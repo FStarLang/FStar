@@ -14,6 +14,7 @@ module I = FStar.Ident
 module P = FStar.Syntax.Print
 module BU = FStar.Compiler.Util
 module TcUtil = FStar.TypeChecker.Util
+module Hash = FStar.Syntax.Hash
 
 type env = {
    tcenv : Env.env;
@@ -489,6 +490,12 @@ let debug g f =
   if Env.debug g.tcenv (Options.Other "Core")
   then f ()
 
+type side = 
+  | Left
+  | Right
+  | Both
+  | Neither
+  
 (*
      G |- e : t0 <: t1 | p
 
@@ -567,18 +574,22 @@ let rec check_subtype_whnf (g:env) (e:option term) (t0 t1: typ)
       check_subtype_whnf g e t0 (curry_arrow x0 (x1::xs) c1)
 
     | Tm_arrow ([x0], c0), Tm_arrow([x1], c1) ->
-      let [x0], c0 = SS.open_comp [x0] c0 in
-      let [x1], c1 = SS.open_comp [x1] c1 in
-      let! _ = check_bqual x0.binder_qual x1.binder_qual in
-      let! u1 = universe_of g x1.binder_bv.sort in
-      with_binders [x1] [u1] (
-        check_subtype g (Some (S.bv_to_name x1.binder_bv)) x1.binder_bv.sort x0.binder_bv.sort ;!
-        check_subcomp (push_binders g [x1])
-                      (if U.is_pure_or_ghost_comp c0
-                       then let? e in Some (S.mk_Tm_app e (snd (U.args_of_binders [x1])) R.dummyRange)
-                       else None)
-                      (SS.subst_comp [NT(x0.binder_bv, S.bv_to_name x1.binder_bv)] c0)
-                      c1
+      with_context "subtype arrow" (Some (U.mk_untyped_eq2 t0 t1)) (fun _ ->
+        let [x0], c0 = SS.open_comp [x0] c0 in
+        let [x1], c1 = SS.open_comp [x1] c1 in
+        let! _ = check_bqual x0.binder_qual x1.binder_qual in
+        let! u1 = universe_of g x1.binder_bv.sort in
+        with_binders [x1] [u1] (
+          check_subtype g (Some (S.bv_to_name x1.binder_bv)) x1.binder_bv.sort x0.binder_bv.sort ;!
+          with_context "check_subcomp" None (fun _ ->
+            check_subcomp (push_binders g [x1])
+                          (if U.is_pure_or_ghost_comp c0
+                          then let? e in Some (S.mk_Tm_app e (snd (U.args_of_binders [x1])) R.dummyRange)
+                          else None)
+                          (SS.subst_comp [NT(x0.binder_bv, S.bv_to_name x1.binder_bv)] c0)
+                          c1
+          )
+        )
       )
 
     | Tm_ascribed (t0, _, _), _ ->
@@ -694,6 +705,180 @@ and check_equality_match (g:env)
         | _, _ -> fail "check_equality does not support branches with when"
     in
     check_equality_branches brs0 brs1
+
+and check_equality_alt (g:env) (t0 t1:typ)
+  : result unit
+  = let err () =
+        fail (BU.format2 "not equal terms: %s <> %s"
+                         (P.term_to_string t0)
+                         (P.term_to_string t1))
+    in
+    if Env.debug g.tcenv (Options.Other "Core")
+    then BU.print2 "check_equality_alt %s =?= %s\n"
+                   (P.term_to_string t0)
+                   (P.term_to_string t1);
+    let! guard_not_ok = guard_not_allowed in
+    let guard_ok = not guard_not_ok in
+    let head_matches t0 t1
+      : bool
+      = let head0, _ = U.head_and_args t0 in
+        let head1, _ = U.head_and_args t1 in
+        match (U.un_uinst head0).n, (U.un_uinst head1).n with
+        | Tm_fvar fv0, Tm_fvar fv1 -> fv_eq fv0 fv1
+        | Tm_name x0, Tm_name x1 -> bv_eq x0 x1
+        | Tm_constant c0, Tm_constant c1 -> Hash.equal_term head0 head1
+        | _ -> false
+    in
+    let which_side_to_unfold t0 t1 
+      : side
+      = let delta_depth_of_head t =
+          let head, _ = U.head_and_args t in
+          match (U.un_uinst head).n with
+          | Tm_fvar fv -> Some (Env.delta_depth_of_fv g.tcenv fv)
+          | _ -> None
+        in
+        let dd0 = delta_depth_of_head t0 in
+        let dd1 = delta_depth_of_head t1 in
+        match dd0, dd1 with
+        | Some _, None -> Left
+        | None, Some _ -> Right
+        | Some dd0, Some dd1 ->
+          if dd0 = dd1
+          then Both
+          else if Common.delta_depth_greater_than dd0 dd1
+          then Left
+          else Right
+        | None, None ->
+          Neither
+    in
+    let maybe_unfold t0 t1
+      : option (term & term)
+      = match which_side_to_unfold t0 t1 with    
+        | Neither -> None
+        | Both -> (
+          match N.maybe_unfold_head g.tcenv t0, 
+                N.maybe_unfold_head g.tcenv t1
+          with 
+          | Some t0, Some t1 -> Some (t0, t1)
+          | Some t0, None -> Some (t0, t1)
+          | None, Some t1 -> Some (t0, t1)
+          | _ -> None
+        )
+        | Left -> (
+          match N.maybe_unfold_head g.tcenv t0 with
+          | Some t0 -> Some (t0, t1)
+          | _ -> None
+        )
+        | Right -> (
+          match N.maybe_unfold_head g.tcenv t1 with
+          | Some t1 -> Some (t0, t1)
+          | _ -> None
+        )
+    in
+    let fallback t0 t1 =
+      if guard_ok
+      then if equatable g t0
+            || equatable g t1
+           then let! _, t_typ = check' g t0 in
+                let! u = universe_of g t_typ in
+                guard (U.mk_eq2 u t_typ t0 t1)
+           else err ()
+      else err ()
+    in
+    let maybe_unfold_and_retry t0 t1 =
+      match maybe_unfold t0 t1 with
+      | None -> fallback t0 t1
+      | Some (t0, t1) -> check_equality_alt g t0 t1
+    in
+    if Hash.equal_term t0 t1 then return ()
+    else 
+      match t0.n, t1.n with
+      | Tm_type u0, Tm_type u1 ->
+        // when g.allow_universe_instantiation ->
+        // See above remark regarding universe instantiations
+        if Rel.teq_nosmt_force g.tcenv t0 t1
+        then return ()
+        else err ()
+
+      | Tm_ascribed (t0, _, _), _ ->
+        check_equality_alt g t0 t1
+        
+      | _, Tm_ascribed(t1, _, _) ->
+        check_equality_alt g t0 t1
+
+      | Tm_uinst (f0, us0), Tm_uinst(f1, us1) ->
+        if Hash.equal_term f0 f1
+        then ( //heads are equal, equate universes
+             if Rel.teq_nosmt_force g.tcenv t0 t1
+             then return ()
+             else err ()
+        )
+        else maybe_unfold_and_retry t0 t1
+        
+      | Tm_fvar _, Tm_fvar _ ->
+        maybe_unfold_and_retry t0 t1
+
+      | Tm_uinst _, _
+      | Tm_fvar _, _
+      | Tm_app _, _
+      | _, Tm_uinst _ 
+      | _, Tm_fvar _
+      | _, Tm_app _ ->
+        if not (head_matches t0 t1)
+        then maybe_unfold_and_retry t0 t1
+        else (
+          let head0, args0 = U.head_and_args t0 in
+          let head1, args1 = U.head_and_args t1 in
+          check_equality_alt g head0 head1 ;!
+          check_equality_args g args0 args1
+        )
+
+      | Tm_refine (x0, f0), Tm_refine (x1, f1) ->
+        if head_matches x0.sort x1.sort
+        then (
+          let [b], f0 = SS.open_term [S.mk_binder x0] f0 in
+          let f1 = SS.subst [DB(0, b.binder_bv)] f1 in
+          let! u = universe_of g b.binder_bv.sort in
+          check_equality_alt g x0.sort x1.sort ;!
+          with_binders [b] [u]
+            (let g = push_binders g [b] in
+             match! guard_not_allowed with
+             | true -> check_equality_alt g f0 f1
+             | _ ->
+               handle_with
+               (check_equality_alt g f0 f1)
+               (fun _ -> check_equality_formula g f0 f1))
+        )
+        else (
+          match maybe_unfold x0.sort x1.sort with
+          | None -> fallback t0 t1
+          | Some (t0, t1) ->
+            let lhs = S.mk (Tm_refine({x0 with sort = t0}, f0)) t0.pos in
+            let rhs = S.mk (Tm_refine({x1 with sort = t1}, f1)) t1.pos in            
+            check_equality_alt g (U.flatten_refinement lhs) (U.flatten_refinement rhs)
+        )
+
+      | Tm_abs(b0::b1::bs, body, ropt), _ ->
+        let t0 = curry_abs b0 b1 bs body ropt in
+        check_equality_whnf g t0 t1
+
+      | _, Tm_abs(b0::b1::bs, body, ropt) ->
+        let t1 = curry_abs b0 b1 bs body ropt in
+        check_equality_whnf g t0 t1
+
+      | Tm_abs([b0], body0, _), Tm_abs([b1], body1, _) ->
+        check_equality g b0.binder_bv.sort b1.binder_bv.sort;!
+        check_bqual b0.binder_qual b1.binder_qual;!
+        let! u = universe_of g b0.binder_bv.sort in
+        let [b0], body0 = SS.open_term [b0] body0 in
+        //little strange to use a DB substitution here
+        //Maybe cleaner to open both and use an NT subst
+        let body1 = SS.subst [DB(0, b0.binder_bv)] body1 in
+        with_binders [b0] [u]
+          (let g = push_binders g [b0] in
+           check_equality g body0 body1)
+      
+      | _ -> fallback t0 t1
 
 and check_equality_whnf (g:env) (t0 t1:typ)
   = let err () =
@@ -1379,3 +1564,12 @@ let check_term g e t (must_tot:bool)
     );
     res
     )
+
+let check_term_equality g t0 t1
+  = let g = { tcenv = g; allow_universe_instantiation = false } in
+    let ctx = { no_guard = false; error_context = [] } in
+    match check_equality_alt g t0 t1 ctx with
+    | Inl (_, g) -> Inl g
+    | Inr err -> Inr err
+
+ 

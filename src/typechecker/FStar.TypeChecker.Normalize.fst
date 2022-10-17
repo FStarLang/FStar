@@ -3118,21 +3118,7 @@ let comp_to_string env c =
 
 let normalize_refinement steps env t0 =
    let t = normalize (steps@[Beta]) env t0 in
-   let rec aux t =
-    let t = compress t in
-    match t.n with
-       | Tm_refine(x, phi) ->
-         let t0 = aux x.sort in
-         begin match t0.n with
-            | Tm_refine(y, phi1) ->
-              //NB: this is working on de Bruijn
-              //    representations; so no need
-              //    to substitute y/x in phi
-              mk (Tm_refine(y, U.mk_conj_simp phi1 phi)) t0.pos
-            | _ -> t
-         end
-       | _ -> t in
-   aux t
+   U.flatten_refinement t
 
 let whnf_steps = [Primops; Weak; HNF; UnfoldUntil delta_constant; Beta]
 let unfold_whnf' steps env t = normalize (steps@whnf_steps) env t
@@ -3400,3 +3386,24 @@ let get_n_binders (env:Env.env) (n:int) (t:term) : list binder * comp =
       (bs, c)
   in
   aux true n t
+
+let maybe_unfold_head (env:Env.env) (t:term)
+  : option term 
+  = let head, args = U.head_and_args t in
+    let fv_us_opt =
+      match (SS.compress head).n with
+      | Tm_uinst ({n=Tm_fvar fv}, us) -> Some (fv, us)
+      | Tm_fvar fv -> Some (fv, [])
+      | _ -> None
+    in
+    match fv_us_opt with
+    | None -> None
+    | Some (fv, us) ->
+      match Env.lookup_definition [Unfold delta_constant] env fv.fv_name.v with
+      | None -> None
+      | Some (us_formals, defn) ->
+        let subst = mk_univ_subst us_formals us in
+        let defn = SS.subst subst defn in
+        let term = S.mk_Tm_app defn args t.pos in
+        Some (normalize [Beta;Iota;Weak;HNF] env term)
+        

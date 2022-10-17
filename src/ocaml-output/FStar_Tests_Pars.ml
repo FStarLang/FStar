@@ -344,17 +344,20 @@ let (pars : Prims.string -> FStar_Syntax_Syntax.term) =
                     "Impossible: parsing a Fragment always results in a Term"))
         ()
     with
-    | uu___ ->
-        if
-          let uu___1 = FStar_Options.trace_error () in
-          Prims.op_Negation uu___1
-        then Obj.magic (Obj.repr (FStar_Compiler_Effect.raise uu___))
-        else Obj.magic (Obj.repr (failwith "unreachable"))
+    | FStar_Errors.Error (err, msg, r, _ctx) when
+        let uu___1 = FStar_Options.trace_error () in
+        FStar_Compiler_Effect.op_Less_Bar Prims.op_Negation uu___1 ->
+        (if r = FStar_Compiler_Range.dummyRange
+         then FStar_Compiler_Util.print_string msg
+         else
+           (let uu___3 = FStar_Compiler_Range.string_of_range r in
+            FStar_Compiler_Util.print2 "%s: %s\n" uu___3 msg);
+         FStar_Compiler_Effect.exit Prims.int_one)
+    | e when
+        let uu___1 = FStar_Options.trace_error () in Prims.op_Negation uu___1
+        -> FStar_Compiler_Effect.raise e
 let (tc' :
-  Prims.string ->
-    (FStar_Syntax_Syntax.term * FStar_TypeChecker_Common.guard_t *
-      FStar_TypeChecker_Env.env))
-  =
+  Prims.string -> (FStar_Syntax_Syntax.term * FStar_TypeChecker_Env.env)) =
   fun s ->
     let tm = pars s in
     let tcenv = init () in
@@ -447,16 +450,13 @@ let (tc' :
           (tcenv.FStar_TypeChecker_Env.core_check)
       } in
     let uu___ = FStar_TypeChecker_TcTerm.tc_tot_or_gtot_term tcenv1 tm in
-    match uu___ with | (tm1, uu___1, g) -> (tm1, g, tcenv1)
-let (tc : Prims.string -> FStar_Syntax_Syntax.term) =
-  fun s -> let uu___ = tc' s in match uu___ with | (tm, uu___1, uu___2) -> tm
-let (tc_nbe : Prims.string -> FStar_Syntax_Syntax.term) =
-  fun s ->
-    let uu___ = tc' s in
     match uu___ with
-    | (tm, g, tcenv) ->
-        (FStar_TypeChecker_Rel.force_trivial_guard tcenv g; tm)
-let (tc_nbe_term : FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.term) =
+    | (tm1, uu___1, g) ->
+        (FStar_TypeChecker_Rel.force_trivial_guard tcenv1 g;
+         (let tm2 = FStar_Syntax_Subst.deep_compress tm1 in (tm2, tcenv1)))
+let (tc : Prims.string -> FStar_Syntax_Syntax.term) =
+  fun s -> let uu___ = tc' s in match uu___ with | (tm, uu___1) -> tm
+let (tc_term : FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.term) =
   fun tm ->
     let tcenv = init () in
     let tcenv1 =
@@ -550,7 +550,8 @@ let (tc_nbe_term : FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.term) =
     let uu___ = FStar_TypeChecker_TcTerm.tc_tot_or_gtot_term tcenv1 tm in
     match uu___ with
     | (tm1, uu___1, g) ->
-        (FStar_TypeChecker_Rel.force_trivial_guard tcenv1 g; tm1)
+        (FStar_TypeChecker_Rel.force_trivial_guard tcenv1 g;
+         (let tm2 = FStar_Syntax_Subst.deep_compress tm1 in tm2))
 let (pars_and_tc_fragment : Prims.string -> unit) =
   fun s ->
     FStar_Options.set_option "trace_error" (FStar_Options.Bool true);

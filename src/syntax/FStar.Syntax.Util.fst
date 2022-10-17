@@ -2413,3 +2413,19 @@ let ctx_uvar_kind (u:ctx_uvar) =
   (Unionfind.find_decoration u.ctx_uvar_head).uvar_decoration_kind
 
 let is_guard_ctx_uvar (u:ctx_uvar) = Inr? (ctx_uvar_kind u)
+    (Unionfind.find_decoration u.ctx_uvar_head).uvar_decoration_typ
+
+let rec flatten_refinement t =
+  let t = compress t in
+  match t.n with
+  | Tm_refine(x, phi) -> (
+    let t0 = flatten_refinement x.sort in
+    match t0.n with
+    | Tm_refine(y, phi1) ->
+      //NB: this is working on de Bruijn
+      //    representations; so no need
+      //    to substitute y/x in phi
+      mk (Tm_refine(y, mk_conj_simp phi1 phi)) t0.pos
+    | _ -> t
+    )
+  | _ -> t

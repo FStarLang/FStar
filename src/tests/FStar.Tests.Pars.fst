@@ -128,6 +128,12 @@ let pars s =
         | ASTFragment _ ->
             failwith "Impossible: parsing a Fragment always results in a Term"
     with
+        | Error(err, msg, r, _ctx) when not <| FStar.Options.trace_error() ->
+          if r = FStar.Compiler.Range.dummyRange
+          then BU.print_string msg
+          else BU.print2 "%s: %s\n" (FStar.Compiler.Range.string_of_range r) msg;
+          exit 1
+    
         | e when not ((Options.trace_error())) -> raise e
 
 let tc' s =
@@ -135,22 +141,20 @@ let tc' s =
     let tcenv = init() in
     let tcenv = {tcenv with top_level=false} in
     let tm, _, g = TcTerm.tc_tot_or_gtot_term tcenv tm in
-    tm, g, tcenv
+    Rel.force_trivial_guard tcenv g;
+    let tm = FStar.Syntax.Subst.deep_compress tm in        
+    tm, tcenv
 
 let tc s =
-    let tm, _, _ = tc' s in
+    let tm, _ = tc' s in
     tm
 
-let tc_nbe s =
-    let tm, g, tcenv = tc' s in
-    Rel.force_trivial_guard tcenv g;
-    tm
-
-let tc_nbe_term tm =
+let tc_term tm =
     let tcenv = init() in
     let tcenv = {tcenv with top_level=false} in
     let tm, _, g = TcTerm.tc_tot_or_gtot_term tcenv tm in
     Rel.force_trivial_guard tcenv g;
+    let tm = FStar.Syntax.Subst.deep_compress tm in
     tm
 
 let pars_and_tc_fragment (s:string) =

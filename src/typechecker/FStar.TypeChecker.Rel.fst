@@ -1184,16 +1184,6 @@ let head_match = function
     | HeadMatch true -> HeadMatch true
     | _ -> HeadMatch false
 
-// GM: This is unused, maybe delete
-(* let and_match m1 m2 = *)
-(*     match m1 with *)
-(*     | MisMatch (i, j) -> MisMatch (i, j) *)
-(*     | HeadMatch u -> begin match m2 () with *)
-(*                      | MisMatch (i,j) -> MisMatch (i, j) *)
-(*                      | _ -> HeadMatch *)
-(*                      end *)
-(*     | FullMatch -> m2 () *)
-
 let fv_delta_depth env fv =
     let d = Env.delta_depth_of_fv env fv in
     match d with
@@ -5023,9 +5013,9 @@ let check_implicit_solution env uv t k (must_tot:bool) (reason:string) : guard_t
     | Inl (Some g) -> 
       { trivial_guard with guard_f = NonTrivial g }
     | Inr print_err ->
-        (BU.print2 "(Rel) core_check failed (%s) because %s\n" 
-          reason
-          (print_err false));
+        // (BU.print2 "(Rel) core_check failed (%s) because %s\n" 
+        //   reason
+        //   (print_err false));
       fallback()
   )
   else begin

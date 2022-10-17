@@ -334,6 +334,7 @@ let equal_poly x y = x=y
 let rec equal_term (t1 t2:term)
   : bool
   = if physical_equality t1 t2 then true else
+    if hash_term t1 <> hash_term t2 then false else
     match (SS.compress t1).n, (SS.compress t2).n with
     | Tm_bvar x, Tm_bvar y -> x.index = y.index
     | Tm_name x, Tm_name y ->

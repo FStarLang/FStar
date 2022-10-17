@@ -89,6 +89,22 @@ let unify' x y =
 
 let norm t = N.normalize [] (tcenv()) t
 
+let check_core i x y =
+  FStar.Main.process_args () |> ignore; //set options
+  let env = tcenv () in
+  let _ = 
+    match FStar.TypeChecker.Core.check_term_equality env x y with
+    | Inl None ->
+      BU.print1 "%s core check ok\n" (BU.string_of_int i)
+    | Inl (Some g) ->
+      BU.print2 "%s core check computed guard %s ok\n" (BU.string_of_int i) (P.term_to_string g);
+      success := false
+    | Inr err ->
+      success := false;
+      BU.print2 "%s failed\n%s\n" (BU.string_of_int i) (FStar.TypeChecker.Core.print_error err)
+  in
+  Options.init()
+
 let inst n tm =
    let rec aux out n =
     if n=0 then out
@@ -115,26 +131,26 @@ let run_all () =
     unify 1 x y (NonTrivial (U.mk_eq2 U_zero U.t_bool x y));
 
     //equal after some reduction
-    let id = tc "fun x -> x" in
+    let id = tc "fun (x:bool) -> x" in
     unify 2 x (app id [x]) Trivial;
 
     //physical equality of terms
-    let id = tc "fun x -> x" in
+    let id = tc "fun (x:bool) -> x" in
     unify 3 id id Trivial;
 
     //alpha equivalence
-    let id = tc "fun x -> x" in
-    let id' = tc "fun y -> y" in
+    let id = tc "fun (x:bool) -> x" in
+    let id' = tc "fun (y:bool) -> y" in
     unify 4 id id' Trivial; //(NonTrivial (pars "True /\ (forall x. True)"));
 
     //alpha equivalence 2
-    unify 5 (tc "fun x y -> x")
-            (tc "fun a b -> a")
+    unify 5 (tc "fun (x y:bool) -> x")
+            (tc "fun (a b:bool) -> a")
             Trivial;
 
     //alpha equivalence 3
-    unify 6 (tc "fun x y z -> y")
-            (tc "fun a b c -> b")
+    unify 6 (tc "fun (x y z:bool) -> y")
+            (tc "fun (a b c:bool) -> b")
             Trivial;
 
     //logical equality of distinct lambdas (questionable ... would only work for unit, or inconsistent context)
@@ -149,8 +165,9 @@ let run_all () =
 
     //imitation: unifies u to a constant
     FStar.Main.process_args () |> ignore; //set options
-    let tm, us = inst 1 (tc "fun u x -> u x") in
-    let sol = tc "fun x -> Prims.pair x x" in
+    let tm, us = inst 1 (tc "fun (u:Type0 -> Type0) (x:Type0) -> u x") in
+    let sol = tc "fun (x:Type0) -> Prims.pair x x" in
+    BU.print1 "Processed args: debug_at_level Core? %s\n" (BU.string_of_bool (Options.debug_at_level_no_module (Options.Other "Core")));
     unify_check 9 tm
             sol
             Trivial
@@ -159,8 +176,8 @@ let run_all () =
                                   (norm sol)));
 
     //imitation: unifies u to a lambda
-    let tm, us = inst 1 (tc "fun u x -> u x") in
-    let sol = tc "fun x y -> x + y" in
+    let tm, us = inst 1 (tc "fun (u: int -> int -> int) (x:int) -> u x") in
+    let sol = tc "fun (x y:int) -> x + y" in
     unify_check 10 tm
             sol
             Trivial
@@ -214,6 +231,26 @@ let run_all () =
     in
 
     unify 14 tm1 tm2 Trivial;
+
+    let tm1, tm2 =
+      let _ = Pars.pars_and_tc_fragment 
+        "let ty0 n = x:int { x >= n }\n\
+         let ty1 n = x:ty0 n { x > n }\n\
+         assume val tc (t:Type0) : Type0"
+      in
+      let t0 = tc "ty1 17" in
+      let t1 = tc "x:ty0 17 { x > 17 }" in
+      t0, t1
+    in
+    check_core 15 tm1 tm2;
+
+    let tm1, tm2 =
+      let t0 = tc "x:int { x >= 17 /\ x > 17 }" in
+      let t1 = tc "x:ty0 17 { x > 17 }" in
+      t0, t1
+    in
+    check_core 16 tm1 tm2;
+
 
     Options.__clear_unit_tests();
 
