@@ -1108,7 +1108,7 @@ let rec norm : cfg -> env -> stack -> term -> term =
             compress t
         in
         log cfg (fun () ->
-          BU.print5 ">>> %s (no_full_norm=%s)\nNorm %s  with with %s env elements top of the stack %s \n"
+          BU.print5 ">>> %s (no_full_norm=%s)\nNorm %s with %s env elements; top of the stack = %s\n"
                                         (Print.tag_of_term t)
                                         (BU.string_of_bool (cfg.steps.no_full_norm))
                                         (Print.term_to_string t)
