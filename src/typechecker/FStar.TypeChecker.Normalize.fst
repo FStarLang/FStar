@@ -1099,6 +1099,14 @@ let maybe_drop_rc_typ cfg (rc:residual_comp) : residual_comp =
  * time. *)
 let rec norm : cfg -> env -> stack -> term -> term =
     fun cfg env stack t ->
+        let rec collapse_metas st =
+          match st with
+          (* Keep only the outermost Meta_monadic *)
+          | Meta (_, Meta_monadic _, _) :: Meta(e, Meta_monadic m, r) :: st' ->
+            collapse_metas (Meta (e, Meta_monadic m, r) :: st')
+          | _ -> st
+        in
+        let stack = collapse_metas stack in
         let t =
             if cfg.debug.norm_delayed
             then (match t.n with
