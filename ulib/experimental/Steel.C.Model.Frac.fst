@@ -1,7 +1,7 @@
-module Steel.C.Frac
+module Steel.C.Model.Frac
 
-open Steel.C.PCM
-open Steel.C.Ref
+open Steel.C.Model.PCM
+open Steel.C.Model.Ref
 open Steel.Effect
 open Steel.Effect.Atomic
   

@@ -7,11 +7,11 @@ open Steel.Effect
 open Steel.Effect.Common
 open Steel.Effect.Atomic
 
-open Steel.C.PCM
-open Steel.C.Struct
+open Steel.C.Model.PCM
+open Steel.C.Model.Struct
 open Steel.C.Typedef
-open Steel.C.Ref
-open Steel.C.Connection
+open Steel.C.Model.Ref
+open Steel.C.Model.Connection
 open Steel.C.Opt
 open Steel.C.Fields
 
@@ -372,7 +372,7 @@ let addr_of_struct_field''
     (requires fun _ -> not (excluded field))
     (ensures fun h q h' -> 
       not (excluded field) /\
-      q == Steel.C.Ref.ref_focus p (struct_field tag fields field) /\
+      q == Steel.C.Model.Ref.ref_focus p (struct_field tag fields field) /\
       fst (extract_field tag fields excluded field
         (h (p `pts_to_view` struct_view tag fields excluded)))
        ==
@@ -417,7 +417,7 @@ let addr_of_struct_field
     (requires fun _ -> not (excluded field))
     (ensures fun h q h' -> 
       not (excluded field) /\
-      q == Steel.C.Ref.ref_focus p (struct_field tag fields field) /\
+      q == Steel.C.Model.Ref.ref_focus p (struct_field tag fields field) /\
       fst (extract_field tag fields excluded field
         (h (p `pts_to_view` struct_view tag fields excluded)))
        == h' (p `pts_to_view` struct_view tag fields (insert field excluded))

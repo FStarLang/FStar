@@ -23,7 +23,7 @@ open FStar.Ghost
 open Steel.Effect.Atomic
 
 open Steel.C.Typedef
-open Steel.C.PCM
+open Steel.C.Model.PCM
 open Steel.C.Fields
 open Steel.C.Typenat
 

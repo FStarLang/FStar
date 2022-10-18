@@ -1,6 +1,6 @@
 module Steel.C.Opt
 
-open Steel.C.PCM
+open Steel.C.Model.PCM
 module A = Steel.Effect.Atomic
 
 let opt_read r =
@@ -38,11 +38,11 @@ let malloc
   #c x
 =
   let xc = ((opt_view c).to_carrier x) in
-  let r = Steel.C.Ref.ref_alloc _ xc in
+  let r = Steel.C.Model.Ref.ref_alloc _ xc in
   pts_to_view_intro r xc (opt_view c) x;
   let r' : ref c (opt_pcm #c) = r in
   A.change_equal_slprop
-    (Steel.C.Ref.pts_to_view r (opt_view c))
+    (Steel.C.Model.Ref.pts_to_view r (opt_view c))
     (pts_to_view r' (opt_view c));
   intro_pts_to_view_or_null_not_null r' (opt_view c);
   A.return r'
@@ -50,6 +50,6 @@ let malloc
 let free
   #c r
 =
-  let r' : Steel.C.Ref.ref (opt_pcm #c) = r in 
+  let r' : Steel.C.Model.Ref.ref (opt_pcm #c) = r in 
   let _ = pts_to_view_elim r (opt_view c) in
-  Steel.C.Ref.ref_free r
+  Steel.C.Model.Ref.ref_free r

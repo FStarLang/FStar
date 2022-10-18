@@ -1,10 +1,10 @@
-module Steel.C.Struct
+module Steel.C.Model.Struct
 
 module P = FStar.PCM
-open Steel.C.PCM
-open Steel.C.Connection
-open Steel.C.Ref
-// module Ptr = Steel.C.Ptr
+open Steel.C.Model.PCM
+open Steel.C.Model.Connection
+open Steel.C.Model.Ref
+// module Ptr = Steel.C.Model.Ptr
 open Steel.Effect
 module A = Steel.Effect.Atomic
 

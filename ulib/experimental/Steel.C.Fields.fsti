@@ -154,7 +154,7 @@ let refine_typedef
 = {
   carrier = t.carrier;
   pcm = t.pcm;
-  view_type = Steel.C.Ref.refine t.view_type p;
+  view_type = Steel.C.Model.Ref.refine t.view_type p;
   view = refine_view t.view p;
   is_unit = t.is_unit;
 }
@@ -166,7 +166,7 @@ let rewrite_typedef
   (#view': Type)
   (f: t.view_type -> Tot view')
   (g: view' -> Tot t.view_type)
-  (prf: squash (f `Steel.C.Connection.is_inverse_of` g))
+  (prf: squash (f `Steel.C.Model.Connection.is_inverse_of` g))
 : Tot typedef
 = {
   carrier = t.carrier;

@@ -1,4 +1,4 @@
-module Steel.C.PCM
+module Steel.C.Model.PCM
 module P = FStar.PCM
 open FStar.FunctionalExtensionality
 open FStar.IndefiniteDescription

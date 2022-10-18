@@ -1,6 +1,6 @@
-module Steel.C.Connection
+module Steel.C.Model.Connection
 
-open Steel.C.PCM
+open Steel.C.Model.PCM
 open FStar.FunctionalExtensionality
 
 (** PCM morphisms *)

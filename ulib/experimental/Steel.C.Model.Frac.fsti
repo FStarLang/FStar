@@ -1,8 +1,8 @@
-module Steel.C.Frac
+module Steel.C.Model.Frac
 
 module P = FStar.PCM
-open Steel.C.PCM
-open Steel.C.Ref
+open Steel.C.Model.PCM
+open Steel.C.Model.Ref
 open Steel.Effect
 
 /// Fractional permissions: from Steel.HigherReference

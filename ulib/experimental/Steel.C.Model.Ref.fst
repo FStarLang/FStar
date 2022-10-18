@@ -1,6 +1,6 @@
-module Steel.C.Ref
+module Steel.C.Model.Ref
 module P = FStar.PCM
-module U = Steel.C.Universe
+module U = Steel.C.Model.Universe
 open FStar.FunctionalExtensionality
 
 module M = Steel.Memory
@@ -194,7 +194,7 @@ let ref_alloc #a pcm v =
   A.return p
 
 let ref_free #b #p #x r =
-  // TODO: use Steel.PCMReference.free, but we are blocked by (p.refine (one p)), which we explicitly excluded in Steel.C.PCM
+  // TODO: use Steel.PCMReference.free, but we are blocked by (p.refine (one p)), which we explicitly excluded in Steel.C.Model.PCM
   A.drop (pts_to _ _)
 
 #pop-options
