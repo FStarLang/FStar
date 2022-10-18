@@ -3630,6 +3630,9 @@ and (encode_formula :
                    FStar_SMTEncoding_Term.mk
                      (FStar_SMTEncoding_Term.Labeled (phi2, msg, r)) r in
                  (uu___1, decls))
+        | FStar_Syntax_Syntax.Tm_meta
+            (phi2, FStar_Syntax_Syntax.Meta_core_guard) ->
+            encode_formula phi2 env
         | FStar_Syntax_Syntax.Tm_meta uu___ ->
             let uu___1 = FStar_Syntax_Util.unmeta phi1 in
             encode_formula uu___1 env

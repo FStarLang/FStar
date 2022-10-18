@@ -1268,6 +1268,7 @@ type indexed_effect_binder_kind =
   | Type_binder 
   | Substitution_binder 
   | BindCont_no_abstraction_binder 
+  | Range_binder 
   | Repr_binder 
   | Ad_hoc_binder 
 let (uu___is_Type_binder : indexed_effect_binder_kind -> Prims.bool) =
@@ -1283,6 +1284,9 @@ let (uu___is_BindCont_no_abstraction_binder :
     match projectee with
     | BindCont_no_abstraction_binder -> true
     | uu___ -> false
+let (uu___is_Range_binder : indexed_effect_binder_kind -> Prims.bool) =
+  fun projectee ->
+    match projectee with | Range_binder -> true | uu___ -> false
 let (uu___is_Repr_binder : indexed_effect_binder_kind -> Prims.bool) =
   fun projectee ->
     match projectee with | Repr_binder -> true | uu___ -> false
