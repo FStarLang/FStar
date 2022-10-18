@@ -442,6 +442,7 @@ type indexed_effect_binder_kind =
   | Type_binder
   | Substitution_binder
   | BindCont_no_abstraction_binder
+  | Range_binder
   | Repr_binder
   | Ad_hoc_binder
 
