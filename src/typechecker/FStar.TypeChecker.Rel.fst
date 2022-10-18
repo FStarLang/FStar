@@ -5019,7 +5019,6 @@ let check_implicit_solution env uv t k (must_tot:bool) (reason:string) : guard_t
       fallback()
   )
   else begin
-    ignore (maybe_set_guard_uvar env uv U.t_true);
     fallback()
   end
 
@@ -5059,18 +5058,20 @@ let check_implicit_solution_and_discharge_guard env imp force_univ_constraints
   if (not force_univ_constraints) &&
      (List.existsb (fun (reason, _, _) -> reason = Deferred_univ_constraint) g.deferred)
   then None
-  else let g' =
-         (match discharge_guard'
-                  (Some (fun () ->
-                         BU.format4 "%s (Introduced at %s for %s resolved at %s)"
-                           (Print.term_to_string tm)
-                           (Range.string_of_range r)
-                           reason
-                           (Range.string_of_range tm.pos)))
-                env g true with
-          | Some g -> g
-          | None -> failwith "Impossible, with use_smt = true, discharge_guard' must return Some") in
-       g'.implicits |> Some
+  else begin
+    if env.phase1 || env.lax then ignore (maybe_set_guard_uvar env ctx_u U.t_true);
+    let g' =
+      (match discharge_guard'
+               (Some (fun () ->
+                      BU.format4 "%s (Introduced at %s for %s resolved at %s)"
+                        (Print.term_to_string tm)
+                        (Range.string_of_range r)
+                        reason
+                        (Range.string_of_range tm.pos))) env g true with
+       | Some g -> g
+       | None -> failwith "Impossible, with use_smt = true, discharge_guard' must return Some") in
+    g'.implicits |> Some
+  end
 
 (*
  * resolve_implicits' uses it to determine if a ctx uvar is unresolved
