@@ -6577,7 +6577,7 @@ let (uvars_for_binders :
                                                       match uu___7 with
                                                       | (ctx_uvar, uu___8) ->
                                                           let uu___9 =
-                                                            FStar_Syntax_Print.ctx_uvar_to_string_no_reason
+                                                            FStar_Syntax_Print.ctx_uvar_to_string
                                                               ctx_uvar in
                                                           let uu___10 =
                                                             let uu___11 =

@@ -12561,8 +12561,8 @@ let (print_pending_implicits :
         g.FStar_TypeChecker_Common.implicits
         (FStar_Compiler_List.map
            (fun i ->
-              FStar_Syntax_Print.term_to_string
-                i.FStar_TypeChecker_Common.imp_tm)) in
+              FStar_Syntax_Print.ctx_uvar_to_string
+                i.FStar_TypeChecker_Common.imp_uvar)) in
     FStar_Compiler_Effect.op_Bar_Greater uu___ (FStar_String.concat ", ")
 let (ineqs_to_string :
   (FStar_Syntax_Syntax.universe Prims.list * (FStar_Syntax_Syntax.universe *
@@ -14945,25 +14945,33 @@ and (resolve_implicits :
        then
          let uu___2 = guard_to_string env g in
          FStar_Compiler_Util.print1
-           "//////////////////////////ResolveImplicitsHook: resolve_implicits////////////\nguard = %s\n"
+           "//////////////////////////ResolveImplicitsHook: resolve_implicits begin////////////\nguard = %s {\n"
            uu___2
        else ());
       (let tagged_implicits1 =
          resolve_implicits' env false g.FStar_TypeChecker_Common.implicits in
-       let uu___1 =
-         FStar_Compiler_List.map FStar_Pervasives_Native.fst
-           tagged_implicits1 in
-       {
-         FStar_TypeChecker_Common.guard_f =
-           (g.FStar_TypeChecker_Common.guard_f);
-         FStar_TypeChecker_Common.deferred_to_tac =
-           (g.FStar_TypeChecker_Common.deferred_to_tac);
-         FStar_TypeChecker_Common.deferred =
-           (g.FStar_TypeChecker_Common.deferred);
-         FStar_TypeChecker_Common.univ_ineqs =
-           (g.FStar_TypeChecker_Common.univ_ineqs);
-         FStar_TypeChecker_Common.implicits = uu___1
-       })
+       (let uu___2 =
+          FStar_Compiler_Effect.op_Less_Bar (FStar_TypeChecker_Env.debug env)
+            (FStar_Options.Other "ResolveImplicitsHook") in
+        if uu___2
+        then
+          FStar_Compiler_Util.print_string
+            "//////////////////////////ResolveImplicitsHook: resolve_implicits end////////////\n}\n"
+        else ());
+       (let uu___2 =
+          FStar_Compiler_List.map FStar_Pervasives_Native.fst
+            tagged_implicits1 in
+        {
+          FStar_TypeChecker_Common.guard_f =
+            (g.FStar_TypeChecker_Common.guard_f);
+          FStar_TypeChecker_Common.deferred_to_tac =
+            (g.FStar_TypeChecker_Common.deferred_to_tac);
+          FStar_TypeChecker_Common.deferred =
+            (g.FStar_TypeChecker_Common.deferred);
+          FStar_TypeChecker_Common.univ_ineqs =
+            (g.FStar_TypeChecker_Common.univ_ineqs);
+          FStar_TypeChecker_Common.implicits = uu___2
+        }))
 and (force_trivial_guard :
   FStar_TypeChecker_Env.env -> FStar_TypeChecker_Common.guard_t -> unit) =
   fun env ->

@@ -747,6 +747,11 @@ let standard_indexed_bind_substs env
 
   : list subst_elt & guard_t & list term =
 
+  let bind_name = BU.format3 "(%s, %s) |> %s"
+    (m_ed.mname |> Ident.ident_of_lid |> string_of_id)
+    (n_ed.mname |> Ident.ident_of_lid |> string_of_id)
+    (p_ed.mname |> Ident.ident_of_lid |> string_of_id) in
+
   let bs, binder_kinds, subst =
     let a_b::b_b::bind_t_bs = bs in
     bind_t_bs,
@@ -784,7 +789,12 @@ let standard_indexed_bind_substs env
         then begin
           let [uv_t], guard_uv_tms, g_uv =
             Env.uvars_for_binders env [g_b] (subst@ss) guard_indexed_effect_uvars
-              (fun _ -> "") r1 in
+              (fun b ->
+               BU.format3 "implicit var for no abs g binder %s of %s at %s"
+                 (Print.binder_to_string b)
+                 bind_name
+                 (Range.string_of_range r1))
+               r1 in
           let g_unif = Rel.layered_effect_teq
             (Env.push_binders env [x_bv |> S.mk_binder])
             uv_t
@@ -813,7 +823,11 @@ let standard_indexed_bind_substs env
     let ss, g, g_uv_tms =
       List.fold_left (fun (ss, g, g_uv_tms) b ->
         let [uv_t], guard_uv_tms, g_uv = Env.uvars_for_binders env [b] (subst@ss) guard_indexed_effect_uvars
-          (fun _ -> "") r1 in
+          (fun b ->
+           BU.format3 "implicit var for additional g binder %s of %s at %s"
+             (Print.binder_to_string b)
+             bind_name
+             (Range.string_of_range r1)) r1 in
         ss@[NT (b.binder_bv, uv_t)],
         Env.conj_guard g g_uv,
         g_uv_tms@guard_uv_tms
@@ -1057,7 +1071,7 @@ and mk_indexed_bind env
   : comp * guard_t =
 
   if Env.debug env <| Options.Other "LayeredEffects" then
-    BU.print2 "Binding c1:%s and c2:%s {\n"
+    BU.print2 "Binding indexed effects: c1:%s and c2:%s {\n"
       (Print.comp_to_string (S.mk_Comp ct1)) (Print.comp_to_string (S.mk_Comp ct2));
 
   if Env.debug env <| Options.Other "ResolveImplicitsHook"

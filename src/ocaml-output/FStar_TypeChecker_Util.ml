@@ -1242,6 +1242,30 @@ let (standard_indexed_bind_substs :
                     fun ct2 ->
                       fun r1 ->
                         fun has_range_binders ->
+                          let bind_name =
+                            let uu___ =
+                              let uu___1 =
+                                FStar_Compiler_Effect.op_Bar_Greater
+                                  m_ed.FStar_Syntax_Syntax.mname
+                                  FStar_Ident.ident_of_lid in
+                              FStar_Compiler_Effect.op_Bar_Greater uu___1
+                                FStar_Ident.string_of_id in
+                            let uu___1 =
+                              let uu___2 =
+                                FStar_Compiler_Effect.op_Bar_Greater
+                                  n_ed.FStar_Syntax_Syntax.mname
+                                  FStar_Ident.ident_of_lid in
+                              FStar_Compiler_Effect.op_Bar_Greater uu___2
+                                FStar_Ident.string_of_id in
+                            let uu___2 =
+                              let uu___3 =
+                                FStar_Compiler_Effect.op_Bar_Greater
+                                  p_ed.FStar_Syntax_Syntax.mname
+                                  FStar_Ident.ident_of_lid in
+                              FStar_Compiler_Effect.op_Bar_Greater uu___3
+                                FStar_Ident.string_of_id in
+                            FStar_Compiler_Util.format3 "(%s, %s) |> %s"
+                              uu___ uu___1 uu___2 in
                           let uu___ =
                             let uu___1 = bs in
                             match uu___1 with
@@ -1364,8 +1388,21 @@ let (standard_indexed_bind_substs :
                                                                  (FStar_Compiler_List.op_At
                                                                     subst1 ss)
                                                                  guard_indexed_effect_uvars
-                                                                 (fun uu___10
-                                                                    -> "") r1 in
+                                                                 (fun b1 ->
+                                                                    let uu___10
+                                                                    =
+                                                                    FStar_Syntax_Print.binder_to_string
+                                                                    b1 in
+                                                                    let uu___11
+                                                                    =
+                                                                    FStar_Compiler_Range.string_of_range
+                                                                    r1 in
+                                                                    FStar_Compiler_Util.format3
+                                                                    "implicit var for no abs g binder %s of %s at %s"
+                                                                    uu___10
+                                                                    bind_name
+                                                                    uu___11)
+                                                                 r1 in
                                                              match uu___9
                                                              with
                                                              | (uv_t::[],
@@ -1461,8 +1498,18 @@ let (standard_indexed_bind_substs :
                                                            (FStar_Compiler_List.op_At
                                                               subst2 ss)
                                                            guard_indexed_effect_uvars
-                                                           (fun uu___7 -> "")
-                                                           r1 in
+                                                           (fun b2 ->
+                                                              let uu___7 =
+                                                                FStar_Syntax_Print.binder_to_string
+                                                                  b2 in
+                                                              let uu___8 =
+                                                                FStar_Compiler_Range.string_of_range
+                                                                  r1 in
+                                                              FStar_Compiler_Util.format3
+                                                                "implicit var for additional g binder %s of %s at %s"
+                                                                uu___7
+                                                                bind_name
+                                                                uu___8) r1 in
                                                        (match uu___6 with
                                                         | (uv_t::[],
                                                            guard_uv_tms,
@@ -2046,7 +2093,8 @@ and (mk_indexed_bind :
                                  let uu___4 = FStar_Syntax_Syntax.mk_Comp ct2 in
                                  FStar_Syntax_Print.comp_to_string uu___4 in
                                FStar_Compiler_Util.print2
-                                 "Binding c1:%s and c2:%s {\n" uu___2 uu___3
+                                 "Binding indexed effects: c1:%s and c2:%s {\n"
+                                 uu___2 uu___3
                              else ());
                             (let uu___2 =
                                FStar_Compiler_Effect.op_Less_Bar

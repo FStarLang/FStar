@@ -1873,7 +1873,7 @@ let uvars_for_binders env (bs:S.binders) substs add_guard_uvars reason r =
 
     if debug env <| Options.Other "LayeredEffectsEqns"
     then List.iter (fun (ctx_uvar, _) -> BU.print2 "Layered Effect uvar : %s (Typing guard uvar : %s)\n"
-      (Print.ctx_uvar_to_string_no_reason ctx_uvar)
+      (Print.ctx_uvar_to_string ctx_uvar)
       (match U.ctx_uvar_kind ctx_uvar with
        | Inl None -> "None"
        | Inl (Some uv) -> Print.ctx_uvar_to_string_no_reason uv

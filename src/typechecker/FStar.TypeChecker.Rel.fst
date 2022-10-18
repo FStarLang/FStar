@@ -4387,7 +4387,7 @@ and solve_c (env:Env.env) (problem:problem comp) (wl:worklist) : solution =
 (* top-level interface                                      *)
 (* -------------------------------------------------------- *)
 let print_pending_implicits g =
-    g.implicits |> List.map (fun i -> Print.term_to_string i.imp_tm) |> String.concat ", "
+    g.implicits |> List.map (fun i -> Print.ctx_uvar_to_string i.imp_uvar) |> String.concat ", "
 
 let ineqs_to_string ineqs =
     let vars =
@@ -5260,10 +5260,13 @@ and resolve_implicits' env is_tac (implicits:Env.implicits)
 
 and resolve_implicits env g =
     if Env.debug env <| Options.Other "ResolveImplicitsHook"
-    then BU.print1 "//////////////////////////ResolveImplicitsHook: resolve_implicits////////////\n\
-                    guard = %s\n"
+    then BU.print1 "//////////////////////////ResolveImplicitsHook: resolve_implicits begin////////////\n\
+                    guard = %s {\n"
                     (guard_to_string env g);
     let tagged_implicits = resolve_implicits' env false g.implicits in
+    if Env.debug env <| Options.Other "ResolveImplicitsHook"
+    then BU.print_string "//////////////////////////ResolveImplicitsHook: resolve_implicits end////////////\n\
+                    }\n";
     {g with implicits = List.map fst tagged_implicits}
 
 
