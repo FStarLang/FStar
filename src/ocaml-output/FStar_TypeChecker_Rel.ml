@@ -14195,11 +14195,7 @@ let (check_implicit_solution :
                              (FStar_TypeChecker_Common.trivial_guard.FStar_TypeChecker_Common.implicits)
                          }
                      | FStar_Pervasives.Inr print_err -> fallback ())
-                  else
-                    ((let uu___4 =
-                        maybe_set_guard_uvar env1 uv FStar_Syntax_Util.t_true in
-                      ());
-                     fallback ())
+                  else fallback ()
 let (check_implicit_solution_and_discharge_guard :
   FStar_TypeChecker_Env.env ->
     FStar_TypeChecker_Common.implicit ->
@@ -14375,29 +14371,38 @@ let (check_implicit_solution_and_discharge_guard :
               if uu___2
               then FStar_Pervasives_Native.None
               else
-                (let g' =
-                   let uu___4 =
-                     discharge_guard'
-                       (FStar_Pervasives_Native.Some
-                          (fun uu___5 ->
-                             let uu___6 =
-                               FStar_Syntax_Print.term_to_string tm in
-                             let uu___7 =
-                               FStar_Compiler_Range.string_of_range r in
-                             let uu___8 =
-                               FStar_Compiler_Range.string_of_range
-                                 tm.FStar_Syntax_Syntax.pos in
-                             FStar_Compiler_Util.format4
-                               "%s (Introduced at %s for %s resolved at %s)"
-                               uu___6 uu___7 reason uu___8)) env1 g true in
-                   match uu___4 with
-                   | FStar_Pervasives_Native.Some g1 -> g1
-                   | FStar_Pervasives_Native.None ->
-                       failwith
-                         "Impossible, with use_smt = true, discharge_guard' must return Some" in
-                 FStar_Compiler_Effect.op_Bar_Greater
-                   g'.FStar_TypeChecker_Common.implicits
-                   (fun uu___4 -> FStar_Pervasives_Native.Some uu___4))))
+                (if
+                   env1.FStar_TypeChecker_Env.phase1 ||
+                     env1.FStar_TypeChecker_Env.lax
+                 then
+                   (let uu___5 =
+                      maybe_set_guard_uvar env1 ctx_u
+                        FStar_Syntax_Util.t_true in
+                    ())
+                 else ();
+                 (let g' =
+                    let uu___5 =
+                      discharge_guard'
+                        (FStar_Pervasives_Native.Some
+                           (fun uu___6 ->
+                              let uu___7 =
+                                FStar_Syntax_Print.term_to_string tm in
+                              let uu___8 =
+                                FStar_Compiler_Range.string_of_range r in
+                              let uu___9 =
+                                FStar_Compiler_Range.string_of_range
+                                  tm.FStar_Syntax_Syntax.pos in
+                              FStar_Compiler_Util.format4
+                                "%s (Introduced at %s for %s resolved at %s)"
+                                uu___7 uu___8 reason uu___9)) env1 g true in
+                    match uu___5 with
+                    | FStar_Pervasives_Native.Some g1 -> g1
+                    | FStar_Pervasives_Native.None ->
+                        failwith
+                          "Impossible, with use_smt = true, discharge_guard' must return Some" in
+                  FStar_Compiler_Effect.op_Bar_Greater
+                    g'.FStar_TypeChecker_Common.implicits
+                    (fun uu___5 -> FStar_Pervasives_Native.Some uu___5)))))
 let rec (unresolved : FStar_Syntax_Syntax.ctx_uvar -> Prims.bool) =
   fun ctx_u ->
     let uu___ =

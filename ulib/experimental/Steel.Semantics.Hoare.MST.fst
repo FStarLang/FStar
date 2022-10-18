@@ -1072,7 +1072,6 @@ let step_bind_ret_aux
     | Bind #_ #_ #_ #_ #_ #_ #_ #post_b #lpre_b #lpost_b (Ret p x _) g ->
       Step (p x) post_b (lpre_b x) (lpost_b x) (g x), m0)
 
-#set-options "--debug Steel.Semantics.Hoare.MST --debug_level Rel,Extreme,LayeredEffects,LayeredEffectsApp,LayeredEffectsEqns,ResolveImplicitsHook --ugly"
 let step_bind_ret
       (#st:st)
       (#a:Type)
