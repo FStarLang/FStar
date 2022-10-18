@@ -1,8 +1,8 @@
 module ScalarUnion
 
-open Steel.C.PCM
+open Steel.C.Model.PCM
 open Steel.C.Opt
-open Steel.C.Connection
+open Steel.C.Model.Connection
 open Steel.C.StructLiteral
 open Steel.C.UnionLiteral
 open Steel.C.Typedef
@@ -10,7 +10,7 @@ open FStar.FunctionalExtensionality
 open Steel.Effect
 open Steel.Effect.Atomic
 open Steel.C.Fields
-open Steel.C.Ref
+open Steel.C.Model.Ref
 open Steel.C.Reference
 open Steel.C.TypedefNorm
 
