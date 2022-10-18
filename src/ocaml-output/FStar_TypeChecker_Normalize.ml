@@ -931,22 +931,13 @@ and (rebuild_closure :
                               FStar_Syntax_Syntax.p =
                                 (p.FStar_Syntax_Syntax.p)
                             }, (dummy :: env4))
-                       | FStar_Syntax_Syntax.Pat_dot_term (x, t1) ->
-                           let x1 =
-                             let uu___2 =
-                               non_tail_inline_closure_env cfg1 env4
-                                 x.FStar_Syntax_Syntax.sort in
-                             {
-                               FStar_Syntax_Syntax.ppname =
-                                 (x.FStar_Syntax_Syntax.ppname);
-                               FStar_Syntax_Syntax.index =
-                                 (x.FStar_Syntax_Syntax.index);
-                               FStar_Syntax_Syntax.sort = uu___2
-                             } in
-                           let t2 = non_tail_inline_closure_env cfg1 env4 t1 in
+                       | FStar_Syntax_Syntax.Pat_dot_term eopt ->
+                           let eopt1 =
+                             FStar_Compiler_Util.map_option
+                               (non_tail_inline_closure_env cfg1 env4) eopt in
                            ({
                               FStar_Syntax_Syntax.v =
-                                (FStar_Syntax_Syntax.Pat_dot_term (x1, t2));
+                                (FStar_Syntax_Syntax.Pat_dot_term eopt1);
                               FStar_Syntax_Syntax.p =
                                 (p.FStar_Syntax_Syntax.p)
                             }, env4) in
@@ -7137,21 +7128,13 @@ and (rebuild :
                                 FStar_Syntax_Syntax.p =
                                   (p.FStar_Syntax_Syntax.p)
                               }, (dummy :: env3))
-                         | FStar_Syntax_Syntax.Pat_dot_term (x, t2) ->
-                             let x1 =
-                               let uu___6 =
-                                 norm_or_whnf env3 x.FStar_Syntax_Syntax.sort in
-                               {
-                                 FStar_Syntax_Syntax.ppname =
-                                   (x.FStar_Syntax_Syntax.ppname);
-                                 FStar_Syntax_Syntax.index =
-                                   (x.FStar_Syntax_Syntax.index);
-                                 FStar_Syntax_Syntax.sort = uu___6
-                               } in
-                             let t3 = norm_or_whnf env3 t2 in
+                         | FStar_Syntax_Syntax.Pat_dot_term eopt ->
+                             let eopt1 =
+                               FStar_Compiler_Util.map_option
+                                 (norm_or_whnf env3) eopt in
                              ({
                                 FStar_Syntax_Syntax.v =
-                                  (FStar_Syntax_Syntax.Pat_dot_term (x1, t3));
+                                  (FStar_Syntax_Syntax.Pat_dot_term eopt1);
                                 FStar_Syntax_Syntax.p =
                                   (p.FStar_Syntax_Syntax.p)
                               }, env3) in

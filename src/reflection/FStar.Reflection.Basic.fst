@@ -267,7 +267,7 @@ let rec inspect_ln (t:term) : term_view =
             | Pat_cons (fv, us_opt, ps) -> Pat_Cons (fv, us_opt, List.map (fun (p, b) -> inspect_pat p, b) ps)
             | Pat_var bv -> Pat_Var bv
             | Pat_wild bv -> Pat_Wild bv
-            | Pat_dot_term (bv, t) -> Pat_Dot_Term (bv, t)
+            | Pat_dot_term eopt -> Pat_Dot_Term eopt
         in
         let brs = List.map (function (pat, _, t) -> (inspect_pat pat, t)) brs in
         Tv_Match (t, ret_opt, brs)
@@ -431,7 +431,7 @@ let pack_ln (tv:term_view) : term =
             | Pat_Cons (fv, us_opt, ps) -> wrap <| Pat_cons (fv, us_opt, List.map (fun (p, b) -> pack_pat p, b) ps)
             | Pat_Var  bv -> wrap <| Pat_var bv
             | Pat_Wild bv -> wrap <| Pat_wild bv
-            | Pat_Dot_Term (bv, t) -> wrap <| Pat_dot_term (bv, t)
+            | Pat_Dot_Term eopt -> wrap <| Pat_dot_term eopt
         in
         let brs = List.map (function (pat, t) -> (pack_pat pat, None, t)) brs in
         S.mk (Tm_match (t, ret_opt, brs, None)) Range.dummyRange

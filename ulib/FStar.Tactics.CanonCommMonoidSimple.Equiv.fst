@@ -143,20 +143,6 @@ let permute_correct (p:permute) =
 // In the general case, an arbitrary permutation can be done via swaps.
 // (see FStar.Tactics.CanonCommSwaps for a proof)
 
-let swap (n:nat) :Type = x:nat{x < n-1}
-
-let rec apply_swap_aux (#a:Type) (n:nat) (xs:list a) (s:swap (length xs + n))
-  : Pure (list a) (requires True)
-                  (ensures (fun zs -> length zs == length xs)) (decreases xs) =
-  match xs with
-  | [] | [_] -> xs
-  | x1 :: x2 :: xs' ->
-      if n = (s <: nat)
-      then x2 :: x1 :: xs'
-      else x1 :: apply_swap_aux (n+1) (x2 :: xs') s
-
-let apply_swap (#a:Type) = apply_swap_aux #a 0
-
 let rec apply_swap_aux_correct (#a:Type) (n:nat) (eq:equiv a) (m:cm a eq) (am:amap a)
                            (xs:list atom) (s:swap (length xs + n))
   : Lemma (requires True)
@@ -198,13 +184,6 @@ let apply_swap_correct (#a:Type) (eq:equiv a) (m:cm a eq) (am:amap a)
           (decreases xs) =
   apply_swap_aux_correct 0 eq m am xs s
 
-let rec apply_swaps (#a:Type) (xs:list a) (ss:list (swap (length xs)))
-  : Pure (list a) (requires True)
-                  (ensures (fun zs -> length zs == length xs)) (decreases ss) =
-  match ss with
-  | [] -> xs
-  | s::ss' -> apply_swaps (apply_swap xs s) ss'
-
 let rec apply_swaps_correct (#a:Type) (eq:equiv a) (m:cm a eq) (am:amap a)
                             (xs:list atom) (ss:list (swap (length xs)))
   : Lemma (requires True)
@@ -244,14 +223,10 @@ let permute_via_swaps_correct
 let sort : permute = List.Tot.Base.sortWith #int (compare_of_bool (<))
 
 let sort_via_swaps (#a:Type) (am:amap a)  (xs:list atom)
-  : Lemma (exists (ss:swaps_for xs). sort xs == apply_swaps xs ss) =
-  List.Tot.Properties.sortWith_permutation #int (compare_of_bool (<)) xs;
-  let (ss:swaps_for xs) = equal_counts_implies_swaps #int xs (sort xs) in
-  assume (sort xs == apply_swaps xs ss)
-  // this should just work from the type of ss
-  // (and the postcondition of equal_counts_implies_swaps),
-  // but ss gets substituted by its definition in the WP
-  // (the same already in FStar.Tactics.CanonCommMonoidSimple.fst)
+  : Lemma (exists (ss:swaps_for xs). sort xs == apply_swaps xs ss) 
+  = List.Tot.Properties.sortWith_permutation #int (compare_of_bool (<)) xs;
+    let ss = equal_counts_implies_swaps xs (sort xs) in
+    ()
 
 let sort_correct_aux (#a:Type) (eq:equiv a) (m:cm a eq) (am:amap a) (xs:list atom)
   : Lemma (xsdenote eq m am xs `EQ?.eq eq` xsdenote eq m am (sort xs)) =

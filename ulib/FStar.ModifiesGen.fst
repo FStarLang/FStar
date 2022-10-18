@@ -646,18 +646,6 @@ let dummy #a (c: cls a) (r: HS.rid) : Tot unit =
 
 #push-options "--z3rlimit 128"
 
-let loc_includes_disjoint_elim
-  #al (c: cls al)
-  (l l1 l2: loc c)
-: Lemma
-  (requires ((l1 `loc_union` l2) `loc_includes` l /\ l1 `loc_disjoint` l /\ l1 `loc_disjoint` l2)
-//    (forall r . r `Set.mem` Ghost.reveal (Loc?.regions l) ==> (exists (a: nat) (x: al r a) . ALoc r a (Some x) `GSet.mem` Ghost.reveal (Loc?.aux l)))
-  )
-  (ensures (l2 `loc_includes'` l))
-= assume (Set.subset (Ghost.reveal (Loc?.regions l)) (Ghost.reveal (Loc?.regions l2)));
-  assume (forall r . GSet.subset (addrs_of_loc l r) (addrs_of_loc l2 r));
-  admit()
-
 (** Liveness-insensitive memory locations *)
 
 let address_liveness_insensitive_locs #al c =
@@ -1533,15 +1521,6 @@ let loc_unused_in_not_unused_in_disjoint #al c h =
   assert (Ghost.reveal (Loc?.aux (loc_unused_in c h)) `loc_aux_disjoint` Ghost.reveal (Loc?.aux (loc_not_unused_in c h)));
   assert (loc_disjoint #al #c (loc_unused_in #al c h)
                               (loc_not_unused_in #al c h))
-
-let loc_unused_in_not_unused_in_union
-  #al
-  (#c: cls al)
-  (l: loc c)
-  h
-: Lemma
-  ((loc_not_unused_in c h `loc_union` loc_unused_in c h) `loc_includes` l)
-= admit()
 
 
 #push-options "--initial_fuel 2 --max_fuel 2 --initial_ifuel 1 --max_ifuel 1"

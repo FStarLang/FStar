@@ -55,11 +55,6 @@ let map_rev (f: 'a -> 'b) (l: list 'a): list 'b =
   in
   aux l []
 
-let strip_prefix (prefix s: string): option string
-  = if starts_with s prefix
-    then Some (substring_from s (String.length prefix))
-    else None
-
 let map_if_all (f: 'a -> option 'b) (l: list 'a): option (list 'b) =
   let rec aux l acc =
     match l with
@@ -1030,6 +1025,7 @@ and p_atomicPattern p = match p.pat with
     optional p_aqual aqual ^^ p_attributes attrs ^^ underscore
   | PatConst c ->
     p_constant c
+  | PatVQuote e -> group (str "`%" ^^ p_noSeqTermAndComment false false e)
   | PatVar (lid, aqual, attrs) ->
     optional p_aqual aqual ^^ p_attributes attrs ^^ p_lident lid
   | PatName uid ->
@@ -1292,19 +1288,15 @@ and p_noSeqTerm' ps pb e = match e.tm with
           group (prefix2 (str "try") (p_noSeqTermAndComment false false e) ^/^ str "with" ^/^
               separate_map_last hardline p_patternBranch branches))
   | Match (e, op_opt, ret_opt, branches) ->
-      let match_str = "match"
-                    ^ ( match bind_opt op_opt (fun id -> strip_prefix "let_" (string_of_id id)) with
-                      | Some op -> ( match string_to_op op with
-                                  | Some (id, _) -> id
-                                  | None         -> failwith ("Malformed operator ["^op^"] on match operator"))
-                      | None    -> ""
-                      ) in
+      let match_doc
+        = str ("match" ^ (dflt "" (op_opt `map_opt` string_of_id
+                                          `bind_opt` strip_prefix "let"))) in
       paren_if (ps || pb) (
       (match ret_opt with
        | None ->
-        group (surround 2 1 (str "match") (p_noSeqTermAndComment false false e) (str "with"))
+        group (surround 2 1 match_doc (p_noSeqTermAndComment false false e) (str "with"))
        | Some (as_opt, ret, use_eq) ->
-         group (surround 2 1 (str "match")
+         group (surround 2 1 match_doc
                              ((p_noSeqTermAndComment false false e) ^/+^
                               (match as_opt with
                                | None -> empty
@@ -1325,24 +1317,25 @@ and p_noSeqTerm' ps pb e = match e.tm with
                ^/^ str "in" ^/^ p_term false pb e)
       )
   | LetOperator(lets, body) ->
-    let p_let (id, pat, e) is_first is_last =
-      let id = string_of_id id in
-      let let_or_and = if is_first then "let" else "and" in
-      let op = match bind_opt (strip_prefix (let_or_and ^ "_") id) string_to_op with
-         | Some (op, _) -> op
-         | None         -> failwith ("Could not decode let operator name '"^id^"' with string_to_op") in
-      let doc_let_or_and = str (let_or_and ^ op) in
-      let doc_pat =  p_letlhs doc_let_or_and (pat, e) true in
-      let comm, doc_expr = p_term_sep false false e in
-      let doc_expr = inline_comment_or_above comm doc_expr empty in
-      if is_last then
-        surround 2 1 (flow break1 [doc_pat; equals]) doc_expr (str "in")
-      else
-        hang 2 (flow break1 [doc_pat; equals; doc_expr])
+    let p_let (id, pat, e) is_last =
+      let doc_let_or_and = str (string_of_id id) in
+      let doc_pat = p_letlhs doc_let_or_and (pat, e) true in
+      match pat.pat, e.tm with
+      | PatVar (pid, _, _), Name tid
+      | PatVar (pid, _, _), Var tid
+        when string_of_id pid = List.last (path_of_lid tid) ->
+          doc_pat ^/^ (if is_last then str "in" else empty)
+      | _ ->
+        let comm, doc_expr = p_term_sep false false e in
+        let doc_expr = inline_comment_or_above comm doc_expr empty in
+        if is_last then
+          surround 2 1 (flow break1 [doc_pat; equals]) doc_expr (str "in")
+        else
+          hang 2 (flow break1 [doc_pat; equals; doc_expr])
     in
     let l = List.length lets in
     let lets_docs = List.mapi (fun i lb ->
-        group (p_let lb (i = 0) (i = l - 1))
+        group (p_let lb (i = l - 1))
     ) lets in
     let lets_doc = group (separate break1 lets_docs) in
     let r = paren_if ps (group (lets_doc ^^ hardline ^^ p_term false pb body)) in
@@ -1944,6 +1937,12 @@ and p_atomicTerm e = match e.tm with
       p_quident lid ^^ dot ^^ soft_parens_with_nesting (p_term false false e)
   | Name lid ->
       p_quident lid
+  | Construct (lid, []) when is_general_construction e ->
+      (*
+       * This case is needed to avoid extra parenthesis on applications
+       * where the argument is a constructor. cf. #2181.
+       *)
+      p_quident lid
   | Op(op, [e]) when is_general_prefix_op op ->
       str (Ident.string_of_id op) ^^ p_atomicTerm e
   | _ -> p_atomicTermNotQUident e
@@ -2025,7 +2024,7 @@ and p_projectionLHS e = match e.tm with
   | Tvar _      (* p_atomicTermNotQUident *)
   | Var _       (* p_projectionLHS *)
   | Name _      (* p_atomicTerm *)
-  | Construct _ (* p_appTerm *)
+  | Construct _ (* p_atomicTerm and p_appTerm *)
   | Abs _       (* p_simpleTerm *)
   | App _       (* p_appTerm *)
   | Let _       (* p_noSeqTerm *)

@@ -73,7 +73,7 @@ let ge e1 e2 = CompProp (Plus (Lit 1) e1) C_Gt e2
 private let st = p:(nat * list term){fst p == List.Tot.Base.length (snd p)}
 private let tm a = st -> Tac (either string (a * st))
 private let return (x:'a) : tm 'a = fun i -> Inr (x, i)
-private let bind (m : tm 'a) (f : 'a -> tm 'b) : tm 'b =
+private let (let!) (m : tm 'a) (f : 'a -> tm 'b) : tm 'b =
     fun i -> match m i with
              | Inr (x, j) -> f x j
              | s -> Inl (Inl?.v s) // why? To have a catch-all pattern and thus an easy WP
@@ -84,20 +84,20 @@ let lift f x st =
 
 val liftM : ('a -> 'b) -> (tm 'a -> tm 'b)
 let liftM f x =
-    xx <-- x;
+    let! xx = x in
     return (f xx)
 
 val liftM2 : ('a -> 'b -> 'c) -> (tm 'a -> tm 'b -> tm 'c)
 let liftM2 f x y =
-    xx <-- x;
-    yy <-- y;
+    let! xx = x in
+    let! yy = y in
     return (f xx yy)
 
 val liftM3 : ('a -> 'b -> 'c -> 'd) -> (tm 'a -> tm 'b -> tm 'c -> tm 'd)
 let liftM3 f x y z =
-    xx <-- x;
-    yy <-- y;
-    zz <-- z;
+    let! xx = x in
+    let! yy = y in
+    let! zz = z in
     return (f xx yy zz)
 
 
@@ -182,7 +182,7 @@ let rec as_arith_expr (t:term) =
 
 val is_arith_expr : term -> tm expr
 let is_arith_expr t =
-  a <-- as_arith_expr t ;
+  let! a = as_arith_expr t in
   match a with
   | Atom _ t -> begin
     let hd, tl = collect_app_ref t in
@@ -198,7 +198,7 @@ let is_arith_expr t =
 // val is_arith_prop : term -> tm prop
 val is_arith_prop : term -> st -> Tac (either string (prop * st))
 let rec is_arith_prop (t:term) = fun i ->
-    (f <-- lift term_as_formula t;
+   (let! f = lift term_as_formula t in
     match f with
     | Comp (Eq _) l r     -> liftM2 eq (is_arith_expr l) (is_arith_expr r)
     | Comp (BoolEq _) l r -> liftM2 eq (is_arith_expr l) (is_arith_expr r)

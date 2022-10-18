@@ -21,7 +21,7 @@
         "typing_tok_Prims.T@tok"
       ],
       0,
-      "3e163578413b01c9e9ed8b9f0b70711d"
+      "c966cec7ea30496072d16a5f2030dee2"
     ],
     [
       "TwoLockQueue.rewrite",
@@ -41,7 +41,7 @@
         "typing_Steel.Effect.Common.hp_of"
       ],
       0,
-      "d23bf0c72cdb4e02ceb753696c6b46a8"
+      "697f19c144e33c103f6c947c4cbdb9ae"
     ],
     [
       "TwoLockQueue.elim_pure",
@@ -61,7 +61,7 @@
         "true_interp", "typing_tok_Prims.T@tok"
       ],
       0,
-      "6820257829cd1beba978f8d17d8f4c8a"
+      "59054896f751c7ef75fcc64526a51175"
     ],
     [
       "TwoLockQueue.intro_lock_inv",
@@ -75,7 +75,7 @@
         "projection_inverse_Steel.Effect.Common.VUnit__0"
       ],
       0,
-      "639f8ebdbfaf9cb9aec75613a11e78f6"
+      "4bd8711c6a292e66776ca06d3919c410"
     ],
     [
       "TwoLockQueue.intro_lock_inv",
@@ -84,7 +84,7 @@
       1,
       [ "@query", "equation_TwoLockQueue.lock_inv" ],
       0,
-      "e32c3ecb82bafdb47295416ec0f0e0bf"
+      "32fc1235c50d897438f2c253ad89b56f"
     ],
     [
       "TwoLockQueue.new_queue",
@@ -93,7 +93,7 @@
       1,
       [ "@query", "equation_Steel.Effect.Common.true_p", "true_interp" ],
       0,
-      "298bd2950d9a9591803fd39b1d55aa94"
+      "08730d2d37bf870e505e4606cf6426f7"
     ],
     [
       "TwoLockQueue.enqueue",
@@ -142,7 +142,7 @@
         "typing_TwoLockQueue.queue_invariant"
       ],
       0,
-      "717a3bd4705a7a90ae1149b6d956d159"
+      "4357c6ea619f0eba8e456507cc0d19cb"
     ],
     [
       "TwoLockQueue.maybe_ghost_pts_to",
@@ -153,7 +153,7 @@
         "@query", "lemma_FStar.Pervasives.invertOption", "typing_Queue.Def.t"
       ],
       0,
-      "0b93b7492e73ca39768fa1554b23edd8"
+      "fb4a8d75577b04bf34b9b60cc3636bd5"
     ],
     [
       "TwoLockQueue.dequeue_core",
@@ -217,7 +217,7 @@
         "typing_TwoLockQueue.maybe_ghost_pts_to"
       ],
       0,
-      "62393cbf9ac42b2c24cb7a9d5bf9c5c1"
+      "adc457cd18aa42fc182259e519ef9608"
     ],
     [
       "TwoLockQueue.dequeue",
@@ -296,7 +296,7 @@
         "typing_TwoLockQueue.queue_invariant"
       ],
       0,
-      "a3c65dbaad8460889e35cfce2bf22049"
+      "1ce1c2e83d280ad7c859564b8c40825a"
     ]
   ]
 ]

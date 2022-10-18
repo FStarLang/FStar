@@ -630,7 +630,9 @@ let rec (resugar_term' :
                            x.FStar_Syntax_Syntax.binder_bv
                            x.FStar_Syntax_Syntax.binder_qual body_bv)) in
                let body2 = resugar_term' env body1 in
-               mk (FStar_Parser_AST.Abs (patterns, body2)))
+               if FStar_Compiler_List.isEmpty patterns
+               then body2
+               else mk (FStar_Parser_AST.Abs (patterns, body2)))
       | FStar_Syntax_Syntax.Tm_arrow uu___1 ->
           let uu___2 =
             let uu___3 =
@@ -2073,8 +2075,6 @@ and (resugar_pat' :
                           match pattern.FStar_Syntax_Syntax.v with
                           | FStar_Syntax_Syntax.Pat_var bv ->
                               FStar_Compiler_Util.set_mem bv branch_bv
-                          | FStar_Syntax_Syntax.Pat_dot_term (bv, uu___2) ->
-                              FStar_Compiler_Util.set_mem bv branch_bv
                           | FStar_Syntax_Syntax.Pat_wild uu___2 -> false
                           | uu___2 -> true in
                         is_implicit && might_be_used) args in
@@ -2243,10 +2243,11 @@ and (resugar_pat' :
                 let uu___2 = let uu___3 = to_arg_qual imp_opt in (uu___3, []) in
                 FStar_Parser_AST.PatWild uu___2 in
               mk uu___1
-          | FStar_Syntax_Syntax.Pat_dot_term (bv, term) ->
-              resugar_bv_as_pat' env bv
-                (FStar_Pervasives_Native.Some FStar_Parser_AST.Implicit)
-                branch_bv (FStar_Pervasives_Native.Some term) in
+          | FStar_Syntax_Syntax.Pat_dot_term uu___ ->
+              mk
+                (FStar_Parser_AST.PatWild
+                   ((FStar_Pervasives_Native.Some FStar_Parser_AST.Implicit),
+                     [])) in
         aux p FStar_Pervasives_Native.None
 and (resugar_bqual :
   FStar_Syntax_DsEnv.env ->

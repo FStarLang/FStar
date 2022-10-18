@@ -331,7 +331,7 @@ let is_BitVector_primitive head args =
       || S.fv_eq_lid fv Const.bv_shift_right_lid
       || S.fv_eq_lid fv Const.bv_udiv_lid
       || S.fv_eq_lid fv Const.bv_mod_lid
-    //  || S.fv_eq_lid fv Const.bv_ult_lid
+      || S.fv_eq_lid fv Const.bv_ult_lid
       || S.fv_eq_lid fv Const.bv_uext_lid
       || S.fv_eq_lid fv Const.bv_mul_lid) &&
       (isInteger sz_arg.n)
@@ -1311,7 +1311,7 @@ and encode_pat (env:env_t) (pat:S.pat) : (env_t * pattern) =
 
     let rec mk_projections pat (scrutinee:term) =
         match pat.v with
-        | Pat_dot_term (x, _)
+        | Pat_dot_term _ -> []
         | Pat_var x
         | Pat_wild x -> [x, scrutinee]
 
