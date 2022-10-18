@@ -669,6 +669,45 @@ let rec (head_and_args_full :
         (match uu___ with
          | (head1, args') -> (head1, (FStar_Compiler_List.op_At args' args)))
     | uu___ -> (t1, [])
+let rec (leftmost_head :
+  FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.term) =
+  fun t ->
+    let t1 = FStar_Syntax_Subst.compress t in
+    match t1.FStar_Syntax_Syntax.n with
+    | FStar_Syntax_Syntax.Tm_app (t0, uu___) -> leftmost_head t0
+    | FStar_Syntax_Syntax.Tm_meta
+        (t0, FStar_Syntax_Syntax.Meta_pattern uu___) -> leftmost_head t0
+    | FStar_Syntax_Syntax.Tm_meta (t0, FStar_Syntax_Syntax.Meta_named uu___)
+        -> leftmost_head t0
+    | FStar_Syntax_Syntax.Tm_meta
+        (t0, FStar_Syntax_Syntax.Meta_labeled uu___) -> leftmost_head t0
+    | FStar_Syntax_Syntax.Tm_meta
+        (t0, FStar_Syntax_Syntax.Meta_desugared uu___) -> leftmost_head t0
+    | FStar_Syntax_Syntax.Tm_ascribed (t0, uu___, uu___1) -> leftmost_head t0
+    | uu___ -> t1
+let (leftmost_head_and_args :
+  FStar_Syntax_Syntax.term ->
+    (FStar_Syntax_Syntax.term * (FStar_Syntax_Syntax.term'
+      FStar_Syntax_Syntax.syntax * FStar_Syntax_Syntax.arg_qualifier
+      FStar_Pervasives_Native.option) Prims.list))
+  =
+  fun t ->
+    let rec aux t1 args =
+      let t2 = FStar_Syntax_Subst.compress t1 in
+      match t2.FStar_Syntax_Syntax.n with
+      | FStar_Syntax_Syntax.Tm_app (t0, args') ->
+          aux t0 (FStar_Compiler_List.op_At args' args)
+      | FStar_Syntax_Syntax.Tm_meta
+          (t0, FStar_Syntax_Syntax.Meta_pattern uu___) -> aux t0 args
+      | FStar_Syntax_Syntax.Tm_meta
+          (t0, FStar_Syntax_Syntax.Meta_named uu___) -> aux t0 args
+      | FStar_Syntax_Syntax.Tm_meta
+          (t0, FStar_Syntax_Syntax.Meta_labeled uu___) -> aux t0 args
+      | FStar_Syntax_Syntax.Tm_meta
+          (t0, FStar_Syntax_Syntax.Meta_desugared uu___) -> aux t0 args
+      | FStar_Syntax_Syntax.Tm_ascribed (t0, uu___, uu___1) -> aux t0 args
+      | uu___ -> (t2, args) in
+    aux t []
 let (un_uinst : FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.term) =
   fun t ->
     let t1 = FStar_Syntax_Subst.compress t in
@@ -4767,20 +4806,25 @@ let (ctx_uvar_typ :
       FStar_Syntax_Unionfind.find_decoration
         u.FStar_Syntax_Syntax.ctx_uvar_head in
     uu___.FStar_Syntax_Syntax.uvar_decoration_typ
-let rec (flatten_refinement :
+let (flatten_refinement :
   FStar_Syntax_Syntax.term ->
     FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax)
   =
   fun t ->
-    let t1 = FStar_Syntax_Subst.compress t in
-    match t1.FStar_Syntax_Syntax.n with
-    | FStar_Syntax_Syntax.Tm_refine (x, phi) ->
-        let t0 = flatten_refinement x.FStar_Syntax_Syntax.sort in
-        (match t0.FStar_Syntax_Syntax.n with
-         | FStar_Syntax_Syntax.Tm_refine (y, phi1) ->
-             let uu___ =
-               let uu___1 = let uu___2 = mk_conj_simp phi1 phi in (y, uu___2) in
-               FStar_Syntax_Syntax.Tm_refine uu___1 in
-             FStar_Syntax_Syntax.mk uu___ t0.FStar_Syntax_Syntax.pos
-         | uu___ -> t1)
-    | uu___ -> t1
+    let rec aux t1 unascribe1 =
+      let t2 = FStar_Syntax_Subst.compress t1 in
+      match t2.FStar_Syntax_Syntax.n with
+      | FStar_Syntax_Syntax.Tm_ascribed (t3, uu___, uu___1) when unascribe1
+          -> aux t3 true
+      | FStar_Syntax_Syntax.Tm_refine (x, phi) ->
+          let t0 = aux x.FStar_Syntax_Syntax.sort true in
+          (match t0.FStar_Syntax_Syntax.n with
+           | FStar_Syntax_Syntax.Tm_refine (y, phi1) ->
+               let uu___ =
+                 let uu___1 =
+                   let uu___2 = mk_conj_simp phi1 phi in (y, uu___2) in
+                 FStar_Syntax_Syntax.Tm_refine uu___1 in
+               FStar_Syntax_Syntax.mk uu___ t0.FStar_Syntax_Syntax.pos
+           | uu___ -> t2)
+      | uu___ -> t2 in
+    aux t false

@@ -3387,7 +3387,7 @@ let get_n_binders (env:Env.env) (n:int) (t:term) : list binder * comp =
 
 let maybe_unfold_head (env:Env.env) (t:term)
   : option term 
-  = let head, args = U.head_and_args_full t in
+  = let head, args = U.leftmost_head_and_args t in
     let fv_us_opt =
       match (SS.compress head).n with
       | Tm_uinst ({n=Tm_fvar fv}, us) -> Some (fv, us)

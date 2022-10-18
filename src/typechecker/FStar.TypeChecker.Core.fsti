@@ -18,6 +18,9 @@ val check_term (g:Env.env) (e:term) (t:typ) (must_tot:bool)
 val check_term_equality (g:Env.env) (t0 t1:typ)
   : either (option typ) error
 
+val check_term_subtyping (g:Env.env) (t0 t1:typ)
+  : either (option typ) error
+
 val print_error (err:error)
   : string
 

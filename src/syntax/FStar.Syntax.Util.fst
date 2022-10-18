@@ -369,16 +369,44 @@ let rec head_of (t : term) : term =
 let head_and_args t =
     let t = compress t in
     match t.n with
-        | Tm_app(head, args) -> head, args
-        | _ -> t, []
+    | Tm_app(head, args) -> head, args
+    | _ -> t, []
 
 let rec head_and_args_full t =
     let t = compress t in
     match t.n with
-        | Tm_app(head, args) ->
-            let (head, args') = head_and_args_full head
-            in (head, args'@args)
-        | _ -> t, []
+    | Tm_app(head, args) ->
+      let (head, args') = head_and_args_full head
+      in (head, args'@args)
+    | _ -> t, []
+
+let rec leftmost_head t =
+    let t = compress t in
+    match t.n with
+    | Tm_app(t0, _)
+    | Tm_meta (t0, Meta_pattern _)
+    | Tm_meta (t0, Meta_named _)
+    | Tm_meta (t0, Meta_labeled _)
+    | Tm_meta (t0, Meta_desugared _)     
+    | Tm_ascribed (t0, _, _) ->
+      leftmost_head t0
+    | _ -> t
+
+
+let leftmost_head_and_args t =
+    let rec aux t args =
+      let t = compress t in
+      match t.n with
+      | Tm_app(t0, args') -> aux t0 (args'@args)
+      | Tm_meta (t0, Meta_pattern _)
+      | Tm_meta (t0, Meta_named _)
+      | Tm_meta (t0, Meta_labeled _)
+      | Tm_meta (t0, Meta_desugared _)     
+      | Tm_ascribed (t0, _, _) -> aux t0 args
+      | _ -> t, args
+    in
+    aux t []
+
 
 let un_uinst t =
     let t = Subst.compress t in
@@ -2407,17 +2435,22 @@ let ctx_uvar_should_check (u:ctx_uvar) =
 let ctx_uvar_typ (u:ctx_uvar) = 
     (Unionfind.find_decoration u.ctx_uvar_head).uvar_decoration_typ
 
-let rec flatten_refinement t =
-  let t = compress t in
-  match t.n with
-  | Tm_refine(x, phi) -> (
-    let t0 = flatten_refinement x.sort in
-    match t0.n with
-    | Tm_refine(y, phi1) ->
-      //NB: this is working on de Bruijn
-      //    representations; so no need
-      //    to substitute y/x in phi
-      mk (Tm_refine(y, mk_conj_simp phi1 phi)) t0.pos
+let flatten_refinement t =
+  let rec aux t unascribe =
+    let t = compress t in
+    match t.n with
+    | Tm_ascribed(t, _, _) when unascribe ->
+      aux t true
+    | Tm_refine(x, phi) -> (
+      let t0 = aux x.sort true in
+      match t0.n with
+      | Tm_refine(y, phi1) ->
+        //NB: this is working on de Bruijn
+        //    representations; so no need
+        //    to substitute y/x in phi
+        mk (Tm_refine(y, mk_conj_simp phi1 phi)) t0.pos
+      | _ -> t
+      )
     | _ -> t
-    )
-  | _ -> t
+  in
+  aux t false
