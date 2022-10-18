@@ -1566,15 +1566,213 @@ and (mk_indexed_bind :
                                                                     ->
                                                                     let uu___10
                                                                     =
+                                                                    let n_num_effect_args
+                                                                    =
+                                                                    FStar_Compiler_List.length
+                                                                    ct2.FStar_Syntax_Syntax.effect_args in
                                                                     let uu___11
+                                                                    =
+                                                                    FStar_Compiler_List.splitAt
+                                                                    n_num_effect_args
+                                                                    bind_t_bs2 in
+                                                                    match uu___11
+                                                                    with
+                                                                    | 
+                                                                    (g_bs,
+                                                                    bind_t_bs3)
+                                                                    ->
+                                                                    let uu___12
+                                                                    =
+                                                                    FStar_Compiler_List.splitAt
+                                                                    n_num_effect_args
+                                                                    binder_kinds2 in
+                                                                    (match uu___12
+                                                                    with
+                                                                    | 
+                                                                    (g_bs_kinds,
+                                                                    binder_kinds3)
+                                                                    ->
+                                                                    let x_bv
+                                                                    =
+                                                                    match b
+                                                                    with
+                                                                    | 
+                                                                    FStar_Pervasives_Native.None
+                                                                    ->
+                                                                    FStar_Syntax_Syntax.null_bv
+                                                                    t1
+                                                                    | 
+                                                                    FStar_Pervasives_Native.Some
+                                                                    x -> x in
+                                                                    let uu___13
+                                                                    =
+                                                                    let uu___14
+                                                                    =
+                                                                    FStar_Compiler_List.zip
+                                                                    g_bs
+                                                                    g_bs_kinds in
+                                                                    FStar_Compiler_List.fold_left2
+                                                                    (fun
+                                                                    uu___15
+                                                                    ->
+                                                                    fun
+                                                                    uu___16
+                                                                    ->
+                                                                    fun arg
+                                                                    ->
+                                                                    match 
+                                                                    (uu___15,
+                                                                    uu___16)
+                                                                    with
+                                                                    | 
+                                                                    ((ss, g,
+                                                                    g_tms),
+                                                                    (g_b,
+                                                                    g_b_kind))
+                                                                    ->
+                                                                    if
+                                                                    g_b_kind
+                                                                    =
+                                                                    FStar_Syntax_Syntax.Substitution_binder
+                                                                    then
+                                                                    let arg_t
+                                                                    =
+                                                                    let uu___17
+                                                                    =
+                                                                    let uu___18
+                                                                    =
+                                                                    FStar_Compiler_Effect.op_Bar_Greater
+                                                                    x_bv
+                                                                    FStar_Syntax_Syntax.mk_binder in
+                                                                    [uu___18] in
+                                                                    FStar_Syntax_Util.abs
+                                                                    uu___17
+                                                                    (FStar_Pervasives_Native.fst
+                                                                    arg)
+                                                                    FStar_Pervasives_Native.None in
+                                                                    let uu___17
+                                                                    =
+                                                                    FStar_TypeChecker_Env.conj_guard
+                                                                    g
+                                                                    FStar_TypeChecker_Env.trivial_guard in
+                                                                    ((FStar_Compiler_List.op_At
+                                                                    ss
+                                                                    [
+                                                                    FStar_Syntax_Syntax.NT
+                                                                    ((g_b.FStar_Syntax_Syntax.binder_bv),
+                                                                    arg_t)]),
+                                                                    uu___17,
+                                                                    g_tms)
+                                                                    else
+                                                                    if
+                                                                    g_b_kind
+                                                                    =
+                                                                    FStar_Syntax_Syntax.BindCont_no_abstraction_binder
+                                                                    then
+                                                                    (let uu___18
+                                                                    =
+                                                                    FStar_TypeChecker_Env.uvars_for_binders
+                                                                    env 
+                                                                    [g_b] ss
+                                                                    guard_indexed_effect_uvars
+                                                                    (fun
+                                                                    uu___19
+                                                                    -> "") r1 in
+                                                                    match uu___18
+                                                                    with
+                                                                    | 
+                                                                    (uv_t::[],
+                                                                    guard_uv_t::[],
+                                                                    g_uv) ->
+                                                                    let g_unif
+                                                                    =
+                                                                    let uu___19
+                                                                    =
+                                                                    let uu___20
+                                                                    =
+                                                                    let uu___21
+                                                                    =
+                                                                    FStar_Compiler_Effect.op_Bar_Greater
+                                                                    x_bv
+                                                                    FStar_Syntax_Syntax.mk_binder in
+                                                                    [uu___21] in
+                                                                    FStar_TypeChecker_Env.push_binders
+                                                                    env
+                                                                    uu___20 in
+                                                                    let uu___20
+                                                                    =
+                                                                    FStar_Compiler_Effect.op_Bar_Greater
+                                                                    arg
+                                                                    FStar_Pervasives_Native.fst in
+                                                                    FStar_TypeChecker_Rel.layered_effect_teq
+                                                                    uu___19
+                                                                    uv_t
+                                                                    uu___20
+                                                                    (FStar_Pervasives_Native.Some
+                                                                    "") in
+                                                                    let uu___19
+                                                                    =
+                                                                    FStar_TypeChecker_Env.conj_guards
+                                                                    [g;
+                                                                    g_uv;
+                                                                    g_unif] in
+                                                                    ((FStar_Compiler_List.op_At
+                                                                    ss
+                                                                    [
+                                                                    FStar_Syntax_Syntax.NT
+                                                                    ((g_b.FStar_Syntax_Syntax.binder_bv),
+                                                                    uv_t)]),
+                                                                    uu___19,
+                                                                    (FStar_Compiler_List.op_At
+                                                                    g_tms
+                                                                    [guard_uv_t])))
+                                                                    else
+                                                                    failwith
+                                                                    "Impossible (standard bind with unexpected binder kind)")
+                                                                    ([],
+                                                                    FStar_TypeChecker_Env.trivial_guard,
+                                                                    [])
+                                                                    uu___14
+                                                                    ct2.FStar_Syntax_Syntax.effect_args in
+                                                                    (match uu___13
+                                                                    with
+                                                                    | 
+                                                                    (g_subst,
+                                                                    guard,
+                                                                    guard_uvars_tms)
+                                                                    ->
+                                                                    let uu___14
+                                                                    =
+                                                                    FStar_Syntax_Subst.subst_binders
+                                                                    g_subst
+                                                                    bind_t_bs3 in
+                                                                    (uu___14,
+                                                                    binder_kinds3,
+                                                                    (FStar_Compiler_List.op_At
+                                                                    subst1
+                                                                    g_subst),
+                                                                    guard,
+                                                                    guard_uvars_tms))) in
+                                                                    (match uu___10
+                                                                    with
+                                                                    | 
+                                                                    (bind_t_bs3,
+                                                                    binder_kinds3,
+                                                                    subst2,
+                                                                    guard,
+                                                                    guard_uvars_tms)
+                                                                    ->
+                                                                    let uu___11
+                                                                    =
+                                                                    let uu___12
                                                                     =
                                                                     FStar_Syntax_Print.indexed_effect_combinator_kind_to_string
                                                                     bind_combinator_kind in
                                                                     Prims.op_Hat
                                                                     "Applying a standard bind with %s\n"
-                                                                    uu___11 in
+                                                                    uu___12 in
                                                                     failwith
-                                                                    uu___10))))))))
+                                                                    uu___11)))))))))
 and (mk_ad_hoc_indexed_bind :
   FStar_TypeChecker_Env.env ->
     Prims.bool ->

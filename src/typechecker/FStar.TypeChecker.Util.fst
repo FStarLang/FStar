@@ -887,11 +887,53 @@ and mk_indexed_bind env
       List.splitAt m_num_effect_args binder_kinds |> snd,
       subst@f_subst in
 
-    // let bind_t_bs, binder_kinds, subst, guard =
-    //   let n_num_effect_args = List.length ct2.effect_args in
-    //   let g_bs, bind_t_bs = List.splitAt n_num_effect_args bind_t_bs in
-            
+    let bind_t_bs, binder_kinds, subst, guard, guard_uvars_tms =
+      let n_num_effect_args = List.length ct2.effect_args in
+      let g_bs, bind_t_bs = List.splitAt n_num_effect_args bind_t_bs in
+      let g_bs_kinds, binder_kinds = List.splitAt n_num_effect_args binder_kinds in
+      let x_bv =
+        match b with
+        | None -> S.null_bv t1
+        | Some x -> x in
 
+      let g_subst, guard, guard_uvars_tms =
+        List.fold_left2 (fun (ss, g, g_tms) (g_b, g_b_kind) arg ->
+          if g_b_kind = Substitution_binder
+          then begin
+            let arg_t = U.abs [x_bv |> S.mk_binder] (fst arg) None in
+            ss@[NT (g_b.binder_bv, arg_t)],
+            Env.conj_guard g Env.trivial_guard,
+            g_tms
+          end
+          else if g_b_kind = BindCont_no_abstraction_binder
+          then begin
+            let [uv_t], [guard_uv_t], g_uv =
+              Env.uvars_for_binders env [g_b] ss guard_indexed_effect_uvars
+                (fun _ -> "") r1 in
+            let g_unif = Rel.layered_effect_teq
+              (Env.push_binders env [x_bv |> S.mk_binder])
+              uv_t
+              (arg |> fst)
+              (Some "") in
+            ss@[NT (g_b.binder_bv, uv_t)],
+            Env.conj_guards [g; g_uv; g_unif],
+            g_tms@[guard_uv_t]
+          end
+          else failwith "Impossible (standard bind with unexpected binder kind)"
+        ) ([], Env.trivial_guard, []) (List.zip g_bs g_bs_kinds) ct2.effect_args in
+
+      SS.subst_binders g_subst bind_t_bs,
+      binder_kinds,
+      subst@g_subst,
+      guard,
+      guard_uvars_tms in
+
+    let subst, guard, guard_uvar_tms =
+      let ss, g, g_uv_tms =
+        List.fold_left (fun (ss, g, g_uv_tms) b ->
+          
+        ) ([], Env.trivial_guard, []) bind_t_bs in
+      
 
     failwith ("Applying a standard bind with %s\n" ^
       (Print.indexed_effect_combinator_kind_to_string bind_combinator_kind))
