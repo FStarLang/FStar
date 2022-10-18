@@ -3832,7 +3832,8 @@ and desugar_decl_noattrs env (d:decl) : (env_t * sigelts) =
       sigel = Sig_polymonadic_bind (
         m.mname, n.mname, p.mname,
         ([], desugar_term env bind),
-        ([], S.tun));
+        ([], S.tun),
+        None);
       sigquals = [];
       sigrng = d.drange;
       sigmeta = default_sigmeta;

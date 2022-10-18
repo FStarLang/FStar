@@ -438,10 +438,16 @@ let validate_indexed_effect_bind_shape (env:env)
     k
     has_range_binders in
 
-  k,
-  (match lopt with
-   | None -> Ad_hoc_combinator
-   | Some l -> Standard_combinator l)
+  let kind = 
+    match lopt with
+    | None -> Ad_hoc_combinator
+    | Some l -> Standard_combinator l in
+
+  if Env.debug env <| Options.Other "LayeredEffectsTc"
+  then BU.print2 "Bind %s has %s kind\n" bind_name
+         (Print.indexed_effect_combinator_kind_to_string kind);
+
+  k, kind
 
 (*
  * Typechecking of layered effects
@@ -1996,7 +2002,9 @@ let check_polymonadic_bind_for_erasable_effects env (m:lident) (n:lident) (p:lid
          else if not n_erasable && not (lid_equals n PC.effect_PURE_lid)
          then err (BU.format1 "target effect is erasable but %s is neither erasable nor PURE" (string_of_lid n))
 
-let tc_polymonadic_bind env (m:lident) (n:lident) (p:lident) (ts:S.tscheme) : (S.tscheme * S.tscheme) =
+let tc_polymonadic_bind env (m:lident) (n:lident) (p:lident) (ts:S.tscheme)
+  : (S.tscheme & S.tscheme & S.indexed_effect_combinator_kind) =
+
   let eff_name = BU.format3 "(%s, %s) |> %s)"
     (m |> ident_of_lid |> string_of_id)
     (n |> ident_of_lid |> string_of_id)
@@ -2025,85 +2033,27 @@ let tc_polymonadic_bind env (m:lident) (n:lident) (p:lident) (ts:S.tscheme) : (S
   let us, ty = SS.open_univ_vars us ty in
   let env = Env.push_univ_vars env us in
 
-  check_no_subtyping_for_layered_combinator env ty None;
+  let m_ed, n_ed, p_ed = Env.get_effect_decl env m, Env.get_effect_decl env n, Env.get_effect_decl env p in
 
-  //construct the expected type k to be:
-  //a:Type -> b:Type -> <some binders> -> m_repr a is -> (x:a -> n_repr b js) -> p_repr b ks
-
-  let a, u_a = U.type_u () |> (fun (t, u) -> S.gen_bv "a" None t |> S.mk_binder, u) in
-  let b, u_b = U.type_u () |> (fun (t, u) -> S.gen_bv "b" None t |> S.mk_binder, u) in
-
-  let rest_bs =
-    match (SS.compress ty).n with
-    | Tm_arrow (bs, _) when List.length bs >= 4 ->
-      let (({binder_bv=a'})::({binder_bv=b'})::bs) = SS.open_binders bs in
-      bs |> List.splitAt (List.length bs - 2) |> fst
-         |> SS.subst_binders [NT (a', a.binder_bv |> S.bv_to_name); NT (b', b.binder_bv |> S.bv_to_name)]
-    | _ ->
-      raise_error (Errors.Fatal_UnexpectedEffect,
-        BU.format3 "Type of %s is not an arrow with >= 4 binders (%s::%s)" eff_name
-          (Print.tag_of_term ty) (Print.term_to_string ty)) r in
-
-  let bs = a::b::rest_bs in
-
-  let f, guard_f =
-    let repr, g = TcUtil.fresh_effect_repr_en (Env.push_binders env bs) r m u_a (a.binder_bv |> S.bv_to_name) in
-    S.gen_bv "f" None repr |> S.mk_binder, g in
-
-  let g, guard_g =
-    let x_a = S.gen_bv "x" None (a.binder_bv |> S.bv_to_name) |> S.mk_binder in
-    let repr, g = TcUtil.fresh_effect_repr_en (Env.push_binders env (bs@[x_a])) r n u_b (b.binder_bv |> S.bv_to_name) in
-    S.gen_bv "g" None (U.arrow [x_a] (S.mk_Total' repr (Some (new_u_univ ())))) |> S.mk_binder, g in
-
-  let repr, guard_repr = TcUtil.fresh_effect_repr_en (Env.push_binders env bs) r p u_b (b.binder_bv |> S.bv_to_name) in
-
-  let pure_wp_uvar, g_pure_wp_uvar = pure_wp_uvar (Env.push_binders env bs) repr
-    (BU.format1 "implicit for pure_wp in checking %s" eff_name)
-    r in
-
-  let k = U.arrow (bs@[f; g]) (S.mk_Comp ({
-    comp_univs = [ Env.new_u_univ () ];
-    effect_name = PC.effect_PURE_lid;
-    result_typ = repr;
-    effect_args = [ pure_wp_uvar |> S.as_arg ];
-    flags = [] })) in
-  
-  let guard_eq = Rel.teq env ty k in
-  List.iter (Rel.force_trivial_guard env) [guard_f; guard_g; guard_repr; g_pure_wp_uvar; guard_eq];
+  let k, kind = validate_indexed_effect_bind_shape env m n p
+    m_ed.signature n_ed.signature p_ed.signature
+    (U.get_eff_repr m_ed) (U.get_eff_repr n_ed) (U.get_eff_repr p_ed)
+    us
+    ty
+    (Env.get_range env)
+    false in
 
   if Env.debug env <| Options.Extreme
   then BU.print3 "Polymonadic bind %s after typechecking (%s::%s)\n"
          eff_name (Print.tscheme_to_string (us, t))
                   (Print.tscheme_to_string (us, k));
 
-  let k = k |> N.remove_uvar_solutions env in
-
-  let check_non_informative_binders =
-    Env.is_reifiable_effect env p &&
-    not (Env.fv_with_lid_has_attr env p PC.allow_informative_binders_attr) in
-  let _check_valid_binders =
-    match (SS.compress k).n with
-    | Tm_arrow (bs, c) ->
-      let a::b::bs, c = SS.open_comp bs c in
-      let res_t = U.comp_result c in
-      let bs, f_b, g_b =
-        List.splitAt (List.length bs - 2) bs
-        |> (fun (l1, l2) -> l1,
-                        l2 |> List.hd, l2 |> List.tl |> List.hd) in
-      //AR: CAUTION: a little lax about opening g_b with x:a binder, see comment in tc_layered_eff bind checking
-      let g_sort =
-        match (SS.compress g_b.binder_bv.sort).n with
-        | Tm_arrow (_, c) -> U.comp_result c in
-      let env = Env.push_binders env [a; b] in
-      validate_layered_effect_binders env bs check_non_informative_binders r in
-
-
   log_issue r (Errors.Warning_BleedingEdge_Feature,
     BU.format1 "Polymonadic binds (%s in this case) is an experimental feature;\
       it is subject to some redesign in the future. Please keep us informed (on github etc.) about how you are using it"
       eff_name);
 
-  (us, t), (us, k |> SS.close_univ_vars us)
+  (us, t), (us, k |> SS.close_univ_vars us), kind
 
 
 let tc_polymonadic_subcomp env0 (m:lident) (n:lident) (ts:S.tscheme) : (S.tscheme * S.tscheme) =

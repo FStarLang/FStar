@@ -3498,13 +3498,13 @@ let update_env_sub_eff env sub r =
     ({ env with range = r }) sub.source sub.target (get_mlift_for_subeff env sub) in
   { env with range = r0 }
 
-let update_env_polymonadic_bind env m n p ty =
+let update_env_polymonadic_bind env m n p ty k =
   //
   //false means no range support in polymonadic bind yet
   //
   Env.add_polymonadic_bind env m n p
     (fun env guard_indexed_effect_uvars c1 bv_opt c2 flags r ->
-     mk_indexed_bind env guard_indexed_effect_uvars m n p ty Ad_hoc_combinator c1 bv_opt c2 flags r false)
+     mk_indexed_bind env guard_indexed_effect_uvars m n p ty k c1 bv_opt c2 flags r false)
 
 (*** Utilities for type-based record
      disambiguation ***)

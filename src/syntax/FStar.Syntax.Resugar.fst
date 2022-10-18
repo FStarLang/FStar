@@ -1473,7 +1473,7 @@ let resugar_sigelt' env se : option A.decl =
   | Sig_inductive_typ _
   | Sig_datacon _ -> None
 
-  | Sig_polymonadic_bind (m, n, p, (_, t), _) ->
+  | Sig_polymonadic_bind (m, n, p, (_, t), _, _) ->
     Some (decl'_to_decl se (A.Polymonadic_bind (m, n, p, resugar_term' env t)))
 
   | Sig_polymonadic_subcomp (m, n, (_, t), _) ->

@@ -866,13 +866,16 @@ let rec sigelt_to_string (x: sigelt) =
         else U.format3 "effect %s %s = %s" (sli l) (binders_to_string " " tps) (comp_to_string c)
       | Sig_splice (lids, t) ->
         U.format2 "splice[%s] (%s)" (String.concat "; " <| List.map Ident.string_of_lid lids) (term_to_string t)
-      | Sig_polymonadic_bind (m, n, p, t, ty) ->
-        U.format5 "polymonadic_bind (%s, %s) |> %s = (%s, %s)"
+      | Sig_polymonadic_bind (m, n, p, t, ty, k) ->
+        U.format6 "polymonadic_bind (%s, %s) |> %s = (%s, %s)<%s>"
           (Ident.string_of_lid m)
           (Ident.string_of_lid n)
           (Ident.string_of_lid p)
           (tscheme_to_string t)
           (tscheme_to_string ty)
+          (match k with
+           | None -> "<kind not set>"
+           | Some k -> indexed_effect_combinator_kind_to_string k)
       | Sig_polymonadic_subcomp (m, n, t, ty) ->
         U.format4 "polymonadic_subcomp %s <: %s = (%s, %s)"
           (Ident.string_of_lid m)
@@ -941,7 +944,7 @@ let rec sigelt_to_string_short (x: sigelt) = match x.sigel with
               (String.concat "; " <| List.map Ident.string_of_lid lids)
               (term_to_string t)
 
-  | Sig_polymonadic_bind (m, n, p, t, ty) ->
+  | Sig_polymonadic_bind (m, n, p, t, ty, _) ->
     U.format3 "polymonadic_bind (%s, %s) |> %s"
               (Ident.string_of_lid m) (Ident.string_of_lid n) (Ident.string_of_lid p)
 

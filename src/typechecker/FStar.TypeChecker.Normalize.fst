@@ -3324,10 +3324,10 @@ let rec elim_uvars (env:Env.env) (s:sigelt) =
     | Sig_splice _ ->
       s
 
-    | Sig_polymonadic_bind (m, n, p, (us_t, t), (us_ty, ty)) ->
+    | Sig_polymonadic_bind (m, n, p, (us_t, t), (us_ty, ty), k) ->
       let us_t, _, t = elim_uvars_aux_t env us_t [] t in
       let us_ty, _, ty = elim_uvars_aux_t env us_ty [] ty in
-      { s with sigel = Sig_polymonadic_bind (m, n, p, (us_t, t), (us_ty, ty)) }
+      { s with sigel = Sig_polymonadic_bind (m, n, p, (us_t, t), (us_ty, ty), k) }
 
     | Sig_polymonadic_subcomp (m, n, (us_t, t), (us_ty, ty)) ->
       let us_t, _, t = elim_uvars_aux_t env us_t [] t in
