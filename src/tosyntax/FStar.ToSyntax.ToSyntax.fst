@@ -3192,7 +3192,7 @@ let rec desugar_effect env d (quals: qualifiers) (is_layered:bool) eff_name eff_
         let has_if_then_else = List.existsb (fun decl -> name_of_eff_decl decl = "if_then_else") eff_decls in
 
         //setting the second component to dummy_ts, typechecker fills them in
-        let to_comb (us, t) = (us, t), dummy_tscheme in
+        let to_comb (us, t) = (us, t), dummy_tscheme, None in
 
         (*
          * AR: if subcomp or if_then_else are not specified, then fill in dummy_tscheme
@@ -3204,10 +3204,10 @@ let rec desugar_effect env d (quals: qualifiers) (is_layered:bool) eff_name eff_
           l_bind = lookup "bind" |> to_comb;
           l_subcomp =
             if has_subcomp then lookup "subcomp" |> to_comb
-            else dummy_tscheme, dummy_tscheme;
+            else dummy_tscheme, dummy_tscheme, None;
           l_if_then_else =
             if has_if_then_else then lookup "if_then_else" |> to_comb
-            else dummy_tscheme, dummy_tscheme;
+            else dummy_tscheme, dummy_tscheme, None;
         })
       else
         let rr = BU.for_some (function S.Reifiable | S.Reflectable _ -> true | _ -> false) qualifiers in

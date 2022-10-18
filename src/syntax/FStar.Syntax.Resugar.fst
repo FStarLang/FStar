@@ -1318,7 +1318,7 @@ let resugar_wp_eff_combinators env for_free combs =
     (repr@return_repr@bind_repr)
 
 let resugar_layered_eff_combinators env combs =
-  let resugar name (ts, _) = resugar_tscheme'' env name ts in
+  let resugar name (ts, _, _) = resugar_tscheme'' env name ts in
 
   (resugar "repr" combs.l_repr)::
   (resugar "return" combs.l_return)::

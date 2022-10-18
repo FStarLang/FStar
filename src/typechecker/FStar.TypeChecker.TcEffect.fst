@@ -145,13 +145,6 @@ let validate_layered_effect_binders env (bs:binders) (check_non_informatve_binde
     else ()
   else ()
 
-type binder_kind =
-  | Type_binder
-  | Substitution_binder
-  | BindCont_no_abstraction_binder
-  | Ad_hoc_binder
-  | Repr_binder
-
 let print_binder_kinds l =
   List.fold_left (fun s k -> 
     s ^ "; " ^ (match k with
@@ -172,7 +165,7 @@ let bind_combinator_kind (env:env)
   (bind_us:univ_names)
   (k:typ)
   (has_range_binders:bool)
-  : option (list binder_kind) =
+  : option (list indexed_effect_binder_kind) =
 
   let [u_a; u_b] = bind_us in
   // we have a_b, b_b, rest_bs, range_bs, f, g, return_repr
@@ -210,7 +203,7 @@ let bind_combinator_kind (env:env)
     then None
     else List.splitAt (List.length g_sig_bs) rest_bs |> Some in
 
-  let g_bs_kinds : list binder_kind =
+  let g_bs_kinds =
     List.map2 (fun g_sig_b g_b ->
       let g_sig_b_arrow_t =
         U.arrow [S.mk_binder (S.gen_bv "x" None (a_b.binder_bv |> S.bv_to_name))]
@@ -273,10 +266,6 @@ let bind_combinator_kind (env:env)
 
   Some ([Type_binder; Type_binder]@f_bs_kinds@g_bs_kinds@[Repr_binder; Repr_binder]@rest_kinds)
 
-type combinator_kind =
-  | Standard_combinator : list binder_kind -> combinator_kind
-  | Ad_hoc_combinator : combinator_kind
-
 let mark_indexed_effect_bind (env:env)
   (eff_name:lident)
   (has_range_binders:bool)
@@ -284,7 +273,7 @@ let mark_indexed_effect_bind (env:env)
   (bind_us:univ_names)
   (bind_t:typ)
   (r:Range.range)
-  : typ & combinator_kind =
+  : typ & indexed_effect_combinator_kind =
 
   let [u_a; u_b] = bind_us in
 
@@ -557,7 +546,7 @@ Errors.with_ctx (BU.format1 "While checking layered effect definition `%s`" (str
    *
    * The binders have arbitrary sorts
    *)
-  let bind_repr =
+  let bind_repr, bind_combinator_kind =
     let bind_repr_ts = ed |> U.get_bind_repr |> must in
     let r = (snd bind_repr_ts).pos in
     let bind_us, bind_t, bind_ty = check_and_gen "bind_repr" 2 bind_repr_ts in
@@ -572,10 +561,6 @@ Errors.with_ctx (BU.format1 "While checking layered effect definition `%s`" (str
       us
       ty
       r in
-
-    
-
-    failwith ("Indexed effect bind type:" ^ (Print.term_to_string k) ^ "\n\n");
 
     // let _check_valid_binders =
     //   match (SS.compress k).n with
@@ -604,7 +589,7 @@ Errors.with_ctx (BU.format1 "While checking layered effect definition `%s`" (str
     //     validate_layered_effect_binders env bs
     //       check_non_informative_binders r in
 
-    bind_us, bind_t, k |> SS.close_univ_vars bind_us in
+    (bind_us, bind_t, k |> SS.close_univ_vars bind_us), kind in
 
   log_combinator "bind_repr" bind_repr;
 
@@ -1142,14 +1127,14 @@ Errors.with_ctx (BU.format1 "While checking layered effect definition `%s`" (str
       [sig_assume_reify]
     else [] in
 
-  let tschemes_of (us, t, ty) : tscheme * tscheme = (us, t), (us, ty) in
+  let tschemes_of (us, t, ty) k = (us, t), (us, ty), k in
 
   let combinators = Layered_eff ({
-    l_repr = tschemes_of repr;
-    l_return = tschemes_of return_repr;
-    l_bind = tschemes_of bind_repr;
-    l_subcomp = tschemes_of stronger_repr;
-    l_if_then_else = tschemes_of if_then_else
+    l_repr = tschemes_of repr (Some (Standard_combinator []));
+    l_return = tschemes_of return_repr (Some Ad_hoc_combinator);
+    l_bind = tschemes_of bind_repr (Some bind_combinator_kind);
+    l_subcomp = tschemes_of stronger_repr (Some Ad_hoc_combinator);
+    l_if_then_else = tschemes_of if_then_else (Some Ad_hoc_combinator)
   }) in
 
   { ed with
@@ -1301,7 +1286,7 @@ Errors.with_ctx (BU.format1 "While checking effect definition `%s`" (string_of_l
       S.null_binder wp_sort_a;
       S.null_binder wp_sort_a_b ] (S.mk_Total wp_sort_b) in
 
-    check_and_gen' "bind_wp" 2 None (ed |> U.get_bind_vc_combinator) (Some k) in
+    check_and_gen' "bind_wp" 2 None (ed |> U.get_bind_vc_combinator |> fst) (Some k) in
 
   log_combinator "bind_wp" bind_wp;
 

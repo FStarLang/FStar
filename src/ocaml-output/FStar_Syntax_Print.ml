@@ -1402,15 +1402,56 @@ let (wp_eff_combinators_to_string :
     FStar_Compiler_Util.format
       "{\nret_wp       = %s\n; bind_wp      = %s\n; stronger     = %s\n; if_then_else = %s\n; ite_wp       = %s\n; close_wp     = %s\n; trivial      = %s\n; repr         = %s\n; return_repr  = %s\n; bind_repr    = %s\n}\n"
       uu___
+let (indexed_effect_binder_kind_to_string :
+  FStar_Syntax_Syntax.indexed_effect_binder_kind -> Prims.string) =
+  fun uu___ ->
+    match uu___ with
+    | FStar_Syntax_Syntax.Type_binder -> "type_binder"
+    | FStar_Syntax_Syntax.Substitution_binder -> "subst_binder"
+    | FStar_Syntax_Syntax.BindCont_no_abstraction_binder ->
+        "bind_g_no_abs_binder"
+    | FStar_Syntax_Syntax.Repr_binder -> "repr_binder"
+    | FStar_Syntax_Syntax.Ad_hoc_binder -> "ad_hoc_binder"
+let list_to_string :
+  'a . ('a -> Prims.string) -> 'a Prims.list -> Prims.string =
+  fun f ->
+    fun elts ->
+      match elts with
+      | [] -> "[]"
+      | x::xs ->
+          let strb = FStar_Compiler_Util.new_string_builder () in
+          (FStar_Compiler_Util.string_builder_append strb "[";
+           (let uu___2 = f x in
+            FStar_Compiler_Util.string_builder_append strb uu___2);
+           FStar_Compiler_List.iter
+             (fun x1 ->
+                FStar_Compiler_Util.string_builder_append strb "; ";
+                (let uu___4 = f x1 in
+                 FStar_Compiler_Util.string_builder_append strb uu___4)) xs;
+           FStar_Compiler_Util.string_builder_append strb "]";
+           FStar_Compiler_Util.string_of_string_builder strb)
+let (indexed_effect_combinator_kind_to_string :
+  FStar_Syntax_Syntax.indexed_effect_combinator_kind -> Prims.string) =
+  fun uu___ ->
+    match uu___ with
+    | FStar_Syntax_Syntax.Standard_combinator l ->
+        let uu___1 = list_to_string indexed_effect_binder_kind_to_string l in
+        FStar_Compiler_Util.format1 "standard_combinator (%s)" uu___1
+    | FStar_Syntax_Syntax.Ad_hoc_combinator -> "ad_hoc_combinator"
 let (layered_eff_combinators_to_string :
   FStar_Syntax_Syntax.layered_eff_combinators -> Prims.string) =
   fun combs ->
     let to_str uu___ =
       match uu___ with
-      | (ts_t, ts_ty) ->
+      | (ts_t, ts_ty, kopt) ->
           let uu___1 = tscheme_to_string ts_t in
           let uu___2 = tscheme_to_string ts_ty in
-          FStar_Compiler_Util.format2 "(%s) : (%s)" uu___1 uu___2 in
+          let uu___3 =
+            match kopt with
+            | FStar_Pervasives_Native.None -> "none"
+            | FStar_Pervasives_Native.Some k ->
+                indexed_effect_combinator_kind_to_string k in
+          FStar_Compiler_Util.format3 "(%s) : (%s)<%s>" uu___1 uu___2 uu___3 in
     let uu___ =
       let uu___1 = to_str combs.FStar_Syntax_Syntax.l_repr in
       let uu___2 =
@@ -1831,24 +1872,6 @@ let (modul_to_string : FStar_Syntax_Syntax.modul -> Prims.string) =
     FStar_Compiler_Util.format3
       "module %s\nDeclarations: [\n%s\n]\nExports: [\n%s\n]\n" uu___ uu___1
       uu___2
-let list_to_string :
-  'a . ('a -> Prims.string) -> 'a Prims.list -> Prims.string =
-  fun f ->
-    fun elts ->
-      match elts with
-      | [] -> "[]"
-      | x::xs ->
-          let strb = FStar_Compiler_Util.new_string_builder () in
-          (FStar_Compiler_Util.string_builder_append strb "[";
-           (let uu___2 = f x in
-            FStar_Compiler_Util.string_builder_append strb uu___2);
-           FStar_Compiler_List.iter
-             (fun x1 ->
-                FStar_Compiler_Util.string_builder_append strb "; ";
-                (let uu___4 = f x1 in
-                 FStar_Compiler_Util.string_builder_append strb uu___4)) xs;
-           FStar_Compiler_Util.string_builder_append strb "]";
-           FStar_Compiler_Util.string_of_string_builder strb)
 let set_to_string :
   'a . ('a -> Prims.string) -> 'a FStar_Compiler_Util.set -> Prims.string =
   fun f ->

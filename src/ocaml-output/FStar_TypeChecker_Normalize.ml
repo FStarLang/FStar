@@ -4624,9 +4624,13 @@ and (do_reify_monadic :
                                                      let uu___12 =
                                                        let uu___13 =
                                                          let uu___14 =
+                                                           let uu___15 =
+                                                             FStar_Compiler_Effect.op_Bar_Greater
+                                                               ed
+                                                               FStar_Syntax_Util.get_bind_vc_combinator in
                                                            FStar_Compiler_Effect.op_Bar_Greater
-                                                             ed
-                                                             FStar_Syntax_Util.get_bind_vc_combinator in
+                                                             uu___15
+                                                             FStar_Pervasives_Native.fst in
                                                          FStar_Compiler_Effect.op_Bar_Greater
                                                            uu___14
                                                            FStar_Pervasives_Native.snd in
@@ -4673,9 +4677,14 @@ and (do_reify_monadic :
                                                            let uu___17 =
                                                              let uu___18 =
                                                                let uu___19 =
+                                                                 let uu___20
+                                                                   =
+                                                                   FStar_Compiler_Effect.op_Bar_Greater
+                                                                    ed
+                                                                    FStar_Syntax_Util.get_bind_vc_combinator in
                                                                  FStar_Compiler_Effect.op_Bar_Greater
-                                                                   ed
-                                                                   FStar_Syntax_Util.get_bind_vc_combinator in
+                                                                   uu___20
+                                                                   FStar_Pervasives_Native.fst in
                                                                FStar_Compiler_Effect.op_Bar_Greater
                                                                  uu___19
                                                                  FStar_Pervasives_Native.snd in

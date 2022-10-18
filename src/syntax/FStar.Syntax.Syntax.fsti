@@ -438,13 +438,23 @@ type wp_eff_combinators = {
  *
  * Similarly the base effect name is also "" after desugaring, and is set by the typechecker
  *)
-type layered_eff_combinators = {
-  l_repr         : (tscheme * tscheme);
-  l_return       : (tscheme * tscheme);
-  l_bind         : (tscheme * tscheme);
-  l_subcomp      : (tscheme * tscheme);
-  l_if_then_else : (tscheme * tscheme);
+type indexed_effect_binder_kind =
+  | Type_binder
+  | Substitution_binder
+  | BindCont_no_abstraction_binder
+  | Repr_binder
+  | Ad_hoc_binder
 
+type indexed_effect_combinator_kind =
+  | Standard_combinator of list indexed_effect_binder_kind
+  | Ad_hoc_combinator
+
+type layered_eff_combinators = {
+  l_repr         : (tscheme * tscheme * option indexed_effect_combinator_kind);
+  l_return       : (tscheme * tscheme * option indexed_effect_combinator_kind);
+  l_bind         : (tscheme * tscheme * option indexed_effect_combinator_kind);
+  l_subcomp      : (tscheme * tscheme * option indexed_effect_combinator_kind);
+  l_if_then_else : (tscheme * tscheme * option indexed_effect_combinator_kind);
 }
 
 

@@ -7302,7 +7302,8 @@ let rec (desugar_effect :
                                           let to_comb uu___5 =
                                             match uu___5 with
                                             | (us, t) ->
-                                                ((us, t), dummy_tscheme) in
+                                                ((us, t), dummy_tscheme,
+                                                  FStar_Pervasives_Native.None) in
                                           let uu___5 =
                                             let uu___6 =
                                               let uu___7 = lookup "repr" in
@@ -7325,7 +7326,8 @@ let rec (desugar_effect :
                                                   uu___10 to_comb
                                               else
                                                 (dummy_tscheme,
-                                                  dummy_tscheme) in
+                                                  dummy_tscheme,
+                                                  FStar_Pervasives_Native.None) in
                                             let uu___10 =
                                               if has_if_then_else
                                               then
@@ -7335,7 +7337,8 @@ let rec (desugar_effect :
                                                   uu___11 to_comb
                                               else
                                                 (dummy_tscheme,
-                                                  dummy_tscheme) in
+                                                  dummy_tscheme,
+                                                  FStar_Pervasives_Native.None) in
                                             {
                                               FStar_Syntax_Syntax.l_repr =
                                                 uu___6;

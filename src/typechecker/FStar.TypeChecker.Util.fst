@@ -852,7 +852,52 @@ and mk_indexed_return env (ed:S.eff_decl) (u_a:universe) (a:typ) (e:term) (r:Ran
  *
  * In addition, we add ((wp[substs]) (fun _ -> True)) to the returned guard
  *)
+
 and mk_indexed_bind env
+  (guard_indexed_effect_uvars:bool)
+  (m:lident) (n:lident) (p:lident) (bind_t:tscheme)
+  (bind_combinator_kind:indexed_effect_combinator_kind)
+  (ct1:comp_typ) (b:option bv) (ct2:comp_typ)
+  (flags:list cflag) (r1:Range.range) (has_range_args:bool)
+  : comp * guard_t =
+
+  if bind_combinator_kind = Ad_hoc_combinator
+  then mk_ad_hoc_indexed_bind env guard_indexed_effect_uvars m n p bind_t ct1 b ct2 flags r1 has_range_args
+  else begin
+    let Standard_combinator binder_kinds = bind_combinator_kind in
+    
+    let u1, t1, is1 = List.hd ct1.comp_univs, ct1.result_typ, List.map fst ct1.effect_args in
+    let u2, t2, is2 = List.hd ct2.comp_univs, ct2.result_typ, List.map fst ct2.effect_args in
+
+    let _, bind_t = Env.inst_tscheme_with bind_t [u1; u2] in
+
+    let m_ed, n_ed, p_ed = Env.get_effect_decl env m, Env.get_effect_decl env n, Env.get_effect_decl env p in
+
+    let a_b::b_b::bind_t_bs, bind_t_comp = U.arrow_formals_comp bind_t in
+
+    let bind_t_bs, binder_kinds, subst =
+      let subst = [NT (a_b.binder_bv, t1); NT (b_b.binder_bv, t2)] in
+      SS.subst_binders subst bind_t_bs, List.splitAt 2 binder_kinds |> snd, subst in
+
+    let bind_t_bs, binder_kinds, subst =
+      let m_num_effect_args = List.length ct1.effect_args in
+      let f_bs, bind_t_bs = List.splitAt m_num_effect_args bind_t_bs in
+      let f_subst = List.map2 (fun f_b arg -> NT (f_b.binder_bv, fst arg)) f_bs ct1.effect_args in
+      SS.subst_binders f_subst bind_t_bs,
+      List.splitAt m_num_effect_args binder_kinds |> snd,
+      subst@f_subst in
+
+    // let bind_t_bs, binder_kinds, subst, guard =
+    //   let n_num_effect_args = List.length ct2.effect_args in
+    //   let g_bs, bind_t_bs = List.splitAt n_num_effect_args bind_t_bs in
+            
+
+
+    failwith ("Applying a standard bind with %s\n" ^
+      (Print.indexed_effect_combinator_kind_to_string bind_combinator_kind))
+  end
+
+and mk_ad_hoc_indexed_bind env
   (guard_indexed_effect_uvars:bool)
   (m:lident) (n:lident) (p:lident) (bind_t:tscheme)
   (ct1:comp_typ) (b:option bv) (ct2:comp_typ)
@@ -1046,7 +1091,7 @@ and mk_wp_bind env (m:lident) (ct1:comp_typ) (b:option bv) (ct2:comp_typ) (flags
     S.as_arg wp1;
     S.as_arg (mk_lam wp2)]
   in
-  let bind_wp = md |> U.get_bind_vc_combinator in
+  let bind_wp, _ = md |> U.get_bind_vc_combinator in
   let wp = mk_Tm_app (inst_effect_fun_with [u_t1;u_t2] env md bind_wp) wp_args t2.pos in
   mk_comp md u_t2 t2 wp flags
 
@@ -1076,9 +1121,9 @@ and mk_bind env guard_indexed_effect_uvars
       if Env.is_layered_effect env m
       then
         let m_ed = m |> Env.get_effect_decl env in
-        let bind_t = m_ed |> U.get_bind_vc_combinator in
+        let bind_t, bind_kind = m_ed |> U.get_bind_vc_combinator in
         let has_range_args = U.has_attribute m_ed.eff_attrs C.bind_has_range_args_attr in
-        mk_indexed_bind env guard_indexed_effect_uvars m m m bind_t ct1 b ct2 flags r1 has_range_args
+        mk_indexed_bind env guard_indexed_effect_uvars m m m bind_t (bind_kind |> must) ct1 b ct2 flags r1 has_range_args
       else mk_wp_bind env m ct1 b ct2 flags r1, Env.trivial_guard in
     c, Env.conj_guard g_lift g_bind
 
@@ -3377,7 +3422,7 @@ let update_env_polymonadic_bind env m n p ty =
   //
   Env.add_polymonadic_bind env m n p
     (fun env guard_indexed_effect_uvars c1 bv_opt c2 flags r ->
-     mk_indexed_bind env guard_indexed_effect_uvars m n p ty c1 bv_opt c2 flags r false)
+     mk_indexed_bind env guard_indexed_effect_uvars m n p ty Ad_hoc_combinator c1 bv_opt c2 flags r false)
 
 (*** Utilities for type-based record
      disambiguation ***)

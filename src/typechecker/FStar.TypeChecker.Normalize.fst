@@ -1848,7 +1848,7 @@ and do_reify_monadic fallback cfg env stack (top : term) (m : monad_name) (t : t
                   //for bind binders that are not fixed, we apply ()
                   //
                   let unit_args =
-                    match (ed |> U.get_bind_vc_combinator |> snd |> SS.compress).n with
+                    match (ed |> U.get_bind_vc_combinator |> fst |> snd |> SS.compress).n with
                     | Tm_arrow (_::_::bs, _) when List.length bs >= num_fixed_binders ->
                       bs
                       |> List.splitAt (List.length bs - num_fixed_binders)
@@ -1859,7 +1859,7 @@ and do_reify_monadic fallback cfg env stack (top : term) (m : monad_name) (t : t
                         BU.format3 "bind_wp for layered effect %s is not an arrow with >= %s arguments (%s)"
                           (Ident.string_of_lid ed.mname)
                           (string_of_int num_fixed_binders)
-                          (ed |> U.get_bind_vc_combinator |> snd |> Print.term_to_string)) rng in
+                          (ed |> U.get_bind_vc_combinator |> fst |> snd |> Print.term_to_string)) rng in
 
                   let range_args =
                     if bind_has_range_args
@@ -3406,4 +3406,3 @@ let maybe_unfold_head (env:Env.env) (t:term)
         let defn = SS.subst subst defn in
         let term = S.mk_Tm_app defn args t.pos in
         Some (normalize [Beta;Iota;Weak;HNF] env term)
-        

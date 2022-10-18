@@ -713,10 +713,40 @@ let wp_eff_combinators_to_string combs =
       tscheme_opt_to_string combs.return_repr;
       tscheme_opt_to_string combs.bind_repr ]
 
+let indexed_effect_binder_kind_to_string = function
+  | Type_binder -> "type_binder"
+  | Substitution_binder -> "subst_binder"
+  | BindCont_no_abstraction_binder -> "bind_g_no_abs_binder"
+  | Repr_binder -> "repr_binder"
+  | Ad_hoc_binder -> "ad_hoc_binder"
+
+let list_to_string f elts =
+    match elts with
+        | [] -> "[]"
+        | x::xs ->
+            let strb = U.new_string_builder () in
+            U.string_builder_append strb "[" ;
+            U.string_builder_append strb (f x) ;
+            List.iter (fun x ->
+                       U.string_builder_append strb "; " ;
+                       U.string_builder_append strb (f x)
+                       ) xs ;
+            U.string_builder_append strb "]" ;
+            U.string_of_string_builder strb
+
+let indexed_effect_combinator_kind_to_string = function
+  | Standard_combinator l ->
+    U.format1 "standard_combinator (%s)"
+      (list_to_string indexed_effect_binder_kind_to_string l)
+  | Ad_hoc_combinator -> "ad_hoc_combinator"
+
 let layered_eff_combinators_to_string combs =
-  let to_str (ts_t, ts_ty) =
-    U.format2 "(%s) : (%s)"
-      (tscheme_to_string ts_t) (tscheme_to_string ts_ty) in
+  let to_str (ts_t, ts_ty, kopt) =
+    U.format3 "(%s) : (%s)<%s>"
+      (tscheme_to_string ts_t) (tscheme_to_string ts_ty)
+      (match kopt with
+       | None -> "none"
+       | Some k -> indexed_effect_combinator_kind_to_string k) in
 
   U.format "{\n\
   ; l_repr = %s\n\
@@ -956,20 +986,6 @@ let modul_to_string (m:modul) =
 //          U.string_builder_append strb (Ident.string_of_lid lid)
 //  end ;
 //  U.string_of_string_builder strb
-
-let list_to_string f elts =
-    match elts with
-        | [] -> "[]"
-        | x::xs ->
-            let strb = U.new_string_builder () in
-            U.string_builder_append strb "[" ;
-            U.string_builder_append strb (f x) ;
-            List.iter (fun x ->
-                       U.string_builder_append strb "; " ;
-                       U.string_builder_append strb (f x)
-                       ) xs ;
-            U.string_builder_append strb "]" ;
-            U.string_of_string_builder strb
 
 let set_to_string f s =
     let elts = U.set_elements s in
