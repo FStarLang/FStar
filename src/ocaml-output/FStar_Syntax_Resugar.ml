@@ -2939,14 +2939,14 @@ let (resugar_sigelt' :
           FStar_Pervasives_Native.None
       | FStar_Syntax_Syntax.Sig_datacon uu___ -> FStar_Pervasives_Native.None
       | FStar_Syntax_Syntax.Sig_polymonadic_bind
-          (m, n, p, (uu___, t), uu___1) ->
-          let uu___2 =
-            let uu___3 =
-              let uu___4 =
-                let uu___5 = resugar_term' env t in (m, n, p, uu___5) in
-              FStar_Parser_AST.Polymonadic_bind uu___4 in
-            decl'_to_decl se uu___3 in
-          FStar_Pervasives_Native.Some uu___2
+          (m, n, p, (uu___, t), uu___1, uu___2) ->
+          let uu___3 =
+            let uu___4 =
+              let uu___5 =
+                let uu___6 = resugar_term' env t in (m, n, p, uu___6) in
+              FStar_Parser_AST.Polymonadic_bind uu___5 in
+            decl'_to_decl se uu___4 in
+          FStar_Pervasives_Native.Some uu___3
       | FStar_Syntax_Syntax.Sig_polymonadic_subcomp
           (m, n, (uu___, t), uu___1) ->
           let uu___2 =

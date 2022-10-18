@@ -1708,15 +1708,20 @@ let rec (sigelt_to_string : FStar_Syntax_Syntax.sigelt -> Prims.string) =
               uu___1 in
           let uu___1 = term_to_string t in
           FStar_Compiler_Util.format2 "splice[%s] (%s)" uu___ uu___1
-      | FStar_Syntax_Syntax.Sig_polymonadic_bind (m, n, p, t, ty) ->
+      | FStar_Syntax_Syntax.Sig_polymonadic_bind (m, n, p, t, ty, k) ->
           let uu___ = FStar_Ident.string_of_lid m in
           let uu___1 = FStar_Ident.string_of_lid n in
           let uu___2 = FStar_Ident.string_of_lid p in
           let uu___3 = tscheme_to_string t in
           let uu___4 = tscheme_to_string ty in
-          FStar_Compiler_Util.format5
-            "polymonadic_bind (%s, %s) |> %s = (%s, %s)" uu___ uu___1 uu___2
-            uu___3 uu___4
+          let uu___5 =
+            match k with
+            | FStar_Pervasives_Native.None -> "<kind not set>"
+            | FStar_Pervasives_Native.Some k1 ->
+                indexed_effect_combinator_kind_to_string k1 in
+          FStar_Compiler_Util.format6
+            "polymonadic_bind (%s, %s) |> %s = (%s, %s)<%s>" uu___ uu___1
+            uu___2 uu___3 uu___4 uu___5
       | FStar_Syntax_Syntax.Sig_polymonadic_subcomp (m, n, t, ty) ->
           let uu___ = FStar_Ident.string_of_lid m in
           let uu___1 = FStar_Ident.string_of_lid n in
@@ -1826,12 +1831,12 @@ let rec (sigelt_to_string_short : FStar_Syntax_Syntax.sigelt -> Prims.string)
           FStar_Compiler_Effect.op_Less_Bar (FStar_String.concat "; ") uu___1 in
         let uu___1 = term_to_string t in
         FStar_Compiler_Util.format3 "%splice[%s] (%s)" "%s" uu___ uu___1
-    | FStar_Syntax_Syntax.Sig_polymonadic_bind (m, n, p, t, ty) ->
-        let uu___ = FStar_Ident.string_of_lid m in
-        let uu___1 = FStar_Ident.string_of_lid n in
-        let uu___2 = FStar_Ident.string_of_lid p in
-        FStar_Compiler_Util.format3 "polymonadic_bind (%s, %s) |> %s" uu___
-          uu___1 uu___2
+    | FStar_Syntax_Syntax.Sig_polymonadic_bind (m, n, p, t, ty, uu___) ->
+        let uu___1 = FStar_Ident.string_of_lid m in
+        let uu___2 = FStar_Ident.string_of_lid n in
+        let uu___3 = FStar_Ident.string_of_lid p in
+        FStar_Compiler_Util.format3 "polymonadic_bind (%s, %s) |> %s" uu___1
+          uu___2 uu___3
     | FStar_Syntax_Syntax.Sig_polymonadic_subcomp (m, n, t, ty) ->
         let uu___ = FStar_Ident.string_of_lid m in
         let uu___1 = FStar_Ident.string_of_lid n in

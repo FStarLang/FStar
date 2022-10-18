@@ -8674,7 +8674,8 @@ and (desugar_decl_noattrs :
                   ((m.FStar_Syntax_Syntax.mname),
                     (n.FStar_Syntax_Syntax.mname),
                     (p.FStar_Syntax_Syntax.mname), uu___4,
-                    ([], FStar_Syntax_Syntax.tun)) in
+                    ([], FStar_Syntax_Syntax.tun),
+                    FStar_Pervasives_Native.None) in
                 FStar_Syntax_Syntax.Sig_polymonadic_bind uu___3 in
               {
                 FStar_Syntax_Syntax.sigel = uu___2;

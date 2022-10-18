@@ -3319,15 +3319,16 @@ let (tc_decl' :
                FStar_Profiling.profile
                  (fun uu___3 -> tc_sig_let env r se1 lbs lids) uu___2
                  "FStar.TypeChecker.Tc.tc_sig_let"
-           | FStar_Syntax_Syntax.Sig_polymonadic_bind (m, n, p, t, uu___2) ->
+           | FStar_Syntax_Syntax.Sig_polymonadic_bind
+               (m, n, p, t, uu___2, uu___3) ->
                let t1 =
-                 let uu___3 = do_two_phases env in
-                 if uu___3
+                 let uu___4 = do_two_phases env in
+                 if uu___4
                  then
-                   let uu___4 =
-                     let uu___5 =
-                       let uu___6 =
-                         let uu___7 =
+                   let uu___5 =
+                     let uu___6 =
+                       let uu___7 =
+                         let uu___8 =
                            FStar_TypeChecker_TcEffect.tc_polymonadic_bind
                              {
                                FStar_TypeChecker_Env.solver =
@@ -3434,14 +3435,15 @@ let (tc_decl' :
                                FStar_TypeChecker_Env.core_check =
                                  (env.FStar_TypeChecker_Env.core_check)
                              } m n p t in
-                         FStar_Compiler_Effect.op_Bar_Greater uu___7
-                           (fun uu___8 ->
-                              match uu___8 with
-                              | (t2, ty) ->
+                         FStar_Compiler_Effect.op_Bar_Greater uu___8
+                           (fun uu___9 ->
+                              match uu___9 with
+                              | (t2, ty, uu___10) ->
                                   {
                                     FStar_Syntax_Syntax.sigel =
                                       (FStar_Syntax_Syntax.Sig_polymonadic_bind
-                                         (m, n, p, t2, ty));
+                                         (m, n, p, t2, ty,
+                                           FStar_Pervasives_Native.None));
                                     FStar_Syntax_Syntax.sigrng =
                                       (se1.FStar_Syntax_Syntax.sigrng);
                                     FStar_Syntax_Syntax.sigquals =
@@ -3453,30 +3455,32 @@ let (tc_decl' :
                                     FStar_Syntax_Syntax.sigopts =
                                       (se1.FStar_Syntax_Syntax.sigopts)
                                   }) in
-                       FStar_Compiler_Effect.op_Bar_Greater uu___6
+                       FStar_Compiler_Effect.op_Bar_Greater uu___7
                          (FStar_TypeChecker_Normalize.elim_uvars env) in
-                     FStar_Compiler_Effect.op_Bar_Greater uu___5
+                     FStar_Compiler_Effect.op_Bar_Greater uu___6
                        (fun se2 ->
                           match se2.FStar_Syntax_Syntax.sigel with
                           | FStar_Syntax_Syntax.Sig_polymonadic_bind
-                              (uu___6, uu___7, uu___8, t2, ty) -> (t2, ty)
-                          | uu___6 ->
+                              (uu___7, uu___8, uu___9, t2, ty, uu___10) ->
+                              (t2, ty)
+                          | uu___7 ->
                               failwith
                                 "Impossible! tc for Sig_polymonadic_bind must be a Sig_polymonadic_bind") in
-                   match uu___4 with
+                   match uu___5 with
                    | (t2, ty) ->
-                       ((let uu___6 =
+                       ((let uu___7 =
                            FStar_Compiler_Effect.op_Less_Bar
                              (FStar_TypeChecker_Env.debug env)
                              (FStar_Options.Other "TwoPhases") in
-                         if uu___6
+                         if uu___7
                          then
-                           let uu___7 =
+                           let uu___8 =
                              FStar_Syntax_Print.sigelt_to_string
                                {
                                  FStar_Syntax_Syntax.sigel =
                                    (FStar_Syntax_Syntax.Sig_polymonadic_bind
-                                      (m, n, p, t2, ty));
+                                      (m, n, p, t2, ty,
+                                        FStar_Pervasives_Native.None));
                                  FStar_Syntax_Syntax.sigrng =
                                    (se1.FStar_Syntax_Syntax.sigrng);
                                  FStar_Syntax_Syntax.sigquals =
@@ -3489,19 +3493,20 @@ let (tc_decl' :
                                    (se1.FStar_Syntax_Syntax.sigopts)
                                } in
                            FStar_Compiler_Util.print1
-                             "Polymonadic bind after phase 1: %s\n" uu___7
+                             "Polymonadic bind after phase 1: %s\n" uu___8
                          else ());
                         t2)
                  else t in
-               let uu___3 =
+               let uu___4 =
                  FStar_TypeChecker_TcEffect.tc_polymonadic_bind env m n p t1 in
-               (match uu___3 with
-                | (t2, ty) ->
+               (match uu___4 with
+                | (t2, ty, k) ->
                     let se2 =
                       {
                         FStar_Syntax_Syntax.sigel =
                           (FStar_Syntax_Syntax.Sig_polymonadic_bind
-                             (m, n, p, t2, ty));
+                             (m, n, p, t2, ty,
+                               (FStar_Pervasives_Native.Some k)));
                         FStar_Syntax_Syntax.sigrng =
                           (se1.FStar_Syntax_Syntax.sigrng);
                         FStar_Syntax_Syntax.sigquals =
@@ -4275,9 +4280,12 @@ let (add_sigelt_to_env :
                   FStar_TypeChecker_Util.update_env_sub_eff env1 sub
                     se.FStar_Syntax_Syntax.sigrng
               | FStar_Syntax_Syntax.Sig_polymonadic_bind
-                  (m, n, p, uu___2, ty) ->
+                  (m, n, p, uu___2, ty, k) ->
+                  let uu___3 =
+                    FStar_Compiler_Effect.op_Bar_Greater k
+                      FStar_Compiler_Util.must in
                   FStar_TypeChecker_Util.update_env_polymonadic_bind env1 m n
-                    p ty
+                    p ty uu___3
               | FStar_Syntax_Syntax.Sig_polymonadic_subcomp
                   (m, n, uu___2, ty) ->
                   FStar_TypeChecker_Env.add_polymonadic_subcomp env1 m n ty
@@ -4446,7 +4454,7 @@ let (tc_decls :
                ([], env) ses) in
       match uu___ with
       | (ses1, env1) -> ((FStar_Compiler_List.rev_append ses1 []), env1)
-let (uu___907 : unit) =
+let (uu___912 : unit) =
   FStar_Compiler_Effect.op_Colon_Equals tc_decls_knot
     (FStar_Pervasives_Native.Some tc_decls)
 let (snapshot_context :

@@ -7824,24 +7824,27 @@ let (update_env_polymonadic_bind :
     FStar_Ident.lident ->
       FStar_Ident.lident ->
         FStar_Ident.lident ->
-          FStar_Syntax_Syntax.tscheme -> FStar_TypeChecker_Env.env)
+          FStar_Syntax_Syntax.tscheme ->
+            FStar_Syntax_Syntax.indexed_effect_combinator_kind ->
+              FStar_TypeChecker_Env.env)
   =
   fun env ->
     fun m ->
       fun n ->
         fun p ->
           fun ty ->
-            FStar_TypeChecker_Env.add_polymonadic_bind env m n p
-              (fun env1 ->
-                 fun guard_indexed_effect_uvars ->
-                   fun c1 ->
-                     fun bv_opt ->
-                       fun c2 ->
-                         fun flags ->
-                           fun r ->
-                             mk_indexed_bind env1 guard_indexed_effect_uvars
-                               m n p ty FStar_Syntax_Syntax.Ad_hoc_combinator
-                               c1 bv_opt c2 flags r false)
+            fun k ->
+              FStar_TypeChecker_Env.add_polymonadic_bind env m n p
+                (fun env1 ->
+                   fun guard_indexed_effect_uvars ->
+                     fun c1 ->
+                       fun bv_opt ->
+                         fun c2 ->
+                           fun flags ->
+                             fun r ->
+                               mk_indexed_bind env1
+                                 guard_indexed_effect_uvars m n p ty k c1
+                                 bv_opt c2 flags r false)
 let (try_lookup_record_type :
   FStar_TypeChecker_Env.env ->
     FStar_Ident.lident ->
