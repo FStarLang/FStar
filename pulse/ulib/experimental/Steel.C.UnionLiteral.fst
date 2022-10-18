@@ -5,11 +5,11 @@ open Steel.Effect
 open Steel.Effect.Common
 open Steel.Effect.Atomic
 
-open Steel.C.PCM
-open Steel.C.Union
+open Steel.C.Model.PCM
+open Steel.C.Model.Union
 open Steel.C.Typedef
-open Steel.C.Ref
-open Steel.C.Connection
+open Steel.C.Model.Ref
+open Steel.C.Model.Connection
 open Steel.C.Opt
 open Steel.C.Fields
 
@@ -38,7 +38,7 @@ let union_pcms (fields: c_fields) (field: field_of fields): pcm (union_carriers 
   (fields.get_field field).pcm
 
 let union_pcm_carrier (tag: Type0) (fields: c_fields): Type0 =
-  Steel.C.Union.union (union_pcms fields)
+  Steel.C.Model.Union.union (union_pcms fields)
 
 let union_pcm (tag: Type0) (fields: c_fields): pcm (union_pcm_carrier tag fields) =
   union_pcm (union_pcms fields)
@@ -50,7 +50,7 @@ let is_units (fields: c_fields) (field: field_of fields)
 
 let rec case_of_union_aux (fields: c_fields)
   (fields_list: list string)
-  (u: Steel.C.Union.union (union_pcms fields))
+  (u: Steel.C.Model.Union.union (union_pcms fields))
 : Pure (option (field_of fields))
     (requires forall (field:string). field `mem` fields_list ==> fields.has_field field == true)
     (ensures fun field ->
@@ -67,7 +67,7 @@ let rec case_of_union_aux (fields: c_fields)
       if (fields.get_field field).is_unit (u field) then None else Some field
 
 let case_of_union (fields: nonempty_c_fields)
-  (u: Steel.C.Union.union (union_pcms fields))
+  (u: Steel.C.Model.Union.union (union_pcms fields))
 : field:field_of fields{case_refinement_f (union_pcms fields) field u}
 = match case_of_union_aux fields fields.cfields u with
   | None -> Some?.v fields.nonempty_witness
@@ -79,7 +79,7 @@ let union_views' (fields: c_fields) (field: field_of fields)
 
 let union_view (tag: Type0) (fields: nonempty_c_fields)
 : sel_view (union_pcm tag fields) (union tag fields) false
-= Steel.C.Union.union_view (union_views' fields) (case_of_union fields)
+= Steel.C.Model.Union.union_view (union_views' fields) (case_of_union fields)
 
 let dtuple2_of_union (#tag: Type0) (#fields: c_fields) (x: union tag fields)
 : dtuple2 (field_of fields) (union_views fields)
@@ -160,7 +160,7 @@ let addr_of_union_field'
     pts_to_view_elim p (union_view tag fields)
   in
   //  assert (Ghost.reveal s == (union_view tag fields).to_carrier v);
-  let q = Steel.C.Union.addr_of_union_field #_ #_ #(union_pcms fields) p field s in
+  let q = Steel.C.Model.Union.addr_of_union_field #_ #_ #(union_pcms fields) p field s in
 //  change_equal_slprop (q `pts_to` _) (q `pts_to` _);
   pts_to_view_intro q (Ghost.reveal s field)
     (fields.get_field field).view
@@ -196,7 +196,7 @@ let unaddr_of_union_field'
   let s: Ghost.erased (fields.get_field field).carrier =
     pts_to_view_elim q (fields.get_field field).view
   in
-  Steel.C.Union.unaddr_of_union_field #_ #_ #_ #(union_pcms fields) field q p s;
+  Steel.C.Model.Union.unaddr_of_union_field #_ #_ #_ #(union_pcms fields) field q p s;
   pts_to_view_intro p
     (field_to_union_f (union_pcms fields) field s)
     (union_view tag fields)
@@ -226,7 +226,7 @@ let exclusive_refine_union_field
   let aux frame
   : Lemma
     (requires 
-     Steel.C.PCM.composable
+     Steel.C.Model.PCM.composable
       (union_pcm tag fields)
       ((union_view tag fields).to_carrier (|old_field, old_value|))
       frame)
@@ -279,7 +279,7 @@ let switch_union_field''
   let upd: frame_preserving_upd (union_pcm tag fields) s new_s =
     base_fpu (union_pcm tag fields) s new_s
   in
-  Steel.C.Ref.ref_upd p s new_s upd;
+  Steel.C.Model.Ref.ref_upd p s new_s upd;
   pts_to_view_intro p new_s
     (union_view tag fields)
     (|field, new_value|);

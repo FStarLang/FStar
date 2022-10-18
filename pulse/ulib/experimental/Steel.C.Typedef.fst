@@ -1,8 +1,8 @@
 module Steel.C.Typedef
 
 open FStar.List.Tot
-open Steel.C.PCM
-open Steel.C.Ref
+open Steel.C.Model.PCM
+open Steel.C.Model.Ref
 open FStar.FunctionalExtensionality
 open Steel.Effect
 

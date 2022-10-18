@@ -1,7 +1,7 @@
-module Steel.C.Ref
+module Steel.C.Model.Ref
 open FStar.FunctionalExtensionality
-open Steel.C.PCM
-open Steel.C.Connection
+open Steel.C.Model.PCM
+open Steel.C.Model.Connection
 
 module A = Steel.Effect.Atomic
 
