@@ -2384,9 +2384,9 @@ let get_wp_trivial_combinator (ed:eff_decl) : option tscheme =
   | DM4F_eff combs -> combs.trivial |> Some
   | _ -> None
 
-let get_layered_if_then_else_combinator (ed:eff_decl) : option tscheme =
+let get_layered_if_then_else_combinator (ed:eff_decl) : option (tscheme & option indexed_effect_combinator_kind) =
   match ed.combinators with
-  | Layered_eff combs -> Mktuple3?._1 combs.l_if_then_else |> Some
+  | Layered_eff combs -> Some (Mktuple3?._1 combs.l_if_then_else, Mktuple3?._3 combs.l_if_then_else)
   | _ -> None
 
 let get_wp_if_then_else_combinator (ed:eff_decl) : option tscheme =

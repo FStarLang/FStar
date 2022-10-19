@@ -1829,36 +1829,85 @@ let fvar_const env lid =  S.fvar (Ident.set_lid_range lid (Env.get_range env)) d
  *
  * And return k_i
  *)
-let mk_layered_conjunction env (ed:S.eff_decl) (u_a:universe) (a:term) (p:typ) (ct1:comp_typ) (ct2:comp_typ) (r:Range.range)
-: comp * guard_t =
 
-  let conjunction_name = BU.format1 "%s.conjunction" (string_of_lid ed.mname) in
+let standard_indexed_ite_substs (env:env)
+  (bs:binders)
+  (a:typ)
+  (p:term)
+  (ct_then:comp_typ)
+  (ct_else:comp_typ)
+  (r:Range.range)
 
-  let _, conjunction =
-    Env.inst_tscheme_with (ed |> U.get_layered_if_then_else_combinator |> must) [u_a] in
-  let is1, is2 = List.map fst ct1.effect_args, List.map fst ct2.effect_args in
+  : list subst_elt & guard_t & list term =
+
+  let bs, subst =
+    let a_b::bs = bs in
+    bs, [NT (a_b.binder_bv, a)] in
+
+  let bs, subst =
+    let m_num_effect_args = List.length ct_then.effect_args in
+    let f_bs, bs = List.splitAt m_num_effect_args bs in
+    let f_subst = List.map2 (fun f_b (arg, _) -> NT (f_b.binder_bv, arg)) f_bs ct_then.effect_args in
+    bs, subst@f_subst in
+
+  let bs, subst =
+    let n_num_effect_args = List.length ct_else.effect_args in
+    let g_bs, bs = List.splitAt n_num_effect_args bs in
+    let g_subst = List.map2 (fun g_b (arg, _) -> NT (g_b.binder_bv, arg)) g_bs ct_else.effect_args in
+    bs, subst@g_subst in
+
+  let bs, [_; _; p_b] = List.splitAt (List.length bs - 3) bs in
+
+  let subst, g, tms =
+    let guard_indexed_effect_uvars = true in
+    List.fold_left (fun (subst, g, tms) b ->
+    let [uv_t], uv_tms, g_uv = Env.uvars_for_binders env [b] subst guard_indexed_effect_uvars
+      (fun b ->
+       BU.format3 "implicit var for additional ite binder %s of %s at %s)"
+         (Print.binder_to_string b)
+         (string_of_lid ct_then.effect_name)
+         (Range.string_of_range r))
+      r in
+    subst@[NT (b.binder_bv, uv_t)],
+    Env.conj_guard g g_uv,
+    tms@uv_tms) (subst, Env.trivial_guard, []) bs in
+
+  subst@[NT (p_b.binder_bv, p)],
+  g,
+  tms
+
+let ad_hoc_indexed_ite_substs (env:env)
+  (bs:binders)
+  (a:typ)
+  (p:term)
+  (ct_then:comp_typ)
+  (ct_else:comp_typ)
+  (r:Range.range)
+
+  : list subst_elt & guard_t & list term =
+
+  let conjunction_name = BU.format1 "%s.conjunction" (string_of_lid ct_then.effect_name) in
 
   let conjunction_t_error (s:string) =
-    (Errors.Fatal_UnexpectedEffect, BU.format3
-      "conjunction %s (%s) does not have proper shape (reason:%s)"
-      (Print.term_to_string conjunction) conjunction_name s) in
+    Errors.Fatal_UnexpectedEffect, BU.format2
+      "conjunction %s does not have proper shape (reason:%s)"
+      (string_of_lid ct_then.effect_name) s in
 
-  let a_b, rest_bs, f_b, g_b, p_b, body =
-    match (SS.compress conjunction).n with
-    | Tm_abs (bs, body, _) when List.length bs >= 4 ->
-      let (a_b::bs), body = SS.open_term bs body in
-      let rest_bs, (f_b::g_b::p_b::[]) = List.splitAt (List.length bs - 3) bs in
-      a_b, rest_bs, f_b, g_b, p_b, body |> U.unascribe
-    | _ -> raise_error (conjunction_t_error "Either not an abstraction or not enough binders") r in
+  let a_b, rest_bs, f_b, g_b, p_b =
+    if List.length bs >= 4
+    then let a_b::bs = bs in
+         let rest_bs, [f_b; g_b; p_b] = List.splitAt (List.length bs - 3) bs in
+         a_b, rest_bs, f_b, g_b, p_b
+    else raise_error (conjunction_t_error "Either not an abstraction or not enough binders") r in
 
   let rest_bs_uvars, rest_uvars_guard_tms, g_uvars =
-    let guard_indexed_effect_uvars = false in
+    let guard_indexed_effect_uvars = true in
     Env.uvars_for_binders
       env rest_bs [NT (a_b.binder_bv, a)]
       guard_indexed_effect_uvars
       (fun b -> BU.format3
                "implicit var for binder %s of %s:conjunction at %s"
-               (Print.binder_to_string b) (Ident.string_of_lid ed.mname)
+               (Print.binder_to_string b) (Ident.string_of_lid ct_then.effect_name)
                (r |> Range.string_of_range)) r in
 
   let substs = List.map2
@@ -1872,8 +1921,11 @@ let mk_layered_conjunction env (ed:S.eff_decl) (u_a:universe) (a:term) (p:typ) (
         is |> List.map fst |> List.map (SS.subst substs)
       | _ -> raise_error (conjunction_t_error "f's type is not a repr type") r in
     List.fold_left2
-      (fun g i1 f_i -> Env.conj_guard g (Rel.layered_effect_teq env i1 f_i (Some conjunction_name)))
-      Env.trivial_guard is1 f_sort_is in
+      (fun g i1 f_i ->
+       Env.conj_guard
+         g
+         (Rel.layered_effect_teq env i1 f_i (Some conjunction_name)))
+      Env.trivial_guard (List.map fst ct_then.effect_args) f_sort_is in
 
   let g_guard =
     let g_sort_is =
@@ -1883,8 +1935,40 @@ let mk_layered_conjunction env (ed:S.eff_decl) (u_a:universe) (a:term) (p:typ) (
       | _ -> raise_error (conjunction_t_error "g's type is not a repr type") r in
     List.fold_left2
       (fun g i2 g_i -> Env.conj_guard g (Rel.layered_effect_teq env i2 g_i (Some conjunction_name)))
-      Env.trivial_guard is2 g_sort_is in
+      Env.trivial_guard (List.map fst ct_else.effect_args) g_sort_is in
 
+  substs,
+  Env.conj_guards [g_uvars; f_guard; g_guard],
+  rest_uvars_guard_tms
+
+
+let mk_layered_conjunction env (ed:S.eff_decl) (u_a:universe) (a:term) (p:typ) (ct1:comp_typ) (ct2:comp_typ) (r:Range.range)
+: comp * guard_t =
+
+  let conjunction_name = BU.format1 "%s.conjunction" (string_of_lid ed.mname) in
+
+  let conjunction_t_error (s:string) =
+    Errors.Fatal_UnexpectedEffect, BU.format2
+      "conjunction %s does not have proper shape (reason:%s)"
+      (string_of_lid ct1.effect_name) s in
+
+  let conjunction, kind =
+    let ts, kopt = ed |> U.get_layered_if_then_else_combinator |> must in
+    let _, conjunction = Env.inst_tscheme_with ts [u_a] in
+    conjunction, kopt |> must in
+
+  let bs, body, _ = U.abs_formals conjunction in
+
+  if Env.debug env <| Options.Other "LayeredEffectsApp" then
+    BU.print2 "layered_ite c1: %s and c2: %s {\n"
+      (ct1 |> S.mk_Comp |> Print.comp_to_string)
+      (ct2 |> S.mk_Comp |> Print.comp_to_string);
+
+  let substs, g, rest_uvars_guard_tms =
+    if kind = Ad_hoc_combinator
+    then ad_hoc_indexed_ite_substs env bs a p ct1 ct2 r
+    else standard_indexed_ite_substs env bs a p ct1 ct2 r in
+    
   let body = SS.subst substs body in
 
   let is =
@@ -1906,10 +1990,11 @@ let mk_layered_conjunction env (ed:S.eff_decl) (u_a:universe) (a:term) (p:typ) (
     "conj" in
 
   let g = Env.conj_guards [
-    g_uvars;
-    g_strengthen;
-    f_guard;
-    g_guard ] in
+    g;
+    g_strengthen ] in
+
+  if Env.debug env <| Options.Other "LayeredEffectsApp" then
+    BU.print_string "\n}\n";
 
   c, g
 

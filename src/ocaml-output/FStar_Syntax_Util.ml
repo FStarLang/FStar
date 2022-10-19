@@ -4703,15 +4703,18 @@ let (get_wp_trivial_combinator :
     | uu___ -> FStar_Pervasives_Native.None
 let (get_layered_if_then_else_combinator :
   FStar_Syntax_Syntax.eff_decl ->
-    FStar_Syntax_Syntax.tscheme FStar_Pervasives_Native.option)
+    (FStar_Syntax_Syntax.tscheme *
+      FStar_Syntax_Syntax.indexed_effect_combinator_kind
+      FStar_Pervasives_Native.option) FStar_Pervasives_Native.option)
   =
   fun ed ->
     match ed.FStar_Syntax_Syntax.combinators with
     | FStar_Syntax_Syntax.Layered_eff combs ->
-        FStar_Compiler_Effect.op_Bar_Greater
-          (FStar_Pervasives_Native.__proj__Mktuple3__item___1
-             combs.FStar_Syntax_Syntax.l_if_then_else)
-          (fun uu___ -> FStar_Pervasives_Native.Some uu___)
+        FStar_Pervasives_Native.Some
+          ((FStar_Pervasives_Native.__proj__Mktuple3__item___1
+              combs.FStar_Syntax_Syntax.l_if_then_else),
+            (FStar_Pervasives_Native.__proj__Mktuple3__item___3
+               combs.FStar_Syntax_Syntax.l_if_then_else))
     | uu___ -> FStar_Pervasives_Native.None
 let (get_wp_if_then_else_combinator :
   FStar_Syntax_Syntax.eff_decl ->
