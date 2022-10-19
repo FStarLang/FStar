@@ -1269,14 +1269,14 @@ let (standard_indexed_bind_substs :
                           let uu___ =
                             let uu___1 = bs in
                             match uu___1 with
-                            | a_b::b_b::bind_t_bs ->
+                            | a_b::b_b::bs1 ->
                                 let uu___2 =
                                   let uu___3 =
                                     FStar_Compiler_List.splitAt
                                       (Prims.of_int (2)) binder_kinds in
                                   FStar_Compiler_Effect.op_Bar_Greater uu___3
                                     FStar_Pervasives_Native.snd in
-                                (bind_t_bs, uu___2,
+                                (bs1, uu___2,
                                   [FStar_Syntax_Syntax.NT
                                      ((a_b.FStar_Syntax_Syntax.binder_bv),
                                        (ct1.FStar_Syntax_Syntax.result_typ));

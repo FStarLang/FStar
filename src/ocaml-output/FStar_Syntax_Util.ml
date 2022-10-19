@@ -4742,16 +4742,22 @@ let (get_wp_ite_combinator :
           (fun uu___ -> FStar_Pervasives_Native.Some uu___)
     | uu___ -> FStar_Pervasives_Native.None
 let (get_stronger_vc_combinator :
-  FStar_Syntax_Syntax.eff_decl -> FStar_Syntax_Syntax.tscheme) =
+  FStar_Syntax_Syntax.eff_decl ->
+    (FStar_Syntax_Syntax.tscheme *
+      FStar_Syntax_Syntax.indexed_effect_combinator_kind
+      FStar_Pervasives_Native.option))
+  =
   fun ed ->
     match ed.FStar_Syntax_Syntax.combinators with
     | FStar_Syntax_Syntax.Primitive_eff combs ->
-        combs.FStar_Syntax_Syntax.stronger
+        ((combs.FStar_Syntax_Syntax.stronger), FStar_Pervasives_Native.None)
     | FStar_Syntax_Syntax.DM4F_eff combs ->
-        combs.FStar_Syntax_Syntax.stronger
+        ((combs.FStar_Syntax_Syntax.stronger), FStar_Pervasives_Native.None)
     | FStar_Syntax_Syntax.Layered_eff combs ->
-        FStar_Pervasives_Native.__proj__Mktuple3__item___2
-          combs.FStar_Syntax_Syntax.l_subcomp
+        ((FStar_Pervasives_Native.__proj__Mktuple3__item___2
+            combs.FStar_Syntax_Syntax.l_subcomp),
+          (FStar_Pervasives_Native.__proj__Mktuple3__item___3
+             combs.FStar_Syntax_Syntax.l_subcomp))
 let (get_stronger_repr :
   FStar_Syntax_Syntax.eff_decl ->
     FStar_Syntax_Syntax.tscheme FStar_Pervasives_Native.option)
