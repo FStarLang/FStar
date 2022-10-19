@@ -1996,7 +1996,8 @@ let tc_layered_lift env0 (sub:S.sub_eff) : S.sub_eff =
 
   let sub = { sub with
     lift = Some (us, lift);
-    lift_wp = Some (us, k |> SS.close_univ_vars us) } in
+    lift_wp = Some (us, k |> SS.close_univ_vars us);
+    kind = Some kind } in
 
   if Env.debug env0 <| Options.Other "LayeredEffectsTc" then
     BU.print1 "Final sub_effect: %s\n" (Print.sub_eff_to_string sub);

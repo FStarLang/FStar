@@ -1694,7 +1694,8 @@ let cps_and_elaborate (env:FStar.TypeChecker.Env.env) (ed:S.eff_decl)
           source = PC.effect_PURE_lid;
           target = ed.mname ;
           lift_wp = Some ([], apply_close lift_from_pure_wp) ;
-          lift = None //Some ([], apply_close return_elab)
+          lift = None; //Some ([], apply_close return_elab)
+          kind = None;
       } in
       Some (mk_sigelt (Sig_sub_effect (lift_from_pure)))
     end else None

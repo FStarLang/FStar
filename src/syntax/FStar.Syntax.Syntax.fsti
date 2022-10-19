@@ -376,11 +376,25 @@ type monad_abbrev = {
   parms:binders;
   def:typ
   }
+
+type indexed_effect_binder_kind =
+  | Type_binder
+  | Substitution_binder
+  | BindCont_no_abstraction_binder
+  | Range_binder
+  | Repr_binder
+  | Ad_hoc_binder
+
+type indexed_effect_combinator_kind =
+  | Standard_combinator of list indexed_effect_binder_kind
+  | Ad_hoc_combinator
+
 type sub_eff = {
   source:lident;
   target:lident;
   lift_wp:option tscheme;
-  lift:option tscheme
+  lift:option tscheme;
+  kind:option indexed_effect_combinator_kind
  }
 
 (*
@@ -438,18 +452,6 @@ type wp_eff_combinators = {
  *
  * Similarly the base effect name is also "" after desugaring, and is set by the typechecker
  *)
-type indexed_effect_binder_kind =
-  | Type_binder
-  | Substitution_binder
-  | BindCont_no_abstraction_binder
-  | Range_binder
-  | Repr_binder
-  | Ad_hoc_binder
-
-type indexed_effect_combinator_kind =
-  | Standard_combinator of list indexed_effect_binder_kind
-  | Ad_hoc_combinator
-
 type layered_eff_combinators = {
   l_repr         : (tscheme * tscheme * option indexed_effect_combinator_kind);
   l_return       : (tscheme * tscheme * option indexed_effect_combinator_kind);

@@ -3799,7 +3799,11 @@ and desugar_decl_noattrs env (d:decl) : (env_t * sigelts) =
            | ReifiableLift (wp, t) -> Some ([],desugar_term env wp), Some([], desugar_term env t)
            | LiftForFree t -> None, Some ([],desugar_term env t)
          in
-         let se = { sigel = Sig_sub_effect({source=src_ed.mname; target=dst_ed.mname; lift_wp=lift_wp; lift=lift});
+         let se = { sigel = Sig_sub_effect({source=src_ed.mname;
+                                            target=dst_ed.mname;
+                                            lift_wp=lift_wp;
+                                            lift=lift;
+                                            kind=None});
                     sigquals = [];
                     sigrng = d.drange;
                     sigmeta = default_sigmeta  ;
@@ -3813,7 +3817,8 @@ and desugar_decl_noattrs env (d:decl) : (env_t * sigelts) =
            source = src_ed.mname;
            target = dst_ed.mname;
            lift_wp = None;
-           lift = Some ([], desugar_term env t)
+           lift = Some ([], desugar_term env t);
+           kind = None
          } in
          env, [{
            sigel = Sig_sub_effect sub_eff;

@@ -3293,6 +3293,85 @@ let check_non_informative_type_for_lift env m1 m2 t r : unit =
             (Print.term_to_string t))
          r
 
+let standard_indexed_lift_substs (env:env)
+  (guard_indexed_effect_uvars:bool)
+  (bs:binders)
+  (ct:comp_typ)
+  (lift_name:string)
+  (r:Range.range)
+
+  : list subst_elt & guard_t & list term =
+
+  let bs, subst =
+    let a_b::bs = bs in
+    bs, [NT (a_b.binder_bv, ct.result_typ)] in
+
+  let bs, subst =
+    let m_num_effect_args = List.length ct.effect_args in
+    let f_bs, bs = List.splitAt m_num_effect_args bs in
+    let f_subst = List.map2 (fun f_b (arg, _) -> NT (f_b.binder_bv, arg)) f_bs ct.effect_args in
+    bs, subst@f_subst in
+
+  let bs = List.splitAt (List.length bs - 1) bs |> fst in
+
+  List.fold_left (fun (subst, g, tms) b ->
+    let [uv_t], uv_tms, g_uv = Env.uvars_for_binders env [b] subst guard_indexed_effect_uvars
+      (fun b ->
+       BU.format3 "implicit var for additional lift binder %s of %s at %s)"
+         (Print.binder_to_string b)
+         lift_name
+         (Range.string_of_range r))
+      r in
+    subst@[NT (b.binder_bv, uv_t)],
+    Env.conj_guard g g_uv,
+    tms@uv_tms) (subst, Env.trivial_guard, []) bs
+
+let ad_hoc_indexed_lift_substs (env:env)
+  (guard_indexed_effect_uvars:bool)
+  (bs:binders)
+  (ct:comp_typ)
+  (lift_name:string)
+  (r:Range.range)
+
+  : list subst_elt & guard_t & list term =
+
+  let lift_t_shape_error s =
+    BU.format2 "Lift %s has unexpected shape, reason: %s"
+      lift_name s in
+
+  let a_b, (rest_bs, [f_b]) =
+    if List.length bs >= 2
+    then let a_b::bs = bs in
+         a_b, List.splitAt (List.length bs - 1) bs
+    else raise_error (Errors.Fatal_UnexpectedEffect,
+                      lift_t_shape_error "either not an arrow or not enough binders") r in
+
+  let rest_bs_uvars, rest_uvars_guard_tms, g =
+    Env.uvars_for_binders env rest_bs
+      [NT (a_b.binder_bv, ct.result_typ)]
+      guard_indexed_effect_uvars
+      (fun b -> BU.format3
+               "implicit var for binder %s of %s at %s"
+               (Print.binder_to_string b)
+               lift_name
+               (Range.string_of_range r)) r in
+
+  let substs = List.map2
+    (fun b t -> NT (b.binder_bv, t))
+    (a_b::rest_bs) (ct.result_typ::rest_bs_uvars) in
+
+  let guard_f =
+    let f_sort = f_b.binder_bv.sort |> SS.subst substs |> SS.compress in
+    let f_sort_is = effect_args_from_repr f_sort (Env.is_layered_effect env ct.effect_name) r in
+    List.fold_left2
+      (fun g i1 i2 -> Env.conj_guard g (Rel.layered_effect_teq env i1 i2 (Some lift_name)))
+      Env.trivial_guard (List.map fst ct.effect_args) f_sort_is in
+
+  substs,
+  Env.conj_guard g guard_f,
+  rest_uvars_guard_tms
+
+
 (*
  * Lifting a comp c to the layered effect eff_name
  *
@@ -3311,10 +3390,10 @@ let check_non_informative_type_for_lift env m1 m2 t r : unit =
  *
  * + we add (wp[substs] (fun _ -> True)) to the returned guard
  *)
-let lift_tf_layered_effect (tgt:lident) (lift_ts:tscheme)
+let lift_tf_layered_effect (tgt:lident) (lift_ts:tscheme) (kind:S.indexed_effect_combinator_kind)
   env guard_indexed_effect_uvars (c:comp) : comp * guard_t =
   if Env.debug env <| Options.Other "LayeredEffects" then
-    BU.print2 "Lifting comp %s to layered effect %s {\n"
+    BU.print2 "Lifting indexed comp %s to  %s {\n"
       (Print.comp_to_string c) (Print.lid_to_string tgt);
 
   let r = Env.get_range env in
@@ -3325,51 +3404,15 @@ let lift_tf_layered_effect (tgt:lident) (lift_ts:tscheme)
 
   let lift_name = BU.format2 "%s ~> %s" (string_of_lid ct.effect_name) (string_of_lid tgt) in
 
-  let u, a, c_is = List.hd ct.comp_univs, ct.result_typ, ct.effect_args |> List.map fst in
+  let _, lift_t = Env.inst_tscheme_with lift_ts [List.hd ct.comp_univs] in
 
-  //lift_ts has the arrow type:  <u>a:Type -> ..bs.. -> f -> repr a is
+  let bs, lift_c = U.arrow_formals_comp lift_t in
 
-  let _, lift_t = Env.inst_tscheme_with lift_ts [u] in
-
-  let lift_t_shape_error s =
-    BU.format4 "Lift from %s to %s has unexpected shape, reason: %s (lift:%s)"
-      (Ident.string_of_lid ct.effect_name) (Ident.string_of_lid tgt)
-      s (Print.term_to_string lift_t) in
-
-  let a_b, (rest_bs, [f_b]), lift_c =  //lift_c is the computation type of the lift combinator (PURE/GHOST a wp)
-    match (SS.compress lift_t).n with
-    | Tm_arrow (bs, c) when List.length bs >= 2 ->
-      let ((a_b::bs), c) = SS.open_comp bs c in
-      a_b, bs |> List.splitAt (List.length bs - 1), c
-    | _ ->
-      raise_error (Errors.Fatal_UnexpectedEffect, lift_t_shape_error
-        "either not an arrow or not enough binders") r in
-
-  let rest_bs_uvars, rest_uvars_guard_tms, g =
-    let guard_indexed_effect_uvars = false in
-    Env.uvars_for_binders env rest_bs
-      [NT (a_b.binder_bv, a)]
-      guard_indexed_effect_uvars
-      (fun b -> BU.format4
-               "implicit var for binder %s of %s~>%s at %s"
-               (Print.binder_to_string b) (Ident.string_of_lid ct.effect_name)
-               (Ident.string_of_lid tgt) (Range.string_of_range r)) r in
-
-  if debug env <| Options.Other "LayeredEffects" then
-    BU.print1 "Introduced uvars: %s\n"
-      (List.fold_left (fun s u -> s ^ ";;;;" ^ (Print.term_to_string u)) "" rest_bs_uvars);
-
-  let substs = List.map2
-    (fun b t -> NT (b.binder_bv, t))
-    (a_b::rest_bs) (a::rest_bs_uvars) in
-
-  let guard_f =
-    let f_sort = f_b.binder_bv.sort |> SS.subst substs |> SS.compress in
-    let f_sort_is = effect_args_from_repr f_sort (Env.is_layered_effect env ct.effect_name) r in
-    List.fold_left2
-      (fun g i1 i2 -> Env.conj_guard g (Rel.layered_effect_teq env i1 i2 (Some lift_name)))
-      Env.trivial_guard c_is f_sort_is in
-
+  let substs, g, rest_uvars_guard_tms =
+    if kind = S.Ad_hoc_combinator
+    then ad_hoc_indexed_lift_substs env guard_indexed_effect_uvars bs ct lift_name r
+    else standard_indexed_lift_substs env guard_indexed_effect_uvars bs ct lift_name r in
+    
   let lift_ct = lift_c |> SS.subst_comp substs |> U.comp_to_comp_typ in
 
   let is = effect_args_from_repr lift_ct.result_typ (Env.is_layered_effect env tgt) r in
@@ -3384,9 +3427,9 @@ let lift_tf_layered_effect (tgt:lident) (lift_ts:tscheme)
   then BU.print1 "Guard for lift is: %s" (Print.term_to_string fml);
 
   let c = mk_Comp ({
-    comp_univs = [u];
+    comp_univs = ct.comp_univs;
     effect_name = tgt;
-    result_typ = a;
+    result_typ = ct.result_typ;
     effect_args = is |> List.map S.as_arg;
     flags = []  //AR: setting the flags to empty
   }) in
@@ -3402,7 +3445,6 @@ let lift_tf_layered_effect (tgt:lident) (lift_ts:tscheme)
   let g = Env.conj_guards [
     g;
     g_strengthen;
-    guard_f;
     Env.guard_of_guard_formula (TcComm.NonTrivial fml) ] in
     
 
@@ -3451,7 +3493,7 @@ let get_mlift_for_subeff env (sub:S.sub_eff) : Env.mlift =
   if Env.is_layered_effect env sub.source || Env.is_layered_effect env sub.target
 
   then
-    ({ mlift_wp = lift_tf_layered_effect sub.target (sub.lift_wp |> must);
+    ({ mlift_wp = lift_tf_layered_effect sub.target (sub.lift_wp |> must) (sub.kind |> must);
        mlift_term = Some (lift_tf_layered_effect_term env sub) })
 
   else
