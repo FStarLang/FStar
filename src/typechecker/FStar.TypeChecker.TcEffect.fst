@@ -145,19 +145,20 @@ let validate_layered_effect_binders env (bs:binders) (check_non_informatve_binde
     else ()
   else ()
 
-let print_binder_kinds l =
-  List.fold_left (fun s k -> 
-    s ^ "; " ^ (match k with
-                | Type_binder -> "type"
-                | Substitution_binder -> "sub"
-                | BindCont_no_abstraction_binder -> "g_no_abs"
-                | Ad_hoc_binder -> "ad_hoc"
-                | Repr_binder -> "repr")) "" l
-
 let (let?) (#a #b:Type) (f:option a) (g:a -> option b) : option b =
   match f with
   | None -> None
   | Some x -> g x
+
+let eq_binders (bs1 bs2:binders) : option (list S.indexed_effect_binder_kind) =
+  if List.fold_left2 (fun (b, ss) b1 b2 ->
+       b &&
+       U.eq_tm (SS.subst ss b1.binder_bv.sort) b2.binder_bv.sort = U.Equal,
+       ss@[NT (b1.binder_bv, b2.binder_bv |> S.bv_to_name)]) (true, []) bs1 bs2
+
+     |> fst
+  then bs1 |> List.map (fun _ -> Substitution_binder) |> Some
+  else None
 
 let bind_combinator_kind (env:env)
   (m_eff_name n_eff_name p_eff_name:lident)
@@ -195,15 +196,7 @@ let bind_combinator_kind (env:env)
   //   the bind combinator is definitely not standard
   //
   
-  let? f_bs_kinds =
-    let f_bs_kinds = List.map2 (fun f_sig_b f_b ->
-      if U.eq_tm f_sig_b.binder_bv.sort f_b.binder_bv.sort = U.Equal
-      then Substitution_binder
-      else Ad_hoc_binder) f_sig_bs f_bs in
-    
-    if List.contains Ad_hoc_binder f_bs_kinds
-    then None
-    else f_bs_kinds |> Some in
+  let? f_bs_kinds = eq_binders f_sig_bs f_bs in
 
   // same thing for g, first get binders in g's signature
 
@@ -226,15 +219,17 @@ let bind_combinator_kind (env:env)
   //
 
   let? g_bs_kinds =
-    let g_bs_kinds = List.map2 (fun g_sig_b g_b ->
+    let g_bs_kinds, _ = List.fold_left2 (fun (l, ss) g_sig_b g_b ->
+      let g_sig_b_sort = SS.subst ss g_sig_b.binder_bv.sort in
+      let ss = ss@[NT (g_sig_b.binder_bv, g_b.binder_bv |> S.bv_to_name)] in
       let g_sig_b_arrow_t =
         U.arrow [S.mk_binder (S.gen_bv "x" None (a_b.binder_bv |> S.bv_to_name))]
-                (mk_Total g_sig_b.binder_bv.sort) in
+                (mk_Total g_sig_b_sort) in  // Universe?
       if U.eq_tm g_sig_b_arrow_t g_b.binder_bv.sort = U.Equal
-      then Substitution_binder
-      else if U.eq_tm g_sig_b.binder_bv.sort g_b.binder_bv.sort = U.Equal
-      then BindCont_no_abstraction_binder
-      else Ad_hoc_binder) g_sig_bs g_bs in
+      then l@[Substitution_binder], ss
+      else if U.eq_tm g_sig_b_sort g_b.binder_bv.sort = U.Equal
+      then l@[BindCont_no_abstraction_binder], ss
+      else l@[Ad_hoc_binder], ss) ([], []) g_sig_bs g_bs in
 
     if List.contains Ad_hoc_binder g_bs_kinds
     then None
@@ -472,15 +467,7 @@ let subcomp_combinator_kind (env:env)
     then None
     else List.splitAt (List.length f_sig_bs) rest_bs |> Some in
 
-  let? f_bs_kinds =
-    let f_bs_kinds = List.map2 (fun f_sig_b f_b ->
-      if U.eq_tm f_sig_b.binder_bv.sort f_b.binder_bv.sort = U.Equal
-      then Substitution_binder
-      else Ad_hoc_binder) f_sig_bs f_bs in
-
-    if List.contains Ad_hoc_binder f_bs_kinds
-    then None
-    else f_bs_kinds |> Some in
+  let? f_bs_kinds = eq_binders f_sig_bs f_bs in
 
   let g_sig_bs =
     let _, sig = Env.inst_tscheme_with n_sig_ts [U_name u] in
@@ -494,17 +481,8 @@ let subcomp_combinator_kind (env:env)
     then None
     else List.splitAt (List.length g_sig_bs) rest_bs |> Some in
 
-  let? g_bs_kinds =
-    let g_bs_kinds = List.map2 (fun g_sig_b g_b ->
-      if U.eq_tm g_sig_b.binder_bv.sort g_b.binder_bv.sort = U.Equal
-      then Substitution_binder
-      else Ad_hoc_binder) g_sig_bs g_bs in
-
-    if List.contains Ad_hoc_binder g_bs_kinds
-    then None
-    else g_bs_kinds |> Some in
-  
-
+  let? g_bs_kinds = eq_binders g_sig_bs g_bs in
+    
   let? rest_bs, f_b =
     if List.length rest_bs >= 1
     then let rest_bs, [f_b] = List.splitAt (List.length rest_bs - 1) rest_bs in
@@ -553,7 +531,7 @@ let subcomp_combinator_kind (env:env)
     then Some ()
     else None in
 
-  let rest_kinds : list indexed_effect_binder_kind = List.map (fun _ -> Ad_hoc_binder) rest_bs in
+  let rest_kinds = List.map (fun _ -> Ad_hoc_binder) rest_bs in
 
   Some ([Type_binder]@f_bs_kinds@g_bs_kinds@rest_kinds@[Repr_binder])
 
@@ -683,15 +661,7 @@ let ite_combinator_kind (env:env)
     then None
     else List.splitAt (List.length f_sig_bs) rest_bs |> Some in
 
-  let? f_bs_kinds =
-    let f_bs_kinds = List.map2 (fun f_sig_b f_b ->
-      if U.eq_tm f_sig_b.binder_bv.sort f_b.binder_bv.sort = U.Equal
-      then Substitution_binder
-      else Ad_hoc_binder) f_sig_bs f_bs in
-
-    if List.contains Ad_hoc_binder f_bs_kinds
-    then None
-    else f_bs_kinds |> Some in
+  let? f_bs_kinds = eq_binders f_sig_bs f_bs in
 
   let g_sig_bs =
     let _, sig = Env.inst_tscheme_with sig_ts [U_name u] in
@@ -705,15 +675,7 @@ let ite_combinator_kind (env:env)
     then None
     else List.splitAt (List.length g_sig_bs) rest_bs |> Some in
 
-  let? g_bs_kinds =
-    let g_bs_kinds = List.map2 (fun g_sig_b g_b ->
-      if U.eq_tm g_sig_b.binder_bv.sort g_b.binder_bv.sort = U.Equal
-      then Substitution_binder
-      else Ad_hoc_binder) g_sig_bs g_bs in
-
-    if List.contains Ad_hoc_binder g_bs_kinds
-    then None
-    else g_bs_kinds |> Some in
+  let? g_bs_kinds = eq_binders g_sig_bs g_bs in
 
   let? rest_bs, [f_b; g_b; p_b] =
     if List.length rest_bs >= 3
@@ -862,15 +824,7 @@ let lift_combinator_kind (env:env)
     then None
     else List.splitAt (List.length f_sig_bs) rest_bs |> Some in
 
-  let? f_bs_kinds =
-    let f_bs_kinds = List.map2 (fun f_sig_b f_b ->
-      if U.eq_tm f_sig_b.binder_bv.sort f_b.binder_bv.sort = U.Equal
-      then Substitution_binder
-      else Ad_hoc_binder) f_sig_bs f_bs in
-
-    if List.contains Ad_hoc_binder f_bs_kinds
-    then None
-    else f_bs_kinds |> Some in
+  let? f_bs_kinds = eq_binders f_sig_bs f_bs in
 
   let? rest_bs, f_b =
     if List.length rest_bs >= 1
