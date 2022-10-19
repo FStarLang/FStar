@@ -449,6 +449,94 @@ let validate_indexed_effect_bind_shape (env:env)
 
   k, kind
 
+let validate_indexed_effect_subcomp_shape (env:env)
+  (m_eff_name n_eff_name:lident)
+  (m_sig_ts n_sig_ts:tscheme)
+  (m_repr_ts n_repr_ts:option tscheme)
+  (u:univ_name)
+  (subcomp_t:typ)
+  (r:Range.range)
+  : typ & indexed_effect_combinator_kind =
+
+  let subcomp_name = BU.format2 "%s <: %s"
+    (string_of_lid m_eff_name)
+    (string_of_lid n_eff_name) in
+
+  let a_b = (U_name u) |> U.type_with_u |> S.gen_bv "a" None |> S.mk_binder in
+
+  let rest_bs =
+    match (SS.compress subcomp_t).n with
+    | Tm_arrow (bs, _) when List.length bs >= 2 ->
+      // peel off a:Type
+      let ({binder_bv=a})::bs = SS.open_binders bs in
+      // peel off f:repr from the end
+      bs |> List.splitAt (List.length bs - 1) |> fst
+         |> SS.subst_binders [NT (a, bv_to_name a_b.binder_bv)]
+    | _ ->
+      raise_error (Errors.Fatal_UnexpectedEffect,
+        BU.format2 "Type of %s is not an arrow with >= 2 binders (%s)"
+          subcomp_name
+          (Print.term_to_string subcomp_t)) r in
+
+  let f, guard_f =
+    let repr, g = TcUtil.fresh_effect_repr
+      (Env.push_binders env (a_b::rest_bs))
+      r
+      m_eff_name
+      m_sig_ts
+      m_repr_ts
+      (U_name u)
+      (a_b.binder_bv |> S.bv_to_name) in
+    repr |> S.gen_bv "f" None |> S.mk_binder, g in
+    
+  let ret_t, guard_ret_t = TcUtil.fresh_effect_repr
+    (Env.push_binders env (a_b::rest_bs))
+    r
+    n_eff_name
+    n_sig_ts
+    n_repr_ts
+    (U_name u)
+    (a_b.binder_bv |> S.bv_to_name) in
+  
+  let pure_wp_uvar, guard_wp = pure_wp_uvar
+    (Env.push_binders env (a_b::rest_bs))
+    ret_t
+    (BU.format1 "implicit for pure_wp in checking %s" subcomp_name)
+    r in
+
+  let c = S.mk_Comp ({
+    comp_univs = [ Env.new_u_univ () ];
+    effect_name = PC.effect_PURE_lid;
+    result_typ = ret_t;
+    effect_args = [ pure_wp_uvar |> S.as_arg ];
+    flags = [] }) in
+
+  let k = U.arrow (a_b::rest_bs@[f]) c in
+
+  if Env.debug env <| Options.Other "LayeredEffectsTc" then
+    BU.print1 "Expected type of subcomp before unification: %s\n"
+      (Print.term_to_string k);
+
+  let guard_eq =
+    match Rel.teq_nosmt env subcomp_t k with
+    | None ->
+      raise_error (Errors.Fatal_UnexpectedEffect,
+                   BU.format2 "Unexpected type of %s (%s)\n"
+                     subcomp_name
+                     (Print.term_to_string subcomp_t)) r
+    | Some g -> g in
+
+
+  Rel.force_trivial_guard env (Env.conj_guards [
+    guard_f;
+    guard_ret_t;
+    guard_wp;
+    guard_eq ]);
+
+  let k = k |> N.remove_uvar_solutions env in
+
+  k, Ad_hoc_combinator
+  
 (*
  * Typechecking of layered effects
  *
@@ -642,33 +730,6 @@ Errors.with_ctx (BU.format1 "While checking layered effect definition `%s`" (str
         r
         (U.has_attribute ed.eff_attrs PC.bind_has_range_args_attr) in
 
-    // let _check_valid_binders =
-    //   match (SS.compress k).n with
-    //   | Tm_arrow (bs, c) ->
-    //     let a::b::bs, c = SS.open_comp bs c in
-    //     let res_t = U.comp_result c in
-    //     let bs, f_b, g_b =
-    //       List.splitAt (List.length bs - 2) bs
-    //       |> (fun (l1, l2) -> l1,
-    //                       l2 |> List.hd, l2 |> List.tl |> List.hd) in
-
-    //     // if there are range binders, don't check for their validity
-    //     let bs =
-    //       if List.length range_bs <> 0
-    //       then List.splitAt (List.length bs - 2) bs |> fst
-    //       else bs in
-    //     (*
-    //      * AR: CAUTION: a little lax about opening g_b with the x:a binder
-    //      *              g_sort is only used for repr terms, validate_layered_effect_binders does not expect
-    //      *                it to be closed in env
-    //      *)
-    //     let g_sort =
-    //       match (SS.compress g_b.binder_bv.sort).n with
-    //       | Tm_arrow (_, c) -> U.comp_result c in
-    //     let env = Env.push_binders env [a; b] in
-    //     validate_layered_effect_binders env bs
-    //       check_non_informative_binders r in
-
     (bind_us, bind_t, k |> SS.close_univ_vars bind_us), kind in
 
   log_combinator "bind_repr" bind_repr;
@@ -686,7 +747,7 @@ Errors.with_ctx (BU.format1 "While checking layered effect definition `%s`" (str
    * If so, we add a default combinator as: fun (a:Type) (signature_bs) (f:repr a signature_bs) -> f
    * 
    *)
-  let stronger_repr =
+  let stronger_repr, stronger_combinator_kind =
     let stronger_repr =
       let ts = ed |> U.get_stronger_repr |> must in
       match (ts |> snd |> SS.compress).n with
@@ -719,56 +780,18 @@ Errors.with_ctx (BU.format1 "While checking layered effect definition `%s`" (str
     let us, ty = SS.open_univ_vars stronger_us stronger_ty in
     let env = Env.push_univ_vars env0 us in
 
-    check_no_subtyping_for_layered_combinator env ty None;
+    let k, kind =
+      let sig_ts = let us, t, _ = signature in (us, t) in
+      let repr_ts = let us, t, _ = repr in (us, t) in
+      validate_indexed_effect_subcomp_shape env
+        ed.mname ed.mname
+        sig_ts sig_ts
+        (Some repr_ts) (Some repr_ts)
+        (List.hd us)
+        ty
+        r in
 
-    let a, u = fresh_a_and_u_a "a" in
-    let rest_bs =
-      match (SS.compress ty).n with
-      | Tm_arrow (bs, _) when List.length bs >= 2 ->
-        let (({binder_bv=a'})::bs) = SS.open_binders bs in
-        bs |> List.splitAt (List.length bs - 1) |> fst
-           |> SS.subst_binders [NT (a', bv_to_name a.binder_bv)]
-      | _ -> not_an_arrow_error "stronger" 2 ty r in
-    let bs = a::rest_bs in
-    let f, guard_f =
-      let repr, g = fresh_repr r (Env.push_binders env bs) u (a.binder_bv |> S.bv_to_name) in
-      S.gen_bv "f" None repr |> S.mk_binder, g in
-    let ret_t, guard_ret_t = fresh_repr r (Env.push_binders env bs) u (a.binder_bv |> S.bv_to_name) in
-
-    let pure_wp_uvar, guard_wp = pure_wp_uvar (Env.push_binders env bs) ret_t 
-      (BU.format1 "implicit for pure_wp in checking stronger for %s" (string_of_lid ed.mname))
-      r in
-    let c = S.mk_Comp ({
-      comp_univs = [ Env.new_u_univ () ];
-      effect_name = PC.effect_PURE_lid;
-      result_typ = ret_t;
-      effect_args = [ pure_wp_uvar |> S.as_arg ];
-      flags = [] }) in
-
-    let k = U.arrow (bs@[f]) c in
-
-    if Env.debug env <| Options.Other "LayeredEffectsTc" then
-      BU.print1 "Expected type of subcomp before unification: %s\n"
-        (Print.term_to_string k);
-
-    let guard_eq = Rel.teq env ty k in
-    List.iter (Rel.force_trivial_guard env) [guard_f; guard_ret_t; guard_wp; guard_eq];
-
-    let k = k |> N.remove_uvar_solutions env in
-
-    let _check_valid_binders =
-      match (SS.compress k).n with
-      | Tm_arrow (bs, c) ->
-        let a::bs,c = SS.open_comp bs c in
-        let res_t = U.comp_result c in
-        let bs, f_b =
-          List.splitAt (List.length bs - 1) bs
-          |> (fun (l1, l2) -> l1, List.hd l2) in
-        let env = Env.push_binders env [a] in
-        validate_layered_effect_binders env bs
-          check_non_informative_binders r in
-
-    stronger_us, stronger_t, k |> SS.close_univ_vars stronger_us in
+    (stronger_us, stronger_t, k |> SS.close_univ_vars stronger_us), kind in
 
   log_combinator "stronger_repr" stronger_repr;
 
