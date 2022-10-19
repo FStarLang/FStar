@@ -89,16 +89,22 @@ let unify' x y =
 
 let norm t = N.normalize [] (tcenv()) t
 
-let check_core i x y =
+let check_core i subtyping guard_ok x y =
   FStar.Main.process_args () |> ignore; //set options
   let env = tcenv () in
+  let res = 
+    if subtyping
+    then FStar.TypeChecker.Core.check_term_subtyping env x y
+    else FStar.TypeChecker.Core.check_term_equality env x y
+  in
   let _ = 
-    match FStar.TypeChecker.Core.check_term_equality env x y with
+    match res with
     | Inl None ->
       BU.print1 "%s core check ok\n" (BU.string_of_int i)
     | Inl (Some g) ->
       BU.print2 "%s core check computed guard %s ok\n" (BU.string_of_int i) (P.term_to_string g);
-      success := false
+      if not guard_ok
+      then success := false
     | Inr err ->
       success := false;
       BU.print2 "%s failed\n%s\n" (BU.string_of_int i) (FStar.TypeChecker.Core.print_error err)
@@ -242,18 +248,58 @@ let run_all () =
       let t1 = tc "x:ty0 17 { x > 17 }" in
       t0, t1
     in
-    check_core 15 tm1 tm2;
+    check_core 15 false false tm1 tm2;
 
     let tm1, tm2 =
       let t0 = tc "x:int { x >= 17 /\ x > 17 }" in
       let t1 = tc "x:ty0 17 { x > 17 }" in
       t0, t1
     in
-    check_core 16 tm1 tm2;
+    check_core 16 false false tm1 tm2;
 
+    let tm1, tm2 =
+      let _ = Pars.pars_and_tc_fragment 
+        "let defn17_0 (x:nat) : nat -> nat -> Type0 = fun y z -> a:int { a + x == y + z }"
+      in
+      let t0 = tc "defn17_0 0 1 2" in
+      let t1_head = tc "(defn17_0 0)" in
+      let arg1 = tc "1" in
+      let arg2 = tc "2" in      
+      let t1 = S.mk_Tm_app t1_head [(arg1, None); (arg2, None)] t0.pos in
+      t0, t1
+    in
+    check_core 17 false false tm1 tm2;
+
+    let tm1, tm2 = 
+      let t0 = tc "dp:((dtuple2 int (fun (y:int) -> z:int{ z > y })) <: Type0) { let (| x, _ |) = dp in x > 17 }" in
+      let t1 = tc "(dtuple2 int (fun (y:int) -> z:int{ z > y }))" in
+      t0, t1
+    in
+    check_core 18 true false tm1 tm2;
+
+    let tm1, tm2 = 
+      let _ = Pars.pars_and_tc_fragment 
+        "type vprop' = { t:Type0 ; n:nat }"
+      in
+      let t0 = tc "x:(({ t=bool; n=0 }).t <: Type0) { x == false }" in
+      let t1 = tc "x:bool{ x == false }" in
+      t0, t1
+    in
+    check_core 19 false false tm1 tm2;
+
+
+    let tm1, tm2 = 
+      let t0 = tc "int" in
+      let t1 = tc "j:(i:nat{ i > 17 } <: Type0){j > 42}" in
+      t0, t1
+    in
+    check_core 20 true true tm1 tm2;
 
     Options.__clear_unit_tests();
 
     if !success
     then BU.print_string "Unifier ok\n";
     !success
+
+type vprop' = {t:Type0; n:nat}
+let test : Type0 = ({t=bool; n=0}).t

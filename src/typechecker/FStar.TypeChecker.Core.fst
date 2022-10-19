@@ -27,9 +27,30 @@ let precondition = option typ
 
 let success a = a & precondition
 
+type relation =
+  | EQUALITY
+  | SUBTYPING : option term -> relation
+
+let relation_to_string = function
+  | EQUALITY -> "=?="
+  | SUBTYPING _ -> "<:?"
+  
+type context_term =
+  | CtxTerm : term -> context_term
+  | CtxRel : term -> relation -> term -> context_term
+  
+let context_term_to_string (c:context_term) =
+  match c with
+  | CtxTerm term -> P.term_to_string term
+  | CtxRel t0 r t1 ->
+    BU.format3 "%s %s %s"
+              (P.term_to_string t0)
+              (relation_to_string r)
+              (P.term_to_string t1)
+
 type context = {
   no_guard : bool;
-  error_context: list (string & option term)
+  error_context: list (string & option context_term)
 }
 
 let print_context (ctx:context)
@@ -37,15 +58,13 @@ let print_context (ctx:context)
   let rec aux (depth:string) (ctx:_) =
     match ctx with
     | [] -> ""
-    | (msg, topt)::tl ->
+    | (msg, ctx_term)::tl ->
       let hd =
         BU.format3
           "%s %s (%s)\n"
           depth
           msg
-          (match topt with
-          | None -> ""
-          | Some t -> P.term_to_string t)
+          (match ctx_term with None -> "" | Some ctx_term -> context_term_to_string ctx_term)
       in
       let tl = aux (depth ^ ">") tl in
       hd ^ tl
@@ -146,7 +165,7 @@ let handle_with (#a:Type) (x:result a) (h: unit -> result a)
       | res -> res
 
 inline_for_extraction
-let with_context (#a:Type) (msg:string) (t:option term) (x:unit -> result a)
+let with_context (#a:Type) (msg:string) (t:option context_term) (x:unit -> result a)
   : result a
   = fun ctx ->
      let ctx' = { ctx with error_context=((msg,t)::ctx.error_context) } in
@@ -166,7 +185,7 @@ let is_type (g:env) (t:term)
         | _ ->
           fail (BU.format1 "Expected a type; got %s" (P.term_to_string t))
     in
-    with_context "is_type" (Some t) (fun _ ->
+    with_context "is_type" (Some (CtxTerm t)) (fun _ ->
       handle_with
         (aux t)
         (fun _ -> aux (U.unrefine (N.unfold_whnf g.tcenv t))))
@@ -495,6 +514,7 @@ type side =
   | Right
   | Both
   | Neither
+
   
 (*
      G |- e : t0 <: t1 | p
@@ -502,237 +522,50 @@ type side =
 or   G |- t0 <: t1 | p
 
  *)
-let rec check_subtype_whnf (g:env) (e:option term) (t0 t1: typ)
-  : result unit
-  = let fail (s:string) = 
-      debug g (fun () ->
-        BU.print2 "check_subtype_whnf  [[%s <: %s]] failed\n" (P.term_to_string t0) (P.term_to_string t1));        
-      fail (BU.format3 "Subtyping failed because %s: %s </: %s"
-              s
-              (P.term_to_string t0)
-              (P.term_to_string t1))
-    in
-    debug g (fun () ->
-      BU.print2 "check_subtype_whnf %s <: %s\n" (P.term_to_string t0) (P.term_to_string t1));
-    let! guard_not_ok = guard_not_allowed in
-    let guard_ok = not guard_not_ok in
-    let fallback g t0 t1 = 
-      if guard_ok && (equatable g t0 || equatable g t1)
-      then
-        let! u = universe_of g t0 in
-        debug g (fun () ->
-          BU.print2 "exiting check_subtype_whnf [[%s <: %s]] with guard\n" (P.term_to_string t0) (P.term_to_string t1));
-        guard (U.mk_eq2 u (mk_type u) t0 t1)
-      else (
-          fail "no subtyping rule is applicable"
-      )
-    in
-    match (SS.compress t0).n, (SS.compress t1).n with
-    | Tm_refine _, Tm_refine _
-      when guard_not_ok ->
-      check_equality_whnf g t0 t1
-
-    | Tm_refine(x0, p0), _ ->
-      let [x0], p0 = SS.open_term [S.mk_binder x0] p0 in
-      if Some? e
-      then (
-        weaken
-          (apply_predicate x0 p0 (Some?.v e))
-          (check_subtype g e x0.binder_bv.sort t1)
-      )
-      else (
-        let! u0 = universe_of g x0.binder_bv.sort in
-        with_binders [x0] [u0] (
-          weaken p0
-            (check_subtype (push_binders g [x0]) 
-                           (Some (S.bv_to_name x0.binder_bv))
-                           x0.binder_bv.sort
-                           t1))
-      )
-
-
-    | _, Tm_refine(x1, p1) ->
-      let [x1], p1 = SS.open_term [S.mk_binder x1] p1 in
-      if Some? e
-      then (
-        strengthen
-          (apply_predicate x1 p1 (Some?.v e))
-          (check_subtype g e t0 x1.binder_bv.sort)
-      )
-      else (
-        let! u0 = universe_of g t0 in
-        let x0 = S.new_bv None t0 in
-        strengthen
-            (mk_forall_l [u0] [mk_binder x0] (SS.subst [NT(x1.binder_bv, S.bv_to_name x0)] p1))
-            (check_subtype g None t0 x1.binder_bv.sort)
-      )
-  
-    | Tm_arrow (x0::x1::xs, c0), _ ->
-      check_subtype_whnf g e (curry_arrow x0 (x1::xs) c0) t1
-
-    | _, Tm_arrow(x0::x1::xs, c1) ->
-      check_subtype_whnf g e t0 (curry_arrow x0 (x1::xs) c1)
-
-    | Tm_arrow ([x0], c0), Tm_arrow([x1], c1) ->
-      with_context "subtype arrow" (Some (U.mk_untyped_eq2 t0 t1)) (fun _ ->
-        let [x0], c0 = SS.open_comp [x0] c0 in
-        let [x1], c1 = SS.open_comp [x1] c1 in
-        let! _ = check_bqual x0.binder_qual x1.binder_qual in
-        let! u1 = universe_of g x1.binder_bv.sort in
-        with_binders [x1] [u1] (
-          check_subtype g (Some (S.bv_to_name x1.binder_bv)) x1.binder_bv.sort x0.binder_bv.sort ;!
-          with_context "check_subcomp" None (fun _ ->
-            check_subcomp (push_binders g [x1])
-                          (if U.is_pure_or_ghost_comp c0
-                          then let? e in Some (S.mk_Tm_app e (snd (U.args_of_binders [x1])) R.dummyRange)
-                          else None)
-                          (SS.subst_comp [NT(x0.binder_bv, S.bv_to_name x1.binder_bv)] c0)
-                          c1
-          )
-        )
-      )
-
-    | Tm_ascribed (t0, _, _), _ ->
-      check_subtype_whnf g e t0 t1
-      
-    | _, Tm_ascribed (t1, _, _) -> 
-      check_subtype_whnf g e t0 t1
-
-    | Tm_type _, Tm_type _ ->
-      check_equality_whnf g t0 t1
-
-    | Tm_app _, _
-    | _, Tm_app _ ->
-      let smt_ok = not (guard_not_ok) in
-      let mr, ts = Rel.head_matches_delta g.tcenv smt_ok t0 t1 in
-      debug g (fun _ -> BU.print_string "Back from head_matches_delta\n");
-      begin
-      match mr, ts with
-      | Rel.MisMatch _, _
-      | Rel.HeadMatch true, _ ->
-        //HeadMatch true: heads may match, e.g, both heads are Tm_match nodes, but we can't decide.
-        //So, just handle as a fallback
-        fallback g t0 t1
-
-      | _, Some (t0', t1') ->
-        //match after reduction to t0, t1
-        debug g (fun _ ->
-          BU.print4 "check_subtype_whnf after redunction [[%s <: %s]] reduced to [[%s <: %s]]\n"
-                       (P.term_to_string t0) (P.term_to_string t1)
-                       (P.term_to_string t0') (P.term_to_string t1'));
-        check_subtype_whnf g e t0' t1'
-      
-      | Rel.FullMatch, _
-      | Rel.HeadMatch false, _ ->
-        //heads already match
-        check_equality_whnf g t0 t1
-      end
-      
-
-    | Tm_match (e0, _, brs0, _), Tm_match (e1, _, brs1, _) ->
-      //
-      // TODO: this will currently check equality of branches,
-      //   it could check subtyping instead
-      //
-      check_equality_match g e0 brs0 e1 brs1
-    
-    | _ ->
-      if U.eq_tm t0 t1 = U.Equal
-      then (
-        debug g (fun _ -> BU.print_string "exiting check_subtype_whnf (EQUAL)\n");      
-        return ()
-      )
-      else fallback g t0 t1
-
-and check_subtype (g:env) (e:option term) (t0 t1:typ)
-  = debug g (fun () ->
-      BU.print2 "check_subtype %s <: %s\n" (P.term_to_string t0) (P.term_to_string t1));
-    match U.eq_tm t0 t1 with
-    | U.Equal -> 
-      debug g (fun _ -> BU.print_string "exiting check_subtype (EQUAL)\n");
-      return ()
-    | _ ->
-      let t0' = N.normalize_refinement default_norm_steps g.tcenv t0 in
-      let t1' = N.normalize_refinement default_norm_steps g.tcenv t1 in
-      check_subtype_whnf g e t0' t1'
-
-and check_equality_formula (g:env) (phi0 phi1:typ) =
-  guard (U.mk_iff phi0 phi1)
-
-and check_equality_match (g:env)
-  (scrutinee0:term) (brs0:list branch)
-  (scrutinee1:term) (brs1:list branch)
-  = let fail (s:string) = 
-      fail (BU.format3 "match equality failed because %s: %s </: %s"
-              s
-              (P.term_to_string (S.mk (Tm_match (scrutinee0, None, brs0, None)) Range.dummyRange))
-              (P.term_to_string (S.mk (Tm_match (scrutinee1, None, brs1, None)) Range.dummyRange))) in
-
-    let! _ = check_equality_whnf g scrutinee0 scrutinee1 in
-
-    let rec check_equality_branches (brs0 brs1:list branch)
-      : result unit
-      = match brs0, brs1 with
-        | [], [] -> return ()
-        | _, []
-        | [], _ -> fail "different number of branches in match nodes"
-        | (p0, None, body0)::brs0, (p1, None, body1)::brs1 ->
-          //
-          // TODO: S.eq_pat does not compare universes or bound variables
-          //       Compare bv sorts for the bvs in here?
-          //
-          if not (S.eq_pat p0 p1)
-          then fail "patterns not equal"
-          else begin
-            let (p0, _, body0) = SS.open_branch (p0, None, body0) in
-            let (p1, _, body1) = SS.open_branch (p1, None, body1) in
-            match PatternUtils.raw_pat_as_exp g.tcenv p0, PatternUtils.raw_pat_as_exp g.tcenv p1 with
-            | Some (_, bvs0), Some (_, bvs1) ->
-              let s = List.map2 (fun bv0 bv1 ->
-                NT(bv1, S.bv_to_name bv0)
-              ) bvs0 bvs1 in
-              let body1 = SS.subst s body1 in
-              let bs0 = List.map S.mk_binder bvs0 in
-              //
-              // We need universes for the binders
-              // Don't expect it to fail
-              //
-              let! _, us, g = check_binders g bs0 in
-              let! _ = with_binders bs0 us (check_equality g body0 body1) in
-              check_equality_branches brs0 brs1
-             | _ -> fail "raw_pat_as_exp failed in check_equality match rule"
-          end
-        | _, _ -> fail "check_equality does not support branches with when"
-    in
-    check_equality_branches brs0 brs1
-
-and check_equality_alt (g:env) (t0 t1:typ)
+let rec check_relation (g:env) (rel:relation) (t0 t1:typ)
   : result unit
   = let err () =
-        fail (BU.format2 "not equal terms: %s <> %s"
-                         (P.term_to_string t0)
-                         (P.term_to_string t1))
+        match rel with
+        | EQUALITY ->
+          fail (BU.format2 "not equal terms: %s <> %s"
+                           (P.term_to_string t0)
+                           (P.term_to_string t1))
+        | _ -> 
+          fail (BU.format2 "%s is not a subtype of %s"
+                           (P.term_to_string t0)
+                           (P.term_to_string t1))
+    in
+    let rel_to_string rel =
+      match rel with
+      | EQUALITY -> "=?="
+      | _ -> "<:?"
     in
     if Env.debug g.tcenv (Options.Other "Core")
-    then BU.print2 "check_equality_alt %s =?= %s\n"
+    then BU.print5 "check_relation (%s) %s %s (%s) %s\n"
+                   (P.tag_of_term t0)
                    (P.term_to_string t0)
+                   (rel_to_string rel)
+                   (P.tag_of_term t1)                   
                    (P.term_to_string t1);
     let! guard_not_ok = guard_not_allowed in
     let guard_ok = not guard_not_ok in
     let head_matches t0 t1
       : bool
-      = let head0, _ = U.head_and_args t0 in
-        let head1, _ = U.head_and_args t1 in
+      = let head0 = U.leftmost_head t0 in
+        let head1 = U.leftmost_head t1 in
         match (U.un_uinst head0).n, (U.un_uinst head1).n with
         | Tm_fvar fv0, Tm_fvar fv1 -> fv_eq fv0 fv1
         | Tm_name x0, Tm_name x1 -> bv_eq x0 x1
         | Tm_constant c0, Tm_constant c1 -> Hash.equal_term head0 head1
+        | Tm_type _, Tm_type _ 
+        | Tm_arrow _, Tm_arrow _
+        | Tm_match _, Tm_match _ -> true
         | _ -> false
     in
     let which_side_to_unfold t0 t1 
       : side
       = let delta_depth_of_head t =
-          let head, _ = U.head_and_args t in
+          let head = U.leftmost_head t in
           match (U.un_uinst head).n with
           | Tm_fvar fv -> Some (Env.delta_depth_of_fv g.tcenv fv)
           | _ -> None
@@ -751,9 +584,9 @@ and check_equality_alt (g:env) (t0 t1:typ)
         | None, None ->
           Neither
     in
-    let maybe_unfold t0 t1
+    let maybe_unfold_side side t0 t1
       : option (term & term)
-      = match which_side_to_unfold t0 t1 with    
+      = match side with
         | Neither -> None
         | Both -> (
           match N.maybe_unfold_head g.tcenv t0, 
@@ -775,6 +608,10 @@ and check_equality_alt (g:env) (t0 t1:typ)
           | _ -> None
         )
     in
+    let maybe_unfold t0 t1
+      : option (term & term)
+      = maybe_unfold_side (which_side_to_unfold t0 t1) t0 t1
+    in
     let fallback t0 t1 =
       if guard_ok
       then if equatable g t0
@@ -785,10 +622,37 @@ and check_equality_alt (g:env) (t0 t1:typ)
            else err ()
       else err ()
     in
-    let maybe_unfold_and_retry t0 t1 =
-      match maybe_unfold t0 t1 with
+    let maybe_unfold_side_and_retry side t0 t1 =
+      match maybe_unfold_side side t0 t1 with
       | None -> fallback t0 t1
-      | Some (t0, t1) -> check_equality_alt g t0 t1
+      | Some (t0, t1) -> check_relation g rel t0 t1
+    in
+    let maybe_unfold_and_retry t0 t1 =
+      maybe_unfold_side_and_retry (which_side_to_unfold t0 t1) t0 t1
+    in
+    let beta_iota_reduce t =
+        let t = SS.compress t in
+        match (SS.compress t).n with
+        | Tm_app _ ->
+          let head = U.leftmost_head t in
+          (match (SS.compress head).n with
+           | Tm_abs _ -> N.normalize [Env.Beta; Env.Iota] g.tcenv t
+           | _ -> t)
+
+        | Tm_let _
+        | Tm_match _ ->
+          N.normalize [Env.Beta;Env.Iota] g.tcenv t
+
+        | Tm_refine _ ->
+          U.flatten_refinement t
+          
+        | _ -> t
+    in
+    let t0 = SS.compress (beta_iota_reduce t0) in
+    let t1 = SS.compress (beta_iota_reduce t1) in
+    let check_relation g rel t0 t1 =
+      with_context "check_relation" (Some (CtxRel t0 rel t1)) 
+        (fun _ -> check_relation g rel t0 t1)
     in
     if Hash.equal_term t0 t1 then return ()
     else 
@@ -800,11 +664,19 @@ and check_equality_alt (g:env) (t0 t1:typ)
         then return ()
         else err ()
 
+      | Tm_meta (t0, Meta_pattern _), _
+      | Tm_meta (t0, Meta_named _), _
+      | Tm_meta (t0, Meta_labeled _), _
+      | Tm_meta (t0, Meta_desugared _), _      
       | Tm_ascribed (t0, _, _), _ ->
-        check_equality_alt g t0 t1
-        
+        check_relation g rel t0 t1
+
+      | _, Tm_meta (t1, Meta_pattern _)
+      | _, Tm_meta (t1, Meta_named _)
+      | _, Tm_meta (t1, Meta_labeled _)
+      | _, Tm_meta (t1, Meta_desugared _)
       | _, Tm_ascribed(t1, _, _) ->
-        check_equality_alt g t0 t1
+        check_relation g rel t0 t1
 
       | Tm_uinst (f0, us0), Tm_uinst(f1, us1) ->
         if Hash.equal_term f0 f1
@@ -817,7 +689,92 @@ and check_equality_alt (g:env) (t0 t1:typ)
         
       | Tm_fvar _, Tm_fvar _ ->
         maybe_unfold_and_retry t0 t1
+      
 
+      | Tm_refine (x0, f0), Tm_refine (x1, f1) ->
+        if head_matches x0.sort x1.sort
+        then (
+          let [b], f0 = SS.open_term [S.mk_binder x0] f0 in
+          let f1 = SS.subst [DB(0, b.binder_bv)] f1 in
+          let! u = universe_of g b.binder_bv.sort in
+          check_relation g EQUALITY x0.sort x1.sort ;!
+            (match! guard_not_allowed with
+             | true ->
+               with_binders [b] [u]
+                 (let g = push_binders g [b] in
+                  check_relation g EQUALITY f0 f1)
+               
+             | _ ->
+               match rel with
+               | EQUALITY ->
+                 with_binders [b] [u]
+                   (let g = push_binders g [b] in
+                    handle_with
+                      (check_relation g EQUALITY f0 f1)
+                      (fun _ -> guard (U.mk_iff f0 f1)))
+                   
+               | SUBTYPING (Some tm) ->
+                 guard (SS.subst [NT(b.binder_bv, tm)] (U.mk_imp f0 f1))
+
+               | SUBTYPING None ->
+                 guard (U.mk_forall u b.binder_bv (U.mk_imp f0 f1)))
+        )
+        else (
+          match maybe_unfold x0.sort x1.sort with
+          | None -> fallback t0 t1
+          | Some (t0, t1) ->
+            let lhs = S.mk (Tm_refine({x0 with sort = t0}, f0)) t0.pos in
+            let rhs = S.mk (Tm_refine({x1 with sort = t1}, f1)) t1.pos in            
+            check_relation g rel (U.flatten_refinement lhs) (U.flatten_refinement rhs)
+        )
+
+      | Tm_refine (x0, f0), _ ->
+        if head_matches x0.sort t1
+        then check_relation g rel x0.sort t1
+        else (
+          match maybe_unfold x0.sort t1 with
+          | None -> fallback t0 t1         
+          | Some (t0, t1) ->
+            let lhs = S.mk (Tm_refine({x0 with sort = t0}, f0)) t0.pos in
+            check_relation g rel (U.flatten_refinement lhs) t1
+        )
+
+
+      | _, Tm_refine (x1, f1) ->
+        if head_matches t0 x1.sort
+        then (
+          let [b1], f1 = SS.open_term [S.mk_binder x1] f1 in
+          let! u1 = universe_of g b1.binder_bv.sort in
+          check_relation g EQUALITY t0 x1.sort ;!
+          match! guard_not_allowed with
+          | true ->
+            with_binders [b1] [u1]
+              (let g = push_binders g [b1] in
+               check_relation g EQUALITY U.t_true f1)
+
+          | _ ->
+            match rel with
+            | EQUALITY ->
+              with_binders [b1] [u1]
+                (let g = push_binders g [b1] in
+                 handle_with
+                    (check_relation g EQUALITY U.t_true f1)
+                    (fun _ -> guard f1))
+                   
+            | SUBTYPING (Some tm) ->
+                 guard (SS.subst [NT(b1.binder_bv, tm)] f1)
+
+            | SUBTYPING None ->
+                 guard (U.mk_forall u1 b1.binder_bv f1)
+        )
+        else (
+          match maybe_unfold t0 x1.sort with
+          | None -> fallback t0 t1         
+          | Some (t0, t1) ->
+            let rhs = S.mk (Tm_refine({x1 with sort = t1}, f1)) t1.pos in          
+            check_relation g rel t0 (U.flatten_refinement rhs)
+        )               
+      
       | Tm_uinst _, _
       | Tm_fvar _, _
       | Tm_app _, _
@@ -827,47 +784,24 @@ and check_equality_alt (g:env) (t0 t1:typ)
         if not (head_matches t0 t1)
         then maybe_unfold_and_retry t0 t1
         else (
-          let head0, args0 = U.head_and_args t0 in
-          let head1, args1 = U.head_and_args t1 in
-          check_equality_alt g head0 head1 ;!
-          check_equality_args g args0 args1
-        )
-
-      | Tm_refine (x0, f0), Tm_refine (x1, f1) ->
-        if head_matches x0.sort x1.sort
-        then (
-          let [b], f0 = SS.open_term [S.mk_binder x0] f0 in
-          let f1 = SS.subst [DB(0, b.binder_bv)] f1 in
-          let! u = universe_of g b.binder_bv.sort in
-          check_equality_alt g x0.sort x1.sort ;!
-          with_binders [b] [u]
-            (let g = push_binders g [b] in
-             match! guard_not_allowed with
-             | true -> check_equality_alt g f0 f1
-             | _ ->
-               handle_with
-               (check_equality_alt g f0 f1)
-               (fun _ -> check_equality_formula g f0 f1))
-        )
-        else (
-          match maybe_unfold x0.sort x1.sort with
-          | None -> fallback t0 t1
-          | Some (t0, t1) ->
-            let lhs = S.mk (Tm_refine({x0 with sort = t0}, f0)) t0.pos in
-            let rhs = S.mk (Tm_refine({x1 with sort = t1}, f1)) t1.pos in            
-            check_equality_alt g (U.flatten_refinement lhs) (U.flatten_refinement rhs)
+          let head0, args0 = U.leftmost_head_and_args t0 in
+          let head1, args1 = U.leftmost_head_and_args t1 in
+          handle_with
+            (check_relation g EQUALITY head0 head1 ;!
+             check_relation_args g EQUALITY args0 args1)
+            (fun _ -> maybe_unfold_side_and_retry Both t0 t1)
         )
 
       | Tm_abs(b0::b1::bs, body, ropt), _ ->
         let t0 = curry_abs b0 b1 bs body ropt in
-        check_equality_whnf g t0 t1
+        check_relation g rel t0 t1
 
       | _, Tm_abs(b0::b1::bs, body, ropt) ->
         let t1 = curry_abs b0 b1 bs body ropt in
-        check_equality_whnf g t0 t1
+        check_relation g rel t0 t1
 
       | Tm_abs([b0], body0, _), Tm_abs([b1], body1, _) ->
-        check_equality g b0.binder_bv.sort b1.binder_bv.sort;!
+        check_relation g EQUALITY b0.binder_bv.sort b1.binder_bv.sort;!
         check_bqual b0.binder_qual b1.binder_qual;!
         let! u = universe_of g b0.binder_bv.sort in
         let [b0], body0 = SS.open_term [b0] body0 in
@@ -876,154 +810,88 @@ and check_equality_alt (g:env) (t0 t1:typ)
         let body1 = SS.subst [DB(0, b0.binder_bv)] body1 in
         with_binders [b0] [u]
           (let g = push_binders g [b0] in
-           check_equality g body0 body1)
+           check_relation g EQUALITY body0 body1)
       
-      | _ -> fallback t0 t1
+      | Tm_arrow (x0::x1::xs, c0), _ ->
+        check_relation g rel (curry_arrow x0 (x1::xs) c0) t1
 
-and check_equality_whnf (g:env) (t0 t1:typ)
-  = let err () =
-        fail (BU.format2 "not equal terms: %s <> %s"
-                         (P.term_to_string t0)
-                         (P.term_to_string t1))
-    in
-    let! guard_not_ok = guard_not_allowed in
-    let guard_ok = not guard_not_ok in
-    let fallback t0 t1 =
-      if guard_ok
-      then if equatable g t0
-            || equatable g t1
-           then let! _, t_typ = check' g t0 in
-                let! u = universe_of g t_typ in
-                guard (U.mk_eq2 u t_typ t0 t1)
-           else err ()
-      else err ()
-    in
-    if Env.debug g.tcenv (Options.Other "Core")
-    then BU.print2 "check_equality_whnf %s =?= %s\n" (P.term_to_string t0) (P.term_to_string t1);
-    if U.eq_tm t0 t1 = U.Equal
-    then return ()
-    else
-      match t0.n, t1.n with
-      | Tm_uinst (f0, us0), Tm_uinst(f1, us1) ->
-        //        when g.allow_universe_instantiation ->
-        // I had initially thought that the only place we might need
-        // universe instantiation was at the top-level, but that isn't true
-        // The tactic framework is often presented with goals that look like
-        //
-        // (eq2<2> #pre_t (?77 uu___) (return_pre (?69 (reveal<U_unif ?15:460.45> #unit (return<U_unif ?15:460.45> #unit ())))))
-        //
-        // i.e., they contain unresolved universes like U_unif ...
-        //
-        // So the solution we check may contain these universe variables too
-        // and we need to solve them here
-        if U.eq_tm f0 f1 = U.Equal
-        then if Rel.teq_nosmt_force g.tcenv t0 t1
-             then return ()
-             else err ()
-        else err ()
+      | _, Tm_arrow(x0::x1::xs, c1) ->
+        check_relation g rel t0 (curry_arrow x0 (x1::xs) c1)
 
-      | Tm_type u0, Tm_type u1 ->
-        // when g.allow_universe_instantiation ->
-        // See above remark regarding universe instantiations
-        if Rel.teq_nosmt_force g.tcenv t0 t1
-        then return ()
-        else err ()
-        
-      | Tm_abs(b0::b1::bs, body, ropt), _ ->
-        let t0 = curry_abs b0 b1 bs body ropt in
-        check_equality_whnf g t0 t1
-
-      | _, Tm_abs(b0::b1::bs, body, ropt) ->
-        let t1 = curry_abs b0 b1 bs body ropt in
-        check_equality_whnf g t0 t1
-
-      | Tm_abs([b0], body0, _), Tm_abs([b1], body1, _) ->
-        check_equality g b0.binder_bv.sort b1.binder_bv.sort;!
-        check_bqual b0.binder_qual b1.binder_qual;!
-        let! u = universe_of g b0.binder_bv.sort in
-        let [b0], body0 = SS.open_term [b0] body0 in
-        //little strange to use a DB substitution here
-        //Maybe cleaner to open both and use an NT subst
-        let body1 = SS.subst [DB(0, b0.binder_bv)] body1 in
-        with_binders [b0] [u]
-          (let g = push_binders g [b0] in
-           check_equality g body0 body1)
-
-      | Tm_refine(b0, phi0), Tm_refine(b1, phi1) ->
-        check_equality_whnf g b0.sort b1.sort;!
-        let [b], phi0 = SS.open_term [S.mk_binder b0] phi0 in
-        //little strange to use a DB substitution here
-        //Maybe cleaner to open both and use an NT subst
-        let phi1 = SS.subst [DB(0, b.binder_bv)] phi1 in
-        begin
-        match! guard_not_allowed with
-        | true -> check_equality g phi0 phi1
-        | _ ->
-          let! u = universe_of g b.binder_bv.sort in
-          with_binders [b] [u]
-            (let g = push_binders g [b] in
-              handle_with
-              (check_equality g phi0 phi1)
-              (fun _ -> check_equality_formula g phi0 phi1))
-        end
+      | Tm_arrow ([x0], c0), Tm_arrow([x1], c1) ->
+        with_context "subtype arrow" None (fun _ ->
+          let [x0], c0 = SS.open_comp [x0] c0 in
+          let [x1], c1 = SS.open_comp [x1] c1 in
+          let! _ = check_bqual x0.binder_qual x1.binder_qual in
+          let! u1 = universe_of g x1.binder_bv.sort in
+          with_binders [x1] [u1] (
+            let rel_arg =
+              match rel with
+              | EQUALITY -> EQUALITY
+              | _ -> SUBTYPING (Some (S.bv_to_name x1.binder_bv))
+            in
+            let rel_comp =
+              match rel with
+              | EQUALITY -> EQUALITY
+              | SUBTYPING e ->
+                SUBTYPING
+                  (if U.is_pure_or_ghost_comp c0
+                   then let? e in Some (S.mk_Tm_app e (snd (U.args_of_binders [x1])) R.dummyRange)
+                   else None)
+            in
+            check_relation g rel x1.binder_bv.sort x0.binder_bv.sort ;!
+            with_context "check_subcomp" None (fun _ ->
+              check_relation_comp (push_binders g [x1]) rel_comp
+                                  (SS.subst_comp [NT(x0.binder_bv, S.bv_to_name x1.binder_bv)] c0)
+                                  c1
+            )
+          )
+        )
 
       | Tm_match (e0, _, brs0, _), Tm_match (e1, _, brs1, _) ->
-        check_equality_match g e0 brs0 e1 brs1
-
-      | Tm_ascribed (t0, _, _), _ ->
-        check_equality g t0 t1
-        
-      | _, Tm_ascribed(t1, _, _) ->
-        check_equality g t0 t1
-        
-      | Tm_app _, _
-      | _, Tm_app _ ->
-        let mr, ts = Rel.head_matches_delta g.tcenv guard_ok t0 t1 in
-        begin
-        match mr, ts with
-        | Rel.MisMatch _, _
-        | Rel.HeadMatch true, _ ->
-          fallback t0 t1
-
-        | _, Some (t0, t1) ->
-          check_equality_whnf g t0 t1
-
-        | Rel.FullMatch, _
-        | Rel.HeadMatch false, _ ->
-          if guard_ok 
-          && (equatable g t0 || equatable g t1)
-          then fallback t0 t1
-          else (
-            match (SS.compress t0).n, (SS.compress t1).n with
-            | Tm_app (hd0, args0), Tm_app(hd1, args1) ->
-              check_equality_whnf g hd0 hd1;!
-              check_equality_args g args0 args1
-            | _ -> fallback t0 t1
-          )
-        end
+        let relate_branch br0 br1 (_:unit)
+          : result unit
+          = match br0, br1 with
+            | (p0, None, body0), (p1, None, body1) ->
+              if not (S.eq_pat p0 p1)
+              then fail "patterns not equal"
+              else begin
+                let (p0, _, body0) = SS.open_branch (p0, None, body0) in
+                let (p1, _, body1) = SS.open_branch (p1, None, body1) in
+                match PatternUtils.raw_pat_as_exp g.tcenv p0, PatternUtils.raw_pat_as_exp g.tcenv p1 with
+                | Some (_, bvs0), Some (_, bvs1) ->
+                  let s =
+                    List.map2
+                      (fun bv0 bv1 -> NT(bv1, S.bv_to_name bv0))
+                      bvs0 bvs1
+                  in
+                  let body1 = SS.subst s body1 in
+                  let bs0 = List.map S.mk_binder bvs0 in
+                  // We need universes for the binders
+                  let! _, us, g = check_binders g bs0 in
+                  with_binders bs0 us (check_relation g rel body0 body1)
+             | _ -> fail "raw_pat_as_exp failed in check_equality match rule"
+             end
+            | _ -> fail "Core does not support branches with when"
+        in
+        handle_with
+          (check_relation g EQUALITY e0 e1 ;!
+           iter2 brs0 brs1 relate_branch ())
+          (fun _ -> fallback t0 t1)
 
       | _ -> fallback t0 t1
 
-and check_equality (g:env) (t0 t1:typ)
-  = match U.eq_tm t0 t1 with
-    | U.Equal -> return ()
-    | _ ->
-      //reduce to whnf, but don't unfold tac_opaque symbols
-      let t0' = N.normalize_refinement default_norm_steps g.tcenv t0 in
-      let t1' = N.normalize_refinement default_norm_steps g.tcenv t1 in
-      check_equality_whnf g t0' t1'
-
-and check_equality_args (g:env) (a0 a1:args)
+and check_relation_args (g:env) rel (a0 a1:args)
   : result unit
   = if List.length a0 = List.length a1
     then iter2 a0 a1
          (fun (t0, q0) (t1, q1) _ ->
             check_aqual q0 q1;!
-            check_equality g t0 t1)
+            check_relation g rel t0 t1)
          ()
     else fail "Unequal number of arguments"
 
-and check_subcomp (g:env) (e:option term) (c0 c1:comp)
+and check_relation_comp (g:env) rel (c0 c1:comp)
   : result unit
   = let destruct_comp c =
         if U.is_total_comp c
@@ -1039,8 +907,8 @@ and check_subcomp (g:env) (e:option term) (c0 c1:comp)
       then return ()
       else (
         let ct_eq ct0 ct1 =
-          check_equality g ct0.result_typ ct1.result_typ ;!
-          check_equality_args g ct0.effect_args ct1.effect_args
+          check_relation g EQUALITY ct0.result_typ ct1.result_typ ;!
+          check_relation_args g EQUALITY ct0.effect_args ct1.effect_args
         in
         let ct0 = U.comp_to_comp_typ_nouniv c0 in
         let ct1 = U.comp_to_comp_typ_nouniv c1 in
@@ -1059,12 +927,27 @@ and check_subcomp (g:env) (e:option term) (c0 c1:comp)
 
     | Some (E_TOTAL, t0), Some (_, t1)
     | Some (E_GHOST, t0), Some (E_GHOST, t1) ->
-      check_subtype g e t0 t1
+      check_relation g rel t0 t1
 
     | Some (E_GHOST, t0), Some (E_TOTAL, t1) ->
       if non_informative g t1
-      then check_subtype g e t0 t1
+      then check_relation g rel t0 t1
       else fail "Expected a Total computation, but got Ghost"
+
+
+and check_subtype (g:env) (e:option term) (t0 t1:typ)
+  = let rel = SUBTYPING e in
+    with_context "check_subtype" (Some (CtxRel t0 rel t1)) (fun _ -> check_relation g rel t0 t1)
+    // debug g (fun () ->
+    //   BU.print2 "check_subtype %s <: %s\n" (P.term_to_string t0) (P.term_to_string t1));
+    // match U.eq_tm t0 t1 with
+    // | U.Equal -> 
+    //   debug g (fun _ -> BU.print_string "exiting check_subtype (EQUAL)\n");
+    //   return ()
+    // | _ ->
+    //   let t0' = N.normalize_refinement default_norm_steps g.tcenv t0 in
+    //   let t1' = N.normalize_refinement default_norm_steps g.tcenv t1 in
+    //   check_subtype_whnf g e t0' t1'
 
 and memo_check (g:env) (e:term)
   : result (effect_label & typ)
@@ -1080,7 +963,7 @@ and memo_check (g:env) (e:term)
 
 and check (msg:string) (g:env) (e:term)
   : result (effect_label & typ)
-  = with_context msg (Some e) (fun _ -> memo_check g e)
+  = with_context msg (Some (CtxTerm e)) (fun _ -> memo_check g e)
 
 (*  G |- e : Tot t | pre *)
 and check' (g:env) (e:term)
@@ -1219,7 +1102,7 @@ and check' (g:env) (e:term)
       let! eff, te = check "ascription head" g e in
       let! _ = with_context "ascription comp" None (fun _ -> check_comp g c) in
       let c_e = as_comp g (eff, te) in
-      check_subcomp g (Some e) c_e c;!
+      check_relation_comp g (SUBTYPING (Some e)) c_e c;!
       let Some (eff, t) = comp_as_effect_label_and_type c in
       return (eff, t)
     )
@@ -1247,7 +1130,7 @@ and check' (g:env) (e:term)
 
   | Tm_match(sc, None, branches, rc_opt) ->
     let! eff_sc, t_sc = check "scrutinee" g sc in
-    let! u_sc = with_context "universe_of" (Some t_sc) (fun _ -> universe_of g t_sc) in
+    let! u_sc = with_context "universe_of" (Some (CtxTerm t_sc)) (fun _ -> universe_of g t_sc) in
     let rec check_branches path_condition
                            branch_typ_opt
                            branches
@@ -1280,14 +1163,15 @@ and check' (g:env) (e:term)
               with_binders bs us
                 (weaken
                   (U.mk_conj path_condition pat_sc_eq)
-                  (let! eff_br, tbr = check "branch" g' b in
+                  (let! eff_br, tbr = with_context "branch" (Some (CtxTerm b)) (fun _ -> check "branch" g' b) in
                    match branch_typ_opt with
                    | None ->
                      check_no_escape bs tbr;!
                      return (eff_br, tbr)
 
                    | Some (acc_eff, expect_tbr) ->
-                     check_subtype g' (Some b) tbr expect_tbr;!
+                     with_context "check_branch_subtype" (Some (CtxRel tbr (SUBTYPING (Some b)) expect_tbr))
+                       (fun _ -> check_subtype g' (Some b) tbr expect_tbr) ;!
                      return (join_eff eff_br acc_eff, expect_tbr))) in
             let path_condition =
               U.mk_conj path_condition
@@ -1308,18 +1192,26 @@ and check' (g:env) (e:term)
     let! branch_typ_opt =
         match rc_opt with
         | Some ({ residual_typ = Some t }) ->
-          with_context "residual type" (Some t) (fun _ -> universe_of g t) ;!
+          with_context "residual type" (Some (CtxTerm t)) (fun _ -> universe_of g t) ;!
           return (Some (E_TOTAL, t))
 
         | _ ->
           return None
     in
-    let! eff_br, t_br = check_branches U.t_true branch_typ_opt branches in
+    let! eff_br, t_br = 
+      let ctx =
+        match branch_typ_opt with
+        | None -> None
+        | Some (_, t) -> Some (CtxTerm t)
+      in
+      with_context "check_branches" ctx
+        (fun _ -> check_branches U.t_true branch_typ_opt branches)
+    in
     return (join_eff eff_sc eff_br, t_br)
 
   | Tm_match(sc, Some (as_x, (Inl returns_ty, None, eq)), branches, rc_opt) ->
     let! eff_sc, t_sc = check "scrutinee" g sc in
-    let! u_sc = with_context "universe_of" (Some t_sc) (fun _ -> universe_of g t_sc) in
+    let! u_sc = with_context "universe_of" (Some (CtxTerm t_sc)) (fun _ -> universe_of g t_sc) in
     let [as_x], returns_ty = SS.open_term [as_x] returns_ty in
     let as_x = {as_x with binder_bv = { as_x.binder_bv with sort = t_sc } } in
     let g_as_x = push_binders g [as_x] in
@@ -1356,10 +1248,13 @@ and check' (g:env) (e:term)
                   (U.mk_conj path_condition pat_sc_eq)
                   (let! eff_br, tbr = check "branch" g' b in
                    let expect_tbr = SS.subst [NT(as_x.binder_bv, e)] returns_ty in
-                   (if eq
-                    then check_equality g' tbr expect_tbr
-                    else check_subtype  g' (Some b) tbr expect_tbr);!
-                    return (join_eff eff_br acc_eff, expect_tbr))) in
+                   let rel =
+                     if eq
+                     then EQUALITY
+                     else SUBTYPING (Some b)
+                   in
+                   check_relation g' rel tbr expect_tbr;!
+                   return (join_eff eff_br acc_eff, expect_tbr))) in
             let path_condition =
               U.mk_conj path_condition
                         (mk_forall_l us bs (U.mk_neg pat_sc_eq))
@@ -1481,13 +1376,393 @@ and check_scrutinee_pattern_type_compatible (g:env) (t_sc t_pat:typ)
      | None -> args_sc, args_pat
      | Some n -> fst (BU.first_N n args_sc), fst (BU.first_N n args_pat) in
 
-   let! (_:unit) = iter2 params_sc params_pat (fun (t_sc, _) (t_pat, _) _ ->
-     check_equality g t_sc t_pat
-   ) () in
+  iter2 params_sc params_pat (fun (t_sc, _) (t_pat, _) _ ->
+     check_relation g EQUALITY t_sc t_pat) () ;!
 
    // TODO: return equality of indices for the caller to weaken the guard with?
 
    return None
+
+// and check_subtype_whnf (g:env) (e:option term) (t0 t1: typ)
+//   : result unit
+//   = let fail (s:string) = 
+//       debug g (fun () ->
+//         BU.print2 "check_subtype_whnf  [[%s <: %s]] failed\n" (P.term_to_string t0) (P.term_to_string t1));        
+//       fail (BU.format3 "Subtyping failed because %s: %s </: %s"
+//               s
+//               (P.term_to_string t0)
+//               (P.term_to_string t1))
+//     in
+//     debug g (fun () ->
+//       BU.print2 "check_subtype_whnf %s <: %s\n" (P.term_to_string t0) (P.term_to_string t1));
+//     let! guard_not_ok = guard_not_allowed in
+//     let guard_ok = not guard_not_ok in
+//     let fallback g t0 t1 = 
+//       if guard_ok && (equatable g t0 || equatable g t1)
+//       then
+//         let! u = universe_of g t0 in
+//         debug g (fun () ->
+//           BU.print2 "exiting check_subtype_whnf [[%s <: %s]] with guard\n" (P.term_to_string t0) (P.term_to_string t1));
+//         guard (U.mk_eq2 u (mk_type u) t0 t1)
+//       else (
+//           fail "no subtyping rule is applicable"
+//       )
+//     in
+//     match (SS.compress t0).n, (SS.compress t1).n with
+//     | Tm_refine _, Tm_refine _
+//       when guard_not_ok ->
+//       check_equality_whnf g t0 t1
+
+//     | Tm_refine(x0, p0), _ ->
+//       let [x0], p0 = SS.open_term [S.mk_binder x0] p0 in
+//       if Some? e
+//       then (
+//         weaken
+//           (apply_predicate x0 p0 (Some?.v e))
+//           (check_subtype g e x0.binder_bv.sort t1)
+//       )
+//       else (
+//         let! u0 = universe_of g x0.binder_bv.sort in
+//         with_binders [x0] [u0] (
+//           weaken p0
+//             (check_subtype (push_binders g [x0]) 
+//                            (Some (S.bv_to_name x0.binder_bv))
+//                            x0.binder_bv.sort
+//                            t1))
+//       )
+
+
+//     | _, Tm_refine(x1, p1) ->
+//       let [x1], p1 = SS.open_term [S.mk_binder x1] p1 in
+//       if Some? e
+//       then (
+//         strengthen
+//           (apply_predicate x1 p1 (Some?.v e))
+//           (check_subtype g e t0 x1.binder_bv.sort)
+//       )
+//       else (
+//         let! u0 = universe_of g t0 in
+//         let x0 = S.new_bv None t0 in
+//         strengthen
+//             (mk_forall_l [u0] [mk_binder x0] (SS.subst [NT(x1.binder_bv, S.bv_to_name x0)] p1))
+//             (check_subtype g None t0 x1.binder_bv.sort)
+//       )
+  
+//     | Tm_arrow (x0::x1::xs, c0), _ ->
+//       check_subtype_whnf g e (curry_arrow x0 (x1::xs) c0) t1
+
+//     | _, Tm_arrow(x0::x1::xs, c1) ->
+//       check_subtype_whnf g e t0 (curry_arrow x0 (x1::xs) c1)
+
+//     | Tm_arrow ([x0], c0), Tm_arrow([x1], c1) ->
+//       with_context "subtype arrow" (Some (U.mk_untyped_eq2 t0 t1)) (fun _ ->
+//         let [x0], c0 = SS.open_comp [x0] c0 in
+//         let [x1], c1 = SS.open_comp [x1] c1 in
+//         let! _ = check_bqual x0.binder_qual x1.binder_qual in
+//         let! u1 = universe_of g x1.binder_bv.sort in
+//         with_binders [x1] [u1] (
+//           check_subtype g (Some (S.bv_to_name x1.binder_bv)) x1.binder_bv.sort x0.binder_bv.sort ;!
+//           with_context "check_subcomp" None (fun _ ->
+//             check_subcomp (push_binders g [x1])
+//                           (if U.is_pure_or_ghost_comp c0
+//                           then let? e in Some (S.mk_Tm_app e (snd (U.args_of_binders [x1])) R.dummyRange)
+//                           else None)
+//                           (SS.subst_comp [NT(x0.binder_bv, S.bv_to_name x1.binder_bv)] c0)
+//                           c1
+//           )
+//         )
+//       )
+
+//     | Tm_ascribed (t0, _, _), _ ->
+//       check_subtype_whnf g e t0 t1
+      
+//     | _, Tm_ascribed (t1, _, _) -> 
+//       check_subtype_whnf g e t0 t1
+
+//     | Tm_type _, Tm_type _ ->
+//       check_equality_whnf g t0 t1
+
+//     | Tm_app _, _
+//     | _, Tm_app _ ->
+//       let smt_ok = not (guard_not_ok) in
+//       let mr, ts = Rel.head_matches_delta g.tcenv smt_ok t0 t1 in
+//       debug g (fun _ -> BU.print_string "Back from head_matches_delta\n");
+//       begin
+//       match mr, ts with
+//       | Rel.MisMatch _, _
+//       | Rel.HeadMatch true, _ ->
+//         //HeadMatch true: heads may match, e.g, both heads are Tm_match nodes, but we can't decide.
+//         //So, just handle as a fallback
+//         fallback g t0 t1
+
+//       | _, Some (t0', t1') ->
+//         //match after reduction to t0, t1
+//         debug g (fun _ ->
+//           BU.print4 "check_subtype_whnf after redunction [[%s <: %s]] reduced to [[%s <: %s]]\n"
+//                        (P.term_to_string t0) (P.term_to_string t1)
+//                        (P.term_to_string t0') (P.term_to_string t1'));
+//         check_subtype_whnf g e t0' t1'
+      
+//       | Rel.FullMatch, _
+//       | Rel.HeadMatch false, _ ->
+//         //heads already match
+//         check_equality_whnf g t0 t1
+//       end
+      
+
+//     | Tm_match (e0, _, brs0, _), Tm_match (e1, _, brs1, _) ->
+//       //
+//       // TODO: this will currently check equality of branches,
+//       //   it could check subtyping instead
+//       //
+//       check_equality_match g e0 brs0 e1 brs1
+    
+//     | _ ->
+//       if U.eq_tm t0 t1 = U.Equal
+//       then (
+//         debug g (fun _ -> BU.print_string "exiting check_subtype_whnf (EQUAL)\n");      
+//         return ()
+//       )
+//       else fallback g t0 t1
+
+// and check_equality_formula (g:env) (phi0 phi1:typ) =
+//   guard (U.mk_iff phi0 phi1)
+
+// and check_equality_match (g:env)
+//   (scrutinee0:term) (brs0:list branch)
+//   (scrutinee1:term) (brs1:list branch)
+//   = let fail (s:string) = 
+//       fail (BU.format3 "match equality failed because %s: %s </: %s"
+//               s
+//               (P.term_to_string (S.mk (Tm_match (scrutinee0, None, brs0, None)) Range.dummyRange))
+//               (P.term_to_string (S.mk (Tm_match (scrutinee1, None, brs1, None)) Range.dummyRange))) in
+
+//     let! _ = check_equality_whnf g scrutinee0 scrutinee1 in
+
+//     let rec check_equality_branches (brs0 brs1:list branch)
+//       : result unit
+//       = match brs0, brs1 with
+//         | [], [] -> return ()
+//         | _, []
+//         | [], _ -> fail "different number of branches in match nodes"
+//         | (p0, None, body0)::brs0, (p1, None, body1)::brs1 ->
+//           //
+//           // TODO: S.eq_pat does not compare universes or bound variables
+//           //       Compare bv sorts for the bvs in here?
+//           //
+//           if not (S.eq_pat p0 p1)
+//           then fail "patterns not equal"
+//           else begin
+//             let (p0, _, body0) = SS.open_branch (p0, None, body0) in
+//             let (p1, _, body1) = SS.open_branch (p1, None, body1) in
+//             match PatternUtils.raw_pat_as_exp g.tcenv p0, PatternUtils.raw_pat_as_exp g.tcenv p1 with
+//             | Some (_, bvs0), Some (_, bvs1) ->
+//               let s = List.map2 (fun bv0 bv1 ->
+//                 NT(bv1, S.bv_to_name bv0)
+//               ) bvs0 bvs1 in
+//               let body1 = SS.subst s body1 in
+//               let bs0 = List.map S.mk_binder bvs0 in
+//               //
+//               // We need universes for the binders
+//               // Don't expect it to fail
+//               //
+//               let! _, us, g = check_binders g bs0 in
+//               let! _ = with_binders bs0 us (check_equality g body0 body1) in
+//               check_equality_branches brs0 brs1
+//              | _ -> fail "raw_pat_as_exp failed in check_equality match rule"
+//           end
+//         | _, _ -> fail "check_equality does not support branches with when"
+//     in
+//     check_equality_branches brs0 brs1
+
+
+// and check_equality_whnf (g:env) (t0 t1:typ)
+//   = let err () =
+//         fail (BU.format2 "not equal terms: %s <> %s"
+//                          (P.term_to_string t0)
+//                          (P.term_to_string t1))
+//     in
+//     let! guard_not_ok = guard_not_allowed in
+//     let guard_ok = not guard_not_ok in
+//     let fallback t0 t1 =
+//       if guard_ok
+//       then if equatable g t0
+//             || equatable g t1
+//            then let! _, t_typ = check' g t0 in
+//                 let! u = universe_of g t_typ in
+//                 guard (U.mk_eq2 u t_typ t0 t1)
+//            else err ()
+//       else err ()
+//     in
+//     if Env.debug g.tcenv (Options.Other "Core")
+//     then BU.print2 "check_equality_whnf %s =?= %s\n" (P.term_to_string t0) (P.term_to_string t1);
+//     if U.eq_tm t0 t1 = U.Equal
+//     then return ()
+//     else
+//       match t0.n, t1.n with
+//       | Tm_uinst (f0, us0), Tm_uinst(f1, us1) ->
+//         //        when g.allow_universe_instantiation ->
+//         // I had initially thought that the only place we might need
+//         // universe instantiation was at the top-level, but that isn't true
+//         // The tactic framework is often presented with goals that look like
+//         //
+//         // (eq2<2> #pre_t (?77 uu___) (return_pre (?69 (reveal<U_unif ?15:460.45> #unit (return<U_unif ?15:460.45> #unit ())))))
+//         //
+//         // i.e., they contain unresolved universes like U_unif ...
+//         //
+//         // So the solution we check may contain these universe variables too
+//         // and we need to solve them here
+//         if U.eq_tm f0 f1 = U.Equal
+//         then if Rel.teq_nosmt_force g.tcenv t0 t1
+//              then return ()
+//              else err ()
+//         else err ()
+
+//       | Tm_type u0, Tm_type u1 ->
+//         // when g.allow_universe_instantiation ->
+//         // See above remark regarding universe instantiations
+//         if Rel.teq_nosmt_force g.tcenv t0 t1
+//         then return ()
+//         else err ()
+        
+//       | Tm_abs(b0::b1::bs, body, ropt), _ ->
+//         let t0 = curry_abs b0 b1 bs body ropt in
+//         check_equality_whnf g t0 t1
+
+//       | _, Tm_abs(b0::b1::bs, body, ropt) ->
+//         let t1 = curry_abs b0 b1 bs body ropt in
+//         check_equality_whnf g t0 t1
+
+//       | Tm_abs([b0], body0, _), Tm_abs([b1], body1, _) ->
+//         check_equality g b0.binder_bv.sort b1.binder_bv.sort;!
+//         check_bqual b0.binder_qual b1.binder_qual;!
+//         let! u = universe_of g b0.binder_bv.sort in
+//         let [b0], body0 = SS.open_term [b0] body0 in
+//         //little strange to use a DB substitution here
+//         //Maybe cleaner to open both and use an NT subst
+//         let body1 = SS.subst [DB(0, b0.binder_bv)] body1 in
+//         with_binders [b0] [u]
+//           (let g = push_binders g [b0] in
+//            check_equality g body0 body1)
+
+//       | Tm_refine(b0, phi0), Tm_refine(b1, phi1) ->
+//         check_equality_whnf g b0.sort b1.sort;!
+//         let [b], phi0 = SS.open_term [S.mk_binder b0] phi0 in
+//         //little strange to use a DB substitution here
+//         //Maybe cleaner to open both and use an NT subst
+//         let phi1 = SS.subst [DB(0, b.binder_bv)] phi1 in
+//         begin
+//         match! guard_not_allowed with
+//         | true -> check_equality g phi0 phi1
+//         | _ ->
+//           let! u = universe_of g b.binder_bv.sort in
+//           with_binders [b] [u]
+//             (let g = push_binders g [b] in
+//               handle_with
+//               (check_equality g phi0 phi1)
+//               (fun _ -> check_equality_formula g phi0 phi1))
+//         end
+
+//       | Tm_match (e0, _, brs0, _), Tm_match (e1, _, brs1, _) ->
+//         check_equality_match g e0 brs0 e1 brs1
+
+//       | Tm_ascribed (t0, _, _), _ ->
+//         check_equality g t0 t1
+        
+//       | _, Tm_ascribed(t1, _, _) ->
+//         check_equality g t0 t1
+        
+//       | Tm_app _, _
+//       | _, Tm_app _ ->
+//         let mr, ts = Rel.head_matches_delta g.tcenv guard_ok t0 t1 in
+//         begin
+//         match mr, ts with
+//         | Rel.MisMatch _, _
+//         | Rel.HeadMatch true, _ ->
+//           fallback t0 t1
+
+//         | _, Some (t0, t1) ->
+//           check_equality_whnf g t0 t1
+
+//         | Rel.FullMatch, _
+//         | Rel.HeadMatch false, _ ->
+//           if guard_ok 
+//           && (equatable g t0 || equatable g t1)
+//           then fallback t0 t1
+//           else (
+//             match (SS.compress t0).n, (SS.compress t1).n with
+//             | Tm_app (hd0, args0), Tm_app(hd1, args1) ->
+//               check_equality_whnf g hd0 hd1;!
+//               check_equality_args g args0 args1
+//             | _ -> fallback t0 t1
+//           )
+//         end
+
+//       | _ -> fallback t0 t1
+
+// and check_equality (g:env) (t0 t1:typ)
+//   = match U.eq_tm t0 t1 with
+//     | U.Equal -> return ()
+//     | _ ->
+//       //reduce to whnf, but don't unfold tac_opaque symbols
+//       let t0' = N.normalize_refinement default_norm_steps g.tcenv t0 in
+//       let t1' = N.normalize_refinement default_norm_steps g.tcenv t1 in
+//       check_equality_whnf g t0' t1'
+
+// and check_equality_args (g:env) (a0 a1:args)
+//   : result unit
+//   = if List.length a0 = List.length a1
+//     then iter2 a0 a1
+//          (fun (t0, q0) (t1, q1) _ ->
+//             check_aqual q0 q1;!
+//             check_equality g t0 t1)
+//          ()
+//     else fail "Unequal number of arguments"
+
+  
+// and check_subcomp (g:env) (e:option term) (c0 c1:comp)
+//   : result unit
+//   = let destruct_comp c =
+//         if U.is_total_comp c
+//         then Some (E_TOTAL, U.comp_result c)
+//         else if U.is_tot_or_gtot_comp c
+//         then Some (E_GHOST, U.comp_result c)
+//         else None
+//     in
+//     match destruct_comp c0, destruct_comp c1 with
+//     | None, _
+//     | _, None ->
+//       if U.eq_comp c0 c1 = U.Equal
+//       then return ()
+//       else (
+//         let ct_eq ct0 ct1 =
+//           check_equality g ct0.result_typ ct1.result_typ ;!
+//           check_equality_args g ct0.effect_args ct1.effect_args
+//         in
+//         let ct0 = U.comp_to_comp_typ_nouniv c0 in
+//         let ct1 = U.comp_to_comp_typ_nouniv c1 in
+//         if I.lid_equals ct0.effect_name ct1.effect_name
+//         then ct_eq ct0 ct1
+//         else (
+//           let ct0 = Env.unfold_effect_abbrev g.tcenv c0 in
+//           let ct1 = Env.unfold_effect_abbrev g.tcenv c1 in          
+//           if I.lid_equals ct0.effect_name ct1.effect_name
+//           then ct_eq ct0 ct1
+//           else fail (BU.format2 "Subcomp failed: Unequal computation types %s and %s" 
+//                             (Ident.string_of_lid ct0.effect_name)
+//                             (Ident.string_of_lid ct1.effect_name))
+//         )
+//       )
+
+//     | Some (E_TOTAL, t0), Some (_, t1)
+//     | Some (E_GHOST, t0), Some (E_GHOST, t1) ->
+//       check_subtype g e t0 t1
+
+//     | Some (E_GHOST, t0), Some (E_TOTAL, t1) ->
+//       if non_informative g t1
+//       then check_subtype g e t0 t1
+//       else fail "Expected a Total computation, but got Ghost"
+
 
 let check_term_top g e t (must_tot:bool)
   : result unit
@@ -1499,7 +1774,11 @@ let check_term_top g e t (must_tot:bool)
       else S.mk_GTotal t
     in
     with_context "top-level subtyping" None (fun _ ->
-      check_subcomp ({ g with allow_universe_instantiation = true}) (Some e) (as_comp g eff_te) target_comp)
+      check_relation_comp
+        ({ g with allow_universe_instantiation = true})
+        (SUBTYPING (Some e))
+        (as_comp g eff_te)
+        target_comp)
 
 let simplify_steps =
     [Env.Beta; 
@@ -1568,7 +1847,14 @@ let check_term g e t (must_tot:bool)
 let check_term_equality g t0 t1
   = let g = { tcenv = g; allow_universe_instantiation = false } in
     let ctx = { no_guard = false; error_context = [] } in
-    match check_equality_alt g t0 t1 ctx with
+    match check_relation g EQUALITY t0 t1 ctx with
+    | Inl (_, g) -> Inl g
+    | Inr err -> Inr err
+
+let check_term_subtyping g t0 t1
+  = let g = { tcenv = g; allow_universe_instantiation = false } in
+    let ctx = { no_guard = false; error_context = [] } in
+    match check_relation g (SUBTYPING None) t0 t1 ctx with
     | Inl (_, g) -> Inl g
     | Inr err -> Inr err
 

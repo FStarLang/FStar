@@ -147,30 +147,42 @@ let (norm : FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.term) =
   fun t ->
     let uu___ = tcenv () in FStar_TypeChecker_Normalize.normalize [] uu___ t
 let (check_core :
-  Prims.int -> FStar_Syntax_Syntax.typ -> FStar_Syntax_Syntax.typ -> unit) =
+  Prims.int ->
+    Prims.bool ->
+      Prims.bool ->
+        FStar_Syntax_Syntax.typ -> FStar_Syntax_Syntax.typ -> unit)
+  =
   fun i ->
-    fun x ->
-      fun y ->
-        (let uu___1 = FStar_Main.process_args () in
-         FStar_Compiler_Effect.op_Bar_Greater uu___1 (fun uu___2 -> ()));
-        (let env = tcenv () in
-         (let uu___2 = FStar_TypeChecker_Core.check_term_equality env x y in
-          match uu___2 with
-          | FStar_Pervasives.Inl (FStar_Pervasives_Native.None) ->
-              let uu___3 = FStar_Compiler_Util.string_of_int i in
-              FStar_Compiler_Util.print1 "%s core check ok\n" uu___3
-          | FStar_Pervasives.Inl (FStar_Pervasives_Native.Some g) ->
-              ((let uu___4 = FStar_Compiler_Util.string_of_int i in
-                let uu___5 = FStar_Syntax_Print.term_to_string g in
-                FStar_Compiler_Util.print2
-                  "%s core check computed guard %s ok\n" uu___4 uu___5);
-               FStar_Compiler_Effect.op_Colon_Equals success false)
-          | FStar_Pervasives.Inr err ->
-              (FStar_Compiler_Effect.op_Colon_Equals success false;
-               (let uu___4 = FStar_Compiler_Util.string_of_int i in
-                let uu___5 = FStar_TypeChecker_Core.print_error err in
-                FStar_Compiler_Util.print2 "%s failed\n%s\n" uu___4 uu___5)));
-         FStar_Options.init ())
+    fun subtyping ->
+      fun guard_ok ->
+        fun x ->
+          fun y ->
+            (let uu___1 = FStar_Main.process_args () in
+             FStar_Compiler_Effect.op_Bar_Greater uu___1 (fun uu___2 -> ()));
+            (let env = tcenv () in
+             let res =
+               if subtyping
+               then FStar_TypeChecker_Core.check_term_subtyping env x y
+               else FStar_TypeChecker_Core.check_term_equality env x y in
+             (match res with
+              | FStar_Pervasives.Inl (FStar_Pervasives_Native.None) ->
+                  let uu___2 = FStar_Compiler_Util.string_of_int i in
+                  FStar_Compiler_Util.print1 "%s core check ok\n" uu___2
+              | FStar_Pervasives.Inl (FStar_Pervasives_Native.Some g) ->
+                  ((let uu___3 = FStar_Compiler_Util.string_of_int i in
+                    let uu___4 = FStar_Syntax_Print.term_to_string g in
+                    FStar_Compiler_Util.print2
+                      "%s core check computed guard %s ok\n" uu___3 uu___4);
+                   if Prims.op_Negation guard_ok
+                   then FStar_Compiler_Effect.op_Colon_Equals success false
+                   else ())
+              | FStar_Pervasives.Inr err ->
+                  (FStar_Compiler_Effect.op_Colon_Equals success false;
+                   (let uu___3 = FStar_Compiler_Util.string_of_int i in
+                    let uu___4 = FStar_TypeChecker_Core.print_error err in
+                    FStar_Compiler_Util.print2 "%s failed\n%s\n" uu___3
+                      uu___4)));
+             FStar_Options.init ())
 let (inst :
   Prims.int ->
     FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax ->
@@ -422,8 +434,8 @@ let (run_all : unit -> Prims.bool) =
                                       (t0, t1)) in
                                    match uu___24 with
                                    | (tm15, tm24) ->
-                                       (check_core (Prims.of_int (15)) tm15
-                                          tm24;
+                                       (check_core (Prims.of_int (15)) false
+                                          false tm15 tm24;
                                         (let uu___26 =
                                            let t0 =
                                              FStar_Tests_Pars.tc
@@ -435,16 +447,99 @@ let (run_all : unit -> Prims.bool) =
                                          match uu___26 with
                                          | (tm16, tm25) ->
                                              (check_core (Prims.of_int (16))
-                                                tm16 tm25;
-                                              FStar_Options.__clear_unit_tests
-                                                ();
-                                              (let uu___30 =
-                                                 FStar_Compiler_Effect.op_Bang
-                                                   success in
-                                               if uu___30
-                                               then
-                                                 FStar_Compiler_Util.print_string
-                                                   "Unifier ok\n"
-                                               else ());
-                                              FStar_Compiler_Effect.op_Bang
-                                                success))))))))))))))))))
+                                                false false tm16 tm25;
+                                              (let uu___28 =
+                                                 FStar_Tests_Pars.pars_and_tc_fragment
+                                                   "let defn17_0 (x:nat) : nat -> nat -> Type0 = fun y z -> a:int { a + x == y + z }";
+                                                 (let t0 =
+                                                    FStar_Tests_Pars.tc
+                                                      "defn17_0 0 1 2" in
+                                                  let t1_head =
+                                                    FStar_Tests_Pars.tc
+                                                      "(defn17_0 0)" in
+                                                  let arg1 =
+                                                    FStar_Tests_Pars.tc "1" in
+                                                  let arg2 =
+                                                    FStar_Tests_Pars.tc "2" in
+                                                  let t1 =
+                                                    FStar_Syntax_Syntax.mk_Tm_app
+                                                      t1_head
+                                                      [(arg1,
+                                                         FStar_Pervasives_Native.None);
+                                                      (arg2,
+                                                        FStar_Pervasives_Native.None)]
+                                                      t0.FStar_Syntax_Syntax.pos in
+                                                  (t0, t1)) in
+                                               match uu___28 with
+                                               | (tm17, tm26) ->
+                                                   (check_core
+                                                      (Prims.of_int (17))
+                                                      false false tm17 tm26;
+                                                    (let uu___30 =
+                                                       let t0 =
+                                                         FStar_Tests_Pars.tc
+                                                           "dp:((dtuple2 int (fun (y:int) -> z:int{ z > y })) <: Type0) { let (| x, _ |) = dp in x > 17 }" in
+                                                       let t1 =
+                                                         FStar_Tests_Pars.tc
+                                                           "(dtuple2 int (fun (y:int) -> z:int{ z > y }))" in
+                                                       (t0, t1) in
+                                                     match uu___30 with
+                                                     | (tm18, tm27) ->
+                                                         (check_core
+                                                            (Prims.of_int (18))
+                                                            true false tm18
+                                                            tm27;
+                                                          (let uu___32 =
+                                                             FStar_Tests_Pars.pars_and_tc_fragment
+                                                               "type vprop' = { t:Type0 ; n:nat }";
+                                                             (let t0 =
+                                                                FStar_Tests_Pars.tc
+                                                                  "x:(({ t=bool; n=0 }).t <: Type0) { x == false }" in
+                                                              let t1 =
+                                                                FStar_Tests_Pars.tc
+                                                                  "x:bool{ x == false }" in
+                                                              (t0, t1)) in
+                                                           match uu___32 with
+                                                           | (tm19, tm28) ->
+                                                               (check_core
+                                                                  (Prims.of_int (19))
+                                                                  false false
+                                                                  tm19 tm28;
+                                                                (let uu___34
+                                                                   =
+                                                                   let t0 =
+                                                                    FStar_Tests_Pars.tc
+                                                                    "int" in
+                                                                   let t1 =
+                                                                    FStar_Tests_Pars.tc
+                                                                    "j:(i:nat{ i > 17 } <: Type0){j > 42}" in
+                                                                   (t0, t1) in
+                                                                 match uu___34
+                                                                 with
+                                                                 | (tm110,
+                                                                    tm29) ->
+                                                                    (check_core
+                                                                    (Prims.of_int (20))
+                                                                    true true
+                                                                    tm110
+                                                                    tm29;
+                                                                    FStar_Options.__clear_unit_tests
+                                                                    ();
+                                                                    (let uu___38
+                                                                    =
+                                                                    FStar_Compiler_Effect.op_Bang
+                                                                    success in
+                                                                    if
+                                                                    uu___38
+                                                                    then
+                                                                    FStar_Compiler_Util.print_string
+                                                                    "Unifier ok\n"
+                                                                    else ());
+                                                                    FStar_Compiler_Effect.op_Bang
+                                                                    success))))))))))))))))))))))))))
+type vprop' = {
+  t: unit ;
+  n: Prims.nat }
+let (__proj__Mkvprop'__item__n : vprop' -> Prims.nat) =
+  fun projectee -> match projectee with | { t; n;_} -> n
+type test = Obj.t
