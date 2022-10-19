@@ -2401,11 +2401,11 @@ let get_wp_ite_combinator (ed:eff_decl) : option tscheme =
   | DM4F_eff combs -> combs.ite_wp |> Some
   | _ -> None
 
-let get_stronger_vc_combinator (ed:eff_decl) : tscheme =
+let get_stronger_vc_combinator (ed:eff_decl) : tscheme & option indexed_effect_combinator_kind =
   match ed.combinators with
   | Primitive_eff combs
-  | DM4F_eff combs -> combs.stronger
-  | Layered_eff combs -> Mktuple3?._2 combs.l_subcomp
+  | DM4F_eff combs -> combs.stronger, None
+  | Layered_eff combs -> Mktuple3?._2 combs.l_subcomp, Mktuple3?._3 combs.l_subcomp
 
 let get_stronger_repr (ed:eff_decl) : option tscheme =
   match ed.combinators with

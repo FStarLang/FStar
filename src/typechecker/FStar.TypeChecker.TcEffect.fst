@@ -655,11 +655,11 @@ let validate_indexed_effect_subcomp_shape (env:env)
     | Some l -> Standard_combinator l in
 
   if Env.debug env <| Options.Other "LayeredEffectsTc"
-  then BU.print2 "Bind %s has %s kind\n" bind_name
+  then BU.print2 "Subcomp %s has %s kind\n" subcomp_name
          (Print.indexed_effect_combinator_kind_to_string kind);
 
 
-  k, Ad_hoc_combinator
+  k, kind
   
 (*
  * Typechecking of layered effects
@@ -834,7 +834,7 @@ Errors.with_ctx (BU.format1 "While checking layered effect definition `%s`" (str
    *
    * The binders have arbitrary sorts
    *)
-  let bind_repr, bind_combinator_kind =
+  let bind_repr, bind_kind =
     let bind_repr_ts = ed |> U.get_bind_repr |> must in
     let r = (snd bind_repr_ts).pos in
     let bind_us, bind_t, bind_ty = check_and_gen "bind_repr" 2 bind_repr_ts in
@@ -871,7 +871,7 @@ Errors.with_ctx (BU.format1 "While checking layered effect definition `%s`" (str
    * If so, we add a default combinator as: fun (a:Type) (signature_bs) (f:repr a signature_bs) -> f
    * 
    *)
-  let stronger_repr, stronger_combinator_kind =
+  let stronger_repr, subcomp_kind =
     let stronger_repr =
       let ts = ed |> U.get_stronger_repr |> must in
       match (ts |> snd |> SS.compress).n with
@@ -1359,8 +1359,8 @@ Errors.with_ctx (BU.format1 "While checking layered effect definition `%s`" (str
   let combinators = Layered_eff ({
     l_repr = tschemes_of repr (Some (Standard_combinator []));
     l_return = tschemes_of return_repr (Some Ad_hoc_combinator);
-    l_bind = tschemes_of bind_repr (Some bind_combinator_kind);
-    l_subcomp = tschemes_of stronger_repr (Some Ad_hoc_combinator);
+    l_bind = tschemes_of bind_repr (Some bind_kind);
+    l_subcomp = tschemes_of stronger_repr (Some subcomp_kind);
     l_if_then_else = tschemes_of if_then_else (Some Ad_hoc_combinator)
   }) in
 
@@ -1524,7 +1524,7 @@ Errors.with_ctx (BU.format1 "While checking effect definition `%s`" (string_of_l
       S.mk_binder a;
       S.null_binder wp_sort_a;
       S.null_binder wp_sort_a ] (S.mk_Total t) in
-    check_and_gen' "stronger" 1 None (ed |> U.get_stronger_vc_combinator) (Some k) in
+    check_and_gen' "stronger" 1 None (ed |> U.get_stronger_vc_combinator |> fst) (Some k) in
 
   log_combinator "stronger" stronger;
 

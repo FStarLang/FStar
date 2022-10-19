@@ -753,8 +753,8 @@ let standard_indexed_bind_substs env
     (p_ed.mname |> Ident.ident_of_lid |> string_of_id) in
 
   let bs, binder_kinds, subst =
-    let a_b::b_b::bind_t_bs = bs in
-    bind_t_bs,
+    let a_b::b_b::bs = bs in
+    bs,
     List.splitAt 2 binder_kinds |> snd,
     [NT (a_b.binder_bv, ct1.result_typ); NT (b_b.binder_bv, ct2.result_typ)] in
 
