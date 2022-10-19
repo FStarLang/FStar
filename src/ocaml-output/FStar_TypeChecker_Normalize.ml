@@ -9031,7 +9031,7 @@ let (maybe_unfold_head :
   =
   fun env1 ->
     fun t ->
-      let uu___ = FStar_Syntax_Util.head_and_args t in
+      let uu___ = FStar_Syntax_Util.leftmost_head_and_args t in
       match uu___ with
       | (head, args) ->
           let fv_us_opt =
