@@ -457,6 +457,92 @@ let substruct
     ))
     (substruct_lift_fpu p p' inj surj sq)
 
+#push-options "--query_stats --z3rlimit 64"
+
+#restart-solver
+let substruct_id
+  (#a: eqtype)
+  (#b: a -> Type)
+  (p:(k: a -> pcm (b k)))
+  (inj: (a -> a))
+  (surj: (a -> option a))
+  (sq: squash (
+    (forall x . inj x == x) /\
+    (forall x . surj x == Some x)
+  ))
+: Lemma
+  (substruct p p inj surj () == connection_id (prod_pcm p))
+= let l = substruct p p inj surj () in
+  let m = connection_id (prod_pcm p) in
+  let _ : squash (l.conn_small_to_large.morph `feq` m.conn_small_to_large.morph) =
+    assert (forall x . l.conn_small_to_large.morph x `feq` m.conn_small_to_large.morph x)
+  in
+  let _ : squash (l.conn_large_to_small.morph `feq` m.conn_large_to_small.morph) = () in
+  connection_eq_gen
+    l
+    m
+    ()
+    (fun x y f v ->
+      assert ((l.conn_lift_frame_preserving_upd ({ fpu_lift_dom_x = x; fpu_lift_dom_y = y; fpu_lift_dom_f = f; })).fpu_f v `feq` (m.conn_lift_frame_preserving_upd ({ fpu_lift_dom_x = x; fpu_lift_dom_y = y; fpu_lift_dom_f = f; })).fpu_f v)
+    )
+
+#pop-options
+
+#push-options "--query_stats --z3rlimit 256"
+
+#restart-solver
+let substruct_compose
+  (#a1: eqtype)
+  (#b1: a1 -> Type)
+  (p1:(k: a1 -> pcm (b1 k)))
+  (#a2: eqtype)
+  (#b2: (a2 -> Type))
+  (p2: (k: a2 -> pcm (b2 k)))
+  (inj21: (a2 -> a1))
+  (surj12: (a1 -> option a2))
+  (sq12: squash (is_substruct p1 p2 inj21 surj12))
+  (#a3: eqtype)
+  (#b3: (a3 -> Type))
+  (p3: (k: a3 -> pcm (b3 k)))
+  (inj32: (a3 -> a2))
+  (surj23: (a2 -> option a3))
+  (sq23: squash (is_substruct p2 p3 inj32 surj23))
+  (inj31: (a3 -> a1))
+  (surj13: (a1 -> option a3))
+  (sq13: squash (is_substruct p1 p3 inj31 surj13))
+: Lemma
+  (requires (
+    (forall x3 . inj31 x3 == inj21 (inj32 x3)) /\
+    (forall x1 . surj13 x1 == (match surj12 x1 with
+    | None -> None
+    | Some x2 -> surj23 x2
+  ))))
+  (ensures (
+    substruct p1 p3 inj31 surj13 sq13 ==
+      substruct p1 p2 inj21 surj12 sq12 `connection_compose`
+      substruct p2 p3 inj32 surj23 sq23
+  ))
+=
+  let c12 = substruct p1 p2 inj21 surj12 sq12 in
+  let c23 = substruct p2 p3 inj32 surj23 sq23 in
+  let l = substruct p1 p3 inj31 surj13 sq13 in
+  let m = connection_compose c12 c23 in
+  let _ : squash (l.conn_small_to_large.morph `feq` m.conn_small_to_large.morph) =
+    assert (forall x . l.conn_small_to_large.morph x `feq` m.conn_small_to_large.morph x)
+  in
+  let _ : squash (l.conn_large_to_small.morph `feq` m.conn_large_to_small.morph) =
+    assert (forall x . l.conn_large_to_small.morph x `feq` m.conn_large_to_small.morph x)
+  in
+  connection_eq_gen
+    l
+    m
+    ()
+    (fun x y f v ->
+      assert ((l.conn_lift_frame_preserving_upd ({ fpu_lift_dom_x = x; fpu_lift_dom_y = y; fpu_lift_dom_f = f; })).fpu_f v `feq` (m.conn_lift_frame_preserving_upd ({ fpu_lift_dom_x = x; fpu_lift_dom_y = y; fpu_lift_dom_f = f; })).fpu_f v)
+    )
+
+#pop-options
+
 let exclusive_struct_intro
   (#a: Type)
   (#b: a -> Type)
