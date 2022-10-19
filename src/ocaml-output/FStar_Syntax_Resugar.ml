@@ -2948,13 +2948,13 @@ let (resugar_sigelt' :
             decl'_to_decl se uu___4 in
           FStar_Pervasives_Native.Some uu___3
       | FStar_Syntax_Syntax.Sig_polymonadic_subcomp
-          (m, n, (uu___, t), uu___1) ->
-          let uu___2 =
-            let uu___3 =
-              let uu___4 = let uu___5 = resugar_term' env t in (m, n, uu___5) in
-              FStar_Parser_AST.Polymonadic_subcomp uu___4 in
-            decl'_to_decl se uu___3 in
-          FStar_Pervasives_Native.Some uu___2
+          (m, n, (uu___, t), uu___1, uu___2) ->
+          let uu___3 =
+            let uu___4 =
+              let uu___5 = let uu___6 = resugar_term' env t in (m, n, uu___6) in
+              FStar_Parser_AST.Polymonadic_subcomp uu___5 in
+            decl'_to_decl se uu___4 in
+          FStar_Pervasives_Native.Some uu___3
 let (empty_env : FStar_Syntax_DsEnv.env) =
   FStar_Syntax_DsEnv.empty_env FStar_Parser_Dep.empty_deps
 let noenv : 'a . (FStar_Syntax_DsEnv.env -> 'a) -> 'a = fun f -> f empty_env

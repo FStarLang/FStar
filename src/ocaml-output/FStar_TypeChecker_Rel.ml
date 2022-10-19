@@ -11920,7 +11920,7 @@ and (solve_c :
                                 (match uu___8 with
                                  | (tsopt, k) ->
                                      (c12, g_lift, tsopt, k, false))))
-                  | FStar_Pervasives_Native.Some t ->
+                  | FStar_Pervasives_Native.Some (t, kind) ->
                       let uu___6 =
                         let uu___7 =
                           let uu___8 =
@@ -11931,7 +11931,7 @@ and (solve_c :
                         FStar_Compiler_Effect.op_Bar_Greater uu___7
                           (fun uu___8 -> FStar_Pervasives_Native.Some uu___8) in
                       (c11, FStar_TypeChecker_Env.trivial_guard, uu___6,
-                        FStar_Syntax_Syntax.Ad_hoc_combinator, true) in
+                        kind, true) in
                 match uu___4 with
                 | (c12, g_lift, stronger_t_opt, kind, is_polymonadic) ->
                     if FStar_Compiler_Util.is_none stronger_t_opt

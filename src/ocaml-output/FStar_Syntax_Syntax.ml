@@ -1483,7 +1483,8 @@ type sigelt' =
   FStar_Ident.lident * tscheme * tscheme * indexed_effect_combinator_kind
   FStar_Pervasives_Native.option) 
   | Sig_polymonadic_subcomp of (FStar_Ident.lident * FStar_Ident.lident *
-  tscheme * tscheme) 
+  tscheme * tscheme * indexed_effect_combinator_kind
+  FStar_Pervasives_Native.option) 
   | Sig_fail of (Prims.int Prims.list * Prims.bool * sigelt Prims.list) 
 and sigelt =
   {
@@ -1575,8 +1576,10 @@ let (uu___is_Sig_polymonadic_subcomp : sigelt' -> Prims.bool) =
     | Sig_polymonadic_subcomp _0 -> true
     | uu___ -> false
 let (__proj__Sig_polymonadic_subcomp__item___0 :
-  sigelt' -> (FStar_Ident.lident * FStar_Ident.lident * tscheme * tscheme)) =
-  fun projectee -> match projectee with | Sig_polymonadic_subcomp _0 -> _0
+  sigelt' ->
+    (FStar_Ident.lident * FStar_Ident.lident * tscheme * tscheme *
+      indexed_effect_combinator_kind FStar_Pervasives_Native.option))
+  = fun projectee -> match projectee with | Sig_polymonadic_subcomp _0 -> _0
 let (uu___is_Sig_fail : sigelt' -> Prims.bool) =
   fun projectee ->
     match projectee with | Sig_fail _0 -> true | uu___ -> false

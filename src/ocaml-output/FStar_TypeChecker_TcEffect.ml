@@ -7894,7 +7894,8 @@ let (tc_polymonadic_subcomp :
     FStar_Ident.lident ->
       FStar_Ident.lident ->
         FStar_Syntax_Syntax.tscheme ->
-          (FStar_Syntax_Syntax.tscheme * FStar_Syntax_Syntax.tscheme))
+          (FStar_Syntax_Syntax.tscheme * FStar_Syntax_Syntax.tscheme *
+            FStar_Syntax_Syntax.indexed_effect_combinator_kind))
   =
   fun env0 ->
     fun m ->
@@ -7927,267 +7928,52 @@ let (tc_polymonadic_subcomp :
                (match uu___2 with
                 | (us1, ty1) ->
                     let env = FStar_TypeChecker_Env.push_univ_vars env0 us1 in
-                    let uu___4 =
-                      let uu___5 = FStar_Syntax_Util.type_u () in
-                      FStar_Compiler_Effect.op_Bar_Greater uu___5
-                        (fun uu___6 ->
-                           match uu___6 with
-                           | (t1, u) ->
-                               let uu___7 =
-                                 let uu___8 =
-                                   FStar_Syntax_Syntax.gen_bv "a"
-                                     FStar_Pervasives_Native.None t1 in
-                                 FStar_Compiler_Effect.op_Bar_Greater uu___8
-                                   FStar_Syntax_Syntax.mk_binder in
-                               (uu___7, u)) in
-                    (match uu___4 with
-                     | (a, u) ->
-                         let rest_bs =
-                           let uu___5 =
-                             let uu___6 = FStar_Syntax_Subst.compress ty1 in
-                             uu___6.FStar_Syntax_Syntax.n in
-                           match uu___5 with
-                           | FStar_Syntax_Syntax.Tm_arrow (bs, uu___6) when
-                               (FStar_Compiler_List.length bs) >=
-                                 (Prims.of_int (2))
-                               ->
-                               let uu___7 =
-                                 FStar_Syntax_Subst.open_binders bs in
-                               (match uu___7 with
-                                | { FStar_Syntax_Syntax.binder_bv = a';
-                                    FStar_Syntax_Syntax.binder_qual = uu___8;
-                                    FStar_Syntax_Syntax.binder_attrs = uu___9;_}::bs1
-                                    ->
-                                    let uu___10 =
-                                      let uu___11 =
-                                        FStar_Compiler_Effect.op_Bar_Greater
-                                          bs1
-                                          (FStar_Compiler_List.splitAt
-                                             ((FStar_Compiler_List.length bs1)
-                                                - Prims.int_one)) in
-                                      FStar_Compiler_Effect.op_Bar_Greater
-                                        uu___11 FStar_Pervasives_Native.fst in
-                                    let uu___11 =
-                                      let uu___12 =
-                                        let uu___13 =
-                                          let uu___14 =
-                                            let uu___15 =
-                                              FStar_Syntax_Syntax.bv_to_name
-                                                a.FStar_Syntax_Syntax.binder_bv in
-                                            (a', uu___15) in
-                                          FStar_Syntax_Syntax.NT uu___14 in
-                                        [uu___13] in
-                                      FStar_Syntax_Subst.subst_binders
-                                        uu___12 in
-                                    FStar_Compiler_Effect.op_Bar_Greater
-                                      uu___10 uu___11)
-                           | uu___6 ->
-                               let uu___7 =
-                                 let uu___8 =
-                                   let uu___9 =
-                                     FStar_Syntax_Print.tag_of_term t in
-                                   let uu___10 =
-                                     FStar_Syntax_Print.term_to_string t in
-                                   FStar_Compiler_Util.format3
-                                     "Type of polymonadic subcomp %s is not an arrow with >= 2 binders (%s::%s)"
-                                     combinator_name uu___9 uu___10 in
-                                 (FStar_Errors.Fatal_UnexpectedEffect,
-                                   uu___8) in
-                               FStar_Errors.raise_error uu___7 r in
-                         let bs = a :: rest_bs in
-                         let uu___5 =
-                           let uu___6 =
-                             let uu___7 =
-                               FStar_TypeChecker_Env.push_binders env bs in
-                             let uu___8 =
-                               FStar_Compiler_Effect.op_Bar_Greater
-                                 a.FStar_Syntax_Syntax.binder_bv
-                                 FStar_Syntax_Syntax.bv_to_name in
-                             FStar_TypeChecker_Util.fresh_effect_repr_en
-                               uu___7 r m u uu___8 in
-                           match uu___6 with
-                           | (repr, g) ->
-                               let uu___7 =
-                                 let uu___8 =
-                                   FStar_Syntax_Syntax.gen_bv "f"
-                                     FStar_Pervasives_Native.None repr in
-                                 FStar_Compiler_Effect.op_Bar_Greater uu___8
-                                   FStar_Syntax_Syntax.mk_binder in
-                               (uu___7, g) in
-                         (match uu___5 with
-                          | (f, guard_f) ->
-                              let uu___6 =
-                                let uu___7 =
-                                  FStar_TypeChecker_Env.push_binders env bs in
-                                let uu___8 =
-                                  FStar_Compiler_Effect.op_Bar_Greater
-                                    a.FStar_Syntax_Syntax.binder_bv
-                                    FStar_Syntax_Syntax.bv_to_name in
-                                FStar_TypeChecker_Util.fresh_effect_repr_en
-                                  uu___7 r n u uu___8 in
-                              (match uu___6 with
-                               | (ret_t, guard_ret_t) ->
-                                   let uu___7 =
-                                     let uu___8 =
-                                       FStar_TypeChecker_Env.push_binders env
-                                         bs in
-                                     let uu___9 =
-                                       FStar_Compiler_Util.format1
-                                         "implicit for pure_wp in checking polymonadic subcomp %s"
-                                         combinator_name in
-                                     pure_wp_uvar uu___8 ret_t uu___9 r in
-                                   (match uu___7 with
-                                    | (pure_wp_uvar1, guard_wp) ->
-                                        let c =
-                                          let uu___8 =
-                                            let uu___9 =
-                                              let uu___10 =
-                                                FStar_TypeChecker_Env.new_u_univ
-                                                  () in
-                                              [uu___10] in
-                                            let uu___10 =
-                                              let uu___11 =
-                                                FStar_Compiler_Effect.op_Bar_Greater
-                                                  pure_wp_uvar1
-                                                  FStar_Syntax_Syntax.as_arg in
-                                              [uu___11] in
-                                            {
-                                              FStar_Syntax_Syntax.comp_univs
-                                                = uu___9;
-                                              FStar_Syntax_Syntax.effect_name
-                                                =
-                                                FStar_Parser_Const.effect_PURE_lid;
-                                              FStar_Syntax_Syntax.result_typ
-                                                = ret_t;
-                                              FStar_Syntax_Syntax.effect_args
-                                                = uu___10;
-                                              FStar_Syntax_Syntax.flags = []
-                                            } in
-                                          FStar_Syntax_Syntax.mk_Comp uu___8 in
-                                        let k =
-                                          FStar_Syntax_Util.arrow
-                                            (FStar_Compiler_List.op_At bs [f])
-                                            c in
-                                        ((let uu___9 =
-                                            FStar_Compiler_Effect.op_Less_Bar
-                                              (FStar_TypeChecker_Env.debug
-                                                 env)
-                                              (FStar_Options.Other
-                                                 "LayeredEffectsTc") in
-                                          if uu___9
-                                          then
-                                            let uu___10 =
-                                              FStar_Syntax_Print.term_to_string
-                                                k in
-                                            FStar_Compiler_Util.print2
-                                              "Expected type of polymonadic subcomp %s before unification: %s\n"
-                                              combinator_name uu___10
-                                          else ());
-                                         (let guard_eq =
-                                            FStar_TypeChecker_Rel.teq env ty1
-                                              k in
-                                          FStar_Compiler_List.iter
-                                            (FStar_TypeChecker_Rel.force_trivial_guard
-                                               env)
-                                            [guard_f;
-                                            guard_ret_t;
-                                            guard_wp;
-                                            guard_eq];
-                                          (let k1 =
-                                             let uu___10 =
-                                               FStar_Compiler_Effect.op_Bar_Greater
-                                                 k
-                                                 (FStar_TypeChecker_Normalize.remove_uvar_solutions
-                                                    env) in
-                                             FStar_Compiler_Effect.op_Bar_Greater
-                                               uu___10
-                                               (FStar_TypeChecker_Normalize.normalize
-                                                  [FStar_TypeChecker_Env.Beta;
-                                                  FStar_TypeChecker_Env.Eager_unfolding]
-                                                  env) in
-                                           (let uu___11 =
-                                              FStar_Compiler_Effect.op_Less_Bar
-                                                (FStar_TypeChecker_Env.debug
-                                                   env)
-                                                (FStar_Options.Other
-                                                   "LayeredEffectsTc") in
-                                            if uu___11
-                                            then
-                                              let uu___12 =
-                                                FStar_Syntax_Print.tscheme_to_string
-                                                  (us1, k1) in
-                                              FStar_Compiler_Util.print2
-                                                "Polymonadic subcomp %s type after unification : %s\n"
-                                                combinator_name uu___12
-                                            else ());
-                                           (let check_non_informative_binders
-                                              =
-                                              (FStar_TypeChecker_Env.is_reifiable_effect
-                                                 env n)
-                                                &&
-                                                (let uu___11 =
-                                                   FStar_TypeChecker_Env.fv_with_lid_has_attr
-                                                     env n
-                                                     FStar_Parser_Const.allow_informative_binders_attr in
-                                                 Prims.op_Negation uu___11) in
-                                            (let uu___11 =
-                                               let uu___12 =
-                                                 FStar_Syntax_Subst.compress
-                                                   k1 in
-                                               uu___12.FStar_Syntax_Syntax.n in
-                                             match uu___11 with
-                                             | FStar_Syntax_Syntax.Tm_arrow
-                                                 (bs1, c1) ->
-                                                 let uu___12 =
-                                                   FStar_Syntax_Subst.open_comp
-                                                     bs1 c1 in
-                                                 (match uu___12 with
-                                                  | (a1::bs2, c2) ->
-                                                      let res_t =
-                                                        FStar_Syntax_Util.comp_result
-                                                          c2 in
-                                                      let uu___13 =
-                                                        let uu___14 =
-                                                          FStar_Compiler_List.splitAt
-                                                            ((FStar_Compiler_List.length
-                                                                bs2)
-                                                               -
-                                                               Prims.int_one)
-                                                            bs2 in
-                                                        FStar_Compiler_Effect.op_Bar_Greater
-                                                          uu___14
-                                                          (fun uu___15 ->
-                                                             match uu___15
-                                                             with
-                                                             | (l1, l2) ->
-                                                                 let uu___16
-                                                                   =
-                                                                   FStar_Compiler_List.hd
-                                                                    l2 in
-                                                                 (l1,
-                                                                   uu___16)) in
-                                                      (match uu___13 with
-                                                       | (bs3, f_b) ->
-                                                           let env1 =
-                                                             FStar_TypeChecker_Env.push_binders
-                                                               env [a1] in
-                                                           validate_layered_effect_binders
-                                                             env1 bs3
-                                                             check_non_informative_binders
-                                                             r)));
-                                            (let uu___12 =
-                                               let uu___13 =
-                                                 FStar_Compiler_Util.format1
-                                                   "Polymonadic subcomp (%s in this case) is an experimental feature;it is subject to some redesign in the future. Please keep us informed (on github etc.) about how you are using it"
-                                                   combinator_name in
-                                               (FStar_Errors.Warning_BleedingEdge_Feature,
-                                                 uu___13) in
-                                             FStar_Errors.log_issue r uu___12);
-                                            (let uu___12 =
-                                               let uu___13 =
-                                                 FStar_Compiler_Effect.op_Bar_Greater
-                                                   k1
-                                                   (FStar_Syntax_Subst.close_univ_vars
-                                                      us1) in
-                                               (us1, uu___13) in
-                                             ((us1, t), uu___12))))))))))))
+                    let uu___3 =
+                      let uu___4 =
+                        FStar_TypeChecker_Env.get_effect_decl env m in
+                      let uu___5 =
+                        FStar_TypeChecker_Env.get_effect_decl env n in
+                      (uu___4, uu___5) in
+                    (match uu___3 with
+                     | (m_ed, n_ed) ->
+                         let uu___4 =
+                           let uu___5 = FStar_Syntax_Util.get_eff_repr m_ed in
+                           let uu___6 = FStar_Syntax_Util.get_eff_repr n_ed in
+                           let uu___7 = FStar_Compiler_List.hd us1 in
+                           let uu___8 = FStar_TypeChecker_Env.get_range env in
+                           validate_indexed_effect_subcomp_shape env m n
+                             m_ed.FStar_Syntax_Syntax.signature
+                             n_ed.FStar_Syntax_Syntax.signature uu___5 uu___6
+                             uu___7 ty1 uu___8 in
+                         (match uu___4 with
+                          | (k, kind) ->
+                              ((let uu___6 =
+                                  FStar_Compiler_Effect.op_Less_Bar
+                                    (FStar_TypeChecker_Env.debug env)
+                                    FStar_Options.Extreme in
+                                if uu___6
+                                then
+                                  let uu___7 =
+                                    FStar_Syntax_Print.tscheme_to_string
+                                      (us1, t) in
+                                  let uu___8 =
+                                    FStar_Syntax_Print.tscheme_to_string
+                                      (us1, k) in
+                                  FStar_Compiler_Util.print3
+                                    "Polymonadic subcomp %s after typechecking (%s::%s)\n"
+                                    combinator_name uu___7 uu___8
+                                else ());
+                               (let uu___7 =
+                                  let uu___8 =
+                                    FStar_Compiler_Util.format1
+                                      "Polymonadic subcomp (%s in this case) is an experimental feature;it is subject to some redesign in the future. Please keep us informed (on github etc.) about how you are using it"
+                                      combinator_name in
+                                  (FStar_Errors.Warning_BleedingEdge_Feature,
+                                    uu___8) in
+                                FStar_Errors.log_issue r uu___7);
+                               (let uu___7 =
+                                  let uu___8 =
+                                    FStar_Compiler_Effect.op_Bar_Greater k
+                                      (FStar_Syntax_Subst.close_univ_vars us1) in
+                                  (us1, uu___8) in
+                                ((us1, t), uu___7, kind)))))))
