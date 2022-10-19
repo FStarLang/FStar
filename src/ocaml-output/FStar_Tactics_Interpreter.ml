@@ -1993,31 +1993,33 @@ let run_tactic_on_ps' :
                                      ps1.FStar_Tactics_Types.goals
                                      ps1.FStar_Tactics_Types.smt_goals), ret))))
                           | FStar_Tactics_Result.Failed (e, ps1) ->
-                              let texn_to_string e1 =
-                                match e1 with
-                                | FStar_Tactics_Common.TacticFailure s -> s
-                                | FStar_Tactics_Common.EExn t ->
-                                    let uu___8 =
-                                      FStar_Syntax_Print.term_to_string t in
-                                    Prims.op_Hat "uncaught exception: "
-                                      uu___8
-                                | e2 -> FStar_Compiler_Effect.raise e2 in
-                              let rng =
-                                if background
-                                then
-                                  match ps1.FStar_Tactics_Types.goals with
-                                  | g1::uu___8 ->
-                                      (g1.FStar_Tactics_Types.goal_ctx_uvar).FStar_Syntax_Syntax.ctx_uvar_range
-                                  | uu___8 -> rng_call
-                                else ps1.FStar_Tactics_Types.entry_range in
-                              let uu___8 =
+                              (FStar_Tactics_Printing.do_dump_proofstate ps1
+                                 "at the time of failure";
+                               (let texn_to_string e1 =
+                                  match e1 with
+                                  | FStar_Tactics_Common.TacticFailure s -> s
+                                  | FStar_Tactics_Common.EExn t ->
+                                      let uu___9 =
+                                        FStar_Syntax_Print.term_to_string t in
+                                      Prims.op_Hat "uncaught exception: "
+                                        uu___9
+                                  | e2 -> FStar_Compiler_Effect.raise e2 in
+                                let rng =
+                                  if background
+                                  then
+                                    match ps1.FStar_Tactics_Types.goals with
+                                    | g1::uu___9 ->
+                                        (g1.FStar_Tactics_Types.goal_ctx_uvar).FStar_Syntax_Syntax.ctx_uvar_range
+                                    | uu___9 -> rng_call
+                                  else ps1.FStar_Tactics_Types.entry_range in
                                 let uu___9 =
-                                  let uu___10 = texn_to_string e in
-                                  FStar_Compiler_Util.format1
-                                    "user tactic failed: `%s`" uu___10 in
-                                (FStar_Errors.Fatal_UserTacticFailure,
-                                  uu___9) in
-                              FStar_Errors.raise_error uu___8 rng))))
+                                  let uu___10 =
+                                    let uu___11 = texn_to_string e in
+                                    FStar_Compiler_Util.format1
+                                      "user tactic failed: `%s`" uu___11 in
+                                  (FStar_Errors.Fatal_UserTacticFailure,
+                                    uu___10) in
+                                FStar_Errors.raise_error uu___9 rng))))))
 let run_tactic_on_ps :
   'a 'b .
     FStar_Compiler_Range.range ->

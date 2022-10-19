@@ -278,12 +278,12 @@ let proc_guard = proc_guard' true
 let tc_unifier_solved_implicits env (must_tot:bool) (allow_guards:bool) (uvs:list ctx_uvar) : tac unit =
   let aux (u:ctx_uvar) : tac unit =
     let dec = UF.find_decoration u.ctx_uvar_head in
-    match dec.uvar_decoration_should_check with
-    | Allow_untyped _ ->
-      ret ()
-    | Already_checked -> 
-      ret ()
-    | _ ->
+    // match dec.uvar_decoration_should_check with
+    // | Allow_untyped _ ->
+    //   ret ()
+    // | Already_checked -> 
+    //   ret ()
+    // | _ ->
       match UF.find u.ctx_uvar_head with
       | None ->
         ret () //not solved yet

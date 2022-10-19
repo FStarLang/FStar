@@ -111,6 +111,22 @@ let check_core i subtyping guard_ok x y =
   in
   Options.init()
 
+let check_core_typing i e t =
+  FStar.Main.process_args () |> ignore; //set options
+  let env = tcenv () in
+  let _ =
+    match FStar.TypeChecker.Core.check_term env e t true with
+    | Inl None -> 
+      BU.print1 "%s core typing ok\n" (BU.string_of_int i)
+    | Inl (Some g) -> 
+      BU.print1 "%s core typing produced a guard\n" (BU.string_of_int i);
+      success := false
+    | Inr err ->
+      success := false;
+      BU.print2 "%s failed\n%s\n" (BU.string_of_int i) (FStar.TypeChecker.Core.print_error err)      
+  in
+  Options.init()
+
 let inst n tm =
    let rec aux out n =
     if n=0 then out
@@ -295,11 +311,16 @@ let run_all () =
     in
     check_core 20 true true tm1 tm2;
 
+    let tm, ty = 
+      let _ = Pars.pars_and_tc_fragment "assume val tstr21 (x:string) : Type0" in
+      let t0 = tc "(fun (x:bool) (y:int) (z: (fun (x:string) -> tstr21 x) \"hello\") -> x)" in
+      let ty = tc "bool -> int -> tstr21 \"hello\" -> bool" in
+      t0, ty
+    in
+    check_core_typing 21 tm ty;
+
     Options.__clear_unit_tests();
 
     if !success
     then BU.print_string "Unifier ok\n";
     !success
-
-type vprop' = {t:Type0; n:nat}
-let test : Type0 = ({t=bool; n=0}).t

@@ -138,7 +138,8 @@ type relation =
 
 let relation_to_string = function
   | EQUALITY -> "=?="
-  | SUBTYPING _ -> "<:?"
+  | SUBTYPING None -> "<:?"
+  | SUBTYPING (Some tm) -> BU.format1 "( <:? %s)" (P.term_to_string tm)
   
 type context_term =
   | CtxTerm : term -> context_term
@@ -502,6 +503,7 @@ let curry_abs (b0:binder) (b1:binder) (bs:binders) (body:term) (ropt: option res
 let is_gtot_comp c = U.is_tot_or_gtot_comp c && not (U.is_total_comp c)
 
 let rec context_included (g0 g1: list binding) =
+  if BU.physical_equality g0 g1 then true else
   match g0, g1 with
   | [], _ -> true
 
@@ -510,7 +512,8 @@ let rec context_included (g0 g1: list binding) =
      match b0, b1 with
      | Binding_var x0, Binding_var x1 ->
        if x0.index = x1.index
-       then context_included g0' g1'
+       then Hash.equal_term x0.sort x1.sort
+            && context_included g0' g1'
        else context_included g0 g1'
 
      | Binding_lid _, Binding_lid _
@@ -536,7 +539,11 @@ let lookup (g:env) (e:term) : result (effect_label & typ) =
      if he.he_gamma `context_included` g.tcenv.gamma
      then (
        record_cache_hit();
-       //BU.print1 "cache hit %s\n" (P.term_to_string e);
+       // BU.print4 "cache hit\n %s |- %s : %s\nmatching env %s\n"
+       //   (Env.print_gamma g.tcenv.gamma)
+       //   (P.term_to_string e)
+       //   (P.term_to_string (snd (fst he.he_res)))
+       //   (Env.print_gamma he.he_gamma);
        fun _ -> Inl he.he_res
      )
      else (
@@ -958,7 +965,7 @@ let rec check_relation (g:env) (rel:relation) (t0 t1:typ)
                 | Some (_, bvs0) ->
                   let bs0 = List.map S.mk_binder bvs0 in
                   // We need universes for the binders
-                  let! _, us, g = check_binders g bs0 in
+                  let! us = check_binders g' g bs0 in
                   with_binders bs0 us (check_relation g' rel body0 body1)
              | _ -> fail "raw_pat_as_exp failed in check_equality match rule"
              end
@@ -1134,7 +1141,7 @@ and check' (g:env) (e:term)
 
   | Tm_abs(xs, body, _) ->
     let g', xs, body = open_term_binders g xs body in
-    let! xs, us, _ = with_context "abs binders" None (fun _ -> check_binders g xs) in
+    let! us = with_context "abs binders" None (fun _ -> check_binders g' g xs) in
     with_binders xs us (
       let! t = check "abs body" g' body in
       return (E_TOTAL, U.arrow xs (as_comp g t))
@@ -1142,7 +1149,7 @@ and check' (g:env) (e:term)
 
   | Tm_arrow(xs, c) ->
     let g', xs, c = open_comp_binders g xs c in
-    let! xs, us, _ = with_context "arrow binders" None (fun _ -> check_binders g xs) in
+    let! us = with_context "arrow binders" None (fun _ -> check_binders g' g xs) in
     with_binders xs us (
       let! u = with_context "arrow comp" None (fun _ -> check_comp g' c) in
       return (E_TOTAL, mk_type (S.U_max (u::us)))
@@ -1245,9 +1252,13 @@ and check' (g:env) (e:term)
             fail "Ill-formed pattern"
 
           | Some (e, bvs) ->
-            let binders = List.map S.mk_binder bvs in
-            let! bs, us, _ = check_binders g binders in
-            let! eff_pat, t = check "pattern term" g' e in
+            let bs = List.map S.mk_binder bvs in
+            let! us = check_binders g' g bs in
+            let msg = 
+              BU.format2 "Checking pattern term %s in a conetxt with pattern binders %s\n"
+                      (P.term_to_string e)
+                      (P.binders_to_string ", " bs) in
+            let! eff_pat, t = check msg g' e in
             with_context "Pattern and scrutinee type compatibility" None
                           (fun _ -> no_guard (check_scrutinee_pattern_type_compatible g' t_sc t)) ;!
             let pat_sc_eq = U.mk_eq2 u_sc t_sc sc e in
@@ -1324,8 +1335,8 @@ and check' (g:env) (e:term)
             fail "Ill-formed pattern"
 
           | Some (e, bvs) ->
-            let binders = List.map S.mk_binder bvs in
-            let! bs, us, _ = check_binders g binders in
+            let bs = List.map S.mk_binder bvs in
+            let! us = check_binders g' g bs in
             let! eff_pat, t = check "pattern term" g' e in
             // TODO: use pattern scrutinee type compatibility function
             with_context "Pattern and scrutinee type compatibility"
@@ -1370,20 +1381,32 @@ and check' (g:env) (e:term)
   | _ ->
     fail (BU.format1 "Unexpected term: %s" (FStar.Syntax.Print.tag_of_term e))
 
-and check_binders (g:env) (xs:binders)
-  : result (binders & list universe & env)
-  = match xs with
-    | [] ->
-      return ([], [], g)
+and check_binders (g':env) (g_initial:env) (xs:binders)
+  : result (list universe)
+  = let rec aux g xs =
+      match xs with
+      | [] ->
+        return []
 
-    | x ::xs ->
-      let! _, t = check "binder sort" g x.binder_bv.sort in
-      let! u = is_type g t in
-      with_binders [x] [u] (
-        let g' = push_binders g [x] in
-        let! xs, us, g = check_binders g' xs in
-        return (x :: xs, u::us, g)
-      )
+      | x ::xs ->
+        let! _, t = check "binder sort" g x.binder_bv.sort in
+        let! u = is_type g t in
+        with_binders [x] [u] (
+          let! us = aux (push_binders g [x]) xs in
+          return (u::us)
+        )
+    in
+    //This is one bit of ugliness to be careful about
+    //We've already opened the binders xs and are trying to check them
+    //in the initial environment g_initial
+    //This involves incrementally pushing those binders into the environment
+    //but, we want to make sure that any further names that are generated, 
+    //are fresh w.r.t the extension of g_initial the prefix of xs
+    //So, we move the freshness counter of g_initial up so that any names
+    //generated while checking the binders are also fresh for g', even those
+    //names to not escape to g'
+    let g = { g_initial with freshness = g'.freshness } in
+    aux g xs
 
 //
 // May be called with an effectful comp type, e.g. from within an arrow

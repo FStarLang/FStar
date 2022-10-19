@@ -96,13 +96,7 @@ and (hash_term' : FStar_Syntax_Syntax.term -> FStar_Hash.hash_code) =
         FStar_Hash.mix uu___1 uu___2
     | FStar_Syntax_Syntax.Tm_name bv ->
         let uu___1 = FStar_Hash.of_int (Prims.of_int (5)) in
-        let uu___2 =
-          let uu___3 =
-            let uu___4 =
-              FStar_Ident.string_of_id bv.FStar_Syntax_Syntax.ppname in
-            FStar_Hash.of_string uu___4 in
-          let uu___4 = FStar_Hash.of_int bv.FStar_Syntax_Syntax.index in
-          FStar_Hash.mix uu___3 uu___4 in
+        let uu___2 = FStar_Hash.of_int bv.FStar_Syntax_Syntax.index in
         FStar_Hash.mix uu___1 uu___2
     | FStar_Syntax_Syntax.Tm_fvar fv ->
         let uu___1 = FStar_Hash.of_int (Prims.of_int (7)) in
@@ -765,11 +759,7 @@ let rec (equal_term :
             | (FStar_Syntax_Syntax.Tm_bvar x, FStar_Syntax_Syntax.Tm_bvar y)
                 -> x.FStar_Syntax_Syntax.index = y.FStar_Syntax_Syntax.index
             | (FStar_Syntax_Syntax.Tm_name x, FStar_Syntax_Syntax.Tm_name y)
-                ->
-                (FStar_Ident.ident_equals x.FStar_Syntax_Syntax.ppname
-                   y.FStar_Syntax_Syntax.ppname)
-                  &&
-                  (x.FStar_Syntax_Syntax.index = y.FStar_Syntax_Syntax.index)
+                -> x.FStar_Syntax_Syntax.index = y.FStar_Syntax_Syntax.index
             | (FStar_Syntax_Syntax.Tm_fvar f, FStar_Syntax_Syntax.Tm_fvar g)
                 -> equal_fv f g
             | (FStar_Syntax_Syntax.Tm_uinst (t11, u1),
