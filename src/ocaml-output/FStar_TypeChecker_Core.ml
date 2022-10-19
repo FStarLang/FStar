@@ -3,49 +3,43 @@ type env =
   {
   tcenv: FStar_TypeChecker_Env.env ;
   allow_universe_instantiation: Prims.bool ;
-  freshness: Prims.int }
+  max_binder_index: Prims.int }
 let (__proj__Mkenv__item__tcenv : env -> FStar_TypeChecker_Env.env) =
   fun projectee ->
     match projectee with
-    | { tcenv; allow_universe_instantiation; freshness;_} -> tcenv
+    | { tcenv; allow_universe_instantiation; max_binder_index;_} -> tcenv
 let (__proj__Mkenv__item__allow_universe_instantiation : env -> Prims.bool) =
   fun projectee ->
     match projectee with
-    | { tcenv; allow_universe_instantiation; freshness;_} ->
+    | { tcenv; allow_universe_instantiation; max_binder_index;_} ->
         allow_universe_instantiation
-let (__proj__Mkenv__item__freshness : env -> Prims.int) =
+let (__proj__Mkenv__item__max_binder_index : env -> Prims.int) =
   fun projectee ->
     match projectee with
-    | { tcenv; allow_universe_instantiation; freshness;_} -> freshness
+    | { tcenv; allow_universe_instantiation; max_binder_index;_} ->
+        max_binder_index
 let (push_binder : env -> FStar_Syntax_Syntax.binder -> env) =
   fun g ->
     fun b ->
-      let uu___ = FStar_TypeChecker_Env.push_binders g.tcenv [b] in
-      {
-        tcenv = uu___;
-        allow_universe_instantiation = (g.allow_universe_instantiation);
-        freshness = (g.freshness)
-      }
-let (push_binders : env -> FStar_Syntax_Syntax.binders -> env) =
-  fun g ->
-    fun bs ->
-      let uu___ = FStar_TypeChecker_Env.push_binders g.tcenv bs in
-      {
-        tcenv = uu___;
-        allow_universe_instantiation = (g.allow_universe_instantiation);
-        freshness = (g.freshness)
-      }
+      if
+        (b.FStar_Syntax_Syntax.binder_bv).FStar_Syntax_Syntax.index <=
+          g.max_binder_index
+      then
+        failwith
+          "Assertion failed: unexpected shadowing in the core environment"
+      else
+        (let uu___1 = FStar_TypeChecker_Env.push_binders g.tcenv [b] in
+         {
+           tcenv = uu___1;
+           allow_universe_instantiation = (g.allow_universe_instantiation);
+           max_binder_index =
+             ((b.FStar_Syntax_Syntax.binder_bv).FStar_Syntax_Syntax.index)
+         })
 let (fresh_binder :
   env -> FStar_Syntax_Syntax.binder -> (env * FStar_Syntax_Syntax.binder)) =
   fun g ->
     fun old ->
-      let ctr = g.freshness + Prims.int_one in
-      let g1 =
-        {
-          tcenv = (g.tcenv);
-          allow_universe_instantiation = (g.allow_universe_instantiation);
-          freshness = ctr
-        } in
+      let ctr = g.max_binder_index + Prims.int_one in
       let bv =
         let uu___ = old.FStar_Syntax_Syntax.binder_bv in
         {
@@ -57,7 +51,7 @@ let (fresh_binder :
         FStar_Syntax_Syntax.mk_binder_with_attrs bv
           old.FStar_Syntax_Syntax.binder_qual
           old.FStar_Syntax_Syntax.binder_attrs in
-      let uu___ = push_binder g1 b in (uu___, b)
+      let uu___ = push_binder g b in (uu___, b)
 let (open_binders :
   env ->
     FStar_Syntax_Syntax.binders ->
@@ -3162,18 +3156,11 @@ and (check_binders :
                          (fun u ->
                             let uu___4 =
                               let uu___5 =
-                                let uu___6 = push_binders g [x] in
+                                let uu___6 = push_binder g x in
                                 aux uu___6 xs2 in
                               op_let_Bang uu___5 (fun us -> return (u :: us)) in
                             with_binders [x] [u] uu___4)) in
-        let g =
-          {
-            tcenv = (g_initial.tcenv);
-            allow_universe_instantiation =
-              (g_initial.allow_universe_instantiation);
-            freshness = (g'.freshness)
-          } in
-        aux g xs
+        aux g_initial xs
 and (check_comp :
   env -> FStar_Syntax_Syntax.comp -> FStar_Syntax_Syntax.universe result) =
   fun g ->
@@ -3433,7 +3420,7 @@ let (initial_env : FStar_TypeChecker_Env.env -> env) =
     {
       tcenv = g;
       allow_universe_instantiation = false;
-      freshness = (max_index + Prims.int_one)
+      max_binder_index = max_index
     }
 let (check_term_top :
   FStar_TypeChecker_Env.env ->
@@ -3462,7 +3449,7 @@ let (check_term_top :
                       {
                         tcenv = (g1.tcenv);
                         allow_universe_instantiation = true;
-                        freshness = (g1.freshness)
+                        max_binder_index = (g1.max_binder_index)
                       } (SUBTYPING (FStar_Pervasives_Native.Some e)) uu___2
                       target_comp))
 let (simplify_steps : FStar_TypeChecker_Env.step Prims.list) =

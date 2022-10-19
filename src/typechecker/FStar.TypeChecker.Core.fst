@@ -19,17 +19,17 @@ module Subst = FStar.Syntax.Subst
 type env = {
    tcenv : Env.env;
    allow_universe_instantiation : bool;
-   freshness : int
-   
+   max_binder_index : int
 }
 
-let push_binder g b = { g with tcenv = Env.push_binders g.tcenv [b] }
-let push_binders g bs = { g with tcenv = Env.push_binders g.tcenv bs }
+let push_binder g b = 
+  if b.binder_bv.index <= g.max_binder_index
+  then failwith "Assertion failed: unexpected shadowing in the core environment"
+  else { g with tcenv = Env.push_binders g.tcenv [b]; max_binder_index = b.binder_bv.index }
 
 let fresh_binder (g:env) (old:binder)
   : env & binder
-  = let ctr = g.freshness + 1 in
-    let g = { g with freshness = ctr } in
+  = let ctr = g.max_binder_index + 1 in
     let bv = { old.binder_bv with index = ctr } in
     let b = S.mk_binder_with_attrs bv old.binder_qual old.binder_attrs in    
     push_binder g b, b
@@ -965,7 +965,7 @@ let rec check_relation (g:env) (rel:relation) (t0 t1:typ)
                 | Some (_, bvs0) ->
                   let bs0 = List.map S.mk_binder bvs0 in
                   // We need universes for the binders
-                  let! us = check_binders g' g bs0 in
+                  let! us = check_binders g bs0 in
                   with_binders bs0 us (check_relation g' rel body0 body1)
              | _ -> fail "raw_pat_as_exp failed in check_equality match rule"
              end
@@ -1035,16 +1035,6 @@ and check_relation_comp (g:env) rel (c0 c1:comp)
 and check_subtype (g:env) (e:option term) (t0 t1:typ)
   = let rel = SUBTYPING e in
     with_context "check_subtype" (Some (CtxRel t0 rel t1)) (fun _ -> check_relation g rel t0 t1)
-    // debug g (fun () ->
-    //   BU.print2 "check_subtype %s <: %s\n" (P.term_to_string t0) (P.term_to_string t1));
-    // match U.eq_tm t0 t1 with
-    // | U.Equal -> 
-    //   debug g (fun _ -> BU.print_string "exiting check_subtype (EQUAL)\n");
-    //   return ()
-    // | _ ->
-    //   let t0' = N.normalize_refinement default_norm_steps g.tcenv t0 in
-    //   let t1' = N.normalize_refinement default_norm_steps g.tcenv t1 in
-    //   check_subtype_whnf g e t0' t1'
 
 and memo_check (g:env) (e:term)
   : result (effect_label & typ)
@@ -1065,9 +1055,6 @@ and check (msg:string) (g:env) (e:term)
 (*  G |- e : Tot t | pre *)
 and check' (g:env) (e:term)
   : result (effect_label & typ) =
-  // (if Env.debug g.tcenv (Options.Other "Core")
-  //  then dump_context
-  //  else return ());!
   let e = Subst.compress e in
   match e.n with
   | Tm_lazy ({lkind=Lazy_embedding _}) ->
@@ -1141,7 +1128,7 @@ and check' (g:env) (e:term)
 
   | Tm_abs(xs, body, _) ->
     let g', xs, body = open_term_binders g xs body in
-    let! us = with_context "abs binders" None (fun _ -> check_binders g' g xs) in
+    let! us = with_context "abs binders" None (fun _ -> check_binders g xs) in
     with_binders xs us (
       let! t = check "abs body" g' body in
       return (E_TOTAL, U.arrow xs (as_comp g t))
@@ -1149,7 +1136,7 @@ and check' (g:env) (e:term)
 
   | Tm_arrow(xs, c) ->
     let g', xs, c = open_comp_binders g xs c in
-    let! us = with_context "arrow binders" None (fun _ -> check_binders g' g xs) in
+    let! us = with_context "arrow binders" None (fun _ -> check_binders g xs) in
     with_binders xs us (
       let! u = with_context "arrow comp" None (fun _ -> check_comp g' c) in
       return (E_TOTAL, mk_type (S.U_max (u::us)))
@@ -1253,7 +1240,7 @@ and check' (g:env) (e:term)
 
           | Some (e, bvs) ->
             let bs = List.map S.mk_binder bvs in
-            let! us = check_binders g' g bs in
+            let! us = check_binders g bs in
             let msg = 
               BU.format2 "Checking pattern term %s in a conetxt with pattern binders %s\n"
                       (P.term_to_string e)
@@ -1336,7 +1323,7 @@ and check' (g:env) (e:term)
 
           | Some (e, bvs) ->
             let bs = List.map S.mk_binder bvs in
-            let! us = check_binders g' g bs in
+            let! us = check_binders g bs in
             let! eff_pat, t = check "pattern term" g' e in
             // TODO: use pattern scrutinee type compatibility function
             with_context "Pattern and scrutinee type compatibility"
@@ -1381,7 +1368,7 @@ and check' (g:env) (e:term)
   | _ ->
     fail (BU.format1 "Unexpected term: %s" (FStar.Syntax.Print.tag_of_term e))
 
-and check_binders (g':env) (g_initial:env) (xs:binders)
+and check_binders (g_initial:env) (xs:binders)
   : result (list universe)
   = let rec aux g xs =
       match xs with
@@ -1392,21 +1379,11 @@ and check_binders (g':env) (g_initial:env) (xs:binders)
         let! _, t = check "binder sort" g x.binder_bv.sort in
         let! u = is_type g t in
         with_binders [x] [u] (
-          let! us = aux (push_binders g [x]) xs in
+          let! us = aux (push_binder g x) xs in
           return (u::us)
         )
     in
-    //This is one bit of ugliness to be careful about
-    //We've already opened the binders xs and are trying to check them
-    //in the initial environment g_initial
-    //This involves incrementally pushing those binders into the environment
-    //but, we want to make sure that any further names that are generated, 
-    //are fresh w.r.t the extension of g_initial the prefix of xs
-    //So, we move the freshness counter of g_initial up so that any names
-    //generated while checking the binders are also fresh for g', even those
-    //names to not escape to g'
-    let g = { g_initial with freshness = g'.freshness } in
-    aux g xs
+    aux g_initial xs
 
 //
 // May be called with an effectful comp type, e.g. from within an arrow
@@ -1891,7 +1868,7 @@ let initial_env g =
   in
   { tcenv = g;
     allow_universe_instantiation = false;
-    freshness = max_index + 1 }
+    max_binder_index = max_index }
    
 let check_term_top g e t (must_tot:bool)
   : result unit
