@@ -4359,29 +4359,38 @@ let (tc_decls :
                                    uu___9
                                else ());
                               FStar_TypeChecker_Normalize.elim_uvars env2 se1)) in
-                    (FStar_TypeChecker_Env.promote_id_info env2
-                       (fun t ->
-                          (let uu___9 =
-                             FStar_TypeChecker_Env.debug env2
-                               (FStar_Options.Other "UF") in
-                           if uu___9
-                           then
-                             let uu___10 =
-                               FStar_Syntax_Print.term_to_string t in
-                             FStar_Compiler_Util.print1 "check uvars %s\n"
-                               uu___10
-                           else ());
-                          FStar_TypeChecker_Normalize.normalize
-                            [FStar_TypeChecker_Env.AllowUnboundUniverses;
-                            FStar_TypeChecker_Env.CheckNoUvars;
-                            FStar_TypeChecker_Env.Beta;
-                            FStar_TypeChecker_Env.DoNotUnfoldPureLets;
-                            FStar_TypeChecker_Env.CompressUvars;
-                            FStar_TypeChecker_Env.Exclude
-                              FStar_TypeChecker_Env.Zeta;
-                            FStar_TypeChecker_Env.Exclude
-                              FStar_TypeChecker_Env.Iota;
-                            FStar_TypeChecker_Env.NoFullNorm] env2 t);
+                    ((let uu___8 =
+                        let uu___9 =
+                          let uu___10 =
+                            FStar_TypeChecker_Env.current_module env2 in
+                          FStar_Ident.string_of_lid uu___10 in
+                        FStar_Pervasives_Native.Some uu___9 in
+                      FStar_Profiling.profile
+                        (fun uu___9 ->
+                           FStar_TypeChecker_Env.promote_id_info env2
+                             (fun t ->
+                                (let uu___11 =
+                                   FStar_TypeChecker_Env.debug env2
+                                     (FStar_Options.Other "UF") in
+                                 if uu___11
+                                 then
+                                   let uu___12 =
+                                     FStar_Syntax_Print.term_to_string t in
+                                   FStar_Compiler_Util.print1
+                                     "check uvars %s\n" uu___12
+                                 else ());
+                                FStar_TypeChecker_Normalize.normalize
+                                  [FStar_TypeChecker_Env.AllowUnboundUniverses;
+                                  FStar_TypeChecker_Env.CheckNoUvars;
+                                  FStar_TypeChecker_Env.Beta;
+                                  FStar_TypeChecker_Env.DoNotUnfoldPureLets;
+                                  FStar_TypeChecker_Env.CompressUvars;
+                                  FStar_TypeChecker_Env.Exclude
+                                    FStar_TypeChecker_Env.Zeta;
+                                  FStar_TypeChecker_Env.Exclude
+                                    FStar_TypeChecker_Env.Iota;
+                                  FStar_TypeChecker_Env.NoFullNorm] env2 t))
+                        uu___8 "FStar.TypeChecker.Tc.chec_uvars");
                      (let env3 =
                         FStar_Compiler_Effect.op_Bar_Greater ses'1
                           (FStar_Compiler_List.fold_left
@@ -4407,10 +4416,19 @@ let (tc_decls :
                                   Prims.op_Hat s uu___12) "" ses'1 in
                          FStar_Compiler_Util.print1 "Checked: %s\n" uu___11
                        else ());
-                      FStar_Compiler_List.iter
-                        (fun se1 ->
-                           (env3.FStar_TypeChecker_Env.solver).FStar_TypeChecker_Env.encode_sig
-                             env3 se1) ses'1;
+                      (let uu___11 =
+                         let uu___12 =
+                           let uu___13 =
+                             FStar_TypeChecker_Env.current_module env3 in
+                           FStar_Ident.string_of_lid uu___13 in
+                         FStar_Pervasives_Native.Some uu___12 in
+                       FStar_Profiling.profile
+                         (fun uu___12 ->
+                            FStar_Compiler_List.iter
+                              (fun se1 ->
+                                 (env3.FStar_TypeChecker_Env.solver).FStar_TypeChecker_Env.encode_sig
+                                   env3 se1) ses'1) uu___11
+                         "FStar.TypeChecker.Tc.encode_sig");
                       (((FStar_Compiler_List.rev_append ses'1 ses1), env3),
                         ses_elaborated1))))) in
       let process_one_decl_timed acc se =
@@ -4446,7 +4464,7 @@ let (tc_decls :
                ([], env) ses) in
       match uu___ with
       | (ses1, env1) -> ((FStar_Compiler_List.rev_append ses1 []), env1)
-let (uu___907 : unit) =
+let (uu___909 : unit) =
   FStar_Compiler_Effect.op_Colon_Equals tc_decls_knot
     (FStar_Pervasives_Native.Some tc_decls)
 let (snapshot_context :

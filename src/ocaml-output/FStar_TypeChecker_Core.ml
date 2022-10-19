@@ -3225,7 +3225,8 @@ let (check_term :
       fun t ->
         fun must_tot ->
           (let uu___1 =
-             FStar_TypeChecker_Env.debug g (FStar_Options.Other "Core") in
+             (FStar_TypeChecker_Env.debug g (FStar_Options.Other "Core")) ||
+               (FStar_TypeChecker_Env.debug g (FStar_Options.Other "CoreTop")) in
            if uu___1
            then
              let uu___2 = FStar_Syntax_Print.term_to_string e in
@@ -3247,11 +3248,14 @@ let (check_term :
                    FStar_TypeChecker_Normalize.normalize simplify_steps g
                      guard0 in
                  ((let uu___3 =
-                     (FStar_TypeChecker_Env.debug g
-                        (FStar_Options.Other "CoreExit"))
+                     ((FStar_TypeChecker_Env.debug g
+                         (FStar_Options.Other "CoreExit"))
+                        ||
+                        (FStar_TypeChecker_Env.debug g
+                           (FStar_Options.Other "Core")))
                        ||
                        (FStar_TypeChecker_Env.debug g
-                          (FStar_Options.Other "Core")) in
+                          (FStar_Options.Other "CoreTop")) in
                    if uu___3
                    then
                      let uu___4 = FStar_Syntax_Print.term_to_string guard0 in
@@ -3263,8 +3267,11 @@ let (check_term :
                   FStar_Pervasives.Inl (FStar_Pervasives_Native.Some guard1))
              | FStar_Pervasives.Inl uu___2 ->
                  ((let uu___4 =
-                     FStar_TypeChecker_Env.debug g
-                       (FStar_Options.Other "Core") in
+                     (FStar_TypeChecker_Env.debug g
+                        (FStar_Options.Other "Core"))
+                       ||
+                       (FStar_TypeChecker_Env.debug g
+                          (FStar_Options.Other "CoreTop")) in
                    if uu___4
                    then
                      FStar_Compiler_Util.print_string "Exiting core (ok)\n"
@@ -3272,8 +3279,11 @@ let (check_term :
                   res)
              | FStar_Pervasives.Inr uu___2 ->
                  ((let uu___4 =
-                     FStar_TypeChecker_Env.debug g
-                       (FStar_Options.Other "Core") in
+                     (FStar_TypeChecker_Env.debug g
+                        (FStar_Options.Other "Core"))
+                       ||
+                       (FStar_TypeChecker_Env.debug g
+                          (FStar_Options.Other "CoreTop")) in
                    if uu___4
                    then
                      FStar_Compiler_Util.print_string

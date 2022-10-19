@@ -4,7 +4,6 @@ open FStar.Compiler.Util
 open FStar.Compiler.Effect
 open FStar.Syntax.Syntax
 module Env = FStar.TypeChecker.Env
-module SS = FStar.Syntax.Subst
 module S = FStar.Syntax.Syntax
 module R = FStar.Compiler.Range
 module U = FStar.Syntax.Util
@@ -15,14 +14,120 @@ module P = FStar.Syntax.Print
 module BU = FStar.Compiler.Util
 module TcUtil = FStar.TypeChecker.Util
 module Hash = FStar.Syntax.Hash
+module Subst = FStar.Syntax.Subst
 
 type env = {
    tcenv : Env.env;
-   allow_universe_instantiation : bool
+   allow_universe_instantiation : bool;
+   freshness : int
+   
 }
 
+let push_binder g b = { g with tcenv = Env.push_binders g.tcenv [b] }
 let push_binders g bs = { g with tcenv = Env.push_binders g.tcenv bs }
 
+let fresh_binder (g:env) (old:binder)
+  : env & binder
+  = let ctr = g.freshness + 1 in
+    let g = { g with freshness = ctr } in
+    let bv = { old.binder_bv with index = ctr } in
+    let b = S.mk_binder_with_attrs bv old.binder_qual old.binder_attrs in    
+    push_binder g b, b
+
+let open_binders (g:env) (bs:binders) 
+  = let g, bs_rev, subst = 
+        List.fold_left 
+          (fun (g, bs, subst) b ->
+            let bv = { b.binder_bv with sort = Subst.subst subst b.binder_bv.sort } in
+            let b = { binder_bv = bv;
+                      binder_qual = Subst.subst_bqual subst b.binder_qual;
+                      binder_attrs = List.map (Subst.subst subst) b.binder_attrs } in
+            let g, b' = fresh_binder g b in
+            g, b'::bs, DB(0, b'.binder_bv)::Subst.shift_subst 1 subst)
+          (g, [], [])
+          bs
+    in
+    g, List.rev bs_rev, subst
+
+let open_pat (g:env) (p:pat)
+  : env & pat & subst_t
+  = let rec open_pat_aux g p sub =
+        match p.v with
+        | Pat_constant _ -> g, p, sub
+
+        | Pat_cons(fv, us_opt, pats) ->
+          let g, pats, sub =
+            List.fold_left
+              (fun (g, pats, sub) (p, imp) ->
+                let g, p, sub = open_pat_aux g p sub in
+                (g, (p,imp)::pats, sub))
+              (g, [], sub)
+              pats
+            in
+            g, {p with v=Pat_cons(fv, us_opt, List.rev pats)}, sub
+
+        | Pat_var x ->
+          let bx = S.mk_binder {x with sort = Subst.subst sub x.sort} in
+          let g, bx' = fresh_binder g bx in
+          let sub = DB(0, bx'.binder_bv)::Subst.shift_subst 1 sub in
+          g, {p with v=Pat_var bx'.binder_bv}, sub
+
+        | Pat_wild x ->
+          let bx = S.mk_binder {x with sort = Subst.subst sub x.sort} in
+          let g, bx' = fresh_binder g bx in
+          let sub = DB(0, bx'.binder_bv)::Subst.shift_subst 1 sub in
+          g, {p with v=Pat_wild bx'.binder_bv}, sub        
+
+        | Pat_dot_term eopt ->
+          let eopt = BU.map_option (Subst.subst sub) eopt in
+          g, {p with v=Pat_dot_term eopt}, sub
+    in
+    open_pat_aux g p []
+
+
+let open_term (g:env) (b:binder) (t:term) 
+  : env & binder & term
+  = let g, b' = fresh_binder g b in
+    let t = FStar.Syntax.Subst.subst [DB(0, b'.binder_bv)] t in
+    g, b', t
+
+let open_term_binders (g:env) (bs:binders) (t:term) 
+  : env & binders & term
+  = let g, bs, subst = open_binders g bs in
+    g, bs, Subst.subst subst t
+ 
+let open_comp (g:env) (b:binder) (c:comp) 
+  : env & binder & comp
+  = let g, bx = fresh_binder g b in
+    let c = FStar.Syntax.Subst.subst_comp [DB(0, bx.binder_bv)] c in
+    g, bx, c
+
+let open_comp_binders (g:env) (bs:binders) (c:comp) 
+  : env & binders & comp
+  = let g, bs, s = open_binders g bs in
+    let c = FStar.Syntax.Subst.subst_comp s c in
+    g, bs, c
+
+let arrow_formals_comp g c =
+    let bs, c = U.arrow_formals_comp_ln c in
+    let g, bs, subst = open_binders g bs in
+    g, bs, Subst.subst_comp subst c
+
+let open_branch (g:env) (br:S.branch)
+  : env & branch
+  = let (p, wopt, e) = br in
+    let g, p, s = open_pat g p in
+    g, (p, BU.map_option (Subst.subst s) wopt, Subst.subst s e)
+
+//br0 and br1 are expected to have equal patterns
+let open_branches_eq_pat (g:env) (br0 br1:S.branch) 
+  = let (p0, wopt0, e0) = br0 in
+    let (_,  wopt1, e1) = br1 in  
+    let g, p0, s = open_pat g p0 in
+    g,
+    (p0, BU.map_option (Subst.subst s) wopt0, Subst.subst s e0),
+    (p0, BU.map_option (Subst.subst s) wopt1, Subst.subst s e1)    
+  
 let precondition = option typ
 
 let success a = a & precondition
@@ -178,7 +283,7 @@ let mk_type (u:universe) = S.mk (Tm_type u) R.dummyRange
 let is_type (g:env) (t:term)
   : result universe
   = let aux t =
-        match (SS.compress t).n with
+        match (Subst.compress t).n with
         | Tm_type u ->
           return u
 
@@ -193,11 +298,11 @@ let is_type (g:env) (t:term)
 let rec is_arrow (g:env) (t:term)
   : result (binder & effect_label & typ)
   = let rec aux t =
-        match (SS.compress t).n with
+        match (Subst.compress t).n with
         | Tm_arrow ([x], c) ->
           if U.is_tot_or_gtot_comp c
           then
-            let [x], c = SS.open_comp [x] c in
+            let g, x, c = open_comp g x c in
             let eff =
               if U.is_total_comp c
               then E_TOTAL
@@ -224,7 +329,7 @@ let rec is_arrow (g:env) (t:term)
             match e_tag with
             | None -> fail (BU.format1 "Expected total or gtot arrow, got %s" (Ident.string_of_lid (U.comp_effect_name c)))
             | Some e_tag ->
-              let [x], c = U.arrow_formals_comp t in
+              let g, [x], c = arrow_formals_comp g t in
               let (pre, _)::(post, _)::_ = U.comp_effect_args c in
               let arg_typ = U.refine x.binder_bv pre in
               let res_typ =
@@ -239,7 +344,7 @@ let rec is_arrow (g:env) (t:term)
 
         | Tm_arrow (x::xs, c) ->
           let t = S.mk (Tm_arrow(xs, c)) t.pos in
-          let [x], t = SS.open_term [x] t in
+          let g, x, t = open_term g x t in
           return (x, E_TOTAL, t)
 
         | Tm_refine(x, _) ->
@@ -384,7 +489,7 @@ let equatable g t =
   let head, _ = U.head_and_args t in
   Rel.may_relate_with_logical_guard g.tcenv true head
 
-let apply_predicate x p = fun e -> SS.subst [NT(x.binder_bv, e)] p
+let apply_predicate x p = fun e -> Subst.subst [NT(x.binder_bv, e)] p
 
 let curry_arrow (x:binder) (xs:binders) (c:comp) =
   let tail = S.mk (Tm_arrow (xs, c)) R.dummyRange in
@@ -632,11 +737,11 @@ let rec check_relation (g:env) (rel:relation) (t0 t1:typ)
       maybe_unfold_side_and_retry (which_side_to_unfold t0 t1) t0 t1
     in
     let beta_iota_reduce t =
-        let t = SS.compress t in
-        match (SS.compress t).n with
+        let t = Subst.compress t in
+        match t.n with
         | Tm_app _ ->
           let head = U.leftmost_head t in
-          (match (SS.compress head).n with
+          (match (Subst.compress head).n with
            | Tm_abs _ -> N.normalize [Env.Beta; Env.Iota] g.tcenv t
            | _ -> t)
 
@@ -649,8 +754,8 @@ let rec check_relation (g:env) (rel:relation) (t0 t1:typ)
           
         | _ -> t
     in
-    let t0 = SS.compress (beta_iota_reduce t0) in
-    let t1 = SS.compress (beta_iota_reduce t1) in
+    let t0 = Subst.compress (beta_iota_reduce t0) in
+    let t1 = Subst.compress (beta_iota_reduce t1) in
     let check_relation g rel t0 t1 =
       with_context "check_relation" (Some (CtxRel t0 rel t1)) 
         (fun _ -> check_relation g rel t0 t1)
@@ -695,27 +800,25 @@ let rec check_relation (g:env) (rel:relation) (t0 t1:typ)
       | Tm_refine (x0, f0), Tm_refine (x1, f1) ->
         if head_matches x0.sort x1.sort
         then (
-          let [b], f0 = SS.open_term [S.mk_binder x0] f0 in
-          let f1 = SS.subst [DB(0, b.binder_bv)] f1 in
-          let! u = universe_of g b.binder_bv.sort in
           check_relation g EQUALITY x0.sort x1.sort ;!
+          let! u = universe_of g x0.sort in
+          let g, b, f0 = open_term g (S.mk_binder x0) f0 in
+          let f1 = Subst.subst [DB(0, b.binder_bv)] f1 in
             (match! guard_not_allowed with
              | true ->
                with_binders [b] [u]
-                 (let g = push_binders g [b] in
-                  check_relation g EQUALITY f0 f1)
+                 (check_relation g EQUALITY f0 f1)
                
              | _ ->
                match rel with
                | EQUALITY ->
                  with_binders [b] [u]
-                   (let g = push_binders g [b] in
-                    handle_with
+                   (handle_with
                       (check_relation g EQUALITY f0 f1)
                       (fun _ -> guard (U.mk_iff f0 f1)))
                    
                | SUBTYPING (Some tm) ->
-                 guard (SS.subst [NT(b.binder_bv, tm)] (U.mk_imp f0 f1))
+                 guard (Subst.subst [NT(b.binder_bv, tm)] (U.mk_imp f0 f1))
 
                | SUBTYPING None ->
                  guard (U.mk_forall u b.binder_bv (U.mk_imp f0 f1)))
@@ -744,26 +847,24 @@ let rec check_relation (g:env) (rel:relation) (t0 t1:typ)
       | _, Tm_refine (x1, f1) ->
         if head_matches t0 x1.sort
         then (
-          let [b1], f1 = SS.open_term [S.mk_binder x1] f1 in
-          let! u1 = universe_of g b1.binder_bv.sort in
+          let! u1 = universe_of g x1.sort in
           check_relation g EQUALITY t0 x1.sort ;!
+          let g, b1, f1 = open_term g (S.mk_binder x1) f1 in
           match! guard_not_allowed with
           | true ->
             with_binders [b1] [u1]
-              (let g = push_binders g [b1] in
-               check_relation g EQUALITY U.t_true f1)
+              (check_relation g EQUALITY U.t_true f1)
 
           | _ ->
             match rel with
             | EQUALITY ->
               with_binders [b1] [u1]
-                (let g = push_binders g [b1] in
-                 handle_with
+                (handle_with
                     (check_relation g EQUALITY U.t_true f1)
                     (fun _ -> guard f1))
                    
             | SUBTYPING (Some tm) ->
-                 guard (SS.subst [NT(b1.binder_bv, tm)] f1)
+                 guard (Subst.subst [NT(b1.binder_bv, tm)] f1)
 
             | SUBTYPING None ->
                  guard (U.mk_forall u1 b1.binder_bv f1)
@@ -805,13 +906,10 @@ let rec check_relation (g:env) (rel:relation) (t0 t1:typ)
         check_relation g EQUALITY b0.binder_bv.sort b1.binder_bv.sort;!
         check_bqual b0.binder_qual b1.binder_qual;!
         let! u = universe_of g b0.binder_bv.sort in
-        let [b0], body0 = SS.open_term [b0] body0 in
-        //little strange to use a DB substitution here
-        //Maybe cleaner to open both and use an NT subst
-        let body1 = SS.subst [DB(0, b0.binder_bv)] body1 in
+        let g, b0, body0 = open_term g b0 body0 in
+        let body1 = Subst.subst [DB(0, b0.binder_bv)] body1 in
         with_binders [b0] [u]
-          (let g = push_binders g [b0] in
-           check_relation g EQUALITY body0 body1)
+          (check_relation g EQUALITY body0 body1)
       
       | Tm_arrow (x0::x1::xs, c0), _ ->
         check_relation g rel (curry_arrow x0 (x1::xs) c0) t1
@@ -821,10 +919,10 @@ let rec check_relation (g:env) (rel:relation) (t0 t1:typ)
 
       | Tm_arrow ([x0], c0), Tm_arrow([x1], c1) ->
         with_context "subtype arrow" None (fun _ ->
-          let [x0], c0 = SS.open_comp [x0] c0 in
-          let [x1], c1 = SS.open_comp [x1] c1 in
           let! _ = check_bqual x0.binder_qual x1.binder_qual in
           let! u1 = universe_of g x1.binder_bv.sort in
+          let g_x1, x1, c1 = open_comp g x1 c1 in
+          let c0 = Subst.subst_comp [DB(0, x1.binder_bv)] c0 in
           with_binders [x1] [u1] (
             let rel_arg =
               match rel with
@@ -842,9 +940,7 @@ let rec check_relation (g:env) (rel:relation) (t0 t1:typ)
             in
             check_relation g rel x1.binder_bv.sort x0.binder_bv.sort ;!
             with_context "check_subcomp" None (fun _ ->
-              check_relation_comp (push_binders g [x1]) rel_comp
-                                  (SS.subst_comp [NT(x0.binder_bv, S.bv_to_name x1.binder_bv)] c0)
-                                  c1
+              check_relation_comp g_x1 rel_comp c0 c1
             )
           )
         )
@@ -857,20 +953,13 @@ let rec check_relation (g:env) (rel:relation) (t0 t1:typ)
               if not (S.eq_pat p0 p1)
               then fail "patterns not equal"
               else begin
-                let (p0, _, body0) = SS.open_branch (p0, None, body0) in
-                let (p1, _, body1) = SS.open_branch (p1, None, body1) in
-                match PatternUtils.raw_pat_as_exp g.tcenv p0, PatternUtils.raw_pat_as_exp g.tcenv p1 with
-                | Some (_, bvs0), Some (_, bvs1) ->
-                  let s =
-                    List.map2
-                      (fun bv0 bv1 -> NT(bv1, S.bv_to_name bv0))
-                      bvs0 bvs1
-                  in
-                  let body1 = SS.subst s body1 in
+                let g', (p0, _, body0), (p1, _, body1) = open_branches_eq_pat g (p0, None, body0) (p1, None, body1) in
+                match PatternUtils.raw_pat_as_exp g.tcenv p0 with
+                | Some (_, bvs0) ->
                   let bs0 = List.map S.mk_binder bvs0 in
                   // We need universes for the binders
                   let! _, us, g = check_binders g bs0 in
-                  with_binders bs0 us (check_relation g rel body0 body1)
+                  with_binders bs0 us (check_relation g' rel body0 body1)
              | _ -> fail "raw_pat_as_exp failed in check_equality match rule"
              end
             | _ -> fail "Core does not support branches with when"
@@ -972,7 +1061,7 @@ and check' (g:env) (e:term)
   // (if Env.debug g.tcenv (Options.Other "Core")
   //  then dump_context
   //  else return ());!
-  let e = SS.compress e in
+  let e = Subst.compress e in
   match e.n with
   | Tm_lazy ({lkind=Lazy_embedding _}) ->
     check' g (U.unlazy e)
@@ -984,7 +1073,7 @@ and check' (g:env) (e:term)
     memo_check g t
 
   | Tm_uvar (uv, s) ->
-    return (E_TOTAL, SS.subst' s (U.ctx_uvar_typ uv))
+    return (E_TOTAL, Subst.subst' s (U.ctx_uvar_typ uv))
 
   | Tm_name x ->
     begin
@@ -1034,29 +1123,28 @@ and check' (g:env) (e:term)
     return (E_TOTAL, mk_type (U_succ u))
 
   | Tm_refine(x, phi) ->
-    let [x], phi = SS.open_term [S.mk_binder x] phi in
-    let! _, t = check "refinement head" g x.binder_bv.sort in
+    let! _, t = check "refinement head" g x.sort in
     let! u = is_type g t in
+    let g', x, phi = open_term g (S.mk_binder x) phi in
     with_binders [x] [u] (
-      let g' = push_binders g [x] in
       let! _, t' = check "refinement formula" g' phi in
       is_type g' t';!
       return (E_TOTAL, t)
     )
 
   | Tm_abs(xs, body, _) ->
-    let xs, body = SS.open_term xs body in
-    let! xs, us, g = with_context "abs binders" None (fun _ -> check_binders g xs) in
+    let g', xs, body = open_term_binders g xs body in
+    let! xs, us, _ = with_context "abs binders" None (fun _ -> check_binders g xs) in
     with_binders xs us (
-      let! t = check "abs body" g body in
+      let! t = check "abs body" g' body in
       return (E_TOTAL, U.arrow xs (as_comp g t))
     )
 
   | Tm_arrow(xs, c) ->
-    let xs, c = SS.open_comp xs c in
-    let! xs, us, g = with_context "arrow binders" None (fun _ -> check_binders g xs) in
+    let g', xs, c = open_comp_binders g xs c in
+    let! xs, us, _ = with_context "arrow binders" None (fun _ -> check_binders g xs) in
     with_binders xs us (
-      let! u = with_context "arrow comp" None (fun _ -> check_comp g c) in
+      let! u = with_context "arrow comp" None (fun _ -> check_comp g' c) in
       return (E_TOTAL, mk_type (S.U_max (u::us)))
     )
 
@@ -1066,13 +1154,21 @@ and check' (g:env) (e:term)
     let! x, eff_arr1, s1 = is_arrow g t_hd in    
     let! eff_arg1, t_t1 = check "app arg" g t1 in
     with_context "operator arg1" None (fun _ -> check_subtype g (Some t1) t_t1 x.binder_bv.sort) ;!    
-    let s1 = SS.subst [NT(x.binder_bv, t1)] s1 in
+    let s1 = Subst.subst [NT(x.binder_bv, t1)] s1 in
     let! y, eff_arr2, s2 = is_arrow g s1 in
-    let guard_formula = TcUtil.short_circuit hd [(t1, None)]in
-    let! eff_arg2, t_t2 = weaken_with_guard_formula guard_formula (check "app arg" g t2) in    
-    with_context "operator arg2" None (fun _ -> check_subtype g (Some t2) t_t2 y.binder_bv.sort) ;!
+    let guard_formula = TcUtil.short_circuit hd [(t1, None)] in
+    let g' = 
+      match guard_formula with
+      | Common.Trivial -> g
+      | Common.NonTrivial gf ->
+        let bv = S.new_bv (Some t1.pos) gf in
+        let b = S.mk_binder bv in
+        fst (fresh_binder g b)
+    in
+    let! eff_arg2, t_t2 = weaken_with_guard_formula guard_formula (check "app arg" g' t2) in    
+    with_context "operator arg2" None (fun _ -> check_subtype g' (Some t2) t_t2 y.binder_bv.sort) ;!
     return (join_eff_l [eff_hd; eff_arr1; eff_arr2; eff_arg1; eff_arg2],
-            SS.subst [NT(y.binder_bv, t2)] s2)
+            Subst.subst [NT(y.binder_bv, t2)] s2)
 
   | Tm_app (hd, [(arg, arg_qual)]) ->
     let! eff_hd, t = check "app head" g hd in
@@ -1080,7 +1176,7 @@ and check' (g:env) (e:term)
     let! eff_arg, t_arg = check "app arg" g arg in
     with_context "app subtyping" None (fun _ -> check_subtype g (Some arg) t_arg x.binder_bv.sort) ;!
     with_context "app arg qual" None (fun _ -> check_arg_qual arg_qual x.binder_qual) ;!
-    return (join_eff eff_hd (join_eff eff_arr eff_arg), SS.subst [NT(x.binder_bv, arg)] t')
+    return (join_eff eff_hd (join_eff eff_arr eff_arg), Subst.subst [NT(x.binder_bv, arg)] t')
 
   | Tm_app(hd, arg::args) ->
     let head = S.mk (Tm_app(hd, [arg])) e.pos in
@@ -1108,7 +1204,7 @@ and check' (g:env) (e:term)
 
   | Tm_let((false, [lb]), body) ->
     let Inl x = lb.lbname in
-    let [x], body = SS.open_term [S.mk_binder x] body in
+    let g', x, body = open_term g (S.mk_binder x) body in
     if I.lid_equals lb.lbeff PC.effect_Tot_lid
     then (
       let! eff_def, tdef = check "let definition" g lb.lbdef in
@@ -1116,8 +1212,7 @@ and check' (g:env) (e:term)
       let! u = is_type g ttyp in
       with_context "let subtyping" None (fun _ -> check_subtype g (Some lb.lbdef) tdef ttyp) ;!
       with_definition x u lb.lbdef (
-        let g = push_binders g [x] in
-        let! eff_body, t = check "let body" g body in
+        let! eff_body, t = check "let body" g' body in
         check_no_escape [x] t;!
         return (join_eff eff_def eff_body, t)
       )
@@ -1144,15 +1239,14 @@ and check' (g:env) (e:term)
              return et)
 
         | (p, None, b) :: rest ->
-          let (p, _, b) = SS.open_branch (p, None, b) in
+          let g', (p, _, b) = open_branch g (p, None, b) in
           match PatternUtils.raw_pat_as_exp g.tcenv p with
           | None ->
             fail "Ill-formed pattern"
 
           | Some (e, bvs) ->
             let binders = List.map S.mk_binder bvs in
-            let! bs_g = check_binders g binders in
-            let bs, us, g' = bs_g in
+            let! bs, us, _ = check_binders g binders in
             let! eff_pat, t = check "pattern term" g' e in
             with_context "Pattern and scrutinee type compatibility" None
                           (fun _ -> no_guard (check_scrutinee_pattern_type_compatible g' t_sc t)) ;!
@@ -1210,9 +1304,8 @@ and check' (g:env) (e:term)
   | Tm_match(sc, Some (as_x, (Inl returns_ty, None, eq)), branches, rc_opt) ->
     let! eff_sc, t_sc = check "scrutinee" g sc in
     let! u_sc = with_context "universe_of" (Some (CtxTerm t_sc)) (fun _ -> universe_of g t_sc) in
-    let [as_x], returns_ty = SS.open_term [as_x] returns_ty in
     let as_x = {as_x with binder_bv = { as_x.binder_bv with sort = t_sc } } in
-    let g_as_x = push_binders g [as_x] in
+    let g_as_x, as_x, returns_ty = open_term g as_x returns_ty in
     let! _eff_t, returns_ty_t = check "return type" g_as_x returns_ty in
     let! _u_ty = is_type g_as_x returns_ty_t in
     let rec check_branches (path_condition: S.term)
@@ -1225,15 +1318,14 @@ and check' (g:env) (e:term)
           return acc_eff
 
         | (p, None, b) :: rest ->
-          let (p, _, b) = SS.open_branch (p, None, b) in
+          let g', (p, _, b) = open_branch g (p, None, b) in
           match PatternUtils.raw_pat_as_exp g.tcenv p with
           | None ->
             fail "Ill-formed pattern"
 
           | Some (e, bvs) ->
             let binders = List.map S.mk_binder bvs in
-            let! bs_g = check_binders g binders in
-            let bs, us, g' = bs_g in
+            let! bs, us, _ = check_binders g binders in
             let! eff_pat, t = check "pattern term" g' e in
             // TODO: use pattern scrutinee type compatibility function
             with_context "Pattern and scrutinee type compatibility"
@@ -1245,7 +1337,7 @@ and check' (g:env) (e:term)
                 (weaken
                   (U.mk_conj path_condition pat_sc_eq)
                   (let! eff_br, tbr = check "branch" g' b in
-                   let expect_tbr = SS.subst [NT(as_x.binder_bv, e)] returns_ty in
+                   let expect_tbr = Subst.subst [NT(as_x.binder_bv, e)] returns_ty in
                    let rel =
                      if eq
                      then EQUALITY
@@ -1269,7 +1361,7 @@ and check' (g:env) (e:term)
               check_branches path_condition rest eff_br
     in
     let! eff = check_branches U.t_true branches E_TOTAL in
-    let ty = SS.subst [NT(as_x.binder_bv, sc)] returns_ty in
+    let ty = Subst.subst [NT(as_x.binder_bv, sc)] returns_ty in
     return (eff, ty)
 
   | Tm_match _ ->
@@ -1348,7 +1440,7 @@ and check_scrutinee_pattern_type_compatible (g:env) (t_sc t_pat:typ)
     let head_pat, args_pat = U.head_and_args t_pat in
 
     let! (t_fv:fv) =
-      match (SS.compress head_sc).n, (SS.compress head_pat).n with
+      match (Subst.compress head_sc).n, (Subst.compress head_pat).n with
       | Tm_fvar (fv_head), Tm_fvar (fv_pat)
         when Ident.lid_equals (lid_of_fv fv_head) (lid_of_fv fv_pat) -> return fv_head
       | Tm_uinst ({n=Tm_fvar (fv_head)}, us_head), Tm_uinst ({n=Tm_fvar (fv_pat)}, us_pat)
@@ -1762,9 +1854,25 @@ and check_scrutinee_pattern_type_compatible (g:env) (t_sc t_pat:typ)
 //       else fail "Expected a Total computation, but got Ghost"
 
 
+let initial_env g = 
+  let max_index = 
+      List.fold_left
+        (fun index b ->
+          match b with
+          | Binding_var x -> 
+            if x.index > index
+            then x.index
+            else index
+          | _ -> index)
+        0 g.Env.gamma
+  in
+  { tcenv = g;
+    allow_universe_instantiation = false;
+    freshness = max_index + 1 }
+   
 let check_term_top g e t (must_tot:bool)
   : result unit
-  = let g = { tcenv = g; allow_universe_instantiation = false } in
+  = let g = initial_env g in
     let! eff_te = check "top" g e in
     let target_comp = 
       if must_tot || fst eff_te = E_TOTAL
@@ -1795,6 +1903,7 @@ let profile_check_term_top g e t must_tot ctx =
     
 let check_term g e t (must_tot:bool)
   = if Env.debug g (Options.Other "Core")
+     || Env.debug g (Options.Other "CoreTop")
     then BU.print2 "Entering core with %s <: %s\n"
                    // (BU.stack_dump ())
                    (P.term_to_string e)
@@ -1816,6 +1925,7 @@ let check_term g e t (must_tot:bool)
         // Options.pop();
         if Env.debug g (Options.Other "CoreExit")
         || Env.debug g (Options.Other "Core")
+        || Env.debug g (Options.Other "CoreTop")        
         then
           BU.print2 "Exiting core: Simplified guard from {{%s}} to {{%s}}\n"
             (P.term_to_string guard0)
@@ -1824,11 +1934,13 @@ let check_term g e t (must_tot:bool)
 
       | Inl _ ->
         if Env.debug g (Options.Other "Core")        
+        ||  Env.debug g (Options.Other "CoreTop")        
         then BU.print_string "Exiting core (ok)\n";
         res
 
       | Inr _ ->
         if Env.debug g (Options.Other "Core")        
+        ||  Env.debug g (Options.Other "CoreTop")                
         then BU.print_string "Exiting core (failed)\n";      
         res
     in
@@ -1843,14 +1955,14 @@ let check_term g e t (must_tot:bool)
     )
 
 let check_term_equality g t0 t1
-  = let g = { tcenv = g; allow_universe_instantiation = false } in
+  = let g = initial_env g in
     let ctx = { no_guard = false; error_context = [] } in
     match check_relation g EQUALITY t0 t1 ctx with
     | Inl (_, g) -> Inl g
     | Inr err -> Inr err
 
 let check_term_subtyping g t0 t1
-  = let g = { tcenv = g; allow_universe_instantiation = false } in
+  = let g = initial_env g in
     let ctx = { no_guard = false; error_context = [] } in
     match check_relation g (SUBTYPING None) t0 t1 ctx with
     | Inl (_, g) -> Inl g

@@ -570,11 +570,14 @@ let run_tactic_on_ps'
 
     (* if !tacdbg then *)
     (*     BU.print1 "Running tactic with goal = (%s) {\n" (Print.term_to_string typ); *)
-    let res, ms = BU.record_time (fun () -> run_safe (tau arg) ps) in
+    let res =
+      Profiling.profile
+        (fun () -> run_safe (tau arg) ps)
+        (Some (Ident.string_of_lid (Env.current_module ps.main_context)))
+        "FStar.Tactics.Interpreter.run_safe"
+    in
     if !tacdbg then
         BU.print_string "}\n";
-    if !tacdbg || Options.tactics_info () then
-        BU.print3 "Tactic %s ran in %s ms (%s)\n" (Print.term_to_string tactic) (string_of_int ms) (Print.lid_to_string env.curmodule);
 
     match res with
     | Success (ret, ps) ->
