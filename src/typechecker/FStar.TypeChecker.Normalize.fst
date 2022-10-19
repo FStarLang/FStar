@@ -80,6 +80,8 @@ type closure =
   | Dummy                                          //Dummy is a placeholder for a binder when doing strong reduction
 and env = list (option binder*closure)
 
+let empty_env : env = []
+
 let dummy : option binder * closure = None,Dummy
 
 type branches = list (pat * option term * term)
@@ -1014,7 +1016,7 @@ let should_unfold cfg should_reify fv qninfo : should_unfold_res =
       plugin_unfold_warn_ctr := !plugin_unfold_warn_ctr - 1
     end;
     r
-let decide_unfolding cfg env stack rng fv qninfo (* : option (cfg * stack) *) =
+let decide_unfolding cfg stack rng fv qninfo (* : option (cfg * stack) *) =
     let res =
         should_unfold cfg (fun cfg -> should_reify cfg stack) fv qninfo
     in
@@ -1055,7 +1057,7 @@ let decide_unfolding cfg env stack rng fv qninfo (* : option (cfg * stack) *) =
         in
         let ref = S.mk (Tm_constant (Const_reflect (S.lid_of_fv fv)))
                        Range.dummyRange in
-        let stack = push (App (env, ref, None, Range.dummyRange)) stack in
+        let stack = push (App (empty_env, ref, None, Range.dummyRange)) stack in
         Some (cfg, stack)
 
 (* on_domain_lids are constant, so compute them once *)
@@ -1099,6 +1101,14 @@ let maybe_drop_rc_typ cfg (rc:residual_comp) : residual_comp =
  * time. *)
 let rec norm : cfg -> env -> stack -> term -> term =
     fun cfg env stack t ->
+        let rec collapse_metas st =
+          match st with
+          (* Keep only the outermost Meta_monadic *)
+          | Meta (_, Meta_monadic _, _) :: Meta(e, Meta_monadic m, r) :: st' ->
+            collapse_metas (Meta (e, Meta_monadic m, r) :: st')
+          | _ -> st
+        in
+        let stack = collapse_metas stack in
         let t =
             if cfg.debug.norm_delayed
             then (match t.n with
@@ -1108,7 +1118,7 @@ let rec norm : cfg -> env -> stack -> term -> term =
             compress t
         in
         log cfg (fun () ->
-          BU.print5 ">>> %s (no_full_norm=%s)\nNorm %s  with with %s env elements top of the stack %s \n"
+          BU.print5 ">>> %s (no_full_norm=%s)\nNorm %s with %s env elements; top of the stack = %s\n"
                                         (Print.tag_of_term t)
                                         (BU.string_of_bool (cfg.steps.no_full_norm))
                                         (Print.term_to_string t)
@@ -1116,30 +1126,34 @@ let rec norm : cfg -> env -> stack -> term -> term =
                                         (stack_to_string (fst <| firstn 4 stack)));
         log_cfg cfg (fun () -> BU.print1 ">>> cfg = %s\n" (cfg_to_string cfg));
         match t.n with
+          // Values
           | Tm_unknown
           | Tm_constant _
           | Tm_name _
+          | Tm_lazy _ ->
+            rebuild cfg empty_env stack t
 
-          | Tm_lazy _
-
-          //these three are just constructors; no delta steps can apply
+          // These three are just constructors; no delta steps can apply.
+          // Note: we drop the environment, no free indices here
           | Tm_fvar({ fv_qual = Some Data_ctor })
           | Tm_fvar({ fv_qual = Some (Record_ctor _) }) ->
             log_unfolding cfg (fun () -> BU.print1 ">>> Tm_fvar case 0 for %s\n" (Print.term_to_string t));
-            rebuild cfg env stack t
+            rebuild cfg empty_env stack t
 
+          // A top-level name, possibly unfold it.
+          // In either case, also drop the environment, no free indices here.
           | Tm_fvar fv ->
             let lid = S.lid_of_fv fv in
             let qninfo = Env.lookup_qname cfg.tcenv lid in
             begin
             match Env.delta_depth_of_qninfo fv qninfo with
             | Some (Delta_constant_at_level 0) ->
-              log_unfolding cfg (fun () -> BU.print1 ">>> Tm_fvar case 0 for %s\n" (Print.term_to_string t));
-              rebuild cfg env stack t
+              log_unfolding cfg (fun () -> BU.print1 ">>> Tm_fvar case 1 for %s\n" (Print.term_to_string t));
+              rebuild cfg empty_env stack t
             | _ ->
-              match decide_unfolding cfg env stack t.pos fv qninfo with
-              | Some (cfg, stack) -> do_unfold_fv cfg env stack t qninfo fv
-              | None -> rebuild cfg env stack t
+              match decide_unfolding cfg stack t.pos fv qninfo with
+              | Some (cfg, stack) -> do_unfold_fv cfg stack t qninfo fv
+              | None -> rebuild cfg empty_env stack t
             end
 
           | Tm_quoted (qt, qi) ->
@@ -1378,6 +1392,17 @@ let rec norm : cfg -> env -> stack -> term -> term =
                       && U.aqual_is_erasable aq //If we're extracting, then erase erasable arguments eagerly
                       then U.exp_unit
                       else a
+                    in
+                    // !! Optimization: if the argument we are pushing is an obvious
+                    // value/closed term, then drop the environment. This can save
+                    // a ton of memory, particularly when running tactics in tight loop.
+                    let env =
+                      match (Subst.compress a).n with
+                      | Tm_name _
+                      | Tm_constant _
+                      | Tm_lazy _
+                      | Tm_fvar _ -> empty_env
+                      | _ -> env
                     in
                     Arg (Clos(env, a, BU.mk_ref None, false),aq,t.pos)::stack)
                   args
@@ -1682,12 +1707,14 @@ let rec norm : cfg -> env -> stack -> term -> term =
           else rebuild cfg env stack (inline_closure_env cfg env [] t)
 
 
-and do_unfold_fv cfg env stack (t0:term) (qninfo : qninfo) (f:fv) : term =
+(* NOTE: we do not need any environment here, since an fv does not
+ * have any free indices. Hence, we use empty_env as environment when needed. *)
+and do_unfold_fv cfg stack (t0:term) (qninfo : qninfo) (f:fv) : term =
     match Env.lookup_definition_qninfo cfg.delta_level f.fv_name.v qninfo with
        | None ->
          log_unfolding cfg (fun () -> // printfn "delta_level = %A, qninfo=%A" cfg.delta_level qninfo;
                                       BU.print1 " >> Tm_fvar case 2 for %s\n" (Print.fv_to_string f));
-         rebuild cfg env stack t0
+         rebuild cfg empty_env stack t0
 
        | Some (us, t) ->
          begin
@@ -1708,12 +1735,12 @@ and do_unfold_fv cfg env stack (t0:term) (qninfo : qninfo) (f:fv) : term =
                   if Env.debug cfg.tcenv <| Options.Other "univ_norm" then
                       List.iter (fun x -> BU.print1 "Univ (normalizer) %s\n" (Print.univ_to_string x)) us'
                   else ();
-                  let env = us' |> List.fold_left (fun env u -> (None, Univ u)::env) env in
+                  let env = us' |> List.fold_left (fun env u -> (None, Univ u)::env) empty_env in
                   norm cfg env stack t
                 | _ when cfg.steps.erase_universes || cfg.steps.allow_unbound_universes ->
-                  norm cfg env stack t
+                  norm cfg empty_env stack t
                 | _ -> failwith (BU.format1 "Impossible: missing universe instantiation on %s" (Print.lid_to_string f.fv_name.v))
-         else norm cfg env stack t
+         else norm cfg empty_env stack t
          end
 
 and reduce_impure_comp cfg env stack (head : term) // monadic term
