@@ -1,6 +1,9 @@
 FSTAR_HOME=../..
 
-FSTAR_FILES=$(wildcard *.fst)
+FSTAR_FILES = $(wildcard *.fst)
+
+# This consumes too much memory (8GB), so disable it for now.
+FSTAR_FILES := $(filter-out SteelIntroExists.fst, $(FSTAR_FILES))
 
 all: verify-all ns-resolution
 
