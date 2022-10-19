@@ -876,12 +876,15 @@ let rec sigelt_to_string (x: sigelt) =
           (match k with
            | None -> "<kind not set>"
            | Some k -> indexed_effect_combinator_kind_to_string k)
-      | Sig_polymonadic_subcomp (m, n, t, ty) ->
-        U.format4 "polymonadic_subcomp %s <: %s = (%s, %s)"
+      | Sig_polymonadic_subcomp (m, n, t, ty, k) ->
+        U.format5 "polymonadic_subcomp %s <: %s = (%s, %s)<%s>"
           (Ident.string_of_lid m)
           (Ident.string_of_lid n)
           (tscheme_to_string t)
           (tscheme_to_string ty)
+          (match k with
+           | None -> "<kind not set>"
+           | Some k -> indexed_effect_combinator_kind_to_string k)
       in
       match x.sigattrs with
       | [] -> "[@ ]" ^ "\n" ^ basic //It is important to keep this empty attribute marker since the Vale type extractor uses it as a delimiter
@@ -948,7 +951,7 @@ let rec sigelt_to_string_short (x: sigelt) = match x.sigel with
     U.format3 "polymonadic_bind (%s, %s) |> %s"
               (Ident.string_of_lid m) (Ident.string_of_lid n) (Ident.string_of_lid p)
 
-  | Sig_polymonadic_subcomp (m, n, t, ty) ->
+  | Sig_polymonadic_subcomp (m, n, t, ty, _) ->
     U.format2 "polymonadic_subcomp %s <: %s" (Ident.string_of_lid m) (Ident.string_of_lid n)
 
 let tag_of_sigelt (se:sigelt) : string =

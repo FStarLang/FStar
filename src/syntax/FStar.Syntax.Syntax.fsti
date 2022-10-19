@@ -546,7 +546,7 @@ type sigelt' =
   | Sig_splice            of list lident * term
 
   | Sig_polymonadic_bind  of lident * lident * lident * tscheme * tscheme * option indexed_effect_combinator_kind  //(m, n) |> p, the polymonadic term, and its type
-  | Sig_polymonadic_subcomp of lident * lident * tscheme * tscheme  //m <: n, the polymonadic subcomp term, and its type
+  | Sig_polymonadic_subcomp of lident * lident * tscheme * tscheme * option indexed_effect_combinator_kind  //m <: n, the polymonadic subcomp term, and its type
   | Sig_fail              of list int         (* Expected errors (empty for 'any') *)
                           * bool               (* true if should fail in --lax *)
                           * list sigelt       (* The sigelts to be checked *)

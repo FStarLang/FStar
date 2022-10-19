@@ -4218,10 +4218,10 @@ and solve_c (env:Env.env) (problem:problem comp) (wl:worklist) : solution =
                    |> U.get_stronger_vc_combinator
                    |> (fun (ts, kopt) -> Env.inst_tscheme_with ts c2.comp_univs |> snd |> Some, kopt |> must) in
                  c1, g_lift, tsopt, k, false)
-            | Some t ->
+            | Some (t, kind) ->
               c1, Env.trivial_guard,
               Env.inst_tscheme_with t c2.comp_univs |> snd |> Some,
-              Ad_hoc_combinator,
+              kind,
               true in
 
           if is_none stronger_t_opt

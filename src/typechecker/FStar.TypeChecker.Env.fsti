@@ -149,7 +149,7 @@ and effects = {
   order :list edge;                                       (* transitive closure of the order in the signature *)
   joins :list (lident * lident * lident * mlift * mlift); (* least upper bounds *)
   polymonadic_binds :list (lident * lident * lident * polymonadic_bind_t);  (* (m, n) | p *)
-  polymonadic_subcomps :list (lident * lident * tscheme);  (* m <: n *)
+  polymonadic_subcomps :list (lident * lident * tscheme * S.indexed_effect_combinator_kind);  (* m <: n *)
 }
 
 and env = {
@@ -354,7 +354,7 @@ val push_new_effect       : env -> (eff_decl * list qualifier) -> env
 //client constructs the mlift and gives it to us
 
 val exists_polymonadic_bind: env -> lident -> lident -> option (lident * polymonadic_bind_t)
-val exists_polymonadic_subcomp: env -> lident -> lident -> option tscheme
+val exists_polymonadic_subcomp: env -> lident -> lident -> option (tscheme & S.indexed_effect_combinator_kind)
 
 //print the effects graph in dot format
 val print_effects_graph: env -> string
@@ -363,7 +363,7 @@ val update_effect_lattice  : env -> src:lident -> tgt:lident -> mlift -> env
 
 val join_opt               : env -> lident -> lident -> option (lident * mlift * mlift)
 val add_polymonadic_bind   : env -> m:lident -> n:lident -> p:lident -> polymonadic_bind_t -> env
-val add_polymonadic_subcomp: env -> m:lident -> n:lident -> tscheme -> env
+val add_polymonadic_subcomp: env -> m:lident -> n:lident -> (tscheme & S.indexed_effect_combinator_kind) -> env
 
 val push_bv               : env -> bv -> env
 val push_bvs              : env -> list bv -> env

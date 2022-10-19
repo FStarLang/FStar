@@ -1222,8 +1222,8 @@ let exists_polymonadic_bind env m n =
 
 let exists_polymonadic_subcomp env m n =
   match env.effects.polymonadic_subcomps
-        |> BU.find_opt (fun (m1, n1, _) -> lid_equals m m1 && lid_equals n n1) with
-  | Some (_, _, ts) -> Some ts
+        |> BU.find_opt (fun (m1, n1, _, _) -> lid_equals m m1 && lid_equals n n1) with
+  | Some (_, _, ts, k) -> Some (ts, k)
   | _ -> None
 
 let print_effects_graph env =
@@ -1271,7 +1271,7 @@ let print_effects_graph env =
     let key = BU.format3 "%s, %s |> %s" (eff_name m) (eff_name n) (eff_name p) in
     smap_add pbinds key "");
 
-  env.effects.polymonadic_subcomps |> List.iter (fun (m, n, _) ->
+  env.effects.polymonadic_subcomps |> List.iter (fun (m, n, _, _) ->
     let key = BU.format2 "%s <: %s" (eff_name m) (eff_name n) in
     smap_add psubcomps key "");
 
@@ -1471,10 +1471,10 @@ let add_polymonadic_bind env m n p ty =
   { env with
     effects = ({ env.effects with polymonadic_binds = (m, n, p, ty)::env.effects.polymonadic_binds }) }
 
-let add_polymonadic_subcomp env m n ts =
+let add_polymonadic_subcomp env m n (ts, k) =
   { env with
     effects = ({ env.effects with
-                 polymonadic_subcomps = (m, n, ts)::env.effects.polymonadic_subcomps }) }
+                 polymonadic_subcomps = (m, n, ts, k)::env.effects.polymonadic_subcomps }) }
 
 let push_local_binding env b =
   {env with gamma=b::env.gamma}

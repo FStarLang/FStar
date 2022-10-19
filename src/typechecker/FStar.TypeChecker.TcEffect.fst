@@ -2203,7 +2203,7 @@ let tc_polymonadic_bind env (m:lident) (n:lident) (p:lident) (ts:S.tscheme)
   (us, t), (us, k |> SS.close_univ_vars us), kind
 
 
-let tc_polymonadic_subcomp env0 (m:lident) (n:lident) (ts:S.tscheme) : (S.tscheme * S.tscheme) =
+let tc_polymonadic_subcomp env0 (m:lident) (n:lident) (ts:S.tscheme) =
   let r = (snd ts).pos in
 
   check_lift_for_erasable_effects env0 m n r;
@@ -2219,79 +2219,25 @@ let tc_polymonadic_subcomp env0 (m:lident) (n:lident) (ts:S.tscheme) : (S.tschem
   let us, ty = SS.open_univ_vars us ty in
   let env = Env.push_univ_vars env0 us in
 
-  check_no_subtyping_for_layered_combinator env ty None;
+  let m_ed, n_ed = Env.get_effect_decl env m, Env.get_effect_decl env n in
 
-  //construct the expected type k to be:
-  //a:Type -> <some binders> -> m_repr a is -> PURE (n_repr a js) wp
+  let k, kind = validate_indexed_effect_subcomp_shape env m n
+    m_ed.signature n_ed.signature
+    (U.get_eff_repr m_ed) (U.get_eff_repr n_ed)
+    (List.hd us)
+    ty
+    (Env.get_range env) in
 
-  let a, u = U.type_u () |> (fun (t, u) -> S.gen_bv "a" None t |> S.mk_binder, u) in
-  let rest_bs =
-    match (SS.compress ty).n with
-    | Tm_arrow (bs, _) when List.length bs >= 2 ->
-      let (({binder_bv=a'})::bs) = SS.open_binders bs in
-      bs |> List.splitAt (List.length bs - 1) |> fst
-         |> SS.subst_binders [NT (a', bv_to_name a.binder_bv)]
-    | _ -> 
-      raise_error (Errors.Fatal_UnexpectedEffect,
-        BU.format3 "Type of polymonadic subcomp %s is not an arrow with >= 2 binders (%s::%s)"
-          combinator_name
-          (Print.tag_of_term t) (Print.term_to_string t)) r in
-    
-  let bs = a::rest_bs in
-  let f, guard_f =
-    let repr, g = TcUtil.fresh_effect_repr_en (Env.push_binders env bs) r m u
-      (a.binder_bv |> S.bv_to_name) in
-    S.gen_bv "f" None repr |> S.mk_binder, g in
-    
-  let ret_t, guard_ret_t = TcUtil.fresh_effect_repr_en (Env.push_binders env bs)
-    r n u (a.binder_bv |> S.bv_to_name) in
-
-  let pure_wp_uvar, guard_wp = pure_wp_uvar (Env.push_binders env bs) ret_t 
-    (BU.format1 "implicit for pure_wp in checking polymonadic subcomp %s" combinator_name)
-    r in
-  let c = S.mk_Comp ({
-    comp_univs = [ Env.new_u_univ () ];
-    effect_name = PC.effect_PURE_lid;
-    result_typ = ret_t;
-    effect_args = [ pure_wp_uvar |> S.as_arg ];
-    flags = [] }) in
-
-  let k = U.arrow (bs@[f]) c in
-
-  if Env.debug env <| Options.Other "LayeredEffectsTc" then
-    BU.print2 "Expected type of polymonadic subcomp %s before unification: %s\n"
-      combinator_name
-      (Print.term_to_string k);
-
-  let guard_eq = Rel.teq env ty k in
-  List.iter (Rel.force_trivial_guard env) [guard_f; guard_ret_t; guard_wp; guard_eq];
-
-  let k = k
-    |> N.remove_uvar_solutions env
-    |> N.normalize [Env.Beta; Env.Eager_unfolding] env in
-
-  if Env.debug env <| Options.Other "LayeredEffectsTc" then
-    BU.print2 "Polymonadic subcomp %s type after unification : %s\n"
-      combinator_name (Print.tscheme_to_string (us, k));
-
-  let check_non_informative_binders =
-    Env.is_reifiable_effect env n &&
-    not (Env.fv_with_lid_has_attr env n PC.allow_informative_binders_attr) in
-  let _check_valid_binders =
-    match (SS.compress k).n with
-    | Tm_arrow (bs, c) ->
-      let a::bs,c = SS.open_comp bs c in
-      let res_t = U.comp_result c in
-      let bs, f_b =
-        List.splitAt (List.length bs - 1) bs
-        |> (fun (l1, l2) -> l1, List.hd l2) in
-      let env = Env.push_binders env [a] in
-      validate_layered_effect_binders env bs check_non_informative_binders r in
-
+  if Env.debug env <| Options.Extreme
+  then BU.print3 "Polymonadic subcomp %s after typechecking (%s::%s)\n"
+         combinator_name
+         (Print.tscheme_to_string (us, t))
+         (Print.tscheme_to_string (us, k));
 
   log_issue r (Errors.Warning_BleedingEdge_Feature,
     BU.format1 "Polymonadic subcomp (%s in this case) is an experimental feature;\
       it is subject to some redesign in the future. Please keep us informed (on github etc.) about how you are using it"
       combinator_name);
 
-  (us, t), (us, k |> SS.close_univ_vars us)
+
+  (us, t), (us, k |> SS.close_univ_vars us), kind
