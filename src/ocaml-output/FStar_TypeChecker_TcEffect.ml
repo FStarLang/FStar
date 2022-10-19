@@ -7140,7 +7140,9 @@ let (tc_layered_lift :
                             (sub.FStar_Syntax_Syntax.target);
                           FStar_Syntax_Syntax.lift_wp = uu___5;
                           FStar_Syntax_Syntax.lift =
-                            (FStar_Pervasives_Native.Some (us1, lift))
+                            (FStar_Pervasives_Native.Some (us1, lift));
+                          FStar_Syntax_Syntax.kind =
+                            (FStar_Pervasives_Native.Some kind)
                         } in
                       ((let uu___6 =
                           FStar_Compiler_Effect.op_Less_Bar
@@ -7761,7 +7763,9 @@ let (tc_lift :
                                 (sub.FStar_Syntax_Syntax.target);
                               FStar_Syntax_Syntax.lift_wp =
                                 (FStar_Pervasives_Native.Some lift_wp);
-                              FStar_Syntax_Syntax.lift = lift1
+                              FStar_Syntax_Syntax.lift = lift1;
+                              FStar_Syntax_Syntax.kind =
+                                (sub.FStar_Syntax_Syntax.kind)
                             }))))))
 let (tc_effect_abbrev :
   FStar_TypeChecker_Env.env ->

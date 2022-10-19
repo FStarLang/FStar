@@ -8617,7 +8617,9 @@ and (desugar_decl_noattrs :
                             FStar_Syntax_Syntax.target =
                               (dst_ed.FStar_Syntax_Syntax.mname);
                             FStar_Syntax_Syntax.lift_wp = lift_wp;
-                            FStar_Syntax_Syntax.lift = lift
+                            FStar_Syntax_Syntax.lift = lift;
+                            FStar_Syntax_Syntax.kind =
+                              FStar_Pervasives_Native.None
                           });
                      FStar_Syntax_Syntax.sigrng = (d.FStar_Parser_AST.drange);
                      FStar_Syntax_Syntax.sigquals = [];
@@ -8643,7 +8645,8 @@ and (desugar_decl_noattrs :
                        (dst_ed.FStar_Syntax_Syntax.mname);
                      FStar_Syntax_Syntax.lift_wp =
                        FStar_Pervasives_Native.None;
-                     FStar_Syntax_Syntax.lift = uu___2
+                     FStar_Syntax_Syntax.lift = uu___2;
+                     FStar_Syntax_Syntax.kind = FStar_Pervasives_Native.None
                    } in
                  (env,
                    [{

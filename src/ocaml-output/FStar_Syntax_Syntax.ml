@@ -1133,26 +1133,75 @@ let (__proj__Mkmonad_abbrev__item__parms : monad_abbrev -> binders) =
   fun projectee -> match projectee with | { mabbrev; parms; def;_} -> parms
 let (__proj__Mkmonad_abbrev__item__def : monad_abbrev -> typ) =
   fun projectee -> match projectee with | { mabbrev; parms; def;_} -> def
+type indexed_effect_binder_kind =
+  | Type_binder 
+  | Substitution_binder 
+  | BindCont_no_abstraction_binder 
+  | Range_binder 
+  | Repr_binder 
+  | Ad_hoc_binder 
+let (uu___is_Type_binder : indexed_effect_binder_kind -> Prims.bool) =
+  fun projectee ->
+    match projectee with | Type_binder -> true | uu___ -> false
+let (uu___is_Substitution_binder : indexed_effect_binder_kind -> Prims.bool)
+  =
+  fun projectee ->
+    match projectee with | Substitution_binder -> true | uu___ -> false
+let (uu___is_BindCont_no_abstraction_binder :
+  indexed_effect_binder_kind -> Prims.bool) =
+  fun projectee ->
+    match projectee with
+    | BindCont_no_abstraction_binder -> true
+    | uu___ -> false
+let (uu___is_Range_binder : indexed_effect_binder_kind -> Prims.bool) =
+  fun projectee ->
+    match projectee with | Range_binder -> true | uu___ -> false
+let (uu___is_Repr_binder : indexed_effect_binder_kind -> Prims.bool) =
+  fun projectee ->
+    match projectee with | Repr_binder -> true | uu___ -> false
+let (uu___is_Ad_hoc_binder : indexed_effect_binder_kind -> Prims.bool) =
+  fun projectee ->
+    match projectee with | Ad_hoc_binder -> true | uu___ -> false
+type indexed_effect_combinator_kind =
+  | Standard_combinator of indexed_effect_binder_kind Prims.list 
+  | Ad_hoc_combinator 
+let (uu___is_Standard_combinator :
+  indexed_effect_combinator_kind -> Prims.bool) =
+  fun projectee ->
+    match projectee with | Standard_combinator _0 -> true | uu___ -> false
+let (__proj__Standard_combinator__item___0 :
+  indexed_effect_combinator_kind -> indexed_effect_binder_kind Prims.list) =
+  fun projectee -> match projectee with | Standard_combinator _0 -> _0
+let (uu___is_Ad_hoc_combinator :
+  indexed_effect_combinator_kind -> Prims.bool) =
+  fun projectee ->
+    match projectee with | Ad_hoc_combinator -> true | uu___ -> false
 type sub_eff =
   {
   source: FStar_Ident.lident ;
   target: FStar_Ident.lident ;
   lift_wp: tscheme FStar_Pervasives_Native.option ;
-  lift: tscheme FStar_Pervasives_Native.option }
+  lift: tscheme FStar_Pervasives_Native.option ;
+  kind: indexed_effect_combinator_kind FStar_Pervasives_Native.option }
 let (__proj__Mksub_eff__item__source : sub_eff -> FStar_Ident.lident) =
   fun projectee ->
-    match projectee with | { source; target; lift_wp; lift;_} -> source
+    match projectee with | { source; target; lift_wp; lift; kind;_} -> source
 let (__proj__Mksub_eff__item__target : sub_eff -> FStar_Ident.lident) =
   fun projectee ->
-    match projectee with | { source; target; lift_wp; lift;_} -> target
+    match projectee with | { source; target; lift_wp; lift; kind;_} -> target
 let (__proj__Mksub_eff__item__lift_wp :
   sub_eff -> tscheme FStar_Pervasives_Native.option) =
   fun projectee ->
-    match projectee with | { source; target; lift_wp; lift;_} -> lift_wp
+    match projectee with
+    | { source; target; lift_wp; lift; kind;_} -> lift_wp
 let (__proj__Mksub_eff__item__lift :
   sub_eff -> tscheme FStar_Pervasives_Native.option) =
   fun projectee ->
-    match projectee with | { source; target; lift_wp; lift;_} -> lift
+    match projectee with | { source; target; lift_wp; lift; kind;_} -> lift
+let (__proj__Mksub_eff__item__kind :
+  sub_eff -> indexed_effect_combinator_kind FStar_Pervasives_Native.option) =
+  fun projectee ->
+    match projectee with | { source; target; lift_wp; lift; kind;_} -> kind
 type action =
   {
   action_name: FStar_Ident.lident ;
@@ -1264,49 +1313,6 @@ let (__proj__Mkwp_eff_combinators__item__bind_repr :
     match projectee with
     | { ret_wp; bind_wp; stronger; if_then_else; ite_wp; close_wp; trivial;
         repr; return_repr; bind_repr;_} -> bind_repr
-type indexed_effect_binder_kind =
-  | Type_binder 
-  | Substitution_binder 
-  | BindCont_no_abstraction_binder 
-  | Range_binder 
-  | Repr_binder 
-  | Ad_hoc_binder 
-let (uu___is_Type_binder : indexed_effect_binder_kind -> Prims.bool) =
-  fun projectee ->
-    match projectee with | Type_binder -> true | uu___ -> false
-let (uu___is_Substitution_binder : indexed_effect_binder_kind -> Prims.bool)
-  =
-  fun projectee ->
-    match projectee with | Substitution_binder -> true | uu___ -> false
-let (uu___is_BindCont_no_abstraction_binder :
-  indexed_effect_binder_kind -> Prims.bool) =
-  fun projectee ->
-    match projectee with
-    | BindCont_no_abstraction_binder -> true
-    | uu___ -> false
-let (uu___is_Range_binder : indexed_effect_binder_kind -> Prims.bool) =
-  fun projectee ->
-    match projectee with | Range_binder -> true | uu___ -> false
-let (uu___is_Repr_binder : indexed_effect_binder_kind -> Prims.bool) =
-  fun projectee ->
-    match projectee with | Repr_binder -> true | uu___ -> false
-let (uu___is_Ad_hoc_binder : indexed_effect_binder_kind -> Prims.bool) =
-  fun projectee ->
-    match projectee with | Ad_hoc_binder -> true | uu___ -> false
-type indexed_effect_combinator_kind =
-  | Standard_combinator of indexed_effect_binder_kind Prims.list 
-  | Ad_hoc_combinator 
-let (uu___is_Standard_combinator :
-  indexed_effect_combinator_kind -> Prims.bool) =
-  fun projectee ->
-    match projectee with | Standard_combinator _0 -> true | uu___ -> false
-let (__proj__Standard_combinator__item___0 :
-  indexed_effect_combinator_kind -> indexed_effect_binder_kind Prims.list) =
-  fun projectee -> match projectee with | Standard_combinator _0 -> _0
-let (uu___is_Ad_hoc_combinator :
-  indexed_effect_combinator_kind -> Prims.bool) =
-  fun projectee ->
-    match projectee with | Ad_hoc_combinator -> true | uu___ -> false
 type layered_eff_combinators =
   {
   l_repr:

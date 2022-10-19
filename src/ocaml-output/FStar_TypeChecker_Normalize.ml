@@ -8855,7 +8855,8 @@ let rec (elim_uvars :
               FStar_Syntax_Syntax.target =
                 (sub_eff.FStar_Syntax_Syntax.target);
               FStar_Syntax_Syntax.lift_wp = uu___;
-              FStar_Syntax_Syntax.lift = uu___1
+              FStar_Syntax_Syntax.lift = uu___1;
+              FStar_Syntax_Syntax.kind = (sub_eff.FStar_Syntax_Syntax.kind)
             } in
           {
             FStar_Syntax_Syntax.sigel =

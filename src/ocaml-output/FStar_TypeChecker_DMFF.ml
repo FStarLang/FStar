@@ -4704,6 +4704,9 @@ let (cps_and_elaborate :
                                                                     = uu___22;
                                                                    FStar_Syntax_Syntax.lift
                                                                     =
+                                                                    FStar_Pervasives_Native.None;
+                                                                   FStar_Syntax_Syntax.kind
+                                                                    =
                                                                     FStar_Pervasives_Native.None
                                                                  } in
                                                                let uu___22 =
