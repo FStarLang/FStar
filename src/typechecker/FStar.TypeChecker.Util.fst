@@ -992,7 +992,7 @@ and mk_indexed_return env (ed:S.eff_decl) (u_a:universe) (a:typ) (e:term) (r:Ran
     | _ -> raise_error (return_t_shape_error "Either not an arrow or not enough binders") r in
 
   let rest_bs_uvars, rest_uvars_guard_tms, g_uvars =
-    let guard_indexed_effect_uvars = false in
+    let guard_indexed_effect_uvars = true in
     Env.uvars_for_binders
       env rest_bs [NT (a_b.binder_bv, a); NT (x_b.binder_bv, e)]
       guard_indexed_effect_uvars

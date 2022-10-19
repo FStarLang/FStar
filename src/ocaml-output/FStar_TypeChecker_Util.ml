@@ -1974,7 +1974,7 @@ and (mk_indexed_return :
                    (match uu___3 with
                     | (a_b, x_b, rest_bs, return_ct) ->
                         let uu___4 =
-                          let guard_indexed_effect_uvars = false in
+                          let guard_indexed_effect_uvars = true in
                           FStar_TypeChecker_Env.uvars_for_binders env rest_bs
                             [FStar_Syntax_Syntax.NT
                                ((a_b.FStar_Syntax_Syntax.binder_bv), a);
