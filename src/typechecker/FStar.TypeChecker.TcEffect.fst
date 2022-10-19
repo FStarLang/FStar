@@ -449,6 +449,114 @@ let validate_indexed_effect_bind_shape (env:env)
 
   k, kind
 
+let subcomp_combinator_kind (env:env)
+  (m_eff_name n_eff_name:lident)
+  (m_sig_ts n_sig_ts:tscheme)
+  (m_repr_ts n_repr_ts:option tscheme)
+  (u:univ_name)
+  (k:typ)
+
+  : option (list indexed_effect_binder_kind) =
+
+  let a_b::rest_bs, k_c = k |> U.arrow_formals_comp in
+
+  let f_sig_bs =
+    let _, sig = Env.inst_tscheme_with m_sig_ts [U_name u] in
+    sig |> U.arrow_formals
+        |> fst
+        |> (fun (a::bs) ->
+           SS.subst_binders [NT (a.binder_bv, a_b.binder_bv |> S.bv_to_name)] bs) in
+
+  let? f_bs, rest_bs =
+    if List.length rest_bs < List.length f_sig_bs
+    then None
+    else List.splitAt (List.length f_sig_bs) rest_bs |> Some in
+
+  let? f_bs_kinds =
+    let f_bs_kinds = List.map2 (fun f_sig_b f_b ->
+      if U.eq_tm f_sig_b.binder_bv.sort f_b.binder_bv.sort = U.Equal
+      then Substitution_binder
+      else Ad_hoc_binder) f_sig_bs f_bs in
+
+    if List.contains Ad_hoc_binder f_bs_kinds
+    then None
+    else f_bs_kinds |> Some in
+
+  let g_sig_bs =
+    let _, sig = Env.inst_tscheme_with n_sig_ts [U_name u] in
+    sig |> U.arrow_formals
+        |> fst
+        |> (fun (a::bs) ->
+           SS.subst_binders [NT (a.binder_bv, a_b.binder_bv |> S.bv_to_name)] bs) in
+
+  let? g_bs, rest_bs =
+    if List.length rest_bs < List.length g_sig_bs
+    then None
+    else List.splitAt (List.length g_sig_bs) rest_bs |> Some in
+
+  let? g_bs_kinds =
+    let g_bs_kinds = List.map2 (fun g_sig_b g_b ->
+      if U.eq_tm g_sig_b.binder_bv.sort g_b.binder_bv.sort = U.Equal
+      then Substitution_binder
+      else Ad_hoc_binder) g_sig_bs g_bs in
+
+    if List.contains Ad_hoc_binder g_bs_kinds
+    then None
+    else g_bs_kinds |> Some in
+  
+
+  let? rest_bs, f_b =
+    if List.length rest_bs >= 1
+    then let rest_bs, [f_b] = List.splitAt (List.length rest_bs - 1) rest_bs in
+         (rest_bs, f_b) |> Some
+    else None in
+
+  let? _f_b_ok_ =
+    let expected_f_b_sort =
+      match m_repr_ts with
+      | Some repr_ts ->
+        let _, t = Env.inst_tscheme_with repr_ts [U_name u] in
+        S.mk_Tm_app t
+          ((a_b.binder_bv |> S.bv_to_name |> S.as_arg)::
+           (List.map (fun {binder_bv=b} -> b |> S.bv_to_name |> S.as_arg) f_bs))
+          Range.dummyRange
+      | None ->
+        U.arrow [S.null_binder S.t_unit]
+          (mk_Comp ({
+             comp_univs = [U_name u];
+             effect_name = m_eff_name;
+             result_typ = a_b.binder_bv |> S.bv_to_name;
+             effect_args = f_bs |> List.map (fun b -> b.binder_bv |> S.bv_to_name |> S.as_arg);
+             flags = []})) in
+    if U.eq_tm f_b.binder_bv.sort expected_f_b_sort = U.Equal
+    then Some ()
+    else None in
+
+  let? _ret_t_ok_ =
+    let expected_t =
+      match n_repr_ts with
+      | Some repr_ts ->
+        let _, t = Env.inst_tscheme_with repr_ts [U_name u] in
+        S.mk_Tm_app t
+          ((a_b.binder_bv |> S.bv_to_name |> S.as_arg)::
+           (List.map (fun {binder_bv=b} -> b |> S.bv_to_name |> S.as_arg) g_bs))
+          Range.dummyRange
+      | None ->
+        U.arrow [S.null_binder S.t_unit]
+          (mk_Comp ({
+             comp_univs = [U_name u];
+             effect_name = n_eff_name;
+             result_typ = a_b.binder_bv |> S.bv_to_name;
+             effect_args = g_bs |> List.map (fun b -> b.binder_bv |> S.bv_to_name |> S.as_arg);
+             flags = []})) in
+    if U.eq_tm (U.comp_result k_c) expected_t = U.Equal
+    then Some ()
+    else None in
+
+  let rest_kinds : list indexed_effect_binder_kind = List.map (fun _ -> Ad_hoc_binder) rest_bs in
+
+  Some ([Type_binder]@f_bs_kinds@g_bs_kinds@rest_kinds@[Repr_binder])
+
 let validate_indexed_effect_subcomp_shape (env:env)
   (m_eff_name n_eff_name:lident)
   (m_sig_ts n_sig_ts:tscheme)
@@ -533,7 +641,23 @@ let validate_indexed_effect_subcomp_shape (env:env)
     guard_wp;
     guard_eq ]);
 
-  let k = k |> N.remove_uvar_solutions env in
+  let k = k |> N.remove_uvar_solutions env |> SS.compress in
+
+  let lopt = subcomp_combinator_kind env m_eff_name n_eff_name
+    m_sig_ts n_sig_ts
+    m_repr_ts n_repr_ts
+    u
+    k in
+
+  let kind =
+    match lopt with
+    | None -> Ad_hoc_combinator
+    | Some l -> Standard_combinator l in
+
+  if Env.debug env <| Options.Other "LayeredEffectsTc"
+  then BU.print2 "Bind %s has %s kind\n" bind_name
+         (Print.indexed_effect_combinator_kind_to_string kind);
+
 
   k, Ad_hoc_combinator
   
