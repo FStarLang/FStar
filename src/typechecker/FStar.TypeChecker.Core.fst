@@ -474,7 +474,12 @@ let weaken_with_guard_formula (p:FStar.TypeChecker.Common.guard_formula) (g:resu
   = match p with
     | Common.Trivial -> g
     | Common.NonTrivial p -> weaken p g
-    
+
+let push_hypothesis (g:env) (h:term) = 
+    let bv = S.new_bv (Some h.pos) h in
+    let b = S.mk_binder bv in
+    fst (fresh_binder g b)
+
 let strengthen (p:term) (g:result 'a)
   = fun ctx ->
       match g ctx with
@@ -1167,10 +1172,7 @@ and check' (g:env) (e:term)
     let g' = 
       match guard_formula with
       | Common.Trivial -> g
-      | Common.NonTrivial gf ->
-        let bv = S.new_bv (Some t1.pos) gf in
-        let b = S.mk_binder bv in
-        fst (fresh_binder g b)
+      | Common.NonTrivial gf -> push_hypothesis g gf
     in
     let! eff_arg2, t_t2 = weaken_with_guard_formula guard_formula (check "app arg" g' t2) in    
     with_context "operator arg2" None (fun _ -> check_subtype g' (Some t2) t_t2 y.binder_bv.sort) ;!
@@ -1262,10 +1264,12 @@ and check' (g:env) (e:term)
             with_context "Pattern and scrutinee type compatibility" None
                           (fun _ -> no_guard (check_scrutinee_pattern_type_compatible g' t_sc t)) ;!
             let pat_sc_eq = U.mk_eq2 u_sc t_sc sc e in
+            let this_path_condition = U.mk_conj path_condition pat_sc_eq in
+            let g' = push_hypothesis g' this_path_condition in
             let! eff_br, tbr =
               with_binders bs us
                 (weaken
-                  (U.mk_conj path_condition pat_sc_eq)
+                  this_path_condition
                   (let! eff_br, tbr = with_context "branch" (Some (CtxTerm b)) (fun _ -> check "branch" g' b) in
                    match branch_typ_opt with
                    | None ->
@@ -1343,10 +1347,12 @@ and check' (g:env) (e:term)
                          None
                           (fun _ -> no_guard (check_subtype g' (Some e) t_sc t)) ;!
             let pat_sc_eq = U.mk_eq2 u_sc t_sc sc e in
+            let this_path_condition = U.mk_conj path_condition pat_sc_eq in
+            let g' = push_hypothesis g this_path_condition in 
             let! eff_br, tbr =
               with_binders bs us
                 (weaken
-                  (U.mk_conj path_condition pat_sc_eq)
+                  this_path_condition
                   (let! eff_br, tbr = check "branch" g' b in
                    let expect_tbr = Subst.subst [NT(as_x.binder_bv, e)] returns_ty in
                    let rel =

@@ -911,6 +911,14 @@ let weaken_with_guard_formula :
       match p with
       | FStar_TypeChecker_Common.Trivial -> g
       | FStar_TypeChecker_Common.NonTrivial p1 -> weaken p1 g
+let (push_hypothesis : env -> FStar_Syntax_Syntax.term -> env) =
+  fun g ->
+    fun h ->
+      let bv =
+        FStar_Syntax_Syntax.new_bv
+          (FStar_Pervasives_Native.Some (h.FStar_Syntax_Syntax.pos)) h in
+      let b = FStar_Syntax_Syntax.mk_binder bv in
+      let uu___ = fresh_binder g b in FStar_Pervasives_Native.fst uu___
 let strengthen :
   'a .
     FStar_Syntax_Syntax.term ->
@@ -2385,18 +2393,7 @@ and (check' :
                                                          -> g
                                                      | FStar_TypeChecker_Common.NonTrivial
                                                          gf ->
-                                                         let bv =
-                                                           FStar_Syntax_Syntax.new_bv
-                                                             (FStar_Pervasives_Native.Some
-                                                                (t1.FStar_Syntax_Syntax.pos))
-                                                             gf in
-                                                         let b =
-                                                           FStar_Syntax_Syntax.mk_binder
-                                                             bv in
-                                                         let uu___10 =
-                                                           fresh_binder g b in
-                                                         FStar_Pervasives_Native.fst
-                                                           uu___10 in
+                                                         push_hypothesis g gf in
                                                    let uu___10 =
                                                      let uu___11 =
                                                        check "app arg" g' t2 in
@@ -2691,14 +2688,19 @@ and (check' :
                                                              FStar_Syntax_Util.mk_eq2
                                                                u_sc t_sc sc
                                                                e2 in
+                                                           let this_path_condition
+                                                             =
+                                                             FStar_Syntax_Util.mk_conj
+                                                               path_condition
+                                                               pat_sc_eq in
+                                                           let g'1 =
+                                                             push_hypothesis
+                                                               g'
+                                                               this_path_condition in
                                                            let uu___11 =
                                                              let uu___12 =
                                                                let uu___13 =
-                                                                 FStar_Syntax_Util.mk_conj
-                                                                   path_condition
-                                                                   pat_sc_eq in
-                                                               let uu___14 =
-                                                                 let uu___15
+                                                                 let uu___14
                                                                    =
                                                                    with_context
                                                                     "branch"
@@ -2706,17 +2708,17 @@ and (check' :
                                                                     (CtxTerm
                                                                     b1))
                                                                     (fun
-                                                                    uu___16
+                                                                    uu___15
                                                                     ->
                                                                     check
                                                                     "branch"
-                                                                    g' b1) in
+                                                                    g'1 b1) in
                                                                  op_let_Bang
-                                                                   uu___15
+                                                                   uu___14
                                                                    (fun
-                                                                    uu___16
+                                                                    uu___15
                                                                     ->
-                                                                    match uu___16
+                                                                    match uu___15
                                                                     with
                                                                     | 
                                                                     (eff_br,
@@ -2726,14 +2728,14 @@ and (check' :
                                                                     | 
                                                                     FStar_Pervasives_Native.None
                                                                     ->
-                                                                    let uu___17
+                                                                    let uu___16
                                                                     =
                                                                     check_no_escape
                                                                     bs tbr in
                                                                     op_let_Bang
-                                                                    uu___17
+                                                                    uu___16
                                                                     (fun
-                                                                    uu___18
+                                                                    uu___17
                                                                     ->
                                                                     return
                                                                     (eff_br,
@@ -2743,7 +2745,7 @@ and (check' :
                                                                     (acc_eff,
                                                                     expect_tbr)
                                                                     ->
-                                                                    let uu___17
+                                                                    let uu___16
                                                                     =
                                                                     with_context
                                                                     "check_branch_subtype"
@@ -2755,25 +2757,26 @@ and (check' :
                                                                     b1)),
                                                                     expect_tbr)))
                                                                     (fun
-                                                                    uu___18
+                                                                    uu___17
                                                                     ->
                                                                     check_subtype
-                                                                    g'
+                                                                    g'1
                                                                     (FStar_Pervasives_Native.Some
                                                                     b1) tbr
                                                                     expect_tbr) in
                                                                     op_let_Bang
-                                                                    uu___17
+                                                                    uu___16
                                                                     (fun
-                                                                    uu___18
+                                                                    uu___17
                                                                     ->
                                                                     return
                                                                     ((join_eff
                                                                     eff_br
                                                                     acc_eff),
                                                                     expect_tbr)))) in
-                                                               weaken uu___13
-                                                                 uu___14 in
+                                                               weaken
+                                                                 this_path_condition
+                                                                 uu___13 in
                                                              with_binders bs
                                                                us uu___12 in
                                                            op_let_Bang
@@ -3010,28 +3013,32 @@ and (check' :
                                                                     FStar_Syntax_Util.mk_eq2
                                                                     u_sc t_sc
                                                                     sc e2 in
+                                                                    let this_path_condition
+                                                                    =
+                                                                    FStar_Syntax_Util.mk_conj
+                                                                    path_condition
+                                                                    pat_sc_eq in
+                                                                    let g'1 =
+                                                                    push_hypothesis
+                                                                    g
+                                                                    this_path_condition in
                                                                     let uu___15
                                                                     =
                                                                     let uu___16
                                                                     =
                                                                     let uu___17
                                                                     =
-                                                                    FStar_Syntax_Util.mk_conj
-                                                                    path_condition
-                                                                    pat_sc_eq in
                                                                     let uu___18
-                                                                    =
-                                                                    let uu___19
                                                                     =
                                                                     check
                                                                     "branch"
-                                                                    g' b1 in
+                                                                    g'1 b1 in
                                                                     op_let_Bang
-                                                                    uu___19
+                                                                    uu___18
                                                                     (fun
-                                                                    uu___20
+                                                                    uu___19
                                                                     ->
-                                                                    match uu___20
+                                                                    match uu___19
                                                                     with
                                                                     | 
                                                                     (eff_br,
@@ -3052,16 +3059,16 @@ and (check' :
                                                                     SUBTYPING
                                                                     (FStar_Pervasives_Native.Some
                                                                     b1) in
-                                                                    let uu___21
+                                                                    let uu___20
                                                                     =
                                                                     check_relation
-                                                                    g' rel
+                                                                    g'1 rel
                                                                     tbr
                                                                     expect_tbr in
                                                                     op_let_Bang
-                                                                    uu___21
+                                                                    uu___20
                                                                     (fun
-                                                                    uu___22
+                                                                    uu___21
                                                                     ->
                                                                     return
                                                                     ((join_eff
@@ -3069,8 +3076,8 @@ and (check' :
                                                                     acc_eff),
                                                                     expect_tbr))) in
                                                                     weaken
-                                                                    uu___17
-                                                                    uu___18 in
+                                                                    this_path_condition
+                                                                    uu___17 in
                                                                     with_binders
                                                                     bs us
                                                                     uu___16 in
