@@ -478,17 +478,21 @@ let effect_signature (us_opt:option universes) (se:sigelt) rng : option ((univer
   in
   match se.sigel with
   | Sig_new_effect ne ->
+    let sig_ts =
+      match ne.signature with
+      | Layered_eff_sig (_, ts)
+      | WP_eff_sig ts -> ts in
     check_effect_is_not_a_template ne rng;
     (match us_opt with
      | None -> ()
      | Some us ->
-       if List.length us <> List.length (fst ne.signature)
+       if List.length us <> List.length (fst sig_ts)
        then failwith ("effect_signature: incorrect number of universes for the signature of " ^
-         (string_of_lid ne.mname) ^ ", expected " ^ (string_of_int (List.length (fst ne.signature))) ^
+         (string_of_lid ne.mname) ^ ", expected " ^ (string_of_int (List.length (fst sig_ts))) ^
          ", got " ^ (string_of_int (List.length us)))
        else ());
 
-    Some (inst_ts us_opt ne.signature, se.sigrng)
+    Some (inst_ts us_opt sig_ts, se.sigrng)
 
   | Sig_effect_abbrev (lid, us, binders, _, _) ->
     Some (inst_ts us_opt (us, U.arrow binders (mk_Total teff)), se.sigrng)

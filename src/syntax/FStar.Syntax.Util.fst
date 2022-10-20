@@ -2298,6 +2298,11 @@ let smt_lemma_as_forall (t:term) (universe_of_binders: binders -> list universe)
  * Leaving it to the callers to deal with it
  *)
 
+let effect_sig_ts (sig:effect_signature) : tscheme =
+  match sig with
+  | Layered_eff_sig (_, ts)
+  | WP_eff_sig ts -> ts
+
 let eff_decl_of_new_effect (se:sigelt) :eff_decl =
   match se.sigel with
   | Sig_new_effect ne -> ne

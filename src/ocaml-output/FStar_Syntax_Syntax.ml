@@ -1396,13 +1396,27 @@ let (uu___is_Layered_eff : eff_combinators -> Prims.bool) =
 let (__proj__Layered_eff__item___0 :
   eff_combinators -> layered_eff_combinators) =
   fun projectee -> match projectee with | Layered_eff _0 -> _0
+type effect_signature =
+  | Layered_eff_sig of (Prims.int * tscheme) 
+  | WP_eff_sig of tscheme 
+let (uu___is_Layered_eff_sig : effect_signature -> Prims.bool) =
+  fun projectee ->
+    match projectee with | Layered_eff_sig _0 -> true | uu___ -> false
+let (__proj__Layered_eff_sig__item___0 :
+  effect_signature -> (Prims.int * tscheme)) =
+  fun projectee -> match projectee with | Layered_eff_sig _0 -> _0
+let (uu___is_WP_eff_sig : effect_signature -> Prims.bool) =
+  fun projectee ->
+    match projectee with | WP_eff_sig _0 -> true | uu___ -> false
+let (__proj__WP_eff_sig__item___0 : effect_signature -> tscheme) =
+  fun projectee -> match projectee with | WP_eff_sig _0 -> _0
 type eff_decl =
   {
   mname: FStar_Ident.lident ;
   cattributes: cflag Prims.list ;
   univs: univ_names ;
   binders: binders ;
-  signature: tscheme ;
+  signature: effect_signature ;
   combinators: eff_combinators ;
   actions: action Prims.list ;
   eff_attrs: attribute Prims.list }
@@ -1426,7 +1440,7 @@ let (__proj__Mkeff_decl__item__binders : eff_decl -> binders) =
     match projectee with
     | { mname; cattributes; univs; binders = binders1; signature;
         combinators; actions; eff_attrs;_} -> binders1
-let (__proj__Mkeff_decl__item__signature : eff_decl -> tscheme) =
+let (__proj__Mkeff_decl__item__signature : eff_decl -> effect_signature) =
   fun projectee ->
     match projectee with
     | { mname; cattributes; univs; binders = binders1; signature;

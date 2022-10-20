@@ -1352,7 +1352,12 @@ let resugar_eff_decl' env r q ed =
       mk_decl r q (A.Tycon(false, false, [(A.TyconAbbrev(ident_of_lid d.action_name, action_params, None, action_defn))]))
   in
   let eff_name = ident_of_lid ed.mname in
-  let eff_binders, eff_typ = SS.open_term ed.binders (ed.signature |> snd) in
+  let eff_binders, eff_typ =
+    let sig_ts =
+      match ed.signature with
+      | Layered_eff_sig (_, ts)
+      | WP_eff_sig ts -> ts in
+    SS.open_term ed.binders (sig_ts |> snd) in
   let eff_binders =
     if (Options.print_implicits())
     then eff_binders

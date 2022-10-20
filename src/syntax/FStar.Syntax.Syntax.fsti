@@ -466,6 +466,9 @@ type eff_combinators =
   | DM4F_eff of wp_eff_combinators
   | Layered_eff of layered_eff_combinators
 
+type effect_signature =
+  | Layered_eff_sig of int & tscheme
+  | WP_eff_sig of tscheme
 
 type eff_decl = {
   mname       : lident;      //STATE_h
@@ -475,7 +478,7 @@ type eff_decl = {
   univs       : univ_names;  //u#heap
   binders     : binders;     //(heap:Type u#heap), univs and binders are in the scope of the rest of the combinators
 
-  signature   : tscheme;     //result:Type -> st_wp_h heap -> result -> Effect
+  signature   : effect_signature;     //result:Type -> st_wp_h heap -> result -> Effect
 
   combinators : eff_combinators;
 
