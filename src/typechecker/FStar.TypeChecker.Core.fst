@@ -16,10 +16,13 @@ module TcUtil = FStar.TypeChecker.Util
 module Hash = FStar.Syntax.Hash
 module Subst = FStar.Syntax.Subst
 
+let guard_handler_t = Env.env -> typ -> bool
+
 type env = {
    tcenv : Env.env;
    allow_universe_instantiation : bool;
-   max_binder_index : int
+   max_binder_index : int;
+   guard_handler : option guard_handler_t
 }
 
 let push_binder g b = 
@@ -1043,9 +1046,19 @@ and memo_check (g:env) (e:term)
       (fun _ ctx ->
          let r = check' g e ctx in
          match r with
-         | Inl res ->
-           insert g e res;
+         | Inl (res, None) ->
+           insert g e (res, None);
            r
+           
+         | Inl (res, Some guard) ->
+           (match g.guard_handler with
+            | None -> insert g e (res, Some guard); r
+            | Some gh ->
+              if gh g.tcenv guard
+              then let r = (res, None) in
+                   insert g e r; Inl r
+              else fail "guard handler failed" ctx)
+
          | _ -> r)
 
 and check (msg:string) (g:env) (e:term)
@@ -1854,7 +1867,7 @@ and check_scrutinee_pattern_type_compatible (g:env) (t_sc t_pat:typ)
 //       else fail "Expected a Total computation, but got Ghost"
 
 
-let initial_env g = 
+let initial_env g gh = 
   let max_index = 
       List.fold_left
         (fun index b ->
@@ -1868,23 +1881,28 @@ let initial_env g =
   in
   { tcenv = g;
     allow_universe_instantiation = false;
-    max_binder_index = max_index }
+    max_binder_index = max_index;
+    guard_handler = gh }
    
-let check_term_top g e t (must_tot:bool)
-  : result unit
-  = let g = initial_env g in
+let check_term_top g e topt (must_tot:bool) (gh:option guard_handler_t)
+  : result (option (effect_label & typ))
+  = let g = initial_env g gh in
     let! eff_te = check "top" g e in
-    let target_comp = 
-      if must_tot || fst eff_te = E_TOTAL
-      then S.mk_Total t
-      else S.mk_GTotal t
-    in
-    with_context "top-level subtyping" None (fun _ ->
-      check_relation_comp
-        ({ g with allow_universe_instantiation = true})
-        (SUBTYPING (Some e))
-        (as_comp g eff_te)
-        target_comp)
+    match topt with
+    | None -> return (Some eff_te)
+    | Some t -> 
+      let target_comp = 
+        if must_tot || fst eff_te = E_TOTAL
+        then S.mk_Total t
+        else S.mk_GTotal t
+      in
+      with_context "top-level subtyping" None (fun _ ->
+        check_relation_comp
+          ({ g with allow_universe_instantiation = true})
+          (SUBTYPING (Some e))
+          (as_comp g eff_te)
+          target_comp) ;!
+      return None
 
 let simplify_steps =
     [Env.Beta; 
@@ -1895,30 +1913,28 @@ let simplify_steps =
      Env.Primops;
      Env.NoFullNorm]
 
-let profile_check_term_top g e t must_tot ctx = 
-  FStar.Profiling.profile
-    (fun _ -> check_term_top g e t must_tot ctx)
-    None
-    "FStar.TypeChecker.Core.check_term_top"
-    
-let check_term g e t (must_tot:bool)
+
+let check_term_top_gh g e topt (must_tot:bool) (gh:option guard_handler_t)
   = if Env.debug g (Options.Other "Core")
      || Env.debug g (Options.Other "CoreTop")
     then BU.print2 "Entering core with %s <: %s\n"
-                   // (BU.stack_dump ())
                    (P.term_to_string e)
-                   (P.term_to_string t);
+                   (match topt with None -> "" | Some t -> P.term_to_string t);
     reset_cache_stats();
     let ctx = { no_guard = false; error_context = [] } in
     let res = 
-      match profile_check_term_top g e t must_tot ctx with
-      | Inl (_, g) -> Inl g
-      | Inr err -> Inr err
+      Profiling.profile 
+        (fun () -> 
+          match check_term_top g e topt must_tot gh ctx with
+          | Inl (et, g) -> Inl (et, g)
+          | Inr err -> Inr err)
+        None
+        "FStar.TypeChecker.Core.check_term_top"        
     in
     (
     let res = 
       match res with
-      | Inl (Some guard0) ->
+      | Inl (et, Some guard0) ->
         // Options.push();
         // Options.set_option "debug_level" (Options.List [Options.String "Unfolding"]);
         let guard = N.normalize simplify_steps g guard0 in
@@ -1930,7 +1946,7 @@ let check_term g e t (must_tot:bool)
           BU.print2 "Exiting core: Simplified guard from {{%s}} to {{%s}}\n"
             (P.term_to_string guard0)
             (P.term_to_string guard);
-        Inl (Some guard)
+        Inl (et, Some guard)
 
       | Inl _ ->
         if Env.debug g (Options.Other "Core")        
@@ -1954,15 +1970,27 @@ let check_term g e t (must_tot:bool)
     res
     )
 
+let check_term g e t must_tot = 
+  match check_term_top_gh g e (Some t) must_tot None with
+  | Inl (_, g) -> Inl g
+  | Inr err -> Inr err
+
+let compute_term_type_handle_guards g e must_tot gh =
+  match check_term_top_gh g e None must_tot (Some gh) with
+  | Inl (Some (_, t), None) -> Inl t
+  | Inl (None, _) -> failwith "Impossible: Success must return some effect and type"
+  | Inl (_, Some _) -> failwith "Impossible: All guards should have been handled already"
+  | Inr err -> Inr err
+
 let check_term_equality g t0 t1
-  = let g = initial_env g in
+  = let g = initial_env g None in
     let ctx = { no_guard = false; error_context = [] } in
     match check_relation g EQUALITY t0 t1 ctx with
     | Inl (_, g) -> Inl g
     | Inr err -> Inr err
 
 let check_term_subtyping g t0 t1
-  = let g = initial_env g in
+  = let g = initial_env g None in
     let ctx = { no_guard = false; error_context = [] } in
     match check_relation g (SUBTYPING None) t0 t1 ctx with
     | Inl (_, g) -> Inl g
