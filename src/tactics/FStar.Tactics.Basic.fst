@@ -285,12 +285,13 @@ let tc_unifier_solved_implicits dbg env (must_tot:bool) (allow_guards:bool) (uvs
         else (
           proc_guard' false "guard for implicit" env guard u.ctx_uvar_range ;!
           ret ()
+        )
   
-        | Inr failed ->
-          fail3 "Could not typecheck unifier solved implicit %s to %s because %s" 
-            (Print.uvar_to_string u.ctx_uvar_head)
-            (term_to_string env sol)
-            (Core.print_error failed)
+      | Inr failed ->
+        fail3 "Could not typecheck unifier solved implicit %s to %s because %s" 
+          (Print.uvar_to_string u.ctx_uvar_head)
+          (term_to_string env sol)
+          (failed true)
   in
   if env.phase1 //phase1 is untrusted
   then ret ()

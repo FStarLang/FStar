@@ -563,6 +563,9 @@ let tc_unifier_solved_implicits :
         fun allow_guards ->
           fun uvs ->
             let aux u =
+              let dec =
+                FStar_Syntax_Unionfind.find_decoration
+                  u.FStar_Syntax_Syntax.ctx_uvar_head in
               let uu___ =
                 FStar_Syntax_Unionfind.find
                   u.FStar_Syntax_Syntax.ctx_uvar_head in
@@ -676,17 +679,10 @@ let tc_unifier_solved_implicits :
                         (env1.FStar_TypeChecker_Env.core_check)
                     } in
                   let must_tot1 =
-                    if must_tot
-                    then
-                      let uu___1 =
-                        let uu___2 =
-                          FStar_Syntax_Unionfind.find_decoration
-                            u.FStar_Syntax_Syntax.ctx_uvar_head in
-                        uu___2.FStar_Syntax_Syntax.uvar_decoration_should_check in
-                      match uu___1 with
-                      | FStar_Syntax_Syntax.Allow_ghost uu___2 -> false
-                      | uu___2 -> true
-                    else false in
+                    must_tot &&
+                      (Prims.op_Negation
+                         (FStar_Syntax_Syntax.uu___is_Allow_ghost
+                            dec.FStar_Syntax_Syntax.uvar_decoration_should_check)) in
                   let uu___1 =
                     let uu___2 = FStar_Syntax_Util.ctx_uvar_typ u in
                     FStar_TypeChecker_Rel.core_check_and_maybe_add_to_guard_uvar
@@ -730,9 +726,7 @@ let tc_unifier_solved_implicits :
                               proc_guard' false "guard for implicit" env2
                                 guard1 u.FStar_Syntax_Syntax.ctx_uvar_range in
                             FStar_Tactics_Monad.op_let_Bang uu___4
-                              (fun uu___5 ->
-                                 mark_uvar_as_already_checked u;
-                                 FStar_Tactics_Monad.ret ()))
+                              (fun uu___5 -> FStar_Tactics_Monad.ret ()))
                    | FStar_Pervasives.Inr failed ->
                        let uu___2 =
                          FStar_Syntax_Print.uvar_to_string
@@ -2410,9 +2404,86 @@ let (t_exact :
         FStar_Compiler_Effect.op_Less_Bar
           (FStar_Tactics_Monad.wrap_err "exact") uu___
 let rec (__try_unify_by_application :
-  Prims.bool ->
-    (FStar_Syntax_Syntax.term * FStar_Syntax_Syntax.aqual *
-      FStar_Syntax_Syntax.ctx_uvar) Prims.list ->
+  FStar_Syntax_Syntax.should_check_uvar FStar_Pervasives_Native.option ->
+    Prims.bool ->
+      (FStar_Syntax_Syntax.term * FStar_Syntax_Syntax.aqual *
+        FStar_Syntax_Syntax.ctx_uvar) Prims.list ->
+        env ->
+          FStar_Syntax_Syntax.term ->
+            FStar_Syntax_Syntax.term ->
+              FStar_Compiler_Range.range ->
+                (FStar_Syntax_Syntax.term * FStar_Syntax_Syntax.aqual *
+                  FStar_Syntax_Syntax.ctx_uvar) Prims.list
+                  FStar_Tactics_Monad.tac)
+  =
+  fun should_check ->
+    fun only_match ->
+      fun acc ->
+        fun e ->
+          fun ty1 ->
+            fun ty2 ->
+              fun rng ->
+                let f = if only_match then do_match else do_unify in
+                let uu___ = let must_tot = true in f must_tot e ty2 ty1 in
+                FStar_Tactics_Monad.bind uu___
+                  (fun uu___1 ->
+                     if uu___1
+                     then FStar_Tactics_Monad.ret acc
+                     else
+                       (let uu___2 = FStar_Syntax_Util.arrow_one ty1 in
+                        match uu___2 with
+                        | FStar_Pervasives_Native.None ->
+                            let uu___3 = term_to_string e ty1 in
+                            let uu___4 = term_to_string e ty2 in
+                            fail2 "Could not instantiate, %s to %s" uu___3
+                              uu___4
+                        | FStar_Pervasives_Native.Some (b, c) ->
+                            let uu___3 =
+                              let uu___4 = FStar_Syntax_Util.is_total_comp c in
+                              Prims.op_Negation uu___4 in
+                            if uu___3
+                            then
+                              FStar_Tactics_Monad.fail
+                                "Codomain is effectful"
+                            else
+                              (let uu___5 =
+                                 FStar_Tactics_Monad.new_uvar "apply arg" e
+                                   (b.FStar_Syntax_Syntax.binder_bv).FStar_Syntax_Syntax.sort
+                                   should_check rng in
+                               FStar_Tactics_Monad.bind uu___5
+                                 (fun uu___6 ->
+                                    match uu___6 with
+                                    | (uvt, uv) ->
+                                        FStar_Tactics_Monad.mlog
+                                          (fun uu___7 ->
+                                             let uu___8 =
+                                               FStar_Syntax_Print.ctx_uvar_to_string
+                                                 uv in
+                                             FStar_Compiler_Util.print1
+                                               "t_apply: generated uvar %s\n"
+                                               uu___8)
+                                          (fun uu___7 ->
+                                             let typ =
+                                               FStar_Syntax_Util.comp_result
+                                                 c in
+                                             let typ' =
+                                               FStar_Syntax_Subst.subst
+                                                 [FStar_Syntax_Syntax.NT
+                                                    ((b.FStar_Syntax_Syntax.binder_bv),
+                                                      uvt)] typ in
+                                             let uu___8 =
+                                               let uu___9 =
+                                                 let uu___10 =
+                                                   FStar_Syntax_Util.aqual_of_binder
+                                                     b in
+                                                 (uvt, uu___10, uv) in
+                                               uu___9 :: acc in
+                                             __try_unify_by_application
+                                               should_check only_match uu___8
+                                               e typ' ty2 rng)))))
+let (try_unify_by_application :
+  FStar_Syntax_Syntax.should_check_uvar FStar_Pervasives_Native.option ->
+    Prims.bool ->
       env ->
         FStar_Syntax_Syntax.term ->
           FStar_Syntax_Syntax.term ->
@@ -2421,82 +2492,14 @@ let rec (__try_unify_by_application :
                 FStar_Syntax_Syntax.ctx_uvar) Prims.list
                 FStar_Tactics_Monad.tac)
   =
-  fun only_match ->
-    fun acc ->
+  fun should_check ->
+    fun only_match ->
       fun e ->
         fun ty1 ->
           fun ty2 ->
             fun rng ->
-              let f = if only_match then do_match else do_unify in
-              let uu___ = let must_tot = true in f must_tot e ty2 ty1 in
-              FStar_Tactics_Monad.bind uu___
-                (fun uu___1 ->
-                   if uu___1
-                   then FStar_Tactics_Monad.ret acc
-                   else
-                     (let uu___2 = FStar_Syntax_Util.arrow_one ty1 in
-                      match uu___2 with
-                      | FStar_Pervasives_Native.None ->
-                          let uu___3 = term_to_string e ty1 in
-                          let uu___4 = term_to_string e ty2 in
-                          fail2 "Could not instantiate, %s to %s" uu___3
-                            uu___4
-                      | FStar_Pervasives_Native.Some (b, c) ->
-                          let uu___3 =
-                            let uu___4 = FStar_Syntax_Util.is_total_comp c in
-                            Prims.op_Negation uu___4 in
-                          if uu___3
-                          then
-                            FStar_Tactics_Monad.fail "Codomain is effectful"
-                          else
-                            (let uu___5 =
-                               FStar_Tactics_Monad.new_uvar "apply arg" e
-                                 (b.FStar_Syntax_Syntax.binder_bv).FStar_Syntax_Syntax.sort
-                                 FStar_Pervasives_Native.None rng in
-                             FStar_Tactics_Monad.bind uu___5
-                               (fun uu___6 ->
-                                  match uu___6 with
-                                  | (uvt, uv) ->
-                                      FStar_Tactics_Monad.mlog
-                                        (fun uu___7 ->
-                                           let uu___8 =
-                                             FStar_Syntax_Print.ctx_uvar_to_string
-                                               uv in
-                                           FStar_Compiler_Util.print1
-                                             "t_apply: generated uvar %s\n"
-                                             uu___8)
-                                        (fun uu___7 ->
-                                           let typ =
-                                             FStar_Syntax_Util.comp_result c in
-                                           let typ' =
-                                             FStar_Syntax_Subst.subst
-                                               [FStar_Syntax_Syntax.NT
-                                                  ((b.FStar_Syntax_Syntax.binder_bv),
-                                                    uvt)] typ in
-                                           let uu___8 =
-                                             let uu___9 =
-                                               let uu___10 =
-                                                 FStar_Syntax_Util.aqual_of_binder
-                                                   b in
-                                               (uvt, uu___10, uv) in
-                                             uu___9 :: acc in
-                                           __try_unify_by_application
-                                             only_match uu___8 e typ' ty2 rng)))))
-let (try_unify_by_application :
-  Prims.bool ->
-    env ->
-      FStar_Syntax_Syntax.term ->
-        FStar_Syntax_Syntax.term ->
-          FStar_Compiler_Range.range ->
-            (FStar_Syntax_Syntax.term * FStar_Syntax_Syntax.aqual *
-              FStar_Syntax_Syntax.ctx_uvar) Prims.list
-              FStar_Tactics_Monad.tac)
-  =
-  fun only_match ->
-    fun e ->
-      fun ty1 ->
-        fun ty2 ->
-          fun rng -> __try_unify_by_application only_match [] e ty1 ty2 rng
+              __try_unify_by_application should_check only_match [] e ty1 ty2
+                rng
 let (apply_implicits_as_goals :
   FStar_TypeChecker_Env.env ->
     FStar_Tactics_Types.goal FStar_Pervasives_Native.option ->
@@ -2598,10 +2601,15 @@ let (t_apply :
                                          let typ1 = bnorm e typ in
                                          let uu___7 =
                                            let uu___8 =
+                                             let uu___9 =
+                                               should_check_goal_uvar goal in
+                                             FStar_Pervasives_Native.Some
+                                               uu___9 in
+                                           let uu___9 =
                                              FStar_Tactics_Types.goal_type
                                                goal in
-                                           try_unify_by_application
-                                             only_match e typ1 uu___8
+                                           try_unify_by_application uu___8
+                                             only_match e typ1 uu___9
                                              (rangeof goal) in
                                          FStar_Tactics_Monad.op_let_Bang
                                            uu___7
@@ -2863,10 +2871,17 @@ let (t_apply_lemma :
                                                                  :: subst))
                                                            else
                                                              (let uu___14 =
+                                                                let uu___15 =
+                                                                  let uu___16
+                                                                    =
+                                                                    should_check_goal_uvar
+                                                                    goal in
+                                                                  FStar_Pervasives_Native.Some
+                                                                    uu___16 in
                                                                 FStar_Tactics_Monad.new_uvar
                                                                   "apply_lemma"
                                                                   env1 b_t
-                                                                  FStar_Pervasives_Native.None
+                                                                  uu___15
                                                                   (rangeof
                                                                     goal) in
                                                               FStar_Tactics_Monad.op_let_Bang
