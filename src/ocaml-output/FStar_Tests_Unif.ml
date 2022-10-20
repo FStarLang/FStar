@@ -183,6 +183,30 @@ let (check_core :
                     FStar_Compiler_Util.print2 "%s failed\n%s\n" uu___3
                       uu___4)));
              FStar_Options.init ())
+let (check_core_typing :
+  Prims.int -> FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.typ -> unit) =
+  fun i ->
+    fun e ->
+      fun t ->
+        (let uu___1 = FStar_Main.process_args () in
+         FStar_Compiler_Effect.op_Bar_Greater uu___1 (fun uu___2 -> ()));
+        (let env = tcenv () in
+         (let uu___2 = FStar_TypeChecker_Core.check_term env e t true in
+          match uu___2 with
+          | FStar_Pervasives.Inl (FStar_Pervasives_Native.None) ->
+              let uu___3 = FStar_Compiler_Util.string_of_int i in
+              FStar_Compiler_Util.print1 "%s core typing ok\n" uu___3
+          | FStar_Pervasives.Inl (FStar_Pervasives_Native.Some g) ->
+              ((let uu___4 = FStar_Compiler_Util.string_of_int i in
+                FStar_Compiler_Util.print1
+                  "%s core typing produced a guard\n" uu___4);
+               FStar_Compiler_Effect.op_Colon_Equals success false)
+          | FStar_Pervasives.Inr err ->
+              (FStar_Compiler_Effect.op_Colon_Equals success false;
+               (let uu___4 = FStar_Compiler_Util.string_of_int i in
+                let uu___5 = FStar_TypeChecker_Core.print_error err in
+                FStar_Compiler_Util.print2 "%s failed\n%s\n" uu___4 uu___5)));
+         FStar_Options.init ())
 let (inst :
   Prims.int ->
     FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax ->
@@ -523,23 +547,37 @@ let (run_all : unit -> Prims.bool) =
                                                                     true true
                                                                     tm110
                                                                     tm29;
+                                                                    (let uu___36
+                                                                    =
+                                                                    FStar_Tests_Pars.pars_and_tc_fragment
+                                                                    "assume val tstr21 (x:string) : Type0";
+                                                                    (
+                                                                    let t0 =
+                                                                    FStar_Tests_Pars.tc
+                                                                    "(fun (x:bool) (y:int) (z: (fun (x:string) -> tstr21 x) \"hello\") -> x)" in
+                                                                    let ty =
+                                                                    FStar_Tests_Pars.tc
+                                                                    "bool -> int -> tstr21 \"hello\" -> bool" in
+                                                                    (t0, ty)) in
+                                                                    match uu___36
+                                                                    with
+                                                                    | 
+                                                                    (tm3, ty)
+                                                                    ->
+                                                                    (check_core_typing
+                                                                    (Prims.of_int (21))
+                                                                    tm3 ty;
                                                                     FStar_Options.__clear_unit_tests
                                                                     ();
-                                                                    (let uu___38
+                                                                    (let uu___40
                                                                     =
                                                                     FStar_Compiler_Effect.op_Bang
                                                                     success in
                                                                     if
-                                                                    uu___38
+                                                                    uu___40
                                                                     then
                                                                     FStar_Compiler_Util.print_string
                                                                     "Unifier ok\n"
                                                                     else ());
                                                                     FStar_Compiler_Effect.op_Bang
-                                                                    success))))))))))))))))))))))))))
-type vprop' = {
-  t: unit ;
-  n: Prims.nat }
-let (__proj__Mkvprop'__item__n : vprop' -> Prims.nat) =
-  fun projectee -> match projectee with | { t; n;_} -> n
-type test = Obj.t
+                                                                    success))))))))))))))))))))))))))))

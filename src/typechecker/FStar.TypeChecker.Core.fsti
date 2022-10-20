@@ -14,6 +14,10 @@ val error : Type0
 val check_term (g:Env.env) (e:term) (t:typ) (must_tot:bool)
   : either (option typ) error
 
+val compute_term_type_handle_guards (g:Env.env) (e:term) (must_tot:bool)
+                                    (discharge_guard: Env.env -> typ -> bool)
+  : either typ error
+
 (* for unit testing *)
 val check_term_equality (g:Env.env) (t0 t1:typ)
   : either (option typ) error

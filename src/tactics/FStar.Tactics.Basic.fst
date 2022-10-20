@@ -256,17 +256,12 @@ let proc_guard = proc_guard' true
 //
 let tc_unifier_solved_implicits dbg env (must_tot:bool) (allow_guards:bool) (uvs:list ctx_uvar) : tac unit =
   let aux (u:ctx_uvar) : tac unit =
+    let dec = UF.find_decoration u.ctx_uvar_head in
     match UF.find u.ctx_uvar_head with
     | None -> ret () //not solved yet
     | Some sol ->  //solved, check it
       let env = {env with gamma=u.ctx_uvar_gamma} in
-      let must_tot = 
-        if must_tot
-        then match (UF.find_decoration u.ctx_uvar_head).uvar_decoration_should_check with
-             | Allow_ghost _ -> false
-             | _ -> true
-        else false
-      in
+      let must_tot = must_tot && not (Allow_ghost? dec.uvar_decoration_should_check) in
       match Rel.core_check_and_maybe_add_to_guard_uvar env u sol (U.ctx_uvar_typ u) must_tot with
       | Inl None ->
         //checked with no guard
@@ -289,15 +284,13 @@ let tc_unifier_solved_implicits dbg env (must_tot:bool) (allow_guards:bool) (uvs
         )
         else (
           proc_guard' false "guard for implicit" env guard u.ctx_uvar_range ;!
-          mark_uvar_as_already_checked u;
           ret ()
-        )
-              
-      | Inr failed ->
-        fail3 "Could not typecheck unifier solved implicit %s to %s because %s" 
-          (Print.uvar_to_string u.ctx_uvar_head)
-          (term_to_string env sol)
-          (failed true)
+  
+        | Inr failed ->
+          fail3 "Could not typecheck unifier solved implicit %s to %s because %s" 
+            (Print.uvar_to_string u.ctx_uvar_head)
+            (term_to_string env sol)
+            (Core.print_error failed)
   in
   if env.phase1 //phase1 is untrusted
   then ret ()
@@ -817,6 +810,7 @@ let t_exact try_refine set_expected_typ tm : tac unit = wrap_err "exact" <|
                   traise e)))))
 
 let rec  __try_unify_by_application
+            (should_check:option should_check_uvar)
             (only_match : bool)
             (acc : list (term * aqual * ctx_uvar))
             (e : env)
@@ -841,17 +835,23 @@ let rec  __try_unify_by_application
         | Some (b, c) ->
             if not (U.is_total_comp c) then fail "Codomain is effectful" else
             
-            bind (new_uvar "apply arg" e b.binder_bv.sort None rng) (fun (uvt, uv) ->
+            bind (new_uvar "apply arg" e b.binder_bv.sort should_check rng) (fun (uvt, uv) ->
             mlog (fun () -> BU.print1 "t_apply: generated uvar %s\n" (Print.ctx_uvar_to_string uv)) (fun _ ->
             let typ = U.comp_result c in
             let typ' = SS.subst [S.NT (b.binder_bv, uvt)] typ in
-            __try_unify_by_application only_match ((uvt, U.aqual_of_binder b, uv)::acc) e typ' ty2 rng))
+            __try_unify_by_application should_check only_match ((uvt, U.aqual_of_binder b, uv)::acc) e typ' ty2 rng))
     end)
 
 (* Can t1 unify t2 if it's applied to arguments? If so return uvars for them *)
 (* NB: Result is reversed, which helps so we use fold_right instead of fold_left *)
-let try_unify_by_application (only_match:bool) (e : env) (ty1 : term) (ty2 : term) (rng:Range.range) : tac (list (term * aqual * ctx_uvar)) =
-  __try_unify_by_application only_match [] e ty1 ty2 rng
+let try_unify_by_application (should_check:option should_check_uvar)
+                             (only_match:bool)
+                             (e : env)
+                             (ty1 : term)
+                             (ty2 : term)
+                             (rng:Range.range)
+   : tac (list (term * aqual * ctx_uvar)) =
+  __try_unify_by_application should_check only_match [] e ty1 ty2 rng
 
 //
 // Goals for implicits created during apply
@@ -916,7 +916,7 @@ let t_apply (uopt:bool) (only_match:bool) (tc_resolved_uvars:bool) (tm:term) : t
     let! tm, typ, guard = __tc e tm in
     // Focus helps keep the goal order
     let typ = bnorm e typ in
-    let! uvs = try_unify_by_application only_match e typ (goal_type goal) (rangeof goal) in
+    let! uvs = try_unify_by_application (Some (should_check_goal_uvar goal)) only_match e typ (goal_type goal) (rangeof goal) in
     if_verbose 
       (fun () -> BU.print1 "t_apply: found args = %s\n"
                         (FStar.Common.string_of_list (fun (t, _, _) -> Print.term_to_string t) uvs);
@@ -1007,7 +1007,7 @@ let t_apply_lemma (noinst:bool) (noinst_lhs:bool)
                    // Simplification: if the argument is simply unit, then don't ask for it
                    ret <| ((U.exp_unit, aq)::uvs, imps, S.NT(b, U.exp_unit)::subst)
                else
-                   let! t, u = new_uvar "apply_lemma" env b_t None (rangeof goal) in
+                   let! t, u = new_uvar "apply_lemma" env b_t (Some (should_check_goal_uvar goal)) (rangeof goal) in
                    if Env.debug env <| Options.Other "2635"
                    then
                      BU.print2 "Apply lemma created a new uvar %s while applying %s\n"

@@ -992,16 +992,20 @@ let tc_decls env ses =
         then BU.print1 "About to elim vars from (elaborated) %s\n" (Print.sigelt_to_string se);
         N.elim_uvars env se) in
 
-    Env.promote_id_info env (fun t ->
-        if Env.debug env (Options.Other "UF")
-        then BU.print1 "check uvars %s\n" (Print.term_to_string t);
-        N.normalize
+    Profiling.profile 
+      (fun () ->
+        Env.promote_id_info env (fun t ->
+          if Env.debug env (Options.Other "UF")
+          then BU.print1 "check uvars %s\n" (Print.term_to_string t);
+          N.normalize
                [Env.AllowUnboundUniverses; //this is allowed, since we're reducing types that appear deep within some arbitrary context
                 Env.CheckNoUvars;
                 Env.Beta; Env.DoNotUnfoldPureLets; Env.CompressUvars;
                 Env.Exclude Env.Zeta; Env.Exclude Env.Iota; Env.NoFullNorm]
               env
-              t); //update the id_info table after having removed their uvars
+              t))
+        (Some (Ident.string_of_lid (Env.current_module env)))
+        "FStar.TypeChecker.Tc.chec_uvars"; //update the id_info table after having removed their uvars
     let env = ses' |> List.fold_left (fun env se -> add_sigelt_to_env env se false) env in
     UF.reset();
 
@@ -1010,7 +1014,10 @@ let tc_decls env ses =
       BU.print1 "Checked: %s\n" (List.fold_left (fun s se -> s ^ Print.sigelt_to_string se ^ "\n") "" ses')
     end;
 
-    List.iter (fun se -> env.solver.encode_sig env se) ses';
+    Profiling.profile 
+      (fun () -> List.iter (fun se -> env.solver.encode_sig env se) ses')
+      (Some (Ident.string_of_lid (Env.current_module env)))      
+      "FStar.TypeChecker.Tc.encode_sig";
 
     (List.rev_append ses' ses, env), ses_elaborated
     end
