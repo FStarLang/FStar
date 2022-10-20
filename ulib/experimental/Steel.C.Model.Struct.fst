@@ -543,6 +543,41 @@ let substruct_compose
 
 #pop-options
 
+#push-options "--query_stats --z3rlimit 64"
+
+#restart-solver
+let substruct_field
+  (#a: eqtype)
+  (#b: a -> Type)
+  (p:(k: a -> pcm (b k)))
+  (#a': eqtype)
+  (#b': (a' -> Type))
+  (p': (k: a' -> pcm (b' k)))
+  (inj: (a' -> a))
+  (surj: (a -> option a'))
+  (sq: squash (is_substruct p p' inj surj))
+  (field': a')
+: Lemma
+  (substruct p p' inj surj sq `connection_compose` struct_field p' field' ==
+    struct_field p (inj field')
+  )
+=
+  let l = substruct p p' inj surj sq `connection_compose` struct_field p' field' in
+  let m = struct_field p (inj field') in
+  let _ : squash (l.conn_small_to_large.morph `feq` m.conn_small_to_large.morph) =
+    assert (forall x . l.conn_small_to_large.morph x `feq` m.conn_small_to_large.morph x)
+  in
+  let _ : squash (l.conn_large_to_small.morph `feq` m.conn_large_to_small.morph) = () in
+  connection_eq_gen
+    l
+    m
+    ()
+    (fun x y f v ->
+      assert ((l.conn_lift_frame_preserving_upd ({ fpu_lift_dom_x = x; fpu_lift_dom_y = y; fpu_lift_dom_f = f; })).fpu_f v `feq` (m.conn_lift_frame_preserving_upd ({ fpu_lift_dom_x = x; fpu_lift_dom_y = y; fpu_lift_dom_f = f; })).fpu_f v)
+    )
+
+#pop-options
+
 let exclusive_struct_intro
   (#a: Type)
   (#b: a -> Type)
