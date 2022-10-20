@@ -557,18 +557,7 @@ let run_tactic_on_ps'
     if !tacdbg then
         BU.print1 "Typechecking tactic: (%s) {\n" (Print.term_to_string tactic);
     ps.all_implicits |>
-    List.iter (fun imp -> 
-      let uv = imp.imp_uvar in
-      let env = {env with gamma = uv.ctx_uvar_gamma } in
-      match FStar.TypeChecker.Core.compute_term_type_handle_guards env (U.ctx_uvar_typ uv) false (fun _ _ -> true) 
-      with
-      | Inl _ -> ()
-      | Inr err ->
-        Errors.log_issue uv.ctx_uvar_range
-                         (Err.Warning_FailedToCheckInitialTacticGoal, 
-                         BU.format2 ("Failed to check initial tactic goal %s because %s")
-                             (Print.term_to_string (U.ctx_uvar_typ uv))
-                             (FStar.TypeChecker.Core.print_error_short err)));
+    List.iter (fun imp -> FStar.Tactics.Monad.register_goal env imp.imp_uvar);
     
     (* Do NOT use the returned tactic, the typechecker is not idempotent and
      * will mess up the monadic lifts. We're just making sure it's well-typed

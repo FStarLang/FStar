@@ -40,6 +40,18 @@ module Print   = FStar.Syntax.Print
 module Env     = FStar.TypeChecker.Env
 module Rel     = FStar.TypeChecker.Rel
 
+let register_goal (env:Env.env) (uv:S.ctx_uvar)  =
+      let env = {env with gamma = uv.ctx_uvar_gamma } in
+      match FStar.TypeChecker.Core.compute_term_type_handle_guards env (U.ctx_uvar_typ uv) false (fun _ _ -> true) 
+      with
+      | Inl _ -> ()
+      | Inr err ->
+        Errors.log_issue uv.ctx_uvar_range
+                         (Err.Warning_FailedToCheckInitialTacticGoal, 
+                         BU.format2 ("Failed to check initial tactic goal %s because %s")
+                             (Print.term_to_string (U.ctx_uvar_typ uv))
+                             (FStar.TypeChecker.Core.print_error_short err))
+
 (*
  * A record, so we can keep it somewhat encapsulated and
  * can more easily add things to it if need be.
@@ -264,6 +276,7 @@ let new_uvar (reason:string) (env:env) (typ:typ)
     let u, ctx_uvar, g_u =
         Env.new_tac_implicit_var reason rng env typ should_check None
     in
+    List.iter (fun (u, _) -> register_goal env u) ctx_uvar;
     bind (add_implicits g_u.implicits) (fun _ ->
     ret (u, fst (List.hd ctx_uvar)))
 

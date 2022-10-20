@@ -149,3 +149,6 @@ val set : proofstate -> tac unit
 
 (* Create a tactic *)
 val mk_tac : (proofstate -> __result 'a) -> tac 'a
+
+(* inform the core of a well-typed goal *)
+val register_goal (env:env) (u:ctx_uvar) : unit
