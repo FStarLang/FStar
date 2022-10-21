@@ -3691,42 +3691,39 @@ let (validate_indexed_effect_lift_shape :
                                            FStar_Compiler_Effect.op_Bar_Greater
                                              uu___7
                                              FStar_Syntax_Subst.compress in
-                                         FStar_Compiler_Util.print1
-                                           "Call lift kind for %s\n"
-                                           lift_name;
-                                         (let lopt =
-                                            let uu___8 =
-                                              FStar_Syntax_Util.effect_sig_ts
-                                                m_ed.FStar_Syntax_Syntax.signature in
+                                         let lopt =
+                                           let uu___7 =
+                                             FStar_Syntax_Util.effect_sig_ts
+                                               m_ed.FStar_Syntax_Syntax.signature in
+                                           let uu___8 =
+                                             FStar_Syntax_Util.get_eff_repr
+                                               m_ed in
+                                           lift_combinator_kind env
+                                             m_eff_name uu___7 uu___8 u k1 in
+                                         let kind =
+                                           match lopt with
+                                           | FStar_Pervasives_Native.None ->
+                                               FStar_Syntax_Syntax.Ad_hoc_combinator
+                                           | FStar_Pervasives_Native.Some l
+                                               ->
+                                               FStar_Syntax_Syntax.Standard_combinator
+                                                 l in
+                                         (let uu___8 =
+                                            FStar_Compiler_Effect.op_Less_Bar
+                                              (FStar_TypeChecker_Env.debug
+                                                 env)
+                                              (FStar_Options.Other
+                                                 "LayeredEffectsTc") in
+                                          if uu___8
+                                          then
                                             let uu___9 =
-                                              FStar_Syntax_Util.get_eff_repr
-                                                m_ed in
-                                            lift_combinator_kind env
-                                              m_eff_name uu___8 uu___9 u k1 in
-                                          let kind =
-                                            match lopt with
-                                            | FStar_Pervasives_Native.None ->
-                                                FStar_Syntax_Syntax.Ad_hoc_combinator
-                                            | FStar_Pervasives_Native.Some l
-                                                ->
-                                                FStar_Syntax_Syntax.Standard_combinator
-                                                  l in
-                                          (let uu___9 =
-                                             FStar_Compiler_Effect.op_Less_Bar
-                                               (FStar_TypeChecker_Env.debug
-                                                  env)
-                                               (FStar_Options.Other
-                                                  "LayeredEffectsTc") in
-                                           if uu___9
-                                           then
-                                             let uu___10 =
-                                               FStar_Syntax_Print.indexed_effect_combinator_kind_to_string
-                                                 kind in
-                                             FStar_Compiler_Util.print2
-                                               "Lift %s has %s kind\n"
-                                               lift_name uu___10
-                                           else ());
-                                          (k1, kind)))))))))
+                                              FStar_Syntax_Print.indexed_effect_combinator_kind_to_string
+                                                kind in
+                                            FStar_Compiler_Util.print2
+                                              "Lift %s has %s kind\n"
+                                              lift_name uu___9
+                                          else ());
+                                         (k1, kind))))))))
 let (tc_layered_eff_decl :
   FStar_TypeChecker_Env.env ->
     FStar_Syntax_Syntax.eff_decl ->
