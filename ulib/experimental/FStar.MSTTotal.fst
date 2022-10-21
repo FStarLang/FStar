@@ -103,7 +103,11 @@ let if_then_else
 total
 reflectable
 effect {
-  MSTATETOT (a:Type) (state:Type u#2) (rel:P.preorder state) (req:pre_t state) (ens:post_t state a)
+  MSTATETOT (a:Type)
+            ([@@@ effect_param] state:Type u#2)
+            ([@@@ effect_param] rel:P.preorder state)
+            (req:pre_t state)
+            (ens:post_t state a)
   with { repr; return; bind; subcomp; if_then_else }
 }
 
@@ -169,9 +173,9 @@ assume val recall (state:Type u#2) (rel:P.preorder state) (p:s_predicate state)
 
 let lift_pure_mst_total
       (a:Type)
+      (wp:pure_wp a)
       (state:Type u#2)
       (rel:P.preorder state)
-      (wp:pure_wp a)
       (f:eqtype_as_type unit -> PURE a wp)
     : repr a state rel
       (fun s0 -> wp (fun _ -> True))
