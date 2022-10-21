@@ -3195,11 +3195,32 @@ let rec desugar_effect env d (quals: qualifiers) (is_layered:bool) eff_name eff_
         //setting the second component to dummy_ts, typechecker fills them in
         let to_comb (us, t) = (us, t), dummy_tscheme, None in
 
+        //
+        // TODO: May be all effect parameters should be upfront
+        //
+
+        let eff_t, num_effect_params =
+          match (SS.compress eff_t).n with
+          | Tm_arrow (bs, c) ->
+            let n, bs = List.fold_left (fun (n, bs) b ->
+              let b_attrs = b.binder_attrs in
+              let n =
+                if U.has_attribute b_attrs C.effect_parameter_attr
+                then n+1
+                else n in
+              let b_attrs = U.remove_attr C.effect_parameter_attr b_attrs in
+              n,
+              bs@[{b with binder_attrs=b_attrs}]) (0, []) bs in
+            {eff_t with n=Tm_arrow (bs, c)},
+            n
+          | _ -> failwith "desugaring indexed effect: effect type not an arrow" in
+
         (*
          * AR: if subcomp or if_then_else are not specified, then fill in dummy_tscheme
          *     typechecker will fill in an appropriate default
          *)
-        Layered_eff_sig (0, ([], eff_t)),
+
+        Layered_eff_sig (num_effect_params, ([], eff_t)),
         Layered_eff ({
           l_repr = lookup "repr" |> to_comb;
           l_return = lookup "return" |> to_comb;

@@ -1090,6 +1090,8 @@ val default_effect (s:string) : Tot unit
     *)
 val top_level_effect (s:string) : Tot unit
 
+val effect_param : unit
+
 (** Bind definition for a layered effect may optionally contain range
     arguments, that are provided by the typechecker during reification
     This attribute on the effect definition indicates that the bind

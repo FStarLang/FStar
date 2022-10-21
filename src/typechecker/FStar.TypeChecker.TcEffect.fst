@@ -166,14 +166,43 @@ let bind_combinator_kind (env:env)
   (m_repr_ts n_repr_ts p_repr_ts:option tscheme)
   (bind_us:univ_names)
   (k:typ)
+  (num_effect_params:int)
   (has_range_binders:bool)
   : option (list indexed_effect_binder_kind) =
+
+  let debug s =
+    if Env.debug env <| Options.Other "LayeredEffectsTc"
+    then BU.print1 "%s\n" s in
+
+  debug (BU.format1
+           "Checking bind combinator kind with %s effect parameters"
+           (string_of_int num_effect_params));
 
   // we know k = a:Type u_a -> b:Type u_b -> rest_bs -> optional_range_bs -> f -> g -> Pure repr wp
 
   let [u_a; u_b] = bind_us in
 
   let (a_b::b_b::rest_bs) = k |> U.arrow_formals |> fst in
+
+  let? eff_params_bs, eff_params_bs_kinds, rest_bs =
+    if num_effect_params = 0
+    then ([], [], rest_bs) |> Some
+    else let _, sig = Env.inst_tscheme_with m_sig_ts [U_name u_a] in
+         let sig_bs = sig |> U.arrow_formals
+           |> fst
+           |> List.tl in
+         let? sig_eff_params_bs =
+           if List.length sig_bs < num_effect_params
+           then None
+           else List.splitAt num_effect_params sig_bs |> fst |> Some in
+         let? eff_params_bs, rest_bs =
+           if List.length rest_bs < num_effect_params
+           then None
+           else List.splitAt num_effect_params rest_bs |> Some in
+         let? eff_params_bs_kinds = eq_binders sig_eff_params_bs eff_params_bs in
+         (eff_params_bs, eff_params_bs_kinds, rest_bs) |> Some in
+
+  debug "Effect parameters match";
 
   // the binders in f's repr signature
 
@@ -182,7 +211,9 @@ let bind_combinator_kind (env:env)
     sig |> U.arrow_formals
         |> fst
         |> (fun (a::bs) ->
-           SS.subst_binders [NT (a.binder_bv, a_b.binder_bv |> S.bv_to_name)] bs) in
+           bs |> List.splitAt num_effect_params
+              |> snd
+              |> SS.subst_binders [NT (a.binder_bv, a_b.binder_bv |> S.bv_to_name)]) in
 
   // f_bs are the binders in k's type, potentially corresponding to the f_sig_bs
   
@@ -198,6 +229,8 @@ let bind_combinator_kind (env:env)
   
   let? f_bs_kinds = eq_binders f_sig_bs f_bs in
 
+  debug "f binders match";
+
   // same thing for g, first get binders in g's signature
 
   let g_sig_bs =
@@ -205,7 +238,9 @@ let bind_combinator_kind (env:env)
     sig |> U.arrow_formals
         |> fst 
         |> (fun (b::bs) ->
-           SS.subst_binders [NT (b.binder_bv, b_b.binder_bv |> S.bv_to_name)] bs) in
+           bs |> List.splitAt num_effect_params
+              |> snd
+              |> SS.subst_binders [NT (b.binder_bv, b_b.binder_bv |> S.bv_to_name)]) in
 
   // g_bs are binders in k's type potentially corresponding to g_sig_bs
 
@@ -235,6 +270,8 @@ let bind_combinator_kind (env:env)
     then None
     else g_bs_kinds |> Some in
 
+  debug "g binders match";
+
   // peel off range binders if any
 
   let (range_bs, rest_bs) : (list binder & list binder) =
@@ -255,6 +292,7 @@ let bind_combinator_kind (env:env)
         let _, t = Env.inst_tscheme_with repr_ts [U_name u_a] in
         S.mk_Tm_app t
           ((a_b.binder_bv |> S.bv_to_name |> S.as_arg)::
+           (List.map (fun {binder_bv=b} -> b |> S.bv_to_name |> S.as_arg) eff_params_bs)@
            (List.map (fun {binder_bv=b} -> b |> S.bv_to_name |> S.as_arg) f_bs))
           Range.dummyRange
       | None ->
@@ -269,6 +307,8 @@ let bind_combinator_kind (env:env)
     then Some ()
     else None in
 
+  debug "f sort matches";
+
   let? _g_b_ok =
     let expected_g_b_sort =
       let x_bv = S.gen_bv "x" None (a_b.binder_bv |> S.bv_to_name) in
@@ -282,7 +322,11 @@ let bind_combinator_kind (env:env)
       match n_repr_ts with
       | Some repr_ts ->
         let _, repr_hd = Env.inst_tscheme_with repr_ts [U_name u_b] in
-        let repr_app = mk_Tm_app repr_hd ((b_b.binder_bv |> S.bv_to_name |> S.as_arg)::repr_args) Range.dummyRange in
+        let repr_app = mk_Tm_app repr_hd
+          ((b_b.binder_bv |> S.bv_to_name |> S.as_arg)::
+           (List.map (fun {binder_bv=b} -> b |> S.bv_to_name |> S.as_arg) eff_params_bs)@
+           repr_args)
+          Range.dummyRange in
         U.arrow [x_bv |> S.mk_binder] (mk_Total repr_app)
       | None ->
         let thunk_t = U.arrow [S.null_binder S.t_unit]
@@ -297,10 +341,12 @@ let bind_combinator_kind (env:env)
     then Some ()
     else None in
 
+  debug "g sort matches";
+  
   let range_kinds = List.map (fun _ -> Range_binder) range_bs in
   let rest_kinds = List.map (fun _ -> Ad_hoc_binder) rest_bs in
 
-  Some ([Type_binder; Type_binder]@f_bs_kinds@g_bs_kinds@range_kinds@rest_kinds@[Repr_binder; Repr_binder])
+  Some ([Type_binder; Type_binder]@eff_params_bs_kinds@f_bs_kinds@g_bs_kinds@range_kinds@rest_kinds@[Repr_binder; Repr_binder])
 
 let validate_indexed_effect_bind_shape (env:env)
   (m_eff_name n_eff_name p_eff_name:lident)
@@ -309,6 +355,7 @@ let validate_indexed_effect_bind_shape (env:env)
   (bind_us:univ_names)
   (bind_t:typ)
   (r:Range.range)
+  (num_effect_params:int)
   (has_range_binders:bool)
   : typ & indexed_effect_combinator_kind =
 
@@ -431,6 +478,7 @@ let validate_indexed_effect_bind_shape (env:env)
     m_repr_ts n_repr_ts p_repr_ts
     bind_us
     k
+    num_effect_params
     has_range_binders in
 
   let kind = 
@@ -1156,6 +1204,7 @@ Errors.with_ctx (BU.format1 "While checking layered effect definition `%s`" (str
         us
         ty
         r
+        num_effect_params
         (U.has_attribute ed.eff_attrs PC.bind_has_range_args_attr) in
 
     (bind_us, bind_t, k |> SS.close_univ_vars bind_us), kind in
@@ -2378,6 +2427,7 @@ let tc_polymonadic_bind env (m:lident) (n:lident) (p:lident) (ts:S.tscheme)
     us
     ty
     (Env.get_range env)
+    0
     false in
 
   if Env.debug env <| Options.Extreme

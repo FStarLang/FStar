@@ -7322,56 +7322,127 @@ let rec (desugar_effect :
                                           let uu___6 =
                                             let uu___7 =
                                               let uu___8 =
-                                                let uu___9 = lookup "repr" in
-                                                FStar_Compiler_Effect.op_Bar_Greater
-                                                  uu___9 to_comb in
-                                              let uu___9 =
-                                                let uu___10 = lookup "return" in
-                                                FStar_Compiler_Effect.op_Bar_Greater
-                                                  uu___10 to_comb in
-                                              let uu___10 =
-                                                let uu___11 = lookup "bind" in
-                                                FStar_Compiler_Effect.op_Bar_Greater
-                                                  uu___11 to_comb in
-                                              let uu___11 =
-                                                if has_subcomp
-                                                then
+                                                FStar_Syntax_Subst.compress
+                                                  eff_t1 in
+                                              uu___8.FStar_Syntax_Syntax.n in
+                                            match uu___7 with
+                                            | FStar_Syntax_Syntax.Tm_arrow
+                                                (bs, c) ->
+                                                let uu___8 =
+                                                  FStar_Compiler_List.fold_left
+                                                    (fun uu___9 ->
+                                                       fun b ->
+                                                         match uu___9 with
+                                                         | (n, bs1) ->
+                                                             let b_attrs =
+                                                               b.FStar_Syntax_Syntax.binder_attrs in
+                                                             let n1 =
+                                                               let uu___10 =
+                                                                 FStar_Syntax_Util.has_attribute
+                                                                   b_attrs
+                                                                   FStar_Parser_Const.effect_parameter_attr in
+                                                               if uu___10
+                                                               then
+                                                                 n +
+                                                                   Prims.int_one
+                                                               else n in
+                                                             let b_attrs1 =
+                                                               FStar_Syntax_Util.remove_attr
+                                                                 FStar_Parser_Const.effect_parameter_attr
+                                                                 b_attrs in
+                                                             (n1,
+                                                               (FStar_Compiler_List.op_At
+                                                                  bs1
+                                                                  [{
+                                                                    FStar_Syntax_Syntax.binder_bv
+                                                                    =
+                                                                    (b.FStar_Syntax_Syntax.binder_bv);
+                                                                    FStar_Syntax_Syntax.binder_qual
+                                                                    =
+                                                                    (b.FStar_Syntax_Syntax.binder_qual);
+                                                                    FStar_Syntax_Syntax.binder_attrs
+                                                                    =
+                                                                    b_attrs1
+                                                                   }])))
+                                                    (Prims.int_zero, []) bs in
+                                                (match uu___8 with
+                                                 | (n, bs1) ->
+                                                     ({
+                                                        FStar_Syntax_Syntax.n
+                                                          =
+                                                          (FStar_Syntax_Syntax.Tm_arrow
+                                                             (bs1, c));
+                                                        FStar_Syntax_Syntax.pos
+                                                          =
+                                                          (eff_t1.FStar_Syntax_Syntax.pos);
+                                                        FStar_Syntax_Syntax.vars
+                                                          =
+                                                          (eff_t1.FStar_Syntax_Syntax.vars);
+                                                        FStar_Syntax_Syntax.hash_code
+                                                          =
+                                                          (eff_t1.FStar_Syntax_Syntax.hash_code)
+                                                      }, n))
+                                            | uu___8 ->
+                                                failwith
+                                                  "desugaring indexed effect: effect type not an arrow" in
+                                          match uu___6 with
+                                          | (eff_t2, num_effect_params) ->
+                                              let uu___7 =
+                                                let uu___8 =
+                                                  let uu___9 =
+                                                    let uu___10 =
+                                                      lookup "repr" in
+                                                    FStar_Compiler_Effect.op_Bar_Greater
+                                                      uu___10 to_comb in
+                                                  let uu___10 =
+                                                    let uu___11 =
+                                                      lookup "return" in
+                                                    FStar_Compiler_Effect.op_Bar_Greater
+                                                      uu___11 to_comb in
+                                                  let uu___11 =
+                                                    let uu___12 =
+                                                      lookup "bind" in
+                                                    FStar_Compiler_Effect.op_Bar_Greater
+                                                      uu___12 to_comb in
                                                   let uu___12 =
-                                                    lookup "subcomp" in
-                                                  FStar_Compiler_Effect.op_Bar_Greater
-                                                    uu___12 to_comb
-                                                else
-                                                  (dummy_tscheme,
-                                                    dummy_tscheme,
-                                                    FStar_Pervasives_Native.None) in
-                                              let uu___12 =
-                                                if has_if_then_else
-                                                then
+                                                    if has_subcomp
+                                                    then
+                                                      let uu___13 =
+                                                        lookup "subcomp" in
+                                                      FStar_Compiler_Effect.op_Bar_Greater
+                                                        uu___13 to_comb
+                                                    else
+                                                      (dummy_tscheme,
+                                                        dummy_tscheme,
+                                                        FStar_Pervasives_Native.None) in
                                                   let uu___13 =
-                                                    lookup "if_then_else" in
-                                                  FStar_Compiler_Effect.op_Bar_Greater
-                                                    uu___13 to_comb
-                                                else
-                                                  (dummy_tscheme,
-                                                    dummy_tscheme,
-                                                    FStar_Pervasives_Native.None) in
-                                              {
-                                                FStar_Syntax_Syntax.l_repr =
-                                                  uu___8;
-                                                FStar_Syntax_Syntax.l_return
-                                                  = uu___9;
-                                                FStar_Syntax_Syntax.l_bind =
-                                                  uu___10;
-                                                FStar_Syntax_Syntax.l_subcomp
-                                                  = uu___11;
-                                                FStar_Syntax_Syntax.l_if_then_else
-                                                  = uu___12
-                                              } in
-                                            FStar_Syntax_Syntax.Layered_eff
-                                              uu___7 in
-                                          ((FStar_Syntax_Syntax.Layered_eff_sig
-                                              (Prims.int_zero, ([], eff_t1))),
-                                            uu___6))
+                                                    if has_if_then_else
+                                                    then
+                                                      let uu___14 =
+                                                        lookup "if_then_else" in
+                                                      FStar_Compiler_Effect.op_Bar_Greater
+                                                        uu___14 to_comb
+                                                    else
+                                                      (dummy_tscheme,
+                                                        dummy_tscheme,
+                                                        FStar_Pervasives_Native.None) in
+                                                  {
+                                                    FStar_Syntax_Syntax.l_repr
+                                                      = uu___9;
+                                                    FStar_Syntax_Syntax.l_return
+                                                      = uu___10;
+                                                    FStar_Syntax_Syntax.l_bind
+                                                      = uu___11;
+                                                    FStar_Syntax_Syntax.l_subcomp
+                                                      = uu___12;
+                                                    FStar_Syntax_Syntax.l_if_then_else
+                                                      = uu___13
+                                                  } in
+                                                FStar_Syntax_Syntax.Layered_eff
+                                                  uu___8 in
+                                              ((FStar_Syntax_Syntax.Layered_eff_sig
+                                                  (num_effect_params,
+                                                    ([], eff_t2))), uu___7))
                                        else
                                          (let rr =
                                             FStar_Compiler_Util.for_some

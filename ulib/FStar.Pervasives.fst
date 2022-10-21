@@ -168,6 +168,7 @@ let ite_soundness_by _ = ()
 
 let default_effect _ = ()
 let top_level_effect _ = ()
+let effect_param = ()
 let bind_has_range_args = ()
 
 let strictly_positive = ()
