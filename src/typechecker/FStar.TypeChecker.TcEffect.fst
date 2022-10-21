@@ -150,10 +150,16 @@ let (let?) (#a #b:Type) (f:option a) (g:a -> option b) : option b =
   | None -> None
   | Some x -> g x
 
-let eq_binders (bs1 bs2:binders) : option (list S.indexed_effect_binder_kind) =
+let mteq (env:env) (t1 t2:typ) : bool =
+  try
+    Rel.teq_nosmt_force env t1 t2
+   with
+   | _ -> false
+
+let eq_binders env (bs1 bs2:binders) : option (list S.indexed_effect_binder_kind) =
   if List.fold_left2 (fun (b, ss) b1 b2 ->
        b &&
-       U.eq_tm (SS.subst ss b1.binder_bv.sort) b2.binder_bv.sort = U.Equal,
+       mteq env (SS.subst ss b1.binder_bv.sort) b2.binder_bv.sort,
        ss@[NT (b1.binder_bv, b2.binder_bv |> S.bv_to_name)]) (true, []) bs1 bs2
 
      |> fst
@@ -199,7 +205,7 @@ let bind_combinator_kind (env:env)
            if List.length rest_bs < num_effect_params
            then None
            else List.splitAt num_effect_params rest_bs |> Some in
-         let? eff_params_bs_kinds = eq_binders sig_eff_params_bs eff_params_bs in
+         let? eff_params_bs_kinds = eq_binders env sig_eff_params_bs eff_params_bs in
          (eff_params_bs, eff_params_bs_kinds, rest_bs) |> Some in
 
   // the binders in f's repr signature
@@ -227,7 +233,7 @@ let bind_combinator_kind (env:env)
   //   the bind combinator is definitely not standard
   //
 
-  let? f_bs_kinds = eq_binders f_sig_bs f_bs in
+  let? f_bs_kinds = eq_binders env f_sig_bs f_bs in
 
   // same thing for g, first get binders in g's signature
 
@@ -486,14 +492,6 @@ let validate_indexed_effect_bind_shape (env:env)
 
   k, kind
 
-let mteq (env:env) (g:guard_t) (t1 t2:typ) : option unit =
-  try
-    BU.map_option
-      (fun g_eq -> Rel.force_trivial_guard env (Env.conj_guard g g_eq))
-      (Rel.teq_nosmt env t1 t2)
-   with
-   | _ -> None
-
 let subcomp_combinator_kind (env:env)
   (m_eff_name n_eff_name:lident)
   (m_sig_ts n_sig_ts:tscheme)
@@ -513,7 +511,7 @@ let subcomp_combinator_kind (env:env)
          let _::sig_bs, _ = sig |> U.arrow_formals in
          let sig_effect_params_bs = List.splitAt num_effect_params sig_bs |> fst in
          let eff_params_bs, rest_bs = List.splitAt num_effect_params rest_bs in
-         let? eff_params_bs_kinds = eq_binders sig_effect_params_bs eff_params_bs in
+         let? eff_params_bs_kinds = eq_binders env sig_effect_params_bs eff_params_bs in
          (eff_params_bs, eff_params_bs_kinds, rest_bs) |> Some in
 
   let f_sig_bs =
@@ -532,7 +530,7 @@ let subcomp_combinator_kind (env:env)
     then None
     else List.splitAt (List.length f_sig_bs) rest_bs |> Some in
 
-  let? f_bs_kinds = eq_binders f_sig_bs f_bs in
+  let? f_bs_kinds = eq_binders env f_sig_bs f_bs in
 
   let g_sig_bs =
     let _, sig = Env.inst_tscheme_with n_sig_ts [U_name u] in
@@ -550,7 +548,7 @@ let subcomp_combinator_kind (env:env)
     then None
     else List.splitAt (List.length g_sig_bs) rest_bs |> Some in
 
-  let? g_bs_kinds = eq_binders g_sig_bs g_bs in
+  let? g_bs_kinds = eq_binders env g_sig_bs g_bs in
     
   let? rest_bs, f_b =
     if List.length rest_bs >= 1
@@ -728,7 +726,7 @@ let ite_combinator_kind (env:env)
          let _::sig_bs, _ = sig |> U.arrow_formals in
          let sig_effect_params_bs = List.splitAt num_effect_params sig_bs |> fst in
          let eff_params_bs, rest_bs = List.splitAt num_effect_params rest_bs in
-         let? eff_params_bs_kinds = eq_binders sig_effect_params_bs eff_params_bs in
+         let? eff_params_bs_kinds = eq_binders env sig_effect_params_bs eff_params_bs in
          (eff_params_bs, eff_params_bs_kinds, rest_bs) |> Some in
 
   let f_sig_bs =
@@ -747,7 +745,7 @@ let ite_combinator_kind (env:env)
     then None
     else List.splitAt (List.length f_sig_bs) rest_bs |> Some in
 
-  let? f_bs_kinds = eq_binders f_sig_bs f_bs in
+  let? f_bs_kinds = eq_binders env f_sig_bs f_bs in
 
   let g_sig_bs =
     let _, sig = Env.inst_tscheme_with sig_ts [U_name u] in
@@ -765,7 +763,7 @@ let ite_combinator_kind (env:env)
     then None
     else List.splitAt (List.length g_sig_bs) rest_bs |> Some in
 
-  let? g_bs_kinds = eq_binders g_sig_bs g_bs in
+  let? g_bs_kinds = eq_binders env g_sig_bs g_bs in
 
   let? rest_bs, [f_b; g_b; p_b] =
     if List.length rest_bs >= 3
@@ -915,7 +913,7 @@ let lift_combinator_kind (env:env)
     then None
     else List.splitAt (List.length f_sig_bs) rest_bs |> Some in
 
-  let? f_bs_kinds = eq_binders f_sig_bs f_bs in
+  let? f_bs_kinds = eq_binders env f_sig_bs f_bs in
 
   let? rest_bs, f_b =
     if List.length rest_bs >= 1
