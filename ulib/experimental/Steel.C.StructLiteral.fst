@@ -349,7 +349,7 @@ let unaddr_of_struct_field_ref' #tag #fields #excluded field p q =
   let t: Ghost.erased (fields.get_field field).carrier =
     pts_to_view_elim q (fields.get_field field).view
   in
-  unaddr_of_struct_field #_ #_ #(struct_pcms fields) field q p s t;
+  unaddr_of_struct_field #_ #_ #_ #(struct_pcms fields) field q p s t;
   let h1: squash (excluded field == true) = () in
   let h2: squash (Ghost.reveal s == (struct_view tag fields excluded).to_carrier v) = () in
   let h3: squash (Ghost.reveal t == (fields.get_field field).view.to_carrier w) = () in
