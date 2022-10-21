@@ -1220,9 +1220,13 @@ and mk_bind env guard_indexed_effect_uvars
       if Env.is_layered_effect env m
       then
         let m_ed = m |> Env.get_effect_decl env in
+        let num_effect_params =
+          match m_ed.signature with
+          | Layered_eff_sig (n, _) -> n
+          | _ -> failwith "Impossible!" in
         let bind_t, bind_kind = m_ed |> U.get_bind_vc_combinator in
         let has_range_args = U.has_attribute m_ed.eff_attrs C.bind_has_range_args_attr in
-        mk_indexed_bind env guard_indexed_effect_uvars m m m bind_t (bind_kind |> must) ct1 b ct2 flags r1 has_range_args
+        mk_indexed_bind env guard_indexed_effect_uvars m m m bind_t (bind_kind |> must) ct1 b ct2 flags r1 num_effect_params has_range_args
       else mk_wp_bind env m ct1 b ct2 flags r1, Env.trivial_guard in
     c, Env.conj_guard g_lift g_bind
 
@@ -1853,6 +1857,7 @@ let standard_indexed_ite_substs (env:env)
   (p:term)
   (ct_then:comp_typ)
   (ct_else:comp_typ)
+  (num_effect_params:int)
   (r:Range.range)
 
   : list subst_elt & guard_t & list term =
@@ -1861,16 +1866,30 @@ let standard_indexed_ite_substs (env:env)
     let a_b::bs = bs in
     bs, [NT (a_b.binder_bv, a)] in
 
+  let bs, subst, guard, args1, args2 =
+    if num_effect_params = 0
+    then bs, subst, Env.trivial_guard, ct_then.effect_args, ct_else.effect_args
+    else let eff_params_bs, bs = List.splitAt num_effect_params bs in
+         let param_args1, args1 = List.splitAt num_effect_params ct_then.effect_args in
+         let param_args2, args2 = List.splitAt num_effect_params ct_else.effect_args in
+         let g = List.fold_left2 (fun g (arg1, _) (arg2, _) ->
+           Env.conj_guard g
+             (Rel.layered_effect_teq env arg1 arg2 (Some "effect param ite"))
+         ) Env.trivial_guard param_args1 param_args2 in
+         let param_subst = List.map2 (fun b (arg, _) ->
+           NT (b.binder_bv, arg)) eff_params_bs param_args1 in
+         bs, subst@param_subst, g, args1, args2 in
+
   let bs, subst =
-    let m_num_effect_args = List.length ct_then.effect_args in
+    let m_num_effect_args = List.length args1 in
     let f_bs, bs = List.splitAt m_num_effect_args bs in
-    let f_subst = List.map2 (fun f_b (arg, _) -> NT (f_b.binder_bv, arg)) f_bs ct_then.effect_args in
+    let f_subst = List.map2 (fun f_b (arg, _) -> NT (f_b.binder_bv, arg)) f_bs args1 in
     bs, subst@f_subst in
 
   let bs, subst =
-    let n_num_effect_args = List.length ct_else.effect_args in
+    let n_num_effect_args = List.length args2 in
     let g_bs, bs = List.splitAt n_num_effect_args bs in
-    let g_subst = List.map2 (fun g_b (arg, _) -> NT (g_b.binder_bv, arg)) g_bs ct_else.effect_args in
+    let g_subst = List.map2 (fun g_b (arg, _) -> NT (g_b.binder_bv, arg)) g_bs args2 in
     bs, subst@g_subst in
 
   let bs, [_; _; p_b] = List.splitAt (List.length bs - 3) bs in
@@ -1887,7 +1906,7 @@ let standard_indexed_ite_substs (env:env)
       r in
     subst@[NT (b.binder_bv, uv_t)],
     Env.conj_guard g g_uv,
-    tms@uv_tms) (subst, Env.trivial_guard, []) bs in
+    tms@uv_tms) (subst, guard, []) bs in
 
   subst@[NT (p_b.binder_bv, p)],
   g,
@@ -1984,7 +2003,11 @@ let mk_layered_conjunction env (ed:S.eff_decl) (u_a:universe) (a:term) (p:typ) (
   let substs, g, rest_uvars_guard_tms =
     if kind = Ad_hoc_combinator
     then ad_hoc_indexed_ite_substs env bs a p ct1 ct2 r
-    else standard_indexed_ite_substs env bs a p ct1 ct2 r in
+    else let num_effect_params =
+           match ed.signature with
+           | Layered_eff_sig (n, _) -> n
+           | _ -> failwith "Impossible!" in
+        standard_indexed_ite_substs env bs a p ct1 ct2 num_effect_params r in
     
   let body = SS.subst substs body in
 
@@ -3648,7 +3671,7 @@ let update_env_polymonadic_bind env m n p ty k =
   //
   Env.add_polymonadic_bind env m n p
     (fun env guard_indexed_effect_uvars c1 bv_opt c2 flags r ->
-     mk_indexed_bind env guard_indexed_effect_uvars m n p ty k c1 bv_opt c2 flags r false)
+     mk_indexed_bind env guard_indexed_effect_uvars m n p ty k c1 bv_opt c2 flags r 0 false)
 
 (*** Utilities for type-based record
      disambiguation ***)

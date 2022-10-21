@@ -1808,28 +1808,44 @@ let apply_standard_indexed_subcomp (env:Env.env)
   (bs:binders)
   (subcomp_c:comp)
   (ct1:comp_typ) (ct2:comp_typ)
+  (sub_prob:worklist -> term -> rel -> term -> string -> prob & worklist)
+  (num_effect_params:int)
   (wl:worklist)
   (subcomp_name:string)
   (r1:Range.range)
 
-  : typ & list term & worklist =
+  : typ & list term & list prob & worklist =
 
   let bs, subst =
     let a_b::bs = bs in
     bs,
     [NT (a_b.binder_bv, ct2.result_typ)] in
 
+  let bs, subst, args1, args2, eff_params_sub_probs, wl =
+    if num_effect_params = 0
+    then bs, subst, ct1.effect_args, ct2.effect_args, [], wl
+    else let eff_params_bs, bs = List.splitAt num_effect_params bs in
+         let param_args1, args1 = List.splitAt num_effect_params ct1.effect_args in
+         let param_args2, args2 = List.splitAt num_effect_params ct2.effect_args in
+
+         let probs, wl = List.fold_left2 (fun (ps, wl) (t1, _) (t2, _) ->
+           let p, wl = sub_prob wl t1 EQ t2 "effect params subcomp" in
+           ps@[p], wl) ([], wl) param_args1 param_args2 in
+         let param_subst = List.map2 (fun b (arg, _) ->
+           NT (b.binder_bv, arg)) eff_params_bs param_args1 in
+         bs, subst@param_subst, args1, args2, probs, wl in
+
   let bs, subst =
-    let m_num_effect_args = List.length ct1.effect_args in
+    let m_num_effect_args = List.length args1 in
     let f_bs, bs = List.splitAt m_num_effect_args bs in
-    let f_substs = List.map2 (fun f_b (arg, _) -> NT (f_b.binder_bv, arg)) f_bs ct1.effect_args in
+    let f_substs = List.map2 (fun f_b (arg, _) -> NT (f_b.binder_bv, arg)) f_bs args1 in
     bs,
     subst@f_substs in
 
   let bs, subst =
-    let n_num_effect_args = List.length ct2.effect_args in
+    let n_num_effect_args = List.length args2 in
     let g_bs, bs = List.splitAt n_num_effect_args bs in
-    let g_substs = List.map2 (fun g_b (arg, _) -> NT (g_b.binder_bv, arg)) g_bs ct2.effect_args in
+    let g_substs = List.map2 (fun g_b (arg, _) -> NT (g_b.binder_bv, arg)) g_bs args2 in
     bs,
     subst@g_substs in
 
@@ -1858,9 +1874,9 @@ let apply_standard_indexed_subcomp (env:Env.env)
     let u, wp = List.hd subcomp_ct.comp_univs, fst (List.hd subcomp_ct.effect_args) in
     Env.pure_precondition_for_trivial_post env u subcomp_ct.result_typ wp Range.dummyRange in
 
-
   fml,
   guard_uvar_tms,
+  eff_params_sub_probs,
   wl
 
 let apply_ad_hoc_indexed_subcomp (env:Env.env)
@@ -4205,23 +4221,27 @@ and solve_c (env:Env.env) (problem:problem comp) (wl:worklist) : solution =
             c1 |> S.mk_Comp |> edge.mlift.mlift_wp env guard_indexed_effect_uvars
                |> (fun (c, g) -> U.comp_to_comp_typ c, g) in
   
-          let c1, g_lift, stronger_t_opt, kind, is_polymonadic =
+          let c1, g_lift, stronger_t_opt, kind, num_eff_params, is_polymonadic =
             match Env.exists_polymonadic_subcomp env c1.effect_name c2.effect_name with
             | None ->
               (match Env.monad_leq env c1.effect_name c2.effect_name with
-               | None -> c1, Env.trivial_guard, None, Ad_hoc_combinator, false
+               | None -> c1, Env.trivial_guard, None, Ad_hoc_combinator, 0, false
                | Some edge ->
                  let c1, g_lift = lift_c1 edge in
-                 let tsopt, k =
-                   c2.effect_name
-                   |> Env.get_effect_decl env
+                 let ed2 = c2.effect_name |> Env.get_effect_decl env in
+                 let tsopt, k = ed2
                    |> U.get_stronger_vc_combinator
                    |> (fun (ts, kopt) -> Env.inst_tscheme_with ts c2.comp_univs |> snd |> Some, kopt |> must) in
-                 c1, g_lift, tsopt, k, false)
+                 let num_eff_params =
+                   match ed2.signature with
+                   | Layered_eff_sig (n, _) -> n
+                   | _ -> failwith "Impossible!" in
+                 c1, g_lift, tsopt, k, num_eff_params, false)
             | Some (t, kind) ->
               c1, Env.trivial_guard,
               Env.inst_tscheme_with t c2.comp_univs |> snd |> Some,
               kind,
+              0,
               true in
 
           if is_none stronger_t_opt
@@ -4296,8 +4316,10 @@ and solve_c (env:Env.env) (problem:problem comp) (wl:worklist) : solution =
               if kind = Ad_hoc_combinator
               then apply_ad_hoc_indexed_subcomp env bs subcomp_c c1 c2 sub_prob wl subcomp_name r
               else let Standard_combinator l = kind in
-                   let fml, tms, wl = apply_standard_indexed_subcomp env bs subcomp_c c1 c2 wl subcomp_name r in
-                   fml, tms, [], wl in
+                   apply_standard_indexed_subcomp env bs subcomp_c c1 c2 sub_prob
+                   num_eff_params
+                   wl
+                   subcomp_name r in
 
             let sub_probs = ret_sub_prob::(is_sub_probs@sub_probs) in
 
