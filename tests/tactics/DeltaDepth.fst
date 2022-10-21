@@ -30,10 +30,10 @@ let v : t = synth_by_tactic (fun () -> exact (f ()))
  * to conclude that it's not `B`, and reducing this match will get stuck. *)
 let m = match v with | B _ -> 0 | A x -> x
 
-let _ = assert True by (let t = quote m in
+let _ = assert True by (let t = `m in
                         let t' = norm_term [delta;iota] t in
-                        (* print ("t' = " ^ term_to_string t'); *)
-                        let r = (`1) in
+                        (* The reduction of the match leaves an ascription *)
+                        let r = (`(1 <: int)) in
                         if term_eq t' r
                         then ()
                         else fail ("The match did not reduce!:" ^ term_to_string t'))

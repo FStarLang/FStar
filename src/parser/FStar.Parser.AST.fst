@@ -156,8 +156,8 @@ type expr = term
 type tycon =
   | TyconAbstract of ident * list binder * option knd
   | TyconAbbrev   of ident * list binder * option knd * term
-  | TyconRecord   of ident * list binder * option knd * list (ident * aqual * attributes_ * term)
-  | TyconVariant  of ident * list binder * option knd * list (ident * option term * bool) (* bool is whether it's using 'of' notation *)
+  | TyconRecord   of ident * list binder * option knd * attributes_ * list (ident * aqual * attributes_ * term)
+  | TyconVariant  of ident * list binder * option knd * list (ident * option term * bool * attributes_) (* bool is whether it's using 'of' notation *)
 
 type qualifier =
   | Private
@@ -905,7 +905,7 @@ let lids_of_let defs =  defs |> List.collect (fun (p, _) -> head_id_of_pat p)
 let id_of_tycon = function
   | TyconAbstract(i, _, _)
   | TyconAbbrev(i, _, _, _)
-  | TyconRecord(i, _, _, _)
+  | TyconRecord(i, _, _, _, _)
   | TyconVariant(i, _, _, _) -> (string_of_id i)
 
 let decl_to_string (d:decl) = match d.d with

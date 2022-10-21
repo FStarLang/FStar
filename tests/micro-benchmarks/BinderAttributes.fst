@@ -21,6 +21,10 @@ let f (#[@@@ description "x_imp"] x_imp:int) ([@@@ description "y"] y:string) : 
 let f2 (#[@@@ description "x_imp"]x_imp [@@@ description "y"]y : int) : Tot unit =
     ()
 
+[@@expect_failure [230]]
+let local_names_in_attributes_are_forbidden
+  = x:unit -> [@@@x]y:unit -> unit
+
 type binder =
     {
         qual : string;

@@ -3,6 +3,9 @@ include Steel.ST.Util
 
 module T = FStar.Tactics
 
+let is_fvar     = Reflection.is_fvar
+let is_any_fvar = Reflection.is_any_fvar
+
 /// A tactic to automatically generate a unique binder
 
 [@@erasable]
@@ -293,16 +296,20 @@ let compute_gen_elim_nondep_post0 (i0: gen_elim_i) (i: gen_elim_nondep_t) : Tot 
 let compute_gen_elim_nondep_post (i0: gen_elim_i) (i: gen_elim_nondep_t) (x: Ghost.erased (compute_gen_elim_nondep_a i0 i)) : Tot prop =
   compute_gen_elim_nondep_post0 i0 i (Ghost.reveal x)
 
-module T = FStar.Tactics
+let is_squash (t:T.term) : T.Tac bool =
+  is_any_fvar t [`%squash; `%auto_squash]
+
+let is_star_or_vstar (t:T.term) : T.Tac bool =
+  is_any_fvar t [`%star; `%VStar]
 
 let rec term_has_head
   (t: T.term)
   (head: T.term)
 : T.Tac bool
 = let (hd, tl) = T.collect_app t in
-  if hd `T.term_eq` head
+  if hd `T.term_eq_old` head
   then true
-  else if hd `T.term_eq` (`star) || hd `T.term_eq` (`VStar)
+  else if is_star_or_vstar hd
   then
     match tl with
     | [tg, T.Q_Explicit; td, T.Q_Explicit] ->
@@ -320,9 +327,9 @@ let rec solve_gen_unit_elim
       then T.mk_app (`GUEId) [tl', T.Q_Explicit]
       else
         let (hd, tl) = T.collect_app tl' in
-        if hd `T.term_eq` (`pure)
+        if hd `is_fvar` (`%pure)
         then T.mk_app (`GUEPure) tl
-        else if hd `T.term_eq` (`star) || hd `T.term_eq` (`VStar)
+        else if is_star_or_vstar hd
         then match tl with
         | [t1, T.Q_Explicit; t2, T.Q_Explicit] ->
           let t1' = solve_gen_unit_elim t1 in
@@ -349,7 +356,7 @@ let rec solve_gen_elim
         T.mk_app (`GEUnit) [t', T.Q_Explicit]
       end else
         let (hd, lbody) = T.collect_app tl' in
-        if hd `T.term_eq` (`exists_)
+        if hd `is_fvar` (`%exists_)
         then
           let (ty, body) =
             match lbody with
@@ -369,7 +376,7 @@ let rec solve_gen_elim
             | _ ->
               T.mk_app (`GEExistsNoAbs) lbody
           end
-        else if hd `T.term_eq` (`star) || hd `T.term_eq` (`VStar)
+        else if is_star_or_vstar hd
         then
           match lbody with
           | [(tl, T.Q_Explicit); (tr, T.Q_Explicit)] ->
@@ -479,7 +486,7 @@ let rec solve_gen_elim_nondep' (fuel: nat) (rev_types_and_binders: list (T.term 
   then None
   else
     let (hd, tl) = T.collect_app t in
-    if hd `T.term_eq` (`TRet)
+    if hd `is_fvar` (`%TRet)
     then match tl with
     | [(v, T.Q_Explicit); (p, T.Q_Explicit)] ->
       let cons_type (accu: (unit -> T.Tac T.term)) (tb: (T.term & T.binder)) () : T.Tac T.term =
@@ -494,7 +501,7 @@ let rec solve_gen_elim_nondep' (fuel: nat) (rev_types_and_binders: list (T.term 
         try
           let env = cur_env () in
           let ty = tc env type_list in
-          ty `term_eq` (`(list Type0))
+          ty `term_eq_old` (`(list Type0))
         with _ -> false
       in
       if not type_list_typechecks
@@ -514,7 +521,7 @@ let rec solve_gen_elim_nondep' (fuel: nat) (rev_types_and_binders: list (T.term 
           p'
         )
     | _ -> None
-    else if hd `T.term_eq` (`TExists)
+    else if hd `is_fvar` (`%TExists)
     then match tl with
     | [(ty, _); (f, T.Q_Explicit)] ->
       begin match T.inspect f with
@@ -557,16 +564,16 @@ let solve_gen_elim_prop
 : T.Tac unit
 =
   let (hd, tl) = T.collect_app (T.cur_goal ()) in
-  if not (hd `T.term_eq` (`squash) || hd `T.term_eq` (`auto_squash))
+  if not (is_squash hd)
   then T.fail "not a squash goal";
   match tl with
   | [body1, T.Q_Explicit] ->
     let (hd1, tl1) = T.collect_app body1 in
-    if not (hd1 `T.term_eq` (`gen_elim_prop))
+    if not (hd1 `is_fvar` (`%gen_elim_prop))
     then T.fail "not a gen_elim_prop goal";
     begin match List.Tot.filter (fun (_, x) -> T.Q_Explicit? x) tl1 with
     | [(enable_nondep_opt_tm, _); (p, _); (a, _); (q, _); (post, _)] ->
-      let enable_nondep_opt = enable_nondep_opt_tm `T.term_eq` (`true) in
+      let enable_nondep_opt = enable_nondep_opt_tm `T.term_eq_old` (`true) in
       let i' = solve_gen_elim p in
       let norm () = T.norm [delta_attr [(`%gen_elim_reduce)]; zeta; iota] in
       begin match solve_gen_elim_nondep0 enable_nondep_opt i' with
@@ -601,12 +608,12 @@ let solve_gen_elim_prop_placeholder
 : T.Tac bool
 =
   let (hd, tl) = T.collect_app (T.cur_goal ()) in
-  if not (hd `T.term_eq` (`squash) || hd `T.term_eq` (`auto_squash))
+  if not (is_squash hd)
   then T.fail "not a squash goal";
   match tl with
   | [body1, T.Q_Explicit] ->
     let (hd1, tl1) = T.collect_app body1 in
-    if not (hd1 `T.term_eq` (`gen_elim_prop_placeholder))
+    if not (hd1 `is_fvar` (`%gen_elim_prop_placeholder))
     then T.fail "not a gen_elim_prop_placeholder goal";
     begin match List.Tot.filter (fun (_, x) -> T.Q_Explicit? x) tl1 with
     | [(enable_nondep_opt_tm, _); (p, _); (a, _); (q, _); (post, _)] ->
@@ -617,7 +624,7 @@ let solve_gen_elim_prop_placeholder
       let post_is_uvar = T.Tv_Uvar? (T.inspect post) in
       if not (a_is_uvar && q_is_uvar && post_is_uvar)
       then T.fail "gen_elim_prop_placeholder is already solved";
-      let enable_nondep_opt = enable_nondep_opt_tm `T.term_eq` (`true) in
+      let enable_nondep_opt = enable_nondep_opt_tm `T.term_eq_old` (`true) in
       let i' = solve_gen_elim p in
       let j' = solve_gen_elim_nondep enable_nondep_opt i' in
       let norm_term = T.norm_term [delta_attr [(`%gen_elim_reduce)]; zeta; iota] in

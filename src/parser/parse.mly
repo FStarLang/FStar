@@ -32,7 +32,7 @@ let old_attribute_syntax_warning =
    Use `[@@ a1; a2; ...; an]`, a semi-colon separated list of attributes, instead"
 
 let do_notation_deprecation_warning =
-  "The lightweight do notation [x <- y; z] or [x ;; z] is deprecated, use let operators (i.e. [let* x = y in z] or [y ;* z], [*] being any sequence of operator characters) instead."
+  "The lightweight do notation [x <-- y; z] or [x ;; z] is deprecated, use let operators (i.e. [let* x = y in z] or [y ;* z], [*] being any sequence of operator characters) instead."
 
 let none_to_empty_list x =
   match x with
@@ -293,10 +293,10 @@ typeDefinition:
   | EQUALS t=typ
       { (fun id binders kopt ->  check_id id; TyconAbbrev(id, binders, kopt, t)) }
   /* A documentation on the first branch creates a conflict with { x with a = ... }/{ a = ... } */
-  | EQUALS LBRACE
+  | EQUALS attrs_opt=ioption(binderAttributes) LBRACE
       record_field_decls=right_flexible_nonempty_list(SEMICOLON, recordFieldDecl)
    RBRACE
-      { (fun id binders kopt -> check_id id; TyconRecord(id, binders, kopt, record_field_decls)) }
+      { (fun id binders kopt -> check_id id; TyconRecord(id, binders, kopt, none_to_empty_list attrs_opt, record_field_decls)) }
   (* having the first BAR optional using left-flexible list creates a s/r on FSDOC since any decl can be preceded by a FSDOC *)
   | EQUALS ct_decls=list(constructorDecl)
       { (fun id binders kopt -> check_id id; TyconVariant(id, binders, kopt, ct_decls)) }
@@ -309,8 +309,8 @@ recordFieldDecl:
       }
 
 constructorDecl:
-  | BAR uid=uident COLON t=typ                { (uid, Some t, false) }
-  | BAR uid=uident t_opt=option(OF t=typ {t}) { (uid, t_opt, true) }
+  | BAR attrs_opt=ioption(binderAttributes) uid=uident COLON t=typ                { (uid, Some t, false, none_to_empty_list attrs_opt) }
+  | BAR attrs_opt=ioption(binderAttributes) uid=uident t_opt=option(OF t=typ {t}) { (uid, t_opt, true, none_to_empty_list attrs_opt) }
 
 attr_letbinding:
   | attr=ioption(attribute) AND lb=letbinding

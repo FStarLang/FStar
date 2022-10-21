@@ -18,6 +18,11 @@ open FStar.List.Tot
 (* Instrumenting recursive functions to provide a trace of their calls *)
 (* TODO: update to make use of metaprogrammed let-recs and splicing *)
 
+(* Do not warn about recursive functions not used in their bodies:
+since we metaprogram them, the desugaring phase wrongly concludes
+they do not have to be recursive, but they do. *)
+#push-options "--warn_error -328"
+
 (* We take a function such as
  *
  *  val fall : mynat -> Tot mynat
@@ -79,7 +84,7 @@ type ins_info = {
 }
 
 let rec instrument_body (ii : ins_info) (t : term) : Tac term =
-  match inspect t with
+  match inspect_unascribe t with
   // descend into matches
   | Tv_Match t ret_opt brs -> begin
     let brs' = map (ins_br ii) brs in
@@ -154,12 +159,12 @@ let rec fall (n : mynat) : Tot mynat =
 
 // Because of the way we're building this recursive function, its termination is unprovable.
 // So admit queries for now.
-#set-options "--admit_smt_queries true"
+#push-options "--admit_smt_queries true"
 let rec fall' (n : mynat) (l : list mynat) =
     // We need to annotate the result type.. which sucks.
     // But we could use a tactic later :)
     synth_by_tactic #(mynat -> list mynat -> (list mynat * mynat)) (fun () -> instrument fall) n l
-#set-options "--admit_smt_queries false"
+#pop-options
 
 let _ = assert (fall' (S (S (S Z))) [] == ([Z; S Z; S (S Z); S (S (S Z))], Z))
 
@@ -171,21 +176,21 @@ let rec fact_aux (n acc : nat) : Tot nat =
     then acc
     else let acc' = acc `op_Multiply` n in fact_aux (n - 1) acc'
 
-let rec fact (n : nat) : Tot nat = fact_aux n 1
+let fact (n : nat) : Tot nat = fact_aux n 1
 
-#set-options "--admit_smt_queries true"
+#push-options "--admit_smt_queries true"
 let rec fact_aux' (n acc : nat) (tr : list (nat * nat)) : Tot (list (nat * nat) * nat) =
     synth_by_tactic #(nat -> nat -> list (nat * nat) -> (list (nat * nat) * nat)) (fun () -> instrument fact_aux) n acc tr
-#set-options "--admit_smt_queries false"
+#pop-options
 
 let _ = assert (fact_aux' 5 1 [] == ([(0, 120); (1, 120); (2, 60); (3, 20); (4, 5); (5, 1)], 120))
 
 (* We can also instrument `fact`, but we won't get anything too
  * interesting as that's not the tail-recursive function *)
-#set-options "--admit_smt_queries true"
+#push-options "--admit_smt_queries true"
 // TODO: I have to use `int` for the codomains or it complains... why? I'm even admitting SMT
 let rec fact' (n : nat) (tr : list nat) : Tot (list nat * int) =
     synth_by_tactic #(nat -> list nat -> (list nat * int)) (fun () -> instrument fact) n tr
-#set-options "--admit_smt_queries false"
+#pop-options
 
 let _ = assert (fact' 5 [] == ([5], 120))

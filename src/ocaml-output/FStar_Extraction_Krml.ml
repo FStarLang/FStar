@@ -1389,11 +1389,8 @@ and (translate_expr : env -> FStar_Extraction_ML_Syntax.mlexpr -> expr) =
              FStar_Extraction_ML_Syntax.loc = uu___4;_},
            e2::[])
           when
-          (((let uu___5 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
-             uu___5 = "FStar.Buffer.createL") ||
-              (let uu___5 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
-               uu___5 = "Steel.ST.HigherArray.malloca_of_list_ptr"))
-             ||
+          ((let uu___5 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
+            uu___5 = "FStar.Buffer.createL") ||
              (let uu___5 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
               uu___5 = "LowStar.Monotonic.Buffer.malloca_of_list"))
             ||

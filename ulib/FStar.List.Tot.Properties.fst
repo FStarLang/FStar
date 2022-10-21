@@ -27,6 +27,70 @@ let llist a (n:nat) = l:list a {length l = n}
 
 (** Properties about mem **)
 
+(** Correctness of [mem] for types with decidable equality. TODO:
+replace [mem] with [memP] in relevant lemmas and define the right
+SMTPat to automatically recover lemmas about [mem] for types with
+decidable equality *)
+let rec mem_memP
+  (#a: eqtype)
+  (x: a)
+  (l: list a)
+: Lemma (ensures (mem x l <==> memP x l))
+        [SMTPat (mem x l); SMTPat (memP x l)]
+= match l with
+  | [] -> ()
+  | a :: q -> mem_memP x q
+
+(** If an element can be [index]ed, then it is a [memP] of the list. *)
+let rec lemma_index_memP (#t:Type) (l:list t) (i:nat{i < length l}) :
+  Lemma
+    (ensures (index l i `memP` l))
+    [SMTPat (index l i `memP` l)] =
+  match i with
+  | 0 -> ()
+  | _ -> lemma_index_memP (tl l) (i - 1)
+
+(** The empty list has no elements. *)
+val memP_empty : #a: Type -> x:a ->
+  Lemma (requires (memP x []))
+        (ensures False)
+let memP_empty #a x = ()
+
+(** Full specification for [existsb]: [existsb f xs] holds if, and
+only if, there exists an element [x] of [xs] such that [f x] holds. *)
+val memP_existsb: #a: Type -> f:(a -> Tot bool) -> xs:list a ->
+  Lemma(ensures (existsb f xs <==> (exists (x:a). (f x = true /\ memP x xs))))
+let rec memP_existsb #a f xs =
+  match xs with
+  | [] -> ()
+  | hd::tl -> memP_existsb f tl
+
+let rec memP_map_intro
+  (#a #b: Type)
+  (f: a -> Tot b)
+  (x: a)
+  (l: list a)
+: Lemma
+  (requires True)
+  (ensures (memP x l ==> memP (f x) (map f l)))
+  (decreases l)
+= match l with
+  | [] -> ()
+  | _ :: q -> memP_map_intro f x q (* NOTE: would fail if [requires memP x l] instead of [ ==> ] *)
+
+let rec memP_map_elim
+  (#a #b: Type)
+  (f: a -> Tot b)
+  (y: b)
+  (l: list a)
+: Lemma
+  (requires True)
+  (ensures (memP y (map f l) ==> (exists (x : a) . memP x l /\ f x == y)))
+  (decreases l)
+= match l with
+  | [] -> ()
+  | _ :: q -> memP_map_elim f y q
+
 (** The empty list has no elements *)
 val mem_empty : #a:eqtype -> x:a ->
   Lemma (requires (mem x []))
@@ -66,19 +130,23 @@ val rev_length : l:list 'a ->
         (ensures (length (rev l) = length l))
 let rev_length l = rev_acc_length l []
 
-val rev_acc_mem : #a:eqtype -> l:list a -> acc:list a -> x:a ->
+val rev_acc_memP : #a:Type -> l:list a -> acc:list a -> x:a ->
   Lemma (requires True)
-        (ensures (mem x (rev_acc l acc) <==> (mem x l \/ mem x acc)))
-let rec rev_acc_mem #a l acc x = match l with
+        (ensures (memP x (rev_acc l acc) <==> (memP x l \/ memP x acc)))
+let rec rev_acc_memP #a l acc x = match l with
     | [] -> ()
-    | hd::tl -> rev_acc_mem tl (hd::acc) x
+    | hd::tl -> rev_acc_memP tl (hd::acc) x
 
 (** A list and its reversed have the same elements *)
+val rev_memP : #a:Type -> l:list a -> x:a ->
+  Lemma (requires True)
+        (ensures (memP x (rev l) <==> memP x l))
+let rev_memP #a l x = rev_acc_memP l [] x
+
 val rev_mem : #a:eqtype -> l:list a -> x:a ->
   Lemma (requires True)
         (ensures (mem x (rev l) <==> mem x l))
-let rev_mem #a l x = rev_acc_mem l [] x
-
+let rev_mem l x = rev_memP l x
 
 (** Properties about append **)
 
@@ -574,71 +642,6 @@ let rec sortWith_sorted #a f l = match l with
        sortWith_sorted f hi;
        append_mem_forall (sortWith f lo) (pivot::sortWith f hi);
        append_sorted (bool_of_compare f) (sortWith f lo) (sortWith f hi) pivot
-
-
-(** Correctness of [mem] for types with decidable equality. TODO:
-replace [mem] with [memP] in relevant lemmas and define the right
-SMTPat to automatically recover lemmas about [mem] for types with
-decidable equality *)
-let rec mem_memP
-  (#a: eqtype)
-  (x: a)
-  (l: list a)
-: Lemma (ensures (mem x l <==> memP x l))
-        [SMTPat (mem x l); SMTPat (memP x l)]
-= match l with
-  | [] -> ()
-  | a :: q -> mem_memP x q
-
-(** If an element can be [index]ed, then it is a [memP] of the list. *)
-let rec lemma_index_memP (#t:Type) (l:list t) (i:nat{i < length l}) :
-  Lemma
-    (ensures (index l i `memP` l))
-    [SMTPat (index l i `memP` l)] =
-  match i with
-  | 0 -> ()
-  | _ -> lemma_index_memP (tl l) (i - 1)
-
-(** The empty list has no elements. *)
-val memP_empty : #a: Type -> x:a ->
-  Lemma (requires (memP x []))
-        (ensures False)
-let memP_empty #a x = ()
-
-(** Full specification for [existsb]: [existsb f xs] holds if, and
-only if, there exists an element [x] of [xs] such that [f x] holds. *)
-val memP_existsb: #a: Type -> f:(a -> Tot bool) -> xs:list a ->
-  Lemma(ensures (existsb f xs <==> (exists (x:a). (f x = true /\ memP x xs))))
-let rec memP_existsb #a f xs =
-  match xs with
-  | [] -> ()
-  | hd::tl -> memP_existsb f tl
-
-let rec memP_map_intro
-  (#a #b: Type)
-  (f: a -> Tot b)
-  (x: a)
-  (l: list a)
-: Lemma
-  (requires True)
-  (ensures (memP x l ==> memP (f x) (map f l)))
-  (decreases l)
-= match l with
-  | [] -> ()
-  | _ :: q -> memP_map_intro f x q (* NOTE: would fail if [requires memP x l] instead of [ ==> ] *)
-
-let rec memP_map_elim
-  (#a #b: Type)
-  (f: a -> Tot b)
-  (y: b)
-  (l: list a)
-: Lemma
-  (requires True)
-  (ensures (memP y (map f l) ==> (exists (x : a) . memP x l /\ f x == y)))
-  (decreases l)
-= match l with
-  | [] -> ()
-  | _ :: q -> memP_map_elim f y q
 
 (** Properties of [noRepeats] *)
 let noRepeats_nil

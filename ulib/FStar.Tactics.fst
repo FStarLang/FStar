@@ -22,6 +22,7 @@ include FStar.Reflection.Builtins
 include FStar.Reflection.Derived
 include FStar.Reflection.Formula
 include FStar.Reflection.Const
+include FStar.Reflection.Compare
 
 include FStar.Tactics.Types
 include FStar.Tactics.Effect

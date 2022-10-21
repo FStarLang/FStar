@@ -39,8 +39,9 @@ let (definition_lids :
                 match uu___2 with
                 | FStar_Parser_AST.TyconAbbrev (id, uu___3, uu___4, uu___5)
                     -> let uu___6 = FStar_Ident.lid_of_ids [id] in [uu___6]
-                | FStar_Parser_AST.TyconRecord (id, uu___3, uu___4, uu___5)
-                    -> let uu___6 = FStar_Ident.lid_of_ids [id] in [uu___6]
+                | FStar_Parser_AST.TyconRecord
+                    (id, uu___3, uu___4, uu___5, uu___6) ->
+                    let uu___7 = FStar_Ident.lid_of_ids [id] in [uu___7]
                 | FStar_Parser_AST.TyconVariant (id, uu___3, uu___4, uu___5)
                     -> let uu___6 = FStar_Ident.lid_of_ids [id] in [uu___6]
                 | uu___3 -> []))

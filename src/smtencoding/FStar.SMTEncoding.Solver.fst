@@ -79,7 +79,7 @@ let initialize_hints_db src_filename format_filename : unit =
             if Options.use_hints () then
               Err.log_issue Range.dummyRange
                             (Err.Warning_CouldNotReadHints,
-                             BU.format1 "Malformed JSON hints file: %s; ran without hints\n"
+                             BU.format1 "Malformed JSON hints file: %s; ran without hints"
                                        val_filename);
             ()
 
@@ -87,7 +87,7 @@ let initialize_hints_db src_filename format_filename : unit =
             if Options.use_hints () then
               Err.log_issue Range.dummyRange
                             (Err.Warning_CouldNotReadHints,
-                             BU.format1 "Unable to open hints file: %s; ran without hints\n"
+                             BU.format1 "Unable to open hints file: %s; ran without hints"
                                        val_filename);
             ()
     end

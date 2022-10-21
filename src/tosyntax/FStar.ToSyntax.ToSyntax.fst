@@ -2746,7 +2746,7 @@ let rec desugar_tycon env (d: AST.decl) quals tcs : (env_t * sigelts) =
   let tycon_id = function
     | TyconAbstract(id, _, _)
     | TyconAbbrev(id, _, _, _)
-    | TyconRecord(id, _, _, _)
+    | TyconRecord(id, _, _, _, _)
     | TyconVariant(id, _, _, _) -> id in
   let binder_to_term b = match b.b with
     | Annotated (x, _)
@@ -2764,7 +2764,7 @@ let rec desugar_tycon env (d: AST.decl) quals tcs : (env_t * sigelts) =
     List.fold_left (fun out b -> mk_term (App(out, binder_to_term b, imp_of_aqual b)) out.range out.level)
       t binders in
   let tycon_record_as_variant = function
-    | TyconRecord(id, parms, kopt, fields) ->
+    | TyconRecord(id, parms, kopt, attrs, fields) ->
       let constrName = mk_ident("Mk" ^ (string_of_id id), (range_of_id id)) in
       let mfields = List.map (fun (x,q,attrs,t) -> mk_binder_with_attrs (Annotated(x,t)) (range_of_id x) Expr q attrs) fields in
       let result = apply_binders (mk_term (Var (lid_of_ids [id])) (range_of_id id) Type_level) parms in
@@ -2778,7 +2778,7 @@ let rec desugar_tycon env (d: AST.decl) quals tcs : (env_t * sigelts) =
                               BU.format1 "Field %s shadows the record's name or a parameter of it, please rename it" (string_of_id f)) (range_of_id f))
           fields;
 
-      TyconVariant(id, parms, kopt, [(constrName, Some constrTyp, false)]), fields |> List.map (fun (f, _, _, _) -> f)
+      TyconVariant(id, parms, kopt, [(constrName, Some constrTyp, false, attrs)]), fields |> List.map (fun (f, _, _, _) -> f)
     | _ -> failwith "impossible" in
   let desugar_abstract_tc quals _env mutuals = function
     | TyconAbstract(id, binders, kopt) ->
@@ -2929,7 +2929,7 @@ let rec desugar_tycon env (d: AST.decl) quals tcs : (env_t * sigelts) =
           let attrs = List.map (desugar_term env) d.attrs in
           let val_attrs = Env.lookup_letbinding_quals_and_attrs env tname |> snd in
           let constrNames, constrs = List.split <|
-              (constrs |> List.map (fun (id, topt, of_notation) ->
+              (constrs |> List.map (fun (id, topt, of_notation, cons_attrs) ->
                 let t =
                   if of_notation
                   then match topt with
@@ -2949,7 +2949,7 @@ let rec desugar_tycon env (d: AST.decl) quals tcs : (env_t * sigelts) =
                                             sigquals = quals;
                                             sigrng = rng;
                                             sigmeta = default_sigmeta  ;
-                                            sigattrs = val_attrs @ attrs;
+                                            sigattrs = val_attrs @ attrs @ map (desugar_term env) cons_attrs;
                                             sigopts = None; }))))
           in
           ([], { sigel = Sig_inductive_typ(tname, univs, tpars, k, mutuals, constrNames);

@@ -1266,7 +1266,7 @@ let attr_eq a a' =
    | _ -> false
 
 let attr_substitute =
-    mk (Tm_fvar (lid_as_fv (lid_of_path ["FStar"; "Pervasives"; "Substitute"] Range.dummyRange)
+    mk (Tm_fvar (lid_as_fv PC.attr_substitute_lid
                            delta_constant
                            None))
        Range.dummyRange
@@ -1788,6 +1788,7 @@ let eqprod (e1 : 'a -> 'a -> bool) (e2 : 'b -> 'b -> bool) (x : 'a * 'b) (y : 'a
 let eqopt (e : 'a -> 'a -> bool) (x : option 'a) (y : option 'a) : bool =
     match x, y with
     | Some x, Some y -> e x y
+    | None, None -> true
     | _ -> false
 
 // Checks for syntactic equality. A returned false doesn't guarantee anything.

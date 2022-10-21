@@ -46,7 +46,7 @@ let definition_lids d =
     | Tycon(_, _, tys) ->
         tys |> List.collect (function
                 | TyconAbbrev (id, _, _, _)
-                | TyconRecord (id, _, _, _)
+                | TyconRecord (id, _, _, _, _)
                 | TyconVariant(id, _, _, _) ->
                   [Ident.lid_of_ids [id]]
                 | _ -> [])
