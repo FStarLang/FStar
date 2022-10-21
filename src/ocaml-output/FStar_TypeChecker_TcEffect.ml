@@ -510,7 +510,7 @@ let (bind_combinator_kind :
                                                                let g_sig_bs =
                                                                  let uu___8 =
                                                                    FStar_TypeChecker_Env.inst_tscheme_with
-                                                                    m_sig_ts
+                                                                    n_sig_ts
                                                                     [
                                                                     FStar_Syntax_Syntax.U_name
                                                                     u_b] in
