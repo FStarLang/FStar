@@ -284,46 +284,6 @@ let malloc_ptr
   return p
 
 [@@noextract_to "krml"]
-let malloca_of_list'
-  (#elt: Type)
-  (init: list elt)
-  (n: U32.t)
-  : ST (array elt)
-       emp
-       (fun a -> pts_to a P.full_perm (Seq.seq_of_list init))
-       (alloca_of_list_pre init /\ U32.v n == List.Tot.length init)
-       (fun a ->
-         length a == U32.v n /\
-         base_len (base (ptr_of a)) == U32.v n
-       )
-=
-  let c : carrier elt (U32.v n) = mk_carrier (U32.v n) 0 (Seq.seq_of_list init) P.full_perm in
-  let base : ref (carrier elt (U32.v n)) (pcm elt (U32.v n)) = R.alloc c in
-  let p = {
-    base_len = Ghost.hide n;
-    base = base;
-    offset = 0;
-  }
-  in
-  let a = (| p, Ghost.hide (U32.v n) |) in
-  change_r_pts_to
-    base c
-    (ptr_of a).base c;
-  intro_pts_to a P.full_perm (Seq.seq_of_list init);
-  return a
-
-#set-options "--ide_id_info_off"
-
-let malloca_of_list_ptr init =
-  let n:U32.t = U32.uint_to_t (List.Tot.length init) in
-  let a = malloca_of_list' init n in
-  let (| p, _ |) = a in
-  rewrite
-    (pts_to _ _ _)
-    (pts_to (| p, Ghost.hide (List.Tot.length init) |) _ _);
-  return p
-
-[@@noextract_to "krml"]
 let free0
   (#elt: Type)
   (#s: Ghost.erased (Seq.seq elt))
@@ -582,7 +542,7 @@ let ptr_shift
 
 let ghost_split
   #_ #_ #x #p a i
-=
+= 
   elim_pts_to a p x;
   mk_carrier_split
     (U32.v (ptr_of a).base_len)
