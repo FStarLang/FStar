@@ -7232,10 +7232,12 @@ let (fresh_effect_repr_en :
             FStar_Compiler_Effect.op_Bar_Greater uu___
               (fun ed ->
                  let uu___1 =
+                   FStar_Syntax_Util.effect_sig_ts
+                     ed.FStar_Syntax_Syntax.signature in
+                 let uu___2 =
                    FStar_Compiler_Effect.op_Bar_Greater ed
                      FStar_Syntax_Util.get_eff_repr in
-                 fresh_effect_repr env r eff_name
-                   ed.FStar_Syntax_Syntax.signature uu___1 u a_tm)
+                 fresh_effect_repr env r eff_name uu___1 uu___2 u a_tm)
 let (layered_effect_indices_as_binders :
   FStar_TypeChecker_Env.env ->
     FStar_Compiler_Range.range ->

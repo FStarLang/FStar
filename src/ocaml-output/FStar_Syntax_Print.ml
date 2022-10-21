@@ -1524,7 +1524,12 @@ let (eff_decl_to_string' :
                          binders_to_string " " ed.FStar_Syntax_Syntax.binders in
                        let uu___10 =
                          let uu___11 =
-                           tscheme_to_string ed.FStar_Syntax_Syntax.signature in
+                           let uu___12 =
+                             FStar_Compiler_Effect.op_Bar_Greater
+                               ed.FStar_Syntax_Syntax.signature
+                               FStar_Syntax_Util.effect_sig_ts in
+                           FStar_Compiler_Effect.op_Bar_Greater uu___12
+                             tscheme_to_string in
                          let uu___12 =
                            let uu___13 =
                              eff_combinators_to_string

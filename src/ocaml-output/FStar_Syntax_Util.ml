@@ -2241,11 +2241,8 @@ let (attr_substitute : FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax)
   =
   let uu___ =
     let uu___1 =
-      let uu___2 =
-        FStar_Ident.lid_of_path ["FStar"; "Pervasives"; "Substitute"]
-          FStar_Compiler_Range.dummyRange in
-      FStar_Syntax_Syntax.lid_as_fv uu___2 FStar_Syntax_Syntax.delta_constant
-        FStar_Pervasives_Native.None in
+      FStar_Syntax_Syntax.lid_as_fv FStar_Parser_Const.attr_substitute_lid
+        FStar_Syntax_Syntax.delta_constant FStar_Pervasives_Native.None in
     FStar_Syntax_Syntax.Tm_fvar uu___1 in
   FStar_Syntax_Syntax.mk uu___ FStar_Compiler_Range.dummyRange
 let (exp_true_bool : FStar_Syntax_Syntax.term) =
@@ -3665,6 +3662,8 @@ let eqopt :
         match (x, y) with
         | (FStar_Pervasives_Native.Some x1, FStar_Pervasives_Native.Some y1)
             -> e x1 y1
+        | (FStar_Pervasives_Native.None, FStar_Pervasives_Native.None) ->
+            true
         | uu___ -> false
 let (debug_term_eq : Prims.bool FStar_Compiler_Effect.ref) =
   FStar_Compiler_Util.mk_ref false
@@ -4515,6 +4514,25 @@ let (smt_lemma_as_forall :
                    fun out -> mk_forall u b.FStar_Syntax_Syntax.binder_bv out)
               binders uu___1 body in
           quant
+let (effect_sig_ts :
+  FStar_Syntax_Syntax.effect_signature -> FStar_Syntax_Syntax.tscheme) =
+  fun sig1 ->
+    match sig1 with
+    | FStar_Syntax_Syntax.Layered_eff_sig (uu___, ts) -> ts
+    | FStar_Syntax_Syntax.WP_eff_sig ts -> ts
+let (apply_eff_sig :
+  (FStar_Syntax_Syntax.tscheme -> FStar_Syntax_Syntax.tscheme) ->
+    FStar_Syntax_Syntax.effect_signature ->
+      FStar_Syntax_Syntax.effect_signature)
+  =
+  fun f ->
+    fun uu___ ->
+      match uu___ with
+      | FStar_Syntax_Syntax.Layered_eff_sig (n, ts) ->
+          let uu___1 = let uu___2 = f ts in (n, uu___2) in
+          FStar_Syntax_Syntax.Layered_eff_sig uu___1
+      | FStar_Syntax_Syntax.WP_eff_sig ts ->
+          let uu___1 = f ts in FStar_Syntax_Syntax.WP_eff_sig uu___1
 let (eff_decl_of_new_effect :
   FStar_Syntax_Syntax.sigelt -> FStar_Syntax_Syntax.eff_decl) =
   fun se ->

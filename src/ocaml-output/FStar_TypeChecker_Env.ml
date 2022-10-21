@@ -2843,6 +2843,9 @@ let (effect_signature :
           | FStar_Pervasives_Native.Some us -> inst_tscheme_with ts us in
         match se.FStar_Syntax_Syntax.sigel with
         | FStar_Syntax_Syntax.Sig_new_effect ne ->
+            let sig_ts =
+              FStar_Syntax_Util.effect_sig_ts
+                ne.FStar_Syntax_Syntax.signature in
             (check_effect_is_not_a_template ne rng;
              (match us_opt with
               | FStar_Pervasives_Native.None -> ()
@@ -2850,8 +2853,7 @@ let (effect_signature :
                   if
                     (FStar_Compiler_List.length us) <>
                       (FStar_Compiler_List.length
-                         (FStar_Pervasives_Native.fst
-                            ne.FStar_Syntax_Syntax.signature))
+                         (FStar_Pervasives_Native.fst sig_ts))
                   then
                     let uu___2 =
                       let uu___3 =
@@ -2863,8 +2865,7 @@ let (effect_signature :
                             let uu___7 =
                               FStar_Compiler_Util.string_of_int
                                 (FStar_Compiler_List.length
-                                   (FStar_Pervasives_Native.fst
-                                      ne.FStar_Syntax_Syntax.signature)) in
+                                   (FStar_Pervasives_Native.fst sig_ts)) in
                             let uu___8 =
                               let uu___9 =
                                 FStar_Compiler_Util.string_of_int
@@ -2879,7 +2880,7 @@ let (effect_signature :
                     failwith uu___2
                   else ());
              (let uu___2 =
-                let uu___3 = inst_ts us_opt ne.FStar_Syntax_Syntax.signature in
+                let uu___3 = inst_ts us_opt sig_ts in
                 (uu___3, (se.FStar_Syntax_Syntax.sigrng)) in
               FStar_Pervasives_Native.Some uu___2))
         | FStar_Syntax_Syntax.Sig_effect_abbrev
@@ -4301,7 +4302,12 @@ let wp_sig_aux :
               "Impossible: declaration for monad %s not found" uu___2 in
           failwith uu___1
       | FStar_Pervasives_Native.Some (md, _q) ->
-          let uu___1 = inst_tscheme md.FStar_Syntax_Syntax.signature in
+          let uu___1 =
+            let uu___2 =
+              FStar_Compiler_Effect.op_Bar_Greater
+                md.FStar_Syntax_Syntax.signature
+                FStar_Syntax_Util.effect_sig_ts in
+            FStar_Compiler_Effect.op_Bar_Greater uu___2 inst_tscheme in
           (match uu___1 with
            | (uu___2, s) ->
                let s1 = FStar_Syntax_Subst.compress s in
