@@ -232,7 +232,7 @@ let bind_combinator_kind (env:env)
   // same thing for g, first get binders in g's signature
 
   let g_sig_bs =
-    let _, sig = Env.inst_tscheme_with m_sig_ts [U_name u_b] in
+    let _, sig = Env.inst_tscheme_with n_sig_ts [U_name u_b] in
     sig |> U.arrow_formals
         |> fst
         |> (fun (b::bs) ->
