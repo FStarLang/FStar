@@ -18,6 +18,12 @@ val compute_term_type_handle_guards (g:Env.env) (e:term) (must_tot:bool)
                                     (discharge_guard: Env.env -> typ -> bool)
   : either typ error
 
+val open_binders_in_term (g:Env.env) (bs:binders) (t:term)
+  : Env.env & binders & term
+
+val open_binders_in_comp (g:Env.env) (bs:binders) (c:comp)
+  : Env.env & binders & comp
+
 (* for unit testing *)
 val check_term_equality (g:Env.env) (t0 t1:typ)
   : either (option typ) error

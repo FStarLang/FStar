@@ -1348,7 +1348,7 @@ and check' (g:env) (e:term)
                           (fun _ -> no_guard (check_subtype g' (Some e) t_sc t)) ;!
             let pat_sc_eq = U.mk_eq2 u_sc t_sc sc e in
             let this_path_condition = U.mk_conj path_condition pat_sc_eq in
-            let g' = push_hypothesis g this_path_condition in 
+            let g' = push_hypothesis g' this_path_condition in 
             let! eff_br, tbr =
               with_binders bs us
                 (weaken
@@ -1987,6 +1987,16 @@ let compute_term_type_handle_guards g e must_tot gh =
   | Inl (None, _) -> failwith "Impossible: Success must return some effect and type"
   | Inl (_, Some _) -> failwith "Impossible: All guards should have been handled already"
   | Inr err -> Inr err
+
+let open_binders_in_term (env:Env.env) (bs:binders) (t:term) =
+  let g = initial_env env None in
+  let g', bs, t = open_term_binders g bs t in
+  g'.tcenv, bs, t
+
+let open_binders_in_comp (env:Env.env) (bs:binders) (c:comp) =
+  let g = initial_env env None in
+  let g', bs, c = open_comp_binders g bs c in
+  g'.tcenv, bs, c
 
 let check_term_equality g t0 t1
   = let g = initial_env g None in

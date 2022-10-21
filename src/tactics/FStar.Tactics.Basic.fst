@@ -127,6 +127,7 @@ let goal_with_type g t
   : goal
   = let u = g.goal_ctx_uvar in
     set_uvar_expected_typ u t;
+    Monad.register_goal (goal_env g) u;
     g
 
     
@@ -278,12 +279,12 @@ let proc_guard = proc_guard' true
 let tc_unifier_solved_implicits env (must_tot:bool) (allow_guards:bool) (uvs:list ctx_uvar) : tac unit =
   let aux (u:ctx_uvar) : tac unit =
     let dec = UF.find_decoration u.ctx_uvar_head in
-    // match dec.uvar_decoration_should_check with
-    // | Allow_untyped _ ->
-    //   ret ()
-    // | Already_checked -> 
-    //   ret ()
-    // | _ ->
+    match dec.uvar_decoration_should_check with
+    | Allow_untyped _ ->
+      ret ()
+    | Already_checked -> 
+      ret ()
+    | _ ->
       match UF.find u.ctx_uvar_head with
       | None ->
         ret () //not solved yet
@@ -300,7 +301,7 @@ let tc_unifier_solved_implicits env (must_tot:bool) (allow_guards:bool) (uvs:lis
         | Inl (Some g) ->
           let guard = { Env.trivial_guard with guard_f = NonTrivial g } in
           let guard = Rel.simplify_guard env guard in
-          if false //disable this for now
+          if Options.disallow_unification_guards ()
           && not allow_guards
           && NonTrivial? guard.guard_f
           then (
@@ -935,6 +936,7 @@ let t_apply (uopt:bool) (only_match:bool) (tc_resolved_uvars:bool) (tm:term) : t
     let! ps = get in
     let! goal = cur_goal in
     let e = goal_env goal in
+    Monad.register_goal e goal.goal_ctx_uvar;    
     if_verbose
       (fun () -> BU.print3 "t_apply: tm = %s\nt_apply: goal = %s\nenv.gamma=%s\n"
                         (Print.term_to_string tm)
@@ -1015,6 +1017,7 @@ let t_apply_lemma (noinst:bool) (noinst_lhs:bool)
     in
     let! goal = cur_goal in
     let env = goal_env goal in
+    Monad.register_goal env goal.goal_ctx_uvar;
     let! tm, t, guard = __tc env tm in
     let bs, comp = U.arrow_formals_comp t in
     match lemma_or_sq comp with
@@ -1309,6 +1312,7 @@ let guard_formula (g:guard_t) : term =
 
 let _t_trefl (allow_guards:bool) (l : term) (r : term) : tac unit =
   bind cur_goal (fun g ->
+  Monad.register_goal (goal_env g) g.goal_ctx_uvar;  
   let attempt (l : term) (r : term) : tac bool =
     bind (let must_tot = true in
           do_unify_maybe_guards allow_guards must_tot (goal_env g) l r) (function

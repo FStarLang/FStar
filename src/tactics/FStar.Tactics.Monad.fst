@@ -42,6 +42,9 @@ module Rel     = FStar.TypeChecker.Rel
 
 let register_goal (env:Env.env) (uv:S.ctx_uvar)  =
       let env = {env with gamma = uv.ctx_uvar_gamma } in
+      if Env.debug env <| Options.Other "Core"
+      ||  Env.debug env <| Options.Other "RegisterGoal"
+      then BU.print1 "Registering goal for %s\n" (Print.ctx_uvar_to_string uv);
       match FStar.TypeChecker.Core.compute_term_type_handle_guards env (U.ctx_uvar_typ uv) false (fun _ _ -> true) 
       with
       | Inl _ -> ()
