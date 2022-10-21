@@ -750,6 +750,21 @@ let struct_peel (#a:eqtype) (#b: a -> Type u#b) (p:(k:a -> pcm (b k))) (k:a)
 = Classical.forall_intro_2 (fun k -> is_unit (p k));
   assert (xs `feq` op (prod_pcm p) (struct_without_field p k xs) (field_to_struct_f p k (xs k)))
 
+let g_addr_of_struct_field
+  (#opened: _)
+  (#a:eqtype) (#b: a -> Type u#b) (#p:(k:a -> pcm (b k)))
+  (r: ref (prod_pcm p)) (k:a)
+  (xs: Ghost.erased (restricted_t a b))
+: A.SteelGhostT unit opened
+    (r `pts_to` xs)
+    (fun _ ->
+      (r `pts_to` struct_without_field p k xs) `star` 
+      (ref_focus r (struct_field p k) `pts_to` Ghost.reveal xs k))
+= struct_peel p k xs;
+  split r xs (struct_without_field p k xs) (field_to_struct_f p k (Ghost.reveal xs k));
+  A.change_equal_slprop (r `pts_to` _) (r `pts_to` _);
+  gfocus r (struct_field p k) (field_to_struct_f p k (Ghost.reveal xs k)) (Ghost.reveal xs k)
+
 let addr_of_struct_field
   (#a:eqtype) (#b: a -> Type u#b) (#p:(k:a -> pcm (b k)))
   (r: ref (prod_pcm p)) (k:a)
@@ -802,19 +817,19 @@ let struct_unpeel (#a:eqtype) (#b: a -> Type u#b) (p:(k:a -> pcm (b k))) (k:a)
   assert (struct_with_field p k x xs `feq` op (prod_pcm p) xs (field_to_struct_f p k x))
 
 let unaddr_of_struct_field
+  (#opened: _)
   (#a:eqtype) (#b: a -> Type u#b) (#p:(k:a -> pcm (b k))) (k:a)
   (r': ref (p k)) (r: ref (prod_pcm p))
-  (xs: Ghost.erased (restricted_t a b)) (x: Ghost.erased (b k))
-: Steel unit
+  (xs: restricted_t a b) (x: b k)
+: A.SteelGhost unit opened
     ((r `pts_to` xs) `star` (r' `pts_to` x))
     (fun s -> r `pts_to` struct_with_field p k x xs)
-    (requires fun _ -> r' == ref_focus r (struct_field p k) /\ Ghost.reveal xs k == one (p k))
+    (requires fun _ -> r' == ref_focus r (struct_field p k) /\ xs k == one (p k))
     (ensures fun _ _ _ -> True)
 = unfocus r' r (struct_field p k) x;
   gather r xs (field_to_struct_f p k x);
   struct_unpeel p k x xs;
-  A.change_equal_slprop (r `pts_to` _) (r `pts_to` _);
-  A.return ()
+  A.change_equal_slprop (r `pts_to` _) (r `pts_to` _)
 
 (*
 let struct_view_to_view_prop
