@@ -294,7 +294,7 @@ let lift_pure_ifst
 /// Now, we have what we need to turn it into a layered effect
 reifiable reflectable
 layered_effect {
-  IFST : a:Type -> s:Type0 -> wp:wp_t s a -> Effect
+  IFST : a:Type -> [@@@ effect_param] s:Type0 -> wp:wp_t s a -> Effect
   with repr         = irepr;
        return       = ireturn;
        bind         = ibind;
