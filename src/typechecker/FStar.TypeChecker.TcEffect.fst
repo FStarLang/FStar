@@ -211,9 +211,11 @@ let bind_combinator_kind (env:env)
     sig |> U.arrow_formals
         |> fst
         |> (fun (a::bs) ->
-           bs |> List.splitAt num_effect_params
-              |> snd
-              |> SS.subst_binders [NT (a.binder_bv, a_b.binder_bv |> S.bv_to_name)]) in
+           let sig_bs, bs = List.splitAt num_effect_params bs in
+           let ss = List.fold_left2 (fun ss sig_b b ->
+             ss@[NT (sig_b.binder_bv, b.binder_bv |> S.bv_to_name)]
+           ) [NT (a.binder_bv, a_b.binder_bv |> S.bv_to_name)] sig_bs eff_params_bs in
+           bs |> SS.subst_binders ss) in
 
   // f_bs are the binders in k's type, potentially corresponding to the f_sig_bs
   
@@ -226,7 +228,11 @@ let bind_combinator_kind (env:env)
   // If the sorts of f_bs and f_sig_bs are NOT the same,
   //   the bind combinator is definitely not standard
   //
-  
+
+  debug (BU.format2 "f_sig_bs: %s and f_bs: %s"
+           (Print.binders_to_string ";" f_sig_bs)
+           (Print.binders_to_string ";" f_bs));
+
   let? f_bs_kinds = eq_binders f_sig_bs f_bs in
 
   debug "f binders match";
@@ -234,13 +240,15 @@ let bind_combinator_kind (env:env)
   // same thing for g, first get binders in g's signature
 
   let g_sig_bs =
-    let _, sig = Env.inst_tscheme_with n_sig_ts [U_name u_b] in
+    let _, sig = Env.inst_tscheme_with m_sig_ts [U_name u_b] in
     sig |> U.arrow_formals
-        |> fst 
+        |> fst
         |> (fun (b::bs) ->
-           bs |> List.splitAt num_effect_params
-              |> snd
-              |> SS.subst_binders [NT (b.binder_bv, b_b.binder_bv |> S.bv_to_name)]) in
+           let sig_bs, bs = List.splitAt num_effect_params bs in
+           let ss = List.fold_left2 (fun ss sig_b b ->
+             ss@[NT (sig_b.binder_bv, b.binder_bv |> S.bv_to_name)]
+           ) [NT (b.binder_bv, b_b.binder_bv |> S.bv_to_name)] sig_bs eff_params_bs in
+           bs |> SS.subst_binders ss) in
 
   // g_bs are binders in k's type potentially corresponding to g_sig_bs
 

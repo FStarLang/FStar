@@ -743,6 +743,7 @@ let standard_indexed_bind_substs env
   (binder_kinds:list indexed_effect_binder_kind)
   (ct1:comp_typ) (b:option bv) (ct2:comp_typ)
   (r1:Range.range)
+  (num_effect_params:int)
   (has_range_binders:bool)
 
   : list subst_elt & guard_t & list term =
@@ -758,16 +759,31 @@ let standard_indexed_bind_substs env
     List.splitAt 2 binder_kinds |> snd,
     [NT (a_b.binder_bv, ct1.result_typ); NT (b_b.binder_bv, ct2.result_typ)] in
 
+  let bs, binder_kinds, subst, guard, args1, args2 =
+    if num_effect_params = 0
+    then bs, binder_kinds, subst, Env.trivial_guard, ct1.effect_args, ct2.effect_args
+    else let eff_params_bs, bs = List.splitAt num_effect_params bs in
+         let _, binder_kinds = List.splitAt num_effect_params binder_kinds in
+         let param_args1, args1 = List.splitAt num_effect_params ct1.effect_args in
+         let param_args2, args2 = List.splitAt num_effect_params ct2.effect_args in
+         let g = List.fold_left2 (fun g (arg1, _) (arg2, _) ->
+           Env.conj_guard g
+             (Rel.layered_effect_teq env arg1 arg2 (Some "effect param bind"))
+         ) Env.trivial_guard param_args1 param_args2 in
+         let param_subst = List.map2 (fun b (arg, _) ->
+           NT (b.binder_bv, arg)) eff_params_bs param_args1 in
+         bs, binder_kinds, subst@param_subst, g, args1, args2 in
+
   let bs, binder_kinds, subst =
-    let m_num_effect_args = List.length ct1.effect_args in
+    let m_num_effect_args = List.length args1 in
     let f_bs, bs = List.splitAt m_num_effect_args bs in
-    let f_subst = List.map2 (fun f_b (arg:S.arg) -> NT (f_b.binder_bv, fst arg)) f_bs ct1.effect_args in
+    let f_subst = List.map2 (fun f_b (arg:S.arg) -> NT (f_b.binder_bv, fst arg)) f_bs args1 in
     bs,
     List.splitAt m_num_effect_args binder_kinds |> snd,
     subst@f_subst in
 
   let bs, subst, guard, guard_uvars_tms =
-    let n_num_effect_args = List.length ct2.effect_args in
+    let n_num_effect_args = List.length args2 in
     let g_bs, bs = List.splitAt n_num_effect_args bs in
     let g_bs_kinds = List.splitAt n_num_effect_args binder_kinds |> fst in
 
@@ -776,7 +792,7 @@ let standard_indexed_bind_substs env
       | None -> S.null_bv ct1.result_typ
       | Some x -> x in
 
-    let g_subst, guard, guard_uvars_tms =
+    let g_subst, g_guard, guard_uvars_tms =
       List.fold_left2 (fun (ss, g, g_tms) (g_b, g_b_kind) (arg:S.arg) ->
         if g_b_kind = Substitution_binder
         then begin
@@ -805,11 +821,11 @@ let standard_indexed_bind_substs env
           g_tms@guard_uv_tms
         end
         else failwith "Impossible (standard bind with unexpected binder kind)"
-      ) ([], Env.trivial_guard, []) (List.zip g_bs g_bs_kinds) ct2.effect_args in
+      ) ([], Env.trivial_guard, []) (List.zip g_bs g_bs_kinds) args2 in
 
     bs,
     subst@g_subst,
-    guard,
+    Env.conj_guard guard g_guard,
     guard_uvars_tms in
 
   let bs =
@@ -837,7 +853,6 @@ let standard_indexed_bind_substs env
     guard_uvars_tms@g_uv_tms in
 
   subst, guard, guard_uvar_tms
-
 
 let ad_hoc_indexed_bind_substs env
   (guard_indexed_effect_uvars:bool)
@@ -1067,7 +1082,9 @@ and mk_indexed_bind env
   (m:lident) (n:lident) (p:lident) (bind_t:tscheme)
   (bind_combinator_kind:indexed_effect_combinator_kind)
   (ct1:comp_typ) (b:option bv) (ct2:comp_typ)
-  (flags:list cflag) (r1:Range.range) (has_range_binders:bool)
+  (flags:list cflag) (r1:Range.range)
+  (num_effect_params:int)
+  (has_range_binders:bool)
   : comp * guard_t =
 
   if Env.debug env <| Options.Other "LayeredEffects" then
@@ -1107,7 +1124,7 @@ and mk_indexed_bind env
            bind_t_bs ct1 b ct2 r1 has_range_binders
     else let Standard_combinator binder_kinds = bind_combinator_kind in
          standard_indexed_bind_substs env guard_indexed_effect_uvars m_ed n_ed p_ed
-           bind_t_bs binder_kinds ct1 b ct2 r1 has_range_binders in
+           bind_t_bs binder_kinds ct1 b ct2 r1 num_effect_params has_range_binders in
 
   let bind_ct = bind_c |> SS.subst_comp subst |> U.comp_to_comp_typ in
 
