@@ -1353,10 +1353,7 @@ let resugar_eff_decl' env r q ed =
   in
   let eff_name = ident_of_lid ed.mname in
   let eff_binders, eff_typ =
-    let sig_ts =
-      match ed.signature with
-      | Layered_eff_sig (_, ts)
-      | WP_eff_sig ts -> ts in
+    let sig_ts = U.effect_sig_ts ed.signature in
     SS.open_term ed.binders (sig_ts |> snd) in
   let eff_binders =
     if (Options.print_implicits())

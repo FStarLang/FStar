@@ -2304,6 +2304,10 @@ let effect_sig_ts (sig:effect_signature) : tscheme =
   | Layered_eff_sig (_, ts)
   | WP_eff_sig ts -> ts
 
+let apply_eff_sig (f:tscheme -> tscheme) = function
+  | Layered_eff_sig (n, ts) -> Layered_eff_sig (n, f ts)
+  | WP_eff_sig ts -> WP_eff_sig (f ts)
+
 let eff_decl_of_new_effect (se:sigelt) :eff_decl =
   match se.sigel with
   | Sig_new_effect ne -> ne

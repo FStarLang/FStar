@@ -3349,7 +3349,7 @@ let fresh_effect_repr env r eff_name signature_ts repr_ts_opt u a_tm =
 let fresh_effect_repr_en env r eff_name u a_tm =
   eff_name
   |> Env.get_effect_decl env
-  |> (fun ed -> fresh_effect_repr env r eff_name ed.signature (ed |> U.get_eff_repr)  u a_tm)
+  |> (fun ed -> fresh_effect_repr env r eff_name (U.effect_sig_ts ed.signature) (ed |> U.get_eff_repr)  u a_tm)
 
 let layered_effect_indices_as_binders env r eff_name sig_ts u a_tm =
   let _, sig_tm = Env.inst_tscheme_with sig_ts [u] in

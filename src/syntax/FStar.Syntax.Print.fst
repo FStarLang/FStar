@@ -766,10 +766,6 @@ let eff_combinators_to_string = function
   | DM4F_eff combs -> wp_eff_combinators_to_string combs
   | Layered_eff combs -> layered_eff_combinators_to_string combs
 
-let eff_sig_to_string = function
-  | Layered_eff_sig (_, ts)
-  | WP_eff_sig ts -> tscheme_to_string ts
-
 let eff_decl_to_string' for_free r q ed =
  if not (Options.ugly()) then
     let d = Resugar.resugar_eff_decl r q ed in
@@ -790,7 +786,7 @@ let eff_decl_to_string' for_free r q ed =
          lid_to_string ed.mname;
          enclose_universes <| univ_names_to_string ed.univs;
          binders_to_string " " ed.binders;
-         ed.signature |> U.effect_sig_ts |> tscheme_to_string;
+         ed.signature |> SU.effect_sig_ts |> tscheme_to_string;
          eff_combinators_to_string ed.combinators;
          actions_to_string ed.actions]
 

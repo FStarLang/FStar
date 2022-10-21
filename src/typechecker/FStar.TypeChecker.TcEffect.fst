@@ -900,7 +900,7 @@ let validate_indexed_effect_lift_shape (env:env)
       (Env.push_binders env (a_b::rest_bs))
       r
       m_eff_name
-      m_ed.signature
+      (U.effect_sig_ts m_ed.signature)
       (U.get_eff_repr m_ed)
       (U_name u)
       (a_b.binder_bv |> S.bv_to_name) in
@@ -911,7 +911,7 @@ let validate_indexed_effect_lift_shape (env:env)
       (Env.push_binders env (a_b::rest_bs))
       r
       n_eff_name
-      n_ed.signature
+      (U.effect_sig_ts n_ed.signature)
       (U.get_eff_repr n_ed)
       (U_name u)
       (a_b.binder_bv |> S.bv_to_name) in
@@ -945,7 +945,8 @@ let validate_indexed_effect_lift_shape (env:env)
 
   let k = k |> N.remove_uvar_solutions env |> SS.compress in
 
-  let lopt = lift_combinator_kind env m_eff_name m_ed.signature (U.get_eff_repr m_ed)
+  let lopt = lift_combinator_kind env m_eff_name (U.effect_sig_ts m_ed.signature)
+    (U.get_eff_repr m_ed)
     u k in
 
   let kind =
@@ -1008,9 +1009,13 @@ Errors.with_ctx (BU.format1 "While checking layered effect definition `%s`" (str
    *
    * The binders become the effect indices
    *)
-  let signature =
-    let r = (snd ed.signature).pos in
-    let sig_us, sig_t, sig_ty = check_and_gen "signature" 1 ed.signature in
+  let num_effect_params, signature =
+    let n, sig_ts =
+      match ed.signature with
+      | Layered_eff_sig (n, ts) -> n, ts
+      | _ -> failwith "Impossible (tc_layered_eff_decl with a wp effect sig" in
+    let r = (snd sig_ts).pos in
+    let sig_us, sig_t, sig_ty = check_and_gen "signature" 1 sig_ts in
 
     let us, t = SS.open_univ_vars sig_us sig_t in
     let env = Env.push_univ_vars env0 us in
@@ -1021,7 +1026,7 @@ Errors.with_ctx (BU.format1 "While checking layered effect definition `%s`" (str
     let k = U.arrow bs (S.mk_Total S.teff) in  //U.arrow does closing over bs
     let g_eq = Rel.teq env t k in
     Rel.force_trivial_guard env g_eq;
-    sig_us, SS.close_univ_vars us (k |> N.remove_uvar_solutions env), sig_ty in
+    n, (sig_us, SS.close_univ_vars us (k |> N.remove_uvar_solutions env), sig_ty) in
 
   log_combinator "signature" signature;
 
@@ -1639,7 +1644,7 @@ Errors.with_ctx (BU.format1 "While checking layered effect definition `%s`" (str
   }) in
 
   { ed with
-    signature     = (let us, t, _ = signature in (us, t));
+    signature     = Layered_eff_sig (num_effect_params, (let us, t, _ = signature in (us, t)));
     combinators   = combinators;
     actions       = List.map (tc_action env0) ed.actions },
   reify_sigelt
@@ -1695,7 +1700,7 @@ Errors.with_ctx (BU.format1 "While checking effect definition `%s`" (string_of_l
       us, SS.subst (SS.shift_subst (List.length us) ed_bs_subst) t in
 
     { ed with
-      signature     =op ed.signature;
+      signature     = U.apply_eff_sig op ed.signature;
       combinators   = U.apply_eff_combinators op ed.combinators;
       actions       = List.map (fun a ->
         { a with action_defn = snd (op (a.action_univs, a.action_defn));
@@ -1744,7 +1749,7 @@ Errors.with_ctx (BU.format1 "While checking effect definition `%s`" (string_of_l
             t.pos
   in
 
-  let signature = check_and_gen' "signature" 1 None ed.signature None in
+  let signature = check_and_gen' "signature" 1 None (U.effect_sig_ts ed.signature) None in
 
   if Env.debug env0 <| Options.Other "ED" then
     BU.print1 "Typechecked signature: %s\n" (Print.tscheme_to_string signature);
@@ -1753,7 +1758,7 @@ Errors.with_ctx (BU.format1 "While checking effect definition `%s`" (string_of_l
    * AR: return a fresh (in the sense of fresh universe) instance of a:Type and wp sort (closed with the returned a) 
    *)
   let fresh_a_and_wp () =
-    let fail t = raise_error (Err.unexpected_signature_for_monad env ed.mname t) (snd ed.signature).pos in
+    let fail t = raise_error (Err.unexpected_signature_for_monad env ed.mname t) (ed.signature |> U.effect_sig_ts |> snd).pos in
     //instantiate with fresh universes
     let _, signature = Env.inst_tscheme signature in
     match (SS.compress signature).n with
@@ -2049,7 +2054,7 @@ Errors.with_ctx (BU.format1 "While checking effect definition `%s`" (string_of_l
 
   //univs and binders have already been set
   let ed = { ed with
-    signature     =cl signature;
+    signature     = WP_eff_sig (cl signature);
     combinators   = combinators;
     actions       =
       List.map (fun a ->
@@ -2366,7 +2371,9 @@ let tc_polymonadic_bind env (m:lident) (n:lident) (p:lident) (ts:S.tscheme)
   let m_ed, n_ed, p_ed = Env.get_effect_decl env m, Env.get_effect_decl env n, Env.get_effect_decl env p in
 
   let k, kind = validate_indexed_effect_bind_shape env m n p
-    m_ed.signature n_ed.signature p_ed.signature
+    (U.effect_sig_ts m_ed.signature)
+    (U.effect_sig_ts n_ed.signature)
+    (U.effect_sig_ts p_ed.signature)
     (U.get_eff_repr m_ed) (U.get_eff_repr n_ed) (U.get_eff_repr p_ed)
     us
     ty
@@ -2405,7 +2412,8 @@ let tc_polymonadic_subcomp env0 (m:lident) (n:lident) (ts:S.tscheme) =
   let m_ed, n_ed = Env.get_effect_decl env m, Env.get_effect_decl env n in
 
   let k, kind = validate_indexed_effect_subcomp_shape env m n
-    m_ed.signature n_ed.signature
+    (U.effect_sig_ts m_ed.signature)
+    (U.effect_sig_ts n_ed.signature)
     (U.get_eff_repr m_ed) (U.get_eff_repr n_ed)
     (List.hd us)
     ty

@@ -3172,8 +3172,9 @@ let rec desugar_effect env d (quals: qualifiers) (is_layered:bool) eff_name eff_
     let mname       =qualify env0 eff_name in
     let qualifiers  =List.map (trans_qual d.drange (Some mname)) quals in
     let dummy_tscheme = [], S.tun in
-    let combinators =
+    let eff_sig, combinators =
       if for_free then
+        WP_eff_sig ([], eff_t),
         DM4F_eff ({
           ret_wp = dummy_tscheme;
           bind_wp = dummy_tscheme;
@@ -3198,6 +3199,7 @@ let rec desugar_effect env d (quals: qualifiers) (is_layered:bool) eff_name eff_
          * AR: if subcomp or if_then_else are not specified, then fill in dummy_tscheme
          *     typechecker will fill in an appropriate default
          *)
+        Layered_eff_sig (0, ([], eff_t)),
         Layered_eff ({
           l_repr = lookup "repr" |> to_comb;
           l_return = lookup "return" |> to_comb;
@@ -3211,6 +3213,7 @@ let rec desugar_effect env d (quals: qualifiers) (is_layered:bool) eff_name eff_
         })
       else
         let rr = BU.for_some (function S.Reifiable | S.Reflectable _ -> true | _ -> false) qualifiers in
+        WP_eff_sig ([], eff_t),
         Primitive_eff ({
           ret_wp = lookup "return_wp";
           bind_wp = lookup "bind_wp";
@@ -3230,7 +3233,7 @@ let rec desugar_effect env d (quals: qualifiers) (is_layered:bool) eff_name eff_
       cattributes = [];
       univs = [];
       binders = binders;
-      signature = [], eff_t;
+      signature = eff_sig;
       combinators = combinators;
       actions = actions;
       eff_attrs = List.map (desugar_term env) attrs;
@@ -3291,7 +3294,7 @@ and desugar_redefine_effect env d trans_qual quals eff_name eff_binders defn =
             cattributes   = cattributes;
             univs         = ed.univs;
             binders       = binders;
-            signature     = sub ed.signature;
+            signature     = U.apply_eff_sig sub ed.signature;
             combinators   = apply_eff_combinators sub ed.combinators;
             actions       = List.map (fun action ->
                 let nparam = List.length action.action_params in
@@ -4011,7 +4014,7 @@ let add_modul_to_env (m:Syntax.modul)
             { ed with
               univs         = [];
               binders       = Subst.close_binders binders;
-              signature     = erase_tscheme ed.signature;
+              signature     = U.apply_eff_sig erase_tscheme ed.signature;
               combinators   = apply_eff_combinators erase_tscheme ed.combinators;
               actions       = List.map erase_action ed.actions
           }

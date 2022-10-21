@@ -478,10 +478,7 @@ let effect_signature (us_opt:option universes) (se:sigelt) rng : option ((univer
   in
   match se.sigel with
   | Sig_new_effect ne ->
-    let sig_ts =
-      match ne.signature with
-      | Layered_eff_sig (_, ts)
-      | WP_eff_sig ts -> ts in
+    let sig_ts = U.effect_sig_ts ne.signature in
     check_effect_is_not_a_template ne rng;
     (match us_opt with
      | None -> ()
@@ -1072,7 +1069,7 @@ let wp_sig_aux decls m =
      *     i.e. implicitly there was an assumption that ed.binders is empty
      *     now when signature is itself a tscheme, this just translates to the following
      *)
-    let _, s = inst_tscheme md.signature in
+    let _, s = md.signature |> U.effect_sig_ts |> inst_tscheme in
     let s = Subst.compress s in
     match md.binders, s.n with
       | [], Tm_arrow([b; wp_b], c) when (is_teff (comp_result c)) -> b.binder_bv, wp_b.binder_bv.sort

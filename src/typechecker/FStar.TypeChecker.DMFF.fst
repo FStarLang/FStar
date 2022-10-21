@@ -1351,7 +1351,7 @@ let cps_and_elaborate (env:FStar.TypeChecker.Env.env) (ed:S.eff_decl)
     S.eff_decl *
     option S.sigelt =
   // Using [STInt: a:Type -> Effect] as an example...
-  let effect_binders_un, signature_un = SS.open_term ed.binders (snd ed.signature) in
+  let effect_binders_un, signature_un = SS.open_term ed.binders (ed.signature |> U.effect_sig_ts |> snd) in
   // [binders] is the empty list (for [ST (h: heap)], there would be one binder)
   let effect_binders, env, _ = TcTerm.tc_tparams env effect_binders_un in
   // [signature] is a:Type -> effect
@@ -1673,9 +1673,8 @@ let cps_and_elaborate (env:FStar.TypeChecker.Env.env) (ed:S.eff_decl)
         bind_repr = Some ([], apply_close bind_elab) })
     | _ -> failwith "Impossible! For a DM4F effect combinators must be in DM4f_eff" in
 
-
   let ed = { ed with
-    signature = ([], close effect_binders effect_signature);
+    signature = WP_eff_sig ([], close effect_binders effect_signature);
     binders = close_binders effect_binders;
     combinators = ed_combs;
     actions = actions; // already went through apply_close
