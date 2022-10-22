@@ -41,6 +41,8 @@ let size_div x y = x `U32.div` y
 
 let size_le x y = x `U32.lte` y
 
+let size_lt x y = x `U32.lt` y
+
 let ptrdiff_t = I64.t
 
 let ptrdiff_v x =
