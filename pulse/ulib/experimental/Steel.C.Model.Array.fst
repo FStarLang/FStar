@@ -518,18 +518,30 @@ let gather
   R.gather _ (array_pcm_carrier_of_seq r.len s1) _;
   intro_pts_to0 r _ s
 
+let sub
+  (#t: Type)
+  (#p: pcm t)
+  (a: array p)
+  (offset: size_t)
+  (len: Ghost.erased size_t)
+: Pure (array p)
+    (requires (size_v offset + size_v len <= size_v a.len))
+    (ensures (fun _ -> True))
+= {
+    a with
+    offset = a.offset `size_add` offset;
+    len = len;
+  }
+
 let split_l
   (#t: Type)
   (#p: pcm t)
   (a: array p)
-  (i: size_t)
+  (i: Ghost.erased size_t)
 : Pure (array p)
     (requires (size_v i <= size_v a.len))
     (ensures (fun _ -> True))
-= {
-    a with
-    len = i;
-  }
+= sub a zero_size i
 
 let split_r
   (#t: Type)
@@ -539,35 +551,33 @@ let split_r
 : Pure (array p)
     (requires (size_v i <= size_v a.len))
     (ensures (fun _ -> True))
-= {
-    a with
-    offset = a.offset `size_add` i;
-    len = a.len `size_sub` i;
-  }
+= sub a i (a.len `size_sub` i)
 
 #push-options "--z3rlimit 64"
 
 #restart-solver
-let g_split_lhs
+let g_focus_sub
   (#opened: _)
   (#t: Type)
   (#p: pcm t)
   (a: array p)
   (s: Seq.seq t)
-  (i: size_t)
-  (sq: squash (size_v i <= size_v a.len /\ Seq.length s == size_v a.len))
+  (offset: size_t)
+  (len: size_t)
+  (sq: squash (size_v offset + size_v len <= size_v a.len /\ Seq.length s == size_v a.len))
   (sl: Seq.lseq t (size_v a.len))
+  (al: array p)
+  (sl0: Seq.lseq t (size_v len))
 : A.SteelGhost unit opened
     (pts_to a sl)
-    (fun _ -> pts_to (split_l a i) (Seq.slice s 0 (size_v i)))
+    (fun _ -> pts_to al sl0)
     (fun _ ->
-      let sl0 = Seq.slice s 0 (size_v i) in
-      sl == sl0 `Seq.append` Seq.create (size_v a.len - size_v i) (one p)
+      al == sub a offset len /\
+      sl0 `Seq.equal` Seq.slice s (size_v offset) (size_v offset + size_v len) /\
+      sl `Seq.equal` (Seq.create (size_v offset) (one p) `Seq.append` sl0 `Seq.append` Seq.create (size_v a.len - size_v len - size_v offset) (one p))
     )
     (fun _ _ _ -> True)
 =
-  let sl0 = Seq.slice s 0 (size_v i) in
-  let al = split_l a i in
   substruct_compose
     (array_elements_pcm p a.base_len)
     (array_elements_pcm p a.len)
@@ -575,8 +585,8 @@ let g_split_lhs
     (large_to_small_index a.base_len a.offset a.len ())
     ()
     (array_elements_pcm p al.len)
-    (small_to_large_index a.len zero_size al.len ())
-    (large_to_small_index a.len zero_size al.len ())
+    (small_to_large_index a.len offset al.len ())
+    (large_to_small_index a.len offset al.len ())
     ()
     (small_to_large_index al.base_len al.offset al.len ())
     (large_to_small_index al.base_len al.offset al.len ())
@@ -585,8 +595,8 @@ let g_split_lhs
     substruct
       (array_elements_pcm p a.len)
       (array_elements_pcm p al.len)
-      (small_to_large_index a.len zero_size al.len ())
-      (large_to_small_index a.len zero_size al.len ())
+      (small_to_large_index a.len offset al.len ())
+      (large_to_small_index a.len offset al.len ())
       ()
   in
   let xl = array_pcm_carrier_of_seq a.len sl in
@@ -601,77 +611,17 @@ let g_split_lhs
       substruct_to_struct_f
         (array_elements_pcm p a.len)
         (array_elements_pcm p al.len)
-        (small_to_large_index a.len zero_size al.len ())
-        (large_to_small_index a.len zero_size al.len ())
+        (small_to_large_index a.len offset al.len ())
+        (large_to_small_index a.len offset al.len ())
         ()
         xl0
   );
   gfocus (ref_of_array a) cl _ xl0;
-  intro_pts_to2 (split_l a i) (ref_focus (ref_of_array a) cl) _ (Seq.slice s 0 (size_v i))
-
-#restart-solver
-let g_split_rhs
-  (#opened: _)
-  (#t: Type)
-  (#p: pcm t)
-  (a: array p)
-  (s: Seq.seq t)
-  (i: size_t)
-  (sq: squash (size_v i <= size_v a.len /\ Seq.length s == size_v a.len))
-  (sr: Seq.lseq t (size_v a.len))
-: A.SteelGhost unit opened
-    (pts_to a sr)
-    (fun _ -> pts_to (split_r a i) (Seq.slice s (size_v i) (size_v a.len)))
-    (fun _ ->
-      let sr0 = Seq.slice s (size_v i) (size_v a.len) in
-      sr == Seq.create (size_v i) (one p) `Seq.append` sr0
-    )
-    (fun _ _ _ -> True)
-=
-  let sr0 = Seq.slice s (size_v i) (size_v a.len) in
-  let ar = split_r a i in
-  substruct_compose
-    (array_elements_pcm p a.base_len)
-    (array_elements_pcm p a.len)
-    (small_to_large_index a.base_len a.offset a.len ())
-    (large_to_small_index a.base_len a.offset a.len ())
-    ()
-    (array_elements_pcm p ar.len)
-    (small_to_large_index a.len i ar.len ())
-    (large_to_small_index a.len i ar.len ())
-    ()
-    (small_to_large_index ar.base_len ar.offset ar.len ())
-    (large_to_small_index ar.base_len ar.offset ar.len ())
-    ();
-  let cr = 
-    substruct
-      (array_elements_pcm p a.len)
-      (array_elements_pcm p ar.len)
-      (small_to_large_index a.len i ar.len ())
-      (large_to_small_index a.len i ar.len ())
-      ()
-  in
-  let xr = array_pcm_carrier_of_seq a.len sr in
-  elim_pts_to a sr;
-  ref_focus_comp
-    a.base
-    (ref_of_array_conn a)
-    cr;
-  let xr0 = array_pcm_carrier_of_seq ar.len sr0 in
-  assert (
-    xr `feq` 
-      substruct_to_struct_f
-        (array_elements_pcm p a.len)
-        (array_elements_pcm p ar.len)
-        (small_to_large_index a.len i ar.len ())
-        (large_to_small_index a.len i ar.len ())
-        ()
-        xr0
-  );
-  gfocus (ref_of_array a) cr _ xr0;
-  intro_pts_to2 (split_r a i) (ref_focus (ref_of_array a) cr) _ (Seq.slice s (size_v i) (size_v a.len))
+  intro_pts_to2 al (ref_focus (ref_of_array a) cl) _ sl0
 
 #pop-options
+
+#push-options "--z3rlimit 16"
 
 #restart-solver
 let g_split
@@ -692,5 +642,7 @@ let g_split
   let sr0 = Seq.slice s (size_v i) (size_v a.len) in
   let sr : Seq.lseq t (size_v a.len) = Seq.create (size_v i) (one p) `Seq.append` sr0 in
   share a s sl sr;
-  g_split_lhs a s i sq sl;
-  g_split_rhs a s i sq sr
+  g_focus_sub a s zero_size i () sl (split_l a i) (Seq.slice s 0 (size_v i));
+  g_focus_sub a s i (a.len `size_sub` i) () sr (split_r a i) (Seq.slice s (size_v i) (size_v a.len))
+
+#pop-options
