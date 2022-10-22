@@ -1,7 +1,9 @@
 FSTAR_HOME=../..
 
-FSTAR_FILES=$(wildcard *.fst)
-# FSTAR_FILES+= Coercions1Phase.fst
+FSTAR_FILES = $(wildcard *.fst)
+
+# This consumes too much memory (8GB), so disable it for now.
+FSTAR_FILES := $(filter-out SteelIntroExists.fst, $(FSTAR_FILES))
 
 all: verify-all ns-resolution
 
@@ -14,16 +16,9 @@ verify-all: $(CACHE_DIR) $(addsuffix .checked, $(addprefix $(CACHE_DIR)/, $(FSTA
             Erasable.ml-cmp \
 	    InlineForExtractionNormRequest.ml-cmp \
 	    MachineIntegerConstants.ml-cmp \
-            $(CACHE_DIR)/Coercions1Phase.fst.checked \
 	    ExtractMutRecTypesAndTerms.ml-cmp
 
 $(CACHE_DIR)/MustEraseForExtraction.fst.checked: OTHERFLAGS += --warn_error @318
-
-$(CACHE_DIR)/Coercions1Phase.fst.checked: OTHERFLAGS +=
-$(CACHE_DIR)/Coercions1Phase.fst.checked: Coercions1Phase.fst
-
-Coercions1Phase.fst: Coercions.fst
-	sed 's/module Coercions/module Coercions1Phase/' < $< > $@
 
 %.ml: %.fst
 	$(FSTAR) --codegen OCaml --extract $(subst .ml,, $@) $^

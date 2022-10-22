@@ -160,8 +160,8 @@ let (pack_universe :
 let rec (inspect_ln :
   FStar_Syntax_Syntax.term -> FStar_Reflection_Data.term_view) =
   fun t ->
-    let t1 = FStar_Syntax_Util.unascribe t in
-    let t2 = FStar_Syntax_Util.unlazy_emb t1 in
+    let t1 = FStar_Syntax_Util.unlazy_emb t in
+    let t2 = FStar_Syntax_Subst.compress t1 in
     match t2.FStar_Syntax_Syntax.n with
     | FStar_Syntax_Syntax.Tm_meta (t3, uu___) -> inspect_ln t3
     | FStar_Syntax_Syntax.Tm_name bv -> FStar_Reflection_Data.Tv_Var bv
@@ -182,6 +182,12 @@ let rec (inspect_ln :
              FStar_Reflection_Data.Tv_UInst (fv, us)
          | uu___ ->
              failwith "Reflection::inspect_ln: uinst for a non-fvar node")
+    | FStar_Syntax_Syntax.Tm_ascribed
+        (t3, (FStar_Pervasives.Inl ty, tacopt, eq), _elid) ->
+        FStar_Reflection_Data.Tv_AscribedT (t3, ty, tacopt, eq)
+    | FStar_Syntax_Syntax.Tm_ascribed
+        (t3, (FStar_Pervasives.Inr cty, tacopt, eq), elid) ->
+        FStar_Reflection_Data.Tv_AscribedC (t3, cty, tacopt, eq)
     | FStar_Syntax_Syntax.Tm_app (hd, []) ->
         failwith "inspect_ln: empty arguments on Tm_app"
     | FStar_Syntax_Syntax.Tm_app (hd, args) ->
@@ -1102,17 +1108,215 @@ let (env_open_modules :
 let (binders_of_env :
   FStar_TypeChecker_Env.env -> FStar_Syntax_Syntax.binders) =
   fun e -> FStar_TypeChecker_Env.all_binders e
-let (term_eq :
+let eqopt :
+  'uuuuu .
+    unit ->
+      ('uuuuu -> 'uuuuu -> Prims.bool) ->
+        'uuuuu FStar_Pervasives_Native.option ->
+          'uuuuu FStar_Pervasives_Native.option -> Prims.bool
+  = fun uu___ -> FStar_Syntax_Util.eqopt
+let eqlist :
+  'uuuuu .
+    unit ->
+      ('uuuuu -> 'uuuuu -> Prims.bool) ->
+        'uuuuu Prims.list -> 'uuuuu Prims.list -> Prims.bool
+  = fun uu___ -> FStar_Syntax_Util.eqlist
+let eqprod :
+  'uuuuu 'uuuuu1 .
+    unit ->
+      ('uuuuu -> 'uuuuu -> Prims.bool) ->
+        ('uuuuu1 -> 'uuuuu1 -> Prims.bool) ->
+          ('uuuuu * 'uuuuu1) -> ('uuuuu * 'uuuuu1) -> Prims.bool
+  = fun uu___ -> FStar_Syntax_Util.eqprod
+let rec (term_eq :
   FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.term -> Prims.bool) =
   fun t1 ->
     fun t2 ->
-      let uu___ = FStar_Syntax_Util.un_uinst t1 in
-      let uu___1 = FStar_Syntax_Util.un_uinst t2 in
-      FStar_Syntax_Util.term_eq uu___ uu___1
-let (term_to_string : FStar_Syntax_Syntax.term -> Prims.string) =
-  fun t -> FStar_Syntax_Print.term_to_string t
-let (comp_to_string : FStar_Syntax_Syntax.comp -> Prims.string) =
-  fun c -> FStar_Syntax_Print.comp_to_string c
+      let uu___ =
+        let uu___1 = inspect_ln t1 in
+        let uu___2 = inspect_ln t2 in (uu___1, uu___2) in
+      match uu___ with
+      | (FStar_Reflection_Data.Tv_Var bv1, FStar_Reflection_Data.Tv_Var bv2)
+          -> bv_eq bv1 bv2
+      | (FStar_Reflection_Data.Tv_BVar bv1, FStar_Reflection_Data.Tv_BVar
+         bv2) -> bv_eq bv1 bv2
+      | (FStar_Reflection_Data.Tv_FVar fv1, FStar_Reflection_Data.Tv_FVar
+         fv2) -> FStar_Syntax_Syntax.fv_eq fv1 fv2
+      | (FStar_Reflection_Data.Tv_UInst (fv1, us1),
+         FStar_Reflection_Data.Tv_UInst (fv2, us2)) ->
+          (FStar_Syntax_Syntax.fv_eq fv1 fv2) && (univs_eq us1 us2)
+      | (FStar_Reflection_Data.Tv_App (h1, arg1),
+         FStar_Reflection_Data.Tv_App (h2, arg2)) ->
+          (term_eq h1 h2) && (arg_eq arg1 arg2)
+      | (FStar_Reflection_Data.Tv_Abs (b1, t11), FStar_Reflection_Data.Tv_Abs
+         (b2, t21)) -> (binder_eq b1 b2) && (term_eq t11 t21)
+      | (FStar_Reflection_Data.Tv_Arrow (b1, c1),
+         FStar_Reflection_Data.Tv_Arrow (b2, c2)) ->
+          (binder_eq b1 b2) && (comp_eq c1 c2)
+      | (FStar_Reflection_Data.Tv_Type u1, FStar_Reflection_Data.Tv_Type u2)
+          -> univ_eq u1 u2
+      | (FStar_Reflection_Data.Tv_Refine (b1, t11),
+         FStar_Reflection_Data.Tv_Refine (b2, t21)) ->
+          (term_eq b1.FStar_Syntax_Syntax.sort b2.FStar_Syntax_Syntax.sort)
+            && (term_eq t11 t21)
+      | (FStar_Reflection_Data.Tv_Const c1, FStar_Reflection_Data.Tv_Const
+         c2) -> const_eq c1 c2
+      | (FStar_Reflection_Data.Tv_Uvar (n1, uv1),
+         FStar_Reflection_Data.Tv_Uvar (n2, uv2)) -> n1 = n2
+      | (FStar_Reflection_Data.Tv_Let (r1, ats1, bv1, m1, n1),
+         FStar_Reflection_Data.Tv_Let (r2, ats2, bv2, m2, n2)) ->
+          ((((r1 = r2) && ((eqlist ()) term_eq ats1 ats2)) &&
+              (term_eq bv1.FStar_Syntax_Syntax.sort
+                 bv2.FStar_Syntax_Syntax.sort))
+             && (term_eq m1 m2))
+            && (term_eq n1 n2)
+      | (FStar_Reflection_Data.Tv_Match (h1, an1, brs1),
+         FStar_Reflection_Data.Tv_Match (h2, an2, brs2)) ->
+          ((term_eq h1 h2) && ((eqopt ()) match_ret_asc_eq an1 an2)) &&
+            ((eqlist ()) branch_eq brs1 brs2)
+      | (FStar_Reflection_Data.Tv_AscribedT (e1, t11, topt1, eq1),
+         FStar_Reflection_Data.Tv_AscribedT (e2, t21, topt2, eq2)) ->
+          (((term_eq e1 e2) && (term_eq t11 t21)) &&
+             ((eqopt ()) term_eq topt1 topt2))
+            && (eq1 = eq2)
+      | (FStar_Reflection_Data.Tv_AscribedC (e1, c1, topt1, eq1),
+         FStar_Reflection_Data.Tv_AscribedC (e2, c2, topt2, eq2)) ->
+          (((term_eq e1 e2) && (comp_eq c1 c2)) &&
+             ((eqopt ()) term_eq topt1 topt2))
+            && (eq1 = eq2)
+      | (FStar_Reflection_Data.Tv_Unknown, FStar_Reflection_Data.Tv_Unknown)
+          -> true
+      | uu___1 -> false
+and (arg_eq :
+  FStar_Reflection_Data.argv -> FStar_Reflection_Data.argv -> Prims.bool) =
+  fun arg1 ->
+    fun arg2 ->
+      let uu___ = arg1 in
+      match uu___ with
+      | (a1, aq1) ->
+          let uu___1 = arg2 in
+          (match uu___1 with
+           | (a2, aq2) -> (term_eq a1 a2) && (aqual_eq aq1 aq2))
+and (aqual_eq :
+  FStar_Reflection_Data.aqualv -> FStar_Reflection_Data.aqualv -> Prims.bool)
+  =
+  fun aq1 ->
+    fun aq2 ->
+      match (aq1, aq2) with
+      | (FStar_Reflection_Data.Q_Implicit, FStar_Reflection_Data.Q_Implicit)
+          -> true
+      | (FStar_Reflection_Data.Q_Explicit, FStar_Reflection_Data.Q_Explicit)
+          -> true
+      | (FStar_Reflection_Data.Q_Meta t1, FStar_Reflection_Data.Q_Meta t2) ->
+          term_eq t1 t2
+      | uu___ -> false
+and (binder_eq :
+  FStar_Syntax_Syntax.binder -> FStar_Syntax_Syntax.binder -> Prims.bool) =
+  fun b1 ->
+    fun b2 ->
+      let uu___ = inspect_binder b1 in
+      match uu___ with
+      | (bv1, (bq1, bats1)) ->
+          let uu___1 = inspect_binder b2 in
+          (match uu___1 with
+           | (bv2, (bq2, bats2)) ->
+               ((binding_bv_eq bv1 bv2) && (aqual_eq bq1 bq2)) &&
+                 ((eqlist ()) term_eq bats1 bats2))
+and (binding_bv_eq :
+  FStar_Syntax_Syntax.bv -> FStar_Syntax_Syntax.bv -> Prims.bool) =
+  fun bv1 ->
+    fun bv2 ->
+      term_eq bv1.FStar_Syntax_Syntax.sort bv2.FStar_Syntax_Syntax.sort
+and (bv_eq : FStar_Syntax_Syntax.bv -> FStar_Syntax_Syntax.bv -> Prims.bool)
+  =
+  fun bv1 ->
+    fun bv2 -> bv1.FStar_Syntax_Syntax.index = bv2.FStar_Syntax_Syntax.index
+and (comp_eq :
+  FStar_Syntax_Syntax.comp -> FStar_Syntax_Syntax.comp -> Prims.bool) =
+  fun c1 ->
+    fun c2 ->
+      let uu___ =
+        let uu___1 = inspect_comp c1 in
+        let uu___2 = inspect_comp c2 in (uu___1, uu___2) in
+      match uu___ with
+      | (FStar_Reflection_Data.C_Total (t1, u1, dec1),
+         FStar_Reflection_Data.C_Total (t2, u2, dec2)) ->
+          ((term_eq t1 t2) && (univ_eq u1 u2)) &&
+            ((eqlist ()) term_eq dec1 dec2)
+      | (FStar_Reflection_Data.C_GTotal (t1, u1, dec1),
+         FStar_Reflection_Data.C_GTotal (t2, u2, dec2)) ->
+          ((term_eq t1 t2) && (univ_eq u1 u2)) &&
+            ((eqlist ()) term_eq dec1 dec2)
+      | (FStar_Reflection_Data.C_Lemma (pre1, post1, pats1),
+         FStar_Reflection_Data.C_Lemma (pre2, post2, pats2)) ->
+          ((term_eq pre1 pre2) && (term_eq post1 post2)) &&
+            (term_eq pats1 pats2)
+      | (FStar_Reflection_Data.C_Eff (us1, name1, t1, args1),
+         FStar_Reflection_Data.C_Eff (us2, name2, t2, args2)) ->
+          (((univs_eq us1 us2) && (name1 = name2)) && (term_eq t1 t2)) &&
+            ((eqlist ()) arg_eq args1 args2)
+      | uu___1 -> false
+and (match_ret_asc_eq :
+  FStar_Syntax_Syntax.match_returns_ascription ->
+    FStar_Syntax_Syntax.match_returns_ascription -> Prims.bool)
+  = fun a1 -> fun a2 -> (eqprod ()) binder_eq ascription_eq a1 a2
+and (ascription_eq :
+  FStar_Syntax_Syntax.ascription ->
+    FStar_Syntax_Syntax.ascription -> Prims.bool)
+  =
+  fun asc1 ->
+    fun asc2 ->
+      let uu___ = asc1 in
+      match uu___ with
+      | (a1, topt1, eq1) ->
+          let uu___1 = asc2 in
+          (match uu___1 with
+           | (a2, topt2, eq2) ->
+               ((match (a1, a2) with
+                 | (FStar_Pervasives.Inl t1, FStar_Pervasives.Inl t2) ->
+                     term_eq t1 t2
+                 | (FStar_Pervasives.Inr c1, FStar_Pervasives.Inr c2) ->
+                     comp_eq c1 c2)
+                  && ((eqopt ()) term_eq topt1 topt2))
+                 && (eq1 = eq2))
+and (branch_eq :
+  FStar_Reflection_Data.branch -> FStar_Reflection_Data.branch -> Prims.bool)
+  = fun c1 -> fun c2 -> (eqprod ()) pattern_eq term_eq c1 c2
+and (pattern_eq :
+  FStar_Reflection_Data.pattern ->
+    FStar_Reflection_Data.pattern -> Prims.bool)
+  =
+  fun p1 ->
+    fun p2 ->
+      match (p1, p2) with
+      | (FStar_Reflection_Data.Pat_Constant c1,
+         FStar_Reflection_Data.Pat_Constant c2) -> const_eq c1 c2
+      | (FStar_Reflection_Data.Pat_Cons (fv1, us1, subpats1),
+         FStar_Reflection_Data.Pat_Cons (fv2, us2, subpats2)) ->
+          ((FStar_Syntax_Syntax.fv_eq fv1 fv2) &&
+             ((eqopt ()) ((eqlist ()) univ_eq) us1 us2))
+            &&
+            ((eqlist ())
+               ((eqprod ()) pattern_eq (fun b1 -> fun b2 -> b1 = b2))
+               subpats1 subpats2)
+      | (FStar_Reflection_Data.Pat_Var bv1, FStar_Reflection_Data.Pat_Var
+         bv2) -> binding_bv_eq bv1 bv2
+      | (FStar_Reflection_Data.Pat_Wild bv1, FStar_Reflection_Data.Pat_Wild
+         bv2) -> binding_bv_eq bv1 bv2
+      | (FStar_Reflection_Data.Pat_Dot_Term topt1,
+         FStar_Reflection_Data.Pat_Dot_Term topt2) ->
+          (eqopt ()) term_eq topt1 topt2
+      | uu___ -> false
+and (const_eq :
+  FStar_Reflection_Data.vconst -> FStar_Reflection_Data.vconst -> Prims.bool)
+  = fun c1 -> fun c2 -> c1 = c2
+and (univ_eq :
+  FStar_Syntax_Syntax.universe -> FStar_Syntax_Syntax.universe -> Prims.bool)
+  = fun u1 -> fun u2 -> FStar_Syntax_Util.eq_univs u1 u2
+and (univs_eq :
+  FStar_Syntax_Syntax.universe Prims.list ->
+    FStar_Syntax_Syntax.universe Prims.list -> Prims.bool)
+  = fun us1 -> fun us2 -> (eqlist ()) univ_eq us1 us2
 let (implode_qn : Prims.string Prims.list -> Prims.string) =
   fun ns -> FStar_String.concat "." ns
 let (explode_qn : Prims.string -> Prims.string Prims.list) =

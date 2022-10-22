@@ -2430,7 +2430,11 @@ let (resugar_typ :
                          resugar_datacon_as_fields [] current_datacons in
                      let uu___4 =
                        let uu___5 = FStar_Ident.ident_of_lid tylid in
-                       (uu___5, bs2, FStar_Pervasives_Native.None, fields) in
+                       let uu___6 =
+                         FStar_Compiler_List.map (resugar_term' env)
+                           se.FStar_Syntax_Syntax.sigattrs in
+                       (uu___5, bs2, FStar_Pervasives_Native.None, uu___6,
+                         fields) in
                      FStar_Parser_AST.TyconRecord uu___4
                    else
                      (let resugar_datacon constructors se1 =
@@ -2442,7 +2446,10 @@ let (resugar_typ :
                               let uu___8 =
                                 let uu___9 = resugar_term' env term in
                                 FStar_Pervasives_Native.Some uu___9 in
-                              (uu___7, uu___8, false) in
+                              let uu___9 =
+                                FStar_Compiler_List.map (resugar_term' env)
+                                  se1.FStar_Syntax_Syntax.sigattrs in
+                              (uu___7, uu___8, false, uu___9) in
                             c :: constructors
                         | uu___5 -> failwith "unexpected" in
                       let constructors =

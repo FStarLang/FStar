@@ -96,9 +96,23 @@ let tc_assume (env:env) (ts:tscheme) (r:Range.range) :tscheme =
   //AR: this might seem same as tc_declare_typ but come prop, this will change
   tc_type_common env ts (U.type_u () |> fst) r
 
+let tc_decl_attributes env se =
+  // [Substitute] (defined in Pervasives), is added as attribute by
+  // TcInductive when a type has no projector, and this happens for
+  // some types (see TcInductive.early_prims_inductives) that are
+  // defined before [Substitute] even exists.
+  // Thus the partition of attributes below.
+  let blacklisted_attrs, other_attrs =
+    if lid_exists env PC.attr_substitute_lid
+    then ([], se.sigattrs)
+    else partition ((=) attr_substitute) se.sigattrs
+  in {se with sigattrs = blacklisted_attrs @ tc_attributes env other_attrs }
+
 let tc_inductive' env ses quals attrs lids =
     if Env.debug env Options.Low then
         BU.print1 ">>>>>>>>>>>>>>tc_inductive %s\n" (FStar.Common.string_of_list Print.sigelt_to_string ses);
+
+    let ses = List.map (tc_decl_attributes env) ses in
 
     let sig_bndle, tcs, datas = TcInductive.check_inductive_well_typedness env ses quals lids in
     (* we have a well-typed inductive;
@@ -311,38 +325,11 @@ let proc_check_with (attrs:list attribute) (kont : unit -> 'a) : 'a =
 
 let handle_postprocess_with_attr (env:Env.env) (ats:list attribute)
     : (list attribute * option term)
-=
-    (* We find postprocess_for_extraction_with attrs, which we don't
-     * have to handle here, but we typecheck the tactic
-     * and elaborate it. *)
-    let tc_and_elab_tactic (env:Env.env) (tau:term) : term =
-        let tau, _, g_tau = tc_tactic t_unit t_unit env tau in
-        Rel.force_trivial_guard env g_tau;
-        tau
-    in
-    let ats =
-      match U.extract_attr' PC.postprocess_extr_with ats with
-      | None -> ats
-      | Some (ats, [tau, None]) ->
-        let tau = tc_and_elab_tactic env tau in
-        (* Further, give it a spin through deep_compress to remove uvar nodes,
-         * since this term will be picked up at extraction time when
-         * the UF graph is blown away. *)
-        let tau = SS.deep_compress tau in
-        (U.mk_app (S.tabbrev PC.postprocess_extr_with) [tau, None])
-           :: ats
-      | Some (ats, [tau, None]) ->
-        Errors.log_issue (Env.get_range env)
-                         (Errors.Warning_UnrecognizedAttribute,
-                            BU.format1 "Ill-formed application of `%s`"
-                                       (string_of_lid PC.postprocess_extr_with));
-        ats
-    in
-    (* Now extract the postprocess_with, if any, and also check it *)
+=   (* Extract the postprocess_with *)
     match U.extract_attr' PC.postprocess_with ats with
     | None -> ats, None
     | Some (ats, [tau, None]) ->
-        ats, Some (tc_and_elab_tactic env tau)
+        ats, Some tau
     | Some (ats, args) ->
         Errors.log_issue (Env.get_range env)
                          (Errors.Warning_UnrecognizedAttribute,
@@ -618,6 +605,14 @@ let tc_sig_let env r se lbs lids : list sigelt * list sigelt * Env.env =
 
 let tc_decl' env0 se: list sigelt * list sigelt * Env.env =
   let env = env0 in
+  let se = match se.sigel with
+         // Disable typechecking attributes for [Sig_fail] bundles, so
+         // that typechecking is wrapped in [Errors.catch_errors]
+         // below, thus allowing using [expect_failure] to mark that
+         // an attribute will fail typechecking.
+         | Sig_fail _ -> se
+         | _ -> tc_decl_attributes env se
+  in
   TcUtil.check_sigelt_quals env se;
   proc_check_with se.sigattrs (fun () ->
   let r = se.sigrng in
