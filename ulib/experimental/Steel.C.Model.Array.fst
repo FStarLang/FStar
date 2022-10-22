@@ -646,3 +646,107 @@ let g_split
   g_focus_sub a s i (a.len `size_sub` i) () sr (split_r a i) (Seq.slice s (size_v i) (size_v a.len))
 
 #pop-options
+
+#push-options "--z3rlimit 64"
+
+#restart-solver
+let unfocus_sub
+  (#opened: _)
+  (#t: Type)
+  (#p: pcm t)
+  (a: array p)
+  (s: Seq.seq t)
+  (offset: size_t)
+  (len: size_t)
+  (sq: squash (size_v offset + size_v len <= size_v a.len /\ Seq.length s == size_v a.len))
+  (sl: Seq.lseq t (size_v a.len))
+  (al: array p)
+  (sl0: Seq.lseq t (size_v len))
+: A.SteelGhost unit opened
+    (pts_to al sl0)
+    (fun _ -> pts_to a sl)
+    (fun _ ->
+      al == sub a offset len /\
+      sl0 `Seq.equal` Seq.slice s (size_v offset) (size_v offset + size_v len) /\
+      sl `Seq.equal` (Seq.create (size_v offset) (one p) `Seq.append` sl0 `Seq.append` Seq.create (size_v a.len - size_v len - size_v offset) (one p))
+    )
+    (fun _ _ _ -> True)
+=
+  substruct_compose
+    (array_elements_pcm p a.base_len)
+    (array_elements_pcm p a.len)
+    (small_to_large_index a.base_len a.offset a.len ())
+    (large_to_small_index a.base_len a.offset a.len ())
+    ()
+    (array_elements_pcm p al.len)
+    (small_to_large_index a.len offset al.len ())
+    (large_to_small_index a.len offset al.len ())
+    ()
+    (small_to_large_index al.base_len al.offset al.len ())
+    (large_to_small_index al.base_len al.offset al.len ())
+    ();
+  let cl = 
+    substruct
+      (array_elements_pcm p a.len)
+      (array_elements_pcm p al.len)
+      (small_to_large_index a.len offset al.len ())
+      (large_to_small_index a.len offset al.len ())
+      ()
+  in
+  let xl = array_pcm_carrier_of_seq a.len sl in
+  elim_pts_to al sl0;
+  ref_focus_comp
+    a.base
+    (ref_of_array_conn a)
+    cl;
+  let xl0 = array_pcm_carrier_of_seq al.len sl0 in
+  assert (
+    xl `feq` 
+      substruct_to_struct_f
+        (array_elements_pcm p a.len)
+        (array_elements_pcm p al.len)
+        (small_to_large_index a.len offset al.len ())
+        (large_to_small_index a.len offset al.len ())
+        ()
+        xl0
+  );
+  unfocus (ref_of_array al) (ref_of_array a) cl _;
+  intro_pts_to2 a (ref_of_array a) _ sl
+
+#pop-options
+
+#push-options "--z3rlimit 64 --fuel 0 --ifuel 1 --z3cliopt smt.arith.nl=false"
+
+#restart-solver
+let join
+  (#opened: _)
+  (#t: Type)
+  (#p: pcm t)
+  (a: array p)
+  (i: size_t)
+  (al ar: array p)
+  (sl0 sr0: Seq.seq t)
+: A.SteelGhost unit opened
+    (pts_to al sl0 `star` pts_to ar sr0)
+    (fun _ -> pts_to a (sl0 `Seq.append` sr0))
+    (fun _ ->
+      size_v i <= size_v a.len /\
+      al == split_l a i /\
+      ar == split_r a i
+    )
+    (fun _ _ _ -> True)
+=
+  pts_to_length al _;
+  pts_to_length ar _;
+  Classical.forall_intro (is_unit p);
+  let sl : Seq.lseq t (size_v a.len) = sl0 `Seq.append` Seq.create (size_v a.len - size_v i) (one p) in
+  let sr : Seq.lseq t (size_v a.len) = Seq.create (size_v i) (one p) `Seq.append` sr0 in
+  let s : Seq.lseq t (size_v a.len) = Seq.append sl0 sr0 in
+  assert (i == Ghost.reveal al.len);
+  assert (size_v zero_size == 0);
+  unfocus_sub a s zero_size i () sl al sl0;
+  unfocus_sub a s i (a.len `size_sub` i) () sr ar sr0;
+  gather a s sl sr;
+  A.change_equal_slprop (pts_to a _) (pts_to a _)
+
+#pop-options
