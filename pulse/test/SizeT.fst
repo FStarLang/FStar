@@ -17,7 +17,8 @@ let g () =
   let x = mk_checked 500000uL in
   x
 
-let main () : t * t =
+let main () : Int32.t =
   let x = f () in
   let y = g () in
-  x, y
+  if x = y then 1l
+  else 0l
