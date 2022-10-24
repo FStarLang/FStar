@@ -16,22 +16,22 @@ let v x =
 
 let size_v_inj (x1 x2: t) = ()
 
+let uint_to_t x =
+  U64.uint_to_t x
+
 let mk (x: U16.t) : Pure t
   (requires True)
   (ensures (fun y -> v y == U16.v x))
-= Cast.uint16_to_uint64 x
+= uint_to_t (U16.v x)
 
-let mk_checked x = x
+let mk_checked x = uint_to_t (U64.v x)
 
-let int_to_t x =
-  U64.uint_to_t x
+let fits_lte x y = ()
 
-let fits_le x y = ()
-
-let add x y = x `U64.add` y
-
-let sub x y = x `U64.sub` y
-
-let mul x y = x `U64.mul` y
-
-let le x y = x `U64.lte` y
+let add = U64.add
+let sub = U64.sub
+let mul = U64.mul
+let gt x y = U64.gt x y
+let gte x y = U64.gte x y
+let lt x y = U64.lt x y
+let lte x y = U64.lte x y
