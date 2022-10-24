@@ -17,14 +17,14 @@
 module Steel.ST.HigherArray
 
 /// C arrays of universe 1 elements.
-/// 
+///
 /// - Due to a limitation on the universe for selectors, no selector
 ///   version can be defined for universe 1.
 /// - Due to F* universes not being cumulative, arrays of universe 0
 ///   elements need to be defined in a separate module.
 
 module P = Steel.FractionalPermission
-module U32 = FStar.UInt32
+module US = FStar.SizeT
 
 open Steel.ST.Util
 
@@ -126,10 +126,10 @@ val pts_to_inj
 val malloc_ptr
   (#elt: Type)
   (x: elt)
-  (n: U32.t)
-: STT(a: ptr elt { base_len (base a) == U32.v n /\ offset a == 0 })
+  (n: US.t)
+: STT(a: ptr elt { base_len (base a) == US.v n /\ offset a == 0 })
     emp
-    (fun a -> pts_to (| a, Ghost.hide (U32.v n) |) P.full_perm (Seq.create (U32.v n) x))
+    (fun a -> pts_to (| a, Ghost.hide (US.v n) |) P.full_perm (Seq.create (US.v n) x))
 
 /// Allocating a new array of size n, where each cell is initialized
 /// with value x
@@ -142,17 +142,17 @@ inline_for_extraction
 let malloc
   (#elt: Type)
   (x: elt)
-  (n: U32.t)
+  (n: US.t)
 : ST (array elt)
     emp
-    (fun a -> pts_to a P.full_perm (Seq.create (U32.v n) x))
+    (fun a -> pts_to a P.full_perm (Seq.create (US.v n) x))
     (True)
     (fun a ->
-      length a == U32.v n /\
+      length a == US.v n /\
       is_full_array a
     )
 = let p = malloc_ptr x n in
-  let a : array elt = (| p, Ghost.hide (U32.v n) |) in
+  let a : array elt = (| p, Ghost.hide (US.v n) |) in
   rewrite
     (pts_to _ _ _)
     (pts_to a _ _);
@@ -224,12 +224,12 @@ val index_ptr
   (a: ptr t)
   (#len: Ghost.erased nat { offset a + len <= base_len (base a) })
   (#s: Ghost.erased (Seq.seq t))
-  (i: U32.t)
+  (i: US.t)
 : ST t
     (pts_to (| a, len |) p s)
     (fun _ -> pts_to (| a, len |) p s)
-    (U32.v i < Ghost.reveal len \/ U32.v i < Seq.length s)
-    (fun res -> Seq.length s == Ghost.reveal len /\ U32.v i < Seq.length s /\ res == Seq.index s (U32.v i))
+    (US.v i < Ghost.reveal len \/ US.v i < Seq.length s)
+    (fun res -> Seq.length s == Ghost.reveal len /\ US.v i < Seq.length s /\ res == Seq.index s (US.v i))
 
 inline_for_extraction
 [@@noextract_to "krml"] // primitive
@@ -237,12 +237,12 @@ let index
   (#t: Type) (#p: P.perm)
   (a: array t)
   (#s: Ghost.erased (Seq.seq t))
-  (i: U32.t)
+  (i: US.t)
 : ST t
     (pts_to a p s)
     (fun _ -> pts_to a p s)
-    (U32.v i < length a \/ U32.v i < Seq.length s)
-    (fun res -> Seq.length s == length a /\ U32.v i < Seq.length s /\ res == Seq.index s (U32.v i))
+    (US.v i < length a \/ US.v i < Seq.length s)
+    (fun res -> Seq.length s == length a /\ US.v i < Seq.length s /\ res == Seq.index s (US.v i))
 = let (| pt, len |) = a in
   rewrite
     (pts_to _ _ _)
@@ -261,11 +261,11 @@ val upd_ptr
   (a: ptr t)
   (#len: Ghost.erased nat { offset a + len <= base_len (base a) })
   (#s: Ghost.erased (Seq.seq t))
-  (i: U32.t { U32.v i < Seq.length s })
+  (i: US.t { US.v i < Seq.length s })
   (v: t)
 : STT unit
     (pts_to (| a, len |) P.full_perm s)
-    (fun res -> pts_to (| a, len |) P.full_perm (Seq.upd s (U32.v i) v))
+    (fun res -> pts_to (| a, len |) P.full_perm (Seq.upd s (US.v i) v))
 
 inline_for_extraction
 [@@noextract_to "krml"]
@@ -273,11 +273,11 @@ let upd
   (#t: Type)
   (a: array t)
   (#s: Ghost.erased (Seq.seq t))
-  (i: U32.t { U32.v i < Seq.length s })
+  (i: US.t { US.v i < Seq.length s })
   (v: t)
 : STT unit
     (pts_to a P.full_perm s)
-    (fun res -> pts_to a P.full_perm (Seq.upd s (U32.v i) v))
+    (fun res -> pts_to a P.full_perm (Seq.upd s (US.v i) v))
 = let (| pt, len |) = a in
   rewrite
     (pts_to _ _ _)
@@ -368,11 +368,11 @@ let join
 inline_for_extraction // this will extract to "let y = a"
 [@@noextract_to "krml"]
 let split_l (#elt: Type) (a: array elt)
-  (i: Ghost.erased U32.t)
+  (i: Ghost.erased US.t)
 : Pure (array elt)
-  (requires (U32.v i <= length a))
+  (requires (US.v i <= length a))
   (ensures (fun y -> True))
-= (| ptr_of a, Ghost.hide (U32.v i) |)
+= (| ptr_of a, Ghost.hide (US.v i) |)
 
 /// C pointer arithmetic to compute (p+off), shifting a pointer p by
 /// offset off.  TODO: replace this with a Ghost definition and a
@@ -382,31 +382,31 @@ let split_l (#elt: Type) (a: array elt)
 val ptr_shift
   (#elt: Type)
   (p: ptr elt)
-  (off: U32.t)
+  (off: US.t)
 : Pure (ptr elt)
-  (requires (offset p + U32.v off <= base_len (base p)))
+  (requires (offset p + US.v off <= base_len (base p)))
   (ensures (fun p' ->
     base p' == base p /\
-    offset p' == offset p + U32.v off
+    offset p' == offset p + US.v off
   ))
 
 let ptr_shift_zero
   (#elt: Type)
   (p: ptr elt)
 : Lemma
-  (ptr_shift p U32.zero == p)
-= ptr_base_offset_inj (ptr_shift p U32.zero) p
+  (ptr_shift p US.zero == p)
+= ptr_base_offset_inj (ptr_shift p US.zero) p
 
 /// Computing the right-hand-side part of splitting an array a at
 /// offset i.
 inline_for_extraction
 [@@noextract_to "krml"]
 let split_r (#elt: Type) (a: array elt)
-  (i: U32.t)
+  (i: US.t)
 : Pure (array elt)
-  (requires (U32.v i <= length a))
+  (requires (US.v i <= length a))
   (ensures (fun y -> merge_into (split_l a i) y a))
-= (| ptr_shift (ptr_of a) i, Ghost.hide (length a - U32.v i) |)
+= (| ptr_shift (ptr_of a) i, Ghost.hide (length a - US.v i) |)
 
 /// Splitting an array a at offset i, as a stateful lemma expressed in
 /// terms of split_l, split_r. This stateful lemma returns a proof
@@ -418,15 +418,15 @@ val ghost_split
   (#x: Seq.seq elt)
   (#p: P.perm)
   (a: array elt)
-  (i: U32.t)
-: STGhost (squash (U32.v i <= length a /\ U32.v i <= Seq.length x)) opened
+  (i: US.t)
+: STGhost (squash (US.v i <= length a /\ US.v i <= Seq.length x)) opened
     (pts_to a p x)
     (fun res ->
-      pts_to (split_l a i) p (Seq.slice x 0 (U32.v i)) `star`
-      pts_to (split_r a i) p (Seq.slice x (U32.v i) (Seq.length x)))
-    (U32.v i <= length a)
+      pts_to (split_l a i) p (Seq.slice x 0 (US.v i)) `star`
+      pts_to (split_r a i) p (Seq.slice x (US.v i) (Seq.length x)))
+    (US.v i <= length a)
     (fun res ->
-      x == Seq.append (Seq.slice x 0 (U32.v i)) (Seq.slice x (U32.v i) (Seq.length x))
+      x == Seq.append (Seq.slice x 0 (US.v i)) (Seq.slice x (US.v i) (Seq.length x))
     )
 
 /// NOTE: we could implement a STAtomicBase Unobservable "split"
@@ -439,34 +439,34 @@ val ghost_split
 let blit_post
 (#t:_) (s0 s1:Ghost.erased (Seq.seq t))
            (src:array t)
-           (idx_src: U32.t)
+           (idx_src: US.t)
            (dst:array t)
-           (idx_dst: U32.t)
-           (len: U32.t)
+           (idx_dst: US.t)
+           (len: US.t)
            (s1' : Seq.seq t)
 : Tot prop
-= 
-        U32.v idx_src + U32.v len <= length src /\
-        U32.v idx_dst + U32.v len <= length dst /\
+=
+        US.v idx_src + US.v len <= length src /\
+        US.v idx_dst + US.v len <= length dst /\
         length src == Seq.length s0 /\
         length dst == Seq.length s1 /\
         Seq.length s1' == Seq.length s1 /\
-        Seq.slice s1' (U32.v idx_dst) (U32.v idx_dst + U32.v len) `Seq.equal`
-          Seq.slice s0 (U32.v idx_src) (U32.v idx_src + U32.v len) /\
-        Seq.slice s1' 0 (U32.v idx_dst) `Seq.equal`
-          Seq.slice s1 0 (U32.v idx_dst) /\
-        Seq.slice s1' (U32.v idx_dst + U32.v len) (length dst) `Seq.equal`
-          Seq.slice s1 (U32.v idx_dst + U32.v len) (length dst)
+        Seq.slice s1' (US.v idx_dst) (US.v idx_dst + US.v len) `Seq.equal`
+          Seq.slice s0 (US.v idx_src) (US.v idx_src + US.v len) /\
+        Seq.slice s1' 0 (US.v idx_dst) `Seq.equal`
+          Seq.slice s1 0 (US.v idx_dst) /\
+        Seq.slice s1' (US.v idx_dst + US.v len) (length dst) `Seq.equal`
+          Seq.slice s1 (US.v idx_dst + US.v len) (length dst)
 
 [@@noextract_to "krml"] // primitive
 val blit_ptr (#t:_) (#p0:perm) (#s0 #s1:Ghost.erased (Seq.seq t))
            (src:ptr t)
            (len_src: Ghost.erased nat { offset src + len_src <= base_len (base src) })
-           (idx_src: U32.t)
+           (idx_src: US.t)
            (dst:ptr t)
            (len_dst: Ghost.erased nat { offset dst + len_dst <= base_len (base dst) })
-           (idx_dst: U32.t)
-           (len: U32.t)
+           (idx_dst: US.t)
+           (len: US.t)
   : ST unit
     (pts_to (| src, len_src |) p0 s0 `star` pts_to (| dst, len_dst |) full_perm s1)
     (fun _ -> pts_to (| src, len_src |) p0 s0  `star` exists_ (fun s1' ->
@@ -474,8 +474,8 @@ val blit_ptr (#t:_) (#p0:perm) (#s0 #s1:Ghost.erased (Seq.seq t))
       pure (blit_post s0 s1 (| src, len_src |) idx_src (| dst, len_dst |) idx_dst len s1')
     ))
     (
-        U32.v idx_src + U32.v len <= len_src /\
-        U32.v idx_dst + U32.v len <= len_dst
+        US.v idx_src + US.v len <= len_src /\
+        US.v idx_dst + US.v len <= len_dst
     )
     (fun _ -> True)
 
@@ -483,10 +483,10 @@ inline_for_extraction
 [@@noextract_to "krml"]
 let blit (#t:_) (#p0:perm) (#s0 #s1:Ghost.erased (Seq.seq t))
            (src:array t)
-           (idx_src: U32.t)
+           (idx_src: US.t)
            (dst:array t)
-           (idx_dst: U32.t)
-           (len: U32.t)
+           (idx_dst: US.t)
+           (len: US.t)
   : ST unit
     (pts_to src p0 s0 `star` pts_to dst full_perm s1)
     (fun _ -> pts_to src p0 s0  `star` exists_ (fun s1' ->
@@ -494,8 +494,8 @@ let blit (#t:_) (#p0:perm) (#s0 #s1:Ghost.erased (Seq.seq t))
       pure (blit_post s0 s1 src idx_src dst idx_dst len s1')
     ))
     (
-        U32.v idx_src + U32.v len <= length src /\
-        U32.v idx_dst + U32.v len <= length dst
+        US.v idx_src + US.v len <= length src /\
+        US.v idx_dst + US.v len <= length dst
     )
     (fun _ -> True)
 = let (| p_src, len_src |) = src in
@@ -514,12 +514,12 @@ inline_for_extraction
 let memcpy (#t:_) (#p0:perm)
            (a0 a1:array t)
            (#s0 #s1:Ghost.erased (Seq.seq t))
-           (l:U32.t { U32.v l == length a0 /\ length a0 == length a1 } )
+           (l:US.t { US.v l == length a0 /\ length a0 == length a1 } )
   : STT unit
     (pts_to a0 p0 s0 `star` pts_to a1 full_perm s1)
     (fun _ -> pts_to a0 p0 s0  `star` pts_to a1 full_perm s0)
-= blit #t #p0 #s0 #s1 a0 0ul a1 0ul l;
+= blit #t #p0 #s0 #s1 a0 (US.mk 0us) a1 (US.mk 0us) l;
   let s1' = elim_exists () in
-  elim_pure (blit_post s0 s1 a0 0ul a1 0ul l s1');
+  elim_pure (blit_post s0 s1 a0 (US.mk 0us) a1 (US.mk 0us) l s1');
   vpattern_rewrite (pts_to a1 full_perm) (Ghost.reveal s0);
   return ()
