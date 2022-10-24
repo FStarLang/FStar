@@ -9,7 +9,8 @@ val t : eqtype
 
 val fits (x: nat) : Tot prop
 
-val v (x: t) : Ghost nat
+[@@noextract_to "krml"]
+val v (x: t) : Pure nat
   (requires True)
   (ensures (fun y -> fits y))
 

@@ -7,7 +7,8 @@ val t : eqtype
 
 val fits (x: int) : Tot prop
 
-val v (x: t) : Ghost int
+[@@noextract_to "krml"]
+val v (x: t) : Pure int
   (requires True)
   (ensures (fun y -> fits y))
 
