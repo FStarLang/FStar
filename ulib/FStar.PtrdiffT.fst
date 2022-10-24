@@ -11,7 +11,16 @@ let v x =
 
 let ptrdiff_v_inj (x1 x2: t) = ()
 
-let mk x = Cast.int16_to_int64 x
-let mk_checked x = x
+let int_to_t (x: int) : Pure t
+  (requires (fits x))
+  (ensures (fun y -> v y == x))
+  = I64.int_to_t x
 
-let intro_ptrdiff_fits x = ()
+let mk x = int_to_t (I16.v x)
+let mk_checked x = int_to_t (I64.v x)
+
+let add = I64.add
+let gt x y = I64.gt x y
+let gte x y = I64.gte x y
+let lt x y = I64.lt x y
+let lte x y = I64.lte x y

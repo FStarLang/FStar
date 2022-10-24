@@ -22,17 +22,48 @@ val ptrdiff_v_inj (x1 x2: t) : Lemma
 /// cast directly to t
 /// Any value that might not fit in a uint_16 needs to be checked,
 /// we will add a static_assert during extraction
+noextract inline_for_extraction
 val mk (x: I16.t) : Pure t
   (requires True)
   (ensures (fun y -> v y == I16.v x))
 
+noextract inline_for_extraction
 val mk_checked (x: I64.t) : Pure t
   (requires True)
   (ensures (fun y -> v y == I64.v x))
 
+noextract inline_for_extraction
 let zero : (zero_ptrdiff: t { v zero_ptrdiff == 0 }) =
   mk 0s
 
-val intro_ptrdiff_fits (x: int) : Lemma
-  (requires (FStar.Int.size x I16.n))
-  (ensures (fits x))
+val add (x y: t) : Pure t
+  (requires (fits (v x + v y)))
+  (ensures (fun z -> v z == v x + v y))
+
+(** Greater than *)
+val gt (x y:t) : Pure bool
+  (requires True)
+  (ensures (fun z -> z == (v x > v y)))
+
+(** Greater than or equal *)
+val gte (x y:t) : Pure bool
+  (requires True)
+  (ensures (fun z -> z == (v x >= v y)))
+
+(** Less than *)
+val lt (x y:t) : Pure bool
+  (requires True)
+  (ensures (fun z -> z == (v x < v y)))
+
+(** Less than or equal *)
+val lte (x y: t) : Pure bool
+  (requires True)
+  (ensures (fun z -> z == (v x <= v y)))
+
+(** Infix notations *)
+
+unfold let op_Plus_Hat = add
+unfold let op_Greater_Hat = gt
+unfold let op_Greater_Equals_Hat = gte
+unfold let op_Less_Hat = lt
+unfold let op_Less_Equals_Hat = lte
