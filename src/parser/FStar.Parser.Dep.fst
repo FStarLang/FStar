@@ -822,7 +822,7 @@ let collect_one
             collect_binders binders;
             iter_opt k collect_term;
             collect_term t
-        | TyconRecord (_, binders, k, identterms) ->
+        | TyconRecord (_, binders, k, _, identterms) ->
             collect_binders binders;
             iter_opt k collect_term;
             List.iter (fun (_, aq, attrs, t) -> 
@@ -832,7 +832,7 @@ let collect_one
         | TyconVariant (_, binders, k, identterms) ->
             collect_binders binders;
             iter_opt k collect_term;
-            List.iter (fun (_, t, _) -> iter_opt t collect_term) identterms
+            List.iter (fun (_, t, _, _) -> iter_opt t collect_term) identterms
 
       and collect_effect_decl = function
         | DefineEffect (_, binders, t, decls) ->

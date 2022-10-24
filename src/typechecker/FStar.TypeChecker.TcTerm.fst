@@ -4266,12 +4266,7 @@ and tc_binder env ({binder_bv=x;binder_qual=imp;binder_attrs=attrs}) =
           Some (Meta tau), g
         | _ -> imp, Env.trivial_guard
     in
-    let attrs =
-      attrs |> List.map
-      (fun attr ->
-        let attr, _, _ = tc_check_tot_or_gtot_term env attr t_unit "" in
-        attr)
-    in
+    let attrs = tc_attributes env attrs in
     check_erasable_binder_attributes env attrs t;
     let x = S.mk_binder_with_attrs ({x with sort=t}) imp attrs in
     if Env.debug env Options.High
@@ -4339,6 +4334,19 @@ and tc_trivial_guard env t =
   let t, c, g = tc_tot_or_gtot_term env t in
   Rel.force_trivial_guard env g;
   t,c
+
+and tc_attributes env attrs =
+  // we don't want attributes to depend on local names (otherwise,
+  // this would imply dependent attributes, substitutions within
+  // attributes...) hence we get rid of [gamma] (the local names)
+  // below.
+  let env = { env with gamma = []; gamma_sig = []; gamma_cache = BU.smap_create 100 } in
+  try List.map (fun attr -> fst (tc_trivial_guard env attr)) attrs
+  with | Error (Fatal_VariableNotFound, msg, rng, ctx) -> // adding small hint for the user
+           raise (Error ( Fatal_VariableNotFound
+                        , msg ^ ". Hint: local names are not allowed in attributes."
+                        , rng, ctx))
+       | e -> raise e
 
 let tc_check_trivial_guard env t k =
   let t, _, g = tc_check_tot_or_gtot_term env t k "" in

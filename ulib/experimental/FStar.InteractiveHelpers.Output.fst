@@ -54,11 +54,11 @@ let subst_shadowed_with_abs_in_assertions dbg ge shadowed_bv es =
     if Some? shadowed_bv then fst (_split_subst_at_bv (Some?.v shadowed_bv) post_subst)
     else post_subst
   in
-  let subst_to_string subst : Tot string =
+  let subst_to_string subst : Tac string =
     let to_string (x, y) =
       "(" ^ abv_to_string x ^ " -> " ^ term_to_string y ^ ")\n"
     in
-    let str = List.Tot.map to_string subst in
+    let str = map to_string subst in
     List.Tot.fold_left (fun x y -> x ^ y) "" str
   in
   if dbg then

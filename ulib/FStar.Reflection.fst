@@ -21,3 +21,4 @@ include FStar.Reflection.Builtins
 include FStar.Reflection.Derived
 include FStar.Reflection.Derived.Lemmas
 include FStar.Reflection.Const
+include FStar.Reflection.Compare

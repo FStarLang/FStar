@@ -336,6 +336,8 @@ let (binder_strictly_positive_attr : FStar_Ident.lident) =
 let (no_auto_projectors_attr : FStar_Ident.lident) =
   psconst "no_auto_projectors"
 let (no_subtping_attr_lid : FStar_Ident.lident) = psconst "no_subtyping"
+let (attr_substitute_lid : FStar_Ident.lident) =
+  p2l ["FStar"; "Pervasives"; "Substitute"]
 let (well_founded_relation_lid : FStar_Ident.lident) =
   p2l ["FStar"; "WellFounded"; "well_founded_relation"]
 let (gen_reset : ((unit -> Prims.int) * (unit -> unit))) =

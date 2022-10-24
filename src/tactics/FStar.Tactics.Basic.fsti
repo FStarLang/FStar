@@ -109,3 +109,8 @@ val goal_with_type : goal -> typ -> goal
 val mark_goal_implicit_already_checked : goal -> unit
 val string_to_term         : env -> string -> tac term
 val push_bv_dsenv          : env -> string -> tac (env * bv)
+
+val term_to_string         : term -> tac string
+val comp_to_string         : comp -> tac string
+
+val term_eq_old            : term -> term -> tac bool

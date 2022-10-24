@@ -134,7 +134,8 @@ CAPPED=$(subst Bug,Bug,$*)
 
 
 %.verify: %.fst
-	$(FSTAR) $^
+	@echo '[CHECK     $<]'
+	$(Q)$(FSTAR) $(SIL) $^
 
 Bug1383.verify: OTHERFLAGS += --warn_error @275 #Z3 warnings are fatal
 Bug1694.verify: OTHERFLAGS += --codegen OCaml
@@ -151,15 +152,16 @@ verify-maybe-close: $(subst .fst,.verify,$(SHOULD_VERIFY_MAYBE_CLOSE))
 
 
 %.not-verify: %.fst
-	(! $(FSTAR) $^ >/dev/null 2>&1) || (echo "Negative test failed ($@)!" ; false)
+	@echo '[CHECKFAIL $<]'
+	$(Q)(! $(FSTAR) $(SIL) $^ >/dev/null 2>&1) || (echo "Negative test failed ($@)!" ; false)
 
 not-verify: $(subst .fst,.not-verify,$(SHOULD_NOT_VERIFY_CLOSED))
 
 Bug310.ml:
-	$(FSTAR) $(FSTAR_DEFAULT_ARGS) --extract Bug310 --codegen OCaml Bug310.fst
+	$(Q)$(FSTAR) $(FSTAR_DEFAULT_ARGS) --extract Bug310 --codegen OCaml Bug310.fst
 
 Bug310.extract: Bug310.ml
-	diff -u --strip-trailing-cr Bug310.ml Bug310.ml.expected
+	$(Q)diff -u --strip-trailing-cr Bug310.ml Bug310.ml.expected
 
 Bug2058.ml:
 	$(FSTAR) $(FSTAR_DEFAULT_ARGS) --extract Bug2058 --codegen OCaml Bug2058.fst

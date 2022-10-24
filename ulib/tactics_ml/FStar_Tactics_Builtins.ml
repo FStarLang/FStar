@@ -163,25 +163,13 @@ let t_commute_applied_match = from_tac_1 B.t_commute_applied_match
 let gather_or_solve_explicit_guards_for_resolved_goals = from_tac_1 B.gather_explicit_guards_for_resolved_goals
 let string_to_term          = from_tac_2 B.string_to_term
 let push_bv_dsenv           = from_tac_2 B.push_bv_dsenv
+let term_to_string          = from_tac_1 B.term_to_string
+let comp_to_string          = from_tac_1 B.comp_to_string
+let term_eq_old             = from_tac_2 B.term_eq_old
 
-(* sigh *)
-let fix_either (s : ('a, 'b) either) : ('a, 'b) either =
-    match s with
-    | Inl a -> Inl a
-    | Inr b -> Inr b
-
-(* SIGH *)
-let fmap f r =
-    match r with
-    | Success (a, ps) -> Success (f a, ps)
-    | Failed (msg, ps) -> Failed (msg, ps)
-
-(* Those that need some translations. Maybe we can do this somewhere else
- * or automatically, but keep it for now *)
-let catch (t: unit -> 'a __tac): ((exn, 'a) FStar_Pervasives.either) __tac =
-        fun ps -> fmap fix_either (from_tac_1 TM.catch (to_tac_0 (t ())) ps)
-let recover (t: unit -> 'a __tac): ((exn, 'a) FStar_Pervasives.either) __tac =
-        fun ps -> fmap fix_either (from_tac_1 TM.recover (to_tac_0 (t ())) ps)
+(* The handlers need to "embed" their argument. *)
+let catch   (t: unit -> 'a __tac): ((exn, 'a) either) __tac = from_tac_1 TM.catch   (to_tac_0 (t ()))
+let recover (t: unit -> 'a __tac): ((exn, 'a) either) __tac = from_tac_1 TM.recover (to_tac_0 (t ()))
 
 let ctrl_rewrite
     (d : direction)
