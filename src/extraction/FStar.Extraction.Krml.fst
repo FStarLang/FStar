@@ -1397,33 +1397,6 @@ let translate_type_decl env ty: option decl =
 let translate_let env flavor lb: option decl =
   match lb with
   | {
-      mllb_tysc = Some (_, MLTY_Named ([MLTY_Named ([], view_type_name)], p));
-      mllb_def = fields;
-    } when Syntax.string_of_mlpath p = "Steel.C.StructLiteral.register_fields_of" ->
-      begin
-        BU.print1 "Found _ : register_fields_of %s. Fields are:\n"
-          (Syntax.string_of_mlpath view_type_name);
-        let rec parse_fields fields =
-          match fields with
-          | {expr=MLE_Name p}
-            when Syntax.string_of_mlpath p = "Steel.C.StructLiteral.fields_nil"
-            ->
-            print_endline "End of fields"
-          | {expr=MLE_App ({expr=MLE_Name p},
-                           [{expr=MLE_Const (MLC_String name)}; typedef; fields])}
-            when Syntax.string_of_mlpath p = "Steel.C.StructLiteral.fields_cons"
-            ->
-            BU.print2 "  Field %s : %s\n"
-              name
-              (FStar.Extraction.ML.Code.string_of_mlexpr ([], "") typedef);
-            parse_fields fields
-          | _ -> failwith "Couldn't parse fields from struct_fields"
-        in
-        parse_fields fields;
-        None
-      end
-
-  | {
       mllb_name = name;
       mllb_tysc = Some (tvars, t0);
       mllb_def = e;
