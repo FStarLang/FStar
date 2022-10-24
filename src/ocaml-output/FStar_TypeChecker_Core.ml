@@ -1,4 +1,13 @@
 open Prims
+let (goal_ctr : Prims.int FStar_Compiler_Effect.ref) =
+  FStar_Compiler_Util.mk_ref Prims.int_zero
+let (get_goal_ctr : unit -> Prims.int) =
+  fun uu___ -> FStar_Compiler_Effect.op_Bang goal_ctr
+let (incr_goal_ctr : unit -> Prims.int) =
+  fun uu___ ->
+    let v = FStar_Compiler_Effect.op_Bang goal_ctr in
+    FStar_Compiler_Effect.op_Colon_Equals goal_ctr (v + Prims.int_one);
+    v + Prims.int_one
 type guard_handler_t =
   FStar_TypeChecker_Env.env -> FStar_Syntax_Syntax.typ -> Prims.bool
 type env =
@@ -2161,31 +2170,37 @@ and (memo_check :
   =
   fun g ->
     fun e ->
-      let uu___ = lookup g e in
-      handle_with uu___
-        (fun uu___1 ->
-           fun ctx ->
-             let r = let uu___2 = check' g e in uu___2 ctx in
-             match r with
-             | FStar_Pervasives.Inl (res, FStar_Pervasives_Native.None) ->
-                 (insert g e (res, FStar_Pervasives_Native.None); r)
-             | FStar_Pervasives.Inl
-                 (res, FStar_Pervasives_Native.Some guard1) ->
-                 (match g.guard_handler with
-                  | FStar_Pervasives_Native.None ->
-                      (insert g e
-                         (res, (FStar_Pervasives_Native.Some guard1));
-                       r)
-                  | FStar_Pervasives_Native.Some gh ->
-                      let uu___2 = gh g.tcenv guard1 in
-                      if uu___2
-                      then
-                        let r1 = (res, FStar_Pervasives_Native.None) in
-                        (insert g e r1; FStar_Pervasives.Inl r1)
-                      else
-                        (let uu___4 = fail "guard handler failed" in
-                         uu___4 ctx))
-             | uu___2 -> r)
+      let check_then_memo g1 e1 ctx =
+        let r = let uu___ = check' g1 e1 in uu___ ctx in
+        match r with
+        | FStar_Pervasives.Inl (res, FStar_Pervasives_Native.None) ->
+            (insert g1 e1 (res, FStar_Pervasives_Native.None); r)
+        | FStar_Pervasives.Inl (res, FStar_Pervasives_Native.Some guard1) ->
+            (match g1.guard_handler with
+             | FStar_Pervasives_Native.None ->
+                 (insert g1 e1 (res, (FStar_Pervasives_Native.Some guard1));
+                  r)
+             | FStar_Pervasives_Native.Some gh ->
+                 let uu___ = gh g1.tcenv guard1 in
+                 if uu___
+                 then
+                   let r1 = (res, FStar_Pervasives_Native.None) in
+                   (insert g1 e1 r1; FStar_Pervasives.Inl r1)
+                 else
+                   (let uu___2 = fail "guard handler failed" in uu___2 ctx))
+        | uu___ -> r in
+      fun ctx ->
+        let uu___ = let uu___1 = lookup g e in uu___1 ctx in
+        match uu___ with
+        | FStar_Pervasives.Inr uu___1 -> check_then_memo g e ctx
+        | FStar_Pervasives.Inl (et, FStar_Pervasives_Native.None) ->
+            FStar_Pervasives.Inl (et, FStar_Pervasives_Native.None)
+        | FStar_Pervasives.Inl (et, FStar_Pervasives_Native.Some pre) ->
+            (match g.guard_handler with
+             | FStar_Pervasives_Native.None ->
+                 FStar_Pervasives.Inl
+                   (et, (FStar_Pervasives_Native.Some pre))
+             | FStar_Pervasives_Native.Some uu___1 -> check_then_memo g e ctx)
 and (check :
   Prims.string ->
     env ->
@@ -3020,7 +3035,7 @@ and (check' :
                                                                     pat_sc_eq in
                                                                     let g'1 =
                                                                     push_hypothesis
-                                                                    g
+                                                                    g'
                                                                     this_path_condition in
                                                                     let uu___15
                                                                     =
@@ -3534,14 +3549,17 @@ let (check_term_top_gh :
                     (FStar_Options.Other "CoreTop")) in
              if uu___1
              then
-               let uu___2 = FStar_Syntax_Print.term_to_string e in
-               let uu___3 =
+               let uu___2 =
+                 let uu___3 = get_goal_ctr () in
+                 FStar_Compiler_Util.string_of_int uu___3 in
+               let uu___3 = FStar_Syntax_Print.term_to_string e in
+               let uu___4 =
                  match topt with
                  | FStar_Pervasives_Native.None -> ""
                  | FStar_Pervasives_Native.Some t ->
                      FStar_Syntax_Print.term_to_string t in
-               FStar_Compiler_Util.print2 "Entering core with %s <: %s\n"
-                 uu___2 uu___3
+               FStar_Compiler_Util.print3
+                 "(%s) Entering core with %s <: %s\n" uu___2 uu___3 uu___4
              else ());
             reset_cache_stats ();
             (let ctx = { no_guard = false; error_context = [] } in
@@ -3575,11 +3593,14 @@ let (check_term_top_gh :
                             (FStar_Options.Other "CoreTop")) in
                      if uu___3
                      then
-                       let uu___4 = FStar_Syntax_Print.term_to_string guard0 in
-                       let uu___5 = FStar_Syntax_Print.term_to_string guard1 in
-                       FStar_Compiler_Util.print2
-                         "Exiting core: Simplified guard from {{%s}} to {{%s}}\n"
-                         uu___4 uu___5
+                       let uu___4 =
+                         let uu___5 = get_goal_ctr () in
+                         FStar_Compiler_Util.string_of_int uu___5 in
+                       let uu___5 = FStar_Syntax_Print.term_to_string guard0 in
+                       let uu___6 = FStar_Syntax_Print.term_to_string guard1 in
+                       FStar_Compiler_Util.print3
+                         "(%s) Exiting core: Simplified guard from {{%s}} to {{%s}}\n"
+                         uu___4 uu___5 uu___6
                      else ());
                     FStar_Pervasives.Inl
                       (et, (FStar_Pervasives_Native.Some guard1)))
@@ -3592,7 +3613,11 @@ let (check_term_top_gh :
                             (FStar_Options.Other "CoreTop")) in
                      if uu___4
                      then
-                       FStar_Compiler_Util.print_string "Exiting core (ok)\n"
+                       let uu___5 =
+                         let uu___6 = get_goal_ctr () in
+                         FStar_Compiler_Util.string_of_int uu___6 in
+                       FStar_Compiler_Util.print1 "(%s) Exiting core (ok)\n"
+                         uu___5
                      else ());
                     res)
                | FStar_Pervasives.Inr uu___2 ->
@@ -3604,8 +3629,11 @@ let (check_term_top_gh :
                             (FStar_Options.Other "CoreTop")) in
                      if uu___4
                      then
-                       FStar_Compiler_Util.print_string
-                         "Exiting core (failed)\n"
+                       let uu___5 =
+                         let uu___6 = get_goal_ctr () in
+                         FStar_Compiler_Util.string_of_int uu___6 in
+                       FStar_Compiler_Util.print1
+                         "(%s) Exiting core (failed)\n" uu___5
                      else ());
                     res) in
              (let uu___3 =
@@ -3664,6 +3692,32 @@ let (compute_term_type_handle_guards :
               failwith
                 "Impossible: All guards should have been handled already"
           | FStar_Pervasives.Inr err -> FStar_Pervasives.Inr err
+let (open_binders_in_term :
+  FStar_TypeChecker_Env.env ->
+    FStar_Syntax_Syntax.binders ->
+      FStar_Syntax_Syntax.term ->
+        (FStar_TypeChecker_Env.env * FStar_Syntax_Syntax.binders *
+          FStar_Syntax_Syntax.term))
+  =
+  fun env1 ->
+    fun bs ->
+      fun t ->
+        let g = initial_env env1 FStar_Pervasives_Native.None in
+        let uu___ = open_term_binders g bs t in
+        match uu___ with | (g', bs1, t1) -> ((g'.tcenv), bs1, t1)
+let (open_binders_in_comp :
+  FStar_TypeChecker_Env.env ->
+    FStar_Syntax_Syntax.binders ->
+      FStar_Syntax_Syntax.comp ->
+        (FStar_TypeChecker_Env.env * FStar_Syntax_Syntax.binders *
+          FStar_Syntax_Syntax.comp))
+  =
+  fun env1 ->
+    fun bs ->
+      fun c ->
+        let g = initial_env env1 FStar_Pervasives_Native.None in
+        let uu___ = open_comp_binders g bs c in
+        match uu___ with | (g', bs1, c1) -> ((g'.tcenv), bs1, c1)
 let (check_term_equality :
   FStar_TypeChecker_Env.env ->
     FStar_Syntax_Syntax.typ ->

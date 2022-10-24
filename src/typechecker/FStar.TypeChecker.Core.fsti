@@ -36,3 +36,6 @@ val print_error (err:error)
 
 val print_error_short (err:error)
   : string
+
+val get_goal_ctr (_:unit) : int
+val incr_goal_ctr (_:unit) : int

@@ -1,8 +1,17 @@
 open Prims
+let (goal_ctr : Prims.int FStar_Compiler_Effect.ref) =
+  FStar_Compiler_Util.mk_ref Prims.int_zero
+let (get_goal_ctr : unit -> Prims.int) =
+  fun uu___ -> FStar_Compiler_Effect.op_Bang goal_ctr
+let (incr_goal_ctr : unit -> Prims.int) =
+  fun uu___ ->
+    let v = FStar_Compiler_Effect.op_Bang goal_ctr in
+    FStar_Compiler_Effect.op_Colon_Equals goal_ctr (v + Prims.int_one); v
 let (register_goal :
   FStar_TypeChecker_Env.env -> FStar_Syntax_Syntax.ctx_uvar -> unit) =
   fun env ->
     fun uv ->
+      let i = FStar_TypeChecker_Core.incr_goal_ctr () in
       let env1 =
         {
           FStar_TypeChecker_Env.solver = (env.FStar_TypeChecker_Env.solver);
@@ -93,24 +102,39 @@ let (register_goal :
           FStar_TypeChecker_Env.core_check =
             (env.FStar_TypeChecker_Env.core_check)
         } in
-      let uu___ =
-        let uu___1 = FStar_Syntax_Util.ctx_uvar_typ uv in
-        FStar_TypeChecker_Core.compute_term_type_handle_guards env1 uu___1
-          false (fun uu___2 -> fun uu___3 -> true) in
-      match uu___ with
-      | FStar_Pervasives.Inl uu___1 -> ()
-      | FStar_Pervasives.Inr err ->
-          let uu___1 =
-            let uu___2 =
-              let uu___3 =
-                let uu___4 = FStar_Syntax_Util.ctx_uvar_typ uv in
-                FStar_Syntax_Print.term_to_string uu___4 in
-              let uu___4 = FStar_TypeChecker_Core.print_error_short err in
-              FStar_Compiler_Util.format2
-                "Failed to check initial tactic goal %s because %s" uu___3
-                uu___4 in
-            (FStar_Errors.Warning_FailedToCheckInitialTacticGoal, uu___2) in
-          FStar_Errors.log_issue uv.FStar_Syntax_Syntax.ctx_uvar_range uu___1
+      (let uu___1 =
+         (FStar_Compiler_Effect.op_Less_Bar
+            (FStar_TypeChecker_Env.debug env1) (FStar_Options.Other "Core"))
+           ||
+           (FStar_Compiler_Effect.op_Less_Bar
+              (FStar_TypeChecker_Env.debug env1)
+              (FStar_Options.Other "RegisterGoal")) in
+       if uu___1
+       then
+         let uu___2 = FStar_Compiler_Util.string_of_int i in
+         let uu___3 = FStar_Syntax_Print.ctx_uvar_to_string uv in
+         FStar_Compiler_Util.print2 "(%s) Registering goal for %s\n" uu___2
+           uu___3
+       else ());
+      (let goal_ty = FStar_Syntax_Util.ctx_uvar_typ uv in
+       let uu___1 =
+         FStar_TypeChecker_Core.compute_term_type_handle_guards env1 goal_ty
+           false (fun uu___2 -> fun uu___3 -> true) in
+       match uu___1 with
+       | FStar_Pervasives.Inl uu___2 -> ()
+       | FStar_Pervasives.Inr err ->
+           let uu___2 =
+             let uu___3 =
+               let uu___4 =
+                 let uu___5 = FStar_Syntax_Util.ctx_uvar_typ uv in
+                 FStar_Syntax_Print.term_to_string uu___5 in
+               let uu___5 = FStar_TypeChecker_Core.print_error_short err in
+               FStar_Compiler_Util.format2
+                 "Failed to check initial tactic goal %s because %s" uu___4
+                 uu___5 in
+             (FStar_Errors.Warning_FailedToCheckInitialTacticGoal, uu___3) in
+           FStar_Errors.log_issue uv.FStar_Syntax_Syntax.ctx_uvar_range
+             uu___2)
 type 'a tac =
   {
   tac_f: FStar_Tactics_Types.proofstate -> 'a FStar_Tactics_Result.__result }
@@ -661,20 +685,16 @@ let (new_uvar :
                 should_check FStar_Pervasives_Native.None in
             match uu___ with
             | (u, ctx_uvar, g_u) ->
-                (FStar_Compiler_List.iter
-                   (fun uu___2 ->
-                      match uu___2 with
-                      | (u1, uu___3) -> register_goal env u1) ctx_uvar;
-                 (let uu___2 =
-                    add_implicits g_u.FStar_TypeChecker_Common.implicits in
-                  bind uu___2
-                    (fun uu___3 ->
+                let uu___1 =
+                  add_implicits g_u.FStar_TypeChecker_Common.implicits in
+                bind uu___1
+                  (fun uu___2 ->
+                     let uu___3 =
                        let uu___4 =
-                         let uu___5 =
-                           let uu___6 = FStar_Compiler_List.hd ctx_uvar in
-                           FStar_Pervasives_Native.fst uu___6 in
-                         (u, uu___5) in
-                       ret uu___4)))
+                         let uu___5 = FStar_Compiler_List.hd ctx_uvar in
+                         FStar_Pervasives_Native.fst uu___5 in
+                       (u, uu___4) in
+                     ret uu___3)
 let (mk_irrelevant_goal :
   Prims.string ->
     FStar_TypeChecker_Env.env ->

@@ -556,8 +556,6 @@ let run_tactic_on_ps'
   = let env = ps.main_context in
     if !tacdbg then
         BU.print1 "Typechecking tactic: (%s) {\n" (Print.term_to_string tactic);
-    ps.all_implicits |>
-    List.iter (fun imp -> FStar.Tactics.Monad.register_goal env imp.imp_uvar);
     
     (* Do NOT use the returned tactic, the typechecker is not idempotent and
      * will mess up the monadic lifts. We're just making sure it's well-typed

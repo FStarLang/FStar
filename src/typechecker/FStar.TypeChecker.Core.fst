@@ -16,6 +16,10 @@ module TcUtil = FStar.TypeChecker.Util
 module Hash = FStar.Syntax.Hash
 module Subst = FStar.Syntax.Subst
 
+let goal_ctr = BU.mk_ref 0
+let get_goal_ctr () = !goal_ctr
+let incr_goal_ctr () = let v = !goal_ctr in goal_ctr := v + 1; v + 1
+
 let guard_handler_t = Env.env -> typ -> bool
 
 type env = {
@@ -1046,25 +1050,39 @@ and check_subtype (g:env) (e:option term) (t0 t1:typ)
 
 and memo_check (g:env) (e:term)
   : result (effect_label & typ)
-  = handle_with
-      (lookup g e)
-      (fun _ ctx ->
-         let r = check' g e ctx in
-         match r with
-         | Inl (res, None) ->
-           insert g e (res, None);
-           r
-           
-         | Inl (res, Some guard) ->
-           (match g.guard_handler with
-            | None -> insert g e (res, Some guard); r
-            | Some gh ->
-              if gh g.tcenv guard
-              then let r = (res, None) in
-                   insert g e r; Inl r
-              else fail "guard handler failed" ctx)
+  = let check_then_memo g e ctx =
+      let r = check' g e ctx in
+      match r with
+      | Inl (res, None) ->
+        insert g e (res, None);
+        r
+          
+      | Inl (res, Some guard) ->
+        (match g.guard_handler with
+         | None -> insert g e (res, Some guard); r
+         | Some gh ->
+           if gh g.tcenv guard
+           then let r = (res, None) in
+                insert g e r; Inl r
+           else fail "guard handler failed" ctx)
 
-         | _ -> r)
+      | _ -> r
+    in
+    fun ctx ->
+      match lookup g e ctx with
+      | Inr _ -> //cache miss; check and insert
+        check_then_memo g e ctx
+
+      | Inl (et, None) -> //cache hit with no guard; great, just return
+        Inl (et, None)
+
+      | Inl (et, Some pre) -> //cache hit with a guard
+        match g.guard_handler with
+        | None -> Inl (et, Some pre) //if there's no guard handler, then just return
+        | Some _ ->
+          //otherwise check then memo, since this can
+          //repopulate the cache with a "better" entry that has no guard        
+          check_then_memo g e ctx
 
 and check (msg:string) (g:env) (e:term)
   : result (effect_label & typ)
@@ -1923,7 +1941,8 @@ let simplify_steps =
 let check_term_top_gh g e topt (must_tot:bool) (gh:option guard_handler_t)
   = if Env.debug g (Options.Other "Core")
      || Env.debug g (Options.Other "CoreTop")
-    then BU.print2 "Entering core with %s <: %s\n"
+    then BU.print3 "(%s) Entering core with %s <: %s\n"
+                   (BU.string_of_int (get_goal_ctr()))    
                    (P.term_to_string e)
                    (match topt with None -> "" | Some t -> P.term_to_string t);
     reset_cache_stats();
@@ -1949,7 +1968,8 @@ let check_term_top_gh g e topt (must_tot:bool) (gh:option guard_handler_t)
         || Env.debug g (Options.Other "Core")
         || Env.debug g (Options.Other "CoreTop")        
         then
-          BU.print2 "Exiting core: Simplified guard from {{%s}} to {{%s}}\n"
+          BU.print3 "(%s) Exiting core: Simplified guard from {{%s}} to {{%s}}\n"
+            (BU.string_of_int (get_goal_ctr()))
             (P.term_to_string guard0)
             (P.term_to_string guard);
         Inl (et, Some guard)
@@ -1957,13 +1977,15 @@ let check_term_top_gh g e topt (must_tot:bool) (gh:option guard_handler_t)
       | Inl _ ->
         if Env.debug g (Options.Other "Core")        
         ||  Env.debug g (Options.Other "CoreTop")        
-        then BU.print_string "Exiting core (ok)\n";
+        then BU.print1 "(%s) Exiting core (ok)\n"
+                    (BU.string_of_int (get_goal_ctr()));
         res
 
       | Inr _ ->
         if Env.debug g (Options.Other "Core")        
         ||  Env.debug g (Options.Other "CoreTop")                
-        then BU.print_string "Exiting core (failed)\n";      
+        then BU.print1 "(%s) Exiting core (failed)\n"
+                       (BU.string_of_int (get_goal_ctr()));
         res
     in
     if FStar.Options.profile_enabled None "FStar.TypeChecker.Core.check_term_top"
