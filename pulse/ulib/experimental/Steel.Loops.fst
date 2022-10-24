@@ -19,21 +19,21 @@ open Steel.Effect.Common
 open Steel.Effect
 open Steel.Reference
 module AT = Steel.Effect.Atomic
-module U32 = FStar.UInt32
+module US = FStar.SizeT
 
-val for_loop' (start:U32.t)
-              (finish:U32.t { U32.v start <= U32.v finish })
-              (current:U32.t { U32.v start <= U32.v current /\
-                               U32.v current <= U32.v finish })
+val for_loop' (start:US.t)
+              (finish:US.t { US.v start <= US.v finish })
+              (current:US.t { US.v start <= US.v current /\
+                               US.v current <= US.v finish })
               (inv: nat_at_most finish -> vprop)
               (body:
                     (i:u32_between start finish ->
                           SteelT unit
-                          (inv (U32.v i))
-                          (fun _ -> inv (U32.v i + 1))))
+                          (inv (US.v i))
+                          (fun _ -> inv (US.v i + 1))))
   : SteelT unit
-      (inv (U32.v current))
-      (fun _ -> inv (U32.v finish))
+      (inv (US.v current))
+      (fun _ -> inv (US.v finish))
 
 #push-options "--fuel 0 --ifuel 0"
 let rec for_loop' start finish current inv body
@@ -42,11 +42,11 @@ let rec for_loop' start finish current inv body
        AT.return ()
     )
     else (
-      let _: squash (U32.v current < U32.v finish) = () in //fails without this
+      let _: squash (US.v current < US.v finish) = () in //fails without this
       body current;
-      let current' = U32.(current +^ 1ul) in
-      AT.change_equal_slprop (inv (U32.v current + 1))
-                             (inv (U32.v current'));
+      let current' = US.(current +^ (US.mk 1us)) in
+      AT.change_equal_slprop (inv (US.v current + 1))
+                             (inv (US.v current'));
       for_loop' start finish current' inv body
     )
 #pop-options

@@ -14,7 +14,7 @@
    limitations under the License.
 *)
 module Steel.ST.Loops
-module U32 = FStar.UInt32
+module US = FStar.SizeT
 open Steel.ST.Util
 open Steel.ST.Coercions
 module L = Steel.Loops
@@ -24,30 +24,30 @@ open FStar.Ghost
 
 (* This module provides some common iterative looping combinators *)
 
-let for_loop' (start:U32.t)
-              (finish:U32.t { U32.v start <= U32.v finish })
+let for_loop' (start:US.t)
+              (finish:US.t { US.v start <= US.v finish })
               (inv: nat_at_most finish -> vprop)
               ($body:
                     (i:u32_between start finish ->
                           STT unit
-                          (inv (U32.v i))
-                          (fun _ -> inv (U32.v i + 1))))
+                          (inv (US.v i))
+                          (fun _ -> inv (US.v i + 1))))
   : SE.SteelT unit
-      (inv (U32.v start))
-      (fun _ -> inv (U32.v finish))
+      (inv (US.v start))
+      (fun _ -> inv (US.v finish))
   = L.for_loop start finish inv body //lift works for body
 
-let for_loop (start:U32.t)
-             (finish:U32.t { U32.v start <= U32.v finish })
+let for_loop (start:US.t)
+             (finish:US.t { US.v start <= US.v finish })
              (inv: nat_at_most finish -> vprop)
              (body:
                     (i:u32_between start finish ->
                           STT unit
-                          (inv (U32.v i))
-                          (fun _ -> inv (U32.v i + 1))))
+                          (inv (US.v i))
+                          (fun _ -> inv (US.v i + 1))))
   : STT unit
-      (inv (U32.v start))
-      (fun _ -> inv (U32.v finish))
+      (inv (US.v start))
+      (fun _ -> inv (US.v finish))
   = coerce_steel (fun _ -> for_loop' start finish inv body); ()
 
 let elim_h_exists (#a:Type) #o (p:a -> vprop)
