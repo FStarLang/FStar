@@ -715,7 +715,7 @@ let unfocus_sub
 
 #pop-options
 
-#push-options "--z3rlimit 64 --fuel 0 --ifuel 1 --z3cliopt smt.arith.nl=false"
+#push-options "--z3rlimit 128 --fuel 0 --ifuel 1 --z3cliopt smt.arith.nl=false"
 
 #restart-solver
 let join
