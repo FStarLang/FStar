@@ -19,7 +19,7 @@ module Steel.ST.Array
 /// C arrays of universe 0 elements, with selectors.
 
 module P = Steel.FractionalPermission
-module U32 = FStar.UInt32
+module US = FStar.SizeT
 
 open Steel.ST.Util
 
@@ -153,13 +153,13 @@ inline_for_extraction
 val malloc
   (#elt: Type)
   (x: elt)
-  (n: U32.t)
+  (n: US.t)
 : ST (array elt)
     emp
-    (fun a -> pts_to a P.full_perm (Seq.create (U32.v n) x))
+    (fun a -> pts_to a P.full_perm (Seq.create (US.v n) x))
     (True)
     (fun a ->
-      length a == U32.v n /\
+      length a == US.v n /\
       is_full_array a
     )
 
@@ -167,7 +167,7 @@ inline_for_extraction
 [@@noextract_to "krml"]
 let alloc #elt = malloc #elt
 
-/// Freeing a full array. 
+/// Freeing a full array.
 inline_for_extraction
 [@@ noextract_to "krml";
     warn_on_use "Steel.Array.free_pt is currently unsound in the presence of zero-size subarrays, have you collected them all?"]
@@ -217,12 +217,12 @@ val index
   (#t: Type) (#p: P.perm)
   (a: array t)
   (#s: Ghost.erased (Seq.seq t))
-  (i: U32.t)
+  (i: US.t)
 : ST t
     (pts_to a p s)
     (fun _ -> pts_to a p s)
-    (U32.v i < length a \/ U32.v i < Seq.length s)
-    (fun res -> Seq.length s == length a /\ U32.v i < Seq.length s /\ res == Seq.index s (U32.v i))
+    (US.v i < length a \/ US.v i < Seq.length s)
+    (fun res -> Seq.length s == length a /\ US.v i < Seq.length s /\ res == Seq.index s (US.v i))
 
 inline_for_extraction
 [@@noextract_to "krml"]
@@ -236,11 +236,11 @@ val upd
   (#t: Type)
   (a: array t)
   (#s: Ghost.erased (Seq.seq t))
-  (i: U32.t {U32.v i < Seq.length s})
+  (i: US.t {US.v i < Seq.length s})
   (v: t)
 : STT unit
     (pts_to a P.full_perm s)
-    (fun res -> pts_to a P.full_perm (Seq.upd s (U32.v i) v))
+    (fun res -> pts_to a P.full_perm (Seq.upd s (US.v i) v))
 
 inline_for_extraction
 [@@noextract_to "krml"]
@@ -327,11 +327,11 @@ let join
 inline_for_extraction // this will extract to "let y = a"
 [@@noextract_to "krml"]
 let split_l (#elt: Type) (a: array elt)
-  (i: Ghost.erased U32.t)
+  (i: Ghost.erased US.t)
 : Pure (array elt)
-  (requires (U32.v i <= length a))
+  (requires (US.v i <= length a))
   (ensures (fun y -> True))
-= (| ptr_of a, Ghost.hide (U32.v i) |)
+= (| ptr_of a, Ghost.hide (US.v i) |)
 
 /// C pointer arithmetic to compute (p+off), shifting a pointer p by
 /// offset off.  TODO: replace this with a Ghost definition and a
@@ -342,31 +342,31 @@ inline_for_extraction
 val ptr_shift
   (#elt: Type)
   (p: ptr elt)
-  (off: U32.t)
+  (off: US.t)
 : Pure (ptr elt)
-  (requires (offset p + U32.v off <= base_len (base p)))
+  (requires (offset p + US.v off <= base_len (base p)))
   (ensures (fun p' ->
     base p' == base p /\
-    offset p' == offset p + U32.v off
+    offset p' == offset p + US.v off
   ))
 
 let ptr_shift_zero
   (#elt: Type)
   (p: ptr elt)
 : Lemma
-  (ptr_shift p U32.zero == p)
-= ptr_base_offset_inj (ptr_shift p U32.zero) p
+  (ptr_shift p US.zero == p)
+= ptr_base_offset_inj (ptr_shift p US.zero) p
 
 /// Computing the right-hand-side part of splitting an array a at
 /// offset i.
 inline_for_extraction
 [@@noextract_to "krml"]
 let split_r (#elt: Type) (a: array elt)
-  (i: U32.t)
+  (i: US.t)
 : Pure (array elt)
-  (requires (U32.v i <= length a))
+  (requires (US.v i <= length a))
   (ensures (fun y -> merge_into (split_l a i) y a))
-= (| ptr_shift (ptr_of a) i, Ghost.hide (length a - U32.v i) |)
+= (| ptr_shift (ptr_of a) i, Ghost.hide (length a - US.v i) |)
 
 /// Splitting an array a at offset i, as a stateful lemma expressed in
 /// terms of split_l, split_r. In the non-selector case, this stateful
@@ -378,15 +378,15 @@ val ghost_split
   (#x: Seq.seq elt)
   (#p: P.perm)
   (a: array elt)
-  (i: U32.t)
-: STGhost (squash (U32.v i <= length a /\ U32.v i <= Seq.length x)) opened
+  (i: US.t)
+: STGhost (squash (US.v i <= length a /\ US.v i <= Seq.length x)) opened
     (pts_to a p x)
     (fun res ->
-      pts_to (split_l a i) p (Seq.slice x 0 (U32.v i)) `star`
-      pts_to (split_r a i) p (Seq.slice x (U32.v i) (Seq.length x)))
-    (U32.v i <= length a)
+      pts_to (split_l a i) p (Seq.slice x 0 (US.v i)) `star`
+      pts_to (split_r a i) p (Seq.slice x (US.v i) (Seq.length x)))
+    (US.v i <= length a)
     (fun res ->
-      x == Seq.append (Seq.slice x 0 (U32.v i)) (Seq.slice x (U32.v i) (Seq.length x))
+      x == Seq.append (Seq.slice x 0 (US.v i)) (Seq.slice x (US.v i) (Seq.length x))
     )
 
 /// NOTE: we could implement a SteelAtomicBase Unobservable "split"
@@ -399,7 +399,7 @@ inline_for_extraction
 val memcpy (#t:_) (#p0:perm)
            (a0 a1:array t)
            (#s0 #s1:Ghost.erased (Seq.seq t))
-           (l:U32.t { U32.v l == length a0 /\ length a0 == length a1 } )
+           (l:US.t { US.v l == length a0 /\ length a0 == length a1 } )
   : STT unit
     (pts_to a0 p0 s0 `star` pts_to a1 full_perm s1)
     (fun _ -> pts_to a0 p0 s0  `star` pts_to a1 full_perm s0)
@@ -409,7 +409,7 @@ val memcpy (#t:_) (#p0:perm)
 val compare (#t:eqtype) (#p0 #p1:perm)
             (a0 a1:array t)
             (#s0 #s1:Ghost.erased (Seq.seq t))
-            (l:U32.t { U32.v l == length a0 /\ length a0 == length a1 } )
+            (l:US.t { US.v l == length a0 /\ length a0 == length a1 } )
   : ST bool
     (pts_to a0 p0 s0 `star` pts_to a1 p1 s1)
     (fun _ -> pts_to a0 p0 s0 `star` pts_to a1 p1 s1)

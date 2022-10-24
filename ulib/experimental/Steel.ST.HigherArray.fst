@@ -437,6 +437,8 @@ let mk_carrier_upd
   ))
 = ()
 
+#push-options "--z3rlimit 20"
+
 [@@noextract_to "krml"]
 let upd0
   (#t: Type)
@@ -461,6 +463,8 @@ let upd0
       _ ((ptr_of a).offset + US.v i)
     );
   intro_pts_to a _ _
+
+#pop-options
 
 let upd_ptr a i v =
   upd0 _ i v;
