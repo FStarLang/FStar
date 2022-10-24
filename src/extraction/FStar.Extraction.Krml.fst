@@ -154,6 +154,7 @@ and width =
   | Int8 | Int16 | Int32 | Int64
   | Bool
   | CInt
+  | SizeT | PtrdiffT
 
 and constant = width * string
 
@@ -203,6 +204,8 @@ let mk_width = function
   | "Int16" -> Some Int16
   | "Int32" -> Some Int32
   | "Int64" -> Some Int64
+  | "SizeT" -> Some SizeT
+  | "PtrdiffT" -> Some PtrdiffT
   | _ -> None
 
 let mk_bool_op = function
