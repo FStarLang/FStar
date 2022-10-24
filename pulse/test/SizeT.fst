@@ -5,10 +5,10 @@ open FStar.SizeT
 let f () =
   let x = mk 0us in
   let y = mk 1us in
-  let z = x `add` y in
-  let z = z `sub` x in
-  let z = z `mul` y in
-  if z `le` x then
+  let z = x +^ y in
+  let z = z -^ x in
+  let z = z *^ y in
+  if z <=^ x then
     zero
   else
     one
