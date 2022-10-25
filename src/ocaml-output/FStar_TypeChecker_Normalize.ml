@@ -5795,6 +5795,9 @@ and (maybe_simplify_aux :
                    let uu___4 = FStar_Syntax_Subst.compress tm1 in
                    uu___4.FStar_Syntax_Syntax.n in
                  (match uu___3 with
+                  | FStar_Syntax_Syntax.Tm_meta
+                      (tm2, FStar_Syntax_Syntax.Meta_core_guard) ->
+                      maybe_simplify_aux cfg env1 stack1 tm2
                   | FStar_Syntax_Syntax.Tm_app
                       ({
                          FStar_Syntax_Syntax.n = FStar_Syntax_Syntax.Tm_uinst

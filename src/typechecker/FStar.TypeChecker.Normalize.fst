@@ -2390,6 +2390,7 @@ and maybe_simplify_aux (cfg:cfg) (env:env) (stack:stack) (tm:term) : term =
     (* Otherwise try to simplify this point *)
     | None ->
     match (SS.compress tm).n with
+    | Tm_meta (tm, Meta_core_guard) -> maybe_simplify_aux cfg env stack tm
     | Tm_app({n=Tm_uinst({n=Tm_fvar fv}, _)}, args)
     | Tm_app({n=Tm_fvar fv}, args) ->
       if S.fv_eq_lid fv PC.and_lid

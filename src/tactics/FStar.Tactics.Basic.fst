@@ -268,7 +268,7 @@ let tc_unifier_solved_implicits dbg env (must_tot:bool) (allow_guards:bool) (uvs
       | Some sol ->  //solved, check it
         let env = {env with gamma=u.ctx_uvar_gamma} in
         let must_tot = must_tot && not (Allow_ghost? dec.uvar_decoration_should_check) in
-        match Rel.core_check_and_maybe_add_to_guard_uvar env u sol (U.ctx_uvar_typ u) must_tot with
+        match Rel.core_check_and_maybe_add_to_guard_uvar env u sol (U.ctx_uvar_typ u) must_tot true with
         | Inl None ->
           //checked with no guard
           //no need to check it again
@@ -276,27 +276,20 @@ let tc_unifier_solved_implicits dbg env (must_tot:bool) (allow_guards:bool) (uvs
           ret ()
   
         | Inl (Some g) ->
-          if Options.admit_tactic_unification_guards()
+          let guard = { Env.trivial_guard with guard_f = NonTrivial g } in
+          let guard = Rel.simplify_guard env guard in
+          if Options.disallow_unification_guards ()
+          && not allow_guards
+          && NonTrivial? guard.guard_f
           then (
-            mark_uvar_as_already_checked u;
-            ret ()
+            fail2 "Could not typecheck unifier solved implicit %s to %s since it produced a guard and guards were not allowed"
+              (Print.uvar_to_string u.ctx_uvar_head)
+              (Print.term_to_string sol)
           )
           else (
-            let guard = { Env.trivial_guard with guard_f = NonTrivial g } in
-            let guard = Rel.simplify_guard env guard in
-            if Options.disallow_unification_guards ()
-            && not allow_guards
-            && NonTrivial? guard.guard_f
-            then (
-              fail2 "Could not typecheck unifier solved implicit %s to %s since it produced a guard and guards were not allowed"
-                (Print.uvar_to_string u.ctx_uvar_head)
-                (Print.term_to_string sol)
-            )
-            else (
-              proc_guard' false "guard for implicit" env guard u.ctx_uvar_range ;!
-              mark_uvar_as_already_checked u;
-              ret ()
-            )
+            proc_guard' false "guard for implicit" env guard u.ctx_uvar_range ;!
+            mark_uvar_as_already_checked u;
+            ret ()
           )
               
         | Inr failed ->

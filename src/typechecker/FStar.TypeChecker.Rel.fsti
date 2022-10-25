@@ -55,7 +55,7 @@ val discharge_guard           : env -> guard_t -> guard_t
 val force_trivial_guard       : env -> guard_t -> unit
 
 val core_check_and_maybe_add_to_guard_uvar:
-  env -> ctx_uvar -> term -> typ -> must_tot:bool -> Env.core_check_ret_t
+  env -> ctx_uvar -> term -> typ -> must_tot:bool -> is_tac:bool -> Env.core_check_ret_t
 
 val is_implicit_resolved      : env -> Env.implicit -> bool
 val check_implicit_solution_for_tac : env -> Env.implicit -> option (term * typ)

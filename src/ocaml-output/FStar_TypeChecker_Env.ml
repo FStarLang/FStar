@@ -6534,8 +6534,19 @@ let (uvars_for_binders :
                                       FStar_Pervasives_Native.None) in
                               (match uu___2 with
                                | (ctx_uvar_meta_t, guard_uvar_meta_t) ->
+                                   let add_guard_uvars1 =
+                                     add_guard_uvars &&
+                                       (match ctx_uvar_meta_t with
+                                        | FStar_Pervasives_Native.Some
+                                            (FStar_Syntax_Syntax.Ctx_uvar_meta_attr
+                                            uu___3) ->
+                                            let uu___4 =
+                                              FStar_Options.admit_tactic_unification_guards
+                                                () in
+                                            Prims.op_Negation uu___4
+                                        | uu___3 -> true) in
                                    let uu___3 =
-                                     if add_guard_uvars
+                                     if add_guard_uvars1
                                      then
                                        let uu___4 =
                                          let uu___5 =
@@ -6567,7 +6578,7 @@ let (uvars_for_binders :
                                           let uu___5 = reason b in
                                           new_implicit_var_with_kind uu___5 r
                                             env1 sort
-                                            (if add_guard_uvars
+                                            (if add_guard_uvars1
                                              then FStar_Syntax_Syntax.Strict
                                              else
                                                FStar_Syntax_Syntax.Allow_untyped

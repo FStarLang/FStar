@@ -5042,7 +5042,7 @@ let maybe_set_guard_uvar env (uv:ctx_uvar) (tm:typ) : bool =
   | Inr _ -> failwith "Impossible (maybe_set_guard_uvar)"
 
 
-let core_check_and_maybe_add_to_guard_uvar env uv t k must_tot =
+let core_check_and_maybe_add_to_guard_uvar env uv t k must_tot is_tac =
   let debug f =
     if Options.debug_any()
     then f () in
@@ -5072,7 +5072,12 @@ let core_check_and_maybe_add_to_guard_uvar env uv t k must_tot =
                (Print.term_to_string t)
                (Print.term_to_string vc));
 
-      if maybe_set_guard_uvar env uv vc
+      if is_tac && Options.admit_tactic_unification_guards ()
+      then begin
+        ignore (maybe_set_guard_uvar env uv U.t_true);
+        Inl None
+      end
+      else if maybe_set_guard_uvar env uv vc
       then Inl None
       else Inl (Some vc)
 
@@ -5122,7 +5127,7 @@ let check_implicit_solution env uv t k (must_tot:bool) (reason:string) : guard_t
   if not (env.phase1) //this can be false if we're running in lax mode without phase2 to follow
   && not env.lax //no point running core checker if we're in lax mode
    then (
-    match core_check_and_maybe_add_to_guard_uvar env uv t k must_tot with
+    match core_check_and_maybe_add_to_guard_uvar env uv t k must_tot false with
     | Inl None ->
       trivial_guard
     | Inl (Some g) -> 
@@ -5236,12 +5241,17 @@ let rec check_implicit_solution_for_tac (env:env) (i:implicit) : option (term * 
   let { imp_reason = reason; imp_tm = tm; imp_uvar = ctx_u; imp_range = r } = i in
   let uvar_ty = U.ctx_uvar_typ ctx_u in
   let uvar_should_check = U.ctx_uvar_should_check ctx_u in
-  if Allow_untyped? uvar_should_check
-  || Already_checked? uvar_should_check
+  if Allow_untyped? uvar_should_check ||
+     Already_checked? uvar_should_check
   then None
+  else if env.phase1
+  then (
+    ignore (maybe_set_guard_uvar env ctx_u U.t_true);
+    None
+  )
   else (
     let env = { env with gamma = ctx_u.ctx_uvar_gamma } in
-    match core_check_and_maybe_add_to_guard_uvar env ctx_u tm uvar_ty false with
+    match core_check_and_maybe_add_to_guard_uvar env ctx_u tm uvar_ty false true with
     | Inl None -> None
     | Inl (Some g) ->
       let g = { trivial_guard with guard_f = NonTrivial g } in
@@ -5342,16 +5352,12 @@ and resolve_implicits' env is_tac (implicits:Env.implicits)
          *)
         let tm_ok_for_tac () =
           if is_implicit_resolved env hd
-          then begin
-            if env.phase1 //phase1 is untrusted; the solution will be recomputed or checked again in phase2
-            then None
-            else check_implicit_solution_for_tac env hd
-          end
+          then check_implicit_solution_for_tac env hd
           else None
         in
         if is_tac
         then match tm_ok_for_tac () with
-             | None ->until_fixpoint (out, true) tl        //Move on to the next imp
+             | None -> until_fixpoint (out, true) tl        //Move on to the next imp
              | Some (tm, ty) -> until_fixpoint ((hd, Implicit_has_typing_guard (tm, ty))::out, changed) tl  //Move hd to out
         else
         begin
