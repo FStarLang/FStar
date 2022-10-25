@@ -2705,35 +2705,7 @@ let rec solve_indirection_eqs (fuel: nat) : Tac unit =
     | _ -> later(); solve_indirection_eqs (fuel - 1)
 
 /// Solve all equalities in the list of goals by calling the F* unifier
-
-let rec pick_next_eq (fuel:nat) : Tac bool  =
-  if fuel = 0
-  then false
-  else match goals () with
-       | [] -> false
-       | hd::_ ->
-         match term_as_formula' (goal_type hd) with
-         | Comp (Eq _) l r ->
-           let l_hd, l_args = collect_app l in
-           let r_hd, r_args = collect_app r in
-
-           (match inspect_ln l_hd, inspect_ln r_hd with
-            | Tv_Uvar _ _, Tv_FVar _
-            | Tv_Uvar _ _, Tv_UInst _ _
-            | Tv_FVar _, Tv_Uvar _ _
-            | Tv_UInst _ _, Tv_Uvar _ _ -> true
-            | _ -> later (); pick_next_eq (fuel - 1))
-         | _ -> later (); pick_next_eq (fuel - 1)
-
-let rec solve_all_flex_rigid_eqs () : Tac unit =
-  if pick_next_eq (List.length (goals ()))
-  then begin
-    trefl ();
-    solve_all_flex_rigid_eqs ()
-  end
-  else ()
-
-let rec solve_all_remaining_eqs (fuel: nat) : Tac unit =
+let rec solve_all_eqs (fuel: nat) : Tac unit =
   if fuel = 0
   then ()
   else match goals () with
@@ -2743,12 +2715,8 @@ let rec solve_all_remaining_eqs (fuel: nat) : Tac unit =
     match f with
     | Comp (Eq _) l r ->
         trefl();
-        solve_all_remaining_eqs (fuel - 1)
-    | _ -> later(); solve_all_remaining_eqs (fuel - 1)
-
-let solve_all_eqs (_:nat) : Tac unit =
-  solve_all_flex_rigid_eqs ();
-  solve_all_remaining_eqs (List.length (goals ()))
+        solve_all_eqs (fuel - 1)
+    | _ -> later(); solve_all_eqs (fuel - 1)
 
 /// It is important to not normalize the return_pre eqs goals before unifying
 /// See test7 in FramingTestSuite for a detailed explanation
