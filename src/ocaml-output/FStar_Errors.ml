@@ -229,7 +229,6 @@ type raw_error =
   | Fatal_UnexpectedModuleDeclaration 
   | Fatal_UnexpectedNumberOfUniverse 
   | Fatal_UnexpectedNumericLiteral 
-  | Fatal_UnexpectedOperatorSymbol 
   | Fatal_UnexpectedPattern 
   | Fatal_UnexpectedPosition 
   | Fatal_UnExpectedPreCondition 
@@ -1276,11 +1275,6 @@ let (uu___is_Fatal_UnexpectedNumericLiteral : raw_error -> Prims.bool) =
     match projectee with
     | Fatal_UnexpectedNumericLiteral -> true
     | uu___ -> false
-let (uu___is_Fatal_UnexpectedOperatorSymbol : raw_error -> Prims.bool) =
-  fun projectee ->
-    match projectee with
-    | Fatal_UnexpectedOperatorSymbol -> true
-    | uu___ -> false
 let (uu___is_Fatal_UnexpectedPattern : raw_error -> Prims.bool) =
   fun projectee ->
     match projectee with | Fatal_UnexpectedPattern -> true | uu___ -> false
@@ -2102,7 +2096,6 @@ let (default_settings : error_setting Prims.list) =
   (Fatal_UnexpectedModuleDeclaration, CFatal, (Prims.of_int (199)));
   (Fatal_UnexpectedNumberOfUniverse, CFatal, (Prims.of_int (200)));
   (Fatal_UnexpectedNumericLiteral, CFatal, (Prims.of_int (201)));
-  (Fatal_UnexpectedOperatorSymbol, CFatal, (Prims.of_int (202)));
   (Fatal_UnexpectedPattern, CFatal, (Prims.of_int (203)));
   (Fatal_UnexpectedPosition, CFatal, (Prims.of_int (204)));
   (Fatal_UnExpectedPreCondition, CFatal, (Prims.of_int (205)));

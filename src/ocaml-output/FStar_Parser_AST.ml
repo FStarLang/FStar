@@ -1472,8 +1472,8 @@ let (strip_prefix :
           FStar_Compiler_Util.substring_from s (FStar_String.length prefix) in
         FStar_Pervasives_Native.Some uu___
       else FStar_Pervasives_Native.None
-let (compile_op :
-  Prims.int -> Prims.string -> FStar_Compiler_Range.range -> Prims.string) =
+let compile_op : 'uuuuu . Prims.int -> Prims.string -> 'uuuuu -> Prims.string
+  =
   fun arity ->
     fun s ->
       fun r ->
@@ -1501,11 +1501,10 @@ let (compile_op :
           | 36 -> "Dollar"
           | 46 -> "Dot"
           | c ->
-              FStar_Errors.raise_error
-                (FStar_Errors.Fatal_UnexpectedOperatorSymbol,
-                  (Prims.op_Hat "Unexpected operator symbol: '"
-                     (Prims.op_Hat (FStar_Compiler_Util.string_of_char c) "'")))
-                r in
+              let uu___1 =
+                FStar_Compiler_Util.string_of_int
+                  (FStar_Compiler_Util.int_of_char c) in
+              Prims.op_Hat "u" uu___1 in
         match s with
         | ".[]<-" -> "op_String_Assignment"
         | ".()<-" -> "op_Array_Assignment"
@@ -1540,8 +1539,7 @@ let (compile_op :
                      FStar_String.concat "_" uu___4 in
                    Prims.op_Hat prefix uu___3 in
                  Prims.op_Hat "op_" uu___2)
-let (compile_op' :
-  Prims.string -> FStar_Compiler_Range.range -> Prims.string) =
+let compile_op' : 'uuuuu . Prims.string -> 'uuuuu -> Prims.string =
   fun s -> fun r -> compile_op (~- Prims.int_one) s r
 let (string_to_op :
   Prims.string ->
@@ -1627,7 +1625,19 @@ let (string_to_op :
                 (FStar_String.length "op_") in
             FStar_Compiler_Util.split uu___1 "_" in
           (match s1 with
-           | op::[] -> name_of_op op
+           | op::[] ->
+               if FStar_Compiler_Util.starts_with op "u"
+               then
+                 let uu___1 =
+                   let uu___2 =
+                     FStar_Compiler_Util.substring_from op Prims.int_one in
+                   FStar_Compiler_Util.safe_int_of_string uu___2 in
+                 FStar_Compiler_Util.map_opt uu___1
+                   (fun op1 ->
+                      ((FStar_Compiler_Util.string_of_char
+                          (FStar_Compiler_Util.char_of_int op1)),
+                        FStar_Pervasives_Native.None))
+               else name_of_op op
            | uu___1 ->
                let maybeop =
                  let uu___2 = FStar_Compiler_List.map name_of_op s1 in
