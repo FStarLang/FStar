@@ -1,4 +1,13 @@
 open Prims
+let (goal_ctr : Prims.int FStar_Compiler_Effect.ref) =
+  FStar_Compiler_Util.mk_ref Prims.int_zero
+let (get_goal_ctr : unit -> Prims.int) =
+  fun uu___ -> FStar_Compiler_Effect.op_Bang goal_ctr
+let (incr_goal_ctr : unit -> Prims.int) =
+  fun uu___ ->
+    let v = FStar_Compiler_Effect.op_Bang goal_ctr in
+    FStar_Compiler_Effect.op_Colon_Equals goal_ctr (v + Prims.int_one);
+    v + Prims.int_one
 type guard_handler_t =
   FStar_TypeChecker_Env.env -> FStar_Syntax_Syntax.typ -> Prims.bool
 type env =
@@ -912,6 +921,14 @@ let weaken_with_guard_formula :
       match p with
       | FStar_TypeChecker_Common.Trivial -> g
       | FStar_TypeChecker_Common.NonTrivial p1 -> weaken p1 g
+let (push_hypothesis : env -> FStar_Syntax_Syntax.term -> env) =
+  fun g ->
+    fun h ->
+      let bv =
+        FStar_Syntax_Syntax.new_bv
+          (FStar_Pervasives_Native.Some (h.FStar_Syntax_Syntax.pos)) h in
+      let b = FStar_Syntax_Syntax.mk_binder bv in
+      let uu___ = fresh_binder g b in FStar_Pervasives_Native.fst uu___
 let strengthen :
   'a .
     FStar_Syntax_Syntax.term ->
@@ -2154,31 +2171,37 @@ and (memo_check :
   =
   fun g ->
     fun e ->
-      let uu___ = lookup g e in
-      handle_with uu___
-        (fun uu___1 ->
-           fun ctx ->
-             let r = let uu___2 = check' g e in uu___2 ctx in
-             match r with
-             | FStar_Pervasives.Inl (res, FStar_Pervasives_Native.None) ->
-                 (insert g e (res, FStar_Pervasives_Native.None); r)
-             | FStar_Pervasives.Inl
-                 (res, FStar_Pervasives_Native.Some guard1) ->
-                 (match g.guard_handler with
-                  | FStar_Pervasives_Native.None ->
-                      (insert g e
-                         (res, (FStar_Pervasives_Native.Some guard1));
-                       r)
-                  | FStar_Pervasives_Native.Some gh ->
-                      let uu___2 = gh g.tcenv guard1 in
-                      if uu___2
-                      then
-                        let r1 = (res, FStar_Pervasives_Native.None) in
-                        (insert g e r1; FStar_Pervasives.Inl r1)
-                      else
-                        (let uu___4 = fail "guard handler failed" in
-                         uu___4 ctx))
-             | uu___2 -> r)
+      let check_then_memo g1 e1 ctx =
+        let r = let uu___ = check' g1 e1 in uu___ ctx in
+        match r with
+        | FStar_Pervasives.Inl (res, FStar_Pervasives_Native.None) ->
+            (insert g1 e1 (res, FStar_Pervasives_Native.None); r)
+        | FStar_Pervasives.Inl (res, FStar_Pervasives_Native.Some guard1) ->
+            (match g1.guard_handler with
+             | FStar_Pervasives_Native.None ->
+                 (insert g1 e1 (res, (FStar_Pervasives_Native.Some guard1));
+                  r)
+             | FStar_Pervasives_Native.Some gh ->
+                 let uu___ = gh g1.tcenv guard1 in
+                 if uu___
+                 then
+                   let r1 = (res, FStar_Pervasives_Native.None) in
+                   (insert g1 e1 r1; FStar_Pervasives.Inl r1)
+                 else
+                   (let uu___2 = fail "guard handler failed" in uu___2 ctx))
+        | uu___ -> r in
+      fun ctx ->
+        let uu___ = let uu___1 = lookup g e in uu___1 ctx in
+        match uu___ with
+        | FStar_Pervasives.Inr uu___1 -> check_then_memo g e ctx
+        | FStar_Pervasives.Inl (et, FStar_Pervasives_Native.None) ->
+            FStar_Pervasives.Inl (et, FStar_Pervasives_Native.None)
+        | FStar_Pervasives.Inl (et, FStar_Pervasives_Native.Some pre) ->
+            (match g.guard_handler with
+             | FStar_Pervasives_Native.None ->
+                 FStar_Pervasives.Inl
+                   (et, (FStar_Pervasives_Native.Some pre))
+             | FStar_Pervasives_Native.Some uu___1 -> check_then_memo g e ctx)
 and (check :
   Prims.string ->
     env ->
@@ -2389,18 +2412,7 @@ and (check' :
                                                          -> g
                                                      | FStar_TypeChecker_Common.NonTrivial
                                                          gf ->
-                                                         let bv =
-                                                           FStar_Syntax_Syntax.new_bv
-                                                             (FStar_Pervasives_Native.Some
-                                                                (t1.FStar_Syntax_Syntax.pos))
-                                                             gf in
-                                                         let b =
-                                                           FStar_Syntax_Syntax.mk_binder
-                                                             bv in
-                                                         let uu___10 =
-                                                           fresh_binder g b in
-                                                         FStar_Pervasives_Native.fst
-                                                           uu___10 in
+                                                         push_hypothesis g gf in
                                                    let uu___10 =
                                                      let uu___11 =
                                                        check "app arg" g' t2 in
@@ -2695,14 +2707,19 @@ and (check' :
                                                              FStar_Syntax_Util.mk_eq2
                                                                u_sc t_sc sc
                                                                e2 in
+                                                           let this_path_condition
+                                                             =
+                                                             FStar_Syntax_Util.mk_conj
+                                                               path_condition
+                                                               pat_sc_eq in
+                                                           let g'1 =
+                                                             push_hypothesis
+                                                               g'
+                                                               this_path_condition in
                                                            let uu___11 =
                                                              let uu___12 =
                                                                let uu___13 =
-                                                                 FStar_Syntax_Util.mk_conj
-                                                                   path_condition
-                                                                   pat_sc_eq in
-                                                               let uu___14 =
-                                                                 let uu___15
+                                                                 let uu___14
                                                                    =
                                                                    with_context
                                                                     "branch"
@@ -2710,17 +2727,17 @@ and (check' :
                                                                     (CtxTerm
                                                                     b1))
                                                                     (fun
-                                                                    uu___16
+                                                                    uu___15
                                                                     ->
                                                                     check
                                                                     "branch"
-                                                                    g' b1) in
+                                                                    g'1 b1) in
                                                                  op_let_Bang
-                                                                   uu___15
+                                                                   uu___14
                                                                    (fun
-                                                                    uu___16
+                                                                    uu___15
                                                                     ->
-                                                                    match uu___16
+                                                                    match uu___15
                                                                     with
                                                                     | 
                                                                     (eff_br,
@@ -2730,14 +2747,14 @@ and (check' :
                                                                     | 
                                                                     FStar_Pervasives_Native.None
                                                                     ->
-                                                                    let uu___17
+                                                                    let uu___16
                                                                     =
                                                                     check_no_escape
                                                                     bs tbr in
                                                                     op_let_Bang
-                                                                    uu___17
+                                                                    uu___16
                                                                     (fun
-                                                                    uu___18
+                                                                    uu___17
                                                                     ->
                                                                     return
                                                                     (eff_br,
@@ -2747,7 +2764,7 @@ and (check' :
                                                                     (acc_eff,
                                                                     expect_tbr)
                                                                     ->
-                                                                    let uu___17
+                                                                    let uu___16
                                                                     =
                                                                     with_context
                                                                     "check_branch_subtype"
@@ -2759,25 +2776,26 @@ and (check' :
                                                                     b1)),
                                                                     expect_tbr)))
                                                                     (fun
-                                                                    uu___18
+                                                                    uu___17
                                                                     ->
                                                                     check_subtype
-                                                                    g'
+                                                                    g'1
                                                                     (FStar_Pervasives_Native.Some
                                                                     b1) tbr
                                                                     expect_tbr) in
                                                                     op_let_Bang
-                                                                    uu___17
+                                                                    uu___16
                                                                     (fun
-                                                                    uu___18
+                                                                    uu___17
                                                                     ->
                                                                     return
                                                                     ((join_eff
                                                                     eff_br
                                                                     acc_eff),
                                                                     expect_tbr)))) in
-                                                               weaken uu___13
-                                                                 uu___14 in
+                                                               weaken
+                                                                 this_path_condition
+                                                                 uu___13 in
                                                              with_binders bs
                                                                us uu___12 in
                                                            op_let_Bang
@@ -3014,28 +3032,32 @@ and (check' :
                                                                     FStar_Syntax_Util.mk_eq2
                                                                     u_sc t_sc
                                                                     sc e2 in
+                                                                    let this_path_condition
+                                                                    =
+                                                                    FStar_Syntax_Util.mk_conj
+                                                                    path_condition
+                                                                    pat_sc_eq in
+                                                                    let g'1 =
+                                                                    push_hypothesis
+                                                                    g'
+                                                                    this_path_condition in
                                                                     let uu___15
                                                                     =
                                                                     let uu___16
                                                                     =
                                                                     let uu___17
                                                                     =
-                                                                    FStar_Syntax_Util.mk_conj
-                                                                    path_condition
-                                                                    pat_sc_eq in
                                                                     let uu___18
-                                                                    =
-                                                                    let uu___19
                                                                     =
                                                                     check
                                                                     "branch"
-                                                                    g' b1 in
+                                                                    g'1 b1 in
                                                                     op_let_Bang
-                                                                    uu___19
+                                                                    uu___18
                                                                     (fun
-                                                                    uu___20
+                                                                    uu___19
                                                                     ->
-                                                                    match uu___20
+                                                                    match uu___19
                                                                     with
                                                                     | 
                                                                     (eff_br,
@@ -3056,16 +3078,16 @@ and (check' :
                                                                     SUBTYPING
                                                                     (FStar_Pervasives_Native.Some
                                                                     b1) in
-                                                                    let uu___21
+                                                                    let uu___20
                                                                     =
                                                                     check_relation
-                                                                    g' rel
+                                                                    g'1 rel
                                                                     tbr
                                                                     expect_tbr in
                                                                     op_let_Bang
-                                                                    uu___21
+                                                                    uu___20
                                                                     (fun
-                                                                    uu___22
+                                                                    uu___21
                                                                     ->
                                                                     return
                                                                     ((join_eff
@@ -3073,8 +3095,8 @@ and (check' :
                                                                     acc_eff),
                                                                     expect_tbr))) in
                                                                     weaken
-                                                                    uu___17
-                                                                    uu___18 in
+                                                                    this_path_condition
+                                                                    uu___17 in
                                                                     with_binders
                                                                     bs us
                                                                     uu___16 in
@@ -3531,14 +3553,17 @@ let (check_term_top_gh :
                     (FStar_Options.Other "CoreTop")) in
              if uu___1
              then
-               let uu___2 = FStar_Syntax_Print.term_to_string e in
-               let uu___3 =
+               let uu___2 =
+                 let uu___3 = get_goal_ctr () in
+                 FStar_Compiler_Util.string_of_int uu___3 in
+               let uu___3 = FStar_Syntax_Print.term_to_string e in
+               let uu___4 =
                  match topt with
                  | FStar_Pervasives_Native.None -> ""
                  | FStar_Pervasives_Native.Some t ->
                      FStar_Syntax_Print.term_to_string t in
-               FStar_Compiler_Util.print2 "Entering core with %s <: %s\n"
-                 uu___2 uu___3
+               FStar_Compiler_Util.print3
+                 "(%s) Entering core with %s <: %s\n" uu___2 uu___3 uu___4
              else ());
             reset_cache_stats ();
             (let ctx = { no_guard = false; error_context = [] } in
@@ -3572,11 +3597,14 @@ let (check_term_top_gh :
                             (FStar_Options.Other "CoreTop")) in
                      if uu___3
                      then
-                       let uu___4 = FStar_Syntax_Print.term_to_string guard0 in
-                       let uu___5 = FStar_Syntax_Print.term_to_string guard1 in
-                       FStar_Compiler_Util.print2
-                         "Exiting core: Simplified guard from {{%s}} to {{%s}}\n"
-                         uu___4 uu___5
+                       let uu___4 =
+                         let uu___5 = get_goal_ctr () in
+                         FStar_Compiler_Util.string_of_int uu___5 in
+                       let uu___5 = FStar_Syntax_Print.term_to_string guard0 in
+                       let uu___6 = FStar_Syntax_Print.term_to_string guard1 in
+                       FStar_Compiler_Util.print3
+                         "(%s) Exiting core: Simplified guard from {{%s}} to {{%s}}\n"
+                         uu___4 uu___5 uu___6
                      else ());
                     FStar_Pervasives.Inl
                       (et, (FStar_Pervasives_Native.Some guard1)))
@@ -3589,7 +3617,11 @@ let (check_term_top_gh :
                             (FStar_Options.Other "CoreTop")) in
                      if uu___4
                      then
-                       FStar_Compiler_Util.print_string "Exiting core (ok)\n"
+                       let uu___5 =
+                         let uu___6 = get_goal_ctr () in
+                         FStar_Compiler_Util.string_of_int uu___6 in
+                       FStar_Compiler_Util.print1 "(%s) Exiting core (ok)\n"
+                         uu___5
                      else ());
                     res)
                | FStar_Pervasives.Inr uu___2 ->
@@ -3601,8 +3633,11 @@ let (check_term_top_gh :
                             (FStar_Options.Other "CoreTop")) in
                      if uu___4
                      then
-                       FStar_Compiler_Util.print_string
-                         "Exiting core (failed)\n"
+                       let uu___5 =
+                         let uu___6 = get_goal_ctr () in
+                         FStar_Compiler_Util.string_of_int uu___6 in
+                       FStar_Compiler_Util.print1
+                         "(%s) Exiting core (failed)\n" uu___5
                      else ());
                     res) in
              (let uu___3 =
@@ -3661,6 +3696,32 @@ let (compute_term_type_handle_guards :
               failwith
                 "Impossible: All guards should have been handled already"
           | FStar_Pervasives.Inr err -> FStar_Pervasives.Inr err
+let (open_binders_in_term :
+  FStar_TypeChecker_Env.env ->
+    FStar_Syntax_Syntax.binders ->
+      FStar_Syntax_Syntax.term ->
+        (FStar_TypeChecker_Env.env * FStar_Syntax_Syntax.binders *
+          FStar_Syntax_Syntax.term))
+  =
+  fun env1 ->
+    fun bs ->
+      fun t ->
+        let g = initial_env env1 FStar_Pervasives_Native.None in
+        let uu___ = open_term_binders g bs t in
+        match uu___ with | (g', bs1, t1) -> ((g'.tcenv), bs1, t1)
+let (open_binders_in_comp :
+  FStar_TypeChecker_Env.env ->
+    FStar_Syntax_Syntax.binders ->
+      FStar_Syntax_Syntax.comp ->
+        (FStar_TypeChecker_Env.env * FStar_Syntax_Syntax.binders *
+          FStar_Syntax_Syntax.comp))
+  =
+  fun env1 ->
+    fun bs ->
+      fun c ->
+        let g = initial_env env1 FStar_Pervasives_Native.None in
+        let uu___ = open_comp_binders g bs c in
+        match uu___ with | (g', bs1, c1) -> ((g'.tcenv), bs1, c1)
 let (check_term_equality :
   FStar_TypeChecker_Env.env ->
     FStar_Syntax_Syntax.typ ->

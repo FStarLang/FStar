@@ -5047,11 +5047,15 @@ let core_check_and_maybe_add_to_guard_uvar env uv t k must_tot =
     if Options.debug_any()
     then f () in
 
-  if Allow_untyped? (U.ctx_uvar_should_check uv)
+  let should_check = U.ctx_uvar_should_check uv in
+
+  if Allow_untyped? should_check
   then begin
     ignore (maybe_set_guard_uvar env uv U.t_true);
     Inl None
   end
+  else if Already_checked? should_check
+  then Inl None
   else
     match env.core_check env t k must_tot with
     | Inl None ->

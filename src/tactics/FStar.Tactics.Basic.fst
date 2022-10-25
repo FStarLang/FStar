@@ -274,7 +274,6 @@ let tc_unifier_solved_implicits dbg env (must_tot:bool) (allow_guards:bool) (uvs
           //no need to check it again
           mark_uvar_as_already_checked u;
           ret ()
-        )
   
         | Inl (Some g) ->
           if Options.admit_tactic_unification_guards()
