@@ -141,6 +141,8 @@ let defaults =
       ("abort_on"                     , Int 0);
       ("admit_smt_queries"            , Bool false);
       ("admit_except"                 , Unset);
+      ("admit_tactic_unification_guards", Bool false);            
+      ("disallow_unification_guards"  , Bool false);      
       ("already_cached"               , Unset);
       ("cache_checked_modules"        , Bool false);
       ("cache_dir"                    , Unset);
@@ -327,6 +329,8 @@ let lookup_opt s c =
 let get_abort_on                ()      = lookup_opt "abort_on"                 as_int
 let get_admit_smt_queries       ()      = lookup_opt "admit_smt_queries"        as_bool
 let get_admit_except            ()      = lookup_opt "admit_except"             (as_option as_string)
+let get_admit_tactic_unification_guards ()   = lookup_opt "admit_tactic_unification_guards" as_bool
+let get_disallow_unification_guards ()     = lookup_opt "disallow_unification_guards" as_bool
 let get_already_cached          ()      = lookup_opt "already_cached"           (as_option (as_list as_string))
 let get_cache_checked_modules   ()      = lookup_opt "cache_checked_modules"    as_bool
 let get_cache_dir               ()      = lookup_opt "cache_dir"                (as_option as_string)
@@ -640,6 +644,16 @@ let rec specs_with_types warn_unsafe : list (char * string * opt_type * string) 
         "admit_except",
         WithSideEffect ((fun _ -> if warn_unsafe then option_warning_callback "admit_except"), SimpleStr "[symbol|(symbol, id)]"),
         "Admit all queries, except those with label ( symbol,  id)) (e.g. --admit_except '(FStar.Fin.pigeonhole, 1)' or --admit_except FStar.Fin.pigeonhole)");
+
+      ( noshort,
+        "admit_tactic_unification_guards",
+        BoolStr,
+        "Admit SMT guards when the tactic engine re-checks solutions produced by the unifier (default 'false')");
+
+      ( noshort,
+        "disallow_unification_guards",
+        BoolStr,
+        "Fail if the SMT guard are produced when the tactic engine re-checks solutions produced by the unifier (default 'false')");
 
        ( noshort,
          "already_cached",
@@ -1344,6 +1358,8 @@ let settable = function
     | "abort_on"
     | "admit_except"
     | "admit_smt_queries"
+    | "admit_tactic_unification_guards"    
+    | "disallow_unification_guards"
     | "debug"
     | "debug_level"
     | "defensive"
@@ -1655,6 +1671,8 @@ let parse_settings ns : list (list string * bool) =
 let __temp_fast_implicits        () = lookup_opt "__temp_fast_implicits" as_bool
 let admit_smt_queries            () = get_admit_smt_queries           ()
 let admit_except                 () = get_admit_except                ()
+let admit_tactic_unification_guards     () = get_admit_tactic_unification_guards    ()
+let disallow_unification_guards     () = get_disallow_unification_guards    ()
 let cache_checked_modules        () = get_cache_checked_modules       ()
 let cache_off                    () = get_cache_off                   ()
 let print_cache_version          () = get_print_cache_version         ()

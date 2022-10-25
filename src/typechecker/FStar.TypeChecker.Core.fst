@@ -16,6 +16,10 @@ module TcUtil = FStar.TypeChecker.Util
 module Hash = FStar.Syntax.Hash
 module Subst = FStar.Syntax.Subst
 
+let goal_ctr = BU.mk_ref 0
+let get_goal_ctr () = !goal_ctr
+let incr_goal_ctr () = let v = !goal_ctr in goal_ctr := v + 1; v + 1
+
 let guard_handler_t = Env.env -> typ -> bool
 
 type env = {
@@ -473,7 +477,12 @@ let weaken_with_guard_formula (p:FStar.TypeChecker.Common.guard_formula) (g:resu
   = match p with
     | Common.Trivial -> g
     | Common.NonTrivial p -> weaken p g
-    
+
+let push_hypothesis (g:env) (h:term) = 
+    let bv = S.new_bv (Some h.pos) h in
+    let b = S.mk_binder bv in
+    fst (fresh_binder g b)
+
 let strengthen (p:term) (g:result 'a)
   = fun ctx ->
       match g ctx with
@@ -1040,25 +1049,39 @@ and check_subtype (g:env) (e:option term) (t0 t1:typ)
 
 and memo_check (g:env) (e:term)
   : result (effect_label & typ)
-  = handle_with
-      (lookup g e)
-      (fun _ ctx ->
-         let r = check' g e ctx in
-         match r with
-         | Inl (res, None) ->
-           insert g e (res, None);
-           r
-           
-         | Inl (res, Some guard) ->
-           (match g.guard_handler with
-            | None -> insert g e (res, Some guard); r
-            | Some gh ->
-              if gh g.tcenv guard
-              then let r = (res, None) in
-                   insert g e r; Inl r
-              else fail "guard handler failed" ctx)
+  = let check_then_memo g e ctx =
+      let r = check' g e ctx in
+      match r with
+      | Inl (res, None) ->
+        insert g e (res, None);
+        r
+          
+      | Inl (res, Some guard) ->
+        (match g.guard_handler with
+         | None -> insert g e (res, Some guard); r
+         | Some gh ->
+           if gh g.tcenv guard
+           then let r = (res, None) in
+                insert g e r; Inl r
+           else fail "guard handler failed" ctx)
 
-         | _ -> r)
+      | _ -> r
+    in
+    fun ctx ->
+      match lookup g e ctx with
+      | Inr _ -> //cache miss; check and insert
+        check_then_memo g e ctx
+
+      | Inl (et, None) -> //cache hit with no guard; great, just return
+        Inl (et, None)
+
+      | Inl (et, Some pre) -> //cache hit with a guard
+        match g.guard_handler with
+        | None -> Inl (et, Some pre) //if there's no guard handler, then just return
+        | Some _ ->
+          //otherwise check then memo, since this can
+          //repopulate the cache with a "better" entry that has no guard        
+          check_then_memo g e ctx
 
 and check (msg:string) (g:env) (e:term)
   : result (effect_label & typ)
@@ -1169,10 +1192,7 @@ and check' (g:env) (e:term)
     let g' = 
       match guard_formula with
       | Common.Trivial -> g
-      | Common.NonTrivial gf ->
-        let bv = S.new_bv (Some t1.pos) gf in
-        let b = S.mk_binder bv in
-        fst (fresh_binder g b)
+      | Common.NonTrivial gf -> push_hypothesis g gf
     in
     let! eff_arg2, t_t2 = weaken_with_guard_formula guard_formula (check "app arg" g' t2) in    
     with_context "operator arg2" None (fun _ -> check_subtype g' (Some t2) t_t2 y.binder_bv.sort) ;!
@@ -1264,10 +1284,12 @@ and check' (g:env) (e:term)
             with_context "Pattern and scrutinee type compatibility" None
                           (fun _ -> no_guard (check_scrutinee_pattern_type_compatible g' t_sc t)) ;!
             let pat_sc_eq = U.mk_eq2 u_sc t_sc sc e in
+            let this_path_condition = U.mk_conj path_condition pat_sc_eq in
+            let g' = push_hypothesis g' this_path_condition in
             let! eff_br, tbr =
               with_binders bs us
                 (weaken
-                  (U.mk_conj path_condition pat_sc_eq)
+                  this_path_condition
                   (let! eff_br, tbr = with_context "branch" (Some (CtxTerm b)) (fun _ -> check "branch" g' b) in
                    match branch_typ_opt with
                    | None ->
@@ -1345,10 +1367,12 @@ and check' (g:env) (e:term)
                          None
                           (fun _ -> no_guard (check_subtype g' (Some e) t_sc t)) ;!
             let pat_sc_eq = U.mk_eq2 u_sc t_sc sc e in
+            let this_path_condition = U.mk_conj path_condition pat_sc_eq in
+            let g' = push_hypothesis g' this_path_condition in 
             let! eff_br, tbr =
               with_binders bs us
                 (weaken
-                  (U.mk_conj path_condition pat_sc_eq)
+                  this_path_condition
                   (let! eff_br, tbr = check "branch" g' b in
                    let expect_tbr = Subst.subst [NT(as_x.binder_bv, e)] returns_ty in
                    let rel =
@@ -1919,7 +1943,8 @@ let simplify_steps =
 let check_term_top_gh g e topt (must_tot:bool) (gh:option guard_handler_t)
   = if Env.debug g (Options.Other "Core")
      || Env.debug g (Options.Other "CoreTop")
-    then BU.print2 "Entering core with %s <: %s\n"
+    then BU.print3 "(%s) Entering core with %s <: %s\n"
+                   (BU.string_of_int (get_goal_ctr()))    
                    (P.term_to_string e)
                    (match topt with None -> "" | Some t -> P.term_to_string t);
     reset_cache_stats();
@@ -1945,7 +1970,8 @@ let check_term_top_gh g e topt (must_tot:bool) (gh:option guard_handler_t)
         || Env.debug g (Options.Other "Core")
         || Env.debug g (Options.Other "CoreTop")        
         then
-          BU.print2 "Exiting core: Simplified guard from {{%s}} to {{%s}}\n"
+          BU.print3 "(%s) Exiting core: Simplified guard from {{%s}} to {{%s}}\n"
+            (BU.string_of_int (get_goal_ctr()))
             (P.term_to_string guard0)
             (P.term_to_string guard);
         Inl (et, Some guard)
@@ -1953,13 +1979,15 @@ let check_term_top_gh g e topt (must_tot:bool) (gh:option guard_handler_t)
       | Inl _ ->
         if Env.debug g (Options.Other "Core")        
         ||  Env.debug g (Options.Other "CoreTop")        
-        then BU.print_string "Exiting core (ok)\n";
+        then BU.print1 "(%s) Exiting core (ok)\n"
+                    (BU.string_of_int (get_goal_ctr()));
         res
 
       | Inr _ ->
         if Env.debug g (Options.Other "Core")        
         ||  Env.debug g (Options.Other "CoreTop")                
-        then BU.print_string "Exiting core (failed)\n";      
+        then BU.print1 "(%s) Exiting core (failed)\n"
+                       (BU.string_of_int (get_goal_ctr()));
         res
     in
     if FStar.Options.profile_enabled None "FStar.TypeChecker.Core.check_term_top"
@@ -1983,6 +2011,16 @@ let compute_term_type_handle_guards g e must_tot gh =
   | Inl (None, _) -> failwith "Impossible: Success must return some effect and type"
   | Inl (_, Some _) -> failwith "Impossible: All guards should have been handled already"
   | Inr err -> Inr err
+
+let open_binders_in_term (env:Env.env) (bs:binders) (t:term) =
+  let g = initial_env env None in
+  let g', bs, t = open_term_binders g bs t in
+  g'.tcenv, bs, t
+
+let open_binders_in_comp (env:Env.env) (bs:binders) (c:comp) =
+  let g = initial_env env None in
+  let g', bs, c = open_comp_binders g bs c in
+  g'.tcenv, bs, c
 
 let check_term_equality g t0 t1
   = let g = initial_env g None in

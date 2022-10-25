@@ -39,6 +39,31 @@ module UF      = FStar.Syntax.Unionfind
 module Print   = FStar.Syntax.Print
 module Env     = FStar.TypeChecker.Env
 module Rel     = FStar.TypeChecker.Rel
+module Core    = FStar.TypeChecker.Core
+
+let goal_ctr = BU.mk_ref 0
+let get_goal_ctr () = !goal_ctr
+let incr_goal_ctr () = let v = !goal_ctr in goal_ctr := v + 1; v
+
+let register_goal (env:Env.env) (uv:S.ctx_uvar) =
+      let i = Core.incr_goal_ctr () in
+      let env = {env with gamma = uv.ctx_uvar_gamma } in
+      if Env.debug env <| Options.Other "Core"
+      ||  Env.debug env <| Options.Other "RegisterGoal"
+      then BU.print2 "(%s) Registering goal for %s\n"
+                     (BU.string_of_int i)
+                     (Print.ctx_uvar_to_string uv);
+      let goal_ty = U.ctx_uvar_typ uv in
+      // let goal_ty = FStar.TypeChecker.Normalize.normalize [Beta; Iota; Exclude Zeta] env goal_ty in
+      match FStar.TypeChecker.Core.compute_term_type_handle_guards env goal_ty false (fun _ _ -> true) 
+      with
+      | Inl _ -> ()
+      | Inr err ->
+        Errors.log_issue uv.ctx_uvar_range
+                         (Err.Warning_FailedToCheckInitialTacticGoal, 
+                         BU.format2 ("Failed to check initial tactic goal %s because %s")
+                             (Print.term_to_string (U.ctx_uvar_typ uv))
+                             (FStar.TypeChecker.Core.print_error_short err))
 
 (*
  * A record, so we can keep it somewhat encapsulated and

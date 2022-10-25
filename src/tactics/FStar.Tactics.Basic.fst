@@ -105,6 +105,7 @@ let goal_with_type g t
   : goal
   = let u = g.goal_ctx_uvar in
     set_uvar_expected_typ u t;
+    Monad.register_goal (goal_env g) u;
     g
 
 let bnorm_goal g = goal_with_type g (bnorm (goal_env g) (goal_type g))
@@ -255,41 +256,55 @@ let proc_guard = proc_guard' true
 let tc_unifier_solved_implicits dbg env (must_tot:bool) (allow_guards:bool) (uvs:list ctx_uvar) : tac unit =
   let aux (u:ctx_uvar) : tac unit =
     let dec = UF.find_decoration u.ctx_uvar_head in
-    match UF.find u.ctx_uvar_head with
-    | None -> ret () //not solved yet
-    | Some sol ->  //solved, check it
-      let env = {env with gamma=u.ctx_uvar_gamma} in
-      let must_tot = must_tot && not (Allow_ghost? dec.uvar_decoration_should_check) in
-      match Rel.core_check_and_maybe_add_to_guard_uvar env u sol (U.ctx_uvar_typ u) must_tot with
-      | Inl None ->
-        //checked with no guard
-        //or folded into some guard uvar
-        //no need to check it again
-        mark_uvar_as_already_checked u;
-        ret ()
-
-      | Inl (Some g) ->
-        let guard = { Env.trivial_guard with guard_f = NonTrivial g } in
-        let guard = Rel.simplify_guard env guard in
-
-        if Trivial? guard.guard_f
-        then ret ()
-        else if false && not allow_guards // Nik: Disable it for now
-        then (
-          fail2 "Could not typecheck unifier solved implicit %s to %s since it produced a guard and guards were not allowed"
-            (Print.uvar_to_string u.ctx_uvar_head)
-            (N.term_to_string env sol)
-        )
-        else (
-          proc_guard' false "guard for implicit" env guard u.ctx_uvar_range ;!
+    match dec.uvar_decoration_should_check with
+    | Allow_untyped _ ->
+      ret ()
+    | Already_checked -> 
+      ret ()
+    | _ ->
+      match UF.find u.ctx_uvar_head with
+      | None ->
+        ret () //not solved yet
+      | Some sol ->  //solved, check it
+        let env = {env with gamma=u.ctx_uvar_gamma} in
+        let must_tot = must_tot && not (Allow_ghost? dec.uvar_decoration_should_check) in
+        match Rel.core_check_and_maybe_add_to_guard_uvar env u sol (U.ctx_uvar_typ u) must_tot with
+        | Inl None ->
+          //checked with no guard
+          //no need to check it again
+          mark_uvar_as_already_checked u;
           ret ()
         )
   
-      | Inr failed ->
-        fail3 "Could not typecheck unifier solved implicit %s to %s because %s" 
-          (Print.uvar_to_string u.ctx_uvar_head)
-          (N.term_to_string env sol)
-          (failed true)
+        | Inl (Some g) ->
+          if Options.admit_tactic_unification_guards()
+          then (
+            mark_uvar_as_already_checked u;
+            ret ()
+          )
+          else (
+            let guard = { Env.trivial_guard with guard_f = NonTrivial g } in
+            let guard = Rel.simplify_guard env guard in
+            if Options.disallow_unification_guards ()
+            && not allow_guards
+            && NonTrivial? guard.guard_f
+            then (
+              fail2 "Could not typecheck unifier solved implicit %s to %s since it produced a guard and guards were not allowed"
+                (Print.uvar_to_string u.ctx_uvar_head)
+                (Print.term_to_string sol)
+            )
+            else (
+              proc_guard' false "guard for implicit" env guard u.ctx_uvar_range ;!
+              mark_uvar_as_already_checked u;
+              ret ()
+            )
+          )
+              
+        | Inr failed ->
+          fail3 "Could not typecheck unifier solved implicit %s to %s because %s" 
+            (Print.uvar_to_string u.ctx_uvar_head)
+            (Print.term_to_string sol)
+            (failed true)
   in
   if env.phase1 //phase1 is untrusted
   then ret ()
@@ -636,6 +651,13 @@ let should_check_goal_uvar (g:goal) = U.ctx_uvar_should_check g.goal_ctx_uvar
 
 let bnorm_and_replace g = replace_cur (bnorm_goal g)
 
+let arrow_one (env:Env.env) (t:term) =
+  match U.arrow_one_ln t with
+  | None -> None
+  | Some (b, c) ->
+    let env, [b], c = FStar.TypeChecker.Core.open_binders_in_comp env [b] c in
+    Some (env, b, c)
+
 (*
   [intro]:
 
@@ -649,12 +671,11 @@ let bnorm_and_replace g = replace_cur (bnorm_goal g)
 *)
 let intro () : tac binder = wrap_err "intro" <|
     bind cur_goal (fun goal ->
-    match U.arrow_one (whnf (goal_env goal) (goal_type goal)) with
-    | Some (b, c) ->
+    match arrow_one (goal_env goal) (whnf (goal_env goal) (goal_type goal)) with
+    | Some (env', b, c) ->
         if not (U.is_total_comp c)
         then fail "Codomain is effectful"
-        else let env' = Env.push_binders (goal_env goal) [b] in
-             let typ' = U.comp_result c in
+        else let typ' = U.comp_result c in
              //BU.print1 "[intro]: current goal is %s" (goal_to_string goal);
              //BU.print1 "[intro]: current goal witness is %s" (Print.term_to_string (goal_witness goal));
              //BU.print1 "[intro]: with goal type %s" (Print.term_to_string (goal_type goal));
@@ -703,13 +724,11 @@ let intro_rec () : tac (binder * binder) =
     bind cur_goal (fun goal ->
     BU.print_string "WARNING (intro_rec): calling this is known to cause normalizer loops\n";
     BU.print_string "WARNING (intro_rec): proceed at your own risk...\n";
-    match U.arrow_one (whnf (goal_env goal) (goal_type goal)) with
-    | Some (b, c) ->
+    match arrow_one (goal_env goal) (whnf (goal_env goal) (goal_type goal)) with
+    | Some (env', b, c) ->
         if not (U.is_total_comp c)
         then fail "Codomain is effectful"
         else let bv = gen_bv "__recf" None (goal_type goal) in
-             let bs = [S.mk_binder bv; b] in // recursively bound name and argument we're introducing
-             let env' = Env.push_binders (goal_env goal) bs in
              bind (new_uvar "intro_rec" env' (U.comp_result c) (Some (should_check_goal_uvar goal)) (rangeof goal)) (fun (u, ctx_uvar_u) ->
              let lb = U.mk_letbinding (Inl bv) [] (goal_type goal) PC.effect_Tot_lid (U.abs [b] u None) [] Range.dummyRange in
              let body = S.bv_to_name bv in
@@ -906,6 +925,7 @@ let t_apply (uopt:bool) (only_match:bool) (tc_resolved_uvars:bool) (tm:term) : t
     let! ps = get in
     let! goal = cur_goal in
     let e = goal_env goal in
+    Monad.register_goal e goal.goal_ctx_uvar;    
     if_verbose
       (fun () -> BU.print3 "t_apply: tm = %s\nt_apply: goal = %s\nenv.gamma=%s\n"
                         (Print.term_to_string tm)
@@ -986,6 +1006,7 @@ let t_apply_lemma (noinst:bool) (noinst_lhs:bool)
     in
     let! goal = cur_goal in
     let env = goal_env goal in
+    Monad.register_goal env goal.goal_ctx_uvar;
     let! tm, t, guard = __tc env tm in
     let bs, comp = U.arrow_formals_comp t in
     match lemma_or_sq comp with
@@ -1084,10 +1105,6 @@ let split_env (bvar : bv) (e : env) : option (env * bv * list bv) =
     in
     map_opt (aux e) (fun (e', bv, bvs) -> (e', bv, List.rev bvs))
 
-let push_bvs e bvs =
-    List.fold_left (fun e b -> Env.push_bv e b) e bvs
-
-
 let subst_goal (b1 : bv) (b2 : bv) (g:goal) : tac (option (bv * goal)) =
     match split_env b1 (goal_env g) with
     | Some (e0, b1, bvs) ->
@@ -1102,13 +1119,12 @@ let subst_goal (b1 : bv) (b2 : bv) (g:goal) : tac (option (bv * goal)) =
         let bs' = (S.mk_binder b2) :: List.tail bs' in
 
         (* Re-open, all done for renaming *)
-        let bs'', t'' = SS.open_term bs' t' in
+        let new_env, bs'', t'' = Core.open_binders_in_term e0 bs' t' in
 
-        (* b2 has been freshened *)
+        // (* b2 has been freshened *)
         let b2 = (List.hd bs'').binder_bv in
 
-        (* Make a new goal in the new env (with new binders) *)
-        let new_env = push_bvs e0 (List.map (fun b -> b.binder_bv) bs'') in
+        // (* Make a new goal in the new env (with new binders) *)
         bind (new_uvar "subst_goal" new_env t'' (Some (should_check_goal_uvar g)) (rangeof g)) (fun (uvt, uv) ->
         let goal' = mk_goal new_env uv g.opts g.is_guard g.label in
 
@@ -1144,9 +1160,7 @@ let rewrite (h:binder) : tac unit = wrap_err "rewrite" <|
 
              let bs', t' = SS.subst_binders s bs', SS.subst s t' in
 
-             let bs'', t'' = SS.open_term bs' t' in
-
-             let new_env = push_bvs e0 (bv::(List.map (fun b -> b.binder_bv) bs'')) in
+             let new_env, bs'', t'' = Core.open_binders_in_term e0 bs' t' in
 
              //
              // AR: TODO: what about copying apply deps here?
@@ -1186,7 +1200,7 @@ let binder_retype (b : binder) : tac unit = wrap_err "binder_retype" <|
         let bv'' = {bv with sort = t'} in
         let s = [S.NT (bv, S.bv_to_name bv'')] in
         let bvs = List.map (fun b -> { b with sort = SS.subst s b.sort }) bvs in
-        let env' = push_bvs e0 (bv''::bvs) in
+        let env' = Env.push_bvs e0 (bv''::bvs) in
         bind dismiss (fun _ ->
         let new_goal = 
           goal_with_type
@@ -1208,7 +1222,7 @@ let norm_binder_type (s : list EMB.norm_step) (b : binder) : tac unit = wrap_err
         let steps = [Env.Reify; Env.UnfoldTac]@(Cfg.translate_norm_steps s) in
         let sort' = normalize steps e0 bv.sort in
         let bv' = { bv with sort = sort' } in
-        let env' = push_bvs e0 (bv'::bvs) in
+        let env' = Env.push_bvs e0 (bv'::bvs) in
         replace_cur (goal_with_env goal env')
         end
     )
@@ -1248,7 +1262,7 @@ let clear (b : binder) : tac unit =
         if free_in bv (goal_type goal) then
             fail "Cannot clear; binder present in goal"
         else bind (check bvs) (fun () ->
-        let env' = push_bvs e' bvs in
+        let env' = Env.push_bvs e' bvs in
         bind (new_uvar "clear.witness" env' (goal_type goal) (Some (should_check_goal_uvar goal)) (rangeof goal)) (fun (ut, uvar_ut) ->
         bind (set_solution goal ut) (fun () ->
         replace_cur (mk_goal env' uvar_ut goal.opts goal.is_guard goal.label))))))
@@ -1280,6 +1294,7 @@ let guard_formula (g:guard_t) : term =
 
 let _t_trefl (allow_guards:bool) (l : term) (r : term) : tac unit =
   bind cur_goal (fun g ->
+  Monad.register_goal (goal_env g) g.goal_ctx_uvar;  
   let attempt (l : term) (r : term) : tac bool =
     bind (let must_tot = true in
           do_unify_maybe_guards allow_guards must_tot (goal_env g) l r) (function
