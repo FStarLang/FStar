@@ -460,7 +460,22 @@ let (__proj__Mkhash_entry__item__he_res :
   fun projectee ->
     match projectee with | { he_term; he_gamma; he_res;_} -> he_res
 type tc_table = (FStar_Syntax_Syntax.term, hash_entry) FStar_Hash.hashtable
-let (table : tc_table) = FStar_Hash.create FStar_Syntax_Hash.equal_term
+let (equal_term_for_hash :
+  FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.term -> Prims.bool) =
+  fun t1 ->
+    fun t2 ->
+      FStar_Profiling.profile
+        (fun uu___ -> FStar_Syntax_Hash.equal_term t1 t2)
+        FStar_Pervasives_Native.None
+        "FStar.TypeChecker.Core.equal_term_for_hash"
+let (equal_term :
+  FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.term -> Prims.bool) =
+  fun t1 ->
+    fun t2 ->
+      FStar_Profiling.profile
+        (fun uu___ -> FStar_Syntax_Hash.equal_term t1 t2)
+        FStar_Pervasives_Native.None "FStar.TypeChecker.Core.equal_term"
+let (table : tc_table) = FStar_Hash.create equal_term_for_hash
 type cache_stats_t = {
   hits: Prims.int ;
   misses: Prims.int }
@@ -502,7 +517,7 @@ let (insert :
             he_gamma = ((g.tcenv).FStar_TypeChecker_Env.gamma);
             he_res = res
           } in
-        FStar_Hash.insert (e, FStar_Syntax_Hash.hash_term) entry table
+        FStar_Hash.insert (e, FStar_Syntax_Hash.ext_hash_term) entry table
 let return : 'a . 'a -> 'a result =
   fun x ->
     fun uu___ -> FStar_Pervasives.Inl (x, FStar_Pervasives_Native.None)
@@ -1041,7 +1056,7 @@ let rec (context_included :
                     x0.FStar_Syntax_Syntax.index =
                       x1.FStar_Syntax_Syntax.index
                   then
-                    (FStar_Syntax_Hash.equal_term x0.FStar_Syntax_Syntax.sort
+                    (equal_term x0.FStar_Syntax_Syntax.sort
                        x1.FStar_Syntax_Syntax.sort)
                       && (context_included g0' g1')
                   else context_included g0 g1'
@@ -1078,7 +1093,8 @@ let (lookup :
   =
   fun g ->
     fun e ->
-      let uu___ = FStar_Hash.lookup (e, FStar_Syntax_Hash.hash_term) table in
+      let uu___ =
+        FStar_Hash.lookup (e, FStar_Syntax_Hash.ext_hash_term) table in
       match uu___ with
       | FStar_Pervasives_Native.None -> fail "not in cache"
       | FStar_Pervasives_Native.Some he ->
@@ -1261,7 +1277,7 @@ let rec (check_relation :
                      FStar_Syntax_Syntax.bv_eq x0 x1
                  | (FStar_Syntax_Syntax.Tm_constant c0,
                     FStar_Syntax_Syntax.Tm_constant c1) ->
-                     FStar_Syntax_Hash.equal_term head0 head1
+                     equal_term head0 head1
                  | (FStar_Syntax_Syntax.Tm_type uu___2,
                     FStar_Syntax_Syntax.Tm_type uu___3) -> true
                  | (FStar_Syntax_Syntax.Tm_arrow uu___2,
@@ -1300,44 +1316,48 @@ let rec (check_relation :
                  | (FStar_Pervasives_Native.None,
                     FStar_Pervasives_Native.None) -> Neither in
                let maybe_unfold_side side1 t01 t11 =
-                 match side1 with
-                 | Neither -> FStar_Pervasives_Native.None
-                 | Both ->
-                     let uu___1 =
-                       let uu___2 =
-                         FStar_TypeChecker_Normalize.maybe_unfold_head
-                           g.tcenv t01 in
-                       let uu___3 =
-                         FStar_TypeChecker_Normalize.maybe_unfold_head
-                           g.tcenv t11 in
-                       (uu___2, uu___3) in
-                     (match uu___1 with
-                      | (FStar_Pervasives_Native.Some t02,
-                         FStar_Pervasives_Native.Some t12) ->
-                          FStar_Pervasives_Native.Some (t02, t12)
-                      | (FStar_Pervasives_Native.Some t02,
-                         FStar_Pervasives_Native.None) ->
-                          FStar_Pervasives_Native.Some (t02, t11)
-                      | (FStar_Pervasives_Native.None,
-                         FStar_Pervasives_Native.Some t12) ->
-                          FStar_Pervasives_Native.Some (t01, t12)
-                      | uu___2 -> FStar_Pervasives_Native.None)
-                 | Left ->
-                     let uu___1 =
-                       FStar_TypeChecker_Normalize.maybe_unfold_head 
-                         g.tcenv t01 in
-                     (match uu___1 with
-                      | FStar_Pervasives_Native.Some t02 ->
-                          FStar_Pervasives_Native.Some (t02, t11)
-                      | uu___2 -> FStar_Pervasives_Native.None)
-                 | Right ->
-                     let uu___1 =
-                       FStar_TypeChecker_Normalize.maybe_unfold_head 
-                         g.tcenv t11 in
-                     (match uu___1 with
-                      | FStar_Pervasives_Native.Some t12 ->
-                          FStar_Pervasives_Native.Some (t01, t12)
-                      | uu___2 -> FStar_Pervasives_Native.None) in
+                 FStar_Profiling.profile
+                   (fun uu___1 ->
+                      match side1 with
+                      | Neither -> FStar_Pervasives_Native.None
+                      | Both ->
+                          let uu___2 =
+                            let uu___3 =
+                              FStar_TypeChecker_Normalize.maybe_unfold_head
+                                g.tcenv t01 in
+                            let uu___4 =
+                              FStar_TypeChecker_Normalize.maybe_unfold_head
+                                g.tcenv t11 in
+                            (uu___3, uu___4) in
+                          (match uu___2 with
+                           | (FStar_Pervasives_Native.Some t02,
+                              FStar_Pervasives_Native.Some t12) ->
+                               FStar_Pervasives_Native.Some (t02, t12)
+                           | (FStar_Pervasives_Native.Some t02,
+                              FStar_Pervasives_Native.None) ->
+                               FStar_Pervasives_Native.Some (t02, t11)
+                           | (FStar_Pervasives_Native.None,
+                              FStar_Pervasives_Native.Some t12) ->
+                               FStar_Pervasives_Native.Some (t01, t12)
+                           | uu___3 -> FStar_Pervasives_Native.None)
+                      | Left ->
+                          let uu___2 =
+                            FStar_TypeChecker_Normalize.maybe_unfold_head
+                              g.tcenv t01 in
+                          (match uu___2 with
+                           | FStar_Pervasives_Native.Some t02 ->
+                               FStar_Pervasives_Native.Some (t02, t11)
+                           | uu___3 -> FStar_Pervasives_Native.None)
+                      | Right ->
+                          let uu___2 =
+                            FStar_TypeChecker_Normalize.maybe_unfold_head
+                              g.tcenv t11 in
+                          (match uu___2 with
+                           | FStar_Pervasives_Native.Some t12 ->
+                               FStar_Pervasives_Native.Some (t01, t12)
+                           | uu___3 -> FStar_Pervasives_Native.None))
+                   FStar_Pervasives_Native.None
+                   "FStar.TypeChecker.Core.maybe_unfold_side" in
                let maybe_unfold t01 t11 =
                  let uu___1 = which_side_to_unfold t01 t11 in
                  maybe_unfold_side uu___1 t01 t11 in
@@ -1395,17 +1415,21 @@ let rec (check_relation :
                  | FStar_Syntax_Syntax.Tm_refine uu___1 ->
                      FStar_Syntax_Util.flatten_refinement t2
                  | uu___1 -> t2 in
+               let beta_iota_reduce1 t =
+                 FStar_Profiling.profile (fun uu___1 -> beta_iota_reduce t)
+                   FStar_Pervasives_Native.None
+                   "FStar.TypeChecker.Core.beta_iota_reduce" in
                let t01 =
-                 let uu___1 = beta_iota_reduce t0 in
+                 let uu___1 = beta_iota_reduce1 t0 in
                  FStar_Syntax_Subst.compress uu___1 in
                let t11 =
-                 let uu___1 = beta_iota_reduce t1 in
+                 let uu___1 = beta_iota_reduce1 t1 in
                  FStar_Syntax_Subst.compress uu___1 in
                let check_relation1 g1 rel1 t02 t12 =
                  with_context "check_relation"
                    (FStar_Pervasives_Native.Some (CtxRel (t02, rel1, t12)))
                    (fun uu___1 -> check_relation g1 rel1 t02 t12) in
-               let uu___1 = FStar_Syntax_Hash.equal_term t01 t11 in
+               let uu___1 = equal_term t01 t11 in
                if uu___1
                then return ()
                else
@@ -1447,7 +1471,7 @@ let rec (check_relation :
                      (t12, uu___4, uu___5)) -> check_relation1 g rel t01 t12
                   | (FStar_Syntax_Syntax.Tm_uinst (f0, us0),
                      FStar_Syntax_Syntax.Tm_uinst (f1, us1)) ->
-                      let uu___3 = FStar_Syntax_Hash.equal_term f0 f1 in
+                      let uu___3 = equal_term f0 f1 in
                       if uu___3
                       then
                         let uu___4 =
@@ -2153,16 +2177,24 @@ and (check_relation_comp :
 and (check_subtype :
   env ->
     FStar_Syntax_Syntax.term FStar_Pervasives_Native.option ->
-      FStar_Syntax_Syntax.typ -> FStar_Syntax_Syntax.typ -> unit result)
+      FStar_Syntax_Syntax.typ ->
+        FStar_Syntax_Syntax.typ ->
+          context -> (unit success, error) FStar_Pervasives.either)
   =
   fun g ->
     fun e ->
       fun t0 ->
         fun t1 ->
-          let rel = SUBTYPING e in
-          with_context "check_subtype"
-            (FStar_Pervasives_Native.Some (CtxRel (t0, rel, t1)))
-            (fun uu___ -> check_relation g rel t0 t1)
+          fun ctx ->
+            FStar_Profiling.profile
+              (fun uu___ ->
+                 let rel = SUBTYPING e in
+                 let uu___1 =
+                   with_context "check_subtype"
+                     (FStar_Pervasives_Native.Some (CtxRel (t0, rel, t1)))
+                     (fun uu___2 -> check_relation g rel t0 t1) in
+                 uu___1 ctx) FStar_Pervasives_Native.None
+              "FStar.TypeChecker.Core.check_subtype"
 and (memo_check :
   env ->
     FStar_Syntax_Syntax.term ->
@@ -3009,15 +3041,12 @@ and (check' :
                                                                     (fun
                                                                     uu___14
                                                                     ->
-                                                                    let uu___15
-                                                                    =
-                                                                    check_subtype
+                                                                    no_guard
+                                                                    (check_subtype
                                                                     g'
                                                                     (FStar_Pervasives_Native.Some
                                                                     e2) t_sc
-                                                                    t in
-                                                                    no_guard
-                                                                    uu___15) in
+                                                                    t)) in
                                                                     op_let_Bang
                                                                     uu___13
                                                                     (fun
@@ -3641,11 +3670,38 @@ let (check_term_top_gh :
                   "FStar.TypeChecker.Core.check_term_top" in
               if uu___3
               then
-                let cs = report_cache_stats () in
-                let uu___4 = FStar_Compiler_Util.string_of_int cs.hits in
-                let uu___5 = FStar_Compiler_Util.string_of_int cs.misses in
-                FStar_Compiler_Util.print2
-                  "Cache_stats { hits = %s; misses = %s }\n" uu___4 uu___5
+                FStar_Hash.max_bucket_stats table
+                  (fun hash_opt ->
+                     fun entries ->
+                       match hash_opt with
+                       | FStar_Pervasives_Native.None -> ()
+                       | FStar_Pervasives_Native.Some h ->
+                           ((let uu___5 = FStar_Compiler_Util.string_of_int h in
+                             let uu___6 =
+                               FStar_Compiler_Util.string_of_int
+                                 (FStar_Compiler_List.length entries) in
+                             FStar_Compiler_Util.print2
+                               "Hash %s had the largest bucket with size %s and entries {{\n"
+                               uu___5 uu___6);
+                            FStar_Compiler_List.iteri
+                              (fun i ->
+                                 fun uu___6 ->
+                                   match uu___6 with
+                                   | (t, uu___7) ->
+                                       let uu___8 =
+                                         FStar_Compiler_Util.string_of_int i in
+                                       let uu___9 =
+                                         let uu___10 =
+                                           FStar_Syntax_Hash.ext_hash_term_no_memo
+                                             t in
+                                         FStar_Hash.string_of_hash_code
+                                           uu___10 in
+                                       let uu___10 =
+                                         FStar_Syntax_Print.term_to_string t in
+                                       FStar_Compiler_Util.print3
+                                         "%s (hash code %s): %s\n" uu___8
+                                         uu___9 uu___10) entries;
+                            FStar_Compiler_Util.print_string "}}\n"))
               else ());
              res1)
 let (check_term :

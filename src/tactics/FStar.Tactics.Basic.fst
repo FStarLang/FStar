@@ -55,7 +55,8 @@ module Core   = FStar.TypeChecker.Core
 
 let core_check env sol t must_tot
   : either (option typ) Core.error
-  = let debug f =
+  = if Options.admit_tactic_unification_guards() then Inl None else
+    let debug f =
         if Options.debug_any()
         then f ()
         else ()

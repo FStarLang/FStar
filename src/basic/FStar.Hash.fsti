@@ -14,3 +14,5 @@ val create : cmp 'a -> hashtable 'a 'b
 val insert : hashable 'a -> 'b -> hashtable 'a 'b -> unit
 val lookup : hashable 'a -> hashtable 'a 'b -> option 'b
 val clear: hashtable 'a 'b -> unit
+val max_bucket_stats : hashtable 'a 'b -> (option int -> list ('a & 'b) -> unit) -> unit
+val string_of_hash_code : hash_code -> string

@@ -24,5 +24,6 @@ open FStar.Syntax.Syntax
 open FStar.Const
 module H = FStar.Hash
 
-val hash_term (t:term) : H.hash_code
+val ext_hash_term (t:term) : H.hash_code
+val ext_hash_term_no_memo (t:term) : H.hash_code
 val equal_term (t0 t1:term) : bool

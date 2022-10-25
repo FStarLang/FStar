@@ -1,198 +1,271 @@
 open Prims
-let memoize :
+type 't mm = Prims.bool -> ('t * Prims.bool)
+let op_let_Question : 's 't . 't mm -> ('t -> 's mm) -> 's mm =
+  fun f ->
+    fun g ->
+      fun b ->
+        let uu___ = f b in
+        match uu___ with | (t1, b1) -> let uu___1 = g t1 in uu___1 b1
+let ret : 't . 't -> 't mm = fun x -> fun b -> (x, b)
+let (should_memo : Prims.bool mm) = fun b -> (b, b)
+let (no_memo : unit mm) = fun uu___ -> ((), false)
+let maybe_memoize :
   'a .
     'a FStar_Syntax_Syntax.syntax ->
-      ('a FStar_Syntax_Syntax.syntax -> FStar_Hash.hash_code) ->
-        FStar_Hash.hash_code
+      ('a FStar_Syntax_Syntax.syntax -> FStar_Hash.hash_code mm) ->
+        FStar_Hash.hash_code mm
   =
   fun h ->
     fun f ->
-      let uu___ =
-        FStar_Compiler_Effect.op_Bang h.FStar_Syntax_Syntax.hash_code in
-      match uu___ with
-      | FStar_Pervasives_Native.Some c -> c
-      | FStar_Pervasives_Native.None ->
-          let c = f h in
-          (FStar_Compiler_Effect.op_Colon_Equals
-             h.FStar_Syntax_Syntax.hash_code (FStar_Pervasives_Native.Some c);
-           c)
-let rec (mix_list : FStar_Hash.hash_code Prims.list -> FStar_Hash.hash_code)
+      fun should_memo1 ->
+        if should_memo1
+        then
+          let uu___ =
+            FStar_Compiler_Effect.op_Bang h.FStar_Syntax_Syntax.hash_code in
+          match uu___ with
+          | FStar_Pervasives_Native.Some c -> (c, should_memo1)
+          | FStar_Pervasives_Native.None ->
+              let uu___1 = let uu___2 = f h in uu___2 should_memo1 in
+              (match uu___1 with
+               | (c, should_memo2) ->
+                   (if should_memo2
+                    then
+                      FStar_Compiler_Effect.op_Colon_Equals
+                        h.FStar_Syntax_Syntax.hash_code
+                        (FStar_Pervasives_Native.Some c)
+                    else ();
+                    (c, should_memo2)))
+        else (let uu___1 = f h in uu___1 should_memo1)
+let (of_int : Prims.int -> FStar_Hash.hash_code mm) =
+  fun i -> let uu___ = FStar_Hash.of_int i in ret uu___
+let (of_string : Prims.string -> FStar_Hash.hash_code mm) =
+  fun s -> let uu___ = FStar_Hash.of_string s in ret uu___
+let (mix :
+  FStar_Hash.hash_code mm ->
+    FStar_Hash.hash_code mm -> FStar_Hash.hash_code mm)
   =
+  fun f ->
+    fun g ->
+      fun b ->
+        let uu___ = f b in
+        match uu___ with
+        | (x, b0) ->
+            let uu___1 = g b in
+            (match uu___1 with
+             | (y, b1) ->
+                 let uu___2 = FStar_Hash.mix x y in (uu___2, (b0 && b1)))
+let (nil_hc : FStar_Hash.hash_code mm) = of_int (Prims.of_int (1229))
+let (cons_hc : FStar_Hash.hash_code mm) = of_int (Prims.of_int (1231))
+let (mix_list :
+  FStar_Hash.hash_code mm Prims.list -> FStar_Hash.hash_code mm) =
   fun l ->
-    match l with
-    | [] -> FStar_Hash.of_int (Prims.of_int (1229))
-    | hd::tl ->
-        let uu___ = FStar_Hash.of_int (Prims.of_int (1231)) in
-        let uu___1 = let uu___2 = mix_list tl in FStar_Hash.mix hd uu___2 in
-        FStar_Hash.mix uu___ uu___1
+    FStar_Compiler_List.fold_right
+      (fun i -> fun out -> let uu___ = mix i out in mix cons_hc uu___) l
+      nil_hc
+let (mix_list_lit :
+  FStar_Hash.hash_code mm Prims.list -> FStar_Hash.hash_code mm) = mix_list
 let hash_list :
-  'a . ('a -> FStar_Hash.hash_code) -> 'a Prims.list -> FStar_Hash.hash_code
+  'a .
+    ('a -> FStar_Hash.hash_code mm) ->
+      'a Prims.list -> FStar_Hash.hash_code mm
   =
   fun h ->
     fun ts -> let uu___ = FStar_Compiler_List.map h ts in mix_list uu___
 let hash_array :
-  'a . ('a -> FStar_Hash.hash_code) -> 'a Prims.array -> FStar_Hash.hash_code
+  'a .
+    ('a -> FStar_Hash.hash_code mm) ->
+      'a Prims.array -> FStar_Hash.hash_code mm
   = fun h -> fun ts -> Prims.admit ()
 let hash_option :
   'a .
-    ('a -> FStar_Hash.hash_code) ->
-      'a FStar_Pervasives_Native.option -> FStar_Hash.hash_code
+    ('a -> FStar_Hash.hash_code mm) ->
+      'a FStar_Pervasives_Native.option -> FStar_Hash.hash_code mm
   =
   fun h ->
     fun o ->
       match o with
       | FStar_Pervasives_Native.None ->
-          FStar_Hash.of_int (Prims.of_int (1237))
+          let uu___ = FStar_Hash.of_int (Prims.of_int (1237)) in ret uu___
       | FStar_Pervasives_Native.Some o1 ->
-          let uu___ = FStar_Hash.of_int (Prims.of_int (1249)) in
-          let uu___1 = h o1 in FStar_Hash.mix uu___ uu___1
+          let uu___ =
+            let uu___1 = FStar_Hash.of_int (Prims.of_int (1249)) in
+            ret uu___1 in
+          let uu___1 = h o1 in mix uu___ uu___1
 let hash_pair :
   'a 'b .
-    ('a -> FStar_Hash.hash_code) ->
-      ('b -> FStar_Hash.hash_code) -> ('a * 'b) -> FStar_Hash.hash_code
+    ('a -> FStar_Hash.hash_code mm) ->
+      ('b -> FStar_Hash.hash_code mm) -> ('a * 'b) -> FStar_Hash.hash_code mm
   =
   fun h ->
     fun i ->
       fun x ->
         let uu___ = h (FStar_Pervasives_Native.fst x) in
-        let uu___1 = i (FStar_Pervasives_Native.snd x) in
-        FStar_Hash.mix uu___ uu___1
-let hash_list_lit :
-  'a . ('a -> FStar_Hash.hash_code) -> 'a Prims.list -> FStar_Hash.hash_code
-  =
-  fun uu___1 ->
-    fun uu___ ->
-      (fun h ->
-         fun ts ->
-           let uu___ = hash_list h ts in
-           Obj.magic
-             (FStar_Pervasives.norm
-                [FStar_Pervasives.zeta_full;
-                FStar_Pervasives.delta_only
-                  ["FStar.Syntax.Hash.hash_list"; "FStar.Compiler.List.map"];
-                FStar_Pervasives.iota] () (Obj.magic uu___))) uu___1 uu___
-let (mix_list_lit : FStar_Hash.hash_code Prims.list -> FStar_Hash.hash_code)
-  =
-  fun l ->
-    let uu___ = mix_list l in
-    Obj.magic
-      (FStar_Pervasives.norm
-         [FStar_Pervasives.zeta_full;
-         FStar_Pervasives.delta_only ["FStar.Syntax.Hash.mix_list"];
-         FStar_Pervasives.iota] () (Obj.magic uu___))
-let (hash_byte : FStar_BaseTypes.byte -> FStar_Hash.hash_code) =
-  fun b -> FStar_Hash.of_int (FStar_UInt8.v b)
-let rec (hash_term : FStar_Syntax_Syntax.term -> FStar_Hash.hash_code) =
-  fun t -> memoize t hash_term'
-and (hash_term' : FStar_Syntax_Syntax.term -> FStar_Hash.hash_code) =
+        let uu___1 = i (FStar_Pervasives_Native.snd x) in mix uu___ uu___1
+let (hash_byte : FStar_BaseTypes.byte -> FStar_Hash.hash_code mm) =
+  fun b -> let uu___ = FStar_Hash.of_int (FStar_UInt8.v b) in ret uu___
+let rec (hash_term : FStar_Syntax_Syntax.term -> FStar_Hash.hash_code mm) =
+  fun t -> maybe_memoize t hash_term'
+and (hash_comp :
+  FStar_Syntax_Syntax.comp' FStar_Syntax_Syntax.syntax ->
+    FStar_Hash.hash_code mm)
+  = fun c -> maybe_memoize c hash_comp'
+and (hash_term' : FStar_Syntax_Syntax.term -> FStar_Hash.hash_code mm) =
   fun t ->
     let uu___ =
       let uu___1 = FStar_Syntax_Subst.compress t in
       uu___1.FStar_Syntax_Syntax.n in
     match uu___ with
     | FStar_Syntax_Syntax.Tm_bvar bv ->
-        let uu___1 = FStar_Hash.of_int (Prims.of_int (3)) in
-        let uu___2 = FStar_Hash.of_int bv.FStar_Syntax_Syntax.index in
-        FStar_Hash.mix uu___1 uu___2
+        let uu___1 = of_int (Prims.of_int (3)) in
+        let uu___2 = of_int bv.FStar_Syntax_Syntax.index in mix uu___1 uu___2
     | FStar_Syntax_Syntax.Tm_name bv ->
-        let uu___1 = FStar_Hash.of_int (Prims.of_int (5)) in
-        let uu___2 = FStar_Hash.of_int bv.FStar_Syntax_Syntax.index in
-        FStar_Hash.mix uu___1 uu___2
+        let uu___1 = of_int (Prims.of_int (5)) in
+        let uu___2 = of_int bv.FStar_Syntax_Syntax.index in mix uu___1 uu___2
     | FStar_Syntax_Syntax.Tm_fvar fv ->
-        let uu___1 = FStar_Hash.of_int (Prims.of_int (7)) in
-        let uu___2 = hash_fv fv in FStar_Hash.mix uu___1 uu___2
+        let uu___1 = of_int (Prims.of_int (7)) in
+        let uu___2 = hash_fv fv in mix uu___1 uu___2
     | FStar_Syntax_Syntax.Tm_uinst (t1, us) ->
-        let uu___1 = FStar_Hash.of_int (Prims.of_int (11)) in
+        let uu___1 = of_int (Prims.of_int (11)) in
         let uu___2 =
           let uu___3 = hash_term t1 in
-          let uu___4 = hash_list hash_universe us in
-          FStar_Hash.mix uu___3 uu___4 in
-        FStar_Hash.mix uu___1 uu___2
+          let uu___4 = hash_list hash_universe us in mix uu___3 uu___4 in
+        mix uu___1 uu___2
     | FStar_Syntax_Syntax.Tm_constant sc ->
-        let uu___1 = FStar_Hash.of_int (Prims.of_int (13)) in
-        let uu___2 = hash_constant sc in FStar_Hash.mix uu___1 uu___2
+        let uu___1 = of_int (Prims.of_int (13)) in
+        let uu___2 = hash_constant sc in mix uu___1 uu___2
     | FStar_Syntax_Syntax.Tm_type u ->
-        let uu___1 = FStar_Hash.of_int (Prims.of_int (17)) in
-        let uu___2 = hash_universe u in FStar_Hash.mix uu___1 uu___2
+        let uu___1 = of_int (Prims.of_int (17)) in
+        let uu___2 = hash_universe u in mix uu___1 uu___2
     | FStar_Syntax_Syntax.Tm_abs (bs, t1, rcopt) ->
-        let uu___1 = FStar_Hash.of_int (Prims.of_int (19)) in
+        let uu___1 = of_int (Prims.of_int (19)) in
         let uu___2 =
           let uu___3 = hash_list hash_binder bs in
           let uu___4 =
             let uu___5 = hash_term t1 in
-            let uu___6 = hash_option hash_rc rcopt in
-            FStar_Hash.mix uu___5 uu___6 in
-          FStar_Hash.mix uu___3 uu___4 in
-        FStar_Hash.mix uu___1 uu___2
+            let uu___6 = hash_option hash_rc rcopt in mix uu___5 uu___6 in
+          mix uu___3 uu___4 in
+        mix uu___1 uu___2
     | FStar_Syntax_Syntax.Tm_arrow (bs, c) ->
-        let uu___1 = FStar_Hash.of_int (Prims.of_int (23)) in
-        let uu___2 = hash_comp c in FStar_Hash.mix uu___1 uu___2
+        let uu___1 = of_int (Prims.of_int (23)) in
+        let uu___2 =
+          let uu___3 = hash_list hash_binder bs in
+          let uu___4 = hash_comp c in mix uu___3 uu___4 in
+        mix uu___1 uu___2
     | FStar_Syntax_Syntax.Tm_refine (b, t1) ->
-        let uu___1 = FStar_Hash.of_int (Prims.of_int (29)) in
+        let uu___1 = of_int (Prims.of_int (29)) in
         let uu___2 =
           let uu___3 = hash_bv b in
-          let uu___4 = hash_term t1 in FStar_Hash.mix uu___3 uu___4 in
-        FStar_Hash.mix uu___1 uu___2
+          let uu___4 = hash_term t1 in mix uu___3 uu___4 in
+        mix uu___1 uu___2
     | FStar_Syntax_Syntax.Tm_app (t1, args) ->
-        let uu___1 = FStar_Hash.of_int (Prims.of_int (31)) in
+        let uu___1 = of_int (Prims.of_int (31)) in
         let uu___2 =
           let uu___3 = hash_term t1 in
-          let uu___4 = hash_list hash_arg args in
-          FStar_Hash.mix uu___3 uu___4 in
-        FStar_Hash.mix uu___1 uu___2
+          let uu___4 = hash_list hash_arg args in mix uu___3 uu___4 in
+        mix uu___1 uu___2
     | FStar_Syntax_Syntax.Tm_match (t1, asc_opt, branches, rcopt) ->
-        let uu___1 = FStar_Hash.of_int (Prims.of_int (37)) in
+        let uu___1 = of_int (Prims.of_int (37)) in
         let uu___2 =
           let uu___3 = hash_option hash_match_returns asc_opt in
           let uu___4 =
             let uu___5 =
               let uu___6 = hash_term t1 in
               let uu___7 = hash_list hash_branch branches in
-              FStar_Hash.mix uu___6 uu___7 in
-            let uu___6 = hash_option hash_rc rcopt in
-            FStar_Hash.mix uu___5 uu___6 in
-          FStar_Hash.mix uu___3 uu___4 in
-        FStar_Hash.mix uu___1 uu___2
+              mix uu___6 uu___7 in
+            let uu___6 = hash_option hash_rc rcopt in mix uu___5 uu___6 in
+          mix uu___3 uu___4 in
+        mix uu___1 uu___2
     | FStar_Syntax_Syntax.Tm_ascribed (t1, a, lopt) ->
-        let uu___1 = FStar_Hash.of_int (Prims.of_int (43)) in
+        let uu___1 = of_int (Prims.of_int (43)) in
         let uu___2 =
           let uu___3 = hash_term t1 in
           let uu___4 =
             let uu___5 = hash_ascription a in
-            let uu___6 = hash_option hash_lid lopt in
-            FStar_Hash.mix uu___5 uu___6 in
-          FStar_Hash.mix uu___3 uu___4 in
-        FStar_Hash.mix uu___1 uu___2
+            let uu___6 = hash_option hash_lid lopt in mix uu___5 uu___6 in
+          mix uu___3 uu___4 in
+        mix uu___1 uu___2
     | FStar_Syntax_Syntax.Tm_let ((false, lb::[]), t1) ->
-        let uu___1 = FStar_Hash.of_int (Prims.of_int (47)) in
+        let uu___1 = of_int (Prims.of_int (47)) in
         let uu___2 =
           let uu___3 = hash_lb lb in
-          let uu___4 = hash_term t1 in FStar_Hash.mix uu___3 uu___4 in
-        FStar_Hash.mix uu___1 uu___2
+          let uu___4 = hash_term t1 in mix uu___3 uu___4 in
+        mix uu___1 uu___2
     | FStar_Syntax_Syntax.Tm_let ((uu___1, lbs), t1) ->
-        let uu___2 = FStar_Hash.of_int (Prims.of_int (51)) in
+        let uu___2 = of_int (Prims.of_int (51)) in
         let uu___3 =
           let uu___4 = hash_list hash_lb lbs in
-          let uu___5 = hash_term t1 in FStar_Hash.mix uu___4 uu___5 in
-        FStar_Hash.mix uu___2 uu___3
+          let uu___5 = hash_term t1 in mix uu___4 uu___5 in
+        mix uu___2 uu___3
     | FStar_Syntax_Syntax.Tm_uvar uv ->
-        let uu___1 = FStar_Hash.of_int (Prims.of_int (53)) in
-        let uu___2 = hash_uvar uv in FStar_Hash.mix uu___1 uu___2
+        let uu___1 = of_int (Prims.of_int (53)) in
+        let uu___2 = hash_uvar uv in mix uu___1 uu___2
     | FStar_Syntax_Syntax.Tm_meta (t1, m) ->
-        let uu___1 = FStar_Hash.of_int (Prims.of_int (61)) in
-        let uu___2 = hash_meta m in FStar_Hash.mix uu___1 uu___2
+        let uu___1 = of_int (Prims.of_int (61)) in
+        let uu___2 =
+          let uu___3 = hash_term t1 in
+          let uu___4 = hash_meta m in mix uu___3 uu___4 in
+        mix uu___1 uu___2
     | FStar_Syntax_Syntax.Tm_lazy li ->
-        let uu___1 = FStar_Hash.of_int (Prims.of_int (67)) in
-        let uu___2 = hash_lazyinfo li in FStar_Hash.mix uu___1 uu___2
+        let uu___1 = of_int (Prims.of_int (67)) in
+        let uu___2 = hash_lazyinfo li in mix uu___1 uu___2
     | FStar_Syntax_Syntax.Tm_quoted (t1, qi) ->
-        let uu___1 = FStar_Hash.of_int (Prims.of_int (71)) in
-        let uu___2 = hash_quoteinfo qi in FStar_Hash.mix uu___1 uu___2
-    | FStar_Syntax_Syntax.Tm_unknown -> FStar_Hash.of_int (Prims.of_int (73))
+        let uu___1 = of_int (Prims.of_int (71)) in
+        let uu___2 =
+          let uu___3 = hash_term t1 in
+          let uu___4 = hash_quoteinfo qi in mix uu___3 uu___4 in
+        mix uu___1 uu___2
+    | FStar_Syntax_Syntax.Tm_unknown -> of_int (Prims.of_int (73))
     | FStar_Syntax_Syntax.Tm_delayed uu___1 -> failwith "Impossible"
-and (hash_lb : FStar_Syntax_Syntax.letbinding -> FStar_Hash.hash_code) =
+and (hash_comp' : FStar_Syntax_Syntax.comp -> FStar_Hash.hash_code mm) =
+  fun c ->
+    match c.FStar_Syntax_Syntax.n with
+    | FStar_Syntax_Syntax.Total (t, ou) ->
+        let uu___ =
+          let uu___1 = of_int (Prims.of_int (811)) in
+          let uu___2 =
+            let uu___3 = hash_term t in
+            let uu___4 =
+              let uu___5 = hash_option hash_universe ou in [uu___5] in
+            uu___3 :: uu___4 in
+          uu___1 :: uu___2 in
+        mix_list_lit uu___
+    | FStar_Syntax_Syntax.GTotal (t, ou) ->
+        let uu___ =
+          let uu___1 = of_int (Prims.of_int (821)) in
+          let uu___2 =
+            let uu___3 = hash_term t in
+            let uu___4 =
+              let uu___5 = hash_option hash_universe ou in [uu___5] in
+            uu___3 :: uu___4 in
+          uu___1 :: uu___2 in
+        mix_list_lit uu___
+    | FStar_Syntax_Syntax.Comp ct ->
+        let uu___ =
+          let uu___1 = of_int (Prims.of_int (823)) in
+          let uu___2 =
+            let uu___3 =
+              hash_list hash_universe ct.FStar_Syntax_Syntax.comp_univs in
+            let uu___4 =
+              let uu___5 = hash_lid ct.FStar_Syntax_Syntax.effect_name in
+              let uu___6 =
+                let uu___7 = hash_term ct.FStar_Syntax_Syntax.result_typ in
+                let uu___8 =
+                  let uu___9 =
+                    hash_list hash_arg ct.FStar_Syntax_Syntax.effect_args in
+                  let uu___10 =
+                    let uu___11 =
+                      hash_list hash_flag ct.FStar_Syntax_Syntax.flags in
+                    [uu___11] in
+                  uu___9 :: uu___10 in
+                uu___7 :: uu___8 in
+              uu___5 :: uu___6 in
+            uu___3 :: uu___4 in
+          uu___1 :: uu___2 in
+        mix_list_lit uu___
+and (hash_lb : FStar_Syntax_Syntax.letbinding -> FStar_Hash.hash_code mm) =
   fun lb ->
     let uu___ =
-      let uu___1 = FStar_Hash.of_int (Prims.of_int (79)) in
+      let uu___1 = of_int (Prims.of_int (79)) in
       let uu___2 =
         let uu___3 = hash_lbname lb.FStar_Syntax_Syntax.lbname in
         let uu___4 =
@@ -220,25 +293,25 @@ and (hash_match_returns :
     FStar_Syntax_Syntax.comp' FStar_Syntax_Syntax.syntax)
     FStar_Pervasives.either * FStar_Syntax_Syntax.term'
     FStar_Syntax_Syntax.syntax FStar_Pervasives_Native.option * Prims.bool))
-    -> FStar_Hash.hash_code)
+    -> FStar_Hash.hash_code mm)
   =
   fun uu___ ->
     match uu___ with
     | (b, asc) ->
         let uu___1 = hash_binder b in
-        let uu___2 = hash_ascription asc in FStar_Hash.mix uu___1 uu___2
+        let uu___2 = hash_ascription asc in mix uu___1 uu___2
 and (hash_branch :
   (FStar_Syntax_Syntax.pat' FStar_Syntax_Syntax.withinfo_t *
     FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax
     FStar_Pervasives_Native.option * FStar_Syntax_Syntax.term'
-    FStar_Syntax_Syntax.syntax) -> FStar_Hash.hash_code)
+    FStar_Syntax_Syntax.syntax) -> FStar_Hash.hash_code mm)
   =
   fun b ->
     let uu___ = b in
     match uu___ with
     | (p, topt, t) ->
         let uu___1 =
-          let uu___2 = FStar_Hash.of_int (Prims.of_int (83)) in
+          let uu___2 = of_int (Prims.of_int (83)) in
           let uu___3 =
             let uu___4 = hash_pat p in
             let uu___5 =
@@ -250,100 +323,48 @@ and (hash_branch :
         mix_list_lit uu___1
 and (hash_pat :
   FStar_Syntax_Syntax.pat' FStar_Syntax_Syntax.withinfo_t ->
-    FStar_Hash.hash_code)
+    FStar_Hash.hash_code mm)
   =
   fun p ->
     match p.FStar_Syntax_Syntax.v with
     | FStar_Syntax_Syntax.Pat_constant c ->
-        let uu___ = FStar_Hash.of_int (Prims.of_int (89)) in
-        let uu___1 = hash_constant c in FStar_Hash.mix uu___ uu___1
-    | FStar_Syntax_Syntax.Pat_cons (fv, _us, args) ->
+        let uu___ = of_int (Prims.of_int (89)) in
+        let uu___1 = hash_constant c in mix uu___ uu___1
+    | FStar_Syntax_Syntax.Pat_cons (fv, us, args) ->
         let uu___ =
-          let uu___1 = FStar_Hash.of_int (Prims.of_int (97)) in
+          let uu___1 = of_int (Prims.of_int (97)) in
           let uu___2 =
             let uu___3 = hash_fv fv in
             let uu___4 =
-              let uu___5 = hash_list (hash_pair hash_pat hash_bool) args in
-              [uu___5] in
+              let uu___5 = hash_option (hash_list hash_universe) us in
+              let uu___6 =
+                let uu___7 = hash_list (hash_pair hash_pat hash_bool) args in
+                [uu___7] in
+              uu___5 :: uu___6 in
             uu___3 :: uu___4 in
           uu___1 :: uu___2 in
         mix_list_lit uu___
     | FStar_Syntax_Syntax.Pat_var bv ->
-        let uu___ = FStar_Hash.of_int (Prims.of_int (101)) in
-        let uu___1 = hash_bv bv in FStar_Hash.mix uu___ uu___1
+        let uu___ = of_int (Prims.of_int (101)) in
+        let uu___1 = hash_bv bv in mix uu___ uu___1
     | FStar_Syntax_Syntax.Pat_wild bv ->
-        let uu___ = FStar_Hash.of_int (Prims.of_int (103)) in
-        let uu___1 = hash_bv bv in FStar_Hash.mix uu___ uu___1
+        let uu___ = of_int (Prims.of_int (103)) in
+        let uu___1 = hash_bv bv in mix uu___ uu___1
     | FStar_Syntax_Syntax.Pat_dot_term t ->
         let uu___ =
-          let uu___1 = FStar_Hash.of_int (Prims.of_int (107)) in
+          let uu___1 = of_int (Prims.of_int (107)) in
           let uu___2 = let uu___3 = hash_option hash_term t in [uu___3] in
           uu___1 :: uu___2 in
         mix_list_lit uu___
-and (hash_comp :
-  FStar_Syntax_Syntax.comp' FStar_Syntax_Syntax.syntax ->
-    FStar_Hash.hash_code)
-  =
-  fun c ->
-    memoize c
-      (fun c1 ->
-         match c1.FStar_Syntax_Syntax.n with
-         | FStar_Syntax_Syntax.Total (t, ou) ->
-             let uu___ =
-               let uu___1 = FStar_Hash.of_int (Prims.of_int (811)) in
-               let uu___2 =
-                 let uu___3 = hash_term t in
-                 let uu___4 =
-                   let uu___5 = hash_option hash_universe ou in [uu___5] in
-                 uu___3 :: uu___4 in
-               uu___1 :: uu___2 in
-             mix_list_lit uu___
-         | FStar_Syntax_Syntax.GTotal (t, ou) ->
-             let uu___ =
-               let uu___1 = FStar_Hash.of_int (Prims.of_int (821)) in
-               let uu___2 =
-                 let uu___3 = hash_term t in
-                 let uu___4 =
-                   let uu___5 = hash_option hash_universe ou in [uu___5] in
-                 uu___3 :: uu___4 in
-               uu___1 :: uu___2 in
-             mix_list_lit uu___
-         | FStar_Syntax_Syntax.Comp ct ->
-             let uu___ =
-               let uu___1 = FStar_Hash.of_int (Prims.of_int (823)) in
-               let uu___2 =
-                 let uu___3 =
-                   hash_list hash_universe ct.FStar_Syntax_Syntax.comp_univs in
-                 let uu___4 =
-                   let uu___5 = hash_lid ct.FStar_Syntax_Syntax.effect_name in
-                   let uu___6 =
-                     let uu___7 = hash_term ct.FStar_Syntax_Syntax.result_typ in
-                     let uu___8 =
-                       let uu___9 =
-                         hash_list hash_arg
-                           ct.FStar_Syntax_Syntax.effect_args in
-                       let uu___10 =
-                         let uu___11 =
-                           hash_list hash_flag ct.FStar_Syntax_Syntax.flags in
-                         [uu___11] in
-                       uu___9 :: uu___10 in
-                     uu___7 :: uu___8 in
-                   uu___5 :: uu___6 in
-                 uu___3 :: uu___4 in
-               uu___1 :: uu___2 in
-             mix_list_lit uu___)
-and (hash_bv : FStar_Syntax_Syntax.bv -> FStar_Hash.hash_code) =
-  fun b ->
-    let uu___ = hash_ident b.FStar_Syntax_Syntax.ppname in
-    let uu___1 = hash_term b.FStar_Syntax_Syntax.sort in
-    FStar_Hash.mix uu___ uu___1
-and (hash_fv : FStar_Syntax_Syntax.fv -> FStar_Hash.hash_code) =
+and (hash_bv : FStar_Syntax_Syntax.bv -> FStar_Hash.hash_code mm) =
+  fun b -> hash_term b.FStar_Syntax_Syntax.sort
+and (hash_fv : FStar_Syntax_Syntax.fv -> FStar_Hash.hash_code mm) =
   fun fv ->
     let uu___ =
       FStar_Ident.string_of_lid
         (fv.FStar_Syntax_Syntax.fv_name).FStar_Syntax_Syntax.v in
-    FStar_Hash.of_string uu___
-and (hash_binder : FStar_Syntax_Syntax.binder -> FStar_Hash.hash_code) =
+    of_string uu___
+and (hash_binder : FStar_Syntax_Syntax.binder -> FStar_Hash.hash_code mm) =
   fun b ->
     let uu___ =
       let uu___1 = hash_bv b.FStar_Syntax_Syntax.binder_bv in
@@ -355,81 +376,76 @@ and (hash_binder : FStar_Syntax_Syntax.binder -> FStar_Hash.hash_code) =
         uu___3 :: uu___4 in
       uu___1 :: uu___2 in
     mix_list_lit uu___
-and (hash_universe : FStar_Syntax_Syntax.universe -> FStar_Hash.hash_code) =
+and (hash_universe : FStar_Syntax_Syntax.universe -> FStar_Hash.hash_code mm)
+  =
   fun uu___ ->
     match uu___ with
-    | FStar_Syntax_Syntax.U_zero -> FStar_Hash.of_int (Prims.of_int (179))
+    | FStar_Syntax_Syntax.U_zero -> of_int (Prims.of_int (179))
     | FStar_Syntax_Syntax.U_succ u ->
-        let uu___1 = FStar_Hash.of_int (Prims.of_int (181)) in
-        let uu___2 = hash_universe u in FStar_Hash.mix uu___1 uu___2
+        let uu___1 = of_int (Prims.of_int (181)) in
+        let uu___2 = hash_universe u in mix uu___1 uu___2
     | FStar_Syntax_Syntax.U_max us ->
-        let uu___1 = FStar_Hash.of_int (Prims.of_int (191)) in
-        let uu___2 = hash_list hash_universe us in
-        FStar_Hash.mix uu___1 uu___2
+        let uu___1 = of_int (Prims.of_int (191)) in
+        let uu___2 = hash_list hash_universe us in mix uu___1 uu___2
     | FStar_Syntax_Syntax.U_bvar i ->
-        let uu___1 = FStar_Hash.of_int (Prims.of_int (193)) in
-        let uu___2 = FStar_Hash.of_int i in FStar_Hash.mix uu___1 uu___2
+        let uu___1 = of_int (Prims.of_int (193)) in
+        let uu___2 = of_int i in mix uu___1 uu___2
     | FStar_Syntax_Syntax.U_name i ->
-        let uu___1 = FStar_Hash.of_int (Prims.of_int (197)) in
-        let uu___2 = hash_ident i in FStar_Hash.mix uu___1 uu___2
+        let uu___1 = of_int (Prims.of_int (197)) in
+        let uu___2 = hash_ident i in mix uu___1 uu___2
     | FStar_Syntax_Syntax.U_unif uv ->
-        let uu___1 = FStar_Hash.of_int (Prims.of_int (199)) in
-        let uu___2 = hash_universe_uvar uv in FStar_Hash.mix uu___1 uu___2
-    | FStar_Syntax_Syntax.U_unknown -> FStar_Hash.of_int (Prims.of_int (211))
+        let uu___1 = of_int (Prims.of_int (199)) in
+        let uu___2 = hash_universe_uvar uv in mix uu___1 uu___2
+    | FStar_Syntax_Syntax.U_unknown -> of_int (Prims.of_int (211))
 and (hash_arg :
   (FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax *
     FStar_Syntax_Syntax.arg_qualifier FStar_Pervasives_Native.option) ->
-    FStar_Hash.hash_code)
+    FStar_Hash.hash_code mm)
   =
   fun uu___ ->
     match uu___ with
     | (t, aq) ->
         let uu___1 = hash_term t in
-        let uu___2 = hash_option hash_arg_qualifier aq in
-        FStar_Hash.mix uu___1 uu___2
+        let uu___2 = hash_option hash_arg_qualifier aq in mix uu___1 uu___2
 and (hash_arg_qualifier :
-  FStar_Syntax_Syntax.arg_qualifier -> FStar_Hash.hash_code) =
+  FStar_Syntax_Syntax.arg_qualifier -> FStar_Hash.hash_code mm) =
   fun aq ->
     let uu___ = hash_bool aq.FStar_Syntax_Syntax.aqual_implicit in
     let uu___1 = hash_list hash_term aq.FStar_Syntax_Syntax.aqual_attributes in
-    FStar_Hash.mix uu___ uu___1
+    mix uu___ uu___1
 and (hash_bqual :
-  FStar_Syntax_Syntax.binder_qualifier -> FStar_Hash.hash_code) =
+  FStar_Syntax_Syntax.binder_qualifier -> FStar_Hash.hash_code mm) =
   fun uu___ ->
     match uu___ with
-    | FStar_Syntax_Syntax.Implicit (true) ->
-        FStar_Hash.of_int (Prims.of_int (419))
-    | FStar_Syntax_Syntax.Implicit (false) ->
-        FStar_Hash.of_int (Prims.of_int (421))
+    | FStar_Syntax_Syntax.Implicit (true) -> of_int (Prims.of_int (419))
+    | FStar_Syntax_Syntax.Implicit (false) -> of_int (Prims.of_int (421))
     | FStar_Syntax_Syntax.Meta t ->
-        let uu___1 = FStar_Hash.of_int (Prims.of_int (431)) in
-        let uu___2 = hash_term t in FStar_Hash.mix uu___1 uu___2
-    | FStar_Syntax_Syntax.Equality -> FStar_Hash.of_int (Prims.of_int (433))
+        let uu___1 = of_int (Prims.of_int (431)) in
+        let uu___2 = hash_term t in mix uu___1 uu___2
+    | FStar_Syntax_Syntax.Equality -> of_int (Prims.of_int (433))
 and (hash_uvar :
   (FStar_Syntax_Syntax.ctx_uvar * (FStar_Syntax_Syntax.subst_elt Prims.list
     Prims.list * FStar_Syntax_Syntax.maybe_set_use_range)) ->
-    FStar_Hash.hash_code)
+    FStar_Hash.hash_code mm)
   =
   fun uu___ ->
     match uu___ with
     | (u, uu___1) ->
         let uu___2 =
           FStar_Syntax_Unionfind.uvar_id u.FStar_Syntax_Syntax.ctx_uvar_head in
-        FStar_Hash.of_int uu___2
+        of_int uu___2
 and (hash_universe_uvar :
   (FStar_Syntax_Syntax.universe FStar_Pervasives_Native.option
     FStar_Unionfind.p_uvar * FStar_Syntax_Syntax.version *
-    FStar_Compiler_Range.range) -> FStar_Hash.hash_code)
+    FStar_Compiler_Range.range) -> FStar_Hash.hash_code mm)
   =
-  fun u ->
-    let uu___ = FStar_Syntax_Unionfind.univ_uvar_id u in
-    FStar_Hash.of_int uu___
+  fun u -> let uu___ = FStar_Syntax_Unionfind.univ_uvar_id u in of_int uu___
 and (hash_ascription :
   ((FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax,
     FStar_Syntax_Syntax.comp' FStar_Syntax_Syntax.syntax)
     FStar_Pervasives.either * FStar_Syntax_Syntax.term'
     FStar_Syntax_Syntax.syntax FStar_Pervasives_Native.option * Prims.bool)
-    -> FStar_Hash.hash_code)
+    -> FStar_Hash.hash_code mm)
   =
   fun uu___ ->
     match uu___ with
@@ -438,87 +454,80 @@ and (hash_ascription :
           match a with
           | FStar_Pervasives.Inl t -> hash_term t
           | FStar_Pervasives.Inr c -> hash_comp c in
-        let uu___2 = hash_option hash_term to1 in
-        FStar_Hash.mix uu___1 uu___2
-and (hash_bool : Prims.bool -> FStar_Hash.hash_code) =
+        let uu___2 = hash_option hash_term to1 in mix uu___1 uu___2
+and (hash_bool : Prims.bool -> FStar_Hash.hash_code mm) =
   fun b ->
-    if b
-    then FStar_Hash.of_int (Prims.of_int (307))
-    else FStar_Hash.of_int (Prims.of_int (311))
-and (hash_constant : FStar_Syntax_Syntax.sconst -> FStar_Hash.hash_code) =
+    if b then of_int (Prims.of_int (307)) else of_int (Prims.of_int (311))
+and (hash_constant : FStar_Syntax_Syntax.sconst -> FStar_Hash.hash_code mm) =
   fun uu___ ->
     match uu___ with
-    | FStar_Const.Const_effect -> FStar_Hash.of_int (Prims.of_int (283))
-    | FStar_Const.Const_unit -> FStar_Hash.of_int (Prims.of_int (293))
+    | FStar_Const.Const_effect -> of_int (Prims.of_int (283))
+    | FStar_Const.Const_unit -> of_int (Prims.of_int (293))
     | FStar_Const.Const_bool b -> hash_bool b
     | FStar_Const.Const_int (s, o) ->
-        let uu___1 = FStar_Hash.of_int (Prims.of_int (313)) in
+        let uu___1 = of_int (Prims.of_int (313)) in
         let uu___2 =
-          let uu___3 = FStar_Hash.of_string s in
-          let uu___4 = hash_option hash_sw o in FStar_Hash.mix uu___3 uu___4 in
-        FStar_Hash.mix uu___1 uu___2
+          let uu___3 = of_string s in
+          let uu___4 = hash_option hash_sw o in mix uu___3 uu___4 in
+        mix uu___1 uu___2
     | FStar_Const.Const_char c ->
-        let uu___1 = FStar_Hash.of_int (Prims.of_int (317)) in
-        let uu___2 =
-          FStar_Hash.of_int (FStar_UInt32.v (FStar_Char.u32_of_char c)) in
-        FStar_Hash.mix uu___1 uu___2
+        let uu___1 = of_int (Prims.of_int (317)) in
+        let uu___2 = of_int (FStar_UInt32.v (FStar_Char.u32_of_char c)) in
+        mix uu___1 uu___2
     | FStar_Const.Const_float d ->
-        let uu___1 = FStar_Hash.of_int (Prims.of_int (331)) in
-        let uu___2 = FStar_Hash.of_int Prims.int_zero in
-        FStar_Hash.mix uu___1 uu___2
+        let uu___1 = of_int (Prims.of_int (331)) in
+        let uu___2 = of_int Prims.int_zero in mix uu___1 uu___2
     | FStar_Const.Const_real s ->
-        let uu___1 = FStar_Hash.of_int (Prims.of_int (337)) in
-        let uu___2 = FStar_Hash.of_string s in FStar_Hash.mix uu___1 uu___2
+        let uu___1 = of_int (Prims.of_int (337)) in
+        let uu___2 = of_string s in mix uu___1 uu___2
     | FStar_Const.Const_bytearray (bs, uu___1) ->
-        let uu___2 = FStar_Hash.of_int (Prims.of_int (347)) in
-        let uu___3 = hash_array hash_byte bs in FStar_Hash.mix uu___2 uu___3
+        let uu___2 = of_int (Prims.of_int (347)) in
+        let uu___3 = hash_array hash_byte bs in mix uu___2 uu___3
     | FStar_Const.Const_string (s, uu___1) ->
-        let uu___2 = FStar_Hash.of_int (Prims.of_int (349)) in
-        let uu___3 = FStar_Hash.of_string s in FStar_Hash.mix uu___2 uu___3
-    | FStar_Const.Const_range_of -> FStar_Hash.of_int (Prims.of_int (353))
-    | FStar_Const.Const_set_range_of ->
-        FStar_Hash.of_int (Prims.of_int (359))
+        let uu___2 = of_int (Prims.of_int (349)) in
+        let uu___3 = of_string s in mix uu___2 uu___3
+    | FStar_Const.Const_range_of -> of_int (Prims.of_int (353))
+    | FStar_Const.Const_set_range_of -> of_int (Prims.of_int (359))
     | FStar_Const.Const_range r ->
-        let uu___1 = FStar_Hash.of_int (Prims.of_int (367)) in
+        let uu___1 = of_int (Prims.of_int (367)) in
         let uu___2 =
           let uu___3 = FStar_Compiler_Range.string_of_range r in
-          FStar_Hash.of_string uu___3 in
-        FStar_Hash.mix uu___1 uu___2
-    | FStar_Const.Const_reify -> FStar_Hash.of_int (Prims.of_int (367))
+          of_string uu___3 in
+        mix uu___1 uu___2
+    | FStar_Const.Const_reify -> of_int (Prims.of_int (367))
     | FStar_Const.Const_reflect l ->
-        let uu___1 = FStar_Hash.of_int (Prims.of_int (373)) in
-        let uu___2 = hash_lid l in FStar_Hash.mix uu___1 uu___2
+        let uu___1 = of_int (Prims.of_int (373)) in
+        let uu___2 = hash_lid l in mix uu___1 uu___2
 and (hash_sw :
-  (FStar_Const.signedness * FStar_Const.width) -> FStar_Hash.hash_code) =
+  (FStar_Const.signedness * FStar_Const.width) -> FStar_Hash.hash_code mm) =
   fun uu___ ->
     match uu___ with
     | (s, w) ->
         let uu___1 =
           match s with
-          | FStar_Const.Unsigned -> FStar_Hash.of_int (Prims.of_int (547))
-          | FStar_Const.Signed -> FStar_Hash.of_int (Prims.of_int (557)) in
+          | FStar_Const.Unsigned -> of_int (Prims.of_int (547))
+          | FStar_Const.Signed -> of_int (Prims.of_int (557)) in
         let uu___2 =
           match w with
-          | FStar_Const.Int8 -> FStar_Hash.of_int (Prims.of_int (563))
-          | FStar_Const.Int16 -> FStar_Hash.of_int (Prims.of_int (569))
-          | FStar_Const.Int32 -> FStar_Hash.of_int (Prims.of_int (571))
-          | FStar_Const.Int64 -> FStar_Hash.of_int (Prims.of_int (577)) in
-        FStar_Hash.mix uu___1 uu___2
-and (hash_ident : FStar_Syntax_Syntax.univ_name -> FStar_Hash.hash_code) =
-  fun i ->
-    let uu___ = FStar_Ident.string_of_id i in FStar_Hash.of_string uu___
-and (hash_lid : FStar_Ident.lident -> FStar_Hash.hash_code) =
-  fun l ->
-    let uu___ = FStar_Ident.string_of_lid l in FStar_Hash.of_string uu___
+          | FStar_Const.Int8 -> of_int (Prims.of_int (563))
+          | FStar_Const.Int16 -> of_int (Prims.of_int (569))
+          | FStar_Const.Int32 -> of_int (Prims.of_int (571))
+          | FStar_Const.Int64 -> of_int (Prims.of_int (577)) in
+        mix uu___1 uu___2
+and (hash_ident : FStar_Syntax_Syntax.univ_name -> FStar_Hash.hash_code mm) =
+  fun i -> let uu___ = FStar_Ident.string_of_id i in of_string uu___
+and (hash_lid : FStar_Ident.lident -> FStar_Hash.hash_code mm) =
+  fun l -> let uu___ = FStar_Ident.string_of_lid l in of_string uu___
 and (hash_lbname :
   (FStar_Syntax_Syntax.bv, FStar_Syntax_Syntax.fv) FStar_Pervasives.either ->
-    FStar_Hash.hash_code)
+    FStar_Hash.hash_code mm)
   =
   fun l ->
     match l with
     | FStar_Pervasives.Inl bv -> hash_bv bv
     | FStar_Pervasives.Inr fv -> hash_fv fv
-and (hash_rc : FStar_Syntax_Syntax.residual_comp -> FStar_Hash.hash_code) =
+and (hash_rc : FStar_Syntax_Syntax.residual_comp -> FStar_Hash.hash_code mm)
+  =
   fun rc ->
     let uu___ =
       let uu___1 = hash_lid rc.FStar_Syntax_Syntax.residual_effect in
@@ -532,88 +541,32 @@ and (hash_rc : FStar_Syntax_Syntax.residual_comp -> FStar_Hash.hash_code) =
         uu___3 :: uu___4 in
       uu___1 :: uu___2 in
     mix_list_lit uu___
-and (hash_subst : FStar_Syntax_Syntax.subst_ts -> FStar_Hash.hash_code) =
-  fun s ->
-    hash_list (hash_list hash_subst_elt) (FStar_Pervasives_Native.fst s)
-and (hash_subst_elt : FStar_Syntax_Syntax.subst_elt -> FStar_Hash.hash_code)
-  =
+and (hash_flag : FStar_Syntax_Syntax.cflag -> FStar_Hash.hash_code mm) =
   fun uu___ ->
     match uu___ with
-    | FStar_Syntax_Syntax.DB (i, bv) ->
-        let uu___1 =
-          let uu___2 = FStar_Hash.of_int (Prims.of_int (1087)) in
-          let uu___3 =
-            let uu___4 = FStar_Hash.of_int i in
-            let uu___5 = let uu___6 = hash_bv bv in [uu___6] in uu___4 ::
-              uu___5 in
-          uu___2 :: uu___3 in
-        mix_list_lit uu___1
-    | FStar_Syntax_Syntax.NM (bv, i) ->
-        let uu___1 =
-          let uu___2 = FStar_Hash.of_int (Prims.of_int (1091)) in
-          let uu___3 =
-            let uu___4 = hash_bv bv in
-            let uu___5 = let uu___6 = FStar_Hash.of_int i in [uu___6] in
-            uu___4 :: uu___5 in
-          uu___2 :: uu___3 in
-        mix_list_lit uu___1
-    | FStar_Syntax_Syntax.NT (bv, t) ->
-        let uu___1 =
-          let uu___2 = FStar_Hash.of_int (Prims.of_int (1093)) in
-          let uu___3 =
-            let uu___4 = hash_bv bv in
-            let uu___5 = let uu___6 = hash_term t in [uu___6] in uu___4 ::
-              uu___5 in
-          uu___2 :: uu___3 in
-        mix_list_lit uu___1
-    | FStar_Syntax_Syntax.UN (i, u) ->
-        let uu___1 =
-          let uu___2 = FStar_Hash.of_int (Prims.of_int (1097)) in
-          let uu___3 =
-            let uu___4 = FStar_Hash.of_int i in
-            let uu___5 = let uu___6 = hash_universe u in [uu___6] in uu___4
-              :: uu___5 in
-          uu___2 :: uu___3 in
-        mix_list_lit uu___1
-    | FStar_Syntax_Syntax.UD (un, i) ->
-        let uu___1 =
-          let uu___2 = FStar_Hash.of_int (Prims.of_int (1103)) in
-          let uu___3 =
-            let uu___4 = hash_ident un in
-            let uu___5 = let uu___6 = FStar_Hash.of_int i in [uu___6] in
-            uu___4 :: uu___5 in
-          uu___2 :: uu___3 in
-        mix_list_lit uu___1
-and (hash_flag : FStar_Syntax_Syntax.cflag -> FStar_Hash.hash_code) =
-  fun uu___ ->
-    match uu___ with
-    | FStar_Syntax_Syntax.TOTAL -> FStar_Hash.of_int (Prims.of_int (947))
-    | FStar_Syntax_Syntax.MLEFFECT -> FStar_Hash.of_int (Prims.of_int (953))
-    | FStar_Syntax_Syntax.LEMMA -> FStar_Hash.of_int (Prims.of_int (967))
-    | FStar_Syntax_Syntax.RETURN -> FStar_Hash.of_int (Prims.of_int (971))
-    | FStar_Syntax_Syntax.PARTIAL_RETURN ->
-        FStar_Hash.of_int (Prims.of_int (977))
-    | FStar_Syntax_Syntax.SOMETRIVIAL ->
-        FStar_Hash.of_int (Prims.of_int (983))
+    | FStar_Syntax_Syntax.TOTAL -> of_int (Prims.of_int (947))
+    | FStar_Syntax_Syntax.MLEFFECT -> of_int (Prims.of_int (953))
+    | FStar_Syntax_Syntax.LEMMA -> of_int (Prims.of_int (967))
+    | FStar_Syntax_Syntax.RETURN -> of_int (Prims.of_int (971))
+    | FStar_Syntax_Syntax.PARTIAL_RETURN -> of_int (Prims.of_int (977))
+    | FStar_Syntax_Syntax.SOMETRIVIAL -> of_int (Prims.of_int (983))
     | FStar_Syntax_Syntax.TRIVIAL_POSTCONDITION ->
-        FStar_Hash.of_int (Prims.of_int (991))
-    | FStar_Syntax_Syntax.SHOULD_NOT_INLINE ->
-        FStar_Hash.of_int (Prims.of_int (997))
-    | FStar_Syntax_Syntax.CPS -> FStar_Hash.of_int (Prims.of_int (1009))
+        of_int (Prims.of_int (991))
+    | FStar_Syntax_Syntax.SHOULD_NOT_INLINE -> of_int (Prims.of_int (997))
+    | FStar_Syntax_Syntax.CPS -> of_int (Prims.of_int (1009))
     | FStar_Syntax_Syntax.DECREASES (FStar_Syntax_Syntax.Decreases_lex ts) ->
-        let uu___1 = FStar_Hash.of_int (Prims.of_int (1013)) in
-        let uu___2 = hash_list hash_term ts in FStar_Hash.mix uu___1 uu___2
+        let uu___1 = of_int (Prims.of_int (1013)) in
+        let uu___2 = hash_list hash_term ts in mix uu___1 uu___2
     | FStar_Syntax_Syntax.DECREASES (FStar_Syntax_Syntax.Decreases_wf
         (t0, t1)) ->
-        let uu___1 = FStar_Hash.of_int (Prims.of_int (2341)) in
-        let uu___2 = hash_list hash_term [t0; t1] in
-        FStar_Hash.mix uu___1 uu___2
-and (hash_meta : FStar_Syntax_Syntax.metadata -> FStar_Hash.hash_code) =
+        let uu___1 = of_int (Prims.of_int (2341)) in
+        let uu___2 = hash_list hash_term [t0; t1] in mix uu___1 uu___2
+and (hash_meta : FStar_Syntax_Syntax.metadata -> FStar_Hash.hash_code mm) =
   fun m ->
     match m with
     | FStar_Syntax_Syntax.Meta_pattern (ts, args) ->
         let uu___ =
-          let uu___1 = FStar_Hash.of_int (Prims.of_int (1019)) in
+          let uu___1 = of_int (Prims.of_int (1019)) in
           let uu___2 =
             let uu___3 = hash_list hash_term ts in
             let uu___4 =
@@ -623,32 +576,32 @@ and (hash_meta : FStar_Syntax_Syntax.metadata -> FStar_Hash.hash_code) =
         mix_list_lit uu___
     | FStar_Syntax_Syntax.Meta_named l ->
         let uu___ =
-          let uu___1 = FStar_Hash.of_int (Prims.of_int (1021)) in
+          let uu___1 = of_int (Prims.of_int (1021)) in
           let uu___2 = let uu___3 = hash_lid l in [uu___3] in uu___1 ::
             uu___2 in
         mix_list_lit uu___
     | FStar_Syntax_Syntax.Meta_labeled (s, r, uu___) ->
         let uu___1 =
-          let uu___2 = FStar_Hash.of_int (Prims.of_int (1031)) in
+          let uu___2 = of_int (Prims.of_int (1031)) in
           let uu___3 =
-            let uu___4 = FStar_Hash.of_string s in
+            let uu___4 = of_string s in
             let uu___5 =
               let uu___6 =
                 let uu___7 = FStar_Compiler_Range.string_of_range r in
-                FStar_Hash.of_string uu___7 in
+                of_string uu___7 in
               [uu___6] in
             uu___4 :: uu___5 in
           uu___2 :: uu___3 in
         mix_list_lit uu___1
     | FStar_Syntax_Syntax.Meta_desugared msi ->
         let uu___ =
-          let uu___1 = FStar_Hash.of_int (Prims.of_int (1033)) in
+          let uu___1 = of_int (Prims.of_int (1033)) in
           let uu___2 = let uu___3 = hash_meta_source_info msi in [uu___3] in
           uu___1 :: uu___2 in
         mix_list_lit uu___
     | FStar_Syntax_Syntax.Meta_monadic (m1, t) ->
         let uu___ =
-          let uu___1 = FStar_Hash.of_int (Prims.of_int (1039)) in
+          let uu___1 = of_int (Prims.of_int (1039)) in
           let uu___2 =
             let uu___3 = hash_lid m1 in
             let uu___4 = let uu___5 = hash_term t in [uu___5] in uu___3 ::
@@ -657,7 +610,7 @@ and (hash_meta : FStar_Syntax_Syntax.metadata -> FStar_Hash.hash_code) =
         mix_list_lit uu___
     | FStar_Syntax_Syntax.Meta_monadic_lift (m0, m1, t) ->
         let uu___ =
-          let uu___1 = FStar_Hash.of_int (Prims.of_int (1069)) in
+          let uu___1 = of_int (Prims.of_int (1069)) in
           let uu___2 =
             let uu___3 = hash_lid m0 in
             let uu___4 =
@@ -668,22 +621,20 @@ and (hash_meta : FStar_Syntax_Syntax.metadata -> FStar_Hash.hash_code) =
           uu___1 :: uu___2 in
         mix_list_lit uu___
 and (hash_meta_source_info :
-  FStar_Syntax_Syntax.meta_source_info -> FStar_Hash.hash_code) =
+  FStar_Syntax_Syntax.meta_source_info -> FStar_Hash.hash_code mm) =
   fun m ->
     match m with
-    | FStar_Syntax_Syntax.Sequence -> FStar_Hash.of_int (Prims.of_int (1049))
-    | FStar_Syntax_Syntax.Primop -> FStar_Hash.of_int (Prims.of_int (1051))
-    | FStar_Syntax_Syntax.Masked_effect ->
-        FStar_Hash.of_int (Prims.of_int (1061))
-    | FStar_Syntax_Syntax.Meta_smt_pat ->
-        FStar_Hash.of_int (Prims.of_int (1063))
+    | FStar_Syntax_Syntax.Sequence -> of_int (Prims.of_int (1049))
+    | FStar_Syntax_Syntax.Primop -> of_int (Prims.of_int (1051))
+    | FStar_Syntax_Syntax.Masked_effect -> of_int (Prims.of_int (1061))
+    | FStar_Syntax_Syntax.Meta_smt_pat -> of_int (Prims.of_int (1063))
     | FStar_Syntax_Syntax.Machine_integer sw ->
-        let uu___ = FStar_Hash.of_int (Prims.of_int (1069)) in
-        let uu___1 = hash_sw sw in FStar_Hash.mix uu___ uu___1
-and (hash_lazyinfo : FStar_Syntax_Syntax.lazyinfo -> FStar_Hash.hash_code) =
-  fun li -> FStar_Hash.of_int Prims.int_zero
-and (hash_quoteinfo : FStar_Syntax_Syntax.quoteinfo -> FStar_Hash.hash_code)
-  =
+        let uu___ = of_int (Prims.of_int (1069)) in
+        let uu___1 = hash_sw sw in mix uu___ uu___1
+and (hash_lazyinfo : FStar_Syntax_Syntax.lazyinfo -> FStar_Hash.hash_code mm)
+  = fun li -> of_int Prims.int_zero
+and (hash_quoteinfo :
+  FStar_Syntax_Syntax.quoteinfo -> FStar_Hash.hash_code mm) =
   fun qi ->
     let uu___ =
       hash_bool
@@ -691,7 +642,7 @@ and (hash_quoteinfo : FStar_Syntax_Syntax.quoteinfo -> FStar_Hash.hash_code)
     let uu___1 =
       hash_list (hash_pair hash_bv hash_term)
         qi.FStar_Syntax_Syntax.antiquotes in
-    FStar_Hash.mix uu___ uu___1
+    mix uu___ uu___1
 let rec equal_list :
   'uuuuu 'uuuuu1 .
     ('uuuuu -> 'uuuuu1 -> Prims.bool) ->
@@ -733,6 +684,15 @@ let equal_pair :
           | ((x1, y1), (x2, y2)) -> (f x1 x2) && (g y1 y2)
 let equal_poly : 'uuuuu . 'uuuuu -> 'uuuuu -> Prims.bool =
   fun x -> fun y -> x = y
+let (ext_hash_term : FStar_Syntax_Syntax.term -> FStar_Hash.hash_code) =
+  fun t ->
+    let uu___ = let uu___1 = hash_term t in uu___1 true in
+    FStar_Pervasives_Native.fst uu___
+let (ext_hash_term_no_memo :
+  FStar_Syntax_Syntax.term -> FStar_Hash.hash_code) =
+  fun t ->
+    let uu___ = let uu___1 = hash_term t in uu___1 false in
+    FStar_Pervasives_Native.fst uu___
 let rec (equal_term :
   FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.term -> Prims.bool) =
   fun t1 ->
@@ -742,8 +702,8 @@ let rec (equal_term :
       then true
       else
         (let uu___2 =
-           let uu___3 = hash_term t1 in
-           let uu___4 = hash_term t2 in uu___3 <> uu___4 in
+           let uu___3 = ext_hash_term t1 in
+           let uu___4 = ext_hash_term t2 in uu___3 <> uu___4 in
          if uu___2
          then false
          else
