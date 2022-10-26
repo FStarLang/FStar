@@ -864,7 +864,7 @@ let collect_one
 
       and collect_constant = function
         | Const_int (_, Some (Unsigned, Sizet)) ->
-            add_to_parsing_data (P_dep (false, ("fstar.sizet" |> Ident.lid_of_str)))
+            add_to_parsing_data (P_dep (false, ("fstar.sizeT" |> Ident.lid_of_str)))
         | Const_int (_, Some (signedness, width)) ->
             let u = match signedness with | Unsigned -> "u" | Signed -> "" in
             let w = match width with | Int8 -> "8" | Int16 -> "16" | Int32 -> "32" | Int64 -> "64" in

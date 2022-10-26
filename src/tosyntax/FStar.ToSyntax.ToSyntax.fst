@@ -1038,7 +1038,7 @@ and desugar_typ env e : S.term =
     t
 
 and desugar_machine_integer env repr (signedness, width) range =
-  let tnm = if width = Sizet then "FStar.Sizet" else
+  let tnm = if width = Sizet then "FStar.SizeT" else
     "FStar." ^
     (match signedness with | Unsigned -> "U" | Signed -> "") ^ "Int" ^
     (match width with | Int8 -> "8" | Int16 -> "16" | Int32 -> "32" | Int64 -> "64")
