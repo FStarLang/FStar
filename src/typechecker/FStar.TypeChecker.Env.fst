@@ -1854,10 +1854,10 @@ let uvars_for_binders env (bs:S.binders) substs add_guard_uvars reason r =
       | _ -> None, None in
 
     let add_guard_uvars =
-      add_guard_uvars &&
-      (match ctx_uvar_meta_t with
-       | Some (Ctx_uvar_meta_attr _) -> not (Options.admit_tactic_unification_guards ())
-       | _ -> true) in
+      add_guard_uvars && not (Options.admit_tactic_unification_guards ()) in
+      // (match ctx_uvar_meta_t with
+      //  | Some (Ctx_uvar_meta_attr _) -> not (Options.admit_tactic_unification_guards ())
+      //  | _ -> true) in
 
     let guard_uvar_tms, guard_uvar_opt, g_guard_uvar =
       if add_guard_uvars

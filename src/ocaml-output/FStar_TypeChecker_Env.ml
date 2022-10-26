@@ -6536,15 +6536,10 @@ let (uvars_for_binders :
                                | (ctx_uvar_meta_t, guard_uvar_meta_t) ->
                                    let add_guard_uvars1 =
                                      add_guard_uvars &&
-                                       (match ctx_uvar_meta_t with
-                                        | FStar_Pervasives_Native.Some
-                                            (FStar_Syntax_Syntax.Ctx_uvar_meta_attr
-                                            uu___3) ->
-                                            let uu___4 =
-                                              FStar_Options.admit_tactic_unification_guards
-                                                () in
-                                            Prims.op_Negation uu___4
-                                        | uu___3 -> true) in
+                                       (let uu___3 =
+                                          FStar_Options.admit_tactic_unification_guards
+                                            () in
+                                        Prims.op_Negation uu___3) in
                                    let uu___3 =
                                      if add_guard_uvars1
                                      then
