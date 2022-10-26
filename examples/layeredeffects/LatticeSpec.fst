@@ -90,12 +90,14 @@ let return (a:Type u#aa) (x:a)
   let r (s0:state) : Tot (r:(option a & state){snd r == s0 /\ fst r == Some x}) = (Some x, s0) in
   r
 
+unfold
 let bind_pre
  (a:Type) (pre1:pre_t) (post1:post_t a)
  (b:Type) (pre2:a -> pre_t) (post2:a -> post_t b)
  : pre_t
  = fun s0 -> pre1 s0 /\ (forall y s1. post1 s0 (Some y) s1 ==> pre2 y s1)
- 
+
+unfold
 let bind_post
  (a:Type) (pre1:pre_t) (post1:post_t a)
  (b:Type) (pre2:a -> pre_t) (post2:a -> post_t b)
@@ -104,8 +106,10 @@ let bind_post
                     \/ (post1 s0 None s2)
 
 let bind (a b : Type)
-  pre1 post1 pre2 post2
-  (labs1 labs2 : list eff_label)
+  pre1 post1
+  (labs1 : list eff_label)
+  pre2 post2
+  (labs2 : list eff_label)
   (c : repr a pre1 post1 labs1)
   (f : (x:a -> repr b (pre2 x) (post2 x) labs2))
   : Tot (repr b (bind_pre  a pre1 post1 b pre2 post2)
@@ -124,9 +128,12 @@ let bind (a b : Type)
     r
 
 let subcomp (a:Type)
-  (pre1 pre2 : pre_t)
-  (post1 post2 : post_t a)
-  (labs1 labs2 : list eff_label)
+  (pre1 : pre_t)
+  (post1 : post_t a)
+  (labs1 : list eff_label)
+  (pre2 : pre_t)
+  (post2 : post_t a)
+  (labs2 : list eff_label)
   (f : repr a pre1 post1 labs1)
   : Pure (repr a pre2 post2 labs2)
          (requires ((forall s0. pre2 s0 ==> pre1 s0) /\
@@ -135,13 +142,17 @@ let subcomp (a:Type)
          (ensures (fun _ -> True))
   = f
 
+unfold
 let ite (p q r : Type0) = (p ==> q) /\ ((~p) ==> r)
 
 let if_then_else
   (a : Type)
-  (pre1 pre2 : pre_t)
-  (post1 post2 : post_t a)
-  (labs1 labs2 : list eff_label)
+  (pre1 : pre_t)
+  (post1 : post_t a)
+  (labs1 : list eff_label)
+  (pre2 : pre_t)
+  (post2 : post_t a)
+  (labs2 : list eff_label)
   (f : repr a pre1 post1 labs1)
   (g : repr a pre2 post2 labs2)
   (b : bool)
@@ -172,6 +183,7 @@ unfold
 let sp #a (wp : pure_wp a) : pure_post a =
   fun x -> ~ (wp (fun y -> ~(x == y)))
 
+unfold
 let post_of_wp #a (wp : pure_wp a) : post_t a =
   fun s0 r s1 -> s0 == s1 /\ Some? r /\ sp wp (Some?.v r)
 
