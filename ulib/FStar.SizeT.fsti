@@ -94,3 +94,17 @@ unfold let op_Greater_Hat = gt
 unfold let op_Greater_Equals_Hat = gte
 unfold let op_Less_Hat = lt
 unfold let op_Less_Equals_Hat = lte
+
+#set-options "--lax"
+//This private primitive is used internally by the
+//compiler to translate bounded integer constants
+//with a desugaring-time check of the size of the number,
+//rather than an expensive verification check.
+//Since it is marked private, client programs cannot call it directly
+//Since it is marked unfold, it eagerly reduces,
+//eliminating the verification overhead of the wrapper
+private
+unfold
+let __uint_to_t (x:int) : Tot t
+    = uint_to_t x
+#reset-options
