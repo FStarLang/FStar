@@ -602,10 +602,10 @@ let memcpy0
     in
     assert (prefix_copied e0 e1 0 `Seq.equal` e1);
     rewrite (pts_to a1 full_perm e1)
-                           (pts_to a1 full_perm (prefix_copied e0 e1 (US.v (US.mk 0us))));
-    rewrite (pts_to a0 _ e0 `star` pts_to a1 full_perm (prefix_copied e0 e1 (US.v (US.mk 0us))))
-                           (inv (US.v (US.mk 0us)));
-    let body (j:Steel.ST.Loops.u32_between (US.mk 0us) i)
+                           (pts_to a1 full_perm (prefix_copied e0 e1 (US.v 0sz)));
+    rewrite (pts_to a0 _ e0 `star` pts_to a1 full_perm (prefix_copied e0 e1 (US.v 0sz)))
+                           (inv (US.v 0sz));
+    let body (j:Steel.ST.Loops.u32_between 0sz i)
       : STT unit
         (inv (US.v j))
         (fun _ -> inv (US.v j + 1))
@@ -621,7 +621,7 @@ let memcpy0
                                (inv (US.v j + 1));
         return ()
     in
-    Steel.ST.Loops.for_loop (US.mk 0us) i inv body;
+    Steel.ST.Loops.for_loop 0sz i inv body;
     assert_ (inv (US.v i));
     rewrite (inv (US.v i))
                            (pts_to a0 p0 e0 `star`
