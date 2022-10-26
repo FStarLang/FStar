@@ -3,8 +3,9 @@ module SizeT
 open FStar.SizeT
 
 let f () =
-  let x = mk 0us in
-  let y = mk 1us in
+  let x = 0sz in
+  let y = 1sz in
+  assert (fits (v y));
   let z = x +^ y in
   let z = z -^ x in
   let z = z *^ y in
