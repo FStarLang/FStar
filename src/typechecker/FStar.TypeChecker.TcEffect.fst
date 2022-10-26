@@ -99,28 +99,76 @@ let pure_wp_uvar env (t:typ) (reason:string) (r:Range.range) : term * guard_t =
   pure_wp_uvar, guard_wp
 
 
-(*
- * For all the layered effects combinators, we enforce that their types are
- *   typeable without using subtyping
- *
- * This is to guard against unsoundness creeping in because of using Untyped uvars
- *   when applying these combinators
- *
- * Essentially we want to ensure that uvars are not introduces at a type different than
- *   what they are used at
- *)
-let check_no_subtyping_for_layered_combinator env (t:term) (k:option typ) = ()
-  // if Env.debug env <| Options.Other "LayeredEffectsTc"
-  // then BU.print2 "Checking that %s is well typed with no subtyping (k:%s)\n"
-  //        (Print.term_to_string t)
-  //        (match k with
-  //         | None -> "None"
-  //         | Some k -> Print.term_to_string k);
+let validate_degenerate_effect env (u:univ_name) (return_term:term) (return_typ:typ) (r:Range.range) : unit =
+  let a_b::x_b1::rest_bs1 =
+    match (SS.compress return_typ).n with
+    | Tm_arrow (bs, _) -> SS.open_binders bs
+    | _ -> failwith "validate_degenerate_effect: return not an arrow" in
 
-  // let env = ({ env with use_eq_strict = true }) in
-  // match k with
-  // | None -> ignore (tc_trivial_guard env t)
-  // | Some k -> ignore (tc_check_trivial_guard env t k)
+  let x_b2::rest_bs2 =
+    match (SS.compress return_typ).n with
+    | Tm_arrow (bs, _) ->
+      let a::bs = SS.open_binders bs in
+      let ss = [NT (a.binder_bv, a_b.binder_bv |> S.bv_to_name)] in
+      SS.subst_binders ss bs
+    | _ -> failwith "validate_degenerate_effect: return not an arrow" in
+
+  
+  let return_term1 = mk_Tm_app return_term
+    (List.map (fun b -> b.binder_bv |> S.bv_to_name |> S.as_arg) (a_b::x_b1::rest_bs1))
+    Range.dummyRange
+    |> N.normalize N.whnf_steps (Env.push_binders env (a_b::x_b1::rest_bs1)) in
+
+  let return_term2 = mk_Tm_app return_term
+    (List.map (fun b -> b.binder_bv |> S.bv_to_name |> S.as_arg) (a_b::x_b2::rest_bs2))
+    Range.dummyRange
+    |> N.normalize N.whnf_steps (Env.push_binders env (a_b::x_b2::rest_bs2)) in
+
+  let return_term_bs1, return_term_bs2, return_term1, return_term2 =
+    match (SS.compress return_term1).n, (SS.compress return_term2).n with
+    | Tm_abs (bs1, t1, _), Tm_abs (bs2, t2, _)
+      when List.length bs1 = List.length bs2 ->
+
+      let bs1, t1 = SS.open_term bs1 t1 in
+      let bs2, t2 = SS.open_term bs2 t2 in
+
+      bs1, bs2, t1, t2
+      
+    | _ -> [], [], return_term1, return_term2 in
+
+  let env = Env.push_binders env ((a_b::x_b1::rest_bs1)@(x_b2::rest_bs2)@return_term_bs1@return_term_bs2) in
+
+  let hyp =
+    let hyp = List.fold_left2 (fun hyp b1 b2 ->
+      U.mk_conj hyp
+        (U.mk_eq3_no_univ
+           b1.binder_bv.sort
+           b2.binder_bv.sort
+           (b1.binder_bv |> S.bv_to_name)
+           (b2.binder_bv |> S.bv_to_name))) U.t_true rest_bs1 rest_bs2 in
+
+    let hyp = List.fold_left2 (fun hyp b1 b2 ->
+      U.mk_conj hyp
+        (U.mk_eq3_no_univ
+           b1.binder_bv.sort
+           b2.binder_bv.sort
+           (b1.binder_bv |> S.bv_to_name)
+           (b2.binder_bv |> S.bv_to_name))) hyp return_term_bs1 return_term_bs2 in
+
+    U.mk_conj hyp (U.mk_untyped_eq2 return_term1 return_term2) in
+
+  let obligation = U.mk_eq3_no_univ
+    x_b1.binder_bv.sort
+    x_b2.binder_bv.sort
+    (x_b1.binder_bv |> S.bv_to_name)
+    (x_b2.binder_bv |> S.bv_to_name) in
+
+  let g = U.mk_imp hyp obligation
+    |> NonTrivial
+    |> Env.guard_of_guard_formula
+    |> TcUtil.label_guard r "Check for effect consistency" in
+
+  Rel.force_trivial_guard env g
 
 
 (*
@@ -1186,8 +1234,6 @@ Errors.with_ctx (BU.format1 "While checking layered effect definition `%s`" (str
     let us, ty = SS.open_univ_vars ret_us ret_ty in
     let env = Env.push_univ_vars env0 us in
 
-    check_no_subtyping_for_layered_combinator env ty None;
-
     let a, u_a = fresh_a_and_u_a "a" in
     let x_a = fresh_x_a "x" a in
     let rest_bs =
@@ -1212,6 +1258,8 @@ Errors.with_ctx (BU.format1 "While checking layered effect definition `%s`" (str
         let res_t = U.comp_result c in
         let env = Env.push_binders env [a; x] in
         validate_layered_effect_binders env bs check_non_informative_binders r in
+
+    // validate_degenerate_effect env (List.hd us) (Env.inst_tscheme_with (ret_us, ret_t) (List.map U_name us) |> snd) k r;
 
     ret_us, ret_t, k |> SS.close_univ_vars us in
 
