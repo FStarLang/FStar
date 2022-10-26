@@ -31,6 +31,7 @@ let fits_lte x y = ()
 let add = U64.add
 let sub = U64.sub
 let mul = U64.mul
+let rem x y = U64.rem x y
 let gt x y = U64.gt x y
 let gte x y = U64.gte x y
 let lt x y = U64.lt x y
