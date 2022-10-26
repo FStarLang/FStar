@@ -860,7 +860,7 @@ let rec desugar_data_pat
       | PatConst c ->
         let x = S.new_bv (Some p.prange) (tun_r p.prange) in
         loc, env, LocalBinder(x, None, []), pos <| Pat_constant c, []
-        
+
       | PatVQuote e ->
         // Here, we desugar [PatVQuote e] into a [PatConst s] where
         // [s] is the (string represented) lid of [e] (see function
@@ -1038,7 +1038,8 @@ and desugar_typ env e : S.term =
     t
 
 and desugar_machine_integer env repr (signedness, width) range =
-  let tnm = "FStar." ^
+  let tnm = if width = Sizet then "FStar.Sizet" else
+    "FStar." ^
     (match signedness with | Unsigned -> "U" | Signed -> "") ^ "Int" ^
     (match width with | Int8 -> "8" | Int16 -> "16" | Int32 -> "32" | Int64 -> "64")
   in
