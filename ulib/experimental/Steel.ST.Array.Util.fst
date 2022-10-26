@@ -91,7 +91,7 @@ let array_literal #a n f =
     (fun i -> exists_ (array_literal_inv n arr f i))
     (array_literal_loop_body n arr f);
 
-  let s = elim_exists #_ #_ #(array_literal_inv n arr f (US.v n)) () in
+  let s = elim_exists () in
   A.pts_to_length arr s;
   elim_pure (array_literal_inv_pure n f (US.v n) s);
   assert (Seq.equal s (Seq.init (US.v n) (fun i -> f (US.uint_to_t i))));
@@ -209,18 +209,18 @@ let forall_body
 
     //atomic increment?
     let i = R.read r in
-    R.write r (US.add i 1ul);
+    R.write r (US.add i 1sz);
 
-    intro_pure (forall_pure_inv n p s () (US.add i 1ul));
+    intro_pure (forall_pure_inv n p s () (US.add i 1sz));
     intro_pure (forall_pure_inv_b n p s ()
-      (US.add i 1ul)
-      ((US.add i 1ul) `US.lt` n && p (Seq.index s (US.v (US.add i 1ul)))));
+      (US.add i 1sz)
+      ((US.add i 1sz) `US.lt` n && p (Seq.index s (US.v (US.add i 1sz)))));
     intro_exists
-      (US.add i 1ul)
+      (US.add i 1sz)
       (forall_pred n arr p r perm s ()
-         ((US.add i 1ul) `US.lt` n && p (Seq.index s (US.v (US.add i 1ul)))));
+         ((US.add i 1sz) `US.lt` n && p (Seq.index s (US.v (US.add i 1sz)))));
     intro_exists
-      ((US.add i 1ul) `US.lt` n && p (Seq.index s (US.v (US.add i 1ul))))
+      ((US.add i 1sz) `US.lt` n && p (Seq.index s (US.v (US.add i 1sz))))
       (forall_inv n arr p r perm s ())
 
 let for_all #a #perm #s n arr p =
@@ -385,21 +385,21 @@ let forall2_body
 
     //atomic increment?
     let i = R.read r in
-    R.write r (US.add i 1ul);
+    R.write r (US.add i 1sz);
 
-    intro_pure (forall2_pure_inv n p s0 s1 () (US.add i 1ul));
+    intro_pure (forall2_pure_inv n p s0 s1 () (US.add i 1sz));
     intro_pure (forall2_pure_inv_b n p s0 s1 ()
-      (US.add i 1ul)
-      ((US.add i 1ul) `US.lt` n && p (Seq.index s0 (US.v (US.add i 1ul)))
-                                       (Seq.index s1 (US.v (US.add i 1ul)))));
+      (US.add i 1sz)
+      ((US.add i 1sz) `US.lt` n && p (Seq.index s0 (US.v (US.add i 1sz)))
+                                       (Seq.index s1 (US.v (US.add i 1sz)))));
     intro_exists
-      (US.add i 1ul)
+      (US.add i 1sz)
       (forall2_pred n a0 a1 p r p0 p1 s0 s1 ()
-         ((US.add i 1ul) `US.lt` n && p (Seq.index s0 (US.v (US.add i 1ul)))
-                                          (Seq.index s1 (US.v (US.add i 1ul)))));
+         ((US.add i 1sz) `US.lt` n && p (Seq.index s0 (US.v (US.add i 1sz)))
+                                          (Seq.index s1 (US.v (US.add i 1sz)))));
     intro_exists
-      ((US.add i 1ul) `US.lt` n && p (Seq.index s0 (US.v (US.add i 1ul)))
-                                       (Seq.index s1 (US.v (US.add i 1ul))))
+      ((US.add i 1sz) `US.lt` n && p (Seq.index s0 (US.v (US.add i 1sz)))
+                                       (Seq.index s1 (US.v (US.add i 1sz))))
       (forall2_inv n a0 a1 p r p0 p1 s0 s1 ())
 
 let for_all2 #a #b #p0 #p1 #s0 #s1 n a0 a1 p =
