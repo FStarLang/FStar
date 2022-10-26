@@ -1357,6 +1357,18 @@ let (collect_one :
            and collect_constant uu___2 =
              match uu___2 with
              | FStar_Const.Const_int
+                 (uu___3, FStar_Pervasives_Native.Some
+                  (FStar_Const.Unsigned, FStar_Const.Sizet))
+                 ->
+                 let uu___4 =
+                   let uu___5 =
+                     let uu___6 =
+                       FStar_Compiler_Effect.op_Bar_Greater "fstar.sizet"
+                         FStar_Ident.lid_of_str in
+                     (false, uu___6) in
+                   P_dep uu___5 in
+                 add_to_parsing_data uu___4
+             | FStar_Const.Const_int
                  (uu___3, FStar_Pervasives_Native.Some (signedness, width))
                  ->
                  let u =

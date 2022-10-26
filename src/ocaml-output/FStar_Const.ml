@@ -10,7 +10,8 @@ type width =
   | Int8 
   | Int16 
   | Int32 
-  | Int64 [@@deriving yojson,show]
+  | Int64 
+  | Sizet [@@deriving yojson,show]
 let (uu___is_Int8 : width -> Prims.bool) =
   fun projectee -> match projectee with | Int8 -> true | uu___ -> false
 let (uu___is_Int16 : width -> Prims.bool) =
@@ -19,6 +20,8 @@ let (uu___is_Int32 : width -> Prims.bool) =
   fun projectee -> match projectee with | Int32 -> true | uu___ -> false
 let (uu___is_Int64 : width -> Prims.bool) =
   fun projectee -> match projectee with | Int64 -> true | uu___ -> false
+let (uu___is_Sizet : width -> Prims.bool) =
+  fun projectee -> match projectee with | Sizet -> true | uu___ -> false
 type sconst =
   | Const_effect 
   | Const_unit 
@@ -128,7 +131,8 @@ let (bounds :
         | Int8 -> FStar_BigInt.big_int_of_string "8"
         | Int16 -> FStar_BigInt.big_int_of_string "16"
         | Int32 -> FStar_BigInt.big_int_of_string "32"
-        | Int64 -> FStar_BigInt.big_int_of_string "64" in
+        | Int64 -> FStar_BigInt.big_int_of_string "64"
+        | Sizet -> FStar_BigInt.big_int_of_string "16" in
       let uu___ =
         match signedness1 with
         | Unsigned ->

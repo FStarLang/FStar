@@ -2139,17 +2139,20 @@ and (desugar_machine_integer :
           match uu___ with
           | (signedness, width) ->
               let tnm =
-                Prims.op_Hat "FStar."
-                  (Prims.op_Hat
-                     (match signedness with
-                      | FStar_Const.Unsigned -> "U"
-                      | FStar_Const.Signed -> "")
-                     (Prims.op_Hat "Int"
-                        (match width with
-                         | FStar_Const.Int8 -> "8"
-                         | FStar_Const.Int16 -> "16"
-                         | FStar_Const.Int32 -> "32"
-                         | FStar_Const.Int64 -> "64"))) in
+                if width = FStar_Const.Sizet
+                then "FStar.Sizet"
+                else
+                  Prims.op_Hat "FStar."
+                    (Prims.op_Hat
+                       (match signedness with
+                        | FStar_Const.Unsigned -> "U"
+                        | FStar_Const.Signed -> "")
+                       (Prims.op_Hat "Int"
+                          (match width with
+                           | FStar_Const.Int8 -> "8"
+                           | FStar_Const.Int16 -> "16"
+                           | FStar_Const.Int32 -> "32"
+                           | FStar_Const.Int64 -> "64"))) in
               ((let uu___2 =
                   let uu___3 =
                     FStar_Const.within_bounds repr signedness width in
