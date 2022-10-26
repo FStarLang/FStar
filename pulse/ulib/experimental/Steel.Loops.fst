@@ -44,7 +44,7 @@ let rec for_loop' start finish current inv body
     else (
       let _: squash (US.v current < US.v finish) = () in //fails without this
       body current;
-      let current' = US.(current +^ (US.mk 1us)) in
+      let current' = US.(current +^ 1sz) in
       AT.change_equal_slprop (inv (US.v current + 1))
                              (inv (US.v current'));
       for_loop' start finish current' inv body

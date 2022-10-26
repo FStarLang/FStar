@@ -518,8 +518,8 @@ let memcpy (#t:_) (#p0:perm)
   : STT unit
     (pts_to a0 p0 s0 `star` pts_to a1 full_perm s1)
     (fun _ -> pts_to a0 p0 s0  `star` pts_to a1 full_perm s0)
-= blit #t #p0 #s0 #s1 a0 (US.mk 0us) a1 (US.mk 0us) l;
+= blit #t #p0 #s0 #s1 a0 0sz a1 0sz l;
   let s1' = elim_exists () in
-  elim_pure (blit_post s0 s1 a0 (US.mk 0us) a1 (US.mk 0us) l s1');
+  elim_pure (blit_post s0 s1 a0 0sz a1 0sz l s1');
   vpattern_rewrite (pts_to a1 full_perm) (Ghost.reveal s0);
   return ()
