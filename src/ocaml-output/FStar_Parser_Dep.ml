@@ -1363,7 +1363,7 @@ let (collect_one :
                  let uu___4 =
                    let uu___5 =
                      let uu___6 =
-                       FStar_Compiler_Effect.op_Bar_Greater "fstar.sizet"
+                       FStar_Compiler_Effect.op_Bar_Greater "fstar.sizeT"
                          FStar_Ident.lid_of_str in
                      (false, uu___6) in
                    P_dep uu___5 in

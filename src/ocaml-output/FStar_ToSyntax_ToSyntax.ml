@@ -2140,7 +2140,7 @@ and (desugar_machine_integer :
           | (signedness, width) ->
               let tnm =
                 if width = FStar_Const.Sizet
-                then "FStar.Sizet"
+                then "FStar.SizeT"
                 else
                   Prims.op_Hat "FStar."
                     (Prims.op_Hat
