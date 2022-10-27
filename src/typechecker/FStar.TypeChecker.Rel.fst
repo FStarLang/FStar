@@ -1796,7 +1796,7 @@ let apply_standard_indexed_subcomp (env:Env.env)
   (subcomp_name:string)
   (r1:Range.range)
 
-  : typ & list term & list prob & worklist =
+  : typ & list prob & worklist =
 
   let bs, subst =
     let a_b::bs = bs in
@@ -1833,22 +1833,19 @@ let apply_standard_indexed_subcomp (env:Env.env)
 
   let bs = List.splitAt (List.length bs - 1) bs |> fst in
 
-  let subst, wl, guard_uvar_tms =
-    let guard_indexed_effect_uvars = true in
-    let ss, wl, guard_uvar_tms =
-      List.fold_left (fun (ss, wl, tms) b ->
-        let [uv_t], uv_tms, g = Env.uvars_for_binders env [b] (subst@ss) guard_indexed_effect_uvars
+  let subst, wl =
+    let ss, wl =
+      List.fold_left (fun (ss, wl) b ->
+        let [uv_t], g = Env.uvars_for_binders env [b] (subst@ss)
           (fun b ->
            BU.format3 "implicit var for additional binder %s in subcomp %s at %s"
              (Print.binder_to_string b)
              subcomp_name
              (Range.string_of_range r1)) r1 in
         ss@[NT (b.binder_bv, uv_t)],
-        {wl with wl_implicits=g.implicits@wl.wl_implicits},
-        tms@uv_tms) ([], wl, []) bs in
+        {wl with wl_implicits=g.implicits@wl.wl_implicits}) ([], wl) bs in
     subst@ss,
-    wl,
-    guard_uvar_tms in
+    wl in
 
   let subcomp_ct = subcomp_c |> SS.subst_comp subst |> U.comp_to_comp_typ in
 
@@ -1857,7 +1854,6 @@ let apply_standard_indexed_subcomp (env:Env.env)
     Env.pure_precondition_for_trivial_post env u subcomp_ct.result_typ wp Range.dummyRange in
 
   fml,
-  guard_uvar_tms,
   eff_params_sub_probs,
   wl
 
@@ -1870,7 +1866,7 @@ let apply_ad_hoc_indexed_subcomp (env:Env.env)
   (subcomp_name:string)
   (r1:Range.range)
 
-  : typ & list term & list prob & worklist =
+  : typ & list prob & worklist =
 
   let stronger_t_shape_error s = BU.format2
     "Unexpected shape of stronger for %s, reason: %s"
@@ -1886,10 +1882,9 @@ let apply_ad_hoc_indexed_subcomp (env:Env.env)
     else raise_error (Errors.Fatal_UnexpectedExpressionType,
                       stronger_t_shape_error "not an arrow or not enough binders") r1 in
 
-  let rest_bs_uvars, rest_uvars_guard_tms, g_uvars =
-    let guard_indexed_effect_uvars = true in
+  let rest_bs_uvars, g_uvars =
     Env.uvars_for_binders env rest_bs
-      [NT (a_b.binder_bv, ct2.result_typ)] guard_indexed_effect_uvars
+      [NT (a_b.binder_bv, ct2.result_typ)]
       (fun b -> BU.format3 "implicit for binder %s in subcomp %s at %s"
                (Print.binder_to_string b)
                subcomp_name
@@ -1939,7 +1934,6 @@ let apply_ad_hoc_indexed_subcomp (env:Env.env)
     Env.pure_precondition_for_trivial_post env u subcomp_ct.result_typ wp Range.dummyRange in
 
   fml,
-  rest_uvars_guard_tms,
   f_sub_probs@g_sub_probs,
   wl
 
@@ -4198,8 +4192,7 @@ and solve_c (env:Env.env) (problem:problem comp) (wl:worklist) : solution =
             (c2.effect_name |> Ident.ident_of_lid |> Ident.string_of_id) in
 
           let lift_c1 (edge:edge) : comp_typ * guard_t =
-            let guard_indexed_effect_uvars = true in
-            c1 |> S.mk_Comp |> edge.mlift.mlift_wp env guard_indexed_effect_uvars
+            c1 |> S.mk_Comp |> edge.mlift.mlift_wp env
                |> (fun (c, g) -> U.comp_to_comp_typ c, g) in
   
           let c1, g_lift, stronger_t_opt, kind, num_eff_params, is_polymonadic =
@@ -4293,7 +4286,7 @@ and solve_c (env:Env.env) (problem:problem comp) (wl:worklist) : solution =
 
             let bs, subcomp_c = U.arrow_formals_comp stronger_t in
 
-            let fml, guard_uvar_tms, sub_probs, wl =
+            let fml, sub_probs, wl =
               if kind = Ad_hoc_combinator
               then apply_ad_hoc_indexed_subcomp env bs subcomp_c c1 c2 sub_prob wl subcomp_name r
               else let Standard_combinator l = kind in
@@ -4305,7 +4298,7 @@ and solve_c (env:Env.env) (problem:problem comp) (wl:worklist) : solution =
             let sub_probs = ret_sub_prob::(is_sub_probs@sub_probs) in
 
             let guard =
-              let guard = U.mk_conj_l ((List.map p_guard sub_probs)@guard_uvar_tms) in
+              let guard = U.mk_conj_l (List.map p_guard sub_probs) in
               match g_lift.guard_f with
               | Trivial -> guard
               | NonTrivial f -> U.mk_conj guard f in
@@ -4324,10 +4317,9 @@ and solve_c (env:Env.env) (problem:problem comp) (wl:worklist) : solution =
                | [] -> [env.universe_of env c1.result_typ]
                | x -> x in
              let c1 = { c1 with comp_univs = univs } in
-             let guard_indexed_effect_uvars = true in
              ({ c1 with comp_univs = univs })
              |> S.mk_Comp
-             |> edge.mlift.mlift_wp env guard_indexed_effect_uvars
+             |> edge.mlift.mlift_wp env
              |> (fun (c, g) ->
                  if not (Env.is_trivial g)
                  then raise_error (Errors.Fatal_UnexpectedEffect,
@@ -5085,7 +5077,7 @@ let check_implicit_solution_and_discharge_guard env imp force_univ_constraints
          (Print.uvar_to_string ctx_u.ctx_uvar_head)
          (N.term_to_string env tm)
          (N.term_to_string env (U.ctx_uvar_typ ctx_u)))
-      (fun () -> check_implicit_solution env ctx_u tm (U.ctx_uvar_typ ctx_u) must_tot ctx_u.ctx_uvar_reason) in
+      (fun () -> check_implicit_solution env tm (U.ctx_uvar_typ ctx_u) must_tot ctx_u.ctx_uvar_reason) in
 
   if (not force_univ_constraints) &&
      (List.existsb (fun (reason, _, _) -> reason = Deferred_univ_constraint) g.deferred)

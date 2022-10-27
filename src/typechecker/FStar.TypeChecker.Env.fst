@@ -1033,7 +1033,7 @@ let is_layered_effect env l =
   l |> get_effect_decl env |> U.is_layered
 
 let identity_mlift : mlift =
-  { mlift_wp=(fun _ _ c -> c, trivial_guard);
+  { mlift_wp=(fun _ c -> c, trivial_guard);
     mlift_term=Some (fun _ _ e -> return_all e) }
 
 let join_opt env (l1:lident) (l2:lident) : option (lident * mlift * mlift) =
@@ -1309,9 +1309,9 @@ let print_effects_graph env =
 let update_effect_lattice env src tgt st_mlift =
   let compose_edges e1 e2 : edge =
     let composed_lift =
-      let mlift_wp env guard_indexed_effect_uvars c =
-        c |> e1.mlift.mlift_wp env guard_indexed_effect_uvars
-	  |> (fun (c, g1) -> c |> e2.mlift.mlift_wp env guard_indexed_effect_uvars
+      let mlift_wp env c =
+        c |> e1.mlift.mlift_wp env
+	  |> (fun (c, g1) -> c |> e2.mlift.mlift_wp env
                            |> (fun (c, g2) -> c, TcComm.conj_guard g1 g2)) in
       let mlift_term =
         match e1.mlift.mlift_term, e2.mlift.mlift_term with
@@ -1770,7 +1770,7 @@ let close_guard env binders g =
 (* ------------------------------------------------*)
 
 (* Generating new implicit variables *)
-let new_implicit_var_with_kind reason r env k should_check kind meta =
+let new_implicit_var reason r env k should_check meta =
     match U.destruct k FStar.Parser.Const.range_of_lid with
      | Some [_; (tm, _)] ->
        let t = S.mk (S.Tm_constant (FStar.Const.Const_range tm.pos)) tm.pos in
@@ -1782,7 +1782,6 @@ let new_implicit_var_with_kind reason r env k should_check kind meta =
       let decoration = {
              uvar_decoration_typ = k;
              uvar_decoration_should_check = should_check;
-             uvar_decoration_kind = kind;
           }
       in
       let ctx_uvar = {
@@ -1804,9 +1803,6 @@ let new_implicit_var_with_kind reason r env k should_check kind meta =
         BU.print1 "Just created uvar for implicit {%s}\n" (Print.uvar_to_string ctx_uvar.ctx_uvar_head);
       let g = {trivial_guard with implicits=[imp]} in
       t, [(ctx_uvar, r)], g
-
-let new_implicit_var reason r env k should_check meta =
-  new_implicit_var_with_kind reason r env k should_check (Inl None) meta
 
 (***************************************************)
 
@@ -1841,57 +1837,31 @@ let new_implicit_var reason r env k should_check meta =
  * To guard against misuses of this, we typecheck the layered effect combinator types in a strict
  *   mode (with no smt and subtyping)
  *)
-let uvars_for_binders env (bs:S.binders) substs add_guard_uvars reason r =
-  bs |> List.fold_left (fun (substs, guard_uvar_tms, uvars, g) b ->
+let uvars_for_binders env (bs:S.binders) substs reason r =
+  bs |> List.fold_left (fun (substs, uvars, g) b ->
     let sort = SS.subst substs b.binder_bv.sort in
 
-    let ctx_uvar_meta_t, guard_uvar_meta_t =
+    let ctx_uvar_meta_t =
       match b.binder_qual, b.binder_attrs with
       | Some (Meta t), [] ->
-        Some (Ctx_uvar_meta_tac (FStar.Compiler.Dyn.mkdyn env, t)),
-        None
-      | _, t::_ -> Some (Ctx_uvar_meta_attr t), Some (Ctx_uvar_meta_attr t)
-      | _ -> None, None in
+        Some (Ctx_uvar_meta_tac (FStar.Compiler.Dyn.mkdyn env, t))
+      | _, t::_ -> Some (Ctx_uvar_meta_attr t)
+      | _ -> None in
 
-    let add_guard_uvars = false in
-      // add_guard_uvars && not (Options.admit_tactic_unification_guards ()) in
-      // (match ctx_uvar_meta_t with
-      //  | Some (Ctx_uvar_meta_attr _) -> not (Options.admit_tactic_unification_guards ())
-      //  | _ -> true) in
-
-    let guard_uvar_tms, guard_uvar_opt, g_guard_uvar =
-      if add_guard_uvars
-      then let t, [u, _], g = new_implicit_var_with_kind
-                                ("uvar typing guard (" ^ reason b ^ ")")
-                                r
-                                env
-                                U.ktype0
-                                (Allow_untyped "uvar typing guard")
-                                (Inr ())
-                                guard_uvar_meta_t in
-           guard_uvar_tms@[t], Some u, g
-      else guard_uvar_tms, None, trivial_guard in
-
-    let t, l_ctx_uvars, g_t = new_implicit_var_with_kind
+    let t, l_ctx_uvars, g_t = new_implicit_var
       (reason b) r env sort
         Strict
-        // (if add_guard_uvars then Strict else Allow_untyped "indexed effect binder (weakening or strengthening)")
-        (Inl guard_uvar_opt)
         ctx_uvar_meta_t in
 
     if debug env <| Options.Other "LayeredEffectsEqns"
-    then List.iter (fun (ctx_uvar, _) -> BU.print2 "Layered Effect uvar : %s (Typing guard uvar : %s)\n"
-      (Print.ctx_uvar_to_string ctx_uvar)
-      (match U.ctx_uvar_kind ctx_uvar with
-       | Inl None -> "None"
-       | Inl (Some uv) -> Print.ctx_uvar_to_string_no_reason uv
-       | _ -> failwith "Impossible!")) l_ctx_uvars;
+    then List.iter (fun (ctx_uvar, _) ->
+                    BU.print1 "Layered Effect uvar : %s\n"
+                      (Print.ctx_uvar_to_string ctx_uvar)) l_ctx_uvars;
 
     substs@[NT (b.binder_bv, t)],
-    guard_uvar_tms,
     uvars@[t],
-    conj_guards [g; g_guard_uvar; g_t]
-  ) (substs, [], [], trivial_guard) |> (fun (_, tms, uvars, g) -> uvars, tms, g)
+    conj_guards [g; g_t]
+  ) (substs, [], trivial_guard) |> (fun (_, uvars, g) -> uvars, g)
 
 let pure_precondition_for_trivial_post env u t wp r =
   let trivial_post =

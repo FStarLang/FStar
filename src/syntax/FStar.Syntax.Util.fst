@@ -123,7 +123,6 @@ open FStar.Syntax.Subst
 let rec unmeta e =
     let e = compress e in
     match e.n with
-    | Tm_meta (_, Meta_core_guard) -> e
     | Tm_meta(e, _)
     | Tm_ascribed(e, _, _) -> unmeta e
     | _ -> e
@@ -134,8 +133,7 @@ let rec unmeta_safe e =
     | Tm_meta(e', m) ->
       begin match m with
             | Meta_monadic _
-            | Meta_monadic_lift _
-            | Meta_core_guard ->
+            | Meta_monadic_lift _ ->
               e // don't remove the metas that really matter
             | _ -> unmeta_safe e'
       end
@@ -2448,11 +2446,6 @@ let ctx_uvar_should_check (u:ctx_uvar) =
 
 let ctx_uvar_typ (u:ctx_uvar) = 
   (Unionfind.find_decoration u.ctx_uvar_head).uvar_decoration_typ
-
-let ctx_uvar_kind (u:ctx_uvar) = 
-  (Unionfind.find_decoration u.ctx_uvar_head).uvar_decoration_kind
-
-let is_guard_ctx_uvar (u:ctx_uvar) = Inr? (ctx_uvar_kind u)
 
 let flatten_refinement t =
   let rec aux t unascribe =

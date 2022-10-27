@@ -94,7 +94,7 @@ type must_tot = bool
  *     Note that these types compose quite nicely along the effect lattice
  *)
 
-type lift_comp_t = env -> guard_indexed_effect_uvars:bool -> comp -> comp * guard_t
+type lift_comp_t = env -> comp -> comp * guard_t
 
 (*
  * AR: Env maintains polymonadic binds as functions of type polymonadic_bind_t
@@ -102,7 +102,6 @@ type lift_comp_t = env -> guard_indexed_effect_uvars:bool -> comp -> comp * guar
  *)
 and polymonadic_bind_t =
   env ->
-  guard_indexed_effect_uvars:bool ->
   comp_typ ->
   option bv ->
   comp_typ ->
@@ -496,10 +495,9 @@ val uvars_for_binders :
   env ->
   bs:S.binders ->
   substs:S.subst_t ->
-  add_guard_uvar:bool ->
   reason:(S.binder -> string) ->
   r:Range.range ->
-  (list S.term * list S.term * guard_t)
+  (list S.term * guard_t)
 
 val pure_precondition_for_trivial_post : env -> universe -> typ -> typ -> Range.range -> typ
 

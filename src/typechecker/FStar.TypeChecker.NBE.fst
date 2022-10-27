@@ -192,8 +192,7 @@ let rec unlazy_unmeta t =
       begin
       match Thunk.force m with
       | Meta_monadic(_, _)
-      | Meta_monadic_lift(_, _, _)
-      | Meta_core_guard -> t
+      | Meta_monadic_lift(_, _, _) -> t
       | _ -> unlazy_unmeta t0
       end
     | _ -> t
@@ -640,8 +639,7 @@ let rec translate (cfg:config) (bs:list t) (e:term) : t =
         match meta with
           | Meta_named _
           | Meta_labeled _
-          | Meta_desugared _
-          | Meta_core_guard -> meta
+          | Meta_desugared _ -> meta
           | Meta_pattern (ts, args) ->
             Meta_pattern (List.map norm ts,
                           List.map (List.map (fun (t, a) -> norm t, a)) args)

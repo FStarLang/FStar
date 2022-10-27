@@ -363,7 +363,7 @@ let rec is_arrow (g:env) (t:term)
         | Tm_refine(x, _) ->
           is_arrow g x.sort
 
-        | Tm_meta(t, m) when m <> Meta_core_guard -> aux t
+        | Tm_meta(t, _) -> aux t
         | Tm_ascribed(t, _, _) -> aux t
 
         | _ ->
@@ -1126,9 +1126,6 @@ and check' (g:env) (e:term)
 
   | Tm_lazy i ->
     return (E_TOTAL, i.ltyp)
-
-  | Tm_meta (_, Meta_core_guard) ->
-    return (E_TOTAL, U.ktype0)
 
   | Tm_meta(t, _) ->
     memo_check g t
@@ -2072,5 +2069,3 @@ let check_term_subtyping g t0 t1
     match check_relation g (SUBTYPING None) t0 t1 ctx with
     | Inl (_, g) -> Inl g
     | Inr err -> Inr err
-
- 

@@ -867,8 +867,7 @@ let rec maybe_weakly_reduced tm :  bool =
 
            | Meta_labeled _
            | Meta_desugared _
-           | Meta_named _
-           | Meta_core_guard -> false)
+           | Meta_named _ -> false)
 
 (* Max number of warnings to print in a single run.
 Initialized below in normalize *)
@@ -1677,8 +1676,7 @@ let rec norm : cfg -> env -> stack -> term -> term =
                           norm cfg env (Meta(env, Meta_pattern(names, args), t.pos)::stack) head
                           //meta doesn't block reduction, but we need to put the label back
 
-                      | Meta_desugared (Machine_integer (_,_))
-                      | Meta_core_guard ->
+                      | Meta_desugared (Machine_integer (_,_)) ->
                         (* meta doesn't block reduction,
                            but we need to put the label back *)
                         norm cfg env (Meta(env,m,t.pos)::stack) head
@@ -2390,7 +2388,6 @@ and maybe_simplify_aux (cfg:cfg) (env:env) (stack:stack) (tm:term) : term =
     (* Otherwise try to simplify this point *)
     | None ->
     match (SS.compress tm).n with
-    | Tm_meta (tm, Meta_core_guard) -> maybe_simplify_aux cfg env stack tm
     | Tm_app({n=Tm_uinst({n=Tm_fvar fv}, _)}, args)
     | Tm_app({n=Tm_fvar fv}, args) ->
       if S.fv_eq_lid fv PC.and_lid

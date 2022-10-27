@@ -320,10 +320,6 @@ let bind_combinator_kind (env:env)
         let g_sig_b_sort = SS.subst ss g_sig_b_sort in
         U.arrow [S.mk_binder x_bv]
                 (mk_Total g_sig_b_sort) in  // Universe?
-      BU.print3 "Checking g_sig_arrow and g_b and g_sig_b %s and %s %s\n"
-        (Print.term_to_string g_sig_b_arrow_t)
-        (Print.term_to_string g_b.binder_bv.sort)
-        (Print.term_to_string g_sig_b_sort);
       if U.eq_tm g_sig_b_arrow_t g_b.binder_bv.sort = U.Equal
       then l@[g_b.binder_bv, Substitution_binder], ss
       else if U.eq_tm g_sig_b_sort g_b.binder_bv.sort = U.Equal

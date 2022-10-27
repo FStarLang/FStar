@@ -111,9 +111,11 @@ let parse (env:uenv) (pre_fn: option string) (fn:string)
 let core_check : TcEnv.core_check_t =
   fun env tm t must_tot ->
     let open FStar.TypeChecker.Core in
-    match check_term env tm t must_tot with
-    | Inl t -> Inl t
-    | Inr err -> Inr (fun b -> if b then print_error_short err else print_error err)
+    if Options.admit_tactic_unification_guards ()
+    then Inl None
+    else match check_term env tm t must_tot with
+         | Inl t -> Inl t
+         | Inr err -> Inr (fun b -> if b then print_error_short err else print_error err)
     
 let init_env deps : TcEnv.env =
   let solver =

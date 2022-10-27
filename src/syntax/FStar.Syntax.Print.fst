@@ -300,9 +300,6 @@ and term_to_string x =
       | Tm_meta(t, Meta_desugared _) ->
         U.format1 "Meta_desugared{%s}"  (term_to_string t)
 
-      | Tm_meta(t, Meta_core_guard) ->
-        U.format1 "Meta_core_guard{%s}"  (term_to_string t)
-
       | Tm_bvar x ->        db_to_string x ^ ":(" ^ (tag_of_term x.sort) ^  ")"
       | Tm_name x ->        nm_to_string x // ^ "@@(" ^ term_to_string x.sort ^ ")"
       | Tm_fvar f ->        fv_to_string f
@@ -624,8 +621,6 @@ and metadata_to_string = function
 
     | Meta_monadic_lift (m, m', t) ->
         U.format3 "{Meta_monadic_lift(%s -> %s @ %s)}" (sli m) (sli m') (term_to_string t)
-
-    | Meta_core_guard -> "{Meta_core_guard}"
 
 let aqual_to_string aq = aqual_to_string' "" aq
 let bqual_to_string bq = bqual_to_string' "" bq

@@ -319,7 +319,6 @@ and hash_meta m =
        hash_lid m0;
        hash_lid m1;
        hash_term t]
-  | Meta_core_guard -> ret (H.of_int 1063)
 
 and hash_meta_source_info m =
    match m with
@@ -556,7 +555,6 @@ and equal_meta m1 m2 =
     Ident.lid_equals m1 m2 &&
     Ident.lid_equals n1 n2 &&
     equal_term t1 t2
-  | Meta_core_guard, Meta_core_guard -> true
 
 and equal_lazyinfo l1 l2 = l1 = l2
 
@@ -608,4 +606,3 @@ and equal_subst_elt s1 s2 =
   | UD (un1, i1), UD (un2, i2) ->
     i1 = i2 &&
     Ident.ident_equals un1 un2
-

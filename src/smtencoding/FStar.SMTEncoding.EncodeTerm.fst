@@ -1453,9 +1453,6 @@ and encode_formula (phi:typ) (env:env_t) : (term * decls_t)  = (* expects phi to
           let phi, decls = encode_formula phi' env in
           mk (Term.Labeled(phi, msg, r)) r, decls
 
-        | Tm_meta (phi, Meta_core_guard) ->
-          encode_formula phi env
-
         | Tm_meta _ ->
           encode_formula (U.unmeta phi) env
 
