@@ -48,12 +48,12 @@ let d_bind #a #b #wc #wf (c : m a D wc) (f : (x:a -> m b D (wf x))) : m b D (bin
   raise_val (fun () -> let y = downgrade_val c () in // cannot inline this
                     downgrade_val (f y) ())
 
-let bind (a b : Type) wc wf (i:idx) (c : m a i wc) (f : (x:a -> m b i (wf x))) : m b i (bind_wp wc wf) =
+let bind (a b : Type) (i:idx) (wc:wp a) (wf:a -> wp b) (c : m a i wc) (f : (x:a -> m b i (wf x))) : m b i (bind_wp wc wf) =
   elim_pure_wp_monotonicity_forall ();
   match i with
   | T -> t_bind #_ #_ #wc #wf c f
   | G -> g_bind #_ #_ #wc #wf c f
-  | D -> coerce (d_bind #_ #_ #wc #wf c f)
+  | D -> coerce (d_bind #_ #_ #wc #wf (coerce c) f)
 // GM: would be nice to skip the annotations.
 
 let subcomp (a:Type) (i:idx) (wp1 : wp a)
@@ -67,6 +67,7 @@ let subcomp (a:Type) (i:idx) (wp1 : wp a)
      | G -> f
      | D -> coerce f
 
+unfold
 let ite_wp #a (w1 w2 : wp a) (b:bool) : wp a =
   elim_pure_wp_monotonicity_forall ();
   as_pure_wp (fun p -> if b then w1 p else w2 p)
@@ -85,20 +86,19 @@ let if_then_else (a:Type) (i:idx) (w1 w2 : wp a)
 [@@allow_informative_binders]
 reifiable
 reflectable
-layered_effect {
-  GTD : a:Type -> idx -> wp a -> Effect
-  with
-  repr         = m;
-  return       = return;
-  bind         = bind;
-  subcomp      = subcomp;
-  if_then_else = if_then_else
+effect {
+  GTD (a:Type) ([@@@ effect_param] _:idx) (_:wp a)
+  with {
+    repr         = m;
+    return;
+    bind;
+    subcomp;
+    if_then_else;
+  }
 }
 
-let unmon #a (w:wp a) : pure_wp a = elim_pure_wp_monotonicity_forall (); as_pure_wp (fun p -> w p)
-
 let lift_pure_gtd (a:Type) (w : wp a) (i : idx)
-                  (f : eqtype_as_type unit -> PURE a (unmon w))
+                  (f : unit -> PURE a w)
                  : Pure (m a i w)
                         (requires True)
                         (ensures (fun _ -> True))
