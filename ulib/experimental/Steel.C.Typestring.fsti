@@ -149,3 +149,18 @@ let rec string_t_of_chars (s: list char): Type0 =
   | c :: s -> string_cons (char_t_of_char c) (string_t_of_chars s)
 
 let mk_string_t s: Type0 = string_t_of_chars (String.list_of_string s)
+
+unfold
+let norm_typestring =
+  [
+    delta_only [
+      `%char_t_of_char;
+      `%string_t_of_chars;
+      `%mk_string_t;
+    ];
+    iota; zeta; primops;
+  ]
+
+let solve_mk_string_t () =
+  FStar.Tactics.norm norm_typestring;
+  FStar.Tactics.trefl ()
