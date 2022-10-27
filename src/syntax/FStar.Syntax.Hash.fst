@@ -358,6 +358,7 @@ let ext_hash_term_no_memo (t:term) = fst (hash_term t false)
 let rec equal_term (t1 t2:term)
   : bool
   = if physical_equality t1 t2 then true else
+    if physical_equality t1.n t2.n then true else
     if ext_hash_term t1 <> ext_hash_term t2 then false else
     match (SS.compress t1).n, (SS.compress t2).n with
     | Tm_bvar x, Tm_bvar y -> x.index = y.index

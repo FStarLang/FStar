@@ -14439,39 +14439,51 @@ let rec (check_implicit_solution_for_tac :
                  FStar_TypeChecker_Env.core_check =
                    (env.FStar_TypeChecker_Env.core_check)
                } in
-             let uu___2 =
-               env1.FStar_TypeChecker_Env.core_check env1 tm uvar_ty false in
-             match uu___2 with
-             | FStar_Pervasives.Inl (FStar_Pervasives_Native.None) ->
-                 FStar_Pervasives_Native.None
-             | FStar_Pervasives.Inl (FStar_Pervasives_Native.Some g) ->
-                 let g1 =
-                   {
-                     FStar_TypeChecker_Common.guard_f =
-                       (FStar_TypeChecker_Common.NonTrivial g);
-                     FStar_TypeChecker_Common.deferred_to_tac =
-                       (FStar_TypeChecker_Common.trivial_guard.FStar_TypeChecker_Common.deferred_to_tac);
-                     FStar_TypeChecker_Common.deferred =
-                       (FStar_TypeChecker_Common.trivial_guard.FStar_TypeChecker_Common.deferred);
-                     FStar_TypeChecker_Common.univ_ineqs =
-                       (FStar_TypeChecker_Common.trivial_guard.FStar_TypeChecker_Common.univ_ineqs);
-                     FStar_TypeChecker_Common.implicits =
-                       (FStar_TypeChecker_Common.trivial_guard.FStar_TypeChecker_Common.implicits)
-                   } in
-                 (force_trivial_guard env1 g1; FStar_Pervasives_Native.None)
-             | FStar_Pervasives.Inr err ->
-                 ((let uu___4 = FStar_TypeChecker_Env.get_range env1 in
-                   let uu___5 =
-                     let uu___6 =
-                       let uu___7 = FStar_Syntax_Print.term_to_string tm in
-                       let uu___8 = FStar_Syntax_Print.term_to_string uvar_ty in
-                       let uu___9 = err false in
-                       FStar_Compiler_Util.format3
-                         "Term %s computed by tactic does not have type %s, because %s"
-                         uu___7 uu___8 uu___9 in
-                     (FStar_Errors.Error_TypeError, uu___6) in
-                   FStar_Errors.log_issue uu___4 uu___5);
-                  FStar_Pervasives_Native.None))
+             (let uu___3 =
+                FStar_Compiler_Effect.op_Less_Bar
+                  (FStar_TypeChecker_Env.debug env1)
+                  (FStar_Options.Other "CoreEq") in
+              if uu___3
+              then
+                let uu___4 = FStar_Syntax_Print.term_to_string tm in
+                let uu___5 = FStar_Syntax_Print.term_to_string uvar_ty in
+                FStar_Compiler_Util.print2 "Calling core with %s : %s\n"
+                  uu___4 uu___5
+              else ());
+             (let uu___3 =
+                env1.FStar_TypeChecker_Env.core_check env1 tm uvar_ty false in
+              match uu___3 with
+              | FStar_Pervasives.Inl (FStar_Pervasives_Native.None) ->
+                  FStar_Pervasives_Native.None
+              | FStar_Pervasives.Inl (FStar_Pervasives_Native.Some g) ->
+                  let g1 =
+                    {
+                      FStar_TypeChecker_Common.guard_f =
+                        (FStar_TypeChecker_Common.NonTrivial g);
+                      FStar_TypeChecker_Common.deferred_to_tac =
+                        (FStar_TypeChecker_Common.trivial_guard.FStar_TypeChecker_Common.deferred_to_tac);
+                      FStar_TypeChecker_Common.deferred =
+                        (FStar_TypeChecker_Common.trivial_guard.FStar_TypeChecker_Common.deferred);
+                      FStar_TypeChecker_Common.univ_ineqs =
+                        (FStar_TypeChecker_Common.trivial_guard.FStar_TypeChecker_Common.univ_ineqs);
+                      FStar_TypeChecker_Common.implicits =
+                        (FStar_TypeChecker_Common.trivial_guard.FStar_TypeChecker_Common.implicits)
+                    } in
+                  (force_trivial_guard env1 g1; FStar_Pervasives_Native.None)
+              | FStar_Pervasives.Inr err ->
+                  ((let uu___5 = FStar_TypeChecker_Env.get_range env1 in
+                    let uu___6 =
+                      let uu___7 =
+                        let uu___8 = FStar_Syntax_Print.term_to_string tm in
+                        let uu___9 =
+                          FStar_Syntax_Print.term_to_string uvar_ty in
+                        let uu___10 = err false in
+                        FStar_Compiler_Util.format3
+                          "Term %s computed by tactic does not have type %s, because %s"
+                          uu___8 uu___9 uu___10 in
+                      (FStar_Errors.Error_TypeError, uu___7) in
+                    FStar_Errors.log_issue uu___5 uu___6);
+                   FStar_Pervasives_Native.None)))
 and (resolve_implicits' :
   FStar_TypeChecker_Env.env ->
     Prims.bool ->

@@ -26,7 +26,8 @@ type env = {
    tcenv : Env.env;
    allow_universe_instantiation : bool;
    max_binder_index : int;
-   guard_handler : option guard_handler_t
+   guard_handler : option guard_handler_t;
+   should_read_cache: bool
 }
 
 let push_binder g b = 
@@ -203,13 +204,13 @@ type hash_entry = {
    he_gamma:list binding;
    he_res:success (effect_label & typ);
 }
-
-type tc_table = FStar.Hash.hashtable term hash_entry
+module THT = FStar.Syntax.TermHashTable
+type tc_table = THT.hashtable hash_entry
 let equal_term_for_hash t1 t2 = 
   Profiling.profile (fun _ -> Hash.equal_term t1 t2) None "FStar.TypeChecker.Core.equal_term_for_hash"
 let equal_term t1 t2 =  
   Profiling.profile (fun _ -> Hash.equal_term t1 t2) None "FStar.TypeChecker.Core.equal_term"
-let table : tc_table = FStar.Hash.create equal_term_for_hash
+let table : tc_table = THT.create 1048576 //2^20
 type cache_stats_t = { hits : int; misses : int }
 let cache_stats = Util.mk_ref { hits = 0; misses = 0 }
 let record_cache_hit () =
@@ -221,7 +222,7 @@ let record_cache_miss () =
 let reset_cache_stats () =     
     cache_stats := { hits = 0; misses = 0 }
 let report_cache_stats () = !cache_stats
-let clear_memo_table () = FStar.Hash.clear table
+let clear_memo_table () = THT.clear table
 let insert (g:env) (e:term) (res:success (effect_label & typ)) =
     let entry = {
        he_term = e;
@@ -229,7 +230,7 @@ let insert (g:env) (e:term) (res:success (effect_label & typ)) =
        he_res = res
     }
     in
-    FStar.Hash.insert (e, FStar.Syntax.Hash.ext_hash_term) entry table
+    THT.insert e entry table
 
 inline_for_extraction
 let return (#a:Type) (x:a) : result a = fun _ -> Inl (x, None)
@@ -549,7 +550,7 @@ let curry_application hd arg args p =
 
 
 let lookup (g:env) (e:term) : result (effect_label & typ) =
-   match FStar.Hash.lookup (e, FStar.Syntax.Hash.ext_hash_term) table with
+   match THT.lookup e table with
    | None -> fail "not in cache"
    | Some he ->
      if he.he_gamma `context_included` g.tcenv.gamma
@@ -1089,20 +1090,28 @@ and memo_check (g:env) (e:term)
       | _ -> r
     in
     fun ctx ->
-      match lookup g e ctx with
-      | Inr _ -> //cache miss; check and insert
-        check_then_memo g e ctx
-
-      | Inl (et, None) -> //cache hit with no guard; great, just return
-        Inl (et, None)
-
-      | Inl (et, Some pre) -> //cache hit with a guard
-        match g.guard_handler with
-        | None -> Inl (et, Some pre) //if there's no guard handler, then just return
-        | Some _ ->
-          //otherwise check then memo, since this can
-          //repopulate the cache with a "better" entry that has no guard        
-          check_then_memo g e ctx
+      if not g.should_read_cache
+      then check_then_memo g e ctx
+      else (
+        match lookup g e ctx with
+        | Inr _ -> //cache miss; check and insert
+          if Some? g.guard_handler
+          then check_then_memo ({ g with should_read_cache = false } ) e ctx
+          else check_then_memo g e ctx
+  
+        | Inl (et, None) -> //cache hit with no guard; great, just return
+          Inl (et, None)
+  
+        | Inl (et, Some pre) -> //cache hit with a guard
+          match g.guard_handler with
+          | None -> Inl (et, Some pre) //if there's no guard handler, then just return
+          | Some _ ->
+            //otherwise check then memo, since this can
+            //repopulate the cache with a "better" entry that has no guard        
+            //But, don't read the cache again, since many subsequent lookups
+            //are likely to be hits with a guard again
+            check_then_memo { g with should_read_cache = false } e ctx
+      )
 
 and check (msg:string) (g:env) (e:term)
   : result (effect_label & typ)
@@ -1926,7 +1935,8 @@ let initial_env g gh =
   { tcenv = g;
     allow_universe_instantiation = false;
     max_binder_index = max_index;
-    guard_handler = gh }
+    guard_handler = gh;
+    should_read_cache = true }
    
 let check_term_top g e topt (must_tot:bool) (gh:option guard_handler_t)
   : result (option (effect_label & typ))
@@ -1959,12 +1969,18 @@ let simplify_steps =
 
 
 let check_term_top_gh g e topt (must_tot:bool) (gh:option guard_handler_t)
-  = if Env.debug g (Options.Other "Core")
+  = 
+    if Env.debug g (Options.Other "CoreEq")
+    then BU.print1 "(%s) Entering core ... \n"
+                   (BU.string_of_int (get_goal_ctr()));
+                   
+    if Env.debug g (Options.Other "Core")
      || Env.debug g (Options.Other "CoreTop")
     then BU.print3 "(%s) Entering core with %s <: %s\n"
                    (BU.string_of_int (get_goal_ctr()))    
                    (P.term_to_string e)
                    (match topt with None -> "" | Some t -> P.term_to_string t);
+    THT.reset_counters table;
     reset_cache_stats();
     let ctx = { no_guard = false; error_context = [] } in
     let res = 
@@ -2008,26 +2024,13 @@ let check_term_top_gh g e topt (must_tot:bool) (gh:option guard_handler_t)
                        (BU.string_of_int (get_goal_ctr()));
         res
     in
-    if FStar.Options.profile_enabled None "FStar.TypeChecker.Core.check_term_top"
+    if Env.debug g (Options.Other "CoreEq")
     then (
-      FStar.Hash.max_bucket_stats table
-        (fun hash_opt entries ->
-          match hash_opt with
-          | None -> ()
-          | Some h ->
-            BU.print2 "Hash %s had the largest bucket with size %s and entries {{\n"
-                      (string_of_int h)
-                      (string_of_int (List.length entries));
-            List.iteri (fun i (t, _) -> BU.print3 "%s (hash code %s): %s\n" 
-                                               (BU.string_of_int i)
-                                               (FStar.Hash.string_of_hash_code (FStar.Syntax.Hash.ext_hash_term_no_memo t))
-                                               (P.term_to_string t))
-                       entries;
-            BU.print_string "}}\n")
-      // let cs = report_cache_stats() in
-      // BU.print2 "Cache_stats { hits = %s; misses = %s }\n"
-      //                (BU.string_of_int cs.hits)
-      //                (BU.string_of_int cs.misses)
+      THT.print_stats table;
+      let cs = report_cache_stats() in
+      BU.print2 "Cache_stats { hits = %s; misses = %s }\n"
+                     (BU.string_of_int cs.hits)
+                     (BU.string_of_int cs.misses)
     );
     res
     )

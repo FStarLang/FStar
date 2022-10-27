@@ -5039,6 +5039,8 @@ let rec check_implicit_solution_for_tac (env:env) (i:implicit) : option (term * 
   then None
   else (
     let env = { env with gamma = ctx_u.ctx_uvar_gamma } in
+    if Env.debug env <| Options.Other "CoreEq"
+    then BU.print2 "Calling core with %s : %s\n" (Print.term_to_string tm) (Print.term_to_string uvar_ty);
     match env.core_check env tm uvar_ty false with
     | Inl None -> None
     | Inl (Some g) ->

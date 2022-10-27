@@ -126,7 +126,6 @@ let goal_with_type g t
   : goal
   = let u = g.goal_ctx_uvar in
     set_uvar_expected_typ u t;
-    Monad.register_goal (goal_env g) u;
     g
 
     
@@ -1314,8 +1313,48 @@ let guard_formula (g:guard_t) : term =
   | NonTrivial f -> f
 
 let _t_trefl (allow_guards:bool) (l : term) (r : term) : tac unit =
+  let is_uvar_untyped_or_already_checked u =
+      let dec = UF.find_decoration u.ctx_uvar_head in
+      match dec.uvar_decoration_should_check with
+      | Allow_untyped _
+      | Already_checked -> true
+      | _ -> false
+  in
+  let is_allow_untyped_uvar t =
+    let head = U.leftmost_head t in
+    match (SS.compress head).n with
+    | Tm_uvar (u, _) -> is_uvar_untyped_or_already_checked u
+    | _ -> false
+  in
+  let should_register_trefl g =
+    let t = U.ctx_uvar_typ g.goal_ctx_uvar in
+    let uvars = BU.set_elements (FStar.Syntax.Free.uvars t) in
+    if BU.for_all is_uvar_untyped_or_already_checked uvars
+    then false
+    else (
+      let head, args = 
+        let t = 
+          match U.un_squash t with
+          | None -> t
+          | Some t -> t
+        in
+        U.leftmost_head_and_args t
+      in
+      match (SS.compress (U.un_uinst head)).n, args with
+      | Tm_fvar fv, [_t; (t1, _); (t2, _)]
+        when S.fv_eq_lid fv PC.eq2_lid ->
+        not (is_allow_untyped_uvar t1) &&
+        not (is_allow_untyped_uvar t2)
+      | _ ->
+        BU.print2 "Unexpected base conn in trefl (%s) (%s)\n"
+                  (Print.tag_of_term t)
+                  (Print.term_to_string t);
+        true
+      )
+  in
   bind cur_goal (fun g ->
-  Monad.register_goal (goal_env g) g.goal_ctx_uvar;  
+  if should_register_trefl g
+  then Monad.register_goal (goal_env g) g.goal_ctx_uvar;  
   let attempt (l : term) (r : term) : tac bool =
     bind (let must_tot = true in
           do_unify_maybe_guards allow_guards must_tot (goal_env g) l r) (function
