@@ -465,7 +465,17 @@ let rec translate_type_without_decay env t: typ =
     Syntax.string_of_mlpath p = "Steel.C.Reference.ptr"
     ->
       TBuf (translate_type_without_decay env arg)
-      
+
+  | MLTY_Named ([arg; _], p) when
+    Syntax.string_of_mlpath p = "Steel.C.Types.ptr"
+    ->
+      TBuf (translate_type_without_decay env arg)
+
+  | MLTY_Named ([arg], p) when
+    Syntax.string_of_mlpath p = "Steel.C.Types.scalar_t"
+    ->
+      translate_type_without_decay env arg
+
   | MLTY_Named ([t; n; s], p)
     when Syntax.string_of_mlpath p = "Steel.C.Array.Base.array_view_type_sized"
     ->
@@ -1020,6 +1030,7 @@ IsNull nodes should be added to the KaRaMeL AST *)
 
   | MLE_App ({expr=MLE_TApp ({expr=MLE_Name p}, _)}, [_ (* pcm *)])
     when string_of_mlpath p = "Steel.C.Reference.null"
+    || string_of_mlpath p = "Steel.C.Types.null"
     -> EApp (EQualified (["LowStar"; "Buffer"], "null"), [EUnit])
 
 (* END support for the Steel null pointer *)
@@ -1067,6 +1078,16 @@ IsNull nodes should be added to the KaRaMeL AST *)
     when string_of_mlpath p = "Steel.C.Opt.opt_write_sel" ->
       EAssign (
         EBufRead (translate_expr env r, EConstant (UInt32, "0")),
+        translate_expr env x)
+
+  | MLE_App ({expr=MLE_TApp ({expr=MLE_Name p}, _)}, [_ (* value *) ; _ (* perm *) ; r])
+    when string_of_mlpath p = "Steel.C.Types.read0" ->
+      EBufRead (translate_expr env r, EQualified (["C"], "_zero_for_deref"))
+
+  | MLE_App ({expr=MLE_TApp ({expr=MLE_Name p}, _)}, [_ (* value *); r; x])
+    when string_of_mlpath p = "Steel.C.Types.write" ->
+      EAssign (
+        EBufRead (translate_expr env r, EQualified (["C"], "_zero_for_deref")),
         translate_expr env x)
 
   | MLE_App ({expr=MLE_TApp ({expr=MLE_Name p}, _)}, [_ (* opened *); r; _ (* r_to *); _ (* sq *) ])
