@@ -95,7 +95,7 @@ let pure_wp_uvar env (t:typ) (reason:string) (r:Range.range) : term * guard_t =
       [t |> S.as_arg]
       r in
 
-  let pure_wp_uvar, _, guard_wp = Env.new_implicit_var reason r env pure_wp_t (Allow_untyped "wp") None in
+  let pure_wp_uvar, _, guard_wp = Env.new_implicit_var reason r env pure_wp_t Strict None in
   pure_wp_uvar, guard_wp
 
 
@@ -1523,15 +1523,6 @@ Errors.with_ctx (BU.format1 "While checking layered effect definition `%s`" (str
         (fun (subst, uvars, g) b ->
          let sort = SS.subst subst b.binder_bv.sort in
          let t, _, g_t =
-         (*
-          * AR: TODO: now that we use fastpath for implicits checking,
-          *           can this always be Strict?
-          *)
-         let uv_qual =
-           if List.length b.binder_attrs > 0 ||
-              attr_opt |> is_some
-           then Strict
-           else Allow_untyped "effect ite binder" in
          let ctx_uvar_meta = BU.map_option Ctx_uvar_meta_attr attr_opt in
          Env.new_implicit_var
            (BU.format1 "uvar for subcomp %s binder when checking ite soundness"
@@ -1539,7 +1530,7 @@ Errors.with_ctx (BU.format1 "While checking layered effect definition `%s`" (str
            r
            env
            sort
-           uv_qual
+           Strict
            ctx_uvar_meta in
         subst@[NT (b.binder_bv, t)], uvars@[t], conj_guard g g_t)
         ([NT (subcomp_a_b.binder_bv, S.bv_to_name a_b.binder_bv)],

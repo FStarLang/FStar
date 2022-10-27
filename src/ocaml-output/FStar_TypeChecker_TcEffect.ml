@@ -130,8 +130,7 @@ let (pure_wp_uvar :
                 FStar_Syntax_Syntax.mk_Tm_app pure_wp_t1 uu___2 r in
           let uu___ =
             FStar_TypeChecker_Env.new_implicit_var reason r env pure_wp_t
-              (FStar_Syntax_Syntax.Allow_untyped "wp")
-              FStar_Pervasives_Native.None in
+              FStar_Syntax_Syntax.Strict FStar_Pervasives_Native.None in
           match uu___ with
           | (pure_wp_uvar1, uu___1, guard_wp) -> (pure_wp_uvar1, guard_wp)
 let (validate_degenerate_effect :
@@ -967,35 +966,17 @@ let (bind_combinator_kind :
                                                                     FStar_Syntax_Util.arrow
                                                                     uu___13
                                                                     uu___14 in
-                                                                    ((
+                                                                    let uu___13
+                                                                    =
                                                                     let uu___14
-                                                                    =
-                                                                    FStar_Syntax_Print.term_to_string
-                                                                    g_sig_b_arrow_t in
-                                                                    let uu___15
-                                                                    =
-                                                                    FStar_Syntax_Print.term_to_string
-                                                                    (g_b.FStar_Syntax_Syntax.binder_bv).FStar_Syntax_Syntax.sort in
-                                                                    let uu___16
-                                                                    =
-                                                                    FStar_Syntax_Print.term_to_string
-                                                                    g_sig_b_sort in
-                                                                    FStar_Compiler_Util.print3
-                                                                    "Checking g_sig_arrow and g_b and g_sig_b %s and %s %s\n"
-                                                                    uu___14
-                                                                    uu___15
-                                                                    uu___16);
-                                                                    (let uu___14
-                                                                    =
-                                                                    let uu___15
                                                                     =
                                                                     FStar_Syntax_Util.eq_tm
                                                                     g_sig_b_arrow_t
                                                                     (g_b.FStar_Syntax_Syntax.binder_bv).FStar_Syntax_Syntax.sort in
-                                                                    uu___15 =
+                                                                    uu___14 =
                                                                     FStar_Syntax_Util.Equal in
                                                                     if
-                                                                    uu___14
+                                                                    uu___13
                                                                     then
                                                                     ((FStar_Compiler_List.op_At
                                                                     l
@@ -1004,17 +985,17 @@ let (bind_combinator_kind :
                                                                     FStar_Syntax_Syntax.Substitution_binder)]),
                                                                     ss1)
                                                                     else
-                                                                    (let uu___16
+                                                                    (let uu___15
                                                                     =
-                                                                    let uu___17
+                                                                    let uu___16
                                                                     =
                                                                     FStar_Syntax_Util.eq_tm
                                                                     g_sig_b_sort
                                                                     (g_b.FStar_Syntax_Syntax.binder_bv).FStar_Syntax_Syntax.sort in
-                                                                    uu___17 =
+                                                                    uu___16 =
                                                                     FStar_Syntax_Util.Equal in
                                                                     if
-                                                                    uu___16
+                                                                    uu___15
                                                                     then
                                                                     ((FStar_Compiler_List.op_At
                                                                     l
@@ -1028,7 +1009,7 @@ let (bind_combinator_kind :
                                                                     [
                                                                     ((g_b.FStar_Syntax_Syntax.binder_bv),
                                                                     FStar_Syntax_Syntax.Ad_hoc_binder)]),
-                                                                    ss1)))))
+                                                                    ss1)))
                                                                     ([], [])
                                                                     g_sig_bs
                                                                     g_bs in
@@ -5083,25 +5064,6 @@ let (tc_layered_eff_decl :
                                                                     (b.FStar_Syntax_Syntax.binder_bv).FStar_Syntax_Syntax.sort in
                                                                     let uu___24
                                                                     =
-                                                                    let uv_qual
-                                                                    =
-                                                                    let uu___25
-                                                                    =
-                                                                    ((FStar_Compiler_List.length
-                                                                    b.FStar_Syntax_Syntax.binder_attrs)
-                                                                    >
-                                                                    Prims.int_zero)
-                                                                    ||
-                                                                    (FStar_Compiler_Effect.op_Bar_Greater
-                                                                    attr_opt
-                                                                    FStar_Compiler_Util.is_some) in
-                                                                    if
-                                                                    uu___25
-                                                                    then
-                                                                    FStar_Syntax_Syntax.Strict
-                                                                    else
-                                                                    FStar_Syntax_Syntax.Allow_untyped
-                                                                    "effect ite binder" in
                                                                     let ctx_uvar_meta
                                                                     =
                                                                     FStar_Compiler_Util.map_option
@@ -5123,7 +5085,7 @@ let (tc_layered_eff_decl :
                                                                     FStar_TypeChecker_Env.new_implicit_var
                                                                     uu___25 r
                                                                     env1 sort
-                                                                    uv_qual
+                                                                    FStar_Syntax_Syntax.Strict
                                                                     ctx_uvar_meta in
                                                                     (match uu___24
                                                                     with
