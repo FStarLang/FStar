@@ -319,7 +319,7 @@ and hash_meta m =
        hash_lid m0;
        hash_lid m1;
        hash_term t]
-  | Meta_core_guard -> H.of_int 1063 // TODO: AR: CHECK
+  | Meta_core_guard -> ret (H.of_int 1063)
 
 and hash_meta_source_info m =
    match m with

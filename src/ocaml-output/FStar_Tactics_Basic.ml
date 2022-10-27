@@ -1,4 +1,52 @@
 open Prims
+let (core_check :
+  FStar_TypeChecker_Env.env ->
+    FStar_Syntax_Syntax.term ->
+      FStar_Syntax_Syntax.term ->
+        Prims.bool ->
+          (FStar_Reflection_Data.typ FStar_Pervasives_Native.option,
+            FStar_TypeChecker_Core.error) FStar_Pervasives.either)
+  =
+  fun env ->
+    fun sol ->
+      fun t ->
+        fun must_tot ->
+          let uu___ = FStar_Options.admit_tactic_unification_guards () in
+          if uu___
+          then FStar_Pervasives.Inl FStar_Pervasives_Native.None
+          else
+            (let debug f =
+               let uu___2 = FStar_Options.debug_any () in
+               if uu___2 then f () else () in
+             let uu___2 =
+               FStar_TypeChecker_Core.check_term env sol t must_tot in
+             match uu___2 with
+             | FStar_Pervasives.Inl (FStar_Pervasives_Native.None) ->
+                 (debug
+                    (fun uu___4 ->
+                       FStar_Compiler_Util.print_string
+                         "Core check ok (no guard)\n");
+                  FStar_Pervasives.Inl FStar_Pervasives_Native.None)
+             | FStar_Pervasives.Inl (FStar_Pervasives_Native.Some g) ->
+                 (debug
+                    (fun uu___4 ->
+                       FStar_Compiler_Util.print_string "Core check ok\n");
+                  FStar_Pervasives.Inl (FStar_Pervasives_Native.Some g))
+             | FStar_Pervasives.Inr err ->
+                 (debug
+                    (fun uu___4 ->
+                       let uu___5 =
+                         let uu___6 = FStar_TypeChecker_Env.get_range env in
+                         FStar_Compiler_Range.string_of_range uu___6 in
+                       let uu___6 =
+                         FStar_TypeChecker_Core.print_error_short err in
+                       let uu___7 = FStar_Syntax_Print.term_to_string sol in
+                       let uu___8 = FStar_Syntax_Print.term_to_string t in
+                       let uu___9 = FStar_TypeChecker_Core.print_error err in
+                       FStar_Compiler_Util.print5
+                         "(%s) Core checking failed (%s) on term %s and type %s\n%s\n"
+                         uu___5 uu___6 uu___7 uu___8 uu___9);
+                  FStar_Pervasives.Inr err))
 type name = FStar_Syntax_Syntax.bv
 type env = FStar_TypeChecker_Env.env
 type implicits = FStar_TypeChecker_Env.implicits
@@ -109,10 +157,7 @@ let (goal_with_type :
   fun g ->
     fun t ->
       let u = g.FStar_Tactics_Types.goal_ctx_uvar in
-      set_uvar_expected_typ u t;
-      (let uu___2 = FStar_Tactics_Types.goal_env g in
-       FStar_Tactics_Monad.register_goal uu___2 u);
-      g
+      set_uvar_expected_typ u t; g
 let (bnorm_goal : FStar_Tactics_Types.goal -> FStar_Tactics_Types.goal) =
   fun g ->
     let uu___ =
@@ -3790,11 +3835,78 @@ let (_t_trefl :
   fun allow_guards ->
     fun l ->
       fun r ->
+        let is_uvar_untyped_or_already_checked u =
+          let dec =
+            FStar_Syntax_Unionfind.find_decoration
+              u.FStar_Syntax_Syntax.ctx_uvar_head in
+          match dec.FStar_Syntax_Syntax.uvar_decoration_should_check with
+          | FStar_Syntax_Syntax.Allow_untyped uu___ -> true
+          | FStar_Syntax_Syntax.Already_checked -> true
+          | uu___ -> false in
+        let is_allow_untyped_uvar t =
+          let head = FStar_Syntax_Util.leftmost_head t in
+          let uu___ =
+            let uu___1 = FStar_Syntax_Subst.compress head in
+            uu___1.FStar_Syntax_Syntax.n in
+          match uu___ with
+          | FStar_Syntax_Syntax.Tm_uvar (u, uu___1) ->
+              is_uvar_untyped_or_already_checked u
+          | uu___1 -> false in
+        let should_register_trefl g =
+          let t =
+            FStar_Syntax_Util.ctx_uvar_typ
+              g.FStar_Tactics_Types.goal_ctx_uvar in
+          let uvars =
+            let uu___ = FStar_Syntax_Free.uvars t in
+            FStar_Compiler_Util.set_elements uu___ in
+          let uu___ =
+            FStar_Compiler_Util.for_all is_uvar_untyped_or_already_checked
+              uvars in
+          if uu___
+          then false
+          else
+            (let uu___2 =
+               let t1 =
+                 let uu___3 = FStar_Syntax_Util.un_squash t in
+                 match uu___3 with
+                 | FStar_Pervasives_Native.None -> t
+                 | FStar_Pervasives_Native.Some t2 -> t2 in
+               FStar_Syntax_Util.leftmost_head_and_args t1 in
+             match uu___2 with
+             | (head, args) ->
+                 let uu___3 =
+                   let uu___4 =
+                     let uu___5 =
+                       let uu___6 = FStar_Syntax_Util.un_uinst head in
+                       FStar_Syntax_Subst.compress uu___6 in
+                     uu___5.FStar_Syntax_Syntax.n in
+                   (uu___4, args) in
+                 (match uu___3 with
+                  | (FStar_Syntax_Syntax.Tm_fvar fv,
+                     _t::(t1, uu___4)::(t2, uu___5)::[]) when
+                      FStar_Syntax_Syntax.fv_eq_lid fv
+                        FStar_Parser_Const.eq2_lid
+                      ->
+                      (let uu___6 = is_allow_untyped_uvar t1 in
+                       Prims.op_Negation uu___6) &&
+                        (let uu___6 = is_allow_untyped_uvar t2 in
+                         Prims.op_Negation uu___6)
+                  | uu___4 ->
+                      ((let uu___6 = FStar_Syntax_Print.tag_of_term t in
+                        let uu___7 = FStar_Syntax_Print.term_to_string t in
+                        FStar_Compiler_Util.print2
+                          "Unexpected base conn in trefl (%s) (%s)\n" uu___6
+                          uu___7);
+                       true))) in
         FStar_Tactics_Monad.bind FStar_Tactics_Monad.cur_goal
           (fun g ->
-             (let uu___1 = FStar_Tactics_Types.goal_env g in
-              FStar_Tactics_Monad.register_goal uu___1
-                g.FStar_Tactics_Types.goal_ctx_uvar);
+             (let uu___1 = should_register_trefl g in
+              if uu___1
+              then
+                let uu___2 = FStar_Tactics_Types.goal_env g in
+                FStar_Tactics_Monad.register_goal uu___2
+                  g.FStar_Tactics_Types.goal_ctx_uvar
+              else ());
              (let attempt l1 r1 =
                 let uu___1 =
                   let must_tot = true in
