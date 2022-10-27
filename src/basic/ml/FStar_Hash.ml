@@ -17,23 +17,49 @@ module HashKey =
     let hash (x:t) = x
   end
 module HT = BatHashtbl.Make(HashKey)
-type ('a, 'b) hashtable = (('a * 'b) list) HT.t * 'a cmp
+type stats = {
+  max_hash_code : hash_code;
+  max_bucket_size : int
+}
+let init_stats = { max_hash_code = 0; max_bucket_size = 0}
+type ('a, 'b) hashtable = (('a * 'b) list) HT.t * 'a cmp * stats ref
 type 'a hashable = 'a * ('a -> hash_code)
-let create (c:'a cmp) = HT.create 10000, c
+let create (c:'a cmp) = HT.create 100000, c, ref init_stats
 let insert (x: 'a hashable) (y:'b) (ht:('a,'b) hashtable) =
     let x, hc = fst x, snd x (fst x) in
+    let htbl, _, stats_ref = ht in
     try
-      let l = HT.find (fst ht) hc in
-      HT.remove (fst ht) hc;
-      HT.add (fst ht) hc ((x,y)::l)
+      let l = HT.find htbl hc in
+      HT.remove htbl hc;
+      HT.add htbl hc ((x,y)::l);
+      let stats = !stats_ref in
+      let n = List.length l + 1 in
+      if n > stats.max_bucket_size
+      then stats_ref := { max_bucket_size = n; max_hash_code = hc }
     with
-      | Not_found -> HT.add (fst ht) hc [x,y]
+      | Not_found -> HT.add htbl hc [x,y]
+module BU = FStar_Compiler_Util
 let lookup (x: 'a hashable) (ht:('a,'b) hashtable) : 'b option =
   try
     let x, hc = fst x, snd x (fst x) in
-    let ht, cmp = ht in
+    let ht, cmp, _ = ht in
     let l = HT.find ht hc in
+(*    
+    if FStar_Options.profile_enabled None "FStar.TypeChecker.Core"
+    then BU.print2 "Hash %s: Bucket size is %s\n" 
+                   (string_of_int hc)
+                   (BU.string_of_int (FStar_List.length l));
+*)                                                        
     Some (snd (BatList.find (fun (xx, _) -> cmp x xx) l))
   with
     | Not_found -> None
-let clear (ht: ('a,'b) hashtable) = HT.clear (fst ht)
+let clear ((htbl, _, stats): ('a,'b) hashtable) = HT.clear htbl; stats := init_stats
+let max_bucket_stats (ht: ('a, 'b) hashtable) (cb: Z.t option -> ('a * 'b) list -> unit) : unit = 
+  try 
+    let htbl, _, stats_ref = ht in
+    let stats = !stats_ref in 
+    let l = HT.find htbl stats.max_hash_code in
+    cb (Some (Z.of_int stats.max_hash_code)) l
+  with
+    | Not_found -> cb None []
+let string_of_hash_code h = string_of_int h

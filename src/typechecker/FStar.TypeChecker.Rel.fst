@@ -5251,7 +5251,9 @@ let rec check_implicit_solution_for_tac (env:env) (i:implicit) : option (term * 
   )
   else (
     let env = { env with gamma = ctx_u.ctx_uvar_gamma } in
-    match core_check_and_maybe_add_to_guard_uvar env ctx_u tm uvar_ty false true with
+    if Env.debug env <| Options.Other "CoreEq"
+    then BU.print2 "Calling core with %s : %s\n" (Print.term_to_string tm) (Print.term_to_string uvar_ty);
+    match env.core_check env tm uvar_ty false with
     | Inl None -> None
     | Inl (Some g) ->
       let g = { trivial_guard with guard_f = NonTrivial g } in

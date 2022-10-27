@@ -26,7 +26,8 @@ type env = {
    tcenv : Env.env;
    allow_universe_instantiation : bool;
    max_binder_index : int;
-   guard_handler : option guard_handler_t
+   guard_handler : option guard_handler_t;
+   should_read_cache: bool
 }
 
 let push_binder g b = 
@@ -203,9 +204,13 @@ type hash_entry = {
    he_gamma:list binding;
    he_res:success (effect_label & typ);
 }
-
-type tc_table = FStar.Hash.hashtable term hash_entry
-let table : tc_table = FStar.Hash.create FStar.Syntax.Hash.equal_term
+module THT = FStar.Syntax.TermHashTable
+type tc_table = THT.hashtable hash_entry
+let equal_term_for_hash t1 t2 = 
+  Profiling.profile (fun _ -> Hash.equal_term t1 t2) None "FStar.TypeChecker.Core.equal_term_for_hash"
+let equal_term t1 t2 =  
+  Profiling.profile (fun _ -> Hash.equal_term t1 t2) None "FStar.TypeChecker.Core.equal_term"
+let table : tc_table = THT.create 1048576 //2^20
 type cache_stats_t = { hits : int; misses : int }
 let cache_stats = Util.mk_ref { hits = 0; misses = 0 }
 let record_cache_hit () =
@@ -217,7 +222,7 @@ let record_cache_miss () =
 let reset_cache_stats () =     
     cache_stats := { hits = 0; misses = 0 }
 let report_cache_stats () = !cache_stats
-let clear_memo_table () = FStar.Hash.clear table
+let clear_memo_table () = THT.clear table
 let insert (g:env) (e:term) (res:success (effect_label & typ)) =
     let entry = {
        he_term = e;
@@ -225,7 +230,7 @@ let insert (g:env) (e:term) (res:success (effect_label & typ)) =
        he_res = res
     }
     in
-    FStar.Hash.insert (e, FStar.Syntax.Hash.hash_term) entry table
+    THT.insert e entry table
 
 inline_for_extraction
 let return (#a:Type) (x:a) : result a = fun _ -> Inl (x, None)
@@ -523,7 +528,7 @@ let rec context_included (g0 g1: list binding) =
      match b0, b1 with
      | Binding_var x0, Binding_var x1 ->
        if x0.index = x1.index
-       then Hash.equal_term x0.sort x1.sort
+       then equal_term x0.sort x1.sort
             && context_included g0' g1'
        else context_included g0 g1'
 
@@ -544,7 +549,7 @@ let curry_application hd arg args p =
 
 
 let lookup (g:env) (e:term) : result (effect_label & typ) =
-   match FStar.Hash.lookup (e, FStar.Syntax.Hash.hash_term) table with
+   match THT.lookup e table with
    | None -> fail "not in cache"
    | Some he ->
      if he.he_gamma `context_included` g.tcenv.gamma
@@ -680,7 +685,7 @@ let rec check_relation (g:env) (rel:relation) (t0 t1:typ)
         match (U.un_uinst head0).n, (U.un_uinst head1).n with
         | Tm_fvar fv0, Tm_fvar fv1 -> fv_eq fv0 fv1
         | Tm_name x0, Tm_name x1 -> bv_eq x0 x1
-        | Tm_constant c0, Tm_constant c1 -> Hash.equal_term head0 head1
+        | Tm_constant c0, Tm_constant c1 -> equal_term head0 head1
         | Tm_type _, Tm_type _ 
         | Tm_arrow _, Tm_arrow _
         | Tm_match _, Tm_match _ -> true
@@ -710,7 +715,8 @@ let rec check_relation (g:env) (rel:relation) (t0 t1:typ)
     in
     let maybe_unfold_side side t0 t1
       : option (term & term)
-      = match side with
+      = Profiling.profile (fun _ -> 
+        match side with
         | Neither -> None
         | Both -> (
           match N.maybe_unfold_head g.tcenv t0, 
@@ -730,7 +736,9 @@ let rec check_relation (g:env) (rel:relation) (t0 t1:typ)
           match N.maybe_unfold_head g.tcenv t1 with
           | Some t1 -> Some (t0, t1)
           | _ -> None
-        )
+        ))
+        None
+        "FStar.TypeChecker.Core.maybe_unfold_side"
     in
     let maybe_unfold t0 t1
       : option (term & term)
@@ -772,13 +780,19 @@ let rec check_relation (g:env) (rel:relation) (t0 t1:typ)
           
         | _ -> t
     in
+    let beta_iota_reduce t =
+        Profiling.profile
+          (fun () -> beta_iota_reduce t)
+          None
+          "FStar.TypeChecker.Core.beta_iota_reduce"
+    in
     let t0 = Subst.compress (beta_iota_reduce t0) in
     let t1 = Subst.compress (beta_iota_reduce t1) in
     let check_relation g rel t0 t1 =
       with_context "check_relation" (Some (CtxRel t0 rel t1)) 
         (fun _ -> check_relation g rel t0 t1)
     in
-    if Hash.equal_term t0 t1 then return ()
+    if equal_term t0 t1 then return ()
     else 
       match t0.n, t1.n with
       | Tm_type u0, Tm_type u1 ->
@@ -803,7 +817,7 @@ let rec check_relation (g:env) (rel:relation) (t0 t1:typ)
         check_relation g rel t0 t1
 
       | Tm_uinst (f0, us0), Tm_uinst(f1, us1) ->
-        if Hash.equal_term f0 f1
+        if equal_term f0 f1
         then ( //heads are equal, equate universes
              if Rel.teq_nosmt_force g.tcenv t0 t1
              then return ()
@@ -1044,8 +1058,15 @@ and check_relation_comp (g:env) rel (c0 c1:comp)
 
 
 and check_subtype (g:env) (e:option term) (t0 t1:typ)
-  = let rel = SUBTYPING e in
-    with_context "check_subtype" (Some (CtxRel t0 rel t1)) (fun _ -> check_relation g rel t0 t1)
+  = fun ctx ->
+    Profiling.profile
+      (fun () -> 
+        let rel = SUBTYPING e in
+        with_context "check_subtype" (Some (CtxRel t0 rel t1))
+          (fun _ -> check_relation g rel t0 t1)
+          ctx)
+      None
+      "FStar.TypeChecker.Core.check_subtype"
 
 and memo_check (g:env) (e:term)
   : result (effect_label & typ)
@@ -1068,20 +1089,28 @@ and memo_check (g:env) (e:term)
       | _ -> r
     in
     fun ctx ->
-      match lookup g e ctx with
-      | Inr _ -> //cache miss; check and insert
-        check_then_memo g e ctx
-
-      | Inl (et, None) -> //cache hit with no guard; great, just return
-        Inl (et, None)
-
-      | Inl (et, Some pre) -> //cache hit with a guard
-        match g.guard_handler with
-        | None -> Inl (et, Some pre) //if there's no guard handler, then just return
-        | Some _ ->
-          //otherwise check then memo, since this can
-          //repopulate the cache with a "better" entry that has no guard        
-          check_then_memo g e ctx
+      if not g.should_read_cache
+      then check_then_memo g e ctx
+      else (
+        match lookup g e ctx with
+        | Inr _ -> //cache miss; check and insert
+          if Some? g.guard_handler
+          then check_then_memo ({ g with should_read_cache = false } ) e ctx
+          else check_then_memo g e ctx
+  
+        | Inl (et, None) -> //cache hit with no guard; great, just return
+          Inl (et, None)
+  
+        | Inl (et, Some pre) -> //cache hit with a guard
+          match g.guard_handler with
+          | None -> Inl (et, Some pre) //if there's no guard handler, then just return
+          | Some _ ->
+            //otherwise check then memo, since this can
+            //repopulate the cache with a "better" entry that has no guard        
+            //But, don't read the cache again, since many subsequent lookups
+            //are likely to be hits with a guard again
+            check_then_memo { g with should_read_cache = false } e ctx
+      )
 
 and check (msg:string) (g:env) (e:term)
   : result (effect_label & typ)
@@ -1908,7 +1937,8 @@ let initial_env g gh =
   { tcenv = g;
     allow_universe_instantiation = false;
     max_binder_index = max_index;
-    guard_handler = gh }
+    guard_handler = gh;
+    should_read_cache = true }
    
 let check_term_top g e topt (must_tot:bool) (gh:option guard_handler_t)
   : result (option (effect_label & typ))
@@ -1941,12 +1971,18 @@ let simplify_steps =
 
 
 let check_term_top_gh g e topt (must_tot:bool) (gh:option guard_handler_t)
-  = if Env.debug g (Options.Other "Core")
+  = 
+    if Env.debug g (Options.Other "CoreEq")
+    then BU.print1 "(%s) Entering core ... \n"
+                   (BU.string_of_int (get_goal_ctr()));
+                   
+    if Env.debug g (Options.Other "Core")
      || Env.debug g (Options.Other "CoreTop")
     then BU.print3 "(%s) Entering core with %s <: %s\n"
                    (BU.string_of_int (get_goal_ctr()))    
                    (P.term_to_string e)
                    (match topt with None -> "" | Some t -> P.term_to_string t);
+    THT.reset_counters table;
     reset_cache_stats();
     let ctx = { no_guard = false; error_context = [] } in
     let res = 
@@ -1990,8 +2026,9 @@ let check_term_top_gh g e topt (must_tot:bool) (gh:option guard_handler_t)
                        (BU.string_of_int (get_goal_ctr()));
         res
     in
-    if FStar.Options.profile_enabled None "FStar.TypeChecker.Core.check_term_top"
+    if Env.debug g (Options.Other "CoreEq")
     then (
+      THT.print_stats table;
       let cs = report_cache_stats() in
       BU.print2 "Cache_stats { hits = %s; misses = %s }\n"
                      (BU.string_of_int cs.hits)
