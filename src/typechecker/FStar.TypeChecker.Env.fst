@@ -1853,8 +1853,8 @@ let uvars_for_binders env (bs:S.binders) substs add_guard_uvars reason r =
       | _, t::_ -> Some (Ctx_uvar_meta_attr t), Some (Ctx_uvar_meta_attr t)
       | _ -> None, None in
 
-    let add_guard_uvars =
-      add_guard_uvars && not (Options.admit_tactic_unification_guards ()) in
+    let add_guard_uvars = false in
+      // add_guard_uvars && not (Options.admit_tactic_unification_guards ()) in
       // (match ctx_uvar_meta_t with
       //  | Some (Ctx_uvar_meta_attr _) -> not (Options.admit_tactic_unification_guards ())
       //  | _ -> true) in
@@ -1874,7 +1874,8 @@ let uvars_for_binders env (bs:S.binders) substs add_guard_uvars reason r =
 
     let t, l_ctx_uvars, g_t = new_implicit_var_with_kind
       (reason b) r env sort
-        (if add_guard_uvars then Strict else Allow_untyped "indexed effect binder (weakening or strengthening)")
+        Strict
+        // (if add_guard_uvars then Strict else Allow_untyped "indexed effect binder (weakening or strengthening)")
         (Inl guard_uvar_opt)
         ctx_uvar_meta_t in
 
