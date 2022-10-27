@@ -1913,8 +1913,7 @@ let (ensure_no_uvar_subst :
                                   else ());
                                  set_uvar env uv
                                    (FStar_Pervasives_Native.Some
-                                      (FStar_Syntax_Syntax.Allow_untyped
-                                         "sol is a new uvar that will be checked"))
+                                      FStar_Syntax_Syntax.Already_checked)
                                    sol;
                                  (let args_sol_s =
                                     FStar_Compiler_List.map
@@ -2360,8 +2359,7 @@ let (restrict_ctx :
                       ((let uu___5 = f src' in
                         set_uvar env src
                           (FStar_Pervasives_Native.Some
-                             (FStar_Syntax_Syntax.Allow_untyped
-                                "assigned solution will be checked")) uu___5);
+                             FStar_Syntax_Syntax.Already_checked) uu___5);
                        wl1) in
                 let bs1 =
                   FStar_Compiler_Effect.op_Bar_Greater bs

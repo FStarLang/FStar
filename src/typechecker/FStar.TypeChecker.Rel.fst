@@ -841,7 +841,7 @@ let ensure_no_uvar_subst env (t0:term) (wl:worklist)
         then BU.print2 "ensure_no_uvar_subst solving %s with %s\n"
                (Print.ctx_uvar_to_string uv)
                (Print.term_to_string sol);
-        set_uvar env uv (Some (Allow_untyped "sol is a new uvar that will be checked")) sol;
+        set_uvar env uv (Some Already_checked) sol;
 
         (* Make a term for the new uvar, applied to the substitutions of
          * the abstracted arguments, plus all the original arguments. *)
@@ -1069,7 +1069,7 @@ let restrict_ctx env (tgt:ctx_uvar) (bs:binders) (src:ctx_uvar) wl : worklist =
       src.ctx_uvar_range g pfx t
       (U.ctx_uvar_should_check src)
       src.ctx_uvar_meta in
-    set_uvar env src (Some (Allow_untyped "assigned solution will be checked")) (f src');
+    set_uvar env src (Some Already_checked) (f src');
     wl in
 
   let bs = bs |> List.filter (fun ({binder_bv=bv1}) ->
