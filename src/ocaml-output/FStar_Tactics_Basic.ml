@@ -2600,28 +2600,36 @@ let (t_apply :
                            let e = FStar_Tactics_Types.goal_env goal in
                            FStar_Tactics_Monad.register_goal e
                              goal.FStar_Tactics_Types.goal_ctx_uvar;
-                           (let uu___4 =
-                              FStar_Tactics_Monad.if_verbose
-                                (fun uu___5 ->
-                                   (let uu___7 =
-                                      FStar_Syntax_Print.term_to_string tm in
-                                    let uu___8 =
-                                      FStar_Tactics_Printing.goal_to_string_verbose
-                                        goal in
-                                    let uu___9 =
-                                      FStar_TypeChecker_Env.print_gamma
-                                        e.FStar_TypeChecker_Env.gamma in
-                                    FStar_Compiler_Util.print3
-                                      "t_apply: tm = %s\nt_apply: goal = %s\nenv.gamma=%s\n"
-                                      uu___7 uu___8 uu___9);
-                                   FStar_Tactics_Monad.ret ()) in
+                           (let uu___4 = __tc e tm in
                             FStar_Tactics_Monad.op_let_Bang uu___4
                               (fun uu___5 ->
-                                 let uu___6 = __tc e tm in
-                                 FStar_Tactics_Monad.op_let_Bang uu___6
-                                   (fun uu___7 ->
-                                      match uu___7 with
-                                      | (tm1, typ, guard) ->
+                                 match uu___5 with
+                                 | (tm1, typ, guard) ->
+                                     let uu___6 =
+                                       FStar_Tactics_Monad.if_verbose
+                                         (fun uu___7 ->
+                                            (let uu___9 =
+                                               FStar_Syntax_Print.term_to_string
+                                                 tm1 in
+                                             let uu___10 =
+                                               FStar_Tactics_Printing.goal_to_string_verbose
+                                                 goal in
+                                             let uu___11 =
+                                               FStar_TypeChecker_Env.print_gamma
+                                                 e.FStar_TypeChecker_Env.gamma in
+                                             let uu___12 =
+                                               FStar_Syntax_Print.term_to_string
+                                                 typ in
+                                             let uu___13 =
+                                               FStar_TypeChecker_Rel.guard_to_string
+                                                 e guard in
+                                             FStar_Compiler_Util.print5
+                                               "t_apply: tm = %s\nt_apply: goal = %s\nenv.gamma=%s\ntyp=%s\nguard=%s\n"
+                                               uu___9 uu___10 uu___11 uu___12
+                                               uu___13);
+                                            FStar_Tactics_Monad.ret ()) in
+                                     FStar_Tactics_Monad.op_let_Bang uu___6
+                                       (fun uu___7 ->
                                           let typ1 = bnorm e typ in
                                           let uu___8 =
                                             let uu___9 =

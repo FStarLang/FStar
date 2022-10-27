@@ -131,18 +131,17 @@ let (register_goal :
        match uu___2 with
        | FStar_Pervasives.Inl uu___3 -> ()
        | FStar_Pervasives.Inr err ->
-           let uu___3 =
-             let uu___4 =
-               let uu___5 =
-                 let uu___6 = FStar_Syntax_Util.ctx_uvar_typ uv in
-                 FStar_Syntax_Print.term_to_string uu___6 in
-               let uu___6 = FStar_TypeChecker_Core.print_error_short err in
-               FStar_Compiler_Util.format2
-                 "Failed to check initial tactic goal %s because %s" uu___5
-                 uu___6 in
-             (FStar_Errors.Warning_FailedToCheckInitialTacticGoal, uu___4) in
-           FStar_Errors.log_issue uv.FStar_Syntax_Syntax.ctx_uvar_range
-             uu___3)
+           let msg =
+             let uu___3 =
+               let uu___4 = FStar_Syntax_Util.ctx_uvar_typ uv in
+               FStar_Syntax_Print.term_to_string uu___4 in
+             let uu___4 = FStar_TypeChecker_Core.print_error_short err in
+             FStar_Compiler_Util.format2
+               "Failed to check initial tactic goal %s because %s" uu___3
+               uu___4 in
+           (FStar_Compiler_Util.print_string msg;
+            FStar_Errors.log_issue uv.FStar_Syntax_Syntax.ctx_uvar_range
+              (FStar_Errors.Warning_FailedToCheckInitialTacticGoal, msg)))
 type 'a tac =
   {
   tac_f: FStar_Tactics_Types.proofstate -> 'a FStar_Tactics_Result.__result }
