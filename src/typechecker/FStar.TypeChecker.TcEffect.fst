@@ -312,14 +312,25 @@ let bind_combinator_kind (env:env)
       let g_sig_b_sort = SS.subst ss g_sig_b.binder_bv.sort in
       let ss = ss@[NT (g_sig_b.binder_bv, g_b.binder_bv |> S.bv_to_name)] in
       let g_sig_b_arrow_t =
-        U.arrow [S.mk_binder (S.gen_bv "x" None (a_b.binder_bv |> S.bv_to_name))]
+        let x_bv = S.gen_bv "x" None (a_b.binder_bv |> S.bv_to_name) in
+        let ss = List.map (fun (bv, k) ->
+          if k = Substitution_binder
+          then [NT (bv, mk_Tm_app (S.bv_to_name bv) [x_bv |> S.bv_to_name |> S.as_arg] Range.dummyRange)]
+          else []) l |> List.flatten in
+        let g_sig_b_sort = SS.subst ss g_sig_b_sort in
+        U.arrow [S.mk_binder x_bv]
                 (mk_Total g_sig_b_sort) in  // Universe?
+      BU.print3 "Checking g_sig_arrow and g_b and g_sig_b %s and %s %s\n"
+        (Print.term_to_string g_sig_b_arrow_t)
+        (Print.term_to_string g_b.binder_bv.sort)
+        (Print.term_to_string g_sig_b_sort);
       if U.eq_tm g_sig_b_arrow_t g_b.binder_bv.sort = U.Equal
-      then l@[Substitution_binder], ss
+      then l@[g_b.binder_bv, Substitution_binder], ss
       else if U.eq_tm g_sig_b_sort g_b.binder_bv.sort = U.Equal
-      then l@[BindCont_no_abstraction_binder], ss
-      else l@[Ad_hoc_binder], ss) ([], []) g_sig_bs g_bs in
+      then l@[g_b.binder_bv, BindCont_no_abstraction_binder], ss
+      else l@[g_b.binder_bv, Ad_hoc_binder], ss) ([], []) g_sig_bs g_bs in
 
+    let g_bs_kinds = List.map snd g_bs_kinds in
     if List.contains Ad_hoc_binder g_bs_kinds
     then None
     else g_bs_kinds |> Some in
