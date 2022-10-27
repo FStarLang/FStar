@@ -12,3 +12,16 @@ let rec nat_t_of_nat (n: nat): Type0 =
   match n with
   | 0 -> z
   | n -> s (nat_t_of_nat (n - 1))
+
+unfold
+let norm_typenat =
+  [
+    delta_only [
+      `%nat_t_of_nat;
+    ];
+    iota; zeta; primops;
+  ]
+
+let solve_nat_t_of_nat () =
+  FStar.Tactics.norm norm_typenat;
+  FStar.Tactics.trefl ()
