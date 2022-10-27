@@ -6534,12 +6534,7 @@ let (uvars_for_binders :
                                       FStar_Pervasives_Native.None) in
                               (match uu___2 with
                                | (ctx_uvar_meta_t, guard_uvar_meta_t) ->
-                                   let add_guard_uvars1 =
-                                     add_guard_uvars &&
-                                       (let uu___3 =
-                                          FStar_Options.admit_tactic_unification_guards
-                                            () in
-                                        Prims.op_Negation uu___3) in
+                                   let add_guard_uvars1 = false in
                                    let uu___3 =
                                      if add_guard_uvars1
                                      then
@@ -6573,11 +6568,7 @@ let (uvars_for_binders :
                                           let uu___5 = reason b in
                                           new_implicit_var_with_kind uu___5 r
                                             env1 sort
-                                            (if add_guard_uvars1
-                                             then FStar_Syntax_Syntax.Strict
-                                             else
-                                               FStar_Syntax_Syntax.Allow_untyped
-                                                 "indexed effect binder (weakening or strengthening)")
+                                            FStar_Syntax_Syntax.Strict
                                             (FStar_Pervasives.Inl
                                                guard_uvar_opt)
                                             ctx_uvar_meta_t in
