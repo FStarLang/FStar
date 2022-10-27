@@ -3,7 +3,7 @@ all: world
 FSTAR_HOME ?= $(realpath $(dir $(shell which fstar.exe))/..)
 FSTAR_EXE = $(FSTAR_HOME)/bin/fstar.exe
 
-INCLUDE_PATH = $(FSTAR_HOME)/ulib/.cache $(FSTAR_HOME)/ulib/experimental
+INCLUDE_PATH = $(FSTAR_HOME)/ulib/.cache $(FSTAR_HOME)/ulib/experimental $(KRML_HOME)/krmllib $(KRML_HOME)/krmllib/obj
 
 ifdef KRML_HOME
 KRML_EXE = $(KRML_HOME)/krml
