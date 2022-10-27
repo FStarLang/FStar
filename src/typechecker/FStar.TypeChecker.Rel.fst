@@ -1774,16 +1774,17 @@ let simplify_guard env g = match g.guard_f with
       let f = norm_with_steps "FStar.TypeChecker.Rel.norm_with_steps.6"
               [Env.Beta; Env.Eager_unfolding; Env.Simplify; Env.Primops; Env.NoFullNorm] env f in
       if Env.debug env <| Options.Other "Simplification" then BU.print1 "Simplified guard to %s\n" (Print.term_to_string f);
-      let f = U.unmeta f in
       let f =
-        match U.un_squash f with
-        | Some f -> f
-        | _ -> f
-      in
-      let f = 
-        match (U.unmeta f).n with
+        let g = U.unmeta f in
+        let g =
+          match U.un_squash g with
+          | Some g' -> U.unmeta g'
+          | _ -> g
+        in
+        match g.n with
         | Tm_fvar fv when S.fv_eq_lid fv Const.true_lid -> Trivial
-        | _ -> NonTrivial f in
+        | _ -> NonTrivial f
+      in
       {g with guard_f=f}
 
 (******************************************************************************************************)

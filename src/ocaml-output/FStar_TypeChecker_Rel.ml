@@ -3964,24 +3964,22 @@ let (simplify_guard :
                let uu___3 = FStar_Syntax_Print.term_to_string f1 in
                FStar_Compiler_Util.print1 "Simplified guard to %s\n" uu___3
              else ());
-            (let f2 = FStar_Syntax_Util.unmeta f1 in
-             let f3 =
-               let uu___2 = FStar_Syntax_Util.un_squash f2 in
-               match uu___2 with
-               | FStar_Pervasives_Native.Some f4 -> f4
-               | uu___3 -> f2 in
-             let f4 =
-               let uu___2 =
-                 let uu___3 = FStar_Syntax_Util.unmeta f3 in
-                 uu___3.FStar_Syntax_Syntax.n in
-               match uu___2 with
+            (let f2 =
+               let g1 = FStar_Syntax_Util.unmeta f1 in
+               let g2 =
+                 let uu___2 = FStar_Syntax_Util.un_squash g1 in
+                 match uu___2 with
+                 | FStar_Pervasives_Native.Some g' ->
+                     FStar_Syntax_Util.unmeta g'
+                 | uu___3 -> g1 in
+               match g2.FStar_Syntax_Syntax.n with
                | FStar_Syntax_Syntax.Tm_fvar fv when
                    FStar_Syntax_Syntax.fv_eq_lid fv
                      FStar_Parser_Const.true_lid
                    -> FStar_TypeChecker_Common.Trivial
-               | uu___3 -> FStar_TypeChecker_Common.NonTrivial f3 in
+               | uu___2 -> FStar_TypeChecker_Common.NonTrivial f1 in
              {
-               FStar_TypeChecker_Common.guard_f = f4;
+               FStar_TypeChecker_Common.guard_f = f2;
                FStar_TypeChecker_Common.deferred_to_tac =
                  (g.FStar_TypeChecker_Common.deferred_to_tac);
                FStar_TypeChecker_Common.deferred =
