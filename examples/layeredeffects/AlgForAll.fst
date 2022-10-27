@@ -242,4 +242,3 @@ let soundness_aux #a #wp (t:repr a wp)
 let soundness #a #wp (t : unit -> AlgWP a wp)
   : Tot (s0:state -> ID5.ID (a & state) (as_pure_wp (wp s0)))
   = soundness_aux (reify (t ()))
-

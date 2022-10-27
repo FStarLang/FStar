@@ -1,7 +1,7 @@
 OTHERFLAGS+=--already_cached 'Prims FStar LowStar' --include parsing
 include ../Makefile.include
 
-NO_VERIFY=Buffers.fst
+NO_VERIFY=Buffers.fst LowParseWriters.fsti LowParseWriters.fst LowParseWriters.NoHoare.fsti LowParseWriters.NoHoare.fst
 
 ROOTS=$(wildcard *.fst)
 

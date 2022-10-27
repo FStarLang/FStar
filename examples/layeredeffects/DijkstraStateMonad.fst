@@ -282,8 +282,8 @@ let lift_wp (a:Type)
 /// Again, without a proof ...
 let lift_pure_ifst
     (a:Type)
-    (s:Type0)
     (wp:pure_wp a)
+    (s:Type0)
     (f:eqtype_as_type unit -> PURE a wp)
   : irepr a s (lift_wp a s wp)
   = admit();
