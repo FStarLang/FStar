@@ -122,11 +122,10 @@ let as_wl_deferred wl (d:deferred): list (int * deferred_reason * lstring * prob
 (* --------------------------------------------------------- *)
 (* <new_uvar> Generating new unification variables/patterns  *)
 (* --------------------------------------------------------- *)
-let new_uvar reason wl r gamma binders k should_check kind meta : ctx_uvar * term * worklist =
+let new_uvar reason wl r gamma binders k should_check meta : ctx_uvar * term * worklist =
     let decoration = {
              uvar_decoration_typ = k;
-             uvar_decoration_should_check = should_check;
-             uvar_decoration_kind = kind;
+             uvar_decoration_should_check = should_check
         }
     in
     let ctx_uvar = {
@@ -154,7 +153,6 @@ let copy_uvar u (bs:binders) t wl =
   new_uvar ("copy:"^u.ctx_uvar_reason) wl u.ctx_uvar_range env.gamma
            (Env.all_binders env) t
            (U.ctx_uvar_should_check u)
-           (Inl None)
            u.ctx_uvar_meta
 
 (* --------------------------------------------------------- *)
@@ -397,7 +395,6 @@ let mk_problem wl scope orig lhs rel rhs elt reason =
                  bs
                  U.ktype0
                  (Allow_untyped "logical guard")
-                 (Inl None)
                  None
     in
     let prob =
@@ -446,7 +443,6 @@ let new_problem wl env lhs rel rhs (subject:option bv) loc reason =
                (Env.all_binders env)
                lg_ty
                (Allow_untyped "logical guard")
-               (Inl None)
                None
   in
   let lg =
@@ -519,7 +515,7 @@ let explain env d (s : lstring) =
 (* <uvi ops> Instantiating unification variables   *)
 (* ------------------------------------------------*)
 
-let set_uvar env u t =
+let set_uvar env u (should_check_opt:option S.should_check_uvar) t =
   // Useful for debugging uvars setting bugs
   // if Env.debug env <| Options.Other "Rel"
   // then (
@@ -535,17 +531,14 @@ let set_uvar env u t =
   //     failwith "DIE"
   // );
 
-  U.set_uvar u.ctx_uvar_head t
 
-let mark_uvar_as_allow_untyped (u:ctx_uvar) (s:string)
-  : unit
-  = let dec = UF.find_decoration u.ctx_uvar_head in
-    (match dec.uvar_decoration_kind with
-     | Inl (Some g_uv) -> set_uvar env g_uv U.t_true
-     | _ -> ());
-    UF.change_decoration u.ctx_uvar_head ({dec with
-                                           uvar_decoration_should_check = Allow_untyped s;
-                                           uvar_decoration_kind = Inl None})
+  (match should_check_opt with
+   | None -> ()
+   | Some should_check ->
+     UF.change_decoration u.ctx_uvar_head
+       ({UF.find_decoration u.ctx_uvar_head with uvar_decoration_should_check=should_check}));
+
+  U.set_uvar u.ctx_uvar_head t
 
 let commit env uvis = uvis |> List.iter (function
     | UNIV(u, t)      ->
@@ -555,7 +548,7 @@ let commit env uvis = uvis |> List.iter (function
       end
     | TERM(u, t) ->
       def_check_closed_in t.pos "commit" (List.map (fun b -> b.binder_bv) u.ctx_uvar_binders) t;
-      set_uvar env u t
+      set_uvar env u None t
     )
 
 let find_term_uvar uv s = BU.find_map s (function
@@ -831,10 +824,6 @@ let ensure_no_uvar_subst env (t0:term) (wl:worklist)
       | _ ->
         (* At least one variable is affected, make a new uvar *)
         let dom_binders = Env.binders_of_bindings gamma_aff in
-        let v_k =
-          match U.ctx_uvar_kind uv with
-          | Inl _ -> Inl None
-          | _ -> failwith "Did not expect to create a new uvar for guard uvar" in
         let v, t_v, wl = new_uvar (uv.ctx_uvar_reason ^ "; force delayed")
                          wl
                          t0.pos
@@ -842,7 +831,6 @@ let ensure_no_uvar_subst env (t0:term) (wl:worklist)
                          (Env.binders_of_bindings new_gamma)
                          (U.arrow dom_binders (S.mk_Total (U.ctx_uvar_typ uv)))
                          (U.ctx_uvar_should_check uv)
-                         v_k
                          uv.ctx_uvar_meta
         in
 
@@ -853,8 +841,7 @@ let ensure_no_uvar_subst env (t0:term) (wl:worklist)
         then BU.print2 "ensure_no_uvar_subst solving %s with %s\n"
                (Print.ctx_uvar_to_string uv)
                (Print.term_to_string sol);
-        set_uvar env uv sol;
-        mark_uvar_as_allow_untyped uv "sol is a new uvar that will be checked";
+        set_uvar env uv (Some (Allow_untyped "sol is a new uvar that will be checked")) sol;
 
         (* Make a term for the new uvar, applied to the substitutions of
          * the abstracted arguments, plus all the original arguments. *)
@@ -943,7 +930,7 @@ let solve_prob' resolve_ok prob logical_guard uvis wl =
         let phi = U.abs xs phi (Some (U.residual_tot U.ktype0)) in
         def_check_closed_in (p_loc prob) ("solve_prob'.sol." ^ string_of_int (p_pid prob))
                             (List.map (fun b -> b.binder_bv) <| p_scope prob) phi;
-        set_uvar wl.tcenv uv phi
+        set_uvar wl.tcenv uv None phi
     in
     let uv = p_guard_uvar prob in
     let fail () =
@@ -1078,17 +1065,13 @@ let restrict_ctx env (tgt:ctx_uvar) (bs:binders) (src:ctx_uvar) wl : worklist =
   //t is the type at which new uvar ?u should be created
   //f is a function that applied to the new uvar term should return the term that ?u_t should be solved to
   let aux (t:typ) (f:term -> term) =
-    if Inl? (U.ctx_uvar_kind src)
-    then
-      let _, src', wl = new_uvar ("restricted " ^ (Print.uvar_to_string src.ctx_uvar_head)) wl
-        src.ctx_uvar_range g pfx t
-        (U.ctx_uvar_should_check src)
-        (Inl None)
-        src.ctx_uvar_meta in
-      set_uvar env src (f src');
-      mark_uvar_as_allow_untyped src "assigned solution will be checked";  
-      wl
-    else wl in
+    let _, src', wl = new_uvar ("restricted " ^ (Print.uvar_to_string src.ctx_uvar_head)) wl
+      src.ctx_uvar_range g pfx t
+      (U.ctx_uvar_should_check src)
+      src.ctx_uvar_meta in
+    set_uvar env src (f src');
+    mark_uvar_as_allow_untyped src "assigned solution will be checked";  
+    wl in
 
   let bs = bs |> List.filter (fun ({binder_bv=bv1}) ->
     src.ctx_uvar_binders |> List.existsb (fun ({binder_bv=bv2}) -> S.bv_eq bv1 bv2) &&  //binder exists in G_t
@@ -3075,7 +3058,7 @@ and solve_t_flex_flex env orig wl (lhs:flex_t) (rhs:flex_t) : solution =
       then BU.print2 "solve_t_flex_flex: solving meta arg uvar %s with %s\n"
              (Print.ctx_uvar_to_string uv)
              (Print.term_to_string t);
-      set_uvar env uv t;
+      set_uvar env uv None t;
       solve env (attempt [orig] wl) in
 
     match p_rel orig with
@@ -3151,7 +3134,6 @@ and solve_t_flex_flex env orig wl (lhs:flex_t) (rhs:flex_t) : solution =
                                              Allow_untyped? (U.ctx_uvar_should_check u_rhs)
                                           then U.ctx_uvar_should_check u_lhs
                                           else Strict)
-                                         (Inl None)
                                          None in
                    let w_app = S.mk_Tm_app w (List.map (fun ({binder_bv=z}) -> S.as_arg (S.bv_to_name z)) zs) w.pos in
                    let _ =
@@ -5024,80 +5006,13 @@ let try_solve_single_valued_implicits env is_tac (imps:Env.implicits) : Env.impl
 
     imps, b
 
-//
-// Set the guard uvar for uv to tm, if it exists
-// Return true if we set it, false otherwise
-//
-let maybe_set_guard_uvar env (uv:ctx_uvar) (tm:typ) : bool =
-  match U.ctx_uvar_kind uv with
-  | Inl None -> false
-  | Inl (Some g_uv) ->
-    if Options.debug_any ()
-    then BU.print3 "Uvar %s has guard uvar %s, setting guard to %s\n"
-           (Print.ctx_uvar_to_string uv)
-           (Print.ctx_uvar_to_string g_uv)
-           (Print.term_to_string tm);
-    commit env [TERM (g_uv, tm)];
-    true
-  | Inr _ -> failwith "Impossible (maybe_set_guard_uvar)"
-
-
-let core_check_and_maybe_add_to_guard_uvar env uv t k must_tot is_tac =
-  let debug f =
-    if Options.debug_any()
-    then f () in
-
-  let should_check = U.ctx_uvar_should_check uv in
-
-  if Allow_untyped? should_check
-  then begin
-    ignore (maybe_set_guard_uvar env uv U.t_true);
-    Inl None
-  end
-  else if Already_checked? should_check
-  then Inl None
-  else
-    match env.core_check env t k must_tot with
-    | Inl None ->
-      debug (fun _ ->
-             BU.print1 "Core checking of uvar %s ok (no guard)\n"
-               (Print.ctx_uvar_to_string uv));
-      ignore (maybe_set_guard_uvar env uv U.t_true);
-      Inl None
-  
-    | Inl (Some vc) ->
-      debug (fun _ ->
-             BU.print3 "Core checking of uvar %s solved to %s ok with guard: %s\n"
-               (Print.ctx_uvar_to_string uv)
-               (Print.term_to_string t)
-               (Print.term_to_string vc));
-
-      if is_tac && Options.admit_tactic_unification_guards ()
-      then begin
-        ignore (maybe_set_guard_uvar env uv U.t_true);
-        Inl None
-      end
-      else if maybe_set_guard_uvar env uv vc
-      then Inl None
-      else Inl (Some vc)
-
-    | Inr err ->
-      debug (fun _ -> 
-             BU.print5 "(%s) Core checking failed (%s) on term %s and type %s\n%s\n"
-               (Range.string_of_range (Env.get_range env))      
-               (err true)
-               (Print.term_to_string t)
-               (Print.term_to_string k)
-               (err false));
-      Inr err
-
 (*
  * Check that an implicit solution t has an expected type k
  *   we know that G |- t : (G)Tot k', for some k'
  *
  * must_tot : if t must be a Tot
  *)
-let check_implicit_solution env uv t k (must_tot:bool) (reason:string) : guard_t =
+let check_implicit_solution env t k (must_tot:bool) (reason:string) : guard_t =
   (*
    * AR: when we create lambda terms as solutions to implicits (in u_abs),
    *       we set the type in the residual comp to be the type of the uvar
@@ -5127,7 +5042,7 @@ let check_implicit_solution env uv t k (must_tot:bool) (reason:string) : guard_t
   if not (env.phase1) //this can be false if we're running in lax mode without phase2 to follow
   && not env.lax //no point running core checker if we're in lax mode
    then (
-    match core_check_and_maybe_add_to_guard_uvar env uv t k must_tot false with
+    match env.core_check env t k must_tot with
     | Inl None ->
       trivial_guard
     | Inl (Some g) -> 
@@ -5138,9 +5053,7 @@ let check_implicit_solution env uv t k (must_tot:bool) (reason:string) : guard_t
         //   (print_err false));
       fallback()
   )
-  else begin
-    fallback()
-  end
+  else fallback()
 
 (*
  * Return None if we did not typecheck the implicit because
@@ -5179,7 +5092,6 @@ let check_implicit_solution_and_discharge_guard env imp force_univ_constraints
      (List.existsb (fun (reason, _, _) -> reason = Deferred_univ_constraint) g.deferred)
   then None
   else begin
-    if env.phase1 || env.lax then ignore (maybe_set_guard_uvar env ctx_u U.t_true);
     let g' =
       (match discharge_guard'
                (Some (fun () ->
@@ -5244,11 +5156,6 @@ let rec check_implicit_solution_for_tac (env:env) (i:implicit) : option (term * 
   if Allow_untyped? uvar_should_check ||
      Already_checked? uvar_should_check
   then None
-  else if env.phase1
-  then (
-    ignore (maybe_set_guard_uvar env ctx_u U.t_true);
-    None
-  )
   else (
     let env = { env with gamma = ctx_u.ctx_uvar_gamma } in
     if Env.debug env <| Options.Other "CoreEq"
@@ -5354,7 +5261,11 @@ and resolve_implicits' env is_tac (implicits:Env.implicits)
          *)
         let tm_ok_for_tac () =
           if is_implicit_resolved env hd
-          then check_implicit_solution_for_tac env hd
+          then begin
+            if env.phase1 //phase1 is untrusted; the solution will be recomputed or checked again in phase2
+            then None
+            else check_implicit_solution_for_tac env hd
+          end
           else None
         in
         if is_tac

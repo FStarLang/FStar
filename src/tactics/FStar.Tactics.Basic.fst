@@ -113,26 +113,9 @@ let set_uvar_expected_typ (u:ctx_uvar) (t:typ)
   = let dec = UF.find_decoration u.ctx_uvar_head in
     UF.change_decoration u.ctx_uvar_head ({dec with uvar_decoration_typ = t })
 
-let transfer_guard_uvar (u_src u_dst:ctx_uvar) : unit =
-  let src_dec = UF.find_decoration u_src.ctx_uvar_head in
-  let dst_dec = UF.find_decoration u_dst.ctx_uvar_head in
-
-  match src_dec.uvar_decoration_kind, dst_dec.uvar_decoration_kind with
-  | Inl None, Inl None -> ()
-  | Inl (Some u), Inl None ->
-    UF.change_decoration u_src.ctx_uvar_head
-      ({src_dec with uvar_decoration_kind = Inl None});
-    UF.change_decoration u_dst.ctx_uvar_head
-      ({dst_dec with uvar_decoration_kind = Inl (Some u)})
-  | _, _ -> failwith "Unexpected call to transfer guard uvar"
-
 let mark_uvar_as_already_checked (u:ctx_uvar)
   : unit
   = let dec = UF.find_decoration u.ctx_uvar_head in
-    (match dec.uvar_decoration_kind with
-     | Inl (Some g_uv) ->
-       FStar.Syntax.Unionfind.change g_uv.ctx_uvar_head U.t_true
-     | _ -> ());
     UF.change_decoration u.ctx_uvar_head ({dec with uvar_decoration_should_check = Already_checked})
   
 let mark_goal_implicit_already_checked (g:goal) 
@@ -290,7 +273,7 @@ let proc_guard = proc_guard' true
 // See if any of the implicits in uvs were solved in a Rel call,
 //   if so, core check them
 //
-let tc_unifier_solved_implicits dbg env (must_tot:bool) (allow_guards:bool) (uvs:list ctx_uvar) : tac unit =
+let tc_unifier_solved_implicits env (must_tot:bool) (allow_guards:bool) (uvs:list ctx_uvar) : tac unit =
   let aux (u:ctx_uvar) : tac unit =
     let dec = UF.find_decoration u.ctx_uvar_head in
     match dec.uvar_decoration_should_check with
@@ -305,7 +288,7 @@ let tc_unifier_solved_implicits dbg env (must_tot:bool) (allow_guards:bool) (uvs
       | Some sol ->  //solved, check it
         let env = {env with gamma=u.ctx_uvar_gamma} in
         let must_tot = must_tot && not (Allow_ghost? dec.uvar_decoration_should_check) in
-        match Rel.core_check_and_maybe_add_to_guard_uvar env u sol (U.ctx_uvar_typ u) must_tot true with
+        match core_check env sol (U.ctx_uvar_typ u) must_tot with
         | Inl None ->
           //checked with no guard
           //no need to check it again
@@ -313,27 +296,34 @@ let tc_unifier_solved_implicits dbg env (must_tot:bool) (allow_guards:bool) (uvs
           ret ()
   
         | Inl (Some g) ->
-          let guard = { Env.trivial_guard with guard_f = NonTrivial g } in
-          let guard = Rel.simplify_guard env guard in
           if Options.disallow_unification_guards ()
-          && not allow_guards
-          && NonTrivial? guard.guard_f
           then (
-            fail2 "Could not typecheck unifier solved implicit %s to %s since it produced a guard and guards were not allowed"
-              (Print.uvar_to_string u.ctx_uvar_head)
-              (Print.term_to_string sol)
-          )
-          else (
-            proc_guard' false "guard for implicit" env guard u.ctx_uvar_range ;!
             mark_uvar_as_already_checked u;
             ret ()
+          )
+          else (
+            let guard = { Env.trivial_guard with guard_f = NonTrivial g } in
+            let guard = Rel.simplify_guard env guard in
+            if Options.disallow_unification_guards ()
+            && not allow_guards
+            && NonTrivial? guard.guard_f
+            then (
+              fail2 "Could not typecheck unifier solved implicit %s to %s since it produced a guard and guards were not allowed"
+                (Print.uvar_to_string u.ctx_uvar_head)
+                (Print.term_to_string sol)
+            )
+            else (
+              proc_guard' false "guard for implicit" env guard u.ctx_uvar_range ;!
+              mark_uvar_as_already_checked u;
+              ret ()
+            )
           )
               
         | Inr failed ->
           fail3 "Could not typecheck unifier solved implicit %s to %s because %s" 
             (Print.uvar_to_string u.ctx_uvar_head)
             (Print.term_to_string sol)
-            (failed true)
+            (Core.print_error failed)
   in
   if env.phase1 //phase1 is untrusted
   then ret ()
@@ -390,7 +380,7 @@ let __do_unify_wflags
           | None ->
             ret None
           | Some g ->
-            tc_unifier_solved_implicits dbg env must_tot allow_guards all_uvars;!
+            tc_unifier_solved_implicits env must_tot allow_guards all_uvars;!
             add_implicits g.implicits;!
             ret (Some g)
   
@@ -1409,7 +1399,6 @@ let dup () : tac unit =
     //the new uvar is just as Strict as the original one. So, its assignement will be checked
     //and we have a goal that requires us to prove it equal to the original uvar
     //so we can clear the should_check status of the current uvar
-    transfer_guard_uvar g.goal_ctx_uvar u_uvar;    
     mark_uvar_as_already_checked g.goal_ctx_uvar;
     let g' = { g with goal_ctx_uvar = u_uvar } in
     bind dismiss (fun _ ->
@@ -2159,9 +2148,7 @@ let proofstate_of_goal_ty rng env typ =
 
 let proofstate_of_all_implicits rng env imps =
     let env = tac_env env in
-    let goals =
-      imps |> List.filter (fun {imp_uvar} -> not (U.is_guard_ctx_uvar imp_uvar))
-           |> List.map (goal_of_implicit env) in
+    let goals = List.map (goal_of_implicit env) imps in
     let w = goal_witness (List.hd goals) in
     let ps = {
         main_context = env;

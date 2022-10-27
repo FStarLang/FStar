@@ -155,7 +155,6 @@ and ctx_uvar_and_subst = ctx_uvar * subst_ts
 and uvar_decoration = {
   uvar_decoration_typ:typ;
   uvar_decoration_should_check:should_check_uvar;
-  uvar_decoration_kind:either (option ctx_uvar) unit
 }
 
 and uvar = Unionfind.p_uvar (option term * uvar_decoration) * version * Range.range
