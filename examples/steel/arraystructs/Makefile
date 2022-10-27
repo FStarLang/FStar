@@ -59,8 +59,7 @@ ifdef KRML_HOME
 	$(FSTAR) $(notdir $(subst .checked,,$<)) --codegen krml \
 	--extract_module $(basename $(notdir $(subst .checked,,$<)))
 
-# FIXME: add extraction rules for Steel.C.Types to support PointStruct2
-ALL_MODULE_NAMES=$(filter-out PointStruct2,$(basename $(ALL_SOURCE_FILES)))
+ALL_MODULE_NAMES=$(basename $(ALL_SOURCE_FILES))
 FILTERED_KRML_FILES=$(filter-out FStar_NMST.krml Steel_%.krml,$(ALL_KRML_FILES))
 
 extract: $(FILTERED_KRML_FILES)
