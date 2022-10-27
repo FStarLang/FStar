@@ -1069,8 +1069,7 @@ let restrict_ctx env (tgt:ctx_uvar) (bs:binders) (src:ctx_uvar) wl : worklist =
       src.ctx_uvar_range g pfx t
       (U.ctx_uvar_should_check src)
       src.ctx_uvar_meta in
-    set_uvar env src (f src');
-    mark_uvar_as_allow_untyped src "assigned solution will be checked";  
+    set_uvar env src (Some (Allow_untyped "assigned solution will be checked")) (f src');
     wl in
 
   let bs = bs |> List.filter (fun ({binder_bv=bv1}) ->

@@ -296,7 +296,7 @@ let tc_unifier_solved_implicits env (must_tot:bool) (allow_guards:bool) (uvs:lis
           ret ()
   
         | Inl (Some g) ->
-          if Options.disallow_unification_guards ()
+          if Options.admit_tactic_unification_guards ()
           then (
             mark_uvar_as_already_checked u;
             ret ()
