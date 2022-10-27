@@ -1894,8 +1894,7 @@ let rec (maybe_weakly_reduced :
                 maybe_weakly_reduced t'
             | FStar_Syntax_Syntax.Meta_labeled uu___ -> false
             | FStar_Syntax_Syntax.Meta_desugared uu___ -> false
-            | FStar_Syntax_Syntax.Meta_named uu___ -> false
-            | FStar_Syntax_Syntax.Meta_core_guard -> false))
+            | FStar_Syntax_Syntax.Meta_named uu___ -> false))
 let (plugin_unfold_warn_ctr : Prims.int FStar_Compiler_Effect.ref) =
   FStar_Compiler_Util.mk_ref Prims.int_zero
 let (should_unfold :
@@ -4206,12 +4205,6 @@ let rec (norm :
                                        (env1, m,
                                          (t1.FStar_Syntax_Syntax.pos))) ::
                                    stack2) head
-                             | FStar_Syntax_Syntax.Meta_core_guard ->
-                                 norm cfg env1
-                                   ((Meta
-                                       (env1, m,
-                                         (t1.FStar_Syntax_Syntax.pos))) ::
-                                   stack2) head
                              | uu___7 -> norm cfg env1 stack2 head)
                         | [] ->
                             let head1 = norm cfg env1 [] head in
@@ -5795,9 +5788,6 @@ and (maybe_simplify_aux :
                    let uu___4 = FStar_Syntax_Subst.compress tm1 in
                    uu___4.FStar_Syntax_Syntax.n in
                  (match uu___3 with
-                  | FStar_Syntax_Syntax.Tm_meta
-                      (tm2, FStar_Syntax_Syntax.Meta_core_guard) ->
-                      maybe_simplify_aux cfg env1 stack1 tm2
                   | FStar_Syntax_Syntax.Tm_app
                       ({
                          FStar_Syntax_Syntax.n = FStar_Syntax_Syntax.Tm_uinst

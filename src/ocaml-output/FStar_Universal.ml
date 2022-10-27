@@ -213,15 +213,19 @@ let (core_check : FStar_TypeChecker_Env.core_check_t) =
     fun tm ->
       fun t ->
         fun must_tot ->
-          let uu___ = FStar_TypeChecker_Core.check_term env tm t must_tot in
-          match uu___ with
-          | FStar_Pervasives.Inl t1 -> FStar_Pervasives.Inl t1
-          | FStar_Pervasives.Inr err ->
-              FStar_Pervasives.Inr
-                ((fun b ->
-                    if b
-                    then FStar_TypeChecker_Core.print_error_short err
-                    else FStar_TypeChecker_Core.print_error err))
+          let uu___ = FStar_Options.admit_tactic_unification_guards () in
+          if uu___
+          then FStar_Pervasives.Inl FStar_Pervasives_Native.None
+          else
+            (let uu___2 = FStar_TypeChecker_Core.check_term env tm t must_tot in
+             match uu___2 with
+             | FStar_Pervasives.Inl t1 -> FStar_Pervasives.Inl t1
+             | FStar_Pervasives.Inr err ->
+                 FStar_Pervasives.Inr
+                   ((fun b ->
+                       if b
+                       then FStar_TypeChecker_Core.print_error_short err
+                       else FStar_TypeChecker_Core.print_error err)))
 let (init_env : FStar_Parser_Dep.deps -> FStar_TypeChecker_Env.env) =
   fun deps ->
     let solver =

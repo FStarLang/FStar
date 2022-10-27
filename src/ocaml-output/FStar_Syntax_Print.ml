@@ -517,10 +517,6 @@ and (term_to_string : FStar_Syntax_Syntax.term -> Prims.string) =
                (t, FStar_Syntax_Syntax.Meta_desugared uu___3) ->
                let uu___4 = term_to_string t in
                FStar_Compiler_Util.format1 "Meta_desugared{%s}" uu___4
-           | FStar_Syntax_Syntax.Tm_meta
-               (t, FStar_Syntax_Syntax.Meta_core_guard) ->
-               let uu___3 = term_to_string t in
-               FStar_Compiler_Util.format1 "Meta_core_guard{%s}" uu___3
            | FStar_Syntax_Syntax.Tm_bvar x3 ->
                let uu___3 = db_to_string x3 in
                let uu___4 =
@@ -1266,7 +1262,6 @@ and (metadata_to_string : FStar_Syntax_Syntax.metadata -> Prims.string) =
         let uu___3 = term_to_string t in
         FStar_Compiler_Util.format3 "{Meta_monadic_lift(%s -> %s @ %s)}"
           uu___1 uu___2 uu___3
-    | FStar_Syntax_Syntax.Meta_core_guard -> "{Meta_core_guard}"
 let (aqual_to_string : FStar_Syntax_Syntax.aqual -> Prims.string) =
   fun aq -> aqual_to_string' "" aq
 let (bqual_to_string : FStar_Syntax_Syntax.bqual -> Prims.string) =

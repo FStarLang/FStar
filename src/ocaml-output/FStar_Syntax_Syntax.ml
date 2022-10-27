@@ -232,9 +232,7 @@ and ctx_uvar_meta_t =
 and uvar_decoration =
   {
   uvar_decoration_typ: term' syntax ;
-  uvar_decoration_should_check: should_check_uvar ;
-  uvar_decoration_kind:
-    (ctx_uvar FStar_Pervasives_Native.option, unit) FStar_Pervasives.either }
+  uvar_decoration_should_check: should_check_uvar }
 and pat' =
   | Pat_constant of sconst 
   | Pat_cons of (fv * universes FStar_Pervasives_Native.option * (pat'
@@ -295,7 +293,6 @@ and metadata =
   | Meta_desugared of meta_source_info 
   | Meta_monadic of (monad_name * term' syntax) 
   | Meta_monadic_lift of (monad_name * monad_name * term' syntax) 
-  | Meta_core_guard 
 and meta_source_info =
   | Sequence 
   | Primop 
@@ -536,22 +533,14 @@ let (__proj__Mkuvar_decoration__item__uvar_decoration_typ :
   uvar_decoration -> term' syntax) =
   fun projectee ->
     match projectee with
-    | { uvar_decoration_typ; uvar_decoration_should_check;
-        uvar_decoration_kind;_} -> uvar_decoration_typ
+    | { uvar_decoration_typ; uvar_decoration_should_check;_} ->
+        uvar_decoration_typ
 let (__proj__Mkuvar_decoration__item__uvar_decoration_should_check :
   uvar_decoration -> should_check_uvar) =
   fun projectee ->
     match projectee with
-    | { uvar_decoration_typ; uvar_decoration_should_check;
-        uvar_decoration_kind;_} -> uvar_decoration_should_check
-let (__proj__Mkuvar_decoration__item__uvar_decoration_kind :
-  uvar_decoration ->
-    (ctx_uvar FStar_Pervasives_Native.option, unit) FStar_Pervasives.either)
-  =
-  fun projectee ->
-    match projectee with
-    | { uvar_decoration_typ; uvar_decoration_should_check;
-        uvar_decoration_kind;_} -> uvar_decoration_kind
+    | { uvar_decoration_typ; uvar_decoration_should_check;_} ->
+        uvar_decoration_should_check
 let (uu___is_Pat_constant : pat' -> Prims.bool) =
   fun projectee ->
     match projectee with | Pat_constant _0 -> true | uu___ -> false
@@ -749,9 +738,6 @@ let (uu___is_Meta_monadic_lift : metadata -> Prims.bool) =
 let (__proj__Meta_monadic_lift__item___0 :
   metadata -> (monad_name * monad_name * term' syntax)) =
   fun projectee -> match projectee with | Meta_monadic_lift _0 -> _0
-let (uu___is_Meta_core_guard : metadata -> Prims.bool) =
-  fun projectee ->
-    match projectee with | Meta_core_guard -> true | uu___ -> false
 let (uu___is_Sequence : meta_source_info -> Prims.bool) =
   fun projectee -> match projectee with | Sequence -> true | uu___ -> false
 let (uu___is_Primop : meta_source_info -> Prims.bool) =

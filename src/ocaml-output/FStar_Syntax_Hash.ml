@@ -620,8 +620,6 @@ and (hash_meta : FStar_Syntax_Syntax.metadata -> FStar_Hash.hash_code mm) =
             uu___3 :: uu___4 in
           uu___1 :: uu___2 in
         mix_list_lit uu___
-    | FStar_Syntax_Syntax.Meta_core_guard ->
-        let uu___ = FStar_Hash.of_int (Prims.of_int (1063)) in ret uu___
 and (hash_meta_source_info :
   FStar_Syntax_Syntax.meta_source_info -> FStar_Hash.hash_code mm) =
   fun m ->
@@ -1110,8 +1108,6 @@ and (equal_meta :
          FStar_Syntax_Syntax.Meta_monadic_lift (m21, n2, t2)) ->
           ((FStar_Ident.lid_equals m11 m21) && (FStar_Ident.lid_equals n1 n2))
             && (equal_term t1 t2)
-      | (FStar_Syntax_Syntax.Meta_core_guard,
-         FStar_Syntax_Syntax.Meta_core_guard) -> true
 and (equal_lazyinfo :
   FStar_Syntax_Syntax.lazyinfo -> FStar_Syntax_Syntax.lazyinfo -> Prims.bool)
   = fun l1 -> fun l2 -> l1 = l2
