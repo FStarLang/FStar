@@ -52,6 +52,7 @@ let if_then_else
   : Type
   = repr a st (ite_wp wpf wpg b)
 
+unfold
 let stronger
   (#a:Type) (#st:Type0)
   (w1 w2 : wp st a)
@@ -71,14 +72,9 @@ let subcomp
 total
 reifiable
 reflectable
-layered_effect {
-  ST : a:Type -> st:Type0 -> wp st a -> Effect
-  with
-  repr = repr;
-  return = return;
-  bind = bind;
-  if_then_else = if_then_else;
-  subcomp = subcomp
+effect {
+  ST (a:Type) ([@@@ effect_param] st:Type0) (_:wp st a)
+  with {repr; return; bind; if_then_else; subcomp}
 }
 
 let pure_monotonic #a (w : pure_wp a) : Type0 =
@@ -89,7 +85,7 @@ let lift_wp (#a:Type) (#st:Type0) (w:pure_wp a) : wp st a =
   elim_pure_wp_monotonicity_forall ();
   fun s0 p -> w (fun x -> p (x, s0))
 
-let lift_pure_st a st wp (f : eqtype_as_type unit -> PURE a wp)
+let lift_pure_st a wp st (f : unit -> PURE a wp)
   : repr a st (lift_wp wp)
   = elim_pure_wp_monotonicity_forall ();
     fun s0 -> (f (), s0)
