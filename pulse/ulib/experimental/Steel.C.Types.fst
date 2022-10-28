@@ -253,6 +253,8 @@ let write
 let field_t_nil = unit
 let field_t_cons _ _ _ = unit
 
+irreducible let norm_field_attr = ()
+
 let define_struct0 _ _ _ = unit
 
 module S = Steel.C.Model.Struct
@@ -423,8 +425,21 @@ let ghost_struct_field
     (pts_to (g_struct_field r field) _)
     (fun _ -> ())
 
-let struct_field
-  #_ #tn #_ #n #fields #v r field
+[@@noextract_to "krml"] // primitive
+let struct_field'
+  (#tn: Type0)
+  (#tf: Type0)
+  (#opened: _)
+  (#n: string)
+  (#fields: field_description_t tf)
+  (#v: Ghost.erased (struct_t0 tn n fields))
+  (r: ref (struct0 tn n fields))
+  (field: field_t fields)
+: SteelAtomicBase (ref (fields.fd_typedef field)) false opened Unobservable
+    (pts_to r v)
+    (fun r' -> pts_to r (struct_set_field field (unknown (fields.fd_typedef field)) v) `star` pts_to r' (struct_get_field v field))
+    (fun _ -> True)
+    (fun _ r' _ -> r' == g_struct_field r field)
 = rewrite_slprop
     (pts_to r v)
     (R.pts_to r v)
@@ -455,6 +470,14 @@ let struct_field
     (pts_to r' _)
     (fun _ -> ());
   return r'
+
+let struct_field0
+  t' r field td'
+=
+  let r' = struct_field' r field in
+  let res : ref td' = r' in
+  change_equal_slprop (pts_to r' _) (pts_to res _);
+  return res
 
 let unstruct_field
   #_ #tn #_ #n #fields #v r field #v' r'

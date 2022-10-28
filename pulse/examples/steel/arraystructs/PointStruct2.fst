@@ -15,6 +15,7 @@ let swap (#v1 #v2: Ghost.erased U32.t) (r1 r2: ref (scalar U32.t)) : SteelT unit
 
 noextract
 inline_for_extraction
+[@@ norm_field_attr]
 let point_fields =
   field_description_cons "x" (scalar U32.t) (
   field_description_cons "y" (scalar U32.t) (
