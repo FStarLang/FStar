@@ -322,8 +322,6 @@ let (check_with_lid : FStar_Ident.lident) =
     FStar_Compiler_Range.dummyRange
 let (commute_nested_matches_lid : FStar_Ident.lident) =
   psconst "commute_nested_matches"
-let (allow_informative_binders_attr : FStar_Ident.lident) =
-  psconst "allow_informative_binders"
 let (remove_unused_type_parameters_lid : FStar_Ident.lident) =
   psconst "remove_unused_type_parameters"
 let (ite_soundness_by_attr : FStar_Ident.lident) = psconst "ite_soundness_by"

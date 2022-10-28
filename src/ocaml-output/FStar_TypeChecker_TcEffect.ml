@@ -331,48 +331,6 @@ let (validate_degenerate_effect :
                               (FStar_TypeChecker_Util.label_guard r
                                  "Check for effect consistency") in
                           FStar_TypeChecker_Rel.force_trivial_guard env1 g))
-let (validate_layered_effect_binders :
-  FStar_TypeChecker_Env.env ->
-    FStar_Syntax_Syntax.binders ->
-      Prims.bool -> FStar_Compiler_Range.range -> unit)
-  =
-  fun env ->
-    fun bs ->
-      fun check_non_informatve_binders ->
-        fun r ->
-          if check_non_informatve_binders
-          then
-            let uu___ =
-              FStar_Compiler_List.fold_left
-                (fun uu___1 ->
-                   fun b ->
-                     match uu___1 with
-                     | (env1, bs1) ->
-                         let env2 =
-                           FStar_TypeChecker_Env.push_binders env1 [b] in
-                         let uu___2 =
-                           FStar_TypeChecker_Normalize.non_info_norm env2
-                             (b.FStar_Syntax_Syntax.binder_bv).FStar_Syntax_Syntax.sort in
-                         if uu___2 then (env2, bs1) else (env2, (b :: bs1)))
-                (env, []) bs in
-            match uu___ with
-            | (uu___1, informative_binders) ->
-                (if
-                   (FStar_Compiler_List.length informative_binders) <>
-                     Prims.int_zero
-                 then
-                   let uu___2 =
-                     let uu___3 =
-                       let uu___4 =
-                         FStar_Syntax_Print.binders_to_string "; "
-                           informative_binders in
-                       FStar_Compiler_Util.format1
-                         "Binders %s are informative while the effect is reifiable"
-                         uu___4 in
-                     (FStar_Errors.Fatal_UnexpectedEffect, uu___3) in
-                   FStar_Errors.raise_error uu___2 r
-                 else ())
-          else ()
 let op_let_Question :
   'a 'b .
     'a FStar_Pervasives_Native.option ->
@@ -4239,14 +4197,6 @@ let (tc_layered_eff_decl :
                                uu___9 comb uu___10 uu___11 uu___12 in
                            (FStar_Errors.Fatal_UnexpectedEffect, uu___8) in
                          FStar_Errors.raise_error uu___7 r in
-                       let check_non_informative_binders =
-                         (FStar_Compiler_List.contains
-                            FStar_Syntax_Syntax.Reifiable quals)
-                           &&
-                           (let uu___7 =
-                              FStar_Syntax_Util.has_attribute attrs
-                                FStar_Parser_Const.allow_informative_binders_attr in
-                            Prims.op_Negation uu___7) in
                        let return_repr =
                          let return_repr_ts =
                            let uu___7 =
@@ -4369,35 +4319,12 @@ let (tc_layered_eff_decl :
                                                   k
                                                   (FStar_TypeChecker_Normalize.remove_uvar_solutions
                                                      env) in
-                                              (let uu___12 =
-                                                 let uu___13 =
-                                                   FStar_Syntax_Subst.compress
-                                                     k1 in
-                                                 uu___13.FStar_Syntax_Syntax.n in
-                                               match uu___12 with
-                                               | FStar_Syntax_Syntax.Tm_arrow
-                                                   (bs1, c) ->
-                                                   let uu___13 =
-                                                     FStar_Syntax_Subst.open_comp
-                                                       bs1 c in
-                                                   (match uu___13 with
-                                                    | (a1::x::bs2, c1) ->
-                                                        let res_t =
-                                                          FStar_Syntax_Util.comp_result
-                                                            c1 in
-                                                        let env1 =
-                                                          FStar_TypeChecker_Env.push_binders
-                                                            env [a1; x] in
-                                                        validate_layered_effect_binders
-                                                          env1 bs2
-                                                          check_non_informative_binders
-                                                          r));
-                                              (let uu___12 =
-                                                 FStar_Compiler_Effect.op_Bar_Greater
-                                                   k1
-                                                   (FStar_Syntax_Subst.close_univ_vars
-                                                      us) in
-                                               (ret_us, ret_t, uu___12))))))) in
+                                              let uu___12 =
+                                                FStar_Compiler_Effect.op_Bar_Greater
+                                                  k1
+                                                  (FStar_Syntax_Subst.close_univ_vars
+                                                     us) in
+                                              (ret_us, ret_t, uu___12)))))) in
                        log_combinator "return_repr" return_repr;
                        (let uu___8 =
                           let bind_repr_ts =
