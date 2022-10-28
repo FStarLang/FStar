@@ -789,6 +789,13 @@ let (check_bqual :
       | (FStar_Pervasives_Native.Some (FStar_Syntax_Syntax.Implicit b01),
          FStar_Pervasives_Native.Some (FStar_Syntax_Syntax.Implicit b11))
           when b01 = b11 -> return ()
+      | (FStar_Pervasives_Native.Some (FStar_Syntax_Syntax.Equality),
+         FStar_Pervasives_Native.Some (FStar_Syntax_Syntax.Equality)) ->
+          return ()
+      | (FStar_Pervasives_Native.Some (FStar_Syntax_Syntax.Meta t1),
+         FStar_Pervasives_Native.Some (FStar_Syntax_Syntax.Meta t2)) ->
+          let uu___ = equal_term t1 t2 in
+          if uu___ then return () else fail "Binder qualifier mismatch"
       | uu___ -> fail "Binder qualifier mismatch"
 let (check_aqual :
   FStar_Syntax_Syntax.aqual -> FStar_Syntax_Syntax.aqual -> unit result) =

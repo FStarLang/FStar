@@ -945,13 +945,15 @@ let t_apply (uopt:bool) (only_match:bool) (tc_resolved_uvars:bool) (tm:term) : t
     let! goal = cur_goal in
     let e = goal_env goal in
     Monad.register_goal e goal.goal_ctx_uvar;    
+    let! tm, typ, guard = __tc e tm in
     if_verbose
-      (fun () -> BU.print3 "t_apply: tm = %s\nt_apply: goal = %s\nenv.gamma=%s\n"
+      (fun () -> BU.print5 "t_apply: tm = %s\nt_apply: goal = %s\nenv.gamma=%s\ntyp=%s\nguard=%s\n"
                         (Print.term_to_string tm)
                         (goal_to_string_verbose goal)
-                        (Env.print_gamma e.gamma);
+                        (Env.print_gamma e.gamma)
+                        (Print.term_to_string typ)
+                        (Rel.guard_to_string e guard);
               ret ());!
-    let! tm, typ, guard = __tc e tm in
     // Focus helps keep the goal order
     let typ = bnorm e typ in
     let! uvs = try_unify_by_application (Some (should_check_goal_uvar goal)) only_match e typ (goal_type goal) (rangeof goal) in

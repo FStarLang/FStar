@@ -90,6 +90,7 @@ let __do_rewrite
       try
         Errors.with_ctx "While typechecking a subterm for ctrl_rewrite" (fun () ->
           (* NS: Should we use Core here? *)
+          
           Some (env.tc_term ({ env with Env.lax = true }) tm))
       with
       | Errors.Error (Errors.Error_LayeredMissingAnnot, _, _, _) -> None
@@ -102,6 +103,7 @@ let __do_rewrite
     if not (TcComm.is_pure_or_ghost_lcomp lcomp) then 
       ret tm (* SHOULD THIS CHECK BE IN maybe_rewrite INSTEAD? *)
     else
+    let g = FStar.TypeChecker.Rel.solve_deferred_constraints env g in
     let typ = lcomp.res_typ in
     let should_check =
       if FStar.TypeChecker.Common.is_total_lcomp lcomp 

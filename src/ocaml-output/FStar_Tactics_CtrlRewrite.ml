@@ -173,7 +173,9 @@ let (__do_rewrite :
                  if uu___2
                  then FStar_Tactics_Monad.ret tm
                  else
-                   (let typ = lcomp.FStar_TypeChecker_Common.res_typ in
+                   (let g1 =
+                      FStar_TypeChecker_Rel.solve_deferred_constraints env g in
+                    let typ = lcomp.FStar_TypeChecker_Common.res_typ in
                     let should_check =
                       let uu___4 =
                         FStar_TypeChecker_Common.is_total_lcomp lcomp in

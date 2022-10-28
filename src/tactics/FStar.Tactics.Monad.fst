@@ -64,11 +64,14 @@ let register_goal (env:Env.env) (uv:S.ctx_uvar) =
       with
       | Inl _ -> ()
       | Inr err ->
+        let msg = 
+          BU.format2 ("Failed to check initial tactic goal %s because %s")
+                              (Print.term_to_string (U.ctx_uvar_typ uv))
+                              (FStar.TypeChecker.Core.print_error_short err)
+        in
+        BU.print_string msg;
         Errors.log_issue uv.ctx_uvar_range
-                         (Err.Warning_FailedToCheckInitialTacticGoal, 
-                         BU.format2 ("Failed to check initial tactic goal %s because %s")
-                             (Print.term_to_string (U.ctx_uvar_typ uv))
-                             (FStar.TypeChecker.Core.print_error_short err))
+                         (Err.Warning_FailedToCheckInitialTacticGoal, msg)
 
 (*
  * A record, so we can keep it somewhat encapsulated and
