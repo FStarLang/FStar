@@ -402,6 +402,12 @@ let check_bqual (b0 b1:bqual)
     | Some (Implicit b0), Some (Implicit b1)
       when b0=b1 ->
       return ()
+    | Some Equality, Some Equality ->
+      return ()
+    | Some (Meta t1), Some (Meta t2) ->
+      if equal_term t1 t2
+      then return ()
+      else fail "Binder qualifier mismatch"
     | _ ->
       fail "Binder qualifier mismatch"
 
