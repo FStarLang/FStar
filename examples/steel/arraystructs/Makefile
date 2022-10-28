@@ -63,7 +63,7 @@ ALL_MODULE_NAMES=$(basename $(ALL_SOURCE_FILES))
 FILTERED_KRML_FILES=$(filter-out FStar_NMST.krml Steel_%.krml,$(ALL_KRML_FILES))
 
 extract: $(FILTERED_KRML_FILES)
-	$(KRML_EXE) -skip-compilation -skip-makefiles -bundle 'FStar.\*,Steel.\*' $^
+	$(KRML_EXE) -skip-compilation -skip-makefiles -bundle 'FStar.\*,Steel.\*,C' $^
 	touch $@
 
 ALL_C_FILES=$(addsuffix .c,$(ALL_MODULE_NAMES))
