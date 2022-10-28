@@ -73,32 +73,23 @@ let bind (a:Type) (b:Type)
 // : Type
 // = repr a r_in r_out b
 
-[@@allow_informative_binders]
 reifiable reflectable
-layered_effect {
-  RSTATE : a:Type -> resource -> (a -> resource) -> Type0 -> Effect
-  with
-  repr = repr;
-  return = returnc;
-  bind = bind
+effect {
+  RSTATE (a:Type) (_:resource) (_:a -> resource) (_:Type0)
+  with {repr = repr;
+        return = returnc;
+        bind = bind}
 }
 
 let return (#a:Type) (#r:a -> resource) (x:a)
 : RSTATE a (r x) r True
 = RSTATE?.reflect (returnc a x r)
 
-assume val elim_pure_wp_monotonicity_forall (_:unit)
-  : Lemma
-    (forall (a:Type) (wp:pure_wp a).
-       (forall (p q:pure_post a).
-          (forall (x:a). p x ==> q x) ==>
-          (wp p ==> wp q)))
-
-let lift_pure_rst (a:Type) (wp:pure_wp a) (r:resource) (f:eqtype_as_type unit -> PURE a wp)
+let lift_pure_rst (a:Type) (wp:pure_wp a) (r:resource) (f:unit -> PURE a wp)
 : Pure (repr a r (fun _ -> r) True)
   (requires wp (fun _ -> True))
   (ensures fun _ -> True)
-= elim_pure_wp_monotonicity_forall ();
+= FStar.Monotonic.Pure.elim_pure_wp_monotonicity_forall ();
   fun _ -> f ()
 
 sub_effect PURE ~> RSTATE = lift_pure_rst

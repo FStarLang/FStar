@@ -7,10 +7,6 @@ open Common
 val wp0 (a : Type u#a) : Type u#(max 1 a)
 let wp0 a = (a -> Type0) -> Type0
 
-// We require monotonicity of them
-let monotonic (w:wp0 'a) =
-  forall p1 p2. (forall x. p1 x ==> p2 x) ==> w p1 ==> w p2
-
 val wp (a : Type u#a) : Type u#(max 1 a)
 let wp a = pure_wp a
 
@@ -109,13 +105,9 @@ let cut #a #w (p:Type0) (f : repr a w) : repr a (cut_wp w p) =
 total
 reifiable
 reflectable
-layered_effect {
-  ID : a:Type -> wp a -> Effect
-  with repr         = repr;
-       return       = return;
-       bind         = bind;
-       subcomp      = subcomp;
-       if_then_else = if_then_else
+effect {
+  ID (a:Type) (_:wp a)
+  with {repr; return; bind; subcomp; if_then_else}
 }
 
 effect Id (a:Type) (pre:Type0) (post:a->Type0) =
@@ -125,7 +117,7 @@ effect I (a:Type) = Id a True (fun _ -> True)
 
 open FStar.Tactics
 
-let lift_pure_nd (a:Type) (wp:wp a) (f:(eqtype_as_type unit -> PURE a wp)) :
+let lift_pure_nd (a:Type) (wp:wp a) (f:unit -> PURE a wp) :
   Pure (repr a wp) (requires True)
                    (ensures (fun _ -> True))
   = fun p _ -> elim_pure f p

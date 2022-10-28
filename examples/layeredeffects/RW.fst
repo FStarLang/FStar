@@ -143,17 +143,15 @@ let if_then_else
         (fun h0 -> ite p (pre1 h0) (pre2 h0))
         (fun h0 x h1 -> ite p (post1 h0 x h1) (post2 h0 x h1))
 
-[@@allow_informative_binders]
 reifiable
 reflectable
-layered_effect {
-  RWI : a:Type -> i:idx -> st_pre -> st_bpost a  -> Effect
-  with
-  repr         = m;
-  return       = return;
-  bind         = bind;
-  subcomp      = subcomp;
-  if_then_else = if_then_else
+effect {
+  RWI (a:Type) (i:idx) (_:st_pre) (_:st_bpost a)
+  with {repr         = m;
+        return       = return;
+        bind         = bind;
+        subcomp      = subcomp;
+        if_then_else = if_then_else}
 }
 
 unfold

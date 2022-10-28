@@ -415,17 +415,15 @@ let subcomp (a:Type) (w0 r0 w1 r1:label) (fs0 fs1:flows) (f:ist a w0 r0 fs0)
     f
 
 reflectable
-layered_effect {
-  IST : a:Type ->
-        w:label ->
-        w:label ->
-        fs:flows ->
-        Effect
-  with
-    repr = ist;
-    return = return;
-    bind = bind;
-    subcomp = subcomp
+effect {
+  IST (a:Type)
+      (r:label)
+      (w:label)
+      (fs:flows)
+  with {repr = ist;
+        return = return;
+        bind = bind;
+        subcomp = subcomp}
 }
 let read (l:loc) : IST int bot (single l) [] = IST?.reflect (iread l)
 let write (l:loc) (x:int) : IST unit (single l) bot [] = IST?.reflect (iwrite l x)

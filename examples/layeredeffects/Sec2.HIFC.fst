@@ -688,7 +688,6 @@ let weaken_flows_append (fs fs':flows)
 
 (*** We now create our HIFC effect *)
 
-[@@allow_informative_binders]
 total
 reifiable
 reflectable

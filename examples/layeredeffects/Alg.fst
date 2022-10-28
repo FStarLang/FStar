@@ -39,7 +39,7 @@ let op_out : op -> Type =
 
 (* Free monad over `op` *)
 noeq
-type tree0 (a:Type u#aa) : Type u#aa =
+type tree0 (a:Type) : Type =
   | Return : a -> tree0 a
   | Op     : op:op -> i:(op_inp op) -> k:(op_out op -> tree0 a) -> tree0 a
 
@@ -54,9 +54,8 @@ let rec abides #a (labs:ops) (f : tree0 a) : prop =
   end
 
 (* Refined free monad *)
-type tree (a:Type u#aa) (labs : list u#0 op)
-  : Type u#aa
-  = r:(tree0 a){abides labs r}
+type tree (a:Type) (labs : list op) : Type =
+  r:(tree0 a){abides labs r}
 
 (***** Some boring list lemmas *****)
 
@@ -177,24 +176,18 @@ let if_then_else
   : Type
   = tree a (labs1@labs2)
 
-[@@allow_informative_binders]
 total
 reifiable
 reflectable
-layered_effect {
-  Alg : a:Type -> ops  -> Effect
-  with
-  repr         = tree;
-  return       = return;
-  bind         = bind;
-  subcomp      = subcomp;
-  if_then_else = if_then_else
+effect {
+  Alg (a:Type) (_:ops)
+  with {repr = tree; return; bind; subcomp; if_then_else}
 }
 
 let lift_pure_alg
  (a:Type)
  (wp : pure_wp a)
- (f : eqtype_as_type unit -> PURE a wp)
+ (f : unit -> PURE a wp)
  : Pure (tree a [])
         (requires (wp (fun _ -> True)))
         (ensures (fun _ -> True))

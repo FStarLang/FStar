@@ -117,13 +117,9 @@ let if_then_else (a : Type)
 total
 reifiable
 reflectable
-layered_effect {
-  DM4A : a:Type -> pre:Type0 -> (squash pre -> w a) -> Effect
-  with repr         = repr;
-       return       = return;
-       bind         = bind;
-       subcomp      = subcomp; 
-       if_then_else = if_then_else
+effect {
+  DM4A (a:Type) (pre:Type0) (_:squash pre -> w a)
+  with {repr; return; bind; subcomp; if_then_else}
 }
 
 (*
@@ -134,7 +130,7 @@ layered_effect {
  *     there is now a check in the typechecker to forbid it,
  *     so the lift below fails
  *)
-let lift_pure_dm4a (a:Type) (wp : pure_wp a) (f:(eqtype_as_type unit -> PURE a wp))
+let lift_pure_dm4a (a:Type) (wp : pure_wp a) (f:unit -> PURE a wp)
   : Tot (repr a (wp (fun _ -> True)) (fun _ -> w_return (f ())))
   = fun _ -> 
       FStar.Monotonic.Pure.elim_pure_wp_monotonicity_forall ();
@@ -145,5 +141,5 @@ let lift_pure_dm4a (a:Type) (wp : pure_wp a) (f:(eqtype_as_type unit -> PURE a w
 [@@expect_failure]
 sub_effect PURE ~> DM4A = lift_pure_dm4a
 
-[@@expect_failure [34]] // why?
+[@@expect_failure [34]]
 let test () : DM4A int True (fun _ -> w_return 5) = 5

@@ -101,38 +101,20 @@ let subcomp
 total
 reifiable
 reflectable
-layered_effect {
-  ST : a:Type -> st:Type0 -> wp st a -> Effect
-  with
-  repr = repr;
-  return = return;
-  bind = bind;
-  if_then_else = if_then_else;
-  subcomp = subcomp
+effect {
+  ST (a:Type) ([@@@ effect_param] st:Type0) (_:wp st a)
+  with {repr; return; bind; subcomp; if_then_else}
 }
 
-let pure_monotonic #a (w : pure_wp a) : Type0 =
-  forall p1 p2. (forall x. p1 x ==> p2 x) ==> w p1 ==> w p2
-
 let lift_pure_st_wp #a #st (w : pure_wp a) : wp st a =
-  assume (pure_monotonic w);
+  FStar.Monotonic.Pure.elim_pure_wp_monotonicity w;
   let r = fun s0 p -> w (fun x -> p x s0) in
   r
-
-//let lift_pure_st a st wp (f : eqtype_as_type unit -> PURE a wp)
-//  : Pure (repr a st (lift_pure_st_wp wp))
-//         (requires (pure_monotonic wp))
-//         (ensures (fun _ -> True))
-//  = fun s0 -> (f (), s0)
-//
-//sub_effect PURE ~> ST = lift_pure_st
 
 let lift_id_st_wp #a #st (w : pure_wp a) : wp st a =
   elim_pure_wp_monotonicity_forall ();
   fun s0 p -> w (fun x -> p x s0)
 
-(* It's odd that I *have* to use the repr here, instead of a thunked
-ID a wp as above. *)
 let lift_id_st a st wp (f : ID2.repr a wp)
   : repr a st (lift_id_st_wp wp)
   = elim_pure_wp_monotonicity_forall ();

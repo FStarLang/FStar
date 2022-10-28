@@ -3,8 +3,6 @@ module LatticeSpec
 open FStar.Tactics
 open FStar.List.Tot
 
-#set-options "--print_universes --print_implicits --print_effect_args"
-
 // GM: Force a type equality by SMT
 let coerce #a #b (x:a{a == b}) : b = x
 
@@ -161,23 +159,13 @@ let if_then_else
            (fun s0 y s1 -> ite b (post1 s0 y s1) (post2 s0 y s1))
            (labs1@labs2)
 
-[@@allow_informative_binders]
 total // need this for catch!!
 reifiable
 reflectable
-layered_effect {
-  EFF : a:Type -> pre_t -> post_t a -> list eff_label -> Effect
-  with
-  repr         = repr;
-  return       = return;
-  bind         = bind;
-  subcomp      = subcomp;
-  if_then_else = if_then_else
+effect {
+  EFF (a:Type) (_:pre_t) (_:post_t a) (_:list eff_label)
+  with {repr; return; bind; subcomp; if_then_else}
 }
-
-unfold
-let pure_monotonic #a (wp : pure_wp a) : Type =
-  forall p1 p2. (forall x. p1 x ==> p2 x) ==> wp p1 ==> wp p2
 
 unfold
 let sp #a (wp : pure_wp a) : pure_post a =
@@ -190,11 +178,10 @@ let post_of_wp #a (wp : pure_wp a) : post_t a =
 let lift_pure_eff
  (a:Type)
  (wp : pure_wp a)
- (f : eqtype_as_type unit -> PURE a wp)
- : Pure (repr a (fun _ -> wp (fun _ -> True)) (post_of_wp wp) [])
-        (requires pure_monotonic wp)
-        (ensures (fun _ -> True))
- = let r (s0:state{wp (fun _ -> True)})
+ (f : unit -> PURE a wp)
+ : repr a (fun _ -> wp (fun _ -> True)) (post_of_wp wp) []
+ = FStar.Monotonic.Pure.elim_pure_wp_monotonicity wp;
+   let r (s0:state{wp (fun _ -> True)})
       : Tot (r:(option a & state){snd r == s0 /\ Some? (fst r) /\ sp wp (Some?.v (fst r))})
    =
     (Some (f ()), s0)

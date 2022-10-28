@@ -162,13 +162,9 @@ let if_then_else (a : Type) (w1 w2 : st_wp a) (f : repr a w1) (g : repr a w2) (b
 total
 reifiable
 reflectable
-layered_effect {
-  AlgWP : a:Type -> st_wp a -> Effect
-  with repr         = repr;
-       return       = return;
-       bind         = bind;
-       subcomp      = subcomp;
-       if_then_else = if_then_else
+effect {
+  AlgWP (a:Type) (_:st_wp a)
+  with {repr; return; bind; subcomp; if_then_else}
 }
 
 let get () : AlgWP state read_wp =
@@ -181,16 +177,16 @@ open FStar.Monotonic.Pure
 
 unfold
 let lift_pure_wp (#a:Type) (wp : pure_wp a) : st_wp a =
-  elim_pure_wp_monotonicity_forall ();
+  elim_pure_wp_monotonicity wp;
   fun s0 p -> wp (fun x -> p (x, s0))
 
-let lift_pure_algwp (a:Type) wp (f:(eqtype_as_type unit -> PURE a wp))
+let lift_pure_algwp (a:Type) wp (f:unit -> PURE a wp)
   : Pure (repr a (lift_pure_wp wp)) // can't call f() here, so lift its wp instead
          (requires (wp (fun _ -> True)))
          (ensures (fun _ -> True))
   =
     let v : a = elim_pure f (fun _ -> True) in
-    FStar.Monotonic.Pure.elim_pure_wp_monotonicity_forall (); // need this lemma
+    FStar.Monotonic.Pure.elim_pure_wp_monotonicity wp; // need this lemma
     assert (forall p. wp p ==> p v); // this is key fact needed for the proof
     assert_norm (stronger (lift_pure_wp wp) (return_wp v));
     Return v
@@ -211,16 +207,6 @@ let add_via_state (x y : int) : AlgWP int (fun s0 p -> p ((x+y), s0)) =
   let r = get () in
   put o;
   r
-
-
-// Why does this admit fail? Only with the 'rec'...
-//
-// let rec interp_sem #a #wp (t : repr a wp) (s0:state)
-//   : PURE (a & state) (fun p -> wp s0 p)
-//   = admit ()
-//
-// literally zero difference in the VC a tactic sees. Also, seems only
-// for the builtin Pure???
 
 let rec interp_sem #a (t : rwtree a) (s0:state)
   : ID5.ID (a & state) (as_pure_wp (interp_as_wp t s0))

@@ -85,13 +85,9 @@ let default_if_then_else (a:Type) (wp:wp a) (f:repr a wp) (g:repr a wp) (p:bool)
 total
 reifiable
 reflectable
-layered_effect {
-  ID : a:Type -> wp a -> Effect
-  with repr         = repr;
-       return       = return;
-       bind         = bind;
-       subcomp      = subcomp;
-       if_then_else = if_then_else
+effect {
+  ID (a:Type) (_:wp a)
+  with {repr; return; bind; subcomp; if_then_else}
 }
 
 effect Id (a:Type) (pre:Type0) (post:a->Type0) =
@@ -102,7 +98,7 @@ effect I (a:Type) = Id a True (fun _ -> True)
 open FStar.Tactics
 
 let elim_pure #a #wp ($f : unit -> PURE a wp) p
- : Pure a (requires (wp p)) (ensures (fun r -> p r)) by (dump "")
+ : Pure a (requires (wp p)) (ensures (fun r -> p r))
  = FStar.Monotonic.Pure.elim_pure_wp_monotonicity_forall ();
    f ()
 

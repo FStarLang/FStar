@@ -19,9 +19,9 @@ let bind (a:Type u#aa) (b : Type u#bb) (i1 i2 : int)
     : Tot (repr b (i1+i2)) =
     raise_val (i1+i2)
 
-layered_effect {
-  Alg : a:Type -> int -> Effect
-  with
+effect {
+  Alg (a:Type) (_:int)
+  with {repr; return; bind}
   repr         = repr;
   bind         = bind;
   return       = return

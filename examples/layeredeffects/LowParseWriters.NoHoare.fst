@@ -91,14 +91,13 @@ let read_if_then_else (a:Type)
 = read_repr a l_g
 
 reifiable reflectable total
-layered_effect {
-  TRead : a:Type -> (memory_invariant) -> Effect
-  with
-  repr = read_repr;
-  return = read_return;
-  bind = read_bind;
-  subcomp = read_subcomp;
-  if_then_else = read_if_then_else
+effect {
+  TRead (a:Type) (_:memory_invariant)
+  with {repr = read_repr;
+        return = read_return;
+        bind = read_bind;
+        subcomp = read_subcomp;
+        if_then_else = read_if_then_else}
 }
 
 inline_for_extraction
@@ -113,7 +112,7 @@ let lift_pure_read_conv (a:Type) (wp:pure_wp a)
 inline_for_extraction
 let lift_pure_read' (a:Type) (wp:pure_wp a)
   (l: memory_invariant)
-  (f_pure: eqtype_as_type unit -> PURE a wp)
+  (f_pure:unit -> PURE a wp)
 : Pure (read_repr a l)
   (requires (wp (fun _ -> True)))
   (ensures (fun _ -> True))
@@ -423,18 +422,14 @@ let if_then_else (a:Type)
 : Tot Type
 = repr a r_in_g r_out_g l_g
 
-// [@@smt_reifiable_layered_effect]
-
-[@@allow_informative_binders]
 reifiable reflectable total
-layered_effect {
-  TWrite : a:Type -> (pin: parser) -> (pout: (parser)) -> (memory_invariant) -> Effect
-  with
-  repr = repr;
-  return = returnc;
-  bind = bind;
-  subcomp = subcomp;
-  if_then_else = if_then_else
+effect {
+  TWrite (a:Type) (pin: parser) (pout:parser) (_:memory_invariant)
+  with {repr;
+        return = returnc;
+        bind;
+        subcomp;
+        if_then_else}
 }
 
 inline_for_extraction

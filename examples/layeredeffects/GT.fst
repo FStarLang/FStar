@@ -60,28 +60,23 @@ let if_then_else (a:Type) (i:idx) (f : m a i) (g : m a i) (b : bool) : Type = m 
 //     e.g. the [idx] in [return] needs to come after [x], otherwise
 //     we get an assertion failure trying to prove [forall (a: Type). idx == a].
 
-[@@allow_informative_binders]
 reifiable
 reflectable
-layered_effect {
-  GTD : a:Type -> idx -> Effect
-  with
-  repr         = m;
-  return       = return;
-  bind         = bind;
-  subcomp      = subcomp;
-  if_then_else = if_then_else
+effect {
+  GTD (a:Type) ([@@@ effect_param] _:idx)
+  with {repr = m; return; bind; subcomp; if_then_else}
 }
 
 let lift_pure_gtd (a:Type) (wp : pure_wp a) (i : idx)
-                  (f : eqtype_as_type unit -> PURE a wp)
+                  (f : unit -> PURE a wp)
                  : Pure (m a i)
-                        (requires (wp (fun _ -> True) /\ (forall p1 p2. (forall x. p1 x ==> p2 x) ==> wp p1 ==> wp p2)))
+                        (requires (wp (fun _ -> True)))
                         (ensures (fun _ -> True))
  = //f
  // GM: Surprised that this works actually... I expected that I would need to
  //     case analyze [i].
  // GM: ok not anymore
+ FStar.Monotonic.Pure.elim_pure_wp_monotonicity wp;
  match i with
  | T -> f
  | G -> f
@@ -122,9 +117,6 @@ let labs #i (n:int) : GTD nat i =
   then -n
   else n
 
-// GM: This fails, which I think makes sense since the effect
-//     doesn't carry any logical payload, so the assume gets lost?
-[@@expect_failure]
 let test #a #i (n:int) : GTD nat i =
   let r = labs0 n in
   assume (r >= 0);

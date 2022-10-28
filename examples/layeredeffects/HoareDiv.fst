@@ -63,28 +63,19 @@ let if_then_else (a:Type)
   (fun x -> (p ==> ens_then x) /\ ((~ p) ==> ens_else x))
 
 
-reifiable reflectable
-layered_effect {
-  HoareDiv : a:Type -> req:Type0 -> ens:(a -> Type0) -> Effect
-  with
-  repr = repr;
-  return = return;
-  bind = bind;
-  subcomp = subcomp;
-  if_then_else = if_then_else
+reifiable
+reflectable
+effect {
+  HoareDiv (a:Type) (req:Type0) (ens:a -> Type0)
+  with {repr; return; bind; subcomp; if_then_else}
 }
 
-assume WP_pure_monotonic:
-  forall (a:Type) (wp:pure_wp a).
-    (forall (p q:pure_post a).
-       (forall (x:a). p x ==> q x) ==>
-       (wp p ==> wp q))
-
-let lift_pure_meff (a:Type) (wp:pure_wp a) (f:eqtype_as_type unit -> PURE a wp)
+let lift_pure_meff (a:Type) (wp:pure_wp a) (f:unit -> PURE a wp)
 : repr a
   (wp (fun _ -> True))
   (fun x -> ~ (wp (fun r -> r =!= x)))
-= fun _ -> f ()
+= FStar.Monotonic.Pure.elim_pure_wp_monotonicity wp;
+  fun _ -> f ()
 
 sub_effect PURE ~> HoareDiv = lift_pure_meff
 

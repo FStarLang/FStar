@@ -173,37 +173,28 @@ let if_then_else
 : Type
 = repr a st0 st1 (labs1@labs2)
 
-[@@allow_informative_binders]
 total
 reifiable
 reflectable
-layered_effect {
-  EFF : a:Type -> Type0 -> Type0 -> erased (list eff_label)  -> Effect // would be nice to get this from repr
-  with
-  repr         = repr;
-  return       = return;
-  bind         = bind;
-  subcomp      = subcomp;
-  if_then_else = if_then_else
+effect {
+  EFF (a:Type) (_:Type0) (_:Type0) (_:erased (list eff_label))
+  with {repr         = repr;
+        return       = return;
+        bind         = bind;
+        subcomp      = subcomp;
+        if_then_else = if_then_else}
 }
-
-unfold
-let pure_monotonic #a (wp : pure_wp a) : Type =
-  forall p1 p2. (forall x. p1 x ==> p2 x) ==> wp p1 ==> wp p2
-
-//unfold
-//let sp #a (wp : pure_wp a) : pure_post a =
-//  fun x -> ~ (wp (fun y -> ~(x == y)))
 
 let lift_pure_eff
  (a:Type)
  (s:Type)
  (wp : pure_wp a)
- (f : eqtype_as_type unit -> PURE a wp)
+ (f : unit -> PURE a wp)
  : Pure (repr a s s [])
-        (requires (wp (fun _ -> True) /\ pure_monotonic wp))
+        (requires (wp (fun _ -> True)))
         (ensures (fun _ -> True))
- = Return (f ())
+ = FStar.Monotonic.Pure.elim_pure_wp_monotonicity wp;
+   Return (f ())
 
 sub_effect PURE ~> EFF = lift_pure_eff
 

@@ -77,9 +77,6 @@ effect {
   with {repr; return; bind; if_then_else; subcomp}
 }
 
-let pure_monotonic #a (w : pure_wp a) : Type0 =
-  forall p1 p2. (forall x. p1 x ==> p2 x) ==> w p1 ==> w p2
-
 unfold
 let lift_wp (#a:Type) (#st:Type0) (w:pure_wp a) : wp st a =
   elim_pure_wp_monotonicity_forall ();
