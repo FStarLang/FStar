@@ -700,11 +700,14 @@ let (solve_deferred_to_tactic_goals :
                           | (uu___6, t_eq, uu___7) ->
                               let goal_ty =
                                 let uu___8 =
-                                  env2.FStar_TypeChecker_Env.universe_of
-                                    env_lax t_eq in
-                                FStar_Syntax_Util.mk_eq2 uu___8 t_eq
-                                  tp.FStar_TypeChecker_Common.lhs
-                                  tp.FStar_TypeChecker_Common.rhs in
+                                  let uu___9 =
+                                    env2.FStar_TypeChecker_Env.universe_of
+                                      env_lax t_eq in
+                                  FStar_Syntax_Util.mk_eq2 uu___9 t_eq
+                                    tp.FStar_TypeChecker_Common.lhs
+                                    tp.FStar_TypeChecker_Common.rhs in
+                                FStar_Syntax_Util.mk_squash
+                                  FStar_Syntax_Syntax.U_zero uu___8 in
                               let uu___8 =
                                 FStar_TypeChecker_Env.new_implicit_var_aux
                                   reason

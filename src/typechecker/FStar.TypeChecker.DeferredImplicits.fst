@@ -249,7 +249,10 @@ let solve_deferred_to_tactic_goals env g =
           in
           env.typeof_tot_or_gtot_term env_lax t true  //AR: TODO: can we call type_of_well_typed?
         in
-        let goal_ty = U.mk_eq2 (env.universe_of env_lax t_eq) t_eq tp.lhs tp.rhs in
+        let goal_ty =
+          U.mk_squash
+            U_zero
+            (U.mk_eq2 (env.universe_of env_lax t_eq) t_eq tp.lhs tp.rhs) in
         let goal, ctx_uvar, _ =
             Env.new_implicit_var_aux reason tp.lhs.pos env goal_ty Strict None
         in
