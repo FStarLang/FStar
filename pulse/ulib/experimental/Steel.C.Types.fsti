@@ -329,9 +329,9 @@ val ghost_struct_field
 
 [@@noextract_to "krml"] // primitive
 val struct_field
-  (#opened: _)
   (#tn: Type0)
   (#tf: Type0)
+  (#opened: _)
   (#n: string)
   (#fields: field_description_t tf)
   (#v: Ghost.erased (struct_t0 tn n fields))
