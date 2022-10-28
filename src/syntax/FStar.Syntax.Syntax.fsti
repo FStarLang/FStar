@@ -154,6 +154,7 @@ and ctx_uvar_and_subst = ctx_uvar * subst_ts
 
 and uvar_decoration = {
   uvar_decoration_typ:typ;
+  uvar_decoration_typedness_depends_on:list ctx_uvar;
   uvar_decoration_should_check:should_check_uvar;
 }
 

@@ -254,6 +254,8 @@ let (new_uvar :
                   let decoration =
                     {
                       FStar_Syntax_Syntax.uvar_decoration_typ = k;
+                      FStar_Syntax_Syntax.uvar_decoration_typedness_depends_on
+                        = [];
                       FStar_Syntax_Syntax.uvar_decoration_should_check =
                         should_check
                     } in
@@ -1344,6 +1346,8 @@ let set_uvar :
                  {
                    FStar_Syntax_Syntax.uvar_decoration_typ =
                      (uu___2.FStar_Syntax_Syntax.uvar_decoration_typ);
+                   FStar_Syntax_Syntax.uvar_decoration_typedness_depends_on =
+                     (uu___2.FStar_Syntax_Syntax.uvar_decoration_typedness_depends_on);
                    FStar_Syntax_Syntax.uvar_decoration_should_check =
                      should_check
                  } in
@@ -14549,40 +14553,42 @@ and (resolve_implicits' :
                          | {
                              FStar_Syntax_Syntax.uvar_decoration_typ =
                                uvar_decoration_typ;
+                             FStar_Syntax_Syntax.uvar_decoration_typedness_depends_on
+                               = uu___3;
                              FStar_Syntax_Syntax.uvar_decoration_should_check
                                = uvar_decoration_should_check;_}
                              ->
-                             ((let uu___4 =
+                             ((let uu___5 =
                                  FStar_Compiler_Effect.op_Less_Bar
                                    (FStar_TypeChecker_Env.debug env)
                                    (FStar_Options.Other "Rel") in
-                               if uu___4
+                               if uu___5
                                then
-                                 let uu___5 =
-                                   FStar_Syntax_Print.term_to_string tm in
                                  let uu___6 =
+                                   FStar_Syntax_Print.term_to_string tm in
+                                 let uu___7 =
                                    FStar_Syntax_Print.ctx_uvar_to_string
                                      ctx_u in
-                                 let uu___7 =
+                                 let uu___8 =
                                    FStar_Compiler_Util.string_of_bool is_tac in
                                  FStar_Compiler_Util.print3
                                    "resolve_implicits' loop, imp_tm = %s and ctx_u = %s, is_tac: %s\n"
-                                   uu___5 uu___6 uu___7
+                                   uu___6 uu___7 uu___8
                                else ());
                               if
                                 FStar_Syntax_Syntax.uu___is_Allow_unresolved
                                   uvar_decoration_should_check
                               then until_fixpoint (out, true) tl
                               else
-                                (let uu___5 = unresolved ctx_u in
-                                 if uu___5
+                                (let uu___6 = unresolved ctx_u in
+                                 if uu___6
                                  then
                                    (if flex_uvar_has_meta_tac ctx_u
                                     then
                                       let t = run_meta_arg_tac ctx_u in
                                       let extra =
-                                        let uu___6 = teq_nosmt env t tm in
-                                        match uu___6 with
+                                        let uu___7 = teq_nosmt env t tm in
+                                        match uu___7 with
                                         | FStar_Pervasives_Native.None ->
                                             failwith
                                               "resolve_implicits: unifying with an unresolved uvar failed?"
@@ -14746,10 +14752,10 @@ and (resolve_implicits' :
                                             =
                                             (hd.FStar_TypeChecker_Common.imp_range)
                                         } in
-                                      let tm_ok_for_tac uu___8 =
-                                        let uu___9 =
+                                      let tm_ok_for_tac uu___9 =
+                                        let uu___10 =
                                           is_implicit_resolved env1 hd1 in
-                                        if uu___9
+                                        if uu___10
                                         then
                                           (if
                                              env1.FStar_TypeChecker_Env.phase1
@@ -14760,8 +14766,8 @@ and (resolve_implicits' :
                                         else FStar_Pervasives_Native.None in
                                       if is_tac
                                       then
-                                        let uu___8 = tm_ok_for_tac () in
-                                        match uu___8 with
+                                        let uu___9 = tm_ok_for_tac () in
+                                        match uu___9 with
                                         | FStar_Pervasives_Native.None ->
                                             until_fixpoint (out, true) tl
                                         | FStar_Pervasives_Native.Some
@@ -14784,9 +14790,9 @@ and (resolve_implicits' :
                                                  :: out), changed) tl
                                          | FStar_Pervasives_Native.Some imps
                                              ->
-                                             let uu___9 =
-                                               let uu___10 =
-                                                 let uu___11 =
+                                             let uu___10 =
+                                               let uu___11 =
+                                                 let uu___12 =
                                                    FStar_Compiler_Effect.op_Bar_Greater
                                                      imps
                                                      (FStar_Compiler_List.map
@@ -14794,9 +14800,9 @@ and (resolve_implicits' :
                                                            (i,
                                                              Implicit_unresolved))) in
                                                  FStar_Compiler_List.op_At
-                                                   uu___11 out in
-                                               (uu___10, true) in
-                                             until_fixpoint uu___9 tl))))))) in
+                                                   uu___12 out in
+                                               (uu___11, true) in
+                                             until_fixpoint uu___10 tl))))))) in
         until_fixpoint ([], false) implicits
 and (resolve_implicits :
   FStar_TypeChecker_Env.env ->

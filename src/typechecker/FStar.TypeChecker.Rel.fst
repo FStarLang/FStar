@@ -125,7 +125,8 @@ let as_wl_deferred wl (d:deferred): list (int * deferred_reason * lstring * prob
 let new_uvar reason wl r gamma binders k should_check meta : ctx_uvar * term * worklist =
     let decoration = {
              uvar_decoration_typ = k;
-             uvar_decoration_should_check = should_check
+             uvar_decoration_should_check = should_check;
+             uvar_decoration_typedness_depends_on = []
         }
     in
     let ctx_uvar = {

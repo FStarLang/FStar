@@ -2436,6 +2436,9 @@ let ctx_uvar_should_check (u:ctx_uvar) =
 let ctx_uvar_typ (u:ctx_uvar) = 
     (Unionfind.find_decoration u.ctx_uvar_head).uvar_decoration_typ
 
+let ctx_uvar_typedness_deps (u:ctx_uvar) = 
+    (Unionfind.find_decoration u.ctx_uvar_head).uvar_decoration_typedness_depends_on
+
 let flatten_refinement t =
   let rec aux t unascribe =
     let t = compress t in

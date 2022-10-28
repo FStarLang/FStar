@@ -108,7 +108,7 @@ val add_implicits : implicits -> tac unit
 
 (* Create a new uvar, and keep track of it in the proofstate to
  * ensure we solve it. *)
-val new_uvar : string -> env -> typ -> option should_check_uvar -> Range.range -> tac (term * ctx_uvar)
+val new_uvar : string -> env -> typ -> option should_check_uvar -> list ctx_uvar -> Range.range -> tac (term * ctx_uvar)
 
 (* Create a squashed goal from a given formula *)
 val mk_irrelevant_goal : string -> env -> typ -> Range.range -> O.optionstate -> string -> tac goal
@@ -133,7 +133,8 @@ val log : proofstate -> (unit -> unit) -> unit
 (* As above, but as a tac<> with an implicit bind for brevity *)
 val mlog : (unit -> unit) -> (unit -> tac 'a) -> tac 'a
 
-val if_verbose: (unit -> tac unit) -> tac unit
+val if_verbose_tac: (unit -> tac unit) -> tac unit
+val if_verbose: (unit -> unit) -> tac unit
 
 (* Discard the implicits in the proofstate that are already
  * solved, only matters for performance. *)

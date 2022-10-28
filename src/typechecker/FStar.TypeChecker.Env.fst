@@ -1768,7 +1768,7 @@ let close_guard env binders g =
 (* ------------------------------------------------*)
 
 (* Generating new implicit variables *)
-let new_tac_implicit_var reason r env k should_check meta =
+let new_tac_implicit_var reason r env k should_check uvar_typedness_deps meta =
     match U.destruct k FStar.Parser.Const.range_of_lid with
      | Some [_; (tm, _)] ->
        let t = S.mk (S.Tm_constant (FStar.Const.Const_range tm.pos)) tm.pos in
@@ -1779,6 +1779,7 @@ let new_tac_implicit_var reason r env k should_check meta =
       let gamma = env.gamma in
       let decoration = {
              uvar_decoration_typ = k;
+             uvar_decoration_typedness_depends_on = uvar_typedness_deps;
              uvar_decoration_should_check = should_check;
           }
       in
@@ -1803,7 +1804,7 @@ let new_tac_implicit_var reason r env k should_check meta =
       t, [(ctx_uvar, r)], g
 
 let new_implicit_var_aux reason r env k should_check meta =
-  new_tac_implicit_var reason r env k should_check meta
+  new_tac_implicit_var reason r env k should_check [] meta
 
 (***************************************************)
 
