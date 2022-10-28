@@ -183,7 +183,15 @@ val field_t_nil: Type0
 [@@noextract_to "krml"] // primitive
 val field_t_cons (fn: Type0) (ft: Type0) (fc: Type0): Type0
 
-inline_for_extraction [@@noextract_to "krml"]
+val norm_field_attr : unit
+
+noextract
+let norm_field_steps = [
+  delta_attr [`%norm_field_attr];
+  iota; zeta; primops;
+]
+
+inline_for_extraction [@@noextract_to "krml"; norm_field_attr]
 noeq
 type field_description_t (t: Type0) : Type u#1 = {
   fd_def: (string -> GTot bool);
@@ -201,7 +209,7 @@ let field_description_nil : field_description_t field_t_nil = {
   fd_typedef = (fun _ -> false_elim ());
 }
 
-inline_for_extraction [@@noextract_to "krml"]
+inline_for_extraction [@@noextract_to "krml"; norm_field_attr]
 let field_description_cons0
   (fn: Type0) (#ft: Type0) (#fc: Type0) (n: string) (t: typedef ft) (fd: field_description_t fc)
 : Tot (field_description_t (field_t_cons fn ft fc))
@@ -211,7 +219,7 @@ let field_description_cons0
     fd_typedef = (fun n' -> if n = n' then t else fd.fd_typedef n');
   }
 
-inline_for_extraction [@@noextract_to "krml"]
+inline_for_extraction [@@noextract_to "krml"; norm_field_attr]
 let field_description_cons (#ft: Type0) (#fc: Type0) (n: string) (#fn: Type0) (# [ solve_mk_string_t ()] prf: squash (norm norm_typestring (mk_string_t n == fn))) (t: typedef ft) (fd: field_description_t fc) : Tot (field_description_t (field_t_cons fn ft fc)) =
   field_description_cons0 fn #ft #fc n t fd
 
@@ -328,7 +336,28 @@ val ghost_struct_field
     (fun _ -> pts_to r (struct_set_field field (unknown (fields.fd_typedef field)) v) `star` pts_to (g_struct_field r field) (struct_get_field v field))
 
 [@@noextract_to "krml"] // primitive
-val struct_field
+val struct_field0
+  (#tn: Type0)
+  (#tf: Type0)
+  (t': Type0)
+  (#opened: _)
+  (#n: string)
+  (#fields: field_description_t tf)
+  (#v: Ghost.erased (struct_t0 tn n fields))
+  (r: ref (struct0 tn n fields))
+  (field: field_t fields)
+  (td': typedef t' {
+    t' ==  fields.fd_type field /\
+    td' == fields.fd_typedef field
+  })
+: SteelAtomicBase (ref td') false opened Unobservable
+    (pts_to r v)
+    (fun r' -> pts_to r (struct_set_field field (unknown (fields.fd_typedef field)) v) `star` pts_to r' (struct_get_field v field))
+    (fun _ -> True)
+    (fun _ r' _ -> r' == g_struct_field r field)
+
+inline_for_extraction [@@noextract_to "krml"] // primitive
+let struct_field
   (#tn: Type0)
   (#tf: Type0)
   (#opened: _)
@@ -337,11 +366,16 @@ val struct_field
   (#v: Ghost.erased (struct_t0 tn n fields))
   (r: ref (struct0 tn n fields))
   (field: field_t fields)
-: SteelAtomicBase (ref (fields.fd_typedef field)) false opened Unobservable
+: SteelAtomicBase (ref #(norm norm_field_steps (fields.fd_type field)) (fields.fd_typedef field)) false opened Unobservable
     (pts_to r v)
-    (fun r' -> pts_to r (struct_set_field field (unknown (fields.fd_typedef field)) v) `star` pts_to r' (struct_get_field v field))
+    (fun r' -> pts_to r (struct_set_field field (unknown (fields.fd_typedef field)) v) `star` pts_to #(norm norm_field_steps (fields.fd_type field)) r' (struct_get_field v field))
     (fun _ -> True)
     (fun _ r' _ -> r' == g_struct_field r field)
+= struct_field0
+    (norm norm_field_steps (fields.fd_type field))
+    r
+    field
+    (fields.fd_typedef field)
 
 val unstruct_field
   (#opened: _)

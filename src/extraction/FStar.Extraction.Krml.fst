@@ -1064,8 +1064,9 @@ IsNull nodes should be added to the KaRaMeL AST *)
                ; _ (* v *)
                ; r
                ; ({expr=MLE_Const (MLC_String field_name)})
+               ; _ (* td' *)
              ])
-    when string_of_mlpath p = "Steel.C.Types.struct_field" ->
+    when string_of_mlpath p = "Steel.C.Types.struct_field0" ->
       EAddrOf (EField (
         TQualified (must (lident_of_string struct_name)),
         EBufRead (translate_expr env r, EQualified (["C"], "_zero_for_deref")),
