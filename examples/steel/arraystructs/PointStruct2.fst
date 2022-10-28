@@ -13,7 +13,6 @@ let swap (#v1 #v2: Ghost.erased U32.t) (r1 r2: ref (scalar U32.t)) : SteelT unit
   write r2 x1;
   return () // necessary to enable smt_fallback
 
-(*
 noextract
 inline_for_extraction
 let point_fields =
@@ -21,10 +20,10 @@ let point_fields =
   field_description_cons "y" (scalar U32.t) (
   field_description_nil))
 
-let _ = define_struct "PointStruct.point" point_fields
+let _ = define_struct "PointStruct2.point" point_fields
 
 inline_for_extraction noextract
-let point = struct "PointStruct.point" point_fields
+let point = struct "PointStruct2.point" point_fields
 
 #push-options "--query_stats --fuel 0"
 
@@ -48,4 +47,5 @@ let swap_struct (p: ref point) (v: Ghost.erased (typeof point))
   unstruct_field p "x" px;
   unstruct_field p "y" py;
   return _
-*)
+
+#pop-options

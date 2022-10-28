@@ -455,7 +455,12 @@ let rec translate_type_without_decay env t: typ =
     BU.starts_with (Syntax.string_of_mlpath p) "Steel.C.StructLiteral.struct'"
     ->
       TQualified (must (lident_of_typestring tag))
-  
+
+  | MLTY_Named ([tag; _; _; _], p) when
+    BU.starts_with (Syntax.string_of_mlpath p) "Steel.C.Types.struct_t0"
+    ->
+      TQualified (must (lident_of_typestring tag))
+
   | MLTY_Named ([tag; _], p) when
     BU.starts_with (Syntax.string_of_mlpath p) "Steel.C.UnionLiteral.union"
     ->
@@ -1052,6 +1057,20 @@ IsNull nodes should be added to the KaRaMeL AST *)
         EBufRead (translate_expr env r, EConstant (UInt32, "0")),
         field_name))
 
+  | MLE_App ({expr=MLE_TApp ({expr=MLE_Name p}, _)},
+             [_ (* opened *)
+               ; ({expr=MLE_Const (MLC_String struct_name)})
+               ; _ (* fields *)
+               ; _ (* v *)
+               ; r
+               ; ({expr=MLE_Const (MLC_String field_name)})
+             ])
+    when string_of_mlpath p = "Steel.C.Types.struct_field" ->
+      EAddrOf (EField (
+        TQualified (must (lident_of_string struct_name)),
+        EBufRead (translate_expr env r, EQualified (["C"], "_zero_for_deref")),
+        field_name))
+
   | MLE_App ({expr=MLE_TApp ({expr=MLE_Name p}, [_; _; union_name])},
              [_; {expr=MLE_Const (MLC_String field_name)}; r])
     when string_of_mlpath p = "Steel.C.UnionLiteral.addr_of_union_field''" ->
@@ -1291,27 +1310,25 @@ and translate_constant c: expr =
 and mk_op_app env w op args =
   EApp (EOp (op, w), List.map (translate_expr env) args)
 
-let translate_type_decl env ty: option decl =
-  if List.mem Syntax.NoExtract ty.tydecl_meta then
-    None
-  else
-    // JL: TODO: hoist?
-    let parse_fields (fields: mlty): option (list _) =
+let parse_steel_c_fields env (fields: mlty): option (list _) =
       let rec go fields =
         match fields with
         | MLTY_Named ([], p)
           when Syntax.string_of_mlpath p = "Steel.C.Fields.c_fields_t_nil"
+          || Syntax.string_of_mlpath p = "Steel.C.Types.field_t_nil"
           -> Some []
           
         | MLTY_Named ([field; t; fields], p)
           when Syntax.string_of_mlpath p = "Steel.C.Fields.c_fields_t_cons"
+          || Syntax.string_of_mlpath p = "Steel.C.Types.field_t_cons"
           ->
           opt_bind (string_of_typestring field) (fun field ->
           if field = "" then go fields else
           opt_bind (go fields) (fun fields ->
           Some ((field, t) :: fields)))
-  
-        | _ -> None
+
+        | _ ->
+          None
       in
       match go fields with
       | None ->
@@ -1335,12 +1352,14 @@ let translate_type_decl env ty: option decl =
                    (FStar.Extraction.ML.Code.string_of_mlty ([], "") ty);
                  (field, translate_type_without_decay env ty))
               fields)
-    in
-    match ty with
-    | {tydecl_defn=Some (MLTD_Abbrev (MLTY_Named ([tag; fields], p)))}
-      when Syntax.string_of_mlpath p = "Steel.C.StructLiteral.mk_struct_def"
-      ->
-      begin
+
+let translate_type_decl env ty: option decl =
+  if List.mem Syntax.NoExtract ty.tydecl_meta then
+    None
+  else
+    let define_struct
+      tag fields
+    =
         (* JL: TODO remove/improve these print commands *)
         print_endline "Parsing struct definition.";
         begin match lident_of_typestring tag with
@@ -1349,11 +1368,21 @@ let translate_type_decl env ty: option decl =
             (FStar.Extraction.ML.Code.string_of_mlty ([], "") tag);
           None
         | Some p ->
-          let fields = must (parse_fields fields) in
+          let fields = must (parse_steel_c_fields env fields) in
           Some (DTypeFlat (p, [], 0,
             List.map (fun (field, ty) -> (field, (ty, true))) fields))
         end
-      end
+    in
+    match ty with
+    | {tydecl_defn=Some (MLTD_Abbrev (MLTY_Named ([tag; fields], p)))}
+      when Syntax.string_of_mlpath p = "Steel.C.StructLiteral.mk_struct_def"
+      ->
+      define_struct tag fields
+
+    | {tydecl_defn=Some (MLTD_Abbrev (MLTY_Named ([tag; fields; _; _], p)))}
+      when Syntax.string_of_mlpath p = "Steel.C.Types.define_struct0"
+      ->
+      define_struct tag fields
 
     | {tydecl_defn=Some (MLTD_Abbrev (MLTY_Named ([tag; fields], p)))}
       when Syntax.string_of_mlpath p = "Steel.C.UnionLiteral.mk_union_def"
@@ -1367,7 +1396,7 @@ let translate_type_decl env ty: option decl =
             (FStar.Extraction.ML.Code.string_of_mlty ([], "") tag);
           None
         | Some p ->
-          let fields = must (parse_fields fields) in
+          let fields = must (parse_steel_c_fields env fields) in
           Some (DUntaggedUnion (p, [], 0, fields))
         end
       end
