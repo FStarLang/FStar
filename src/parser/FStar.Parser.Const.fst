@@ -359,7 +359,6 @@ let preprocess_with = p2l ["FStar"; "Tactics"; "Effect"; "preprocess_with"]
 let postprocess_extr_with = p2l ["FStar"; "Tactics"; "Effect"; "postprocess_for_extraction_with"]
 let check_with_lid = lid_of_path (["FStar"; "Reflection"; "Builtins"; "check_with"]) FStar.Compiler.Range.dummyRange
 let commute_nested_matches_lid = psconst "commute_nested_matches"
-let allow_informative_binders_attr = psconst "allow_informative_binders"
 let remove_unused_type_parameters_lid = psconst "remove_unused_type_parameters"
 let ite_soundness_by_attr = psconst "ite_soundness_by"
 let default_effect_attr = psconst "default_effect"

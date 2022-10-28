@@ -156,8 +156,6 @@ let handle_smt_goals = ()
 
 let erasable = ()
 
-let allow_informative_binders = ()
-
 let commute_nested_matches = ()
 
 let noextract_to _ = ()

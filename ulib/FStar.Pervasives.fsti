@@ -955,16 +955,6 @@ val handle_smt_goals : unit
     see https://github.com/FStarLang/FStar/issues/1844 *)
 val erasable : unit
 
-(** THIS ATTRIBUTE CAN BREAK EXTRACTION SOUNDNESS, USE WITH CARE
-
-    Combinators for reifiable layered effects must have binders with
-    non-informative types, since at extraction time, those binders are
-    substituted with ().
-    This attribute can be added to a layered effect definition to skip this
-    check, i.e. adding it will allow informative binder types, but then
-    the code should not be extracted *)
-val allow_informative_binders : unit
-
 (** [commute_nested_matches]
     This attribute can be used to decorate an inductive type [t]
 

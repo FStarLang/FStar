@@ -170,29 +170,6 @@ let validate_degenerate_effect env (u:univ_name) (return_term:term) (return_typ:
 
   Rel.force_trivial_guard env g
 
-
-(*
- * If the flag check_non_informative_binders is set, additionally checks
- *   binders have non-informative types
- *
- * To check for non_informativeness, we do some normalization, so bs well-typedness is required
- *)
-let validate_layered_effect_binders env (bs:binders) (check_non_informatve_binders:bool) (r:Range.range)
-: unit
-= if check_non_informatve_binders
-  then
-    let _, informative_binders = List.fold_left (fun (env, bs) b ->
-      let env = Env.push_binders env [b] in
-      if N.non_info_norm env b.binder_bv.sort
-      then (env, bs)
-      else (env, b::bs)) (env, []) bs in
-    if List.length informative_binders <> 0 then
-      raise_error (Errors.Fatal_UnexpectedEffect,
-        BU.format1 "Binders %s are informative while the effect is reifiable"
-          (Print.binders_to_string "; " informative_binders)) r
-    else ()
-  else ()
-
 let (let?) (#a #b:Type) (f:option a) (g:a -> option b) : option b =
   match f with
   | None -> None
@@ -1215,10 +1192,6 @@ Errors.with_ctx (BU.format1 "While checking layered effect definition `%s`" (str
         (string_of_int n) (Print.tag_of_term t) (Print.term_to_string t)
     ) r in
 
-  let check_non_informative_binders =
-    List.contains S.Reifiable quals &&
-    not (U.has_attribute attrs PC.allow_informative_binders_attr) in
-
   (*
    * return_repr
    *
@@ -1257,14 +1230,6 @@ Errors.with_ctx (BU.format1 "While checking layered effect definition `%s`" (str
     Rel.force_trivial_guard env (Env.conj_guard g g_eq);
 
     let k = k |> N.remove_uvar_solutions env in
-
-    let _check_valid_binders =
-      match (SS.compress k).n with
-      | Tm_arrow (bs, c) ->
-        let a::x::bs, c = SS.open_comp bs c in
-        let res_t = U.comp_result c in
-        let env = Env.push_binders env [a; x] in
-        validate_layered_effect_binders env bs check_non_informative_binders r in
 
     // validate_degenerate_effect env (List.hd us) (Env.inst_tscheme_with (ret_us, ret_t) (List.map U_name us) |> snd) k r;
 
