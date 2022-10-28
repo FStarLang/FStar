@@ -40,7 +40,7 @@ type typedef (t: Type0) : Type u#1 = {
     Lemma
     (mk_fraction (one pcm) p == one pcm)
   );
-  uninitialized: (y: t { exclusive pcm y });
+  uninitialized: (y: t { exclusive pcm y /\ fractionable y });
   mk_fraction_split: (
     (v: t) ->
     (p1: P.perm) ->
@@ -125,18 +125,16 @@ let mk_fraction_join
     (fun _ -> ())
 
 module F = Steel.C.Model.Frac
-module U = Steel.C.Model.Uninit
 
-let scalar_t t = U.uninit_t (F.fractional t)
+let scalar_t t = F.fractional (option t)
 
 let scalar_fractionable
   (#t: Type)
   (s: scalar_t t)
 : GTot prop
 = match s with
-  | U.InitOrUnit (Some (_, p)) -> (p `P.lesser_equal_perm` P.full_perm) == true
-  | U.InitOrUnit None -> True
-  | _ -> False
+  | Some (_, p) -> (p `P.lesser_equal_perm` P.full_perm) == true
+  | _ -> True
 
 [@@noextract_to "krml"] // proof-only
 let scalar_mk_fraction
@@ -147,25 +145,25 @@ let scalar_mk_fraction
     (requires (scalar_fractionable x))
     (ensures (fun y -> p `P.lesser_equal_perm` P.full_perm ==> scalar_fractionable y))
 = match x with
-  | U.InitOrUnit (Some (v, p')) ->
-    U.InitOrUnit (Some (v, p `prod_perm` p'))
+  | (Some (v, p')) ->
+    (Some (v, p `prod_perm` p'))
   | _ -> x
 
 #restart-solver
 let scalar t = {
-  pcm = U.pcm_uninit F.pcm_frac;
+  pcm = F.pcm_frac;
   fractionable = scalar_fractionable #t;
   mk_fraction = scalar_mk_fraction #t;
   mk_fraction_full = (fun x ->
     match x with
-    | U.InitOrUnit (Some (v, p)) ->
+    | (Some (v, p)) ->
       assert_norm ((P.full_perm `prod_perm` p).v == (let open FStar.Real in 1.0R *. p.v));
       assert (P.full_perm `prod_perm` p == p)
     | _ -> ()
   );
   mk_fraction_compose = (fun w p1 p2 ->
     match w with
-    | U.InitOrUnit (Some (v, p)) ->
+    | (Some (v, p)) ->
       assert_norm (let open FStar.Real in ((p1 `prod_perm` p2) `prod_perm` p).v == (p1.v *. p2.v) *. p.v);
       assert_norm (let open FStar.Real in (p2 `prod_perm` (p1 `prod_perm` p)).v == p2.v *. (p1.v *. p.v));
       assert ((p1 `prod_perm` p2) `prod_perm` p == p2 `prod_perm` (p1 `prod_perm` p))
@@ -173,20 +171,20 @@ let scalar t = {
   );
   fractionable_one = ();
   mk_fraction_one = (fun _ -> ());
-  uninitialized = U.Uninitialized;
+  uninitialized = Some (None, P.full_perm);
   mk_fraction_split = (fun w p1 p2 ->
     match w with
-    | U.InitOrUnit (Some (v, p)) ->
+    | (Some (v, p)) ->
       assert_norm (((p1 `P.sum_perm` p2) `prod_perm` p).v == (let open FStar.Real in (p1.v +. p2.v) *. p.v));
       assert_norm (((p1 `prod_perm` p) `P.sum_perm` (p2 `prod_perm` p)).v == (let open FStar.Real in (p1.v *. p.v) +. (p2.v *. p.v)));
       assert ((p1 `P.sum_perm` p2) `prod_perm` p == (p1 `prod_perm` p) `P.sum_perm` (p2 `prod_perm` p));
-      assert (composable (U.pcm_uninit F.pcm_frac) (scalar_mk_fraction w p1) (scalar_mk_fraction w p2));
+      assert (composable (F.pcm_frac) (scalar_mk_fraction w p1) (scalar_mk_fraction w p2));
 ()   //   assert (op (U.pcm_uninit F.pcm_frac) (scalar_mk_fraction w p1) (scalar_mk_fraction w p2) == scalar_mk_fraction w (p1 `P.sum_perm` p2))
     | _ -> ()
   );
   mk_fraction_join = (fun w p1 p2 ->
     match w with
-    | U.InitOrUnit (Some (v, p)) ->
+    | (Some (v, p)) ->
       assert_norm (((p1 `P.sum_perm` p2) `prod_perm` p).v == (let open FStar.Real in (p1.v +. p2.v) *. p.v));
       assert_norm (((p1 `prod_perm` p) `P.sum_perm` (p2 `prod_perm` p)).v == (let open FStar.Real in (p1.v *. p.v) +. (p2.v *. p.v)));
       assert ((p1 `P.sum_perm` p2) `prod_perm` p == (p1 `prod_perm` p) `P.sum_perm` (p2 `prod_perm` p))
@@ -194,7 +192,7 @@ let scalar t = {
   );
 }
 
-let mk_scalar v = U.InitOrUnit (Some (v, P.full_perm))
+let mk_scalar v = (Some (Some v, P.full_perm))
 
 let mk_scalar_fractionable v p = ()
 
@@ -205,20 +203,20 @@ let scalar_unique
 =
   rewrite_slprop
     (pts_to r (mk_fraction (scalar _) (mk_scalar v1) p1))
-    (R.pts_to r (U.InitOrUnit (Some (v1, p1))))
+    (R.pts_to r (Some (Some v1, p1)))
     (fun _ -> ());
   rewrite_slprop
     (pts_to r (mk_fraction (scalar _) (mk_scalar v2) p2))
-    (R.pts_to r (U.InitOrUnit (Some (v2, p2))))
+    (R.pts_to r (Some (Some v2, p2)))
     (fun _ -> ());
-  R.gather r (U.InitOrUnit (Some (v1, p1))) (U.InitOrUnit (Some (v2, p2)));
-  R.split r _ (U.InitOrUnit (Some (v1, p1))) (U.InitOrUnit (Some (v2, p2)));
+  R.gather r (Some (Some v1, p1)) (Some (Some v2, p2));
+  R.split r _ (Some (Some v1, p1)) (Some (Some v2, p2));
   rewrite_slprop
-    (R.pts_to r (U.InitOrUnit (Some (v1, p1))))
+    (R.pts_to r (Some (Some v1, p1)))
     (pts_to r (mk_fraction (scalar _) (mk_scalar v1) p1))
     (fun _ -> ());
   rewrite_slprop
-    (R.pts_to r (U.InitOrUnit (Some (v2, p2))))
+    (R.pts_to r (Some (Some v2, p2)))
     (pts_to r (mk_fraction (scalar _) (mk_scalar v2) p2))
     (fun _ -> ())
 
@@ -227,14 +225,14 @@ let read0
 =
   rewrite_slprop
     (pts_to r (mk_fraction (scalar t) (mk_scalar (Ghost.reveal v)) p))
-    (R.pts_to r (U.InitOrUnit (Some (Ghost.reveal v, p))))
+    (R.pts_to r (Some (Some (Ghost.reveal v), p)))
     (fun _ -> ());
   let v' = R.ref_read r in
   rewrite_slprop
-    (R.pts_to r (U.InitOrUnit (Some (Ghost.reveal v, p))))
+    (R.pts_to r (Some (Some (Ghost.reveal v), p)))
     (pts_to r (mk_fraction (scalar t) (mk_scalar (Ghost.reveal v)) p))
     (fun _ -> ());
-  let U.InitOrUnit (Some (v0, _)) = v' in
+  let Some (Some v0, _) = v' in
   return v0
 
 let write
@@ -244,7 +242,7 @@ let write
     (pts_to r v)
     (R.pts_to r v)
     (fun _ -> ());
-  R.ref_upd r _ _ (R.base_fpu _ _ (U.InitOrUnit (Some (v', P.full_perm))));
+  R.ref_upd r _ _ (R.base_fpu _ _ (Some (Some v', P.full_perm)));
   rewrite_slprop
     (R.pts_to r _)
     (pts_to _ _)

@@ -42,7 +42,7 @@ val full (#t: Type0) (td: typedef t) (v: t) : GTot prop
 
 val uninitialized (#t: Type0) (td: typedef t) : Ghost t
   (requires True)
-  (ensures (fun y -> full td y))
+  (ensures (fun y -> full td y /\ fractionable td y))
 
 val unknown (#t: Type0) (td: typedef t) : Ghost t
   (requires True)
