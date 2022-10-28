@@ -787,8 +787,8 @@ let (check_bqual :
       | (FStar_Pervasives_Native.None, FStar_Pervasives_Native.None) ->
           return ()
       | (FStar_Pervasives_Native.Some (FStar_Syntax_Syntax.Implicit b01),
-         FStar_Pervasives_Native.Some (FStar_Syntax_Syntax.Implicit b11))
-          when b01 = b11 -> return ()
+         FStar_Pervasives_Native.Some (FStar_Syntax_Syntax.Implicit b11)) ->
+          return ()
       | (FStar_Pervasives_Native.Some (FStar_Syntax_Syntax.Equality),
          FStar_Pervasives_Native.Some (FStar_Syntax_Syntax.Equality)) ->
           return ()
@@ -2281,8 +2281,24 @@ and (check :
   fun msg ->
     fun g ->
       fun e ->
-        with_context msg (FStar_Pervasives_Native.Some (CtxTerm e))
-          (fun uu___ -> memo_check g e)
+        let uu___ =
+          with_context msg (FStar_Pervasives_Native.Some (CtxTerm e))
+            (fun uu___1 -> memo_check g e) in
+        op_let_Bang uu___
+          (fun uu___1 ->
+             match uu___1 with
+             | (et, t) ->
+                 ((let uu___3 =
+                     FStar_TypeChecker_Env.debug g.tcenv
+                       (FStar_Options.Other "Core") in
+                   if uu___3
+                   then
+                     let uu___4 = FStar_Syntax_Print.term_to_string e in
+                     let uu___5 = FStar_Syntax_Print.term_to_string t in
+                     FStar_Compiler_Util.print2 "check(%s) : %s\n" uu___4
+                       uu___5
+                   else ());
+                  return (et, t)))
 and (check' :
   env ->
     FStar_Syntax_Syntax.term ->

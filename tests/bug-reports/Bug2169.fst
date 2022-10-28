@@ -153,7 +153,7 @@ let wrap (f:int -> ND unit (as_pure_wp (fun p -> True))) (x':int) : ND unit (as_
   | Some x -> f x
   | None -> f 4
 
-[@@expect_failure [217]]
+[@@expect_failure [228]] //Core refuses to check ND terms; previously, it failed with 217, gather implicits guards at the end
 let rewrite_inside_reify
   (f : int -> ND unit (as_pure_wp (fun p -> True)))
   (g : int -> Tot (option int))
