@@ -1173,6 +1173,7 @@ let rewrite (h:binder) : tac unit = wrap_err "rewrite" <| (
 
           let bs', t' = SS.close_binders bs, SS.close bs t in
           let bs', t' = SS.subst_binders s bs', SS.subst s t' in
+          let e0 = Env.push_bvs e0 [bv] in
           let new_env, bs'', t'' = Core.open_binders_in_term e0 bs' t' in
 
           let! uvt, uv =

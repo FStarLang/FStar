@@ -3403,9 +3403,12 @@ let (rewrite : FStar_Syntax_Syntax.binder -> unit FStar_Tactics_Monad.tac) =
                                      (uu___8, uu___9) in
                                    (match uu___7 with
                                     | (bs'1, t'1) ->
+                                        let e01 =
+                                          FStar_TypeChecker_Env.push_bvs e0
+                                            [bv1] in
                                         let uu___8 =
                                           FStar_TypeChecker_Core.open_binders_in_term
-                                            e0 bs'1 t'1 in
+                                            e01 bs'1 t'1 in
                                         (match uu___8 with
                                          | (new_env, bs'', t'') ->
                                              let uu___9 =
@@ -3724,8 +3727,17 @@ let (clear : FStar_Syntax_Syntax.binder -> unit FStar_Tactics_Monad.tac) =
                 split_env bv uu___3 in
               match uu___2 with
               | FStar_Pervasives_Native.None ->
-                  FStar_Tactics_Monad.fail
-                    "Cannot clear; binder not in environment"
+                  let uu___3 =
+                    let uu___4 = FStar_Syntax_Print.bv_to_string bv in
+                    let uu___5 =
+                      let uu___6 =
+                        let uu___7 = FStar_Tactics_Types.goal_env goal in
+                        uu___7.FStar_TypeChecker_Env.gamma in
+                      FStar_TypeChecker_Env.print_gamma uu___6 in
+                    FStar_Compiler_Util.format2
+                      "Cannot clear; binder %s not in environment [%s]"
+                      uu___4 uu___5 in
+                  FStar_Tactics_Monad.fail uu___3
               | FStar_Pervasives_Native.Some (e', bv1, bvs) ->
                   let rec check bvs1 =
                     match bvs1 with
