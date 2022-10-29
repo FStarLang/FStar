@@ -51,6 +51,11 @@ val unknown (#t: Type0) (td: typedef t) : Ghost t
 val mk_fraction_unknown (#t: Type0) (td: typedef t) (p: P.perm) : Lemma
   (ensures (mk_fraction td (unknown td) p == unknown td))
 
+val mk_fraction_eq_unknown (#t: Type0) (td: typedef t) (v: t) (p: P.perm) : Lemma
+  (requires (fractionable td v /\ mk_fraction td v p == unknown td))
+  (ensures (v == unknown td))
+
+
 // To be extracted as: *t
 [@@noextract_to "krml"] // primitive
 val ptr (#t: Type) (td: typedef t) : Tot Type0
@@ -195,9 +200,14 @@ inline_for_extraction [@@noextract_to "krml"; norm_field_attr]
 noeq
 type field_description_t (t: Type0) : Type u#1 = {
   fd_def: (string -> GTot bool);
+  fd_empty: (fd_empty: bool { fd_empty == true <==> (forall s . fd_def s == false) });
   fd_type: (string -> Type0);
   fd_typedef: ((s: string) -> Pure (typedef (fd_type s)) (requires (fd_def s)) (ensures (fun _ -> True)));
 }
+
+inline_for_extraction [@@noextract_to "krml"; norm_field_attr]
+let nonempty_field_description_t (t: Type0) =
+  (fd: field_description_t t { fd.fd_empty == false })
 
 [@@noextract_to "krml"] // proof-only
 let field_t (#t: Type0) (fd: field_description_t t) = (s: string { fd.fd_def s })
@@ -205,6 +215,7 @@ let field_t (#t: Type0) (fd: field_description_t t) = (s: string { fd.fd_def s }
 inline_for_extraction [@@noextract_to "krml"]
 let field_description_nil : field_description_t field_t_nil = {
   fd_def = (fun _ -> false);
+  fd_empty = true;
   fd_type = (fun _ -> unit);
   fd_typedef = (fun _ -> false_elim ());
 }
@@ -215,6 +226,7 @@ let field_description_cons0
 : Tot (field_description_t (field_t_cons fn ft fc))
 = {
     fd_def = (fun n' -> n = n' || fd.fd_def n');
+    fd_empty = false;
     fd_type = (fun n' -> if n = n' then ft else fd.fd_type n');
     fd_typedef = (fun n' -> if n = n' then t else fd.fd_typedef n');
   }
@@ -287,10 +299,12 @@ val struct_get_field_other
   [SMTPat (struct_get_field (struct_set_field field v s) field')]
 
 [@@noextract_to "krml"] // proof-only
-val struct0 (tn: Type0) (#tf: Type0) (n: string) (fields: field_description_t tf) : Tot (typedef (struct_t0 tn n fields))
+val struct0 (tn: Type0) (#tf: Type0) (n: string) (fields: nonempty_field_description_t tf) : Tot (typedef (struct_t0 tn n fields))
 
 [@@noextract_to "krml"] // proof-only
-let struct (#tf: Type0) (n: string) (#tn: Type0) (# [solve_mk_string_t ()] prf: squash (norm norm_typestring (mk_string_t n == tn))) (fields: field_description_t tf) : Tot (typedef (struct_t0 tn n fields))
+let struct (#tf: Type0) (n: string) (#tn: Type0) (# [solve_mk_string_t ()] prf: squash (norm norm_typestring (mk_string_t n == tn))) (fields: field_description_t tf) : Pure (typedef (struct_t0 tn n fields))
+  (requires (fields.fd_empty == false))
+  (ensures (fun _ -> True))
 = struct0 tn #tf n fields
 
 val struct_get_field_unknown
@@ -317,7 +331,7 @@ val g_struct_field
   (#tn: Type0)
   (#tf: Type0)
   (#n: string)
-  (#fields: field_description_t tf)
+  (#fields: nonempty_field_description_t tf)
   (r: ref (struct0 tn n fields))
   (field: field_t fields)
 : GTot (ref (fields.fd_typedef field))
@@ -327,7 +341,7 @@ val ghost_struct_field
   (#tn: Type0)
   (#tf: Type0)
   (#n: string)
-  (#fields: field_description_t tf)
+  (#fields: nonempty_field_description_t tf)
   (#v: Ghost.erased (struct_t0 tn n fields))
   (r: ref (struct0 tn n fields))
   (field: field_t fields)
@@ -342,7 +356,7 @@ val struct_field0
   (t': Type0)
   (#opened: _)
   (#n: string)
-  (#fields: field_description_t tf)
+  (#fields: nonempty_field_description_t tf)
   (#v: Ghost.erased (struct_t0 tn n fields))
   (r: ref (struct0 tn n fields))
   (field: field_t fields)
@@ -362,7 +376,7 @@ let struct_field
   (#tf: Type0)
   (#opened: _)
   (#n: string)
-  (#fields: field_description_t tf)
+  (#fields: nonempty_field_description_t tf)
   (#v: Ghost.erased (struct_t0 tn n fields))
   (r: ref (struct0 tn n fields))
   (field: field_t fields)
@@ -382,7 +396,7 @@ val unstruct_field
   (#tn: Type0)
   (#tf: Type0)
   (#n: string)
-  (#fields: field_description_t tf)
+  (#fields: nonempty_field_description_t tf)
   (#v: Ghost.erased (struct_t0 tn n fields))
   (r: ref (struct0 tn n fields))
   (field: field_t fields)
@@ -401,7 +415,7 @@ val fractionable_struct
   (#tn: Type0)
   (#tf: Type0)
   (#n: string)
-  (#fields: field_description_t tf)
+  (#fields: nonempty_field_description_t tf)
   (s: struct_t0 tn n fields)
 : Lemma
   (fractionable (struct0 tn n fields) s <==> (forall field . fractionable (fields.fd_typedef field) (struct_get_field s field)))
@@ -411,7 +425,7 @@ val mk_fraction_struct
   (#tn: Type0)
   (#tf: Type0)
   (#n: string)
-  (#fields: field_description_t tf)
+  (#fields: nonempty_field_description_t tf)
   (s: struct_t0 tn n fields)
   (p: P.perm)
   (field: field_t fields)
@@ -425,7 +439,7 @@ val mk_fraction_struct_recip
   (#tn: Type0)
   (#tf: Type0)
   (#n: string)
-  (#fields: field_description_t tf)
+  (#fields: nonempty_field_description_t tf)
   (s: struct_t0 tn n fields)
   (p: P.perm)
 : Ghost (struct_t0 tn n fields)
@@ -442,11 +456,307 @@ val full_struct
   (#tn: Type0)
   (#tf: Type0)
   (#n: string)
-  (#fields: field_description_t tf)
+  (#fields: nonempty_field_description_t tf)
   (s: struct_t0 tn n fields)
 : Lemma
   (full (struct0 tn n fields) s <==> (forall field . full (fields.fd_typedef field) (struct_get_field s field)))
   [SMTPat (full (struct0 tn n fields) s)]
+
+[@@noextract_to "krml"] // primitive
+val define_union0 (tn: Type0) (#tf: Type0) (n: string) (fields: field_description_t tf) : Tot Type0
+inline_for_extraction [@@noextract_to "krml"]
+let define_union (n: string) (#tf: Type0) (#tn: Type0) (#[solve_mk_string_t ()] prf: squash (norm norm_typestring (mk_string_t n == tn))) (fields: field_description_t tf) : Tot Type0
+= define_union0 tn #tf n fields
+
+// To be extracted as: union t
+[@@noextract_to "krml"] // primitive
+val union_t0 (tn: Type0) (#tf: Type0) (n: string) (fields: field_description_t tf) : Tot Type0
+inline_for_extraction [@@noextract_to "krml"]
+let union_t (#tf: Type0) (n: string) (#tn: Type0) (# [solve_mk_string_t ()] prf: squash (norm norm_typestring (mk_string_t n == tn))) (fields: field_description_t tf) : Tot Type0
+= union_t0 tn #tf n fields
+
+val union_set_field (tn: Type0) (#tf: Type0) (n: string) (fields: field_description_t tf) (f: field_t fields) (v: fields.fd_type f) : GTot (union_t0 tn n fields)
+
+val union_get_case
+  (#tn: Type0)
+  (#tf: Type0)
+  (#n: string)
+  (#fields: field_description_t tf)
+  (u: union_t0 tn n fields)
+: GTot (option (field_t fields))
+
+val union_get_field
+  (#tn: Type0)
+  (#tf: Type0)
+  (#n: string)
+  (#fields: field_description_t tf)
+  (u: union_t0 tn n fields)
+  (field: field_t fields)
+: Ghost (fields.fd_type field)
+    (requires (union_get_case u == Some field))
+    (ensures (fun _ -> True))
+
+val union_get_field_same
+  (tn: Type0)
+  (#tf: Type0)
+  (n: string)
+  (fields: field_description_t tf)
+  (field: field_t fields)
+  (v: fields.fd_type field)
+: Lemma
+  (requires (~ (v == unknown (fields.fd_typedef field))))
+  (ensures (
+    let u = union_set_field tn n fields field v in
+    union_get_case u == Some field /\
+    union_get_field u field == v
+  ))
+  [SMTPatOr [
+    [SMTPat (union_get_case (union_set_field tn n fields field v))];
+    [SMTPat (union_get_field (union_set_field tn n fields field v) field)];
+  ]]
+
+val union_set_field_same
+  (#tn: Type0)
+  (#tf: Type0)
+  (#n: string)
+  (#fields: field_description_t tf)
+  (s: union_t0 tn n fields)
+  (field: field_t fields)
+: Lemma
+  (requires (union_get_case s == Some field))
+  (ensures (
+    union_set_field tn n fields field (union_get_field s field) == s
+  ))
+  [SMTPat (union_set_field tn n fields (union_get_field s field))]
+
+[@@noextract_to "krml"] // proof-only
+val union0 (tn: Type0) (#tf: Type0) (n: string) (fields: field_description_t tf) : Tot (typedef (union_t0 tn n fields))
+
+[@@noextract_to "krml"] // proof-only
+let union (#tf: Type0) (n: string) (#tn: Type0) (# [solve_mk_string_t ()] prf: squash (norm norm_typestring (mk_string_t n == tn))) (fields: field_description_t tf) : Tot (typedef (union_t0 tn n fields))
+= union0 tn #tf n fields
+
+val union_get_case_unknown
+  (tn: Type0)
+  (#tf: Type0)
+  (n: string)
+  (fields: field_description_t tf)
+: Lemma
+  (union_get_case (unknown (union0 tn n fields)) == None)
+  [SMTPat (unknown (union0 tn n fields))]
+
+val union_set_field_unknown
+  (tn: Type0)
+  (#tf: Type0)
+  (n: string)
+  (fields: field_description_t tf)
+  (field: field_t fields)
+: Lemma
+  (union_set_field tn n fields field (unknown (fields.fd_typedef field)) == unknown (union0 tn n fields))
+  [SMTPat (union_set_field tn n fields field (unknown (fields.fd_typedef field)))]
+
+val union_get_case_uninitialized
+  (tn: Type0)
+  (#tf: Type0)
+  (n: string)
+  (fields: field_description_t tf)
+: Lemma
+  (union_get_case (uninitialized (union0 tn n fields)) == None)
+  [SMTPat (uninitialized (union0 tn n fields))]
+
+val mk_fraction_union_get_case
+  (#tn: Type0)
+  (#tf: Type0)
+  (#n: string)
+  (#fields: field_description_t tf)
+  (s: union_t0 tn n fields)
+  (p: P.perm)
+: Lemma
+  (requires (fractionable (union0 tn n fields) s))
+  (ensures (
+    union_get_case (mk_fraction (union0 tn n fields) s p) == union_get_case s
+  ))
+  [SMTPat (union_get_case (mk_fraction (union0 tn n fields) s p))]
+
+val fractionable_union_get_field
+  (#tn: Type0)
+  (#tf: Type0)
+  (#n: string)
+  (#fields: field_description_t tf)
+  (s: union_t0 tn n fields)
+  (field: field_t fields)
+: Lemma
+  (requires (union_get_case s == Some field))
+  (ensures (
+    fractionable (union0 tn n fields) s <==> fractionable (fields.fd_typedef field) (union_get_field s field)
+  ))
+  [SMTPat (fractionable (union0 tn n fields) s); SMTPat (union_get_field s field)]
+
+val mk_fraction_union_get_field
+  (#tn: Type0)
+  (#tf: Type0)
+  (#n: string)
+  (#fields: field_description_t tf)
+  (s: union_t0 tn n fields)
+  (p: P.perm)
+  (field: field_t fields)
+: Lemma
+  (requires (fractionable (union0 tn n fields) s /\ union_get_case s == Some field))
+  (ensures (union_get_field (mk_fraction (union0 tn n fields) s p) field == mk_fraction (fields.fd_typedef field) (union_get_field s field) p))
+  [SMTPat (union_get_field (mk_fraction (union0 tn n fields) s p) field)]
+
+val mk_fraction_union_set_field
+  (tn: Type0)
+  (#tf: Type0)
+  (n: string)
+  (fields: field_description_t tf)
+  (field: field_t fields)
+  (v: fields.fd_type field)
+  (p: P.perm)
+: Lemma
+  (requires (fractionable (fields.fd_typedef field) v))
+  (ensures (
+    fractionable (union0 tn n fields) (union_set_field tn n fields field v) /\
+    mk_fraction (union0 tn n fields) (union_set_field tn n fields field v) p == union_set_field tn n fields field (mk_fraction (fields.fd_typedef field) v p)
+  ))
+
+val full_union
+  (#tn: Type0)
+  (#tf: Type0)
+  (#n: string)
+  (#fields: field_description_t tf)
+  (s: union_t0 tn n fields)
+  (field: field_t fields)
+: Lemma
+  (requires (union_get_case s == Some field))
+  (ensures (
+    full (union0 tn n fields) s <==> full (fields.fd_typedef field) (union_get_field s field)
+  ))
+  [SMTPat (full (union0 tn n fields) s); SMTPat (union_get_field s field)]
+
+val g_union_field
+  (#tn: Type0)
+  (#tf: Type0)
+  (#n: string)
+  (#fields: field_description_t tf)
+  (r: ref (union0 tn n fields))
+  (field: field_t fields)
+: GTot (ref (fields.fd_typedef field))
+
+val ghost_union_field
+  (#opened: _)
+  (#tn: Type0)
+  (#tf: Type0)
+  (#n: string)
+  (#fields: field_description_t tf)
+  (#v: Ghost.erased (union_t0 tn n fields))
+  (r: ref (union0 tn n fields))
+  (field: field_t fields {union_get_case v == Some field})
+: SteelGhostT unit opened
+    (pts_to r v)
+    (fun _ -> pts_to (g_union_field r field) (union_get_field v field))
+
+[@@noextract_to "krml"] // primitive
+val union_field0
+  (#tn: Type0)
+  (#tf: Type0)
+  (t': Type0)
+  (#opened: _)
+  (#n: string)
+  (#fields: field_description_t tf)
+  (#v: Ghost.erased (union_t0 tn n fields))
+  (r: ref (union0 tn n fields))
+  (field: field_t fields {union_get_case v == Some field})
+  (td': typedef t' {
+    t' ==  fields.fd_type field /\
+    td' == fields.fd_typedef field
+  })
+: SteelAtomicBase (ref td') false opened Unobservable
+    (pts_to r v)
+    (fun r' -> pts_to r' (union_get_field v field))
+    (fun _ -> True)
+    (fun _ r' _ -> r' == g_union_field r field)
+
+inline_for_extraction [@@noextract_to "krml"] // primitive
+let union_field
+  (#tn: Type0)
+  (#tf: Type0)
+  (#opened: _)
+  (#n: string)
+  (#fields: field_description_t tf)
+  (#v: Ghost.erased (union_t0 tn n fields))
+  (r: ref (union0 tn n fields))
+  (field: field_t fields {union_get_case v == Some field})
+: SteelAtomicBase (ref #(norm norm_field_steps (fields.fd_type field)) (fields.fd_typedef field)) false opened Unobservable
+    (pts_to r v)
+    (fun r' -> pts_to #(norm norm_field_steps (fields.fd_type field)) r' (union_get_field v field))
+    (fun _ -> True)
+    (fun _ r' _ -> r' == g_union_field r field)
+= union_field0
+    (norm norm_field_steps (fields.fd_type field))
+    r
+    field
+    (fields.fd_typedef field)
+
+val ununion_field
+  (#opened: _)
+  (#tn: Type0)
+  (#tf: Type0)
+  (#n: string)
+  (#fields: field_description_t tf)
+  (r: ref (union0 tn n fields))
+  (field: field_t fields)
+  (#v': Ghost.erased (fields.fd_type field))
+  (r': ref (fields.fd_typedef field))
+: SteelGhost unit opened
+    (pts_to r' v')
+    (fun _ -> pts_to r (union_set_field tn n fields field v'))
+    (fun _ ->
+      r' == g_union_field r field
+    )
+    (fun _ _ _ -> True)
+
+// NOTE: we DO NOT support preservation of struct prefixes
+
+[@@noextract_to "krml"] // primitive
+val union_switch_field0
+  (#tn: Type0)
+  (#tf: Type0)
+  (t': Type0)
+  (#n: string)
+  (#fields: field_description_t tf)
+  (#v: Ghost.erased (union_t0 tn n fields))
+  (r: ref (union0 tn n fields))
+  (field: field_t fields)
+  (td': typedef t' {
+    t' ==  fields.fd_type field /\
+    td' == fields.fd_typedef field
+  })
+: Steel (ref td') // need to write the pcm carrier value, so this cannot be Ghost or Atomic
+    (pts_to r v)
+    (fun r' -> pts_to r' (uninitialized (fields.fd_typedef field)))
+    (fun _ -> full (union0 tn n fields) v)
+    (fun _ r' _ -> r' == g_union_field r field)
+
+inline_for_extraction [@@noextract_to "krml"]
+let union_switch_field
+  (#tn: Type0)
+  (#tf: Type0)
+  (#n: string)
+  (#fields: field_description_t tf)
+  (#v: Ghost.erased (union_t0 tn n fields))
+  (r: ref (union0 tn n fields))
+  (field: field_t fields)
+: Steel (ref #(norm norm_field_steps (fields.fd_type field)) (fields.fd_typedef field)) // need to write the pcm carrier value, so this cannot be Ghost or Atomic
+    (pts_to r v)
+    (fun r' -> pts_to #(norm norm_field_steps (fields.fd_type field)) r' (uninitialized (fields.fd_typedef field)))
+    (fun _ -> full (union0 tn n fields) v)
+    (fun _ r' _ -> r' == g_union_field r field)
+= union_switch_field0
+    (norm norm_field_steps (fields.fd_type field))
+    r
+    field
+    (fields.fd_typedef field)
 
 (*
 // To be extracted as: t[tn]
