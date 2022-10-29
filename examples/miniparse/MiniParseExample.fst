@@ -25,7 +25,12 @@ module T = FStar.Tactics
 
 let p = T.synth_by_tactic (fun () -> gen_enum_parser T.SMT (`test))
 
+#push-options "--admit_tactic_unification_guards true"
 let q = T.synth_by_tactic (fun () -> gen_parser_impl T.Goal)
+#pop-options
+
+//more goals show up with Core checking
+let q' : parser_impl p = T.synth_by_tactic (fun () -> gen_parser_impl T.SMT)
 
 #reset-options
  
