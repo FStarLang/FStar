@@ -179,7 +179,7 @@ let read (#t: Type) (#v: Ghost.erased (scalar_t t)) (r: ref (scalar t)) : Steel 
 val write (#t: Type) (#v: Ghost.erased (scalar_t t)) (r: ref (scalar t)) (v': t) : Steel unit
   (pts_to r v)
   (fun _ -> pts_to r (mk_fraction (scalar t) (mk_scalar v') P.full_perm))
-  (fun _ -> Ghost.reveal v == uninitialized (scalar t) \/ (exists (v0: t) . Ghost.reveal v == mk_scalar v0))
+  (fun _ -> full (scalar t) v)
   (fun _ _ _ -> True)
 
 // To be extracted as: struct t { fields ... }
