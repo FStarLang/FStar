@@ -129,7 +129,7 @@ let (pure_wp_uvar :
                   [uu___3] in
                 FStar_Syntax_Syntax.mk_Tm_app pure_wp_t1 uu___2 r in
           let uu___ =
-            FStar_TypeChecker_Env.new_implicit_var reason r env pure_wp_t
+            FStar_TypeChecker_Env.new_implicit_var_aux reason r env pure_wp_t
               FStar_Syntax_Syntax.Strict FStar_Pervasives_Native.None in
           match uu___ with
           | (pure_wp_uvar1, uu___1, guard_wp) -> (pure_wp_uvar1, guard_wp)
@@ -5009,7 +5009,7 @@ let (tc_layered_eff_decl :
                                                                     FStar_Compiler_Util.format1
                                                                     "uvar for subcomp %s binder when checking ite soundness"
                                                                     uu___26 in
-                                                                    FStar_TypeChecker_Env.new_implicit_var
+                                                                    FStar_TypeChecker_Env.new_implicit_var_aux
                                                                     uu___25 r
                                                                     env1 sort
                                                                     FStar_Syntax_Syntax.Strict
@@ -5132,7 +5132,7 @@ let (tc_layered_eff_decl :
                                                                     ->
                                                                     FStar_Pervasives_Native.Some
                                                                     uu___24) in
-                                                                    FStar_TypeChecker_Env.new_implicit_var
+                                                                    FStar_TypeChecker_Env.new_implicit_var_aux
                                                                     "" r env1
                                                                     uu___22
                                                                     FStar_Syntax_Syntax.Strict

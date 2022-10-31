@@ -181,7 +181,7 @@ let pat_as_exp (introduce_bv_uvars:bool)
         if not introduce_bv_uvars
         then {x with sort=S.tun}, Env.trivial_guard, env
         else let t, _ = U.type_u() in
-             let t_x, _, guard = new_implicit_var "pattern bv type" (S.range_of_bv x) env t (Allow_untyped "pattern bv type") None in
+             let t_x, _, guard = new_implicit_var_aux "pattern bv type" (S.range_of_bv x) env t (Allow_untyped "pattern bv type") None in
              let x = {x with sort=t_x} in
              x, guard, Env.push_bv env x
     in
@@ -214,8 +214,8 @@ let pat_as_exp (introduce_bv_uvars:bool)
                          (Print.pat_to_string p)
                 end;
                 let k, _ = U.type_u () in
-                let t, _, g = new_implicit_var "pat_dot_term type" p.p env k (Allow_ghost "pat dot term type") None in
-                let e, _,  g' = new_implicit_var "pat_dot_term" p.p env t (Allow_ghost "pat dot term") None in
+                let t, _, g = new_implicit_var_aux "pat_dot_term type" p.p env k (Allow_ghost "pat dot term type") None in
+                let e, _,  g' = new_implicit_var_aux "pat_dot_term" p.p env t (Allow_ghost "pat dot term") None in
                 let p = {p with v=Pat_dot_term (Some e)} in
                 [], [], [], env, e, conj_guard g g', p
               | Some e -> [], [], [], env, e, Env.trivial_guard, p)

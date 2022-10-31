@@ -53,7 +53,7 @@ let report env errs =
 let new_implicit_var reason r env k =
   if Env.debug env <| Options.Extreme
   then BU.print2 "New implicit var: %s\n%s\n" reason (BU.stack_dump());
-  Env.new_implicit_var reason r env k Strict None
+  Env.new_implicit_var_aux reason r env k Strict None
 
 let close_guard_implicits env solve_deferred (xs:binders) (g:guard_t) : guard_t =
   if Options.eager_subtyping ()
@@ -2758,9 +2758,9 @@ let maybe_instantiate (env:Env.env) e t =
                           Ctx_uvar_meta_attr attr
                         | _ -> failwith "Impossible, match is under a guard, did not expect this case"
                       in
-                      let v, _, g = Env.new_implicit_var "Instantiation of meta argument"
-                                                         e.pos env t Strict
-                                                         (Some meta_t) in
+                      let v, _, g = Env.new_implicit_var_aux "Instantiation of meta argument"
+                                                             e.pos env t Strict
+                                                             (Some meta_t) in
                       if Env.debug env Options.High then
                         BU.print1 "maybe_instantiate: Instantiating meta argument with %s\n"
                                 (Print.term_to_string v);

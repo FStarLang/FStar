@@ -268,8 +268,8 @@ let (pat_as_exp :
                | (t, uu___2) ->
                    let uu___3 =
                      let uu___4 = FStar_Syntax_Syntax.range_of_bv x in
-                     FStar_TypeChecker_Env.new_implicit_var "pattern bv type"
-                       uu___4 env1 t
+                     FStar_TypeChecker_Env.new_implicit_var_aux
+                       "pattern bv type" uu___4 env1 t
                        (FStar_Syntax_Syntax.Allow_untyped "pattern bv type")
                        FStar_Pervasives_Native.None in
                    (match uu___3 with
@@ -323,7 +323,7 @@ let (pat_as_exp :
                        match uu___1 with
                        | (k, uu___2) ->
                            let uu___3 =
-                             FStar_TypeChecker_Env.new_implicit_var
+                             FStar_TypeChecker_Env.new_implicit_var_aux
                                "pat_dot_term type" p1.FStar_Syntax_Syntax.p
                                env1 k
                                (FStar_Syntax_Syntax.Allow_ghost
@@ -332,7 +332,7 @@ let (pat_as_exp :
                            (match uu___3 with
                             | (t, uu___4, g) ->
                                 let uu___5 =
-                                  FStar_TypeChecker_Env.new_implicit_var
+                                  FStar_TypeChecker_Env.new_implicit_var_aux
                                     "pat_dot_term" p1.FStar_Syntax_Syntax.p
                                     env1 t
                                     (FStar_Syntax_Syntax.Allow_ghost

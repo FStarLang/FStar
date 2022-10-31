@@ -1821,7 +1821,7 @@ let uvars_for_binders env (bs:S.binders) substs reason r =
       | _, t::_ -> Some (Ctx_uvar_meta_attr t)
       | _ -> None in
 
-    let t, l_ctx_uvars, g_t = new_implicit_var
+    let t, l_ctx_uvars, g_t = new_implicit_var_aux
       (reason b) r env sort
         Strict
         ctx_uvar_meta_t in

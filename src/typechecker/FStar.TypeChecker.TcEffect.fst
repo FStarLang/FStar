@@ -95,7 +95,7 @@ let pure_wp_uvar env (t:typ) (reason:string) (r:Range.range) : term * guard_t =
       [t |> S.as_arg]
       r in
 
-  let pure_wp_uvar, _, guard_wp = Env.new_implicit_var reason r env pure_wp_t Strict None in
+  let pure_wp_uvar, _, guard_wp = Env.new_implicit_var_aux reason r env pure_wp_t Strict None in
   pure_wp_uvar, guard_wp
 
 
@@ -1489,7 +1489,7 @@ Errors.with_ctx (BU.format1 "While checking layered effect definition `%s`" (str
          let sort = SS.subst subst b.binder_bv.sort in
          let t, _, g_t =
          let ctx_uvar_meta = BU.map_option Ctx_uvar_meta_attr attr_opt in
-         Env.new_implicit_var
+         Env.new_implicit_var_aux
            (BU.format1 "uvar for subcomp %s binder when checking ite soundness"
              (Print.binder_to_string b))
            r
@@ -1518,7 +1518,7 @@ Errors.with_ctx (BU.format1 "While checking layered effect definition `%s`" (str
         match attr_opt with
         | None -> fml  |> NonTrivial |> Env.guard_of_guard_formula
         | Some attr ->
-          let _, _, g = Env.new_implicit_var "" r env
+          let _, _, g = Env.new_implicit_var_aux "" r env
             (U.mk_squash S.U_zero fml)
             Strict
             (Ctx_uvar_meta_attr attr |> Some) in

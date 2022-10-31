@@ -232,6 +232,7 @@ and ctx_uvar_meta_t =
 and uvar_decoration =
   {
   uvar_decoration_typ: term' syntax ;
+  uvar_decoration_typedness_depends_on: ctx_uvar Prims.list ;
   uvar_decoration_should_check: should_check_uvar }
 and pat' =
   | Pat_constant of sconst 
@@ -533,14 +534,21 @@ let (__proj__Mkuvar_decoration__item__uvar_decoration_typ :
   uvar_decoration -> term' syntax) =
   fun projectee ->
     match projectee with
-    | { uvar_decoration_typ; uvar_decoration_should_check;_} ->
-        uvar_decoration_typ
+    | { uvar_decoration_typ; uvar_decoration_typedness_depends_on;
+        uvar_decoration_should_check;_} -> uvar_decoration_typ
+let (__proj__Mkuvar_decoration__item__uvar_decoration_typedness_depends_on :
+  uvar_decoration -> ctx_uvar Prims.list) =
+  fun projectee ->
+    match projectee with
+    | { uvar_decoration_typ; uvar_decoration_typedness_depends_on;
+        uvar_decoration_should_check;_} ->
+        uvar_decoration_typedness_depends_on
 let (__proj__Mkuvar_decoration__item__uvar_decoration_should_check :
   uvar_decoration -> should_check_uvar) =
   fun projectee ->
     match projectee with
-    | { uvar_decoration_typ; uvar_decoration_should_check;_} ->
-        uvar_decoration_should_check
+    | { uvar_decoration_typ; uvar_decoration_typedness_depends_on;
+        uvar_decoration_should_check;_} -> uvar_decoration_should_check
 let (uu___is_Pat_constant : pat' -> Prims.bool) =
   fun projectee ->
     match projectee with | Pat_constant _0 -> true | uu___ -> false

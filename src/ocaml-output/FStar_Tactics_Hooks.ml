@@ -205,7 +205,7 @@ let (by_tactic_interp :
                    FStar_Parser_Const.rewrite_by_tactic_lid
                  ->
                  let uu___3 =
-                   FStar_TypeChecker_Env.new_implicit_var
+                   FStar_TypeChecker_Env.new_implicit_var_aux
                      "rewrite_with_tactic RHS" tm.FStar_Syntax_Syntax.pos e
                      typ FStar_Syntax_Syntax.Strict
                      FStar_Pervasives_Native.None in
@@ -1802,8 +1802,8 @@ let (postprocess :
                    FStar_Compiler_Effect.op_Colon_Equals
                      FStar_Tactics_Interpreter.tacdbg uu___3);
                   (let uu___3 =
-                     FStar_TypeChecker_Env.new_implicit_var "postprocess RHS"
-                       tm.FStar_Syntax_Syntax.pos env typ
+                     FStar_TypeChecker_Env.new_implicit_var_aux
+                       "postprocess RHS" tm.FStar_Syntax_Syntax.pos env typ
                        (FStar_Syntax_Syntax.Allow_untyped "postprocess")
                        FStar_Pervasives_Native.None in
                    match uu___3 with

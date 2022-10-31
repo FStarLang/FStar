@@ -30,7 +30,7 @@ let (new_implicit_var :
              FStar_Compiler_Util.print2 "New implicit var: %s\n%s\n" reason
                uu___2
            else ());
-          FStar_TypeChecker_Env.new_implicit_var reason r env k
+          FStar_TypeChecker_Env.new_implicit_var_aux reason r env k
             FStar_Syntax_Syntax.Strict FStar_Pervasives_Native.None
 let (close_guard_implicits :
   FStar_TypeChecker_Env.env ->
@@ -6105,7 +6105,7 @@ let (maybe_instantiate :
                                  failwith
                                    "Impossible, match is under a guard, did not expect this case" in
                            let uu___4 =
-                             FStar_TypeChecker_Env.new_implicit_var
+                             FStar_TypeChecker_Env.new_implicit_var_aux
                                "Instantiation of meta argument"
                                e.FStar_Syntax_Syntax.pos env t2
                                FStar_Syntax_Syntax.Strict

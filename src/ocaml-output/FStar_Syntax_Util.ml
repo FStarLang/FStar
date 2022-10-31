@@ -2693,6 +2693,17 @@ let (residual_tot :
       FStar_Syntax_Syntax.residual_typ = (FStar_Pervasives_Native.Some t);
       FStar_Syntax_Syntax.residual_flags = [FStar_Syntax_Syntax.TOTAL]
     }
+let (residual_gtot :
+  FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax ->
+    FStar_Syntax_Syntax.residual_comp)
+  =
+  fun t ->
+    {
+      FStar_Syntax_Syntax.residual_effect =
+        FStar_Parser_Const.effect_GTot_lid;
+      FStar_Syntax_Syntax.residual_typ = (FStar_Pervasives_Native.Some t);
+      FStar_Syntax_Syntax.residual_flags = [FStar_Syntax_Syntax.TOTAL]
+    }
 let (residual_comp_of_comp :
   FStar_Syntax_Syntax.comp -> FStar_Syntax_Syntax.residual_comp) =
   fun c ->
@@ -4838,6 +4849,13 @@ let (ctx_uvar_typ :
       FStar_Syntax_Unionfind.find_decoration
         u.FStar_Syntax_Syntax.ctx_uvar_head in
     uu___.FStar_Syntax_Syntax.uvar_decoration_typ
+let (ctx_uvar_typedness_deps :
+  FStar_Syntax_Syntax.ctx_uvar -> FStar_Syntax_Syntax.ctx_uvar Prims.list) =
+  fun u ->
+    let uu___ =
+      FStar_Syntax_Unionfind.find_decoration
+        u.FStar_Syntax_Syntax.ctx_uvar_head in
+    uu___.FStar_Syntax_Syntax.uvar_decoration_typedness_depends_on
 let (flatten_refinement :
   FStar_Syntax_Syntax.term ->
     FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax)
