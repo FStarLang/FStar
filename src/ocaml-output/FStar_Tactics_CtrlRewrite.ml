@@ -185,52 +185,59 @@ let (__do_rewrite :
                         FStar_Pervasives_Native.Some
                           (FStar_Syntax_Syntax.Allow_ghost "do_rewrite.lhs") in
                     let uu___4 =
+                      let uu___5 = FStar_Tactics_Basic.goal_typedness_deps g0 in
                       FStar_Tactics_Monad.new_uvar "do_rewrite.rhs" env typ
-                        should_check (rangeof g0) in
-                    FStar_Tactics_Monad.bind uu___4
+                        should_check uu___5 (rangeof g0) in
+                    FStar_Tactics_Monad.op_let_Bang uu___4
                       (fun uu___5 ->
                          match uu___5 with
-                         | (ut, uvar_ut) ->
-                             FStar_Tactics_Monad.mlog
-                               (fun uu___6 ->
-                                  let uu___7 =
-                                    FStar_Syntax_Print.term_to_string tm in
-                                  let uu___8 =
-                                    FStar_Syntax_Print.term_to_string ut in
-                                  FStar_Compiler_Util.print2
-                                    "do_rewrite: making equality\n\t%s ==\n\t%s\n"
-                                    uu___7 uu___8)
-                               (fun uu___6 ->
-                                  let uu___7 =
+                         | (ut, uvar_t) ->
+                             let uu___6 =
+                               FStar_Tactics_Monad.if_verbose
+                                 (fun uu___7 ->
                                     let uu___8 =
-                                      let uu___9 =
+                                      FStar_Syntax_Print.term_to_string tm in
+                                    let uu___9 =
+                                      FStar_Syntax_Print.term_to_string ut in
+                                    FStar_Compiler_Util.print2
+                                      "do_rewrite: making equality\n\t%s ==\n\t%s\n"
+                                      uu___8 uu___9) in
+                             FStar_Tactics_Monad.op_let_Bang uu___6
+                               (fun uu___7 ->
+                                  let uu___8 =
+                                    let uu___9 =
+                                      let uu___10 =
                                         env.FStar_TypeChecker_Env.universe_of
                                           env typ in
-                                      FStar_Syntax_Util.mk_eq2 uu___9 typ tm
+                                      FStar_Syntax_Util.mk_eq2 uu___10 typ tm
                                         ut in
                                     FStar_Tactics_Monad.add_irrelevant_goal
-                                      g0 "do_rewrite.eq" env uu___8 in
-                                  FStar_Tactics_Monad.bind uu___7
-                                    (fun uu___8 ->
-                                       let uu___9 =
+                                      g0 "do_rewrite.eq" env uu___9 in
+                                  FStar_Tactics_Monad.op_let_Bang uu___8
+                                    (fun uu___9 ->
+                                       let uu___10 =
                                          FStar_Tactics_Basic.focus rewriter in
-                                       FStar_Tactics_Monad.bind uu___9
-                                         (fun uu___10 ->
+                                       FStar_Tactics_Monad.op_let_Bang
+                                         uu___10
+                                         (fun uu___11 ->
                                             let ut1 =
                                               FStar_TypeChecker_Normalize.reduce_uvar_solutions
                                                 env ut in
-                                            FStar_Tactics_Monad.mlog
-                                              (fun uu___11 ->
-                                                 let uu___12 =
-                                                   FStar_Syntax_Print.term_to_string
-                                                     tm in
-                                                 let uu___13 =
-                                                   FStar_Syntax_Print.term_to_string
-                                                     ut1 in
-                                                 FStar_Compiler_Util.print2
-                                                   "rewrite_rec: succeeded rewriting\n\t%s to\n\t%s\n"
-                                                   uu___12 uu___13)
-                                              (fun uu___11 ->
+                                            let uu___12 =
+                                              FStar_Tactics_Monad.if_verbose
+                                                (fun uu___13 ->
+                                                   let uu___14 =
+                                                     FStar_Syntax_Print.term_to_string
+                                                       tm in
+                                                   let uu___15 =
+                                                     FStar_Syntax_Print.term_to_string
+                                                       ut1 in
+                                                   FStar_Compiler_Util.print2
+                                                     "rewrite_rec: succeeded rewriting\n\t%s to\n\t%s\n"
+                                                     uu___14 uu___15) in
+                                            FStar_Tactics_Monad.op_let_Bang
+                                              uu___12
+                                              (fun uu___13 ->
                                                  FStar_Tactics_Monad.ret ut1)))))))
 let (do_rewrite :
   FStar_Tactics_Types.goal ->
@@ -246,7 +253,7 @@ let (do_rewrite :
           let uu___ =
             let uu___1 = __do_rewrite g0 rewriter env tm in
             FStar_Tactics_Monad.catch uu___1 in
-          FStar_Tactics_Monad.bind uu___
+          FStar_Tactics_Monad.op_let_Bang uu___
             (fun uu___1 ->
                match uu___1 with
                | FStar_Pervasives.Inl (FStar_Tactics_Common.TacticFailure
@@ -260,7 +267,7 @@ let seq_ctac : 'a . 'a ctac -> 'a ctac -> 'a ctac =
     fun c2 ->
       fun x ->
         let uu___ = c1 x in
-        FStar_Tactics_Monad.bind uu___
+        FStar_Tactics_Monad.op_let_Bang uu___
           (fun uu___1 ->
              match uu___1 with
              | (x', flag) ->
@@ -289,7 +296,7 @@ let par_ctac : 'a 'b . 'a ctac -> 'b ctac -> ('a * 'b) ctac =
         match uu___ with
         | (x, y) ->
             let uu___1 = cl x in
-            FStar_Tactics_Monad.bind uu___1
+            FStar_Tactics_Monad.op_let_Bang uu___1
               (fun uu___2 ->
                  match uu___2 with
                  | (x1, flag) ->
@@ -299,7 +306,7 @@ let par_ctac : 'a 'b . 'a ctac -> 'b ctac -> ('a * 'b) ctac =
                             ((x1, y), FStar_Tactics_Types.Abort)
                       | fa ->
                           let uu___3 = cr y in
-                          FStar_Tactics_Monad.bind uu___3
+                          FStar_Tactics_Monad.op_let_Bang uu___3
                             (fun uu___4 ->
                                match uu___4 with
                                | (y1, flag1) ->
@@ -320,7 +327,7 @@ let rec map_ctac : 'a . 'a ctac -> 'a Prims.list ctac =
           let uu___ =
             let uu___1 = let uu___2 = map_ctac c in par_ctac c uu___2 in
             uu___1 (x, xs1) in
-          FStar_Tactics_Monad.bind uu___
+          FStar_Tactics_Monad.op_let_Bang uu___
             (fun uu___1 ->
                match uu___1 with
                | ((x1, xs2), flag) ->
@@ -346,7 +353,7 @@ let (maybe_rewrite :
         fun env ->
           fun tm ->
             let uu___ = controller tm in
-            FStar_Tactics_Monad.bind uu___
+            FStar_Tactics_Monad.op_let_Bang uu___
               (fun uu___1 ->
                  match uu___1 with
                  | (rw, ctrl_flag) ->
@@ -354,7 +361,7 @@ let (maybe_rewrite :
                        if rw
                        then do_rewrite g0 rewriter env tm
                        else FStar_Tactics_Monad.ret tm in
-                     FStar_Tactics_Monad.bind uu___2
+                     FStar_Tactics_Monad.op_let_Bang uu___2
                        (fun tm' -> FStar_Tactics_Monad.ret (tm', ctrl_flag)))
 let rec (ctrl_fold_env :
   FStar_Tactics_Types.goal ->
@@ -414,7 +421,7 @@ and (recurse_option_residual_comp :
                | FStar_Pervasives_Native.Some t ->
                    let t1 = FStar_Syntax_Subst.subst retyping_subst t in
                    let uu___ = recurse env t1 in
-                   FStar_Tactics_Monad.bind uu___
+                   FStar_Tactics_Monad.op_let_Bang uu___
                      (fun uu___1 ->
                         match uu___1 with
                         | (t2, flag) ->
@@ -453,7 +460,7 @@ and (on_subterms :
                 | [] ->
                     let t1 = FStar_Syntax_Subst.subst retyping_subst t in
                     let uu___ = recurse env1 t1 in
-                    FStar_Tactics_Monad.bind uu___
+                    FStar_Tactics_Monad.op_let_Bang uu___
                       (fun uu___1 ->
                          match uu___1 with
                          | (t2, t_flag) ->
@@ -465,7 +472,7 @@ and (on_subterms :
                                   let uu___3 =
                                     recurse_option_residual_comp env1
                                       retyping_subst k recurse in
-                                  FStar_Tactics_Monad.bind uu___3
+                                  FStar_Tactics_Monad.op_let_Bang uu___3
                                     (fun uu___4 ->
                                        match uu___4 with
                                        | (k1, k_flag) ->
@@ -498,7 +505,7 @@ and (on_subterms :
                       FStar_Syntax_Subst.subst retyping_subst
                         (b.FStar_Syntax_Syntax.binder_bv).FStar_Syntax_Syntax.sort in
                     let uu___ = recurse env1 s in
-                    FStar_Tactics_Monad.bind uu___
+                    FStar_Tactics_Monad.op_let_Bang uu___
                       (fun uu___1 ->
                          match uu___1 with
                          | (s1, flag) ->
@@ -548,7 +555,7 @@ and (on_subterms :
                       let uu___2 =
                         let uu___3 = ctac_args rr in par_ctac rr uu___3 in
                       uu___2 (hd, args) in
-                    FStar_Tactics_Monad.bind uu___1
+                    FStar_Tactics_Monad.op_let_Bang uu___1
                       (fun uu___2 ->
                          match uu___2 with
                          | ((hd1, args1), flag) ->
@@ -603,7 +610,7 @@ and (on_subterms :
                             let uu___3 =
                               FStar_TypeChecker_Env.push_bvs env bvs in
                             recurse uu___3 e in
-                          FStar_Tactics_Monad.bind uu___2
+                          FStar_Tactics_Monad.op_let_Bang uu___2
                             (fun uu___3 ->
                                match uu___3 with
                                | (e1, flag) ->
@@ -615,7 +622,7 @@ and (on_subterms :
                       let uu___2 =
                         let uu___3 = map_ctac c_branch in par_ctac rr uu___3 in
                       uu___2 (hd, brs) in
-                    FStar_Tactics_Monad.bind uu___1
+                    FStar_Tactics_Monad.op_let_Bang uu___1
                       (fun uu___2 ->
                          match uu___2 with
                          | ((hd1, brs1), flag) ->
@@ -652,7 +659,7 @@ and (on_subterms :
                                recurse uu___10 in
                              par_ctac rr uu___9 in
                            uu___8 ((lb.FStar_Syntax_Syntax.lbdef), e1) in
-                         FStar_Tactics_Monad.bind uu___7
+                         FStar_Tactics_Monad.op_let_Bang uu___7
                            (fun uu___8 ->
                               match uu___8 with
                               | ((lbdef, e2), flag) ->
@@ -684,7 +691,7 @@ and (on_subterms :
                 | FStar_Syntax_Syntax.Tm_let ((true, lbs), e) ->
                     let c_lb lb =
                       let uu___1 = rr lb.FStar_Syntax_Syntax.lbdef in
-                      FStar_Tactics_Monad.bind uu___1
+                      FStar_Tactics_Monad.op_let_Bang uu___1
                         (fun uu___2 ->
                            match uu___2 with
                            | (def, flag) ->
@@ -711,7 +718,7 @@ and (on_subterms :
                            let uu___3 =
                              let uu___4 = map_ctac c_lb in par_ctac uu___4 rr in
                            uu___3 (lbs1, e1) in
-                         FStar_Tactics_Monad.bind uu___2
+                         FStar_Tactics_Monad.op_let_Bang uu___2
                            (fun uu___3 ->
                               match uu___3 with
                               | ((lbs2, e2), flag) ->
@@ -724,7 +731,7 @@ and (on_subterms :
                                              ((true, lbs3), e3)), flag))))
                 | FStar_Syntax_Syntax.Tm_ascribed (t, asc, eff) ->
                     let uu___1 = rr t in
-                    FStar_Tactics_Monad.bind uu___1
+                    FStar_Tactics_Monad.op_let_Bang uu___1
                       (fun uu___2 ->
                          match uu___2 with
                          | (t1, flag) ->
@@ -733,7 +740,7 @@ and (on_subterms :
                                    (t1, asc, eff)), flag))
                 | FStar_Syntax_Syntax.Tm_meta (t, m) ->
                     let uu___1 = rr t in
-                    FStar_Tactics_Monad.bind uu___1
+                    FStar_Tactics_Monad.op_let_Bang uu___1
                       (fun uu___2 ->
                          match uu___2 with
                          | (t1, flag) ->
@@ -744,7 +751,7 @@ and (on_subterms :
                       ((tm1.FStar_Syntax_Syntax.n),
                         FStar_Tactics_Types.Continue) in
               let uu___ = go () in
-              FStar_Tactics_Monad.bind uu___
+              FStar_Tactics_Monad.op_let_Bang uu___
                 (fun uu___1 ->
                    match uu___1 with
                    | (tmn', flag) ->
@@ -774,7 +781,7 @@ let (do_ctrl_rewrite :
           fun env ->
             fun tm ->
               let uu___ = ctrl_fold_env g0 dir controller rewriter env tm in
-              FStar_Tactics_Monad.bind uu___
+              FStar_Tactics_Monad.op_let_Bang uu___
                 (fun uu___1 ->
                    match uu___1 with
                    | (tm', uu___2) -> FStar_Tactics_Monad.ret tm')
@@ -786,7 +793,7 @@ let (ctrl_rewrite :
     fun controller ->
       fun rewriter ->
         let uu___ =
-          FStar_Tactics_Monad.bind FStar_Tactics_Monad.get
+          FStar_Tactics_Monad.op_let_Bang FStar_Tactics_Monad.get
             (fun ps ->
                let uu___1 =
                  match ps.FStar_Tactics_Types.goals with
@@ -794,34 +801,44 @@ let (ctrl_rewrite :
                  | [] -> failwith "no goals" in
                match uu___1 with
                | (g, gs) ->
-                   FStar_Tactics_Monad.bind FStar_Tactics_Monad.dismiss_all
+                   FStar_Tactics_Monad.op_let_Bang
+                     FStar_Tactics_Monad.dismiss_all
                      (fun uu___2 ->
                         let gt = FStar_Tactics_Types.goal_type g in
-                        FStar_Tactics_Monad.log ps
+                        let uu___3 =
+                          FStar_Tactics_Monad.if_verbose
+                            (fun uu___4 ->
+                               let uu___5 =
+                                 FStar_Syntax_Print.term_to_string gt in
+                               FStar_Compiler_Util.print1
+                                 "ctrl_rewrite starting with %s\n" uu___5) in
+                        FStar_Tactics_Monad.op_let_Bang uu___3
                           (fun uu___4 ->
                              let uu___5 =
-                               FStar_Syntax_Print.term_to_string gt in
-                             FStar_Compiler_Util.print1
-                               "ctrl_rewrite starting with %s\n" uu___5);
-                        (let uu___4 =
-                           let uu___5 = FStar_Tactics_Types.goal_env g in
-                           do_ctrl_rewrite g dir controller rewriter uu___5
-                             gt in
-                         FStar_Tactics_Monad.bind uu___4
-                           (fun gt' ->
-                              FStar_Tactics_Monad.log ps
-                                (fun uu___6 ->
-                                   let uu___7 =
-                                     FStar_Syntax_Print.term_to_string gt' in
-                                   FStar_Compiler_Util.print1
-                                     "ctrl_rewrite seems to have succeded with %s\n"
-                                     uu___7);
-                              (let uu___6 = FStar_Tactics_Monad.push_goals gs in
-                               FStar_Tactics_Monad.bind uu___6
-                                 (fun uu___7 ->
-                                    let g1 =
-                                      FStar_Tactics_Basic.goal_with_type g
-                                        gt' in
-                                    FStar_Tactics_Monad.add_goals [g1])))))) in
+                               let uu___6 = FStar_Tactics_Types.goal_env g in
+                               do_ctrl_rewrite g dir controller rewriter
+                                 uu___6 gt in
+                             FStar_Tactics_Monad.op_let_Bang uu___5
+                               (fun gt' ->
+                                  let uu___6 =
+                                    FStar_Tactics_Monad.if_verbose
+                                      (fun uu___7 ->
+                                         let uu___8 =
+                                           FStar_Syntax_Print.term_to_string
+                                             gt' in
+                                         FStar_Compiler_Util.print1
+                                           "ctrl_rewrite seems to have succeded with %s\n"
+                                           uu___8) in
+                                  FStar_Tactics_Monad.op_let_Bang uu___6
+                                    (fun uu___7 ->
+                                       let uu___8 =
+                                         FStar_Tactics_Monad.push_goals gs in
+                                       FStar_Tactics_Monad.op_let_Bang uu___8
+                                         (fun uu___9 ->
+                                            let g1 =
+                                              FStar_Tactics_Basic.goal_with_type
+                                                g gt' in
+                                            FStar_Tactics_Monad.add_goals
+                                              [g1])))))) in
         FStar_Compiler_Effect.op_Less_Bar
           (FStar_Tactics_Monad.wrap_err "ctrl_rewrite") uu___

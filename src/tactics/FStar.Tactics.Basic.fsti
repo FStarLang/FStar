@@ -37,6 +37,7 @@ module Z     = FStar.BigInt
 module TcComm = FStar.TypeChecker.Common
 
 (* Internal utilities *)
+val goal_typedness_deps : goal -> list ctx_uvar
 
 val proofstate_of_goals : Range.range -> env -> list goal -> list implicit -> proofstate
 (* Returns proofstate and uvar for main witness *)

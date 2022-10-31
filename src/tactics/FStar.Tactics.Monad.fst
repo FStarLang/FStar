@@ -53,25 +53,44 @@ let register_goal (env:Env.env) (uv:S.ctx_uvar) =
       then BU.print1 "(%s) Registering goal\n"
                      (BU.string_of_int i);
       
-      if Env.debug env <| Options.Other "Core"
-      ||  Env.debug env <| Options.Other "RegisterGoal"
-      then BU.print2 "(%s) Registering goal for %s\n"
+      let all_deps_resolved =
+          List.for_all 
+          (fun uv -> 
+            match UF.find uv.ctx_uvar_head with
+            | Some t -> BU.set_is_empty (FStar.Syntax.Free.uvars t)
+            | _ -> false)
+          (U.ctx_uvar_typedness_deps uv)
+      in
+      if not all_deps_resolved
+      then (
+        if Env.debug env <| Options.Other "Core"
+        ||  Env.debug env <| Options.Other "RegisterGoal"
+        then BU.print1 "(%s) Not registering goal since it has unresolved uvar deps\n"
+                     (BU.string_of_int i);
+        
+        ()
+      )
+      else (
+        if Env.debug env <| Options.Other "Core"
+        ||  Env.debug env <| Options.Other "RegisterGoal"
+        then BU.print2 "(%s) Registering goal for %s\n"
                      (BU.string_of_int i)
                      (Print.ctx_uvar_to_string uv);
-      let goal_ty = U.ctx_uvar_typ uv in
-      // let goal_ty = FStar.TypeChecker.Normalize.normalize [Beta; Iota; Exclude Zeta] env goal_ty in
-      match FStar.TypeChecker.Core.compute_term_type_handle_guards env goal_ty false (fun _ _ -> true) 
-      with
-      | Inl _ -> ()
-      | Inr err ->
-        let msg = 
-          BU.format2 ("Failed to check initial tactic goal %s because %s")
-                              (Print.term_to_string (U.ctx_uvar_typ uv))
-                              (FStar.TypeChecker.Core.print_error_short err)
-        in
-        BU.print_string msg;
-        Errors.log_issue uv.ctx_uvar_range
-                         (Err.Warning_FailedToCheckInitialTacticGoal, msg)
+        let goal_ty = U.ctx_uvar_typ uv in
+        // let goal_ty = FStar.TypeChecker.Normalize.normalize [Beta; Iota; Exclude Zeta] env goal_ty in
+        match FStar.TypeChecker.Core.compute_term_type_handle_guards env goal_ty false (fun _ _ -> true) 
+        with
+        | Inl _ -> ()
+        | Inr err ->
+          let msg = 
+            BU.format2 ("Failed to check initial tactic goal %s because %s")
+                                (Print.term_to_string (U.ctx_uvar_typ uv))
+                                (FStar.TypeChecker.Core.print_error_short err)
+          in
+          BU.print_string msg;
+          Errors.log_issue uv.ctx_uvar_range
+                           (Err.Warning_FailedToCheckInitialTacticGoal, msg)
+      )
 
 (*
  * A record, so we can keep it somewhat encapsulated and
@@ -287,6 +306,7 @@ let add_implicits (i:implicits) : tac unit =
 
 let new_uvar (reason:string) (env:env) (typ:typ)
              (sc_opt:option should_check_uvar)
+             (uvar_typedness_deps:list ctx_uvar)
              (rng:Range.range) 
   : tac (term * ctx_uvar) =
     let should_check = 
@@ -295,14 +315,14 @@ let new_uvar (reason:string) (env:env) (typ:typ)
       | _ -> Strict
     in
     let u, ctx_uvar, g_u =
-        Env.new_implicit_var reason rng env typ should_check None
+        Env.new_tac_implicit_var reason rng env typ should_check uvar_typedness_deps None
     in
     bind (add_implicits g_u.implicits) (fun _ ->
     ret (u, fst (List.hd ctx_uvar)))
 
 let mk_irrelevant_goal (reason:string) (env:env) (phi:typ) (rng:Range.range) opts label : tac goal =
     let typ = U.mk_squash (env.universe_of env phi) phi in
-    bind (new_uvar reason env typ (Some Strict) rng) (fun (_, ctx_uvar) ->
+    bind (new_uvar reason env typ (Some Strict) [] rng) (fun (_, ctx_uvar) ->
     let goal = mk_goal env ctx_uvar opts false label in
     ret goal)
 
@@ -342,12 +362,14 @@ let mlog f (cont : unit -> tac 'a) : tac 'a =
   log ps f;
   cont ()
 
-let if_verbose f =
+let if_verbose_tac f =
   let! ps = get in
   if ps.tac_verb_dbg
   then f ()
   else ret ()
-    
+
+let if_verbose f = if_verbose_tac (fun _ -> f(); ret ()) 
+
 let compress_implicits : tac unit =
     bind get (fun ps ->
     let imps = ps.all_implicits in

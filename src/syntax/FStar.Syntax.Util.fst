@@ -1378,6 +1378,11 @@ let residual_tot t = {
     residual_typ=Some t;
     residual_flags=[TOTAL]
   }
+let residual_gtot t = {
+    residual_effect=PC.effect_GTot_lid;
+    residual_typ=Some t;
+    residual_flags=[TOTAL]
+  }
 let residual_comp_of_comp (c:comp) = {
     residual_effect=comp_effect_name c;
     residual_typ=Some (comp_result c);
@@ -2446,6 +2451,9 @@ let ctx_uvar_should_check (u:ctx_uvar) =
 
 let ctx_uvar_typ (u:ctx_uvar) = 
   (Unionfind.find_decoration u.ctx_uvar_head).uvar_decoration_typ
+
+let ctx_uvar_typedness_deps (u:ctx_uvar) = 
+    (Unionfind.find_decoration u.ctx_uvar_head).uvar_decoration_typedness_depends_on
 
 let flatten_refinement t =
   let rec aux t unascribe =

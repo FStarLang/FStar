@@ -787,8 +787,8 @@ let (check_bqual :
       | (FStar_Pervasives_Native.None, FStar_Pervasives_Native.None) ->
           return ()
       | (FStar_Pervasives_Native.Some (FStar_Syntax_Syntax.Implicit b01),
-         FStar_Pervasives_Native.Some (FStar_Syntax_Syntax.Implicit b11))
-          when b01 = b11 -> return ()
+         FStar_Pervasives_Native.Some (FStar_Syntax_Syntax.Implicit b11)) ->
+          return ()
       | (FStar_Pervasives_Native.Some (FStar_Syntax_Syntax.Equality),
          FStar_Pervasives_Native.Some (FStar_Syntax_Syntax.Equality)) ->
           return ()

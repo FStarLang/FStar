@@ -398,8 +398,9 @@ let check_bqual (b0 b1:bqual)
   : result unit
   = match b0, b1 with
     | None, None -> return ()
-    | Some (Implicit b0), Some (Implicit b1)
-      when b0=b1 ->
+    | Some (Implicit b0), Some (Implicit b1) ->
+      //we don't care about the inaccessibility qualifier
+      //when comparing bquals
       return ()
     | Some Equality, Some Equality ->
       return ()
@@ -1121,7 +1122,7 @@ and memo_check (g:env) (e:term)
 and check (msg:string) (g:env) (e:term)
   : result (effect_label & typ)
   = with_context msg (Some (CtxTerm e)) (fun _ -> memo_check g e)
-
+    
 (*  G |- e : Tot t | pre *)
 and check' (g:env) (e:term)
   : result (effect_label & typ) =

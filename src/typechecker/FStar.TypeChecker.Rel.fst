@@ -125,7 +125,8 @@ let as_wl_deferred wl (d:deferred): list (int * deferred_reason * lstring * prob
 let new_uvar reason wl r gamma binders k should_check meta : ctx_uvar * term * worklist =
     let decoration = {
              uvar_decoration_typ = k;
-             uvar_decoration_should_check = should_check
+             uvar_decoration_should_check = should_check;
+             uvar_decoration_typedness_depends_on = []
         }
     in
     let ctx_uvar = {
@@ -3120,14 +3121,17 @@ and solve_t_flex_flex env orig wl (lhs:flex_t) (rhs:flex_t) : solution =
                      then BU.print1 "flex-flex quasi: %s\n"
                                     (BU.stack_dump())
                    in
+                   let new_uvar_should_check, is_ghost =
+                     match U.ctx_uvar_should_check u_lhs, U.ctx_uvar_should_check u_rhs with
+                     | Allow_untyped r, Allow_untyped _ -> Allow_untyped r, false
+                     | Allow_ghost r, _
+                     | _, Allow_ghost r -> Allow_ghost r, true
+                     | _ -> Strict, false in
                    let _, w, wl = new_uvar ("flex-flex quasi:"
-                                          ^"\tlhs="  ^u_lhs.ctx_uvar_reason
-                                          ^ "\trhs=" ^u_rhs.ctx_uvar_reason)
+                                           ^"\tlhs="  ^u_lhs.ctx_uvar_reason
+                                           ^"\trhs=" ^u_rhs.ctx_uvar_reason)
                                          wl range gamma_w ctx_w new_uvar_typ
-                                         (if Allow_untyped? (U.ctx_uvar_should_check u_lhs) &&
-                                             Allow_untyped? (U.ctx_uvar_should_check u_rhs)
-                                          then U.ctx_uvar_should_check u_lhs
-                                          else Strict)
+                                         new_uvar_should_check
                                          None in
                    let w_app = S.mk_Tm_app w (List.map (fun ({binder_bv=z}) -> S.as_arg (S.bv_to_name z)) zs) w.pos in
                    let _ =
@@ -3146,12 +3150,13 @@ and solve_t_flex_flex env orig wl (lhs:flex_t) (rhs:flex_t) : solution =
                              Print.binders_to_string ", " (ctx_r@binders_rhs);
                              Print.binders_to_string ", " zs]
                    in
-                   let s1_sol = U.abs binders_lhs w_app (Some (U.residual_tot t_res_lhs)) in
+                   let rc = (if is_ghost then U.residual_gtot else U.residual_tot) t_res_lhs in
+                   let s1_sol = U.abs binders_lhs w_app (Some rc) in
                    let s1 = TERM(u_lhs, s1_sol) in
                    if Unionfind.equiv u_lhs.ctx_uvar_head u_rhs.ctx_uvar_head
                    then solve env (solve_prob orig None [s1] wl)
                    else (
-                       let s2_sol = U.abs binders_rhs w_app (Some (U.residual_tot t_res_lhs)) in
+                       let s2_sol = U.abs binders_rhs w_app (Some rc) in
                        let s2 = TERM(u_rhs, s2_sol) in
                        solve env (solve_prob orig None [s1;s2] wl)
                      )
