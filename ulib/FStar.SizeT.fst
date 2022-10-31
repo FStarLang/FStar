@@ -19,12 +19,17 @@ let size_v_inj (x1 x2: t) = ()
 let uint_to_t x =
   U64.uint_to_t x
 
-let mk (x: U16.t) : Pure t
-  (requires True)
-  (ensures (fun y -> v y == U16.v x))
-= uint_to_t (U16.v x)
+/// These two predicates are only used for modeling purposes, and their definitions must
+/// remain abstract to ensure they can only be introduced through a static assert.
+/// We simply define them as True here
+let fits_u32 = True
+let fits_u64 = True
 
-let mk_checked x = uint_to_t (U64.v x)
+let mk_u32 (x: U32.t)
+  = uint_to_t (U32.v x)
+
+let mk_u64 (x: U64.t)
+  = uint_to_t (U64.v x)
 
 let fits_lte x y = ()
 
