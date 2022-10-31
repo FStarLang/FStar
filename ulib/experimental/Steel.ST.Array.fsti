@@ -354,8 +354,8 @@ let ptr_shift_zero
   (#elt: Type)
   (p: ptr elt)
 : Lemma
-  (ptr_shift p US.zero == p)
-= ptr_base_offset_inj (ptr_shift p US.zero) p
+  (ptr_shift p 0sz == p)
+= ptr_base_offset_inj (ptr_shift p 0sz) p
 
 /// Computing the right-hand-side part of splitting an array a at
 /// offset i.
