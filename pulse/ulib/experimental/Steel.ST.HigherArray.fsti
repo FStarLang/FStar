@@ -529,7 +529,6 @@ let memcpy (#t:_) (#p0:perm)
 /// It will be natively extracted to static_assert (UINT32_MAX <= SIZE_T_MAX) by krml
 /// It is a ghost, stateful lemma, but it needs to be in STAtomicBase to avoid being
 /// erased at extraction-time
-inline_for_extraction
 [@@noextract_to "krml"]
 val intro_fits_u32 (#opened: _) (_:unit)
   : STAtomicBase unit false opened Unobservable
@@ -541,7 +540,6 @@ val intro_fits_u32 (#opened: _) (_:unit)
 /// It will be natively extracted to static_assert (UINT64_MAX <= SIZE_T_MAX) by krml
 /// It is a ghost, stateful lemma, but it needs to be in STAtomicBase to avoid being
 /// erased at extraction-time
-inline_for_extraction
 [@@noextract_to "krml"]
 val intro_fits_u64 (#opened: _) (_:unit)
   : STAtomicBase unit false opened Unobservable
