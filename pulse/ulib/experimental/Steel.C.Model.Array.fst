@@ -553,7 +553,7 @@ let split_r
     (ensures (fun _ -> True))
 = sub a i (a.len `size_sub` i)
 
-#push-options "--z3rlimit 64"
+#push-options "--z3rlimit 128"
 
 #restart-solver
 let g_focus_sub
@@ -621,7 +621,7 @@ let g_focus_sub
 
 #pop-options
 
-#push-options "--z3rlimit 16"
+#push-options "--z3rlimit 32"
 
 #restart-solver
 let g_split
