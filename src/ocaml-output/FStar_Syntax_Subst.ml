@@ -1709,20 +1709,6 @@ let rec (deep_compress :
           FStar_Syntax_Syntax.pos = (t1.FStar_Syntax_Syntax.pos);
           FStar_Syntax_Syntax.vars = uu___1
         }
-    | FStar_Syntax_Syntax.Tm_bvar uu___ ->
-        let uu___1 = FStar_Compiler_Util.mk_ref FStar_Pervasives_Native.None in
-        {
-          FStar_Syntax_Syntax.n = (t1.FStar_Syntax_Syntax.n);
-          FStar_Syntax_Syntax.pos = (t1.FStar_Syntax_Syntax.pos);
-          FStar_Syntax_Syntax.vars = uu___1
-        }
-    | FStar_Syntax_Syntax.Tm_name uu___ ->
-        let uu___1 = FStar_Compiler_Util.mk_ref FStar_Pervasives_Native.None in
-        {
-          FStar_Syntax_Syntax.n = (t1.FStar_Syntax_Syntax.n);
-          FStar_Syntax_Syntax.pos = (t1.FStar_Syntax_Syntax.pos);
-          FStar_Syntax_Syntax.vars = uu___1
-        }
     | FStar_Syntax_Syntax.Tm_unknown ->
         let uu___ = FStar_Compiler_Util.mk_ref FStar_Pervasives_Native.None in
         {
@@ -1730,6 +1716,28 @@ let rec (deep_compress :
           FStar_Syntax_Syntax.pos = (t1.FStar_Syntax_Syntax.pos);
           FStar_Syntax_Syntax.vars = uu___
         }
+    | FStar_Syntax_Syntax.Tm_bvar bv ->
+        let uu___ =
+          let uu___1 =
+            let uu___2 = mk FStar_Syntax_Syntax.Tm_unknown in
+            {
+              FStar_Syntax_Syntax.ppname = (bv.FStar_Syntax_Syntax.ppname);
+              FStar_Syntax_Syntax.index = (bv.FStar_Syntax_Syntax.index);
+              FStar_Syntax_Syntax.sort = uu___2
+            } in
+          FStar_Syntax_Syntax.Tm_bvar uu___1 in
+        mk uu___
+    | FStar_Syntax_Syntax.Tm_name bv ->
+        let uu___ =
+          let uu___1 =
+            let uu___2 = mk FStar_Syntax_Syntax.Tm_unknown in
+            {
+              FStar_Syntax_Syntax.ppname = (bv.FStar_Syntax_Syntax.ppname);
+              FStar_Syntax_Syntax.index = (bv.FStar_Syntax_Syntax.index);
+              FStar_Syntax_Syntax.sort = uu___2
+            } in
+          FStar_Syntax_Syntax.Tm_name uu___1 in
+        mk uu___
     | FStar_Syntax_Syntax.Tm_uinst (f, us) ->
         let us1 = FStar_Compiler_List.map deep_compress_univ us in
         mk (FStar_Syntax_Syntax.Tm_uinst (f, us1))

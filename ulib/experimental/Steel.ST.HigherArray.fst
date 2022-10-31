@@ -669,3 +669,7 @@ let blit0 (#t:_) (#p0:perm) (#s0 #s1:Ghost.erased (Seq.seq t))
 let blit_ptr
   src len_src idx_src dst len_dst idx_dst len
 = blit0 _ idx_src _ idx_dst len
+
+/// These two functions will be natively extracted, we can simply admit them
+let intro_fits_u32 () = admit_ ()
+let intro_fits_u64 () = admit_ ()

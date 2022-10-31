@@ -3,6 +3,7 @@ module FStar.SizeT
 open FStar.Mul
 
 module U16 = FStar.UInt16
+module U32 = FStar.UInt32
 module U64 = FStar.UInt64
 
 val t : eqtype
@@ -22,20 +23,25 @@ val size_v_inj (x1 x2: t) : Lemma
 /// (https://en.cppreference.com/w/c/types/t)
 /// We therefore offer two functions to create a t value.
 /// Any value that fits in a uint_16 can be cast directly to t
-/// Any value that might not fit in a uint_16 needs to be checked,
-/// we will add a static_assert during extraction
+/// Any value that might not fit in a uint_16 needs to satisfy the `fits_u32`
+/// or `fits_u64` predicates. These predicates can only be introduced through a
+/// stateful function (currently in Steel.ST.HigherArray), which will be extracted
+/// to a static_assert by krml
 val uint_to_t (x: nat) : Pure t
   (requires (fits x))
   (ensures (fun y -> v y == x))
 
-noextract inline_for_extraction
-val mk (x: U16.t) : Pure t
-  (requires True)
-  (ensures (fun y -> v y == U16.v x))
+val fits_u32 : prop
+val fits_u64 : prop
 
 noextract inline_for_extraction
-val mk_checked (x: U64.t) : Pure t
-  (requires True)
+val mk_u32 (x: U32.t) : Pure t
+  (requires fits_u32)
+  (ensures (fun y -> v y == U32.v x))
+
+noextract inline_for_extraction
+val mk_u64 (x: U64.t) : Pure t
+  (requires fits_u64)
   (ensures (fun y -> v y == U64.v x))
 
 val fits_lte (x y: nat) : Lemma
@@ -89,14 +95,6 @@ val lt (x y:t) : Pure bool
 val lte (x y: t) : Pure bool
   (requires True)
   (ensures (fun z -> z == (v x <= v y)))
-
-(** Common constants *)
-
-noextract inline_for_extraction
-let zero : (zero_size: t { v zero_size == 0 }) = mk 0us
-
-noextract inline_for_extraction
-let one : (zero_size: t { v zero_size == 1 }) = mk 1us
 
 (** Infix notations *)
 

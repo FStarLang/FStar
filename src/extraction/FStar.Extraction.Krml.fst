@@ -971,6 +971,7 @@ and translate_width = function
   | Some (FC.Unsigned, FC.Int16) -> UInt16
   | Some (FC.Unsigned, FC.Int32) -> UInt32
   | Some (FC.Unsigned, FC.Int64) -> UInt64
+  | Some (FC.Unsigned, FC.Sizet) -> SizeT
 
 and translate_pat env p =
   match p with

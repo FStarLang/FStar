@@ -523,3 +523,26 @@ let memcpy (#t:_) (#p0:perm)
   elim_pure (blit_post s0 s1 a0 0sz a1 0sz l s1');
   vpattern_rewrite (pts_to a1 full_perm) (Ghost.reveal s0);
   return ()
+
+
+/// An introduction function for the fits_u32 predicate.
+/// It will be natively extracted to static_assert (UINT32_MAX <= SIZE_T_MAX) by krml
+/// It is a ghost, stateful lemma, but it needs to be in STAtomicBase to avoid being
+/// erased at extraction-time
+[@@noextract_to "krml"]
+val intro_fits_u32 (#opened: _) (_:unit)
+  : STAtomicBase unit false opened Unobservable
+                 emp (fun _ -> emp)
+                 (requires True)
+                 (ensures fun _ -> US.fits_u32)
+
+/// An introduction function for the fits_u64 predicate.
+/// It will be natively extracted to static_assert (UINT64_MAX <= SIZE_T_MAX) by krml
+/// It is a ghost, stateful lemma, but it needs to be in STAtomicBase to avoid being
+/// erased at extraction-time
+[@@noextract_to "krml"]
+val intro_fits_u64 (#opened: _) (_:unit)
+  : STAtomicBase unit false opened Unobservable
+                 emp (fun _ -> emp)
+                 (requires True)
+                 (ensures fun _ -> US.fits_u64)

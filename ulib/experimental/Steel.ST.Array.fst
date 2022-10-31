@@ -508,3 +508,6 @@ let compare
     )
 
 #pop-options
+
+let intro_fits_u32 () = H.intro_fits_u32 ()
+let intro_fits_u64 () = H.intro_fits_u64 ()

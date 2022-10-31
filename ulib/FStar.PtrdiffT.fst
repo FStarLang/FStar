@@ -1,6 +1,7 @@
 module FStar.PtrdiffT
 
 module Cast = FStar.Int.Cast
+module I64 = FStar.Int64
 
 let t = I64.t
 
@@ -17,7 +18,6 @@ let int_to_t (x: int) : Pure t
   = I64.int_to_t x
 
 let mk x = int_to_t (I16.v x)
-let mk_checked x = int_to_t (I64.v x)
 
 let add = I64.add
 let gt x y = I64.gt x y
