@@ -23,6 +23,7 @@ open Steel.Effect.Atomic
 open Steel.Effect
 open Steel.PCMReference
 open Steel.FractionalPermission
+open Steel.Preorder
 
 module Preorder = FStar.Preorder
 module Q = Steel.Preorder
@@ -32,155 +33,7 @@ open FStar.Real
 
 #set-options "--ide_id_info_off"
 
-noeq
-type history (a:Type) (p:Preorder.preorder a) =
-  | Witnessed : Q.hist p -> history a p
-  | Current : h:Q.vhist p -> f:perm -> history a p
-
-let hval_tot #a #p (h:history a p{Current? h}) : a =
-  match h with
-  | Current h _ -> Q.curval h
-
-let hval #a #p (h:history a p{Current? h}) : Ghost.erased a =
-  hval_tot h
-
-let hperm #a #p (h:history a p{Current? h}) : perm =
-  match h with
-  | Current _ f -> f
-
-let history_composable #a #p
-  : symrel (history a p)
-  = fun h0 h1 ->
-    match h0, h1 with
-    | Witnessed h0, Witnessed h1 ->
-      Q.p_composable p h0 h1
-    | Witnessed h0, Current h1 f
-    | Current h1 f, Witnessed h0 ->
-      Q.extends #a #p h1 h0
-    | Current h0 f0, Current h1 f1 ->
-      h0 == h1 /\
-      (sum_perm f0 f1).v <=. one
-
-let history_compose #a #p (h0:history a p) (h1:history a p{history_composable h0 h1})
-  : history a p
-  = match h0, h1 with
-    | Witnessed h0, Witnessed h1 ->
-      Witnessed (Q.p_op p h0 h1)
-    | Current h0 f, Witnessed h1
-    | Witnessed h1, Current h0 f ->
-      Current (Q.p_op p h1 h0) f
-    | Current h0 f0, Current _ f1 ->
-      Current h0 (sum_perm f0 f1)
-
-let unit_history #a #p : history a p = Witnessed []
-
-let lem_is_unit #a #p (x:history a p)
-  : Lemma (history_composable x unit_history /\
-           history_compose x unit_history == x)
-  = match x with
-    | Witnessed h -> ()
-    | Current h _ ->
-      assert (forall (h:Q.hist p). Q.p_composable p h []);
-      assert (forall (h:Q.hist p). Q.p_op p h [] == h);
-      assert (forall (h:Q.vhist p). Q.extends #a #p h []);
-      assert (h =!= []);
-      assert (Q.extends #a #p h [])
-#push-options "--z3rlimit_factor 2"
-let assoc_l #a #p (x y:history a p)
-                  (z:history a p{history_composable y z /\
-                                 history_composable x (history_compose y z)})
-  : Lemma (history_composable x y /\
-           history_composable (history_compose x y) z /\
-           history_compose (history_compose x y) z ==
-           history_compose x (history_compose y z))
-  = ()
-
-
-let assoc_r #a #p (x y:history a p)
-                  (z:history a p{history_composable x y /\
-                                 history_composable (history_compose x y) z})
-  : Lemma (history_composable y z /\
-           history_composable x (history_compose y z) /\
-           history_compose (history_compose x y) z ==
-           history_compose x (history_compose y z))
-  = ()
-#pop-options
-
-let pcm_history #a #p : pcm (history a p) = {
-  p = {
-         composable = history_composable;
-         op = history_compose;
-         one = unit_history
-      };
-  comm = (fun _ _ -> ());
-  assoc = assoc_l;
-  assoc_r = assoc_r;
-  is_unit = lem_is_unit;
-  refine = (fun _ -> True);
-}
-
-let pcm_history_preorder #a #p : Preorder.preorder (history a p) =
-  fun h0 h1 ->
-    match h0, h1 with
-    | Witnessed vh0, Witnessed vh1
-    | Current vh0 _, Witnessed vh1
-    | Witnessed vh0, Current vh1 _
-    | Current vh0 _, Current vh1 _ ->
-      vh1 `Q.extends` vh0
-
-#push-options "--z3rlimit_factor 8 --ifuel 1 --fuel 0 --warn_error -271"
-let pcm_history_induces_preorder #a #p
-  : Lemma (Q.induces_preorder (pcm_history #a #p)
-                              (pcm_history_preorder #a #p))
-  = let aux (x y:history a p)
-            (f:frame_preserving_upd (pcm_history #a #p) x y)
-            (v:history a p)
-      : Lemma
-          (requires compatible (pcm_history #a #p) x v)
-          (ensures (pcm_history_preorder #a #p) v (f v))
-          [SMTPat ()]
-      = let pcm = pcm_history #a #p in
-        let v1 = f v in
-        match x, v, v1 with
-        | Witnessed _, Witnessed _, Witnessed _ ->
-          assert (composable pcm x v)
-        | Current _ _, Witnessed _, Witnessed _ -> ()
-        | Witnessed _, Current _ _, Witnessed _ -> ()
-        | Witnessed _, Witnessed _, Current _ _ ->
-          assert (composable pcm x v)
-        | Current _ _, Witnessed _, Current _ _ -> ()
-        | Witnessed _, Current _ _, Current _ _ -> ()
-        | Current hx _, Current hv _, Witnessed _
-        | Current hx _, Current hv _, Current _ _ ->
-          let frame = FStar.IndefiniteDescription.indefinite_description_ghost
-            (history a p) (fun frame -> composable pcm x frame /\ op pcm frame x == v) in
-          match frame with
-          | Current hf _ -> ()
-          | Witnessed hf ->
-            assert (Q.extends hx hf);
-            assert (hx == hv);
-            assert (composable pcm x (Witnessed hv))
-    in
-    ()
-#pop-options
-
-let extend_history #a #p (h0:history a p{Current? h0})
-                         (v:a{p (hval h0) v})
- : history a p
- = let Current h f = h0 in
-   Current (v :: h) f
-
-let extend_history_is_frame_preserving #a #p
-                                       (h0:history a p{Current? h0 /\ hperm h0 == full_perm})
-                                       (v:a{p (hval h0) v})
-  : Lemma (frame_preserving pcm_history h0 (extend_history h0 v))
-  = ()
-
 let ref a p = M.ref (history a p) pcm_history
-
-let history_val #a #p (h:history a p) (v:Ghost.erased a) (f:perm)
-  : prop
-  = Current? h /\ hval h == v /\ hperm h == f /\ f.v <=. one
 
 [@@__reduce__]
 let pts_to_body #a #p (r:ref a p) (f:perm) (v:Ghost.erased a) (h:history a p) =
@@ -189,18 +42,6 @@ let pts_to_body #a #p (r:ref a p) (f:perm) (v:Ghost.erased a) (h:history a p) =
 
 let pts_to' (#a:Type) (#p:Preorder.preorder a) (r:ref a p) (f:perm) (v:Ghost.erased a) =
     h_exists (pts_to_body r f v)
-
-let split_current #a #p (h:history a p { Current? h /\ (Current?.f h).v <=. one  })
-  : half:history a p {
-    Current? h /\
-    composable pcm_history half half /\
-    op pcm_history half half  == h /\
-    Current?.h half == Current?.h h /\
-    history_val half (hval h) (Current?.f half)
-  }
-  = let Current v p = h in
-    assert_spinoff (sum_perm (half_perm p) (half_perm p) == p);
-    Current v (half_perm p)
 
 let pts_to_sl r f v = hp_of (pts_to' r f v)
 
@@ -310,25 +151,10 @@ let write (#a:Type) (#p:Preorder.preorder a) (#v:erased a)
     let _ = elim_pure r v h_old_e in
 
     let h_old = read r h_old_e in
-    let h: history a p = extend_history h_old x in
+    let h: history a p = extend_history' h_old x in
     write r h_old_e h;
 
     intro_pure_full r x h
-
-let lift_fact #a #p (f:property a)
-  : property (history a p)
-  = fun history ->
-      match history with
-      | Witnessed h -> Cons? h /\ f (Cons?.hd h)
-      | Current h _ -> f (hval history)
-
-let lift_fact_is_stable #a #p (f:property a{FStar.Preorder.stable f p})
-  : Lemma (FStar.Preorder.stable #(history a p)
-                                 (lift_fact f)
-                                 (Steel.Preorder.preorder_of_pcm pcm_history))
-  = assert (FStar.Preorder.stable #(history a p) (lift_fact f) pcm_history_preorder);
-    pcm_history_induces_preorder #a #p;
-    Q.stability #(history a p) (lift_fact f) pcm_history_preorder pcm_history
 
 let witnessed #a #p r fact =
   M.witnessed r (lift_fact fact)
@@ -339,7 +165,7 @@ let witness_thunk (#inames: _) (#a:Type) (#pcm:FStar.PCM.pcm a)
                   (r:M.ref a pcm)
                   (fact:M.stable_property pcm)
                   (v:Ghost.erased a)
-                  (_:fact_valid_compat fact v)
+                  (_:squash (fact_valid_compat #_ #pcm fact v))
                   (_:unit)
   : SteelGhost unit inames (PR.pts_to r v)
                (fun _ -> PR.pts_to r v)
@@ -347,6 +173,7 @@ let witness_thunk (#inames: _) (#a:Type) (#pcm:FStar.PCM.pcm a)
                (ensures fun _ _ _ -> M.witnessed r fact)
   = witness r fact v ()
 
+#push-options "--print_implicits"
 
 let witness (#inames: _) (#a:Type) (#q:perm) (#p:Preorder.preorder a) (r:ref a p)
             (fact:stable_property p)
@@ -362,7 +189,7 @@ let witness (#inames: _) (#a:Type) (#q:perm) (#p:Preorder.preorder a) (r:ref a p
     assert (forall h'. compatible pcm_history h h' ==> lift_fact fact h');
     lift_fact_is_stable #a #p fact;
 
-    witness_thunk r (lift_fact fact) h () _;
+    witness_thunk #_ #_ #(pcm_history #a #p)  r (lift_fact fact) h () _;
 
     rewrite_slprop (PR.pts_to r h) (pts_to_body r q v h) (fun m ->
       emp_unit (M.pts_to r h);
