@@ -10,9 +10,9 @@ let prod_perm
   P.MkPerm w
 
 noeq
-type typedef (t: Type0) : Type u#1 = {
+type typedef (t: Type0) : Type0 = {
   pcm: pcm t;
-  fractionable: (t -> Tot prop);
+  fractionable: (t -> GTot bool);
   mk_fraction: (
     (x: t) ->
     (p: P.perm) ->
@@ -77,7 +77,7 @@ type typedef (t: Type0) : Type u#1 = {
   );
 }
 
-let fractionable td x = td.fractionable x
+let fractionable td x = td.fractionable x == true
 let mk_fraction td x p = td.mk_fraction x p
 let mk_fraction_full td x = td.mk_fraction_full x
 let mk_fraction_compose td x p1 p2 = td.mk_fraction_compose x p1 p2
@@ -143,10 +143,10 @@ let scalar_t t = F.fractional (option t)
 let scalar_fractionable
   (#t: Type)
   (s: scalar_t t)
-: GTot prop
+: GTot bool
 = match s with
-  | Some (_, p) -> (p `P.lesser_equal_perm` P.full_perm) == true
-  | _ -> True
+  | Some (_, p) -> p `P.lesser_equal_perm` P.full_perm
+  | _ -> true
 
 [@@noextract_to "krml"] // proof-only
 let scalar_mk_fraction
@@ -332,8 +332,8 @@ let struct_get_field_other
 let struct_fractionable
   (#tn: Type0) (#tf: Type0) (#n: string) (#fields: field_description_t tf)
   (s: struct_t0 tn n fields)
-: GTot prop
-= forall (f: field_t fields) . (fields.fd_typedef f).fractionable (s f)
+: GTot bool
+= FStar.StrongExcludedMiddle.strong_excluded_middle (forall (f: field_t fields) . (fields.fd_typedef f).fractionable (s f))
 
 [@@noextract_to "krml"] // proof-only
 let struct_mk_fraction
@@ -635,10 +635,10 @@ let union_set_field_same
 let union_fractionable
   (#tn: Type0) (#tf: Type0) (#n: string) (#fields: field_description_t tf)
   (s: union_t0 tn n fields)
-: GTot prop
+: GTot bool
 = match U.case_of_union (union_field_pcm fields) s with
-  | Some f -> fractionable (union_field_typedef fields f) (s f)
-  | _ -> True
+  | Some f -> (union_field_typedef fields f).fractionable (s f)
+  | _ -> true
 
 let union_fractionable_fields
   (#tn: Type0) (#tf: Type0) (#n: string) (#fields: field_description_t tf)
