@@ -10,13 +10,9 @@ let f () =
   let z = z -^ x in
   let z = z *^ y in
   if z <=^ x then
-    zero
+    0sz
   else
-    one
-
-let g () =
-  let x = mk_checked 500000uL in
-  x
+    1sz
 
 open FStar.PtrdiffT
 
@@ -26,9 +22,13 @@ let ft () =
   let z = x +^ y in
   if z <=^ x then zero else zero
 
-let main () : Int32.t =
+open Steel.Effect
+open Steel.Array
+
+let main () : SteelT Int32.t emp (fun _ -> emp) =
   let x = f () in
-  let y = g () in
+  intro_fits_u32 ();
+  let y = mk_u32 500000ul in
   let z = ft () in
   if x = y then 1l
   else
