@@ -415,3 +415,28 @@ val compare (#t:eqtype) (#p0 #p1:perm)
     (fun _ -> pts_to a0 p0 s0 `star` pts_to a1 p1 s1)
     (requires True)
     (ensures fun b -> b <==> eq2 #(Seq.seq t) s0 s1)
+
+
+/// An introduction function for the fits_u32 predicate.
+/// It will be natively extracted to static_assert (UINT32_MAX <= SIZE_T_MAX) by krml
+/// It is a ghost, stateful lemma, but it needs to be in STAtomicBase to avoid being
+/// erased at extraction-time
+inline_for_extraction
+[@@noextract_to "krml"]
+val intro_fits_u32 (#opened: _) (_:unit)
+  : STAtomicBase unit false opened Unobservable
+                 emp (fun _ -> emp)
+                 (requires True)
+                 (ensures fun _ -> FStar.SizeT.fits_u32)
+
+/// An introduction function for the fits_u64 predicate.
+/// It will be natively extracted to static_assert (UINT64_MAX <= SIZE_T_MAX) by krml
+/// It is a ghost, stateful lemma, but it needs to be in STAtomicBase to avoid being
+/// erased at extraction-time
+inline_for_extraction
+[@@noextract_to "krml"]
+val intro_fits_u64 (#opened: _) (_:unit)
+  : STAtomicBase unit false opened Unobservable
+                 emp (fun _ -> emp)
+                 (requires True)
+                 (ensures fun _ -> FStar.SizeT.fits_u64)
