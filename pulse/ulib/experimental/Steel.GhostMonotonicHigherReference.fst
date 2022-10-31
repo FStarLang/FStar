@@ -14,26 +14,27 @@
    limitations under the License.
 *)
 
-module Steel.MonotonicHigherReference
+module Steel.GhostMonotonicHigherReference
 
 open FStar.Ghost
 open FStar.PCM
 open Steel.Memory
 open Steel.Effect.Atomic
 open Steel.Effect
-open Steel.PCMReference
+open Steel.GhostPCMReference
 open Steel.FractionalPermission
 open Steel.Preorder
 
 module Preorder = FStar.Preorder
 module Q = Steel.Preorder
 module M = Steel.Memory
-module PR = Steel.PCMReference
+module PR = Steel.GhostPCMReference
+module A = Steel.Effect.Atomic
 open FStar.Real
 
 #set-options "--ide_id_info_off"
 
-let ref a p = M.ref (history a p) pcm_history
+let ref a p = PR.ref (history a p) pcm_history
 
 [@@__reduce__]
 let pts_to_body #a #p (r:ref a p) (f:perm) (v:Ghost.erased a) (h:history a p) =
@@ -45,29 +46,26 @@ let pts_to' (#a:Type) (#p:Preorder.preorder a) (r:ref a p) (f:perm) (v:Ghost.era
 
 let pts_to_sl r f v = hp_of (pts_to' r f v)
 
-let intro_pure #a #p #f
+let intro_pure #opened #a #p #f
                  (r:ref a p)
                  (v:a)
                  (h:history a p { history_val h v f })
-  : SteelT unit
+  : SteelGhostT unit opened
            (PR.pts_to r h)
            (fun _ -> pts_to_body r f v h)
-  = rewrite_slprop (PR.pts_to r h) (pts_to_body _ _ _ _) (fun m ->
-      emp_unit (M.pts_to r h);
-      pure_star_interp (M.pts_to r h) (history_val h v f) m)
+  = A.intro_pure (history_val h v f)
 
-let intro_pure_full #a #p #f
+let intro_pure_full #opened #a #p #f
                  (r:ref a p)
                  (v:a)
                  (h:history a p { history_val h v f })
-  : SteelT unit
+  : SteelGhostT unit opened
            (PR.pts_to r h)
            (fun _ -> pts_to r f v)
-  = intro_pure #a #p #f r v h;
+  = intro_pure #_ #a #p #f r v h;
     intro_exists h (pts_to_body r f v)
 
-
-let alloc (#a:Type) (p:Preorder.preorder a) (v:a)
+let alloc #_ (#a:Type) (p:Preorder.preorder a) (v:a)
   = let h = Current [v] full_perm in
     assert (compatible pcm_history h h);
     let x : ref a p = alloc h in
@@ -82,15 +80,8 @@ let extract_pure #a #uses #p #f
            uses
            (pts_to_body r f v h)
            (fun _ -> pts_to_body r f v h)
-  = rewrite_slprop
-      (pts_to_body r f v h)
-      (PR.pts_to r h `star` pure (history_val h v f))
-      (fun _ -> ());
-    elim_pure (history_val h v f);
-    rewrite_slprop (PR.pts_to r h) (pts_to_body r f v h) (fun m ->
-      emp_unit (M.pts_to r h);
-      pure_star_interp (M.pts_to r h) (history_val h v f) m
-    )
+  = elim_pure (history_val h v f);
+    A.intro_pure (history_val h v f)
 
 let elim_pure #a #uses #p #f
                  (r:ref a p)
@@ -103,77 +94,47 @@ let elim_pure #a #uses #p #f
   = let _ = extract_pure r v h in
     drop (pure (history_val h v f))
 
-let rewrite_erased #a (p:erased a -> vprop) (x:erased a) (y:a)
-  : Steel unit (p x) (fun _ -> p (Ghost.hide y))
+let rewrite_erased #opened #a (p:erased a -> vprop) (x:erased a) (y:a)
+  : SteelGhost unit opened (p x) (fun _ -> p (Ghost.hide y))
           (requires fun _ -> reveal x == y)
           (ensures fun _ _ _ -> True)
   = rewrite_slprop (p x) (p (Ghost.hide y)) (fun _ -> ())
 
-let rewrite_reveal_hide #a (x:a) (p:a -> vprop) ()
-  : SteelT unit (p (Ghost.reveal (Ghost.hide x))) (fun _ -> p x)
+let rewrite_reveal_hide #opened #a (x:a) (p:a -> vprop) ()
+  : SteelGhostT unit opened (p (Ghost.reveal (Ghost.hide x))) (fun _ -> p x)
   = rewrite_slprop (p (Ghost.reveal (Ghost.hide x))) (p x) (fun _ -> ())
 
-let read_refine (#a:Type) (#q:perm) (#p:Preorder.preorder a) (#f:a -> vprop)
-                (r:ref a p)
-  : SteelT a (h_exists (fun (v:a) -> pts_to r q v `star` f v))
-             (fun v -> pts_to r q v `star` f v)
-  = let v = witness_exists () in
-    rewrite_slprop (pts_to r q (Ghost.hide (Ghost.reveal v)) `star` f v) (h_exists (pts_to_body r q v) `star` f v) (fun _ -> ());
-
-    let h = witness_exists () in
-
-    let _ = elim_pure r v h in
-
-    let hv = read r h in
-    let _:squash (compatible pcm_history h hv) = () in
-
-    rewrite_slprop (PR.pts_to r h) (pts_to_body r q v h) (fun m ->
-      emp_unit (M.pts_to r h);
-      pure_star_interp (M.pts_to r h) (history_val h v q) m);
-
-    intro_exists_erased h (pts_to_body r q v);
-    rewrite_erased (fun v -> (pts_to r q v `star` f v)) v (hval_tot hv);
-    let v = hval_tot hv in
-
-    rewrite_slprop
-      (pts_to r q (hval_tot hv) `star` f (Ghost.reveal (Ghost.hide (hval_tot hv))))
-      (pts_to r q v `star` f v)
-      (fun _ -> ());
-    return v
-
-let write (#a:Type) (#p:Preorder.preorder a) (#v:erased a)
+let write (#opened: _) (#a:Type) (#p:Preorder.preorder a) (#v:erased a)
           (r:ref a p) (x:a)
-  : Steel unit (pts_to r full_perm v)
+  : SteelGhost unit opened (pts_to r full_perm v)
                (fun v -> pts_to r full_perm x)
                (requires fun _ -> p v x /\ True)
                (ensures fun _ _ _ -> True)
   = let h_old_e = witness_exists #_ #_ #(pts_to_body r full_perm v) () in
     let _ = elim_pure r v h_old_e in
 
-    let h_old = read r h_old_e in
+    let h_old = read r in
     let h: history a p = extend_history' h_old x in
     write r h_old_e h;
 
     intro_pure_full r x h
 
 let witnessed #a #p r fact =
-  M.witnessed r (lift_fact fact)
+  PR.witnessed r (lift_fact fact)
 
 let get_squash (#p:prop) (_:unit{p}) : squash p = ()
 
 let witness_thunk (#inames: _) (#a:Type) (#pcm:FStar.PCM.pcm a)
-                  (r:M.ref a pcm)
+                  (r:PR.ref a pcm)
                   (fact:M.stable_property pcm)
                   (v:Ghost.erased a)
-                  (_:squash (fact_valid_compat #_ #pcm fact v))
+                  (sq:squash (fact_valid_compat #_ #pcm fact v))
                   (_:unit)
   : SteelGhost unit inames (PR.pts_to r v)
                (fun _ -> PR.pts_to r v)
                (requires fun _ -> True)
-               (ensures fun _ _ _ -> M.witnessed r fact)
-  = witness r fact v ()
-
-#push-options "--print_implicits"
+               (ensures fun _ _ _ -> PR.witnessed r fact)
+  = witness r fact v sq
 
 let witness (#inames: _) (#a:Type) (#q:perm) (#p:Preorder.preorder a) (r:ref a p)
             (fact:stable_property p)
@@ -191,11 +152,8 @@ let witness (#inames: _) (#a:Type) (#q:perm) (#p:Preorder.preorder a) (r:ref a p
 
     witness_thunk #_ #_ #(pcm_history #a #p)  r (lift_fact fact) h () _;
 
-    rewrite_slprop (PR.pts_to r h) (pts_to_body r q v h) (fun m ->
-      emp_unit (M.pts_to r h);
-      pure_star_interp (M.pts_to r h) (history_val h v q) m);
-
-    intro_exists_erased h (pts_to_body r q v)
+    intro_pure_full r v h;
+    rewrite_slprop (pts_to _ q _) (pts_to r q v) (fun _ -> ())
 
 let recall (#inames: _) (#a:Type u#1) (#q:perm) (#p:Preorder.preorder a) (fact:property a)
            (r:ref a p) (v:erased a)
@@ -208,11 +166,8 @@ let recall (#inames: _) (#a:Type u#1) (#q:perm) (#p:Preorder.preorder a) (fact:p
 
     let h1 = recall (lift_fact fact) r h in
 
-    rewrite_slprop (PR.pts_to r h) (pts_to_body r q v h) (fun m ->
-      emp_unit (M.pts_to r h);
-      pure_star_interp (M.pts_to r h) (history_val h v q) m);
-
-    intro_exists_erased h (pts_to_body r q v)
+    intro_pure_full r v h;
+    rewrite_slprop (pts_to _ q _) (pts_to r q v) (fun _ -> ())
 
 let elim_pts_to #o (#a:Type)
                 (#p:Preorder.preorder a)
@@ -244,7 +199,7 @@ let share #o (#a:Type) (#p:Preorder.preorder a) (r:ref a p) (f:perm) (v:Ghost.er
     let h : erased (history a p) = witness_exists () in
     elim_pure _;
     let sh = split_current h in
-    PR.split r h sh sh;
+    PR.share r h sh sh;
     intro_pure (history_val sh v (half_perm f));
     intro_exists #(history a p) sh (pts_to_body r (half_perm f) v);
     intro_pts_to r (half_perm f) v;
