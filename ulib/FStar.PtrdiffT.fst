@@ -1,6 +1,7 @@
 module FStar.PtrdiffT
 
 module Cast = FStar.Int.Cast
+module I64 = FStar.Int64
 
 let t = I64.t
 
