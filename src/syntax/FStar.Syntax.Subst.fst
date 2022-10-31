@@ -826,12 +826,14 @@ let rec deep_compress (t:term) : term =
     | Tm_delayed _ -> failwith "Impossible"
     | Tm_fvar _
     | Tm_constant _
-    (* NOTE: the BVs here contain a sort, but it is not reached
-     * by substitutions, so we do not need to go into it. *)
-    | Tm_bvar _
-    | Tm_name _
     | Tm_unknown ->
         { t with vars = U.mk_ref None }
+
+    (* The sorts are not needed. Delete them. *)
+    | Tm_bvar bv ->
+      mk (Tm_bvar ({bv with sort = mk Tm_unknown}))
+    | Tm_name bv ->
+      mk (Tm_name ({bv with sort = mk Tm_unknown}))
 
     | Tm_uinst (f, us) ->
       let us = List.map deep_compress_univ us in
