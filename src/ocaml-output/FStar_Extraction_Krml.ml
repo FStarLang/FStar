@@ -2693,6 +2693,8 @@ and (translate_width :
         -> UInt32
     | FStar_Pervasives_Native.Some (FStar_Const.Unsigned, FStar_Const.Int64)
         -> UInt64
+    | FStar_Pervasives_Native.Some (FStar_Const.Unsigned, FStar_Const.Sizet)
+        -> SizeT
 and (translate_pat :
   env -> FStar_Extraction_ML_Syntax.mlpattern -> (env * pattern)) =
   fun env1 ->
