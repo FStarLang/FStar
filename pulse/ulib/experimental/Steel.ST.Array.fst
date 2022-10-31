@@ -365,13 +365,13 @@ let extend_equal_up_to (#o:_)
                        (i:US.t{ Seq.length s0 == Seq.length s1 /\ US.(i <^ len) /\ US.v len == Seq.length s0 } )
   : STGhost unit o
     (pure (equal_up_to s0 s1 (Some i)))
-    (fun _ -> pure (equal_up_to s0 s1 (Some US.(i +^ one))))
+    (fun _ -> pure (equal_up_to s0 s1 (Some US.(i +^ 1sz))))
     (requires
       Seq.index s0 (US.v i) == Seq.index s1 (US.v i))
     (ensures fun _ -> True)
   = elim_pure _;
     extend_equal_up_to_lemma s0 s1 (US.v i);
-    intro_pure (equal_up_to s0 s1 (Some US.(i +^ one)))
+    intro_pure (equal_up_to s0 s1 (Some US.(i +^ 1sz)))
 
 let extend_equal_up_to_neg (#o:_)
                            (#t:Type0)
@@ -400,7 +400,7 @@ let init_compare_inv #o
          (let open US in
           pts_to a0 p0 s0 `star`
           pts_to a1 p1 s1 `star`
-          R.pts_to ctr Steel.FractionalPermission.full_perm (Some US.zero))
+          R.pts_to ctr Steel.FractionalPermission.full_perm (Some 0sz))
         (fun _ -> exists_ (compare_inv #_ #p0 #p1 a0 a1 s0 s1 l ctr))
         (requires (
           length a0 > 0 /\
@@ -410,11 +410,11 @@ let init_compare_inv #o
         (ensures (fun _ -> True))
     = pts_to_length a0 _;
       pts_to_length a1 _;
-      intro_pure (equal_up_to s0 s1 (Ghost.hide (Some US.zero)));
+      intro_pure (equal_up_to s0 s1 (Ghost.hide (Some 0sz)));
       rewrite
-        (R.pts_to ctr Steel.FractionalPermission.full_perm (Some US.zero))
-        (R.pts_to ctr Steel.FractionalPermission.full_perm (Ghost.hide (Some US.zero)));
-      intro_exists_compare_inv a0 a1 l ctr (Ghost.hide (Some US.zero))
+        (R.pts_to ctr Steel.FractionalPermission.full_perm (Some 0sz))
+        (R.pts_to ctr Steel.FractionalPermission.full_perm (Ghost.hide (Some 0sz)));
+      intro_exists_compare_inv a0 a1 l ctr (Ghost.hide (Some 0sz))
 
 let compare_pts
     (#t:eqtype)
@@ -434,7 +434,7 @@ let compare_pts
   =
    pts_to_length a0 _;
    pts_to_length a1 _;
-   let ctr = R.alloc (Some US.zero) in
+   let ctr = R.alloc (Some 0sz) in
     let cond ()
       : STT bool
         (exists_ (compare_inv #_ #p0 #p1 a0 a1 s0 s1 l ctr))
@@ -470,9 +470,9 @@ let compare_pts
         let v1 = index a1 i in
         if v0 = v1
         then (
-          R.write ctr (Some US.(i +^ one));
+          R.write ctr (Some US.(i +^ 1sz));
           extend_equal_up_to l i;
-          intro_exists_compare_inv #_ #_ #p0 #p1 a0 a1 l ctr (Ghost.hide (Some (US.(i +^ one))))
+          intro_exists_compare_inv #_ #_ #p0 #p1 a0 a1 l ctr (Ghost.hide (Some (US.(i +^ 1sz))))
         )
         else (
           R.write ctr None;
@@ -498,7 +498,7 @@ let compare
   =
     pts_to_length a0 _;
     pts_to_length a1 _;
-    if l = US.zero
+    if l = 0sz
     then (
       assert (Seq.equal s0 s1);
       return true
