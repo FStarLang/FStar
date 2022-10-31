@@ -1376,6 +1376,11 @@ let residual_tot t = {
     residual_typ=Some t;
     residual_flags=[TOTAL]
   }
+let residual_gtot t = {
+    residual_effect=PC.effect_GTot_lid;
+    residual_typ=Some t;
+    residual_flags=[TOTAL]
+  }
 let residual_comp_of_comp (c:comp) = {
     residual_effect=comp_effect_name c;
     residual_typ=Some (comp_result c);

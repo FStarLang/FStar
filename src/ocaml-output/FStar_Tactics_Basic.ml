@@ -2924,10 +2924,32 @@ let (t_apply_lemma :
                                                                    =
                                                                    let uu___17
                                                                     =
-                                                                    should_check_goal_uvar
-                                                                    goal in
-                                                                   FStar_Pervasives_Native.Some
-                                                                    uu___17 in
+                                                                    let uu___18
+                                                                    =
+                                                                    FStar_Compiler_Effect.op_Bar_Greater
+                                                                    goal
+                                                                    should_check_goal_uvar in
+                                                                    FStar_Compiler_Effect.op_Bar_Greater
+                                                                    uu___18
+                                                                    (fun
+                                                                    uu___19
+                                                                    ->
+                                                                    match uu___19
+                                                                    with
+                                                                    | 
+                                                                    FStar_Syntax_Syntax.Strict
+                                                                    ->
+                                                                    FStar_Syntax_Syntax.Allow_ghost
+                                                                    "apply lemma uvar"
+                                                                    | 
+                                                                    x -> x) in
+                                                                   FStar_Compiler_Effect.op_Bar_Greater
+                                                                    uu___17
+                                                                    (fun
+                                                                    uu___18
+                                                                    ->
+                                                                    FStar_Pervasives_Native.Some
+                                                                    uu___18) in
                                                                  FStar_Tactics_Monad.new_uvar
                                                                    "apply_lemma"
                                                                    env1 b_t
@@ -3727,17 +3749,8 @@ let (clear : FStar_Syntax_Syntax.binder -> unit FStar_Tactics_Monad.tac) =
                 split_env bv uu___3 in
               match uu___2 with
               | FStar_Pervasives_Native.None ->
-                  let uu___3 =
-                    let uu___4 = FStar_Syntax_Print.bv_to_string bv in
-                    let uu___5 =
-                      let uu___6 =
-                        let uu___7 = FStar_Tactics_Types.goal_env goal in
-                        uu___7.FStar_TypeChecker_Env.gamma in
-                      FStar_TypeChecker_Env.print_gamma uu___6 in
-                    FStar_Compiler_Util.format2
-                      "Cannot clear; binder %s not in environment [%s]"
-                      uu___4 uu___5 in
-                  FStar_Tactics_Monad.fail uu___3
+                  FStar_Tactics_Monad.fail
+                    "Cannot clear; binder not in environment"
               | FStar_Pervasives_Native.Some (e', bv1, bvs) ->
                   let rec check bvs1 =
                     match bvs1 with

@@ -2689,6 +2689,17 @@ let (residual_tot :
       FStar_Syntax_Syntax.residual_typ = (FStar_Pervasives_Native.Some t);
       FStar_Syntax_Syntax.residual_flags = [FStar_Syntax_Syntax.TOTAL]
     }
+let (residual_gtot :
+  FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax ->
+    FStar_Syntax_Syntax.residual_comp)
+  =
+  fun t ->
+    {
+      FStar_Syntax_Syntax.residual_effect =
+        FStar_Parser_Const.effect_GTot_lid;
+      FStar_Syntax_Syntax.residual_typ = (FStar_Pervasives_Native.Some t);
+      FStar_Syntax_Syntax.residual_flags = [FStar_Syntax_Syntax.TOTAL]
+    }
 let (residual_comp_of_comp :
   FStar_Syntax_Syntax.comp -> FStar_Syntax_Syntax.residual_comp) =
   fun c ->

@@ -1036,7 +1036,14 @@ let t_apply_lemma (noinst:bool) (noinst_lhs:bool)
                    // Simplification: if the argument is simply unit, then don't ask for it
                    ret <| ((U.exp_unit, aq)::uvs, deps, imps, S.NT(b, U.exp_unit)::subst)
                else
-                   let! t, u = new_uvar "apply_lemma" env b_t (Some (should_check_goal_uvar goal)) deps (rangeof goal) in
+                   let! t, u = new_uvar "apply_lemma" env b_t
+                     (goal
+                      |> should_check_goal_uvar
+                      |> (function | Strict -> Allow_ghost "apply lemma uvar"
+                                  | x -> x)
+                      |> Some)
+                     deps
+                     (rangeof goal) in
                    if Env.debug env <| Options.Other "2635"
                    then
                      BU.print2 "Apply lemma created a new uvar %s while applying %s\n"
