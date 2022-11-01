@@ -670,9 +670,13 @@ let rec (is_arrow :
                  match uu___3 with
                  | FStar_Syntax_Syntax.Comp ct ->
                      let uu___4 =
-                       FStar_Ident.lid_equals
-                         ct.FStar_Syntax_Syntax.effect_name
-                         FStar_Parser_Const.effect_Pure_lid in
+                       (FStar_Ident.lid_equals
+                          ct.FStar_Syntax_Syntax.effect_name
+                          FStar_Parser_Const.effect_Pure_lid)
+                         ||
+                         (FStar_Ident.lid_equals
+                            ct.FStar_Syntax_Syntax.effect_name
+                            FStar_Parser_Const.effect_Lemma_lid) in
                      if uu___4
                      then FStar_Pervasives_Native.Some E_TOTAL
                      else
@@ -1231,6 +1235,13 @@ let (uu___is_Both : side -> Prims.bool) =
   fun projectee -> match projectee with | Both -> true | uu___ -> false
 let (uu___is_Neither : side -> Prims.bool) =
   fun projectee -> match projectee with | Neither -> true | uu___ -> false
+let (side_to_string : side -> Prims.string) =
+  fun uu___ ->
+    match uu___ with
+    | Left -> "Left"
+    | Right -> "Right"
+    | Both -> "Both"
+    | Neither -> "Neither"
 let rec (check_relation :
   env ->
     relation ->
@@ -1301,7 +1312,7 @@ let rec (check_relation :
                     FStar_Syntax_Syntax.Tm_match uu___3) -> true
                  | uu___2 -> false in
                let which_side_to_unfold t01 t11 =
-                 let delta_depth_of_head t =
+                 let rec delta_depth_of_head t =
                    let head = FStar_Syntax_Util.leftmost_head t in
                    let uu___1 =
                      let uu___2 = FStar_Syntax_Util.un_uinst head in
@@ -1311,6 +1322,8 @@ let rec (check_relation :
                        let uu___2 =
                          FStar_TypeChecker_Env.delta_depth_of_fv g.tcenv fv in
                        FStar_Pervasives_Native.Some uu___2
+                   | FStar_Syntax_Syntax.Tm_match
+                       (t2, uu___2, uu___3, uu___4) -> delta_depth_of_head t2
                    | uu___2 -> FStar_Pervasives_Native.None in
                  let dd0 = delta_depth_of_head t01 in
                  let dd1 = delta_depth_of_head t11 in
@@ -1399,12 +1412,37 @@ let rec (check_relation :
                let maybe_unfold_side_and_retry side1 t01 t11 =
                  let uu___1 = maybe_unfold_side side1 t01 t11 in
                  match uu___1 with
-                 | FStar_Pervasives_Native.None -> fallback t01 t11
+                 | FStar_Pervasives_Native.None ->
+                     ((let uu___3 =
+                         FStar_Compiler_Effect.op_Less_Bar
+                           (FStar_TypeChecker_Env.debug g.tcenv)
+                           (FStar_Options.Other "Core") in
+                       if uu___3
+                       then
+                         let uu___4 = FStar_Syntax_Print.term_to_string t01 in
+                         let uu___5 = FStar_Syntax_Print.term_to_string t11 in
+                         FStar_Compiler_Util.print3
+                           "Unfolding %s for %s and %s returned None\n"
+                           (side_to_string side1) uu___4 uu___5
+                       else ());
+                      fallback t01 t11)
                  | FStar_Pervasives_Native.Some (t02, t12) ->
                      check_relation g rel t02 t12 in
                let maybe_unfold_and_retry t01 t11 =
-                 let uu___1 = which_side_to_unfold t01 t11 in
-                 maybe_unfold_side_and_retry uu___1 t01 t11 in
+                 let side1 = which_side_to_unfold t01 t11 in
+                 (let uu___2 =
+                    FStar_Compiler_Effect.op_Less_Bar
+                      (FStar_TypeChecker_Env.debug g.tcenv)
+                      (FStar_Options.Other "Core") in
+                  if uu___2
+                  then
+                    let uu___3 = FStar_Syntax_Print.term_to_string t01 in
+                    let uu___4 = FStar_Syntax_Print.term_to_string t11 in
+                    FStar_Compiler_Util.print3
+                      "For terms %s and %s, deciding to unfold %s\n" uu___3
+                      uu___4 (side_to_string side1)
+                  else ());
+                 maybe_unfold_side_and_retry side1 t01 t11 in
                let beta_iota_reduce t =
                  let t2 = FStar_Syntax_Subst.compress t in
                  match t2.FStar_Syntax_Syntax.n with
@@ -1710,161 +1748,263 @@ let rec (check_relation :
                                FStar_Syntax_Util.flatten_refinement rhs in
                              check_relation1 g rel t02 uu___7)
                   | (FStar_Syntax_Syntax.Tm_uinst uu___3, uu___4) ->
+                      let head_matches1 = head_matches t01 t11 in
                       let uu___5 =
-                        let uu___6 = head_matches t01 t11 in
-                        Prims.op_Negation uu___6 in
-                      if uu___5
-                      then maybe_unfold_and_retry t01 t11
-                      else
-                        (let uu___7 =
-                           FStar_Syntax_Util.leftmost_head_and_args t01 in
-                         match uu___7 with
-                         | (head0, args0) ->
-                             let uu___8 =
-                               FStar_Syntax_Util.leftmost_head_and_args t11 in
-                             (match uu___8 with
-                              | (head1, args1) ->
-                                  let uu___9 =
-                                    let uu___10 =
-                                      check_relation1 g EQUALITY head0 head1 in
-                                    op_let_Bang uu___10
-                                      (fun uu___11 ->
-                                         check_relation_args g EQUALITY args0
-                                           args1) in
-                                  handle_with uu___9
-                                    (fun uu___10 ->
-                                       maybe_unfold_side_and_retry Both t01
-                                         t11)))
+                        FStar_Syntax_Util.leftmost_head_and_args t01 in
+                      (match uu___5 with
+                       | (head0, args0) ->
+                           let uu___6 =
+                             FStar_Syntax_Util.leftmost_head_and_args t11 in
+                           (match uu___6 with
+                            | (head1, args1) ->
+                                if
+                                  Prims.op_Negation
+                                    (head_matches1 &&
+                                       ((FStar_Compiler_List.length args0) =
+                                          (FStar_Compiler_List.length args1)))
+                                then
+                                  ((let uu___8 =
+                                      FStar_Compiler_Effect.op_Less_Bar
+                                        (FStar_TypeChecker_Env.debug g.tcenv)
+                                        (FStar_Options.Other "Core") in
+                                    if uu___8
+                                    then
+                                      let uu___9 =
+                                        FStar_Syntax_Print.term_to_string t01 in
+                                      let uu___10 =
+                                        FStar_Syntax_Print.term_to_string t11 in
+                                      FStar_Compiler_Util.print2
+                                        "Unfolding and retrying with %s and %s\n"
+                                        uu___9 uu___10
+                                    else ());
+                                   maybe_unfold_and_retry t01 t11)
+                                else
+                                  (let uu___8 =
+                                     let uu___9 =
+                                       check_relation1 g EQUALITY head0 head1 in
+                                     op_let_Bang uu___9
+                                       (fun uu___10 ->
+                                          check_relation_args g EQUALITY
+                                            args0 args1) in
+                                   handle_with uu___8
+                                     (fun uu___9 ->
+                                        maybe_unfold_side_and_retry Both t01
+                                          t11))))
                   | (FStar_Syntax_Syntax.Tm_fvar uu___3, uu___4) ->
+                      let head_matches1 = head_matches t01 t11 in
                       let uu___5 =
-                        let uu___6 = head_matches t01 t11 in
-                        Prims.op_Negation uu___6 in
-                      if uu___5
-                      then maybe_unfold_and_retry t01 t11
-                      else
-                        (let uu___7 =
-                           FStar_Syntax_Util.leftmost_head_and_args t01 in
-                         match uu___7 with
-                         | (head0, args0) ->
-                             let uu___8 =
-                               FStar_Syntax_Util.leftmost_head_and_args t11 in
-                             (match uu___8 with
-                              | (head1, args1) ->
-                                  let uu___9 =
-                                    let uu___10 =
-                                      check_relation1 g EQUALITY head0 head1 in
-                                    op_let_Bang uu___10
-                                      (fun uu___11 ->
-                                         check_relation_args g EQUALITY args0
-                                           args1) in
-                                  handle_with uu___9
-                                    (fun uu___10 ->
-                                       maybe_unfold_side_and_retry Both t01
-                                         t11)))
+                        FStar_Syntax_Util.leftmost_head_and_args t01 in
+                      (match uu___5 with
+                       | (head0, args0) ->
+                           let uu___6 =
+                             FStar_Syntax_Util.leftmost_head_and_args t11 in
+                           (match uu___6 with
+                            | (head1, args1) ->
+                                if
+                                  Prims.op_Negation
+                                    (head_matches1 &&
+                                       ((FStar_Compiler_List.length args0) =
+                                          (FStar_Compiler_List.length args1)))
+                                then
+                                  ((let uu___8 =
+                                      FStar_Compiler_Effect.op_Less_Bar
+                                        (FStar_TypeChecker_Env.debug g.tcenv)
+                                        (FStar_Options.Other "Core") in
+                                    if uu___8
+                                    then
+                                      let uu___9 =
+                                        FStar_Syntax_Print.term_to_string t01 in
+                                      let uu___10 =
+                                        FStar_Syntax_Print.term_to_string t11 in
+                                      FStar_Compiler_Util.print2
+                                        "Unfolding and retrying with %s and %s\n"
+                                        uu___9 uu___10
+                                    else ());
+                                   maybe_unfold_and_retry t01 t11)
+                                else
+                                  (let uu___8 =
+                                     let uu___9 =
+                                       check_relation1 g EQUALITY head0 head1 in
+                                     op_let_Bang uu___9
+                                       (fun uu___10 ->
+                                          check_relation_args g EQUALITY
+                                            args0 args1) in
+                                   handle_with uu___8
+                                     (fun uu___9 ->
+                                        maybe_unfold_side_and_retry Both t01
+                                          t11))))
                   | (FStar_Syntax_Syntax.Tm_app uu___3, uu___4) ->
+                      let head_matches1 = head_matches t01 t11 in
                       let uu___5 =
-                        let uu___6 = head_matches t01 t11 in
-                        Prims.op_Negation uu___6 in
-                      if uu___5
-                      then maybe_unfold_and_retry t01 t11
-                      else
-                        (let uu___7 =
-                           FStar_Syntax_Util.leftmost_head_and_args t01 in
-                         match uu___7 with
-                         | (head0, args0) ->
-                             let uu___8 =
-                               FStar_Syntax_Util.leftmost_head_and_args t11 in
-                             (match uu___8 with
-                              | (head1, args1) ->
-                                  let uu___9 =
-                                    let uu___10 =
-                                      check_relation1 g EQUALITY head0 head1 in
-                                    op_let_Bang uu___10
-                                      (fun uu___11 ->
-                                         check_relation_args g EQUALITY args0
-                                           args1) in
-                                  handle_with uu___9
-                                    (fun uu___10 ->
-                                       maybe_unfold_side_and_retry Both t01
-                                         t11)))
+                        FStar_Syntax_Util.leftmost_head_and_args t01 in
+                      (match uu___5 with
+                       | (head0, args0) ->
+                           let uu___6 =
+                             FStar_Syntax_Util.leftmost_head_and_args t11 in
+                           (match uu___6 with
+                            | (head1, args1) ->
+                                if
+                                  Prims.op_Negation
+                                    (head_matches1 &&
+                                       ((FStar_Compiler_List.length args0) =
+                                          (FStar_Compiler_List.length args1)))
+                                then
+                                  ((let uu___8 =
+                                      FStar_Compiler_Effect.op_Less_Bar
+                                        (FStar_TypeChecker_Env.debug g.tcenv)
+                                        (FStar_Options.Other "Core") in
+                                    if uu___8
+                                    then
+                                      let uu___9 =
+                                        FStar_Syntax_Print.term_to_string t01 in
+                                      let uu___10 =
+                                        FStar_Syntax_Print.term_to_string t11 in
+                                      FStar_Compiler_Util.print2
+                                        "Unfolding and retrying with %s and %s\n"
+                                        uu___9 uu___10
+                                    else ());
+                                   maybe_unfold_and_retry t01 t11)
+                                else
+                                  (let uu___8 =
+                                     let uu___9 =
+                                       check_relation1 g EQUALITY head0 head1 in
+                                     op_let_Bang uu___9
+                                       (fun uu___10 ->
+                                          check_relation_args g EQUALITY
+                                            args0 args1) in
+                                   handle_with uu___8
+                                     (fun uu___9 ->
+                                        maybe_unfold_side_and_retry Both t01
+                                          t11))))
                   | (uu___3, FStar_Syntax_Syntax.Tm_uinst uu___4) ->
+                      let head_matches1 = head_matches t01 t11 in
                       let uu___5 =
-                        let uu___6 = head_matches t01 t11 in
-                        Prims.op_Negation uu___6 in
-                      if uu___5
-                      then maybe_unfold_and_retry t01 t11
-                      else
-                        (let uu___7 =
-                           FStar_Syntax_Util.leftmost_head_and_args t01 in
-                         match uu___7 with
-                         | (head0, args0) ->
-                             let uu___8 =
-                               FStar_Syntax_Util.leftmost_head_and_args t11 in
-                             (match uu___8 with
-                              | (head1, args1) ->
-                                  let uu___9 =
-                                    let uu___10 =
-                                      check_relation1 g EQUALITY head0 head1 in
-                                    op_let_Bang uu___10
-                                      (fun uu___11 ->
-                                         check_relation_args g EQUALITY args0
-                                           args1) in
-                                  handle_with uu___9
-                                    (fun uu___10 ->
-                                       maybe_unfold_side_and_retry Both t01
-                                         t11)))
+                        FStar_Syntax_Util.leftmost_head_and_args t01 in
+                      (match uu___5 with
+                       | (head0, args0) ->
+                           let uu___6 =
+                             FStar_Syntax_Util.leftmost_head_and_args t11 in
+                           (match uu___6 with
+                            | (head1, args1) ->
+                                if
+                                  Prims.op_Negation
+                                    (head_matches1 &&
+                                       ((FStar_Compiler_List.length args0) =
+                                          (FStar_Compiler_List.length args1)))
+                                then
+                                  ((let uu___8 =
+                                      FStar_Compiler_Effect.op_Less_Bar
+                                        (FStar_TypeChecker_Env.debug g.tcenv)
+                                        (FStar_Options.Other "Core") in
+                                    if uu___8
+                                    then
+                                      let uu___9 =
+                                        FStar_Syntax_Print.term_to_string t01 in
+                                      let uu___10 =
+                                        FStar_Syntax_Print.term_to_string t11 in
+                                      FStar_Compiler_Util.print2
+                                        "Unfolding and retrying with %s and %s\n"
+                                        uu___9 uu___10
+                                    else ());
+                                   maybe_unfold_and_retry t01 t11)
+                                else
+                                  (let uu___8 =
+                                     let uu___9 =
+                                       check_relation1 g EQUALITY head0 head1 in
+                                     op_let_Bang uu___9
+                                       (fun uu___10 ->
+                                          check_relation_args g EQUALITY
+                                            args0 args1) in
+                                   handle_with uu___8
+                                     (fun uu___9 ->
+                                        maybe_unfold_side_and_retry Both t01
+                                          t11))))
                   | (uu___3, FStar_Syntax_Syntax.Tm_fvar uu___4) ->
+                      let head_matches1 = head_matches t01 t11 in
                       let uu___5 =
-                        let uu___6 = head_matches t01 t11 in
-                        Prims.op_Negation uu___6 in
-                      if uu___5
-                      then maybe_unfold_and_retry t01 t11
-                      else
-                        (let uu___7 =
-                           FStar_Syntax_Util.leftmost_head_and_args t01 in
-                         match uu___7 with
-                         | (head0, args0) ->
-                             let uu___8 =
-                               FStar_Syntax_Util.leftmost_head_and_args t11 in
-                             (match uu___8 with
-                              | (head1, args1) ->
-                                  let uu___9 =
-                                    let uu___10 =
-                                      check_relation1 g EQUALITY head0 head1 in
-                                    op_let_Bang uu___10
-                                      (fun uu___11 ->
-                                         check_relation_args g EQUALITY args0
-                                           args1) in
-                                  handle_with uu___9
-                                    (fun uu___10 ->
-                                       maybe_unfold_side_and_retry Both t01
-                                         t11)))
+                        FStar_Syntax_Util.leftmost_head_and_args t01 in
+                      (match uu___5 with
+                       | (head0, args0) ->
+                           let uu___6 =
+                             FStar_Syntax_Util.leftmost_head_and_args t11 in
+                           (match uu___6 with
+                            | (head1, args1) ->
+                                if
+                                  Prims.op_Negation
+                                    (head_matches1 &&
+                                       ((FStar_Compiler_List.length args0) =
+                                          (FStar_Compiler_List.length args1)))
+                                then
+                                  ((let uu___8 =
+                                      FStar_Compiler_Effect.op_Less_Bar
+                                        (FStar_TypeChecker_Env.debug g.tcenv)
+                                        (FStar_Options.Other "Core") in
+                                    if uu___8
+                                    then
+                                      let uu___9 =
+                                        FStar_Syntax_Print.term_to_string t01 in
+                                      let uu___10 =
+                                        FStar_Syntax_Print.term_to_string t11 in
+                                      FStar_Compiler_Util.print2
+                                        "Unfolding and retrying with %s and %s\n"
+                                        uu___9 uu___10
+                                    else ());
+                                   maybe_unfold_and_retry t01 t11)
+                                else
+                                  (let uu___8 =
+                                     let uu___9 =
+                                       check_relation1 g EQUALITY head0 head1 in
+                                     op_let_Bang uu___9
+                                       (fun uu___10 ->
+                                          check_relation_args g EQUALITY
+                                            args0 args1) in
+                                   handle_with uu___8
+                                     (fun uu___9 ->
+                                        maybe_unfold_side_and_retry Both t01
+                                          t11))))
                   | (uu___3, FStar_Syntax_Syntax.Tm_app uu___4) ->
+                      let head_matches1 = head_matches t01 t11 in
                       let uu___5 =
-                        let uu___6 = head_matches t01 t11 in
-                        Prims.op_Negation uu___6 in
-                      if uu___5
-                      then maybe_unfold_and_retry t01 t11
-                      else
-                        (let uu___7 =
-                           FStar_Syntax_Util.leftmost_head_and_args t01 in
-                         match uu___7 with
-                         | (head0, args0) ->
-                             let uu___8 =
-                               FStar_Syntax_Util.leftmost_head_and_args t11 in
-                             (match uu___8 with
-                              | (head1, args1) ->
-                                  let uu___9 =
-                                    let uu___10 =
-                                      check_relation1 g EQUALITY head0 head1 in
-                                    op_let_Bang uu___10
-                                      (fun uu___11 ->
-                                         check_relation_args g EQUALITY args0
-                                           args1) in
-                                  handle_with uu___9
-                                    (fun uu___10 ->
-                                       maybe_unfold_side_and_retry Both t01
-                                         t11)))
+                        FStar_Syntax_Util.leftmost_head_and_args t01 in
+                      (match uu___5 with
+                       | (head0, args0) ->
+                           let uu___6 =
+                             FStar_Syntax_Util.leftmost_head_and_args t11 in
+                           (match uu___6 with
+                            | (head1, args1) ->
+                                if
+                                  Prims.op_Negation
+                                    (head_matches1 &&
+                                       ((FStar_Compiler_List.length args0) =
+                                          (FStar_Compiler_List.length args1)))
+                                then
+                                  ((let uu___8 =
+                                      FStar_Compiler_Effect.op_Less_Bar
+                                        (FStar_TypeChecker_Env.debug g.tcenv)
+                                        (FStar_Options.Other "Core") in
+                                    if uu___8
+                                    then
+                                      let uu___9 =
+                                        FStar_Syntax_Print.term_to_string t01 in
+                                      let uu___10 =
+                                        FStar_Syntax_Print.term_to_string t11 in
+                                      FStar_Compiler_Util.print2
+                                        "Unfolding and retrying with %s and %s\n"
+                                        uu___9 uu___10
+                                    else ());
+                                   maybe_unfold_and_retry t01 t11)
+                                else
+                                  (let uu___8 =
+                                     let uu___9 =
+                                       check_relation1 g EQUALITY head0 head1 in
+                                     op_let_Bang uu___9
+                                       (fun uu___10 ->
+                                          check_relation_args g EQUALITY
+                                            args0 args1) in
+                                   handle_with uu___8
+                                     (fun uu___9 ->
+                                        maybe_unfold_side_and_retry Both t01
+                                          t11))))
                   | (FStar_Syntax_Syntax.Tm_abs (b0::b1::bs, body, ropt),
                      uu___3) ->
                       let t02 = curry_abs b0 b1 bs body ropt in
