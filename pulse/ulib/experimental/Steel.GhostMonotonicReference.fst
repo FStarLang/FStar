@@ -40,7 +40,7 @@ let pts_to_sl (#a:Type) (#p:Preorder.preorder a)
               (r:ref a p)
               (f:perm)
               (v:a)
-    = MHR.pts_to_sl r f (hide (U.raise_val v))
+    = MHR.pts_to_sl r f (U.raise_val v)
 
 /// Allocates a reference with value [x]. We have full permission on the newly
 /// allocated reference.
@@ -48,14 +48,14 @@ let alloc #opened (#a:Type) (p:Preorder.preorder a) (v:a)
   : SteelGhostT (ref a p) opened emp (fun r -> pts_to r full_perm v)
   = let r = MHR.alloc (raise_preorder p) (U.raise_val v) in
     rewrite_slprop
-      (MHR.pts_to r full_perm (hide (U.raise_val v)))
+      (MHR.pts_to r full_perm (U.raise_val v))
       (pts_to r full_perm v)
       (fun _ -> ());
     r
 
 
 /// Writes value [x] in the reference [r], as long as we have full ownership of [r]
-let write #opened (#a:Type) (#p:Preorder.preorder a) (#v:erased a)
+let write #opened (#a:Type) (#p:Preorder.preorder a) (#v:a)
           (r:ref a p) (x:a)
   : SteelGhost unit opened (pts_to r full_perm v)
                (fun v -> pts_to r full_perm x)
@@ -85,14 +85,14 @@ let witness (#inames: _)
            (#p:Preorder.preorder a)
            (r:ref a p)
            (fact:stable_property p)
-           (v:erased a)
+           (v:a)
            (_:squash (fact v))
   : SteelGhost unit inames
                (pts_to r q v)
                (fun _ -> pts_to r q v)
                (requires fun _ -> True)
                (ensures fun _ _ _ -> witnessed r fact)
-  = MHR.witness r (lift_property fact) (hide (U.raise_val (reveal v))) ()
+  = MHR.witness r (lift_property fact) (U.raise_val (v)) ()
 
 /// If we previously witnessed the validity of [fact], we can recall its validity
 let recall (#inames: _)
@@ -101,12 +101,12 @@ let recall (#inames: _)
            (#p:Preorder.preorder a)
            (fact:property a)
            (r:ref a p)
-           (v:erased a)
+           (v:a)
   : SteelGhost unit inames (pts_to r q v)
                (fun _ -> pts_to r q v)
                (requires fun _ -> witnessed r fact)
                (ensures fun _ _ _ -> fact v)
-  = MHR.recall (lift_property fact) r (hide (U.raise_val (reveal v)))
+  = MHR.recall (lift_property fact) r (U.raise_val v)
 
 /// Monotonic references are also equipped with the usual fractional permission discipline
 /// So, you can split a reference into two read-only shares
@@ -115,11 +115,11 @@ let share (#inames:_)
           (#p:Preorder.preorder a)
           (r:ref a p)
           (f:perm)
-          (v:Ghost.erased a)
+          (v:a)
   : SteelGhostT unit inames
     (pts_to r f v)
     (fun _ -> pts_to r (half_perm f) v `star` pts_to r (half_perm f) v)
-  = MHR.share r f (hide (U.raise_val (reveal v)))
+  = MHR.share r f (U.raise_val v)
 
 /// And you can gather back the shares
 let gather (#inames:_)
@@ -127,8 +127,8 @@ let gather (#inames:_)
            (#p:Preorder.preorder a)
            (r:ref a p)
            (f g:perm)
-           (v:Ghost.erased a)
+           (v:a)
   : SteelGhostT unit inames
     (pts_to r f v `star` pts_to r g v)
     (fun _ -> pts_to r (sum_perm f g) v)
-  = MHR.gather r f g (hide (U.raise_val (reveal v)))
+  = MHR.gather r f g (U.raise_val v)
