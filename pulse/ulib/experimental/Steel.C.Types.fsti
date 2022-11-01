@@ -57,6 +57,12 @@ val mk_fraction_eq_unknown (#t: Type0) (td: typedef t) (v: t) (p: P.perm) : Lemm
 
 
 // To be extracted as: void*
+
+// FIXME: Currently, Karamel does not directly support
+// void*. examples/steel/arraystructs currently has a stopgap in
+// lib/steel_c.h, whose contents should be moved to krmllib.h, unless
+// direct support for void* is added to Karamel.
+
 [@@noextract_to "krml"] // primitive
 val void_ptr : Type0
  
