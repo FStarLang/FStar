@@ -347,6 +347,29 @@ let built_in_primitive_steps : prim_step_set =
                     end
                  | _ -> None
     in
+    let mixed_ternary_op
+           : (arg -> option 'a)
+           -> (arg -> option 'b)
+           -> (arg -> option 'c)           
+           -> (Range.range -> 'd -> term)
+           -> (Range.range -> 'a -> 'b -> 'c -> option 'd)
+           -> psc
+           -> EMB.norm_cb
+           -> args
+           -> option term
+           = fun as_a as_b as_c embed_d f res _norm_cb args ->
+                 match args with
+                 | [a;b;c] ->
+                    begin
+                    match as_a a, as_b b, as_c c with
+                    | Some a, Some b, Some c ->
+                      (match f res.psc_range a b c with
+                       | Some d -> Some (embed_d res.psc_range d)
+                       | _ -> None)
+                    | _ -> None
+                    end
+                 | _ -> None
+    in
     let list_of_string' rng (s:string) : term =
         let name l = mk (Tm_fvar (lid_as_fv l delta_constant None)) rng in
         let char_t = name PC.char_lid in
@@ -1065,9 +1088,94 @@ let built_in_primitive_steps : prim_step_set =
             (fun body -> body)
             (fun _t body -> Some body)
     in
+    let array_ops =
+      let of_list_op =
+        let emb_typ t = ET_app(PC.cst_seq_lid |> Ident.string_of_lid, [t]) in
+        let un_lazy t l r = 
+          S.mk_Tm_app
+            (S.mk_Tm_uinst (U.fvar_const PC.cst_of_list_lid) [U_zero])
+            [S.iarg t; S.as_arg l]
+            r
+        in
+        (  PC.cst_of_list_lid, 2, 1, 
+           mixed_binary_op 
+              (fun (elt_t, _) -> Some elt_t) 
+              (fun (l, q) -> 
+                match arg_as_list FStar.Syntax.Embeddings.e_any (l, q) with
+                | Some lst -> Some (l, lst)
+                | _ -> None)
+              (fun r (elt_t, (l, blob)) -> 
+                S.mk (Tm_lazy { blob;
+                                lkind=Lazy_embedding (emb_typ EMB.(emb_typ_of e_any), Thunk.mk (fun _ -> un_lazy elt_t l r));
+                                ltyp=S.mk_Tm_app (S.mk_Tm_uinst (U.fvar_const PC.cst_seq_lid) [U_zero]) [S.as_arg elt_t] r;
+                                rng=r }) r)
+              (fun r elt_t (l, lst) ->
+                 let blob = FStar.ConstantTimeSequence.of_list #term lst in
+                 Some (elt_t, (l, FStar.Compiler.Dyn.mkdyn blob))),
+           NBETerm.mixed_binary_op 
+             (fun (elt_t, _) -> Some elt_t)
+             (fun (l, q) ->
+               match NBETerm.arg_as_list NBETerm.e_any (l, q) with
+               | None -> None
+               | Some lst -> Some (l, lst))
+             (fun (elt_t, (l, blob)) ->
+               NBETerm.mk_t <|
+               NBETerm.Lazy (Inr (blob, emb_typ EMB.(emb_typ_of e_any)),
+                             Thunk.mk (fun _ -> 
+                               NBETerm.mk_t <| NBETerm.FV (S.lid_as_fv PC.cst_of_list_lid S.delta_constant None, [U_zero], [NBETerm.as_arg l]))))
+             (fun elt_t (l, lst) ->
+                let blob = FStar.ConstantTimeSequence.of_list #NBETerm.t lst in
+                Some (elt_t, (l, FStar.Compiler.Dyn.mkdyn blob))))
+      in
+      let arg1_as_elt_t (x:arg) : option term = Some (fst x) in
+      let arg2_as_blob (x:arg) : option FStar.Compiler.Dyn.dyn =
+          match (SS.compress (fst x)).n with
+          | Tm_lazy {blob=blob; lkind=Lazy_embedding (ET_app(head, _), _)}
+            when head=Ident.string_of_lid PC.cst_seq_lid -> Some blob
+          | _ -> None
+      in
+      let arg2_as_blob_nbe (x:NBETerm.arg) : option FStar.Compiler.Dyn.dyn =
+          let open FStar.TypeChecker.NBETerm in
+          match (fst x).nbe_t with
+          | Lazy (Inr (blob, ET_app(head, _)), _)
+            when head=Ident.string_of_lid PC.cst_seq_lid -> Some blob
+          | _ -> None
+      in
+      let length_op =
+        let embed_int (r:Range.range) (i:Z.t) : term = embed_simple EMB.e_int r i in
+        let run_op (blob:FStar.Compiler.Dyn.dyn) : option Z.t = 
+            Some (BU.array_length #term (FStar.Compiler.Dyn.undyn blob))
+        in
+        ( PC.cst_length_lid, 2, 1,
+          mixed_binary_op arg1_as_elt_t
+                          arg2_as_blob
+                          embed_int
+                          (fun _ _ blob -> run_op blob),
+          NBETerm.mixed_binary_op
+             (fun (elt_t, _) -> Some elt_t)
+             arg2_as_blob_nbe
+             (fun (i:Z.t) -> NBETerm.embed NBETerm.e_int bogus_cbs i)
+             (fun _ blob -> run_op blob) )
+      in
+      let index_op = 
+          (PC.cst_index_lid, 3, 1,
+           mixed_ternary_op arg1_as_elt_t
+                            arg2_as_blob 
+                            arg_as_int
+                            (fun r tm -> tm)
+                            (fun r _t blob i -> Some (BU.array_index #term (FStar.Compiler.Dyn.undyn blob) i)),
+          NBETerm.mixed_ternary_op
+             (fun (elt_t, _) -> Some elt_t)
+             arg2_as_blob_nbe
+             NBETerm.arg_as_int
+             (fun tm -> tm)
+             (fun _t blob i -> Some (BU.array_index #NBETerm.t (FStar.Compiler.Dyn.undyn blob) i)))
+      in             
+      [of_list_op; length_op; index_op]
+    in
     let strong_steps =
       List.map (as_primitive_step true)
-               (basic_ops@bounded_arith_ops@[reveal_hide])
+               (basic_ops@bounded_arith_ops@[reveal_hide]@array_ops)
     in
     let weak_steps   = List.map (as_primitive_step false) weak_ops in
     prim_from_list <| (strong_steps @ weak_steps)

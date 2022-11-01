@@ -231,8 +231,22 @@ let ml_mode_prefix_with_iface_decls
    | Friend _
    | Include _
    | ModuleAbbrev _ ->
-     iface, [impl]
+     let iface_prefix_opens, iface =
+       List.span (fun d -> match d.d with | Open _ | ModuleAbbrev _ -> true | _ -> false) iface     
+     in
+     let iface =
+       List.filter 
+         (fun d ->
+           match d.d with
+           | Val _
+           | Tycon _ -> true //only retain the vals in --MLish mode
+           | _ -> false)
+         iface
+     in
+     iface, [impl]@iface_prefix_opens
+     
    | _ ->
+
      let iface_prefix_tycons, iface =
        List.span (fun d -> match d.d with | Tycon _ -> true | _ -> false) iface
      in
@@ -260,12 +274,10 @@ let ml_mode_check_initial_interface mname (iface:list decl) =
                    "Interface contains an abstract 'type' declaration; \
                     use 'val' instead") d.drange
     | Tycon _
-    | Val _ -> true
+    | Val _
+    | Open _
+    | ModuleAbbrev _ -> true
     | _ -> false)
-  // iface |> List.filter (fun d ->
-  // match d.d with
-  // | Val _ -> true //only retain the vals in --MLish mode
-  // | _ -> false)
 
 let ulib_modules = [
   "FStar.Calc";
@@ -335,13 +347,19 @@ let initialize_interface (mname:Ident.lid) (l:list decl) : E.withenv unit =
 
 let prefix_with_interface_decls mname (impl:decl) : E.withenv (list decl) =
   fun (env:E.env) ->
-    match E.iface_decls env (E.current_module env) with
-    | None ->
-      [impl], env
-    | Some iface ->
-      let iface, impl = prefix_one_decl mname iface impl in
-      let env = E.set_iface_decls env (E.current_module env) iface in
-      impl, env
+    let decls, env = 
+      match E.iface_decls env (E.current_module env) with
+      | None ->
+        [impl], env
+      | Some iface ->
+        let iface, impl = prefix_one_decl mname iface impl in
+        let env = E.set_iface_decls env (E.current_module env) iface in
+        impl, env
+    in
+    if Options.dump_module (Ident.string_of_lid mname)
+    then Util.print1 "Interleaved decls:\n%s\n" (List.map FStar.Parser.AST.decl_to_string decls |> String.concat "\n");
+    decls,env
+    
 
 let interleave_module (a:modul) (expect_complete_modul:bool) : E.withenv modul =
   fun (env:E.env)  ->
@@ -380,5 +398,7 @@ let interleave_module (a:modul) (expect_complete_modul:bool) : E.withenv modul =
                                     (Ident.string_of_lid l)
                                     err)) (Ident.range_of_lid l)
         | _ ->
+          if Options.dump_module (string_of_lid l)
+          then Util.print1 "Interleaved module is:\n%s\n" (FStar.Parser.AST.modul_to_string a);
           a, env
       end

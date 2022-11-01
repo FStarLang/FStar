@@ -355,6 +355,7 @@ and lazy_kind =
   | Lazy_sigelt 
   | Lazy_uvar 
   | Lazy_letbinding 
+  | Lazy_native_array 
   | Lazy_embedding of (emb_typ * term' syntax FStar_Thunk.t) 
   | Lazy_universe 
   | Lazy_universe_uvar 
@@ -923,6 +924,9 @@ let (uu___is_Lazy_uvar : lazy_kind -> Prims.bool) =
 let (uu___is_Lazy_letbinding : lazy_kind -> Prims.bool) =
   fun projectee ->
     match projectee with | Lazy_letbinding -> true | uu___ -> false
+let (uu___is_Lazy_native_array : lazy_kind -> Prims.bool) =
+  fun projectee ->
+    match projectee with | Lazy_native_array -> true | uu___ -> false
 let (uu___is_Lazy_embedding : lazy_kind -> Prims.bool) =
   fun projectee ->
     match projectee with | Lazy_embedding _0 -> true | uu___ -> false

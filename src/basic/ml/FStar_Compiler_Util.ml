@@ -1253,3 +1253,15 @@ let within_bounds repr signedness width =
   let lower, upper = bounds signedness width in
   let value = Z.of_string (ensure_decimal repr) in
   Z.leq lower value && Z.leq value upper
+
+let print_array (f: 'a -> string) 
+                (s: 'a array)
+  : string 
+  = let ls = Array.fold_left (fun out a -> f a  :: out) [] s in
+    format1 "[| %s |]" (String.concat "; " (List.rev ls))
+
+let array_of_list (l:'a list) = FStar_ConstantTimeSequence.of_list l
+
+let array_length (l:'a FStar_ConstantTimeSequence.seq) = FStar_ConstantTimeSequence.length l
+
+let array_index (l:'a FStar_ConstantTimeSequence.seq) (i:Z.t) = FStar_ConstantTimeSequence.index l i

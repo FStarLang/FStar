@@ -20,6 +20,14 @@ let (bytes_lid : FStar_Ident.lident) = pconst "bytes"
 let (int_lid : FStar_Ident.lident) = pconst "int"
 let (exn_lid : FStar_Ident.lident) = pconst "exn"
 let (list_lid : FStar_Ident.lident) = pconst "list"
+let (cst_seq_lid : FStar_Ident.lident) =
+  p2l ["FStar"; "ConstantTimeSequence"; "seq"]
+let (cst_of_list_lid : FStar_Ident.lident) =
+  p2l ["FStar"; "ConstantTimeSequence"; "of_list"]
+let (cst_length_lid : FStar_Ident.lident) =
+  p2l ["FStar"; "ConstantTimeSequence"; "length"]
+let (cst_index_lid : FStar_Ident.lident) =
+  p2l ["FStar"; "ConstantTimeSequence"; "index"]
 let (eqtype_lid : FStar_Ident.lident) = pconst "eqtype"
 let (option_lid : FStar_Ident.lident) = psnconst "option"
 let (either_lid : FStar_Ident.lident) = psconst "either"

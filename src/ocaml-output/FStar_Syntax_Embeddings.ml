@@ -1355,6 +1355,55 @@ let e_list : 'a . 'a embedding -> 'a Prims.list embedding =
     let uu___ =
       let uu___1 = type_of ea in FStar_Syntax_Syntax.t_list_of uu___1 in
     mk_emb_full em un uu___ printer1 emb_t_list_a
+let e_array :
+  'a . 'a embedding -> 'a FStar_ConstantTimeSequence.seq embedding =
+  fun ea ->
+    let t_seq_a =
+      let t_seq =
+        let uu___ =
+          FStar_Syntax_Util.fvar_const FStar_Parser_Const.cst_seq_lid in
+        FStar_Syntax_Syntax.mk_Tm_uinst uu___ [FStar_Syntax_Syntax.U_zero] in
+      let uu___ = let uu___1 = FStar_Syntax_Syntax.as_arg ea.typ in [uu___1] in
+      FStar_Syntax_Syntax.mk_Tm_app t_seq uu___
+        FStar_Compiler_Range.dummyRange in
+    let emb_t_seq_a =
+      let uu___ =
+        let uu___1 =
+          FStar_Compiler_Effect.op_Bar_Greater FStar_Parser_Const.cst_seq_lid
+            FStar_Ident.string_of_lid in
+        (uu___1, [ea.emb_typ]) in
+      FStar_Syntax_Syntax.ET_app uu___ in
+    let printer1 = FStar_Compiler_Util.print_array ea.print in
+    let em arr rng shadow_l norm =
+      FStar_Syntax_Util.mk_lazy arr t_seq_a
+        FStar_Syntax_Syntax.Lazy_native_array FStar_Pervasives_Native.None in
+    let un t0 w norm =
+      let t = unmeta_div_results t0 in
+      let uu___ =
+        let uu___1 = FStar_Syntax_Subst.compress t in
+        uu___1.FStar_Syntax_Syntax.n in
+      match uu___ with
+      | FStar_Syntax_Syntax.Tm_lazy
+          { FStar_Syntax_Syntax.blob = arr;
+            FStar_Syntax_Syntax.lkind = FStar_Syntax_Syntax.Lazy_native_array;
+            FStar_Syntax_Syntax.ltyp = uu___1;
+            FStar_Syntax_Syntax.rng = uu___2;_}
+          ->
+          let uu___3 = FStar_Compiler_Dyn.undyn arr in
+          FStar_Pervasives_Native.Some uu___3
+      | uu___1 ->
+          (if w
+           then
+             (let uu___3 =
+                let uu___4 =
+                  let uu___5 = FStar_Syntax_Print.term_to_string t0 in
+                  FStar_Compiler_Util.format1
+                    "Not an embedded native array: %s" uu___5 in
+                (FStar_Errors.Warning_NotEmbedded, uu___4) in
+              FStar_Errors.log_issue t0.FStar_Syntax_Syntax.pos uu___3)
+           else ();
+           FStar_Pervasives_Native.None) in
+    mk_emb_full em un t_seq_a printer1 emb_t_seq_a
 let (e_string_list : Prims.string Prims.list embedding) = e_list e_string
 let (steps_Simpl : FStar_Syntax_Syntax.term) =
   FStar_Syntax_Syntax.tconst FStar_Parser_Const.steps_simpl

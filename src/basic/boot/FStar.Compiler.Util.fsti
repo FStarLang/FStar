@@ -436,3 +436,7 @@ val write : ref 'a -> 'a -> unit
 (* Marshaling to and from strings *)
 val marshal: 'a -> string
 val unmarshal: string -> 'a
+
+val print_array (f: 'a -> string) (s:FStar.ConstantTimeSequence.seq 'a) : string 
+val array_length (s:FStar.ConstantTimeSequence.seq 'a) : FStar.BigInt.t
+val array_index (s:FStar.ConstantTimeSequence.seq 'a) (i:FStar.BigInt.t) : 'a

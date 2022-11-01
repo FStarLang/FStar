@@ -341,6 +341,14 @@ val interp_prop_eq2 : args -> option t
 
 val mixed_binary_op : (arg -> option 'a) -> (arg -> option 'b) -> ('c -> t) ->
                       ('a -> 'b -> option 'c) -> args -> option t
+
+val mixed_ternary_op (as_a : arg -> option 'a)
+                     (as_b : arg -> option 'b)
+                     (as_c : arg -> option 'c)                     
+                     (embed_d : 'd -> t) 
+                     (f : 'a -> 'b -> 'c -> option 'd)
+                     (args : args) : option t
+
 val unary_op : (arg -> option 'a) -> ('a -> t) -> (args -> option t)
 val binary_op : (arg -> option 'a) -> ('a -> 'a -> t) -> (args -> option t)
 
