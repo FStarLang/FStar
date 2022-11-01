@@ -36,7 +36,6 @@ module Ident = FStar.Ident
 module Err = FStar.Errors
 module Z = FStar.BigInt
 open FStar.Char
-module CST = FStar.ConstantTimeSequence
 
 let id_norm_cb : norm_cb = function
     | Inr x -> x
@@ -677,38 +676,6 @@ let e_list (ea:embedding 'a) =
         (S.t_list_of (type_of ea))
         printer
         emb_t_list_a
-
-let e_array (ea:embedding 'a) 
-  : embedding (CST.seq 'a)
-  = let t_seq_a =
-        let t_seq = S.mk_Tm_uinst (U.fvar_const PC.cst_seq_lid) [U_zero] in
-        S.mk_Tm_app t_seq [S.as_arg ea.typ] Range.dummyRange
-    in
-    let emb_t_seq_a =
-        ET_app(PC.cst_seq_lid |> Ident.string_of_lid, [ea.emb_typ])
-    in
-    let printer = BU.print_array ea.print in
-    let em (arr:CST.seq 'a) (rng:range) (shadow_l:option (Thunk.t term)) (norm:norm_cb) : term =
-        U.mk_lazy arr t_seq_a Lazy_native_array None
-    in
-    let un (t0:term) (w:bool) (norm:norm_cb) : option (CST.seq 'a) = 
-        let t = unmeta_div_results t0 in
-        match (SS.compress t).n with
-        | Tm_lazy {blob=arr; lkind=Lazy_native_array } ->
-          Some (FStar.Compiler.Dyn.undyn arr)
-
-        | _ ->
-          if w
-          then Err.log_issue t0.pos (Err.Warning_NotEmbedded, BU.format1 "Not an embedded native array: %s" (Print.term_to_string t0));
-          None
-    in
-    mk_emb_full
-        em
-        un
-        t_seq_a
-        printer
-        emb_t_seq_a
-
   
 let e_string_list = e_list e_string
 

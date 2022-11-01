@@ -498,25 +498,6 @@ let e_list (ea:embedding 'a) =
         | _ -> None)
     in
     mk_emb em un (lid_as_typ PC.list_lid [U_zero] [as_arg (type_of ea)]) etyp
-
-let e_array (ea:embedding 'a)
-  : embedding (FStar.ConstantTimeSequence.seq 'a)
-  = let etyp = ET_app(PC.cst_seq_lid |> Ident.string_of_lid, [ea.emb_typ]) in
-    let t_seq_a =
-        let t_seq = S.mk_Tm_uinst (U.fvar_const PC.cst_seq_lid) [U_zero] in
-        S.mk_Tm_app t_seq [S.as_arg S.tun] Range.dummyRange
-    in
-    let em cb (l:FStar.ConstantTimeSequence.seq 'a) : t =
-      let li = { blob = FStar.Compiler.Dyn.mkdyn l; lkind = Lazy_native_array; ltyp = t_seq_a; rng = Range.dummyRange } in
-      let rec thunk () = mk_t (Lazy (Inl li, Thunk.mk thunk)) in
-      thunk ()
-    in
-    let un cb (trm:t) : option (FStar.ConstantTimeSequence.seq 'a) =
-      match trm.nbe_t with
-      | Lazy (Inl li, _) -> Some (FStar.Compiler.Dyn.undyn li.blob)
-      | _ -> None
-    in
-    mk_emb em un (lid_as_typ PC.cst_seq_lid [U_zero] [as_arg (type_of ea)]) etyp
   
 let e_string_list = e_list e_string
 

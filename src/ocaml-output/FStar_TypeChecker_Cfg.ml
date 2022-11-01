@@ -3522,20 +3522,23 @@ let (built_in_primitive_steps : primitive_step FStar_Compiler_Util.psmap) =
         let uu___ =
           let uu___1 =
             FStar_Compiler_Effect.op_Bar_Greater
-              FStar_Parser_Const.cst_seq_lid FStar_Ident.string_of_lid in
+              FStar_Parser_Const.immutable_array_t_lid
+              FStar_Ident.string_of_lid in
           (uu___1, [t]) in
         FStar_Syntax_Syntax.ET_app uu___ in
       let un_lazy t l r =
         let uu___ =
           let uu___1 =
-            FStar_Syntax_Util.fvar_const FStar_Parser_Const.cst_of_list_lid in
+            FStar_Syntax_Util.fvar_const
+              FStar_Parser_Const.immutable_array_of_list_lid in
           FStar_Syntax_Syntax.mk_Tm_uinst uu___1 [FStar_Syntax_Syntax.U_zero] in
         let uu___1 =
           let uu___2 = FStar_Syntax_Syntax.iarg t in
           let uu___3 = let uu___4 = FStar_Syntax_Syntax.as_arg l in [uu___4] in
           uu___2 :: uu___3 in
         FStar_Syntax_Syntax.mk_Tm_app uu___ uu___1 r in
-      (FStar_Parser_Const.cst_of_list_lid, (Prims.of_int (2)), Prims.int_one,
+      (FStar_Parser_Const.immutable_array_of_list_lid, (Prims.of_int (2)),
+        Prims.int_one,
         (mixed_binary_op
            (fun uu___ ->
               match uu___ with
@@ -3571,7 +3574,7 @@ let (built_in_primitive_steps : primitive_step FStar_Compiler_Util.psmap) =
                           let uu___5 =
                             let uu___6 =
                               FStar_Syntax_Util.fvar_const
-                                FStar_Parser_Const.cst_seq_lid in
+                                FStar_Parser_Const.immutable_array_t_lid in
                             FStar_Syntax_Syntax.mk_Tm_uinst uu___6
                               [FStar_Syntax_Syntax.U_zero] in
                           let uu___6 =
@@ -3591,7 +3594,7 @@ let (built_in_primitive_steps : primitive_step FStar_Compiler_Util.psmap) =
                 fun uu___ ->
                   match uu___ with
                   | (l, lst) ->
-                      let blob = FStar_ConstantTimeSequence.of_list lst in
+                      let blob = FStar_ImmutableArray_Base.of_list lst in
                       let uu___1 =
                         let uu___2 =
                           let uu___3 = FStar_Compiler_Dyn.mkdyn blob in
@@ -3634,7 +3637,7 @@ let (built_in_primitive_steps : primitive_step FStar_Compiler_Util.psmap) =
                                let uu___7 =
                                  let uu___8 =
                                    FStar_Syntax_Syntax.lid_as_fv
-                                     FStar_Parser_Const.cst_of_list_lid
+                                     FStar_Parser_Const.immutable_array_of_list_lid
                                      FStar_Syntax_Syntax.delta_constant
                                      FStar_Pervasives_Native.None in
                                  let uu___9 =
@@ -3654,7 +3657,7 @@ let (built_in_primitive_steps : primitive_step FStar_Compiler_Util.psmap) =
               fun uu___ ->
                 match uu___ with
                 | (l, lst) ->
-                    let blob = FStar_ConstantTimeSequence.of_list lst in
+                    let blob = FStar_ImmutableArray_Base.of_list lst in
                     let uu___1 =
                       let uu___2 =
                         let uu___3 = FStar_Compiler_Dyn.mkdyn blob in
@@ -3677,7 +3680,8 @@ let (built_in_primitive_steps : primitive_step FStar_Compiler_Util.psmap) =
             FStar_Syntax_Syntax.rng = uu___4;_}
           when
           let uu___5 =
-            FStar_Ident.string_of_lid FStar_Parser_Const.cst_seq_lid in
+            FStar_Ident.string_of_lid
+              FStar_Parser_Const.immutable_array_t_lid in
           head = uu___5 -> FStar_Pervasives_Native.Some blob
       | uu___1 -> FStar_Pervasives_Native.None in
     let arg2_as_blob_nbe x =
@@ -3688,7 +3692,8 @@ let (built_in_primitive_steps : primitive_step FStar_Compiler_Util.psmap) =
            (blob, FStar_Syntax_Syntax.ET_app (head, uu___)), uu___1)
           when
           let uu___2 =
-            FStar_Ident.string_of_lid FStar_Parser_Const.cst_seq_lid in
+            FStar_Ident.string_of_lid
+              FStar_Parser_Const.immutable_array_t_lid in
           head = uu___2 -> FStar_Pervasives_Native.Some blob
       | uu___ -> FStar_Pervasives_Native.None in
     let length_op =
@@ -3698,7 +3703,8 @@ let (built_in_primitive_steps : primitive_step FStar_Compiler_Util.psmap) =
           let uu___1 = FStar_Compiler_Dyn.undyn blob in
           FStar_Compiler_Util.array_length uu___1 in
         FStar_Pervasives_Native.Some uu___ in
-      (FStar_Parser_Const.cst_length_lid, (Prims.of_int (2)), Prims.int_one,
+      (FStar_Parser_Const.immutable_array_length_lid, (Prims.of_int (2)),
+        Prims.int_one,
         (mixed_binary_op arg1_as_elt_t arg2_as_blob embed_int
            (fun uu___ -> fun uu___1 -> fun blob -> run_op blob)),
         (FStar_TypeChecker_NBETerm.mixed_binary_op
@@ -3710,7 +3716,8 @@ let (built_in_primitive_steps : primitive_step FStar_Compiler_Util.psmap) =
               FStar_TypeChecker_NBETerm.embed FStar_TypeChecker_NBETerm.e_int
                 bogus_cbs i) (fun uu___ -> fun blob -> run_op blob))) in
     let index_op =
-      (FStar_Parser_Const.cst_index_lid, (Prims.of_int (3)), Prims.int_one,
+      (FStar_Parser_Const.immutable_array_index_lid, (Prims.of_int (3)),
+        Prims.int_one,
         (mixed_ternary_op arg1_as_elt_t arg2_as_blob arg_as_int
            (fun r -> fun tm -> tm)
            (fun r ->

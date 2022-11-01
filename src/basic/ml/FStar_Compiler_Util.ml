@@ -1260,8 +1260,8 @@ let print_array (f: 'a -> string)
   = let ls = Array.fold_left (fun out a -> f a  :: out) [] s in
     format1 "[| %s |]" (String.concat "; " (List.rev ls))
 
-let array_of_list (l:'a list) = FStar_ConstantTimeSequence.of_list l
+let array_of_list (l:'a list) = FStar_ImmutableArray_Base.of_list l
 
-let array_length (l:'a FStar_ConstantTimeSequence.seq) = FStar_ConstantTimeSequence.length l
+let array_length (l:'a FStar_ImmutableArray_Base.t) = FStar_ImmutableArray_Base.length l
 
-let array_index (l:'a FStar_ConstantTimeSequence.seq) (i:Z.t) = FStar_ConstantTimeSequence.index l i
+let array_index (l:'a FStar_ImmutableArray_Base.t) (i:Z.t) = FStar_ImmutableArray_Base.index l i

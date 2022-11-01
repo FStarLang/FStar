@@ -1291,55 +1291,6 @@ let e_list : 'a . 'a embedding -> 'a Prims.list embedding =
       lid_as_typ FStar_Parser_Const.list_lid [FStar_Syntax_Syntax.U_zero]
         uu___1 in
     mk_emb em un uu___ etyp
-let e_array :
-  'a . 'a embedding -> 'a FStar_ConstantTimeSequence.seq embedding =
-  fun ea ->
-    let etyp =
-      let uu___ =
-        let uu___1 =
-          FStar_Compiler_Effect.op_Bar_Greater FStar_Parser_Const.cst_seq_lid
-            FStar_Ident.string_of_lid in
-        (uu___1, [ea.emb_typ]) in
-      FStar_Syntax_Syntax.ET_app uu___ in
-    let t_seq_a =
-      let t_seq =
-        let uu___ =
-          FStar_Syntax_Util.fvar_const FStar_Parser_Const.cst_seq_lid in
-        FStar_Syntax_Syntax.mk_Tm_uinst uu___ [FStar_Syntax_Syntax.U_zero] in
-      let uu___ =
-        let uu___1 = FStar_Syntax_Syntax.as_arg FStar_Syntax_Syntax.tun in
-        [uu___1] in
-      FStar_Syntax_Syntax.mk_Tm_app t_seq uu___
-        FStar_Compiler_Range.dummyRange in
-    let em cb l =
-      let li =
-        let uu___ = FStar_Compiler_Dyn.mkdyn l in
-        {
-          FStar_Syntax_Syntax.blob = uu___;
-          FStar_Syntax_Syntax.lkind = FStar_Syntax_Syntax.Lazy_native_array;
-          FStar_Syntax_Syntax.ltyp = t_seq_a;
-          FStar_Syntax_Syntax.rng = FStar_Compiler_Range.dummyRange
-        } in
-      let rec thunk uu___ =
-        let uu___1 =
-          let uu___2 =
-            let uu___3 = FStar_Thunk.mk thunk in
-            ((FStar_Pervasives.Inl li), uu___3) in
-          Lazy uu___2 in
-        mk_t uu___1 in
-      thunk () in
-    let un cb trm =
-      match trm.nbe_t with
-      | Lazy (FStar_Pervasives.Inl li, uu___) ->
-          let uu___1 = FStar_Compiler_Dyn.undyn li.FStar_Syntax_Syntax.blob in
-          FStar_Pervasives_Native.Some uu___1
-      | uu___ -> FStar_Pervasives_Native.None in
-    let uu___ =
-      let uu___1 =
-        let uu___2 = let uu___3 = type_of ea in as_arg uu___3 in [uu___2] in
-      lid_as_typ FStar_Parser_Const.cst_seq_lid [FStar_Syntax_Syntax.U_zero]
-        uu___1 in
-    mk_emb em un uu___ etyp
 let (e_string_list : Prims.string Prims.list embedding) = e_list e_string
 let e_arrow : 'a 'b . 'a embedding -> 'b embedding -> ('a -> 'b) embedding =
   fun ea ->

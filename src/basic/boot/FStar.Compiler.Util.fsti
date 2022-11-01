@@ -437,6 +437,6 @@ val write : ref 'a -> 'a -> unit
 val marshal: 'a -> string
 val unmarshal: string -> 'a
 
-val print_array (f: 'a -> string) (s:FStar.ConstantTimeSequence.seq 'a) : string 
-val array_length (s:FStar.ConstantTimeSequence.seq 'a) : FStar.BigInt.t
-val array_index (s:FStar.ConstantTimeSequence.seq 'a) (i:FStar.BigInt.t) : 'a
+val print_array (f: 'a -> string) (s:FStar.ImmutableArray.Base.t 'a) : string 
+val array_length (s:FStar.ImmutableArray.Base.t 'a) : FStar.BigInt.t
+val array_index (s:FStar.ImmutableArray.Base.t 'a) (i:FStar.BigInt.t) : 'a

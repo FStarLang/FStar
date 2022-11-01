@@ -322,7 +322,6 @@ and lazy_kind =
   | Lazy_sigelt
   | Lazy_uvar
   | Lazy_letbinding
-  | Lazy_native_array
   | Lazy_embedding of emb_typ * Thunk.t term
   | Lazy_universe
   | Lazy_universe_uvar
