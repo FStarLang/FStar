@@ -35,12 +35,12 @@ val ref (a:Type u#1) (p:Preorder.preorder a)
   : Type u#0
 
 /// The standard points to separation logic predicate
-val pts_to_sl (#a:Type) (#p:Preorder.preorder a) (r:ref a p) (f:perm) (v:erased a)
+val pts_to_sl (#a:Type) (#p:Preorder.preorder a) (r:ref a p) (f:perm) (v:a)
   : slprop u#1
 
 /// Lifting the standard points to predicate to vprop, with a non-informative selector
 [@@ __steel_reduce__]
-unfold let pts_to (#a:Type) (#p:Preorder.preorder a) (r:ref a p) (f:perm) (v:erased a) : vprop =
+unfold let pts_to (#a:Type) (#p:Preorder.preorder a) (r:ref a p) (f:perm) (v:a) : vprop =
   to_vprop (pts_to_sl r f v)
 
 /// Allocates a reference with value [x]. We have full permission on the newly
@@ -49,7 +49,7 @@ val alloc (#opened: _) (#a:Type) (p:Preorder.preorder a) (v:a)
   : SteelGhostT (ref a p) opened emp (fun r -> pts_to r full_perm v)
 
 /// Writes value [x] in the reference [r], as long as we have full ownership of [r]
-val write (#opened: _) (#a:Type) (#p:Preorder.preorder a) (#v:erased a)
+val write (#opened: _) (#a:Type) (#p:Preorder.preorder a) (#v:a)
           (r:ref a p) (x:a)
   : SteelGhost unit opened (pts_to r full_perm v)
                (fun v -> pts_to r full_perm x)
@@ -74,7 +74,7 @@ let stable_property (#a:Type) (p:Preorder.preorder a)
 /// it holds for the current value [v] of the reference, then we can witness it
 val witness (#inames: _) (#a:Type) (#q:perm) (#p:Preorder.preorder a) (r:ref a p)
             (fact:stable_property p)
-            (v:erased a)
+            (v:a)
             (_:squash (fact v))
   : SteelGhost unit inames (pts_to r q v)
                (fun _ -> pts_to r q v)
@@ -84,7 +84,7 @@ val witness (#inames: _) (#a:Type) (#q:perm) (#p:Preorder.preorder a) (r:ref a p
 /// If we previously witnessed the validity of [fact], we can recall its validity
 val recall (#inames: _) (#a:Type u#1) (#q:perm) (#p:Preorder.preorder a)
            (fact:property a)
-           (r:ref a p) (v:erased a)
+           (r:ref a p) (v:a)
   : SteelGhost unit inames (pts_to r q v)
                (fun _ -> pts_to r q v)
                (requires fun _ -> witnessed r fact)
@@ -97,7 +97,7 @@ val share (#inames:_)
           (#p:Preorder.preorder a)
           (r:ref a p)
           (f:perm)
-          (v:Ghost.erased a)
+          (v:a)
   : SteelGhostT unit inames
     (pts_to r f v)
     (fun _ -> pts_to r (half_perm f) v `star` pts_to r (half_perm f) v)
@@ -108,7 +108,7 @@ val gather (#inames:_)
            (#p:Preorder.preorder a)
            (r:ref a p)
            (f g:perm)
-           (v:Ghost.erased a)
+           (v:a)
   : SteelGhostT unit inames
     (pts_to r f v `star` pts_to r g v)
     (fun _ -> pts_to r (sum_perm f g) v)
