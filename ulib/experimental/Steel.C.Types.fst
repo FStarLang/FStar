@@ -92,16 +92,27 @@ let mk_fraction_unknown td p = td.mk_fraction_one p
 let mk_fraction_eq_unknown td v p = td.mk_fraction_eq_one v p
 
 module R = Steel.C.Model.Ref
+module TD = Steel.TypeDictionary
 
-let ptr td = R.ptr td.pcm
-let null _ = R.null _
+noeq
+type ref0 : Type0 = {
+  dest: TD.token;
+  typedef: typedef (TD.type_of_token dest);
+  ref: R.ref typedef.pcm;
+}
 
-let _pts_to r v = hp_of (R.pts_to r v)
+let void_ptr = option ref0
+let void_null = None
+let type_of_ptr p = TD.type_of_token (Some?.v p).dest
+let typedef_of_ptr p = (Some?.v p).typedef
+
+let _pts_to r v = hp_of (R.pts_to (Some?.v r).ref v)
 
 #restart-solver
 let mk_fraction_split_gen
-  #_ #_ #td r v p p1 p2
+  #_ #_ #td r0 v p p1 p2
 =
+  let r = (Some?.v r0).ref in
   td.mk_fraction_split v p1 p2;
   td.mk_fraction_join v p1 p2;
   rewrite_slprop
@@ -111,22 +122,22 @@ let mk_fraction_split_gen
   R.split r _ (td.mk_fraction v p1) (td.mk_fraction v p2);
   rewrite_slprop
     (R.pts_to r (td.mk_fraction v p1))
-    (pts_to r (mk_fraction td v p1))
+    (pts_to r0 (mk_fraction td v p1))
     (fun _ -> ());
   rewrite_slprop
     (R.pts_to r (td.mk_fraction v p2))
-    (pts_to r (mk_fraction td v p2))
+    (pts_to r0 (mk_fraction td v p2))
     (fun _ -> ())
 
 let mk_fraction_join
-  #_ #_ #td r v p1 p2
-=
+  #_ #_ #td r0 v p1 p2
+= let r = (Some?.v r0).ref in
   rewrite_slprop
-    (pts_to r (mk_fraction td v p1))
+    (pts_to r0 (mk_fraction td v p1))
     (R.pts_to r (td.mk_fraction v p1))
     (fun _ -> ());
   rewrite_slprop
-    (pts_to r (mk_fraction td v p2))
+    (pts_to r0 (mk_fraction td v p2))
     (R.pts_to r (td.mk_fraction v p2))
     (fun _ -> ());
   R.gather r (td.mk_fraction v p1) (td.mk_fraction v p2);
@@ -212,47 +223,50 @@ let mk_scalar_fractionable v p = ()
 let mk_scalar_inj v1 v2 p1 p2 = ()
 
 let scalar_unique
-  v1 v2 p1 p2 r
+  #_ #t v1 v2 p1 p2 r0
 =
+  let r : R.ref (scalar t).pcm = (Some?.v r0).ref in
   rewrite_slprop
-    (pts_to r (mk_fraction (scalar _) (mk_scalar v1) p1))
+    (pts_to r0 (mk_fraction (scalar _) (mk_scalar v1) p1))
     (R.pts_to r (Some (Some v1, p1)))
     (fun _ -> ());
   rewrite_slprop
-    (pts_to r (mk_fraction (scalar _) (mk_scalar v2) p2))
+    (pts_to r0 (mk_fraction (scalar _) (mk_scalar v2) p2))
     (R.pts_to r (Some (Some v2, p2)))
     (fun _ -> ());
   R.gather r (Some (Some v1, p1)) (Some (Some v2, p2));
   R.split r _ (Some (Some v1, p1)) (Some (Some v2, p2));
   rewrite_slprop
     (R.pts_to r (Some (Some v1, p1)))
-    (pts_to r (mk_fraction (scalar _) (mk_scalar v1) p1))
+    (pts_to r0 (mk_fraction (scalar _) (mk_scalar v1) p1))
     (fun _ -> ());
   rewrite_slprop
     (R.pts_to r (Some (Some v2, p2)))
-    (pts_to r (mk_fraction (scalar _) (mk_scalar v2) p2))
+    (pts_to r0 (mk_fraction (scalar _) (mk_scalar v2) p2))
     (fun _ -> ())
 
 let read0
-  #t #v #p r
+  #t #v #p r0
 =
+  let r : R.ref (scalar t).pcm = (Some?.v r0).ref in
   rewrite_slprop
-    (pts_to r (mk_fraction (scalar t) (mk_scalar (Ghost.reveal v)) p))
+    (pts_to r0 (mk_fraction (scalar t) (mk_scalar (Ghost.reveal v)) p))
     (R.pts_to r (Some (Some (Ghost.reveal v), p)))
     (fun _ -> ());
   let v' = R.ref_read r in
   rewrite_slprop
     (R.pts_to r (Some (Some (Ghost.reveal v), p)))
-    (pts_to r (mk_fraction (scalar t) (mk_scalar (Ghost.reveal v)) p))
+    (pts_to r0 (mk_fraction (scalar t) (mk_scalar (Ghost.reveal v)) p))
     (fun _ -> ());
   let Some (Some v0, _) = v' in
   return v0
 
 let write
-  #t #v r v'
+  #t #v r0 v'
 =
+  let r : R.ref (scalar t).pcm = (Some?.v r0).ref in
   rewrite_slprop
-    (pts_to r v)
+    (pts_to r0 v)
     (R.pts_to r v)
     (fun _ -> ());
   R.ref_upd r _ _ (R.base_fpu _ _ (Some (Some v', P.full_perm)));
@@ -407,17 +421,25 @@ let struct_get_field_uninitialized
   tn n fields field
 = ()
 
-let g_struct_field
-  #_ #_ #_ #fields r field
-= R.ref_focus r (S.struct_field (struct_field_pcm fields) field)
+let _inv = TD.inv
+
+let has_struct_field
+  #_ #_ #_ #fields r field r'
+= (Some?.v r').ref == R.ref_focus (Some?.v r).ref (S.struct_field (struct_field_pcm fields) field)
+
+let has_struct_field_inj
+  r field r1 r2
+= TD.type_of_token_inj (Some?.v r1).dest (Some?.v r2).dest
 
 #push-options "--z3rlimit 32"
 
 #restart-solver
-let ghost_struct_field
-  #_ #tn #_ #n #fields #v r field
-= rewrite_slprop
-    (pts_to r v)
+
+let ghost_struct_field_focus
+  #_ #tn #_ #n #fields #v r0 field r'0
+= let r : R.ref (struct_pcm tn n fields) = (Some?.v r0).ref in
+  rewrite_slprop
+    (pts_to r0 v)
     (R.pts_to r v)
     (fun _ -> ());
   let prf
@@ -439,12 +461,25 @@ let ghost_struct_field
   R.gfocus r (S.struct_field (struct_field_pcm fields) field) vf (struct_get_field v field);
   rewrite_slprop
     (R.pts_to r _)
-    (pts_to r _)
+    (pts_to r0 _)
     (fun _ -> ());
   rewrite_slprop
     (R.pts_to _ _)
-    (pts_to (g_struct_field r field) _)
+    (pts_to r'0 _)
     (fun _ -> ())
+
+let ghost_struct_field
+  #_ #tn #_ #n #fields #v r field
+= let tok' = TD.get_token (fields.fd_type field) in
+  let r' : ref (fields.fd_typedef field) = Some ({
+    dest = tok';
+    typedef = fields.fd_typedef field;
+    ref = R.ref_focus (Some?.v r).ref (S.struct_field (struct_field_pcm fields) field);
+  })
+  in
+  let gr' = Ghost.hide r' in
+  ghost_struct_field_focus r field gr';
+  gr'
 
 [@@noextract_to "krml"] // primitive
 let struct_field'
@@ -454,15 +489,16 @@ let struct_field'
   (#n: string)
   (#fields: nonempty_field_description_t tf)
   (#v: Ghost.erased (struct_t0 tn n fields))
-  (r: ref (struct0 tn n fields))
+  (r0: ref (struct0 tn n fields))
   (field: field_t fields)
 : SteelAtomicBase (ref (fields.fd_typedef field)) false opened Unobservable
-    (pts_to r v)
-    (fun r' -> pts_to r (struct_set_field field (unknown (fields.fd_typedef field)) v) `star` pts_to r' (struct_get_field v field))
-    (fun _ -> True)
-    (fun _ r' _ -> r' == g_struct_field r field)
-= rewrite_slprop
-    (pts_to r v)
+    (pts_to r0 v)
+    (fun r' -> pts_to r0 (struct_set_field field (unknown (fields.fd_typedef field)) v) `star` pts_to r' (struct_get_field v field))
+    (fun _ -> Ghost.reveal (mem_inv opened _inv) == false)
+    (fun _ r' _ -> has_struct_field r0 field r')
+= let r : R.ref (struct_pcm tn n fields) = (Some?.v r0).ref in
+  rewrite_slprop
+    (pts_to r0 v)
     (R.pts_to r v)
     (fun _ -> ());
   let prf
@@ -482,15 +518,22 @@ let struct_field'
   assert (op (struct_pcm tn n fields) v' vf `FX.feq` v);
   R.split r _ v' vf;
   let r' = R.focus r (S.struct_field (struct_field_pcm fields) field) vf (struct_get_field v field) in
+  let tok' = TD.get_token (fields.fd_type field) in
+  let res : ref (fields.fd_typedef field) = Some ({
+    dest = tok';
+    typedef = fields.fd_typedef field;
+    ref = r';
+  })
+  in
   rewrite_slprop
     (R.pts_to r _)
-    (pts_to r _)
+    (pts_to r0 _)
     (fun _ -> ());
   rewrite_slprop
     (R.pts_to _ _)
-    (pts_to r' _)
+    (pts_to res _)
     (fun _ -> ());
-  return r'
+  return res
 
 let struct_field0
   t' r field td'
@@ -501,13 +544,15 @@ let struct_field0
   return res
 
 let unstruct_field
-  #_ #tn #_ #n #fields #v r field #v' r'
-= rewrite_slprop
-    (pts_to r v)
+  #_ #tn #_ #n #fields #v r0 field #v' r'0
+= let r : R.ref (struct_pcm tn n fields) = (Some?.v r0).ref in
+  rewrite_slprop
+    (pts_to r0 v)
     (R.pts_to r v)
     (fun _ -> ());
+  let r' : R.ref (fields.fd_typedef field).pcm = (Some?.v r'0).ref in
   rewrite_slprop
-    (pts_to r' v')
+    (pts_to r'0 v')
     (R.pts_to r' v')
     (fun _ -> ());
   let prf
@@ -528,7 +573,7 @@ let unstruct_field
   R.gather r v _;
   rewrite_slprop
     (R.pts_to r _)
-    (pts_to r _)
+    (pts_to r0 _)
     (fun _ -> ())
 
 #pop-options
@@ -800,17 +845,22 @@ let full_union
 = Classical.move_requires (U.exclusive_union_intro (union_field_pcm fields) s) (Some field);
   Classical.move_requires (U.exclusive_union_elim (union_field_pcm fields) s) (Some field) 
 
-let g_union_field
-  #_ #_ #_ #fields r field
-= R.ref_focus r (U.union_field (union_field_pcm fields) (Some field))
+let has_union_field
+  #_ #_ #_ #fields r field r'
+= (Some?.v r').ref == R.ref_focus (Some?.v r).ref (U.union_field (union_field_pcm fields) (Some field))
+
+let has_union_field_inj
+  #_ #_ #_ #fields r field r1 r2
+= TD.type_of_token_inj (Some?.v r1).dest (Some?.v r2).dest
 
 #push-options "--z3rlimit 16"
 
 #restart-solver
-let ghost_union_field
-  #_ #tn #_ #n #fields #v r field
-= rewrite_slprop
-    (pts_to r v)
+let ghost_union_field_focus
+  #_ #tn #_ #n #fields #v r0 field r'0
+= let r : R.ref (union_pcm tn n fields) = (Some?.v r0).ref in
+  rewrite_slprop
+    (pts_to r0 v)
     (R.pts_to r v)
     (fun _ -> ());
   let v' = U.field_to_union_f (union_field_pcm fields) (Some field) (union_get_field v field) in
@@ -818,8 +868,21 @@ let ghost_union_field
   R.gfocus r (U.union_field (union_field_pcm fields) (Some field)) v (union_get_field v field);
   rewrite_slprop
     (R.pts_to _ _)
-    (pts_to (g_union_field r field) _)
+    (pts_to r'0 _)
     (fun _ -> ())
+
+let ghost_union_field
+  #_ #tn #_ #n #fields #v r field
+= let tok' = TD.get_token (fields.fd_type field) in
+  let r' : ref (fields.fd_typedef field) = Some ({
+    dest = tok';
+    typedef = fields.fd_typedef field;
+    ref = R.ref_focus (Some?.v r).ref (U.union_field (union_field_pcm fields) (Some field));
+  })
+  in
+  let gr' = Ghost.hide r' in
+  ghost_union_field_focus r field gr';
+  gr'
 
 [@@noextract_to "krml"] // primitive
 let union_field'
@@ -829,25 +892,33 @@ let union_field'
   (#n: string)
   (#fields: field_description_t tf)
   (#v: Ghost.erased (union_t0 tn n fields))
-  (r: ref (union0 tn n fields))
+  (r0: ref (union0 tn n fields))
   (field: field_t fields {union_get_case v == Some field})
 : SteelAtomicBase (ref (fields.fd_typedef field)) false opened Unobservable
-    (pts_to r v)
+    (pts_to r0 v)
     (fun r' -> pts_to r' (union_get_field v field))
-    (fun _ -> True)
-    (fun _ r' _ -> r' == g_union_field r field)
-= rewrite_slprop
-    (pts_to r v)
+    (fun _ -> Ghost.reveal (mem_inv opened _inv) == false)
+    (fun _ r' _ -> has_union_field r0 field r')
+= let r : R.ref (union_pcm tn n fields) = (Some?.v r0).ref in
+  rewrite_slprop
+    (pts_to r0 v)
     (R.pts_to r v)
     (fun _ -> ());
   let v' = Ghost.hide (U.field_to_union_f (union_field_pcm fields) (Some field) (union_get_field v field)) in
   assert (v' `FX.feq` v);
   let r' = R.focus r (U.union_field (union_field_pcm fields) (Some field)) v (union_get_field v field) in
+  let tok' = TD.get_token (fields.fd_type field) in
+  let res : ref (fields.fd_typedef field) = Some ({
+    dest = tok';
+    typedef = fields.fd_typedef field;
+    ref = r';
+  })
+  in
   rewrite_slprop
     (R.pts_to _ _)
-    (pts_to r' _)
+    (pts_to res _)
     (fun _ -> ());
-  return r'
+  return res
 
 let union_field0
   t' r field td'
@@ -858,15 +929,17 @@ let union_field0
   return res
 
 let ununion_field
-  #_ #tn #_ #n #fields r field #v' r'
-= rewrite_slprop
-    (pts_to r' v')
+  #_ #tn #_ #n #fields r0 field #v' r'0
+= let r : R.ref (union_pcm tn n fields) = (Some?.v r0).ref in
+  let r' : R.ref (fields.fd_typedef field).pcm = (Some?.v r'0).ref in
+  rewrite_slprop
+    (pts_to r'0 v')
     (R.pts_to r' v')
     (fun _ -> ());
   R.unfocus r' r (U.union_field (union_field_pcm fields) (Some field)) _;
   rewrite_slprop
     (R.pts_to r _)
-    (pts_to r _)
+    (pts_to r0 _)
     (fun _ -> ())
 
 [@@noextract_to "krml"] // primitive
@@ -876,24 +949,25 @@ let union_switch_field'
   (#n: string)
   (#fields: field_description_t tf)
   (#v: Ghost.erased (union_t0 tn n fields))
-  (r: ref (union0 tn n fields))
+  (r0: ref (union0 tn n fields))
   (field: field_t fields)
 : Steel (ref (fields.fd_typedef field))
-    (pts_to r v)
+    (pts_to r0 v)
     (fun r' -> pts_to #(norm norm_field_steps (fields.fd_type field)) r' (uninitialized (fields.fd_typedef field)))
     (fun _ -> full (union0 tn n fields) v)
-    (fun _ r' _ -> r' == g_union_field r field)
-= rewrite_slprop
-    (pts_to r v)
+    (fun _ r' _ -> has_union_field r0 field r')
+= let r : R.ref (union_pcm tn n fields) = (Some?.v r0).ref in
+  rewrite_slprop
+    (pts_to r0 v)
     (R.pts_to r v)
     (fun _ -> ());
   let v' = U.field_to_union_f (union_field_pcm fields) (Some field) (fields.fd_typedef field).uninitialized in
   R.ref_upd r _ _ (R.base_fpu (union_pcm tn n fields) _ v');
   rewrite_slprop
     (R.pts_to _ _)
-    (pts_to r v')
+    (pts_to r0 v')
     (fun _ -> ());
-  let r' = union_field' r field in
+  let r' = union_field' r0 field in
   return r'
 
 let union_switch_field0

@@ -56,11 +56,23 @@ val mk_fraction_eq_unknown (#t: Type0) (td: typedef t) (v: t) (p: P.perm) : Lemm
   (ensures (v == unknown td))
 
 
+// To be extracted as: void*
+[@@noextract_to "krml"] // primitive
+val void_ptr : Type0
+ 
+// To be extracted as: NULL
+[@@noextract_to "krml"] // primitive
+val void_null: void_ptr
+
+[@@noextract_to "krml"] // proof-only
+val type_of_ptr (p: void_ptr { ~ (p == void_null) }) : GTot Type0
+val typedef_of_ptr (p: void_ptr { ~ (p == void_null) }) : GTot (typedef (type_of_ptr p))
+
 // To be extracted as: *t
 [@@noextract_to "krml"] // primitive
-val ptr (#t: Type) (td: typedef t) : Tot Type0
+let ptr (#t: Type) (td: typedef t) : Tot Type0 = (p: void_ptr { (~ (p == void_null)) ==> (type_of_ptr p == t /\ typedef_of_ptr p == td) })
 [@@noextract_to "krml"] // primitive
-val null (#t: Type) (td: typedef t) : Tot (ptr td)
+let null (#t: Type) (td: typedef t) : Tot (ptr td) = void_null
 inline_for_extraction [@@noextract_to "krml"]
 let ref (#t: Type) (td: typedef t) : Tot Type0 = (p: ptr td { ~ (p == null td) })
 
@@ -327,14 +339,52 @@ val struct_get_field_uninitialized
   (struct_get_field (uninitialized (struct0 tn n fields)) field == uninitialized (fields.fd_typedef field))
   [SMTPat (struct_get_field (uninitialized (struct0 tn n fields)) field)]
 
-val g_struct_field
+val _inv: Ghost.erased Steel.Memory.iname
+
+val has_struct_field
   (#tn: Type0)
   (#tf: Type0)
   (#n: string)
   (#fields: nonempty_field_description_t tf)
   (r: ref (struct0 tn n fields))
   (field: field_t fields)
-: GTot (ref (fields.fd_typedef field))
+  (r': ref (fields.fd_typedef field))
+: GTot prop
+
+val has_struct_field_inj
+  (#opened: _)
+  (#tn: Type0)
+  (#tf: Type0)
+  (#n: string)
+  (#fields: nonempty_field_description_t tf)
+  (r: ref (struct0 tn n fields))
+  (field: field_t fields)
+  (r1 r2: ref (fields.fd_typedef field))
+: SteelGhost unit opened
+    emp
+    (fun _ -> emp)
+    (fun _ ->
+      Ghost.reveal (mem_inv opened _inv) == false /\
+      has_struct_field r field r1 /\
+      has_struct_field r field r2
+    )
+    (fun _ _ _ -> r1 == r2)
+
+val ghost_struct_field_focus
+  (#opened: _)
+  (#tn: Type0)
+  (#tf: Type0)
+  (#n: string)
+  (#fields: nonempty_field_description_t tf)
+  (#v: Ghost.erased (struct_t0 tn n fields))
+  (r: ref (struct0 tn n fields))
+  (field: field_t fields)
+  (r': ref (fields.fd_typedef field))
+: SteelGhost unit opened
+    (pts_to r v)
+    (fun _ -> pts_to r (struct_set_field field (unknown (fields.fd_typedef field)) v) `star` pts_to r' (struct_get_field v field))
+    (fun _ -> has_struct_field r field r')
+    (fun _ _ _ -> True)
 
 val ghost_struct_field
   (#opened: _)
@@ -345,9 +395,11 @@ val ghost_struct_field
   (#v: Ghost.erased (struct_t0 tn n fields))
   (r: ref (struct0 tn n fields))
   (field: field_t fields)
-: SteelGhostT unit opened
+: SteelGhost (Ghost.erased (ref (fields.fd_typedef field))) opened
     (pts_to r v)
-    (fun _ -> pts_to r (struct_set_field field (unknown (fields.fd_typedef field)) v) `star` pts_to (g_struct_field r field) (struct_get_field v field))
+    (fun r' -> pts_to r (struct_set_field field (unknown (fields.fd_typedef field)) v) `star` pts_to r' (struct_get_field v field))
+    (fun _ -> Ghost.reveal (mem_inv opened _inv) == false)
+    (fun _ r' _ -> has_struct_field r field r')
 
 [@@noextract_to "krml"] // primitive
 val struct_field0
@@ -367,8 +419,10 @@ val struct_field0
 : SteelAtomicBase (ref td') false opened Unobservable
     (pts_to r v)
     (fun r' -> pts_to r (struct_set_field field (unknown (fields.fd_typedef field)) v) `star` pts_to r' (struct_get_field v field))
-    (fun _ -> True)
-    (fun _ r' _ -> r' == g_struct_field r field)
+    (fun _ -> Ghost.reveal (mem_inv opened _inv) == false)
+    (fun _ r' _ ->
+      has_struct_field r field r'
+    )
 
 inline_for_extraction [@@noextract_to "krml"] // primitive
 let struct_field
@@ -383,8 +437,10 @@ let struct_field
 : SteelAtomicBase (ref #(norm norm_field_steps (fields.fd_type field)) (fields.fd_typedef field)) false opened Unobservable
     (pts_to r v)
     (fun r' -> pts_to r (struct_set_field field (unknown (fields.fd_typedef field)) v) `star` pts_to #(norm norm_field_steps (fields.fd_type field)) r' (struct_get_field v field))
-    (fun _ -> True)
-    (fun _ r' _ -> r' == g_struct_field r field)
+    (fun _ -> Ghost.reveal (mem_inv opened _inv) == false)
+    (fun _ r' _ ->
+      has_struct_field r field r'
+    )
 = struct_field0
     (norm norm_field_steps (fields.fd_type field))
     r
@@ -406,7 +462,7 @@ val unstruct_field
     (pts_to r v `star` pts_to r' v')
     (fun _ -> pts_to r (struct_set_field field v' v))
     (fun _ ->
-      r' == g_struct_field r field /\
+      has_struct_field r field r' /\
       struct_get_field v field == unknown (fields.fd_typedef field)
     )
     (fun _ _ _ -> True)
@@ -634,14 +690,50 @@ val full_union
   ))
   [SMTPat (full (union0 tn n fields) s); SMTPat (union_get_field s field)]
 
-val g_union_field
+val has_union_field
   (#tn: Type0)
   (#tf: Type0)
   (#n: string)
   (#fields: field_description_t tf)
   (r: ref (union0 tn n fields))
   (field: field_t fields)
-: GTot (ref (fields.fd_typedef field))
+  (r': ref (fields.fd_typedef field))
+: GTot prop
+
+val has_union_field_inj
+  (#opened: _)
+  (#tn: Type0)
+  (#tf: Type0)
+  (#n: string)
+  (#fields: nonempty_field_description_t tf)
+  (r: ref (union0 tn n fields))
+  (field: field_t fields)
+  (r1 r2: ref (fields.fd_typedef field))
+: SteelGhost unit opened
+    emp
+    (fun _ -> emp)
+    (fun _ ->
+      Ghost.reveal (mem_inv opened _inv) == false /\
+      has_union_field r field r1 /\
+      has_union_field r field r2
+    )
+    (fun _ _ _ -> r1 == r2)
+
+val ghost_union_field_focus
+  (#opened: _)
+  (#tn: Type0)
+  (#tf: Type0)
+  (#n: string)
+  (#fields: field_description_t tf)
+  (#v: Ghost.erased (union_t0 tn n fields))
+  (r: ref (union0 tn n fields))
+  (field: field_t fields {union_get_case v == Some field})
+  (r': ref (fields.fd_typedef field))
+: SteelGhost unit opened
+    (pts_to r v)
+    (fun _ -> pts_to r' (union_get_field v field))
+    (fun _ -> has_union_field r field r')
+    (fun _ _ _ -> True)
 
 val ghost_union_field
   (#opened: _)
@@ -652,9 +744,11 @@ val ghost_union_field
   (#v: Ghost.erased (union_t0 tn n fields))
   (r: ref (union0 tn n fields))
   (field: field_t fields {union_get_case v == Some field})
-: SteelGhostT unit opened
+: SteelGhost (Ghost.erased (ref (fields.fd_typedef field))) opened
     (pts_to r v)
-    (fun _ -> pts_to (g_union_field r field) (union_get_field v field))
+    (fun r' -> pts_to r' (union_get_field v field))
+    (fun _ -> Ghost.reveal (mem_inv opened _inv) == false)
+    (fun _ r' _ -> has_union_field r field r')
 
 [@@noextract_to "krml"] // primitive
 val union_field0
@@ -674,8 +768,8 @@ val union_field0
 : SteelAtomicBase (ref td') false opened Unobservable
     (pts_to r v)
     (fun r' -> pts_to r' (union_get_field v field))
-    (fun _ -> True)
-    (fun _ r' _ -> r' == g_union_field r field)
+    (fun _ -> Ghost.reveal (mem_inv opened _inv) == false)
+    (fun _ r' _ -> has_union_field r field r')
 
 inline_for_extraction [@@noextract_to "krml"] // primitive
 let union_field
@@ -690,8 +784,8 @@ let union_field
 : SteelAtomicBase (ref #(norm norm_field_steps (fields.fd_type field)) (fields.fd_typedef field)) false opened Unobservable
     (pts_to r v)
     (fun r' -> pts_to #(norm norm_field_steps (fields.fd_type field)) r' (union_get_field v field))
-    (fun _ -> True)
-    (fun _ r' _ -> r' == g_union_field r field)
+    (fun _ -> Ghost.reveal (mem_inv opened _inv) == false)
+    (fun _ r' _ -> has_union_field r field r')
 = union_field0
     (norm norm_field_steps (fields.fd_type field))
     r
@@ -712,7 +806,7 @@ val ununion_field
     (pts_to r' v')
     (fun _ -> pts_to r (union_set_field tn n fields field v'))
     (fun _ ->
-      r' == g_union_field r field
+      has_union_field r field r'
     )
     (fun _ _ _ -> True)
 
@@ -736,7 +830,7 @@ val union_switch_field0
     (pts_to r v)
     (fun r' -> pts_to r' (uninitialized (fields.fd_typedef field)))
     (fun _ -> full (union0 tn n fields) v)
-    (fun _ r' _ -> r' == g_union_field r field)
+    (fun _ r' _ -> has_union_field r field r')
 
 inline_for_extraction [@@noextract_to "krml"]
 let union_switch_field
@@ -751,7 +845,7 @@ let union_switch_field
     (pts_to r v)
     (fun r' -> pts_to #(norm norm_field_steps (fields.fd_type field)) r' (uninitialized (fields.fd_typedef field)))
     (fun _ -> full (union0 tn n fields) v)
-    (fun _ r' _ -> r' == g_union_field r field)
+    (fun _ r' _ -> has_union_field r field r')
 = union_switch_field0
     (norm norm_field_steps (fields.fd_type field))
     r
