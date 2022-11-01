@@ -325,7 +325,8 @@ let rec is_arrow (g:env) (t:term)
           else (
             let e_tag =
               let Comp ct = c.n in
-              if Ident.lid_equals ct.effect_name PC.effect_Pure_lid
+              if Ident.lid_equals ct.effect_name PC.effect_Pure_lid  ||
+                 Ident.lid_equals ct.effect_name PC.effect_Lemma_lid
               then Some E_TOTAL
               else if Ident.lid_equals ct.effect_name PC.effect_Ghost_lid
               then Some E_GHOST
@@ -652,6 +653,11 @@ type side =
   | Both
   | Neither
 
+let side_to_string = function
+  | Left -> "Left"
+  | Right -> "Right"
+  | Both -> "Both"
+  | Neither -> "Neither"
   
 (*
      G |- e : t0 <: t1 | p
@@ -701,10 +707,11 @@ let rec check_relation (g:env) (rel:relation) (t0 t1:typ)
     in
     let which_side_to_unfold t0 t1 
       : side
-      = let delta_depth_of_head t =
+      = let rec delta_depth_of_head t =
           let head = U.leftmost_head t in
           match (U.un_uinst head).n with
           | Tm_fvar fv -> Some (Env.delta_depth_of_fv g.tcenv fv)
+          | Tm_match (t, _, _, _) -> delta_depth_of_head t
           | _ -> None
         in
         let dd0 = delta_depth_of_head t0 in
@@ -764,11 +771,23 @@ let rec check_relation (g:env) (rel:relation) (t0 t1:typ)
     in
     let maybe_unfold_side_and_retry side t0 t1 =
       match maybe_unfold_side side t0 t1 with
-      | None -> fallback t0 t1
+      | None ->
+        if Env.debug g.tcenv <| Options.Other "Core"
+        then BU.print3 "Unfolding %s for %s and %s returned None\n"
+               (side_to_string side)
+               (P.term_to_string t0)
+               (P.term_to_string t1);
+        fallback t0 t1
       | Some (t0, t1) -> check_relation g rel t0 t1
     in
     let maybe_unfold_and_retry t0 t1 =
-      maybe_unfold_side_and_retry (which_side_to_unfold t0 t1) t0 t1
+      let side = which_side_to_unfold t0 t1 in
+      if Env.debug g.tcenv <| Options.Other "Core"
+      then BU.print3 "For terms %s and %s, deciding to unfold %s\n"
+             (P.term_to_string t0)
+             (P.term_to_string t1)
+             (side_to_string side);
+      maybe_unfold_side_and_retry side t0 t1
     in
     let beta_iota_reduce t =
         let t = Subst.compress t in
@@ -923,11 +942,18 @@ let rec check_relation (g:env) (rel:relation) (t0 t1:typ)
       | _, Tm_uinst _ 
       | _, Tm_fvar _
       | _, Tm_app _ ->
-        if not (head_matches t0 t1)
-        then maybe_unfold_and_retry t0 t1
+        let head_matches = head_matches t0 t1 in
+        let head0, args0 = U.leftmost_head_and_args t0 in
+        let head1, args1 = U.leftmost_head_and_args t1 in
+        if not (head_matches && List.length args0 = List.length args1)
+        then begin
+          if Env.debug g.tcenv <| Options.Other "Core"
+          then BU.print2 "Unfolding and retrying with %s and %s\n"
+                 (P.term_to_string t0)
+                 (P.term_to_string t1);
+          maybe_unfold_and_retry t0 t1
+        end
         else (
-          let head0, args0 = U.leftmost_head_and_args t0 in
-          let head1, args1 = U.leftmost_head_and_args t1 in
           handle_with
             (check_relation g EQUALITY head0 head1 ;!
              check_relation_args g EQUALITY args0 args1)
