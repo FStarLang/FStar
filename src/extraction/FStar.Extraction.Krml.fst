@@ -785,6 +785,12 @@ and translate_expr env e: expr =
           false) ->
       EBufCreate (ManuallyManaged, translate_expr env e, EConstant (UInt32, "1"))
 
+  | MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, _) }, [ _ (* typedef *) ])
+    when (
+          string_of_mlpath p = "Steel.C.Types.alloc" ||
+          false) ->
+      EBufCreateNoInit (ManuallyManaged, EConstant (UInt32, "1"))
+
   | MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, _) }, [ e0; e1 ])
     when string_of_mlpath p = "Steel.ST.HigherArray.malloc_ptr" ->
       EBufCreate (ManuallyManaged, translate_expr env e0, translate_expr env e1)
@@ -816,6 +822,10 @@ and translate_expr env e: expr =
           string_of_mlpath p = "Steel.C.Array.Base.free_from" ||
           false) ->
       EBufFree (translate_expr env e2)
+
+  | MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, _) }, [ _ (* typedef *); _ (* v *); e ]) when
+       string_of_mlpath p = "Steel.C.Types.free" ->
+      EBufFree (translate_expr env e)
 
   (* Generic buffer operations. *)
   | MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, _) }, [ e1; e2; _e3 ]) when (string_of_mlpath p = "FStar.Buffer.sub") ->
@@ -1029,6 +1039,10 @@ IsNull nodes should be added to the KaRaMeL AST *)
     when string_of_mlpath p = "Steel.C.Reference.is_null"
     -> EApp (EQualified (["LowStar"; "Monotonic"; "Buffer"], "is_null"), [ translate_expr env e ])
 
+  | MLE_App ({expr=MLE_TApp ({expr=MLE_Name p}, _)}, [_ (* opened *); _ (* td *); _ (* v *); e])
+    when string_of_mlpath p = "Steel.C.Types.is_null"
+    -> EApp (EQualified (["LowStar"; "Monotonic"; "Buffer"], "is_null"), [ translate_expr env e ])
+  
   | MLE_TApp ({expr=MLE_Name p}, _)
     when Syntax.string_of_mlpath p = "Steel.C.Array.Base.null_from"
     -> EQualified (["LowStar"; "Buffer"], "null")
