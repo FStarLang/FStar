@@ -86,24 +86,24 @@ let token_has_type_inj_type_with (#opened: _) (n: nat) (t1 t2: Type0) : SteelGho
   (h_exists (R.pts_to dict full_perm) `star` pure (token_has_type n t1 /\ token_has_type n t2))
   (fun _ -> h_exists (R.pts_to dict full_perm) `star` pure (t1 == t2))
 = elim_pure _;
-  let ggd : Ghost.erased (Ghost.erased dictionary) = witness_exists () in
-  let d : dictionary = Ghost.reveal (Ghost.reveal ggd) in
+  let gd : Ghost.erased dictionary = witness_exists () in
+  let d : dictionary = Ghost.reveal gd in
   rewrite_slprop (R.pts_to dict full_perm _) (R.pts_to dict full_perm d) (fun _ -> ());
   R.recall (token_has_type_in n t1) dict d;
   R.recall (token_has_type_in n t2) dict d;
-  intro_exists (Ghost.hide d) (R.pts_to dict full_perm);
+  intro_exists d (R.pts_to dict full_perm);
   intro_pure _
 
 let token_has_type_inj_token_with (#opened: _) (n1 n2: nat) (t: Type0) : SteelGhostT unit opened
   (h_exists (R.pts_to dict full_perm) `star` pure (token_has_type n1 t /\ token_has_type n2 t))
   (fun _ -> h_exists (R.pts_to dict full_perm) `star` pure (n1 == n2))
 = elim_pure _;
-  let ggd : Ghost.erased (Ghost.erased dictionary) = witness_exists () in
-  let d : dictionary = Ghost.reveal (Ghost.reveal ggd) in
+  let gd : Ghost.erased dictionary = witness_exists () in
+  let d : dictionary = Ghost.reveal gd in
   rewrite_slprop (R.pts_to dict full_perm _) (R.pts_to dict full_perm d) (fun _ -> ());
   R.recall (token_has_type_in n1 t) dict d;
   R.recall (token_has_type_in n2 t) dict d;
-  intro_exists (Ghost.hide d) (R.pts_to dict full_perm);
+  intro_exists d (R.pts_to dict full_perm);
   intro_pure _
 
 #push-options "--split_queries"
@@ -120,7 +120,7 @@ let get_token_from_true
     (fun _ _ _ -> True)
 = let n = FStar.IndefiniteDescription.indefinite_description_ghost (n_up_to d.size) (fun n -> d.type_of_nat n == t) in
   R.witness dict (token_has_type_in n t) d ();
-  intro_exists (Ghost.hide d) (R.pts_to dict full_perm);
+  intro_exists d (R.pts_to dict full_perm);
   intro_pure _;
   token_has_type_inj_type_with n t (type_of_token n);
   elim_pure _;
@@ -153,8 +153,8 @@ let get_token_from
 : SteelGhostT token opened
     (h_exists (R.pts_to dict full_perm) `star` emp)
     (fun n -> h_exists (R.pts_to dict full_perm) `star` pure (type_of_token n == t))
-= let ggd : Ghost.erased (Ghost.erased dictionary) = witness_exists () in
-  let d : dictionary = Ghost.reveal (Ghost.reveal ggd) in
+= let gd : Ghost.erased dictionary = witness_exists () in
+  let d : dictionary = Ghost.reveal gd in
   rewrite_slprop (R.pts_to dict full_perm _) (R.pts_to dict full_perm d) (fun _ -> ());
   if FStar.StrongExcludedMiddle.strong_excluded_middle (exists (n: n_up_to d.size) . d.type_of_nat n == t)
   then
