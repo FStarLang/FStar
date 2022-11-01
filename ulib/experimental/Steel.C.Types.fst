@@ -82,7 +82,7 @@ let mk_fraction td x p = td.mk_fraction x p
 let mk_fraction_full td x = td.mk_fraction_full x
 let mk_fraction_compose td x p1 p2 = td.mk_fraction_compose x p1 p2
 
-let full td v = exclusive td.pcm v
+let full td v = exclusive td.pcm v /\ p_refine td.pcm v
 
 let uninitialized td = td.uninitialized
 
@@ -107,6 +107,39 @@ let type_of_ptr p = TD.type_of_token (Some?.v p).dest
 let typedef_of_ptr p = (Some?.v p).typedef
 
 let _pts_to r v = hp_of (R.pts_to (Some?.v r).ref v)
+
+let is_null
+  p
+= return (None? p)
+
+let freeable
+  r
+= R.freeable (Some?.v r).ref
+
+let alloc
+  #t td
+= let r = R.ref_alloc td.pcm td.uninitialized in
+  let tok = TD.get_token t in
+  let res : ref td = Some ({
+    dest = tok;
+    typedef = td;
+    ref = r;
+  })
+  in
+  rewrite_slprop
+    (R.pts_to r _)
+    (pts_to_or_null res _)
+    (fun _ -> ());
+  return res
+
+let free
+  #t #td #v r0
+= let r : R.ref td.pcm = (Some?.v r0).ref in
+  rewrite_slprop
+    (pts_to r0 v)
+    (R.pts_to r v)
+    (fun _ -> ());
+  R.ref_free r
 
 #restart-solver
 let mk_fraction_split_gen
@@ -222,6 +255,9 @@ let mk_scalar_fractionable v p = ()
 
 let mk_scalar_inj v1 v2 p1 p2 = ()
 
+#push-options "--z3rlimit 16"
+
+#restart-solver
 let scalar_unique
   #_ #t v1 v2 p1 p2 r0
 =
@@ -244,6 +280,8 @@ let scalar_unique
     (R.pts_to r (Some (Some v2, p2)))
     (pts_to r0 (mk_fraction (scalar _) (mk_scalar v2) p2))
     (fun _ -> ())
+
+#pop-options
 
 let read0
   #t #v #p r0
