@@ -56,9 +56,10 @@ let dict_inv_vprop
 : Tot vprop
 = h_exists (R.pts_to dict full_perm)
 
-let dict_and_inv_f (opened: _) : SteelGhostT
-  (Ghost.erased (dict: R.ref dictionary preorder & S.inv (dict_inv_vprop dict)))
-  opened emp (fun _ -> emp)
+[@@noextract_to "krml"]
+let dict_and_inv_t = Ghost.erased (dict: R.ref dictionary preorder & S.inv (dict_inv_vprop dict))
+
+let dict_and_inv_f (opened: _) : SteelGhostT dict_and_inv_t opened emp (fun _ -> emp)
 =
   let d = ({ size = 0; type_of_nat = (fun _ -> unit); type_of_nat_inj = () }) in
   let dict = R.alloc preorder d in
@@ -66,8 +67,10 @@ let dict_and_inv_f (opened: _) : SteelGhostT
   let i = new_invariant (h_exists (R.pts_to dict full_perm)) in
   Ghost.hide (| dict, i |)
 
-// let dict_and_inv = dict_and_inv_f _
-assume val dict_and_inv : Ghost.erased (dict: R.ref dictionary preorder & S.inv (dict_inv_vprop dict))
+#push-options "--warn_error -272" // disable top-level effect warning
+[@@noextract_to "krml"]
+let dict_and_inv = dict_and_inv_f _ <: SteelTop dict_and_inv_t false (fun _ -> emp) (fun _ _ _ -> True)
+#pop-options
 
 let dict : R.ref dictionary preorder = dfst dict_and_inv
 let inv : Ghost.erased Steel.Memory.iname = dsnd dict_and_inv
