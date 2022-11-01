@@ -36,6 +36,7 @@ let type_of_nat_of_type
   (ensures (d.type_of_nat (nat_of_type d t) == t))
 = ()
 
+[@@noextract_to "krml"]
 let preorder : FP.preorder dictionary =
   (fun d1 d2 ->
     d1.size <= d2.size /\
@@ -49,8 +50,14 @@ open Steel.FractionalPermission
 
 module S = Steel.Effect.Common
 
+[@@__steel_reduce__]
+let dict_inv_vprop
+  (dict: R.ref dictionary preorder)
+: Tot vprop
+= h_exists (R.pts_to dict full_perm)
+
 let dict_and_inv_f (opened: _) : SteelGhostT
-  (Ghost.erased (dict: R.ref dictionary preorder & S.inv (h_exists (R.pts_to dict full_perm))))
+  (Ghost.erased (dict: R.ref dictionary preorder & S.inv (dict_inv_vprop dict)))
   opened emp (fun _ -> emp)
 =
   let d = ({ size = 0; type_of_nat = (fun _ -> unit); type_of_nat_inj = () }) in
@@ -60,10 +67,24 @@ let dict_and_inv_f (opened: _) : SteelGhostT
   Ghost.hide (| dict, i |)
 
 // let dict_and_inv = dict_and_inv_f _
-assume val dict_and_inv : Ghost.erased (dict: R.ref dictionary preorder & S.inv (h_exists (R.pts_to dict full_perm)))
+assume val dict_and_inv : Ghost.erased (dict: R.ref dictionary preorder & S.inv (dict_inv_vprop dict))
 
 let dict : R.ref dictionary preorder = dfst dict_and_inv
-let inv : S.inv (h_exists (R.pts_to dict full_perm)) = dsnd dict_and_inv
+let inv : Ghost.erased Steel.Memory.iname = dsnd dict_and_inv
+
+let inv_holds : squash (inv >--> dict_inv_vprop dict) = ()
+
+let p_eq_q_p_FIXME_why_do_I_need_to_do_that
+  (p q: prop)
+  (sq: squash p)
+: Lemma
+  (requires (p == q))
+  (ensures q)
+= ()
+
+let inv_holds_unfold_WHY_WHY_WHY () : Lemma (inv >--> h_exists (R.pts_to dict full_perm)) =
+  assert_norm ((inv >--> dict_inv_vprop dict) == (inv >--> h_exists (R.pts_to dict full_perm)));
+  p_eq_q_p_FIXME_why_do_I_need_to_do_that (inv >--> dict_inv_vprop dict) (inv >--> h_exists (R.pts_to dict full_perm)) inv_holds
 
 let token_has_type_in (n: nat) (t: Type0) (d: dictionary) : GTot prop =
   n < d.size /\
@@ -82,7 +103,7 @@ let type_of_token
 : Tot Type0
 = FStar.IndefiniteDescription.indefinite_description_ghost Type0 (fun t -> token_has_type n t)
 
-let token_has_type_inj_type_with (#opened: _) (n: nat) (t1 t2: Type0) : SteelGhostT unit opened
+let token_has_type_inj_type_with (#opened: _) (n: nat) (t1 t2: Type0) () : SteelGhostT unit opened
   (h_exists (R.pts_to dict full_perm) `star` pure (token_has_type n t1 /\ token_has_type n t2))
   (fun _ -> h_exists (R.pts_to dict full_perm) `star` pure (t1 == t2))
 = elim_pure _;
@@ -94,7 +115,23 @@ let token_has_type_inj_type_with (#opened: _) (n: nat) (t1 t2: Type0) : SteelGho
   intro_exists d (R.pts_to dict full_perm);
   intro_pure _
 
-let token_has_type_inj_token_with (#opened: _) (n1 n2: nat) (t: Type0) : SteelGhostT unit opened
+let token_has_type_inj_type (#opened: _) (n: nat) (t1 t2: Type0) : SteelGhost unit opened
+  emp
+  (fun _ -> emp)
+  (fun _ ->
+    token_has_type n t1 /\
+    token_has_type n t2 /\
+    Ghost.reveal (mem_inv opened inv) == false
+  )
+  (fun _ _ _ -> t1 == t2)
+= inv_holds_unfold_WHY_WHY_WHY ();
+  intro_pure _;
+  with_invariant_g
+    inv
+    (token_has_type_inj_type_with n t1 t2);
+  elim_pure _
+
+let token_has_type_inj_token_with (#opened: _) (n1 n2: nat) (t: Type0) () : SteelGhostT unit opened
   (h_exists (R.pts_to dict full_perm) `star` pure (token_has_type n1 t /\ token_has_type n2 t))
   (fun _ -> h_exists (R.pts_to dict full_perm) `star` pure (n1 == n2))
 = elim_pure _;
@@ -105,6 +142,32 @@ let token_has_type_inj_token_with (#opened: _) (n1 n2: nat) (t: Type0) : SteelGh
   R.recall (token_has_type_in n2 t) dict d;
   intro_exists d (R.pts_to dict full_perm);
   intro_pure _
+
+let token_has_type_inj_token (#opened: _) (n1 n2: nat) (t: Type0) : SteelGhost unit opened
+  emp
+  (fun _ -> emp)
+  (fun _ ->
+    token_has_type n1 t /\
+    token_has_type n2 t /\
+    Ghost.reveal (mem_inv opened inv) == false
+  )
+  (fun _ _ _ -> n1 == n2)
+= inv_holds_unfold_WHY_WHY_WHY ();
+  intro_pure _;
+  with_invariant_g
+    inv
+    (token_has_type_inj_token_with n1 n2 t);
+  elim_pure _
+
+let type_of_token_inj (#opened: _) (n1 n2: token) : SteelGhost unit opened
+  emp
+  (fun _ -> emp)
+  (fun _ ->
+    type_of_token n1 == type_of_token n2 /\
+    Ghost.reveal (mem_inv opened inv) == false
+  )
+  (fun _ _ _ -> n1 == n2)
+= token_has_type_inj_token n1 n2 (type_of_token n1)
 
 #push-options "--split_queries"
 
@@ -122,7 +185,7 @@ let get_token_from_true
   R.witness dict (token_has_type_in n t) d ();
   intro_exists d (R.pts_to dict full_perm);
   intro_pure _;
-  token_has_type_inj_type_with n t (type_of_token n);
+  token_has_type_inj_type_with n t (type_of_token n) ();
   elim_pure _;
   let n' : token = n in
   intro_pure (type_of_token n' == t);
@@ -166,7 +229,8 @@ let get_token
   (#opened: _)
   (t: Type0)
 : SteelGhost token opened emp (fun _ -> emp) (fun _ -> Ghost.reveal (mem_inv opened inv) == false) (fun _ n _ -> type_of_token n == t)
-= let n = with_invariant_g
+= inv_holds_unfold_WHY_WHY_WHY ();
+  let n = with_invariant_g
     inv
     (get_token_from t)
   in
