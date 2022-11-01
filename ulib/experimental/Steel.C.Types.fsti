@@ -111,6 +111,32 @@ val is_null
     (fun _ -> True)
     (fun _ res _ -> res == true <==> p == null _)
 
+let assert_null
+  (#t: Type)
+  (#opened: _)
+  (#td: typedef t)
+  (#v: Ghost.erased t)
+  (p: ptr td)
+: SteelGhost unit opened
+    (pts_to_or_null p v)
+    (fun _ -> emp)
+    (fun _ -> p == null _)
+    (fun _ _ _ -> True)
+= rewrite_slprop (pts_to_or_null p v) emp (fun _ -> ())
+
+let assert_not_null
+  (#t: Type)
+  (#opened: _)
+  (#td: typedef t)
+  (#v: Ghost.erased t)
+  (p: ptr td)
+: SteelGhost (squash (~ (p == null _))) opened
+    (pts_to_or_null p v)
+    (fun _ -> pts_to p v)
+    (fun _ -> ~ (p == null _))
+    (fun _ _ _ -> True)
+= change_equal_slprop (pts_to_or_null p v) (pts_to p v)
+
 val freeable
   (#t: Type)
   (#td: typedef t)
