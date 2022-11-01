@@ -85,6 +85,63 @@ let pts_to (#t: Type) (#td: typedef t) (r: ref td) ([@@@ smt_fallback ] v: Ghost
   sel = trivial_selector _;
 })
 
+let pts_to_or_null' 
+  (#t: Type) (#td: typedef t) (p: ptr td) (v: Ghost.erased t) : vprop
+= if FStar.StrongExcludedMiddle.strong_excluded_middle (p == null _)
+  then emp
+  else pts_to p v
+
+[@@__steel_reduce__]
+let pts_to_or_null (#t: Type) (#td: typedef t) (p: ptr td) ([@@@ smt_fallback ] v: Ghost.erased t) : vprop = VUnit ({
+  hp = hp_of (pts_to_or_null' p v);
+  t = _;
+  sel = trivial_selector _;
+})
+
+[@@noextract_to "krml"] // primitive
+val is_null
+  (#t: Type)
+  (#opened: _)
+  (#td: typedef t)
+  (#v: Ghost.erased t)
+  (p: ptr td)
+: SteelAtomicBase bool false opened Unobservable
+    (pts_to_or_null p v)
+    (fun _ -> pts_to_or_null p v)
+    (fun _ -> True)
+    (fun _ res _ -> res == true <==> p == null _)
+
+val freeable
+  (#t: Type)
+  (#td: typedef t)
+  (r: ref td)
+: GTot prop
+
+[@@noextract_to "krml"] // primitive
+val alloc
+  (#t: Type)
+  (td: typedef t)
+: Steel (ptr td)
+    emp
+    (fun p -> pts_to_or_null p (uninitialized td))
+    (fun _ -> True)
+    (fun _ p _ -> (~ (p == null _)) ==> freeable p)
+
+[@@noextract_to "krml"] // primitive
+val free
+  (#t: Type)
+  (#td: typedef t)
+  (#v: Ghost.erased t)
+  (r: ref td)
+: Steel unit
+    (pts_to r v)
+    (fun _ -> emp)
+    (fun _ ->
+      freeable r /\
+      full td v
+    )
+    (fun _ _ _ -> True)
+
 val mk_fraction_split_gen
   (#opened: _)
   (#t: Type) (#td: typedef t) (r: ref td) (v: Ghost.erased t { fractionable td v }) (p p1 p2: P.perm) : SteelGhost unit opened
