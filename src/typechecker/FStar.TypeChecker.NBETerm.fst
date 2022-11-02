@@ -639,10 +639,10 @@ let lift_binary (f : 'a -> 'a -> 'b) (aopts : list (option 'a)) : option 'b =
         | [Some a0; Some a1] -> Some (f a0 a1)
         | _ -> None
 
-let unary_op (as_a : arg -> option 'a) (f : 'a -> t) (args : args) : option t =
+let unary_op (as_a : arg -> option 'a) (f : 'a -> t) (us:universes) (args : args) : option t =
     lift_unary f (List.map as_a args)
 
-let binary_op (as_a : arg -> option 'a) (f : 'a -> 'a -> t) (args : args) : option t =
+let binary_op (as_a : arg -> option 'a) (f : 'a -> 'a -> t) _us (args : args) : option t =
     lift_binary f (List.map as_a args)
 
 let unary_int_op (f:Z.t -> Z.t) =
@@ -659,20 +659,6 @@ let binary_bool_op (f:bool -> bool -> bool) =
 
 let binary_string_op (f : string -> string -> string) =
     binary_op arg_as_string (fun x y -> embed e_string bogus_cbs (f x y))
-
-let mixed_binary_op_no_univs (as_a : arg -> option 'a) (as_b : arg -> option 'b)
-       (embed_c : 'c -> t) (f : 'a -> 'b -> option 'c) (args : args) : option t =
-             match args with
-             | [a;b] ->
-                begin
-                match as_a a, as_b b with
-                | Some a, Some b ->
-                  (match f a b with
-                   | Some c -> Some (embed_c c)
-                   | _ -> None)
-                | _ -> None
-                end
-             | _ -> None
 
 let mixed_binary_op (as_a : arg -> option 'a) (as_b : arg -> option 'b)
        (embed_c : 'c -> t) (f : universes -> 'a -> 'b -> option 'c)

@@ -7,7 +7,6 @@ let test1 () = IA.of_list [0;1;2]
 
 let test2 () = assert_norm (IA.index (IA.of_list [0;1;2]) 1 == 1)
 
-
 let goal_is_true () : Tac unit = 
   match inspect (cur_goal()) with
   | Tv_App hd (arg, _) ->
