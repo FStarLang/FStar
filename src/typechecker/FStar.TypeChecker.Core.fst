@@ -763,30 +763,22 @@ let rec check_relation (g:env) (rel:relation) (t0 t1:typ)
       if guard_ok
       then if equatable g t0
             || equatable g t1
-           then let! _, t_typ = check' g t0 in
+           then begin
+                let! _, t_typ = check' g t0 in
                 let! u = universe_of g t_typ in
                 guard (U.mk_eq2 u t_typ t0 t1)
+           end
            else err ()
       else err ()
     in
     let maybe_unfold_side_and_retry side t0 t1 =
       match maybe_unfold_side side t0 t1 with
       | None ->
-        if Env.debug g.tcenv <| Options.Other "Core"
-        then BU.print3 "Unfolding %s for %s and %s returned None\n"
-               (side_to_string side)
-               (P.term_to_string t0)
-               (P.term_to_string t1);
         fallback t0 t1
       | Some (t0, t1) -> check_relation g rel t0 t1
     in
     let maybe_unfold_and_retry t0 t1 =
       let side = which_side_to_unfold t0 t1 in
-      if Env.debug g.tcenv <| Options.Other "Core"
-      then BU.print3 "For terms %s and %s, deciding to unfold %s\n"
-             (P.term_to_string t0)
-             (P.term_to_string t1)
-             (side_to_string side);
       maybe_unfold_side_and_retry side t0 t1
     in
     let beta_iota_reduce t =
@@ -946,13 +938,7 @@ let rec check_relation (g:env) (rel:relation) (t0 t1:typ)
         let head0, args0 = U.leftmost_head_and_args t0 in
         let head1, args1 = U.leftmost_head_and_args t1 in
         if not (head_matches && List.length args0 = List.length args1)
-        then begin
-          if Env.debug g.tcenv <| Options.Other "Core"
-          then BU.print2 "Unfolding and retrying with %s and %s\n"
-                 (P.term_to_string t0)
-                 (P.term_to_string t1);
-          maybe_unfold_and_retry t0 t1
-        end
+        then maybe_unfold_and_retry t0 t1
         else (
           handle_with
             (check_relation g EQUALITY head0 head1 ;!

@@ -3423,7 +3423,7 @@ let maybe_unfold_head_fv (env:Env.env) (head:term)
     match fv_us_opt with
     | None -> None
     | Some (fv, us) ->
-      match Env.lookup_definition [Unfold delta_constant] env fv.fv_name.v with
+      match Env.lookup_nonrec_definition [Unfold delta_constant] env fv.fv_name.v with
       | None -> None
       | Some (us_formals, defn) ->
         let subst = mk_univ_subst us_formals us in

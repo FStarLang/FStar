@@ -1412,36 +1412,11 @@ let rec (check_relation :
                let maybe_unfold_side_and_retry side1 t01 t11 =
                  let uu___1 = maybe_unfold_side side1 t01 t11 in
                  match uu___1 with
-                 | FStar_Pervasives_Native.None ->
-                     ((let uu___3 =
-                         FStar_Compiler_Effect.op_Less_Bar
-                           (FStar_TypeChecker_Env.debug g.tcenv)
-                           (FStar_Options.Other "Core") in
-                       if uu___3
-                       then
-                         let uu___4 = FStar_Syntax_Print.term_to_string t01 in
-                         let uu___5 = FStar_Syntax_Print.term_to_string t11 in
-                         FStar_Compiler_Util.print3
-                           "Unfolding %s for %s and %s returned None\n"
-                           (side_to_string side1) uu___4 uu___5
-                       else ());
-                      fallback t01 t11)
+                 | FStar_Pervasives_Native.None -> fallback t01 t11
                  | FStar_Pervasives_Native.Some (t02, t12) ->
                      check_relation g rel t02 t12 in
                let maybe_unfold_and_retry t01 t11 =
                  let side1 = which_side_to_unfold t01 t11 in
-                 (let uu___2 =
-                    FStar_Compiler_Effect.op_Less_Bar
-                      (FStar_TypeChecker_Env.debug g.tcenv)
-                      (FStar_Options.Other "Core") in
-                  if uu___2
-                  then
-                    let uu___3 = FStar_Syntax_Print.term_to_string t01 in
-                    let uu___4 = FStar_Syntax_Print.term_to_string t11 in
-                    FStar_Compiler_Util.print3
-                      "For terms %s and %s, deciding to unfold %s\n" uu___3
-                      uu___4 (side_to_string side1)
-                  else ());
                  maybe_unfold_side_and_retry side1 t01 t11 in
                let beta_iota_reduce t =
                  let t2 = FStar_Syntax_Subst.compress t in
@@ -1762,22 +1737,7 @@ let rec (check_relation :
                                     (head_matches1 &&
                                        ((FStar_Compiler_List.length args0) =
                                           (FStar_Compiler_List.length args1)))
-                                then
-                                  ((let uu___8 =
-                                      FStar_Compiler_Effect.op_Less_Bar
-                                        (FStar_TypeChecker_Env.debug g.tcenv)
-                                        (FStar_Options.Other "Core") in
-                                    if uu___8
-                                    then
-                                      let uu___9 =
-                                        FStar_Syntax_Print.term_to_string t01 in
-                                      let uu___10 =
-                                        FStar_Syntax_Print.term_to_string t11 in
-                                      FStar_Compiler_Util.print2
-                                        "Unfolding and retrying with %s and %s\n"
-                                        uu___9 uu___10
-                                    else ());
-                                   maybe_unfold_and_retry t01 t11)
+                                then maybe_unfold_and_retry t01 t11
                                 else
                                   (let uu___8 =
                                      let uu___9 =
@@ -1805,22 +1765,7 @@ let rec (check_relation :
                                     (head_matches1 &&
                                        ((FStar_Compiler_List.length args0) =
                                           (FStar_Compiler_List.length args1)))
-                                then
-                                  ((let uu___8 =
-                                      FStar_Compiler_Effect.op_Less_Bar
-                                        (FStar_TypeChecker_Env.debug g.tcenv)
-                                        (FStar_Options.Other "Core") in
-                                    if uu___8
-                                    then
-                                      let uu___9 =
-                                        FStar_Syntax_Print.term_to_string t01 in
-                                      let uu___10 =
-                                        FStar_Syntax_Print.term_to_string t11 in
-                                      FStar_Compiler_Util.print2
-                                        "Unfolding and retrying with %s and %s\n"
-                                        uu___9 uu___10
-                                    else ());
-                                   maybe_unfold_and_retry t01 t11)
+                                then maybe_unfold_and_retry t01 t11
                                 else
                                   (let uu___8 =
                                      let uu___9 =
@@ -1848,22 +1793,7 @@ let rec (check_relation :
                                     (head_matches1 &&
                                        ((FStar_Compiler_List.length args0) =
                                           (FStar_Compiler_List.length args1)))
-                                then
-                                  ((let uu___8 =
-                                      FStar_Compiler_Effect.op_Less_Bar
-                                        (FStar_TypeChecker_Env.debug g.tcenv)
-                                        (FStar_Options.Other "Core") in
-                                    if uu___8
-                                    then
-                                      let uu___9 =
-                                        FStar_Syntax_Print.term_to_string t01 in
-                                      let uu___10 =
-                                        FStar_Syntax_Print.term_to_string t11 in
-                                      FStar_Compiler_Util.print2
-                                        "Unfolding and retrying with %s and %s\n"
-                                        uu___9 uu___10
-                                    else ());
-                                   maybe_unfold_and_retry t01 t11)
+                                then maybe_unfold_and_retry t01 t11
                                 else
                                   (let uu___8 =
                                      let uu___9 =
@@ -1891,22 +1821,7 @@ let rec (check_relation :
                                     (head_matches1 &&
                                        ((FStar_Compiler_List.length args0) =
                                           (FStar_Compiler_List.length args1)))
-                                then
-                                  ((let uu___8 =
-                                      FStar_Compiler_Effect.op_Less_Bar
-                                        (FStar_TypeChecker_Env.debug g.tcenv)
-                                        (FStar_Options.Other "Core") in
-                                    if uu___8
-                                    then
-                                      let uu___9 =
-                                        FStar_Syntax_Print.term_to_string t01 in
-                                      let uu___10 =
-                                        FStar_Syntax_Print.term_to_string t11 in
-                                      FStar_Compiler_Util.print2
-                                        "Unfolding and retrying with %s and %s\n"
-                                        uu___9 uu___10
-                                    else ());
-                                   maybe_unfold_and_retry t01 t11)
+                                then maybe_unfold_and_retry t01 t11
                                 else
                                   (let uu___8 =
                                      let uu___9 =
@@ -1934,22 +1849,7 @@ let rec (check_relation :
                                     (head_matches1 &&
                                        ((FStar_Compiler_List.length args0) =
                                           (FStar_Compiler_List.length args1)))
-                                then
-                                  ((let uu___8 =
-                                      FStar_Compiler_Effect.op_Less_Bar
-                                        (FStar_TypeChecker_Env.debug g.tcenv)
-                                        (FStar_Options.Other "Core") in
-                                    if uu___8
-                                    then
-                                      let uu___9 =
-                                        FStar_Syntax_Print.term_to_string t01 in
-                                      let uu___10 =
-                                        FStar_Syntax_Print.term_to_string t11 in
-                                      FStar_Compiler_Util.print2
-                                        "Unfolding and retrying with %s and %s\n"
-                                        uu___9 uu___10
-                                    else ());
-                                   maybe_unfold_and_retry t01 t11)
+                                then maybe_unfold_and_retry t01 t11
                                 else
                                   (let uu___8 =
                                      let uu___9 =
@@ -1977,22 +1877,7 @@ let rec (check_relation :
                                     (head_matches1 &&
                                        ((FStar_Compiler_List.length args0) =
                                           (FStar_Compiler_List.length args1)))
-                                then
-                                  ((let uu___8 =
-                                      FStar_Compiler_Effect.op_Less_Bar
-                                        (FStar_TypeChecker_Env.debug g.tcenv)
-                                        (FStar_Options.Other "Core") in
-                                    if uu___8
-                                    then
-                                      let uu___9 =
-                                        FStar_Syntax_Print.term_to_string t01 in
-                                      let uu___10 =
-                                        FStar_Syntax_Print.term_to_string t11 in
-                                      FStar_Compiler_Util.print2
-                                        "Unfolding and retrying with %s and %s\n"
-                                        uu___9 uu___10
-                                    else ());
-                                   maybe_unfold_and_retry t01 t11)
+                                then maybe_unfold_and_retry t01 t11
                                 else
                                   (let uu___8 =
                                      let uu___9 =

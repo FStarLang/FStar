@@ -9040,7 +9040,7 @@ let (maybe_unfold_head_fv :
       | FStar_Pervasives_Native.None -> FStar_Pervasives_Native.None
       | FStar_Pervasives_Native.Some (fv, us) ->
           let uu___ =
-            FStar_TypeChecker_Env.lookup_definition
+            FStar_TypeChecker_Env.lookup_nonrec_definition
               [FStar_TypeChecker_Env.Unfold
                  FStar_Syntax_Syntax.delta_constant] env1
               (fv.FStar_Syntax_Syntax.fv_name).FStar_Syntax_Syntax.v in
