@@ -1,5 +1,5 @@
 [
-  "&QÑYa8ô \f\u0011`Æèó1",
+  "π\u0015Ô´6B@ä›Új\u0013‚¢ˇ‹",
   [
     [
       "SteelLoops.sum_to_n_for",
@@ -8,7 +8,48 @@
       1,
       [ "@query" ],
       0,
-      "16d3d414e7d1e91f134f2d6e1c916357"
+      "4c004c4dbbca6a7485e479c52a0516cf"
+    ],
+    [
+      "SteelLoops.sum_to_n_for_2",
+      1,
+      2,
+      1,
+      [
+        "@MaxFuel_assumption", "@MaxIFuel_assumption",
+        "@fuel_correspondence_Prims.pow2.fuel_instrumented",
+        "@fuel_irrelevance_Prims.pow2.fuel_instrumented", "@query",
+        "b2t_def", "bool_inversion", "bool_typing",
+        "data_elim_Steel.FractionalPermission.MkPerm",
+        "equation_FStar.UInt.add_mod", "equation_FStar.UInt.fits",
+        "equation_FStar.UInt.max_int", "equation_FStar.UInt.min_int",
+        "equation_FStar.UInt.size", "equation_FStar.UInt.uint_t",
+        "equation_Prims.eq2", "equation_Prims.nat", "equation_Prims.squash",
+        "equation_Prims.subtype_of",
+        "equation_Steel.FractionalPermission.full_perm",
+        "equation_Steel.Loops.nat_at_most",
+        "equation_Steel.Loops.u32_between",
+        "equation_with_fuel_Prims.pow2.fuel_instrumented", "int_inversion",
+        "int_typing", "lemma_FStar.UInt.pow2_values",
+        "lemma_FStar.UInt32.uv_inv", "lemma_FStar.UInt32.vu_inv",
+        "primitive_FStar.Real.op_Greater_Dot", "primitive_Prims.op_Addition",
+        "primitive_Prims.op_AmpAmp", "primitive_Prims.op_LessThanOrEqual",
+        "primitive_Prims.op_Modulus", "primitive_Prims.op_Multiply",
+        "primitive_Prims.op_Subtraction",
+        "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c",
+        "refinement_interpretation_Tm_refine_2eec29014a998085381126097e78648e",
+        "refinement_interpretation_Tm_refine_3f54e9b64bb1cf73ff37c7c9d439498d",
+        "refinement_interpretation_Tm_refine_4b0fd9f7f8f1604f3a6eff1b064811f6",
+        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "refinement_interpretation_Tm_refine_c0a58b8a9558ef109f577c9fd2a6bfec",
+        "refinement_interpretation_Tm_refine_f13070840248fced9d9d60d77bdae3ec",
+        "typing_FStar.UInt32.v",
+        "typing_Steel.FractionalPermission.full_perm"
+      ],
+      0,
+      "48a60e63fb99f81eef72bd9f0b0a59a4"
     ],
     [
       "SteelLoops.sum_to_n_while",
@@ -17,7 +58,7 @@
       1,
       [ "@query" ],
       0,
-      "76a4227b93374a8047e6141a9e1334ca"
+      "721bcc7fbd62df56f7900fce0ce544b4"
     ]
   ]
 ]
