@@ -1103,17 +1103,25 @@ let built_in_primitive_steps : prim_step_set =
         in
         (  PC.immutable_array_of_list_lid, 2, 1,
            mixed_binary_op
-              (fun (elt_t, _) -> Some elt_t)
-              (fun (l, q) ->
+              (fun (elt_t, _) -> Some elt_t) //the first arg of of_list is the element type
+              (fun (l, q) -> //2nd arg: unembed as a list term
                 match arg_as_list FStar.Syntax.Embeddings.e_any (l, q) with
                 | Some lst -> Some (l, lst)
                 | _ -> None)
-              (fun r (universes, elt_t, (l, blob)) ->
+              (fun r (universes, elt_t, (l, blob)) -> 
+                //embed the result back as a Tm_lazy with the `ImmutableArray.t term` as the blob
+                //The kind records the type of the blob as IA.t "any"
+                //and the interesting thing here is that the thunk represents the blob back as pure F* term
+                //IA.of_list u#universes elt_t l.
+                //This unreduced representation can be used in a context where the blob doesn't make sense,
+                //e.g., in the SMT encoding, we represent the blob computed by of_list l
+                //just as the unreduced term `of_list l`
                 S.mk (Tm_lazy { blob;
                                 lkind=Lazy_embedding (emb_typ EMB.(emb_typ_of e_any), Thunk.mk (fun _ -> un_lazy universes elt_t l r));
                                 ltyp=S.mk_Tm_app (S.mk_Tm_uinst (U.fvar_const PC.immutable_array_t_lid) universes) [S.as_arg elt_t] r;
                                 rng=r }) r)
               (fun r universes elt_t (l, lst) ->
+                //The actual primitive step computing the IA.t blob
                  let blob = FStar.ImmutableArray.Base.of_list #term lst in
                  Some (universes, elt_t, (l, FStar.Compiler.Dyn.mkdyn blob))),
            NBETerm.mixed_binary_op
@@ -1123,6 +1131,8 @@ let built_in_primitive_steps : prim_step_set =
                | None -> None
                | Some lst -> Some (l, lst))
              (fun (universes, elt_t, (l, blob)) ->
+               //The embedding is similar to the non-NBE case
+               //But, this time the thunk is the NBE.t representation of `of_list l`
                NBETerm.mk_t <|
                NBETerm.Lazy (Inr (blob, emb_typ EMB.(emb_typ_of e_any)),
                              Thunk.mk (fun _ ->
@@ -1135,12 +1145,16 @@ let built_in_primitive_steps : prim_step_set =
       in
       let arg1_as_elt_t (x:arg) : option term = Some (fst x) in
       let arg2_as_blob (x:arg) : option FStar.Compiler.Dyn.dyn =
+          //unembed an arg as a IA.t blob if the emb_typ
+          //of the lkind tells us it has the right type
           match (SS.compress (fst x)).n with
           | Tm_lazy {blob=blob; lkind=Lazy_embedding (ET_app(head, _), _)}
             when head=Ident.string_of_lid PC.immutable_array_t_lid -> Some blob
           | _ -> None
       in
       let arg2_as_blob_nbe (x:NBETerm.arg) : option FStar.Compiler.Dyn.dyn =
+          //unembed an arg as a IA.t blob if the emb_typ
+          //tells us it has the right type      
           let open FStar.TypeChecker.NBETerm in
           match (fst x).nbe_t with
           | Lazy (Inr (blob, ET_app(head, _)), _)
@@ -1153,10 +1167,11 @@ let built_in_primitive_steps : prim_step_set =
             Some (BU.array_length #term (FStar.Compiler.Dyn.undyn blob))
         in
         ( PC.immutable_array_length_lid, 2, 1,
-          mixed_binary_op arg1_as_elt_t
-                          arg2_as_blob
-                          embed_int
+          mixed_binary_op arg1_as_elt_t //1st arg of length is the type
+                          arg2_as_blob //2nd arg is the IA.t term blob
+                          embed_int //the result is just an int, so embed it back
                           (fun _r _universes _ blob -> run_op blob),
+          //NBE case is similar
           NBETerm.mixed_binary_op
              (fun (elt_t, _) -> Some elt_t)
              arg2_as_blob_nbe
@@ -1165,16 +1180,16 @@ let built_in_primitive_steps : prim_step_set =
       in
       let index_op =
           (PC.immutable_array_index_lid, 3, 1,
-           mixed_ternary_op arg1_as_elt_t
-                            arg2_as_blob
-                            arg_as_int
-                            (fun r tm -> tm)
+           mixed_ternary_op arg1_as_elt_t //1st arg of index is the type
+                            arg2_as_blob //2nd arg is the `IA.t term` blob
+                            arg_as_int //3rd arg is an int
+                            (fun r tm -> tm) //the result is just a term, so the embedding is the identity
                             (fun r _universes _t blob i -> Some (BU.array_index #term (FStar.Compiler.Dyn.undyn blob) i)),
           NBETerm.mixed_ternary_op
              (fun (elt_t, _) -> Some elt_t)
-             arg2_as_blob_nbe
-             NBETerm.arg_as_int
-             (fun tm -> tm)
+             arg2_as_blob_nbe //2nd arg is an `IA.t NBEterm.t` blob
+             NBETerm.arg_as_int 
+             (fun tm -> tm) //In this case, the result is a NBE.t, so embedding is the identity
              (fun _universes _t blob i  -> Some (BU.array_index #NBETerm.t (FStar.Compiler.Dyn.undyn blob) i)))
       in
       [of_list_op; length_op; index_op]
