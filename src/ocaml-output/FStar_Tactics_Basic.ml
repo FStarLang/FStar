@@ -2926,10 +2926,32 @@ let (t_apply_lemma :
                                                                    =
                                                                    let uu___17
                                                                     =
-                                                                    should_check_goal_uvar
-                                                                    goal in
-                                                                   FStar_Pervasives_Native.Some
-                                                                    uu___17 in
+                                                                    let uu___18
+                                                                    =
+                                                                    FStar_Compiler_Effect.op_Bar_Greater
+                                                                    goal
+                                                                    should_check_goal_uvar in
+                                                                    FStar_Compiler_Effect.op_Bar_Greater
+                                                                    uu___18
+                                                                    (fun
+                                                                    uu___19
+                                                                    ->
+                                                                    match uu___19
+                                                                    with
+                                                                    | 
+                                                                    FStar_Syntax_Syntax.Strict
+                                                                    ->
+                                                                    FStar_Syntax_Syntax.Allow_ghost
+                                                                    "apply lemma uvar"
+                                                                    | 
+                                                                    x -> x) in
+                                                                   FStar_Compiler_Effect.op_Bar_Greater
+                                                                    uu___17
+                                                                    (fun
+                                                                    uu___18
+                                                                    ->
+                                                                    FStar_Pervasives_Native.Some
+                                                                    uu___18) in
                                                                  FStar_Tactics_Monad.new_uvar
                                                                    "apply_lemma"
                                                                    env1 b_t
