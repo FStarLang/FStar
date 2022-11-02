@@ -2803,7 +2803,8 @@ let (built_in_primitive_steps : primitive_step FStar_Compiler_Util.psmap) =
       ("UInt16", (Prims.of_int (16)));
       ("UInt32", (Prims.of_int (32)));
       ("UInt64", (Prims.of_int (64)));
-      ("UInt128", (Prims.of_int (128)))] in
+      ("UInt128", (Prims.of_int (128)));
+      ("SizeT", (Prims.of_int (64)))] in
     let add_sub_mul_v_comparisons =
       FStar_Compiler_Effect.op_Bar_Greater
         (FStar_Compiler_List.op_At bounded_signed_int_types
