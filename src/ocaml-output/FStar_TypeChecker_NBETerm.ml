@@ -1670,7 +1670,7 @@ let (binary_string_op :
   fun f ->
     binary_op arg_as_string
       (fun x -> fun y -> let uu___ = f x y in embed e_string bogus_cbs uu___)
-let mixed_binary_op :
+let mixed_binary_op_no_univs :
   'a 'b 'c .
     (arg -> 'a FStar_Pervasives_Native.option) ->
       (arg -> 'b FStar_Pervasives_Native.option) ->
@@ -1699,39 +1699,76 @@ let mixed_binary_op :
                       | uu___2 -> FStar_Pervasives_Native.None)
                  | uu___1 -> FStar_Pervasives_Native.None)
             | uu___ -> FStar_Pervasives_Native.None
+let mixed_binary_op :
+  'a 'b 'c .
+    (arg -> 'a FStar_Pervasives_Native.option) ->
+      (arg -> 'b FStar_Pervasives_Native.option) ->
+        ('c -> t) ->
+          (FStar_Syntax_Syntax.universes ->
+             'a -> 'b -> 'c FStar_Pervasives_Native.option)
+            ->
+            FStar_Syntax_Syntax.universes ->
+              args -> t FStar_Pervasives_Native.option
+  =
+  fun as_a ->
+    fun as_b ->
+      fun embed_c ->
+        fun f ->
+          fun us ->
+            fun args1 ->
+              match args1 with
+              | a1::b1::[] ->
+                  let uu___ =
+                    let uu___1 = as_a a1 in
+                    let uu___2 = as_b b1 in (uu___1, uu___2) in
+                  (match uu___ with
+                   | (FStar_Pervasives_Native.Some a2,
+                      FStar_Pervasives_Native.Some b2) ->
+                       let uu___1 = f us a2 b2 in
+                       (match uu___1 with
+                        | FStar_Pervasives_Native.Some c1 ->
+                            let uu___2 = embed_c c1 in
+                            FStar_Pervasives_Native.Some uu___2
+                        | uu___2 -> FStar_Pervasives_Native.None)
+                   | uu___1 -> FStar_Pervasives_Native.None)
+              | uu___ -> FStar_Pervasives_Native.None
 let mixed_ternary_op :
   'a 'b 'c 'd .
     (arg -> 'a FStar_Pervasives_Native.option) ->
       (arg -> 'b FStar_Pervasives_Native.option) ->
         (arg -> 'c FStar_Pervasives_Native.option) ->
           ('d -> t) ->
-            ('a -> 'b -> 'c -> 'd FStar_Pervasives_Native.option) ->
-              args -> t FStar_Pervasives_Native.option
+            (FStar_Syntax_Syntax.universes ->
+               'a -> 'b -> 'c -> 'd FStar_Pervasives_Native.option)
+              ->
+              FStar_Syntax_Syntax.universes ->
+                args -> t FStar_Pervasives_Native.option
   =
   fun as_a ->
     fun as_b ->
       fun as_c ->
         fun embed_d ->
           fun f ->
-            fun args1 ->
-              match args1 with
-              | a1::b1::c1::[] ->
-                  let uu___ =
-                    let uu___1 = as_a a1 in
-                    let uu___2 = as_b b1 in
-                    let uu___3 = as_c c1 in (uu___1, uu___2, uu___3) in
-                  (match uu___ with
-                   | (FStar_Pervasives_Native.Some a2,
-                      FStar_Pervasives_Native.Some b2,
-                      FStar_Pervasives_Native.Some c2) ->
-                       let uu___1 = f a2 b2 c2 in
-                       (match uu___1 with
-                        | FStar_Pervasives_Native.Some d1 ->
-                            let uu___2 = embed_d d1 in
-                            FStar_Pervasives_Native.Some uu___2
-                        | uu___2 -> FStar_Pervasives_Native.None)
-                   | uu___1 -> FStar_Pervasives_Native.None)
-              | uu___ -> FStar_Pervasives_Native.None
+            fun us ->
+              fun args1 ->
+                match args1 with
+                | a1::b1::c1::[] ->
+                    let uu___ =
+                      let uu___1 = as_a a1 in
+                      let uu___2 = as_b b1 in
+                      let uu___3 = as_c c1 in (uu___1, uu___2, uu___3) in
+                    (match uu___ with
+                     | (FStar_Pervasives_Native.Some a2,
+                        FStar_Pervasives_Native.Some b2,
+                        FStar_Pervasives_Native.Some c2) ->
+                         let uu___1 = f us a2 b2 c2 in
+                         (match uu___1 with
+                          | FStar_Pervasives_Native.Some d1 ->
+                              let uu___2 = embed_d d1 in
+                              FStar_Pervasives_Native.Some uu___2
+                          | uu___2 -> FStar_Pervasives_Native.None)
+                     | uu___1 -> FStar_Pervasives_Native.None)
+                | uu___ -> FStar_Pervasives_Native.None
 let (list_of_string' : Prims.string -> t) =
   fun s ->
     let uu___ = e_list e_char in

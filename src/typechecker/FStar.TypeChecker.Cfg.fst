@@ -247,8 +247,8 @@ let built_in_primitive_steps : prim_step_set =
     let arg_as_bool   (a:arg) = fst a |> try_unembed_simple EMB.e_bool in
     let arg_as_char   (a:arg) = fst a |> try_unembed_simple EMB.e_char in
     let arg_as_string (a:arg) = fst a |> try_unembed_simple EMB.e_string in
-    let arg_as_list   (e:EMB.embedding 'a) a = fst a |> try_unembed_simple (EMB.e_list e) in
-    let arg_as_bounded_int (a, _) : option (fv * Z.t * option S.meta_source_info) =
+    let arg_as_list   (e:EMB.embedding 'a) (a:arg) = fst a |> try_unembed_simple (EMB.e_list e) in
+    let arg_as_bounded_int ((a, _) :arg) : option (fv * Z.t * option S.meta_source_info) =
         let (a, m) =
             (match (SS.compress a).n with
              | Tm_meta(t, Meta_desugared m) -> (t, Some m)
@@ -307,8 +307,18 @@ let built_in_primitive_steps : prim_step_set =
         auto_reflect=None;
         strong_reduction_ok=is_strong;
         requires_binder_substitution=false;
-        interpretation=f;
-        interpretation_nbe=fun _cb -> f_nbe
+        interpretation=(fun psc cb _univs args -> f psc cb args);
+        interpretation_nbe=(fun _cb _univs args -> f_nbe args)
+    } in
+    let as_primitive_step_with_universes is_strong (l, arity, u_arity, f, f_nbe) = {
+        name=l;
+        arity=arity;
+        univ_arity=u_arity;
+        auto_reflect=None;
+        strong_reduction_ok=is_strong;
+        requires_binder_substitution=false;
+        interpretation=(fun psc cb univs args -> f psc cb univs args);
+        interpretation_nbe=(fun _cb univs args -> f_nbe univs args)
     } in
     let unary_int_op (f:Z.t -> Z.t) =
         unary_op arg_as_int (fun r x -> embed_simple EMB.e_int r (f x))
@@ -325,8 +335,8 @@ let built_in_primitive_steps : prim_step_set =
     let binary_string_op (f : string -> string -> string) =
         binary_op arg_as_string (fun r x y -> embed_simple EMB.e_string r (f x y))
     in
-    let mixed_binary_op
-           :  (arg -> option 'a)
+    let mixed_binary_op_no_univs
+           : (arg -> option 'a)
            -> (arg -> option 'b)
            -> (Range.range -> 'c -> term)
            -> (Range.range -> 'a -> 'b -> option 'c)
@@ -347,23 +357,47 @@ let built_in_primitive_steps : prim_step_set =
                     end
                  | _ -> None
     in
+    let mixed_binary_op
+           : (arg -> option 'a)
+           -> (arg -> option 'b)
+           -> (Range.range -> 'c -> term)
+           -> (Range.range -> universes -> 'a -> 'b -> option 'c)
+           -> psc
+           -> EMB.norm_cb
+           -> universes
+           -> args
+           -> option term
+           = fun as_a as_b embed_c f res _norm_cb universes args ->
+                 match args with
+                 | [a;b] ->
+                    begin
+                    match as_a a, as_b b with
+                    | Some a, Some b ->
+                      (match f res.psc_range universes a b with
+                       | Some c -> Some (embed_c res.psc_range c)
+                       | _ -> None)
+                    | _ -> None
+                    end
+                 | _ -> None
+    in
     let mixed_ternary_op
            : (arg -> option 'a)
            -> (arg -> option 'b)
            -> (arg -> option 'c)           
            -> (Range.range -> 'd -> term)
-           -> (Range.range -> 'a -> 'b -> 'c -> option 'd)
+           -> (Range.range -> universes -> 'a -> 'b -> 'c -> option 'd)
            -> psc
            -> EMB.norm_cb
+           -> universes
            -> args
            -> option term
-           = fun as_a as_b as_c embed_d f res _norm_cb args ->
+           = fun as_a as_b as_c embed_d f res _norm_cb universes args ->
                  match args with
                  | [a;b;c] ->
                     begin
                     match as_a a, as_b b, as_c c with
                     | Some a, Some b, Some c ->
-                      (match f res.psc_range a b c with
+                      (match f res.psc_range universes a b c with
                        | Some d -> Some (embed_d res.psc_range d)
                        | _ -> None)
                     | _ -> None
@@ -376,7 +410,7 @@ let built_in_primitive_steps : prim_step_set =
         let charterm c = mk (Tm_constant (Const_char c)) rng in
         U.mk_list char_t rng <| List.map charterm (list_of_string s)
     in
-    let string_of_list' rng (l:list char) : term =
+    let string_of_list' (rng:Range.range) (l:list char) : term =
         let s = string_of_list l in
         U.exp_string s
     in
@@ -684,12 +718,12 @@ let built_in_primitive_steps : prim_step_set =
          (PC.string_make_lid,
              2,
              0,
-             mixed_binary_op
-                   arg_as_int
-                   arg_as_char
-                   (embed_simple EMB.e_string)
-                   (fun r (x:BigInt.t) (y:char) -> Some (FStar.String.make (BigInt.to_int_fs x) y)),
-             NBETerm.mixed_binary_op
+             mixed_binary_op_no_univs
+                   (fun (x:arg) -> arg_as_int x <: option Z.t)
+                   (fun (x:arg) -> arg_as_char x <: option char)
+                   (fun (r:Range.range) (s:string) -> embed_simple EMB.e_string r s)
+                   (fun (r:Range.range) (x:BigInt.t) (y:char) -> Some (FStar.String.make (BigInt.to_int_fs x) y)),
+             NBETerm.mixed_binary_op_no_univs
                    NBETerm.arg_as_int
                    NBETerm.arg_as_char
                    (NBETerm.embed NBETerm.e_string bogus_cbs)
@@ -1066,7 +1100,7 @@ let built_in_primitive_steps : prim_step_set =
             PC.reveal,
             2,
             1,
-            mixed_binary_op
+            mixed_binary_op_no_univs
             (fun x -> Some x)
             (fun (x, _) ->
               let head, args = U.head_and_args x  in
@@ -1077,7 +1111,7 @@ let built_in_primitive_steps : prim_step_set =
               else None)
             (fun r body -> body)
             (fun r _t body -> Some body),
-            NBETerm.mixed_binary_op
+            NBETerm.mixed_binary_op_no_univs
             (fun x -> Some x)
             (fun (x, _) ->
               match NBETerm.nbe_t_of_t x with
@@ -1091,9 +1125,9 @@ let built_in_primitive_steps : prim_step_set =
     let array_ops =
       let of_list_op =
         let emb_typ t = ET_app(PC.immutable_array_t_lid |> Ident.string_of_lid, [t]) in
-        let un_lazy t l r = 
+        let un_lazy universes t l r = 
           S.mk_Tm_app
-            (S.mk_Tm_uinst (U.fvar_const PC.immutable_array_of_list_lid) [U_zero])
+            (S.mk_Tm_uinst (U.fvar_const PC.immutable_array_of_list_lid) universes)
             [S.iarg t; S.as_arg l]
             r
         in
@@ -1104,28 +1138,30 @@ let built_in_primitive_steps : prim_step_set =
                 match arg_as_list FStar.Syntax.Embeddings.e_any (l, q) with
                 | Some lst -> Some (l, lst)
                 | _ -> None)
-              (fun r (elt_t, (l, blob)) -> 
+              (fun r (universes, elt_t, (l, blob)) ->
                 S.mk (Tm_lazy { blob;
-                                lkind=Lazy_embedding (emb_typ EMB.(emb_typ_of e_any), Thunk.mk (fun _ -> un_lazy elt_t l r));
-                                ltyp=S.mk_Tm_app (S.mk_Tm_uinst (U.fvar_const PC.immutable_array_t_lid) [U_zero]) [S.as_arg elt_t] r;
+                                lkind=Lazy_embedding (emb_typ EMB.(emb_typ_of e_any), Thunk.mk (fun _ -> un_lazy universes elt_t l r));
+                                ltyp=S.mk_Tm_app (S.mk_Tm_uinst (U.fvar_const PC.immutable_array_t_lid) universes) [S.as_arg elt_t] r;
                                 rng=r }) r)
-              (fun r elt_t (l, lst) ->
+              (fun r universes elt_t (l, lst) ->
                  let blob = FStar.ImmutableArray.Base.of_list #term lst in
-                 Some (elt_t, (l, FStar.Compiler.Dyn.mkdyn blob))),
+                 Some (universes, elt_t, (l, FStar.Compiler.Dyn.mkdyn blob))),
            NBETerm.mixed_binary_op 
              (fun (elt_t, _) -> Some elt_t)
              (fun (l, q) ->
                match NBETerm.arg_as_list NBETerm.e_any (l, q) with
                | None -> None
                | Some lst -> Some (l, lst))
-             (fun (elt_t, (l, blob)) ->
+             (fun (universes, elt_t, (l, blob)) ->
                NBETerm.mk_t <|
                NBETerm.Lazy (Inr (blob, emb_typ EMB.(emb_typ_of e_any)),
                              Thunk.mk (fun _ -> 
-                               NBETerm.mk_t <| NBETerm.FV (S.lid_as_fv PC.immutable_array_of_list_lid S.delta_constant None, [U_zero], [NBETerm.as_arg l]))))
-             (fun elt_t (l, lst) ->
+                               NBETerm.mk_t <| NBETerm.FV (S.lid_as_fv PC.immutable_array_of_list_lid S.delta_constant None, 
+                                                          universes,
+                                                          [NBETerm.as_arg l]))))
+             (fun  universes elt_t (l, lst) ->
                 let blob = FStar.ImmutableArray.Base.of_list #NBETerm.t lst in
-                Some (elt_t, (l, FStar.Compiler.Dyn.mkdyn blob))))
+                Some (universes, elt_t, (l, FStar.Compiler.Dyn.mkdyn blob))))
       in
       let arg1_as_elt_t (x:arg) : option term = Some (fst x) in
       let arg2_as_blob (x:arg) : option FStar.Compiler.Dyn.dyn =
@@ -1150,12 +1186,12 @@ let built_in_primitive_steps : prim_step_set =
           mixed_binary_op arg1_as_elt_t
                           arg2_as_blob
                           embed_int
-                          (fun _ _ blob -> run_op blob),
+                          (fun _r _universes _ blob -> run_op blob),
           NBETerm.mixed_binary_op
              (fun (elt_t, _) -> Some elt_t)
              arg2_as_blob_nbe
              (fun (i:Z.t) -> NBETerm.embed NBETerm.e_int bogus_cbs i)
-             (fun _ blob -> run_op blob) )
+             (fun _universes _ blob -> run_op blob) )
       in
       let index_op = 
           (PC.immutable_array_index_lid, 3, 1,
@@ -1163,25 +1199,27 @@ let built_in_primitive_steps : prim_step_set =
                             arg2_as_blob 
                             arg_as_int
                             (fun r tm -> tm)
-                            (fun r _t blob i -> Some (BU.array_index #term (FStar.Compiler.Dyn.undyn blob) i)),
+                            (fun r _universes _t blob i -> Some (BU.array_index #term (FStar.Compiler.Dyn.undyn blob) i)),
           NBETerm.mixed_ternary_op
              (fun (elt_t, _) -> Some elt_t)
              arg2_as_blob_nbe
              NBETerm.arg_as_int
              (fun tm -> tm)
-             (fun _t blob i -> Some (BU.array_index #NBETerm.t (FStar.Compiler.Dyn.undyn blob) i)))
+             (fun _universes _t blob i  -> Some (BU.array_index #NBETerm.t (FStar.Compiler.Dyn.undyn blob) i)))
       in             
       [of_list_op; length_op; index_op]
     in
     let strong_steps =
       List.map (as_primitive_step true)
-               (basic_ops@bounded_arith_ops@[reveal_hide]@array_ops)
+               (basic_ops@bounded_arith_ops@[reveal_hide])
+               @
+      List.map (as_primitive_step_with_universes true) array_ops
     in
     let weak_steps   = List.map (as_primitive_step false) weak_ops in
     prim_from_list <| (strong_steps @ weak_steps)
 
 let equality_ops : prim_step_set =
-    let interp_prop_eq2 (psc:psc) _norm_cb (args:args) : option term =
+    let interp_prop_eq2 (psc:psc) _norm_cb _univs (args:args) : option term =
         let r = psc.psc_range in
         match args with
         | [(_typ, _); (a1, _); (a2, _)]  ->         //eq2
@@ -1201,7 +1239,7 @@ let equality_ops : prim_step_set =
          strong_reduction_ok=true;
          requires_binder_substitution=false;
          interpretation = interp_prop_eq2;
-         interpretation_nbe = fun _cb -> NBETerm.interp_prop_eq2}
+         interpretation_nbe = fun _cb _univs -> NBETerm.interp_prop_eq2}
     in
     prim_from_list [propositional_equality]
 
