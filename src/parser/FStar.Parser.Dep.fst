@@ -922,7 +922,7 @@ let collect_one
         | Seq (t1, t2) ->
             collect_term t1;
             collect_term t2
-        | If (t1, ret_opt, t2, t3) ->
+        | If (t1, _, ret_opt, t2, t3) ->
             collect_term t1;
             (match ret_opt with
              | None -> ()

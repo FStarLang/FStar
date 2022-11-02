@@ -1681,7 +1681,18 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term * an
       then ds_let_rec_or_app()
       else ds_non_rec attrs head_pat defn body
 
-    | If(t1, asc_opt, t2, t3) ->
+    | If(e, Some op, asc_opt, t2, t3) ->
+      // A if operator is desugared into a let operator binding
+      // with name "uu___if_op_head" followed by a regular if on
+      // "uu___if_op_head"
+      let var_id = mk_ident(reserved_prefix ^ "if_op_head", e.range) in
+      let var = mk_term (Var (lid_of_ids [var_id])) e.range Expr in
+      let pat = mk_pattern (PatVar (var_id, None, [])) e.range in
+      let if_ = mk_term (If (var, None, asc_opt, t2, t3)) top.range Expr in
+      let t   = mk_term (LetOperator ([(op, pat, e)], if_)) e.range Expr in
+      desugar_term_aq env t
+
+    | If(t1, None, asc_opt, t2, t3) ->
       let x = Syntax.new_bv (Some t3.range) (tun_r t3.range) in
       let t_bool = mk (Tm_fvar(S.lid_as_fv C.bool_lid delta_constant None)) in
       let t1', aq1 = desugar_term_aq env t1 in

@@ -67,6 +67,7 @@ let none_to_empty_list x =
 %token <string> LET_OP
 %token <string> AND_OP
 %token <string> MATCH_OP
+%token <string> IF_OP
 /* [SEMICOLON_OP] encodes either:
 - [;;], which used to be SEMICOLON_SEMICOLON, or
 - [;<OP>], with <OP> a sequence of [op_char] (see FStar_Parser_LexFStar).
@@ -663,6 +664,10 @@ matchMaybeOp:
   | MATCH {None}
   | op=MATCH_OP { Some (mk_ident ("let" ^ op, rhs parseState 1)) }
 
+ifMaybeOp:
+  | IF {None}
+  | op=IF_OP { Some (mk_ident ("let" ^ op, rhs parseState 1)) }
+
 lidentOrUnderscore:
   | id=IDENT { mk_ident(id, rhs parseState 1)}
   | UNDERSCORE { gen (rhs parseState 1) }
@@ -769,12 +774,12 @@ noSeqTerm:
 
   | ATTRIBUTES es=nonempty_list(atomicTerm)
       { mk_term (Attributes es) (rhs2 parseState 1 2) Type_level }
-  | IF e1=noSeqTerm ret_opt=option(match_returning) THEN e2=noSeqTerm ELSE e3=noSeqTerm
-      { mk_term (If(e1, ret_opt, e2, e3)) (rhs2 parseState 1 7) Expr }
-  | IF e1=noSeqTerm ret_opt=option(match_returning) THEN e2=noSeqTerm
+  | op=ifMaybeOp e1=noSeqTerm ret_opt=option(match_returning) THEN e2=noSeqTerm ELSE e3=noSeqTerm
+      { mk_term (If(e1, op, ret_opt, e2, e3)) (rhs2 parseState 1 7) Expr }
+  | op=ifMaybeOp e1=noSeqTerm ret_opt=option(match_returning) THEN e2=noSeqTerm
       {
         let e3 = mk_term (Const Const_unit) (rhs2 parseState 1 5) Expr in
-        mk_term (If(e1, ret_opt, e2, e3)) (rhs2 parseState 1 5) Expr
+        mk_term (If(e1, op, ret_opt, e2, e3)) (rhs2 parseState 1 5) Expr
       }
   | TRY e1=term WITH pbs=left_flexible_nonempty_list(BAR, patternBranch)
       {
