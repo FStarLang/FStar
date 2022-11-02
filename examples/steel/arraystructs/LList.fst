@@ -11,10 +11,13 @@ let cell_fields =
   field_description_cons "tl" (scalar void_ptr) (
   field_description_nil))
 
-let _ = define_struct "LList.cell" cell_fields
+inline_for_extraction noextract
+let cell_n : Type0 = norm Steel.C.Typestring.norm_typestring (Steel.C.Typestring.mk_string_t "LList.cell")
+
+let _ = define_struct0 cell_n "LList.cell" cell_fields
 
 inline_for_extraction noextract
-let cell = struct "LList.cell" cell_fields
+let cell = struct0 cell_n "LList.cell" cell_fields
 
 let rec llist' (p: ptr cell) (l: Ghost.erased (list U32.t)) : Tot vprop (decreases (Ghost.reveal l)) =
   match Ghost.reveal l with
@@ -48,7 +51,7 @@ let llist_intro_nil (#opened: _) (p: ptr cell) : SteelGhost unit opened
     (pure (p == null _))
     (llist p [])
 
-let llist_intro_cons (#opened: _) (p: ref cell) (s: Ghost.erased (struct_t "LList.cell" cell_fields)) (a: U32.t) (p' : ptr cell) (q: Ghost.erased (list U32.t)) : SteelGhost unit opened
+let llist_intro_cons (#opened: _) (p: ref cell) (s: Ghost.erased (typeof cell)) (a: U32.t) (p' : ptr cell) (q: Ghost.erased (list U32.t)) : SteelGhost unit opened
   (pts_to p s `star` llist p' q)
   (fun _ -> llist p (a :: q))
   (fun _ ->
