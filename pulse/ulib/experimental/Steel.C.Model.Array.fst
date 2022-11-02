@@ -4,12 +4,15 @@ open Steel.C.Model.PCM
 open Steel.C.Model.Connection
 open Steel.C.Model.Ref
 open Steel.C.Model.Struct
-open Steel.C.StdInt
 open Steel.Effect
 module R = Steel.C.Model.Ref
 module A = Steel.Effect.Atomic
+module SZ = FStar.SizeT
 
 (* Base array type *)
+
+let size_t = SZ.t
+let size_v = SZ.v
 
 let array_domain
   (n: Ghost.erased size_t)
@@ -88,6 +91,8 @@ let adjacent
   a1.base == a2.base /\
   size_v a1.offset + size_v a1.len == size_v a2.offset
 
+let size_add = SZ.add
+
 let merge
   (#t: Type)
   (#p: pcm t)
@@ -102,6 +107,10 @@ let merge
     len = size_add a1.len a2.len;
     prf = ();
   }
+
+let size_le = SZ.lte
+let size_lt = SZ.lt
+let size_sub = SZ.sub
 
 let large_to_small_index
   (large_len: size_t)
@@ -158,6 +167,8 @@ let array_pcm_carrier_of_seq
   (s: Seq.lseq t (size_v n))
 : Tot (array_pcm_carrier t n)
 = on_dom (array_domain n) (fun i -> Seq.index s (size_v i) <: array_range t n i)
+
+let int_to_size_t = SZ.uint_to_t
 
 let seq_of_array_pcm_carrier
   (#t: Type)
@@ -541,7 +552,7 @@ let split_l
 : Pure (array p)
     (requires (size_v i <= size_v a.len))
     (ensures (fun _ -> True))
-= sub a zero_size i
+= sub a 0sz i
 
 let split_r
   (#t: Type)
@@ -642,12 +653,12 @@ let g_split
   let sr0 = Seq.slice s (size_v i) (size_v a.len) in
   let sr : Seq.lseq t (size_v a.len) = Seq.create (size_v i) (one p) `Seq.append` sr0 in
   share a s sl sr;
-  g_focus_sub a s zero_size i () sl (split_l a i) (Seq.slice s 0 (size_v i));
+  g_focus_sub a s 0sz i () sl (split_l a i) (Seq.slice s 0 (size_v i));
   g_focus_sub a s i (a.len `size_sub` i) () sr (split_r a i) (Seq.slice s (size_v i) (size_v a.len))
 
 #pop-options
 
-#push-options "--z3rlimit 64"
+#push-options "--z3rlimit 128"
 
 #restart-solver
 let unfocus_sub
@@ -715,7 +726,7 @@ let unfocus_sub
 
 #pop-options
 
-#push-options "--z3rlimit 128 --fuel 0 --ifuel 1 --z3cliopt smt.arith.nl=false"
+#push-options "--z3rlimit 256 --fuel 0 --ifuel 1 --z3cliopt smt.arith.nl=false"
 
 #restart-solver
 let join
@@ -743,8 +754,7 @@ let join
   let sr : Seq.lseq t (size_v a.len) = Seq.create (size_v i) (one p) `Seq.append` sr0 in
   let s : Seq.lseq t (size_v a.len) = Seq.append sl0 sr0 in
   assert (i == Ghost.reveal al.len);
-  assert (size_v zero_size == 0);
-  unfocus_sub a s zero_size i () sl al sl0;
+  unfocus_sub a s 0sz i () sl al sl0;
   unfocus_sub a s i (a.len `size_sub` i) () sr ar sr0;
   gather a s sl sr;
   A.change_equal_slprop (pts_to a _) (pts_to a _)
