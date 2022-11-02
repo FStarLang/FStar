@@ -732,9 +732,11 @@ let (tc_unifier_solved_implicits :
                                    u.FStar_Syntax_Syntax.ctx_uvar_head in
                                let uu___7 =
                                  FStar_Syntax_Print.term_to_string sol in
-                               fail2
-                                 "Could not typecheck unifier solved implicit %s to %s since it produced a guard and guards were not allowed"
-                                 uu___6 uu___7
+                               let uu___8 =
+                                 FStar_Syntax_Print.term_to_string g in
+                               fail3
+                                 "Could not typecheck unifier solved implicit %s to %s since it produced a guard and guards were not allowed;guard is\n%s"
+                                 uu___6 uu___7 uu___8
                              else
                                (let uu___7 =
                                   proc_guard' false "guard for implicit" env2
@@ -3727,17 +3729,8 @@ let (clear : FStar_Syntax_Syntax.binder -> unit FStar_Tactics_Monad.tac) =
                 split_env bv uu___3 in
               match uu___2 with
               | FStar_Pervasives_Native.None ->
-                  let uu___3 =
-                    let uu___4 = FStar_Syntax_Print.bv_to_string bv in
-                    let uu___5 =
-                      let uu___6 =
-                        let uu___7 = FStar_Tactics_Types.goal_env goal in
-                        uu___7.FStar_TypeChecker_Env.gamma in
-                      FStar_TypeChecker_Env.print_gamma uu___6 in
-                    FStar_Compiler_Util.format2
-                      "Cannot clear; binder %s not in environment [%s]"
-                      uu___4 uu___5 in
-                  FStar_Tactics_Monad.fail uu___3
+                  FStar_Tactics_Monad.fail
+                    "Cannot clear; binder not in environment"
               | FStar_Pervasives_Native.Some (e', bv1, bvs) ->
                   let rec check bvs1 =
                     match bvs1 with

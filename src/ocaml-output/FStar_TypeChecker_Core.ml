@@ -607,7 +607,7 @@ let with_context :
               no_guard = (ctx.no_guard);
               error_context = ((msg, t) :: (ctx.error_context))
             } in
-          let uu___ = x () in uu___ ctx'
+          let uu___ = x () in uu___ ctx
 let (mk_type :
   FStar_Syntax_Syntax.universe ->
     FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax)
@@ -1111,7 +1111,8 @@ let (lookup :
     fun e ->
       let uu___ = FStar_Syntax_TermHashTable.lookup e table in
       match uu___ with
-      | FStar_Pervasives_Native.None -> fail "not in cache"
+      | FStar_Pervasives_Native.None ->
+          (record_cache_miss (); fail "not in cache")
       | FStar_Pervasives_Native.Some he ->
           let uu___1 =
             context_included he.he_gamma
@@ -1120,7 +1121,7 @@ let (lookup :
           then
             (record_cache_hit ();
              (fun uu___3 -> FStar_Pervasives.Inl (he.he_res)))
-          else (record_cache_miss (); fail "not in cache")
+          else fail "not in cache"
 let (check_no_escape :
   FStar_Syntax_Syntax.binders -> FStar_Syntax_Syntax.term -> unit result) =
   fun bs ->
@@ -2242,19 +2243,7 @@ and (memo_check :
         else
           (let uu___1 = let uu___2 = lookup g e in uu___2 ctx in
            match uu___1 with
-           | FStar_Pervasives.Inr uu___2 ->
-               if FStar_Pervasives_Native.uu___is_Some g.guard_handler
-               then
-                 check_then_memo
-                   {
-                     tcenv = (g.tcenv);
-                     allow_universe_instantiation =
-                       (g.allow_universe_instantiation);
-                     max_binder_index = (g.max_binder_index);
-                     guard_handler = (g.guard_handler);
-                     should_read_cache = false
-                   } e ctx
-               else check_then_memo g e ctx
+           | FStar_Pervasives.Inr uu___2 -> check_then_memo g e ctx
            | FStar_Pervasives.Inl (et, FStar_Pervasives_Native.None) ->
                FStar_Pervasives.Inl (et, FStar_Pervasives_Native.None)
            | FStar_Pervasives.Inl (et, FStar_Pervasives_Native.Some pre) ->
@@ -3757,8 +3746,9 @@ let (compute_term_type_handle_guards :
     fun e ->
       fun must_tot ->
         fun gh ->
+          let e1 = FStar_Syntax_Subst.deep_compress true e in
           let uu___ =
-            check_term_top_gh g e FStar_Pervasives_Native.None must_tot
+            check_term_top_gh g e1 FStar_Pervasives_Native.None must_tot
               (FStar_Pervasives_Native.Some gh) in
           match uu___ with
           | FStar_Pervasives.Inl

@@ -309,9 +309,10 @@ let tc_unifier_solved_implicits env (must_tot:bool) (allow_guards:bool) (uvs:lis
             && not allow_guards
             && NonTrivial? guard.guard_f
             then (
-              fail2 "Could not typecheck unifier solved implicit %s to %s since it produced a guard and guards were not allowed"
+              fail3 "Could not typecheck unifier solved implicit %s to %s since it produced a guard and guards were not allowed;guard is\n%s"
                 (Print.uvar_to_string u.ctx_uvar_head)
                 (Print.term_to_string sol)
+                (Print.term_to_string g)
             )
             else (
               proc_guard' false "guard for implicit" env guard u.ctx_uvar_range ;!

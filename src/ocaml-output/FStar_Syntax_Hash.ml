@@ -58,10 +58,7 @@ let (nil_hc : FStar_Hash.hash_code mm) = of_int (Prims.of_int (1229))
 let (cons_hc : FStar_Hash.hash_code mm) = of_int (Prims.of_int (1231))
 let (mix_list :
   FStar_Hash.hash_code mm Prims.list -> FStar_Hash.hash_code mm) =
-  fun l ->
-    FStar_Compiler_List.fold_right
-      (fun i -> fun out -> let uu___ = mix i out in mix cons_hc uu___) l
-      nil_hc
+  fun l -> FStar_Compiler_List.fold_right mix l nil_hc
 let (mix_list_lit :
   FStar_Hash.hash_code mm Prims.list -> FStar_Hash.hash_code mm) = mix_list
 let hash_list :
