@@ -752,7 +752,7 @@ let built_in_primitive_steps : prim_step_set =
            [ "Int8", 8; "Int16", 16; "Int32", 32; "Int64", 64 ]
         in
         let bounded_unsigned_int_types =
-           [ "UInt8", 8; "UInt16", 16; "UInt32", 32; "UInt64", 64; "UInt128", 128]
+           [ "UInt8", 8; "UInt16", 16; "UInt32", 32; "UInt64", 64; "UInt128", 128; "SizeT", 64]
         in
         let add_sub_mul_v_comparisons =
           (bounded_signed_int_types @ bounded_unsigned_int_types)
@@ -908,7 +908,7 @@ let built_in_primitive_steps : prim_step_set =
                    NBETerm.arg_as_bounded_int
                    (fun (int_to_t, x, m) (_, y, _) ->
                      NBETerm.with_meta_ds
-                       (NBETerm.int_as_bounded int_to_t (mod (Z.sub_big_int x y))) m));             
+                       (NBETerm.int_as_bounded int_to_t (mod (Z.sub_big_int x y))) m));
             (PC.p2l ["FStar"; m; "div"],
                  2,
                  0,
