@@ -265,12 +265,12 @@ let (defaults : (Prims.string * option_val) Prims.list) =
   ("abort_on", (Int Prims.int_zero));
   ("admit_smt_queries", (Bool false));
   ("admit_except", Unset);
-  ("admit_tactic_unification_guards", (Bool false));
   ("disallow_unification_guards", (Bool false));
   ("already_cached", Unset);
   ("cache_checked_modules", (Bool false));
   ("cache_dir", Unset);
   ("cache_off", (Bool false));
+  ("compat_pre_core", (Bool false));
   ("print_cache_version", (Bool false));
   ("cmi", (Bool false));
   ("codegen", Unset);
@@ -454,8 +454,8 @@ let (get_admit_smt_queries : unit -> Prims.bool) =
   fun uu___ -> lookup_opt "admit_smt_queries" as_bool
 let (get_admit_except : unit -> Prims.string FStar_Pervasives_Native.option)
   = fun uu___ -> lookup_opt "admit_except" (as_option as_string)
-let (get_admit_tactic_unification_guards : unit -> Prims.bool) =
-  fun uu___ -> lookup_opt "admit_tactic_unification_guards" as_bool
+let (get_compat_pre_core : unit -> Prims.bool) =
+  fun uu___ -> lookup_opt "compat_pre_core" as_bool
 let (get_disallow_unification_guards : unit -> Prims.bool) =
   fun uu___ -> lookup_opt "disallow_unification_guards" as_bool
 let (get_already_cached :
@@ -1012,8 +1012,8 @@ let rec (specs_with_types :
               then option_warning_callback "admit_except"
               else ())), (SimpleStr "[symbol|(symbol, id)]"))),
       "Admit all queries, except those with label ( symbol,  id)) (e.g. --admit_except '(FStar.Fin.pigeonhole, 1)' or --admit_except FStar.Fin.pigeonhole)");
-    (FStar_Getopt.noshort, "admit_tactic_unification_guards", BoolStr,
-      "Admit SMT guards when the tactic engine re-checks solutions produced by the unifier (default 'false')");
+    (FStar_Getopt.noshort, "compat_pre_core", BoolStr,
+      "Retain behavior of the tactic engine prior to the introduction of FStar.TypeChecker.Core (default 'false')");
     (FStar_Getopt.noshort, "disallow_unification_guards", BoolStr,
       "Fail if the SMT guard are produced when the tactic engine re-checks solutions produced by the unifier (default 'false')");
     (FStar_Getopt.noshort, "already_cached",
@@ -1388,7 +1388,7 @@ let (settable : Prims.string -> Prims.bool) =
     | "abort_on" -> true
     | "admit_except" -> true
     | "admit_smt_queries" -> true
-    | "admit_tactic_unification_guards" -> true
+    | "compat_pre_core" -> true
     | "disallow_unification_guards" -> true
     | "debug" -> true
     | "debug_level" -> true
@@ -1790,8 +1790,8 @@ let (admit_smt_queries : unit -> Prims.bool) =
   fun uu___ -> get_admit_smt_queries ()
 let (admit_except : unit -> Prims.string FStar_Pervasives_Native.option) =
   fun uu___ -> get_admit_except ()
-let (admit_tactic_unification_guards : unit -> Prims.bool) =
-  fun uu___ -> get_admit_tactic_unification_guards ()
+let (compat_pre_core : unit -> Prims.bool) =
+  fun uu___ -> get_compat_pre_core ()
 let (disallow_unification_guards : unit -> Prims.bool) =
   fun uu___ -> get_disallow_unification_guards ()
 let (cache_checked_modules : unit -> Prims.bool) =

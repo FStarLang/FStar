@@ -11,7 +11,7 @@ let (core_check :
     fun sol ->
       fun t ->
         fun must_tot ->
-          let uu___ = FStar_Options.admit_tactic_unification_guards () in
+          let uu___ = FStar_Options.compat_pre_core () in
           if uu___
           then FStar_Pervasives.Inl FStar_Pervasives_Native.None
           else
@@ -696,8 +696,7 @@ let (tc_unifier_solved_implicits :
                            FStar_Tactics_Monad.ret ())
                       | FStar_Pervasives.Inl (FStar_Pervasives_Native.Some g)
                           ->
-                          let uu___3 =
-                            FStar_Options.admit_tactic_unification_guards () in
+                          let uu___3 = FStar_Options.compat_pre_core () in
                           if uu___3
                           then
                             (mark_uvar_as_already_checked u;

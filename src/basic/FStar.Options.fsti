@@ -101,8 +101,8 @@ val __temp_fast_implicits       : unit    -> bool
 val admit_smt_queries           : unit    -> bool
 val set_admit_smt_queries       : bool    -> unit
 val admit_except                : unit    -> option string
-val admit_tactic_unification_guards : unit    -> bool
-val disallow_unification_guards    : unit    -> bool
+val compat_pre_core             : unit    -> bool
+val disallow_unification_guards : unit    -> bool
 val cache_checked_modules       : unit    -> bool
 val cache_off                   : unit    -> bool
 val print_cache_version         : unit    -> bool
