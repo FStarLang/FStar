@@ -631,6 +631,12 @@ let lookup_datacon env lid =
       inst_tscheme_with_range (range_of_lid lid) (uvs, t)
     | _ -> raise_error (name_not_found lid) (range_of_lid lid)
 
+let lookup_and_inst_datacon env us lid =
+  match lookup_qname env lid with
+    | Some (Inr ({ sigel = Sig_datacon (_, uvs, t, _, _, _) }, None), _) ->
+      inst_tscheme_with (uvs, t) us |> snd
+    | _ -> raise_error (name_not_found lid) (range_of_lid lid)
+
 let datacons_of_typ env lid =
   match lookup_qname env lid with
     | Some (Inr ({ sigel = Sig_inductive_typ(_, _, _, _, _, dcs) }, _), _) -> true, dcs
