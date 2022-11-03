@@ -425,12 +425,13 @@ let pts_to_intro_from_base
 #restart-solver
 let focus_cell
   (#t: Type)
+  (#opened: _)
   (#p: pcm t)
   (r: array p)
   (s: Ghost.erased (Seq.seq t))
   (i: size_t)
   (sq: squash (size_v i < size_v r.len \/ size_v i < Seq.length s))
-: Steel (_: ref p { (size_v i < size_v r.len /\ size_v r.len == Seq.length s) })
+: A.SteelAtomicBase (_: ref p { (size_v i < size_v r.len /\ size_v r.len == Seq.length s) }) false opened Unobservable
     (pts_to r s)
     (fun r' -> pts_to r (Seq.upd s (size_v i) (one p)) `star` R.pts_to r' (Seq.index s (size_v i)))
     (fun _ -> True)
@@ -883,10 +884,11 @@ let ghost_array_of_ref
 #restart-solver
 let array_of_ref
   (#t: Type)
+  (#opened: _)
   (#p: pcm t)
   (#v: Ghost.erased t)
   (r: ref p)
-: Steel (array p)
+: A.SteelAtomicBase (array p) false opened Unobservable
     (R.pts_to r v)
     (fun a -> pts_to a (Seq.create 1 (Ghost.reveal v)))
     (fun _ -> True)
