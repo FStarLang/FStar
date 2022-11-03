@@ -42,7 +42,7 @@ module S = FStar.Syntax.Syntax
 module SS = FStar.Syntax.Subst
 module N = FStar.TypeChecker.Normalize
 module UF = FStar.Syntax.Unionfind
-module Const = FStar.Parser.Const
+module PC = FStar.Parser.Const
 module FC = FStar.Const
 module TcComm = FStar.TypeChecker.Common
 
@@ -935,7 +935,7 @@ let u_abs (k : typ) (ys : binders) (t : term) : term =
     (* TODO : not putting any cflags here on the annotation... *)
     then //The annotation is imprecise, due to a discrepancy in currying/eta-expansions etc.;
          //causing a loss in precision for the SMT encoding
-         U.abs ys t (Some (U.mk_residual_comp Const.effect_Tot_lid None []))
+         U.abs ys t (Some (U.mk_residual_comp PC.effect_Tot_lid None []))
     else let c = Subst.subst_comp (U.rename_binders xs ys) c in
          U.abs ys t (Some (U.residual_comp_of_comp c))
 
@@ -1815,7 +1815,7 @@ let simplify_guard env g = match g.guard_f with
               [Env.Beta; Env.Eager_unfolding; Env.Simplify; Env.Primops; Env.NoFullNorm] env f in
       if Env.debug env <| Options.Other "Simplification" then BU.print1 "Simplified guard to %s\n" (Print.term_to_string f);
       let f = match (U.unmeta f).n with
-        | Tm_fvar fv when S.fv_eq_lid fv Const.true_lid -> Trivial
+        | Tm_fvar fv when S.fv_eq_lid fv PC.true_lid -> Trivial
         | _ -> NonTrivial f in
       {g with guard_f=f}
 
@@ -3179,7 +3179,7 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
               let treat_as_injective =
                 match (U.un_uinst head1).n with
                 | Tm_fvar fv ->
-                  Env.fv_has_attr env fv Const.unifier_hint_injective_lid
+                  Env.fv_has_attr env fv PC.unifier_hint_injective_lid
                 | _ -> false
               in
               begin
@@ -3421,11 +3421,11 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
                 in
                 let is_reveal_or_hide t =
                   let h, args = U.head_and_args t in
-                  if U.is_fvar Const.reveal h
+                  if U.is_fvar PC.reveal h
                   then match payload_of_hide_reveal h args with
                        | None -> None
                        | Some t -> Some (Inl t)
-                  else if U.is_fvar Const.hide h
+                  else if U.is_fvar PC.hide h
                   then match payload_of_hide_reveal h args with
                        | None -> None
                        | Some t -> Some (Inr t)
@@ -3452,25 +3452,25 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
                 | Some (Inl (u, ty, lhs)), None ->
                   // reveal / _
                   //add hide to both sides to simplify
-                  let rhs = mk_fv_app Const.hide u [(ty, S.as_aqual_implicit true); (t2, None)] t2.pos in
+                  let rhs = mk_fv_app PC.hide u [(ty, S.as_aqual_implicit true); (t2, None)] t2.pos in
                   Some (lhs, rhs)
 
                 | None, Some (Inl (u, ty, rhs)) ->
                   // _ / reveal
                   //add hide to both sides to simplify
-                  let lhs = mk_fv_app Const.hide u [(ty, S.as_aqual_implicit true); (t1, None)] t1.pos in
+                  let lhs = mk_fv_app PC.hide u [(ty, S.as_aqual_implicit true); (t1, None)] t1.pos in
                   Some (lhs, rhs)
 
                 | Some (Inr (u, ty, lhs)), None ->
                   // hide / _
                   //add reveal to both sides to simplify
-                  let rhs = mk_fv_app Const.reveal u [(ty,S.as_aqual_implicit true); (t2, None)] t2.pos in
+                  let rhs = mk_fv_app PC.reveal u [(ty,S.as_aqual_implicit true); (t2, None)] t2.pos in
                   Some (lhs, rhs)
 
                 | None, Some (Inr (u, ty, rhs)) ->
                   // hide / _
                   //add reveal to both sides to simplify
-                  let lhs = mk_fv_app Const.reveal u [(ty,S.as_aqual_implicit true); (t1, None)] t1.pos in
+                  let lhs = mk_fv_app PC.reveal u [(ty,S.as_aqual_implicit true); (t1, None)] t1.pos in
                   Some (lhs, rhs)
             in
             begin
@@ -4901,7 +4901,7 @@ let try_solve_single_valued_implicits env is_tac (imps:Env.implicits) : Env.impl
      let t_norm = N.normalize N.whnf_steps env (U.ctx_uvar_typ ctx_u) in
 
       match (SS.compress t_norm).n with
-      | Tm_fvar fv when S.fv_eq_lid fv Const.unit_lid ->
+      | Tm_fvar fv when S.fv_eq_lid fv PC.unit_lid ->
         r |> S.unit_const_with_range |> Some
      | Tm_refine (b, _) when U.is_unit b.sort ->
         r |> S.unit_const_with_range |> Some

@@ -93,8 +93,8 @@ type primitive_step = {
     auto_reflect:option int;
     strong_reduction_ok:bool;
     requires_binder_substitution:bool;
-    interpretation:(psc -> FStar.Syntax.Embeddings.norm_cb -> args -> option term);
-    interpretation_nbe:(NBE.nbe_cbs -> NBE.args -> option NBE.t)
+    interpretation:(psc -> FStar.Syntax.Embeddings.norm_cb -> universes -> args -> option term);
+    interpretation_nbe:(NBE.nbe_cbs -> universes -> NBE.args -> option NBE.t)
 }
 
 type debug_switches = {

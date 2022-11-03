@@ -60,6 +60,7 @@ let none_to_empty_list x =
 %token <string> UINT16
 %token <string> UINT32
 %token <string> UINT64
+%token <string> SIZET
 %token <float> IEEE64
 %token <string> REAL
 %token <char> CHAR
@@ -1351,6 +1352,7 @@ constant:
           log_issue (lhs(parseState)) (Error_OutOfRange, "This number is outside the allowable range for 64-bit signed integers");
         Const_int (fst n, Some (Signed, Int64))
       }
+  | n=SIZET { Const_int (n, Some (Unsigned, Sizet)) }
   (* TODO : What about reflect ? There is also a constant representing it *)
   | REIFY   { Const_reify }
   | RANGE_OF     { Const_range_of }

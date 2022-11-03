@@ -676,7 +676,7 @@ let e_list (ea:embedding 'a) =
         (S.t_list_of (type_of ea))
         printer
         emb_t_list_a
-
+  
 let e_string_list = e_list e_string
 
 (* the steps as terms *)
