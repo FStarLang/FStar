@@ -337,13 +337,13 @@ let struct_t0 _ n fields =
 
 [@@noextract_to "krml"] // proof-only
 let struct_pcm
-  (tn: Type0) (#tf: Type0) (n: string) (fields: field_description_t tf)
+  (tn: Type0) (#tf: Type0) (n: string) (fields: nonempty_field_description_t tf)
 : Tot (pcm (struct_t0 tn n fields))
 = S.prod_pcm (struct_field_pcm fields)
 
 [@@noextract_to "krml"] // proof-only
 let t_struct_set_field
-  (#tn: Type0) (#tf: Type0) (#n: string) (#fields: field_description_t tf) (f: field_t fields) (v: fields.fd_type f) (s: struct_t0 tn n fields)
+  (#tn: Type0) (#tf: Type0) (#n: string) (#fields: nonempty_field_description_t tf) (f: field_t fields) (v: fields.fd_type f) (s: struct_t0 tn n fields)
 : Tot (struct_t0 tn n fields)
 = FX.on_dom (field_t fields) (fun f' -> if f = f' then v else s f')
 
@@ -361,7 +361,7 @@ let struct_eq_intro
   (#tn: Type0)
   (#tf: Type0)
   (#n: string)
-  (#fields: field_description_t tf)
+  (#fields: nonempty_field_description_t tf)
   (s1 s2: struct_t0 tn n fields)
   (prf: (
     (f: field_t fields) ->
@@ -382,14 +382,14 @@ let struct_get_field_other
 = ()
 
 let struct_fractionable
-  (#tn: Type0) (#tf: Type0) (#n: string) (#fields: field_description_t tf)
+  (#tn: Type0) (#tf: Type0) (#n: string) (#fields: nonempty_field_description_t tf)
   (s: struct_t0 tn n fields)
 : GTot bool
 = FStar.StrongExcludedMiddle.strong_excluded_middle (forall (f: field_t fields) . (fields.fd_typedef f).fractionable (s f))
 
 [@@noextract_to "krml"] // proof-only
 let struct_mk_fraction
-  (#tn: Type0) (#tf: Type0) (#n: string) (#fields: field_description_t tf)
+  (#tn: Type0) (#tf: Type0) (#n: string) (#fields: nonempty_field_description_t tf)
   (s: struct_t0 tn n fields)
   (p: P.perm)
 : Pure (struct_t0 tn n fields)

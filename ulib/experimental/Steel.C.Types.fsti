@@ -324,7 +324,7 @@ let field_description_nil : field_description_t field_t_nil = {
 inline_for_extraction [@@noextract_to "krml"; norm_field_attr]
 let field_description_cons0
   (fn: Type0) (#ft: Type0) (#fc: Type0) (n: string) (t: typedef ft) (fd: field_description_t fc)
-: Tot (field_description_t (field_t_cons fn ft fc))
+: Tot (nonempty_field_description_t (field_t_cons fn ft fc))
 = {
     fd_def = (fun n' -> n = n' || fd.fd_def n');
     fd_empty = false;
@@ -333,29 +333,29 @@ let field_description_cons0
   }
 
 inline_for_extraction [@@noextract_to "krml"; norm_field_attr]
-let field_description_cons (#ft: Type0) (#fc: Type0) (n: string) (#fn: Type0) (# [ solve_mk_string_t ()] prf: squash (norm norm_typestring (mk_string_t n == fn))) (t: typedef ft) (fd: field_description_t fc) : Tot (field_description_t (field_t_cons fn ft fc)) =
+let field_description_cons (#ft: Type0) (#fc: Type0) (n: string) (#fn: Type0) (# [ solve_mk_string_t ()] prf: squash (norm norm_typestring (mk_string_t n == fn))) (t: typedef ft) (fd: field_description_t fc) : Tot (nonempty_field_description_t (field_t_cons fn ft fc)) =
   field_description_cons0 fn #ft #fc n t fd
 
 [@@noextract_to "krml"] // primitive
-val define_struct0 (tn: Type0) (#tf: Type0) (n: string) (fields: field_description_t tf) : Tot Type0
+val define_struct0 (tn: Type0) (#tf: Type0) (n: string) (fields: nonempty_field_description_t tf) : Tot Type0
 inline_for_extraction [@@noextract_to "krml"]
-let define_struct (n: string) (#tf: Type0) (#tn: Type0) (#[solve_mk_string_t ()] prf: squash (norm norm_typestring (mk_string_t n == tn))) (fields: field_description_t tf) : Tot Type0
+let define_struct (n: string) (#tf: Type0) (#tn: Type0) (#[solve_mk_string_t ()] prf: squash (norm norm_typestring (mk_string_t n == tn))) (fields: nonempty_field_description_t tf) : Tot Type0
 = define_struct0 tn #tf n fields
 
 // To be extracted as: struct t
 [@@noextract_to "krml"] // primitive
-val struct_t0 (tn: Type0) (#tf: Type0) (n: string) (fields: field_description_t tf) : Tot Type0
+val struct_t0 (tn: Type0) (#tf: Type0) (n: string) (fields: nonempty_field_description_t tf) : Tot Type0
 inline_for_extraction [@@noextract_to "krml"]
-let struct_t (#tf: Type0) (n: string) (#tn: Type0) (# [solve_mk_string_t ()] prf: squash (norm norm_typestring (mk_string_t n == tn))) (fields: field_description_t tf) : Tot Type0
+let struct_t (#tf: Type0) (n: string) (#tn: Type0) (# [solve_mk_string_t ()] prf: squash (norm norm_typestring (mk_string_t n == tn))) (fields: nonempty_field_description_t tf) : Tot Type0
 = struct_t0 tn #tf n fields
 
-val struct_set_field (#tn: Type0) (#tf: Type0) (#n: string) (#fields: field_description_t tf) (f: field_t fields) (v: fields.fd_type f) (s: struct_t0 tn n fields) : GTot (struct_t0 tn n fields)
+val struct_set_field (#tn: Type0) (#tf: Type0) (#n: string) (#fields: nonempty_field_description_t tf) (f: field_t fields) (v: fields.fd_type f) (s: struct_t0 tn n fields) : GTot (struct_t0 tn n fields)
 
 val struct_get_field
   (#tn: Type0)
   (#tf: Type0)
   (#n: string)
-  (#fields: field_description_t tf)
+  (#fields: nonempty_field_description_t tf)
   (s: struct_t0 tn n fields)
   (field: field_t fields)
 : GTot (fields.fd_type field)
@@ -364,7 +364,7 @@ val struct_eq
   (#tn: Type0)
   (#tf: Type0)
   (#n: string)
-  (#fields: field_description_t tf)
+  (#fields: nonempty_field_description_t tf)
   (s1 s2: struct_t0 tn n fields)
 : Ghost prop
   (requires True)
@@ -377,7 +377,7 @@ val struct_get_field_same
   (#tn: Type0)
   (#tf: Type0)
   (#n: string)
-  (#fields: field_description_t tf)
+  (#fields: nonempty_field_description_t tf)
   (s: struct_t0 tn n fields)
   (field: field_t fields)
   (v: fields.fd_type field)
@@ -389,7 +389,7 @@ val struct_get_field_other
   (#tn: Type0)
   (#tf: Type0)
   (#n: string)
-  (#fields: field_description_t tf)
+  (#fields: nonempty_field_description_t tf)
   (s: struct_t0 tn n fields)
   (field: field_t fields)
   (v: fields.fd_type field)
@@ -403,16 +403,14 @@ val struct_get_field_other
 val struct0 (tn: Type0) (#tf: Type0) (n: string) (fields: nonempty_field_description_t tf) : Tot (typedef (struct_t0 tn n fields))
 
 [@@noextract_to "krml"] // proof-only
-let struct (#tf: Type0) (n: string) (#tn: Type0) (# [solve_mk_string_t ()] prf: squash (norm norm_typestring (mk_string_t n == tn))) (fields: field_description_t tf) : Pure (typedef (struct_t0 tn n fields))
-  (requires (fields.fd_empty == false))
-  (ensures (fun _ -> True))
+let struct (#tf: Type0) (n: string) (#tn: Type0) (# [solve_mk_string_t ()] prf: squash (norm norm_typestring (mk_string_t n == tn))) (fields: nonempty_field_description_t tf) : Tot (typedef (struct_t0 tn n fields))
 = struct0 tn #tf n fields
 
 val struct_get_field_unknown
   (tn: Type0)
   (#tf: Type0)
   (n: string)
-  (fields: field_description_t tf)
+  (fields: nonempty_field_description_t tf)
   (field: field_t fields)
 : Lemma
   (struct_get_field (unknown (struct0 tn n fields)) field == unknown (fields.fd_typedef field))
@@ -422,7 +420,7 @@ val struct_get_field_uninitialized
   (tn: Type0)
   (#tf: Type0)
   (n: string)
-  (fields: field_description_t tf)
+  (fields: nonempty_field_description_t tf)
   (field: field_t fields)
 : Lemma
   (struct_get_field (uninitialized (struct0 tn n fields)) field == uninitialized (fields.fd_typedef field))
