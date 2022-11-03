@@ -683,6 +683,7 @@ let rec check_relation (g:env) (rel:relation) (t0 t1:typ)
       | EQUALITY -> "=?="
       | _ -> "<:?"
     in
+    let! _ = dump_context in
     if Env.debug g.tcenv (Options.Other "Core")
     then BU.print5 "check_relation (%s) %s %s (%s) %s\n"
                    (P.tag_of_term t0)
@@ -1327,6 +1328,10 @@ and check' (g:env) (e:term)
                       (P.term_to_string e)
                       (P.binders_to_string ", " bs) in
             let! eff_pat, t = check msg g' e in
+            if Env.debug g.tcenv <| Options.Other "Core"
+            then BU.print2 "Checking scrutinee and pattern type compatibility: %s and %s\n"
+                   (P.term_to_string t_sc)
+                   (P.term_to_string t);
             with_context "Pattern and scrutinee type compatibility" None
                           (fun _ -> no_guard (check_scrutinee_pattern_type_compatible g' t_sc t)) ;!
             let pat_sc_eq = U.mk_eq2 u_sc t_sc sc e in
@@ -2089,5 +2094,3 @@ let check_term_subtyping g t0 t1
     match check_relation g (SUBTYPING None) t0 t1 ctx with
     | Inl (_, g) -> Inl g
     | Inr err -> Inr err
-
- 
