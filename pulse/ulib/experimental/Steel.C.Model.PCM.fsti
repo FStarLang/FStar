@@ -46,6 +46,31 @@ val op_assoc_r
 
 val p_refine (#a: Type) (p: pcm0 a) (x: a) : Tot prop
 
+val pcm0_ext (#a: Type u#a) (p1 p2: pcm0 a)
+  (composable_eq: (
+    (x: a) ->
+    (y: a) ->
+    Lemma
+    (composable p1 x y <==> composable p2 x y)
+  ))
+  (op_eq: (
+    (x: a) ->
+    (y: a) ->
+    Lemma
+    (requires (composable p1 x y /\ composable p2 x y))
+    (ensures (
+      op p1 x y == op p2 x y
+    ))
+  ))
+  (p_refine_eq: (
+    (x: a) ->
+    Lemma
+    (p_refine p1 x <==> p_refine p2 x)
+  ))
+  (one_eq: squash (one p1 == one p2))
+: Lemma
+  (p1 == p2)
+
 val pcm_of_fstar_pcm
   (#a: Type)
   (p: P.pcm a)
