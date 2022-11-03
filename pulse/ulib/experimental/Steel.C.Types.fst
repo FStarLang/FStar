@@ -320,34 +320,75 @@ irreducible let norm_field_attr = ()
 
 let define_struct0 _ _ _ = unit
 
+[@@noextract_to "krml"]
+noeq
+type field_description_gen_t (field_t: eqtype) : Type u#1 = {
+  fd_nonempty: squash (exists (f: field_t) . True);
+  fd_type: (field_t -> Type0);
+  fd_typedef: ((s: field_t) -> Tot (typedef (fd_type s)));
+}
+
+let nonempty_field_description_nonempty
+  (#tf: Type)
+  (fd: nonempty_field_description_t tf)
+: Lemma
+  (exists (f: field_t fd) . True)
+= if StrongExcludedMiddle.strong_excluded_middle (exists (f: field_t fd) . True)
+  then ()
+  else begin
+    let prf
+      (f: string)
+    : Lemma
+      (fd.fd_def f == false)
+    = if fd.fd_def f
+      then Classical.exists_intro (fun (f: field_t fd) -> True) f
+      else ()
+    in
+    Classical.forall_intro prf
+  end
+
+[@@noextract_to "krml"]
+let fd_gen_of_nonempty_fd (#tf: Type0) (fd: nonempty_field_description_t tf) : Tot (field_description_gen_t (field_t fd)) = {
+  fd_nonempty = nonempty_field_description_nonempty fd;
+  fd_type = fd.fd_type;
+  fd_typedef = (fun (s: field_t fd) -> fd.fd_typedef s);
+}
+
 module S = Steel.C.Model.Struct
 
 [@@noextract_to "krml"] // proof-only
 let struct_field_pcm
-  (#tf: Type0)
-  (fields: field_description_t tf)
-  (f: field_t fields)
+  (#field_t: eqtype)
+  (fields: field_description_gen_t field_t)
+  (f: field_t)
 : Tot (pcm (fields.fd_type f))
 = (fields.fd_typedef f).pcm
 
 module FX = FStar.FunctionalExtensionality
 
+[@@noextract_to "krml"] // primitive
+let struct_t1 (#field_t: eqtype) (fields: field_description_gen_t field_t) : Tot Type0 =
+  FX.restricted_t field_t fields.fd_type
+
 let struct_t0 _ n fields =
-  FX.restricted_t (field_t fields) fields.fd_type
+  struct_t1 (fd_gen_of_nonempty_fd fields)
 
 [@@noextract_to "krml"] // proof-only
 let struct_pcm
-  (tn: Type0) (#tf: Type0) (n: string) (fields: nonempty_field_description_t tf)
-: Tot (pcm (struct_t0 tn n fields))
+  (#field_t: eqtype)
+  (fields: field_description_gen_t field_t)
+: Tot (pcm (struct_t1 fields))
 = S.prod_pcm (struct_field_pcm fields)
 
 [@@noextract_to "krml"] // proof-only
 let t_struct_set_field
-  (#tn: Type0) (#tf: Type0) (#n: string) (#fields: nonempty_field_description_t tf) (f: field_t fields) (v: fields.fd_type f) (s: struct_t0 tn n fields)
-: Tot (struct_t0 tn n fields)
-= FX.on_dom (field_t fields) (fun f' -> if f = f' then v else s f')
+  (#field_t: eqtype) (#fields: field_description_gen_t field_t) (f: field_t) (v: fields.fd_type f) (s: struct_t1 fields)
+: Tot (struct_t1 fields)
+= FX.on_dom (field_t) (fun f' -> if f = f' then v else s f')
 
-let struct_set_field = t_struct_set_field
+let struct_set_field
+  f v s
+= t_struct_set_field f v s
 
 let struct_get_field
   s field
@@ -358,13 +399,11 @@ let struct_eq
 = s1 `FX.feq` s2
 
 let struct_eq_intro
-  (#tn: Type0)
-  (#tf: Type0)
-  (#n: string)
-  (#fields: nonempty_field_description_t tf)
-  (s1 s2: struct_t0 tn n fields)
+  (#field_t: eqtype)
+  (#fields: field_description_gen_t field_t)
+  (s1 s2: struct_t1 fields)
   (prf: (
-    (f: field_t fields) ->
+    (f: field_t) ->
     Lemma
     (s1 f == s2 f)
   ))
@@ -382,35 +421,34 @@ let struct_get_field_other
 = ()
 
 let struct_fractionable
-  (#tn: Type0) (#tf: Type0) (#n: string) (#fields: nonempty_field_description_t tf)
-  (s: struct_t0 tn n fields)
+  (#field_t: eqtype) (#fields: field_description_gen_t field_t)
+  (s: struct_t1 fields)
 : GTot bool
-= FStar.StrongExcludedMiddle.strong_excluded_middle (forall (f: field_t fields) . (fields.fd_typedef f).fractionable (s f))
+= FStar.StrongExcludedMiddle.strong_excluded_middle (forall (f: field_t) . (fields.fd_typedef f).fractionable (s f))
 
 [@@noextract_to "krml"] // proof-only
 let struct_mk_fraction
-  (#tn: Type0) (#tf: Type0) (#n: string) (#fields: nonempty_field_description_t tf)
-  (s: struct_t0 tn n fields)
+  (#field_t: eqtype) (#fields: field_description_gen_t field_t)
+  (s: struct_t1 fields)
   (p: P.perm)
-: Pure (struct_t0 tn n fields)
+: Pure (struct_t1 fields)
   (requires (struct_fractionable s))
   (ensures (fun s' -> p `P.lesser_equal_perm` P.full_perm ==> struct_fractionable s'))
-= FX.on_dom (field_t fields) (fun f -> (fields.fd_typedef f).mk_fraction (s f) p)
+= FX.on_dom field_t (fun f -> (fields.fd_typedef f).mk_fraction (s f) p)
 
 [@@noextract_to "krml"] // proof-only
 let struct_uninitialized
-  (tn: Type0) (#tf: Type0) (n: string) (fields: nonempty_field_description_t tf)
-: Pure (struct_t0 tn n fields)
+  (#field_t: eqtype) (fields: field_description_gen_t field_t)
+: Pure (struct_t1 fields)
     (requires True)
-    (ensures (fun y -> p_refine (struct_pcm tn n fields) y))
-= let y = FX.on_dom (field_t fields) (fun f -> (fields.fd_typedef f).uninitialized <: fields.fd_type f) in
-  assert (exists (fd:field_t fields) . fields.fd_def fd == true /\ True);
-  y
+    (ensures (fun y -> p_refine (struct_pcm fields) y))
+= FX.on_dom field_t (fun f -> (fields.fd_typedef f).uninitialized <: fields.fd_type f)
 
-let struct0
-  tn n fields
+let struct1
+  (#field_t: eqtype)
+  (fields: field_description_gen_t field_t)
 = {
-  pcm = struct_pcm tn n fields;
+  pcm = struct_pcm fields;
   fractionable = struct_fractionable;
   mk_fraction = struct_mk_fraction;
   mk_fraction_full = (fun x ->
@@ -425,14 +463,14 @@ let struct0
   );
   fractionable_one = ();
   mk_fraction_one = (fun p ->
-    struct_eq_intro (struct_mk_fraction (one (struct_pcm tn n fields)) p) (one (struct_pcm tn n fields)) (fun f ->
+    struct_eq_intro (struct_mk_fraction (one (struct_pcm fields)) p) (one (struct_pcm fields)) (fun f ->
       (fields.fd_typedef f).mk_fraction_one p
     )
   );
-  uninitialized = struct_uninitialized _ _ _;
+  uninitialized = struct_uninitialized _;
   mk_fraction_split = (fun v p1 p2 ->
     let prf
-      (f: field_t fields)
+      (f: field_t)
     : Lemma
       (composable (fields.fd_typedef f).pcm (mk_fraction (fields.fd_typedef f) (v f) p1) (mk_fraction (fields.fd_typedef f) (v f) p2))
     = (fields.fd_typedef f).mk_fraction_split (v f) p1 p2
@@ -440,16 +478,18 @@ let struct0
     Classical.forall_intro prf
   );
   mk_fraction_join = (fun v p1 p2 ->
-    struct_eq_intro (op (struct_pcm tn n fields) (struct_mk_fraction v p1) (struct_mk_fraction v p2)) (struct_mk_fraction v (p1 `P.sum_perm` p2)) (fun f ->
+    struct_eq_intro (op (struct_pcm fields) (struct_mk_fraction v p1) (struct_mk_fraction v p2)) (struct_mk_fraction v (p1 `P.sum_perm` p2)) (fun f ->
       (fields.fd_typedef f).mk_fraction_join (v f) p1 p2
     )
   );
   mk_fraction_eq_one = (fun v p ->
-    struct_eq_intro v (one (struct_pcm tn n fields)) (fun f ->
+    struct_eq_intro v (one (struct_pcm fields)) (fun f ->
       (fields.fd_typedef f).mk_fraction_eq_one (v f) p
     )
   );
 }
+
+let struct0 _ _ _ = struct1 _
 
 let struct_get_field_unknown
   tn n fields field
@@ -461,13 +501,40 @@ let struct_get_field_uninitialized
 
 let _inv = TD.inv
 
-let has_struct_field
-  #_ #_ #_ #fields r field r'
+let has_struct_field_gen
+  (#field_t: eqtype)
+  (#fields: field_description_gen_t field_t)
+  (r: ref (struct1 fields))
+  (field: field_t)
+  (r': ref (fields.fd_typedef field))
+: GTot prop
 = (Some?.v r').ref == R.ref_focus (Some?.v r).ref (S.struct_field (struct_field_pcm fields) field)
+
+let has_struct_field
+  r field r'
+= has_struct_field_gen r field r'
+
+let has_struct_field_gen_inj
+  (#opened: _)
+  (#field_t: eqtype)
+  (#fields: field_description_gen_t field_t)
+  (r: ref (struct1 fields))
+  (field: field_t)
+  (r1 r2: ref (fields.fd_typedef field))
+: SteelGhost unit opened
+    emp
+    (fun _ -> emp)
+    (fun _ ->
+      Ghost.reveal (mem_inv opened _inv) == false /\
+      has_struct_field_gen r field r1 /\
+      has_struct_field_gen r field r2
+    )
+    (fun _ _ _ -> r1 == r2)
+= TD.type_of_token_inj (Some?.v r1).dest (Some?.v r2).dest
 
 let has_struct_field_inj
   r field r1 r2
-= TD.type_of_token_inj (Some?.v r1).dest (Some?.v r2).dest
+= has_struct_field_gen_inj r field r1 r2
 
 #push-options "--z3rlimit 32"
 
@@ -475,7 +542,7 @@ let has_struct_field_inj
 
 let ghost_struct_field_focus
   #_ #tn #_ #n #fields #v r0 field r'0
-= let r : R.ref (struct_pcm tn n fields) = (Some?.v r0).ref in
+= let r : R.ref (struct_pcm _) = (Some?.v r0).ref in
   rewrite_slprop
     (pts_to r0 v)
     (R.pts_to r v)
@@ -492,11 +559,11 @@ let ghost_struct_field_focus
   in
   Classical.forall_intro_2 prf;
   let v' = struct_set_field field (unknown (fields.fd_typedef field)) v in
-  let vf = S.field_to_struct_f (struct_field_pcm fields) field (struct_get_field v field) in
-  assert (composable (struct_pcm tn n fields) v' vf);
-  assert (op (struct_pcm tn n fields) v' vf `FX.feq` v);
+  let vf = S.field_to_struct_f (struct_field_pcm _) field (struct_get_field v field) in
+  assert (composable (struct_pcm _) v' vf);
+  assert (op (struct_pcm _) v' vf `FX.feq` v);
   R.split r _ v' vf;
-  R.gfocus r (S.struct_field (struct_field_pcm fields) field) vf (struct_get_field v field);
+  R.gfocus r (S.struct_field (struct_field_pcm _) field) vf (struct_get_field v field);
   rewrite_slprop
     (R.pts_to r _)
     (pts_to r0 _)
@@ -512,7 +579,7 @@ let ghost_struct_field
   let r' : ref (fields.fd_typedef field) = Some ({
     dest = tok';
     typedef = fields.fd_typedef field;
-    ref = R.ref_focus (Some?.v r).ref (S.struct_field (struct_field_pcm fields) field);
+    ref = R.ref_focus (Some?.v r).ref (S.struct_field (struct_field_pcm (fd_gen_of_nonempty_fd fields)) field);
   })
   in
   let gr' = Ghost.hide r' in
@@ -534,7 +601,7 @@ let struct_field'
     (fun r' -> pts_to r0 (struct_set_field field (unknown (fields.fd_typedef field)) v) `star` pts_to r' (struct_get_field v field))
     (fun _ -> Ghost.reveal (mem_inv opened _inv) == false)
     (fun _ r' _ -> has_struct_field r0 field r')
-= let r : R.ref (struct_pcm tn n fields) = (Some?.v r0).ref in
+= let r : R.ref (struct_pcm _) = (Some?.v r0).ref in
   rewrite_slprop
     (pts_to r0 v)
     (R.pts_to r v)
@@ -551,11 +618,11 @@ let struct_field'
   in
   Classical.forall_intro_2 prf;
   let v' = Ghost.hide (struct_set_field field (unknown (fields.fd_typedef field)) v) in
-  let vf = Ghost.hide (S.field_to_struct_f (struct_field_pcm fields) field (struct_get_field v field)) in
-  assert (composable (struct_pcm tn n fields) v' vf);
-  assert (op (struct_pcm tn n fields) v' vf `FX.feq` v);
+  let vf = Ghost.hide (S.field_to_struct_f (struct_field_pcm _) field (struct_get_field v field)) in
+  assert (composable (struct_pcm _) v' vf);
+  assert (op (struct_pcm _) v' vf `FX.feq` v);
   R.split r _ v' vf;
-  let r' = R.focus r (S.struct_field (struct_field_pcm fields) field) vf (struct_get_field v field) in
+  let r' = R.focus r (S.struct_field (struct_field_pcm _) field) vf (struct_get_field v field) in
   let tok' = TD.get_token (fields.fd_type field) in
   let res : ref (fields.fd_typedef field) = Some ({
     dest = tok';
@@ -583,7 +650,7 @@ let struct_field0
 
 let unstruct_field
   #_ #tn #_ #n #fields #v r0 field #v' r'0
-= let r : R.ref (struct_pcm tn n fields) = (Some?.v r0).ref in
+= let r : R.ref (struct_pcm _) = (Some?.v r0).ref in
   rewrite_slprop
     (pts_to r0 v)
     (R.pts_to r v)
@@ -604,10 +671,10 @@ let unstruct_field
   = is_unit (fields.fd_typedef f').pcm x
   in
   Classical.forall_intro_2 prf;
-  let vf = S.field_to_struct_f (struct_field_pcm fields) field v' in
-  assert (composable (struct_pcm tn n fields) v vf);
-  assert (op (struct_pcm tn n fields) v vf `FX.feq` struct_set_field field v' v);
-  R.unfocus r' r (S.struct_field (struct_field_pcm fields) field) _;
+  let vf = S.field_to_struct_f (struct_field_pcm _) field v' in
+  assert (composable (struct_pcm _) v vf);
+  assert (op (struct_pcm _) v vf `FX.feq` struct_set_field field v' v);
+  R.unfocus r' r (S.struct_field (struct_field_pcm _) field) _;
   R.gather r v _;
   rewrite_slprop
     (R.pts_to r _)
@@ -619,11 +686,15 @@ let unstruct_field
 let fractionable_struct _ = ()
 let mk_fraction_struct _ _ _ = ()
 
-let full_struct
-  #tn #_ #n #fields s
+let full_struct_gen
+  (#field_t: eqtype)
+  (#fields: field_description_gen_t field_t)
+  (s: struct_t1 fields)
+: Lemma
+  (full (struct1 fields) s <==> (forall field . full (fields.fd_typedef field) (s field)))
 =
   let is_unit'
-    (f': field_t fields)
+    (f': field_t)
     (x: (fields.fd_type f'))
   : Lemma
     (let p = (fields.fd_typedef f').pcm in
@@ -634,21 +705,23 @@ let full_struct
   in
   Classical.forall_intro_2 is_unit';
   let prf
-    (field: field_t fields)
+    (field: field_t)
   : Lemma
-    (requires (full (struct0 tn n fields) s))
-    (ensures (full (fields.fd_typedef field) (struct_get_field s field)))
+    (requires (full (struct1 fields) s))
+    (ensures (full (fields.fd_typedef field) (s field)))
   = let prf'
       (x: fields.fd_type field)
     : Lemma
-      (requires (composable (fields.fd_typedef field).pcm (struct_get_field s field) x))
+      (requires (composable (fields.fd_typedef field).pcm (s field) x))
       (ensures (x == one (fields.fd_typedef field).pcm))
-    = let s' = struct_set_field field x (one (struct_pcm tn n fields)) in
-      assert (composable (struct_pcm tn n fields) s s')
+    = let s' = t_struct_set_field field x (one (struct_pcm fields)) in
+      assert (composable (struct_pcm fields) s s')
     in
     Classical.forall_intro (Classical.move_requires prf')
   in
   Classical.forall_intro (Classical.move_requires prf)
+
+let full_struct s = full_struct_gen s
 
 module U = Steel.C.Model.Union
 
