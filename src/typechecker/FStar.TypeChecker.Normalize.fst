@@ -3202,7 +3202,7 @@ let elim_uvars_aux_tc (env:Env.env) (univ_names:univ_names) (binders:binders) (t
     let univ_names, t = Subst.open_univ_vars univ_names t in
     let t = remove_uvar_solutions env t in
     let t = Subst.close_univ_vars univ_names t in
-    let t = Subst.deep_compress t in
+    let t = Subst.deep_compress false t in
     let binders, tc =
         match binders with
         | [] -> [], Inl t
@@ -3246,7 +3246,7 @@ let rec elim_uvars (env:Env.env) (s:sigelt) =
     | Sig_let((b, lbs), lids) ->
       let lbs = lbs |> List.map (fun lb ->
         let opening, lbunivs = Subst.univ_var_opening lb.lbunivs in
-        let elim t = Subst.deep_compress (Subst.close_univ_vars lbunivs (remove_uvar_solutions env (Subst.subst opening t))) in
+        let elim t = Subst.deep_compress false (Subst.close_univ_vars lbunivs (remove_uvar_solutions env (Subst.subst opening t))) in
         let lbtyp = elim lb.lbtyp in
         let lbdef = elim lb.lbdef in
         {lb with lbunivs = lbunivs;

@@ -21,9 +21,8 @@ let f (#[@@@ description "x_imp"] x_imp:int) ([@@@ description "y"] y:string) : 
 let f2 (#[@@@ description "x_imp"]x_imp [@@@ description "y"]y : int) : Tot unit =
     ()
 
-[@@expect_failure [230]]
-let local_names_in_attributes_are_forbidden
-  = x:unit -> [@@@x]y:unit -> unit
+let attributes_with_local_name (s: string)
+  = [@@@ description s] y:string -> unit
 
 type binder =
     {
@@ -147,4 +146,13 @@ let _ =
         let bss = T.map (fun b -> binders_to_string b) b in
         let expected = [[{ name = "x_imp"; qual = "Implicit"; desc = Some "x_imp"; }; { name = "y"; qual = "Explicit"; desc = Some "y"; }]] in
         iter2 (fun ex bs -> validate ex bs) expected b
+    end
+
+let _ =
+    // Substitution within attributes
+    assert True by begin
+        let foo = "foo" in
+        let t = attributes_with_local_name foo in
+        let bs = binders_from_arrow (quote t) in
+        validate [{ name = "y"; qual = "Explicit"; desc = Some foo; }] bs
     end

@@ -287,9 +287,7 @@ let with_context (#a:Type) (msg:string) (t:option context_term) (x:unit -> resul
   : result a
   = fun ctx ->
      let ctx' = { ctx with error_context=((msg,t)::ctx.error_context) } in
-     // (if Options.debug_any()
-     //  then BU.print_string (print_context ctx'));
-     x () ctx'
+     x () ctx
 
 let mk_type (u:universe) = S.mk (Tm_type u) R.dummyRange
 
@@ -559,7 +557,9 @@ let curry_application hd arg args p =
 
 let lookup (g:env) (e:term) : result (effect_label & typ) =
    match THT.lookup e table with
-   | None -> fail "not in cache"
+   | None -> 
+     record_cache_miss ();
+     fail "not in cache"
    | Some he ->
      if he.he_gamma `context_included` g.tcenv.gamma
      then (
@@ -572,7 +572,7 @@ let lookup (g:env) (e:term) : result (effect_label & typ) =
        fun _ -> Inl he.he_res
      )
      else (
-       record_cache_miss();
+       // record_cache_miss();
        fail "not in cache"
      )
 
@@ -1115,9 +1115,7 @@ and memo_check (g:env) (e:term)
       else (
         match lookup g e ctx with
         | Inr _ -> //cache miss; check and insert
-          if Some? g.guard_handler
-          then check_then_memo ({ g with should_read_cache = false } ) e ctx
-          else check_then_memo g e ctx
+          check_then_memo g e ctx
   
         | Inl (et, None) -> //cache hit with no guard; great, just return
           Inl (et, None)
@@ -2065,6 +2063,7 @@ let check_term g e t must_tot =
   | Inr err -> Inr err
 
 let compute_term_type_handle_guards g e must_tot gh =
+  let e = FStar.Syntax.Subst.deep_compress true e in
   match check_term_top_gh g e None must_tot (Some gh) with
   | Inl (Some (_, t), None) -> Inl t
   | Inl (None, _) -> failwith "Impossible: Success must return some effect and type"

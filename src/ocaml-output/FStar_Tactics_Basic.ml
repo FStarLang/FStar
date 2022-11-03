@@ -732,9 +732,11 @@ let (tc_unifier_solved_implicits :
                                    u.FStar_Syntax_Syntax.ctx_uvar_head in
                                let uu___7 =
                                  FStar_Syntax_Print.term_to_string sol in
-                               fail2
-                                 "Could not typecheck unifier solved implicit %s to %s since it produced a guard and guards were not allowed"
-                                 uu___6 uu___7
+                               let uu___8 =
+                                 FStar_Syntax_Print.term_to_string g in
+                               fail3
+                                 "Could not typecheck unifier solved implicit %s to %s since it produced a guard and guards were not allowed;guard is\n%s"
+                                 uu___6 uu___7 uu___8
                              else
                                (let uu___7 =
                                   proc_guard' false "guard for implicit" env2

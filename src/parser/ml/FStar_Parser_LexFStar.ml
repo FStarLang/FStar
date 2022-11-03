@@ -381,6 +381,7 @@ let uint32 = [%sedlex.regexp? any_integer, unsigned, 'l']
 let int64 = [%sedlex.regexp? any_integer, 'L']
 let uint64 = [%sedlex.regexp? any_integer, unsigned, 'L']
 let char8 = [%sedlex.regexp? any_integer, 'z']
+let sizet = [%sedlex.regexp? any_integer, "sz"]
 
 let floatp     = [%sedlex.regexp? Plus digit, '.', Star digit]
 let floate     = [%sedlex.regexp? Plus digit, Opt ('.', Star digit), Chars "eE", Opt (Chars "+-"), Plus digit]
@@ -512,6 +513,7 @@ match%sedlex lexbuf with
  | int32 -> INT32 (clean_number (L.lexeme lexbuf), false)
  | uint64 -> UINT64 (clean_number (L.lexeme lexbuf))
  | int64 -> INT64 (clean_number (L.lexeme lexbuf), false)
+ | sizet -> SIZET (clean_number (L.lexeme lexbuf))
  | range -> RANGE (L.lexeme lexbuf)
  | real -> REAL(trim_right lexbuf 1)
  | (ieee64 | xieee64) -> IEEE64 (float_of_string (L.lexeme lexbuf))
