@@ -590,6 +590,28 @@ let rec map (#a #b:Type) (f:a -> result b) (l:list a) : result (list b) =
     let! tl = map f tl in
     return (hd::tl)
 
+let rec map2 (#a #b #c:Type) (f:a -> b -> result c) (l1:list a) (l2:list b) : result (list c) =
+  match l1, l2 with
+  | [], [] -> return []
+  | hd1::tl1, hd2::tl2 ->
+    let! hd = f hd1 hd2 in
+    let! tl = map2 f tl1 tl2 in
+    return (hd::tl)
+
+let rec fold (#a #b:Type) (f:a -> b -> result a) (x:a) (l:list b) : result a =
+  match l with
+  | [] -> return x
+  | hd::tl ->
+    let! x = f x hd in
+    fold f x tl
+
+let rec fold2 (#a #b #c:Type) (f:a -> b -> c -> result a) (x:a) (l1:list b) (l2:list c) : result a =
+  match l1, l2 with
+  | [], [] -> return x
+  | hd1::tl1, hd2::tl2 ->
+    let! x = f x hd1 hd2 in
+    fold2 f x tl1 tl2
+
 let rec iter2 (xs ys:list 'a) (f: 'a -> 'a -> 'b -> result 'b) (b:'b)
   : result 'b
   = match xs, ys with
@@ -1313,56 +1335,43 @@ and check' (g:env) (e:term)
              return et)
 
         | (p, None, b) :: rest ->
-          let g', (p, _, b) = open_branch g (p, None, b) in
-          match PatternUtils.raw_pat_as_exp g.tcenv p with
-          | None ->
-            fail "Ill-formed pattern"
+          let _, (p, _, b) = open_branch g (p, None, b) in
+          let! bvs = no_guard (check_pat g p t_sc) in
+          let bs = List.map S.mk_binder bvs in
+          let! us = no_guard (check_binders g bs) in
+          let pat_sc_eq =
+            U.mk_eq2 u_sc t_sc sc
+            (PatternUtils.raw_pat_as_exp g.tcenv p |> must |> fst) in
+          let this_path_condition = U.mk_conj path_condition pat_sc_eq in
+          let g' = List.fold_left push_binder g bs in
+          let g' = push_hypothesis g' this_path_condition in
+          let! eff_br, tbr =
+            with_binders bs us
+              (weaken
+                 this_path_condition
+                 (let! eff_br, tbr = with_context "branch" (Some (CtxTerm b)) (fun _ -> check "branch" g' b) in
+                  match branch_typ_opt with
+                  | None ->
+                    check_no_escape bs tbr;!
+                    return (eff_br, tbr)
 
-          | Some (e, bvs) ->
-            let bs = List.map S.mk_binder bvs in
-            let! us = check_binders g bs in
-            let msg = 
-              BU.format2 "Checking pattern term %s in a conetxt with pattern binders %s\n"
-                      (P.term_to_string e)
-                      (P.binders_to_string ", " bs) in
-            let! eff_pat, t = check msg g' e in
-            if Env.debug g.tcenv <| Options.Other "Core"
-            then BU.print2 "Checking scrutinee and pattern type compatibility: %s and %s\n"
-                   (P.term_to_string t_sc)
-                   (P.term_to_string t);
-            with_context "Pattern and scrutinee type compatibility" None
-                          (fun _ -> no_guard (check_scrutinee_pattern_type_compatible g' t_sc t)) ;!
-            let pat_sc_eq = U.mk_eq2 u_sc t_sc sc e in
-            let this_path_condition = U.mk_conj path_condition pat_sc_eq in
-            let g' = push_hypothesis g' this_path_condition in
-            let! eff_br, tbr =
-              with_binders bs us
-                (weaken
-                  this_path_condition
-                  (let! eff_br, tbr = with_context "branch" (Some (CtxTerm b)) (fun _ -> check "branch" g' b) in
-                   match branch_typ_opt with
-                   | None ->
-                     check_no_escape bs tbr;!
-                     return (eff_br, tbr)
+                  | Some (acc_eff, expect_tbr) ->
+                    with_context "check_branch_subtype" (Some (CtxRel tbr (SUBTYPING (Some b)) expect_tbr))
+                      (fun _ -> check_subtype g' (Some b) tbr expect_tbr) ;!
+                    return (join_eff eff_br acc_eff, expect_tbr))) in
+          let path_condition =
+            U.mk_conj path_condition
+                      (mk_forall_l us bs (U.mk_neg pat_sc_eq)) in
+          match p.v with
+          | Pat_var _
+          | Pat_wild _ ->
+            //trivially exhaustive
+            (match rest with
+             | _ :: _ -> fail "Redundant branches after wildcard"
+             | _ -> return (eff_br, tbr))
 
-                   | Some (acc_eff, expect_tbr) ->
-                     with_context "check_branch_subtype" (Some (CtxRel tbr (SUBTYPING (Some b)) expect_tbr))
-                       (fun _ -> check_subtype g' (Some b) tbr expect_tbr) ;!
-                     return (join_eff eff_br acc_eff, expect_tbr))) in
-            let path_condition =
-              U.mk_conj path_condition
-                        (mk_forall_l us bs (U.mk_neg pat_sc_eq))
-            in
-            match p.v with
-            | Pat_var _
-            | Pat_wild _ ->
-              //trivially exhaustive
-              (match rest with
-               | _ :: _ -> fail "Redundant branches after wildcard"
-               | _ -> return (eff_br, tbr))
-
-            | _ ->
-              check_branches path_condition (Some (eff_br, tbr)) rest
+          | _ ->
+            check_branches path_condition (Some (eff_br, tbr)) rest
     in
 
     let! branch_typ_opt =
@@ -1402,50 +1411,44 @@ and check' (g:env) (e:term)
           return acc_eff
 
         | (p, None, b) :: rest ->
-          let g', (p, _, b) = open_branch g (p, None, b) in
-          match PatternUtils.raw_pat_as_exp g.tcenv p with
-          | None ->
-            fail "Ill-formed pattern"
+          let _, (p, _, b) = open_branch g (p, None, b) in
+          let! bvs = no_guard (check_pat g p t_sc) in
+          let bs = List.map S.mk_binder bvs in
+          let! us = no_guard (check_binders g bs) in
+          let pat_sc_eq =
+            U.mk_eq2 u_sc t_sc sc
+            (PatternUtils.raw_pat_as_exp g.tcenv p |> must |> fst) in
+          let this_path_condition = U.mk_conj path_condition pat_sc_eq in
+          let g' = List.fold_left push_binder g bs in
+          let g' = push_hypothesis g' this_path_condition in 
+          let! eff_br, tbr =
+            with_binders bs us
+              (weaken
+                 this_path_condition
+                 (let! eff_br, tbr = check "branch" g' b in
+                  let expect_tbr = Subst.subst [NT(as_x.binder_bv, e)] returns_ty in
+                  let rel =
+                    if eq
+                    then EQUALITY
+                    else SUBTYPING (Some b)
+                  in
+                  check_relation g' rel tbr expect_tbr;!
+                  return (join_eff eff_br acc_eff, expect_tbr))) in
+          let path_condition =
+            U.mk_conj path_condition
+                      (mk_forall_l us bs (U.mk_neg pat_sc_eq))
+          in
+          match p.v with
+          | Pat_var _
+          | Pat_wild _ ->
+            //trivially exhaustive
+            (match rest with
+             | _ :: _ -> fail "Redundant branches after wildcard"
+             | _ -> return eff_br)
 
-          | Some (e, bvs) ->
-            let bs = List.map S.mk_binder bvs in
-            let! us = check_binders g bs in
-            let! eff_pat, t = check "pattern term" g' e in
-            // TODO: use pattern scrutinee type compatibility function
-            with_context "Pattern and scrutinee type compatibility"
-                         None
-                          (fun _ -> no_guard (check_subtype g' (Some e) t_sc t)) ;!
-            let pat_sc_eq = U.mk_eq2 u_sc t_sc sc e in
-            let this_path_condition = U.mk_conj path_condition pat_sc_eq in
-            let g' = push_hypothesis g' this_path_condition in 
-            let! eff_br, tbr =
-              with_binders bs us
-                (weaken
-                  this_path_condition
-                  (let! eff_br, tbr = check "branch" g' b in
-                   let expect_tbr = Subst.subst [NT(as_x.binder_bv, e)] returns_ty in
-                   let rel =
-                     if eq
-                     then EQUALITY
-                     else SUBTYPING (Some b)
-                   in
-                   check_relation g' rel tbr expect_tbr;!
-                   return (join_eff eff_br acc_eff, expect_tbr))) in
-            let path_condition =
-              U.mk_conj path_condition
-                        (mk_forall_l us bs (U.mk_neg pat_sc_eq))
-            in
-            match p.v with
-            | Pat_var _
-            | Pat_wild _ ->
-              //trivially exhaustive
-              (match rest with
-               | _ :: _ -> fail "Redundant branches after wildcard"
-               | _ -> return eff_br)
+          | _ ->
+            check_branches path_condition rest eff_br in
 
-            | _ ->
-              check_branches path_condition rest eff_br
-    in
     let! eff = check_branches U.t_true branches E_TOTAL in
     let ty = Subst.subst [NT(as_x.binder_bv, sc)] returns_ty in
     return (eff, ty)
@@ -1511,6 +1514,94 @@ and universe_of (g:env) (t:typ)
   : result universe
   = let! _, t = check "universe of" g t in
     is_type g t
+
+and check_simple_pat (g:env) (p:pat) (t_sc:typ) : result (list bv) =
+  let t_sc = t_sc |> N.normalize_refinement N.whnf_steps g.tcenv
+                  |> U.unrefine in
+
+  match p.v with
+  | Pat_constant c ->
+    let e =
+      match c with
+      | FStar.Const.Const_int(repr, Some sw) ->
+        FStar.ToSyntax.ToSyntax.desugar_machine_integer g.tcenv.dsenv repr sw p.p
+      | _ ->
+        mk (Tm_constant c) p.p in
+    let! _, t_const = check "pat_const" g e in
+    let! _ = check_subtype g (Some e) t_const t_sc in
+    return []
+
+  | Pat_var bv
+  | Pat_wild bv -> return [{bv with sort=t_sc}]
+
+  | Pat_cons (fv, usopt, pats) ->
+    let us = if is_none usopt then [] else usopt |> must in
+
+    let formals, t_pat =
+      Env.lookup_and_inst_datacon g.tcenv us (S.lid_of_fv fv)
+      |> U.arrow_formals in
+
+    let pat_dots, pat_vars =
+      let pats = pats |> List.map fst in
+      pats |> BU.prefix_until (fun p -> match p.v with
+                                    | Pat_var _ -> true
+                                    | Pat_dot_term _ -> false
+                                    | _ -> failwith "Impossible!")
+           |> BU.map_option (fun (pat_dots, pat_var, pat_vars) ->
+                            pat_dots, (pat_var::pat_vars))
+           |> BU.dflt (pats, []) in
+
+     let formals_dots, formals_vars = List.splitAt (List.length pat_dots) formals in
+
+     let! ss = fold2 (fun ss f p ->
+       let expected_t = Subst.subst ss f.binder_bv.sort in
+       let pat_dot_t =
+         match p.v with
+         | Pat_dot_term (Some t) -> t
+         | _ -> failwith "Impossible!" in
+
+       let! _, p_t = check "pat dot term" g pat_dot_t in
+       let!_ = check_subtype g (Some pat_dot_t) p_t expected_t in
+
+       return (ss@[NT (f.binder_bv, pat_dot_t)])) [] formals_dots pat_dots in
+
+     let! ss, bvs = fold2 (fun (ss, bvs) f p ->
+       let expected_t = Subst.subst ss f.binder_bv.sort in
+       let! [bv] = check_simple_pat g p expected_t in
+       return (ss@[NT (f.binder_bv, S.bv_to_name bv)],
+               bvs@[bv])) (ss, []) formals_vars pat_vars in
+
+     let t_pat = Subst.subst ss t_pat in
+
+     let!_ = no_guard (check_scrutinee_pattern_type_compatible g t_sc t_pat) in
+
+     return bvs
+  
+  | _ -> failwith "Impossible!"  
+
+
+and check_pat (g:env) (p:pat) (t_sc:typ) : result (list bv) =
+  match p.v with
+  | Pat_constant _
+  | Pat_var _
+  | Pat_wild _ -> check_simple_pat g p t_sc
+
+  | Pat_cons (fv, usopt, pats) ->
+    let sub_pats, pats =
+      List.fold_left (fun (sub_pats, pats) p ->
+        match p.v with
+        | Pat_dot_term _ -> sub_pats, pats@[p]
+        | _ ->
+          let pat = S.withinfo (Pat_var (S.new_bv (Some p.p) S.tun)) p.p in
+          sub_pats@[p], pats@[pat]) ([], []) (pats |> List.map fst) in
+
+    let! bvs = check_simple_pat g
+      {p with v=Pat_cons (fv, usopt, List.map (fun p -> p, false) pats)}
+      t_sc in
+
+    let! ll = map2 (fun p bv -> check_pat g p bv.sort) sub_pats bvs in
+
+    List.flatten ll |> return
 
 and check_scrutinee_pattern_type_compatible (g:env) (t_sc t_pat:typ)
   : result precondition
