@@ -8416,7 +8416,7 @@ let (elim_uvars_aux_tc :
           | (univ_names1, t1) ->
               let t2 = remove_uvar_solutions env1 t1 in
               let t3 = FStar_Syntax_Subst.close_univ_vars univ_names1 t2 in
-              let t4 = FStar_Syntax_Subst.deep_compress t3 in
+              let t4 = FStar_Syntax_Subst.deep_compress false t3 in
               let uu___1 =
                 match binders with
                 | [] -> ([], (FStar_Pervasives.Inl t4))
@@ -8589,7 +8589,7 @@ let rec (elim_uvars :
                               let uu___3 = FStar_Syntax_Subst.subst opening t in
                               remove_uvar_solutions env1 uu___3 in
                             FStar_Syntax_Subst.close_univ_vars lbunivs uu___2 in
-                          FStar_Syntax_Subst.deep_compress uu___1 in
+                          FStar_Syntax_Subst.deep_compress false uu___1 in
                         let lbtyp = elim lb.FStar_Syntax_Syntax.lbtyp in
                         let lbdef = elim lb.FStar_Syntax_Syntax.lbdef in
                         {
