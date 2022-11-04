@@ -2509,8 +2509,11 @@ and (translate_expr : env -> FStar_Extraction_ML_Syntax.mlexpr -> expr) =
                                          FStar_Extraction_ML_Syntax.loc =
                                            uu___7;_}::[])
           when
-          let uu___8 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
-          uu___8 = "Steel.ST.Util.with_invariant" -> translate_expr env1 body
+          (let uu___8 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
+           uu___8 = "Steel.ST.Util.with_invariant") ||
+            (let uu___8 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
+             uu___8 = "Steel.Effect.Atomic.with_invariant")
+          -> translate_expr env1 body
       | FStar_Extraction_ML_Syntax.MLE_App
           ({
              FStar_Extraction_ML_Syntax.expr =
