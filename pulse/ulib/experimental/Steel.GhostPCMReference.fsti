@@ -134,7 +134,7 @@ val witness (#o:inames)
             (r:ref a pcm)
             (fact:Steel.Preorder.stable_property pcm)
             (v:a)
-            (_:Steel.Preorder.fact_valid_compat fact v)
+            (_:squash (Steel.Preorder.fact_valid_compat fact v))
   : SteelGhost unit o
       (pts_to r v)
       (fun _ -> pts_to r v)
