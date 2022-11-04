@@ -310,7 +310,7 @@ let variable_not_found v =
   (Errors.Fatal_VariableNotFound, (format1 "Variable \"%s\" not found" (Print.bv_to_string v)))
 
 //Construct a new universe unification variable
-let new_u_univ () = U_unif (Unionfind.univ_fresh Range.dummyRange)
+let new_u_univ () = U_unif (UF.univ_fresh Range.dummyRange)
 
 let mk_univ_subst (formals : list univ_name) (us : universes) : list subst_elt =
     assert (List.length us = List.length formals);
