@@ -1365,7 +1365,8 @@ let mk_and e1 e2 =
 let mk_and_l l = match l with
     | [] -> exp_true_bool
     | hd::tl -> List.fold_left mk_and hd tl
-
+let mk_boolean_negation b = 
+  mk (Tm_app(fvar_const PC.op_Negation, [as_arg b])) b.pos
 let mk_residual_comp l t f = {
     residual_effect=l;
     residual_typ=t;
