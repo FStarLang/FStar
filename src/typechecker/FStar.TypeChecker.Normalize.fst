@@ -3418,23 +3418,38 @@ let get_n_binders (env:Env.env) (n:int) (t:term) : list binder * comp =
   in
   aux true n t
 
-let maybe_unfold_head (env:Env.env) (t:term)
-  : option term 
-  = let head, args = U.leftmost_head_and_args t in
-    let fv_us_opt =
+let maybe_unfold_head_fv (env:Env.env) (head:term)
+  : option term
+  = let fv_us_opt =
       match (SS.compress head).n with
       | Tm_uinst ({n=Tm_fvar fv}, us) -> Some (fv, us)
       | Tm_fvar fv -> Some (fv, [])
-      | _ -> None
+      | _ -> failwith "Impossible: maybe_unfold_head_fv is called with a non fvar/uinst"
     in
     match fv_us_opt with
     | None -> None
     | Some (fv, us) ->
-      match Env.lookup_definition [Unfold delta_constant] env fv.fv_name.v with
+      match Env.lookup_nonrec_definition [Unfold delta_constant] env fv.fv_name.v with
       | None -> None
       | Some (us_formals, defn) ->
         let subst = mk_univ_subst us_formals us in
-        let defn = SS.subst subst defn in
-        let term = S.mk_Tm_app defn args t.pos in
-        Some (normalize [Beta;Iota;Weak;HNF] env term)
-        
+        SS.subst subst defn |> Some
+
+let rec maybe_unfold_aux (env:Env.env) (t:term) : option term =
+  match (SS.compress t).n with
+  | Tm_match (t0, ret_opt, brs, rc_opt) ->
+    BU.map_option
+      (fun t0 -> S.mk (Tm_match (t0, ret_opt, brs, rc_opt)) t.pos)
+      (maybe_unfold_aux env t0)
+  | Tm_fvar _
+  | Tm_uinst _ -> maybe_unfold_head_fv env t
+  | _ ->
+    let head, args = U.leftmost_head_and_args t in
+    match maybe_unfold_aux env head with
+    | None -> None
+    | Some head -> S.mk_Tm_app head args t.pos |> Some
+
+let maybe_unfold_head (env:Env.env) (t:term) : option term =
+  BU.map_option
+    (normalize [Beta;Iota;Weak;HNF] env)
+    (maybe_unfold_aux env t)

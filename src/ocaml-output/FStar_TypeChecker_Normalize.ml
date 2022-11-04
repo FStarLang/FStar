@@ -9025,6 +9025,79 @@ let (get_n_binders :
                     | (bs', c') -> ((FStar_Compiler_List.op_At bs1 bs'), c'))
                | (bs1, c1) -> (bs1, c1)) in
         aux true n t
+let (maybe_unfold_head_fv :
+  FStar_TypeChecker_Env.env ->
+    FStar_Syntax_Syntax.term ->
+      FStar_Syntax_Syntax.term FStar_Pervasives_Native.option)
+  =
+  fun env1 ->
+    fun head ->
+      let fv_us_opt =
+        let uu___ =
+          let uu___1 = FStar_Syntax_Subst.compress head in
+          uu___1.FStar_Syntax_Syntax.n in
+        match uu___ with
+        | FStar_Syntax_Syntax.Tm_uinst
+            ({ FStar_Syntax_Syntax.n = FStar_Syntax_Syntax.Tm_fvar fv;
+               FStar_Syntax_Syntax.pos = uu___1;
+               FStar_Syntax_Syntax.vars = uu___2;
+               FStar_Syntax_Syntax.hash_code = uu___3;_},
+             us)
+            -> FStar_Pervasives_Native.Some (fv, us)
+        | FStar_Syntax_Syntax.Tm_fvar fv ->
+            FStar_Pervasives_Native.Some (fv, [])
+        | uu___1 ->
+            failwith
+              "Impossible: maybe_unfold_head_fv is called with a non fvar/uinst" in
+      match fv_us_opt with
+      | FStar_Pervasives_Native.None -> FStar_Pervasives_Native.None
+      | FStar_Pervasives_Native.Some (fv, us) ->
+          let uu___ =
+            FStar_TypeChecker_Env.lookup_nonrec_definition
+              [FStar_TypeChecker_Env.Unfold
+                 FStar_Syntax_Syntax.delta_constant] env1
+              (fv.FStar_Syntax_Syntax.fv_name).FStar_Syntax_Syntax.v in
+          (match uu___ with
+           | FStar_Pervasives_Native.None -> FStar_Pervasives_Native.None
+           | FStar_Pervasives_Native.Some (us_formals, defn) ->
+               let subst = FStar_TypeChecker_Env.mk_univ_subst us_formals us in
+               let uu___1 = FStar_Syntax_Subst.subst subst defn in
+               FStar_Compiler_Effect.op_Bar_Greater uu___1
+                 (fun uu___2 -> FStar_Pervasives_Native.Some uu___2))
+let rec (maybe_unfold_aux :
+  FStar_TypeChecker_Env.env ->
+    FStar_Syntax_Syntax.term ->
+      FStar_Syntax_Syntax.term FStar_Pervasives_Native.option)
+  =
+  fun env1 ->
+    fun t ->
+      let uu___ =
+        let uu___1 = FStar_Syntax_Subst.compress t in
+        uu___1.FStar_Syntax_Syntax.n in
+      match uu___ with
+      | FStar_Syntax_Syntax.Tm_match (t0, ret_opt, brs, rc_opt) ->
+          let uu___1 = maybe_unfold_aux env1 t0 in
+          FStar_Compiler_Util.map_option
+            (fun t01 ->
+               FStar_Syntax_Syntax.mk
+                 (FStar_Syntax_Syntax.Tm_match (t01, ret_opt, brs, rc_opt))
+                 t.FStar_Syntax_Syntax.pos) uu___1
+      | FStar_Syntax_Syntax.Tm_fvar uu___1 -> maybe_unfold_head_fv env1 t
+      | FStar_Syntax_Syntax.Tm_uinst uu___1 -> maybe_unfold_head_fv env1 t
+      | uu___1 ->
+          let uu___2 = FStar_Syntax_Util.leftmost_head_and_args t in
+          (match uu___2 with
+           | (head, args) ->
+               let uu___3 = maybe_unfold_aux env1 head in
+               (match uu___3 with
+                | FStar_Pervasives_Native.None ->
+                    FStar_Pervasives_Native.None
+                | FStar_Pervasives_Native.Some head1 ->
+                    let uu___4 =
+                      FStar_Syntax_Syntax.mk_Tm_app head1 args
+                        t.FStar_Syntax_Syntax.pos in
+                    FStar_Compiler_Effect.op_Bar_Greater uu___4
+                      (fun uu___5 -> FStar_Pervasives_Native.Some uu___5)))
 let (maybe_unfold_head :
   FStar_TypeChecker_Env.env ->
     FStar_Syntax_Syntax.term ->
@@ -9032,46 +9105,10 @@ let (maybe_unfold_head :
   =
   fun env1 ->
     fun t ->
-      let uu___ = FStar_Syntax_Util.leftmost_head_and_args t in
-      match uu___ with
-      | (head, args) ->
-          let fv_us_opt =
-            let uu___1 =
-              let uu___2 = FStar_Syntax_Subst.compress head in
-              uu___2.FStar_Syntax_Syntax.n in
-            match uu___1 with
-            | FStar_Syntax_Syntax.Tm_uinst
-                ({ FStar_Syntax_Syntax.n = FStar_Syntax_Syntax.Tm_fvar fv;
-                   FStar_Syntax_Syntax.pos = uu___2;
-                   FStar_Syntax_Syntax.vars = uu___3;
-                   FStar_Syntax_Syntax.hash_code = uu___4;_},
-                 us)
-                -> FStar_Pervasives_Native.Some (fv, us)
-            | FStar_Syntax_Syntax.Tm_fvar fv ->
-                FStar_Pervasives_Native.Some (fv, [])
-            | uu___2 -> FStar_Pervasives_Native.None in
-          (match fv_us_opt with
-           | FStar_Pervasives_Native.None -> FStar_Pervasives_Native.None
-           | FStar_Pervasives_Native.Some (fv, us) ->
-               let uu___1 =
-                 FStar_TypeChecker_Env.lookup_definition
-                   [FStar_TypeChecker_Env.Unfold
-                      FStar_Syntax_Syntax.delta_constant] env1
-                   (fv.FStar_Syntax_Syntax.fv_name).FStar_Syntax_Syntax.v in
-               (match uu___1 with
-                | FStar_Pervasives_Native.None ->
-                    FStar_Pervasives_Native.None
-                | FStar_Pervasives_Native.Some (us_formals, defn) ->
-                    let subst =
-                      FStar_TypeChecker_Env.mk_univ_subst us_formals us in
-                    let defn1 = FStar_Syntax_Subst.subst subst defn in
-                    let term =
-                      FStar_Syntax_Syntax.mk_Tm_app defn1 args
-                        t.FStar_Syntax_Syntax.pos in
-                    let uu___2 =
-                      normalize
-                        [FStar_TypeChecker_Env.Beta;
-                        FStar_TypeChecker_Env.Iota;
-                        FStar_TypeChecker_Env.Weak;
-                        FStar_TypeChecker_Env.HNF] env1 term in
-                    FStar_Pervasives_Native.Some uu___2))
+      let uu___ = maybe_unfold_aux env1 t in
+      FStar_Compiler_Util.map_option
+        (normalize
+           [FStar_TypeChecker_Env.Beta;
+           FStar_TypeChecker_Env.Iota;
+           FStar_TypeChecker_Env.Weak;
+           FStar_TypeChecker_Env.HNF] env1) uu___
