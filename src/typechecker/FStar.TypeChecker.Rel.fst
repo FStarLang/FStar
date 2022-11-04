@@ -1783,7 +1783,7 @@ let simplify_guard env g = match g.guard_f with
           | _ -> g
         in
         match g.n with
-        | Tm_fvar fv when S.fv_eq_lid fv Const.true_lid -> Trivial
+        | Tm_fvar fv when S.fv_eq_lid fv PC.true_lid -> Trivial
         | _ -> NonTrivial f
       in
       {g with guard_f=f}
