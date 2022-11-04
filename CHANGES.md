@@ -230,6 +230,10 @@ Guidelines for the changelog:
      provided (using UInt128).
 
 ## Syntax
+    
+   * PR #2745 adds support for `if` operators: the syntax `if* a then
+     ...` (with `*` an operator) is now accepted and desugared as
+     `let* [c] = a in if [c] then ...`.
 
    * PR #2671 allows operators as field names in record expressions
      and record type declaration. Example:
