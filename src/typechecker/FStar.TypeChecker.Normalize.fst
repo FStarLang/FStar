@@ -636,7 +636,13 @@ let reduce_primops norm_cb cfg env tm =
     then tm
     else begin
          let head, args = U.head_and_args tm in
-         match (U.un_uinst head).n with
+         let head_term, universes = 
+           let head = SS.compress head in
+           match head.n with
+           | Tm_uinst(fv, us) -> fv, us
+           | _ -> head, []
+         in
+         match head_term.n with
          | Tm_fvar fv -> begin
            match find_prim_step cfg fv with
            | Some prim_step when prim_step.strong_reduction_ok || not cfg.strong ->
@@ -662,11 +668,11 @@ let reduce_primops norm_cb cfg env tm =
                   } in
                   let r =
                       if false
-                      then begin let (r, ms) = BU.record_time (fun () -> prim_step.interpretation psc norm_cb args_1) in
+                      then begin let (r, ms) = BU.record_time (fun () -> prim_step.interpretation psc norm_cb universes args_1) in
                                  primop_time_count (Ident.string_of_lid fv.fv_name.v) ms;
                                  r
                            end
-                      else prim_step.interpretation psc norm_cb args_1
+                      else prim_step.interpretation psc norm_cb universes args_1
                   in
                   match r with
                   | None ->
