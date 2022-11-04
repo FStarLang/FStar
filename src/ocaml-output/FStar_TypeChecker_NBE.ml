@@ -1722,37 +1722,80 @@ and (translate_fv :
                                    FStar_TypeChecker_NBETerm.translate =
                                      (translate cfg bs)
                                  } in
-                               let uu___9 =
-                                 prim_step.FStar_TypeChecker_Cfg.interpretation_nbe
-                                   callbacks args' in
-                               match uu___9 with
-                               | FStar_Pervasives_Native.Some x ->
-                                   (debug1
-                                      (fun uu___11 ->
-                                         let uu___12 =
-                                           FStar_Syntax_Print.fv_to_string
-                                             fvar in
-                                         let uu___13 =
-                                           FStar_TypeChecker_NBETerm.t_to_string
-                                             x in
-                                         FStar_Compiler_Util.print2
-                                           "Primitive operator %s returned %s\n"
-                                           uu___12 uu___13);
-                                    x)
-                               | FStar_Pervasives_Native.None ->
-                                   (debug1
-                                      (fun uu___11 ->
-                                         let uu___12 =
-                                           FStar_Syntax_Print.fv_to_string
-                                             fvar in
-                                         FStar_Compiler_Util.print1
-                                           "Primitive operator %s failed\n"
-                                           uu___12);
-                                    (let uu___11 =
-                                       FStar_TypeChecker_NBETerm.mkFV fvar []
-                                         [] in
-                                     iapp cfg uu___11 args'))), uu___8,
-                             arity) in
+                               debug1
+                                 (fun uu___10 ->
+                                    let uu___11 =
+                                      let uu___12 =
+                                        FStar_Compiler_List.map
+                                          (fun uu___13 ->
+                                             match uu___13 with
+                                             | (x, uu___14) ->
+                                                 FStar_TypeChecker_NBETerm.t_to_string
+                                                   x) args' in
+                                      FStar_Compiler_Effect.op_Bar_Greater
+                                        uu___12 (FStar_String.concat "; ") in
+                                    FStar_Compiler_Util.print1
+                                      "Caling primop with args = [%s]\n"
+                                      uu___11);
+                               (let uu___10 =
+                                  FStar_Compiler_List.span
+                                    (fun uu___11 ->
+                                       match uu___11 with
+                                       | ({
+                                            FStar_TypeChecker_NBETerm.nbe_t =
+                                              FStar_TypeChecker_NBETerm.Univ
+                                              uu___12;
+                                            FStar_TypeChecker_NBETerm.nbe_r =
+                                              uu___13;_},
+                                          uu___14) -> true
+                                       | uu___12 -> false) args' in
+                                match uu___10 with
+                                | (univs, rest) ->
+                                    let univs1 =
+                                      FStar_Compiler_List.map
+                                        (fun uu___11 ->
+                                           match uu___11 with
+                                           | ({
+                                                FStar_TypeChecker_NBETerm.nbe_t
+                                                  =
+                                                  FStar_TypeChecker_NBETerm.Univ
+                                                  u;
+                                                FStar_TypeChecker_NBETerm.nbe_r
+                                                  = uu___12;_},
+                                              uu___13) -> u
+                                           | uu___12 -> failwith "Impossible")
+                                        univs in
+                                    let uu___11 =
+                                      prim_step.FStar_TypeChecker_Cfg.interpretation_nbe
+                                        callbacks univs1 rest in
+                                    (match uu___11 with
+                                     | FStar_Pervasives_Native.Some x ->
+                                         (debug1
+                                            (fun uu___13 ->
+                                               let uu___14 =
+                                                 FStar_Syntax_Print.fv_to_string
+                                                   fvar in
+                                               let uu___15 =
+                                                 FStar_TypeChecker_NBETerm.t_to_string
+                                                   x in
+                                               FStar_Compiler_Util.print2
+                                                 "Primitive operator %s returned %s\n"
+                                                 uu___14 uu___15);
+                                          x)
+                                     | FStar_Pervasives_Native.None ->
+                                         (debug1
+                                            (fun uu___13 ->
+                                               let uu___14 =
+                                                 FStar_Syntax_Print.fv_to_string
+                                                   fvar in
+                                               FStar_Compiler_Util.print1
+                                                 "Primitive operator %s failed\n"
+                                                 uu___14);
+                                          (let uu___13 =
+                                             FStar_TypeChecker_NBETerm.mkFV
+                                               fvar [] [] in
+                                           iapp cfg uu___13 args'))))),
+                             uu___8, arity) in
                          FStar_TypeChecker_NBETerm.Lam uu___7 in
                        FStar_Compiler_Effect.op_Less_Bar mk_t uu___6))
                  | FStar_Pervasives_Native.Some uu___5 ->
