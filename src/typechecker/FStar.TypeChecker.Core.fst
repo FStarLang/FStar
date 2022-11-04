@@ -35,6 +35,9 @@ let push_binder g b =
   then failwith "Assertion failed: unexpected shadowing in the core environment"
   else { g with tcenv = Env.push_binders g.tcenv [b]; max_binder_index = b.binder_bv.index }
 
+let push_binders g bs =
+  List.fold_left push_binder g bs
+
 let fresh_binder (g:env) (old:binder)
   : env & binder
   = let ctr = g.max_binder_index + 1 in
@@ -1515,7 +1518,7 @@ and universe_of (g:env) (t:typ)
   = let! _, t = check "universe of" g t in
     is_type g t
 
-and check_simple_pat (g:env) (p:pat) (t_sc:typ) : result (list bv) =
+and check_pat (g:env) (p:pat) (t_sc:typ) : result (list bv) =
   let t_sc = t_sc |> N.normalize_refinement N.whnf_steps g.tcenv
                   |> U.unrefine in
 
@@ -1541,67 +1544,46 @@ and check_simple_pat (g:env) (p:pat) (t_sc:typ) : result (list bv) =
       Env.lookup_and_inst_datacon g.tcenv us (S.lid_of_fv fv)
       |> U.arrow_formals in
 
-    let pat_dots, pat_vars =
+    let dot_pats, rest_pats =
       let pats = pats |> List.map fst in
       pats |> BU.prefix_until (fun p -> match p.v with
-                                    | Pat_var _ -> true
                                     | Pat_dot_term _ -> false
-                                    | _ -> failwith "Impossible!")
-           |> BU.map_option (fun (pat_dots, pat_var, pat_vars) ->
-                            pat_dots, (pat_var::pat_vars))
+                                    | _ -> true)
+           |> BU.map_option (fun (dot_pats, pat, rest_pats) ->
+                            dot_pats, (pat::rest_pats))
            |> BU.dflt (pats, []) in
 
-     let formals_dots, formals_vars = List.splitAt (List.length pat_dots) formals in
+    let dot_formals, rest_formals = List.splitAt (List.length dot_pats) formals in
 
-     let! ss = fold2 (fun ss f p ->
-       let expected_t = Subst.subst ss f.binder_bv.sort in
-       let pat_dot_t =
-         match p.v with
-         | Pat_dot_term (Some t) -> t
-         | _ -> failwith "Impossible!" in
-
-       let! _, p_t = check "pat dot term" g pat_dot_t in
-       let!_ = check_subtype g (Some pat_dot_t) p_t expected_t in
-
-       return (ss@[NT (f.binder_bv, pat_dot_t)])) [] formals_dots pat_dots in
-
-     let! ss, bvs = fold2 (fun (ss, bvs) f p ->
-       let expected_t = Subst.subst ss f.binder_bv.sort in
-       let! [bv] = check_simple_pat g p expected_t in
-       return (ss@[NT (f.binder_bv, S.bv_to_name bv)],
-               bvs@[bv])) (ss, []) formals_vars pat_vars in
-
-     let t_pat = Subst.subst ss t_pat in
-
-     let!_ = no_guard (check_scrutinee_pattern_type_compatible g t_sc t_pat) in
-
-     return bvs
-  
-  | _ -> failwith "Impossible!"  
-
-
-and check_pat (g:env) (p:pat) (t_sc:typ) : result (list bv) =
-  match p.v with
-  | Pat_constant _
-  | Pat_var _
-  | Pat_wild _ -> check_simple_pat g p t_sc
-
-  | Pat_cons (fv, usopt, pats) ->
-    let sub_pats, pats =
-      List.fold_left (fun (sub_pats, pats) p ->
+    let! ss = fold2 (fun ss {binder_bv=f} p ->
+      let expected_t = Subst.subst ss f.sort in
+      let! pat_dot_t =
         match p.v with
-        | Pat_dot_term _ -> sub_pats, pats@[p]
-        | _ ->
-          let pat = S.withinfo (Pat_var (S.new_bv (Some p.p) S.tun)) p.p in
-          sub_pats@[p], pats@[pat]) ([], []) (pats |> List.map fst) in
+        | Pat_dot_term (Some t) -> return t
+        | _ -> fail "check_pat in core has unset dot pattern" in
 
-    let! bvs = check_simple_pat g
-      {p with v=Pat_cons (fv, usopt, List.map (fun p -> p, false) pats)}
-      t_sc in
+      let! _, p_t = check "pat dot term" g pat_dot_t in
+      let!_ = check_subtype g (Some pat_dot_t) p_t expected_t in
 
-    let! ll = map2 (fun p bv -> check_pat g p bv.sort) sub_pats bvs in
+      return (ss@[NT (f, pat_dot_t)])) [] dot_formals dot_pats in
 
-    List.flatten ll |> return
+    let! ss, bvs = fold2 (fun (ss, bvs) {binder_bv=f} p ->
+      let expected_t = Subst.subst ss f.sort in
+      let! bvs_p = check_pat
+        (push_binders g (bvs |> List.map S.mk_binder))
+        p
+        expected_t in
+      let p_e = PatternUtils.raw_pat_as_exp g.tcenv p |> must |> fst in
+      return (ss@[NT (f, p_e)],
+              bvs@bvs_p)) (ss, []) rest_formals rest_pats in
+
+    let t_pat = Subst.subst ss t_pat in
+
+    let!_ = no_guard (check_scrutinee_pattern_type_compatible g t_sc t_pat) in
+
+    return bvs
+  
+  | _ -> fail "check_pat called with a dot pattern"
 
 and check_scrutinee_pattern_type_compatible (g:env) (t_sc t_pat:typ)
   : result precondition
