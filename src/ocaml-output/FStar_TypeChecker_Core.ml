@@ -62,6 +62,8 @@ let (push_binder : env -> FStar_Syntax_Syntax.binder -> env) =
            guard_handler = (g.guard_handler);
            should_read_cache = (g.should_read_cache)
          })
+let (push_binders : env -> FStar_Syntax_Syntax.binder Prims.list -> env) =
+  fun g -> fun bs -> FStar_Compiler_List.fold_left push_binder g bs
 let (fresh_binder :
   env -> FStar_Syntax_Syntax.binder -> (env * FStar_Syntax_Syntax.binder)) =
   fun g ->
@@ -3416,7 +3418,7 @@ and (universe_of :
       let uu___ = check "universe of" g t in
       op_let_Bang uu___
         (fun uu___1 -> match uu___1 with | (uu___2, t1) -> is_type g t1)
-and (check_simple_pat :
+and (check_pat :
   env ->
     FStar_Syntax_Syntax.pat ->
       FStar_Syntax_Syntax.typ -> FStar_Syntax_Syntax.bv Prims.list result)
@@ -3491,98 +3493,121 @@ and (check_simple_pat :
                          (FStar_Compiler_Util.prefix_until
                             (fun p1 ->
                                match p1.FStar_Syntax_Syntax.v with
-                               | FStar_Syntax_Syntax.Pat_var uu___4 -> true
                                | FStar_Syntax_Syntax.Pat_dot_term uu___4 ->
                                    false
-                               | uu___4 -> failwith "Impossible!")) in
+                               | uu___4 -> true)) in
                      FStar_Compiler_Effect.op_Bar_Greater uu___3
                        (FStar_Compiler_Util.map_option
                           (fun uu___4 ->
                              match uu___4 with
-                             | (pat_dots, pat_var, pat_vars) ->
-                                 (pat_dots, (pat_var :: pat_vars)))) in
+                             | (dot_pats, pat, rest_pats) ->
+                                 (dot_pats, (pat :: rest_pats)))) in
                    FStar_Compiler_Effect.op_Bar_Greater uu___2
                      (FStar_Compiler_Util.dflt (pats1, [])) in
                  (match uu___1 with
-                  | (pat_dots, pat_vars) ->
+                  | (dot_pats, rest_pats) ->
                       let uu___2 =
                         FStar_Compiler_List.splitAt
-                          (FStar_Compiler_List.length pat_dots) formals in
+                          (FStar_Compiler_List.length dot_pats) formals in
                       (match uu___2 with
-                       | (formals_dots, formals_vars) ->
+                       | (dot_formals, rest_formals) ->
                            let uu___3 =
                              fold2
                                (fun ss ->
-                                  fun f ->
+                                  fun uu___4 ->
                                     fun p1 ->
-                                      let expected_t =
-                                        FStar_Syntax_Subst.subst ss
-                                          (f.FStar_Syntax_Syntax.binder_bv).FStar_Syntax_Syntax.sort in
-                                      let pat_dot_t =
-                                        match p1.FStar_Syntax_Syntax.v with
-                                        | FStar_Syntax_Syntax.Pat_dot_term
-                                            (FStar_Pervasives_Native.Some t)
-                                            -> t
-                                        | uu___4 -> failwith "Impossible!" in
-                                      let uu___4 =
-                                        check "pat dot term" g pat_dot_t in
-                                      op_let_Bang uu___4
-                                        (fun uu___5 ->
-                                           match uu___5 with
-                                           | (uu___6, p_t) ->
-                                               op_let_Bang
-                                                 (check_subtype g
-                                                    (FStar_Pervasives_Native.Some
-                                                       pat_dot_t) p_t
-                                                    expected_t)
-                                                 (fun uu___7 ->
-                                                    return
-                                                      (FStar_List_Tot_Base.append
-                                                         ss
-                                                         [FStar_Syntax_Syntax.NT
-                                                            ((f.FStar_Syntax_Syntax.binder_bv),
-                                                              pat_dot_t)]))))
-                               [] formals_dots pat_dots in
+                                      match uu___4 with
+                                      | { FStar_Syntax_Syntax.binder_bv = f;
+                                          FStar_Syntax_Syntax.binder_qual =
+                                            uu___5;
+                                          FStar_Syntax_Syntax.binder_attrs =
+                                            uu___6;_}
+                                          ->
+                                          let expected_t =
+                                            FStar_Syntax_Subst.subst ss
+                                              f.FStar_Syntax_Syntax.sort in
+                                          let uu___7 =
+                                            match p1.FStar_Syntax_Syntax.v
+                                            with
+                                            | FStar_Syntax_Syntax.Pat_dot_term
+                                                (FStar_Pervasives_Native.Some
+                                                t) -> return t
+                                            | uu___8 ->
+                                                fail
+                                                  "check_pat in core has unset dot pattern" in
+                                          op_let_Bang uu___7
+                                            (fun pat_dot_t ->
+                                               let uu___8 =
+                                                 check "pat dot term" g
+                                                   pat_dot_t in
+                                               op_let_Bang uu___8
+                                                 (fun uu___9 ->
+                                                    match uu___9 with
+                                                    | (uu___10, p_t) ->
+                                                        op_let_Bang
+                                                          (check_subtype g
+                                                             (FStar_Pervasives_Native.Some
+                                                                pat_dot_t)
+                                                             p_t expected_t)
+                                                          (fun uu___11 ->
+                                                             return
+                                                               (FStar_List_Tot_Base.append
+                                                                  ss
+                                                                  [FStar_Syntax_Syntax.NT
+                                                                    (f,
+                                                                    pat_dot_t)])))))
+                               [] dot_formals dot_pats in
                            op_let_Bang uu___3
                              (fun ss ->
                                 let uu___4 =
                                   fold2
                                     (fun uu___5 ->
-                                       fun f ->
+                                       fun uu___6 ->
                                          fun p1 ->
-                                           match uu___5 with
-                                           | (ss1, bvs) ->
+                                           match (uu___5, uu___6) with
+                                           | ((ss1, bvs),
+                                              {
+                                                FStar_Syntax_Syntax.binder_bv
+                                                  = f;
+                                                FStar_Syntax_Syntax.binder_qual
+                                                  = uu___7;
+                                                FStar_Syntax_Syntax.binder_attrs
+                                                  = uu___8;_})
+                                               ->
                                                let expected_t =
                                                  FStar_Syntax_Subst.subst ss1
-                                                   (f.FStar_Syntax_Syntax.binder_bv).FStar_Syntax_Syntax.sort in
-                                               let uu___6 =
-                                                 check_simple_pat g p1
+                                                   f.FStar_Syntax_Syntax.sort in
+                                               let uu___9 =
+                                                 let uu___10 =
+                                                   let uu___11 =
+                                                     FStar_Compiler_Effect.op_Bar_Greater
+                                                       bvs
+                                                       (FStar_Compiler_List.map
+                                                          FStar_Syntax_Syntax.mk_binder) in
+                                                   push_binders g uu___11 in
+                                                 check_pat uu___10 p1
                                                    expected_t in
-                                               op_let_Bang uu___6
-                                                 (fun uu___7 ->
-                                                    match uu___7 with
-                                                    | bv::[] ->
-                                                        let uu___8 =
-                                                          let uu___9 =
-                                                            let uu___10 =
-                                                              let uu___11 =
-                                                                let uu___12 =
-                                                                  let uu___13
-                                                                    =
-                                                                    FStar_Syntax_Syntax.bv_to_name
-                                                                    bv in
-                                                                  ((f.FStar_Syntax_Syntax.binder_bv),
-                                                                    uu___13) in
-                                                                FStar_Syntax_Syntax.NT
-                                                                  uu___12 in
-                                                              [uu___11] in
-                                                            FStar_List_Tot_Base.append
-                                                              ss1 uu___10 in
-                                                          (uu___9,
-                                                            (FStar_List_Tot_Base.append
-                                                               bvs [bv])) in
-                                                        return uu___8))
-                                    (ss, []) formals_vars pat_vars in
+                                               op_let_Bang uu___9
+                                                 (fun bvs_p ->
+                                                    let p_e =
+                                                      let uu___10 =
+                                                        let uu___11 =
+                                                          FStar_TypeChecker_PatternUtils.raw_pat_as_exp
+                                                            g.tcenv p1 in
+                                                        FStar_Compiler_Effect.op_Bar_Greater
+                                                          uu___11
+                                                          FStar_Compiler_Util.must in
+                                                      FStar_Compiler_Effect.op_Bar_Greater
+                                                        uu___10
+                                                        FStar_Pervasives_Native.fst in
+                                                    return
+                                                      ((FStar_List_Tot_Base.append
+                                                          ss1
+                                                          [FStar_Syntax_Syntax.NT
+                                                             (f, p_e)]),
+                                                        (FStar_List_Tot_Base.append
+                                                           bvs bvs_p))))
+                                    (ss, []) rest_formals rest_pats in
                                 op_let_Bang uu___4
                                   (fun uu___5 ->
                                      match uu___5 with
@@ -3596,75 +3621,7 @@ and (check_simple_pat :
                                            no_guard uu___7 in
                                          op_let_Bang uu___6
                                            (fun uu___7 -> return bvs))))))
-        | uu___ -> failwith "Impossible!"
-and (check_pat :
-  env ->
-    FStar_Syntax_Syntax.pat ->
-      FStar_Syntax_Syntax.typ -> FStar_Syntax_Syntax.bv Prims.list result)
-  =
-  fun g ->
-    fun p ->
-      fun t_sc ->
-        match p.FStar_Syntax_Syntax.v with
-        | FStar_Syntax_Syntax.Pat_constant uu___ -> check_simple_pat g p t_sc
-        | FStar_Syntax_Syntax.Pat_var uu___ -> check_simple_pat g p t_sc
-        | FStar_Syntax_Syntax.Pat_wild uu___ -> check_simple_pat g p t_sc
-        | FStar_Syntax_Syntax.Pat_cons (fv, usopt, pats) ->
-            let uu___ =
-              let uu___1 =
-                FStar_Compiler_Effect.op_Bar_Greater pats
-                  (FStar_Compiler_List.map FStar_Pervasives_Native.fst) in
-              FStar_Compiler_List.fold_left
-                (fun uu___2 ->
-                   fun p1 ->
-                     match uu___2 with
-                     | (sub_pats, pats1) ->
-                         (match p1.FStar_Syntax_Syntax.v with
-                          | FStar_Syntax_Syntax.Pat_dot_term uu___3 ->
-                              (sub_pats,
-                                (FStar_List_Tot_Base.append pats1 [p1]))
-                          | uu___3 ->
-                              let pat =
-                                let uu___4 =
-                                  let uu___5 =
-                                    FStar_Syntax_Syntax.new_bv
-                                      (FStar_Pervasives_Native.Some
-                                         (p1.FStar_Syntax_Syntax.p))
-                                      FStar_Syntax_Syntax.tun in
-                                  FStar_Syntax_Syntax.Pat_var uu___5 in
-                                FStar_Syntax_Syntax.withinfo uu___4
-                                  p1.FStar_Syntax_Syntax.p in
-                              ((FStar_List_Tot_Base.append sub_pats [p1]),
-                                (FStar_List_Tot_Base.append pats1 [pat]))))
-                ([], []) uu___1 in
-            (match uu___ with
-             | (sub_pats, pats1) ->
-                 let uu___1 =
-                   let uu___2 =
-                     let uu___3 =
-                       let uu___4 =
-                         let uu___5 =
-                           FStar_Compiler_List.map (fun p1 -> (p1, false))
-                             pats1 in
-                         (fv, usopt, uu___5) in
-                       FStar_Syntax_Syntax.Pat_cons uu___4 in
-                     {
-                       FStar_Syntax_Syntax.v = uu___3;
-                       FStar_Syntax_Syntax.p = (p.FStar_Syntax_Syntax.p)
-                     } in
-                   check_simple_pat g uu___2 t_sc in
-                 op_let_Bang uu___1
-                   (fun bvs ->
-                      let uu___2 =
-                        map2
-                          (fun p1 ->
-                             fun bv ->
-                               check_pat g p1 bv.FStar_Syntax_Syntax.sort)
-                          sub_pats bvs in
-                      op_let_Bang uu___2
-                        (fun ll ->
-                           FStar_Compiler_Effect.op_Bar_Greater
-                             (FStar_Compiler_List.flatten ll) return)))
+        | uu___ -> fail "check_pat called with a dot pattern"
 and (check_scrutinee_pattern_type_compatible :
   env ->
     FStar_Syntax_Syntax.typ -> FStar_Syntax_Syntax.typ -> precondition result)
