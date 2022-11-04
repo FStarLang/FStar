@@ -47,7 +47,6 @@ let incr_goal_ctr () = let v = !goal_ctr in goal_ctr := v + 1; v
 
 let register_goal (env:Env.env) (uv:S.ctx_uvar) =
       let i = Core.incr_goal_ctr () in
-      // if Options.admit_tactic_unification_guards() then () else
       let env = {env with gamma = uv.ctx_uvar_gamma } in
       if Env.debug env <| Options.Other "CoreEq"      
       then BU.print1 "(%s) Registering goal\n"

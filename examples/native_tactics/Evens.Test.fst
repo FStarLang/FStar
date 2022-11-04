@@ -18,6 +18,6 @@ open Evens
 open FStar.Tactics
 
 let even_test () =
- assert (even (nat2unary 24))
+ assert (even (nat2unary 1024))
      by (norm [nbe; delta_only [`%nat2unary]; zeta; iota; primops];
          prove_even ())
