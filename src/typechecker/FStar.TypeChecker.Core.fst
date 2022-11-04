@@ -35,8 +35,7 @@ let push_binder g b =
   then failwith "Assertion failed: unexpected shadowing in the core environment"
   else { g with tcenv = Env.push_binders g.tcenv [b]; max_binder_index = b.binder_bv.index }
 
-let push_binders g bs =
-  List.fold_left push_binder g bs
+let push_binders = List.fold_left push_binder
 
 let fresh_binder (g:env) (old:binder)
   : env & binder
@@ -708,7 +707,6 @@ let rec check_relation (g:env) (rel:relation) (t0 t1:typ)
       | EQUALITY -> "=?="
       | _ -> "<:?"
     in
-    let! _ = dump_context in
     if Env.debug g.tcenv (Options.Other "Core")
     then BU.print5 "check_relation (%s) %s %s (%s) %s\n"
                    (P.tag_of_term t0)
@@ -789,23 +787,19 @@ let rec check_relation (g:env) (rel:relation) (t0 t1:typ)
       if guard_ok
       then if equatable g t0
             || equatable g t1
-           then begin
-                let! _, t_typ = check' g t0 in
+           then let! _, t_typ = check' g t0 in
                 let! u = universe_of g t_typ in
                 guard (U.mk_eq2 u t_typ t0 t1)
-           end
            else err ()
       else err ()
     in
     let maybe_unfold_side_and_retry side t0 t1 =
       match maybe_unfold_side side t0 t1 with
-      | None ->
-        fallback t0 t1
+      | None -> fallback t0 t1
       | Some (t0, t1) -> check_relation g rel t0 t1
     in
     let maybe_unfold_and_retry t0 t1 =
-      let side = which_side_to_unfold t0 t1 in
-      maybe_unfold_side_and_retry side t0 t1
+      maybe_unfold_side_and_retry (which_side_to_unfold t0 t1) t0 t1
     in
     let beta_iota_reduce t =
         let t = Subst.compress t in
@@ -1346,7 +1340,7 @@ and check' (g:env) (e:term)
             U.mk_eq2 u_sc t_sc sc
             (PatternUtils.raw_pat_as_exp g.tcenv p |> must |> fst) in
           let this_path_condition = U.mk_conj path_condition pat_sc_eq in
-          let g' = List.fold_left push_binder g bs in
+          let g' = push_binders g bs in
           let g' = push_hypothesis g' this_path_condition in
           let! eff_br, tbr =
             with_binders bs us
@@ -1422,7 +1416,7 @@ and check' (g:env) (e:term)
             U.mk_eq2 u_sc t_sc sc
             (PatternUtils.raw_pat_as_exp g.tcenv p |> must |> fst) in
           let this_path_condition = U.mk_conj path_condition pat_sc_eq in
-          let g' = List.fold_left push_binder g bs in
+          let g' = push_binders g bs in
           let g' = push_hypothesis g' this_path_condition in 
           let! eff_br, tbr =
             with_binders bs us
