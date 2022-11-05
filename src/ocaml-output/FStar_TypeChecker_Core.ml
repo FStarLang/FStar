@@ -2857,9 +2857,7 @@ and (check' :
                                    let uu___6 =
                                      with_context "check_pat"
                                        FStar_Pervasives_Native.None
-                                       (fun uu___7 ->
-                                          let uu___8 = check_pat g p1 t_sc in
-                                          no_guard uu___8) in
+                                       (fun uu___7 -> check_pat g p1 t_sc) in
                                    op_let_Bang uu___6
                                      (fun bvs ->
                                         let bs =
@@ -3150,10 +3148,8 @@ and (check' :
                                                          "check_pat"
                                                          FStar_Pervasives_Native.None
                                                          (fun uu___11 ->
-                                                            let uu___12 =
-                                                              check_pat g p1
-                                                                t_sc in
-                                                            no_guard uu___12) in
+                                                            check_pat g p1
+                                                              t_sc) in
                                                      op_let_Bang uu___10
                                                        (fun bvs ->
                                                           let bs =

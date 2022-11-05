@@ -62,3 +62,39 @@ let _: squash (forall (x:nested_pair). f_nd (g_nd x) == x) =
     let _ = forall_intro () in
     trefl()
   ))
+
+//
+// This is another example from Theophile Wallez
+//
+// Here core gets a match term, with a dot pattern,
+//   whose typechecking results in a guard
+//
+
+type simple_record_dp = {
+  f1: nat_dep 1;
+  f2: nat_dep 2;
+  f3: nat_dep 3;
+}
+
+unfold
+type nested_pair_dp = (f1:nat_dep 1 & (f2:nat_dep 2 & nat_dep 3))
+
+unfold
+let f_dp (x:simple_record_dp): nested_pair_dp =
+  let {f1; f2; f3} = x in
+  (|f1, (|f2, f3|)|)
+
+unfold
+let g_dp (x:nested_pair_dp): simple_record_dp =
+  let (|f1, (|f2, f3|)|) = x in
+  {f1; f2; f3}
+
+let _: squash (forall (x:nested_pair_dp). f_dp (g_dp x) == x) =
+  synth_by_tactic(fun () -> (
+    apply_lemma (`dtuple2_ind);
+    let _ = forall_intro () in
+    apply_lemma (`dtuple2_ind);
+    let _ = forall_intro () in
+    let _ = forall_intro () in
+    trefl()
+  ))

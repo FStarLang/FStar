@@ -1379,7 +1379,7 @@ and check' (g:env) (e:term)
 
         | (p, None, b) :: rest ->
           let _, (p, _, b) = open_branch g (p, None, b) in
-          let! bvs = with_context "check_pat" None (fun _ -> no_guard (check_pat g p t_sc)) in
+          let! bvs = with_context "check_pat" None (fun _ -> check_pat g p t_sc) in
           let bs = List.map S.mk_binder bvs in
           let! us = with_context "check_pat_binders" None (fun _ -> check_binders g bs) in
           let! branch_condition = pattern_branch_condition g sc p in
@@ -1460,7 +1460,7 @@ and check' (g:env) (e:term)
 
         | (p, None, b) :: rest ->
           let _, (p, _, b) = open_branch g (p, None, b) in
-          let! bvs = with_context "check_pat" None (fun _ -> no_guard (check_pat g p t_sc)) in
+          let! bvs = with_context "check_pat" None (fun _ -> check_pat g p t_sc) in
           let bs = List.map S.mk_binder bvs in
           let! us = with_context "check_pat_binders" None (fun _ -> check_binders g bs) in
           let! branch_condition = pattern_branch_condition g sc p in
