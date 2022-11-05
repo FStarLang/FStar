@@ -288,7 +288,7 @@ inline_for_extraction
 let with_context (#a:Type) (msg:string) (t:option context_term) (x:unit -> result a)
   : result a
   = fun ctx ->
-     let ctx' = { ctx with error_context=((msg,t)::ctx.error_context) } in
+     let ctx = { ctx with error_context=((msg,t)::ctx.error_context) } in
      x () ctx
 
 let mk_type (u:universe) = S.mk (Tm_type u) R.dummyRange
@@ -1142,7 +1142,8 @@ and check_subtype (g:env) (e:option term) (t0 t1:typ)
     Profiling.profile
       (fun () -> 
         let rel = SUBTYPING e in
-        with_context "check_subtype" (Some (CtxRel t0 rel t1))
+        with_context (if ctx.no_guard then "check_subtype(no_guard)" else "check_subtype")
+                     (Some (CtxRel t0 rel t1))
           (fun _ -> check_relation g rel t0 t1)
           ctx)
       None
@@ -1378,9 +1379,9 @@ and check' (g:env) (e:term)
 
         | (p, None, b) :: rest ->
           let _, (p, _, b) = open_branch g (p, None, b) in
-          let! bvs = no_guard (check_pat g p t_sc) in
+          let! bvs = with_context "check_pat" None (fun _ -> no_guard (check_pat g p t_sc)) in
           let bs = List.map S.mk_binder bvs in
-          let! us = no_guard (check_binders g bs) in
+          let! us = with_context "check_pat_binders" None (fun _ -> check_binders g bs) in
           let! branch_condition = pattern_branch_condition g sc p in
           let pat_sc_eq =
             U.mk_eq2 u_sc t_sc sc
@@ -1459,9 +1460,9 @@ and check' (g:env) (e:term)
 
         | (p, None, b) :: rest ->
           let _, (p, _, b) = open_branch g (p, None, b) in
-          let! bvs = no_guard (check_pat g p t_sc) in
+          let! bvs = with_context "check_pat" None (fun _ -> no_guard (check_pat g p t_sc)) in
           let bs = List.map S.mk_binder bvs in
-          let! us = no_guard (check_binders g bs) in
+          let! us = with_context "check_pat_binders" None (fun _ -> check_binders g bs) in
           let! branch_condition = pattern_branch_condition g sc p in
           let pat_sc_eq =
             U.mk_eq2 u_sc t_sc sc
@@ -1806,7 +1807,7 @@ let check_term_top_gh g e topt (must_tot:bool) (gh:option guard_handler_t)
                    (match topt with None -> "" | Some t -> P.term_to_string t);
     THT.reset_counters table;
     reset_cache_stats();
-    let ctx = { no_guard = false; error_context = [] } in
+    let ctx = { no_guard = false; error_context = [("Top", None)] } in
     let res = 
       Profiling.profile 
         (fun () -> 
@@ -1884,14 +1885,14 @@ let open_binders_in_comp (env:Env.env) (bs:binders) (c:comp) =
 
 let check_term_equality g t0 t1
   = let g = initial_env g None in
-    let ctx = { no_guard = false; error_context = [] } in
+    let ctx = { no_guard = false; error_context = [("Eq", None)] } in
     match check_relation g EQUALITY t0 t1 ctx with
     | Inl (_, g) -> Inl g
     | Inr err -> Inr err
 
 let check_term_subtyping g t0 t1
   = let g = initial_env g None in
-    let ctx = { no_guard = false; error_context = [] } in
+    let ctx = { no_guard = false; error_context = [("Subtyping", None)] } in
     match check_relation g (SUBTYPING None) t0 t1 ctx with
     | Inl (_, g) -> Inl g
     | Inr err -> Inr err

@@ -35,3 +35,30 @@ let _ =
         trivial();
         trivial())
 
+assume val nat_dep: nat -> eqtype
+
+type simple_record_nd = {
+  f1: nat_dep 1;
+  f2: nat_dep 1;
+}
+
+unfold
+type nested_pair = (f1:nat_dep 1 & nat_dep 1)
+
+unfold
+let f_nd (x:simple_record_nd): nested_pair =
+  let {f1; f2} = x in
+  (|f1, f2|)
+
+unfold
+let g_nd (x:nested_pair): simple_record_nd =
+  let (|f1, f2|) = x in
+  {f1; f2}
+
+let _: squash (forall (x:nested_pair). f_nd (g_nd x) == x) =
+  synth_by_tactic(fun () -> (
+    apply_lemma (`dtuple2_ind);
+    let _ = forall_intro () in
+    let _ = forall_intro () in
+    trefl()
+  ))

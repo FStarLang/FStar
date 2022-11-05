@@ -604,12 +604,12 @@ let with_context :
     fun t ->
       fun x ->
         fun ctx ->
-          let ctx' =
+          let ctx1 =
             {
               no_guard = (ctx.no_guard);
               error_context = ((msg, t) :: (ctx.error_context))
             } in
-          let uu___ = x () in uu___ ctx
+          let uu___ = x () in uu___ ctx1
 let (mk_type :
   FStar_Syntax_Syntax.universe ->
     FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax)
@@ -2334,7 +2334,10 @@ and (check_subtype :
               (fun uu___ ->
                  let rel = SUBTYPING e in
                  let uu___1 =
-                   with_context "check_subtype"
+                   with_context
+                     (if ctx.no_guard
+                      then "check_subtype(no_guard)"
+                      else "check_subtype")
                      (FStar_Pervasives_Native.Some (CtxRel (t0, rel, t1)))
                      (fun uu___2 -> check_relation g rel t0 t1) in
                  uu___1 ctx) FStar_Pervasives_Native.None
@@ -2852,16 +2855,20 @@ and (check' :
                               (match uu___3 with
                                | (uu___4, (p1, uu___5, b1)) ->
                                    let uu___6 =
-                                     let uu___7 = check_pat g p1 t_sc in
-                                     no_guard uu___7 in
+                                     with_context "check_pat"
+                                       FStar_Pervasives_Native.None
+                                       (fun uu___7 ->
+                                          let uu___8 = check_pat g p1 t_sc in
+                                          no_guard uu___8) in
                                    op_let_Bang uu___6
                                      (fun bvs ->
                                         let bs =
                                           FStar_Compiler_List.map
                                             FStar_Syntax_Syntax.mk_binder bvs in
                                         let uu___7 =
-                                          let uu___8 = check_binders g bs in
-                                          no_guard uu___8 in
+                                          with_context "check_pat_binders"
+                                            FStar_Pervasives_Native.None
+                                            (fun uu___8 -> check_binders g bs) in
                                         op_let_Bang uu___7
                                           (fun us ->
                                              let uu___8 =
@@ -3139,9 +3146,14 @@ and (check' :
                                                  | (uu___8, (p1, uu___9, b1))
                                                      ->
                                                      let uu___10 =
-                                                       let uu___11 =
-                                                         check_pat g p1 t_sc in
-                                                       no_guard uu___11 in
+                                                       with_context
+                                                         "check_pat"
+                                                         FStar_Pervasives_Native.None
+                                                         (fun uu___11 ->
+                                                            let uu___12 =
+                                                              check_pat g p1
+                                                                t_sc in
+                                                            no_guard uu___12) in
                                                      op_let_Bang uu___10
                                                        (fun bvs ->
                                                           let bs =
@@ -3149,10 +3161,12 @@ and (check' :
                                                               FStar_Syntax_Syntax.mk_binder
                                                               bvs in
                                                           let uu___11 =
-                                                            let uu___12 =
-                                                              check_binders g
-                                                                bs in
-                                                            no_guard uu___12 in
+                                                            with_context
+                                                              "check_pat_binders"
+                                                              FStar_Pervasives_Native.None
+                                                              (fun uu___12 ->
+                                                                 check_binders
+                                                                   g bs) in
                                                           op_let_Bang uu___11
                                                             (fun us ->
                                                                let uu___12 =
@@ -4098,7 +4112,11 @@ let (check_term_top_gh :
              else ());
             FStar_Syntax_TermHashTable.reset_counters table;
             reset_cache_stats ();
-            (let ctx = { no_guard = false; error_context = [] } in
+            (let ctx =
+               {
+                 no_guard = false;
+                 error_context = [("Top", FStar_Pervasives_Native.None)]
+               } in
              let res =
                FStar_Profiling.profile
                  (fun uu___4 ->
@@ -4266,7 +4284,11 @@ let (check_term_equality :
     fun t0 ->
       fun t1 ->
         let g1 = initial_env g FStar_Pervasives_Native.None in
-        let ctx = { no_guard = false; error_context = [] } in
+        let ctx =
+          {
+            no_guard = false;
+            error_context = [("Eq", FStar_Pervasives_Native.None)]
+          } in
         let uu___ =
           let uu___1 = check_relation g1 EQUALITY t0 t1 in uu___1 ctx in
         match uu___ with
@@ -4283,7 +4305,11 @@ let (check_term_subtyping :
     fun t0 ->
       fun t1 ->
         let g1 = initial_env g FStar_Pervasives_Native.None in
-        let ctx = { no_guard = false; error_context = [] } in
+        let ctx =
+          {
+            no_guard = false;
+            error_context = [("Subtyping", FStar_Pervasives_Native.None)]
+          } in
         let uu___ =
           let uu___1 =
             check_relation g1 (SUBTYPING FStar_Pervasives_Native.None) t0 t1 in
