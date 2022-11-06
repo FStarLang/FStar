@@ -1563,8 +1563,9 @@ and universe_of (g:env) (t:typ)
     is_type g t
 
 and check_pat (g:env) (p:pat) (t_sc:typ) : result (list bv) =
-  let t_sc = t_sc |> N.normalize_refinement N.whnf_steps g.tcenv
-                  |> U.unrefine in
+  let unrefine_tsc t_sc =
+    t_sc |> N.normalize_refinement N.whnf_steps g.tcenv
+         |> U.unrefine in
 
   match p.v with
   | Pat_constant c ->
@@ -1575,7 +1576,7 @@ and check_pat (g:env) (p:pat) (t_sc:typ) : result (list bv) =
       | _ ->
         mk (Tm_constant c) p.p in
     let! _, t_const = check "pat_const" g e in
-    let! _ = check_subtype g (Some e) t_const t_sc in
+    let! _ = check_subtype g (Some e) t_const (unrefine_tsc t_sc) in
     return []
 
   | Pat_var bv
@@ -1623,7 +1624,7 @@ and check_pat (g:env) (p:pat) (t_sc:typ) : result (list bv) =
 
     let t_pat = Subst.subst ss t_pat in
 
-    let!_ = no_guard (check_scrutinee_pattern_type_compatible g t_sc t_pat) in
+    let!_ = no_guard (check_scrutinee_pattern_type_compatible g (unrefine_tsc t_sc) t_pat) in
 
     return bvs
   
@@ -1637,9 +1638,6 @@ and check_scrutinee_pattern_type_compatible (g:env) (t_sc t_pat:typ)
               (P.term_to_string t_sc)
               (P.term_to_string t_pat)
               s) in
-
-    let t_sc = t_sc |> N.normalize_refinement N.whnf_steps g.tcenv
-                    |> U.unrefine in
 
     let head_sc, args_sc = U.head_and_args t_sc in
     let head_pat, args_pat = U.head_and_args t_pat in

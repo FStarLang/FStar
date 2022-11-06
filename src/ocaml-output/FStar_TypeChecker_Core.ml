@@ -3473,9 +3473,9 @@ and (check_pat :
   fun g ->
     fun p ->
       fun t_sc ->
-        let t_sc1 =
+        let unrefine_tsc t_sc1 =
           let uu___ =
-            FStar_Compiler_Effect.op_Bar_Greater t_sc
+            FStar_Compiler_Effect.op_Bar_Greater t_sc1
               (FStar_TypeChecker_Normalize.normalize_refinement
                  FStar_TypeChecker_Normalize.whnf_steps g.tcenv) in
           FStar_Compiler_Effect.op_Bar_Greater uu___
@@ -3497,22 +3497,24 @@ and (check_pat :
               (fun uu___1 ->
                  match uu___1 with
                  | (uu___2, t_const) ->
-                     op_let_Bang
-                       (check_subtype g (FStar_Pervasives_Native.Some e)
-                          t_const t_sc1) (fun uu___3 -> return []))
+                     let uu___3 =
+                       let uu___4 = unrefine_tsc t_sc in
+                       check_subtype g (FStar_Pervasives_Native.Some e)
+                         t_const uu___4 in
+                     op_let_Bang uu___3 (fun uu___4 -> return []))
         | FStar_Syntax_Syntax.Pat_var bv ->
             return
               [{
                  FStar_Syntax_Syntax.ppname = (bv.FStar_Syntax_Syntax.ppname);
                  FStar_Syntax_Syntax.index = (bv.FStar_Syntax_Syntax.index);
-                 FStar_Syntax_Syntax.sort = t_sc1
+                 FStar_Syntax_Syntax.sort = t_sc
                }]
         | FStar_Syntax_Syntax.Pat_wild bv ->
             return
               [{
                  FStar_Syntax_Syntax.ppname = (bv.FStar_Syntax_Syntax.ppname);
                  FStar_Syntax_Syntax.index = (bv.FStar_Syntax_Syntax.index);
-                 FStar_Syntax_Syntax.sort = t_sc1
+                 FStar_Syntax_Syntax.sort = t_sc
                }]
         | FStar_Syntax_Syntax.Pat_cons (fv, usopt, pats) ->
             let us =
@@ -3663,8 +3665,9 @@ and (check_pat :
                                            FStar_Syntax_Subst.subst ss1 t_pat in
                                          let uu___6 =
                                            let uu___7 =
+                                             let uu___8 = unrefine_tsc t_sc in
                                              check_scrutinee_pattern_type_compatible
-                                               g t_sc1 t_pat1 in
+                                               g uu___8 t_pat1 in
                                            no_guard uu___7 in
                                          op_let_Bang uu___6
                                            (fun uu___7 -> return bvs))))))
@@ -3684,14 +3687,7 @@ and (check_scrutinee_pattern_type_compatible :
               "Scrutinee type %s and Pattern type %s are not compatible because %s"
               uu___1 uu___2 s in
           fail uu___ in
-        let t_sc1 =
-          let uu___ =
-            FStar_Compiler_Effect.op_Bar_Greater t_sc
-              (FStar_TypeChecker_Normalize.normalize_refinement
-                 FStar_TypeChecker_Normalize.whnf_steps g.tcenv) in
-          FStar_Compiler_Effect.op_Bar_Greater uu___
-            FStar_Syntax_Util.unrefine in
-        let uu___ = FStar_Syntax_Util.head_and_args t_sc1 in
+        let uu___ = FStar_Syntax_Util.head_and_args t_sc in
         match uu___ with
         | (head_sc, args_sc) ->
             let uu___1 = FStar_Syntax_Util.head_and_args t_pat in
@@ -3811,10 +3807,10 @@ and (check_scrutinee_pattern_type_compatible :
                                            fun uu___10 ->
                                              fun uu___11 ->
                                                match (uu___9, uu___10) with
-                                               | ((t_sc2, uu___12),
+                                               | ((t_sc1, uu___12),
                                                   (t_pat1, uu___13)) ->
                                                    check_relation g EQUALITY
-                                                     t_sc2 t_pat1) () in
+                                                     t_sc1 t_pat1) () in
                                     op_let_Bang uu___8
                                       (fun uu___9 ->
                                          return FStar_Pervasives_Native.None)))))

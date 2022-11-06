@@ -98,3 +98,56 @@ let _: squash (forall (x:nested_pair_dp). f_dp (g_dp x) == x) =
     let _ = forall_intro () in
     trefl()
   ))
+
+
+//
+// Yet another example from Theophile Wallez,
+//   illustrating why it is not a good idea to aggressively unrefine the type of
+//   scrutinee when typechecking a pattern
+//
+// The idea is supose there is a constructor C : nat -> t
+//   and we write match x with | C n -> ...
+//
+// Then if we add n:int (i.e. lose the refinement) to the environment for
+//   typechecking the branch, we may unnecessarily generate guards
+//
+
+let nat_dep_tsc_ref sz = n:nat{n < sz}
+
+//But it works if we trick F* like this??!
+//let nat_dep0 sz = n:nat{n < sz}
+//let nat_dep sz = x:(nat_dep0 sz){True}
+
+type simple_record_tsc_ref = {
+  f1: nat_dep_tsc_ref 1;
+  f2: nat_dep_tsc_ref 2;
+  f3: nat_dep_tsc_ref 3;
+  f4: nat_dep_tsc_ref 4;
+}
+
+unfold
+type nested_pair_tsc_ref = (f1:nat_dep_tsc_ref 1 & (f2:nat_dep_tsc_ref 2 & (f3:nat_dep_tsc_ref 3 & nat_dep_tsc_ref 4)))
+
+unfold
+let f_tsc_ref (x:simple_record_tsc_ref): nested_pair_tsc_ref =
+  let {f1; f2; f3; f4} = x in
+  (|f1, (|f2, (|f3, f4|)|)|)
+
+unfold
+let g_tsc_ref (x:nested_pair_tsc_ref): simple_record_tsc_ref =
+  let (|f1, (|f2, (|f3, f4|)|)|) = x in
+  {f1; f2; f3; f4}
+
+#push-options "--no_smt"
+let _: squash (forall (x:nested_pair_tsc_ref). f_tsc_ref (g_tsc_ref x) == x) =
+  synth_by_tactic(fun () -> (
+    apply_lemma (`dtuple2_ind);
+    let _ = forall_intro () in
+    apply_lemma (`dtuple2_ind);
+    let _ = forall_intro () in
+    apply_lemma (`dtuple2_ind);
+    let _ = forall_intro () in
+    let _ = forall_intro () in
+    trefl()
+  ))
+#pop-options
