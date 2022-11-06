@@ -1475,7 +1475,7 @@ let (mk_indexed_bind :
                              let uu___5 = FStar_Syntax_Syntax.mk_Comp ct2 in
                              FStar_Syntax_Print.comp_to_string uu___5 in
                            FStar_Compiler_Util.print2
-                             "Binding c1:%s and c2:%s {\n" uu___3 uu___4
+                             "Binding c1:%s and c2:%s{\n" uu___3 uu___4
                          else ());
                         (let uu___3 =
                            FStar_Compiler_Effect.op_Less_Bar
@@ -1783,7 +1783,17 @@ let (mk_indexed_bind :
                                                             | FStar_Pervasives_Native.Some
                                                                 x ->
                                                                 FStar_Syntax_Syntax.mk_binder
-                                                                  x in
+                                                                  {
+                                                                    FStar_Syntax_Syntax.ppname
+                                                                    =
+                                                                    (x.FStar_Syntax_Syntax.ppname);
+                                                                    FStar_Syntax_Syntax.index
+                                                                    =
+                                                                    (x.FStar_Syntax_Syntax.index);
+                                                                    FStar_Syntax_Syntax.sort
+                                                                    =
+                                                                    (ct1.FStar_Syntax_Syntax.result_typ)
+                                                                  } in
                                                           let g_sort_is =
                                                             let uu___11 =
                                                               let uu___12 =

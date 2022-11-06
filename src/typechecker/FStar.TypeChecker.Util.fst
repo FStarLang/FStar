@@ -865,8 +865,9 @@ let mk_indexed_bind env
                       bind_name (string_of_lid p)) r1;
 
   if Env.debug env <| Options.Other "LayeredEffects" then
-    BU.print2 "Binding c1:%s and c2:%s {\n"
-      (Print.comp_to_string (S.mk_Comp ct1)) (Print.comp_to_string (S.mk_Comp ct2));
+    BU.print2 "Binding c1:%s and c2:%s{\n"
+      (Print.comp_to_string (S.mk_Comp ct1))
+      (Print.comp_to_string (S.mk_Comp ct2));
 
   if Env.debug env <| Options.Other "ResolveImplicitsHook"
   then BU.print2 "///////////////////////////////Bind at %s/////////////////////\n\
@@ -943,7 +944,7 @@ let mk_indexed_bind env
     let x_a =
       match b with
       | None -> S.null_binder ct1.result_typ
-      | Some x -> S.mk_binder x in
+      | Some x -> S.mk_binder {x with sort=ct1.result_typ} in
 
     let g_sort_is : list term =
       match (SS.compress g_b.binder_bv.sort).n with
