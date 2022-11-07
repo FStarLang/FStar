@@ -127,10 +127,6 @@ let rec (compress_univ :
          | FStar_Pervasives_Native.Some u1 -> compress_univ u1
          | uu___1 -> u)
     | uu___ -> u
-let (bv_eq : FStar_Syntax_Syntax.bv -> FStar_Syntax_Syntax.bv -> Prims.bool)
-  =
-  fun bv1 ->
-    fun bv2 -> bv1.FStar_Syntax_Syntax.index = bv2.FStar_Syntax_Syntax.index
 let (subst_bv :
   FStar_Syntax_Syntax.bv ->
     FStar_Syntax_Syntax.subst_elt Prims.list ->
@@ -161,7 +157,8 @@ let (subst_nm :
       FStar_Compiler_Util.find_map s
         (fun uu___ ->
            match uu___ with
-           | FStar_Syntax_Syntax.NM (x, i) when bv_eq a x ->
+           | FStar_Syntax_Syntax.NM (x, i) when FStar_Syntax_Syntax.bv_eq a x
+               ->
                let uu___1 =
                  FStar_Syntax_Syntax.bv_to_tm
                    {
@@ -171,8 +168,8 @@ let (subst_nm :
                      FStar_Syntax_Syntax.sort = (a.FStar_Syntax_Syntax.sort)
                    } in
                FStar_Pervasives_Native.Some uu___1
-           | FStar_Syntax_Syntax.NT (x, t) when bv_eq a x ->
-               FStar_Pervasives_Native.Some t
+           | FStar_Syntax_Syntax.NT (x, t) when FStar_Syntax_Syntax.bv_eq a x
+               -> FStar_Pervasives_Native.Some t
            | uu___1 -> FStar_Pervasives_Native.None)
 let (subst_univ_bv :
   Prims.int ->
@@ -701,7 +698,8 @@ let (compose_uvar_subst :
           FStar_Compiler_Effect.op_Bar_Greater
             u.FStar_Syntax_Syntax.ctx_uvar_binders
             (FStar_Compiler_Util.for_some
-               (fun b -> bv_eq x b.FStar_Syntax_Syntax.binder_bv)) in
+               (fun b ->
+                  FStar_Syntax_Syntax.bv_eq x b.FStar_Syntax_Syntax.binder_bv)) in
         let rec aux uu___ =
           match uu___ with
           | [] -> []
