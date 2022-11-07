@@ -453,7 +453,8 @@ let (tc' :
     match uu___ with
     | (tm1, uu___1, g) ->
         (FStar_TypeChecker_Rel.force_trivial_guard tcenv1 g;
-         (let tm2 = FStar_Syntax_Subst.deep_compress tm1 in (tm2, tcenv1)))
+         (let tm2 = FStar_Syntax_Subst.deep_compress false tm1 in
+          (tm2, tcenv1)))
 let (tc : Prims.string -> FStar_Syntax_Syntax.term) =
   fun s -> let uu___ = tc' s in match uu___ with | (tm, uu___1) -> tm
 let (tc_term : FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.term) =
@@ -551,7 +552,7 @@ let (tc_term : FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.term) =
     match uu___ with
     | (tm1, uu___1, g) ->
         (FStar_TypeChecker_Rel.force_trivial_guard tcenv1 g;
-         (let tm2 = FStar_Syntax_Subst.deep_compress tm1 in tm2))
+         (let tm2 = FStar_Syntax_Subst.deep_compress false tm1 in tm2))
 let (pars_and_tc_fragment : Prims.string -> unit) =
   fun s ->
     FStar_Options.set_option "trace_error" (FStar_Options.Bool true);
@@ -605,3 +606,27 @@ let (pars_and_tc_fragment : Prims.string -> unit) =
            Prims.op_Negation uu___2
          then Obj.magic (Obj.repr (FStar_Compiler_Effect.raise uu___1))
          else Obj.magic (Obj.repr (failwith "unreachable")))
+let (test_hashes : unit -> unit) =
+  fun uu___ ->
+    (let uu___2 = FStar_Main.process_args () in
+     FStar_Compiler_Effect.op_Bar_Greater uu___2 (fun uu___3 -> ()));
+    pars_and_tc_fragment "type unary_nat = | U0 | US of unary_nat";
+    (let test_one_hash n =
+       let rec aux n1 =
+         if n1 = Prims.int_zero
+         then "U0"
+         else
+           (let uu___4 =
+              let uu___5 = aux (n1 - Prims.int_one) in
+              Prims.op_Hat uu___5 ")" in
+            Prims.op_Hat "(US " uu___4) in
+       let tm = let uu___3 = aux n in tc uu___3 in
+       let hc = FStar_Syntax_Hash.ext_hash_term tm in
+       let uu___3 = FStar_Compiler_Util.string_of_int n in
+       let uu___4 = FStar_Hash.string_of_hash_code hc in
+       FStar_Compiler_Util.print2 "Hash of unary %s is %s\n" uu___3 uu___4 in
+     let rec aux n =
+       if n = Prims.int_zero
+       then ()
+       else (test_one_hash n; aux (n - Prims.int_one)) in
+     aux (Prims.of_int (100)); FStar_Options.init ())

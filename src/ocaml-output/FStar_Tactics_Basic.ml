@@ -11,7 +11,7 @@ let (core_check :
     fun sol ->
       fun t ->
         fun must_tot ->
-          let uu___ = FStar_Options.admit_tactic_unification_guards () in
+          let uu___ = FStar_Options.compat_pre_core () in
           if uu___
           then FStar_Pervasives.Inl FStar_Pervasives_Native.None
           else
@@ -696,8 +696,7 @@ let (tc_unifier_solved_implicits :
                            FStar_Tactics_Monad.ret ())
                       | FStar_Pervasives.Inl (FStar_Pervasives_Native.Some g)
                           ->
-                          let uu___3 =
-                            FStar_Options.admit_tactic_unification_guards () in
+                          let uu___3 = FStar_Options.compat_pre_core () in
                           if uu___3
                           then
                             (mark_uvar_as_already_checked u;
@@ -732,9 +731,11 @@ let (tc_unifier_solved_implicits :
                                    u.FStar_Syntax_Syntax.ctx_uvar_head in
                                let uu___7 =
                                  FStar_Syntax_Print.term_to_string sol in
-                               fail2
-                                 "Could not typecheck unifier solved implicit %s to %s since it produced a guard and guards were not allowed"
-                                 uu___6 uu___7
+                               let uu___8 =
+                                 FStar_Syntax_Print.term_to_string g in
+                               fail3
+                                 "Could not typecheck unifier solved implicit %s to %s since it produced a guard and guards were not allowed;guard is\n%s"
+                                 uu___6 uu___7 uu___8
                              else
                                (let uu___7 =
                                   proc_guard' false "guard for implicit" env2

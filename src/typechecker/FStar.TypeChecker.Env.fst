@@ -310,7 +310,7 @@ let variable_not_found v =
   (Errors.Fatal_VariableNotFound, (format1 "Variable \"%s\" not found" (Print.bv_to_string v)))
 
 //Construct a new universe unification variable
-let new_u_univ () = U_unif (Unionfind.univ_fresh Range.dummyRange)
+let new_u_univ () = U_unif (UF.univ_fresh Range.dummyRange)
 
 let mk_univ_subst (formals : list univ_name) (us : universes) : list subst_elt =
     assert (List.length us = List.length formals);
@@ -630,6 +630,12 @@ let lookup_datacon env lid =
   match lookup_qname env lid with
     | Some (Inr ({ sigel = Sig_datacon (_, uvs, t, _, _, _) }, None), _) ->
       inst_tscheme_with_range (range_of_lid lid) (uvs, t)
+    | _ -> raise_error (name_not_found lid) (range_of_lid lid)
+
+let lookup_and_inst_datacon env us lid =
+  match lookup_qname env lid with
+    | Some (Inr ({ sigel = Sig_datacon (_, uvs, t, _, _, _) }, None), _) ->
+      inst_tscheme_with (uvs, t) us |> snd
     | _ -> raise_error (name_not_found lid) (range_of_lid lid)
 
 let datacons_of_typ env lid =

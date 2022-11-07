@@ -55,7 +55,7 @@ module Core   = FStar.TypeChecker.Core
 
 let core_check env sol t must_tot
   : either (option typ) Core.error
-  = if Options.admit_tactic_unification_guards() then Inl None else
+  = if Options.compat_pre_core() then Inl None else
     let debug f =
         if Options.debug_any()
         then f ()
@@ -296,7 +296,7 @@ let tc_unifier_solved_implicits env (must_tot:bool) (allow_guards:bool) (uvs:lis
           ret ()
   
         | Inl (Some g) ->
-          if Options.admit_tactic_unification_guards ()
+          if Options.compat_pre_core()
           then (
             mark_uvar_as_already_checked u;
             ret ()
@@ -308,9 +308,10 @@ let tc_unifier_solved_implicits env (must_tot:bool) (allow_guards:bool) (uvs:lis
             && not allow_guards
             && NonTrivial? guard.guard_f
             then (
-              fail2 "Could not typecheck unifier solved implicit %s to %s since it produced a guard and guards were not allowed"
+              fail3 "Could not typecheck unifier solved implicit %s to %s since it produced a guard and guards were not allowed;guard is\n%s"
                 (Print.uvar_to_string u.ctx_uvar_head)
                 (Print.term_to_string sol)
+                (Print.term_to_string g)
             )
             else (
               proc_guard' false "guard for implicit" env guard u.ctx_uvar_range ;!

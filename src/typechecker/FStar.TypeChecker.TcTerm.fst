@@ -4351,17 +4351,7 @@ and tc_trivial_guard env t =
   t,c
 
 and tc_attributes env attrs =
-  // we don't want attributes to depend on local names (otherwise,
-  // this would imply dependent attributes, substitutions within
-  // attributes...) hence we get rid of [gamma] (the local names)
-  // below.
-  let env = { env with gamma = []; gamma_sig = []; gamma_cache = BU.smap_create 100 } in
-  try List.map (fun attr -> fst (tc_trivial_guard env attr)) attrs
-  with | Error (Fatal_VariableNotFound, msg, rng, ctx) -> // adding small hint for the user
-           raise (Error ( Fatal_VariableNotFound
-                        , msg ^ ". Hint: local names are not allowed in attributes."
-                        , rng, ctx))
-       | e -> raise e
+  List.map (fun attr -> fst (tc_trivial_guard env attr)) attrs
 
 let tc_check_trivial_guard env t k =
   let t, _, g = tc_check_tot_or_gtot_term env t k "" in

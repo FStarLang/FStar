@@ -636,7 +636,13 @@ let reduce_primops norm_cb cfg env tm =
     then tm
     else begin
          let head, args = U.head_and_args tm in
-         match (U.un_uinst head).n with
+         let head_term, universes = 
+           let head = SS.compress head in
+           match head.n with
+           | Tm_uinst(fv, us) -> fv, us
+           | _ -> head, []
+         in
+         match head_term.n with
          | Tm_fvar fv -> begin
            match find_prim_step cfg fv with
            | Some prim_step when prim_step.strong_reduction_ok || not cfg.strong ->
@@ -662,11 +668,11 @@ let reduce_primops norm_cb cfg env tm =
                   } in
                   let r =
                       if false
-                      then begin let (r, ms) = BU.record_time (fun () -> prim_step.interpretation psc norm_cb args_1) in
+                      then begin let (r, ms) = BU.record_time (fun () -> prim_step.interpretation psc norm_cb universes args_1) in
                                  primop_time_count (Ident.string_of_lid fv.fv_name.v) ms;
                                  r
                            end
-                      else prim_step.interpretation psc norm_cb args_1
+                      else prim_step.interpretation psc norm_cb universes args_1
                   in
                   match r with
                   | None ->
@@ -3202,7 +3208,7 @@ let elim_uvars_aux_tc (env:Env.env) (univ_names:univ_names) (binders:binders) (t
     let univ_names, t = Subst.open_univ_vars univ_names t in
     let t = remove_uvar_solutions env t in
     let t = Subst.close_univ_vars univ_names t in
-    let t = Subst.deep_compress t in
+    let t = Subst.deep_compress false t in
     let binders, tc =
         match binders with
         | [] -> [], Inl t
@@ -3246,7 +3252,7 @@ let rec elim_uvars (env:Env.env) (s:sigelt) =
     | Sig_let((b, lbs), lids) ->
       let lbs = lbs |> List.map (fun lb ->
         let opening, lbunivs = Subst.univ_var_opening lb.lbunivs in
-        let elim t = Subst.deep_compress (Subst.close_univ_vars lbunivs (remove_uvar_solutions env (Subst.subst opening t))) in
+        let elim t = Subst.deep_compress false (Subst.close_univ_vars lbunivs (remove_uvar_solutions env (Subst.subst opening t))) in
         let lbtyp = elim lb.lbtyp in
         let lbdef = elim lb.lbdef in
         {lb with lbunivs = lbunivs;
@@ -3412,22 +3418,38 @@ let get_n_binders (env:Env.env) (n:int) (t:term) : list binder * comp =
   in
   aux true n t
 
-let maybe_unfold_head (env:Env.env) (t:term)
-  : option term 
-  = let head, args = U.leftmost_head_and_args t in
-    let fv_us_opt =
+let maybe_unfold_head_fv (env:Env.env) (head:term)
+  : option term
+  = let fv_us_opt =
       match (SS.compress head).n with
       | Tm_uinst ({n=Tm_fvar fv}, us) -> Some (fv, us)
       | Tm_fvar fv -> Some (fv, [])
-      | _ -> None
+      | _ -> failwith "Impossible: maybe_unfold_head_fv is called with a non fvar/uinst"
     in
     match fv_us_opt with
     | None -> None
     | Some (fv, us) ->
-      match Env.lookup_definition [Unfold delta_constant] env fv.fv_name.v with
+      match Env.lookup_nonrec_definition [Unfold delta_constant] env fv.fv_name.v with
       | None -> None
       | Some (us_formals, defn) ->
         let subst = mk_univ_subst us_formals us in
-        let defn = SS.subst subst defn in
-        let term = S.mk_Tm_app defn args t.pos in
-        Some (normalize [Beta;Iota;Weak;HNF] env term)
+        SS.subst subst defn |> Some
+
+let rec maybe_unfold_aux (env:Env.env) (t:term) : option term =
+  match (SS.compress t).n with
+  | Tm_match (t0, ret_opt, brs, rc_opt) ->
+    BU.map_option
+      (fun t0 -> S.mk (Tm_match (t0, ret_opt, brs, rc_opt)) t.pos)
+      (maybe_unfold_aux env t0)
+  | Tm_fvar _
+  | Tm_uinst _ -> maybe_unfold_head_fv env t
+  | _ ->
+    let head, args = U.leftmost_head_and_args t in
+    match maybe_unfold_aux env head with
+    | None -> None
+    | Some head -> S.mk_Tm_app head args t.pos |> Some
+
+let maybe_unfold_head (env:Env.env) (t:term) : option term =
+  BU.map_option
+    (normalize [Beta;Iota;Weak;HNF] env)
+    (maybe_unfold_aux env t)

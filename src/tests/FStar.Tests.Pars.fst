@@ -142,7 +142,7 @@ let tc' s =
     let tcenv = {tcenv with top_level=false} in
     let tm, _, g = TcTerm.tc_tot_or_gtot_term tcenv tm in
     Rel.force_trivial_guard tcenv g;
-    let tm = FStar.Syntax.Subst.deep_compress tm in        
+    let tm = FStar.Syntax.Subst.deep_compress false tm in        
     tm, tcenv
 
 let tc s =
@@ -154,7 +154,7 @@ let tc_term tm =
     let tcenv = {tcenv with top_level=false} in
     let tm, _, g = TcTerm.tc_tot_or_gtot_term tcenv tm in
     Rel.force_trivial_guard tcenv g;
-    let tm = FStar.Syntax.Subst.deep_compress tm in
+    let tm = FStar.Syntax.Subst.deep_compress false tm in
     tm
 
 let pars_and_tc_fragment (s:string) =
@@ -174,3 +174,25 @@ let pars_and_tc_fragment (s:string) =
         with e -> report(); raise_err (Errors.Fatal_TcOneFragmentFailed, "tc_one_fragment failed: " ^s)
     with
         | e when not ((Options.trace_error())) -> raise e
+
+let test_hashes () = 
+  FStar.Main.process_args () |> ignore; //set options
+  let _ = pars_and_tc_fragment "type unary_nat = | U0 | US of unary_nat" in
+  let test_one_hash (n:int) = 
+    let rec aux n =
+      if n = 0 then "U0"
+      else "(US " ^ aux (n - 1) ^ ")"
+    in
+    let tm = tc (aux n) in
+    let hc = FStar.Syntax.Hash.ext_hash_term tm in
+    BU.print2 "Hash of unary %s is %s\n"
+              (string_of_int n)
+              (FStar.Hash.string_of_hash_code hc)
+  in
+  let rec aux (n:int) = 
+    if n = 0 then ()
+    else (test_one_hash n; aux (n - 1))
+  in
+  aux 100;
+  Options.init()
+  

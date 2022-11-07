@@ -650,6 +650,7 @@ let rec resugar_term' (env: DsEnv.env) (t : S.term) : A.term =
       when is_true_pat pat1 && is_wild_pat pat2 ->
       let asc_opt = resugar_match_returns env e t.pos asc_opt in
       mk (A.If(resugar_term' env e,
+               None,
                asc_opt,
                resugar_term' env t1,
                resugar_term' env t2))

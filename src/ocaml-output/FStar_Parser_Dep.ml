@@ -1357,6 +1357,18 @@ let (collect_one :
            and collect_constant uu___2 =
              match uu___2 with
              | FStar_Const.Const_int
+                 (uu___3, FStar_Pervasives_Native.Some
+                  (FStar_Const.Unsigned, FStar_Const.Sizet))
+                 ->
+                 let uu___4 =
+                   let uu___5 =
+                     let uu___6 =
+                       FStar_Compiler_Effect.op_Bar_Greater "fstar.sizeT"
+                         FStar_Ident.lid_of_str in
+                     (false, uu___6) in
+                   P_dep uu___5 in
+                 add_to_parsing_data uu___4
+             | FStar_Const.Const_int
                  (uu___3, FStar_Pervasives_Native.Some (signedness, width))
                  ->
                  let u =
@@ -1449,11 +1461,11 @@ let (collect_one :
                  (collect_term t1; collect_term t2)
              | FStar_Parser_AST.Seq (t1, t2) ->
                  (collect_term t1; collect_term t2)
-             | FStar_Parser_AST.If (t1, ret_opt, t2, t3) ->
+             | FStar_Parser_AST.If (t1, uu___3, ret_opt, t2, t3) ->
                  (collect_term t1;
                   (match ret_opt with
                    | FStar_Pervasives_Native.None -> ()
-                   | FStar_Pervasives_Native.Some (uu___5, ret, uu___6) ->
+                   | FStar_Pervasives_Native.Some (uu___6, ret, uu___7) ->
                        collect_term ret);
                   collect_term t2;
                   collect_term t3)

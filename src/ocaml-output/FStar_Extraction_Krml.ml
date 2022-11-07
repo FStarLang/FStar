@@ -125,6 +125,8 @@ and width =
   | Int64 
   | Bool 
   | CInt 
+  | SizeT 
+  | PtrdiffT 
 and binder = {
   name: Prims.string ;
   typ: typ ;
@@ -525,6 +527,10 @@ let (uu___is_Bool : width -> Prims.bool) =
   fun projectee -> match projectee with | Bool -> true | uu___ -> false
 let (uu___is_CInt : width -> Prims.bool) =
   fun projectee -> match projectee with | CInt -> true | uu___ -> false
+let (uu___is_SizeT : width -> Prims.bool) =
+  fun projectee -> match projectee with | SizeT -> true | uu___ -> false
+let (uu___is_PtrdiffT : width -> Prims.bool) =
+  fun projectee -> match projectee with | PtrdiffT -> true | uu___ -> false
 let (__proj__Mkbinder__item__name : binder -> Prims.string) =
   fun projectee -> match projectee with | { name; typ = typ1; mut;_} -> name
 let (__proj__Mkbinder__item__typ : binder -> typ) =
@@ -605,6 +611,8 @@ let (mk_width : Prims.string -> width FStar_Pervasives_Native.option) =
     | "Int16" -> FStar_Pervasives_Native.Some Int16
     | "Int32" -> FStar_Pervasives_Native.Some Int32
     | "Int64" -> FStar_Pervasives_Native.Some Int64
+    | "SizeT" -> FStar_Pervasives_Native.Some SizeT
+    | "PtrdiffT" -> FStar_Pervasives_Native.Some PtrdiffT
     | uu___1 -> FStar_Pervasives_Native.None
 let (mk_bool_op : Prims.string -> op FStar_Pervasives_Native.option) =
   fun uu___ ->
@@ -2685,6 +2693,8 @@ and (translate_width :
         -> UInt32
     | FStar_Pervasives_Native.Some (FStar_Const.Unsigned, FStar_Const.Int64)
         -> UInt64
+    | FStar_Pervasives_Native.Some (FStar_Const.Unsigned, FStar_Const.Sizet)
+        -> SizeT
 and (translate_pat :
   env -> FStar_Extraction_ML_Syntax.mlpattern -> (env * pattern)) =
   fun env1 ->

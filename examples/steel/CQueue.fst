@@ -463,7 +463,7 @@ let elim_llist_fragment_tail_nil
     (vconst phead);
   elim_vconst phead
 
-assume val intro_llist_fragment_tail_snoc
+val intro_llist_fragment_tail_snoc
   (#opened: _)
   (#a: Type)
   (l: Ghost.erased (list a))
@@ -484,39 +484,39 @@ assume val intro_llist_fragment_tail_snoc
 
 #push-options "--z3rlimit 16"
 
-// let intro_llist_fragment_tail_snoc
-//   #_ #a l phead ptail tail
-// =
-//   let d = gget (vptr (ccell_data tail)) in
-//   let l' : (l' : Ghost.erased (list a) { Cons? (Ghost.reveal l') }) = Ghost.hide (snoc (Ghost.reveal l) (Ghost.reveal d)) in
-//   intro_vrefine (vptr (ccell_data tail)) (llist_fragment_tail_cons_data_refine l');
-//   intro_vrefine (vptr ptail) (ccell_is_lvalue_refine a);
-//   intro_vdep
-//     (vptr ptail `vrefine` ccell_is_lvalue_refine a)
-//     (vptr (ccell_data tail) `vrefine` llist_fragment_tail_cons_data_refine l')
-//     (llist_fragment_tail_cons_lvalue_payload l');
-//   change_equal_slprop
-//     (llist_fragment_tail l phead)
-//     (llist_fragment_tail (Ghost.hide (unsnoc_hd l')) phead);
+let intro_llist_fragment_tail_snoc
+  #_ #a l phead ptail tail
+=
+  let d = gget (vptr (ccell_data tail)) in
+  let l' : (l' : Ghost.erased (list a) { Cons? (Ghost.reveal l') }) = Ghost.hide (snoc (Ghost.reveal l) (Ghost.reveal d)) in
+  intro_vrefine (vptr (ccell_data tail)) (llist_fragment_tail_cons_data_refine l');
+  intro_vrefine (vptr ptail) (ccell_is_lvalue_refine a);
+  intro_vdep
+    (vptr ptail `vrefine` ccell_is_lvalue_refine a)
+    (vptr (ccell_data tail) `vrefine` llist_fragment_tail_cons_data_refine l')
+    (llist_fragment_tail_cons_lvalue_payload l');
+  change_equal_slprop
+    (llist_fragment_tail l phead)
+    (llist_fragment_tail (Ghost.hide (unsnoc_hd l')) phead);
 
-//   intro_vdep
-//     (llist_fragment_tail (Ghost.hide (unsnoc_hd l')) phead)
-//     (vptr ptail `vrefine` ccell_is_lvalue_refine a `vdep` llist_fragment_tail_cons_lvalue_payload l')
-//     (llist_fragment_tail_cons_next_payload l');
+  intro_vdep
+    (llist_fragment_tail (Ghost.hide (unsnoc_hd l')) phead)
+    (vptr ptail `vrefine` ccell_is_lvalue_refine a `vdep` llist_fragment_tail_cons_lvalue_payload l')
+    (llist_fragment_tail_cons_next_payload l');
 
-//   intro_vrewrite_no_norm
-//     (llist_fragment_tail (Ghost.hide (unsnoc_hd l')) phead `vdep` llist_fragment_tail_cons_next_payload l')
-//     (llist_fragment_tail_cons_rewrite l' (llist_fragment_tail (Ghost.hide (unsnoc_hd l')) phead));
-//   llist_fragment_tail_eq_cons l' phead;
-//   change_equal_slprop
-//     (llist_fragment_tail (Ghost.hide (unsnoc_hd l')) phead `vdep` llist_fragment_tail_cons_next_payload l' `vrewrite` llist_fragment_tail_cons_rewrite l' (llist_fragment_tail (Ghost.hide (unsnoc_hd l')) phead))
-//     (llist_fragment_tail l' phead);
-//   let g' = gget (llist_fragment_tail l' phead) in
+  intro_vrewrite_no_norm
+    (llist_fragment_tail (Ghost.hide (unsnoc_hd l')) phead `vdep` llist_fragment_tail_cons_next_payload l')
+    (llist_fragment_tail_cons_rewrite l' (llist_fragment_tail (Ghost.hide (unsnoc_hd l')) phead));
+  llist_fragment_tail_eq_cons l' phead;
+  change_equal_slprop
+    (llist_fragment_tail (Ghost.hide (unsnoc_hd l')) phead `vdep` llist_fragment_tail_cons_next_payload l' `vrewrite` llist_fragment_tail_cons_rewrite l' (llist_fragment_tail (Ghost.hide (unsnoc_hd l')) phead))
+    (llist_fragment_tail l' phead);
+  let g' = gget (llist_fragment_tail l' phead) in
 
 
-//   assert (Ghost.reveal g' == ccell_next tail);
-//   noop ();
-//   l'
+  assert (Ghost.reveal g' == ccell_next tail);
+  noop ();
+  l'
 
 #pop-options
 
@@ -528,7 +528,7 @@ type ll_unsnoc_t (a: Type) = {
   ll_unsnoc_tail: ccell_lvalue a;
 }
 
-assume val elim_llist_fragment_tail_snoc
+val elim_llist_fragment_tail_snoc
   (#opened: _)
   (#a: Type)
   (l: Ghost.erased (list a))
@@ -549,48 +549,48 @@ assume val elim_llist_fragment_tail_snoc
 #push-options "--z3rlimit 32"
 #restart-solver
 
-// let elim_llist_fragment_tail_snoc
-//   #_ #a l phead
-// =
-//   let l0 : (l0: Ghost.erased (list a) { Cons? l0 }) = Ghost.hide (Ghost.reveal l) in
-//   llist_fragment_tail_eq_cons l0 phead;
-//   change_equal_slprop
-//     (llist_fragment_tail l phead)
-//     (llist_fragment_tail (Ghost.hide (unsnoc_hd l0)) phead `vdep` llist_fragment_tail_cons_next_payload l0 `vrewrite` llist_fragment_tail_cons_rewrite l0 (llist_fragment_tail (Ghost.hide (unsnoc_hd l0)) phead));
-//   elim_vrewrite_no_norm
-//     (llist_fragment_tail (Ghost.hide (unsnoc_hd l0)) phead `vdep` llist_fragment_tail_cons_next_payload l0)
-//     (llist_fragment_tail_cons_rewrite l0 (llist_fragment_tail (Ghost.hide (unsnoc_hd l0)) phead));
-//   let ptail = elim_vdep
-//     (llist_fragment_tail (Ghost.hide (unsnoc_hd l0)) phead)
-//     (llist_fragment_tail_cons_next_payload l0)
-//   in
-//   let ptail0 : Ghost.erased (ref (ccell_ptrvalue a)) = ptail in
-//   change_equal_slprop
-//     (llist_fragment_tail_cons_next_payload l0 (Ghost.reveal ptail))
-//     (vptr (Ghost.reveal ptail0) `vrefine` ccell_is_lvalue_refine a `vdep` llist_fragment_tail_cons_lvalue_payload l0);
-//   let tail = elim_vdep
-//     (vptr (Ghost.reveal ptail0) `vrefine` ccell_is_lvalue_refine a)
-//     (llist_fragment_tail_cons_lvalue_payload l0)
-//   in
-//   elim_vrefine (vptr (Ghost.reveal ptail0)) (ccell_is_lvalue_refine a);
-//   let res = {
-//     ll_unsnoc_l = unsnoc_hd l0;
-//     ll_unsnoc_ptail = Ghost.reveal ptail0;
-//     ll_unsnoc_tail = Ghost.reveal tail;
-//   } in
-//   change_equal_slprop
-//     (vptr (Ghost.reveal ptail0))
-//     (vptr res.ll_unsnoc_ptail);
-//   change_equal_slprop
-//     (llist_fragment_tail_cons_lvalue_payload l0 (Ghost.reveal tail))
-//     (vptr (ccell_data res.ll_unsnoc_tail) `vrefine` llist_fragment_tail_cons_data_refine l0);
-//   elim_vrefine
-//     (vptr (ccell_data res.ll_unsnoc_tail))
-//     (llist_fragment_tail_cons_data_refine l0);
-//   change_equal_slprop
-//     (llist_fragment_tail (Ghost.hide (unsnoc_hd l0)) phead)
-//     (llist_fragment_tail res.ll_unsnoc_l phead);
-//   res
+let elim_llist_fragment_tail_snoc
+  #_ #a l phead
+=
+  let l0 : (l0: Ghost.erased (list a) { Cons? l0 }) = Ghost.hide (Ghost.reveal l) in
+  llist_fragment_tail_eq_cons l0 phead;
+  change_equal_slprop
+    (llist_fragment_tail l phead)
+    (llist_fragment_tail (Ghost.hide (unsnoc_hd l0)) phead `vdep` llist_fragment_tail_cons_next_payload l0 `vrewrite` llist_fragment_tail_cons_rewrite l0 (llist_fragment_tail (Ghost.hide (unsnoc_hd l0)) phead));
+  elim_vrewrite_no_norm
+    (llist_fragment_tail (Ghost.hide (unsnoc_hd l0)) phead `vdep` llist_fragment_tail_cons_next_payload l0)
+    (llist_fragment_tail_cons_rewrite l0 (llist_fragment_tail (Ghost.hide (unsnoc_hd l0)) phead));
+  let ptail = elim_vdep
+    (llist_fragment_tail (Ghost.hide (unsnoc_hd l0)) phead)
+    (llist_fragment_tail_cons_next_payload l0)
+  in
+  let ptail0 : Ghost.erased (ref (ccell_ptrvalue a)) = ptail in
+  change_equal_slprop
+    (llist_fragment_tail_cons_next_payload l0 (Ghost.reveal ptail))
+    (vptr (Ghost.reveal ptail0) `vrefine` ccell_is_lvalue_refine a `vdep` llist_fragment_tail_cons_lvalue_payload l0);
+  let tail = elim_vdep
+    (vptr (Ghost.reveal ptail0) `vrefine` ccell_is_lvalue_refine a)
+    (llist_fragment_tail_cons_lvalue_payload l0)
+  in
+  elim_vrefine (vptr (Ghost.reveal ptail0)) (ccell_is_lvalue_refine a);
+  let res = {
+    ll_unsnoc_l = unsnoc_hd l0;
+    ll_unsnoc_ptail = Ghost.reveal ptail0;
+    ll_unsnoc_tail = Ghost.reveal tail;
+  } in
+  change_equal_slprop
+    (vptr (Ghost.reveal ptail0))
+    (vptr res.ll_unsnoc_ptail);
+  change_equal_slprop
+    (llist_fragment_tail_cons_lvalue_payload l0 (Ghost.reveal tail))
+    (vptr (ccell_data res.ll_unsnoc_tail) `vrefine` llist_fragment_tail_cons_data_refine l0);
+  elim_vrefine
+    (vptr (ccell_data res.ll_unsnoc_tail))
+    (llist_fragment_tail_cons_data_refine l0);
+  change_equal_slprop
+    (llist_fragment_tail (Ghost.hide (unsnoc_hd l0)) phead)
+    (llist_fragment_tail res.ll_unsnoc_l phead);
+  res
 
 #pop-options
 
@@ -1224,7 +1224,7 @@ let intro_queue_head
     (llist_fragment_head l (cllist_head x) hd `vdep` queue_head_dep1 x l hd)
     (queue_head_dep2 x l)
 
-assume val elim_queue_head
+val elim_queue_head
   (#opened: _)
   (#a: Type)
   (x: t a)
@@ -1240,21 +1240,21 @@ assume val elim_queue_head
         ccell_ptrvalue_is_null (snd frag) == true
     ))
 
-// let elim_queue_head
-//   #_ #a x l
-// =
-//   let hd = elim_vdep
-//     (vptr (cllist_head x))
-//     (queue_head_dep2 x l)
-//   in
-//   let ptl = elim_vdep
-//     (llist_fragment_head l (cllist_head x) hd)
-//     (queue_head_dep1 x l hd)
-//   in
-//   elim_vrefine
-//     (vptr (cllist_tail x))
-//     (queue_head_refine x l hd ptl);
-//   hd
+let elim_queue_head
+  #_ #a x l
+=
+  let hd = elim_vdep
+    (vptr (cllist_head x))
+    (queue_head_dep2 x l)
+  in
+  let ptl = elim_vdep
+    (llist_fragment_head l (cllist_head x) hd)
+    (queue_head_dep1 x l hd)
+  in
+  elim_vrefine
+    (vptr (cllist_tail x))
+    (queue_head_refine x l hd ptl);
+  hd
 
 let queue_head_to_tail
   (#opened: _)

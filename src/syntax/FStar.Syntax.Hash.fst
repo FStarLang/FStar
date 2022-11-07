@@ -22,6 +22,7 @@ open FStar.Syntax.Syntax
 open FStar.Const
 module SS = FStar.Syntax.Subst
 module UU = FStar.Syntax.Unionfind
+module BU = FStar.Compiler.Util
 
 (* maybe memo *)
 let mm (t:Type) = bool -> t & bool
@@ -66,7 +67,7 @@ let nil_hc : mm H.hash_code = of_int 1229
 let cons_hc : mm H.hash_code = of_int 1231
 
 let mix_list (l:list (mm H.hash_code)) : mm H.hash_code = 
-  List.fold_right (fun i out -> mix cons_hc (mix i out)) l nil_hc
+  List.fold_right mix l nil_hc
 
 let mix_list_lit = mix_list
 
@@ -96,7 +97,9 @@ and hash_comp c
 
 and hash_term' (t:term)
   : mm H.hash_code
-  = match (SS.compress t).n with
+  = // if Options.debug_any ()
+    // then FStar.Compiler.Util.print1 "Hash_term %s\n" (FStar.Syntax.Print.term_to_string t);
+    match (SS.compress t).n with
     | Tm_bvar bv -> mix (of_int 3) (of_int bv.index)
     | Tm_name bv -> mix (of_int 5) (of_int bv.index)
     | Tm_fvar fv -> mix (of_int 7) (hash_fv fv)

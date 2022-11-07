@@ -296,6 +296,7 @@ val lookup_univ            : env -> univ_name -> bool
 val try_lookup_val_decl    : env -> lident -> option (tscheme * list qualifier)
 val lookup_val_decl        : env -> lident -> (universes * typ)
 val lookup_datacon         : env -> lident -> universes * typ
+val lookup_and_inst_datacon: env -> universes -> lident -> typ
 (* the boolean tells if the lident was actually a inductive *)
 val datacons_of_typ        : env -> lident -> (bool * list lident)
 val typ_of_datacon         : env -> lident -> lident

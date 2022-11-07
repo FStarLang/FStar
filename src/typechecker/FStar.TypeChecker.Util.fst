@@ -923,7 +923,7 @@ let ad_hoc_indexed_bind_substs env
     let x_a =
       match b with
       | None -> S.null_binder ct1.result_typ
-      | Some x -> S.mk_binder x in
+      | Some x -> S.mk_binder {x with sort=ct1.result_typ} in
 
     let g_sort_is : list term =
       match (SS.compress g_b.binder_bv.sort).n with

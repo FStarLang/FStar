@@ -107,8 +107,8 @@ let mk (l : lid) (arity : int) (fn     : Cfg.psc -> EMB.norm_cb -> args -> optio
   ; Cfg.auto_reflect                 = None
   ; Cfg.strong_reduction_ok          = true
   ; Cfg.requires_binder_substitution = false
-  ; Cfg.interpretation               = fn
-  ; Cfg.interpretation_nbe           = nbe_fn
+  ; Cfg.interpretation               = (fun psc cbs _us args -> fn psc cbs args)
+  ; Cfg.interpretation_nbe           = (fun cbs _us args -> nbe_fn cbs args)
   }
 
 (*

@@ -265,12 +265,12 @@ let (defaults : (Prims.string * option_val) Prims.list) =
   ("abort_on", (Int Prims.int_zero));
   ("admit_smt_queries", (Bool false));
   ("admit_except", Unset);
-  ("admit_tactic_unification_guards", (Bool false));
   ("disallow_unification_guards", (Bool false));
   ("already_cached", Unset);
   ("cache_checked_modules", (Bool false));
   ("cache_dir", Unset);
   ("cache_off", (Bool false));
+  ("compat_pre_core", (Bool false));
   ("print_cache_version", (Bool false));
   ("cmi", (Bool false));
   ("codegen", Unset);
@@ -283,7 +283,6 @@ let (defaults : (Prims.string * option_val) Prims.list) =
   ("detail_hint_replay", (Bool false));
   ("dump_module", (List []));
   ("eager_subtyping", (Bool false));
-  ("enable_core", (Bool false));
   ("error_contexts", (Bool false));
   ("expose_interfaces", (Bool false));
   ("extract", Unset);
@@ -454,8 +453,8 @@ let (get_admit_smt_queries : unit -> Prims.bool) =
   fun uu___ -> lookup_opt "admit_smt_queries" as_bool
 let (get_admit_except : unit -> Prims.string FStar_Pervasives_Native.option)
   = fun uu___ -> lookup_opt "admit_except" (as_option as_string)
-let (get_admit_tactic_unification_guards : unit -> Prims.bool) =
-  fun uu___ -> lookup_opt "admit_tactic_unification_guards" as_bool
+let (get_compat_pre_core : unit -> Prims.bool) =
+  fun uu___ -> lookup_opt "compat_pre_core" as_bool
 let (get_disallow_unification_guards : unit -> Prims.bool) =
   fun uu___ -> lookup_opt "disallow_unification_guards" as_bool
 let (get_already_cached :
@@ -490,8 +489,6 @@ let (get_dump_module : unit -> Prims.string Prims.list) =
   fun uu___ -> lookup_opt "dump_module" (as_list as_string)
 let (get_eager_subtyping : unit -> Prims.bool) =
   fun uu___ -> lookup_opt "eager_subtyping" as_bool
-let (get_enable_core : unit -> Prims.bool) =
-  fun uu___ -> lookup_opt "enable_core" as_bool
 let (get_error_contexts : unit -> Prims.bool) =
   fun uu___ -> lookup_opt "error_contexts" as_bool
 let (get_expose_interfaces : unit -> Prims.bool) =
@@ -962,7 +959,7 @@ let (interp_quake_arg : Prims.string -> (Prims.int * Prims.int * Prims.bool))
           let uu___ = ios f1 in let uu___1 = ios f2 in (uu___, uu___1, true)
         else failwith "unexpected value for --quake"
     | uu___ -> failwith "unexpected value for --quake"
-let (uu___410 : (((Prims.string -> unit) -> unit) * (Prims.string -> unit)))
+let (uu___409 : (((Prims.string -> unit) -> unit) * (Prims.string -> unit)))
   =
   let cb = FStar_Compiler_Util.mk_ref FStar_Pervasives_Native.None in
   let set1 f =
@@ -974,11 +971,11 @@ let (uu___410 : (((Prims.string -> unit) -> unit) * (Prims.string -> unit)))
     | FStar_Pervasives_Native.Some f -> f msg in
   (set1, call)
 let (set_option_warning_callback_aux : (Prims.string -> unit) -> unit) =
-  match uu___410 with
+  match uu___409 with
   | (set_option_warning_callback_aux1, option_warning_callback) ->
       set_option_warning_callback_aux1
 let (option_warning_callback : Prims.string -> unit) =
-  match uu___410 with
+  match uu___409 with
   | (set_option_warning_callback_aux1, option_warning_callback1) ->
       option_warning_callback1
 let (set_option_warning_callback : (Prims.string -> unit) -> unit) =
@@ -1012,8 +1009,8 @@ let rec (specs_with_types :
               then option_warning_callback "admit_except"
               else ())), (SimpleStr "[symbol|(symbol, id)]"))),
       "Admit all queries, except those with label ( symbol,  id)) (e.g. --admit_except '(FStar.Fin.pigeonhole, 1)' or --admit_except FStar.Fin.pigeonhole)");
-    (FStar_Getopt.noshort, "admit_tactic_unification_guards", BoolStr,
-      "Admit SMT guards when the tactic engine re-checks solutions produced by the unifier (default 'false')");
+    (FStar_Getopt.noshort, "compat_pre_core", BoolStr,
+      "Retain behavior of the tactic engine prior to the introduction of FStar.TypeChecker.Core (default 'false')");
     (FStar_Getopt.noshort, "disallow_unification_guards", BoolStr,
       "Fail if the SMT guard are produced when the tactic engine re-checks solutions produced by the unifier (default 'false')");
     (FStar_Getopt.noshort, "already_cached",
@@ -1057,8 +1054,6 @@ let rec (specs_with_types :
       (Accumulated (SimpleStr "module_name")), "");
     (FStar_Getopt.noshort, "eager_subtyping", (Const (Bool true)),
       "Try to solve subtyping constraints at each binder (loses precision but may be slightly more efficient)");
-    (FStar_Getopt.noshort, "enable_core", (Const (Bool true)),
-      "Use the experimental core typechecker");
     (FStar_Getopt.noshort, "error_contexts", BoolStr,
       "Print context information for each error or warning raised (default false)");
     (FStar_Getopt.noshort, "extract",
@@ -1388,7 +1383,7 @@ let (settable : Prims.string -> Prims.bool) =
     | "abort_on" -> true
     | "admit_except" -> true
     | "admit_smt_queries" -> true
-    | "admit_tactic_unification_guards" -> true
+    | "compat_pre_core" -> true
     | "disallow_unification_guards" -> true
     | "debug" -> true
     | "debug_level" -> true
@@ -1396,7 +1391,6 @@ let (settable : Prims.string -> Prims.bool) =
     | "detail_errors" -> true
     | "detail_hint_replay" -> true
     | "eager_subtyping" -> true
-    | "enable_core" -> true
     | "error_contexts" -> true
     | "hide_uvar_nums" -> true
     | "hint_dir" -> true
@@ -1483,7 +1477,7 @@ let (settable_specs :
     (FStar_Compiler_List.filter
        (fun uu___ ->
           match uu___ with | (uu___1, x, uu___2, uu___3) -> settable x))
-let (uu___598 :
+let (uu___596 :
   (((unit -> FStar_Getopt.parse_cmdline_res) -> unit) *
     (unit -> FStar_Getopt.parse_cmdline_res)))
   =
@@ -1500,11 +1494,11 @@ let (uu___598 :
   (set1, call)
 let (set_error_flags_callback_aux :
   (unit -> FStar_Getopt.parse_cmdline_res) -> unit) =
-  match uu___598 with
+  match uu___596 with
   | (set_error_flags_callback_aux1, set_error_flags) ->
       set_error_flags_callback_aux1
 let (set_error_flags : unit -> FStar_Getopt.parse_cmdline_res) =
-  match uu___598 with
+  match uu___596 with
   | (set_error_flags_callback_aux1, set_error_flags1) -> set_error_flags1
 let (set_error_flags_callback :
   (unit -> FStar_Getopt.parse_cmdline_res) -> unit) =
@@ -1790,8 +1784,8 @@ let (admit_smt_queries : unit -> Prims.bool) =
   fun uu___ -> get_admit_smt_queries ()
 let (admit_except : unit -> Prims.string FStar_Pervasives_Native.option) =
   fun uu___ -> get_admit_except ()
-let (admit_tactic_unification_guards : unit -> Prims.bool) =
-  fun uu___ -> get_admit_tactic_unification_guards ()
+let (compat_pre_core : unit -> Prims.bool) =
+  fun uu___ -> get_compat_pre_core ()
 let (disallow_unification_guards : unit -> Prims.bool) =
   fun uu___ -> get_disallow_unification_guards ()
 let (cache_checked_modules : unit -> Prims.bool) =
@@ -1873,7 +1867,6 @@ let (dump_module : Prims.string -> Prims.bool) =
       (FStar_Compiler_List.existsb (module_name_eq s))
 let (eager_subtyping : unit -> Prims.bool) =
   fun uu___ -> get_eager_subtyping ()
-let (enable_core : unit -> Prims.bool) = fun uu___ -> get_enable_core ()
 let (error_contexts : unit -> Prims.bool) =
   fun uu___ -> get_error_contexts ()
 let (expose_interfaces : unit -> Prims.bool) =
