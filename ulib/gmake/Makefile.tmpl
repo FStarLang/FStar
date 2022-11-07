@@ -19,7 +19,7 @@ TOP_LEVEL_FILE ?=
 OUTPUT_DIRECTORY ?= _output
 
 ################################################################################
-MY_FSTAR=$(FSTAR) --cache_checked_modules --odir $(OUTPUT_DIRECTORY)
+MY_FSTAR=$(FSTAR) $(SIL) --cache_checked_modules --odir $(OUTPUT_DIRECTORY)
 ML_FILES=$(addprefix $(OUTPUT_DIRECTORY)/,$(addsuffix .ml,$(subst .,_, $(subst .fst,,$(FSTAR_FILES)))))
 OCAML_EXE=$(PROGRAM).ocaml.exe
 KRML_EXE=$(PROGRAM).exe
