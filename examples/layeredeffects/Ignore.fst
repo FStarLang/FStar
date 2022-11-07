@@ -22,7 +22,4 @@ let bind (a:Type u#aa) (b : Type u#bb) (i1 i2 : int)
 effect {
   Alg (a:Type) (_:int)
   with {repr; return; bind}
-  repr         = repr;
-  bind         = bind;
-  return       = return
 }
