@@ -184,11 +184,10 @@ let (register_goal :
                     FStar_Compiler_Util.format2
                       "Failed to check initial tactic goal %s because %s"
                       uu___5 uu___6 in
-                  (FStar_Compiler_Util.print_string msg;
-                   FStar_Errors.log_issue
-                     uv.FStar_Syntax_Syntax.ctx_uvar_range
-                     (FStar_Errors.Warning_FailedToCheckInitialTacticGoal,
-                       msg))))))
+                  FStar_Errors.log_issue
+                    uv.FStar_Syntax_Syntax.ctx_uvar_range
+                    (FStar_Errors.Warning_FailedToCheckInitialTacticGoal,
+                      msg)))))
 type 'a tac =
   {
   tac_f: FStar_Tactics_Types.proofstate -> 'a FStar_Tactics_Result.__result }

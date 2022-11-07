@@ -86,7 +86,6 @@ let register_goal env uv = if env.phase1 || env.lax then () else
                                 (Print.term_to_string (U.ctx_uvar_typ uv))
                                 (FStar.TypeChecker.Core.print_error_short err)
           in
-          BU.print_string msg;
           Errors.log_issue uv.ctx_uvar_range
                            (Err.Warning_FailedToCheckInitialTacticGoal, msg)
       )
