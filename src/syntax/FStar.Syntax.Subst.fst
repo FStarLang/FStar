@@ -124,6 +124,8 @@ let rec compress_univ u = match u with
 (*************************** Delayed substitutions ******************************)
 (********************************************************************************)
 
+let bv_eq (bv1 bv2:S.bv) : bool = bv1.index = bv2.index
+
 //Lookup a bound var or a name in a parallel substitution
 let subst_bv a s = U.find_map s (function
     | DB (i, x) when (i=a.index) ->
@@ -342,7 +344,7 @@ let push_subst_lcomp s lopt = match lopt with
 
 let compose_uvar_subst (u:ctx_uvar) (s0:subst_ts) (s:subst_ts) : subst_ts =
     let should_retain x =
-        u.ctx_uvar_binders |> U.for_some (fun b -> S.bv_eq x b.binder_bv)
+        u.ctx_uvar_binders |> U.for_some (fun b -> bv_eq x b.binder_bv)
     in
     let rec aux = function
         | [] -> []

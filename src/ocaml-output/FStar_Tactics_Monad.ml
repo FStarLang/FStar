@@ -14,7 +14,23 @@ let (register_goal :
       if env.FStar_TypeChecker_Env.phase1 || env.FStar_TypeChecker_Env.lax
       then ()
       else
-        (let i = FStar_TypeChecker_Core.incr_goal_ctr () in
+        (let dbg f =
+           let uu___1 =
+             ((FStar_Compiler_Effect.op_Less_Bar
+                 (FStar_TypeChecker_Env.debug env)
+                 (FStar_Options.Other "CoreEq"))
+                ||
+                (FStar_Compiler_Effect.op_Less_Bar
+                   (FStar_TypeChecker_Env.debug env)
+                   (FStar_Options.Other "Core")))
+               ||
+               (FStar_Compiler_Effect.op_Less_Bar
+                  (FStar_TypeChecker_Env.debug env)
+                  (FStar_Options.Other "RegisterGoal")) in
+           if uu___1
+           then let uu___2 = f () in FStar_Compiler_Util.print_string uu___2
+           else () in
+         let i = FStar_TypeChecker_Core.incr_goal_ctr () in
          let env1 =
            {
              FStar_TypeChecker_Env.solver =
@@ -115,15 +131,10 @@ let (register_goal :
              FStar_TypeChecker_Env.core_check =
                (env.FStar_TypeChecker_Env.core_check)
            } in
-         (let uu___2 =
-            FStar_Compiler_Effect.op_Less_Bar
-              (FStar_TypeChecker_Env.debug env1)
-              (FStar_Options.Other "CoreEq") in
-          if uu___2
-          then
-            let uu___3 = FStar_Compiler_Util.string_of_int i in
-            FStar_Compiler_Util.print1 "(%s) Registering goal\n" uu___3
-          else ());
+         dbg
+           (fun uu___2 ->
+              let uu___3 = FStar_Compiler_Util.string_of_int i in
+              FStar_Compiler_Util.format1 "(%s) Registering goal\n" uu___3);
          (let all_deps_resolved =
             let uu___2 = FStar_Syntax_Util.ctx_uvar_typedness_deps uv in
             FStar_Compiler_List.for_all
@@ -138,37 +149,19 @@ let (register_goal :
                  | uu___4 -> false) uu___2 in
           if Prims.op_Negation all_deps_resolved
           then
-            let uu___3 =
-              (FStar_Compiler_Effect.op_Less_Bar
-                 (FStar_TypeChecker_Env.debug env1)
-                 (FStar_Options.Other "Core"))
-                ||
-                (FStar_Compiler_Effect.op_Less_Bar
-                   (FStar_TypeChecker_Env.debug env1)
-                   (FStar_Options.Other "RegisterGoal")) in
-            (if uu___3
-             then
-               let uu___4 = FStar_Compiler_Util.string_of_int i in
-               FStar_Compiler_Util.print1
-                 "(%s) Not registering goal since it has unresolved uvar deps\n"
-                 uu___4
-             else ())
+            dbg
+              (fun uu___2 ->
+                 let uu___3 = FStar_Compiler_Util.string_of_int i in
+                 FStar_Compiler_Util.format1
+                   "(%s) Not registering goal since it has unresolved uvar deps\n"
+                   uu___3)
           else
-            ((let uu___4 =
-                (FStar_Compiler_Effect.op_Less_Bar
-                   (FStar_TypeChecker_Env.debug env1)
-                   (FStar_Options.Other "Core"))
-                  ||
-                  (FStar_Compiler_Effect.op_Less_Bar
-                     (FStar_TypeChecker_Env.debug env1)
-                     (FStar_Options.Other "RegisterGoal")) in
-              if uu___4
-              then
-                let uu___5 = FStar_Compiler_Util.string_of_int i in
-                let uu___6 = FStar_Syntax_Print.ctx_uvar_to_string uv in
-                FStar_Compiler_Util.print2 "(%s) Registering goal for %s\n"
-                  uu___5 uu___6
-              else ());
+            (dbg
+               (fun uu___4 ->
+                  let uu___5 = FStar_Compiler_Util.string_of_int i in
+                  let uu___6 = FStar_Syntax_Print.ctx_uvar_to_string uv in
+                  FStar_Compiler_Util.format2
+                    "(%s) Registering goal for %s\n" uu___5 uu___6);
              (let goal_ty = FStar_Syntax_Util.ctx_uvar_typ uv in
               let uu___4 =
                 FStar_TypeChecker_Core.compute_term_type_handle_guards env1
@@ -184,7 +177,7 @@ let (register_goal :
                     FStar_Compiler_Util.format2
                       "Failed to check initial tactic goal %s because %s"
                       uu___5 uu___6 in
-                  (FStar_Compiler_Util.print_string msg;
+                  (dbg (fun uu___6 -> msg);
                    FStar_Errors.log_issue
                      uv.FStar_Syntax_Syntax.ctx_uvar_range
                      (FStar_Errors.Warning_FailedToCheckInitialTacticGoal,

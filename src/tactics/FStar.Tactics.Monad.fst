@@ -46,11 +46,16 @@ let get_goal_ctr () = !goal_ctr
 let incr_goal_ctr () = let v = !goal_ctr in goal_ctr := v + 1; v
 
 let register_goal env uv = if env.phase1 || env.lax then () else
+      let dbg f =
+        if Env.debug env <| Options.Other "CoreEq" ||
+           Env.debug env <| Options.Other "Core"   ||
+           Env.debug env <| Options.Other "RegisterGoal"
+        then BU.print_string (f ()) in
+
       let i = Core.incr_goal_ctr () in
       let env = {env with gamma = uv.ctx_uvar_gamma } in
-      if Env.debug env <| Options.Other "CoreEq"      
-      then BU.print1 "(%s) Registering goal\n"
-                     (BU.string_of_int i);
+      dbg (fun _ -> BU.format1 "(%s) Registering goal\n"
+                   (BU.string_of_int i));
       
       let all_deps_resolved =
           List.for_all 
@@ -62,31 +67,25 @@ let register_goal env uv = if env.phase1 || env.lax then () else
       in
       if not all_deps_resolved
       then (
-        if Env.debug env <| Options.Other "Core"
-        ||  Env.debug env <| Options.Other "RegisterGoal"
-        then BU.print1 "(%s) Not registering goal since it has unresolved uvar deps\n"
-                     (BU.string_of_int i);
-        
-        ()
+        dbg (fun _ -> BU.format1 "(%s) Not registering goal since it has unresolved uvar deps\n"
+                     (BU.string_of_int i))
       )
       else (
-        if Env.debug env <| Options.Other "Core"
-        ||  Env.debug env <| Options.Other "RegisterGoal"
-        then BU.print2 "(%s) Registering goal for %s\n"
+        dbg (fun _ -> BU.format2 "(%s) Registering goal for %s\n"
                      (BU.string_of_int i)
-                     (Print.ctx_uvar_to_string uv);
+                     (Print.ctx_uvar_to_string uv));
         let goal_ty = U.ctx_uvar_typ uv in
         // let goal_ty = FStar.TypeChecker.Normalize.normalize [Beta; Iota; Exclude Zeta] env goal_ty in
         match FStar.TypeChecker.Core.compute_term_type_handle_guards env goal_ty false (fun _ _ -> true) 
         with
         | Inl _ -> ()
         | Inr err ->
-          let msg = 
+          let msg =
             BU.format2 ("Failed to check initial tactic goal %s because %s")
                                 (Print.term_to_string (U.ctx_uvar_typ uv))
                                 (FStar.TypeChecker.Core.print_error_short err)
           in
-          BU.print_string msg;
+          dbg (fun _ -> msg);
           Errors.log_issue uv.ctx_uvar_range
                            (Err.Warning_FailedToCheckInitialTacticGoal, msg)
       )
