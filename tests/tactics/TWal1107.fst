@@ -27,6 +27,7 @@ assume val foo:
   f:(dtuple2 toto tata -> test_sum bytes) -> g:(test_sum bytes -> dtuple2 toto tata) ->
   (x:dtuple2 toto tata -> squash (g (f x) == x)) ->
   unit
+open FStar.Tactics
 
 let bla (bytes:Type0) {|bytes_like bytes|} =
   foo bytes
@@ -35,5 +36,12 @@ let bla (bytes:Type0) {|bytes_like bytes|} =
       | (|0, _0|) -> Ctor_1 _0
       | (|1, _0|) -> Ctor_2 _0
     )
-
-
+    (fun x ->
+      match x with
+      | Ctor_1 _0 -> (|0, _0|)
+      | Ctor_2 _0 -> (|1, _0|)
+    )
+    (_ by (
+      apply (`arrow_to_forall);
+      tadmit()
+    ))

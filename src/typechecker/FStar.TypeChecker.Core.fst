@@ -379,7 +379,8 @@ let rec is_arrow (g:env) (t:term)
 let check_arg_qual (a:aqual) (b:bqual)
   : result unit
   = match b with
-    | Some (Implicit _) ->
+    | Some (Implicit _)
+    | Some (Meta _) ->
       begin
       match a with
       | Some ({aqual_implicit=true}) ->

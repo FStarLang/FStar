@@ -143,6 +143,8 @@ val compress_implicits : tac unit
 (* Only leave goals that are unsolved in the main list *)
 val remove_solved_goals : tac unit
 
+val is_goal_safe_as_well_typed (g:goal) : bool
+
 (* DANGER AHEAD, DO NOT USE *)
 
 (* Set the proofstate *)
@@ -152,4 +154,4 @@ val set : proofstate -> tac unit
 val mk_tac : (proofstate -> __result 'a) -> tac 'a
 
 (* inform the core of a well-typed goal *)
-val register_goal (env:env) (u:ctx_uvar) : unit
+val register_goal (g:goal) : unit

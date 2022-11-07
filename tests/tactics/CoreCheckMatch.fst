@@ -39,11 +39,11 @@ assume val nat_dep: nat -> eqtype
 
 type simple_record_nd = {
   f1: nat_dep 1;
-  f2: nat_dep 1;
+  f2: nat_dep 2;
 }
 
 unfold
-type nested_pair = (f1:nat_dep 1 & nat_dep 1)
+type nested_pair = (f1:nat_dep 1 & nat_dep 2)
 
 unfold
 let f_nd (x:simple_record_nd): nested_pair =
@@ -155,6 +155,8 @@ let _: squash (forall (x:nested_pair_tsc_ref). f_tsc_ref (g_tsc_ref x) == x) =
 //
 // In particular, core equality of names does not depend on the string names, whereas
 //   syntax substitutions do
+//
+// The fix was to make syntax substitutions also name irrelevant
 //
 
 type refined (a:Type) (pred:a -> bool) = x:a{pred x}

@@ -778,6 +778,13 @@ let (check_arg_qual :
                  FStar_Syntax_Syntax.aqual_attributes = uu___1;_}
                -> return ()
            | uu___1 -> fail "missing arg qualifier implicit")
+      | FStar_Pervasives_Native.Some (FStar_Syntax_Syntax.Meta uu___) ->
+          (match a with
+           | FStar_Pervasives_Native.Some
+               { FStar_Syntax_Syntax.aqual_implicit = true;
+                 FStar_Syntax_Syntax.aqual_attributes = uu___1;_}
+               -> return ()
+           | uu___1 -> fail "missing arg qualifier implicit")
       | uu___ ->
           (match a with
            | FStar_Pervasives_Native.Some
