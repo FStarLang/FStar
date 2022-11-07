@@ -18,7 +18,7 @@
         "subterm_ordering_Prims.Cons"
       ],
       0,
-      "5a66e1263eaa3fc2e0bceb211508a07e"
+      "2465c589e010399fd5cf11ce7d1ed377"
     ],
     [
       "Queue.emp_equiv_pure",
@@ -43,7 +43,7 @@
         "typing_Steel.Memory.pure"
       ],
       0,
-      "28273285c0ed424ce8fe75701c2b1ec1"
+      "9314f442f7807b006747671b83ef1562"
     ],
     [
       "Queue.next_last",
@@ -58,7 +58,7 @@
         "projection_inverse_BoxBool_proj_0", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "643c8f52abb787b5d2669c75cc6a8bf5"
+      "412e5a2f47d48327a07374ec47fb014f"
     ],
     [
       "Queue.next_last_correct",
@@ -70,7 +70,7 @@
         "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
       ],
       0,
-      "6e34628c9c8436d5953027249d9d548f"
+      "5d0939230c8435bf03bf61de6e7597b9"
     ],
     [
       "Queue.next_last_correct",
@@ -112,7 +112,7 @@
         "typing_Steel.Reference.ref"
       ],
       0,
-      "a19b6d6ecde5a1f5c6a517c6475c4d70"
+      "343cc9729597b8f3b779514e1d291821"
     ],
     [
       "Queue.fragment_append",
@@ -159,7 +159,7 @@
         "typing_Steel.Effect.Common.star", "typing_Steel.Reference.ref"
       ],
       0,
-      "c5aa31d589f364ba92016c2e1a8dee10"
+      "f0f173561225b460c410a2457ff7d271"
     ],
     [
       "Queue.intro_fragment_nil",
@@ -181,7 +181,7 @@
         "typing_Steel.Reference.ref"
       ],
       0,
-      "4efa776a2366804bc1f721cd003f6104"
+      "fb9b9f8a445eb9f030231ae6221ba61e"
     ],
     [
       "Queue.intro_fragment_cons",
@@ -198,7 +198,7 @@
         "typing_tok_Prims.T@tok"
       ],
       0,
-      "6b294aa7d705d86e4aab207edd594b09"
+      "a9e352e6ee01b35d06602f123b5898ed"
     ],
     [
       "Queue.fragment_append_singleton",
@@ -250,7 +250,7 @@
         "typing_Steel.Reference.ref"
       ],
       0,
-      "5ae5b73d5bee3b64e1eadbadba855b4e"
+      "071930390b5d06897980b5f886fa9c7b"
     ],
     [
       "Queue.queue_lc_prop",
@@ -277,7 +277,7 @@
         "typing_Steel.Reference.ref"
       ],
       0,
-      "53330d207f2f2621a3207b6cebf79d8c"
+      "fd37485aea842c7c17718176383024dc"
     ],
     [
       "Queue.new_queue",
@@ -347,7 +347,7 @@
         "typing_Steel.Reference.is_null", "typing_Steel.Reference.null"
       ],
       0,
-      "8df8c3360b5c9e5b831ae9f5d62f65e8"
+      "1a7d397e0314d642217c5446c68763d2"
     ],
     [
       "Queue.snoc_inj",
@@ -360,7 +360,7 @@
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__2"
       ],
       0,
-      "5ce7d2f49ceaab92a09764530d0c9591"
+      "ff36bc645c9ea079cb957039c2c6ce77"
     ],
     [
       "Queue.unsnoc",
@@ -381,7 +381,7 @@
         "token_correspondence_FStar.List.Tot.Base.length.fuel_instrumented"
       ],
       0,
-      "2255ff38d99654d8b446f13fb28feef1"
+      "3d5110402ffb3dd1bc1cfd87161010b9"
     ],
     [
       "Queue.unsnoc_hd",
@@ -390,7 +390,7 @@
       1,
       [ "@query" ],
       0,
-      "8326c6b7a0adf45c57005015841fd105"
+      "dbd3406a28cd8b91fc9e193d0d03c284"
     ],
     [
       "Queue.unsnoc_tl",
@@ -399,7 +399,7 @@
       1,
       [ "@query" ],
       0,
-      "81ebf1e224a11f03cf9a1a40cbb3a2ca"
+      "2cc8a2fb0e0c21a77ad8b2cd6a07d6ae"
     ],
     [
       "Queue.enqueue",
@@ -508,7 +508,7 @@
         "typing_Steel.Reference.pts_to_sl", "typing_Steel.Reference.ref"
       ],
       0,
-      "201b35d096a50e95adac99148dfe68bd"
+      "e5e1ab72d2250fc8141f1b93d5a691cf"
     ],
     [
       "Queue.dequeue_post_success",
@@ -525,7 +525,7 @@
         "typing_Queue.Def.t"
       ],
       0,
-      "1f02113831030a6dce3f6048f548c9a8"
+      "db632fbe837496bd546e8eab5120c886"
     ],
     [
       "Queue.dequeue_post",
@@ -536,7 +536,7 @@
         "@query", "lemma_FStar.Pervasives.invertOption", "typing_Queue.Def.t"
       ],
       0,
-      "8a56433ac5976dc12cce56d36dee3f5f"
+      "dbb9603f8a0507fb26e285d9397e44fe"
     ],
     [
       "Queue.dequeue",
@@ -609,7 +609,7 @@
         "typing_Steel.Reference.ref"
       ],
       0,
-      "65c865e6a6ef5873132798d42dcb7014"
+      "f8c4efa7b12cd0b29e3de85292b6693e"
     ]
   ]
 ]
