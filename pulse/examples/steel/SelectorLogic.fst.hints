@@ -15,7 +15,7 @@
         "typing_SelectorLogic.__proj__Mkvprop__item__hp"
       ],
       0,
-      "0926ed15fdcacc8a69d1665a86fdc76c"
+      "a1bedf37c013c493d37dae11b90336c7"
     ],
     [
       "SelectorLogic.wand",
@@ -40,7 +40,7 @@
         "typing_SelectorLogic.__proj__Mkvprop__item__hp"
       ],
       0,
-      "de1fbecc3a8da00c542ad9accd905bd8"
+      "a143ae4386fc6f4c94d6d7b0a69d44ce"
     ],
     [
       "SelectorLogic.star_split",
@@ -49,7 +49,7 @@
       1,
       [ "@query" ],
       0,
-      "da849ddcf09f2370c46adcdc91696cc5"
+      "191102019e6c666e52e204b43796098f"
     ],
     [
       "SelectorLogic.star_split",
@@ -74,7 +74,7 @@
         "refinement_interpretation_Tm_refine_5a121517d5876c554c3e043a63a98441"
       ],
       0,
-      "6a78a194fa47e520b3ca1816c5a04d4d"
+      "c43e8ed9e80da4924480347e9db67939"
     ],
     [
       "SelectorLogic.modus_ponens_interp",
@@ -100,7 +100,7 @@
         "typing_SelectorLogic.__proj__Mkvprop__item__hp"
       ],
       0,
-      "5304c06a86e02cb96379572432be15f9"
+      "4b951b11ed64a6891b2d18e9f84f38c4"
     ],
     [
       "SelectorLogic.modus_ponens_derive_sel",
@@ -109,7 +109,7 @@
       1,
       [ "@query" ],
       0,
-      "44bcede0886828557d33a2ce9ea82d92"
+      "0f58da3be9e478d0dcc35e43b7db2afc"
     ],
     [
       "SelectorLogic.modus_ponens_derive_sel",
@@ -142,7 +142,7 @@
         "typing_SelectorLogic.__proj__Mkvprop__item__hp"
       ],
       0,
-      "d1670797f14ecd6383542a1381572efa"
+      "48a4c1d12e54493bbce30368f51ed8d8"
     ]
   ]
 ]
