@@ -2668,6 +2668,18 @@ let (mk_and_l :
     match l with
     | [] -> exp_true_bool
     | hd::tl -> FStar_Compiler_List.fold_left mk_and hd tl
+let (mk_boolean_negation :
+  FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax ->
+    FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax)
+  =
+  fun b ->
+    let uu___ =
+      let uu___1 =
+        let uu___2 = fvar_const FStar_Parser_Const.op_Negation in
+        let uu___3 = let uu___4 = FStar_Syntax_Syntax.as_arg b in [uu___4] in
+        (uu___2, uu___3) in
+      FStar_Syntax_Syntax.Tm_app uu___1 in
+    FStar_Syntax_Syntax.mk uu___ b.FStar_Syntax_Syntax.pos
 let (mk_residual_comp :
   FStar_Ident.lident ->
     FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax

@@ -111,7 +111,7 @@ let parse (env:uenv) (pre_fn: option string) (fn:string)
 let core_check : TcEnv.core_check_t =
   fun env tm t must_tot ->
     let open FStar.TypeChecker.Core in
-    if Options.admit_tactic_unification_guards ()
+    if Options.compat_pre_core ()
     then Inl None
     else match check_term env tm t must_tot with
          | Inl t -> Inl t

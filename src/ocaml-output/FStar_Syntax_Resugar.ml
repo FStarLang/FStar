@@ -1159,7 +1159,8 @@ let rec (resugar_term' :
               let uu___6 = resugar_term' env e in
               let uu___7 = resugar_term' env t1 in
               let uu___8 = resugar_term' env t2 in
-              (uu___6, asc_opt1, uu___7, uu___8) in
+              (uu___6, FStar_Pervasives_Native.None, asc_opt1, uu___7,
+                uu___8) in
             FStar_Parser_AST.If uu___5 in
           mk uu___4
       | FStar_Syntax_Syntax.Tm_match (e, asc_opt, branches, uu___1) ->

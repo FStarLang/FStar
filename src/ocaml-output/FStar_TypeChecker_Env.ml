@@ -3243,6 +3243,36 @@ let (lookup_datacon :
           let uu___2 = name_not_found lid in
           let uu___3 = FStar_Ident.range_of_lid lid in
           FStar_Errors.raise_error uu___2 uu___3
+let (lookup_and_inst_datacon :
+  env ->
+    FStar_Syntax_Syntax.universes ->
+      FStar_Ident.lident -> FStar_Syntax_Syntax.typ)
+  =
+  fun env1 ->
+    fun us ->
+      fun lid ->
+        let uu___ = lookup_qname env1 lid in
+        match uu___ with
+        | FStar_Pervasives_Native.Some
+            (FStar_Pervasives.Inr
+             ({
+                FStar_Syntax_Syntax.sigel = FStar_Syntax_Syntax.Sig_datacon
+                  (uu___1, uvs, t, uu___2, uu___3, uu___4);
+                FStar_Syntax_Syntax.sigrng = uu___5;
+                FStar_Syntax_Syntax.sigquals = uu___6;
+                FStar_Syntax_Syntax.sigmeta = uu___7;
+                FStar_Syntax_Syntax.sigattrs = uu___8;
+                FStar_Syntax_Syntax.sigopts = uu___9;_},
+              FStar_Pervasives_Native.None),
+             uu___10)
+            ->
+            let uu___11 = inst_tscheme_with (uvs, t) us in
+            FStar_Compiler_Effect.op_Bar_Greater uu___11
+              FStar_Pervasives_Native.snd
+        | uu___1 ->
+            let uu___2 = name_not_found lid in
+            let uu___3 = FStar_Ident.range_of_lid lid in
+            FStar_Errors.raise_error uu___2 uu___3
 let (datacons_of_typ :
   env -> FStar_Ident.lident -> (Prims.bool * FStar_Ident.lident Prims.list))
   =

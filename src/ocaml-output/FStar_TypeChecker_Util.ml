@@ -1824,7 +1824,15 @@ let (ad_hoc_indexed_bind_substs :
                                          FStar_Syntax_Syntax.null_binder
                                            ct1.FStar_Syntax_Syntax.result_typ
                                      | FStar_Pervasives_Native.Some x ->
-                                         FStar_Syntax_Syntax.mk_binder x in
+                                         FStar_Syntax_Syntax.mk_binder
+                                           {
+                                             FStar_Syntax_Syntax.ppname =
+                                               (x.FStar_Syntax_Syntax.ppname);
+                                             FStar_Syntax_Syntax.index =
+                                               (x.FStar_Syntax_Syntax.index);
+                                             FStar_Syntax_Syntax.sort =
+                                               (ct1.FStar_Syntax_Syntax.result_typ)
+                                           } in
                                    let g_sort_is =
                                      let uu___3 =
                                        let uu___4 =

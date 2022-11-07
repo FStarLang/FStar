@@ -213,7 +213,7 @@ let (core_check : FStar_TypeChecker_Env.core_check_t) =
     fun tm ->
       fun t ->
         fun must_tot ->
-          let uu___ = FStar_Options.admit_tactic_unification_guards () in
+          let uu___ = FStar_Options.compat_pre_core () in
           if uu___
           then FStar_Pervasives.Inl FStar_Pervasives_Native.None
           else
