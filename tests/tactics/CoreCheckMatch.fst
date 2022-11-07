@@ -147,3 +147,89 @@ let _: squash (forall (x:nested_pair_tsc_ref). f_tsc_ref (g_tsc_ref x) == x) =
     trefl()
   ))
 #pop-options
+
+
+//
+// This example from Theophile Wallez brings out the different between openings and closings in
+//   core vs in the tc
+//
+// In particular, core equality of names does not depend on the string names, whereas
+//   syntax substitutions do
+//
+
+type refined (a:Type) (pred:a -> bool) = x:a{pred x}
+
+val dtuple2_ind_ss: #a:Type -> #b:(a -> Type) -> p:((x:a & b x) -> Type0) -> squash (forall (x:a) (y:b x). p (|x, y|)) -> Lemma (forall xy. p xy)
+let dtuple2_ind_ss #a #b p _ = ()
+
+val refined_ind: a:Type -> pred:(a -> bool) -> p:(refined a pred -> Type0) -> squash (forall (x:a). pred x ==> p x) -> squash (forall (x:refined a pred). p x)
+let refined_ind a pred p _ = ()
+
+val eq_to_eq: a:eqtype -> x:a -> y:a -> p:Type0 -> squash (x == y ==> p) -> squash (x = y ==> p)
+let eq_to_eq a x y p _ = ()
+
+val add_squash: p:Type0 -> q:Type0 -> squash (squash p ==> q) -> squash (p ==> q)
+let add_squash p q _ =
+  introduce p ==> q with _. ()
+
+val or_split: b1:bool -> b2:bool -> p:Type0 -> squash (b1 ==> p) -> squash (b2 ==> p) -> squash (b1 || b2 ==> p)
+let or_split b1 b2 p _ _ = ()
+
+unfold
+type toto = refined nat (fun x0 -> x0 = (1 <: nat) || x0 = (0 <: nat))
+
+unfold
+let tata (x1:toto): Type0 =
+  match x1 with
+  | 0 -> unit
+  | 1 -> unit
+
+type test_sum  =
+  | Ctor_1: unit -> test_sum
+  | Ctor_2: unit -> test_sum
+
+unfold
+let f_ss (x:dtuple2 toto tata): test_sum =
+  match x with
+  | (|0, _0|) -> Ctor_1 _0
+  | (|1, _0|) -> Ctor_2 _0
+
+unfold
+let g_ss (x:test_sum): dtuple2 toto tata =
+  match x with
+  | Ctor_1 _0 -> (|0, _0|)
+  | Ctor_2 _0 -> (|1, _0|)
+
+val arrow_to_forall: #a:Type -> p:(a -> Type0) -> squash (forall (x:a). p x) -> (x:a -> squash (p x))
+let arrow_to_forall #a p _ x =
+  ()
+
+val remove_refine: a:Type0 -> p:(a -> Type0) -> q:(a -> Type0) -> squash (forall (x:a). q x) -> squash (forall (x:a{p x}). q x)
+let remove_refine a p q _ = ()
+
+//
+// The smt query still fail, as they should, but no internal assertion failure
+//
+
+#push-options "--admit_smt_queries true"
+let _: x:dtuple2 toto tata -> squash (g_ss (f_ss x) == x) =
+  synth_by_tactic (fun () ->
+    apply (`arrow_to_forall);
+    apply_lemma (`dtuple2_ind);
+    apply (`refined_ind);
+    let _ = forall_intro () in
+    norm [primops; iota];
+    let solve_one_goal () =
+      apply (`eq_to_eq);
+      apply (`add_squash);
+      let x_eq_term = binder_to_term (implies_intro ()) in
+      l_to_r [x_eq_term];
+      let _ = forall_intro () in
+      trefl()
+    in
+    apply (`or_split);
+    focus solve_one_goal;
+    focus solve_one_goal;
+    dump "SMT goals"
+  )
+#pop-options
