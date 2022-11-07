@@ -144,7 +144,7 @@ let malloc
   intro_varray res _;
   return res
 
-/// Freeing a full array. 
+/// Freeing a full array.
 inline_for_extraction
 [@@ noextract_to "krml";
     warn_on_use "Steel.Array.free is currently unsound in the presence of zero-size subarrays, have you collected them all?"]
@@ -370,3 +370,25 @@ let compare (#t:eqtype) (#p0 #p1:P.perm)
     intro_varrayp a0 _ _;
     intro_varrayp a1 _ _;
     return res
+
+/// An introduction function for the fits_u32 predicate.
+/// It will be natively extracted to static_assert (UINT32_MAX <= SIZE_T_MAX) by krml
+inline_for_extraction
+[@@noextract_to "krml"]
+let intro_fits_u32 (_:unit)
+  : Steel unit
+          emp (fun _ -> emp)
+          (requires fun _ -> True)
+          (ensures fun _ _ _ -> FStar.SizeT.fits_u32)
+  = A.intro_fits_u32 ()
+
+/// An introduction function for the fits_u64 predicate.
+/// It will be natively extracted to static_assert (UINT64_MAX <= SIZE_T_MAX) by krml
+inline_for_extraction
+[@@noextract_to "krml"]
+let intro_fits_u64 (_:unit)
+  : Steel unit
+          emp (fun _ -> emp)
+          (requires fun _ -> True)
+          (ensures fun _ _ _ -> FStar.SizeT.fits_u64)
+  = A.intro_fits_u64 ()

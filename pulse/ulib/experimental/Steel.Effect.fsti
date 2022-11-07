@@ -251,7 +251,11 @@ let if_then_else (a:Type)
     (if_then_else_ens s_pre s_post ens_then ens_else p)
 
 /// Assembling the combinators defined above into an actual effect
-[@@ite_soundness_by ite_attr]
+
+/// If the effect appears at the top-level, make sure it is constrained as per STTop
+
+
+[@@ite_soundness_by ite_attr; top_level_effect "Steel.Effect.SteelTop"]
 reflectable
 effect {
   SteelBase
@@ -262,6 +266,13 @@ effect {
          subcomp = subcomp;
          if_then_else = if_then_else }
 }
+
+//
+// Trivial preconditions for top-level effect
+//
+effect SteelTop (a:Type) (framed:bool) (post:post_t a) (ens:ens_t emp a post) =
+  SteelBase a framed emp post (return_req _) ens
+
 
 /// The two user-facing effects, corresponding to not yet framed (Steel) and already framed (SteelF)
 /// computations. In the ICFP21 paper, this is modeled by the |- and |-_F modalities
