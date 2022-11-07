@@ -1,4 +1,4 @@
-module CoreExhaustivenessCheck
+module CoreCheckMatch
 //Thanks to Theophile Wallez for this example
 open FStar.Tactics
 
@@ -113,10 +113,6 @@ let _: squash (forall (x:nested_pair_dp). f_dp (g_dp x) == x) =
 //
 
 let nat_dep_tsc_ref sz = n:nat{n < sz}
-
-//But it works if we trick F* like this??!
-//let nat_dep0 sz = n:nat{n < sz}
-//let nat_dep sz = x:(nat_dep0 sz){True}
 
 type simple_record_tsc_ref = {
   f1: nat_dep_tsc_ref 1;
