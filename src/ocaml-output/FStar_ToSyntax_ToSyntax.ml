@@ -3685,7 +3685,35 @@ and (desugar_term_maybe_top :
                  if uu___2
                  then ds_let_rec_or_app ()
                  else ds_non_rec attrs head_pat defn body)
-        | FStar_Parser_AST.If (t1, asc_opt, t2, t3) ->
+        | FStar_Parser_AST.If
+            (e, FStar_Pervasives_Native.Some op, asc_opt, t2, t3) ->
+            let var_id =
+              FStar_Ident.mk_ident
+                ((Prims.op_Hat FStar_Ident.reserved_prefix "if_op_head"),
+                  (e.FStar_Parser_AST.range)) in
+            let var =
+              let uu___1 =
+                let uu___2 = FStar_Ident.lid_of_ids [var_id] in
+                FStar_Parser_AST.Var uu___2 in
+              FStar_Parser_AST.mk_term uu___1 e.FStar_Parser_AST.range
+                FStar_Parser_AST.Expr in
+            let pat =
+              FStar_Parser_AST.mk_pattern
+                (FStar_Parser_AST.PatVar
+                   (var_id, FStar_Pervasives_Native.None, []))
+                e.FStar_Parser_AST.range in
+            let if_ =
+              FStar_Parser_AST.mk_term
+                (FStar_Parser_AST.If
+                   (var, FStar_Pervasives_Native.None, asc_opt, t2, t3))
+                top.FStar_Parser_AST.range FStar_Parser_AST.Expr in
+            let t =
+              FStar_Parser_AST.mk_term
+                (FStar_Parser_AST.LetOperator ([(op, pat, e)], if_))
+                e.FStar_Parser_AST.range FStar_Parser_AST.Expr in
+            desugar_term_aq env t
+        | FStar_Parser_AST.If
+            (t1, FStar_Pervasives_Native.None, asc_opt, t2, t3) ->
             let x =
               let uu___1 = tun_r t3.FStar_Parser_AST.range in
               FStar_Syntax_Syntax.new_bv

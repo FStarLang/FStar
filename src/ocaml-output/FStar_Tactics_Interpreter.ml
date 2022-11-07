@@ -40,11 +40,14 @@ let (native_tactics_steps :
           (s.FStar_Tactics_Native.strong_reduction_ok);
         FStar_TypeChecker_Cfg.requires_binder_substitution = false;
         FStar_TypeChecker_Cfg.interpretation =
-          (s.FStar_Tactics_Native.tactic);
+          (fun psc ->
+             fun cb ->
+               fun _us -> fun t -> s.FStar_Tactics_Native.tactic psc cb t);
         FStar_TypeChecker_Cfg.interpretation_nbe =
           (fun _cb ->
-             FStar_TypeChecker_NBETerm.dummy_interp
-               s.FStar_Tactics_Native.name)
+             fun _us ->
+               FStar_TypeChecker_NBETerm.dummy_interp
+                 s.FStar_Tactics_Native.name)
       } in
     let uu___1 = FStar_Tactics_Native.list_all () in
     FStar_Compiler_List.map step_from_native_step uu___1
@@ -423,7 +426,7 @@ let e_tactic_nbe_1 :
            fun t ->
              let uu___2 = unembed_tactic_nbe_1 ea er cb t in
              FStar_Pervasives_Native.Some uu___2) uu___ uu___1
-let (uu___143 : unit) =
+let (uu___148 : unit) =
   let uu___ =
     let uu___1 =
       let uu___2 =
@@ -1481,9 +1484,9 @@ let (uu___143 : unit) =
                                                                     FStar_Tactics_Basic.gather_explicit_guards_for_resolved_goals
                                                                     FStar_TypeChecker_NBETerm.e_unit
                                                                     FStar_TypeChecker_NBETerm.e_unit in
-                                                                    let uu___144
+                                                                    let uu___143
                                                                     =
-                                                                    let uu___145
+                                                                    let uu___144
                                                                     =
                                                                     FStar_Tactics_InterpFuns.mk_tac_step_2
                                                                     Prims.int_zero
@@ -1496,11 +1499,11 @@ let (uu___143 : unit) =
                                                                     FStar_Reflection_NBEEmbeddings.e_env
                                                                     FStar_TypeChecker_NBETerm.e_string
                                                                     FStar_Reflection_NBEEmbeddings.e_term in
+                                                                    let uu___145
+                                                                    =
                                                                     let uu___146
                                                                     =
                                                                     let uu___147
-                                                                    =
-                                                                    let uu___148
                                                                     =
                                                                     FStar_Syntax_Embeddings.e_tuple2
                                                                     FStar_Reflection_Embeddings.e_env
@@ -1516,12 +1519,12 @@ let (uu___143 : unit) =
                                                                     FStar_Tactics_Basic.push_bv_dsenv
                                                                     FStar_Reflection_Embeddings.e_env
                                                                     FStar_Syntax_Embeddings.e_string
-                                                                    uu___148
+                                                                    uu___147
                                                                     FStar_Tactics_Basic.push_bv_dsenv
                                                                     FStar_Reflection_NBEEmbeddings.e_env
                                                                     FStar_TypeChecker_NBETerm.e_string
                                                                     uu___149 in
-                                                                    let uu___148
+                                                                    let uu___147
                                                                     =
                                                                     let uu___149
                                                                     =
@@ -1569,15 +1572,15 @@ let (uu___143 : unit) =
                                                                     uu___149
                                                                     ::
                                                                     uu___150 in
-                                                                    uu___147
+                                                                    uu___146
                                                                     ::
-                                                                    uu___148 in
-                                                                    uu___145
+                                                                    uu___147 in
+                                                                    uu___144
                                                                     ::
-                                                                    uu___146 in
+                                                                    uu___145 in
                                                                     uu___142
                                                                     ::
-                                                                    uu___144 in
+                                                                    uu___143 in
                                                                     uu___140
                                                                     ::
                                                                     uu___141 in

@@ -2478,12 +2478,23 @@ and (p_noSeqTerm' :
               let uu___2 = FStar_Pprint.separate_map break1 p_atomicTerm es in
               FStar_Pprint.op_Hat_Slash_Hat uu___1 uu___2 in
             FStar_Pprint.group uu___
-        | FStar_Parser_AST.If (e1, ret_opt, e2, e3) ->
+        | FStar_Parser_AST.If (e1, op_opt, ret_opt, e2, e3) ->
             if is_unit e3
             then
               let uu___ =
                 let uu___1 =
-                  let uu___2 = str "if" in
+                  let uu___2 =
+                    let uu___3 =
+                      let uu___4 =
+                        let uu___5 =
+                          let uu___6 =
+                            FStar_Compiler_Util.map_opt op_opt
+                              FStar_Ident.string_of_id in
+                          FStar_Compiler_Util.bind_opt uu___6
+                            (FStar_Parser_AST.strip_prefix "let") in
+                        FStar_Compiler_Util.dflt "" uu___5 in
+                      Prims.op_Hat "if" uu___4 in
+                    str uu___3 in
                   let uu___3 = p_noSeqTermAndComment false false e1 in
                   op_Hat_Slash_Plus_Hat uu___2 uu___3 in
                 let uu___2 =
@@ -2495,10 +2506,10 @@ and (p_noSeqTerm' :
             else
               (let e2_doc =
                  match e2.FStar_Parser_AST.tm with
-                 | FStar_Parser_AST.If (uu___1, uu___2, uu___3, e31) when
-                     is_unit e31 ->
-                     let uu___4 = p_noSeqTermAndComment false false e2 in
-                     soft_parens_with_nesting uu___4
+                 | FStar_Parser_AST.If (uu___1, uu___2, uu___3, uu___4, e31)
+                     when is_unit e31 ->
+                     let uu___5 = p_noSeqTermAndComment false false e2 in
+                     soft_parens_with_nesting uu___5
                  | uu___1 -> p_noSeqTermAndComment false false e2 in
                match ret_opt with
                | FStar_Pervasives_Native.None ->
