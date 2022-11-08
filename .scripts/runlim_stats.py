@@ -46,6 +46,7 @@ def join_lines(lines1, lines2):
             if line1[0] == line2[0]:
                 time2 = float(line2[1])
                 space2 = float(line2[2])                
+                space2
                 joined_lines_time.append((line1[0], time1, time2, ((time2 - time1) / time1) * 100))
                 joined_lines_space.append((line1[0], space1, space2, ((space2 - space1) / space1) * 100))
     return (joined_lines_space, joined_lines_time)
@@ -157,8 +158,8 @@ def main():
     print_lines (sorted_space_lines, "MB", 20)
     print_lines (sorted_time_lines, "seconds", 20)    
     # generate a scatter plot
-    generate_scatter_plot(sorted_space_lines, file1, file2, "space (MB)")
-    generate_scatter_plot(sorted_time_lines, file1, file2, "time (s)")
+    generate_scatter_plot(sorted_space_lines, file1, file2, "space")
+    generate_scatter_plot(sorted_time_lines, file1, file2, "time")
 
 
 main()
