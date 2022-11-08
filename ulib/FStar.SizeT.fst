@@ -1,7 +1,6 @@
 module FStar.SizeT
 
 module I64 = FStar.Int64
-module Cast = FStar.Int.Cast
 
 (* This is only intended as a model, but will be extracted natively by Krml
    with the correct C semantics *)
