@@ -1,4 +1,4 @@
-OTHERFLAGS+=--already_cached 'Prims FStar LowStar Steel NMST MST NMSTTotal MSTTotal' --compat_pre_core true
+OTHERFLAGS+=--already_cached 'Prims FStar LowStar Steel NMST MST NMSTTotal MSTTotal' --compat_pre_core 1
 FSTAR_FILES = $(wildcard *.fst) 
 
 all: verify-all

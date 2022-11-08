@@ -55,7 +55,8 @@ module Core   = FStar.TypeChecker.Core
 
 let core_check env sol t must_tot
   : either (option typ) Core.error
-  = let debug f =
+  = if not (Options.compat_pre_core_should_check()) then Inl None else
+    let debug f =
         if Options.debug_any()
         then f ()
         else ()
@@ -65,7 +66,7 @@ let core_check env sol t must_tot
       Inl None
 
     | Inl (Some g) ->
-      if Options.compat_pre_core()  //core check the solution, but drop the guard, pre_core
+      if Options.compat_pre_core_set ()  //core check the solution, but drop the guard, pre_core
       then Inl None
       else Inl (Some g)
        
@@ -286,28 +287,21 @@ let tc_unifier_solved_implicits env (must_tot:bool) (allow_guards:bool) (uvs:lis
           ret ()
   
         | Inl (Some g) ->
-          if Options.compat_pre_core()
+          let guard = { Env.trivial_guard with guard_f = NonTrivial g } in
+          let guard = Rel.simplify_guard env guard in
+          if Options.disallow_unification_guards ()
+          && not allow_guards
+          && NonTrivial? guard.guard_f
           then (
-            mark_uvar_as_already_checked u;
-            ret ()
-          )
-          else (
-            let guard = { Env.trivial_guard with guard_f = NonTrivial g } in
-            let guard = Rel.simplify_guard env guard in
-            if Options.disallow_unification_guards ()
-            && not allow_guards
-            && NonTrivial? guard.guard_f
-            then (
-              fail3 "Could not typecheck unifier solved implicit %s to %s since it produced a guard and guards were not allowed;guard is\n%s"
+            fail3 "Could not typecheck unifier solved implicit %s to %s since it produced a guard and guards were not allowed;guard is\n%s"
                 (Print.uvar_to_string u.ctx_uvar_head)
                 (Print.term_to_string sol)
                 (Print.term_to_string g)
-            )
-            else (
-              proc_guard' false "guard for implicit" env guard u.ctx_uvar_range ;!
-              mark_uvar_as_already_checked u;
-              ret ()
-            )
+          )
+          else (
+            proc_guard' false "guard for implicit" env guard u.ctx_uvar_range ;!
+            mark_uvar_as_already_checked u;
+            ret ()
           )
               
         | Inr failed ->
@@ -1325,6 +1319,7 @@ let _t_trefl (allow_guards:bool) (l : term) (r : term) : tac unit =
     let should_register_trefl g =
       let should_register = true in
       let skip_register = false in
+      if not (Options.compat_pre_core_should_register()) then skip_register else
       //Sending a goal t1 == t2 to the core for registration can be expensive
       //particularly if the terms are big, e.g., when they are WPs etc
       //This function decides which goals to register, using two criteria

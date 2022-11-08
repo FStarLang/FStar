@@ -39,7 +39,7 @@ let rw_test3 () : int =
   (match x with | X -> ff | _ -> gg) 42 12
 
 // NS: Since Core: Don't handle rewriting of effectful terms for now
-#push-options "--compat_pre_core true --warn_error -351"
+#push-options "--compat_pre_core 1 --warn_error -351"
 [@@postprocess_with rwtac]
 let rw_test4 (b:bool) :  ML int =
   f (999 + (((match b with

@@ -58,6 +58,7 @@ let is_goal_safe_as_well_typed (g:goal) =
   all_deps_resolved
 
 let register_goal (g:goal) =
+  if not (Options.compat_pre_core_should_register()) then () else
   let env = goal_env g in
   if env.phase1 || env.lax then () else
   let uv = g.goal_ctx_uvar in
