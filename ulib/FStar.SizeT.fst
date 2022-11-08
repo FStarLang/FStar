@@ -25,10 +25,10 @@ let uint_to_t x =
 let fits_u32 = True
 let fits_u64 = True
 
-let mk_u32 (x: U32.t)
+let of_u32 (x: U32.t)
   = uint_to_t (U32.v x)
 
-let mk_u64 (x: U64.t)
+let of_u64 (x: U64.t)
   = uint_to_t (U64.v x)
 
 let fits_lte x y = ()

@@ -34,13 +34,19 @@ val uint_to_t (x: nat) : Pure t
 val fits_u32 : prop
 val fits_u64 : prop
 
+/// Creates a size_t when given a uint32 literal. Note, this will not
+/// extract if [x] is not a literal (e.g., 12ul). If you want to do a
+/// cast, see `uint32_to_sizet` below
 noextract inline_for_extraction
-val mk_u32 (x: U32.t) : Pure t
+val of_u32 (x: U32.t) : Pure t
   (requires fits_u32)
   (ensures (fun y -> v y == U32.v x))
 
+/// Creates a size_t when given a uint64 literal. Note, this will not
+/// extract if [x] is not a literal (e.g., 12uL). If you want to do a
+/// cast, see `uint64_to_sizet` below
 noextract inline_for_extraction
-val mk_u64 (x: U64.t) : Pure t
+val of_u64 (x: U64.t) : Pure t
   (requires fits_u64)
   (ensures (fun y -> v y == U64.v x))
 
