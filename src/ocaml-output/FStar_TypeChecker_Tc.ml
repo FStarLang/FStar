@@ -301,6 +301,36 @@ let (tc_assume :
           FStar_Compiler_Effect.op_Bar_Greater uu___1
             FStar_Pervasives_Native.fst in
         tc_type_common env ts uu___ r
+let (tc_decl_attributes :
+  FStar_TypeChecker_Env.env ->
+    FStar_Syntax_Syntax.sigelt -> FStar_Syntax_Syntax.sigelt)
+  =
+  fun env ->
+    fun se ->
+      let uu___ =
+        let uu___1 =
+          FStar_TypeChecker_Env.lid_exists env
+            FStar_Parser_Const.attr_substitute_lid in
+        if uu___1
+        then ([], (se.FStar_Syntax_Syntax.sigattrs))
+        else
+          FStar_Compiler_List.partition
+            ((=) FStar_Syntax_Util.attr_substitute)
+            se.FStar_Syntax_Syntax.sigattrs in
+      match uu___ with
+      | (blacklisted_attrs, other_attrs) ->
+          let uu___1 =
+            let uu___2 =
+              FStar_TypeChecker_TcTerm.tc_attributes env other_attrs in
+            FStar_Compiler_List.op_At blacklisted_attrs uu___2 in
+          {
+            FStar_Syntax_Syntax.sigel = (se.FStar_Syntax_Syntax.sigel);
+            FStar_Syntax_Syntax.sigrng = (se.FStar_Syntax_Syntax.sigrng);
+            FStar_Syntax_Syntax.sigquals = (se.FStar_Syntax_Syntax.sigquals);
+            FStar_Syntax_Syntax.sigmeta = (se.FStar_Syntax_Syntax.sigmeta);
+            FStar_Syntax_Syntax.sigattrs = uu___1;
+            FStar_Syntax_Syntax.sigopts = (se.FStar_Syntax_Syntax.sigopts)
+          }
 let (tc_inductive' :
   FStar_TypeChecker_Env.env ->
     FStar_Syntax_Syntax.sigelt Prims.list ->
@@ -324,9 +354,10 @@ let (tc_inductive' :
                FStar_Compiler_Util.print1 ">>>>>>>>>>>>>>tc_inductive %s\n"
                  uu___2
              else ());
-            (let uu___1 =
+            (let ses1 = FStar_Compiler_List.map (tc_decl_attributes env) ses in
+             let uu___1 =
                FStar_TypeChecker_TcInductive.check_inductive_well_typedness
-                 env ses quals lids in
+                 env ses1 quals lids in
              match uu___1 with
              | (sig_bndle, tcs, datas) ->
                  let attrs' =
@@ -448,7 +479,7 @@ let (tc_inductive' :
                        (let is_unopteq =
                           FStar_Compiler_List.existsb
                             (fun q -> q = FStar_Syntax_Syntax.Unopteq) quals in
-                        let ses1 =
+                        let ses2 =
                           if is_unopteq
                           then
                             FStar_TypeChecker_TcInductive.unoptimized_haseq_scheme
@@ -457,7 +488,7 @@ let (tc_inductive' :
                             FStar_TypeChecker_TcInductive.optimized_haseq_scheme
                               sig_bndle tcs datas env in
                         (sig_bndle,
-                          (FStar_Compiler_List.op_At ses1 data_ops_ses))) in
+                          (FStar_Compiler_List.op_At ses2 data_ops_ses))) in
                    res)))
 let (tc_inductive :
   FStar_TypeChecker_Env.env ->
@@ -667,55 +698,15 @@ let (handle_postprocess_with_attr :
   =
   fun env ->
     fun ats ->
-      let tc_and_elab_tactic env1 tau =
-        let uu___ =
-          FStar_TypeChecker_TcTerm.tc_tactic FStar_Syntax_Syntax.t_unit
-            FStar_Syntax_Syntax.t_unit env1 tau in
-        match uu___ with
-        | (tau1, uu___1, g_tau) ->
-            (FStar_TypeChecker_Rel.force_trivial_guard env1 g_tau; tau1) in
-      let ats1 =
-        let uu___ =
-          FStar_Syntax_Util.extract_attr'
-            FStar_Parser_Const.postprocess_extr_with ats in
-        match uu___ with
-        | FStar_Pervasives_Native.None -> ats
-        | FStar_Pervasives_Native.Some
-            (ats2, (tau, FStar_Pervasives_Native.None)::[]) ->
-            let tau1 = tc_and_elab_tactic env tau in
-            let tau2 = FStar_Syntax_Subst.deep_compress tau1 in
-            let uu___1 =
-              let uu___2 =
-                FStar_Syntax_Syntax.tabbrev
-                  FStar_Parser_Const.postprocess_extr_with in
-              FStar_Syntax_Util.mk_app uu___2
-                [(tau2, FStar_Pervasives_Native.None)] in
-            uu___1 :: ats2
-        | FStar_Pervasives_Native.Some
-            (ats2, (tau, FStar_Pervasives_Native.None)::[]) ->
-            ((let uu___2 = FStar_TypeChecker_Env.get_range env in
-              let uu___3 =
-                let uu___4 =
-                  let uu___5 =
-                    FStar_Ident.string_of_lid
-                      FStar_Parser_Const.postprocess_extr_with in
-                  FStar_Compiler_Util.format1
-                    "Ill-formed application of `%s`" uu___5 in
-                (FStar_Errors.Warning_UnrecognizedAttribute, uu___4) in
-              FStar_Errors.log_issue uu___2 uu___3);
-             ats2) in
       let uu___ =
         FStar_Syntax_Util.extract_attr' FStar_Parser_Const.postprocess_with
-          ats1 in
+          ats in
       match uu___ with
-      | FStar_Pervasives_Native.None -> (ats1, FStar_Pervasives_Native.None)
+      | FStar_Pervasives_Native.None -> (ats, FStar_Pervasives_Native.None)
       | FStar_Pervasives_Native.Some
-          (ats2, (tau, FStar_Pervasives_Native.None)::[]) ->
-          let uu___1 =
-            let uu___2 = tc_and_elab_tactic env tau in
-            FStar_Pervasives_Native.Some uu___2 in
-          (ats2, uu___1)
-      | FStar_Pervasives_Native.Some (ats2, args) ->
+          (ats1, (tau, FStar_Pervasives_Native.None)::[]) ->
+          (ats1, (FStar_Pervasives_Native.Some tau))
+      | FStar_Pervasives_Native.Some (ats1, args) ->
           ((let uu___2 = FStar_TypeChecker_Env.get_range env in
             let uu___3 =
               let uu___4 =
@@ -726,7 +717,7 @@ let (handle_postprocess_with_attr :
                   uu___5 in
               (FStar_Errors.Warning_UnrecognizedAttribute, uu___4) in
             FStar_Errors.log_issue uu___2 uu___3);
-           (ats2, FStar_Pervasives_Native.None))
+           (ats1, FStar_Pervasives_Native.None))
 let (store_sigopts :
   FStar_Syntax_Syntax.sigelt -> FStar_Syntax_Syntax.sigelt) =
   fun se ->
@@ -1460,6 +1451,9 @@ let (tc_sig_let :
                                      (lb.FStar_Syntax_Syntax.lbpos)
                                  } in
                            let r1 =
+                             let should_generalize1 =
+                               let uu___4 = do_two_phases env' in
+                               Prims.op_Negation uu___4 in
                              let uu___4 =
                                let uu___5 =
                                  let uu___6 =
@@ -1469,7 +1463,121 @@ let (tc_sig_let :
                              FStar_Profiling.profile
                                (fun uu___5 ->
                                   FStar_TypeChecker_TcTerm.tc_maybe_toplevel_term
-                                    env' e1) uu___4
+                                    {
+                                      FStar_TypeChecker_Env.solver =
+                                        (env'.FStar_TypeChecker_Env.solver);
+                                      FStar_TypeChecker_Env.range =
+                                        (env'.FStar_TypeChecker_Env.range);
+                                      FStar_TypeChecker_Env.curmodule =
+                                        (env'.FStar_TypeChecker_Env.curmodule);
+                                      FStar_TypeChecker_Env.gamma =
+                                        (env'.FStar_TypeChecker_Env.gamma);
+                                      FStar_TypeChecker_Env.gamma_sig =
+                                        (env'.FStar_TypeChecker_Env.gamma_sig);
+                                      FStar_TypeChecker_Env.gamma_cache =
+                                        (env'.FStar_TypeChecker_Env.gamma_cache);
+                                      FStar_TypeChecker_Env.modules =
+                                        (env'.FStar_TypeChecker_Env.modules);
+                                      FStar_TypeChecker_Env.expected_typ =
+                                        (env'.FStar_TypeChecker_Env.expected_typ);
+                                      FStar_TypeChecker_Env.sigtab =
+                                        (env'.FStar_TypeChecker_Env.sigtab);
+                                      FStar_TypeChecker_Env.attrtab =
+                                        (env'.FStar_TypeChecker_Env.attrtab);
+                                      FStar_TypeChecker_Env.instantiate_imp =
+                                        (env'.FStar_TypeChecker_Env.instantiate_imp);
+                                      FStar_TypeChecker_Env.effects =
+                                        (env'.FStar_TypeChecker_Env.effects);
+                                      FStar_TypeChecker_Env.generalize =
+                                        should_generalize1;
+                                      FStar_TypeChecker_Env.letrecs =
+                                        (env'.FStar_TypeChecker_Env.letrecs);
+                                      FStar_TypeChecker_Env.top_level =
+                                        (env'.FStar_TypeChecker_Env.top_level);
+                                      FStar_TypeChecker_Env.check_uvars =
+                                        (env'.FStar_TypeChecker_Env.check_uvars);
+                                      FStar_TypeChecker_Env.use_eq_strict =
+                                        (env'.FStar_TypeChecker_Env.use_eq_strict);
+                                      FStar_TypeChecker_Env.is_iface =
+                                        (env'.FStar_TypeChecker_Env.is_iface);
+                                      FStar_TypeChecker_Env.admit =
+                                        (env'.FStar_TypeChecker_Env.admit);
+                                      FStar_TypeChecker_Env.lax =
+                                        (env'.FStar_TypeChecker_Env.lax);
+                                      FStar_TypeChecker_Env.lax_universes =
+                                        (env'.FStar_TypeChecker_Env.lax_universes);
+                                      FStar_TypeChecker_Env.phase1 =
+                                        (env'.FStar_TypeChecker_Env.phase1);
+                                      FStar_TypeChecker_Env.failhard =
+                                        (env'.FStar_TypeChecker_Env.failhard);
+                                      FStar_TypeChecker_Env.nosynth =
+                                        (env'.FStar_TypeChecker_Env.nosynth);
+                                      FStar_TypeChecker_Env.uvar_subtyping =
+                                        (env'.FStar_TypeChecker_Env.uvar_subtyping);
+                                      FStar_TypeChecker_Env.tc_term =
+                                        (env'.FStar_TypeChecker_Env.tc_term);
+                                      FStar_TypeChecker_Env.typeof_tot_or_gtot_term
+                                        =
+                                        (env'.FStar_TypeChecker_Env.typeof_tot_or_gtot_term);
+                                      FStar_TypeChecker_Env.universe_of =
+                                        (env'.FStar_TypeChecker_Env.universe_of);
+                                      FStar_TypeChecker_Env.typeof_well_typed_tot_or_gtot_term
+                                        =
+                                        (env'.FStar_TypeChecker_Env.typeof_well_typed_tot_or_gtot_term);
+                                      FStar_TypeChecker_Env.teq_nosmt_force =
+                                        (env'.FStar_TypeChecker_Env.teq_nosmt_force);
+                                      FStar_TypeChecker_Env.subtype_nosmt_force
+                                        =
+                                        (env'.FStar_TypeChecker_Env.subtype_nosmt_force);
+                                      FStar_TypeChecker_Env.use_bv_sorts =
+                                        (env'.FStar_TypeChecker_Env.use_bv_sorts);
+                                      FStar_TypeChecker_Env.qtbl_name_and_index
+                                        =
+                                        (env'.FStar_TypeChecker_Env.qtbl_name_and_index);
+                                      FStar_TypeChecker_Env.normalized_eff_names
+                                        =
+                                        (env'.FStar_TypeChecker_Env.normalized_eff_names);
+                                      FStar_TypeChecker_Env.fv_delta_depths =
+                                        (env'.FStar_TypeChecker_Env.fv_delta_depths);
+                                      FStar_TypeChecker_Env.proof_ns =
+                                        (env'.FStar_TypeChecker_Env.proof_ns);
+                                      FStar_TypeChecker_Env.synth_hook =
+                                        (env'.FStar_TypeChecker_Env.synth_hook);
+                                      FStar_TypeChecker_Env.try_solve_implicits_hook
+                                        =
+                                        (env'.FStar_TypeChecker_Env.try_solve_implicits_hook);
+                                      FStar_TypeChecker_Env.splice =
+                                        (env'.FStar_TypeChecker_Env.splice);
+                                      FStar_TypeChecker_Env.mpreprocess =
+                                        (env'.FStar_TypeChecker_Env.mpreprocess);
+                                      FStar_TypeChecker_Env.postprocess =
+                                        (env'.FStar_TypeChecker_Env.postprocess);
+                                      FStar_TypeChecker_Env.identifier_info =
+                                        (env'.FStar_TypeChecker_Env.identifier_info);
+                                      FStar_TypeChecker_Env.tc_hooks =
+                                        (env'.FStar_TypeChecker_Env.tc_hooks);
+                                      FStar_TypeChecker_Env.dsenv =
+                                        (env'.FStar_TypeChecker_Env.dsenv);
+                                      FStar_TypeChecker_Env.nbe =
+                                        (env'.FStar_TypeChecker_Env.nbe);
+                                      FStar_TypeChecker_Env.strict_args_tab =
+                                        (env'.FStar_TypeChecker_Env.strict_args_tab);
+                                      FStar_TypeChecker_Env.erasable_types_tab
+                                        =
+                                        (env'.FStar_TypeChecker_Env.erasable_types_tab);
+                                      FStar_TypeChecker_Env.enable_defer_to_tac
+                                        =
+                                        (env'.FStar_TypeChecker_Env.enable_defer_to_tac);
+                                      FStar_TypeChecker_Env.unif_allow_ref_guards
+                                        =
+                                        (env'.FStar_TypeChecker_Env.unif_allow_ref_guards);
+                                      FStar_TypeChecker_Env.erase_erasable_args
+                                        =
+                                        (env'.FStar_TypeChecker_Env.erase_erasable_args);
+                                      FStar_TypeChecker_Env.rel_query_for_apply_tac_uvar
+                                        =
+                                        (env'.FStar_TypeChecker_Env.rel_query_for_apply_tac_uvar)
+                                    } e1) uu___4
                                "FStar.TypeChecker.Tc.tc_sig_let-tc-phase2" in
                            let uu___4 =
                              match r1 with
@@ -1815,14 +1923,18 @@ let (tc_decl' :
   fun env0 ->
     fun se ->
       let env = env0 in
-      FStar_TypeChecker_Util.check_sigelt_quals env se;
-      proc_check_with se.FStar_Syntax_Syntax.sigattrs
+      let se1 =
+        match se.FStar_Syntax_Syntax.sigel with
+        | FStar_Syntax_Syntax.Sig_fail uu___ -> se
+        | uu___ -> tc_decl_attributes env se in
+      FStar_TypeChecker_Util.check_sigelt_quals env se1;
+      proc_check_with se1.FStar_Syntax_Syntax.sigattrs
         (fun uu___1 ->
-           let r = se.FStar_Syntax_Syntax.sigrng in
-           let se1 =
+           let r = se1.FStar_Syntax_Syntax.sigrng in
+           let se2 =
              let uu___2 = FStar_Options.record_options () in
-             if uu___2 then store_sigopts se else se in
-           match se1.FStar_Syntax_Syntax.sigel with
+             if uu___2 then store_sigopts se1 else se1 in
+           match se2.FStar_Syntax_Syntax.sigel with
            | FStar_Syntax_Syntax.Sig_inductive_typ uu___2 ->
                failwith "Impossible bare data-constructor"
            | FStar_Syntax_Syntax.Sig_datacon uu___2 ->
@@ -1990,7 +2102,7 @@ let (tc_decl' :
                             (FStar_Compiler_List.iter
                                FStar_Errors.print_issue errs;
                              FStar_Errors.log_issue
-                               se1.FStar_Syntax_Syntax.sigrng
+                               se2.FStar_Syntax_Syntax.sigrng
                                (FStar_Errors.Error_DidNotFail,
                                  "This top-level definition was expected to fail, but it succeeded"))
                         | uu___8 ->
@@ -2030,7 +2142,7 @@ let (tc_decl' :
                                        (FStar_Errors.Error_DidNotFail,
                                          uu___12) in
                                      FStar_Errors.log_issue
-                                       se1.FStar_Syntax_Syntax.sigrng uu___11)))
+                                       se2.FStar_Syntax_Syntax.sigrng uu___11)))
                             else ());
                        ([], [], env)))))
            | FStar_Syntax_Syntax.Sig_bundle (ses, lids) ->
@@ -2149,8 +2261,8 @@ let (tc_decl' :
                                FStar_TypeChecker_Env.rel_query_for_apply_tac_uvar
                                  =
                                  (env1.FStar_TypeChecker_Env.rel_query_for_apply_tac_uvar)
-                             } ses se1.FStar_Syntax_Syntax.sigquals
-                             se1.FStar_Syntax_Syntax.sigattrs lids in
+                             } ses se2.FStar_Syntax_Syntax.sigquals
+                             se2.FStar_Syntax_Syntax.sigattrs lids in
                          FStar_Compiler_Effect.op_Bar_Greater uu___5
                            FStar_Pervasives_Native.fst in
                        FStar_Compiler_Effect.op_Bar_Greater uu___4
@@ -2169,15 +2281,15 @@ let (tc_decl' :
                              FStar_Syntax_Syntax.sigel =
                                (FStar_Syntax_Syntax.Sig_bundle (ses2, lids));
                              FStar_Syntax_Syntax.sigrng =
-                               (se1.FStar_Syntax_Syntax.sigrng);
+                               (se2.FStar_Syntax_Syntax.sigrng);
                              FStar_Syntax_Syntax.sigquals =
-                               (se1.FStar_Syntax_Syntax.sigquals);
+                               (se2.FStar_Syntax_Syntax.sigquals);
                              FStar_Syntax_Syntax.sigmeta =
-                               (se1.FStar_Syntax_Syntax.sigmeta);
+                               (se2.FStar_Syntax_Syntax.sigmeta);
                              FStar_Syntax_Syntax.sigattrs =
-                               (se1.FStar_Syntax_Syntax.sigattrs);
+                               (se2.FStar_Syntax_Syntax.sigattrs);
                              FStar_Syntax_Syntax.sigopts =
-                               (se1.FStar_Syntax_Syntax.sigopts)
+                               (se2.FStar_Syntax_Syntax.sigopts)
                            } in
                        FStar_Compiler_Util.print1
                          "Inductive after phase 1: %s\n" uu___5
@@ -2185,8 +2297,8 @@ let (tc_decl' :
                     ses2)
                  else ses in
                let uu___2 =
-                 tc_inductive env1 ses1 se1.FStar_Syntax_Syntax.sigquals
-                   se1.FStar_Syntax_Syntax.sigattrs lids in
+                 tc_inductive env1 ses1 se2.FStar_Syntax_Syntax.sigquals
+                   se2.FStar_Syntax_Syntax.sigattrs lids in
                (match uu___2 with
                 | (sigbndle, projectors_ses) ->
                     let sigbndle1 =
@@ -2200,13 +2312,13 @@ let (tc_decl' :
                         FStar_Syntax_Syntax.sigmeta =
                           (sigbndle.FStar_Syntax_Syntax.sigmeta);
                         FStar_Syntax_Syntax.sigattrs =
-                          (se1.FStar_Syntax_Syntax.sigattrs);
+                          (se2.FStar_Syntax_Syntax.sigattrs);
                         FStar_Syntax_Syntax.sigopts =
                           (sigbndle.FStar_Syntax_Syntax.sigopts)
                       } in
                     ([sigbndle1], projectors_ses, env0))
            | FStar_Syntax_Syntax.Sig_pragma p ->
-               (FStar_Syntax_Util.process_pragma p r; ([se1], [], env0))
+               (FStar_Syntax_Util.process_pragma p r; ([se2], [], env0))
            | FStar_Syntax_Syntax.Sig_new_effect ne ->
                let is_unelaborated_dm4f =
                  match ne.FStar_Syntax_Syntax.combinators with
@@ -2240,15 +2352,15 @@ let (tc_decl' :
                                FStar_Syntax_Syntax.sigel =
                                  (FStar_Syntax_Syntax.Sig_new_effect ne1);
                                FStar_Syntax_Syntax.sigrng =
-                                 (se1.FStar_Syntax_Syntax.sigrng);
+                                 (se2.FStar_Syntax_Syntax.sigrng);
                                FStar_Syntax_Syntax.sigquals =
-                                 (se1.FStar_Syntax_Syntax.sigquals);
+                                 (se2.FStar_Syntax_Syntax.sigquals);
                                FStar_Syntax_Syntax.sigmeta =
-                                 (se1.FStar_Syntax_Syntax.sigmeta);
+                                 (se2.FStar_Syntax_Syntax.sigmeta);
                                FStar_Syntax_Syntax.sigattrs =
-                                 (se1.FStar_Syntax_Syntax.sigattrs);
+                                 (se2.FStar_Syntax_Syntax.sigattrs);
                                FStar_Syntax_Syntax.sigopts =
-                                 (se1.FStar_Syntax_Syntax.sigopts)
+                                 (se2.FStar_Syntax_Syntax.sigopts)
                              };
                             lift]
                         | FStar_Pervasives_Native.None ->
@@ -2256,15 +2368,15 @@ let (tc_decl' :
                                FStar_Syntax_Syntax.sigel =
                                  (FStar_Syntax_Syntax.Sig_new_effect ne1);
                                FStar_Syntax_Syntax.sigrng =
-                                 (se1.FStar_Syntax_Syntax.sigrng);
+                                 (se2.FStar_Syntax_Syntax.sigrng);
                                FStar_Syntax_Syntax.sigquals =
-                                 (se1.FStar_Syntax_Syntax.sigquals);
+                                 (se2.FStar_Syntax_Syntax.sigquals);
                                FStar_Syntax_Syntax.sigmeta =
-                                 (se1.FStar_Syntax_Syntax.sigmeta);
+                                 (se2.FStar_Syntax_Syntax.sigmeta);
                                FStar_Syntax_Syntax.sigattrs =
-                                 (se1.FStar_Syntax_Syntax.sigattrs);
+                                 (se2.FStar_Syntax_Syntax.sigattrs);
                                FStar_Syntax_Syntax.sigopts =
-                                 (se1.FStar_Syntax_Syntax.sigopts)
+                                 (se2.FStar_Syntax_Syntax.sigopts)
                              }] in
                       let effect_and_lift_ses1 =
                         FStar_Compiler_Effect.op_Bar_Greater
@@ -2421,8 +2533,8 @@ let (tc_decl' :
                                     FStar_TypeChecker_Env.rel_query_for_apply_tac_uvar
                                       =
                                       (env.FStar_TypeChecker_Env.rel_query_for_apply_tac_uvar)
-                                  } ne se1.FStar_Syntax_Syntax.sigquals
-                                  se1.FStar_Syntax_Syntax.sigattrs in
+                                  } ne se2.FStar_Syntax_Syntax.sigquals
+                                  se2.FStar_Syntax_Syntax.sigattrs in
                               FStar_Compiler_Effect.op_Bar_Greater uu___7
                                 FStar_Pervasives_Native.fst in
                             FStar_Compiler_Effect.op_Bar_Greater uu___6
@@ -2431,15 +2543,15 @@ let (tc_decl' :
                                    FStar_Syntax_Syntax.sigel =
                                      (FStar_Syntax_Syntax.Sig_new_effect ne3);
                                    FStar_Syntax_Syntax.sigrng =
-                                     (se1.FStar_Syntax_Syntax.sigrng);
+                                     (se2.FStar_Syntax_Syntax.sigrng);
                                    FStar_Syntax_Syntax.sigquals =
-                                     (se1.FStar_Syntax_Syntax.sigquals);
+                                     (se2.FStar_Syntax_Syntax.sigquals);
                                    FStar_Syntax_Syntax.sigmeta =
-                                     (se1.FStar_Syntax_Syntax.sigmeta);
+                                     (se2.FStar_Syntax_Syntax.sigmeta);
                                    FStar_Syntax_Syntax.sigattrs =
-                                     (se1.FStar_Syntax_Syntax.sigattrs);
+                                     (se2.FStar_Syntax_Syntax.sigattrs);
                                    FStar_Syntax_Syntax.sigopts =
-                                     (se1.FStar_Syntax_Syntax.sigopts)
+                                     (se2.FStar_Syntax_Syntax.sigopts)
                                  }) in
                           FStar_Compiler_Effect.op_Bar_Greater uu___5
                             (FStar_TypeChecker_Normalize.elim_uvars env) in
@@ -2457,15 +2569,15 @@ let (tc_decl' :
                                 FStar_Syntax_Syntax.sigel =
                                   (FStar_Syntax_Syntax.Sig_new_effect ne2);
                                 FStar_Syntax_Syntax.sigrng =
-                                  (se1.FStar_Syntax_Syntax.sigrng);
+                                  (se2.FStar_Syntax_Syntax.sigrng);
                                 FStar_Syntax_Syntax.sigquals =
-                                  (se1.FStar_Syntax_Syntax.sigquals);
+                                  (se2.FStar_Syntax_Syntax.sigquals);
                                 FStar_Syntax_Syntax.sigmeta =
-                                  (se1.FStar_Syntax_Syntax.sigmeta);
+                                  (se2.FStar_Syntax_Syntax.sigmeta);
                                 FStar_Syntax_Syntax.sigattrs =
-                                  (se1.FStar_Syntax_Syntax.sigattrs);
+                                  (se2.FStar_Syntax_Syntax.sigattrs);
                                 FStar_Syntax_Syntax.sigopts =
-                                  (se1.FStar_Syntax_Syntax.sigopts)
+                                  (se2.FStar_Syntax_Syntax.sigopts)
                               } in
                           FStar_Compiler_Util.print1
                             "Effect decl after phase 1: %s\n" uu___6
@@ -2474,44 +2586,44 @@ let (tc_decl' :
                     else ne in
                   let uu___3 =
                     FStar_TypeChecker_TcEffect.tc_eff_decl env ne1
-                      se1.FStar_Syntax_Syntax.sigquals
-                      se1.FStar_Syntax_Syntax.sigattrs in
+                      se2.FStar_Syntax_Syntax.sigquals
+                      se2.FStar_Syntax_Syntax.sigattrs in
                   match uu___3 with
                   | (ne2, ses) ->
-                      let se2 =
+                      let se3 =
                         {
                           FStar_Syntax_Syntax.sigel =
                             (FStar_Syntax_Syntax.Sig_new_effect ne2);
                           FStar_Syntax_Syntax.sigrng =
-                            (se1.FStar_Syntax_Syntax.sigrng);
+                            (se2.FStar_Syntax_Syntax.sigrng);
                           FStar_Syntax_Syntax.sigquals =
-                            (se1.FStar_Syntax_Syntax.sigquals);
+                            (se2.FStar_Syntax_Syntax.sigquals);
                           FStar_Syntax_Syntax.sigmeta =
-                            (se1.FStar_Syntax_Syntax.sigmeta);
+                            (se2.FStar_Syntax_Syntax.sigmeta);
                           FStar_Syntax_Syntax.sigattrs =
-                            (se1.FStar_Syntax_Syntax.sigattrs);
+                            (se2.FStar_Syntax_Syntax.sigattrs);
                           FStar_Syntax_Syntax.sigopts =
-                            (se1.FStar_Syntax_Syntax.sigopts)
+                            (se2.FStar_Syntax_Syntax.sigopts)
                         } in
-                      ([se2], ses, env0))
+                      ([se3], ses, env0))
            | FStar_Syntax_Syntax.Sig_sub_effect sub ->
                let sub1 = FStar_TypeChecker_TcEffect.tc_lift env sub r in
-               let se2 =
+               let se3 =
                  {
                    FStar_Syntax_Syntax.sigel =
                      (FStar_Syntax_Syntax.Sig_sub_effect sub1);
                    FStar_Syntax_Syntax.sigrng =
-                     (se1.FStar_Syntax_Syntax.sigrng);
+                     (se2.FStar_Syntax_Syntax.sigrng);
                    FStar_Syntax_Syntax.sigquals =
-                     (se1.FStar_Syntax_Syntax.sigquals);
+                     (se2.FStar_Syntax_Syntax.sigquals);
                    FStar_Syntax_Syntax.sigmeta =
-                     (se1.FStar_Syntax_Syntax.sigmeta);
+                     (se2.FStar_Syntax_Syntax.sigmeta);
                    FStar_Syntax_Syntax.sigattrs =
-                     (se1.FStar_Syntax_Syntax.sigattrs);
+                     (se2.FStar_Syntax_Syntax.sigattrs);
                    FStar_Syntax_Syntax.sigopts =
-                     (se1.FStar_Syntax_Syntax.sigopts)
+                     (se2.FStar_Syntax_Syntax.sigopts)
                  } in
-               ([se2], [], env)
+               ([se3], [], env)
            | FStar_Syntax_Syntax.Sig_effect_abbrev (lid, uvs, tps, c, flags)
                ->
                let uu___2 =
@@ -2635,21 +2747,21 @@ let (tc_decl' :
                                     (FStar_Syntax_Syntax.Sig_effect_abbrev
                                        (lid1, uvs1, tps1, c1, flags));
                                   FStar_Syntax_Syntax.sigrng =
-                                    (se1.FStar_Syntax_Syntax.sigrng);
+                                    (se2.FStar_Syntax_Syntax.sigrng);
                                   FStar_Syntax_Syntax.sigquals =
-                                    (se1.FStar_Syntax_Syntax.sigquals);
+                                    (se2.FStar_Syntax_Syntax.sigquals);
                                   FStar_Syntax_Syntax.sigmeta =
-                                    (se1.FStar_Syntax_Syntax.sigmeta);
+                                    (se2.FStar_Syntax_Syntax.sigmeta);
                                   FStar_Syntax_Syntax.sigattrs =
-                                    (se1.FStar_Syntax_Syntax.sigattrs);
+                                    (se2.FStar_Syntax_Syntax.sigattrs);
                                   FStar_Syntax_Syntax.sigopts =
-                                    (se1.FStar_Syntax_Syntax.sigopts)
+                                    (se2.FStar_Syntax_Syntax.sigopts)
                                 }) in
                      FStar_Compiler_Effect.op_Bar_Greater uu___5
                        (FStar_TypeChecker_Normalize.elim_uvars env) in
                    FStar_Compiler_Effect.op_Bar_Greater uu___4
-                     (fun se2 ->
-                        match se2.FStar_Syntax_Syntax.sigel with
+                     (fun se3 ->
+                        match se3.FStar_Syntax_Syntax.sigel with
                         | FStar_Syntax_Syntax.Sig_effect_abbrev
                             (lid1, uvs1, tps1, c1, uu___5) ->
                             (lid1, uvs1, tps1, c1)
@@ -2664,27 +2776,27 @@ let (tc_decl' :
                         (lid1, uvs1, tps1, c1) r in
                     (match uu___3 with
                      | (lid2, uvs2, tps2, c2) ->
-                         let se2 =
+                         let se3 =
                            {
                              FStar_Syntax_Syntax.sigel =
                                (FStar_Syntax_Syntax.Sig_effect_abbrev
                                   (lid2, uvs2, tps2, c2, flags));
                              FStar_Syntax_Syntax.sigrng =
-                               (se1.FStar_Syntax_Syntax.sigrng);
+                               (se2.FStar_Syntax_Syntax.sigrng);
                              FStar_Syntax_Syntax.sigquals =
-                               (se1.FStar_Syntax_Syntax.sigquals);
+                               (se2.FStar_Syntax_Syntax.sigquals);
                              FStar_Syntax_Syntax.sigmeta =
-                               (se1.FStar_Syntax_Syntax.sigmeta);
+                               (se2.FStar_Syntax_Syntax.sigmeta);
                              FStar_Syntax_Syntax.sigattrs =
-                               (se1.FStar_Syntax_Syntax.sigattrs);
+                               (se2.FStar_Syntax_Syntax.sigattrs);
                              FStar_Syntax_Syntax.sigopts =
-                               (se1.FStar_Syntax_Syntax.sigopts)
+                               (se2.FStar_Syntax_Syntax.sigopts)
                            } in
-                         ([se2], [], env0)))
+                         ([se3], [], env0)))
            | FStar_Syntax_Syntax.Sig_declare_typ (uu___2, uu___3, uu___4)
                when
                FStar_Compiler_Effect.op_Bar_Greater
-                 se1.FStar_Syntax_Syntax.sigquals
+                 se2.FStar_Syntax_Syntax.sigquals
                  (FStar_Compiler_Util.for_some
                     (fun uu___5 ->
                        match uu___5 with
@@ -2693,7 +2805,7 @@ let (tc_decl' :
                -> ([], [], env0)
            | FStar_Syntax_Syntax.Sig_let (uu___2, uu___3) when
                FStar_Compiler_Effect.op_Bar_Greater
-                 se1.FStar_Syntax_Syntax.sigquals
+                 se2.FStar_Syntax_Syntax.sigquals
                  (FStar_Compiler_Util.for_some
                     (fun uu___4 ->
                        match uu___4 with
@@ -2824,7 +2936,7 @@ let (tc_decl' :
                            FStar_TypeChecker_Env.rel_query_for_apply_tac_uvar
                              =
                              (env1.FStar_TypeChecker_Env.rel_query_for_apply_tac_uvar)
-                         } (uvs, t) se1.FStar_Syntax_Syntax.sigrng in
+                         } (uvs, t) se2.FStar_Syntax_Syntax.sigrng in
                      match uu___5 with
                      | (uvs1, t1) ->
                          ((let uu___7 =
@@ -2847,7 +2959,7 @@ let (tc_decl' :
                  | (uvs1, t1) ->
                      let uu___4 =
                        tc_declare_typ env1 (uvs1, t1)
-                         se1.FStar_Syntax_Syntax.sigrng in
+                         se2.FStar_Syntax_Syntax.sigrng in
                      (match uu___4 with
                       | (uvs2, t2) ->
                           ([{
@@ -2855,15 +2967,15 @@ let (tc_decl' :
                                 (FStar_Syntax_Syntax.Sig_declare_typ
                                    (lid, uvs2, t2));
                               FStar_Syntax_Syntax.sigrng =
-                                (se1.FStar_Syntax_Syntax.sigrng);
+                                (se2.FStar_Syntax_Syntax.sigrng);
                               FStar_Syntax_Syntax.sigquals =
-                                (se1.FStar_Syntax_Syntax.sigquals);
+                                (se2.FStar_Syntax_Syntax.sigquals);
                               FStar_Syntax_Syntax.sigmeta =
-                                (se1.FStar_Syntax_Syntax.sigmeta);
+                                (se2.FStar_Syntax_Syntax.sigmeta);
                               FStar_Syntax_Syntax.sigattrs =
-                                (se1.FStar_Syntax_Syntax.sigattrs);
+                                (se2.FStar_Syntax_Syntax.sigattrs);
                               FStar_Syntax_Syntax.sigopts =
-                                (se1.FStar_Syntax_Syntax.sigopts)
+                                (se2.FStar_Syntax_Syntax.sigopts)
                             }], [], env0))))
            | FStar_Syntax_Syntax.Sig_assume (lid, uvs, t) ->
                ((let uu___3 =
@@ -2983,7 +3095,7 @@ let (tc_decl' :
                            FStar_TypeChecker_Env.rel_query_for_apply_tac_uvar
                              =
                              (env1.FStar_TypeChecker_Env.rel_query_for_apply_tac_uvar)
-                         } (uvs, t) se1.FStar_Syntax_Syntax.sigrng in
+                         } (uvs, t) se2.FStar_Syntax_Syntax.sigrng in
                      match uu___5 with
                      | (uvs1, t1) ->
                          ((let uu___7 =
@@ -3006,7 +3118,7 @@ let (tc_decl' :
                  | (uvs1, t1) ->
                      let uu___4 =
                        tc_assume env1 (uvs1, t1)
-                         se1.FStar_Syntax_Syntax.sigrng in
+                         se2.FStar_Syntax_Syntax.sigrng in
                      (match uu___4 with
                       | (uvs2, t2) ->
                           ([{
@@ -3014,15 +3126,15 @@ let (tc_decl' :
                                 (FStar_Syntax_Syntax.Sig_assume
                                    (lid, uvs2, t2));
                               FStar_Syntax_Syntax.sigrng =
-                                (se1.FStar_Syntax_Syntax.sigrng);
+                                (se2.FStar_Syntax_Syntax.sigrng);
                               FStar_Syntax_Syntax.sigquals =
-                                (se1.FStar_Syntax_Syntax.sigquals);
+                                (se2.FStar_Syntax_Syntax.sigquals);
                               FStar_Syntax_Syntax.sigmeta =
-                                (se1.FStar_Syntax_Syntax.sigmeta);
+                                (se2.FStar_Syntax_Syntax.sigmeta);
                               FStar_Syntax_Syntax.sigattrs =
-                                (se1.FStar_Syntax_Syntax.sigattrs);
+                                (se2.FStar_Syntax_Syntax.sigattrs);
                               FStar_Syntax_Syntax.sigopts =
-                                (se1.FStar_Syntax_Syntax.sigopts)
+                                (se2.FStar_Syntax_Syntax.sigopts)
                             }], [], env0))))
            | FStar_Syntax_Syntax.Sig_splice (lids, t) ->
                ((let uu___3 = FStar_Options.debug_any () in
@@ -3044,7 +3156,7 @@ let (tc_decl' :
                      (FStar_TypeChecker_Rel.force_trivial_guard env g;
                       (let ses =
                          env.FStar_TypeChecker_Env.splice env
-                           se1.FStar_Syntax_Syntax.sigrng t1 in
+                           se2.FStar_Syntax_Syntax.sigrng t1 in
                        let lids' =
                          FStar_Compiler_List.collect
                            FStar_Syntax_Util.lids_of_sigelt ses in
@@ -3205,7 +3317,7 @@ let (tc_decl' :
                    FStar_Ident.string_of_lid uu___4 in
                  FStar_Pervasives_Native.Some uu___3 in
                FStar_Profiling.profile
-                 (fun uu___3 -> tc_sig_let env r se1 lbs lids) uu___2
+                 (fun uu___3 -> tc_sig_let env r se2 lbs lids) uu___2
                  "FStar.TypeChecker.Tc.tc_sig_let"
            | FStar_Syntax_Syntax.Sig_polymonadic_bind (m, n, p, t, uu___2) ->
                let t1 =
@@ -3332,21 +3444,21 @@ let (tc_decl' :
                                       (FStar_Syntax_Syntax.Sig_polymonadic_bind
                                          (m, n, p, t2, ty));
                                     FStar_Syntax_Syntax.sigrng =
-                                      (se1.FStar_Syntax_Syntax.sigrng);
+                                      (se2.FStar_Syntax_Syntax.sigrng);
                                     FStar_Syntax_Syntax.sigquals =
-                                      (se1.FStar_Syntax_Syntax.sigquals);
+                                      (se2.FStar_Syntax_Syntax.sigquals);
                                     FStar_Syntax_Syntax.sigmeta =
-                                      (se1.FStar_Syntax_Syntax.sigmeta);
+                                      (se2.FStar_Syntax_Syntax.sigmeta);
                                     FStar_Syntax_Syntax.sigattrs =
-                                      (se1.FStar_Syntax_Syntax.sigattrs);
+                                      (se2.FStar_Syntax_Syntax.sigattrs);
                                     FStar_Syntax_Syntax.sigopts =
-                                      (se1.FStar_Syntax_Syntax.sigopts)
+                                      (se2.FStar_Syntax_Syntax.sigopts)
                                   }) in
                        FStar_Compiler_Effect.op_Bar_Greater uu___6
                          (FStar_TypeChecker_Normalize.elim_uvars env) in
                      FStar_Compiler_Effect.op_Bar_Greater uu___5
-                       (fun se2 ->
-                          match se2.FStar_Syntax_Syntax.sigel with
+                       (fun se3 ->
+                          match se3.FStar_Syntax_Syntax.sigel with
                           | FStar_Syntax_Syntax.Sig_polymonadic_bind
                               (uu___6, uu___7, uu___8, t2, ty) -> (t2, ty)
                           | uu___6 ->
@@ -3367,15 +3479,15 @@ let (tc_decl' :
                                    (FStar_Syntax_Syntax.Sig_polymonadic_bind
                                       (m, n, p, t2, ty));
                                  FStar_Syntax_Syntax.sigrng =
-                                   (se1.FStar_Syntax_Syntax.sigrng);
+                                   (se2.FStar_Syntax_Syntax.sigrng);
                                  FStar_Syntax_Syntax.sigquals =
-                                   (se1.FStar_Syntax_Syntax.sigquals);
+                                   (se2.FStar_Syntax_Syntax.sigquals);
                                  FStar_Syntax_Syntax.sigmeta =
-                                   (se1.FStar_Syntax_Syntax.sigmeta);
+                                   (se2.FStar_Syntax_Syntax.sigmeta);
                                  FStar_Syntax_Syntax.sigattrs =
-                                   (se1.FStar_Syntax_Syntax.sigattrs);
+                                   (se2.FStar_Syntax_Syntax.sigattrs);
                                  FStar_Syntax_Syntax.sigopts =
-                                   (se1.FStar_Syntax_Syntax.sigopts)
+                                   (se2.FStar_Syntax_Syntax.sigopts)
                                } in
                            FStar_Compiler_Util.print1
                              "Polymonadic bind after phase 1: %s\n" uu___7
@@ -3386,23 +3498,23 @@ let (tc_decl' :
                  FStar_TypeChecker_TcEffect.tc_polymonadic_bind env m n p t1 in
                (match uu___3 with
                 | (t2, ty) ->
-                    let se2 =
+                    let se3 =
                       {
                         FStar_Syntax_Syntax.sigel =
                           (FStar_Syntax_Syntax.Sig_polymonadic_bind
                              (m, n, p, t2, ty));
                         FStar_Syntax_Syntax.sigrng =
-                          (se1.FStar_Syntax_Syntax.sigrng);
+                          (se2.FStar_Syntax_Syntax.sigrng);
                         FStar_Syntax_Syntax.sigquals =
-                          (se1.FStar_Syntax_Syntax.sigquals);
+                          (se2.FStar_Syntax_Syntax.sigquals);
                         FStar_Syntax_Syntax.sigmeta =
-                          (se1.FStar_Syntax_Syntax.sigmeta);
+                          (se2.FStar_Syntax_Syntax.sigmeta);
                         FStar_Syntax_Syntax.sigattrs =
-                          (se1.FStar_Syntax_Syntax.sigattrs);
+                          (se2.FStar_Syntax_Syntax.sigattrs);
                         FStar_Syntax_Syntax.sigopts =
-                          (se1.FStar_Syntax_Syntax.sigopts)
+                          (se2.FStar_Syntax_Syntax.sigopts)
                       } in
-                    ([se2], [], env0))
+                    ([se3], [], env0))
            | FStar_Syntax_Syntax.Sig_polymonadic_subcomp (m, n, t, uu___2) ->
                let t1 =
                  let uu___3 = do_two_phases env in
@@ -3528,21 +3640,21 @@ let (tc_decl' :
                                       (FStar_Syntax_Syntax.Sig_polymonadic_subcomp
                                          (m, n, t2, ty));
                                     FStar_Syntax_Syntax.sigrng =
-                                      (se1.FStar_Syntax_Syntax.sigrng);
+                                      (se2.FStar_Syntax_Syntax.sigrng);
                                     FStar_Syntax_Syntax.sigquals =
-                                      (se1.FStar_Syntax_Syntax.sigquals);
+                                      (se2.FStar_Syntax_Syntax.sigquals);
                                     FStar_Syntax_Syntax.sigmeta =
-                                      (se1.FStar_Syntax_Syntax.sigmeta);
+                                      (se2.FStar_Syntax_Syntax.sigmeta);
                                     FStar_Syntax_Syntax.sigattrs =
-                                      (se1.FStar_Syntax_Syntax.sigattrs);
+                                      (se2.FStar_Syntax_Syntax.sigattrs);
                                     FStar_Syntax_Syntax.sigopts =
-                                      (se1.FStar_Syntax_Syntax.sigopts)
+                                      (se2.FStar_Syntax_Syntax.sigopts)
                                   }) in
                        FStar_Compiler_Effect.op_Bar_Greater uu___6
                          (FStar_TypeChecker_Normalize.elim_uvars env) in
                      FStar_Compiler_Effect.op_Bar_Greater uu___5
-                       (fun se2 ->
-                          match se2.FStar_Syntax_Syntax.sigel with
+                       (fun se3 ->
+                          match se3.FStar_Syntax_Syntax.sigel with
                           | FStar_Syntax_Syntax.Sig_polymonadic_subcomp
                               (uu___6, uu___7, t2, ty) -> (t2, ty)
                           | uu___6 ->
@@ -3563,15 +3675,15 @@ let (tc_decl' :
                                    (FStar_Syntax_Syntax.Sig_polymonadic_subcomp
                                       (m, n, t2, ty));
                                  FStar_Syntax_Syntax.sigrng =
-                                   (se1.FStar_Syntax_Syntax.sigrng);
+                                   (se2.FStar_Syntax_Syntax.sigrng);
                                  FStar_Syntax_Syntax.sigquals =
-                                   (se1.FStar_Syntax_Syntax.sigquals);
+                                   (se2.FStar_Syntax_Syntax.sigquals);
                                  FStar_Syntax_Syntax.sigmeta =
-                                   (se1.FStar_Syntax_Syntax.sigmeta);
+                                   (se2.FStar_Syntax_Syntax.sigmeta);
                                  FStar_Syntax_Syntax.sigattrs =
-                                   (se1.FStar_Syntax_Syntax.sigattrs);
+                                   (se2.FStar_Syntax_Syntax.sigattrs);
                                  FStar_Syntax_Syntax.sigopts =
-                                   (se1.FStar_Syntax_Syntax.sigopts)
+                                   (se2.FStar_Syntax_Syntax.sigopts)
                                } in
                            FStar_Compiler_Util.print1
                              "Polymonadic subcomp after phase 1: %s\n" uu___7
@@ -3582,23 +3694,23 @@ let (tc_decl' :
                  FStar_TypeChecker_TcEffect.tc_polymonadic_subcomp env m n t1 in
                (match uu___3 with
                 | (t2, ty) ->
-                    let se2 =
+                    let se3 =
                       {
                         FStar_Syntax_Syntax.sigel =
                           (FStar_Syntax_Syntax.Sig_polymonadic_subcomp
                              (m, n, t2, ty));
                         FStar_Syntax_Syntax.sigrng =
-                          (se1.FStar_Syntax_Syntax.sigrng);
+                          (se2.FStar_Syntax_Syntax.sigrng);
                         FStar_Syntax_Syntax.sigquals =
-                          (se1.FStar_Syntax_Syntax.sigquals);
+                          (se2.FStar_Syntax_Syntax.sigquals);
                         FStar_Syntax_Syntax.sigmeta =
-                          (se1.FStar_Syntax_Syntax.sigmeta);
+                          (se2.FStar_Syntax_Syntax.sigmeta);
                         FStar_Syntax_Syntax.sigattrs =
-                          (se1.FStar_Syntax_Syntax.sigattrs);
+                          (se2.FStar_Syntax_Syntax.sigattrs);
                         FStar_Syntax_Syntax.sigopts =
-                          (se1.FStar_Syntax_Syntax.sigopts)
+                          (se2.FStar_Syntax_Syntax.sigopts)
                       } in
-                    ([se2], [], env0)))
+                    ([se3], [], env0)))
 let (tc_decl :
   FStar_TypeChecker_Env.env ->
     FStar_Syntax_Syntax.sigelt ->
@@ -4334,7 +4446,7 @@ let (tc_decls :
                ([], env) ses) in
       match uu___ with
       | (ses1, env1) -> ((FStar_Compiler_List.rev_append ses1 []), env1)
-let (uu___905 : unit) =
+let (uu___890 : unit) =
   FStar_Compiler_Effect.op_Colon_Equals tc_decls_knot
     (FStar_Pervasives_Native.Some tc_decls)
 let (snapshot_context :

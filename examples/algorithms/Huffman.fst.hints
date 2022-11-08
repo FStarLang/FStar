@@ -15,7 +15,7 @@
         "typing_Huffman.symbol"
       ],
       0,
-      "9a9bc6b5a3425b203aa0d4b4c11bfda2"
+      "46d5e64b943d44709e3024b99e21d549"
     ],
     [
       "Huffman.__proj__Leaf__item__w",
@@ -28,7 +28,7 @@
         "refinement_interpretation_Tm_refine_673d4504dc1e4cbbf78a6d1db34013a8"
       ],
       0,
-      "49f5e42686f490096a6a9747a2a09fb7"
+      "1a8684fe2643468486c265aee7da4745"
     ],
     [
       "Huffman.__proj__Leaf__item__s",
@@ -41,7 +41,7 @@
         "refinement_interpretation_Tm_refine_673d4504dc1e4cbbf78a6d1db34013a8"
       ],
       0,
-      "2df38122054b805daf79f79c7d9e329b"
+      "64bac0f58ca60e0f24d8cc1de663538e"
     ],
     [
       "Huffman.__proj__Node__item__w",
@@ -54,7 +54,7 @@
         "refinement_interpretation_Tm_refine_da21e2f813ab8bad3b81748c14e80223"
       ],
       0,
-      "16dbb0e7464a6f5dbbb0cc744a7a5b73"
+      "a5c6febc584784b04ea74da8cb50eef9"
     ],
     [
       "Huffman.__proj__Node__item__l",
@@ -67,7 +67,7 @@
         "refinement_interpretation_Tm_refine_da21e2f813ab8bad3b81748c14e80223"
       ],
       0,
-      "0f2f3283f8f661f1ba6188bccdd123da"
+      "ec842d598cd04cb80eed5c9487e98a01"
     ],
     [
       "Huffman.__proj__Node__item__r",
@@ -80,7 +80,7 @@
         "refinement_interpretation_Tm_refine_da21e2f813ab8bad3b81748c14e80223"
       ],
       0,
-      "c381ae354abe6381ed3e01fcce0f8763"
+      "0fdabcf3ccaf74f12aea7c1ad38a513b"
     ],
     [
       "Huffman.weight",
@@ -92,7 +92,7 @@
         "disc_equation_Huffman.Node", "fuel_guarded_inversion_Huffman.trie"
       ],
       0,
-      "1294b4eb1a7726a572f54f36db3fda27"
+      "a18a7e05cbc53daa643fb47bd61911b8"
     ],
     [
       "Huffman.sorted",
@@ -109,7 +109,7 @@
         "subterm_ordering_Prims.Cons", "typing_Prims.__proj__Cons__item__tl"
       ],
       0,
-      "c6d2dc9719c5da691badb6a3d0eb9891"
+      "328a8230354ea51bb6f20bbb90907b3b"
     ],
     [
       "Huffman.permutation",
@@ -124,7 +124,7 @@
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "09035921aa7e30341af0f7e6e3adcfd0"
+      "bf3b4f6ed9186d8f40b6308fa0160bf2"
     ],
     [
       "Huffman.sorted_smaller",
@@ -133,7 +133,7 @@
       1,
       [ "@query", "assumption_Huffman.trie__uu___haseq" ],
       0,
-      "a7602006310227d6fba2f74529d4a91e"
+      "55e5b00744e92f07f6e3273fe526b73b"
     ],
     [
       "Huffman.sorted_smaller",
@@ -171,7 +171,7 @@
         "typing_Huffman.leq_trie", "unit_inversion", "unit_typing"
       ],
       0,
-      "5ebf134706c6e03a63fab87a083c6882"
+      "cd4b7e70c6259c7ed8abf75abef2c0b7"
     ],
     [
       "Huffman.sorted_smaller",
@@ -209,7 +209,7 @@
         "typing_Huffman.sorted", "unit_inversion", "unit_typing"
       ],
       0,
-      "6ffe0790a1db823ca9fe2864293c4ec8"
+      "4ff9357bc513e3a6b3419259e3f10fb3"
     ],
     [
       "Huffman.insert_in_sorted",
@@ -249,7 +249,7 @@
         "subterm_ordering_Prims.Cons", "typing_Huffman.sorted"
       ],
       0,
-      "ef5ea94cc03321b58fca4f044e8468ed"
+      "151027b02b68095a54579ad453c5620b"
     ],
     [
       "Huffman.insertion_sort",
@@ -283,7 +283,7 @@
         "subterm_ordering_Prims.Cons"
       ],
       0,
-      "82cde88d0ecb1fd7b95781b8e74c57b9"
+      "86eac324ff80ab584924b294bf0100ab"
     ],
     [
       "Huffman.huffman_trie",
@@ -341,7 +341,7 @@
         "typing_Prims.__proj__Cons__item__tl", "well-founded-ordering-on-nat"
       ],
       0,
-      "0166c163b8e7bf5670c0caf5e592a490"
+      "04c0dd4dc92923a34b7ac67fdf02992e"
     ],
     [
       "Huffman.huffman",
@@ -370,7 +370,7 @@
         "typing_Tm_abs_6533a4f83db3855fa174143ac8c4ac82"
       ],
       0,
-      "34f7265d2832815e1119088089fedf28"
+      "722e4b05f83c33a11d6da25e73afba88"
     ],
     [
       "Huffman.encode_one",
@@ -395,7 +395,7 @@
         "typing_FStar.Pervasives.Native.uu___is_Some"
       ],
       0,
-      "dbbac82ef47a0608b2d7bf6be1d0d85c"
+      "e759df8d1422c3d25f5f66deff4990ed"
     ],
     [
       "Huffman.encode",
@@ -444,7 +444,7 @@
         "typing_FStar.Pervasives.Native.__proj__Some__item__v"
       ],
       0,
-      "7b5dfc1bf51b532b7d1900a9ea4aec20"
+      "74ac031d13bb953e6ce4c7d82eb0ccfb"
     ],
     [
       "Huffman.encode",
@@ -494,7 +494,7 @@
         "typing_Prims.uu___is_Cons", "typing_Prims.uu___is_Nil"
       ],
       0,
-      "b8f60f1104f53edc1817b9ea0a2ce444"
+      "bfc0c1509543fd4205d5fcf74effadfa"
     ],
     [
       "Huffman.decode_one",
@@ -539,7 +539,7 @@
         "subterm_ordering_Huffman.Node"
       ],
       0,
-      "e90a8eb41394cf0f35dc6fdb2ebd602c"
+      "66a7b689f4e9aec1e1186b4f57a4cb5e"
     ],
     [
       "Huffman.decode_one",
@@ -587,7 +587,7 @@
         "subterm_ordering_Huffman.Node"
       ],
       0,
-      "2800b4b6e603985d0a314acaa9b45e47"
+      "84f9d24225fc302a6b1bccadc52178f6"
     ],
     [
       "Huffman.decode'",
@@ -638,7 +638,7 @@
         "typing_Huffman.symbol", "well-founded-ordering-on-nat"
       ],
       0,
-      "36c1d32678e02ec45e272ed29e55f2f5"
+      "b2336efb2240388c2d563cf352d93247"
     ],
     [
       "Huffman.decode_aux",
@@ -695,7 +695,7 @@
         "typing_Huffman.uu___is_Node", "well-founded-ordering-on-nat"
       ],
       0,
-      "6117d5505b6e42a76c9d06b2474ed7b7"
+      "e14a0b4842d84797e3198ffb2f148bf1"
     ],
     [
       "Huffman.decode",
@@ -704,7 +704,7 @@
       1,
       [ "@query" ],
       0,
-      "320b9bd945a2ff8b0a2d6cb24b30e6d1"
+      "186f73f61ae4d9ca881aa923f868a586"
     ],
     [
       "Huffman.cancelation_one",
@@ -730,7 +730,7 @@
         "typing_Huffman.symbol", "typing_Huffman.uu___is_Node"
       ],
       0,
-      "240677021930ab1b014913da6321df8c"
+      "29398cfc7a2240cc4569090a6d802430"
     ],
     [
       "Huffman.cancelation_one",
@@ -792,7 +792,7 @@
         "unit_inversion", "unit_typing"
       ],
       0,
-      "7fd25941bd2c2a6bb432680387230494"
+      "a6788989ada7fbbb939b213700e7e132"
     ],
     [
       "Huffman.decode_prefix_aux",
@@ -812,7 +812,7 @@
         "typing_Huffman.symbol"
       ],
       0,
-      "455b35dd647353d2c7768e8952b618c9"
+      "573581a2b44560fa32373673d898da58"
     ],
     [
       "Huffman.decode_prefix_aux",
@@ -882,7 +882,7 @@
         "typing_Huffman.uu___is_Node"
       ],
       0,
-      "27022f1973f26b1e32f01be7ccf910f6"
+      "3ecdca0b286aef67ae9985869f27ac00"
     ],
     [
       "Huffman.decode_prefix",
@@ -904,7 +904,7 @@
         "typing_Huffman.symbol"
       ],
       0,
-      "abd00140729a57278b1f92dd95c085e3"
+      "b7ef1e28440ca1671616973d1123e227"
     ],
     [
       "Huffman.decode_prefix",
@@ -937,7 +937,7 @@
         "typing_Huffman.uu___is_Node"
       ],
       0,
-      "d24a63cd092c56f34c0ae4bf6eeb125a"
+      "41db20024b56e52639faaf69639e78ff"
     ],
     [
       "Huffman.cancelation_aux",
@@ -959,7 +959,7 @@
         "typing_Huffman.symbol"
       ],
       0,
-      "83863d2a11c51ae78eaf79c072694412"
+      "9d465ba09d94b3df3ce64dda546c5add"
     ],
     [
       "Huffman.cancelation_aux",
@@ -1015,7 +1015,7 @@
         "typing_Huffman.uu___is_Node", "unit_inversion", "unit_typing"
       ],
       0,
-      "65d63cb5e7df91d6c43430daaedaa225"
+      "6e058790add15c3a4cab088c1276abdb"
     ],
     [
       "Huffman.cancelation",
@@ -1039,7 +1039,7 @@
         "typing_Huffman.symbol"
       ],
       0,
-      "1e6fd9f58c44fcf9bb5c086486b9239b"
+      "ccbb010dbb583a5823501e8ad36bb08b"
     ],
     [
       "Huffman.cancelation",
@@ -1063,7 +1063,7 @@
         "typing_Huffman.symbol"
       ],
       0,
-      "8b6276de757fe901cd568bbf6f86902f"
+      "57905852a1b7bc9e371439131fa75ad0"
     ]
   ]
 ]

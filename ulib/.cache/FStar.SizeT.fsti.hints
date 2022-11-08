@@ -1,0 +1,49 @@
+[
+  "smáù±>Çœ¼¢\rm?Ã«\"",
+  [
+    [
+      "FStar.SizeT.mk_u32",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "128b48b2279b3281cad33d90d88a513a"
+    ],
+    [
+      "FStar.SizeT.mk_u64",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "d6957ab8b049c4ea54699392a7ebc8cc"
+    ],
+    [
+      "FStar.SizeT.add",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.nat",
+        "primitive_Prims.op_Addition", "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2"
+      ],
+      0,
+      "eb1b7c6f7e2e0487ef66b6e0918a560c"
+    ],
+    [
+      "FStar.SizeT.mul",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.nat",
+        "primitive_Prims.op_Multiply", "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2"
+      ],
+      0,
+      "2b1ac25ef42a0105ad9f2095aea07271"
+    ]
+  ]
+]

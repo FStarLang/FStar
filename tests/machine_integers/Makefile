@@ -13,16 +13,18 @@ all: $(patsubst %.fst,%.run,$(MODULES))
 accept: $(patsubst %.fst,%.run-accept,$(MODULES))
 
 %.exe: %.fst | out
+	@echo '[BUILD     $(notdir $@)]'
 	$(eval B := $(patsubst %.exe,%,$@))
-	$(FSTAR) $(FSTAR_DEFAULT_ARGS) --odir out --codegen OCaml --extract '${B}' '${B}.fst'
-	/bin/echo -e '\n\nlet _ = main ()\n' >> out/${B}.ml
-	$(OCAMLOPT) out/${B}.ml -o $@
+	$(Q)$(FSTAR) $(SIL) $(FSTAR_DEFAULT_ARGS) --odir out --codegen OCaml --extract '${B}' '${B}.fst'
+	$(Q)/bin/echo -e '\n\nlet _ = main ()\n' >> out/${B}.ml
+	$(Q)$(OCAMLOPT) out/${B}.ml -o $@
 
 %.out: %.exe
-	./$< > $@
+	@echo '[OUTPUT    $(notdir $<)]'
+	$(Q)./$< > $@
 
 %.run: %.out
-	diff -u --strip-trailing-cr $<.expected $<
+	$(Q)diff -u --strip-trailing-cr $<.expected $<
 
 %.run-accept: %.out
 	cp $< $<.expected

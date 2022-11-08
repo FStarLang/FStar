@@ -66,8 +66,8 @@ let native_tactics_steps () =
     ; Cfg.auto_reflect                 = Some (s.arity - 1)
     ; Cfg.strong_reduction_ok          = s.strong_reduction_ok
     ; Cfg.requires_binder_substitution = false // GM: Don't think we care about pretty-printing on native
-    ; Cfg.interpretation               = s.tactic
-    ; Cfg.interpretation_nbe           = fun _cb -> NBET.dummy_interp s.name
+    ; Cfg.interpretation               = (fun psc cb _us t -> s.tactic psc cb t)
+    ; Cfg.interpretation_nbe           = fun _cb _us -> NBET.dummy_interp s.name
     }
   in
   List.map step_from_native_step (Native.list_all ())
@@ -419,6 +419,10 @@ let () =
         pack    RE.e_term_view RE.e_term
         pack    NRE.e_term_view NRE.e_term;
 
+      mk_tac_step_1 0 "pack_curried"
+        pack_curried    RE.e_term_view RE.e_term
+        pack_curried    NRE.e_term_view NRE.e_term;
+
       mk_tac_step_1 0 "fresh"
         fresh       e_unit e_int
         fresh       NBET.e_unit NBET.e_int;
@@ -498,6 +502,18 @@ let () =
       mk_tac_step_2 0 "push_bv_dsenv"
         push_bv_dsenv RE.e_env e_string (e_tuple2 RE.e_env RE.e_bv)
         push_bv_dsenv NRE.e_env NBET.e_string (NBET.e_tuple2 NRE.e_env NRE.e_bv);
+
+      mk_tac_step_1 0 "term_to_string"
+        term_to_string RE.e_term e_string
+        term_to_string NRE.e_term NBET.e_string;
+
+      mk_tac_step_1 0 "comp_to_string"
+        comp_to_string RE.e_comp e_string
+        comp_to_string NRE.e_comp NBET.e_string;
+
+      mk_tac_step_2 0 "term_eq_old"
+        term_eq_old RE.e_term RE.e_term e_bool
+        term_eq_old NRE.e_term NRE.e_term NBET.e_bool;
     ]
 
 let unembed_tactic_1_alt (ea:embedding 'a) (er:embedding 'r) (f:term) (ncb:norm_cb) : option ('a -> tac 'r) =

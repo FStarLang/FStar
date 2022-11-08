@@ -45,6 +45,10 @@ let bytes_lid        = pconst "bytes"
 let int_lid          = pconst "int"
 let exn_lid          = pconst "exn"
 let list_lid         = pconst "list"
+let immutable_array_t_lid = p2l ["FStar"; "ImmutableArray"; "Base"; "t"]
+let immutable_array_of_list_lid  = p2l ["FStar"; "ImmutableArray"; "Base"; "of_list"]
+let immutable_array_length_lid   = p2l ["FStar"; "ImmutableArray"; "Base"; "length"]
+let immutable_array_index_lid    = p2l ["FStar"; "ImmutableArray"; "Base"; "index"]
 let eqtype_lid       = pconst "eqtype"
 let option_lid       = psnconst "option"
 let either_lid       = psconst "either"
@@ -366,6 +370,7 @@ let bind_has_range_args_attr = psconst "bind_has_range_args"
 let binder_strictly_positive_attr = psconst "strictly_positive"
 let no_auto_projectors_attr = psconst "no_auto_projectors"
 let no_subtping_attr_lid = psconst "no_subtyping"
+let attr_substitute_lid = p2l ["FStar"; "Pervasives"; "Substitute"]
 
 
 //the type of well-founded relations, used for decreases clauses with relations

@@ -375,6 +375,7 @@ let (defaults : (Prims.string * option_val) Prims.list) =
   ("z3rlimit_factor", (Int Prims.int_one));
   ("z3seed", (Int Prims.int_zero));
   ("z3cliopt", (List []));
+  ("z3smtopt", (List []));
   ("__no_positivity", (Bool false));
   ("__tactics_nbe", (Bool false));
   ("warn_error", (List []));
@@ -429,6 +430,7 @@ let (set_verification_options : optionstate -> unit) =
       "no_tactics";
       "vcgen.optimize_bind_as_seq";
       "z3cliopt";
+      "z3smtopt";
       "z3refresh";
       "z3rlimit";
       "z3rlimit_factor";
@@ -651,6 +653,8 @@ let (get_warn_default_effects : unit -> Prims.bool) =
   fun uu___ -> lookup_opt "warn_default_effects" as_bool
 let (get_z3cliopt : unit -> Prims.string Prims.list) =
   fun uu___ -> lookup_opt "z3cliopt" (as_list as_string)
+let (get_z3smtopt : unit -> Prims.string Prims.list) =
+  fun uu___ -> lookup_opt "z3smtopt" (as_list as_string)
 let (get_z3refresh : unit -> Prims.bool) =
   fun uu___ -> lookup_opt "z3refresh" as_bool
 let (get_z3rlimit : unit -> Prims.int) =
@@ -949,7 +953,7 @@ let (interp_quake_arg : Prims.string -> (Prims.int * Prims.int * Prims.bool))
           let uu___ = ios f1 in let uu___1 = ios f2 in (uu___, uu___1, true)
         else failwith "unexpected value for --quake"
     | uu___ -> failwith "unexpected value for --quake"
-let (uu___406 : (((Prims.string -> unit) -> unit) * (Prims.string -> unit)))
+let (uu___407 : (((Prims.string -> unit) -> unit) * (Prims.string -> unit)))
   =
   let cb = FStar_Compiler_Util.mk_ref FStar_Pervasives_Native.None in
   let set1 f =
@@ -961,11 +965,11 @@ let (uu___406 : (((Prims.string -> unit) -> unit) * (Prims.string -> unit)))
     | FStar_Pervasives_Native.Some f -> f msg in
   (set1, call)
 let (set_option_warning_callback_aux : (Prims.string -> unit) -> unit) =
-  match uu___406 with
+  match uu___407 with
   | (set_option_warning_callback_aux1, option_warning_callback) ->
       set_option_warning_callback_aux1
 let (option_warning_callback : Prims.string -> unit) =
-  match uu___406 with
+  match uu___407 with
   | (set_option_warning_callback_aux1, option_warning_callback1) ->
       option_warning_callback1
 let (set_option_warning_callback : (Prims.string -> unit) -> unit) =
@@ -1296,6 +1300,8 @@ let rec (specs_with_types :
       "Warn when (a -> b) is desugared to (a -> Tot b)");
     (FStar_Getopt.noshort, "z3cliopt",
       (ReverseAccumulated (SimpleStr "option")), "Z3 command line options");
+    (FStar_Getopt.noshort, "z3smtopt",
+      (ReverseAccumulated (SimpleStr "option")), "Z3 options in smt2 format");
     (FStar_Getopt.noshort, "z3refresh", (Const (Bool true)),
       "Restart Z3 after each query; useful for ensuring proof robustness");
     (FStar_Getopt.noshort, "z3rlimit", (IntStr "positive_integer"),
@@ -1383,6 +1389,7 @@ let (settable : Prims.string -> Prims.bool) =
     | "initial_fuel" -> true
     | "initial_ifuel" -> true
     | "ide_id_info_off" -> true
+    | "keep_query_captions" -> true
     | "lax" -> true
     | "load" -> true
     | "load_cmxs" -> true
@@ -1436,6 +1443,7 @@ let (settable : Prims.string -> Prims.bool) =
     | "vcgen.optimize_bind_as_seq" -> true
     | "warn_error" -> true
     | "z3cliopt" -> true
+    | "z3smtopt" -> true
     | "z3refresh" -> true
     | "z3rlimit" -> true
     | "z3rlimit_factor" -> true
@@ -1457,7 +1465,7 @@ let (settable_specs :
     (FStar_Compiler_List.filter
        (fun uu___ ->
           match uu___ with | (uu___1, x, uu___2, uu___3) -> settable x))
-let (uu___589 :
+let (uu___592 :
   (((unit -> FStar_Getopt.parse_cmdline_res) -> unit) *
     (unit -> FStar_Getopt.parse_cmdline_res)))
   =
@@ -1474,11 +1482,11 @@ let (uu___589 :
   (set1, call)
 let (set_error_flags_callback_aux :
   (unit -> FStar_Getopt.parse_cmdline_res) -> unit) =
-  match uu___589 with
+  match uu___592 with
   | (set_error_flags_callback_aux1, set_error_flags) ->
       set_error_flags_callback_aux1
 let (set_error_flags : unit -> FStar_Getopt.parse_cmdline_res) =
-  match uu___589 with
+  match uu___592 with
   | (set_error_flags_callback_aux1, set_error_flags1) -> set_error_flags1
 let (set_error_flags_callback :
   (unit -> FStar_Getopt.parse_cmdline_res) -> unit) =
@@ -2023,6 +2031,8 @@ let (z3_exe : unit -> Prims.string) =
     | FStar_Pervasives_Native.Some s -> s
 let (z3_cliopt : unit -> Prims.string Prims.list) =
   fun uu___ -> get_z3cliopt ()
+let (z3_smtopt : unit -> Prims.string Prims.list) =
+  fun uu___ -> get_z3smtopt ()
 let (z3_refresh : unit -> Prims.bool) = fun uu___ -> get_z3refresh ()
 let (z3_rlimit : unit -> Prims.int) = fun uu___ -> get_z3rlimit ()
 let (z3_rlimit_factor : unit -> Prims.int) =
@@ -2387,12 +2397,13 @@ let (get_vconfig : unit -> FStar_VConfig.vconfig) =
       let uu___19 = get_no_tactics () in
       let uu___20 = get_vcgen_optimize_bind_as_seq () in
       let uu___21 = get_z3cliopt () in
-      let uu___22 = get_z3refresh () in
-      let uu___23 = get_z3rlimit () in
-      let uu___24 = get_z3rlimit_factor () in
-      let uu___25 = get_z3seed () in
-      let uu___26 = get_trivial_pre_for_unannotated_effectful_fns () in
-      let uu___27 = get_reuse_hint_for () in
+      let uu___22 = get_z3smtopt () in
+      let uu___23 = get_z3refresh () in
+      let uu___24 = get_z3rlimit () in
+      let uu___25 = get_z3rlimit_factor () in
+      let uu___26 = get_z3seed () in
+      let uu___27 = get_trivial_pre_for_unannotated_effectful_fns () in
+      let uu___28 = get_reuse_hint_for () in
       {
         FStar_VConfig.initial_fuel = uu___1;
         FStar_VConfig.max_fuel = uu___2;
@@ -2415,12 +2426,13 @@ let (get_vconfig : unit -> FStar_VConfig.vconfig) =
         FStar_VConfig.no_tactics = uu___19;
         FStar_VConfig.vcgen_optimize_bind_as_seq = uu___20;
         FStar_VConfig.z3cliopt = uu___21;
-        FStar_VConfig.z3refresh = uu___22;
-        FStar_VConfig.z3rlimit = uu___23;
-        FStar_VConfig.z3rlimit_factor = uu___24;
-        FStar_VConfig.z3seed = uu___25;
-        FStar_VConfig.trivial_pre_for_unannotated_effectful_fns = uu___26;
-        FStar_VConfig.reuse_hint_for = uu___27
+        FStar_VConfig.z3smtopt = uu___22;
+        FStar_VConfig.z3refresh = uu___23;
+        FStar_VConfig.z3rlimit = uu___24;
+        FStar_VConfig.z3rlimit_factor = uu___25;
+        FStar_VConfig.z3seed = uu___26;
+        FStar_VConfig.trivial_pre_for_unannotated_effectful_fns = uu___27;
+        FStar_VConfig.reuse_hint_for = uu___28
       } in
     vcfg
 let (set_vconfig : FStar_VConfig.vconfig -> unit) =
@@ -2464,13 +2476,19 @@ let (set_vconfig : FStar_VConfig.vconfig -> unit) =
            vcfg.FStar_VConfig.z3cliopt in
        List uu___22 in
      set_option "z3cliopt" uu___21);
+    (let uu___22 =
+       let uu___23 =
+         FStar_Compiler_List.map (fun uu___24 -> String uu___24)
+           vcfg.FStar_VConfig.z3smtopt in
+       List uu___23 in
+     set_option "z3smtopt" uu___22);
     set_option "z3refresh" (Bool (vcfg.FStar_VConfig.z3refresh));
     set_option "z3rlimit" (Int (vcfg.FStar_VConfig.z3rlimit));
     set_option "z3rlimit_factor" (Int (vcfg.FStar_VConfig.z3rlimit_factor));
     set_option "z3seed" (Int (vcfg.FStar_VConfig.z3seed));
     set_option "trivial_pre_for_unannotated_effectful_fns"
       (Bool (vcfg.FStar_VConfig.trivial_pre_for_unannotated_effectful_fns));
-    (let uu___27 =
-       option_as (fun uu___28 -> String uu___28)
+    (let uu___28 =
+       option_as (fun uu___29 -> String uu___29)
          vcfg.FStar_VConfig.reuse_hint_for in
-     set_option "reuse_hint_for" uu___27)
+     set_option "reuse_hint_for" uu___28)

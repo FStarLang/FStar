@@ -3308,8 +3308,12 @@ and (tc_maybe_toplevel_term :
                        | (e1, c, g) ->
                            let uu___5 =
                              let uu___6 =
-                               FStar_TypeChecker_Common.is_tot_or_gtot_lcomp
-                                 c in
+                               (FStar_TypeChecker_Common.is_tot_or_gtot_lcomp
+                                  c)
+                                 ||
+                                 (env2.FStar_TypeChecker_Env.phase1 &&
+                                    (FStar_TypeChecker_Common.is_pure_or_ghost_lcomp
+                                       c)) in
                              if uu___6
                              then
                                let uu___7 =
@@ -11506,15 +11510,7 @@ and (tc_binder :
                        | uu___6 -> (imp, FStar_TypeChecker_Env.trivial_guard) in
                      (match uu___5 with
                       | (imp1, g') ->
-                          let attrs1 =
-                            FStar_Compiler_Effect.op_Bar_Greater attrs
-                              (FStar_Compiler_List.map
-                                 (fun attr ->
-                                    let uu___6 =
-                                      tc_check_tot_or_gtot_term env attr
-                                        FStar_Syntax_Syntax.t_unit "" in
-                                    match uu___6 with
-                                    | (attr1, uu___7, uu___8) -> attr1)) in
+                          let attrs1 = tc_attributes env attrs in
                           (check_erasable_binder_attributes env attrs1 t;
                            (let x1 =
                               FStar_Syntax_Syntax.mk_binder_with_attrs
@@ -11720,6 +11716,17 @@ and (tc_trivial_guard :
       match uu___ with
       | (t1, c, g) ->
           (FStar_TypeChecker_Rel.force_trivial_guard env g; (t1, c))
+and (tc_attributes :
+  FStar_TypeChecker_Env.env ->
+    FStar_Syntax_Syntax.term Prims.list ->
+      FStar_Syntax_Syntax.term Prims.list)
+  =
+  fun env ->
+    fun attrs ->
+      FStar_Compiler_List.map
+        (fun attr ->
+           let uu___ = tc_trivial_guard env attr in
+           FStar_Pervasives_Native.fst uu___) attrs
 let (tc_check_trivial_guard :
   FStar_TypeChecker_Env.env ->
     FStar_Syntax_Syntax.term ->

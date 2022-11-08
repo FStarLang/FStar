@@ -1253,6 +1253,9 @@ and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked 
                   else check_application_args env head chead g_head args (Env.expected_typ env0) in
     let e, c, implicits =
         if TcComm.is_tot_or_gtot_lcomp c
+        //Also instantiate in phase1, dropping any precondition,
+        //since it will be recomputed correctly in phase2        
+        || (env.phase1 && TcComm.is_pure_or_ghost_lcomp c)
         then let e, res_typ, implicits = TcUtil.maybe_instantiate env0 e c.res_typ in
              e, TcComm.set_result_typ_lc c res_typ, implicits
         else e, c, Env.trivial_guard
@@ -4261,12 +4264,7 @@ and tc_binder env ({binder_bv=x;binder_qual=imp;binder_attrs=attrs}) =
           Some (Meta tau), g
         | _ -> imp, Env.trivial_guard
     in
-    let attrs =
-      attrs |> List.map
-      (fun attr ->
-        let attr, _, _ = tc_check_tot_or_gtot_term env attr t_unit "" in
-        attr)
-    in
+    let attrs = tc_attributes env attrs in
     check_erasable_binder_attributes env attrs t;
     let x = S.mk_binder_with_attrs ({x with sort=t}) imp attrs in
     if Env.debug env Options.High
@@ -4334,6 +4332,9 @@ and tc_trivial_guard env t =
   let t, c, g = tc_tot_or_gtot_term env t in
   Rel.force_trivial_guard env g;
   t,c
+
+and tc_attributes env attrs =
+  List.map (fun attr -> fst (tc_trivial_guard env attr)) attrs
 
 let tc_check_trivial_guard env t k =
   let t, _, g = tc_check_tot_or_gtot_term env t k "" in

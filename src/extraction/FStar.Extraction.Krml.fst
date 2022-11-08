@@ -38,6 +38,7 @@ module FC = FStar.Const
 - v27: Added PConstant
 - v28: added many things for which the AST wasn't bumped; bumped it for
   TConstBuf which will expect will be used soon
+- v29: added a SizeT and PtrdiffT width to machine integers
 *)
 
 (* COPY-PASTED ****************************************************************)
@@ -154,6 +155,7 @@ and width =
   | Int8 | Int16 | Int32 | Int64
   | Bool
   | CInt
+  | SizeT | PtrdiffT
 
 and constant = width * string
 
@@ -203,6 +205,8 @@ let mk_width = function
   | "Int16" -> Some Int16
   | "Int32" -> Some Int32
   | "Int64" -> Some Int64
+  | "SizeT" -> Some SizeT
+  | "PtrdiffT" -> Some PtrdiffT
   | _ -> None
 
 let mk_bool_op = function
@@ -407,7 +411,8 @@ let rec translate_type env t: typ =
     Syntax.string_of_mlpath p = "LowStar.Monotonic.Buffer.mbuffer" -> TBuf (translate_type env arg)
 
   | MLTY_Named ([arg], p) when
-    Syntax.string_of_mlpath p = "LowStar.ConstBuffer.const_buffer" -> TConstBuf (translate_type env arg)
+    Syntax.string_of_mlpath p = "LowStar.ConstBuffer.const_buffer" ||
+    Syntax.string_of_mlpath p = "Steel.TLArray.t" -> TConstBuf (translate_type env arg)
 
   | MLTY_Named ([arg], p) when
     Syntax.string_of_mlpath p = "FStar.Buffer.buffer" ||
@@ -539,7 +544,8 @@ and translate_expr env e: expr =
     when string_of_mlpath p = "FStar.Buffer.index" || string_of_mlpath p = "FStar.Buffer.op_Array_Access"
       || string_of_mlpath p = "LowStar.Monotonic.Buffer.index"
       || string_of_mlpath p = "LowStar.UninitializedBuffer.uindex"
-      || string_of_mlpath p = "LowStar.ConstBuffer.index" ->
+      || string_of_mlpath p = "LowStar.ConstBuffer.index"
+      || string_of_mlpath p = "Steel.TLArray.get" ->
       EBufRead (translate_expr env e1, translate_expr env e2)
 
   | MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, _) }, [ _perm; e1; _len; _seq; e2 ])
@@ -873,11 +879,13 @@ and translate_expr env e: expr =
     translate_expr env e
 
   | MLE_App ({expr=MLE_TApp ({expr=MLE_Name p}, _)}, [_fp; _fp'; _opened; _p; _i; {expr=MLE_Fun (_, body)}])
-    when string_of_mlpath p = "Steel.ST.Util.with_invariant" ->
+    when string_of_mlpath p = "Steel.ST.Util.with_invariant" ||
+         string_of_mlpath p = "Steel.Effect.Atomic.with_invariant" ->
     translate_expr env body
 
   | MLE_App ({expr=MLE_TApp ({expr=MLE_Name p}, _)}, [_fp; _fp'; _opened; _p; _i; e])
-    when string_of_mlpath p = "Steel.ST.Util.with_invariant" ->
+    when string_of_mlpath p = "Steel.ST.Util.with_invariant" ||
+         string_of_mlpath p = "Steel.Effect.Atomic.with_invariant" ->
     Errors.raise_error
       (Errors.Fatal_ExtractionUnsupported,
        BU.format2
@@ -965,6 +973,7 @@ and translate_width = function
   | Some (FC.Unsigned, FC.Int16) -> UInt16
   | Some (FC.Unsigned, FC.Int32) -> UInt32
   | Some (FC.Unsigned, FC.Int64) -> UInt64
+  | Some (FC.Unsigned, FC.Sizet) -> SizeT
 
 and translate_pat env p =
   match p with
@@ -1151,6 +1160,29 @@ let translate_let env flavor lb: option decl =
           Some (DFunction (cc, meta, List.length tvars, t, name, binders, EAbortS msg))
         end
 
+  | {
+      mllb_name = name;
+      mllb_tysc = Some (tvars, t);
+      mllb_def = { expr = MLE_App ({
+        expr = MLE_TApp ({expr = MLE_Name p}, _)}, [ l ] ) };
+      mllb_meta = meta
+    }
+    when string_of_mlpath p = "Steel.TLArray.create" ->
+    if List.mem Syntax.NoExtract meta then
+      None
+    else
+      // This is a global const array, defined using Steel.TLArray
+      let meta = translate_flags meta in
+      let env = List.fold_left (fun env name -> extend_t env name) env tvars in
+      let t = translate_type env t in
+      let name = env.module_name, name in
+      begin try
+        let expr = List.map (translate_expr env) (list_elements l) in
+        Some (DGlobal (meta, name, List.length tvars, t, EBufCreateL (Eternal, expr)))
+      with e ->
+          Errors. log_issue Range.dummyRange (Errors.Warning_DefinitionNotTranslated, (BU.format2 "Error extracting %s to KaRaMeL (%s)\n" (Syntax.string_of_mlpath name) (BU.print_exn e)));
+          Some (DGlobal (meta, name, List.length tvars, t, EAny))
+        end
   | {
       mllb_name = name;
       mllb_tysc = Some (tvars, t);

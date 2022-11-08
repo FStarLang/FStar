@@ -1291,14 +1291,14 @@ let (collect_one :
                  (collect_binders binders;
                   FStar_Compiler_Util.iter_opt k collect_term;
                   collect_term t)
-             | FStar_Parser_AST.TyconRecord (uu___3, binders, k, identterms)
-                 ->
+             | FStar_Parser_AST.TyconRecord
+                 (uu___3, binders, k, uu___4, identterms) ->
                  (collect_binders binders;
                   FStar_Compiler_Util.iter_opt k collect_term;
                   FStar_Compiler_List.iter
-                    (fun uu___6 ->
-                       match uu___6 with
-                       | (uu___7, aq, attrs, t) ->
+                    (fun uu___7 ->
+                       match uu___7 with
+                       | (uu___8, aq, attrs, t) ->
                            (collect_aqual aq;
                             FStar_Compiler_Effect.op_Bar_Greater attrs
                               (FStar_Compiler_List.iter collect_term);
@@ -1310,7 +1310,7 @@ let (collect_one :
                   FStar_Compiler_List.iter
                     (fun uu___6 ->
                        match uu___6 with
-                       | (uu___7, t, uu___8) ->
+                       | (uu___7, t, uu___8, uu___9) ->
                            FStar_Compiler_Util.iter_opt t collect_term)
                     identterms)
            and collect_effect_decl uu___2 =
@@ -1356,6 +1356,18 @@ let (collect_one :
            and collect_term t = collect_term' t.FStar_Parser_AST.tm
            and collect_constant uu___2 =
              match uu___2 with
+             | FStar_Const.Const_int
+                 (uu___3, FStar_Pervasives_Native.Some
+                  (FStar_Const.Unsigned, FStar_Const.Sizet))
+                 ->
+                 let uu___4 =
+                   let uu___5 =
+                     let uu___6 =
+                       FStar_Compiler_Effect.op_Bar_Greater "fstar.sizeT"
+                         FStar_Ident.lid_of_str in
+                     (false, uu___6) in
+                   P_dep uu___5 in
+                 add_to_parsing_data uu___4
              | FStar_Const.Const_int
                  (uu___3, FStar_Pervasives_Native.Some (signedness, width))
                  ->
@@ -1449,11 +1461,11 @@ let (collect_one :
                  (collect_term t1; collect_term t2)
              | FStar_Parser_AST.Seq (t1, t2) ->
                  (collect_term t1; collect_term t2)
-             | FStar_Parser_AST.If (t1, ret_opt, t2, t3) ->
+             | FStar_Parser_AST.If (t1, uu___3, ret_opt, t2, t3) ->
                  (collect_term t1;
                   (match ret_opt with
                    | FStar_Pervasives_Native.None -> ()
-                   | FStar_Pervasives_Native.Some (uu___5, ret, uu___6) ->
+                   | FStar_Pervasives_Native.Some (uu___6, ret, uu___7) ->
                        collect_term ret);
                   collect_term t2;
                   collect_term t3)
