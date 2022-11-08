@@ -424,17 +424,13 @@ val compare (#t:eqtype) (#p0 #p1:perm)
 inline_for_extraction
 [@@noextract_to "krml"]
 val intro_fits_u32 (_:unit)
-  : ST unit
-       emp (fun _ -> emp)
-       (requires True)
-       (ensures fun _ -> FStar.SizeT.fits_u32)
+  : STT (squash (US.fits_u32))
+        emp (fun _ -> emp)
 
 /// An introduction function for the fits_u64 predicate.
 /// It will be natively extracted to static_assert (UINT64_MAX <= SIZE_T_MAX) by krml
 inline_for_extraction
 [@@noextract_to "krml"]
 val intro_fits_u64 (_:unit)
-  : ST unit
-       emp (fun _ -> emp)
-       (requires True)
-       (ensures fun _ -> FStar.SizeT.fits_u64)
+  : STT (squash (US.fits_u64))
+        emp (fun _ -> emp)
