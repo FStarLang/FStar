@@ -72,6 +72,9 @@ val trytac_exn : tac 'a -> tac (option 'a)
 (* Good old mapM *)
 val mapM : ('a -> tac 'b) -> list 'a -> tac (list 'b)
 
+(* iter combinator *)
+val iter_tac (f: 'a -> tac unit) (l:list 'a) : tac unit
+
 (* Set the current set of goals / SMT goals *)
 val set_goals      : list goal -> tac unit
 val set_smt_goals  : list goal -> tac unit
@@ -130,12 +133,17 @@ val log : proofstate -> (unit -> unit) -> unit
 (* As above, but as a tac<> with an implicit bind for brevity *)
 val mlog : (unit -> unit) -> (unit -> tac 'a) -> tac 'a
 
+val if_verbose_tac: (unit -> tac unit) -> tac unit
+val if_verbose: (unit -> unit) -> tac unit
+
 (* Discard the implicits in the proofstate that are already
  * solved, only matters for performance. *)
 val compress_implicits : tac unit
 
 (* Only leave goals that are unsolved in the main list *)
 val remove_solved_goals : tac unit
+
+val is_goal_safe_as_well_typed (g:goal) : bool
 
 (* DANGER AHEAD, DO NOT USE *)
 
@@ -144,3 +152,6 @@ val set : proofstate -> tac unit
 
 (* Create a tactic *)
 val mk_tac : (proofstate -> __result 'a) -> tac 'a
+
+(* inform the core of a well-typed goal *)
+val register_goal (g:goal) : unit

@@ -689,23 +689,26 @@ let rec (resugar_term' :
       | FStar_Syntax_Syntax.Tm_app
           ({ FStar_Syntax_Syntax.n = FStar_Syntax_Syntax.Tm_fvar fv;
              FStar_Syntax_Syntax.pos = uu___1;
-             FStar_Syntax_Syntax.vars = uu___2;_},
-           (e, uu___3)::[])
+             FStar_Syntax_Syntax.vars = uu___2;
+             FStar_Syntax_Syntax.hash_code = uu___3;_},
+           (e, uu___4)::[])
           when
-          (let uu___4 = FStar_Options.print_implicits () in
-           Prims.op_Negation uu___4) &&
+          (let uu___5 = FStar_Options.print_implicits () in
+           Prims.op_Negation uu___5) &&
             (FStar_Syntax_Syntax.fv_eq_lid fv FStar_Parser_Const.b2t_lid)
           -> resugar_term' env e
       | FStar_Syntax_Syntax.Tm_app
           ({ FStar_Syntax_Syntax.n = FStar_Syntax_Syntax.Tm_fvar fv;
              FStar_Syntax_Syntax.pos = uu___1;
-             FStar_Syntax_Syntax.vars = uu___2;_},
+             FStar_Syntax_Syntax.vars = uu___2;
+             FStar_Syntax_Syntax.hash_code = uu___3;_},
            ({
               FStar_Syntax_Syntax.n = FStar_Syntax_Syntax.Tm_constant
                 (FStar_Const.Const_int (i, FStar_Pervasives_Native.None));
-              FStar_Syntax_Syntax.pos = uu___3;
-              FStar_Syntax_Syntax.vars = uu___4;_},
-            uu___5)::[])
+              FStar_Syntax_Syntax.pos = uu___4;
+              FStar_Syntax_Syntax.vars = uu___5;
+              FStar_Syntax_Syntax.hash_code = uu___6;_},
+            uu___7)::[])
           when can_resugar_machine_integer fv ->
           resugar_machine_integer fv i t.FStar_Syntax_Syntax.pos
       | FStar_Syntax_Syntax.Tm_app (e, args) ->
@@ -787,54 +790,6 @@ let rec (resugar_term' :
                                  FStar_Pervasives_Native.Some uu___5))
                    FStar_Pervasives_Native.None args1 in
                FStar_Compiler_Option.get out
-           | FStar_Pervasives_Native.Some ("dtuple", uu___2) when
-               (FStar_Compiler_List.length args1) > Prims.int_zero ->
-               let args2 = last args1 in
-               let body =
-                 match args2 with
-                 | (b, uu___3)::[] -> b
-                 | uu___3 -> failwith "wrong arguments to dtuple" in
-               let uu___3 =
-                 let uu___4 = FStar_Syntax_Subst.compress body in
-                 uu___4.FStar_Syntax_Syntax.n in
-               (match uu___3 with
-                | FStar_Syntax_Syntax.Tm_abs (xs, body1, uu___4) ->
-                    let uu___5 = FStar_Syntax_Subst.open_term xs body1 in
-                    (match uu___5 with
-                     | (xs1, body2) ->
-                         let xs2 =
-                           let uu___6 = FStar_Options.print_implicits () in
-                           if uu___6 then xs1 else filter_imp_bs xs1 in
-                         let xs3 =
-                           FStar_Compiler_Effect.op_Bar_Greater xs2
-                             ((map_opt ())
-                                (fun b ->
-                                   resugar_binder' env b
-                                     t.FStar_Syntax_Syntax.pos)) in
-                         let body3 = resugar_term' env body2 in
-                         let uu___6 =
-                           let uu___7 =
-                             let uu___8 =
-                               FStar_Compiler_List.map
-                                 (fun uu___9 -> FStar_Pervasives.Inl uu___9)
-                                 xs3 in
-                             (uu___8, body3) in
-                           FStar_Parser_AST.Sum uu___7 in
-                         mk uu___6)
-                | uu___4 ->
-                    let args3 =
-                      FStar_Compiler_Effect.op_Bar_Greater args2
-                        (FStar_Compiler_List.map
-                           (fun uu___5 ->
-                              match uu___5 with
-                              | (e1, qual) -> resugar_term' env e1)) in
-                    let e1 = resugar_term' env e in
-                    FStar_Compiler_List.fold_left
-                      (fun acc ->
-                         fun x ->
-                           mk
-                             (FStar_Parser_AST.App
-                                (acc, x, FStar_Parser_AST.Nothing))) e1 args3)
            | FStar_Pervasives_Native.Some ("dtuple", uu___2) ->
                resugar_as_app e args1
            | FStar_Pervasives_Native.Some (ref_read, uu___2) when
@@ -2013,7 +1968,8 @@ and (resugar_bv_as_pat' :
             | FStar_Pervasives_Native.Some
                 { FStar_Syntax_Syntax.n = FStar_Syntax_Syntax.Tm_unknown;
                   FStar_Syntax_Syntax.pos = uu___;
-                  FStar_Syntax_Syntax.vars = uu___1;_}
+                  FStar_Syntax_Syntax.vars = uu___1;
+                  FStar_Syntax_Syntax.hash_code = uu___2;_}
                 -> pat
             | FStar_Pervasives_Native.Some typ ->
                 let uu___ = FStar_Options.print_bound_var_types () in

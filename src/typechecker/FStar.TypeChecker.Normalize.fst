@@ -2928,9 +2928,22 @@ and rebuild (cfg:cfg) (env:env) (stack:stack) (t:term) : term =
                 //the elements of s are sub-terms of t
                 //the have no free de Bruijn indices; so their env=[]; see pre-condition at the top of rebuild
                 let env0 = env in
+                //
+                // AR: when adding the bindings for pattern arguments to the environment,
+                //     this code used to set the memo entry to t as well
+                //     (i.e. BU.mk_ref None used to be BU.mk_ref t), roughly
+                //
+                //     but unclear to me why is that ok
+                //     the scrutinee argument may not be normalized at all
+                //     in fact, in the core typechecker code, we had instances of this resulting
+                //       in incorrect behavior
+                //     there `t`, i.e. an argument to scrutinee was of the form `f x`,
+                //       where `f` did not get unfolded (we asked for whnf there),
+                //       because this memo entry was set to `f x`, and we returned it as is
+                //
                 let env = List.fold_left
                       (fun env (bv, t) -> (Some (S.mk_binder bv),
-                                           Clos([], t, BU.mk_ref (Some ([], t)), false))::env)
+                                        Clos([], t, BU.mk_ref None, false))::env)
                       env s in
                 norm cfg env stack (guard_when_clause wopt b rest)
         in
@@ -3136,21 +3149,7 @@ let comp_to_string env c =
 
 let normalize_refinement steps env t0 =
    let t = normalize (steps@[Beta]) env t0 in
-   let rec aux t =
-    let t = compress t in
-    match t.n with
-       | Tm_refine(x, phi) ->
-         let t0 = aux x.sort in
-         begin match t0.n with
-            | Tm_refine(y, phi1) ->
-              //NB: this is working on de Bruijn
-              //    representations; so no need
-              //    to substitute y/x in phi
-              mk (Tm_refine(y, U.mk_conj_simp phi1 phi)) t0.pos
-            | _ -> t
-         end
-       | _ -> t in
-   aux t
+   U.flatten_refinement t
 
 let whnf_steps = [Primops; Weak; HNF; UnfoldUntil delta_constant; Beta]
 let unfold_whnf' steps env t = normalize (steps@whnf_steps) env t
@@ -3209,7 +3208,7 @@ let elim_uvars_aux_tc (env:Env.env) (univ_names:univ_names) (binders:binders) (t
     let univ_names, t = Subst.open_univ_vars univ_names t in
     let t = remove_uvar_solutions env t in
     let t = Subst.close_univ_vars univ_names t in
-    let t = Subst.deep_compress t in
+    let t = Subst.deep_compress false t in
     let binders, tc =
         match binders with
         | [] -> [], Inl t
@@ -3253,7 +3252,7 @@ let rec elim_uvars (env:Env.env) (s:sigelt) =
     | Sig_let((b, lbs), lids) ->
       let lbs = lbs |> List.map (fun lb ->
         let opening, lbunivs = Subst.univ_var_opening lb.lbunivs in
-        let elim t = Subst.deep_compress (Subst.close_univ_vars lbunivs (remove_uvar_solutions env (Subst.subst opening t))) in
+        let elim t = Subst.deep_compress false (Subst.close_univ_vars lbunivs (remove_uvar_solutions env (Subst.subst opening t))) in
         let lbtyp = elim lb.lbtyp in
         let lbdef = elim lb.lbdef in
         {lb with lbunivs = lbunivs;
@@ -3418,3 +3417,39 @@ let get_n_binders (env:Env.env) (n:int) (t:term) : list binder * comp =
       (bs, c)
   in
   aux true n t
+
+let maybe_unfold_head_fv (env:Env.env) (head:term)
+  : option term
+  = let fv_us_opt =
+      match (SS.compress head).n with
+      | Tm_uinst ({n=Tm_fvar fv}, us) -> Some (fv, us)
+      | Tm_fvar fv -> Some (fv, [])
+      | _ -> failwith "Impossible: maybe_unfold_head_fv is called with a non fvar/uinst"
+    in
+    match fv_us_opt with
+    | None -> None
+    | Some (fv, us) ->
+      match Env.lookup_nonrec_definition [Unfold delta_constant] env fv.fv_name.v with
+      | None -> None
+      | Some (us_formals, defn) ->
+        let subst = mk_univ_subst us_formals us in
+        SS.subst subst defn |> Some
+
+let rec maybe_unfold_aux (env:Env.env) (t:term) : option term =
+  match (SS.compress t).n with
+  | Tm_match (t0, ret_opt, brs, rc_opt) ->
+    BU.map_option
+      (fun t0 -> S.mk (Tm_match (t0, ret_opt, brs, rc_opt)) t.pos)
+      (maybe_unfold_aux env t0)
+  | Tm_fvar _
+  | Tm_uinst _ -> maybe_unfold_head_fv env t
+  | _ ->
+    let head, args = U.leftmost_head_and_args t in
+    match maybe_unfold_aux env head with
+    | None -> None
+    | Some head -> S.mk_Tm_app head args t.pos |> Some
+
+let maybe_unfold_head (env:Env.env) (t:term) : option term =
+  BU.map_option
+    (normalize [Beta;Iota;Weak;HNF] env)
+    (maybe_unfold_aux env t)

@@ -568,7 +568,7 @@ let run_tactic_on_ps'
   = let env = ps.main_context in
     if !tacdbg then
         BU.print1 "Typechecking tactic: (%s) {\n" (Print.term_to_string tactic);
-
+    
     (* Do NOT use the returned tactic, the typechecker is not idempotent and
      * will mess up the monadic lifts. We're just making sure it's well-typed
      * so it won't get stuck. c.f #1307 *)
@@ -582,11 +582,14 @@ let run_tactic_on_ps'
 
     (* if !tacdbg then *)
     (*     BU.print1 "Running tactic with goal = (%s) {\n" (Print.term_to_string typ); *)
-    let res, ms = BU.record_time (fun () -> run_safe (tau arg) ps) in
+    let res =
+      Profiling.profile
+        (fun () -> run_safe (tau arg) ps)
+        (Some (Ident.string_of_lid (Env.current_module ps.main_context)))
+        "FStar.Tactics.Interpreter.run_safe"
+    in
     if !tacdbg then
         BU.print_string "}\n";
-    if !tacdbg || Options.tactics_info () then
-        BU.print3 "Tactic %s ran in %s ms (%s)\n" (Print.term_to_string tactic) (string_of_int ms) (Print.lid_to_string env.curmodule);
 
     match res with
     | Success (ret, ps) ->
@@ -595,7 +598,7 @@ let run_tactic_on_ps'
         let remaining_smt_goals = ps.goals@ps.smt_goals in
         List.iter 
           (fun g -> 
-            FStar.Tactics.Basic.mark_goal_implicit_allow_untyped g;//all of these will be fed to SMT anyway
+            FStar.Tactics.Basic.mark_goal_implicit_already_checked g;//all of these will be fed to SMT anyway
             if is_irrelevant g
             then (
               if !tacdbg then BU.print1 "Assigning irrelevant goal %s\n" (Print.term_to_string (goal_witness g));

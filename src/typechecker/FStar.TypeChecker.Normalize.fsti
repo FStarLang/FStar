@@ -82,3 +82,5 @@ val reflection_env_hook : ref (option Env.env)
 computation type. Only grabs up to [n] binders, and normalizes only as
 needed to discover the shape of the arrow. The binders are opened. *)
 val get_n_binders : Env.env -> int -> term -> list binder * comp
+
+val maybe_unfold_head : Env.env -> term -> option term
