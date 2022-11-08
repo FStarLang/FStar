@@ -29,8 +29,11 @@ let main () : SteelT Int32.t emp (fun _ -> emp) =
   let x = f () in
   intro_fits_u32 ();
   let y = of_u32 500000ul in
+  let r = 4000ul in
+  let r = uint32_to_sizet r in
   let z = ft () in
   if x = y then 1l
   else
     if z >^ zero then 1l
-    else 0l
+    else if r = 4000sz then 0l
+    else 1l
