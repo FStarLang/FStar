@@ -748,7 +748,7 @@ let default_settings : list error_setting =
     Warning_AmbiguousResolveImplicitsHook             , CWarning, 348;    
     Warning_SplitAndRetryQueries                      , CWarning, 349;
     Warning_DeprecatedLightDoNotation                 , CWarning, 350;
-    Warning_FailedToCheckInitialTacticGoal            , CWarning, 351;
+    Warning_FailedToCheckInitialTacticGoal            , CSilent,  351;
     ]
 
 let lookup_error settings e =

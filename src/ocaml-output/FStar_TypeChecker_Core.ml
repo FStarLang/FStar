@@ -358,48 +358,6 @@ let (open_branches_eq_pat :
                         let uu___7 = FStar_Syntax_Subst.subst s e1 in
                         (p01, uu___6, uu___7) in
                       (g1, uu___4, uu___5)))
-let (close_term :
-  FStar_Syntax_Syntax.binder ->
-    FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.term)
-  =
-  fun b ->
-    fun t ->
-      let b1 =
-        let uu___ =
-          let uu___1 =
-            let uu___2 =
-              let uu___3 =
-                FStar_Compiler_Effect.op_Bar_Greater t
-                  FStar_Syntax_Free.names in
-              FStar_Compiler_Effect.op_Bar_Greater uu___3
-                FStar_Compiler_Util.set_elements in
-            FStar_Compiler_Effect.op_Bar_Greater uu___2
-              (FStar_Compiler_List.tryFind
-                 (fun bv ->
-                    bv.FStar_Syntax_Syntax.index =
-                      (b.FStar_Syntax_Syntax.binder_bv).FStar_Syntax_Syntax.index)) in
-          FStar_Compiler_Effect.op_Bar_Greater uu___1
-            (FStar_Compiler_Util.map_option
-               (fun bv ->
-                  {
-                    FStar_Syntax_Syntax.binder_bv =
-                      (let uu___2 = b.FStar_Syntax_Syntax.binder_bv in
-                       {
-                         FStar_Syntax_Syntax.ppname =
-                           (bv.FStar_Syntax_Syntax.ppname);
-                         FStar_Syntax_Syntax.index =
-                           (uu___2.FStar_Syntax_Syntax.index);
-                         FStar_Syntax_Syntax.sort =
-                           (uu___2.FStar_Syntax_Syntax.sort)
-                       });
-                    FStar_Syntax_Syntax.binder_qual =
-                      (b.FStar_Syntax_Syntax.binder_qual);
-                    FStar_Syntax_Syntax.binder_attrs =
-                      (b.FStar_Syntax_Syntax.binder_attrs)
-                  })) in
-        FStar_Compiler_Effect.op_Bar_Greater uu___
-          (FStar_Compiler_Util.dflt b) in
-      FStar_Syntax_Subst.close [b1] t
 type precondition = FStar_Syntax_Syntax.typ FStar_Pervasives_Native.option
 type 'a success = ('a * precondition)
 type relation =
@@ -820,6 +778,13 @@ let (check_arg_qual :
                  FStar_Syntax_Syntax.aqual_attributes = uu___1;_}
                -> return ()
            | uu___1 -> fail "missing arg qualifier implicit")
+      | FStar_Pervasives_Native.Some (FStar_Syntax_Syntax.Meta uu___) ->
+          (match a with
+           | FStar_Pervasives_Native.Some
+               { FStar_Syntax_Syntax.aqual_implicit = true;
+                 FStar_Syntax_Syntax.aqual_attributes = uu___1;_}
+               -> return ()
+           | uu___1 -> fail "missing arg qualifier implicit")
       | uu___ ->
           (match a with
            | FStar_Pervasives_Native.Some
@@ -860,41 +825,6 @@ let (check_aqual :
            FStar_Syntax_Syntax.aqual_attributes = uu___1;_})
           -> if b0 = b1 then return () else fail "Unequal arg qualifiers"
       | uu___ -> fail "Unequal arg qualifiers"
-let (mk_forall :
-  FStar_Syntax_Syntax.universe ->
-    FStar_Syntax_Syntax.bv ->
-      FStar_Syntax_Syntax.typ ->
-        FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax)
-  =
-  fun u ->
-    fun x ->
-      fun body ->
-        let tforall =
-          FStar_Syntax_Syntax.mk_Tm_uinst FStar_Syntax_Util.tforall [u] in
-        let pred =
-          let uu___ =
-            let uu___1 =
-              let uu___2 =
-                let uu___3 = FStar_Syntax_Syntax.mk_binder x in [uu___3] in
-              let uu___3 =
-                let uu___4 = FStar_Syntax_Syntax.mk_binder x in
-                close_term uu___4 body in
-              (uu___2, uu___3,
-                (FStar_Pervasives_Native.Some
-                   (FStar_Syntax_Util.residual_tot FStar_Syntax_Util.ktype0))) in
-            FStar_Syntax_Syntax.Tm_abs uu___1 in
-          FStar_Syntax_Syntax.mk uu___ FStar_Compiler_Range.dummyRange in
-        let uu___ =
-          let uu___1 =
-            let uu___2 =
-              let uu___3 =
-                FStar_Syntax_Syntax.iarg x.FStar_Syntax_Syntax.sort in
-              let uu___4 =
-                let uu___5 = FStar_Syntax_Syntax.as_arg pred in [uu___5] in
-              uu___3 :: uu___4 in
-            (tforall, uu___2) in
-          FStar_Syntax_Syntax.Tm_app uu___1 in
-        FStar_Syntax_Syntax.mk uu___ FStar_Compiler_Range.dummyRange
 let (mk_forall_l :
   FStar_Syntax_Syntax.universes ->
     FStar_Syntax_Syntax.binders ->
@@ -906,8 +836,9 @@ let (mk_forall_l :
         FStar_Compiler_List.fold_right2
           (fun u ->
              fun x ->
-               fun t1 -> mk_forall u x.FStar_Syntax_Syntax.binder_bv t1) us
-          xs t
+               fun t1 ->
+                 FStar_Syntax_Util.mk_forall u
+                   x.FStar_Syntax_Syntax.binder_bv t1) us xs t
 let (close_guard :
   FStar_Syntax_Syntax.binders ->
     FStar_Syntax_Syntax.universes -> precondition -> precondition)
@@ -942,7 +873,8 @@ let (close_guard_with_definition :
                       (x.FStar_Syntax_Syntax.binder_bv).FStar_Syntax_Syntax.sort
                       uu___2 t1 in
                   FStar_Syntax_Util.mk_imp uu___1 t1 in
-                mk_forall u x.FStar_Syntax_Syntax.binder_bv t2 in
+                FStar_Syntax_Util.mk_forall u x.FStar_Syntax_Syntax.binder_bv
+                  t2 in
               FStar_Pervasives_Native.Some uu___
 let with_binders :
   'a .
@@ -1760,7 +1692,8 @@ let rec (check_relation :
                                                     let uu___11 =
                                                       FStar_Syntax_Util.mk_imp
                                                         f01 f11 in
-                                                    mk_forall u
+                                                    FStar_Syntax_Util.mk_forall
+                                                      u
                                                       b.FStar_Syntax_Syntax.binder_bv
                                                       uu___11 in
                                                   guard uu___10))))
@@ -1876,7 +1809,8 @@ let rec (check_relation :
                                                   (FStar_Pervasives_Native.None)
                                                   ->
                                                   let uu___11 =
-                                                    mk_forall u1
+                                                    FStar_Syntax_Util.mk_forall
+                                                      u1
                                                       b1.FStar_Syntax_Syntax.binder_bv
                                                       f11 in
                                                   guard uu___11))))

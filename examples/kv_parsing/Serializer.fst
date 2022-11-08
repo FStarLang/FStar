@@ -46,9 +46,13 @@ val enc_entry_st : e:entry_st -> h:mem{forall b. TSet.mem b (entry_st_bufs e) ==
 let enc_entry_st (e:entry_st) h =
     enc_u16_array_st e.key_st h `append` enc_u32_array_st e.val_st h
 
-let ser_entry (e:entry_st) : serializer_any (hide (entry_st_bufs e)) (fun h -> enc_entry_st e h) =
-    fun buf ->
-    (ser_u16_array e.key_st `ser_append` ser_u32_array e.val_st) buf
+module T = FStar.Tactics
+
+let ser_entry (e:entry_st) : 
+  Tot (serializer_any (hide (entry_st_bufs e)) (fun h -> enc_entry_st e h))
+    by (T.smt()) //This is weird; without the tactic, the proof that goes to SMT by default fails
+  =
+    fun buf ->  (ser_u16_array e.key_st `ser_append` ser_u32_array e.val_st) buf
 
 (*! Incremental key-value store writer *)
 

@@ -5162,14 +5162,6 @@ let rec check_implicit_solution_for_tac (env:env) (i:implicit) : option (term * 
     | Inl (Some g) ->
       let g = { trivial_guard with guard_f = NonTrivial g } in
       force_trivial_guard env g; None
-      // else (
-      //   if Env.debug env <| Options.Other "Core"
-      //   then BU.print3 "Core computed %s : %s <== %s"
-      //                    (Print.term_to_string tm)
-      //                    (Print.term_to_string uvar_ty)
-      //                    (Print.term_to_string g);
-      //   Some (tm, uvar_ty)
-      // )
 
     | Inr err ->
       FStar.Errors.log_issue

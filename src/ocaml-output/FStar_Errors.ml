@@ -2259,7 +2259,7 @@ let (default_settings : error_setting Prims.list) =
   (Warning_AmbiguousResolveImplicitsHook, CWarning, (Prims.of_int (348)));
   (Warning_SplitAndRetryQueries, CWarning, (Prims.of_int (349)));
   (Warning_DeprecatedLightDoNotation, CWarning, (Prims.of_int (350)));
-  (Warning_FailedToCheckInitialTacticGoal, CWarning, (Prims.of_int (351)))]
+  (Warning_FailedToCheckInitialTacticGoal, CSilent, (Prims.of_int (351)))]
 let lookup_error :
   'uuuuu 'uuuuu1 'uuuuu2 .
     ('uuuuu * 'uuuuu1 * 'uuuuu2) Prims.list ->
@@ -2755,7 +2755,7 @@ let (set_option_warning_callback_range :
   FStar_Compiler_Range.range FStar_Pervasives_Native.option -> unit) =
   fun ropt ->
     FStar_Options.set_option_warning_callback (warn_unsafe_options ropt)
-let (uu___241 :
+let (uu___253 :
   (((Prims.string -> error_setting Prims.list) -> unit) *
     (unit -> error_setting Prims.list)))
   =
@@ -2800,10 +2800,10 @@ let (uu___241 :
   (set_callbacks, get_error_flags)
 let (set_parse_warn_error :
   (Prims.string -> error_setting Prims.list) -> unit) =
-  match uu___241 with
+  match uu___253 with
   | (set_parse_warn_error1, error_flags) -> set_parse_warn_error1
 let (error_flags : unit -> error_setting Prims.list) =
-  match uu___241 with | (set_parse_warn_error1, error_flags1) -> error_flags1
+  match uu___253 with | (set_parse_warn_error1, error_flags1) -> error_flags1
 let (lookup : raw_error -> (raw_error * error_flag * Prims.int)) =
   fun err ->
     let flags = error_flags () in

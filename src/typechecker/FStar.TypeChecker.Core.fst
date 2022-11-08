@@ -137,23 +137,7 @@ let open_branches_eq_pat (g:env) (br0 br1:S.branch)
     g,
     (p0, BU.map_option (Subst.subst s) wopt0, Subst.subst s e0),
     (p0, BU.map_option (Subst.subst s) wopt1, Subst.subst s e1)    
-
-//
-// Closing substitutions in Syntax.Subst are sensitive to bv names
-//
-// Try to find a bv in t, that has the same index as b,
-//   and use its name for closing
-//
-let close_term (b:binder) (t:term) =
-  let b =
-    t |> Syntax.Free.names
-      |> BU.set_elements
-      |> List.tryFind (fun bv -> bv.index = b.binder_bv.index)
-      |> BU.map_option (fun bv -> {b with binder_bv={b.binder_bv with ppname=bv.ppname}})
-      |> BU.dflt b
-  in
-  Subst.close [b] t
-
+  
 let precondition = option typ
 
 let success a = a & precondition
@@ -394,7 +378,8 @@ let rec is_arrow (g:env) (t:term)
 let check_arg_qual (a:aqual) (b:bqual)
   : result unit
   = match b with
-    | Some (Implicit _) ->
+    | Some (Implicit _)
+    | Some (Meta _) ->
       begin
       match a with
       | Some ({aqual_implicit=true}) ->
@@ -439,20 +424,10 @@ let check_aqual (a0 a1:aqual)
     | _ ->
       fail "Unequal arg qualifiers"
 
-let mk_forall (u:universe) (x:bv) (body :typ) =
-  let tforall = mk_Tm_uinst U.tforall [u] in
-  let pred = S.mk
-    (Tm_abs ([S.mk_binder x],
-             close_term (S.mk_binder x) body,
-             Some (U.residual_tot U.ktype0)))
-    Range.dummyRange in
-
-  S.mk (Tm_app (tforall, [ iarg x.sort; as_arg pred ])) Range.dummyRange
-
 let mk_forall_l (us:universes) (xs:binders) (t:term)
   : term
   = FStar.Compiler.List.fold_right2
-        (fun u x t -> mk_forall u x.binder_bv t)
+        (fun u x t -> U.mk_forall u x.binder_bv t)
         us
         xs
         t
@@ -470,7 +445,7 @@ let close_guard_with_definition (x:binder) (u:universe) (t:term) (g:precondition
     | Some t ->
       Some (
        let t = U.mk_imp (U.mk_eq2 u x.binder_bv.sort (S.bv_to_name x.binder_bv) t) t in
-       mk_forall u x.binder_bv t
+       U.mk_forall u x.binder_bv t
       )
 
 let with_binders (#a:Type) (xs:binders) (us:universes) (f:result a)
@@ -957,7 +932,7 @@ let rec check_relation (g:env) (rel:relation) (t0 t1:typ)
                  guard (Subst.subst [NT(b.binder_bv, tm)] (U.mk_imp f0 f1))
 
                | SUBTYPING None ->
-                 guard (mk_forall u b.binder_bv (U.mk_imp f0 f1)))
+                 guard (U.mk_forall u b.binder_bv (U.mk_imp f0 f1)))
         )
         else (
           match maybe_unfold x0.sort x1.sort with
@@ -1003,7 +978,7 @@ let rec check_relation (g:env) (rel:relation) (t0 t1:typ)
                  guard (Subst.subst [NT(b1.binder_bv, tm)] f1)
 
             | SUBTYPING None ->
-                 guard (mk_forall u1 b1.binder_bv f1)
+                 guard (U.mk_forall u1 b1.binder_bv f1)
         )
         else (
           match maybe_unfold t0 x1.sort with

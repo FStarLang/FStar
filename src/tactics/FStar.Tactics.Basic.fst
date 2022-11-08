@@ -63,22 +63,12 @@ let core_check env sol t must_tot
     in
     match FStar.TypeChecker.Core.check_term env sol t must_tot with
     | Inl None ->
-      debug (fun _ -> BU.print_string "Core check ok (no guard)\n");
-      //checked with no guard
-      //no need to check it again
-      // debug (fun _ -> BU.print2 "(%s) Core checking succeeded on %s\n"
-      //                        (Range.string_of_range (Env.get_range env))
-      //                        (Print.term_to_string sol));
       Inl None
 
     | Inl (Some g) ->
-      debug (fun _ -> BU.print_string "Core check ok\n");
-      // debug (fun _ -> 
-      //          BU.print3 "(%s) Core checking succeeded on %s, with guard %s\n"
-      //                    (Range.string_of_range (Env.get_range env))              
-      //                    (Print.term_to_string sol)
-      //                    (Print.term_to_string g));
-      Inl (Some g)
+      if Options.compat_pre_core()  //core check the solution, but drop the guard, pre_core
+      then Inl None
+      else Inl (Some g)
        
 
     | Inr err ->
@@ -943,7 +933,7 @@ let t_apply (uopt:bool) (only_match:bool) (tc_resolved_uvars:bool) (tm:term) : t
     let! ps = get in
     let! goal = cur_goal in
     let e = goal_env goal in
-    Monad.register_goal e goal.goal_ctx_uvar;    
+    Monad.register_goal goal;
     let! tm, typ, guard = __tc e tm in
     if_verbose
       (fun () -> BU.print5 "t_apply: tm = %s\nt_apply: goal = %s\nenv.gamma=%s\ntyp=%s\nguard=%s\n"
@@ -1021,7 +1011,7 @@ let t_apply_lemma (noinst:bool) (noinst_lhs:bool)
     in
     let! goal = cur_goal in
     let env = goal_env goal in
-    Monad.register_goal env goal.goal_ctx_uvar;
+    Monad.register_goal goal;
     let! tm, t, guard = __tc env tm in
     let bs, comp = U.arrow_formals_comp t in
     match lemma_or_sq comp with
@@ -1351,8 +1341,8 @@ let _t_trefl (allow_guards:bool) (l : term) (r : term) : tac unit =
     if BU.for_all is_uvar_untyped_or_already_checked uvars
     then false
     else (
-      let head, args = 
-        let t = 
+      let head, args =
+        let t =
           match U.un_squash t with
           | None -> t
           | Some t -> t
@@ -1365,15 +1355,12 @@ let _t_trefl (allow_guards:bool) (l : term) (r : term) : tac unit =
         not (is_allow_untyped_uvar t1) &&
         not (is_allow_untyped_uvar t2)
       | _ ->
-        BU.print2 "Unexpected base conn in trefl (%s) (%s)\n"
-                  (Print.tag_of_term t)
-                  (Print.term_to_string t);
         true
-      )
+    )
   in
   let! g = cur_goal in
   if should_register_trefl g
-  then Monad.register_goal (goal_env g) g.goal_ctx_uvar;  
+  then Monad.register_goal g;
   let must_tot = true in  
   let attempt (l : term) (r : term) : tac bool =
     match! do_unify_maybe_guards allow_guards must_tot (goal_env g) l r with
@@ -1407,10 +1394,10 @@ let t_trefl (allow_guards:bool) : tac unit = wrap_err "t_trefl" <| (
     let! g = cur_goal in
     match destruct_eq (whnf (goal_env g) (goal_type g)) with
     | Some (l, r) ->
-        _t_trefl allow_guards l r
+      _t_trefl allow_guards l r
     | None ->
-        fail1 "not an equality (%s)" (tts (goal_env g) (goal_type g))
-    )
+      fail1 "not an equality (%s)" (tts (goal_env g) (goal_type g))
+ )
 
 let dup () : tac unit =
   let! g = cur_goal in

@@ -457,6 +457,9 @@ let rec resugar_term' (env: DsEnv.env) (t : S.term) : A.term =
           in
           Option.get out
 
+(* This is wrong: It treats the first N - 1 args of dtupleN as implicit
+   But, they are not *)
+(*   
         | Some ("dtuple", _) when List.length args > 0 ->
           (* this is desugared from Sum(binders*term) *)
           let args = last args in
@@ -481,7 +484,7 @@ let rec resugar_term' (env: DsEnv.env) (t : S.term) : A.term =
               let e = resugar_term' env e in
               List.fold_left(fun acc x -> mk (A.App(acc, x, A.Nothing))) e args
           end
-
+*)
         | Some ("dtuple", _) ->
           resugar_as_app e args
 

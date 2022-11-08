@@ -22,16 +22,12 @@ let (core_check :
                FStar_TypeChecker_Core.check_term env sol t must_tot in
              match uu___2 with
              | FStar_Pervasives.Inl (FStar_Pervasives_Native.None) ->
-                 (debug
-                    (fun uu___4 ->
-                       FStar_Compiler_Util.print_string
-                         "Core check ok (no guard)\n");
-                  FStar_Pervasives.Inl FStar_Pervasives_Native.None)
+                 FStar_Pervasives.Inl FStar_Pervasives_Native.None
              | FStar_Pervasives.Inl (FStar_Pervasives_Native.Some g) ->
-                 (debug
-                    (fun uu___4 ->
-                       FStar_Compiler_Util.print_string "Core check ok\n");
-                  FStar_Pervasives.Inl (FStar_Pervasives_Native.Some g))
+                 let uu___3 = FStar_Options.compat_pre_core () in
+                 if uu___3
+                 then FStar_Pervasives.Inl FStar_Pervasives_Native.None
+                 else FStar_Pervasives.Inl (FStar_Pervasives_Native.Some g)
              | FStar_Pervasives.Inr err ->
                  (debug
                     (fun uu___4 ->
@@ -2612,8 +2608,7 @@ let (t_apply :
                         FStar_Tactics_Monad.cur_goal
                         (fun goal ->
                            let e = FStar_Tactics_Types.goal_env goal in
-                           FStar_Tactics_Monad.register_goal e
-                             goal.FStar_Tactics_Types.goal_ctx_uvar;
+                           FStar_Tactics_Monad.register_goal goal;
                            (let uu___4 = __tc e tm in
                             FStar_Tactics_Monad.op_let_Bang uu___4
                               (fun uu___5 ->
@@ -2867,8 +2862,7 @@ let (t_apply_lemma :
                         FStar_Tactics_Monad.cur_goal
                         (fun goal ->
                            let env1 = FStar_Tactics_Types.goal_env goal in
-                           FStar_Tactics_Monad.register_goal env1
-                             goal.FStar_Tactics_Types.goal_ctx_uvar;
+                           FStar_Tactics_Monad.register_goal goal;
                            (let uu___5 = __tc env1 tm in
                             FStar_Tactics_Monad.op_let_Bang uu___5
                               (fun uu___6 ->
@@ -3904,22 +3898,11 @@ let (_t_trefl :
                        Prims.op_Negation uu___6) &&
                         (let uu___6 = is_allow_untyped_uvar t2 in
                          Prims.op_Negation uu___6)
-                  | uu___4 ->
-                      ((let uu___6 = FStar_Syntax_Print.tag_of_term t in
-                        let uu___7 = FStar_Syntax_Print.term_to_string t in
-                        FStar_Compiler_Util.print2
-                          "Unexpected base conn in trefl (%s) (%s)\n" uu___6
-                          uu___7);
-                       true))) in
+                  | uu___4 -> true)) in
         FStar_Tactics_Monad.op_let_Bang FStar_Tactics_Monad.cur_goal
           (fun g ->
              (let uu___1 = should_register_trefl g in
-              if uu___1
-              then
-                let uu___2 = FStar_Tactics_Types.goal_env g in
-                FStar_Tactics_Monad.register_goal uu___2
-                  g.FStar_Tactics_Types.goal_ctx_uvar
-              else ());
+              if uu___1 then FStar_Tactics_Monad.register_goal g else ());
              (let must_tot = true in
               let attempt l1 r1 =
                 let uu___1 =
