@@ -376,10 +376,8 @@ let compare (#t:eqtype) (#p0 #p1:P.perm)
 inline_for_extraction
 [@@noextract_to "krml"]
 let intro_fits_u32 (_:unit)
-  : Steel unit
-          emp (fun _ -> emp)
-          (requires fun _ -> True)
-          (ensures fun _ _ _ -> FStar.SizeT.fits_u32)
+  : SteelT (squash (US.fits_u32))
+           emp (fun _ -> emp)
   = A.intro_fits_u32 ()
 
 /// An introduction function for the fits_u64 predicate.
@@ -387,8 +385,6 @@ let intro_fits_u32 (_:unit)
 inline_for_extraction
 [@@noextract_to "krml"]
 let intro_fits_u64 (_:unit)
-  : Steel unit
-          emp (fun _ -> emp)
-          (requires fun _ -> True)
-          (ensures fun _ _ _ -> FStar.SizeT.fits_u64)
+  : SteelT (squash (US.fits_u64))
+           emp (fun _ -> emp)
   = A.intro_fits_u64 ()
