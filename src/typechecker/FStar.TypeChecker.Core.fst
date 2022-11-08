@@ -1,4 +1,5 @@
 module FStar.TypeChecker.Core
+open FStar.List.Tot
 open FStar.Compiler
 open FStar.Compiler.Util
 open FStar.Compiler.Effect

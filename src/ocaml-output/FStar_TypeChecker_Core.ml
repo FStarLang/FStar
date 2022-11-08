@@ -3607,7 +3607,7 @@ and (check_pat :
                                                              p_t expected_t)
                                                           (fun uu___11 ->
                                                              return
-                                                               (FStar_List_Tot_Base.append
+                                                               (FStar_List_Tot_Base.op_At
                                                                   ss
                                                                   [FStar_Syntax_Syntax.NT
                                                                     (f,
@@ -3657,11 +3657,11 @@ and (check_pat :
                                                         uu___10
                                                         FStar_Pervasives_Native.fst in
                                                     return
-                                                      ((FStar_List_Tot_Base.append
+                                                      ((FStar_List_Tot_Base.op_At
                                                           ss1
                                                           [FStar_Syntax_Syntax.NT
                                                              (f, p_e)]),
-                                                        (FStar_List_Tot_Base.append
+                                                        (FStar_List_Tot_Base.op_At
                                                            bvs bvs_p))))
                                     (ss, []) rest_formals rest_pats in
                                 op_let_Bang uu___4

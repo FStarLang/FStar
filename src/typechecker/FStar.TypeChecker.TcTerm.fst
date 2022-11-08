@@ -1808,7 +1808,6 @@ and tc_constant (env:env_t) r (c:sconst) : typ =
           | Unsigned, Int64 -> Const.uint64_lid)
       | Const_string _ -> t_string
       | Const_real _ -> t_real
-      | Const_float _ -> t_float
       | Const_char _ ->
         FStar.Syntax.DsEnv.try_lookup_lid env.dsenv FStar.Parser.Const.char_lid
         |> BU.must
@@ -3128,7 +3127,7 @@ and tc_pat env (pat_t:typ) (p0:pat) :
            *     we now have scrutinee = c, so we need decidable equality on c
            *)
           (match c with
-           | Const_unit | Const_bool _ | Const_int _ | Const_char _ | Const_float _ | Const_string _ -> ()
+           | Const_unit | Const_bool _ | Const_int _ | Const_char _ | Const_string _ -> ()
            | _ ->
              fail (BU.format1
                      "Pattern matching a constant that does not have decidable equality: %s"
