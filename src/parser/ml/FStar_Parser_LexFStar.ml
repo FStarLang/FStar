@@ -466,6 +466,13 @@ match%sedlex lexbuf with
         | s  -> MATCH_OP s
       )
 
+ | "if", Plus op_char ->
+    ensure_no_comment lexbuf (fun s ->
+        match BatString.lchop ~n:2 s with
+        | "" -> IF
+        | s  -> IF_OP s
+      )
+
  | "let", Plus op_char ->
     ensure_no_comment lexbuf (fun s ->
         match BatString.lchop ~n:3 s with

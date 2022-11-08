@@ -19,6 +19,9 @@ open FStar.List.Tot
 ///  - monadic pattern matching [match*], desugaring into (1) a [let]
 ///    operator [let*] and (2) a normal [match];
 ///
+///  - monadic conditionals [if*], desugaring into (1) a [let]
+///    operator [let*] and (2) a normal [if];
+///
 ///  - and monadic sequences [x ;* y], that desugars into
 ///    [let* _ = x in y].
 ///
@@ -95,6 +98,11 @@ let sugared3 (let?) ex
     Some 1
 let desugared3 op_let_Question ex
   = op_let_Question ex (fun _ -> Some 1)
+
+let sugared4 (let?) ex a b
+  = if? ex then a else b
+let desugared4 op_let_Question ex a b
+  = op_let_Question ex (fun ex -> if ex then a b)
 
 (**** The [list] monad *)
 let ( let:: ) (l: list 'a) (f: 'a -> list 'b): list 'b

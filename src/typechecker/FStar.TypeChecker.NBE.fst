@@ -881,13 +881,17 @@ and translate_fv (cfg: config) (bs:list t) (fvar:fv): t =
                         iapp = iapp cfg;
                         translate = translate cfg bs;
                       } in
-                      match prim_step.interpretation_nbe callbacks args' with
+                      debug (fun () -> BU.print1 "Caling primop with args = [%s]\n"
+                                    (List.map (fun (x, _) -> t_to_string x) args' |> String.concat "; "));
+                      let univs, rest = List.span (function ({nbe_t=Univ _ }, _) -> true | _ -> false) args' in
+                      let univs = List.map (function ({nbe_t=Univ u}, _) -> u | _ -> failwith "Impossible") univs in
+                      match prim_step.interpretation_nbe callbacks univs rest with
                       | Some x ->
                         debug (fun () -> BU.print2 "Primitive operator %s returned %s\n" (P.fv_to_string fvar) (t_to_string x));
                         x
                       | None ->
                         debug (fun () -> BU.print1 "Primitive operator %s failed\n" (P.fv_to_string fvar));
-                      iapp cfg (mkFV fvar [] []) args'),
+                        iapp cfg (mkFV fvar [] []) args'),
                      (let f (_:int) = S.mk_binder (S.new_bv None S.t_unit) in
                       Inl ([], FStar.Common.tabulate arity f, None)),
                      arity)

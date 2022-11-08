@@ -1364,139 +1364,152 @@ let (reduce_primops :
              match uu___1 with
              | (head, args) ->
                  let uu___2 =
-                   let uu___3 = FStar_Syntax_Util.un_uinst head in
-                   uu___3.FStar_Syntax_Syntax.n in
+                   let head1 = FStar_Syntax_Subst.compress head in
+                   match head1.FStar_Syntax_Syntax.n with
+                   | FStar_Syntax_Syntax.Tm_uinst (fv, us) -> (fv, us)
+                   | uu___3 -> (head1, []) in
                  (match uu___2 with
-                  | FStar_Syntax_Syntax.Tm_fvar fv ->
-                      let uu___3 =
-                        FStar_TypeChecker_Cfg.find_prim_step cfg fv in
-                      (match uu___3 with
-                       | FStar_Pervasives_Native.Some prim_step when
-                           prim_step.FStar_TypeChecker_Cfg.strong_reduction_ok
-                             ||
-                             (Prims.op_Negation
-                                cfg.FStar_TypeChecker_Cfg.strong)
-                           ->
-                           let l = FStar_Compiler_List.length args in
-                           if l < prim_step.FStar_TypeChecker_Cfg.arity
-                           then
-                             (FStar_TypeChecker_Cfg.log_primops cfg
-                                (fun uu___5 ->
-                                   let uu___6 =
-                                     FStar_Syntax_Print.lid_to_string
-                                       prim_step.FStar_TypeChecker_Cfg.name in
-                                   let uu___7 =
-                                     FStar_Compiler_Util.string_of_int l in
-                                   let uu___8 =
-                                     FStar_Compiler_Util.string_of_int
-                                       prim_step.FStar_TypeChecker_Cfg.arity in
-                                   FStar_Compiler_Util.print3
-                                     "primop: found partially applied %s (%s/%s args)\n"
-                                     uu___6 uu___7 uu___8);
-                              tm)
-                           else
-                             (let uu___5 =
-                                if l = prim_step.FStar_TypeChecker_Cfg.arity
-                                then (args, [])
-                                else
-                                  FStar_Compiler_List.splitAt
-                                    prim_step.FStar_TypeChecker_Cfg.arity
-                                    args in
-                              match uu___5 with
-                              | (args_1, args_2) ->
+                  | (head_term, universes) ->
+                      (match head_term.FStar_Syntax_Syntax.n with
+                       | FStar_Syntax_Syntax.Tm_fvar fv ->
+                           let uu___3 =
+                             FStar_TypeChecker_Cfg.find_prim_step cfg fv in
+                           (match uu___3 with
+                            | FStar_Pervasives_Native.Some prim_step when
+                                prim_step.FStar_TypeChecker_Cfg.strong_reduction_ok
+                                  ||
+                                  (Prims.op_Negation
+                                     cfg.FStar_TypeChecker_Cfg.strong)
+                                ->
+                                let l = FStar_Compiler_List.length args in
+                                if l < prim_step.FStar_TypeChecker_Cfg.arity
+                                then
                                   (FStar_TypeChecker_Cfg.log_primops cfg
-                                     (fun uu___7 ->
+                                     (fun uu___5 ->
+                                        let uu___6 =
+                                          FStar_Syntax_Print.lid_to_string
+                                            prim_step.FStar_TypeChecker_Cfg.name in
+                                        let uu___7 =
+                                          FStar_Compiler_Util.string_of_int l in
                                         let uu___8 =
-                                          FStar_Syntax_Print.term_to_string
-                                            tm in
-                                        FStar_Compiler_Util.print1
-                                          "primop: trying to reduce <%s>\n"
-                                          uu___8);
-                                   (let psc =
-                                      {
-                                        FStar_TypeChecker_Cfg.psc_range =
-                                          (head.FStar_Syntax_Syntax.pos);
-                                        FStar_TypeChecker_Cfg.psc_subst =
+                                          FStar_Compiler_Util.string_of_int
+                                            prim_step.FStar_TypeChecker_Cfg.arity in
+                                        FStar_Compiler_Util.print3
+                                          "primop: found partially applied %s (%s/%s args)\n"
+                                          uu___6 uu___7 uu___8);
+                                   tm)
+                                else
+                                  (let uu___5 =
+                                     if
+                                       l =
+                                         prim_step.FStar_TypeChecker_Cfg.arity
+                                     then (args, [])
+                                     else
+                                       FStar_Compiler_List.splitAt
+                                         prim_step.FStar_TypeChecker_Cfg.arity
+                                         args in
+                                   match uu___5 with
+                                   | (args_1, args_2) ->
+                                       (FStar_TypeChecker_Cfg.log_primops cfg
                                           (fun uu___7 ->
-                                             if
-                                               prim_step.FStar_TypeChecker_Cfg.requires_binder_substitution
-                                             then mk_psc_subst cfg env1
-                                             else [])
-                                      } in
-                                    let r =
-                                      prim_step.FStar_TypeChecker_Cfg.interpretation
-                                        psc norm_cb args_1 in
-                                    match r with
-                                    | FStar_Pervasives_Native.None ->
-                                        (FStar_TypeChecker_Cfg.log_primops
-                                           cfg
-                                           (fun uu___8 ->
-                                              let uu___9 =
-                                                FStar_Syntax_Print.term_to_string
-                                                  tm in
-                                              FStar_Compiler_Util.print1
-                                                "primop: <%s> did not reduce\n"
-                                                uu___9);
-                                         tm)
-                                    | FStar_Pervasives_Native.Some reduced ->
-                                        (FStar_TypeChecker_Cfg.log_primops
-                                           cfg
-                                           (fun uu___8 ->
-                                              let uu___9 =
-                                                FStar_Syntax_Print.term_to_string
-                                                  tm in
-                                              let uu___10 =
-                                                FStar_Syntax_Print.term_to_string
-                                                  reduced in
-                                              FStar_Compiler_Util.print2
-                                                "primop: <%s> reduced to  %s\n"
-                                                uu___9 uu___10);
-                                         FStar_Syntax_Util.mk_app reduced
-                                           args_2))))
-                       | FStar_Pervasives_Native.Some uu___4 ->
+                                             let uu___8 =
+                                               FStar_Syntax_Print.term_to_string
+                                                 tm in
+                                             FStar_Compiler_Util.print1
+                                               "primop: trying to reduce <%s>\n"
+                                               uu___8);
+                                        (let psc =
+                                           {
+                                             FStar_TypeChecker_Cfg.psc_range
+                                               =
+                                               (head.FStar_Syntax_Syntax.pos);
+                                             FStar_TypeChecker_Cfg.psc_subst
+                                               =
+                                               (fun uu___7 ->
+                                                  if
+                                                    prim_step.FStar_TypeChecker_Cfg.requires_binder_substitution
+                                                  then mk_psc_subst cfg env1
+                                                  else [])
+                                           } in
+                                         let r =
+                                           prim_step.FStar_TypeChecker_Cfg.interpretation
+                                             psc norm_cb universes args_1 in
+                                         match r with
+                                         | FStar_Pervasives_Native.None ->
+                                             (FStar_TypeChecker_Cfg.log_primops
+                                                cfg
+                                                (fun uu___8 ->
+                                                   let uu___9 =
+                                                     FStar_Syntax_Print.term_to_string
+                                                       tm in
+                                                   FStar_Compiler_Util.print1
+                                                     "primop: <%s> did not reduce\n"
+                                                     uu___9);
+                                              tm)
+                                         | FStar_Pervasives_Native.Some
+                                             reduced ->
+                                             (FStar_TypeChecker_Cfg.log_primops
+                                                cfg
+                                                (fun uu___8 ->
+                                                   let uu___9 =
+                                                     FStar_Syntax_Print.term_to_string
+                                                       tm in
+                                                   let uu___10 =
+                                                     FStar_Syntax_Print.term_to_string
+                                                       reduced in
+                                                   FStar_Compiler_Util.print2
+                                                     "primop: <%s> reduced to  %s\n"
+                                                     uu___9 uu___10);
+                                              FStar_Syntax_Util.mk_app
+                                                reduced args_2))))
+                            | FStar_Pervasives_Native.Some uu___4 ->
+                                (FStar_TypeChecker_Cfg.log_primops cfg
+                                   (fun uu___6 ->
+                                      let uu___7 =
+                                        FStar_Syntax_Print.term_to_string tm in
+                                      FStar_Compiler_Util.print1
+                                        "primop: not reducing <%s> since we're doing strong reduction\n"
+                                        uu___7);
+                                 tm)
+                            | FStar_Pervasives_Native.None -> tm)
+                       | FStar_Syntax_Syntax.Tm_constant
+                           (FStar_Const.Const_range_of) when
+                           Prims.op_Negation cfg.FStar_TypeChecker_Cfg.strong
+                           ->
                            (FStar_TypeChecker_Cfg.log_primops cfg
-                              (fun uu___6 ->
-                                 let uu___7 =
+                              (fun uu___4 ->
+                                 let uu___5 =
                                    FStar_Syntax_Print.term_to_string tm in
                                  FStar_Compiler_Util.print1
-                                   "primop: not reducing <%s> since we're doing strong reduction\n"
-                                   uu___7);
-                            tm)
-                       | FStar_Pervasives_Native.None -> tm)
-                  | FStar_Syntax_Syntax.Tm_constant
-                      (FStar_Const.Const_range_of) when
-                      Prims.op_Negation cfg.FStar_TypeChecker_Cfg.strong ->
-                      (FStar_TypeChecker_Cfg.log_primops cfg
-                         (fun uu___4 ->
-                            let uu___5 = FStar_Syntax_Print.term_to_string tm in
-                            FStar_Compiler_Util.print1
-                              "primop: reducing <%s>\n" uu___5);
-                       (match args with
-                        | (a1, uu___4)::[] ->
-                            FStar_TypeChecker_Cfg.embed_simple
-                              FStar_Syntax_Embeddings.e_range
-                              a1.FStar_Syntax_Syntax.pos
-                              tm.FStar_Syntax_Syntax.pos
-                        | uu___4 -> tm))
-                  | FStar_Syntax_Syntax.Tm_constant
-                      (FStar_Const.Const_set_range_of) when
-                      Prims.op_Negation cfg.FStar_TypeChecker_Cfg.strong ->
-                      (FStar_TypeChecker_Cfg.log_primops cfg
-                         (fun uu___4 ->
-                            let uu___5 = FStar_Syntax_Print.term_to_string tm in
-                            FStar_Compiler_Util.print1
-                              "primop: reducing <%s>\n" uu___5);
-                       (match args with
-                        | (t, uu___4)::(r, uu___5)::[] ->
-                            let uu___6 =
-                              FStar_TypeChecker_Cfg.try_unembed_simple
-                                FStar_Syntax_Embeddings.e_range r in
-                            (match uu___6 with
-                             | FStar_Pervasives_Native.Some rng ->
-                                 FStar_Syntax_Subst.set_use_range rng t
-                             | FStar_Pervasives_Native.None -> tm)
-                        | uu___4 -> tm))
-                  | uu___3 -> tm))
+                                   "primop: reducing <%s>\n" uu___5);
+                            (match args with
+                             | (a1, uu___4)::[] ->
+                                 FStar_TypeChecker_Cfg.embed_simple
+                                   FStar_Syntax_Embeddings.e_range
+                                   a1.FStar_Syntax_Syntax.pos
+                                   tm.FStar_Syntax_Syntax.pos
+                             | uu___4 -> tm))
+                       | FStar_Syntax_Syntax.Tm_constant
+                           (FStar_Const.Const_set_range_of) when
+                           Prims.op_Negation cfg.FStar_TypeChecker_Cfg.strong
+                           ->
+                           (FStar_TypeChecker_Cfg.log_primops cfg
+                              (fun uu___4 ->
+                                 let uu___5 =
+                                   FStar_Syntax_Print.term_to_string tm in
+                                 FStar_Compiler_Util.print1
+                                   "primop: reducing <%s>\n" uu___5);
+                            (match args with
+                             | (t, uu___4)::(r, uu___5)::[] ->
+                                 let uu___6 =
+                                   FStar_TypeChecker_Cfg.try_unembed_simple
+                                     FStar_Syntax_Embeddings.e_range r in
+                                 (match uu___6 with
+                                  | FStar_Pervasives_Native.Some rng ->
+                                      FStar_Syntax_Subst.set_use_range rng t
+                                  | FStar_Pervasives_Native.None -> tm)
+                             | uu___4 -> tm))
+                       | uu___3 -> tm)))
 let (reduce_equality :
   FStar_Syntax_Embeddings.norm_cb ->
     FStar_TypeChecker_Cfg.cfg ->
