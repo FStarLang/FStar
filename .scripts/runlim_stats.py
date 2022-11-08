@@ -50,9 +50,9 @@ def join_lines(lines1, lines2):
                 joined_lines_space.append((line1[0], space1, space2, ((space2 - space1) / space1) * 100))
     return (joined_lines_space, joined_lines_time)
 
-# sort the joined lines by the maximum difference in query timing
+# sort the joined lines in increasing order of the baseline metric
 def sort_lines(joined_lines):
-    joined_lines.sort(key=lambda x: x[3])
+    joined_lines.sort(key=lambda x: x[1])
     return joined_lines
 
 # print the joined lines
@@ -79,10 +79,13 @@ def find_duplicates(joined_lines):
 def filter_duplicates(parsed_lines):
     filtered_lines = []
     seen_query_ids = []
+    pattern = re.compile(r'.*Steel.*checked')
     for line in parsed_lines:
-        if line[0] not in seen_query_ids:
-            filtered_lines.append(line)
-            seen_query_ids.append(line[0])
+        match = pattern.match(line[0])
+        if match is not None:
+            if line[0] not in seen_query_ids:
+                filtered_lines.append(line)
+                seen_query_ids.append(line[0])
     return filtered_lines
 
 
