@@ -50,6 +50,14 @@ val of_u64 (x: U64.t) : Pure t
   (requires fits_u64)
   (ensures (fun y -> v y == U64.v x))
 
+val uint32_to_sizet (x:U32.t) : Pure t
+  (requires fits_u32)
+  (ensures fun y -> v y == U32.v x)
+
+val uint64_to_sizet (x:U64.t) : Pure t
+  (requires fits_u64)
+  (ensures fun y -> v y == U64.v x)
+
 val fits_lte (x y: nat) : Lemma
   (requires (x <= y /\ fits y))
   (ensures (fits x))
