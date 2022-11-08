@@ -28,7 +28,7 @@ open Steel.Array
 let main () : SteelT Int32.t emp (fun _ -> emp) =
   let x = f () in
   intro_fits_u32 ();
-  let y = mk_u32 500000ul in
+  let y = of_u32 500000ul in
   let z = ft () in
   if x = y then 1l
   else
