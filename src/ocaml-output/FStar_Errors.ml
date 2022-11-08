@@ -2755,7 +2755,7 @@ let (set_option_warning_callback_range :
   FStar_Compiler_Range.range FStar_Pervasives_Native.option -> unit) =
   fun ropt ->
     FStar_Options.set_option_warning_callback (warn_unsafe_options ropt)
-let (uu___253 :
+let (uu___241 :
   (((Prims.string -> error_setting Prims.list) -> unit) *
     (unit -> error_setting Prims.list)))
   =
@@ -2800,10 +2800,10 @@ let (uu___253 :
   (set_callbacks, get_error_flags)
 let (set_parse_warn_error :
   (Prims.string -> error_setting Prims.list) -> unit) =
-  match uu___253 with
+  match uu___241 with
   | (set_parse_warn_error1, error_flags) -> set_parse_warn_error1
 let (error_flags : unit -> error_setting Prims.list) =
-  match uu___253 with | (set_parse_warn_error1, error_flags1) -> error_flags1
+  match uu___241 with | (set_parse_warn_error1, error_flags1) -> error_flags1
 let (lookup : raw_error -> (raw_error * error_flag * Prims.int)) =
   fun err ->
     let flags = error_flags () in

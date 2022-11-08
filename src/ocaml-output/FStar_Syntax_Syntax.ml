@@ -1657,10 +1657,7 @@ let withinfo : 'a . 'a -> FStar_Compiler_Range.range -> 'a withinfo_t =
 let withsort : 'a . 'a -> 'a withinfo_t =
   fun v -> withinfo v FStar_Compiler_Range.dummyRange
 let (bv_eq : bv -> bv -> Prims.bool) =
-  fun bv1 ->
-    fun bv2 ->
-      (FStar_Ident.ident_equals bv1.ppname bv2.ppname) &&
-        (bv1.index = bv2.index)
+  fun bv1 -> fun bv2 -> bv1.index = bv2.index
 let (order_bv : bv -> bv -> Prims.int) =
   fun x ->
     fun y ->
@@ -1863,7 +1860,46 @@ let (is_type : term -> Prims.bool) =
 let (null_id : FStar_Ident.ident) =
   FStar_Ident.mk_ident ("_", FStar_Compiler_Range.dummyRange)
 let (null_bv : term -> bv) =
-  fun k -> { ppname = null_id; index = Prims.int_zero; sort = k }
+  fun k ->
+    let uu___ = FStar_Ident.next_id () in
+    { ppname = null_id; index = uu___; sort = k }
+let (is_null_bv : bv -> Prims.bool) =
+  fun b ->
+    let uu___ = FStar_Ident.string_of_id b.ppname in
+    let uu___1 = FStar_Ident.string_of_id null_id in uu___ = uu___1
+let (is_null_binder : binder -> Prims.bool) = fun b -> is_null_bv b.binder_bv
+let (range_of_ropt :
+  FStar_Compiler_Range.range FStar_Pervasives_Native.option ->
+    FStar_Compiler_Range.range)
+  =
+  fun uu___ ->
+    match uu___ with
+    | FStar_Pervasives_Native.None -> FStar_Compiler_Range.dummyRange
+    | FStar_Pervasives_Native.Some r -> r
+let (gen_bv :
+  Prims.string ->
+    FStar_Compiler_Range.range FStar_Pervasives_Native.option -> typ -> bv)
+  =
+  fun s ->
+    fun r ->
+      fun t ->
+        let id = FStar_Ident.mk_ident (s, (range_of_ropt r)) in
+        let uu___ = FStar_Ident.next_id () in
+        { ppname = id; index = uu___; sort = t }
+let (new_bv :
+  FStar_Compiler_Range.range FStar_Pervasives_Native.option -> typ -> bv) =
+  fun ropt -> fun t -> gen_bv FStar_Ident.reserved_prefix ropt t
+let (freshen_bv : bv -> bv) =
+  fun bv1 ->
+    let uu___ = is_null_bv bv1 in
+    if uu___
+    then
+      let uu___1 =
+        let uu___2 = range_of_bv bv1 in FStar_Pervasives_Native.Some uu___2 in
+      new_bv uu___1 bv1.sort
+    else
+      (let uu___2 = FStar_Ident.next_id () in
+       { ppname = (bv1.ppname); index = uu___2; sort = (bv1.sort) })
 let (mk_binder_with_attrs : bv -> bqual -> attribute Prims.list -> binder) =
   fun bv1 ->
     fun aqual1 ->
@@ -1880,11 +1916,6 @@ let (iarg : term -> arg) =
       (FStar_Pervasives_Native.Some
          { aqual_implicit = true; aqual_attributes = [] }))
 let (as_arg : term -> arg) = fun t -> (t, FStar_Pervasives_Native.None)
-let (is_null_bv : bv -> Prims.bool) =
-  fun b ->
-    let uu___ = FStar_Ident.string_of_id b.ppname in
-    let uu___1 = FStar_Ident.string_of_id null_id in uu___ = uu___1
-let (is_null_binder : binder -> Prims.bool) = fun b -> is_null_bv b.binder_bv
 let (is_top_level : letbinding Prims.list -> Prims.bool) =
   fun uu___ ->
     match uu___ with
@@ -1949,38 +1980,6 @@ let (pat_bvs : pat -> bv Prims.list) =
             pats in
     let uu___ = aux [] p in
     FStar_Compiler_Effect.op_Less_Bar FStar_Compiler_List.rev uu___
-let (range_of_ropt :
-  FStar_Compiler_Range.range FStar_Pervasives_Native.option ->
-    FStar_Compiler_Range.range)
-  =
-  fun uu___ ->
-    match uu___ with
-    | FStar_Pervasives_Native.None -> FStar_Compiler_Range.dummyRange
-    | FStar_Pervasives_Native.Some r -> r
-let (gen_bv :
-  Prims.string ->
-    FStar_Compiler_Range.range FStar_Pervasives_Native.option -> typ -> bv)
-  =
-  fun s ->
-    fun r ->
-      fun t ->
-        let id = FStar_Ident.mk_ident (s, (range_of_ropt r)) in
-        let uu___ = FStar_Ident.next_id () in
-        { ppname = id; index = uu___; sort = t }
-let (new_bv :
-  FStar_Compiler_Range.range FStar_Pervasives_Native.option -> typ -> bv) =
-  fun ropt -> fun t -> gen_bv FStar_Ident.reserved_prefix ropt t
-let (freshen_bv : bv -> bv) =
-  fun bv1 ->
-    let uu___ = is_null_bv bv1 in
-    if uu___
-    then
-      let uu___1 =
-        let uu___2 = range_of_bv bv1 in FStar_Pervasives_Native.Some uu___2 in
-      new_bv uu___1 bv1.sort
-    else
-      (let uu___2 = FStar_Ident.next_id () in
-       { ppname = (bv1.ppname); index = uu___2; sort = (bv1.sort) })
 let (freshen_binder : binder -> binder) =
   fun b ->
     let uu___ = freshen_bv b.binder_bv in
