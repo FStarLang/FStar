@@ -940,13 +940,17 @@ let is_smt_binder (b:binder) : Tac bool =
 /// Creates a new term, where all arguments where SMT rewriting is enabled have been replaced
 /// by fresh, unconstrained unification variables
 let rec new_args_for_smt_attrs (env:env) (l:list argv) (ty:typ) : Tac (list argv * list term) =
+  let fresh_ghost_uvar ty =
+    let e = cur_env () in
+    ghost_uvar_env e ty
+  in
   match l, inspect_unascribe ty with
   | (arg, aqualv)::tl, Tv_Arrow binder comp ->
     let needs_smt = is_smt_binder binder in
     let new_hd =
       if needs_smt then (
         let arg_ty = tc env arg in
-        let uvar = fresh_uvar (Some arg_ty) in
+        let uvar = fresh_ghost_uvar arg_ty in
         unshelve uvar;
         flip ();
         (uvar, aqualv)
