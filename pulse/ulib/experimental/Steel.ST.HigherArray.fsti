@@ -75,6 +75,8 @@ let ptr_of
 let length (#elt: Type) (a: array elt) : GTot nat =
   dsnd a
 
+val length_fits (#elt: Type) (a: array elt) : Lemma (US.fits (length a))
+
 /// A Steel separation logic heap predicate to describe that an array
 /// a points to some element sequence s with some permission p.  vprop
 /// limits the universe to at most 1 (because of the universe of the
@@ -542,4 +544,3 @@ val intro_fits_u64 (_:unit)
        emp (fun _ -> emp)
        (requires True)
        (ensures fun _ -> FStar.SizeT.fits_u64)
-

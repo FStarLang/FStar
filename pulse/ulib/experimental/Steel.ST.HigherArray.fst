@@ -100,6 +100,8 @@ let ptr_base_offset_inj (#elt: Type) (p1 p2: ptr elt) : Lemma
   ))
 = ()
 
+let length_fits #elt a = ()
+
 let valid_perm
   (len: nat)
   (offset: nat)

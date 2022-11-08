@@ -77,6 +77,8 @@ let ptr_of
 let length (#elt: Type) (a: array elt) : GTot nat =
   dsnd a
 
+val length_fits (#elt: Type) (a: array elt) : Lemma (US.fits (length a))
+
 /// An abbreviation refining an array by its length
 inline_for_extraction
 [@@noextract_to "krml"]
