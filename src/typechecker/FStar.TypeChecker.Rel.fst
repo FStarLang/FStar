@@ -4900,23 +4900,26 @@ let try_solve_single_valued_implicits env is_tac (imps:Env.implicits) : Env.impl
  *
  * must_tot : if t must be a Tot
  *)
-let check_implicit_solution env t k (must_tot:bool) (reason:string) : guard_t =
-  (*
-   * AR: when we create lambda terms as solutions to implicits (in u_abs),
-   *       we set the type in the residual comp to be the type of the uvar
-   *     while this ok for smt encoding etc., when we are typechecking the implicit solution using fastpath,
-   *       it doesn't help since the two types are the same (the type of the uvar and its solution)
-   *     worse, this prevents some constraints to be generated between the actual type of the solution
-   *       and the type of the uvar
-   *     therefore, we unset the residual comp type in the solution before typechecking
-   *)
-  let t = match (SS.compress t).n with
-          | Tm_abs (bs, body, Some rc) ->
-            {t with n=Tm_abs (bs, body, Some ({rc with residual_typ=None}))}
-          | _ -> t in
-
+let check_implicit_solution env (uv:ctx_uvar) (t:term) (k:typ) (must_tot:bool) (reason:string) r : guard_t =
   let env, _ = Env.clear_expected_typ env in
-  let fallback () =
+
+  if env.phase1 || //this can be false if we're running in lax mode without phase2 to follow
+     env.lax      //no point running core checker if we're in lax mode
+   then begin
+    (*
+     * AR: when we create lambda terms as solutions to implicits (in u_abs),
+     *       we set the type in the residual comp to be the type of the uvar
+     *     while this ok for smt encoding etc., when we are typechecking the implicit solution using fastpath,
+     *       it doesn't help since the two types are the same (the type of the uvar and its solution)
+     *     worse, this prevents some constraints to be generated between the actual type of the solution
+     *       and the type of the uvar
+     *     therefore, we unset the residual comp type in the solution before typechecking
+     *)
+    let t = match (SS.compress t).n with
+            | Tm_abs (bs, body, Some rc) ->
+              {t with n=Tm_abs (bs, body, Some ({rc with residual_typ=None}))}
+            | _ -> t in
+
     let k', g =
       env.typeof_well_typed_tot_or_gtot_term
       (Env.set_expected_typ ({env with use_bv_sorts=true}) k)
@@ -4924,24 +4927,20 @@ let check_implicit_solution env t k (must_tot:bool) (reason:string) : guard_t =
 
     match get_subtyping_predicate env k' k with
     | None -> raise_error (Err.expected_expression_of_type env k t k') t.pos
-    | Some f -> Env.conj_guard (Env.apply_guard f t) g
-  in
-  
-  if not (env.phase1) //this can be false if we're running in lax mode without phase2 to follow
-  && not env.lax //no point running core checker if we're in lax mode
-   then (
+    | Some f -> {Env.conj_guard (Env.apply_guard f t) g with guard_f=Trivial}
+  end
+  else begin
     match env.core_check env t k must_tot with
-    | Inl None ->
-      trivial_guard
-    | Inl (Some g) -> 
-      { trivial_guard with guard_f = NonTrivial g }
+    | Inl None -> trivial_guard
+    | Inl (Some g) -> { trivial_guard with guard_f = NonTrivial g }
     | Inr print_err ->
-        // (BU.print2 "(Rel) core_check failed (%s) because %s\n" 
-        //   reason
-        //   (print_err false));
-      fallback()
-  )
-  else fallback()
+      raise_error (Errors.Fatal_FailToResolveImplicitArgument,
+                   BU.format4 "Core checking failed for implicit %s (reason: %s) (%s <: %s)"
+                     (Print.ctx_uvar_to_string uv)
+                     reason
+                     (Print.term_to_string t)
+                     (Print.term_to_string k)) r
+  end
 
 (*
  * Return None if we did not typecheck the implicit because
@@ -4974,7 +4973,7 @@ let check_implicit_solution_and_discharge_guard env imp force_univ_constraints
          (Print.uvar_to_string ctx_u.ctx_uvar_head)
          (N.term_to_string env tm)
          (N.term_to_string env (U.ctx_uvar_typ ctx_u)))
-      (fun () -> check_implicit_solution env tm (U.ctx_uvar_typ ctx_u) must_tot ctx_u.ctx_uvar_reason) in
+      (fun () -> check_implicit_solution env ctx_u tm (U.ctx_uvar_typ ctx_u) must_tot ctx_u.ctx_uvar_reason) r in
 
     if (not force_univ_constraints) &&
        (List.existsb (fun (reason, _, _) -> reason = Deferred_univ_constraint) g.deferred)
