@@ -712,6 +712,7 @@ let indexed_effect_binder_kind_to_string = function
   | Type_binder -> "type_binder"
   | Substitution_binder -> "subst_binder"
   | BindCont_no_abstraction_binder -> "bind_g_no_abs_binder"
+  | Range_binder -> "range_binder"
   | Repr_binder -> "repr_binder"
   | Ad_hoc_binder -> "ad_hoc_binder"
 

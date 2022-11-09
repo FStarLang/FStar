@@ -1405,6 +1405,7 @@ let (indexed_effect_binder_kind_to_string :
     | FStar_Syntax_Syntax.Substitution_binder -> "subst_binder"
     | FStar_Syntax_Syntax.BindCont_no_abstraction_binder ->
         "bind_g_no_abs_binder"
+    | FStar_Syntax_Syntax.Range_binder -> "range_binder"
     | FStar_Syntax_Syntax.Repr_binder -> "repr_binder"
     | FStar_Syntax_Syntax.Ad_hoc_binder -> "ad_hoc_binder"
 let list_to_string :
