@@ -77,6 +77,11 @@ val mul (x y: t) : Pure t
   (requires (fits (v x * v y)))
   (ensures (fun z -> v z == v x * v y))
 
+(** Euclidean division of [a] and [b], with [b] non-zero *)
+val div (a:t) (b:t{v b <> 0}) : Pure t
+  (requires (True))
+  (ensures (fun c -> v a / v b = v c))
+
 (** Modulo specification, similar to FStar.UInt.mod *)
 
 let mod_spec (a:nat{fits a}) (b:nat{fits b /\ b <> 0}) : GTot (n:nat{fits n}) =
