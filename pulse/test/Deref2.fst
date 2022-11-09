@@ -8,3 +8,5 @@ let test1 () : SteelT UInt32.t emp (fun _ -> emp)
   let x = read r in
   free r;
   x
+
+let main : Int32.t = 0l
