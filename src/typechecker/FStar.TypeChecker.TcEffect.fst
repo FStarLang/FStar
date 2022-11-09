@@ -2068,6 +2068,8 @@ Errors.with_ctx (BU.format1 "While checking effect definition `%s`" (string_of_l
               (Print.term_to_string act_typ);
           let act_defn, _, g_a = tc_tot_or_gtot_term env' act.action_defn in
 
+          Rel.force_trivial_guard env (Env.conj_guards [g_a; g_t]);
+
           let act_defn = N.normalize [ Env.UnfoldUntil S.delta_constant ] env act_defn in
           let act_typ = N.normalize [ Env.UnfoldUntil S.delta_constant; Env.Eager_unfolding; Env.Beta ] env act_typ in
           // 2) This implies that [action_typ] has Type(k): good for us!
@@ -2087,8 +2089,18 @@ Errors.with_ctx (BU.format1 "While checking effect definition `%s`" (string_of_l
               "Actions must have function types (not: %s, a.k.a. %s)"
                 (Print.term_to_string act_typ) (Print.tag_of_term act_typ))) act_defn.pos
           in
-          let g = Rel.teq env act_typ expected_k in
-          Rel.force_trivial_guard env (Env.conj_guard g_a (Env.conj_guard g_k (Env.conj_guard g_t g)));
+
+          // The following Rel query is only to check that act_typ has
+          //   the right shape, no actual typechecking going on here
+          (let g = Rel.teq env act_typ expected_k in
+           let g = Env.conj_guard g g_k in
+           match g.guard_f with
+           | NonTrivial _ ->
+             raise_error (Errors.Fatal_ActionMustHaveFunctionType,
+                          BU.format1 "Unexpected non trivial guard formula when checking action type shape (%s)"
+                            (Print.term_to_string act_typ)) act_defn.pos
+           | Trivial ->
+             Rel.force_trivial_guard {env with lax=true} (Env.conj_guards [g_k; g]));
 
           // 4) Do a bunch of plumbing to assign a type in the new monad to
           //    the action

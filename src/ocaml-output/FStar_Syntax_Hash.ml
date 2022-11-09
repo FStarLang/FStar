@@ -68,11 +68,6 @@ let hash_list :
   =
   fun h ->
     fun ts -> let uu___ = FStar_Compiler_List.map h ts in mix_list uu___
-let hash_array :
-  'a .
-    ('a -> FStar_Hash.hash_code mm) ->
-      'a Prims.array -> FStar_Hash.hash_code mm
-  = fun h -> fun ts -> Prims.admit ()
 let hash_option :
   'a .
     ('a -> FStar_Hash.hash_code mm) ->
@@ -471,15 +466,9 @@ and (hash_constant : FStar_Syntax_Syntax.sconst -> FStar_Hash.hash_code mm) =
         let uu___1 = of_int (Prims.of_int (317)) in
         let uu___2 = of_int (FStar_UInt32.v (FStar_Char.u32_of_char c)) in
         mix uu___1 uu___2
-    | FStar_Const.Const_float d ->
-        let uu___1 = of_int (Prims.of_int (331)) in
-        let uu___2 = of_int Prims.int_zero in mix uu___1 uu___2
     | FStar_Const.Const_real s ->
         let uu___1 = of_int (Prims.of_int (337)) in
         let uu___2 = of_string s in mix uu___1 uu___2
-    | FStar_Const.Const_bytearray (bs, uu___1) ->
-        let uu___2 = of_int (Prims.of_int (347)) in
-        let uu___3 = hash_array hash_byte bs in mix uu___2 uu___3
     | FStar_Const.Const_string (s, uu___1) ->
         let uu___2 = of_int (Prims.of_int (349)) in
         let uu___3 = of_string s in mix uu___2 uu___3
@@ -982,11 +971,7 @@ and (equal_constant :
              -> (s1 = s2) && (o1 = o2)
          | (FStar_Const.Const_char c11, FStar_Const.Const_char c21) ->
              c11 = c21
-         | (FStar_Const.Const_float d1, FStar_Const.Const_float d2) ->
-             d1 = d2
          | (FStar_Const.Const_real s1, FStar_Const.Const_real s2) -> s1 = s2
-         | (FStar_Const.Const_bytearray (bs1, uu___2),
-            FStar_Const.Const_bytearray (bs2, uu___3)) -> bs1 = bs2
          | (FStar_Const.Const_string (s1, uu___2), FStar_Const.Const_string
             (s2, uu___3)) -> s1 = s2
          | (FStar_Const.Const_range_of, FStar_Const.Const_range_of) -> true

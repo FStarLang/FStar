@@ -146,7 +146,7 @@ let defaults =
       ("cache_checked_modules"        , Bool false);
       ("cache_dir"                    , Unset);
       ("cache_off"                    , Bool false);
-      ("compat_pre_core"              , Bool false);            
+      ("compat_pre_core"              , Unset);
       ("print_cache_version"          , Bool false);
       ("cmi"                          , Bool false);
       ("codegen"                      , Unset);
@@ -328,7 +328,7 @@ let lookup_opt s c =
 let get_abort_on                ()      = lookup_opt "abort_on"                 as_int
 let get_admit_smt_queries       ()      = lookup_opt "admit_smt_queries"        as_bool
 let get_admit_except            ()      = lookup_opt "admit_except"             (as_option as_string)
-let get_compat_pre_core         ()      = lookup_opt "compat_pre_core" as_bool
+let get_compat_pre_core         ()      = lookup_opt "compat_pre_core"          (as_option as_int)
 let get_disallow_unification_guards ()     = lookup_opt "disallow_unification_guards" as_bool
 let get_already_cached          ()      = lookup_opt "already_cached"           (as_option (as_list as_string))
 let get_cache_checked_modules   ()      = lookup_opt "cache_checked_modules"    as_bool
@@ -645,8 +645,8 @@ let rec specs_with_types warn_unsafe : list (char * string * opt_type * string) 
 
       ( noshort,
         "compat_pre_core",
-        BoolStr,
-        "Retain behavior of the tactic engine prior to the introduction of FStar.TypeChecker.Core (default 'false')");
+        IntStr "0, 1, 2",
+        "Retain behavior of the tactic engine prior to the introduction of FStar.TypeChecker.Core (0 is most permissive, 2 is least permissive)");
 
       ( noshort,
         "disallow_unification_guards",
@@ -1663,7 +1663,19 @@ let parse_settings ns : list (list string * bool) =
 let __temp_fast_implicits        () = lookup_opt "__temp_fast_implicits" as_bool
 let admit_smt_queries            () = get_admit_smt_queries           ()
 let admit_except                 () = get_admit_except                ()
-let compat_pre_core              () = get_compat_pre_core    ()
+let compat_pre_core_should_register () = 
+  match get_compat_pre_core() with
+  | Some 0 -> false
+  | _ -> true
+let compat_pre_core_should_check () = 
+  match get_compat_pre_core() with
+  | Some 0 
+  | Some 1 -> false
+  | _ -> true  
+let compat_pre_core_set () =
+  match get_compat_pre_core() with
+  | None -> false
+  | _ -> true
 let disallow_unification_guards  () = get_disallow_unification_guards    ()
 let cache_checked_modules        () = get_cache_checked_modules       ()
 let cache_off                    () = get_cache_off                   ()

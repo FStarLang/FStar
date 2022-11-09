@@ -871,8 +871,6 @@ let collect_one
             add_to_parsing_data (P_dep (false, (Util.format2 "fstar.%sint%s" u w |> Ident.lid_of_str)))
         | Const_char _ ->
             add_to_parsing_data (P_dep (false, ("fstar.char" |> Ident.lid_of_str)))
-        | Const_float _ ->
-            add_to_parsing_data (P_dep (false, ("fstar.float" |> Ident.lid_of_str)))
         | _ ->
             ()
 

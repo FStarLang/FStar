@@ -153,25 +153,9 @@ let wrap (f:int -> ND unit (as_pure_wp (fun p -> True))) (x':int) : ND unit (as_
   | Some x -> f x
   | None -> f 4
 
-[@@expect_failure [228]] //Core refuses to check ND terms; previously, it failed with 217, gather implicits guards at the end
-let rewrite_inside_reify
-  (f : int -> ND unit (as_pure_wp (fun p -> True)))
-  (g : int -> Tot (option int))
-  (x' : int) : Tot unit =
 
-  let f' = wrap f in
-  let l = reify (f' x') (fun _ -> True) in
+assume val f : int -> ND unit (as_pure_wp (fun p -> forall x. p x))
 
-  match g x' with
-  | Some x ->
-     let ll = reify (f x) (fun _ -> True) in
-     assert (l == ll) by (
-       unfold_def (`wrap);
-       dump "A";
-       // This puts in rwr: g x' == Some b
-       let rwr = (match (List.Tot.nth (cur_binders ()) 7) with
-       | Some y -> y | None -> T.fail "no goal found") in
-       l_to_r [`rwr])
-     // The assert ^ fails with the error:
-     // "(Error) user tactic failed: Ill-typed reify: this constant must be fully applied"
-  | None -> ()
+let rewrite_inside_reify (x y:int) (_:squash (x == y)) =
+  assert (reify (f x) (fun _ -> True) == reify (f y) (fun _ -> True))
+    by (rewrite_eqs_from_context ())

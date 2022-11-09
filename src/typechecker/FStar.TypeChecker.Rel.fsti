@@ -53,8 +53,6 @@ val solve_non_tactic_deferred_constraints: maybe_defer_flex_flex:bool -> env -> 
 val discharge_guard_no_smt    : env -> guard_t -> guard_t
 val discharge_guard           : env -> guard_t -> guard_t
 val force_trivial_guard       : env -> guard_t -> unit
-val is_implicit_resolved      : env -> Env.implicit -> bool
-val check_implicit_solution_for_tac : env -> Env.implicit -> option (term * typ)
 val resolve_implicits         : env -> guard_t -> guard_t
 val resolve_implicits_tac     : env -> guard_t -> tagged_implicits
 val base_and_refinement_maybe_delta : bool -> env -> term -> term * option (bv * term)

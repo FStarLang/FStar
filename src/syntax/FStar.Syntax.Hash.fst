@@ -73,7 +73,6 @@ let mix_list_lit = mix_list
 
 let hash_list (h:'a -> mm H.hash_code) (ts:list 'a) : mm H.hash_code = mix_list (List.map h ts)
 
-let hash_array (h:'a -> mm H.hash_code) (ts:array 'a) : mm H.hash_code = admit()
 
 let hash_option (h:'a -> mm H.hash_code) (o:option 'a) : mm H.hash_code =
   match o with
@@ -244,9 +243,7 @@ and hash_constant =
                              (mix (of_string s)
                                     (hash_option hash_sw o))
   | Const_char c -> mix (of_int 317) (of_int (UInt32.v (Char.u32_of_char c)))
-  | Const_float d -> mix (of_int 331) (of_int 0) //(hash_double d)(* ?? *)
   | Const_real s -> mix (of_int 337) (of_string s)
-  | Const_bytearray (bs, _) -> mix (of_int 347) (hash_array hash_byte bs)
   | Const_string (s, _) -> mix (of_int 349) (of_string s)
   | Const_range_of -> of_int 353
   | Const_set_range_of -> of_int 359
@@ -489,9 +486,7 @@ and equal_constant c1 c2 =
   | Const_bool b1, Const_bool b2 -> b1 = b2
   | Const_int (s1, o1), Const_int(s2, o2) -> s1=s2 && o1=o2
   | Const_char c1, Const_char c2 -> c1=c2
-  | Const_float d1, Const_float d2 -> d1=d2
   | Const_real s1, Const_real s2 -> s1=s2
-  | Const_bytearray (bs1, _), Const_bytearray(bs2, _) -> bs1=bs2
   | Const_string (s1, _), Const_string (s2, _) -> s1=s2
   | Const_range_of, Const_range_of
   | Const_set_range_of, Const_set_range_of -> true

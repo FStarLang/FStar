@@ -18,7 +18,7 @@ verify-all: $(CACHE_DIR) $(addsuffix .checked, $(addprefix $(CACHE_DIR)/, $(FSTA
 	    MachineIntegerConstants.ml-cmp \
 	    ExtractMutRecTypesAndTerms.ml-cmp
 
-$(CACHE_DIR)/SteelFramingTestSuite.fst.checked:  OTHERFLAGS += --compat_pre_core true
+$(CACHE_DIR)/SteelFramingTestSuite.fst.checked:  OTHERFLAGS += --compat_pre_core 1
 $(CACHE_DIR)/MustEraseForExtraction.fst.checked: OTHERFLAGS += --warn_error @318
 
 %.ml: %.fst

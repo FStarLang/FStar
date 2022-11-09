@@ -1,6 +1,6 @@
 include ../Makefile.include
 
-OTHERFLAGS+=--include ../tactics --compat_pre_core true
+OTHERFLAGS+=--include ../tactics --compat_pre_core 1
 
 all: SepLogic.Heap.uver Shallow.uver SL.Heap.uver SL.Effect.uver	\
 	SL.Shallow.uver Examples.uver \
