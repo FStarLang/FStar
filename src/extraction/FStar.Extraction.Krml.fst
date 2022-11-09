@@ -866,7 +866,8 @@ and translate_expr env e: expr =
         EApp (EQualified ([ "FStar"; "Int"; "Cast" ], c), [ translate_expr env arg ])
 
   | MLE_App ({ expr = MLE_Name p }, [ arg ])
-    when string_of_mlpath p = "FStar.SizeT.uint32_to_sizet" ||
+    when string_of_mlpath p = "FStar.SizeT.uint16_to_sizet" ||
+         string_of_mlpath p = "FStar.SizeT.uint32_to_sizet" ||
          string_of_mlpath p = "FStar.SizeT.uint64_to_sizet" ->
       ECast (translate_expr env arg, TInt SizeT)
 
