@@ -4632,7 +4632,6 @@ and (tc_constant :
                      FStar_Parser_Const.uint64_lid)
           | FStar_Const.Const_string uu___ -> FStar_Syntax_Syntax.t_string
           | FStar_Const.Const_real uu___ -> FStar_Syntax_Syntax.t_real
-          | FStar_Const.Const_float uu___ -> FStar_Syntax_Syntax.t_float
           | FStar_Const.Const_char uu___ ->
               let uu___1 =
                 FStar_Syntax_DsEnv.try_lookup_lid
@@ -8326,7 +8325,6 @@ and (tc_pat :
                  | FStar_Const.Const_bool uu___2 -> ()
                  | FStar_Const.Const_int uu___2 -> ()
                  | FStar_Const.Const_char uu___2 -> ()
-                 | FStar_Const.Const_float uu___2 -> ()
                  | FStar_Const.Const_string uu___2 -> ()
                  | uu___2 ->
                      let uu___3 =

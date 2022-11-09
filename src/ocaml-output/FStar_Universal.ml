@@ -213,13 +213,21 @@ let (core_check : FStar_TypeChecker_Env.core_check_t) =
     fun tm ->
       fun t ->
         fun must_tot ->
-          let uu___ = FStar_Options.compat_pre_core () in
+          let uu___ =
+            let uu___1 = FStar_Options.compat_pre_core_should_check () in
+            Prims.op_Negation uu___1 in
           if uu___
           then FStar_Pervasives.Inl FStar_Pervasives_Native.None
           else
             (let uu___2 = FStar_TypeChecker_Core.check_term env tm t must_tot in
              match uu___2 with
-             | FStar_Pervasives.Inl t1 -> FStar_Pervasives.Inl t1
+             | FStar_Pervasives.Inl (FStar_Pervasives_Native.None) ->
+                 FStar_Pervasives.Inl FStar_Pervasives_Native.None
+             | FStar_Pervasives.Inl (FStar_Pervasives_Native.Some g) ->
+                 let uu___3 = FStar_Options.compat_pre_core_set () in
+                 if uu___3
+                 then FStar_Pervasives.Inl FStar_Pervasives_Native.None
+                 else FStar_Pervasives.Inl (FStar_Pervasives_Native.Some g)
              | FStar_Pervasives.Inr err ->
                  FStar_Pervasives.Inr
                    ((fun b ->
