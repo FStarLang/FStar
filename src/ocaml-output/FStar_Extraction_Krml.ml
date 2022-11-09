@@ -2444,8 +2444,11 @@ and (translate_expr : env -> FStar_Extraction_ML_Syntax.mlexpr -> expr) =
              FStar_Extraction_ML_Syntax.loc = uu___1;_},
            arg::[])
           when
-          (let uu___2 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
-           uu___2 = "FStar.SizeT.uint32_to_sizet") ||
+          ((let uu___2 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
+            uu___2 = "FStar.SizeT.uint16_to_sizet") ||
+             (let uu___2 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
+              uu___2 = "FStar.SizeT.uint32_to_sizet"))
+            ||
             (let uu___2 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
              uu___2 = "FStar.SizeT.uint64_to_sizet")
           ->
