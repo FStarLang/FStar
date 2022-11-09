@@ -4895,21 +4895,23 @@ let try_solve_single_valued_implicits env is_tac (imps:Env.implicits) : Env.impl
     imps, b
 
 (*
- * Check that an implicit solution t has an expected type k
- *   we know that G |- t : (G)Tot k', for some k'
+ * Check that an implicit solution has the expected type
  *
- * must_tot : if t must be a Tot
- *)
-(*
  * Return None if we did not typecheck the implicit because
  *   typechecking it required solving deferred univ constraints,
  *   and the flag force_univ_constraints is not set
  *
- * If force_univ_constraints is set, it always returns a Some
+ * Invariants:
+ *   - If force_univ_constraints is set, return is a Some
+ *   - If is_tac is true, return is Some []
+ *   - The caller (resolve_implicits') ensures that
+ *     if is_tac then force_univ_constraints
+ *
  *)
 let check_implicit_solution_and_discharge_guard env
   (imp:implicit)
   (is_tac force_univ_constraints:bool)
+
   : option Env.implicits =
 
   let {imp_reason; imp_tm; imp_uvar; imp_range} = imp in
@@ -4950,7 +4952,8 @@ let check_implicit_solution_and_discharge_guard env
        if skip_core
        then if is_tac
             then Env.trivial_guard
-            else begin
+            else begin  // following is ad-hoc code for constraining some univs
+                        // ideally we should get rid of it, and just return trivial_guard
               (*
                * AR: when we create lambda terms as solutions to implicits (in u_abs),
                *       we set the type in the residual comp to be the type of the uvar
@@ -5050,7 +5053,7 @@ let is_implicit_resolved (env:env) (i:implicit) : bool =
     |> BU.set_elements
     |> List.for_all (fun uv -> Allow_unresolved? (U.ctx_uvar_should_check uv))
 
-let rec resolve_implicits' env is_tac (implicits:Env.implicits) 
+let resolve_implicits' env is_tac (implicits:Env.implicits) 
   : list (implicit * implicit_checking_status) =
   
   let rec until_fixpoint (acc:tagged_implicits * bool)
@@ -5106,8 +5109,8 @@ let rec resolve_implicits' env is_tac (implicits:Env.implicits)
 
                  until_fixpoint (out, true) (extra @ tl)
             else until_fixpoint ((hd, Implicit_unresolved)::out, changed) tl)
-      else if Allow_untyped? uvar_decoration_should_check
-           || Already_checked? uvar_decoration_should_check
+      else if Allow_untyped? uvar_decoration_should_check ||
+              Already_checked? uvar_decoration_should_check
       then until_fixpoint (out, true) tl
       else begin
         let env = {env with gamma=ctx_u.ctx_uvar_gamma} in
@@ -5135,7 +5138,6 @@ let rec resolve_implicits' env is_tac (implicits:Env.implicits)
         end
         else
         begin
-          //typecheck the solution
           let force_univ_constraints = false in
           let imps_opt =
             check_implicit_solution_and_discharge_guard
@@ -5155,7 +5157,7 @@ let rec resolve_implicits' env is_tac (implicits:Env.implicits)
   in
   until_fixpoint ([], false) implicits
 
-and resolve_implicits env g =
+let resolve_implicits env g =
     if Env.debug env <| Options.Other "ResolveImplicitsHook"
     then BU.print1 "//////////////////////////ResolveImplicitsHook: resolve_implicits////////////\n\
                     guard = %s\n"
@@ -5163,8 +5165,7 @@ and resolve_implicits env g =
     let tagged_implicits = resolve_implicits' env false g.implicits in
     {g with implicits = List.map fst tagged_implicits}
 
-
-and force_trivial_guard env g =
+let force_trivial_guard env g =
     if Env.debug env <| Options.Other "ResolveImplicitsHook"
     then BU.print1 "//////////////////////////ResolveImplicitsHook: force_trivial_guard////////////\n\
                     guard = %s\n"

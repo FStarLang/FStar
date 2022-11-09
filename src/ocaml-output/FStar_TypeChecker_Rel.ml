@@ -14403,7 +14403,7 @@ let (is_implicit_resolved :
            (fun uv ->
               let uu___1 = FStar_Syntax_Util.ctx_uvar_should_check uv in
               FStar_Syntax_Syntax.uu___is_Allow_unresolved uu___1))
-let rec (resolve_implicits' :
+let (resolve_implicits' :
   FStar_TypeChecker_Env.env ->
     Prims.bool ->
       FStar_TypeChecker_Env.implicits ->
@@ -14719,7 +14719,7 @@ let rec (resolve_implicits' :
                                                (uu___11, true) in
                                              until_fixpoint uu___10 tl))))))) in
         until_fixpoint ([], false) implicits
-and (resolve_implicits :
+let (resolve_implicits :
   FStar_TypeChecker_Env.env ->
     FStar_TypeChecker_Common.guard_t -> FStar_TypeChecker_Common.guard_t)
   =
@@ -14751,7 +14751,7 @@ and (resolve_implicits :
            (g.FStar_TypeChecker_Common.univ_ineqs);
          FStar_TypeChecker_Common.implicits = uu___1
        })
-and (force_trivial_guard :
+let (force_trivial_guard :
   FStar_TypeChecker_Env.env -> FStar_TypeChecker_Common.guard_t -> unit) =
   fun env ->
     fun g ->
