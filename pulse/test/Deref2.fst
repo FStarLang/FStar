@@ -1,5 +1,6 @@
 module Deref2
 
+open Steel.Effect.Atomic
 open Steel.Effect
 open Steel.Reference
 
@@ -9,4 +10,4 @@ let test1 () : SteelT UInt32.t emp (fun _ -> emp)
   free r;
   x
 
-let main : Int32.t = 0l
+let main () : SteelT Int32.t emp (fun _ -> emp) = return 0l
