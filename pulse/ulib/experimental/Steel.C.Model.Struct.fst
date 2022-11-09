@@ -95,6 +95,24 @@ let prod_pcm (p:(k:'a -> pcm ('b k))): pcm (restricted_t 'a 'b) =
   assert (forall x frame . (prod_refine p x /\ prod_comp p x frame) ==> frame `feq` prod_one p);
   prod_pcm' p
 
+let prod_pcm_ext
+  (#a: Type)
+  (#b: (a -> Type))
+  (p1 p2: ((k: a) -> pcm (b k)))
+  (p_eq: (
+    (k: a) ->
+    Lemma
+    (p1 k == p2 k)
+  ))
+: Lemma
+  (prod_pcm p1 == prod_pcm p2)
+= Classical.forall_intro p_eq;
+  pcm0_ext (prod_pcm p1) (prod_pcm p2)
+    (fun x y -> ())
+    (fun x y -> assert (op (prod_pcm p1) x y `feq` op (prod_pcm p2) x y))
+    (fun _ -> ())
+    (assert (one (prod_pcm p1) `feq` one (prod_pcm p2)))
+
 let prod_pcm_composable_intro0
   (p:(k:'a -> pcm ('b k)))
   (x y: restricted_t 'a 'b)
@@ -237,6 +255,44 @@ let struct_field
     (struct_to_field p k)
     ()
     (struct_field_lift_fpu p k)
+
+#push-options "--split_queries"
+
+#restart-solver
+let struct_field_ext
+  (#a: eqtype)
+  (#b: a -> Type u#b)
+  (p1 p2:(k: a -> pcm (b k)))
+  (p_eq: (
+    (k: a) ->
+    Lemma
+    (p1 k == p2 k)
+  ))
+  (k: a)
+: Lemma
+  (prod_pcm p1 == prod_pcm p2 /\
+    p1 k == p2 k /\
+    struct_field p1 k === struct_field p2 k
+  )
+= prod_pcm_ext p1 p2 p_eq;
+  p_eq k;
+  Classical.forall_intro p_eq;
+  let l = struct_field p1 k in
+  let m : connection (prod_pcm p1) (p1 k) = coerce_eq () (struct_field p2 k) in
+  assert (forall x . field_to_struct_f p1 k x `feq` field_to_struct_f p2 k x);
+  connection_eq_gen
+    l
+    m
+    ()
+    (fun x y f v ->
+      struct_field_lift_fpu_prf p1 k x y f v;
+      struct_field_lift_fpu_prf p2 k x y f v;
+      assert (forall k' . struct_field_lift_fpu' p1 k x y f v k' == struct_field_lift_fpu' p2 k x y f v k');
+      assert (struct_field_lift_fpu' p1 k x y f v == struct_field_lift_fpu' p2 k x y f v);
+      assert ((l.conn_lift_frame_preserving_upd ({ fpu_lift_dom_x = x; fpu_lift_dom_y = y; fpu_lift_dom_f = f; })).fpu_f v == (m.conn_lift_frame_preserving_upd ({ fpu_lift_dom_x = x; fpu_lift_dom_y = y; fpu_lift_dom_f = f; })).fpu_f v)
+    )
+
+#pop-options
 
 let is_substruct
   (#a: eqtype)

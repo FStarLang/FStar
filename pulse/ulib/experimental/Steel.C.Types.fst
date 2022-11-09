@@ -503,7 +503,7 @@ let _inv = TD.inv
 
 let has_struct_field_gen
   (#field_t: eqtype)
-  (#fields: field_description_gen_t field_t)
+  (fields: field_description_gen_t field_t)
   (r: ref (struct1 fields))
   (field: field_t)
   (r': ref (fields.fd_typedef field))
@@ -512,12 +512,12 @@ let has_struct_field_gen
 
 let has_struct_field
   r field r'
-= has_struct_field_gen r field r'
+= has_struct_field_gen _ r field r'
 
 let has_struct_field_gen_inj
   (#opened: _)
   (#field_t: eqtype)
-  (#fields: field_description_gen_t field_t)
+  (fields: field_description_gen_t field_t)
   (r: ref (struct1 fields))
   (field: field_t)
   (r1 r2: ref (fields.fd_typedef field))
@@ -526,15 +526,15 @@ let has_struct_field_gen_inj
     (fun _ -> emp)
     (fun _ ->
       Ghost.reveal (mem_inv opened _inv) == false /\
-      has_struct_field_gen r field r1 /\
-      has_struct_field_gen r field r2
+      has_struct_field_gen fields r field r1 /\
+      has_struct_field_gen fields r field r2
     )
     (fun _ _ _ -> r1 == r2)
 = TD.type_of_token_inj (Some?.v r1).dest (Some?.v r2).dest
 
 let has_struct_field_inj
   r field r1 r2
-= has_struct_field_gen_inj r field r1 r2
+= has_struct_field_gen_inj _ r field r1 r2
 
 #push-options "--z3rlimit 32"
 
@@ -1090,3 +1090,300 @@ let union_switch_field0
   return res
 
 #pop-options
+
+/// Base arrays (without decay: explicit array types as top-level arrays or struct/union fields of array type)
+
+module A = Steel.C.Model.Array
+
+let base_array_t t _ n = A.array_pcm_carrier t n
+
+[@@noextract_to "krml"] // proof-only
+let base_array_fd
+  (#t: Type)
+  (td: typedef t)
+  (n: array_size_t)
+: Tot (field_description_gen_t (base_array_index_t n))
+= {
+    fd_nonempty = (let _ : base_array_index_t n = 0sz in ());
+    fd_type = A.array_range t n;
+    fd_typedef = (fun _ -> td);
+  }
+
+let base_array0 tn td n = struct1 (base_array_fd td n)
+
+let base_array_index a i = a i
+
+let base_array_eq #_ #_ #n a1 a2 =
+  assert (a1 `FX.feq` a2 <==> (forall (i: base_array_index_t n) . a1 i == a2 i));
+  a1 `FX.feq` a2
+
+let mk_base_array _ n v = A.array_pcm_carrier_of_seq n v
+
+let mk_base_array_index _ _ _ _ = ()
+
+let base_array_fractionable a td = ()
+
+let base_array_mk_fraction a td p i = ()
+
+let base_array_index_unknown tn n td i = ()
+
+let base_array_index_uninitialized tn n td i = ()
+
+let base_array_index_full td x = ()
+
+let has_base_array_cell #_ #_ #n #td r i r' =
+  SZ.v i < SZ.v n /\
+  has_struct_field_gen (base_array_fd td n) r i r'
+
+let has_base_array_cell_inj
+  #_ #_ #_ #n #td r i r1 r2
+= has_struct_field_gen_inj (base_array_fd td n) r i r1 r2
+
+/// Array pointers (with decay)
+
+noeq
+type array_ref #t td = {
+  ar_base_size_token: TD.token;
+  ar_base_size: Ghost.erased array_size_t;
+  ar_base: ref (base_array0 #t (TD.type_of_token ar_base_size_token) td ar_base_size);
+  ar_offset: base_array_index_t ar_base_size;
+}
+let array_ref_base_size_type ar = TD.type_of_token ar.ar_base_size_token
+let array_ref_base_size ar = ar.ar_base_size
+let array_ref_base ar = ar.ar_base
+let array_ref_offset ar = ar.ar_offset
+let array_ref_base_offset_inj a1 a2 =
+  TD.type_of_token_inj a1.ar_base_size_token a2.ar_base_size_token
+
+#push-options "--z3rlimit 16"
+
+#restart-solver
+let base_array_pcm_eq
+  (#t: Type)
+  (td: typedef t)
+  (n: array_size_t)
+  (tn: Type0)
+: Lemma
+  (A.array_pcm td.pcm n == (base_array0 tn td n).pcm)
+  [SMTPat (base_array0 tn td n).pcm]
+= pcm0_ext (A.array_pcm td.pcm n) (base_array0 tn td n).pcm
+    (fun _ _ -> ())
+    (fun x1 x2 ->
+      assert (op (A.array_pcm td.pcm n) x1 x2 `FX.feq` op (base_array0 tn td n).pcm x1 x2)
+    )
+    (fun _ -> ())
+    ()
+
+#pop-options
+
+[@@noextract_to "krml"] // proof-only
+let coerce (#t1 t2: Type) (x1: t1) : Pure t2
+  (requires (t1 == t2))
+  (ensures (fun x2 ->
+    t1 == t2 /\
+    x1 == x2
+  ))
+= x1
+
+[@@noextract_to "krml"] // proof-only
+let model_array_of_array
+  (#t: Type)
+  (#td: typedef t)
+  (a: array td)
+: Tot (A.array td.pcm)
+= let (| al, len |) = a in
+  {
+    base_len = Ghost.hide (Ghost.reveal al.ar_base_size);
+    base = coerce _ ((Some?.v al.ar_base).ref);
+    offset = al.ar_offset;
+    len = len;
+    prf = ();
+  }
+
+let array_pts_to' r v =
+  A.pts_to (model_array_of_array r) v
+
+let array_pts_to_length r v =
+  rewrite_slprop
+    (array_pts_to _ _)
+    (A.pts_to (model_array_of_array r) v)
+    (fun _ -> ());
+  A.pts_to_length _ _;
+  rewrite_slprop
+    (A.pts_to _ _)
+    (array_pts_to _ _)
+    (fun _ -> ())
+
+#push-options "--z3rlimit 16"
+
+let ghost_array_of_base_focus
+  #_ #tn #_ #n #td #v r a
+= let mr : R.ref (A.array_pcm td.pcm n) = coerce _ (Some?.v r).ref in
+  let m : A.array td.pcm = {
+    base_len = Ghost.hide n;
+    base = mr;
+    offset = 0sz;
+    len = n;
+    prf = ();
+  }
+  in
+  rewrite_slprop (pts_to r v) (R.pts_to m.base v) (fun _ -> ());
+  assert (seq_of_base_array v `Seq.equal` A.seq_of_array_pcm_carrier v);
+  A.array_pcm_carrier_of_seq_of_array_pcm_carrier v;
+  A.pts_to_intro_from_base m v (seq_of_base_array v);
+  rewrite_slprop (A.pts_to _ _) (array_pts_to _ _) (fun _ -> ())
+
+#pop-options
+
+let ghost_array_of_base
+  #_ #tn #_ #n #td #v r
+= let tok = TD.get_token tn in
+  let ar : array_ref td = {
+    ar_base_size_token = tok;
+    ar_base_size = Ghost.hide (n <: SZ.t);
+    ar_base = r;
+    ar_offset = 0sz;
+  }
+  in
+  let res : (a: Ghost.erased (array td)  { has_array_of_base r a }) = Ghost.hide (| ar, Ghost.hide n |) in
+  ghost_array_of_base_focus r res;
+  res
+
+let array_ref_of_base
+  #_ #tn #_ #n #td #v r
+= let tok = TD.get_token tn in
+  let ar : array_ref td = {
+    ar_base_size_token = tok;
+    ar_base_size = Ghost.hide (n <: SZ.t);
+    ar_base = r;
+    ar_offset = 0sz;
+  }
+  in
+  ghost_array_of_base_focus r (| ar, Ghost.hide n |);
+  return ar
+
+#push-options "--z3rlimit 16 --split_queries"
+
+#restart-solver
+let unarray_of_base
+  #t #tn #_ #n #td #v r a
+=
+  let m = model_array_of_array a in
+  rewrite_slprop (array_pts_to _ _) (A.pts_to m v) (fun _ -> ());
+  let y : Ghost.erased (A.array_pcm_carrier t m.base_len) = A.pts_to_elim_to_base m v in
+  let y' : Ghost.erased (base_array_t t tn n) = Ghost.hide (Ghost.reveal y) in
+  rewrite_slprop (R.pts_to m.base y) (pts_to r y') (fun _ -> ());
+  y'
+
+#pop-options
+
+let has_array_of_ref
+  r a
+= TD.type_of_token (dfst a).ar_base_size_token == unit /\
+  model_array_of_array a == A.g_array_of_ref (coerce _ (Some?.v r).ref)
+
+let has_array_of_ref_inj
+  r a1 a2
+= TD.type_of_token_inj (dfst a1).ar_base_size_token (dfst a2).ar_base_size_token;
+  TD.type_of_token_inj (Some?.v (dfst a1).ar_base).dest (Some?.v (dfst a2).ar_base).dest
+
+let ghost_array_of_ref_focus
+  #t #_ #td #v r a
+= let mr : R.ref td.pcm = (Some?.v r).ref in
+  rewrite_slprop (pts_to _ _) (R.pts_to mr v) (fun _ -> ());
+  let ma = A.ghost_array_of_ref mr in
+  rewrite_slprop (A.pts_to _ _) (array_pts_to _ _) (fun _ -> ())
+
+let ghost_array_of_ref
+  #t #_ #td #v r
+= let mr : R.ref td.pcm = (Some?.v r).ref in
+  let ma = A.g_array_of_ref mr in
+  let tok_unit = TD.get_token unit in
+  let tok_array = TD.get_token (A.array_pcm_carrier t 1sz) in
+  let ar = {
+    ar_base_size_token = tok_unit;
+    ar_base_size = 1sz;
+    ar_base = Some ({
+      dest = tok_array;
+      typedef = base_array0 unit td 1sz;
+      ref = coerce _ ma.base;
+    });
+    ar_offset = 0sz;
+  }
+  in
+  let res: (a: Ghost.erased (array td) { has_array_of_ref r a }) = Ghost.hide (| ar, Ghost.hide 1sz |) in
+  ghost_array_of_ref_focus r res;
+  res
+
+let array_ref_of_ref
+  #t #_ #td #v r
+= let mr : R.ref td.pcm = (Some?.v r).ref in
+  rewrite_slprop (pts_to _ _) (R.pts_to mr v) (fun _ -> ());
+  let ma = A.array_of_ref mr in
+  let tok_unit = TD.get_token unit in
+  let tok_array = TD.get_token (A.array_pcm_carrier t 1sz) in
+  let res = {
+    ar_base_size_token = tok_unit;
+    ar_base_size = 1sz;
+    ar_base = Some ({
+      dest = tok_array;
+      typedef = base_array0 unit td 1sz;
+      ref = coerce _ ma.base;
+    });
+    ar_offset = 0sz;
+  }
+  in
+  rewrite_slprop (A.pts_to _ _) (array_pts_to _ _) (fun _ -> ());
+  return res
+
+
+
+unfold
+let has_base_array_cell0
+  (#t: Type)
+  (#tn: Type0)
+  (#n: array_size_t)
+  (#td: typedef t)
+  (r: ref (base_array0 tn td n))
+  (i: SZ.t)
+  (r': ref td)
+: Ghost prop
+    (requires True)
+    (fun p -> p ==> has_base_array_cell r i r')
+= SZ.v i < SZ.v n /\
+  has_struct_field_gen (base_array_fd td n) r i r'
+
+#restart-solver
+let struct_field_eq_cell
+  (#t: Type)
+  (td: typedef t)
+  (n: array_size_t)
+  (k: base_array_index_t n)
+: Lemma
+  (Steel.C.Model.Struct.struct_field (struct_field_pcm (base_array_fd td n)) k == A.cell td.pcm n k)
+= assert_norm (A.array_domain n == base_array_index_t n);
+  Steel.C.Model.Struct.struct_field_ext #(A.array_domain n) #(A.array_range t n) (struct_field_pcm (base_array_fd td n)) (A.array_elements_pcm td.pcm n) (fun _ -> ()) k
+
+#push-options "--split_queries --z3rlimit 16"
+
+#restart-solver
+let has_array_cell_array_of_ref
+  #_ #td r a
+= assert_norm (SZ.v 0sz == 0);
+  assert_norm (SZ.v 1sz == 1);
+  A.ref_of_array_of_ref (Some?.v r).ref;
+  A.ref_of_array_of_ref_base (Some?.v r).ref;
+  assert (Ghost.reveal (dsnd a) == 1sz);
+  assert ((dfst a).ar_offset == 0sz);
+  struct_field_eq_cell td 1sz 0sz;
+  assert (has_base_array_cell0 (array_ref_base (dfst a)) (array_ref_offset (dfst a) `SZ.add` 0sz) r)
+
+#pop-options
+
+(*
+let ghost_array_cell
+  #_ #_ #_ #s a i
+= let ma = model_array_of_array a in
+*)
+
+let mk_fraction_seq_join = magic ()
