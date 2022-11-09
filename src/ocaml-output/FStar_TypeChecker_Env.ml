@@ -6543,8 +6543,20 @@ let (uvars_for_binders :
                               | uu___2 -> FStar_Pervasives_Native.None in
                             let uu___2 =
                               let uu___3 = reason b in
-                              new_implicit_var_aux uu___3 r env1 sort
-                                FStar_Syntax_Syntax.Strict ctx_uvar_meta_t in
+                              let uu___4 =
+                                let uu___5 =
+                                  (let uu___6 =
+                                     FStar_Options.compat_pre_core_should_check
+                                       () in
+                                   Prims.op_Negation uu___6) ||
+                                    (FStar_Options.compat_pre_core_set ()) in
+                                if uu___5
+                                then
+                                  FStar_Syntax_Syntax.Allow_untyped
+                                    "indexed effect uvar with pre core flag"
+                                else FStar_Syntax_Syntax.Strict in
+                              new_implicit_var_aux uu___3 r env1 sort uu___4
+                                ctx_uvar_meta_t in
                             (match uu___2 with
                              | (t, l_ctx_uvars, g_t) ->
                                  ((let uu___4 =
