@@ -1829,8 +1829,11 @@ let uvars_for_binders env (bs:S.binders) substs reason r =
 
     let t, l_ctx_uvars, g_t = new_implicit_var_aux
       (reason b) r env sort
-        Strict
-        ctx_uvar_meta_t in
+      (if (not (Options.compat_pre_core_should_check ())) ||
+          Options.compat_pre_core_set ()
+       then Allow_untyped "indexed effect uvar with pre core flag"
+       else Strict)
+      ctx_uvar_meta_t in
 
     if debug env <| Options.Other "LayeredEffectsEqns"
     then List.iter (fun (ctx_uvar, _) ->
