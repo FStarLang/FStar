@@ -4900,48 +4900,6 @@ let try_solve_single_valued_implicits env is_tac (imps:Env.implicits) : Env.impl
  *
  * must_tot : if t must be a Tot
  *)
-let check_implicit_solution env (uv:ctx_uvar) (t:term) (k:typ) (must_tot:bool) (reason:string) r : guard_t =
-  let env, _ = Env.clear_expected_typ env in
-
-  if env.phase1 || //this can be false if we're running in lax mode without phase2 to follow
-     env.lax      //no point running core checker if we're in lax mode
-   then begin
-    (*
-     * AR: when we create lambda terms as solutions to implicits (in u_abs),
-     *       we set the type in the residual comp to be the type of the uvar
-     *     while this ok for smt encoding etc., when we are typechecking the implicit solution using fastpath,
-     *       it doesn't help since the two types are the same (the type of the uvar and its solution)
-     *     worse, this prevents some constraints to be generated between the actual type of the solution
-     *       and the type of the uvar
-     *     therefore, we unset the residual comp type in the solution before typechecking
-     *)
-    let t = match (SS.compress t).n with
-            | Tm_abs (bs, body, Some rc) ->
-              {t with n=Tm_abs (bs, body, Some ({rc with residual_typ=None}))}
-            | _ -> t in
-
-    let k', g =
-      env.typeof_well_typed_tot_or_gtot_term
-      (Env.set_expected_typ ({env with use_bv_sorts=true}) k)
-      t must_tot in
-
-    match get_subtyping_predicate env k' k with
-    | None -> raise_error (Err.expected_expression_of_type env k t k') t.pos
-    | Some f -> {Env.conj_guard (Env.apply_guard f t) g with guard_f=Trivial}
-  end
-  else begin
-    match env.core_check env t k must_tot with
-    | Inl None -> trivial_guard
-    | Inl (Some g) -> { trivial_guard with guard_f = NonTrivial g }
-    | Inr print_err ->
-      raise_error (Errors.Fatal_FailToResolveImplicitArgument,
-                   BU.format4 "Core checking failed for implicit %s (reason: %s) (%s <: %s)"
-                     (Print.ctx_uvar_to_string uv)
-                     reason
-                     (Print.term_to_string t)
-                     (Print.term_to_string k)) r
-  end
-
 (*
  * Return None if we did not typecheck the implicit because
  *   typechecking it required solving deferred univ constraints,
@@ -4949,47 +4907,104 @@ let check_implicit_solution env (uv:ctx_uvar) (t:term) (k:typ) (must_tot:bool) (
  *
  * If force_univ_constraints is set, it always returns a Some
  *)
-let check_implicit_solution_and_discharge_guard env imp force_univ_constraints
+let check_implicit_solution_and_discharge_guard env
+  (imp:implicit)
+  (is_tac force_univ_constraints:bool)
   : option Env.implicits =
 
-  let { imp_reason = reason; imp_tm = tm; imp_uvar = ctx_u; imp_range = r } = imp in
-  let env = {env with gamma=ctx_u.ctx_uvar_gamma} in
+  let {imp_reason; imp_tm; imp_uvar; imp_range} = imp in
+
+  let uvar_ty = U.ctx_uvar_typ imp_uvar in
+  let uvar_should_check = U.ctx_uvar_should_check imp_uvar in
 
   if Env.debug env <| Options.Other "Rel"
   then BU.print5 "Checking uvar %s resolved to %s at type %s, introduce for %s at %s\n"
-         (Print.uvar_to_string ctx_u.ctx_uvar_head)
-         (Print.term_to_string tm)
-         (Print.term_to_string (U.ctx_uvar_typ ctx_u))
-         reason
-        (Range.string_of_range r);
+         (Print.uvar_to_string imp_uvar.ctx_uvar_head)
+         (Print.term_to_string imp_tm)
+         (Print.term_to_string uvar_ty)
+         imp_reason
+         (Range.string_of_range imp_range);
+
+  let env =
+    {env with gamma=imp_uvar.ctx_uvar_gamma}
+    |> Env.clear_expected_typ
+    |> fst in
 
   let g =
-    let must_tot = not (env.phase1 ||
-                        env.lax    ||
-                        Allow_ghost? (U.ctx_uvar_should_check ctx_u)) in
-
     Errors.with_ctx
       (BU.format3 "While checking implicit %s set to %s of expected type %s"
-         (Print.uvar_to_string ctx_u.ctx_uvar_head)
-         (N.term_to_string env tm)
-         (N.term_to_string env (U.ctx_uvar_typ ctx_u)))
-      (fun () -> check_implicit_solution env ctx_u tm (U.ctx_uvar_typ ctx_u) must_tot ctx_u.ctx_uvar_reason) r in
+         (Print.uvar_to_string imp_uvar.ctx_uvar_head)
+         (N.term_to_string env imp_tm)
+         (N.term_to_string env uvar_ty))
+      (fun () ->
+       let skip_core =
+         env.phase1 ||
+         env.lax ||
+         Allow_untyped? uvar_should_check ||
+         Already_checked? uvar_should_check in
 
-    if (not force_univ_constraints) &&
-       (List.existsb (fun (reason, _, _) -> reason = Deferred_univ_constraint) g.deferred)
-    then None
-    else let g' =
-          (match discharge_guard'
-                   (Some (fun () ->
-                          BU.format4 "%s (Introduced at %s for %s resolved at %s)"
-                            (Print.term_to_string tm)
-                            (Range.string_of_range r)
-                            reason
-                            (Range.string_of_range tm.pos)))
+       let must_tot = not (env.phase1 ||
+                           env.lax    ||
+                           Allow_ghost? uvar_should_check) in
+
+       if skip_core
+       then if is_tac
+            then Env.trivial_guard
+            else begin
+              (*
+               * AR: when we create lambda terms as solutions to implicits (in u_abs),
+               *       we set the type in the residual comp to be the type of the uvar
+               *     while this ok for smt encoding etc., when we are typechecking the implicit solution using fastpath,
+               *       it doesn't help since the two types are the same (the type of the uvar and its solution)
+               *     worse, this prevents some constraints to be generated between the actual type of the solution
+               *       and the type of the uvar
+               *     therefore, we unset the residual comp type in the solution before typechecking
+               *)
+              let imp_tm =
+                match (SS.compress imp_tm).n with
+                | Tm_abs (bs, body, Some rc) ->
+                  {imp_tm with n=Tm_abs (bs, body, Some ({rc with residual_typ=None}))}
+                | _ -> imp_tm in
+
+              let k', g =
+                env.typeof_well_typed_tot_or_gtot_term
+                  {env with use_bv_sorts=true}
+                  imp_tm must_tot in
+
+              match get_subtyping_predicate env k' uvar_ty with
+              | None -> raise_error (Err.expected_expression_of_type env uvar_ty imp_tm k') imp_tm.pos
+              | Some f ->
+                {Env.conj_guard (Env.apply_guard f imp_tm) g with guard_f=Trivial}
+            end
+       else begin
+         match env.core_check env imp_tm uvar_ty must_tot with
+         | Inl None -> trivial_guard
+         | Inl (Some g) -> { trivial_guard with guard_f = NonTrivial g }
+         | Inr print_err ->
+           raise_error (Errors.Fatal_FailToResolveImplicitArgument,
+                        BU.format5 "Core checking failed for implicit %s (is_tac: %s) (reason: %s) (%s <: %s)"
+                          (Print.ctx_uvar_to_string imp_uvar)
+                          (string_of_bool is_tac)
+                          imp_reason
+                          (Print.term_to_string imp_tm)
+                          (Print.term_to_string uvar_ty)) imp_range
+       end) in
+
+  if (not force_univ_constraints) &&
+     (List.existsb (fun (reason, _, _) -> reason = Deferred_univ_constraint) g.deferred)
+  then None
+  else let g' =
+         match discharge_guard'
+                 (Some (fun () ->
+                        BU.format4 "%s (Introduced at %s for %s resolved at %s)"
+                          (Print.term_to_string imp_tm)
+                          (Range.string_of_range imp_range)
+                          imp_reason
+                          (Range.string_of_range imp_tm.pos)))
                    env g true with
-           | Some g -> g
-           | None -> failwith "Impossible, with use_smt = true, discharge_guard' must return Some") in
-         g'.implicits |> Some
+         | Some g -> g
+         | None -> failwith "Impossible, with use_smt = true, discharge_guard' must return Some" in
+       g'.implicits |> Some
 
 (*
  * resolve_implicits' uses it to determine if a ctx uvar is unresolved
@@ -5035,36 +5050,7 @@ let is_implicit_resolved (env:env) (i:implicit) : bool =
     |> BU.set_elements
     |> List.for_all (fun uv -> Allow_unresolved? (U.ctx_uvar_should_check uv))
 
-let rec check_implicit_solution_for_tac (env:env) (i:implicit) : option (term * typ) =
-  let { imp_reason = reason; imp_tm = tm; imp_uvar = ctx_u; imp_range = r } = i in
-  let uvar_ty = U.ctx_uvar_typ ctx_u in
-  let uvar_should_check = U.ctx_uvar_should_check ctx_u in
-  if Allow_untyped? uvar_should_check
-  || Already_checked? uvar_should_check
-  then None
-  else (
-    let env = { env with gamma = ctx_u.ctx_uvar_gamma } in
-    if Env.debug env <| Options.Other "CoreEq"
-    then BU.print2 "Calling core with %s : %s\n" (Print.term_to_string tm) (Print.term_to_string uvar_ty);
-    match env.core_check env tm uvar_ty false with
-    | Inl None -> None
-    | Inl (Some g) ->
-      let g = { trivial_guard with guard_f = NonTrivial g } in
-      force_trivial_guard env g; None
-
-    | Inr err ->
-      FStar.Errors.log_issue
-        (Env.get_range env)
-        (Errors.Error_TypeError, 
-         BU.format3 "Term %s computed by tactic does not have type %s, because %s"
-           (Print.term_to_string tm)
-           (Print.term_to_string uvar_ty)
-           (err false));
-      None
-  )
-    
-
-and resolve_implicits' env is_tac (implicits:Env.implicits) 
+let rec resolve_implicits' env is_tac (implicits:Env.implicits) 
   : list (implicit * implicit_checking_status) =
   
   let rec until_fixpoint (acc:tagged_implicits * bool)
@@ -5090,6 +5076,7 @@ and resolve_implicits' env is_tac (implicits:Env.implicits)
                      check_implicit_solution_and_discharge_guard
                        env
                        imp
+                       is_tac
                        force_univ_constraints |> must in
                    until_fixpoint ([], false) (imps@List.map fst rest))
       else until_fixpoint ([], false) (List.map fst out)
@@ -5131,26 +5118,21 @@ and resolve_implicits' env is_tac (implicits:Env.implicits)
          *)
         let tm = norm_with_steps "FStar.TypeChecker.Rel.norm_with_steps.8" [Env.Beta] env tm in
         let hd = {hd with imp_tm=tm} in
-        (*
-         * NS: As a fix for Bug #2635, for tactics we check that the uvar is indeed solved
-         *     and that if it is not marked Allow_untyped, then it's solution has a type
-         *     that's a subtype of the uvar's type.
-         *     This check is done without SMT enabled, since any implicit goals like that
-         *     should be handled by the tactic itself
-         *)
-        let tm_ok_for_tac () =
-          if is_implicit_resolved env hd
-          then begin
-            if env.phase1 //phase1 is untrusted; the solution will be recomputed or checked again in phase2
-            then None
-            else check_implicit_solution_for_tac env hd
-          end
-          else None
-        in
         if is_tac
-        then match tm_ok_for_tac () with
-             | None ->until_fixpoint (out, true) tl        //Move on to the next imp
-             | Some (tm, ty) -> until_fixpoint ((hd, Implicit_has_typing_guard (tm, ty))::out, changed) tl  //Move hd to out
+        then begin
+          if is_implicit_resolved env hd
+          then let force_univ_constraints = true in
+               let res = check_implicit_solution_and_discharge_guard
+                 env
+                 hd
+                 is_tac
+                 force_univ_constraints in
+               if res <> Some []
+               then failwith "Impossible: check_implicit_solution_and_discharge_guard for tac must return Some []"
+               else ()
+          else ();
+          until_fixpoint (out, true) tl
+        end
         else
         begin
           //typecheck the solution
@@ -5159,6 +5141,7 @@ and resolve_implicits' env is_tac (implicits:Env.implicits)
             check_implicit_solution_and_discharge_guard
               env
               hd
+              is_tac
               force_univ_constraints in
 
           match imps_opt with
