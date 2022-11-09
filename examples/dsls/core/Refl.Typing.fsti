@@ -3,22 +3,26 @@ open FStar.List.Tot
 open FStar.Reflection
 module R = FStar.Reflection
 
-val inspect_pack (t:R.term_view)
+let inspect_pack (t:R.term_view)
   : Lemma (ensures R.(inspect_ln (pack_ln t) == t))
           [SMTPat R.(inspect_ln (pack_ln t))]
-
-val pack_inspect (t:R.term)
+  = R.inspect_pack_inv t
+  
+let pack_inspect (t:R.term)
   : Lemma (ensures R.(pack_ln (inspect_ln t) == t))
           [SMTPat R.(pack_ln (inspect_ln t))]
-
-val inspect_pack_bv (t:R.bv_view)
+  = R.pack_inspect_inv t
+  
+let inspect_pack_bv (t:R.bv_view)
   : Lemma (ensures R.(inspect_bv (pack_bv t) == t))
           [SMTPat R.(inspect_bv (pack_bv t))]
-
-val pack_inspect_bv (t:R.bv)
+  = admit()
+  
+let pack_inspect_bv (t:R.bv)
   : Lemma (ensures R.(pack_bv (inspect_bv t) == t))
           [SMTPat R.(pack_bv (inspect_bv t))]
-
+  = admit()
+  
 val inspect_pack_binder (b:_) (q:_) (a:_)
   : Lemma (ensures R.(R.inspect_binder (R.pack_binder b q a) == (b, (q, a))))
           [SMTPat R.(inspect_binder (pack_binder b q a))]
@@ -27,14 +31,16 @@ val pack_inspect_binder (t:R.binder)
   : Lemma (ensures (let b, (q, a) = R.inspect_binder t in
                     R.(pack_binder b q a == t)))
 
-val pack_inspect_comp (t:R.comp)
+let pack_inspect_comp (t:R.comp)
   : Lemma (ensures (R.pack_comp (R.inspect_comp t) == t))
           [SMTPat (R.pack_comp (R.inspect_comp t))]
-
-val inspect_pack_comp (t:R.comp_view)
+  = R.pack_inspect_comp_inv t
+  
+let inspect_pack_comp (t:R.comp_view)
   : Lemma (ensures (R.inspect_comp (R.pack_comp t) == t))
           [SMTPat (R.inspect_comp (R.pack_comp t))]
-
+  = R.inspect_pack_comp_inv t
+  
 val lookup_bvar (e:env) (x:int) : option term
 
 val lookup_fvar (e:env) (x:fv) : option term
@@ -127,7 +133,6 @@ let rec open_or_close_term' (t:term) (v:open_or_close) (i:nat)
       pack_ln (Tv_Arrow b' (open_or_close_comp' c v (i + 1)))      
 
     | Tv_Refine bv f ->
-      assume (bv << t); //bug in the definition of R.smaller
       let bv' = open_or_close_bv' bv v i in
       pack_ln (Tv_Refine bv' (open_or_close_term' f v (i + 1)))
 
@@ -135,7 +140,6 @@ let rec open_or_close_term' (t:term) (v:open_or_close) (i:nat)
       pack_ln (Tv_Uvar j (open_or_close_ctx_uvar_and_subst c v i))
       
     | Tv_Let recf attrs bv def body ->
-      assume (attrs << t); //bug in defn of R.smaller
       pack_ln (Tv_Let recf 
                       (open_or_close_terms' attrs v i)
                       (open_or_close_bv' bv v i)
@@ -145,7 +149,6 @@ let rec open_or_close_term' (t:term) (v:open_or_close) (i:nat)
                       (open_or_close_term' body v (i + 1)))
 
     | Tv_Match scr ret brs ->
-      assume (brs << t);
       pack_ln (Tv_Match (open_or_close_term' scr v i)
                         (match ret with
                          | None -> None
@@ -171,7 +174,6 @@ let rec open_or_close_term' (t:term) (v:open_or_close) (i:nat)
 and open_or_close_bv' (b:bv) (v:open_or_close) (i:nat)
   : GTot bv (decreases b)
   = let bv = inspect_bv b in
-    assume (bv << b);
     pack_bv ({bv with bv_sort = open_or_close_term' bv.bv_sort v i})
 
 and open_or_close_binder' (b:binder) (v:open_or_close) (i:nat)
@@ -200,7 +202,6 @@ and open_or_close_comp' (c:comp) (v:open_or_close) (i:nat)
                          (open_or_close_term' pats v i))
 
     | C_Eff us eff_name res args ->
-      assume (args << c);
       pack_comp (C_Eff us eff_name
                        (open_or_close_term' res v i)
                        (open_or_close_args' args v i))
@@ -233,9 +234,9 @@ and open_or_close_pattern' (p:pattern) (v:open_or_close) (i:nat)
   = match p with
     | Pat_Constant _ -> p,0
 
-    | Pat_Cons fv pats -> 
+    | Pat_Cons fv us pats -> 
       let pats, n = open_or_close_patterns' pats v i in
-      Pat_Cons fv pats, n
+      Pat_Cons fv us pats, n
       
     | Pat_Var bv ->
       Pat_Var (open_or_close_bv' bv v i), 1
@@ -243,8 +244,10 @@ and open_or_close_pattern' (p:pattern) (v:open_or_close) (i:nat)
     | Pat_Wild bv ->
       Pat_Wild (open_or_close_bv' bv v i), 1
 
-    | Pat_Dot_Term bv t -> //CHECK!
-      Pat_Dot_Term (open_or_close_bv' bv v i) (open_or_close_term' t v i), 0
+    | Pat_Dot_Term topt ->
+      Pat_Dot_Term (match topt with
+                    | None -> None
+                    | Some t -> Some (open_or_close_term' t v i)), 0
 
     
 and open_or_close_branch' (br:branch) (v:open_or_close) (i:nat)

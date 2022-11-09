@@ -12,24 +12,30 @@ type constant =
 
 let var = nat
 let index = nat  
- 
+
+type universe = 
+  | U_zero
+  | U_succ of universe
+  | U_var of var
+  | U_max of list universe
+  
 type term =
   | Tm_BVar     : i:index -> term
   | Tm_Var      : v:var -> term
   | Tm_FVar     : l:lident -> term
   | Tm_Constant : c:constant -> term
-  | Tm_Abs      : t:typ -> body:term -> term
+  | Tm_Abs      : t:typ -> pre_hint:vprop -> body:term -> term
   | Tm_PureApp  : head:term -> arg:term -> term
   | Tm_Let      : t:typ -> e1:term -> e2:term -> term  
   | Tm_STApp    : head:term -> arg:term -> term  
   | Tm_Bind     : t:typ -> e1:term -> e2:term -> term
   | Tm_Emp      : term
   | Tm_Pure     : p:term -> term
-  | Tm_Star     : l:term -> r:term -> term
-  | Tm_ExistsSL : t:typ -> body:term -> term
-  | Tm_ForallSL : t:typ -> body:term -> term
+  | Tm_Star     : l:vprop -> r:vprop -> term
+  | Tm_ExistsSL : t:typ -> body:vprop -> term
+  | Tm_ForallSL : t:typ -> body:vprop -> term
   | Tm_Arrow    : t:typ -> body:comp -> term 
-  | Tm_Type     : term
+  | Tm_Type     : universe -> term
   | Tm_VProp    : term
   | Tm_If       : b:term -> then_:term -> else_:term -> term
 
@@ -39,11 +45,13 @@ and comp =
 
 and st_comp = {
   res:typ;
-  pre:term;
-  post:term
+  pre:vprop;
+  post:vprop
 }
 
 and typ = term
+
+and vprop = term
 
 let rec open_term' (t:term) (v:var) (i:index)
   : term
@@ -105,7 +113,7 @@ let rec elab_term (t:term)
     | Tm_FVar l ->
       pack_ln (Tv_FVar (pack_fv l))
 
-    | Tm_Abs t b ->
+    | Tm_Abs t _ b ->
       let t = elab_term t in
       let b = elab_term b in
       R.pack_ln (Tv_Abs (RT.as_binder 0 t) b)
@@ -294,6 +302,18 @@ type src_typing (f:fstar_top_env) : env -> term -> comp -> Type =
       RT.typing (extend_env_l f g) (elab_term e) (elab_term ty) ->
       src_typing f g e (C_Tot ty)
 
+  | T_Abs: 
+      g:env ->
+      x:var { None? (lookup g x) } ->
+      ty:typ ->
+      u:universe ->
+      body:term ->
+      c:comp ->
+      hint:vprop ->
+      tot_typing f g ty (Tm_Type u) ->
+      src_typing f ((x, Inl ty)::g) (open_term body x) c ->
+      src_typing f g (Tm_Abs ty hint body) (C_Tot (Tm_Arrow ty (close_comp c x)))
+  
   | T_STApp :
       g:env ->
       head:term -> 
@@ -588,7 +608,6 @@ let vprop_equiv_swap (f:_) (g:_) (l0 l1 l2:list term)
     List.Tot.append_assoc l1 l0 l2;
     d4
 
-
 let split_one_vprop (p:term) 
                     (qs:list term { can_split_one_vprop p qs })
   : list term
@@ -693,7 +712,19 @@ let rec check (f:fstar_top_env)
               (pre_typing: tot_typing f g pre Tm_VProp)
   : T.Tac (c:st_comp { c.pre == pre } &
            src_typing f g t (C_ST c))
-  = match t with
+  = let return (ty:typ) (d:tot_typing f g t ty)
+      : (c:st_comp {c.pre == pre} &
+         src_typing f g t (C_ST c))
+      = let d = T_Return _ _ _ d in
+        let d = T_Frame _ _ _ pre pre_typing d in
+        let c = add_frame (return_comp ty t) pre in
+        let d : src_typing f g t (C_ST c) = d in
+        let c' = { c with pre = pre } in
+        let x = fresh g in
+        let eq : st_equiv f g c c' = ST_Equiv g c c' x (VE_Unit g pre) (VE_Refl _ _) in
+        (| c', T_Equiv _ _ _ _ d eq |)
+    in
+    match t with
     | Tm_BVar _ -> T.fail "not locally nameless"
     | Tm_Var _
     | Tm_FVar _ 
@@ -706,17 +737,28 @@ let rec check (f:fstar_top_env)
     | Tm_ExistsSL _ _
     | Tm_ForallSL _ _
     | Tm_Arrow _ _
-    | Tm_Type
+    | Tm_Type _
     | Tm_VProp ->
       let (| ty, d |) = check_tot f g t in
-      let d = T_Return _ _ _ d in
-      let d = T_Frame _ _ _ pre pre_typing d in
-      let c = add_frame (return_comp ty t) pre in
-      let d : src_typing f g t (C_ST c) = d in
-      let c' = { c with pre = pre } in
-      let x = fresh g in
-      let eq : st_equiv f g c c' = ST_Equiv g c c' x (VE_Unit g pre) (VE_Refl _ _) in
-      (| c', T_Equiv _ _ _ _ d eq |)
+      return ty d
+
+    | Tm_Abs t pre_hint body -> (
+      match check_tot f g t with
+      | (| Tm_Type u, t_typing |) ->
+        let x = fresh g in
+        let g' = (x, Inl t) :: g in
+        let pre = open_term pre_hint x in
+        (
+        match check_tot f g' pre with
+        | (| Tm_VProp, pre_typing |) ->
+          let (| c_body, body_typing |) = check f g' (open_term body x) pre pre_typing in
+          let tt = T_Abs g x t u body (C_ST c_body) pre_hint t_typing body_typing in
+          return _ tt
+          
+        | _ -> T.fail "bad hint"
+        )
+      | _ -> T.fail "Expected a type"
+      )
 
     | Tm_STApp head arg ->
       let (| ty_head, dhead |) = check_tot f g head in
@@ -750,16 +792,11 @@ let rec check (f:fstar_top_env)
         if x `Set.mem` freevars c2.post
         ||  x `Set.mem` freevars c2.res
         then T.fail "Let-bound variable escapes its scope"
-        else 
-          let b : bind_comp f g c1 x c2 _ = 
-            Bind_comp _ _ _ _
-          in
-          (| _, T_Bind _ _ _ _ _ _ _ d1 d2 b |)
+        else (| _, T_Bind _ _ _ _ _ _ _ d1 d2 (Bind_comp _ _ _ _) |)
      )
 
-    | Tm_Abs _ _
     | Tm_If _ _ _ ->
-      T.fail "Not handling if/abs yet"
+      T.fail "Not handling if yet"
 
 ////////////////////////////////////////////////////////////////////////////////
 // elaboration
