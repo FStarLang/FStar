@@ -50,6 +50,10 @@ val of_u64 (x: U64.t) : Pure t
   (requires fits_u64)
   (ensures (fun y -> v y == U64.v x))
 
+val uint16_to_sizet (x:U16.t) : Pure t
+  (requires True)
+  (ensures fun y -> v y == U16.v x)
+
 val uint32_to_sizet (x:U32.t) : Pure t
   (requires fits_u32)
   (ensures fun y -> v y == U32.v x)

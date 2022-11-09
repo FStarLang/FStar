@@ -30,6 +30,7 @@ let of_u32 (x: U32.t)
 let of_u64 (x: U64.t)
   = uint_to_t (U64.v x)
 
+let uint16_to_sizet x = uint_to_t (U16.v x)
 let uint32_to_sizet x = uint_to_t (U32.v x)
 let uint64_to_sizet x = uint_to_t (U64.v x)
 
