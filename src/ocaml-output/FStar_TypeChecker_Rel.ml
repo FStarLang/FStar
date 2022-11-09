@@ -14387,8 +14387,9 @@ let (pick_a_univ_deffered_implicit :
                FStar_Compiler_Effect.op_Bar_Greater uu___2
                  (fun uu___3 -> FStar_Pervasives_Native.Some uu___3) in
              (uu___1, (FStar_Compiler_List.op_At tl rest)))
-let (is_implicit_resolved :
-  FStar_TypeChecker_Env.env -> FStar_TypeChecker_Env.implicit -> Prims.bool)
+let (is_tac_implicit_resolved :
+  FStar_TypeChecker_Env.env ->
+    FStar_TypeChecker_Common.implicit -> Prims.bool)
   =
   fun env ->
     fun i ->
@@ -14673,7 +14674,7 @@ let (resolve_implicits' :
                                       if is_tac
                                       then
                                         ((let uu___10 =
-                                            is_implicit_resolved env1 hd1 in
+                                            is_tac_implicit_resolved env1 hd1 in
                                           if uu___10
                                           then
                                             let force_univ_constraints = true in

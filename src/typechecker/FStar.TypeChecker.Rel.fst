@@ -5047,7 +5047,7 @@ let pick_a_univ_deffered_implicit (out : tagged_implicits)
   | [] -> None, out
   | hd::tl -> hd |> fst |> Some, (tl@rest)
 
-let is_implicit_resolved (env:env) (i:implicit) : bool =
+let is_tac_implicit_resolved (env:env) (i:implicit) : bool =
     i.imp_tm
     |> Free.uvars
     |> BU.set_elements
@@ -5123,7 +5123,7 @@ let resolve_implicits' env is_tac (implicits:Env.implicits)
         let hd = {hd with imp_tm=tm} in
         if is_tac
         then begin
-          if is_implicit_resolved env hd
+          if is_tac_implicit_resolved env hd
           then let force_univ_constraints = true in
                let res = check_implicit_solution_and_discharge_guard
                  env
