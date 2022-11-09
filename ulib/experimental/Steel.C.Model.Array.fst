@@ -168,6 +168,16 @@ let array_pcm_carrier_of_seq
 : Tot (array_pcm_carrier t n)
 = on_dom (array_domain n) (fun i -> Seq.index s (size_v i) <: array_range t n i)
 
+let array_pcm_carrier_of_seq_eq
+  (#t: Type)
+  (n: Ghost.erased size_t)
+  (s: Seq.lseq t (size_v n))
+  (i: array_domain n)
+: Lemma
+  (array_pcm_carrier_of_seq n s i == Seq.index s (SZ.v i))
+  [SMTPat (array_pcm_carrier_of_seq n s i)]
+= ()
+
 let int_to_size_t = SZ.uint_to_t
 
 let seq_of_array_pcm_carrier
@@ -909,3 +919,31 @@ let array_of_ref
   ref_of_array_of_ref_base r;
   intro_pts_to1 a _ _ _;
   A.return a
+
+#push-options "--split_queries --z3rlimit 32 --query_stats"
+
+#restart-solver
+let unarray_of_ref
+  (#opened: _)
+  (#t: Type)
+  (#p: pcm t)
+  (#v: Seq.seq t)
+  (r: ref p)
+  (a: array p)
+: A.SteelGhost (squash (Seq.length v == 1)) opened
+    (pts_to a v)
+    (fun _ -> R.pts_to r (Seq.index v 0))
+    (fun _ -> a == g_array_of_ref r)
+    (fun _ _ _ -> True)
+= assert_norm (size_v 0sz == 0);
+  assert_norm (size_v 1sz == 1);
+  elim_pts_to _ _;
+  ref_of_array_of_ref_base r;
+  R.unfocus (ref_of_array a) r (array_of_ref_conn p) _;
+  let x = (array_pcm_carrier_of_seq a.len v) in
+  assert_norm ((array_of_ref_conn p).conn_small_to_large.morph x == x 0sz);
+  array_pcm_carrier_of_seq_eq a.len v 0sz;
+  assert (x 0sz == Seq.index v 0);
+  A.change_equal_slprop (R.pts_to _ _) (R.pts_to _ _)
+
+#pop-options
