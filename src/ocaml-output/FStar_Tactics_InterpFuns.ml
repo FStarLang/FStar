@@ -72,9 +72,14 @@ let (mk :
                 (FStar_Pervasives_Native.Some (arity - Prims.int_one));
               FStar_TypeChecker_Cfg.strong_reduction_ok = true;
               FStar_TypeChecker_Cfg.requires_binder_substitution = true;
-              FStar_TypeChecker_Cfg.interpretation = (timing_int nm1 interp);
+              FStar_TypeChecker_Cfg.interpretation =
+                (fun psc ->
+                   fun cbs ->
+                     fun _us ->
+                       fun args -> timing_int nm1 interp psc cbs args);
               FStar_TypeChecker_Cfg.interpretation_nbe =
-                (timing_nbe nm1 nbe_interp)
+                (fun cbs ->
+                   fun _us -> fun args -> timing_nbe nm1 nbe_interp cbs args)
             }
 let (mkt :
   Prims.string ->
@@ -104,9 +109,14 @@ let (mkt :
                 FStar_Pervasives_Native.None;
               FStar_TypeChecker_Cfg.strong_reduction_ok = true;
               FStar_TypeChecker_Cfg.requires_binder_substitution = true;
-              FStar_TypeChecker_Cfg.interpretation = (timing_int nm1 interp);
+              FStar_TypeChecker_Cfg.interpretation =
+                (fun psc ->
+                   fun cbs ->
+                     fun _us ->
+                       fun args -> timing_int nm1 interp psc cbs args);
               FStar_TypeChecker_Cfg.interpretation_nbe =
-                (timing_nbe nm1 nbe_interp)
+                (fun cbs ->
+                   fun _us -> fun args -> timing_nbe nm1 nbe_interp cbs args)
             }
 let mk_total_interpretation_1_psc :
   'r 't1 .

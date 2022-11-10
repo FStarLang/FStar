@@ -309,7 +309,7 @@ let variable_not_found v =
   (Errors.Fatal_VariableNotFound, (format1 "Variable \"%s\" not found" (Print.bv_to_string v)))
 
 //Construct a new universe unification variable
-let new_u_univ () = U_unif (Unionfind.univ_fresh Range.dummyRange)
+let new_u_univ () = U_unif (UF.univ_fresh Range.dummyRange)
 
 let mk_univ_subst (formals : list univ_name) (us : universes) : list subst_elt =
     assert (List.length us = List.length formals);
@@ -1665,7 +1665,7 @@ let is_trivial g = match g with
     | {guard_f=Trivial; deferred=[]; univ_ineqs=([], []); implicits=i} ->
       i |> BU.for_all (fun imp ->
            (U.ctx_uvar_should_check imp.imp_uvar=Allow_unresolved)
-           || (match Unionfind.find imp.imp_uvar.ctx_uvar_head with
+           || (match UF.find imp.imp_uvar.ctx_uvar_head with
                | Some _ -> true
                | None -> false))
     | _ -> false

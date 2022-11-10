@@ -1166,11 +1166,13 @@ IsNull nodes should be added to the KaRaMeL AST *)
     translate_expr env e
 
   | MLE_App ({expr=MLE_TApp ({expr=MLE_Name p}, _)}, [_fp; _fp'; _opened; _p; _i; {expr=MLE_Fun (_, body)}])
-    when string_of_mlpath p = "Steel.ST.Util.with_invariant" ->
+    when string_of_mlpath p = "Steel.ST.Util.with_invariant" ||
+         string_of_mlpath p = "Steel.Effect.Atomic.with_invariant" ->
     translate_expr env body
 
   | MLE_App ({expr=MLE_TApp ({expr=MLE_Name p}, _)}, [_fp; _fp'; _opened; _p; _i; e])
-    when string_of_mlpath p = "Steel.ST.Util.with_invariant" ->
+    when string_of_mlpath p = "Steel.ST.Util.with_invariant" ||
+         string_of_mlpath p = "Steel.Effect.Atomic.with_invariant" ->
     Errors.raise_error
       (Errors.Fatal_ExtractionUnsupported,
        BU.format2

@@ -167,14 +167,15 @@ clean: clean_checked clean_ocaml
 	$(Q)rm -fr ml/extracted tactics_ml/extracted tactics_ml/fstarlib_leftovers
 
 clean_ocaml:
+	@echo "[CLEAN OCAML LIBS]"
 	$(Q)rm -f ml/*.mllib tactics_ml/*.mllib tactics_ml/*.mldylib *~
 	$(Q)rm -rf $(FSTARLIB_DIR)
 	$(Q)rm -rf $(TACLIB_DIR)
 	$(Q)rm -rf ml/_build tactics_ml/_build # ← ocamlbuild -clean does not work on Cygwin
 
 rebuild: clean_ocaml
-	+$(MAKE) install-fstarlib
-	+$(MAKE) install-fstar-tactics
+	+$(Q)$(MAKE) install-fstarlib
+	+$(Q)$(MAKE) install-fstar-tactics
 
 DOC_FILES=prims.fst FStar.Pervasives.Native.fst FStar.Pervasives.fst \
 	  FStar.Squash.fsti FStar.Classical.fsti FStar.BigOps.fsti \

@@ -8,7 +8,7 @@
       1,
       [ "@query", "equation_FStar.IFC.hide", "equation_FStar.IFC.reveal" ],
       0,
-      "59a7b6ac47e4f57bf36ca2d9bb288eaa"
+      "4a8e0e93ef338af0d59b81a668f6c002"
     ],
     [
       "FStar.IFC.hide_reveal",
@@ -17,7 +17,7 @@
       1,
       [ "@query", "equation_FStar.IFC.hide", "equation_FStar.IFC.reveal" ],
       0,
-      "d89a37a130d962c5b53fd3bccf6d3cdf"
+      "9f6d2386f18d21a6e9e75840af2efacf"
     ],
     [
       "FStar.IFC.map",
@@ -26,7 +26,7 @@
       1,
       [ "@query", "equation_FStar.IFC.reveal" ],
       0,
-      "e8b2f08355a5d2f83ec6c78f4d573a83"
+      "168b57a9bee72b821ca214b292dd7c0b"
     ],
     [
       "FStar.IFC.join",
@@ -35,7 +35,7 @@
       1,
       [ "@query", "equation_FStar.IFC.reveal" ],
       0,
-      "5f680db889f548572421b456a7d6985f"
+      "a21b25181ccf78ad1afedb8ed43a97c8"
     ]
   ]
 ]
