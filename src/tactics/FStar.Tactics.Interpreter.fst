@@ -379,11 +379,13 @@ let () =
         dump_uvars_of E.e_goal      e_string      e_unit
         dump_uvars_of E.e_goal_nbe NBET.e_string NBET.e_unit;
 
-      mk_tac_step_3 0 "ctrl_rewrite"
-        ctrl_rewrite E.e_direction (e_tactic_1 RE.e_term (e_tuple2 e_bool E.e_ctrl_flag))
+      mk_tac_step_4 0 "ctrl_rewrite"
+        ctrl_rewrite E.e_direction e_bool
+                                   (e_tactic_1 RE.e_term (e_tuple2 e_bool E.e_ctrl_flag))
                                    (e_tactic_thunk e_unit)
                                    e_unit
-        ctrl_rewrite E.e_direction_nbe (e_tactic_nbe_1 NRE.e_term (NBET.e_tuple2 NBET.e_bool E.e_ctrl_flag_nbe))
+        ctrl_rewrite E.e_direction_nbe NBET.e_bool
+                                       (e_tactic_nbe_1 NRE.e_term (NBET.e_tuple2 NBET.e_bool E.e_ctrl_flag_nbe))
                                        (e_tactic_nbe_thunk NBET.e_unit)
                                         NBET.e_unit;
 

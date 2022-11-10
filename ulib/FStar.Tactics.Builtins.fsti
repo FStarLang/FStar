@@ -225,7 +225,7 @@ val gather_or_solve_explicit_guards_for_resolved_goals : unit -> Tac unit
 
 (** [ctrl_rewrite] will traverse the current goal, and call [ctrl]
  * repeatedly on subterms. When [ctrl t] returns [(true, _)], the
- * tactic will call [rw] with a goal of type [t = ?u], which once
+ * tactic will call [rw] with a goal of type [t == ?u], which once
  * solved will rewrite [t] to the solution of [?u]. No goal is
  * made if [ctrl t] returns [(false, _)].
  *
@@ -244,10 +244,16 @@ val gather_or_solve_explicit_guards_for_resolved_goals : unit -> Tac unit
  * means that [ctrl_rewrite BottomUp (fun _ -> (true, Skip)) t] will call [t]
  * for every leaf node in the AST.
  *
+ * The second argument specifies whether F* will force the equality type
+ * in the created goal [t == ?u] to be the type of [t]. If this flag is
+ * set to [true], the type of the equality will be a new uvar, which
+ * will need to be solved during rewriting.
+ *
  * See [pointwise] and [topdown_rewrite] for more friendly versions.
  *)
 val ctrl_rewrite :
     direction ->
+    bool ->
     (ctrl : term -> Tac (bool & ctrl_flag)) ->
     (rw:unit -> Tac unit) ->
     Tac unit

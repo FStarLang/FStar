@@ -6,7 +6,7 @@ open FStar.Tactics
 (* This tactic can unfold recursive functions inside of [match] statements and others... *)
 let rec_norm direction (steps : list norm_step) : Tac unit =
   let normalize () = norm steps; trefl () in
-  t_pointwise direction normalize
+  t_pointwise direction false normalize
 
 let opt_id_nat (x : nat) : option nat = Some x
 

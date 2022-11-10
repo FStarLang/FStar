@@ -48,6 +48,7 @@ let rangeof g = g.goal_ctx_uvar.ctx_uvar_range
 
 let __do_rewrite
     (g0:goal)
+    (allow_subtyping : bool)
     (rewriter : rewriter_ty)
     (env : env)
     (tm : term)
@@ -98,10 +99,14 @@ let __do_rewrite
     | None -> ret tm
     | Some (_, lcomp, g) ->
 
-    if not (TcComm.is_pure_or_ghost_lcomp lcomp) then 
+    if not (TcComm.is_pure_or_ghost_lcomp lcomp) then
       ret tm (* SHOULD THIS CHECK BE IN maybe_rewrite INSTEAD? *)
     else
-    let typ = lcomp.res_typ in
+    bind (
+      (* If this type is already a uvar, no need to generate one. *)
+      if not allow_subtyping || U.is_uvar lcomp.res_typ then ret lcomp.res_typ else
+      bind (new_uvar "do_rewrite.eq_ty" env (fst (U.type_u ())) None [] (rangeof g0)) (fun x -> ret (fst x))
+      ) (fun typ ->
     bind (new_uvar "do_rewrite.rhs" env typ None [] (rangeof g0)) (fun (ut, uvar_ut) ->
     mlog (fun () ->
        BU.print2 "do_rewrite: making equality\n\t%s ==\n\t%s\n"
@@ -118,17 +123,18 @@ let __do_rewrite
        BU.print2 "rewrite_rec: succeeded rewriting\n\t%s to\n\t%s\n"
                    (Print.term_to_string tm)
                    (Print.term_to_string ut)) (fun () ->
-    ret ut)))))
+    ret ut))))))
   end
 
 (* If __do_rewrite fails with "SKIP" we do nothing *)
 let do_rewrite
     (g0:goal)
+    (allow_subtyping : bool)
     (rewriter : rewriter_ty)
     (env : env)
     (tm : term)
   : tac term
-= bind (catch (__do_rewrite g0 rewriter env tm)) (function
+= bind (catch (__do_rewrite g0 allow_subtyping rewriter env tm)) (function
        | Inl (TacticFailure "SKIP") -> ret tm
        | Inl e -> traise e
        | Inr tm' -> ret tm')
@@ -190,6 +196,7 @@ let ctac_args (c : ctac term) : ctac args =
 
 let maybe_rewrite
     (g0 : goal)
+    (allow_subtyping : bool)
     (controller : controller_ty)
     (rewriter   : rewriter_ty)
     (env : env)
@@ -197,29 +204,30 @@ let maybe_rewrite
   : tac (term * ctrl_flag)
   = bind (controller tm) (fun (rw, ctrl_flag) ->
     bind (if rw
-          then do_rewrite g0 rewriter env tm
+          then do_rewrite g0 allow_subtyping rewriter env tm
           else ret tm) (fun tm' ->
     ret (tm', ctrl_flag)))
 
 let rec ctrl_fold_env
     (g0 : goal)
     (d : direction)
+    (allow_subtyping:bool)
     (controller : controller_ty)
     (rewriter : rewriter_ty)
     (env : env)
     (tm : term)
   : tac (term * ctrl_flag)
   = let recurse tm =
-      ctrl_fold_env g0 d controller rewriter env tm
+      ctrl_fold_env g0 d allow_subtyping controller rewriter env tm
     in
     match d with
     | TopDown ->
-      seq_ctac (maybe_rewrite g0 controller rewriter env)
-               (on_subterms g0 d controller rewriter env) tm
+      seq_ctac (maybe_rewrite g0 allow_subtyping controller rewriter env)
+               (on_subterms g0 d allow_subtyping controller rewriter env) tm
 
     | BottomUp ->
-      seq_ctac (on_subterms g0 d controller rewriter env)
-               (maybe_rewrite g0 controller rewriter env) tm
+      seq_ctac (on_subterms g0 d allow_subtyping controller rewriter env)
+               (maybe_rewrite g0 allow_subtyping controller rewriter env) tm
 
 and recurse_option_residual_comp (env:env) (retyping_subst:list subst_elt) (rc_opt:option residual_comp) recurse
   : tac (option residual_comp & ctrl_flag)
@@ -237,17 +245,17 @@ and recurse_option_residual_comp (env:env) (retyping_subst:list subst_elt) (rc_o
 and on_subterms
     (g0 : goal)
     (d : direction)
+    (allow_subtyping : bool)
     (controller : controller_ty)
     (rewriter : rewriter_ty)
     (env : env)
     (tm : term)
   : tac (term * ctrl_flag)
-  = let recurse env tm = ctrl_fold_env g0 d controller rewriter env tm in
+  = let recurse env tm = ctrl_fold_env g0 d allow_subtyping controller rewriter env tm in
     let rr = recurse env in (* recurse on current env *)
-
     //
     // t is the body and k is the option residual comp
-    // 
+    //
     // Note, the type of the binder sorts may change as we rewrite them
     // The retyping_subst is an identity substitution that replaces the bound vars
     // in the term with their new variants tagged with the rewritten bv sorts
@@ -295,17 +303,17 @@ and on_subterms
         descend_binders tm [] [] Continue env bs_orig t k
                         (fun bs t k -> Tm_abs(bs, t, k))
 
-      | Tm_refine (x, phi) -> 
+      | Tm_refine (x, phi) ->
         let bs, phi = SS.open_term [S.mk_binder x] phi in
         descend_binders tm [] [] Continue env bs phi None  //no residual comp
                         (fun bs phi _ ->
-                          let x = 
+                          let x =
                             match bs with
                             | [x] -> x.binder_bv
                             | _ -> failwith "Impossible"
                           in
                           Tm_refine (x, phi))
-      
+
       (* Do nothing (FIXME) *)
       | Tm_arrow (bs, k) ->
         ret (tm.n, Continue)
@@ -371,16 +379,18 @@ and on_subterms
 let do_ctrl_rewrite
     (g0 : goal)
     (dir : direction)
+    (allow_subtyping : bool)
     (controller : controller_ty)
     (rewriter   : rewriter_ty)
     (env : env)
     (tm : term)
   : tac term
-  = bind (ctrl_fold_env g0 dir controller rewriter env tm) (fun (tm', _) ->
+  = bind (ctrl_fold_env g0 dir allow_subtyping controller rewriter env tm) (fun (tm', _) ->
     ret tm')
 
 let ctrl_rewrite
     (dir : direction)
+    (allow_subtyping:bool)
     (controller : controller_ty)
     (rewriter   : rewriter_ty)
   : tac unit
@@ -396,7 +406,7 @@ let ctrl_rewrite
     log ps (fun () ->
         BU.print1 "ctrl_rewrite starting with %s\n" (Print.term_to_string gt));
 
-    bind (do_ctrl_rewrite g dir controller rewriter (goal_env g) gt) (fun gt' ->
+    bind (do_ctrl_rewrite g dir allow_subtyping controller rewriter (goal_env g) gt) (fun gt' ->
 
     log ps (fun () ->
         BU.print1 "ctrl_rewrite seems to have succeded with %s\n" (Print.term_to_string gt'));

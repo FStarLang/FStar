@@ -172,7 +172,8 @@ let recover (t: unit -> 'a __tac): ((exn, 'a) either) __tac = from_tac_1 TM.reco
 
 let ctrl_rewrite
     (d : direction)
+    (b : bool)
     (t1 : RT.term -> (bool * ctrl_flag) __tac)
     (t2 : unit -> unit __tac)
   : unit __tac
-  = from_tac_3 CTRW.ctrl_rewrite d (to_tac_1 t1) (to_tac_0 (t2 ()))
+  = from_tac_4 CTRW.ctrl_rewrite d b (to_tac_1 t1) (to_tac_0 (t2 ()))

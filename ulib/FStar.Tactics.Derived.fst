@@ -208,14 +208,14 @@ the engine will rewrite [t'] for [?u] in the original goal type. This
 is done for every subterm, bottom-up. This allows to recurse over an
 unknown goal type. By inspecting the goal, the [tau] can then decide
 what to do (to not do anything, use [trefl]). *)
-let t_pointwise (d:direction) (tau : unit -> Tac unit) : Tac unit =
+let t_pointwise (d:direction) (allow_eq_subtyping : bool) (tau : unit -> Tac unit) : Tac unit =
   let ctrl (t:term) : Tac (bool & ctrl_flag) =
     true, Continue
   in
   let rw () : Tac unit =
     tau ()
   in
-  ctrl_rewrite d ctrl rw
+  ctrl_rewrite d allow_eq_subtyping ctrl rw
 
 (** [topdown_rewrite ctrl rw] is used to rewrite those sub-terms [t]
     of the goal on which [fst (ctrl t)] returns true.
@@ -250,10 +250,10 @@ let topdown_rewrite (ctrl : term -> Tac (bool * int))
       in
       b, f
     in
-    ctrl_rewrite TopDown ctrl' rw
+    ctrl_rewrite TopDown false ctrl' rw
 
-let pointwise  (tau : unit -> Tac unit) : Tac unit = t_pointwise BottomUp tau
-let pointwise' (tau : unit -> Tac unit) : Tac unit = t_pointwise TopDown  tau
+let pointwise  (tau : unit -> Tac unit) : Tac unit = t_pointwise BottomUp false tau
+let pointwise' (tau : unit -> Tac unit) : Tac unit = t_pointwise TopDown  false tau
 
 let cur_module () : Tac name =
     moduleof (top_env ())
@@ -606,12 +606,12 @@ let unfold_def (t:term) : Tac unit =
 equalities. The lemmas need to prove *propositional* equalities, that
 is, using [==]. *)
 let l_to_r (lems:list term) : Tac unit =
-    let first_or_trefl () : Tac unit =
+    let first_or_skip () : Tac unit =
         fold_left (fun k l () ->
                     (fun () -> apply_lemma_rw l)
                     `or_else` k)
-                  trefl lems () in
-    pointwise first_or_trefl
+                  (fun _ -> fail_silently "SKIP") lems () in
+    t_pointwise BottomUp true first_or_skip
 
 let mk_squash (t : term) : term =
     let sq : term = pack_ln (Tv_FVar (pack_fv squash_qn)) in
