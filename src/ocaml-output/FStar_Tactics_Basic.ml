@@ -6733,6 +6733,18 @@ let (term_eq_old :
         (fun uu___ ->
            let uu___1 = FStar_Syntax_Util.term_eq t1 t2 in
            FStar_Tactics_Monad.ret uu___1)
+let with_compat_pre_core :
+  'a .
+    FStar_BigInt.t ->
+      'a FStar_Tactics_Monad.tac -> 'a FStar_Tactics_Monad.tac
+  =
+  fun n ->
+    fun f ->
+      FStar_Tactics_Monad.mk_tac
+        (fun ps ->
+           FStar_Options.push ();
+           (let res = FStar_Options.set_options "--compat_pre_core 0" in
+            let r = FStar_Tactics_Monad.run f ps in FStar_Options.pop (); r))
 let (tac_env : FStar_TypeChecker_Env.env -> FStar_TypeChecker_Env.env) =
   fun env1 ->
     let uu___ = FStar_TypeChecker_Env.clear_expected_typ env1 in
