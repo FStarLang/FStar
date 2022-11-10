@@ -21,15 +21,6 @@ let (new_implicit_var :
     fun r ->
       fun env ->
         fun k ->
-          (let uu___1 =
-             FStar_Compiler_Effect.op_Less_Bar
-               (FStar_TypeChecker_Env.debug env) FStar_Options.Extreme in
-           if uu___1
-           then
-             let uu___2 = FStar_Compiler_Util.stack_dump () in
-             FStar_Compiler_Util.print2 "New implicit var: %s\n%s\n" reason
-               uu___2
-           else ());
           FStar_TypeChecker_Env.new_implicit_var_aux reason r env k
             FStar_Syntax_Syntax.Strict FStar_Pervasives_Native.None
 let (close_guard_implicits :
@@ -763,21 +754,21 @@ let (mk_indexed_return :
         fun a ->
           fun e ->
             fun r ->
-              (let uu___1 =
-                 FStar_Compiler_Effect.op_Less_Bar
-                   (FStar_TypeChecker_Env.debug env)
-                   (FStar_Options.Other "LayeredEffects") in
-               if uu___1
-               then
-                 let uu___2 =
+              let debug =
+                FStar_Compiler_Effect.op_Less_Bar
+                  (FStar_TypeChecker_Env.debug env)
+                  (FStar_Options.Other "LayeredEffects") in
+              if debug
+              then
+                (let uu___1 =
                    FStar_Ident.string_of_lid ed.FStar_Syntax_Syntax.mname in
-                 let uu___3 = FStar_Syntax_Print.univ_to_string u_a in
-                 let uu___4 = FStar_Syntax_Print.term_to_string a in
-                 let uu___5 = FStar_Syntax_Print.term_to_string e in
+                 let uu___2 = FStar_Syntax_Print.univ_to_string u_a in
+                 let uu___3 = FStar_Syntax_Print.term_to_string a in
+                 let uu___4 = FStar_Syntax_Print.term_to_string e in
                  FStar_Compiler_Util.print4
-                   "Computing %s.return for u_a:%s, a:%s, and e:%s{\n" uu___2
-                   uu___3 uu___4 uu___5
-               else ());
+                   "Computing %s.return for u_a:%s, a:%s, and e:%s{\n" uu___1
+                   uu___2 uu___3 uu___4)
+              else ();
               (let uu___1 =
                  let uu___2 =
                    FStar_Compiler_Effect.op_Bar_Greater ed
@@ -825,19 +816,22 @@ let (mk_indexed_return :
                             FStar_Syntax_Syntax.NT
                               ((x_b.FStar_Syntax_Syntax.binder_bv), e)]
                             (fun b ->
-                               let uu___5 =
-                                 FStar_Syntax_Print.binder_to_string b in
-                               let uu___6 =
-                                 let uu___7 =
-                                   FStar_Ident.string_of_lid
-                                     ed.FStar_Syntax_Syntax.mname in
-                                 FStar_Compiler_Util.format1 "%s.return"
-                                   uu___7 in
-                               let uu___7 =
-                                 FStar_Compiler_Range.string_of_range r in
-                               FStar_Compiler_Util.format3
-                                 "implicit var for binder %s of %s at %s"
-                                 uu___5 uu___6 uu___7) r in
+                               if Prims.op_Negation debug
+                               then ""
+                               else
+                                 (let uu___6 =
+                                    FStar_Syntax_Print.binder_to_string b in
+                                  let uu___7 =
+                                    let uu___8 =
+                                      FStar_Ident.string_of_lid
+                                        ed.FStar_Syntax_Syntax.mname in
+                                    FStar_Compiler_Util.format1 "%s.return"
+                                      uu___8 in
+                                  let uu___8 =
+                                    FStar_Compiler_Range.string_of_range r in
+                                  FStar_Compiler_Util.format3
+                                    "implicit var for binder %s of %s at %s"
+                                    uu___6 uu___7 uu___8)) r in
                         (match uu___4 with
                          | (rest_bs_uvars, g_uvars) ->
                              let subst =
@@ -1405,27 +1399,34 @@ let (mk_indexed_bind :
                   fun flags ->
                     fun r1 ->
                       fun has_range_args ->
-                        let bind_name =
-                          let uu___ =
-                            let uu___1 =
-                              FStar_Compiler_Effect.op_Bar_Greater m
-                                FStar_Ident.ident_of_lid in
-                            FStar_Compiler_Effect.op_Bar_Greater uu___1
-                              FStar_Ident.string_of_id in
-                          let uu___1 =
-                            let uu___2 =
-                              FStar_Compiler_Effect.op_Bar_Greater n
-                                FStar_Ident.ident_of_lid in
-                            FStar_Compiler_Effect.op_Bar_Greater uu___2
-                              FStar_Ident.string_of_id in
-                          let uu___2 =
-                            let uu___3 =
-                              FStar_Compiler_Effect.op_Bar_Greater p
-                                FStar_Ident.ident_of_lid in
-                            FStar_Compiler_Effect.op_Bar_Greater uu___3
-                              FStar_Ident.string_of_id in
-                          FStar_Compiler_Util.format3 "(%s, %s) |> %s" uu___
-                            uu___1 uu___2 in
+                        let debug =
+                          FStar_Compiler_Effect.op_Less_Bar
+                            (FStar_TypeChecker_Env.debug env)
+                            (FStar_Options.Other "LayeredEffects") in
+                        let bind_name uu___ =
+                          if Prims.op_Negation debug
+                          then ""
+                          else
+                            (let uu___2 =
+                               let uu___3 =
+                                 FStar_Compiler_Effect.op_Bar_Greater m
+                                   FStar_Ident.ident_of_lid in
+                               FStar_Compiler_Effect.op_Bar_Greater uu___3
+                                 FStar_Ident.string_of_id in
+                             let uu___3 =
+                               let uu___4 =
+                                 FStar_Compiler_Effect.op_Bar_Greater n
+                                   FStar_Ident.ident_of_lid in
+                               FStar_Compiler_Effect.op_Bar_Greater uu___4
+                                 FStar_Ident.string_of_id in
+                             let uu___4 =
+                               let uu___5 =
+                                 FStar_Compiler_Effect.op_Bar_Greater p
+                                   FStar_Ident.ident_of_lid in
+                               FStar_Compiler_Effect.op_Bar_Greater uu___5
+                                 FStar_Ident.string_of_id in
+                             FStar_Compiler_Util.format3 "(%s, %s) |> %s"
+                               uu___2 uu___3 uu___4) in
                         (let uu___1 =
                            (((FStar_TypeChecker_Env.is_erasable_effect env m)
                                &&
@@ -1455,28 +1456,25 @@ let (mk_indexed_bind :
                          then
                            let uu___2 =
                              let uu___3 =
-                               let uu___4 = FStar_Ident.string_of_lid p in
+                               let uu___4 = bind_name () in
+                               let uu___5 = FStar_Ident.string_of_lid p in
                                FStar_Compiler_Util.format2
                                  "Cannot apply bind %s since %s is not erasable and one of the computations is informative"
-                                 bind_name uu___4 in
+                                 uu___4 uu___5 in
                              (FStar_Errors.Fatal_UnexpectedEffect, uu___3) in
                            FStar_Errors.raise_error uu___2 r1
                          else ());
-                        (let uu___2 =
-                           FStar_Compiler_Effect.op_Less_Bar
-                             (FStar_TypeChecker_Env.debug env)
-                             (FStar_Options.Other "LayeredEffects") in
-                         if uu___2
-                         then
+                        if debug
+                        then
+                          (let uu___2 =
+                             let uu___3 = FStar_Syntax_Syntax.mk_Comp ct1 in
+                             FStar_Syntax_Print.comp_to_string uu___3 in
                            let uu___3 =
-                             let uu___4 = FStar_Syntax_Syntax.mk_Comp ct1 in
+                             let uu___4 = FStar_Syntax_Syntax.mk_Comp ct2 in
                              FStar_Syntax_Print.comp_to_string uu___4 in
-                           let uu___4 =
-                             let uu___5 = FStar_Syntax_Syntax.mk_Comp ct2 in
-                             FStar_Syntax_Print.comp_to_string uu___5 in
                            FStar_Compiler_Util.print2
-                             "Binding c1:%s and c2:%s{\n" uu___3 uu___4
-                         else ());
+                             "Binding c1:%s and c2:%s{\n" uu___2 uu___3)
+                        else ();
                         (let uu___3 =
                            FStar_Compiler_Effect.op_Less_Bar
                              (FStar_TypeChecker_Env.debug env)
@@ -1537,9 +1535,10 @@ let (mk_indexed_bind :
                                                 let uu___9 =
                                                   FStar_Syntax_Print.term_to_string
                                                     bind_t1 in
+                                                let uu___10 = bind_name () in
                                                 FStar_Compiler_Util.format3
                                                   "bind %s (%s) does not have proper shape (reason:%s)"
-                                                  uu___9 bind_name s in
+                                                  uu___9 uu___10 s in
                                               (FStar_Errors.Fatal_UnexpectedEffect,
                                                 uu___8) in
                                             let num_range_args =
@@ -1632,16 +1631,23 @@ let (mk_indexed_bind :
                                                        ((b_b.FStar_Syntax_Syntax.binder_bv),
                                                          t2)]
                                                      (fun b1 ->
-                                                        let uu___10 =
-                                                          FStar_Syntax_Print.binder_to_string
-                                                            b1 in
-                                                        let uu___11 =
-                                                          FStar_Compiler_Range.string_of_range
-                                                            r1 in
-                                                        FStar_Compiler_Util.format3
-                                                          "implicit var for binder %s of %s at %s"
-                                                          uu___10 bind_name
-                                                          uu___11) r1 in
+                                                        if
+                                                          Prims.op_Negation
+                                                            debug
+                                                        then ""
+                                                        else
+                                                          (let uu___11 =
+                                                             FStar_Syntax_Print.binder_to_string
+                                                               b1 in
+                                                           let uu___12 =
+                                                             bind_name () in
+                                                           let uu___13 =
+                                                             FStar_Compiler_Range.string_of_range
+                                                               r1 in
+                                                           FStar_Compiler_Util.format3
+                                                             "implicit var for binder %s of %s at %s"
+                                                             uu___11 uu___12
+                                                             uu___13)) r1 in
                                                  (match uu___9 with
                                                   | (rest_bs_uvars, g_uvars)
                                                       ->
@@ -1764,11 +1770,18 @@ let (mk_indexed_bind :
                                                                     else ());
                                                                    (let uu___12
                                                                     =
+                                                                    let uu___13
+                                                                    =
+                                                                    let uu___14
+                                                                    =
+                                                                    bind_name
+                                                                    () in
+                                                                    FStar_Pervasives_Native.Some
+                                                                    uu___14 in
                                                                     FStar_TypeChecker_Rel.layered_effect_teq
                                                                     env i1
                                                                     f_i1
-                                                                    (FStar_Pervasives_Native.Some
-                                                                    bind_name) in
+                                                                    uu___13 in
                                                                     FStar_TypeChecker_Env.conj_guard
                                                                     g uu___12))
                                                             FStar_TypeChecker_Env.trivial_guard
@@ -1894,11 +1907,18 @@ let (mk_indexed_bind :
                                                                     (
                                                                     let uu___13
                                                                     =
+                                                                    let uu___14
+                                                                    =
+                                                                    let uu___15
+                                                                    =
+                                                                    bind_name
+                                                                    () in
+                                                                    FStar_Pervasives_Native.Some
+                                                                    uu___15 in
                                                                     FStar_TypeChecker_Rel.layered_effect_teq
                                                                     env_g i1
                                                                     g_i1
-                                                                    (FStar_Pervasives_Native.Some
-                                                                    bind_name) in
+                                                                    uu___14 in
                                                                     FStar_TypeChecker_Env.conj_guard
                                                                     g uu___13))
                                                               FStar_TypeChecker_Env.trivial_guard
@@ -3365,6 +3385,10 @@ let (mk_layered_conjunction :
             fun ct1 ->
               fun ct2 ->
                 fun r ->
+                  let debug =
+                    FStar_Compiler_Effect.op_Less_Bar
+                      (FStar_TypeChecker_Env.debug env)
+                      (FStar_Options.Other "LayeredEffects") in
                   let conjunction_name =
                     let uu___ =
                       FStar_Ident.string_of_lid ed.FStar_Syntax_Syntax.mname in
@@ -3439,19 +3463,22 @@ let (mk_layered_conjunction :
                                        ((a_b.FStar_Syntax_Syntax.binder_bv),
                                          a)]
                                     (fun b ->
-                                       let uu___5 =
-                                         FStar_Syntax_Print.binder_to_string
-                                           b in
-                                       let uu___6 =
-                                         FStar_Ident.string_of_lid
-                                           ed.FStar_Syntax_Syntax.mname in
-                                       let uu___7 =
-                                         FStar_Compiler_Effect.op_Bar_Greater
-                                           r
-                                           FStar_Compiler_Range.string_of_range in
-                                       FStar_Compiler_Util.format3
-                                         "implicit var for binder %s of %s:conjunction at %s"
-                                         uu___5 uu___6 uu___7) r in
+                                       if Prims.op_Negation debug
+                                       then ""
+                                       else
+                                         (let uu___6 =
+                                            FStar_Syntax_Print.binder_to_string
+                                              b in
+                                          let uu___7 =
+                                            FStar_Ident.string_of_lid
+                                              ed.FStar_Syntax_Syntax.mname in
+                                          let uu___8 =
+                                            FStar_Compiler_Effect.op_Bar_Greater
+                                              r
+                                              FStar_Compiler_Range.string_of_range in
+                                          FStar_Compiler_Util.format3
+                                            "implicit var for binder %s of %s:conjunction at %s"
+                                            uu___6 uu___7 uu___8)) r in
                                 (match uu___4 with
                                  | (rest_bs_uvars, g_uvars) ->
                                      let substs =
@@ -5714,6 +5741,10 @@ let (check_top_level :
                                 FStar_TypeChecker_Env.get_range env in
                               FStar_Errors.raise_error uu___7 uu___8
                           | FStar_Pervasives_Native.Some (bs, uu___7) ->
+                              let debug =
+                                FStar_Compiler_Effect.op_Less_Bar
+                                  (FStar_TypeChecker_Env.debug env)
+                                  (FStar_Options.Other "LayeredEffects") in
                               let uu___8 = FStar_Syntax_Subst.open_binders bs in
                               (match uu___8 with
                                | a::bs1 ->
@@ -5726,15 +5757,18 @@ let (check_top_level :
                                           ((a.FStar_Syntax_Syntax.binder_bv),
                                             (FStar_Syntax_Util.comp_result c2))]
                                        (fun b ->
-                                          let uu___11 =
-                                            FStar_Syntax_Print.binder_to_string
-                                              b in
-                                          let uu___12 =
-                                            FStar_Ident.string_of_lid
-                                              top_level_eff in
-                                          FStar_Compiler_Util.format2
-                                            "implicit for binder %s in effect abbreviation %s while checking top-level effect"
-                                            uu___11 uu___12) uu___10 in
+                                          if Prims.op_Negation debug
+                                          then ""
+                                          else
+                                            (let uu___12 =
+                                               FStar_Syntax_Print.binder_to_string
+                                                 b in
+                                             let uu___13 =
+                                               FStar_Ident.string_of_lid
+                                                 top_level_eff in
+                                             FStar_Compiler_Util.format2
+                                               "implicit for binder %s in effect abbreviation %s while checking top-level effect"
+                                               uu___12 uu___13)) uu___10 in
                                    (match uu___9 with
                                     | (uvs, g_uvs) ->
                                         let top_level_comp =
@@ -6541,6 +6575,10 @@ let (fresh_effect_repr :
                          let bs1 = FStar_Syntax_Subst.open_binders bs in
                          (match bs1 with
                           | a::bs2 ->
+                              let debug =
+                                FStar_Compiler_Effect.op_Less_Bar
+                                  (FStar_TypeChecker_Env.debug env)
+                                  (FStar_Options.Other "LayeredEffects") in
                               let uu___4 =
                                 FStar_TypeChecker_Env.uvars_for_binders env
                                   bs2
@@ -6548,15 +6586,20 @@ let (fresh_effect_repr :
                                      ((a.FStar_Syntax_Syntax.binder_bv),
                                        a_tm)]
                                   (fun b ->
-                                     let uu___5 =
-                                       FStar_Syntax_Print.binder_to_string b in
-                                     let uu___6 =
-                                       FStar_Ident.string_of_lid eff_name in
-                                     let uu___7 =
-                                       FStar_Compiler_Range.string_of_range r in
-                                     FStar_Compiler_Util.format3
-                                       "uvar for binder %s when creating a fresh repr for %s at %s"
-                                       uu___5 uu___6 uu___7) r in
+                                     if Prims.op_Negation debug
+                                     then ""
+                                     else
+                                       (let uu___6 =
+                                          FStar_Syntax_Print.binder_to_string
+                                            b in
+                                        let uu___7 =
+                                          FStar_Ident.string_of_lid eff_name in
+                                        let uu___8 =
+                                          FStar_Compiler_Range.string_of_range
+                                            r in
+                                        FStar_Compiler_Util.format3
+                                          "uvar for binder %s when creating a fresh repr for %s at %s"
+                                          uu___6 uu___7 uu___8)) r in
                               (match uu___4 with
                                | (is, g) ->
                                    let uu___5 =
@@ -6721,17 +6764,17 @@ let (lift_tf_layered_effect :
     fun lift_ts ->
       fun env ->
         fun c ->
-          (let uu___1 =
-             FStar_Compiler_Effect.op_Less_Bar
-               (FStar_TypeChecker_Env.debug env)
-               (FStar_Options.Other "LayeredEffects") in
-           if uu___1
-           then
-             let uu___2 = FStar_Syntax_Print.comp_to_string c in
-             let uu___3 = FStar_Syntax_Print.lid_to_string tgt in
+          let debug =
+            FStar_Compiler_Effect.op_Less_Bar
+              (FStar_TypeChecker_Env.debug env)
+              (FStar_Options.Other "LayeredEffects") in
+          if debug
+          then
+            (let uu___1 = FStar_Syntax_Print.comp_to_string c in
+             let uu___2 = FStar_Syntax_Print.lid_to_string tgt in
              FStar_Compiler_Util.print2
-               "Lifting comp %s to layered effect %s {\n" uu___2 uu___3
-           else ());
+               "Lifting comp %s to layered effect %s {\n" uu___1 uu___2)
+          else ();
           (let r = FStar_TypeChecker_Env.get_range env in
            let ct = FStar_Syntax_Util.comp_to_comp_typ c in
            check_non_informative_type_for_lift env
@@ -6798,39 +6841,39 @@ let (lift_tf_layered_effect :
                               [FStar_Syntax_Syntax.NT
                                  ((a_b.FStar_Syntax_Syntax.binder_bv), a)]
                               (fun b ->
-                                 let uu___7 =
-                                   FStar_Syntax_Print.binder_to_string b in
-                                 let uu___8 =
-                                   FStar_Ident.string_of_lid
-                                     ct.FStar_Syntax_Syntax.effect_name in
-                                 let uu___9 = FStar_Ident.string_of_lid tgt in
-                                 let uu___10 =
-                                   FStar_Compiler_Range.string_of_range r in
-                                 FStar_Compiler_Util.format4
-                                   "implicit var for binder %s of %s~>%s at %s"
-                                   uu___7 uu___8 uu___9 uu___10) r in
+                                 if Prims.op_Negation debug
+                                 then ""
+                                 else
+                                   (let uu___8 =
+                                      FStar_Syntax_Print.binder_to_string b in
+                                    let uu___9 =
+                                      FStar_Ident.string_of_lid
+                                        ct.FStar_Syntax_Syntax.effect_name in
+                                    let uu___10 =
+                                      FStar_Ident.string_of_lid tgt in
+                                    let uu___11 =
+                                      FStar_Compiler_Range.string_of_range r in
+                                    FStar_Compiler_Util.format4
+                                      "implicit var for binder %s of %s~>%s at %s"
+                                      uu___8 uu___9 uu___10 uu___11)) r in
                           (match uu___6 with
                            | (rest_bs_uvars, g) ->
-                               ((let uu___8 =
-                                   FStar_Compiler_Effect.op_Less_Bar
-                                     (FStar_TypeChecker_Env.debug env)
-                                     (FStar_Options.Other "LayeredEffects") in
-                                 if uu___8
-                                 then
-                                   let uu___9 =
+                               (if debug
+                                then
+                                  (let uu___8 =
                                      FStar_Compiler_List.fold_left
                                        (fun s ->
                                           fun u1 ->
-                                            let uu___10 =
-                                              let uu___11 =
+                                            let uu___9 =
+                                              let uu___10 =
                                                 FStar_Syntax_Print.term_to_string
                                                   u1 in
-                                              Prims.op_Hat ";;;;" uu___11 in
-                                            Prims.op_Hat s uu___10) ""
+                                              Prims.op_Hat ";;;;" uu___10 in
+                                            Prims.op_Hat s uu___9) ""
                                        rest_bs_uvars in
                                    FStar_Compiler_Util.print1
-                                     "Introduced uvars: %s\n" uu___9
-                                 else ());
+                                     "Introduced uvars: %s\n" uu___8)
+                                else ();
                                 (let substs =
                                    FStar_Compiler_List.map2
                                      (fun b ->
@@ -6899,10 +6942,7 @@ let (lift_tf_layered_effect :
                                          lift_ct.FStar_Syntax_Syntax.result_typ
                                          wp FStar_Compiler_Range.dummyRange in
                                  (let uu___9 =
-                                    (FStar_Compiler_Effect.op_Less_Bar
-                                       (FStar_TypeChecker_Env.debug env)
-                                       (FStar_Options.Other "LayeredEffects"))
-                                      &&
+                                    debug &&
                                       (FStar_Compiler_Effect.op_Less_Bar
                                          (FStar_TypeChecker_Env.debug env)
                                          FStar_Options.Extreme) in
@@ -6929,17 +6969,13 @@ let (lift_tf_layered_effect :
                                         FStar_Syntax_Syntax.flags = []
                                       } in
                                     FStar_Syntax_Syntax.mk_Comp uu___9 in
-                                  (let uu___10 =
-                                     FStar_Compiler_Effect.op_Less_Bar
-                                       (FStar_TypeChecker_Env.debug env)
-                                       (FStar_Options.Other "LayeredEffects") in
-                                   if uu___10
-                                   then
-                                     let uu___11 =
+                                  if debug
+                                  then
+                                    (let uu___10 =
                                        FStar_Syntax_Print.comp_to_string c1 in
                                      FStar_Compiler_Util.print1
-                                       "} Lifted comp: %s\n" uu___11
-                                   else ());
+                                       "} Lifted comp: %s\n" uu___10)
+                                  else ();
                                   (let uu___10 =
                                      let uu___11 =
                                        FStar_TypeChecker_Env.conj_guard g

@@ -4934,10 +4934,7 @@ let check_implicit_solution_and_discharge_guard env
 
   let g =
     Errors.with_ctx
-      (BU.format3 "While checking implicit %s set to %s of expected type %s"
-         (Print.uvar_to_string imp_uvar.ctx_uvar_head)
-         (N.term_to_string env imp_tm)
-         (N.term_to_string env uvar_ty))
+      "While checking implicit solution"
       (fun () ->
        let skip_core =
          env.phase1 ||
