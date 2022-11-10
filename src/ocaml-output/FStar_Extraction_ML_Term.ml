@@ -2848,7 +2848,38 @@ and (term_as_mlexpr' :
               FStar_Syntax_Syntax.pos = uu___2;
               FStar_Syntax_Syntax.vars = uu___3;_},
             uu___4)
-           -> failwith "Unreachable? Tm_app Const_reflect"
+           ->
+           let uu___5 =
+             let uu___6 =
+               let uu___7 = FStar_Parser_Const.failwith_lid () in
+               FStar_Syntax_Syntax.lid_as_fv uu___7
+                 FStar_Syntax_Syntax.delta_constant
+                 FStar_Pervasives_Native.None in
+             FStar_Extraction_ML_UEnv.lookup_fv t.FStar_Syntax_Syntax.pos g
+               uu___6 in
+           (match uu___5 with
+            | { FStar_Extraction_ML_UEnv.exp_b_name = uu___6;
+                FStar_Extraction_ML_UEnv.exp_b_expr = fw;
+                FStar_Extraction_ML_UEnv.exp_b_tscheme = uu___7;_} ->
+                let uu___8 =
+                  let uu___9 =
+                    let uu___10 =
+                      let uu___11 =
+                        let uu___12 =
+                          FStar_Compiler_Effect.op_Less_Bar
+                            (FStar_Extraction_ML_Syntax.with_ty
+                               FStar_Extraction_ML_Syntax.ml_string_ty)
+                            (FStar_Extraction_ML_Syntax.MLE_Const
+                               (FStar_Extraction_ML_Syntax.MLC_String
+                                  "Extraction of reflect is not supported")) in
+                        [uu___12] in
+                      (fw, uu___11) in
+                    FStar_Extraction_ML_Syntax.MLE_App uu___10 in
+                  FStar_Compiler_Effect.op_Less_Bar
+                    (FStar_Extraction_ML_Syntax.with_ty
+                       FStar_Extraction_ML_Syntax.ml_int_ty) uu___9 in
+                (uu___8, FStar_Extraction_ML_Syntax.E_PURE,
+                  FStar_Extraction_ML_Syntax.ml_int_ty))
        | FStar_Syntax_Syntax.Tm_app (head, args) when
            (is_match head) &&
              (FStar_Compiler_Effect.op_Bar_Greater args
