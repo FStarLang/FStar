@@ -2191,6 +2191,14 @@ let term_eq_old (t1:term) (t2:term) : tac bool
   = idtac ;!
     ret (Syntax.Util.term_eq t1 t2)
 
+let with_compat_pre_core (n:Z.t) (f:tac 'a) : tac 'a =
+    mk_tac (fun ps ->
+            FStar.Options.push ();
+            let res = FStar.Options.set_options ("--compat_pre_core 0") in
+            let r = run f ps in
+            FStar.Options.pop ();
+            r)
+
 (**** Creating proper environments and proofstates ****)
 
 let tac_env (env:Env.env) : Env.env =
