@@ -1072,8 +1072,60 @@ let frame_empty (f:fstar_top_env)
     let eq : st_equiv f g c c' = ST_Equiv g s s' x (VE_Unit g pre) (VE_Refl _ _) in
     (| c', T_Equiv _ _ _ _ d eq |)
 
-#push-options "--query_stats --fuel 2 --ifuel 1 --z3rlimit_factor 4"
+let rec opening_pure_term_with_pure_term (x:pure_term) (v:pure_term) (i:index)
+  : Lemma (ensures is_pure_term (open_term' x v i))
+  = let aux (y:pure_term {y << x}) (j:index)
+      : Lemma (ensures (is_pure_term (open_term' y v j)))
+      = opening_pure_term_with_pure_term y v j
+    in
+    match x with
+    | Tm_BVar _
+    | Tm_Var _
+    | Tm_FVar _
+    | Tm_Constant _
+    | Tm_Type _
+    | Tm_VProp
+    | Tm_Emp -> ()
 
+    | Tm_Abs t pre_hint body ->
+      aux t i;
+      aux body (i + 1)
+
+    | Tm_PureApp l r
+    | Tm_STApp l r
+    | Tm_Star l r ->    
+      aux l i; aux r i
+                 
+    | Tm_Let t e1 e2 
+    | Tm_Bind t e1 e2 ->    
+      aux t i; aux e1 i; aux e2 (i + 1)
+      
+    | Tm_Pure p ->
+      aux p i
+              
+    | Tm_ExistsSL t body
+    | Tm_ForallSL t body ->
+      aux t i; aux body (i + 1)
+    
+    | Tm_Arrow t c ->
+      aux t i;
+      opening_pure_comp_with_pure_term c v (i + 1)
+
+    | Tm_If b then_ else_ ->
+      aux b i; aux then_ i; aux else_ i
+
+and opening_pure_comp_with_pure_term (x:pure_comp) (v:pure_term) (i:index)
+  : Lemma (ensures is_pure_comp (open_comp' x v i))
+  = match x with
+    | C_Tot t ->
+      opening_pure_term_with_pure_term t v i
+      
+    | C_ST { res; pre; post } -> 
+      opening_pure_term_with_pure_term res v i;
+      opening_pure_term_with_pure_term pre v i;
+      opening_pure_term_with_pure_term post v (i + 1)
+      
+#push-options "--query_stats --fuel 2 --ifuel 1 --z3rlimit_factor 4"
 let rec check (f:fstar_top_env)
               (g:env)
               (t:term)
@@ -1131,7 +1183,7 @@ let rec check (f:fstar_top_env)
         if ty_arg <> formal
         then T.fail "Type of formal parameter does not match type of argument"
         else let d = T_STApp g head formal (C_ST res) arg dhead darg in
-             assume (is_pure_comp (open_comp_with (C_ST res) arg));
+             opening_pure_comp_with_pure_term (C_ST res) arg 0;
              try_frame_pre pre_typing d
       | _ -> T.fail "Unexpected head type in impure application"
       end
