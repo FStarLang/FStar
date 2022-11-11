@@ -111,11 +111,11 @@ type delta_depth =
 
 // IN F*: [@@ PpxDerivingYoJson; PpxDerivingShow ]
 type should_check_uvar =
-  | Allow_unresolved      (* Escape hatch for uvars in logical guards that are sometimes left unresolved *)
-  | Allow_untyped         (* Escape hatch to not re-typecheck guards in WPs and types of pattern bound vars *)
-  | Allow_ghost           (* Escape hatch used for dot patterns *)
-  | Strict                (* Strict uvar that must be typechecked, using fastpath is ok *)
-  | Strict_no_fastpath    (* Strict uvar that must be typechecked without fastpath *)
+  | Allow_unresolved of string  (* Escape hatch for uvars in logical guards that are sometimes left unresolved *)
+  | Allow_untyped of string     (* Escape hatch to not re-typecheck guards in WPs and types of pattern bound vars *)
+  | Allow_ghost of string       (* In some cases, e.g., in ctrl_rewrite, we introduce uvars in Ghost context *)
+  | Strict                      (* Strict uvar that must be typechecked *)
+  | Already_checked             (* A uvar whose solution has already been checked *)
 
 type term' =
   | Tm_bvar       of bv                //bound variable, referenced by de Bruijn index
@@ -146,16 +146,6 @@ and ctx_uvar = {                                                 (* (G |- ?u : t
   ctx_uvar_reason:string;
   ctx_uvar_range:Range.range;
   ctx_uvar_meta: option ctx_uvar_meta_t;
-
-  //
-  // If this uvar ?u:t is created by the apply tactic,
-  //   then ctx_uvar_apply_tac_prefix keeps the uvars created as part of same apply call,
-  //   that are free in t
-  //
-  // E.g. consider apply creating two uvars for the binders in (x:int -> y:int{x == 2} -> Tot int)
-  // Then ctx_uvar_apply_tac_prefix for the second uvar will contain the first uvar
-  //
-  ctx_uvar_apply_tac_prefix: list ctx_uvar;
 }
 and ctx_uvar_meta_t =
   | Ctx_uvar_meta_tac of dyn * term (* the dyn is an FStar.TypeChecker.Env.env *)
@@ -164,6 +154,7 @@ and ctx_uvar_and_subst = ctx_uvar * subst_ts
 
 and uvar_decoration = {
   uvar_decoration_typ:typ;
+  uvar_decoration_typedness_depends_on:list ctx_uvar;
   uvar_decoration_should_check:should_check_uvar;
 }
 
@@ -272,6 +263,7 @@ and syntax 'a = {
     n:'a;
     pos:Range.range;
     vars:memo free_vars;
+    hash_code:memo FStar.Hash.hash_code
 }
 and bv = {
     ppname:ident;  //programmer-provided name for pretty-printing

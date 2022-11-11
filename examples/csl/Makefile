@@ -1,6 +1,7 @@
 INCLUDE_PATHS=../tactics
 EXCLUDED_FSTAR_FILES=
 FSTAR_FILES = $(filter-out $(EXCLUDED_FSTAR_FILES), $(wildcard *.fst))
+OTHERFLAGS += --compat_pre_core 1
 
 all: verify-all
 
