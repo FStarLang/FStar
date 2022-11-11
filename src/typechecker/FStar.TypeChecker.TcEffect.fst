@@ -95,7 +95,7 @@ let pure_wp_uvar env (t:typ) (reason:string) (r:Range.range) : term * guard_t =
       [t |> S.as_arg]
       r in
 
-  let pure_wp_uvar, _, guard_wp = Env.new_implicit_var_aux reason r env pure_wp_t Allow_untyped None in
+  let pure_wp_uvar, _, guard_wp = Env.new_implicit_var_aux reason r env pure_wp_t (Allow_untyped "wp") None in
   pure_wp_uvar, guard_wp
 
 
@@ -697,7 +697,7 @@ Errors.with_ctx (BU.format1 "While checking layered effect definition `%s`" (str
            if List.length b.binder_attrs > 0 ||
               attr_opt |> is_some
            then Strict
-           else Allow_untyped in
+           else Allow_untyped "effect ite binder" in
          let ctx_uvar_meta = BU.map_option Ctx_uvar_meta_attr attr_opt in
          new_implicit_var_aux
            (BU.format1 "uvar for subcomp %s binder when checking ite soundness"
@@ -1278,6 +1278,8 @@ Errors.with_ctx (BU.format1 "While checking effect definition `%s`" (string_of_l
               (Print.term_to_string act_typ);
           let act_defn, _, g_a = tc_tot_or_gtot_term env' act.action_defn in
 
+          Rel.force_trivial_guard env (Env.conj_guards [g_a; g_t]);
+
           let act_defn = N.normalize [ Env.UnfoldUntil S.delta_constant ] env act_defn in
           let act_typ = N.normalize [ Env.UnfoldUntil S.delta_constant; Env.Eager_unfolding; Env.Beta ] env act_typ in
           // 2) This implies that [action_typ] has Type(k): good for us!
@@ -1297,8 +1299,18 @@ Errors.with_ctx (BU.format1 "While checking effect definition `%s`" (string_of_l
               "Actions must have function types (not: %s, a.k.a. %s)"
                 (Print.term_to_string act_typ) (Print.tag_of_term act_typ))) act_defn.pos
           in
-          let g = Rel.teq env act_typ expected_k in
-          Rel.force_trivial_guard env (Env.conj_guard g_a (Env.conj_guard g_k (Env.conj_guard g_t g)));
+
+          // The following Rel query is only to check that act_typ has
+          //   the right shape, no actual typechecking going on here
+          (let g = Rel.teq env act_typ expected_k in
+           let g = Env.conj_guard g g_k in
+           match g.guard_f with
+           | NonTrivial _ ->
+             raise_error (Errors.Fatal_ActionMustHaveFunctionType,
+                          BU.format1 "Unexpected non trivial guard formula when checking action type shape (%s)"
+                            (Print.term_to_string act_typ)) act_defn.pos
+           | Trivial ->
+             Rel.force_trivial_guard {env with lax=true} (Env.conj_guards [g_k; g]));
 
           // 4) Do a bunch of plumbing to assign a type in the new monad to
           //    the action

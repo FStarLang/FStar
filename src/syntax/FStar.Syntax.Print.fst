@@ -390,11 +390,11 @@ and ctx_uvar_to_string_aux print_reason ctx_uvar =
             (uvar_to_string ctx_uvar.ctx_uvar_head)
             (term_to_string (SU.ctx_uvar_typ ctx_uvar))
             (match SU.ctx_uvar_should_check ctx_uvar with
-             | Allow_unresolved -> "Allow_unresolved"
-             | Allow_untyped  -> "Allow_untyped"
-             | Allow_ghost  -> "Allow_ghost"
+             | Allow_unresolved s -> "Allow_unresolved " ^s
+             | Allow_untyped s -> "Allow_untyped " ^s
+             | Allow_ghost s -> "Allow_ghost " ^s
              | Strict   -> "Strict"
-             | Strict_no_fastpath -> "Strict_no_fastpath")
+             | Already_checked -> "Already_checked")
 
 
 and subst_elt_to_string = function

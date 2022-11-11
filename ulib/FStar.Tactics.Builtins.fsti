@@ -287,6 +287,11 @@ val set_options : string -> Tac unit
 provided, a second uvar is created for the type. *)
 val uvar_env : env -> option typ -> Tac term
 
+(** Creates a new, unconstrained unification variable in environment
+[env]. The type of the uvar must be provided and the uvar can be solved
+to a Ghost term of that type *)
+val ghost_uvar_env : env -> typ -> Tac term
+
 (** Creates a new, unconstrained universe unification variable.
 The returned term is Type (U_Unif ?u). *)
 val fresh_universe_uvar : unit -> Tac term
@@ -406,3 +411,6 @@ This is only exposed as a migration path. Please use
 [Reflection.term_eq] instead. *)
 [@@deprecated "use Reflection.term_eq instead"]
 val term_eq_old : term -> term -> Tac bool
+
+
+val with_compat_pre_core : #a:Type -> int -> (unit -> Tac a) -> Tac a

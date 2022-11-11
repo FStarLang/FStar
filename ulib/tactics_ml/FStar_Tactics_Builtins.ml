@@ -142,6 +142,7 @@ let addns                   = from_tac_1 B.addns
 let t_destruct              = from_tac_1 B.t_destruct
 let set_options             = from_tac_1 B.set_options
 let uvar_env                = from_tac_2 B.uvar_env
+let ghost_uvar_env          = from_tac_2 B.ghost_uvar_env
 let unify_env               = from_tac_3 B.unify_env
 let unify_guard_env         = from_tac_3 B.unify_guard_env
 let match_env               = from_tac_3 B.match_env
@@ -165,6 +166,9 @@ let push_bv_dsenv           = from_tac_2 B.push_bv_dsenv
 let term_to_string          = from_tac_1 B.term_to_string
 let comp_to_string          = from_tac_1 B.comp_to_string
 let term_eq_old             = from_tac_2 B.term_eq_old
+
+let with_compat_pre_core (n:Prims.int) (f: unit -> 'a __tac) : 'a __tac =
+  from_tac_2 B.with_compat_pre_core n (to_tac_0 (f ()))
 
 (* The handlers need to "embed" their argument. *)
 let catch   (t: unit -> 'a __tac): ((exn, 'a) either) __tac = from_tac_1 TM.catch   (to_tac_0 (t ()))

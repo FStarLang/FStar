@@ -125,6 +125,8 @@ let none_lid              = psnconst  "None"
 let assume_lid            = pconst  "_assume"
 let assert_lid            = pconst  "_assert"
 let pure_wp_lid           = pconst "pure_wp"
+let pure_wp_monotonic_lid = pconst "pure_wp_monotonic"
+let pure_wp_monotonic0_lid = pconst "pure_wp_monotonic0"
 let trivial_pure_post_lid = psconst "trivial_pure_post"
 let pure_assert_wp_lid    = pconst "pure_assert_wp0"
 let pure_assume_wp_lid    = pconst "pure_assume_wp0"
@@ -393,9 +395,7 @@ let const_to_string x = match x with
   | Const_unit -> "()"
   | Const_bool b -> if b then "true" else "false"
   | Const_real r -> r^"R"
-  | Const_float x ->      U.string_of_float x
   | Const_string(s, _) -> U.format1 "\"%s\"" s
-  | Const_bytearray _  ->  "<bytearray>"
   | Const_int (x, _) -> x
   | Const_char c -> "'" ^ U.string_of_char c ^ "'"
   | Const_range r -> FStar.Compiler.Range.string_of_range r
