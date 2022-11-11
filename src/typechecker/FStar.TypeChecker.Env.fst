@@ -1829,9 +1829,8 @@ let uvars_for_binders env (bs:S.binders) substs reason r =
 
     let t, l_ctx_uvars, g_t = new_implicit_var_aux
       (reason b) r env sort
-      (if (not (Options.compat_pre_core_should_check ())) ||
-          Options.compat_pre_core_set ()
-       then Allow_untyped "indexed effect uvar with pre core flag"
+      (if Options.compat_pre_typed_indexed_effects ()
+       then Allow_untyped "indexed effect uvar in compat mode"
        else Strict)
       ctx_uvar_meta_t in
 

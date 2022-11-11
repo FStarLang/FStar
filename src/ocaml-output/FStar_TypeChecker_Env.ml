@@ -6545,15 +6545,12 @@ let (uvars_for_binders :
                               let uu___3 = reason b in
                               let uu___4 =
                                 let uu___5 =
-                                  (let uu___6 =
-                                     FStar_Options.compat_pre_core_should_check
-                                       () in
-                                   Prims.op_Negation uu___6) ||
-                                    (FStar_Options.compat_pre_core_set ()) in
+                                  FStar_Options.compat_pre_typed_indexed_effects
+                                    () in
                                 if uu___5
                                 then
                                   FStar_Syntax_Syntax.Allow_untyped
-                                    "indexed effect uvar with pre core flag"
+                                    "indexed effect uvar in compat mode"
                                 else FStar_Syntax_Syntax.Strict in
                               new_implicit_var_aux uu___3 r env1 sort uu___4
                                 ctx_uvar_meta_t in

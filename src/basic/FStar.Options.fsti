@@ -104,6 +104,7 @@ val admit_except                : unit    -> option string
 val compat_pre_core_should_register : unit    -> bool
 val compat_pre_core_should_check : unit    -> bool
 val compat_pre_core_set         : unit    -> bool
+val compat_pre_typed_indexed_effects: unit -> bool
 val disallow_unification_guards : unit    -> bool
 val cache_checked_modules       : unit    -> bool
 val cache_off                   : unit    -> bool
