@@ -413,7 +413,7 @@ val elim_conjunction (p1 p1' p2 p2':Type0)
 /// When that happens, we want to replace frame_equalities by an equality on the frame,
 /// mimicking reduction
 [@@plugin]
-let frame_vc_norm () : Tac unit =
+let frame_vc_norm () : Tac unit = with_compat_pre_core 0 (fun _ ->
   // Do not normalize mk_rmem/focus_rmem to simplify application of
   // the reflexivity lemma on frame_equalities'
   norm [delta_attr [`%__steel_reduce__];
@@ -452,7 +452,7 @@ let frame_vc_norm () : Tac unit =
   // If it fails, the frame was not symbolic, so there is nothing to do
   or_else (fun _ -> apply_lemma (`lemma_frame_equalities); dismiss ()) (fun _ -> ());
   norm normal_steps;
-  trefl ()
+  trefl ())
 
 [@@ __steel_reduce__]
 unfold
@@ -940,13 +940,17 @@ let is_smt_binder (b:binder) : Tac bool =
 /// Creates a new term, where all arguments where SMT rewriting is enabled have been replaced
 /// by fresh, unconstrained unification variables
 let rec new_args_for_smt_attrs (env:env) (l:list argv) (ty:typ) : Tac (list argv * list term) =
+  let fresh_ghost_uvar ty =
+    let e = cur_env () in
+    ghost_uvar_env e ty
+  in
   match l, inspect_unascribe ty with
   | (arg, aqualv)::tl, Tv_Arrow binder comp ->
     let needs_smt = is_smt_binder binder in
     let new_hd =
       if needs_smt then (
         let arg_ty = tc env arg in
-        let uvar = fresh_uvar (Some arg_ty) in
+        let uvar = fresh_ghost_uvar arg_ty in
         unshelve uvar;
         flip ();
         (uvar, aqualv)
@@ -3158,19 +3162,13 @@ let ite_soundness_tac () : Tac unit =
   // Now taking care of the actual subcomp VC
   set_goals [subcomp_goal];
   norm [];
-  // We remove the with_tactic call with executing the tactic before calling the SMT.
-  split ();
-  // Remove the `rewrite_by_tactic` nodes
-  pointwise' (fun _ -> or_else
-    (fun _ -> apply_lemma (`unfold_rewrite_with_tactic))
-    trefl);
   smt ()
 
 
 /// Normalization step for VC generation, used in Steel and SteelAtomic subcomps
 /// This tactic is executed after frame inference, and just before sending the query to the SMT
 /// As such, it is a good place to add debugging features to inspect SMT queries when needed
-let vc_norm () : Tac unit = norm normal_steps; trefl()
+let vc_norm () : Tac unit = with_compat_pre_core 0 (fun _ -> norm normal_steps; trefl())
 
 ////////////////////////////////////////////////////////////////////////////////
 //Common datatypes for the atomic & ghost effects

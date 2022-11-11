@@ -182,12 +182,12 @@ let free
       is_full_array a
     )
     (fun _ -> True)
-= let (| p, _ |) = a in
+= let (| p, v |) = a in
+  let _ : squash (offset p == 0) = () in
   let s = elim_exists () in
-  rewrite
-    (pts_to _ _ _)
-    (pts_to (| p, Ghost.hide #nat (base_len (base p)) |) _ s);
-  free_ptr p
+  rewrite (pts_to _ _ _)
+          (pts_to (| p, Ghost.hide (base_len (base p)) |) full_perm s);
+  free_ptr p            
 
 /// Sharing and gathering permissions on an array. Those only
 /// manipulate permissions, so they are nothing more than stateful
@@ -355,7 +355,8 @@ let join
     (fun res -> pts_to res p (x1 `Seq.append` x2))
     (adjacent a1 a2)
     (fun res -> merge_into a1 a2 res)
-= ghost_join a1 a2 ();
+= let _ : squash (adjacent a1 a2) = () in
+  ghost_join a1 a2 ();
   let res = merge a1 a2 in
   rewrite
     (pts_to (merge a1 (Ghost.reveal a2)) p (x1 `Seq.append` x2))
