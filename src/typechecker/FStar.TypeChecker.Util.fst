@@ -51,8 +51,6 @@ let report env errs =
 (* Unification variables *)
 (************************************************************************)
 let new_implicit_var reason r env k =
-  if Env.debug env <| Options.Extreme
-  then BU.print2 "New implicit var: %s\n%s\n" reason (BU.stack_dump());
   Env.new_implicit_var_aux reason r env k Strict None
 
 let close_guard_implicits env solve_deferred (xs:binders) (g:guard_t) : guard_t =
@@ -746,10 +744,15 @@ let standard_indexed_bind_substs env
 
   : list subst_elt & guard_t =
 
-  let bind_name = BU.format3 "(%s, %s) |> %s"
-    (m_ed.mname |> Ident.ident_of_lid |> string_of_id)
-    (n_ed.mname |> Ident.ident_of_lid |> string_of_id)
-    (p_ed.mname |> Ident.ident_of_lid |> string_of_id) in
+  let debug = Env.debug env <| Options.Other "LayeredEffectsApp" in
+
+  let bind_name () =
+    if debug
+    then BU.format3 "(%s, %s) |> %s"
+           (m_ed.mname |> Ident.ident_of_lid |> string_of_id)
+           (n_ed.mname |> Ident.ident_of_lid |> string_of_id)
+          (p_ed.mname |> Ident.ident_of_lid |> string_of_id)
+    else "" in
 
   let bs, binder_kinds, subst =
     let a_b::b_b::bs = bs in
@@ -803,10 +806,12 @@ let standard_indexed_bind_substs env
           let [uv_t], g_uv =
             Env.uvars_for_binders env [g_b] (subst@ss)
               (fun b ->
-               BU.format3 "implicit var for no abs g binder %s of %s at %s"
-                 (Print.binder_to_string b)
-                 bind_name
-                 (Range.string_of_range r1))
+               if debug
+               then BU.format3 "implicit var for no abs g binder %s of %s at %s"
+                      (Print.binder_to_string b)
+                      (bind_name ())
+                      (Range.string_of_range r1)
+               else "")
                r1 in
           let g_unif = Rel.layered_effect_teq
             (Env.push_binders env [x_bv |> S.mk_binder])
@@ -835,10 +840,12 @@ let standard_indexed_bind_substs env
       List.fold_left (fun (ss, g) b ->
         let [uv_t], g_uv = Env.uvars_for_binders env [b] (subst@ss)
           (fun b ->
-           BU.format3 "implicit var for additional g binder %s of %s at %s"
-             (Print.binder_to_string b)
-             bind_name
-             (Range.string_of_range r1)) r1 in
+           if debug
+           then BU.format3 "implicit var for additional g binder %s of %s at %s"
+                  (Print.binder_to_string b)
+                  (bind_name ())
+                  (Range.string_of_range r1)
+           else "") r1 in
         ss@[NT (b.binder_bv, uv_t)],
         Env.conj_guard g g_uv
       ) ([], Env.trivial_guard) bs in
@@ -856,15 +863,20 @@ let ad_hoc_indexed_bind_substs env
 
   : list subst_elt & guard_t =
 
-  let bind_name = BU.format3 "(%s, %s) |> %s"
-    (m_ed.mname |> Ident.ident_of_lid |> string_of_id)
-    (n_ed.mname |> Ident.ident_of_lid |> string_of_id)
-    (p_ed.mname |> Ident.ident_of_lid |> string_of_id) in
+  let debug = Env.debug env <| Options.Other "LayeredEffectsApp" in
+
+  let bind_name () =
+    if debug
+    then BU.format3 "(%s, %s) |> %s"
+           (m_ed.mname |> Ident.ident_of_lid |> string_of_id)
+           (n_ed.mname |> Ident.ident_of_lid |> string_of_id)
+           (p_ed.mname |> Ident.ident_of_lid |> string_of_id)
+    else "" in
 
   let bind_t_shape_error (s:string) =
     (Errors.Fatal_UnexpectedEffect, BU.format2
        "bind %s does not have proper shape (reason:%s)"
-       bind_name s) in
+       (bind_name ()) s) in
 
   let num_range_binders =
     if has_range_binders then 2
@@ -885,9 +897,12 @@ let ad_hoc_indexed_bind_substs env
   let rest_bs_uvars, g_uvars =
     Env.uvars_for_binders
       env rest_bs [NT (a_b.binder_bv, ct1.result_typ); NT (b_b.binder_bv, ct2.result_typ)]
-      (fun b -> BU.format3
-               "implicit var for binder %s of %s at %s"
-               (Print.binder_to_string b) bind_name (Range.string_of_range r1)) r1 in
+      (fun b ->
+       if debug
+       then BU.format3
+              "implicit var for binder %s of %s at %s"
+              (Print.binder_to_string b) (bind_name ()) (Range.string_of_range r1)
+       else "") r1 in
 
   if Env.debug env <| Options.Other "ResolveImplicitsHook"
   then rest_bs_uvars |>
@@ -915,7 +930,7 @@ let ad_hoc_indexed_bind_substs env
         then BU.print2 "Generating constraint %s = %s\n"
                                    (Print.term_to_string i1)
                                    (Print.term_to_string f_i1);
-        Env.conj_guard g (Rel.layered_effect_teq env i1 f_i1 (Some bind_name)))
+        Env.conj_guard g (Rel.layered_effect_teq env i1 f_i1 (Some (bind_name ()))))
       Env.trivial_guard (List.map fst ct1.effect_args) f_sort_is
   in
 
@@ -943,7 +958,7 @@ let ad_hoc_indexed_bind_substs env
         then BU.print2 "Generating constraint %s = %s\n"
                                    (Print.term_to_string i1)
                                    (Print.term_to_string g_i1);
-         Env.conj_guard g (Rel.layered_effect_teq env_g i1 g_i1 (Some bind_name)))
+         Env.conj_guard g (Rel.layered_effect_teq env_g i1 g_i1 (Some (bind_name ()))))
       Env.trivial_guard (List.map fst ct2.effect_args) g_sort_is
     |> Env.close_guard env [x_a]
   in
@@ -958,9 +973,12 @@ let ad_hoc_indexed_bind_substs env
  *
  * Caller must ensure that ed is an indexed effect
  *)
-let rec mk_indexed_return env (ed:S.eff_decl) (u_a:universe) (a:typ) (e:term) (r:Range.range)
-: comp * guard_t
-= if Env.debug env <| Options.Other "LayeredEffects"
+let mk_indexed_return env (ed:S.eff_decl) (u_a:universe) (a:typ) (e:term) (r:Range.range)
+  : comp * guard_t =
+
+  let debug = Env.debug env <| Options.Other "LayeredEffectsApp" in
+
+  if debug
   then BU.print4 "Computing %s.return for u_a:%s, a:%s, and e:%s{\n"
          (Ident.string_of_lid ed.mname) (Print.univ_to_string u_a)
          (Print.term_to_string a) (Print.term_to_string e);
@@ -984,10 +1002,13 @@ let rec mk_indexed_return env (ed:S.eff_decl) (u_a:universe) (a:typ) (e:term) (r
   let rest_bs_uvars, g_uvars =
     Env.uvars_for_binders
       env rest_bs [NT (a_b.binder_bv, a); NT (x_b.binder_bv, e)]
-      (fun b -> BU.format3 "implicit var for binder %s of %s at %s"
-               (Print.binder_to_string b)
-               (BU.format1 "%s.return" (Ident.string_of_lid ed.mname))
-               (Range.string_of_range r)) r in
+      (fun b ->
+       if debug
+       then BU.format3 "implicit var for binder %s of %s at %s"
+              (Print.binder_to_string b)
+              (BU.format1 "%s.return" (Ident.string_of_lid ed.mname))
+              (Range.string_of_range r)
+       else "") r in
 
   let subst = List.map2
     (fun b t -> NT (b.binder_bv, t))
@@ -1005,7 +1026,7 @@ let rec mk_indexed_return env (ed:S.eff_decl) (u_a:universe) (a:typ) (e:term) (r
     flags = []
   }) in
 
-  if Env.debug env <| Options.Other "LayeredEffects"
+  if debug
   then BU.print1 "} c after return %s\n" (Print.comp_to_string c);
 
   c, g_uvars
@@ -1044,7 +1065,7 @@ let rec mk_indexed_return env (ed:S.eff_decl) (u_a:universe) (a:typ) (e:term) (r
  *
  * In addition, we add ((wp[substs]) (fun _ -> True)) to the returned guard
  *)
-and mk_indexed_bind env
+let mk_indexed_bind env
   (m:lident) (n:lident) (p:lident) (bind_t:tscheme)
   (bind_combinator_kind:indexed_effect_combinator_kind)
   (ct1:comp_typ) (b:option bv) (ct2:comp_typ)
@@ -1053,7 +1074,9 @@ and mk_indexed_bind env
   (has_range_binders:bool)
   : comp * guard_t =
 
-  if Env.debug env <| Options.Other "LayeredEffects" then
+  let debug = Env.debug env <| Options.Other "LayeredEffectsApp" in
+
+  if debug then
     BU.print2 "Binding indexed effects: c1:%s and c2:%s {\n"
       (Print.comp_to_string (S.mk_Comp ct1)) (Print.comp_to_string (S.mk_Comp ct2));
 
@@ -1065,7 +1088,7 @@ and mk_indexed_bind env
 
   let m_ed, n_ed, p_ed = Env.get_effect_decl env m, Env.get_effect_decl env n, Env.get_effect_decl env p in
 
-  let bind_name = BU.format3 "(%s, %s) |> %s"
+  let bind_name () = BU.format3 "(%s, %s) |> %s"
     (m_ed.mname |> Ident.ident_of_lid |> string_of_id)
     (n_ed.mname |> Ident.ident_of_lid |> string_of_id)
     (p_ed.mname |> Ident.ident_of_lid |> string_of_id) in
@@ -1078,7 +1101,7 @@ and mk_indexed_bind env
       not (N.non_info_norm env ct2.result_typ))
   then raise_error (Errors.Fatal_UnexpectedEffect,
                     BU.format2 "Cannot apply bind %s since %s is not erasable and one of the computations is informative"
-                      bind_name (string_of_lid p)) r1;
+                      (bind_name ()) (string_of_lid p)) r1;
 
   let _, bind_t = Env.inst_tscheme_with bind_t [List.hd ct1.comp_univs; List.hd ct2.comp_univs] in
 
@@ -1110,7 +1133,7 @@ and mk_indexed_bind env
     flags = flags
   }) in
 
-  if Env.debug env <| Options.Other "LayeredEffects"
+  if debug
   then BU.print1 "} c after bind: %s\n" (Print.comp_to_string c);
 
   let guard =
@@ -1127,7 +1150,7 @@ and mk_indexed_bind env
 
   c, guard
 
-and mk_wp_bind env (m:lident) (ct1:comp_typ) (b:option bv) (ct2:comp_typ) (flags:list cflag) (r1:Range.range)
+let mk_wp_bind env (m:lident) (ct1:comp_typ) (b:option bv) (ct2:comp_typ) (flags:list cflag) (r1:Range.range)
   : comp =
 
   let (md, a, kwp), (u_t1, t1, wp1), (u_t2, t2, wp2) =
@@ -1154,12 +1177,13 @@ and mk_wp_bind env (m:lident) (ct1:comp_typ) (b:option bv) (ct2:comp_typ) (flags
   let wp = mk_Tm_app (inst_effect_fun_with [u_t1;u_t2] env md bind_wp) wp_args t2.pos in
   mk_comp md u_t2 t2 wp flags
 
-and mk_bind env
+let mk_bind env
   (c1:comp)
   (b:option bv)
   (c2:comp)
   (flags:list cflag)
   (r1:Range.range) : comp * guard_t =
+
   let ct1, ct2 = Env.unfold_effect_abbrev env c1, Env.unfold_effect_abbrev env c2 in
 
   match Env.exists_polymonadic_bind env ct1.effect_name ct2.effect_name with
@@ -1190,7 +1214,7 @@ and mk_bind env
       else mk_wp_bind env m ct1 b ct2 flags r1, Env.trivial_guard in
     c, Env.conj_guard g_lift g_bind
 
-and strengthen_comp env (reason:option (unit -> string)) (c:comp) (f:formula) flags : comp * guard_t =
+let strengthen_comp env (reason:option (unit -> string)) (c:comp) (f:formula) flags : comp * guard_t =
     if env.lax || Env.too_early_in_prims env
     then c, Env.trivial_guard
     else let r = Env.get_range env in
@@ -1818,6 +1842,8 @@ let standard_indexed_ite_substs (env:env)
   (r:Range.range)
 
   : list subst_elt & guard_t =
+  
+  let debug = Env.debug env <| Options.Other "LayeredEffectsApp" in
 
   let bs, subst =
     let a_b::bs = bs in
@@ -1855,10 +1881,12 @@ let standard_indexed_ite_substs (env:env)
     List.fold_left (fun (subst, g) b ->
     let [uv_t], g_uv = Env.uvars_for_binders env [b] subst
       (fun b ->
-       BU.format3 "implicit var for additional ite binder %s of %s at %s)"
-         (Print.binder_to_string b)
-         (string_of_lid ct_then.effect_name)
-         (Range.string_of_range r))
+       if debug
+       then BU.format3 "implicit var for additional ite binder %s of %s at %s)"
+              (Print.binder_to_string b)
+              (string_of_lid ct_then.effect_name)
+             (Range.string_of_range r)
+       else "")
       r in
     subst@[NT (b.binder_bv, uv_t)],
     Env.conj_guard g g_uv) (subst, guard) bs in
@@ -1876,7 +1904,11 @@ let ad_hoc_indexed_ite_substs (env:env)
 
   : list subst_elt & guard_t =
 
-  let conjunction_name = BU.format1 "%s.conjunction" (string_of_lid ct_then.effect_name) in
+  let debug = Env.debug env <| Options.Other "LayeredEffectsApp" in
+
+  let conjunction_name () =
+    if debug then BU.format1 "%s.conjunction" (string_of_lid ct_then.effect_name)
+    else "" in
 
   let conjunction_t_error (s:string) =
     Errors.Fatal_UnexpectedEffect, BU.format2
@@ -1893,10 +1925,13 @@ let ad_hoc_indexed_ite_substs (env:env)
   let rest_bs_uvars, g_uvars =
     Env.uvars_for_binders
       env rest_bs [NT (a_b.binder_bv, a)]
-      (fun b -> BU.format3
-               "implicit var for binder %s of %s:conjunction at %s"
-               (Print.binder_to_string b) (Ident.string_of_lid ct_then.effect_name)
-               (r |> Range.string_of_range)) r in
+      (fun b ->
+       if debug
+       then BU.format3
+              "implicit var for binder %s of %s:conjunction at %s"
+              (Print.binder_to_string b) (Ident.string_of_lid ct_then.effect_name)
+              (r |> Range.string_of_range)
+       else "") r in
 
   let substs = List.map2
     (fun b t -> NT (b.binder_bv, t))
@@ -1912,7 +1947,7 @@ let ad_hoc_indexed_ite_substs (env:env)
       (fun g i1 f_i ->
        Env.conj_guard
          g
-         (Rel.layered_effect_teq env i1 f_i (Some conjunction_name)))
+         (Rel.layered_effect_teq env i1 f_i (Some (conjunction_name ()))))
       Env.trivial_guard (List.map fst ct_then.effect_args) f_sort_is in
 
   let g_guard =
@@ -1922,7 +1957,7 @@ let ad_hoc_indexed_ite_substs (env:env)
         is |> List.map fst |> List.map (SS.subst substs)
       | _ -> raise_error (conjunction_t_error "g's type is not a repr type") r in
     List.fold_left2
-      (fun g i2 g_i -> Env.conj_guard g (Rel.layered_effect_teq env i2 g_i (Some conjunction_name)))
+      (fun g i2 g_i -> Env.conj_guard g (Rel.layered_effect_teq env i2 g_i (Some (conjunction_name ()))))
       Env.trivial_guard (List.map fst ct_else.effect_args) g_sort_is in
 
   substs,
@@ -1932,7 +1967,7 @@ let ad_hoc_indexed_ite_substs (env:env)
 let mk_layered_conjunction env (ed:S.eff_decl) (u_a:universe) (a:term) (p:typ) (ct1:comp_typ) (ct2:comp_typ) (r:Range.range)
 : comp * guard_t =
 
-  let conjunction_name = BU.format1 "%s.conjunction" (string_of_lid ed.mname) in
+  let debug = Env.debug env <| Options.Other "LayeredEffectsApp" in
 
   let conjunction_t_error (s:string) =
     Errors.Fatal_UnexpectedEffect, BU.format2
@@ -1946,7 +1981,7 @@ let mk_layered_conjunction env (ed:S.eff_decl) (u_a:universe) (a:term) (p:typ) (
 
   let bs, body, _ = U.abs_formals conjunction in
 
-  if Env.debug env <| Options.Other "LayeredEffectsApp" then
+  if debug then
     BU.print2 "layered_ite c1: %s and c2: %s {\n"
       (ct1 |> S.mk_Comp |> Print.comp_to_string)
       (ct2 |> S.mk_Comp |> Print.comp_to_string);
@@ -1975,8 +2010,7 @@ let mk_layered_conjunction env (ed:S.eff_decl) (u_a:universe) (a:term) (p:typ) (
     flags = []
   }) in
 
-  if Env.debug env <| Options.Other "LayeredEffectsApp" then
-    BU.print_string "\n}\n";
+  if debug then BU.print_string "\n}\n";
 
   c, g
 
@@ -2885,6 +2919,7 @@ let check_top_level env g lc : (bool * comp) =
                     (c_eff |> Ident.string_of_lid))
                  (Env.get_range env)
              | Some (bs, _) ->
+               let debug = Env.debug env <| Options.Other "LayeredEffectsApp" in
                //
                // Typechecking of effect abbreviation ensures that there is at least
                //   one return type argument, so the following a::bs is ok
@@ -2896,10 +2931,12 @@ let check_top_level env g lc : (bool * comp) =
                    bs
                    [NT (a.binder_bv, U.comp_result c)]
                    (fun b ->
-                    BU.format2
-                      "implicit for binder %s in effect abbreviation %s while checking top-level effect"
-                      (Print.binder_to_string b)
-                      (Ident.string_of_lid top_level_eff))
+                    if debug
+                    then BU.format2
+                           "implicit for binder %s in effect abbreviation %s while checking top-level effect"
+                           (Print.binder_to_string b)
+                          (Ident.string_of_lid top_level_eff)
+                    else "")
                    (Env.get_range env) in
                let top_level_comp =
                  ({ comp_univs = us;
@@ -3287,6 +3324,8 @@ let fresh_effect_repr env r eff_name signature_ts repr_ts_opt u a_tm =
 
   let _, signature = Env.inst_tscheme signature_ts in
 
+  let debug = Env.debug env <| Options.Other "LayeredEffectsApp" in
+
   (*
    * We go through the binders in the signature a -> bs
    * For each binder in bs, create a fresh uvar
@@ -3300,9 +3339,12 @@ let fresh_effect_repr env r eff_name signature_ts repr_ts_opt u a_tm =
        //is is all the uvars, and g is their collective guard
        let is, g =
          Env.uvars_for_binders env bs [NT (a.binder_bv, a_tm)]
-           (fun b -> BU.format3
-                    "uvar for binder %s when creating a fresh repr for %s at %s"
-                    (Print.binder_to_string b) (string_of_lid eff_name) (Range.string_of_range r)) r in
+           (fun b ->
+            if debug
+            then BU.format3
+                   "uvar for binder %s when creating a fresh repr for %s at %s"
+                   (Print.binder_to_string b) (string_of_lid eff_name) (Range.string_of_range r)
+            else "") r in
        (match repr_ts_opt with
         | None ->  //no repr, return thunked computation type
           let eff_c = mk_Comp ({
@@ -3362,6 +3404,8 @@ let standard_indexed_lift_substs (env:env)
 
   : list subst_elt & guard_t =
 
+  let debug = Env.debug env <| Options.Other "LayeredEffectsApp" in
+
   let bs, subst =
     let a_b::bs = bs in
     bs, [NT (a_b.binder_bv, ct.result_typ)] in
@@ -3377,11 +3421,12 @@ let standard_indexed_lift_substs (env:env)
   List.fold_left (fun (subst, g) b ->
     let [uv_t], g_uv = Env.uvars_for_binders env [b] subst
       (fun b ->
-       BU.format3 "implicit var for additional lift binder %s of %s at %s)"
-         (Print.binder_to_string b)
-         lift_name
-         (Range.string_of_range r))
-      r in
+       if debug
+       then BU.format3 "implicit var for additional lift binder %s of %s at %s)"
+              (Print.binder_to_string b)
+              lift_name
+              (Range.string_of_range r)
+       else "") r in
     subst@[NT (b.binder_bv, uv_t)],
     Env.conj_guard g g_uv) (subst, Env.trivial_guard) bs
 
@@ -3392,6 +3437,8 @@ let ad_hoc_indexed_lift_substs (env:env)
   (r:Range.range)
 
   : list subst_elt & guard_t =
+
+  let debug = Env.debug env <| Options.Other "LayeredEffectsApp" in
 
   let lift_t_shape_error s =
     BU.format2 "Lift %s has unexpected shape, reason: %s"
@@ -3407,11 +3454,14 @@ let ad_hoc_indexed_lift_substs (env:env)
   let rest_bs_uvars, g =
     Env.uvars_for_binders env rest_bs
       [NT (a_b.binder_bv, ct.result_typ)]
-      (fun b -> BU.format3
-               "implicit var for binder %s of %s at %s"
-               (Print.binder_to_string b)
-               lift_name
-               (Range.string_of_range r)) r in
+      (fun b ->
+       if debug
+       then BU.format3
+              "implicit var for binder %s of %s at %s"
+              (Print.binder_to_string b)
+              lift_name
+              (Range.string_of_range r)
+       else "") r in
 
   let substs = List.map2
     (fun b t -> NT (b.binder_bv, t))
@@ -3448,7 +3498,10 @@ let ad_hoc_indexed_lift_substs (env:env)
  *)
 let lift_tf_layered_effect (tgt:lident) (lift_ts:tscheme) (kind:S.indexed_effect_combinator_kind)
   env (c:comp) : comp * guard_t =
-  if Env.debug env <| Options.Other "LayeredEffects" then
+
+  let debug = Env.debug env <| Options.Other "LayeredEffectsApp" in
+  
+  if debug then
     BU.print2 "Lifting indexed comp %s to  %s {\n"
       (Print.comp_to_string c) (Print.lid_to_string tgt);
 
@@ -3458,7 +3511,9 @@ let lift_tf_layered_effect (tgt:lident) (lift_ts:tscheme) (kind:S.indexed_effect
 
   check_non_informative_type_for_lift env ct.effect_name tgt ct.result_typ r;
 
-  let lift_name = BU.format2 "%s ~> %s" (string_of_lid ct.effect_name) (string_of_lid tgt) in
+  let lift_name () =
+    if debug then BU.format2 "%s ~> %s" (string_of_lid ct.effect_name) (string_of_lid tgt)
+    else "" in
 
   let _, lift_t = Env.inst_tscheme_with lift_ts [List.hd ct.comp_univs] in
 
@@ -3466,8 +3521,8 @@ let lift_tf_layered_effect (tgt:lident) (lift_ts:tscheme) (kind:S.indexed_effect
 
   let substs, g =
     if kind = S.Ad_hoc_combinator
-    then ad_hoc_indexed_lift_substs env bs ct lift_name r
-    else standard_indexed_lift_substs env bs ct lift_name r in
+    then ad_hoc_indexed_lift_substs env bs ct (lift_name ()) r
+    else standard_indexed_lift_substs env bs ct (lift_name ()) r in
     
   let lift_ct = lift_c |> SS.subst_comp substs |> U.comp_to_comp_typ in
 
@@ -3490,8 +3545,7 @@ let lift_tf_layered_effect (tgt:lident) (lift_ts:tscheme) (kind:S.indexed_effect
     flags = []  //AR: setting the flags to empty
   }) in
 
-  if debug env <| Options.Other "LayeredEffects" then
-    BU.print1 "} Lifted comp: %s\n" (Print.comp_to_string c);
+  if debug then BU.print1 "} Lifted comp: %s\n" (Print.comp_to_string c);
 
   let g = Env.conj_guards [
     g;

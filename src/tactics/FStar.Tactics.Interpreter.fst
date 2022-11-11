@@ -514,6 +514,10 @@ let () =
       mk_tac_step_2 0 "term_eq_old"
         term_eq_old RE.e_term RE.e_term e_bool
         term_eq_old NRE.e_term NRE.e_term NBET.e_bool;
+
+      mk_tac_step_3 1 "with_compat_pre_core"
+        (fun _ -> with_compat_pre_core) e_any e_int (e_tactic_thunk e_any) e_any
+        (fun _ -> with_compat_pre_core) NBET.e_any NBET.e_int (e_tactic_nbe_thunk NBET.e_any) NBET.e_any;
     ]
 
 let unembed_tactic_1_alt (ea:embedding 'a) (er:embedding 'r) (f:term) (ncb:norm_cb) : option ('a -> tac 'r) =

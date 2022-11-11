@@ -212,7 +212,8 @@ let (__do_rewrite :
                                       FStar_Syntax_Util.mk_eq2 uu___10 typ tm
                                         ut in
                                     FStar_Tactics_Monad.add_irrelevant_goal
-                                      g0 "do_rewrite.eq" env uu___9 in
+                                      g0 "do_rewrite.eq" env uu___9
+                                      FStar_Pervasives_Native.None in
                                   FStar_Tactics_Monad.op_let_Bang uu___8
                                     (fun uu___9 ->
                                        let uu___10 =

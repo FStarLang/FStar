@@ -123,7 +123,8 @@ let __do_rewrite
                       g0
                       "do_rewrite.eq"
                       env
-                      (U.mk_eq2 (env.universe_of env typ) typ tm ut) ;!
+                      (U.mk_eq2 (env.universe_of env typ) typ tm ut)
+                      None ;!
     focus rewriter ;!
     // Try to get rid of all the unification lambdas
     let ut = N.reduce_uvar_solutions env ut in

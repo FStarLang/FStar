@@ -111,17 +111,17 @@ val add_implicits : implicits -> tac unit
 val new_uvar : string -> env -> typ -> option should_check_uvar -> list ctx_uvar -> Range.range -> tac (term * ctx_uvar)
 
 (* Create a squashed goal from a given formula *)
-val mk_irrelevant_goal : string -> env -> typ -> Range.range -> O.optionstate -> string -> tac goal
+val mk_irrelevant_goal : string -> env -> typ -> option should_check_uvar -> Range.range -> O.optionstate -> string -> tac goal
 
 (* Create an add an irrelevant goal, allows to set options and label *)
-val add_irrelevant_goal' : string -> env -> typ -> Range.range -> O.optionstate -> string -> tac unit
+val add_irrelevant_goal' : string -> env -> typ -> option should_check_uvar -> Range.range -> O.optionstate -> string -> tac unit
 
 (* Create an add an irrelevant goal, taking a [base_goal] as a template for
  * options and label (which seldom need to be changed) *)
-val add_irrelevant_goal : goal -> string -> env -> typ -> tac unit
+val add_irrelevant_goal : goal -> string -> env -> typ -> option should_check_uvar -> tac unit
 
 (* Create a goal from a typechecking guard. *)
-val goal_of_guard : string -> env -> term -> Range.range -> tac goal
+val goal_of_guard : string -> env -> term -> option should_check_uvar -> Range.range -> tac goal
 
 (* Run a tactic [t], and it fails with a [TacticFailure] exception,
  * add a note in the error message. *)

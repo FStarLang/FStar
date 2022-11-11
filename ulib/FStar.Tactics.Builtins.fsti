@@ -411,3 +411,6 @@ This is only exposed as a migration path. Please use
 [Reflection.term_eq] instead. *)
 [@@deprecated "use Reflection.term_eq instead"]
 val term_eq_old : term -> term -> Tac bool
+
+
+val with_compat_pre_core : #a:Type -> int -> (unit -> Tac a) -> Tac a
