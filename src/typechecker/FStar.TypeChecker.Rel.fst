@@ -1800,6 +1800,8 @@ let apply_standard_indexed_subcomp (env:Env.env)
 
   : typ & list prob & worklist =
 
+  let debug = Env.debug env <| Options.Other "LayeredEffectsApp" in
+
   let bs, subst =
     let a_b::bs = bs in
     bs,
@@ -1840,10 +1842,12 @@ let apply_standard_indexed_subcomp (env:Env.env)
       List.fold_left (fun (ss, wl) b ->
         let [uv_t], g = Env.uvars_for_binders env [b] (subst@ss)
           (fun b ->
-           BU.format3 "implicit var for additional binder %s in subcomp %s at %s"
-             (Print.binder_to_string b)
-             subcomp_name
-             (Range.string_of_range r1)) r1 in
+           if debug
+           then BU.format3 "implicit var for additional binder %s in subcomp %s at %s"
+                  (Print.binder_to_string b)
+                  subcomp_name
+                  (Range.string_of_range r1)
+           else "") r1 in
         ss@[NT (b.binder_bv, uv_t)],
         {wl with wl_implicits=g.implicits@wl.wl_implicits}) ([], wl) bs in
     subst@ss,
@@ -1870,6 +1874,8 @@ let apply_ad_hoc_indexed_subcomp (env:Env.env)
 
   : typ & list prob & worklist =
 
+  let debug = Env.debug env <| Options.Other "LayeredEffectsApp" in
+
   let stronger_t_shape_error s = BU.format2
     "Unexpected shape of stronger for %s, reason: %s"
       (Ident.string_of_lid ct2.effect_name) s in
@@ -1887,10 +1893,13 @@ let apply_ad_hoc_indexed_subcomp (env:Env.env)
   let rest_bs_uvars, g_uvars =
     Env.uvars_for_binders env rest_bs
       [NT (a_b.binder_bv, ct2.result_typ)]
-      (fun b -> BU.format3 "implicit for binder %s in subcomp %s at %s"
-               (Print.binder_to_string b)
-               subcomp_name
-               (Range.string_of_range r1)) r1 in
+      (fun b ->
+       if debug
+       then BU.format3 "implicit for binder %s in subcomp %s at %s"
+              (Print.binder_to_string b)
+              subcomp_name
+              (Range.string_of_range r1)
+       else "") r1 in
 
   let wl = { wl with wl_implicits = g_uvars.implicits@wl.wl_implicits } in  //AR: TODO: FIXME: using knowledge that g_uvars is only implicits
 

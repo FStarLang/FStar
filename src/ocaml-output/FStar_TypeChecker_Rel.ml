@@ -4023,6 +4023,10 @@ let (apply_standard_indexed_subcomp :
                 fun wl ->
                   fun subcomp_name ->
                     fun r1 ->
+                      let debug =
+                        FStar_Compiler_Effect.op_Less_Bar
+                          (FStar_TypeChecker_Env.debug env)
+                          (FStar_Options.Other "LayeredEffectsApp") in
                       let uu___ =
                         let uu___1 = bs in
                         match uu___1 with
@@ -4170,17 +4174,20 @@ let (apply_standard_indexed_subcomp :
                                                             (FStar_Compiler_List.op_At
                                                                subst3 ss)
                                                             (fun b1 ->
-                                                               let uu___8 =
-                                                                 FStar_Syntax_Print.binder_to_string
-                                                                   b1 in
-                                                               let uu___9 =
-                                                                 FStar_Compiler_Range.string_of_range
-                                                                   r1 in
-                                                               FStar_Compiler_Util.format3
-                                                                 "implicit var for additional binder %s in subcomp %s at %s"
-                                                                 uu___8
-                                                                 subcomp_name
-                                                                 uu___9) r1 in
+                                                               if debug
+                                                               then
+                                                                 let uu___8 =
+                                                                   FStar_Syntax_Print.binder_to_string
+                                                                    b1 in
+                                                                 let uu___9 =
+                                                                   FStar_Compiler_Range.string_of_range
+                                                                    r1 in
+                                                                 FStar_Compiler_Util.format3
+                                                                   "implicit var for additional binder %s in subcomp %s at %s"
+                                                                   uu___8
+                                                                   subcomp_name
+                                                                   uu___9
+                                                               else "") r1 in
                                                         (match uu___7 with
                                                          | (uv_t::[], g) ->
                                                              ((FStar_Compiler_List.op_At
@@ -4282,6 +4289,10 @@ let (apply_ad_hoc_indexed_subcomp :
               fun wl ->
                 fun subcomp_name ->
                   fun r1 ->
+                    let debug =
+                      FStar_Compiler_Effect.op_Less_Bar
+                        (FStar_TypeChecker_Env.debug env)
+                        (FStar_Options.Other "LayeredEffectsApp") in
                     let stronger_t_shape_error s =
                       let uu___ =
                         FStar_Ident.string_of_lid
@@ -4326,13 +4337,16 @@ let (apply_ad_hoc_indexed_subcomp :
                                ((a_b.FStar_Syntax_Syntax.binder_bv),
                                  (ct2.FStar_Syntax_Syntax.result_typ))]
                             (fun b ->
-                               let uu___2 =
-                                 FStar_Syntax_Print.binder_to_string b in
-                               let uu___3 =
-                                 FStar_Compiler_Range.string_of_range r1 in
-                               FStar_Compiler_Util.format3
-                                 "implicit for binder %s in subcomp %s at %s"
-                                 uu___2 subcomp_name uu___3) r1 in
+                               if debug
+                               then
+                                 let uu___2 =
+                                   FStar_Syntax_Print.binder_to_string b in
+                                 let uu___3 =
+                                   FStar_Compiler_Range.string_of_range r1 in
+                                 FStar_Compiler_Util.format3
+                                   "implicit for binder %s in subcomp %s at %s"
+                                   uu___2 subcomp_name uu___3
+                               else "") r1 in
                         (match uu___1 with
                          | (rest_bs_uvars, g_uvars) ->
                              let wl1 =
@@ -14355,19 +14369,8 @@ let (check_implicit_solution_and_discharge_guard :
                   FStar_Compiler_Effect.op_Bar_Greater uu___2
                     FStar_Pervasives_Native.fst in
                 let g =
-                  let uu___2 =
-                    let uu___3 =
-                      FStar_Syntax_Print.uvar_to_string
-                        imp_uvar.FStar_Syntax_Syntax.ctx_uvar_head in
-                    let uu___4 =
-                      FStar_TypeChecker_Normalize.term_to_string env1 imp_tm in
-                    let uu___5 =
-                      FStar_TypeChecker_Normalize.term_to_string env1 uvar_ty in
-                    FStar_Compiler_Util.format3
-                      "While checking implicit %s set to %s of expected type %s"
-                      uu___3 uu___4 uu___5 in
-                  FStar_Errors.with_ctx uu___2
-                    (fun uu___3 ->
+                  FStar_Errors.with_ctx "While checking implicit solution"
+                    (fun uu___2 ->
                        let skip_core =
                          ((env1.FStar_TypeChecker_Env.phase1 ||
                              env1.FStar_TypeChecker_Env.lax)
@@ -14390,11 +14393,11 @@ let (check_implicit_solution_and_discharge_guard :
                           then FStar_TypeChecker_Env.trivial_guard
                           else
                             (let imp_tm1 =
-                               let uu___5 =
-                                 let uu___6 =
+                               let uu___4 =
+                                 let uu___5 =
                                    FStar_Syntax_Subst.compress imp_tm in
-                                 uu___6.FStar_Syntax_Syntax.n in
-                               match uu___5 with
+                                 uu___5.FStar_Syntax_Syntax.n in
+                               match uu___4 with
                                | FStar_Syntax_Syntax.Tm_abs
                                    (bs, body, FStar_Pervasives_Native.Some
                                     rc)
@@ -14422,8 +14425,8 @@ let (check_implicit_solution_and_discharge_guard :
                                      FStar_Syntax_Syntax.hash_code =
                                        (imp_tm.FStar_Syntax_Syntax.hash_code)
                                    }
-                               | uu___6 -> imp_tm in
-                             let uu___5 =
+                               | uu___5 -> imp_tm in
+                             let uu___4 =
                                env1.FStar_TypeChecker_Env.typeof_well_typed_tot_or_gtot_term
                                  {
                                    FStar_TypeChecker_Env.solver =
@@ -14537,42 +14540,42 @@ let (check_implicit_solution_and_discharge_guard :
                                    FStar_TypeChecker_Env.core_check =
                                      (env1.FStar_TypeChecker_Env.core_check)
                                  } imp_tm1 must_tot in
-                             match uu___5 with
+                             match uu___4 with
                              | (k', g1) ->
-                                 let uu___6 =
+                                 let uu___5 =
                                    get_subtyping_predicate env1 k' uvar_ty in
-                                 (match uu___6 with
+                                 (match uu___5 with
                                   | FStar_Pervasives_Native.None ->
-                                      let uu___7 =
+                                      let uu___6 =
                                         FStar_TypeChecker_Err.expected_expression_of_type
                                           env1 uvar_ty imp_tm1 k' in
-                                      FStar_Errors.raise_error uu___7
+                                      FStar_Errors.raise_error uu___6
                                         imp_tm1.FStar_Syntax_Syntax.pos
                                   | FStar_Pervasives_Native.Some f ->
-                                      let uu___7 =
-                                        let uu___8 =
+                                      let uu___6 =
+                                        let uu___7 =
                                           FStar_TypeChecker_Env.apply_guard f
                                             imp_tm1 in
                                         FStar_TypeChecker_Env.conj_guard
-                                          uu___8 g1 in
+                                          uu___7 g1 in
                                       {
                                         FStar_TypeChecker_Common.guard_f =
                                           FStar_TypeChecker_Common.Trivial;
                                         FStar_TypeChecker_Common.deferred_to_tac
                                           =
-                                          (uu___7.FStar_TypeChecker_Common.deferred_to_tac);
+                                          (uu___6.FStar_TypeChecker_Common.deferred_to_tac);
                                         FStar_TypeChecker_Common.deferred =
-                                          (uu___7.FStar_TypeChecker_Common.deferred);
+                                          (uu___6.FStar_TypeChecker_Common.deferred);
                                         FStar_TypeChecker_Common.univ_ineqs =
-                                          (uu___7.FStar_TypeChecker_Common.univ_ineqs);
+                                          (uu___6.FStar_TypeChecker_Common.univ_ineqs);
                                         FStar_TypeChecker_Common.implicits =
-                                          (uu___7.FStar_TypeChecker_Common.implicits)
+                                          (uu___6.FStar_TypeChecker_Common.implicits)
                                       })))
                        else
-                         (let uu___5 =
+                         (let uu___4 =
                             env1.FStar_TypeChecker_Env.core_check env1 imp_tm
                               uvar_ty must_tot in
-                          match uu___5 with
+                          match uu___4 with
                           | FStar_Pervasives.Inl
                               (FStar_Pervasives_Native.None) ->
                               FStar_TypeChecker_Common.trivial_guard
@@ -14591,23 +14594,23 @@ let (check_implicit_solution_and_discharge_guard :
                                   (FStar_TypeChecker_Common.trivial_guard.FStar_TypeChecker_Common.implicits)
                               }
                           | FStar_Pervasives.Inr print_err ->
-                              let uu___6 =
-                                let uu___7 =
-                                  let uu___8 =
+                              let uu___5 =
+                                let uu___6 =
+                                  let uu___7 =
                                     FStar_Syntax_Print.ctx_uvar_to_string
                                       imp_uvar in
-                                  let uu___9 =
+                                  let uu___8 =
                                     FStar_Compiler_Util.string_of_bool is_tac in
-                                  let uu___10 =
+                                  let uu___9 =
                                     FStar_Syntax_Print.term_to_string imp_tm in
-                                  let uu___11 =
+                                  let uu___10 =
                                     FStar_Syntax_Print.term_to_string uvar_ty in
                                   FStar_Compiler_Util.format5
                                     "Core checking failed for implicit %s (is_tac: %s) (reason: %s) (%s <: %s)"
-                                    uu___8 uu___9 imp_reason uu___10 uu___11 in
+                                    uu___7 uu___8 imp_reason uu___9 uu___10 in
                                 (FStar_Errors.Fatal_FailToResolveImplicitArgument,
-                                  uu___7) in
-                              FStar_Errors.raise_error uu___6 imp_range)) in
+                                  uu___6) in
+                              FStar_Errors.raise_error uu___5 imp_range)) in
                 let uu___2 =
                   (Prims.op_Negation force_univ_constraints) &&
                     (FStar_Compiler_List.existsb
