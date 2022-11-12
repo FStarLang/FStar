@@ -354,11 +354,126 @@ let is_pure_term (e:term) = Some? (elab_term e)
 let pure_term = e:term { is_pure_term e }
 let elab_pure (e:pure_term) : R.term = Some?.v (elab_term e)
 let typ = term //pure_term
+let is_pure_comp (c:comp) = Some? (elab_comp c)
+let pure_comp = c:comp { is_pure_comp c }
+let pure_comp_st = c:pure_comp { C_ST? c }
+let comp_pre (c:pure_comp_st)
+  : pure_term 
+  = let C_ST s = c in s.pre
 
 //let eqn = typ & pure_term & pure_term
 let eqn = typ & term & term
 let binding = either typ eqn
 let env = list (var & binding)
+
+let rec opening_pure_term_with_pure_term (x:pure_term) (v:pure_term) (i:index)
+  : Lemma (ensures is_pure_term (open_term' x v i))
+          [SMTPat (is_pure_term (open_term' x v i))]
+  = let aux (y:pure_term {y << x}) (j:index)
+      : Lemma (ensures (is_pure_term (open_term' y v j)))
+      = opening_pure_term_with_pure_term y v j
+    in
+    match x with
+    | Tm_BVar _
+    | Tm_Var _
+    | Tm_FVar _
+    | Tm_Constant _
+    | Tm_Type _
+    | Tm_VProp
+    | Tm_Emp -> ()
+
+    | Tm_Abs t pre_hint body ->
+      aux t i;
+      aux body (i + 1)
+
+    | Tm_PureApp l r
+    | Tm_STApp l r
+    | Tm_Star l r ->    
+      aux l i; aux r i
+                 
+    | Tm_Let t e1 e2 
+    | Tm_Bind t e1 e2 ->    
+      aux t i; aux e1 i; aux e2 (i + 1)
+      
+    | Tm_Pure p ->
+      aux p i
+              
+    | Tm_ExistsSL t body
+    | Tm_ForallSL t body ->
+      aux t i; aux body (i + 1)
+    
+    | Tm_Arrow t c ->
+      aux t i;
+      opening_pure_comp_with_pure_term c v (i + 1)
+
+    | Tm_If b then_ else_ ->
+      aux b i; aux then_ i; aux else_ i
+
+and opening_pure_comp_with_pure_term (x:pure_comp) (v:pure_term) (i:index)
+  : Lemma (ensures is_pure_comp (open_comp' x v i))
+          [SMTPat (is_pure_comp (open_comp' x v i))]
+  = match x with
+    | C_Tot t ->
+      opening_pure_term_with_pure_term t v i
+      
+    | C_ST { res; pre; post } -> 
+      opening_pure_term_with_pure_term res v i;
+      opening_pure_term_with_pure_term pre v i;
+      opening_pure_term_with_pure_term post v (i + 1)
+
+let rec closing_pure_term (x:pure_term) (v:var) (i:index)
+  : Lemma (ensures is_pure_term (close_term' x v i))
+  = let aux (y:pure_term {y << x}) (j:index)
+      : Lemma (ensures (is_pure_term (close_term' y v j)))
+      = closing_pure_term y v j
+    in
+    match x with
+    | Tm_BVar _
+    | Tm_Var _
+    | Tm_FVar _
+    | Tm_Constant _
+    | Tm_Type _
+    | Tm_VProp
+    | Tm_Emp -> ()
+
+    | Tm_Abs t pre_hint body ->
+      aux t i;
+      aux body (i + 1)
+
+    | Tm_PureApp l r
+    | Tm_STApp l r
+    | Tm_Star l r ->    
+      aux l i; aux r i
+                 
+    | Tm_Let t e1 e2 
+    | Tm_Bind t e1 e2 ->    
+      aux t i; aux e1 i; aux e2 (i + 1)
+      
+    | Tm_Pure p ->
+      aux p i
+              
+    | Tm_ExistsSL t body
+    | Tm_ForallSL t body ->
+      aux t i; aux body (i + 1)
+    
+    | Tm_Arrow t c ->
+      aux t i;
+      closing_pure_comp c v (i + 1)
+
+    | Tm_If b then_ else_ ->
+      aux b i; aux then_ i; aux else_ i
+
+and closing_pure_comp (x:pure_comp) (v:var) (i:index)
+  : Lemma (ensures is_pure_comp (close_comp' x v i))
+          [SMTPat (is_pure_comp (close_comp' x v i))]
+  = match x with
+    | C_Tot t ->
+      closing_pure_term t v i
+      
+    | C_ST { res; pre; post } -> 
+      closing_pure_term res v i;
+      closing_pure_term pre v i;
+      closing_pure_term post v (i + 1)
 
 let elab_eqn (e:eqn)
   : option R.term
@@ -396,28 +511,31 @@ let lookup_ty (e:env) (x:var)
     | Some (Inl t) -> Some t
     | _ -> None
 
-let add_frame (s:comp { C_ST? s }) (frame:term) = 
-  let C_ST s = s in
-  C_ST { s with pre = Tm_Star s.pre frame;
-                post = Tm_Star s.post frame }
-
 assume
 val freevars (t:term) : FStar.Set.set var
 
+let comp_post (c:pure_comp_st) = let C_ST s = c in s.post
+
+let comp_res (c:comp) : term =
+  match c with
+  | C_Tot ty -> ty
+  | C_ST c -> c.res
+
+let comp_u (c:pure_comp_st) = let C_ST s = c in s.u
 
 [@@erasable]
 noeq
-type bind_comp (f:fstar_top_env) : env -> comp -> var -> comp -> comp -> Type =
+type bind_comp (f:fstar_top_env) : env -> pure_comp -> var -> pure_comp -> pure_comp -> Type =
   | Bind_comp :
       g:env ->
-      c1:st_comp ->
+      c1:pure_comp_st ->
       x:var ->
-      c2:st_comp {
-        open_term c1.post x == c2.pre /\
-        ~(x `Set.mem` freevars c2.post) /\
-        ~(x `Set.mem` freevars c2.res) 
+      c2:pure_comp_st {
+        open_term (comp_post c1) x == comp_pre c2 /\
+        ~(x `Set.mem` freevars (comp_post c2)) /\
+        ~(x `Set.mem` freevars (comp_res c2)) 
       } ->
-      bind_comp f g (C_ST c1) x (C_ST c2) (C_ST {u = c2.u; res = c2.res; pre = c1.pre; post=c2.post})
+      bind_comp f g c1 x  c2 (C_ST {u = comp_u c2; res = comp_res c1; pre = comp_pre c1; post=comp_post c2})
 
 let tm_bool : term = Tm_FVar bool_lid
 
@@ -430,7 +548,6 @@ let mk_eq2 t (e0 e1:term)
   = Tm_PureApp
          (Tm_PureApp (Tm_PureApp (Tm_FVar R.eq2_qn) t)
                       e0) e1
-let pure_comp = c:comp { Some? (elab_comp c) }
 
 let return_comp (u:universe) (t:pure_term) (e:pure_term)
   : pure_comp 
@@ -449,95 +566,98 @@ let return_comp_noeq (u:universe) (t:pure_term)
 
 [@@erasable]
 noeq
-type vprop_equiv (f:fstar_top_env) : env -> term -> term -> Type =
+type vprop_equiv (f:fstar_top_env) : env -> pure_term -> pure_term -> Type =
   | VE_Refl:
      g:env ->
-     t:term ->
+     t:pure_term ->
      vprop_equiv f g t t
 
   | VE_Sym:
      g:env ->
-     t1:term -> 
-     t2:term -> 
+     t1:pure_term -> 
+     t2:pure_term -> 
      vprop_equiv f g t1 t2 ->
      vprop_equiv f g t2 t1
 
   | VE_Trans:
      g:env ->
-     t0:term ->
-     t1:term ->
-     t2:term ->
+     t0:pure_term ->
+     t1:pure_term ->
+     t2:pure_term ->
      vprop_equiv f g t0 t1 ->
      vprop_equiv f g t1 t2 ->
      vprop_equiv f g t0 t2
 
   | VE_Ctxt:
      g:env ->
-     t0:term -> 
-     t1:term -> 
-     t0':term -> 
-     t1':term ->
+     t0:pure_term -> 
+     t1:pure_term -> 
+     t0':pure_term -> 
+     t1':pure_term ->
      vprop_equiv f g t0 t0' ->
      vprop_equiv f g t1 t1' ->
      vprop_equiv f g (Tm_Star t0 t1) (Tm_Star t0' t1')
      
   | VE_Unit:
      g:env ->
-     t:term ->
+     t:pure_term ->
      vprop_equiv f g (Tm_Star Tm_Emp t) t
 
   | VE_Comm:
      g:env ->
-     t0:term ->
-     t1:term ->
+     t0:pure_term ->
+     t1:pure_term ->
      vprop_equiv f g (Tm_Star t0 t1) (Tm_Star t1 t0)
      
   | VE_Assoc:
      g:env ->
-     t0:term ->
-     t1:term ->
-     t2:term ->
+     t0:pure_term ->
+     t1:pure_term ->
+     t2:pure_term ->
      vprop_equiv f g (Tm_Star t0 (Tm_Star t1 t2)) (Tm_Star (Tm_Star t0 t1) t2)
 
   | VE_Ex:
      g:env ->
      x:var { None? (lookup_ty g x) } ->
-     ty:typ ->
-     t0:term ->
-     t1:term ->
+     ty:pure_term ->
+     t0:pure_term ->
+     t1:pure_term ->
      vprop_equiv f ((x, Inl ty)::g) (open_term t0 x) (open_term t1 x) ->
      vprop_equiv f g (Tm_ExistsSL ty t0) (Tm_ExistsSL ty t1)
 
   | VE_Fa:
      g:env ->
      x:var { None? (lookup_ty g x) } ->
-     ty:typ ->
-     t0:term ->
-     t1:term ->
+     ty:pure_term ->
+     t0:pure_term ->
+     t1:pure_term ->
      vprop_equiv f ((x, Inl ty)::g) (open_term t0 x) (open_term t1 x) ->
      vprop_equiv f g (Tm_ForallSL ty t0) (Tm_ForallSL ty t1)
 
 [@@erasable]
 noeq
-type st_equiv (f:fstar_top_env) : env -> comp -> comp -> Type =
+type st_equiv (f:fstar_top_env) : env -> pure_comp -> pure_comp -> Type =
   | ST_Equiv :
       g:env ->
-      c1:st_comp ->
-      c2:st_comp { c1.res == c2.res } -> 
+      c1:pure_comp_st ->
+      c2:pure_comp_st { comp_res c1 == comp_res c2 } -> 
       x:var { None? (lookup_ty g x) } ->
-      vprop_equiv f g c1.pre c2.pre ->
-      vprop_equiv f ((x, Inl c1.res)::g) (open_term c1.post x) (open_term c2.post x) ->      
-      st_equiv f g (C_ST c1) (C_ST c2)
+      vprop_equiv f g (comp_pre c1) (comp_pre c2) ->
+      vprop_equiv f ((x, Inl (comp_res c1))::g) (open_term (comp_post c1) x) (open_term (comp_post c2) x) ->      
+      st_equiv f g c1 c2
 
 
-let comp_result_typ (c:comp) : term =
-  match c with
-  | C_Tot ty -> ty
-  | C_ST c -> c.res
-  
+let add_frame (s:pure_comp_st) (frame:pure_term)
+  : pure_comp_st
+  = let C_ST s = s in
+    C_ST { s with pre = Tm_Star s.pre frame;
+                  post = Tm_Star s.post frame }
+
+let close_pure_comp (c:pure_comp) (x:var) : pure_comp = close_comp c x
+
 [@@erasable]
 noeq
-type src_typing (f:fstar_top_env) : env -> term -> comp -> Type =
+type src_typing (f:fstar_top_env) : env -> term -> pure_comp -> Type =
   | T_Tot: 
       g:env ->
       e:pure_term ->
@@ -555,14 +675,14 @@ type src_typing (f:fstar_top_env) : env -> term -> comp -> Type =
       hint:vprop ->
       tot_typing f g ty (Tm_Type u) ->
       src_typing f ((x, Inl ty)::g) (open_term body x) c ->
-      src_typing f g (Tm_Abs ty hint body) (C_Tot (Tm_Arrow ty (close_comp c x)))
+      src_typing f g (Tm_Abs ty hint body) (C_Tot (Tm_Arrow ty (close_pure_comp c x)))
   
   | T_STApp :
       g:env ->
       head:term -> 
       formal:pure_term ->
       res:pure_comp {C_ST? res} ->
-      arg:term ->
+      arg:pure_term ->
       tot_typing f g head (Tm_Arrow formal res) ->
       tot_typing f g arg formal ->
       src_typing f g (Tm_STApp head arg) (open_comp_with res arg)
@@ -594,9 +714,9 @@ type src_typing (f:fstar_top_env) : env -> term -> comp -> Type =
       x:var { None? (lookup g x) (*  /\ ~(x `Set.mem` freevars e2) *) } ->
       c:pure_comp ->
       src_typing f g e1 c1 ->
-      src_typing f ((x, Inl (comp_result_typ c1))::g) (open_term e2 x) c2 ->
+      src_typing f ((x, Inl (comp_res c1))::g) (open_term e2 x) c2 ->
       bind_comp f g c1 x c2 c ->
-      src_typing f g (Tm_Bind (comp_result_typ c1) e1 e2) c
+      src_typing f g (Tm_Bind (comp_res c1) e1 e2) c
 
   | T_If:
       g:env ->
@@ -614,8 +734,8 @@ type src_typing (f:fstar_top_env) : env -> term -> comp -> Type =
   | T_Frame:
       g:env ->
       e:term ->
-      c:pure_comp { C_ST? c } ->
-      frame:term ->
+      c:pure_comp_st ->
+      frame:pure_term ->
       tot_typing f g frame Tm_VProp ->
       src_typing f g e c ->
       src_typing f g e (add_frame c frame)
@@ -629,14 +749,12 @@ type src_typing (f:fstar_top_env) : env -> term -> comp -> Type =
       st_equiv f g c c' ->
       src_typing f g e c' 
 
-and tot_typing (f:fstar_top_env) (g:env) (e:term) (t:typ) = 
+and tot_typing (f:fstar_top_env) (g:env) (e:term) (t:pure_term) =
   src_typing f g e (C_Tot t)
 
 and universe_of (f:fstar_top_env) (g:env) (t:term) (u:universe) =
   tot_typing f g t (Tm_Type u)
 
-let st_typing (f:fstar_top_env) (g:env) (e:term) (st:st_comp) = 
-  src_typing f g e (C_ST st)
 
 let star_typing_inversion (f:_) (g:_) (t0 t1:term) (d:tot_typing f g (Tm_Star t0 t1) Tm_VProp)
   : (tot_typing f g t0 Tm_VProp &
@@ -653,7 +771,7 @@ let emp_typing (#f:_) (#g:_)
   : tot_typing f g Tm_Emp Tm_VProp
   = admit()
 
-let rec vprop_equiv_typing (f:_) (g:_) (t0 t1:term) (v:vprop_equiv f g t0 t1)
+let rec vprop_equiv_typing (f:_) (g:_) (t0 t1:pure_term) (v:vprop_equiv f g t0 t1)
   : GTot ((tot_typing f g t0 Tm_VProp -> tot_typing f g t1 Tm_VProp) &
           (tot_typing f g t1 Tm_VProp -> tot_typing f g t0 Tm_VProp))
          (decreases v)
@@ -1014,18 +1132,7 @@ let split_vprop (f:fstar_top_env)
        in
        (| list_as_vprop frame, typing, d |)
 
-let is_pure_comp (c:comp) = Some? (elab_comp c)
-
-let add_frame_pure (c:pure_comp { C_ST? c }) (f:pure_term)
-  : Lemma (Some? (elab_comp (add_frame c f)))
-  = ()
-  
-let pure_comp_st = c:pure_comp { C_ST? c }
-
-let comp_pre (c:pure_comp_st)
-  : pure_term 
-  = let C_ST s = c in s.pre
-
+#push-options "--query_stats --fuel 1 --ifuel 2 --z3rlimit_factor 4"
 let try_frame_pre (#f:fstar_top_env)
                   (#g:env)
                   (#t:term)
@@ -1037,7 +1144,6 @@ let try_frame_pre (#f:fstar_top_env)
            src_typing f g t c')
   = let C_ST s = c in
     let (| frame, frame_typing, ve |) = split_vprop f g pre pre_typing s.pre in
-    add_frame_pure c frame;
     let t_typing
       : src_typing f g t (add_frame c frame)
       = T_Frame g t c frame frame_typing t_typing in
@@ -1046,9 +1152,23 @@ let try_frame_pre (#f:fstar_top_env)
     let C_ST s' = c' in
     let ve: vprop_equiv f g s'.pre pre = ve in
     let s'' = { s' with pre = pre } in
-    let st_equiv = ST_Equiv g s' s'' x ve (VE_Refl _ _) in
+    let c'' = C_ST s'' in
+    assert (is_pure_comp (C_ST s'));
+    assert (is_pure_comp (C_ST s''));
+    assert (comp_post c' == comp_post c'');
+    opening_pure_term_with_pure_term (comp_post c') (Tm_Var x) 0;
+    opening_pure_term_with_pure_term (comp_post c'') (Tm_Var x) 0;    
+    assert (is_pure_term (open_term (comp_post c') x));
+    let g' = ((x, Inl (comp_res c'))::g) in
+    let ve: vprop_equiv f g (comp_pre c') (comp_pre c'') = ve in    
+    let ve' 
+      : vprop_equiv f g'
+                      (open_term (comp_post c') x)
+                      (open_term (comp_post c'') x) = VE_Refl _ _ in
+    let st_equiv = ST_Equiv g c' c'' x ve ve' in
     let t_typing = T_Equiv _ _ _ _ t_typing st_equiv in
     (| C_ST s'', t_typing |)
+#pop-options
 
 let frame_empty (f:fstar_top_env)
                 (g:env)
@@ -1058,72 +1178,19 @@ let frame_empty (f:fstar_top_env)
                 (ty:pure_term) 
                 (ut:universe_of f g ty u)
                 (t:term)
-                (c:pure_comp_st { comp_pre c == Tm_Emp })
+                (c:pure_comp_st{ comp_pre c == Tm_Emp })
                 (d:src_typing f g t c)
   : (c:pure_comp_st { comp_pre c == pre} &
      src_typing f g t c)
-  = let d = T_Frame _ _ _ pre pre_typing d in
+  = let d = T_Frame g t c pre pre_typing d in
     let c = add_frame c pre in
     let C_ST s = c in
     let d : src_typing f g t c = d in
     let s' = { s with pre = pre } in
     let c' = C_ST s' in
     let x = fresh g in
-    let eq : st_equiv f g c c' = ST_Equiv g s s' x (VE_Unit g pre) (VE_Refl _ _) in
+    let eq : st_equiv f g c c' = ST_Equiv g c c' x (VE_Unit g pre) (VE_Refl _ _) in
     (| c', T_Equiv _ _ _ _ d eq |)
-
-let rec opening_pure_term_with_pure_term (x:pure_term) (v:pure_term) (i:index)
-  : Lemma (ensures is_pure_term (open_term' x v i))
-  = let aux (y:pure_term {y << x}) (j:index)
-      : Lemma (ensures (is_pure_term (open_term' y v j)))
-      = opening_pure_term_with_pure_term y v j
-    in
-    match x with
-    | Tm_BVar _
-    | Tm_Var _
-    | Tm_FVar _
-    | Tm_Constant _
-    | Tm_Type _
-    | Tm_VProp
-    | Tm_Emp -> ()
-
-    | Tm_Abs t pre_hint body ->
-      aux t i;
-      aux body (i + 1)
-
-    | Tm_PureApp l r
-    | Tm_STApp l r
-    | Tm_Star l r ->    
-      aux l i; aux r i
-                 
-    | Tm_Let t e1 e2 
-    | Tm_Bind t e1 e2 ->    
-      aux t i; aux e1 i; aux e2 (i + 1)
-      
-    | Tm_Pure p ->
-      aux p i
-              
-    | Tm_ExistsSL t body
-    | Tm_ForallSL t body ->
-      aux t i; aux body (i + 1)
-    
-    | Tm_Arrow t c ->
-      aux t i;
-      opening_pure_comp_with_pure_term c v (i + 1)
-
-    | Tm_If b then_ else_ ->
-      aux b i; aux then_ i; aux else_ i
-
-and opening_pure_comp_with_pure_term (x:pure_comp) (v:pure_term) (i:index)
-  : Lemma (ensures is_pure_comp (open_comp' x v i))
-  = match x with
-    | C_Tot t ->
-      opening_pure_term_with_pure_term t v i
-      
-    | C_ST { res; pre; post } -> 
-      opening_pure_term_with_pure_term res v i;
-      opening_pure_term_with_pure_term pre v i;
-      opening_pure_term_with_pure_term post v (i + 1)
       
 #push-options "--query_stats --fuel 2 --ifuel 1 --z3rlimit_factor 4"
 let rec check (f:fstar_top_env)
@@ -1209,7 +1276,7 @@ let rec check (f:fstar_top_env)
         if x `Set.mem` freevars s2.post
         ||  x `Set.mem` freevars s2.res
         then T.fail "Let-bound variable escapes its scope"
-        else (| _, T_Bind _ _ _ _ _ _ _ d1 d2 (Bind_comp _ s1 _ s2) |)
+        else (| _, T_Bind _ _ _ _ _ _ _ d1 d2 (Bind_comp _ c1 _ c2) |)
      )
 
     | Tm_If _ _ _ ->
