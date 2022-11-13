@@ -1350,10 +1350,10 @@ let mk_sub (u:universe)
 
 let mk_abs ty t =  R.pack_ln (R.Tv_Abs (RT.as_binder 0 ty) t)
 
-let rec elab_src_typing (f:fstar_top_env)
-                        (g:env)
-                        (t:term)
-                        (c:pure_comp)
+let rec elab_src_typing (#f:fstar_top_env)
+                        (#g:env)
+                        (#t:term)
+                        (#c:pure_comp)
                         (d:src_typing f g t c)
   : Tot R.term (decreases d)
   = match d with
@@ -1361,11 +1361,11 @@ let rec elab_src_typing (f:fstar_top_env)
 
     | T_Abs _ x ty _u body _ _ ty_typing body_typing ->
       let ty = elab_pure ty in
-      let body = elab_src_typing _ _ _ _ body_typing in
+      let body = elab_src_typing body_typing in
       mk_abs ty body
     
     | T_STApp _ head _formal _res arg head_typing arg_typing ->
-      let head = elab_src_typing _ _ _ _ head_typing in
+      let head = elab_src_typing head_typing in
       let arg = elab_pure arg in
       R.mk_app head [(arg, R.Q_Explicit)]
 
@@ -1373,11 +1373,11 @@ let rec elab_src_typing (f:fstar_top_env)
       mk_return u (elab_pure ty) (elab_pure t)
 
     | T_ReturnNoEq _ _ ty u t_typing _ ->
-      mk_return u (elab_pure ty) (elab_src_typing _ _ _ _ t_typing)
+      mk_return u (elab_pure ty) (elab_src_typing t_typing)
 
     | T_Bind _ e1 e2 c1 c2 x c e1_typing e2_typing _bc ->
-      let e1 = elab_src_typing _ _ _ _ e1_typing in
-      let e2 = elab_src_typing _ _ _ _ e2_typing in
+      let e1 = elab_src_typing e1_typing in
+      let e2 = elab_src_typing e2_typing in
       let C_ST c1 = c1 in
       let C_ST c2 = c2 in
       let ty1 = elab_pure c1.res in
@@ -1390,7 +1390,7 @@ let rec elab_src_typing (f:fstar_top_env)
               e1 e2
 
     | T_Frame _ _ c frame _frame_typing e_typing ->
-      let e = elab_src_typing _ _ _ _ e_typing in
+      let e = elab_src_typing e_typing in
       let C_ST c = c in
       let ty = elab_pure c.res in
       let pre = elab_pure c.pre in
@@ -1399,15 +1399,15 @@ let rec elab_src_typing (f:fstar_top_env)
       
     | T_If _ b e1 e2 _c hyp _ e1_typing e2_typing ->
       let b = elab_pure b in
-      let e1 = elab_src_typing _ _ _ _ e1_typing in
-      let e2 = elab_src_typing _ _ _ _ e2_typing in
+      let e1 = elab_src_typing e1_typing in
+      let e2 = elab_src_typing e2_typing in
       let open R in
       pack_ln (Tv_Match b None 
                   [(Pat_Constant C_True, e1);
                    (Pat_Constant C_False, e2)])
 
     | T_Equiv _ _ c1 c2 e_typing _ ->
-      let e = elab_src_typing _ _ _ _ e_typing in
+      let e = elab_src_typing e_typing in
       let C_ST c1 = c1 in
       let C_ST c2 = c2 in
       let ty = elab_pure c1.res in
@@ -1419,7 +1419,16 @@ let rec elab_src_typing (f:fstar_top_env)
              e
 
       
-    
+////////////////////////////////////////////////////////////////////////////////
+// Main theorem 
+////////////////////////////////////////////////////////////////////////////////
+let elab_pure_comp (c:pure_comp) = Some?.v (elab_comp c)
+
+let rec soundness (f:fstar_top_env)
+                  (g:env)
+                  (t:term)
+                  (c:pure_comp)
+                  (d:src_typing f g t c)
+  : GTot (RT.typing (extend_env_l f g) (elab_src_typing d) (elab_pure_comp c))
+  = admit()
   
-                    
-                    
