@@ -561,7 +561,6 @@ let return_comp_noeq (u:universe) (t:pure_term)
            pre = Tm_Emp;
            post = Tm_Emp }
 
-
 [@@erasable]
 noeq
 type vprop_equiv (f:fstar_top_env) : env -> pure_term -> pure_term -> Type =
@@ -655,6 +654,9 @@ let close_pure_comp (c:pure_comp) (x:var) : pure_comp = close_comp c x
 
 [@@erasable]
 noeq
+type my_erased (a:Type) = | E of a
+
+noeq
 type src_typing (f:fstar_top_env) : env -> term -> pure_comp -> Type =
   | T_Tot: 
       g:env ->
@@ -681,7 +683,7 @@ type src_typing (f:fstar_top_env) : env -> term -> pure_comp -> Type =
       formal:pure_term ->
       res:pure_comp {C_ST? res} ->
       arg:pure_term ->
-      tot_typing f g head (Tm_Arrow formal res) ->
+      src_typing f g head (C_Tot (Tm_Arrow formal res)) ->
       tot_typing f g arg formal ->
       src_typing f g (Tm_STApp head arg) (open_comp_with res arg)
 
@@ -699,7 +701,7 @@ type src_typing (f:fstar_top_env) : env -> term -> pure_comp -> Type =
       e:term -> 
       t:pure_term -> 
       u:universe ->
-      tot_typing f g e t ->
+      src_typing f g e (C_Tot t) ->
       universe_of f g t u ->
       src_typing f g e (return_comp_noeq u t)
 
@@ -748,7 +750,7 @@ type src_typing (f:fstar_top_env) : env -> term -> pure_comp -> Type =
       src_typing f g e c' 
 
 and tot_typing (f:fstar_top_env) (g:env) (e:term) (t:pure_term) =
-  src_typing f g e (C_Tot t)
+  my_erased (src_typing f g e (C_Tot t))
 
 and universe_of (f:fstar_top_env) (g:env) (t:term) (u:universe) =
   tot_typing f g t (Tm_Type u)
@@ -772,7 +774,7 @@ let emp_typing (#f:_) (#g:_)
 let rec vprop_equiv_typing (f:_) (g:_) (t0 t1:pure_term) (v:vprop_equiv f g t0 t1)
   : GTot ((tot_typing f g t0 Tm_VProp -> tot_typing f g t1 Tm_VProp) &
           (tot_typing f g t1 Tm_VProp -> tot_typing f g t0 Tm_VProp))
-         (decreases v)
+        (decreases v)
   = match v with
     | VE_Refl _ _ -> (fun x -> x), (fun x -> x)
 
@@ -908,14 +910,14 @@ let check_universe (f:fstar_top_env) (g:env) (t:term)
       | None -> T.fail "Not typeable"
       | Some (| ty', tok |) ->
         match readback_ty ty' with
-        | Some (Tm_Type u) -> (| u, T_Tot _ _ _ tok |)
+        | Some (Tm_Type u) -> (| u, E (T_Tot _ _ _ tok) |)
         | _ -> T.fail "Not typeable as a universe"
       
 let check_tot_univ (f:fstar_top_env) (g:env) (t:term)
   : T.Tac (_:(u:universe &
               ty:pure_term &
               universe_of f g ty u &
-              tot_typing f g t ty) { is_pure_term t } )
+              src_typing f g t (C_Tot ty)) { is_pure_term t } )
   = let fg = extend_env_l f g in
     match elab_term t with
     | None -> T.fail "Not a syntactically pure term"
@@ -931,7 +933,7 @@ let check_tot_univ (f:fstar_top_env) (g:env) (t:term)
 
 let check_tot (f:fstar_top_env) (g:env) (t:term)
   : T.Tac (_:(ty:pure_term &
-              tot_typing f g t ty) { is_pure_term t })
+              src_typing f g t (C_Tot ty)) { is_pure_term t })
   = let fg = extend_env_l f g in
     match elab_term t with
     | None -> T.fail "Not a syntactically pure term"
@@ -1216,7 +1218,7 @@ let rec check (f:fstar_top_env)
     | Tm_VProp ->
       let (| u, ty, uty, d |) = check_tot_univ f g t in
       let c = return_comp u ty t in
-      let d = T_Return _ _ _ _ d uty in
+      let d = T_Return _ _ _ _ (E d) uty in
       frame_empty u ty uty t c d
 
     | Tm_Abs t pre_hint body ->
@@ -1227,7 +1229,7 @@ let rec check (f:fstar_top_env)
       (
         match check_tot f g' pre with
         | (| Tm_VProp, pre_typing |) ->
-          let (| c_body, body_typing |) = check f g' (open_term body x) pre pre_typing in
+          let (| c_body, body_typing |) = check f g' (open_term body x) pre (E pre_typing) in
           let tt = T_Abs g x t u body c_body pre_hint t_typing body_typing in
           let tres = Tm_Arrow t (close_comp c_body x) in
           (* could avoid this re-checking call if we had a lemma about arrow typing *)
@@ -1247,7 +1249,7 @@ let rec check (f:fstar_top_env)
       | Tm_Arrow formal (C_ST res) ->
         if ty_arg <> formal
         then T.fail "Type of formal parameter does not match type of argument"
-        else let d = T_STApp g head formal (C_ST res) arg dhead darg in
+        else let d = T_STApp g head formal (C_ST res) arg dhead (E darg) in
              opening_pure_comp_with_pure_term (C_ST res) arg 0;
              try_frame_pre pre_typing d
       | _ -> T.fail "Unexpected head type in impure application"
@@ -1266,7 +1268,7 @@ let rec check (f:fstar_top_env)
           //would be nice to prove that this is typable as a lemma,
           //without having to re-check it
           match check_tot f g' next_pre with
-          | (| Tm_VProp, nt |) -> nt
+          | (| Tm_VProp, nt |) -> E nt
           | _ -> T.fail "next pre is not typable"
         in
         let (| c2, d2 |) = check f g' (open_term e2 x) next_pre next_pre_typing in
@@ -1283,3 +1285,141 @@ let rec check (f:fstar_top_env)
 ////////////////////////////////////////////////////////////////////////////////
 // elaboration of derivations
 ////////////////////////////////////////////////////////////////////////////////
+
+let return_lid = ["Steel"; "ST"; "Util"; "return_stt"]
+let return_noeq_lid = ["Steel"; "ST"; "Util"; "return_stt_noeq"]
+let bind_lid = ["Steel"; "ST"; "Util"; "bind_stt"]
+let frame_lid = ["Steel"; "ST"; "Util"; "frame_stt"]
+let subsumption_lid = ["Steel"; "ST"; "Util"; "sub_stt"]
+
+let mk_return (u:universe) (ty:R.term) (t:R.term) 
+  : R.term
+  = let head = R.pack_ln (R.Tv_UInst (R.pack_fv return_lid) [elab_universe u]) in
+    R.mk_app head [(ty, R.Q_Implicit); (t, R.Q_Explicit)]
+
+let mk_return_noeq (u:universe) (ty:R.term) (t:R.term) 
+  : R.term
+  = let head = R.pack_ln (R.Tv_UInst (R.pack_fv return_noeq_lid) [elab_universe u]) in
+    R.mk_app head [(ty, R.Q_Implicit); (t, R.Q_Explicit)]
+
+let mk_bind (u1 u2:universe)
+            (ty1 ty2:R.term)
+            (pre1 post1: R.term)
+            (post2: R.term)
+            (t1 t2:R.term) 
+  : R.term
+  = let head = R.pack_ln (R.Tv_UInst (R.pack_fv bind_lid)
+                         [elab_universe u1; elab_universe u2]) in
+    R.mk_app head [(ty1, R.Q_Implicit);
+                   (ty2, R.Q_Implicit);
+                   (pre1, R.Q_Implicit);
+                   (post1, R.Q_Implicit);
+                   (post2, R.Q_Implicit);
+                   (t1, R.Q_Explicit);
+                   (t2, R.Q_Explicit)]
+
+let mk_frame (u:universe)
+             (ty:R.term)
+             (pre: R.term)
+             (post: R.term)
+             (frame: R.term)
+             (t:R.term) 
+  : R.term
+  = let head = R.pack_ln (R.Tv_UInst (R.pack_fv frame_lid)
+                         [elab_universe u]) in
+    R.mk_app head [(ty, R.Q_Implicit);
+                   (pre, R.Q_Implicit);
+                   (post, R.Q_Implicit);
+                   (frame, R.Q_Explicit);
+                   (t, R.Q_Explicit)]
+
+let mk_sub (u:universe)
+           (ty:R.term)
+           (pre1 pre2: R.term)
+           (post1 post2: R.term)
+           (t:R.term) 
+  : R.term
+  = let head = R.pack_ln (R.Tv_UInst (R.pack_fv subsumption_lid)
+                         [elab_universe u]) in
+    R.mk_app head [(ty, R.Q_Implicit);
+                   (pre1, R.Q_Implicit);
+                   (pre2, R.Q_Explicit);                   
+                   (post1, R.Q_Implicit);
+                   (post2, R.Q_Explicit);                   
+                   (t, R.Q_Explicit)]
+
+let mk_abs ty t =  R.pack_ln (R.Tv_Abs (RT.as_binder 0 ty) t)
+
+let rec elab_src_typing (f:fstar_top_env)
+                        (g:env)
+                        (t:term)
+                        (c:pure_comp)
+                        (d:src_typing f g t c)
+  : Tot R.term (decreases d)
+  = match d with
+    | T_Tot _ _ _ _ -> elab_pure t
+
+    | T_Abs _ x ty _u body _ _ ty_typing body_typing ->
+      let ty = elab_pure ty in
+      let body = elab_src_typing _ _ _ _ body_typing in
+      mk_abs ty body
+    
+    | T_STApp _ head _formal _res arg head_typing arg_typing ->
+      let head = elab_src_typing _ _ _ _ head_typing in
+      let arg = elab_pure arg in
+      R.mk_app head [(arg, R.Q_Explicit)]
+
+    | T_Return _ _ ty u _ _ ->
+      mk_return u (elab_pure ty) (elab_pure t)
+
+    | T_ReturnNoEq _ _ ty u t_typing _ ->
+      mk_return u (elab_pure ty) (elab_src_typing _ _ _ _ t_typing)
+
+    | T_Bind _ e1 e2 c1 c2 x c e1_typing e2_typing _bc ->
+      let e1 = elab_src_typing _ _ _ _ e1_typing in
+      let e2 = elab_src_typing _ _ _ _ e2_typing in
+      let C_ST c1 = c1 in
+      let C_ST c2 = c2 in
+      let ty1 = elab_pure c1.res in
+      let ty2 = elab_pure c2.res in      
+      mk_bind c1.u c2.u
+              ty1 ty2
+              (elab_pure c1.pre)
+              (mk_abs ty1 (elab_pure c1.post))
+              (mk_abs ty2 (elab_pure c2.post))
+              e1 e2
+
+    | T_Frame _ _ c frame _frame_typing e_typing ->
+      let e = elab_src_typing _ _ _ _ e_typing in
+      let C_ST c = c in
+      let ty = elab_pure c.res in
+      let pre = elab_pure c.pre in
+      let post = elab_pure c.post in
+      mk_frame c.u ty pre post (elab_pure frame) e
+      
+    | T_If _ b e1 e2 _c hyp _ e1_typing e2_typing ->
+      let b = elab_pure b in
+      let e1 = elab_src_typing _ _ _ _ e1_typing in
+      let e2 = elab_src_typing _ _ _ _ e2_typing in
+      let open R in
+      pack_ln (Tv_Match b None 
+                  [(Pat_Constant C_True, e1);
+                   (Pat_Constant C_False, e2)])
+
+    | T_Equiv _ _ c1 c2 e_typing _ ->
+      let e = elab_src_typing _ _ _ _ e_typing in
+      let C_ST c1 = c1 in
+      let C_ST c2 = c2 in
+      let ty = elab_pure c1.res in
+      mk_sub c1.u ty
+             (elab_pure c1.pre)
+             (elab_pure c2.pre)
+             (mk_abs ty (elab_pure c1.post))
+             (mk_abs ty (elab_pure c2.post))
+             e
+
+      
+    
+  
+                    
+                    
