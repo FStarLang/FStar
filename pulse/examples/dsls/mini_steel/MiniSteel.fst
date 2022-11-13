@@ -361,9 +361,8 @@ let comp_pre (c:pure_comp_st)
   : pure_term 
   = let C_ST s = c in s.pre
 
-//let eqn = typ & pure_term & pure_term
-let eqn = typ & term & term
-let binding = either typ eqn
+let eqn = pure_term & pure_term & pure_term
+let binding = either pure_term eqn
 let env = list (var & binding)
 
 let rec opening_pure_term_with_pure_term (x:pure_term) (v:pure_term) (i:index)
@@ -476,26 +475,25 @@ and closing_pure_comp (x:pure_comp) (v:var) (i:index)
       closing_pure_term post v (i + 1)
 
 let elab_eqn (e:eqn)
-  : option R.term
+  : R.term
   = let ty, l, r = e in
-    let? ty = elab_term ty in
-    let? l = elab_term l in
-    let? r = elab_term r in
-    Some (RT.eq2 ty l r)
+    let ty = elab_pure ty in
+    let l = elab_pure l in
+    let r = elab_pure r in
+    RT.eq2 ty l r
 
 let elab_binding (b:binding)
-  : option R.term 
+  : R.term 
   = match b with
-    | Inl t -> elab_term t
+    | Inl t -> elab_pure t
     | Inr eqn -> elab_eqn eqn
 
 module L = FStar.List.Tot
 let extend_env_l (f:R.env) (g:env) : R.env = 
   L.fold_right 
     (fun (x, b) g ->  
-      match elab_binding b with
-      | None -> g
-      | Some t -> RT.extend_env g x t)
+      let t = elab_binding b in
+      RT.extend_env g x t)
      g
      f
 
@@ -537,14 +535,14 @@ type bind_comp (f:fstar_top_env) : env -> pure_comp -> var -> pure_comp -> pure_
       } ->
       bind_comp f g c1 x  c2 (C_ST {u = comp_u c2; res = comp_res c1; pre = comp_pre c1; post=comp_post c2})
 
-let tm_bool : term = Tm_FVar bool_lid
+let tm_bool : pure_term = Tm_FVar bool_lid
 
-let tm_true : term = Tm_Constant (Bool true)
+let tm_true : pure_term = Tm_Constant (Bool true)
 
-let tm_false : term = Tm_Constant (Bool false)
+let tm_false : pure_term = Tm_Constant (Bool false)
 
-let mk_eq2 t (e0 e1:term) 
-  : term
+let mk_eq2 (t:pure_term) (e0 e1:pure_term) 
+  : pure_term
   = Tm_PureApp
          (Tm_PureApp (Tm_PureApp (Tm_FVar R.eq2_qn) t)
                       e0) e1
@@ -720,7 +718,7 @@ type src_typing (f:fstar_top_env) : env -> term -> pure_comp -> Type =
 
   | T_If:
       g:env ->
-      b:term -> 
+      b:pure_term -> 
       e1:term ->
       e2:term -> 
       c:pure_comp ->
