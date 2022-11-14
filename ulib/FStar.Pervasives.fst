@@ -164,7 +164,7 @@ let noextract_to _ = ()
 
 let normalize_for_extraction _ = ()
 
-let ite_soundness_by = ()
+let ite_soundness_by _ = ()
 
 let default_effect _ = ()
 let top_level_effect _ = ()

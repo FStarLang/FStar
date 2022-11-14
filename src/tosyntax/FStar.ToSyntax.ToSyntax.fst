@@ -860,7 +860,7 @@ let rec desugar_data_pat
       | PatConst c ->
         let x = S.new_bv (Some p.prange) (tun_r p.prange) in
         loc, env, LocalBinder(x, None, []), pos <| Pat_constant c, []
-        
+
       | PatVQuote e ->
         // Here, we desugar [PatVQuote e] into a [PatConst s] where
         // [s] is the (string represented) lid of [e] (see function
@@ -1038,7 +1038,8 @@ and desugar_typ env e : S.term =
     t
 
 and desugar_machine_integer env repr (signedness, width) range =
-  let tnm = "FStar." ^
+  let tnm = if width = Sizet then "FStar.SizeT" else
+    "FStar." ^
     (match signedness with | Unsigned -> "U" | Signed -> "") ^ "Int" ^
     (match width with | Int8 -> "8" | Int16 -> "16" | Int32 -> "32" | Int64 -> "64")
   in
@@ -1681,7 +1682,18 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term * an
       then ds_let_rec_or_app()
       else ds_non_rec attrs head_pat defn body
 
-    | If(t1, asc_opt, t2, t3) ->
+    | If(e, Some op, asc_opt, t2, t3) ->
+      // A if operator is desugared into a let operator binding
+      // with name "uu___if_op_head" followed by a regular if on
+      // "uu___if_op_head"
+      let var_id = mk_ident(reserved_prefix ^ "if_op_head", e.range) in
+      let var = mk_term (Var (lid_of_ids [var_id])) e.range Expr in
+      let pat = mk_pattern (PatVar (var_id, None, [])) e.range in
+      let if_ = mk_term (If (var, None, asc_opt, t2, t3)) top.range Expr in
+      let t   = mk_term (LetOperator ([(op, pat, e)], if_)) e.range Expr in
+      desugar_term_aq env t
+
+    | If(t1, None, asc_opt, t2, t3) ->
       let x = Syntax.new_bv (Some t3.range) (tun_r t3.range) in
       let t_bool = mk (Tm_fvar(S.lid_as_fv C.bool_lid delta_constant None)) in
       let t1', aq1 = desugar_term_aq env t1 in
@@ -2746,7 +2758,7 @@ let rec desugar_tycon env (d: AST.decl) quals tcs : (env_t * sigelts) =
   let tycon_id = function
     | TyconAbstract(id, _, _)
     | TyconAbbrev(id, _, _, _)
-    | TyconRecord(id, _, _, _)
+    | TyconRecord(id, _, _, _, _)
     | TyconVariant(id, _, _, _) -> id in
   let binder_to_term b = match b.b with
     | Annotated (x, _)
@@ -2764,7 +2776,7 @@ let rec desugar_tycon env (d: AST.decl) quals tcs : (env_t * sigelts) =
     List.fold_left (fun out b -> mk_term (App(out, binder_to_term b, imp_of_aqual b)) out.range out.level)
       t binders in
   let tycon_record_as_variant = function
-    | TyconRecord(id, parms, kopt, fields) ->
+    | TyconRecord(id, parms, kopt, attrs, fields) ->
       let constrName = mk_ident("Mk" ^ (string_of_id id), (range_of_id id)) in
       let mfields = List.map (fun (x,q,attrs,t) -> mk_binder_with_attrs (Annotated(x,t)) (range_of_id x) Expr q attrs) fields in
       let result = apply_binders (mk_term (Var (lid_of_ids [id])) (range_of_id id) Type_level) parms in
@@ -2778,7 +2790,7 @@ let rec desugar_tycon env (d: AST.decl) quals tcs : (env_t * sigelts) =
                               BU.format1 "Field %s shadows the record's name or a parameter of it, please rename it" (string_of_id f)) (range_of_id f))
           fields;
 
-      TyconVariant(id, parms, kopt, [(constrName, Some constrTyp, false)]), fields |> List.map (fun (f, _, _, _) -> f)
+      TyconVariant(id, parms, kopt, [(constrName, Some constrTyp, false, attrs)]), fields |> List.map (fun (f, _, _, _) -> f)
     | _ -> failwith "impossible" in
   let desugar_abstract_tc quals _env mutuals = function
     | TyconAbstract(id, binders, kopt) ->
@@ -2929,7 +2941,7 @@ let rec desugar_tycon env (d: AST.decl) quals tcs : (env_t * sigelts) =
           let attrs = List.map (desugar_term env) d.attrs in
           let val_attrs = Env.lookup_letbinding_quals_and_attrs env tname |> snd in
           let constrNames, constrs = List.split <|
-              (constrs |> List.map (fun (id, topt, of_notation) ->
+              (constrs |> List.map (fun (id, topt, of_notation, cons_attrs) ->
                 let t =
                   if of_notation
                   then match topt with
@@ -2949,7 +2961,7 @@ let rec desugar_tycon env (d: AST.decl) quals tcs : (env_t * sigelts) =
                                             sigquals = quals;
                                             sigrng = rng;
                                             sigmeta = default_sigmeta  ;
-                                            sigattrs = val_attrs @ attrs;
+                                            sigattrs = val_attrs @ attrs @ map (desugar_term env) cons_attrs;
                                             sigopts = None; }))))
           in
           ([], { sigel = Sig_inductive_typ(tname, univs, tpars, k, mutuals, constrNames);

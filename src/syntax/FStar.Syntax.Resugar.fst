@@ -457,6 +457,9 @@ let rec resugar_term' (env: DsEnv.env) (t : S.term) : A.term =
           in
           Option.get out
 
+(* This is wrong: It treats the first N - 1 args of dtupleN as implicit
+   But, they are not *)
+(*   
         | Some ("dtuple", _) when List.length args > 0 ->
           (* this is desugared from Sum(binders*term) *)
           let args = last args in
@@ -481,7 +484,7 @@ let rec resugar_term' (env: DsEnv.env) (t : S.term) : A.term =
               let e = resugar_term' env e in
               List.fold_left(fun acc x -> mk (A.App(acc, x, A.Nothing))) e args
           end
-
+*)
         | Some ("dtuple", _) ->
           resugar_as_app e args
 
@@ -650,6 +653,7 @@ let rec resugar_term' (env: DsEnv.env) (t : S.term) : A.term =
       when is_true_pat pat1 && is_wild_pat pat2 ->
       let asc_opt = resugar_match_returns env e t.pos asc_opt in
       mk (A.If(resugar_term' env e,
+               None,
                asc_opt,
                resugar_term' env t1,
                resugar_term' env t2))
@@ -1259,13 +1263,13 @@ let resugar_typ env datacon_ses se : sigelts * A.tycon =
             | _ -> failwith "unexpected"
           in
           let fields =  List.fold_left resugar_datacon_as_fields [] current_datacons in
-          A.TyconRecord(ident_of_lid tylid, bs, None, fields)
+          A.TyconRecord(ident_of_lid tylid, bs, None, map (resugar_term' env) se.sigattrs, fields)
         else
           (* Resugar as a variant *)
           let resugar_datacon constructors se = match se.sigel with
             | Sig_datacon (l, univs, term, _, num, _) ->
               (* Todo: resugar univs *)
-              let c = (ident_of_lid l, Some (resugar_term' env term), false)  in
+              let c = (ident_of_lid l, Some (resugar_term' env term), false, map (resugar_term' env) se.sigattrs)  in
               c::constructors
             | _ -> failwith "unexpected"
           in

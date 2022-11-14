@@ -17,7 +17,7 @@
 module Steel.ST.HigherArray
 
 /// C arrays of universe 1 elements.
-/// 
+///
 /// - Due to a limitation on the universe for selectors, no selector
 ///   version can be defined for universe 1.
 /// - Due to F* universes not being cumulative, arrays of universe 0
@@ -182,12 +182,12 @@ let free
       is_full_array a
     )
     (fun _ -> True)
-= let (| p, _ |) = a in
+= let (| p, v |) = a in
+  let _ : squash (offset p == 0) = () in
   let s = elim_exists () in
-  rewrite
-    (pts_to _ _ _)
-    (pts_to (| p, Ghost.hide #nat (base_len (base p)) |) _ s);
-  free_ptr p
+  rewrite (pts_to _ _ _)
+          (pts_to (| p, Ghost.hide (base_len (base p)) |) full_perm s);
+  free_ptr p            
 
 /// Sharing and gathering permissions on an array. Those only
 /// manipulate permissions, so they are nothing more than stateful
@@ -355,7 +355,8 @@ let join
     (fun res -> pts_to res p (x1 `Seq.append` x2))
     (adjacent a1 a2)
     (fun res -> merge_into a1 a2 res)
-= ghost_join a1 a2 ();
+= let _ : squash (adjacent a1 a2) = () in
+  ghost_join a1 a2 ();
   let res = merge a1 a2 in
   rewrite
     (pts_to (merge a1 (Ghost.reveal a2)) p (x1 `Seq.append` x2))
@@ -445,7 +446,7 @@ let blit_post
            (len: U32.t)
            (s1' : Seq.seq t)
 : Tot prop
-= 
+=
         U32.v idx_src + U32.v len <= length src /\
         U32.v idx_dst + U32.v len <= length dst /\
         length src == Seq.length s0 /\
@@ -523,3 +524,22 @@ let memcpy (#t:_) (#p0:perm)
   elim_pure (blit_post s0 s1 a0 0ul a1 0ul l s1');
   vpattern_rewrite (pts_to a1 full_perm) (Ghost.reveal s0);
   return ()
+
+
+/// An introduction function for the fits_u32 predicate.
+/// It will be natively extracted to static_assert (UINT32_MAX <= SIZE_T_MAX) by krml
+[@@noextract_to "krml"]
+val intro_fits_u32 (_:unit)
+  : ST unit
+       emp (fun _ -> emp)
+       (requires True)
+       (ensures fun _ -> FStar.SizeT.fits_u32)
+
+/// An introduction function for the fits_u64 predicate.
+/// It will be natively extracted to static_assert (UINT64_MAX <= SIZE_T_MAX) by krml
+[@@noextract_to "krml"]
+val intro_fits_u64 (_:unit)
+  : ST unit
+       emp (fun _ -> emp)
+       (requires True)
+       (ensures fun _ -> FStar.SizeT.fits_u64)

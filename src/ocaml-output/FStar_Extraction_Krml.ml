@@ -125,6 +125,8 @@ and width =
   | Int64 
   | Bool 
   | CInt 
+  | SizeT 
+  | PtrdiffT 
 and binder = {
   name: Prims.string ;
   typ: typ ;
@@ -525,6 +527,10 @@ let (uu___is_Bool : width -> Prims.bool) =
   fun projectee -> match projectee with | Bool -> true | uu___ -> false
 let (uu___is_CInt : width -> Prims.bool) =
   fun projectee -> match projectee with | CInt -> true | uu___ -> false
+let (uu___is_SizeT : width -> Prims.bool) =
+  fun projectee -> match projectee with | SizeT -> true | uu___ -> false
+let (uu___is_PtrdiffT : width -> Prims.bool) =
+  fun projectee -> match projectee with | PtrdiffT -> true | uu___ -> false
 let (__proj__Mkbinder__item__name : binder -> Prims.string) =
   fun projectee -> match projectee with | { name; typ = typ1; mut;_} -> name
 let (__proj__Mkbinder__item__typ : binder -> typ) =
@@ -605,6 +611,8 @@ let (mk_width : Prims.string -> width FStar_Pervasives_Native.option) =
     | "Int16" -> FStar_Pervasives_Native.Some Int16
     | "Int32" -> FStar_Pervasives_Native.Some Int32
     | "Int64" -> FStar_Pervasives_Native.Some Int64
+    | "SizeT" -> FStar_Pervasives_Native.Some SizeT
+    | "PtrdiffT" -> FStar_Pervasives_Native.Some PtrdiffT
     | uu___1 -> FStar_Pervasives_Native.None
 let (mk_bool_op : Prims.string -> op FStar_Pervasives_Native.option) =
   fun uu___ ->
@@ -2501,8 +2509,11 @@ and (translate_expr : env -> FStar_Extraction_ML_Syntax.mlexpr -> expr) =
                                          FStar_Extraction_ML_Syntax.loc =
                                            uu___7;_}::[])
           when
-          let uu___8 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
-          uu___8 = "Steel.ST.Util.with_invariant" -> translate_expr env1 body
+          (let uu___8 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
+           uu___8 = "Steel.ST.Util.with_invariant") ||
+            (let uu___8 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
+             uu___8 = "Steel.Effect.Atomic.with_invariant")
+          -> translate_expr env1 body
       | FStar_Extraction_ML_Syntax.MLE_App
           ({
              FStar_Extraction_ML_Syntax.expr =
@@ -2517,8 +2528,11 @@ and (translate_expr : env -> FStar_Extraction_ML_Syntax.mlexpr -> expr) =
              FStar_Extraction_ML_Syntax.loc = uu___4;_},
            _fp::_fp'::_opened::_p::_i::e1::[])
           when
-          let uu___5 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
-          uu___5 = "Steel.ST.Util.with_invariant" ->
+          (let uu___5 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
+           uu___5 = "Steel.ST.Util.with_invariant") ||
+            (let uu___5 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
+             uu___5 = "Steel.Effect.Atomic.with_invariant")
+          ->
           let uu___5 =
             let uu___6 =
               let uu___7 =
@@ -2685,6 +2699,8 @@ and (translate_width :
         -> UInt32
     | FStar_Pervasives_Native.Some (FStar_Const.Unsigned, FStar_Const.Int64)
         -> UInt64
+    | FStar_Pervasives_Native.Some (FStar_Const.Unsigned, FStar_Const.Sizet)
+        -> SizeT
 and (translate_pat :
   env -> FStar_Extraction_ML_Syntax.mlpattern -> (env * pattern)) =
   fun env1 ->

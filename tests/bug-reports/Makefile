@@ -47,7 +47,9 @@ SHOULD_VERIFY_CLOSED=Bug022.fst Bug024.fst Bug025.fst Bug026.fst Bug026b.fst Bug
   Bug1418.fst Bug171.fst Bug2496.fst Bug2478.fst Bug2414.fst Bug2515.fst \
   Bug2535.fst Bug2557.fst Bug2572.fst Bug2522.fst Bug2486.fst \
   Bug2552.fst Bug2597.fst Bug2471_B.fst Bug2605.fst Bug2614.fst Bug2622.fst \
-  Bug2637.fst Bug2641.fst Bug1486.fst PropProofs.fst
+  Bug2635.fst Bug2637.fst Bug2641.fst Bug1486.fst PropProofs.fst \
+  Bug2684a.fst Bug2684b.fst Bug2684c.fst Bug2684d.fst \
+  Bug2756.fst
 
 SHOULD_VERIFY_INTERFACE_CLOSED=Bug771.fsti Bug771b.fsti
 SHOULD_VERIFY_AND_WARN_CLOSED=Bug016.fst
@@ -134,11 +136,17 @@ CAPPED=$(subst Bug,Bug,$*)
 
 
 %.verify: %.fst
-	$(FSTAR) $^
+	@echo '[CHECK     $<]'
+	$(Q)$(FSTAR) $(SIL) $^
 
 Bug1383.verify: OTHERFLAGS += --warn_error @275 #Z3 warnings are fatal
 Bug1694.verify: OTHERFLAGS += --codegen OCaml
 Bug2210.verify: OTHERFLAGS += --codegen OCaml
+
+Bug2684a.verify: OTHERFLAGS += --cache_checked_modules
+Bug2684b.verify: OTHERFLAGS += --cache_checked_modules
+Bug2684c.verify: OTHERFLAGS += --cache_checked_modules
+Bug2684d.verify: OTHERFLAGS += --cache_checked_modules
 
 verify: $(subst .fst,.verify,$(SHOULD_VERIFY_CLOSED))
 
@@ -151,15 +159,16 @@ verify-maybe-close: $(subst .fst,.verify,$(SHOULD_VERIFY_MAYBE_CLOSE))
 
 
 %.not-verify: %.fst
-	(! $(FSTAR) $^ >/dev/null 2>&1) || (echo "Negative test failed ($@)!" ; false)
+	@echo '[CHECKFAIL $<]'
+	$(Q)(! $(FSTAR) $(SIL) $^ >/dev/null 2>&1) || (echo "Negative test failed ($@)!" ; false)
 
 not-verify: $(subst .fst,.not-verify,$(SHOULD_NOT_VERIFY_CLOSED))
 
 Bug310.ml:
-	$(FSTAR) $(FSTAR_DEFAULT_ARGS) --extract Bug310 --codegen OCaml Bug310.fst
+	$(Q)$(FSTAR) $(FSTAR_DEFAULT_ARGS) --extract Bug310 --codegen OCaml Bug310.fst
 
 Bug310.extract: Bug310.ml
-	diff -u --strip-trailing-cr Bug310.ml Bug310.ml.expected
+	$(Q)diff -u --strip-trailing-cr Bug310.ml Bug310.ml.expected
 
 Bug2058.ml:
 	$(FSTAR) $(FSTAR_DEFAULT_ARGS) --extract Bug2058 --codegen OCaml Bug2058.fst

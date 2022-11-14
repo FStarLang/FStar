@@ -174,7 +174,7 @@ let pure_star_interp p q m = H.pure_star_interp p q (heap_of_mem m)
 //pts_to
 ////////////////////////////////////////////////////////////////////////////////
 
-let pts_to_compatible #a #pcm x v0 v1 m 
+let pts_to_compatible #a #pcm x v0 v1 m
   = H.pts_to_compatible #a #pcm x v0 v1 (heap_of_mem m)
 let pts_to_compatible_equiv #a #pcm x v0 v1
   = H.pts_to_compatible_equiv #a #pcm x v0 v1
@@ -458,7 +458,7 @@ let interp_sdep
   (ensures (
     interp (sdep s f) m <==> (exists m1 m2 . interp s m1 /\ interp (f m1) m2 /\ disjoint m1 m2 /\ join m1 m2 == m)
   ))
-= 
+=
   dep_hprop_is_affine s f;
   assert (forall m1 m2 . (interp s m1 /\ interp (f m1) m2 /\ disjoint m1 m2 /\ join m1 m2 == m) ==> (
     interp s (mem_of_heap m1.heap) /\ interp (f (mem_of_heap m1.heap)) (mem_of_heap m2.heap) /\
@@ -895,7 +895,14 @@ let refined_pre_action_as_action (#fp0:slprop) (#a:Type) (#fp1:a -> slprop)
 let alloc_action #a #pcm e x
   = let f : refined_pre_action e emp (ref a pcm) (fun r -> pts_to r x)
       = fun m0 ->
-        let h = hheap_of_hmem m0 in
+        (* NS: 9/29/22 I needed to annotate h : Heap.full_heap, for use with the Core checker
+           which generates a guard for checking the implicit pattern "dot" term in the dependent
+           pair pattern on the next line. That guard expects `h` to be a full_heap, which is it,
+           because it is a projection of m0. However, this is not reflected in `h`'s type. So,
+           the Core checker, which produces a guard for the pat_dot_term in isolation, cannot
+           recheck the term. If we were to fold in the checking of pat_dot_terms and their guards
+           with the rest of the VC, this would work.  *)
+        let h : Heap.full_heap = hheap_of_hmem m0 in
         let (|r, h'|) = H.extend #a #pcm x m0.ctr h in
         let m' : hmem_with_inv_except e emp = inc_ctr m0 in
         let h' : H.hheap (pts_to #a #pcm r x `star` linv e m') = weaken _ (linv e m0) (linv e m') h' in

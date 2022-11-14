@@ -115,7 +115,8 @@ let build_constant (c: mlconstant): Parsetree.constant =
     | FStar_Const.Int8 -> with_w "8"
     | FStar_Const.Int16 -> with_w "16"
     | FStar_Const.Int32 -> with_w "32"
-    | FStar_Const.Int64 -> with_w "64" in
+    | FStar_Const.Int64 -> with_w "64"
+    | FStar_Const.Sizet -> with_w "64" in
   match c with
   | MLC_Int (v, None) ->
       let s = match Z.of_string v with

@@ -86,7 +86,7 @@ unfold let normal (x:Type0) : Type0 =
   norm [iota; zeta; simplify; primops; delta_attr [`%qattr]; delta_only normal_steps] x
 
 
-[@@ "opaque_to_smt" qattr]
+[@@ "opaque_to_smt"; qattr]
 let wp_compute_ghash_incremental (x:int) (s0:state) (k:(state -> Type0)) : Type0 =
   let sM = s0 in
 // COMMENT OUT 1-3 OF THE FOLLOWING LINES TO SPEED UP:

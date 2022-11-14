@@ -32,9 +32,9 @@ let mk_u32 (n: nat { n < 4294967296 } ) : Tot U32.t = U32.uint_to_t n
 
 let rec gen_parser_impl' (p: T.term) : T.Tac T.term =
   let (hd, tl) = app_head_tail p in
-  if hd `T.term_eq` (`(parse_ret)) then T.mk_app (`(parse_ret_impl)) tl else
-  if hd `T.term_eq` (`(parse_u8)) then (`(parse_u8_impl)) else
-  if hd `T.term_eq` (`(nondep_then)) then match tl with
+  if hd `T.is_fvar` (`%parse_ret) then T.mk_app (`(parse_ret_impl)) tl else
+  if hd `T.is_fvar` (`%parse_u8) then (`(parse_u8_impl)) else
+  if hd `T.is_fvar` (`%nondep_then) then match tl with
   | [t1; (p1, _); t2; (p2, _)] ->
     let p1' = gen_parser_impl' p1 in
     let p2' = gen_parser_impl' p2 in
@@ -48,7 +48,7 @@ let rec gen_parser_impl' (p: T.term) : T.Tac T.term =
     ]
   | _ -> tfail "Not enough arguments to nondep_then"
   else
-  if hd `T.term_eq` (`(parse_synth))
+  if hd `T.is_fvar` (`%parse_synth)
   then match tl with
   | [qt1; t2; qp1; qf2; qg1] ->
     let (p1, _) = qp1 in
@@ -70,13 +70,13 @@ let rec gen_parser_impl' (p: T.term) : T.Tac T.term =
     ]
   | _ -> tfail "Not enough arguments to synth"
   else
-  if hd `T.term_eq` (`parse_bounded_u16)
+  if hd `T.is_fvar` (`%parse_bounded_u16)
   then match tl with
   | [(b, _)] ->
     T.mk_app (`parse_bounded_u16_impl) [(b, T.Q_Explicit)]
   | _ -> tfail "not enough arguments to parse_bounded_u16"
   else
-  if hd `T.term_eq` (`parse_filter)
+  if hd `T.is_fvar` (`%parse_filter)
   then match tl with
   | [(t, _); (p, _); (f, _)] ->
     let bx = T.fresh_binder t in
@@ -92,11 +92,11 @@ let rec gen_parser_impl' (p: T.term) : T.Tac T.term =
     ]
   | _ -> tfail "Not enough arguments to parse_filter"
   else
-  if hd `T.term_eq` (`(TS.package_parser))
+  if hd `T.is_fvar` (`%TS.package_parser)
   then match tl with
   | [qt; (pk, _)] ->
     let (hd', tl') = app_head_tail pk in
-    if hd' `T.term_eq` (`(TS.mk_package))
+    if hd' `T.is_fvar` (`%TS.mk_package)
     then match tl' with
     | [_; (p, _); _] ->
       gen_parser_impl' p
@@ -111,7 +111,7 @@ let rec gen_parser_impl' (p: T.term) : T.Tac T.term =
   | _ ->
     tfail "Not enough arguments to package_parser"
   else
-  if hd `T.term_eq` (`parse_nlist)
+  if hd `T.is_fvar` (`%parse_nlist)
   then match tl with
   | [(n, _); (t, _); (p, _)] ->
     let env = T.cur_env () in
@@ -179,17 +179,17 @@ let rec gen_serializer_impl (pol: T.guard_policy) : T.Tac unit =
     then begin
       let (hd, tl) = app_head_tail s in
       begin
-        if hd `T.term_eq` (`(serialize_empty)) then begin
+        if hd `T.is_fvar` (`%serialize_empty) then begin
           T.with_policy pol (fun () -> T.apply (`(serialize_empty_impl)));
           T.debug ("Applied serialize_empty_impl; " ^ string_of_int (T.ngoals ()) ^ " goals remaining");
           _default ()
         end else
-        if hd `T.term_eq` (`(serialize_u8)) then begin
+        if hd `T.is_fvar` (`%serialize_u8) then begin
           T.with_policy pol (fun () -> T.apply (`(serialize_u8_impl)));
           T.debug ("Applied serialize_u8_impl; " ^ string_of_int (T.ngoals ()) ^ " goals remaining");
           _default ()
         end else
-        if hd `T.term_eq` (`(serialize_nondep_then)) then begin
+        if hd `T.is_fvar` (`%serialize_nondep_then) then begin
           T.with_policy pol (fun () -> T.apply (`(serialize_nondep_then_impl)));
           T.debug ("Applied serialize_nondep_then_impl; " ^ string_of_int (T.ngoals ()) ^ " goals remaining");
           let _ =
@@ -201,7 +201,7 @@ let rec gen_serializer_impl (pol: T.guard_policy) : T.Tac unit =
           in
           ()
         end else
-        if hd `T.term_eq` (`(serialize_synth)) then match tl with
+        if hd `T.is_fvar` (`%serialize_synth) then match tl with
         | [qt1; qt2; qp1; qs1; qf2; qg1; qu] ->
           let (t2, _) = qt2 in
           let (g1, _) = qg1 in
@@ -218,21 +218,21 @@ let rec gen_serializer_impl (pol: T.guard_policy) : T.Tac unit =
           ()
         | _ -> tfail "Not enough arguments to synth"
         else
-        if hd `T.term_eq` (`serialize_bounded_u16) then begin
+        if hd `T.is_fvar` (`%serialize_bounded_u16) then begin
           T.with_policy pol (fun () -> T.apply (`serialize_bounded_u16_impl));
           T.debug ("Applied serialize_bounded_u16_impl'; " ^ string_of_int (T.ngoals ()) ^ " goals remaining");
           _default ()
         end else
-        if hd `T.term_eq` (`serialize_filter) then begin
+        if hd `T.is_fvar` (`%serialize_filter) then begin
           T.with_policy pol (fun () -> T.apply (`serialize_filter_impl));
           T.debug ("Applied serialize_filter_impl'; " ^ string_of_int (T.ngoals ()) ^ " goals remaining");          
           let _ = T.divide 1 (fun () -> gen_serializer_impl pol) _default in
           ()
         end else
-        if hd `T.term_eq` (`(TS.package_serializer)) then match tl with
+        if hd `T.is_fvar` (`%TS.package_serializer) then match tl with
         | [qt; (pk, _)] ->
           let (hd', tl') = app_head_tail pk in
-          if hd' `T.term_eq` (`(TS.mk_package))
+          if hd' `T.is_fvar` (`%TS.mk_package)
           then match tl' with
           | [_; _; (s, _)] ->
             T.with_policy pol (fun () -> T.change (T.mk_app (`(serializer_impl)) [t0; p0; (s, T.Q_Explicit)]));
@@ -252,7 +252,7 @@ let rec gen_serializer_impl (pol: T.guard_policy) : T.Tac unit =
         | _ ->
           tfail "Not enough arguments to package_serializer"
         else
-        if hd `T.term_eq` (`serialize_nlist)
+        if hd `T.is_fvar` (`%serialize_nlist)
         then match tl with
         | [(n, _); (t, _); (p, _); (s, _)] ->
           let env = T.cur_env () in

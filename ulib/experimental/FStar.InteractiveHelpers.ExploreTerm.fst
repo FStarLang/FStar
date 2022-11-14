@@ -78,7 +78,7 @@ noeq type type_info = {
 
 let mk_type_info = Mktype_info
 
-val type_info_to_string : type_info -> Tot string
+val type_info_to_string : type_info -> Tac string
 let type_info_to_string info =
   "Mktype_info (" ^
   term_to_string info.ty ^ ") (" ^
@@ -159,13 +159,13 @@ noeq type typ_or_comp =
 | TC_Typ : v:typ -> pl:list binder -> num_unflushed:nat -> typ_or_comp
 | TC_Comp : v:comp -> pl:list binder -> num_unflushed:nat -> typ_or_comp
 
-let typ_or_comp_to_string (tyc : typ_or_comp) : Tot string =
+let typ_or_comp_to_string (tyc : typ_or_comp) : Tac string =
   match tyc with
   | TC_Typ v pl num_unflushed ->
-    "TC_Typ (" ^ term_to_string v ^ ") " ^ list_to_string name_of_binder pl ^
+    "TC_Typ (" ^ term_to_string v ^ ") " ^ list_to_string (fun b -> name_of_binder b) pl ^
     " " ^ string_of_int num_unflushed
   | TC_Comp c pl num_unflushed ->
-    "TC_Comp (" ^ acomp_to_string c ^ ") " ^ list_to_string name_of_binder pl ^
+    "TC_Comp (" ^ acomp_to_string c ^ ") " ^ list_to_string (fun b -> name_of_binder b) pl ^
     " " ^ string_of_int num_unflushed
 
 /// Return the list of parameters stored in a ``typ_or_comp``
@@ -360,7 +360,7 @@ let rec _flush_typ_or_comp_comp (dbg : bool) (e:env) (rem : list binder) (inst :
     | _ ->
       mfail ("_flush_typ_or_comp: inconsistent state" ^
              "\n-comp: " ^ acomp_to_string c ^
-             "\n-remaning binders: " ^ list_to_string name_of_binder rem)
+             "\n-remaning binders: " ^ list_to_string (fun b -> name_of_binder b) rem)
 
 let flush_typ_or_comp dbg e tyc =
   let flush_comp pl n c : Tac (tyc:typ_or_comp{num_unflushed_of_typ_or_comp tyc = 0})  =

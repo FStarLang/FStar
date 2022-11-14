@@ -14,6 +14,27 @@ Guidelines for the changelog:
 # Version 0.9.7.0
 
 ## Tactics & Reflection
+  * As a better fix for Bug2635, F* now has a memoizing core typechecker for total
+    (including ghost terms that are total) terms. The unification solutions, including
+    those computed in the tactics engine, are typechecked using this core typechecker.
+
+    This is a breaking change, since the core typechecker may fail to typecheck those
+    solutions, or produce SMT guards that, for example, may need to be handled by the
+    tactics.
+
+    There are a couple of ways to maintain backward compatibility.
+
+    There is a new command line option (also settable via `#set-options` in a file)
+    `--compat_pre_core <n>` , where n is either 0, 1, or 2. Value 0 is most permissive and
+    value 2 is most strict, with the metric being how much of the core typechecker is applied.
+
+    This flag is a global setting that applies "relaxed" treatment to all the unification
+    solutions. For controlling this more locally, there is a new tactic primitive
+    `with_compat_pre_core` (see https://github.com/FStarLang/FStar/blob/master/ulib/FStar.Tactics.Builtins.fsti),
+    that applies the compat pre core setting only to the input tactic invocation.
+    See https://github.com/FStarLang/FStar/blob/master/ulib/experimental/Steel.Effect.Common.fsti
+    for an example usage.
+
   * Pat_Dot_Term now only has an `option term` as argument, where a `Some e` indicates that
     the dot pattern has been resolved to `e`.
 
@@ -230,6 +251,10 @@ Guidelines for the changelog:
      provided (using UInt128).
 
 ## Syntax
+    
+   * PR #2745 adds support for `if` operators: the syntax `if* a then
+     ...` (with `*` an operator) is now accepted and desugared as
+     `let* [c] = a in if [c] then ...`.
 
    * PR #2671 allows operators as field names in record expressions
      and record type declaration. Example:

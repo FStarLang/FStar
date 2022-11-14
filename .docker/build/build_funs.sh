@@ -232,12 +232,12 @@ function fstar_default_build () {
     $gnutime make -C src -j $threads -k $localTarget && echo true >$status_file
     echo Done building FStar
 
-    # Make it an orange if there's a git diff. Note: FStar_Version.ml is in the
+    # Make it a hard failure if there's a git diff. Note: FStar_Version.ml is in the
     # .gitignore.
     echo "Searching for a diff in src/ocaml-output"
     if ! git diff --exit-code src/ocaml-output; then
         echo "GIT DIFF: the files in the list above have a git diff"
-        { echo " - snapshot-diff (F*)" >>$ORANGE_FILE; }
+        echo false >$status_file
     fi
 
     # We should not generate hints when building on Windows

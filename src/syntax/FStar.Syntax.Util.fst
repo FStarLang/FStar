@@ -369,16 +369,44 @@ let rec head_of (t : term) : term =
 let head_and_args t =
     let t = compress t in
     match t.n with
-        | Tm_app(head, args) -> head, args
-        | _ -> t, []
+    | Tm_app(head, args) -> head, args
+    | _ -> t, []
 
 let rec head_and_args_full t =
     let t = compress t in
     match t.n with
-        | Tm_app(head, args) ->
-            let (head, args') = head_and_args_full head
-            in (head, args'@args)
-        | _ -> t, []
+    | Tm_app(head, args) ->
+      let (head, args') = head_and_args_full head
+      in (head, args'@args)
+    | _ -> t, []
+
+let rec leftmost_head t =
+    let t = compress t in
+    match t.n with
+    | Tm_app(t0, _)
+    | Tm_meta (t0, Meta_pattern _)
+    | Tm_meta (t0, Meta_named _)
+    | Tm_meta (t0, Meta_labeled _)
+    | Tm_meta (t0, Meta_desugared _)     
+    | Tm_ascribed (t0, _, _) ->
+      leftmost_head t0
+    | _ -> t
+
+
+let leftmost_head_and_args t =
+    let rec aux t args =
+      let t = compress t in
+      match t.n with
+      | Tm_app(t0, args') -> aux t0 (args'@args)
+      | Tm_meta (t0, Meta_pattern _)
+      | Tm_meta (t0, Meta_named _)
+      | Tm_meta (t0, Meta_labeled _)
+      | Tm_meta (t0, Meta_desugared _)     
+      | Tm_ascribed (t0, _, _) -> aux t0 args
+      | _ -> t, args
+    in
+    aux t []
+
 
 let un_uinst t =
     let t = Subst.compress t in
@@ -1234,7 +1262,7 @@ let attr_eq a a' =
    | _ -> false
 
 let attr_substitute =
-    mk (Tm_fvar (lid_as_fv (lid_of_path ["FStar"; "Pervasives"; "Substitute"] Range.dummyRange)
+    mk (Tm_fvar (lid_as_fv PC.attr_substitute_lid
                            delta_constant
                            None))
        Range.dummyRange
@@ -1337,7 +1365,8 @@ let mk_and e1 e2 =
 let mk_and_l l = match l with
     | [] -> exp_true_bool
     | hd::tl -> List.fold_left mk_and hd tl
-
+let mk_boolean_negation b = 
+  mk (Tm_app(fvar_const PC.op_Negation, [as_arg b])) b.pos
 let mk_residual_comp l t f = {
     residual_effect=l;
     residual_typ=t;
@@ -1345,6 +1374,11 @@ let mk_residual_comp l t f = {
   }
 let residual_tot t = {
     residual_effect=PC.effect_Tot_lid;
+    residual_typ=Some t;
+    residual_flags=[TOTAL]
+  }
+let residual_gtot t = {
+    residual_effect=PC.effect_GTot_lid;
     residual_typ=Some t;
     residual_flags=[TOTAL]
   }
@@ -1756,6 +1790,7 @@ let eqprod (e1 : 'a -> 'a -> bool) (e2 : 'b -> 'b -> bool) (x : 'a * 'b) (y : 'a
 let eqopt (e : 'a -> 'a -> bool) (x : option 'a) (y : option 'a) : bool =
     match x, y with
     | Some x, Some y -> e x y
+    | None, None -> true
     | _ -> false
 
 // Checks for syntactic equality. A returned false doesn't guarantee anything.
@@ -2406,3 +2441,26 @@ let ctx_uvar_should_check (u:ctx_uvar) =
 
 let ctx_uvar_typ (u:ctx_uvar) = 
     (Unionfind.find_decoration u.ctx_uvar_head).uvar_decoration_typ
+
+let ctx_uvar_typedness_deps (u:ctx_uvar) = 
+    (Unionfind.find_decoration u.ctx_uvar_head).uvar_decoration_typedness_depends_on
+
+let flatten_refinement t =
+  let rec aux t unascribe =
+    let t = compress t in
+    match t.n with
+    | Tm_ascribed(t, _, _) when unascribe ->
+      aux t true
+    | Tm_refine(x, phi) -> (
+      let t0 = aux x.sort true in
+      match t0.n with
+      | Tm_refine(y, phi1) ->
+        //NB: this is working on de Bruijn
+        //    representations; so no need
+        //    to substitute y/x in phi
+        mk (Tm_refine(y, mk_conj_simp phi1 phi)) t0.pos
+      | _ -> t
+      )
+    | _ -> t
+  in
+  aux t false

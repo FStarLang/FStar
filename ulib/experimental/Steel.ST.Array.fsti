@@ -167,7 +167,7 @@ inline_for_extraction
 [@@noextract_to "krml"]
 let alloc #elt = malloc #elt
 
-/// Freeing a full array. 
+/// Freeing a full array.
 inline_for_extraction
 [@@ noextract_to "krml";
     warn_on_use "Steel.Array.free_pt is currently unsound in the presence of zero-size subarrays, have you collected them all?"]
@@ -314,7 +314,8 @@ let join
     (fun res -> pts_to res p (x1 `Seq.append` x2))
     (adjacent a1 a2)
     (fun res -> merge_into a1 a2 res)
-= ghost_join a1 a2 ();
+= let _ : squash (adjacent a1 a2) = () in
+  ghost_join a1 a2 ();
   let res = merge a1 a2 in
   rewrite
     (pts_to (merge a1 (Ghost.reveal a2)) p (x1 `Seq.append` x2))
@@ -415,3 +416,24 @@ val compare (#t:eqtype) (#p0 #p1:perm)
     (fun _ -> pts_to a0 p0 s0 `star` pts_to a1 p1 s1)
     (requires True)
     (ensures fun b -> b <==> eq2 #(Seq.seq t) s0 s1)
+
+
+/// An introduction function for the fits_u32 predicate.
+/// It will be natively extracted to static_assert (UINT32_MAX <= SIZE_T_MAX) by krml
+inline_for_extraction
+[@@noextract_to "krml"]
+val intro_fits_u32 (_:unit)
+  : ST unit
+       emp (fun _ -> emp)
+       (requires True)
+       (ensures fun _ -> FStar.SizeT.fits_u32)
+
+/// An introduction function for the fits_u64 predicate.
+/// It will be natively extracted to static_assert (UINT64_MAX <= SIZE_T_MAX) by krml
+inline_for_extraction
+[@@noextract_to "krml"]
+val intro_fits_u64 (_:unit)
+  : ST unit
+       emp (fun _ -> emp)
+       (requires True)
+       (ensures fun _ -> FStar.SizeT.fits_u64)

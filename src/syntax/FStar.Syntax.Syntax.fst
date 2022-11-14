@@ -46,8 +46,7 @@ let contains_reflectable (l: list qualifier): bool =
 let withinfo v r = {v=v; p=r}
 let withsort v = withinfo v dummyRange
 
-let bv_eq (bv1:bv) (bv2:bv) =
-    ident_equals bv1.ppname bv2.ppname && bv1.index=bv2.index
+let bv_eq (bv1:bv) (bv2:bv) = bv1.index=bv2.index
 
 let order_bv x y =
   let i = String.compare (string_of_id x.ppname) (string_of_id y.ppname) in
@@ -109,6 +108,7 @@ let mk (t:'a) r = {
     n=t;
     pos=r;
     vars=Util.mk_ref None;
+    hash_code=Util.mk_ref None;
 }
 
 let bv_to_tm   bv :term = mk (Tm_bvar bv) (range_of_bv bv)
@@ -169,8 +169,22 @@ let is_teff (t:term) = match t.n with
 let is_type (t:term) = match t.n with
     | Tm_type _ -> true
     | _ -> false
+(* Gen sym *)
 let null_id  = mk_ident("_", dummyRange)
-let null_bv k = {ppname=null_id; index=0; sort=k}
+let null_bv k = {ppname=null_id; index=Ident.next_id(); sort=k}
+let is_null_bv (b:bv) = string_of_id b.ppname = string_of_id null_id
+let is_null_binder (b:binder) = is_null_bv b.binder_bv
+let range_of_ropt = function
+    | None -> dummyRange
+    | Some r -> r
+let gen_bv : string -> option Range.range -> typ -> bv = fun s r t ->
+  let id = mk_ident(s, range_of_ropt r) in
+  {ppname=id; index=Ident.next_id(); sort=t}
+let new_bv ropt t = gen_bv Ident.reserved_prefix ropt t
+let freshen_bv bv =
+    if is_null_bv bv
+    then new_bv (Some (range_of_bv bv)) bv.sort
+    else {bv with index=Ident.next_id()}
 let mk_binder_with_attrs bv aqual attrs = {
   binder_bv = bv;
   binder_qual = aqual;
@@ -181,8 +195,7 @@ let null_binder t : binder = mk_binder (null_bv t)
 let imp_tag = Implicit false
 let iarg t : arg = t, Some ({ aqual_implicit = true; aqual_attributes = [] })
 let as_arg t : arg = t, None
-let is_null_bv (b:bv) = string_of_id b.ppname = string_of_id null_id
-let is_null_binder (b:binder) = is_null_bv b.binder_bv
+
 
 let is_top_level = function
     | {lbname=Inr _}::_ -> true
@@ -208,19 +221,6 @@ let pat_bvs (p:pat) : list bv =
     in
   List.rev <| aux [] p
 
-(* Gen sym *)
-let range_of_ropt = function
-    | None -> dummyRange
-    | Some r -> r
-let gen_bv : string -> option Range.range -> typ -> bv = fun s r t ->
-  let id = mk_ident(s, range_of_ropt r) in
-  {ppname=id; index=Ident.next_id(); sort=t}
-let new_bv ropt t = gen_bv Ident.reserved_prefix ropt t
-
-let freshen_bv bv =
-    if is_null_bv bv
-    then new_bv (Some (range_of_bv bv)) bv.sort
-    else {bv with index=Ident.next_id()}
 
 let freshen_binder (b:binder) = { b with binder_bv = freshen_bv b.binder_bv }
 
