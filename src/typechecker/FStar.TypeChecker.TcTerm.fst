@@ -2437,7 +2437,7 @@ and check_application_args env head (chead:comp) ghead args expected_topt : term
               But this leads to a massive blow up in the size of generated VCs (cf issue #971)
               arg_rets below are those xn...x1 bound variables
        *)
-      let cres =
+      let cres, inserted_return_in_cres =
         let head_is_pure_and_some_arg_is_effectful =
             TcComm.is_pure_or_ghost_lcomp chead
             && (BU.for_some (fun (_, _, lc) -> not (TcComm.is_pure_or_ghost_lcomp lc)
@@ -2449,9 +2449,9 @@ and check_application_args env head (chead:comp) ghead args expected_topt : term
         && (head_is_pure_and_some_arg_is_effectful)
             // || Option.isSome (Env.expected_typ env))
         then let _ = if Env.debug env Options.Extreme then BU.print1 "(a) Monadic app: Return inserted in monadic application: %s\n" (Print.term_to_string term) in
-             TcUtil.maybe_assume_result_eq_pure_term env term cres
+             TcUtil.maybe_assume_result_eq_pure_term env term cres, true
         else let _ = if Env.debug env Options.Extreme then BU.print1 "(a) Monadic app: No return inserted in monadic application: %s\n" (Print.term_to_string term) in
-             cres
+             cres, false
       in
 
       (* 1. We compute the final computation type comp  *)
@@ -2505,9 +2505,12 @@ and check_application_args env head (chead:comp) ghead args expected_topt : term
              //
              //Push first (List.length arg_rets_names_opt - i) names in the env
              //
-             let env = push_option_names_to_env env
-               (List.splitAt (List.length arg_rets_names_opt - i) arg_rets_names_opt
-                |> fst) in
+             let env =
+               if inserted_return_in_cres
+               then push_option_names_to_env env
+                      (List.splitAt (List.length arg_rets_names_opt - i) arg_rets_names_opt
+                       |> fst)
+                else env in
               if TcComm.is_pure_or_ghost_lcomp c
               then i+1,TcUtil.bind e.pos env (Some e) c (x, out_c)
               else i+1,TcUtil.bind e.pos env None c (x, out_c))
