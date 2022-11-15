@@ -7523,7 +7523,13 @@ and (rebuild :
                                                   let uu___10 =
                                                     let uu___11 =
                                                       FStar_Compiler_Util.mk_ref
-                                                        FStar_Pervasives_Native.None in
+                                                        (if
+                                                           (cfg1.FStar_TypeChecker_Cfg.steps).FStar_TypeChecker_Cfg.hnf
+                                                         then
+                                                           FStar_Pervasives_Native.None
+                                                         else
+                                                           FStar_Pervasives_Native.Some
+                                                             ([], t2)) in
                                                     ([], t2, uu___11, false) in
                                                   Clos uu___10 in
                                                 (uu___8, uu___9) in
