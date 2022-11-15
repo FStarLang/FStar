@@ -426,7 +426,7 @@ let e_tactic_nbe_1 :
            fun t ->
              let uu___2 = unembed_tactic_nbe_1 ea er cb t in
              FStar_Pervasives_Native.Some uu___2) uu___ uu___1
-let (uu___148 : unit) =
+let (uu___153 : unit) =
   let uu___ =
     let uu___1 =
       let uu___2 =
@@ -1508,7 +1508,7 @@ let (uu___148 : unit) =
                                                                     FStar_Syntax_Embeddings.e_tuple2
                                                                     FStar_Reflection_Embeddings.e_env
                                                                     FStar_Reflection_Embeddings.e_bv in
-                                                                    let uu___149
+                                                                    let uu___148
                                                                     =
                                                                     FStar_TypeChecker_NBETerm.e_tuple2
                                                                     FStar_Reflection_NBEEmbeddings.e_env
@@ -1523,10 +1523,10 @@ let (uu___148 : unit) =
                                                                     FStar_Tactics_Basic.push_bv_dsenv
                                                                     FStar_Reflection_NBEEmbeddings.e_env
                                                                     FStar_TypeChecker_NBETerm.e_string
-                                                                    uu___149 in
+                                                                    uu___148 in
                                                                     let uu___147
                                                                     =
-                                                                    let uu___149
+                                                                    let uu___148
                                                                     =
                                                                     FStar_Tactics_InterpFuns.mk_tac_step_1
                                                                     Prims.int_zero
@@ -1537,9 +1537,9 @@ let (uu___148 : unit) =
                                                                     FStar_Tactics_Basic.term_to_string
                                                                     FStar_Reflection_NBEEmbeddings.e_term
                                                                     FStar_TypeChecker_NBETerm.e_string in
-                                                                    let uu___150
+                                                                    let uu___149
                                                                     =
-                                                                    let uu___151
+                                                                    let uu___150
                                                                     =
                                                                     FStar_Tactics_InterpFuns.mk_tac_step_1
                                                                     Prims.int_zero
@@ -1550,9 +1550,9 @@ let (uu___148 : unit) =
                                                                     FStar_Tactics_Basic.comp_to_string
                                                                     FStar_Reflection_NBEEmbeddings.e_comp
                                                                     FStar_TypeChecker_NBETerm.e_string in
-                                                                    let uu___152
+                                                                    let uu___151
                                                                     =
-                                                                    let uu___153
+                                                                    let uu___152
                                                                     =
                                                                     FStar_Tactics_InterpFuns.mk_tac_step_2
                                                                     Prims.int_zero
@@ -1565,13 +1565,47 @@ let (uu___148 : unit) =
                                                                     FStar_Reflection_NBEEmbeddings.e_term
                                                                     FStar_Reflection_NBEEmbeddings.e_term
                                                                     FStar_TypeChecker_NBETerm.e_bool in
-                                                                    [uu___153] in
-                                                                    uu___151
+                                                                    let uu___154
+                                                                    =
+                                                                    let uu___155
+                                                                    =
+                                                                    let uu___156
+                                                                    =
+                                                                    e_tactic_thunk
+                                                                    FStar_Syntax_Embeddings.e_any in
+                                                                    let uu___157
+                                                                    =
+                                                                    e_tactic_nbe_thunk
+                                                                    FStar_TypeChecker_NBETerm.e_any in
+                                                                    FStar_Tactics_InterpFuns.mk_tac_step_3
+                                                                    Prims.int_one
+                                                                    "with_compat_pre_core"
+                                                                    (fun
+                                                                    uu___158
+                                                                    ->
+                                                                    FStar_Tactics_Basic.with_compat_pre_core)
+                                                                    FStar_Syntax_Embeddings.e_any
+                                                                    FStar_Syntax_Embeddings.e_int
+                                                                    uu___156
+                                                                    FStar_Syntax_Embeddings.e_any
+                                                                    (fun
+                                                                    uu___158
+                                                                    ->
+                                                                    FStar_Tactics_Basic.with_compat_pre_core)
+                                                                    FStar_TypeChecker_NBETerm.e_any
+                                                                    FStar_TypeChecker_NBETerm.e_int
+                                                                    uu___157
+                                                                    FStar_TypeChecker_NBETerm.e_any in
+                                                                    [uu___155] in
+                                                                    uu___152
                                                                     ::
-                                                                    uu___152 in
-                                                                    uu___149
+                                                                    uu___154 in
+                                                                    uu___150
                                                                     ::
-                                                                    uu___150 in
+                                                                    uu___151 in
+                                                                    uu___148
+                                                                    ::
+                                                                    uu___149 in
                                                                     uu___146
                                                                     ::
                                                                     uu___147 in
@@ -1894,205 +1928,185 @@ let run_tactic_on_ps' :
                         (let tau =
                            unembed_tactic_1 e_arg e_res tactic
                              FStar_Syntax_Embeddings.id_norm_cb in
-                         let uu___7 =
-                           FStar_Compiler_Util.record_time
+                         let res =
+                           let uu___7 =
+                             let uu___8 =
+                               let uu___9 =
+                                 FStar_TypeChecker_Env.current_module
+                                   ps.FStar_Tactics_Types.main_context in
+                               FStar_Ident.string_of_lid uu___9 in
+                             FStar_Pervasives_Native.Some uu___8 in
+                           FStar_Profiling.profile
                              (fun uu___8 ->
                                 let uu___9 = tau arg in
-                                FStar_Tactics_Monad.run_safe uu___9 ps) in
-                         match uu___7 with
-                         | (res, ms) ->
-                             ((let uu___9 =
-                                 FStar_Compiler_Effect.op_Bang tacdbg in
-                               if uu___9
-                               then FStar_Compiler_Util.print_string "}\n"
-                               else ());
-                              (let uu___10 =
-                                 (FStar_Compiler_Effect.op_Bang tacdbg) ||
-                                   (FStar_Options.tactics_info ()) in
-                               if uu___10
-                               then
-                                 let uu___11 =
-                                   FStar_Syntax_Print.term_to_string tactic in
-                                 let uu___12 =
-                                   FStar_Compiler_Util.string_of_int ms in
-                                 let uu___13 =
-                                   FStar_Syntax_Print.lid_to_string
-                                     env.FStar_TypeChecker_Env.curmodule in
-                                 FStar_Compiler_Util.print3
-                                   "Tactic %s ran in %s ms (%s)\n" uu___11
-                                   uu___12 uu___13
-                               else ());
-                              (match res with
-                               | FStar_Tactics_Result.Success (ret, ps1) ->
-                                   let remaining_smt_goals =
-                                     FStar_Compiler_List.op_At
-                                       ps1.FStar_Tactics_Types.goals
-                                       ps1.FStar_Tactics_Types.smt_goals in
-                                   (FStar_Compiler_List.iter
-                                      (fun g1 ->
-                                         FStar_Tactics_Basic.mark_goal_implicit_allow_untyped
-                                           g1;
-                                         (let uu___12 =
-                                            FStar_Tactics_Types.is_irrelevant
-                                              g1 in
-                                          if uu___12
-                                          then
-                                            ((let uu___14 =
-                                                FStar_Compiler_Effect.op_Bang
-                                                  tacdbg in
-                                              if uu___14
-                                              then
-                                                let uu___15 =
-                                                  let uu___16 =
-                                                    FStar_Tactics_Types.goal_witness
-                                                      g1 in
-                                                  FStar_Syntax_Print.term_to_string
-                                                    uu___16 in
-                                                FStar_Compiler_Util.print1
-                                                  "Assigning irrelevant goal %s\n"
-                                                  uu___15
-                                              else ());
-                                             (let uu___14 =
-                                                let uu___15 =
-                                                  FStar_Tactics_Types.goal_env
-                                                    g1 in
+                                FStar_Tactics_Monad.run_safe uu___9 ps)
+                             uu___7 "FStar.Tactics.Interpreter.run_safe" in
+                         (let uu___8 = FStar_Compiler_Effect.op_Bang tacdbg in
+                          if uu___8
+                          then FStar_Compiler_Util.print_string "}\n"
+                          else ());
+                         (match res with
+                          | FStar_Tactics_Result.Success (ret, ps1) ->
+                              let remaining_smt_goals =
+                                FStar_Compiler_List.op_At
+                                  ps1.FStar_Tactics_Types.goals
+                                  ps1.FStar_Tactics_Types.smt_goals in
+                              (FStar_Compiler_List.iter
+                                 (fun g1 ->
+                                    FStar_Tactics_Basic.mark_goal_implicit_already_checked
+                                      g1;
+                                    (let uu___10 =
+                                       FStar_Tactics_Types.is_irrelevant g1 in
+                                     if uu___10
+                                     then
+                                       ((let uu___12 =
+                                           FStar_Compiler_Effect.op_Bang
+                                             tacdbg in
+                                         if uu___12
+                                         then
+                                           let uu___13 =
+                                             let uu___14 =
+                                               FStar_Tactics_Types.goal_witness
+                                                 g1 in
+                                             FStar_Syntax_Print.term_to_string
+                                               uu___14 in
+                                           FStar_Compiler_Util.print1
+                                             "Assigning irrelevant goal %s\n"
+                                             uu___13
+                                         else ());
+                                        (let uu___12 =
+                                           let uu___13 =
+                                             FStar_Tactics_Types.goal_env g1 in
+                                           let uu___14 =
+                                             FStar_Tactics_Types.goal_witness
+                                               g1 in
+                                           FStar_TypeChecker_Rel.teq_nosmt_force
+                                             uu___13 uu___14
+                                             FStar_Syntax_Util.exp_unit in
+                                         if uu___12
+                                         then ()
+                                         else
+                                           (let uu___14 =
+                                              let uu___15 =
                                                 let uu___16 =
                                                   FStar_Tactics_Types.goal_witness
                                                     g1 in
-                                                FStar_TypeChecker_Rel.teq_nosmt_force
-                                                  uu___15 uu___16
-                                                  FStar_Syntax_Util.exp_unit in
-                                              if uu___14
-                                              then ()
-                                              else
-                                                (let uu___16 =
-                                                   let uu___17 =
-                                                     let uu___18 =
-                                                       FStar_Tactics_Types.goal_witness
-                                                         g1 in
-                                                     FStar_Syntax_Print.term_to_string
-                                                       uu___18 in
-                                                   FStar_Compiler_Util.format1
-                                                     "Irrelevant tactic witness does not unify with (): %s"
-                                                     uu___17 in
-                                                 failwith uu___16)))
-                                          else ())) remaining_smt_goals;
-                                    (let uu___12 =
-                                       FStar_Compiler_Effect.op_Bang tacdbg in
-                                     if uu___12
-                                     then
-                                       let uu___13 =
-                                         FStar_Common.string_of_list
-                                           (fun imp ->
-                                              FStar_Syntax_Print.ctx_uvar_to_string
-                                                imp.FStar_TypeChecker_Common.imp_uvar)
-                                           ps1.FStar_Tactics_Types.all_implicits in
-                                       FStar_Compiler_Util.print1
-                                         "About to check tactic implicits: %s\n"
-                                         uu___13
-                                     else ());
-                                    (let g1 =
-                                       {
-                                         FStar_TypeChecker_Common.guard_f =
-                                           (FStar_TypeChecker_Env.trivial_guard.FStar_TypeChecker_Common.guard_f);
-                                         FStar_TypeChecker_Common.deferred_to_tac
-                                           =
-                                           (FStar_TypeChecker_Env.trivial_guard.FStar_TypeChecker_Common.deferred_to_tac);
-                                         FStar_TypeChecker_Common.deferred =
-                                           (FStar_TypeChecker_Env.trivial_guard.FStar_TypeChecker_Common.deferred);
-                                         FStar_TypeChecker_Common.univ_ineqs
-                                           =
-                                           (FStar_TypeChecker_Env.trivial_guard.FStar_TypeChecker_Common.univ_ineqs);
-                                         FStar_TypeChecker_Common.implicits =
-                                           (ps1.FStar_Tactics_Types.all_implicits)
-                                       } in
-                                     let g2 =
-                                       FStar_TypeChecker_Rel.solve_deferred_constraints
-                                         env g1 in
-                                     (let uu___13 =
-                                        FStar_Compiler_Effect.op_Bang tacdbg in
-                                      if uu___13
-                                      then
-                                        let uu___14 =
-                                          FStar_Compiler_Util.string_of_int
-                                            (FStar_Compiler_List.length
-                                               ps1.FStar_Tactics_Types.all_implicits) in
-                                        let uu___15 =
-                                          FStar_Common.string_of_list
-                                            (fun imp ->
-                                               FStar_Syntax_Print.ctx_uvar_to_string
-                                                 imp.FStar_TypeChecker_Common.imp_uvar)
-                                            ps1.FStar_Tactics_Types.all_implicits in
-                                        FStar_Compiler_Util.print2
-                                          "Checked %s implicits (1): %s\n"
-                                          uu___14 uu___15
-                                      else ());
-                                     (let tagged_implicits =
-                                        FStar_TypeChecker_Rel.resolve_implicits_tac
-                                          env g2 in
-                                      (let uu___14 =
-                                         FStar_Compiler_Effect.op_Bang tacdbg in
-                                       if uu___14
-                                       then
-                                         let uu___15 =
-                                           FStar_Compiler_Util.string_of_int
-                                             (FStar_Compiler_List.length
-                                                ps1.FStar_Tactics_Types.all_implicits) in
-                                         let uu___16 =
-                                           FStar_Common.string_of_list
-                                             (fun imp ->
-                                                FStar_Syntax_Print.ctx_uvar_to_string
-                                                  imp.FStar_TypeChecker_Common.imp_uvar)
-                                             ps1.FStar_Tactics_Types.all_implicits in
-                                         FStar_Compiler_Util.print2
-                                           "Checked %s implicits (2): %s\n"
-                                           uu___15 uu___16
-                                       else ());
-                                      report_implicits rng_goal
-                                        tagged_implicits;
-                                      (let uu___16 =
-                                         FStar_Compiler_Effect.op_Bang tacdbg in
-                                       if uu___16
-                                       then
-                                         FStar_Tactics_Printing.do_dump_proofstate
-                                           ps1 "at the finish line"
-                                       else ());
-                                      ((FStar_Compiler_List.op_At
-                                          ps1.FStar_Tactics_Types.goals
-                                          ps1.FStar_Tactics_Types.smt_goals),
-                                        ret))))
-                               | FStar_Tactics_Result.Failed (e, ps1) ->
-                                   (FStar_Tactics_Printing.do_dump_proofstate
-                                      ps1 "at the time of failure";
-                                    (let texn_to_string e1 =
-                                       match e1 with
-                                       | FStar_Tactics_Common.TacticFailure s
-                                           -> s
-                                       | FStar_Tactics_Common.EExn t ->
-                                           let uu___11 =
-                                             FStar_Syntax_Print.term_to_string
-                                               t in
-                                           Prims.op_Hat
-                                             "uncaught exception: " uu___11
-                                       | e2 -> FStar_Compiler_Effect.raise e2 in
-                                     let rng =
-                                       if background
-                                       then
-                                         match ps1.FStar_Tactics_Types.goals
-                                         with
-                                         | g1::uu___11 ->
-                                             (g1.FStar_Tactics_Types.goal_ctx_uvar).FStar_Syntax_Syntax.ctx_uvar_range
-                                         | uu___11 -> rng_call
-                                       else
-                                         ps1.FStar_Tactics_Types.entry_range in
-                                     let uu___11 =
-                                       let uu___12 =
-                                         let uu___13 = texn_to_string e in
-                                         FStar_Compiler_Util.format1
-                                           "user tactic failed: `%s`" uu___13 in
-                                       (FStar_Errors.Fatal_UserTacticFailure,
-                                         uu___12) in
-                                     FStar_Errors.raise_error uu___11 rng)))))))
+                                                FStar_Syntax_Print.term_to_string
+                                                  uu___16 in
+                                              FStar_Compiler_Util.format1
+                                                "Irrelevant tactic witness does not unify with (): %s"
+                                                uu___15 in
+                                            failwith uu___14)))
+                                     else ())) remaining_smt_goals;
+                               (let uu___10 =
+                                  FStar_Compiler_Effect.op_Bang tacdbg in
+                                if uu___10
+                                then
+                                  let uu___11 =
+                                    FStar_Common.string_of_list
+                                      (fun imp ->
+                                         FStar_Syntax_Print.ctx_uvar_to_string
+                                           imp.FStar_TypeChecker_Common.imp_uvar)
+                                      ps1.FStar_Tactics_Types.all_implicits in
+                                  FStar_Compiler_Util.print1
+                                    "About to check tactic implicits: %s\n"
+                                    uu___11
+                                else ());
+                               (let g1 =
+                                  {
+                                    FStar_TypeChecker_Common.guard_f =
+                                      (FStar_TypeChecker_Env.trivial_guard.FStar_TypeChecker_Common.guard_f);
+                                    FStar_TypeChecker_Common.deferred_to_tac
+                                      =
+                                      (FStar_TypeChecker_Env.trivial_guard.FStar_TypeChecker_Common.deferred_to_tac);
+                                    FStar_TypeChecker_Common.deferred =
+                                      (FStar_TypeChecker_Env.trivial_guard.FStar_TypeChecker_Common.deferred);
+                                    FStar_TypeChecker_Common.univ_ineqs =
+                                      (FStar_TypeChecker_Env.trivial_guard.FStar_TypeChecker_Common.univ_ineqs);
+                                    FStar_TypeChecker_Common.implicits =
+                                      (ps1.FStar_Tactics_Types.all_implicits)
+                                  } in
+                                let g2 =
+                                  FStar_TypeChecker_Rel.solve_deferred_constraints
+                                    env g1 in
+                                (let uu___11 =
+                                   FStar_Compiler_Effect.op_Bang tacdbg in
+                                 if uu___11
+                                 then
+                                   let uu___12 =
+                                     FStar_Compiler_Util.string_of_int
+                                       (FStar_Compiler_List.length
+                                          ps1.FStar_Tactics_Types.all_implicits) in
+                                   let uu___13 =
+                                     FStar_Common.string_of_list
+                                       (fun imp ->
+                                          FStar_Syntax_Print.ctx_uvar_to_string
+                                            imp.FStar_TypeChecker_Common.imp_uvar)
+                                       ps1.FStar_Tactics_Types.all_implicits in
+                                   FStar_Compiler_Util.print2
+                                     "Checked %s implicits (1): %s\n" uu___12
+                                     uu___13
+                                 else ());
+                                (let tagged_implicits =
+                                   FStar_TypeChecker_Rel.resolve_implicits_tac
+                                     env g2 in
+                                 (let uu___12 =
+                                    FStar_Compiler_Effect.op_Bang tacdbg in
+                                  if uu___12
+                                  then
+                                    let uu___13 =
+                                      FStar_Compiler_Util.string_of_int
+                                        (FStar_Compiler_List.length
+                                           ps1.FStar_Tactics_Types.all_implicits) in
+                                    let uu___14 =
+                                      FStar_Common.string_of_list
+                                        (fun imp ->
+                                           FStar_Syntax_Print.ctx_uvar_to_string
+                                             imp.FStar_TypeChecker_Common.imp_uvar)
+                                        ps1.FStar_Tactics_Types.all_implicits in
+                                    FStar_Compiler_Util.print2
+                                      "Checked %s implicits (2): %s\n"
+                                      uu___13 uu___14
+                                  else ());
+                                 report_implicits rng_goal tagged_implicits;
+                                 (let uu___14 =
+                                    FStar_Compiler_Effect.op_Bang tacdbg in
+                                  if uu___14
+                                  then
+                                    FStar_Tactics_Printing.do_dump_proofstate
+                                      ps1 "at the finish line"
+                                  else ());
+                                 ((FStar_Compiler_List.op_At
+                                     ps1.FStar_Tactics_Types.goals
+                                     ps1.FStar_Tactics_Types.smt_goals), ret))))
+                          | FStar_Tactics_Result.Failed (e, ps1) ->
+                              (FStar_Tactics_Printing.do_dump_proofstate ps1
+                                 "at the time of failure";
+                               (let texn_to_string e1 =
+                                  match e1 with
+                                  | FStar_Tactics_Common.TacticFailure s -> s
+                                  | FStar_Tactics_Common.EExn t ->
+                                      let uu___9 =
+                                        FStar_Syntax_Print.term_to_string t in
+                                      Prims.op_Hat "uncaught exception: "
+                                        uu___9
+                                  | e2 -> FStar_Compiler_Effect.raise e2 in
+                                let rng =
+                                  if background
+                                  then
+                                    match ps1.FStar_Tactics_Types.goals with
+                                    | g1::uu___9 ->
+                                        (g1.FStar_Tactics_Types.goal_ctx_uvar).FStar_Syntax_Syntax.ctx_uvar_range
+                                    | uu___9 -> rng_call
+                                  else ps1.FStar_Tactics_Types.entry_range in
+                                let uu___9 =
+                                  let uu___10 =
+                                    let uu___11 = texn_to_string e in
+                                    FStar_Compiler_Util.format1
+                                      "user tactic failed: `%s`" uu___11 in
+                                  (FStar_Errors.Fatal_UserTacticFailure,
+                                    uu___10) in
+                                FStar_Errors.raise_error uu___9 rng))))))
 let run_tactic_on_ps :
   'a 'b .
     FStar_Compiler_Range.range ->

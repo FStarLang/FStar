@@ -4651,17 +4651,10 @@ and (p_constant : FStar_Const.sconst -> FStar_Pprint.document) =
     | FStar_Const.Const_unit -> str "()"
     | FStar_Const.Const_bool b -> FStar_Pprint.doc_of_bool b
     | FStar_Const.Const_real r -> str (Prims.op_Hat r "R")
-    | FStar_Const.Const_float x ->
-        str (FStar_Compiler_Util.string_of_float x)
     | FStar_Const.Const_char x -> FStar_Pprint.doc_of_char x
     | FStar_Const.Const_string (s, uu___1) ->
         let uu___2 = str (FStar_String.escaped s) in
         FStar_Pprint.dquotes uu___2
-    | FStar_Const.Const_bytearray (bytes, uu___1) ->
-        let uu___2 =
-          let uu___3 = str (FStar_Compiler_Util.string_of_bytes bytes) in
-          FStar_Pprint.dquotes uu___3 in
-        let uu___3 = str "B" in FStar_Pprint.op_Hat_Hat uu___2 uu___3
     | FStar_Const.Const_int (repr, sign_width_opt) ->
         let signedness uu___1 =
           match uu___1 with

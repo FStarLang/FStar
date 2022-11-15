@@ -90,6 +90,9 @@ let (none_lid : FStar_Ident.lident) = psnconst "None"
 let (assume_lid : FStar_Ident.lident) = pconst "_assume"
 let (assert_lid : FStar_Ident.lident) = pconst "_assert"
 let (pure_wp_lid : FStar_Ident.lident) = pconst "pure_wp"
+let (pure_wp_monotonic_lid : FStar_Ident.lident) = pconst "pure_wp_monotonic"
+let (pure_wp_monotonic0_lid : FStar_Ident.lident) =
+  pconst "pure_wp_monotonic0"
 let (trivial_pure_post_lid : FStar_Ident.lident) =
   psconst "trivial_pure_post"
 let (pure_assert_wp_lid : FStar_Ident.lident) = pconst "pure_assert_wp0"
@@ -366,10 +369,8 @@ let (const_to_string : FStar_Const.sconst -> Prims.string) =
     | FStar_Const.Const_unit -> "()"
     | FStar_Const.Const_bool b -> if b then "true" else "false"
     | FStar_Const.Const_real r -> FStar_String.op_Hat r "R"
-    | FStar_Const.Const_float x1 -> FStar_Compiler_Util.string_of_float x1
     | FStar_Const.Const_string (s, uu___) ->
         FStar_Compiler_Util.format1 "\"%s\"" s
-    | FStar_Const.Const_bytearray uu___ -> "<bytearray>"
     | FStar_Const.Const_int (x1, uu___) -> x1
     | FStar_Const.Const_char c ->
         let uu___ =
