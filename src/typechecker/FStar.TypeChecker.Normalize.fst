@@ -2928,22 +2928,28 @@ and rebuild (cfg:cfg) (env:env) (stack:stack) (t:term) : term =
                 //the elements of s are sub-terms of t
                 //the have no free de Bruijn indices; so their env=[]; see pre-condition at the top of rebuild
                 let env0 = env in
-                //
-                // AR: when adding the bindings for pattern arguments to the environment,
-                //     this code used to set the memo entry to t as well
-                //     (i.e. BU.mk_ref None used to be BU.mk_ref t), roughly
-                //
-                //     but unclear to me why is that ok
-                //     the scrutinee argument may not be normalized at all
-                //     in fact, in the core typechecker code, we had instances of this resulting
-                //       in incorrect behavior
-                //     there `t`, i.e. an argument to scrutinee was of the form `f x`,
-                //       where `f` did not get unfolded (we asked for whnf there),
-                //       because this memo entry was set to `f x`, and we returned it as is
-                //
+
+
+                // The scrutinee is (at least) in weak normal
+                // form. This means, it can be of the form (C v1
+                // ... (fun x -> e) ... vn)
+
+                //ie., it may have some sub-terms that are lambdas
+                //with unreduced bodies
+
+                //but, since the memo references are expected to hold
+                //weakly normal terms, it is safe to set them to the
+                //sub-terms of the scrutinee
+
+                //otherwise, we will keep reducing them over and over
+                //again. See, e.g., Issue #2757
+
+                //Except, if the normalizer is running in HEAD normal form mode, 
+                //then the sub-terms of the scrutinee might not be reduced yet.
+                //In that case, do not set the memo reference
                 let env = List.fold_left
                       (fun env (bv, t) -> (Some (S.mk_binder bv),
-                                        Clos([], t, BU.mk_ref None, false))::env)
+                                        Clos([], t, BU.mk_ref (if cfg.steps.hnf then None else Some ([], t)), false))::env)
                       env s in
                 norm cfg env stack (guard_when_clause wopt b rest)
         in
