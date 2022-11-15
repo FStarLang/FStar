@@ -60,16 +60,6 @@ let split () : Tac unit =
     try apply_lemma (`split_lem)
     with | _ -> fail "Could not split goal"
 
-private val imp_intro_lem : (#a:Type) -> (#b : Type) ->
-                            (a -> squash b) ->
-                            Lemma (a ==> b)
-let imp_intro_lem #a #b f =
-  FStar.Classical.give_witness (FStar.Classical.arrow_to_impl (fun (x:squash a) -> FStar.Squash.bind_squash x f))
-
-let implies_intro () : Tac binder =
-    apply_lemma (`imp_intro_lem);
-    intro ()
-
 let implies_intros () : Tac binders = repeat1 implies_intro
 
 let l_intro () = forall_intro `or_else` implies_intro

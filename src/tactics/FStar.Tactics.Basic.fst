@@ -764,6 +764,41 @@ let intro_rec () : tac (binder * binder) =
     | None ->
         fail1 "intro_rec: goal is not an arrow (%s)" (tts (goal_env goal) (goal_type goal))
 
+(*
+  [implies_intro]:
+
+  Initial goal: G |- ?u : squash (a ==> b)
+
+  Now we do an `implies_intro`:
+
+  Next goal:  `G, x:a |- ?v : squash b'`
+
+  with `?u := ()`, since this is a squashed goal
+*)
+let implies_intro () : tac binder = wrap_err "implies_intro" <| (
+    let! goal = cur_goal in
+    match U.un_squash (goal_type goal) with
+    | None -> fail "Cannot apply implies_intro: not a squashed goal"
+    | Some imp ->
+      let head, args = U.head_and_args imp in
+      match (SS.compress head).n, args with
+      | Tm_fvar fv, [(a, _); (b, _)] 
+        when S.fv_eq_lid fv PC.imp_lid ->
+        let hyp = a in
+        let new_goal_type = U.mk_squash U_zero b in
+        let env', binder = FStar.TypeChecker.Core.fresh_binder_in_env (goal_env goal) hyp in
+        let! body, ctx_uvar = 
+             new_uvar "implies_intro" env' new_goal_type 
+                      (Some (should_check_goal_uvar goal)) 
+                      (goal_typedness_deps goal)
+                      (rangeof goal) in
+        set_solution goal U.exp_unit ;!
+        let new_goal = mk_goal env' ctx_uvar goal.opts goal.is_guard goal.label in
+        bnorm_and_replace new_goal ;!
+        ret binder
+      | _ -> fail "Cannot apply implies_intro: not an implication"
+    )
+
 let norm (s : list EMB.norm_step) : tac unit =
     let! goal = cur_goal in
     if_verbose (fun () -> BU.print1 "norm: witness = %s\n" (Print.term_to_string (goal_witness goal))) ;!

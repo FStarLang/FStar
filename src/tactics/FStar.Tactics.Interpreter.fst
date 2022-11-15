@@ -279,6 +279,10 @@ let () =
         intro_rec e_unit (e_tuple2 RE.e_binder RE.e_binder)
         intro_rec NBET.e_unit (NBET.e_tuple2 NRE.e_binder NRE.e_binder);
 
+      mk_tac_step_1 0 "implies_intro"
+        implies_intro e_unit RE.e_binder
+        implies_intro NBET.e_unit NRE.e_binder;
+
       mk_tac_step_1 0 "norm"
         norm (e_list e_norm_step) e_unit
         norm (NBET.e_list NBET.e_norm_step) NBET.e_unit;

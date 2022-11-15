@@ -1880,6 +1880,12 @@ let compute_term_type_handle_guards g e must_tot gh =
   | Inl (_, Some _) -> failwith "Impossible: All guards should have been handled already"
   | Inr err -> Inr err
 
+let fresh_binder_in_env (g:Env.env) (ty:term)
+  : Env.env & binder
+  = let g = initial_env g None in
+    let g', b = fresh_binder g (S.mk_binder (S.new_bv None ty)) in
+    g'.tcenv, b
+
 let open_binders_in_term (env:Env.env) (bs:binders) (t:term) =
   let g = initial_env env None in
   let g', bs, t = open_term_binders g bs t in

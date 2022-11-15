@@ -121,6 +121,7 @@ let norm_term_env           = fun e s -> from_tac_3 B.norm_term_env e (tr_repr_s
 let norm_binder_type        = fun s ->   from_tac_2 B.norm_binder_type (tr_repr_steps s)
 let intro                   = from_tac_1 B.intro
 let intro_rec               = from_tac_1 B.intro_rec
+let implies_intro           = from_tac_1 B.implies_intro
 let rename_to               = from_tac_2 B.rename_to
 let revert                  = from_tac_1 B.revert
 let binder_retype           = from_tac_1 B.binder_retype

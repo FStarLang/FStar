@@ -18,6 +18,9 @@ val compute_term_type_handle_guards (g:Env.env) (e:term) (must_tot:bool)
                                     (discharge_guard: Env.env -> typ -> bool)
   : either typ error
 
+val fresh_binder_in_env (g:Env.env) (ty:term)
+  : Env.env & binder
+  
 val open_binders_in_term (g:Env.env) (bs:binders) (t:term)
   : Env.env & binders & term
 

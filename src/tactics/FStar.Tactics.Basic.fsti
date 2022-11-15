@@ -63,6 +63,7 @@ val norm_term_env          : env -> list EMB.norm_step -> term -> tac term
 val norm_binder_type       : list EMB.norm_step -> binder -> tac unit
 val intro                  : unit -> tac binder
 val intro_rec              : unit -> tac (binder * binder)
+val implies_intro          : unit -> tac binder
 val rename_to              : binder -> string -> tac binder
 val revert                 : unit -> tac unit
 val binder_retype          : binder -> tac unit

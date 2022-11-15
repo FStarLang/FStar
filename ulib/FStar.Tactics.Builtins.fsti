@@ -104,6 +104,12 @@ Currently broken (c.f. issue #1103)
 *)
 val intro_rec  : unit -> Tac (binder * binder)
 
+(** [implies_intro] pushes the first argument of an implication goal into the
+environment, turning [Gamma |- ?u : squash (a ==>  b)]
+into [Gamma, x:squash a |- ?u' : squash b].
+*)
+val implies_intro : unit -> Tac binder
+
 (** [rename_to b nm] will rename the binder [b] to [nm] in
 the environment, goal, and witness in a safe manner. The only use of this
 is to make goals and terms more user readable. The primitive returns

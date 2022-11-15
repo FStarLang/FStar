@@ -4271,6 +4271,21 @@ let (compute_term_type_handle_guards :
               failwith
                 "Impossible: All guards should have been handled already"
           | FStar_Pervasives.Inr err -> FStar_Pervasives.Inr err
+let (fresh_binder_in_env :
+  FStar_TypeChecker_Env.env ->
+    FStar_Syntax_Syntax.term ->
+      (FStar_TypeChecker_Env.env * FStar_Syntax_Syntax.binder))
+  =
+  fun g ->
+    fun ty ->
+      let g1 = initial_env g FStar_Pervasives_Native.None in
+      let uu___ =
+        let uu___1 =
+          let uu___2 =
+            FStar_Syntax_Syntax.new_bv FStar_Pervasives_Native.None ty in
+          FStar_Syntax_Syntax.mk_binder uu___2 in
+        fresh_binder g1 uu___1 in
+      match uu___ with | (g', b) -> ((g'.tcenv), b)
 let (open_binders_in_term :
   FStar_TypeChecker_Env.env ->
     FStar_Syntax_Syntax.binders ->

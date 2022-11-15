@@ -2181,6 +2181,80 @@ let (intro_rec :
                 let uu___6 = FStar_Tactics_Types.goal_type goal in
                 tts uu___5 uu___6 in
               fail1 "intro_rec: goal is not an arrow (%s)" uu___4))
+let (implies_intro :
+  unit -> FStar_Syntax_Syntax.binder FStar_Tactics_Monad.tac) =
+  fun uu___ ->
+    let uu___1 =
+      FStar_Tactics_Monad.op_let_Bang FStar_Tactics_Monad.cur_goal
+        (fun goal ->
+           let uu___2 =
+             let uu___3 = FStar_Tactics_Types.goal_type goal in
+             FStar_Syntax_Util.un_squash uu___3 in
+           match uu___2 with
+           | FStar_Pervasives_Native.None ->
+               FStar_Tactics_Monad.fail
+                 "Cannot apply implies_intro: not a squashed goal"
+           | FStar_Pervasives_Native.Some imp ->
+               let uu___3 = FStar_Syntax_Util.head_and_args imp in
+               (match uu___3 with
+                | (head, args) ->
+                    let uu___4 =
+                      let uu___5 =
+                        let uu___6 = FStar_Syntax_Subst.compress head in
+                        uu___6.FStar_Syntax_Syntax.n in
+                      (uu___5, args) in
+                    (match uu___4 with
+                     | (FStar_Syntax_Syntax.Tm_fvar fv,
+                        (a, uu___5)::(b, uu___6)::[]) when
+                         FStar_Syntax_Syntax.fv_eq_lid fv
+                           FStar_Parser_Const.imp_lid
+                         ->
+                         let hyp = a in
+                         let new_goal_type =
+                           FStar_Syntax_Util.mk_squash
+                             FStar_Syntax_Syntax.U_zero b in
+                         let uu___7 =
+                           let uu___8 = FStar_Tactics_Types.goal_env goal in
+                           FStar_TypeChecker_Core.fresh_binder_in_env uu___8
+                             hyp in
+                         (match uu___7 with
+                          | (env', binder) ->
+                              let uu___8 =
+                                let uu___9 =
+                                  let uu___10 = should_check_goal_uvar goal in
+                                  FStar_Pervasives_Native.Some uu___10 in
+                                let uu___10 = goal_typedness_deps goal in
+                                FStar_Tactics_Monad.new_uvar "implies_intro"
+                                  env' new_goal_type uu___9 uu___10
+                                  (rangeof goal) in
+                              FStar_Tactics_Monad.op_let_Bang uu___8
+                                (fun uu___9 ->
+                                   match uu___9 with
+                                   | (body, ctx_uvar) ->
+                                       let uu___10 =
+                                         set_solution goal
+                                           FStar_Syntax_Util.exp_unit in
+                                       FStar_Tactics_Monad.op_let_Bang
+                                         uu___10
+                                         (fun uu___11 ->
+                                            let new_goal =
+                                              FStar_Tactics_Types.mk_goal
+                                                env' ctx_uvar
+                                                goal.FStar_Tactics_Types.opts
+                                                goal.FStar_Tactics_Types.is_guard
+                                                goal.FStar_Tactics_Types.label in
+                                            let uu___12 =
+                                              bnorm_and_replace new_goal in
+                                            FStar_Tactics_Monad.op_let_Bang
+                                              uu___12
+                                              (fun uu___13 ->
+                                                 FStar_Tactics_Monad.ret
+                                                   binder))))
+                     | uu___5 ->
+                         FStar_Tactics_Monad.fail
+                           "Cannot apply implies_intro: not an implication"))) in
+    FStar_Compiler_Effect.op_Less_Bar
+      (FStar_Tactics_Monad.wrap_err "implies_intro") uu___1
 let (norm :
   FStar_Syntax_Embeddings.norm_step Prims.list ->
     unit FStar_Tactics_Monad.tac)
