@@ -1321,12 +1321,13 @@ let resugar_wp_eff_combinators env for_free combs =
 
 let resugar_layered_eff_combinators env combs =
   let resugar name (ts, _, _) = resugar_tscheme'' env name ts in
+  let resugar2 name (ts, _) = resugar_tscheme'' env name ts in
 
-  (resugar "repr" combs.l_repr)::
-  (resugar "return" combs.l_return)::
-  (resugar "bind" combs.l_bind)::
-  (resugar "subcomp" combs.l_subcomp)::
-  (resugar "if_then_else" combs.l_if_then_else)::[]
+  (resugar2 "repr"         combs.l_repr)::
+  (resugar2 "return"       combs.l_return)::
+  (resugar  "bind"         combs.l_bind)::
+  (resugar  "subcomp"      combs.l_subcomp)::
+  (resugar  "if_then_else" combs.l_if_then_else)::[]
 
 let resugar_combinators env combs =
   match combs with

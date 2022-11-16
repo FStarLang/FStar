@@ -2540,9 +2540,11 @@ let (resugar_layered_eff_combinators :
       let resugar name uu___ =
         match uu___ with
         | (ts, uu___1, uu___2) -> resugar_tscheme'' env name ts in
-      let uu___ = resugar "repr" combs.FStar_Syntax_Syntax.l_repr in
+      let resugar2 name uu___ =
+        match uu___ with | (ts, uu___1) -> resugar_tscheme'' env name ts in
+      let uu___ = resugar2 "repr" combs.FStar_Syntax_Syntax.l_repr in
       let uu___1 =
-        let uu___2 = resugar "return" combs.FStar_Syntax_Syntax.l_return in
+        let uu___2 = resugar2 "return" combs.FStar_Syntax_Syntax.l_return in
         let uu___3 =
           let uu___4 = resugar "bind" combs.FStar_Syntax_Syntax.l_bind in
           let uu___5 =

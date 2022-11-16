@@ -1402,7 +1402,7 @@ let (indexed_effect_binder_kind_to_string :
   fun uu___ ->
     match uu___ with
     | FStar_Syntax_Syntax.Type_binder -> "type_binder"
-    | FStar_Syntax_Syntax.Substitution_binder -> "subst_binder"
+    | FStar_Syntax_Syntax.Substitutive_binder -> "subst_binder"
     | FStar_Syntax_Syntax.BindCont_no_abstraction_binder ->
         "bind_g_no_abs_binder"
     | FStar_Syntax_Syntax.Range_binder -> "range_binder"
@@ -1430,10 +1430,19 @@ let (indexed_effect_combinator_kind_to_string :
   FStar_Syntax_Syntax.indexed_effect_combinator_kind -> Prims.string) =
   fun uu___ ->
     match uu___ with
-    | FStar_Syntax_Syntax.Standard_combinator l ->
+    | FStar_Syntax_Syntax.Substitutive_combinator l ->
         let uu___1 = list_to_string indexed_effect_binder_kind_to_string l in
         FStar_Compiler_Util.format1 "standard_combinator (%s)" uu___1
     | FStar_Syntax_Syntax.Ad_hoc_combinator -> "ad_hoc_combinator"
+let (indexed_effect_combinator_kind_opt_to_string :
+  FStar_Syntax_Syntax.indexed_effect_combinator_kind
+    FStar_Pervasives_Native.option -> Prims.string)
+  =
+  fun k ->
+    match k with
+    | FStar_Pervasives_Native.None -> "kind not set"
+    | FStar_Pervasives_Native.Some k1 ->
+        indexed_effect_combinator_kind_to_string k1
 let (layered_eff_combinators_to_string :
   FStar_Syntax_Syntax.layered_eff_combinators -> Prims.string) =
   fun combs ->
@@ -1442,16 +1451,18 @@ let (layered_eff_combinators_to_string :
       | (ts_t, ts_ty, kopt) ->
           let uu___1 = tscheme_to_string ts_t in
           let uu___2 = tscheme_to_string ts_ty in
-          let uu___3 =
-            match kopt with
-            | FStar_Pervasives_Native.None -> "none"
-            | FStar_Pervasives_Native.Some k ->
-                indexed_effect_combinator_kind_to_string k in
+          let uu___3 = indexed_effect_combinator_kind_opt_to_string kopt in
           FStar_Compiler_Util.format3 "(%s) : (%s)<%s>" uu___1 uu___2 uu___3 in
+    let to_str2 uu___ =
+      match uu___ with
+      | (ts_t, ts_ty) ->
+          let uu___1 = tscheme_to_string ts_t in
+          let uu___2 = tscheme_to_string ts_ty in
+          FStar_Compiler_Util.format2 "(%s) : (%s)" uu___1 uu___2 in
     let uu___ =
-      let uu___1 = to_str combs.FStar_Syntax_Syntax.l_repr in
+      let uu___1 = to_str2 combs.FStar_Syntax_Syntax.l_repr in
       let uu___2 =
-        let uu___3 = to_str combs.FStar_Syntax_Syntax.l_return in
+        let uu___3 = to_str2 combs.FStar_Syntax_Syntax.l_return in
         let uu___4 =
           let uu___5 = to_str combs.FStar_Syntax_Syntax.l_bind in
           let uu___6 =
@@ -1715,11 +1726,7 @@ let rec (sigelt_to_string : FStar_Syntax_Syntax.sigelt -> Prims.string) =
           let uu___2 = FStar_Ident.string_of_lid p in
           let uu___3 = tscheme_to_string t in
           let uu___4 = tscheme_to_string ty in
-          let uu___5 =
-            match k with
-            | FStar_Pervasives_Native.None -> "<kind not set>"
-            | FStar_Pervasives_Native.Some k1 ->
-                indexed_effect_combinator_kind_to_string k1 in
+          let uu___5 = indexed_effect_combinator_kind_opt_to_string k in
           FStar_Compiler_Util.format6
             "polymonadic_bind (%s, %s) |> %s = (%s, %s)<%s>" uu___ uu___1
             uu___2 uu___3 uu___4 uu___5
@@ -1728,11 +1735,7 @@ let rec (sigelt_to_string : FStar_Syntax_Syntax.sigelt -> Prims.string) =
           let uu___1 = FStar_Ident.string_of_lid n in
           let uu___2 = tscheme_to_string t in
           let uu___3 = tscheme_to_string ty in
-          let uu___4 =
-            match k with
-            | FStar_Pervasives_Native.None -> "<kind not set>"
-            | FStar_Pervasives_Native.Some k1 ->
-                indexed_effect_combinator_kind_to_string k1 in
+          let uu___4 = indexed_effect_combinator_kind_opt_to_string k in
           FStar_Compiler_Util.format5
             "polymonadic_subcomp %s <: %s = (%s, %s)<%s>" uu___ uu___1 uu___2
             uu___3 uu___4 in

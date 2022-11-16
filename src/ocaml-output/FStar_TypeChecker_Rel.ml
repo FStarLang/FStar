@@ -12200,7 +12200,7 @@ and (solve_c :
                                         else
                                           (let uu___12 = kind in
                                            match uu___12 with
-                                           | FStar_Syntax_Syntax.Standard_combinator
+                                           | FStar_Syntax_Syntax.Substitutive_combinator
                                                l ->
                                                apply_standard_indexed_subcomp
                                                  env bs subcomp_c c12 c21

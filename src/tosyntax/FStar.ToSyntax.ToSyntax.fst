@@ -3234,8 +3234,8 @@ let rec desugar_effect env d (quals: qualifiers) (is_layered:bool) eff_name eff_
 
         Layered_eff_sig (num_effect_params, ([], eff_t)),
         Layered_eff ({
-          l_repr = lookup "repr" |> to_comb;
-          l_return = lookup "return" |> to_comb;
+          l_repr = lookup "repr", dummy_tscheme;
+          l_return = lookup "return", dummy_tscheme;
           l_bind = lookup "bind" |> to_comb;
           l_subcomp =
             if has_subcomp then lookup "subcomp" |> to_comb

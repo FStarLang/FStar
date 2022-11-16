@@ -188,7 +188,7 @@ let eq_binders env (bs1 bs2:binders) : option (list S.indexed_effect_binder_kind
        ss@[NT (b1.binder_bv, b2.binder_bv |> S.bv_to_name)]) (true, []) bs1 bs2
 
      |> fst
-  then bs1 |> List.map (fun _ -> Substitution_binder) |> Some
+  then bs1 |> List.map (fun _ -> Substitutive_binder) |> Some
   else None
 
 let bind_combinator_kind (env:env)
@@ -291,14 +291,14 @@ let bind_combinator_kind (env:env)
       let g_sig_b_arrow_t =
         let x_bv = S.gen_bv "x" None (a_b.binder_bv |> S.bv_to_name) in
         let ss = List.map (fun (bv, k) ->
-          if k = Substitution_binder
+          if k = Substitutive_binder
           then [NT (bv, mk_Tm_app (S.bv_to_name bv) [x_bv |> S.bv_to_name |> S.as_arg] Range.dummyRange)]
           else []) l |> List.flatten in
         let g_sig_b_sort = SS.subst ss g_sig_b_sort in
         U.arrow [S.mk_binder x_bv]
                 (mk_Total g_sig_b_sort) in  // Universe?
       if U.eq_tm g_sig_b_arrow_t g_b.binder_bv.sort = U.Equal
-      then l@[g_b.binder_bv, Substitution_binder], ss
+      then l@[g_b.binder_bv, Substitutive_binder], ss
       else if U.eq_tm g_sig_b_sort g_b.binder_bv.sort = U.Equal
       then l@[g_b.binder_bv, BindCont_no_abstraction_binder], ss
       else l@[g_b.binder_bv, Ad_hoc_binder], ss) ([], []) g_sig_bs g_bs in
@@ -349,7 +349,7 @@ let bind_combinator_kind (env:env)
       let eff_params_args = List.map (fun {binder_bv=b} -> b |> S.bv_to_name |> S.as_arg) eff_params_bs in
       let g_bs_args =
         List.map2 (fun {binder_bv=b} kind ->
-          if kind = Substitution_binder
+          if kind = Substitutive_binder
           then S.mk_Tm_app (b |> S.bv_to_name) [x_bv |> S.bv_to_name |> S.as_arg] Range.dummyRange
           else b |> S.bv_to_name) g_bs g_bs_kinds
         |> List.map S.as_arg in
@@ -516,7 +516,7 @@ let validate_indexed_effect_bind_shape (env:env)
   let kind = 
     match lopt with
     | None -> Ad_hoc_combinator
-    | Some l -> Standard_combinator l in
+    | Some l -> Substitutive_combinator l in
 
   if Env.debug env <| Options.Other "LayeredEffectsTc"
   then BU.print2 "Bind %s has %s kind\n" bind_name
@@ -731,7 +731,7 @@ let validate_indexed_effect_subcomp_shape (env:env)
   let kind =
     match lopt with
     | None -> Ad_hoc_combinator
-    | Some l -> Standard_combinator l in
+    | Some l -> Substitutive_combinator l in
 
   if Env.debug env <| Options.Other "LayeredEffectsTc"
   then BU.print2 "Subcomp %s has %s kind\n" subcomp_name
@@ -826,7 +826,7 @@ let ite_combinator_kind (env:env)
 
   let rest_kinds = List.map (fun _ -> Ad_hoc_binder) rest_bs in
 
-  Some ([Type_binder]@eff_params_bs_kinds@f_bs_kinds@g_bs_kinds@rest_kinds@[Repr_binder; Repr_binder; Substitution_binder])
+  Some ([Type_binder]@eff_params_bs_kinds@f_bs_kinds@g_bs_kinds@rest_kinds@[Repr_binder; Repr_binder; Substitutive_binder])
 
 let validate_indexed_effect_ite_shape (env:env)
   (eff_name:lident)
@@ -915,7 +915,7 @@ let validate_indexed_effect_ite_shape (env:env)
   let kind =
     match lopt with
     | None -> Ad_hoc_combinator
-    | Some l -> Standard_combinator l in
+    | Some l -> Substitutive_combinator l in
 
   if Env.debug env <| Options.Other "LayeredEffectsTc"
   then BU.print2 "Ite %s has %s kind\n" ite_name
@@ -1073,7 +1073,7 @@ let validate_indexed_effect_lift_shape (env:env)
   let kind =
     match lopt with
     | None -> Ad_hoc_combinator
-    | Some l -> Standard_combinator l in
+    | Some l -> Substitutive_combinator l in
 
   if Env.debug env <| Options.Other "LayeredEffectsTc"
   then BU.print2 "Lift %s has %s kind\n" lift_name
@@ -1737,10 +1737,11 @@ Errors.with_ctx (BU.format1 "While checking layered effect definition `%s`" (str
     else [] in
 
   let tschemes_of (us, t, ty) k = (us, t), (us, ty), k in
+  let tschemes_of2 (us, t, ty) = (us, t), (us, ty) in
 
   let combinators = Layered_eff ({
-    l_repr = tschemes_of repr (Some (Standard_combinator []));
-    l_return = tschemes_of return_repr (Some Ad_hoc_combinator);
+    l_repr = tschemes_of2 repr;
+    l_return = tschemes_of2 return_repr;
     l_bind = tschemes_of bind_repr (Some bind_kind);
     l_subcomp = tschemes_of stronger_repr (Some subcomp_kind);
     l_if_then_else = tschemes_of if_then_else (Some ite_kind);

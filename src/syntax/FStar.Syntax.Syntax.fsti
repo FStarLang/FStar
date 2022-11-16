@@ -376,16 +376,22 @@ type monad_abbrev = {
   def:typ
   }
 
+//
+// Kind of a binder in an indexed effect combinator
+//
 type indexed_effect_binder_kind =
   | Type_binder
-  | Substitution_binder
-  | BindCont_no_abstraction_binder
+  | Substitutive_binder
+  | BindCont_no_abstraction_binder  // a g computation (the continuation) binder in bind that's not abstracted over x:a
   | Range_binder
   | Repr_binder
   | Ad_hoc_binder
 
+//
+// Kind of an indexed effect combinator
+//
 type indexed_effect_combinator_kind =
-  | Standard_combinator of list indexed_effect_binder_kind
+  | Substitutive_combinator of list indexed_effect_binder_kind
   | Ad_hoc_combinator
 
 type sub_eff = {
@@ -443,22 +449,22 @@ type wp_eff_combinators = {
 (*
  * Layered effects combinators
  *
- * All of these are pairs of type schemes,
+ * All of these have pairs of type schemes,
  *   where the first component is the term ts and the second component is the type ts
  *
  * Before typechecking the effect declaration, the second component is a dummy ts
  *   In other words, desugaring sets the first component only, and typechecker then fills up the second one
  *
- * Similarly the base effect name is also "" after desugaring, and is set by the typechecker
+ * Additionally, bind, subcomp, and if_then_else have a combinator kind,
+ *   this is also set to None in desugaring and set during typechecking the effect
  *)
 type layered_eff_combinators = {
-  l_repr         : (tscheme * tscheme * option indexed_effect_combinator_kind);
-  l_return       : (tscheme * tscheme * option indexed_effect_combinator_kind);
+  l_repr         : (tscheme * tscheme);
+  l_return       : (tscheme * tscheme);
   l_bind         : (tscheme * tscheme * option indexed_effect_combinator_kind);
   l_subcomp      : (tscheme * tscheme * option indexed_effect_combinator_kind);
   l_if_then_else : (tscheme * tscheme * option indexed_effect_combinator_kind);
 }
-
 
 type eff_combinators =
   | Primitive_eff of wp_eff_combinators
@@ -466,18 +472,18 @@ type eff_combinators =
   | Layered_eff of layered_eff_combinators
 
 type effect_signature =
-  | Layered_eff_sig of int & tscheme
+  | Layered_eff_sig of int & tscheme  // (n, ts) where n is the number of effect parameters (all upfront) in the effect signature
   | WP_eff_sig of tscheme
 
 type eff_decl = {
-  mname       : lident;      //STATE_h
+  mname       : lident;      // STATE_h
 
   cattributes : list cflag;
 
-  univs       : univ_names;  //u#heap
-  binders     : binders;     //(heap:Type u#heap), univs and binders are in the scope of the rest of the combinators
+  univs       : univ_names;  // u#heap
+  binders     : binders;     // (heap:Type u#heap), univs and binders are in the scope of the rest of the combinators
 
-  signature   : effect_signature;     //result:Type -> st_wp_h heap -> result -> Effect
+  signature   : effect_signature;
 
   combinators : eff_combinators;
 

@@ -1414,7 +1414,7 @@ let (standard_indexed_bind_substs :
                                                              ->
                                                              if
                                                                g_b_kind =
-                                                                 FStar_Syntax_Syntax.Substitution_binder
+                                                                 FStar_Syntax_Syntax.Substitutive_binder
                                                              then
                                                                let arg_t =
                                                                  let uu___9 =
@@ -2262,7 +2262,7 @@ let (mk_indexed_bind :
                                                 (let uu___9 =
                                                    bind_combinator_kind in
                                                  match uu___9 with
-                                                 | FStar_Syntax_Syntax.Standard_combinator
+                                                 | FStar_Syntax_Syntax.Substitutive_combinator
                                                      binder_kinds ->
                                                      standard_indexed_bind_substs
                                                        env m_ed n_ed p_ed

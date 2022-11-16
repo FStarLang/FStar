@@ -656,7 +656,7 @@ let rec specs_with_types warn_unsafe : list (char * string * opt_type * string) 
       ( noshort,
         "compat_pre_typed_indexed_effects",
         Const (Bool true),
-        "Retain untyped indexed effects unification variables");
+        "Retain untyped indexed effects implicits");
 
       ( noshort,
         "disallow_unification_guards",

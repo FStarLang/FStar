@@ -795,7 +795,7 @@ let standard_indexed_bind_substs env
 
     let g_subst, g_guard =
       List.fold_left2 (fun (ss, g) (g_b, g_b_kind) (arg:S.arg) ->
-        if g_b_kind = Substitution_binder
+        if g_b_kind = Substitutive_binder
         then begin
           let arg_t = U.abs [x_bv |> S.mk_binder] (fst arg) None in
           ss@[NT (g_b.binder_bv, arg_t)],
@@ -1111,7 +1111,7 @@ let mk_indexed_bind env
     if bind_combinator_kind = Ad_hoc_combinator
     then ad_hoc_indexed_bind_substs env m_ed n_ed p_ed
            bind_t_bs ct1 b ct2 r1 has_range_binders
-    else let Standard_combinator binder_kinds = bind_combinator_kind in
+    else let Substitutive_combinator binder_kinds = bind_combinator_kind in
          standard_indexed_bind_substs env m_ed n_ed p_ed
            bind_t_bs binder_kinds ct1 b ct2 r1 num_effect_params has_range_binders in
 

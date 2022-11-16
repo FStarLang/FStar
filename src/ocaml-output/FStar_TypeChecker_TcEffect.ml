@@ -399,7 +399,7 @@ let (eq_binders :
           let uu___1 =
             FStar_Compiler_Effect.op_Bar_Greater bs1
               (FStar_Compiler_List.map
-                 (fun uu___2 -> FStar_Syntax_Syntax.Substitution_binder)) in
+                 (fun uu___2 -> FStar_Syntax_Syntax.Substitutive_binder)) in
           FStar_Compiler_Effect.op_Bar_Greater uu___1
             (fun uu___2 -> FStar_Pervasives_Native.Some uu___2)
         else FStar_Pervasives_Native.None
@@ -866,7 +866,7 @@ let (bind_combinator_kind :
                                                                     ->
                                                                     if
                                                                     k1 =
-                                                                    FStar_Syntax_Syntax.Substitution_binder
+                                                                    FStar_Syntax_Syntax.Substitutive_binder
                                                                     then
                                                                     let uu___15
                                                                     =
@@ -940,7 +940,7 @@ let (bind_combinator_kind :
                                                                     l
                                                                     [
                                                                     ((g_b.FStar_Syntax_Syntax.binder_bv),
-                                                                    FStar_Syntax_Syntax.Substitution_binder)]),
+                                                                    FStar_Syntax_Syntax.Substitutive_binder)]),
                                                                     ss1)
                                                                     else
                                                                     (let uu___15
@@ -1273,7 +1273,7 @@ let (bind_combinator_kind :
                                                                     ->
                                                                     if
                                                                     kind =
-                                                                    FStar_Syntax_Syntax.Substitution_binder
+                                                                    FStar_Syntax_Syntax.Substitutive_binder
                                                                     then
                                                                     let uu___21
                                                                     =
@@ -1888,7 +1888,7 @@ let (validate_indexed_effect_bind_shape :
                                                                     FStar_Syntax_Syntax.Ad_hoc_combinator
                                                                  | FStar_Pervasives_Native.Some
                                                                     l ->
-                                                                    FStar_Syntax_Syntax.Standard_combinator
+                                                                    FStar_Syntax_Syntax.Substitutive_combinator
                                                                     l in
                                                                (let uu___8 =
                                                                   FStar_Compiler_Effect.op_Less_Bar
@@ -2767,7 +2767,7 @@ let (validate_indexed_effect_subcomp_shape :
                                                FStar_Syntax_Syntax.Ad_hoc_combinator
                                            | FStar_Pervasives_Native.Some l
                                                ->
-                                               FStar_Syntax_Syntax.Standard_combinator
+                                               FStar_Syntax_Syntax.Substitutive_combinator
                                                  l in
                                          (let uu___6 =
                                             FStar_Compiler_Effect.op_Less_Bar
@@ -3253,7 +3253,7 @@ let (ite_combinator_kind :
                                                                     rest_kinds
                                                                     [FStar_Syntax_Syntax.Repr_binder;
                                                                     FStar_Syntax_Syntax.Repr_binder;
-                                                                    FStar_Syntax_Syntax.Substitution_binder])))))))))))))
+                                                                    FStar_Syntax_Syntax.Substitutive_binder])))))))))))))
 let (validate_indexed_effect_ite_shape :
   FStar_TypeChecker_Env.env ->
     FStar_Ident.lident ->
@@ -3459,7 +3459,7 @@ let (validate_indexed_effect_ite_shape :
                                       | FStar_Pervasives_Native.None ->
                                           FStar_Syntax_Syntax.Ad_hoc_combinator
                                       | FStar_Pervasives_Native.Some l ->
-                                          FStar_Syntax_Syntax.Standard_combinator
+                                          FStar_Syntax_Syntax.Substitutive_combinator
                                             l in
                                     (let uu___5 =
                                        FStar_Compiler_Effect.op_Less_Bar
@@ -3929,7 +3929,7 @@ let (validate_indexed_effect_lift_shape :
                                                FStar_Syntax_Syntax.Ad_hoc_combinator
                                            | FStar_Pervasives_Native.Some l
                                                ->
-                                               FStar_Syntax_Syntax.Standard_combinator
+                                               FStar_Syntax_Syntax.Substitutive_combinator
                                                  l in
                                          (let uu___8 =
                                             FStar_Compiler_Effect.op_Less_Bar
@@ -6211,19 +6211,18 @@ let (tc_layered_eff_decl :
                                             match uu___14 with
                                             | (us, t, ty) ->
                                                 ((us, t), (us, ty), k) in
+                                          let tschemes_of2 uu___14 =
+                                            match uu___14 with
+                                            | (us, t, ty) ->
+                                                ((us, t), (us, ty)) in
                                           let combinators =
                                             FStar_Syntax_Syntax.Layered_eff
                                               {
                                                 FStar_Syntax_Syntax.l_repr =
-                                                  (tschemes_of repr
-                                                     (FStar_Pervasives_Native.Some
-                                                        (FStar_Syntax_Syntax.Standard_combinator
-                                                           [])));
+                                                  (tschemes_of2 repr);
                                                 FStar_Syntax_Syntax.l_return
                                                   =
-                                                  (tschemes_of return_repr
-                                                     (FStar_Pervasives_Native.Some
-                                                        FStar_Syntax_Syntax.Ad_hoc_combinator));
+                                                  (tschemes_of2 return_repr);
                                                 FStar_Syntax_Syntax.l_bind =
                                                   (tschemes_of bind_repr
                                                      (FStar_Pervasives_Native.Some

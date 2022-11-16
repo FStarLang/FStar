@@ -4609,15 +4609,19 @@ let (apply_layered_eff_combinators :
   =
   fun f ->
     fun combs ->
-      let map uu___ =
+      let map2 uu___ =
+        match uu___ with
+        | (ts1, ts2) ->
+            let uu___1 = f ts1 in let uu___2 = f ts2 in (uu___1, uu___2) in
+      let map3 uu___ =
         match uu___ with
         | (ts1, ts2, k) ->
             let uu___1 = f ts1 in let uu___2 = f ts2 in (uu___1, uu___2, k) in
-      let uu___ = map combs.FStar_Syntax_Syntax.l_repr in
-      let uu___1 = map combs.FStar_Syntax_Syntax.l_return in
-      let uu___2 = map combs.FStar_Syntax_Syntax.l_bind in
-      let uu___3 = map combs.FStar_Syntax_Syntax.l_subcomp in
-      let uu___4 = map combs.FStar_Syntax_Syntax.l_if_then_else in
+      let uu___ = map2 combs.FStar_Syntax_Syntax.l_repr in
+      let uu___1 = map2 combs.FStar_Syntax_Syntax.l_return in
+      let uu___2 = map3 combs.FStar_Syntax_Syntax.l_bind in
+      let uu___3 = map3 combs.FStar_Syntax_Syntax.l_subcomp in
+      let uu___4 = map3 combs.FStar_Syntax_Syntax.l_if_then_else in
       {
         FStar_Syntax_Syntax.l_repr = uu___;
         FStar_Syntax_Syntax.l_return = uu___1;
@@ -4664,8 +4668,7 @@ let (get_eff_repr :
     | FStar_Syntax_Syntax.DM4F_eff combs -> combs.FStar_Syntax_Syntax.repr
     | FStar_Syntax_Syntax.Layered_eff combs ->
         FStar_Compiler_Effect.op_Bar_Greater
-          (FStar_Pervasives_Native.__proj__Mktuple3__item___1
-             combs.FStar_Syntax_Syntax.l_repr)
+          (FStar_Pervasives_Native.fst combs.FStar_Syntax_Syntax.l_repr)
           (fun uu___ -> FStar_Pervasives_Native.Some uu___)
 let (get_bind_vc_combinator :
   FStar_Syntax_Syntax.eff_decl ->
@@ -4692,8 +4695,7 @@ let (get_return_vc_combinator :
         combs.FStar_Syntax_Syntax.ret_wp
     | FStar_Syntax_Syntax.DM4F_eff combs -> combs.FStar_Syntax_Syntax.ret_wp
     | FStar_Syntax_Syntax.Layered_eff combs ->
-        FStar_Pervasives_Native.__proj__Mktuple3__item___2
-          combs.FStar_Syntax_Syntax.l_return
+        FStar_Pervasives_Native.snd combs.FStar_Syntax_Syntax.l_return
 let (get_bind_repr :
   FStar_Syntax_Syntax.eff_decl ->
     FStar_Syntax_Syntax.tscheme FStar_Pervasives_Native.option)
@@ -4721,8 +4723,7 @@ let (get_return_repr :
         combs.FStar_Syntax_Syntax.return_repr
     | FStar_Syntax_Syntax.Layered_eff combs ->
         FStar_Compiler_Effect.op_Bar_Greater
-          (FStar_Pervasives_Native.__proj__Mktuple3__item___1
-             combs.FStar_Syntax_Syntax.l_return)
+          (FStar_Pervasives_Native.fst combs.FStar_Syntax_Syntax.l_return)
           (fun uu___ -> FStar_Pervasives_Native.Some uu___)
 let (get_wp_trivial_combinator :
   FStar_Syntax_Syntax.eff_decl ->

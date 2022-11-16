@@ -7423,13 +7423,11 @@ let rec (desugar_effect :
                                                   let uu___9 =
                                                     let uu___10 =
                                                       lookup "repr" in
-                                                    FStar_Compiler_Effect.op_Bar_Greater
-                                                      uu___10 to_comb in
+                                                    (uu___10, dummy_tscheme) in
                                                   let uu___10 =
                                                     let uu___11 =
                                                       lookup "return" in
-                                                    FStar_Compiler_Effect.op_Bar_Greater
-                                                      uu___11 to_comb in
+                                                    (uu___11, dummy_tscheme) in
                                                   let uu___11 =
                                                     let uu___12 =
                                                       lookup "bind" in

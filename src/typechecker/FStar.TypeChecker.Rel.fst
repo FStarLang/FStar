@@ -4304,7 +4304,7 @@ and solve_c (env:Env.env) (problem:problem comp) (wl:worklist) : solution =
             let fml, sub_probs, wl =
               if kind = Ad_hoc_combinator
               then apply_ad_hoc_indexed_subcomp env bs subcomp_c c1 c2 sub_prob wl subcomp_name r
-              else let Standard_combinator l = kind in
+              else let Substitutive_combinator l = kind in
                    apply_standard_indexed_subcomp env bs subcomp_c c1 c2 sub_prob
                    num_eff_params
                    wl

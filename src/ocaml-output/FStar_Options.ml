@@ -1015,8 +1015,7 @@ let rec (specs_with_types :
     (FStar_Getopt.noshort, "compat_pre_core", (IntStr "0, 1, 2"),
       "Retain behavior of the tactic engine prior to the introduction of FStar.TypeChecker.Core (0 is most permissive, 2 is least permissive)");
     (FStar_Getopt.noshort, "compat_pre_typed_indexed_effects",
-      (Const (Bool true)),
-      "Retain untyped indexed effects unification variables");
+      (Const (Bool true)), "Retain untyped indexed effects implicits");
     (FStar_Getopt.noshort, "disallow_unification_guards", BoolStr,
       "Fail if the SMT guard are produced when the tactic engine re-checks solutions produced by the unifier (default 'false')");
     (FStar_Getopt.noshort, "already_cached",

@@ -710,7 +710,7 @@ let wp_eff_combinators_to_string combs =
 
 let indexed_effect_binder_kind_to_string = function
   | Type_binder -> "type_binder"
-  | Substitution_binder -> "subst_binder"
+  | Substitutive_binder -> "subst_binder"
   | BindCont_no_abstraction_binder -> "bind_g_no_abs_binder"
   | Range_binder -> "range_binder"
   | Repr_binder -> "repr_binder"
@@ -731,18 +731,25 @@ let list_to_string f elts =
             U.string_of_string_builder strb
 
 let indexed_effect_combinator_kind_to_string = function
-  | Standard_combinator l ->
+  | Substitutive_combinator l ->
     U.format1 "standard_combinator (%s)"
       (list_to_string indexed_effect_binder_kind_to_string l)
   | Ad_hoc_combinator -> "ad_hoc_combinator"
+
+let indexed_effect_combinator_kind_opt_to_string k =
+  match k with
+  | None -> "kind not set"
+  | Some k -> indexed_effect_combinator_kind_to_string k
 
 let layered_eff_combinators_to_string combs =
   let to_str (ts_t, ts_ty, kopt) =
     U.format3 "(%s) : (%s)<%s>"
       (tscheme_to_string ts_t) (tscheme_to_string ts_ty)
-      (match kopt with
-       | None -> "none"
-       | Some k -> indexed_effect_combinator_kind_to_string k) in
+      (indexed_effect_combinator_kind_opt_to_string kopt) in
+
+  let to_str2 (ts_t, ts_ty) =
+    U.format2 "(%s) : (%s)"
+      (tscheme_to_string ts_t) (tscheme_to_string ts_ty) in
 
   U.format "{\n\
   ; l_repr = %s\n\
@@ -751,11 +758,11 @@ let layered_eff_combinators_to_string combs =
   ; l_subcomp = %s\n\
   ; l_if_then_else = %s\n
   }\n"
-    [ to_str combs.l_repr;
-      to_str combs.l_return;
-      to_str combs.l_bind;
-      to_str combs.l_subcomp;
-      to_str combs.l_if_then_else ]
+    [ to_str2 combs.l_repr;
+      to_str2 combs.l_return;
+      to_str  combs.l_bind;
+      to_str  combs.l_subcomp;
+      to_str  combs.l_if_then_else ]
 
 let eff_combinators_to_string = function
   | Primitive_eff combs
@@ -869,18 +876,14 @@ let rec sigelt_to_string (x: sigelt) =
           (Ident.string_of_lid p)
           (tscheme_to_string t)
           (tscheme_to_string ty)
-          (match k with
-           | None -> "<kind not set>"
-           | Some k -> indexed_effect_combinator_kind_to_string k)
+          (indexed_effect_combinator_kind_opt_to_string k)
       | Sig_polymonadic_subcomp (m, n, t, ty, k) ->
         U.format5 "polymonadic_subcomp %s <: %s = (%s, %s)<%s>"
           (Ident.string_of_lid m)
           (Ident.string_of_lid n)
           (tscheme_to_string t)
           (tscheme_to_string ty)
-          (match k with
-           | None -> "<kind not set>"
-           | Some k -> indexed_effect_combinator_kind_to_string k)
+          (indexed_effect_combinator_kind_opt_to_string k)
       in
       match x.sigattrs with
       | [] -> "[@ ]" ^ "\n" ^ basic //It is important to keep this empty attribute marker since the Vale type extractor uses it as a delimiter
