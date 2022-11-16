@@ -1080,6 +1080,14 @@ val default_effect (s:string) : Tot unit
     *)
 val top_level_effect (s:string) : Tot unit
 
+(** This attribute can be annotated on the binders in an effect signature
+    to indicate that they are effect parameters. For example, for a
+    state effect that is parametric in the type of the state, the state
+    index may be marked as an effect parameter.
+
+    Also see https://github.com/FStarLang/FStar/wiki/Indexed-effects
+
+    *)
 val effect_param : unit
 
 (** Bind definition for a layered effect may optionally contain range

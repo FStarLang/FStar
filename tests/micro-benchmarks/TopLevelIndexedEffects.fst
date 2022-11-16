@@ -57,7 +57,7 @@ let n : int = g ()
 // See e.g. Steel.ST.Effect.STBase that constrains the preconditions at the top-level
 //
 
-#push-options "--compat_pre_core 1"
+#push-options "--compat_pre_typed_indexed_effects"
 
 open Steel.FractionalPermission
 open Steel.ST.Effect
