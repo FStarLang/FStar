@@ -2506,6 +2506,9 @@ and check_application_args env head (chead:comp) ghead args expected_topt : term
              //Push first (List.length arg_rets_names_opt - i) names in the env
              //
              let env =
+               // add arg_rets_names to env only if needed
+               // extra names in the env interfere with flex-flex queries in Rel,
+               //   as they may result in uvar restrictions etc.
                if inserted_return_in_cres
                then push_option_names_to_env env
                       (List.splitAt (List.length arg_rets_names_opt - i) arg_rets_names_opt
