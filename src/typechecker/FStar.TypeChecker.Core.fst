@@ -365,8 +365,9 @@ let rec is_arrow (g:env) (t:term)
         | Tm_refine(x, _) ->
           is_arrow g x.sort
 
-        | Tm_meta(t, _) -> aux t
-        | Tm_ascribed(t, _, _) -> aux t
+        | Tm_meta(t, _)
+        | Tm_ascribed(t, _, _) ->
+          aux t
 
         | _ ->
           fail (BU.format2 "Expected an arrow, got (%s) %s" (P.tag_of_term t) (P.term_to_string t))

@@ -1430,9 +1430,6 @@ type polymonadic_bind_t =
             FStar_Compiler_Range.range ->
               (FStar_Syntax_Syntax.comp * FStar_TypeChecker_Common.guard_t)
 type solver_depth_t = (Prims.int * Prims.int * Prims.int)
-type core_check_ret_t =
-  (FStar_Syntax_Syntax.typ FStar_Pervasives_Native.option,
-    Prims.bool -> Prims.string) FStar_Pervasives.either
 type core_check_t =
   env ->
     FStar_Syntax_Syntax.term ->

@@ -532,7 +532,6 @@ let set_uvar env u (should_check_opt:option S.should_check_uvar) t =
   //     failwith "DIE"
   // );
 
-
   (match should_check_opt with
    | None -> ()
    | Some should_check ->
@@ -1788,7 +1787,20 @@ let simplify_guard env g = match g.guard_f with
       in
       {g with guard_f=f}
 
-let apply_standard_indexed_subcomp (env:Env.env)
+//
+// Apply substitutive indexed effects subcomp for an effect M
+//
+// bs: (opened) binders in the subcomp type
+// subcomp_c: the computation type in the subcomp type (opened with bs)
+// ct1 ct2: the two input computation types, both in M
+// sub_prob: a function to create and add subproblems to the worklist
+// num_effect_params: number of effect parameters in M
+// wl: worklist
+// subcomp_name and r1: for debugging purposes
+//
+// returns the (subcomp guard, new sub problems, worklist)
+//
+let apply_substitutive_indexed_subcomp (env:Env.env)
   (bs:binders)
   (subcomp_c:comp)
   (ct1:comp_typ) (ct2:comp_typ)
@@ -1802,17 +1814,30 @@ let apply_standard_indexed_subcomp (env:Env.env)
 
   let debug = Env.debug env <| Options.Other "LayeredEffectsApp" in
 
+  //
+  // We will collect the substitutions in subst,
+  // bs will be the remaining binders (that are not in subst yet)
+  //
+
+  // first the a:Type binder
   let bs, subst =
     let a_b::bs = bs in
     bs,
     [NT (a_b.binder_bv, ct2.result_typ)] in
 
+  //
+  // If the effect has effect parameters:
+  //   - peel those arguments off of ct1 and ct2,
+  //   - add subproblems for their equality to the worklist
+  //   - add substitutions for corresponding binders
+  //
   let bs, subst, args1, args2, eff_params_sub_probs, wl =
     if num_effect_params = 0
     then bs, subst, ct1.effect_args, ct2.effect_args, [], wl
-    else let eff_params_bs, bs = List.splitAt num_effect_params bs in
-         let param_args1, args1 = List.splitAt num_effect_params ct1.effect_args in
-         let param_args2, args2 = List.splitAt num_effect_params ct2.effect_args in
+    else let split (l:list 'a) = List.splitAt num_effect_params l in
+         let eff_params_bs, bs = split bs in
+         let param_args1, args1 = split ct1.effect_args in
+         let param_args2, args2 = split ct2.effect_args in
 
          let probs, wl = List.fold_left2 (fun (ps, wl) (t1, _) (t2, _) ->
            let p, wl = sub_prob wl t1 EQ t2 "effect params subcomp" in
@@ -1821,38 +1846,39 @@ let apply_standard_indexed_subcomp (env:Env.env)
            NT (b.binder_bv, arg)) eff_params_bs param_args1 in
          bs, subst@param_subst, args1, args2, probs, wl in
 
+  // add substitutions for the f computation
   let bs, subst =
-    let m_num_effect_args = List.length args1 in
-    let f_bs, bs = List.splitAt m_num_effect_args bs in
+    let f_bs, bs = List.splitAt (List.length args1) bs in
     let f_substs = List.map2 (fun f_b (arg, _) -> NT (f_b.binder_bv, arg)) f_bs args1 in
     bs,
     subst@f_substs in
 
+  // add substitutions for the g computation
   let bs, subst =
-    let n_num_effect_args = List.length args2 in
-    let g_bs, bs = List.splitAt n_num_effect_args bs in
+    let g_bs, bs = List.splitAt (List.length args2) bs in
     let g_substs = List.map2 (fun g_b (arg, _) -> NT (g_b.binder_bv, arg)) g_bs args2 in
     bs,
     subst@g_substs in
 
+  // peel off the f:repr a is binder from bs
   let bs = List.splitAt (List.length bs - 1) bs |> fst in
 
+  // for the binders in bs, create uvars, and add their substitutions
   let subst, wl =
-    let ss, wl =
-      List.fold_left (fun (ss, wl) b ->
-        let [uv_t], g = Env.uvars_for_binders env [b] (subst@ss)
-          (fun b ->
-           if debug
-           then BU.format3 "implicit var for additional binder %s in subcomp %s at %s"
-                  (Print.binder_to_string b)
-                  subcomp_name
-                  (Range.string_of_range r1)
-           else "") r1 in
-        ss@[NT (b.binder_bv, uv_t)],
-        {wl with wl_implicits=g.implicits@wl.wl_implicits}) ([], wl) bs in
-    subst@ss,
-    wl in
+    List.fold_left (fun (ss, wl) b ->
+      let [uv_t], g = Env.uvars_for_binders env [b] ss
+        (fun b ->
+         if debug
+         then BU.format3 "implicit var for additional binder %s in subcomp %s at %s"
+                (Print.binder_to_string b)
+                subcomp_name
+                (Range.string_of_range r1)
+         else "") r1 in
+      ss@[NT (b.binder_bv, uv_t)],
+      {wl with wl_implicits=g.implicits@wl.wl_implicits}) (subst, wl) bs in
 
+  // apply the substitutions to subcomp_c,
+  //   and get the precondition from the PURE wp
   let subcomp_ct = subcomp_c |> SS.subst_comp subst |> U.comp_to_comp_typ in
 
   let fml =
@@ -1863,6 +1889,19 @@ let apply_standard_indexed_subcomp (env:Env.env)
   eff_params_sub_probs,
   wl
 
+//
+// Apply ad-hoc indexed effects subcomp for an effect M
+//
+// bs: (opened) binders in the subcomp type
+// subcomp_c: the computation type in the subcomp type (opened with bs)
+// ct1 ct2: the two input computation types, both in M
+// sub_prob: a function to create and add subproblems to the worklist
+// num_effect_params: number of effect parameters in M
+// wl: worklist
+// subcomp_name and r1: for debugging purposes
+//
+// returns the (subcomp guard, new sub problems, worklist)
+//
 let apply_ad_hoc_indexed_subcomp (env:Env.env)
   (bs:binders)
   (subcomp_c:comp)
@@ -4305,7 +4344,7 @@ and solve_c (env:Env.env) (problem:problem comp) (wl:worklist) : solution =
               if kind = Ad_hoc_combinator
               then apply_ad_hoc_indexed_subcomp env bs subcomp_c c1 c2 sub_prob wl subcomp_name r
               else let Substitutive_combinator l = kind in
-                   apply_standard_indexed_subcomp env bs subcomp_c c1 c2 sub_prob
+                   apply_substitutive_indexed_subcomp env bs subcomp_c c1 c2 sub_prob
                    num_eff_params
                    wl
                    subcomp_name r in

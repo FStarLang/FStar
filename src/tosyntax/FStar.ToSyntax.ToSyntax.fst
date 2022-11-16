@@ -3212,6 +3212,8 @@ let rec desugar_effect env d (quals: qualifiers) (is_layered:bool) eff_name eff_
         let eff_t, num_effect_params =
           match (SS.compress eff_t).n with
           | Tm_arrow (bs, c) ->
+            // peel off the first a:Type binder
+            let a::bs = bs in
             //
             // allow_param checks that all effect parameters
             //   are upfront
@@ -3231,7 +3233,7 @@ let rec desugar_effect env d (quals: qualifiers) (is_layered:bool) eff_name eff_
               (if is_param then n+1 else n),
               allow_param && is_param,
               bs@[{b with binder_attrs=b_attrs}]) (0, true, []) bs in
-            {eff_t with n=Tm_arrow (bs, c)},
+            {eff_t with n=Tm_arrow (a::bs, c)},
             n
           | _ -> failwith "desugaring indexed effect: effect type not an arrow" in
 

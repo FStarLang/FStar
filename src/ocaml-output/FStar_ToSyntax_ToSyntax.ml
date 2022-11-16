@@ -7359,43 +7359,53 @@ let rec (desugar_effect :
                                             match uu___7 with
                                             | FStar_Syntax_Syntax.Tm_arrow
                                                 (bs, c) ->
-                                                let uu___8 =
-                                                  FStar_Compiler_List.fold_left
-                                                    (fun uu___9 ->
-                                                       fun b ->
-                                                         match uu___9 with
-                                                         | (n, allow_param,
-                                                            bs1) ->
-                                                             let b_attrs =
-                                                               b.FStar_Syntax_Syntax.binder_attrs in
-                                                             let is_param =
-                                                               FStar_Syntax_Util.has_attribute
-                                                                 b_attrs
-                                                                 FStar_Parser_Const.effect_parameter_attr in
-                                                             (if
-                                                                is_param &&
-                                                                  (Prims.op_Negation
+                                                let uu___8 = bs in
+                                                (match uu___8 with
+                                                 | a::bs1 ->
+                                                     let uu___9 =
+                                                       FStar_Compiler_List.fold_left
+                                                         (fun uu___10 ->
+                                                            fun b ->
+                                                              match uu___10
+                                                              with
+                                                              | (n,
+                                                                 allow_param,
+                                                                 bs2) ->
+                                                                  let b_attrs
+                                                                    =
+                                                                    b.FStar_Syntax_Syntax.binder_attrs in
+                                                                  let is_param
+                                                                    =
+                                                                    FStar_Syntax_Util.has_attribute
+                                                                    b_attrs
+                                                                    FStar_Parser_Const.effect_parameter_attr in
+                                                                  (if
+                                                                    is_param
+                                                                    &&
+                                                                    (Prims.op_Negation
                                                                     allow_param)
-                                                              then
-                                                                FStar_Errors.raise_error
-                                                                  (FStar_Errors.Fatal_UnexpectedEffect,
+                                                                   then
+                                                                    FStar_Errors.raise_error
+                                                                    (FStar_Errors.Fatal_UnexpectedEffect,
                                                                     "Effect parameters must all be upfront")
-                                                                  d.FStar_Parser_AST.drange
-                                                              else ();
-                                                              (let b_attrs1 =
-                                                                 FStar_Syntax_Util.remove_attr
-                                                                   FStar_Parser_Const.effect_parameter_attr
-                                                                   b_attrs in
-                                                               ((if is_param
-                                                                 then
-                                                                   n +
+                                                                    d.FStar_Parser_AST.drange
+                                                                   else ();
+                                                                   (let b_attrs1
+                                                                    =
+                                                                    FStar_Syntax_Util.remove_attr
+                                                                    FStar_Parser_Const.effect_parameter_attr
+                                                                    b_attrs in
+                                                                    ((if
+                                                                    is_param
+                                                                    then
+                                                                    n +
                                                                     Prims.int_one
-                                                                 else n),
-                                                                 (allow_param
+                                                                    else n),
+                                                                    (allow_param
                                                                     &&
                                                                     is_param),
-                                                                 (FStar_Compiler_List.op_At
-                                                                    bs1
+                                                                    (FStar_Compiler_List.op_At
+                                                                    bs2
                                                                     [
                                                                     {
                                                                     FStar_Syntax_Syntax.binder_bv
@@ -7408,25 +7418,26 @@ let rec (desugar_effect :
                                                                     =
                                                                     b_attrs1
                                                                     }])))))
-                                                    (Prims.int_zero, true,
-                                                      []) bs in
-                                                (match uu___8 with
-                                                 | (n, uu___9, bs1) ->
-                                                     ({
-                                                        FStar_Syntax_Syntax.n
-                                                          =
-                                                          (FStar_Syntax_Syntax.Tm_arrow
-                                                             (bs1, c));
-                                                        FStar_Syntax_Syntax.pos
-                                                          =
-                                                          (eff_t1.FStar_Syntax_Syntax.pos);
-                                                        FStar_Syntax_Syntax.vars
-                                                          =
-                                                          (eff_t1.FStar_Syntax_Syntax.vars);
-                                                        FStar_Syntax_Syntax.hash_code
-                                                          =
-                                                          (eff_t1.FStar_Syntax_Syntax.hash_code)
-                                                      }, n))
+                                                         (Prims.int_zero,
+                                                           true, []) bs1 in
+                                                     (match uu___9 with
+                                                      | (n, uu___10, bs2) ->
+                                                          ({
+                                                             FStar_Syntax_Syntax.n
+                                                               =
+                                                               (FStar_Syntax_Syntax.Tm_arrow
+                                                                  ((a ::
+                                                                    bs2), c));
+                                                             FStar_Syntax_Syntax.pos
+                                                               =
+                                                               (eff_t1.FStar_Syntax_Syntax.pos);
+                                                             FStar_Syntax_Syntax.vars
+                                                               =
+                                                               (eff_t1.FStar_Syntax_Syntax.vars);
+                                                             FStar_Syntax_Syntax.hash_code
+                                                               =
+                                                               (eff_t1.FStar_Syntax_Syntax.hash_code)
+                                                           }, n)))
                                             | uu___8 ->
                                                 failwith
                                                   "desugaring indexed effect: effect type not an arrow" in

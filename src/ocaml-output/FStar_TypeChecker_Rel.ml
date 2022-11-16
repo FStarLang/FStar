@@ -3993,7 +3993,7 @@ let (simplify_guard :
                FStar_TypeChecker_Common.implicits =
                  (g.FStar_TypeChecker_Common.implicits)
              })))
-let (apply_standard_indexed_subcomp :
+let (apply_substitutive_indexed_subcomp :
   FStar_TypeChecker_Env.env ->
     FStar_Syntax_Syntax.binders ->
       FStar_Syntax_Syntax.comp ->
@@ -4045,20 +4045,19 @@ let (apply_standard_indexed_subcomp :
                                 (ct2.FStar_Syntax_Syntax.effect_args), [],
                                 wl)
                             else
-                              (let uu___3 =
+                              (let split l =
                                  FStar_Compiler_List.splitAt
-                                   num_effect_params bs1 in
+                                   num_effect_params l in
+                               let uu___3 = split bs1 in
                                match uu___3 with
                                | (eff_params_bs, bs2) ->
                                    let uu___4 =
-                                     FStar_Compiler_List.splitAt
-                                       num_effect_params
+                                     split
                                        ct1.FStar_Syntax_Syntax.effect_args in
                                    (match uu___4 with
                                     | (param_args1, args1) ->
                                         let uu___5 =
-                                          FStar_Compiler_List.splitAt
-                                            num_effect_params
+                                          split
                                             ct2.FStar_Syntax_Syntax.effect_args in
                                         (match uu___5 with
                                          | (param_args2, args2) ->
@@ -4109,11 +4108,9 @@ let (apply_standard_indexed_subcomp :
                            | (bs2, subst1, args1, args2,
                               eff_params_sub_probs, wl1) ->
                                let uu___2 =
-                                 let m_num_effect_args =
-                                   FStar_Compiler_List.length args1 in
                                  let uu___3 =
                                    FStar_Compiler_List.splitAt
-                                     m_num_effect_args bs2 in
+                                     (FStar_Compiler_List.length args1) bs2 in
                                  match uu___3 with
                                  | (f_bs, bs3) ->
                                      let f_substs =
@@ -4131,11 +4128,10 @@ let (apply_standard_indexed_subcomp :
                                (match uu___2 with
                                 | (bs3, subst2) ->
                                     let uu___3 =
-                                      let n_num_effect_args =
-                                        FStar_Compiler_List.length args2 in
                                       let uu___4 =
                                         FStar_Compiler_List.splitAt
-                                          n_num_effect_args bs3 in
+                                          (FStar_Compiler_List.length args2)
+                                          bs3 in
                                       match uu___4 with
                                       | (g_bs, bs4) ->
                                           let g_substs =
@@ -4162,73 +4158,64 @@ let (apply_standard_indexed_subcomp :
                                              uu___4
                                              FStar_Pervasives_Native.fst in
                                          let uu___4 =
-                                           let uu___5 =
-                                             FStar_Compiler_List.fold_left
-                                               (fun uu___6 ->
-                                                  fun b ->
-                                                    match uu___6 with
-                                                    | (ss, wl2) ->
-                                                        let uu___7 =
-                                                          FStar_TypeChecker_Env.uvars_for_binders
-                                                            env [b]
-                                                            (FStar_Compiler_List.op_At
-                                                               subst3 ss)
-                                                            (fun b1 ->
-                                                               if debug
-                                                               then
-                                                                 let uu___8 =
-                                                                   FStar_Syntax_Print.binder_to_string
-                                                                    b1 in
-                                                                 let uu___9 =
-                                                                   FStar_Compiler_Range.string_of_range
-                                                                    r1 in
-                                                                 FStar_Compiler_Util.format3
-                                                                   "implicit var for additional binder %s in subcomp %s at %s"
-                                                                   uu___8
-                                                                   subcomp_name
-                                                                   uu___9
-                                                               else "") r1 in
-                                                        (match uu___7 with
-                                                         | (uv_t::[], g) ->
-                                                             ((FStar_Compiler_List.op_At
-                                                                 ss
-                                                                 [FStar_Syntax_Syntax.NT
-                                                                    ((b.FStar_Syntax_Syntax.binder_bv),
+                                           FStar_Compiler_List.fold_left
+                                             (fun uu___5 ->
+                                                fun b ->
+                                                  match uu___5 with
+                                                  | (ss, wl2) ->
+                                                      let uu___6 =
+                                                        FStar_TypeChecker_Env.uvars_for_binders
+                                                          env [b] ss
+                                                          (fun b1 ->
+                                                             if debug
+                                                             then
+                                                               let uu___7 =
+                                                                 FStar_Syntax_Print.binder_to_string
+                                                                   b1 in
+                                                               let uu___8 =
+                                                                 FStar_Compiler_Range.string_of_range
+                                                                   r1 in
+                                                               FStar_Compiler_Util.format3
+                                                                 "implicit var for additional binder %s in subcomp %s at %s"
+                                                                 uu___7
+                                                                 subcomp_name
+                                                                 uu___8
+                                                             else "") r1 in
+                                                      (match uu___6 with
+                                                       | (uv_t::[], g) ->
+                                                           ((FStar_Compiler_List.op_At
+                                                               ss
+                                                               [FStar_Syntax_Syntax.NT
+                                                                  ((b.FStar_Syntax_Syntax.binder_bv),
                                                                     uv_t)]),
-                                                               {
-                                                                 attempting =
-                                                                   (wl2.attempting);
-                                                                 wl_deferred
-                                                                   =
-                                                                   (wl2.wl_deferred);
-                                                                 wl_deferred_to_tac
-                                                                   =
-                                                                   (wl2.wl_deferred_to_tac);
-                                                                 ctr =
-                                                                   (wl2.ctr);
-                                                                 defer_ok =
-                                                                   (wl2.defer_ok);
-                                                                 smt_ok =
-                                                                   (wl2.smt_ok);
-                                                                 umax_heuristic_ok
-                                                                   =
-                                                                   (wl2.umax_heuristic_ok);
-                                                                 tcenv =
-                                                                   (wl2.tcenv);
-                                                                 wl_implicits
-                                                                   =
-                                                                   (FStar_Compiler_List.op_At
+                                                             {
+                                                               attempting =
+                                                                 (wl2.attempting);
+                                                               wl_deferred =
+                                                                 (wl2.wl_deferred);
+                                                               wl_deferred_to_tac
+                                                                 =
+                                                                 (wl2.wl_deferred_to_tac);
+                                                               ctr =
+                                                                 (wl2.ctr);
+                                                               defer_ok =
+                                                                 (wl2.defer_ok);
+                                                               smt_ok =
+                                                                 (wl2.smt_ok);
+                                                               umax_heuristic_ok
+                                                                 =
+                                                                 (wl2.umax_heuristic_ok);
+                                                               tcenv =
+                                                                 (wl2.tcenv);
+                                                               wl_implicits =
+                                                                 (FStar_Compiler_List.op_At
                                                                     g.FStar_TypeChecker_Common.implicits
                                                                     wl2.wl_implicits);
-                                                                 repr_subcomp_allowed
-                                                                   =
-                                                                   (wl2.repr_subcomp_allowed)
-                                                               }))) ([], wl1)
-                                               bs5 in
-                                           match uu___5 with
-                                           | (ss, wl2) ->
-                                               ((FStar_Compiler_List.op_At
-                                                   subst3 ss), wl2) in
+                                                               repr_subcomp_allowed
+                                                                 =
+                                                                 (wl2.repr_subcomp_allowed)
+                                                             })))
+                                             (subst3, wl1) bs5 in
                                          (match uu___4 with
                                           | (subst4, wl2) ->
                                               let subcomp_ct =
@@ -12202,7 +12189,7 @@ and (solve_c :
                                            match uu___12 with
                                            | FStar_Syntax_Syntax.Substitutive_combinator
                                                l ->
-                                               apply_standard_indexed_subcomp
+                                               apply_substitutive_indexed_subcomp
                                                  env bs subcomp_c c12 c21
                                                  sub_prob num_eff_params wl3
                                                  subcomp_name r) in
