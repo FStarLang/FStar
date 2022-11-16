@@ -23,14 +23,16 @@ let pack_inspect_bv (t:R.bv)
           [SMTPat R.(pack_bv (inspect_bv t))]
   = admit()
   
-val inspect_pack_binder (b:_) (q:_) (a:_)
+let inspect_pack_binder (b:_) (q:_) (a:_)
   : Lemma (ensures R.(R.inspect_binder (R.pack_binder b q a) == (b, (q, a))))
           [SMTPat R.(inspect_binder (pack_binder b q a))]
-
-val pack_inspect_binder (t:R.binder)
+  = admit()
+  
+let pack_inspect_binder (t:R.binder)
   : Lemma (ensures (let b, (q, a) = R.inspect_binder t in
                     R.(pack_binder b q a == t)))
-
+  = admit()
+  
 let pack_inspect_comp (t:R.comp)
   : Lemma (ensures (R.pack_comp (R.inspect_comp t) == t))
           [SMTPat (R.pack_comp (R.inspect_comp t))]
@@ -85,12 +87,34 @@ let binder_sort_lemma (x:var) (ty:term)
 noeq
 type open_or_close =
   | OpenWith of term
+  | OpenWithVar of var
   | CloseVar of var
   | Rename   : var -> var -> open_or_close
 
 val open_or_close_ctx_uvar_and_subst (c:ctx_uvar_and_subst) (v:open_or_close) (i:nat) 
   : ctx_uvar_and_subst
-  
+
+let rec binder_offset_patterns (ps:list (pattern & bool))
+  : nat
+  = match ps with
+    | [] -> 0
+    | (p, b)::ps ->
+      let n = binder_offset_pattern p in
+      let m = binder_offset_patterns ps in
+      n + m
+
+and binder_offset_pattern (p:pattern)
+  : nat
+  = match p with
+    | Pat_Constant _
+    | Pat_Dot_Term _ -> 0
+
+    | Pat_Var _
+    | Pat_Wild _ -> 1
+
+    | Pat_Cons fv us pats -> 
+      binder_offset_patterns pats
+
 let rec open_or_close_term' (t:term) (v:open_or_close) (i:nat)
   : GTot term (decreases t)
   = match inspect_ln t with
@@ -101,14 +125,15 @@ let rec open_or_close_term' (t:term) (v:open_or_close) (i:nat)
     | Tv_Unknown -> t
     | Tv_Var x ->
       (match v with
-       | OpenWith _ -> t
+       | OpenWith _ 
+       | OpenWithVar _ -> t
        | CloseVar y ->
          if bv_index x = y 
-         then pack_ln (Tv_BVar (pack_bv ({ inspect_bv x with bv_index = i })))
+         then pack_ln (Tv_BVar (pack_bv { inspect_bv x with bv_index = i }))
          else t
        | Rename y z ->
          if bv_index x = y
-         then pack_ln (Tv_Var (pack_bv ({ inspect_bv x with bv_index = z })))
+         then pack_ln (Tv_Var (pack_bv { inspect_bv x with bv_index = z }))
          else t)
 
     | Tv_BVar j -> 
@@ -117,7 +142,11 @@ let rec open_or_close_term' (t:term) (v:open_or_close) (i:nat)
        | CloseVar _ -> t
        | OpenWith v ->
          if i=bv_index j 
-          then v
+         then v
+         else t
+       | OpenWithVar v ->
+         if i = bv_index j
+         then pack_ln (Tv_Var (pack_bv { inspect_bv j with bv_index = v }))
          else t)
 
     | Tv_App hd argv ->
@@ -179,7 +208,6 @@ and open_or_close_bv' (b:bv) (v:open_or_close) (i:nat)
 and open_or_close_binder' (b:binder) (v:open_or_close) (i:nat)
   : GTot binder (decreases b)
   = let bndr  = inspect_binder b in
-    assume (bndr << b);
     let bv, (q, attrs) = bndr in
     pack_binder (open_or_close_bv' bv v i) 
                 q
@@ -219,41 +247,43 @@ and open_or_close_args' (ts:list argv) (v:open_or_close) (i:nat)
     | (t,q)::ts -> (open_or_close_term' t v i,q) :: open_or_close_args' ts v i
 
 and open_or_close_patterns' (ps:list (pattern & bool)) (v:open_or_close) (i:nat) 
-  : GTot (list (pattern & bool) & nat)
+  : GTot (list (pattern & bool))
          (decreases ps)
   = match ps with
-    | [] -> ps, 0
+    | [] -> ps
     | (p, b)::ps ->
-      let (p, n) = open_or_close_pattern' p v i in
-      let (ps, m) = open_or_close_patterns' ps v (i + n) in
-      (p,b)::ps, n + m
+      let n = binder_offset_pattern p in
+      let p = open_or_close_pattern' p v i in
+      let ps = open_or_close_patterns' ps v (i + n) in
+      (p,b)::ps
 
 and open_or_close_pattern' (p:pattern) (v:open_or_close) (i:nat) 
-  : GTot (pattern & nat)
+  : GTot pattern
          (decreases p)
   = match p with
-    | Pat_Constant _ -> p,0
+    | Pat_Constant _ -> p
 
     | Pat_Cons fv us pats -> 
-      let pats, n = open_or_close_patterns' pats v i in
-      Pat_Cons fv us pats, n
+      let pats = open_or_close_patterns' pats v i in
+      Pat_Cons fv us pats
       
     | Pat_Var bv ->
-      Pat_Var (open_or_close_bv' bv v i), 1
+      Pat_Var (open_or_close_bv' bv v i)
 
     | Pat_Wild bv ->
-      Pat_Wild (open_or_close_bv' bv v i), 1
+      Pat_Wild (open_or_close_bv' bv v i)
 
     | Pat_Dot_Term topt ->
       Pat_Dot_Term (match topt with
                     | None -> None
-                    | Some t -> Some (open_or_close_term' t v i)), 0
+                    | Some t -> Some (open_or_close_term' t v i))
 
     
 and open_or_close_branch' (br:branch) (v:open_or_close) (i:nat)
   : GTot branch (decreases br)
   = let p, t = br in
-    let p, j = open_or_close_pattern' p v i in
+    let p = open_or_close_pattern' p v i in
+    let j = binder_offset_pattern p in
     let t = open_or_close_term' t v (i + j) in
     p, t
   
@@ -279,8 +309,8 @@ and open_or_close_match_returns' (m:match_returns_ascription) (v:open_or_close) 
     in
     b, (ret, as_, eq)
 
-let make_bv (n:nat) (t:term) = { bv_ppname = "_"; bv_index = n; bv_sort = t}
-let var_as_bv (v:var) = pack_bv (make_bv v (pack_ln Tv_Unknown))
+let make_bv (n:int) (t:term) = { bv_ppname = "_"; bv_index = n; bv_sort = t}
+let var_as_bv (v:int) = pack_bv (make_bv v (pack_ln Tv_Unknown))
 let var_as_term (v:var) = pack_ln (Tv_Var (var_as_bv v))
 
 val open_with (t:term) (v:term)
@@ -293,7 +323,7 @@ val open_term (t:term) (v:var)
   : term
 
 val open_term_spec (t:term) (v:var)
-  : Lemma (open_term t v == open_or_close_term' t (OpenWith (var_as_term v)) 0)
+  : Lemma (open_term t v == open_or_close_term' t (OpenWithVar v) 0)
   
 val close_term (t:term) (v:var) 
   : term
@@ -554,4 +584,421 @@ let simplify_umax (#g:R.env) (#t:R.term) (#u:R.universe)
      in
      T_Sub _ _ _ _ d (ST_UnivEq _ _ _ ue)
 
+#push-options "--query_stats --ifuel 2"
+
+let rec ln' (e:term) (n:int)
+  : bool
+  = match inspect_ln e with
+    | Tv_UInst _ _
+    | Tv_FVar _
+    | Tv_Type _
+    | Tv_Const _
+    | Tv_Unknown 
+    | Tv_Var _ -> true
+    | Tv_BVar m -> bv_index m <= n
+    | Tv_App e1 (e2, _) -> ln' e1 n && ln' e2 n
+    | Tv_Abs b body -> 
+      ln'_binder b n &&
+      ln' body (n + 1)
+
+    | Tv_Arrow b c ->
+      ln'_binder b n &&
+      ln'_comp c (n + 1)
+
+    | Tv_Refine bv f ->
+      ln'_bv bv n &&
+      ln' f (n + 1)
+
+    | Tv_Uvar _ _ ->
+      false
+      
+    | Tv_Let recf attrs bv def body ->
+      ln'_terms attrs n &&
+      ln'_bv bv n &&
+      (if recf then ln' def (n + 1) else ln' def n) &&
+      ln' body (n + 1)
+
+    | Tv_Match scr ret brs ->
+      ln' scr n &&
+      (match ret with
+      | None -> true
+      | Some m -> ln'_match_returns m n) &&
+      ln'_branches brs n
+      
+    | Tv_AscribedT e t tac b ->
+      ln' e n &&
+      ln' t n &&
+      (match tac with
+       | None -> true
+       | Some tac -> ln' tac n)
+                            
+    | Tv_AscribedC e c tac b ->
+      ln' e n &&
+      ln'_comp c n &&
+      (match tac with
+       | None -> true
+       | Some tac -> ln' tac n)
+                            
+    | _ -> false
+
+and ln'_comp (c:comp) (i:int)
+  : Tot bool (decreases c)
+  = match inspect_comp c with
+    | C_Total t u decr
+    | C_GTotal t u decr ->
+      ln' t i &&
+      ln'_terms decr i
+
+    | C_Lemma pre post pats ->
+      ln' pre i &&
+      ln' post i &&
+      ln' pats i
+
+    | C_Eff us eff_name res args ->
+      ln' res i &&
+      ln'_args args i
+
+and ln'_args (ts:list argv) (i:int)
+  : Tot bool (decreases ts)
+  = match ts with
+    | [] -> true
+    | (t,q)::ts -> 
+      ln' t i &&
+      ln'_args ts i
+
+and ln'_bv (b:bv) (n:int) 
+  : Tot bool (decreases b)
+  = let bv = inspect_bv b in
+    ln' bv.bv_sort n
+    
+and ln'_binder (b:binder) (n:int)
+  : Tot bool (decreases b)
+  = let bndr  = inspect_binder b in
+    let bv, (q, attrs) = bndr in
+    ln'_bv bv n &&
+    ln'_terms attrs n
+
+and ln'_terms (ts:list term) (n:int)
+  : Tot bool (decreases ts)
+  = match ts with
+    | [] -> true
+    | t::ts -> ln' t n && ln'_terms ts n
+
+and ln'_patterns (ps:list (pattern & bool)) (i:int)
+  : Tot bool
+    (decreases ps)
+  = match ps with
+    | [] -> true
+    | (p, b)::ps ->
+      let b0 = ln'_pattern p i in
+      let n = binder_offset_pattern p in
+      let b1 = ln'_patterns ps (i + n) in
+      b0 && b1
+
+and ln'_pattern (p:pattern) (i:int) 
+  : Tot bool
+        (decreases p)
+  = match p with
+    | Pat_Constant _ -> true
+
+    | Pat_Cons fv us pats -> 
+      ln'_patterns pats i
+      
+    | Pat_Var bv 
+    | Pat_Wild bv ->
+      ln'_bv bv i
+
+    | Pat_Dot_Term topt ->
+      (match topt with
+       | None -> true
+       | Some t -> ln' t i)
+    
+and ln'_branch (br:branch) (i:int)
+  : Tot bool (decreases br)
+  = let p, t = br in
+    let b = ln'_pattern p i in
+    let j = binder_offset_pattern p in
+    let b' = ln' t (i + j) in
+    b&&b'
+  
+and ln'_branches (brs:list branch) (i:int)
+  : Tot bool (decreases brs)
+  = match brs with
+    | [] -> true
+    | br::brs -> 
+      ln'_branch br i &&
+      ln'_branches brs i
+  
+and ln'_match_returns (m:match_returns_ascription) (i:int)
+  : Tot bool (decreases m)
+  = let b, (ret, as_, eq) = m in
+    let b = ln'_binder b i in
+    let ret =
+      match ret with
+      | Inl t -> ln' t (i + 1)
+      | Inr c -> ln'_comp c (i + 1)
+    in
+    let as_ =
+      match as_ with
+      | None -> true
+      | Some t -> ln' t (i + 1)
+    in
+    b && ret && as_
+
+let rec binder_offset_pattern_invariant (p:pattern) (s:open_or_close) (i:nat)
+  : Lemma (binder_offset_pattern p == binder_offset_pattern (open_or_close_pattern' p s i))
+  = match p with
+    | Pat_Cons _ _ pats ->
+      binder_offset_patterns_invariant pats s i
+    | _ -> ()
+
+and binder_offset_patterns_invariant (p:list (pattern & bool)) (s:open_or_close) (i:nat)
+  : Lemma (binder_offset_patterns p == binder_offset_patterns (open_or_close_patterns' p s i))
+  = match p with
+    | [] -> ()
+    | (hd, _)::tl ->
+      binder_offset_pattern_invariant hd s i;
+      let n = binder_offset_pattern hd in
+      binder_offset_patterns_invariant tl s (i + n)
+  
+
+let rec open_close_inverse (i:nat) (t:term { ln' t (i - 1) }) (x:var)
+  : Lemma 
+       (ensures open_or_close_term' 
+                       (open_or_close_term' t (CloseVar x) i)
+                       (OpenWithVar x)
+                       i
+                == t)
+       (decreases t)
+  = match inspect_ln t with
+    | Tv_UInst _ _
+    | Tv_FVar _
+    | Tv_Type _
+    | Tv_Const _
+    | Tv_Unknown -> ()
+    | Tv_Var _ -> ()
+    | Tv_BVar _ -> ()
+    | Tv_App t1 a ->
+      open_close_inverse i t1 x;
+      open_close_inverse i (fst a) x
+     
+    | Tv_Abs b body -> 
+      open_close_inverse_binder i b x;
+      open_close_inverse (i + 1) body x
+
+    | Tv_Arrow b c ->
+      open_close_inverse_binder i b x;
+      open_close_inverse_comp (i + 1) c x
+
+    | Tv_Refine b f ->
+      open_close_inverse_bv i b x;
+      open_close_inverse (i + 1) f x
+
+
+    // | Tv_Uvar j c ->
+    //   pack_ln (Tv_Uvar j (open_or_close_ctx_uvar_and_subst c v i))
+      
+    | Tv_Let recf attrs bv def body ->
+      open_close_inverse_terms i attrs x;
+      open_close_inverse_bv i bv x;
+      (if recf 
+      then open_close_inverse (i + 1) def x
+      else open_close_inverse i def x);
+      open_close_inverse (i + 1) body x
+
+    | Tv_Match scr ret brs ->
+      open_close_inverse i scr x;
+      (match ret with
+       | None -> ()
+       | Some m -> open_close_inverse_match_returns i m x);
+      open_close_inverse_branches i brs x
+      
+    | Tv_AscribedT e t tac b ->
+      open_close_inverse i e x;
+      open_close_inverse i t x;      
+      (match tac with
+       | None -> ()
+       | Some tac -> open_close_inverse i tac x)
+
+    | Tv_AscribedC e c tac b ->
+      open_close_inverse i e x;
+      open_close_inverse_comp i c x;      
+      (match tac with
+       | None -> ()
+       | Some tac -> open_close_inverse i tac x)
+    
+
+and open_close_inverse_bv (i:nat) (b:bv { ln'_bv b (i - 1) }) (x:var) 
+  : Lemma (ensures open_or_close_bv' (open_or_close_bv' b (CloseVar x) i)
+                                     (OpenWithVar x)
+                                     i
+                   == b)
+          (decreases b)
+  = let bv = inspect_bv b in
+    open_close_inverse i bv.bv_sort x
+    
+and open_close_inverse_binder (i:nat) (b:binder { ln'_binder b (i - 1) }) (x:var)
+  : Lemma (ensures open_or_close_binder'
+                         (open_or_close_binder' b (CloseVar x) i)
+                         (OpenWithVar x)
+                         i
+                   == b)
+          (decreases b)                   
+  = let bndr  = inspect_binder b in
+    assert (bndr << b);
+    let bv, (q, attrs) = bndr in
+    open_close_inverse_bv i bv x;
+    open_close_inverse_terms i attrs x;
+    assert (open_or_close_bv' (open_or_close_bv' bv (CloseVar x) i) (OpenWithVar x) i == bv);
+    assert (open_or_close_terms' (open_or_close_terms' attrs (CloseVar x) i) (OpenWithVar x) i == attrs);    
+    pack_inspect_binder b;    
+    assert (pack_binder bv q attrs == b)
+
+and open_close_inverse_terms (i:nat) (ts:list term { ln'_terms ts (i - 1) }) (x:var)
+  : Lemma (ensures open_or_close_terms' (open_or_close_terms' ts (CloseVar x) i)
+                                        (OpenWithVar x)
+                                        i
+                   == ts)
+          (decreases ts)                   
+  = match ts with
+    | [] -> ()
+    | t::ts -> 
+      open_close_inverse i t x;
+      open_close_inverse_terms i ts x
+
+and open_close_inverse_comp (i:nat) (c:comp { ln'_comp c (i - 1) }) (x:var)
+  : Lemma 
+    (ensures open_or_close_comp' (open_or_close_comp' c (CloseVar x) i)
+                              (OpenWithVar x)
+                              i
+             == c)
+    (decreases c)
+  = match inspect_comp c with
+    | C_Total t u decr
+    | C_GTotal t u decr ->    
+      open_close_inverse i t x;
+      open_close_inverse_terms i decr x
+
+
+    | C_Lemma pre post pats ->
+      open_close_inverse i pre x;
+      open_close_inverse i post x;
+      open_close_inverse i pats x
+
+    | C_Eff us eff_name res args ->
+      open_close_inverse i res x;
+      open_close_inverse_args i args x
+      
+
+and open_close_inverse_args (i:nat) 
+                            (ts:list argv { ln'_args ts (i - 1) })
+                            (x:var)
+  : Lemma
+    (ensures open_or_close_args' (open_or_close_args' ts (CloseVar x) i)
+                                 (OpenWithVar x)
+                                 i
+             == ts)
+    (decreases ts)
+  = match ts with
+    | [] -> ()
+    | (t,q)::ts -> 
+      open_close_inverse i t x;
+      open_close_inverse_args i ts x
+
+and open_close_inverse_patterns (i:nat)
+                                (ps:list (pattern & bool) { ln'_patterns ps (i - 1) })
+                                (x:var)
+  : Lemma 
+    (ensures open_or_close_patterns' (open_or_close_patterns' ps (CloseVar x) i)
+                                     (OpenWithVar x)
+                                     i
+             == ps)
+    (decreases ps)
+  = match ps with
+    | [] -> ()
+    | (p, b)::ps' ->
+      open_close_inverse_pattern i p x;
+      let n = binder_offset_pattern p in
+      binder_offset_pattern_invariant p (CloseVar x) i;
+      open_close_inverse_patterns (i + n) ps' x
+
+and open_close_inverse_pattern (i:nat) (p:pattern{ln'_pattern p (i - 1)}) (x:var)
+  : Lemma 
+    (ensures open_or_close_pattern' (open_or_close_pattern' p (CloseVar x) i)
+                                    (OpenWithVar x)
+                                      i
+             == p)
+    (decreases p)
+  = match p with
+    | Pat_Constant _ -> ()
+
+    | Pat_Cons fv us pats -> 
+      open_close_inverse_patterns i pats x
+      
+    | Pat_Var bv
+    | Pat_Wild bv ->
+      open_close_inverse_bv i bv x
+
+    | Pat_Dot_Term topt ->
+      match topt with
+      | None -> ()
+      | Some t -> open_close_inverse i t x
+
+    
+and open_close_inverse_branch (i:nat) (br:branch{ln'_branch br (i - 1)}) (x:var)
+  : Lemma
+    (ensures open_or_close_branch'
+                 (open_or_close_branch' br (CloseVar x) i)
+                 (OpenWithVar x)
+                 i
+             == br)
+    (decreases br)  
+  = let p, t = br in
+    let j = binder_offset_pattern p in
+    binder_offset_pattern_invariant p (CloseVar x) i;
+    open_close_inverse_pattern i p x;
+    open_close_inverse (i + j) t x
+  
+and open_close_inverse_branches (i:nat)
+                                (brs:list branch { ln'_branches brs (i - 1) })
+                                (x:var)
+  : Lemma
+    (ensures open_or_close_branches'
+                 (open_or_close_branches' brs (CloseVar x) i)
+                 (OpenWithVar x)
+                 i
+             == brs)
+    (decreases brs)
+  = match brs with
+    | [] -> ()
+    | br::brs -> 
+      open_close_inverse_branch i br x;
+      open_close_inverse_branches i brs x
+  
+and open_close_inverse_match_returns (i:nat) 
+                                     (m:match_returns_ascription { ln'_match_returns m (i - 1) })
+                                     (x:var)
+  : Lemma 
+    (ensures open_or_close_match_returns' 
+                 (open_or_close_match_returns' m (CloseVar x) i)
+                 (OpenWithVar x)
+                 i
+             == m)
+    (decreases m)
+  = let b, (ret, as_, eq) = m in
+    open_close_inverse_binder i b x;
+    let ret =
+      match ret with
+      | Inl t ->
+        open_close_inverse (i + 1) t x
+      | Inr c ->
+        open_close_inverse_comp (i + 1) c x
+    in
+    let as_ =
+      match as_ with
+      | None -> ()
+      | Some t ->
+        open_close_inverse (i + 1) t x
+    in
+    ()
 
