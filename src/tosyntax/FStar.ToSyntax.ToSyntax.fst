@@ -3204,25 +3204,33 @@ let rec desugar_effect env d (quals: qualifiers) (is_layered:bool) eff_name eff_
         let has_subcomp = List.existsb (fun decl -> name_of_eff_decl decl = "subcomp") eff_decls in
         let has_if_then_else = List.existsb (fun decl -> name_of_eff_decl decl = "if_then_else") eff_decls in
 
-        //setting the second component to dummy_ts, typechecker fills them in
+        //setting the second component to dummy_ts,
+        //  and kind to None, typechecker fills them in
         let to_comb (us, t) = (us, t), dummy_tscheme, None in
 
-        //
-        // TODO: May be all effect parameters should be upfront
-        //
-
+ 
         let eff_t, num_effect_params =
           match (SS.compress eff_t).n with
           | Tm_arrow (bs, c) ->
-            let n, bs = List.fold_left (fun (n, bs) b ->
+            //
+            // allow_param checks that all effect parameters
+            //   are upfront
+            // it is true initially, and is set to false as soon as
+            //   we see a non-parameter binder
+            // and if some parameter appears after that, we raise an error
+            //
+            let n, _, bs = List.fold_left (fun (n, allow_param, bs) b ->
               let b_attrs = b.binder_attrs in
-              let n =
-                if U.has_attribute b_attrs C.effect_parameter_attr
-                then n+1
-                else n in
+              let is_param = U.has_attribute b_attrs C.effect_parameter_attr in
+              if is_param && not allow_param
+              then raise_error
+                     (Errors.Fatal_UnexpectedEffect,
+                      "Effect parameters must all be upfront")
+                     d.drange;
               let b_attrs = U.remove_attr C.effect_parameter_attr b_attrs in
-              n,
-              bs@[{b with binder_attrs=b_attrs}]) (0, []) bs in
+              (if is_param then n+1 else n),
+              allow_param && is_param,
+              bs@[{b with binder_attrs=b_attrs}]) (0, true, []) bs in
             {eff_t with n=Tm_arrow (bs, c)},
             n
           | _ -> failwith "desugaring indexed effect: effect type not an arrow" in
