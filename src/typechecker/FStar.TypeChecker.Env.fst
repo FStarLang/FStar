@@ -1816,6 +1816,11 @@ let new_implicit_var_aux reason r env k should_check meta =
 
 (***************************************************)
 
+//
+// Perhaps this should not return a guard,
+//   but only a list of implicits, so that callers don't have to
+//   be cautious about the logical payload of the guard
+//
 let uvars_for_binders env (bs:S.binders) substs reason r =
   bs |> List.fold_left (fun (substs, uvars, g) b ->
     let sort = SS.subst substs b.binder_bv.sort in

@@ -12019,7 +12019,9 @@ and (solve_c :
                                        with
                                        | FStar_Syntax_Syntax.Layered_eff_sig
                                            (n, uu___9) -> n
-                                       | uu___9 -> failwith "Impossible!" in
+                                       | uu___9 ->
+                                           failwith
+                                             "Impossible (expected indexed effect subcomp)" in
                                      (c12, g_lift, tsopt, k, num_eff_params,
                                        false))))
                   | FStar_Pervasives_Native.Some (t, kind) ->
@@ -12161,16 +12163,6 @@ and (solve_c :
                                 "result type" in
                             (match uu___8 with
                              | (ret_sub_prob, wl3) ->
-                                 let stronger_t_shape_error s =
-                                   let uu___9 =
-                                     FStar_Ident.string_of_lid
-                                       c21.FStar_Syntax_Syntax.effect_name in
-                                   let uu___10 =
-                                     FStar_Syntax_Print.term_to_string
-                                       stronger_t in
-                                   FStar_Compiler_Util.format3
-                                     "Unexpected shape of stronger for %s, reason: %s (t:%s)"
-                                     uu___9 s uu___10 in
                                  let uu___9 =
                                    FStar_Syntax_Util.arrow_formals_comp
                                      stronger_t in
@@ -12205,24 +12197,21 @@ and (solve_c :
                                                    p_guard sub_probs1 in
                                                FStar_Syntax_Util.mk_conj_l
                                                  uu___11 in
-                                             match g_lift.FStar_TypeChecker_Common.guard_f
-                                             with
-                                             | FStar_TypeChecker_Common.Trivial
-                                                 -> guard1
-                                             | FStar_TypeChecker_Common.NonTrivial
-                                                 f ->
-                                                 FStar_Syntax_Util.mk_conj
-                                                   guard1 f in
+                                             let guard2 =
+                                               match g_lift.FStar_TypeChecker_Common.guard_f
+                                               with
+                                               | FStar_TypeChecker_Common.Trivial
+                                                   -> guard1
+                                               | FStar_TypeChecker_Common.NonTrivial
+                                                   f ->
+                                                   FStar_Syntax_Util.mk_conj
+                                                     guard1 f in
+                                             FStar_Syntax_Util.mk_conj guard2
+                                               fml in
                                            let wl5 =
-                                             let uu___11 =
-                                               let uu___12 =
-                                                 FStar_Syntax_Util.mk_conj
-                                                   guard fml in
-                                               FStar_Compiler_Effect.op_Less_Bar
-                                                 (fun uu___13 ->
-                                                    FStar_Pervasives_Native.Some
-                                                      uu___13) uu___12 in
-                                             solve_prob orig uu___11 [] wl4 in
+                                             solve_prob orig
+                                               (FStar_Pervasives_Native.Some
+                                                  guard) [] wl4 in
                                            ((let uu___12 =
                                                FStar_Compiler_Effect.op_Less_Bar
                                                  (FStar_TypeChecker_Env.debug
