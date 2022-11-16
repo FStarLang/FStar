@@ -205,6 +205,17 @@ let (eq_binders :
           FStar_Compiler_Effect.op_Bar_Greater uu___1
             (fun uu___2 -> FStar_Pervasives_Native.Some uu___2)
         else FStar_Pervasives_Native.None
+let (log_ad_hoc_combinator_warning :
+  Prims.string -> FStar_Compiler_Range.range -> unit) =
+  fun comb_name ->
+    fun r ->
+      let uu___ =
+        let uu___1 =
+          FStar_Compiler_Util.format1
+            "Combinator %s is not a substitutive indexed effect combinator, it is better to make it one if possible for better performance and ease of use"
+            comb_name in
+        (FStar_Errors.Warning_Adhoc_IndexedEffect_Combinator, uu___1) in
+      FStar_Errors.log_issue r uu___
 let (bind_combinator_kind :
   FStar_TypeChecker_Env.env ->
     FStar_Ident.lident ->
@@ -1714,7 +1725,10 @@ let (validate_indexed_effect_bind_shape :
                                                                  with
                                                                  | FStar_Pervasives_Native.None
                                                                     ->
-                                                                    FStar_Syntax_Syntax.Ad_hoc_combinator
+                                                                    (log_ad_hoc_combinator_warning
+                                                                    bind_name
+                                                                    r;
+                                                                    FStar_Syntax_Syntax.Ad_hoc_combinator)
                                                                  | FStar_Pervasives_Native.Some
                                                                     l ->
                                                                     FStar_Syntax_Syntax.Substitutive_combinator
@@ -2600,7 +2614,9 @@ let (validate_indexed_effect_subcomp_shape :
                                          let kind =
                                            match lopt with
                                            | FStar_Pervasives_Native.None ->
-                                               FStar_Syntax_Syntax.Ad_hoc_combinator
+                                               (log_ad_hoc_combinator_warning
+                                                  subcomp_name r;
+                                                FStar_Syntax_Syntax.Ad_hoc_combinator)
                                            | FStar_Pervasives_Native.Some l
                                                ->
                                                FStar_Syntax_Syntax.Substitutive_combinator
@@ -3290,7 +3306,9 @@ let (validate_indexed_effect_ite_shape :
                                     let kind =
                                       match lopt with
                                       | FStar_Pervasives_Native.None ->
-                                          FStar_Syntax_Syntax.Ad_hoc_combinator
+                                          (log_ad_hoc_combinator_warning
+                                             ite_name r;
+                                           FStar_Syntax_Syntax.Ad_hoc_combinator)
                                       | FStar_Pervasives_Native.Some l ->
                                           FStar_Syntax_Syntax.Substitutive_combinator
                                             l in
@@ -3762,7 +3780,9 @@ let (validate_indexed_effect_lift_shape :
                                          let kind =
                                            match lopt with
                                            | FStar_Pervasives_Native.None ->
-                                               FStar_Syntax_Syntax.Ad_hoc_combinator
+                                               (log_ad_hoc_combinator_warning
+                                                  lift_name r;
+                                                FStar_Syntax_Syntax.Ad_hoc_combinator)
                                            | FStar_Pervasives_Native.Some l
                                                ->
                                                FStar_Syntax_Syntax.Substitutive_combinator

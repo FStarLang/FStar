@@ -124,6 +124,12 @@ let eq_binders env (bs1 bs2:binders) : option (list S.indexed_effect_binder_kind
   then bs1 |> List.map (fun _ -> Substitutive_binder) |> Some
   else None
 
+let log_ad_hoc_combinator_warning (comb_name:string) (r:Range.range) =
+  log_issue r
+    (Errors.Warning_Adhoc_IndexedEffect_Combinator,
+     BU.format1 "Combinator %s is not a substitutive indexed effect combinator, \
+                 it is better to make it one if possible for better performance and ease of use" comb_name)
+
 //
 // Check bind combinator kind for an indexed effect or polymonadic bind
 //
@@ -482,7 +488,9 @@ let validate_indexed_effect_bind_shape (env:env)
 
   let kind = 
     match lopt with
-    | None -> Ad_hoc_combinator
+    | None ->
+      log_ad_hoc_combinator_warning bind_name r;
+      Ad_hoc_combinator
     | Some l -> Substitutive_combinator l in
 
   if Env.debug env <| Options.Other "LayeredEffectsTc"
@@ -724,7 +732,9 @@ let validate_indexed_effect_subcomp_shape (env:env)
 
   let kind =
     match lopt with
-    | None -> Ad_hoc_combinator
+    | None ->
+      log_ad_hoc_combinator_warning subcomp_name r;
+      Ad_hoc_combinator
     | Some l -> Substitutive_combinator l in
 
   if Env.debug env <| Options.Other "LayeredEffectsTc"
@@ -926,7 +936,9 @@ let validate_indexed_effect_ite_shape (env:env)
 
   let kind =
     match lopt with
-    | None -> Ad_hoc_combinator
+    | None ->
+      log_ad_hoc_combinator_warning ite_name r;
+      Ad_hoc_combinator
     | Some l -> Substitutive_combinator l in
 
   if Env.debug env <| Options.Other "LayeredEffectsTc"
@@ -1097,7 +1109,9 @@ let validate_indexed_effect_lift_shape (env:env)
 
   let kind =
     match lopt with
-    | None -> Ad_hoc_combinator
+    | None ->
+      log_ad_hoc_combinator_warning lift_name r;
+      Ad_hoc_combinator
     | Some l -> Substitutive_combinator l in
 
   if Env.debug env <| Options.Other "LayeredEffectsTc"
