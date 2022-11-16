@@ -98,78 +98,6 @@ let pure_wp_uvar env (t:typ) (reason:string) (r:Range.range) : term * guard_t =
   let pure_wp_uvar, _, guard_wp = Env.new_implicit_var_aux reason r env pure_wp_t Strict None in
   pure_wp_uvar, guard_wp
 
-
-let validate_degenerate_effect env (u:univ_name) (return_term:term) (return_typ:typ) (r:Range.range) : unit =
-  let a_b::x_b1::rest_bs1 =
-    match (SS.compress return_typ).n with
-    | Tm_arrow (bs, _) -> SS.open_binders bs
-    | _ -> failwith "validate_degenerate_effect: return not an arrow" in
-
-  let x_b2::rest_bs2 =
-    match (SS.compress return_typ).n with
-    | Tm_arrow (bs, _) ->
-      let a::bs = SS.open_binders bs in
-      let ss = [NT (a.binder_bv, a_b.binder_bv |> S.bv_to_name)] in
-      SS.subst_binders ss bs
-    | _ -> failwith "validate_degenerate_effect: return not an arrow" in
-
-  
-  let return_term1 = mk_Tm_app return_term
-    (List.map (fun b -> b.binder_bv |> S.bv_to_name |> S.as_arg) (a_b::x_b1::rest_bs1))
-    Range.dummyRange
-    |> N.normalize N.whnf_steps (Env.push_binders env (a_b::x_b1::rest_bs1)) in
-
-  let return_term2 = mk_Tm_app return_term
-    (List.map (fun b -> b.binder_bv |> S.bv_to_name |> S.as_arg) (a_b::x_b2::rest_bs2))
-    Range.dummyRange
-    |> N.normalize N.whnf_steps (Env.push_binders env (a_b::x_b2::rest_bs2)) in
-
-  let return_term_bs1, return_term_bs2, return_term1, return_term2 =
-    match (SS.compress return_term1).n, (SS.compress return_term2).n with
-    | Tm_abs (bs1, t1, _), Tm_abs (bs2, t2, _)
-      when List.length bs1 = List.length bs2 ->
-
-      let bs1, t1 = SS.open_term bs1 t1 in
-      let bs2, t2 = SS.open_term bs2 t2 in
-
-      bs1, bs2, t1, t2
-      
-    | _ -> [], [], return_term1, return_term2 in
-
-  let env = Env.push_binders env ((a_b::x_b1::rest_bs1)@(x_b2::rest_bs2)@return_term_bs1@return_term_bs2) in
-
-  let hyp =
-    let hyp = List.fold_left2 (fun hyp b1 b2 ->
-      U.mk_conj hyp
-        (U.mk_eq3_no_univ
-           b1.binder_bv.sort
-           b2.binder_bv.sort
-           (b1.binder_bv |> S.bv_to_name)
-           (b2.binder_bv |> S.bv_to_name))) U.t_true rest_bs1 rest_bs2 in
-
-    let hyp = List.fold_left2 (fun hyp b1 b2 ->
-      U.mk_conj hyp
-        (U.mk_eq3_no_univ
-           b1.binder_bv.sort
-           b2.binder_bv.sort
-           (b1.binder_bv |> S.bv_to_name)
-           (b2.binder_bv |> S.bv_to_name))) hyp return_term_bs1 return_term_bs2 in
-
-    U.mk_conj hyp (U.mk_untyped_eq2 return_term1 return_term2) in
-
-  let obligation = U.mk_eq3_no_univ
-    x_b1.binder_bv.sort
-    x_b2.binder_bv.sort
-    (x_b1.binder_bv |> S.bv_to_name)
-    (x_b2.binder_bv |> S.bv_to_name) in
-
-  let g = U.mk_imp hyp obligation
-    |> NonTrivial
-    |> Env.guard_of_guard_formula
-    |> TcUtil.label_guard r "Check for effect consistency" in
-
-  Rel.force_trivial_guard env g
-
 let (let?) (#a #b:Type) (f:option a) (g:a -> option b) : option b =
   match f with
   | None -> None
@@ -181,6 +109,11 @@ let mteq (env:env) (t1 t2:typ) : bool =
    with
    | _ -> false
 
+//
+// A gadget used to check for effect combinator kind (substitutive or ad-hoc)
+//
+// bs1 and bs2 are opened binders from the signature and the effect combinator
+//
 let eq_binders env (bs1 bs2:binders) : option (list S.indexed_effect_binder_kind) =
   if List.fold_left2 (fun (b, ss) b1 b2 ->
        b &&
@@ -191,6 +124,16 @@ let eq_binders env (bs1 bs2:binders) : option (list S.indexed_effect_binder_kind
   then bs1 |> List.map (fun _ -> Substitutive_binder) |> Some
   else None
 
+//
+// Check bind combinator kind for an indexed effect or polymonadic bind
+//
+// k is the bind type (in the general indexed effects bind shape)
+//
+// num_effect_params must be 0 for polymonadic binds
+//
+// returns None if bind is not Substitutive
+//   else Some l, where l is the list of binder kinds
+//
 let bind_combinator_kind (env:env)
   (m_eff_name n_eff_name p_eff_name:lident)
   (m_sig_ts n_sig_ts p_sig_ts:tscheme)
@@ -215,10 +158,19 @@ let bind_combinator_kind (env:env)
 
   let (a_b::b_b::rest_bs) = k |> U.arrow_formals |> fst in
 
+  // we will check that every binder in k has the expected type,
+  //   where the expected types will come from the signatures of the effects
+
+  // check that rest_bs has expected effect parameters
+  // to check expected, we use the signature from m,
+  //   for polymonadic binds num effect parameters is 0,
+  //   so this code will return from the then branch
   let? eff_params_bs, eff_params_bs_kinds, rest_bs =
     if num_effect_params = 0
     then ([], [], rest_bs) |> Some
-    else let _, sig = Env.inst_tscheme_with m_sig_ts [U_name u_a] in
+    else // take the num effect parameters from m's signature and
+         //   check that those binders are equal to those in k
+         let _, sig = Env.inst_tscheme_with m_sig_ts [U_name u_a] in
          let sig_bs = sig |> U.arrow_formals
            |> fst
            |> List.tl in
@@ -233,80 +185,80 @@ let bind_combinator_kind (env:env)
          let? eff_params_bs_kinds = eq_binders env sig_eff_params_bs eff_params_bs in
          (eff_params_bs, eff_params_bs_kinds, rest_bs) |> Some in
 
-  // the binders in f's repr signature
+  // check that prefix of rest_bs matches the binders in f's repr
+  let? f_bs, f_bs_kinds, rest_bs =
+    // binders in f's signature,
+    //   after substituting eff_params_bs (we need to check for binder equality)
+    let f_sig_bs =
+      let _, sig = Env.inst_tscheme_with m_sig_ts [U_name u_a] in
+      sig |> U.arrow_formals
+          |> fst
+          |> (fun (a::bs) ->
+             let sig_bs, bs = List.splitAt num_effect_params bs in
+             let ss = List.fold_left2 (fun ss sig_b b ->
+               ss@[NT (sig_b.binder_bv, b.binder_bv |> S.bv_to_name)]
+             ) [NT (a.binder_bv, a_b.binder_bv |> S.bv_to_name)] sig_bs eff_params_bs in
+             bs |> SS.subst_binders ss) in
 
-  let f_sig_bs =
-    let _, sig = Env.inst_tscheme_with m_sig_ts [U_name u_a] in
-    sig |> U.arrow_formals
-        |> fst
-        |> (fun (a::bs) ->
-           let sig_bs, bs = List.splitAt num_effect_params bs in
-           let ss = List.fold_left2 (fun ss sig_b b ->
-             ss@[NT (sig_b.binder_bv, b.binder_bv |> S.bv_to_name)]
-           ) [NT (a.binder_bv, a_b.binder_bv |> S.bv_to_name)] sig_bs eff_params_bs in
-           bs |> SS.subst_binders ss) in
+    let? f_bs, rest_bs =
+      if List.length rest_bs < List.length f_sig_bs
+      then None
+      else List.splitAt (List.length f_sig_bs) rest_bs |> Some in
 
-  // f_bs are the binders in k's type, potentially corresponding to the f_sig_bs
-  
-  let? f_bs, rest_bs =
-    if List.length rest_bs < List.length f_sig_bs
-    then None
-    else List.splitAt (List.length f_sig_bs) rest_bs |> Some in
+    let? f_bs_kinds = eq_binders env f_sig_bs f_bs in
 
-  //
-  // If the sorts of f_bs and f_sig_bs are NOT the same,
-  //   the bind combinator is definitely not standard
-  //
+    (f_bs, f_bs_kinds, rest_bs) |> Some in
 
-  let? f_bs_kinds = eq_binders env f_sig_bs f_bs in
+  // same thing for g
 
-  // same thing for g, first get binders in g's signature
+  let? g_bs, g_bs_kinds, rest_bs =
+    let g_sig_bs =
+      let _, sig = Env.inst_tscheme_with n_sig_ts [U_name u_b] in
+      sig |> U.arrow_formals
+          |> fst
+          |> (fun (b::bs) ->
+             let sig_bs, bs = List.splitAt num_effect_params bs in
+             let ss = List.fold_left2 (fun ss sig_b b ->
+               ss@[NT (sig_b.binder_bv, b.binder_bv |> S.bv_to_name)]
+             ) [NT (b.binder_bv, b_b.binder_bv |> S.bv_to_name)] sig_bs eff_params_bs in
+             bs |> SS.subst_binders ss) in
 
-  let g_sig_bs =
-    let _, sig = Env.inst_tscheme_with n_sig_ts [U_name u_b] in
-    sig |> U.arrow_formals
-        |> fst
-        |> (fun (b::bs) ->
-           let sig_bs, bs = List.splitAt num_effect_params bs in
-           let ss = List.fold_left2 (fun ss sig_b b ->
-             ss@[NT (sig_b.binder_bv, b.binder_bv |> S.bv_to_name)]
-           ) [NT (b.binder_bv, b_b.binder_bv |> S.bv_to_name)] sig_bs eff_params_bs in
-           bs |> SS.subst_binders ss) in
+    let? g_bs, rest_bs =
+      if List.length rest_bs < List.length g_sig_bs
+      then None
+      else List.splitAt (List.length g_sig_bs) rest_bs |> Some in
 
-  // g_bs are binders in k's type potentially corresponding to g_sig_bs
+    //
+    // g's binders may be either abstracted over x:a or un-abstracted,
+    //   so we can't simply do eq_binders, we need to check one binder at a time
+    //
+    let? g_bs_kinds =
+      let g_bs_kinds, _ = List.fold_left2 (fun (l, ss) g_sig_b g_b ->  // l is the (bv, kind) list for the binders seen so far
+        let g_sig_b_sort = SS.subst ss g_sig_b.binder_bv.sort in
+        let g_sig_b_arrow_t =  // expected sort of g_b if the binder were abstracted
+          let x_bv = S.gen_bv "x" None (a_b.binder_bv |> S.bv_to_name) in
+          let ss = List.map (fun (bv, k) ->
+            if k = Substitutive_binder
+            then [NT (bv, mk_Tm_app (S.bv_to_name bv) [x_bv |> S.bv_to_name |> S.as_arg] Range.dummyRange)]
+            else []) l |> List.flatten in
+          let g_sig_b_sort = SS.subst ss g_sig_b_sort in
+          U.arrow [S.mk_binder x_bv]
+                  (mk_Total g_sig_b_sort) in
+        let g_b_kind =
+          if U.eq_tm g_sig_b_arrow_t g_b.binder_bv.sort = U.Equal
+          then Substitutive_binder
+          else if U.eq_tm g_sig_b_sort g_b.binder_bv.sort = U.Equal
+          then BindCont_no_abstraction_binder
+          else Ad_hoc_binder in
+        let ss = ss@[NT (g_sig_b.binder_bv, g_b.binder_bv |> S.bv_to_name)] in
+        l@[g_b.binder_bv, g_b_kind], ss) ([], []) g_sig_bs g_bs in
 
-  let? g_bs, rest_bs =
-    if List.length rest_bs < List.length g_sig_bs
-    then None
-    else List.splitAt (List.length g_sig_bs) rest_bs |> Some in
+      let g_bs_kinds = List.map snd g_bs_kinds in
+      if List.contains Ad_hoc_binder g_bs_kinds
+      then None
+      else g_bs_kinds |> Some in
 
-  //
-  // g's binders may be either abstracted over x:a or un-abstracted
-  //
-
-  let? g_bs_kinds =
-    let g_bs_kinds, _ = List.fold_left2 (fun (l, ss) g_sig_b g_b ->
-      let g_sig_b_sort = SS.subst ss g_sig_b.binder_bv.sort in
-      let ss = ss@[NT (g_sig_b.binder_bv, g_b.binder_bv |> S.bv_to_name)] in
-      let g_sig_b_arrow_t =
-        let x_bv = S.gen_bv "x" None (a_b.binder_bv |> S.bv_to_name) in
-        let ss = List.map (fun (bv, k) ->
-          if k = Substitutive_binder
-          then [NT (bv, mk_Tm_app (S.bv_to_name bv) [x_bv |> S.bv_to_name |> S.as_arg] Range.dummyRange)]
-          else []) l |> List.flatten in
-        let g_sig_b_sort = SS.subst ss g_sig_b_sort in
-        U.arrow [S.mk_binder x_bv]
-                (mk_Total g_sig_b_sort) in  // Universe?
-      if U.eq_tm g_sig_b_arrow_t g_b.binder_bv.sort = U.Equal
-      then l@[g_b.binder_bv, Substitutive_binder], ss
-      else if U.eq_tm g_sig_b_sort g_b.binder_bv.sort = U.Equal
-      then l@[g_b.binder_bv, BindCont_no_abstraction_binder], ss
-      else l@[g_b.binder_bv, Ad_hoc_binder], ss) ([], []) g_sig_bs g_bs in
-
-    let g_bs_kinds = List.map snd g_bs_kinds in
-    if List.contains Ad_hoc_binder g_bs_kinds
-    then None
-    else g_bs_kinds |> Some in
+    (g_bs, g_bs_kinds, rest_bs) |> Some in
 
   // peel off range binders if any
 
@@ -321,17 +273,18 @@ let bind_combinator_kind (env:env)
          (rest_bs, f_b, g_b) |> Some
     else None in
 
+  // check that the type of the f repr is ok
   let? _f_b_ok_ =
     let repr_app_bs = eff_params_bs@f_bs in
     let expected_f_b_sort =
       match m_repr_ts with
-      | Some repr_ts ->
+      | Some repr_ts ->  // an indexed effect, so repr applied to a and bs
         let _, t = Env.inst_tscheme_with repr_ts [U_name u_a] in
         S.mk_Tm_app t
           ((a_b.binder_bv |> S.bv_to_name |> S.as_arg)::
            (List.map (fun {binder_bv=b} -> b |> S.bv_to_name |> S.as_arg) repr_app_bs))
           Range.dummyRange
-      | None ->
+      | None ->  // a primitive effect, so unit -> M a bs
         U.arrow [S.null_binder S.t_unit]
                 (mk_Comp ({
                    comp_univs = [U_name u_a];
@@ -343,12 +296,14 @@ let bind_combinator_kind (env:env)
     then Some ()
     else None in
 
+  // check that the type of g repr is ok
   let? _g_b_ok =
     let expected_g_b_sort =
       let x_bv = S.gen_bv "x" None (a_b.binder_bv |> S.bv_to_name) in
       let eff_params_args = List.map (fun {binder_bv=b} -> b |> S.bv_to_name |> S.as_arg) eff_params_bs in
       let g_bs_args =
         List.map2 (fun {binder_bv=b} kind ->
+          // we know here that kind is either Substitutive or BindCont_no_abs
           if kind = Substitutive_binder
           then S.mk_Tm_app (b |> S.bv_to_name) [x_bv |> S.bv_to_name |> S.as_arg] Range.dummyRange
           else b |> S.bv_to_name) g_bs g_bs_kinds
@@ -376,10 +331,22 @@ let bind_combinator_kind (env:env)
     else None in
 
   let range_kinds = List.map (fun _ -> Range_binder) range_bs in
+
+  // remaining binders in rest_bs are all ad-hoc
   let rest_kinds = List.map (fun _ -> Ad_hoc_binder) rest_bs in
 
-  Some ([Type_binder; Type_binder]@eff_params_bs_kinds@f_bs_kinds@g_bs_kinds@range_kinds@rest_kinds@[Repr_binder; Repr_binder])
+  Some ([Type_binder; Type_binder] @
+        eff_params_bs_kinds        @
+        f_bs_kinds                 @
+        g_bs_kinds                 @
+        range_kinds                @
+        rest_kinds                 @
+        [Repr_binder; Repr_binder])
 
+//
+// Validate that the indexed effect bind has the expected shape,
+//   and return its canonical type and combinator kind
+//
 let validate_indexed_effect_bind_shape (env:env)
   (m_eff_name n_eff_name p_eff_name:lident)
   (m_sig_ts n_sig_ts p_sig_ts:tscheme)
@@ -399,7 +366,7 @@ let validate_indexed_effect_bind_shape (env:env)
   let [u_a; u_b] = bind_us in
 
   //
-  // Check that bind has the general shape:
+  // First check that bind has the general shape:
   //   a:Type u_a -> b:Type u_b -> some_bs -> optional_range_bs -> f -> g -> PURE repr wp
   //
   // We do so by creating expected type k = the arrow type above,
@@ -524,6 +491,11 @@ let validate_indexed_effect_bind_shape (env:env)
 
   k, kind
 
+//
+// Check subcomp combinator kind
+//
+// Used for both indexed effects subcomp and polymonadic subcomp
+//
 let subcomp_combinator_kind (env:env)
   (m_eff_name n_eff_name:lident)
   (m_sig_ts n_sig_ts:tscheme)
@@ -533,6 +505,10 @@ let subcomp_combinator_kind (env:env)
   (num_effect_params:int)
 
   : option (list indexed_effect_binder_kind) =
+
+  // the idea is same as that of bind
+  //   we will check that each binder in k has expected type,
+  //   where the expected types will come from signatures and reprs of m and n
 
   let a_b::rest_bs, k_c = k |> U.arrow_formals_comp in
 
@@ -546,48 +522,56 @@ let subcomp_combinator_kind (env:env)
          let? eff_params_bs_kinds = eq_binders env sig_effect_params_bs eff_params_bs in
          (eff_params_bs, eff_params_bs_kinds, rest_bs) |> Some in
 
-  let f_sig_bs =
-    let _, sig = Env.inst_tscheme_with m_sig_ts [U_name u] in
-    sig |> U.arrow_formals
-        |> fst
-        |> (fun (a::bs) ->
-           let sig_bs, bs = List.splitAt num_effect_params bs in
-           let ss = List.fold_left2 (fun ss sig_b b ->
-             ss@[NT (sig_b.binder_bv, b.binder_bv |> S.bv_to_name)]
-           ) [NT (a.binder_bv, a_b.binder_bv |> S.bv_to_name)] sig_bs eff_params_bs in
-           bs |> SS.subst_binders ss) in
+  let? f_bs, f_bs_kinds, rest_bs =
+    let f_sig_bs =
+      let _, sig = Env.inst_tscheme_with m_sig_ts [U_name u] in
+      sig |> U.arrow_formals
+          |> fst
+          |> (fun (a::bs) ->
+             let sig_bs, bs = List.splitAt num_effect_params bs in
+             let ss = List.fold_left2 (fun ss sig_b b ->
+               ss@[NT (sig_b.binder_bv, b.binder_bv |> S.bv_to_name)]
+             ) [NT (a.binder_bv, a_b.binder_bv |> S.bv_to_name)] sig_bs eff_params_bs in
+             bs |> SS.subst_binders ss) in
 
-  let? f_bs, rest_bs =
-    if List.length rest_bs < List.length f_sig_bs
-    then None
-    else List.splitAt (List.length f_sig_bs) rest_bs |> Some in
+    let? f_bs, rest_bs =
+      if List.length rest_bs < List.length f_sig_bs
+      then None
+      else List.splitAt (List.length f_sig_bs) rest_bs |> Some in
 
-  let? f_bs_kinds = eq_binders env f_sig_bs f_bs in
+    let? f_bs_kinds = eq_binders env f_sig_bs f_bs in
 
-  let g_sig_bs =
-    let _, sig = Env.inst_tscheme_with n_sig_ts [U_name u] in
-    sig |> U.arrow_formals
-        |> fst
-        |> (fun (a::bs) ->
-           let sig_bs, bs = List.splitAt num_effect_params bs in
-           let ss = List.fold_left2 (fun ss sig_b b ->
-             ss@[NT (sig_b.binder_bv, b.binder_bv |> S.bv_to_name)]
-           ) [NT (a.binder_bv, a_b.binder_bv |> S.bv_to_name)] sig_bs eff_params_bs in
-           bs |> SS.subst_binders ss) in
+    (f_bs, f_bs_kinds, rest_bs) |> Some in
 
-  let? g_bs, rest_bs =
-    if List.length rest_bs < List.length g_sig_bs
-    then None
-    else List.splitAt (List.length g_sig_bs) rest_bs |> Some in
+  let? g_bs, g_bs_kinds, rest_bs =
+    let g_sig_bs =
+      let _, sig = Env.inst_tscheme_with n_sig_ts [U_name u] in
+      sig |> U.arrow_formals
+          |> fst
+          |> (fun (a::bs) ->
+             let sig_bs, bs = List.splitAt num_effect_params bs in
+             let ss = List.fold_left2 (fun ss sig_b b ->
+               ss@[NT (sig_b.binder_bv, b.binder_bv |> S.bv_to_name)]
+             ) [NT (a.binder_bv, a_b.binder_bv |> S.bv_to_name)] sig_bs eff_params_bs in
+             bs |> SS.subst_binders ss) in
 
-  let? g_bs_kinds = eq_binders env g_sig_bs g_bs in
-    
+    let? g_bs, rest_bs =
+      if List.length rest_bs < List.length g_sig_bs
+      then None
+      else List.splitAt (List.length g_sig_bs) rest_bs |> Some in
+
+    let? g_bs_kinds = eq_binders env g_sig_bs g_bs in
+
+    (g_bs, g_bs_kinds, rest_bs) |> Some in
+
+  // peel off the f:repr a is binder
   let? rest_bs, f_b =
     if List.length rest_bs >= 1
     then let rest_bs, [f_b] = List.splitAt (List.length rest_bs - 1) rest_bs in
          (rest_bs, f_b) |> Some
     else None in
 
+  // check that f repr binder has the expected type
   let? _f_b_ok_ =
     let expected_f_b_sort =
       match m_repr_ts with
@@ -609,6 +593,7 @@ let subcomp_combinator_kind (env:env)
     then Some ()
     else None in
 
+  // check subcomp return type is expected
   let? _ret_t_ok_ =
     let expected_t =
       match n_repr_ts with
@@ -630,10 +615,19 @@ let subcomp_combinator_kind (env:env)
     then Some ()
     else None in
 
+  // rest of the binders are ad-hoc
   let rest_kinds = List.map (fun _ -> Ad_hoc_binder) rest_bs in
 
-  Some ([Type_binder]@eff_params_bs_kinds@f_bs_kinds@g_bs_kinds@rest_kinds@[Repr_binder])
+  Some ([Type_binder]        @
+        eff_params_bs_kinds  @
+        f_bs_kinds           @
+        g_bs_kinds@rest_kinds@
+        [Repr_binder])
 
+//
+// Validate indexed effect subcomp (including polymonadic subcomp) shape
+//   and compute its kind
+//
 let validate_indexed_effect_subcomp_shape (env:env)
   (m_eff_name n_eff_name:lident)
   (m_sig_ts n_sig_ts:tscheme)
@@ -740,6 +734,9 @@ let validate_indexed_effect_subcomp_shape (env:env)
 
   k, kind
 
+//
+// Check the kind of an indexed effect ite combinator
+//
 let ite_combinator_kind (env:env)
   (eff_name:lident)
   (sig_ts repr_ts:tscheme)
@@ -761,41 +758,47 @@ let ite_combinator_kind (env:env)
          let? eff_params_bs_kinds = eq_binders env sig_effect_params_bs eff_params_bs in
          (eff_params_bs, eff_params_bs_kinds, rest_bs) |> Some in
 
-  let f_sig_bs =
-    let _, sig = Env.inst_tscheme_with sig_ts [U_name u] in
-    sig |> U.arrow_formals
-        |> fst
-        |> (fun (a::bs) ->
-           let sig_bs, bs = List.splitAt num_effect_params bs in
-           let ss = List.fold_left2 (fun ss sig_b b ->
-             ss@[NT (sig_b.binder_bv, b.binder_bv |> S.bv_to_name)]
-           ) [NT (a.binder_bv, a_b.binder_bv |> S.bv_to_name)] sig_bs eff_params_bs in
-           bs |> SS.subst_binders ss) in
+  let? f_bs, f_bs_kinds, rest_bs =
+    let f_sig_bs =
+      let _, sig = Env.inst_tscheme_with sig_ts [U_name u] in
+      sig |> U.arrow_formals
+          |> fst
+          |> (fun (a::bs) ->
+             let sig_bs, bs = List.splitAt num_effect_params bs in
+             let ss = List.fold_left2 (fun ss sig_b b ->
+               ss@[NT (sig_b.binder_bv, b.binder_bv |> S.bv_to_name)]
+             ) [NT (a.binder_bv, a_b.binder_bv |> S.bv_to_name)] sig_bs eff_params_bs in
+             bs |> SS.subst_binders ss) in
 
-  let? ((f_bs, rest_bs):(binders&binders)) =
-    if List.length rest_bs < List.length f_sig_bs
-    then None
-    else List.splitAt (List.length f_sig_bs) rest_bs |> Some in
+    let? f_bs, rest_bs =
+      if List.length rest_bs < List.length f_sig_bs
+      then None
+      else List.splitAt (List.length f_sig_bs) rest_bs |> Some in
 
-  let? f_bs_kinds = eq_binders env f_sig_bs f_bs in
+    let? f_bs_kinds = eq_binders env f_sig_bs f_bs in
 
-  let g_sig_bs =
-    let _, sig = Env.inst_tscheme_with sig_ts [U_name u] in
-    sig |> U.arrow_formals
-        |> fst
-        |> (fun (a::bs) ->
-           let sig_bs, bs = List.splitAt num_effect_params bs in
-           let ss = List.fold_left2 (fun ss sig_b b ->
-             ss@[NT (sig_b.binder_bv, b.binder_bv |> S.bv_to_name)]
-           ) [NT (a.binder_bv, a_b.binder_bv |> S.bv_to_name)] sig_bs eff_params_bs in
-           bs |> SS.subst_binders ss) in
+    (f_bs, f_bs_kinds, rest_bs) |> Some in
 
-  let? g_bs, rest_bs =
-    if List.length rest_bs < List.length g_sig_bs
-    then None
-    else List.splitAt (List.length g_sig_bs) rest_bs |> Some in
+  let? g_bs, g_bs_kinds, rest_bs =
+    let g_sig_bs =
+      let _, sig = Env.inst_tscheme_with sig_ts [U_name u] in
+      sig |> U.arrow_formals
+          |> fst
+          |> (fun (a::bs) ->
+             let sig_bs, bs = List.splitAt num_effect_params bs in
+             let ss = List.fold_left2 (fun ss sig_b b ->
+               ss@[NT (sig_b.binder_bv, b.binder_bv |> S.bv_to_name)]
+             ) [NT (a.binder_bv, a_b.binder_bv |> S.bv_to_name)] sig_bs eff_params_bs in
+             bs |> SS.subst_binders ss) in
 
-  let? g_bs_kinds = eq_binders env g_sig_bs g_bs in
+    let? g_bs, rest_bs =
+      if List.length rest_bs < List.length g_sig_bs
+      then None
+      else List.splitAt (List.length g_sig_bs) rest_bs |> Some in
+
+    let? g_bs_kinds = eq_binders env g_sig_bs g_bs in
+
+    (g_bs, g_bs_kinds, rest_bs) |> Some in
 
   let? rest_bs, [f_b; g_b; p_b] =
     if List.length rest_bs >= 3
@@ -826,8 +829,17 @@ let ite_combinator_kind (env:env)
 
   let rest_kinds = List.map (fun _ -> Ad_hoc_binder) rest_bs in
 
-  Some ([Type_binder]@eff_params_bs_kinds@f_bs_kinds@g_bs_kinds@rest_kinds@[Repr_binder; Repr_binder; Substitutive_binder])
+  Some ([Type_binder]      @
+        eff_params_bs_kinds@
+        f_bs_kinds         @
+        g_bs_kinds         @
+        rest_kinds         @
+        [Repr_binder; Repr_binder; Substitutive_binder])
 
+//
+// Validate the shape of an indexed effect ite combinator,
+//   and compute its kind
+//
 let validate_indexed_effect_ite_shape (env:env)
   (eff_name:lident)
   (sig_ts:tscheme)
@@ -923,6 +935,9 @@ let validate_indexed_effect_ite_shape (env:env)
 
   k, kind
 
+//
+// Check the kind of an indexed effect lift
+//
 let lift_combinator_kind (env:env)
   (m_eff_name:lident)
   (m_sig_ts:tscheme)
@@ -933,19 +948,22 @@ let lift_combinator_kind (env:env)
 
   let a_b::rest_bs, _ = U.arrow_formals k in
 
-  let f_sig_bs =
-    let _, sig = Env.inst_tscheme_with m_sig_ts [U_name u] in
-    sig |> U.arrow_formals
-        |> fst
-        |> (fun (a::bs) ->
-           SS.subst_binders [NT (a.binder_bv, a_b.binder_bv |> S.bv_to_name)] bs) in
+  let? f_bs, f_bs_kinds, rest_bs =
+    let f_sig_bs =
+      let _, sig = Env.inst_tscheme_with m_sig_ts [U_name u] in
+      sig |> U.arrow_formals
+          |> fst
+          |> (fun (a::bs) ->
+             SS.subst_binders [NT (a.binder_bv, a_b.binder_bv |> S.bv_to_name)] bs) in
 
-  let? f_bs, rest_bs =
-    if List.length rest_bs < List.length f_sig_bs
-    then None
-    else List.splitAt (List.length f_sig_bs) rest_bs |> Some in
+    let? f_bs, rest_bs =
+      if List.length rest_bs < List.length f_sig_bs
+      then None
+      else List.splitAt (List.length f_sig_bs) rest_bs |> Some in
 
-  let? f_bs_kinds = eq_binders env f_sig_bs f_bs in
+    let? f_bs_kinds = eq_binders env f_sig_bs f_bs in
+
+    (f_bs, f_bs_kinds, rest_bs) |> Some in
 
   let? rest_bs, f_b =
     if List.length rest_bs >= 1
@@ -974,10 +992,17 @@ let lift_combinator_kind (env:env)
     then Some ()
     else None in
 
-  let rest_kinds : list indexed_effect_binder_kind = List.map (fun _ -> Ad_hoc_binder) rest_bs in
+  let rest_kinds = List.map (fun _ -> Ad_hoc_binder) rest_bs in
 
-  Some ([Type_binder]@f_bs_kinds@rest_kinds@[Repr_binder])
+  Some ([Type_binder]@
+        f_bs_kinds   @
+        rest_kinds   @
+        [Repr_binder])
 
+//
+// Validate the shape of an indexed effect lift,
+//   and compute its kind
+//
 let validate_indexed_effect_lift_shape (env:env)
   (m_eff_name n_eff_name:lident)
   (u:univ_name)
@@ -1230,8 +1255,6 @@ Errors.with_ctx (BU.format1 "While checking layered effect definition `%s`" (str
     Rel.force_trivial_guard env (Env.conj_guard g g_eq);
 
     let k = k |> N.remove_uvar_solutions env in
-
-    // validate_degenerate_effect env (List.hd us) (Env.inst_tscheme_with (ret_us, ret_t) (List.map U_name us) |> snd) k r;
 
     ret_us, ret_t, k |> SS.close_univ_vars us in
 

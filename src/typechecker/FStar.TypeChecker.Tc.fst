@@ -841,7 +841,7 @@ let tc_decl' env0 se: list sigelt * list sigelt * Env.env =
       (Some (Ident.string_of_lid (Env.current_module env)))
       "FStar.TypeChecker.Tc.tc_sig_let"
 
-  | Sig_polymonadic_bind (m, n, p, t, _, _) ->  //desugaring does not set the last field, tc does
+  | Sig_polymonadic_bind (m, n, p, t, _, _) ->  //desugaring does not set the last two fields, tc does
     let t =
       if do_two_phases env then run_phase1 (fun _ ->
         let t, ty =
@@ -861,7 +861,7 @@ let tc_decl' env0 se: list sigelt * list sigelt * Env.env =
     let se = ({ se with sigel = Sig_polymonadic_bind (m, n, p, t, ty, Some k) }) in
     [se], [], env0
 
-  | Sig_polymonadic_subcomp (m, n, t, _, _) ->  //desugaring does not set the last field, tc does
+  | Sig_polymonadic_subcomp (m, n, t, _, _) ->  //desugaring does not set the last two fields, tc does
     let t =
       if do_two_phases env then run_phase1 (fun _ ->
         let t, ty =
