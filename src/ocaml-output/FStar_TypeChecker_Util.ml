@@ -1514,8 +1514,8 @@ let (substitutive_indexed_bind_substs :
                                                   (subst2, guard) uu___6
                                                   args2 in
                                               (match uu___5 with
-                                               | (subst3, g_guard) ->
-                                                   (bs4, subst3, guard)) in
+                                               | (subst3, guard1) ->
+                                                   (bs4, subst3, guard1)) in
                                         (match uu___3 with
                                          | (bs4, subst3, guard1) ->
                                              let bs5 =

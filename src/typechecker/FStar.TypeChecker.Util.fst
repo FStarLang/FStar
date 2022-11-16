@@ -807,7 +807,7 @@ let substitutive_indexed_bind_substs env
       | None -> S.null_bv ct1.result_typ
       | Some x -> x in
 
-    let subst, g_guard =
+    let subst, guard =
       List.fold_left2 (fun (ss, g) (g_b, g_b_kind) (arg:S.arg) ->
         if g_b_kind = Substitutive_binder
         then begin
