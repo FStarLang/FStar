@@ -386,7 +386,10 @@ let optimized_haseq_soundness_for_data (ty_lid:lident) (data:sigelt) (usubst:lis
       U.mk_conj t haseq_b) U.t_true dbs
     in
     //fold right over dbs and add a forall for each binder in dbs
-    List.fold_right (fun (b:binder) (t:term) -> mk_Tm_app tforall [ S.as_arg (U.abs [S.mk_binder b.binder_bv] (SS.close [b] t) None) ] Range.dummyRange) dbs cond
+    List.fold_right (fun (b:binder) (t:term) -> mk_Tm_app tforall [
+        S.iarg b.binder_bv.sort;
+        S.as_arg (U.abs [S.mk_binder b.binder_bv] (SS.close [b] t) None)
+      ] Range.dummyRange) dbs cond
   | _                -> U.t_true
 
 //this is the folding function for tcs

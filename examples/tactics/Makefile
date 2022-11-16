@@ -1,6 +1,6 @@
 # Poly files are here for benchmarking, and expected to fail without tactics
 EXCLUDED_FSTAR_FILES=Launch.fst CanonDeep.fst Poly1.fst Poly2.fst \
-		     StringPrinterTest.fst StringPrinterTest.Aux.fst NArrows.fst
+		     StringPrinterTest.fst StringPrinterTest.Aux.fst ReifiedTc.fst
 		     # ^ these last 3 should be fixed and restored
 
 ifndef KRML_HOME

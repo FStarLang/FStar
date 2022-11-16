@@ -101,7 +101,7 @@ let encode_nat n =
         else aux (snat out) (n - 1) in
     aux znat n
 
-let tests =
+let default_tests =
   let _ = Pars.pars_and_tc_fragment "let rec copy (x:list int) : Tot (list int) = \
                                          match x with \
                                           | [] -> []  \
@@ -197,59 +197,59 @@ let tests =
                        (let_ h (app mul [nm y; nm y])
                        (minus (nm h) (nm h))))), z)
   ; (18, (pred_nat (snat (snat znat))), (snat znat))
-  ; (19, tc_nbe_term (minus_nat (snat (snat znat)) (snat znat)), (snat znat)) // requires local recdef 
-  ; (20, tc_nbe_term (minus_nat (encode_nat 10) (encode_nat 10)), znat)
-  ; (21, tc_nbe_term (minus_nat (encode_nat 100) (encode_nat 100)), znat)
-  // ; (22, tc_nbe_term (minus_nat (encode_nat 10000) (encode_nat 10000)), znat) // Stack overflow in Normalizer when run with mono
-  // ; (23, tc_nbe_term (minus_nat (encode_nat 1000000) (encode_nat 1000000)), znat) //this one takes about 30 sec and ~3.5GB of memory. Stack overflow in NBE when run with mono
-  ; (24, (tc_nbe "recons [0;1]"), (tc_nbe "[0;1]"))
-  ; (241, (tc_nbe "recons [false;true;false]"), (tc_nbe "[false;true;false]"))
-  ; (25, (tc_nbe "copy [0;1]"), (tc_nbe "[0;1]"))
-  ; (26, (tc_nbe "rev [0;1;2;3;4;5;6;7;8;9;10]"), (tc_nbe "[10;9;8;7;6;5;4;3;2;1;0]"))
+  ; (19, tc_term (minus_nat (snat (snat znat)) (snat znat)), (snat znat)) // requires local recdef 
+  ; (20, tc_term (minus_nat (encode_nat 10) (encode_nat 10)), znat)
+  ; (21, tc_term (minus_nat (encode_nat 100) (encode_nat 100)), znat)
+  // ; (22, tc_term (minus_nat (encode_nat 10000) (encode_nat 10000)), znat) // Stack overflow in Normalizer when run with mono
+  // ; (23, tc_term (minus_nat (encode_nat 1000000) (encode_nat 1000000)), znat) //this one takes about 30 sec and ~3.5GB of memory. Stack overflow in NBE when run with mono
+  ; (24, (tc "recons [0;1]"), (tc "[0;1]"))
+  ; (241, (tc "recons [false;true;false]"), (tc "[false;true;false]"))
+  ; (25, (tc "copy [0;1]"), (tc "[0;1]"))
+  ; (26, (tc "rev [0;1;2;3;4;5;6;7;8;9;10]"), (tc "[10;9;8;7;6;5;4;3;2;1;0]"))
   // Type defs not yet implemented for NBE
-  // ; (271, (tc_nbe "(FStar.String.substring \"abcdef\" 1 2)"), (tc_nbe "\"bc\"")) //VD: Not sure why, but this test fails on the normalizer
-  // ; (27, (tc_nbe "(rev (FStar.String.list_of_string \"abcd\"))"), (tc_nbe "['d'; 'c'; 'b'; 'a']"))// -- CH: works up to an unfolding too much (char -> char')
-  ; (28, (tc_nbe "(fun x y z q -> z) T T F T"), (tc_nbe "F"))
-  ; (29, (tc_nbe "[T; F]"), (tc_nbe "[T; F]"))
-  ; (31, (tc_nbe "id_tb T"), (tc_nbe "T"))
-  ; (32, (tc_nbe "(fun #a x -> x) #tb T"), (tc_nbe "T"))
-  ; (33, (tc_nbe "revtb T"), (tc_nbe "F"))
-  ; (34, (tc_nbe "(fun x y -> x) T F"), (tc_nbe "T"))
-  ; (35, (tc_nbe "fst_a T F"), (tc_nbe "T"))
-  ; (36, (tc_nbe "idd T"), (tc_nbe "T"))
-  ; (301, (tc_nbe "id_list [T]"), (tc_nbe "[T]"))
-  ; (3012, (tc_nbe "id_list_m [T]"), (tc_nbe "[T]"))
-  ; (302, (tc_nbe "recons_m [T; F]"), (tc_nbe "[T; F]"))
-  ; (303, (tc_nbe "select T A1 A3"), (tc_nbe "A1"))
-  ; (3031, (tc_nbe "select T 3 4"), (tc_nbe "3"))
-  ; (3032, (tc_nbe "select_bool false 3 4"), (tc_nbe "4"))
-  ; (3033, (tc_nbe "select_int3 1 7 8 9"), (tc_nbe "8"))
-  ; (3034, (tc_nbe "[5]"), (tc_nbe "[5]"))
-  ; (3035, (tc_nbe "[\"abcd\"]"), (tc_nbe "[\"abcd\"]"))
-  ; (3036, (tc_nbe "select_string3 \"def\" 5 6 7"), (tc_nbe "6"))
-  //; (3037, (tc_nbe "['c']"), (tc_nbe "['c']")) //VD: Fails unless FStar.Char is imported (see FStar.Tests.Pars)
-  ; (305, (tc_nbe "idd T"), (tc_nbe "T"))
-  ; (306, (tc_nbe "recons [T]"), (tc_nbe "[T]"))
-  ; (307, (tc_nbe "copy_tb_list_2 [T;F;T;F;T;F;F]"), (tc_nbe "[T;F;T;F;T;F;F]"))
-  ; (308, (tc_nbe "copy_list_2    [T;F;T;F;T;F;F]"), (tc_nbe "[T;F;T;F;T;F;F]"))
+  // ; (271, (tc "(FStar.String.substring \"abcdef\" 1 2)"), (tc "\"bc\"")) //VD: Not sure why, but this test fails on the normalizer
+  // ; (27, (tc "(rev (FStar.String.list_of_string \"abcd\"))"), (tc "['d'; 'c'; 'b'; 'a']"))// -- CH: works up to an unfolding too much (char -> char')
+  ; (28, (tc "(fun x y z q -> z) T T F T"), (tc "F"))
+  ; (29, (tc "[T; F]"), (tc "[T; F]"))
+  ; (31, (tc "id_tb T"), (tc "T"))
+  ; (32, (tc "(fun #a x -> x) #tb T"), (tc "T"))
+  ; (33, (tc "revtb T"), (tc "F"))
+  ; (34, (tc "(fun x y -> x) T F"), (tc "T"))
+  ; (35, (tc "fst_a T F"), (tc "T"))
+  ; (36, (tc "idd T"), (tc "T"))
+  ; (301, (tc "id_list [T]"), (tc "[T]"))
+  ; (3012, (tc "id_list_m [T]"), (tc "[T]"))
+  ; (302, (tc "recons_m [T; F]"), (tc "[T; F]"))
+  ; (303, (tc "select T A1 A3"), (tc "A1"))
+  ; (3031, (tc "select T 3 4"), (tc "3"))
+  ; (3032, (tc "select_bool false 3 4"), (tc "4"))
+  ; (3033, (tc "select_int3 1 7 8 9"), (tc "8"))
+  ; (3034, (tc "[5]"), (tc "[5]"))
+  ; (3035, (tc "[\"abcd\"]"), (tc "[\"abcd\"]"))
+  ; (3036, (tc "select_string3 \"def\" 5 6 7"), (tc "6"))
+  //; (3037, (tc "['c']"), (tc "['c']")) //VD: Fails unless FStar.Char is imported (see FStar.Tests.Pars)
+  ; (305, (tc "idd T"), (tc "T"))
+  ; (306, (tc "recons [T]"), (tc "[T]"))
+  ; (307, (tc "copy_tb_list_2 [T;F;T;F;T;F;F]"), (tc "[T;F;T;F;T;F;F]"))
+  ; (308, (tc "copy_list_2    [T;F;T;F;T;F;F]"), (tc "[T;F;T;F;T;F;F]"))
 
-  ; (304, (tc_nbe "rev [T; F; F]"), (tc_nbe "[F; F; T]"))
-  ; (305, (tc_nbe "rev [[T]; [F; T]]"), (tc_nbe "[[F; T]; [T]]"))
+  ; (304, (tc "rev [T; F; F]"), (tc "[F; F; T]"))
+  ; (305, (tc "rev [[T]; [F; T]]"), (tc "[[F; T]; [T]]"))
 
-  ; (309, (tc_nbe "x1"), (tc_nbe "6"))
-  ; (310, (tc_nbe "x2"), (tc_nbe "2"))
-  //; (311, (tc_nbe "x3"), (tc_nbe "7")) // Throws parsing exceptiomn
+  ; (309, (tc "x1"), (tc "6"))
+  ; (310, (tc "x2"), (tc "2"))
+  //; (311, (tc "x3"), (tc "7")) // Throws parsing exceptiomn
 
   // Tests for primops
-  ; (401, (tc_nbe "7 + 3"), (tc_nbe "10"))
-  ; (402, (tc_nbe "true && false"), (tc_nbe "false"))
-  ; (403, (tc_nbe "3 = 5"), (tc_nbe "false"))
-  ; (404, (tc_nbe "\"abc\" ^ \"def\""), (tc_nbe "\"abcdef\""))
-  ; (405, (tc_nbe "(fun (x:list int) -> match x with | [] -> 0 | hd::tl -> 1) []"), (tc_nbe "0"))
+  ; (401, (tc "7 + 3"), (tc "10"))
+  ; (402, (tc "true && false"), (tc "false"))
+  ; (403, (tc "3 = 5"), (tc "false"))
+  ; (404, (tc "\"abc\" ^ \"def\""), (tc "\"abcdef\""))
+  ; (405, (tc "(fun (x:list int) -> match x with | [] -> 0 | hd::tl -> 1) []"), (tc "0"))
 
   // Test for refinements 
-  // ; (501, (tc_nbe "fun (x1:int{x1>(3+1)}) -> x1 + (1 + 0)"), (tc_nbe "fun (x1:int{x1>4}) -> x1 + 1")) // ZP : Fails because the two functions are not syntactically equal
-  // ; (502, (tc_nbe "x1:int{x1>(3+1)}"), (tc_nbe "x1:int{x1>4}"))
+  // ; (501, (tc "fun (x1:int{x1>(3+1)}) -> x1 + (1 + 0)"), (tc "fun (x1:int{x1>4}) -> x1 + 1")) // ZP : Fails because the two functions are not syntactically equal
+  // ; (502, (tc "x1:int{x1>(3+1)}"), (tc "x1:int{x1>4}"))
   ]
 
 
@@ -267,41 +267,84 @@ let run_either i r expected normalizer =
     // ignore (Options.set_options "--debug Test --debug_level univ_norm --debug_level NBE");
     always i (term_eq (U.unascribe x) expected)
 
+let run_whnf i r expected = 
+  let open Env in
+  let steps = 
+    [ Primops;
+      Weak;
+      HNF;
+      UnfoldUntil delta_constant ] 
+  in
+  run_either i r expected  (N.normalize steps)
+    
 let run_interpreter i r expected = run_either i r expected (N.normalize [Env.Beta; Env.UnfoldUntil delta_constant; Env.Primops])
 let run_nbe i r expected = run_either i r expected (FStar.TypeChecker.NBE.normalize_for_unit_test [FStar.TypeChecker.Env.UnfoldUntil delta_constant])
 let run_interpreter_with_time i r expected =
   let interp () = run_interpreter i r expected in
   (i, snd (FStar.Compiler.Util.return_execution_time interp))
 
+let run_whnf_with_time i r expected =
+  let whnf () = run_whnf i r expected in
+  (i, snd (FStar.Compiler.Util.return_execution_time whnf))
+
 let run_nbe_with_time i r expected =
   let nbe () = run_nbe i r expected in
   (i, snd (FStar.Compiler.Util.return_execution_time nbe))
 
-let run_tests run =
+let run_tests tests run =
   Options.__set_unit_tests();
   let l = List.map (function (no, test, res) -> run no test res) tests in
   Options.__clear_unit_tests();
   l
 
+let whnf_tests =
+    let _ = Pars.pars_and_tc_fragment "assume val def : Type0" in
+    let _ = Pars.pars_and_tc_fragment "assume val pred : Type0" in    
+    let _ = Pars.pars_and_tc_fragment "let def0 (y:int) = def" in
+    let _ = Pars.pars_and_tc_fragment "unfold let def1 (y:int) = x:def0 y { pred }" in
+    let def_def1 = tc "x:def0 17 { pred }" in
+    let def_def1_unfolded = tc "x:def { pred }" in
+    // let tests =  //We should expect this ... for 602
+    //   [(601, tc "def1 17", def_def1);
+    //    (602, def_def1, def_def1)]
+    // in
+    let tests =  //but the current behavior is this
+                 //if we can fix the normalizer, we should change test 602
+      [(601, tc "def1 17", def_def1);
+       (602, def_def1, def_def1_unfolded)]
+    in    
+    tests
+
+let run_all_whnf () = 
+  BU.print_string "Testing Normlizer WHNF\n";
+  let _ = run_tests whnf_tests run_whnf in
+  BU.print_string "Normalizer WHNF ok\n"
+
 let run_all_nbe () =
     BU.print_string "Testing NBE\n";
-    let _ = run_tests run_nbe in
+    let _ = run_tests default_tests run_nbe in
     BU.print_string "NBE ok\n"
 
 let run_all_interpreter () =
     BU.print_string "Testing the normalizer\n";
-    let _ = run_tests run_interpreter in
+    let _ = run_tests default_tests run_interpreter in
     BU.print_string "Normalizer ok\n"
+
+let run_all_whnf_with_time () =
+  BU.print_string "Testing WHNF\n";
+  let l = run_tests whnf_tests run_whnf_with_time in
+  BU.print_string "WHNF ok\n";
+  l
 
 let run_all_nbe_with_time () =
   BU.print_string "Testing NBE\n";
-  let l = run_tests run_nbe_with_time in
+  let l = run_tests default_tests run_nbe_with_time in
   BU.print_string "NBE ok\n";
   l
 
 let run_all_interpreter_with_time () =
   BU.print_string "Testing the normalizer\n";
-  let l = run_tests run_interpreter_with_time in
+  let l = run_tests default_tests run_interpreter_with_time in
   BU.print_string "Normalizer ok\n";
   l
 
@@ -336,6 +379,7 @@ let compare_times l_int l_nbe =
 
 let run_all () =
     BU.print1 "%s" (P.term_to_string znat);
+    let _ = run_all_whnf_with_time () in
     let l_int = run_all_interpreter_with_time () in
     let l_nbe = run_all_nbe_with_time () in
     compare_times l_int l_nbe

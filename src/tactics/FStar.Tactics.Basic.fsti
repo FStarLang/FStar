@@ -37,6 +37,7 @@ module Z     = FStar.BigInt
 module TcComm = FStar.TypeChecker.Common
 
 (* Internal utilities *)
+val goal_typedness_deps : goal -> list ctx_uvar
 
 val proofstate_of_goals : Range.range -> env -> list goal -> list implicit -> proofstate
 (* Returns proofstate and uvar for main witness *)
@@ -84,6 +85,7 @@ val t_destruct             : term -> tac (list (fv * Z.t))
 val gather_explicit_guards_for_resolved_goals : unit -> tac unit
 val set_options            : string -> tac unit
 val uvar_env               : env -> option typ -> tac term
+val ghost_uvar_env         : env -> typ -> tac term
 val fresh_universe_uvar    : unit -> tac term
 val unify_env              : env -> term -> term -> tac bool
 val unify_guard_env        : env -> term -> term -> tac bool
@@ -105,7 +107,7 @@ val curms                  : unit -> tac Z.t
 val set_urgency            : Z.t -> tac unit
 val t_commute_applied_match : unit -> tac unit
 val goal_with_type : goal -> typ -> goal
-val mark_goal_implicit_allow_untyped : goal -> unit
+val mark_goal_implicit_already_checked : goal -> unit
 val string_to_term         : env -> string -> tac term
 val push_bv_dsenv          : env -> string -> tac (env * bv)
 
@@ -113,3 +115,4 @@ val term_to_string         : term -> tac string
 val comp_to_string         : comp -> tac string
 
 val term_eq_old            : term -> term -> tac bool
+val with_compat_pre_core   : Z.t -> tac 'a -> tac 'a

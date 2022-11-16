@@ -47,7 +47,9 @@ SHOULD_VERIFY_CLOSED=Bug022.fst Bug024.fst Bug025.fst Bug026.fst Bug026b.fst Bug
   Bug1418.fst Bug171.fst Bug2496.fst Bug2478.fst Bug2414.fst Bug2515.fst \
   Bug2535.fst Bug2557.fst Bug2572.fst Bug2522.fst Bug2486.fst \
   Bug2552.fst Bug2597.fst Bug2471_B.fst Bug2605.fst Bug2614.fst Bug2622.fst \
-  Bug2637.fst Bug2641.fst Bug1486.fst PropProofs.fst Bug2684a.fst Bug2684b.fst Bug2684c.fst Bug2684d.fst
+  Bug2635.fst Bug2637.fst Bug2641.fst Bug1486.fst PropProofs.fst \
+  Bug2684a.fst Bug2684b.fst Bug2684c.fst Bug2684d.fst \
+  Bug2756.fst
 
 SHOULD_VERIFY_INTERFACE_CLOSED=Bug771.fsti Bug771b.fsti
 SHOULD_VERIFY_AND_WARN_CLOSED=Bug016.fst

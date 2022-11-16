@@ -200,14 +200,7 @@ and env = {
   unif_allow_ref_guards:bool;                     (* Allow guards when unifying refinements, even when SMT is disabled *)
   erase_erasable_args: bool;                      (* This flag is set when running normalize_for_extraction, see Extraction.ML.Modul *)
 
-  //
-  // When the tactics engine makes a Rel call while solving a goal that is an apply uvar,
-  //   it sets the following field
-  //
-  // Rel then makes use of it to properly typecheck the indirectly solved uvars
-  //   as part of this Rel call
-  //
-  rel_query_for_apply_tac_uvar: option S.ctx_uvar;
+  core_check: core_check_t;
 }
 
 and solver_depth_t = int * int * int
@@ -227,6 +220,8 @@ and solver_t = {
 }
 and tcenv_hooks =
   { tc_push_in_gamma_hook : (env -> either binding sig_binding -> unit) }
+and core_check_t = 
+  env -> term -> typ -> bool -> either (option typ) (bool -> string)
 
 type implicit = TcComm.implicit
 type implicits = TcComm.implicits
@@ -249,7 +244,8 @@ val initial_env : FStar.Parser.Dep.deps ->
                   (env -> term -> term -> bool) ->
                   (env -> term -> term -> bool) ->
                   solver_t -> lident ->
-                  (list step -> env -> term -> term) -> env
+                  (list step -> env -> term -> term) ->
+                  core_check_t -> env
 
 (* Some utilities *)
 val should_verify   : env -> bool
@@ -292,6 +288,7 @@ val lookup_univ            : env -> univ_name -> bool
 val try_lookup_val_decl    : env -> lident -> option (tscheme * list qualifier)
 val lookup_val_decl        : env -> lident -> (universes * typ)
 val lookup_datacon         : env -> lident -> universes * typ
+val lookup_and_inst_datacon: env -> universes -> lident -> typ
 (* the boolean tells if the lident was actually a inductive *)
 val datacons_of_typ        : env -> lident -> (bool * list lident)
 val typ_of_datacon         : env -> lident -> lident
@@ -463,14 +460,14 @@ val def_check_closed_in_env   : Range.range -> msg:string -> env -> term -> unit
 val def_check_guard_wf        : Range.range -> msg:string -> env -> guard_t -> unit
 val close_forall              : env -> binders -> term -> term
 
-val new_tac_implicit_var : string ->
-                           Range.range ->
-                           env ->
-                           typ ->
-                           should_check_uvar ->
-                           option ctx_uvar_meta_t ->
-                           list S.ctx_uvar ->
-                           (term * list (ctx_uvar * Range.range) * guard_t)
+val new_tac_implicit_var (reason: string)
+                         (r: Range.range)
+                         (env:env)
+                         (uvar_typ:typ)
+                         (should_check:should_check_uvar)
+                         (uvar_typedness_deps:list ctx_uvar)
+                         (meta:option ctx_uvar_meta_t)
+  : (term * list (ctx_uvar * Range.range) * guard_t)
 
 val new_implicit_var_aux : string ->
                            Range.range ->
