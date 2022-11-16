@@ -1,5 +1,5 @@
 >> Got issues: [
-Inference.fst(20,14-20,15): (Error 19) Subtyping check failed; expected type Prims.eqtype; got type Type0; The SMT solver could not prove the query. Use --query_stats for more details. (see also prims.fst(52,23-52,30))
+Inference.fst(20,14-20,15): (Error 19) Subtyping check failed; expected type Prims.eqtype; got type Type0; The SMT solver could not prove the query. Use --query_stats for more details. (see also /home/aseem/everest/FStar/ulib/prims.fst(52,23-52,30))
 >>]
 Verified module: Inference
 All verification conditions discharged successfully
