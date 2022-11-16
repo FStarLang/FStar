@@ -38,9 +38,11 @@ module Mem = Steel.Memory
 val ref ([@@@strictly_positive] a:Type0) : Type0
 
 /// The null pointer
+[@@ noextract_to "krml"]
 val null (#a:Type0) : ref a
 
 /// Checking whether a pointer is null can be done in a decidable way
+[@@ noextract_to "krml"]
 val is_null (#a:Type0) (r:ref a) : (b:bool{b <==> r == null})
 
 (** First version of references: Non-informative selector and standard pts_to predicate.

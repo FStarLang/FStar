@@ -99,6 +99,7 @@ effect {
   with { repr; return; bind; subcomp; if_then_else }
 }
 
+[@@ noextract_to "krml"]
 let get (#state:Type u#2) (#rel:P.preorder state) ()
     : NMSTATE state state rel
       (fun _ -> True)
@@ -106,6 +107,7 @@ let get (#state:Type u#2) (#rel:P.preorder state) ()
     =
   NMSTATE?.reflect (fun (_, n) -> MST.get (), n)
 
+[@@ noextract_to "krml"]
 let put (#state:Type u#2) (#rel:P.preorder state) (s:state)
     : NMSTATE unit state rel
       (fun s0 -> rel s0 s)
@@ -121,6 +123,7 @@ let stable (state:Type u#2) (rel:P.preorder state) (p:s_predicate state) =
 let witnessed (state:Type u#2) (rel:P.preorder state) (p:s_predicate state) =
   M.witnessed state rel p
 
+[@@ noextract_to "krml"]
 let witness (state:Type u#2) (rel:P.preorder state) (p:s_predicate state)
     : NMSTATE unit state rel
       (fun s0 -> p s0 /\ stable state rel p)
@@ -128,6 +131,7 @@ let witness (state:Type u#2) (rel:P.preorder state) (p:s_predicate state)
     =
   NMSTATE?.reflect (fun (_, n) -> M.witness state rel p, n)
 
+[@@ noextract_to "krml"]
 let recall (state:Type u#2) (rel:P.preorder state) (p:s_predicate state)
     : NMSTATE unit state rel
       (fun _ -> witnessed state rel p)
@@ -135,7 +139,7 @@ let recall (state:Type u#2) (rel:P.preorder state) (p:s_predicate state)
     =
   NMSTATE?.reflect (fun (_, n) -> M.recall state rel p, n)
 
-
+[@@ noextract_to "krml"]
 let sample (#state:Type u#2) (#rel:P.preorder state) ()
     : NMSTATE bool state rel
       (fun _ -> True)
