@@ -1,5 +1,5 @@
 >> Got issues: [
-NegativeTests.False.fst(23,13-23,33): (Error 19) assertion failed; The SMT solver could not prove the query. Use --query_stats for more details. (see also /home/aseem/everest/FStar/ulib/prims.fst(446,77-446,89))
+NegativeTests.False.fst(23,13-23,33): (Error 19) assertion failed; The SMT solver could not prove the query. Use --query_stats for more details. (see also prims.fst(446,77-446,89))
 >>]
 >> Got issues: [
 NegativeTests.False.fst(30,18-30,41): (Error 12) Expected type "Prims.l_True \/ Prims.l_True"; but "Prims.Left Prims.T" has type "Prims.sum (*?u1*) _ Prims.l_True"
