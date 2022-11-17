@@ -45,7 +45,9 @@ let inspect_pack_comp (t:R.comp_view)
   
 val lookup_bvar (e:env) (x:int) : option term
 
-val lookup_fvar (e:env) (x:fv) : option term
+val lookup_fvar_uinst (e:R.env) (x:R.fv) (us:list R.universe) : option R.term
+
+let lookup_fvar (e:env) (x:fv) : option term = lookup_fvar_uinst e x []
 
 val extend_env (e:env) (x:var) (ty:term) : env
 
@@ -57,10 +59,10 @@ val lookup_bvar_extend_env (g:env) (x y:var) (ty:term)
            else lookup_bvar (extend_env g x ty) y == lookup_bvar g y))
     [SMTPat (lookup_bvar (extend_env g x ty) y)]
 
-val lookup_fvar_extend_env (g:env) (x:fv) (y:var) (ty:term)
+val lookup_fvar_extend_env (g:env) (x:fv) (us:universes) (y:var) (ty:term)
   : Lemma 
-    (ensures lookup_fvar (extend_env g y ty) x == lookup_fvar g x)
-    [SMTPat (lookup_fvar (extend_env g y ty) x)]
+    (ensures lookup_fvar_uinst (extend_env g y ty) x us == lookup_fvar_uinst g x us)
+    [SMTPat (lookup_fvar_uinst (extend_env g y ty) x us)]
 
 let as_binder (x:var) (ty:term)
   : binder 
@@ -77,6 +79,9 @@ let bv_index (x:bv) : int = (inspect_bv x).bv_index
 let binder_sort (b:binder) =
   let bv, _ = inspect_binder b in 
   (inspect_bv bv).bv_sort
+
+let binder_qual (b:binder) =
+  let _, (q, _) = inspect_binder b in q
 
 let binder_sort_lemma (x:var) (ty:term)
   : Lemma (binder_sort (as_binder x ty) == ty)
@@ -435,7 +440,13 @@ type typing : env -> term -> term -> Type0 =
      g:env ->
      x:fv { Some? (lookup_fvar g x) } -> 
      typing g (pack_ln (Tv_FVar x)) (Some?.v (lookup_fvar g x))
-     
+
+  | T_UInst :
+     g:env ->
+     x:fv ->
+     us:list universe { Some? (lookup_fvar_uinst g x us) } ->
+     typing g (pack_ln (Tv_UInst x us)) (Some?.v (lookup_fvar_uinst g x us))
+
   | T_Const:
      g:env ->
      v:vconst ->
@@ -465,7 +476,7 @@ type typing : env -> term -> term -> Type0 =
      u:universe ->
      typing g e1 (pack_ln (Tv_Arrow x (pack_comp (C_Total t u [])))) ->
      typing g e2 (binder_sort x) ->
-     typing g (pack_ln (Tv_App e1 (e2, Q_Explicit)))
+     typing g (pack_ln (Tv_App e1 (e2, binder_qual x)))
               (open_with t e2)
 
   | T_Arrow:
