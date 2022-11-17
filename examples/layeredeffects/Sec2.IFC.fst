@@ -389,7 +389,7 @@ let bind (a b:Type)
     bind_comp_flows_ok x y;
     f
 
-let subcomp (a:Type) (w0 r0 w1 r1:label) (fs0 fs1:flows) (f:ist a w0 r0 fs0)
+let subcomp (a:Type) (w0 r0:label) (fs0:flows) (w1 r1:label) (fs1:flows) (f:ist a w0 r0 fs0)
   : Pure (ist a w1 r1 fs1)
     (requires label_inclusion w0 w1 /\
               label_inclusion r0 r1 /\
@@ -421,9 +421,9 @@ effect {
       (w:label)
       (fs:flows)
   with {repr = ist;
-        return = return;
-        bind = bind;
-        subcomp = subcomp}
+        return;
+        bind;
+        subcomp}
 }
 let read (l:loc) : IST int bot (single l) [] = IST?.reflect (iread l)
 let write (l:loc) (x:int) : IST unit (single l) bot [] = IST?.reflect (iwrite l x)
