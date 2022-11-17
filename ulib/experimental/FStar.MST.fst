@@ -110,6 +110,7 @@ effect {
   with { repr; return; bind; subcomp; if_then_else }
 }
 
+[@@ noextract_to "krml"]
 let get (#state:Type u#2) (#rel:P.preorder state) ()
     : MSTATE state state rel
       (fun _ -> True)
@@ -117,6 +118,7 @@ let get (#state:Type u#2) (#rel:P.preorder state) ()
     =
   MSTATE?.reflect (fun s0 -> s0, s0)
 
+[@@ noextract_to "krml"]
 let put (#state:Type u#2) (#rel:P.preorder state) (s:state)
     : MSTATE unit state rel
       (fun s0 -> rel s0 s)
