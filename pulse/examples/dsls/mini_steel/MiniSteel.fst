@@ -7,12 +7,60 @@ type lident = R.name
 
 let bool_lid = ["Prims"; "bool"]
 let vprop_lid = ["Steel"; "Effect"; "Common"; "vprop"]
+let vprop_fv = R.pack_fv vprop_lid
+let vprop_tm = R.pack_ln (R.Tv_FVar vprop_fv)
 let emp_lid = ["Steel"; "Effect"; "Common"; "emp"]
 let star_lid = ["Steel"; "Effect"; "Common"; "star"]
 let pure_lid = ["Steel"; "ST"; "Util"; "pure"]
 let exists_lid = ["Steel"; "ST"; "Util"; "exists_"]
 let forall_lid = ["Steel"; "ST"; "Util"; "forall_"]
-let st_thunk_t_lid = ["Steel"; "ST"; "Util"; "stt"] //the thunked, value-type counterpart of the effect STT
+let stt_lid = ["Steel"; "ST"; "Util"; "stt"] //the thunked, value-type counterpart of the effect STT
+let stt_fv = R.pack_fv stt_lid
+let stt_tm = R.pack_ln (R.Tv_FVar stt_fv)
+let mk_stt_app (u:R.universe) (args:list R.term) : R.term = 
+  R.mk_app (R.pack_ln (R.Tv_UInst stt_fv [u])) (map (fun x -> x, R.Q_Explicit) args)
+
+let return_lid = ["Steel"; "ST"; "Util"; "return_stt"]
+let return_noeq_lid = ["Steel"; "ST"; "Util"; "return_stt_noeq"]
+let bind_lid = ["Steel"; "ST"; "Util"; "bind_stt"]
+let bind_fv = R.pack_fv bind_lid
+let bind_univ_inst u1 u2 = R.pack_ln (R.Tv_UInst bind_fv [u1;u2])
+let mk_total t = R.C_Total t (R.pack_universe R.Uv_Unk) []
+let bind_type (u1 u2:R.universe) 
+  : R.term // #t1:Type u#u1 -> #t2:Type u#u2 ->
+           // #pre:vprop ->
+           // #post1:(t1 -> vprop) ->
+           // #post2:(t2 -> vprop) ->
+           // f:stt t1 pre post1 ->
+           // g:(x:t1 -> stt t2 (post1 x) post2) ->
+           // stt t2 pre post2
+  = let open R in 
+    let mk_binder t q = R.pack_binder (pack_bv (RT.make_bv 0 t)) q [] in
+    let bound_var i : R.term = R.pack_ln (R.Tv_BVar (R.pack_bv (RT.make_bv i (R.pack_ln Tv_Unknown)))) in 
+    let name i : R.term = R.pack_ln (R.Tv_Var (R.pack_bv (RT.make_bv i (R.pack_ln Tv_Unknown)))) in 
+    let mk_tot_arrow (formals:list (R.var & term & aqualv)) (res:term) : R.term =
+        fold_right 
+          (fun (var, ty, q) out ->
+            pack_ln (R.Tv_Arrow (mk_binder ty q) (pack_comp (mk_total (RT.close_term res var)))))
+          formals
+          res
+    in
+    let t1, t2, pre, post1, post2, f, x, g = 1, 2, 3, 4, 5, 6, 7, 8 in
+    let formals = 
+      [ (t1, RT.tm_type u1, Q_Implicit);
+        (t2, RT.tm_type u2, Q_Implicit); 
+        (pre, vprop_tm     , Q_Implicit);
+        (post1, mk_tot_arrow [(0, name t1, Q_Explicit)] vprop_tm, Q_Implicit);
+        (post2, mk_tot_arrow [(0, name t2, Q_Explicit)] vprop_tm, Q_Implicit);
+        (f, mk_stt_app u1 [name t1; name pre; name post1], Q_Explicit);
+        (g, mk_tot_arrow [(x, name t1, Q_Explicit)]
+                         (mk_stt_app u2 [name t2; mk_app (name post1) [name x, Q_Explicit]; name post2]), Q_Explicit)]
+    in
+    let res = mk_stt_app u2 [name t2; name pre; name post2] in
+    mk_tot_arrow formals res
+    
+let frame_lid = ["Steel"; "ST"; "Util"; "frame_stt"]
+let subsumption_lid = ["Steel"; "ST"; "Util"; "sub_stt"]
 
 type constant =
   | Unit
@@ -215,10 +263,25 @@ and close_comp' (c:comp) (v:var) (i:index)
 let close_term t v = close_term' t v 0
 let close_comp t v = close_comp' t v 0
 
+assume
+val dummy_range : Prims.range 
+let rec elab_universe (u:universe)
+  : Tot R.universe
+  = match u with
+    | U_zero -> R.pack_universe (R.Uv_Zero)
+    | U_succ u -> R.pack_universe (R.Uv_Succ (elab_universe u))
+    | U_var x -> R.pack_universe (R.Uv_Name (x, dummy_range))
+    | U_max u1 u2 -> R.pack_universe (R.Uv_Max [elab_universe u1; elab_universe u2])
+
+assume
+val lookup_fvar_uinst (e:R.env) (x:R.fv) (us:list R.universe) : option R.term
+
 let fstar_env =
   g:R.env { 
-    RT.lookup_fvar g RT.bool_fv == Some (RT.tm_type RT.u_zero)
-    ///\ vprop etc
+    RT.lookup_fvar g RT.bool_fv == Some (RT.tm_type RT.u_zero) /\
+    RT.lookup_fvar g vprop_fv == Some (RT.tm_type (elab_universe (U_succ (U_succ U_zero)))) /\
+    (forall (u1 u2:R.universe). lookup_fvar_uinst g bind_fv [u1; u2] == Some (bind_type u1 u2))
+    ///\ star etc
   }
 
 let fstar_top_env =
@@ -232,16 +295,6 @@ let (let?) (f:option 'a) (g: 'a -> option 'b) : option 'b =
   match f with
   | None -> None
   | Some x -> g x
-
-assume
-val dummy_range : Prims.range 
-let rec elab_universe (u:universe)
-  : Tot R.universe
-  = match u with
-    | U_zero -> R.pack_universe (R.Uv_Zero)
-    | U_succ u -> R.pack_universe (R.Uv_Succ (elab_universe u))
-    | U_var x -> R.pack_universe (R.Uv_Name (x, dummy_range))
-    | U_max u1 u2 -> R.pack_universe (R.Uv_Max [elab_universe u1; elab_universe u2])
 
 let mk_abs ty t =  R.pack_ln (R.Tv_Abs (RT.as_binder 0 ty) t)
 
@@ -519,20 +572,6 @@ let comp_res (c:comp) : term =
 
 let comp_u (c:pure_comp_st) = let C_ST s = c in s.u
 
-[@@erasable]
-noeq
-type bind_comp (f:fstar_top_env) : env -> pure_comp -> var -> pure_comp -> pure_comp -> Type =
-  | Bind_comp :
-      g:env ->
-      c1:pure_comp_st ->
-      x:var ->
-      c2:pure_comp_st {
-        open_term (comp_post c1) x == comp_pre c2 /\
-        ~(x `Set.mem` freevars (comp_post c2)) /\
-        ~(x `Set.mem` freevars (comp_res c2)) 
-      } ->
-      bind_comp f g c1 x  c2 (C_ST {u = comp_u c2; res = comp_res c1; pre = comp_pre c1; post=comp_post c2})
-
 let tm_bool : pure_term = Tm_FVar bool_lid
 
 let tm_true : pure_term = Tm_Constant (Bool true)
@@ -714,7 +753,7 @@ type src_typing (f:fstar_top_env) : env -> term -> pure_comp -> Type =
       src_typing f g e1 c1 ->
       tot_typing f g (comp_res c1) (Tm_Type (comp_u c1)) -> //type-correctness; would be nice to derive it instead      
       src_typing f ((x, Inl (comp_res c1))::g) (open_term e2 x) c2 ->
-      bind_comp f g c1 x c2 c ->
+      bind_comp f g x c1 c2 c ->
       src_typing f g (Tm_Bind (comp_res c1) e1 e2) c
 
   | T_If:
@@ -753,6 +792,18 @@ and tot_typing (f:fstar_top_env) (g:env) (e:term) (t:pure_term) =
 
 and universe_of (f:fstar_top_env) (g:env) (t:term) (u:universe) =
   tot_typing f g t (Tm_Type u)
+
+and bind_comp (f:fstar_top_env) : env -> var -> pure_comp -> pure_comp -> pure_comp -> Type =
+  | Bind_comp :
+      g:env ->
+      x:var { None? (lookup g x) } ->
+      c1:pure_comp_st ->
+      c2:pure_comp_st {  open_term (comp_post c1) x == comp_pre c2 /\ ~ (x `Set.mem` freevars (comp_post c2)) } ->
+      //x doesn't escape in the result type
+      universe_of f g (comp_res c2) (comp_u c2) ->
+      //or in the result post; free var check isn't enough; we need typability
+      tot_typing f ((x, Inl (comp_res c2)) :: g) (open_term (comp_post c2) x) Tm_VProp ->
+      bind_comp f g x c1 c2 (C_ST {u = comp_u c2; res = comp_res c1; pre = comp_pre c1; post=comp_post c2})
 
 
 let star_typing_inversion (f:_) (g:_) (t0 t1:term) (d:tot_typing f g (Tm_Star t0 t1) Tm_VProp)
@@ -1191,7 +1242,7 @@ let frame_empty (f:fstar_top_env)
     let eq : st_equiv f g c c' = ST_Equiv g c c' x (VE_Unit g pre) (VE_Refl _ _) in
     (| c', T_Equiv _ _ _ _ d eq |)
       
-#push-options "--query_stats --fuel 2 --ifuel 1 --z3rlimit_factor 4"
+#push-options "--query_stats --fuel 2 --ifuel 1 --z3rlimit_factor 10"
 let rec check (f:fstar_top_env)
               (g:env)
               (t:term)
@@ -1276,25 +1327,26 @@ let rec check (f:fstar_top_env)
             in
             let (| c2, d2 |) = check f g' (open_term e2 x) next_pre next_pre_typing in
             let C_ST s2 = c2 in
-            if x `Set.mem` freevars s2.post
-            ||  x `Set.mem` freevars s2.res
-            then T.fail "Let-bound variable escapes its scope"
-            else (| _, T_Bind _ _ _ _ _ _ _ d1 (E t_typing) d2 (Bind_comp _ c1 _ c2) |)
+            let (| u, res_typing |) = check_universe f g s2.res in
+            if u <> s2.u || x `Set.mem` freevars s2.post
+            then T.fail "Unexpected universe for result type or variable escapes scope in bind"
+            else (
+              match check_tot f ((x, Inl s2.res)::g) (open_term s2.post x) with
+              | (| Tm_VProp, post_typing |) ->
+                let bc : bind_comp f g x c1 c2 _ = (Bind_comp g x c1 c2 res_typing (E post_typing)) in
+                (| _, T_Bind _ _ _ _ _ _ _ d1 (E t_typing) d2 bc |)
+              | _ -> T.fail "Ill-typed postcondition in bind"
+            )
           )
         | _ -> T.fail "Ill-typed annotated type on `bind`"
      )
     | Tm_If _ _ _ ->
       T.fail "Not handling if yet"
+#pop-options
 
 ////////////////////////////////////////////////////////////////////////////////
 // elaboration of derivations
 ////////////////////////////////////////////////////////////////////////////////
-
-let return_lid = ["Steel"; "ST"; "Util"; "return_stt"]
-let return_noeq_lid = ["Steel"; "ST"; "Util"; "return_stt_noeq"]
-let bind_lid = ["Steel"; "ST"; "Util"; "bind_stt"]
-let frame_lid = ["Steel"; "ST"; "Util"; "frame_stt"]
-let subsumption_lid = ["Steel"; "ST"; "Util"; "sub_stt"]
 
 let mk_return (u:universe) (ty:R.term) (t:R.term) 
   : R.term
@@ -1352,6 +1404,17 @@ let mk_sub (u:universe)
                    (post2, R.Q_Explicit);                   
                    (t, R.Q_Explicit)]
 
+let elab_bind (c1 c2:pure_comp_st) (e1 e2:R.term) =
+  let C_ST c1 = c1 in
+  let C_ST c2 = c2 in
+  let ty1 = elab_pure c1.res in
+  let ty2 = elab_pure c2.res in
+  mk_bind c1.u c2.u
+          ty1 ty2
+          (elab_pure c1.pre)
+          (mk_abs ty1 (elab_pure c1.post))
+          (mk_abs ty2 (elab_pure c2.post))
+          e1 e2
 
 let rec elab_src_typing (#f:fstar_top_env)
                         (#g:env)
@@ -1381,17 +1444,9 @@ let rec elab_src_typing (#f:fstar_top_env)
     | T_Bind _ e1 e2 c1 c2 x c e1_typing t_typing e2_typing _bc ->
       let e1 = elab_src_typing e1_typing in
       let e2 = elab_src_typing e2_typing in
-      let C_ST c1 = c1 in
-      let C_ST c2 = c2 in
-      let ty1 = elab_pure c1.res in
-      let ty2 = elab_pure c2.res in      
-      mk_bind c1.u c2.u
-              ty1 ty2
-              (elab_pure c1.pre)
-              (mk_abs ty1 (elab_pure c1.post))
-              (mk_abs ty2 (elab_pure c2.post))
-              e1 e2
-
+      let ty1 = elab_pure (comp_res c1) in
+      elab_bind c1 c2 e1 (mk_abs ty1 (RT.close_term e2 x))
+      
     | T_Frame _ _ c frame _frame_typing e_typing ->
       let e = elab_src_typing e_typing in
       let C_ST c = c in
@@ -1476,6 +1531,24 @@ assume
 val well_typed_terms_are_ln (g:R.env) (e:R.term) (t:R.term) (_:RT.typing g e t)
   : Lemma (ensures ln e)
 
+assume
+val type_correctness (g:R.env) (e:R.term) (t:R.term) (_:RT.typing g e t)
+  : GTot (u:R.universe & RT.typing g t (RT.tm_type u))
+
+assume
+val inversion_of_stt_typing (f:fstar_top_env) (g:env) (c:pure_comp_st)
+                            (u:R.universe)
+                            // _ |- stt u#u t pre (fun (x:t) -> post) : Type _ 
+                            (_:RT.typing (extend_env_l f g) (elab_pure_comp c) (RT.tm_type u))
+  : GTot ( // _ |- t : Type u#u
+          RT.typing (extend_env_l f g) (elab_pure (comp_res c)) (RT.tm_type (elab_universe (comp_u c))) &
+          // _ |- pre : vprop
+          RT.typing (extend_env_l f g) (elab_pure (comp_pre c)) (elab_pure (Tm_VProp)) &
+          // _ |- (fun (x:t) -> post) : t -> vprop
+          RT.typing (extend_env_l f g) (mk_abs (elab_pure (comp_res c)) (elab_pure (comp_post c)))
+                                       (elab_pure (Tm_Arrow (comp_res c) (C_Tot Tm_VProp))))
+          
+
 #push-options "--fuel 8 --ifuel 4 --z3rlimit_factor 10"
 let rec elab_close_commute' (e:pure_term)
                             (v:var)
@@ -1547,6 +1620,25 @@ let open_close_inverse (e:R.term { ln e }) (x:var)
      RT.open_term_spec (RT.close_term e x) x;
      RT.open_close_inverse 0 e x
 
+let elab_bind_typing (f:fstar_top_env)
+                     (g:env)
+                     (x:var)
+                     (c1 c2 c:pure_comp_st)
+                     (r1:R.term)
+                     (r1_typing: RT.typing (extend_env_l f g) r1 (elab_pure_comp c1))
+                     (r2:R.term)
+                     (r2_typing: RT.typing (extend_env_l f g) r2 
+                                           (elab_pure (Tm_Arrow (comp_res c1) (close_pure_comp c2 x))))
+                     (bc:bind_comp f g x c1 c2 c)
+  : GTot (RT.typing (extend_env_l f g) (elab_bind c1 c2 r1 r2) (elab_pure_comp c))
+  = let u1 = elab_universe (comp_u c1) in
+    let u2 = elab_universe (comp_u c2) in
+    let head = bind_univ_inst u1 u2 in
+    assert (lookup_fvar_uinst f bind_fv [u1; u2] == Some (bind_type u1 u2));
+    admit()
+    
+
+#push-options "--query_stats --fuel 2 --ifuel 2 --z3rlimit_factor 4"
 let rec soundness (f:fstar_top_env)
                   (g:env)
                   (t:term)
@@ -1612,11 +1704,16 @@ let rec soundness (f:fstar_top_env)
                      r_arg_typing
 
     | T_Bind _ e1 e2 c1 c2 x c e1_typing t_typing e2_typing bc ->
-      let r1 = elab_src_typing e1_typing in
-      let r1_typing = soundness _ _ _ _ e1_typing in
-      let r2_typing = mk_t_abs t_typing e2_typing in
-      
-      admit()
+      let r1_typing
+        : RT.typing _ _ (elab_pure_comp c1)
+        = soundness _ _ _ _ e1_typing
+      in
+      let r2_typing
+        : RT.typing _ _ (elab_pure (Tm_Arrow (comp_res c1) (close_pure_comp c2 x)))
+        = mk_t_abs t_typing e2_typing
+      in
+      let e = elab_src_typing d in
+      elab_bind_typing f g x _ _ _ _ r1_typing _ r2_typing bc  
       
     | _ -> admit()
   
