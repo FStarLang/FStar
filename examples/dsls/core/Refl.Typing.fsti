@@ -793,10 +793,6 @@ let rec open_close_inverse (i:nat) (t:term { ln' t (i - 1) }) (x:var)
     | Tv_Refine b f ->
       open_close_inverse_bv i b x;
       open_close_inverse (i + 1) f x
-
-
-    // | Tv_Uvar j c ->
-    //   pack_ln (Tv_Uvar j (open_or_close_ctx_uvar_and_subst c v i))
       
     | Tv_Let recf attrs bv def body ->
       open_close_inverse_terms i attrs x;
