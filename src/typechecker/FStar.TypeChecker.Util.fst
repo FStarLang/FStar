@@ -1788,6 +1788,7 @@ let fvar_const env lid =  S.fvar (Ident.set_lid_range lid (Env.get_range env)) d
 // Apply substitutive ite combinator for indexed effects
 //
 let substitutive_indexed_ite_substs (env:env)
+  (k:S.indexed_effect_combinator_kind)
   (bs:binders)
   (a:typ)
   (p:term)
@@ -1832,11 +1833,24 @@ let substitutive_indexed_ite_substs (env:env)
     bs, subst@f_subst in
 
   // g binders
-  let bs, subst =
-    let n_num_effect_args = List.length args2 in
-    let g_bs, bs = List.splitAt n_num_effect_args bs in
-    let g_subst = List.map2 (fun g_b (arg, _) -> NT (g_b.binder_bv, arg)) g_bs args2 in
-    bs, subst@g_subst in
+  let bs, subst, guard =
+    if Substitutive_combinator? k
+    then begin
+      let n_num_effect_args = List.length args2 in
+      let g_bs, bs = List.splitAt n_num_effect_args bs in
+      let g_subst = List.map2 (fun g_b (arg, _) -> NT (g_b.binder_bv, arg)) g_bs args2 in
+      bs, subst@g_subst, guard
+    end
+    else if Substitutive_invariant_combinator? k
+    then begin
+      bs,
+      subst,
+      List.fold_left2 (fun guard (arg1, _) (arg2, _) ->
+        Env.conj_guard guard
+          (Rel.layered_effect_teq env arg1 arg2 (Some "substitutive_inv ite args"))
+      ) guard args1 args2
+    end
+    else failwith "Impossible (substitutive_indexed_ite: unexpected k)" in
 
   let bs, [_; _; p_b] = List.splitAt (List.length bs - 3) bs in
 
@@ -1955,7 +1969,7 @@ let mk_layered_conjunction env (ed:S.eff_decl) (u_a:universe) (a:term) (p:typ) (
            match ed.signature with
            | Layered_eff_sig (n, _) -> n
            | _ -> failwith "Impossible!" in
-        substitutive_indexed_ite_substs env bs a p ct1 ct2 num_effect_params r in
+        substitutive_indexed_ite_substs env kind bs a p ct1 ct2 num_effect_params r in
     
   let body = SS.subst substs body in
 

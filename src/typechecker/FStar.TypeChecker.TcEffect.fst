@@ -760,7 +760,7 @@ let ite_combinator_kind (env:env)
   (tm:term)
   (num_effect_params:int)
 
-  : option (list indexed_effect_binder_kind) =
+  : option S.indexed_effect_combinator_kind =
 
   let a_b::rest_bs, _, _ = U.abs_formals tm in
 
@@ -795,27 +795,6 @@ let ite_combinator_kind (env:env)
 
     (f_bs, f_bs_kinds, rest_bs) |> Some in
 
-  let? g_bs, g_bs_kinds, rest_bs =
-    let g_sig_bs =
-      let _, sig = Env.inst_tscheme_with sig_ts [U_name u] in
-      sig |> U.arrow_formals
-          |> fst
-          |> (fun (a::bs) ->
-             let sig_bs, bs = List.splitAt num_effect_params bs in
-             let ss = List.fold_left2 (fun ss sig_b b ->
-               ss@[NT (sig_b.binder_bv, b.binder_bv |> S.bv_to_name)]
-             ) [NT (a.binder_bv, a_b.binder_bv |> S.bv_to_name)] sig_bs eff_params_bs in
-             bs |> SS.subst_binders ss) in
-
-    let? g_bs, rest_bs =
-      if List.length rest_bs < List.length g_sig_bs
-      then None
-      else List.splitAt (List.length g_sig_bs) rest_bs |> Some in
-
-    let? g_bs_kinds = eq_binders env g_sig_bs g_bs in
-
-    (g_bs, g_bs_kinds, rest_bs) |> Some in
-
   let? rest_bs, [f_b; g_b; p_b] =
     if List.length rest_bs >= 3
     then List.splitAt (List.length rest_bs - 3) rest_bs |> Some
@@ -832,25 +811,53 @@ let ite_combinator_kind (env:env)
     then Some ()
     else None in
 
-  let? _g_b_ok_ =
+  let check_g_b (f_or_g_bs:binders) : option unit =
     let expected_g_b_sort =
       let _, t = Env.inst_tscheme_with repr_ts [U_name u] in
       S.mk_Tm_app t
         ((a_b.binder_bv |> S.bv_to_name |> S.as_arg)::
-         (List.map (fun {binder_bv=b} -> b |> S.bv_to_name |> S.as_arg) (eff_params_bs@g_bs)))
+         (List.map (fun {binder_bv=b} -> b |> S.bv_to_name |> S.as_arg) (eff_params_bs@f_or_g_bs)))
         Range.dummyRange in
     if U.eq_tm g_b.binder_bv.sort expected_g_b_sort = U.Equal
     then Some ()
     else None in
 
-  let rest_kinds = List.map (fun _ -> Ad_hoc_binder) rest_bs in
+  if Some? (check_g_b f_bs)
+  then Some Substitutive_invariant_combinator
+  else begin
+    let? g_bs, g_bs_kinds, rest_bs =
+      let g_sig_bs =
+        let _, sig = Env.inst_tscheme_with sig_ts [U_name u] in
+        sig |> U.arrow_formals
+            |> fst
+            |> (fun (a::bs) ->
+               let sig_bs, bs = List.splitAt num_effect_params bs in
+               let ss = List.fold_left2 (fun ss sig_b b ->
+                 ss@[NT (sig_b.binder_bv, b.binder_bv |> S.bv_to_name)]
+               ) [NT (a.binder_bv, a_b.binder_bv |> S.bv_to_name)] sig_bs eff_params_bs in
+               bs |> SS.subst_binders ss) in
 
-  Some ([Type_binder]      @
-        eff_params_bs_kinds@
-        f_bs_kinds         @
-        g_bs_kinds         @
-        rest_kinds         @
-        [Repr_binder; Repr_binder; Substitutive_binder])
+      let? g_bs, rest_bs =
+        if List.length rest_bs < List.length g_sig_bs
+        then None
+        else List.splitAt (List.length g_sig_bs) rest_bs |> Some in
+
+      let? g_bs_kinds = eq_binders env g_sig_bs g_bs in
+
+      (g_bs, g_bs_kinds, rest_bs) |> Some in
+
+    let? _g_b_ok_ = check_g_b g_bs in
+
+    let rest_kinds = List.map (fun _ -> Ad_hoc_binder) rest_bs in
+
+    Some ([Type_binder]      @
+          eff_params_bs_kinds@
+          f_bs_kinds         @
+          g_bs_kinds         @
+          rest_kinds         @
+          [Repr_binder; Repr_binder; Substitutive_binder] |> Substitutive_combinator)
+
+  end
 
 //
 // Validate the shape of an indexed effect ite combinator,
@@ -938,14 +945,14 @@ let validate_indexed_effect_ite_shape (env:env)
     
   let k = k |> N.remove_uvar_solutions env |> SS.compress in
 
-  let lopt = ite_combinator_kind env eff_name sig_ts repr_ts u k num_effect_params in
+  let kopt = ite_combinator_kind env eff_name sig_ts repr_ts u k num_effect_params in
 
   let kind =
-    match lopt with
+    match kopt with
     | None ->
       log_ad_hoc_combinator_warning ite_name r;
       Ad_hoc_combinator
-    | Some l -> Substitutive_combinator l in
+    | Some k -> k in
 
   if Env.debug env <| Options.Other "LayeredEffectsTc"
   then BU.print2 "Ite %s has %s kind\n" ite_name
