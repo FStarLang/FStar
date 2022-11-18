@@ -1801,6 +1801,7 @@ let simplify_guard env g = match g.guard_f with
 // returns the (subcomp guard, new sub problems, worklist)
 //
 let apply_substitutive_indexed_subcomp (env:Env.env)
+  (k:S.indexed_effect_combinator_kind)
   (bs:binders)
   (subcomp_c:comp)
   (ct1:comp_typ) (ct2:comp_typ)
@@ -1854,11 +1855,24 @@ let apply_substitutive_indexed_subcomp (env:Env.env)
     subst@f_substs in
 
   // add substitutions for the g computation
-  let bs, subst =
-    let g_bs, bs = List.splitAt (List.length args2) bs in
-    let g_substs = List.map2 (fun g_b (arg, _) -> NT (g_b.binder_bv, arg)) g_bs args2 in
-    bs,
-    subst@g_substs in
+  let bs, subst, f_g_args_eq_sub_probs, wl =
+    if Substitutive_combinator? k
+    then begin
+      let g_bs, bs = List.splitAt (List.length args2) bs in
+      let g_substs = List.map2 (fun g_b (arg, _) -> NT (g_b.binder_bv, arg)) g_bs args2 in
+      bs,
+      subst@g_substs,
+      [],
+      wl
+    end
+    else if Substitutive_invariant_combinator? k
+    then begin
+      let probs, wl = List.fold_left2 (fun (ps, wl) (t1, _) (t2, _) ->
+        let p, wl = sub_prob wl t1 EQ t2 "substitutive inv subcomp args" in
+        ps@[p], wl) ([], wl) args1 args2 in
+      bs, subst, probs, wl
+    end
+    else failwith "Impossible (rel.apply_substitutive_indexed_subcomp unexpected k" in
 
   // peel off the f:repr a is binder from bs
   let bs = List.splitAt (List.length bs - 1) bs |> fst in
@@ -1886,7 +1900,7 @@ let apply_substitutive_indexed_subcomp (env:Env.env)
     Env.pure_precondition_for_trivial_post env u subcomp_ct.result_typ wp Range.dummyRange in
 
   fml,
-  eff_params_sub_probs,
+  eff_params_sub_probs@f_g_args_eq_sub_probs,
   wl
 
 //
@@ -4314,8 +4328,7 @@ and solve_c (env:Env.env) (problem:problem comp) (wl:worklist) : solution =
             let fml, sub_probs, wl =
               if kind = Ad_hoc_combinator
               then apply_ad_hoc_indexed_subcomp env bs subcomp_c c1 c2 sub_prob wl subcomp_name r
-              else let Substitutive_combinator l = kind in
-                   apply_substitutive_indexed_subcomp env bs subcomp_c c1 c2 sub_prob
+              else apply_substitutive_indexed_subcomp env kind bs subcomp_c c1 c2 sub_prob
                    num_eff_params
                    wl
                    subcomp_name r in

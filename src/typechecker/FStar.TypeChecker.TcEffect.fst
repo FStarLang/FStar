@@ -512,7 +512,7 @@ let subcomp_combinator_kind (env:env)
   (k:typ)
   (num_effect_params:int)
 
-  : option (list indexed_effect_binder_kind) =
+  : option S.indexed_effect_combinator_kind =
 
   // the idea is same as that of bind
   //   we will check that each binder in k has expected type,
@@ -551,27 +551,6 @@ let subcomp_combinator_kind (env:env)
 
     (f_bs, f_bs_kinds, rest_bs) |> Some in
 
-  let? g_bs, g_bs_kinds, rest_bs =
-    let g_sig_bs =
-      let _, sig = Env.inst_tscheme_with n_sig_ts [U_name u] in
-      sig |> U.arrow_formals
-          |> fst
-          |> (fun (a::bs) ->
-             let sig_bs, bs = List.splitAt num_effect_params bs in
-             let ss = List.fold_left2 (fun ss sig_b b ->
-               ss@[NT (sig_b.binder_bv, b.binder_bv |> S.bv_to_name)]
-             ) [NT (a.binder_bv, a_b.binder_bv |> S.bv_to_name)] sig_bs eff_params_bs in
-             bs |> SS.subst_binders ss) in
-
-    let? g_bs, rest_bs =
-      if List.length rest_bs < List.length g_sig_bs
-      then None
-      else List.splitAt (List.length g_sig_bs) rest_bs |> Some in
-
-    let? g_bs_kinds = eq_binders env g_sig_bs g_bs in
-
-    (g_bs, g_bs_kinds, rest_bs) |> Some in
-
   // peel off the f:repr a is binder
   let? rest_bs, f_b =
     if List.length rest_bs >= 1
@@ -601,15 +580,14 @@ let subcomp_combinator_kind (env:env)
     then Some ()
     else None in
 
-  // check subcomp return type is expected
-  let? _ret_t_ok_ =
+  let check_ret_t (f_or_g_bs:binders) : option unit =
     let expected_t =
       match n_repr_ts with
       | Some repr_ts ->
         let _, t = Env.inst_tscheme_with repr_ts [U_name u] in
         S.mk_Tm_app t
           ((a_b.binder_bv |> S.bv_to_name |> S.as_arg)::
-           (List.map (fun {binder_bv=b} -> b |> S.bv_to_name |> S.as_arg) (eff_params_bs@g_bs)))
+           (List.map (fun {binder_bv=b} -> b |> S.bv_to_name |> S.as_arg) (eff_params_bs@f_or_g_bs)))
           Range.dummyRange
       | None ->
         U.arrow [S.null_binder S.t_unit]
@@ -617,20 +595,48 @@ let subcomp_combinator_kind (env:env)
              comp_univs = [U_name u];
              effect_name = n_eff_name;
              result_typ = a_b.binder_bv |> S.bv_to_name;
-             effect_args = (eff_params_bs@g_bs) |> List.map (fun b -> b.binder_bv |> S.bv_to_name |> S.as_arg);
+             effect_args = (eff_params_bs@f_or_g_bs) |> List.map (fun b -> b.binder_bv |> S.bv_to_name |> S.as_arg);
              flags = []})) in
     if U.eq_tm (U.comp_result k_c) expected_t = U.Equal
     then Some ()
     else None in
 
-  // rest of the binders are ad-hoc
-  let rest_kinds = List.map (fun _ -> Ad_hoc_binder) rest_bs in
+  if Some? (check_ret_t f_bs)
+  then Some Substitutive_invariant_combinator
+  else begin
+    let? g_bs, g_bs_kinds, rest_bs =
+      let g_sig_bs =
+        let _, sig = Env.inst_tscheme_with n_sig_ts [U_name u] in
+        sig |> U.arrow_formals
+            |> fst
+            |> (fun (a::bs) ->
+               let sig_bs, bs = List.splitAt num_effect_params bs in
+               let ss = List.fold_left2 (fun ss sig_b b ->
+                 ss@[NT (sig_b.binder_bv, b.binder_bv |> S.bv_to_name)]
+               ) [NT (a.binder_bv, a_b.binder_bv |> S.bv_to_name)] sig_bs eff_params_bs in
+               bs |> SS.subst_binders ss) in
 
-  Some ([Type_binder]        @
-        eff_params_bs_kinds  @
-        f_bs_kinds           @
-        g_bs_kinds@rest_kinds@
-        [Repr_binder])
+      let? g_bs, rest_bs =
+        if List.length rest_bs < List.length g_sig_bs
+        then None
+        else List.splitAt (List.length g_sig_bs) rest_bs |> Some in
+
+      let? g_bs_kinds = eq_binders env g_sig_bs g_bs in
+
+      (g_bs, g_bs_kinds, rest_bs) |> Some in
+
+    // check subcomp return type is expected
+    let? _ret_t_ok_ = check_ret_t g_bs in
+
+    // rest of the binders are ad-hoc
+    let rest_kinds = List.map (fun _ -> Ad_hoc_binder) rest_bs in
+
+    Some (([Type_binder]        @
+           eff_params_bs_kinds  @
+           f_bs_kinds           @
+           g_bs_kinds@rest_kinds@
+           [Repr_binder]) |> Substitutive_combinator)
+  end
 
 //
 // Validate indexed effect subcomp (including polymonadic subcomp) shape
@@ -723,7 +729,7 @@ let validate_indexed_effect_subcomp_shape (env:env)
 
   let k = k |> N.remove_uvar_solutions env |> SS.compress in
 
-  let lopt = subcomp_combinator_kind env m_eff_name n_eff_name
+  let kopt = subcomp_combinator_kind env m_eff_name n_eff_name
     m_sig_ts n_sig_ts
     m_repr_ts n_repr_ts
     u
@@ -731,11 +737,11 @@ let validate_indexed_effect_subcomp_shape (env:env)
     num_effect_params in
 
   let kind =
-    match lopt with
+    match kopt with
     | None ->
       log_ad_hoc_combinator_warning subcomp_name r;
       Ad_hoc_combinator
-    | Some l -> Substitutive_combinator l in
+    | Some k -> k in
 
   if Env.debug env <| Options.Other "LayeredEffectsTc"
   then BU.print2 "Subcomp %s has %s kind\n" subcomp_name
