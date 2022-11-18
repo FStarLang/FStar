@@ -141,7 +141,7 @@ effect {
 let lift_pure_nd (a:Type) (wp:pure_wp a) (f:unit -> PURE a wp) :
   Pure (irepr a wp) (requires True)
                     (ensures (fun _ -> True))
-  = fun p _ -> let r = Common.elim_pure f p in [r]
+  = fun p _ -> let r = FStar.Monotonic.Pure.elim_pure f p in [r]
 
 sub_effect PURE ~> ND = lift_pure_nd
 
@@ -152,7 +152,7 @@ let test_f () =
 //let l () : (l:(list int){forall p. p 5 /\ p 3 ==> interp l p}) = reify (test_f ())
 // ^ This one doesn't work... datatype subtyping to blame?
 
-let l () : (l:(list int)) = reify (test_f ()) (fun _ -> True) ()
+let l () : list int = reify (test_f ()) (fun _ -> True) ()
 
 effect Nd (a:Type) (pre:pure_pre) (post:pure_post' a pre) =
         ND a (as_pure_wp (fun (p:pure_post a) -> pre /\ (forall (pure_result:a). post pure_result ==> p pure_result)))

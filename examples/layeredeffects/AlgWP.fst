@@ -6,7 +6,6 @@ a tree will not change the state, effectively allowing to strengthen a
 WP from intensional information about the operations in the tree. *)
 
 open FStar.List.Tot
-open Common
 open FStar.Calc
 module FE = FStar.FunctionalExtensionality
 module F = FStar.FunctionalExtensionality
@@ -156,8 +155,7 @@ let rec interp_morph #a #b #l1 #l2 (c : rwtree a l1) (f : a -> rwtree b l2) (p:_
       in
       Classical.forall_intro aux
 
-    | _ ->
-      unreachable ()
+    | _ -> () // this branch is unreachable
 #pop-options
 
 val interp_bind (#a #b:Type) (#l1 #l2 : rwops)
@@ -235,7 +233,7 @@ let lift_pure_algwp (a:Type) wp (f:unit -> PURE a wp)
          (requires (wp (fun _ -> True)))
          (ensures (fun _ -> True))
   =
-    let v : a = elim_pure f (fun _ -> True) in
+    let v : a = FStar.Monotonic.Pure.elim_pure f (fun _ -> True) in
     FStar.Monotonic.Pure.elim_pure_wp_monotonicity wp; // need this lemma
     assert (forall p. wp p ==> p v); // this is key fact needed for the proof
     assert_norm (stronger (lift_pure_wp wp) (return_wp v));

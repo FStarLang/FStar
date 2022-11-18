@@ -65,9 +65,11 @@ let iw_bind (#a : Type) (#b : Type)
                                    wp_f x ())
 
 let bind (a : Type) (b : Type)
-  (pre_v : Type0) (pre_f : a -> Type0)
-  (wp_v : squash pre_v -> w a) (wp_f: (x:a -> squash (pre_f x) -> w b))
-  (v : repr a pre_v wp_v) (f : (x:a -> repr b (pre_f x) (wp_f x)))
+  (pre_v : Type0) (wp_v : squash pre_v -> w a)
+  (pre_f : a -> Type0)
+  (wp_f: (x:a -> (squash (pre_f x) -> w b)))
+  (v : repr a pre_v wp_v)
+  (f : (x:a -> repr b (pre_f x) (wp_f x)))
   : repr b (pre_v /\ (forall x. pre_f x)) (iw_bind pre_v pre_f wp_v wp_f)
   =
   fun (pf : squash (pre_v /\ (forall x. pre_f x))) ->
@@ -95,8 +97,9 @@ let weaken (t1 t2 : Type) (s : squash t1)
   = ()
 
 let subcomp (a:Type)
-  (p1 p2 : Type0)
+  (p1 : Type0)
   (w1 : squash p1 -> w a)
+  (p2 : Type0)
   (w2 : squash p2 -> w a)
   (f : repr a p1 w1)
   : Pure (repr a p2 w2)
@@ -114,6 +117,7 @@ let if_then_else (a : Type)
   : Type
   = repr a p1 (if b then w1 else w2)
 
+#push-options "--warn_error -352"  // if then else is not substitutive, it doesn't bind p2
 total
 reifiable
 reflectable
@@ -121,6 +125,7 @@ effect {
   DM4A (a:Type) (pre:Type0) (_:squash pre -> w a)
   with {repr; return; bind; subcomp; if_then_else}
 }
+#pop-options
 
 (*
  * AR: 11/23:

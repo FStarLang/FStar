@@ -2,7 +2,6 @@ module Alg
 
 (*** Algebraic effects. ***)
 
-open Common
 open FStar.Tactics
 open FStar.List.Tot
 open FStar.Universe
@@ -191,7 +190,7 @@ let lift_pure_alg
  : Pure (tree a [])
         (requires (wp (fun _ -> True)))
         (ensures (fun _ -> True))
- = let v = elim_pure f (fun _ -> True) in
+ = let v = FStar.Monotonic.Pure.elim_pure f (fun _ -> True) in
    Return v
 
 sub_effect PURE ~> Alg = lift_pure_alg

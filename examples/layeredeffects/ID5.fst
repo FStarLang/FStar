@@ -1,7 +1,6 @@
 module ID5
 
 open FStar.Ghost
-open Common
 
 // The base type of WPs
 val wp0 (a : Type u#a) : Type u#(max 1 a)
@@ -165,7 +164,7 @@ let fmap (x:nat) : Id nat (requires (even x)) (ensures (fun r -> r <= x)) = x/2
 
 let callmap () : Id (list nat) True (fun _ -> True) =
  let lmap : list nat = [2;4;6;8] in
- ID5.map #_ #_ #even fmap lmap
+ map #_ #_ #even fmap lmap
 
 let rec count (n:nat) : I int
  = if n = 0 then 0 else count (n-1)

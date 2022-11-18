@@ -136,7 +136,7 @@ let stbind (a:Type) (b:Type)
 
 reifiable reflectable
 effect {
-  STEXN (a:Type) (state:Type0)
+  STEXN (a:Type) ([@@@ effect_param] state:Type0)
   with {repr=mrepr; return=streturn; bind=stbind}
 }
 

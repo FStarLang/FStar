@@ -16,6 +16,15 @@
 
 module BUGSLowParseWriters
 
+//
+// This module is a testcase for an already fixed bug
+// The effect combinators defined here are non-substitutive
+// See LowParse.fsti for a substitutive version of the effect defined here
+//
+
+// silence not a substitutive combinator warning
+#set-options "--warn_error -352"
+
 let memory_invariant : Type0 = nat
 
 (*

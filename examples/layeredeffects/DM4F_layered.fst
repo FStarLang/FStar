@@ -1,9 +1,25 @@
+(*
+   Copyright 2008-2018 Microsoft Research
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+*)
+
 module DM4F_layered
 
 (* Same as DM4F, but layered over a layered PURE *)
+open DM4F_Utils
 open ID2
 open FStar.Tactics
-open Common
 
 (* Simulating state effect in DM4F, hopefully doable by a tactic. *)
 
@@ -115,7 +131,7 @@ let lift_id_st_wp #a #st (w : pure_wp a) : wp st a =
   elim_pure_wp_monotonicity_forall ();
   fun s0 p -> w (fun x -> p x s0)
 
-let lift_id_st a st wp (f : ID2.repr a wp)
+let lift_id_st a wp st (f : ID2.repr a wp)
   : repr a st (lift_id_st_wp wp)
   = elim_pure_wp_monotonicity_forall ();
     fun s0 -> (f (), s0)

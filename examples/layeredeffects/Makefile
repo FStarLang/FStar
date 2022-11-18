@@ -1,4 +1,6 @@
-OTHERFLAGS+=--already_cached 'Prims FStar LowStar' --include parsing --warn_error -330
+# 330 - experimental features
+# 333 - no hints
+OTHERFLAGS+=--already_cached 'Prims FStar LowStar' --include parsing --warn_error -330-333
 include ../Makefile.include
 
 NO_VERIFY=Buffers.fst

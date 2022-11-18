@@ -289,6 +289,7 @@ let rec add_source_monotonic (from to:loc) (r:label) (fs:flows)
     | [] -> ()
     | _::tl -> add_source_monotonic from to r tl
 
+#push-options "--warn_error -271"  // intentional empty SMTPat
 let has_flow_soundness #a #r #w #fs #p #q (f:hifc a r w fs p q)
                        (from to:loc) (s:store{p s}) (k:int{p (upd s from k)})
     : Lemma (requires
@@ -305,6 +306,7 @@ let has_flow_soundness #a #r #w #fs #p #q (f:hifc a r w fs p q)
          assert (no_leakage f from to)
       in
       ()
+#pop-options
 
 let bind_hst_no_leakage (#a #b:Type)
                          (#w0 #r0 #w1 #r1:label)
@@ -531,6 +533,7 @@ let assoc_hst (w0, r0, fs0) (w1, r1, fs1) (w2, r2, fs2) =
 
 (* Adding a frame combinator, refining the Hoare postcondition with 
    the interpretation of the write index *)
+#push-options "--warn_error -271"  // intentional empty SMTPat
 let frame (a:Type) (r w:label) (fs:flows) #p #q (f:hifc a r w fs p q)
   : hifc a r w fs p (fun s0 x s1 -> q s0 x s1 /\ modifies w s0 s1)
   = let aux (s0:store{p s0}) (l:loc{~(Set.mem l w)})
@@ -560,7 +563,7 @@ let frame (a:Type) (r w:label) (fs:flows) #p #q (f:hifc a r w fs p q)
     in
     assert (respects g fs);
     g
-
+#pop-options
 
 (*** And there we have our bind for hifc ***)
 (* It is similar to pre_bind, but we integrate the use of `frame`
@@ -665,6 +668,7 @@ let rec append_memP #a (x:a) (l0 l1:list a)
 
     
 (* An auxiliary lemma needed to prove if_then_else sound *)
+#push-options "--warn_error -271"  // intentional empty SMTPat
 let weaken_flows_append (fs fs':flows)
   : Lemma (ensures (norm [delta;iota;zeta] (fs `flows_included_in` (fs @ fs')) /\
                    (norm [delta;iota;zeta] (fs' `flows_included_in` (fs @ fs')))))
@@ -685,6 +689,7 @@ let weaken_flows_append (fs fs':flows)
     in
     norm_spec_inv (fs `flows_included_in` (fs @ fs'));
     norm_spec_inv (fs' `flows_included_in` (fs @ fs'))
+#pop-options
 
 (*** We now create our HIFC effect *)
 
@@ -938,7 +943,7 @@ let ist_exn a w r fs (p:pre) (q:post a) =
                  | Some x -> q s0 x s1)
 
 
-let lift_ist_hst a w r fs p q (x:hifc a r w fs p q) 
+let lift_ist_hst a r w fs p q (x:hifc a r w fs p q) 
   : hst a p (fun s0 x s1 -> q s0 x s1 /\ modifies w s0 s1) 
   = frame _ _ _ _ x
 sub_effect HIFC ~> HST = lift_ist_hst

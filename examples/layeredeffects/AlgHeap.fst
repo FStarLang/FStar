@@ -2,7 +2,6 @@ module AlgHeap
 
 (* Essentially a copy of AlgForAll but using a heap for the state *)
 
-open Common
 open FStar.Tactics
 open FStar.List.Tot
 open FStar.Universe
@@ -315,8 +314,7 @@ let rec interp_morph #a #b (c : rwtree a) (f : a -> rwtree b) (p:_) (s0:_)
       in
       Classical.forall_intro aux
 
-    | _ ->
-      unreachable ()
+    | _ -> ()  // this branch is unreachable
 
 val interp_bind (#a #b:Type)
   (c : rwtree a) (f : a -> rwtree b)

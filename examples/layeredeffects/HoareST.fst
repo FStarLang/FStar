@@ -234,4 +234,6 @@ let copy (#a:Type0) (s:array a)
 
 effect HoareSTT (a:Type) (post:post_t a) = HoareST a (fun _ -> True) post
 
+#push-options "--warn_error -272"  // silence top-level effects warning
 let r : ref int = alloc 2
+#pop-options

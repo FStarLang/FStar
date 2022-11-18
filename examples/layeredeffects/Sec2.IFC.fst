@@ -140,7 +140,7 @@ let has_flow_append (from to:loc) (fs fs':flows)
   : Lemma (has_flow from to fs ==>
            has_flow from to (fs @ fs') /\
            has_flow from to (fs' @ fs))
-  = let rec aux (rs:_)
+  = let aux (rs:_)
       : Lemma (requires
                   List.Tot.memP rs fs)
               (ensures
@@ -176,6 +176,7 @@ let rec add_source_monotonic (from to:loc) (r:label) (fs:flows)
     | [] -> ()
     | _::tl -> add_source_monotonic from to r tl
 
+#push-options "--warn_error -271"  // intentional empty SMTPat
 let has_flow_soundness #a #r #w #fs (f:ist a r w fs)
                        (from to:loc) (s:store) (k:int)
     : Lemma (requires
@@ -192,6 +193,7 @@ let has_flow_soundness #a #r #w #fs (f:ist a r w fs)
          assert (no_leakage f from to)
       in
       ()
+#pop-options
 
 let bind_comp_no_leakage (#a #b:Type)
                          (#w0 #r0 #w1 #r1:label)
@@ -379,7 +381,8 @@ let assoc_comp (w0, r0, fs0) (w1, r1, fs1) (w2, r2, fs2) =
   }
 
 let bind (a b:Type)
-         (w0 r0 w1 r1:label) (fs0 fs1:flows)
+         (w0 r0:label) (fs0:flows)
+         (w1 r1:label) (fs1:flows)
          (x:ist a w0 r0 fs0)
          (y: a -> ist b w1 r1 fs1)
   : ist b (union w0 w1) (union r0 r1) (fs0 @ add_source r0 ((bot, w1)::fs1))
@@ -428,10 +431,12 @@ effect {
 let read (l:loc) : IST int bot (single l) [] = IST?.reflect (iread l)
 let write (l:loc) (x:int) : IST unit (single l) bot [] = IST?.reflect (iwrite l x)
 
-let u : Type = unit
-let lift_pure (a:Type) (x:u -> Tot a)
-  : ist a bot bot []
-  = return a (x())
+let lift_pure (a:Type) (wp:pure_wp a) (x:unit -> PURE a wp)
+  : Pure (ist a bot bot [])
+         (requires wp (fun _ -> True))
+         (ensures fun _ -> True)
+  = FStar.Monotonic.Pure.elim_pure_wp_monotonicity wp;
+    return a (x())
 
 sub_effect PURE ~> IST = lift_pure
 

@@ -1,6 +1,5 @@
 module AlgForAll
 
-open Common
 open FStar.Calc
 module FE = FStar.FunctionalExtensionality
 module F = FStar.FunctionalExtensionality
@@ -112,8 +111,7 @@ let rec interp_morph #a #b (c : rwtree a) (f : a -> rwtree b) (p:_) (s0:_)
       in
       Classical.forall_intro aux
 
-    | _ ->
-      unreachable ()
+    | _ -> ()  // this branch is unreachable
 
 val interp_bind (#a #b:Type)
   (c : rwtree a) (f : a -> rwtree b)

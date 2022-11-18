@@ -10,6 +10,14 @@ open FStar.Ghost
 
 #set-options "--print_universes --print_implicits --print_effect_args"
 
+//
+// The bind defined here is not substitutive, since it threads through
+//   one of the indices from f to g, this pattern is not yet well-supported with
+//   substitutive effects, though there are ways to do it (see LowParse.fsti)
+//
+// Silence the warning
+#set-options "--warn_error -352"
+
 // GM: Force a type equality by SMT
 let coerce #a #b (x:a{a == b}) : b = x
 

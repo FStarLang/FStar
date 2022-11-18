@@ -1,4 +1,4 @@
-module Ignore
+module Degenerate
 
 open FStar.Universe
 

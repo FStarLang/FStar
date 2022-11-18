@@ -30,7 +30,7 @@ let return (a:Type) (x:a)
 
 let bind (a:Type) (b:Type)
   (req_f:Type0) (ens_f:a -> Type0)
-  (req_g:a -> Type0) (ens_g:a -> b -> Type0)
+  (req_g:a -> Type0) (ens_g:a -> (b -> Type0))
   (f:repr a req_f ens_f) (g:(x:a -> repr b (req_g x) (ens_g x)))
 : repr b
   (req_f /\ (forall (x:a). ens_f x ==> req_g x))
