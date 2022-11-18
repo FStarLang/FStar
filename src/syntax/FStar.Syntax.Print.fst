@@ -734,6 +734,7 @@ let indexed_effect_combinator_kind_to_string = function
   | Substitutive_combinator l ->
     U.format1 "standard_combinator (%s)"
       (list_to_string indexed_effect_binder_kind_to_string l)
+  | Substitutive_invariant_combinator -> "substitutive_invariant"
   | Ad_hoc_combinator -> "ad_hoc_combinator"
 
 let indexed_effect_combinator_kind_opt_to_string k =

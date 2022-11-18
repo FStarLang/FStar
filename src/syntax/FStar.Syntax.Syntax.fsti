@@ -392,6 +392,7 @@ type indexed_effect_binder_kind =
 //
 type indexed_effect_combinator_kind =
   | Substitutive_combinator of list indexed_effect_binder_kind
+  | Substitutive_invariant_combinator
   | Ad_hoc_combinator
 
 type sub_eff = {
