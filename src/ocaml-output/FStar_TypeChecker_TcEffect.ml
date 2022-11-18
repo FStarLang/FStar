@@ -4313,21 +4313,39 @@ let (tc_layered_eff_decl :
                                                       (repr_t, uu___18) in
                                                     FStar_Syntax_Syntax.Tm_app
                                                       uu___17 in
+                                                  let uu___17 =
+                                                    FStar_Ident.range_of_lid
+                                                      ed.FStar_Syntax_Syntax.mname in
                                                   FStar_Syntax_Syntax.mk
-                                                    uu___16
-                                                    FStar_Compiler_Range.dummyRange in
+                                                    uu___16 uu___17 in
                                                 let f_b =
                                                   FStar_Syntax_Syntax.null_binder
                                                     repr_t_applied in
                                                 let uu___16 =
                                                   let uu___17 =
-                                                    FStar_Compiler_Effect.op_Bar_Greater
-                                                      f_b.FStar_Syntax_Syntax.binder_bv
-                                                      FStar_Syntax_Syntax.bv_to_name in
-                                                  FStar_Syntax_Util.abs
-                                                    (FStar_Compiler_List.op_At
-                                                       bs1 [f_b]) uu___17
-                                                    FStar_Pervasives_Native.None in
+                                                    let uu___18 =
+                                                      FStar_Compiler_Effect.op_Bar_Greater
+                                                        f_b.FStar_Syntax_Syntax.binder_bv
+                                                        FStar_Syntax_Syntax.bv_to_name in
+                                                    FStar_Syntax_Util.abs
+                                                      (FStar_Compiler_List.op_At
+                                                         bs1 [f_b]) uu___18
+                                                      FStar_Pervasives_Native.None in
+                                                  let uu___18 =
+                                                    FStar_Ident.range_of_lid
+                                                      ed.FStar_Syntax_Syntax.mname in
+                                                  {
+                                                    FStar_Syntax_Syntax.n =
+                                                      (uu___17.FStar_Syntax_Syntax.n);
+                                                    FStar_Syntax_Syntax.pos =
+                                                      uu___18;
+                                                    FStar_Syntax_Syntax.vars
+                                                      =
+                                                      (uu___17.FStar_Syntax_Syntax.vars);
+                                                    FStar_Syntax_Syntax.hash_code
+                                                      =
+                                                      (uu___17.FStar_Syntax_Syntax.hash_code)
+                                                  } in
                                                 ([], uu___16)
                                             | uu___15 ->
                                                 failwith "Impossible!"))
@@ -4483,9 +4501,11 @@ let (tc_layered_eff_decl :
                                                             (repr_t, uu___20) in
                                                           FStar_Syntax_Syntax.Tm_app
                                                             uu___19 in
+                                                        let uu___19 =
+                                                          FStar_Ident.range_of_lid
+                                                            ed.FStar_Syntax_Syntax.mname in
                                                         FStar_Syntax_Syntax.mk
-                                                          uu___18
-                                                          FStar_Compiler_Range.dummyRange in
+                                                          uu___18 uu___19 in
                                                       let f_b =
                                                         FStar_Syntax_Syntax.null_binder
                                                           repr_t_applied in
@@ -4496,12 +4516,31 @@ let (tc_layered_eff_decl :
                                                         FStar_Syntax_Syntax.null_binder
                                                           FStar_Syntax_Util.t_bool in
                                                       let uu___18 =
-                                                        FStar_Syntax_Util.abs
-                                                          (FStar_Compiler_List.op_At
-                                                             bs1
-                                                             [f_b; g_b; b_b])
-                                                          repr_t_applied
-                                                          FStar_Pervasives_Native.None in
+                                                        let uu___19 =
+                                                          FStar_Syntax_Util.abs
+                                                            (FStar_Compiler_List.op_At
+                                                               bs1
+                                                               [f_b;
+                                                               g_b;
+                                                               b_b])
+                                                            repr_t_applied
+                                                            FStar_Pervasives_Native.None in
+                                                        let uu___20 =
+                                                          FStar_Ident.range_of_lid
+                                                            ed.FStar_Syntax_Syntax.mname in
+                                                        {
+                                                          FStar_Syntax_Syntax.n
+                                                            =
+                                                            (uu___19.FStar_Syntax_Syntax.n);
+                                                          FStar_Syntax_Syntax.pos
+                                                            = uu___20;
+                                                          FStar_Syntax_Syntax.vars
+                                                            =
+                                                            (uu___19.FStar_Syntax_Syntax.vars);
+                                                          FStar_Syntax_Syntax.hash_code
+                                                            =
+                                                            (uu___19.FStar_Syntax_Syntax.hash_code)
+                                                        } in
                                                       ([], uu___18)
                                                   | uu___17 ->
                                                       failwith "Impossible!"))

@@ -1337,9 +1337,10 @@ Errors.with_ctx (BU.format1 "While checking layered effect definition `%s`" (str
              Env.inst_tscheme_with repr_ts [U_unknown] |> snd in
            let repr_t_applied = mk
              (Tm_app (repr_t, bs |> List.map (fun b -> b.binder_bv) |> List.map S.bv_to_name |> List.map S.as_arg))
-             Range.dummyRange in
+             (Ident.range_of_lid ed.mname) in
            let f_b = S.null_binder repr_t_applied in
-           [], U.abs (bs@[f_b]) (f_b.binder_bv |> S.bv_to_name) None
+           [], {U.abs (bs@[f_b]) (f_b.binder_bv |> S.bv_to_name) None
+                with pos=Ident.range_of_lid ed.mname}
          | _ -> failwith "Impossible!")
       | _ -> ts in
         
@@ -1391,11 +1392,12 @@ Errors.with_ctx (BU.format1 "While checking layered effect definition `%s`" (str
              Env.inst_tscheme_with repr_ts [U_unknown] |> snd in
            let repr_t_applied = mk
              (Tm_app (repr_t, bs |> List.map (fun b -> b.binder_bv) |> List.map S.bv_to_name |> List.map S.as_arg))
-             Range.dummyRange in
+             (Ident.range_of_lid ed.mname) in
            let f_b = S.null_binder repr_t_applied in
            let g_b = S.null_binder repr_t_applied in
            let b_b = S.null_binder U.t_bool in
-           [], U.abs (bs@[f_b; g_b; b_b]) repr_t_applied None
+           [], {U.abs (bs@[f_b; g_b; b_b]) repr_t_applied None
+                with pos=Ident.range_of_lid ed.mname}
          | _ -> failwith "Impossible!")
       | _ -> ts in
 
