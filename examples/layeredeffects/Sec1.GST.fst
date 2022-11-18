@@ -49,12 +49,14 @@ effect {
 }
 let read () : GST state R = GST?.reflect gst_read
 let write (s:state) : GST unit RW = GST?.reflect (gst_write s)
-let u : Type = unit
-let lift_pure a (x:u -> Tot a)
-  : gst a R
-  = fun (_:state) -> x()
+let lift_pure a (wp:pure_wp a) (f:unit -> PURE a wp)
+  : Pure (gst a R)
+         (requires wp (fun _ -> True))
+         (ensures fun _ -> True)
+  = fun s -> f ()
 
 sub_effect PURE ~> GST = lift_pure
+
 
 let increment ()
   : GST unit RW
