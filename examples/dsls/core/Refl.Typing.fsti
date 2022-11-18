@@ -376,6 +376,10 @@ val subtyping_token (e:env) (t0 t1:term) : Type0
 val check_subtyping (e:env) (t0 t1:term)
   : FStar.Tactics.Tac (option (subtyping_token e t0 t1))
 
+val equiv_token (e:env) (t0 t1:term) : Type0
+val check_equiv (e:env) (t0 t1:term)
+  : FStar.Tactics.Tac (option (equiv_token e t0 t1))
+
 noeq
 type univ_eq : universe -> universe -> Type0 = 
   | UN_Refl : 
@@ -533,10 +537,12 @@ type typing : env -> term -> term -> Type0 =
      typing g (pack_ln (Tv_Match scrutinee None branches)) ty
     
 and sub_typing : env -> term -> term -> Type0 =
-  | ST_Refl: 
+  | ST_Equiv:
       g:env ->
-      t:term ->
-      sub_typing g t t
+      t0:term ->
+      t1:term ->
+      equiv g t0 t1 ->
+      sub_typing g t0 t1
 
   | ST_Token: 
       g:env ->
@@ -551,6 +557,36 @@ and sub_typing : env -> term -> term -> Type0 =
       v:universe ->
       univ_eq u v ->
       sub_typing g (tm_type u) (tm_type v)
+
+and equiv : env -> term -> term -> Type0 =
+  | EQ_Refl:
+      g:env ->
+      t0:term ->
+      equiv g t0 t0
+
+  | EQ_Sym:
+      g:env ->
+      t0:term ->
+      t1:term ->
+      equiv g t0 t1 ->
+      equiv g t1 t0
+
+  | EQ_Trans:
+      g:env ->
+      t0:term ->
+      t1:term ->
+      t2:term ->
+      equiv g t0 t1 ->
+      equiv g t1 t2 ->
+      equiv g t0 t2
+
+  | EQ_Token:
+      g:env ->
+      t0:term ->
+      t1:term ->
+      equiv_token g t0 t1 ->
+      equiv g t0 t1
+      
 
 and branches_typing : env -> term -> term -> list branch -> term -> Type0 =
 
@@ -753,6 +789,15 @@ and ln'_match_returns (m:match_returns_ascription) (i:int)
       | Some t -> ln' t (i + 1)
     in
     b && ret && as_
+
+let ln (t:term) = ln' t (-1)
+let ln_comp (c:comp) = ln'_comp c (-1)
+
+val well_typed_terms_are_ln (g:R.env) (e:R.term) (t:R.term) (_:typing g e t)
+  : Lemma (ensures ln e)
+
+val type_correctness (g:R.env) (e:R.term) (t:R.term) (_:typing g e t)
+  : GTot (u:R.universe & typing g t (tm_type u))
 
 let rec binder_offset_pattern_invariant (p:pattern) (s:open_or_close) (i:nat)
   : Lemma (binder_offset_pattern p == binder_offset_pattern (open_or_close_pattern' p s i))
