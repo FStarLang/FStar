@@ -1433,6 +1433,8 @@ let (indexed_effect_combinator_kind_to_string :
     | FStar_Syntax_Syntax.Substitutive_combinator l ->
         let uu___1 = list_to_string indexed_effect_binder_kind_to_string l in
         FStar_Compiler_Util.format1 "standard_combinator (%s)" uu___1
+    | FStar_Syntax_Syntax.Substitutive_invariant_combinator ->
+        "substitutive_invariant"
     | FStar_Syntax_Syntax.Ad_hoc_combinator -> "ad_hoc_combinator"
 let (indexed_effect_combinator_kind_opt_to_string :
   FStar_Syntax_Syntax.indexed_effect_combinator_kind

@@ -1158,6 +1158,7 @@ let (uu___is_Ad_hoc_binder : indexed_effect_binder_kind -> Prims.bool) =
     match projectee with | Ad_hoc_binder -> true | uu___ -> false
 type indexed_effect_combinator_kind =
   | Substitutive_combinator of indexed_effect_binder_kind Prims.list 
+  | Substitutive_invariant_combinator 
   | Ad_hoc_combinator 
 let (uu___is_Substitutive_combinator :
   indexed_effect_combinator_kind -> Prims.bool) =
@@ -1168,6 +1169,12 @@ let (uu___is_Substitutive_combinator :
 let (__proj__Substitutive_combinator__item___0 :
   indexed_effect_combinator_kind -> indexed_effect_binder_kind Prims.list) =
   fun projectee -> match projectee with | Substitutive_combinator _0 -> _0
+let (uu___is_Substitutive_invariant_combinator :
+  indexed_effect_combinator_kind -> Prims.bool) =
+  fun projectee ->
+    match projectee with
+    | Substitutive_invariant_combinator -> true
+    | uu___ -> false
 let (uu___is_Ad_hoc_combinator :
   indexed_effect_combinator_kind -> Prims.bool) =
   fun projectee ->
