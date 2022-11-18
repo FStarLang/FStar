@@ -29,7 +29,8 @@ let mk_total t = R.C_Total t (R.pack_universe R.Uv_Unk) []
 let mk_binder t q = R.pack_binder (R.pack_bv (RT.make_bv 0 t)) q []
 let bound_var i : R.term = R.pack_ln (R.Tv_BVar (R.pack_bv (RT.make_bv i (R.pack_ln R.Tv_Unknown))))
 let mk_name i : R.term = R.pack_ln (R.Tv_Var (R.pack_bv (RT.make_bv i (R.pack_ln R.Tv_Unknown)))) 
-let mk_tot_arrow1 (f:(R.term & R.aqualv)) (out:R.term) : R.term =
+let arrow_dom = (R.term & R.aqualv)
+let mk_tot_arrow1 (f:arrow_dom) (out:R.term) : R.term =
   let ty, q = f in
   R.pack_ln (R.Tv_Arrow (mk_binder ty q) (R.pack_comp (mk_total out)))
 let rec mk_tot_arrow (formals:list (R.term & R.aqualv)) (res:R.term) : R.term =
@@ -38,29 +39,135 @@ let rec mk_tot_arrow (formals:list (R.term & R.aqualv)) (res:R.term) : R.term =
   | hd :: tl -> 
     let out = mk_tot_arrow tl res in
     mk_tot_arrow1 hd out
-let bind_formals (u1 u2:R.universe) 
-  = [ ((* t1 *) RT.tm_type u1, R.Q_Implicit);
-      ((* t2 *) RT.tm_type u2, R.Q_Implicit); 
-      ((* pre *) vprop_tm     , R.Q_Implicit);
-      ((* post1 *) mk_tot_arrow [(bound_var 2 (* t1 *), R.Q_Explicit)] vprop_tm, R.Q_Implicit);
-      ((* post2 *) mk_tot_arrow [(bound_var 2 (* t2 *), R.Q_Explicit)] vprop_tm, R.Q_Implicit);
-      ((* f *) mk_stt_app u1 [bound_var 4 (* t1 *); bound_var 2 (* pre *); bound_var 1 (* post1 *)], R.Q_Explicit);
-      ((* g *) mk_tot_arrow [((* x *) bound_var 5 (* t1 *), R.Q_Explicit)]
-                              (mk_stt_app u2 [bound_var 5 (* t2 *);
-                                              R.mk_app (bound_var 3 (* post1 *)) [bound_var 0 (* x *), R.Q_Explicit];
-                                              bound_var 2 (* post2 *)]), R.Q_Explicit)]
-let bind_type (u1 u2:R.universe) 
-  : R.term // #t1:Type u#u1 -> #t2:Type u#u2 ->
-           // #pre:vprop ->
-           // #post1:(t1 -> vprop) ->
-           // #post2:(t2 -> vprop) ->
-           // f:stt t1 pre post1 ->
-           // g:(x:t1 -> stt t2 (post1 x) post2) ->
-           // stt t2 pre post2
-  = let open R in 
-    let res = mk_stt_app u2 [bound_var 5 (* t2 *); bound_var 4 (* pre *); bound_var 2 (* post2 *)] in
-    mk_tot_arrow (bind_formals u1 u2) res
-    
+
+let bind_res (u2:R.universe) (t2 pre post2:R.term) =
+  mk_stt_app u2 [t2; pre; post2]
+
+let g_type_bind (u2:R.universe) (t1 t2 post1 post2:R.term) =
+    mk_tot_arrow1 (t1, R.Q_Explicit)
+                  (bind_res u2 t2 (R.mk_app post1 [bound_var 0 (* x *), R.Q_Explicit]) post2)
+
+let bind_type_t1_t2_pre_post1_post2_f (u1 u2:R.universe) (t1 t2 pre post1 post2:R.term) =
+  mk_tot_arrow1 (g_type_bind u2 t1 t2 post1 post2, R.Q_Explicit)
+                (bind_res u2 t2 pre post2)
+
+let bind_type_t1_t2_pre_post1_post2 (u1 u2:R.universe) (t1 t2 pre post1 post2:R.term) =
+  let f_type = mk_stt_app u1 [t1; pre; post1] in
+  mk_tot_arrow1 (f_type, R.Q_Explicit)
+                (bind_type_t1_t2_pre_post1_post2_f u1 u2 t1 t2 pre post1 post2)
+
+let post2_type_bind t2 = mk_tot_arrow1 (t2, R.Q_Explicit) vprop_tm
+let bind_type_t1_t2_pre_post1 (u1 u2:R.universe) (t1 t2 pre post1:R.term) =
+  let var = 0 in
+  let post2 = mk_name var in
+  mk_tot_arrow1 (post2_type_bind t2, R.Q_Implicit)
+                (RT.open_or_close_term' (bind_type_t1_t2_pre_post1_post2 u1 u2 t1 t2 pre post1 post2) (RT.CloseVar var) 0)
+
+let post1_type_bind t1 = mk_tot_arrow [(t1, R.Q_Explicit)] vprop_tm
+let bind_type_t1_t2_pre (u1 u2:R.universe) (t1 t2 pre:R.term) =
+  let var = 1 in
+  let post1 = mk_name var in
+  mk_tot_arrow1 (post1_type_bind t1, R.Q_Implicit)
+                (RT.open_or_close_term' (bind_type_t1_t2_pre_post1 u1 u2 t1 t2 pre post1) (RT.CloseVar var) 0)
+
+let bind_type_t1_t2 (u1 u2:R.universe) (t1 t2:R.term) =
+  let var = 2 in
+  let pre = mk_name var in
+  let pre_type = vprop_tm in
+  mk_tot_arrow1 (pre_type, R.Q_Implicit)
+                (RT.open_or_close_term' (bind_type_t1_t2_pre u1 u2 t1 t2 pre) (RT.CloseVar var) 0)
+
+let bind_type_t1 (u1 u2:R.universe) (t1:R.term) =
+  let var = 3 in
+  let t2 = mk_name var in
+  let t2_type = RT.tm_type u2 in
+  mk_tot_arrow1 (t2_type, R.Q_Implicit)
+                (RT.open_or_close_term' (bind_type_t1_t2 u1 u2 t1 t2) (RT.CloseVar var) 0)
+
+let bind_type (u1 u2:R.universe) =
+  let var = 4 in
+  let t1 = mk_name var in
+  let t1_type = RT.tm_type u1 in
+  mk_tot_arrow1 (t1_type, R.Q_Implicit)
+                (RT.open_or_close_term' (bind_type_t1 u1 u2 t1) (RT.CloseVar var) 0)
+
+#push-options "--fuel 2 --ifuel 1 --query_stats"
+let inst_bind_t1 #u1 #u2 #g #head
+                   (head_typing: RT.typing g head (bind_type u1 u2))
+                   (#t1:_)
+                   (t1_typing: RT.typing g t1 (RT.tm_type u1))
+  : GTot (RT.typing g (R.mk_app head [(t1, R.Q_Implicit)]) (bind_type_t1 u1 u2 t1))
+  = let open_with_spec (t v:R.term)
+      : Lemma (RT.open_with t v == RT.open_or_close_term' t (RT.OpenWith v) 0)
+              [SMTPat (RT.open_with t v)]
+      = RT.open_with_spec t v
+    in
+    let d : RT.typing g (R.mk_app head [(t1, R.Q_Implicit)]) _ =
+      RT.T_App _ _ _ _ _ _ head_typing t1_typing
+    in
+    assume (bind_type_t1 u1 u2 t1 ==
+            RT.open_with (RT.open_or_close_term' (bind_type_t1 u1 u2 (mk_name 4))
+                                                 (RT.CloseVar 4) 0)
+                         t1);
+
+    d
+#pop-options    
+
+
+
+let inst_bind_t2 #u1 #u2 #g #head #t1
+                   (head_typing: RT.typing g head (bind_type_t1 u1 u2 t1))
+                   (#t2:_)
+                   (t1_typing: RT.typing g t2 (RT.tm_type u2))
+  : RT.typing g (R.mk_app head [(t1, R.Q_Implicit)]) (bind_type_t1_t2 u1 u2 t1 t2)
+  = admit()
+
+
+let inst_bind_pre #u1 #u2 #g #head #t1 #t2
+                  (head_typing: RT.typing g head (bind_type_t1_t2 u1 u2 t1 t2))
+                  (#pre:_)
+                  (pre_typing: RT.typing g pre vprop_tm)
+  : RT.typing g (R.mk_app head [(pre, R.Q_Implicit)]) (bind_type_t1_t2_pre u1 u2 t1 t2 pre)
+  = admit()
+
+let inst_bind_post1 #u1 #u2 #g #head #t1 #t2 #pre
+                  (head_typing: RT.typing g head (bind_type_t1_t2_pre u1 u2 t1 t2 pre))
+                  (#post1:_)
+                  (post1_typing: RT.typing g post1 (post1_type_bind t1))
+  : RT.typing g (R.mk_app head [(post1, R.Q_Implicit)]) (bind_type_t1_t2_pre_post1 u1 u2 t1 t2 pre post1)
+  = admit()
+
+let inst_bind_post2 #u1 #u2 #g #head #t1 #t2 #pre #post1
+                  (head_typing: RT.typing g head (bind_type_t1_t2_pre_post1 u1 u2 t1 t2 pre post1))
+                  (#post2:_)
+                  (post2_typing: RT.typing g post2 (post2_type_bind t2))
+  : RT.typing g (R.mk_app head [(post1, R.Q_Implicit)]) (bind_type_t1_t2_pre_post1_post2 u1 u2 t1 t2 pre post1 post2)
+  = admit()
+
+let inst_bind_f #u1 #u2 #g #head #t1 #t2 #pre #post1 #post2
+                  (head_typing: RT.typing g head (bind_type_t1_t2_pre_post1_post2 u1 u2 t1 t2 pre post1 post2))
+                  (#f:_)
+                  (f_typing: RT.typing g f (mk_stt_app u1 [t1; pre; post1]))
+  : RT.typing g (R.mk_app head [(f, R.Q_Explicit)]) (bind_type_t1_t2_pre_post1_post2_f u1 u2 t1 t2 pre post1 post2)
+  = admit()
+
+let inst_bind_g #u1 #u2 #g #head #t1 #t2 #pre #post1 #post2
+                  (head_typing: RT.typing g head (bind_type_t1_t2_pre_post1_post2_f u1 u2 t1 t2 pre post1 post2))
+                  (#gg:_)
+                  (g_typing: RT.typing g gg (g_type_bind u2 t1 t2 post1 post2))
+  : RT.typing g (R.mk_app head [(gg, R.Q_Explicit)]) (bind_res u2 t2 pre post2)
+  = let open_with_spec (t v:R.term)
+      : Lemma (RT.open_with t v == RT.open_or_close_term' t (RT.OpenWith v) 0)
+              [SMTPat (RT.open_with t v)]
+      = RT.open_with_spec t v
+    in
+    let d : RT.typing g (R.mk_app head [(gg, R.Q_Explicit)]) _ =
+      RT.T_App _ _ _ _ _ _ head_typing g_typing
+    in
+    admit();
+    d
+
+
 let frame_lid = ["Steel"; "ST"; "Util"; "frame_stt"]
 let subsumption_lid = ["Steel"; "ST"; "Util"; "sub_stt"]
 
@@ -1641,30 +1748,103 @@ let qual_of x = snd x
 module L = FStar.List.Tot
 let u_unk = (R.pack_universe R.Uv_Unk)
 
-let app_typing (hd: (R.term * R.aqualv))
-               (res: R.term) 
-               (g:R.env)
-               (head: R.term)
-               (head_typing: RT.typing g head (mk_tot_arrow1 hd res))
-               (arg: R.term)
-               (arg_typing: RT.typing g arg (ty_of hd))
-  : RT.typing g (R.mk_app head [arg, qual_of hd])
-                (RT.open_or_close_term' res (RT.OpenWith arg) 0)
+let sub = list (RT.open_or_close & nat)
+
+let shift (s:sub) : sub = L.map #(RT.open_or_close & nat) #(RT.open_or_close & nat) (fun (oc, s) -> oc, s + 1) s
+
+let rec subst (x:R.term) (s:sub)
+  : GTot R.term (decreases s)
+  = match s with
+    | [] -> x
+    | (oc,i)::tl -> subst (RT.open_or_close_term' x oc i) tl
+
+let rec merge_subst (x:R.term) (s0 s1:sub)
+  : Lemma 
+    (ensures subst (subst x s0) s1 == subst x (s0@s1))
+    (decreases s0)
+    [SMTPat (subst (subst x s0) s1)]
+  = match s0 with
+    | [] -> ()
+    | hd::tl -> merge_subst (subst x [hd]) tl s1
+
+let subst_arrow (hd: (R.term * R.aqualv))
+                (res: R.term)
+                (s:sub)
+    : Lemma (subst (mk_tot_arrow1 hd res) s ==
+             mk_tot_arrow1 (subst (fst hd) s, snd hd) (subst res (shift s)))
+    = admit()
+
+let app_tot_arrow1 (#hd: (R.term * R.aqualv))
+                   (#res: R.term) 
+                   (#g:R.env)
+                   (#head: R.term)
+                   (head_typing: RT.typing g head (mk_tot_arrow1 hd res))
+                   (#arg: R.term)
+                   (arg_typing: RT.typing g arg (ty_of hd))
+  : GTot (RT.typing g (R.mk_app head [arg, qual_of hd])
+                      (subst res [RT.OpenWith arg, 0]))
   = let ty,q = hd in
     RT.open_with_spec res arg;
-    RT.T_App _ _ _ (mk_binder ty q) res u_unk head_typing arg_typing
+    let d : RT.typing g (R.mk_app head [arg, qual_of hd])
+                        (RT.open_or_close_term' res
+                                                (RT.OpenWith arg) 0)
+        = RT.T_App _ _ _ (mk_binder ty q) res u_unk head_typing arg_typing
+    in
+    d
 
-let open_tot_arrow (formals:list (R.term & R.aqualv) { Cons? formals })
-                   (res:R.term)
-                   (arg:R.term)
-                   (i:nat)
-  : Lemma (let (ty,q)::tl = formals in
-           RT.open_or_close_term' (mk_tot_arrow formals res) (RT.OpenWith arg) i ==
-           mk_tot_arrow1 ((RT.open_or_close_term' ty (RT.OpenWith arg) i, q))
-                         (RT.open_or_close_term' (mk_tot_arrow tl res) (RT.OpenWith arg) (i + 1)))
-  = ()
-                         
-                   
+let merge_subst_d (#g:R.env) (#head:R.term) (#t:R.term) (#s0 #s1:sub)
+                  (d:RT.typing g head (subst (subst t s0) s1))
+  : RT.typing g head (subst t (s0 @ s1))
+  = merge_subst t s0 s1;
+    d
+
+let open_tot_arrow (#formals:list (R.term & R.aqualv) { Cons? formals })
+                   (#res:R.term)
+                   (#g:R.env) (#e:R.term)
+                   (#s:sub)
+                   (d:RT.typing g e (subst (mk_tot_arrow formals res) s))
+  : RT.typing g e (mk_tot_arrow1 (subst (ty_of (L.hd formals)) s, qual_of (L.hd formals))
+                                 (subst (mk_tot_arrow (L.tl formals) res) (shift s)))
+  = subst_arrow (L.hd formals) (mk_tot_arrow (L.tl formals) res) s;
+    d
+
+let as_tot_arrow1 (#formals:list (R.term & R.aqualv) { Cons? formals })
+                  (#res:R.term)
+                  (#g:R.env)
+                  (#head:R.term)
+                  (head_typing: RT.typing g head (mk_tot_arrow formals res))
+  : RT.typing g head (mk_tot_arrow1 (L.hd formals) (mk_tot_arrow (L.tl formals) res))
+  = head_typing
+
+
+#push-options "--query_stats"
+let app_typing (#formals:list (R.term & R.aqualv) { Cons? formals })
+               (#res:R.term)
+               (#g:R.env)
+               (#s:sub)
+               (#head:R.term)
+               (d:RT.typing g head (subst (mk_tot_arrow formals res) s))
+               (#arg:R.term)
+               (d':RT.typing g arg (subst (ty_of (L.hd formals)) s))
+   : GTot (RT.typing g (R.mk_app head [(arg, qual_of (L.hd formals))]) 
+                       (subst (mk_tot_arrow (L.tl formals) res) (shift s @ [RT.OpenWith arg, 0])))
+   = merge_subst_d (app_tot_arrow1 (open_tot_arrow d) d')
+
+let subst_tm_type_id (u:R.universe) (s:sub) 
+  : Lemma (subst (RT.tm_type u) s == RT.tm_type u)
+          [SMTPat (subst (RT.tm_type u) s)]
+  = admit()
+
+let subst_tm_vprop (s:sub) 
+  : Lemma (subst vprop_tm s == vprop_tm)
+          [SMTPat (subst vprop_tm s)]
+  = admit()
+
+let mk_vprop_arrow (c:pure_comp_st) : pure_term = 
+  let t : pure_term = comp_res c in
+  (Tm_Arrow (comp_res c) (C_Tot Tm_VProp))
+
+#push-options "--fuel 4 --ifuel 2 --z3rlimit_factor 2"
 let elab_bind_typing (f:fstar_top_env)
                      (g:env)
                      (x:var)
@@ -1685,8 +1865,18 @@ let elab_bind_typing (f:fstar_top_env)
     let head_typing : RT.typing _ _ (bind_type u1 u2) = RT.T_UInst rg bind_fv [u1;u2] in
     let (| _, c1_typing |) = type_correctness _ _ _ r1_typing in
     let t1_typing, pre_typing, post_typing = inversion_of_stt_typing _ _ _ _ c1_typing in
-    let t1_typing : RT.typing rg (elab_pure (comp_res c1)) (RT.tm_type u1) = t1_typing in
-    let head_t1_typing = app_typing (L.hd (bind_formals u1 u2)) _ _ _ head_typing  _ t1_typing in
+    let t1 = (elab_pure (comp_res c1)) in
+    let t2 = (elab_pure (comp_res c2)) in
+    let t1_typing : RT.typing rg t1 (RT.tm_type u1) = t1_typing in
+    let _ = 
+      //inst_bind_post1
+        (inst_bind_pre 
+          (inst_bind_t2 
+            (inst_bind_t1 head_typing t1_typing)
+            t2_typing)
+          pre_typing)
+        //post_typing
+    in
     admit()
 
 
