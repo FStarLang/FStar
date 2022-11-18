@@ -26,13 +26,13 @@ let bind_lid = ["Steel"; "ST"; "Util"; "bind_stt"]
 let bind_fv = R.pack_fv bind_lid
 let bind_univ_inst u1 u2 = R.pack_ln (R.Tv_UInst bind_fv [u1;u2])
 let mk_total t = R.C_Total t (R.pack_universe R.Uv_Unk) []
-let mk_binder t q = R.pack_binder (R.pack_bv (RT.make_bv 0 t)) q []
+let binder_of_t_q t q = RT.mk_binder "_" 0 t q
 let bound_var i : R.term = R.pack_ln (R.Tv_BVar (R.pack_bv (RT.make_bv i (R.pack_ln R.Tv_Unknown))))
 let mk_name i : R.term = R.pack_ln (R.Tv_Var (R.pack_bv (RT.make_bv i (R.pack_ln R.Tv_Unknown)))) 
 let arrow_dom = (R.term & R.aqualv)
 let mk_tot_arrow1 (f:arrow_dom) (out:R.term) : R.term =
   let ty, q = f in
-  R.pack_ln (R.Tv_Arrow (mk_binder ty q) (R.pack_comp (mk_total out)))
+  R.pack_ln (R.Tv_Arrow (binder_of_t_q ty q) (R.pack_comp (mk_total out)))
 let rec mk_tot_arrow (formals:list (R.term & R.aqualv)) (res:R.term) : R.term =
   match formals with
   | [] -> res
@@ -402,7 +402,7 @@ let (let?) (f:option 'a) (g: 'a -> option 'b) : option 'b =
   | None -> None
   | Some x -> g x
 
-let mk_abs ty t =  R.pack_ln (R.Tv_Abs (RT.as_binder 0 ty) t)
+let mk_abs ty t =  R.pack_ln (R.Tv_Abs (binder_of_t_q ty R.Q_Explicit) t)
 
 let mk_st (u:universe) (res pre post:R.term)
   : Tot R.term 
@@ -438,7 +438,7 @@ let rec elab_term (top:term)
       let? c = elab_comp c in
       Some (R.pack_ln 
               (R.Tv_Arrow 
-                (RT.as_binder 0 t) 
+                (binder_of_t_q t R.Q_Explicit)
                 (R.pack_comp (R.C_Total c (R.pack_universe R.Uv_Unk) []))))
 
     | Tm_Let t e1 e2 ->
@@ -472,7 +472,7 @@ let rec elab_term (top:term)
     | Tm_ForallSL t body ->    
       let? t = elab_term t in
       let? b = elab_term body in
-      let body = R.pack_ln (R.Tv_Abs (RT.as_binder 0 t) b) in
+      let body = R.pack_ln (R.Tv_Abs (binder_of_t_q t R.Q_Explicit) b) in
       let head = 
         let head_lid = 
           if Tm_ExistsSL? top
@@ -1788,7 +1788,7 @@ let app_tot_arrow1 (#hd: (R.term * R.aqualv))
     let d : RT.typing g (R.mk_app head [arg, qual_of hd])
                         (RT.open_or_close_term' res
                                                 (RT.OpenWith arg) 0)
-        = RT.T_App _ _ _ (mk_binder ty q) res u_unk head_typing arg_typing
+        = RT.T_App _ _ _ (binder_of_t_q ty q) res u_unk head_typing arg_typing
     in
     d
 
@@ -1844,7 +1844,7 @@ let mk_vprop_arrow (c:pure_comp_st) : pure_term =
   let t : pure_term = comp_res c in
   (Tm_Arrow (comp_res c) (C_Tot Tm_VProp))
 
-#push-options "--fuel 4 --ifuel 2 --z3rlimit_factor 2"
+#push-options "--fuel 2 --ifuel 1"
 let elab_bind_typing (f:fstar_top_env)
                      (g:env)
                      (x:var)
@@ -1869,13 +1869,13 @@ let elab_bind_typing (f:fstar_top_env)
     let t2 = (elab_pure (comp_res c2)) in
     let t1_typing : RT.typing rg t1 (RT.tm_type u1) = t1_typing in
     let _ = 
-      //inst_bind_post1
-        (inst_bind_pre 
+      inst_bind_post1
+      (inst_bind_pre 
           (inst_bind_t2 
             (inst_bind_t1 head_typing t1_typing)
             t2_typing)
           pre_typing)
-        //post_typing
+      post_typing
     in
     admit()
 
@@ -1908,19 +1908,14 @@ let rec soundness (f:fstar_top_env)
         well_typed_terms_are_ln _ _ _ r_body_typing;
         open_close_inverse r_body x;
         elab_comp_close_commute c x;      
-        let d 
-          : RT.typing (extend_env_l f g)
-                      (mk_abs r_ty (RT.close_term r_body x))
-                      (elab_pure (Tm_Arrow ty (close_pure_comp c x)))
-          = RT.T_Abs (extend_env_l f g)
+        RT.T_Abs (extend_env_l f g)
                    x
                    r_ty
                    (RT.close_term r_body x)
                    r_c
-                   (elab_universe u)
+                   (elab_universe u) _ _
                    r_t_typing
-                   r_body_typing in
-        d
+                   r_body_typing
     in
     match d with
     | T_Tot _ _ _ d -> d
@@ -1939,7 +1934,7 @@ let rec soundness (f:fstar_top_env)
       in
       let r_arg_typing = soundness _ _ _ _ arg_typing in
       elab_comp_open_commute res arg;
-      RT.T_App _ _ _ (RT.as_binder 0 (elab_pure formal))
+      RT.T_App _ _ _ (binder_of_t_q (elab_pure formal) R.Q_Explicit)
                      (elab_pure_comp res)
                      ((R.pack_universe R.Uv_Unk))
                      r_head_typing

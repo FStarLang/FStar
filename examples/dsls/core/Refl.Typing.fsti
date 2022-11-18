@@ -64,17 +64,15 @@ val lookup_fvar_extend_env (g:env) (x:fv) (us:universes) (y:var) (ty:term)
     (ensures lookup_fvar_uinst (extend_env g y ty) x us == lookup_fvar_uinst g x us)
     [SMTPat (lookup_fvar_uinst (extend_env g y ty) x us)]
 
-let as_binder (x:var) (ty:term)
-  : binder 
+let mk_binder (pp_name:string) (x:var) (ty:term) (q:aqualv)
   = pack_binder
-      (pack_bv ({bv_ppname="";
+      (pack_bv ({bv_ppname=pp_name;
                  bv_index=x;
                  bv_sort=ty}))
-      Q_Explicit
+      q
       []
 
 let bv_index (x:bv) : int = (inspect_bv x).bv_index
-
 
 let binder_sort (b:binder) =
   let bv, _ = inspect_binder b in 
@@ -83,10 +81,6 @@ let binder_sort (b:binder) =
 let binder_qual (b:binder) =
   let _, (q, _) = inspect_binder b in q
 
-let binder_sort_lemma (x:var) (ty:term)
-  : Lemma (binder_sort (as_binder x ty) == ty)
-          [SMTPat (binder_sort (as_binder x ty))]
-  = ()          
 
 //replace BV 0 in t with v
 noeq
@@ -461,10 +455,12 @@ type typing : env -> term -> term -> Type0 =
      body:term ->
      body_ty:term ->
      u:universe ->
+     pp_name:string ->
+     q:aqualv ->
      typing g ty (tm_type u) ->
      typing (extend_env g x ty) (open_term body x) body_ty ->
-     typing g (pack_ln (Tv_Abs (as_binder 0 ty) body))
-              (pack_ln (Tv_Arrow (as_binder 0 ty) 
+     typing g (pack_ln (Tv_Abs (mk_binder pp_name 0 ty q) body))
+              (pack_ln (Tv_Arrow (mk_binder pp_name 0 ty q)
                                  (mk_total (close_term body_ty x))))
 
   | T_App :
@@ -486,9 +482,11 @@ type typing : env -> term -> term -> Type0 =
      t2:term ->
      u1:universe ->
      u2:universe ->
+     pp_name:string ->
+     q:aqualv ->
      typing g t1 (tm_type u1) ->
      typing (extend_env g x t1) (open_term t2 x) (tm_type u2) ->
-     typing g (pack_ln (Tv_Arrow (as_binder 0 t1) (mk_total t2)))
+     typing g (pack_ln (Tv_Arrow (mk_binder pp_name 0 t1 q) (mk_total t2)))
               (tm_type (u_max u1 u2))
 
   | T_Refine:
