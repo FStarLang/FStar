@@ -390,6 +390,10 @@ type indexed_effect_binder_kind =
 //
 // Kind of an indexed effect combinator
 //
+// Substitutive invariant applies only to subcomp and ite combinators,
+//   where the effect indices of the two computations could be the same,
+//   and hence bound only once in the combinator definitions
+//
 type indexed_effect_combinator_kind =
   | Substitutive_combinator of list indexed_effect_binder_kind
   | Substitutive_invariant_combinator
