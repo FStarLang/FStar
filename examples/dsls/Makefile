@@ -1,6 +1,6 @@
 DIRS=core stlc bool_refinement dependent_bool_refinement mini_steel
-SRC_FILES=$(wildcard $(addsuffix /*.fst, $(DIRS)))
-INCLUDE_PATH=$(addprefix --include , $(DIRS))
+SRC_FILES=$(wildcard *.fst)
+INCLUDE_PATH=$(addprefix --include , ../core)
 OUT_DIR=output
 FSTAR=fstar.exe $(INCLUDE_PATH) --cache_checked_modules --cache_dir $(OUT_DIR) --odir $(OUT_DIR) $(OTHERFLAGS) --already_cached Prims,FStar,Steel
 

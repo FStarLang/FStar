@@ -43,14 +43,18 @@ let inspect_pack_comp (t:R.comp_view)
           [SMTPat (R.inspect_comp (R.pack_comp t))]
   = R.inspect_pack_comp_inv t
   
+assume
 val lookup_bvar (e:env) (x:int) : option term
 
+assume
 val lookup_fvar_uinst (e:R.env) (x:R.fv) (us:list R.universe) : option R.term
 
 let lookup_fvar (e:env) (x:fv) : option term = lookup_fvar_uinst e x []
 
+assume
 val extend_env (e:env) (x:var) (ty:term) : env
 
+assume
 val lookup_bvar_extend_env (g:env) (x y:var) (ty:term)
   : Lemma 
     (ensures (
@@ -59,6 +63,7 @@ val lookup_bvar_extend_env (g:env) (x y:var) (ty:term)
            else lookup_bvar (extend_env g x ty) y == lookup_bvar g y))
     [SMTPat (lookup_bvar (extend_env g x ty) y)]
 
+assume
 val lookup_fvar_extend_env (g:env) (x:fv) (us:universes) (y:var) (ty:term)
   : Lemma 
     (ensures lookup_fvar_uinst (extend_env g y ty) x us == lookup_fvar_uinst g x us)
@@ -90,6 +95,7 @@ type open_or_close =
   | CloseVar of var
   | Rename   : var -> var -> open_or_close
 
+assume
 val open_or_close_ctx_uvar_and_subst (c:ctx_uvar_and_subst) (v:open_or_close) (i:nat) 
   : ctx_uvar_and_subst
 
@@ -312,27 +318,35 @@ let make_bv (n:int) (t:term) = { bv_ppname = "_"; bv_index = n; bv_sort = t}
 let var_as_bv (v:int) = pack_bv (make_bv v (pack_ln Tv_Unknown))
 let var_as_term (v:var) = pack_ln (Tv_Var (var_as_bv v))
 
+assume
 val open_with (t:term) (v:term)
   : term
   
+assume
 val open_with_spec (t v:term)
   : Lemma (open_with t v == open_or_close_term' t (OpenWith v) 0)
 
+assume
 val open_term (t:term) (v:var) 
   : term
 
+assume
 val open_term_spec (t:term) (v:var)
   : Lemma (open_term t v == open_or_close_term' t (OpenWithVar v) 0)
   
+assume
 val close_term (t:term) (v:var) 
   : term
 
+assume
 val close_term_spec (t:term) (v:var)
   : Lemma (close_term t v == open_or_close_term' t (CloseVar v) 0)
 
+assume
 val rename (t:term) (x y:var)
   : term
 
+assume
 val rename_spec (t:term) (x y:var)
   : Lemma (rename t x y == open_or_close_term' t (Rename x y) 0)
   
@@ -372,11 +386,15 @@ type constant_typing: vconst -> term -> Type0 =
   | CT_True: constant_typing C_True bool_ty
   | CT_False: constant_typing C_False bool_ty  
 
+assume
 val subtyping_token (e:env) (t0 t1:term) : Type0
+assume
 val check_subtyping (e:env) (t0 t1:term)
   : FStar.Tactics.Tac (option (subtyping_token e t0 t1))
 
+assume
 val equiv_token (e:env) (t0 t1:term) : Type0
+assume
 val check_equiv (e:env) (t0 t1:term)
   : FStar.Tactics.Tac (option (equiv_token e t0 t1))
 
@@ -599,6 +617,7 @@ let rec extend_env_l (g:env) (bs:bindings)
     | [] -> g
     | (x,t)::bs -> extend_env (extend_env_l g bs) x t
 
+assume
 val subtyping_token_renaming (g:env)
                              (bs0:bindings)
                              (bs1:bindings)
@@ -611,6 +630,7 @@ val subtyping_token_renaming (g:env)
                     (rename t0 x y)
                     (rename t1 x y)
 
+assume
 val subtyping_token_weakening (g:env)
                               (bs0:bindings)
                               (bs1:bindings)
@@ -793,9 +813,11 @@ and ln'_match_returns (m:match_returns_ascription) (i:int)
 let ln (t:term) = ln' t (-1)
 let ln_comp (c:comp) = ln'_comp c (-1)
 
+assume
 val well_typed_terms_are_ln (g:R.env) (e:R.term) (t:R.term) (_:typing g e t)
   : Lemma (ensures ln e)
 
+assume
 val type_correctness (g:R.env) (e:R.term) (t:R.term) (_:typing g e t)
   : GTot (u:R.universe & typing g t (tm_type u))
 
