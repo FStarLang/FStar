@@ -6283,9 +6283,18 @@ and (tc_abs :
                                                 env1 e lc t1 use_eq in
                                             (match uu___10 with
                                              | (e1, uu___11, guard') ->
+                                                 let guard'1 =
+                                                   let uu___12 =
+                                                     FStar_TypeChecker_Err.subtyping_failed
+                                                       env1
+                                                       lc.FStar_TypeChecker_Common.res_typ
+                                                       t1 () in
+                                                   FStar_TypeChecker_Util.label_guard
+                                                     e1.FStar_Syntax_Syntax.pos
+                                                     uu___12 guard' in
                                                  let uu___12 =
                                                    FStar_TypeChecker_Env.conj_guard
-                                                     guard1 guard' in
+                                                     guard1 guard'1 in
                                                  (e1, t_annot, uu___12))))
                               | FStar_Pervasives_Native.None ->
                                   (e, tfun_computed, guard1) in
