@@ -2030,6 +2030,19 @@ let (maybe_register_plugin :
                   FStar_Compiler_List.collect mk_registration
                     (FStar_Pervasives_Native.snd lbs)
               | uu___3 -> []))
+let (lb_irrelevant : env_t -> FStar_Syntax_Syntax.letbinding -> Prims.bool) =
+  fun g ->
+    fun lb ->
+      ((let uu___ = FStar_Extraction_ML_UEnv.tcenv_of_uenv g in
+        FStar_TypeChecker_Env.non_informative uu___
+          lb.FStar_Syntax_Syntax.lbtyp)
+         &&
+         (let uu___ =
+            FStar_Extraction_ML_Term.is_arity g lb.FStar_Syntax_Syntax.lbtyp in
+          Prims.op_Negation uu___))
+        &&
+        (FStar_Syntax_Util.is_pure_or_ghost_effect
+           lb.FStar_Syntax_Syntax.lbeff)
 let rec (extract_sig :
   env_t ->
     FStar_Syntax_Syntax.sigelt ->
@@ -2071,6 +2084,9 @@ let rec (extract_sig :
                | FStar_Syntax_Syntax.Sig_fail uu___5 ->
                    failwith "impossible: trying to extract Sig_fail"
                | FStar_Syntax_Syntax.Sig_new_effect uu___5 -> (g, [])
+               | FStar_Syntax_Syntax.Sig_let ((uu___5, lbs), uu___6) when
+                   FStar_Compiler_List.for_all (lb_irrelevant g) lbs ->
+                   (g, [])
                | FStar_Syntax_Syntax.Sig_declare_typ (lid, univs, t) when
                    FStar_Extraction_ML_Term.is_arity g t ->
                    let uu___5 =

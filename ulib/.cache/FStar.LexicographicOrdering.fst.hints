@@ -1,5 +1,5 @@
 [
-  "√ç~éﬂ^âﬂI‚ ˛VCnJ",
+  "3S,â\u000e]9`¶–&îYoB\u0004",
   [
     [
       "FStar.LexicographicOrdering.__proj__Left_lex__item__x1",
@@ -181,7 +181,7 @@
         "well_founded_ordering_on_codomain_FStar.WellFounded.AccIntro"
       ],
       0,
-      "d663a1cfb5cfcd50c0b9287918c0ecb9"
+      "5c8c50e667613dc9337c3a8bc010a702"
     ],
     [
       "FStar.LexicographicOrdering.lex_t_wf",
@@ -257,7 +257,7 @@
         "well_founded_ordering_on_codomain_FStar.WellFounded.AccIntro"
       ],
       0,
-      "6bdacddcebebef638d12a347e4197552"
+      "dda759d266758980b74dfe6062dd1517"
     ],
     [
       "FStar.LexicographicOrdering.__proj__Left_sym__item__x1",
