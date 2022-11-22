@@ -2262,10 +2262,25 @@ and tc_abs env (top:term) (bs:binders) (body:term) : term * lcomp * guard_t =
         body, cbody, Env.conj_guard guard_body g_lc
     in
 
+    if Env.debug env <| Options.Extreme
+    then BU.print1 "tc_abs: guard_body: %s\n"
+           (Rel.guard_to_string env guard_body);
+
     let guard = if env.top_level
                 || not (Options.should_verify (string_of_lid env.curmodule))
-                then Env.conj_guard (Rel.discharge_guard env g_env)
-                                    (Rel.discharge_guard envbody guard_body)
+                then begin
+                  if env.lax ||
+                     env.phase1
+                  then Env.conj_guard (Rel.discharge_guard env g_env)
+                                      (Rel.discharge_guard envbody guard_body)
+                  else
+                    let g_env, g_env_logical = TcComm.split_guard g_env in
+                    let guard_body, guard_body_logical = TcComm.split_guard guard_body in
+                    Rel.force_trivial_guard env (Env.conj_guard g_env guard_body);
+                    Rel.force_trivial_guard env g_env_logical;
+                    Rel.force_trivial_guard envbody guard_body_logical;
+                    Env.trivial_guard
+                end
                 else let guard = Env.conj_guard g_env (Env.close_guard env (bs@letrec_binders) guard_body) in
                      guard in
 
@@ -2423,7 +2438,7 @@ and check_application_args env head (chead:comp) ghead args expected_topt : term
               But this leads to a massive blow up in the size of generated VCs (cf issue #971)
               arg_rets below are those xn...x1 bound variables
        *)
-      let cres =
+      let cres, inserted_return_in_cres =
         let head_is_pure_and_some_arg_is_effectful =
             TcComm.is_pure_or_ghost_lcomp chead
             && (BU.for_some (fun (_, _, lc) -> not (TcComm.is_pure_or_ghost_lcomp lc)
@@ -2435,9 +2450,9 @@ and check_application_args env head (chead:comp) ghead args expected_topt : term
         && (head_is_pure_and_some_arg_is_effectful)
             // || Option.isSome (Env.expected_typ env))
         then let _ = if Env.debug env Options.Extreme then BU.print1 "(a) Monadic app: Return inserted in monadic application: %s\n" (Print.term_to_string term) in
-             TcUtil.maybe_assume_result_eq_pure_term env term cres
+             TcUtil.maybe_assume_result_eq_pure_term env term cres, true
         else let _ = if Env.debug env Options.Extreme then BU.print1 "(a) Monadic app: No return inserted in monadic application: %s\n" (Print.term_to_string term) in
-             cres
+             cres, false
       in
 
       (* 1. We compute the final computation type comp  *)
@@ -2491,9 +2506,15 @@ and check_application_args env head (chead:comp) ghead args expected_topt : term
              //
              //Push first (List.length arg_rets_names_opt - i) names in the env
              //
-             let env = push_option_names_to_env env
-               (List.splitAt (List.length arg_rets_names_opt - i) arg_rets_names_opt
-                |> fst) in
+             let env =
+               // add arg_rets_names to env only if needed
+               // extra names in the env interfere with flex-flex queries in Rel,
+               //   as they may result in uvar restrictions etc.
+               if inserted_return_in_cres
+               then push_option_names_to_env env
+                      (List.splitAt (List.length arg_rets_names_opt - i) arg_rets_names_opt
+                       |> fst)
+                else env in
               if TcComm.is_pure_or_ghost_lcomp c
               then i+1,TcUtil.bind e.pos env (Some e) c (x, out_c)
               else i+1,TcUtil.bind e.pos env None c (x, out_c))
@@ -2667,7 +2688,7 @@ and check_application_args env head (chead:comp) ghead args expected_topt : term
                                                             (Range.use_range t.pos))
             in
             let varg, _, implicits =
-              new_implicit_var_aux "Instantiating meta argument in application" r env t Strict (Some ctx_uvar_meta)
+              Env.new_implicit_var_aux "Instantiating meta argument in application" r env t Strict (Some ctx_uvar_meta)
             in
             let subst = NT(x, varg)::subst in
             let aq = U.aqual_of_binder (List.hd bs) in

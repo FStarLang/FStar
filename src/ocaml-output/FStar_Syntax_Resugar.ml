@@ -1349,9 +1349,8 @@ let rec (resugar_term' :
            | FStar_Syntax_Syntax.Meta_desugared i -> resugar_meta_desugared i
            | FStar_Syntax_Syntax.Meta_named t1 ->
                mk (FStar_Parser_AST.Name t1)
-           | FStar_Syntax_Syntax.Meta_monadic (uu___1, t1) ->
-               resugar_term' env e
-           | FStar_Syntax_Syntax.Meta_monadic_lift (uu___1, uu___2, t1) ->
+           | FStar_Syntax_Syntax.Meta_monadic uu___1 -> resugar_term' env e
+           | FStar_Syntax_Syntax.Meta_monadic_lift uu___1 ->
                resugar_term' env e)
       | FStar_Syntax_Syntax.Tm_unknown -> mk FStar_Parser_AST.Wild
 and (resugar_ascription :
@@ -2539,10 +2538,13 @@ let (resugar_layered_eff_combinators :
   fun env ->
     fun combs ->
       let resugar name uu___ =
+        match uu___ with
+        | (ts, uu___1, uu___2) -> resugar_tscheme'' env name ts in
+      let resugar2 name uu___ =
         match uu___ with | (ts, uu___1) -> resugar_tscheme'' env name ts in
-      let uu___ = resugar "repr" combs.FStar_Syntax_Syntax.l_repr in
+      let uu___ = resugar2 "repr" combs.FStar_Syntax_Syntax.l_repr in
       let uu___1 =
-        let uu___2 = resugar "return" combs.FStar_Syntax_Syntax.l_return in
+        let uu___2 = resugar2 "return" combs.FStar_Syntax_Syntax.l_return in
         let uu___3 =
           let uu___4 = resugar "bind" combs.FStar_Syntax_Syntax.l_bind in
           let uu___5 =
@@ -2653,9 +2655,12 @@ let (resugar_eff_decl' :
           let eff_name =
             FStar_Ident.ident_of_lid ed.FStar_Syntax_Syntax.mname in
           let uu___ =
+            let sig_ts =
+              FStar_Syntax_Util.effect_sig_ts
+                ed.FStar_Syntax_Syntax.signature in
             let uu___1 =
-              FStar_Compiler_Effect.op_Bar_Greater
-                ed.FStar_Syntax_Syntax.signature FStar_Pervasives_Native.snd in
+              FStar_Compiler_Effect.op_Bar_Greater sig_ts
+                FStar_Pervasives_Native.snd in
             FStar_Syntax_Subst.open_term ed.FStar_Syntax_Syntax.binders
               uu___1 in
           match uu___ with
@@ -2898,22 +2903,22 @@ let (resugar_sigelt' :
           FStar_Pervasives_Native.None
       | FStar_Syntax_Syntax.Sig_datacon uu___ -> FStar_Pervasives_Native.None
       | FStar_Syntax_Syntax.Sig_polymonadic_bind
-          (m, n, p, (uu___, t), uu___1) ->
-          let uu___2 =
-            let uu___3 =
-              let uu___4 =
-                let uu___5 = resugar_term' env t in (m, n, p, uu___5) in
-              FStar_Parser_AST.Polymonadic_bind uu___4 in
-            decl'_to_decl se uu___3 in
-          FStar_Pervasives_Native.Some uu___2
+          (m, n, p, (uu___, t), uu___1, uu___2) ->
+          let uu___3 =
+            let uu___4 =
+              let uu___5 =
+                let uu___6 = resugar_term' env t in (m, n, p, uu___6) in
+              FStar_Parser_AST.Polymonadic_bind uu___5 in
+            decl'_to_decl se uu___4 in
+          FStar_Pervasives_Native.Some uu___3
       | FStar_Syntax_Syntax.Sig_polymonadic_subcomp
-          (m, n, (uu___, t), uu___1) ->
-          let uu___2 =
-            let uu___3 =
-              let uu___4 = let uu___5 = resugar_term' env t in (m, n, uu___5) in
-              FStar_Parser_AST.Polymonadic_subcomp uu___4 in
-            decl'_to_decl se uu___3 in
-          FStar_Pervasives_Native.Some uu___2
+          (m, n, (uu___, t), uu___1, uu___2) ->
+          let uu___3 =
+            let uu___4 =
+              let uu___5 = let uu___6 = resugar_term' env t in (m, n, uu___6) in
+              FStar_Parser_AST.Polymonadic_subcomp uu___5 in
+            decl'_to_decl se uu___4 in
+          FStar_Pervasives_Native.Some uu___3
 let (empty_env : FStar_Syntax_DsEnv.env) =
   FStar_Syntax_DsEnv.empty_env FStar_Parser_Dep.empty_deps
 let noenv : 'a . (FStar_Syntax_DsEnv.env -> 'a) -> 'a = fun f -> f empty_env

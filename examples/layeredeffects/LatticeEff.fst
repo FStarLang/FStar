@@ -5,8 +5,6 @@ open FStar.List.Tot
 open FStar.All
 module H = FStar.Heap
 
-#set-options "--print_universes --print_implicits --print_effect_args"
-
 // GM: Force a type equality by SMT
 let coerce #a #b (x:a{a == b}) : b = x
 
@@ -124,36 +122,23 @@ let if_then_else
   : Type
   = repr a (labs1@labs2)
 
-[@@allow_informative_binders]
 total
 reifiable
 reflectable
-layered_effect {
-  EFF : a:Type -> list eff_label  -> Effect
-  with
-  repr         = repr;
-  return       = return;
-  bind         = bind;
-  subcomp      = subcomp;
-  if_then_else = if_then_else
+effect {
+  EFF (a:Type) (_:list eff_label)
+  with {repr; return; bind; subcomp; if_then_else}
 }
-
-unfold
-let pure_monotonic #a (wp : pure_wp a) : Type =
-  forall p1 p2. (forall x. p1 x ==> p2 x) ==> wp p1 ==> wp p2
-
-//unfold
-//let sp #a (wp : pure_wp a) : pure_post a =
-//  fun x -> ~ (wp (fun y -> ~(x == y)))
 
 let lift_pure_eff
  (a:Type)
  (wp : pure_wp a)
- (f : eqtype_as_type unit -> PURE a wp)
+ (f : unit -> PURE a wp)
  : Pure (repr a [])
-        (requires (wp (fun _ -> True) /\ pure_monotonic wp))
+        (requires (wp (fun _ -> True)))
         (ensures (fun _ -> True))
- = fun () -> f ()
+ = FStar.Monotonic.Pure.elim_pure_wp_monotonicity wp;
+   fun () -> f ()
  
 sub_effect PURE ~> EFF = lift_pure_eff
 

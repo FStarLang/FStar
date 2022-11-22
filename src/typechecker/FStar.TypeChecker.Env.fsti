@@ -100,7 +100,14 @@ type lift_comp_t = env -> comp -> comp * guard_t
  * AR: Env maintains polymonadic binds as functions of type polymonadic_bind_t
  *     read as: env -> c1 -> x -> c2 -> flags -> r -> (c * g)
  *)
-and polymonadic_bind_t = env -> comp_typ -> option bv -> comp_typ -> list cflag -> Range.range -> comp * guard_t
+and polymonadic_bind_t =
+  env ->
+  comp_typ ->
+  option bv ->
+  comp_typ ->
+  list cflag ->
+  Range.range ->
+  comp * guard_t
 
 and mlift = {
   mlift_wp:lift_comp_t;
@@ -141,7 +148,7 @@ and effects = {
   order :list edge;                                       (* transitive closure of the order in the signature *)
   joins :list (lident * lident * lident * mlift * mlift); (* least upper bounds *)
   polymonadic_binds :list (lident * lident * lident * polymonadic_bind_t);  (* (m, n) | p *)
-  polymonadic_subcomps :list (lident * lident * tscheme);  (* m <: n *)
+  polymonadic_subcomps :list (lident * lident * tscheme * S.indexed_effect_combinator_kind);  (* m <: n *)
 }
 
 and env = {
@@ -220,7 +227,8 @@ and solver_t = {
 }
 and tcenv_hooks =
   { tc_push_in_gamma_hook : (env -> either binding sig_binding -> unit) }
-and core_check_t = 
+
+and core_check_t =
   env -> term -> typ -> bool -> either (option typ) (bool -> string)
 
 type implicit = TcComm.implicit
@@ -346,7 +354,7 @@ val push_new_effect       : env -> (eff_decl * list qualifier) -> env
 //client constructs the mlift and gives it to us
 
 val exists_polymonadic_bind: env -> lident -> lident -> option (lident * polymonadic_bind_t)
-val exists_polymonadic_subcomp: env -> lident -> lident -> option tscheme
+val exists_polymonadic_subcomp: env -> lident -> lident -> option (tscheme & S.indexed_effect_combinator_kind)
 
 //print the effects graph in dot format
 val print_effects_graph: env -> string
@@ -355,7 +363,7 @@ val update_effect_lattice  : env -> src:lident -> tgt:lident -> mlift -> env
 
 val join_opt               : env -> lident -> lident -> option (lident * mlift * mlift)
 val add_polymonadic_bind   : env -> m:lident -> n:lident -> p:lident -> polymonadic_bind_t -> env
-val add_polymonadic_subcomp: env -> m:lident -> n:lident -> tscheme -> env
+val add_polymonadic_subcomp: env -> m:lident -> n:lident -> (tscheme & S.indexed_effect_combinator_kind) -> env
 
 val push_bv               : env -> bv -> env
 val push_bvs              : env -> list bv -> env
@@ -493,7 +501,13 @@ val print_gamma : gamma -> string
  * It returns the list of the uvars, and combined guard (which essentially contains the uvars as implicits)
  *)
 
-val uvars_for_binders : env -> bs:S.binders -> substs:S.subst_t -> reason:(S.binder -> string) -> r:Range.range -> (list S.term * guard_t)
+val uvars_for_binders :
+  env ->
+  bs:S.binders ->
+  substs:S.subst_t ->
+  reason:(S.binder -> string) ->
+  r:Range.range ->
+  (list S.term * guard_t)
 
 val pure_precondition_for_trivial_post : env -> universe -> typ -> typ -> Range.range -> typ
 

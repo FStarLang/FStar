@@ -1255,6 +1255,8 @@ let type_u () : typ * universe =
     let u = U_unif <| Unionfind.univ_fresh Range.dummyRange in
     mk (Tm_type u) dummyRange, u
 
+let type_with_u (u:universe) : typ = mk (Tm_type u) dummyRange
+
 // works on anything, really
 let attr_eq a a' =
    match eq_tm a a' with
@@ -2301,6 +2303,15 @@ let smt_lemma_as_forall (t:term) (universe_of_binders: binders -> list universe)
  * Leaving it to the callers to deal with it
  *)
 
+let effect_sig_ts (sig:effect_signature) : tscheme =
+  match sig with
+  | Layered_eff_sig (_, ts)
+  | WP_eff_sig ts -> ts
+
+let apply_eff_sig (f:tscheme -> tscheme) = function
+  | Layered_eff_sig (n, ts) -> Layered_eff_sig (n, f ts)
+  | WP_eff_sig ts -> WP_eff_sig (f ts)
+
 let eff_decl_of_new_effect (se:sigelt) :eff_decl =
   match se.sigel with
   | Sig_new_effect ne -> ne
@@ -2332,12 +2343,13 @@ let apply_wp_eff_combinators (f:tscheme -> tscheme) (combs:wp_eff_combinators)
 
 let apply_layered_eff_combinators (f:tscheme -> tscheme) (combs:layered_eff_combinators)
 : layered_eff_combinators
-= let map_tuple (ts1, ts2) = (f ts1, f ts2) in
-  { l_repr = map_tuple combs.l_repr;
-    l_return = map_tuple combs.l_return;
-    l_bind = map_tuple combs.l_bind;
-    l_subcomp = map_tuple combs.l_subcomp;
-    l_if_then_else = map_tuple combs.l_if_then_else }
+= let map2 (ts1, ts2) = (f ts1, f ts2) in
+  let map3 (ts1, ts2, k) = (f ts1, f ts2, k) in
+  { l_repr = map2 combs.l_repr;
+    l_return = map2 combs.l_return;
+    l_bind = map3 combs.l_bind;
+    l_subcomp = map3 combs.l_subcomp;
+    l_if_then_else = map3 combs.l_if_then_else }
 
 let apply_eff_combinators (f:tscheme -> tscheme) (combs:eff_combinators) : eff_combinators =
   match combs with
@@ -2355,31 +2367,31 @@ let get_eff_repr (ed:eff_decl) : option tscheme =
   match ed.combinators with
   | Primitive_eff combs
   | DM4F_eff combs -> combs.repr
-  | Layered_eff combs -> combs.l_repr |> fst |> Some
+  | Layered_eff combs -> fst combs.l_repr |> Some
 
-let get_bind_vc_combinator (ed:eff_decl) : tscheme =
+let get_bind_vc_combinator (ed:eff_decl) : tscheme & option indexed_effect_combinator_kind =
   match ed.combinators with
   | Primitive_eff combs
-  | DM4F_eff combs -> combs.bind_wp
-  | Layered_eff combs -> combs.l_bind |> snd
+  | DM4F_eff combs -> combs.bind_wp, None
+  | Layered_eff combs -> Mktuple3?._2 combs.l_bind, Mktuple3?._3 combs.l_bind
 
 let get_return_vc_combinator (ed:eff_decl) : tscheme =
   match ed.combinators with
   | Primitive_eff combs
   | DM4F_eff combs -> combs.ret_wp
-  | Layered_eff combs -> combs.l_return |> snd
+  | Layered_eff combs -> snd combs.l_return
 
 let get_bind_repr (ed:eff_decl) : option tscheme =
   match ed.combinators with
   | Primitive_eff combs
   | DM4F_eff combs -> combs.bind_repr
-  | Layered_eff combs -> combs.l_bind |> fst |> Some
+  | Layered_eff combs -> Mktuple3?._1 combs.l_bind |> Some
 
 let get_return_repr (ed:eff_decl) : option tscheme =
   match ed.combinators with
   | Primitive_eff combs
   | DM4F_eff combs -> combs.return_repr
-  | Layered_eff combs -> combs.l_return |> fst |> Some
+  | Layered_eff combs -> fst combs.l_return |> Some
 
 let get_wp_trivial_combinator (ed:eff_decl) : option tscheme =
   match ed.combinators with
@@ -2387,9 +2399,9 @@ let get_wp_trivial_combinator (ed:eff_decl) : option tscheme =
   | DM4F_eff combs -> combs.trivial |> Some
   | _ -> None
 
-let get_layered_if_then_else_combinator (ed:eff_decl) : option tscheme =
+let get_layered_if_then_else_combinator (ed:eff_decl) : option (tscheme & option indexed_effect_combinator_kind) =
   match ed.combinators with
-  | Layered_eff combs -> combs.l_if_then_else |> fst |> Some
+  | Layered_eff combs -> Some (Mktuple3?._1 combs.l_if_then_else, Mktuple3?._3 combs.l_if_then_else)
   | _ -> None
 
 let get_wp_if_then_else_combinator (ed:eff_decl) : option tscheme =
@@ -2404,17 +2416,17 @@ let get_wp_ite_combinator (ed:eff_decl) : option tscheme =
   | DM4F_eff combs -> combs.ite_wp |> Some
   | _ -> None
 
-let get_stronger_vc_combinator (ed:eff_decl) : tscheme =
+let get_stronger_vc_combinator (ed:eff_decl) : tscheme & option indexed_effect_combinator_kind =
   match ed.combinators with
   | Primitive_eff combs
-  | DM4F_eff combs -> combs.stronger
-  | Layered_eff combs -> combs.l_subcomp |> snd
+  | DM4F_eff combs -> combs.stronger, None
+  | Layered_eff combs -> Mktuple3?._2 combs.l_subcomp, Mktuple3?._3 combs.l_subcomp
 
 let get_stronger_repr (ed:eff_decl) : option tscheme =
   match ed.combinators with
   | Primitive_eff _
   | DM4F_eff _ -> None
-  | Layered_eff combs -> combs.l_subcomp |> fst |> Some
+  | Layered_eff combs -> Mktuple3?._1 combs.l_subcomp |> Some
 
 let aqual_is_erasable (aq:aqual) =
   match aq with
@@ -2437,10 +2449,10 @@ let check_mutual_universes (lbs:list letbinding)
         lbs
 
 let ctx_uvar_should_check (u:ctx_uvar) = 
-    (Unionfind.find_decoration u.ctx_uvar_head).uvar_decoration_should_check
+  (Unionfind.find_decoration u.ctx_uvar_head).uvar_decoration_should_check
 
 let ctx_uvar_typ (u:ctx_uvar) = 
-    (Unionfind.find_decoration u.ctx_uvar_head).uvar_decoration_typ
+  (Unionfind.find_decoration u.ctx_uvar_head).uvar_decoration_typ
 
 let ctx_uvar_typedness_deps (u:ctx_uvar) = 
     (Unionfind.find_decoration u.ctx_uvar_head).uvar_decoration_typedness_depends_on

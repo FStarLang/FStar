@@ -122,7 +122,6 @@ let goal_with_type g t
     set_uvar_expected_typ u t;
     g
 
-    
 let bnorm_goal g = goal_with_type g (bnorm (goal_env g) (goal_type g))
 
 let tacprint  (s:string)       = BU.print1 "TAC>> %s\n" s
@@ -585,6 +584,7 @@ let __tc_ghost (e : env) (t : term) : tac (term * typ * guard_t) =
     bind get (fun ps ->
     mlog (fun () -> BU.print1 "Tac> __tc_ghost(%s)\n" (Print.term_to_string t)) (fun () ->
     let e = {e with uvar_subtyping=false} in
+    let e = {e with letrecs=[]} in
     try let t, lc, g = TcTerm.tc_tot_or_gtot_term e t in
         ret (t, lc.res_typ, g)
     with | Errors.Err (_, msg ,_)
@@ -601,6 +601,7 @@ let __tc_lax (e : env) (t : term) : tac (term * lcomp * guard_t) =
                            (Env.all_binders e |> Print.binders_to_string ", ")) (fun () ->
     let e = {e with uvar_subtyping=false} in
     let e = {e with lax = true} in
+    let e = {e with letrecs=[]} in
     try ret (TcTerm.tc_term e t)
     with | Errors.Err (_, msg, _)
          | Errors.Error (_, msg, _, _) -> begin
