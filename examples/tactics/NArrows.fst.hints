@@ -1,35 +1,25 @@
 [
-  "U\b\u000ba\u001fA(¼Œ8’2nF=\u007f",
+  "¤03—c>Í•\u001af\u0016ô\u001a×Îp",
   [
     [
-      "NArrows.uu___6",
+      "NArrows.uu___18",
       1,
       2,
       1,
       [
-        "@MaxIFuel_assumption", "@query", "equation_NArrows.n_arrow_arr",
-        "equation_NArrows.n_arrow_int", "equation_NArrows.n_arrows",
-        "equation_NArrows.n_arrows_t", "equation_NArrows.xxx",
-        "equation_Prims.nat", "int_inversion", "primitive_Prims.op_Addition",
-        "projection_inverse_BoxInt_proj_0", "typing_NArrows.xxx"
+        "@MaxIFuel_assumption", "@query",
+        "Prims_pretyping_ae567c2fb75be05905677af440075565",
+        "equation_NArrows.n_arrow_arr", "equation_NArrows.n_arrow_int",
+        "equation_NArrows.n_arrows", "equation_NArrows.xxx",
+        "equation_Prims.nat",
+        "function_token_typing_Prims.__cache_version_number__",
+        "int_inversion", "primitive_Prims.op_Addition",
+        "proj_equation_NArrows.Mkn_arrows_t_ff",
+        "projection_inverse_BoxInt_proj_0",
+        "projection_inverse_NArrows.Mkn_arrows_t_ff", "typing_NArrows.xxx"
       ],
       0,
-      "14235cc474c424c0506d3721a91970da"
-    ],
-    [
-      "NArrows.uu___6",
-      2,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query", "equation_NArrows.n_arrow_arr",
-        "equation_NArrows.n_arrow_int", "equation_NArrows.n_arrows",
-        "equation_NArrows.n_arrows_t", "equation_NArrows.xxx",
-        "equation_Prims.nat", "int_inversion", "primitive_Prims.op_Addition",
-        "projection_inverse_BoxInt_proj_0", "typing_NArrows.xxx"
-      ],
-      0,
-      "4e0f27cbabd3702538dd9c1c415f5652"
+      "135722f7209bb2a11d6ce226e5c8b812"
     ]
   ]
 ]

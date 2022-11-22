@@ -90,15 +90,16 @@ let (head_normal :
       | FStar_Syntax_Syntax.Tm_app
           ({ FStar_Syntax_Syntax.n = FStar_Syntax_Syntax.Tm_fvar fv;
              FStar_Syntax_Syntax.pos = uu___;
-             FStar_Syntax_Syntax.vars = uu___1;_},
-           uu___2)
+             FStar_Syntax_Syntax.vars = uu___1;
+             FStar_Syntax_Syntax.hash_code = uu___2;_},
+           uu___3)
           ->
-          let uu___3 =
+          let uu___4 =
             FStar_TypeChecker_Env.lookup_definition
               [FStar_TypeChecker_Env.Eager_unfolding_only]
               env.FStar_SMTEncoding_Env.tcenv
               (fv.FStar_Syntax_Syntax.fv_name).FStar_Syntax_Syntax.v in
-          FStar_Compiler_Effect.op_Bar_Greater uu___3
+          FStar_Compiler_Effect.op_Bar_Greater uu___4
             FStar_Compiler_Option.isNone
       | uu___ -> false
 let (head_redex :
@@ -580,32 +581,35 @@ let is_BitVector_primitive :
       match ((head.FStar_Syntax_Syntax.n), args) with
       | (FStar_Syntax_Syntax.Tm_fvar fv, (sz_arg, uu___)::uu___1::uu___2::[])
           ->
-          (((((((((((FStar_Syntax_Syntax.fv_eq_lid fv
-                       FStar_Parser_Const.bv_and_lid)
+          ((((((((((((FStar_Syntax_Syntax.fv_eq_lid fv
+                        FStar_Parser_Const.bv_and_lid)
+                       ||
+                       (FStar_Syntax_Syntax.fv_eq_lid fv
+                          FStar_Parser_Const.bv_xor_lid))
                       ||
                       (FStar_Syntax_Syntax.fv_eq_lid fv
-                         FStar_Parser_Const.bv_xor_lid))
+                         FStar_Parser_Const.bv_or_lid))
                      ||
                      (FStar_Syntax_Syntax.fv_eq_lid fv
-                        FStar_Parser_Const.bv_or_lid))
+                        FStar_Parser_Const.bv_add_lid))
                     ||
                     (FStar_Syntax_Syntax.fv_eq_lid fv
-                       FStar_Parser_Const.bv_add_lid))
+                       FStar_Parser_Const.bv_sub_lid))
                    ||
                    (FStar_Syntax_Syntax.fv_eq_lid fv
-                      FStar_Parser_Const.bv_sub_lid))
+                      FStar_Parser_Const.bv_shift_left_lid))
                   ||
                   (FStar_Syntax_Syntax.fv_eq_lid fv
-                     FStar_Parser_Const.bv_shift_left_lid))
+                     FStar_Parser_Const.bv_shift_right_lid))
                  ||
                  (FStar_Syntax_Syntax.fv_eq_lid fv
-                    FStar_Parser_Const.bv_shift_right_lid))
+                    FStar_Parser_Const.bv_udiv_lid))
                 ||
                 (FStar_Syntax_Syntax.fv_eq_lid fv
-                   FStar_Parser_Const.bv_udiv_lid))
+                   FStar_Parser_Const.bv_mod_lid))
                ||
                (FStar_Syntax_Syntax.fv_eq_lid fv
-                  FStar_Parser_Const.bv_mod_lid))
+                  FStar_Parser_Const.bv_ult_lid))
               ||
               (FStar_Syntax_Syntax.fv_eq_lid fv
                  FStar_Parser_Const.bv_uext_lid))
@@ -1435,6 +1439,10 @@ and (encode_term :
                               FStar_TypeChecker_Env.typeof_well_typed_tot_or_gtot_term
                                 =
                                 (uu___6.FStar_TypeChecker_Env.typeof_well_typed_tot_or_gtot_term);
+                              FStar_TypeChecker_Env.teq_nosmt_force =
+                                (uu___6.FStar_TypeChecker_Env.teq_nosmt_force);
+                              FStar_TypeChecker_Env.subtype_nosmt_force =
+                                (uu___6.FStar_TypeChecker_Env.subtype_nosmt_force);
                               FStar_TypeChecker_Env.use_bv_sorts =
                                 (uu___6.FStar_TypeChecker_Env.use_bv_sorts);
                               FStar_TypeChecker_Env.qtbl_name_and_index =
@@ -1473,7 +1481,9 @@ and (encode_term :
                               FStar_TypeChecker_Env.unif_allow_ref_guards =
                                 (uu___6.FStar_TypeChecker_Env.unif_allow_ref_guards);
                               FStar_TypeChecker_Env.erase_erasable_args =
-                                (uu___6.FStar_TypeChecker_Env.erase_erasable_args)
+                                (uu___6.FStar_TypeChecker_Env.erase_erasable_args);
+                              FStar_TypeChecker_Env.core_check =
+                                (uu___6.FStar_TypeChecker_Env.core_check)
                             }) res in
                        (match uu___5 with
                         | (pre_opt, res_t) ->
@@ -1801,17 +1811,18 @@ and (encode_term :
              | {
                  FStar_Syntax_Syntax.n = FStar_Syntax_Syntax.Tm_refine (x, f);
                  FStar_Syntax_Syntax.pos = uu___4;
-                 FStar_Syntax_Syntax.vars = uu___5;_} ->
-                 let uu___6 =
-                   let uu___7 =
-                     let uu___8 = FStar_Syntax_Syntax.mk_binder x in [uu___8] in
-                   FStar_Syntax_Subst.open_term uu___7 f in
-                 (match uu___6 with
+                 FStar_Syntax_Syntax.vars = uu___5;
+                 FStar_Syntax_Syntax.hash_code = uu___6;_} ->
+                 let uu___7 =
+                   let uu___8 =
+                     let uu___9 = FStar_Syntax_Syntax.mk_binder x in [uu___9] in
+                   FStar_Syntax_Subst.open_term uu___8 f in
+                 (match uu___7 with
                   | (b, f1) ->
-                      let uu___7 =
-                        let uu___8 = FStar_Compiler_List.hd b in
-                        uu___8.FStar_Syntax_Syntax.binder_bv in
-                      (uu___7, f1))
+                      let uu___8 =
+                        let uu___9 = FStar_Compiler_List.hd b in
+                        uu___9.FStar_Syntax_Syntax.binder_bv in
+                      (uu___8, f1))
              | uu___4 -> failwith "impossible" in
            (match uu___2 with
             | (x, f) ->
@@ -2004,8 +2015,8 @@ and (encode_term :
                  uv.FStar_Syntax_Syntax.ctx_uvar_head in
              FStar_SMTEncoding_Util.mk_Term_uvar uu___2 in
            let uu___2 =
-             encode_term_pred FStar_Pervasives_Native.None
-               uv.FStar_Syntax_Syntax.ctx_uvar_typ env ttm in
+             let uu___3 = FStar_Syntax_Util.ctx_uvar_typ uv in
+             encode_term_pred FStar_Pervasives_Native.None uu___3 env ttm in
            (match uu___2 with
             | (t_has_k, decls) ->
                 let d =
@@ -2078,18 +2089,19 @@ and (encode_term :
                             FStar_Syntax_Syntax.n =
                               FStar_Syntax_Syntax.Tm_fvar fv;
                             FStar_Syntax_Syntax.pos = uu___5;
-                            FStar_Syntax_Syntax.vars = uu___6;_},
-                          uu___7),
-                         (arg, uu___8)::[]) when
+                            FStar_Syntax_Syntax.vars = uu___6;
+                            FStar_Syntax_Syntax.hash_code = uu___7;_},
+                          uu___8),
+                         (arg, uu___9)::[]) when
                           ((FStar_Syntax_Syntax.fv_eq_lid fv
                               FStar_Parser_Const.squash_lid)
                              ||
                              (FStar_Syntax_Syntax.fv_eq_lid fv
                                 FStar_Parser_Const.auto_squash_lid))
                             &&
-                            (let uu___9 =
+                            (let uu___10 =
                                FStar_Syntax_Util.destruct_typ_as_formula arg in
-                             FStar_Compiler_Option.isSome uu___9)
+                             FStar_Compiler_Option.isSome uu___10)
                           ->
                           let dummy =
                             FStar_Syntax_Syntax.new_bv
@@ -2112,9 +2124,10 @@ and (encode_term :
                             FStar_Syntax_Syntax.n =
                               FStar_Syntax_Syntax.Tm_fvar fv;
                             FStar_Syntax_Syntax.pos = uu___5;
-                            FStar_Syntax_Syntax.vars = uu___6;_},
-                          uu___7),
-                         uu___8) when
+                            FStar_Syntax_Syntax.vars = uu___6;
+                            FStar_Syntax_Syntax.hash_code = uu___7;_},
+                          uu___8),
+                         uu___9) when
                           (Prims.op_Negation
                              env.FStar_SMTEncoding_Env.encoding_quantifier)
                             &&
@@ -2171,11 +2184,29 @@ and (encode_term :
                             FStar_Syntax_Syntax.n =
                               FStar_Syntax_Syntax.Tm_fvar fv;
                             FStar_Syntax_Syntax.pos = uu___5;
-                            FStar_Syntax_Syntax.vars = uu___6;_},
-                          uu___7),
-                         uu___8::(phi, uu___9)::[]) when
+                            FStar_Syntax_Syntax.vars = uu___6;
+                            FStar_Syntax_Syntax.hash_code = uu___7;_},
+                          uu___8),
+                         uu___9::(phi, uu___10)::[]) when
                           FStar_Syntax_Syntax.fv_eq_lid fv
                             FStar_Parser_Const.by_tactic_lid
+                          -> encode_term phi env
+                      | (FStar_Syntax_Syntax.Tm_fvar fv,
+                         uu___5::uu___6::(phi, uu___7)::[]) when
+                          FStar_Syntax_Syntax.fv_eq_lid fv
+                            FStar_Parser_Const.rewrite_by_tactic_lid
+                          -> encode_term phi env
+                      | (FStar_Syntax_Syntax.Tm_uinst
+                         ({
+                            FStar_Syntax_Syntax.n =
+                              FStar_Syntax_Syntax.Tm_fvar fv;
+                            FStar_Syntax_Syntax.pos = uu___5;
+                            FStar_Syntax_Syntax.vars = uu___6;
+                            FStar_Syntax_Syntax.hash_code = uu___7;_},
+                          uu___8),
+                         uu___9::uu___10::(phi, uu___11)::[]) when
+                          FStar_Syntax_Syntax.fv_eq_lid fv
+                            FStar_Parser_Const.rewrite_by_tactic_lid
                           -> encode_term phi env
                       | uu___5 ->
                           let uu___6 = encode_args args_e1 env in
@@ -2524,8 +2555,10 @@ and (encode_term :
                                         FStar_Syntax_Syntax.n =
                                           FStar_Syntax_Syntax.Tm_name x;
                                         FStar_Syntax_Syntax.pos = uu___7;
-                                        FStar_Syntax_Syntax.vars = uu___8;_},
-                                      uu___9)
+                                        FStar_Syntax_Syntax.vars = uu___8;
+                                        FStar_Syntax_Syntax.hash_code =
+                                          uu___9;_},
+                                      uu___10)
                                      ->
                                      FStar_Pervasives_Native.Some
                                        (x.FStar_Syntax_Syntax.sort)
@@ -2537,21 +2570,23 @@ and (encode_term :
                                         FStar_Syntax_Syntax.n =
                                           FStar_Syntax_Syntax.Tm_fvar fv;
                                         FStar_Syntax_Syntax.pos = uu___7;
-                                        FStar_Syntax_Syntax.vars = uu___8;_},
-                                      uu___9)
+                                        FStar_Syntax_Syntax.vars = uu___8;
+                                        FStar_Syntax_Syntax.hash_code =
+                                          uu___9;_},
+                                      uu___10)
                                      ->
-                                     let uu___10 =
-                                       let uu___11 =
-                                         let uu___12 =
+                                     let uu___11 =
+                                       let uu___12 =
+                                         let uu___13 =
                                            FStar_TypeChecker_Env.lookup_lid
                                              env.FStar_SMTEncoding_Env.tcenv
                                              (fv.FStar_Syntax_Syntax.fv_name).FStar_Syntax_Syntax.v in
                                          FStar_Compiler_Effect.op_Bar_Greater
-                                           uu___12
+                                           uu___13
                                            FStar_Pervasives_Native.fst in
                                        FStar_Compiler_Effect.op_Bar_Greater
-                                         uu___11 FStar_Pervasives_Native.snd in
-                                     FStar_Pervasives_Native.Some uu___10
+                                         uu___12 FStar_Pervasives_Native.snd in
+                                     FStar_Pervasives_Native.Some uu___11
                                  | FStar_Syntax_Syntax.Tm_fvar fv ->
                                      let uu___7 =
                                        let uu___8 =
@@ -2658,8 +2693,10 @@ and (encode_term :
                                                   FStar_Syntax_Syntax.pos =
                                                     uu___9;
                                                   FStar_Syntax_Syntax.vars =
-                                                    uu___10;_},
-                                                uu___11)
+                                                    uu___10;
+                                                  FStar_Syntax_Syntax.hash_code
+                                                    = uu___11;_},
+                                                uu___12)
                                                when
                                                (FStar_Compiler_List.length
                                                   formals)
@@ -3253,49 +3290,23 @@ and (encode_pat :
                                    "Unexpected encoding of constant pattern"
                              | uu___5 -> ());
                             FStar_SMTEncoding_Util.mkEq (scrutinee, tm)))
-                  | FStar_Syntax_Syntax.Pat_cons (f, args) ->
+                  | FStar_Syntax_Syntax.Pat_cons (f, uu___3, args) ->
                       let is_f =
                         let tc_name =
                           FStar_TypeChecker_Env.typ_of_datacon
                             env1.FStar_SMTEncoding_Env.tcenv
                             (f.FStar_Syntax_Syntax.fv_name).FStar_Syntax_Syntax.v in
-                        let uu___3 =
+                        let uu___4 =
                           FStar_TypeChecker_Env.datacons_of_typ
                             env1.FStar_SMTEncoding_Env.tcenv tc_name in
-                        match uu___3 with
-                        | (uu___4, uu___5::[]) ->
+                        match uu___4 with
+                        | (uu___5, uu___6::[]) ->
                             FStar_SMTEncoding_Util.mkTrue
-                        | uu___4 ->
+                        | uu___5 ->
                             FStar_SMTEncoding_Env.mk_data_tester env1
                               (f.FStar_Syntax_Syntax.fv_name).FStar_Syntax_Syntax.v
                               scrutinee in
                       let sub_term_guards =
-                        FStar_Compiler_Effect.op_Bar_Greater args
-                          (FStar_Compiler_List.mapi
-                             (fun i ->
-                                fun uu___3 ->
-                                  match uu___3 with
-                                  | (arg, uu___4) ->
-                                      let proj =
-                                        FStar_SMTEncoding_Env.primitive_projector_by_pos
-                                          env1.FStar_SMTEncoding_Env.tcenv
-                                          (f.FStar_Syntax_Syntax.fv_name).FStar_Syntax_Syntax.v
-                                          i in
-                                      let uu___5 =
-                                        FStar_SMTEncoding_Util.mkApp
-                                          (proj, [scrutinee]) in
-                                      mk_guard arg uu___5)) in
-                      FStar_SMTEncoding_Util.mk_and_l (is_f ::
-                        sub_term_guards) in
-                let rec mk_projections pat1 scrutinee =
-                  match pat1.FStar_Syntax_Syntax.v with
-                  | FStar_Syntax_Syntax.Pat_dot_term (x, uu___3) ->
-                      [(x, scrutinee)]
-                  | FStar_Syntax_Syntax.Pat_var x -> [(x, scrutinee)]
-                  | FStar_Syntax_Syntax.Pat_wild x -> [(x, scrutinee)]
-                  | FStar_Syntax_Syntax.Pat_constant uu___3 -> []
-                  | FStar_Syntax_Syntax.Pat_cons (f, args) ->
-                      let uu___3 =
                         FStar_Compiler_Effect.op_Bar_Greater args
                           (FStar_Compiler_List.mapi
                              (fun i ->
@@ -3310,8 +3321,33 @@ and (encode_pat :
                                       let uu___6 =
                                         FStar_SMTEncoding_Util.mkApp
                                           (proj, [scrutinee]) in
-                                      mk_projections arg uu___6)) in
-                      FStar_Compiler_Effect.op_Bar_Greater uu___3
+                                      mk_guard arg uu___6)) in
+                      FStar_SMTEncoding_Util.mk_and_l (is_f ::
+                        sub_term_guards) in
+                let rec mk_projections pat1 scrutinee =
+                  match pat1.FStar_Syntax_Syntax.v with
+                  | FStar_Syntax_Syntax.Pat_dot_term uu___3 -> []
+                  | FStar_Syntax_Syntax.Pat_var x -> [(x, scrutinee)]
+                  | FStar_Syntax_Syntax.Pat_wild x -> [(x, scrutinee)]
+                  | FStar_Syntax_Syntax.Pat_constant uu___3 -> []
+                  | FStar_Syntax_Syntax.Pat_cons (f, uu___3, args) ->
+                      let uu___4 =
+                        FStar_Compiler_Effect.op_Bar_Greater args
+                          (FStar_Compiler_List.mapi
+                             (fun i ->
+                                fun uu___5 ->
+                                  match uu___5 with
+                                  | (arg, uu___6) ->
+                                      let proj =
+                                        FStar_SMTEncoding_Env.primitive_projector_by_pos
+                                          env1.FStar_SMTEncoding_Env.tcenv
+                                          (f.FStar_Syntax_Syntax.fv_name).FStar_Syntax_Syntax.v
+                                          i in
+                                      let uu___7 =
+                                        FStar_SMTEncoding_Util.mkApp
+                                          (proj, [scrutinee]) in
+                                      mk_projections arg uu___7)) in
+                      FStar_Compiler_Effect.op_Bar_Greater uu___4
                         FStar_Compiler_List.flatten in
                 let pat_term1 uu___3 = encode_term pat_term env1 in
                 let pattern1 =
@@ -3657,11 +3693,27 @@ and (encode_formula :
              | (FStar_Syntax_Syntax.Tm_uinst
                 ({ FStar_Syntax_Syntax.n = FStar_Syntax_Syntax.Tm_fvar fv;
                    FStar_Syntax_Syntax.pos = uu___;
-                   FStar_Syntax_Syntax.vars = uu___1;_},
-                 uu___2),
-                uu___3::(phi2, uu___4)::[]) when
+                   FStar_Syntax_Syntax.vars = uu___1;
+                   FStar_Syntax_Syntax.hash_code = uu___2;_},
+                 uu___3),
+                uu___4::(phi2, uu___5)::[]) when
                  FStar_Syntax_Syntax.fv_eq_lid fv
                    FStar_Parser_Const.by_tactic_lid
+                 -> encode_formula phi2 env
+             | (FStar_Syntax_Syntax.Tm_fvar fv,
+                uu___::uu___1::(phi2, uu___2)::[]) when
+                 FStar_Syntax_Syntax.fv_eq_lid fv
+                   FStar_Parser_Const.rewrite_by_tactic_lid
+                 -> encode_formula phi2 env
+             | (FStar_Syntax_Syntax.Tm_uinst
+                ({ FStar_Syntax_Syntax.n = FStar_Syntax_Syntax.Tm_fvar fv;
+                   FStar_Syntax_Syntax.pos = uu___;
+                   FStar_Syntax_Syntax.vars = uu___1;
+                   FStar_Syntax_Syntax.hash_code = uu___2;_},
+                 uu___3),
+                uu___4::uu___5::(phi2, uu___6)::[]) when
+                 FStar_Syntax_Syntax.fv_eq_lid fv
+                   FStar_Parser_Const.rewrite_by_tactic_lid
                  -> encode_formula phi2 env
              | (FStar_Syntax_Syntax.Tm_fvar fv,
                 (r, uu___)::(msg, uu___1)::(phi2, uu___2)::[]) when

@@ -145,9 +145,13 @@ with all this. *)
 val t_exact : maybe_refine:bool -> set_expected_typ:bool -> term -> Tac unit
 
 (** Inner primitive for [apply], takes a boolean specifying whether
-to not ask for implicits that appear free in posterior goals, and a
+to not ask for implicits that appear free in posterior goals, a
 boolean specifying whether it's forbidden to instantiate uvars in the
-goal.
+goal, and a boolean specifying whether uvars resolved during unification
+of the goal to the term should be typechecked as part of t_apply
+
+If the third boolean is false, those uvars will be typechecked at the
+end by the tactics engine.
 
 Example: when [uopt] is true, applying transitivity to [|- a = c]
 will give two goals, [|- a = ?u] and [|- ?u = c] without asking to
@@ -162,7 +166,7 @@ instantiate [?u]. We use this in typeclass resolution.
 You may want [apply] from FStar.Tactics.Derived, or one of
 the other user facing variants.
 *)
-val t_apply : uopt:bool -> noinst:bool -> term -> Tac unit
+val t_apply : uopt:bool -> noinst:bool -> tc_resolved_uvars:bool -> term -> Tac unit
 
 (** [t_apply_lemma ni nilhs l] will solve a goal of type [squash phi]
 when [l] is a Lemma ensuring [phi]. The arguments to [l] and its
@@ -212,6 +216,18 @@ val t_trefl : allow_guards:bool -> Tac unit
 This is particularly useful to rewrite the expression on the left to the
 one on the right when the RHS is actually a unification variable. *)
 val t_commute_applied_match : unit -> Tac unit
+
+(** In case there are goals that are already solved which have
+    non-trivial typing guards, make those guards as explicit proof
+    obligations in the tactic state, solving any trivial ones by simplification.
+    See tests/bug-reports/Bug2635.fst for some examples
+
+    Update 11/14/2022: with the introduction of the core typechecker,
+    this primitive should no longer be necessary. Try using the compat pre core
+    flags, or `with_compat_pre_core` primitive if your code breaks without
+    this.*)
+[@@deprecated "This will soon be removed, please use compat pre core settings if needed"]
+val gather_or_solve_explicit_guards_for_resolved_goals : unit -> Tac unit
 
 (** [ctrl_rewrite] will traverse the current goal, and call [ctrl]
  * repeatedly on subterms. When [ctrl t] returns [(true, _)], the
@@ -277,6 +293,11 @@ val set_options : string -> Tac unit
 provided, a second uvar is created for the type. *)
 val uvar_env : env -> option typ -> Tac term
 
+(** Creates a new, unconstrained unification variable in environment
+[env]. The type of the uvar must be provided and the uvar can be solved
+to a Ghost term of that type *)
+val ghost_uvar_env : env -> typ -> Tac term
+
 (** Creates a new, unconstrained universe unification variable.
 The returned term is Type (U_Unif ?u). *)
 val fresh_universe_uvar : unit -> Tac term
@@ -336,6 +357,10 @@ val inspect : term -> Tac term_view
 (** Pack a term view on a fully-named representation back into a term *)
 val pack    : term_view -> Tac term
 
+(** Similar to [pack] above, but does not flatten arrows, it leaves
+    then in a curried form instead *)
+val pack_curried : term_view -> Tac term
+
 (** Join the first two goals, which must be irrelevant, in a single
 one by finding a maximal prefix of their environment and reverting
 appropriately. Useful to minimize SMT queries that share internal
@@ -362,3 +387,38 @@ val curms : unit -> Tac int
 (** [set_urgency u] sets the urgency of error messages. Usually set just
 before raising an exception (see e.g. [fail_silently]). *)
 val set_urgency : int -> TacS unit
+
+(** [string_to_term e s] runs the F* parser on the string [s] in the
+environment [e], and produces a term. *)
+val string_to_term : env -> string -> Tac term
+
+(** [push_bv_dsenv e id] pushes a identifier [id] into the parsing
+environment of [e] an environment. It returns a new environment that
+has the identifier [id] along with its corresponding bounded
+variable. *)
+val push_bv_dsenv : env -> string -> Tac (env * bv)
+
+(** Print a term via the pretty printer. This is considered effectful
+since 1) setting options can change the behavior of this function, and
+hence is not really pure; and 2) this function could expose details of
+the term representation that do not show up in the view, invalidating
+the pack_inspect_inv/inspeck_pack_inv lemmas. *)
+val term_to_string : term -> Tac string
+
+(** Print a computation type via the pretty printer. See comment
+on [term_to_string]. *)
+val comp_to_string : comp -> Tac string
+
+(** A variant of Reflection.term_eq that may inspect more underlying
+details of terms. This function could distinguish two _otherwise equal
+terms_, but that distinction cannot leave the Tac effect.
+
+This is only exposed as a migration path. Please use
+[Reflection.term_eq] instead. *)
+[@@deprecated "use Reflection.term_eq instead"]
+val term_eq_old : term -> term -> Tac bool
+
+(** Runs the input tactic `f` with compat pre core setting `n`.
+It is an escape hatch for maintaining backward compatibility
+for code that breaks with the core typechecker. *)
+val with_compat_pre_core : #a:Type -> n:int -> f:(unit -> Tac a) -> Tac a

@@ -18,6 +18,8 @@ module Syntax
 open FStar.Tactics
 open FStar.Reflection.Arith
 
+exception Oops
+
 let quote_sanity_check =
     assert True
         by (let t = quote (1+1) in
@@ -38,7 +40,7 @@ let test2 = assert True
                 by (let x = quote test1 in
                     match inspect x with
                     | Tv_FVar fv -> ()
-                    | _ -> fail "wat")
+                    | _ -> raise Oops)
 
 
 let rec blah (t : term) : Tac term =
@@ -77,7 +79,7 @@ let _ = assert True
                 let s = `(x:int{x > 0}) in
                 if term_eq s t
                 then ()
-                else fail "wat")
+                else raise Oops)
 
 let _ = assert True
             by (let t = quote blah in
@@ -125,7 +127,7 @@ let _ = assert True
                    debug ("t1 = " ^ term_to_string t1);
                    debug ("t2 = " ^ term_to_string t2)
                    )
-                | _ -> fail "wat?")
+                | _ -> raise Oops)
 
 let _ = assert True
             by (let t = quote (let rec f x = if (x <= 0) then 1 else f (x - 1) in f 5) in
@@ -136,4 +138,4 @@ let _ = assert True
                    debug ("t1 = " ^ term_to_string t1);
                    debug ("t2 = " ^ term_to_string t2)
                    )
-                | _ -> fail "wat?")
+                | _ -> raise Oops)

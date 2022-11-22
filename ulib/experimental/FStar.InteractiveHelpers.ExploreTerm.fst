@@ -78,7 +78,7 @@ noeq type type_info = {
 
 let mk_type_info = Mktype_info
 
-val type_info_to_string : type_info -> Tot string
+val type_info_to_string : type_info -> Tac string
 let type_info_to_string info =
   "Mktype_info (" ^
   term_to_string info.ty ^ ") (" ^
@@ -159,13 +159,13 @@ noeq type typ_or_comp =
 | TC_Typ : v:typ -> pl:list binder -> num_unflushed:nat -> typ_or_comp
 | TC_Comp : v:comp -> pl:list binder -> num_unflushed:nat -> typ_or_comp
 
-let typ_or_comp_to_string (tyc : typ_or_comp) : Tot string =
+let typ_or_comp_to_string (tyc : typ_or_comp) : Tac string =
   match tyc with
   | TC_Typ v pl num_unflushed ->
-    "TC_Typ (" ^ term_to_string v ^ ") " ^ list_to_string name_of_binder pl ^
+    "TC_Typ (" ^ term_to_string v ^ ") " ^ list_to_string (fun b -> name_of_binder b) pl ^
     " " ^ string_of_int num_unflushed
   | TC_Comp c pl num_unflushed ->
-    "TC_Comp (" ^ acomp_to_string c ^ ") " ^ list_to_string name_of_binder pl ^
+    "TC_Comp (" ^ acomp_to_string c ^ ") " ^ list_to_string (fun b -> name_of_binder b) pl ^
     " " ^ string_of_int num_unflushed
 
 /// Return the list of parameters stored in a ``typ_or_comp``
@@ -360,7 +360,7 @@ let rec _flush_typ_or_comp_comp (dbg : bool) (e:env) (rem : list binder) (inst :
     | _ ->
       mfail ("_flush_typ_or_comp: inconsistent state" ^
              "\n-comp: " ^ acomp_to_string c ^
-             "\n-remaning binders: " ^ list_to_string name_of_binder rem)
+             "\n-remaning binders: " ^ list_to_string (fun b -> name_of_binder b) rem)
 
 let flush_typ_or_comp dbg e tyc =
   let flush_comp pl n c : Tac (tyc:typ_or_comp{num_unflushed_of_typ_or_comp tyc = 0})  =
@@ -554,7 +554,7 @@ and explore_pattern dbg dfs #a f x ge0 pat =
   print_dbg dbg ("[> explore_pattern:");
   match pat with
   | Pat_Constant _ -> ge0, x, Continue
-  | Pat_Cons fv patterns ->
+  | Pat_Cons fv us patterns ->
     let explore_pat ge_x_flag pat =
       let ge0, x, flag = ge_x_flag in
       let pat1, _ = pat in
@@ -568,10 +568,7 @@ and explore_pattern dbg dfs #a f x ge0 pat =
   | Pat_Var bv | Pat_Wild bv ->
     let ge1 = genv_push_bv ge0 bv false None in
     ge1, x, Continue
-  | Pat_Dot_Term bv t ->
-    (* TODO: I'm not sure what this is *)
-    let ge1 = genv_push_bv ge0 bv false None in
-    ge1, x, Continue
+  | Pat_Dot_Term _ -> ge0, x, Continue
 
 (*** Variables in a term *)
 /// Returns the list of free variables contained in a term

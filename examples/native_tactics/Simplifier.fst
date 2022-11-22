@@ -15,6 +15,9 @@
 *)
 module Simplifier
 
+open FStar.TSet
+open FStar.Heap
+open FStar.Preorder
 open FStar.ST
 open FStar.Tactics
 open FStar.Tactics.Simplifier
@@ -31,14 +34,29 @@ let test_simplify () : Tac unit =
     or_else goal_is_true (fun () -> dump ""; fail "simplify left open goals")
 
 [@@plugin]
-let simplify_c () : Tac unit = simplify (); admit_all()
+let simplify_c () : Tac unit = dump "start"; simplify (); dump "end"; admit_all()
+
+let test (_:unit) =
+  assert (forall (x:nat). True /\ x + 1 >= 0)
+       by (dump "start"; simplify(); dump "end")
+
+#push-options "--disallow_unification_guards true"
+//Factor some definitions so we don't get unexpected unificatio guards due to subtyping
+let nat_addr_of (#a:Type0) (#rel:preorder a) (r:mref a rel) : GTot nat = addr_of r
+let modifies_singleton #a (#rel:preorder a) (r:mref a rel) h0 h1 = modifies (Set.singleton (addr_of r)) h0 h1
+
+let op_Colon_Equals (#a:Type) (#rel:preorder a) (r:mref a rel) (v:a)
+  : ST unit
+    (fun h -> rel (sel h r) v)
+    (fun h0 x h1 -> rel (sel h0 r) v /\ h0 `contains` r /\
+                 modifies_singleton r h0 h1 /\ equal_dom h0 h1 /\
+                 sel h1 r == v)
+= write #a #rel r v
 
 let test1 (r: ref int) =
-  (r := 0;
-   r := 1;
-   r := 2;
-   r := 3)
-  <: St unit by simplify_c ()
+  (r := 0
+  )
+  <: St unit by (simplify_c ())
 
 let test2 (r: ref int) =
   (r := 0;

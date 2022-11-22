@@ -1,14 +1,21 @@
 [
-  "’•¾J·”CJ}ý\b]`ò•\u0018",
+  "99¼z7\u001c†J-üûÄ)ÀòQ",
   [
     [
-      "Steel.ST.Util.extract_pure",
+      "Steel.ST.Util.intro_can_be_split_forall_dep_exists",
       1,
       2,
       1,
-      [ "@query" ],
+      [
+        "@MaxIFuel_assumption", "@query",
+        "Prims_pretyping_e8ffb7d227a1bbf69407a8d2ad2c4c83",
+        "equality_tok_Prims.T@tok", "equation_Prims.l_True",
+        "equation_Prims.squash", "equation_Prims.subtype_of",
+        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c",
+        "typing_tok_Prims.T@tok"
+      ],
       0,
-      "d596be61b2ee52ad9aaef90e48f45b9f"
+      "0bd5b168e69ffee6c5fce99a192b47ee"
     ]
   ]
 ]

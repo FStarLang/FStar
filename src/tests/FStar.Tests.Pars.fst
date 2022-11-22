@@ -72,9 +72,13 @@ let init_once () : unit =
                 TcTerm.typeof_tot_or_gtot_term
                 TcTerm.typeof_tot_or_gtot_term_fastpath
                 TcTerm.universe_of
+                Rel.teq_nosmt_force
+                Rel.subtype_nosmt_force
                 solver
                 Const.prims_lid
-                NBE.normalize_for_unit_test in
+                NBE.normalize_for_unit_test
+                FStar.Universal.core_check 
+  in
   env.solver.init env;
   let dsenv, prims_mod = parse_mod (Options.prims()) (DsEnv.empty_env FStar.Parser.Dep.empty_deps) in
   let env = {env with dsenv=dsenv} in
@@ -124,6 +128,12 @@ let pars s =
         | ASTFragment _ ->
             failwith "Impossible: parsing a Fragment always results in a Term"
     with
+        | Error(err, msg, r, _ctx) when not <| FStar.Options.trace_error() ->
+          if r = FStar.Compiler.Range.dummyRange
+          then BU.print_string msg
+          else BU.print2 "%s: %s\n" (FStar.Compiler.Range.string_of_range r) msg;
+          exit 1
+    
         | e when not ((Options.trace_error())) -> raise e
 
 let tc' s =
@@ -131,22 +141,20 @@ let tc' s =
     let tcenv = init() in
     let tcenv = {tcenv with top_level=false} in
     let tm, _, g = TcTerm.tc_tot_or_gtot_term tcenv tm in
-    tm, g, tcenv
+    Rel.force_trivial_guard tcenv g;
+    let tm = FStar.Syntax.Subst.deep_compress false tm in        
+    tm, tcenv
 
 let tc s =
-    let tm, _, _ = tc' s in
+    let tm, _ = tc' s in
     tm
 
-let tc_nbe s =
-    let tm, g, tcenv = tc' s in
-    Rel.force_trivial_guard tcenv g;
-    tm
-
-let tc_nbe_term tm =
+let tc_term tm =
     let tcenv = init() in
     let tcenv = {tcenv with top_level=false} in
     let tm, _, g = TcTerm.tc_tot_or_gtot_term tcenv tm in
     Rel.force_trivial_guard tcenv g;
+    let tm = FStar.Syntax.Subst.deep_compress false tm in
     tm
 
 let pars_and_tc_fragment (s:string) =
@@ -166,3 +174,25 @@ let pars_and_tc_fragment (s:string) =
         with e -> report(); raise_err (Errors.Fatal_TcOneFragmentFailed, "tc_one_fragment failed: " ^s)
     with
         | e when not ((Options.trace_error())) -> raise e
+
+let test_hashes () = 
+  FStar.Main.process_args () |> ignore; //set options
+  let _ = pars_and_tc_fragment "type unary_nat = | U0 | US of unary_nat" in
+  let test_one_hash (n:int) = 
+    let rec aux n =
+      if n = 0 then "U0"
+      else "(US " ^ aux (n - 1) ^ ")"
+    in
+    let tm = tc (aux n) in
+    let hc = FStar.Syntax.Hash.ext_hash_term tm in
+    BU.print2 "Hash of unary %s is %s\n"
+              (string_of_int n)
+              (FStar.Hash.string_of_hash_code hc)
+  in
+  let rec aux (n:int) = 
+    if n = 0 then ()
+    else (test_one_hash n; aux (n - 1))
+  in
+  aux 100;
+  Options.init()
+  

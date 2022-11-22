@@ -32,6 +32,7 @@ val subst_ascription:   list subst_elt -> ascription -> ascription
 val subst_decreasing_order:
                         list subst_elt -> decreases_order -> decreases_order
 val subst_binders:      list subst_elt -> binders -> binders
+val subst_residual_comp:list subst_elt -> residual_comp -> residual_comp
 val compress:           term -> term
 val compress_univ:      universe -> universe
 
@@ -73,5 +74,5 @@ val open_term_bvs : list bv -> term -> list bv * term
 val open_term_bv  : bv       -> term -> bv * term
 
 (* Removes all delayed substitutions and resolved uvar nodes in a term.
-Raises a hard error if an *unresolved* uvar (term or universe) remains. *)
-val deep_compress : term -> term
+if allow_uvars is false, it taises a hard error if an *unresolved* uvar (term or universe) remains. *)
+val deep_compress (allow_uvars: bool) (t:term) : term

@@ -179,8 +179,8 @@ let pack_universe uv =
   | Uv_Unk -> U_unknown
 
 let rec inspect_ln (t:term) : term_view =
-    let t = U.unascribe t in
     let t = U.unlazy_emb t in
+    let t = SS.compress t in
     match t.n with
     | Tm_meta (t, _) ->
         inspect_ln t
@@ -199,7 +199,12 @@ let rec inspect_ln (t:term) : term_view =
       (match t.n with
        | Tm_fvar fv -> Tv_UInst (fv, us)
        | _ -> failwith "Reflection::inspect_ln: uinst for a non-fvar node")
-        
+
+    | Tm_ascribed (t, (Inl ty, tacopt, eq), _elid) ->
+        Tv_AscribedT (t, ty, tacopt, eq)
+
+    | Tm_ascribed (t, (Inr cty, tacopt, eq), elid) ->
+        Tv_AscribedC (t, cty, tacopt, eq)
 
     | Tm_app (hd, []) ->
         failwith "inspect_ln: empty arguments on Tm_app"
@@ -264,10 +269,10 @@ let rec inspect_ln (t:term) : term_view =
         let rec inspect_pat p =
             match p.v with
             | Pat_constant c -> Pat_Constant (inspect_const c)
-            | Pat_cons (fv, ps) -> Pat_Cons (fv, List.map (fun (p, b) -> inspect_pat p, b) ps)
+            | Pat_cons (fv, us_opt, ps) -> Pat_Cons (fv, us_opt, List.map (fun (p, b) -> inspect_pat p, b) ps)
             | Pat_var bv -> Pat_Var bv
             | Pat_wild bv -> Pat_Wild bv
-            | Pat_dot_term (bv, t) -> Pat_Dot_Term (bv, t)
+            | Pat_dot_term eopt -> Pat_Dot_Term eopt
         in
         let brs = List.map (function (pat, _, t) -> (inspect_pat pat, t)) brs in
         Tv_Match (t, ret_opt, brs)
@@ -428,10 +433,10 @@ let pack_ln (tv:term_view) : term =
         let rec pack_pat p : S.pat =
             match p with
             | Pat_Constant c -> wrap <| Pat_constant (pack_const c)
-            | Pat_Cons (fv, ps) -> wrap <| Pat_cons (fv, List.map (fun (p, b) -> pack_pat p, b) ps)
+            | Pat_Cons (fv, us_opt, ps) -> wrap <| Pat_cons (fv, us_opt, List.map (fun (p, b) -> pack_pat p, b) ps)
             | Pat_Var  bv -> wrap <| Pat_var bv
             | Pat_Wild bv -> wrap <| Pat_wild bv
-            | Pat_Dot_Term (bv, t) -> wrap <| Pat_dot_term (bv, t)
+            | Pat_Dot_Term eopt -> wrap <| Pat_dot_term eopt
         in
         let brs = List.map (function (pat, t) -> (pack_pat pat, None, t)) brs in
         S.mk (Tm_match (t, ret_opt, brs, None)) Range.dummyRange
@@ -617,6 +622,12 @@ let inspect_sigelt (se : sigelt) : sigelt_view =
         Unk
 
 let pack_sigelt (sv:sigelt_view) : sigelt =
+    let check_lid lid =
+        if List.length (Ident.path_of_lid lid) <= 1
+	then failwith ("pack_sigelt: invalid long identifier \""
+	              ^ Ident.string_of_lid lid
+		      ^ "\" (did you forget a module path?)")
+    in
     match sv with
     | Sg_Let (r, lbs) ->
         let pack_letbinding (lb:letbinding) =
@@ -626,6 +637,7 @@ let pack_sigelt (sv:sigelt_view) : sigelt =
                       | _ -> failwith
                               "impossible: pack_sigelt: bv in toplevel let binding"
             in
+            check_lid lid;
             let s = SS.univ_var_closing us in
             let typ = SS.subst s typ in
             let def = SS.subst s def in
@@ -639,6 +651,7 @@ let pack_sigelt (sv:sigelt_view) : sigelt =
 
     | Sg_Inductive (nm, us_names, param_bs, ty, ctors) ->
       let ind_lid = Ident.lid_of_path nm Range.dummyRange in
+      check_lid ind_lid;
       let s = SS.univ_var_closing us_names in
       let nparam = List.length param_bs in
       let pack_ctor (c:ctor) : sigelt =
@@ -667,6 +680,7 @@ let pack_sigelt (sv:sigelt_view) : sigelt =
 
     | Sg_Val (nm, us_names, ty) ->
         let val_lid = Ident.lid_of_path nm Range.dummyRange in
+        check_lid val_lid;
         let typ = SS.close_univ_vars us_names ty in
         mk_sigelt <| Sig_declare_typ (val_lid, us_names, typ)
 
@@ -719,9 +733,211 @@ let env_open_modules (e : Env.env) : list name =
              (DsEnv.open_modules e.dsenv)
 
 let binders_of_env e = FStar.TypeChecker.Env.all_binders e
-let term_eq t1 t2 = U.term_eq (U.un_uinst t1) (U.un_uinst t2) // temporary, until universes are exposed
-let term_to_string t = Print.term_to_string t
-let comp_to_string c = Print.comp_to_string c
+
+(* Generic combinators, safe *)
+let eqopt  = Syntax.Util.eqopt
+let eqlist = Syntax.Util.eqlist
+let eqprod = Syntax.Util.eqprod
+
+(*
+ * Why doesn't this call into Syntax.Util.term_eq? Because that function
+ * can expose details that are not observable in the userspace view of
+ * terms, and hence that function cannot be safely exposed if we wish to
+ * maintain the lemmas stating that pack/inspect are inverses of each
+ * other.
+ *
+ * In other words, we need this function to be implemented consistently
+ * with the view to make sure it is a _function_ in userspace, and maps
+ * (propositionally) equal terms to equal results.
+ *
+ * So we implement it via inspect_ln, to make sure we don't reveal
+ * anything inspect_ln does not already reveal. Hence this function
+ * is really only an optimization of this same implementation done in
+ * userspace. Also, nothing is guaranted about its result. It if were to
+ * just return false constantly, that would be safe (though useless).
+ *
+ * This same note also applies to comp, and other types that are taken
+ * as abstract, but have a lemma stating that the view is complete
+ * (or appear inside a view of one such type).
+ *)
+let rec term_eq (t1:term) (t2:term) : bool =
+  match inspect_ln t1, inspect_ln t2 with
+  | Tv_Var bv1, Tv_Var bv2 ->
+    bv_eq bv1 bv2
+
+  | Tv_BVar bv1, Tv_BVar bv2 ->
+    bv_eq bv1 bv2
+
+  | Tv_FVar fv1, Tv_FVar fv2 ->
+    (* This should be equivalent to exploding the fv's name comparing *)
+    S.fv_eq fv1 fv2
+
+  | Tv_UInst (fv1, us1), Tv_UInst (fv2, us2) ->
+    S.fv_eq fv1 fv2 && univs_eq us1 us2
+
+  | Tv_App (h1, arg1), Tv_App (h2, arg2) ->
+    term_eq h1 h2 && arg_eq arg1 arg2
+
+  | Tv_Abs (b1, t1), Tv_Abs (b2, t2) ->
+    binder_eq b1 b2 && term_eq t1 t2
+
+  | Tv_Arrow (b1, c1), Tv_Arrow (b2, c2) ->
+    binder_eq b1 b2 && comp_eq c1 c2
+
+  | Tv_Type u1, Tv_Type u2 ->
+    univ_eq u1 u2
+
+  | Tv_Refine (b1, t1), Tv_Refine (b2, t2) ->
+    term_eq b1.sort b2.sort && term_eq t1 t2
+
+  | Tv_Const c1, Tv_Const c2 ->
+    const_eq c1 c2
+
+  | Tv_Uvar (n1, uv1), Tv_Uvar (n2, uv2) ->
+    (*
+     * The uvs are completely opaque in userspace, so we could do a fancier
+     * check here without compromising soundness. But.. we cannot really check
+     * the unionfind graph, I think, since the result could differ as things get
+     * unified (though it's unclear if that can happen within two calls to this
+     * function within a *single* definition.. since uvars do not survive across
+     * top-levels.
+     *
+     * Anyway, for now just compare the associated ints. Which are *definitely*
+     * visible by users.
+     *)
+    n1 = n2
+
+  | Tv_Let (r1, ats1, bv1, m1, n1), Tv_Let (r2, ats2, bv2, m2, n2) ->
+    r1 = r2 &&
+     eqlist term_eq ats1 ats2 &&
+     term_eq bv1.sort bv2.sort &&
+     term_eq m1 m2 &&
+     term_eq n1 n2
+
+  | Tv_Match (h1, an1, brs1), Tv_Match (h2, an2, brs2) ->
+    term_eq h1 h2 &&
+      eqopt match_ret_asc_eq an1 an2 &&
+      eqlist branch_eq brs1 brs2
+
+  | Tv_AscribedT (e1, t1, topt1, eq1), Tv_AscribedT (e2, t2, topt2, eq2) ->
+    term_eq e1 e2 &&
+      term_eq t1 t2 &&
+      eqopt term_eq topt1 topt2 &&
+      eq1 = eq2
+
+  | Tv_AscribedC (e1, c1, topt1, eq1), Tv_AscribedC (e2, c2, topt2, eq2) ->
+    term_eq e1 e2 &&
+      comp_eq c1 c2 &&
+      eqopt term_eq topt1 topt2 &&
+      eq1 = eq2
+
+  | Tv_Unknown, Tv_Unknown -> true
+  | _ -> false
+
+and arg_eq (arg1 : argv) (arg2 : argv) : bool =
+  let (a1, aq1) = arg1 in
+  let (a2, aq2) = arg2 in
+  term_eq a1 a2 && aqual_eq aq1 aq2
+
+and aqual_eq (aq1 : aqualv) (aq2 : aqualv) : bool =
+  match aq1, aq2 with
+  | Q_Implicit, Q_Implicit -> true
+  | Q_Explicit, Q_Explicit -> true
+  | Q_Meta t1, Q_Meta t2 -> term_eq t1 t2
+  | _ -> false
+
+and binder_eq (b1 : binder) (b2 : binder) : bool =
+  let bv1, (bq1, bats1) = inspect_binder b1 in
+  let bv2, (bq2, bats2) = inspect_binder b2 in
+  binding_bv_eq bv1 bv2 &&
+    aqual_eq bq1 bq2 &&
+    eqlist term_eq bats1 bats2
+
+and binding_bv_eq (bv1 : bv) (bv2 : bv) : bool =
+  (*
+   * In binding ocurrences, we compare the sorts of variables. Not so
+   * in normal ocurrences, as term_eq does. Note we can access the sort
+   * safely since it's exactly what inspect_bv does.
+   *
+   * We do _not_ compare the indices. This is a binding ocurrence, so
+   * they do not matter at all.
+   *)
+  term_eq bv1.sort bv2.sort
+
+and bv_eq (bv1 : bv) (bv2 : bv) : bool =
+  (*
+   * Just compare the index. Note: this is safe since inspect_bv
+   * exposes it. We do _not_ compare the sorts. This is already
+   * what Syntax.Util.term_eq does, and they arguably should not
+   * be there.
+   *)
+  bv1.index = bv2.index
+
+and comp_eq (c1 : comp) (c2 : comp) : bool =
+  match inspect_comp c1, inspect_comp c2 with
+  | C_Total (t1, u1, dec1), C_Total (t2, u2, dec2) ->
+    term_eq t1 t2 && univ_eq u1 u2
+    && eqlist term_eq dec1 dec2
+
+  | C_GTotal (t1, u1, dec1), C_GTotal (t2, u2, dec2) ->
+    term_eq t1 t2 && univ_eq u1 u2
+    && eqlist term_eq dec1 dec2
+
+  | C_Lemma (pre1, post1, pats1), C_Lemma (pre2, post2, pats2) ->
+    term_eq pre1 pre2 && term_eq post1 post2 && term_eq pats1 pats2
+
+  | C_Eff (us1, name1, t1, args1), C_Eff (us2, name2, t2, args2) ->
+    univs_eq us1 us2 &&
+    name1 = name2 &&
+    term_eq t1 t2 &&
+    eqlist arg_eq args1 args2
+
+  | _ ->
+    false
+
+and match_ret_asc_eq (a1 : match_returns_ascription) (a2 : match_returns_ascription) : bool =
+  eqprod binder_eq ascription_eq a1 a2
+
+and ascription_eq (asc1 : ascription) (asc2 : ascription) : bool =
+  let (a1, topt1, eq1) = asc1 in
+  let (a2, topt2, eq2) = asc2 in
+  (match a1, a2 with
+   | Inl t1, Inl t2 -> term_eq t1 t2
+   | Inr c1, Inr c2 -> comp_eq c1 c2) &&
+     eqopt term_eq topt1 topt2 &&
+     eq1 = eq2
+
+and branch_eq (c1 : Data.branch) (c2 : Data.branch) : bool =
+  eqprod pattern_eq term_eq c1 c2
+
+and pattern_eq (p1 : pattern) (p2 : pattern) : bool =
+  match p1, p2 with
+  | Pat_Constant c1, Pat_Constant c2 ->
+    const_eq c1 c2
+  | Pat_Cons (fv1, us1, subpats1), Pat_Cons (fv2, us2, subpats2) ->
+    S.fv_eq fv1 fv2 &&
+      eqopt (eqlist univ_eq) us1 us2 &&
+      eqlist (eqprod pattern_eq (fun b1 b2 -> b1 = b2)) subpats1 subpats2
+
+  | Pat_Var bv1, Pat_Var bv2 ->
+    binding_bv_eq bv1 bv2
+
+  | Pat_Wild bv1, Pat_Wild bv2 ->
+    binding_bv_eq bv1 bv2
+
+  | Pat_Dot_Term topt1, Pat_Dot_Term topt2 ->
+    eqopt term_eq topt1 topt2
+
+  | _ -> false
+
+and const_eq (c1 : vconst) (c2 : vconst) : bool =
+  c1 = c2
+
+and univ_eq (u1 : universe) (u2 : universe) : bool =
+  Syntax.Util.eq_univs u1 u2 // FIXME!
+
+and univs_eq (us1 : list universe) (us2 : list universe) : bool =
+  eqlist univ_eq us1 us2
 
 let implode_qn ns = String.concat "." ns
 let explode_qn s = String.split ['.'] s

@@ -30,7 +30,7 @@ let rec mk_tenum_branches (ty: T.term) (vty: T.term) (v: nat) (accu: list T.bran
     let v = T.mk_app (`(mk_u16)) [pack_nat v, T.Q_Explicit] in
     let v = T.pack (T.Tv_AscribedT v vty None false) in
     let pat =
-      T.Pat_Cons (T.pack_fv n) []
+      T.Pat_Cons (T.pack_fv n) None []
     in
     let br : T.branch = (pat, v) in
     let accu' = br :: accu in
@@ -80,13 +80,15 @@ let pat_of_term (t: T.term) : T.Tac T.pattern =
   let t = T.norm_term_env (T.cur_env ()) [delta; iota; primops] t in
   match T.inspect t with
   | T.Tv_Const v -> T.Pat_Constant v
-  | T.Tv_FVar v -> T.Pat_Cons v []
+  | T.Tv_FVar v -> T.Pat_Cons v (Some []) []
   | _ -> T.fail "Not a pattern"
 
 let term_of_pat (t: T.pattern) : T.Tac (option T.term) =
   match t with
   | T.Pat_Constant v -> Some (T.pack (T.Tv_Const v))
-  | T.Pat_Cons v [] -> Some (T.pack (T.Tv_FVar v))
+  | T.Pat_Cons v None [] -> Some (T.pack (T.Tv_FVar v))
+  | T.Pat_Cons v (Some []) [] -> Some (T.pack (T.Tv_FVar v))  
+  | T.Pat_Cons v (Some us) [] -> Some (T.pack (T.Tv_UInst v us))    
   | _ -> None
 
 let rec invert_branches_with_cascade (enum_ty: T.term) (val_eq: T.term) (x: T.term) (accu: option T.term) (l: list T.branch) : T.Tac T.term =
@@ -183,16 +185,13 @@ let synth_inverse_forall_tenum_solve' () : T.Tac unit =
     T.qed ()
   )
 
-let auto_squash_tm () : T.Tac T.term = T.pack (T.Tv_FVar (T.pack_fv ["Prims"; "auto_squash"]))
-
 let synth_inverse_forall_tenum_solve () : T.Tac unit =
   let (hd, tl) = app_head_tail (T.cur_goal ()) in
-  let auto_squash = auto_squash_tm () in
-  if hd `T.term_eq` (`squash) || hd `T.term_eq` auto_squash
+  if hd `T.is_fvar` (`%squash) || hd `T.is_fvar` (`%auto_squash)
   then match tl with
   | [(g, _)] ->
     let (hd', _) = app_head_tail g in
-    if hd' `T.term_eq` (`synth_inverse)
+    if hd' `T.is_fvar` (`%synth_inverse)
     then match T.trytac synth_inverse_forall_tenum_solve' with
     | Some _ -> ()
     | _ -> (if T.debugging () then
@@ -226,16 +225,15 @@ let synth_inverse_forall_bounded_u16_solve'
 
 let synth_inverse_forall_bounded_u16_solve () : T.Tac unit =
   let (hd, tl) = app_head_tail (T.cur_goal ()) in
-  let auto_squash = auto_squash_tm () in
-  if hd `T.term_eq` (`squash) || hd `T.term_eq` auto_squash
+  if hd `T.is_fvar` (`%squash) || hd `T.is_fvar` (`%auto_squash)
   then match tl with
   | [(tl, _)] ->
     let (hd', tl') = app_head_tail tl in
-    if hd' `T.term_eq` (`synth_inverse)
+    if hd' `T.is_fvar` (`%synth_inverse)
     then begin match tl' with
     | [ (t, _); (bt, _); (f2, _); (f1, _)] ->
       let (bt_hd, bt_tl) = app_head_tail bt in
-      if bt_hd `T.term_eq` (`bounded_u16)
+      if bt_hd `T.is_fvar` (`%bounded_u16)
       then begin match bt_tl with
       | [(b, _)] ->
         synth_inverse_forall_bounded_u16_solve' b t f1 f2

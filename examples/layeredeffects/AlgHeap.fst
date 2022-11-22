@@ -2,7 +2,6 @@ module AlgHeap
 
 (* Essentially a copy of AlgForAll but using a heap for the state *)
 
-open Common
 open FStar.Tactics
 open FStar.List.Tot
 open FStar.Universe
@@ -39,7 +38,7 @@ let op_out : op -> Type =
  | Other i -> other_inp i
 
 noeq
-type tree0 (a:Type u#aa) : Type u#aa =
+type tree0 (a:Type) : Type =
   | Return : a -> tree0 a
   | Op     : op:op -> i:(op_inp op) -> k:(op_out op -> tree0 a) -> tree0 a
 
@@ -176,39 +175,26 @@ let _get : tree state [Read] = Op Read () Return
 
 let _put (s:state) : tree unit [Write] = Op Write s Return
 
-[@@allow_informative_binders]
 total // need this for catch!!
 reifiable
 reflectable
-layered_effect {
-  Alg : a:Type -> ops  -> Effect
-  with
-  repr         = tree;
-  return       = return;
-  bind         = bind;
-  subcomp      = subcomp;
-  if_then_else = if_then_else
+effect {
+  Alg (a:Type) (_:ops)
+  with {repr = tree; return; bind; subcomp; if_then_else}
 }
 
 let get () : Alg state [Read] =
   Alg?.reflect _get
 
-unfold
-let pure_monotonic #a (wp : pure_wp a) : Type =
-  forall p1 p2. (forall x. p1 x ==> p2 x) ==> wp p1 ==> wp p2
-
-//unfold
-//let sp #a (wp : pure_wp a) : pure_post a =
-//  fun x -> ~ (wp (fun y -> ~(x == y)))
-
 let lift_pure_eff
  (a:Type)
  (wp : pure_wp a)
- (f : eqtype_as_type unit -> PURE a wp)
+ (f : unit -> PURE a wp)
  : Pure (tree a [])
-        (requires (wp (fun _ -> True) /\ pure_monotonic wp))
+        (requires (wp (fun _ -> True)))
         (ensures (fun _ -> True))
- = Return (f ())
+ = FStar.Monotonic.Pure.elim_pure_wp_monotonicity wp;
+   Return (f ())
 
 sub_effect PURE ~> Alg = lift_pure_eff
 
@@ -328,8 +314,7 @@ let rec interp_morph #a #b (c : rwtree a) (f : a -> rwtree b) (p:_) (s0:_)
       in
       Classical.forall_intro aux
 
-    | _ ->
-      unreachable ()
+    | _ -> ()  // this branch is unreachable
 
 val interp_bind (#a #b:Type)
   (c : rwtree a) (f : a -> rwtree b)
@@ -380,13 +365,13 @@ let if_then_else2 (a : Type) (w1 w2 : st_wp a)
 total
 reifiable
 reflectable
-layered_effect {
-  AlgWP : a:Type -> st_wp a -> Effect
-  with repr         = repr;
-       return       = return2;
-       bind         = bind2;
-       subcomp      = subcomp2;
-       if_then_else = if_then_else2
+effect {
+  AlgWP (a:Type) (_:st_wp a)
+  with {repr;
+        return = return2;
+        bind   = bind2;
+        subcomp = subcomp2;
+        if_then_else = if_then_else2}
 }
 
 let get2 () : AlgWP state read_wp =
@@ -399,15 +384,15 @@ open FStar.Monotonic.Pure
 
 unfold
 let lift_pure_wp (#a:Type) (wp : pure_wp a) : st_wp a =
-  elim_pure_wp_monotonicity_forall ();
+  elim_pure_wp_monotonicity wp;
   fun s0 p -> wp (fun x -> p (x, s0))
 
-let lift_pure_algwp (a:Type) wp (f:(eqtype_as_type unit -> PURE a wp))
+let lift_pure_algwp (a:Type) wp (f:unit -> PURE a wp)
   : Pure (repr a (lift_pure_wp wp)) // can't call f() here, so lift its wp instead
          (requires (wp (fun _ -> True)))
          (ensures (fun _ -> True))
   = let v : a = elim_pure f (fun _ -> True) in
-    FStar.Monotonic.Pure.elim_pure_wp_monotonicity_forall (); // need this lemma
+    FStar.Monotonic.Pure.elim_pure_wp_monotonicity wp; // need this lemma
     assert (forall p. wp p ==> p v); // this is key fact needed for the proof
     assert_norm (stronger (lift_pure_wp wp) (return_wp v));
     Return v
@@ -457,10 +442,19 @@ let rec interp_sem #a (t : rwtree a) (s0:state)
     | Op Write i k ->
       interp_sem (k ()) i
     
+
+let extract #a #w (c:repr a w)
+  : Lemma (w `stronger` interp_as_wp c)
+  = ()
+
+let soundness_aux #a #wp (t:repr a wp)
+  : Tot (s0:state -> ID5.ID (a & state) (as_pure_wp (wp s0)))
+  = extract t;
+    interp_sem t
+
 let soundness #a #wp (t : unit -> AlgWP a wp)
   : Tot (s0:state -> ID5.ID (a & state) (as_pure_wp (wp s0)))
-  = let c = reify (t ()) in
-    interp_sem c
+  = soundness_aux (reify (t ()))
 
 (* Same as above, but one doesn't have to think about WPs *)
 let soundnessPP #a #pre #post (t : unit -> AlgPP a pre post)

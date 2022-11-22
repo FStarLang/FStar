@@ -232,7 +232,7 @@ let pickBranch (cfg:config) (scrut : t) (branches : list branch) : option (term 
             in
             if matches_const scrutinee s then Inl [] else Inr false
 
-        | Pat_cons(fv, arg_pats) ->
+        | Pat_cons(fv, _us_opt, arg_pats) ->
             let rec matches_args out (a:list (t * aqual)) (p:list (pat * bool))
                 : either (list t) bool =
                 match a, p with
@@ -556,23 +556,27 @@ let rec translate (cfg:config) (bs:list t) (e:term) : t =
           let (bs, p_new) =
             match p.v with
             | Pat_constant c -> (bs, Pat_constant c)
-            | Pat_cons (fvar, args) ->
+            | Pat_cons (fvar, us_opt, args) ->
               let (bs', args') =
                   List.fold_left (fun (bs, args) (arg, b) ->
                                     let (bs', arg') = process_pattern bs arg in
                                     (bs', (arg', b) :: args)) (bs, []) args
               in
-              (bs', Pat_cons (fvar, List.rev args'))
+              let us_opt =
+                match us_opt with
+                | None -> None
+                | Some us -> Some (List.map (translate_univ cfg bs) us)
+              in
+              (bs', Pat_cons (fvar, us_opt, List.rev args'))
             | Pat_var bvar ->
               let x = S.new_bv None (readback cfg (translate cfg bs bvar.sort)) in
               (mkAccuVar x :: bs, Pat_var x)
             | Pat_wild bvar ->
               let x = S.new_bv None (readback cfg (translate cfg bs bvar.sort)) in
               (mkAccuVar x :: bs, Pat_wild x)
-            | Pat_dot_term (bvar, tm) ->
-              let x = S.new_bv None (readback cfg (translate cfg bs bvar.sort)) in
+            | Pat_dot_term eopt ->
               (bs,
-               Pat_dot_term (x, readback cfg (translate cfg bs tm)))
+               Pat_dot_term (BU.map_option (fun e -> readback cfg (translate cfg bs e)) eopt))
           in
           (bs, {p with v = p_new}) (* keep the info and change the pattern *)
         in
@@ -877,13 +881,17 @@ and translate_fv (cfg: config) (bs:list t) (fvar:fv): t =
                         iapp = iapp cfg;
                         translate = translate cfg bs;
                       } in
-                      match prim_step.interpretation_nbe callbacks args' with
+                      debug (fun () -> BU.print1 "Caling primop with args = [%s]\n"
+                                    (List.map (fun (x, _) -> t_to_string x) args' |> String.concat "; "));
+                      let univs, rest = List.span (function ({nbe_t=Univ _ }, _) -> true | _ -> false) args' in
+                      let univs = List.map (function ({nbe_t=Univ u}, _) -> u | _ -> failwith "Impossible") univs in
+                      match prim_step.interpretation_nbe callbacks univs rest with
                       | Some x ->
                         debug (fun () -> BU.print2 "Primitive operator %s returned %s\n" (P.fv_to_string fvar) (t_to_string x));
                         x
                       | None ->
                         debug (fun () -> BU.print1 "Primitive operator %s failed\n" (P.fv_to_string fvar));
-                      iapp cfg (mkFV fvar [] []) args'),
+                        iapp cfg (mkFV fvar [] []) args'),
                      (let f (_:int) = S.mk_binder (S.new_bv None S.t_unit) in
                       Inl ([], FStar.Common.tabulate arity f, None)),
                      arity)

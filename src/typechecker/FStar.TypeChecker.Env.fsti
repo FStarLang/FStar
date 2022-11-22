@@ -100,7 +100,14 @@ type lift_comp_t = env -> comp -> comp * guard_t
  * AR: Env maintains polymonadic binds as functions of type polymonadic_bind_t
  *     read as: env -> c1 -> x -> c2 -> flags -> r -> (c * g)
  *)
-and polymonadic_bind_t = env -> comp_typ -> option bv -> comp_typ -> list cflag -> Range.range -> comp * guard_t
+and polymonadic_bind_t =
+  env ->
+  comp_typ ->
+  option bv ->
+  comp_typ ->
+  list cflag ->
+  Range.range ->
+  comp * guard_t
 
 and mlift = {
   mlift_wp:lift_comp_t;
@@ -141,7 +148,7 @@ and effects = {
   order :list edge;                                       (* transitive closure of the order in the signature *)
   joins :list (lident * lident * lident * mlift * mlift); (* least upper bounds *)
   polymonadic_binds :list (lident * lident * lident * polymonadic_bind_t);  (* (m, n) | p *)
-  polymonadic_subcomps :list (lident * lident * tscheme);  (* m <: n *)
+  polymonadic_subcomps :list (lident * lident * tscheme * S.indexed_effect_combinator_kind);  (* m <: n *)
 }
 
 and env = {
@@ -177,8 +184,9 @@ and env = {
   typeof_tot_or_gtot_term :env -> term -> must_tot -> term * typ * guard_t; (* typechecker callback; G |- e : (G)Tot t <== g *)
   universe_of :env -> term -> universe; (* typechecker callback; G |- e : Tot (Type u) *)
   typeof_well_typed_tot_or_gtot_term :env -> term -> must_tot -> typ * guard_t; (* typechecker callback, uses fast path, with a fallback on the slow path *)
-
-  use_bv_sorts   :bool;                           (* use bv.sort for a bound-variable's type rather than consulting gamma *)
+  teq_nosmt_force: env -> term -> term -> bool;        (* callback to the unifier *)
+  subtype_nosmt_force: env -> term -> term -> bool;    (* callback to the unifier *)
+  use_bv_sorts   :bool;                             (* use bv.sort for a bound-variable's type rather than consulting gamma *)
   qtbl_name_and_index:BU.smap int * option (lident*int);    (* the top-level term we're currently processing and the nth query for it, in addition we maintain a counter for query index per lid *)
   normalized_eff_names:BU.smap lident;           (* cache for normalized effect name, used to be captured in the function norm_eff_name, which made it harder to roll back etc. *)
   fv_delta_depths:BU.smap delta_depth;           (* cache for fv delta depths, its preferable to use Env.delta_depth_of_fv, soon fv.delta_depth should be removed *)
@@ -196,8 +204,10 @@ and env = {
   erasable_types_tab:BU.smap bool;              (* a dictionary of type names to erasable types *)
   enable_defer_to_tac: bool;                     (* Set by default; unset when running within a tactic itself, since we do not allow
                                                     a tactic to defer problems to another tactic via the attribute mechanism *)
-  unif_allow_ref_guards:bool;                    (* Allow guards when unifying refinements, even when SMT is disabled *)
-  erase_erasable_args: bool                      (* This flag is set when running normalize_for_extraction, see Extraction.ML.Modul *)
+  unif_allow_ref_guards:bool;                     (* Allow guards when unifying refinements, even when SMT is disabled *)
+  erase_erasable_args: bool;                      (* This flag is set when running normalize_for_extraction, see Extraction.ML.Modul *)
+
+  core_check: core_check_t;
 }
 
 and solver_depth_t = int * int * int
@@ -218,6 +228,9 @@ and solver_t = {
 and tcenv_hooks =
   { tc_push_in_gamma_hook : (env -> either binding sig_binding -> unit) }
 
+and core_check_t =
+  env -> term -> typ -> bool -> either (option typ) (bool -> string)
+
 type implicit = TcComm.implicit
 type implicits = TcComm.implicits
 type guard_t = TcComm.guard_t
@@ -236,8 +249,11 @@ val initial_env : FStar.Parser.Dep.deps ->
                   (env -> term -> must_tot -> term * typ * guard_t) ->
                   (env -> term -> must_tot -> option typ) ->
                   (env -> term -> universe) ->
+                  (env -> term -> term -> bool) ->
+                  (env -> term -> term -> bool) ->
                   solver_t -> lident ->
-                  (list step -> env -> term -> term) -> env
+                  (list step -> env -> term -> term) ->
+                  core_check_t -> env
 
 (* Some utilities *)
 val should_verify   : env -> bool
@@ -280,6 +296,7 @@ val lookup_univ            : env -> univ_name -> bool
 val try_lookup_val_decl    : env -> lident -> option (tscheme * list qualifier)
 val lookup_val_decl        : env -> lident -> (universes * typ)
 val lookup_datacon         : env -> lident -> universes * typ
+val lookup_and_inst_datacon: env -> universes -> lident -> typ
 (* the boolean tells if the lident was actually a inductive *)
 val datacons_of_typ        : env -> lident -> (bool * list lident)
 val typ_of_datacon         : env -> lident -> lident
@@ -337,7 +354,7 @@ val push_new_effect       : env -> (eff_decl * list qualifier) -> env
 //client constructs the mlift and gives it to us
 
 val exists_polymonadic_bind: env -> lident -> lident -> option (lident * polymonadic_bind_t)
-val exists_polymonadic_subcomp: env -> lident -> lident -> option tscheme
+val exists_polymonadic_subcomp: env -> lident -> lident -> option (tscheme & S.indexed_effect_combinator_kind)
 
 //print the effects graph in dot format
 val print_effects_graph: env -> string
@@ -346,7 +363,7 @@ val update_effect_lattice  : env -> src:lident -> tgt:lident -> mlift -> env
 
 val join_opt               : env -> lident -> lident -> option (lident * mlift * mlift)
 val add_polymonadic_bind   : env -> m:lident -> n:lident -> p:lident -> polymonadic_bind_t -> env
-val add_polymonadic_subcomp: env -> m:lident -> n:lident -> tscheme -> env
+val add_polymonadic_subcomp: env -> m:lident -> n:lident -> (tscheme & S.indexed_effect_combinator_kind) -> env
 
 val push_bv               : env -> bv -> env
 val push_bvs              : env -> list bv -> env
@@ -382,6 +399,7 @@ val monad_leq              : env -> lident -> lident -> option edge
 val effect_decl_opt        : env -> lident -> option (eff_decl * list qualifier)
 val get_effect_decl        : env -> lident -> eff_decl
 val get_default_effect     : env -> lident -> option lident
+val get_top_level_effect   : env -> lident -> option lident
 val is_layered_effect      : env -> lident -> bool
 val wp_signature           : env -> lident -> (bv * term)
 val comp_to_comp_typ       : env -> comp -> comp_typ
@@ -450,6 +468,15 @@ val def_check_closed_in_env   : Range.range -> msg:string -> env -> term -> unit
 val def_check_guard_wf        : Range.range -> msg:string -> env -> guard_t -> unit
 val close_forall              : env -> binders -> term -> term
 
+val new_tac_implicit_var (reason: string)
+                         (r: Range.range)
+                         (env:env)
+                         (uvar_typ:typ)
+                         (should_check:should_check_uvar)
+                         (uvar_typedness_deps:list ctx_uvar)
+                         (meta:option ctx_uvar_meta_t)
+  : (term * list (ctx_uvar * Range.range) * guard_t)
+
 val new_implicit_var_aux : string ->
                            Range.range ->
                            env ->
@@ -474,7 +501,13 @@ val print_gamma : gamma -> string
  * It returns the list of the uvars, and combined guard (which essentially contains the uvars as implicits)
  *)
 
-val uvars_for_binders : env -> bs:S.binders -> substs:S.subst_t -> reason:(S.binder -> string) -> r:Range.range -> (list S.term * guard_t)
+val uvars_for_binders :
+  env ->
+  bs:S.binders ->
+  substs:S.subst_t ->
+  reason:(S.binder -> string) ->
+  r:Range.range ->
+  (list S.term * guard_t)
 
 val pure_precondition_for_trivial_post : env -> universe -> typ -> typ -> Range.range -> typ
 

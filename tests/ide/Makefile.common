@@ -39,6 +39,7 @@ touch:
 
 FSTAR_HOME = ../../..
 include $(FSTAR_HOME)/ulib/gmake/z3.mk
+include $(FSTAR_HOME)/.common.mk
 
 ifdef Z3
 SMT=--smt $(Z3)
@@ -50,9 +51,11 @@ JSON_CLEANUP:=python ../cleanup.py
 # ‘fstar-write-transcript’, or possibly by ‘make build’) and save it as
 # ‘.out.expected’.
 %.out.accept: %.out
-	$(JSON_CLEANUP) "$<.expected" < "$<"
+	@echo '[ACCEPT    $<]'
+	$(Q)$(JSON_CLEANUP) "$<.expected" < "$<"
 
 # Verify that a given output matches the corresponding input
 %.out.check: %.out %.out.expected
-	diff -u --strip-trailing-cr "$<.expected" "$<"
-	touch $@
+	@echo '[DIFF      $<]'
+	$(Q)diff -u --strip-trailing-cr "$<.expected" "$<"
+	$(Q)touch $@

@@ -27,12 +27,12 @@ module Env = FStar.TypeChecker.Env
 
 val dmff_cps_and_elaborate : Env.env -> S.eff_decl -> (list S.sigelt * S.eff_decl * option S.sigelt)
 
-val tc_eff_decl : Env.env -> S.eff_decl -> list S.qualifier -> list S.attribute -> S.eff_decl
+val tc_eff_decl : Env.env -> S.eff_decl -> list S.qualifier -> list S.attribute -> S.eff_decl & list S.sigelt 
 
 val tc_lift : Env.env -> S.sub_eff -> Range.range -> S.sub_eff
 
 val tc_effect_abbrev : Env.env -> (lident * S.univ_names * S.binders * S.comp) -> Range.range -> (lident * S.univ_names * S.binders * S.comp)
 
-val tc_polymonadic_bind : Env.env -> m:lident -> n:lident -> p:lident -> bind_t:S.tscheme -> S.tscheme * S.tscheme
+val tc_polymonadic_bind : Env.env -> m:lident -> n:lident -> p:lident -> bind_t:S.tscheme -> S.tscheme & S.tscheme & S.indexed_effect_combinator_kind
 
-val tc_polymonadic_subcomp : Env.env -> m:lident -> n:lident -> subcomp_t:S.tscheme -> S.tscheme * S.tscheme
+val tc_polymonadic_subcomp : Env.env -> m:lident -> n:lident -> subcomp_t:S.tscheme -> S.tscheme & S.tscheme & S.indexed_effect_combinator_kind

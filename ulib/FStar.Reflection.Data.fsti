@@ -29,17 +29,19 @@ type vconst =
   | C_Reflect   : name -> vconst
   (* TODO: complete *)
 
+type universes = list universe
+
 // This is shadowing `pattern` from Prims (for smt_pats)
 noeq
 type pattern =
     | Pat_Constant : vconst -> pattern              // A built-in constant
-    | Pat_Cons     : fv -> list (pattern * bool) -> pattern
+    | Pat_Cons     : fv -> option universes -> list (pattern * bool) -> pattern
                                                     // A fully applied constructor, each boolean marks
                                                     // whether the argument was an explicitly-provided
                                                     // implicit argument
     | Pat_Var      : bv -> pattern                  // Pattern bound variable
     | Pat_Wild     : bv -> pattern                  // Wildcard (GM: why is this not Pat_var too?)
-    | Pat_Dot_Term : bv -> term -> pattern          // Dot pattern: resolved by other elements in the pattern and type
+    | Pat_Dot_Term : option term -> pattern          // Dot pattern: resolved by other elements in the pattern and type
 
 type branch = pattern * term  // | pattern -> term
 
@@ -57,8 +59,6 @@ type bv_view = {
     bv_index : int;
     bv_sort : typ;
 }
-
-type universes = list universe
 
 noeq
 type universe_view =
@@ -89,6 +89,9 @@ type term_view =
   | Tv_AscribedC : e:term -> c:comp -> tac:option term -> use_eq:bool -> term_view
   | Tv_Unknown  : term_view // Baked in "None"
 
+let notAscription (tv:term_view) : bool =
+  not (Tv_AscribedT? tv) && not (Tv_AscribedC? tv)
+
 // Very basic for now
 noeq
 type comp_view =
@@ -105,7 +108,6 @@ type comp_view =
 [Sg_Inductive] below. *)
 type ctor = name & typ
 
-
 noeq
 type lb_view = {
     lb_fv : fv;
@@ -113,7 +115,6 @@ type lb_view = {
     lb_typ : typ;
     lb_def : term
 }
-
 
 noeq
 type sigelt_view =
@@ -176,75 +177,4 @@ type exp : Type =
   | Var : var -> exp
   | Mult : exp -> exp -> exp
 
-
 type decls = list sigelt
-
-let rec forall_list (p:'a -> Type) (l:list 'a) : Type =
-    match l with
-    | [] -> True
-    | x::xs -> p x /\ forall_list p xs
-
-(* Comparison of a term_view to term. Allows to recurse while changing the view *)
-[@@ remove_unused_type_parameters [0; 1]]
-let smaller (tv:term_view) (t:term) : Type0 =
-    match tv with
-    | Tv_App l r ->
-        l << t /\ r << t /\ fst r << t
-
-    | Tv_Abs b t'
-    | Tv_Arrow b t' ->
-        b << t /\ t' << t
-
-    | Tv_Refine b t' ->
-        bv << t /\ t' << t
-
-    | Tv_Let r attrs bv t1 t2 ->
-        (forall_list (fun t' -> t' << t) attrs) /\ bv << t /\ t1 << t /\ t2 << t
-
-    | Tv_Match t1 ret_opt brs ->
-        t1 << t /\ ret_opt << t /\ (forall_list (fun (b, t') -> t' << t) brs)
-
-    | Tv_AscribedT e ty tac _use_eq ->
-      e << t /\ ty << t /\ tac << t
-
-    | Tv_AscribedC e c tac _use_eq ->
-      e << t /\ c << t /\ tac << t
-
-    | Tv_Type _
-    | Tv_Const _
-    | Tv_Unknown
-    | Tv_Var _
-    | Tv_BVar _
-    | Tv_Uvar _ _
-    | Tv_FVar _
-    | Tv_UInst _ _ -> True
-
-[@@ remove_unused_type_parameters [0; 1]]
-let smaller_comp (cv:comp_view) (c:comp) : Type0 =
-    match cv with
-    | C_Total t _ md -> t << c /\ md << c
-    | C_GTotal t _ md ->
-        t << c /\ md << c
-    | C_Lemma pre post pats ->
-        pre << c /\ post << c /\ pats << c
-    | C_Eff _us eff res args ->
-        res << c
-
-[@@ remove_unused_type_parameters [0; 1]]
-let smaller_bv (bvv:bv_view) (bv:bv) : Type0 =
-    bvv.bv_sort << bv
-
-[@@ remove_unused_type_parameters [0; 1]]
-let smaller_binder (b:binder) ((bv, _): bv * aqualv) : Type0 =
-    bv << b
-
-[@@ remove_unused_type_parameters [0; 1]]
-let smaller_universe (uv:universe_view) (u:universe) : Type0 =
-  match uv with
-  | Uv_Succ u' -> u' << u
-  | Uv_Max us -> us << u
-  | Uv_Zero
-  | Uv_BVar _
-  | Uv_Name _
-  | Uv_Unif _
-  | Uv_Unk -> True

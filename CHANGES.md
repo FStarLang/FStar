@@ -13,7 +13,39 @@ Guidelines for the changelog:
 
 # Version 0.9.7.0
 
-## Tactics
+## Tactics & Reflection
+  * As a better fix for Bug2635, F* now has a memoizing core typechecker for total
+    (including ghost terms that are total) terms. The unification solutions, including
+    those computed in the tactics engine, are typechecked using this core typechecker.
+
+    This is a breaking change, since the core typechecker may fail to typecheck those
+    solutions, or produce SMT guards that, for example, may need to be handled by the
+    tactics.
+
+    There are a couple of ways to maintain backward compatibility.
+
+    There is a new command line option (also settable via `#set-options` in a file)
+    `--compat_pre_core <n>` , where n is either 0, 1, or 2. Value 0 is most permissive and
+    value 2 is most strict, with the metric being how much of the core typechecker is applied.
+
+    This flag is a global setting that applies "relaxed" treatment to all the unification
+    solutions. For controlling this more locally, there is a new tactic primitive
+    `with_compat_pre_core` (see https://github.com/FStarLang/FStar/blob/master/ulib/FStar.Tactics.Builtins.fsti),
+    that applies the compat pre core setting only to the input tactic invocation.
+    See https://github.com/FStarLang/FStar/blob/master/ulib/experimental/Steel.Effect.Common.fsti
+    for an example usage.
+
+  * Pat_Dot_Term now only has an `option term` as argument, where a `Some e` indicates that
+    the dot pattern has been resolved to `e`.
+
+  * Pat_Cons, the case of constructed patterns, now takes an additional argument representing
+    the universe instantiation of the constructor.
+  
+  * The behavior of `pack` was changed to canonize arrows by flattening them in the internal
+    compiler representation (https://github.com/FStarLang/FStar/pull/2609).
+    An alternative version of `pack` called `pack_curried` which does not perform canonization,
+    thus retrieving the previous behavior was also exposed.
+
   * Mutually recursive let bindings are now supported in the reflected syntax, using the
     same constructor (`Tv_Let`) as before (https://github.com/FStarLang/FStar/pull/2291.
     Inspection of a let binding now usually looks like this:
@@ -31,6 +63,19 @@ Guidelines for the changelog:
      ...
     ```
 
+  * Bug2635, reported by Benjamin Bonneau, revealed an unsoundness in
+    the way the tactic engine was using the unifier. In some cases, it
+    would enable terms at a weaker type to be accepted as solutions
+    for a goal at a refinement type, without presenting any goals for
+    the refinement formula itself. This is now fixed by adding a phase
+    at the end of tactic evaluation that checks that any
+    as-yet-unchecked solution actually has the type of the goal. If
+    this check fails, F* reports Error 217 and suggests to use the new
+    primitive tactic
+    `gather_or_solve_explicit_guards_for_resolved_goals` which
+    collects all those refinement goals and presents them to the user
+    tactic for furhter processing.
+
 ## Typeclass argument syntax
 
   * The syntax for a typeclass argument (a.k.a. constraint) is now `{| ... |}`
@@ -42,6 +87,17 @@ Guidelines for the changelog:
   * Friend modules (https://github.com/FStarLang/FStar/wiki/Friend-modules)
 
 ## Core typechecker
+  * PR https://github.com/FStarLang/FStar/pull/2760 introduces core typechecking for
+    implicits introduced for application of indexed effects combinators. This is a
+    breaking change, since indexed effects clients are subject to stricter typechecking.
+
+    See the PR description for more details.
+
+  * Cf. #2641, F* now supports only type-based reasoning of reification of indexed
+    effects. See https://github.com/FStarLang/FStar/issues/2641 for more discussions
+    and associated pull request. This may be a breaking change for clients relying on
+    extraction/smt reasoning of indexed effects via reification.
+
   * F* now supports accessibility predicates based termination proofs. When writing a recursive function
 
     ```
@@ -201,6 +257,56 @@ Guidelines for the changelog:
      provided (using UInt128).
 
 ## Syntax
+    
+   * PR #2745 adds support for `if` operators: the syntax `if* a then
+     ...` (with `*` an operator) is now accepted and desugared as
+     `let* [c] = a in if [c] then ...`.
+
+   * PR #2671 allows operators as field names in record expressions
+     and record type declaration. Example:
+
+	 ```fstar
+	 type foo = { ( ^ ): int  }
+	 let _: foo = { ( ^ ) = 3 }
+	 ```
+
+	 See `tests/micro-benchmarks/RecordFieldOperator.fst` for details.
+
+   * PR #2670 makes F*'s parser accept unparenthesised record
+     expressions on function application. `f {x = 1}` is now legal
+     F\*, while before one was forced to write `f ({x = 1})`.
+
+	   Note that in the context of a (possible) refinement, this is not
+     allowed since it is a parser conflict.
+
+   * PR #2669 allows name quotes in patterns, i.e. ``%`foo`` is a
+     valid pattern and is desugared to the constant string
+     pattern `"X.Y.Z.foo"`, with `X.Y.Z` being `foo`'s module.
+
+   * PR #2686 forbids the sequence `//` in operators. For instance,
+     `+//` used to be a legal operator, it is not the case anymore,
+     since it is ambiguous with the comment syntax.
+
+   * PR #2644 introduces monadic let operators in the surface
+     syntax. One can now write:
+
+	 ```
+	 let (let?) (x: option 'a) (f: 'a -> option 'b): option 'b
+       = match x with
+       | Some x -> f x
+       | None   -> None
+
+     let foo (x: option (int * option int)) =
+	    let? (a, b) = x in
+		match? b with
+		...
+	 ```
+
+     Where `?` is any operator sequence; there is also support for
+     `and?`, `;?`, etc. See [example module
+     `MonadicLetBindings`](./examples/misc/MonadicLetBindings.fst) for
+     more details.
+
    * PR #2603 introduces universes in the reflection syntax.
      It is a potentially breaking change for reflection clients.
      See the PR for more description.

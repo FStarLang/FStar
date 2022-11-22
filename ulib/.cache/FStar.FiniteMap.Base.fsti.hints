@@ -1,0 +1,92 @@
+[
+  "î\u0001]–èö\\HôU\u0007_Ñ\u0005¬Ç",
+  [
+    [
+      "FStar.FiniteMap.Base.key_in_item_list",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "binder_x_c02a87b7307268e9ac6c8f3d9da6da75_4",
+        "disc_equation_Prims.Cons", "disc_equation_Prims.Nil",
+        "equation_Prims.eqtype", "equation_Prims.op_Equals_Equals_Equals",
+        "fuel_guarded_inversion_Prims.list",
+        "projection_inverse_BoxBool_proj_0", "subterm_ordering_Prims.Cons"
+      ],
+      0,
+      "3229dfce8e3f797e71ee2b42fc1880cb"
+    ],
+    [
+      "FStar.FiniteMap.Base.item_list_doesnt_repeat_keys",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "binder_x_c02a87b7307268e9ac6c8f3d9da6da75_3",
+        "disc_equation_Prims.Cons", "disc_equation_Prims.Nil",
+        "equation_Prims.eqtype", "equation_Prims.op_Equals_Equals_Equals",
+        "fuel_guarded_inversion_Prims.list",
+        "projection_inverse_BoxBool_proj_0", "subterm_ordering_Prims.Cons"
+      ],
+      0,
+      "d9d572a902fd430822d3ba5915ada65a"
+    ],
+    [
+      "FStar.FiniteMap.Base.lookup",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "disc_equation_FStar.Pervasives.Native.Some",
+        "equation_FStar.FiniteMap.Base.mem",
+        "equation_FStar.FiniteMap.Base.setfun_t",
+        "refinement_interpretation_Tm_refine_68bf9bd3ada09e18181b562d70ce751b",
+        "refinement_interpretation_Tm_refine_824e11a232832f5d5a9d46bcc4172854",
+        "token_correspondence_FStar.FiniteMap.Base.elements",
+        "typing_FStar.FiniteMap.Base.elements"
+      ],
+      0,
+      "1ac701ce881637d9c953ad98d6bfabb5"
+    ],
+    [
+      "FStar.FiniteMap.Base.map_cardinality_matches_domain_fact",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.eqtype",
+        "equation_Prims.nat", "function_token_typing_Prims.int",
+        "haseqTm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
+      ],
+      0,
+      "90bebbd2d3f5b3e5024f233ecc4651e1"
+    ],
+    [
+      "FStar.FiniteMap.Base.glue_elements_fact",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "18e93e5c4f5ea7465926de750134973e"
+    ],
+    [
+      "FStar.FiniteMap.Base.insert_member_cardinality_fact",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.eqtype",
+        "equation_Prims.nat", "function_token_typing_Prims.int",
+        "haseqTm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
+      ],
+      0,
+      "1fb064ba9a114994e7325a89d443c846"
+    ]
+  ]
+]

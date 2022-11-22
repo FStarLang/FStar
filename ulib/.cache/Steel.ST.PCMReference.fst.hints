@@ -1,0 +1,87 @@
+[
+  "Kuþs\u0006»¦:T’ÁÚØ(,)",
+  [
+    [
+      "Steel.ST.PCMReference.split",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "4bb5d4328360468b4211c89d04fa9d5c"
+    ],
+    [
+      "Steel.ST.PCMReference.split",
+      2,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "d1253944ded47e3321f1cc1bae0c2069"
+    ],
+    [
+      "Steel.ST.PCMReference.gather",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_625413e9a3a548e616103efddf1886c4"
+      ],
+      0,
+      "971fc1d94ec893bb7deccaa15c58bf75"
+    ],
+    [
+      "Steel.ST.PCMReference.gather",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_625413e9a3a548e616103efddf1886c4"
+      ],
+      0,
+      "7cbd469ffa2a4617d6f25ef2d37b3f79"
+    ],
+    [
+      "Steel.ST.PCMReference.witness'",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "equation_Steel.ST.PCMReference.fact_valid_compat",
+        "refinement_interpretation_Tm_refine_816f3fe7bd55a9e3150fe37777137c20"
+      ],
+      0,
+      "38d8b5a8c25127dfdbb17f40bdf068cb"
+    ],
+    [
+      "Steel.ST.PCMReference.witness",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "d2cc38308e50910e2f37fd844950f1bc"
+    ],
+    [
+      "Steel.ST.PCMReference.select_refine",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "e88d9a984920acfa978fe602e61bf79b"
+    ],
+    [
+      "Steel.ST.PCMReference.select_refine",
+      2,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "57021a19e1f8be9ca7fade755e91d46d"
+    ]
+  ]
+]

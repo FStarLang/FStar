@@ -128,7 +128,10 @@ let (pred_nat :
   =
   fun s ->
     let zbranch =
-      let uu___ = pat (FStar_Syntax_Syntax.Pat_cons (znat_l, [])) in
+      let uu___ =
+        pat
+          (FStar_Syntax_Syntax.Pat_cons
+             (znat_l, FStar_Pervasives_Native.None, [])) in
       (uu___, FStar_Pervasives_Native.None, znat) in
     let sbranch =
       let uu___ =
@@ -140,7 +143,7 @@ let (pred_nat :
                   pat (FStar_Syntax_Syntax.Pat_var FStar_Tests_Util.x) in
                 (uu___5, false) in
               [uu___4] in
-            (snat_l, uu___3) in
+            (snat_l, FStar_Pervasives_Native.None, uu___3) in
           FStar_Syntax_Syntax.Pat_cons uu___2 in
         pat uu___1 in
       let uu___1 =
@@ -180,7 +183,10 @@ let (minus_nat :
           FStar_Syntax_Syntax.sort = snat_type
         } in
       let zbranch =
-        let uu___ = pat (FStar_Syntax_Syntax.Pat_cons (znat_l, [])) in
+        let uu___ =
+          pat
+            (FStar_Syntax_Syntax.Pat_cons
+               (znat_l, FStar_Pervasives_Native.None, [])) in
         let uu___1 = FStar_Tests_Util.nm x in
         (uu___, FStar_Pervasives_Native.None, uu___1) in
       let sbranch =
@@ -193,7 +199,7 @@ let (minus_nat :
                     pat (FStar_Syntax_Syntax.Pat_var FStar_Tests_Util.n) in
                   (uu___5, false) in
                 [uu___4] in
-              (snat_l, uu___3) in
+              (snat_l, FStar_Pervasives_Native.None, uu___3) in
             FStar_Syntax_Syntax.Pat_cons uu___2 in
           pat uu___1 in
         let uu___1 =
@@ -247,7 +253,7 @@ let (encode_nat : Prims.int -> FStar_Syntax_Syntax.term) =
       then out
       else (let uu___1 = snat out in aux uu___1 (n1 - Prims.int_one)) in
     aux znat n
-let (tests :
+let (default_tests :
   (Prims.int * FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax *
     FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax) Prims.list)
   =
@@ -591,8 +597,7 @@ let (tests :
                                                  snat uu___67 in
                                                let uu___67 = snat znat in
                                                minus_nat uu___66 uu___67 in
-                                             FStar_Tests_Pars.tc_nbe_term
-                                               uu___65 in
+                                             FStar_Tests_Pars.tc_term uu___65 in
                                            let uu___65 = snat znat in
                                            ((Prims.of_int (19)), uu___64,
                                              uu___65) in
@@ -607,7 +612,7 @@ let (tests :
                                                    encode_nat
                                                      (Prims.of_int (10)) in
                                                  minus_nat uu___68 uu___69 in
-                                               FStar_Tests_Pars.tc_nbe_term
+                                               FStar_Tests_Pars.tc_term
                                                  uu___67 in
                                              ((Prims.of_int (20)), uu___66,
                                                znat) in
@@ -622,67 +627,67 @@ let (tests :
                                                      encode_nat
                                                        (Prims.of_int (100)) in
                                                    minus_nat uu___70 uu___71 in
-                                                 FStar_Tests_Pars.tc_nbe_term
+                                                 FStar_Tests_Pars.tc_term
                                                    uu___69 in
                                                ((Prims.of_int (21)), uu___68,
                                                  znat) in
                                              let uu___68 =
                                                let uu___69 =
                                                  let uu___70 =
-                                                   FStar_Tests_Pars.tc_nbe
+                                                   FStar_Tests_Pars.tc
                                                      "recons [0;1]" in
                                                  let uu___71 =
-                                                   FStar_Tests_Pars.tc_nbe
+                                                   FStar_Tests_Pars.tc
                                                      "[0;1]" in
                                                  ((Prims.of_int (24)),
                                                    uu___70, uu___71) in
                                                let uu___70 =
                                                  let uu___71 =
                                                    let uu___72 =
-                                                     FStar_Tests_Pars.tc_nbe
+                                                     FStar_Tests_Pars.tc
                                                        "recons [false;true;false]" in
                                                    let uu___73 =
-                                                     FStar_Tests_Pars.tc_nbe
+                                                     FStar_Tests_Pars.tc
                                                        "[false;true;false]" in
                                                    ((Prims.of_int (241)),
                                                      uu___72, uu___73) in
                                                  let uu___72 =
                                                    let uu___73 =
                                                      let uu___74 =
-                                                       FStar_Tests_Pars.tc_nbe
+                                                       FStar_Tests_Pars.tc
                                                          "copy [0;1]" in
                                                      let uu___75 =
-                                                       FStar_Tests_Pars.tc_nbe
+                                                       FStar_Tests_Pars.tc
                                                          "[0;1]" in
                                                      ((Prims.of_int (25)),
                                                        uu___74, uu___75) in
                                                    let uu___74 =
                                                      let uu___75 =
                                                        let uu___76 =
-                                                         FStar_Tests_Pars.tc_nbe
+                                                         FStar_Tests_Pars.tc
                                                            "rev [0;1;2;3;4;5;6;7;8;9;10]" in
                                                        let uu___77 =
-                                                         FStar_Tests_Pars.tc_nbe
+                                                         FStar_Tests_Pars.tc
                                                            "[10;9;8;7;6;5;4;3;2;1;0]" in
                                                        ((Prims.of_int (26)),
                                                          uu___76, uu___77) in
                                                      let uu___76 =
                                                        let uu___77 =
                                                          let uu___78 =
-                                                           FStar_Tests_Pars.tc_nbe
+                                                           FStar_Tests_Pars.tc
                                                              "(fun x y z q -> z) T T F T" in
                                                          let uu___79 =
-                                                           FStar_Tests_Pars.tc_nbe
+                                                           FStar_Tests_Pars.tc
                                                              "F" in
                                                          ((Prims.of_int (28)),
                                                            uu___78, uu___79) in
                                                        let uu___78 =
                                                          let uu___79 =
                                                            let uu___80 =
-                                                             FStar_Tests_Pars.tc_nbe
+                                                             FStar_Tests_Pars.tc
                                                                "[T; F]" in
                                                            let uu___81 =
-                                                             FStar_Tests_Pars.tc_nbe
+                                                             FStar_Tests_Pars.tc
                                                                "[T; F]" in
                                                            ((Prims.of_int (29)),
                                                              uu___80,
@@ -690,10 +695,10 @@ let (tests :
                                                          let uu___80 =
                                                            let uu___81 =
                                                              let uu___82 =
-                                                               FStar_Tests_Pars.tc_nbe
+                                                               FStar_Tests_Pars.tc
                                                                  "id_tb T" in
                                                              let uu___83 =
-                                                               FStar_Tests_Pars.tc_nbe
+                                                               FStar_Tests_Pars.tc
                                                                  "T" in
                                                              ((Prims.of_int (31)),
                                                                uu___82,
@@ -701,10 +706,10 @@ let (tests :
                                                            let uu___82 =
                                                              let uu___83 =
                                                                let uu___84 =
-                                                                 FStar_Tests_Pars.tc_nbe
+                                                                 FStar_Tests_Pars.tc
                                                                    "(fun #a x -> x) #tb T" in
                                                                let uu___85 =
-                                                                 FStar_Tests_Pars.tc_nbe
+                                                                 FStar_Tests_Pars.tc
                                                                    "T" in
                                                                ((Prims.of_int (32)),
                                                                  uu___84,
@@ -713,11 +718,11 @@ let (tests :
                                                                let uu___85 =
                                                                  let uu___86
                                                                    =
-                                                                   FStar_Tests_Pars.tc_nbe
+                                                                   FStar_Tests_Pars.tc
                                                                     "revtb T" in
                                                                  let uu___87
                                                                    =
-                                                                   FStar_Tests_Pars.tc_nbe
+                                                                   FStar_Tests_Pars.tc
                                                                     "F" in
                                                                  ((Prims.of_int (33)),
                                                                    uu___86,
@@ -727,11 +732,11 @@ let (tests :
                                                                    =
                                                                    let uu___88
                                                                     =
-                                                                    FStar_Tests_Pars.tc_nbe
+                                                                    FStar_Tests_Pars.tc
                                                                     "(fun x y -> x) T F" in
                                                                    let uu___89
                                                                     =
-                                                                    FStar_Tests_Pars.tc_nbe
+                                                                    FStar_Tests_Pars.tc
                                                                     "T" in
                                                                    ((Prims.of_int (34)),
                                                                     uu___88,
@@ -742,11 +747,11 @@ let (tests :
                                                                     =
                                                                     let uu___90
                                                                     =
-                                                                    FStar_Tests_Pars.tc_nbe
+                                                                    FStar_Tests_Pars.tc
                                                                     "fst_a T F" in
                                                                     let uu___91
                                                                     =
-                                                                    FStar_Tests_Pars.tc_nbe
+                                                                    FStar_Tests_Pars.tc
                                                                     "T" in
                                                                     ((Prims.of_int (35)),
                                                                     uu___90,
@@ -757,11 +762,11 @@ let (tests :
                                                                     =
                                                                     let uu___92
                                                                     =
-                                                                    FStar_Tests_Pars.tc_nbe
+                                                                    FStar_Tests_Pars.tc
                                                                     "idd T" in
                                                                     let uu___93
                                                                     =
-                                                                    FStar_Tests_Pars.tc_nbe
+                                                                    FStar_Tests_Pars.tc
                                                                     "T" in
                                                                     ((Prims.of_int (36)),
                                                                     uu___92,
@@ -772,11 +777,11 @@ let (tests :
                                                                     =
                                                                     let uu___94
                                                                     =
-                                                                    FStar_Tests_Pars.tc_nbe
+                                                                    FStar_Tests_Pars.tc
                                                                     "id_list [T]" in
                                                                     let uu___95
                                                                     =
-                                                                    FStar_Tests_Pars.tc_nbe
+                                                                    FStar_Tests_Pars.tc
                                                                     "[T]" in
                                                                     ((Prims.of_int (301)),
                                                                     uu___94,
@@ -787,11 +792,11 @@ let (tests :
                                                                     =
                                                                     let uu___96
                                                                     =
-                                                                    FStar_Tests_Pars.tc_nbe
+                                                                    FStar_Tests_Pars.tc
                                                                     "id_list_m [T]" in
                                                                     let uu___97
                                                                     =
-                                                                    FStar_Tests_Pars.tc_nbe
+                                                                    FStar_Tests_Pars.tc
                                                                     "[T]" in
                                                                     ((Prims.of_int (3012)),
                                                                     uu___96,
@@ -802,11 +807,11 @@ let (tests :
                                                                     =
                                                                     let uu___98
                                                                     =
-                                                                    FStar_Tests_Pars.tc_nbe
+                                                                    FStar_Tests_Pars.tc
                                                                     "recons_m [T; F]" in
                                                                     let uu___99
                                                                     =
-                                                                    FStar_Tests_Pars.tc_nbe
+                                                                    FStar_Tests_Pars.tc
                                                                     "[T; F]" in
                                                                     ((Prims.of_int (302)),
                                                                     uu___98,
@@ -817,11 +822,11 @@ let (tests :
                                                                     =
                                                                     let uu___100
                                                                     =
-                                                                    FStar_Tests_Pars.tc_nbe
+                                                                    FStar_Tests_Pars.tc
                                                                     "select T A1 A3" in
                                                                     let uu___101
                                                                     =
-                                                                    FStar_Tests_Pars.tc_nbe
+                                                                    FStar_Tests_Pars.tc
                                                                     "A1" in
                                                                     ((Prims.of_int (303)),
                                                                     uu___100,
@@ -832,11 +837,11 @@ let (tests :
                                                                     =
                                                                     let uu___102
                                                                     =
-                                                                    FStar_Tests_Pars.tc_nbe
+                                                                    FStar_Tests_Pars.tc
                                                                     "select T 3 4" in
                                                                     let uu___103
                                                                     =
-                                                                    FStar_Tests_Pars.tc_nbe
+                                                                    FStar_Tests_Pars.tc
                                                                     "3" in
                                                                     ((Prims.of_int (3031)),
                                                                     uu___102,
@@ -847,11 +852,11 @@ let (tests :
                                                                     =
                                                                     let uu___104
                                                                     =
-                                                                    FStar_Tests_Pars.tc_nbe
+                                                                    FStar_Tests_Pars.tc
                                                                     "select_bool false 3 4" in
                                                                     let uu___105
                                                                     =
-                                                                    FStar_Tests_Pars.tc_nbe
+                                                                    FStar_Tests_Pars.tc
                                                                     "4" in
                                                                     ((Prims.of_int (3032)),
                                                                     uu___104,
@@ -862,11 +867,11 @@ let (tests :
                                                                     =
                                                                     let uu___106
                                                                     =
-                                                                    FStar_Tests_Pars.tc_nbe
+                                                                    FStar_Tests_Pars.tc
                                                                     "select_int3 1 7 8 9" in
                                                                     let uu___107
                                                                     =
-                                                                    FStar_Tests_Pars.tc_nbe
+                                                                    FStar_Tests_Pars.tc
                                                                     "8" in
                                                                     ((Prims.of_int (3033)),
                                                                     uu___106,
@@ -877,11 +882,11 @@ let (tests :
                                                                     =
                                                                     let uu___108
                                                                     =
-                                                                    FStar_Tests_Pars.tc_nbe
+                                                                    FStar_Tests_Pars.tc
                                                                     "[5]" in
                                                                     let uu___109
                                                                     =
-                                                                    FStar_Tests_Pars.tc_nbe
+                                                                    FStar_Tests_Pars.tc
                                                                     "[5]" in
                                                                     ((Prims.of_int (3034)),
                                                                     uu___108,
@@ -892,11 +897,11 @@ let (tests :
                                                                     =
                                                                     let uu___110
                                                                     =
-                                                                    FStar_Tests_Pars.tc_nbe
+                                                                    FStar_Tests_Pars.tc
                                                                     "[\"abcd\"]" in
                                                                     let uu___111
                                                                     =
-                                                                    FStar_Tests_Pars.tc_nbe
+                                                                    FStar_Tests_Pars.tc
                                                                     "[\"abcd\"]" in
                                                                     ((Prims.of_int (3035)),
                                                                     uu___110,
@@ -907,11 +912,11 @@ let (tests :
                                                                     =
                                                                     let uu___112
                                                                     =
-                                                                    FStar_Tests_Pars.tc_nbe
+                                                                    FStar_Tests_Pars.tc
                                                                     "select_string3 \"def\" 5 6 7" in
                                                                     let uu___113
                                                                     =
-                                                                    FStar_Tests_Pars.tc_nbe
+                                                                    FStar_Tests_Pars.tc
                                                                     "6" in
                                                                     ((Prims.of_int (3036)),
                                                                     uu___112,
@@ -922,11 +927,11 @@ let (tests :
                                                                     =
                                                                     let uu___114
                                                                     =
-                                                                    FStar_Tests_Pars.tc_nbe
+                                                                    FStar_Tests_Pars.tc
                                                                     "idd T" in
                                                                     let uu___115
                                                                     =
-                                                                    FStar_Tests_Pars.tc_nbe
+                                                                    FStar_Tests_Pars.tc
                                                                     "T" in
                                                                     ((Prims.of_int (305)),
                                                                     uu___114,
@@ -937,11 +942,11 @@ let (tests :
                                                                     =
                                                                     let uu___116
                                                                     =
-                                                                    FStar_Tests_Pars.tc_nbe
+                                                                    FStar_Tests_Pars.tc
                                                                     "recons [T]" in
                                                                     let uu___117
                                                                     =
-                                                                    FStar_Tests_Pars.tc_nbe
+                                                                    FStar_Tests_Pars.tc
                                                                     "[T]" in
                                                                     ((Prims.of_int (306)),
                                                                     uu___116,
@@ -952,11 +957,11 @@ let (tests :
                                                                     =
                                                                     let uu___118
                                                                     =
-                                                                    FStar_Tests_Pars.tc_nbe
+                                                                    FStar_Tests_Pars.tc
                                                                     "copy_tb_list_2 [T;F;T;F;T;F;F]" in
                                                                     let uu___119
                                                                     =
-                                                                    FStar_Tests_Pars.tc_nbe
+                                                                    FStar_Tests_Pars.tc
                                                                     "[T;F;T;F;T;F;F]" in
                                                                     ((Prims.of_int (307)),
                                                                     uu___118,
@@ -967,11 +972,11 @@ let (tests :
                                                                     =
                                                                     let uu___120
                                                                     =
-                                                                    FStar_Tests_Pars.tc_nbe
+                                                                    FStar_Tests_Pars.tc
                                                                     "copy_list_2    [T;F;T;F;T;F;F]" in
                                                                     let uu___121
                                                                     =
-                                                                    FStar_Tests_Pars.tc_nbe
+                                                                    FStar_Tests_Pars.tc
                                                                     "[T;F;T;F;T;F;F]" in
                                                                     ((Prims.of_int (308)),
                                                                     uu___120,
@@ -982,11 +987,11 @@ let (tests :
                                                                     =
                                                                     let uu___122
                                                                     =
-                                                                    FStar_Tests_Pars.tc_nbe
+                                                                    FStar_Tests_Pars.tc
                                                                     "rev [T; F; F]" in
                                                                     let uu___123
                                                                     =
-                                                                    FStar_Tests_Pars.tc_nbe
+                                                                    FStar_Tests_Pars.tc
                                                                     "[F; F; T]" in
                                                                     ((Prims.of_int (304)),
                                                                     uu___122,
@@ -997,11 +1002,11 @@ let (tests :
                                                                     =
                                                                     let uu___124
                                                                     =
-                                                                    FStar_Tests_Pars.tc_nbe
+                                                                    FStar_Tests_Pars.tc
                                                                     "rev [[T]; [F; T]]" in
                                                                     let uu___125
                                                                     =
-                                                                    FStar_Tests_Pars.tc_nbe
+                                                                    FStar_Tests_Pars.tc
                                                                     "[[F; T]; [T]]" in
                                                                     ((Prims.of_int (305)),
                                                                     uu___124,
@@ -1012,11 +1017,11 @@ let (tests :
                                                                     =
                                                                     let uu___126
                                                                     =
-                                                                    FStar_Tests_Pars.tc_nbe
+                                                                    FStar_Tests_Pars.tc
                                                                     "x1" in
                                                                     let uu___127
                                                                     =
-                                                                    FStar_Tests_Pars.tc_nbe
+                                                                    FStar_Tests_Pars.tc
                                                                     "6" in
                                                                     ((Prims.of_int (309)),
                                                                     uu___126,
@@ -1027,11 +1032,11 @@ let (tests :
                                                                     =
                                                                     let uu___128
                                                                     =
-                                                                    FStar_Tests_Pars.tc_nbe
+                                                                    FStar_Tests_Pars.tc
                                                                     "x2" in
                                                                     let uu___129
                                                                     =
-                                                                    FStar_Tests_Pars.tc_nbe
+                                                                    FStar_Tests_Pars.tc
                                                                     "2" in
                                                                     ((Prims.of_int (310)),
                                                                     uu___128,
@@ -1042,11 +1047,11 @@ let (tests :
                                                                     =
                                                                     let uu___130
                                                                     =
-                                                                    FStar_Tests_Pars.tc_nbe
+                                                                    FStar_Tests_Pars.tc
                                                                     "7 + 3" in
                                                                     let uu___131
                                                                     =
-                                                                    FStar_Tests_Pars.tc_nbe
+                                                                    FStar_Tests_Pars.tc
                                                                     "10" in
                                                                     ((Prims.of_int (401)),
                                                                     uu___130,
@@ -1057,11 +1062,11 @@ let (tests :
                                                                     =
                                                                     let uu___132
                                                                     =
-                                                                    FStar_Tests_Pars.tc_nbe
+                                                                    FStar_Tests_Pars.tc
                                                                     "true && false" in
                                                                     let uu___133
                                                                     =
-                                                                    FStar_Tests_Pars.tc_nbe
+                                                                    FStar_Tests_Pars.tc
                                                                     "false" in
                                                                     ((Prims.of_int (402)),
                                                                     uu___132,
@@ -1072,11 +1077,11 @@ let (tests :
                                                                     =
                                                                     let uu___134
                                                                     =
-                                                                    FStar_Tests_Pars.tc_nbe
+                                                                    FStar_Tests_Pars.tc
                                                                     "3 = 5" in
                                                                     let uu___135
                                                                     =
-                                                                    FStar_Tests_Pars.tc_nbe
+                                                                    FStar_Tests_Pars.tc
                                                                     "false" in
                                                                     ((Prims.of_int (403)),
                                                                     uu___134,
@@ -1087,11 +1092,11 @@ let (tests :
                                                                     =
                                                                     let uu___136
                                                                     =
-                                                                    FStar_Tests_Pars.tc_nbe
+                                                                    FStar_Tests_Pars.tc
                                                                     "\"abc\" ^ \"def\"" in
                                                                     let uu___137
                                                                     =
-                                                                    FStar_Tests_Pars.tc_nbe
+                                                                    FStar_Tests_Pars.tc
                                                                     "\"abcdef\"" in
                                                                     ((Prims.of_int (404)),
                                                                     uu___136,
@@ -1102,11 +1107,11 @@ let (tests :
                                                                     =
                                                                     let uu___138
                                                                     =
-                                                                    FStar_Tests_Pars.tc_nbe
+                                                                    FStar_Tests_Pars.tc
                                                                     "(fun (x:list int) -> match x with | [] -> 0 | hd::tl -> 1) []" in
                                                                     let uu___139
                                                                     =
-                                                                    FStar_Tests_Pars.tc_nbe
+                                                                    FStar_Tests_Pars.tc
                                                                     "0" in
                                                                     ((Prims.of_int (405)),
                                                                     uu___138,
@@ -1248,6 +1253,21 @@ let run_either :
                let uu___8 = FStar_Syntax_Util.unascribe x in
                FStar_Tests_Util.term_eq uu___8 expected in
              FStar_Tests_Util.always i uu___7)))
+let (run_whnf :
+  Prims.int ->
+    FStar_Syntax_Syntax.term ->
+      FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax -> unit)
+  =
+  fun i ->
+    fun r ->
+      fun expected ->
+        let steps =
+          [FStar_TypeChecker_Env.Primops;
+          FStar_TypeChecker_Env.Weak;
+          FStar_TypeChecker_Env.HNF;
+          FStar_TypeChecker_Env.UnfoldUntil
+            FStar_Syntax_Syntax.delta_constant] in
+        run_either i r expected (FStar_TypeChecker_Normalize.normalize steps)
 let (run_interpreter :
   Prims.int ->
     FStar_Syntax_Syntax.term ->
@@ -1288,6 +1308,20 @@ let (run_interpreter_with_time :
           let uu___1 = FStar_Compiler_Util.return_execution_time interp in
           FStar_Pervasives_Native.snd uu___1 in
         (i, uu___)
+let (run_whnf_with_time :
+  Prims.int ->
+    FStar_Syntax_Syntax.term ->
+      FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax ->
+        (Prims.int * FStar_BaseTypes.float))
+  =
+  fun i ->
+    fun r ->
+      fun expected ->
+        let whnf uu___ = run_whnf i r expected in
+        let uu___ =
+          let uu___1 = FStar_Compiler_Util.return_execution_time whnf in
+          FStar_Pervasives_Native.snd uu___1 in
+        (i, uu___)
 let (run_nbe_with_time :
   Prims.int ->
     FStar_Syntax_Syntax.term ->
@@ -1303,40 +1337,67 @@ let (run_nbe_with_time :
           FStar_Pervasives_Native.snd uu___1 in
         (i, uu___)
 let run_tests :
-  'uuuuu .
-    (Prims.int ->
-       FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax ->
-         FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax -> 'uuuuu)
-      -> 'uuuuu Prims.list
+  'uuuuu 'uuuuu1 'uuuuu2 'uuuuu3 .
+    ('uuuuu * 'uuuuu1 * 'uuuuu2) Prims.list ->
+      ('uuuuu -> 'uuuuu1 -> 'uuuuu2 -> 'uuuuu3) -> 'uuuuu3 Prims.list
   =
-  fun run ->
-    FStar_Options.__set_unit_tests ();
-    (let l =
-       FStar_Compiler_List.map
-         (fun uu___1 ->
-            match uu___1 with | (no, test, res) -> run no test res) tests in
-     FStar_Options.__clear_unit_tests (); l)
+  fun tests ->
+    fun run ->
+      FStar_Options.__set_unit_tests ();
+      (let l =
+         FStar_Compiler_List.map
+           (fun uu___1 ->
+              match uu___1 with | (no, test, res) -> run no test res) tests in
+       FStar_Options.__clear_unit_tests (); l)
+let (whnf_tests :
+  (Prims.int * FStar_Syntax_Syntax.term * FStar_Syntax_Syntax.term)
+    Prims.list)
+  =
+  FStar_Tests_Pars.pars_and_tc_fragment "assume val def : Type0";
+  FStar_Tests_Pars.pars_and_tc_fragment "assume val pred : Type0";
+  FStar_Tests_Pars.pars_and_tc_fragment "let def0 (y:int) = def";
+  FStar_Tests_Pars.pars_and_tc_fragment
+    "unfold let def1 (y:int) = x:def0 y { pred }";
+  (let def_def1 = FStar_Tests_Pars.tc "x:def0 17 { pred }" in
+   let def_def1_unfolded = FStar_Tests_Pars.tc "x:def { pred }" in
+   let tests =
+     let uu___4 =
+       let uu___5 = FStar_Tests_Pars.tc "def1 17" in
+       ((Prims.of_int (601)), uu___5, def_def1) in
+     [uu___4; ((Prims.of_int (602)), def_def1, def_def1_unfolded)] in
+   tests)
+let (run_all_whnf : unit -> unit) =
+  fun uu___ ->
+    FStar_Compiler_Util.print_string "Testing Normlizer WHNF\n";
+    (let uu___2 = run_tests whnf_tests run_whnf in
+     FStar_Compiler_Util.print_string "Normalizer WHNF ok\n")
 let (run_all_nbe : unit -> unit) =
   fun uu___ ->
     FStar_Compiler_Util.print_string "Testing NBE\n";
-    (let uu___2 = run_tests run_nbe in
+    (let uu___2 = run_tests default_tests run_nbe in
      FStar_Compiler_Util.print_string "NBE ok\n")
 let (run_all_interpreter : unit -> unit) =
   fun uu___ ->
     FStar_Compiler_Util.print_string "Testing the normalizer\n";
-    (let uu___2 = run_tests run_interpreter in
+    (let uu___2 = run_tests default_tests run_interpreter in
      FStar_Compiler_Util.print_string "Normalizer ok\n")
+let (run_all_whnf_with_time :
+  unit -> (Prims.int * FStar_BaseTypes.float) Prims.list) =
+  fun uu___ ->
+    FStar_Compiler_Util.print_string "Testing WHNF\n";
+    (let l = run_tests whnf_tests run_whnf_with_time in
+     FStar_Compiler_Util.print_string "WHNF ok\n"; l)
 let (run_all_nbe_with_time :
   unit -> (Prims.int * FStar_BaseTypes.float) Prims.list) =
   fun uu___ ->
     FStar_Compiler_Util.print_string "Testing NBE\n";
-    (let l = run_tests run_nbe_with_time in
+    (let l = run_tests default_tests run_nbe_with_time in
      FStar_Compiler_Util.print_string "NBE ok\n"; l)
 let (run_all_interpreter_with_time :
   unit -> (Prims.int * FStar_BaseTypes.float) Prims.list) =
   fun uu___ ->
     FStar_Compiler_Util.print_string "Testing the normalizer\n";
-    (let l = run_tests run_interpreter_with_time in
+    (let l = run_tests default_tests run_interpreter_with_time in
      FStar_Compiler_Util.print_string "Normalizer ok\n"; l)
 let (run_both_with_time :
   Prims.int ->
@@ -1395,5 +1456,6 @@ let (run_all : unit -> unit) =
   fun uu___ ->
     (let uu___2 = FStar_Syntax_Print.term_to_string znat in
      FStar_Compiler_Util.print1 "%s" uu___2);
-    (let l_int = run_all_interpreter_with_time () in
+    (let uu___2 = run_all_whnf_with_time () in
+     let l_int = run_all_interpreter_with_time () in
      let l_nbe = run_all_nbe_with_time () in compare_times l_int l_nbe)

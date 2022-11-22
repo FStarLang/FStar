@@ -58,6 +58,7 @@ type norm_step =
   | UnfoldAttr : list string -> norm_step // Unfold definitions marked with the given attributes
   | UnfoldQual : list string -> norm_step
   | Unmeta : norm_step
+  | Unascribe // Remove type ascriptions [t <: ty ~> t]
 
 irreducible
 let simplify = Simpl
@@ -103,6 +104,9 @@ let delta_qualifier s = UnfoldAttr s
 
 irreducible
 let unmeta = Unmeta
+
+irreducible
+let unascribe = Unascribe
 
 let norm _ #_ x = x
 
@@ -152,22 +156,24 @@ let handle_smt_goals = ()
 
 let erasable = ()
 
-let allow_informative_binders = ()
-
 let commute_nested_matches = ()
 
 let noextract_to _ = ()
 
 let normalize_for_extraction _ = ()
 
-let ite_soundness_by = ()
+let ite_soundness_by _ = ()
 
 let default_effect _ = ()
+let top_level_effect _ = ()
+let effect_param = ()
 let bind_has_range_args = ()
 
 let strictly_positive = ()
 
 let no_auto_projectors = ()
+
+let no_subtyping = ()
 
 let singleton #_ x = x
 

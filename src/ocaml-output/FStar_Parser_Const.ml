@@ -20,6 +20,14 @@ let (bytes_lid : FStar_Ident.lident) = pconst "bytes"
 let (int_lid : FStar_Ident.lident) = pconst "int"
 let (exn_lid : FStar_Ident.lident) = pconst "exn"
 let (list_lid : FStar_Ident.lident) = pconst "list"
+let (immutable_array_t_lid : FStar_Ident.lident) =
+  p2l ["FStar"; "ImmutableArray"; "Base"; "t"]
+let (immutable_array_of_list_lid : FStar_Ident.lident) =
+  p2l ["FStar"; "ImmutableArray"; "Base"; "of_list"]
+let (immutable_array_length_lid : FStar_Ident.lident) =
+  p2l ["FStar"; "ImmutableArray"; "Base"; "length"]
+let (immutable_array_index_lid : FStar_Ident.lident) =
+  p2l ["FStar"; "ImmutableArray"; "Base"; "index"]
 let (eqtype_lid : FStar_Ident.lident) = pconst "eqtype"
 let (option_lid : FStar_Ident.lident) = psnconst "option"
 let (either_lid : FStar_Ident.lident) = psconst "either"
@@ -82,6 +90,9 @@ let (none_lid : FStar_Ident.lident) = psnconst "None"
 let (assume_lid : FStar_Ident.lident) = pconst "_assume"
 let (assert_lid : FStar_Ident.lident) = pconst "_assert"
 let (pure_wp_lid : FStar_Ident.lident) = pconst "pure_wp"
+let (pure_wp_monotonic_lid : FStar_Ident.lident) = pconst "pure_wp_monotonic"
+let (pure_wp_monotonic0_lid : FStar_Ident.lident) =
+  pconst "pure_wp_monotonic0"
 let (trivial_pure_post_lid : FStar_Ident.lident) =
   psconst "trivial_pure_post"
 let (pure_assert_wp_lid : FStar_Ident.lident) = pconst "pure_assert_wp0"
@@ -270,6 +281,7 @@ let (steps_unfoldonly : FStar_Ident.lident) = psconst "delta_only"
 let (steps_unfoldfully : FStar_Ident.lident) = psconst "delta_fully"
 let (steps_unfoldattr : FStar_Ident.lident) = psconst "delta_attr"
 let (steps_unfoldqual : FStar_Ident.lident) = psconst "delta_qualifier"
+let (steps_unascribe : FStar_Ident.lident) = psconst "unascribe"
 let (steps_nbe : FStar_Ident.lident) = psconst "nbe"
 let (steps_unmeta : FStar_Ident.lident) = psconst "unmeta"
 let (deprecated_attr : FStar_Ident.lident) = pconst "deprecated"
@@ -318,18 +330,21 @@ let (check_with_lid : FStar_Ident.lident) =
     FStar_Compiler_Range.dummyRange
 let (commute_nested_matches_lid : FStar_Ident.lident) =
   psconst "commute_nested_matches"
-let (allow_informative_binders_attr : FStar_Ident.lident) =
-  psconst "allow_informative_binders"
 let (remove_unused_type_parameters_lid : FStar_Ident.lident) =
   psconst "remove_unused_type_parameters"
 let (ite_soundness_by_attr : FStar_Ident.lident) = psconst "ite_soundness_by"
 let (default_effect_attr : FStar_Ident.lident) = psconst "default_effect"
+let (top_level_effect_attr : FStar_Ident.lident) = psconst "top_level_effect"
+let (effect_parameter_attr : FStar_Ident.lident) = psconst "effect_param"
 let (bind_has_range_args_attr : FStar_Ident.lident) =
   psconst "bind_has_range_args"
 let (binder_strictly_positive_attr : FStar_Ident.lident) =
   psconst "strictly_positive"
 let (no_auto_projectors_attr : FStar_Ident.lident) =
   psconst "no_auto_projectors"
+let (no_subtping_attr_lid : FStar_Ident.lident) = psconst "no_subtyping"
+let (attr_substitute_lid : FStar_Ident.lident) =
+  p2l ["FStar"; "Pervasives"; "Substitute"]
 let (well_founded_relation_lid : FStar_Ident.lident) =
   p2l ["FStar"; "WellFounded"; "well_founded_relation"]
 let (gen_reset : ((unit -> Prims.int) * (unit -> unit))) =
@@ -353,10 +368,8 @@ let (const_to_string : FStar_Const.sconst -> Prims.string) =
     | FStar_Const.Const_unit -> "()"
     | FStar_Const.Const_bool b -> if b then "true" else "false"
     | FStar_Const.Const_real r -> FStar_String.op_Hat r "R"
-    | FStar_Const.Const_float x1 -> FStar_Compiler_Util.string_of_float x1
     | FStar_Const.Const_string (s, uu___) ->
         FStar_Compiler_Util.format1 "\"%s\"" s
-    | FStar_Const.Const_bytearray uu___ -> "<bytearray>"
     | FStar_Const.Const_int (x1, uu___) -> x1
     | FStar_Const.Const_char c ->
         let uu___ =
@@ -541,3 +554,18 @@ let (or_elim_lid : FStar_Ident.lid) = classical_sugar_lid "or_elim"
 let (and_elim_lid : FStar_Ident.lid) = classical_sugar_lid "and_elim"
 let (match_returns_def_name : Prims.string) =
   FStar_String.op_Hat FStar_Ident.reserved_prefix "_ret_"
+let (layered_effect_reify_val_lid :
+  FStar_Ident.lident -> FStar_Compiler_Range.range -> FStar_Ident.lident) =
+  fun eff_name ->
+    fun r ->
+      let ns = FStar_Ident.ns_of_lid eff_name in
+      let reify_fn_name =
+        let uu___ =
+          let uu___1 =
+            FStar_Compiler_Effect.op_Bar_Greater eff_name
+              FStar_Ident.ident_of_lid in
+          FStar_Compiler_Effect.op_Bar_Greater uu___1
+            FStar_Ident.string_of_id in
+        FStar_String.op_Hat "reify___" uu___ in
+      let uu___ = FStar_Ident.mk_ident (reify_fn_name, r) in
+      FStar_Ident.lid_of_ns_and_id ns uu___

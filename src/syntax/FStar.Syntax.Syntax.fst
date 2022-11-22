@@ -46,8 +46,7 @@ let contains_reflectable (l: list qualifier): bool =
 let withinfo v r = {v=v; p=r}
 let withsort v = withinfo v dummyRange
 
-let bv_eq (bv1:bv) (bv2:bv) =
-    ident_equals bv1.ppname bv2.ppname && bv1.index=bv2.index
+let bv_eq (bv1:bv) (bv2:bv) = bv1.index=bv2.index
 
 let order_bv x y =
   let i = String.compare (string_of_id x.ppname) (string_of_id y.ppname) in
@@ -109,6 +108,7 @@ let mk (t:'a) r = {
     n=t;
     pos=r;
     vars=Util.mk_ref None;
+    hash_code=Util.mk_ref None;
 }
 
 let bv_to_tm   bv :term = mk (Tm_bvar bv) (range_of_bv bv)
@@ -169,8 +169,22 @@ let is_teff (t:term) = match t.n with
 let is_type (t:term) = match t.n with
     | Tm_type _ -> true
     | _ -> false
+(* Gen sym *)
 let null_id  = mk_ident("_", dummyRange)
-let null_bv k = {ppname=null_id; index=0; sort=k}
+let null_bv k = {ppname=null_id; index=Ident.next_id(); sort=k}
+let is_null_bv (b:bv) = string_of_id b.ppname = string_of_id null_id
+let is_null_binder (b:binder) = is_null_bv b.binder_bv
+let range_of_ropt = function
+    | None -> dummyRange
+    | Some r -> r
+let gen_bv : string -> option Range.range -> typ -> bv = fun s r t ->
+  let id = mk_ident(s, range_of_ropt r) in
+  {ppname=id; index=Ident.next_id(); sort=t}
+let new_bv ropt t = gen_bv Ident.reserved_prefix ropt t
+let freshen_bv bv =
+    if is_null_bv bv
+    then new_bv (Some (range_of_bv bv)) bv.sort
+    else {bv with index=Ident.next_id()}
 let mk_binder_with_attrs bv aqual attrs = {
   binder_bv = bv;
   binder_qual = aqual;
@@ -181,8 +195,7 @@ let null_binder t : binder = mk_binder (null_bv t)
 let imp_tag = Implicit false
 let iarg t : arg = t, Some ({ aqual_implicit = true; aqual_attributes = [] })
 let as_arg t : arg = t, None
-let is_null_bv (b:bv) = string_of_id b.ppname = string_of_id null_id
-let is_null_binder (b:binder) = is_null_bv b.binder_bv
+
 
 let is_top_level = function
     | {lbname=Inr _}::_ -> true
@@ -204,23 +217,10 @@ let pat_bvs (p:pat) : list bv =
         | Pat_constant _ -> b
         | Pat_wild x
         | Pat_var x -> x::b
-        | Pat_cons(_, pats) -> List.fold_left (fun b (p, _) -> aux b p) b pats
+        | Pat_cons(_, _, pats) -> List.fold_left (fun b (p, _) -> aux b p) b pats
     in
   List.rev <| aux [] p
 
-(* Gen sym *)
-let range_of_ropt = function
-    | None -> dummyRange
-    | Some r -> r
-let gen_bv : string -> option Range.range -> typ -> bv = fun s r t ->
-  let id = mk_ident(s, range_of_ropt r) in
-  {ppname=id; index=Ident.next_id(); sort=t}
-let new_bv ropt t = gen_bv Ident.reserved_prefix ropt t
-
-let freshen_bv bv =
-    if is_null_bv bv
-    then new_bv (Some (range_of_bv bv)) bv.sort
-    else {bv with index=Ident.next_id()}
 
 let freshen_binder (b:binder) = { b with binder_bv = freshen_bv b.binder_bv }
 
@@ -255,20 +255,23 @@ let has_simple_attribute (l: list term) s =
         false
   ) l
 
-// Compares the SHAPE of the patterns, *ignoring bound variables*
+// Compares the SHAPE of the patterns, *ignoring bound variables and universes*
 let rec eq_pat (p1 : pat) (p2 : pat) : bool =
     match p1.v, p2.v with
     | Pat_constant c1, Pat_constant c2 -> eq_const c1 c2
-    | Pat_cons (fv1, as1), Pat_cons (fv2, as2) ->
+    | Pat_cons (fv1, us1, as1), Pat_cons (fv2, us2, as2) ->
         if fv_eq fv1 fv2
-        then begin assert(List.length as1 = List.length as2);
-                   List.zip as1 as2 |>
-                   List.for_all (fun ((p1, b1), (p2, b2)) -> b1 = b2 && eq_pat p1 p2)
-             end
+        && List.length as1 = List.length as2
+        then List.forall2 (fun (p1, b1) (p2, b2) -> b1 = b2 && eq_pat p1 p2) as1 as2
+          && (match us1, us2 with
+              | None, None -> true
+              | Some us1, Some us2 -> 
+                List.length us1 = List.length us2
+              | _ -> false)
         else false
     | Pat_var _, Pat_var _ -> true
     | Pat_wild _, Pat_wild _ -> true
-    | Pat_dot_term (bv1, t1), Pat_dot_term (bv2, t2) -> true //&& term_eq t1 t2
+    | Pat_dot_term _, Pat_dot_term _ -> true
     | _, _ -> false
 
 ///////////////////////////////////////////////////////////////////////

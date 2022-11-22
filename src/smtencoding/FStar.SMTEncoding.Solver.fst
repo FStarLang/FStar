@@ -79,7 +79,7 @@ let initialize_hints_db src_filename format_filename : unit =
             if Options.use_hints () then
               Err.log_issue Range.dummyRange
                             (Err.Warning_CouldNotReadHints,
-                             BU.format1 "Malformed JSON hints file: %s; ran without hints\n"
+                             BU.format1 "Malformed JSON hints file: %s; ran without hints"
                                        val_filename);
             ()
 
@@ -87,7 +87,7 @@ let initialize_hints_db src_filename format_filename : unit =
             if Options.use_hints () then
               Err.log_issue Range.dummyRange
                             (Err.Warning_CouldNotReadHints,
-                             BU.format1 "Unable to open hints file: %s; ran without hints\n"
+                             BU.format1 "Unable to open hints file: %s; ran without hints"
                                        val_filename);
             ()
     end
@@ -301,7 +301,7 @@ let errors_to_report (settings : query_settings) : list Errors.error =
     let format_smt_error msg =
       BU.format1 "SMT solver says:\n\t%s;\n\t\
                   Note: 'canceled' or 'resource limits reached' means the SMT query timed out, so you might want to increase the rlimit;\n\t\
-                  'incomplete quantifiers' means Z3 could not prove the query, so try to spell your proof out in greater detail, increase fuel or ifuel\n\t\
+                  'incomplete quantifiers' means Z3 could not prove the query, so try to spell out your proof out in greater detail, increase fuel or ifuel\n\t\
                   'unknown' means Z3 provided no further reason for the proof failing"
         msg
     in
@@ -346,7 +346,7 @@ let errors_to_report (settings : query_settings) : list Errors.error =
               ) (0, 0, 0) settings.query_errors
             in
             (match incomplete_count, canceled_count, unknown_count with
-             | _, 0, 0 when incomplete_count > 0 -> "The SMT solver could not prove the query, try to spell your proof in more detail or increase fuel/ifuel"
+             | _, 0, 0 when incomplete_count > 0 -> "The SMT solver could not prove the query. Use --query_stats for more details."
              | 0, _, 0 when canceled_count > 0   -> "The SMT query timed out, you might want to increase the rlimit"
              | _, _, _                           -> "Try with --query_stats to get more details") |> Inl
         in
@@ -934,6 +934,7 @@ let ask_and_report_errors is_being_retried env all_labels prefix query query_ter
 type solver_cfg = {
   seed             : int;
   cliopt           : list string;
+  smtopt           : list string;  
   facts            : list (list string * bool);
   valid_intro      : bool;
   valid_elim       : bool;
@@ -944,6 +945,7 @@ let _last_cfg : ref (option solver_cfg) = BU.mk_ref None
 let get_cfg env : solver_cfg =
     { seed             = Options.z3_seed ()
     ; cliopt           = Options.z3_cliopt ()
+    ; smtopt           = Options.z3_smtopt ()    
     ; facts            = env.proof_ns
     ; valid_intro      = Options.smtencoding_valid_intro ()
     ; valid_elim       = Options.smtencoding_valid_elim ()

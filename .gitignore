@@ -80,6 +80,7 @@ tags
 *.checked
 *.checked.lax
 *.dump
+*.runlim
 
 /.nubuild
 /nucache/
@@ -89,3 +90,6 @@ nubuild.progress
 
 # Z3/F* nightly/weekly files
 /nightly
+
+# Nuget packages
+nuget/

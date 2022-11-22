@@ -145,28 +145,20 @@ let by_tactic_interp (pol:pol) (e:Env.env) (t:term) : tres =
             when S.fv_eq_lid fv PC.rewrite_by_tactic_lid ->
 
         // Create a new uvar that must be equal to the initial term
-        let uvtm, _, g_imp = Env.new_implicit_var_aux "rewrite_with_tactic RHS" tm.pos e typ Allow_untyped None in
+        let uvtm, _, g_imp = Env.new_implicit_var_aux "rewrite_with_tactic RHS" tm.pos e typ Strict None in
 
         let u = e.universe_of e typ in
         // eq2 is squashed already, so it's in Type0
         let goal = U.mk_squash U_zero (U.mk_eq2 u typ tm uvtm) in
         let gs, _ = run_tactic_on_typ tactic.pos tm.pos tactic e goal in
 
-        // Ensure that rewriting did not leave goals
-        let _ =
-          match gs with
-          | [] -> ()
-          | _ ->
-            Err.raise_error (Err.Fatal_OpenGoalsInSynthesis, "rewrite_with_tactic left open goals") typ.pos
-        in
-
         // abort if the uvar was not solved
-        let g_imp = TcRel.resolve_implicits_tac e g_imp in
-        report_implicits tm.pos g_imp.implicits;
+        let tagged_imps = TcRel.resolve_implicits_tac e g_imp in
+        report_implicits tm.pos tagged_imps;
 
         // If the rewriting succeeded, we return the generated uvar, which is now
-        // a synthesized term
-        Simplified (uvtm, [])
+        // a synthesized term. Any unsolved goals (gs) are spun off.
+        Simplified (uvtm, gs)
 
     | _ ->
         Unchanged t
@@ -436,7 +428,7 @@ let rec traverse_for_spinoff
         let rec pat_as_exp env p =
           match FStar.TypeChecker.PatternUtils.raw_pat_as_exp env p with
           | None -> None
-          | Some e ->
+          | Some (e, _) ->
             let env, _ = Env.clear_expected_typ env in
             let e, lc =
               FStar.TypeChecker.TcTerm.tc_trivial_guard ({env with FStar.TypeChecker.Env.admit=true}) e in
@@ -730,23 +722,33 @@ let solve_implicits (env:Env.env) (tau:term) (imps:Env.implicits) : unit =
     // Check that all goals left are irrelevant and provable
     // TODO: It would be nicer to combine all of these into a guard and return
     // that to TcTerm, but the varying environments make it awkward.
-    gs |> List.iter (fun g ->
+    if Options.profile_enabled None "FStar.TypeChecker"
+    then BU.print1 "solve_implicits produced %s goals\n" (BU.string_of_int (List.length gs));
+    
+    Options.with_saved_options (fun () ->
+      let _ = Options.set_options "--no_tactics" in
+      gs |> List.iter (fun g ->
         match getprop (goal_env g) (goal_type g) with
         | Some vc ->
-            begin
+          begin
             if !tacdbg then
               BU.print1 "Synthesis left a goal: %s\n" (Print.term_to_string vc);
-            let guard = { guard_f = NonTrivial vc
-                        ; deferred_to_tac = []
-                        ; deferred = []
-                        ; univ_ineqs = [], []
-                        ; implicits = [] } in
-            TcRel.force_trivial_guard (goal_env g) guard
-            end
+            if not (Options.admit_smt_queries())
+            then (
+              let guard = { guard_f = NonTrivial vc
+                          ; deferred_to_tac = []
+                          ; deferred = []
+                          ; univ_ineqs = [], []
+                          ; implicits = [] } in
+              Profiling.profile (fun () ->
+                TcRel.force_trivial_guard (goal_env g) guard)
+              None
+              "FStar.TypeChecker.Hooks.force_trivial_guard"
+            )
+          end
         | None ->
             Err.raise_error (Err.Fatal_OpenGoalsInSynthesis, "synthesis left open goals")
-                            (Env.get_range env));
-    ()
+                            (Env.get_range env)))
     end
   )
 
@@ -858,7 +860,10 @@ let postprocess (env:Env.env) (tau:term) (typ:term) (tm:term) : term =
   Errors.with_ctx "While postprocessing a definition with a tactic" (fun () ->
     if env.nosynth then tm else begin
     tacdbg := Env.debug env (O.Other "Tac");
-    let uvtm, _, g_imp = Env.new_implicit_var_aux "postprocess RHS" tm.pos env typ Allow_untyped None in
+    //we know that tm:typ
+    //and we have a goal that u == tm
+    //so if we solve that equality, we don't need to retype the solution of `u : typ`
+    let uvtm, _, g_imp = Env.new_implicit_var_aux "postprocess RHS" tm.pos env typ (Allow_untyped "postprocess") None in
 
     let u = env.universe_of env typ in
     // eq2 is squashed already, so it's in Type0
@@ -881,8 +886,8 @@ let postprocess (env:Env.env) (tau:term) (typ:term) (tm:term) : term =
         | None ->
             Err.raise_error (Err.Fatal_OpenGoalsInSynthesis, "postprocessing left open goals") typ.pos) gs;
     (* abort if the uvar was not solved *)
-    let g_imp = TcRel.resolve_implicits_tac env g_imp in
-    report_implicits tm.pos g_imp.implicits;
+    let tagged_imps = TcRel.resolve_implicits_tac env g_imp in
+    report_implicits tm.pos tagged_imps;
 
     uvtm
     end

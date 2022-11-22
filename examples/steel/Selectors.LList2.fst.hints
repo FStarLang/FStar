@@ -15,7 +15,7 @@
         "projection_inverse_Selectors.LList2.Mkcell_next"
       ],
       0,
-      "89e19dcae3dae529fae8970ecd92dff7"
+      "6f3a6bead208b368f955fdc6a1dbc693"
     ],
     [
       "Selectors.LList2.is_null",
@@ -24,7 +24,7 @@
       1,
       [ "@query", "equation_Selectors.LList2.null_llist" ],
       0,
-      "77e9f9bb7d50c10b5e64be4bbc8a381f"
+      "6e9425c5dbab054b3603006a9a1a3d7b"
     ],
     [
       "Selectors.LList2.v_c",
@@ -39,7 +39,7 @@
         "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
       ],
       0,
-      "af77e37ee8a657dc18df945184bc8b36"
+      "f6050d077eeaa30b32e259e88e14d203"
     ],
     [
       "Selectors.LList2.v_c_dep",
@@ -53,7 +53,7 @@
         "refinement_interpretation_Tm_refine_0214c723e4f462bc81c1b20f4f38a4ac"
       ],
       0,
-      "77307bfd988a182b38f408665fea8b0e"
+      "37c100eb521bd2c6bdd80647efd99dd7"
     ],
     [
       "Selectors.LList2.v_c_l_rewrite",
@@ -87,7 +87,7 @@
         "typing_Steel.Reference.vptr_"
       ],
       0,
-      "7f65d001dd86f9cafac3c980a4f6db1c"
+      "c84e065a4a008241a9997b9de6510636"
     ],
     [
       "Selectors.LList2.v_c_l_rewrite",
@@ -152,7 +152,7 @@
         "typing_Steel.Reference.vptr_"
       ],
       0,
-      "c93d5cb6f72c4486252f3bf8f63cbd1c"
+      "72cd54e94eb7c5d8be34b5fb035f0768"
     ],
     [
       "Selectors.LList2.nllist",
@@ -197,7 +197,7 @@
         "typing_Steel.Reference.vptr_", "well-founded-ordering-on-nat"
       ],
       0,
-      "a878eb11e4a71f265cfa24ba57cb4596"
+      "ae24a4e317158bd9ce70436dd3715c4a"
     ],
     [
       "Selectors.LList2.nllist_eq_not_null",
@@ -232,33 +232,11 @@
         "typing_Steel.Reference.vptr_"
       ],
       0,
-      "0a446f95e2f4c8fb8c369de48d9161d7"
+      "042d7e29ac8e7e91f0e3744198d98e75"
     ],
     [
       "Selectors.LList2.llist_vrewrite",
       1,
-      2,
-      1,
-      [
-        "@MaxFuel_assumption", "@MaxIFuel_assumption",
-        "@fuel_correspondence_Steel.Effect.Common.t_of.fuel_instrumented",
-        "@query", "constructor_distinct_Steel.Effect.Common.VUnit",
-        "data_typing_intro_Steel.Effect.Common.VUnit@tok",
-        "equation_Selectors.LList2.t", "equation_Steel.Reference.vptr_",
-        "equation_with_fuel_Steel.Effect.Common.t_of.fuel_instrumented",
-        "kinding_Selectors.LList2.cell@tok",
-        "proj_equation_Steel.Effect.Common.Mkvprop__t",
-        "projection_inverse_Steel.Effect.Common.Mkvprop__t",
-        "projection_inverse_Steel.Effect.Common.VUnit__0",
-        "typing_Steel.FractionalPermission.full_perm",
-        "typing_Steel.Reference.vptr_"
-      ],
-      0,
-      "749c84f71392b0c83934233e5eadacee"
-    ],
-    [
-      "Selectors.LList2.llist_vrewrite",
-      2,
       2,
       1,
       [
@@ -293,7 +271,7 @@
         "typing_Steel.Reference.ptrp", "typing_Steel.Reference.ptrp_sel"
       ],
       0,
-      "788392888ebfecefa5257e8a541689a4"
+      "f84832f696f0aa320bf990ebcf03ae7e"
     ],
     [
       "Selectors.LList2.llist0",
@@ -321,7 +299,7 @@
         "typing_Steel.Reference.vptr_"
       ],
       0,
-      "25566506ab450aa5a4208c4d7417a736"
+      "7e10a8e783ea96f21109221a8efec436"
     ],
     [
       "Selectors.LList2.nllist_of_llist0",
@@ -375,7 +353,7 @@
         "typing_Selectors.LList2.null_llist"
       ],
       0,
-      "ba4dd33f0832b86ba6d15463cded8227"
+      "5fe177a04a08fbcf72e4e902c84a5a7b"
     ],
     [
       "Selectors.LList2.llist0_of_nllist",
@@ -417,7 +395,7 @@
         "typing_Selectors.LList2.is_null"
       ],
       0,
-      "a66bb2110c9131825425bdf0f9e24cbd"
+      "69fe8e72db20d75c1b20634533239143"
     ],
     [
       "Selectors.LList2.llist_sel",
@@ -440,7 +418,7 @@
         "typing_Selectors.LList2.llist0"
       ],
       0,
-      "64912307321d6bafb196da0e29554d4e"
+      "8f0b4193cf8ae5e1190a9bbf578b6b6a"
     ],
     [
       "Selectors.LList2.v_llist",
@@ -448,16 +426,11 @@
       2,
       1,
       [
-        "@MaxIFuel_assumption", "@query", "equation_Prims.l_True",
-        "equation_Prims.l_and", "equation_Prims.logical",
-        "equation_Prims.squash",
-        "function_token_typing_Steel.Effect.Common.selector_tactic",
-        "l_and-interp", "lemma_FStar.Tactics.Effect.by_tactic_seman",
-        "refinement_interpretation_Tm_refine_13b6088eb7985d6ce1200dc46f7ae42b",
-        "refinement_kinding_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_f739d7585f85f9216ab76894ab82188b"
       ],
       0,
-      "b605d9c9738944e7ca845ef24e9c27fb"
+      "440552189dfaa9e5a4949cb9a30281f5"
     ],
     [
       "Selectors.LList2.llist_of_llist0",
@@ -491,7 +464,7 @@
         "typing_Selectors.LList2.llist_"
       ],
       0,
-      "7c2ad01f0cac6ff4dc5164d96be93e5a"
+      "0198d2e48b7e3e46734743b40c547dc6"
     ],
     [
       "Selectors.LList2.llist0_of_llist",
@@ -524,7 +497,7 @@
         "typing_Selectors.LList2.llist_"
       ],
       0,
-      "5ee6f6b23f0acbdb37dc943d406f225f"
+      "a8e5c353486f1d174d957dc0b7a2ab42"
     ],
     [
       "Selectors.LList2.intro_llist_nil",
@@ -544,7 +517,7 @@
         "typing_Steel.Reference.is_null", "typing_Steel.Reference.null"
       ],
       0,
-      "75cc852c58761a534b52d316dc6c12ae"
+      "0f8b72a7440db5ee8038916714e25a1a"
     ],
     [
       "Selectors.LList2.is_nil",
@@ -572,7 +545,7 @@
         "typing_Selectors.LList2.is_null"
       ],
       0,
-      "c534b826c30f037be17d5698a60212be"
+      "19a712d6e8862b72f37f0894761145fe"
     ],
     [
       "Selectors.LList2.intro_llist_cons",
@@ -623,7 +596,7 @@
         "typing_Steel.Reference.ptrp", "typing_Steel.Reference.ptrp_sel"
       ],
       0,
-      "9acb5d55dbcd80ab6484d14646ef0d2b"
+      "c8594fbb094cade96012957f5f554a69"
     ],
     [
       "Selectors.LList2.tail",
@@ -632,7 +605,7 @@
       1,
       [ "@query" ],
       0,
-      "c2c806ddc8502a08e9aa7ad0f04ef12d"
+      "06fa9fbb4f694a54065407cd7ca91991"
     ],
     [
       "Selectors.LList2.tail",
@@ -671,7 +644,7 @@
         "typing_Selectors.LList2.is_null"
       ],
       0,
-      "741b6673500eaab005d757ddce5ca9b0"
+      "5598e3c1ddb30a8470961588fd1d0740"
     ]
   ]
 ]

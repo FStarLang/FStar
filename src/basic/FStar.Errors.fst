@@ -391,7 +391,10 @@ type raw_error =
   | Error_UnexpectedTypeclassInstance
   | Warning_AmbiguousResolveImplicitsHook
   | Warning_SplitAndRetryQueries
-
+  | Warning_DeprecatedLightDoNotation
+  | Warning_FailedToCheckInitialTacticGoal
+  | Warning_Adhoc_IndexedEffect_Combinator
+  
 type flag = error_flag
 type error_setting = raw_error * error_flag * int
 let default_settings : list error_setting =
@@ -745,6 +748,9 @@ let default_settings : list error_setting =
     Error_UnexpectedTypeclassInstance                 , CAlwaysError, 347;
     Warning_AmbiguousResolveImplicitsHook             , CWarning, 348;    
     Warning_SplitAndRetryQueries                      , CWarning, 349;
+    Warning_DeprecatedLightDoNotation                 , CWarning, 350;
+    Warning_FailedToCheckInitialTacticGoal            , CSilent,  351;
+    Warning_Adhoc_IndexedEffect_Combinator            , CWarning, 352;
     ]
 
 let lookup_error settings e =

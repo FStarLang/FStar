@@ -331,7 +331,7 @@ let is_BitVector_primitive head args =
       || S.fv_eq_lid fv Const.bv_shift_right_lid
       || S.fv_eq_lid fv Const.bv_udiv_lid
       || S.fv_eq_lid fv Const.bv_mod_lid
-    //  || S.fv_eq_lid fv Const.bv_ult_lid
+      || S.fv_eq_lid fv Const.bv_ult_lid
       || S.fv_eq_lid fv Const.bv_uext_lid
       || S.fv_eq_lid fv Const.bv_mul_lid) &&
       (isInteger sz_arg.n)
@@ -898,7 +898,7 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
 
       | Tm_uvar (uv, _) ->
         let ttm = mk_Term_uvar (Unionfind.uvar_id uv.ctx_uvar_head) in
-        let t_has_k, decls = encode_term_pred None uv.ctx_uvar_typ env ttm in //TODO: skip encoding this if it has already been encoded before
+        let t_has_k, decls = encode_term_pred None (U.ctx_uvar_typ uv) env ttm in //TODO: skip encoding this if it has already been encoded before
         let d =
             Util.mkAssume(t_has_k,
                           Some "Uvar typing",
@@ -962,6 +962,11 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
         | Tm_fvar fv, [_; (phi, _)]
         | Tm_uinst ({n=Tm_fvar fv}, _), [_; (phi, _)]
           when S.fv_eq_lid fv Const.by_tactic_lid ->
+          encode_term phi env
+
+        | Tm_fvar fv, [_; _; (phi, _)]
+        | Tm_uinst ({n=Tm_fvar fv}, _), [_; _; (phi, _)]
+          when S.fv_eq_lid fv Const.rewrite_by_tactic_lid ->
           encode_term phi env
 
         | _ ->
@@ -1296,7 +1301,7 @@ and encode_pat (env:env_t) (pat:S.pat) : (env_t * pattern) =
             let tm, decls = encode_const c env in
             let _ = match decls with _::_ -> failwith "Unexpected encoding of constant pattern" | _ -> () in
             mkEq(scrutinee, tm)
-        | Pat_cons(f, args) ->
+        | Pat_cons(f, _, args) ->
             let is_f =
                 let tc_name = Env.typ_of_datacon env.tcenv f.fv_name.v in
                 match Env.datacons_of_typ env.tcenv tc_name with
@@ -1311,13 +1316,13 @@ and encode_pat (env:env_t) (pat:S.pat) : (env_t * pattern) =
 
     let rec mk_projections pat (scrutinee:term) =
         match pat.v with
-        | Pat_dot_term (x, _)
+        | Pat_dot_term _ -> []
         | Pat_var x
         | Pat_wild x -> [x, scrutinee]
 
         | Pat_constant _ -> []
 
-        | Pat_cons(f, args) ->
+        | Pat_cons(f, _, args) ->
             args
             |> List.mapi (fun i (arg, _) ->
                 let proj = primitive_projector_by_pos env.tcenv f.fv_name.v i in
@@ -1475,6 +1480,11 @@ and encode_formula (phi:typ) (env:env_t) : (term * decls_t)  = (* expects phi to
             | Tm_fvar fv, [_; (phi, _)]
             | Tm_uinst ({n=Tm_fvar fv}, _), [_; (phi, _)]
               when S.fv_eq_lid fv Const.by_tactic_lid ->
+              encode_formula phi env
+
+            | Tm_fvar fv, [_; _; (phi, _)]
+            | Tm_uinst ({n=Tm_fvar fv}, _), [_; _; (phi, _)]
+              when S.fv_eq_lid fv Const.rewrite_by_tactic_lid ->
               encode_formula phi env
 
             | Tm_fvar fv, [(r, _); (msg, _); (phi, _)] when S.fv_eq_lid fv Const.labeled_lid -> //interpret (labeled r msg t) as Tm_meta(t, Meta_labeled(msg, r, false)

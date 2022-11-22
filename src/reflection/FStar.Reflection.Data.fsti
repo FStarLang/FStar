@@ -42,12 +42,14 @@ type vconst =
     | C_Reify
     | C_Reflect of name
 
+type universes = list universe
+
 type pattern =
     | Pat_Constant of vconst
-    | Pat_Cons     of fv * list (pattern * bool)
+    | Pat_Cons     of fv * option (list universe) * list (pattern * bool)
     | Pat_Var      of bv
     | Pat_Wild     of bv
-    | Pat_Dot_Term of bv * term
+    | Pat_Dot_Term of option term
 
 type branch = pattern * term
 
@@ -58,7 +60,6 @@ type aqualv =
 
 type argv = term * aqualv
 
-type universes = list universe
 
 type universe_view =
   | Uv_Zero : universe_view
@@ -113,6 +114,8 @@ type qualifier =
   | HasMaskedEffect
   | Effect
   | OnlyName
+
+type qualifiers = list qualifier
 
 type bv_view = {
     bv_ppname : string;

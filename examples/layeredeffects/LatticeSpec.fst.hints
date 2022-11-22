@@ -1,5 +1,5 @@
 [
-  "}\u0017˜$\u0018€ªãvç‚\u001b_Õ∏\u0011",
+  ",∑˝%¢\u007f(‹LΩ≈IéÌÎú",
   [
     [
       "LatticeSpec.coerce",
@@ -11,7 +11,7 @@
         "refinement_interpretation_Tm_refine_754b00004f4a881ff74d076ab276dfe1"
       ],
       0,
-      "38e288a1efecfb23b6c78e7bcc73601e"
+      "7768129a53db25bfb58890372ba58457"
     ],
     [
       "LatticeSpec.interp",
@@ -20,7 +20,7 @@
       1,
       [ "@query", "assumption_LatticeSpec.eff_label__uu___haseq" ],
       0,
-      "664025d892702d5c87fa3c0ee3526fcc"
+      "47027281d620447a8624ced168cc15ff"
     ],
     [
       "LatticeSpec.interp_at",
@@ -65,7 +65,7 @@
         "typing_FStar.List.Tot.Base.mem", "typing_FStar.List.Tot.Base.op_At"
       ],
       0,
-      "d788de95e8e0684d354139342fafdcf2"
+      "57a2710234c1379fa0aa04c48de59d7f"
     ],
     [
       "LatticeSpec.sublist",
@@ -74,7 +74,7 @@
       1,
       [ "@query", "assumption_LatticeSpec.eff_label__uu___haseq" ],
       0,
-      "81ad8133422549f21e7f410aa83dd57d"
+      "56200cafc2950f3b85dba6aebd5aa173"
     ],
     [
       "LatticeSpec.sublist_refl",
@@ -83,7 +83,7 @@
       1,
       [ "@query", "equation_LatticeSpec.sublist" ],
       0,
-      "c7a69c267c4cd51bbb1bc45aa9cfc189"
+      "ad703e806fe41b6e9a8dca6b28e0d8df"
     ],
     [
       "LatticeSpec.interp_sublist",
@@ -117,7 +117,7 @@
         "typing_FStar.List.Tot.Base.mem"
       ],
       0,
-      "88b1f0bcf9b8b0ddfa9a04d44a4fccc2"
+      "9906b0e3c9c58403b2a7df7903ebd63c"
     ],
     [
       "LatticeSpec.sublist_at",
@@ -153,7 +153,7 @@
         "typing_FStar.List.Tot.Base.mem", "typing_FStar.List.Tot.Base.op_At"
       ],
       0,
-      "300452bef9aac8258bf340c433cfc3b1"
+      "3152632c23f2b134cd2a0d6e8f0732e3"
     ],
     [
       "LatticeSpec.return",
@@ -178,7 +178,7 @@
         "projection_inverse_FStar.Pervasives.Native.Some_v"
       ],
       0,
-      "36200e8cdca7f88de17ee9ff9193d503"
+      "dc31a9b0b88ae4dc59019c93e8c7a033"
     ],
     [
       "LatticeSpec.bind",
@@ -254,7 +254,7 @@
         "typing_tok_LatticeSpec.WR@tok"
       ],
       0,
-      "cf60d4752b1cd42c842dbca4f2c19541"
+      "3a132e7579b8d5cfbf241d19cc1f7e35"
     ],
     [
       "LatticeSpec.subcomp",
@@ -295,7 +295,7 @@
         "typing_tok_LatticeSpec.WR@tok"
       ],
       0,
-      "d00a8b90d7e759d28edece667e57150c"
+      "6ab6fb2f0169ca6e90dc968d796556ec"
     ],
     [
       "LatticeSpec.EFF",
@@ -308,7 +308,7 @@
         "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
       ],
       0,
-      "3868a5f4e84f93269db6515ea642a07d"
+      "8a3955f4153f7874517696004761e17a"
     ],
     [
       "LatticeSpec.EFF",
@@ -321,7 +321,7 @@
         "refinement_interpretation_Tm_refine_de09779676242898794a0b057d5f5bb4"
       ],
       0,
-      "24e2a0205b3429bd95a007770acbc74b"
+      "c6cef1a20bca520dadede4cbed57a255"
     ],
     [
       "LatticeSpec.post_of_wp",
@@ -330,7 +330,7 @@
       1,
       [ "@query" ],
       0,
-      "1d409e40e8bb5efae5af9dc968fa1ed3"
+      "b59d33adcc870ac9580d79cfad0923ac"
     ],
     [
       "LatticeSpec.lift_pure_eff",
@@ -374,7 +374,7 @@
         "typing_Tm_abs_e9482f0906fd641dd64a44721af42b76"
       ],
       0,
-      "639b30e0233cfe75f481873992d98ab9"
+      "32c812197a565e2ca915eadd3711639b"
     ],
     [
       "LatticeSpec._get",
@@ -416,7 +416,7 @@
         "typing_tok_LatticeSpec.RD@tok"
       ],
       0,
-      "266ca94dad9d2a9783ae754ff8156ec9"
+      "5aa08f16ac2f461d184eb2f1ef08046e"
     ],
     [
       "LatticeSpec._put",
@@ -462,7 +462,7 @@
         "typing_tok_LatticeSpec.WR@tok", "unit_typing"
       ],
       0,
-      "5a609fb126ae2899ce7ad81fa3962136"
+      "ad848c641e3528d8ace74523373aec6f"
     ],
     [
       "LatticeSpec.put",
@@ -471,7 +471,7 @@
       1,
       [ "@query", "equation_LatticeSpec.abides" ],
       0,
-      "597953a7765b00ce8f850b4c4ca1b9cb"
+      "f1c01e2f325646a635e2774da09561d9"
     ],
     [
       "LatticeSpec._raise",
@@ -522,7 +522,7 @@
         "typing_tok_LatticeSpec.EXN@tok"
       ],
       0,
-      "4e373a4f174de02e8028f8fabc0ab3f9"
+      "629f518a7e277b1251611438c445a9be"
     ],
     [
       "LatticeSpec.test0",
@@ -566,7 +566,7 @@
         "unit_typing"
       ],
       0,
-      "9959d06a30d6ad6fe9f7007239479676"
+      "beb76b1cd04b2e63644eea9fcd80f6d4"
     ],
     [
       "LatticeSpec.test1",
@@ -596,7 +596,7 @@
         "unit_typing"
       ],
       0,
-      "fa7b57d2e55ea52732479815f8355f56"
+      "0695456fb31ea1f1facfd821c5ec03d0"
     ],
     [
       "LatticeSpec.sublist_at_self",
@@ -609,7 +609,7 @@
         "projection_inverse_BoxBool_proj_0"
       ],
       0,
-      "846b2380d1f2a79a5e4071892ef75bcf"
+      "7384dc6777abc1090b84ca6ed2aa293d"
     ],
     [
       "LatticeSpec.labpoly",
@@ -634,31 +634,72 @@
         "token_correspondence_LatticeSpec.bind_pre", "true_interp"
       ],
       0,
-      "3557426115a66ab08181aaec36b763c0"
+      "c53b43ebd61cf4e80645b29b51358489"
     ],
     [
-      "LatticeSpec.catch",
+      "LatticeSpec.catch0",
       1,
       2,
       1,
       [
-        "@MaxIFuel_assumption", "@query",
+        "@MaxFuel_assumption", "@MaxIFuel_assumption",
+        "@fuel_correspondence_FStar.List.Tot.Base.mem.fuel_instrumented",
+        "@fuel_irrelevance_FStar.List.Tot.Base.mem.fuel_instrumented",
+        "@query",
         "LatticeSpec_interpretation_Tm_arrow_18fd99887a6f6bf9d46fa597c6112740",
-        "constructor_distinct_BoxString", "equation_LatticeSpec.abides",
-        "equation_LatticeSpec.coerce", "equation_LatticeSpec.state",
-        "equation_LatticeSpec.unreachable",
+        "LatticeSpec_interpretation_Tm_arrow_47a6f6a0597b58cafa402d51060429eb",
+        "LatticeSpec_interpretation_Tm_arrow_c6ce43fcce0a4c3af1b3dd25e21bee7c",
+        "assumption_LatticeSpec.eff_label__uu___haseq", "bool_inversion",
+        "constructor_distinct_BoxString",
+        "constructor_distinct_FStar.Pervasives.Native.Some",
+        "constructor_distinct_LatticeSpec.EXN",
+        "constructor_distinct_LatticeSpec.RD",
+        "constructor_distinct_LatticeSpec.WR",
+        "constructor_distinct_Prims.Cons",
+        "data_typing_intro_Prims.Cons@tok",
+        "disc_equation_FStar.Pervasives.Native.None",
+        "disc_equation_FStar.Pervasives.Native.Some",
+        "equality_tok_LatticeSpec.EXN@tok",
+        "equality_tok_LatticeSpec.RD@tok", "equality_tok_LatticeSpec.WR@tok",
+        "equation_FStar.Pervasives.Native.fst",
+        "equation_FStar.Pervasives.Native.snd",
+        "equation_LatticeSpec.abides", "equation_LatticeSpec.annot",
+        "equation_LatticeSpec.coerce", "equation_LatticeSpec.interp",
+        "equation_LatticeSpec.repr", "equation_LatticeSpec.repr0",
+        "equation_LatticeSpec.state", "equation_LatticeSpec.unreachable",
+        "equation_Prims.eqtype",
+        "equation_with_fuel_FStar.List.Tot.Base.mem.fuel_instrumented",
+        "fuel_guarded_inversion_FStar.Pervasives.Native.option",
         "fuel_guarded_inversion_FStar.Pervasives.Native.tuple2",
-        "function_token_typing_LatticeSpec.state",
-        "interpretation_Tm_abs_62749f6b821b0a143d92cc70a7e3bbe9",
+        "function_token_typing_LatticeSpec.state", "int_inversion",
+        "interpretation_Tm_abs_5f1695dfb94fc63ba4b1c1ee4e4bd451",
+        "interpretation_Tm_abs_8bac02395235ec15fae59220f77c40bd",
+        "interpretation_Tm_abs_dd12a11c989540a200821b0f480f6de0",
         "kinding_FStar.Pervasives.Native.option@tok",
-        "lemma_FStar.Pervasives.invertOption",
+        "kinding_LatticeSpec.eff_label@tok",
+        "lemma_FStar.Pervasives.invertOption", "primitive_Prims.op_Equality",
         "proj_equation_FStar.Pervasives.Native.Mktuple2__1",
+        "proj_equation_FStar.Pervasives.Native.Mktuple2__2",
+        "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_FStar.Pervasives.Native.Mktuple2__1",
+        "projection_inverse_FStar.Pervasives.Native.Mktuple2__2",
+        "projection_inverse_Prims.Cons_a",
+        "projection_inverse_Prims.Cons_hd",
+        "projection_inverse_Prims.Cons_tl",
+        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
+        "refinement_interpretation_Tm_refine_72c2637aff0fabecefa998cd005a3a50",
+        "refinement_interpretation_Tm_refine_891a171fa58da3b599c98c433e2eaeed",
         "refinement_interpretation_Tm_refine_d27886807ce70970cab4a3c274e3acac",
+        "true_interp",
         "typing_FStar.Pervasives.Native.__proj__Mktuple2__item___1",
-        "typing_Tm_abs_62749f6b821b0a143d92cc70a7e3bbe9"
+        "typing_FStar.Pervasives.Native.fst",
+        "typing_FStar.Pervasives.Native.snd", "typing_LatticeSpec.interp",
+        "typing_Tm_abs_dd12a11c989540a200821b0f480f6de0",
+        "typing_tok_LatticeSpec.EXN@tok", "typing_tok_LatticeSpec.RD@tok",
+        "typing_tok_LatticeSpec.WR@tok"
       ],
       0,
-      "65c6cebec0396ac50415086f81e71d48"
+      "fe82ce5da4bf53f187ea5ddcc8bb2f10"
     ],
     [
       "LatticeSpec.g",
@@ -681,7 +722,7 @@
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "1f95249b905e416cf1d7e2c1ff164ce3"
+      "25a410a63d4e8302872ab56796c66a0a"
     ],
     [
       "LatticeSpec.test_catch",
@@ -719,7 +760,7 @@
         "unit_typing"
       ],
       0,
-      "4a2a121af527155a71e3f0ad1037a074"
+      "f648e2f1d661ff68dfee7fe1405ae271"
     ],
     [
       "LatticeSpec.test_catch2",
@@ -757,7 +798,7 @@
         "unit_typing"
       ],
       0,
-      "63d3188bc0fdaa02babe0062b971d7e5"
+      "b508a2521a779c9cb0bfda4cb519267a"
     ]
   ]
 ]

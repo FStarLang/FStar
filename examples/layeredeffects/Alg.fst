@@ -2,7 +2,6 @@ module Alg
 
 (*** Algebraic effects. ***)
 
-open Common
 open FStar.Tactics
 open FStar.List.Tot
 open FStar.Universe
@@ -39,7 +38,7 @@ let op_out : op -> Type =
 
 (* Free monad over `op` *)
 noeq
-type tree0 (a:Type u#aa) : Type u#aa =
+type tree0 (a:Type) : Type =
   | Return : a -> tree0 a
   | Op     : op:op -> i:(op_inp op) -> k:(op_out op -> tree0 a) -> tree0 a
 
@@ -54,9 +53,8 @@ let rec abides #a (labs:ops) (f : tree0 a) : prop =
   end
 
 (* Refined free monad *)
-type tree (a:Type u#aa) (labs : list u#0 op)
-  : Type u#aa
-  = r:(tree0 a){abides labs r}
+type tree (a:Type) (labs : list op) : Type =
+  r:(tree0 a){abides labs r}
 
 (***** Some boring list lemmas *****)
 
@@ -177,28 +175,22 @@ let if_then_else
   : Type
   = tree a (labs1@labs2)
 
-[@@allow_informative_binders]
 total
 reifiable
 reflectable
-layered_effect {
-  Alg : a:Type -> ops  -> Effect
-  with
-  repr         = tree;
-  return       = return;
-  bind         = bind;
-  subcomp      = subcomp;
-  if_then_else = if_then_else
+effect {
+  Alg (a:Type) (_:ops)
+  with {repr = tree; return; bind; subcomp; if_then_else}
 }
 
 let lift_pure_alg
  (a:Type)
  (wp : pure_wp a)
- (f : eqtype_as_type unit -> PURE a wp)
+ (f : unit -> PURE a wp)
  : Pure (tree a [])
         (requires (wp (fun _ -> True)))
         (ensures (fun _ -> True))
- = let v = elim_pure f (fun _ -> True) in
+ = let v = FStar.Monotonic.Pure.elim_pure f (fun _ -> True) in
    Return v
 
 sub_effect PURE ~> Alg = lift_pure_alg
@@ -766,6 +758,14 @@ let rec fixup_no_other (l:op{Other? l}) (ls:list baseop)
     | [] -> ()
     | l1::ls -> fixup_no_other l ls
 
+let lattice_get_repr () : L.repr int [L.RD] = reify (L.get ())
+
+let lattice_put_repr (s:state) : L.repr unit [L.WR] =
+  reify (L.put s)
+
+let lattice_raise_repr (#a:Type) () : L.repr a [L.EXN] =
+  reify (L.raise #a ())
+
 // This would be a lot nicer if it was done in L.EFF itself,
 // but the termination proof fails since it has no logical payload.
 let rec interp_into_lattice_tree #a (#labs:list baseop)
@@ -774,13 +774,13 @@ let rec interp_into_lattice_tree #a (#labs:list baseop)
   = match t with
     | Return x -> L.return _ x
     | Op Read i k ->
-      L.bind _ _ _ _ (reify (L.get i))
+      L.bind _ _ _ _ (lattice_get_repr ())
        (fun x -> interp_into_lattice_tree #a #labs (k x))
     | Op Write i k ->
-      L.bind _ _ _ _ (reify (L.put i))
+      L.bind _ _ _ _ (lattice_put_repr i)
        (fun x -> interp_into_lattice_tree #a #labs (k x))
     | Op Raise i k ->
-      L.bind _ _ _ _ (reify (L.raise ()))
+      L.bind _ _ _ _ (lattice_raise_repr ())
        (fun x -> interp_into_lattice_tree #a #labs (k x))
 
 let interp_into_lattice #a (#labs:list baseop)
@@ -792,9 +792,8 @@ let interp_into_lattice #a (#labs:list baseop)
 // directly?
 let interp_full #a (#labs:list baseop)
   (f : unit -> Alg a (fixup labs))
-  : Tot (f:(state -> Tot (option a & state)){Lattice.abides f (Lattice.interp (trlabs labs))})
+  : L.repr a (trlabs labs)
   = reify (interp_into_lattice #a #labs f)
-
 
 (* Doing it directly. *)
 

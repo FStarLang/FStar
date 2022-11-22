@@ -103,6 +103,10 @@ let (set_check_kind :
           (env.FStar_TypeChecker_Env.universe_of);
         FStar_TypeChecker_Env.typeof_well_typed_tot_or_gtot_term =
           (env.FStar_TypeChecker_Env.typeof_well_typed_tot_or_gtot_term);
+        FStar_TypeChecker_Env.teq_nosmt_force =
+          (env.FStar_TypeChecker_Env.teq_nosmt_force);
+        FStar_TypeChecker_Env.subtype_nosmt_force =
+          (env.FStar_TypeChecker_Env.subtype_nosmt_force);
         FStar_TypeChecker_Env.use_bv_sorts =
           (env.FStar_TypeChecker_Env.use_bv_sorts);
         FStar_TypeChecker_Env.qtbl_name_and_index =
@@ -135,7 +139,9 @@ let (set_check_kind :
         FStar_TypeChecker_Env.unif_allow_ref_guards =
           (env.FStar_TypeChecker_Env.unif_allow_ref_guards);
         FStar_TypeChecker_Env.erase_erasable_args =
-          (env.FStar_TypeChecker_Env.erase_erasable_args)
+          (env.FStar_TypeChecker_Env.erase_erasable_args);
+        FStar_TypeChecker_Env.core_check =
+          (env.FStar_TypeChecker_Env.core_check)
       }
 let (repl_ld_tasks_of_deps :
   Prims.string Prims.list ->

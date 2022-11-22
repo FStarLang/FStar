@@ -116,7 +116,7 @@ val universe_of_comp: env -> universe -> comp -> universe
 (*
  * return value: formula for input comp to have trivial wp * guard for that formula
  *)
-val check_trivial_precondition : env -> comp -> (comp_typ * formula * guard_t)
+val check_trivial_precondition_wp : env -> comp -> (comp_typ * formula * guard_t)
 
 //
 //checking that e:t is convertible to t'
@@ -180,7 +180,8 @@ val get_field_projector_name : env -> datacon:lident -> index:int -> lident
 
 (* update the env functions *)
 val update_env_sub_eff : env -> sub_eff -> Range.range -> env
-val update_env_polymonadic_bind : env -> lident -> lident -> lident -> tscheme -> env
+val update_env_polymonadic_bind :
+  env -> lident -> lident -> lident -> tscheme -> indexed_effect_combinator_kind -> env
 
 val try_lookup_record_type : env -> lident -> option DsEnv.record_or_dc
 val find_record_or_dc_from_typ : env -> option typ -> unresolved_constructor -> Range.range -> DsEnv.record_or_dc * lident * fv

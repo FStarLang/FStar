@@ -76,14 +76,11 @@ let if_then_else (a:Type)
   (fun h -> (p ==> pre_f h) /\ ((~ p) ==> pre_g h))
   (fun h0 r h1 -> (p ==> post_f h0 r h1) /\ ((~ p) ==> post_g h0 r h1))
 
+[@@ top_level_effect "HoareST.HoareSTT"]
 reifiable reflectable
-layered_effect {
-  HoareST : a:Type -> pre:pre_t -> post:post_t a -> Effect
-  with repr         = repr;
-       return       = return;
-       bind         = bind;
-       subcomp      = subcomp;
-       if_then_else = if_then_else
+effect {
+  HoareST (a:Type) (pre:pre_t) (post:post_t a)
+  with {repr; return; bind; subcomp; if_then_else}
 }
 
 
@@ -129,20 +126,13 @@ let get ()
   (fun h0 h h1 -> h0 == h1 /\ h == h1)
 = HoareST?.reflect get
 
-assume val elim_pure_wp_monotonicity_forall (_:unit)
-  : Lemma
-    (forall (a:Type) (wp:pure_wp a).
-       (forall (p q:pure_post a).
-          (forall (x:a). p x ==> q x) ==>
-          (wp p ==> wp q)))
-
 /// lift from PURE
 
-let lift_pure_hoarest (a:Type) (wp:pure_wp a) (f:eqtype_as_type unit -> PURE a wp)
+let lift_pure_hoarest (a:Type) (wp:pure_wp a) (f:unit -> PURE a wp)
 : repr a
   (fun _ -> wp (fun _ -> True))
   (fun h0 r h1 -> ~ (wp (fun x -> x =!= r \/ h0 =!= h1)))
-= elim_pure_wp_monotonicity_forall ();
+= FStar.Monotonic.Pure.elim_pure_wp_monotonicity wp;
   fun _ -> f ()
 
 sub_effect PURE ~> HoareST = lift_pure_hoarest
@@ -237,3 +227,13 @@ let copy (#a:Type0) (s:array a)
   let cpy = alloc (Seq.create (length s) (index s 0)) in
   copy_aux s cpy 0;
   cpy
+
+//
+// Top-level effect
+//
+
+effect HoareSTT (a:Type) (post:post_t a) = HoareST a (fun _ -> True) post
+
+#push-options "--warn_error -272"  // silence top-level effects warning
+let r : ref int = alloc 2
+#pop-options

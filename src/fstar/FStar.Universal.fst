@@ -108,6 +108,20 @@ let parse (env:uenv) (pre_fn: option string) (fn:string)
 (***********************************************************************)
 (* Initialize a clean environment                                      *)
 (***********************************************************************)
+let core_check : TcEnv.core_check_t =
+  fun env tm t must_tot ->
+    let open FStar.TypeChecker.Core in
+    if not (Options.compat_pre_core_should_check ())
+    then Inl None
+    else match check_term env tm t must_tot with
+         | Inl None -> Inl None
+         | Inl (Some g) ->
+           if Options.compat_pre_core_set ()
+           then Inl None
+           else Inl (Some g)
+         | Inr err ->
+           Inr (fun b -> if b then print_error_short err else print_error err)
+    
 let init_env deps : TcEnv.env =
   let solver =
     if Options.lax()
@@ -124,10 +138,13 @@ let init_env deps : TcEnv.env =
         TcTerm.typeof_tot_or_gtot_term
         TcTerm.typeof_tot_or_gtot_term_fastpath
         TcTerm.universe_of
+        Rel.teq_nosmt_force
+        Rel.subtype_nosmt_force
         solver
         Const.prims_lid
         (NBE.normalize
           (FStar.Tactics.Interpreter.primitive_steps ()))
+        core_check
   in
   (* Set up some tactics callbacks *)
   let env = { env with synth_hook       = FStar.Tactics.Hooks.synthesize } in

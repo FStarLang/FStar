@@ -30,10 +30,6 @@ open FStar.Const
 module O = FStar.Options
 open FStar.VConfig
 
-// JP: all these types are defined twice and every change has to be performed
-// twice (because of the .fs). TODO: move the type definitions into a standalone
-// fs without fsi, and move the helpers into syntaxhelpers.fs / syntaxhelpers.fsi
-
 (* Objects with metadata *)
 // IN F*: [@@ PpxDerivingYoJson; PpxDerivingShow ]
 type withinfo_t 'a = {
@@ -115,10 +111,11 @@ type delta_depth =
 
 // IN F*: [@@ PpxDerivingYoJson; PpxDerivingShow ]
 type should_check_uvar =
-  | Allow_unresolved      (* Escape hatch for uvars in logical guards that are sometimes left unresolved *)
-  | Allow_untyped         (* Escape hatch to not re-typecheck guards in WPs and types of pattern bound vars *)
-  | Allow_ghost           (* Escape hatch used for dot patterns *)
-  | Strict                (* Everything else is strict *)
+  | Allow_unresolved of string  (* Escape hatch for uvars in logical guards that are sometimes left unresolved *)
+  | Allow_untyped of string     (* Escape hatch to not re-typecheck guards in WPs and types of pattern bound vars *)
+  | Allow_ghost of string       (* In some cases, e.g., in ctrl_rewrite, we introduce uvars in Ghost context *)
+  | Strict                      (* Strict uvar that must be typechecked *)
+  | Already_checked             (* A uvar whose solution has already been checked *)
 
 type term' =
   | Tm_bvar       of bv                //bound variable, referenced by de Bruijn index
@@ -143,20 +140,25 @@ type term' =
   | Tm_quoted     of term * quoteinfo                            (* A quoted term, in one of its many variants *)
   | Tm_unknown                                                   (* only present initially while desugaring a term *)
 and ctx_uvar = {                                                 (* (G |- ?u : t), a uvar introduced in context G at type t *)
-    ctx_uvar_head:uvar;                                          (* ?u *)
-    ctx_uvar_gamma:gamma;                                        (* G: a cons list of bindings (most recent at the head) *)
-    ctx_uvar_binders:binders;                                    (* All the Tm_name bindings in G, a snoc list (most recent at the tail) *)
-    ctx_uvar_typ:typ;                                            (* t *)
-    ctx_uvar_reason:string;
-    ctx_uvar_should_check:should_check_uvar;
-    ctx_uvar_range:Range.range;
-    ctx_uvar_meta: option ctx_uvar_meta_t;
+  ctx_uvar_head:uvar;                                          (* ?u *)
+  ctx_uvar_gamma:gamma;                                        (* G: a cons list of bindings (most recent at the head) *)
+  ctx_uvar_binders:binders;                                    (* All the Tm_name bindings in G, a snoc list (most recent at the tail) *)
+  ctx_uvar_reason:string;
+  ctx_uvar_range:Range.range;
+  ctx_uvar_meta: option ctx_uvar_meta_t;
 }
 and ctx_uvar_meta_t =
   | Ctx_uvar_meta_tac of dyn * term (* the dyn is an FStar.TypeChecker.Env.env *)
   | Ctx_uvar_meta_attr of term (* An attribute associated with an implicit argument using the #[@@...] notation *)
 and ctx_uvar_and_subst = ctx_uvar * subst_ts
-and uvar = Unionfind.p_uvar (option term) * version * Range.range
+
+and uvar_decoration = {
+  uvar_decoration_typ:typ;
+  uvar_decoration_typedness_depends_on:list ctx_uvar;
+  uvar_decoration_should_check:should_check_uvar;
+}
+
+and uvar = Unionfind.p_uvar (option term * uvar_decoration) * version * Range.range
 and uvars = set ctx_uvar
 and match_returns_ascription = binder * ascription               (* as x returns C|t *)
 and branch = pat * option term * term                           (* optional when clause in each branch *)
@@ -164,10 +166,11 @@ and ascription = either term comp * option term * bool        (* e <: t [by tac]
                                                                  (* the bool says whether the ascription is an equality ascription, i.e. $: *)
 and pat' =
   | Pat_constant of sconst
-  | Pat_cons     of fv * list (pat * bool)                      (* flag marks an explicitly provided implicit *)
+  | Pat_cons     of fv * option universes * list (pat * bool)    (* flag marks an explicitly provided implicit *)
   | Pat_var      of bv                                           (* a pattern bound variable (linear in a pattern) *)
   | Pat_wild     of bv                                           (* need stable names for even the wild patterns *)
-  | Pat_dot_term of bv * term                                    (* dot patterns: determined by other elements in the pattern and type *)
+  | Pat_dot_term of option term                                  (* dot patterns: determined by other elements in the pattern *)
+                                                                 (* the option term is the optionally resolved pat dot term *)
 and letbinding = {  //let f : forall u1..un. M t = e
     lbname :lbname;          //f
     lbunivs:list univ_name; //u1..un
@@ -220,14 +223,14 @@ and cflag =                                                      (* flags applic
   | CPS                                                            (* computation is marked with attribute `cps`, for DM4F, seems useless, see #1557 *)
   | DECREASES of decreases_order
 and metadata =
-  | Meta_pattern       of list term * list args                (* Patterns for SMT quantifier instantiation; the first arg instantiation *)
+  | Meta_pattern       of list term * list args                  (* Patterns for SMT quantifier instantiation; the first arg instantiation *)
   | Meta_named         of lident                                 (* Useful for pretty printing to keep the type abbreviation around *)
   | Meta_labeled       of string * Range.range * bool            (* Sub-terms in a VC are labeled with error messages to be reported, used in SMT encoding *)
   | Meta_desugared     of meta_source_info                       (* Node tagged with some information about source term before desugaring *)
   | Meta_monadic       of monad_name * typ                       (* Annotation on a Tm_app or Tm_let node in case it is monadic for m not in {Pure, Ghost, Div} *)
                                                                  (* Contains the name of the monadic effect and  the type of the subterm *)
   | Meta_monadic_lift  of monad_name * monad_name * typ          (* Sub-effecting: lift the subterm of type typ *)
-                                                                 (* from the first monad_name m1 to the second monad name  m2 *)
+                                                                 (* from the first monad_name m1 to the second monad name m2 *)
 and meta_source_info =
   | Sequence                                    (* used when resugaring *)
   | Primop                                      (* ... add more cases here as needed for better code generation *)
@@ -260,6 +263,7 @@ and syntax 'a = {
     n:'a;
     pos:Range.range;
     vars:memo free_vars;
+    hash_code:memo FStar.Hash.hash_code
 }
 and bv = {
     ppname:ident;  //programmer-provided name for pretty-printing
@@ -371,11 +375,36 @@ type monad_abbrev = {
   parms:binders;
   def:typ
   }
+
+//
+// Kind of a binder in an indexed effect combinator
+//
+type indexed_effect_binder_kind =
+  | Type_binder
+  | Substitutive_binder
+  | BindCont_no_abstraction_binder  // a g computation (the continuation) binder in bind that's not abstracted over x:a
+  | Range_binder
+  | Repr_binder
+  | Ad_hoc_binder
+
+//
+// Kind of an indexed effect combinator
+//
+// Substitutive invariant applies only to subcomp and ite combinators,
+//   where the effect indices of the two computations could be the same,
+//   and hence bound only once in the combinator definitions
+//
+type indexed_effect_combinator_kind =
+  | Substitutive_combinator of list indexed_effect_binder_kind
+  | Substitutive_invariant_combinator
+  | Ad_hoc_combinator
+
 type sub_eff = {
   source:lident;
   target:lident;
   lift_wp:option tscheme;
-  lift:option tscheme
+  lift:option tscheme;
+  kind:option indexed_effect_combinator_kind
  }
 
 (*
@@ -425,39 +454,41 @@ type wp_eff_combinators = {
 (*
  * Layered effects combinators
  *
- * All of these are pairs of type schemes,
+ * All of these have pairs of type schemes,
  *   where the first component is the term ts and the second component is the type ts
  *
  * Before typechecking the effect declaration, the second component is a dummy ts
  *   In other words, desugaring sets the first component only, and typechecker then fills up the second one
  *
- * Similarly the base effect name is also "" after desugaring, and is set by the typechecker
+ * Additionally, bind, subcomp, and if_then_else have a combinator kind,
+ *   this is also set to None in desugaring and set during typechecking the effect
  *)
 type layered_eff_combinators = {
   l_repr         : (tscheme * tscheme);
   l_return       : (tscheme * tscheme);
-  l_bind         : (tscheme * tscheme);
-  l_subcomp      : (tscheme * tscheme);
-  l_if_then_else : (tscheme * tscheme);
-
+  l_bind         : (tscheme * tscheme * option indexed_effect_combinator_kind);
+  l_subcomp      : (tscheme * tscheme * option indexed_effect_combinator_kind);
+  l_if_then_else : (tscheme * tscheme * option indexed_effect_combinator_kind);
 }
-
 
 type eff_combinators =
   | Primitive_eff of wp_eff_combinators
   | DM4F_eff of wp_eff_combinators
   | Layered_eff of layered_eff_combinators
 
+type effect_signature =
+  | Layered_eff_sig of int & tscheme  // (n, ts) where n is the number of effect parameters (all upfront) in the effect signature
+  | WP_eff_sig of tscheme
 
 type eff_decl = {
-  mname       : lident;      //STATE_h
+  mname       : lident;      // STATE_h
 
   cattributes : list cflag;
 
-  univs       : univ_names;  //u#heap
-  binders     : binders;     //(heap:Type u#heap), univs and binders are in the scope of the rest of the combinators
+  univs       : univ_names;  // u#heap
+  binders     : binders;     // (heap:Type u#heap), univs and binders are in the scope of the rest of the combinators
 
-  signature   : tscheme;     //result:Type -> st_wp_h heap -> result -> Effect
+  signature   : effect_signature;
 
   combinators : eff_combinators;
 
@@ -529,8 +560,8 @@ type sigelt' =
   | Sig_pragma            of pragma
   | Sig_splice            of list lident * term
 
-  | Sig_polymonadic_bind  of lident * lident * lident * tscheme * tscheme  //(m, n) |> p, the polymonadic term, and its type
-  | Sig_polymonadic_subcomp of lident * lident * tscheme * tscheme  //m <: n, the polymonadic subcomp term, and its type
+  | Sig_polymonadic_bind  of lident * lident * lident * tscheme * tscheme * option indexed_effect_combinator_kind  //(m, n) |> p, the polymonadic term, and its type
+  | Sig_polymonadic_subcomp of lident * lident * tscheme * tscheme * option indexed_effect_combinator_kind  //m <: n, the polymonadic subcomp term, and its type
   | Sig_fail              of list int         (* Expected errors (empty for 'any') *)
                           * bool               (* true if should fail in --lax *)
                           * list sigelt       (* The sigelts to be checked *)

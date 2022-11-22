@@ -209,22 +209,25 @@ let should_defer_uvar_to_user_tac env (u:ctx_uvar) =
 
 
 let solve_goals_with_tac env g (deferred_goals:implicits) (tac:sigelt) =
-  let resolve_tac =
-    match tac.sigel with
-    | Sig_let (_, [lid]) ->
-      let qn = Env.lookup_qname env lid in
-      let fv = S.lid_as_fv lid (Delta_constant_at_level 0) None in
-      let dd =
-        match Env.delta_depth_of_qninfo fv qn with
-        | Some dd -> dd
-        | None -> failwith "Expected a dd"
-      in
-      let term = S.fv_to_tm (S.lid_as_fv lid dd None) in
-      term
-    | _ -> failwith "Resolve_tac not found"
-  in
-  let env = { env with enable_defer_to_tac = false } in
-  env.try_solve_implicits_hook env resolve_tac deferred_goals
+  Profiling.profile (fun () ->
+    let resolve_tac =
+      match tac.sigel with
+      | Sig_let (_, [lid]) ->
+        let qn = Env.lookup_qname env lid in
+        let fv = S.lid_as_fv lid (Delta_constant_at_level 0) None in
+        let dd =
+          match Env.delta_depth_of_qninfo fv qn with
+          | Some dd -> dd
+          | None -> failwith "Expected a dd"
+        in
+        let term = S.fv_to_tm (S.lid_as_fv lid dd None) in
+        term
+      | _ -> failwith "Resolve_tac not found"
+    in
+    let env = { env with enable_defer_to_tac = false } in
+    env.try_solve_implicits_hook env resolve_tac deferred_goals)
+  (Some (Ident.string_of_lid (Env.current_module env)))
+  "FStar.TypeChecker.DeferredImplicits.solve_goals_with_tac"
 
 (** This functions is called in Rel.force_trivial_guard to solve all
     goals in a guard that were deferred to a tactic *)
@@ -251,7 +254,7 @@ let solve_deferred_to_tactic_goals env g =
         in
         let goal_ty = U.mk_eq2 (env.universe_of env_lax t_eq) t_eq tp.lhs tp.rhs in
         let goal, ctx_uvar, _ =
-            Env.new_implicit_var_aux reason tp.lhs.pos env goal_ty Allow_untyped None
+            Env.new_implicit_var_aux reason tp.lhs.pos env goal_ty Strict None
         in
         let imp =
             { imp_reason = "";

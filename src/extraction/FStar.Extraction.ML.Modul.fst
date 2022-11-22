@@ -588,16 +588,60 @@ let extract_reifiable_effect g ed
     iface_union_l (return_iface::bind_iface::actions_iface),
     return_decl::bind_decl::actions
 
+let should_split_let_rec_types_and_terms (env:uenv) (lbs:list letbinding)
+  : bool
+  = let rec is_homogeneous out lbs =
+        match lbs with
+        | [] -> true
+        | lb::lbs_tail ->
+          let is_type = Term.is_arity env lb.lbtyp in
+          match out with
+          | None -> is_homogeneous (Some is_type) lbs_tail
+          | Some b when b = is_type ->
+            is_homogeneous (Some is_type) lbs_tail
+          | _ ->
+            false
+    in
+    not (is_homogeneous None lbs)
+      
+let split_let_rec_types_and_terms se (env:uenv) (lbs:list letbinding)
+  : list sigelt
+  = let rec aux (out:list sigelt) (mutuals:list letbinding) (lbs:list letbinding)
+      : (list sigelt & list letbinding)
+      = match lbs with
+        | [] ->  out, mutuals
+        | lb::lbs_tail ->
+          let out, mutuals = aux out mutuals lbs_tail in
+          if not (Term.is_arity env lb.lbtyp)
+          then (
+            //This is a term, not a type
+            out, lb::mutuals
+          )
+          else (
+            //This is a type; split it into a sigelt
+            let formals, body, rc_opt = U.abs_formals_maybe_unascribe_body true lb.lbdef in
+            let body = S.tconst PC.c_true_lid in //extract it not as unit, since otherwise it will be treated as erasable
+            let lbdef = U.abs formals body None in
+            let lb = { lb with lbdef } in
+            let se = { se with sigel = Sig_let ((false, [lb]), []) } in
+            se::out, mutuals
+          )
+    in
+    let sigs, lbs = aux [] [] lbs in
+    let lb = {se with sigel = Sig_let ((true, lbs), List.map (fun lb -> lb.lbname) lbs) } in
+    let sigs = sigs@[lb] in
+    // BU.print1 "Split let recs into %s\n"
+    //   (List.map Print.sigelt_to_string sigs |> String.concat ";;\n");
+    sigs
+    
+
 let extract_let_rec_types se (env:uenv) (lbs:list letbinding) =
     //extracting `let rec t .. : Type = e
     //            and ...
     if BU.for_some (fun lb -> not (Term.is_arity env lb.lbtyp)) lbs
     then //mixtures of mutually recursively defined types and terms
-         //are not yet supported
-         Errors.raise_error
-           (Errors.Fatal_ExtractionUnsupported,
-             "Mutually recursively defined typed and terms cannot yet be extracted")
-           se.sigrng
+         //should have already been pre-processed away
+         failwith "Impossible: mixed mutual types and terms"
     else
       let env, iface_opt, impls =
           List.fold_left
@@ -674,7 +718,7 @@ let mark_sigelt_erased (se:sigelt) (g:uenv) : uenv =
                   (U.lids_of_sigelt se) g
 
 (*  The top-level extraction of a sigelt to an interface *)
-let extract_sigelt_iface (g:uenv) (se:sigelt) : uenv * iface =
+let rec extract_sigelt_iface (g:uenv) (se:sigelt) : uenv * iface =
     if sigelt_has_noextract se then
       let g = mark_sigelt_erased se g in
       g, empty_iface
@@ -705,6 +749,16 @@ let extract_sigelt_iface (g:uenv) (se:sigelt) : uenv * iface =
         in
         env, iface
       )
+      
+    | Sig_let((true, lbs), _)
+      when should_split_let_rec_types_and_terms g lbs ->
+      let ses = split_let_rec_types_and_terms se g lbs in
+      let iface = {empty_iface with iface_module_name=(current_module_of_uenv g)} in
+      List.fold_left 
+        (fun (g, out) se -> 
+           let g, mls = extract_sigelt_iface g se in
+           g,  iface_union out mls)
+        (g, iface) ses
 
     | Sig_let ((true, lbs), _)
       when BU.for_some (fun lb -> Term.is_arity g lb.lbtyp) lbs ->
@@ -916,6 +970,10 @@ let maybe_register_plugin (g:env_t) (se:sigelt) : list mlmodule1 =
            | _ -> []
            end
 
+let lb_irrelevant (g:env_t) (lb:letbinding) : bool =
+    Env.non_informative (tcenv_of_uenv g) lb.lbtyp && // result type is non informative
+    not (Term.is_arity g lb.lbtyp) &&  // but not a type definition
+    U.is_pure_or_ghost_effect lb.lbeff // and not top-level effectful
 
 (*****************************************************************************)
 (* Extracting the top-level definitions in a module                          *)
@@ -950,6 +1008,10 @@ let rec extract_sig (g:env_t) (se:sigelt) : env_t * list mlmodule1 =
         | Sig_new_effect _ ->
           g, []
 
+        (* Ignore all non-informative sigelts *)
+        | Sig_let ((_, lbs), _) when List.for_all (lb_irrelevant g) lbs ->
+          g, []
+
         | Sig_declare_typ(lid, univs, t)  when Term.is_arity g t -> //lid is a type
           //extracting `assume type t : k`
           let env, _, impl = extract_type_declaration g false lid se.sigquals se.sigattrs univs t in
@@ -969,6 +1031,15 @@ let rec extract_sig (g:env_t) (se:sigelt) : env_t * list mlmodule1 =
             in
             env, impl
           )
+
+        | Sig_let((true, lbs), _)
+          when should_split_let_rec_types_and_terms g lbs ->
+          let ses = split_let_rec_types_and_terms se g lbs in
+          List.fold_left 
+            (fun (g, out) se -> 
+              let g, mls = extract_sig g se in
+              g,  out@mls)
+            (g, []) ses
 
         | Sig_let((true, lbs), _)
           when BU.for_some (fun lb -> Term.is_arity g lb.lbtyp) lbs ->
@@ -1158,7 +1229,7 @@ let rec extract_sig (g:env_t) (se:sigelt) : env_t * list mlmodule1 =
          U.process_pragma p se.sigrng;
          g, []
   )
-
+ 
 let extract' (g:uenv) (m:modul) : uenv * option mllib =
   let _ = Options.restore_cmd_line_options true in
   let name, g = UEnv.extend_with_module_name g m.name in

@@ -51,6 +51,6 @@ let test3 (#l1:lattice_element sl2)
           (px:protected l1 int)
           (py:protected l2 int)
    : z:protected (l1 `lub` l2) int{reveal z = reveal px + reveal py}
-   = x <-- px ;
-     y <-- py ;
+   = let>> x = px in
+     let>> y = py in
      ret (x + y)

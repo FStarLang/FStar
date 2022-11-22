@@ -5,6 +5,11 @@ on:
     - _**
   pull_request:
   workflow_dispatch:
+    inputs:
+      ci_refresh_hints:
+        description: Refresh hints and advance version number
+        required: true
+        type: boolean
 jobs:
   build:
     runs-on: [self-hosted, linux, X64]
@@ -17,12 +22,17 @@ jobs:
       - name: Identify the notification channel
         run: |
           echo "CI_SLACK_CHANNEL=$(jq -c -r '.NotificationChannel' .docker/build/config.json)" >> $GITHUB_ENV
+      - name: Set the refresh hints flag
+        if: ${{ (github.event_name == 'workflow_dispatch') && inputs.ci_refresh_hints }}
+        run: |
+          echo "CI_TARGET=uregressions-ulong" >> $GITHUB_ENV
       - name: Build FStar and its dependencies
         run: |
           ci_docker_image_tag=fstar:local-run-$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT
           ci_docker_builder=builder_fstar_${GITHUB_RUN_ID}_${GITHUB_RUN_ATTEMPT}
           docker buildx create --name $ci_docker_builder --driver-opt env.BUILDKIT_STEP_LOG_MAX_SIZE=500000000
-          docker buildx build --builder $ci_docker_builder --pull --load --secret id=DZOMO_GITHUB_TOKEN -t $ci_docker_image_tag -f .docker/standalone.Dockerfile --build-arg CI_BRANCH=$GITHUB_REF_NAME .
+          if [[ -z $CI_TARGET ]] ; then CI_TARGET=uregressions ; fi
+          docker buildx build --builder $ci_docker_builder --pull --load --secret id=DZOMO_GITHUB_TOKEN -t $ci_docker_image_tag -f .docker/standalone.Dockerfile --build-arg CI_BRANCH=$GITHUB_REF_NAME --build-arg CI_TARGET="$CI_TARGET" .
           ci_docker_status=$(docker run $ci_docker_image_tag /bin/bash -c 'cat $FSTAR_HOME/status.txt' || echo false)
           if $ci_docker_status ; then
             if ! { echo $GITHUB_REF_NAME | grep '/' ; } ; then
@@ -60,7 +70,7 @@ jobs:
           echo "CI_COMMIT=$(echo ${{ github.event.head_commit.id || github.event.pull_request.head.sha }} | grep -o '^........')" >> $GITHUB_ENV
           echo 'CI_STATUS='"$(docker run fstar:local-run-$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT /bin/bash -c 'cat $FSTAR_HOME/result.txt' || echo Failure)" >> $GITHUB_ENV
       - name: Post to the Slack channel
-        if: ${{ always() }}
+        if: ${{ always() && (github.event_name != 'workflow_dispatch') }}
         id: slack
         uses: slackapi/slack-github-action@v1.16.0
         with:

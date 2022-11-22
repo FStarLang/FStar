@@ -42,9 +42,18 @@ module S = FStar.Syntax.Syntax
 module SS = FStar.Syntax.Subst
 module N = FStar.TypeChecker.Normalize
 module UF = FStar.Syntax.Unionfind
-module Const = FStar.Parser.Const
+module PC = FStar.Parser.Const
 module FC = FStar.Const
 module TcComm = FStar.TypeChecker.Common
+
+let is_base_type env typ =
+    let t = FStar.TypeChecker.Normalize.unfold_whnf env typ in
+    let head, args = U.head_and_args t in
+    match (U.unascribe (U.un_uinst head)).n with
+    | Tm_name _
+    | Tm_fvar _
+    | Tm_type _ -> true
+    | _ -> false
 
 let print_ctx_uvar ctx_uvar = Print.ctx_uvar_to_string ctx_uvar
 
@@ -114,13 +123,17 @@ let as_wl_deferred wl (d:deferred): list (int * deferred_reason * lstring * prob
 (* <new_uvar> Generating new unification variables/patterns  *)
 (* --------------------------------------------------------- *)
 let new_uvar reason wl r gamma binders k should_check meta : ctx_uvar * term * worklist =
+    let decoration = {
+             uvar_decoration_typ = k;
+             uvar_decoration_should_check = should_check;
+             uvar_decoration_typedness_depends_on = []
+        }
+    in
     let ctx_uvar = {
-         ctx_uvar_head=UF.fresh r;
+         ctx_uvar_head=UF.fresh decoration r;
          ctx_uvar_gamma=gamma;
          ctx_uvar_binders=binders;
-         ctx_uvar_typ=k;
          ctx_uvar_reason=reason;
-         ctx_uvar_should_check=should_check;
          ctx_uvar_range=r;
          ctx_uvar_meta=meta;
        } in
@@ -136,10 +149,12 @@ let new_uvar reason wl r gamma binders k should_check meta : ctx_uvar * term * w
     ctx_uvar, t, {wl with wl_implicits=imp::wl.wl_implicits}
 
 let copy_uvar u (bs:binders) t wl =
-    let env = {wl.tcenv with gamma = u.ctx_uvar_gamma } in
-    let env = Env.push_binders env bs in
-    new_uvar ("copy:"^u.ctx_uvar_reason) wl u.ctx_uvar_range env.gamma
-            (Env.all_binders env) t u.ctx_uvar_should_check u.ctx_uvar_meta
+  let env = {wl.tcenv with gamma = u.ctx_uvar_gamma } in
+  let env = Env.push_binders env bs in
+  new_uvar ("copy:"^u.ctx_uvar_reason) wl u.ctx_uvar_range env.gamma
+           (Env.all_binders env) t
+           (U.ctx_uvar_should_check u)
+           u.ctx_uvar_meta
 
 (* --------------------------------------------------------- *)
 (* </new_uvar>                                               *)
@@ -350,9 +365,11 @@ let mk_eq2 wl env prob t1 t2 : term * worklist =
             to simply compute the type of t1 here.
             Sadly, it seems to be way too expensive to call env.type_of here.
     *)
-    let t_type, u = U.type_u () in
-    let binders = Env.all_binders env in
-    let _, tt, wl = new_uvar "eq2" wl t1.pos env.gamma binders t_type Allow_unresolved None in
+    // let t_type, u = U.type_u () in
+    // let binders = Env.all_binders env in
+    // let _, tt, wl = new_uvar "eq2" wl t1.pos env.gamma binders t_type (Allow_unresolved "eq2 type") None in
+    let tt, _ = env.typeof_well_typed_tot_or_gtot_term env t1 false in
+    let u = env.universe_of env tt in
     U.mk_eq2 u tt t1 t2, wl
 
 let p_invert = function
@@ -378,7 +395,7 @@ let mk_problem wl scope orig lhs rel rhs elt reason =
                  gamma
                  bs
                  U.ktype0
-                 Allow_untyped
+                 (Allow_untyped "logical guard")
                  None
     in
     let prob =
@@ -426,7 +443,7 @@ let new_problem wl env lhs rel rhs (subject:option bv) loc reason =
                env.gamma
                (Env.all_binders env)
                lg_ty
-               Allow_untyped
+               (Allow_untyped "logical guard")
                None
   in
   let lg =
@@ -499,7 +516,7 @@ let explain env d (s : lstring) =
 (* <uvi ops> Instantiating unification variables   *)
 (* ------------------------------------------------*)
 
-let set_uvar env u t = 
+let set_uvar env u (should_check_opt:option S.should_check_uvar) t =
   // Useful for debugging uvars setting bugs
   // if Env.debug env <| Options.Other "Rel"
   // then (
@@ -514,6 +531,13 @@ let set_uvar env u t =
   //       (BU.stack_dump());
   //     failwith "DIE"
   // );
+
+  (match should_check_opt with
+   | None -> ()
+   | Some should_check ->
+     UF.change_decoration u.ctx_uvar_head
+       ({UF.find_decoration u.ctx_uvar_head with uvar_decoration_should_check=should_check}));
+
   U.set_uvar u.ctx_uvar_head t
 
 let commit env uvis = uvis |> List.iter (function
@@ -524,9 +548,9 @@ let commit env uvis = uvis |> List.iter (function
       end
     | TERM(u, t) ->
       def_check_closed_in t.pos "commit" (List.map (fun b -> b.binder_bv) u.ctx_uvar_binders) t;
-      set_uvar env u t
+      set_uvar env u None t
     )
-  
+
 let find_term_uvar uv s = BU.find_map s (function
     | UNIV _ -> None
     | TERM(u, t) -> if UF.equiv uv u.ctx_uvar_head then Some t else None)
@@ -805,8 +829,8 @@ let ensure_no_uvar_subst env (t0:term) (wl:worklist)
                          t0.pos
                          new_gamma
                          (Env.binders_of_bindings new_gamma)
-                         (U.arrow dom_binders (S.mk_Total uv.ctx_uvar_typ))
-                         uv.ctx_uvar_should_check
+                         (U.arrow dom_binders (S.mk_Total (U.ctx_uvar_typ uv)))
+                         (U.ctx_uvar_should_check uv)
                          uv.ctx_uvar_meta
         in
 
@@ -817,7 +841,7 @@ let ensure_no_uvar_subst env (t0:term) (wl:worklist)
         then BU.print2 "ensure_no_uvar_subst solving %s with %s\n"
                (Print.ctx_uvar_to_string uv)
                (Print.term_to_string sol);
-        set_uvar env uv sol;
+        set_uvar env uv (Some Already_checked) sol;
 
         (* Make a term for the new uvar, applied to the substitutions of
          * the abstracted arguments, plus all the original arguments. *)
@@ -835,7 +859,7 @@ let no_free_uvars t = BU.set_is_empty (Free.uvars t) && BU.set_is_empty (Free.un
 
 (* Deciding when it's okay to issue an SMT query for
    equating a term whose head symbol is `head` with another term *)
-let rec may_relate env prel head =
+let rec may_relate_with_logical_guard env is_eq head =
     match (SS.compress head).n with
     | Tm_name _
     | Tm_match _ -> true
@@ -847,12 +871,14 @@ let rec may_relate env prel head =
          //these may be relatable via a logical theory
          //which may provide **equations** among abstract symbols
          //Note, this is specifically not applicable for subtyping queries: see issue #1359
-         prel = EQ
+         is_eq
        | _ -> false)
     | Tm_ascribed (t, _, _)
     | Tm_uinst (t, _)
-    | Tm_meta (t, _) -> may_relate env prel t
+    | Tm_meta (t, _) -> may_relate_with_logical_guard env is_eq t
     | _ -> false
+
+let may_relate env prel head  = may_relate_with_logical_guard env (EQ? prel) head
 
 (* Only call if ensure_no_uvar_subst was called on t before *)
 let destruct_flex_t' t : flex_t =
@@ -886,7 +912,7 @@ let u_abs (k : typ) (ys : binders) (t : term) : term =
     (* TODO : not putting any cflags here on the annotation... *)
     then //The annotation is imprecise, due to a discrepancy in currying/eta-expansions etc.;
          //causing a loss in precision for the SMT encoding
-         U.abs ys t (Some (U.mk_residual_comp Const.effect_Tot_lid None []))
+         U.abs ys t (Some (U.mk_residual_comp PC.effect_Tot_lid None []))
     else let c = Subst.subst_comp (U.rename_binders xs ys) c in
          U.abs ys t (Some (U.residual_comp_of_comp c))
 
@@ -904,7 +930,7 @@ let solve_prob' resolve_ok prob logical_guard uvis wl =
         let phi = U.abs xs phi (Some (U.residual_tot U.ktype0)) in
         def_check_closed_in (p_loc prob) ("solve_prob'.sol." ^ string_of_int (p_pid prob))
                             (List.map (fun b -> b.binder_bv) <| p_scope prob) phi;
-        set_uvar wl.tcenv uv phi
+        set_uvar wl.tcenv uv None phi
     in
     let uv = p_guard_uvar prob in
     let fail () =
@@ -1041,18 +1067,19 @@ let restrict_ctx env (tgt:ctx_uvar) (bs:binders) (src:ctx_uvar) wl : worklist =
   let aux (t:typ) (f:term -> term) =
     let _, src', wl = new_uvar ("restricted " ^ (Print.uvar_to_string src.ctx_uvar_head)) wl
       src.ctx_uvar_range g pfx t
-      src.ctx_uvar_should_check src.ctx_uvar_meta in
-    set_uvar env src (f src');
+      (U.ctx_uvar_should_check src)
+      src.ctx_uvar_meta in
+    set_uvar env src (Some Already_checked) (f src');
     wl in
 
   let bs = bs |> List.filter (fun ({binder_bv=bv1}) ->
     src.ctx_uvar_binders |> List.existsb (fun ({binder_bv=bv2}) -> S.bv_eq bv1 bv2) &&  //binder exists in G_t
     not (pfx |> List.existsb (fun ({binder_bv=bv2}) -> S.bv_eq bv1 bv2))) in  //but not in the maximal prefix
 
-  if List.length bs = 0 then aux src.ctx_uvar_typ (fun src' -> src')  //no abstraction over bs
+  if List.length bs = 0 then aux (U.ctx_uvar_typ src) (fun src' -> src')  //no abstraction over bs
   else begin
     aux
-      (src.ctx_uvar_typ |> env.universe_of env |> Some |> S.mk_Total' src.ctx_uvar_typ |> U.arrow bs)  //bs -> Tot t_t
+      (let t = U.ctx_uvar_typ src in t |> env.universe_of env |> Some |> S.mk_Total' t |> U.arrow bs)  //bs -> Tot t_t
       (fun src' -> S.mk_Tm_app  //?u bs
         src'
         (bs |> S.binders_to_names |> List.map S.as_arg)
@@ -1126,11 +1153,6 @@ let pat_vars env ctx args : option binders =
 (* </variable ops>                                  *)
 (* ------------------------------------------------ *)
 
-type match_result =
-  | MisMatch of option delta_depth * option delta_depth
-  | HeadMatch of bool // true iff the heads MAY match after further unification, false if already the same
-  | FullMatch
-
 let string_of_match_result = function
     | MisMatch (d1, d2) ->
         "MisMatch ("
@@ -1143,16 +1165,6 @@ let head_match = function
     | MisMatch(i, j) -> MisMatch(i, j)
     | HeadMatch true -> HeadMatch true
     | _ -> HeadMatch false
-
-// GM: This is unused, maybe delete
-(* let and_match m1 m2 = *)
-(*     match m1 with *)
-(*     | MisMatch (i, j) -> MisMatch (i, j) *)
-(*     | HeadMatch u -> begin match m2 () with *)
-(*                      | MisMatch (i,j) -> MisMatch (i, j) *)
-(*                      | _ -> HeadMatch *)
-(*                      end *)
-(*     | FullMatch -> m2 () *)
 
 let fv_delta_depth env fv =
     let d = Env.delta_depth_of_fv env fv in
@@ -1174,7 +1186,7 @@ let rec delta_depth_of_term env t =
     let t = U.unmeta t in
     match t.n with
     | Tm_meta _
-    | Tm_delayed _  -> failwith "Impossible"
+    | Tm_delayed _  -> failwith "Impossible (delta depth of term)"
     | Tm_lazy i -> delta_depth_of_term env (U.unfold_lazy i)
     | Tm_unknown
     | Tm_bvar _
@@ -1234,7 +1246,7 @@ let rec head_matches env t1 t2 : match_result =
     | _ -> MisMatch(delta_depth_of_term env t1, delta_depth_of_term env t2)
 
 (* Does t1 head-match t2, after some delta steps? *)
-let head_matches_delta env wl t1 t2 : (match_result * option (typ*typ)) =
+let head_matches_delta env smt_ok t1 t2 : (match_result & option (typ&typ)) =
     let maybe_inline t =
         let head = U.head_of (unrefine env t) in
         if Env.debug env <| Options.Other "RelDelta" then
@@ -1263,7 +1275,7 @@ let head_matches_delta env wl t1 t2 : (match_result * option (typ*typ)) =
                  Env.Iota]
             in
             let steps =
-              if wl.smt_ok then basic_steps
+              if smt_ok then basic_steps
               else Env.Exclude Env.Zeta::basic_steps
                    //NS: added this to prevent unifier looping
                    //see bug606.fst
@@ -1695,7 +1707,9 @@ let should_defer_flex_to_user_tac env (wl:worklist) (f:flex_t) =
             else xi is a fresh variable
     *)
 let quasi_pattern env (f:flex_t) : option (binders * typ) =
-    let (Flex (_, {ctx_uvar_binders=ctx; ctx_uvar_typ=t_hd}, args)) = f in
+    let (Flex (_, ctx_uvar, args)) = f in
+    let t_hd = U.ctx_uvar_typ ctx_uvar in
+    let ctx = ctx_uvar.ctx_uvar_binders in
     let name_exists_in x bs =
         BU.for_some (fun ({binder_bv=y}) -> S.bv_eq x y) bs
     in
@@ -1749,9 +1763,242 @@ let run_meta_arg_tac (ctx_u:ctx_uvar) : term =
     if Env.debug env (Options.Other "Tac")
     then BU.print1 "Running tactic for meta-arg %s\n" (Print.ctx_uvar_to_string ctx_u);
     Errors.with_ctx "Running tactic for meta-arg"
-      (fun () -> env.synth_hook env ctx_u.ctx_uvar_typ tau)
+      (fun () -> env.synth_hook env (U.ctx_uvar_typ ctx_u) tau)
   | _ ->
     failwith "run_meta_arg_tac must have been called with a uvar that has a meta tac"
+
+let simplify_guard env g = match g.guard_f with
+    | Trivial -> g
+    | NonTrivial f ->
+      if Env.debug env <| Options.Other "Simplification" then BU.print1 "Simplifying guard %s\n" (Print.term_to_string f);
+      let f = norm_with_steps "FStar.TypeChecker.Rel.norm_with_steps.6"
+              [Env.Beta; Env.Eager_unfolding; Env.Simplify; Env.Primops; Env.NoFullNorm] env f in
+      if Env.debug env <| Options.Other "Simplification" then BU.print1 "Simplified guard to %s\n" (Print.term_to_string f);
+      let f =
+        let g = U.unmeta f in
+        let g =
+          match U.un_squash g with
+          | Some g' -> U.unmeta g'
+          | _ -> g
+        in
+        match g.n with
+        | Tm_fvar fv when S.fv_eq_lid fv PC.true_lid -> Trivial
+        | _ -> NonTrivial f
+      in
+      {g with guard_f=f}
+
+//
+// Apply substitutive indexed effects subcomp for an effect M
+//
+// bs: (opened) binders in the subcomp type
+// subcomp_c: the computation type in the subcomp type (opened with bs)
+// ct1 ct2: the two input computation types, both in M
+// sub_prob: a function to create and add subproblems to the worklist
+// num_effect_params: number of effect parameters in M
+// wl: worklist
+// subcomp_name and r1: for debugging purposes
+//
+// returns the (subcomp guard, new sub problems, worklist)
+//
+let apply_substitutive_indexed_subcomp (env:Env.env)
+  (k:S.indexed_effect_combinator_kind)
+  (bs:binders)
+  (subcomp_c:comp)
+  (ct1:comp_typ) (ct2:comp_typ)
+  (sub_prob:worklist -> term -> rel -> term -> string -> prob & worklist)
+  (num_effect_params:int)
+  (wl:worklist)
+  (subcomp_name:string)
+  (r1:Range.range)
+
+  : typ & list prob & worklist =
+
+  let debug = Env.debug env <| Options.Other "LayeredEffectsApp" in
+
+  //
+  // We will collect the substitutions in subst,
+  // bs will be the remaining binders (that are not in subst yet)
+  //
+
+  // first the a:Type binder
+  let bs, subst =
+    let a_b::bs = bs in
+    bs,
+    [NT (a_b.binder_bv, ct2.result_typ)] in
+
+  //
+  // If the effect has effect parameters:
+  //   - peel those arguments off of ct1 and ct2,
+  //   - add subproblems for their equality to the worklist
+  //   - add substitutions for corresponding binders
+  //
+  let bs, subst, args1, args2, eff_params_sub_probs, wl =
+    if num_effect_params = 0
+    then bs, subst, ct1.effect_args, ct2.effect_args, [], wl
+    else let split (l:list 'a) = List.splitAt num_effect_params l in
+         let eff_params_bs, bs = split bs in
+         let param_args1, args1 = split ct1.effect_args in
+         let param_args2, args2 = split ct2.effect_args in
+
+         let probs, wl = List.fold_left2 (fun (ps, wl) (t1, _) (t2, _) ->
+           let p, wl = sub_prob wl t1 EQ t2 "effect params subcomp" in
+           ps@[p], wl) ([], wl) param_args1 param_args2 in
+         let param_subst = List.map2 (fun b (arg, _) ->
+           NT (b.binder_bv, arg)) eff_params_bs param_args1 in
+         bs, subst@param_subst, args1, args2, probs, wl in
+
+  // add substitutions for the f computation
+  let bs, subst =
+    let f_bs, bs = List.splitAt (List.length args1) bs in
+    let f_substs = List.map2 (fun f_b (arg, _) -> NT (f_b.binder_bv, arg)) f_bs args1 in
+    bs,
+    subst@f_substs in
+
+  // add substitutions for the g computation
+  let bs, subst, f_g_args_eq_sub_probs, wl =
+    if Substitutive_combinator? k
+    then begin
+      let g_bs, bs = List.splitAt (List.length args2) bs in
+      let g_substs = List.map2 (fun g_b (arg, _) -> NT (g_b.binder_bv, arg)) g_bs args2 in
+      bs,
+      subst@g_substs,
+      [],
+      wl
+    end
+    else if Substitutive_invariant_combinator? k
+    then begin
+      let probs, wl = List.fold_left2 (fun (ps, wl) (t1, _) (t2, _) ->
+        let p, wl = sub_prob wl t1 EQ t2 "substitutive inv subcomp args" in
+        ps@[p], wl) ([], wl) args1 args2 in
+      bs, subst, probs, wl
+    end
+    else failwith "Impossible (rel.apply_substitutive_indexed_subcomp unexpected k" in
+
+  // peel off the f:repr a is binder from bs
+  let bs = List.splitAt (List.length bs - 1) bs |> fst in
+
+  // for the binders in bs, create uvars, and add their substitutions
+  let subst, wl =
+    List.fold_left (fun (ss, wl) b ->
+      let [uv_t], g = Env.uvars_for_binders env [b] ss
+        (fun b ->
+         if debug
+         then BU.format3 "implicit var for additional binder %s in subcomp %s at %s"
+                (Print.binder_to_string b)
+                subcomp_name
+                (Range.string_of_range r1)
+         else "") r1 in
+      ss@[NT (b.binder_bv, uv_t)],
+      {wl with wl_implicits=g.implicits@wl.wl_implicits}) (subst, wl) bs in
+
+  // apply the substitutions to subcomp_c,
+  //   and get the precondition from the PURE wp
+  let subcomp_ct = subcomp_c |> SS.subst_comp subst |> U.comp_to_comp_typ in
+
+  let fml =
+    let u, wp = List.hd subcomp_ct.comp_univs, fst (List.hd subcomp_ct.effect_args) in
+    Env.pure_precondition_for_trivial_post env u subcomp_ct.result_typ wp Range.dummyRange in
+
+  fml,
+  eff_params_sub_probs@f_g_args_eq_sub_probs,
+  wl
+
+//
+// Apply ad-hoc indexed effects subcomp for an effect M
+//
+// bs: (opened) binders in the subcomp type
+// subcomp_c: the computation type in the subcomp type (opened with bs)
+// ct1 ct2: the two input computation types, both in M
+// sub_prob: a function to create and add subproblems to the worklist
+// wl: worklist
+// subcomp_name and r1: for debugging purposes
+//
+// returns the (subcomp guard, new sub problems, worklist)
+//
+let apply_ad_hoc_indexed_subcomp (env:Env.env)
+  (bs:binders)
+  (subcomp_c:comp)
+  (ct1:comp_typ) (ct2:comp_typ)
+  (sub_prob:worklist -> term -> rel -> term -> string -> prob & worklist)
+  (wl:worklist)
+  (subcomp_name:string)
+  (r1:Range.range)
+
+  : typ & list prob & worklist =
+
+  let debug = Env.debug env <| Options.Other "LayeredEffectsApp" in
+
+  let stronger_t_shape_error s = BU.format2
+    "Unexpected shape of stronger for %s, reason: %s"
+      (Ident.string_of_lid ct2.effect_name) s in
+
+  let a_b, rest_bs, f_b =
+    if List.length bs >= 2
+    then let a_b::bs = bs in
+         let rest_bs, f_b =
+           bs |> List.splitAt (List.length bs - 1)
+              |> (fun (l1, l2) -> l1, List.hd l2) in
+         a_b, rest_bs, f_b
+    else raise_error (Errors.Fatal_UnexpectedExpressionType,
+                      stronger_t_shape_error "not an arrow or not enough binders") r1 in
+
+  let rest_bs_uvars, g_uvars =
+    Env.uvars_for_binders env rest_bs
+      [NT (a_b.binder_bv, ct2.result_typ)]
+      (fun b ->
+       if debug
+       then BU.format3 "implicit for binder %s in subcomp %s at %s"
+              (Print.binder_to_string b)
+              subcomp_name
+              (Range.string_of_range r1)
+       else "") r1 in
+
+  let wl = { wl with wl_implicits = g_uvars.implicits@wl.wl_implicits } in
+
+  let substs =
+    List.map2 (fun b t -> NT (b.binder_bv, t))
+              (a_b::rest_bs) (ct2.result_typ::rest_bs_uvars) in
+
+  let f_sub_probs, wl =
+    let f_sort_is =
+      U.effect_indices_from_repr
+        f_b.binder_bv.sort
+        (Env.is_layered_effect env ct1.effect_name)
+        r1 (stronger_t_shape_error "type of f is not a repr type")
+      |> List.map (SS.subst substs) in
+
+    List.fold_left2 (fun (ps, wl) f_sort_i c1_i ->
+      if Env.debug env <| Options.Other "LayeredEffectsEqns"
+      then BU.print3 "Layered Effects (%s) %s = %s\n" subcomp_name
+             (Print.term_to_string f_sort_i) (Print.term_to_string c1_i);
+      let p, wl = sub_prob wl f_sort_i EQ c1_i "indices of c1" in
+        ps@[p], wl
+    ) ([], wl) f_sort_is (ct1.effect_args |> List.map fst) in
+
+  let subcomp_ct = subcomp_c |> SS.subst_comp substs |> U.comp_to_comp_typ in
+
+  let g_sub_probs, wl =
+    let g_sort_is =
+      U.effect_indices_from_repr
+        subcomp_ct.result_typ
+        (Env.is_layered_effect env ct2.effect_name)
+        r1 (stronger_t_shape_error "subcomp return type is not a repr") in
+
+    List.fold_left2 (fun (ps, wl) g_sort_i c2_i ->
+      if Env.debug env <| Options.Other "LayeredEffectsEqns"
+      then BU.print3 "Layered Effects (%s) %s = %s\n" subcomp_name
+             (Print.term_to_string g_sort_i) (Print.term_to_string c2_i);
+      let p, wl = sub_prob wl g_sort_i EQ c2_i "indices of c2" in
+      ps@[p], wl
+    ) ([], wl) g_sort_is (ct2.effect_args |> List.map fst) in
+
+  let fml =
+    let u, wp = List.hd subcomp_ct.comp_univs, fst (List.hd subcomp_ct.effect_args) in
+    Env.pure_precondition_for_trivial_post env u subcomp_ct.result_typ wp Range.dummyRange in
+
+  fml,
+  f_sub_probs@g_sub_probs,
+  wl
 
 (******************************************************************************************************)
 (* Main solving algorithm begins here *)
@@ -1915,7 +2162,7 @@ and solve_rigid_flex_or_flex_rigid_subtyping
         let pairwise t1 t2 wl =
             if Env.debug env <| Options.Other "Rel"
             then BU.print2 "[meet/join]: pairwise: %s and %s\n" (Print.term_to_string t1) (Print.term_to_string t2);
-            let mr, ts = head_matches_delta env wl t1 t2 in
+            let mr, ts = head_matches_delta env wl.smt_ok t1 t2 in
             match mr with
             | HeadMatch true
             | MisMatch _ ->
@@ -2266,6 +2513,14 @@ and solve_binders (env:Env.env) (bs1:binders) (bs2:binders) (orig:prob) (wl:work
                        (rel_to_string (p_rel orig))
                        (Print.binders_to_string ", " bs2);
 
+   let eq_bqual a1 a2 =
+       match a1, a2 with
+       | Some (Implicit b1), Some (Implicit b2) ->
+         U.Equal //we don't care about comparing the dot qualifier in this context
+       | _ ->
+         U.eq_bqual a1 a2
+   in
+
    (*
     * AR: adding env to the return type
     *
@@ -2287,7 +2542,7 @@ and solve_binders (env:Env.env) (bs1:binders) (bs2:binders) (orig:prob) (wl:work
           let formula = p_guard rhs_prob in
           env, Inl ([rhs_prob], formula), wl
 
-        | x::xs, y::ys when (U.eq_bqual x.binder_qual y.binder_qual = U.Equal) ->
+        | x::xs, y::ys when (eq_bqual x.binder_qual y.binder_qual = U.Equal) ->
            let hd1, imp = x.binder_bv, x.binder_qual in
            let hd2, imp' = y.binder_bv, y.binder_qual in
            let hd1 = {hd1 with sort=Subst.subst subst hd1.sort} in //open both binders
@@ -2459,8 +2714,7 @@ and solve_t_flex_rigid_eq env (orig:prob) wl
         let sol =
           match bs with
           | [] -> rhs
-          | _ ->
-            u_abs ctx_u.ctx_uvar_typ (sn_binders env bs) rhs
+          | _ -> u_abs (U.ctx_uvar_typ ctx_u) (sn_binders env bs) rhs
         in
         [TERM(ctx_u, sol)]
     in
@@ -2716,9 +2970,9 @@ and solve_t_flex_rigid_eq env (orig:prob) wl
                   false
           in
           let tx = UF.new_transaction () in
-          let solve_sub_probs_if_head_types_equal wl = 
+          let solve_sub_probs_if_head_types_equal head_uvars_to_restrict wl =
               let sol = [TERM(ctx_uv, head)] in
-              let wl = restrict_all_uvars env ctx_uv [] uvars_head wl in
+              let wl = restrict_all_uvars env ctx_uv [] head_uvars_to_restrict wl in
               let wl = solve_prob orig None sol wl in
               
               let sub_probs, wl =
@@ -2744,20 +2998,32 @@ and solve_t_flex_rigid_eq env (orig:prob) wl
                 UF.rollback tx;
                 inapplicable "Subprobs failed: " (Some lstring)
           in
-          if U.eq_tm t_head ctx_uv.ctx_uvar_typ = U.Equal
-          then solve_sub_probs_if_head_types_equal wl
+          if U.eq_tm t_head (U.ctx_uvar_typ ctx_uv) = U.Equal
+          then
+            //
+            // eq_tm doesn't unify, so uvars_head computed remains consistent
+            //   (see the second call to solve_sub_probs_if_head_types_equal below)
+            //
+            solve_sub_probs_if_head_types_equal uvars_head wl
           else (
               if Env.debug env (Options.Other "Rel")
               then BU.print2  "first-order: head type mismatch:\n\tlhs=%s\n\trhs=%s\n"
-                                              (Print.term_to_string ctx_uv.ctx_uvar_typ)
+                                              (Print.term_to_string (U.ctx_uvar_typ ctx_uv))
                                               (Print.term_to_string t_head);
               let typ_equality_prob wl =                                 
-                let p, wl = mk_t_problem wl [] orig ctx_uv.ctx_uvar_typ EQ t_head None "first-order head type" in
+                let p, wl = mk_t_problem wl [] orig (U.ctx_uvar_typ ctx_uv) EQ t_head None "first-order head type" in
                 [p], wl
               in
               match try_solve_probs_without_smt env wl typ_equality_prob with
               | Inl wl ->
-                solve_sub_probs_if_head_types_equal wl
+                //
+                // Some uvars from uvars_head list above may already be solved
+                //   or restricted, so recompute since solve_sub_probs_if_head_types_equal
+                //   will also try to restrict them
+                //
+                solve_sub_probs_if_head_types_equal
+                  (head |> Free.uvars |> BU.set_elements)
+                  wl
               | Inr msg ->
                 UF.rollback tx;
                 inapplicable "first-order: head type mismatch" (Some msg)
@@ -2838,7 +3104,7 @@ and solve_t_flex_flex env orig wl (lhs:flex_t) (rhs:flex_t) : solution =
     let should_run_meta_arg_tac (flex:flex_t) =
       let uv = flex_uvar flex in
       flex_uvar_has_meta_tac uv &&
-      BU.set_is_empty (Free.uvars uv.ctx_uvar_typ) in
+      BU.set_is_empty (Free.uvars (U.ctx_uvar_typ uv)) in
 
     let run_meta_arg_tac_and_try_again (flex:flex_t) =
       let uv = flex_uvar flex in
@@ -2847,7 +3113,7 @@ and solve_t_flex_flex env orig wl (lhs:flex_t) (rhs:flex_t) : solution =
       then BU.print2 "solve_t_flex_flex: solving meta arg uvar %s with %s\n"
              (Print.ctx_uvar_to_string uv)
              (Print.term_to_string t);
-      set_uvar env uv t;
+      set_uvar env uv None t;
       solve env (attempt [orig] wl) in
 
     match p_rel orig with
@@ -2915,14 +3181,17 @@ and solve_t_flex_flex env orig wl (lhs:flex_t) (rhs:flex_t) : solution =
                      then BU.print1 "flex-flex quasi: %s\n"
                                     (BU.stack_dump())
                    in
+                   let new_uvar_should_check, is_ghost =
+                     match U.ctx_uvar_should_check u_lhs, U.ctx_uvar_should_check u_rhs with
+                     | Allow_untyped r, Allow_untyped _ -> Allow_untyped r, false
+                     | Allow_ghost r, _
+                     | _, Allow_ghost r -> Allow_ghost r, true
+                     | _ -> Strict, false in
                    let _, w, wl = new_uvar ("flex-flex quasi:"
-                                          ^"\tlhs="  ^u_lhs.ctx_uvar_reason
-                                          ^ "\trhs=" ^u_rhs.ctx_uvar_reason)
+                                           ^"\tlhs="  ^u_lhs.ctx_uvar_reason
+                                           ^"\trhs=" ^u_rhs.ctx_uvar_reason)
                                          wl range gamma_w ctx_w new_uvar_typ
-                                         (if u_lhs.ctx_uvar_should_check = Allow_untyped &&
-                                             u_rhs.ctx_uvar_should_check = Allow_untyped
-                                          then Allow_untyped
-                                          else Strict)
+                                         new_uvar_should_check
                                          None in
                    let w_app = S.mk_Tm_app w (List.map (fun ({binder_bv=z}) -> S.as_arg (S.bv_to_name z)) zs) w.pos in
                    let _ =
@@ -2941,12 +3210,13 @@ and solve_t_flex_flex env orig wl (lhs:flex_t) (rhs:flex_t) : solution =
                              Print.binders_to_string ", " (ctx_r@binders_rhs);
                              Print.binders_to_string ", " zs]
                    in
-                   let s1_sol = U.abs binders_lhs w_app (Some (U.residual_tot t_res_lhs)) in
+                   let rc = (if is_ghost then U.residual_gtot else U.residual_tot) t_res_lhs in
+                   let s1_sol = U.abs binders_lhs w_app (Some rc) in
                    let s1 = TERM(u_lhs, s1_sol) in
                    if Unionfind.equiv u_lhs.ctx_uvar_head u_rhs.ctx_uvar_head
                    then solve env (solve_prob orig None [s1] wl)
                    else (
-                       let s2_sol = U.abs binders_rhs w_app (Some (U.residual_tot t_res_lhs)) in
+                       let s2_sol = U.abs binders_rhs w_app (Some rc) in
                        let s2 = TERM(u_rhs, s2_sol) in
                        solve env (solve_prob orig None [s1;s2] wl)
                      )
@@ -3094,7 +3364,7 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
               let treat_as_injective =
                 match (U.un_uinst head1).n with
                 | Tm_fvar fv ->
-                  Env.fv_has_attr env fv Const.unifier_hint_injective_lid
+                  Env.fv_has_attr env fv PC.unifier_hint_injective_lid
                 | _ -> false
               in
               begin
@@ -3130,7 +3400,11 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
     let try_match_heuristic env orig wl s1 s2 t1t2_opt =
         let try_solve_branch scrutinee p =
             let (Flex (_t, uv, _args), wl) = destruct_flex_t env scrutinee wl  in
-            let xs, pat_term, _, _ = PatternUtils.pat_as_exp true true env p in
+            //
+            // We add g_pat_as_exp implicits to the worklist later
+            // And we know it only contains implicits, no logical payload
+            //
+            let xs, pat_term, g_pat_as_exp, _ = PatternUtils.pat_as_exp true true env p in
             let subst, wl =
                 List.fold_left (fun (subst, wl) x ->
                     let t_x = SS.subst subst x.sort in
@@ -3141,31 +3415,86 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
                     xs
             in
             let pat_term = SS.subst subst pat_term in
-            let prob, wl =
-                new_problem wl env scrutinee
-                            EQ pat_term None scrutinee.pos
-                            "match heuristic"
-            in
-            let wl' = {wl with defer_ok=NoDefer;
-                                smt_ok=false;
-                                attempting=[TProb prob];
-                                wl_deferred=[];
-                                wl_implicits=[]} in
-            let tx = UF.new_transaction () in
-            match solve env wl' with
-            | Success (_, defer_to_tac, imps) ->
-                let wl' = {wl' with attempting=[orig]} in
-                (match solve env wl' with
-                | Success (_, defer_to_tac', imps') ->
-                  UF.commit tx;
-                  Some (extend_wl wl [] (defer_to_tac@defer_to_tac') (imps@imps'))
 
-                | Failed _ ->
-                  UF.rollback tx;
-                  None)
-            | _ ->
-              UF.rollback tx;
-              None
+            //
+            // The pat term here contains uvars for dot patterns, and even bvs
+            //   and their types
+            // We are going to unify the pat_term with the scrutinee, and that
+            //   will solve some of those uvars
+            // But there are some uvars, e.g. for the dot pattern types, that will
+            //   not get constrained even with those unifications
+            //
+            // To constrain such uvars, we typecheck the pat_term with the type of
+            //   the scrutinee as the expected type
+            // This typechecking cannot use fastpath since the pat_term may be nested,
+            //   and may have uvars in nested levels (Cons ?u (Cons ?u1 ...)),
+            //   whereas fastpath may only compute the type from the top-level (list ?u here, e.g.)
+            // And so on
+            //
+
+            let pat_term, g_pat_term =
+              let must_tot = false in
+              //
+              // Note that we cannot just use the uv.ctx_uvar_typ,
+              //   since _args may be non-empty
+              // Also unrefine the scrutinee type
+              //
+              let scrutinee_t =
+                env.typeof_well_typed_tot_or_gtot_term env scrutinee must_tot
+                |> fst
+                |> N.normalize_refinement N.whnf_steps env
+                |> U.unrefine in
+              if Env.debug env <| Options.Other "Rel"
+              then BU.print1 "Match heuristic, typechecking the pattern term: %s {\n\n"
+                     (Print.term_to_string pat_term);
+              let pat_term, pat_term_t, g_pat_term =
+                env.typeof_tot_or_gtot_term
+                  (Env.set_expected_typ env scrutinee_t)
+                  pat_term
+                  must_tot in
+              if Env.debug env <| Options.Other "Rel"
+              then BU.print2 "} Match heuristic, typechecked pattern term to %s and type %s\n"
+                     (Print.term_to_string pat_term)
+                     (Print.term_to_string pat_term_t);
+              pat_term, g_pat_term in
+
+            //
+            // Enforce that the pattern typechecking guard has trivial logical payload
+            //
+            if g_pat_term |> simplify_guard env |> Env.is_trivial_guard_formula
+            then begin
+              let prob, wl = new_problem wl env scrutinee
+                EQ pat_term None scrutinee.pos
+                "match heuristic" in
+
+              let wl' = extend_wl ({wl with defer_ok=NoDefer;
+                                    smt_ok=false;
+                                    attempting=[TProb prob];
+                                    wl_deferred=[];
+                                    wl_implicits=[]})
+                                  g_pat_term.deferred
+                                  g_pat_term.deferred_to_tac
+                                  [] in
+              let tx = UF.new_transaction () in
+              match solve env wl' with
+              | Success (_, defer_to_tac, imps) ->
+                  let wl' = {wl' with attempting=[orig]} in
+                  (match solve env wl' with
+                  | Success (_, defer_to_tac', imps') ->
+                    UF.commit tx;
+                    Some (extend_wl wl
+                                    []
+                                    (defer_to_tac@defer_to_tac')
+                                    (imps@imps'@g_pat_as_exp.implicits@g_pat_term.implicits))
+  
+                  | Failed _ ->
+                    UF.rollback tx;
+                    None)
+              | _ ->
+                UF.rollback tx;
+                None
+            end
+            else None
         in
         match t1t2_opt with
         | None -> Inr None
@@ -3204,7 +3533,7 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
                             if pat_discriminates b
                             then
                               let (_, _, t') = SS.open_branch b in
-                              match head_matches_delta env wl s t' with
+                              match head_matches_delta env wl.smt_ok s t' with
                               | FullMatch, _
                               | HeadMatch _, _ ->
                                 true
@@ -3253,7 +3582,7 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
                         (Print.tag_of_term t2)
                         (Print.term_to_string t1)
                         (Print.term_to_string t2);
-        let m, o = head_matches_delta env wl t1 t2 in
+        let m, o = head_matches_delta env wl.smt_ok t1 t2 in
         match m, o  with
         | (MisMatch _, _) -> //heads definitely do not match
             let try_reveal_hide env t1 t2 =
@@ -3277,11 +3606,11 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
                 in
                 let is_reveal_or_hide t =
                   let h, args = U.head_and_args t in
-                  if U.is_fvar Const.reveal h
+                  if U.is_fvar PC.reveal h
                   then match payload_of_hide_reveal h args with
                        | None -> None
                        | Some t -> Some (Inl t)
-                  else if U.is_fvar Const.hide h
+                  else if U.is_fvar PC.hide h
                   then match payload_of_hide_reveal h args with
                        | None -> None
                        | Some t -> Some (Inr t)
@@ -3308,25 +3637,25 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
                 | Some (Inl (u, ty, lhs)), None ->
                   // reveal / _
                   //add hide to both sides to simplify
-                  let rhs = mk_fv_app Const.hide u [(ty, S.as_aqual_implicit true); (t2, None)] t2.pos in
+                  let rhs = mk_fv_app PC.hide u [(ty, S.as_aqual_implicit true); (t2, None)] t2.pos in
                   Some (lhs, rhs)
 
                 | None, Some (Inl (u, ty, rhs)) ->
                   // _ / reveal
                   //add hide to both sides to simplify
-                  let lhs = mk_fv_app Const.hide u [(ty, S.as_aqual_implicit true); (t1, None)] t1.pos in
+                  let lhs = mk_fv_app PC.hide u [(ty, S.as_aqual_implicit true); (t1, None)] t1.pos in
                   Some (lhs, rhs)
 
                 | Some (Inr (u, ty, lhs)), None ->
                   // hide / _
                   //add reveal to both sides to simplify
-                  let rhs = mk_fv_app Const.reveal u [(ty,S.as_aqual_implicit true); (t2, None)] t2.pos in
+                  let rhs = mk_fv_app PC.reveal u [(ty,S.as_aqual_implicit true); (t2, None)] t2.pos in
                   Some (lhs, rhs)
 
                 | None, Some (Inr (u, ty, rhs)) ->
                   // hide / _
                   //add reveal to both sides to simplify
-                  let lhs = mk_fv_app Const.reveal u [(ty,S.as_aqual_implicit true); (t1, None)] t1.pos in
+                  let lhs = mk_fv_app PC.reveal u [(ty,S.as_aqual_implicit true); (t1, None)] t1.pos in
                   Some (lhs, rhs)
             in
             begin
@@ -3475,7 +3804,7 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
          * necessarily always correct.
          *)
         let x1, x2 =
-            match head_matches_delta env wl x1.sort x2.sort with
+            match head_matches_delta env wl.smt_ok x1.sort x2.sort with
             (* We allow (HeadMatch true) since we're gonna unify them again anyway via base_prob *)
             | FullMatch, Some (t1, t2)
             | HeadMatch _, Some (t1, t2) ->
@@ -3619,7 +3948,7 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
               then let flex, wl = destruct_flex_t env not_abs wl in
                     solve_t_flex_rigid_eq env orig wl flex t_abs
               else begin
-                match head_matches_delta env wl not_abs t_abs with
+                match head_matches_delta env wl.smt_ok not_abs t_abs with
                 | HeadMatch _, Some (not_abs', _) ->
                   solve_t env ({problem with lhs=not_abs'; rhs=t_abs}) wl
 
@@ -3766,11 +4095,13 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
            && no_free_uvars t2
            then
              if not wl.smt_ok
+             || Options.ml_ish ()
              then if equal t1 t2
                   then solve env (solve_prob orig None [] wl)
                   else rigid_rigid_delta env problem wl head1 head2 t1 t2
              else solve_with_smt()
            else if not wl.smt_ok
+                || Options.ml_ish()
            then rigid_rigid_delta env problem wl head1 head2 t1 t2
            else (
             try_solve_then_or_else
@@ -3873,40 +4204,9 @@ and solve_c (env:Env.env) (problem:problem comp) (wl:worklist) : solution =
 
     let solve_layered_sub c1 c2 =
       if Env.debug env <| Options.Other "LayeredEffectsApp" then
-        BU.print2 "solve_layered_sub c1: %s and c2: %s\n"
+        BU.print2 "solve_layered_sub c1: %s and c2: %s {\n"
           (c1 |> S.mk_Comp |> Print.comp_to_string)
           (c2 |> S.mk_Comp |> Print.comp_to_string);
-
-      // if Env.debug env <| Options.Other "LayeredEffects" then
-      //   BU.print2 "solve_layered_sub after lift c1: %s and c2: %s\n"
-      //     (c1 |> S.mk_Comp |> Print.comp_to_string)
-      //     (c2 |> S.mk_Comp |> Print.comp_to_string);
-
-      (*
-       * M t1 i_1 ... i_n <: M t2 j_1 ... j_n (equality is simple, just unify the indices, as before)
-       * We solve it using following sub-problems and guards:
-       *
-       * --> sub_probs_is: first, if any of the indices i_1 ... i_n are uvars,
-       *                   we simply unify them with corresponding indices on the R.H.S
-       *
-       * Then we solve t1 <: t2 as a sub-problem
-       *
-       * Next, we lookup M.stronger_wp
-       * let M.stronger_wp =
-       *   (u, a:Type u -> (x_i:t_i) -> f:<repr u> a f_i_1 ... f_i_n -> PURE (repr<u> a g_i_1 ... g_i_n) wp)
-       *
-       * We first instantiate it with c2.comp_univs
-       *
-       * Next, we create uvars ?u_i for each binder x_i
-       *   with subtitutions [a/c2.result_typ]@[x_j/?u_j] (forall j < i)
-       *
-       * let substs = [a/c2.result_typ]@[x_i/?u_i]
-       *
-       * --> f_sub_probs: unify f_i_i[substs] with indices of c1
-       * --> g_sub_probs: unify g_i_i[substs] with indices of c2
-       *
-       * --> Add (wp[substs] (fun _ -> True)) to the guard
-       *)
 
       if problem.relation = EQ
       then solve_eq c1 c2 Env.trivial_guard
@@ -3930,22 +4230,34 @@ and solve_c (env:Env.env) (problem:problem comp) (wl:worklist) : solution =
             c1 |> S.mk_Comp |> edge.mlift.mlift_wp env
                |> (fun (c, g) -> U.comp_to_comp_typ c, g) in
   
-          let c1, g_lift, stronger_t_opt, is_polymonadic =
+          let c1, g_lift, stronger_t_opt, kind, num_eff_params, is_polymonadic =
             match Env.exists_polymonadic_subcomp env c1.effect_name c2.effect_name with
             | None ->
+              // there is no polymonadic bind c1 <: c2
+              // see if c1 can be lifted to c2
               (match Env.monad_leq env c1.effect_name c2.effect_name with
-               | None -> c1, Env.trivial_guard, None, false
+               | None ->
+                 // c1 cannot be lifted to c2, fail
+                 //   (sets stronger_t_opt to None)
+                 //
+                 c1, Env.trivial_guard, None, Ad_hoc_combinator, 0, false
                | Some edge ->
+                 // there is a way to lift c1 to c2 via edge
                  let c1, g_lift = lift_c1 edge in
-                 c1, g_lift,
-                 c2.effect_name
-                 |> Env.get_effect_decl env
-                 |> U.get_stronger_vc_combinator
-                 |> (fun ts -> Env.inst_tscheme_with ts c2.comp_univs |> snd |> Some),
-                 false)
-            | Some t ->
+                 let ed2 = c2.effect_name |> Env.get_effect_decl env in
+                 let tsopt, k = ed2
+                   |> U.get_stronger_vc_combinator
+                   |> (fun (ts, kopt) -> Env.inst_tscheme_with ts c2.comp_univs |> snd |> Some, kopt |> must) in
+                 let num_eff_params =
+                   match ed2.signature with
+                   | Layered_eff_sig (n, _) -> n
+                   | _ -> failwith "Impossible (expected indexed effect subcomp)" in
+                 c1, g_lift, tsopt, k, num_eff_params, false)
+            | Some (t, kind) ->
               c1, Env.trivial_guard,
               Env.inst_tscheme_with t c2.comp_univs |> snd |> Some,
+              kind,
+              0,
               true in
 
           if is_none stronger_t_opt
@@ -3954,6 +4266,7 @@ and solve_c (env:Env.env) (problem:problem comp) (wl:worklist) : solution =
                                           (Print.lid_to_string c2.effect_name))) orig
           else
             let stronger_t = stronger_t_opt |> must in
+            // we will account for g_lift logical guard later
             let wl = extend_wl wl g_lift.deferred g_lift.deferred_to_tac g_lift.implicits in
 
             if is_polymonadic &&
@@ -3988,7 +4301,7 @@ and solve_c (env:Env.env) (problem:problem comp) (wl:worklist) : solution =
             let is_sub_probs, wl =
               if is_polymonadic then [], wl
               else
-                let rec is_uvar t =  //t is a uvar that is not to be solved by a user   tactic
+                let rec is_uvar t =  //t is a uvar that is not to be solved by a user tactic
                   match (SS.compress t).n with
                   | Tm_uvar (uv, _) ->
                     not (DeferredImplicits.should_defer_uvar_to_user_tac env uv)
@@ -4010,79 +4323,29 @@ and solve_c (env:Env.env) (problem:problem comp) (wl:worklist) : solution =
             //return type sub problem
             let ret_sub_prob, wl = sub_prob wl c1.result_typ problem.relation c2.result_typ "result type" in
 
-            let stronger_t_shape_error s = BU.format3
-              "Unexpected shape of stronger for %s, reason: %s (t:%s)"
-              (Ident.string_of_lid c2.effect_name) s (Print.term_to_string stronger_t) in
+            let bs, subcomp_c = U.arrow_formals_comp stronger_t in
 
-            let a_b, rest_bs, f_b, stronger_c =
-              match (SS.compress stronger_t).n with
-              | Tm_arrow (bs, c) when List.length bs >= 2 ->
-                let (bs', c) = SS.open_comp bs c in
-                let a = List.hd bs' in
-                let bs = List.tail bs' in
-                let rest_bs, f_b = bs |> List.splitAt (List.length bs - 1)
-                  |> (fun (l1, l2) -> l1, List.hd l2) in
-                a, rest_bs, f_b, c
-              | _ ->
-                raise_error (Errors.Fatal_UnexpectedExpressionType,
-                  stronger_t_shape_error "not an arrow or not enough binders") r in
+            let fml, sub_probs, wl =
+              if kind = Ad_hoc_combinator
+              then apply_ad_hoc_indexed_subcomp env bs subcomp_c c1 c2 sub_prob wl subcomp_name r
+              else apply_substitutive_indexed_subcomp env kind bs subcomp_c c1 c2 sub_prob
+                   num_eff_params
+                   wl
+                   subcomp_name r in
 
-            let rest_bs_uvars, g_uvars = Env.uvars_for_binders env rest_bs
-              [NT (a_b.binder_bv, c2.result_typ)]
-              (fun b -> BU.format3 "implicit for binder %s in subcomp of %s at %s"
-                (Print.binder_to_string b) (Ident.string_of_lid c2.effect_name) (Range.string_of_range r)) r in
+            let sub_probs = ret_sub_prob::(is_sub_probs@sub_probs) in
 
-            let wl = { wl with wl_implicits = g_uvars.implicits@wl.wl_implicits } in  //AR: TODO: FIXME: using knowledge that g_uvars is only implicits
-
-            let substs = List.map2
-              (fun b t -> NT (b.binder_bv, t))
-              (a_b::rest_bs) (c2.result_typ::rest_bs_uvars) in
-
-            let f_sub_probs, wl =
-              let f_sort_is = U.effect_indices_from_repr
-                f_b.binder_bv.sort
-                (Env.is_layered_effect env c1.effect_name)
-                r (stronger_t_shape_error "type of f is not a repr type")
-                |> List.map (SS.subst substs) in
-
-              List.fold_left2 (fun (ps, wl) f_sort_i c1_i ->
-                if Env.debug env <| Options.Other "LayeredEffectsEqns"
-                then BU.print3 "Layered Effects (%s) %s = %s\n" subcomp_name
-                       (Print.term_to_string f_sort_i) (Print.term_to_string c1_i);
-                let p, wl = sub_prob wl f_sort_i EQ c1_i "indices of c1" in
-                ps@[p], wl
-              ) ([], wl) f_sort_is (c1.effect_args |> List.map fst) in
-
-            let stronger_ct = stronger_c |> SS.subst_comp substs |> U.comp_to_comp_typ in
-
-            let g_sub_probs, wl =
-              let g_sort_is = U.effect_indices_from_repr
-                stronger_ct.result_typ
-                (Env.is_layered_effect env c2.effect_name)
-                r (stronger_t_shape_error "subcomp return type is not a repr") in
-
-              List.fold_left2 (fun (ps, wl) g_sort_i c2_i ->
-                if Env.debug env <| Options.Other "LayeredEffectsEqns"
-                then BU.print3 "Layered Effects (%s) %s = %s\n" subcomp_name
-                       (Print.term_to_string g_sort_i) (Print.term_to_string c2_i);
-                let p, wl = sub_prob wl g_sort_i EQ c2_i "indices of c2" in
-                ps@[p], wl
-              ) ([], wl) g_sort_is (c2.effect_args |> List.map fst) in
-
-            let fml =
-              let u, wp = List.hd stronger_ct.comp_univs, fst (List.hd stronger_ct.effect_args) in
-              Env.pure_precondition_for_trivial_post env u stronger_ct.result_typ wp Range.dummyRange in
-
-            let sub_probs =
-              ret_sub_prob::(is_sub_probs@
-                            f_sub_probs@
-                            g_sub_probs) in
             let guard =
               let guard = U.mk_conj_l (List.map p_guard sub_probs) in
-              match g_lift.guard_f with
-              | Trivial -> guard
-              | NonTrivial f -> U.mk_conj guard f in
-            let wl = solve_prob orig (Some <| U.mk_conj guard fml) [] wl in
+              let guard =
+                match g_lift.guard_f with
+                | Trivial -> guard
+                | NonTrivial f -> U.mk_conj guard f in
+              U.mk_conj guard fml in
+
+            let wl = solve_prob orig (Some guard) [] wl in
+            if Env.debug env <| Options.Other "LayeredEffectsApp"
+            then  BU.print_string "}\n";
             solve env (attempt sub_probs wl) in
 
     let solve_sub c1 edge c2 =
@@ -4161,7 +4424,7 @@ and solve_c (env:Env.env) (problem:problem comp) (wl:worklist) : solution =
                                                [as_arg c1.result_typ;
                                                 wpc1_2])) r
                               else let c2_univ = env.universe_of env c2.result_typ in
-                                   let stronger = c2_decl |> U.get_stronger_vc_combinator in
+                                   let stronger = c2_decl |> U.get_stronger_vc_combinator |> fst in
                                    mk (Tm_app(inst_effect_fun_with [c2_univ] env c2_decl stronger,
                                               [as_arg c2.result_typ;
                                                as_arg wpc2;
@@ -4249,7 +4512,7 @@ and solve_c (env:Env.env) (problem:problem comp) (wl:worklist) : solution =
 (* top-level interface                                      *)
 (* -------------------------------------------------------- *)
 let print_pending_implicits g =
-    g.implicits |> List.map (fun i -> Print.term_to_string i.imp_tm) |> String.concat ", "
+    g.implicits |> List.map (fun i -> Print.ctx_uvar_to_string i.imp_uvar) |> String.concat ", "
 
 let ineqs_to_string ineqs =
     let vars =
@@ -4325,18 +4588,6 @@ let solve_and_commit env wl err
       UF.rollback tx;
       result
 
-let simplify_guard env g = match g.guard_f with
-    | Trivial -> g
-    | NonTrivial f ->
-      if Env.debug env <| Options.Other "Simplification" then BU.print1 "Simplifying guard %s\n" (Print.term_to_string f);
-      let f = norm_with_steps "FStar.TypeChecker.Rel.norm_with_steps.6"
-              [Env.Beta; Env.Eager_unfolding; Env.Simplify; Env.Primops; Env.NoFullNorm] env f in
-      if Env.debug env <| Options.Other "Simplification" then BU.print1 "Simplified guard to %s\n" (Print.term_to_string f);
-      let f = match (U.unmeta f).n with
-        | Tm_fvar fv when S.fv_eq_lid fv Const.true_lid -> Trivial
-        | _ -> NonTrivial f in
-      {g with guard_f=f}
-
 let with_guard env prob dopt =
     match dopt with
     | None -> None
@@ -4352,7 +4603,8 @@ let try_teq smt_ok env t1 t2 : option guard_t =
   Profiling.profile
     (fun () ->
       if debug env <| Options.Other "Rel" then
-        BU.print2 "try_teq of %s and %s {\n" (Print.term_to_string t1) (Print.term_to_string t2);
+        BU.print3 "try_teq of %s and %s in %s {\n" (Print.term_to_string t1) (Print.term_to_string t2)
+          (Env.print_gamma env.gamma);
       let prob, wl = new_t_problem (empty_worklist env) env t1 EQ t2 None (Env.get_range env) in
       let g = with_guard env prob <| solve_and_commit env (singleton wl prob smt_ok) (fun _ -> None) in
       if debug env <| Options.Other "Rel" then
@@ -4529,7 +4781,9 @@ let try_solve_deferred_constraints (defer_ok:defer_ok_t) smt_ok deferred_to_tac_
    solve_universe_inequalities env g.univ_ineqs;
    let g =
      if deferred_to_tac_ok
-     then DeferredImplicits.solve_deferred_to_tactic_goals env g
+     then Profiling.profile (fun () -> DeferredImplicits.solve_deferred_to_tactic_goals env g)
+                            (Some (Ident.string_of_lid (Env.current_module env)))
+                            "FStar.TypeChecker.Rel.solve_deferred_to_tactic_goals"
      else g
    in
    if Env.debug env <| Options.Other "ResolveImplicitsHook"
@@ -4627,6 +4881,8 @@ let discharge_guard' use_env_range_msg env (g:guard_t) (use_smt:bool) : option g
                     Options.with_saved_options (fun () ->
                         ignore <| Options.set_options "--no_tactics";
                         let vcs = env.solver.preprocess env vc in
+                        if Options.profile_enabled None "FStar.TypeChecker"
+                        then BU.print1 "Tactic preprocessing produced %s goals\n" (BU.string_of_int (List.length vcs));
                         let vcs = List.map (fun (env, goal, opts) ->
                         env, norm_with_steps "FStar.TypeChecker.Rel.norm_with_steps.7" [Env.Simplify; Env.Primops] env goal, opts) vcs in
                         let vcs = List.map (fun (env, goal, opts) ->
@@ -4763,17 +5019,18 @@ let try_solve_single_valued_implicits env is_tac (imps:Env.implicits) : Env.impl
     let imp_value imp : option term =
       let ctx_u, r = imp.imp_uvar, imp.imp_range in
 
-     let t_norm = N.normalize N.whnf_steps env ctx_u.ctx_uvar_typ in
+     let t_norm = N.normalize N.whnf_steps env (U.ctx_uvar_typ ctx_u) in
 
       match (SS.compress t_norm).n with
-      | Tm_fvar fv when S.fv_eq_lid fv Const.unit_lid ->
+      | Tm_fvar fv when S.fv_eq_lid fv PC.unit_lid ->
         r |> S.unit_const_with_range |> Some
-     | Tm_refine (b, _) when U.is_unit b.sort ->
+      | Tm_refine (b, _) when U.is_unit b.sort ->
         r |> S.unit_const_with_range |> Some
-     | _ -> None in
+      | _ -> None in
 
     let b = List.fold_left (fun b imp ->  //check that the imp is still unsolved
-      if UF.find imp.imp_uvar.ctx_uvar_head |> is_none
+      if UF.find imp.imp_uvar.ctx_uvar_head |> is_none &&
+         U.ctx_uvar_should_check imp.imp_uvar = Strict
       then match imp_value imp with
            | Some tm -> commit env ([TERM (imp.imp_uvar, tm)]); true
            | None -> b
@@ -4782,83 +5039,116 @@ let try_solve_single_valued_implicits env is_tac (imps:Env.implicits) : Env.impl
     imps, b
 
 (*
- * Check that an implicit solution t has an expected type k
- *   we know that G |- t : (G)Tot k', for some k'
+ * Check that an implicit solution has the expected type
  *
- * must_tot : if t must be a Tot
- *)
-let check_implicit_solution env t k (must_tot:bool) : guard_t =
-  (*
-   * AR: when we create lambda terms as solutions to implicits (in u_abs),
-   *       we set the type in the residual comp to be the type of the uvar
-   *     while this ok for smt encoding etc., when we are typechecking the implicit solution using fastpath,
-   *       it doesn't help since the two types are the same (the type of the uvar and its solution)
-   *     worse, this prevents some constraints to be generated between the actual type of the solution
-   *       and the type of the uvar
-   *     therefore, we unset the residual comp type in the solution before typechecking
-   *)
-  let t = match (SS.compress t).n with
-          | Tm_abs (bs, body, Some rc) ->
-            {t with n=Tm_abs (bs, body, Some ({rc with residual_typ=None}))}
-          | _ -> t in
-
-  let k', g =
-    env.typeof_well_typed_tot_or_gtot_term
-    (Env.set_expected_typ ({env with use_bv_sorts=true}) k)
-    t must_tot in
-
-  match get_subtyping_predicate env k' k with
-  | None -> raise_error (Err.expected_expression_of_type env k t k') t.pos
-  | Some f -> Env.conj_guard (Env.apply_guard f t) g
-
-(*
  * Return None if we did not typecheck the implicit because
  *   typechecking it required solving deferred univ constraints,
  *   and the flag force_univ_constraints is not set
  *
- * If force_univ_constraints is set, it always returns a Some
+ * Invariants:
+ *   - If force_univ_constraints is set, return is a Some
+ *   - If is_tac is true, return is Some []
+ *   - The caller (resolve_implicits') ensures that
+ *     if is_tac then force_univ_constraints
+ *
  *)
-let check_implicit_solution_and_discharge_guard env imp force_univ_constraints
+let check_implicit_solution_and_discharge_guard env
+  (imp:implicit)
+  (is_tac force_univ_constraints:bool)
+
   : option Env.implicits =
 
-  let { imp_reason = reason; imp_tm = tm; imp_uvar = ctx_u; imp_range = r } = imp in
-  let env = {env with gamma=ctx_u.ctx_uvar_gamma} in
+  let {imp_reason; imp_tm; imp_uvar; imp_range} = imp in
+
+  let uvar_ty = U.ctx_uvar_typ imp_uvar in
+  let uvar_should_check = U.ctx_uvar_should_check imp_uvar in
 
   if Env.debug env <| Options.Other "Rel"
   then BU.print5 "Checking uvar %s resolved to %s at type %s, introduce for %s at %s\n"
-         (Print.uvar_to_string ctx_u.ctx_uvar_head)
-         (Print.term_to_string tm)
-         (Print.term_to_string ctx_u.ctx_uvar_typ)
-         reason
-        (Range.string_of_range r);
+         (Print.uvar_to_string imp_uvar.ctx_uvar_head)
+         (Print.term_to_string imp_tm)
+         (Print.term_to_string uvar_ty)
+         imp_reason
+         (Range.string_of_range imp_range);
+
+  let env =
+    {env with gamma=imp_uvar.ctx_uvar_gamma}
+    |> Env.clear_expected_typ
+    |> fst in
 
   let g =
-    let must_tot = not (env.phase1 ||
-                        env.lax    ||
-                        ctx_u.ctx_uvar_should_check = Allow_ghost) in
-
     Errors.with_ctx
-      (BU.format3 "While checking implicit %s set to %s of expected type %s"
-         (Print.uvar_to_string ctx_u.ctx_uvar_head)
-         (N.term_to_string env tm)
-         (N.term_to_string env ctx_u.ctx_uvar_typ))
-      (fun () -> check_implicit_solution env tm ctx_u.ctx_uvar_typ must_tot) in
+      "While checking implicit solution"
+      (fun () ->
+       let skip_core =
+         env.phase1 ||
+         env.lax ||
+         Allow_untyped? uvar_should_check ||
+         Already_checked? uvar_should_check in
 
-    if (not force_univ_constraints) &&
-       (List.existsb (fun (reason, _, _) -> reason = Deferred_univ_constraint) g.deferred)
-    then None
-    else let g' =
-          (match discharge_guard'
-                   (Some (fun () ->
-                          BU.format4 "%s (Introduced at %s for %s resolved at %s)"
-                            (Print.term_to_string tm)
-                            (Range.string_of_range r)
-                            reason
-                            (Range.string_of_range tm.pos)))
+       let must_tot = not (env.phase1 ||
+                           env.lax    ||
+                           Allow_ghost? uvar_should_check) in
+
+       if skip_core
+       then if is_tac
+            then Env.trivial_guard
+            else begin  // following is ad-hoc code for constraining some univs
+                        // ideally we should get rid of it, and just return trivial_guard
+              (*
+               * AR: when we create lambda terms as solutions to implicits (in u_abs),
+               *       we set the type in the residual comp to be the type of the uvar
+               *     while this ok for smt encoding etc., when we are typechecking the implicit solution using fastpath,
+               *       it doesn't help since the two types are the same (the type of the uvar and its solution)
+               *     worse, this prevents some constraints to be generated between the actual type of the solution
+               *       and the type of the uvar
+               *     therefore, we unset the residual comp type in the solution before typechecking
+               *)
+              let imp_tm =
+                match (SS.compress imp_tm).n with
+                | Tm_abs (bs, body, Some rc) ->
+                  {imp_tm with n=Tm_abs (bs, body, Some ({rc with residual_typ=None}))}
+                | _ -> imp_tm in
+
+              let k', g =
+                env.typeof_well_typed_tot_or_gtot_term
+                  {env with use_bv_sorts=true}
+                  imp_tm must_tot in
+
+              match get_subtyping_predicate env k' uvar_ty with
+              | None -> raise_error (Err.expected_expression_of_type env uvar_ty imp_tm k') imp_tm.pos
+              | Some f ->
+                {Env.conj_guard (Env.apply_guard f imp_tm) g with guard_f=Trivial}
+            end
+       else begin
+         match env.core_check env imp_tm uvar_ty must_tot with
+         | Inl None -> trivial_guard
+         | Inl (Some g) -> { trivial_guard with guard_f = NonTrivial g }
+         | Inr print_err ->
+           raise_error (Errors.Fatal_FailToResolveImplicitArgument,
+                        BU.format5 "Core checking failed for implicit %s (is_tac: %s) (reason: %s) (%s <: %s)"
+                          (Print.ctx_uvar_to_string imp_uvar)
+                          (string_of_bool is_tac)
+                          imp_reason
+                          (Print.term_to_string imp_tm)
+                          (Print.term_to_string uvar_ty)) imp_range
+       end) in
+
+  if (not force_univ_constraints) &&
+     (List.existsb (fun (reason, _, _) -> reason = Deferred_univ_constraint) g.deferred)
+  then None
+  else let g' =
+         match discharge_guard'
+                 (Some (fun () ->
+                        BU.format4 "%s (Introduced at %s for %s resolved at %s)"
+                          (Print.term_to_string imp_tm)
+                          (Range.string_of_range imp_range)
+                          imp_reason
+                          (Range.string_of_range imp_tm.pos)))
                    env g true with
-           | Some g -> g
-           | None -> failwith "Impossible, with use_smt = true, discharge_guard' must return Some") in
-         g'.implicits |> Some
+         | Some g -> g
+         | None -> failwith "Impossible, with use_smt = true, discharge_guard' must return Some" in
+       g'.implicits |> Some
 
 (*
  * resolve_implicits' uses it to determine if a ctx uvar is unresolved
@@ -4882,32 +5172,36 @@ let rec unresolved ctx_u : bool =
   | None -> true
 
 
-type implicit_checking_status =
-  | Implicit_unresolved
-  | Implicit_checking_defers_univ_constraint
-
-
 (*
  * In the fixpoint loop of resolve_implicits',
  *   when we reach a fixpoint, with some implicits still remaining,
  * try to pick an implicit whose typechecking generates a univ constraint,
  *   force it, and then repeat the fixpoint loop
  *)
-let pick_a_univ_deffered_implicit out : option Env.implicit * Env.implicits =
+let pick_a_univ_deffered_implicit (out : tagged_implicits)
+  : option Env.implicit * tagged_implicits
+  =
   let imps_with_deferred_univs, rest = List.partition
     (fun (_, status) -> status = Implicit_checking_defers_univ_constraint)
     out in
   match imps_with_deferred_univs with
-  | [] -> None, out |> List.map fst
-  | hd::tl -> hd |> fst |> Some, (tl@rest) |> List.map fst
+  | [] -> None, out
+  | hd::tl -> hd |> fst |> Some, (tl@rest)
 
-let resolve_implicits' env is_tac g =
+let is_tac_implicit_resolved (env:env) (i:implicit) : bool =
+    i.imp_tm
+    |> Free.uvars
+    |> BU.set_elements
+    |> List.for_all (fun uv -> Allow_unresolved? (U.ctx_uvar_should_check uv))
 
-  let rec until_fixpoint (acc:list (implicit * implicit_checking_status) * bool)
-                         (implicits:Env.implicits) : Env.implicits =
+let resolve_implicits' env is_tac (implicits:Env.implicits) 
+  : list (implicit * implicit_checking_status) =
+  
+  let rec until_fixpoint (acc:tagged_implicits * bool)
+                         (implicits:Env.implicits) 
+    : tagged_implicits =
 
     let out, changed = acc in
-    let out_imps = out |> List.map fst in
 
     match implicits with
     | [] ->
@@ -4915,7 +5209,7 @@ let resolve_implicits' env is_tac g =
       then //Nothing changed in this iteration of the loop
            //We will try to make progress by either solving a single valued implicit,
            //  or solving an implicit that generates univ constraint, with force flag on
-           let imps, changed = try_solve_single_valued_implicits env is_tac out_imps in
+           let imps, changed = try_solve_single_valued_implicits env is_tac (List.map fst out) in
            if changed then until_fixpoint ([], false) imps
            else let imp_opt, rest = pick_a_univ_deffered_implicit out in
                 (match imp_opt with
@@ -4926,18 +5220,24 @@ let resolve_implicits' env is_tac g =
                      check_implicit_solution_and_discharge_guard
                        env
                        imp
+                       is_tac
                        force_univ_constraints |> must in
-                   until_fixpoint ([], false) (imps@rest))
-      else until_fixpoint ([], false) out_imps
+                   until_fixpoint ([], false) (imps@List.map fst rest))
+      else until_fixpoint ([], false) (List.map fst out)
 
     | hd::tl ->
       let { imp_reason = reason; imp_tm = tm; imp_uvar = ctx_u; imp_range = r } = hd in
+      let { 
+            uvar_decoration_typ;
+            uvar_decoration_should_check 
+          } = UF.find_decoration ctx_u.ctx_uvar_head
+      in
       if Env.debug env <| Options.Other "Rel"
       then BU.print3 "resolve_implicits' loop, imp_tm = %s and ctx_u = %s, is_tac: %s\n"
              (Print.term_to_string tm)
              (Print.ctx_uvar_to_string ctx_u)
              (string_of_bool is_tac);
-      if ctx_u.ctx_uvar_should_check = Allow_unresolved
+      if Allow_unresolved? uvar_decoration_should_check
       then until_fixpoint (out, true) tl
       else if unresolved ctx_u
       then (if flex_uvar_has_meta_tac ctx_u
@@ -4950,7 +5250,8 @@ let resolve_implicits' env is_tac g =
 
                  until_fixpoint (out, true) (extra @ tl)
             else until_fixpoint ((hd, Implicit_unresolved)::out, changed) tl)
-      else if ctx_u.ctx_uvar_should_check = Allow_untyped
+      else if Allow_untyped? uvar_decoration_should_check ||
+              Already_checked? uvar_decoration_should_check
       then until_fixpoint (out, true) tl
       else begin
         let env = {env with gamma=ctx_u.ctx_uvar_gamma} in
@@ -4959,37 +5260,31 @@ let resolve_implicits' env is_tac g =
          *       we may end up normalizing an implicit solution multiple times in
          *       multiple until_fixpoint calls
          *)
-               if Env.debug env <| Options.Other "Rel"
-      then BU.print2 "resolve_implicits' loop before norm, imp_tm = %s and ctx_u = %s\n"
-             (Print.term_to_string tm)
-             (Print.ctx_uvar_to_string ctx_u);
-
         let tm = norm_with_steps "FStar.TypeChecker.Rel.norm_with_steps.8" [Env.Beta] env tm in
-               if Env.debug env <| Options.Other "Rel"
-      then BU.print2 "resolve_implicits' loop after norm, imp_tm = %s and ctx_u = %s\n"
-             (Print.term_to_string tm)
-             (Print.ctx_uvar_to_string ctx_u);
         let hd = {hd with imp_tm=tm} in
-        (*
-         * AR: We do not retypecheck the solutions solved by a tactic
-         *     However we still check that any uvars remaining in those solutions
-         *       are Allow_unresolved
-         *)
-        let tm_ok_for_tac tm =
-          tm
-          |> Free.uvars
-          |> BU.set_elements
-          |> List.for_all (fun uv -> uv.ctx_uvar_should_check = Allow_unresolved) in
-        if is_tac then if tm_ok_for_tac tm
-                       then until_fixpoint (out, true) tl        //Move on to the next imp
-                       else until_fixpoint ((hd, Implicit_unresolved)::out, changed) tl  //Move hd to out
-        else begin
-          //typecheck the solution
+        if is_tac
+        then begin
+          if is_tac_implicit_resolved env hd
+          then let force_univ_constraints = true in
+               let res = check_implicit_solution_and_discharge_guard
+                 env
+                 hd
+                 is_tac
+                 force_univ_constraints in
+               if res <> Some []
+               then failwith "Impossible: check_implicit_solution_and_discharge_guard for tac must return Some []"
+               else ()
+          else ();
+          until_fixpoint (out, true) tl
+        end
+        else
+        begin
           let force_univ_constraints = false in
           let imps_opt =
             check_implicit_solution_and_discharge_guard
               env
               hd
+              is_tac
               force_univ_constraints in
 
           match imps_opt with
@@ -4997,22 +5292,22 @@ let resolve_implicits' env is_tac g =
             until_fixpoint ((hd, Implicit_checking_defers_univ_constraint)::out, changed) tl  //Move hd to out
           | Some imps ->
             //add imps to out
-            until_fixpoint ((imps |> List.map (fun imp -> (imp, Implicit_unresolved)))@out, true) tl
+            until_fixpoint ((imps |> List.map (fun i -> i, Implicit_unresolved))@out, true) tl
         end
       end
   in
-
-  let imps = g.implicits |> until_fixpoint ([], false) in
-  {g with implicits=imps}
+  until_fixpoint ([], false) implicits
 
 let resolve_implicits env g =
     if Env.debug env <| Options.Other "ResolveImplicitsHook"
-    then BU.print1 "//////////////////////////ResolveImplicitsHook: resolve_implicits////////////\n\
-                    guard = %s\n"
+    then BU.print1 "//////////////////////////ResolveImplicitsHook: resolve_implicits begin////////////\n\
+                    guard = %s {\n"
                     (guard_to_string env g);
-    resolve_implicits' env false g
-
-let resolve_implicits_tac env g = resolve_implicits' env true  g
+    let tagged_implicits = resolve_implicits' env false g.implicits in
+    if Env.debug env <| Options.Other "ResolveImplicitsHook"
+    then BU.print_string "//////////////////////////ResolveImplicitsHook: resolve_implicits end////////////\n\
+                    }\n";
+    {g with implicits = List.map fst tagged_implicits}
 
 let force_trivial_guard env g =
     if Env.debug env <| Options.Other "ResolveImplicitsHook"
@@ -5026,8 +5321,10 @@ let force_trivial_guard env g =
     | imp::_ -> raise_error (Errors.Fatal_FailToResolveImplicitArgument,
                            BU.format3 "Failed to resolve implicit argument %s of type %s introduced for %s"
                                 (Print.uvar_to_string imp.imp_uvar.ctx_uvar_head)
-                                (N.term_to_string env imp.imp_uvar.ctx_uvar_typ)
+                                (N.term_to_string env (U.ctx_uvar_typ imp.imp_uvar))
                                 imp.imp_reason) imp.imp_range
+
+let resolve_implicits_tac env g = resolve_implicits' env true g.implicits
 
 let subtype_nosmt_force env t1 t2 =
     match subtype_nosmt env t1 t2 with

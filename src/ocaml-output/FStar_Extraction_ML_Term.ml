@@ -261,18 +261,9 @@ let rec (is_type_aux :
           FStar_Syntax_Syntax.fv_eq_lid fv uu___ -> false
       | FStar_Syntax_Syntax.Tm_fvar fv ->
           FStar_Extraction_ML_UEnv.is_type_name env fv
-      | FStar_Syntax_Syntax.Tm_uvar
-          ({ FStar_Syntax_Syntax.ctx_uvar_head = uu___;
-             FStar_Syntax_Syntax.ctx_uvar_gamma = uu___1;
-             FStar_Syntax_Syntax.ctx_uvar_binders = uu___2;
-             FStar_Syntax_Syntax.ctx_uvar_typ = t2;
-             FStar_Syntax_Syntax.ctx_uvar_reason = uu___3;
-             FStar_Syntax_Syntax.ctx_uvar_should_check = uu___4;
-             FStar_Syntax_Syntax.ctx_uvar_range = uu___5;
-             FStar_Syntax_Syntax.ctx_uvar_meta = uu___6;_},
-           s)
-          ->
-          let uu___7 = FStar_Syntax_Subst.subst' s t2 in is_arity env uu___7
+      | FStar_Syntax_Syntax.Tm_uvar (u, s) ->
+          let t2 = FStar_Syntax_Util.ctx_uvar_typ u in
+          let uu___ = FStar_Syntax_Subst.subst' s t2 in is_arity env uu___
       | FStar_Syntax_Syntax.Tm_bvar
           { FStar_Syntax_Syntax.ppname = uu___;
             FStar_Syntax_Syntax.index = uu___1;
@@ -912,7 +903,8 @@ let (comp_no_args :
           {
             FStar_Syntax_Syntax.n = (FStar_Syntax_Syntax.Comp ct1);
             FStar_Syntax_Syntax.pos = (c.FStar_Syntax_Syntax.pos);
-            FStar_Syntax_Syntax.vars = (c.FStar_Syntax_Syntax.vars)
+            FStar_Syntax_Syntax.vars = (c.FStar_Syntax_Syntax.vars);
+            FStar_Syntax_Syntax.hash_code = (c.FStar_Syntax_Syntax.hash_code)
           } in
         c1
 let maybe_reify_comp :
@@ -1421,170 +1413,170 @@ let rec (extract_one_pat :
                        true))
             | FStar_Syntax_Syntax.Pat_dot_term uu___ ->
                 (g, FStar_Pervasives_Native.None, true)
-            | FStar_Syntax_Syntax.Pat_cons (f, pats) ->
-                let uu___ =
-                  let uu___1 =
+            | FStar_Syntax_Syntax.Pat_cons (f, uu___, pats) ->
+                let uu___1 =
+                  let uu___2 =
                     FStar_Extraction_ML_UEnv.try_lookup_fv
                       p.FStar_Syntax_Syntax.p g f in
-                  match uu___1 with
+                  match uu___2 with
                   | FStar_Pervasives_Native.Some
-                      { FStar_Extraction_ML_UEnv.exp_b_name = uu___2;
+                      { FStar_Extraction_ML_UEnv.exp_b_name = uu___3;
                         FStar_Extraction_ML_UEnv.exp_b_expr =
                           {
                             FStar_Extraction_ML_Syntax.expr =
                               FStar_Extraction_ML_Syntax.MLE_Name n;
-                            FStar_Extraction_ML_Syntax.mlty = uu___3;
-                            FStar_Extraction_ML_Syntax.loc = uu___4;_};
+                            FStar_Extraction_ML_Syntax.mlty = uu___4;
+                            FStar_Extraction_ML_Syntax.loc = uu___5;_};
                         FStar_Extraction_ML_UEnv.exp_b_tscheme = ttys;_}
                       -> (n, ttys)
-                  | FStar_Pervasives_Native.Some uu___2 ->
+                  | FStar_Pervasives_Native.Some uu___3 ->
                       failwith "Expected a constructor"
                   | FStar_Pervasives_Native.None ->
-                      let uu___2 =
-                        let uu___3 =
-                          let uu___4 = FStar_Syntax_Print.fv_to_string f in
+                      let uu___3 =
+                        let uu___4 =
+                          let uu___5 = FStar_Syntax_Print.fv_to_string f in
                           FStar_Compiler_Util.format1
                             "Cannot extract this pattern, the %s constructor was erased"
-                            uu___4 in
-                        (FStar_Errors.Error_ErasedCtor, uu___3) in
-                      FStar_Errors.raise_error uu___2
+                            uu___5 in
+                        (FStar_Errors.Error_ErasedCtor, uu___4) in
+                      FStar_Errors.raise_error uu___3
                         (f.FStar_Syntax_Syntax.fv_name).FStar_Syntax_Syntax.p in
-                (match uu___ with
+                (match uu___1 with
                  | (d, tys) ->
                      let nTyVars =
                        FStar_Compiler_List.length
                          (FStar_Pervasives_Native.fst tys) in
-                     let uu___1 = FStar_Compiler_Util.first_N nTyVars pats in
-                     (match uu___1 with
+                     let uu___2 = FStar_Compiler_Util.first_N nTyVars pats in
+                     (match uu___2 with
                       | (tysVarPats, restPats) ->
                           let f_ty =
                             let mlty_args =
                               FStar_Compiler_Effect.op_Bar_Greater tysVarPats
                                 (FStar_Compiler_List.map
-                                   (fun uu___2 ->
-                                      match uu___2 with
-                                      | (p1, uu___3) ->
+                                   (fun uu___3 ->
+                                      match uu___3 with
+                                      | (p1, uu___4) ->
                                           (match expected_ty with
                                            | FStar_Extraction_ML_Syntax.MLTY_Top
                                                ->
                                                FStar_Extraction_ML_Syntax.MLTY_Top
-                                           | uu___4 ->
+                                           | uu___5 ->
                                                (match p1.FStar_Syntax_Syntax.v
                                                 with
                                                 | FStar_Syntax_Syntax.Pat_dot_term
-                                                    (uu___5, t) ->
-                                                    term_as_mlty g t
-                                                | uu___5 ->
+                                                    (FStar_Pervasives_Native.Some
+                                                    t) -> term_as_mlty g t
+                                                | uu___6 ->
                                                     FStar_Extraction_ML_Syntax.MLTY_Top)))) in
                             let f_ty1 =
                               FStar_Extraction_ML_Util.subst tys mlty_args in
                             FStar_Extraction_ML_Util.uncurry_mlty_fun f_ty1 in
                           (FStar_Extraction_ML_UEnv.debug g
-                             (fun uu___3 ->
-                                let uu___4 =
-                                  FStar_Syntax_Print.fv_to_string f in
+                             (fun uu___4 ->
                                 let uu___5 =
-                                  let uu___6 = f_ty in
-                                  match uu___6 with
+                                  FStar_Syntax_Print.fv_to_string f in
+                                let uu___6 =
+                                  let uu___7 = f_ty in
+                                  match uu___7 with
                                   | (args, t) ->
                                       let args1 =
-                                        let uu___7 =
-                                          let uu___8 =
-                                            let uu___9 =
+                                        let uu___8 =
+                                          let uu___9 =
+                                            let uu___10 =
                                               FStar_Extraction_ML_UEnv.current_module_of_uenv
                                                 g in
                                             FStar_Extraction_ML_Code.string_of_mlty
-                                              uu___9 in
-                                          FStar_Compiler_List.map uu___8 args in
+                                              uu___10 in
+                                          FStar_Compiler_List.map uu___9 args in
                                         FStar_Compiler_Effect.op_Bar_Greater
-                                          uu___7 (FStar_String.concat " -> ") in
+                                          uu___8 (FStar_String.concat " -> ") in
                                       let res =
-                                        let uu___7 =
+                                        let uu___8 =
                                           FStar_Extraction_ML_UEnv.current_module_of_uenv
                                             g in
                                         FStar_Extraction_ML_Code.string_of_mlty
-                                          uu___7 t in
+                                          uu___8 t in
                                       FStar_Compiler_Util.format2 "%s -> %s"
                                         args1 res in
                                 FStar_Compiler_Util.print2
                                   "@@@Expected type of pattern with head = %s is %s\n"
-                                  uu___4 uu___5);
-                           (let uu___3 =
+                                  uu___5 uu___6);
+                           (let uu___4 =
                               FStar_Compiler_Util.fold_map
                                 (fun g1 ->
-                                   fun uu___4 ->
-                                     match uu___4 with
+                                   fun uu___5 ->
+                                     match uu___5 with
                                      | (p1, imp1) ->
-                                         let uu___5 =
+                                         let uu___6 =
                                            extract_one_pat true g1 p1
                                              FStar_Extraction_ML_Syntax.MLTY_Top
                                              term_as_mlexpr in
-                                         (match uu___5 with
-                                          | (g2, p2, uu___6) -> (g2, p2))) g
+                                         (match uu___6 with
+                                          | (g2, p2, uu___7) -> (g2, p2))) g
                                 tysVarPats in
-                            match uu___3 with
+                            match uu___4 with
                             | (g1, tyMLPats) ->
-                                let uu___4 =
+                                let uu___5 =
                                   FStar_Compiler_Util.fold_map
-                                    (fun uu___5 ->
-                                       fun uu___6 ->
-                                         match (uu___5, uu___6) with
+                                    (fun uu___6 ->
+                                       fun uu___7 ->
+                                         match (uu___6, uu___7) with
                                          | ((g2, f_ty1, ok1), (p1, imp1)) ->
-                                             let uu___7 =
+                                             let uu___8 =
                                                match f_ty1 with
                                                | (hd::rest, res) ->
                                                    ((rest, res), hd)
-                                               | uu___8 ->
+                                               | uu___9 ->
                                                    (([],
                                                       FStar_Extraction_ML_Syntax.MLTY_Top),
                                                      FStar_Extraction_ML_Syntax.MLTY_Top) in
-                                             (match uu___7 with
+                                             (match uu___8 with
                                               | (f_ty2, expected_arg_ty) ->
-                                                  let uu___8 =
+                                                  let uu___9 =
                                                     extract_one_pat false g2
                                                       p1 expected_arg_ty
                                                       term_as_mlexpr in
-                                                  (match uu___8 with
+                                                  (match uu___9 with
                                                    | (g3, p2, ok') ->
                                                        ((g3, f_ty2,
                                                           (ok1 && ok')), p2))))
                                     (g1, f_ty, true) restPats in
-                                (match uu___4 with
+                                (match uu___5 with
                                  | ((g2, f_ty1, sub_pats_ok), restMLPats) ->
-                                     let uu___5 =
-                                       let uu___6 =
+                                     let uu___6 =
+                                       let uu___7 =
                                          FStar_Compiler_Effect.op_Bar_Greater
                                            (FStar_Compiler_List.append
                                               tyMLPats restMLPats)
                                            (FStar_Compiler_List.collect
-                                              (fun uu___7 ->
-                                                 match uu___7 with
+                                              (fun uu___8 ->
+                                                 match uu___8 with
                                                  | FStar_Pervasives_Native.Some
                                                      x -> [x]
-                                                 | uu___8 -> [])) in
+                                                 | uu___9 -> [])) in
                                        FStar_Compiler_Effect.op_Bar_Greater
-                                         uu___6 FStar_Compiler_List.split in
-                                     (match uu___5 with
+                                         uu___7 FStar_Compiler_List.split in
+                                     (match uu___6 with
                                       | (mlPats, when_clauses) ->
                                           let pat_ty_compat =
                                             match f_ty1 with
                                             | ([], t) -> ok t
-                                            | uu___6 -> false in
-                                          let uu___6 =
-                                            let uu___7 =
-                                              let uu___8 =
+                                            | uu___7 -> false in
+                                          let uu___7 =
+                                            let uu___8 =
+                                              let uu___9 =
                                                 resugar_pat g2
                                                   f.FStar_Syntax_Syntax.fv_qual
                                                   (FStar_Extraction_ML_Syntax.MLP_CTor
                                                      (d, mlPats)) in
-                                              let uu___9 =
+                                              let uu___10 =
                                                 FStar_Compiler_Effect.op_Bar_Greater
                                                   when_clauses
                                                   FStar_Compiler_List.flatten in
-                                              (uu___8, uu___9) in
+                                              (uu___9, uu___10) in
                                             FStar_Pervasives_Native.Some
-                                              uu___7 in
-                                          (g2, uu___6,
+                                              uu___8 in
+                                          (g2, uu___7,
                                             (sub_pats_ok && pat_ty_compat))))))))
 let (extract_pat :
   FStar_Extraction_ML_UEnv.uenv ->
@@ -2479,7 +2471,9 @@ and (term_as_mlexpr' :
                                FStar_Syntax_Syntax.pos =
                                  (body.FStar_Syntax_Syntax.pos);
                                FStar_Syntax_Syntax.vars =
-                                 (body.FStar_Syntax_Syntax.vars)
+                                 (body.FStar_Syntax_Syntax.vars);
+                               FStar_Syntax_Syntax.hash_code =
+                                 (body.FStar_Syntax_Syntax.hash_code)
                              }))) in
              {
                FStar_Syntax_Syntax.n =
@@ -2487,7 +2481,9 @@ and (term_as_mlexpr' :
                     (scrutinee, FStar_Pervasives_Native.None, branches1,
                       FStar_Pervasives_Native.None));
                FStar_Syntax_Syntax.pos = (head.FStar_Syntax_Syntax.pos);
-               FStar_Syntax_Syntax.vars = (head.FStar_Syntax_Syntax.vars)
+               FStar_Syntax_Syntax.vars = (head.FStar_Syntax_Syntax.vars);
+               FStar_Syntax_Syntax.hash_code =
+                 (head.FStar_Syntax_Syntax.hash_code)
              }
          | uu___2 ->
              failwith
@@ -2828,36 +2824,70 @@ and (term_as_mlexpr' :
               FStar_Syntax_Syntax.n = FStar_Syntax_Syntax.Tm_constant
                 (FStar_Const.Const_range_of);
               FStar_Syntax_Syntax.pos = uu___1;
-              FStar_Syntax_Syntax.vars = uu___2;_},
-            (a1, uu___3)::[])
+              FStar_Syntax_Syntax.vars = uu___2;
+              FStar_Syntax_Syntax.hash_code = uu___3;_},
+            (a1, uu___4)::[])
            ->
            let ty =
-             let uu___4 =
-               FStar_Syntax_Syntax.tabbrev FStar_Parser_Const.range_lid in
-             term_as_mlty g uu___4 in
-           let uu___4 =
              let uu___5 =
+               FStar_Syntax_Syntax.tabbrev FStar_Parser_Const.range_lid in
+             term_as_mlty g uu___5 in
+           let uu___5 =
+             let uu___6 =
                FStar_Extraction_ML_Util.mlexpr_of_range
                  a1.FStar_Syntax_Syntax.pos in
              FStar_Compiler_Effect.op_Less_Bar
-               (FStar_Extraction_ML_Syntax.with_ty ty) uu___5 in
-           (uu___4, FStar_Extraction_ML_Syntax.E_PURE, ty)
+               (FStar_Extraction_ML_Syntax.with_ty ty) uu___6 in
+           (uu___5, FStar_Extraction_ML_Syntax.E_PURE, ty)
        | FStar_Syntax_Syntax.Tm_app
            ({
               FStar_Syntax_Syntax.n = FStar_Syntax_Syntax.Tm_constant
                 (FStar_Const.Const_set_range_of);
               FStar_Syntax_Syntax.pos = uu___1;
-              FStar_Syntax_Syntax.vars = uu___2;_},
-            (t1, uu___3)::(r, uu___4)::[])
+              FStar_Syntax_Syntax.vars = uu___2;
+              FStar_Syntax_Syntax.hash_code = uu___3;_},
+            (t1, uu___4)::(r, uu___5)::[])
            -> term_as_mlexpr g t1
        | FStar_Syntax_Syntax.Tm_app
            ({
               FStar_Syntax_Syntax.n = FStar_Syntax_Syntax.Tm_constant
                 (FStar_Const.Const_reflect uu___1);
               FStar_Syntax_Syntax.pos = uu___2;
-              FStar_Syntax_Syntax.vars = uu___3;_},
-            uu___4)
-           -> failwith "Unreachable? Tm_app Const_reflect"
+              FStar_Syntax_Syntax.vars = uu___3;
+              FStar_Syntax_Syntax.hash_code = uu___4;_},
+            uu___5)
+           ->
+           let uu___6 =
+             let uu___7 =
+               let uu___8 = FStar_Parser_Const.failwith_lid () in
+               FStar_Syntax_Syntax.lid_as_fv uu___8
+                 FStar_Syntax_Syntax.delta_constant
+                 FStar_Pervasives_Native.None in
+             FStar_Extraction_ML_UEnv.lookup_fv t.FStar_Syntax_Syntax.pos g
+               uu___7 in
+           (match uu___6 with
+            | { FStar_Extraction_ML_UEnv.exp_b_name = uu___7;
+                FStar_Extraction_ML_UEnv.exp_b_expr = fw;
+                FStar_Extraction_ML_UEnv.exp_b_tscheme = uu___8;_} ->
+                let uu___9 =
+                  let uu___10 =
+                    let uu___11 =
+                      let uu___12 =
+                        let uu___13 =
+                          FStar_Compiler_Effect.op_Less_Bar
+                            (FStar_Extraction_ML_Syntax.with_ty
+                               FStar_Extraction_ML_Syntax.ml_string_ty)
+                            (FStar_Extraction_ML_Syntax.MLE_Const
+                               (FStar_Extraction_ML_Syntax.MLC_String
+                                  "Extraction of reflect is not supported")) in
+                        [uu___13] in
+                      (fw, uu___12) in
+                    FStar_Extraction_ML_Syntax.MLE_App uu___11 in
+                  FStar_Compiler_Effect.op_Less_Bar
+                    (FStar_Extraction_ML_Syntax.with_ty
+                       FStar_Extraction_ML_Syntax.ml_int_ty) uu___10 in
+                (uu___9, FStar_Extraction_ML_Syntax.E_PURE,
+                  FStar_Extraction_ML_Syntax.ml_int_ty))
        | FStar_Syntax_Syntax.Tm_app (head, args) when
            (is_match head) &&
              (FStar_Compiler_Effect.op_Bar_Greater args
@@ -3517,7 +3547,9 @@ and (term_as_mlexpr' :
                     FStar_Syntax_Syntax.n = maybe_rewritten_let;
                     FStar_Syntax_Syntax.pos = (top1.FStar_Syntax_Syntax.pos);
                     FStar_Syntax_Syntax.vars =
-                      (top1.FStar_Syntax_Syntax.vars)
+                      (top1.FStar_Syntax_Syntax.vars);
+                    FStar_Syntax_Syntax.hash_code =
+                      (top1.FStar_Syntax_Syntax.hash_code)
                   } in
                 term_as_mlexpr' g top2)
        | FStar_Syntax_Syntax.Tm_let ((is_rec, lbs), e') ->

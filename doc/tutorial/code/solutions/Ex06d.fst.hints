@@ -19,7 +19,7 @@
         "subterm_ordering_Prims.Cons"
       ],
       0,
-      "89a30004848bc01d8e4624ab04388bef"
+      "b8bfab831d53fdcfbc83ce17cfa7dc90"
     ],
     [
       "Ex06d.append",
@@ -33,7 +33,7 @@
         "fuel_guarded_inversion_Prims.list", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "e487432df88874bab30f0765e39d3df7"
+      "7eae506b00a5edc3b1e8b94c7910a2e8"
     ],
     [
       "Ex06d.append_count",
@@ -68,7 +68,7 @@
         "typing_Ex06d.count"
       ],
       0,
-      "6a146d37f0c2a194230cb71787a80788"
+      "8c0be331c2ff1f40db9316b04de5e3b8"
     ],
     [
       "Ex06d.append_mem",
@@ -87,7 +87,7 @@
         "typing_Ex06d.count"
       ],
       0,
-      "4413d57ad7a2cbcace8da22f4f677677"
+      "d099c3e3ede43bad04b9f7e5c68ad08e"
     ],
     [
       "Ex06d.length",
@@ -104,7 +104,7 @@
         "subterm_ordering_Prims.Cons"
       ],
       0,
-      "e8118043300d5204173d5f75a3785700"
+      "8e62226f793da8a191bd826d3f6e8d37"
     ],
     [
       "Ex06d.sorted",
@@ -122,7 +122,7 @@
         "subterm_ordering_Prims.Cons", "typing_Prims.__proj__Cons__item__tl"
       ],
       0,
-      "4afb3154ad8187f42b6a3686a0138119"
+      "a134cb27164590e149feee991cc5d981"
     ],
     [
       "Ex06d.partition",
@@ -136,7 +136,7 @@
         "fuel_guarded_inversion_Prims.list", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "e91da9d60b5a2849dad37d733c012a49"
+      "e1c4d4bcaf3e14da8e7de41a4b69b2ea"
     ],
     [
       "Ex06d.partition_lemma",
@@ -188,7 +188,7 @@
         "typing_FStar.Pervasives.Native.snd"
       ],
       0,
-      "295f519ab60203812a19622189d07b05"
+      "dab61dd59e6132e7734f0f041fc6b7c1"
     ],
     [
       "Ex06d.sorted_concat_lemma",
@@ -236,7 +236,7 @@
         "typing_Ex06d.sorted"
       ],
       0,
-      "ad882946e6bb1e16d7c4878a41cf952d"
+      "64ea9d2411a4470c2bdba8f2a1773ea0"
     ],
     [
       "Ex06d.sort",
@@ -250,7 +250,7 @@
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "a1da475532d64cecd49d4debc09c5540"
+      "6cb4099c5de6821e353900e18db65a8f"
     ],
     [
       "Ex06d.sort",
@@ -264,7 +264,7 @@
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "49a4a39e811088d20c950c7b354f638d"
+      "8c9480f6319233e8bd8d86bbe96b133f"
     ],
     [
       "Ex06d.sort",
@@ -320,7 +320,7 @@
         "typing_FStar.Pervasives.Native.snd", "well-founded-ordering-on-nat"
       ],
       0,
-      "916b295ad21b3f39a81f23625bc8cd41"
+      "0fe7ca798071d3c0feffb8b838a37b47"
     ]
   ]
 ]

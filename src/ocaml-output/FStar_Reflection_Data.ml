@@ -37,13 +37,15 @@ let (uu___is_C_Reflect : vconst -> Prims.bool) =
     match projectee with | C_Reflect _0 -> true | uu___ -> false
 let (__proj__C_Reflect__item___0 : vconst -> name) =
   fun projectee -> match projectee with | C_Reflect _0 -> _0
+type universes = FStar_Syntax_Syntax.universe Prims.list
 type pattern =
   | Pat_Constant of vconst 
-  | Pat_Cons of (FStar_Syntax_Syntax.fv * (pattern * Prims.bool) Prims.list)
-  
+  | Pat_Cons of (FStar_Syntax_Syntax.fv * FStar_Syntax_Syntax.universe
+  Prims.list FStar_Pervasives_Native.option * (pattern * Prims.bool)
+  Prims.list) 
   | Pat_Var of FStar_Syntax_Syntax.bv 
   | Pat_Wild of FStar_Syntax_Syntax.bv 
-  | Pat_Dot_Term of (FStar_Syntax_Syntax.bv * FStar_Syntax_Syntax.term) 
+  | Pat_Dot_Term of FStar_Syntax_Syntax.term FStar_Pervasives_Native.option 
 let (uu___is_Pat_Constant : pattern -> Prims.bool) =
   fun projectee ->
     match projectee with | Pat_Constant _0 -> true | uu___ -> false
@@ -53,8 +55,10 @@ let (uu___is_Pat_Cons : pattern -> Prims.bool) =
   fun projectee ->
     match projectee with | Pat_Cons _0 -> true | uu___ -> false
 let (__proj__Pat_Cons__item___0 :
-  pattern -> (FStar_Syntax_Syntax.fv * (pattern * Prims.bool) Prims.list)) =
-  fun projectee -> match projectee with | Pat_Cons _0 -> _0
+  pattern ->
+    (FStar_Syntax_Syntax.fv * FStar_Syntax_Syntax.universe Prims.list
+      FStar_Pervasives_Native.option * (pattern * Prims.bool) Prims.list))
+  = fun projectee -> match projectee with | Pat_Cons _0 -> _0
 let (uu___is_Pat_Var : pattern -> Prims.bool) =
   fun projectee -> match projectee with | Pat_Var _0 -> true | uu___ -> false
 let (__proj__Pat_Var__item___0 : pattern -> FStar_Syntax_Syntax.bv) =
@@ -68,7 +72,7 @@ let (uu___is_Pat_Dot_Term : pattern -> Prims.bool) =
   fun projectee ->
     match projectee with | Pat_Dot_Term _0 -> true | uu___ -> false
 let (__proj__Pat_Dot_Term__item___0 :
-  pattern -> (FStar_Syntax_Syntax.bv * FStar_Syntax_Syntax.term)) =
+  pattern -> FStar_Syntax_Syntax.term FStar_Pervasives_Native.option) =
   fun projectee -> match projectee with | Pat_Dot_Term _0 -> _0
 type branch = (pattern * FStar_Syntax_Syntax.term)
 type aqualv =
@@ -84,7 +88,6 @@ let (uu___is_Q_Meta : aqualv -> Prims.bool) =
 let (__proj__Q_Meta__item___0 : aqualv -> FStar_Syntax_Syntax.term) =
   fun projectee -> match projectee with | Q_Meta _0 -> _0
 type argv = (FStar_Syntax_Syntax.term * aqualv)
-type universes = FStar_Syntax_Syntax.universe Prims.list
 type universe_view =
   | Uv_Zero 
   | Uv_Succ of FStar_Syntax_Syntax.universe 
@@ -332,6 +335,7 @@ let (uu___is_Effect : qualifier -> Prims.bool) =
   fun projectee -> match projectee with | Effect -> true | uu___ -> false
 let (uu___is_OnlyName : qualifier -> Prims.bool) =
   fun projectee -> match projectee with | OnlyName -> true | uu___ -> false
+type qualifiers = qualifier Prims.list
 type bv_view =
   {
   bv_ppname: Prims.string ;
