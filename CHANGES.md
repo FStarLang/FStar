@@ -87,6 +87,12 @@ Guidelines for the changelog:
   * Friend modules (https://github.com/FStarLang/FStar/wiki/Friend-modules)
 
 ## Core typechecker
+  * PR https://github.com/FStarLang/FStar/pull/2760 introduces core typechecking for
+    implicits introduced for application of indexed effects combinators. This is a
+    breaking change, since indexed effects clients are subject to stricter typechecking.
+
+    See the PR description for more details.
+
   * Cf. #2641, F* now supports only type-based reasoning of reification of indexed
     effects. See https://github.com/FStarLang/FStar/issues/2641 for more discussions
     and associated pull request. This may be a breaking change for clients relying on

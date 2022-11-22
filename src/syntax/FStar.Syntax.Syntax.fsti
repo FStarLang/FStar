@@ -223,14 +223,14 @@ and cflag =                                                      (* flags applic
   | CPS                                                            (* computation is marked with attribute `cps`, for DM4F, seems useless, see #1557 *)
   | DECREASES of decreases_order
 and metadata =
-  | Meta_pattern       of list term * list args                (* Patterns for SMT quantifier instantiation; the first arg instantiation *)
+  | Meta_pattern       of list term * list args                  (* Patterns for SMT quantifier instantiation; the first arg instantiation *)
   | Meta_named         of lident                                 (* Useful for pretty printing to keep the type abbreviation around *)
   | Meta_labeled       of string * Range.range * bool            (* Sub-terms in a VC are labeled with error messages to be reported, used in SMT encoding *)
   | Meta_desugared     of meta_source_info                       (* Node tagged with some information about source term before desugaring *)
   | Meta_monadic       of monad_name * typ                       (* Annotation on a Tm_app or Tm_let node in case it is monadic for m not in {Pure, Ghost, Div} *)
                                                                  (* Contains the name of the monadic effect and  the type of the subterm *)
   | Meta_monadic_lift  of monad_name * monad_name * typ          (* Sub-effecting: lift the subterm of type typ *)
-                                                                 (* from the first monad_name m1 to the second monad name  m2 *)
+                                                                 (* from the first monad_name m1 to the second monad name m2 *)
 and meta_source_info =
   | Sequence                                    (* used when resugaring *)
   | Primop                                      (* ... add more cases here as needed for better code generation *)
@@ -375,11 +375,36 @@ type monad_abbrev = {
   parms:binders;
   def:typ
   }
+
+//
+// Kind of a binder in an indexed effect combinator
+//
+type indexed_effect_binder_kind =
+  | Type_binder
+  | Substitutive_binder
+  | BindCont_no_abstraction_binder  // a g computation (the continuation) binder in bind that's not abstracted over x:a
+  | Range_binder
+  | Repr_binder
+  | Ad_hoc_binder
+
+//
+// Kind of an indexed effect combinator
+//
+// Substitutive invariant applies only to subcomp and ite combinators,
+//   where the effect indices of the two computations could be the same,
+//   and hence bound only once in the combinator definitions
+//
+type indexed_effect_combinator_kind =
+  | Substitutive_combinator of list indexed_effect_binder_kind
+  | Substitutive_invariant_combinator
+  | Ad_hoc_combinator
+
 type sub_eff = {
   source:lident;
   target:lident;
   lift_wp:option tscheme;
-  lift:option tscheme
+  lift:option tscheme;
+  kind:option indexed_effect_combinator_kind
  }
 
 (*
@@ -429,39 +454,41 @@ type wp_eff_combinators = {
 (*
  * Layered effects combinators
  *
- * All of these are pairs of type schemes,
+ * All of these have pairs of type schemes,
  *   where the first component is the term ts and the second component is the type ts
  *
  * Before typechecking the effect declaration, the second component is a dummy ts
  *   In other words, desugaring sets the first component only, and typechecker then fills up the second one
  *
- * Similarly the base effect name is also "" after desugaring, and is set by the typechecker
+ * Additionally, bind, subcomp, and if_then_else have a combinator kind,
+ *   this is also set to None in desugaring and set during typechecking the effect
  *)
 type layered_eff_combinators = {
   l_repr         : (tscheme * tscheme);
   l_return       : (tscheme * tscheme);
-  l_bind         : (tscheme * tscheme);
-  l_subcomp      : (tscheme * tscheme);
-  l_if_then_else : (tscheme * tscheme);
-
+  l_bind         : (tscheme * tscheme * option indexed_effect_combinator_kind);
+  l_subcomp      : (tscheme * tscheme * option indexed_effect_combinator_kind);
+  l_if_then_else : (tscheme * tscheme * option indexed_effect_combinator_kind);
 }
-
 
 type eff_combinators =
   | Primitive_eff of wp_eff_combinators
   | DM4F_eff of wp_eff_combinators
   | Layered_eff of layered_eff_combinators
 
+type effect_signature =
+  | Layered_eff_sig of int & tscheme  // (n, ts) where n is the number of effect parameters (all upfront) in the effect signature
+  | WP_eff_sig of tscheme
 
 type eff_decl = {
-  mname       : lident;      //STATE_h
+  mname       : lident;      // STATE_h
 
   cattributes : list cflag;
 
-  univs       : univ_names;  //u#heap
-  binders     : binders;     //(heap:Type u#heap), univs and binders are in the scope of the rest of the combinators
+  univs       : univ_names;  // u#heap
+  binders     : binders;     // (heap:Type u#heap), univs and binders are in the scope of the rest of the combinators
 
-  signature   : tscheme;     //result:Type -> st_wp_h heap -> result -> Effect
+  signature   : effect_signature;
 
   combinators : eff_combinators;
 
@@ -533,8 +560,8 @@ type sigelt' =
   | Sig_pragma            of pragma
   | Sig_splice            of list lident * term
 
-  | Sig_polymonadic_bind  of lident * lident * lident * tscheme * tscheme  //(m, n) |> p, the polymonadic term, and its type
-  | Sig_polymonadic_subcomp of lident * lident * tscheme * tscheme  //m <: n, the polymonadic subcomp term, and its type
+  | Sig_polymonadic_bind  of lident * lident * lident * tscheme * tscheme * option indexed_effect_combinator_kind  //(m, n) |> p, the polymonadic term, and its type
+  | Sig_polymonadic_subcomp of lident * lident * tscheme * tscheme * option indexed_effect_combinator_kind  //m <: n, the polymonadic subcomp term, and its type
   | Sig_fail              of list int         (* Expected errors (empty for 'any') *)
                           * bool               (* true if should fail in --lax *)
                           * list sigelt       (* The sigelts to be checked *)

@@ -2,14 +2,6 @@ module ID1
 
 open FStar.Ghost
 
-// The base type of WPs
-val wp0 (a : Type u#a) : Type u#(max 1 a)
-let wp0 a = (a -> Type0) -> Type0
-
-// We require monotonicity of them
-let monotonic (w:wp0 'a) =
-  forall p1 p2. (forall x. p1 x ==> p2 x) ==> w p1 ==> w p2
-
 val wp (a : Type u#a) : Type u#(max 1 a)
 let wp a = pure_wp a
 
@@ -93,13 +85,9 @@ let default_if_then_else (a:Type) (wp:wp a) (f:repr a wp) (g:repr a wp) (p:bool)
 total
 reifiable
 reflectable
-layered_effect {
-  ID : a:Type -> wp a -> Effect
-  with repr         = repr;
-       return       = return;
-       bind         = bind;
-       subcomp      = subcomp;
-       if_then_else = if_then_else
+effect {
+  ID (a:Type) (_:wp a)
+  with {repr; return; bind; subcomp; if_then_else}
 }
 
 effect Id (a:Type) (pre:Type0) (post:a->Type0) =
@@ -110,16 +98,11 @@ effect I (a:Type) = Id a True (fun _ -> True)
 open FStar.Tactics
 
 let elim_pure #a #wp ($f : unit -> PURE a wp) p
- : Pure a (requires (wp p)) (ensures (fun r -> p r)) by (dump "")
+ : Pure a (requires (wp p)) (ensures (fun r -> p r))
  = FStar.Monotonic.Pure.elim_pure_wp_monotonicity_forall ();
    f ()
 
-unfold
-let nomon #a (w:wp a) : pure_wp a =
-  elim_pure_wp_monotonicity_forall ();
-  as_pure_wp (fun p -> w p)
-
-let lift_pure_nd (a:Type) (wp:wp a) (f:(eqtype_as_type unit -> PURE a (nomon wp))) :
+let lift_pure_nd (a:Type) (wp:wp a) (f:unit -> PURE a wp) :
   Pure (repr a wp) (requires True)
                    (ensures (fun _ -> True))
   = fun p _ -> elim_pure f p
@@ -141,20 +124,16 @@ let l () : int = reify (test_f ()) (fun _ -> True) ()
 
 open FStar.List.Tot
 
-let rec pmap #a #b #pre
+let rec pmap #a #b pre
   (f : (x:a -> Id b (requires (pre x)) (ensures (fun _ -> True))))
   (l : list a)
   : Id (list b)
        (requires (forall x. memP x l ==> pre x))
        (ensures (fun _ -> True))
+       (decreases l)
   = match l with
     | [] -> []
-    | x::xs ->
-      // ha... without a trick like this one, we fail to prove termination.
-      // not even assuming the precedes helps. tactics show an `l` unrelated
-      // to `x` and `xs`.
-      let xs () = xs in
-      f x :: pmap #_ #_ #pre f (xs ())
+    | x::xs -> f x :: (pmap pre f xs)
 
 let even x = x % 2 == 0
 
@@ -167,7 +146,7 @@ let fmap (x:nat) : Id nat (requires (even x)) (ensures (fun r -> True)) =
 
 let callmap () : Id (list nat) True (fun _ -> True) =
  let lmap : list nat = [2;4;6;8] in
- ID1.pmap #_ #_ #even fmap lmap
+ pmap even fmap lmap
 
 let rec count (n:nat) : I int
  = if n = 0 then 0 else count (n-1)
@@ -202,7 +181,6 @@ let test_assert () : ID unit (as_pure_wp (fun p -> p ())) =
   iassert False;
   ()
 
-[@@expect_failure [19]]
 let rec idiv (a b : nat) : Id int (requires (a >= 0 /\ b > 0))
                               (ensures (fun r -> r >= 0)) 
                               (decreases a)
@@ -211,7 +189,6 @@ let rec idiv (a b : nat) : Id int (requires (a >= 0 /\ b > 0))
   then 0
   else 1 + idiv (a-b) b
   
-[@@expect_failure [19]]
 let rec ack (m n : nat) : I nat =
   match m, n with
   | 0, n -> n+1
@@ -226,7 +203,6 @@ let tot_i #a (f : unit -> Tot a) : I a =
 let i_tot #a (f : unit -> I a) : Tot a =
   reify (f ()) (fun _ -> True) ()
 
-[@@expect_failure [19]]
 let rec sum (l : list int) : I int
  = match l with
    | [] -> 0

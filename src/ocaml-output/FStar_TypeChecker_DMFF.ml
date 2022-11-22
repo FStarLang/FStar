@@ -3503,8 +3503,14 @@ let (cps_and_elaborate :
   fun env1 ->
     fun ed ->
       let uu___ =
-        FStar_Syntax_Subst.open_term ed.FStar_Syntax_Syntax.binders
-          (FStar_Pervasives_Native.snd ed.FStar_Syntax_Syntax.signature) in
+        let uu___1 =
+          let uu___2 =
+            FStar_Compiler_Effect.op_Bar_Greater
+              ed.FStar_Syntax_Syntax.signature
+              FStar_Syntax_Util.effect_sig_ts in
+          FStar_Compiler_Effect.op_Bar_Greater uu___2
+            FStar_Pervasives_Native.snd in
+        FStar_Syntax_Subst.open_term ed.FStar_Syntax_Syntax.binders uu___1 in
       match uu___ with
       | (effect_binders_un, signature_un) ->
           let uu___1 =
@@ -4626,10 +4632,13 @@ let (cps_and_elaborate :
                                                            effect_binders1 in
                                                        let uu___21 =
                                                          let uu___22 =
-                                                           FStar_Syntax_Subst.close
-                                                             effect_binders1
-                                                             effect_signature in
-                                                         ([], uu___22) in
+                                                           let uu___23 =
+                                                             FStar_Syntax_Subst.close
+                                                               effect_binders1
+                                                               effect_signature in
+                                                           ([], uu___23) in
+                                                         FStar_Syntax_Syntax.WP_eff_sig
+                                                           uu___22 in
                                                        {
                                                          FStar_Syntax_Syntax.mname
                                                            =
@@ -4703,6 +4712,9 @@ let (cps_and_elaborate :
                                                                    FStar_Syntax_Syntax.lift_wp
                                                                     = uu___22;
                                                                    FStar_Syntax_Syntax.lift
+                                                                    =
+                                                                    FStar_Pervasives_Native.None;
+                                                                   FStar_Syntax_Syntax.kind
                                                                     =
                                                                     FStar_Pervasives_Native.None
                                                                  } in

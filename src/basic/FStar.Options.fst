@@ -147,6 +147,8 @@ let defaults =
       ("cache_dir"                    , Unset);
       ("cache_off"                    , Bool false);
       ("compat_pre_core"              , Unset);
+      ("compat_pre_typed_indexed_effects"
+                                      , Bool false);
       ("print_cache_version"          , Bool false);
       ("cmi"                          , Bool false);
       ("codegen"                      , Unset);
@@ -329,7 +331,10 @@ let get_abort_on                ()      = lookup_opt "abort_on"                 
 let get_admit_smt_queries       ()      = lookup_opt "admit_smt_queries"        as_bool
 let get_admit_except            ()      = lookup_opt "admit_except"             (as_option as_string)
 let get_compat_pre_core         ()      = lookup_opt "compat_pre_core"          (as_option as_int)
-let get_disallow_unification_guards ()     = lookup_opt "disallow_unification_guards" as_bool
+
+let get_compat_pre_typed_indexed_effects ()  = lookup_opt "compat_pre_typed_indexed_effects" as_bool
+let get_disallow_unification_guards  ()      = lookup_opt "disallow_unification_guards"      as_bool
+
 let get_already_cached          ()      = lookup_opt "already_cached"           (as_option (as_list as_string))
 let get_cache_checked_modules   ()      = lookup_opt "cache_checked_modules"    as_bool
 let get_cache_dir               ()      = lookup_opt "cache_dir"                (as_option as_string)
@@ -647,6 +652,11 @@ let rec specs_with_types warn_unsafe : list (char * string * opt_type * string) 
         "compat_pre_core",
         IntStr "0, 1, 2",
         "Retain behavior of the tactic engine prior to the introduction of FStar.TypeChecker.Core (0 is most permissive, 2 is least permissive)");
+
+      ( noshort,
+        "compat_pre_typed_indexed_effects",
+        Const (Bool true),
+        "Retain untyped indexed effects implicits");
 
       ( noshort,
         "disallow_unification_guards",
@@ -1351,7 +1361,8 @@ let settable = function
     | "abort_on"
     | "admit_except"
     | "admit_smt_queries"
-    | "compat_pre_core"    
+    | "compat_pre_core"
+    | "compat_pre_typed_indexed_effects"
     | "disallow_unification_guards"
     | "debug"
     | "debug_level"
@@ -1676,6 +1687,9 @@ let compat_pre_core_set () =
   match get_compat_pre_core() with
   | None -> false
   | _ -> true
+
+let compat_pre_typed_indexed_effects () = get_compat_pre_typed_indexed_effects ()
+
 let disallow_unification_guards  () = get_disallow_unification_guards    ()
 let cache_checked_modules        () = get_cache_checked_modules       ()
 let cache_off                    () = get_cache_off                   ()

@@ -373,7 +373,7 @@ let rec push_subst s t =
     //makes a syntax node, setting it's use range as appropriate from s
     let mk t' = Syntax.mk t' (mk_range t.pos s) in
     match t.n with
-    | Tm_delayed _ -> failwith "Impossible"
+    | Tm_delayed _ -> failwith "Impossible (delayed node in push_subst)"
 
     | Tm_lazy i ->
         begin match i.lkind with
@@ -394,9 +394,9 @@ let rec push_subst s t =
 
     | Tm_uvar (uv, s0) ->
       begin
-      match (Unionfind.find uv.ctx_uvar_head) with
-      | None -> tag_with_range ({t with n = Tm_uvar(uv, compose_uvar_subst uv s0 s)}) s
-      | Some t -> push_subst (compose_subst s0 s) t
+        match (Unionfind.find uv.ctx_uvar_head) with
+        | None -> tag_with_range ({t with n = Tm_uvar(uv, compose_uvar_subst uv s0 s)}) s
+        | Some t -> push_subst (compose_subst s0 s) t
       end
 
     | Tm_type _
@@ -822,7 +822,7 @@ let rec deep_compress (allow_uvars:bool) (t:term) : term =
     let t = compress t in
     let elim_bv x = {x with sort=deep_compress allow_uvars x.sort} in
     match t.n with
-    | Tm_delayed _ -> failwith "Impossible"
+    | Tm_delayed _ -> failwith "Impossible (delayed node in deep_compress)"
     | Tm_fvar _
     | Tm_constant _
     | Tm_unknown ->

@@ -1207,7 +1207,7 @@ and check' (g:env) (e:term)
 
   | Tm_lazy i ->
     return (E_TOTAL, i.ltyp)
-    
+
   | Tm_meta(t, _) ->
     memo_check g t
 

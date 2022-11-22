@@ -96,7 +96,11 @@ let if_then_else
 total
 reflectable
 effect {
-  NMSTATETOT (a:Type) (state:Type u#2) (rel:P.preorder state) (req:M.pre_t state) (ens:M.post_t state a)
+  NMSTATETOT (a:Type)
+             ([@@@ effect_param] state:Type u#2)
+             ([@@@ effect_param] rel:P.preorder state)
+             (req:M.pre_t state)
+             (ens:M.post_t state a)
   with { repr; return; bind; subcomp; if_then_else }
 }
 
@@ -150,9 +154,9 @@ let sample (#state:Type u#2) (#rel:P.preorder state) ()
 
 let lift_pure_nmst
       (a:Type)
+      (wp:pure_wp a)
       (state:Type u#2)
       (rel:P.preorder state)
-      (wp:pure_wp a)
       (f:eqtype_as_type unit -> PURE a wp)
     : repr a state rel
       (fun s0 -> wp (fun _ -> True))
