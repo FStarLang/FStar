@@ -12,7 +12,6 @@ depends: [
   "stdint"
   "yojson"
   "ocamlbuild" {build}
-  "ocaml-migrate-parsetree"
   "fileutils"
   "menhir" {>= "20161115" build}
   "pprint" {build}
