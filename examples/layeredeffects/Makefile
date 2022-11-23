@@ -1,4 +1,6 @@
-OTHERFLAGS+=--already_cached 'Prims FStar LowStar' --include parsing
+# 330 - experimental features
+# 333 - no hints
+OTHERFLAGS+=--already_cached 'Prims FStar LowStar' --include parsing --warn_error -330-333
 include ../Makefile.include
 
 NO_VERIFY=Buffers.fst
@@ -30,3 +32,6 @@ extract:
 	krml -skip-compilation -tmpdir out -I parsing Buffers.fst parsing/Flights.fst parsing/FlightsExn.fst parsing/FlightsStExn.fst
 
 .PHONY: all depend verify verify-all clean extract
+
+%.fsti-in %.fst-in:
+	@echo --warn_error -330-274-241

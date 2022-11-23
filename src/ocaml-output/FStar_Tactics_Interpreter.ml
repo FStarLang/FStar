@@ -1565,7 +1565,41 @@ let (uu___153 : unit) =
                                                                     FStar_Reflection_NBEEmbeddings.e_term
                                                                     FStar_Reflection_NBEEmbeddings.e_term
                                                                     FStar_TypeChecker_NBETerm.e_bool in
-                                                                    [uu___152] in
+                                                                    let uu___154
+                                                                    =
+                                                                    let uu___155
+                                                                    =
+                                                                    let uu___156
+                                                                    =
+                                                                    e_tactic_thunk
+                                                                    FStar_Syntax_Embeddings.e_any in
+                                                                    let uu___157
+                                                                    =
+                                                                    e_tactic_nbe_thunk
+                                                                    FStar_TypeChecker_NBETerm.e_any in
+                                                                    FStar_Tactics_InterpFuns.mk_tac_step_3
+                                                                    Prims.int_one
+                                                                    "with_compat_pre_core"
+                                                                    (fun
+                                                                    uu___158
+                                                                    ->
+                                                                    FStar_Tactics_Basic.with_compat_pre_core)
+                                                                    FStar_Syntax_Embeddings.e_any
+                                                                    FStar_Syntax_Embeddings.e_int
+                                                                    uu___156
+                                                                    FStar_Syntax_Embeddings.e_any
+                                                                    (fun
+                                                                    uu___158
+                                                                    ->
+                                                                    FStar_Tactics_Basic.with_compat_pre_core)
+                                                                    FStar_TypeChecker_NBETerm.e_any
+                                                                    FStar_TypeChecker_NBETerm.e_int
+                                                                    uu___157
+                                                                    FStar_TypeChecker_NBETerm.e_any in
+                                                                    [uu___155] in
+                                                                    uu___152
+                                                                    ::
+                                                                    uu___154 in
                                                                     uu___150
                                                                     ::
                                                                     uu___151 in
@@ -1736,7 +1770,6 @@ let (uu___153 : unit) =
     FStar_Compiler_Effect.op_Less_Bar
       (fun uu___2 -> FStar_Pervasives_Native.Some uu___2) uu___1 in
   FStar_Compiler_Effect.op_Colon_Equals __primitive_steps_ref uu___
-
 let unembed_tactic_1_alt :
   'a 'r .
     'a FStar_Syntax_Embeddings.embedding ->

@@ -2866,70 +2866,63 @@ and (check' :
                                        FStar_Pervasives_Native.None
                                        (fun uu___7 -> check_pat g p1 t_sc) in
                                    op_let_Bang uu___6
-                                     (fun bvs ->
-                                        let bs =
-                                          FStar_Compiler_List.map
-                                            FStar_Syntax_Syntax.mk_binder bvs in
-                                        let uu___7 =
-                                          with_context "check_pat_binders"
-                                            FStar_Pervasives_Native.None
-                                            (fun uu___8 -> check_binders g bs) in
-                                        op_let_Bang uu___7
-                                          (fun us ->
-                                             let uu___8 =
-                                               pattern_branch_condition g sc
-                                                 p1 in
-                                             op_let_Bang uu___8
-                                               (fun branch_condition ->
-                                                  let pat_sc_eq =
-                                                    let uu___9 =
-                                                      let uu___10 =
-                                                        let uu___11 =
-                                                          FStar_TypeChecker_PatternUtils.raw_pat_as_exp
-                                                            g.tcenv p1 in
-                                                        FStar_Compiler_Effect.op_Bar_Greater
-                                                          uu___11
-                                                          FStar_Compiler_Util.must in
-                                                      FStar_Compiler_Effect.op_Bar_Greater
-                                                        uu___10
-                                                        FStar_Pervasives_Native.fst in
-                                                    FStar_Syntax_Util.mk_eq2
-                                                      u_sc t_sc sc uu___9 in
-                                                  let uu___9 =
-                                                    combine_path_and_branch_condition
-                                                      path_condition
-                                                      branch_condition
-                                                      pat_sc_eq in
-                                                  match uu___9 with
-                                                  | (this_path_condition,
-                                                     next_path_condition) ->
-                                                      let g' =
-                                                        push_binders g bs in
-                                                      let g'1 =
-                                                        push_hypothesis g'
-                                                          this_path_condition in
-                                                      let uu___10 =
-                                                        let uu___11 =
-                                                          let uu___12 =
-                                                            let uu___13 =
-                                                              with_context
-                                                                "branch"
-                                                                (FStar_Pervasives_Native.Some
-                                                                   (CtxTerm
-                                                                    b1))
-                                                                (fun uu___14
-                                                                   ->
-                                                                   check
+                                     (fun uu___7 ->
+                                        match uu___7 with
+                                        | (bs, us) ->
+                                            let uu___8 =
+                                              pattern_branch_condition g sc
+                                                p1 in
+                                            op_let_Bang uu___8
+                                              (fun branch_condition ->
+                                                 let pat_sc_eq =
+                                                   let uu___9 =
+                                                     let uu___10 =
+                                                       let uu___11 =
+                                                         FStar_TypeChecker_PatternUtils.raw_pat_as_exp
+                                                           g.tcenv p1 in
+                                                       FStar_Compiler_Effect.op_Bar_Greater
+                                                         uu___11
+                                                         FStar_Compiler_Util.must in
+                                                     FStar_Compiler_Effect.op_Bar_Greater
+                                                       uu___10
+                                                       FStar_Pervasives_Native.fst in
+                                                   FStar_Syntax_Util.mk_eq2
+                                                     u_sc t_sc sc uu___9 in
+                                                 let uu___9 =
+                                                   combine_path_and_branch_condition
+                                                     path_condition
+                                                     branch_condition
+                                                     pat_sc_eq in
+                                                 match uu___9 with
+                                                 | (this_path_condition,
+                                                    next_path_condition) ->
+                                                     let g' =
+                                                       push_binders g bs in
+                                                     let g'1 =
+                                                       push_hypothesis g'
+                                                         this_path_condition in
+                                                     let uu___10 =
+                                                       let uu___11 =
+                                                         let uu___12 =
+                                                           let uu___13 =
+                                                             with_context
+                                                               "branch"
+                                                               (FStar_Pervasives_Native.Some
+                                                                  (CtxTerm b1))
+                                                               (fun uu___14
+                                                                  ->
+                                                                  check
                                                                     "branch"
                                                                     g'1 b1) in
-                                                            op_let_Bang
-                                                              uu___13
-                                                              (fun uu___14 ->
-                                                                 match uu___14
-                                                                 with
-                                                                 | (eff_br,
-                                                                    tbr) ->
-                                                                    (match branch_typ_opt
+                                                           op_let_Bang
+                                                             uu___13
+                                                             (fun uu___14 ->
+                                                                match uu___14
+                                                                with
+                                                                | (eff_br,
+                                                                   tbr) ->
+                                                                    (
+                                                                    match branch_typ_opt
                                                                     with
                                                                     | 
                                                                     FStar_Pervasives_Native.None
@@ -2980,23 +2973,21 @@ and (check' :
                                                                     eff_br
                                                                     acc_eff),
                                                                     expect_tbr)))) in
-                                                          weaken
-                                                            this_path_condition
-                                                            uu___12 in
-                                                        with_binders bs us
-                                                          uu___11 in
-                                                      op_let_Bang uu___10
-                                                        (fun uu___11 ->
-                                                           match uu___11 with
-                                                           | (eff_br, tbr) ->
-                                                               (match 
-                                                                  p1.FStar_Syntax_Syntax.v
-                                                                with
-                                                                | FStar_Syntax_Syntax.Pat_var
-                                                                    uu___12
-                                                                    ->
-                                                                    (
-                                                                    match rest
+                                                         weaken
+                                                           this_path_condition
+                                                           uu___12 in
+                                                       with_binders bs us
+                                                         uu___11 in
+                                                     op_let_Bang uu___10
+                                                       (fun uu___11 ->
+                                                          match uu___11 with
+                                                          | (eff_br, tbr) ->
+                                                              (match 
+                                                                 p1.FStar_Syntax_Syntax.v
+                                                               with
+                                                               | FStar_Syntax_Syntax.Pat_var
+                                                                   uu___12 ->
+                                                                   (match rest
                                                                     with
                                                                     | 
                                                                     uu___13::uu___14
@@ -3009,11 +3000,9 @@ and (check' :
                                                                     return
                                                                     (eff_br,
                                                                     tbr))
-                                                                | FStar_Syntax_Syntax.Pat_wild
-                                                                    uu___12
-                                                                    ->
-                                                                    (
-                                                                    match rest
+                                                               | FStar_Syntax_Syntax.Pat_wild
+                                                                   uu___12 ->
+                                                                   (match rest
                                                                     with
                                                                     | 
                                                                     uu___13::uu___14
@@ -3026,13 +3015,13 @@ and (check' :
                                                                     return
                                                                     (eff_br,
                                                                     tbr))
-                                                                | uu___12 ->
-                                                                    check_branches
+                                                               | uu___12 ->
+                                                                   check_branches
                                                                     next_path_condition
                                                                     (FStar_Pervasives_Native.Some
                                                                     (eff_br,
                                                                     tbr))
-                                                                    rest)))))) in
+                                                                    rest))))) in
                         let uu___3 =
                           match rc_opt with
                           | FStar_Pervasives_Native.Some
@@ -3158,29 +3147,18 @@ and (check' :
                                                             check_pat g p1
                                                               t_sc) in
                                                      op_let_Bang uu___10
-                                                       (fun bvs ->
-                                                          let bs =
-                                                            FStar_Compiler_List.map
-                                                              FStar_Syntax_Syntax.mk_binder
-                                                              bvs in
-                                                          let uu___11 =
-                                                            with_context
-                                                              "check_pat_binders"
-                                                              FStar_Pervasives_Native.None
-                                                              (fun uu___12 ->
-                                                                 check_binders
-                                                                   g bs) in
-                                                          op_let_Bang uu___11
-                                                            (fun us ->
-                                                               let uu___12 =
-                                                                 pattern_branch_condition
-                                                                   g sc p1 in
-                                                               op_let_Bang
-                                                                 uu___12
-                                                                 (fun
-                                                                    branch_condition
-                                                                    ->
-                                                                    let pat_sc_eq
+                                                       (fun uu___11 ->
+                                                          match uu___11 with
+                                                          | (bs, us) ->
+                                                              let uu___12 =
+                                                                pattern_branch_condition
+                                                                  g sc p1 in
+                                                              op_let_Bang
+                                                                uu___12
+                                                                (fun
+                                                                   branch_condition
+                                                                   ->
+                                                                   let pat_sc_eq
                                                                     =
                                                                     let uu___13
                                                                     =
@@ -3201,16 +3179,16 @@ and (check' :
                                                                     u_sc t_sc
                                                                     sc
                                                                     uu___13 in
-                                                                    let uu___13
+                                                                   let uu___13
                                                                     =
                                                                     combine_path_and_branch_condition
                                                                     path_condition
                                                                     branch_condition
                                                                     pat_sc_eq in
-                                                                    match uu___13
-                                                                    with
-                                                                    | 
-                                                                    (this_path_condition,
+                                                                   match uu___13
+                                                                   with
+                                                                   | 
+                                                                   (this_path_condition,
                                                                     next_path_condition)
                                                                     ->
                                                                     let g' =
@@ -3330,7 +3308,7 @@ and (check' :
                                                                     check_branches
                                                                     next_path_condition
                                                                     rest
-                                                                    eff_br)))))) in
+                                                                    eff_br))))) in
                                           let uu___7 =
                                             check_branches
                                               FStar_Syntax_Util.exp_true_bool
@@ -3475,7 +3453,8 @@ and (universe_of :
 and (check_pat :
   env ->
     FStar_Syntax_Syntax.pat ->
-      FStar_Syntax_Syntax.typ -> FStar_Syntax_Syntax.bv Prims.list result)
+      FStar_Syntax_Syntax.typ ->
+        (FStar_Syntax_Syntax.binders * FStar_Syntax_Syntax.universes) result)
   =
   fun g ->
     fun p ->
@@ -3508,21 +3487,35 @@ and (check_pat :
                        let uu___4 = unrefine_tsc t_sc in
                        check_subtype g (FStar_Pervasives_Native.Some e)
                          t_const uu___4 in
-                     op_let_Bang uu___3 (fun uu___4 -> return []))
+                     op_let_Bang uu___3 (fun uu___4 -> return ([], [])))
         | FStar_Syntax_Syntax.Pat_var bv ->
-            return
-              [{
-                 FStar_Syntax_Syntax.ppname = (bv.FStar_Syntax_Syntax.ppname);
-                 FStar_Syntax_Syntax.index = (bv.FStar_Syntax_Syntax.index);
-                 FStar_Syntax_Syntax.sort = t_sc
-               }]
+            let b =
+              FStar_Syntax_Syntax.mk_binder
+                {
+                  FStar_Syntax_Syntax.ppname =
+                    (bv.FStar_Syntax_Syntax.ppname);
+                  FStar_Syntax_Syntax.index = (bv.FStar_Syntax_Syntax.index);
+                  FStar_Syntax_Syntax.sort = t_sc
+                } in
+            let uu___ =
+              with_context "check_pat_binder" FStar_Pervasives_Native.None
+                (fun uu___1 -> check_binders g [b]) in
+            op_let_Bang uu___
+              (fun uu___1 -> match uu___1 with | u::[] -> return ([b], [u]))
         | FStar_Syntax_Syntax.Pat_wild bv ->
-            return
-              [{
-                 FStar_Syntax_Syntax.ppname = (bv.FStar_Syntax_Syntax.ppname);
-                 FStar_Syntax_Syntax.index = (bv.FStar_Syntax_Syntax.index);
-                 FStar_Syntax_Syntax.sort = t_sc
-               }]
+            let b =
+              FStar_Syntax_Syntax.mk_binder
+                {
+                  FStar_Syntax_Syntax.ppname =
+                    (bv.FStar_Syntax_Syntax.ppname);
+                  FStar_Syntax_Syntax.index = (bv.FStar_Syntax_Syntax.index);
+                  FStar_Syntax_Syntax.sort = t_sc
+                } in
+            let uu___ =
+              with_context "check_pat_binder" FStar_Pervasives_Native.None
+                (fun uu___1 -> check_binders g [b]) in
+            op_let_Bang uu___
+              (fun uu___1 -> match uu___1 with | u::[] -> return ([b], [u]))
         | FStar_Syntax_Syntax.Pat_cons (fv, usopt, pats) ->
             let us =
               if FStar_Compiler_Util.is_none usopt
@@ -3621,7 +3614,7 @@ and (check_pat :
                                        fun uu___6 ->
                                          fun p1 ->
                                            match (uu___5, uu___6) with
-                                           | ((ss1, bvs),
+                                           | ((g1, ss1, bs, us1),
                                               {
                                                 FStar_Syntax_Syntax.binder_bv
                                                   = f;
@@ -3635,49 +3628,52 @@ and (check_pat :
                                                    f.FStar_Syntax_Syntax.sort in
                                                let uu___9 =
                                                  let uu___10 =
-                                                   let uu___11 =
-                                                     FStar_Compiler_Effect.op_Bar_Greater
-                                                       bvs
-                                                       (FStar_Compiler_List.map
-                                                          FStar_Syntax_Syntax.mk_binder) in
-                                                   push_binders g uu___11 in
-                                                 check_pat uu___10 p1
-                                                   expected_t in
+                                                   check_pat g1 p1 expected_t in
+                                                 with_binders bs us1 uu___10 in
                                                op_let_Bang uu___9
-                                                 (fun bvs_p ->
-                                                    let p_e =
-                                                      let uu___10 =
+                                                 (fun uu___10 ->
+                                                    match uu___10 with
+                                                    | (bs_p, us_p) ->
+                                                        let p_e =
+                                                          let uu___11 =
+                                                            let uu___12 =
+                                                              FStar_TypeChecker_PatternUtils.raw_pat_as_exp
+                                                                g1.tcenv p1 in
+                                                            FStar_Compiler_Effect.op_Bar_Greater
+                                                              uu___12
+                                                              FStar_Compiler_Util.must in
+                                                          FStar_Compiler_Effect.op_Bar_Greater
+                                                            uu___11
+                                                            FStar_Pervasives_Native.fst in
                                                         let uu___11 =
-                                                          FStar_TypeChecker_PatternUtils.raw_pat_as_exp
-                                                            g.tcenv p1 in
-                                                        FStar_Compiler_Effect.op_Bar_Greater
-                                                          uu___11
-                                                          FStar_Compiler_Util.must in
-                                                      FStar_Compiler_Effect.op_Bar_Greater
-                                                        uu___10
-                                                        FStar_Pervasives_Native.fst in
-                                                    return
-                                                      ((FStar_List_Tot_Base.op_At
-                                                          ss1
-                                                          [FStar_Syntax_Syntax.NT
-                                                             (f, p_e)]),
-                                                        (FStar_List_Tot_Base.op_At
-                                                           bvs bvs_p))))
-                                    (ss, []) rest_formals rest_pats in
+                                                          let uu___12 =
+                                                            push_binders g1
+                                                              bs_p in
+                                                          (uu___12,
+                                                            (FStar_List_Tot_Base.op_At
+                                                               ss1
+                                                               [FStar_Syntax_Syntax.NT
+                                                                  (f, p_e)]),
+                                                            (FStar_List_Tot_Base.op_At
+                                                               bs bs_p),
+                                                            (FStar_List_Tot_Base.op_At
+                                                               us1 us_p)) in
+                                                        return uu___11))
+                                    (g, ss, [], []) rest_formals rest_pats in
                                 op_let_Bang uu___4
                                   (fun uu___5 ->
                                      match uu___5 with
-                                     | (ss1, bvs) ->
+                                     | (uu___6, ss1, bs, us1) ->
                                          let t_pat1 =
                                            FStar_Syntax_Subst.subst ss1 t_pat in
-                                         let uu___6 =
-                                           let uu___7 =
-                                             let uu___8 = unrefine_tsc t_sc in
+                                         let uu___7 =
+                                           let uu___8 =
+                                             let uu___9 = unrefine_tsc t_sc in
                                              check_scrutinee_pattern_type_compatible
-                                               g uu___8 t_pat1 in
-                                           no_guard uu___7 in
-                                         op_let_Bang uu___6
-                                           (fun uu___7 -> return bvs))))))
+                                               g uu___9 t_pat1 in
+                                           no_guard uu___8 in
+                                         op_let_Bang uu___7
+                                           (fun uu___8 -> return (bs, us1)))))))
         | uu___ -> fail "check_pat called with a dot pattern"
 and (check_scrutinee_pattern_type_compatible :
   env ->
@@ -4146,14 +4142,43 @@ let (check_term_top_gh :
                             (FStar_Options.Other "CoreTop")) in
                      if uu___5
                      then
-                       let uu___6 =
-                         let uu___7 = get_goal_ctr () in
-                         FStar_Compiler_Util.string_of_int uu___7 in
-                       let uu___7 = FStar_Syntax_Print.term_to_string guard0 in
-                       let uu___8 = FStar_Syntax_Print.term_to_string guard1 in
-                       FStar_Compiler_Util.print3
-                         "(%s) Exiting core: Simplified guard from {{%s}} to {{%s}}\n"
-                         uu___6 uu___7 uu___8
+                       ((let uu___7 =
+                           let uu___8 = get_goal_ctr () in
+                           FStar_Compiler_Util.string_of_int uu___8 in
+                         let uu___8 =
+                           FStar_Syntax_Print.term_to_string guard0 in
+                         let uu___9 =
+                           FStar_Syntax_Print.term_to_string guard1 in
+                         FStar_Compiler_Util.print3
+                           "(%s) Exiting core: Simplified guard from {{%s}} to {{%s}}\n"
+                           uu___7 uu___8 uu___9);
+                        (let guard_names =
+                           let uu___7 = FStar_Syntax_Free.names guard1 in
+                           FStar_Compiler_Effect.op_Bar_Greater uu___7
+                             FStar_Compiler_Util.set_elements in
+                         let uu___7 =
+                           FStar_Compiler_List.tryFind
+                             (fun bv ->
+                                FStar_Compiler_List.for_all
+                                  (fun binding_env ->
+                                     match binding_env with
+                                     | FStar_Syntax_Syntax.Binding_var bv_env
+                                         ->
+                                         let uu___8 =
+                                           FStar_Syntax_Syntax.bv_eq bv_env
+                                             bv in
+                                         Prims.op_Negation uu___8
+                                     | uu___8 -> true)
+                                  g.FStar_TypeChecker_Env.gamma) guard_names in
+                         match uu___7 with
+                         | FStar_Pervasives_Native.Some bv ->
+                             let uu___8 =
+                               let uu___9 = FStar_Syntax_Syntax.bv_to_name bv in
+                               FStar_Syntax_Print.term_to_string uu___9 in
+                             FStar_Compiler_Util.print1
+                               "WARNING: %s is free in the core generated guard\n"
+                               uu___8
+                         | uu___8 -> ()))
                      else ());
                     FStar_Pervasives.Inl
                       (et, (FStar_Pervasives_Native.Some guard1)))

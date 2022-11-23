@@ -30,9 +30,10 @@ let locked = true
 let lockinv (p:vprop) (r:ref bool) : vprop =
   h_exists (fun b -> pts_to r full_perm b `star` (if b then emp else p))
 
-let lock_t = ref bool & erased iname
+noeq
+type lock_t = | Lock: r: ref bool -> i: erased iname -> lock_t
 
-let protects (l:lock_t) (p:vprop) : prop = snd l >--> lockinv p (fst l)
+let protects (l:lock_t) (p:vprop) : prop = l.i >--> lockinv p l.r
 
 val intro_lockinv_available (#uses:inames) (p:vprop) (r:ref bool)
   : SteelGhostT unit uses (pts_to r full_perm available `star` p) (fun _ -> lockinv p r)
@@ -57,7 +58,7 @@ let new_lock (p:vprop)
   let r = alloc_pt available in
   intro_lockinv_available p r;
   let i:inv (lockinv p r) = new_invariant (lockinv p r) in
-  return (r, i)
+  return (Lock r i)
 
 val acquire_core (#p:vprop) (#u:inames) (r:ref bool) (i:inv (lockinv p r))
   : SteelAtomicT bool u
@@ -78,8 +79,8 @@ let acquire_core #p #u r i =
   return res
 
 let rec acquire #p l =
-  let r:ref bool = fst l in
-  let i: inv (lockinv p r) = snd l in
+  let r:ref bool = l.r in
+  let i: inv (lockinv p r) = l.i in
   let b = with_invariant i (fun _ -> acquire_core r i) in
   if b then (
     rewrite_slprop (if b then p else emp) p (fun _ -> ());
@@ -108,8 +109,8 @@ let release_core #p #u r i =
   return res
 
 let release (#p:vprop) (l:lock p) =
-  let r:ref bool = fst l in
-  let i: inv (lockinv p r) = snd l in
+  let r:ref bool = l.r in
+  let i: inv (lockinv p r) = l.i in
   let b = with_invariant i (fun _ -> release_core r i) in
   drop (if b then emp else p)
 

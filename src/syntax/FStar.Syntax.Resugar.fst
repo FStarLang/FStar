@@ -781,9 +781,8 @@ let rec resugar_term' (env: DsEnv.env) (t : S.term) : A.term =
           resugar_meta_desugared i
       | Meta_named t ->
           mk (A.Name t)
-      | Meta_monadic (_, t)
-      | Meta_monadic_lift (_, _, t) ->
-        resugar_term' env e
+      | Meta_monadic _
+      | Meta_monadic_lift _ -> resugar_term' env e
       end
 
     | Tm_unknown -> mk A.Wild
@@ -1321,13 +1320,14 @@ let resugar_wp_eff_combinators env for_free combs =
     (repr@return_repr@bind_repr)
 
 let resugar_layered_eff_combinators env combs =
-  let resugar name (ts, _) = resugar_tscheme'' env name ts in
+  let resugar name (ts, _, _) = resugar_tscheme'' env name ts in
+  let resugar2 name (ts, _) = resugar_tscheme'' env name ts in
 
-  (resugar "repr" combs.l_repr)::
-  (resugar "return" combs.l_return)::
-  (resugar "bind" combs.l_bind)::
-  (resugar "subcomp" combs.l_subcomp)::
-  (resugar "if_then_else" combs.l_if_then_else)::[]
+  (resugar2 "repr"         combs.l_repr)::
+  (resugar2 "return"       combs.l_return)::
+  (resugar  "bind"         combs.l_bind)::
+  (resugar  "subcomp"      combs.l_subcomp)::
+  (resugar  "if_then_else" combs.l_if_then_else)::[]
 
 let resugar_combinators env combs =
   match combs with
@@ -1355,7 +1355,9 @@ let resugar_eff_decl' env r q ed =
       mk_decl r q (A.Tycon(false, false, [(A.TyconAbbrev(ident_of_lid d.action_name, action_params, None, action_defn))]))
   in
   let eff_name = ident_of_lid ed.mname in
-  let eff_binders, eff_typ = SS.open_term ed.binders (ed.signature |> snd) in
+  let eff_binders, eff_typ =
+    let sig_ts = U.effect_sig_ts ed.signature in
+    SS.open_term ed.binders (sig_ts |> snd) in
   let eff_binders =
     if (Options.print_implicits())
     then eff_binders
@@ -1476,10 +1478,10 @@ let resugar_sigelt' env se : option A.decl =
   | Sig_inductive_typ _
   | Sig_datacon _ -> None
 
-  | Sig_polymonadic_bind (m, n, p, (_, t), _) ->
+  | Sig_polymonadic_bind (m, n, p, (_, t), _, _) ->
     Some (decl'_to_decl se (A.Polymonadic_bind (m, n, p, resugar_term' env t)))
 
-  | Sig_polymonadic_subcomp (m, n, (_, t), _) ->
+  | Sig_polymonadic_subcomp (m, n, (_, t), _, _) ->
     Some (decl'_to_decl se (A.Polymonadic_subcomp (m, n, resugar_term' env t)))
 
 (* Old interface: no envs *)

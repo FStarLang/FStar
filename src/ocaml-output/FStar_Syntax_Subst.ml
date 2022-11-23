@@ -764,7 +764,8 @@ let rec (push_subst :
         let uu___ = mk_range t.FStar_Syntax_Syntax.pos s in
         FStar_Syntax_Syntax.mk t' uu___ in
       match t.FStar_Syntax_Syntax.n with
-      | FStar_Syntax_Syntax.Tm_delayed uu___ -> failwith "Impossible"
+      | FStar_Syntax_Syntax.Tm_delayed uu___ ->
+          failwith "Impossible (delayed node in push_subst)"
       | FStar_Syntax_Syntax.Tm_lazy i ->
           (match i.FStar_Syntax_Syntax.lkind with
            | FStar_Syntax_Syntax.Lazy_embedding uu___ ->
@@ -1698,7 +1699,8 @@ let rec (deep_compress :
           FStar_Syntax_Syntax.sort = uu___
         } in
       match t1.FStar_Syntax_Syntax.n with
-      | FStar_Syntax_Syntax.Tm_delayed uu___ -> failwith "Impossible"
+      | FStar_Syntax_Syntax.Tm_delayed uu___ ->
+          failwith "Impossible (delayed node in deep_compress)"
       | FStar_Syntax_Syntax.Tm_fvar uu___ ->
           let uu___1 =
             FStar_Compiler_Util.mk_ref FStar_Pervasives_Native.None in

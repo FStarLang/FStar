@@ -4630,9 +4630,13 @@ and (do_reify_monadic :
                                                      let uu___12 =
                                                        let uu___13 =
                                                          let uu___14 =
+                                                           let uu___15 =
+                                                             FStar_Compiler_Effect.op_Bar_Greater
+                                                               ed
+                                                               FStar_Syntax_Util.get_bind_vc_combinator in
                                                            FStar_Compiler_Effect.op_Bar_Greater
-                                                             ed
-                                                             FStar_Syntax_Util.get_bind_vc_combinator in
+                                                             uu___15
+                                                             FStar_Pervasives_Native.fst in
                                                          FStar_Compiler_Effect.op_Bar_Greater
                                                            uu___14
                                                            FStar_Pervasives_Native.snd in
@@ -4679,9 +4683,14 @@ and (do_reify_monadic :
                                                            let uu___17 =
                                                              let uu___18 =
                                                                let uu___19 =
+                                                                 let uu___20
+                                                                   =
+                                                                   FStar_Compiler_Effect.op_Bar_Greater
+                                                                    ed
+                                                                    FStar_Syntax_Util.get_bind_vc_combinator in
                                                                  FStar_Compiler_Effect.op_Bar_Greater
-                                                                   ed
-                                                                   FStar_Syntax_Util.get_bind_vc_combinator in
+                                                                   uu___20
+                                                                   FStar_Pervasives_Native.fst in
                                                                FStar_Compiler_Effect.op_Bar_Greater
                                                                  uu___19
                                                                  FStar_Pervasives_Native.snd in
@@ -7514,7 +7523,13 @@ and (rebuild :
                                                   let uu___10 =
                                                     let uu___11 =
                                                       FStar_Compiler_Util.mk_ref
-                                                        FStar_Pervasives_Native.None in
+                                                        (if
+                                                           (cfg1.FStar_TypeChecker_Cfg.steps).FStar_TypeChecker_Cfg.hnf
+                                                         then
+                                                           FStar_Pervasives_Native.None
+                                                         else
+                                                           FStar_Pervasives_Native.Some
+                                                             ([], t2)) in
                                                     ([], t2, uu___11, false) in
                                                   Clos uu___10 in
                                                 (uu___8, uu___9) in
@@ -8803,7 +8818,8 @@ let rec (elim_uvars :
                                     a') in
                          let ed1 =
                            let uu___4 =
-                             elim_tscheme ed.FStar_Syntax_Syntax.signature in
+                             FStar_Syntax_Util.apply_eff_sig elim_tscheme
+                               ed.FStar_Syntax_Syntax.signature in
                            let uu___5 =
                              FStar_Syntax_Util.apply_eff_combinators
                                elim_tscheme
@@ -8856,7 +8872,8 @@ let rec (elim_uvars :
               FStar_Syntax_Syntax.target =
                 (sub_eff.FStar_Syntax_Syntax.target);
               FStar_Syntax_Syntax.lift_wp = uu___;
-              FStar_Syntax_Syntax.lift = uu___1
+              FStar_Syntax_Syntax.lift = uu___1;
+              FStar_Syntax_Syntax.kind = (sub_eff.FStar_Syntax_Syntax.kind)
             } in
           {
             FStar_Syntax_Syntax.sigel =
@@ -8890,7 +8907,7 @@ let rec (elim_uvars :
       | FStar_Syntax_Syntax.Sig_fail uu___ -> s1
       | FStar_Syntax_Syntax.Sig_splice uu___ -> s1
       | FStar_Syntax_Syntax.Sig_polymonadic_bind
-          (m, n, p, (us_t, t), (us_ty, ty)) ->
+          (m, n, p, (us_t, t), (us_ty, ty), k) ->
           let uu___ = elim_uvars_aux_t env1 us_t [] t in
           (match uu___ with
            | (us_t1, uu___1, t1) ->
@@ -8900,7 +8917,7 @@ let rec (elim_uvars :
                     {
                       FStar_Syntax_Syntax.sigel =
                         (FStar_Syntax_Syntax.Sig_polymonadic_bind
-                           (m, n, p, (us_t1, t1), (us_ty1, ty1)));
+                           (m, n, p, (us_t1, t1), (us_ty1, ty1), k));
                       FStar_Syntax_Syntax.sigrng =
                         (s1.FStar_Syntax_Syntax.sigrng);
                       FStar_Syntax_Syntax.sigquals =
@@ -8913,7 +8930,7 @@ let rec (elim_uvars :
                         (s1.FStar_Syntax_Syntax.sigopts)
                     }))
       | FStar_Syntax_Syntax.Sig_polymonadic_subcomp
-          (m, n, (us_t, t), (us_ty, ty)) ->
+          (m, n, (us_t, t), (us_ty, ty), k) ->
           let uu___ = elim_uvars_aux_t env1 us_t [] t in
           (match uu___ with
            | (us_t1, uu___1, t1) ->
@@ -8923,7 +8940,7 @@ let rec (elim_uvars :
                     {
                       FStar_Syntax_Syntax.sigel =
                         (FStar_Syntax_Syntax.Sig_polymonadic_subcomp
-                           (m, n, (us_t1, t1), (us_ty1, ty1)));
+                           (m, n, (us_t1, t1), (us_ty1, ty1), k));
                       FStar_Syntax_Syntax.sigrng =
                         (s1.FStar_Syntax_Syntax.sigrng);
                       FStar_Syntax_Syntax.sigquals =

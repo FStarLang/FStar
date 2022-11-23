@@ -63,6 +63,7 @@ let register_goal (g:goal) =
   if env.phase1 || env.lax then () else
   let uv = g.goal_ctx_uvar in
   let i = Core.incr_goal_ctr () in
+  if Allow_untyped? (U.ctx_uvar_should_check g.goal_ctx_uvar) then () else
   let env = {env with gamma = uv.ctx_uvar_gamma } in
   if Env.debug env <| Options.Other "CoreEq"      
   then BU.print1 "(%s) Registering goal\n" (BU.string_of_int i);
@@ -324,27 +325,33 @@ let new_uvar (reason:string) (env:env) (typ:typ)
     bind (add_implicits g_u.implicits) (fun _ ->
     ret (u, fst (List.hd ctx_uvar)))
 
-let mk_irrelevant_goal (reason:string) (env:env) (phi:typ) (rng:Range.range) opts label : tac goal =
+let mk_irrelevant_goal (reason:string) (env:env) (phi:typ) (sc_opt:option should_check_uvar) (rng:Range.range) opts label : tac goal =
     let typ = U.mk_squash (env.universe_of env phi) phi in
-    bind (new_uvar reason env typ (Some Strict) [] rng) (fun (_, ctx_uvar) ->
+    bind (new_uvar reason env typ sc_opt [] rng) (fun (_, ctx_uvar) ->
     let goal = mk_goal env ctx_uvar opts false label in
     ret goal)
 
 let add_irrelevant_goal' (reason:string) (env:Env.env)
-                         (phi:term) (rng:Range.range)
+                         (phi:term) 
+                         (sc_opt:option should_check_uvar)
+                         (rng:Range.range)
                          (opts:FStar.Options.optionstate)
                          (label:string) : tac unit =
-    bind (mk_irrelevant_goal reason env phi rng opts label) (fun goal ->
+    bind (mk_irrelevant_goal reason env phi sc_opt rng opts label) (fun goal ->
     add_goals [goal])
 
 let add_irrelevant_goal (base_goal:goal) (reason:string) 
-                         (env:Env.env) (phi:term) : tac unit =
-    add_irrelevant_goal' reason env phi base_goal.goal_ctx_uvar.ctx_uvar_range
+                        (env:Env.env) (phi:term)
+                        (sc_opt:option should_check_uvar) : tac unit =
+    add_irrelevant_goal' reason env phi sc_opt
+                         base_goal.goal_ctx_uvar.ctx_uvar_range
                          base_goal.opts base_goal.label
 
-let goal_of_guard (reason:string) (e:Env.env) (f:term) (rng:Range.range) : tac goal =
+let goal_of_guard (reason:string) (e:Env.env)
+                  (f:term) (sc_opt:option should_check_uvar)
+                  (rng:Range.range) : tac goal =
   bind getopts (fun opts ->
-  bind (mk_irrelevant_goal reason e f rng opts "") (fun goal ->
+  bind (mk_irrelevant_goal reason e f sc_opt rng opts "") (fun goal ->
   let goal = { goal with is_guard = true } in
   ret goal))
 

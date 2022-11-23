@@ -1879,7 +1879,7 @@ and do_reify_monadic fallback cfg env stack (top : term) (m : monad_name) (t : t
                   //for bind binders that are not fixed, we apply ()
                   //
                   let unit_args =
-                    match (ed |> U.get_bind_vc_combinator |> snd |> SS.compress).n with
+                    match (ed |> U.get_bind_vc_combinator |> fst |> snd |> SS.compress).n with
                     | Tm_arrow (_::_::bs, _) when List.length bs >= num_fixed_binders ->
                       bs
                       |> List.splitAt (List.length bs - num_fixed_binders)
@@ -1890,7 +1890,7 @@ and do_reify_monadic fallback cfg env stack (top : term) (m : monad_name) (t : t
                         BU.format3 "bind_wp for layered effect %s is not an arrow with >= %s arguments (%s)"
                           (Ident.string_of_lid ed.mname)
                           (string_of_int num_fixed_binders)
-                          (ed |> U.get_bind_vc_combinator |> snd |> Print.term_to_string)) rng in
+                          (ed |> U.get_bind_vc_combinator |> fst |> snd |> Print.term_to_string)) rng in
 
                   let range_args =
                     if bind_has_range_args
@@ -2928,22 +2928,28 @@ and rebuild (cfg:cfg) (env:env) (stack:stack) (t:term) : term =
                 //the elements of s are sub-terms of t
                 //the have no free de Bruijn indices; so their env=[]; see pre-condition at the top of rebuild
                 let env0 = env in
-                //
-                // AR: when adding the bindings for pattern arguments to the environment,
-                //     this code used to set the memo entry to t as well
-                //     (i.e. BU.mk_ref None used to be BU.mk_ref t), roughly
-                //
-                //     but unclear to me why is that ok
-                //     the scrutinee argument may not be normalized at all
-                //     in fact, in the core typechecker code, we had instances of this resulting
-                //       in incorrect behavior
-                //     there `t`, i.e. an argument to scrutinee was of the form `f x`,
-                //       where `f` did not get unfolded (we asked for whnf there),
-                //       because this memo entry was set to `f x`, and we returned it as is
-                //
+
+
+                // The scrutinee is (at least) in weak normal
+                // form. This means, it can be of the form (C v1
+                // ... (fun x -> e) ... vn)
+
+                //ie., it may have some sub-terms that are lambdas
+                //with unreduced bodies
+
+                //but, since the memo references are expected to hold
+                //weakly normal terms, it is safe to set them to the
+                //sub-terms of the scrutinee
+
+                //otherwise, we will keep reducing them over and over
+                //again. See, e.g., Issue #2757
+
+                //Except, if the normalizer is running in HEAD normal form mode, 
+                //then the sub-terms of the scrutinee might not be reduced yet.
+                //In that case, do not set the memo reference
                 let env = List.fold_left
                       (fun env (bv, t) -> (Some (S.mk_binder bv),
-                                        Clos([], t, BU.mk_ref None, false))::env)
+                                        Clos([], t, BU.mk_ref (if cfg.steps.hnf then None else Some ([], t)), false))::env)
                       env s in
                 norm cfg env stack (guard_when_clause wopt b rest)
         in
@@ -3329,7 +3335,7 @@ let rec elim_uvars (env:Env.env) (s:sigelt) =
       let ed = { ed with
                  univs         = univs;
                  binders       = binders;
-                 signature     = elim_tscheme ed.signature;
+                 signature     = U.apply_eff_sig elim_tscheme ed.signature;
                  combinators   = apply_eff_combinators elim_tscheme ed.combinators;
                  actions       = List.map elim_action ed.actions } in
       {s with sigel=Sig_new_effect ed}
@@ -3355,15 +3361,15 @@ let rec elim_uvars (env:Env.env) (s:sigelt) =
     | Sig_splice _ ->
       s
 
-    | Sig_polymonadic_bind (m, n, p, (us_t, t), (us_ty, ty)) ->
+    | Sig_polymonadic_bind (m, n, p, (us_t, t), (us_ty, ty), k) ->
       let us_t, _, t = elim_uvars_aux_t env us_t [] t in
       let us_ty, _, ty = elim_uvars_aux_t env us_ty [] ty in
-      { s with sigel = Sig_polymonadic_bind (m, n, p, (us_t, t), (us_ty, ty)) }
+      { s with sigel = Sig_polymonadic_bind (m, n, p, (us_t, t), (us_ty, ty), k) }
 
-    | Sig_polymonadic_subcomp (m, n, (us_t, t), (us_ty, ty)) ->
+    | Sig_polymonadic_subcomp (m, n, (us_t, t), (us_ty, ty), k) ->
       let us_t, _, t = elim_uvars_aux_t env us_t [] t in
       let us_ty, _, ty = elim_uvars_aux_t env us_ty [] ty in
-      { s with sigel = Sig_polymonadic_subcomp (m, n, (us_t, t), (us_ty, ty)) }
+      { s with sigel = Sig_polymonadic_subcomp (m, n, (us_t, t), (us_ty, ty), k) }
 
 
 let erase_universes env t =

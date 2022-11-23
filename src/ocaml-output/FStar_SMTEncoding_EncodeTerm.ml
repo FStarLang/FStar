@@ -2191,6 +2191,23 @@ and (encode_term :
                           FStar_Syntax_Syntax.fv_eq_lid fv
                             FStar_Parser_Const.by_tactic_lid
                           -> encode_term phi env
+                      | (FStar_Syntax_Syntax.Tm_fvar fv,
+                         uu___5::uu___6::(phi, uu___7)::[]) when
+                          FStar_Syntax_Syntax.fv_eq_lid fv
+                            FStar_Parser_Const.rewrite_by_tactic_lid
+                          -> encode_term phi env
+                      | (FStar_Syntax_Syntax.Tm_uinst
+                         ({
+                            FStar_Syntax_Syntax.n =
+                              FStar_Syntax_Syntax.Tm_fvar fv;
+                            FStar_Syntax_Syntax.pos = uu___5;
+                            FStar_Syntax_Syntax.vars = uu___6;
+                            FStar_Syntax_Syntax.hash_code = uu___7;_},
+                          uu___8),
+                         uu___9::uu___10::(phi, uu___11)::[]) when
+                          FStar_Syntax_Syntax.fv_eq_lid fv
+                            FStar_Parser_Const.rewrite_by_tactic_lid
+                          -> encode_term phi env
                       | uu___5 ->
                           let uu___6 = encode_args args_e1 env in
                           (match uu___6 with
@@ -3682,6 +3699,21 @@ and (encode_formula :
                 uu___4::(phi2, uu___5)::[]) when
                  FStar_Syntax_Syntax.fv_eq_lid fv
                    FStar_Parser_Const.by_tactic_lid
+                 -> encode_formula phi2 env
+             | (FStar_Syntax_Syntax.Tm_fvar fv,
+                uu___::uu___1::(phi2, uu___2)::[]) when
+                 FStar_Syntax_Syntax.fv_eq_lid fv
+                   FStar_Parser_Const.rewrite_by_tactic_lid
+                 -> encode_formula phi2 env
+             | (FStar_Syntax_Syntax.Tm_uinst
+                ({ FStar_Syntax_Syntax.n = FStar_Syntax_Syntax.Tm_fvar fv;
+                   FStar_Syntax_Syntax.pos = uu___;
+                   FStar_Syntax_Syntax.vars = uu___1;
+                   FStar_Syntax_Syntax.hash_code = uu___2;_},
+                 uu___3),
+                uu___4::uu___5::(phi2, uu___6)::[]) when
+                 FStar_Syntax_Syntax.fv_eq_lid fv
+                   FStar_Parser_Const.rewrite_by_tactic_lid
                  -> encode_formula phi2 env
              | (FStar_Syntax_Syntax.Tm_fvar fv,
                 (r, uu___)::(msg, uu___1)::(phi2, uu___2)::[]) when
