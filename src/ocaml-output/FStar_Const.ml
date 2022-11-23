@@ -29,10 +29,7 @@ type sconst =
   | Const_int of (Prims.string * (signedness * width)
   FStar_Pervasives_Native.option) 
   | Const_char of FStar_BaseTypes.char 
-  | Const_float of FStar_BaseTypes.double 
   | Const_real of Prims.string 
-  | Const_bytearray of (FStar_BaseTypes.byte Prims.array *
-  FStar_Compiler_Range.range) 
   | Const_string of (Prims.string * FStar_Compiler_Range.range) 
   | Const_range_of 
   | Const_set_range_of 
@@ -61,22 +58,11 @@ let (uu___is_Const_char : sconst -> Prims.bool) =
     match projectee with | Const_char _0 -> true | uu___ -> false
 let (__proj__Const_char__item___0 : sconst -> FStar_BaseTypes.char) =
   fun projectee -> match projectee with | Const_char _0 -> _0
-let (uu___is_Const_float : sconst -> Prims.bool) =
-  fun projectee ->
-    match projectee with | Const_float _0 -> true | uu___ -> false
-let (__proj__Const_float__item___0 : sconst -> FStar_BaseTypes.double) =
-  fun projectee -> match projectee with | Const_float _0 -> _0
 let (uu___is_Const_real : sconst -> Prims.bool) =
   fun projectee ->
     match projectee with | Const_real _0 -> true | uu___ -> false
 let (__proj__Const_real__item___0 : sconst -> Prims.string) =
   fun projectee -> match projectee with | Const_real _0 -> _0
-let (uu___is_Const_bytearray : sconst -> Prims.bool) =
-  fun projectee ->
-    match projectee with | Const_bytearray _0 -> true | uu___ -> false
-let (__proj__Const_bytearray__item___0 :
-  sconst -> (FStar_BaseTypes.byte Prims.array * FStar_Compiler_Range.range))
-  = fun projectee -> match projectee with | Const_bytearray _0 -> _0
 let (uu___is_Const_string : sconst -> Prims.bool) =
   fun projectee ->
     match projectee with | Const_string _0 -> true | uu___ -> false
@@ -110,7 +96,6 @@ let (eq_const : sconst -> sconst -> Prims.bool) =
           (let uu___ = FStar_Compiler_Util.ensure_decimal s1 in
            let uu___1 = FStar_Compiler_Util.ensure_decimal s2 in
            uu___ = uu___1) && (o1 = o2)
-      | (Const_bytearray (a, uu___), Const_bytearray (b, uu___1)) -> a = b
       | (Const_string (a, uu___), Const_string (b, uu___1)) -> a = b
       | (Const_reflect l1, Const_reflect l2) -> FStar_Ident.lid_equals l1 l2
       | uu___ -> c1 = c2

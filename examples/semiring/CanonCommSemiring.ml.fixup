@@ -1,3 +1,5 @@
+
+(* ^ Empty line above since extracted files may not have a newline at the end. *)
 let _ =
   FStar_Tactics_Native.register_tactic "CanonCommSemiring.canon_semiring_aux"
     (Prims.parse_int "11")

@@ -44,6 +44,9 @@ include gmake/Makefile.tmpl
 %FStar.Buffer.fst.checked: OTHERFLAGS+=--warn_error -271
 %FStar.Buffer.Quantifiers.fst.checked: OTHERFLAGS+=--warn_error -271
 
+# 352 - Indexed effect combinator is not substitutive warning
+.cache/Steel.%.checked: COMPAT_INDEXED_EFFECTS=--compat_pre_typed_indexed_effects --warn_error -352
+
 verify-core: $(filter-out $(addprefix %, $(addsuffix .checked, $(notdir $(EXTRA)))), $(ALL_CHECKED_FILES))
 verify-extra: $(filter $(addprefix %, $(addsuffix .checked, $(notdir $(EXTRA)))), $(ALL_CHECKED_FILES))
 
@@ -51,7 +54,7 @@ verify-extra: $(filter $(addprefix %, $(addsuffix .checked, $(notdir $(EXTRA))))
 	@echo "[CHECK     $(basename $(notdir $@))]"
 	@# MY_FSTAR is imported from ulib/gmake.Makefile.tmpl, so it does not
 	@# contain the $(SIL) flag nor the $(PREF) for monitoring resources.
-	$(Q)$(PREF) $(MY_FSTAR) $(SIL) $<
+	$(Q)$(PREF) $(MY_FSTAR) $(SIL) $(COMPAT_INDEXED_EFFECTS) $<
 
 # Benchmarking rules
 #

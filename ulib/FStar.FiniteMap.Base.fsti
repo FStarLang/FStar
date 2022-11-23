@@ -192,8 +192,8 @@ let notin (#a: eqtype) (#b: Type u#b) (key: a) (m: map a b)
 ///  { Map#Card(m) }
 ///  Map#Card(m) == 0 <==> m == Map#Empty());
 
-let cardinality_zero_iff_empty_fact (b:Type u#b) =
-  forall (a: eqtype) (m: map a b).{:pattern cardinality m}
+let cardinality_zero_iff_empty_fact =
+  forall (a: eqtype) (b:Type u#b) (m: map a b).{:pattern cardinality m}
     cardinality m = 0 <==> m == emptymap
 
 /// We represent the following Dafny axiom with `empty_or_domain_occupied_fact`:
@@ -202,8 +202,8 @@ let cardinality_zero_iff_empty_fact (b:Type u#b) =
 ///  { Map#Domain(m) }
 ///  m == Map#Empty() || (exists k: U :: Map#Domain(m)[k]));
 
-let empty_or_domain_occupied_fact (b: Type u#b) =
-  forall (a: eqtype) (m: map a b).{:pattern domain m}
+let empty_or_domain_occupied_fact =
+  forall (a: eqtype) (b: Type u#b) (m: map a b).{:pattern domain m}
     m == emptymap \/ (exists k.{:pattern mem k m} mem k m)
 
 /// We represent the following Dafny axiom with `empty_or_values_occupied_fact`:
@@ -212,8 +212,8 @@ let empty_or_domain_occupied_fact (b: Type u#b) =
 ///  { Map#Values(m) }
 ///  m == Map#Empty() || (exists v: V :: Map#Values(m)[v]));
 
-let empty_or_values_occupied_fact (b: Type u#b) =
-  forall (a: eqtype) (m: map a b).{:pattern values m}
+let empty_or_values_occupied_fact =
+  forall (a: eqtype) (b: Type u#b) (m: map a b).{:pattern values m}
     m == emptymap \/ (exists v. {:pattern values m v } (values m) v)
 
 /// We represent the following Dafny axiom with `empty_or_items_occupied_fact`:
@@ -222,8 +222,8 @@ let empty_or_values_occupied_fact (b: Type u#b) =
 ///  { Map#Items(m) }
 ///  m == Map#Empty() || (exists k, v: Box :: Map#Items(m)[$Box(#_System._tuple#2._#Make2(k, v))]));
 
-let empty_or_items_occupied_fact (b:Type u#b) =
-  forall (a: eqtype) (m: map a b).{:pattern items m}
+let empty_or_items_occupied_fact =
+  forall (a: eqtype) (b:Type u#b) (m: map a b).{:pattern items m}
     m == emptymap \/ (exists item. {:pattern items m item } (items m) item)
 
 /// We represent the following Dafny axiom with `map_cardinality_matches_domain_fact`:
@@ -232,8 +232,8 @@ let empty_or_items_occupied_fact (b:Type u#b) =
 ///  { Set#Card(Map#Domain(m)) }
 ///  Set#Card(Map#Domain(m)) == Map#Card(m));
 
-let map_cardinality_matches_domain_fact (b: Type u#b) =
-  forall (a: eqtype) (m: map a b).{:pattern FSet.cardinality (domain m)}
+let map_cardinality_matches_domain_fact =
+  forall (a: eqtype) (b: Type u#b) (m: map a b).{:pattern FSet.cardinality (domain m)}
     FSet.cardinality (domain m) = cardinality m
     
 /// We don't use the following Dafny axioms, which would require
@@ -255,8 +255,8 @@ let map_cardinality_matches_domain_fact (b: Type u#b) =
 ///          Map#Domain(m)[u] &&
 ///          v == Map#Elements(m)[u]));
 
-let values_contains_fact (b: Type u#b) =
-  forall (a: eqtype) (m: map a b) (v: b).{:pattern (values m) v}
+let values_contains_fact =
+  forall (a: eqtype) (b: Type u#b) (m: map a b) (v: b).{:pattern (values m) v}
     (values m) v <==>
        (exists (u: a).{:pattern FSet.mem u (domain m) \/ ((elements m) u)}
           FSet.mem u (domain m) /\ (elements m) u == Some v)
@@ -268,8 +268,8 @@ let values_contains_fact (b: Type u#b) =
 ///    Map#Domain(m)[_System.Tuple2._0($Unbox(item))] &&
 ///    Map#Elements(m)[_System.Tuple2._0($Unbox(item))] == _System.Tuple2._1($Unbox(item)));
 
-let items_contains_fact (b: Type u#b) =
-  forall (a: eqtype) (m: map a b) (item: a * b).{:pattern (items m) item}
+let items_contains_fact =
+  forall (a: eqtype) (b: Type u#b) (m: map a b) (item: a * b).{:pattern (items m) item}
     (items m) item <==>
         FSet.mem (fst item) (domain m)
       /\ (elements m) (fst item) == Some (snd item)
@@ -280,8 +280,8 @@ let items_contains_fact (b: Type u#b) =
 ///        { Map#Domain(Map#Empty(): Map U V)[u] }
 ///        !Map#Domain(Map#Empty(): Map U V)[u]);
 
-let empty_domain_empty_fact (b: Type u#b) =
-  forall (a: eqtype) (u: a).{:pattern FSet.mem u (domain (emptymap #a #b))}
+let empty_domain_empty_fact =
+  forall (a: eqtype) (b: Type u#b) (u: a).{:pattern FSet.mem u (domain (emptymap #a #b))}
     not (FSet.mem u (domain (emptymap #a #b)))
 
 /// We represent the following Dafny axiom with `glue_domain_fact`:
@@ -290,8 +290,8 @@ let empty_domain_empty_fact (b: Type u#b) =
 ///  { Map#Domain(Map#Glue(a, b, t)) }
 ///  Map#Domain(Map#Glue(a, b, t)) == a);
 
-let glue_domain_fact (b: Type u#b) =
-  forall (a: eqtype) (keys: FSet.set a) (f: setfun_t a b keys).{:pattern domain (glue keys f)}
+let glue_domain_fact =
+  forall (a: eqtype) (b: Type u#b) (keys: FSet.set a) (f: setfun_t a b keys).{:pattern domain (glue keys f)}
     domain (glue keys f) == keys
 
 /// We represent the following Dafny axiom with `glue_elements_fact`.
@@ -302,8 +302,8 @@ let glue_domain_fact (b: Type u#b) =
 ///  { Map#Elements(Map#Glue(a, b, t)) }
 ///  Map#Elements(Map#Glue(a, b, t)) == b);
 
-let glue_elements_fact (b: Type u#b) =
-  forall (a: eqtype) (keys: FSet.set a) (f: setfun_t a b keys).{:pattern elements (glue keys f)}
+let glue_elements_fact =
+  forall (a: eqtype) (b: Type u#b) (keys: FSet.set a) (f: setfun_t a b keys).{:pattern elements (glue keys f)}
       domain (glue keys f) == keys
     /\ elements (glue keys f) == f
 
@@ -325,8 +325,8 @@ let glue_elements_fact (b: Type u#b) =
 ///  (u' != u ==> Map#Domain(Map#Build(m, u, v))[u'] == Map#Domain(m)[u'] &&
 ///               Map#Elements(Map#Build(m, u, v))[u'] == Map#Elements(m)[u']));
 
-let insert_elements_fact (b: Type u#b) =
-  forall (a: eqtype) (m: map a b) (key: a) (key': a) (value: b).
+let insert_elements_fact =
+  forall (a: eqtype) (b: Type u#b) (m: map a b) (key: a) (key': a) (value: b).
     {:pattern FSet.mem key' (domain (insert key value m)) \/ ((elements (insert key value m)) key')}
       (key' = key ==>   FSet.mem key' (domain (insert key value m))
                      /\ (elements (insert key value m)) key' == Some value)
@@ -338,8 +338,8 @@ let insert_elements_fact (b: Type u#b) =
 /// axiom (forall<U, V> m: Map U V, u: U, v: V :: { Map#Card(Map#Build(m, u, v)) }
 ///  Map#Domain(m)[u] ==> Map#Card(Map#Build(m, u, v)) == Map#Card(m));
 
-let insert_member_cardinality_fact (b: Type u#b) =
-  forall (a: eqtype) (m: map a b) (key: a) (value: b).{:pattern cardinality (insert key value m)}
+let insert_member_cardinality_fact =
+  forall (a: eqtype) (b: Type u#b) (m: map a b) (key: a) (value: b).{:pattern cardinality (insert key value m)}
     FSet.mem key (domain m) ==> cardinality (insert key value m) = cardinality m
 
 /// We represent the following Dafny axiom with `insert_nonmember_cardinality_fact`:
@@ -347,8 +347,8 @@ let insert_member_cardinality_fact (b: Type u#b) =
 /// axiom (forall<U, V> m: Map U V, u: U, v: V :: { Map#Card(Map#Build(m, u, v)) }
 ///  !Map#Domain(m)[u] ==> Map#Card(Map#Build(m, u, v)) == Map#Card(m) + 1);
 
-let insert_nonmember_cardinality_fact (b: Type u#b) =
-  forall (a: eqtype) (m: map a b) (key: a) (value: b).{:pattern cardinality (insert key value m)}
+let insert_nonmember_cardinality_fact =
+  forall (a: eqtype) (b: Type u#b) (m: map a b) (key: a) (value: b).{:pattern cardinality (insert key value m)}
     not (FSet.mem key (domain m)) ==> cardinality (insert key value m) = cardinality m + 1
 
 /// We represent the following Dafny axiom with `merge_domain_is_union_fact`:
@@ -357,8 +357,8 @@ let insert_nonmember_cardinality_fact (b: Type u#b) =
 ///  { Map#Domain(Map#Merge(m, n)) }
 ///  Map#Domain(Map#Merge(m, n)) == Set#Union(Map#Domain(m), Map#Domain(n)));
 
-let merge_domain_is_union_fact (b: Type u#b) =
-  forall (a: eqtype) (m1: map a b) (m2: map a b).{:pattern domain (merge m1 m2)}
+let merge_domain_is_union_fact =
+  forall (a: eqtype) (b: Type u#b) (m1: map a b) (m2: map a b).{:pattern domain (merge m1 m2)}
     domain (merge m1 m2) == FSet.union (domain m1) (domain m2)
 
 /// We represent the following Dafny axiom with `merge_element_fact`:
@@ -369,8 +369,8 @@ let merge_domain_is_union_fact (b: Type u#b) =
 ///    (!Map#Domain(n)[u] ==> Map#Elements(Map#Merge(m, n))[u] == Map#Elements(m)[u]) &&
 ///    (Map#Domain(n)[u] ==> Map#Elements(Map#Merge(m, n))[u] == Map#Elements(n)[u]));
 
-let merge_element_fact (b: Type u#b) =
-  forall (a: eqtype) (m1: map a b) (m2: map a b) (key: a).{:pattern (elements (merge m1 m2)) key}
+let merge_element_fact =
+  forall (a: eqtype) (b: Type u#b) (m1: map a b) (m2: map a b) (key: a).{:pattern (elements (merge m1 m2)) key}
     FSet.mem key (domain (merge m1 m2)) ==>
         (not (FSet.mem key (domain m2)) ==> FSet.mem key (domain m1) /\ (elements (merge m1 m2)) key == (elements m1) key)
       /\ (FSet.mem key (domain m2) ==> (elements (merge m1 m2)) key == (elements m2) key)
@@ -381,8 +381,8 @@ let merge_element_fact (b: Type u#b) =
 ///  { Map#Domain(Map#Subtract(m, s)) }
 ///  Map#Domain(Map#Subtract(m, s)) == Set#Difference(Map#Domain(m), s));
 
-let subtract_domain_fact (b: Type u#b) =
-  forall (a: eqtype) (m: map a b) (s: FSet.set a).{:pattern domain (subtract m s)}
+let subtract_domain_fact =
+  forall (a: eqtype) (b: Type u#b) (m: map a b) (s: FSet.set a).{:pattern domain (subtract m s)}
     domain (subtract m s) == FSet.difference (domain m) s
 
 /// We represent the following Dafny axiom with `subtract_element_fact`:
@@ -392,8 +392,8 @@ let subtract_domain_fact (b: Type u#b) =
 ///  Map#Domain(Map#Subtract(m, s))[u] ==>
 ///    Map#Elements(Map#Subtract(m, s))[u] == Map#Elements(m)[u]);
 
-let subtract_element_fact (b: Type u#b) =
-  forall (a: eqtype) (m: map a b) (s: FSet.set a) (key: a).{:pattern (elements (subtract m s)) key}
+let subtract_element_fact =
+  forall (a: eqtype) (b: Type u#b) (m: map a b) (s: FSet.set a) (key: a).{:pattern (elements (subtract m s)) key}
     FSet.mem key (domain (subtract m s)) ==> FSet.mem key (domain m) /\ (elements (subtract m s)) key == (elements m) key
 
 /// We represent the following Dafny axiom with `map_equal_fact`:
@@ -403,8 +403,8 @@ let subtract_element_fact (b: Type u#b) =
 ///    Map#Equal(m, m') <==> (forall u : U :: Map#Domain(m)[u] == Map#Domain(m')[u]) &&
 ///                          (forall u : U :: Map#Domain(m)[u] ==> Map#Elements(m)[u] == Map#Elements(m')[u]));
 
-let map_equal_fact (b: Type u#b) =
-  forall (a: eqtype) (m1: map a b) (m2: map a b).{:pattern equal m1 m2}
+let map_equal_fact =
+  forall (a: eqtype) (b: Type u#b) (m1: map a b) (m2: map a b).{:pattern equal m1 m2}
     equal m1 m2 <==>   (forall key. FSet.mem key (domain m1) = FSet.mem key (domain m2))
                    /\ (forall key. FSet.mem key (domain m1) ==> (elements m1) key == (elements m2) key)
 
@@ -414,8 +414,8 @@ let map_equal_fact (b: Type u#b) =
 ///  { Map#Equal(m, m') }
 ///    Map#Equal(m, m') ==> m == m');
 
-let map_extensionality_fact (b: Type u#b) =
-  forall (a: eqtype) (m1: map a b) (m2: map a b).{:pattern equal m1 m2}
+let map_extensionality_fact =
+  forall (a: eqtype) (b: Type u#b) (m1: map a b) (m2: map a b).{:pattern equal m1 m2}
     equal m1 m2 ==> m1 == m2
 
 /// We represent the following Dafny axiom with `disjoint_fact`:
@@ -424,8 +424,8 @@ let map_extensionality_fact (b: Type u#b) =
 ///  { Map#Disjoint(m, m') }
 ///    Map#Disjoint(m, m') <==> (forall o: U :: {Map#Domain(m)[o]} {Map#Domain(m')[o]} !Map#Domain(m)[o] || !Map#Domain(m')[o]));
 
-let disjoint_fact (b: Type u#b) =
-  forall (a: eqtype) (m1: map a b) (m2: map a b).{:pattern disjoint m1 m2}
+let disjoint_fact =
+  forall (a: eqtype) (b: Type u#b) (m1: map a b) (m2: map a b).{:pattern disjoint m1 m2}
     disjoint m1 m2 <==> (forall key.{:pattern FSet.mem key (domain m1) \/ FSet.mem key (domain m2)}
                           not (FSet.mem key (domain m1)) || not (FSet.mem key (domain m2)))
 
@@ -435,26 +435,26 @@ let disjoint_fact (b: Type u#b) =
 **)
 
 let all_finite_map_facts =
-  forall (b:Type u#b).
-    cardinality_zero_iff_empty_fact b
-  /\ empty_or_domain_occupied_fact b
-  /\ empty_or_values_occupied_fact b
-  /\ empty_or_items_occupied_fact b
-  /\ map_cardinality_matches_domain_fact b
-  /\ values_contains_fact b
-  /\ items_contains_fact b
-  /\ empty_domain_empty_fact b
-  /\ glue_domain_fact b
-  /\ glue_elements_fact b
-  /\ insert_elements_fact b
-  /\ insert_member_cardinality_fact b
-  /\ insert_nonmember_cardinality_fact b
-  /\ merge_domain_is_union_fact b
-  /\ merge_element_fact b
-  /\ subtract_domain_fact b
-  /\ subtract_element_fact b
-  /\ map_equal_fact b 
-  /\ map_extensionality_fact b
-  /\ disjoint_fact b
-
-val all_finite_map_facts_lemma (_:unit) : Lemma (all_finite_map_facts)
+    cardinality_zero_iff_empty_fact u#b
+  /\ empty_or_domain_occupied_fact u#b
+  /\ empty_or_values_occupied_fact u#b
+  /\ empty_or_items_occupied_fact u#b
+  /\ map_cardinality_matches_domain_fact u#b
+  /\ values_contains_fact u#b
+  /\ items_contains_fact u#b
+  /\ empty_domain_empty_fact u#b
+  /\ glue_domain_fact u#b
+  /\ glue_elements_fact u#b
+  /\ insert_elements_fact u#b
+  /\ insert_member_cardinality_fact u#b
+  /\ insert_nonmember_cardinality_fact u#b
+  /\ merge_domain_is_union_fact u#b
+  /\ merge_element_fact u#b
+  /\ subtract_domain_fact u#b
+  /\ subtract_element_fact u#b
+  /\ map_equal_fact u#b
+  /\ map_extensionality_fact u#b
+  /\ disjoint_fact u#b
+  
+val all_finite_map_facts_lemma (_:unit)
+  : Lemma (all_finite_map_facts u#b)

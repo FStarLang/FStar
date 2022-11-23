@@ -8,7 +8,7 @@
       1,
       [ "@query" ],
       0,
-      "1d1ceefc6e5b323a52fdbdbbb3d07572"
+      "6dd6b0776fe0efd106f97f32bd84b285"
     ],
     [
       "Steel.ST.Effect.AtomicAndGhost.weaken_repr",
@@ -43,7 +43,7 @@
         "typing_Steel.Effect.Common.star", "typing_tok_Prims.T@tok"
       ],
       0,
-      "991505a429185f365ffc9311277c9b96"
+      "69fe18d0824bdd6f7405cf93401e0511"
     ],
     [
       "Steel.ST.Effect.AtomicAndGhost.return_",
@@ -52,7 +52,7 @@
       1,
       [ "@query" ],
       0,
-      "5b5893a1eff926cdb65f25086ec2114e"
+      "61e850e46d0efb89765cb2742816710e"
     ],
     [
       "Steel.ST.Effect.AtomicAndGhost.bind",
@@ -61,7 +61,7 @@
       1,
       [ "@query" ],
       0,
-      "61c702d55f09cfbd3f73620628e95de7"
+      "4d16a7a4dc02ec463cd6add9a504da18"
     ],
     [
       "Steel.ST.Effect.AtomicAndGhost.subcomp",
@@ -80,7 +80,7 @@
         "typing_tok_Prims.T@tok"
       ],
       0,
-      "6aa8b13f297d635957fb06e41b53b07e"
+      "29f3a6b422a058cbc1394cbf6d1c25ca"
     ],
     [
       "Steel.ST.Effect.AtomicAndGhost.STAGCommon",
@@ -92,7 +92,7 @@
         "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
       ],
       0,
-      "f61137d64cdb3855579186de60720b78"
+      "68ed1c53e6519a2a5e49cec871a33838"
     ],
     [
       "Steel.ST.Effect.AtomicAndGhost.STAGCommon",
@@ -104,7 +104,7 @@
         "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
       ],
       0,
-      "6795faf935e9be984902c1ed6a512e8e"
+      "e8e48333d3a62b551b251831f94324c7"
     ],
     [
       "Steel.ST.Effect.AtomicAndGhost.STAGCommon",
@@ -116,7 +116,7 @@
         "refinement_interpretation_Tm_refine_de09779676242898794a0b057d5f5bb4"
       ],
       0,
-      "5c36f9983ac13a88f0324069a2cac9d1"
+      "afd4d97d24b3398c849d59bbb44a3a01"
     ],
     [
       "Steel.ST.Effect.AtomicAndGhost.STAGCommon",
@@ -128,7 +128,7 @@
         "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
       ],
       0,
-      "74dec68f45c70bc2d9da2edc80de6477"
+      "160d3571301db9b646d146bc1c1e2bb4"
     ],
     [
       "Steel.ST.Effect.AtomicAndGhost.bind_pure_stag",
@@ -146,7 +146,7 @@
         "typing_Tm_abs_6ba36691ee58dee85cd144324b083848"
       ],
       0,
-      "02b8c353282632cdb8834e5e3b074770"
+      "16ab189a2c80fa41a1d989d474358e22"
     ]
   ]
 ]
