@@ -322,8 +322,8 @@ let rec elab_ty (t:stlc_ty)
       let t2 = elab_ty t2 in
 
       R.pack_ln 
-        (R.Tv_Arrow 
-          (RT.as_binder 0 t1)
+        (R.Tv_Arrow
+          (RT.mk_binder "x" 0 t1 R.Q_Explicit)
           (R.pack_comp (C_Total t2 u_unk [])))
   
 let rec elab_exp (e:s_exp)
@@ -345,7 +345,7 @@ let rec elab_exp (e:s_exp)
     | ELam t e ->
       let t = elab_ty t in
       let e = elab_exp e in
-      R.pack_ln (Tv_Abs (RT.as_binder 0 t) e)
+      R.pack_ln (Tv_Abs (RT.mk_binder "x" 0 t R.Q_Explicit) e)
              
     | EApp e1 e2 ->
       let e1 = elab_exp e1 in
@@ -403,7 +403,7 @@ let stlc_types_are_closed3 (ty:stlc_ty) (x:R.var)
 
 let rec elab_open_commute' (e:s_exp) (x:var) (n:nat)
   : Lemma (ensures
-              RT.open_or_close_term' (elab_exp e) (RT.OpenWith (RT.var_as_term x)) n ==
+              RT.open_or_close_term' (elab_exp e) (RT.OpenWithVar x) n ==
               elab_exp (open_exp' e x n))
           (decreases e)
   = match e with
@@ -422,21 +422,19 @@ let rec elab_open_commute' (e:s_exp) (x:var) (n:nat)
         R.(pack_ln (Tv_Abs (RT.as_binder 0 (elab_ty t)) (elab_exp (open_exp' e x (n + 1)))));
       (==) { elab_open_commute' e x (n + 1) } 
         R.(pack_ln (Tv_Abs (RT.as_binder 0 (elab_ty t))
-                           (RT.open_or_close_term' (elab_exp e) RT.(OpenWith (var_as_term x)) (n + 1))));
-      (==) { stlc_types_are_closed_core t (RT.OpenWith (RT.var_as_term x)) n }
+                           (RT.open_or_close_term' (elab_exp e) RT.(OpenWithVar x) (n + 1))));
+      (==) { stlc_types_are_closed_core t (RT.OpenWithVar x) n }
         RT.open_or_close_term'
           R.(pack_ln (Tv_Abs (RT.as_binder 0 (elab_ty t)) (elab_exp e)))
-          RT.(OpenWith (var_as_term x))           
+          RT.(OpenWithVar x)
           n;
       }
-      
 
 let elab_open_commute (e:s_exp) (x:var)
   : Lemma (RT.open_term (elab_exp e) x == elab_exp (open_exp e x))
           [SMTPat (RT.open_term (elab_exp e) x)]
   = elab_open_commute' e x 0;
     RT.open_term_spec (elab_exp e) x
-
 
 let fstar_env =
   g:R.env { 
@@ -478,7 +476,7 @@ let rec elab_ty_soundness (g:fstar_top_env)
                (elab_ty t)
                (RT.tm_type RT.(u_max u_zero u_zero))
             =  RT.T_Arrow _ x (elab_ty t1) (elab_ty t2) 
-                          RT.u_zero RT.u_zero t1_ok t2_ok
+                          _ _ "x" R.Q_Explicit t1_ok t2_ok
       in
       RT.simplify_umax arr_max
   
@@ -520,6 +518,8 @@ let rec soundness (#sg:stlc_env)
                    (elab_exp e)
                    (elab_ty t')
                    _
+                   "x"
+                   R.Q_Explicit
                    (elab_ty_soundness g sg t)
                    de
       in
@@ -569,5 +569,3 @@ let main (g:fstar_top_env)
       soundness_lemma [] src' src_ty g;
       (| elab_exp src', elab_ty src_ty |)
     else T.fail "Not locally nameless"
-
-
