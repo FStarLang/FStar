@@ -16,7 +16,7 @@ depends: [
   "menhir" {>= "20161115" build}
   "pprint" {build}
   "sedlex" {build}
-  "ppxlib" {>= "0.22.0" & < "0.26.0"}
+  "ppxlib" {>= "0.22.0"}
   "ppx_deriving"
   "ppx_deriving_yojson"
   "process"

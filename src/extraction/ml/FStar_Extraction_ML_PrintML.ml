@@ -1,11 +1,11 @@
 open List
 open Lexing
 open Ppxlib_ast
-open Parsetree
+open Astlib.Ast_500.Parsetree
 open Location
 open Pprintast
 open Ast_helper
-open Asttypes
+open Astlib.Ast_500.Asttypes
 open Longident
 
 open FStar_Extraction_ML_Syntax
@@ -193,10 +193,10 @@ and build_constructor_pat ((path, sym), p) =
   | [] ->
      Ppat_construct (path_to_ident (path', name), None)
   | [pat] ->
-     Ppat_construct (path_to_ident (path', name), Some (build_pattern pat))
+     Ppat_construct (path_to_ident (path', name), Some ([], build_pattern pat))
   | pats ->
      let inner = Pat.tuple (map build_pattern pats) in
-     Ppat_construct (path_to_ident(path', name), Some inner)
+     Ppat_construct (path_to_ident(path', name), Some ([], inner))
 
 let rec build_core_type ?(annots = []) (ty: mlty): core_type =
   let t =
