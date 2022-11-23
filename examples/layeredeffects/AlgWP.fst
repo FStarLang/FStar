@@ -90,6 +90,7 @@ let interp_as_wp2 #a #l (t : rwtree a l) : Alg (st_wp a) [] =
 
 (* Bug: defining this as a FStar.Preorder.preorder
 causes stupid failures ahead *)
+unfold
 val stronger : (#a:Type) -> st_wp a -> st_wp a -> Type0
 let stronger w1 w2 = forall p s. w1 p s ==> w2 p s
 

@@ -2330,6 +2330,7 @@ and tc_abs env (top:term) (bs:binders) (body:term) : term * lcomp * guard_t =
                 | _ ->
                     let lc = S.mk_Total tfun_computed |> TcComm.lcomp_of_comp in
                     let e, _, guard' = TcUtil.check_has_type_maybe_coerce env e lc t use_eq in  //QUESTION: t should also probably be t_annot here
+                    let guard' = TcUtil.label_guard e.pos (Err.subtyping_failed env lc.res_typ t ()) guard' in
                     e, t_annot, Env.conj_guard guard guard'
            end
 
