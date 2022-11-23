@@ -53,6 +53,15 @@ ENV OPAMYES=1
 
 ADD --chown=opam:opam ./ $HOME/FStar/
 
+# If CI_TEST_MIN_OPAM_DEPS is set, then for each package except ocaml,
+# when a lower bound constraint for its version number exists, replace
+# this constraint with an equality to install that lower version
+ARG CI_TEST_MIN_OPAM_DEPS=
+RUN if [[ -n "$CI_TEST_MIN_OPAM_DEPS" ]] ; then \
+  sed -i 's!>=!=!g' $HOME/FStar/fstar.opam && \
+  sed -i 's!"ocaml" {=!"ocaml" {>=!' $HOME/FStar/fstar.opam ; \
+fi
+
 # F* dependencies
 RUN opam install --confirm-level=unsafe-yes --deps-only $HOME/FStar/fstar.opam
 
