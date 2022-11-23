@@ -77,6 +77,9 @@ let mk_binder (pp_name:string) (x:var) (ty:term) (q:aqualv)
       q
       []
 
+let as_binder (x:var) (ty:term) =
+  mk_binder "x" x ty Q_Explicit
+
 let bv_index (x:bv) : int = (inspect_bv x).bv_index
 
 let binder_sort (b:binder) =
@@ -649,7 +652,7 @@ let simplify_umax (#g:R.env) (#t:R.term) (#u:R.universe)
      in
      T_Sub _ _ _ _ d (ST_UnivEq _ _ _ ue)
 
-#push-options "--query_stats --ifuel 2"
+#push-options "--ifuel 2"
 
 let rec ln' (e:term) (n:int)
   : bool
