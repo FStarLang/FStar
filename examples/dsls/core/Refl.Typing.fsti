@@ -4,6 +4,7 @@ open FStar.List.Tot
 open FStar.Reflection
 module R = FStar.Reflection
 module T = FStar.Tactics
+module RTB = Refl.Typing.Builtins
 
 val inspect_pack (t:R.term_view)
   : Lemma (ensures R.(inspect_ln (pack_ln t) == t))
@@ -360,17 +361,7 @@ noeq
 type constant_typing: vconst -> term -> Type0 = 
   | CT_Unit: constant_typing C_Unit unit_ty
   | CT_True: constant_typing C_True bool_ty
-  | CT_False: constant_typing C_False bool_ty  
-
-val subtyping_token (e:env) (t0 t1:term) : Type0
-
-val check_subtyping (e:env) (t0 t1:term)
-  : FStar.Tactics.Tac (option (subtyping_token e t0 t1))
-
-val equiv_token (e:env) (t0 t1:term) : Type0
-
-val check_equiv (e:env) (t0 t1:term)
-  : FStar.Tactics.Tac (option (equiv_token e t0 t1))
+  | CT_False: constant_typing C_False bool_ty
 
 noeq
 type univ_eq : universe -> universe -> Type0 = 
@@ -419,17 +410,13 @@ and univ_leq : universe -> universe -> Type0 =
     v:universe ->
     univ_leq u (u_max u v)
 
-val typing_token (g:env) (e:term) (t:typ) : Type0
-
-val tc_term (g:env) (e:term) : T.Tac (option (t:R.typ{typing_token g e t}))
-
 noeq
 type typing : env -> term -> term -> Type0 =
   | T_Token :
     g:env ->
     e:term ->
     t:typ ->
-    squash (typing_token g e t) ->
+    squash (RTB.typing_token g e t) ->
     typing g e t
 
   | T_Var : 
@@ -551,7 +538,7 @@ and sub_typing : env -> term -> term -> Type0 =
       g:env ->
       t0:term ->
       t1:term ->      
-      subtyping_token g t0 t1 ->
+      squash (RTB.subtyping_token g t0 t1) ->
       sub_typing g t0 t1
 
   | ST_UnivEq:
@@ -587,7 +574,7 @@ and equiv : env -> term -> term -> Type0 =
       g:env ->
       t0:term ->
       t1:term ->
-      equiv_token g t0 t1 ->
+      squash (RTB.equiv_token g t0 t1) ->
       equiv g t0 t1
       
 
@@ -609,10 +596,10 @@ val subtyping_token_renaming (g:env)
                              (y:var { None? (lookup_bvar (extend_env_l g (bs1@bs0)) y) })
                              (t:term)
                              (t0 t1:term)
-                             (d:subtyping_token (extend_env_l g (bs1@(x,t)::bs0)) t0 t1)
-  : subtyping_token (extend_env_l g (rename_bindings bs1 x y@(y,t)::bs0))
-                    (rename t0 x y)
-                    (rename t1 x y)
+                             (d:RTB.subtyping_token (extend_env_l g (bs1@(x,t)::bs0)) t0 t1)
+  : RTB.subtyping_token (extend_env_l g (rename_bindings bs1 x y@(y,t)::bs0))
+                        (rename t0 x y)
+                        (rename t1 x y)
 
 val subtyping_token_weakening (g:env)
                               (bs0:bindings)
@@ -620,8 +607,8 @@ val subtyping_token_weakening (g:env)
                               (x:var { None? (lookup_bvar (extend_env_l g (bs1@bs0)) x) })
                               (t:term)
                               (t0 t1:term)
-                             (d:subtyping_token (extend_env_l g (bs1@bs0)) t0 t1)
-  : subtyping_token (extend_env_l g (bs1@(x,t)::bs0)) t0 t1
+                              (d:RTB.subtyping_token (extend_env_l g (bs1@bs0)) t0 t1)
+  : RTB.subtyping_token (extend_env_l g (bs1@(x,t)::bs0)) t0 t1
 
 let simplify_umax (#g:R.env) (#t:R.term) (#u:R.universe)
                   (d:typing g t (tm_type (u_max u u)))

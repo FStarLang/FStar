@@ -1,8 +1,10 @@
 module Refl.Typing
 open FStar.List.Tot
 open FStar.Reflection
+
 module R = FStar.Reflection
 module T = FStar.Tactics
+module RTB = Refl.Typing.Builtins
 
 let inspect_pack t = R.inspect_pack_inv t
   
@@ -51,18 +53,6 @@ let rename_spec (t:term) (x y:var) = admit ()
   
 let bv_index_of_make_bv (n:nat) (t:term) = ()
 
-let subtyping_token (e:env) (t0 t1:term) = unit
-
-let check_subtyping (e:env) (t0 t1:term) = magic ()
-
-let equiv_token (e:env) (t0 t1:term) = unit
-
-let check_equiv (e:env) (t0 t1:term) = magic ()
-
-type typing_token g e t = unit
-
-let tc_term g e = magic ()
-
 let subtyping_token_renaming (g:env)
                              (bs0:bindings)
                              (bs1:bindings)
@@ -70,7 +60,7 @@ let subtyping_token_renaming (g:env)
                              (y:var { None? (lookup_bvar (extend_env_l g (bs1@bs0)) y) })
                              (t:term)
                              (t0 t1:term)
-                             (d:subtyping_token (extend_env_l g (bs1@(x,t)::bs0)) t0 t1) = magic ()
+                             (d:RTB.subtyping_token (extend_env_l g (bs1@(x,t)::bs0)) t0 t1) = magic ()
 
 let subtyping_token_weakening (g:env)
                               (bs0:bindings)
@@ -78,7 +68,7 @@ let subtyping_token_weakening (g:env)
                               (x:var { None? (lookup_bvar (extend_env_l g (bs1@bs0)) x) })
                               (t:term)
                               (t0 t1:term)
-                             (d:subtyping_token (extend_env_l g (bs1@bs0)) t0 t1) = magic ()
+                             (d:RTB.subtyping_token (extend_env_l g (bs1@bs0)) t0 t1) = magic ()
 
 let well_typed_terms_are_ln (g:R.env) (e:R.term) (t:R.term) (_:typing g e t) = admit ()
 
