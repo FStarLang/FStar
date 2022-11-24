@@ -17,6 +17,7 @@ depends: [
   "pprint" {build}
   "sedlex" {build}
   "ppxlib" {>= "0.27.0"}
+  "ocaml-lsp-server" {= "1.8.3"}
   "ppx_deriving"
   "ppx_deriving_yojson"
   "process"

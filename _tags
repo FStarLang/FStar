@@ -7,7 +7,7 @@
 # 28	Wildcard pattern given as argument to a constant constructor.
 
 true: \
-  thread, -traverse, \
+  thread, -traverse, -bin-annot, \
   package(batteries), \
   package(zarith), \
   package(ppx_deriving.std), \
