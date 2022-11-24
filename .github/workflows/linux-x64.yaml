@@ -55,7 +55,7 @@ jobs:
         if: ${{ (github.event_name == 'workflow_dispatch') }}
         run: |
           echo "${{inputs.ci_ocaml_version}}" | grep '^[0-9]*\(\.[0-9]*\)\+$'
-          echo "CI_DO_OCAML_VERSION=--build-arg CI_OCAML_VERSION=${{inputs.ci_ocaml_version}}" >> $GITHUB_ENV
+          echo "CI_DO_OCAML_VERSION=--build-arg OCAML_VERSION=${{inputs.ci_ocaml_version}}" >> $GITHUB_ENV
       - name: Populate skip image tag arg
         if: ${{ (github.event_name == 'workflow_dispatch') && inputs.ci_skip_image_tag }}
         run: |
