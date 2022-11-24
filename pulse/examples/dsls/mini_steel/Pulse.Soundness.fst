@@ -480,4 +480,4 @@ let rec soundness (f:fstar_top_env)
       elab_bind_typing f g _ _ _ x _ r1_typing _ r2_typing bc t2_typing post2_typing
       
     | _ -> admit()
-  
+
