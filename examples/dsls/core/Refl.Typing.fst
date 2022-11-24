@@ -59,6 +59,10 @@ let equiv_token (e:env) (t0 t1:term) = unit
 
 let check_equiv (e:env) (t0 t1:term) = magic ()
 
+type typing_token g e t = unit
+
+let tc_term g e = magic ()
+
 let subtyping_token_renaming (g:env)
                              (bs0:bindings)
                              (bs1:bindings)

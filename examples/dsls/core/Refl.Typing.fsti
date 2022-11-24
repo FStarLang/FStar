@@ -419,8 +419,19 @@ and univ_leq : universe -> universe -> Type0 =
     v:universe ->
     univ_leq u (u_max u v)
 
+val typing_token (g:env) (e:term) (t:typ) : Type0
+
+val tc_term (g:env) (e:term) : T.Tac (option (t:R.typ & typing_token g e t))
+
 noeq
 type typing : env -> term -> term -> Type0 =
+  | T_Token :
+    g:env ->
+    e:term ->
+    t:typ ->
+    typing_token g e t ->
+    typing g e t
+
   | T_Var : 
      g:env ->
      x:bv { Some? (lookup_bvar g (bv_index x)) } ->
