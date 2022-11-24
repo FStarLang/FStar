@@ -1836,7 +1836,8 @@ let (splice :
                                           (FStar_Syntax_Syntax.Sig_let
                                              ((false, [lb]), lids));
                                         FStar_Syntax_Syntax.sigrng = rng;
-                                        FStar_Syntax_Syntax.sigquals = [];
+                                        FStar_Syntax_Syntax.sigquals =
+                                          [FStar_Syntax_Syntax.Visible_default];
                                         FStar_Syntax_Syntax.sigmeta =
                                           FStar_Syntax_Syntax.default_sigmeta;
                                         FStar_Syntax_Syntax.sigattrs = [];

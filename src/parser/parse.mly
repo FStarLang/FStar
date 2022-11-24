@@ -260,7 +260,7 @@ rawDecl:
       }
   | SPLICE LBRACK ids=separated_list(SEMICOLON, ident) RBRACK t=thunk(atomicTerm)
       { Splice (false, ids, t) }
-  | SPLICET LBRACK ids=separated_list(SEMICOLON, ident) RBRACK t=thunk(atomicTerm)
+  | SPLICET LBRACK ids=separated_list(SEMICOLON, ident) RBRACK t=atomicTerm
       { Splice (true, ids, t) }
   | EXCEPTION lid=uident t_opt=option(OF t=typ {t})
       { Exception(lid, t_opt) }

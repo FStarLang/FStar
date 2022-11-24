@@ -847,9 +847,9 @@ let splice (env:Env.env) (is_typed:bool) (lids:list Ident.lident) (tau:term) (rn
           rng in
 
         gs,
-        [{sigel = Sig_let ((false, [lb]), lids);  // false ==> non-recursive
+        [{sigel = S.Sig_let ((false, [lb]), lids);  // false ==> non-recursive
           sigrng = rng;
-          sigquals = [];
+          sigquals = [S.Visible_default];  // default visibility
           sigmeta = S.default_sigmeta;
           sigattrs = [];
           sigopts = None}]

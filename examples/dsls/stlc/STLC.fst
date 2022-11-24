@@ -558,3 +558,21 @@ let main (src:stlc_exp unit) : RT.dsl_tac_t =
     soundness_lemma [] src' src_ty g;
     elab_exp src', elab_ty src_ty
   else T.fail "Not locally nameless"
+
+(***** Tests *****)
+
+#set-options "--ugly"
+
+let stlc_id : stlc_exp unit = ELam () (EBVar 0)
+
+%splice_t[foo] (main stlc_id)
+
+#push-options "--no_smt"
+let test_id () = assert (foo () == ()) by (T.compute ())
+#pop-options
+
+let tm0 : stlc_exp unit = ELam () (ELam () (EBVar 1))
+%splice_t[bar] (main tm0)
+
+let tm1 : stlc_exp unit = EApp tm0 EUnit
+%splice_t[baz] (main tm1)
