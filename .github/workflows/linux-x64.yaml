@@ -10,6 +10,19 @@ on:
         description: Refresh hints and advance version number
         required: true
         type: boolean
+      ci_test_min_opam_deps:
+        description: Test minimal opam package dependency versions
+        required: true
+        type: boolean
+      ci_ocaml_version:
+        description: OCaml version
+        required: true
+        type: string
+        default: 4.12.0
+      ci_skip_image_tag:
+        description: Do not tag image
+        required: true
+        type: boolean
 jobs:
   build:
     runs-on: [self-hosted, linux, X64]
@@ -26,15 +39,28 @@ jobs:
         if: ${{ (github.event_name == 'workflow_dispatch') && inputs.ci_refresh_hints }}
         run: |
           echo "CI_TARGET=uregressions-ulong" >> $GITHUB_ENV
+      - name: Populate test min opam deps arg
+        if: ${{ (github.event_name == 'workflow_dispatch') && inputs.ci_test_min_opam_deps }}
+        run: |
+          echo "CI_DO_TEST_MIN_OPAM_DEPS=--build-arg CI_TEST_MIN_OPAM_DEPS=1" >> $GITHUB_ENV
+      - name: Populate ocaml version arg
+        if: ${{ (github.event_name == 'workflow_dispatch') }}
+        run: |
+          echo "${{inputs.ci_ocaml_version}}" | grep '^[0-9]*\(\.[0-9]*\)\+$'
+          echo "CI_DO_OCAML_VERSION=--build-arg CI_OCAML_VERSION=${{inputs.ci_ocaml_version}}" >> $GITHUB_ENV
+      - name: Populate skip image tag arg
+        if: ${{ (github.event_name == 'workflow_dispatch') && inputs.ci_skip_image_tag }}
+        run: |
+          echo "CI_SKIP_IMAGE_TAG=1" >> $GITHUB_ENV
       - name: Build FStar and its dependencies
         run: |
           ci_docker_image_tag=fstar:local-run-$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT
           ci_docker_builder=builder_fstar_${GITHUB_RUN_ID}_${GITHUB_RUN_ATTEMPT}
           docker buildx create --name $ci_docker_builder --driver-opt env.BUILDKIT_STEP_LOG_MAX_SIZE=500000000
           if [[ -z $CI_TARGET ]] ; then CI_TARGET=uregressions ; fi
-          docker buildx build --builder $ci_docker_builder --pull --load --secret id=DZOMO_GITHUB_TOKEN -t $ci_docker_image_tag -f .docker/standalone.Dockerfile --build-arg CI_BRANCH=$GITHUB_REF_NAME --build-arg CI_TARGET="$CI_TARGET" .
+          docker buildx build --builder $ci_docker_builder --pull --load --secret id=DZOMO_GITHUB_TOKEN -t $ci_docker_image_tag -f .docker/standalone.Dockerfile --build-arg CI_BRANCH=$GITHUB_REF_NAME --build-arg CI_TARGET="$CI_TARGET" $CI_DO_TEST_MIN_OPAM_DEPS $CI_DO_OCAML_VERSION .
           ci_docker_status=$(docker run $ci_docker_image_tag /bin/bash -c 'cat $FSTAR_HOME/status.txt' || echo false)
-          if $ci_docker_status ; then
+          if $ci_docker_status && [[ -z "$CI_SKIP_IMAGE_TAG" ]] ; then
             if ! { echo $GITHUB_REF_NAME | grep '/' ; } ; then
               docker tag $ci_docker_image_tag fstar:local-branch-$GITHUB_REF_NAME
             fi
