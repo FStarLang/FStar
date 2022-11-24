@@ -1253,13 +1253,16 @@ and (p_rawDecl : FStar_Parser_AST.decl -> FStar_Pprint.document) =
     | FStar_Parser_AST.Tycon (true, uu___, uu___1) ->
         failwith
           "Effect abbreviation is expected to be defined by an abbreviation"
-    | FStar_Parser_AST.Splice (ids, t) ->
+    | FStar_Parser_AST.Splice (is_typed, ids, t) ->
         let uu___ = str "%splice" in
         let uu___1 =
-          let uu___2 = let uu___3 = str ";" in p_list p_uident uu___3 ids in
+          let uu___2 = if is_typed then str "_t" else FStar_Pprint.empty in
           let uu___3 =
-            let uu___4 = p_term false false t in
-            FStar_Pprint.op_Hat_Hat FStar_Pprint.space uu___4 in
+            let uu___4 = let uu___5 = str ";" in p_list p_uident uu___5 ids in
+            let uu___5 =
+              let uu___6 = p_term false false t in
+              FStar_Pprint.op_Hat_Hat FStar_Pprint.space uu___6 in
+            FStar_Pprint.op_Hat_Hat uu___4 uu___5 in
           FStar_Pprint.op_Hat_Hat uu___2 uu___3 in
         FStar_Pprint.op_Hat_Hat uu___ uu___1
 and (p_pragma : FStar_Parser_AST.pragma -> FStar_Pprint.document) =

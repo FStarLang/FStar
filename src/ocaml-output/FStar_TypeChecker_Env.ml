@@ -315,8 +315,11 @@ and env =
     ;
   splice:
     env ->
-      FStar_Compiler_Range.range ->
-        FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.sigelt Prims.list
+      Prims.bool ->
+        FStar_Ident.lident Prims.list ->
+          FStar_Syntax_Syntax.term ->
+            FStar_Compiler_Range.range ->
+              FStar_Syntax_Syntax.sigelt Prims.list
     ;
   mpreprocess:
     env ->
@@ -1092,8 +1095,11 @@ let (__proj__Mkenv__item__try_solve_implicits_hook :
 let (__proj__Mkenv__item__splice :
   env ->
     env ->
-      FStar_Compiler_Range.range ->
-        FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.sigelt Prims.list)
+      Prims.bool ->
+        FStar_Ident.lident Prims.list ->
+          FStar_Syntax_Syntax.term ->
+            FStar_Compiler_Range.range ->
+              FStar_Syntax_Syntax.sigelt Prims.list)
   =
   fun projectee ->
     match projectee with
@@ -1833,8 +1839,11 @@ let (initial_env :
                                    failwith "no implicit hook available");
                           splice =
                             (fun e ->
-                               fun rng ->
-                                 fun tau -> failwith "no splicer available");
+                               fun is_typed ->
+                                 fun lids ->
+                                   fun tau ->
+                                     fun range ->
+                                       failwith "no splicer available");
                           mpreprocess =
                             (fun e ->
                                fun tau ->

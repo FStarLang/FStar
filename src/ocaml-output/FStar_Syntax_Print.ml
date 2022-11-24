@@ -1714,14 +1714,15 @@ let rec (sigelt_to_string : FStar_Syntax_Syntax.sigelt -> Prims.string) =
              let uu___4 = comp_to_string c in
              FStar_Compiler_Util.format3 "effect %s %s = %s" uu___2 uu___3
                uu___4)
-      | FStar_Syntax_Syntax.Sig_splice (lids, t) ->
+      | FStar_Syntax_Syntax.Sig_splice (is_typed, lids, t) ->
           let uu___ =
             let uu___1 =
               FStar_Compiler_List.map FStar_Ident.string_of_lid lids in
             FStar_Compiler_Effect.op_Less_Bar (FStar_String.concat "; ")
               uu___1 in
           let uu___1 = term_to_string t in
-          FStar_Compiler_Util.format2 "splice[%s] (%s)" uu___ uu___1
+          FStar_Compiler_Util.format3 "splice%s[%s] (%s)"
+            (if is_typed then "_t" else "") uu___ uu___1
       | FStar_Syntax_Syntax.Sig_polymonadic_bind (m, n, p, t, ty, k) ->
           let uu___ = FStar_Ident.string_of_lid m in
           let uu___1 = FStar_Ident.string_of_lid n in
@@ -1836,12 +1837,13 @@ let rec (sigelt_to_string_short : FStar_Syntax_Syntax.sigelt -> Prims.string)
         let uu___1 = binders_to_string " " tps in
         let uu___2 = comp_to_string c in
         FStar_Compiler_Util.format3 "effect %s %s = %s" uu___ uu___1 uu___2
-    | FStar_Syntax_Syntax.Sig_splice (lids, t) ->
+    | FStar_Syntax_Syntax.Sig_splice (is_typed, lids, t) ->
         let uu___ =
           let uu___1 = FStar_Compiler_List.map FStar_Ident.string_of_lid lids in
           FStar_Compiler_Effect.op_Less_Bar (FStar_String.concat "; ") uu___1 in
         let uu___1 = term_to_string t in
-        FStar_Compiler_Util.format3 "%splice[%s] (%s)" "%s" uu___ uu___1
+        FStar_Compiler_Util.format4 "%splice%s[%s] (%s)"
+          (if is_typed then "_t" else "") "%s" uu___ uu___1
     | FStar_Syntax_Syntax.Sig_polymonadic_bind (m, n, p, t, ty, uu___) ->
         let uu___1 = FStar_Ident.string_of_lid m in
         let uu___2 = FStar_Ident.string_of_lid n in

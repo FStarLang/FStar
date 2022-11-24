@@ -1489,7 +1489,7 @@ type sigelt' =
   | Sig_effect_abbrev of (FStar_Ident.lident * univ_names * binders * comp *
   cflag Prims.list) 
   | Sig_pragma of pragma 
-  | Sig_splice of (FStar_Ident.lident Prims.list * term) 
+  | Sig_splice of (Prims.bool * FStar_Ident.lident Prims.list * term) 
   | Sig_polymonadic_bind of (FStar_Ident.lident * FStar_Ident.lident *
   FStar_Ident.lident * tscheme * tscheme * indexed_effect_combinator_kind
   FStar_Pervasives_Native.option) 
@@ -1570,7 +1570,7 @@ let (uu___is_Sig_splice : sigelt' -> Prims.bool) =
   fun projectee ->
     match projectee with | Sig_splice _0 -> true | uu___ -> false
 let (__proj__Sig_splice__item___0 :
-  sigelt' -> (FStar_Ident.lident Prims.list * term)) =
+  sigelt' -> (Prims.bool * FStar_Ident.lident Prims.list * term)) =
   fun projectee -> match projectee with | Sig_splice _0 -> _0
 let (uu___is_Sig_polymonadic_bind : sigelt' -> Prims.bool) =
   fun projectee ->
