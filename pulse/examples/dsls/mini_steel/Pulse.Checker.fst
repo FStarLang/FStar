@@ -13,8 +13,8 @@ let tc_meta_callback (f:R.env) (e:R.term)
   = let topt = RT.tc_term f e in
     match topt with
     | None -> None
-    | Some (| t, token |) ->
-      Some (| t, RT.T_Token _ _ _ token |)
+    | Some t ->
+      Some (| t, RT.T_Token _ _ _ (FStar.Squash.get_proof _) |)
 
 assume
 val readback_ty (t:R.term)
