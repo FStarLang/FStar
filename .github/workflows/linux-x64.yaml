@@ -14,6 +14,10 @@ on:
         description: Test minimal opam package dependency versions
         required: true
         type: boolean
+      ci_no_karamel:
+        description: Disable Karamel extraction tests
+        required: true
+        type: boolean
       ci_ocaml_version:
         description: OCaml version
         required: true
@@ -43,6 +47,10 @@ jobs:
         if: ${{ (github.event_name == 'workflow_dispatch') && inputs.ci_test_min_opam_deps }}
         run: |
           echo "CI_DO_TEST_MIN_OPAM_DEPS=--build-arg CI_TEST_MIN_OPAM_DEPS=1" >> $GITHUB_ENV
+      - name: Populate no karamel arg
+        if: ${{ (github.event_name == 'workflow_dispatch') && inputs.ci_no_karamel }}
+        run: |
+          echo "CI_DO_NO_KARAMEL=--build-arg CI_NO_KARAMEL=1" >> $GITHUB_ENV
       - name: Populate ocaml version arg
         if: ${{ (github.event_name == 'workflow_dispatch') }}
         run: |
@@ -58,7 +66,7 @@ jobs:
           ci_docker_builder=builder_fstar_${GITHUB_RUN_ID}_${GITHUB_RUN_ATTEMPT}
           docker buildx create --name $ci_docker_builder --driver-opt env.BUILDKIT_STEP_LOG_MAX_SIZE=500000000
           if [[ -z $CI_TARGET ]] ; then CI_TARGET=uregressions ; fi
-          docker buildx build --builder $ci_docker_builder --pull --load --secret id=DZOMO_GITHUB_TOKEN -t $ci_docker_image_tag -f .docker/standalone.Dockerfile --build-arg CI_BRANCH=$GITHUB_REF_NAME --build-arg CI_TARGET="$CI_TARGET" $CI_DO_TEST_MIN_OPAM_DEPS $CI_DO_OCAML_VERSION .
+          docker buildx build --builder $ci_docker_builder --pull --load --secret id=DZOMO_GITHUB_TOKEN -t $ci_docker_image_tag -f .docker/standalone.Dockerfile --build-arg CI_BRANCH=$GITHUB_REF_NAME --build-arg CI_TARGET="$CI_TARGET" $CI_DO_TEST_MIN_OPAM_DEPS $CI_DO_OCAML_VERSION $CI_DO_NO_KARAMEL .
           ci_docker_status=$(docker run $ci_docker_image_tag /bin/bash -c 'cat $FSTAR_HOME/status.txt' || echo false)
           if $ci_docker_status && [[ -z "$CI_SKIP_IMAGE_TAG" ]] ; then
             if ! { echo $GITHUB_REF_NAME | grep '/' ; } ; then
