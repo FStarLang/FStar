@@ -421,7 +421,7 @@ and univ_leq : universe -> universe -> Type0 =
 
 val typing_token (g:env) (e:term) (t:typ) : Type0
 
-val tc_term (g:env) (e:term) : T.Tac (option (t:R.typ & typing_token g e t))
+val tc_term (g:env) (e:term) : T.Tac (option (t:R.typ{typing_token g e t}))
 
 noeq
 type typing : env -> term -> term -> Type0 =
@@ -429,7 +429,7 @@ type typing : env -> term -> term -> Type0 =
     g:env ->
     e:term ->
     t:typ ->
-    typing_token g e t ->
+    squash (typing_token g e t) ->
     typing g e t
 
   | T_Var : 
