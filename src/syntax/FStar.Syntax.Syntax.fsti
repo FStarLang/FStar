@@ -249,7 +249,8 @@ and unresolved_constructor = {
   uc_fields : list lident  // The fields names as written in the source
 }
 and lbname = either bv fv
-and letbindings = bool * list letbinding       (* let recs may have more than one element; top-level lets have lidents *)
+and letbindings = bool * list letbinding        (* let recs may have more than one element; top-level lets have lidents *)
+                                                (* boolean true indicates rec *)
 and subst_ts = list (list subst_elt)            (* A composition of parallel substitutions *)
              * maybe_set_use_range              (* and a maybe range update, Some r, to set the use_range of subterms to r.def_range *)
 and subst_elt =
@@ -558,7 +559,7 @@ type sigelt' =
                           * comp
                           * list cflag
   | Sig_pragma            of pragma
-  | Sig_splice            of list lident * term
+  | Sig_splice            of bool * list lident * term    // bool true indicates a typed splice that does not re-typecheck the generated sigelt
 
   | Sig_polymonadic_bind  of lident * lident * lident * tscheme * tscheme * option indexed_effect_combinator_kind  //(m, n) |> p, the polymonadic term, and its type
   | Sig_polymonadic_subcomp of lident * lident * tscheme * tscheme * option indexed_effect_combinator_kind  //m <: n, the polymonadic subcomp term, and its type

@@ -809,31 +809,25 @@ let tc_decl' env0 se: list sigelt * list sigelt * Env.env =
     let uvs, t = tc_assume env (uvs, t) se.sigrng in
     [ { se with sigel = Sig_assume (lid, uvs, t) }], [], env0
 
-  | Sig_splice (lids, t) ->
+  | Sig_splice (is_typed, lids, t) ->
     if Options.debug_any () then
-        BU.print2 "%s: Found splice of (%s)\n" (string_of_lid env.curmodule) (Print.term_to_string t);
+      BU.print3 "%s: Found splice of (%s) with is_typed: %s\n"
+        (string_of_lid env.curmodule)
+        (Print.term_to_string t)
+        (string_of_bool is_typed);
 
-    // Check the tactic
-    let t, _, g = tc_tactic t_unit S.t_decls env t in
-    Rel.force_trivial_guard env g;
+    // env.splice will check the tactic
 
-    let ses = env.splice env se.sigrng t in
-    let lids' = List.collect U.lids_of_sigelt ses in
-    List.iter (fun lid ->
-        match List.tryFind (Ident.lid_equals lid) lids' with
-        (* If env.nosynth is on, nothing will be generated, so don't raise an error
-         * so flycheck does spuriously not mark the line red *)
-        | None when not env.nosynth ->
-            raise_error (Errors.Fatal_SplicedUndef, BU.format2 "Splice declared the name %s but it was not defined.\nThose defined were: %s" (string_of_lid lid) (String.concat ", " <| List.map string_of_lid lids')) r
-        | _ -> ()
-    ) lids;
+    let ses = env.splice env is_typed lids t se.sigrng in
     let dsenv = List.fold_left DsEnv.push_sigelt_force env.dsenv ses in
     let env = { env with dsenv = dsenv } in
 
     if Env.debug env Options.Low then
         BU.print1 "Splice returned sigelts {\n%s\n}\n" (String.concat "\n" <| List.map Print.sigelt_to_string ses);
 
-    [], ses, env
+    if is_typed
+    then ses, [], env
+    else [], ses, env
 
   | Sig_let(lbs, lids) ->
     Profiling.profile

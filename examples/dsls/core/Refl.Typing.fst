@@ -2,6 +2,7 @@ module Refl.Typing
 open FStar.List.Tot
 open FStar.Reflection
 module R = FStar.Reflection
+module T = FStar.Tactics
 
 let inspect_pack (t:R.term_view)
   : Lemma (ensures R.(inspect_ln (pack_ln t) == t))
@@ -1077,3 +1078,26 @@ and open_close_inverse_match_returns (i:nat)
     in
     ()
 
+
+
+//
+// Type of the top-level tactic that would splice-in the definitions
+//
+
+type fstar_env = g:R.env {
+  lookup_fvar g unit_fv == Some (tm_type u_zero)
+}
+
+type fstar_top_env = g:fstar_env {
+  forall x. None? (lookup_bvar g x )
+}
+
+//
+// This doesn't allow for universe polymorphic definitions
+//
+// May be we can change it to:
+//
+// g:fstar_top_env -> T.tac ((us, e, t):(univ_names & term & typ){typing (push g us) e t})
+//
+
+type dsl_tac_t = g:fstar_top_env -> T.Tac (r:(R.term & R.typ){typing g (fst r) (snd r)})

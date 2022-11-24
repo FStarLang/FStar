@@ -43,6 +43,7 @@ module N       = FStar.TypeChecker.Normalize
 module Env     = FStar.TypeChecker.Env
 module TcUtil  = FStar.TypeChecker.Util
 module TcRel   = FStar.TypeChecker.Rel
+module TcTerm  = FStar.TypeChecker.TcTerm
 module RE      = FStar.Reflection.Embeddings
 
 let run_tactic_on_typ
@@ -53,7 +54,8 @@ let run_tactic_on_typ
                     =
     let rng = range_of_rng (use_range rng_goal) (use_range rng_tac) in
     let ps, w = proofstate_of_goal_ty rng env typ in
-    let gs, _res = run_tactic_on_ps rng_tac rng_goal false e_unit () e_unit tactic ps in
+    let tactic_already_typed = false in
+    let gs, _res = run_tactic_on_ps rng_tac rng_goal false e_unit () e_unit tactic tactic_already_typed ps in
     gs, w
 
 let run_tactic_on_all_implicits
@@ -62,6 +64,7 @@ let run_tactic_on_all_implicits
     : list goal // remaining goals
     =
     let ps, _ = proofstate_of_all_implicits rng_goal env imps in
+    let tactic_already_typed = false in
     let goals, () =
       run_tactic_on_ps
         (Env.get_range env)
@@ -71,6 +74,7 @@ let run_tactic_on_all_implicits
         ()
         e_unit
         tactic
+        tactic_already_typed
         ps
     in
     goals
@@ -808,24 +812,75 @@ let handle_smt_goal env goal =
     (* No such tactic was available in the current context *)
     | None -> [env, goal]
 
-let splice (env:Env.env) (rng:Range.range) (tau:term) : list sigelt =
+let splice (env:Env.env) (is_typed:bool) (lids:list Ident.lident) (tau:term) (rng:Range.range) : list sigelt =
   Errors.with_ctx "While running splice with a tactic" (fun () ->
     if env.nosynth then [] else begin
     tacdbg := Env.debug env (O.Other "Tac");
 
-    let typ = S.t_decls in // running with goal type FStar.Reflection.Data.decls
+    let tau, _, g =
+      if is_typed
+      then TcTerm.tc_check_tot_or_gtot_term env tau U.t_dsl_tac_typ ""
+      else TcTerm.tc_tactic t_unit S.t_decls env tau in
+
+    TcRel.force_trivial_guard env g;
+
     let ps = proofstate_of_goals tau.pos env [] [] in
-    let gs, sigelts = run_tactic_on_ps tau.pos tau.pos false
-                                  e_unit ()
-                                  (e_list RE.e_sigelt) tau ps in
+    let tactic_already_typed = true in
+    let gs, sigelts =
+      if is_typed
+      then begin
+        let gs, (e, t) = run_tactic_on_ps tau.pos tau.pos false
+          RE.e_env
+          {env with gamma=[]}
+          (e_tuple2 RE.e_term RE.e_term)
+          tau
+          tactic_already_typed
+          ps in
+
+        let lb = U.mk_letbinding
+          (Inr (S.lid_as_fv (List.hd lids) (Delta_constant_at_level 1) None))
+          []  // no universe polymorphism yet
+          t
+          PC.effect_Tot_lid  // only Tot top-level effect so far
+          e
+          []
+          rng in
+
+        gs,
+        [{sigel = Sig_let ((false, [lb]), lids);  // false ==> non-recursive
+          sigrng = rng;
+          sigquals = [];
+          sigmeta = S.default_sigmeta;
+          sigattrs = [];
+          sigopts = None}]
+      end
+      else run_tactic_on_ps tau.pos tau.pos false
+             e_unit ()
+             (e_list RE.e_sigelt) tau tactic_already_typed ps in
 
     // Check that all goals left are irrelevant. We don't need to check their
     // validity, as we will typecheck the witness independently.
+
     // TODO: Do not retypecheck and do just like `synth`. But that's hard.. what to do for inductives,
     // for instance? We would need to reflect *all* of F* static semantics into Meta-F*, and
     // that is a ton of work.
+
     if List.existsML (fun g -> not (Option.isSome (getprop (goal_env g) (goal_type g)))) gs
-        then Err.raise_error (Err.Fatal_OpenGoalsInSynthesis, "splice left open goals") typ.pos;
+        then Err.raise_error (Err.Fatal_OpenGoalsInSynthesis, "splice left open goals") rng;
+
+    let lids' = List.collect U.lids_of_sigelt sigelts in
+    List.iter (fun lid ->
+      match List.tryFind (Ident.lid_equals lid) lids' with
+      (* If env.nosynth is on, nothing will be generated, so don't raise an error
+       * so flycheck does spuriously not mark the line red *)
+      | None when not env.nosynth ->
+        Err.raise_error
+          (Errors.Fatal_SplicedUndef,
+           BU.format2 "Splice declared the name %s but it was not defined.\nThose defined were: %s"
+             (Ident.string_of_lid lid)
+             (String.concat ", " <| List.map Ident.string_of_lid lids')) rng
+      | _ -> ()
+    ) lids;
 
     if !tacdbg then
       BU.print1 "splice: got decls = %s\n"
@@ -851,7 +906,8 @@ let mpreprocess (env:Env.env) (tau:term) (tm:term) : term =
     if env.nosynth then tm else begin
     tacdbg := Env.debug env (O.Other "Tac");
     let ps = proofstate_of_goals tm.pos env [] [] in
-    let gs, tm = run_tactic_on_ps tau.pos tm.pos false RE.e_term tm RE.e_term tau ps in
+    let tactic_already_typed = false in
+    let gs, tm = run_tactic_on_ps tau.pos tm.pos false RE.e_term tm RE.e_term tau tactic_already_typed ps in
     tm
     end
   )

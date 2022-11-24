@@ -3583,7 +3583,8 @@ and desugar_decl_noattrs env (d:decl) : (env_t * sigelts) =
               formals
           in
           let meths = List.filter (fun x -> not (has_no_method_attr x)) meths in
-          [{ sigel = Sig_splice(meths , mkclass lid);
+          let is_typed = false in
+          [{ sigel = Sig_splice(is_typed, meths , mkclass lid);
              sigquals = [];
              sigrng = d.drange;
              sigmeta = default_sigmeta;
@@ -3906,9 +3907,9 @@ and desugar_decl_noattrs env (d:decl) : (env_t * sigelts) =
       sigattrs = [];
       sigopts = None }]
 
-  | Splice (ids, t) ->
+  | Splice (is_typed, ids, t) ->
     let t = desugar_term env t in
-    let se = { sigel = Sig_splice(List.map (qualify env) ids, t);
+    let se = { sigel = Sig_splice(is_typed, List.map (qualify env) ids, t);
                sigquals = [];
                sigrng = d.drange;
                sigmeta = default_sigmeta;

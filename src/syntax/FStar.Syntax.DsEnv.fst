@@ -544,7 +544,7 @@ let try_lookup_name any_val exclude_interf env (lid:lident) : option foundname =
             else None
           | Sig_new_effect(ne) -> Some (Eff_name(se, set_lid_range ne.mname (range_of_lid source_lid)))
           | Sig_effect_abbrev _ ->   Some (Eff_name(se, source_lid))
-          | Sig_splice (lids, t) ->
+          | Sig_splice (_, lids, t) ->
                 // TODO: This depth is probably wrong
                 Some (Term_name (S.fvar source_lid (Delta_constant_at_level 1) None, [])) //NS delta: wrong
           | _ -> None

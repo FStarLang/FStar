@@ -225,7 +225,7 @@ type decl' =
   | Polymonadic_subcomp of lid * lid * term
   | Pragma of pragma
   | Assume of ident * term
-  | Splice of list ident * term
+  | Splice of bool * list ident * term  (* bool is true for a typed splice *)
 
 and decl = {
   d:decl';
@@ -931,7 +931,10 @@ let decl_to_string (d:decl) = match d.d with
   | Polymonadic_subcomp (l1, l2, _) ->
       Util.format2 "polymonadic_subcomp %s <: %s"
                     (string_of_lid l1) (string_of_lid l2)
-  | Splice (ids, t) -> "splice[" ^ (String.concat ";" <| List.map (fun i -> (string_of_id i)) ids) ^ "] (" ^ term_to_string t ^ ")"
+  | Splice (is_typed, ids, t) ->
+    "splice" ^ (if is_typed then "_t" else "")
+             ^ "["
+             ^ (String.concat ";" <| List.map (fun i -> (string_of_id i)) ids) ^ "] (" ^ term_to_string t ^ ")"
   | SubEffect _ -> "sub_effect"
   | Pragma _ -> "pragma"
 

@@ -436,16 +436,6 @@ let elab_open_commute (e:s_exp) (x:var)
   = elab_open_commute' e x 0;
     RT.open_term_spec (elab_exp e) x
 
-let fstar_env =
-  g:R.env { 
-    RT.lookup_fvar g RT.unit_fv == Some (RT.tm_type RT.u_zero)
-  }
-
-let fstar_top_env =
-  g:fstar_env { 
-    forall x. None? (RT.lookup_bvar g x )
-  }
-
 let rec extend_env_l_lookup_fvar (g:R.env) (sg:stlc_env) (fv:R.fv)
   : Lemma 
     (ensures
@@ -456,7 +446,7 @@ let rec extend_env_l_lookup_fvar (g:R.env) (sg:stlc_env) (fv:R.fv)
     | [] -> ()
     | hd::tl -> extend_env_l_lookup_fvar g tl fv
    
-let rec elab_ty_soundness (g:fstar_top_env)
+let rec elab_ty_soundness (g:RT.fstar_top_env)
                           (sg:stlc_env)
                           (t:stlc_ty)
   : GTot (RT.typing (extend_env_l g sg) (elab_ty t) (RT.tm_type RT.u_zero))
@@ -484,7 +474,7 @@ let rec soundness (#sg:stlc_env)
                   (#se:s_exp)
                   (#st:stlc_ty)
                   (dd:stlc_typing sg se st)
-                  (g:fstar_top_env)
+                  (g:RT.fstar_top_env)
   : GTot (RT.typing (extend_env_l g sg)
                     (elab_exp se)
                     (elab_ty st))
@@ -549,7 +539,7 @@ let rec soundness (#sg:stlc_env)
 let soundness_lemma (sg:stlc_env) 
                     (se:s_exp)
                     (st:stlc_ty)
-                    (g:fstar_top_env)
+                    (g:RT.fstar_top_env)
   : Lemma
     (requires stlc_typing sg se st)
     (ensures  RT.typing (extend_env_l g sg)
@@ -560,12 +550,11 @@ let soundness_lemma (sg:stlc_env)
       ()
       (fun dd -> FStar.Squash.return_squash (soundness dd g))
 
-let main (g:fstar_top_env)
-         (src:stlc_exp unit)
-  : T.Tac (e:R.term & t:R.term { RT.typing g e t })
-  = if ln src
-    then 
-      let (| src', src_ty |) = infer_and_check g src in
-      soundness_lemma [] src' src_ty g;
-      (| elab_exp src', elab_ty src_ty |)
-    else T.fail "Not locally nameless"
+let main (src:stlc_exp unit) : RT.dsl_tac_t =
+  fun g ->
+  if ln src
+  then
+    let (| src', src_ty |) = infer_and_check g src in
+    soundness_lemma [] src' src_ty g;
+    elab_exp src', elab_ty src_ty
+  else T.fail "Not locally nameless"

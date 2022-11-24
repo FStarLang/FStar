@@ -289,20 +289,8 @@ let as_requires    = pconst "as_requires"
 let as_ensures     = pconst "as_ensures"
 let decreases_lid  = pconst "decreases"
 
-let inspect        = p2l ["FStar"; "Tactics"; "Builtins"; "inspect"]
-let pack           = p2l ["FStar"; "Tactics"; "Builtins"; "pack"]
-let binder_to_term = p2l ["FStar"; "Tactics"; "Derived"; "binder_to_term"]
-
 let reveal = p2l ["FStar"; "Ghost"; "reveal"]
 let hide   = p2l ["FStar"; "Ghost"; "hide"]
-
-let term_lid       = p2l ["FStar"; "Reflection"; "Types"; "term"]
-let term_view_lid  = p2l ["FStar"; "Reflection"; "Data"; "term_view"]
-
-let decls_lid      = p2l ["FStar"; "Reflection"; "Data"; "decls"]
-
-let ctx_uvar_and_subst_lid = p2l ["FStar"; "Reflection"; "Types"; "ctx_uvar_and_subst"]
-let universe_uvar_lid      = p2l ["FStar"; "Reflection"; "Types"; "universe_uvar"]
 
 
 let range_lid      = pconst "range"
@@ -358,10 +346,6 @@ let tcdecltime_attr = psconst "tcdecltime"
 let noextract_to_attr = psconst "noextract_to"
 let unifier_hint_injective_lid = psconst "unifier_hint_injective"
 let normalize_for_extraction_lid = psconst "normalize_for_extraction"
-let postprocess_with = p2l ["FStar"; "Tactics"; "Effect"; "postprocess_with"]
-let preprocess_with = p2l ["FStar"; "Tactics"; "Effect"; "preprocess_with"]
-let postprocess_extr_with = p2l ["FStar"; "Tactics"; "Effect"; "postprocess_for_extraction_with"]
-let check_with_lid = lid_of_path (["FStar"; "Reflection"; "Builtins"; "check_with"]) FStar.Compiler.Range.dummyRange
 let commute_nested_matches_lid = psconst "commute_nested_matches"
 let remove_unused_type_parameters_lid = psconst "remove_unused_type_parameters"
 let ite_soundness_by_attr = psconst "ite_soundness_by"
@@ -471,6 +455,10 @@ let is_name (lid:lident) =
   U.is_upper c
 
 (* tactic constants *)
+let inspect        = p2l ["FStar"; "Tactics"; "Builtins"; "inspect"]
+let pack           = p2l ["FStar"; "Tactics"; "Builtins"; "pack"]
+let binder_to_term = p2l ["FStar"; "Tactics"; "Derived"; "binder_to_term"]
+
 let fstar_tactics_lid' s : lid = FStar.Ident.lid_of_path (["FStar"; "Tactics"]@s) FStar.Compiler.Range.dummyRange
 let fstar_tactics_lid  s = fstar_tactics_lid' [s]
 let tac_lid = fstar_tactics_lid' ["Effect"; "tac"]
@@ -495,6 +483,19 @@ let binders_lid = lid_of_path (["FStar"; "Reflection"; "Types"; "binders"]) FSta
 let bv_lid = lid_of_path (["FStar"; "Reflection"; "Types"; "bv"]) FStar.Compiler.Range.dummyRange
 let fv_lid = lid_of_path (["FStar"; "Reflection"; "Types"; "fv"]) FStar.Compiler.Range.dummyRange
 let norm_step_lid = psconst "norm_step"
+let postprocess_with = p2l ["FStar"; "Tactics"; "Effect"; "postprocess_with"]
+let preprocess_with = p2l ["FStar"; "Tactics"; "Effect"; "preprocess_with"]
+let postprocess_extr_with = p2l ["FStar"; "Tactics"; "Effect"; "postprocess_for_extraction_with"]
+let term_lid       = p2l ["FStar"; "Reflection"; "Types"; "term"]
+let term_view_lid  = p2l ["FStar"; "Reflection"; "Data"; "term_view"]
+let decls_lid      = p2l ["FStar"; "Reflection"; "Data"; "decls"]
+let ctx_uvar_and_subst_lid = p2l ["FStar"; "Reflection"; "Types"; "ctx_uvar_and_subst"]
+let universe_uvar_lid      = p2l ["FStar"; "Reflection"; "Types"; "universe_uvar"]
+let check_with_lid = lid_of_path (["FStar"; "Reflection"; "Builtins"; "check_with"]) FStar.Compiler.Range.dummyRange
+
+// meta dsl constants
+let dsl_tac_typ_lid = lid_of_path ["Refl"; "Typing"; "dsl_tac_t"] FStar.Compiler.Range.dummyRange
+
 
 (* Calculational proofs, from FStar.Calc *)
 let calc_lid i : lid = lid_of_path ["FStar"; "Calc"; i] FStar.Compiler.Range.dummyRange

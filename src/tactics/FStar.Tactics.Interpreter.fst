@@ -566,17 +566,25 @@ let run_tactic_on_ps'
   (arg : 'a)
   (e_res : embedding 'b)
   (tactic:term)
+  (tactic_already_typed:bool)
   (ps:proofstate)
   : list goal // remaining goals
   * 'b // return value
   = let env = ps.main_context in
     if !tacdbg then
-        BU.print1 "Typechecking tactic: (%s) {\n" (Print.term_to_string tactic);
+        BU.print2 "Typechecking tactic: (%s) (already_typed: %s) {\n"
+          (Print.term_to_string tactic)
+          (string_of_bool tactic_already_typed);
     
     (* Do NOT use the returned tactic, the typechecker is not idempotent and
      * will mess up the monadic lifts. We're just making sure it's well-typed
      * so it won't get stuck. c.f #1307 *)
-    let _, _, g = TcTerm.tc_tactic (type_of e_arg) (type_of e_res) env tactic in
+    let g =
+      if tactic_already_typed
+      then Env.trivial_guard
+      else let _, _, g = TcTerm.tc_tactic (type_of e_arg) (type_of e_res) env tactic in
+           g in
+
     if !tacdbg then
         BU.print_string "}\n";
 
@@ -671,8 +679,9 @@ let run_tactic_on_ps
           (arg : 'a)
           (e_res : embedding 'b)
           (tactic:term)
+          (tactic_already_typed:bool)
           (ps:proofstate) =
     Profiling.profile
-      (fun () -> run_tactic_on_ps' rng_call rng_goal background e_arg arg e_res tactic ps)
+      (fun () -> run_tactic_on_ps' rng_call rng_goal background e_arg arg e_res tactic tactic_already_typed ps)
       (Some (Ident.string_of_lid (Env.current_module ps.main_context)))
       "FStar.Tactics.Interpreter.run_tactic_on_ps"
