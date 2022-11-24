@@ -53,13 +53,29 @@ let rec pigeonhole (#n: pos) (s: S.seq (under n)) =
                                    (fun i -> let k = S.index s (i+1) in
                                           if k<k0 then k else k-1))
               in (i1+1, i2+1)
+ 
+[@@"opaque_to_smt"]
+let is_reflexive #a r  = forall (x:a).     x `r` x
+
+[@@"opaque_to_smt"]
+let is_symmetric #a r  = forall (x y:a).   x `r` y == y `r` x
+
+[@@"opaque_to_smt"]
+let is_transitive #a r = forall (x y z:a). x `r` y /\ y `r` z ==> x `r` z 
+
+let is_reflexive_intro #a r = reveal_opaque (`%is_reflexive) (is_reflexive #a)
+
+let is_symmetric_intro #a r = reveal_opaque (`%is_reflexive) (is_reflexive #a)
+
+let is_transitive_intro #a r = reveal_opaque (`%is_reflexive) (is_reflexive #a)
 
 let refl_lemma #a _ _      = reveal_opaque (`%is_reflexive) (is_reflexive #a)
+
+let symm_lemma #a _ _ _    = reveal_opaque (`%is_symmetric) (is_symmetric #a)
 
 let trans_lemma #a _ _ _ _ = reveal_opaque (`%is_transitive) (is_transitive #a);
                              reveal_opaque (`%is_symmetric) (is_symmetric #a)
                              
-let symm_lemma #a _ _ _    = reveal_opaque (`%is_symmetric) (is_symmetric #a)
 
 let contains_eq_means_nonempty #a (eq:equivalence_relation a) (s: S.seq a) (x:a)
   : Lemma (requires contains_eq eq s x) 

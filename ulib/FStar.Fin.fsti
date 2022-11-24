@@ -83,14 +83,20 @@ type binary_relation (a: Type) = a -> a -> bool
 (** For performance reasons, forall definitions are best kept hidden from SMT.
     Use reveal_opaque when you really need it. Or use refl/trans/symm lemmas
     below to keep the context clean. *)
-    
-[@@"opaque_to_smt"]
-let is_reflexive  (#a:Type) (r: binary_relation a) = forall (x:a).     x `r` x
-[@@"opaque_to_smt"]
-let is_symmetric  (#a:Type) (r: binary_relation a) = forall (x y:a).   x `r` y == y `r` x
-[@@"opaque_to_smt"]
-let is_transitive (#a:Type) (r: binary_relation a) = forall (x y z:a). x `r` y /\ y `r` z ==> x `r` z 
 
+val is_reflexive (#a:Type) (r: binary_relation a) : Type0
+val is_symmetric (#a:Type) (r: binary_relation a) : Type0
+val is_transitive (#a:Type) (r: binary_relation a) : Type0
+
+val is_reflexive_intro (#a:Type) (r: binary_relation a)
+  : Lemma (requires forall (x:a). r x x) (ensures is_reflexive r)
+  
+val is_symmetric_intro (#a:Type) (r: binary_relation a)
+  : Lemma (requires forall (x:a). r x x) (ensures is_reflexive r)
+ 
+val is_transitive_intro (#a:Type) (r: binary_relation a)
+  : Lemma (requires forall (x:a). r x x) (ensures is_reflexive r)
+   
 (** Textbook stuff on equivalence relations *)
 type equivalence_relation (a: Type) 
   = r:binary_relation a { is_reflexive r /\ is_symmetric r /\ is_transitive r }
@@ -98,12 +104,13 @@ type equivalence_relation (a: Type)
 val refl_lemma (#a:Type) (eq: equivalence_relation a) (x:a) 
   : Lemma (eq x x)
    
+val symm_lemma (#a:Type) (eq:equivalence_relation a) (x y:a) 
+  : Lemma (eq x y == eq y x)  
+  
 val trans_lemma (#a:Type) (eq: equivalence_relation a) (x y z:a)
   : Lemma (requires (eq x y \/ eq y x) /\ (eq y z \/ eq z y))  
           (ensures (x `eq` z) && (z `eq` x))    
- 
-val symm_lemma (#a:Type) (eq:equivalence_relation a) (x y:a) 
-  : Lemma (eq x y == eq y x)  
+  
 
 (** (contains) predicate, but with custom comparison operation (a->a->bool) *) 
 [@@"opaque_to_smt"]
