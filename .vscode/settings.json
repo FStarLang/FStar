@@ -1,0 +1,6 @@
+{
+    "ocaml.sandbox": {
+        "kind": "custom",
+        "template": "opam exec --set-switch --switch=default -- $prog $args --fallback-read-dot-merlin"
+      }
+}
