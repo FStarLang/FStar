@@ -61,11 +61,6 @@ let mlconst_of_const' (sctt : sconst) =
   | Const_char   c     -> MLC_Char  c
   | Const_int    (s, i)-> MLC_Int   (s, i)
   | Const_bool   b     -> MLC_Bool  b
-  | Const_float  d     -> MLC_Float d
-
-  | Const_bytearray (bytes, _) ->
-      MLC_Bytes bytes
-
   | Const_string (s, _) -> MLC_String (s)
 
   | Const_range_of

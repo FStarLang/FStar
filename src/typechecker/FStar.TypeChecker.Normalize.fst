@@ -1879,7 +1879,7 @@ and do_reify_monadic fallback cfg env stack (top : term) (m : monad_name) (t : t
                   //for bind binders that are not fixed, we apply ()
                   //
                   let unit_args =
-                    match (ed |> U.get_bind_vc_combinator |> snd |> SS.compress).n with
+                    match (ed |> U.get_bind_vc_combinator |> fst |> snd |> SS.compress).n with
                     | Tm_arrow (_::_::bs, _) when List.length bs >= num_fixed_binders ->
                       bs
                       |> List.splitAt (List.length bs - num_fixed_binders)
@@ -1890,7 +1890,7 @@ and do_reify_monadic fallback cfg env stack (top : term) (m : monad_name) (t : t
                         BU.format3 "bind_wp for layered effect %s is not an arrow with >= %s arguments (%s)"
                           (Ident.string_of_lid ed.mname)
                           (string_of_int num_fixed_binders)
-                          (ed |> U.get_bind_vc_combinator |> snd |> Print.term_to_string)) rng in
+                          (ed |> U.get_bind_vc_combinator |> fst |> snd |> Print.term_to_string)) rng in
 
                   let range_args =
                     if bind_has_range_args
@@ -2928,9 +2928,28 @@ and rebuild (cfg:cfg) (env:env) (stack:stack) (t:term) : term =
                 //the elements of s are sub-terms of t
                 //the have no free de Bruijn indices; so their env=[]; see pre-condition at the top of rebuild
                 let env0 = env in
+
+
+                // The scrutinee is (at least) in weak normal
+                // form. This means, it can be of the form (C v1
+                // ... (fun x -> e) ... vn)
+
+                //ie., it may have some sub-terms that are lambdas
+                //with unreduced bodies
+
+                //but, since the memo references are expected to hold
+                //weakly normal terms, it is safe to set them to the
+                //sub-terms of the scrutinee
+
+                //otherwise, we will keep reducing them over and over
+                //again. See, e.g., Issue #2757
+
+                //Except, if the normalizer is running in HEAD normal form mode, 
+                //then the sub-terms of the scrutinee might not be reduced yet.
+                //In that case, do not set the memo reference
                 let env = List.fold_left
                       (fun env (bv, t) -> (Some (S.mk_binder bv),
-                                           Clos([], t, BU.mk_ref (Some ([], t)), false))::env)
+                                        Clos([], t, BU.mk_ref (if cfg.steps.hnf then None else Some ([], t)), false))::env)
                       env s in
                 norm cfg env stack (guard_when_clause wopt b rest)
         in
@@ -3136,21 +3155,7 @@ let comp_to_string env c =
 
 let normalize_refinement steps env t0 =
    let t = normalize (steps@[Beta]) env t0 in
-   let rec aux t =
-    let t = compress t in
-    match t.n with
-       | Tm_refine(x, phi) ->
-         let t0 = aux x.sort in
-         begin match t0.n with
-            | Tm_refine(y, phi1) ->
-              //NB: this is working on de Bruijn
-              //    representations; so no need
-              //    to substitute y/x in phi
-              mk (Tm_refine(y, U.mk_conj_simp phi1 phi)) t0.pos
-            | _ -> t
-         end
-       | _ -> t in
-   aux t
+   U.flatten_refinement t
 
 let whnf_steps = [Primops; Weak; HNF; UnfoldUntil delta_constant; Beta]
 let unfold_whnf' steps env t = normalize (steps@whnf_steps) env t
@@ -3209,7 +3214,7 @@ let elim_uvars_aux_tc (env:Env.env) (univ_names:univ_names) (binders:binders) (t
     let univ_names, t = Subst.open_univ_vars univ_names t in
     let t = remove_uvar_solutions env t in
     let t = Subst.close_univ_vars univ_names t in
-    let t = Subst.deep_compress t in
+    let t = Subst.deep_compress false t in
     let binders, tc =
         match binders with
         | [] -> [], Inl t
@@ -3253,7 +3258,7 @@ let rec elim_uvars (env:Env.env) (s:sigelt) =
     | Sig_let((b, lbs), lids) ->
       let lbs = lbs |> List.map (fun lb ->
         let opening, lbunivs = Subst.univ_var_opening lb.lbunivs in
-        let elim t = Subst.deep_compress (Subst.close_univ_vars lbunivs (remove_uvar_solutions env (Subst.subst opening t))) in
+        let elim t = Subst.deep_compress false (Subst.close_univ_vars lbunivs (remove_uvar_solutions env (Subst.subst opening t))) in
         let lbtyp = elim lb.lbtyp in
         let lbdef = elim lb.lbdef in
         {lb with lbunivs = lbunivs;
@@ -3330,7 +3335,7 @@ let rec elim_uvars (env:Env.env) (s:sigelt) =
       let ed = { ed with
                  univs         = univs;
                  binders       = binders;
-                 signature     = elim_tscheme ed.signature;
+                 signature     = U.apply_eff_sig elim_tscheme ed.signature;
                  combinators   = apply_eff_combinators elim_tscheme ed.combinators;
                  actions       = List.map elim_action ed.actions } in
       {s with sigel=Sig_new_effect ed}
@@ -3356,15 +3361,15 @@ let rec elim_uvars (env:Env.env) (s:sigelt) =
     | Sig_splice _ ->
       s
 
-    | Sig_polymonadic_bind (m, n, p, (us_t, t), (us_ty, ty)) ->
+    | Sig_polymonadic_bind (m, n, p, (us_t, t), (us_ty, ty), k) ->
       let us_t, _, t = elim_uvars_aux_t env us_t [] t in
       let us_ty, _, ty = elim_uvars_aux_t env us_ty [] ty in
-      { s with sigel = Sig_polymonadic_bind (m, n, p, (us_t, t), (us_ty, ty)) }
+      { s with sigel = Sig_polymonadic_bind (m, n, p, (us_t, t), (us_ty, ty), k) }
 
-    | Sig_polymonadic_subcomp (m, n, (us_t, t), (us_ty, ty)) ->
+    | Sig_polymonadic_subcomp (m, n, (us_t, t), (us_ty, ty), k) ->
       let us_t, _, t = elim_uvars_aux_t env us_t [] t in
       let us_ty, _, ty = elim_uvars_aux_t env us_ty [] ty in
-      { s with sigel = Sig_polymonadic_subcomp (m, n, (us_t, t), (us_ty, ty)) }
+      { s with sigel = Sig_polymonadic_subcomp (m, n, (us_t, t), (us_ty, ty), k) }
 
 
 let erase_universes env t =
@@ -3418,3 +3423,39 @@ let get_n_binders (env:Env.env) (n:int) (t:term) : list binder * comp =
       (bs, c)
   in
   aux true n t
+
+let maybe_unfold_head_fv (env:Env.env) (head:term)
+  : option term
+  = let fv_us_opt =
+      match (SS.compress head).n with
+      | Tm_uinst ({n=Tm_fvar fv}, us) -> Some (fv, us)
+      | Tm_fvar fv -> Some (fv, [])
+      | _ -> failwith "Impossible: maybe_unfold_head_fv is called with a non fvar/uinst"
+    in
+    match fv_us_opt with
+    | None -> None
+    | Some (fv, us) ->
+      match Env.lookup_nonrec_definition [Unfold delta_constant] env fv.fv_name.v with
+      | None -> None
+      | Some (us_formals, defn) ->
+        let subst = mk_univ_subst us_formals us in
+        SS.subst subst defn |> Some
+
+let rec maybe_unfold_aux (env:Env.env) (t:term) : option term =
+  match (SS.compress t).n with
+  | Tm_match (t0, ret_opt, brs, rc_opt) ->
+    BU.map_option
+      (fun t0 -> S.mk (Tm_match (t0, ret_opt, brs, rc_opt)) t.pos)
+      (maybe_unfold_aux env t0)
+  | Tm_fvar _
+  | Tm_uinst _ -> maybe_unfold_head_fv env t
+  | _ ->
+    let head, args = U.leftmost_head_and_args t in
+    match maybe_unfold_aux env head with
+    | None -> None
+    | Some head -> S.mk_Tm_app head args t.pos |> Some
+
+let maybe_unfold_head (env:Env.env) (t:term) : option term =
+  BU.map_option
+    (normalize [Beta;Iota;Weak;HNF] env)
+    (maybe_unfold_aux env t)

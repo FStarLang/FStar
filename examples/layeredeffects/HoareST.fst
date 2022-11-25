@@ -126,20 +126,13 @@ let get ()
   (fun h0 h h1 -> h0 == h1 /\ h == h1)
 = HoareST?.reflect get
 
-assume val elim_pure_wp_monotonicity_forall (_:unit)
-  : Lemma
-    (forall (a:Type) (wp:pure_wp a).
-       (forall (p q:pure_post a).
-          (forall (x:a). p x ==> q x) ==>
-          (wp p ==> wp q)))
-
 /// lift from PURE
 
-let lift_pure_hoarest (a:Type) (wp:pure_wp a) (f:eqtype_as_type unit -> PURE a wp)
+let lift_pure_hoarest (a:Type) (wp:pure_wp a) (f:unit -> PURE a wp)
 : repr a
   (fun _ -> wp (fun _ -> True))
   (fun h0 r h1 -> ~ (wp (fun x -> x =!= r \/ h0 =!= h1)))
-= elim_pure_wp_monotonicity_forall ();
+= FStar.Monotonic.Pure.elim_pure_wp_monotonicity wp;
   fun _ -> f ()
 
 sub_effect PURE ~> HoareST = lift_pure_hoarest
@@ -241,4 +234,6 @@ let copy (#a:Type0) (s:array a)
 
 effect HoareSTT (a:Type) (post:post_t a) = HoareST a (fun _ -> True) post
 
+#push-options "--warn_error -272"  // silence top-level effects warning
 let r : ref int = alloc 2
+#pop-options

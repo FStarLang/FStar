@@ -462,58 +462,6 @@
       "ae3d7919b4591de9853704fd1b9f38ac"
     ],
     [
-      "Part2.FreeFunExt.read",
-      1,
-      2,
-      1,
-      [
-        "@query",
-        "Part2.FreeFunExt_pretyping_7e01786a7e4c8b5b379ded1815a9657e",
-        "constructor_distinct_Part2.FreeFunExt.Read",
-        "data_typing_intro_Part2.FreeFunExt.Write@tok",
-        "equality_tok_Part2.FreeFunExt.Read@tok",
-        "equation_Part2.FreeFunExt.input_of",
-        "equation_Part2.FreeFunExt.output_of",
-        "equation_Part2.FreeFunExt.rw_action_class",
-        "proj_equation_Part2.FreeFunExt.Mkaction_class_input_of",
-        "proj_equation_Part2.FreeFunExt.Mkaction_class_output_of",
-        "projection_inverse_Part2.FreeFunExt.Mkaction_class_input_of",
-        "projection_inverse_Part2.FreeFunExt.Mkaction_class_output_of",
-        "token_correspondence_Part2.FreeFunExt.__proj__Mkaction_class__item__input_of",
-        "token_correspondence_Part2.FreeFunExt.__proj__Mkaction_class__item__output_of",
-        "token_correspondence_Part2.FreeFunExt.input_of",
-        "token_correspondence_Part2.FreeFunExt.output_of", "unit_typing"
-      ],
-      0,
-      "45822f3ed18662f0081295ccdd5d304d"
-    ],
-    [
-      "Part2.FreeFunExt.write",
-      1,
-      2,
-      1,
-      [
-        "@query",
-        "Part2.FreeFunExt_pretyping_7e01786a7e4c8b5b379ded1815a9657e",
-        "constructor_distinct_Part2.FreeFunExt.Write",
-        "data_typing_intro_Part2.FreeFunExt.Write@tok",
-        "equality_tok_Part2.FreeFunExt.Write@tok",
-        "equation_Part2.FreeFunExt.input_of",
-        "equation_Part2.FreeFunExt.output_of",
-        "equation_Part2.FreeFunExt.rw_action_class",
-        "proj_equation_Part2.FreeFunExt.Mkaction_class_input_of",
-        "proj_equation_Part2.FreeFunExt.Mkaction_class_output_of",
-        "projection_inverse_Part2.FreeFunExt.Mkaction_class_input_of",
-        "projection_inverse_Part2.FreeFunExt.Mkaction_class_output_of",
-        "token_correspondence_Part2.FreeFunExt.__proj__Mkaction_class__item__input_of",
-        "token_correspondence_Part2.FreeFunExt.__proj__Mkaction_class__item__output_of",
-        "token_correspondence_Part2.FreeFunExt.input_of",
-        "token_correspondence_Part2.FreeFunExt.output_of"
-      ],
-      0,
-      "390fde314121b0295b13a51282b008d6"
-    ],
-    [
       "Part2.FreeFunExt.interp",
       1,
       2,
@@ -533,29 +481,24 @@
         "disc_equation_Part2.FreeFunExt.Write",
         "equality_tok_Part2.FreeFunExt.Read@tok",
         "equality_tok_Part2.FreeFunExt.Write@tok",
-        "equation_Part2.FreeFunExt.input_of",
         "equation_Part2.FreeFunExt.output_of",
         "equation_Part2.FreeFunExt.rw_action_class",
         "fuel_guarded_inversion_Part2.FreeFunExt.rw",
         "fuel_guarded_inversion_Part2.FreeFunExt.tree", "int_inversion",
         "proj_equation_Part2.FreeFunExt.DoThen_act",
-        "proj_equation_Part2.FreeFunExt.Mkaction_class_input_of",
         "proj_equation_Part2.FreeFunExt.Mkaction_class_output_of",
         "proj_equation_Part2.FreeFunExt.Mkaction_class_t",
         "projection_inverse_BoxBool_proj_0",
         "projection_inverse_Part2.FreeFunExt.DoThen_act",
         "projection_inverse_Part2.FreeFunExt.DoThen_continue",
-        "projection_inverse_Part2.FreeFunExt.Mkaction_class_input_of",
         "projection_inverse_Part2.FreeFunExt.Mkaction_class_output_of",
         "projection_inverse_Part2.FreeFunExt.Mkaction_class_t",
-        "token_correspondence_Part2.FreeFunExt.__proj__Mkaction_class__item__input_of",
         "token_correspondence_Part2.FreeFunExt.__proj__Mkaction_class__item__output_of",
-        "token_correspondence_Part2.FreeFunExt.input_of",
         "token_correspondence_Part2.FreeFunExt.output_of", "unit_typing",
         "well_founded_ordering_on_codomain_Part2.FreeFunExt.DoThen"
       ],
       0,
-      "28e9e34c3187abda690ddff3d12b1044"
+      "c0ee1f1c50decc44e1d997f3129a016b"
     ],
     [
       "Part2.FreeFunExt.interp_equiv",
@@ -564,7 +507,7 @@
       1,
       [ "@query", "equation_FStar.FunctionalExtensionality.feq" ],
       0,
-      "081b74ecca338ff40ccb109fc0f33467"
+      "8269c32d9bec6c678867f346cdfb0ad0"
     ]
   ]
 ]

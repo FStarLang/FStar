@@ -1400,15 +1400,6 @@ let (collect_one :
                      (false, uu___6) in
                    P_dep uu___5 in
                  add_to_parsing_data uu___4
-             | FStar_Const.Const_float uu___3 ->
-                 let uu___4 =
-                   let uu___5 =
-                     let uu___6 =
-                       FStar_Compiler_Effect.op_Bar_Greater "fstar.float"
-                         FStar_Ident.lid_of_str in
-                     (false, uu___6) in
-                   P_dep uu___5 in
-                 add_to_parsing_data uu___4
              | uu___3 -> ()
            and collect_term' uu___2 =
              match uu___2 with

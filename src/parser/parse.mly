@@ -41,7 +41,6 @@ let none_to_empty_list x =
 
 %}
 
-%token <bytes> BYTEARRAY
 %token <string> STRING
 %token <string> IDENT
 %token <string> NAME
@@ -61,7 +60,6 @@ let none_to_empty_list x =
 %token <string> UINT32
 %token <string> UINT64
 %token <string> SIZET
-%token <float> IEEE64
 %token <string> REAL
 %token <char> CHAR
 %token <bool> LET
@@ -1319,11 +1317,9 @@ constant:
      }
   | c=CHAR { Const_char c }
   | s=STRING { Const_string (s,lhs(parseState)) }
-  | bs=BYTEARRAY { Const_bytearray (bs,lhs(parseState)) }
   | TRUE { Const_bool true }
   | FALSE { Const_bool false }
   | r=REAL { Const_real r }
-  | f=IEEE64 { Const_float f }
   | n=UINT8 { Const_int (n, Some (Unsigned, Int8)) }
   | n=INT8
       {

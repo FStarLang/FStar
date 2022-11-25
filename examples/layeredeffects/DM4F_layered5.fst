@@ -1,9 +1,25 @@
+(*
+   Copyright 2008-2018 Microsoft Research
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+*)
+
 module DM4F_layered5
 
 (* Same as DM4F, but layered over a layered PURE without monotonicity *)
 open ID5
 open FStar.Tactics
-open Common
+open DM4F_Utils
 
 unfold
 let pure_bind_wp (#a #b : Type) (w1 : ID5.wp a) (w2 : a -> ID5.wp b) : ID5.wp b =
@@ -11,8 +27,7 @@ let pure_bind_wp (#a #b : Type) (w1 : ID5.wp a) (w2 : a -> ID5.wp b) : ID5.wp b 
 
 (* Simulating state effect in DM4F, hopefully doable by a tactic. *)
 
-type post_t st a =
-  a -> st -> Type0
+type post_t st a = a -> st -> Type0
 
 type wp0 (st:Type u#0) (a:Type u#ua) : Type u#(max 1 ua) =
   st -> post_t st a -> Type0
@@ -24,13 +39,6 @@ let st_monotonic #st #a (w : wp0 st a) : Type0 =
 
 type wp st a = w:(wp0 st a){st_monotonic w}
 
-let iso1 #a #s (w : wp s a) : s -> (a & s -> Type0) -> Type0 =
-  fun s p -> w s (curry p)
-  
-let iso2 #a #s (w : s -> (a & s -> Type0) -> Type0) : wp s a=
-  admit ();  //AR: need monotonicity of w
-  fun s p -> w s (uncurry p)
-
 open FStar.Monotonic.Pure
 
 type repr (a:Type u#ua) (st:Type0) (wp : wp u#ua st a) : Type u#(max 1 ua) =
@@ -39,8 +47,6 @@ type repr (a:Type u#ua) (st:Type0) (wp : wp u#ua st a) : Type u#(max 1 ua) =
 unfold
 let return_wp (#a:Type) (#st:Type0) (x:a) : wp st a =
   fun s0 p -> p x s0
-  //iso2 (fun s0 -> ID5.return_wp (x, s0))
-     // ^ reusing pure return
 
 let return (a:Type) (x:a) (st:Type0) : repr a st (return_wp x) =
   fun s0 -> (x, s0)
@@ -49,8 +55,6 @@ unfold
 let bind_wp (#a:Type) (#b:Type) (#st:Type0)
   (w1 : wp st a) (w2 : a -> wp st b) : wp st b =
   fun s0 p -> w1 s0 (fun y s1 -> w2 y s1 p)
-  //iso2 (fun s0 -> pure_bind_wp (iso1 w1 s0) (fun (y, s1) -> iso1 (w2 y) s1))
-    // ^ reusing pure bind
 
 [@@ resolve_implicits; refine]
 let resolve_tac () : Tac unit =
@@ -103,23 +107,16 @@ let subcomp
 total
 reifiable
 reflectable
-layered_effect {
-  ST : a:Type -> st:Type0 -> wp st a -> Effect
-  with
-  repr = repr;
-  return = return;
-  bind = bind;
-  if_then_else = if_then_else;
-  subcomp = subcomp
+effect {
+  ST (a:Type) ([@@@ effect_param] st:Type0) (_:wp st a)
+  with {repr; return; bind; subcomp; if_then_else}
 }
 
 let lift_id_st_wp #a #st (w : ID5.wp a) : wp st a =
   elim_pure_wp_monotonicity_forall ();
   fun s0 p -> w (fun x -> p x s0)
 
-(* It's odd that I *have* to use the repr here, instead of a thunked
-ID a wp as above. *)
-let lift_id_st a st wp (f : ID5.repr a wp)
+let lift_id_st a wp st (f : ID5.repr a wp)
   : repr a st (lift_id_st_wp wp)
   = fun s0 -> ID5.ID?.reflect (ID5.bind _ _ _ _ f (fun x -> ID5.return _ (x, s0)))
 

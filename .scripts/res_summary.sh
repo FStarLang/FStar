@@ -5,6 +5,15 @@
 # makefile with MON=1 to generate the .runlim files (and have runlim
 # installed).
 
+echo "All space and time:"
+for f in $(find . -name '*.runlim'); do
+        s=$(grep space: $f | grep -Eo '[0-9.]* MB')
+	t=$(grep time: $f | grep -Eo '[0-9.]* seconds')
+	t=${t/seconds/s}
+	fp=${f/.runlim/}
+	printf "RUNLIM: %-80s %12s %12s\n" "$fp" "$t" "$s"
+done
+
 echo "Top 20 memory:"
 for f in $(find . -name '*.runlim'); do
 	s=$(grep space: $f | grep -Eo '[0-9.]* MB')

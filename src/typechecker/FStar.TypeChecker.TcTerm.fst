@@ -483,7 +483,7 @@ let guard_letrecs env actuals expected_c : list (lbname*typ*univ_names) =
          *     We build an "untyped" term here, the caller will typecheck it properly
          *)
         let rec aux l l_prev : term =
-         let type_of (e1:term) (e2:term) : typ * typ =
+         let type_of (should_warn:bool) (e1:term) (e2:term) : typ * typ =
            (*
             * AR: we compute the types of e1 and e2 to provide type
             *     arguments to eq3 (otherwise F* may infer something that Z3 is unable
@@ -509,7 +509,7 @@ let guard_letrecs env actuals expected_c : list (lbname*typ*univ_names) =
                   | _, Tm_uvar _ -> false
                   | _, _ -> true in
 
-           (if warn t1 t2
+           (if should_warn && warn t1 t2
             then match (SS.compress t1).n, (SS.compress t2).n with
                  | Tm_name _, Tm_name _ -> ()
                  | _, _ ->
@@ -526,9 +526,11 @@ let guard_letrecs env actuals expected_c : list (lbname*typ*univ_names) =
           match l, l_prev with
           | [], [] ->
             mk_Tm_app precedes_t [as_arg S.unit_const; as_arg S.unit_const] r
-          | [x], [x_prev] -> mk_Tm_app precedes_t [as_arg x; as_arg x_prev] r
+          | [x], [x_prev] -> 
+            let t_x, t_x_prev = type_of false x x_prev in            
+            mk_Tm_app precedes_t [iarg t_x; iarg t_x_prev; as_arg x; as_arg x_prev] r
           | x::tl, x_prev::tl_prev ->
-            let t_x, t_x_prev = type_of x x_prev in
+            let t_x, t_x_prev = type_of true x x_prev in
             let tm_precedes = mk_Tm_app precedes_t [
               iarg t_x;
               iarg t_x_prev;
@@ -1806,7 +1808,6 @@ and tc_constant (env:env_t) r (c:sconst) : typ =
           | Unsigned, Int64 -> Const.uint64_lid)
       | Const_string _ -> t_string
       | Const_real _ -> t_real
-      | Const_float _ -> t_float
       | Const_char _ ->
         FStar.Syntax.DsEnv.try_lookup_lid env.dsenv FStar.Parser.Const.char_lid
         |> BU.must
@@ -2261,10 +2262,25 @@ and tc_abs env (top:term) (bs:binders) (body:term) : term * lcomp * guard_t =
         body, cbody, Env.conj_guard guard_body g_lc
     in
 
+    if Env.debug env <| Options.Extreme
+    then BU.print1 "tc_abs: guard_body: %s\n"
+           (Rel.guard_to_string env guard_body);
+
     let guard = if env.top_level
                 || not (Options.should_verify (string_of_lid env.curmodule))
-                then Env.conj_guard (Rel.discharge_guard env g_env)
-                                    (Rel.discharge_guard envbody guard_body)
+                then begin
+                  if env.lax ||
+                     env.phase1
+                  then Env.conj_guard (Rel.discharge_guard env g_env)
+                                      (Rel.discharge_guard envbody guard_body)
+                  else
+                    let g_env, g_env_logical = TcComm.split_guard g_env in
+                    let guard_body, guard_body_logical = TcComm.split_guard guard_body in
+                    Rel.force_trivial_guard env (Env.conj_guard g_env guard_body);
+                    Rel.force_trivial_guard env g_env_logical;
+                    Rel.force_trivial_guard envbody guard_body_logical;
+                    Env.trivial_guard
+                end
                 else let guard = Env.conj_guard g_env (Env.close_guard env (bs@letrec_binders) guard_body) in
                      guard in
 
@@ -2314,6 +2330,7 @@ and tc_abs env (top:term) (bs:binders) (body:term) : term * lcomp * guard_t =
                 | _ ->
                     let lc = S.mk_Total tfun_computed |> TcComm.lcomp_of_comp in
                     let e, _, guard' = TcUtil.check_has_type_maybe_coerce env e lc t use_eq in  //QUESTION: t should also probably be t_annot here
+                    let guard' = TcUtil.label_guard e.pos (Err.subtyping_failed env lc.res_typ t ()) guard' in
                     e, t_annot, Env.conj_guard guard guard'
            end
 
@@ -2421,7 +2438,7 @@ and check_application_args env head (chead:comp) ghead args expected_topt : term
               But this leads to a massive blow up in the size of generated VCs (cf issue #971)
               arg_rets below are those xn...x1 bound variables
        *)
-      let cres =
+      let cres, inserted_return_in_cres =
         let head_is_pure_and_some_arg_is_effectful =
             TcComm.is_pure_or_ghost_lcomp chead
             && (BU.for_some (fun (_, _, lc) -> not (TcComm.is_pure_or_ghost_lcomp lc)
@@ -2433,9 +2450,9 @@ and check_application_args env head (chead:comp) ghead args expected_topt : term
         && (head_is_pure_and_some_arg_is_effectful)
             // || Option.isSome (Env.expected_typ env))
         then let _ = if Env.debug env Options.Extreme then BU.print1 "(a) Monadic app: Return inserted in monadic application: %s\n" (Print.term_to_string term) in
-             TcUtil.maybe_assume_result_eq_pure_term env term cres
+             TcUtil.maybe_assume_result_eq_pure_term env term cres, true
         else let _ = if Env.debug env Options.Extreme then BU.print1 "(a) Monadic app: No return inserted in monadic application: %s\n" (Print.term_to_string term) in
-             cres
+             cres, false
       in
 
       (* 1. We compute the final computation type comp  *)
@@ -2489,9 +2506,15 @@ and check_application_args env head (chead:comp) ghead args expected_topt : term
              //
              //Push first (List.length arg_rets_names_opt - i) names in the env
              //
-             let env = push_option_names_to_env env
-               (List.splitAt (List.length arg_rets_names_opt - i) arg_rets_names_opt
-                |> fst) in
+             let env =
+               // add arg_rets_names to env only if needed
+               // extra names in the env interfere with flex-flex queries in Rel,
+               //   as they may result in uvar restrictions etc.
+               if inserted_return_in_cres
+               then push_option_names_to_env env
+                      (List.splitAt (List.length arg_rets_names_opt - i) arg_rets_names_opt
+                       |> fst)
+                else env in
               if TcComm.is_pure_or_ghost_lcomp c
               then i+1,TcUtil.bind e.pos env (Some e) c (x, out_c)
               else i+1,TcUtil.bind e.pos env None c (x, out_c))
@@ -2665,7 +2688,7 @@ and check_application_args env head (chead:comp) ghead args expected_topt : term
                                                             (Range.use_range t.pos))
             in
             let varg, _, implicits =
-              new_implicit_var_aux "Instantiating meta argument in application" r env t Strict (Some ctx_uvar_meta)
+              Env.new_implicit_var_aux "Instantiating meta argument in application" r env t Strict (Some ctx_uvar_meta)
             in
             let subst = NT(x, varg)::subst in
             let aq = U.aqual_of_binder (List.hd bs) in
@@ -3126,7 +3149,7 @@ and tc_pat env (pat_t:typ) (p0:pat) :
            *     we now have scrutinee = c, so we need decidable equality on c
            *)
           (match c with
-           | Const_unit | Const_bool _ | Const_int _ | Const_char _ | Const_float _ | Const_string _ -> ()
+           | Const_unit | Const_bool _ | Const_int _ | Const_char _ | Const_string _ -> ()
            | _ ->
              fail (BU.format1
                      "Pattern matching a constant that does not have decidable equality: %s"

@@ -523,7 +523,6 @@ match%sedlex lexbuf with
  | sizet -> SIZET (clean_number (L.lexeme lexbuf))
  | range -> RANGE (L.lexeme lexbuf)
  | real -> REAL(trim_right lexbuf 1)
- | (ieee64 | xieee64) -> IEEE64 (float_of_string (L.lexeme lexbuf))
  | (integer | xinteger | ieee64 | xieee64), Plus ident_char ->
    fail lexbuf (E.Fatal_SyntaxError, "This is not a valid numeric literal: " ^ L.lexeme lexbuf)
 
@@ -603,10 +602,6 @@ match%sedlex lexbuf with
    (* position info must be set since the start of the string *)
    lexbuf.Sedlexing.start_p <- start_pos;
    STRING (Buffer.contents buffer)
- | '"', 'B' ->
-   (* as above *)
-   lexbuf.Sedlexing.start_p <- start_pos;
-   BYTEARRAY (ba_of_string (Buffer.contents buffer))
  | eof -> fail lexbuf (E.Fatal_SyntaxError, "unterminated string")
  | any ->
   Buffer.add_string buffer (L.lexeme lexbuf);

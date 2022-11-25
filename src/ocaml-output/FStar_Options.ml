@@ -265,10 +265,13 @@ let (defaults : (Prims.string * option_val) Prims.list) =
   ("abort_on", (Int Prims.int_zero));
   ("admit_smt_queries", (Bool false));
   ("admit_except", Unset);
+  ("disallow_unification_guards", (Bool false));
   ("already_cached", Unset);
   ("cache_checked_modules", (Bool false));
   ("cache_dir", Unset);
   ("cache_off", (Bool false));
+  ("compat_pre_core", Unset);
+  ("compat_pre_typed_indexed_effects", (Bool false));
   ("print_cache_version", (Bool false));
   ("cmi", (Bool false));
   ("codegen", Unset);
@@ -451,6 +454,12 @@ let (get_admit_smt_queries : unit -> Prims.bool) =
   fun uu___ -> lookup_opt "admit_smt_queries" as_bool
 let (get_admit_except : unit -> Prims.string FStar_Pervasives_Native.option)
   = fun uu___ -> lookup_opt "admit_except" (as_option as_string)
+let (get_compat_pre_core : unit -> Prims.int FStar_Pervasives_Native.option)
+  = fun uu___ -> lookup_opt "compat_pre_core" (as_option as_int)
+let (get_compat_pre_typed_indexed_effects : unit -> Prims.bool) =
+  fun uu___ -> lookup_opt "compat_pre_typed_indexed_effects" as_bool
+let (get_disallow_unification_guards : unit -> Prims.bool) =
+  fun uu___ -> lookup_opt "disallow_unification_guards" as_bool
 let (get_already_cached :
   unit -> Prims.string Prims.list FStar_Pervasives_Native.option) =
   fun uu___ -> lookup_opt "already_cached" (as_option (as_list as_string))
@@ -953,7 +962,7 @@ let (interp_quake_arg : Prims.string -> (Prims.int * Prims.int * Prims.bool))
           let uu___ = ios f1 in let uu___1 = ios f2 in (uu___, uu___1, true)
         else failwith "unexpected value for --quake"
     | uu___ -> failwith "unexpected value for --quake"
-let (uu___407 : (((Prims.string -> unit) -> unit) * (Prims.string -> unit)))
+let (uu___449 : (((Prims.string -> unit) -> unit) * (Prims.string -> unit)))
   =
   let cb = FStar_Compiler_Util.mk_ref FStar_Pervasives_Native.None in
   let set1 f =
@@ -965,11 +974,11 @@ let (uu___407 : (((Prims.string -> unit) -> unit) * (Prims.string -> unit)))
     | FStar_Pervasives_Native.Some f -> f msg in
   (set1, call)
 let (set_option_warning_callback_aux : (Prims.string -> unit) -> unit) =
-  match uu___407 with
+  match uu___449 with
   | (set_option_warning_callback_aux1, option_warning_callback) ->
       set_option_warning_callback_aux1
 let (option_warning_callback : Prims.string -> unit) =
-  match uu___407 with
+  match uu___449 with
   | (set_option_warning_callback_aux1, option_warning_callback1) ->
       option_warning_callback1
 let (set_option_warning_callback : (Prims.string -> unit) -> unit) =
@@ -1003,6 +1012,12 @@ let rec (specs_with_types :
               then option_warning_callback "admit_except"
               else ())), (SimpleStr "[symbol|(symbol, id)]"))),
       "Admit all queries, except those with label ( symbol,  id)) (e.g. --admit_except '(FStar.Fin.pigeonhole, 1)' or --admit_except FStar.Fin.pigeonhole)");
+    (FStar_Getopt.noshort, "compat_pre_core", (IntStr "0, 1, 2"),
+      "Retain behavior of the tactic engine prior to the introduction of FStar.TypeChecker.Core (0 is most permissive, 2 is least permissive)");
+    (FStar_Getopt.noshort, "compat_pre_typed_indexed_effects",
+      (Const (Bool true)), "Retain untyped indexed effects implicits");
+    (FStar_Getopt.noshort, "disallow_unification_guards", BoolStr,
+      "Fail if the SMT guard are produced when the tactic engine re-checks solutions produced by the unifier (default 'false')");
     (FStar_Getopt.noshort, "already_cached",
       (Accumulated
          (SimpleStr
@@ -1373,6 +1388,9 @@ let (settable : Prims.string -> Prims.bool) =
     | "abort_on" -> true
     | "admit_except" -> true
     | "admit_smt_queries" -> true
+    | "compat_pre_core" -> true
+    | "compat_pre_typed_indexed_effects" -> true
+    | "disallow_unification_guards" -> true
     | "debug" -> true
     | "debug_level" -> true
     | "defensive" -> true
@@ -1465,7 +1483,7 @@ let (settable_specs :
     (FStar_Compiler_List.filter
        (fun uu___ ->
           match uu___ with | (uu___1, x, uu___2, uu___3) -> settable x))
-let (uu___592 :
+let (uu___641 :
   (((unit -> FStar_Getopt.parse_cmdline_res) -> unit) *
     (unit -> FStar_Getopt.parse_cmdline_res)))
   =
@@ -1482,11 +1500,11 @@ let (uu___592 :
   (set1, call)
 let (set_error_flags_callback_aux :
   (unit -> FStar_Getopt.parse_cmdline_res) -> unit) =
-  match uu___592 with
+  match uu___641 with
   | (set_error_flags_callback_aux1, set_error_flags) ->
       set_error_flags_callback_aux1
 let (set_error_flags : unit -> FStar_Getopt.parse_cmdline_res) =
-  match uu___592 with
+  match uu___641 with
   | (set_error_flags_callback_aux1, set_error_flags1) -> set_error_flags1
 let (set_error_flags_callback :
   (unit -> FStar_Getopt.parse_cmdline_res) -> unit) =
@@ -1772,6 +1790,32 @@ let (admit_smt_queries : unit -> Prims.bool) =
   fun uu___ -> get_admit_smt_queries ()
 let (admit_except : unit -> Prims.string FStar_Pervasives_Native.option) =
   fun uu___ -> get_admit_except ()
+let (compat_pre_core_should_register : unit -> Prims.bool) =
+  fun uu___ ->
+    let uu___1 = get_compat_pre_core () in
+    match uu___1 with
+    | FStar_Pervasives_Native.Some uu___2 when uu___2 = Prims.int_zero ->
+        false
+    | uu___2 -> true
+let (compat_pre_core_should_check : unit -> Prims.bool) =
+  fun uu___ ->
+    let uu___1 = get_compat_pre_core () in
+    match uu___1 with
+    | FStar_Pervasives_Native.Some uu___2 when uu___2 = Prims.int_zero ->
+        false
+    | FStar_Pervasives_Native.Some uu___2 when uu___2 = Prims.int_one ->
+        false
+    | uu___2 -> true
+let (compat_pre_core_set : unit -> Prims.bool) =
+  fun uu___ ->
+    let uu___1 = get_compat_pre_core () in
+    match uu___1 with
+    | FStar_Pervasives_Native.None -> false
+    | uu___2 -> true
+let (compat_pre_typed_indexed_effects : unit -> Prims.bool) =
+  fun uu___ -> get_compat_pre_typed_indexed_effects ()
+let (disallow_unification_guards : unit -> Prims.bool) =
+  fun uu___ -> get_disallow_unification_guards ()
 let (cache_checked_modules : unit -> Prims.bool) =
   fun uu___ -> get_cache_checked_modules ()
 let (cache_off : unit -> Prims.bool) = fun uu___ -> get_cache_off ()

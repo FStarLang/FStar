@@ -1265,8 +1265,10 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
                  | U_unknown, _
                  | _, U_unknown
                  | U_unif _, _
-                 | _, U_unif _ -> failwith (BU.format1 "Impossible: Unresolved or unknown universe in inductive type %s"
-                                                      (Ident.string_of_lid t))
+                 | _, U_unif _ -> failwith (BU.format3 "Impossible: Unresolved or unknown universe in inductive type %s (%s, %s)"
+                                                      (Ident.string_of_lid t)
+                                                      (Print.univ_to_string u)
+                                                      (Print.univ_to_string v))
                  | _ -> false
              in
              let u_leq_u_k u =

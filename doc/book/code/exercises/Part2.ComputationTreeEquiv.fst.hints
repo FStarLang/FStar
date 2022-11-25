@@ -394,59 +394,6 @@
       "2b8bb73cc8379a6aa0ea0aaf1188e548"
     ],
     [
-      "Part2.ComputationTreeEquiv.read",
-      1,
-      2,
-      1,
-      [
-        "@query",
-        "Part2.ComputationTreeEquiv_pretyping_dac0fbd6611dfa2c6a987a50449669a7",
-        "constructor_distinct_Part2.ComputationTreeEquiv.Read",
-        "data_typing_intro_Part2.ComputationTreeEquiv.Write@tok",
-        "equality_tok_Part2.ComputationTreeEquiv.Read@tok",
-        "equation_Part2.ComputationTreeEquiv.input_of",
-        "equation_Part2.ComputationTreeEquiv.output_of",
-        "equation_Part2.ComputationTreeEquiv.rw_action_class",
-        "proj_equation_Part2.ComputationTreeEquiv.Mkaction_class_input_of",
-        "proj_equation_Part2.ComputationTreeEquiv.Mkaction_class_output_of",
-        "projection_inverse_Part2.ComputationTreeEquiv.Mkaction_class_input_of",
-        "projection_inverse_Part2.ComputationTreeEquiv.Mkaction_class_output_of",
-        "token_correspondence_Part2.ComputationTreeEquiv.__proj__Mkaction_class__item__input_of",
-        "token_correspondence_Part2.ComputationTreeEquiv.__proj__Mkaction_class__item__output_of",
-        "token_correspondence_Part2.ComputationTreeEquiv.input_of",
-        "token_correspondence_Part2.ComputationTreeEquiv.output_of",
-        "unit_typing"
-      ],
-      0,
-      "844b211eaac5fe9a134cdc7a70d921a9"
-    ],
-    [
-      "Part2.ComputationTreeEquiv.write",
-      1,
-      2,
-      1,
-      [
-        "@query",
-        "Part2.ComputationTreeEquiv_pretyping_dac0fbd6611dfa2c6a987a50449669a7",
-        "constructor_distinct_Part2.ComputationTreeEquiv.Write",
-        "data_typing_intro_Part2.ComputationTreeEquiv.Write@tok",
-        "equality_tok_Part2.ComputationTreeEquiv.Write@tok",
-        "equation_Part2.ComputationTreeEquiv.input_of",
-        "equation_Part2.ComputationTreeEquiv.output_of",
-        "equation_Part2.ComputationTreeEquiv.rw_action_class",
-        "proj_equation_Part2.ComputationTreeEquiv.Mkaction_class_input_of",
-        "proj_equation_Part2.ComputationTreeEquiv.Mkaction_class_output_of",
-        "projection_inverse_Part2.ComputationTreeEquiv.Mkaction_class_input_of",
-        "projection_inverse_Part2.ComputationTreeEquiv.Mkaction_class_output_of",
-        "token_correspondence_Part2.ComputationTreeEquiv.__proj__Mkaction_class__item__input_of",
-        "token_correspondence_Part2.ComputationTreeEquiv.__proj__Mkaction_class__item__output_of",
-        "token_correspondence_Part2.ComputationTreeEquiv.input_of",
-        "token_correspondence_Part2.ComputationTreeEquiv.output_of"
-      ],
-      0,
-      "bacc0d9b0560b4d5c3a321a1785d3b59"
-    ],
-    [
       "Part2.ComputationTreeEquiv.interp",
       1,
       2,
@@ -466,31 +413,26 @@
         "disc_equation_Part2.ComputationTreeEquiv.Write",
         "equality_tok_Part2.ComputationTreeEquiv.Read@tok",
         "equality_tok_Part2.ComputationTreeEquiv.Write@tok",
-        "equation_Part2.ComputationTreeEquiv.input_of",
         "equation_Part2.ComputationTreeEquiv.output_of",
         "equation_Part2.ComputationTreeEquiv.rw_action_class",
         "fuel_guarded_inversion_Part2.ComputationTreeEquiv.rw",
         "fuel_guarded_inversion_Part2.ComputationTreeEquiv.tree",
         "int_inversion",
         "proj_equation_Part2.ComputationTreeEquiv.DoThen_act",
-        "proj_equation_Part2.ComputationTreeEquiv.Mkaction_class_input_of",
         "proj_equation_Part2.ComputationTreeEquiv.Mkaction_class_output_of",
         "proj_equation_Part2.ComputationTreeEquiv.Mkaction_class_t",
         "projection_inverse_BoxBool_proj_0",
         "projection_inverse_Part2.ComputationTreeEquiv.DoThen_act",
         "projection_inverse_Part2.ComputationTreeEquiv.DoThen_continue",
-        "projection_inverse_Part2.ComputationTreeEquiv.Mkaction_class_input_of",
         "projection_inverse_Part2.ComputationTreeEquiv.Mkaction_class_output_of",
         "projection_inverse_Part2.ComputationTreeEquiv.Mkaction_class_t",
-        "token_correspondence_Part2.ComputationTreeEquiv.__proj__Mkaction_class__item__input_of",
         "token_correspondence_Part2.ComputationTreeEquiv.__proj__Mkaction_class__item__output_of",
-        "token_correspondence_Part2.ComputationTreeEquiv.input_of",
         "token_correspondence_Part2.ComputationTreeEquiv.output_of",
         "unit_typing",
         "well_founded_ordering_on_codomain_Part2.ComputationTreeEquiv.DoThen"
       ],
       0,
-      "742a9d14b0ecbd807ddf363b84e70042"
+      "f9c55ed0219f4ba1a5d4a9ca83667ce9"
     ]
   ]
 ]

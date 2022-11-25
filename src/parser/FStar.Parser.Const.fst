@@ -125,6 +125,8 @@ let none_lid              = psnconst  "None"
 let assume_lid            = pconst  "_assume"
 let assert_lid            = pconst  "_assert"
 let pure_wp_lid           = pconst "pure_wp"
+let pure_wp_monotonic_lid = pconst "pure_wp_monotonic"
+let pure_wp_monotonic0_lid = pconst "pure_wp_monotonic0"
 let trivial_pure_post_lid = psconst "trivial_pure_post"
 let pure_assert_wp_lid    = pconst "pure_assert_wp0"
 let pure_assume_wp_lid    = pconst "pure_assume_wp0"
@@ -361,11 +363,11 @@ let preprocess_with = p2l ["FStar"; "Tactics"; "Effect"; "preprocess_with"]
 let postprocess_extr_with = p2l ["FStar"; "Tactics"; "Effect"; "postprocess_for_extraction_with"]
 let check_with_lid = lid_of_path (["FStar"; "Reflection"; "Builtins"; "check_with"]) FStar.Compiler.Range.dummyRange
 let commute_nested_matches_lid = psconst "commute_nested_matches"
-let allow_informative_binders_attr = psconst "allow_informative_binders"
 let remove_unused_type_parameters_lid = psconst "remove_unused_type_parameters"
 let ite_soundness_by_attr = psconst "ite_soundness_by"
 let default_effect_attr = psconst "default_effect"
 let top_level_effect_attr = psconst "top_level_effect"
+let effect_parameter_attr = psconst "effect_param"
 let bind_has_range_args_attr = psconst "bind_has_range_args"
 let binder_strictly_positive_attr = psconst "strictly_positive"
 let no_auto_projectors_attr = psconst "no_auto_projectors"
@@ -393,9 +395,7 @@ let const_to_string x = match x with
   | Const_unit -> "()"
   | Const_bool b -> if b then "true" else "false"
   | Const_real r -> r^"R"
-  | Const_float x ->      U.string_of_float x
   | Const_string(s, _) -> U.format1 "\"%s\"" s
-  | Const_bytearray _  ->  "<bytearray>"
   | Const_int (x, _) -> x
   | Const_char c -> "'" ^ U.string_of_char c ^ "'"
   | Const_range r -> FStar.Compiler.Range.string_of_range r
