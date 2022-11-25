@@ -1,5 +1,5 @@
 [
-  "—å©ëëyõäqtf\u001b¾3W\t",
+  "¹\u0015ï«6B@ŠÝòj\u0013â¢ÿÜ",
   [
     [
       "SteelLoops.sum_to_n_for",
@@ -8,7 +8,7 @@
       1,
       [ "@query" ],
       0,
-      "7a99c1682d45ae4f3f68bf0b27a57fa0"
+      "4c004c4dbbca6a7485e479c52a0516cf"
     ],
     [
       "SteelLoops.sum_to_n_for_2",
@@ -28,32 +28,28 @@
         "equation_Prims.subtype_of",
         "equation_Steel.FractionalPermission.full_perm",
         "equation_Steel.Loops.nat_at_most",
-        "equation_Steel.Loops.u32_between", "int_inversion", "int_typing",
-        "lemma_FStar.SizeT.fits_lte", "lemma_FStar.UInt.pow2_values",
+        "equation_Steel.Loops.u32_between",
+        "equation_with_fuel_Prims.pow2.fuel_instrumented", "int_inversion",
+        "int_typing", "lemma_FStar.UInt.pow2_values",
         "lemma_FStar.UInt32.uv_inv", "lemma_FStar.UInt32.vu_inv",
         "primitive_FStar.Real.op_Greater_Dot", "primitive_Prims.op_Addition",
         "primitive_Prims.op_AmpAmp", "primitive_Prims.op_LessThanOrEqual",
-        "primitive_Prims.op_Modulus", "primitive_Prims.op_Subtraction",
+        "primitive_Prims.op_Modulus", "primitive_Prims.op_Multiply",
+        "primitive_Prims.op_Subtraction",
         "projection_inverse_BoxBool_proj_0",
         "projection_inverse_BoxInt_proj_0",
-        "refinement_interpretation_Tm_refine_0ea1fba779ad5718e28476faeef94d56",
-        "refinement_interpretation_Tm_refine_207024d2522be2ff59992eb07d6dc785",
         "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c",
-        "refinement_interpretation_Tm_refine_3a8efe8897601cf34c6cedf4c76b3b62",
+        "refinement_interpretation_Tm_refine_2eec29014a998085381126097e78648e",
         "refinement_interpretation_Tm_refine_3f54e9b64bb1cf73ff37c7c9d439498d",
+        "refinement_interpretation_Tm_refine_4b0fd9f7f8f1604f3a6eff1b064811f6",
         "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
-        "refinement_interpretation_Tm_refine_7df43cb9feb536df62477b7b30ce1682",
-        "refinement_interpretation_Tm_refine_a1d502d8e0b172ffcd22072c2bb46a53",
-        "refinement_interpretation_Tm_refine_d74c5cae4646fea1e5e69a2dd9d7c65a",
-        "refinement_interpretation_Tm_refine_edc8fb7e909853d860d4ab445ef31337",
+        "refinement_interpretation_Tm_refine_c0a58b8a9558ef109f577c9fd2a6bfec",
         "refinement_interpretation_Tm_refine_f13070840248fced9d9d60d77bdae3ec",
-        "typing_FStar.SizeT.uint_to_t", "typing_FStar.SizeT.v",
-        "typing_FStar.UInt.fits", "typing_FStar.UInt32.add_mod",
-        "typing_FStar.UInt32.uint_to_t", "typing_FStar.UInt32.v",
+        "typing_FStar.UInt32.v",
         "typing_Steel.FractionalPermission.full_perm"
       ],
       0,
-      "0c25029ffee54e6309bad3b1e0b0c5af"
+      "48a60e63fb99f81eef72bd9f0b0a59a4"
     ],
     [
       "SteelLoops.sum_to_n_while",
@@ -62,7 +58,7 @@
       1,
       [ "@query" ],
       0,
-      "434b2af85a66fbac96dcb130c97be4c7"
+      "721bcc7fbd62df56f7900fce0ce544b4"
     ]
   ]
 ]
