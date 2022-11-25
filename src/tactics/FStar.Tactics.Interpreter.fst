@@ -518,6 +518,18 @@ let () =
       mk_tac_step_3 1 "with_compat_pre_core"
         (fun _ -> with_compat_pre_core) e_any e_int (e_tactic_thunk e_any) e_any
         (fun _ -> with_compat_pre_core) NBET.e_any NBET.e_int (e_tactic_nbe_thunk NBET.e_any) NBET.e_any;
+
+      mk_refl_typing_step_3 "check_subtyping"
+        refl_check_subtyping RE.e_env RE.e_term RE.e_term (e_option e_unit)
+        refl_check_subtyping NRE.e_env NRE.e_term NRE.e_term (NBET.e_option NBET.e_unit);
+
+      mk_refl_typing_step_3 "check_equiv"
+        refl_check_equiv RE.e_env RE.e_term RE.e_term (e_option e_unit)
+        refl_check_equiv NRE.e_env NRE.e_term NRE.e_term (NBET.e_option NBET.e_unit);
+
+      mk_refl_typing_step_2 "tc_term"
+        refl_tc_term RE.e_env RE.e_term (e_option RE.e_term)
+        refl_tc_term NRE.e_env NRE.e_term (NBET.e_option NRE.e_term);
     ]
 
 let unembed_tactic_1_alt (ea:embedding 'a) (er:embedding 'r) (f:term) (ncb:norm_cb) : option ('a -> tac 'r) =

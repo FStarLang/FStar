@@ -494,6 +494,7 @@ let universe_uvar_lid      = p2l ["FStar"; "Reflection"; "Types"; "universe_uvar
 let check_with_lid = lid_of_path (["FStar"; "Reflection"; "Builtins"; "check_with"]) FStar.Compiler.Range.dummyRange
 
 // meta dsl constants
+let dsl_typing_builtin s = lid_of_path (["Refl"; "Typing"; "Builtins"]@[s]) FStar.Compiler.Range.dummyRange
 let dsl_tac_typ_lid = lid_of_path ["Refl"; "Typing"; "dsl_tac_t"] FStar.Compiler.Range.dummyRange
 
 

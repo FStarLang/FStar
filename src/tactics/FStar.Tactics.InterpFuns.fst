@@ -4397,3 +4397,51 @@ let mk_total_step_20
       (mk_total_interpretation_20 f e1 e2 e3 e4 e5 e6 e7 e8 e9 e10 e11 e12 e13 e14 e15 e16 e17 e18 e19 e20 er)
       (fun cb args -> mk_total_nbe_interpretation_20 cb nf ne1 ne2 ne3 ne4 ne5 ne6 ne7 ne8 ne9 ne10 ne11 ne12 ne13 ne14 ne15 ne16 ne17 ne18 ne19 ne20 ner (drop nunivs args))
 
+
+(*****)
+
+let mk_refl_typing_step nm arity interp nbe_interp =
+  let nm = PC.dsl_typing_builtin nm in
+  { Cfg.name                         = nm
+  ; Cfg.arity                        = arity
+  ; Cfg.univ_arity                   = 0
+  ; Cfg.auto_reflect                 = Some (arity - 1)
+  ; Cfg.strong_reduction_ok          = true
+  ; Cfg.requires_binder_substitution = true
+  ; Cfg.interpretation               = (fun psc cbs _us args -> timing_int nm interp psc cbs args)
+  ; Cfg.interpretation_nbe           = (fun cbs _us args -> timing_nbe nm nbe_interp cbs args)
+  }
+
+let mk_refl_typing_step_2
+  (name:string)
+  (t : 't1 -> 't2 -> tac 'r)
+  (e1:embedding 't1)
+  (e2:embedding 't2)
+  (er:embedding 'r)
+  (nt : 'nt1 -> 'nt2 -> tac 'nr)
+  (ne1:NBET.embedding 'nt1)
+  (ne2:NBET.embedding 'nt2)
+  (ner:NBET.embedding 'nr)
+  : Cfg.primitive_step
+  =
+    mk_refl_typing_step name 3
+      (mk_tactic_interpretation_2 t e1 e2 er)
+      (fun cb args -> mk_tactic_nbe_interpretation_2 cb nt ne1 ne2 ner (drop 0 args))
+
+let mk_refl_typing_step_3
+  (name:string)
+  (t : 't1 -> 't2 -> 't3 -> tac 'r)
+  (e1:embedding 't1)
+  (e2:embedding 't2)
+  (e3:embedding 't3)
+  (er:embedding 'r)
+  (nt : 'nt1 -> 'nt2 -> 'nt3 -> tac 'nr)
+  (ne1:NBET.embedding 'nt1)
+  (ne2:NBET.embedding 'nt2)
+  (ne3:NBET.embedding 'nt3)
+  (ner:NBET.embedding 'nr)
+  : Cfg.primitive_step
+  =
+    mk_refl_typing_step name 4
+      (mk_tactic_interpretation_3 t e1 e2 e3 er)
+      (fun cb args -> mk_tactic_nbe_interpretation_3 cb nt ne1 ne2 ne3 ner (drop 0 args))

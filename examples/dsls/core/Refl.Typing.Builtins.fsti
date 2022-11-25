@@ -3,6 +3,15 @@ module Refl.Typing.Builtins
 module R = FStar.Reflection
 module T = FStar.Tactics
 
+//
+// These are currently in Tac but they don't alter proofstate in any way
+//
+// Perhaps they could be in a separate Compiler effect,
+//   but that requires a lot of boilerplate in the typechecker
+//
+// So leaving them as Tac for now
+//
+
 val subtyping_token (g:R.env) (t0 t1:R.typ) : Type0
 
 val equiv_token (g:R.env) (t0 t1:R.typ) : Type0

@@ -2200,6 +2200,62 @@ let with_compat_pre_core (n:Z.t) (f:tac 'a) : tac 'a =
             FStar.Options.pop ();
             r)
 
+(***** Refl typing builtins *****)
+
+let refl_typing_builtin_wrapper (f:unit -> 'a) (dflt:'a) : tac 'a =
+  let tx = UF.new_transaction () in
+  try
+    let r = f () in
+    UF.rollback tx;
+    ret r
+  with
+    | _ -> UF.rollback tx; ret dflt
+
+let no_uvars_in_term (t:term) : bool =
+  t |> Free.uvars |> BU.set_is_empty &&
+  t |> Free.univs |> BU.set_is_empty
+
+let no_uvars_in_g (g:env) : bool =
+  g.gamma |> BU.for_all (function
+    | Binding_var bv -> no_uvars_in_term bv.sort
+    | _ -> true)
+
+let refl_check_subtyping (g:env) (t0 t1:typ) : tac (option unit) =
+  if no_uvars_in_g g &&
+     no_uvars_in_term t0 &&
+     no_uvars_in_term t1
+  then refl_typing_builtin_wrapper (fun _ ->
+         let gopt = Rel.get_subtyping_prop g t0 t1 in
+         match gopt with
+         | None -> None
+         | Some guard ->
+           Rel.force_trivial_guard g guard;
+           Some ()
+       ) None
+  else ret None
+
+let refl_check_equiv (g:env) (t0 t1:typ) : tac (option unit) =
+  if no_uvars_in_g g &&
+     no_uvars_in_term t0 &&
+     no_uvars_in_term t1
+  then refl_typing_builtin_wrapper (fun _ ->
+         Rel.teq_force g t0 t1;
+         Some ()
+       ) None
+  else ret None
+
+let refl_tc_term (g:env) (e:term) : tac (option typ) =
+  if no_uvars_in_g g &&
+     no_uvars_in_term e
+  then refl_typing_builtin_wrapper (fun _ ->
+         let must_tot = true in
+         let _, t, guard = TcTerm.typeof_tot_or_gtot_term g e must_tot in
+         Rel.force_trivial_guard g guard;
+         Some t
+       ) None
+  else ret None
+
+
 (**** Creating proper environments and proofstates ****)
 
 let tac_env (env:Env.env) : Env.env =

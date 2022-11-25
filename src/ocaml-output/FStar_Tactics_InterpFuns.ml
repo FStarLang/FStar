@@ -16949,3 +16949,99 @@ let mk_total_step_20 :
                                                                     ne18 ne19
                                                                     ne20 ner
                                                                     uu___)
+let (mk_refl_typing_step :
+  Prims.string ->
+    Prims.int ->
+      (FStar_TypeChecker_Cfg.psc ->
+         FStar_Syntax_Embeddings.norm_cb ->
+           FStar_Syntax_Syntax.args ->
+             FStar_Syntax_Syntax.term FStar_Pervasives_Native.option)
+        ->
+        (FStar_TypeChecker_NBETerm.nbe_cbs ->
+           FStar_TypeChecker_NBETerm.args ->
+             FStar_TypeChecker_NBETerm.t FStar_Pervasives_Native.option)
+          -> FStar_TypeChecker_Cfg.primitive_step)
+  =
+  fun nm ->
+    fun arity ->
+      fun interp ->
+        fun nbe_interp ->
+          let nm1 = FStar_Parser_Const.dsl_typing_builtin nm in
+          {
+            FStar_TypeChecker_Cfg.name = nm1;
+            FStar_TypeChecker_Cfg.arity = arity;
+            FStar_TypeChecker_Cfg.univ_arity = Prims.int_zero;
+            FStar_TypeChecker_Cfg.auto_reflect =
+              (FStar_Pervasives_Native.Some (arity - Prims.int_one));
+            FStar_TypeChecker_Cfg.strong_reduction_ok = true;
+            FStar_TypeChecker_Cfg.requires_binder_substitution = true;
+            FStar_TypeChecker_Cfg.interpretation =
+              (fun psc ->
+                 fun cbs ->
+                   fun _us -> fun args -> timing_int nm1 interp psc cbs args);
+            FStar_TypeChecker_Cfg.interpretation_nbe =
+              (fun cbs ->
+                 fun _us -> fun args -> timing_nbe nm1 nbe_interp cbs args)
+          }
+let mk_refl_typing_step_2 :
+  'nr 'nt1 'nt2 'r 't1 't2 .
+    Prims.string ->
+      ('t1 -> 't2 -> 'r FStar_Tactics_Monad.tac) ->
+        't1 FStar_Syntax_Embeddings.embedding ->
+          't2 FStar_Syntax_Embeddings.embedding ->
+            'r FStar_Syntax_Embeddings.embedding ->
+              ('nt1 -> 'nt2 -> 'nr FStar_Tactics_Monad.tac) ->
+                'nt1 FStar_TypeChecker_NBETerm.embedding ->
+                  'nt2 FStar_TypeChecker_NBETerm.embedding ->
+                    'nr FStar_TypeChecker_NBETerm.embedding ->
+                      FStar_TypeChecker_Cfg.primitive_step
+  =
+  fun name ->
+    fun t ->
+      fun e1 ->
+        fun e2 ->
+          fun er ->
+            fun nt ->
+              fun ne1 ->
+                fun ne2 ->
+                  fun ner ->
+                    mk_refl_typing_step name (Prims.of_int (3))
+                      (mk_tactic_interpretation_2 t e1 e2 er)
+                      (fun cb ->
+                         fun args ->
+                           let uu___ = drop Prims.int_zero args in
+                           mk_tactic_nbe_interpretation_2 cb nt ne1 ne2 ner
+                             uu___)
+let mk_refl_typing_step_3 :
+  'nr 'nt1 'nt2 'nt3 'r 't1 't2 't3 .
+    Prims.string ->
+      ('t1 -> 't2 -> 't3 -> 'r FStar_Tactics_Monad.tac) ->
+        't1 FStar_Syntax_Embeddings.embedding ->
+          't2 FStar_Syntax_Embeddings.embedding ->
+            't3 FStar_Syntax_Embeddings.embedding ->
+              'r FStar_Syntax_Embeddings.embedding ->
+                ('nt1 -> 'nt2 -> 'nt3 -> 'nr FStar_Tactics_Monad.tac) ->
+                  'nt1 FStar_TypeChecker_NBETerm.embedding ->
+                    'nt2 FStar_TypeChecker_NBETerm.embedding ->
+                      'nt3 FStar_TypeChecker_NBETerm.embedding ->
+                        'nr FStar_TypeChecker_NBETerm.embedding ->
+                          FStar_TypeChecker_Cfg.primitive_step
+  =
+  fun name ->
+    fun t ->
+      fun e1 ->
+        fun e2 ->
+          fun e3 ->
+            fun er ->
+              fun nt ->
+                fun ne1 ->
+                  fun ne2 ->
+                    fun ne3 ->
+                      fun ner ->
+                        mk_refl_typing_step name (Prims.of_int (4))
+                          (mk_tactic_interpretation_3 t e1 e2 e3 er)
+                          (fun cb ->
+                             fun args ->
+                               let uu___ = drop Prims.int_zero args in
+                               mk_tactic_nbe_interpretation_3 cb nt ne1 ne2
+                                 ne3 ner uu___)

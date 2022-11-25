@@ -1596,7 +1596,86 @@ let (uu___153 : unit) =
                                                                     FStar_TypeChecker_NBETerm.e_int
                                                                     uu___157
                                                                     FStar_TypeChecker_NBETerm.e_any in
-                                                                    [uu___155] in
+                                                                    let uu___156
+                                                                    =
+                                                                    let uu___157
+                                                                    =
+                                                                    let uu___158
+                                                                    =
+                                                                    FStar_Syntax_Embeddings.e_option
+                                                                    FStar_Syntax_Embeddings.e_unit in
+                                                                    let uu___159
+                                                                    =
+                                                                    FStar_TypeChecker_NBETerm.e_option
+                                                                    FStar_TypeChecker_NBETerm.e_unit in
+                                                                    FStar_Tactics_InterpFuns.mk_refl_typing_step_3
+                                                                    "check_subtyping"
+                                                                    FStar_Tactics_Basic.refl_check_subtyping
+                                                                    FStar_Reflection_Embeddings.e_env
+                                                                    FStar_Reflection_Embeddings.e_term
+                                                                    FStar_Reflection_Embeddings.e_term
+                                                                    uu___158
+                                                                    FStar_Tactics_Basic.refl_check_subtyping
+                                                                    FStar_Reflection_NBEEmbeddings.e_env
+                                                                    FStar_Reflection_NBEEmbeddings.e_term
+                                                                    FStar_Reflection_NBEEmbeddings.e_term
+                                                                    uu___159 in
+                                                                    let uu___158
+                                                                    =
+                                                                    let uu___159
+                                                                    =
+                                                                    let uu___160
+                                                                    =
+                                                                    FStar_Syntax_Embeddings.e_option
+                                                                    FStar_Syntax_Embeddings.e_unit in
+                                                                    let uu___161
+                                                                    =
+                                                                    FStar_TypeChecker_NBETerm.e_option
+                                                                    FStar_TypeChecker_NBETerm.e_unit in
+                                                                    FStar_Tactics_InterpFuns.mk_refl_typing_step_3
+                                                                    "check_equiv"
+                                                                    FStar_Tactics_Basic.refl_check_equiv
+                                                                    FStar_Reflection_Embeddings.e_env
+                                                                    FStar_Reflection_Embeddings.e_term
+                                                                    FStar_Reflection_Embeddings.e_term
+                                                                    uu___160
+                                                                    FStar_Tactics_Basic.refl_check_equiv
+                                                                    FStar_Reflection_NBEEmbeddings.e_env
+                                                                    FStar_Reflection_NBEEmbeddings.e_term
+                                                                    FStar_Reflection_NBEEmbeddings.e_term
+                                                                    uu___161 in
+                                                                    let uu___160
+                                                                    =
+                                                                    let uu___161
+                                                                    =
+                                                                    let uu___162
+                                                                    =
+                                                                    FStar_Syntax_Embeddings.e_option
+                                                                    FStar_Reflection_Embeddings.e_term in
+                                                                    let uu___163
+                                                                    =
+                                                                    FStar_TypeChecker_NBETerm.e_option
+                                                                    FStar_Reflection_NBEEmbeddings.e_term in
+                                                                    FStar_Tactics_InterpFuns.mk_refl_typing_step_2
+                                                                    "tc_term"
+                                                                    FStar_Tactics_Basic.refl_tc_term
+                                                                    FStar_Reflection_Embeddings.e_env
+                                                                    FStar_Reflection_Embeddings.e_term
+                                                                    uu___162
+                                                                    FStar_Tactics_Basic.refl_tc_term
+                                                                    FStar_Reflection_NBEEmbeddings.e_env
+                                                                    FStar_Reflection_NBEEmbeddings.e_term
+                                                                    uu___163 in
+                                                                    [uu___161] in
+                                                                    uu___159
+                                                                    ::
+                                                                    uu___160 in
+                                                                    uu___157
+                                                                    ::
+                                                                    uu___158 in
+                                                                    uu___155
+                                                                    ::
+                                                                    uu___156 in
                                                                     uu___152
                                                                     ::
                                                                     uu___154 in

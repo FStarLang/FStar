@@ -6955,6 +6955,106 @@ let with_compat_pre_core :
            FStar_Options.push ();
            (let res = FStar_Options.set_options "--compat_pre_core 0" in
             let r = FStar_Tactics_Monad.run f ps in FStar_Options.pop (); r))
+let refl_typing_builtin_wrapper :
+  'a . (unit -> 'a) -> 'a -> 'a FStar_Tactics_Monad.tac =
+  fun f ->
+    fun dflt ->
+      let tx = FStar_Syntax_Unionfind.new_transaction () in
+      try
+        (fun uu___ ->
+           match () with
+           | () ->
+               let r = f () in
+               (FStar_Syntax_Unionfind.rollback tx; FStar_Tactics_Monad.ret r))
+          ()
+      with
+      | uu___ ->
+          (FStar_Syntax_Unionfind.rollback tx; FStar_Tactics_Monad.ret dflt)
+let (no_uvars_in_term : FStar_Syntax_Syntax.term -> Prims.bool) =
+  fun t ->
+    (let uu___ =
+       FStar_Compiler_Effect.op_Bar_Greater t FStar_Syntax_Free.uvars in
+     FStar_Compiler_Effect.op_Bar_Greater uu___
+       FStar_Compiler_Util.set_is_empty)
+      &&
+      (let uu___ =
+         FStar_Compiler_Effect.op_Bar_Greater t FStar_Syntax_Free.univs in
+       FStar_Compiler_Effect.op_Bar_Greater uu___
+         FStar_Compiler_Util.set_is_empty)
+let (no_uvars_in_g : env -> Prims.bool) =
+  fun g ->
+    FStar_Compiler_Effect.op_Bar_Greater g.FStar_TypeChecker_Env.gamma
+      (FStar_Compiler_Util.for_all
+         (fun uu___ ->
+            match uu___ with
+            | FStar_Syntax_Syntax.Binding_var bv ->
+                no_uvars_in_term bv.FStar_Syntax_Syntax.sort
+            | uu___1 -> true))
+let (refl_check_subtyping :
+  env ->
+    FStar_Reflection_Data.typ ->
+      FStar_Reflection_Data.typ ->
+        unit FStar_Pervasives_Native.option FStar_Tactics_Monad.tac)
+  =
+  fun g ->
+    fun t0 ->
+      fun t1 ->
+        let uu___ =
+          ((no_uvars_in_g g) && (no_uvars_in_term t0)) &&
+            (no_uvars_in_term t1) in
+        if uu___
+        then
+          refl_typing_builtin_wrapper
+            (fun uu___1 ->
+               let gopt = FStar_TypeChecker_Rel.get_subtyping_prop g t0 t1 in
+               match gopt with
+               | FStar_Pervasives_Native.None -> FStar_Pervasives_Native.None
+               | FStar_Pervasives_Native.Some guard ->
+                   (FStar_TypeChecker_Rel.force_trivial_guard g guard;
+                    FStar_Pervasives_Native.Some ()))
+            FStar_Pervasives_Native.None
+        else FStar_Tactics_Monad.ret FStar_Pervasives_Native.None
+let (refl_check_equiv :
+  env ->
+    FStar_Reflection_Data.typ ->
+      FStar_Reflection_Data.typ ->
+        unit FStar_Pervasives_Native.option FStar_Tactics_Monad.tac)
+  =
+  fun g ->
+    fun t0 ->
+      fun t1 ->
+        let uu___ =
+          ((no_uvars_in_g g) && (no_uvars_in_term t0)) &&
+            (no_uvars_in_term t1) in
+        if uu___
+        then
+          refl_typing_builtin_wrapper
+            (fun uu___1 ->
+               FStar_TypeChecker_Rel.teq_force g t0 t1;
+               FStar_Pervasives_Native.Some ()) FStar_Pervasives_Native.None
+        else FStar_Tactics_Monad.ret FStar_Pervasives_Native.None
+let (refl_tc_term :
+  env ->
+    FStar_Syntax_Syntax.term ->
+      FStar_Reflection_Data.typ FStar_Pervasives_Native.option
+        FStar_Tactics_Monad.tac)
+  =
+  fun g ->
+    fun e ->
+      let uu___ = (no_uvars_in_g g) && (no_uvars_in_term e) in
+      if uu___
+      then
+        refl_typing_builtin_wrapper
+          (fun uu___1 ->
+             let must_tot = true in
+             let uu___2 =
+               FStar_TypeChecker_TcTerm.typeof_tot_or_gtot_term g e must_tot in
+             match uu___2 with
+             | (uu___3, t, guard) ->
+                 (FStar_TypeChecker_Rel.force_trivial_guard g guard;
+                  FStar_Pervasives_Native.Some t))
+          FStar_Pervasives_Native.None
+      else FStar_Tactics_Monad.ret FStar_Pervasives_Native.None
 let (tac_env : FStar_TypeChecker_Env.env -> FStar_TypeChecker_Env.env) =
   fun env1 ->
     let uu___ = FStar_TypeChecker_Env.clear_expected_typ env1 in
