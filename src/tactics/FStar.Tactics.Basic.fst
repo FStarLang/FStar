@@ -2202,14 +2202,11 @@ let with_compat_pre_core (n:Z.t) (f:tac 'a) : tac 'a =
 
 (***** Refl typing builtins *****)
 
-let refl_typing_builtin_wrapper (f:unit -> 'a) (dflt:'a) : tac 'a =
+let refl_typing_builtin_wrapper (f:unit -> 'a) : tac (option 'a) =
   let tx = UF.new_transaction () in
-  try
-    let r = f () in
-    UF.rollback tx;
-    ret r
-  with
-    | _ -> UF.rollback tx; ret dflt
+  let _, r = Errors.catch_errors_and_ignore_rest f in
+  UF.rollback tx;
+  ret r
 
 let no_uvars_in_term (t:term) : bool =
   t |> Free.uvars |> BU.set_is_empty &&
@@ -2227,21 +2224,15 @@ let refl_check_subtyping (g:env) (t0 t1:typ) : tac (option unit) =
   then refl_typing_builtin_wrapper (fun _ ->
          let gopt = Rel.get_subtyping_prop g t0 t1 in
          match gopt with
-         | None -> None
-         | Some guard ->
-           Rel.force_trivial_guard g guard;
-           Some ()
-       ) None
+         | None -> Errors.raise_error (Errors.Fatal_IllTyped, "") Range.dummyRange
+         | Some guard -> Rel.force_trivial_guard g guard)
   else ret None
 
 let refl_check_equiv (g:env) (t0 t1:typ) : tac (option unit) =
   if no_uvars_in_g g &&
      no_uvars_in_term t0 &&
      no_uvars_in_term t1
-  then refl_typing_builtin_wrapper (fun _ ->
-         Rel.teq_force g t0 t1;
-         Some ()
-       ) None
+  then refl_typing_builtin_wrapper (fun _ -> Rel.teq_force g t0 t1)
   else ret None
 
 let refl_tc_term (g:env) (e:term) : tac (option typ) =
@@ -2251,8 +2242,7 @@ let refl_tc_term (g:env) (e:term) : tac (option typ) =
          let must_tot = true in
          let _, t, guard = TcTerm.typeof_tot_or_gtot_term g e must_tot in
          Rel.force_trivial_guard g guard;
-         Some t
-       ) None
+         t)
   else ret None
 
 

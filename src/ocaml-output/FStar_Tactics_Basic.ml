@@ -6956,20 +6956,15 @@ let with_compat_pre_core :
            (let res = FStar_Options.set_options "--compat_pre_core 0" in
             let r = FStar_Tactics_Monad.run f ps in FStar_Options.pop (); r))
 let refl_typing_builtin_wrapper :
-  'a . (unit -> 'a) -> 'a -> 'a FStar_Tactics_Monad.tac =
+  'a .
+    (unit -> 'a) -> 'a FStar_Pervasives_Native.option FStar_Tactics_Monad.tac
+  =
   fun f ->
-    fun dflt ->
-      let tx = FStar_Syntax_Unionfind.new_transaction () in
-      try
-        (fun uu___ ->
-           match () with
-           | () ->
-               let r = f () in
-               (FStar_Syntax_Unionfind.rollback tx; FStar_Tactics_Monad.ret r))
-          ()
-      with
-      | uu___ ->
-          (FStar_Syntax_Unionfind.rollback tx; FStar_Tactics_Monad.ret dflt)
+    let tx = FStar_Syntax_Unionfind.new_transaction () in
+    let uu___ = FStar_Errors.catch_errors_and_ignore_rest f in
+    match uu___ with
+    | (uu___1, r) ->
+        (FStar_Syntax_Unionfind.rollback tx; FStar_Tactics_Monad.ret r)
 let (no_uvars_in_term : FStar_Syntax_Syntax.term -> Prims.bool) =
   fun t ->
     (let uu___ =
@@ -7008,11 +7003,11 @@ let (refl_check_subtyping :
             (fun uu___1 ->
                let gopt = FStar_TypeChecker_Rel.get_subtyping_prop g t0 t1 in
                match gopt with
-               | FStar_Pervasives_Native.None -> FStar_Pervasives_Native.None
+               | FStar_Pervasives_Native.None ->
+                   FStar_Errors.raise_error (FStar_Errors.Fatal_IllTyped, "")
+                     FStar_Compiler_Range.dummyRange
                | FStar_Pervasives_Native.Some guard ->
-                   (FStar_TypeChecker_Rel.force_trivial_guard g guard;
-                    FStar_Pervasives_Native.Some ()))
-            FStar_Pervasives_Native.None
+                   FStar_TypeChecker_Rel.force_trivial_guard g guard)
         else FStar_Tactics_Monad.ret FStar_Pervasives_Native.None
 let (refl_check_equiv :
   env ->
@@ -7029,9 +7024,7 @@ let (refl_check_equiv :
         if uu___
         then
           refl_typing_builtin_wrapper
-            (fun uu___1 ->
-               FStar_TypeChecker_Rel.teq_force g t0 t1;
-               FStar_Pervasives_Native.Some ()) FStar_Pervasives_Native.None
+            (fun uu___1 -> FStar_TypeChecker_Rel.teq_force g t0 t1)
         else FStar_Tactics_Monad.ret FStar_Pervasives_Native.None
 let (refl_tc_term :
   env ->
@@ -7051,9 +7044,7 @@ let (refl_tc_term :
                FStar_TypeChecker_TcTerm.typeof_tot_or_gtot_term g e must_tot in
              match uu___2 with
              | (uu___3, t, guard) ->
-                 (FStar_TypeChecker_Rel.force_trivial_guard g guard;
-                  FStar_Pervasives_Native.Some t))
-          FStar_Pervasives_Native.None
+                 (FStar_TypeChecker_Rel.force_trivial_guard g guard; t))
       else FStar_Tactics_Monad.ret FStar_Pervasives_Native.None
 let (tac_env : FStar_TypeChecker_Env.env -> FStar_TypeChecker_Env.env) =
   fun env1 ->
