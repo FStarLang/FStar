@@ -357,6 +357,10 @@ let eq2 (t v0 v1:term)
     let h2 = pack_ln (Tv_App h1 (v1, Q_Explicit)) in    
     h2
 
+let b2t_lid : R.name = ["Prims"; "b2t"]
+let b2t_fv : R.fv = R.pack_fv b2t_lid
+let b2t_ty : R.term = R.(pack_ln (Tv_Arrow (as_binder 0 bool_ty) (mk_total (tm_type u_zero))))
+
 noeq
 type constant_typing: vconst -> term -> Type0 = 
   | CT_Unit: constant_typing C_Unit unit_ty
@@ -1047,9 +1051,12 @@ and open_close_inverse_match_returns (i:nat)
 // Type of the top-level tactic that would splice-in the definitions
 //
 
-type fstar_env = g:R.env {
-  lookup_fvar g unit_fv == Some (tm_type u_zero)
-}
+let fstar_env_fvs (g:R.env) =
+  lookup_fvar g unit_fv == Some (tm_type u_zero) /\
+  lookup_fvar g bool_fv == Some (tm_type u_zero) /\
+  lookup_fvar g b2t_fv  == Some b2t_ty
+
+type fstar_env = g:R.env{fstar_env_fvs g}
 
 type fstar_top_env = g:fstar_env {
   forall x. None? (lookup_bvar g x )

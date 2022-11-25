@@ -290,13 +290,9 @@ let fresh_is_fresh (e:src_env)
 
 module RT = Refl.Typing
 
-
-let b2t_lid : R.name = ["Prims"; "b2t"]
-let b2t_fv : R.fv = R.pack_fv b2t_lid
-let b2t_ty : R.term = R.(pack_ln (Tv_Arrow (RT.as_binder 0 RT.bool_ty) (RT.mk_total (RT.tm_type RT.u_zero))))
 let r_b2t (t:R.term) 
   : R.term 
-  = R.(pack_ln (Tv_App (pack_ln (Tv_FVar b2t_fv)) (t, Q_Explicit)))
+  = R.(pack_ln (Tv_App (pack_ln (Tv_FVar RT.b2t_fv)) (t, Q_Explicit)))
 
 let rec elab_exp (e:src_exp)
   : Tot R.term
@@ -395,21 +391,10 @@ let rec extend_env_alt_append (g:R.env) (sg0 sg1:src_env)
   = match sg0 with
     | [] -> ()
     | hd::tl -> extend_env_alt_append g tl sg1
-           
-let fstar_env =
-  g:R.env { 
-    RT.lookup_fvar g RT.bool_fv == Some RT.(tm_type u_zero) /\
-    RT.lookup_fvar g b2t_fv == Some b2t_ty
-  }
-
-let fstar_top_env =
-  g:fstar_env { 
-    forall x. None? (RT.lookup_bvar g x )
-  }
 
 [@@erasable]
 noeq
-type sub_typing (f:fstar_top_env) : src_env -> s_ty -> s_ty -> Type =
+type sub_typing (f:RT.fstar_top_env) : src_env -> s_ty -> s_ty -> Type =
   | S_Refl : g:src_env -> t:s_ty -> sub_typing f g t t
   | S_ELab : g:src_env -> t0:s_ty -> t1:s_ty ->
              RT.sub_typing (extend_env_l f g) (elab_ty t0) (elab_ty t1) ->
@@ -418,7 +403,7 @@ type sub_typing (f:fstar_top_env) : src_env -> s_ty -> s_ty -> Type =
   
 [@@erasable]
 noeq
-type src_typing (f:fstar_top_env) : src_env -> src_exp -> s_ty -> Type =
+type src_typing (f:RT.fstar_top_env) : src_env -> src_exp -> s_ty -> Type =
   | T_Bool :
       g:src_env ->
       b:bool ->
@@ -467,7 +452,7 @@ type src_typing (f:fstar_top_env) : src_env -> src_exp -> s_ty -> Type =
        sub_typing f ((hyp, Inr (b, EBool false)) :: g) t2 t ->
        src_typing f g (EIf b e1 e2) t
        
-and src_ty_ok (f:fstar_top_env) : src_env -> s_ty -> Type =
+and src_ty_ok (f:RT.fstar_top_env) : src_env -> s_ty -> Type =
   | OK_TBool  : g:src_env -> src_ty_ok f g TBool
   | OK_TArrow : g:src_env -> t:s_ty -> t':s_ty ->
                 src_ty_ok f g t ->
@@ -508,7 +493,7 @@ let check_sub_typing f
   = if t0 = t1 then S_Refl _ t0
     else T.fail "Not subtypes"
 
-let weaken (f:fstar_top_env) (sg:src_env) (hyp:var { None? (lookup sg hyp) } ) (b:s_exp) (t0 t1:s_ty)
+let weaken (f:RT.fstar_top_env) (sg:src_env) (hyp:var { None? (lookup sg hyp) } ) (b:s_exp) (t0 t1:s_ty)
   : T.Tac (t:s_ty &
            sub_typing f ((hyp,Inr(b, EBool true))::sg) t0 t &
            sub_typing f ((hyp,Inr(b, EBool false))::sg) t1 t)
@@ -519,7 +504,7 @@ let weaken (f:fstar_top_env) (sg:src_env) (hyp:var { None? (lookup sg hyp) } ) (
 let exp (sg:src_env) = e:src_exp { ln e /\ (forall x. x `Set.mem` freevars e ==> Some? (lookup sg x)) }
 
 #push-options "--fuel 2 --ifuel 2 --z3rlimit_factor 6 --query_stats"
-let rec check (f:fstar_top_env)
+let rec check (f:RT.fstar_top_env)
               (sg:src_env)
               (e:exp sg)
   : T.Tac (t:s_ty &
@@ -573,7 +558,7 @@ let rec check (f:fstar_top_env)
       )
       else T.fail "Branching on a non-boolean"
 
-and check_ty (f:fstar_top_env)
+and check_ty (f:RT.fstar_top_env)
              (sg:src_env)
              (t:s_ty)
   : T.Tac (src_ty_ok f sg t)
@@ -713,9 +698,9 @@ let src_types_are_closed3 (ty:s_ty) (x:R.var)
   = src_types_are_closed_core ty (RT.OpenWithVar x) 0;
     RT.open_term_spec (elab_ty ty) x
 
-let b2t_typing (g:fstar_env) (t:R.term) (dt:RT.typing g t RT.bool_ty)
+let b2t_typing (g:RT.fstar_env) (t:R.term) (dt:RT.typing g t RT.bool_ty)
   : RT.typing g (r_b2t t) (RT.tm_type RT.u_zero)
-  = let b2t_typing : RT.typing g _ b2t_ty = RT.T_FVar g b2t_fv in
+  = let b2t_typing : RT.typing g _ RT.b2t_ty = RT.T_FVar g RT.b2t_fv in
     let app_ty : _ = RT.T_App _ _ _ _ _ _ b2t_typing dt in
     RT.open_with_spec (RT.tm_type RT.u_zero) t;
     app_ty
@@ -731,7 +716,7 @@ let rec extend_env_l_lookup_fvar (g:R.env) (sg:src_env) (fv:R.fv)
     | hd::tl -> extend_env_l_lookup_fvar g tl fv
 
 open FStar.List.Tot    
-let rec src_ty_ok_weakening (#f:fstar_top_env)
+let rec src_ty_ok_weakening (#f:RT.fstar_top_env)
                             (sg sg':src_env)
                             (x:var { None? (lookup sg x) && None? (lookup sg' x) })
                             (b:binding)
@@ -905,7 +890,7 @@ let rec rename_lookup (sg:src_env) (a:var) (x y:var)
     | [] -> ()
     | hd::tl -> rename_lookup tl a x y
 
-let rec src_ty_ok_renaming (#f:fstar_top_env)
+let rec src_ty_ok_renaming (#f:RT.fstar_top_env)
                            (sg sg':src_env)
                            (x:var { None? (lookup sg x) /\ None? (lookup sg' x) })
                            (y:var { None? (lookup sg y) /\ None? (lookup sg' x) })
@@ -1033,7 +1018,7 @@ let rec rename_as_bindings_commute (sg:src_env) (x y:var)
 module RTB = Refl.Typing.Builtins
 
 let core_subtyping_renaming
-                        (#f:fstar_top_env)
+                        (#f:RT.fstar_top_env)
                         (sg sg':src_env)
                         (x:var { None? (lookup sg x) && None? (lookup sg' x) })
                         (y:var { None? (lookup sg y) && None? (lookup sg' y) })
@@ -1105,7 +1090,7 @@ let core_subtyping_renaming
       RT.ST_Token _ _ _ tok
 
 
-let sub_typing_renaming (#f:fstar_top_env)
+let sub_typing_renaming (#f:RT.fstar_top_env)
                         (sg sg':src_env)
                         (x:var { None? (lookup sg x) && None? (lookup sg' x) })
                         (y:var { None? (lookup sg y) && None? (lookup sg' y) })
@@ -1141,7 +1126,7 @@ let rec src_typing_freevars #f (sg:src_env) (e:src_exp) (t:s_ty) (d:src_typing f
       src_typing_freevars _ _ _ dbody
   
 #push-options "--z3rlimit_factor 4"
-let rec src_typing_renaming (#f:fstar_top_env)
+let rec src_typing_renaming (#f:RT.fstar_top_env)
                             (sg sg':src_env)
                             (x:var { None? (lookup sg x) && None? (lookup sg' x) })
                             (y:var { None? (lookup sg y) && None? (lookup sg' y) })
@@ -1458,7 +1443,7 @@ let apply_refinement_closed (e:src_exp { ln e && closed e })
     src_refinements_are_closed_core 0 e (RT.OpenWithVar x)
 #pop-options
 
-let rec soundness (#f:fstar_top_env)
+let rec soundness (#f:RT.fstar_top_env)
                   (#sg:src_env { src_env_ok sg } ) 
                   (#se:src_exp { ln se })
                   (#st:s_ty)
@@ -1545,7 +1530,7 @@ let rec soundness (#f:fstar_top_env)
       RT.T_If (extend_env_l f sg) (elab_exp b) (elab_exp e1) (elab_exp e2) _ hyp db d1 d2
 
 
-and src_ty_ok_soundness (#f:fstar_top_env)
+and src_ty_ok_soundness (#f:RT.fstar_top_env)
                         (sg:src_env { src_env_ok sg })
                         (t:s_ty)
                         (dt:src_ty_ok f sg t)
@@ -1605,7 +1590,7 @@ and src_ty_ok_soundness (#f:fstar_top_env)
      in
      RT.T_Refine (extend_env_l f sg) x RT.bool_ty refinement' _ _ bool_typing dr
 
-let soundness_lemma (f:fstar_top_env)
+let soundness_lemma (f:RT.fstar_top_env)
                     (sg:src_env { src_env_ok sg }) 
                     (se:src_exp { ln se })
                     (st:s_ty)
@@ -1619,7 +1604,6 @@ let soundness_lemma (f:fstar_top_env)
       ()
       (fun dd -> FStar.Squash.return_squash (soundness dd))
 
-#push-options "--admit_smt_queries true"
 let main (src:src_exp) : RT.dsl_tac_t =
   fun f ->
   if ln src && closed src
@@ -1628,4 +1612,3 @@ let main (src:src_exp) : RT.dsl_tac_t =
     soundness_lemma f [] src src_ty;
     elab_exp src, elab_ty src_ty
   else T.fail "Not locally nameless"
-#pop-options
