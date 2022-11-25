@@ -34,15 +34,33 @@ val uint_to_t (x: nat) : Pure t
 val fits_u32 : prop
 val fits_u64 : prop
 
+/// Creates a size_t when given a uint32 literal. Note, this will not
+/// extract if [x] is not a literal (e.g., 12ul). If you want to do a
+/// cast, see `uint32_to_sizet` below
 noextract inline_for_extraction
-val mk_u32 (x: U32.t) : Pure t
+val of_u32 (x: U32.t) : Pure t
   (requires fits_u32)
   (ensures (fun y -> v y == U32.v x))
 
+/// Creates a size_t when given a uint64 literal. Note, this will not
+/// extract if [x] is not a literal (e.g., 12uL). If you want to do a
+/// cast, see `uint64_to_sizet` below
 noextract inline_for_extraction
-val mk_u64 (x: U64.t) : Pure t
+val of_u64 (x: U64.t) : Pure t
   (requires fits_u64)
   (ensures (fun y -> v y == U64.v x))
+
+val uint16_to_sizet (x:U16.t) : Pure t
+  (requires True)
+  (ensures fun y -> v y == U16.v x)
+
+val uint32_to_sizet (x:U32.t) : Pure t
+  (requires fits_u32)
+  (ensures fun y -> v y == U32.v x)
+
+val uint64_to_sizet (x:U64.t) : Pure t
+  (requires fits_u64)
+  (ensures fun y -> v y == U64.v x)
 
 val fits_lte (x y: nat) : Lemma
   (requires (x <= y /\ fits y))
@@ -62,6 +80,24 @@ val sub (x y: t) : Pure t
 val mul (x y: t) : Pure t
   (requires (fits (v x * v y)))
   (ensures (fun z -> v z == v x * v y))
+
+(** Euclidean division of [a] and [b], with [b] non-zero *)
+val div (a:t) (b:t{v b <> 0}) : Pure t
+  (requires (True))
+  (ensures (fun c -> v a / v b = v c))
+
+(** Modulo specification, similar to FStar.UInt.mod *)
+
+let mod_spec (a:nat{fits a}) (b:nat{fits b /\ b <> 0}) : GTot (n:nat{fits n}) =
+  let open FStar.Mul in
+  a - ((a/b) * b)
+
+(** Euclidean remainder
+
+    The result is the modulus of [a] with respect to a non-zero [b] *)
+val rem (a:t) (b:t{v b <> 0}) : Pure t
+  (requires True)
+  (ensures (fun c -> mod_spec (v a) (v b) = v c))
 
 (** Greater than *)
 val gt (x y:t) : Pure bool
@@ -88,6 +124,7 @@ val lte (x y: t) : Pure bool
 unfold let op_Plus_Hat = add
 unfold let op_Subtraction_Hat = sub
 unfold let op_Star_Hat = mul
+unfold let op_Percent_Hat = rem
 unfold let op_Greater_Hat = gt
 unfold let op_Greater_Equals_Hat = gte
 unfold let op_Less_Hat = lt
