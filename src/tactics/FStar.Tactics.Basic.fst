@@ -2202,11 +2202,17 @@ let with_compat_pre_core (n:Z.t) (f:tac 'a) : tac 'a =
 
 (***** Refl typing builtins *****)
 
+let dbg_refl (g:env) (msg:unit -> string) =
+  if Env.debug g <| Options.Other "ReflTc"
+  then BU.print_string (msg ())
+
 let refl_typing_builtin_wrapper (f:unit -> 'a) : tac (option 'a) =
   let tx = UF.new_transaction () in
-  let _, r = Errors.catch_errors_and_ignore_rest f in
+  let errs, r = Errors.catch_errors_and_ignore_rest f in
   UF.rollback tx;
-  ret r
+  if List.length errs > 0
+  then ret None
+  else ret r
 
 let no_uvars_in_term (t:term) : bool =
   t |> Free.uvars |> BU.set_is_empty &&
@@ -2222,10 +2228,16 @@ let refl_check_subtyping (g:env) (t0 t1:typ) : tac (option unit) =
      no_uvars_in_term t0 &&
      no_uvars_in_term t1
   then refl_typing_builtin_wrapper (fun _ ->
+         dbg_refl g (fun _ ->
+           BU.format2 "refl_check_subtyping: %s <:? %s\n"
+             (Print.term_to_string t0)
+             (Print.term_to_string t1));
          let gopt = Rel.get_subtyping_prop g t0 t1 in
          match gopt with
          | None -> Errors.raise_error (Errors.Fatal_IllTyped, "") Range.dummyRange
-         | Some guard -> Rel.force_trivial_guard g guard)
+         | Some guard ->
+           Rel.force_trivial_guard g guard;
+           dbg_refl g (fun _ -> "refl_check_subtyping: succeeded"))
   else ret None
 
 let refl_check_equiv (g:env) (t0 t1:typ) : tac (option unit) =

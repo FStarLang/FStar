@@ -486,12 +486,24 @@ and t_height #f (#g:src_env) (#t:s_ty) (d:src_ty_ok f g t)
     | OK_TArrow _ _ _ d0 d1 -> max (t_height d0) (t_height d1) + 1
     | OK_TRefine _ _ d -> height d + 1
 
-let check_sub_typing f
+module RTB = Refl.Typing.Builtins
+
+let check_sub_typing (f:RT.fstar_top_env)
                      (sg:src_env)
                      (t0 t1:s_ty)
   : T.Tac (sub_typing f sg t0 t1)
   = if t0 = t1 then S_Refl _ t0
-    else T.fail "Not subtypes"
+    else let t0' = elab_ty t0 in
+         let t1' = elab_ty t1 in
+         let f' = extend_env_l f sg in
+         let token_opt = RTB.check_subtyping f' t0' t1' in
+         match token_opt with
+         | None -> T.fail "Not subtypes"
+         | Some token ->
+           S_ELab sg t0 t1 (RT.ST_Token (extend_env_l f sg)
+                                        (elab_ty t0)
+                                        (elab_ty t1)
+                                        token)
 
 let weaken (f:RT.fstar_top_env) (sg:src_env) (hyp:var { None? (lookup sg hyp) } ) (b:s_exp) (t0 t1:s_ty)
   : T.Tac (t:s_ty &
@@ -1612,3 +1624,22 @@ let main (src:src_exp) : RT.dsl_tac_t =
     soundness_lemma f [] src src_ty;
     elab_exp src, elab_ty src_ty
   else T.fail "Not locally nameless"
+
+(***** Examples *****)
+
+%splice_t[foo] (main (EBool true))
+
+//
+// This emits a subtyping query, bool <: x:bool{true}
+//   which is dispatched to the tc call back and succeeds
+//
+%splice_t[bar] (main (EApp (ELam (TRefineBool (ELam TBool (EBool true))) (EBVar 0))
+                           (EBool false)))
+
+//
+// The query here is bool <: x:bool{false}
+//   which fails as expected
+//
+[@@ expect_failure]
+%splice_t[bar] (main (EApp (ELam (TRefineBool (ELam TBool (EBool false))) (EBVar 0))
+                           (EBool true)))

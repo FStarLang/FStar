@@ -6955,6 +6955,15 @@ let with_compat_pre_core :
            FStar_Options.push ();
            (let res = FStar_Options.set_options "--compat_pre_core 0" in
             let r = FStar_Tactics_Monad.run f ps in FStar_Options.pop (); r))
+let (dbg_refl : env -> (unit -> Prims.string) -> unit) =
+  fun g ->
+    fun msg ->
+      let uu___ =
+        FStar_Compiler_Effect.op_Less_Bar (FStar_TypeChecker_Env.debug g)
+          (FStar_Options.Other "ReflTc") in
+      if uu___
+      then let uu___1 = msg () in FStar_Compiler_Util.print_string uu___1
+      else ()
 let refl_typing_builtin_wrapper :
   'a .
     (unit -> 'a) -> 'a FStar_Pervasives_Native.option FStar_Tactics_Monad.tac
@@ -6963,8 +6972,11 @@ let refl_typing_builtin_wrapper :
     let tx = FStar_Syntax_Unionfind.new_transaction () in
     let uu___ = FStar_Errors.catch_errors_and_ignore_rest f in
     match uu___ with
-    | (uu___1, r) ->
-        (FStar_Syntax_Unionfind.rollback tx; FStar_Tactics_Monad.ret r)
+    | (errs, r) ->
+        (FStar_Syntax_Unionfind.rollback tx;
+         if (FStar_Compiler_List.length errs) > Prims.int_zero
+         then FStar_Tactics_Monad.ret FStar_Pervasives_Native.None
+         else FStar_Tactics_Monad.ret r)
 let (no_uvars_in_term : FStar_Syntax_Syntax.term -> Prims.bool) =
   fun t ->
     (let uu___ =
@@ -7001,13 +7013,22 @@ let (refl_check_subtyping :
         then
           refl_typing_builtin_wrapper
             (fun uu___1 ->
-               let gopt = FStar_TypeChecker_Rel.get_subtyping_prop g t0 t1 in
-               match gopt with
-               | FStar_Pervasives_Native.None ->
-                   FStar_Errors.raise_error (FStar_Errors.Fatal_IllTyped, "")
-                     FStar_Compiler_Range.dummyRange
-               | FStar_Pervasives_Native.Some guard ->
-                   FStar_TypeChecker_Rel.force_trivial_guard g guard)
+               dbg_refl g
+                 (fun uu___3 ->
+                    let uu___4 = FStar_Syntax_Print.term_to_string t0 in
+                    let uu___5 = FStar_Syntax_Print.term_to_string t1 in
+                    FStar_Compiler_Util.format2
+                      "refl_check_subtyping: %s <:? %s\n" uu___4 uu___5);
+               (let gopt = FStar_TypeChecker_Rel.get_subtyping_prop g t0 t1 in
+                match gopt with
+                | FStar_Pervasives_Native.None ->
+                    FStar_Errors.raise_error
+                      (FStar_Errors.Fatal_IllTyped, "")
+                      FStar_Compiler_Range.dummyRange
+                | FStar_Pervasives_Native.Some guard ->
+                    (FStar_TypeChecker_Rel.force_trivial_guard g guard;
+                     dbg_refl g
+                       (fun uu___4 -> "refl_check_subtyping: succeeded"))))
         else FStar_Tactics_Monad.ret FStar_Pervasives_Native.None
 let (refl_check_equiv :
   env ->
