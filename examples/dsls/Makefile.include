@@ -1,11 +1,10 @@
 # Makefile for examples stlc, mini_steel, ...
 
 SRC_FILES=$(wildcard *.fst)
-OUT_DIR=_output
 
-INCLUDE_PATHS=../core ../core/$(OUT_DIR)
+INCLUDE_PATHS=../core
 
-FSTAR=fstar.exe $(addprefix --include , $(INCLUDE_PATHS)) --cache_checked_modules --cache_dir $(OUT_DIR) --odir $(OUT_DIR) $(OTHERFLAGS) --already_cached Prims,FStar,Steel
+FSTAR=fstar.exe $(addprefix --include , $(INCLUDE_PATHS)) --cache_checked_modules $(OTHERFLAGS) --already_cached Prims,FStar,Steel
 
 all: verify_all
 
@@ -23,13 +22,10 @@ include .depend
 %.fsti.checked:
 	$(FSTAR) $<
 
-$(OUT_DIR):
-	mkdir -p $(OUT_DIR)
-
-verify_all: $(OUT_DIR) $(ALL_CHECKED_FILES)
+verify_all: $(ALL_CHECKED_FILES)
 
 clean:
-	rm -rf $(OUT_DIR) .depend ._depend
+	rm -rf .depend ._depend
 
 %.fst-in %.fst-in:
 	@echo --include ../core

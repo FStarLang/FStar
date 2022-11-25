@@ -1,5 +1,4 @@
-ALL := stlc mini_steel
-  #bool_refinement \
+ALL := stlc bool_refinement mini_steel
   #dependent_bool_refinement
 
 all:
