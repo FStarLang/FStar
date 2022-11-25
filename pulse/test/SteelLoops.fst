@@ -7,8 +7,8 @@ open Steel.Loops
 
 let sum_to_n_for (r:ref UInt32.t) : SteelT unit (vptr r) (fun _ -> vptr r) =
   for_loop
-    0ul
-    10ul
+    0sz
+    10sz
     (fun _ -> vptr r)
     (fun _ -> let x = read r in write r (x `FStar.UInt32.add_mod` 1ul))
 
@@ -17,8 +17,8 @@ let sum_to_n_for_2 (r:ref UInt32.t) : Steel unit (vptr r) (fun _ -> vptr r)
   (ensures fun h0 _ h1 -> sel r h1 == 10ul)
 =
   for_loop_full
-    0ul
-    10ul
+    0sz
+    10sz
     (fun _ -> vptr r)
     (fun i v -> v == UInt32.uint_to_t i)
     (fun _ -> let x = read r in write r (x `FStar.UInt32.add_mod` 1ul))
