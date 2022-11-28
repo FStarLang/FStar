@@ -141,10 +141,14 @@ let defaults =
       ("abort_on"                     , Int 0);
       ("admit_smt_queries"            , Bool false);
       ("admit_except"                 , Unset);
+      ("disallow_unification_guards"  , Bool false);      
       ("already_cached"               , Unset);
       ("cache_checked_modules"        , Bool false);
       ("cache_dir"                    , Unset);
       ("cache_off"                    , Bool false);
+      ("compat_pre_core"              , Unset);
+      ("compat_pre_typed_indexed_effects"
+                                      , Bool false);
       ("print_cache_version"          , Bool false);
       ("cmi"                          , Bool false);
       ("codegen"                      , Unset);
@@ -253,6 +257,7 @@ let defaults =
       ("z3rlimit_factor"              , Int 1);
       ("z3seed"                       , Int 0);
       ("z3cliopt"                     , List []);
+      ("z3smtopt"                     , List []);
       ("__no_positivity"              , Bool false);
       ("__tactics_nbe"                , Bool false);
       ("warn_error"                   , List []);
@@ -310,6 +315,7 @@ let set_verification_options o =
     "no_tactics";
     "vcgen.optimize_bind_as_seq";
     "z3cliopt";
+    "z3smtopt";    
     "z3refresh";
     "z3rlimit";
     "z3rlimit_factor";
@@ -324,6 +330,11 @@ let lookup_opt s c =
 let get_abort_on                ()      = lookup_opt "abort_on"                 as_int
 let get_admit_smt_queries       ()      = lookup_opt "admit_smt_queries"        as_bool
 let get_admit_except            ()      = lookup_opt "admit_except"             (as_option as_string)
+let get_compat_pre_core         ()      = lookup_opt "compat_pre_core"          (as_option as_int)
+
+let get_compat_pre_typed_indexed_effects ()  = lookup_opt "compat_pre_typed_indexed_effects" as_bool
+let get_disallow_unification_guards  ()      = lookup_opt "disallow_unification_guards"      as_bool
+
 let get_already_cached          ()      = lookup_opt "already_cached"           (as_option (as_list as_string))
 let get_cache_checked_modules   ()      = lookup_opt "cache_checked_modules"    as_bool
 let get_cache_dir               ()      = lookup_opt "cache_dir"                (as_option as_string)
@@ -426,6 +437,7 @@ let get_verify_module           ()      = lookup_opt "verify_module"            
 let get_version                 ()      = lookup_opt "version"                  as_bool
 let get_warn_default_effects    ()      = lookup_opt "warn_default_effects"     as_bool
 let get_z3cliopt                ()      = lookup_opt "z3cliopt"                 (as_list as_string)
+let get_z3smtopt                ()      = lookup_opt "z3smtopt"                 (as_list as_string)
 let get_z3refresh               ()      = lookup_opt "z3refresh"                as_bool
 let get_z3rlimit                ()      = lookup_opt "z3rlimit"                 as_int
 let get_z3rlimit_factor         ()      = lookup_opt "z3rlimit_factor"          as_int
@@ -635,6 +647,21 @@ let rec specs_with_types warn_unsafe : list (char * string * opt_type * string) 
         "admit_except",
         WithSideEffect ((fun _ -> if warn_unsafe then option_warning_callback "admit_except"), SimpleStr "[symbol|(symbol, id)]"),
         "Admit all queries, except those with label ( symbol,  id)) (e.g. --admit_except '(FStar.Fin.pigeonhole, 1)' or --admit_except FStar.Fin.pigeonhole)");
+
+      ( noshort,
+        "compat_pre_core",
+        IntStr "0, 1, 2",
+        "Retain behavior of the tactic engine prior to the introduction of FStar.TypeChecker.Core (0 is most permissive, 2 is least permissive)");
+
+      ( noshort,
+        "compat_pre_typed_indexed_effects",
+        Const (Bool true),
+        "Retain untyped indexed effects implicits");
+
+      ( noshort,
+        "disallow_unification_guards",
+        BoolStr,
+        "Fail if the SMT guard are produced when the tactic engine re-checks solutions produced by the unifier (default 'false')");
 
        ( noshort,
          "already_cached",
@@ -1233,6 +1260,11 @@ let rec specs_with_types warn_unsafe : list (char * string * opt_type * string) 
          "Z3 command line options");
 
        ( noshort,
+         "z3smtopt",
+         ReverseAccumulated (SimpleStr "option"),
+         "Z3 options in smt2 format");
+
+       ( noshort,
         "z3refresh",
         Const (Bool true),
         "Restart Z3 after each query; useful for ensuring proof robustness");
@@ -1329,6 +1361,9 @@ let settable = function
     | "abort_on"
     | "admit_except"
     | "admit_smt_queries"
+    | "compat_pre_core"
+    | "compat_pre_typed_indexed_effects"
+    | "disallow_unification_guards"
     | "debug"
     | "debug_level"
     | "defensive"
@@ -1345,6 +1380,7 @@ let settable = function
     | "initial_fuel"
     | "initial_ifuel"
     | "ide_id_info_off"
+    | "keep_query_captions"
     | "lax"
     | "load"
     | "load_cmxs"
@@ -1398,6 +1434,7 @@ let settable = function
     | "vcgen.optimize_bind_as_seq"
     | "warn_error"
     | "z3cliopt"
+    | "z3smtopt"    
     | "z3refresh"
     | "z3rlimit"
     | "z3rlimit_factor"
@@ -1637,6 +1674,23 @@ let parse_settings ns : list (list string * bool) =
 let __temp_fast_implicits        () = lookup_opt "__temp_fast_implicits" as_bool
 let admit_smt_queries            () = get_admit_smt_queries           ()
 let admit_except                 () = get_admit_except                ()
+let compat_pre_core_should_register () = 
+  match get_compat_pre_core() with
+  | Some 0 -> false
+  | _ -> true
+let compat_pre_core_should_check () = 
+  match get_compat_pre_core() with
+  | Some 0 
+  | Some 1 -> false
+  | _ -> true  
+let compat_pre_core_set () =
+  match get_compat_pre_core() with
+  | None -> false
+  | _ -> true
+
+let compat_pre_typed_indexed_effects () = get_compat_pre_typed_indexed_effects ()
+
+let disallow_unification_guards  () = get_disallow_unification_guards    ()
 let cache_checked_modules        () = get_cache_checked_modules       ()
 let cache_off                    () = get_cache_off                   ()
 let print_cache_version          () = get_print_cache_version         ()
@@ -1783,6 +1837,7 @@ let z3_exe                       () = match get_smt () with
                                     | None -> Platform.exe "z3"
                                     | Some s -> s
 let z3_cliopt                    () = get_z3cliopt                    ()
+let z3_smtopt                    () = get_z3smtopt                    ()
 let z3_refresh                   () = get_z3refresh                   ()
 let z3_rlimit                    () = get_z3rlimit                    ()
 let z3_rlimit_factor             () = get_z3rlimit_factor             ()
@@ -2039,6 +2094,7 @@ let get_vconfig () =
     no_tactics                                = get_no_tactics ();
     vcgen_optimize_bind_as_seq                = get_vcgen_optimize_bind_as_seq ();
     z3cliopt                                  = get_z3cliopt ();
+    z3smtopt                                  = get_z3smtopt ();    
     z3refresh                                 = get_z3refresh ();
     z3rlimit                                  = get_z3rlimit ();
     z3rlimit_factor                           = get_z3rlimit_factor ();
@@ -2076,6 +2132,7 @@ let set_vconfig (vcfg:vconfig) : unit =
   set_option "no_tactics"                                (Bool vcfg.no_tactics);
   set_option "vcgen.optimize_bind_as_seq"                (option_as String vcfg.vcgen_optimize_bind_as_seq);
   set_option "z3cliopt"                                  (List (List.map String vcfg.z3cliopt));
+  set_option "z3smtopt"                                  (List (List.map String vcfg.z3smtopt));  
   set_option "z3refresh"                                 (Bool vcfg.z3refresh);
   set_option "z3rlimit"                                  (Int vcfg.z3rlimit);
   set_option "z3rlimit_factor"                           (Int vcfg.z3rlimit_factor);

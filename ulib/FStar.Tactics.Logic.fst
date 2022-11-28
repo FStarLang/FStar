@@ -70,6 +70,10 @@ let implies_intro () : Tac binder =
     apply_lemma (`imp_intro_lem);
     intro ()
 
+let implies_intro_as (s:string) : Tac binder =
+    apply_lemma (`imp_intro_lem);
+    intro_as s
+
 let implies_intros () : Tac binders = repeat1 implies_intro
 
 let l_intro () = forall_intro `or_else` implies_intro
@@ -270,6 +274,10 @@ let instantiate (fa : term) (x : term) : Tac binder =
     try pose (`__forall_inst_sq (`#fa) (`#x)) with | _ ->
     try pose (`__forall_inst (`#fa) (`#x)) with | _ ->
     fail "could not instantiate"
+
+let instantiate_as (fa : term) (x : term) (s : string) : Tac binder =
+    let b = instantiate fa x in
+    rename_to b s
 
 private
 let sklem0 (#a:Type) (#p : a -> Type0) ($v : (exists (x:a). p x)) (phi:Type0) :

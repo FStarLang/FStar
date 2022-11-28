@@ -17,7 +17,7 @@
 module Steel.ST.Array.Util
 
 module G = FStar.Ghost
-module U32 = FStar.UInt32
+module US = FStar.SizeT
 
 module A = Steel.ST.Array
 
@@ -33,14 +33,14 @@ open Steel.ST.Util
 inline_for_extraction
 val array_literal
   (#a:Type0)
-  (n:U32.t)
-  (f:(i:U32.t{U32.v i < U32.v n} -> a))
+  (n:US.t)
+  (f:(i:US.t{US.v i < US.v n} -> a))
   : ST (A.array a)
        emp
        (fun arr ->
-        A.pts_to arr full_perm (Seq.init (U32.v n) (fun i -> f (U32.uint_to_t i))))
-       (requires U32.v n > 0)
-       (ensures fun arr -> A.length arr == U32.v n)
+        A.pts_to arr full_perm (Seq.init (US.v n) (fun i -> f (US.uint_to_t i))))
+       (requires US.v n > 0)
+       (ensures fun arr -> A.length arr == US.v n)
 
 
 /// Check if all the elements of an array satisfy a predicate
@@ -50,13 +50,13 @@ val for_all
   (#a:Type0)
   (#perm:perm)
   (#s:G.erased (Seq.seq a))
-  (n:U32.t)
+  (n:US.t)
   (arr:A.array a)
   (p:a -> bool)
   : ST bool
        (A.pts_to arr perm s)
        (fun _ -> A.pts_to arr perm s)
-       (requires A.length arr == U32.v n)
+       (requires A.length arr == US.v n)
        (ensures fun b -> b <==> (forall (i:nat). i < Seq.length s ==>
                                     p (Seq.index s i)))
 
@@ -69,7 +69,7 @@ val for_all2
   (#p0 #p1:perm)
   (#s0:G.erased (Seq.seq a))
   (#s1:G.erased (Seq.seq b))
-  (n:U32.t)
+  (n:US.t)
   (a0:A.array a)
   (a1:A.array b)
   (p:a -> b -> bool)
@@ -82,7 +82,7 @@ val for_all2
           `star`
         A.pts_to a1 p1 s1)
        (requires
-         A.length a0 == U32.v n /\
+         A.length a0 == US.v n /\
          A.length a0 == A.length a1)
        (ensures fun b -> b <==> (forall (i:nat). (i < Seq.length s0 /\ i < Seq.length s1) ==>
                                     p (Seq.index s0 i) (Seq.index s1 i)))
@@ -94,7 +94,7 @@ val for_all2
 let compare (#a:eqtype) (#p0 #p1:perm)
   (a0 a1:A.array a)
   (#s0 #s1:G.erased (Seq.seq a))
-  (n:U32.t{U32.v n == A.length a0 /\ A.length a0 == A.length a1})
+  (n:US.t{US.v n == A.length a0 /\ A.length a0 == A.length a1})
   : ST bool
        (A.pts_to a0 p0 s0
           `star`

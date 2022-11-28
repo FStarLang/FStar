@@ -287,8 +287,8 @@ let rec e_pattern' () =
             mkConstruct ref_Pat_Var.fv [] [as_arg (embed e_bv cb bv)]
         | Pat_Wild bv ->
             mkConstruct ref_Pat_Wild.fv [] [as_arg (embed e_bv cb bv)]
-        | Pat_Dot_Term (bv, t) ->
-            mkConstruct ref_Pat_Dot_Term.fv [] [as_arg (embed e_bv cb bv); as_arg (embed e_term cb t)]
+        | Pat_Dot_Term eopt ->
+            mkConstruct ref_Pat_Dot_Term.fv [] [as_arg (embed (e_option e_term) cb eopt)]
     in
     let unembed_pattern cb (t : t) : option pattern =
         match t.nbe_t with
@@ -310,10 +310,9 @@ let rec e_pattern' () =
             BU.bind_opt (unembed e_bv cb bv) (fun bv ->
             Some <| Pat_Wild bv)
 
-        | Construct (fv, [], [(t, _); (bv, _)]) when S.fv_eq_lid fv ref_Pat_Dot_Term.lid ->
-            BU.bind_opt (unembed e_bv cb bv) (fun bv ->
-            BU.bind_opt (unembed e_term cb t) (fun t ->
-            Some <| Pat_Dot_Term (bv, t)))
+        | Construct (fv, [], [(eopt, _)]) when S.fv_eq_lid fv ref_Pat_Dot_Term.lid ->
+            BU.bind_opt (unembed (e_option e_term) cb eopt) (fun eopt ->
+            Some <| Pat_Dot_Term eopt)
 
         | _ ->
             Err.log_issue Range.dummyRange (Err.Warning_NotEmbedded, (BU.format1 "Not an embedded pattern: %s" (t_to_string t)));

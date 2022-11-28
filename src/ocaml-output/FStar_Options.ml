@@ -265,10 +265,13 @@ let (defaults : (Prims.string * option_val) Prims.list) =
   ("abort_on", (Int Prims.int_zero));
   ("admit_smt_queries", (Bool false));
   ("admit_except", Unset);
+  ("disallow_unification_guards", (Bool false));
   ("already_cached", Unset);
   ("cache_checked_modules", (Bool false));
   ("cache_dir", Unset);
   ("cache_off", (Bool false));
+  ("compat_pre_core", Unset);
+  ("compat_pre_typed_indexed_effects", (Bool false));
   ("print_cache_version", (Bool false));
   ("cmi", (Bool false));
   ("codegen", Unset);
@@ -375,6 +378,7 @@ let (defaults : (Prims.string * option_val) Prims.list) =
   ("z3rlimit_factor", (Int Prims.int_one));
   ("z3seed", (Int Prims.int_zero));
   ("z3cliopt", (List []));
+  ("z3smtopt", (List []));
   ("__no_positivity", (Bool false));
   ("__tactics_nbe", (Bool false));
   ("warn_error", (List []));
@@ -429,6 +433,7 @@ let (set_verification_options : optionstate -> unit) =
       "no_tactics";
       "vcgen.optimize_bind_as_seq";
       "z3cliopt";
+      "z3smtopt";
       "z3refresh";
       "z3rlimit";
       "z3rlimit_factor";
@@ -449,6 +454,12 @@ let (get_admit_smt_queries : unit -> Prims.bool) =
   fun uu___ -> lookup_opt "admit_smt_queries" as_bool
 let (get_admit_except : unit -> Prims.string FStar_Pervasives_Native.option)
   = fun uu___ -> lookup_opt "admit_except" (as_option as_string)
+let (get_compat_pre_core : unit -> Prims.int FStar_Pervasives_Native.option)
+  = fun uu___ -> lookup_opt "compat_pre_core" (as_option as_int)
+let (get_compat_pre_typed_indexed_effects : unit -> Prims.bool) =
+  fun uu___ -> lookup_opt "compat_pre_typed_indexed_effects" as_bool
+let (get_disallow_unification_guards : unit -> Prims.bool) =
+  fun uu___ -> lookup_opt "disallow_unification_guards" as_bool
 let (get_already_cached :
   unit -> Prims.string Prims.list FStar_Pervasives_Native.option) =
   fun uu___ -> lookup_opt "already_cached" (as_option (as_list as_string))
@@ -651,6 +662,8 @@ let (get_warn_default_effects : unit -> Prims.bool) =
   fun uu___ -> lookup_opt "warn_default_effects" as_bool
 let (get_z3cliopt : unit -> Prims.string Prims.list) =
   fun uu___ -> lookup_opt "z3cliopt" (as_list as_string)
+let (get_z3smtopt : unit -> Prims.string Prims.list) =
+  fun uu___ -> lookup_opt "z3smtopt" (as_list as_string)
 let (get_z3refresh : unit -> Prims.bool) =
   fun uu___ -> lookup_opt "z3refresh" as_bool
 let (get_z3rlimit : unit -> Prims.int) =
@@ -949,7 +962,7 @@ let (interp_quake_arg : Prims.string -> (Prims.int * Prims.int * Prims.bool))
           let uu___ = ios f1 in let uu___1 = ios f2 in (uu___, uu___1, true)
         else failwith "unexpected value for --quake"
     | uu___ -> failwith "unexpected value for --quake"
-let (uu___406 : (((Prims.string -> unit) -> unit) * (Prims.string -> unit)))
+let (uu___449 : (((Prims.string -> unit) -> unit) * (Prims.string -> unit)))
   =
   let cb = FStar_Compiler_Util.mk_ref FStar_Pervasives_Native.None in
   let set1 f =
@@ -961,11 +974,11 @@ let (uu___406 : (((Prims.string -> unit) -> unit) * (Prims.string -> unit)))
     | FStar_Pervasives_Native.Some f -> f msg in
   (set1, call)
 let (set_option_warning_callback_aux : (Prims.string -> unit) -> unit) =
-  match uu___406 with
+  match uu___449 with
   | (set_option_warning_callback_aux1, option_warning_callback) ->
       set_option_warning_callback_aux1
 let (option_warning_callback : Prims.string -> unit) =
-  match uu___406 with
+  match uu___449 with
   | (set_option_warning_callback_aux1, option_warning_callback1) ->
       option_warning_callback1
 let (set_option_warning_callback : (Prims.string -> unit) -> unit) =
@@ -999,6 +1012,12 @@ let rec (specs_with_types :
               then option_warning_callback "admit_except"
               else ())), (SimpleStr "[symbol|(symbol, id)]"))),
       "Admit all queries, except those with label ( symbol,  id)) (e.g. --admit_except '(FStar.Fin.pigeonhole, 1)' or --admit_except FStar.Fin.pigeonhole)");
+    (FStar_Getopt.noshort, "compat_pre_core", (IntStr "0, 1, 2"),
+      "Retain behavior of the tactic engine prior to the introduction of FStar.TypeChecker.Core (0 is most permissive, 2 is least permissive)");
+    (FStar_Getopt.noshort, "compat_pre_typed_indexed_effects",
+      (Const (Bool true)), "Retain untyped indexed effects implicits");
+    (FStar_Getopt.noshort, "disallow_unification_guards", BoolStr,
+      "Fail if the SMT guard are produced when the tactic engine re-checks solutions produced by the unifier (default 'false')");
     (FStar_Getopt.noshort, "already_cached",
       (Accumulated
          (SimpleStr
@@ -1296,6 +1315,8 @@ let rec (specs_with_types :
       "Warn when (a -> b) is desugared to (a -> Tot b)");
     (FStar_Getopt.noshort, "z3cliopt",
       (ReverseAccumulated (SimpleStr "option")), "Z3 command line options");
+    (FStar_Getopt.noshort, "z3smtopt",
+      (ReverseAccumulated (SimpleStr "option")), "Z3 options in smt2 format");
     (FStar_Getopt.noshort, "z3refresh", (Const (Bool true)),
       "Restart Z3 after each query; useful for ensuring proof robustness");
     (FStar_Getopt.noshort, "z3rlimit", (IntStr "positive_integer"),
@@ -1367,6 +1388,9 @@ let (settable : Prims.string -> Prims.bool) =
     | "abort_on" -> true
     | "admit_except" -> true
     | "admit_smt_queries" -> true
+    | "compat_pre_core" -> true
+    | "compat_pre_typed_indexed_effects" -> true
+    | "disallow_unification_guards" -> true
     | "debug" -> true
     | "debug_level" -> true
     | "defensive" -> true
@@ -1383,6 +1407,7 @@ let (settable : Prims.string -> Prims.bool) =
     | "initial_fuel" -> true
     | "initial_ifuel" -> true
     | "ide_id_info_off" -> true
+    | "keep_query_captions" -> true
     | "lax" -> true
     | "load" -> true
     | "load_cmxs" -> true
@@ -1436,6 +1461,7 @@ let (settable : Prims.string -> Prims.bool) =
     | "vcgen.optimize_bind_as_seq" -> true
     | "warn_error" -> true
     | "z3cliopt" -> true
+    | "z3smtopt" -> true
     | "z3refresh" -> true
     | "z3rlimit" -> true
     | "z3rlimit_factor" -> true
@@ -1457,7 +1483,7 @@ let (settable_specs :
     (FStar_Compiler_List.filter
        (fun uu___ ->
           match uu___ with | (uu___1, x, uu___2, uu___3) -> settable x))
-let (uu___589 :
+let (uu___641 :
   (((unit -> FStar_Getopt.parse_cmdline_res) -> unit) *
     (unit -> FStar_Getopt.parse_cmdline_res)))
   =
@@ -1474,11 +1500,11 @@ let (uu___589 :
   (set1, call)
 let (set_error_flags_callback_aux :
   (unit -> FStar_Getopt.parse_cmdline_res) -> unit) =
-  match uu___589 with
+  match uu___641 with
   | (set_error_flags_callback_aux1, set_error_flags) ->
       set_error_flags_callback_aux1
 let (set_error_flags : unit -> FStar_Getopt.parse_cmdline_res) =
-  match uu___589 with
+  match uu___641 with
   | (set_error_flags_callback_aux1, set_error_flags1) -> set_error_flags1
 let (set_error_flags_callback :
   (unit -> FStar_Getopt.parse_cmdline_res) -> unit) =
@@ -1764,6 +1790,32 @@ let (admit_smt_queries : unit -> Prims.bool) =
   fun uu___ -> get_admit_smt_queries ()
 let (admit_except : unit -> Prims.string FStar_Pervasives_Native.option) =
   fun uu___ -> get_admit_except ()
+let (compat_pre_core_should_register : unit -> Prims.bool) =
+  fun uu___ ->
+    let uu___1 = get_compat_pre_core () in
+    match uu___1 with
+    | FStar_Pervasives_Native.Some uu___2 when uu___2 = Prims.int_zero ->
+        false
+    | uu___2 -> true
+let (compat_pre_core_should_check : unit -> Prims.bool) =
+  fun uu___ ->
+    let uu___1 = get_compat_pre_core () in
+    match uu___1 with
+    | FStar_Pervasives_Native.Some uu___2 when uu___2 = Prims.int_zero ->
+        false
+    | FStar_Pervasives_Native.Some uu___2 when uu___2 = Prims.int_one ->
+        false
+    | uu___2 -> true
+let (compat_pre_core_set : unit -> Prims.bool) =
+  fun uu___ ->
+    let uu___1 = get_compat_pre_core () in
+    match uu___1 with
+    | FStar_Pervasives_Native.None -> false
+    | uu___2 -> true
+let (compat_pre_typed_indexed_effects : unit -> Prims.bool) =
+  fun uu___ -> get_compat_pre_typed_indexed_effects ()
+let (disallow_unification_guards : unit -> Prims.bool) =
+  fun uu___ -> get_disallow_unification_guards ()
 let (cache_checked_modules : unit -> Prims.bool) =
   fun uu___ -> get_cache_checked_modules ()
 let (cache_off : unit -> Prims.bool) = fun uu___ -> get_cache_off ()
@@ -2023,6 +2075,8 @@ let (z3_exe : unit -> Prims.string) =
     | FStar_Pervasives_Native.Some s -> s
 let (z3_cliopt : unit -> Prims.string Prims.list) =
   fun uu___ -> get_z3cliopt ()
+let (z3_smtopt : unit -> Prims.string Prims.list) =
+  fun uu___ -> get_z3smtopt ()
 let (z3_refresh : unit -> Prims.bool) = fun uu___ -> get_z3refresh ()
 let (z3_rlimit : unit -> Prims.int) = fun uu___ -> get_z3rlimit ()
 let (z3_rlimit_factor : unit -> Prims.int) =
@@ -2387,12 +2441,13 @@ let (get_vconfig : unit -> FStar_VConfig.vconfig) =
       let uu___19 = get_no_tactics () in
       let uu___20 = get_vcgen_optimize_bind_as_seq () in
       let uu___21 = get_z3cliopt () in
-      let uu___22 = get_z3refresh () in
-      let uu___23 = get_z3rlimit () in
-      let uu___24 = get_z3rlimit_factor () in
-      let uu___25 = get_z3seed () in
-      let uu___26 = get_trivial_pre_for_unannotated_effectful_fns () in
-      let uu___27 = get_reuse_hint_for () in
+      let uu___22 = get_z3smtopt () in
+      let uu___23 = get_z3refresh () in
+      let uu___24 = get_z3rlimit () in
+      let uu___25 = get_z3rlimit_factor () in
+      let uu___26 = get_z3seed () in
+      let uu___27 = get_trivial_pre_for_unannotated_effectful_fns () in
+      let uu___28 = get_reuse_hint_for () in
       {
         FStar_VConfig.initial_fuel = uu___1;
         FStar_VConfig.max_fuel = uu___2;
@@ -2415,12 +2470,13 @@ let (get_vconfig : unit -> FStar_VConfig.vconfig) =
         FStar_VConfig.no_tactics = uu___19;
         FStar_VConfig.vcgen_optimize_bind_as_seq = uu___20;
         FStar_VConfig.z3cliopt = uu___21;
-        FStar_VConfig.z3refresh = uu___22;
-        FStar_VConfig.z3rlimit = uu___23;
-        FStar_VConfig.z3rlimit_factor = uu___24;
-        FStar_VConfig.z3seed = uu___25;
-        FStar_VConfig.trivial_pre_for_unannotated_effectful_fns = uu___26;
-        FStar_VConfig.reuse_hint_for = uu___27
+        FStar_VConfig.z3smtopt = uu___22;
+        FStar_VConfig.z3refresh = uu___23;
+        FStar_VConfig.z3rlimit = uu___24;
+        FStar_VConfig.z3rlimit_factor = uu___25;
+        FStar_VConfig.z3seed = uu___26;
+        FStar_VConfig.trivial_pre_for_unannotated_effectful_fns = uu___27;
+        FStar_VConfig.reuse_hint_for = uu___28
       } in
     vcfg
 let (set_vconfig : FStar_VConfig.vconfig -> unit) =
@@ -2464,13 +2520,19 @@ let (set_vconfig : FStar_VConfig.vconfig -> unit) =
            vcfg.FStar_VConfig.z3cliopt in
        List uu___22 in
      set_option "z3cliopt" uu___21);
+    (let uu___22 =
+       let uu___23 =
+         FStar_Compiler_List.map (fun uu___24 -> String uu___24)
+           vcfg.FStar_VConfig.z3smtopt in
+       List uu___23 in
+     set_option "z3smtopt" uu___22);
     set_option "z3refresh" (Bool (vcfg.FStar_VConfig.z3refresh));
     set_option "z3rlimit" (Int (vcfg.FStar_VConfig.z3rlimit));
     set_option "z3rlimit_factor" (Int (vcfg.FStar_VConfig.z3rlimit_factor));
     set_option "z3seed" (Int (vcfg.FStar_VConfig.z3seed));
     set_option "trivial_pre_for_unannotated_effectful_fns"
       (Bool (vcfg.FStar_VConfig.trivial_pre_for_unannotated_effectful_fns));
-    (let uu___27 =
-       option_as (fun uu___28 -> String uu___28)
+    (let uu___28 =
+       option_as (fun uu___29 -> String uu___29)
          vcfg.FStar_VConfig.reuse_hint_for in
-     set_option "reuse_hint_for" uu___27)
+     set_option "reuse_hint_for" uu___28)

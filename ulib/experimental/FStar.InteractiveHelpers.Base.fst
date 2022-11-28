@@ -41,7 +41,7 @@ let opt_tapply #a #b f x =
   | None -> None
   | Some x' -> Some (f x')
 
-val option_to_string : (#a : Type) -> (a -> Tot string) -> option a -> Tot string
+val option_to_string : (#a : Type) -> (a -> Tac string) -> option a -> Tac string
 let option_to_string #a f x =
   match x with
   | None -> "None"
@@ -53,9 +53,9 @@ let opt_cons (#a : Type) (opt_x : option a) (ls : list a) : Tot (list a) =
   | Some x -> x :: ls
   | None -> ls
 
-val list_to_string : #a : Type -> (a -> Tot string) -> list a -> Tot string
+val list_to_string : #a : Type -> (a -> Tac string) -> list a -> Tac string
 let list_to_string #a f ls =
-  (List.Tot.fold_left (fun s x -> s ^ " (" ^ f x ^ ");") "[" ls) ^ "]"
+  (Tactics.Util.fold_left (fun s x -> s ^ " (" ^ f x ^ ");") "[" ls) ^ "]"
 
 
 /// Apply a term to a list of parameters, normalize the result to make sure
@@ -80,7 +80,7 @@ let rec unzip #a #b (l : list (a & b)) : Tot (list a & list b) =
 
 /// Alternative ``bv_to_string`` function where we print the index of the bv.
 /// It can be very useful for debugging.
-let abv_to_string bv : Tot string =
+let abv_to_string bv : Tac string =
   let bvv = inspect_bv bv in
   bvv.bv_ppname ^ " (%" ^ string_of_int (bvv.bv_index) ^ ") : " ^
   term_to_string bvv.bv_sort
@@ -109,7 +109,7 @@ let print_binder_info (full : bool) (b : binder) : Tac unit =
 let print_binders_info (full : bool) (e:env) : Tac unit =
   iter (print_binder_info full) (binders_of_env e)
 
-let acomp_to_string (c:comp) : Tot string =
+let acomp_to_string (c:comp) : Tac string =
   match inspect_comp c with
   | C_Total ret _ decr ->
     "C_Total (" ^ term_to_string ret ^ ")"
@@ -118,10 +118,10 @@ let acomp_to_string (c:comp) : Tot string =
   | C_Lemma pre post patterns ->
     "C_Lemma (" ^ term_to_string pre ^ ") (" ^ term_to_string post ^ ")"
   | C_Eff us eff_name result eff_args ->
-    let eff_arg_to_string (a : term) : Tot string =
+    let eff_arg_to_string (a : term) : Tac string =
       " (" ^ term_to_string a ^ ")"
     in
-    let args_str = List.Tot.map (fun (x, y) -> eff_arg_to_string x) eff_args in
+    let args_str = map (fun (x, y) -> eff_arg_to_string x) eff_args in
     let args_str = List.Tot.fold_left (fun x y -> x ^ y) "" args_str in
     "C_Eff (" ^ flatten_name eff_name ^ ") (" ^ term_to_string result ^ ")" ^ args_str
 
@@ -242,19 +242,19 @@ let get_bind_map (e:genv) : bind_map (bool & term) = e.bmap
 let mk_genv env bmap svars : genv = Mkgenv env bmap svars
 let mk_init_genv env : genv = mk_genv env [] []
 
-val genv_to_string : genv -> Tot string
+val genv_to_string : genv -> Tac string
 let genv_to_string ge =
-  let binder_to_string (b : binder) : Tot string =
+  let binder_to_string (b : binder) : Tac string =
     abv_to_string (bv_of_binder b) ^ "\n"
   in
-  let binders_str = List.Tot.map binder_to_string (binders_of_env ge.env) in
-  let bmap_elem_to_string (e : bv & (bool & term)) : Tot string =
+  let binders_str = map binder_to_string (binders_of_env ge.env) in
+  let bmap_elem_to_string (e : bv & (bool & term)) : Tac string =
     let bv, (abs, t) = e in
     "(" ^ abv_to_string bv ^" -> (" ^
     string_of_bool abs ^ ", " ^ term_to_string t ^ "))\n"
   in
-  let bmap_str = List.Tot.map bmap_elem_to_string ge.bmap in
-  let svars_str = List.Tot.map (fun bv -> abv_to_string bv ^ "\n") ge.svars in
+  let bmap_str = map bmap_elem_to_string ge.bmap in
+  let svars_str = map (fun bv -> abv_to_string bv ^ "\n") ge.svars in
   let flatten = List.Tot.fold_left (fun x y -> x ^ y) "" in
   "> env:\n" ^ flatten binders_str ^
   "> bmap:\n" ^ flatten bmap_str ^
@@ -567,10 +567,8 @@ and deep_apply_subst_in_pattern e pat subst =
   | Pat_Wild bv ->
     let bv, subst = deep_apply_subst_in_bv e bv subst in
     Pat_Wild bv, subst
-  | Pat_Dot_Term bv t ->
-    let bv, subst = deep_apply_subst_in_bv e bv subst in
-    let t = deep_apply_subst e t subst in
-    Pat_Dot_Term bv t, subst
+  | Pat_Dot_Term eopt ->
+    Pat_Dot_Term (map_opt (fun t -> deep_apply_subst e t subst) eopt), subst
 
 /// The substitution functions actually used in the rest of the meta F* functions.
 /// For now, we use normalization because even though it is sometimes slow it

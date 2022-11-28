@@ -331,7 +331,7 @@ let is_BitVector_primitive head args =
       || S.fv_eq_lid fv Const.bv_shift_right_lid
       || S.fv_eq_lid fv Const.bv_udiv_lid
       || S.fv_eq_lid fv Const.bv_mod_lid
-    //  || S.fv_eq_lid fv Const.bv_ult_lid
+      || S.fv_eq_lid fv Const.bv_ult_lid
       || S.fv_eq_lid fv Const.bv_uext_lid
       || S.fv_eq_lid fv Const.bv_mul_lid) &&
       (isInteger sz_arg.n)
@@ -964,6 +964,11 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
           when S.fv_eq_lid fv Const.by_tactic_lid ->
           encode_term phi env
 
+        | Tm_fvar fv, [_; _; (phi, _)]
+        | Tm_uinst ({n=Tm_fvar fv}, _), [_; _; (phi, _)]
+          when S.fv_eq_lid fv Const.rewrite_by_tactic_lid ->
+          encode_term phi env
+
         | _ ->
             let args, decls = encode_args args_e env in
 
@@ -1311,7 +1316,7 @@ and encode_pat (env:env_t) (pat:S.pat) : (env_t * pattern) =
 
     let rec mk_projections pat (scrutinee:term) =
         match pat.v with
-        | Pat_dot_term (x, _)
+        | Pat_dot_term _ -> []
         | Pat_var x
         | Pat_wild x -> [x, scrutinee]
 
@@ -1475,6 +1480,11 @@ and encode_formula (phi:typ) (env:env_t) : (term * decls_t)  = (* expects phi to
             | Tm_fvar fv, [_; (phi, _)]
             | Tm_uinst ({n=Tm_fvar fv}, _), [_; (phi, _)]
               when S.fv_eq_lid fv Const.by_tactic_lid ->
+              encode_formula phi env
+
+            | Tm_fvar fv, [_; _; (phi, _)]
+            | Tm_uinst ({n=Tm_fvar fv}, _), [_; _; (phi, _)]
+              when S.fv_eq_lid fv Const.rewrite_by_tactic_lid ->
               encode_formula phi env
 
             | Tm_fvar fv, [(r, _); (msg, _); (phi, _)] when S.fv_eq_lid fv Const.labeled_lid -> //interpret (labeled r msg t) as Tm_meta(t, Meta_labeled(msg, r, false)

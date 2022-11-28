@@ -156,18 +156,17 @@ let handle_smt_goals = ()
 
 let erasable = ()
 
-let allow_informative_binders = ()
-
 let commute_nested_matches = ()
 
 let noextract_to _ = ()
 
 let normalize_for_extraction _ = ()
 
-let ite_soundness_by = ()
+let ite_soundness_by _ = ()
 
 let default_effect _ = ()
 let top_level_effect _ = ()
+let effect_param = ()
 let bind_has_range_args = ()
 
 let strictly_positive = ()

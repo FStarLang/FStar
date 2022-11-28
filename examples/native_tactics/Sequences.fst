@@ -19,12 +19,9 @@ open FStar.Tactics
 open FStar.Reflection
 open FStar.Seq
 
-let is_seq_t t : Tac bool =
+let is_seq_t (t:term) : Tac bool =
     let hd, args = collect_app t in
-    let tseq = `seq in
-    print ("This is the quoted term: " ^ (term_to_string tseq));
-    print ("This is hd: " ^ (term_to_string hd));
-    term_eq tseq hd
+    is_fvar hd (`%seq)
 
 let clear_hypothesis (b:binder) : Tac unit = ()
 

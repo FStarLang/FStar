@@ -41,10 +41,8 @@ let p x = True
 val q : a -> Type0
 let q x = False
 
-val fact: (h:squash (exists x. p x)) -> Lemma (exists x. q x)
-
 [@@(expect_failure [19])]
-let fact h =
+let fact (h:squash (exists x. p x)) : Lemma (exists x. q x) =
    assert (exists x. q x)
        by (apply_lemma (`exists_elim);
            exact (quote h);

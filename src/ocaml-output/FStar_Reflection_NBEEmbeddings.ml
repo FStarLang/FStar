@@ -533,17 +533,14 @@ let rec (e_pattern' :
           mkConstruct
             FStar_Reflection_Constants.ref_Pat_Wild.FStar_Reflection_Constants.fv
             [] uu___1
-      | FStar_Reflection_Data.Pat_Dot_Term (bv, t) ->
+      | FStar_Reflection_Data.Pat_Dot_Term eopt ->
           let uu___1 =
             let uu___2 =
-              let uu___3 = FStar_TypeChecker_NBETerm.embed e_bv cb bv in
+              let uu___3 =
+                let uu___4 = FStar_TypeChecker_NBETerm.e_option e_term in
+                FStar_TypeChecker_NBETerm.embed uu___4 cb eopt in
               FStar_TypeChecker_NBETerm.as_arg uu___3 in
-            let uu___3 =
-              let uu___4 =
-                let uu___5 = FStar_TypeChecker_NBETerm.embed e_term cb t in
-                FStar_TypeChecker_NBETerm.as_arg uu___5 in
-              [uu___4] in
-            uu___2 :: uu___3 in
+            [uu___2] in
           mkConstruct
             FStar_Reflection_Constants.ref_Pat_Dot_Term.FStar_Reflection_Constants.fv
             [] uu___1 in
@@ -607,20 +604,18 @@ let rec (e_pattern' :
                FStar_Compiler_Effect.op_Less_Bar
                  (fun uu___3 -> FStar_Pervasives_Native.Some uu___3)
                  (FStar_Reflection_Data.Pat_Wild bv1))
-      | FStar_TypeChecker_NBETerm.Construct
-          (fv, [], (t1, uu___1)::(bv, uu___2)::[]) when
+      | FStar_TypeChecker_NBETerm.Construct (fv, [], (eopt, uu___1)::[]) when
           FStar_Syntax_Syntax.fv_eq_lid fv
             FStar_Reflection_Constants.ref_Pat_Dot_Term.FStar_Reflection_Constants.lid
           ->
-          let uu___3 = FStar_TypeChecker_NBETerm.unembed e_bv cb bv in
-          FStar_Compiler_Util.bind_opt uu___3
-            (fun bv1 ->
-               let uu___4 = FStar_TypeChecker_NBETerm.unembed e_term cb t1 in
-               FStar_Compiler_Util.bind_opt uu___4
-                 (fun t2 ->
-                    FStar_Compiler_Effect.op_Less_Bar
-                      (fun uu___5 -> FStar_Pervasives_Native.Some uu___5)
-                      (FStar_Reflection_Data.Pat_Dot_Term (bv1, t2))))
+          let uu___2 =
+            let uu___3 = FStar_TypeChecker_NBETerm.e_option e_term in
+            FStar_TypeChecker_NBETerm.unembed uu___3 cb eopt in
+          FStar_Compiler_Util.bind_opt uu___2
+            (fun eopt1 ->
+               FStar_Compiler_Effect.op_Less_Bar
+                 (fun uu___3 -> FStar_Pervasives_Native.Some uu___3)
+                 (FStar_Reflection_Data.Pat_Dot_Term eopt1))
       | uu___1 ->
           ((let uu___3 =
               let uu___4 =

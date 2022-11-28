@@ -483,7 +483,7 @@ let guard_letrecs env actuals expected_c : list (lbname*typ*univ_names) =
          *     We build an "untyped" term here, the caller will typecheck it properly
          *)
         let rec aux l l_prev : term =
-         let type_of (e1:term) (e2:term) : typ * typ =
+         let type_of (should_warn:bool) (e1:term) (e2:term) : typ * typ =
            (*
             * AR: we compute the types of e1 and e2 to provide type
             *     arguments to eq3 (otherwise F* may infer something that Z3 is unable
@@ -509,7 +509,7 @@ let guard_letrecs env actuals expected_c : list (lbname*typ*univ_names) =
                   | _, Tm_uvar _ -> false
                   | _, _ -> true in
 
-           (if warn t1 t2
+           (if should_warn && warn t1 t2
             then match (SS.compress t1).n, (SS.compress t2).n with
                  | Tm_name _, Tm_name _ -> ()
                  | _, _ ->
@@ -526,9 +526,11 @@ let guard_letrecs env actuals expected_c : list (lbname*typ*univ_names) =
           match l, l_prev with
           | [], [] ->
             mk_Tm_app precedes_t [as_arg S.unit_const; as_arg S.unit_const] r
-          | [x], [x_prev] -> mk_Tm_app precedes_t [as_arg x; as_arg x_prev] r
+          | [x], [x_prev] -> 
+            let t_x, t_x_prev = type_of false x x_prev in            
+            mk_Tm_app precedes_t [iarg t_x; iarg t_x_prev; as_arg x; as_arg x_prev] r
           | x::tl, x_prev::tl_prev ->
-            let t_x, t_x_prev = type_of x x_prev in
+            let t_x, t_x_prev = type_of true x x_prev in
             let tm_precedes = mk_Tm_app precedes_t [
               iarg t_x;
               iarg t_x_prev;
@@ -1253,6 +1255,9 @@ and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked 
                   else check_application_args env head chead g_head args (Env.expected_typ env0) in
     let e, c, implicits =
         if TcComm.is_tot_or_gtot_lcomp c
+        //Also instantiate in phase1, dropping any precondition,
+        //since it will be recomputed correctly in phase2        
+        || (env.phase1 && TcComm.is_pure_or_ghost_lcomp c)
         then let e, res_typ, implicits = TcUtil.maybe_instantiate env0 e c.res_typ in
              e, TcComm.set_result_typ_lc c res_typ, implicits
         else e, c, Env.trivial_guard
@@ -1803,7 +1808,6 @@ and tc_constant (env:env_t) r (c:sconst) : typ =
           | Unsigned, Int64 -> Const.uint64_lid)
       | Const_string _ -> t_string
       | Const_real _ -> t_real
-      | Const_float _ -> t_float
       | Const_char _ ->
         FStar.Syntax.DsEnv.try_lookup_lid env.dsenv FStar.Parser.Const.char_lid
         |> BU.must
@@ -2258,10 +2262,25 @@ and tc_abs env (top:term) (bs:binders) (body:term) : term * lcomp * guard_t =
         body, cbody, Env.conj_guard guard_body g_lc
     in
 
+    if Env.debug env <| Options.Extreme
+    then BU.print1 "tc_abs: guard_body: %s\n"
+           (Rel.guard_to_string env guard_body);
+
     let guard = if env.top_level
                 || not (Options.should_verify (string_of_lid env.curmodule))
-                then Env.conj_guard (Rel.discharge_guard env g_env)
-                                    (Rel.discharge_guard envbody guard_body)
+                then begin
+                  if env.lax ||
+                     env.phase1
+                  then Env.conj_guard (Rel.discharge_guard env g_env)
+                                      (Rel.discharge_guard envbody guard_body)
+                  else
+                    let g_env, g_env_logical = TcComm.split_guard g_env in
+                    let guard_body, guard_body_logical = TcComm.split_guard guard_body in
+                    Rel.force_trivial_guard env (Env.conj_guard g_env guard_body);
+                    Rel.force_trivial_guard env g_env_logical;
+                    Rel.force_trivial_guard envbody guard_body_logical;
+                    Env.trivial_guard
+                end
                 else let guard = Env.conj_guard g_env (Env.close_guard env (bs@letrec_binders) guard_body) in
                      guard in
 
@@ -2311,6 +2330,7 @@ and tc_abs env (top:term) (bs:binders) (body:term) : term * lcomp * guard_t =
                 | _ ->
                     let lc = S.mk_Total tfun_computed |> TcComm.lcomp_of_comp in
                     let e, _, guard' = TcUtil.check_has_type_maybe_coerce env e lc t use_eq in  //QUESTION: t should also probably be t_annot here
+                    let guard' = TcUtil.label_guard e.pos (Err.subtyping_failed env lc.res_typ t ()) guard' in
                     e, t_annot, Env.conj_guard guard guard'
            end
 
@@ -2418,7 +2438,7 @@ and check_application_args env head (chead:comp) ghead args expected_topt : term
               But this leads to a massive blow up in the size of generated VCs (cf issue #971)
               arg_rets below are those xn...x1 bound variables
        *)
-      let cres =
+      let cres, inserted_return_in_cres =
         let head_is_pure_and_some_arg_is_effectful =
             TcComm.is_pure_or_ghost_lcomp chead
             && (BU.for_some (fun (_, _, lc) -> not (TcComm.is_pure_or_ghost_lcomp lc)
@@ -2430,9 +2450,9 @@ and check_application_args env head (chead:comp) ghead args expected_topt : term
         && (head_is_pure_and_some_arg_is_effectful)
             // || Option.isSome (Env.expected_typ env))
         then let _ = if Env.debug env Options.Extreme then BU.print1 "(a) Monadic app: Return inserted in monadic application: %s\n" (Print.term_to_string term) in
-             TcUtil.maybe_assume_result_eq_pure_term env term cres
+             TcUtil.maybe_assume_result_eq_pure_term env term cres, true
         else let _ = if Env.debug env Options.Extreme then BU.print1 "(a) Monadic app: No return inserted in monadic application: %s\n" (Print.term_to_string term) in
-             cres
+             cres, false
       in
 
       (* 1. We compute the final computation type comp  *)
@@ -2486,9 +2506,15 @@ and check_application_args env head (chead:comp) ghead args expected_topt : term
              //
              //Push first (List.length arg_rets_names_opt - i) names in the env
              //
-             let env = push_option_names_to_env env
-               (List.splitAt (List.length arg_rets_names_opt - i) arg_rets_names_opt
-                |> fst) in
+             let env =
+               // add arg_rets_names to env only if needed
+               // extra names in the env interfere with flex-flex queries in Rel,
+               //   as they may result in uvar restrictions etc.
+               if inserted_return_in_cres
+               then push_option_names_to_env env
+                      (List.splitAt (List.length arg_rets_names_opt - i) arg_rets_names_opt
+                       |> fst)
+                else env in
               if TcComm.is_pure_or_ghost_lcomp c
               then i+1,TcUtil.bind e.pos env (Some e) c (x, out_c)
               else i+1,TcUtil.bind e.pos env None c (x, out_c))
@@ -2662,7 +2688,7 @@ and check_application_args env head (chead:comp) ghead args expected_topt : term
                                                             (Range.use_range t.pos))
             in
             let varg, _, implicits =
-              new_implicit_var_aux "Instantiating meta argument in application" r env t Strict (Some ctx_uvar_meta)
+              Env.new_implicit_var_aux "Instantiating meta argument in application" r env t Strict (Some ctx_uvar_meta)
             in
             let subst = NT(x, varg)::subst in
             let aq = U.aqual_of_binder (List.hd bs) in
@@ -3006,10 +3032,28 @@ and tc_pat env (pat_t:typ) (p0:pat) :
                   (a, imp_a), subst, bvs, g
 
                 | _ ->
-                  fail "Not a simple pattern"
+                  //
+                  // AR: 09/29:
+                  //
+                  // Before we carried on dot patterns solutions from phase1 to phase2,
+                  //   the arguments args here could just be names (from Pat_var)
+                  //   or uvars (from Pat_dot_term)
+                  //
+                  // But now they can be arbitrary terms for Pat_dot_term,
+                  //   since in phase1, Pat_dot_term could be solved with
+                  //   arbitrary term
+                  //
+                  // If not a name or uvar, we typecheck the term,
+                  //   and add it to args_out
+                  //
+                  let a = SS.subst subst a in
+                  let env = Env.set_expected_typ env t_f in
+                  let a, _, g = tc_tot_or_gtot_term env a in
+                  let subst = NT(f, a)::subst in
+                  (a, imp_a), subst, bvs, g
               in
               aux (subst, args_out@[a], bvs, Env.conj_guard g guard) formals args
-            | _ -> fail "Not a fully applued pattern"
+            | _ -> fail "Not a fully applied pattern"
            in
            aux ([], [], [], Env.trivial_guard) formals args
         | _ ->
@@ -3105,7 +3149,7 @@ and tc_pat env (pat_t:typ) (p0:pat) :
            *     we now have scrutinee = c, so we need decidable equality on c
            *)
           (match c with
-           | Const_unit | Const_bool _ | Const_int _ | Const_char _ | Const_float _ | Const_string _ -> ()
+           | Const_unit | Const_bool _ | Const_int _ | Const_char _ | Const_string _ -> ()
            | _ ->
              fail (BU.format1
                      "Pattern matching a constant that does not have decidable equality: %s"
@@ -3156,28 +3200,68 @@ and tc_pat env (pat_t:typ) (p0:pat) :
                             | Pat_dot_term _ -> false
                             | _ -> true)
           in
-          let simple_bvs, simple_pat_e, g0, simple_pat_elab =
+          let simple_bvs_pat, simple_pat_e, g0, simple_pat_elab =
               PatternUtils.pat_as_exp false false env simple_pat
           in
-          if List.length simple_bvs <> List.length sub_pats
+          //
+          // simple_bvs_pat are the Pat_vars in a Pat_cons
+          //
+          // Number of simple_bvs should be same as the number of simple_pats
+          //
+          if List.length simple_bvs_pat <> List.length sub_pats
           then failwith (BU.format4 "(%s) Impossible: pattern bvar mismatch: %s; expected %s sub pats; got %s"
                                           (Range.string_of_range p.p)
                                           (Print.pat_to_string simple_pat)
                                           (BU.string_of_int (List.length sub_pats))
-                                          (BU.string_of_int (List.length simple_bvs)));
+                                          (BU.string_of_int (List.length simple_bvs_pat)));
           let simple_pat_e, simple_bvs, g1, erasable =
               //
-              //guard is the typechecking guard
-              //it contains some deferred constraints for dot pattern uvars
-              //we will solve them after pat_typ_ok
+              // guard is the typechecking guard
+              // it contains some deferred constraints for dot pattern uvars
+              // we will solve them after pat_typ_ok
               //
               let simple_pat_e, simple_pat_t, simple_bvs, guard, erasable =
                   type_of_simple_pat env simple_pat_e
               in
+
+              //
+              // AR: 09/29:
+              //
+              // A note about simple_bvs:
+              //
+              // Before we started to reuse Pat_dot_term solutions from phase1 to phase2,
+              //   the simple_bvs returned by typechecking of simple pat would be
+              //   same as the simple_bvs_pat that we got from pat_as_exp,
+              //   since Pat_dot_term were always elaborated to uvars, so the only names were
+              //   those coming from Pat_vars (a simple pat is a Pat_cons with sub pats as
+              //   Pat_dot_term or Pat_var)
+              //
+              // But now, a Pat_dot_term solution could itself be a name,
+              //   and typechecking the simple pat returns it in simple_bvs
+              //
+              // Noting that all the Pat_dot_terms occur at the beginning,
+              //   we take the suffix of simple_bvs with length same as
+              //   simple_bvs_pat
+              //
+              let simple_bvs =
+                simple_bvs
+                 |> BU.first_N (List.length simple_bvs - List.length simple_bvs_pat)
+                 |> snd in
+
               let g' = pat_typ_ok env simple_pat_t (expected_pat_typ env p0.p t) in
-              //Now solve guard
-              let guard = Rel.discharge_guard_no_smt env guard in
-              //And combine with g' (the guard from pat_typ_ok)
+              //
+              // Now solve guard
+              // guard may have logical payload coming from typechecking of the
+              //   Pat_dot_term solutions computed in phase 1
+              // Here we only want to solve the implicits,
+              //   folding in the logical payload in the rest of the VC
+              //
+              let guard =
+                let fml = Env.guard_form guard in
+                let guard =
+                  Rel.discharge_guard_no_smt env {guard with guard_f = Trivial} in
+                {guard with guard_f=fml} in
+              // And combine with g' (the guard from pat_typ_ok)
               let guard = Env.conj_guard guard g' in
               if Env.debug env <| Options.Other "Patterns"
               then BU.print3 "$$$$$$$$$$$$Checked simple pattern %s at type %s with bvs=%s\n"
@@ -3187,17 +3271,21 @@ and tc_pat env (pat_t:typ) (p0:pat) :
                               |> String.concat " ");
               simple_pat_e, simple_bvs, guard, erasable
           in
-          let _env, bvs, tms, checked_sub_pats, subst, g, erasable, _ =
+          let bvs, tms, checked_sub_pats, subst, g, erasable, _ =
+            //
+            // Invariant: g must be well-formed in the top-level env
+            //
             List.fold_left2
-              (fun (env, bvs, tms, pats, subst, g, erasable, i) (p, b) x ->
+              (fun (bvs, tms, pats, subst, g, erasable, i) (p, b) x ->
                 let expected_t = SS.subst subst x.sort in
+                let env = Env.push_bvs env bvs in
                 let bvs_p, tms_p, e_p, p, g', erasable_p = check_nested_pattern env p expected_t in
-                let env = Env.push_bvs env bvs_p in
+                let g' = Env.close_guard env (bvs |> List.map S.mk_binder) g' in
                 let tms_p =
                   let disc_tm = TcUtil.get_field_projector_name env (S.lid_of_fv fv) i in
                   tms_p |> List.map (mk_disc_t (S.fvar disc_tm (S.Delta_constant_at_level 1) None)) in
-                env, bvs@bvs_p, tms@tms_p, pats@[(p,b)], NT(x, e_p)::subst, Env.conj_guard g g', erasable || erasable_p, i+1)
-              (env, [], [], [], [], Env.conj_guard g0 g1, erasable, 0)
+                bvs@bvs_p, tms@tms_p, pats@[(p,b)], NT(x, e_p)::subst, Env.conj_guard g g', erasable || erasable_p, i+1)
+              ([], [], [], [], Env.conj_guard g0 g1, erasable, 0)
               sub_pats
               simple_bvs
           in
@@ -3208,9 +3296,9 @@ and tc_pat env (pat_t:typ) (p0:pat) :
                 | [] -> []
                 | (hd, b)::simple_pats ->
                   match hd.v with
-                  | Pat_dot_term(x, e) ->
-                    let e = SS.subst subst e in
-                    let hd = {hd with v=Pat_dot_term(x, e)} in
+                  | Pat_dot_term eopt ->
+                    let eopt = BU.map_option (SS.subst subst) eopt in
+                    let hd = {hd with v=Pat_dot_term eopt} in
                     (hd, b) :: aux simple_pats bvs sub_pats
                   | Pat_var x ->
                     begin
@@ -4199,12 +4287,7 @@ and tc_binder env ({binder_bv=x;binder_qual=imp;binder_attrs=attrs}) =
           Some (Meta tau), g
         | _ -> imp, Env.trivial_guard
     in
-    let attrs =
-      attrs |> List.map
-      (fun attr ->
-        let attr, _, _ = tc_check_tot_or_gtot_term env attr t_unit "" in
-        attr)
-    in
+    let attrs = tc_attributes env attrs in
     check_erasable_binder_attributes env attrs t;
     let x = S.mk_binder_with_attrs ({x with sort=t}) imp attrs in
     if Env.debug env Options.High
@@ -4272,6 +4355,9 @@ and tc_trivial_guard env t =
   let t, c, g = tc_tot_or_gtot_term env t in
   Rel.force_trivial_guard env g;
   t,c
+
+and tc_attributes env attrs =
+  List.map (fun attr -> fst (tc_trivial_guard env attr)) attrs
 
 let tc_check_trivial_guard env t k =
   let t, _, g = tc_check_tot_or_gtot_term env t k "" in

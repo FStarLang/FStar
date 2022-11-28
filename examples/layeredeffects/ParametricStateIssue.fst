@@ -91,7 +91,7 @@ effect {
 }
 
 inline_for_extraction
-let lift_div_exn (a:Type) (wp:pure_wp a) (f:eqtype_as_type unit -> DIV a wp)
+let lift_div_exn (a:Type) (wp:pure_wp a) (f:unit -> DIV a wp)
 : repr a
 = fun _ -> Some (f ())
 
@@ -136,12 +136,12 @@ let stbind (a:Type) (b:Type)
 
 reifiable reflectable
 effect {
-  STEXN (a:Type) (state:Type0)
+  STEXN (a:Type) ([@@@ effect_param] state:Type0)
   with {repr=mrepr; return=streturn; bind=stbind}
 }
 
 inline_for_extraction noextract
-let lift_div_stexn (a:Type) (wp:pure_wp a) (state:Type0) (f:eqtype_as_type unit -> DIV a wp)
+let lift_div_stexn (a:Type) (wp:pure_wp a) (state:Type0) (f:unit -> DIV a wp)
 : mrepr a state
 = fun st -> (f (), st)
 

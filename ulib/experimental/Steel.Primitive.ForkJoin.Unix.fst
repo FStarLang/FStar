@@ -141,7 +141,6 @@ let subcomp (a:Type)
 // We did not define a bind between Div and Steel, so we indicate
 // SteelKF as total to be able to reify and compose it when implementing fork
 // This module is intended as proof of concept
-[@@allow_informative_binders]
 total
 reifiable
 reflectable
@@ -166,7 +165,7 @@ effect SteelKF (a:Type) (pre:pre_t) (post:post_t a) =
 let bind_tot_steelK_ (a:Type) (b:Type)
   (#framed:eqtype_as_type bool)
   (#[@@@ framing_implicit] pre:pre_t) (#[@@@ framing_implicit] post:post_t b)
-  (f:eqtype_as_type unit -> PURE a (pure_null_wp a)) (g:(x:a -> steelK b framed pre post))
+  (f:eqtype_as_type unit -> Tot a) (g:(x:a -> steelK b framed pre post))
 : steelK b
     framed
     pre

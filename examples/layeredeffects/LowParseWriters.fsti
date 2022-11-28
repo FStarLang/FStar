@@ -25,6 +25,10 @@ module U8 = FStar.UInt8
 module U32 = FStar.UInt32
 module HST = FStar.HyperStack.ST
 
+irreducible let refl_implicit : unit = ()
+
+open FStar.Tactics
+
 noeq
 [@erasable]
 type memory_invariant = {
@@ -44,14 +48,6 @@ let memory_invariant_includes_trans (l1 l2 l3: memory_invariant) : Lemma
   (requires (l1 `memory_invariant_includes` l2 /\ l2 `memory_invariant_includes` l3))
   (ensures (l1 `memory_invariant_includes` l3))
 = ()
-
-unfold
-let pure_wp_mono
-  (a: Type)
-  (wp: pure_wp a)
-: GTot Type0
-= (forall (p q:pure_post a).
-     (forall (x:a). p x ==> q x) ==> (wp p ==> wp q))
 
 noeq
 type result (a: Type u#x) : Type u#x =
@@ -226,18 +222,20 @@ let read_bind
   (pre_f: pure_pre)
   (post_f: pure_post' a pre_f)
   (post_err_f: pure_post_err pre_f)
+  ([@@@ refl_implicit] l_f:memory_invariant)
   (pre_g: (x:a) -> pure_pre) (post_g: (x:a) -> pure_post' b (pre_g x))
   (post_err_g: (x: a) -> pure_post_err (pre_g x))
-  (l: memory_invariant)
-  (f_bind : read_repr a pre_f post_f post_err_f l)
-  (g : (x: a -> read_repr b (pre_g x) (post_g x) (post_err_g x) l))
+  ([@@@ refl_implicit] l_g: memory_invariant)
+  ([@@@ refl_implicit] pr:squash (l_f == l_g))
+  (f_bind : read_repr a pre_f post_f post_err_f l_f)
+  (g : (x: a -> read_repr b (pre_g x) (post_g x) (post_err_g x) l_g))
 : Tot (read_repr b
     (pre_f /\ (forall (x: a) . post_f x ==> pre_g x)) //(read_bind_pre a pre_f post_f pre_g)
     (fun y -> exists (x: a) . pre_f /\ post_f x /\ post_g x y) // (read_bind_post a b pre_f post_f pre_g post_g)
     (fun _ -> pre_f /\ (post_err_f () \/ (exists (x: a) . post_f x /\ post_err_g x ()))) // (read_bind_post_err a pre_f post_f post_err_f pre_g post_err_g)
-    l
+    l_g
   )
-= ReadRepr _ (read_bind_impl a b pre_f post_f post_err_f pre_g post_g post_err_g (ReadRepr?.spec f_bind) (fun x -> ReadRepr?.spec (g x)) l (ReadRepr?.impl f_bind) (fun x -> ReadRepr?.impl (g x)) )
+= ReadRepr _ (read_bind_impl a b pre_f post_f post_err_f pre_g post_g post_err_g (ReadRepr?.spec f_bind) (fun x -> ReadRepr?.spec (g x)) l_g (ReadRepr?.impl f_bind) (fun x -> ReadRepr?.impl (g x)) )
 
 unfold
 let read_subcomp_spec_cond
@@ -283,8 +281,8 @@ val read_subcomp_impl (a:Type)
 inline_for_extraction
 let read_subcomp (a:Type)
   (pre: pure_pre) (post: pure_post' a pre) (post_err: pure_post_err pre)
-  (pre': pure_pre) (post': pure_post' a pre') (post_err': pure_post_err pre')
   (l:memory_invariant)
+  (pre': pure_pre) (post': pure_post' a pre') (post_err': pure_post_err pre')
   (l' : memory_invariant)
   (f_subcomp:read_repr a pre post post_err l)
 : Pure (read_repr a pre' post' post_err' l')
@@ -296,31 +294,33 @@ let read_subcomp (a:Type)
 
 inline_for_extraction
 let read_if_then_else (a:Type)
-  (pre_f pre_g: pure_pre)
+  (pre_f:pure_pre) 
   (post_f: pure_post' a pre_f)
-  (post_g: pure_post' a pre_g)
   (post_err_f: pure_post_err pre_f)
+  ([@@@ refl_implicit] l_f:memory_invariant)
+  (pre_g: pure_pre)
+  (post_g: pure_post' a pre_g)
   (post_err_g: pure_post_err pre_g)
-  (l:memory_invariant)
-  (f_ifthenelse:read_repr a pre_f post_f post_err_f l)
-  (g:read_repr a pre_g post_g post_err_g l)
+  ([@@@ refl_implicit] l_g:memory_invariant)
+  ([@@@ refl_implicit] pr:squash (l_f == l_g))
+  (f_ifthenelse:read_repr a pre_f post_f post_err_f l_f)
+  (g:read_repr a pre_g post_g post_err_g l_g)
   (p:bool)
 : Tot Type
 = read_repr a
     ((p ==> pre_f) /\ ((~ p) ==> pre_g)) // (read_if_then_else_pre pre_f pre_g p)
     (fun x -> (p ==> post_f x) /\ ((~ p) ==> post_g x)) // (read_if_then_else_post a pre_f pre_g post_f post_g p)
     (fun _ -> (p ==> post_err_f ()) /\ ((~ p) ==> post_err_g ())) // (read_if_then_else_post_err pre_f pre_g post_err_f post_err_g p)
-    l
+    l_g
 
 reifiable reflectable total
-layered_effect {
-  ERead : a:Type -> (pre: pure_pre) -> (post: pure_post' a pre) -> (post_err: pure_post_err pre) -> (memory_invariant) -> Effect
-  with
-  repr = read_repr;
-  return = read_return;
-  bind = read_bind;
-  subcomp = read_subcomp;
-  if_then_else = read_if_then_else
+effect {
+  ERead (a:Type) (pre: pure_pre) (post: pure_post' a pre) (post_err: pure_post_err pre) (_:memory_invariant)
+  with {repr = read_repr;
+        return = read_return;
+        bind = read_bind;
+        subcomp = read_subcomp;
+        if_then_else = read_if_then_else}
 }
 
 effect Read
@@ -331,17 +331,18 @@ effect Read
 = ERead a pre post (fun _ -> False) inv
 
 let lift_pure_read_spec
-  (a:Type) (wp:pure_wp a { pure_wp_mono a wp }) (f_pure_spec:unit -> PURE a wp)
+  (a:Type) (wp:pure_wp a) (f_pure_spec:unit -> PURE a wp)
 : Tot (read_repr_spec a 
     (wp (fun _ -> True)) // (lift_pure_read_pre a wp)
     (fun x -> ~ (wp (fun x' -> ~ (x == x')))) // (lift_pure_read_post a wp)
     (fun _ -> False) // (lift_pure_read_post_err a wp))
   )
-= fun () -> Correct (f_pure_spec ())
+= FStar.Monotonic.Pure.elim_pure_wp_monotonicity wp;
+  fun () -> Correct (f_pure_spec ())
 
 inline_for_extraction
 val lift_pure_read_impl
-  (a:Type) (wp:pure_wp a { pure_wp_mono a wp })
+  (a:Type) (wp:pure_wp a)
   (f_pure_spec_for_impl:unit -> PURE a wp)
   (l: memory_invariant)
 : Tot (read_repr_impl a _ _ _ l (lift_pure_read_spec a wp f_pure_spec_for_impl))
@@ -351,7 +352,7 @@ open FStar.Monotonic.Pure
 inline_for_extraction
 let lift_pure_read (a:Type) (wp:pure_wp a)
   (l: memory_invariant)
-  (f_pure:eqtype_as_type unit -> PURE a wp)
+  (f_pure:unit -> PURE a wp)
 : Tot (read_repr a
     (wp (fun _ -> True)) // (lift_pure_read_pre a wp)
     (fun x -> ~ (wp (fun x' -> ~ (x == x')))) // (lift_pure_read_post a wp)
@@ -404,6 +405,83 @@ let reify_read
     ))
 =
   extract_read_repr_impl _ _ _ _ _ _ (destr_read_repr_impl _ _ _ _ _ r)
+
+let is_uvar (t:term) : Tac bool = match t with
+  | Tv_Uvar _ _ -> true
+  | Tv_App _ _ ->
+      let hd, args = collect_app t in
+      Tv_Uvar? hd
+  | _ -> false
+
+let is_eq (t:term) : Tac (option (term & term)) =
+  match term_as_formula t with
+  | Comp (Eq _) l r -> Some (l, r)
+  | _ -> None
+    // (match term_as_formula' t with
+    //  | Comp (Eq _) l r -> Some (l, r)
+    //  | _ -> None)
+
+let rec pick_next (fuel:nat) : Tac bool =
+  if fuel = 0
+  then false
+  else match goals () with
+       | [] -> false
+       | hd::tl ->
+         (match is_eq (goal_type hd) with
+          | Some (l, r) ->
+            let b1 = is_uvar l in
+            let b2 = is_uvar r in
+            if b1 && b2
+            then begin
+              later ();
+              pick_next (fuel - 1)
+            end
+            else true
+          | None -> later (); pick_next (fuel - 1))
+
+let rec try_rewrite_equality (x:term) (bs:binders) : Tac unit =
+    match bs with
+    | [] -> ()
+    | x_t::bs ->
+        begin match term_as_formula' (type_of_binder x_t) with
+        | Comp (Eq _) y _ ->
+            if term_eq x y
+            then rewrite x_t
+            else try_rewrite_equality x bs
+        | _ ->
+            try_rewrite_equality x bs
+        end
+
+let rec rewrite_all_context_equalities (bs:binders) : Tac unit =
+    match bs with
+    | [] -> ()
+    | x_t::bs -> begin
+        (try rewrite x_t with | _ -> ());
+        rewrite_all_context_equalities bs
+    end
+
+let rewrite_eqs_from_context_non_sq () : Tac unit =
+    rewrite_all_context_equalities (cur_binders ())
+
+let rewrite_eqs_from_context () : Tac unit =
+  rewrite_eqs_from_context ();
+  rewrite_eqs_from_context_non_sq ()
+
+[@@ resolve_implicits; refl_implicit]
+let rec tac () : Tac unit =
+  if List.length (goals ()) = 0
+  then ()
+  else if pick_next (FStar.List.length (goals ()))
+  then begin
+    or_else (fun _ -> rewrite_eqs_from_context (); norm []; trefl ()) (fun _ -> assumption ());
+    tac ()
+  end
+  else begin
+    rewrite_eqs_from_context ();
+    norm [];
+    trefl ();
+    tac ()
+  end
 
 inline_for_extraction
 let test_read_if
@@ -968,15 +1046,19 @@ val bind_impl
 
 inline_for_extraction
 let bind (a:Type) (b:Type)
-  (r_in_f:parser) (r_out_f: parser)
+  (r_in_f:parser) ([@@@ refl_implicit] r_out_f: parser)
   (pre_f: pre_t r_in_f) (post_f: post_t a r_in_f r_out_f pre_f)
   (post_err_f: post_err_t r_in_f pre_f)
+  ([@@@ refl_implicit] l_f: memory_invariant)
+  ([@@@ refl_implicit] r_in_g:parser)
   (r_out_g: parser)
-  (pre_g: (x:a) -> pre_t (r_out_f)) (post_g: (x:a) -> post_t b (r_out_f) r_out_g (pre_g x))
-  (post_err_g: (x:a) -> post_err_t (r_out_f) (pre_g x))
-  (l: memory_invariant)
-  (f_bind : repr a r_in_f r_out_f pre_f post_f post_err_f l)
-  (g : (x: a -> repr b (r_out_f) r_out_g (pre_g x) (post_g x) (post_err_g x) l))
+  (pre_g: (x:a) -> pre_t r_in_g) (post_g: (x:a) -> post_t b r_in_g r_out_g (pre_g x))
+  (post_err_g: (x:a) -> post_err_t r_in_g (pre_g x))
+  ([@@@ refl_implicit] l_g: memory_invariant)
+  ([@@@ refl_implicit] pr:squash (l_f == l_g))
+  ([@@@ refl_implicit] pr':squash (r_out_f == r_in_g))
+  (f_bind : repr a r_in_f r_out_f pre_f post_f post_err_f l_f)
+  (g : (x: a -> repr b (r_in_g) r_out_g (pre_g x) (post_g x) (post_err_g x) l_g))
 : Tot (repr b r_in_f r_out_g
     (fun v_in -> pre_f v_in /\ (forall (x: a) v_out . post_f v_in x v_out ==> pre_g x v_out)) // (bind_pre a r_in_f r_out_f pre_f post_f pre_g)
     (fun v_in y v_out -> exists x v_out_f . pre_f v_in /\ post_f v_in x v_out_f /\ post_g x v_out_f y v_out) // (bind_post a b r_in_f r_out_f pre_f post_f r_out_g pre_g post_g)
@@ -985,9 +1067,9 @@ let bind (a:Type) (b:Type)
         post_err_f v_in \/ (
         exists x v_out_f . post_f v_in x v_out_f /\ post_err_g x v_out_f
     ))) // (bind_post_err a r_in_f r_out_f pre_f post_f post_err_f pre_g post_err_g))
-    l
+    l_g
   )
-= Repr (bind_spec a b r_in_f r_out_f pre_f post_f post_err_f r_out_g pre_g post_g post_err_g (Repr?.spec f_bind) (fun x -> Repr?.spec (g x))) (bind_impl a b r_in_f r_out_f pre_f post_f post_err_f r_out_g pre_g post_g post_err_g (Repr?.spec f_bind) (fun x -> Repr?.spec (g x)) l (Repr?.impl f_bind) (fun x -> Repr?.impl (g x)))
+= Repr (bind_spec a b r_in_f r_out_f pre_f post_f post_err_f r_out_g pre_g post_g post_err_g (Repr?.spec f_bind) (fun x -> Repr?.spec (g x))) (bind_impl a b r_in_f r_out_f pre_f post_f post_err_f r_out_g pre_g post_g post_err_g (Repr?.spec f_bind) (fun x -> Repr?.spec (g x)) l_g (Repr?.impl f_bind) (fun x -> Repr?.impl (g x)))
 
 unfold
 let subcomp_spec_cond
@@ -1026,8 +1108,9 @@ inline_for_extraction
 val subcomp_impl (a:Type)
   (r_in:parser) (r_out: parser)
   (pre: pre_t r_in) (post: post_t a r_in r_out pre) (post_err: post_err_t r_in pre)
-  (pre': pre_t r_in) (post': post_t a r_in r_out pre') (post_err': post_err_t r_in pre')
   (l:memory_invariant)
+  (r_in':parser) (r_out': parser)  
+  (pre': pre_t r_in) (post': post_t a r_in r_out pre') (post_err': post_err_t r_in pre')
   (l' : memory_invariant)
   (f_subcomp_spec:repr_spec a r_in r_out pre post post_err)
   (f_subcomp:repr_impl a r_in r_out pre post post_err l f_subcomp_spec)
@@ -1036,29 +1119,38 @@ val subcomp_impl (a:Type)
 
 inline_for_extraction
 let subcomp (a:Type)
-  (r_in:parser) (r_out: parser)
+  ([@@@refl_implicit] r_in:parser)
+  ([@@@ refl_implicit] r_out: parser)
   (pre: pre_t r_in) (post: post_t a r_in r_out pre) (post_err: post_err_t r_in pre)
-  (pre': pre_t r_in) (post': post_t a r_in r_out pre') (post_err': post_err_t r_in pre')
-  (l:memory_invariant)
-  (l' : memory_invariant)
+  ([@@@ refl_implicit] l:memory_invariant)
+  ([@@@refl_implicit] r_in':parser)
+  ([@@@ refl_implicit] r_out': parser)
+  (pre': pre_t r_in') (post': post_t a r_in' r_out' pre') (post_err': post_err_t r_in' pre')
+  ([@@@ refl_implicit] l' : memory_invariant)
+  ([@@@ refl_implicit] pr1:squash (r_in == r_in'))
+  ([@@@ refl_implicit] pr2:squash (r_out == r_out'))
   (f_subcomp:repr a r_in r_out pre post post_err l)
-: Pure (repr a r_in r_out pre' post' post_err' l')
+: Pure (repr a r_in' r_out' pre' post' post_err' l')
   (requires (subcomp_cond a r_in r_out pre post post_err pre' post' post_err' l l'))
   (ensures (fun _ -> True))
 = Repr (subcomp_spec a r_in r_out pre post post_err pre' post' post_err' (Repr?.spec f_subcomp))
-     (subcomp_impl a r_in r_out pre post post_err pre' post' post_err' l l' (Repr?.spec f_subcomp) (Repr?.impl f_subcomp) ()
+     (subcomp_impl a r_in r_out pre post post_err l r_in' r_out' pre' post' post_err' l' (Repr?.spec f_subcomp) (Repr?.impl f_subcomp) ()
   )
 
 let if_then_else (a:Type)
-  (r_in:parser) (r_out: parser)
-  (pre_f pre_g: pre_t r_in)
-  (post_f: post_t a r_in r_out pre_f)
-  (post_g: post_t a r_in r_out pre_g)
-  (post_err_f: post_err_t r_in pre_f)
-  (post_err_g: post_err_t r_in pre_g)
-  (l:memory_invariant)
+  ([@@@refl_implicit] r_in:parser)
+  ([@@@ refl_implicit] r_out: parser)
+  (pre_f: pre_t r_in) (post_f: post_t a r_in r_out pre_f) (post_err_f: post_err_t r_in pre_f)
+  ([@@@ refl_implicit] l:memory_invariant)
+  ([@@@refl_implicit] r_in':parser)
+  ([@@@ refl_implicit] r_out': parser)
+  (pre_g: pre_t r_in') (post_g: post_t a r_in' r_out' pre_g) (post_err_g: post_err_t r_in' pre_g)
+  ([@@@ refl_implicit] l' : memory_invariant)
+  ([@@@ refl_implicit] pr1:squash (r_in == r_in'))
+  ([@@@ refl_implicit] pr2:squash (r_out == r_out'))
+  ([@@@ refl_implicit] pr3:squash (l == l'))
   (f_ifthenelse:repr a r_in r_out pre_f post_f post_err_f l)
-  (g:repr a r_in r_out pre_g post_g post_err_g l)
+  (g:repr a r_in' r_out' pre_g post_g post_err_g l')
   (p:bool)
 : Tot Type
 = repr a r_in r_out
@@ -1067,16 +1159,14 @@ let if_then_else (a:Type)
     (fun v_in -> (p ==> post_err_f v_in) /\ ((~ p) ==> post_err_g v_in)) // (if_then_else_post_err r_in pre_f pre_g post_err_f post_err_g p)
     l
 
-[@@allow_informative_binders]
 reifiable reflectable total
-layered_effect {
-  EWrite : a:Type -> (pin: parser) -> (pout: (parser)) -> (pre: pre_t pin) -> (post: post_t a pin pout pre) -> (post_err: post_err_t pin pre) -> (memory_invariant) -> Effect
-  with
-  repr = repr;
-  return = returnc;
-  bind = bind;
-  subcomp = subcomp;
-  if_then_else = if_then_else
+effect {
+  EWrite (a:Type) (pin:parser) (pout:parser) (pre:pre_t pin) (post:post_t a pin pout pre) (post_err:post_err_t pin pre) (_:memory_invariant)
+  with {repr = repr;
+        return = returnc;
+        bind = bind;
+        subcomp = subcomp;
+        if_then_else = if_then_else}
 }
 
 effect Write

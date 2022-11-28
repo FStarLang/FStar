@@ -519,7 +519,7 @@ let dep_subsumed_by d d' =
 (** For all items [i] in the map that start with [prefix], add an additional
     entry where [i] stripped from [prefix] points to the same value. Returns a
     boolean telling whether the map was modified.
-    
+
     If the open is an implicit open (as indicated by the flag),
     and doing so shadows an existing entry, warn! *)
 let enter_namespace
@@ -608,7 +608,7 @@ let collect_one
          if is_interface filename
          then has_inline_for_extraction := true
        in
-      
+
        let add_dep deps d =
          if not (List.existsML (dep_subsumed_by d) !deps) then
            deps := d :: !deps
@@ -629,7 +629,7 @@ let collect_one
            false
        in
 
-       let record_open_module let_open lid = 
+       let record_open_module let_open lid =
          //use the original_map here
          //since the working_map will resolve lid while accounting
          //for already opened namespaces
@@ -696,7 +696,7 @@ let collect_one
              (Errors.Warning_UnboundModuleReference, (BU.format1 "Unbound module reference %s"
               (Ident.string_of_lid module_name)))
        in
-    
+
        let record_lid lid =
          (* Thanks to the new `?.` and `.(` syntaxes, `lid` is no longer a
             module name itself, so only its namespace part is to be
@@ -707,7 +707,7 @@ let collect_one
            let module_name = Ident.lid_of_ids ns in
            add_dep_on_module module_name false
        in
-      
+
        let begin_module lid =
          if List.length (ns_of_lid lid) > 0 then
          ignore (enter_namespace original_map working_map (namespace_of_lid lid))
@@ -822,17 +822,17 @@ let collect_one
             collect_binders binders;
             iter_opt k collect_term;
             collect_term t
-        | TyconRecord (_, binders, k, identterms) ->
+        | TyconRecord (_, binders, k, _, identterms) ->
             collect_binders binders;
             iter_opt k collect_term;
-            List.iter (fun (_, aq, attrs, t) -> 
+            List.iter (fun (_, aq, attrs, t) ->
                 collect_aqual aq;
                 attrs |> List.iter collect_term;
                 collect_term t) identterms
         | TyconVariant (_, binders, k, identterms) ->
             collect_binders binders;
             iter_opt k collect_term;
-            List.iter (fun (_, t, _) -> iter_opt t collect_term) identterms
+            List.iter (fun (_, t, _, _) -> iter_opt t collect_term) identterms
 
       and collect_effect_decl = function
         | DefineEffect (_, binders, t, decls) ->
@@ -863,14 +863,14 @@ let collect_one
         collect_term' t.tm
 
       and collect_constant = function
+        | Const_int (_, Some (Unsigned, Sizet)) ->
+            add_to_parsing_data (P_dep (false, ("fstar.sizeT" |> Ident.lid_of_str)))
         | Const_int (_, Some (signedness, width)) ->
             let u = match signedness with | Unsigned -> "u" | Signed -> "" in
             let w = match width with | Int8 -> "8" | Int16 -> "16" | Int32 -> "32" | Int64 -> "64" in
             add_to_parsing_data (P_dep (false, (Util.format2 "fstar.%sint%s" u w |> Ident.lid_of_str)))
         | Const_char _ ->
             add_to_parsing_data (P_dep (false, ("fstar.char" |> Ident.lid_of_str)))
-        | Const_float _ ->
-            add_to_parsing_data (P_dep (false, ("fstar.float" |> Ident.lid_of_str)))
         | _ ->
             ()
 
@@ -922,7 +922,7 @@ let collect_one
         | Seq (t1, t2) ->
             collect_term t1;
             collect_term t2
-        | If (t1, ret_opt, t2, t3) ->
+        | If (t1, _, ret_opt, t2, t3) ->
             collect_term t1;
             (match ret_opt with
              | None -> ()
@@ -949,8 +949,8 @@ let collect_one
             collect_term tac
         | Record (t, idterms) ->
             iter_opt t collect_term;
-            List.iter 
-              (fun (fn, t) -> 
+            List.iter
+              (fun (fn, t) ->
                 collect_fieldname fn;
                 collect_term t)
               idterms
@@ -1007,44 +1007,44 @@ let collect_one
             end
 
         | IntroForall (bs, p, e) ->
-          add_to_parsing_data (P_dep (false, (Ident.lid_of_str "FStar.Classical.Sugar")));        
+          add_to_parsing_data (P_dep (false, (Ident.lid_of_str "FStar.Classical.Sugar")));
           collect_binders bs;
           collect_term p;
           collect_term e
-          
+
         | IntroExists(bs, t, vs, e) ->
-          add_to_parsing_data (P_dep (false, (Ident.lid_of_str "FStar.Classical.Sugar")));        
+          add_to_parsing_data (P_dep (false, (Ident.lid_of_str "FStar.Classical.Sugar")));
           collect_binders bs;
           collect_term t;
           List.iter collect_term vs;
           collect_term e
 
         | IntroImplies(p, q, x, e) ->
-          add_to_parsing_data (P_dep (false, (Ident.lid_of_str "FStar.Classical.Sugar")));        
+          add_to_parsing_data (P_dep (false, (Ident.lid_of_str "FStar.Classical.Sugar")));
           collect_term p;
           collect_term q;
           collect_binder x;
           collect_term e
-          
+
         | IntroOr(b, p, q, r) ->
           add_to_parsing_data (P_dep (false, (Ident.lid_of_str "FStar.Classical.Sugar")));
           collect_term p;
-          collect_term q;          
+          collect_term q;
           collect_term r
-          
+
         | IntroAnd(p, q, r, e) ->
           add_to_parsing_data (P_dep (false, (Ident.lid_of_str "FStar.Classical.Sugar")));
           collect_term p;
-          collect_term q;          
+          collect_term q;
           collect_term r;
-          collect_term e          
+          collect_term e
 
         | ElimForall(bs, p, vs) ->
            add_to_parsing_data (P_dep (false, (Ident.lid_of_str "FStar.Classical.Sugar")));
            collect_binders bs;
            collect_term p;
            List.iter collect_term vs
-            
+
         | ElimExists(bs, p, q, b, e) ->
            add_to_parsing_data (P_dep (false, (Ident.lid_of_str "FStar.Classical.Sugar")));
            collect_binders bs;
@@ -1053,22 +1053,22 @@ let collect_one
            collect_binder b;
            collect_term e
 
-        | ElimImplies(p, q, e) -> 
-          add_to_parsing_data (P_dep (false, (Ident.lid_of_str "FStar.Classical.Sugar")));        
+        | ElimImplies(p, q, e) ->
+          add_to_parsing_data (P_dep (false, (Ident.lid_of_str "FStar.Classical.Sugar")));
           collect_term p;
           collect_term q;
           collect_term e
 
-        | ElimAnd(p, q, r, x, y, e) -> 
+        | ElimAnd(p, q, r, x, y, e) ->
           add_to_parsing_data (P_dep (false, (Ident.lid_of_str "FStar.Classical.Sugar")));
           collect_term p;
           collect_term q;
-          collect_term r;          
+          collect_term r;
           collect_binder x;
           collect_binder y;
           collect_term e
 
-        | ElimOr(p, q, r, x, e, y, e') -> 
+        | ElimOr(p, q, r, x, e, y, e') ->
           add_to_parsing_data (P_dep (false, (Ident.lid_of_str "FStar.Classical.Sugar")));
           collect_term p;
           collect_term q;
@@ -1076,7 +1076,7 @@ let collect_one
           collect_binder x;
           collect_binder y;
           collect_term e;
-          collect_term e'          
+          collect_term e'
 
       and collect_patterns ps =
         List.iter collect_pattern ps
@@ -1094,6 +1094,8 @@ let collect_one
         | PatOp _
         | PatConst _ ->
             ()
+        | PatVQuote t ->
+            collect_term t
         | PatApp (p, ps) ->
             collect_pattern p;
             collect_patterns ps
@@ -1377,7 +1379,7 @@ let collect (all_cmd_line_files: list file_name)
   in
 
   let parse_results = BU.smap_create 40 in
-  
+
   (* discover: Do a graph traversal starting from file_name
    *           filling in dep_graph with the dependences *)
   let rec discover_one (file_name:file_name) =
@@ -1643,7 +1645,7 @@ let print_full (deps:deps) : unit =
         Options.prepend_output_dir (ml_base_name ^ ext)
     in
     let norm_path s = replace_chars (replace_chars s '\\' "/") ' ' "\\ " in
-    let output_fs_file f = norm_path (output_file ".fs" f) in    
+    let output_fs_file f = norm_path (output_file ".fs" f) in
     let output_ml_file f = norm_path (output_file ".ml" f) in
     let output_krml_file f = norm_path (output_file ".krml" f) in
     let output_cmx_file f = norm_path (output_file ".cmx" f) in
@@ -1770,7 +1772,7 @@ let print_full (deps:deps) : unit =
               end
               else begin
                      let mname = lowercase_module_name file_name in
-              
+
                      print_entry
                         (output_ml_file file_name)
                         cache_file_name
@@ -1887,7 +1889,7 @@ let print_full (deps:deps) : unit =
     print_all "ALL_FST_FILES" all_fst_files;
     print_all "ALL_FSTI_FILES" all_fsti_files;
     print_all "ALL_CHECKED_FILES" all_checked_files;
-    print_all "ALL_FS_FILES" all_fs_files;    
+    print_all "ALL_FS_FILES" all_fs_files;
     print_all "ALL_ML_FILES" all_ml_files;
     print_all "ALL_KRML_FILES" all_krml_files;
 

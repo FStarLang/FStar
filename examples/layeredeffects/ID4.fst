@@ -88,19 +88,14 @@ let default_if_then_else (a:Type u#aa) (wp:wp0 a) (f:repr a wp) (g:repr a wp) (p
 total
 reifiable
 reflectable
-layered_effect {
-  ID : a:Type -> wp0 a -> Effect
-  with repr         = repr;
-       return       = return;
-       bind         = bind;
-       subcomp      = subcomp;
-       if_then_else = if_then_else
+effect {
+  ID (a:Type) (_:wp0 a)
+  with {repr; return; bind; subcomp; if_then_else}
 }
 
-let lift_pure_nd (a:Type) (wp:pure_wp a) (f:(eqtype_as_type unit -> PURE a wp)) :
-  Pure (repr a wp) (requires monotonic wp)
-                   (ensures (fun _ -> True))
-  = (_, (fun (p:erased (a -> Type0)) _ -> // need the type annot
+let lift_pure_nd (a:Type) (wp:pure_wp a) (f:unit -> PURE a wp) : repr a wp
+  = FStar.Monotonic.Pure.elim_pure_wp_monotonicity wp;
+    (_, (fun (p:erased (a -> Type0)) _ -> // need the type annot
          let r = f () in
          assert (reveal p r);
          r))
@@ -119,8 +114,6 @@ effect Id (a:Type) (pre:pure_pre) (post:pure_post' a pre) =
 
 effect I (a:Type) = Id a True (fun _ -> True)
 
-#set-options "--debug ID1 --debug_level SMTQuery"
-
 open FStar.Tactics
 
 let br (n:nat) : I bool =
@@ -128,17 +121,16 @@ let br (n:nat) : I bool =
   
 let add1 (x:int) : Id int (requires (x > 0)) (ensures (fun r -> r == x+1)) = x + 1
 
-[@@expect_failure]
 let rec count (n:nat) : I int
  = if n = 0 then 0 else count (n-1)
 
-[@@expect_failure [19]]
-let rec fib (i:nat) : I nat by (compute (); dump "") =
+let rec fib (i:nat) : I nat =
   if i = 0 || i = 1
   then 1
-  else fib (i-1) + fib (i-2)
+  else let x = fib (i-1) in
+       let y = fib (i-2) in
+       x+y
 
-[@@expect_failure [19]]
 let rec idiv (a b : nat) : Id int (requires (a >= 0 /\ b > 0))
                               (ensures (fun r -> r >= 0)) 
                               (decreases a)
@@ -146,12 +138,11 @@ let rec idiv (a b : nat) : Id int (requires (a >= 0 /\ b > 0))
   if a < b
   then 0
   else begin
-   assume (a-b << a);
+   assert (a-b << a);
    let r = idiv (a-b) b in
    1 + r
   end
 
-[@@expect_failure [19]] // same
 let rec sum (l : list int) : I int
  = match l with
    | [] -> 0

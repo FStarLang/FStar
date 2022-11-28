@@ -955,16 +955,6 @@ val handle_smt_goals : unit
     see https://github.com/FStarLang/FStar/issues/1844 *)
 val erasable : unit
 
-(** THIS ATTRIBUTE CAN BREAK EXTRACTION SOUNDNESS, USE WITH CARE
-
-    Combinators for reifiable layered effects must have binders with
-    non-informative types, since at extraction time, those binders are
-    substituted with ().
-    This attribute can be added to a layered effect definition to skip this
-    check, i.e. adding it will allow informative binder types, but then
-    the code should not be extracted *)
-val allow_informative_binders : unit
-
 (** [commute_nested_matches]
     This attribute can be used to decorate an inductive type [t]
 
@@ -1045,7 +1035,7 @@ val normalize_for_extraction (steps:list norm_step) : Tot unit
 
     See examples/layeredeffects/IteSoundess.fst for a few examples
   *)
-val ite_soundness_by : unit
+val ite_soundness_by (attribute: unit): Tot unit
 
 (** By-default functions that have a layered effect, need to have a type
     annotation for their bodies
@@ -1089,6 +1079,16 @@ val default_effect (s:string) : Tot unit
 
     *)
 val top_level_effect (s:string) : Tot unit
+
+(** This attribute can be annotated on the binders in an effect signature
+    to indicate that they are effect parameters. For example, for a
+    state effect that is parametric in the type of the state, the state
+    index may be marked as an effect parameter.
+
+    Also see https://github.com/FStarLang/FStar/wiki/Indexed-effects
+
+    *)
+val effect_param : unit
 
 (** Bind definition for a layered effect may optionally contain range
     arguments, that are provided by the typechecker during reification

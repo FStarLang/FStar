@@ -16,6 +16,15 @@
 
 module BUGSLowParseWriters
 
+//
+// This module is a testcase for an already fixed bug
+// The effect combinators defined here are non-substitutive
+// See LowParse.fsti for a substitutive version of the effect defined here
+//
+
+// silence not a substitutive combinator warning
+#set-options "--warn_error -352"
+
 let memory_invariant : Type0 = nat
 
 (*
@@ -26,14 +35,6 @@ type memory_invariant : Type0 = | Meminv
 // this one will make that `assert False` fail:
 let memory_invariant : Type0 = unit
 *)
-
-unfold
-let pure_wp_mono
-  (a: Type)
-  (wp: pure_wp a)
-: GTot Type0
-= (forall (p q:pure_post a).
-     (forall (x:a). p x ==> q x) ==> (wp p ==> wp q))
 
 noeq
 type result (a: Type u#x) : Type u#x =
@@ -176,16 +177,15 @@ let read_if_then_else (a:Type)
     (fun _ -> (p ==> post_err_f ()) /\ ((~ p) ==> post_err_g ())) // (read_if_then_else_post_err pre_f pre_g post_err_f post_err_g p)
     l
 
-[@@allow_informative_binders]
 reifiable reflectable total
-layered_effect {
-  ERead : a:Type -> (pre: pure_pre) -> (post: pure_post' a pre) -> (post_err: pure_post_err pre) -> (memory_invariant) -> Effect
+effect {
+  ERead (a:Type) (pre: pure_pre) (post: pure_post' a pre) (post_err: pure_post_err pre) (_:memory_invariant)
   with
-  repr = read_repr;
-  return = read_return;
-  bind = read_bind;
-  subcomp = read_subcomp;
-  if_then_else = read_if_then_else
+  { repr = read_repr;
+    return = read_return;
+    bind = read_bind;
+    subcomp = read_subcomp;
+    if_then_else = read_if_then_else }
 }
 
 effect Read
@@ -196,25 +196,23 @@ effect Read
 = ERead a pre post (fun _ -> False) inv
 
 let lift_pure_read_spec
-  (a:Type) (wp:pure_wp a { pure_wp_mono a wp }) (f_pure_spec:unit -> PURE a wp)
+  (a:Type) (wp:pure_wp a) (f_pure_spec:unit -> PURE a wp)
 : Tot (read_repr_spec a 
     (wp (fun _ -> True)) // (lift_pure_read_pre a wp)
     (fun x -> ~ (wp (fun x' -> ~ (x == x')))) // (lift_pure_read_post a wp)
     (fun _ -> False) // (lift_pure_read_post_err a wp))
   )
-= fun () -> Correct (f_pure_spec ())
+= FStar.Monotonic.Pure.elim_pure_wp_monotonicity wp;
+  fun () -> Correct (f_pure_spec ())
 
 let lift_pure_read (a:Type) (wp:pure_wp a)
   (l: memory_invariant)
-  (f_pure:eqtype_as_type unit -> PURE a wp)
-: Pure (read_repr a
+  (f_pure:unit -> PURE a wp)
+: (read_repr a
     (wp (fun _ -> True)) // (lift_pure_read_pre a wp)
     (fun x -> ~ (wp (fun x' -> ~ (x == x')))) // (lift_pure_read_post a wp)
     (fun _ -> False) // (lift_pure_read_post_err a wp))
-    l
-  )
-  (requires (pure_wp_mono a wp))
-  (ensures (fun _ -> True))
+    l)
 = ReadRepr (lift_pure_read_spec a wp f_pure)
 
 sub_effect PURE ~> ERead = lift_pure_read

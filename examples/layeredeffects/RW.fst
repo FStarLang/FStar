@@ -94,9 +94,9 @@ let bind_post #a #b (i1 i2 : idx)
     fun h0 y h2 -> pre h0 /\ (exists x h1. post h0 x h1 /\ post' x h1 y h2)
 
 let bind (a b : Type)
-  (i i' :idx)
-  (pre:_) (post:st_bpost a)
-  (pre':_) (post':a -> st_bpost b)
+  (i:idx) (pre:st_pre) (post:st_bpost a)
+  (i':idx)
+  (pre':a -> st_pre) (post':a -> st_bpost b)
   (c : m a i pre post)
   (f : (x:a -> m b i' (pre' x) (post' x)))
   : Tot (m b (join i i') (bind_pre i i' pre pre' post) (bind_post i i' pre post post'))
@@ -118,21 +118,23 @@ let post_leq #a (post1 post2 : H.heap -> st_post a) =
 
 // how is subtyping handled? can I subtype on a?
 // note that post is contravariant in a
-let subcomp (a:Type) (i1 i2 :idx)
-  (pre : st_pre)  (post  : st_bpost a)
-  (pre' : st_pre) (post' : st_bpost a)
+let subcomp (a:Type) (i1:idx) (pre : st_pre)  (post  : st_bpost a)
+  (i2:idx) (pre' : st_pre) (post' : st_bpost a)
   (f : m a i1 pre post)
   : Pure (m a i2 pre' post')
          (requires (flows i1 i2 /\ pre_leq pre pre' /\ post_leq post post'))
          (ensures (fun _ -> True))
   = fun () -> f ()
-  
+
+unfold
 let ite (p q r : Type0) = (p ==> q) /\ (~p ==> r)
 
 let if_then_else
-  (a : Type) (i1 i2 : idx)
-  (pre1 pre2 : st_pre)
+  (a : Type) (i1:idx) 
+  (pre1:st_pre) 
   (post1 : st_bpost a)
+  (i2 : idx)
+  (pre2 : st_pre)
   (post2 : st_bpost a)
   (f : m a i1 pre1 post1) (g : m a i2 pre2 post2)
   (p : bool)
@@ -141,22 +143,16 @@ let if_then_else
         (fun h0 -> ite p (pre1 h0) (pre2 h0))
         (fun h0 x h1 -> ite p (post1 h0 x h1) (post2 h0 x h1))
 
-[@@allow_informative_binders]
 reifiable
 reflectable
-layered_effect {
-  RWI : a:Type -> i:idx -> st_pre -> st_bpost a  -> Effect
-  with
-  repr         = m;
-  return       = return;
-  bind         = bind;
-  subcomp      = subcomp;
-  if_then_else = if_then_else
+effect {
+  RWI (a:Type) (i:idx) (_:st_pre) (_:st_bpost a)
+  with {repr         = m;
+        return       = return;
+        bind         = bind;
+        subcomp      = subcomp;
+        if_then_else = if_then_else}
 }
-
-unfold
-let pure_monotonic #a (wp : pure_wp a) : Type =
-  forall p1 p2. (forall x. p1 x ==> p2 x) ==> wp p1 ==> wp p2
 
 unfold
 let sp #a (wp : pure_wp a) : pure_post a =
@@ -165,13 +161,12 @@ let sp #a (wp : pure_wp a) : pure_post a =
 let lift_pure_rwi
  (a:Type)
  (wp : pure_wp a)
- (f : eqtype_as_type unit -> PURE a wp)
+ (f :unit -> PURE a wp)
  // with the index-polymorphic bind above, this has to be in RO,
  // or unification will usually not find the index here
- : Pure (m a RO (fun _ -> wp (fun _ -> True)) (fun h0 x h1 -> sp wp x /\ h1 == h0))
-        (requires pure_monotonic wp)
-        (ensures (fun _ -> True))
- = fun () -> f ()
+ : m a RO (fun _ -> wp (fun _ -> True)) (fun h0 x h1 -> sp wp x /\ h1 == h0)
+ = FStar.Monotonic.Pure.elim_pure_wp_monotonicity wp;
+   fun () -> f ()
  
 sub_effect PURE ~> RWI = lift_pure_rwi
 

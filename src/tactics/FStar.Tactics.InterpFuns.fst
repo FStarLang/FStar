@@ -72,8 +72,8 @@ let mk nm arity nunivs interp nbe_interp =
   ; Cfg.auto_reflect                 = Some (arity - 1)
   ; Cfg.strong_reduction_ok          = true
   ; Cfg.requires_binder_substitution = true
-  ; Cfg.interpretation               = timing_int nm interp
-  ; Cfg.interpretation_nbe           = timing_nbe nm nbe_interp
+  ; Cfg.interpretation               = (fun psc cbs _us args -> timing_int nm interp psc cbs args)
+  ; Cfg.interpretation_nbe           = (fun cbs _us args -> timing_nbe nm nbe_interp cbs args)
   }
 
 let mkt nm arity nunivs interp nbe_interp =
@@ -84,8 +84,8 @@ let mkt nm arity nunivs interp nbe_interp =
   ; Cfg.auto_reflect                 = None
   ; Cfg.strong_reduction_ok          = true
   ; Cfg.requires_binder_substitution = true
-  ; Cfg.interpretation               = timing_int nm interp
-  ; Cfg.interpretation_nbe           = timing_nbe nm nbe_interp
+  ; Cfg.interpretation               = (fun psc cbs _us args -> timing_int nm interp psc cbs args)
+  ; Cfg.interpretation_nbe           = (fun cbs _us args -> timing_nbe nm nbe_interp cbs args)
   }
 
 (* This _psc variant is a special case *)
