@@ -1158,6 +1158,35 @@ let rec do_solve is_retry use_env_msg tcenv q : unit =
              "Could not encode the query since F* does not support precise smtencoding of inner let-recs yet (in this case %s)"
              (String.concat "," (List.map fst names)))
 
+(* Called by solve_sync. *)
+let do_solve_sync use_env_msg tcenv q : bool =
+    maybe_refresh_solver tcenv;
+    Encode.push (BU.format1 "Starting query at %s" (Range.string_of_range <| Env.get_range tcenv));
+    let pop () = Encode.pop (BU.format1 "Ending query at %s" (Range.string_of_range <| Env.get_range tcenv)) in
+
+    let prefix, labels, qry, suffix = Encode.encode_query use_env_msg tcenv q in
+    let tcenv = incr_query_index tcenv in
+    match qry with
+    | Assume({assumption_term={tm=App(FalseOp, _)}}) -> begin
+      pop();
+      true
+    end
+
+    | _ when tcenv.admit -> begin
+      pop();
+      true
+    end
+
+    | Assume _ ->
+      (* We set is_being_retried=true here so we will not try to split queries,
+       * and hence we do not need to handle the SplitQueryAndRetry exception. *)
+      let configs, ans = ask_solver true tcenv labels prefix qry q suffix in
+      let default_settings = List.hd configs in
+      pop ();
+      ans.ok
+
+    | _ -> failwith "do_solve_sync: impossible"
+
 (* Attempt to discharge a VC through the SMT solver. Will
 automatically retry increasing fuel as needed, and perform quake testing
 (repeating the query to make sure it is robust). This function will
@@ -1174,6 +1203,17 @@ let solve use_env_msg tcenv q : unit =
       (Some (Ident.string_of_lid (Env.current_module tcenv)))
       "FStar.SMTEncoding.solve_top_level"
 
+(* Like solve, but returns a boolean indicating whether the query
+succeeded, and _will not_ log not raise an error if not. Mostly useful
+for the smt_sync tactic primitive. *)
+let solve_sync use_env_msg tcenv q : bool =
+    if Options.no_smt ()
+    then false
+    else
+    Profiling.profile
+      (fun () -> do_solve_sync use_env_msg tcenv q)
+      (Some (Ident.string_of_lid (Env.current_module tcenv)))
+      "FStar.SMTEncoding.solve_top_level"
 
 (**********************************************************************************************)
 (* Top-level interface *)
@@ -1193,6 +1233,7 @@ let solver = {
     handle_smt_goal=(fun e g -> [e,g]);
 
     solve=solve;
+    solve_sync=solve_sync;
     finish=Z3.finish;
     refresh=Z3.refresh;
 }
@@ -1208,6 +1249,7 @@ let dummy = {
     spinoff_strictly_positive_goals = None;
     handle_smt_goal=(fun e g -> [e,g]);
     solve=(fun _ _ _ -> ());
+    solve_sync=(fun _ _ _ -> false);
     finish=(fun () -> ());
     refresh=(fun () -> ());
 }
