@@ -17,9 +17,11 @@ import sys
 
 sys.path.insert(0, os.path.abspath('.'))
 import fstar_pygments
+import smt2_pygments
 from sphinx.highlighting import lexers
 
 lexers['fstar'] = fstar_pygments.CustomLexer()
+lexers['smt2'] = smt2_pygments.CustomLexer()
 
 def setup(app):
     app.add_css_file('custom.css')

@@ -7,6 +7,10 @@
    <http://research.microsoft.com/en-us>`_, `MSR-Inria
    <http://www.msr-inria.fr/>`_, and `Inria <https://www.inria.fr/>`_.
 
+   
+.. role:: smt2(code)
+   :language: smt2
+
 Proof-oriented Programming in F*
 ================================
 
@@ -48,3 +52,4 @@ and I hope this book will soon include chapters authored by others.
    part1/part1
    part2/part2
    part3/part3
+   under_the_hood/under_the_hood
