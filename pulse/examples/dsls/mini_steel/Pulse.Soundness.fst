@@ -484,3 +484,17 @@ let rec soundness (f:RT.fstar_top_env)
       elab_bind_typing f g _ _ _ x _ r1_typing _ r2_typing bc t2_typing post2_typing
       
     | _ -> admit()
+
+let soundness_lemma
+  (f:RT.fstar_top_env)
+  (g:env)
+  (t:term)
+  (c:pure_comp)
+  (d:src_typing f g t c)
+  : Lemma (ensures RT.typing (extend_env_l f g)
+                             (elab_src_typing d)
+                             (elab_pure_comp c))
+  = FStar.Squash.bind_squash
+      #(src_typing f g t c)
+      ()
+      (fun dd -> FStar.Squash.return_squash (soundness f g t c d))
