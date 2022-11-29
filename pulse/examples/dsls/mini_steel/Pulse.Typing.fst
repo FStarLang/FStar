@@ -14,11 +14,6 @@ open Pulse.Elaborate.Pure
 //     ///\ star etc
 //   }
 
-let fstar_top_env =
-  g:R.env { 
-    forall x. None? (RT.lookup_bvar g x )
-  }
-
 let tm_bool : pure_term = Tm_FVar bool_lid
 let tm_true : pure_term = Tm_Constant (Bool true)
 let tm_false : pure_term = Tm_Constant (Bool false)
@@ -126,7 +121,7 @@ let fresh_is_fresh (e:env)
 
 [@@erasable]
 noeq
-type vprop_equiv (f:fstar_top_env) : env -> pure_term -> pure_term -> Type =
+type vprop_equiv (f:RT.fstar_top_env) : env -> pure_term -> pure_term -> Type =
   | VE_Refl:
      g:env ->
      t:pure_term ->
@@ -197,7 +192,7 @@ type vprop_equiv (f:fstar_top_env) : env -> pure_term -> pure_term -> Type =
 
 [@@erasable]
 noeq
-type st_equiv (f:fstar_top_env) : env -> pure_comp -> pure_comp -> Type =
+type st_equiv (f:RT.fstar_top_env) : env -> pure_comp -> pure_comp -> Type =
   | ST_VPropEquiv :
       g:env ->
       c1:pure_comp_st ->
@@ -228,7 +223,7 @@ noeq
 type my_erased (a:Type) = | E of a
 
 noeq
-type src_typing (f:fstar_top_env) : env -> term -> pure_comp -> Type =
+type src_typing (f:RT.fstar_top_env) : env -> term -> pure_comp -> Type =
   | T_Tot: 
       g:env ->
       e:pure_term ->
@@ -320,13 +315,13 @@ type src_typing (f:fstar_top_env) : env -> term -> pure_comp -> Type =
       st_equiv f g c c' ->
       src_typing f g e c' 
 
-and tot_typing (f:fstar_top_env) (g:env) (e:term) (t:pure_term) =
+and tot_typing (f:RT.fstar_top_env) (g:env) (e:term) (t:pure_term) =
   my_erased (src_typing f g e (C_Tot t))
 
-and universe_of (f:fstar_top_env) (g:env) (t:term) (u:universe) =
+and universe_of (f:RT.fstar_top_env) (g:env) (t:term) (u:universe) =
   tot_typing f g t (Tm_Type u)
 
-and bind_comp (f:fstar_top_env) : env -> var -> pure_comp -> pure_comp -> pure_comp -> Type =
+and bind_comp (f:RT.fstar_top_env) : env -> var -> pure_comp -> pure_comp -> pure_comp -> Type =
   | Bind_comp :
       g:env ->
       x:var { None? (lookup g x) } ->

@@ -92,7 +92,7 @@ let elab_bind (c1 c2:pure_comp_st) (e1 e2:R.term) =
           (mk_abs ty2 (elab_pure c2.post))
           e1 e2
 
-let rec elab_src_typing (#f:fstar_top_env)
+let rec elab_src_typing (#f:RT.fstar_top_env)
                         (#g:env)
                         (#t:term)
                         (#c:pure_comp)
