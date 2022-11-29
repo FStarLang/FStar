@@ -189,7 +189,7 @@ and readback_universe (u:R.universe)
 
   | _ -> T.fail "readback_universe: unexpected universe"
 
-let check_universe (f:fstar_top_env) (g:env) (t:term)
+let check_universe (f:RT.fstar_top_env) (g:env) (t:term)
   : T.Tac (_:(u:universe & universe_of f g t u) { is_pure_term t })
   = let f = extend_env_l f g in
     match elab_term t with
@@ -202,7 +202,7 @@ let check_universe (f:fstar_top_env) (g:env) (t:term)
         | Some (Tm_Type u) -> (| u, E (T_Tot _ _ _ tok) |)
         | _ -> T.fail "Not typeable as a universe"
       
-let check_tot_univ (f:fstar_top_env) (g:env) (t:term)
+let check_tot_univ (f:RT.fstar_top_env) (g:env) (t:term)
   : T.Tac (_:(u:universe &
               ty:pure_term &
               universe_of f g ty u &
@@ -220,7 +220,7 @@ let check_tot_univ (f:fstar_top_env) (g:env) (t:term)
           let (| u, uty |) = check_universe f g ty in
           (| u, ty, uty, T_Tot g t ty tok |)
 
-let check_tot (f:fstar_top_env) (g:env) (t:term)
+let check_tot (f:RT.fstar_top_env) (g:env) (t:term)
   : T.Tac (_:(ty:pure_term &
               src_typing f g t (C_Tot ty)) { is_pure_term t })
   = let fg = extend_env_l f g in
@@ -287,7 +287,7 @@ let list_as_vprop_assoc f g (vp0 vp1 vp2:list pure_term)
   = List.Tot.append_assoc vp0 vp1 vp2;
     VE_Refl _ _
   
-let rec vprop_list_equiv (f:fstar_top_env)
+let rec vprop_list_equiv (f:RT.fstar_top_env)
                          (g:env)
                          (vp:pure_term)
   : GTot (vprop_equiv f g vp (canon_vprop vp))
@@ -383,7 +383,7 @@ let rec try_split_vprop f g (req:list pure_term) (ctxt:list pure_term)
           let ddd = VE_Trans _ _ _ _ dd (VE_Sym _ _ _ d1) in
           Some (| frame, ddd |)
                        
-let split_vprop (f:fstar_top_env)
+let split_vprop (f:RT.fstar_top_env)
                 (g:env)
                 (ctxt:pure_term)
                 (ctxt_typing: tot_typing f g ctxt Tm_VProp)
@@ -422,7 +422,7 @@ let split_vprop (f:fstar_top_env)
        (| list_as_vprop frame, typing, d |)
 
 #push-options "--query_stats --fuel 1 --ifuel 2 --z3rlimit_factor 4"
-let try_frame_pre (#f:fstar_top_env)
+let try_frame_pre (#f:RT.fstar_top_env)
                   (#g:env)
                   (#t:term)
                   (#pre:pure_term)
@@ -459,7 +459,7 @@ let try_frame_pre (#f:fstar_top_env)
     (| C_ST s'', t_typing |)
 #pop-options
 
-let frame_empty (f:fstar_top_env)
+let frame_empty (f:RT.fstar_top_env)
                 (g:env)
                 (pre:pure_term)
                 (pre_typing: tot_typing f g pre Tm_VProp)
@@ -482,7 +482,7 @@ let frame_empty (f:fstar_top_env)
     (| c', T_Equiv _ _ _ _ d eq |)
       
 #push-options "--query_stats --fuel 2 --ifuel 1 --z3rlimit_factor 10"
-let rec check (f:fstar_top_env)
+let rec check (f:RT.fstar_top_env)
               (g:env)
               (t:term)
               (pre:pure_term)

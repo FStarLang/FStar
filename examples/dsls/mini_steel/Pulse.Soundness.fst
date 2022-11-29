@@ -24,7 +24,7 @@ let rec extend_env_l_lookup_bvar (g:R.env) (sg:env) (x:var)
     | hd :: tl -> extend_env_l_lookup_bvar g tl x
 
 #push-options "--ifuel 2"
-let rec elab_pure_equiv (#f:fstar_top_env)
+let rec elab_pure_equiv (#f:RT.fstar_top_env)
                         (#g:env)
                         (#t:pure_term)
                         (#c:pure_comp { C_Tot? c })
@@ -64,7 +64,7 @@ let comp_post_type (c:pure_comp_st) : R.term =
   
 
 assume
-val inversion_of_stt_typing (f:fstar_top_env) (g:env) (c:pure_comp_st)
+val inversion_of_stt_typing (f:RT.fstar_top_env) (g:env) (c:pure_comp_st)
                             (u:R.universe)
                             // _ |- stt u#u t pre (fun (x:t) -> post) : Type _ 
                             (_:RT.typing (extend_env_l f g) (elab_pure_comp c) (RT.tm_type u))
@@ -308,13 +308,16 @@ let inst_bind_g #u1 #u2 #g #head #t1 #t2 #pre #post1 #post2
     admit();
     d
 
-let fstar_top_env = f:fstar_top_env {
-    RT.lookup_fvar f RT.bool_fv == Some (RT.tm_type RT.u_zero) /\
-    RT.lookup_fvar f vprop_fv == Some (RT.tm_type (elab_universe (U_succ (U_succ U_zero)))) /\
-    (forall (u1 u2:R.universe). RT.lookup_fvar_uinst f bind_fv [u1; u2] == Some (bind_type u1 u2))
-}
+assume val fstar_top_env_axiom (f:RT.fstar_top_env)
+  : Lemma
+      (ensures
+         RT.lookup_fvar f RT.bool_fv == Some (RT.tm_type RT.u_zero) /\
+         RT.lookup_fvar f vprop_fv == Some (RT.tm_type (elab_universe (U_succ (U_succ U_zero)))) /\
+         (forall (u1 u2:R.universe). RT.lookup_fvar_uinst f bind_fv [u1; u2] == Some (bind_type u1 u2)))
+      [SMTPatOr [[SMTPat (RT.lookup_fvar f RT.bool_fv)];
+                 [SMTPat (RT.lookup_fvar f vprop_fv)]]]
 
-let elab_bind_typing (f:fstar_top_env)
+let elab_bind_typing (f:RT.fstar_top_env)
                      (g:env)
                      (c1 c2 c:ln_comp)
                      (x:var { ~ (x `Set.mem` freevars_comp c1) })
@@ -331,6 +334,7 @@ let elab_bind_typing (f:fstar_top_env)
     let u1 = elab_universe (comp_u c1) in
     let u2 = elab_universe (comp_u c2) in
     let head = bind_univ_inst u1 u2 in
+    fstar_top_env_axiom f;
     assert (RT.lookup_fvar_uinst rg bind_fv [u1; u2] == Some (bind_type u1 u2));
     let head_typing : RT.typing _ _ (bind_type u1 u2) = RT.T_UInst rg bind_fv [u1;u2] in
     let (| _, c1_typing |) = RT.type_correctness _ _ _ r1_typing in
@@ -377,7 +381,7 @@ let elab_bind_typing (f:fstar_top_env)
     d
 
 #push-options "--query_stats --fuel 2 --ifuel 2 --z3rlimit_factor 8"
-let rec soundness (f:fstar_top_env)
+let rec soundness (f:RT.fstar_top_env)
                   (g:env)
                   (t:term)
                   (c:pure_comp)
@@ -480,4 +484,3 @@ let rec soundness (f:fstar_top_env)
       elab_bind_typing f g _ _ _ x _ r1_typing _ r2_typing bc t2_typing post2_typing
       
     | _ -> admit()
-
