@@ -428,6 +428,9 @@ It is an escape hatch for maintaining backward compatibility
 for code that breaks with the core typechecker. *)
 val with_compat_pre_core : #a:Type -> n:int -> f:(unit -> Tac a) -> Tac a
 
+(** Attempt to solve the current goal with SMT immediately, and
+fail if it cannot be solved. *)
+val smt_sync : unit -> Tac unit
 
 
 (***** APIs used in the meta DSL framework *****)
