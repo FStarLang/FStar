@@ -18,9 +18,176 @@ let tc_meta_callback (f:R.env) (e:R.term)
     | Some t ->
       Some (| t, RT.T_Token _ _ _ (FStar.Squash.get_proof _) |)
 
-assume
-val readback_ty (t:R.term)
-  : T.Tac (option (ty:pure_term { elab_term ty == Some t }))
+let (let?) (f:option 'a) (g:'a -> T.Tac (option 'b)) : T.Tac (option 'b) =
+  match f with
+  | None -> None
+  | Some x -> g x
+
+let is_stt (t:R.term)
+  : Pure (option (R.universe & R.typ & R.term & R.term))
+         (requires True)
+         (ensures fun r ->
+            Some? r ==> (let u, res, pre, post = Some?.v r in
+                       let args = [res; pre; mk_abs res post] in
+                       t == mk_stt_app u args)) =
+          
+  let open R in
+  let hd, args = collect_app t in
+  match inspect_ln hd with
+  | Tv_UInst fv [u] ->
+    if inspect_fv fv = stt_lid
+    then match args with
+         | [res; pre; post] ->
+           (match inspect_ln (fst post) with
+            | Tv_Abs b body ->
+              let bv, (aq, attrs) = inspect_binder b in    
+              RT.pack_inspect_binder b;  // This does not have SMTPat
+              let bv_view = inspect_bv bv in
+              assume (fv == stt_fv);
+              assume (aq == Q_Explicit           /\
+                      attrs == []                /\
+                      bv_view.bv_ppname == "_"   /\
+                      bv_view.bv_index == 0      /\
+                      bv_view.bv_sort == fst res /\
+                      snd res == Q_Explicit      /\
+                      snd pre == Q_Explicit      /\
+                      snd post == Q_Explicit);
+
+              let l = [fst res; fst pre; mk_abs (fst res) body] in
+              assume (args_of l == args);
+              // probably need some lemma for R.mk_app and R.collect_app
+              assume (t == mk_stt_app u l);
+              Some (u, fst res, fst pre, body)
+            | _ -> None)
+         | _ -> None
+    else None
+  | _ -> None
+
+let rec readback_ty (t:R.term)
+  : T.Tac (option (ty:pure_term { elab_term ty == Some t })) =
+
+  let open T in
+  let open R in
+
+  match inspect_ln t with
+  | Tv_Var bv ->
+    let bv_view = inspect_bv bv in
+    assume (bv_view.bv_index >= 0);
+    let r = Tm_Var bv_view.bv_index in
+    // Needs some tweaks to how names are designed in the DSL,
+    //   e.g. may need to expose ppname, what happens to tun bv sort?
+    assume (elab_term r == Some t);
+    Some r
+
+  | Tv_BVar bv ->
+    let bv_view = inspect_bv bv in
+    assume (bv_view.bv_index >= 0);
+    let r = Tm_BVar bv_view.bv_index in
+    // Similar to the name case
+    assume (elab_term r == Some t);
+    Some r
+
+  | Tv_FVar fv -> Some (Tm_FVar (inspect_fv fv))
+
+  | Tv_UInst _ _ -> T.fail "readback_ty: Tv_UInst is not yet handled"
+
+  | Tv_App hd arg ->
+    let? hd' = readback_ty hd in
+    // R.aqualv is noeq, we should add implicits to mini steel
+    assume (snd arg == R.Q_Explicit);
+    let? arg' = readback_ty (fst arg) in
+    Some (Tm_PureApp hd' arg' <: ty:pure_term {elab_term ty == Some t})
+
+  | Tv_Abs _ _ -> T.fail "readback_ty: unexpected Tv_Abs"
+
+  | Tv_Arrow b c ->
+    let bv, (aq, attrs) = inspect_binder b in
+    assume (attrs == []);
+    assume (aq == R.Q_Explicit);
+    RT.pack_inspect_binder b;  // This does not have SMTPat
+    let bv_view = inspect_bv bv in
+    assume (bv_view.bv_ppname == "_" /\ bv_view.bv_index == 0);
+     
+    let c_view = inspect_comp c in
+    (match c_view with
+     | C_Total c_t u decrs ->
+      assume (inspect_universe u == R.Uv_Unk);
+      assume (decrs == []);
+
+      let? b_ty' = readback_ty bv_view.bv_sort in
+      let? c' = readback_comp u c_t in
+      Some (Tm_Arrow b_ty' c' <: ty:pure_term{ elab_term ty == Some t})
+     | _ -> None)
+
+  | Tv_Type u ->
+    let? u' = readback_universe u in
+    Some (Tm_Type u' <: ty:pure_term{ elab_term ty == Some t })
+
+  | Tv_Refine _ _ -> T.fail "readback_ty: unexpected Tv_Refine"
+
+  | Tv_Const c ->
+    (match c with
+     | C_Unit -> Some (Tm_Constant Pulse.Syntax.Unit)
+     | C_True -> Some (Tm_Constant (Bool true))
+     | C_False -> Some (Tm_Constant (Bool false))
+     | C_Int n -> Some (Tm_Constant (Int n))
+     | _ -> T.fail "readback_ty: constant not supported")
+
+  | Tv_Uvar _ _ -> T.fail "readback_ty: unexpected Tv_Uvar"
+
+  | Tv_Let recf attrs bv def body ->
+    if recf
+    then T.fail "readback_ty: unexpected recursive Tv_Let"
+    else begin
+      assume (attrs == []);
+      let bv_view = inspect_bv bv in
+      assume (bv_view.bv_ppname == "_" /\ bv_view.bv_index == 0);
+      let? bv_t' = readback_ty bv_view.bv_sort in
+      let? def' = readback_ty def in
+      let? body' = readback_ty body in
+      Some (Tm_Let bv_t' def' body' <: ty:pure_term { elab_term ty == Some t })
+    end
+
+  | Tv_Match _ _ _ -> T.fail "readbackty: Tv_Match not yet implemented"
+
+  | Tv_AscribedT _ _ _ _
+  | Tv_AscribedC _ _ _ _ -> T.fail "readbackty: ascription nodes not supported"
+
+  | Tv_Unknown -> T.fail "readbackty: unexpected Tv_Unknown"
+
+and readback_comp (u:R.universe) (t:R.term)
+  : T.Tac (option (c:comp{ elab_comp c == Some t})) =
+
+  let is_stt_opt = is_stt t in
+  match is_stt_opt with
+  | Some (u', res, pre, post) ->
+    let? u'' = readback_universe u' in
+    let? res' = readback_ty res in
+    let? pre' = readback_ty pre in
+    let? post' = readback_ty post in
+    Some (C_ST ({u=u''; res=res'; pre=pre';post=post'}) <: c:comp{ elab_comp c == Some t })
+
+  | _ ->
+    let? t' = readback_ty t in
+    Some (C_Tot t' <: c:comp{ elab_comp c == Some t })
+
+and readback_universe (u:R.universe)
+  : T.Tac (option (u':universe{ elab_universe u' == u })) =
+
+  match R.inspect_universe u with
+  | R.Uv_Zero -> Some U_zero
+  | R.Uv_Succ u' ->
+    let? u' = readback_universe u' in
+    Some (U_succ u' <: u':universe{ elab_universe u' == u })
+  | R.Uv_Name (s, r) ->
+    assume (r == dummy_range);
+    Some (U_var s)
+  | R.Uv_Max [u1; u2] ->
+    let? u1' = readback_universe u1 in
+    let? u2' = readback_universe u2 in
+    Some (U_max u1' u2' <: u':universe{ elab_universe u' == u })
+
+  | _ -> T.fail "readback_universe: unexpected universe"
 
 let check_universe (f:fstar_top_env) (g:env) (t:term)
   : T.Tac (_:(u:universe & universe_of f g t u) { is_pure_term t })

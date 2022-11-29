@@ -19,8 +19,9 @@ let forall_lid = ["Steel"; "ST"; "Util"; "forall_"]
 let stt_lid = ["Steel"; "ST"; "Util"; "stt"] //the thunked, value-type counterpart of the effect STT
 let stt_fv = R.pack_fv stt_lid
 let stt_tm = R.pack_ln (R.Tv_FVar stt_fv)
-let mk_stt_app (u:R.universe) (args:list R.term) : R.term = 
-  R.mk_app (R.pack_ln (R.Tv_UInst stt_fv [u])) (map (fun x -> x, R.Q_Explicit) args)
+let args_of (tms:list R.term) = List.Tot.map (fun x -> x, R.Q_Explicit) tms
+let mk_stt_app (u:R.universe) (args:list R.term) : Tot R.term = 
+  R.mk_app (R.pack_ln (R.Tv_UInst stt_fv [u])) (args_of args)
 let mk_total t = R.C_Total t (R.pack_universe R.Uv_Unk) []
 let binder_of_t_q t q = RT.mk_binder "_" 0 t q
 let bound_var i : R.term = R.pack_ln (R.Tv_BVar (R.pack_bv (RT.make_bv i tun)))
@@ -31,7 +32,7 @@ let mk_tot_arrow1 (f:arrow_dom) (out:R.term) : R.term =
   R.pack_ln (R.Tv_Arrow (binder_of_t_q ty q) (R.pack_comp (mk_total out)))
 
 
-let mk_abs ty t =  R.pack_ln (R.Tv_Abs (binder_of_t_q ty R.Q_Explicit) t)
+let mk_abs ty t : R.term =  R.pack_ln (R.Tv_Abs (binder_of_t_q ty R.Q_Explicit) t)
 
 let rec elab_universe (u:universe)
   : Tot R.universe
