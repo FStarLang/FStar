@@ -822,5 +822,174 @@ new project:
    native --smtencoding.elim_box true`` is a good one to consider, and
    may yield some proof performance boosts over the default setting.
 
+Designing a Library with SMT Patterns
+-------------------------------------
 
+In this section, we look at the design of ``FStar.Set``, a module in
+the standard library, examining, in particular, its use of SMT
+patterns on lemmas for proof automation. The style used here is
+representative of the style used in many proof-oriented
+libraries---the interface of the module offers an abstract type, with
+some constructors and some destructors, and lemmas that relate their
+behavior.
+
+To start with, for our interface, we set the fuel and ifuel both to
+zero---we will not need to reason about recursive functions or invert
+inductive types in the interface.
+
+.. literalinclude:: ../code/SimplifiedFStarSet.fsti
+   :language: fstar
+   :start-after: //SNIPPET_START: module$
+   :end-before: //SNIPPET_END: module$
+
+Next, we introduce the signature of the main abstract type of this
+module, ``set``:
+
+.. literalinclude:: ../code/SimplifiedFStarSet.fsti
+   :language: fstar
+   :start-after: //SNIPPET_START: set$
+   :end-before: //SNIPPET_END: set$
+
+Sets offer just a single operation call ``mem`` that allow testing
+whether or not a given element is in the set.
+
+.. literalinclude:: ../code/SimplifiedFStarSet.fsti
+   :language: fstar
+   :start-after: //SNIPPET_START: destructor$
+   :end-before: //SNIPPET_END: destructor$
+
+However, there are several ways to construct sets:
+
+.. literalinclude:: ../code/SimplifiedFStarSet.fsti
+   :language: fstar
+   :start-after: //SNIPPET_START: constructors$
+   :end-before: //SNIPPET_END: constructors$
+
+Finally, sets are equipped with a custom equivalence relation:
+
+.. literalinclude:: ../code/SimplifiedFStarSet.fsti
+   :language: fstar
+   :start-after: //SNIPPET_START: equal$
+   :end-before: //SNIPPET_END: equal$
+
+The rest of our module offers lemmas that describe the behavior of
+``mem`` when applied to each of the constructors.
+
+.. literalinclude:: ../code/SimplifiedFStarSet.fsti
+   :language: fstar
+   :start-after: //SNIPPET_START: core_properties$
+   :end-before: //SNIPPET_END: core_properties$
+
+Each of these lemmas should be intuitive and familiar. The extra bit
+to pay attention to is the ``SMTPat`` annotations on each of the
+lemmas. These annotations instruct F*'s SMT encoding to treat the
+lemma like a universal quantifier guarded by the user-provided
+pattern. For instance, the lemma ``mem_empty`` is encoded to the SMT
+solver as shown below.
+
+.. code-block:: smt2
+
+   (assert (! (forall ((@x0 Term) (@x1 Term))
+                      (! (implies (and (HasType @x0 Prims.eqtype)
+                                       (HasType @x1 @x0))
+                                  (not (BoxBool_proj_0
+                                          (SimplifiedFStarSet.mem @x0
+                                                                  @x1
+                                                                 (SimplifiedFStarSet.empty @x0)))))
+                       :pattern ((SimplifiedFStarSet.mem @x0
+                                                         @x1
+                                                         (SimplifiedFStarSet.empty @x0)))
+                       :qid lemma_SimplifiedFStarSet.mem_empty))
+           :named lemma_SimplifiedFStarSet.mem_empty))
+
+That is, from the perspective of the SMT encoding, the statement of
+the lemma ``mem_empty`` is analogous to the following assumption:
+
+.. code-block:: fstar
+
+   forall (a:eqtype) (x:a). {:pattern (mem x empty)} not (mem x empty)
+
+
+As such, lemmas decorated with SMT patterns allow the user to inject
+new, quantified hypotheses into the solver's context, where each of
+those hypotheses are justified by a proof in F* of the corresponding
+lemma. This allows users of the ``FStar.Set`` library to treat ``set``
+almost like a new built-in type, with proof automation to reason about
+its operations. However, making this work well requires some careful
+design of the patterns.
+
+Consider ``mem_union``: the pattern chosen here allows the solver to
+decompose an active term ``mem x (union s1 s2)`` into ``mem x s1`` and
+``mem x s2``, where both terms are smaller than the term we started
+with. Suppose instead that we had written:
+
+.. code-block:: fstar
+
+   val mem_union (#a:eqtype) (x:a) (s1 s2:set a)
+     : Lemma
+       (ensures (mem x (union s1 s2) == (mem x s1 || mem x s2)))
+       [SMTPat (mem x s1); SMTPat (mem x s2)]
+
+This translates to an SMT quantifier whose patterns are the pair of
+terms ``mem x s1`` and ``mem x s2``. This choice of pattern would
+allow the solver to instantiate the quantifier with all pairs of
+active terms of the form ``mem x s``, creating more active terms that
+are themselves matching candidates. To be explicit, with a single
+active term ``mem x s``, the solver would derive ``mem x (union s
+s)``, ``mem x (union s (union s s))``, and so on.  This is called a
+matching loop and can be disastrous for solver performance. So,
+carefully chosing the patterns on quantifiers and lemma with
+``SMTPat`` annotations is important.
+
+Finally, to complete our interface, we provide two lemmas to
+characterize ``equal``, the equivalence relation on sets. The first
+says that sets that agree on the ``mem`` function are ``equal``, and
+the second says that ``equal`` sets are provably equal ``(==)``, and
+the patterns allow the solver to convert reasoning about equality into
+membership and provable equality.
+
+.. literalinclude:: ../code/SimplifiedFStarSet.fsti
+   :language: fstar
+   :start-after: //SNIPPET_START: equal_intro_elim$
+   :end-before: //SNIPPET_END: equal_intro_elim$
+
+Of course, all these lemmas can be easily proven by F* under a
+suitable representation of the abstract type ``set``, as shown below.
+
+.. literalinclude:: ../code/SimplifiedFStarSet.fst
+   :language: fstar
+   :start-after: //SNIPPET_START: SimplifiedFStarSet.Impl$
+   :end-before: //SNIPPET_END: SimplifiedFStarSet.Impl$
+
+Exercise
+........
+
+Extend the set library with another constructor with the signature
+shown below:
+
+.. code-block:: fstar
+
+   val from_fun (#a:eqtype) (f: a -> bool) : Tot (set a)
+
+and prove a lemma that shows that a an element ``x`` is in ``from_fun
+f`` if and only if ``f x = true``, decorating the lemma with the
+appropriate SMT pattern.
+
+This `interface file <../code/SimplifiedFStarSet.fsti>`_ and its
+`implementation <../code/SimplifiedFStarSet.fst>`_ provides the
+definitions you need.
+
+.. container:: toggle
+
+    .. container:: header
+
+       **Answer**
+
+    Look at ``FStar.Set.intension`` if you get stuck.
+
+--------------------------------------------------------------------------------    
+
+           
+Profiling Z3 and Solving Proof Performance Issues
+-------------------------------------------------
 
