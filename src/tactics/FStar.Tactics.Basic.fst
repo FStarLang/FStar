@@ -2251,8 +2251,15 @@ let refl_tc_term (g:env) (e:term) : tac (option typ) =
   if no_uvars_in_g g &&
      no_uvars_in_term e
   then refl_typing_builtin_wrapper (fun _ ->
+         dbg_refl g (fun _ ->
+           BU.format1 "refl_tc_term: %s\n" (Print.term_to_string e));
          let must_tot = true in
          let _, t, guard = TcTerm.typeof_tot_or_gtot_term g e must_tot in
+         dbg_refl g (fun _ ->
+           BU.format3 "refl_tc_term for %s computed type %s and guard %s\n"
+             (Print.term_to_string e)
+             (Print.term_to_string t)
+             (Rel.guard_to_string g guard));
          Rel.force_trivial_guard g guard;
          t)
   else ret None

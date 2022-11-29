@@ -7060,12 +7060,26 @@ let (refl_tc_term :
       then
         refl_typing_builtin_wrapper
           (fun uu___1 ->
-             let must_tot = true in
-             let uu___2 =
-               FStar_TypeChecker_TcTerm.typeof_tot_or_gtot_term g e must_tot in
-             match uu___2 with
-             | (uu___3, t, guard) ->
-                 (FStar_TypeChecker_Rel.force_trivial_guard g guard; t))
+             dbg_refl g
+               (fun uu___3 ->
+                  let uu___4 = FStar_Syntax_Print.term_to_string e in
+                  FStar_Compiler_Util.format1 "refl_tc_term: %s\n" uu___4);
+             (let must_tot = true in
+              let uu___3 =
+                FStar_TypeChecker_TcTerm.typeof_tot_or_gtot_term g e must_tot in
+              match uu___3 with
+              | (uu___4, t, guard) ->
+                  (dbg_refl g
+                     (fun uu___6 ->
+                        let uu___7 = FStar_Syntax_Print.term_to_string e in
+                        let uu___8 = FStar_Syntax_Print.term_to_string t in
+                        let uu___9 =
+                          FStar_TypeChecker_Rel.guard_to_string g guard in
+                        FStar_Compiler_Util.format3
+                          "refl_tc_term for %s computed type %s and guard %s\n"
+                          uu___7 uu___8 uu___9);
+                   FStar_TypeChecker_Rel.force_trivial_guard g guard;
+                   t)))
       else FStar_Tactics_Monad.ret FStar_Pervasives_Native.None
 let (tac_env : FStar_TypeChecker_Env.env -> FStar_TypeChecker_Env.env) =
   fun env1 ->

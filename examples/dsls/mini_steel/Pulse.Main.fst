@@ -25,5 +25,8 @@ let main (t:term) (pre:pure_term) : RT.dsl_tac_t =
 
 (***** tests *****)
 
-[@@ expect_failure]
+open Steel.Effect.Common
+open Steel.ST.Util
+
+// #set-options "--debug Pulse.Main --debug_level ReflTc,Extreme,Rel --ugly"
 %splice_t[foo] (main (Tm_Constant (Bool true)) Tm_Emp)
