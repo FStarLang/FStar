@@ -29,4 +29,5 @@ open Steel.Effect.Common
 open Steel.ST.Util
 
 // #set-options "--debug Pulse.Main --debug_level ReflTc,Extreme,Rel --ugly"
+[@@ expect_failure]
 %splice_t[foo] (main (Tm_Constant (Bool true)) Tm_Emp)

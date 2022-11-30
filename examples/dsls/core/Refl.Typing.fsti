@@ -377,6 +377,8 @@ let b2t_lid : R.name = ["Prims"; "b2t"]
 let b2t_fv : R.fv = R.pack_fv b2t_lid
 let b2t_ty : R.term = R.(pack_ln (Tv_Arrow (as_binder 0 bool_ty) (mk_total (tm_type u_zero))))
 
+let eqtype_lid : R.name = ["Prims"; "eqtype"]
+
 noeq
 type constant_typing: vconst -> term -> Type0 = 
   | CT_Unit: constant_typing C_Unit unit_ty

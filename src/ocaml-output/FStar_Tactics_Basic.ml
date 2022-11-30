@@ -7081,6 +7081,36 @@ let (refl_tc_term :
                    FStar_TypeChecker_Rel.force_trivial_guard g guard;
                    t)))
       else FStar_Tactics_Monad.ret FStar_Pervasives_Native.None
+let (refl_universe_of :
+  env ->
+    FStar_Syntax_Syntax.term ->
+      FStar_Syntax_Syntax.universe FStar_Pervasives_Native.option
+        FStar_Tactics_Monad.tac)
+  =
+  fun g ->
+    fun e ->
+      let uu___ = (no_uvars_in_g g) && (no_uvars_in_term e) in
+      if uu___
+      then
+        refl_typing_builtin_wrapper
+          (fun uu___1 ->
+             let uu___2 = FStar_Syntax_Util.type_u () in
+             match uu___2 with
+             | (t, u) ->
+                 let uu___3 =
+                   FStar_TypeChecker_TcTerm.tc_check_tot_or_gtot_term g e t
+                     "" in
+                 (match uu___3 with
+                  | (uu___4, uu___5, guard) ->
+                      (FStar_TypeChecker_Rel.force_trivial_guard g guard;
+                       (let uu___7 = FStar_Syntax_Subst.compress_univ u in
+                        match uu___7 with
+                        | FStar_Syntax_Syntax.U_unif uu___8 ->
+                            FStar_Errors.raise_error
+                              (FStar_Errors.Fatal_IllTyped, "")
+                              FStar_Compiler_Range.dummyRange
+                        | u1 -> u1))))
+      else FStar_Tactics_Monad.ret FStar_Pervasives_Native.None
 let (tac_env : FStar_TypeChecker_Env.env -> FStar_TypeChecker_Env.env) =
   fun env1 ->
     let uu___ = FStar_TypeChecker_Env.clear_expected_typ env1 in

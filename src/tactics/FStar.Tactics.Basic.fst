@@ -2264,6 +2264,18 @@ let refl_tc_term (g:env) (e:term) : tac (option typ) =
          t)
   else ret None
 
+let refl_universe_of (g:env) (e:term) : tac (option universe) =
+  if no_uvars_in_g g &&
+     no_uvars_in_term e
+  then refl_typing_builtin_wrapper (fun _ ->
+         let t, u = U.type_u () in
+         let _, _, guard = TcTerm.tc_check_tot_or_gtot_term g e t "" in
+         Rel.force_trivial_guard g guard;
+         match SS.compress_univ u with
+         | S.U_unif _ -> Errors.raise_error (Errors.Fatal_IllTyped, "") Range.dummyRange
+         | u -> u)
+  else ret None
+
 
 (**** Creating proper environments and proofstates ****)
 
