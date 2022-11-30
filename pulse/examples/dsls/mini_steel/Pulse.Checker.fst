@@ -87,7 +87,13 @@ let rec readback_ty (t:R.term)
     assume (elab_term r == Some t);
     Some r
 
-  | Tv_FVar fv -> Some (Tm_FVar (inspect_fv fv))
+  | Tv_FVar fv ->
+    let fv_lid = inspect_fv fv in
+    if fv_lid = vprop_lid
+    then Some Tm_VProp
+    else if fv_lid = emp_lid
+    then Some Tm_Emp
+    else Some (Tm_FVar (inspect_fv fv))
 
   | Tv_UInst _ _ -> T.fail "readback_ty: Tv_UInst is not yet handled"
 
