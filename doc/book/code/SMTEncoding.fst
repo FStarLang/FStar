@@ -11,12 +11,10 @@ let rec factorial (n:nat) : nat =
 
 let test = assert (factorial 1 == 1)
 
-// assume Factorial_unbounded: forall (x:nat). exists (y:nat). factorial y > x
+assume Factorial_unbounded: forall (x:nat). exists (y:nat). factorial y > x
 
-#push-options "--initial_fuel 0 --max_fuel 4 --ifuel 0 --query_stats" 
+#push-options "--fuel 4 --ifuel 0 --query_stats --log_queries --z3rlimit_factor 2"
 #restart-solver
-let _ = assert (factorial 0 == 0)
-
 let _test_query_stats = assert (factorial 3 == 6)
 
 type unat = 

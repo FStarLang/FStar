@@ -170,6 +170,11 @@ substituted patterns are equal to the active terms ``v1..vm``. Given
 such a substitution, the substituted term ``S(body)`` becomes active
 and may refine the partial model further.
 
+Existentially quantified formulas are dual to universally quantified
+formulas. Whereas an universal formula in the *context* (i.e., a
+hypothesis) is inert until it's pattern is instantiated, an
+existential *goal* is inert until its pattern is instantiated.
+
 Returning to ``projection_inverse_BoxBool_proj_0``, what this means is
 that once the solver has an active term ``BoxBool b``, it can
 instantiate the quantified formula to obtain ``(= (BoxBool_proj_0
@@ -1082,7 +1087,7 @@ There's a lot of information here:
 
       #push-options "--initial_fuel 0 --max_fuel 4 --ifuel 0 --query_stats" 
       #restart-solver
-      let _dummy = assert (factorial 0 == 0)
+      let _dummy = assert (factorial 0 == 1)
 
       let _test_query_stats = assert (factorial 3 == 6)
                    
@@ -1092,43 +1097,449 @@ There's a lot of information here:
    initialization costs in the solver. Then, the query stats reported
    for the real test subject starts in this fresh session.
 
-
-   
-Resource Limits
-...............
-
-bb
-
-Proof Instability and Quake
+Working though a slow proof
 ...........................
 
-cc
+Even a single poorly chosen quantified assumption in the prover's
+context can make an otherwise simple proof take very long. To
+illustrate, consider the following variation on our example above:
 
-Context Pollution and Unsat Cores
-.................................
+.. code-block:: fstar
 
-dd
+   assume Factorial_unbounded: forall (x:nat). exists (y:nat). factorial y > x
 
-Splitting Queries
-.................
+   #push-options "--fuel 4 --ifuel 0 --query_stats" 
+   #restart-solver
+   let _test_query_stats = assert (factorial 3 == 6)
 
-ee
+We've now introduced the assumption ``Factorial_unbounded`` into our
+context. Recall from the SMT encoding of quantified formula, from the
+SMT solver's perspective, this looks like the following:
+
+.. code-block:: smt2
+
+    (assert (! (forall ((@x0 Term))
+                       (! (implies (HasType @x0 Prims.nat)
+                                   (exists ((@x1 Term))
+                                           (! (and (HasType @x1 Prims.nat)
+                                              (> (BoxInt_proj_0 (SMTEncoding.factorial @x1))
+                                                 (BoxInt_proj_0 @x0)))
+                                            :qid assumption_SMTEncoding.Factorial_unbounded.1)))
+                    :qid assumption_SMTEncoding.Factorial_unbounded))
+             :named assumption_SMTEncoding.Factorial_unbounded))
+
+
+This quantifier has no explicit patterns, but Z3 picks the term
+``(HasType @x0 Prims.nat)`` as the pattern for the ``forall``
+quantifier. This means that it can instantiate the quantifier for
+active term of type ``nat``. But, a single instantiation of the
+quantifier, yields the existentially quantified formula. Existentials
+are immediately skolemized by Z3, i.e., the existentially bound
+variable is replaced by a fresh function symbol that depends on all
+the variables in scope. So, a fresh term ``a`` corresponding ``@x1``
+is introduced, and immediately, the conjunct ``HasType a Prims.nat``
+becomes an active term and can be used to instantiate the outer
+universal quantifier again. This "matching loop" sends the solver into
+a long, fruitless search and the simple proof about ``factorial 3 ==
+6`` which previously succeeded in a few milliseconds, now
+fails. Here's are the query stats:
+
+
+.. code-block:: none
+
+   (<input>(18,0-18,49))	Query-stats (SMTEncoding._test_query_stats, 1)	failed {reason-unknown=unknown because canceled} in 5647 milliseconds with fuel 4 and ifuel 0 and rlimit 2723280 statistics={max-missed-qa-cost=11.00 num-checks=1 binary-propagations=14 arith-fixed-eqs=8268 arith-assert-upper=18916 arith-assert-lower=12359 decisions=13325 rlimit-count=4748763 missed-quant-instantiations=18005 max-generation=10 time=5.02 max-memory=790.20 arith-eq-adapter=11893 added-eqs=106037 mk-bool-var=172140 min-missed-qa-cost=11.00 del-clause=79534 interface-eqs=1 conflicts=11 arith-pseudo-nonlinear=2 arith-bound-prop=6 propagations=47550 arith-offset-eqs=3610 quant-instantiations=57046 mk-clause=124231 minimized-lits=1 memory=517.40 arith-pivots=20818 arith-assert-diseq=3 arith-add-rows=21504 arith-conflicts=3 num-allocs=1168378745 datatype-accessor-ax=5 final-checks=1}
+
+A few things to notice:
+
+  * The failure reason is "unknown because canceled". That means the
+    solver eached its resource limit and halted the proof
+    search. Usually, when you see "canceled" as the reason, you could
+    try raising the rlimit, as we'll see shortly.
+
+  * The failure took 5.6 seconds.
+
+  * There were 57k quantifier instantiations, as compared to just the
+    100 or so we had earlier. We'll soon seen how to pinpoint which
+    quantifiers were instantiated too much.
+
+Increasing the rlimit
+~~~~~~~~~~~~~~~~~~~~~
+
+We can first retry the proof by giving Z3 more resources---the
+directive below doubles the resource limit given to Z3.
+
+.. code-block:: fstar
+
+   #push-options "--z3rlimit_factor 2"
+
+This time it took 14 seconds and failed. But if you try the same proof
+a second time, it succeded. That's not very satisfying.
+
+Repeating Proofs with Quake
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Although this is an artificial example, unstable proofs that work and
+then suddenly fail do happen. Z3 does guarantee that it is
+deterministic in a very strict sense, but even the smallest change to
+the input, e.g., a change in variable names, or even asking the same
+query twice in a succession in the same Z3 session, can result in
+differnt answers.
+
+There is often a deeper root cause (in our case, it's the
+``Factorial_unbounded`` assumption, of course), but a first attempt at
+determining whether or not a proof is "flaky" is to use the F* option
+``--quake``.
+
+.. code-block:: fstar
+
+   #push-options "--quake 5/k"
+   let _test_query_stats = assert (factorial 3 == 6)
+
+This tries the query 5 times and reports the number of successes and
+failures.
+
+In this case, F* reports the following:
+
+.. code-block:: none
+
+   Quake: query (SMTEncoding._test_query_stats, 1) succeeded 4/5 times (best fuel=4, best ifuel=0)
+
+If you're working to stabilize a proof, a good criterion is to see if
+you can get the proof to go through with the ``--quake`` option.
+
+You can also try the proof by varying the Z3's random seed.
+
+.. code-block:: none
+
+   #push-options "--z3smtopt '(set-option :smt.random_seed 1)'"
 
 
 Profiling Quantifier Instantiation
 ..................................
 
-ff
+We have a query that's taking much longer than we'd like and from the
+query-stats we see that there are a lot of quantifier instances. Now,
+let's see how to pin down which quantifier is to blame.
 
 
-Opaque Definitions
-..................
+   1. Get F* to log an .smt2 file, by adding the ``--log_queries``
+      option. It's important to also add a ``#restart-solver`` before
+      just before the definition that you're interested in
+      profiling.
+      
+      .. code-block:: fstar
+   
+          #push-options "--fuel 4 --ifuel 0 --query_stats --log_queries --z3rlimit_factor 2"
+          #restart-solver
+          let _test_query_stats = assert (factorial 3 == 6)
 
-gg
+      F* reports the name of the file that it wrote as part of the
+      query-stats. For example:
 
+      .. code-block:: none
+
+          (<input>(18,0-18,49)@queries-SMTEncoding-7.smt2)	Query-stats ...
+
+   2. Now, from a terminal, you run Z3 on this generated .smt2 file,
+      while passing it the following option and save the output in a
+      file.
+
+      .. code-block:: none
+
+           z3 queries-SMTEncoding-7.smt2 smt.qi.profile=true > sample_qiprofile                        
+
+   3. The output contains several lines that begin with
+      ``[quantifier_instances]``, which is what we're interested in.
+
+
+      .. code-block:: none
+
+           grep quantifier_instances sample_qiprofile | sort -k 4 -n
+
+      The last few lines of output look like this:
+
+      .. code-block:: none
+
+          [quantifier_instances] bool_inversion :    352 :  10 : 11
+          [quantifier_instances] bool_typing :    720 :  10 : 11
+          [quantifier_instances] constructor_distinct_BoxBool :    720 :  10 : 11
+          [quantifier_instances] projection_inverse_BoxBool_proj_0 :   1772 :  10 : 11
+          [quantifier_instances] primitive_Prims.op_Equality :   2873 :  10 : 11
+          [quantifier_instances] int_typing :   3168 :  10 : 11
+          [quantifier_instances] constructor_distinct_BoxInt :   3812 :  10 : 11
+          [quantifier_instances] typing_SMTEncoding.factorial :   5490 :  10 : 11
+          [quantifier_instances] int_inversion :   5506 :  11 : 12
+          [quantifier_instances] @fuel_correspondence_SMTEncoding.factorial.fuel_instrumented :   5746 :  10 : 11
+          [quantifier_instances] Prims_pretyping_ae567c2fb75be05905677af440075565 :   5835 :  11 : 12
+          [quantifier_instances] projection_inverse_BoxInt_proj_0 :   6337 :  10 : 11
+          [quantifier_instances] primitive_Prims.op_Multiply :   6394 :  10 : 11
+          [quantifier_instances] primitive_Prims.op_Subtraction :   6394 :  10 : 11
+          [quantifier_instances] token_correspondence_SMTEncoding.factorial.fuel_instrumented :   7629 :  10 : 11
+          [quantifier_instances] @fuel_irrelevance_SMTEncoding.factorial.fuel_instrumented :   9249 :  10 : 11
+          [quantifier_instances] equation_with_fuel_SMTEncoding.factorial.fuel_instrumented :  13185 :  10 : 10
+          [quantifier_instances] refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2 :  15346 :  10 : 11
+          [quantifier_instances] assumption_SMTEncoding.Factorial_unbounded :  15890 :  10 : 11
+                       
+
+      Each line mentions is of the form:
+
+      .. code-block:: none
+
+          qid : number of instances : max generation :  max cost
+
+      where,
+
+          * qid is the identifer of quantifier in the .smt2 file
+
+          * the number of times it was instantiated, which is the
+            number we're most interested in
+
+          * the generation and cost are other internal measures, which
+            Nikolaj Bjorner explains `here
+            <https://github.com/Z3Prover/z3/issues/4522#issuecomment-644454562>`_
+
+   4. Interpreting the results
+
+      Clearly, as expected, ``assumption_SMTEncoding.Factorial_unbounded`` is
+      instantiated the most.
+
+      If you search in the .smt2 file for ":qid
+      refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
+      you'll find the assumption that gives an interpretation to the
+      ``HasType x Prims.nat`` predicate, where each instantiation of
+      ``Factorial_unbounded`` yields another instance of this fact.
+
+      Notice that
+      ``equation_with_fuel_SMTEncoding.factorial.fuel_instrumented``
+      is also instantiated a lot. This is because aside from the
+      matching loop due to ``HasType x Prims.nat`` that each
+      instantiation of ``Factorial_unbounded`` also yields an
+      occurrence of ``factorial`` as a new active term, which the
+      solver then unrolls up to four times.
+
+      We also see instantiations of quantifiers in ``Prims`` and other
+      basic facts like ``int_inversion``, ``bool_typing`` etc.
+      Sometimes, you may even find that these quantifiers fire the
+      most. However, these quantifiers are inherent to F*'s SMT
+      encoding: there's not much you can do about it as a user. They
+      are usually also not to blame for a slow proof---they fire a lot
+      when other terms are instantiated too much. You should try to
+      identify other quantifiers in your code or libraries that first
+      a lot and try to understand the root cause of that.
 
 Z3 Axiom Profiler
+~~~~~~~~~~~~~~~~~
+
+The `Z3 Axiom Profiler
+<https://github.com/viperproject/axiom-profiler>`_ can also be used to
+find more detailed information about quantifier instantiation,
+including which terms we used for instantiation, dependence among the
+quantifiers in the form of instantiation chains, etc.
+
+However, there seem to be `some issues
+<https://github.com/viperproject/axiom-profiler/issues/26>`_ with
+using it at the moment with Z3 logs generated from F*.
+
+
+
+Splitting Queries
 .................
 
-hh
+In the next two sections, we look at a small example that Alex Rozanov
+reported, shown below. It exhibits similar proof problems to our
+artificial example with factorial. Instead of just identifying the
+problematic quantifier, we look at how to remedy the performance
+problem by revising the proof to be less reliant on Z3 quantifier
+instantiation.
 
+.. literalinclude:: ../code/Alex.fst
+   :language: fstar
+
+The hypothesis that ``unbounded f`` has exactly the same problem as
+the our unbounded hypothesis on factorial---the ``forall/exists``
+quantifier contains a matching loop. 
+
+This proof of ``find_above_for_g`` succeeds, but it takes a while and
+F* reports:
+
+.. code-block:: none
+
+    (Warning 349) The verification condition succeeded after splitting
+    it to localize potential errors, although the original non-split
+    verification condition failed. If you want to rely on splitting
+    queries for verifying your program please use the --split_queries
+    option rather than relying on it implicitly.
+
+By default, F* collects all the proof obligations in a top-level F*
+definition and presents it to Z3 in a single query with several
+conjuncts. Usually, this allows Z3 to efficiently solve all the
+conjuncts together, e.g., the proof search for one conjunct may yield
+clauses useful to complete the search for other clauses. However,
+sometimes, the converse can be true: the proof search for separate
+conjuncts can interfere with each other negatively, leading to the
+entire proof to fail when every conjunct may be provable if tried
+separately. Additionally, when F* calls Z3, it applies the current
+rlimit setting for every query. If a query contains N conjuncts,
+splitting the conjuncts into N separate conjuncts is effectively a
+rlimit multiplier, since each query can separately consume resources
+as much as the current rlimit.
+
+If the single query with several conjunct fails without Z3 reporting
+any further information that F* can reconstruct into a localized error
+message, F* splits the query in to its conjuncts and tries each of
+them in isolation, so as to isolate the failing conjunct it
+any. However, sometimes, when tried in this mode, the proof of all
+conjuncts can succeed.
+
+One way to respond to Warning 349 is to follow what it says and enable
+``--split_queries`` explicitly, at least for the program fragment in
+question. This can sometimes stabilize a previously unstable
+proof. However, it may also end up deferring an underlying
+proof-performance problem. Besides, even putting stability aside,
+splitting queries into their conjuncts results in somewhat slower
+proofs.
+
+
+Taking Control of Quantifier Instantiations with Opaque Definitions
+...................................................................
+
+Here is a revision of Alex's program that addresses the quantifier
+instantiation problem. There are a few elements to the solution.
+
+.. literalinclude:: ../code/AlexOpaque.fst
+   :language: fstar
+   :start-after: //SNIPPET_START: opaque$
+   :end-before: //SNIPPET_END: opaque$
+
+1. Marking definitions as opaque
+
+     The attribute ``[@@"opaque_to_smt"]`` on the definition of
+     unbounded instructs F* to not encode that definition to the SMT
+     solver. So, the problematic alternating quantifier is no longer
+     in the global scope.
+
+2. Selectively revealing the definition within a scope
+
+     Of course, we still want to reason about the unbounded
+     predicate. So, we provide a lemma, ``instantiate_unbounded`` that
+     given allows the caller to explicity instantiate the assumption
+     that ``f`` is unbounded on some lower bound ``m``.
+
+     To prove the lemma, we use ``FStar.Pervasives.reveal_opaque``:
+     its first argument is the name of a symbol that should be
+     revealed; its second argument is a term in which that definition
+     should be revealed. It this case, it proves that ``unbounded f``
+     is equal to ``forall m. exists n. abs (f n) > m``.
+
+     With this fact available in the local scope, Z3 can prove the
+     lemma. You want to use ``reveal_opaque`` carefully, since with
+     having revealed it, Z3 has the problematic alternating quantifier
+     in scope and could go into a matching loop. But, here, since the
+     conclusion of the lemma is exactly the body of the quantifier, Z3
+     quickly completes the proof. If even this proves to be
+     problematic, then you may have to resort to tactics.
+
+3. Explicitly instantiate where needed
+
+     Now, with our instantiation lemma in hand, we can precisly
+     instantiate the unboundedness hypothesis on ``f`` as needed.
+
+     In the proof, there are two instantiations, at ``m`` and ``m1``.
+
+     Note, we are still relying on some non-trivial quantifier
+     instantiation by Z3. Notably, the two assertions are important to
+     instantiate the existential quantifier in the ``returns``
+     clause. We'll look at that in more detail shortly.
+
+     But, by making the problematic definition opaque an instantiating
+     it explicitly, our performance problem is gone---here's what
+     query-stats shows now.
+
+     .. code-block:: none
+
+        (<input>(18,2-31,5))	Query-stats (AlexOpaque.find_above_for_g, 1)	succeeded in 46 milliseconds
+
+Other Ways to Explicitly Trigger Quantifiers
+............................................
+
+For completeness, we look at some other ways in which quantifier
+instantiation works.
+
+An Artificial Trigger
+~~~~~~~~~~~~~~~~~~~~~
+
+Instead of making the definition of ``unbounded`` opaque, we could
+protect the universal quantifier with a pattern using some symbol
+reserved for this purpose, as shown below.
+
+.. literalinclude:: ../code/AlexOpaque.fst
+   :language: fstar
+   :start-after: //SNIPPET_START: trigger$
+   :end-before: //SNIPPET_END: trigger$
+
+
+1. We define a new function ``trigger x`` that is trivially true.
+
+2. In ``unbounded_alt`` we decorate the universal quantifier with an
+     explicit pattern, ``{:pattern (trigger x)}``. The pattern is not
+     semantically relevant---it's only there to control how the
+     quantifier is instantiated
+
+3. In ``find_above_for_gg``, whenever we want to instantiate the
+     quantifier with a particular lower bound ``k``, we assert
+     ``trigger k``. That gives Z3 an active term that mentions
+     ``trigger`` which it then uses to instantiate the quantifier with
+     our choice of ``k``.
+
+This style is not particularly pleasant, because it involves polluting
+our definitions with semantically irrelevant triggers. The selectively
+revealing opaque definitions style is much preferred. However,
+artificial triggers can sometimes be useful.
+
+Existential quantifiers
+~~~~~~~~~~~~~~~~~~~~~~~
+
+We have an existential formula in the goal ``exists (i:nat). abs(g i)
+> m`` and Z3 will try to solve this by finding an active term to
+instantiate ``i``. In this case, the pattern Z3 picks is ``(g
+i)``---there's no guarantee that that is what it will always pick, but
+empirically, it seems that it does in this case.
+
+Since ``g i`` is the pattern, by asserting ``abs (g (n - 1)) > m`` in
+one branch, and ``abs (g (n1 - 1)) > m`` in the other, Z3 has the
+terms it needs to instantiate the quantifier with ``n - 1`` in one
+case, and ``n1 - 1`` in the other case.
+
+In fact, any assertion that mentions the ``g (n - 1)`` and ``g (n1 -
+1)`` will do, even trivial ones, as the example below shows.
+
+.. literalinclude:: ../code/AlexOpaque.fst
+   :language: fstar
+   :start-after: //SNIPPET_START: trigger_exists$
+   :end-before: //SNIPPET_END: trigger_exists$
+
+We assert ``trigger (g (n - 1)))`` and ``trigger (g (n1 - 1))``, this
+gives Z3 active terms for ``g (n - 1))`` and ``g (n1 - 1)``, which
+suffices for the instantiation. Note, asserting ``trigger (n - 1)`` is
+not enough, since that doesn't mention ``g``.
+
+Note, F* does not currently allow the existential quantifier in a
+``returns`` annoation to be decorated with a pattern---that will
+likely change in the future.
+
+Of course, rather than relying on implicitly chosen triggers for the
+existentials, one can be explicit about it and provide the instance
+directly, as shown below, where the ``introdude exists ...`` in each
+branch directly provides the witness rather than relying on Z3 to find
+it.
+
+.. literalinclude:: ../code/AlexOpaque.fst
+   :language: fstar
+   :start-after: //SNIPPET_START: explicit_exists$
+   :end-before: //SNIPPET_END: explicit_exists$
+
+Here is `a link to the the full file <../code/AlexOpaque.fst>`_ with
+all the variations we have explored.
+
+Context Pollution and Unsat Cores
+.................................
