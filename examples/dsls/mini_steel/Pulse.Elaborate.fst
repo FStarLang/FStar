@@ -8,13 +8,14 @@ open Pulse.Syntax
 open Pulse.Elaborate.Pure
 open Pulse.Typing
 
-let return_lid = ["Steel"; "ST"; "Util"; "return_stt"]
-let return_noeq_lid = ["Steel"; "ST"; "Util"; "return_stt_noeq"]
-let bind_lid = ["Steel"; "ST"; "Util"; "bind_stt"]
+let return_lid = mk_steel_wrapper_lid "return_stt"
+let return_noeq_lid = mk_steel_wrapper_lid "return_stt_noeq"
+let bind_lid = mk_steel_wrapper_lid "bind_stt"
+let frame_lid = mk_steel_wrapper_lid "frame_stt"
+let subsumption_lid = mk_steel_wrapper_lid "sub_stt"
+
 let bind_fv = R.pack_fv bind_lid
 let bind_univ_inst u1 u2 = R.pack_ln (R.Tv_UInst bind_fv [u1;u2])
-let frame_lid = ["Steel"; "ST"; "Util"; "frame_stt"]
-let subsumption_lid = ["Steel"; "ST"; "Util"; "sub_stt"]
 
 let mk_return (u:universe) (ty:R.term) (t:R.term) 
   : R.term

@@ -10,6 +10,8 @@ open Pulse.Elaborate.Pure
 open Pulse.Elaborate
 open Pulse.Soundness
 
+open Pulse.Steel.Wrapper
+
 let main (t:term) (pre:pure_term) : RT.dsl_tac_t =
   fun g ->
   let (| ty, pre_typing |) = check_tot g [] pre in
@@ -28,6 +30,4 @@ let main (t:term) (pre:pure_term) : RT.dsl_tac_t =
 open Steel.Effect.Common
 open Steel.ST.Util
 
-//#set-options "--debug Pulse.Main --debug_level ReflTc,Extreme,Rel --ugly"
-//[@@ expect_failure]
 %splice_t[foo] (main (Tm_Constant (Bool true)) Tm_Emp)
