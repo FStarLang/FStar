@@ -16,7 +16,11 @@ let star_lid = ["Steel"; "Effect"; "Common"; "star"]
 let pure_lid = ["Steel"; "ST"; "Util"; "pure"]
 let exists_lid = ["Steel"; "ST"; "Util"; "exists_"]
 let forall_lid = ["Steel"; "ST"; "Util"; "forall_"]
-let stt_lid = ["Steel"; "ST"; "Util"; "stt"] //the thunked, value-type counterpart of the effect STT
+
+
+let steel_wrapper = ["Pulse"; "Steel"; "Wrapper"]
+let mk_steel_wrapper_lid s = steel_wrapper@[s]
+let stt_lid = mk_steel_wrapper_lid "stt" //the thunked, value-type counterpart of the effect STT
 let stt_fv = R.pack_fv stt_lid
 let stt_tm = R.pack_ln (R.Tv_FVar stt_fv)
 let args_of (tms:list R.term) = List.Tot.map (fun x -> x, R.Q_Explicit) tms
