@@ -195,18 +195,26 @@ and readback_universe (u:R.universe)
 
   | _ -> T.fail "readback_universe: unexpected universe"
 
-let check_universe (f:RT.fstar_top_env) (g:env) (t:term)
-  : T.Tac (_:(u:universe & universe_of f g t u) { is_pure_term t })
-  = let f = extend_env_l f g in
+let check_universe (f0:RT.fstar_top_env) (g:env) (t:term)
+  : T.Tac (_:(u:universe & universe_of f0 g t u) { is_pure_term t })
+  = let f = extend_env_l f0 g in
     match elab_term t with
     | None -> T.fail "Not a syntactically pure term"
     | Some rt ->
-      match tc_meta_callback f rt with
-      | None -> T.fail "Not typeable"
-      | Some (| ty', tok |) ->
-        match readback_ty ty' with
-        | Some (Tm_Type u) -> (| u, E (T_Tot _ _ _ tok) |)
-        | _ -> T.fail "Not typeable as a universe"
+      let ru_opt = RTB.universe_of f rt in
+      match ru_opt  with
+      | None -> T.fail "Not typable as a universe"
+      | Some ru ->
+        let uopt = readback_universe ru in
+        let proof : squash (RTB.typing_token f rt (R.pack_ln (R.Tv_Type ru))) =
+          FStar.Squash.get_proof _ in
+        let proof : RT.typing f rt (R.pack_ln (R.Tv_Type ru)) = RT.T_Token _ _ _ proof in
+        match uopt with
+        | None -> T.fail "check_universe: failed to readback the universe"
+        | Some u ->
+          let proof : tot_typing f0 g t (Tm_Type u) =
+            E (T_Tot g _ _ proof) in
+          (| u, proof |)
       
 let check_tot_univ (f:RT.fstar_top_env) (g:env) (t:term)
   : T.Tac (_:(u:universe &
