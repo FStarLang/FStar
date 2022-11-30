@@ -1,5 +1,4 @@
 module SMTEncoding
-#push-options "--log_queries"
 
 let false_boolean = false
 let true_boolean = true
@@ -12,6 +11,14 @@ let rec factorial (n:nat) : nat =
 
 let test = assert (factorial 1 == 1)
 
+// assume Factorial_unbounded: forall (x:nat). exists (y:nat). factorial y > x
+
+#push-options "--initial_fuel 0 --max_fuel 4 --ifuel 0 --query_stats" 
+#restart-solver
+let _ = assert (factorial 0 == 0)
+
+let _test_query_stats = assert (factorial 3 == 6)
+
 type unat = 
   | Z : unat
   | S : (prec:unat) -> unat
@@ -23,14 +30,16 @@ let rec as_nat (x:unat) : nat =
   match x with
   | S x -> 1 + as_nat x
   | Z -> 0
+#pop-options
 
-let fact_positive = forall (x:nat). factorial x >= 1
-let fact_positive_2 = forall (x:nat).{:pattern (factorial x)} factorial x >= 1
+// let fact_positive = forall (x:nat). factorial x >= 1
+// let fact_positive_2 = forall (x:nat).{:pattern (factorial x)} factorial x >= 1
 
-let fact_unbounded = forall (n:nat). exists (x:nat). factorial x >= n
+// let fact_unbounded = forall (n:nat). exists (x:nat). factorial x >= n
 
-let fact_unbounded2 = forall (n:nat). exists (x:nat). {:pattern (factorial x >= n)} factorial x >= n
+// let fact_unbounded2 = forall (n:nat). exists (x:nat). {:pattern (factorial x >= n)} factorial x >= n
 
 let id (x:Type0) = x
+
 let force_a_query = assert (id True)
 

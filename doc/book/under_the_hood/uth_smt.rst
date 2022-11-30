@@ -993,3 +993,142 @@ definitions you need.
 Profiling Z3 and Solving Proof Performance Issues
 -------------------------------------------------
 
+At some point, you will write F* programs where proofs start to take
+much longer you'd like, simple proofs fail to go through, or proofs
+that were once working start to fail as you make small changes to your
+program. Hopefully, you notice this early in your project and can try
+to figure out how to make it better before slogging through slow and
+unpredictable proofs. Contrary to the wisdom one often receives in
+software engineering where early optimization is discouraged, when
+developing proof-oriented libraries, it's wise to pay attention to
+proof performance issues as soon as they come up, otherwise you'll
+find that as you scale up further, proofs become so slow or brittle
+that your productivity decreases rapidly.
+
+Query Statistics
+................
+
+Your first tool to start diagnosing solver performance is F*'s
+``--query_stats`` option. We'll start with some very simple artificial
+examples.
+
+With the options below, F* outputs the following statistics:
+
+
+.. code-block:: fstar
+
+   #push-options "--initial_fuel 0 --max_fuel 4 --ifuel 0 --query_stats" 
+   let _ = assert (factorial 3 == 6)
+
+   
+.. code-block:: none
+
+   (<input>(20,0-20,49))	Query-stats (SMTEncoding._test_query_stats, 1)	failed {reason-unknown=unknown because (incomplete quantifiers)} in 31 milliseconds with fuel 0 and ifuel 0 and rlimit 2723280 statistics={mk-bool-var=7065 del-clause=242 num-checks=3 conflicts=5 binary-propagations=42 arith-fixed-eqs=4 arith-pseudo-nonlinear=1 propagations=10287 arith-assert-upper=21 arith-assert-lower=18 decisions=11 datatype-occurs-check=2 rlimit-count=2084689 arith-offset-eqs=2 quant-instantiations=208 mk-clause=3786 minimized-lits=3 memory=21.41 arith-pivots=6 max-generation=5 arith-conflicts=3 time=0.03 num-allocs=132027456 datatype-accessor-ax=3 max-memory=21.68 final-checks=2 arith-eq-adapter=15 added-eqs=711}
+   
+   (<input>(20,0-20,49))	Query-stats (SMTEncoding._test_query_stats, 1)	failed {reason-unknown=unknown because (incomplete quantifiers)} in 47 milliseconds with fuel 2 and ifuel 0 and rlimit 2723280 statistics={mk-bool-var=7354 del-clause=350 arith-max-min=10 interface-eqs=3 num-checks=4 conflicts=8 binary-propagations=56 arith-fixed-eqs=17 arith-pseudo-nonlinear=3 arith-bound-prop=2 propagations=13767 arith-assert-upper=46 arith-assert-lower=40 decisions=25 datatype-occurs-check=5 rlimit-count=2107946 arith-offset-eqs=6 quant-instantiations=326 mk-clause=4005 minimized-lits=4 memory=21.51 arith-pivots=20 max-generation=5 arith-add-rows=34 arith-conflicts=4 time=0.05 num-allocs=143036410 datatype-accessor-ax=5 max-memory=21.78 final-checks=6 arith-eq-adapter=31 added-eqs=1053}
+   
+   (<input>(20,0-20,49))	Query-stats (SMTEncoding._test_query_stats, 1)	succeeded in 48 milliseconds with fuel 4 and ifuel 0 and rlimit 2723280 statistics={arith-max-min=26 num-checks=5 binary-propagations=70 arith-fixed-eqs=47 arith-assert-upper=78 arith-assert-lower=71 decisions=40 rlimit-count=2130332 max-generation=5 arith-nonlinear-bounds=2 time=0.05 max-memory=21.78 arith-eq-adapter=53 added-eqs=1517 mk-bool-var=7805 del-clause=805 interface-eqs=3 conflicts=16 arith-pseudo-nonlinear=6 arith-bound-prop=4 propagations=17271 datatype-occurs-check=5 arith-offset-eqs=20 quant-instantiations=481 mk-clause=4286 minimized-lits=38 memory=21.23 arith-pivots=65 arith-add-rows=114 arith-conflicts=5 num-allocs=149004462 datatype-accessor-ax=9 final-checks=7}
+
+There's a lot of information here:
+
+* We see three lines of output, each tagged with a source location and
+  an internal query identifer (``(SMTEncoding._test_query_stats, 1)``,
+  the first query for verifying ``_test_query_stats``).
+
+* The first two attempts at the query failed, with Z3 reporting the
+  reason for failure as ``unknown because (incomplete
+  quantifiers)``. This is a common response from Z3 when it fails to
+  prove a query---since first-order logic is undecidable, when Z3
+  fails to find a proof, it reports "unknown" rather than claiming
+  that the theory is satisfiable. The third attempt succeeded.
+
+* The attempts used ``0``, ``2``, and ``4`` units of fuel. Notice that
+  our query was ``factorial 3 == 6`` and this clearly requires at
+  least 4 units of fuel to succeed. In this case it didn't matter
+  much, since the two failed attempts took only ``47`` and ``48``
+  milliseconds. But, you may sometimes find that there are many
+  attempts of a proof with low fuel settings and finally success with
+  a higher fuel number. In such cases, you may try to find ways to
+  rewrite your proof so that you are not relying on so many unrollings
+  (if possible), or if you decide that you really need that much fuel,
+  then setting the ``--fuel`` option to that value can help avoid
+  several slow failures and retries.
+
+* The rest of the statistics report internal Z3 statistics.
+
+  - The ``rlimit`` value is a logical resource limit that F* sets when
+    calling Z3. Sometimes, as we will see shortly, a proof can be
+    "cancelled" in case Z3 runs past this resource limit. You can
+    increase the ``rlimit`` in this case, as we'll see below.
+
+  - Of the remaning statistics, perhaps the main one of interest is
+    ``quant_instantiations``. This records a cumulative total of
+    quantifiers instantiated by Z3 so far in the current
+    session---here, each attempt seems to instantiate around 100--150
+    quantifiers. This is a very low number, since the query is so
+    simple. You may be wondering why it is even as many as that, since
+    4 unfolding of factorial suffice, but remember that there are many
+    other quantifiers involved in the encoding, e.g., those that prove
+    that ``BoxBool`` is injective etc. A more typical query will see
+    quantifier instantiations in the few thousands.
+
+
+.. note::
+   
+   Note, since the ``quant-instantiations`` metric is cumulative, it
+   is often useful to precede a query with something like the following:
+
+   .. code-block:: fstar
+
+      #push-options "--initial_fuel 0 --max_fuel 4 --ifuel 0 --query_stats" 
+      #restart-solver
+      let _dummy = assert (factorial 0 == 0)
+
+      let _test_query_stats = assert (factorial 3 == 6)
+                   
+   The ``#restart-solver`` creates a fresh Z3 process and the
+   ``dummy`` query "warms up" the process by feeding it a trivial
+   query, which will run somewhat slow because of various
+   initialization costs in the solver. Then, the query stats reported
+   for the real test subject starts in this fresh session.
+
+
+   
+Resource Limits
+...............
+
+bb
+
+Proof Instability and Quake
+...........................
+
+cc
+
+Context Pollution and Unsat Cores
+.................................
+
+dd
+
+Splitting Queries
+.................
+
+ee
+
+
+Profiling Quantifier Instantiation
+..................................
+
+ff
+
+
+Opaque Definitions
+..................
+
+gg
+
+
+Z3 Axiom Profiler
+.................
+
+hh
+
