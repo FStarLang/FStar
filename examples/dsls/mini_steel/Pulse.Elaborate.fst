@@ -37,7 +37,7 @@ let mk_frame (u:universe)
                          [elab_universe u]) in
     R.mk_app head [(ty, R.Q_Implicit);
                    (pre, R.Q_Implicit);
-                   (post, R.Q_Implicit);
+                   (mk_abs ty post, R.Q_Implicit);
                    (frame, R.Q_Explicit);
                    (t, R.Q_Explicit)]
 
