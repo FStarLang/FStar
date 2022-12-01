@@ -16,8 +16,14 @@ type universe =
   | U_succ of universe
   | U_var of string
   | U_max : universe -> universe -> universe
-  
+
+(* locally nameless.
+   term is currently an eqtype. That makes some experiments a bit easier.
+   but it doesn't have to be. and if we include Embed it won't be. 
+   So, we should remove reliance on this thing being an eqtype soon.
+*)
 type term =
+(*  | Embed  of R.term *)
   | Tm_BVar     : i:index -> term
   | Tm_Var      : v:var -> term
   | Tm_FVar     : l:R.name -> term
@@ -28,7 +34,7 @@ type term =
   | Tm_STApp    : head:term -> arg:term -> term  
   | Tm_Bind     : t:term -> e1:term -> e2:term -> term
   | Tm_Emp      : term
-  | Tm_Pure     : p:term -> term
+  | Tm_Pure     : p:term -> term (* pure p : vprop *)
   | Tm_Star     : l:vprop -> r:vprop -> term
   | Tm_ExistsSL : t:term -> body:vprop -> term
   | Tm_ForallSL : t:term -> body:vprop -> term
@@ -41,7 +47,7 @@ and comp =
   | C_Tot : term -> comp
   | C_ST  : st_comp -> comp
 
-and st_comp = {
+and st_comp = { (* ST pre (x:res) post ... x is free in post *)
   u:universe;
   res:term;
   pre:vprop;
@@ -110,7 +116,7 @@ and ln'_comp (c:comp) (i:int)
     | C_ST st -> 
       ln' st.res i &&
       ln' st.pre i &&
-      ln' st.post (i + 1)
+      ln' st.post (i + 1) (* post has 1 impliict abstraction *)
 
 let ln (t:term) = ln' t (-1)
 let ln_c (c:comp) = ln'_comp c (-1)

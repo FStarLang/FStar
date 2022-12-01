@@ -158,7 +158,7 @@ type vprop_equiv (f:fstar_top_env) : env -> pure_term -> pure_term -> Type =
      vprop_equiv f g t1 t1' ->
      vprop_equiv f g (Tm_Star t0 t1) (Tm_Star t0' t1')
      
-  | VE_Unit:
+  | VE_Unit: (*   *)
      g:env ->
      t:pure_term ->
      vprop_equiv f g (Tm_Star Tm_Emp t) t
@@ -246,7 +246,8 @@ type src_typing (f:fstar_top_env) : env -> term -> pure_comp -> Type =
       hint:vprop ->
       tot_typing f g ty (Tm_Type u) ->
       src_typing f ((x, Inl ty)::g) (open_term body x) c ->
-      src_typing f g (Tm_Abs ty hint body) (C_Tot (Tm_Arrow ty (close_pure_comp c x)))
+      src_typing f g (Tm_Abs ty hint body) 
+                     (C_Tot (Tm_Arrow ty (close_pure_comp c x)))
   
   | T_STApp :
       g:env ->
@@ -327,7 +328,7 @@ and universe_of (f:fstar_top_env) (g:env) (t:term) (u:universe) =
   tot_typing f g t (Tm_Type u)
 
 and bind_comp (f:fstar_top_env) : env -> var -> pure_comp -> pure_comp -> pure_comp -> Type =
-  | Bind_comp :
+  | Bind_comp : (* st t1 pre1 post1 -> (x:t1 -> st t2 (post1 x) post2) -> st (y:t2) pre1 post2 *)
       g:env ->
       x:var { None? (lookup g x) } ->
       c1:pure_comp_st ->
@@ -340,11 +341,30 @@ and bind_comp (f:fstar_top_env) : env -> var -> pure_comp -> pure_comp -> pure_c
       bind_comp f g x c1 c2 (C_ST {u = comp_u c2; res = comp_res c2; pre = comp_pre c1; post=comp_post c2})
 
 
+(* this requires some metatheory on Refl.Typing
+
+     G |- fv e : t
+
+    G(fv) = t0 -> t1
+
+     G |- e : t0
+     G |- t1 <: t
+
+
+
+    G |- e0 e1 : t ==>
+
+   exists t0 t1.
+    G |- e0 : t0 -> t1 /\
+    G |- e1 : t0
+
+*)
 let star_typing_inversion (f:_) (g:_) (t0 t1:term) (d:tot_typing f g (Tm_Star t0 t1) Tm_VProp)
   : (tot_typing f g t0 Tm_VProp &
      tot_typing f g t1 Tm_VProp)
   = admit()
 
+(* These I can easily prove *)
 let star_typing (#f:_) (#g:_) (#t0 #t1:term)
                 (d0:tot_typing f g t0 Tm_VProp)
                 (d1:tot_typing f g t1 Tm_VProp)

@@ -10,10 +10,28 @@ open Pulse.Typing
 
 let return_lid = ["Steel"; "ST"; "Util"; "return_stt"]
 let return_noeq_lid = ["Steel"; "ST"; "Util"; "return_stt_noeq"]
+
+(* 
+  inline_for_extraction
+  let bind_stt : stt t1 p1 q1 -> (x:t1 -> stt t2 (q1 x) q2) -> stt t2 p1 q2
+*)
 let bind_lid = ["Steel"; "ST"; "Util"; "bind_stt"]
+
 let bind_fv = R.pack_fv bind_lid
 let bind_univ_inst u1 u2 = R.pack_ln (R.Tv_UInst bind_fv [u1;u2])
+
+
+(* 
+  inline_for_extraction
+  let frame_stt : stt t1 p1 q1 -> (stt t1 (pre * f) (fun x -> q1 x * f)
+*)
 let frame_lid = ["Steel"; "ST"; "Util"; "frame_stt"]
+
+
+(* 
+  inline_for_extraction
+  let sub_stt : stt t1 p1 q1 { p1 `equiv` p2 /\ forall x. q1 x `equiv` q2 x } -> stt t1 p2 q2
+*)
 let subsumption_lid = ["Steel"; "ST"; "Util"; "sub_stt"]
 
 let mk_return (u:universe) (ty:R.term) (t:R.term) 
