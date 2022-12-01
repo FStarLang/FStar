@@ -11,8 +11,7 @@ normalization engines, its plugin framework, and other topics.
 
    
 .. toctree::
-   :hidden:
    :maxdepth: 1
    :caption: Contents:
 
-   uth_smt.rst
+   uth_smt

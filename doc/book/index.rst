@@ -37,9 +37,11 @@ with proofs that they behave as intended.
 development of F* over the past decade. Many parts of this book too
 are based on research papers, libraries, code samples, and language
 features co-authored with several other people. However, the
-presentation here is, so far, my own, including especially any errors
-or oversights. That said, contributions are most welcome
-and I hope this book will soon include chapters authored by others.
+presentation here, including especially any errors or oversights, are
+due to the authors. So far, Guido Martínez is the author of the part
+on Metaprogramming, while Nikhil Swamy is the author of the rest. That
+said, contributions are most welcome and we hope this book will soon
+include chapters authored by others.
 
 
    
