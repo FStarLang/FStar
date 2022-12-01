@@ -21,7 +21,15 @@ let pack_inspect_binder (t:R.binder) = admit ()
 let pack_inspect_comp (t:R.comp) = admit ()
   
 let inspect_pack_comp (t:R.comp_view) = admit ()
-  
+
+let pack_inspect_fv (fv:R.fv) = admit ()
+
+let inspect_pack_fv (nm:R.name) = admit ()
+
+let pack_inspect_universe u = admit ()
+
+let inspect_pack_universe u = admit ()
+
 let lookup_bvar (e:env) (x:int) : option term = magic ()
 
 let lookup_fvar_uinst (e:R.env) (x:R.fv) (us:list R.universe)

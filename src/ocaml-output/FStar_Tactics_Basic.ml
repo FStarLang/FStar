@@ -6997,56 +6997,82 @@ let (no_uvars_in_g : env -> Prims.bool) =
             | FStar_Syntax_Syntax.Binding_var bv ->
                 no_uvars_in_term bv.FStar_Syntax_Syntax.sort
             | uu___1 -> true))
+type relation =
+  | Subtyping 
+  | Equality 
+let (uu___is_Subtyping : relation -> Prims.bool) =
+  fun projectee -> match projectee with | Subtyping -> true | uu___ -> false
+let (uu___is_Equality : relation -> Prims.bool) =
+  fun projectee -> match projectee with | Equality -> true | uu___ -> false
+let (refl_check_relation :
+  env ->
+    FStar_Reflection_Data.typ ->
+      FStar_Reflection_Data.typ ->
+        relation ->
+          unit FStar_Pervasives_Native.option FStar_Tactics_Monad.tac)
+  =
+  fun g ->
+    fun t0 ->
+      fun t1 ->
+        fun rel ->
+          let uu___ =
+            ((no_uvars_in_g g) && (no_uvars_in_term t0)) &&
+              (no_uvars_in_term t1) in
+          if uu___
+          then
+            refl_typing_builtin_wrapper
+              (fun uu___1 ->
+                 dbg_refl g
+                   (fun uu___3 ->
+                      let uu___4 = FStar_Syntax_Print.term_to_string t0 in
+                      let uu___5 = FStar_Syntax_Print.term_to_string t1 in
+                      FStar_Compiler_Util.format3
+                        "refl_check_relation: %s %s %s\n" uu___4
+                        (if rel = Subtyping then "<:?" else "=?=") uu___5);
+                 (let f =
+                    if rel = Subtyping
+                    then FStar_TypeChecker_Core.check_term_subtyping
+                    else FStar_TypeChecker_Core.check_term_equality in
+                  let uu___3 = f g t0 t1 in
+                  match uu___3 with
+                  | FStar_Pervasives.Inl (FStar_Pervasives_Native.None) ->
+                      dbg_refl g
+                        (fun uu___5 ->
+                           "refl_check_relation: succeeded (no guard)")
+                  | FStar_Pervasives.Inl (FStar_Pervasives_Native.Some
+                      guard_f) ->
+                      (FStar_TypeChecker_Rel.force_trivial_guard g
+                         {
+                           FStar_TypeChecker_Common.guard_f =
+                             (FStar_TypeChecker_Common.NonTrivial guard_f);
+                           FStar_TypeChecker_Common.deferred_to_tac =
+                             (FStar_TypeChecker_Env.trivial_guard.FStar_TypeChecker_Common.deferred_to_tac);
+                           FStar_TypeChecker_Common.deferred =
+                             (FStar_TypeChecker_Env.trivial_guard.FStar_TypeChecker_Common.deferred);
+                           FStar_TypeChecker_Common.univ_ineqs =
+                             (FStar_TypeChecker_Env.trivial_guard.FStar_TypeChecker_Common.univ_ineqs);
+                           FStar_TypeChecker_Common.implicits =
+                             (FStar_TypeChecker_Env.trivial_guard.FStar_TypeChecker_Common.implicits)
+                         };
+                       dbg_refl g
+                         (fun uu___5 -> "refl_check_relation: succeeded"))
+                  | FStar_Pervasives.Inr uu___4 ->
+                      FStar_Errors.raise_error
+                        (FStar_Errors.Fatal_IllTyped, "")
+                        FStar_Compiler_Range.dummyRange))
+          else FStar_Tactics_Monad.ret FStar_Pervasives_Native.None
 let (refl_check_subtyping :
   env ->
     FStar_Reflection_Data.typ ->
       FStar_Reflection_Data.typ ->
         unit FStar_Pervasives_Native.option FStar_Tactics_Monad.tac)
-  =
-  fun g ->
-    fun t0 ->
-      fun t1 ->
-        let uu___ =
-          ((no_uvars_in_g g) && (no_uvars_in_term t0)) &&
-            (no_uvars_in_term t1) in
-        if uu___
-        then
-          refl_typing_builtin_wrapper
-            (fun uu___1 ->
-               dbg_refl g
-                 (fun uu___3 ->
-                    let uu___4 = FStar_Syntax_Print.term_to_string t0 in
-                    let uu___5 = FStar_Syntax_Print.term_to_string t1 in
-                    FStar_Compiler_Util.format2
-                      "refl_check_subtyping: %s <:? %s\n" uu___4 uu___5);
-               (let gopt = FStar_TypeChecker_Rel.get_subtyping_prop g t0 t1 in
-                match gopt with
-                | FStar_Pervasives_Native.None ->
-                    FStar_Errors.raise_error
-                      (FStar_Errors.Fatal_IllTyped, "")
-                      FStar_Compiler_Range.dummyRange
-                | FStar_Pervasives_Native.Some guard ->
-                    (FStar_TypeChecker_Rel.force_trivial_guard g guard;
-                     dbg_refl g
-                       (fun uu___4 -> "refl_check_subtyping: succeeded"))))
-        else FStar_Tactics_Monad.ret FStar_Pervasives_Native.None
+  = fun g -> fun t0 -> fun t1 -> refl_check_relation g t0 t1 Subtyping
 let (refl_check_equiv :
   env ->
     FStar_Reflection_Data.typ ->
       FStar_Reflection_Data.typ ->
         unit FStar_Pervasives_Native.option FStar_Tactics_Monad.tac)
-  =
-  fun g ->
-    fun t0 ->
-      fun t1 ->
-        let uu___ =
-          ((no_uvars_in_g g) && (no_uvars_in_term t0)) &&
-            (no_uvars_in_term t1) in
-        if uu___
-        then
-          refl_typing_builtin_wrapper
-            (fun uu___1 -> FStar_TypeChecker_Rel.teq_force g t0 t1)
-        else FStar_Tactics_Monad.ret FStar_Pervasives_Native.None
+  = fun g -> fun t0 -> fun t1 -> refl_check_relation g t0 t1 Equality
 let (refl_tc_term :
   env ->
     FStar_Syntax_Syntax.term ->
@@ -7060,12 +7086,92 @@ let (refl_tc_term :
       then
         refl_typing_builtin_wrapper
           (fun uu___1 ->
-             let must_tot = true in
-             let uu___2 =
-               FStar_TypeChecker_TcTerm.typeof_tot_or_gtot_term g e must_tot in
+             dbg_refl g
+               (fun uu___3 ->
+                  let uu___4 = FStar_Syntax_Print.term_to_string e in
+                  FStar_Compiler_Util.format1 "refl_tc_term: %s\n" uu___4);
+             (let must_tot = true in
+              let gh g1 guard =
+                FStar_TypeChecker_Rel.force_trivial_guard g1
+                  {
+                    FStar_TypeChecker_Common.guard_f =
+                      (FStar_TypeChecker_Common.NonTrivial guard);
+                    FStar_TypeChecker_Common.deferred_to_tac =
+                      (FStar_TypeChecker_Env.trivial_guard.FStar_TypeChecker_Common.deferred_to_tac);
+                    FStar_TypeChecker_Common.deferred =
+                      (FStar_TypeChecker_Env.trivial_guard.FStar_TypeChecker_Common.deferred);
+                    FStar_TypeChecker_Common.univ_ineqs =
+                      (FStar_TypeChecker_Env.trivial_guard.FStar_TypeChecker_Common.univ_ineqs);
+                    FStar_TypeChecker_Common.implicits =
+                      (FStar_TypeChecker_Env.trivial_guard.FStar_TypeChecker_Common.implicits)
+                  };
+                true in
+              let uu___3 =
+                FStar_TypeChecker_Core.compute_term_type_handle_guards g e
+                  must_tot gh in
+              match uu___3 with
+              | FStar_Pervasives.Inl t ->
+                  (dbg_refl g
+                     (fun uu___5 ->
+                        let uu___6 = FStar_Syntax_Print.term_to_string e in
+                        let uu___7 = FStar_Syntax_Print.term_to_string t in
+                        FStar_Compiler_Util.format2
+                          "refl_tc_term for %s computed type %s\n" uu___6
+                          uu___7);
+                   t)
+              | FStar_Pervasives.Inr uu___4 ->
+                  FStar_Errors.raise_error (FStar_Errors.Fatal_IllTyped, "")
+                    FStar_Compiler_Range.dummyRange))
+      else FStar_Tactics_Monad.ret FStar_Pervasives_Native.None
+let (refl_universe_of :
+  env ->
+    FStar_Syntax_Syntax.term ->
+      FStar_Syntax_Syntax.universe FStar_Pervasives_Native.option
+        FStar_Tactics_Monad.tac)
+  =
+  fun g ->
+    fun e ->
+      let check_univ_var_resolved u =
+        let uu___ = FStar_Syntax_Subst.compress_univ u in
+        match uu___ with
+        | FStar_Syntax_Syntax.U_unif uu___1 ->
+            FStar_Errors.raise_error (FStar_Errors.Fatal_IllTyped, "")
+              FStar_Compiler_Range.dummyRange
+        | u1 -> u1 in
+      let uu___ = (no_uvars_in_g g) && (no_uvars_in_term e) in
+      if uu___
+      then
+        refl_typing_builtin_wrapper
+          (fun uu___1 ->
+             let uu___2 = FStar_Syntax_Util.type_u () in
              match uu___2 with
-             | (uu___3, t, guard) ->
-                 (FStar_TypeChecker_Rel.force_trivial_guard g guard; t))
+             | (t, u) ->
+                 let must_tot = false in
+                 let uu___3 =
+                   FStar_TypeChecker_Core.check_term g e t must_tot in
+                 (match uu___3 with
+                  | FStar_Pervasives.Inl (FStar_Pervasives_Native.None) ->
+                      check_univ_var_resolved u
+                  | FStar_Pervasives.Inl (FStar_Pervasives_Native.Some guard)
+                      ->
+                      (FStar_TypeChecker_Rel.force_trivial_guard g
+                         {
+                           FStar_TypeChecker_Common.guard_f =
+                             (FStar_TypeChecker_Common.NonTrivial guard);
+                           FStar_TypeChecker_Common.deferred_to_tac =
+                             (FStar_TypeChecker_Env.trivial_guard.FStar_TypeChecker_Common.deferred_to_tac);
+                           FStar_TypeChecker_Common.deferred =
+                             (FStar_TypeChecker_Env.trivial_guard.FStar_TypeChecker_Common.deferred);
+                           FStar_TypeChecker_Common.univ_ineqs =
+                             (FStar_TypeChecker_Env.trivial_guard.FStar_TypeChecker_Common.univ_ineqs);
+                           FStar_TypeChecker_Common.implicits =
+                             (FStar_TypeChecker_Env.trivial_guard.FStar_TypeChecker_Common.implicits)
+                         };
+                       check_univ_var_resolved u)
+                  | FStar_Pervasives.Inr uu___4 ->
+                      FStar_Errors.raise_error
+                        (FStar_Errors.Fatal_IllTyped, "")
+                        FStar_Compiler_Range.dummyRange))
       else FStar_Tactics_Monad.ret FStar_Pervasives_Native.None
 let (tac_env : FStar_TypeChecker_Env.env -> FStar_TypeChecker_Env.env) =
   fun env1 ->

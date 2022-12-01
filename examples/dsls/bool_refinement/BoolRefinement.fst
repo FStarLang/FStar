@@ -1638,5 +1638,5 @@ let main (src:src_exp) : RT.dsl_tac_t =
 //   which fails as expected
 //
 [@@ expect_failure]
-%splice_t[bar] (main (EApp (ELam (TRefineBool (ELam TBool (EBool false))) (EBVar 0))
+%splice_t[baz] (main (EApp (ELam (TRefineBool (ELam TBool (EBool false))) (EBVar 0))
                            (EBool true)))

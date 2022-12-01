@@ -37,7 +37,23 @@ val pack_inspect_comp (t:R.comp)
 val inspect_pack_comp (t:R.comp_view)
   : Lemma (ensures (R.inspect_comp (R.pack_comp t) == t))
           [SMTPat (R.inspect_comp (R.pack_comp t))]
-  
+
+val pack_inspect_fv (fv:R.fv)
+  : Lemma (ensures R.pack_fv (R.inspect_fv fv) == fv)
+          [SMTPat (R.pack_fv (R.inspect_fv fv))]
+
+val inspect_pack_fv (nm:R.name)
+  : Lemma (ensures R.inspect_fv (R.pack_fv nm) == nm)
+          [SMTPat (R.inspect_fv (R.pack_fv nm))]
+
+val pack_inspect_universe (u:R.universe)
+  : Lemma (ensures R.pack_universe (R.inspect_universe u) == u)
+          [SMTPat (R.pack_universe (R.inspect_universe u))]
+
+val inspect_pack_universe (u:R.universe_view)
+  : Lemma (ensures R.inspect_universe (R.pack_universe u) == u)
+          [SMTPat (R.inspect_universe (R.pack_universe u))]
+
 val lookup_bvar (e:env) (x:int) : option term
 
 val lookup_fvar_uinst (e:R.env) (x:R.fv) (us:list R.universe) : option R.term
@@ -360,6 +376,8 @@ let eq2 (t v0 v1:term)
 let b2t_lid : R.name = ["Prims"; "b2t"]
 let b2t_fv : R.fv = R.pack_fv b2t_lid
 let b2t_ty : R.term = R.(pack_ln (Tv_Arrow (as_binder 0 bool_ty) (mk_total (tm_type u_zero))))
+
+let eqtype_lid : R.name = ["Prims"; "eqtype"]
 
 noeq
 type constant_typing: vconst -> term -> Type0 = 

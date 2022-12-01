@@ -519,6 +519,8 @@ let () =
         (fun _ -> with_compat_pre_core) e_any e_int (e_tactic_thunk e_any) e_any
         (fun _ -> with_compat_pre_core) NBET.e_any NBET.e_int (e_tactic_nbe_thunk NBET.e_any) NBET.e_any;
 
+      // reflection typechecker callbacks (part of the DSL framework)
+
       mk_refl_typing_step_3 "check_subtyping"
         refl_check_subtyping RE.e_env RE.e_term RE.e_term (e_option e_unit)
         refl_check_subtyping NRE.e_env NRE.e_term NRE.e_term (NBET.e_option NBET.e_unit);
@@ -530,6 +532,11 @@ let () =
       mk_refl_typing_step_2 "tc_term"
         refl_tc_term RE.e_env RE.e_term (e_option RE.e_term)
         refl_tc_term NRE.e_env NRE.e_term (NBET.e_option NRE.e_term);
+
+      mk_refl_typing_step_2 "universe_of"
+        refl_universe_of RE.e_env RE.e_term (e_option RE.e_universe)
+        refl_universe_of NRE.e_env NRE.e_term (NBET.e_option NRE.e_universe);
+
     ]
 
 let unembed_tactic_1_alt (ea:embedding 'a) (er:embedding 'r) (f:term) (ncb:norm_cb) : option ('a -> tac 'r) =

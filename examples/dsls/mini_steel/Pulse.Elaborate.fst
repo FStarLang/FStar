@@ -8,31 +8,14 @@ open Pulse.Syntax
 open Pulse.Elaborate.Pure
 open Pulse.Typing
 
-let return_lid = ["Steel"; "ST"; "Util"; "return_stt"]
-let return_noeq_lid = ["Steel"; "ST"; "Util"; "return_stt_noeq"]
-
-(* 
-  inline_for_extraction
-  let bind_stt : stt t1 p1 q1 -> (x:t1 -> stt t2 (q1 x) q2) -> stt t2 p1 q2
-*)
-let bind_lid = ["Steel"; "ST"; "Util"; "bind_stt"]
+let return_lid = mk_steel_wrapper_lid "return_stt"
+let return_noeq_lid = mk_steel_wrapper_lid "return_stt_noeq"
+let bind_lid = mk_steel_wrapper_lid "bind_stt"
+let frame_lid = mk_steel_wrapper_lid "frame_stt"
+let subsumption_lid = mk_steel_wrapper_lid "sub_stt"
 
 let bind_fv = R.pack_fv bind_lid
 let bind_univ_inst u1 u2 = R.pack_ln (R.Tv_UInst bind_fv [u1;u2])
-
-
-(* 
-  inline_for_extraction
-  let frame_stt : stt t1 p1 q1 -> (stt t1 (pre * f) (fun x -> q1 x * f)
-*)
-let frame_lid = ["Steel"; "ST"; "Util"; "frame_stt"]
-
-
-(* 
-  inline_for_extraction
-  let sub_stt : stt t1 p1 q1 { p1 `equiv` p2 /\ forall x. q1 x `equiv` q2 x } -> stt t1 p2 q2
-*)
-let subsumption_lid = ["Steel"; "ST"; "Util"; "sub_stt"]
 
 let mk_return (u:universe) (ty:R.term) (t:R.term) 
   : R.term
@@ -55,7 +38,7 @@ let mk_frame (u:universe)
                          [elab_universe u]) in
     R.mk_app head [(ty, R.Q_Implicit);
                    (pre, R.Q_Implicit);
-                   (post, R.Q_Implicit);
+                   (mk_abs ty post, R.Q_Implicit);
                    (frame, R.Q_Explicit);
                    (t, R.Q_Explicit)]
 
@@ -110,7 +93,7 @@ let elab_bind (c1 c2:pure_comp_st) (e1 e2:R.term) =
           (mk_abs ty2 (elab_pure c2.post))
           e1 e2
 
-let rec elab_src_typing (#f:fstar_top_env)
+let rec elab_src_typing (#f:RT.fstar_top_env)
                         (#g:env)
                         (#t:term)
                         (#c:pure_comp)

@@ -26,3 +26,6 @@ val check_equiv (g:R.env) (t0 t1:R.typ)
 
 val tc_term (g:R.env) (e:R.term)
   : T.Tac (option (t:R.typ{typing_token g e t}))
+
+val universe_of (g:R.env) (e:R.term)
+  : T.Tac (option (u:R.universe{typing_token g e (R.pack_ln (R.Tv_Type u))}))

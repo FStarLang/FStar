@@ -2223,40 +2223,82 @@ let no_uvars_in_g (g:env) : bool =
     | Binding_var bv -> no_uvars_in_term bv.sort
     | _ -> true)
 
-let refl_check_subtyping (g:env) (t0 t1:typ) : tac (option unit) =
+type relation =
+  | Subtyping
+  | Equality
+
+let refl_check_relation (g:env) (t0 t1:typ) (rel:relation)
+  : tac (option unit) =
+
   if no_uvars_in_g g &&
      no_uvars_in_term t0 &&
      no_uvars_in_term t1
   then refl_typing_builtin_wrapper (fun _ ->
          dbg_refl g (fun _ ->
-           BU.format2 "refl_check_subtyping: %s <:? %s\n"
+           BU.format3 "refl_check_relation: %s %s %s\n"
              (Print.term_to_string t0)
+             (if rel = Subtyping then "<:?" else "=?=")
              (Print.term_to_string t1));
-         let gopt = Rel.get_subtyping_prop g t0 t1 in
-         match gopt with
-         | None -> Errors.raise_error (Errors.Fatal_IllTyped, "") Range.dummyRange
-         | Some guard ->
-           Rel.force_trivial_guard g guard;
-           dbg_refl g (fun _ -> "refl_check_subtyping: succeeded"))
+         let f =
+           if rel = Subtyping
+           then Core.check_term_subtyping
+           else Core.check_term_equality in
+         match f g t0 t1 with
+         | Inl None ->
+           dbg_refl g (fun _ -> "refl_check_relation: succeeded (no guard)");
+           ()
+         | Inl (Some guard_f) ->
+           Rel.force_trivial_guard g {Env.trivial_guard with guard_f=NonTrivial guard_f};
+           dbg_refl g (fun _ -> "refl_check_relation: succeeded")
+         | Inr _ -> Errors.raise_error (Errors.Fatal_IllTyped, "") Range.dummyRange)
   else ret None
 
+let refl_check_subtyping (g:env) (t0 t1:typ) : tac (option unit) =
+  refl_check_relation g t0 t1 Subtyping
+
 let refl_check_equiv (g:env) (t0 t1:typ) : tac (option unit) =
-  if no_uvars_in_g g &&
-     no_uvars_in_term t0 &&
-     no_uvars_in_term t1
-  then refl_typing_builtin_wrapper (fun _ -> Rel.teq_force g t0 t1)
-  else ret None
+  refl_check_relation g t0 t1 Equality
 
 let refl_tc_term (g:env) (e:term) : tac (option typ) =
   if no_uvars_in_g g &&
      no_uvars_in_term e
   then refl_typing_builtin_wrapper (fun _ ->
+         dbg_refl g (fun _ ->
+           BU.format1 "refl_tc_term: %s\n" (Print.term_to_string e));
          let must_tot = true in
-         let _, t, guard = TcTerm.typeof_tot_or_gtot_term g e must_tot in
-         Rel.force_trivial_guard g guard;
-         t)
+         let gh = fun g guard ->
+           Rel.force_trivial_guard g
+             {Env.trivial_guard with guard_f = NonTrivial guard};
+           true in
+         match Core.compute_term_type_handle_guards g e must_tot gh with
+         | Inl t ->
+           dbg_refl g (fun _ ->
+             BU.format2 "refl_tc_term for %s computed type %s\n"
+               (Print.term_to_string e)
+               (Print.term_to_string t));
+           t
+         | Inr _ -> Errors.raise_error (Errors.Fatal_IllTyped, "") Range.dummyRange)
   else ret None
 
+let refl_universe_of (g:env) (e:term) : tac (option universe) =
+  let check_univ_var_resolved u =
+    match SS.compress_univ u with
+    | S.U_unif _ -> Errors.raise_error (Errors.Fatal_IllTyped, "") Range.dummyRange
+    | u -> u in
+
+  if no_uvars_in_g g &&
+     no_uvars_in_term e
+  then refl_typing_builtin_wrapper (fun _ ->
+         let t, u = U.type_u () in
+         let must_tot = false in
+         match Core.check_term g e t must_tot with
+         | Inl None -> check_univ_var_resolved u
+         | Inl (Some guard) ->
+           Rel.force_trivial_guard g
+             {Env.trivial_guard with guard_f=NonTrivial guard};
+           check_univ_var_resolved u
+         | Inr _ -> Errors.raise_error (Errors.Fatal_IllTyped, "") Range.dummyRange)
+  else ret None
 
 (**** Creating proper environments and proofstates ****)
 
