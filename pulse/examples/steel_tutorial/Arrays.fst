@@ -4,13 +4,13 @@ open FStar.Ghost
 open Steel.Effect.Atomic
 open Steel.Effect
 open Steel.Array
-module U32 = FStar.UInt32
+module US = FStar.SizeT
 
 /// Some examples using Steel arrays
 
 let access ()
   : SteelT unit emp (fun _ -> emp)
-  = let r = malloc 0ul 2ul in
-    let x = index r 0ul in
-    upd r 0ul x;
+  = let r = malloc 0sz 2sz in
+    let x = index r 0sz in
+    upd r 0sz x;
     free r

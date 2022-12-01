@@ -16,7 +16,7 @@
 
 module Steel.ST.Array
 
-module U32 = FStar.UInt32
+module US = FStar.SizeT
 
 /// Lifting a value of universe 0 to universe 1. We use
 /// FStar.Universe, since FStar.Extraction.Krml is set to extract
@@ -88,6 +88,7 @@ let ptr elt = H.ptr (raise_t elt)
 let base p = H.base p
 let offset p = H.offset p
 let ptr_base_offset_inj p1 p2 = H.ptr_base_offset_inj p1 p2
+let length_fits a = H.length_fits a
 
 let pts_to a p s = H.pts_to a p (seq_map raise s)
 
@@ -101,7 +102,7 @@ let pts_to_inj a p1 s1 p2 s2 =
 
 let malloc x n =
   let res = H.malloc (raise x) n in
-  assert (seq_map raise (Seq.create (U32.v n) x) `Seq.equal` Seq.create (U32.v n) (raise x));
+  assert (seq_map raise (Seq.create (US.v n) x) `Seq.equal` Seq.create (US.v n) (raise x));
   rewrite
     (H.pts_to res _ _)
     (pts_to res _ _);
@@ -155,7 +156,7 @@ let upd #_ a #s i v =
     (pts_to a _ _)
     (H.pts_to a P.full_perm (seq_map raise s));
   H.upd a i (raise v);
-  assert (seq_map raise (Seq.upd s (U32.v i) v) `Seq.equal` Seq.upd (seq_map raise s) (U32.v i) (raise v));
+  assert (seq_map raise (Seq.upd s (US.v i) v) `Seq.equal` Seq.upd (seq_map raise s) (US.v i) (raise v));
   rewrite
     (H.pts_to _ _ _)
     (pts_to _ _ _)
@@ -186,18 +187,18 @@ let ghost_split
     (pts_to a _ _)
     (H.pts_to a p (seq_map raise x));
   H.ghost_split a i;
-  assert (seq_map raise (Seq.slice x 0 (U32.v i)) `Seq.equal` Seq.slice (seq_map raise x) 0 (U32.v i));
+  assert (seq_map raise (Seq.slice x 0 (US.v i)) `Seq.equal` Seq.slice (seq_map raise x) 0 (US.v i));
   rewrite
     (H.pts_to (H.split_l a i) _ _)
-    (H.pts_to (split_l a i) p (seq_map raise (Seq.slice x 0 (U32.v i))));
+    (H.pts_to (split_l a i) p (seq_map raise (Seq.slice x 0 (US.v i))));
   rewrite
     (H.pts_to (split_l a i) _ _)
     (pts_to (split_l a i) _ _);
-  assert (seq_map raise (Seq.slice x (U32.v i) (Seq.length x)) `Seq.equal` Seq.slice (seq_map raise x) (U32.v i) (Seq.length (seq_map raise x)));
-  Seq.lemma_split x (U32.v i);
+  assert (seq_map raise (Seq.slice x (US.v i) (Seq.length x)) `Seq.equal` Seq.slice (seq_map raise x) (US.v i) (Seq.length (seq_map raise x)));
+  Seq.lemma_split x (US.v i);
   rewrite
     (H.pts_to (H.split_r a i) _ _)
-    (H.pts_to (split_r a i) p (seq_map raise (Seq.slice x (U32.v i) (Seq.length x))));
+    (H.pts_to (split_r a i) p (seq_map raise (Seq.slice x (US.v i) (Seq.length x))));
   rewrite
     (H.pts_to (split_r a i) _ _)
     (pts_to (split_r a i) _ _)
@@ -217,26 +218,26 @@ module R = Steel.ST.Reference
 let equal_up_to #t
                   (s0: Seq.seq t)
                   (s1: Seq.seq t)
-                  (v : option U32.t) : prop =
+                  (v : option US.t) : prop =
     Seq.length s0 = Seq.length s1 /\
     (match v with
      | None -> Ghost.reveal s0 =!= Ghost.reveal s1
-     | Some v -> U32.v v <= Seq.length s0 /\ Seq.slice s0 0 (U32.v v) `Seq.equal` Seq.slice s1 0 (U32.v v))
+     | Some v -> US.v v <= Seq.length s0 /\ Seq.slice s0 0 (US.v v) `Seq.equal` Seq.slice s1 0 (US.v v))
 
-let within_bounds (x:option U32.t) (l:U32.t) (b:Ghost.erased bool) : prop =
-  if b then Some? x /\ U32.(Some?.v x <^ l)
-  else None? x \/ U32.(Some?.v x >=^ l)
+let within_bounds (x:option US.t) (l:US.t) (b:Ghost.erased bool) : prop =
+  if b then Some? x /\ US.(Some?.v x <^ l)
+  else None? x \/ US.(Some?.v x >=^ l)
 
 let compare_inv (#t:eqtype) (#p0 #p1:perm)
         (a0 a1:array t)
         (s0: Seq.seq t)
         (s1: Seq.seq t)
-        (l:U32.t)
-        (ctr : R.ref (option U32.t))
+        (l:US.t)
+        (ctr : R.ref (option US.t))
         (b: bool) =
     pts_to a0 p0 s0 `star`
     pts_to a1 p1 s1 `star`
-    exists_ (fun (x:option U32.t) ->
+    exists_ (fun (x:option US.t) ->
         R.pts_to ctr Steel.FractionalPermission.full_perm x `star`
         pure (equal_up_to s0 s1 x) `star`
         pure (within_bounds x l b))
@@ -247,24 +248,24 @@ let elim_compare_inv #o
         (a0 a1:array t)
         (#s0: Seq.seq t)
         (#s1: Seq.seq t)
-        (l:U32.t)
-        (ctr : R.ref (option U32.t))
+        (l:US.t)
+        (ctr : R.ref (option US.t))
         (b: bool)
-    : STGhostT (Ghost.erased (option U32.t)) o
+    : STGhostT (Ghost.erased (option US.t)) o
         (compare_inv a0 a1 s0 s1 l ctr b)
         (fun x ->
-          let open U32 in
+          let open US in
           pts_to a0 p0 s0 `star`
           pts_to a1 p1 s1 `star`
           R.pts_to ctr Steel.FractionalPermission.full_perm x `star`
           pure (equal_up_to s0 s1 x) `star`
           pure (within_bounds x l b))
-      = let open U32 in
+      = let open US in
         assert_spinoff
           ((compare_inv #_ #p0 #p1 a0 a1 s0 s1 l ctr b) ==
           (pts_to a0 p0 s0 `star`
            pts_to a1 p1 s1 `star`
-           exists_ (fun (v:option U32.t) ->
+           exists_ (fun (v:option US.t) ->
              R.pts_to ctr Steel.FractionalPermission.full_perm v `star`
              pure (equal_up_to s0 s1 v)  `star`
              pure (within_bounds v l b))));
@@ -272,7 +273,7 @@ let elim_compare_inv #o
           (compare_inv #_ #p0 #p1 a0 a1 s0 s1 l ctr b)
           (pts_to a0 p0 s0 `star`
            pts_to a1 p1 s1 `star`
-           exists_ (fun (v:option U32.t) ->
+           exists_ (fun (v:option US.t) ->
              R.pts_to ctr Steel.FractionalPermission.full_perm v `star`
              pure (equal_up_to s0 s1 v) `star`
              pure (within_bounds v l b)));
@@ -285,20 +286,20 @@ let intro_compare_inv #o
               (a0 a1:array t)
               (#s0: Seq.seq t)
               (#s1: Seq.seq t)
-              (l:U32.t)
-              (ctr : R.ref (option U32.t))
-              (x: Ghost.erased (option U32.t))
+              (l:US.t)
+              (ctr : R.ref (option US.t))
+              (x: Ghost.erased (option US.t))
               (b:bool { within_bounds x l b })
     : STGhostT unit o
-         (let open U32 in
+         (let open US in
           pts_to a0 p0 s0 `star`
           pts_to a1 p1 s1 `star`
           R.pts_to ctr Steel.FractionalPermission.full_perm x `star`
           pure (equal_up_to s0 s1 x))
         (fun _ -> compare_inv a0 a1 s0 s1 l ctr (Ghost.hide b))
-    = let open U32 in
+    = let open US in
       intro_pure (within_bounds x l (Ghost.hide b));
-      intro_exists_erased x (fun (x:option U32.t) ->
+      intro_exists_erased x (fun (x:option US.t) ->
           R.pts_to ctr Steel.FractionalPermission.full_perm x `star`
           pure (equal_up_to s0 s1 x) `star`
           pure (within_bounds x l (Ghost.hide b)));
@@ -306,14 +307,14 @@ let intro_compare_inv #o
           ((compare_inv #_ #p0 #p1 a0 a1 s0 s1 l ctr (Ghost.hide b)) ==
           (pts_to a0 p0 s0 `star`
            pts_to a1 p1 s1 `star`
-           exists_ (fun (v:option U32.t) ->
+           exists_ (fun (v:option US.t) ->
              R.pts_to ctr Steel.FractionalPermission.full_perm v `star`
              pure (equal_up_to s0 s1 v)  `star`
              pure (within_bounds v l (Ghost.hide b)))));
         rewrite
           (pts_to a0 p0 s0 `star`
            pts_to a1 p1 s1 `star`
-           exists_ (fun (v:option U32.t) ->
+           exists_ (fun (v:option US.t) ->
              R.pts_to ctr Steel.FractionalPermission.full_perm v `star`
              pure (equal_up_to s0 s1 v) `star`
              pure (within_bounds v l (Ghost.hide b))))
@@ -325,11 +326,11 @@ let intro_exists_compare_inv #o
               (a0 a1:array t)
               (#s0: Seq.seq t)
               (#s1: Seq.seq t)
-              (l:U32.t)
-              (ctr : R.ref (option U32.t))
-              (x: Ghost.erased (option U32.t))
+              (l:US.t)
+              (ctr : R.ref (option US.t))
+              (x: Ghost.erased (option US.t))
     : STGhostT unit o
-         (let open U32 in
+         (let open US in
           pts_to a0 p0 s0 `star`
           pts_to a1 p1 s1 `star`
           R.pts_to ctr Steel.FractionalPermission.full_perm x `star`
@@ -338,7 +339,7 @@ let intro_exists_compare_inv #o
     = let b : bool =
           match Ghost.reveal x with
           | None -> false
-          | Some x -> U32.(x <^ l)
+          | Some x -> US.(x <^ l)
       in
       assert (within_bounds x l b);
       intro_compare_inv #_ #_ #p0 #p1 a0 a1 #s0 #s1 l ctr x b;
@@ -361,29 +362,29 @@ let extend_equal_up_to (#o:_)
                        (#t:Type0)
                        (#s0:Seq.seq t)
                        (#s1:Seq.seq t)
-                       (len:U32.t)
-                       (i:U32.t{ Seq.length s0 == Seq.length s1 /\ U32.(i <^ len) /\ U32.v len == Seq.length s0 } )
+                       (len:US.t)
+                       (i:US.t{ Seq.length s0 == Seq.length s1 /\ US.(i <^ len) /\ US.v len == Seq.length s0 } )
   : STGhost unit o
     (pure (equal_up_to s0 s1 (Some i)))
-    (fun _ -> pure (equal_up_to s0 s1 (Some U32.(i +^ 1ul))))
+    (fun _ -> pure (equal_up_to s0 s1 (Some US.(i +^ 1sz))))
     (requires
-      Seq.index s0 (U32.v i) == Seq.index s1 (U32.v i))
+      Seq.index s0 (US.v i) == Seq.index s1 (US.v i))
     (ensures fun _ -> True)
   = elim_pure _;
-    extend_equal_up_to_lemma s0 s1 (U32.v i);
-    intro_pure (equal_up_to s0 s1 (Some U32.(i +^ 1ul)))
+    extend_equal_up_to_lemma s0 s1 (US.v i);
+    intro_pure (equal_up_to s0 s1 (Some US.(i +^ 1sz)))
 
 let extend_equal_up_to_neg (#o:_)
                            (#t:Type0)
                            (#s0:Seq.seq t)
                            (#s1:Seq.seq t)
-                           (len:U32.t)
-                           (i:U32.t{ Seq.length s0 == Seq.length s1 /\ U32.(i <^ len) /\ U32.v len == Seq.length s0 } )
+                           (len:US.t)
+                           (i:US.t{ Seq.length s0 == Seq.length s1 /\ US.(i <^ len) /\ US.v len == Seq.length s0 } )
   : STGhost unit o
     (pure (equal_up_to s0 s1 (Some i)))
     (fun _ -> pure (equal_up_to s0 s1 None))
     (requires
-      Seq.index s0 (U32.v i) =!= Seq.index s1 (U32.v i))
+      Seq.index s0 (US.v i) =!= Seq.index s1 (US.v i))
     (ensures fun _ -> True)
   = elim_pure _;
     intro_pure _
@@ -394,27 +395,27 @@ let init_compare_inv #o
              (a0 a1:array t)
              (#s0: Seq.seq t)
              (#s1: Seq.seq t)
-             (l:U32.t)
-             (ctr : R.ref (option U32.t))
+             (l:US.t)
+             (ctr : R.ref (option US.t))
     : STGhost unit o
-         (let open U32 in
+         (let open US in
           pts_to a0 p0 s0 `star`
           pts_to a1 p1 s1 `star`
-          R.pts_to ctr Steel.FractionalPermission.full_perm (Some 0ul))
+          R.pts_to ctr Steel.FractionalPermission.full_perm (Some 0sz))
         (fun _ -> exists_ (compare_inv #_ #p0 #p1 a0 a1 s0 s1 l ctr))
         (requires (
           length a0 > 0 /\
           length a0 == length a1 /\
-          U32.v l == length a0
+          US.v l == length a0
         ))
         (ensures (fun _ -> True))
     = pts_to_length a0 _;
       pts_to_length a1 _;
-      intro_pure (equal_up_to s0 s1 (Ghost.hide (Some 0ul)));
+      intro_pure (equal_up_to s0 s1 (Ghost.hide (Some 0sz)));
       rewrite
-        (R.pts_to ctr Steel.FractionalPermission.full_perm (Some 0ul))
-        (R.pts_to ctr Steel.FractionalPermission.full_perm (Ghost.hide (Some 0ul)));
-      intro_exists_compare_inv a0 a1 l ctr (Ghost.hide (Some 0ul))
+        (R.pts_to ctr Steel.FractionalPermission.full_perm (Some 0sz))
+        (R.pts_to ctr Steel.FractionalPermission.full_perm (Ghost.hide (Some 0sz)));
+      intro_exists_compare_inv a0 a1 l ctr (Ghost.hide (Some 0sz))
 
 let compare_pts
     (#t:eqtype)
@@ -422,19 +423,19 @@ let compare_pts
     (a0 a1:array t)
     (#s0: Ghost.erased (Seq.seq t))
     (#s1: Ghost.erased (Seq.seq t))
-    (l:U32.t)
+    (l:US.t)
   : ST bool
     (pts_to a0 p0 s0 `star` pts_to a1 p1 s1)
     (fun _ -> pts_to a0 p0 s0 `star` pts_to a1 p1 s1)
     (requires
-      length a0 > 0 /\ length a0 == length a1 /\ U32.v l == length a0
+      length a0 > 0 /\ length a0 == length a1 /\ US.v l == length a0
     )
     (ensures fun b ->
       b = (Ghost.reveal s0 = Ghost.reveal s1))
   =
    pts_to_length a0 _;
    pts_to_length a1 _;
-   let ctr = R.alloc (Some 0ul) in
+   let ctr = R.alloc (Some 0sz) in
     let cond ()
       : STT bool
         (exists_ (compare_inv #_ #p0 #p1 a0 a1 s0 s1 l ctr))
@@ -449,7 +450,7 @@ let compare_pts
           return false
 
         | Some x ->
-          let res = U32.(x <^ l) in
+          let res = US.(x <^ l) in
           intro_compare_inv #_ #_ #p0 #p1 a0 a1 l ctr _ res;
           return res
     in
@@ -470,9 +471,9 @@ let compare_pts
         let v1 = index a1 i in
         if v0 = v1
         then (
-          R.write ctr (Some U32.(i +^ 1ul));
+          R.write ctr (Some US.(i +^ 1sz));
           extend_equal_up_to l i;
-          intro_exists_compare_inv #_ #_ #p0 #p1 a0 a1 l ctr (Ghost.hide (Some (U32.(i +^ 1ul))))
+          intro_exists_compare_inv #_ #_ #p0 #p1 a0 a1 l ctr (Ghost.hide (Some (US.(i +^ 1sz))))
         )
         else (
           R.write ctr None;
@@ -498,7 +499,7 @@ let compare
   =
     pts_to_length a0 _;
     pts_to_length a1 _;
-    if l = 0ul
+    if l = 0sz
     then (
       assert (Seq.equal s0 s1);
       return true
