@@ -2,14 +2,14 @@ module AlexOpaque
 
 //SNIPPET_START: opaque$
 [@@"opaque_to_smt"]
-let unbounded (f: ℕ → ℤ) = ∀ (m: ℕ). ∃ (n:ℕ). abs (f n) > m
+let unbounded (f: nat → int) = forall (m: nat). exists (n:nat). abs (f n) > m
 
-let instantiate_unbounded (f:ℕ → ℤ { unbounded f }) (m:ℕ)
-  : Lemma (∃ (n:ℕ). abs (f n) > m)
+let instantiate_unbounded (f:nat → int { unbounded f }) (m:nat)
+  : Lemma (exists (n:nat). abs (f n) > m)
   = reveal_opaque (`%unbounded) (unbounded f)
 
 assume
-val f : (z:(ℕ → ℤ){unbounded z})
+val f : (z:(nat → int){unbounded z})
 
 let g : (nat -> int) = fun x -> f (x+1)
 
@@ -36,10 +36,10 @@ let find_above_for_g (m:nat) : Lemma(exists (i:nat). abs(g i) > m) =
 
 let trigger (x:int) = True
 
-let unbounded_alt (f: ℕ → ℤ) = ∀ (m: ℕ). {:pattern (trigger m)} (∃ (n:ℕ). abs (f n) > m)
+let unbounded_alt (f: nat → int) = forall (m: nat). {:pattern (trigger m)} (exists (n:nat). abs (f n) > m)
 
 assume
-val ff : (z:(ℕ → ℤ){unbounded_alt z})
+val ff : (z:(nat → int){unbounded_alt z})
 
 let gg : (nat -> int) = fun x -> ff (x+1)
 

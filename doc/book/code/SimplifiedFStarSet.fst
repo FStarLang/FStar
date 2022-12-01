@@ -45,6 +45,6 @@ let mem_intersect  #a x s1 s2 = ()
 let mem_complement #a x s     = ()
 
 (* extensionality *)
-let lemma_equal_intro #a s1 s2 = ()
-let lemma_equal_elim  #a s1 s2 = ()
+let equal_intro #a s1 s2 = ()
+let equal_elim  #a s1 s2 = ()
 //SNIPPET_END: SimplifiedFStarSet.Impl$
