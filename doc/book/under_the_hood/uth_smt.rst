@@ -314,7 +314,9 @@ first-order logic and functions like ``add3`` are not first-class
 values. So, F* introduces another layer in the encoding to model
 higher-order functions, but we don't cover this here.
 
-   
+
+.. _UTH_SMT_fuel:
+
 Recursive functions and fuel
 ............................
 
@@ -1389,6 +1391,7 @@ However, there seem to be `some issues
 using it at the moment with Z3 logs generated from F*.
 
 
+.. _Splitting_queries:
 
 Splitting Queries
 .................
