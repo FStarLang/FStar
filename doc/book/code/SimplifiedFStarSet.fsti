@@ -28,24 +28,24 @@ val set (a:eqtype)
 
 //SNIPPET_START: destructor$
 val mem (#a:eqtype) (x:a) (s:set a)
-  : Tot bool
+  : bool
 //SNIPPET_END: destructor$
 
 //SNIPPET_START: constructors$
 val empty (#a:eqtype)
-  : Tot (set a)
+  : set a
 
 val singleton (#a:eqtype) (x:a)
-  : Tot (set a)
+  : set a
 
 val union (#a:eqtype) (s0 s1: set a)
-  : Tot (set a)
+  : set a
   
 val intersect (#a:eqtype) (s0 s1: set a)
-  : Tot (set a)
+  : set a
   
 val complement (#a:eqtype) (s0:set a)
-  : Tot (set a)
+  : set a
 //SNIPPET_END: constructors$
 
 //SNIPPET_START: equal$

@@ -31,18 +31,18 @@ Some background and resources:
     <http://smtlib.cs.uiowa.edu/language.shtml>`_ language. We refer
     to the "SMT-LIB v2" language as SMT2.
     
-  * Alejandro Aguirre wrote a `tech report:
+  * Alejandro Aguirre wrote a `tech report
     <https://catalin-hritcu.github.io/students/alejandro/report.pdf>`_
     describing work in progress towards formalizing F*'s SMT encoding.
 
-  * Michal Moskal's `Programming with Triggers:
+  * Michal Moskal's `Programming with Triggers
     <https://moskal.me/pdf/prtrig.pdf>`_ describes how to pick
     triggers for quantifier instantiation and how to debug and profile
     the SMT solver, in the context of Vcc and the relation Hypervisor
     Verification project.
 
   * Leonardo de Moura and Nikolaj Bjorner `describe how E-matching is
-    implemented in Z3:
+    implemented in Z3
     <http://leodemoura.github.io/files/ematching.pdf>`_ (at least
     circa 2007).
     
@@ -50,7 +50,7 @@ A Brief Tour of F*'s SMT Encoding
 ---------------------------------
 
 To inspect F*'s SMT encoding, we'll work through several small
-examples and get F* to log the SMT-LIB theories that it generates. For
+examples and get F* to log the SMT2 theories that it generates. For
 this, we'll use the file shown below as a skeleton, starting with the
 ``#push-options "--log_queries"`` directive, which instructs F* to
 print out its encoding to ``.smt2`` file. The ``force_a_query``
@@ -87,7 +87,7 @@ of the following kind:
    ...
    ;;; End interface FStar.Pervasives (2421 decls; total size 1123058)
 
-where each ``End`` line also describes the number of declarations in
+where each `End` line also describes the number of declarations in
 the module and its length in characters.
 
 
@@ -96,14 +96,13 @@ the module and its length in characters.
 .............
 
 The logic provided by the SMT solver is multi-sorted: the sorts
-provide a kind of simple type system for the logic, ensuring, e.g.,
-that terms from two different sorts can never be equal. However, F*'s
-encoding to SMT (mostly) uses just a single sort: every pure (or
-ghost) F* term is encoded to the SMT solver as an instance of an
-uninterpreted SMT sort called ``Term``. This allows the encoding to be
-very general, handling F*'s much richer type system, rather than
-trying to map F*'s complex type system into the much simpler type
-system of SMT sorts.
+provide a simple type system for the logic, ensuring, e.g., that terms
+from two different sorts can never be equal. However, F*'s encoding to
+SMT (mostly) uses just a single sort: every pure (or ghost) F* term is
+encoded to the SMT solver as an instance of an uninterpreted SMT sort
+called ``Term``. This allows the encoding to be very general, handling
+F*'s much richer type system, rather than trying to map F*'s complex
+type system into the much simpler type system of SMT sorts.
 
 
 Booleans
@@ -129,12 +128,20 @@ using the SMT2 definitions below.
 
 This declares two uninterpreted functions ``BoxBool`` and
 ``BoxBool_proj_0`` that go back and forth between the sorts ``Bool``
-and ``Term``. The axiom named ``projection_inverse_BoxBool_proj_0``
-states that ``BoxBool_proj_0`` is the inverse of ``BoxBool``, or,
-equivalently, that ``BoxBool`` is an injective function from ``Bool``
-to ``Term``. Note, unlike in F*, the ``assert`` keyword in SMT2
-assumes that a fact is true, rather than checking that it is valid,
-i.e., ``assert`` in SMT2 is like ``assume`` in F*.
+and ``Term``.
+
+The axiom named ``projection_inverse_BoxBool_proj_0`` states that
+``BoxBool_proj_0`` is the inverse of ``BoxBool``, or, equivalently,
+that ``BoxBool`` is an injective function from ``Bool`` to
+``Term``. 
+
+Note, unlike in F*, the ``assert`` keyword in SMT2 assumes that a fact
+is true, rather than checking that it is valid, i.e., ``assert`` in
+SMT2 is like ``assume`` in F*.
+
+The ``qid`` is the quantifier identifier, usually equal to or derived
+from the name of the assumption that includes it---qids come up when
+we look at :ref:`profiling quantifier instantiation <Profiling_z3>`.
 
 Patterns for quantifier instantiation
 .....................................
@@ -160,20 +167,23 @@ Each universally quantified formula in scope is a term of the form below:
              :pattern ((p1) ... (pm))))
 
 This quantified formula is inert and only plays a role in the solver's
-search once that bound variables ``x1 ... xn`` are instantiated. The
+search once the bound variables ``x1 ... xn`` are instantiated. The
 terms ``p1 ... pm`` are called patterns, and collectively, ``p1
-... pm`` must mention all the bound variables. To instantiate the
+... pm`` must mention *all* the bound variables. To instantiate the
 quantifier, the solver aims to find active terms ``v1...vm`` that
 match the patterns ``p1..pm``, where a match involves finding a
 substitution ``S`` for the bound variables ``x1...xm``, such that the
-substituted patterns are equal to the active terms ``v1..vm``. Given
-such a substitution, the substituted term ``S(body)`` becomes active
-and may refine the partial model further.
+substituted patterns ``S(p1...pm)`` are equal to the active terms
+``v1..vm``. Given such a substitution, the substituted term
+``S(body)`` becomes active and may refine the partial model further.
 
 Existentially quantified formulas are dual to universally quantified
-formulas. Whereas an universal formula in the *context* (i.e., a
-hypothesis) is inert until it's pattern is instantiated, an
-existential *goal* is inert until its pattern is instantiated.
+formulas. Whereas a universal formula in the *context* (i.e., in
+negative position, or as a hypothesis) is inert until it's pattern is
+instantiated, an existential *goal* (or, in positive position) is
+inert until its pattern is instantiated. Existential quantifiers can
+be decorated with patterns that trigger instantiation when matched
+with active terms, just like universal quantifiers
 
 Returning to ``projection_inverse_BoxBool_proj_0``, what this means is
 that once the solver has an active term ``BoxBool b``, it can
@@ -195,8 +205,6 @@ integers) are coerced to ``Term`` using the injective function
     (assert (! (forall ((@u0 Int))
                        (! (= (BoxInt_proj_0 (BoxInt @u0))
                              @u0)
-                      
-
                           :pattern ((BoxInt @u0))
                           :qid projection_inverse_BoxInt_proj_0))
                :named projection_inverse_BoxInt_proj_0))
@@ -227,12 +235,12 @@ active application of the ``Prims.op_Addition``.
 The additional boxing introduces some overhead, e.g., proving ``x + y
 == y + x`` in F* amounts to proving ``Prims.op_Addition x y ==
 Prims.op_Addition y x`` in SMT2. This in turn involves instantiation
-quantifiers, then reasoning the the theory of arithmetic, and finally
-using the injectivity of the ``BoxInt`` function to conclude. However,
-this overhead is usually not perceptible, and the uniformity of
-encoding everything to a single ``Term`` sort simplifies many other
-things. Nevertheless, F* provides a few options to control the way
-integers and boxed and unboxed, described :ref:`ahead
+quantifiers, then reasoning in the theory of linear arithmetic, and
+finally using the injectivity of the ``BoxInt`` function to
+conclude. However, this overhead is usually not perceptible, and the
+uniformity of encoding everything to a single ``Term`` sort simplifies
+many other things. Nevertheless, F* provides a few options to control
+the way integers and boxed and unboxed, described :ref:`ahead
 <z3_and_smtencoding_options>`.
 
    
@@ -248,7 +256,7 @@ Consider the F* function below:
 
 Its encoding to SMT has several elements.
 
-First, we have have a declaration of an uinterpreted ternary function
+First, we have have a declaration of an uninterpreted ternary function
 on ``Term``.
 
 .. code-block:: smt2
@@ -277,7 +285,7 @@ definition.
     
             :named equation_SMTEncoding.add3))
 
-In addition to its definition, F* encoding the type of ``add3`` to the
+In addition to its definition, F* encodes *the type of* ``add3`` to the
 solver too, as seen by the assumption below. One of the key predicates
 of F*'s SMT encoding is ``HasType``, which relates a term to its
 type. The assumption ``typing_SMTEncoding.add3`` encodes the typing of
@@ -310,7 +318,7 @@ higher-order functions, but we don't cover this here.
 Recursive functions and fuel
 ............................
 
-Non-recursive functions are similar to macro definitions. F* simply
+Non-recursive functions are similar to macro definitions---F* just
 encodes encodes their semantics to the SMT solver as a rewrite
 rule. However, recursive functions, since they could be unfolded
 indefinitely, are not so simple. Let's look at the encoding of the
@@ -324,7 +332,8 @@ indefinitely, are not so simple. Let's look at the encoding of the
      else n * factorial (n - 1)
 
 
-First, we have, as before an uninterpreted function symbol on ``Term``
+     
+First, we have, as before, an uninterpreted function symbol on ``Term``
 and an assumption about its typing.
 
 .. code-block:: smt2
@@ -433,7 +442,7 @@ to unfold ``factorial 0`` further, the proof fails.
 .. code-block:: fstar
 
    #push-options "--fuel 1"
-   let _ = assert (factorial 1 == 1)
+   let _ = assert (factorial 1 == 1) (* fails *)
 
 As with regular functions, the rest of the encoding of recursive
 functions has to do with handling higher-order uses.
@@ -498,7 +507,7 @@ definition of the inversion assumption of datatypes, namely that given
 a term of type ``unat``, one can conclude that its head constructor
 must be either ``Z`` or ``S``. However, since the type ``unat`` is
 unbounded, we want to avoid applying this inversion indefinitely, so
-we it uses a quantifier with a pattern that requires non-zero fuel to
+it uses a quantifier with a pattern that requires non-zero fuel to
 be triggered.
 
 .. code-block:: smt2
@@ -516,7 +525,7 @@ the ``HasType`` we've seen earlier. In fact, ``(HasType x t)`` is just
 a macro for ``(HasTypeFuel MaxIFuel x t)``, where much like for
 recursive functions and fuel, the constant ``MaxIFuel`` is defined by
 the current value of the F* options ``--initial_ifuel``,
-``--max_ifuel``, and ``--ifuel``.
+``--max_ifuel``, and ``--ifuel`` (where ``ifuel`` stands for "inversion fuel").
 
 The key bit in ensuring that the inversion assumption above is not
 indefinitely applied is in the structure of the typing assumptions for
@@ -588,8 +597,8 @@ handling higher order uses of the constructors.
 
 As with recursive functions, the single value of ``MaxIFuel`` controls
 the number of inversions of all datatypes in scope. It's a good idea
-to try to keep use an ``ifuel`` setting that is as low as possible for
-your proofs, e.g., a value less than ``2``, or even zero if
+to try to use an ``ifuel`` setting that is as low as possible for
+your proofs, e.g., a value less than ``2``, or even ``0``, if
 possible. However, as with fuel, a value of ifuel that is too low will
 cause the solver to be unable to prove some facts. For example,
 without any ``ifuel``, the solver cannot use the inversion assumption
@@ -600,8 +609,8 @@ reports the error "Patterns are incomplete".
 
    #push-options "--ifuel 0"                
    let rec as_nat (x:unat) : nat = 
-      match x with
-      | S x -> 1 + as_nat x
+      match x with (* fails exhaustiveness check *)
+      | S x -> 1 + as_nat x (* fails termination check *)
       | Z -> 0
 
 Sometimes it is useful to let the solver arbitrarily invert an
@@ -629,24 +638,24 @@ allow inversion within a scope for only a few selected types, e.g.,
 Logical Connectives
 ....................
 
-The :ref`logical connectives <Part2_connectives>` that F* offers, all
+The :ref:`logical connectives <Part2_connectives>` that F* offers, all
 derived forms. Given the encodings of datatypes and functions (and
-arrow types), the encodings of all these connectives just fall out
-naturally. However, all these connectives also have built-in support
-in the SMT solver as part of its propositional core and support for
-E-matching-based quantifier instantiation. So, rather than leave them
-as derived forms, a vital optimization in F*'s SMT encoding is to
-recognize these connectives and to encode them directly to the
-corresponding forms in SMT.
+arrow types, which we haven't shown), the encodings of all these
+connectives just fall out naturally. However, all these connectives
+also have built-in support in the SMT solver as part of its
+propositional core and support for E-matching-based quantifier
+instantiation. So, rather than leave them as derived forms, a vital
+optimization in F*'s SMT encoding is to recognize these connectives
+and to encode them directly to the corresponding forms in SMT.
 
-The term ``p /\ q`` in F* encoded to ``(and [[p]] [[q]]])`` where
+The term ``p /\ q`` in F* is encoded to ``(and [[p]] [[q]]])`` where
 ``[[p]]`` and ``[[q]]`` are the *logical* encodings of ``p`` and ``q``
 respectively. However, the SMT connective ``and`` is a binary function
 on the SMT sort ``Bool``, whereas all we have been describing so far
 is that every F* term ``p`` is encoded to the SMT sort ``Term``. To
 bridge the gap, the logical encoding of a term ``p`` interprets the
 ``Term`` sort into ``Bool`` by using a function ``Valid p``, which
-deeps a ``p : Term`` to be valid if it is inhabited, as per the
+deems a ``p : Term`` to be valid if it is inhabited, as per the
 definitions below.
 
 .. code-block:: smt2
@@ -687,7 +696,7 @@ also a candidate.
 For small developments, leaving the choice of pattern to Z3 is often
 fine, but as your project scales up, you probably want to be more
 careful about your choice of patterns. F* lets you write the pattern
-explicit on a quantifier and translates it down to SMT, as shown
+explicitly on a quantifier and translates it down to SMT, as shown
 below.
 
 .. code-block:: fstar
@@ -808,7 +817,7 @@ Now, you may wonder why all these settings are useful. Surely, one
 would think, ``--smtencoding.l_arith_repr native
 --smtencoding.nl_arith_repr native --smtencoding.elim_box true`` is
 the best setting. However, it turns out that the additional layers of
-wrapping are boxing actually enable some proofs to go, and,
+wrapping and boxing actually enable some proofs to go through, and,
 empirically, no setting strictly dominates all the others.
 
 However, the following is a good rule of thumb if you are starting a
@@ -840,7 +849,7 @@ behavior.
 
 To start with, for our interface, we set the fuel and ifuel both to
 zero---we will not need to reason about recursive functions or invert
-inductive types in the interface.
+inductive types here.
 
 .. literalinclude:: ../code/SimplifiedFStarSet.fsti
    :language: fstar
@@ -855,7 +864,7 @@ module, ``set``:
    :start-after: //SNIPPET_START: set$
    :end-before: //SNIPPET_END: set$
 
-Sets offer just a single operation call ``mem`` that allow testing
+Sets offer just a single operation called ``mem`` that allows testing
 whether or not a given element is in the set.
 
 .. literalinclude:: ../code/SimplifiedFStarSet.fsti
@@ -917,7 +926,7 @@ the lemma ``mem_empty`` is analogous to the following assumption:
 
 As such, lemmas decorated with SMT patterns allow the user to inject
 new, quantified hypotheses into the solver's context, where each of
-those hypotheses are justified by a proof in F* of the corresponding
+those hypotheses is justified by a proof in F* of the corresponding
 lemma. This allows users of the ``FStar.Set`` library to treat ``set``
 almost like a new built-in type, with proof automation to reason about
 its operations. However, making this work well requires some careful
@@ -943,7 +952,7 @@ are themselves matching candidates. To be explicit, with a single
 active term ``mem x s``, the solver would derive ``mem x (union s
 s)``, ``mem x (union s (union s s))``, and so on.  This is called a
 matching loop and can be disastrous for solver performance. So,
-carefully chosing the patterns on quantifiers and lemma with
+carefully chosing the patterns on quantifiers and lemmas with
 ``SMTPat`` annotations is important.
 
 Finally, to complete our interface, we provide two lemmas to
@@ -959,7 +968,8 @@ membership and provable equality.
    :end-before: //SNIPPET_END: equal_intro_elim$
 
 Of course, all these lemmas can be easily proven by F* under a
-suitable representation of the abstract type ``set``, as shown below.
+suitable representation of the abstract type ``set``, as shown in the
+module implementation below.
 
 .. literalinclude:: ../code/SimplifiedFStarSet.fst
    :language: fstar
@@ -990,25 +1000,26 @@ definitions you need.
 
        **Answer**
 
-    Look at ``FStar.Set.intension`` if you get stuck.
+    Look at `FStar.Set.intension <https://github.com/FStarLang/FStar/blob/master/ulib/FStar.Set.fsti>`_ if you get stuck
 
 --------------------------------------------------------------------------------    
 
+.. _Profiling_z3:
            
 Profiling Z3 and Solving Proof Performance Issues
 -------------------------------------------------
 
 At some point, you will write F* programs where proofs start to take
-much longer you'd like, simple proofs fail to go through, or proofs
-that were once working start to fail as you make small changes to your
-program. Hopefully, you notice this early in your project and can try
-to figure out how to make it better before slogging through slow and
-unpredictable proofs. Contrary to the wisdom one often receives in
-software engineering where early optimization is discouraged, when
-developing proof-oriented libraries, it's wise to pay attention to
-proof performance issues as soon as they come up, otherwise you'll
-find that as you scale up further, proofs become so slow or brittle
-that your productivity decreases rapidly.
+much longer than xyou'd like, simple proofs fail to go through, or
+proofs that were once working start to fail as you make small changes
+to your program. Hopefully, you notice this early in your project and
+can try to figure out how to make it better before slogging through
+slow and unpredictable proofs. Contrary to the wisdom one often
+receives in software engineering where early optimization is
+discouraged, when developing proof-oriented libraries, it's wise to
+pay attention to proof performance issues as soon as they come up,
+otherwise you'll find that as you scale up further, proofs become so
+slow or brittle that your productivity decreases rapidly.
 
 Query Statistics
 ................
@@ -1028,11 +1039,43 @@ With the options below, F* outputs the following statistics:
    
 .. code-block:: none
 
-   (<input>(20,0-20,49))	Query-stats (SMTEncoding._test_query_stats, 1)	failed {reason-unknown=unknown because (incomplete quantifiers)} in 31 milliseconds with fuel 0 and ifuel 0 and rlimit 2723280 statistics={mk-bool-var=7065 del-clause=242 num-checks=3 conflicts=5 binary-propagations=42 arith-fixed-eqs=4 arith-pseudo-nonlinear=1 propagations=10287 arith-assert-upper=21 arith-assert-lower=18 decisions=11 datatype-occurs-check=2 rlimit-count=2084689 arith-offset-eqs=2 quant-instantiations=208 mk-clause=3786 minimized-lits=3 memory=21.41 arith-pivots=6 max-generation=5 arith-conflicts=3 time=0.03 num-allocs=132027456 datatype-accessor-ax=3 max-memory=21.68 final-checks=2 arith-eq-adapter=15 added-eqs=711}
+   (<input>(20,0-20,49))	Query-stats (SMTEncoding._test_query_stats, 1)	failed
+      {reason-unknown=unknown because (incomplete quantifiers)} in 31 milliseconds
+      with fuel 0 and ifuel 0 and rlimit 2723280
+      statistics={mk-bool-var=7065 del-clause=242 num-checks=3 conflicts=5
+                  binary-propagations=42 arith-fixed-eqs=4 arith-pseudo-nonlinear=1
+                  propagations=10287 arith-assert-upper=21 arith-assert-lower=18
+                  decisions=11 datatype-occurs-check=2 rlimit-count=2084689
+                  arith-offset-eqs=2 quant-instantiations=208 mk-clause=3786
+                  minimized-lits=3 memory=21.41 arith-pivots=6 max-generation=5
+                  arith-conflicts=3 time=0.03 num-allocs=132027456 datatype-accessor-ax=3
+                  max-memory=21.68 final-checks=2 arith-eq-adapter=15 added-eqs=711}
    
-   (<input>(20,0-20,49))	Query-stats (SMTEncoding._test_query_stats, 1)	failed {reason-unknown=unknown because (incomplete quantifiers)} in 47 milliseconds with fuel 2 and ifuel 0 and rlimit 2723280 statistics={mk-bool-var=7354 del-clause=350 arith-max-min=10 interface-eqs=3 num-checks=4 conflicts=8 binary-propagations=56 arith-fixed-eqs=17 arith-pseudo-nonlinear=3 arith-bound-prop=2 propagations=13767 arith-assert-upper=46 arith-assert-lower=40 decisions=25 datatype-occurs-check=5 rlimit-count=2107946 arith-offset-eqs=6 quant-instantiations=326 mk-clause=4005 minimized-lits=4 memory=21.51 arith-pivots=20 max-generation=5 arith-add-rows=34 arith-conflicts=4 time=0.05 num-allocs=143036410 datatype-accessor-ax=5 max-memory=21.78 final-checks=6 arith-eq-adapter=31 added-eqs=1053}
+   (<input>(20,0-20,49))	Query-stats (SMTEncoding._test_query_stats, 1)	failed
+      {reason-unknown=unknown because (incomplete quantifiers)} in 47 milliseconds
+      with fuel 2 and ifuel 0 and rlimit 2723280
+      statistics={mk-bool-var=7354 del-clause=350 arith-max-min=10 interface-eqs=3
+                  num-checks=4 conflicts=8 binary-propagations=56 arith-fixed-eqs=17
+                  arith-pseudo-nonlinear=3 arith-bound-prop=2 propagations=13767
+                  arith-assert-upper=46 arith-assert-lower=40 decisions=25
+                  datatype-occurs-check=5 rlimit-count=2107946 arith-offset-eqs=6
+                  quant-instantiations=326 mk-clause=4005 minimized-lits=4
+                  memory=21.51 arith-pivots=20 max-generation=5 arith-add-rows=34
+                  arith-conflicts=4 time=0.05 num-allocs=143036410 datatype-accessor-ax=5
+                  max-memory=21.78 final-checks=6 arith-eq-adapter=31 added-eqs=1053}
    
-   (<input>(20,0-20,49))	Query-stats (SMTEncoding._test_query_stats, 1)	succeeded in 48 milliseconds with fuel 4 and ifuel 0 and rlimit 2723280 statistics={arith-max-min=26 num-checks=5 binary-propagations=70 arith-fixed-eqs=47 arith-assert-upper=78 arith-assert-lower=71 decisions=40 rlimit-count=2130332 max-generation=5 arith-nonlinear-bounds=2 time=0.05 max-memory=21.78 arith-eq-adapter=53 added-eqs=1517 mk-bool-var=7805 del-clause=805 interface-eqs=3 conflicts=16 arith-pseudo-nonlinear=6 arith-bound-prop=4 propagations=17271 datatype-occurs-check=5 arith-offset-eqs=20 quant-instantiations=481 mk-clause=4286 minimized-lits=38 memory=21.23 arith-pivots=65 arith-add-rows=114 arith-conflicts=5 num-allocs=149004462 datatype-accessor-ax=9 final-checks=7}
+   (<input>(20,0-20,49))	Query-stats (SMTEncoding._test_query_stats, 1)	succeeded
+       in 48 milliseconds with fuel 4 and ifuel 0 and rlimit 2723280
+       statistics={arith-max-min=26 num-checks=5 binary-propagations=70 arith-fixed-eqs=47
+                   arith-assert-upper=78 arith-assert-lower=71 decisions=40
+                   rlimit-count=2130332 max-generation=5 arith-nonlinear-bounds=2
+                   time=0.05 max-memory=21.78 arith-eq-adapter=53 added-eqs=1517
+                   mk-bool-var=7805 del-clause=805 interface-eqs=3 conflicts=16
+                   arith-pseudo-nonlinear=6 arith-bound-prop=4 propagations=17271
+                   datatype-occurs-check=5 arith-offset-eqs=20 quant-instantiations=481
+                   mk-clause=4286 minimized-lits=38 memory=21.23 arith-pivots=65
+                   arith-add-rows=114 arith-conflicts=5 num-allocs=149004462
+                   datatype-accessor-ax=9 final-checks=7}
 
 There's a lot of information here:
 
@@ -1137,9 +1180,9 @@ quantifier, yields the existentially quantified formula. Existentials
 are immediately `skolemized
 <https://en.wikipedia.org/wiki/Skolem_normal_form>`_ by Z3, i.e., the
 existentially bound variable is replaced by a fresh function symbol
-that depends on all the variables in scope. So, a fresh term ``a``
+that depends on all the variables in scope. So, a fresh term ``a @x0``
 corresponding ``@x1`` is introduced, and immediately, the conjunct
-``HasType a Prims.nat`` becomes an active term and can be used to
+``HasType (a @x0) Prims.nat`` becomes an active term and can be used to
 instantiate the outer universal quantifier again. This "matching loop"
 sends the solver into a long, fruitless search and the simple proof
 about ``factorial 3 == 6`` which previously succeeded in a few
@@ -1148,12 +1191,15 @@ milliseconds, now fails. Here's are the query stats:
 
 .. code-block:: none
 
-   (<input>(18,0-18,49))	Query-stats (SMTEncoding._test_query_stats, 1)	failed {reason-unknown=unknown because canceled} in 5647 milliseconds with fuel 4 and ifuel 0 and rlimit 2723280 statistics={max-missed-qa-cost=11.00 num-checks=1 binary-propagations=14 arith-fixed-eqs=8268 arith-assert-upper=18916 arith-assert-lower=12359 decisions=13325 rlimit-count=4748763 missed-quant-instantiations=18005 max-generation=10 time=5.02 max-memory=790.20 arith-eq-adapter=11893 added-eqs=106037 mk-bool-var=172140 min-missed-qa-cost=11.00 del-clause=79534 interface-eqs=1 conflicts=11 arith-pseudo-nonlinear=2 arith-bound-prop=6 propagations=47550 arith-offset-eqs=3610 quant-instantiations=57046 mk-clause=124231 minimized-lits=1 memory=517.40 arith-pivots=20818 arith-assert-diseq=3 arith-add-rows=21504 arith-conflicts=3 num-allocs=1168378745 datatype-accessor-ax=5 final-checks=1}
+   (<input>(18,0-18,49))	Query-stats (SMTEncoding._test_query_stats, 1)	failed
+     {reason-unknown=unknown because canceled} in 5647 milliseconds
+     with fuel 4 and ifuel 0 and rlimit 2723280
+     statistics={ ... quant-instantiations=57046 ... }
 
 A few things to notice:
 
   * The failure reason is "unknown because canceled". That means the
-    solver eached its resource limit and halted the proof
+    solver reached its resource limit and halted the proof
     search. Usually, when you see "canceled" as the reason, you could
     try raising the rlimit, as we'll see shortly.
 
@@ -1174,7 +1220,7 @@ directive below doubles the resource limit given to Z3.
    #push-options "--z3rlimit_factor 2"
 
 This time it took 14 seconds and failed. But if you try the same proof
-a second time, it succeded. That's not very satisfying.
+a second time, it succeeds. That's not very satisfying.
 
 Repeating Proofs with Quake
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -1184,7 +1230,7 @@ then suddenly fail do happen. Z3 does guarantee that it is
 deterministic in a very strict sense, but even the smallest change to
 the input, e.g., a change in variable names, or even asking the same
 query twice in a succession in the same Z3 session, can result in
-differnt answers.
+different answers.
 
 There is often a deeper root cause (in our case, it's the
 ``Factorial_unbounded`` assumption, of course), but a first attempt at
@@ -1208,7 +1254,8 @@ In this case, F* reports the following:
 If you're working to stabilize a proof, a good criterion is to see if
 you can get the proof to go through with the ``--quake`` option.
 
-You can also try the proof by varying the Z3's random seed.
+You can also try the proof by varying the Z3's random seed and
+checking that it works with several choices of the seed.
 
 .. code-block:: none
 
@@ -1304,7 +1351,7 @@ let's see how to pin down which quantifier is to blame.
       Clearly, as expected, ``assumption_SMTEncoding.Factorial_unbounded`` is
       instantiated the most.
 
-      If you search in the .smt2 file for ":qid
+      Next, if you search in the .smt2 file for ":qid
       refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
       you'll find the assumption that gives an interpretation to the
       ``HasType x Prims.nat`` predicate, where each instantiation of
@@ -1313,7 +1360,7 @@ let's see how to pin down which quantifier is to blame.
       Notice that
       ``equation_with_fuel_SMTEncoding.factorial.fuel_instrumented``
       is also instantiated a lot. This is because aside from the
-      matching loop due to ``HasType x Prims.nat`` that each
+      matching loop due to ``HasType x Prims.nat``, each
       instantiation of ``Factorial_unbounded`` also yields an
       occurrence of ``factorial`` as a new active term, which the
       solver then unrolls up to four times.
@@ -1325,7 +1372,7 @@ let's see how to pin down which quantifier is to blame.
       encoding: there's not much you can do about it as a user. They
       are usually also not to blame for a slow proof---they fire a lot
       when other terms are instantiated too much. You should try to
-      identify other quantifiers in your code or libraries that first
+      identify other quantifiers in your code or libraries that fire
       a lot and try to understand the root cause of that.
 
 Z3 Axiom Profiler
@@ -1378,7 +1425,7 @@ conjuncts together, e.g., the proof search for one conjunct may yield
 clauses useful to complete the search for other clauses. However,
 sometimes, the converse can be true: the proof search for separate
 conjuncts can interfere with each other negatively, leading to the
-entire proof to fail when every conjunct may be provable if tried
+entire proof to fail even when every conjunct may be provable if tried
 separately. Additionally, when F* calls Z3, it applies the current
 rlimit setting for every query. If a query contains N conjuncts,
 splitting the conjuncts into N separate conjuncts is effectively a
@@ -1387,7 +1434,7 @@ as much as the current rlimit.
 
 If the single query with several conjunct fails without Z3 reporting
 any further information that F* can reconstruct into a localized error
-message, F* splits the query in to its conjuncts and tries each of
+message, F* splits the query into its conjuncts and tries each of
 them in isolation, so as to isolate the failing conjunct it
 any. However, sometimes, when tried in this mode, the proof of all
 conjuncts can succeed.
@@ -1415,7 +1462,7 @@ instantiation problem. There are a few elements to the solution.
 1. Marking definitions as opaque
 
      The attribute ``[@@"opaque_to_smt"]`` on the definition of
-     unbounded instructs F* to not encode that definition to the SMT
+     ``unbounded`` instructs F* to not encode that definition to the SMT
      solver. So, the problematic alternating quantifier is no longer
      in the global scope.
 
@@ -1458,7 +1505,8 @@ instantiation problem. There are a few elements to the solution.
 
      .. code-block:: none
 
-        (<input>(18,2-31,5))	Query-stats (AlexOpaque.find_above_for_g, 1)	succeeded in 46 milliseconds
+        (<input>(18,2-31,5))	Query-stats (AlexOpaque.find_above_for_g, 1)
+	             succeeded in 46 milliseconds
 
 This `wiki page
 <https://github.com/FStarLang/FStar/wiki/Code-pattern-for-hiding-definitions-from-Z3-and-selectively-revealing-them>`_
@@ -1469,6 +1517,8 @@ Other Ways to Explicitly Trigger Quantifiers
 
 For completeness, we look at some other ways in which quantifier
 instantiation works.
+
+.. _Artificial_triggers:
 
 An Artificial Trigger
 ~~~~~~~~~~~~~~~~~~~~~
@@ -1486,15 +1536,15 @@ reserved for this purpose, as shown below.
 1. We define a new function ``trigger x`` that is trivially true.
 
 2. In ``unbounded_alt`` we decorate the universal quantifier with an
-     explicit pattern, ``{:pattern (trigger x)}``. The pattern is not
-     semantically relevant---it's only there to control how the
-     quantifier is instantiated
+   explicit pattern, ``{:pattern (trigger x)}``. The pattern is not
+   semantically relevant---it's only there to control how the
+   quantifier is instantiated
 
 3. In ``find_above_for_gg``, whenever we want to instantiate the
-     quantifier with a particular lower bound ``k``, we assert
-     ``trigger k``. That gives Z3 an active term that mentions
-     ``trigger`` which it then uses to instantiate the quantifier with
-     our choice of ``k``.
+   quantifier with a particular lower bound ``k``, we assert ``trigger
+   k``. That gives Z3 an active term that mentions ``trigger`` which
+   it then uses to instantiate the quantifier with our choice of
+   ``k``.
 
 This style is not particularly pleasant, because it involves polluting
 our definitions with semantically irrelevant triggers. The selectively
@@ -1564,11 +1614,11 @@ about 11MB of SMT2 definitions with nearly 20,000 assertions for the
 solver to process. This makes for a large search space for the solver
 to explore to find a proof, however, most of those assertions are
 quantified formulas guarded by patterns and they remain inert unless
-some active term triggers them. Nevertheless, all these definitions a
-noticeable overhead to the solver. If you turn ``--query_stats`` on
-(after a single warm-up query), it takes Z3 about 300 milliseconds
-(and about 3000 quantifier instantiations) to find a proof for
-``test1``.
+some active term triggers them. Nevertheless, all these definitions
+impose a noticeable overhead to the solver. If you turn
+``--query_stats`` on (after a single warm-up query), it takes Z3 about
+300 milliseconds (and about 3000 quantifier instantiations) to find a
+proof for ``test1``.
 
 You probably won't really notice the overhead of a proof that takes
 300 milliseconds---the F* standard library doesn't have many
@@ -1611,7 +1661,7 @@ When Z3 finds a proof, it can report which facts from the context were
 relevant to the proof. This collection of facts is called the unsat
 core, because Z3 has proven that the facts from the context and the
 negated goal are unsatisfiable. F* has an option to record and replay
-the unsat core for each query and F* refers to the record unsat cores
+the unsat core for each query and F* refers to the recorded unsat cores
 as "hints".
 
 Here's how to use hints:
@@ -1625,7 +1675,7 @@ Here's how to use hints:
 
    This produces a file called ``ContextPollution.fst.hints``
 
-   The format of a hints file is an internal and subject to change,
+   The format of a hints file is internal and subject to change,
    but it is a textual format and you can roughly see what it
    contains. Here's a fragment from it:
 
@@ -1671,8 +1721,8 @@ Here's how to use hints:
 
    The following command requests F* to search for
    ``ContextPollution.fst.hints`` in the include path and when
-   attempting prove a query with a given id, it looks for a hint for
-   that query in the hints file, uses the fuel and ifuel settings
+   attempting to prove a query with a given id, it looks for a hint
+   for that query in the hints file, uses the fuel and ifuel settings
    present in the hints, and prunes the context to include only the
    facts present in the unsat core.
    
@@ -1701,7 +1751,73 @@ prefer to make proofs work quickly and robustly without hints. If you
 can get your project to this state, without relying on hints, then so
 much the better for you!
 
+Differential Profiling with qprofdiff
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Differential profiling with hints
-.................................
+If you have a proof that takes very long without hints but goes
+through quickly with hints, then the hints might help you diagnose why
+the original proof was taking so long. This wiki page describes how to
+`compare two Z3 quantifier instantiation profiles
+<https://github.com/FStarLang/FStar/wiki/Profiling-Z3-queries#interpreting-the-results>`_
+with a tool that comes with Z3 called qprofdiff.
+
+
+Hints that fail to replay
+^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Sometimes, Z3 will report an unsat core, but when F* uses it to try to
+replay a proof, Z3 will be unable to find a proof of unsat, and F*
+will fall back to trying the proof again in its original context. The
+failure to find a proof of unsat from a previously reported unsat core
+is not a Z3 unsoundness or bug---it's because although the report core
+is really logically unsat, finding a proof of unsat may have relied on
+quantifier instantiation hints from facts that are not otherwise
+semantically relevant. The following example illustrates.
+
+.. literalinclude:: ../code/HintReplay.fst
+   :language: fstar
+
+
+Say you run the following:
+
+.. code-block:: none
+
+   fstar --record_hints HintReplay.fst
+   fstar --query_stats --use_hints HintReplay.fst
+
+You will see the following output from the second run:
+
+.. code-block:: none
+
+   (HintReplay.fst(15,27-15,39))   Query-stats (HintReplay.test, 1)        failed
+     {reason-unknown=unknown because (incomplete quantifiers)} (with hint)
+     in 42 milliseconds ..
    
+   (HintReplay.fst(15,27-15,39))   Query-stats (HintReplay.test, 1)        succeeded
+     in 740 milliseconds ...
+
+The first attempt at the query failed when using the hint, and the
+second attempt at the query (without the hint) succeeded. 
+
+To see why, notice that to prove the assertion ``r x`` from the
+hypothesis ``q x``, logically, the assumption ``Q_R``
+suffices. Indeed, if you look in the hints file, you will see that it
+only mentions ``HintReplay.Q_R`` as part of the logical core. However,
+``Q_R`` is guarded by a pattern ``p x`` and in the absence of the
+assumption ``P_Q``, there is no way for the solver to derive an active
+term ``p x`` to instantiate ``Q_R``---so, with just the unsat core, it
+fails to complete the proof.
+
+Failures for hint replay usually point to some unusual quantifier
+triggering pattern in your proof. For instance, here we used ``p x``
+as a pattern, even though ``p x`` doesn't appear anywhere in
+``Q_R``---that's not usually a good choice, though sometimes, e.g.,
+when using :ref:`artificial triggers <Artificial_triggers>` it can
+come up.
+
+This `wiki page on hints
+<https://github.com/FStarLang/FStar/wiki/Robust,-replayable-proofs-using-unsat-cores,-(aka,-hints,-or-how-to-replay-verification-in-milliseconds-instead-of-minutes)>`_
+provides more information about diagnosing hint-replay failures,
+particularly in the context of the Low* libraries.
+
+

@@ -14,6 +14,7 @@ class CustomLexer(RegexLexer):
         'define-fun'  ,        
         'set-option'  ,
         'pattern'     ,
+        'weight'      ,        
         'qid'         ,
         'check-sat'   ,
         'named'       ,
