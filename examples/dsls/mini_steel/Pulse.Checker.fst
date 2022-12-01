@@ -343,7 +343,7 @@ let rec check (f:fstar_top_env)
       let d = T_Return _ _ _ _ (E d) uty in
       frame_empty u ty uty t c d
 
-    | Tm_Abs t pre_hint body ->
+    | Tm_Abs t pre_hint body ->  (* {pre}  (fun (x:t) -> body) : ? { pre } *)
       let (| u, t_typing |) = check_universe f g t in
       let x = fresh g in
       let g' = (x, Inl t) :: g in

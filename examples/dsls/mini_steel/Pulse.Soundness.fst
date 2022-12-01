@@ -169,6 +169,7 @@ let rec close_open_inverse (t:term) (x:var { ~(x `Set.mem` freevars t) } )
           (decreases t)
   = admit()
 
+(* x:t1 -> stt t2 pre post   ~    x:t1 -> stt t2 ((fun x -> pre) x) post *)
 let equiv_arrow (g:R.env) (t1:R.term) (u2:R.universe) (t2:R.term) (pre:R.term) (post:R.term) //need some ln preconditions
   : GTot (RT.equiv g (mk_tot_arrow1 (t1, R.Q_Explicit)
                                     (mk_stt_app u2 [t2; pre; post]))
@@ -179,7 +180,7 @@ let equiv_arrow (g:R.env) (t1:R.term) (u2:R.universe) (t2:R.term) (pre:R.term) (
 let ln_comp = c:pure_comp_st{ ln_c c }
 
 #push-options "--z3rlimit_factor 5"
-(* Soundness of bind elaboration *)
+(*** Soundness of bind elaboration *)
 
 let bind_res (u2:R.universe) (t2 pre post2:R.term) =
   mk_stt_app u2 [t2; pre; post2]
@@ -376,6 +377,82 @@ let elab_bind_typing (f:fstar_top_env)
     in
     d
 
+(*** Soundness of frame elaboration *)
+
+let mk_star (l r:R.term) =
+  let open R in
+  let head = pack_ln (Tv_FVar (pack_fv star_lid)) in      
+  R.mk_app head [(l, Q_Explicit); (r, Q_Explicit)]
+
+let frame_res (u:R.universe) (t pre post frame:R.term) =
+    mk_stt_app u [t; 
+                  mk_star pre frame;
+                  mk_abs t (mk_star (R.mk_app post [bound_var 0, R.Q_Explicit]) frame)]
+
+let frame_type_t_pre_post_frame (u:R.universe) (t pre post frame:R.term) =
+  let open R in
+  let f_type = mk_stt_app u [t; pre; post] in
+  mk_tot_arrow1 (f_type, Q_Explicit)
+                (frame_res u t pre post frame)
+
+let frame_type_t_pre_post (u:R.universe) (t pre post:R.term) =
+  let var = 0 in
+  let frame = mk_name var in
+  mk_tot_arrow1 (vprop_tm, R.Q_Explicit)
+                (RT.close_term (frame_res u t pre post frame) var)
+
+let frame_type_t_pre (u:R.universe) (t pre:R.term) =
+  let var = 1 in
+  let post = mk_name var in
+  let post_type = mk_tot_arrow1 (t, R.Q_Explicit) vprop_tm in
+  mk_tot_arrow1 (post_type, R.Q_Explicit)
+                (RT.close_term (frame_type_t_pre_post u t pre post) var)
+
+let frame_type_t (u:R.universe) (t:R.term) =
+  let var = 2 in
+  let pre = mk_name var in
+  let pre_type = vprop_tm in
+  mk_tot_arrow1 (pre_type, R.Q_Explicit)
+                (RT.close_term (frame_type_t_pre u t pre) var)
+
+let frame_type (u:R.universe) =
+  let var = 3 in
+  let t = mk_name var in
+  let t_type = RT.tm_type u in
+  mk_tot_arrow1 (t_type, R.Q_Explicit)
+                (RT.close_term (frame_type_t u t) var)
+
+#push-options "--fuel 2 --ifuel 1 --query_stats"
+let inst_frame_t #u #g #head
+                 (head_typing: RT.typing g head (frame_type u))
+                 (#t:_)
+                 (t_typing: RT.typing g t (RT.tm_type u))
+  : GTot (RT.typing g (R.mk_app head [(t, R.Q_Explicit)]) (frame_type_t u t))
+  = admit()
+
+let inst_frame_pre #u #g #head #t
+                 (head_typing: RT.typing g head (frame_type_t u t))
+                 (#pre:_)
+                 (pre_typing: RT.typing g pre vprop_tm)
+  : GTot (RT.typing g (R.mk_app head [(pre, R.Q_Explicit)]) (frame_type_t_pre u t pre))
+  = admit()
+
+let inst_frame_post #u #g #head #t #pre
+                    (head_typing: RT.typing g head (frame_type_t_pre u t pre))
+                    (#post:_)
+                    (post_typing: RT.typing g pre (mk_tot_arrow1 (t, R.Q_Explicit) vprop_tm))
+  : GTot (RT.typing g (R.mk_app head [(post, R.Q_Explicit)]) (frame_type_t_pre_post u t pre post))
+  = admit()
+
+let inst_frame_frame #u #g #head #t #pre #post
+                     (head_typing: RT.typing g head (frame_type_t_pre_post u t pre post))
+                     (#frame:_)
+                     (frame_typing: RT.typing g frame vprop_tm)
+  : GTot (RT.typing g (R.mk_app head [(frame, R.Q_Explicit)]) (frame_type_t_pre_post_frame u t pre post frame))
+  = admit()
+
+#pop-options    
+
 #push-options "--query_stats --fuel 2 --ifuel 2 --z3rlimit_factor 8"
 let rec soundness (f:fstar_top_env)
                   (g:env)
@@ -478,6 +555,12 @@ let rec soundness (f:fstar_top_env)
       assume (~ (x `Set.mem` freevars_comp c1));
       assume (ln_c c1 /\ ln_c c2 /\ ln_c c);
       elab_bind_typing f g _ _ _ x _ r1_typing _ r2_typing bc t2_typing post2_typing
+
+    | T_Frame _ e c frame (E frame_typing) e_typing ->
+      let e_typing = soundness _ _ _ _ e_typing in
+      elab_pure_equiv frame_typing;
+      let frame_typing = soundness _ _ _ _ frame_typing in
+      admit()
       
     | _ -> admit()
 

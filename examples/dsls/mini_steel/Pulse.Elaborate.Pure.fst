@@ -131,7 +131,7 @@ let rec elab_term (top:term)
         pack_ln (Tv_FVar (pack_fv head_lid)) in
       Some (R.mk_app head ([(t, Q_Implicit); (body, Q_Explicit)]))
 
-    | Tm_If b then_ else_ ->
+    | Tm_If b then_ else_ -> (* this should be stateful *)
       let? b = elab_term b in
       let? then_ = elab_term then_ in
       let? else_ = elab_term else_ in
