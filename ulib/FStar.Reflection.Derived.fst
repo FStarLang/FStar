@@ -234,3 +234,35 @@ let un_uinst (t:term) : term =
   match inspect_ln t with
   | Tv_UInst fv _ -> pack_ln (Tv_FVar fv)
   | _ -> t
+
+(* Returns [true] iff the term [t] is just the name [nm], though
+possibly universe-instantiated and applied to some implicit arguments.
+*)
+let rec is_name_imp (nm : name) (t : term) : bool =
+    begin match inspect_ln_unascribe t with
+    | Tv_FVar fv
+    | Tv_UInst fv _ ->
+        if inspect_fv fv = nm
+        then true
+        else false
+    | Tv_App l (_, Q_Implicit) ->
+        is_name_imp nm l
+    | _ -> false
+    end
+
+(* If t is of the shape [squash t'], return [Some t'],
+otherwise [None]. *)
+let unsquash_term (t : term) : option term =
+    match inspect_ln_unascribe t with
+    | Tv_App l (r, Q_Explicit) ->
+        if is_name_imp squash_qn l
+        then Some r
+        else None
+    | _ -> None
+
+(* As [unsquash_term], but returns the original term if
+[t] is not a squash. *)
+let maybe_unsquash_term (t : term) : term =
+    match unsquash_term t with
+    | Some t' -> t'
+    | None -> t

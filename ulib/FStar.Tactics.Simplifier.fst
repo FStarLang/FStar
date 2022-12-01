@@ -119,15 +119,35 @@ val fa_cong (#a : Type) (#p #q : a -> Type) :
     (x:a -> squash (p x <==> q x)) ->
     Lemma ((forall (x:a). p x) <==> (forall (x:a). q x))
 let fa_cong #a #p #q f =
-  let lem (x:a) : Lemma (p x <==> q x) = f x in
-  FStar.Classical.forall_intro lem
+  assert ((forall (x:a). p x) <==> (forall (x:a). q x)) by (
+    split();
+    let do1 () : Tac unit =
+      let _ = l_intros () in
+      let t = quote f in
+      let x = nth_binder (-1) in
+      let bb = pose (mk_e_app t [binder_to_term x]) in
+      dump "a";
+      ()
+    in
+    iseq [do1; do1]
+  )
 
 val ex_cong (#a : Type) (#p #q : a -> Type) :
     (x:a -> squash (p x <==> q x)) ->
     Lemma ((exists (x:a). p x) <==> (exists (x:a). q x))
 let ex_cong #a #p #q f =
-  let lem (x:a) : Lemma (p x <==> q x) = f x in
-  FStar.Classical.forall_intro lem
+  assert ((exists (x:a). p x) <==> (exists (x:a). q x)) by (assume_safe (fun () ->
+    split();
+    let do1 () : Tac unit =
+      let [ex] = l_intros () in
+      let (b, pf) = elim_exists ex in
+      let t = quote f in
+      let bb = pose (mk_e_app t [binder_to_term b]) in
+      dump "a";
+      ()
+    in
+    iseq [do1; do1]
+  ))
 
 val neg_cong (#p #q:Type) : squash (p <==> q) -> Lemma (~p <==> ~q)
 let neg_cong #p #q _ = ()
@@ -188,13 +208,10 @@ val simplify_point : unit -> Tac unit
 val recurse : unit -> Tac unit
 
 let rec simplify_point () =
-    (* dump "1 ALIVE"; *)
     recurse ();
     norm [];
     let g = cur_goal () in
     let f = term_as_formula g in
-    (* print ("1 g = " ^ term_to_string g); *)
-    (* print ("1 f = " ^ formula_to_string f); *)
     match f with
     | Iff l r ->
         begin match term_as_formula' l with
@@ -249,13 +266,10 @@ let rec simplify_point () =
     | _ -> fail "simplify_point: failed precondition: goal should be `g <==> ?u`"
 
 and recurse () : Tac unit =
-    (* dump "2 ALIVE"; *)
     step ();
     norm [];
     let g = cur_goal () in
     let f = term_as_formula g in
-    (* print ("2 g = " ^ term_to_string g); *)
-    (* print ("2 f = " ^ formula_to_string f); *)
     match f with
     | Iff l r ->
         begin match term_as_formula' l with

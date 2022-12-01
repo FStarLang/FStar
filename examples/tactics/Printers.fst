@@ -25,7 +25,7 @@ module TU = FStar.Tactics.Util
 let print_Prims_string : string -> Tot string = fun s -> "\"" ^ s ^ "\""
 let print_Prims_int : int -> Tot string = string_of_int
 
-let rec mk_concat (sep : term) (ts : list term) : Tac term =
+let mk_concat (sep : term) (ts : list term) : Tac term =
     mk_e_app (pack (Tv_FVar (pack_fv ["FStar"; "String"; "concat"]))) [sep; mk_list ts]
 
 let mk_flatten ts = mk_concat (`"") ts
@@ -55,7 +55,6 @@ let mk_printer_type (t : term) : Tac term =
 (* This tactics generates the entire let rec at once and
  * then uses exact. We could do something better. *)
 let mk_printer_fun (dom : term) : Tac term =
-    admit ();
     set_guard_policy SMT;
     let e = top_env () in
     (* Recursive binding *)
