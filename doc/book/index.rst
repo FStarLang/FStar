@@ -52,4 +52,5 @@ and I hope this book will soon include chapters authored by others.
    part1/part1
    part2/part2
    part3/part3
+   part5/part5_meta   
    under_the_hood/under_the_hood
