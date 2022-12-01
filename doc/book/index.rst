@@ -54,5 +54,5 @@ include chapters authored by others.
    part1/part1
    part2/part2
    part3/part3
-   part5/part5_meta   
+   part5/part5
    under_the_hood/under_the_hood
