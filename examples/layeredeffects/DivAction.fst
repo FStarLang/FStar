@@ -1,7 +1,6 @@
 module DivAction
 
-let repr (a : Type) : Type =
-  unit -> Dv a
+let repr (a : Type) : Type = unit -> Dv a
 
 let return (a : Type) (x : a) : repr a =
   fun () -> x
@@ -17,10 +16,11 @@ effect {
   with {repr; return; bind}
 }
 
-let lift_pure_nd (a:Type) (wp:pure_wp a) (f:(eqtype_as_type unit -> PURE a wp)) :
-  Pure (repr a) (requires (wp (fun _ -> True) /\ (forall p1 p2. (forall x. p1 x ==> p2 x) ==> wp p1 ==> wp p2)))
+let lift_pure_nd (a:Type) (wp:pure_wp a) (f:unit -> PURE a wp) :
+  Pure (repr a) (requires (wp (fun _ -> True)))
                 (ensures (fun _ -> True))
-  = fun _ ->
+  = FStar.Monotonic.Pure.elim_pure_wp_monotonicity wp;
+    fun _ ->
     let r = f () in
     r
 

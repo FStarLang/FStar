@@ -185,16 +185,13 @@ let synth_inverse_forall_tenum_solve' () : T.Tac unit =
     T.qed ()
   )
 
-let auto_squash_tm () : T.Tac T.term = T.pack (T.Tv_FVar (T.pack_fv ["Prims"; "auto_squash"]))
-
 let synth_inverse_forall_tenum_solve () : T.Tac unit =
   let (hd, tl) = app_head_tail (T.cur_goal ()) in
-  let auto_squash = auto_squash_tm () in
-  if hd `T.term_eq` (`squash) || hd `T.term_eq` auto_squash
+  if hd `T.is_fvar` (`%squash) || hd `T.is_fvar` (`%auto_squash)
   then match tl with
   | [(g, _)] ->
     let (hd', _) = app_head_tail g in
-    if hd' `T.term_eq` (`synth_inverse)
+    if hd' `T.is_fvar` (`%synth_inverse)
     then match T.trytac synth_inverse_forall_tenum_solve' with
     | Some _ -> ()
     | _ -> (if T.debugging () then
@@ -228,16 +225,15 @@ let synth_inverse_forall_bounded_u16_solve'
 
 let synth_inverse_forall_bounded_u16_solve () : T.Tac unit =
   let (hd, tl) = app_head_tail (T.cur_goal ()) in
-  let auto_squash = auto_squash_tm () in
-  if hd `T.term_eq` (`squash) || hd `T.term_eq` auto_squash
+  if hd `T.is_fvar` (`%squash) || hd `T.is_fvar` (`%auto_squash)
   then match tl with
   | [(tl, _)] ->
     let (hd', tl') = app_head_tail tl in
-    if hd' `T.term_eq` (`synth_inverse)
+    if hd' `T.is_fvar` (`%synth_inverse)
     then begin match tl' with
     | [ (t, _); (bt, _); (f2, _); (f1, _)] ->
       let (bt_hd, bt_tl) = app_head_tail bt in
-      if bt_hd `T.term_eq` (`bounded_u16)
+      if bt_hd `T.is_fvar` (`%bounded_u16)
       then begin match bt_tl with
       | [(b, _)] ->
         synth_inverse_forall_bounded_u16_solve' b t f1 f2

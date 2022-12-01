@@ -38,6 +38,7 @@ module FC = FStar.Const
 - v27: Added PConstant
 - v28: added many things for which the AST wasn't bumped; bumped it for
   TConstBuf which will expect will be used soon
+- v29: added a SizeT and PtrdiffT width to machine integers
 *)
 
 (* COPY-PASTED ****************************************************************)
@@ -154,6 +155,7 @@ and width =
   | Int8 | Int16 | Int32 | Int64
   | Bool
   | CInt
+  | SizeT | PtrdiffT
 
 and constant = width * string
 
@@ -203,6 +205,8 @@ let mk_width = function
   | "Int16" -> Some Int16
   | "Int32" -> Some Int32
   | "Int64" -> Some Int64
+  | "SizeT" -> Some SizeT
+  | "PtrdiffT" -> Some PtrdiffT
   | _ -> None
 
 let mk_bool_op = function
@@ -588,7 +592,6 @@ and translate_expr env e: expr =
 
   | MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, _) }, [ e2 ])
     when (string_of_mlpath p = "FStar.Buffer.createL" ||
-          string_of_mlpath p = "Steel.ST.HigherArray.malloca_of_list_ptr" ||
           string_of_mlpath p = "LowStar.Monotonic.Buffer.malloca_of_list" ||
           string_of_mlpath p = "LowStar.ImmutableBuffer.ialloca_of_list") ->
       EBufCreateL (Stack, List.map (translate_expr env) (list_elements e2))
@@ -862,6 +865,12 @@ and translate_expr env e: expr =
       else
         EApp (EQualified ([ "FStar"; "Int"; "Cast" ], c), [ translate_expr env arg ])
 
+  | MLE_App ({ expr = MLE_Name p }, [ arg ])
+    when string_of_mlpath p = "FStar.SizeT.uint16_to_sizet" ||
+         string_of_mlpath p = "FStar.SizeT.uint32_to_sizet" ||
+         string_of_mlpath p = "FStar.SizeT.uint64_to_sizet" ->
+      ECast (translate_expr env arg, TInt SizeT)
+
   | MLE_App ({expr=MLE_Name p}, [ _inv; test; body ])
     when (string_of_mlpath p = "Steel.ST.Loops.while_loop") ->
     EApp (EQualified (["Steel"; "Loops"], "while_loop"), [ EUnit; translate_expr env test; translate_expr env body ])
@@ -876,11 +885,13 @@ and translate_expr env e: expr =
     translate_expr env e
 
   | MLE_App ({expr=MLE_TApp ({expr=MLE_Name p}, _)}, [_fp; _fp'; _opened; _p; _i; {expr=MLE_Fun (_, body)}])
-    when string_of_mlpath p = "Steel.ST.Util.with_invariant" ->
+    when string_of_mlpath p = "Steel.ST.Util.with_invariant" ||
+         string_of_mlpath p = "Steel.Effect.Atomic.with_invariant" ->
     translate_expr env body
 
   | MLE_App ({expr=MLE_TApp ({expr=MLE_Name p}, _)}, [_fp; _fp'; _opened; _p; _i; e])
-    when string_of_mlpath p = "Steel.ST.Util.with_invariant" ->
+    when string_of_mlpath p = "Steel.ST.Util.with_invariant" ||
+         string_of_mlpath p = "Steel.Effect.Atomic.with_invariant" ->
     Errors.raise_error
       (Errors.Fatal_ExtractionUnsupported,
        BU.format2
@@ -968,6 +979,7 @@ and translate_width = function
   | Some (FC.Unsigned, FC.Int16) -> UInt16
   | Some (FC.Unsigned, FC.Int32) -> UInt32
   | Some (FC.Unsigned, FC.Int64) -> UInt64
+  | Some (FC.Unsigned, FC.Sizet) -> SizeT
 
 and translate_pat env p =
   match p with

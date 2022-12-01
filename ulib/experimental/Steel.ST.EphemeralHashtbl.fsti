@@ -26,7 +26,7 @@ open Steel.ST.Util
 
 module G = FStar.Ghost
 module Map = FStar.PartialMap
-module U32 = FStar.UInt32
+module US = FStar.SizeT
 
 /// This module provides a basic hashtable with no support for hash-collisions
 ///
@@ -48,17 +48,17 @@ module U32 = FStar.UInt32
 ///
 /// The module provides a logical view of the hashtable as a map from keys to contents,
 ///   thereby collapsing the indirection of key -> value -> content
-/// 
+///
 /// The logical map provides a hash-collision-free view of the table,
 ///   in the example above, the map would contain both k1 and k2, with the mapping for k1 unchanged by the `put` operation on k2 (unless k1 == k2)
 ///
 /// So in that sense, the concrete state maintains a partial view of the logical map
 
-type u32 = U32.t
+type us = US.t
 
 /// Type of the hash functions
 
-type hash_fn (k:eqtype) = k -> u32
+type hash_fn (k:eqtype) = k -> us
 
 /// Type of the vprops that related the key, value, and contents type
 
@@ -108,7 +108,7 @@ val create
   (#contents:Type)
   (vp:vp_t k v contents)
   (h:hash_fn k)
-  (n:u32{U32.v n > 0})
+  (n:us{US.v n > 0})
   : STT (tbl vp h)
         emp
         (fun a -> tperm a (Map.empty k contents) (Map.empty k v))
@@ -128,7 +128,7 @@ val create_v
   (#contents:Type)
   (vp:vp_t k v contents)
   (h:hash_fn k)
-  (n:u32{U32.v n > 0})
+  (n:us{US.v n > 0})
   (c:G.erased contents)
   : STT (tbl vp h)
         emp
@@ -149,7 +149,7 @@ unfold let map_contains_prop (#k:eqtype) (#v:Type0) (x:k) (m:Map.t k v) : prop =
 
 /// post vprop for `get`
 
-let get_post 
+let get_post
   (#k:eqtype)
   (#v:Type0)
   (#contents:Type)

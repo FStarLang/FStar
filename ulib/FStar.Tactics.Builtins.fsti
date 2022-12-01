@@ -220,7 +220,13 @@ val t_commute_applied_match : unit -> Tac unit
 (** In case there are goals that are already solved which have
     non-trivial typing guards, make those guards as explicit proof
     obligations in the tactic state, solving any trivial ones by simplification.
-    See tests/bug-reports/Bug2635.fst for some examples *)
+    See tests/bug-reports/Bug2635.fst for some examples
+
+    Update 11/14/2022: with the introduction of the core typechecker,
+    this primitive should no longer be necessary. Try using the compat pre core
+    flags, or `with_compat_pre_core` primitive if your code breaks without
+    this.*)
+[@@deprecated "This will soon be removed, please use compat pre core settings if needed"]
 val gather_or_solve_explicit_guards_for_resolved_goals : unit -> Tac unit
 
 (** [ctrl_rewrite] will traverse the current goal, and call [ctrl]
@@ -286,6 +292,11 @@ val set_options : string -> Tac unit
 [env]. The type of the uvar can optionally be provided in [o]. If not
 provided, a second uvar is created for the type. *)
 val uvar_env : env -> option typ -> Tac term
+
+(** Creates a new, unconstrained unification variable in environment
+[env]. The type of the uvar must be provided and the uvar can be solved
+to a Ghost term of that type *)
+val ghost_uvar_env : env -> typ -> Tac term
 
 (** Creates a new, unconstrained universe unification variable.
 The returned term is Type (U_Unif ?u). *)
@@ -386,3 +397,28 @@ environment of [e] an environment. It returns a new environment that
 has the identifier [id] along with its corresponding bounded
 variable. *)
 val push_bv_dsenv : env -> string -> Tac (env * bv)
+
+(** Print a term via the pretty printer. This is considered effectful
+since 1) setting options can change the behavior of this function, and
+hence is not really pure; and 2) this function could expose details of
+the term representation that do not show up in the view, invalidating
+the pack_inspect_inv/inspeck_pack_inv lemmas. *)
+val term_to_string : term -> Tac string
+
+(** Print a computation type via the pretty printer. See comment
+on [term_to_string]. *)
+val comp_to_string : comp -> Tac string
+
+(** A variant of Reflection.term_eq that may inspect more underlying
+details of terms. This function could distinguish two _otherwise equal
+terms_, but that distinction cannot leave the Tac effect.
+
+This is only exposed as a migration path. Please use
+[Reflection.term_eq] instead. *)
+[@@deprecated "use Reflection.term_eq instead"]
+val term_eq_old : term -> term -> Tac bool
+
+(** Runs the input tactic `f` with compat pre core setting `n`.
+It is an escape hatch for maintaining backward compatibility
+for code that breaks with the core typechecker. *)
+val with_compat_pre_core : #a:Type -> n:int -> f:(unit -> Tac a) -> Tac a
