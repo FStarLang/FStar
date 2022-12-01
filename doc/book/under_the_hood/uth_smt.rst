@@ -1113,7 +1113,7 @@ illustrate, consider the following variation on our example above:
    let _test_query_stats = assert (factorial 3 == 6)
 
 We've now introduced the assumption ``Factorial_unbounded`` into our
-context. Recall from the SMT encoding of quantified formula, from the
+context. Recall from the SMT encoding of quantified formulas, from the
 SMT solver's perspective, this looks like the following:
 
 .. code-block:: smt2
@@ -1132,17 +1132,18 @@ SMT solver's perspective, this looks like the following:
 This quantifier has no explicit patterns, but Z3 picks the term
 ``(HasType @x0 Prims.nat)`` as the pattern for the ``forall``
 quantifier. This means that it can instantiate the quantifier for
-active term of type ``nat``. But, a single instantiation of the
+active terms of type ``nat``. But, a single instantiation of the
 quantifier, yields the existentially quantified formula. Existentials
-are immediately skolemized by Z3, i.e., the existentially bound
-variable is replaced by a fresh function symbol that depends on all
-the variables in scope. So, a fresh term ``a`` corresponding ``@x1``
-is introduced, and immediately, the conjunct ``HasType a Prims.nat``
-becomes an active term and can be used to instantiate the outer
-universal quantifier again. This "matching loop" sends the solver into
-a long, fruitless search and the simple proof about ``factorial 3 ==
-6`` which previously succeeded in a few milliseconds, now
-fails. Here's are the query stats:
+are immediately `skolemized
+<https://en.wikipedia.org/wiki/Skolem_normal_form>`_ by Z3, i.e., the
+existentially bound variable is replaced by a fresh function symbol
+that depends on all the variables in scope. So, a fresh term ``a``
+corresponding ``@x1`` is introduced, and immediately, the conjunct
+``HasType a Prims.nat`` becomes an active term and can be used to
+instantiate the outer universal quantifier again. This "matching loop"
+sends the solver into a long, fruitless search and the simple proof
+about ``factorial 3 == 6`` which previously succeeded in a few
+milliseconds, now fails. Here's are the query stats:
 
 
 .. code-block:: none
@@ -1459,6 +1460,10 @@ instantiation problem. There are a few elements to the solution.
 
         (<input>(18,2-31,5))	Query-stats (AlexOpaque.find_above_for_g, 1)	succeeded in 46 milliseconds
 
+This `wiki page
+<https://github.com/FStarLang/FStar/wiki/Code-pattern-for-hiding-definitions-from-Z3-and-selectively-revealing-them>`_
+provides more information on selectively revealing opaque definitions.
+
 Other Ways to Explicitly Trigger Quantifiers
 ............................................
 
@@ -1541,5 +1546,162 @@ it.
 Here is `a link to the the full file <../code/AlexOpaque.fst>`_ with
 all the variations we have explored.
 
-Context Pollution and Unsat Cores
+Overhead due to a Large Context
+...............................
+
+Consider the following program:
+
+.. literalinclude:: ../code/ContextPollution.fst
+   :language: fstar
+   :start-after: //SNIPPET_START: context_test1$
+   :end-before: //SNIPPET_END: context_test1$
+
+The lemma ``test1`` is a simple property about ``FStar.Seq``, but the
+lemma occurs in a module that also depends on a large number of other
+modules---in this case, about 177 modules from the F* standard
+library. All those modules are encoded to the SMT solver producing
+about 11MB of SMT2 definitions with nearly 20,000 assertions for the
+solver to process. This makes for a large search space for the solver
+to explore to find a proof, however, most of those assertions are
+quantified formulas guarded by patterns and they remain inert unless
+some active term triggers them. Nevertheless, all these definitions a
+noticeable overhead to the solver. If you turn ``--query_stats`` on
+(after a single warm-up query), it takes Z3 about 300 milliseconds
+(and about 3000 quantifier instantiations) to find a proof for
+``test1``.
+
+You probably won't really notice the overhead of a proof that takes
+300 milliseconds---the F* standard library doesn't have many
+quantifiers in scope with things like bad quantifier alternation that
+lead to matching loops. However, as your development starts to depend
+on an ever larger stack of modules, there's the danger that at some
+point, your proofs are impacted by some bad choice of quantifiers in
+some module that you have forgotten about. In that case, you may find
+that seemingly simple proofs take many seconds to go through. In this
+section, we'll look at a few things you can do to diagnose such
+problems.
+
+Filtering the context
+~~~~~~~~~~~~~~~~~~~~~
+
+The first thing we'll look at is an F* option to remove facts from the
+context.
+
+.. literalinclude:: ../code/ContextPollution.fst
+   :language: fstar
+   :start-after: //SNIPPET_START: using_facts$
+   :end-before: //SNIPPET_END: using_facts$
+
+The ``--using_facts_from`` option retains only facts from modules that
+match the namespace-selector string provided. In this case, the
+selector shrinks the context from 11MB and 20,000 assertions to around
+1MB and 2,000 assertions and the query stats reports that the proof
+now goes through in just 15 milliseconds---a sizeable speedup even
+though the absolute numbers are still small.
+
+Of course, deciding which facts to filter from your context is not
+easy. For example, if you had only retained ``FStar.Seq`` and forgot
+to include ``Prims``, the proof would have failed. So, the
+``--using_facts_from`` option isn't often very useful.
+
+Unsat Core and Hints
+~~~~~~~~~~~~~~~~~~~~
+
+When Z3 finds a proof, it can report which facts from the context were
+relevant to the proof. This collection of facts is called the unsat
+core, because Z3 has proven that the facts from the context and the
+negated goal are unsatisfiable. F* has an option to record and replay
+the unsat core for each query and F* refers to the record unsat cores
+as "hints".
+
+Here's how to use hints:
+
+
+1. Record hints
+
+   .. code-block:: none
+
+      fstar.exe --record_hints ContextPollution.fst
+
+   This produces a file called ``ContextPollution.fst.hints``
+
+   The format of a hints file is an internal and subject to change,
+   but it is a textual format and you can roughly see what it
+   contains. Here's a fragment from it:
+
+   .. code-block:: none
+                   
+      [
+         "ContextPollution.test1",
+         1,
+         2,
+         1,
+         [
+           "@MaxIFuel_assumption", "@query", "equation_Prims.nat",
+           "int_inversion", "int_typing", "lemma_FStar.Seq.Base.lemma_eq_intro",
+           "lemma_FStar.Seq.Base.lemma_index_app1",
+           "lemma_FStar.Seq.Base.lemma_index_app2",
+           "lemma_FStar.Seq.Base.lemma_len_append",
+           "primitive_Prims.op_Addition", "primitive_Prims.op_Subtraction",
+           "projection_inverse_BoxInt_proj_0",
+           "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
+           "refinement_interpretation_Tm_refine_ac201cf927190d39c033967b63cb957b",
+           "refinement_interpretation_Tm_refine_d83f8da8ef6c1cb9f71d1465c1bb1c55",
+           "typing_FStar.Seq.Base.append", "typing_FStar.Seq.Base.length"
+         ],
+         0,
+         "3f144f59e410fbaa970cffb0e20df75d"
+       ]
+
+   This is the hint entry for the query with whose id is
+   ``(ContextPollution.test1, 1)``
+
+   The next two fields are the fuel and ifuel used for the query,
+   ``2`` and ``1`` in this case.
+   
+   Then, we have the names of all the facts in the unsat core for this
+   query: you can see that it was only about 20 facts that were
+   needed, out of the 20,000 that were originally present.
+
+   The second to last field is not used---it is always 0.
+
+   And the last field is a hash of the query that was issued.
+   
+2. Replaying hints
+
+   The following command requests F* to search for
+   ``ContextPollution.fst.hints`` in the include path and when
+   attempting prove a query with a given id, it looks for a hint for
+   that query in the hints file, uses the fuel and ifuel settings
+   present in the hints, and prunes the context to include only the
+   facts present in the unsat core.
+   
+   .. code-block:: none
+
+      fstar.exe --use_hints ContextPollution.fst
+
+   Using the hints usually improves verification times substantially,
+   but in this case, we see that the our proof now goes through in
+   about 130 milliseconds, not nearly as fast as the 15 milliseconds
+   we saw earlier. That's because when using a hint, each query to Z3
+   spawns a new Z3 process initialized with just the facts in the
+   unsat core, and that incurs some basic start-up time costs.
+
+Many F* projects use hints as part of their build, including F*'s
+standard library. The .hints files are checked in to the repository
+and are periodically refreshed as proofs evolve. This helps improve
+the stability of proofs: it may take a while for a proof to go
+through, but once it does, you can record and replay the unsat core
+and subsequent attempts of the same proof (or even small variations of
+it) can go through quickly.
+
+Other projects do not use hints: some people (perhaps rightfully) see
+hints as a way of masking underlying proof performance problems and
+prefer to make proofs work quickly and robustly without hints. If you
+can get your project to this state, without relying on hints, then so
+much the better for you!
+
+
+Differential profiling with hints
 .................................
+   
