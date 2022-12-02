@@ -275,3 +275,8 @@ let comp_res (c:comp) : term =
 let comp_u (c:comp { C_ST? c }) = let C_ST s = c in s.u
 let comp_pre (c:comp { C_ST? c }) = let C_ST s = c in s.pre
 let comp_post (c:comp { C_ST? c }) = let C_ST s = c in s.post
+
+let rec close_open_inverse (t:term) (x:var { ~(x `Set.mem` freevars t) } )
+  : Lemma (ensures close_term (open_term t x) x== t)
+          (decreases t)
+  = admit()

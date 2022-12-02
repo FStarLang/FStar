@@ -153,5 +153,99 @@ let rec elab_src_typing (#f:RT.fstar_top_env)
              (mk_abs ty (elab_pure c2.post))
              e
 
-      
+#push-options "--ifuel 2"
+let rec elab_pure_equiv (#f:RT.fstar_top_env)
+                        (#g:env)
+                        (#t:pure_term)
+                        (#c:pure_comp { C_Tot? c })
+                        (d:src_typing f g t c)
+  : Lemma (ensures elab_src_typing d == elab_pure t)
+          (decreases d)
+  = match d with
+    | T_Tot _ _ _ d -> ()
+    | T_If _ _ _ _ _ _ _ d1 d2 -> 
+      elab_pure_equiv d1; 
+      elab_pure_equiv d2      
+#pop-options
 
+
+let rec elab_open_commute' (e:pure_term)
+                           (v:pure_term)
+                           (n:index)
+  : Lemma (ensures
+              RT.open_or_close_term' (elab_pure e) (RT.OpenWith (elab_pure v)) n ==
+              elab_pure (open_term' e v n))
+          (decreases e)
+  = admit()
+and elab_comp_open_commute' (c:pure_comp) (v:pure_term) (n:index)
+  : Lemma (ensures
+              RT.open_or_close_term' (elab_pure_comp c) (RT.OpenWith (elab_pure v)) n ==
+              elab_pure_comp (open_comp' c v n))
+          (decreases c)
+  = admit()
+
+#push-options "--fuel 8 --ifuel 4 --z3rlimit_factor 10"
+let rec elab_close_commute' (e:pure_term)
+                            (v:var)
+                            (n:index)
+  : Lemma (ensures (
+              closing_pure_term e v n;
+              RT.open_or_close_term' (elab_pure e) (RT.CloseVar v) n ==
+              elab_pure (close_term' e v n)))
+          (decreases e)
+  = closing_pure_term e v n;
+    match e with
+    | Tm_BVar _ 
+    | Tm_Var _ 
+    | Tm_FVar _
+    | Tm_Constant _
+    | Tm_Emp 
+    | Tm_Type _ 
+    | Tm_VProp -> ()
+    | Tm_PureApp e1 e2 ->
+      elab_close_commute' e1 v n;
+      elab_close_commute' e2 v n
+    | Tm_Let t e1 e2 ->
+      elab_close_commute' t v n;    
+      elab_close_commute' e1 v n;
+      elab_close_commute' e2 v (n + 1)
+    | Tm_Pure p ->
+      elab_close_commute' p v n
+    | Tm_Star e1 e2 ->
+      elab_close_commute' e1 v n;
+      elab_close_commute' e2 v n
+    | Tm_ExistsSL t body
+    | Tm_ForallSL t body ->
+      elab_close_commute' t v n;
+      elab_close_commute' body v (n + 1)    
+    | Tm_Arrow t body ->
+      elab_close_commute' t v n;
+      elab_comp_close_commute' body v (n + 1)
+    | Tm_If e1 e2 e3 ->
+      elab_close_commute' e1 v n;
+      elab_close_commute' e2 v n;
+      elab_close_commute' e3 v n
+
+and elab_comp_close_commute' (c:pure_comp) (v:var) (n:index)
+  : Lemma (ensures
+              RT.open_or_close_term' (elab_pure_comp c) (RT.CloseVar v) n ==
+              elab_pure_comp (close_comp' c v n))
+          (decreases c)
+  = match c with
+    | C_Tot t -> elab_close_commute' t v n
+    | C_ST s -> 
+      elab_close_commute' s.res v n;
+      elab_close_commute' s.pre v n;
+      elab_close_commute' s.post v (n + 1)           
+#pop-options
+
+
+let elab_comp_close_commute (c:pure_comp) (x:var)
+  : Lemma (elab_pure_comp (close_pure_comp c x) == RT.close_term (elab_pure_comp c) x)
+  = RT.close_term_spec (elab_pure_comp c) x;
+    elab_comp_close_commute' c x 0
+
+let elab_comp_open_commute (c:pure_comp) (x:pure_term)
+  : Lemma (elab_pure_comp (open_comp_with c x) == RT.open_with (elab_pure_comp c) (elab_pure x))
+  = RT.open_with_spec (elab_pure_comp c) (elab_pure x);
+    elab_comp_open_commute' c x 0

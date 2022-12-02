@@ -168,6 +168,8 @@ let is_pure_comp (c:comp) = Some? (elab_comp c)
 let pure_comp = c:comp { is_pure_comp c }
 let elab_pure_comp (c:pure_comp) = Some?.v (elab_comp c)
 let pure_comp_st = c:pure_comp { C_ST? c }
+  
+let ln_comp = c:pure_comp_st{ ln_c c }
 
 let rec opening_pure_term_with_pure_term (x:pure_term) (v:pure_term) (i:index)
   : Lemma (ensures is_pure_term (open_term' x v i))

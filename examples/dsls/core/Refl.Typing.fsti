@@ -98,7 +98,6 @@ let binder_qual (b:binder) =
 noeq
 type open_or_close =
   | OpenWith of term
-  // | OpenWithVar of var
   | CloseVar of var
   | Rename   : var -> var -> open_or_close
 
@@ -173,10 +172,6 @@ let rec open_or_close_term' (t:term) (v:open_or_close) (i:nat)
              pack_ln (Tv_Var (pack_bv { inspect_bv j with bv_index = k }))
          )
          else t
-       // | OpenWithVar v ->
-       //   if i = bv_index j
-       //   then pack_ln (Tv_Var (pack_bv { inspect_bv j with bv_index = v }))
-       //   else t
       )
 
     | Tv_App hd argv ->
@@ -843,7 +838,7 @@ and binder_offset_patterns_invariant (p:list (pattern & bool)) (s:open_or_close)
       let n = binder_offset_pattern hd in
       binder_offset_patterns_invariant tl s (i + n)
   
-let rec open_close_inverse (i:nat) (t:term { ln' t (i - 1) }) (x:var)
+let rec open_close_inverse' (i:nat) (t:term { ln' t (i - 1) }) (x:var)
   : Lemma 
        (ensures open_or_close_term' 
                        (open_or_close_term' t (CloseVar x) i)
@@ -860,61 +855,61 @@ let rec open_close_inverse (i:nat) (t:term { ln' t (i - 1) }) (x:var)
     | Tv_Var _ 
     | Tv_BVar _ -> ()
     | Tv_App t1 a ->
-      open_close_inverse i t1 x;
-      open_close_inverse i (fst a) x
+      open_close_inverse' i t1 x;
+      open_close_inverse' i (fst a) x
      
     | Tv_Abs b body -> 
-      open_close_inverse_binder i b x;
-      open_close_inverse (i + 1) body x
+      open_close_inverse'_binder i b x;
+      open_close_inverse' (i + 1) body x
 
     | Tv_Arrow b c ->
-      open_close_inverse_binder i b x;
-      open_close_inverse_comp (i + 1) c x
+      open_close_inverse'_binder i b x;
+      open_close_inverse'_comp (i + 1) c x
 
     | Tv_Refine b f ->
-      open_close_inverse_bv i b x;
-      open_close_inverse (i + 1) f x
+      open_close_inverse'_bv i b x;
+      open_close_inverse' (i + 1) f x
       
     | Tv_Let recf attrs bv def body ->
-      open_close_inverse_terms i attrs x;
-      open_close_inverse_bv i bv x;
+      open_close_inverse'_terms i attrs x;
+      open_close_inverse'_bv i bv x;
       (if recf 
-      then open_close_inverse (i + 1) def x
-      else open_close_inverse i def x);
-      open_close_inverse (i + 1) body x
+      then open_close_inverse' (i + 1) def x
+      else open_close_inverse' i def x);
+      open_close_inverse' (i + 1) body x
 
     | Tv_Match scr ret brs ->
-      open_close_inverse i scr x;
+      open_close_inverse' i scr x;
       (match ret with
        | None -> ()
-       | Some m -> open_close_inverse_match_returns i m x);
-      open_close_inverse_branches i brs x
+       | Some m -> open_close_inverse'_match_returns i m x);
+      open_close_inverse'_branches i brs x
       
     | Tv_AscribedT e t tac b ->
-      open_close_inverse i e x;
-      open_close_inverse i t x;      
+      open_close_inverse' i e x;
+      open_close_inverse' i t x;      
       (match tac with
        | None -> ()
-       | Some tac -> open_close_inverse i tac x)
+       | Some tac -> open_close_inverse' i tac x)
 
     | Tv_AscribedC e c tac b ->
-      open_close_inverse i e x;
-      open_close_inverse_comp i c x;      
+      open_close_inverse' i e x;
+      open_close_inverse'_comp i c x;      
       (match tac with
        | None -> ()
-       | Some tac -> open_close_inverse i tac x)
+       | Some tac -> open_close_inverse' i tac x)
     
 
-and open_close_inverse_bv (i:nat) (b:bv { ln'_bv b (i - 1) }) (x:var) 
+and open_close_inverse'_bv (i:nat) (b:bv { ln'_bv b (i - 1) }) (x:var) 
   : Lemma (ensures open_or_close_bv' (open_or_close_bv' b (CloseVar x) i)
                                      (open_with_var x)
                                      i
                    == b)
           (decreases b)
   = let bv = inspect_bv b in
-    open_close_inverse i bv.bv_sort x
+    open_close_inverse' i bv.bv_sort x
     
-and open_close_inverse_binder (i:nat) (b:binder { ln'_binder b (i - 1) }) (x:var)
+and open_close_inverse'_binder (i:nat) (b:binder { ln'_binder b (i - 1) }) (x:var)
   : Lemma (ensures open_or_close_binder'
                          (open_or_close_binder' b (CloseVar x) i)
                          (open_with_var x)
@@ -924,14 +919,14 @@ and open_close_inverse_binder (i:nat) (b:binder { ln'_binder b (i - 1) }) (x:var
   = let bndr  = inspect_binder b in
     assert (bndr << b);
     let bv, (q, attrs) = bndr in
-    open_close_inverse_bv i bv x;
-    open_close_inverse_terms i attrs x;
+    open_close_inverse'_bv i bv x;
+    open_close_inverse'_terms i attrs x;
     assert (open_or_close_bv' (open_or_close_bv' bv (CloseVar x) i) (open_with_var x) i == bv);
     assert (open_or_close_terms' (open_or_close_terms' attrs (CloseVar x) i) (open_with_var x) i == attrs);    
     pack_inspect_binder b;    
     assert (pack_binder bv q attrs == b)
 
-and open_close_inverse_terms (i:nat) (ts:list term { ln'_terms ts (i - 1) }) (x:var)
+and open_close_inverse'_terms (i:nat) (ts:list term { ln'_terms ts (i - 1) }) (x:var)
   : Lemma (ensures open_or_close_terms' (open_or_close_terms' ts (CloseVar x) i)
                                         (open_with_var x)
                                         i
@@ -940,10 +935,10 @@ and open_close_inverse_terms (i:nat) (ts:list term { ln'_terms ts (i - 1) }) (x:
   = match ts with
     | [] -> ()
     | t::ts -> 
-      open_close_inverse i t x;
-      open_close_inverse_terms i ts x
+      open_close_inverse' i t x;
+      open_close_inverse'_terms i ts x
 
-and open_close_inverse_comp (i:nat) (c:comp { ln'_comp c (i - 1) }) (x:var)
+and open_close_inverse'_comp (i:nat) (c:comp { ln'_comp c (i - 1) }) (x:var)
   : Lemma 
     (ensures open_or_close_comp' (open_or_close_comp' c (CloseVar x) i)
                               (open_with_var x)
@@ -953,21 +948,21 @@ and open_close_inverse_comp (i:nat) (c:comp { ln'_comp c (i - 1) }) (x:var)
   = match inspect_comp c with
     | C_Total t u decr
     | C_GTotal t u decr ->    
-      open_close_inverse i t x;
-      open_close_inverse_terms i decr x
+      open_close_inverse' i t x;
+      open_close_inverse'_terms i decr x
 
 
     | C_Lemma pre post pats ->
-      open_close_inverse i pre x;
-      open_close_inverse i post x;
-      open_close_inverse i pats x
+      open_close_inverse' i pre x;
+      open_close_inverse' i post x;
+      open_close_inverse' i pats x
 
     | C_Eff us eff_name res args ->
-      open_close_inverse i res x;
-      open_close_inverse_args i args x
+      open_close_inverse' i res x;
+      open_close_inverse'_args i args x
       
 
-and open_close_inverse_args (i:nat) 
+and open_close_inverse'_args (i:nat) 
                             (ts:list argv { ln'_args ts (i - 1) })
                             (x:var)
   : Lemma
@@ -979,10 +974,10 @@ and open_close_inverse_args (i:nat)
   = match ts with
     | [] -> ()
     | (t,q)::ts -> 
-      open_close_inverse i t x;
-      open_close_inverse_args i ts x
+      open_close_inverse' i t x;
+      open_close_inverse'_args i ts x
 
-and open_close_inverse_patterns (i:nat)
+and open_close_inverse'_patterns (i:nat)
                                 (ps:list (pattern & bool) { ln'_patterns ps (i - 1) })
                                 (x:var)
   : Lemma 
@@ -994,12 +989,12 @@ and open_close_inverse_patterns (i:nat)
   = match ps with
     | [] -> ()
     | (p, b)::ps' ->
-      open_close_inverse_pattern i p x;
+      open_close_inverse'_pattern i p x;
       let n = binder_offset_pattern p in
       binder_offset_pattern_invariant p (CloseVar x) i;
-      open_close_inverse_patterns (i + n) ps' x
+      open_close_inverse'_patterns (i + n) ps' x
 
-and open_close_inverse_pattern (i:nat) (p:pattern{ln'_pattern p (i - 1)}) (x:var)
+and open_close_inverse'_pattern (i:nat) (p:pattern{ln'_pattern p (i - 1)}) (x:var)
   : Lemma 
     (ensures open_or_close_pattern' (open_or_close_pattern' p (CloseVar x) i)
                                     (open_with_var x)
@@ -1010,19 +1005,19 @@ and open_close_inverse_pattern (i:nat) (p:pattern{ln'_pattern p (i - 1)}) (x:var
     | Pat_Constant _ -> ()
 
     | Pat_Cons fv us pats -> 
-      open_close_inverse_patterns i pats x
+      open_close_inverse'_patterns i pats x
       
     | Pat_Var bv
     | Pat_Wild bv ->
-      open_close_inverse_bv i bv x
+      open_close_inverse'_bv i bv x
 
     | Pat_Dot_Term topt ->
       match topt with
       | None -> ()
-      | Some t -> open_close_inverse i t x
+      | Some t -> open_close_inverse' i t x
 
     
-and open_close_inverse_branch (i:nat) (br:branch{ln'_branch br (i - 1)}) (x:var)
+and open_close_inverse'_branch (i:nat) (br:branch{ln'_branch br (i - 1)}) (x:var)
   : Lemma
     (ensures open_or_close_branch'
                  (open_or_close_branch' br (CloseVar x) i)
@@ -1033,10 +1028,10 @@ and open_close_inverse_branch (i:nat) (br:branch{ln'_branch br (i - 1)}) (x:var)
   = let p, t = br in
     let j = binder_offset_pattern p in
     binder_offset_pattern_invariant p (CloseVar x) i;
-    open_close_inverse_pattern i p x;
-    open_close_inverse (i + j) t x
+    open_close_inverse'_pattern i p x;
+    open_close_inverse' (i + j) t x
   
-and open_close_inverse_branches (i:nat)
+and open_close_inverse'_branches (i:nat)
                                 (brs:list branch { ln'_branches brs (i - 1) })
                                 (x:var)
   : Lemma
@@ -1049,10 +1044,10 @@ and open_close_inverse_branches (i:nat)
   = match brs with
     | [] -> ()
     | br::brs -> 
-      open_close_inverse_branch i br x;
-      open_close_inverse_branches i brs x
+      open_close_inverse'_branch i br x;
+      open_close_inverse'_branches i brs x
   
-and open_close_inverse_match_returns (i:nat) 
+and open_close_inverse'_match_returns (i:nat) 
                                      (m:match_returns_ascription { ln'_match_returns m (i - 1) })
                                      (x:var)
   : Lemma 
@@ -1063,22 +1058,28 @@ and open_close_inverse_match_returns (i:nat)
              == m)
     (decreases m)
   = let b, (ret, as_, eq) = m in
-    open_close_inverse_binder i b x;
+    open_close_inverse'_binder i b x;
     let ret =
       match ret with
       | Inl t ->
-        open_close_inverse (i + 1) t x
+        open_close_inverse' (i + 1) t x
       | Inr c ->
-        open_close_inverse_comp (i + 1) c x
+        open_close_inverse'_comp (i + 1) c x
     in
     let as_ =
       match as_ with
       | None -> ()
       | Some t ->
-        open_close_inverse (i + 1) t x
+        open_close_inverse' (i + 1) t x
     in
     ()
 
+
+let open_close_inverse (e:R.term { ln e }) (x:var)
+  : Lemma (open_term (close_term e x) x == e)
+   = close_term_spec e x;
+     open_term_spec (close_term e x) x;
+     open_close_inverse' 0 e x
 
 //
 // Type of the top-level tactic that would splice-in the definitions
