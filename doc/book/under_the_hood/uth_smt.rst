@@ -426,7 +426,7 @@ and ``m``. Additionally, the option ``--fuel n`` sets both the initial
 fuel and max fuel to ``n``.
 
 This single value of ``MaxFuel`` controls the number of unfoldings of
-`all` recursive functions in scope. Of coure, the patterns are
+`all` recursive functions in scope. Of course, the patterns are
 arranged so that if you have a query involving, say, ``List.map``,
 quantified assumptions about an unrelated recursive function like
 ``factorial`` should never trigger. Neverthless, large values of
@@ -544,7 +544,7 @@ term, peeling off one application of the ``S`` constructor.  If we
 were to use ``(HasTypeFuel @u0 @x1 SMTEncoding.unat)`` as the pattern,
 this would lead to an infinite quantifier instantiation loop, since
 every each instantiation would lead a new, larger active term that
-could instantiate the quantifier again.  Note, using the introdution
+could instantiate the quantifier again.  Note, using the introduction
 form does not vary the fuel parameter, since the the number of
 applications of the constructor ``S`` decreases at each instantiation
 anyway.
@@ -935,7 +935,7 @@ almost like a new built-in type, with proof automation to reason about
 its operations. However, making this work well requires some careful
 design of the patterns.
 
-Consider ``mem_union``: the pattern chosen here allows the solver to
+Consider ``mem_union``: the pattern chosen above allows the solver to
 decompose an active term ``mem x (union s1 s2)`` into ``mem x s1`` and
 ``mem x s2``, where both terms are smaller than the term we started
 with. Suppose instead that we had written:
@@ -1013,7 +1013,7 @@ Profiling Z3 and Solving Proof Performance Issues
 -------------------------------------------------
 
 At some point, you will write F* programs where proofs start to take
-much longer than xyou'd like, simple proofs fail to go through, or
+much longer than you'd like: simple proofs fail to go through, or
 proofs that were once working start to fail as you make small changes
 to your program. Hopefully, you notice this early in your project and
 can try to figure out how to make it better before slogging through
@@ -1407,7 +1407,7 @@ instantiation.
 .. literalinclude:: ../code/Alex.fst
    :language: fstar
 
-The hypothesis that ``unbounded f`` has exactly the same problem as
+The hypothesis is that ``unbounded f`` has exactly the same problem as
 the our unbounded hypothesis on factorial---the ``forall/exists``
 quantifier contains a matching loop. 
 
@@ -1473,8 +1473,8 @@ instantiation problem. There are a few elements to the solution.
 2. Selectively revealing the definition within a scope
 
      Of course, we still want to reason about the unbounded
-     predicate. So, we provide a lemma, ``instantiate_unbounded`` that
-     given allows the caller to explicity instantiate the assumption
+     predicate. So, we provide a lemma, ``instantiate_unbounded``, that
+     allows the caller to explicity instantiate the assumption
      that ``f`` is unbounded on some lower bound ``m``.
 
      To prove the lemma, we use ``FStar.Pervasives.reveal_opaque``:
@@ -1503,7 +1503,7 @@ instantiation problem. There are a few elements to the solution.
      instantiate the existential quantifier in the ``returns``
      clause. We'll look at that in more detail shortly.
 
-     But, by making the problematic definition opaque an instantiating
+     But, by making the problematic definition opaque and instantiating
      it explicitly, our performance problem is gone---here's what
      query-stats shows now.
 
@@ -1588,7 +1588,7 @@ likely change in the future.
 
 Of course, rather than relying on implicitly chosen triggers for the
 existentials, one can be explicit about it and provide the instance
-directly, as shown below, where the ``introdude exists ...`` in each
+directly, as shown below, where the ``introduce exists ...`` in each
 branch directly provides the witness rather than relying on Z3 to find
 it.
 
