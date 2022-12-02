@@ -10,12 +10,18 @@ open Pulse.Typing
 
 let return_lid = mk_steel_wrapper_lid "return_stt"
 let return_noeq_lid = mk_steel_wrapper_lid "return_stt_noeq"
-let bind_lid = mk_steel_wrapper_lid "bind_stt"
-let frame_lid = mk_steel_wrapper_lid "frame_stt"
-let subsumption_lid = mk_steel_wrapper_lid "sub_stt"
 
+let bind_lid = mk_steel_wrapper_lid "bind_stt"
 let bind_fv = R.pack_fv bind_lid
 let bind_univ_inst u1 u2 = R.pack_ln (R.Tv_UInst bind_fv [u1;u2])
+
+let frame_lid = mk_steel_wrapper_lid "frame_stt"
+let frame_fv = R.pack_fv frame_lid
+let frame_univ_inst u = R.pack_ln (R.Tv_UInst (R.pack_fv frame_lid) [u])
+
+let subsumption_lid = mk_steel_wrapper_lid "sub_stt"
+let subsumption_fv = R.pack_fv subsumption_lid
+let subsumption_univ_inst u = R.pack_ln (R.Tv_UInst subsumption_fv [u])
 
 let mk_return (u:universe) (ty:R.term) (t:R.term) 
   : R.term
@@ -27,45 +33,13 @@ let mk_return_noeq (u:universe) (ty:R.term) (t:R.term)
   = let head = R.pack_ln (R.Tv_UInst (R.pack_fv return_noeq_lid) [elab_universe u]) in
     R.mk_app head [(ty, R.Q_Implicit); (t, R.Q_Explicit)]
 
-let mk_frame (u:universe)
-             (ty:R.term)
-             (pre: R.term)
-             (post: R.term)
-             (frame: R.term)
-             (t:R.term) 
-  : R.term
-  = let head = R.pack_ln (R.Tv_UInst (R.pack_fv frame_lid)
-                         [elab_universe u]) in
-    R.mk_app head [(ty, R.Q_Implicit);
-                   (pre, R.Q_Implicit);
-                   (mk_abs ty post, R.Q_Implicit);
-                   (frame, R.Q_Explicit);
-                   (t, R.Q_Explicit)]
-
-let mk_sub (u:universe)
-           (ty:R.term)
-           (pre1 pre2: R.term)
-           (post1 post2: R.term)
-           (t:R.term) 
-  : R.term
-  = let head = R.pack_ln (R.Tv_UInst (R.pack_fv subsumption_lid)
-                         [elab_universe u]) in
-    R.mk_app head [(ty, R.Q_Implicit);
-                   (pre1, R.Q_Implicit);
-                   (pre2, R.Q_Explicit);                   
-                   (post1, R.Q_Implicit);
-                   (post2, R.Q_Explicit);                   
-                   (t, R.Q_Explicit)]
-
-
 let mk_bind (u1 u2:universe)
             (ty1 ty2:R.term)
             (pre1 post1: R.term)
             (post2: R.term)
             (t1 t2:R.term) 
   : R.term
-  = let head = R.pack_ln (R.Tv_UInst (R.pack_fv bind_lid)
-                         [elab_universe u1; elab_universe u2]) in
+  = let head = bind_univ_inst (elab_universe u1) (elab_universe u2) in
     R.mk_app
       (R.mk_app
         (R.mk_app
@@ -80,6 +54,39 @@ let mk_bind (u1 u2:universe)
           [(post2, R.Q_Implicit)])
         [(t1, R.Q_Explicit)])
       [(t2, R.Q_Explicit)]
+
+let mk_frame (u:universe)
+             (ty:R.term)
+             (pre: R.term)
+             (post: R.term)
+             (frame: R.term)
+             (t:R.term) 
+  : R.term
+  = let head = frame_univ_inst (elab_universe u) in
+    R.mk_app
+      (R.mk_app
+        (R.mk_app
+          (R.mk_app
+            (R.mk_app head [(ty, R.Q_Implicit)])
+            [(pre, R.Q_Implicit)])
+          [(post, R.Q_Implicit)])
+        [(frame, R.Q_Implicit)])
+      [(t, R.Q_Explicit)]
+
+let mk_sub (u:universe)
+           (ty:R.term)
+           (pre1 pre2: R.term)
+           (post1 post2: R.term)
+           (t:R.term) 
+  : R.term
+  = let head = subsumption_univ_inst (elab_universe u) in
+    R.mk_app head [(ty, R.Q_Implicit);
+                   (pre1, R.Q_Implicit);
+                   (pre2, R.Q_Explicit);                   
+                   (post1, R.Q_Implicit);
+                   (post2, R.Q_Explicit);                   
+                   (t, R.Q_Explicit)]
+
 
 let elab_bind (c1 c2:pure_comp_st) (e1 e2:R.term) =
   let C_ST c1 = c1 in
@@ -130,7 +137,7 @@ let rec elab_src_typing (#f:RT.fstar_top_env)
       let ty = elab_pure c.res in
       let pre = elab_pure c.pre in
       let post = elab_pure c.post in
-      mk_frame c.u ty pre post (elab_pure frame) e
+      mk_frame c.u ty pre (mk_abs ty post) (elab_pure frame) e
       
     | T_If _ b e1 e2 _c hyp _ e1_typing e2_typing ->
       let b = elab_pure b in
