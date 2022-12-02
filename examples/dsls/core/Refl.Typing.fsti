@@ -98,10 +98,23 @@ let binder_qual (b:binder) =
 noeq
 type open_or_close =
   | OpenWith of term
-  | OpenWithVar of var
+  // | OpenWithVar of var
   | CloseVar of var
   | Rename   : var -> var -> open_or_close
 
+let tun = pack_ln Tv_Unknown
+
+let make_bv (n:int) (t:term) = { bv_ppname = "_"; bv_index = n; bv_sort = t}
+let var_as_bv (v:int) = pack_bv (make_bv v tun)
+let var_as_term (v:var) = pack_ln (Tv_Var (var_as_bv v))
+            
+let open_with_var (x:var) = OpenWith (pack_ln (Tv_Var (var_as_bv x)))
+  
+let maybe_index_of_term (x:term) =
+  match inspect_ln x with
+  | Tv_Var bv -> Some (bv_index bv)
+  | _ -> None
+  
 val open_or_close_ctx_uvar_and_subst (c:ctx_uvar_and_subst) (v:open_or_close) (i:nat) 
   : ctx_uvar_and_subst
 
@@ -136,8 +149,7 @@ let rec open_or_close_term' (t:term) (v:open_or_close) (i:nat)
     | Tv_Unknown -> t
     | Tv_Var x ->
       (match v with
-       | OpenWith _ 
-       | OpenWithVar _ -> t
+       | OpenWith _ -> t
        | CloseVar y ->
          if bv_index x = y 
          then pack_ln (Tv_BVar (pack_bv { inspect_bv x with bv_index = i }))
@@ -153,12 +165,19 @@ let rec open_or_close_term' (t:term) (v:open_or_close) (i:nat)
        | CloseVar _ -> t
        | OpenWith v ->
          if i=bv_index j 
-         then v
+         then (
+           match maybe_index_of_term v with
+           | None -> v
+           | Some k ->
+             //if we're substituting a name j for a name k, retain the pp_name of j
+             pack_ln (Tv_Var (pack_bv { inspect_bv j with bv_index = k }))
+         )
          else t
-       | OpenWithVar v ->
-         if i = bv_index j
-         then pack_ln (Tv_Var (pack_bv { inspect_bv j with bv_index = v }))
-         else t)
+       // | OpenWithVar v ->
+       //   if i = bv_index j
+       //   then pack_ln (Tv_Var (pack_bv { inspect_bv j with bv_index = v }))
+       //   else t
+      )
 
     | Tv_App hd argv ->
       pack_ln (Tv_App (open_or_close_term' hd v i)
@@ -320,9 +339,6 @@ and open_or_close_match_returns' (m:match_returns_ascription) (v:open_or_close) 
     in
     b, (ret, as_, eq)
 
-let make_bv (n:int) (t:term) = { bv_ppname = "_"; bv_index = n; bv_sort = t}
-let var_as_bv (v:int) = pack_bv (make_bv v (pack_ln Tv_Unknown))
-let var_as_term (v:var) = pack_ln (Tv_Var (var_as_bv v))
 
 val open_with (t:term) (v:term) : term
   
@@ -332,7 +348,7 @@ val open_with_spec (t v:term)
 val open_term (t:term) (v:var) : term
 
 val open_term_spec (t:term) (v:var)
-  : Lemma (open_term t v == open_or_close_term' t (OpenWithVar v) 0)
+  : Lemma (open_term t v == open_or_close_term' t (open_with_var v) 0)
   
 val close_term (t:term) (v:var) : term
 
@@ -827,12 +843,11 @@ and binder_offset_patterns_invariant (p:list (pattern & bool)) (s:open_or_close)
       let n = binder_offset_pattern hd in
       binder_offset_patterns_invariant tl s (i + n)
   
-
 let rec open_close_inverse (i:nat) (t:term { ln' t (i - 1) }) (x:var)
   : Lemma 
        (ensures open_or_close_term' 
                        (open_or_close_term' t (CloseVar x) i)
-                       (OpenWithVar x)
+                       (open_with_var x)
                        i
                 == t)
        (decreases t)
@@ -841,8 +856,8 @@ let rec open_close_inverse (i:nat) (t:term { ln' t (i - 1) }) (x:var)
     | Tv_FVar _
     | Tv_Type _
     | Tv_Const _
-    | Tv_Unknown -> ()
-    | Tv_Var _ -> ()
+    | Tv_Unknown
+    | Tv_Var _ 
     | Tv_BVar _ -> ()
     | Tv_App t1 a ->
       open_close_inverse i t1 x;
@@ -892,7 +907,7 @@ let rec open_close_inverse (i:nat) (t:term { ln' t (i - 1) }) (x:var)
 
 and open_close_inverse_bv (i:nat) (b:bv { ln'_bv b (i - 1) }) (x:var) 
   : Lemma (ensures open_or_close_bv' (open_or_close_bv' b (CloseVar x) i)
-                                     (OpenWithVar x)
+                                     (open_with_var x)
                                      i
                    == b)
           (decreases b)
@@ -902,7 +917,7 @@ and open_close_inverse_bv (i:nat) (b:bv { ln'_bv b (i - 1) }) (x:var)
 and open_close_inverse_binder (i:nat) (b:binder { ln'_binder b (i - 1) }) (x:var)
   : Lemma (ensures open_or_close_binder'
                          (open_or_close_binder' b (CloseVar x) i)
-                         (OpenWithVar x)
+                         (open_with_var x)
                          i
                    == b)
           (decreases b)                   
@@ -911,14 +926,14 @@ and open_close_inverse_binder (i:nat) (b:binder { ln'_binder b (i - 1) }) (x:var
     let bv, (q, attrs) = bndr in
     open_close_inverse_bv i bv x;
     open_close_inverse_terms i attrs x;
-    assert (open_or_close_bv' (open_or_close_bv' bv (CloseVar x) i) (OpenWithVar x) i == bv);
-    assert (open_or_close_terms' (open_or_close_terms' attrs (CloseVar x) i) (OpenWithVar x) i == attrs);    
+    assert (open_or_close_bv' (open_or_close_bv' bv (CloseVar x) i) (open_with_var x) i == bv);
+    assert (open_or_close_terms' (open_or_close_terms' attrs (CloseVar x) i) (open_with_var x) i == attrs);    
     pack_inspect_binder b;    
     assert (pack_binder bv q attrs == b)
 
 and open_close_inverse_terms (i:nat) (ts:list term { ln'_terms ts (i - 1) }) (x:var)
   : Lemma (ensures open_or_close_terms' (open_or_close_terms' ts (CloseVar x) i)
-                                        (OpenWithVar x)
+                                        (open_with_var x)
                                         i
                    == ts)
           (decreases ts)                   
@@ -931,7 +946,7 @@ and open_close_inverse_terms (i:nat) (ts:list term { ln'_terms ts (i - 1) }) (x:
 and open_close_inverse_comp (i:nat) (c:comp { ln'_comp c (i - 1) }) (x:var)
   : Lemma 
     (ensures open_or_close_comp' (open_or_close_comp' c (CloseVar x) i)
-                              (OpenWithVar x)
+                              (open_with_var x)
                               i
              == c)
     (decreases c)
@@ -957,7 +972,7 @@ and open_close_inverse_args (i:nat)
                             (x:var)
   : Lemma
     (ensures open_or_close_args' (open_or_close_args' ts (CloseVar x) i)
-                                 (OpenWithVar x)
+                                 (open_with_var x)
                                  i
              == ts)
     (decreases ts)
@@ -972,7 +987,7 @@ and open_close_inverse_patterns (i:nat)
                                 (x:var)
   : Lemma 
     (ensures open_or_close_patterns' (open_or_close_patterns' ps (CloseVar x) i)
-                                     (OpenWithVar x)
+                                     (open_with_var x)
                                      i
              == ps)
     (decreases ps)
@@ -987,7 +1002,7 @@ and open_close_inverse_patterns (i:nat)
 and open_close_inverse_pattern (i:nat) (p:pattern{ln'_pattern p (i - 1)}) (x:var)
   : Lemma 
     (ensures open_or_close_pattern' (open_or_close_pattern' p (CloseVar x) i)
-                                    (OpenWithVar x)
+                                    (open_with_var x)
                                       i
              == p)
     (decreases p)
@@ -1011,7 +1026,7 @@ and open_close_inverse_branch (i:nat) (br:branch{ln'_branch br (i - 1)}) (x:var)
   : Lemma
     (ensures open_or_close_branch'
                  (open_or_close_branch' br (CloseVar x) i)
-                 (OpenWithVar x)
+                 (open_with_var x)
                  i
              == br)
     (decreases br)  
@@ -1027,7 +1042,7 @@ and open_close_inverse_branches (i:nat)
   : Lemma
     (ensures open_or_close_branches'
                  (open_or_close_branches' brs (CloseVar x) i)
-                 (OpenWithVar x)
+                 (open_with_var x)
                  i
              == brs)
     (decreases brs)
@@ -1043,7 +1058,7 @@ and open_close_inverse_match_returns (i:nat)
   : Lemma 
     (ensures open_or_close_match_returns' 
                  (open_or_close_match_returns' m (CloseVar x) i)
-                 (OpenWithVar x)
+                 (open_with_var x)
                  i
              == m)
     (decreases m)

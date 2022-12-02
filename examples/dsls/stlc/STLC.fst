@@ -403,7 +403,7 @@ let stlc_types_are_closed3 (ty:stlc_ty) (x:R.var)
 
 let rec elab_open_commute' (e:s_exp) (x:var) (n:nat)
   : Lemma (ensures
-              RT.open_or_close_term' (elab_exp e) (RT.OpenWithVar x) n ==
+              RT.open_or_close_term' (elab_exp e) (RT.open_with_var x) n ==
               elab_exp (open_exp' e x n))
           (decreases e)
   = match e with
@@ -422,11 +422,11 @@ let rec elab_open_commute' (e:s_exp) (x:var) (n:nat)
         R.(pack_ln (Tv_Abs (RT.as_binder 0 (elab_ty t)) (elab_exp (open_exp' e x (n + 1)))));
       (==) { elab_open_commute' e x (n + 1) } 
         R.(pack_ln (Tv_Abs (RT.as_binder 0 (elab_ty t))
-                           (RT.open_or_close_term' (elab_exp e) RT.(OpenWithVar x) (n + 1))));
-      (==) { stlc_types_are_closed_core t (RT.OpenWithVar x) n }
+                           (RT.open_or_close_term' (elab_exp e) RT.(open_with_var x) (n + 1))));
+      (==) { stlc_types_are_closed_core t (RT.open_with_var x) n }
         RT.open_or_close_term'
           R.(pack_ln (Tv_Abs (RT.as_binder 0 (elab_ty t)) (elab_exp e)))
-          RT.(OpenWithVar x)
+          RT.(open_with_var x)
           n;
       }
 

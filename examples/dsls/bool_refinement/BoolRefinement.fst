@@ -644,7 +644,7 @@ let src_refinements_are_closed (e:src_exp {ln e && closed e})
 #push-options "--query_stats --fuel 8 --ifuel 2 --z3rlimit_factor 2"
 let rec elab_open_commute' (n:nat) (e:src_exp { ln' e n }) (x:var) 
   : Lemma (ensures
-              RT.open_or_close_term' (elab_exp e) (RT.OpenWithVar x) n ==
+              RT.open_or_close_term' (elab_exp e) (RT.open_with_var x) n ==
               elab_exp (open_exp' e x n))
           (decreases e)
   = match e with
@@ -658,7 +658,7 @@ let rec elab_open_commute' (n:nat) (e:src_exp { ln' e n }) (x:var)
       elab_open_commute' n b x;    
       elab_open_commute' n e1 x;
       elab_open_commute' n e2 x;
-      let opening = RT.OpenWithVar x in
+      let opening = RT.open_with_var x in
       assert (RT.open_or_close_term' (elab_exp e) opening n ==
               R.(pack_ln (Tv_Match (RT.open_or_close_term' (elab_exp b) opening n)
                                   None
@@ -673,11 +673,11 @@ let rec elab_open_commute' (n:nat) (e:src_exp { ln' e n }) (x:var)
         R.(pack_ln (Tv_Abs (RT.as_binder 0 (elab_ty t)) (elab_exp (open_exp' e x (n + 1)))));
       (==) { elab_open_commute' (n + 1) e x } 
         R.(pack_ln (Tv_Abs (RT.as_binder 0 (elab_ty t))
-                           (RT.open_or_close_term' (elab_exp e) RT.(OpenWithVar x) (n + 1))));
-      (==) { src_types_are_closed_core t (RT.OpenWithVar x) n }
+                           (RT.open_or_close_term' (elab_exp e) RT.(open_with_var x) (n + 1))));
+      (==) { src_types_are_closed_core t (RT.open_with_var x) n }
         RT.open_or_close_term'
           R.(pack_ln (Tv_Abs (RT.as_binder 0 (elab_ty t)) (elab_exp e)))
-          RT.(OpenWithVar x)           
+          RT.(open_with_var x)           
           n;
       }
 #pop-options
@@ -704,7 +704,7 @@ let src_types_are_closed2 (ty:s_ty) (x:R.var)
 let src_types_are_closed3 (ty:s_ty) (x:R.var)
   : Lemma (RT.open_term (elab_ty ty) x == elab_ty ty)
           [SMTPat (RT.open_term (elab_ty ty) x)]
-  = src_types_are_closed_core ty (RT.OpenWithVar x) 0;
+  = src_types_are_closed_core ty (RT.open_with_var x) 0;
     RT.open_term_spec (elab_ty ty) x
 
 let b2t_typing (g:RT.fstar_env) (t:R.term) (dt:RT.typing g t RT.bool_ty)
@@ -1447,9 +1447,20 @@ let apply_refinement_closed (e:src_exp { ln e && closed e })
   : Lemma (RT.open_term (r_b2t (apply (elab_exp e) (bv_as_arg bv0))) x
            ==
            r_b2t (apply (elab_exp e) (RT.var_as_term x, R.Q_Explicit)))
-  = admit ();
-    RT.open_term_spec (r_b2t (apply (elab_exp e) (bv_as_arg bv0))) x;
-    src_refinements_are_closed_core 0 e (RT.OpenWithVar x)
+  = 
+    calc (==) {
+      RT.open_term (r_b2t (apply (elab_exp e) (bv_as_arg bv0))) x;
+     (==) { RT.open_term_spec (r_b2t (apply (elab_exp e) (bv_as_arg bv0))) x }
+      RT.open_or_close_term' (r_b2t (apply (elab_exp e) (bv_as_arg bv0))) (RT.open_with_var x) 0;
+     (==) {  }
+      r_b2t (apply (RT.open_or_close_term' (elab_exp e) (RT.open_with_var x) 0)
+                   (RT.open_or_close_term' R.(pack_ln (Tv_BVar bv0)) (RT.open_with_var x) 0, R.Q_Explicit));
+     (==) { src_refinements_are_closed_core 0 e (RT.open_with_var x) }
+       r_b2t (apply (elab_exp e)
+                    (RT.open_or_close_term' R.(pack_ln (Tv_BVar bv0)) (RT.open_with_var x) 0, R.Q_Explicit));
+     (==) { assume (RT.tun == RT.bool_ty) }  //obviously a false assumption; but these bv_sorts need to go!
+       r_b2t (apply (elab_exp e) (RT.var_as_term x, R.Q_Explicit));
+     }
 #pop-options
 
 let rec soundness (#f:RT.fstar_top_env)

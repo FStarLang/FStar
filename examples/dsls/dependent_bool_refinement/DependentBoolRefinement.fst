@@ -231,7 +231,6 @@ let rec elab_exp (e:src_exp)
       R.pack_ln (Tv_BVar bv)
       
     | EVar n ->
-      // tun because type does not matter at a use site
       let bv = R.pack_bv (RT.make_bv n tun) in
       R.pack_ln (Tv_Var bv)
 
@@ -561,7 +560,7 @@ let elab_open_commute (e:src_exp) (x:var)
           [SMTPat (RT.open_term (elab_exp e) x)]
   = elab_open_commute' 0 e (EVar x);
     RT.open_term_spec (elab_exp e) x
-
+    
 let b2t_typing (g:fstar_env) (t:R.term) (dt:RT.typing g t RT.bool_ty)
   : RT.typing g (r_b2t t) (RT.tm_type RT.u_zero)
   = let b2t_typing : RT.typing g _ b2t_ty = RT.T_FVar g b2t_fv in
@@ -584,7 +583,7 @@ let rec extend_env_l_lookup_fvar (g:R.env) (sg:src_env) (fv:R.fv)
 let subtyping_soundness #f (#sg:src_env) (#t0 #t1:src_ty) (ds:sub_typing f sg t0 t1)
   : GTot (RT.sub_typing (extend_env_l f sg) (elab_ty t0) (elab_ty t1))
   = match ds with
-    | S_Refl _ _ -> RT.ST_Refl _ _
+    | S_Refl _ _ -> RT.ST_Equiv _ _ _ (RT.EQ_Refl _ _)
     | S_ELab _ _ _ d -> d
 
 #push-options "--query_stats --fuel 8 --ifuel 2 --z3rlimit_factor 2"
@@ -692,6 +691,8 @@ let rec soundness (#f:fstar_top_env)
                    (elab_exp e)
                    (elab_ty t')
                    _
+                   _
+                   _
                    dt
                    de
       in
@@ -745,7 +746,7 @@ and src_ty_ok_soundness (#f:fstar_top_env)
    | OK_TArrow _ t1 t2 x ok_t1 ok_t2 ->
      let t1_ok = src_ty_ok_soundness sg _ ok_t1 in
      let t2_ok = src_ty_ok_soundness ((x, Inl t1)::sg) _ ok_t2 in
-     let arr_max = RT.T_Arrow _ x (elab_ty t1) (elab_ty t2) _ _ t1_ok t2_ok in
+     let arr_max = RT.T_Arrow _ x (elab_ty t1) (elab_ty t2) _ _ "x" R.Q_Explicit t1_ok t2_ok in
      RT.simplify_umax arr_max
 
    | OK_TRefine _ e x de ->

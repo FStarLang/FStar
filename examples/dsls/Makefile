@@ -1,5 +1,4 @@
-ALL := stlc bool_refinement mini_steel
-  #dependent_bool_refinement
+ALL := stlc bool_refinement dependent_bool_refinement mini_steel
 
 all:
 	+$(MAKE) -C core all
