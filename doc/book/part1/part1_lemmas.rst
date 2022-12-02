@@ -506,7 +506,7 @@ the ``map`` function on lists.
 
 It takes a function ``f`` and a list ``l`` and it applies ``f`` to
 each element in ``l`` producing a new list. More precisely ``map f
-[v₁; ...; vₙ]`` produces the list ``[f v₁; ...; f vₙ]``. For example:
+[v1; ...; vn]`` produces the list ``[f v1; ...; f vn]``. For example:
 
 .. code-block:: fstar
 

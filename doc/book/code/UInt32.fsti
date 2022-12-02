@@ -22,7 +22,7 @@ val vu_inv (x : u32_nat) : Lemma (v (u x) == x)
 //SNIPPET_START: add_mod$
 (** Addition modulo [2^n]
 
-    Machine integers can always be added, but the postcondition is now
+    Unsigned machine integers can always be added, but the postcondition is now
     in terms of addition modulo [2^n] on mathematical integers *)
 val add_mod (a:t) (b:t) 
   : y:t { v y = (v a + v b) % pow2 n } 
@@ -31,7 +31,7 @@ val add_mod (a:t) (b:t)
 //SNIPPET_START: sub_mod$
 (** Subtraction modulo [2^n]
 
-    Machine integers can always be added, but the postcondition is now
+    Unsigned machine integers can always be subtracted, but the postcondition is now
     in terms of subtraction modulo [2^n] on mathematical integers *)
 val sub_mod (a:t) (b:t) 
   : y:t { v y = (v a - v b) % pow2 n } 
@@ -56,7 +56,7 @@ val add (a:t) (b:t { fits (+) a b })
 //SNIPPET_START: sub$
 (** Bounds-respecting subtraction
 
-    The precondition enforces that the sum does not overflow,
+    The precondition enforces that the difference does not underflow,
     expressing the bound as an subtraction on mathematical integers *)
 val sub (a:t) (b:t { fits (fun x y -> x - y) a b }) 
   : y:t{ v y == v a - v b }

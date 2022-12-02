@@ -319,7 +319,7 @@ let bind_ro #a #b (w : st_wp a) (f : a -> st_wp b)
   : Lemma (requires is_ro w /\ (forall x. is_ro (f x)))
           (ensures is_ro (bind_wp w f))
   = ()
-  
+
 let quot_mono #a #b (w1 w2 : st_wp a)
   : Lemma (requires w1 `stronger` w2)
           (ensures quotient_ro w1 `stronger` quotient_ro w2)

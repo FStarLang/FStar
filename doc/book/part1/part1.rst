@@ -1,7 +1,9 @@
 .. _Part1:
 
+############################################
 Programming and Proving with Total Functions
-============================================
+############################################
+
 
 The core design philosophy of F* is that the type of a term (a program
 fragment) is a specification of its runtime behavior. We write ``e :
@@ -37,7 +39,6 @@ In the next few chapters we'll learn about how to program total
 functions and prove them correct.
 
 .. toctree::
-   :hidden:
    :maxdepth: 1
    :caption: Contents:
 
@@ -49,4 +50,5 @@ functions and prove them correct.
    part1_termination
    part1_lemmas
    part1_quicksort
+   part1_execution   
    part1_wrap

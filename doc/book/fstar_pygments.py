@@ -47,6 +47,7 @@ class CustomLexer(RegexLexer):
         'layered_effect'            ,
         'polymonadic_bind'          ,
         'polymonadic_subcomp'       ,
+        'SMTPat'     ,        
         'noextract',
         'of'         ,
         'open'       ,
