@@ -179,7 +179,7 @@ substituted patterns ``S(p1...pm)`` are equal to the active terms
 
 Existentially quantified formulas are dual to universally quantified
 formulas. Whereas a universal formula in the *context* (i.e., in
-negative position, or as a hypothesis) is inert until it's pattern is
+negative position, or as a hypothesis) is inert until its pattern is
 instantiated, an existential *goal* (or, in positive position) is
 inert until its pattern is instantiated. Existential quantifiers can
 be decorated with patterns that trigger instantiation when matched
@@ -640,7 +640,7 @@ allow inversion within a scope for only a few selected types, e.g.,
 Logical Connectives
 ....................
 
-The :ref:`logical connectives <Part2_connectives>` that F* offers, all
+The :ref:`logical connectives <Part2_connectives>` that F* offers are all
 derived forms. Given the encodings of datatypes and functions (and
 arrow types, which we haven't shown), the encodings of all these
 connectives just fall out naturally. However, all these connectives
@@ -691,9 +691,10 @@ Note, this quantifier does not have any explicitly annotated
 patterns. In this case, Z3's syntactic trigger selection heuristics
 pick a pattern: it is usually the smallest collection of sub-terms of
 the body of the quantifier that collectively mention all the bound
-variables. In this case, the likely choice for the pattern is
-``(SMTEncoding.factorial @x1)``, though ``(HasType @x1 Prims.nat)`` is
-also a candidate.
+variables. In this case, the choices for the pattern are
+``(SMTEncoding.factorial @x1)`` and ``(HasType @x1 Prims.nat)``: Z3
+picks both of these as patterns, allowing the quantifier to be
+triggered if an active term matches either one of them.
 
 For small developments, leaving the choice of pattern to Z3 is often
 fine, but as your project scales up, you probably want to be more
