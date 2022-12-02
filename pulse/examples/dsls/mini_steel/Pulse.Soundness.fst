@@ -94,21 +94,21 @@ let frame_type_t_pre (u:R.universe) (t pre:R.term) =
   let var = 1 in
   let post = mk_name var in
   let post_type = mk_tot_arrow1 (t, R.Q_Explicit) vprop_tm in
-  mk_tot_arrow1 (post_type, R.Q_Explicit)
+  mk_tot_arrow1 (post_type, R.Q_Implicit)
                 (RT.close_term (frame_type_t_pre_post u t pre post) var)
 
 let frame_type_t (u:R.universe) (t:R.term) =
   let var = 2 in
   let pre = mk_name var in
   let pre_type = vprop_tm in
-  mk_tot_arrow1 (pre_type, R.Q_Explicit)
+  mk_tot_arrow1 (pre_type, R.Q_Implicit)
                 (RT.close_term (frame_type_t_pre u t pre) var)
 
 let frame_type (u:R.universe) =
   let var = 3 in
   let t = mk_name var in
   let t_type = RT.tm_type u in
-  mk_tot_arrow1 (t_type, R.Q_Explicit)
+  mk_tot_arrow1 (t_type, R.Q_Implicit)
                 (RT.close_term (frame_type_t u t) var)
 
 
@@ -122,7 +122,8 @@ let stt_env =
   f:RT.fstar_top_env {
     RT.lookup_fvar f RT.bool_fv == Some (RT.tm_type RT.u_zero) /\
     RT.lookup_fvar f vprop_fv == Some (RT.tm_type (elab_universe (U_succ (U_succ U_zero)))) /\
-    (forall (u1 u2:R.universe). RT.lookup_fvar_uinst f bind_fv [u1; u2] == Some (bind_type u1 u2))
+    (forall (u1 u2:R.universe). RT.lookup_fvar_uinst f bind_fv [u1; u2] == Some (bind_type u1 u2)) /\
+    (forall (u:R.universe). RT.lookup_fvar_uinst f frame_fv [u] == Some (frame_type u))    
   }
 
 let check_top_level_environment (f:RT.fstar_top_env)
@@ -338,21 +339,21 @@ let inst_frame_t #u #g #head
                  (head_typing: RT.typing g head (frame_type u))
                  (#t:_)
                  (t_typing: RT.typing g t (RT.tm_type u))
-  : GTot (RT.typing g (R.mk_app head [(t, R.Q_Explicit)]) (frame_type_t u t))
+  : GTot (RT.typing g (R.mk_app head [(t, R.Q_Implicit)]) (frame_type_t u t))
   = admit()
 
 let inst_frame_pre #u #g #head #t
                  (head_typing: RT.typing g head (frame_type_t u t))
                  (#pre:_)
                  (pre_typing: RT.typing g pre vprop_tm)
-  : GTot (RT.typing g (R.mk_app head [(pre, R.Q_Explicit)]) (frame_type_t_pre u t pre))
+  : GTot (RT.typing g (R.mk_app head [(pre, R.Q_Implicit)]) (frame_type_t_pre u t pre))
   = admit()
 
 let inst_frame_post #u #g #head #t #pre
                     (head_typing: RT.typing g head (frame_type_t_pre u t pre))
                     (#post:_)
-                    (post_typing: RT.typing g pre (mk_tot_arrow1 (t, R.Q_Explicit) vprop_tm))
-  : GTot (RT.typing g (R.mk_app head [(post, R.Q_Explicit)]) (frame_type_t_pre_post u t pre post))
+                    (post_typing: RT.typing g post (mk_tot_arrow1 (t, R.Q_Explicit) vprop_tm))
+  : GTot (RT.typing g (R.mk_app head [(post, R.Q_Implicit)]) (frame_type_t_pre_post u t pre post))
   = admit()
 
 let inst_frame_frame #u #g #head #t #pre #post
@@ -370,19 +371,58 @@ let inst_frame_comp #u #g #head #t #pre #post #frame
   = admit()
 
 let elab_frame (c:pure_comp { C_ST? c }) (frame:pure_term) (e:R.term) =
-  let C_ST c = c in
-  Elaborate.mk_frame c.u (elab_pure c.res) (elab_pure c.pre) (elab_pure c.post) (elab_pure frame) e
-  
-let elab_frame_typing (f:RT.fstar_top_env)
+  let C_ST s = c in
+  Elaborate.mk_frame s.u (elab_pure s.res) (elab_pure s.pre) (elab_comp_post c) (elab_pure frame) e
+
+(* stt t pre (fun x -> (fun x -> post) x * frame)   ~ 
+   stt t pre (fun x -> post * frame) *)
+let equiv_frame_post (g:R.env) 
+                     (u:R.universe)
+                     (t:R.term)
+                     (pre:R.term) 
+                     (post:pure_term) // ln 1
+                     (frame:R.term) //ln 0
+  : GTot (RT.equiv g (mk_stt_app u [t; pre; mk_abs t (mk_star (R.mk_app (mk_abs t (elab_pure post))
+                                                                        [bound_var 0, R.Q_Explicit]) frame)])
+                     (mk_stt_app u [t; pre; mk_abs t (mk_star (elab_pure post) frame)]))
+  = admit()
+
+let elab_frame_typing (f:stt_env)
                       (g:env)
                       (e:R.term)
                       (c:ln_comp)
                       (frame:pure_term)
                       (frame_typing: RT.typing (extend_env_l f g) (elab_pure frame) (elab_pure Tm_VProp))
                       (e_typing: RT.typing (extend_env_l f g) e (elab_pure_comp c))
-  : RT.typing (extend_env_l f g) (elab_frame c frame e) (elab_pure_comp (add_frame c frame))
-  = admit()
-
+  : GTot (RT.typing (extend_env_l f g) (elab_frame c frame e) (elab_pure_comp (add_frame c frame)))
+  = let rg = extend_env_l f g in
+    let u = elab_universe (comp_u c) in
+    let head = frame_univ_inst u in
+    assert (RT.lookup_fvar_uinst rg frame_fv [u] == Some (frame_type u));
+    let head_typing : RT.typing _ _ (frame_type u) = RT.T_UInst rg frame_fv [u] in
+    let (| _, c_typing |) = RT.type_correctness _ _ _ e_typing in
+    let t_typing, pre_typing, post_typing = inversion_of_stt_typing _ _ _ _ c_typing in
+    let t = elab_pure (comp_res c) in
+    let t_typing : RT.typing rg t (RT.tm_type u) = t_typing in
+    let d : RT.typing (extend_env_l f g)
+                      (elab_frame c frame e)
+                      (frame_res u t (elab_pure (comp_pre c))
+                                     (elab_comp_post c)
+                                     (elab_pure frame)) =
+        inst_frame_comp
+          (inst_frame_frame
+            (inst_frame_post
+                (inst_frame_pre 
+                  (inst_frame_t head_typing t_typing)
+                 pre_typing)
+             post_typing)
+           frame_typing)
+          e_typing
+    in
+    RT.T_Sub _ _ _ _ d RT.(ST_Equiv _ _ _ (equiv_frame_post rg u t 
+                                                         (elab_pure (Tm_Star (comp_pre c) frame))
+                                                         (comp_post c)
+                                                         (elab_pure frame)))
 #pop-options    
 
 #push-options "--query_stats --fuel 2 --ifuel 2 --z3rlimit_factor 8 --print_implicits --print_full_names"
