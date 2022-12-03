@@ -114,7 +114,60 @@ let frame_type (u:R.universe) =
 
 (** Type of sub_stt **)
 
-// TODO
+let stt_vprop_equiv_fv = R.pack_fv (mk_steel_wrapper_lid "vprop_equiv")
+let stt_vprop_equiv_tm = R.pack_ln (R.Tv_FVar stt_vprop_equiv_fv)
+let stt_vprop_equiv (t1 t2:R.term) = R.mk_app stt_vprop_equiv_tm [(t1, R.Q_Explicit); (t2, R.Q_Explicit)]
+
+let stt_vprop_post_equiv_fv = R.pack_fv (mk_steel_wrapper_lid "vprop_post_equiv")
+let stt_vprop_post_equiv_univ_inst u = R.pack_ln (R.Tv_UInst stt_vprop_post_equiv_fv [u])
+let stt_vprop_post_equiv (u:R.universe) (t t1 t2:R.term) = 
+  R.mk_app (stt_vprop_post_equiv_univ_inst u) 
+           [(t, R.Q_Implicit); (t1, R.Q_Explicit); (t2, R.Q_Explicit)]
+
+let sub_stt_res u t pre post = mk_stt_app u [t; pre; post]
+
+let sub_stt_equiv_post u t pre1 post1 pre2 post2 = 
+  mk_tot_arrow1 (stt_vprop_post_equiv u t post1 post2, R.Q_Explicit)
+                (sub_stt_res u t pre2 post2)
+
+let sub_stt_equiv_pre u t pre1 post1 pre2 post2 = 
+  mk_tot_arrow1 (stt_vprop_equiv pre1 pre2, R.Q_Explicit)
+                (sub_stt_equiv_post u t pre1 pre2 post1 post2)
+
+let sub_stt_post2 u t pre1 post1 pre2 = 
+  let var = 0 in
+  let post2 = mk_name var in
+  let post2_type = mk_tot_arrow1 (t, R.Q_Explicit) vprop_tm in
+  mk_tot_arrow1 (post2_type, R.Q_Explicit)
+                (RT.close_term (sub_stt_equiv_pre u t pre1 pre2 post1 post2) var)
+
+let sub_stt_pre2 u t pre1 post1 = 
+  let var = 1 in
+  let pre2 = mk_name var in
+  let pre2_type = vprop_tm in
+  mk_tot_arrow1 (pre2_type, R.Q_Explicit)
+                (RT.close_term (sub_stt_post2 u t pre1 post1 pre2) var)
+
+let sub_stt_post1 u t pre1 = 
+  let var = 2 in
+  let post1 = mk_name var in
+  let post1_type = mk_tot_arrow1 (t, R.Q_Explicit) vprop_tm in
+  mk_tot_arrow1 (post1_type, R.Q_Explicit)
+                (RT.close_term (sub_stt_pre2 u t pre1 post1) var)
+
+let sub_stt_pre1 u t = 
+  let var = 3 in
+  let pre1 = mk_name var in
+  let pre1_type = vprop_tm in
+  mk_tot_arrow1 (pre1_type, R.Q_Explicit)
+                (RT.close_term (sub_stt_post1 u t pre1) var)
+
+let sub_stt_type u = 
+  let var = 4 in
+  let t = mk_name var in
+  let ty_typ = RT.tm_type u in
+  mk_tot_arrow1 (ty_typ, R.Q_Explicit)
+                (RT.close_term (sub_stt_pre1 u t) var)
 
 (** Properties of environments suitable for elaboration **)
 
@@ -123,13 +176,13 @@ let stt_env =
     RT.lookup_fvar f RT.bool_fv == Some (RT.tm_type RT.u_zero) /\
     RT.lookup_fvar f vprop_fv == Some (RT.tm_type (elab_universe (U_succ (U_succ U_zero)))) /\
     (forall (u1 u2:R.universe). RT.lookup_fvar_uinst f bind_fv [u1; u2] == Some (bind_type u1 u2)) /\
-    (forall (u:R.universe). RT.lookup_fvar_uinst f frame_fv [u] == Some (frame_type u))    
+    (forall (u:R.universe). RT.lookup_fvar_uinst f frame_fv [u] == Some (frame_type u)) /\
+    (forall (u:R.universe). RT.lookup_fvar_uinst f subsumption_fv [u] == Some (sub_stt_type u))        
   }
 
 let check_top_level_environment (f:RT.fstar_top_env)
   : option stt_env
   = admit(); Some f //we should implement this as a runtime check
-
 
 let rec extend_env_l_lookup_fvar (g:R.env) (sg:env) (fv:R.fv) (us:R.universes)
   : Lemma 
@@ -425,6 +478,70 @@ let elab_frame_typing (f:stt_env)
                                                          (elab_pure frame)))
 #pop-options    
 
+(*** Soundness of vprop equivalence **)
+
+let rec tot_typing_soundness (f:stt_env)
+                             (g:env)
+                             (e:pure_term)
+                             (t:pure_term)
+                             (d:tot_typing f g e t)
+  : GTot (RT.typing (extend_env_l f g) (elab_pure e) (elab_pure t))
+         (decreases d)
+  = let E d = d in
+    match d with
+    | T_Tot _ _ _ d -> d
+    | T_If _ _ _ _ _ _ _ _ _ -> admit() //make T_If stateful
+
+let rec vprop_equiv_soundness (f:stt_env) (g:env) (v0 v1:pure_term) 
+                              (d:tot_typing f g v0 Tm_VProp)
+                              (eq:vprop_equiv f g v0 v1)
+  : GTot (pf:R.term &
+          RT.typing (extend_env_l f g) pf (stt_vprop_equiv (elab_pure v0) (elab_pure v1)))
+         (decreases eq)
+  = admit()
+
+(*** Soundness of st equivalence **)
+let st_equiv_soundness (f:stt_env) (g:env) (c0 c1:ln_comp)
+  : GTot (RT.typing (extend_env_l f g) (`()) (stt_vprop_equiv (elab_pure (comp_pre c0)) (elab_pure (comp_pre c1))) &
+          RT.typing (extend_env_l f g) (`()) (stt_vprop_post_equiv (elab_universe (comp_u c0))
+                                                                   (elab_pure (comp_res c0))
+                                                                   (elab_comp_post c0)
+                                                                   (elab_comp_post c1)))
+  = admit()
+
+let mk_t_abs (f:stt_env) (g:env)
+             (#u:universe)
+             (#ty:pure_term)
+             (#t_typing:src_typing f g ty (C_Tot (Tm_Type u)))
+             (r_t_typing:RT.typing (extend_env_l f g)
+                                   (elab_src_typing t_typing)
+                                   (elab_pure_comp (C_Tot (Tm_Type u))))
+             (#body:term)
+             (#x:var { None? (lookup g x) })
+             (#c:pure_comp)
+             (#body_typing:src_typing f ((x, Inl ty)::g) (open_term body x) c)
+             (r_body_typing:RT.typing (extend_env_l f ((x, Inl ty)::g))
+                                     (elab_src_typing body_typing)
+                                     (elab_pure_comp c))
+  : GTot (RT.typing (extend_env_l f g)
+                    (mk_abs (elab_pure ty) (RT.close_term (elab_src_typing body_typing) x))
+                    (elab_pure (Tm_Arrow ty (close_pure_comp c x))))
+  = let r_ty = elab_pure ty in
+    let r_body = elab_src_typing body_typing in
+    let r_c = elab_pure_comp c in
+    Pulse.Elaborate.elab_pure_equiv t_typing;
+    RT.well_typed_terms_are_ln _ _ _ r_body_typing;
+    RT.open_close_inverse r_body x;
+    elab_comp_close_commute c x;      
+        RT.T_Abs (extend_env_l f g)
+                   x
+                   r_ty
+                   (RT.close_term r_body x)
+                   r_c
+                   (elab_universe u) _ _
+                   r_t_typing
+                   r_body_typing
+    
 #push-options "--query_stats --fuel 2 --ifuel 2 --z3rlimit_factor 8 --print_implicits --print_full_names"
 let rec soundness (f:stt_env)
                   (g:env)
@@ -444,29 +561,15 @@ let rec soundness (f:stt_env)
                         (mk_abs (elab_pure ty) (RT.close_term (elab_src_typing body_typing) x))
                         (elab_pure (Tm_Arrow ty (close_pure_comp c x))))
       = let E t_typing = t_typing in
-        let r_ty = elab_pure ty in
-        let r_body = elab_src_typing body_typing in
-        let r_c = elab_pure_comp c in
         let r_t_typing = soundness _ _ _ _ t_typing in
-        Pulse.Elaborate.elab_pure_equiv t_typing;
         let r_body_typing = soundness _ _ _ _ body_typing in
-        RT.well_typed_terms_are_ln _ _ _ r_body_typing;
-        RT.open_close_inverse r_body x;
-        elab_comp_close_commute c x;      
-        RT.T_Abs (extend_env_l f g)
-                   x
-                   r_ty
-                   (RT.close_term r_body x)
-                   r_c
-                   (elab_universe u) _ _
-                   r_t_typing
-                   r_body_typing
+        mk_t_abs f g r_t_typing r_body_typing
     in
     match d with
     | T_Tot _ _ _ d -> d
 
     | T_Abs _ x ty u body c hint t_typing body_typing ->
-      mk_t_abs t_typing body_typing
+      mk_t_abs t_typing body_typing    
 
     | T_STApp _ head formal res arg head_typing arg_typing ->
       let E arg_typing = arg_typing in
@@ -534,6 +637,9 @@ let rec soundness (f:stt_env)
       let r_frame_typing = soundness _ _ _ _ frame_typing in
       assume (ln_c c);
       elab_frame_typing f g _ _ frame r_frame_typing r_e_typing
+
+    | T_Equiv _ e c c' e_typing equiv ->
+      admit()
       
     | _ -> admit()
 

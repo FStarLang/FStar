@@ -42,7 +42,11 @@ let can_be_split_congr_r p q r =
   Classical.forall_intro (interp_star (hp_of r) (hp_of q))
 
 let equiv (p q:vprop) : prop = Mem.equiv (hp_of p) (hp_of q) /\ True
+
 let reveal_equiv p q = ()
+
+let unsquash_equiv (p q:vprop) (pf:squash (equiv p q)) : equiv p q = 
+    FStar.Squash.join_squash pf
 
 let valid_rmem (#frame:vprop) (h:rmem' frame) : prop =
   forall (p p1 p2:vprop). can_be_split frame p /\ p == VStar p1 p2 ==>

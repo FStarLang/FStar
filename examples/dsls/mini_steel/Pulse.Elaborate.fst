@@ -70,7 +70,7 @@ let mk_frame (u:universe)
             (R.mk_app head [(ty, R.Q_Implicit)])
             [(pre, R.Q_Implicit)])
           [(post, R.Q_Implicit)])
-        [(frame, R.Q_Implicit)])
+        [(frame, R.Q_Explicit)])
       [(t, R.Q_Explicit)]
 
 let mk_sub (u:universe)
@@ -80,13 +80,21 @@ let mk_sub (u:universe)
            (t:R.term) 
   : R.term
   = let head = subsumption_univ_inst (elab_universe u) in
-    R.mk_app head [(ty, R.Q_Implicit);
-                   (pre1, R.Q_Implicit);
-                   (pre2, R.Q_Explicit);                   
-                   (post1, R.Q_Implicit);
-                   (post2, R.Q_Explicit);                   
-                   (t, R.Q_Explicit)]
-
+    R.mk_app
+     (R.mk_app 
+      (R.mk_app
+        (R.mk_app
+          (R.mk_app
+            (R.mk_app
+              (R.mk_app 
+                 (R.mk_app head [(ty, R.Q_Implicit)])
+                 [(pre1, R.Q_Implicit)])
+              [(pre2, R.Q_Explicit)])
+            [(post1, R.Q_Implicit)])
+          [(post2, R.Q_Explicit)])
+        [(t, R.Q_Explicit)])
+      [(`(), R.Q_Explicit)])
+     [(`(), R.Q_Explicit)]      
 
 let elab_bind (c1 c2:pure_comp_st) (e1 e2:R.term) =
   let C_ST c1 = c1 in

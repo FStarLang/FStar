@@ -268,6 +268,7 @@ val equiv (p q:vprop) : prop
 /// Revealing the definition of vprop equivalence when needed for proof purposes.
 /// In other cases, the predicate is abstract
 val reveal_equiv (p q:vprop) : Lemma (p `equiv` q <==> hp_of p `Mem.equiv` hp_of q)
+val unsquash_equiv (p q:vprop) (_:squash (equiv p q)) : equiv p q
 
 (* A restricted view of the heap,
    that only allows to access selectors of the current slprop *)
