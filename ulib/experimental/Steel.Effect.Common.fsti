@@ -129,13 +129,13 @@ let rec hp_of (p:vprop) = match p with
   | VStar p1 p2 -> hp_of p1 `Mem.star` hp_of p2
 
 /// Extracting the selector type from a vprop
-[@@ __steel_reduce__]
+[@@ __steel_reduce__; strict_on_arguments [0]]
 let rec t_of (p:vprop) = match p with
   | VUnit p -> p.t
   | VStar p1 p2 -> t_of p1 * t_of p2
 
 /// Extracting the selector from a vprop
-[@@ __steel_reduce__]
+[@@ __steel_reduce__; strict_on_arguments [0]]
 let rec sel_of (p:vprop) : GTot (selector (t_of p) (hp_of p)) = match p with
   | VUnit p -> fun h -> p.sel h
   | VStar p1 p2 ->
@@ -585,6 +585,7 @@ val interp_vdep_hp (v: vprop) (p: ( (t_of v) -> Tot vprop)) (m: mem) : Lemma
   (interp (vdep_hp v p) m <==> (interp (hp_of v) m /\ interp (hp_of v `Mem.star` hp_of (p (sel_of v m))) m))
 
 /// Helper to define the selector type of the second component of the dependent star
+[@__steel_reduce__]
 let vdep_payload
   (v: vprop) (p: ( (t_of v) -> Tot vprop))
   (x: t_of v)
@@ -592,6 +593,7 @@ let vdep_payload
 = t_of (p x)
 
 /// Selector type for the dependent star: A dependent tuple, where the second component's type depends on the first vprop
+[@__steel_reduce__]
 let vdep_t (v: vprop) (p: ( (t_of v) -> Tot vprop)) : Tot Type
 = dtuple2 (t_of v) (vdep_payload v p)
 
