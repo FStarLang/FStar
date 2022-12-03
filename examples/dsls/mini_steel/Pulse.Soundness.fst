@@ -9,6 +9,19 @@ open Pulse.Elaborate.Pure
 open Pulse.Typing
 open Pulse.Elaborate
 
+
+let tot_typing_soundness (#f:RT.fstar_top_env)
+                         (#g:env)
+                         (#e:pure_term)
+                         (#t:pure_term)
+                         (d:tot_typing f g e t)
+  : GTot (RT.typing (extend_env_l f g) (elab_pure e) (elab_pure t))
+         (decreases d)
+  = let E d = d in
+    match d with
+    | T_Tot _ _ _ d -> d
+    | T_If _ _ _ _ _ _ _ _ _ -> admit() //make T_If stateful
+
 (*** Typing of combinators used
      in the elaboration **)
 
@@ -480,17 +493,56 @@ let elab_frame_typing (f:stt_env)
 
 (*** Soundness of vprop equivalence **)
 
-let rec tot_typing_soundness (f:stt_env)
-                             (g:env)
-                             (e:pure_term)
-                             (t:pure_term)
-                             (d:tot_typing f g e t)
-  : GTot (RT.typing (extend_env_l f g) (elab_pure e) (elab_pure t))
-         (decreases d)
-  = let E d = d in
-    match d with
-    | T_Tot _ _ _ d -> d
-    | T_If _ _ _ _ _ _ _ _ _ -> admit() //make T_If stateful
+let vprop_equiv_refl_type = 
+  let var = 0 in
+  let v = mk_name var in
+  let v_typ = elab_pure Tm_VProp in
+  mk_tot_arrow1 (v_typ, R.Q_Explicit)
+                (RT.close_term (stt_vprop_equiv v v) var)
+
+let inst_vprop_equiv_refl #g #v
+                          (d:RT.typing g v (elab_pure Tm_VProp))
+  : GTot (pf:R.term &
+          RT.typing g pf (stt_vprop_equiv v v))
+  = admit()
+
+let vprop_equiv_sym_type = 
+  let var0 = 0 in
+  let v0 = mk_name var0 in
+  let var1 = 1 in
+  let v1 = mk_name var1 in
+  let v_typ = elab_pure Tm_VProp in
+  mk_tot_arrow1 
+    (v_typ, R.Q_Implicit)
+    (RT.close_term
+      (mk_tot_arrow1 
+        (v_typ, R.Q_Implicit)
+        (RT.close_term 
+          (mk_tot_arrow1 
+             (stt_vprop_equiv v0 v1, R.Q_Explicit)
+             (stt_vprop_equiv v0 v1)) var1))
+        var0)
+            
+let inst_vprop_equiv_sym #g #v0 #v1
+                         (d0:RT.typing g v0 (elab_pure Tm_VProp))
+                         (d1:RT.typing g v1 (elab_pure Tm_VProp))
+                         (#pf:_)
+                         (deq:RT.typing g pf (stt_vprop_equiv v0 v1))
+  : GTot (pf:R.term &
+          RT.typing g pf (stt_vprop_equiv v1 v0))
+  = admit()
+
+let inst_vprop_equiv_trans #g #v0 #v1 #v2
+                         (d0:RT.typing g v0 (elab_pure Tm_VProp))
+                         (d1:RT.typing g v1 (elab_pure Tm_VProp))
+                         (d2:RT.typing g v2 (elab_pure Tm_VProp))
+                         (#pf01:_)
+                         (d01:RT.typing g pf01 (stt_vprop_equiv v0 v1))
+                         (#pf12:_)                         
+                         (d12:RT.typing g pf12 (stt_vprop_equiv v1 v2))
+  : GTot (pf:R.term &
+          RT.typing g pf (stt_vprop_equiv v0 v2))
+  = admit()
 
 let rec vprop_equiv_soundness (f:stt_env) (g:env) (v0 v1:pure_term) 
                               (d:tot_typing f g v0 Tm_VProp)
@@ -498,7 +550,32 @@ let rec vprop_equiv_soundness (f:stt_env) (g:env) (v0 v1:pure_term)
   : GTot (pf:R.term &
           RT.typing (extend_env_l f g) pf (stt_vprop_equiv (elab_pure v0) (elab_pure v1)))
          (decreases eq)
-  = admit()
+  = match eq with
+    | VE_Refl _ _ ->
+      let d = tot_typing_soundness d in
+      inst_vprop_equiv_refl d
+
+    | VE_Sym g _v1 _v0 eq' ->
+      let fwd, _ = vprop_equiv_typing _ _ _ _ eq in
+      let d' = fwd d in
+      let (| pf, dd |) = vprop_equiv_soundness _ _ _ _ d' eq' in
+      inst_vprop_equiv_sym (tot_typing_soundness d')
+                           (tot_typing_soundness d)
+                           dd
+
+    | VE_Trans _ _ v _ eq_0v eq_v1 ->
+      let dv = fst (vprop_equiv_typing _ _ _ _ eq_0v) d in
+      let d1 = fst (vprop_equiv_typing _ _ _ _ eq_v1) dv in
+      let (| pf_0v, eq_0v |) = vprop_equiv_soundness _ _ _ _ d eq_0v in
+      let (| pf_v1, eq_v1 |) = vprop_equiv_soundness _ _ _ _ dv eq_v1 in
+      inst_vprop_equiv_trans 
+        (tot_typing_soundness d)
+        (tot_typing_soundness dv)        
+        (tot_typing_soundness d1)
+        eq_0v
+        eq_v1
+                             
+    | _ -> admit()
 
 (*** Soundness of st equivalence **)
 let st_equiv_soundness (f:stt_env) (g:env) (c0 c1:ln_comp)

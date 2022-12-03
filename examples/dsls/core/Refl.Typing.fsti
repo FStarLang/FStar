@@ -373,6 +373,10 @@ let u_max u1 u2 = pack_universe (Uv_Max [u1; u2])
 let u_succ u = pack_universe (Uv_Succ u)
 let mk_total t = pack_comp (C_Total t u_unk [])
 let tm_type u = pack_ln (Tv_Type u)
+let tm_prop = 
+  let prop_fv = R.pack_fv ["Prims"; "prop"] in
+  R.pack_ln (Tv_FVar prop_fv)
+let eqtype_lid : R.name = ["Prims"; "eqtype"]
 
 let true_bool = pack_ln (Tv_Const C_True)
 let false_bool = pack_ln (Tv_Const C_False)
@@ -388,7 +392,7 @@ let b2t_lid : R.name = ["Prims"; "b2t"]
 let b2t_fv : R.fv = R.pack_fv b2t_lid
 let b2t_ty : R.term = R.(pack_ln (Tv_Arrow (as_binder 0 bool_ty) (mk_total (tm_type u_zero))))
 
-let eqtype_lid : R.name = ["Prims"; "eqtype"]
+
 
 noeq
 type constant_typing: vconst -> term -> Type0 = 
@@ -527,6 +531,14 @@ type typing : env -> term -> term -> Type0 =
      typing (extend_env g x t) (open_term e x) (tm_type u2) ->
      typing g (pack_ln (Tv_Refine (pack_bv (make_bv 0 t)) e)) (tm_type u1)
 
+  | T_PropIrrelevance:
+     g:env -> 
+     e:term -> 
+     t:term ->
+     typing g e t ->
+     typing g t tm_prop ->
+     typing g (`()) t
+     
   | T_Sub:
      g:env ->
      e:term ->
