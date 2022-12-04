@@ -2,8 +2,8 @@
 #
 # Very basic script to collect all .runlim files and print the files
 # that consumed the most memory and CPU time. You should run the
-# makefile with MON=1 to generate the .runlim files (and have runlim
-# installed).
+# makefile with RESOURCEMONITOR=1 to generate the .runlim files (and
+# have runlim installed).
 
 echo "All space and time:"
 for f in $(find . -name '*.runlim'); do

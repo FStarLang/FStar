@@ -30,8 +30,8 @@ ifneq ($(V),)
 	SIL=
 endif
 
-# Passing MON=1 will create .runlim files through the source tree with
+# Passing RESOURCEMONITOR=1 will create .runlim files through the source tree with
 # information about the time and space taken by each F* invocation.
-ifneq ($(MON),)
+ifneq ($(RESOURCEMONITOR),)
 	RUNLIM=runlim -p -o $@.runlim
 endif
