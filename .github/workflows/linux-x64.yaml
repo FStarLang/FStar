@@ -10,6 +10,8 @@ on:
         description: Refresh hints and advance version number
         required: true
         type: boolean
+permissions:
+  contents: read # to fetch code (actions/checkout)
 jobs:
   build:
     runs-on: [self-hosted, linux, X64]
@@ -19,6 +21,8 @@ jobs:
           echo "CI_INITIAL_TIMESTAMP=$(date '+%s')" >> $GITHUB_ENV
       - name: Check out repo        
         uses: actions/checkout@v2
+        with:
+          token: ${{ secrets.DZOMO_GITHUB_TOKEN }}
       - name: Identify the notification channel
         run: |
           echo "CI_SLACK_CHANNEL=$(jq -c -r '.NotificationChannel' .docker/build/config.json)" >> $GITHUB_ENV
