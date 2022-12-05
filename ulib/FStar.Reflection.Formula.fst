@@ -132,43 +132,15 @@ let term_as_formula' (t:term) : Tac formula =
     (* Should not occur, we're using inspect_ln *)
     | Tv_BVar _ -> F_Unknown
 
-let rec is_name_imp (nm : name) (t : term) : bool =
-    begin match inspect_ln_unascribe t with
-    | Tv_FVar fv
-    | Tv_UInst fv _ ->
-        if inspect_fv fv = nm
-        then true
-        else false
-    | Tv_App l (_, Q_Implicit) -> // ignore implicits
-        is_name_imp nm l
-    | _ -> false
-    end
-
-let unsquash (t : term) : option term =
-    match inspect_ln_unascribe t with
-    | Tv_App l (r, Q_Explicit) ->
-        if is_name_imp squash_qn l
-        then Some r
-        else None
-    | _ -> None
-
-let unsquash_total (t : term) : term =
-    match inspect_ln_unascribe t with
-    | Tv_App l (r, Q_Explicit) ->
-        if is_name_imp squash_qn l
-        then r
-        else t
-    | _ -> t
-
 // Unsquashing
 let term_as_formula (t:term) : Tac formula =
-    match unsquash t with
+    match unsquash_term t with
     | None -> F_Unknown
     | Some t ->
         term_as_formula' t
 
 let term_as_formula_total (t:term) : Tac formula =
-    term_as_formula' (unsquash_total t)
+    term_as_formula' (maybe_unsquash_term t)
 
 let formula_as_term_view (f:formula) : Tot term_view =
     let mk_app' tv args = List.Tot.Base.fold_left (fun tv a -> Tv_App (pack_ln tv) a) tv args in

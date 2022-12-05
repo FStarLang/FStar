@@ -8,20 +8,20 @@ following general structure.
 
 .. math::
 
-   \mathsf{type}~T₁~\overline{(x₁:p₁)} : \overline{y₁:q₁} → \mathsf{Type} = \overline{| D₁ : t₁} \\
-   \mathsf{and}~Tₙ~\overline{(xₙ:pₙ)} : \overline{yₙ:qₙ} → \mathsf{Type} =  \overline{| Dₙ : tₙ} \\
+   \mathsf{type}~T_1~\overline{(x_1:p_1)} : \overline{y_1:q_1} \rightarrow \mathsf{Type} = \overline{| D_1 : t_1} \\
+   \mathsf{and}~T_n~\overline{(x_n:p_n)} : \overline{y_n:q_n} \rightarrow \mathsf{Type} =  \overline{| D_n : t_n} \\
 
-This defines :math:`n` mutually inductive types, named :math:`T₁ …
-Tₙ`, called the *type constructors*. Each type constructor :math:`Tᵢ`
-has a number of *parameters*, the :math:`\overline{xᵢ : pᵢ}`, and a
-number of *indexes*, the :math:`\overline{yᵢ:qᵢ}`.
+This defines :math:`n` mutually inductive types, named :math:`T_1 \ldots
+T_n`, called the *type constructors*. Each type constructor :math:`T_i`
+has a number of *parameters*, the :math:`\overline{x_i : p_i}`, and a
+number of *indexes*, the :math:`\overline{y_i:q_i}`.
 
-Each type constructor :math:`Tᵢ` has zero or more *data constructors*
-:math:`\overline{Dᵢ:tᵢ}`. For each data constructor :math:`Dᵢⱼ`, its
-type :math:`tᵢⱼ` must be of the form :math:`\overline{z:s} →
-Tᵢ~\bar{xᵢ}~\bar{e}`, i.e., it must be a function type returning an
-instance of :math:`Tᵢ` with *the same parameters*
-:math:`\overline{xᵢ}` as in the type constructor's signature, but with
+Each type constructor :math:`T_i` has zero or more *data constructors*
+:math:`\overline{D_i:t_i}`. For each data constructor :math:`D_{ij}`, its
+type :math:`t_{ij}` must be of the form :math:`\overline{z:s} \rightarrow
+T_i~\bar{x_i}~\bar{e}`, i.e., it must be a function type returning an
+instance of :math:`T_i` with *the same parameters*
+:math:`\overline{x_i}` as in the type constructor's signature, but with
 any other well-typed terms :math:`\overline{e}` for the index
 arguments. This is the main difference between a parameter and an
 index—a parameter of a type constructor *cannot* vary in the result
@@ -73,8 +73,8 @@ Consider again the general shape of an inductive type definition:
 
 .. math::
 
-   \mathsf{type}~T₁~\overline{(x₁:p₁)} : \overline{y₁:q₁} → \mathsf{Type} = \overline{| D₁ : t₁} \\
-   \mathsf{and}~Tₙ~\overline{(xₙ:pₙ)} : \overline{yₙ:qₙ} → \mathsf{Type} =  \overline{| Dₙ : tₙ} \\
+   \mathsf{type}~T_1~\overline{(x_1:p_1)} : \overline{y_1:q_1} \rightarrow \mathsf{Type} = \overline{| D_1 : t_1} \\
+   \mathsf{and}~T_n~\overline{(x_n:p_n)} : \overline{y_n:q_n} \rightarrow \mathsf{Type} =  \overline{| D_n : t_n} \\
 
 This definition is strictly positive when
 
@@ -82,7 +82,7 @@ This definition is strictly positive when
 
  * and every data constructor :math:`D : t \in \overline{D_1},
    ... \overline{D_n}`, where `t` is of the form
-   :math:`x0:s_0 → ...  → xn:s_n  → T_i ...`,
+   :math:`x0:s_0 \rightarrow ...  \rightarrow xn:s_n  \rightarrow T_i ...`,
    and :math:`s_0, ..., s_n` are the types of the fields of :math:`D`
 
  * and for all instantiations :math:`\overline{v}` of the type parameters
@@ -165,3 +165,50 @@ non-positive definitions can safely be used in a context where
 programs are not expected to terminate, allowing one to safely model
 things like the ``dyn`` type, without compromising the soundness of
 F*.
+
+.. _Part2_strictly_positive_annotations:
+
+Strictly Positive Annotations
+-----------------------------
+
+Sometimes it is useful to parameterize an inductive definition with a
+type function, without introducing a non-positive definition as we did
+in ``also_non_pos`` above.
+
+For example, the definition below introduces a type ``free f a``, a 
+form of a tree whose leaf nodes contain ``a`` values, and whose
+internal nodes branch according the type function ``f``. 
+
+.. literalinclude:: ../code/Part2.Positivity.fst
+   :language: fstar
+   :start-after: //SNIPPET_START: free$
+   :end-before: //SNIPPET_END: free$
+
+We can instantiate this generic ``free`` to produce various kinds of
+trees.
+
+.. literalinclude:: ../code/Part2.Positivity.fst
+   :language: fstar
+   :start-after: //SNIPPET_START: free_instances$
+   :end-before: //SNIPPET_END: free_instances$
+
+However, we should only be allowed to instantate ``f`` with type
+functions that are strictly positive in their argument, since otherwise
+we can build a proof of ``False``, as we did with
+``also_non_pos``. The ``@@@strictly_positive`` attribute on the
+formal parameter of ``f`` enforces this.
+
+If we were to try to instantiate ``free`` with a non-strictly positive
+type function, 
+
+.. literalinclude:: ../code/Part2.Positivity.fst
+   :language: fstar
+   :start-after: //SNIPPET_START: free_bad$
+   :end-before: //SNIPPET_END: free_bad$
+
+then F* raises an error:
+
+.. code-block::
+
+    Binder (t: Type) is marked strictly positive, but its use in the definition is not
+   

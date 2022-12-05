@@ -498,7 +498,8 @@ and (hash_sw :
           | FStar_Const.Int8 -> of_int (Prims.of_int (563))
           | FStar_Const.Int16 -> of_int (Prims.of_int (569))
           | FStar_Const.Int32 -> of_int (Prims.of_int (571))
-          | FStar_Const.Int64 -> of_int (Prims.of_int (577)) in
+          | FStar_Const.Int64 -> of_int (Prims.of_int (577))
+          | FStar_Const.Sizet -> of_int (Prims.of_int (583)) in
         mix uu___1 uu___2
 and (hash_ident : FStar_Syntax_Syntax.univ_name -> FStar_Hash.hash_code mm) =
   fun i -> let uu___ = FStar_Ident.string_of_id i in of_string uu___

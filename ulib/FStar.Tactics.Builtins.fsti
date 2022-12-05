@@ -70,7 +70,7 @@ val recover : #a:Type -> (unit -> Tac a) -> TacS (either exn a)
 (** [norm steps] will call the normalizer on the current goal's
 type and witness, with its reduction behaviour parameterized
 by the flags in [steps].
-Currently, the flags (provided in Prims) are
+Currently, the flags (provided in FStar.Pervasives) are
 [simpl] (do logical simplifications)
 [whnf] (only reduce until weak head-normal-form)
 [primops] (performing primitive reductions, such as arithmetic and
