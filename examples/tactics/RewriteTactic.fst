@@ -17,22 +17,24 @@ module RewriteTactic
 
 open FStar.Tactics
 
-let lem1 () : Lemma (1 == 2) = admit ()
-let lem2 (x:int) : Lemma (1 == x)
-            = admit()
+assume val foo : int -> int
+assume val lem1 : unit -> Lemma (foo 1 == foo 2)
+assume val lem2 : (x:int) -> Lemma (foo 1 == foo x)
 
 let tau1 () = apply_lemma (`lem1)
 let tau2 () = apply_lemma (`lem2)
 
 let test1 _ =
-  assert (rewrite_with_tactic tau1 1 == 2)
+  assert (rewrite_with_tactic tau1 (foo 1) == (foo 2))
 
-// SMT Failure
-[@expect_failure]
+// SMT Failure, expected, since the SMT can't see that foo 1 == foo 2
+// (without triggering lem1)
+[@@expect_failure]
 let test2 _ =
-  assert (rewrite_with_tactic tau1 1 == 1)
+  assert (rewrite_with_tactic tau1 (foo 1) == (foo 1))
 
-// Uninstantiated uvar remaining
-[@expect_failure]
+// Uninstantiated uvar remaining, OK, since there is no one solution for
+// x in the call to lem2. Doing [exact (`n)] for any n will make it work.
+[@@expect_failure]
 let test3 _ =
-  assert (rewrite_with_tactic tau2 1 == 2)
+  assert (rewrite_with_tactic tau2 (foo 1) == (foo 2))

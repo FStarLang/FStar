@@ -14,14 +14,15 @@ including inductive ``type`` definitions; ``let`` and ``let rec``
 definitions; ``val`` declarations; etc. However, unlike module
 implementations, an interface is allowed to declare a symbol ``val f :
 t`` without any corresponding definition of ``f``. This makes ``f``
-abstract, i.e., to the rest of the interface and all client modules,
+abstract to the rest of the interface and all client modules, i.e.,
 ``f`` is simply assumed to have type ``t`` without any definition. The
 definition of ``f`` is provided in the ``.fst`` file and checked to
 have type ``t``, ensuring that a client module's assumption of ``f:t``
 is backed by a suitable definition.
 
 To see how interfaces work, we'll look at the design of the **bounded
-integer** modules ``FStar.UInt32``, ``FStar.UInt64``, and the like.
+integer** modules ``FStar.UInt32``, ``FStar.UInt64``, and the like,
+building our own simplified versions by way of illustration.
 
 Bounded Integers
 ^^^^^^^^^^^^^^^^
@@ -43,21 +44,29 @@ arithmetic overflow, i.e., we'd like to use bounded integers for
 efficiency, and by proving that their operations don't overflow we can
 reason bounded integer terms without using modular arithmetic.
 
+.. note::
+
+   Although we don't discuss them here, F*'s libraries also provide
+   signed integer types that can be compiled to the corresponding
+   signed integters in C. Avoiding overflow on signed integer
+   arithmetic is not just a matter of ease of reasoning, since signed
+   integer overflow is undefined behavior in C.
+
 Interface: UInt32.fsti
 ----------------------
 
 The interface ``UInt32`` begins like any module with the
-module's---although this could be inferred from the name of the file
+module's name. Although this could be inferred from the name of the file
 (``UInt32.fsti``, in this case), F* requires the name to be explicit.
-
-``UInt32`` provides one abstract type ``val t : eqtype``, the type of
-our bounded integer. Its type says that it supports decidable
-equality, but no definition of ``t`` is revaled in the interface.
 
 .. literalinclude:: ../code/UInt32.fsti
    :language: fstar
    :start-after: //SNIPPET_START: t$
    :end-before: //SNIPPET_END: t$
+                
+``UInt32`` provides one abstract type ``val t : eqtype``, the type of
+our bounded integer. Its type says that it supports decidable
+equality, but no definition of ``t`` is revaled in the interface.
 
 The operations on ``t`` are specified in terms of a logical model that
 relates ``t`` to bounded mathematical integers, in particular
@@ -78,9 +87,9 @@ relates ``t`` to bounded mathematical integers, in particular
 
 To relate our abstract type ``t`` to ``u32_nat``, the interface
 provides two coercions ``v`` and ``u`` that go back and forth between
-the ``t`` and ``u32_nat``. The lemma signatures ``vu_inv`` and
+``t`` and ``u32_nat``. The lemma signatures ``vu_inv`` and
 ``uv_inv`` require ``v`` and ``u`` to be mutually inverse, meaning
-that ``t`` and ``u32_nat`` are in 1-1 correspondence logically.
+that ``t`` and ``u32_nat`` are in 1-1 correspondence.
 
 .. literalinclude:: ../code/UInt32.fsti
    :language: fstar
@@ -111,13 +120,13 @@ Although precise, the types of ``add_mod`` and ``sub_mod`` aren't
 always easy to reason with. For example, proving that ``add_mod (u 2)
 (u 3) == u 5`` requires reasoning about modular arithmetic---for
 constants like ``2``, ``3``, and ``5`` this is easy enough, but proofs
-about modular arithmetic over symbolic values will in general involve
+about modular arithmetic over symbolic values will, in general, involve
 reasoning about non-linear arithmetic, which is difficult to automate
 even with an SMT solver. Besides, in many safety critical software
 systems, one often prefers to avoid integer overflow altogether.
 
 So, the ``UInt32`` interface also provides two additional operations,
-``add`` and ``sub``, whose specification enables two ``t`` to be added
+``add`` and ``sub``, whose specification enables two ``t`` values to be added
 (resp. subtracted) only if there is no overflow (or underflow).
 
 First, we define an auxiliary predicate ``fits`` to state when an
@@ -163,7 +172,7 @@ specified below:
 Implementation: UInt32.fst
 --------------------------
 
-The implementation of the ``UInt32`` must provide implementations for
+An implementation of ``UInt32`` must provide definitions for
 all the ``val`` declarations in the ``UInt32`` interface, starting
 with a representation for the abstract type ``t``.
 
@@ -191,7 +200,7 @@ for tactics, but we show the code below for reference.
    :end-before: //SNIPPET_END: UInt32BV$
 
 Although both implementations correctly satisfy the ``UInt32``
-interface, F* requires picking one. Unlike module systems in some
+interface, F* requires the user to pick one. Unlike module systems in some
 other ML-like languages, where interfaces are first-class entities
 which many modules can implement, in F* an interface can have at most
 one implementation. For interfaces with multiple implementations, one
@@ -202,7 +211,7 @@ Interleaving: A Quirk
 ---------------------
 
 The current F* implementation views an interface and its
-implementation two partially implemented halves of a module. When
+implementation as two partially implemented halves of a module. When
 checking that an implementation is a correct implementation of an
 interface, F* attempts to combine the two halves into a complete
 module before typechecking it. It does this by trying to *interleave*
@@ -223,6 +232,10 @@ is the following:
     of ``val`` declarations in the interface. E.g., if the interface
     contains ``val f : tf`` followed by ``val g : tg``, then the
     implementation of ``f`` must precede the implementation of ``g``.
+
+Also, remember that if you are writing ``val`` declarations in an
+interface, it is a good idea to be explicit about universe levels. See
+:ref:`here for more discussion <Part2_tips_for_universes>`.
 
 Other issues with interleaving that may help in debugging compiler
 errors with interfaces:
@@ -250,11 +263,15 @@ bounded natural numbers.
 
 The library also provides several other unsigned machine integer types
 in addition to ``FStar.UInt32``, including ``FStar.UInt8``,
-``FStar.UInt16``, and ``FStar.UInt64``. All of these modules are very
-similar and, in fact, all these variants are generated by a script
-from a common template. F* also has several signed machine integer
-types, also generated from a template.
+``FStar.UInt16``, and ``FStar.UInt64``.  F* also has several signed
+machine integer types.
 
-Interfaces not being first-class entities in the language, there is no
-way to define all these modules as being instances of a
-generic interface.
+All of these modules are very similar, but not being first-class
+entities in the language, there is no way to define a general
+interface that is instantiated by all these modules. In fact, all
+these variants are generated by a script from a common template.
+
+Although interfaces are well-suited to simple patterns of information
+hiding and modular structure, as we'll learn next, typeclasses are
+more powerful and enable more generic solutions, though sometimes
+requiring the use of higher-order code.

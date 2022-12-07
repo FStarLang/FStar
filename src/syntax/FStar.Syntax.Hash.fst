@@ -27,8 +27,8 @@ module BU = FStar.Compiler.Util
 (* maybe memo *)
 let mm (t:Type) = bool -> t & bool
 
-let (let?) (f:mm 't) (g: 't -> mm 's) : mm 's = 
-  fun b -> 
+let (let?) (f:mm 't) (g: 't -> mm 's) : mm 's =
+  fun b ->
     let t, b = f b in
     g t b
 
@@ -42,13 +42,13 @@ module H = FStar.Hash
 
 let maybe_memoize (h:syntax 'a) (f:syntax 'a -> mm H.hash_code) : mm H.hash_code =
   fun should_memo ->
-    if should_memo 
+    if should_memo
     then (
       match !h.hash_code with
       | Some c -> c, should_memo
       | None ->
         let c, should_memo = f h should_memo in
-        if should_memo 
+        if should_memo
         then h.hash_code := Some c;
         c, should_memo
     )
@@ -66,7 +66,7 @@ let mix (f:mm H.hash_code) (g:mm H.hash_code) : mm H.hash_code =
 let nil_hc : mm H.hash_code = of_int 1229
 let cons_hc : mm H.hash_code = of_int 1231
 
-let mix_list (l:list (mm H.hash_code)) : mm H.hash_code = 
+let mix_list (l:list (mm H.hash_code)) : mm H.hash_code =
   List.fold_right mix l nil_hc
 
 let mix_list_lit = mix_list
@@ -86,7 +86,7 @@ let hash_pair (h:'a -> mm H.hash_code) (i:'b -> mm H.hash_code) (x:('a * 'b))
 
 let hash_byte (b:FStar.BaseTypes.byte) : mm H.hash_code = ret (H.of_int (UInt8.v b))
 
-let rec hash_term (t:term) 
+let rec hash_term (t:term)
   : mm H.hash_code
   = maybe_memoize t hash_term'
 
@@ -115,7 +115,7 @@ and hash_term' (t:term)
     | Tm_refine(b, t) -> mix (of_int 29) (mix (hash_bv b) (hash_term t))
     | Tm_app (t, args) -> mix (of_int 31) (mix (hash_term t) (hash_list hash_arg args))
     | Tm_match (t, asc_opt, branches, rcopt) ->
-      mix (of_int 37) 
+      mix (of_int 37)
             (mix (hash_option hash_match_returns asc_opt)
                    (mix (mix (hash_term t) (hash_list hash_branch branches))
                           (hash_option hash_rc rcopt)))
@@ -161,10 +161,10 @@ and hash_lb lb =
       hash_term lb.lbdef;
       hash_list hash_term lb.lbattrs]
 
-and hash_match_returns (b, asc) = 
+and hash_match_returns (b, asc) =
   mix (hash_binder b)
       (hash_ascription asc)
-        
+
 and hash_branch b =
   let p, topt, t = b in
   mix_list_lit
@@ -208,10 +208,10 @@ and hash_universe =
 and hash_arg (t, aq) =
   mix (hash_term t) (hash_option hash_arg_qualifier aq)
 
-and hash_arg_qualifier aq = 
+and hash_arg_qualifier aq =
   mix (hash_bool aq.aqual_implicit)
         (hash_list hash_term aq.aqual_attributes)
-  
+
 and hash_bqual =
   function
   | Implicit true -> of_int 419
@@ -260,7 +260,8 @@ and hash_sw (s, w) =
    | Int8 -> of_int 563
    | Int16 -> of_int 569
    | Int32 -> of_int 571
-   | Int64 -> of_int 577)
+   | Int64 -> of_int 577
+   | Sizet -> of_int 583)
 
 and hash_ident i = of_string (Ident.string_of_id i)
 and hash_lid l = of_string (Ident.string_of_lid l)
@@ -432,7 +433,7 @@ and equal_binder b1 b2 =
 and equal_match_returns (b1, asc1) (b2, asc2) =
   equal_binder b1 b2 &&
   equal_ascription asc1 asc2
-  
+
 and equal_ascription x1 x2 =
   if physical_equality x1 x2 then true else
   let a1, t1, b1 = x1 in
@@ -502,16 +503,16 @@ and equal_arg arg1 arg2 =
   equal_term t1 t2 &&
   equal_opt equal_arg_qualifier a1 a2
 
-and equal_bqual b1 b2 = 
+and equal_bqual b1 b2 =
   equal_opt equal_binder_qualifier b1 b2
 
-and equal_binder_qualifier b1 b2 = 
+and equal_binder_qualifier b1 b2 =
   match b1, b2 with
   | Implicit b1, Implicit b2 -> b1 = b2
   | Equality, Equality -> true
   | Meta t1, Meta t2 -> equal_term t1 t2
   | _ -> false
-  
+
 and equal_branch (p1, w1, t1) (p2, w2, t2) =
   equal_pat p1 p2 &&
   equal_opt equal_term w1 w2 &&
@@ -572,7 +573,7 @@ and equal_flag f1 f2 =
 
   | _ -> f1 = f2
 
-and equal_decreases_order d1 d2 = 
+and equal_decreases_order d1 d2 =
   match d1, d2 with
   | Decreases_lex ts1, Decreases_lex ts2 ->
     equal_list equal_term ts1 ts2
@@ -580,7 +581,7 @@ and equal_decreases_order d1 d2 =
   | Decreases_wf (t1, t1'), Decreases_wf (t2, t2') ->
     equal_term t1 t2 &&
     equal_term t1' t2'
-    
+
 and equal_arg_qualifier a1 a2 =
   a1.aqual_implicit = a2.aqual_implicit &&
   equal_list equal_term a1.aqual_attributes a2.aqual_attributes

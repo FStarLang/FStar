@@ -17,9 +17,11 @@ import sys
 
 sys.path.insert(0, os.path.abspath('.'))
 import fstar_pygments
+import smt2_pygments
 from sphinx.highlighting import lexers
 
 lexers['fstar'] = fstar_pygments.CustomLexer()
+lexers['smt2'] = smt2_pygments.CustomLexer()
 
 def setup(app):
     app.add_css_file('custom.css')
@@ -28,7 +30,7 @@ def setup(app):
 
 project = u'Proof-Oriented Programming in F*'
 copyright = u'2020, Microsoft Research'
-author = u'F* development team'
+author = u'Nikhil Swamy and Guido Martínez'
 
 # The short X.Y version
 version = u''
@@ -66,7 +68,7 @@ master_doc = 'index'
 #
 # This is also used if you do content translation via gettext catalogs.
 # Usually you set "language" from the command line for these cases.
-language = None
+language = 'en'
 
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.

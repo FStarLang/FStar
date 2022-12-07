@@ -32,20 +32,25 @@ module L = FStar.List.Tot
 module S = FStar.Seq 
 
 (** The type of natural numbers bounded by [n] *)
+inline_for_extraction
 let fin (n: nat) = k: int {0 <= k /\ k < n} 
 
 (** Newer synonym. We perhaps should choose one over another globally.
     [under] is also defined in IntegerIntervals.fst, along with other 
     often used finite intervals. *)
+inline_for_extraction
 let under (p:nat) = x:nat {x<p}
 
 (** Length-indexed list *)
+inline_for_extraction
 let vect (n: nat) (a: Type) = l: list a {L.length l = n}
 
 (** Length-indexed sequence *)
+inline_for_extraction
 let seqn (n: nat) (a: Type) = s: S.seq a {S.length s = n}
 
 (** [in_ s] is the type of a valid index into the sequence [s] *)
+inline_for_extraction
 let in_ (#a: Type) (s: S.seq a) = n: nat{n < S.length s}
 
 (** Find an index of an element in [s] starting from [i] that validates [p]  *)
@@ -78,6 +83,7 @@ val pigeonhole (#n: pos) (s: S.seq (under n))
     As I port more code from my CAS project to F*, such things will be
     moved to separate modules. -- Alex Rozanov *)
  
+inline_for_extraction
 type binary_relation (a: Type) = a -> a -> bool
  
 (** For performance reasons, forall definitions are best kept hidden from SMT.
