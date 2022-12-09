@@ -263,8 +263,8 @@ let subst_comp' s t =
   | [[]], NoUseRange -> t
   | _ ->
     match t.n with
-      | Total (t, uopt) -> mk_Total' (subst' s t) (Option.map (subst_univ (fst s)) uopt)
-      | GTotal (t, uopt) -> mk_GTotal' (subst' s t) (Option.map (subst_univ (fst s)) uopt)
+      | Total t -> mk_Total (subst' s t)
+      | GTotal t -> mk_GTotal (subst' s t)
       | Comp ct -> mk_Comp(subst_comp_typ' s ct)
 
 let subst_ascription' s (asc:ascription) =
@@ -969,13 +969,11 @@ and deep_compress_cflags allow_uvars flags =
 and deep_compress_comp allow_uvars (c:comp) : comp =
     let mk x = S.mk x c.pos in
     match c.n with
-    | Total (t, uopt) ->
-      let uopt = map_opt uopt (deep_compress_univ allow_uvars) in
-      mk (Total (deep_compress allow_uvars t, uopt))
+    | Total t ->
+      mk (Total (deep_compress allow_uvars t))
 
-    | GTotal (t, uopt) ->
-      let uopt = map_opt uopt (deep_compress_univ allow_uvars) in
-      mk (GTotal (deep_compress allow_uvars t, uopt))
+    | GTotal t ->
+      mk (GTotal (deep_compress allow_uvars t))
 
     | Comp ct ->
       let ct = {

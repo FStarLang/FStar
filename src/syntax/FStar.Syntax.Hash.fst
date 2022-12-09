@@ -132,16 +132,14 @@ and hash_term' (t:term)
 and hash_comp' (c:comp)
   : mm H.hash_code
   = match c.n with
-    | Total (t, ou) ->
+    | Total t ->
       mix_list_lit
         [of_int 811;
-         hash_term t;
-         hash_option hash_universe ou]
-    | GTotal (t, ou) ->
+         hash_term t]
+    | GTotal t ->
       mix_list_lit
         [of_int 821;
-         hash_term t;
-         hash_option hash_universe ou]
+         hash_term t]
     | Comp ct ->
       mix_list_lit
         [of_int 823;
@@ -413,10 +411,9 @@ let rec equal_term (t1 t2:term)
 and equal_comp c1 c2 =
   if physical_equality c1 c2 then true else
   match c1.n, c2.n with
-  | Total (t1, u1), Total (t2, u2)
-  | GTotal (t1, u1), GTotal (t2, u2) ->
-    equal_term t1 t2 &&
-    equal_opt equal_universe u1 u2
+  | Total t1, Total t2
+  | GTotal t1, GTotal t2 ->
+    equal_term t1 t2
   | Comp ct1, Comp ct2 ->
     Ident.lid_equals ct1.effect_name ct2.effect_name &&
     equal_list equal_universe ct1.comp_univs ct2.comp_univs &&

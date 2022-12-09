@@ -241,32 +241,38 @@ let comp_flags c = match c.n with
     | GTotal _ -> [SOMETRIVIAL]
     | Comp ct -> ct.flags
 
-(* Duplicate of the function below not failing when universe is not provided *)
-let comp_to_comp_typ_nouniv (c:comp) : comp_typ =
-    match c.n with
-        | Comp c -> c
-        | Total (t, u_opt)
-        | GTotal(t, u_opt) ->
-            {comp_univs=dflt [] (map_opt u_opt (fun x -> [x]));
-             effect_name=comp_effect_name c;
-             result_typ=t;
-             effect_args=[];
-             flags=comp_flags c}
+let comp_eff_name_res_and_args (c:comp) : lident & typ & args =
+  match c.n with
+  | Total t -> PC.effect_Tot_lid, t, []
+  | GTotal t -> PC.effect_GTot_lid, t, []
+  | Comp c -> c.effect_name, c.result_typ, c.effect_args
 
-let comp_set_flags (c:comp) f =
-    {c with n=Comp ({comp_to_comp_typ_nouniv c with flags=f})}
+// (* Duplicate of the function below not failing when universe is not provided *)
+// let comp_to_comp_typ_nouniv (c:comp) : comp_typ =
+//     match c.n with
+//         | Comp c -> c
+//         | Total (t, u_opt)
+//         | GTotal(t, u_opt) ->
+//             {comp_univs=dflt [] (map_opt u_opt (fun x -> [x]));
+//              effect_name=comp_effect_name c;
+//              result_typ=t;
+//              effect_args=[];
+//              flags=comp_flags c}
 
-let comp_to_comp_typ (c:comp) : comp_typ =
-    match c.n with
-    | Comp c -> c
-    | Total (t, Some u)
-    | GTotal(t, Some u) ->
-      {comp_univs=[u];
-       effect_name=comp_effect_name c;
-       result_typ=t;
-       effect_args=[];
-       flags=comp_flags c}
-    | _ -> failwith "Assertion failed: Computation type without universe"
+// let comp_set_flags (c:comp) f =
+//     {c with n=Comp ({comp_to_comp_typ_nouniv c with flags=f})}
+
+// let comp_to_comp_typ (c:comp) : comp_typ =
+//     match c.n with
+//     | Comp c -> c
+//     | Total (t, Some u)
+//     | GTotal(t, Some u) ->
+//       {comp_univs=[u];
+//        effect_name=comp_effect_name c;
+//        result_typ=t;
+//        effect_args=[];
+//        flags=comp_flags c}
+//     | _ -> failwith "Assertion failed: Computation type without universe"
 
 
 (*
@@ -288,7 +294,7 @@ let effect_indices_from_repr (repr:term) (is_layered:bool) (r:Range.range) (err:
        | Tm_app (_, _::is) -> is |> List.map fst
        | _ -> err ()
   else match repr.n with
-       | Tm_arrow (_, c) -> c |> comp_to_comp_typ |> (fun ct -> ct.effect_args |> List.map fst)
+       | Tm_arrow (_, c) -> c |> comp_eff_name_res_and_args |> (fun (_, _, args) -> args |> List.map fst)
        | _ -> err ()
 
 let destruct_comp c : (universe * typ * typ) =
@@ -421,8 +427,8 @@ let is_ml_comp c = match c.n with
   | _ -> false
 
 let comp_result c = match c.n with
-  | Total (t, _)
-  | GTotal (t, _) -> t
+  | Total t
+  | GTotal t -> t
   | Comp ct -> ct.result_typ
 
 let set_result_typ c t = match c.n with
@@ -744,11 +750,9 @@ and eq_univs_list (us:universes) (vs:universes) : bool =
 
 and eq_comp (c1 c2:comp) : eq_result =
   match c1.n, c2.n with
-  | Total (t1, u1opt), Total (t2, u2opt)
-  | GTotal (t1, u1opt), GTotal (t2, u2opt) ->
-    eq_tm t1 t2 //Rel ignores the universe annotations when comparing these comps for equality.
-                //So, ignore them here too
-                //But, this should be sorted out: Can we always populate the universe?
+  | Total t1, Total t2
+  | GTotal t1, GTotal t2 ->
+    eq_tm t1 t2
   | Comp ct1, Comp ct2 ->
     eq_and (equal_if (eq_univs_list ct1.comp_univs ct2.comp_univs))
            (fun _ ->
@@ -997,7 +1001,7 @@ let flat_arrow bs c =
   match (Subst.compress t).n with
   | Tm_arrow(bs, c) ->
     begin match c.n with
-        | Total (tres, _) ->
+        | Total tres ->
           begin match (Subst.compress tres).n with
                | Tm_arrow(bs', c') -> mk (Tm_arrow(bs@bs', c')) t.pos
                | _ -> t
@@ -1010,7 +1014,7 @@ let rec canon_arrow t =
   match (compress t).n with
   | Tm_arrow (bs, c) ->
       let cn = match c.n with
-               | Total (t, u) -> Total (canon_arrow t, u)
+               | Total t -> Total (canon_arrow t)
                | _ -> c.n
       in
       let c = { c with n = cn } in
@@ -1081,9 +1085,8 @@ let let_rec_arity (lb:letbinding) : int * option (list bool) =
         match k.n with
         | Tm_arrow(bs, c) ->
             let bs, c = Subst.open_comp bs c in
-            let ct = comp_to_comp_typ c in
            (match
-                ct.flags |> U.find_opt (function DECREASES _ -> true | _ -> false)
+                c |> comp_flags |> U.find_opt (function DECREASES _ -> true | _ -> false)
             with
             | Some (DECREASES d) ->
                 bs, Some d
@@ -1639,7 +1642,7 @@ let destruct_typ_as_formula f : option connective =
             if not (is_tot_or_gtot_comp c)
             then None
             else
-                let q = (comp_to_comp_typ_nouniv c).result_typ in
+                let q = comp_result c in
                 if is_free_in b.binder_bv q
                 then (
                     let pats, q = patterns q in
@@ -1928,11 +1931,11 @@ and binder_eq_dbg (dbg : bool) b1 b2 =
     (check "binder attrs" (eqlist (term_eq_dbg dbg) b1.binder_attrs b2.binder_attrs))
 
 and comp_eq_dbg (dbg : bool) c1 c2 =
-    let c1 = comp_to_comp_typ_nouniv c1 in
-    let c2 = comp_to_comp_typ_nouniv c2 in
-    (check "comp eff"  (lid_equals c1.effect_name c2.effect_name)) &&
+    let eff1, res1, args1 = comp_eff_name_res_and_args c1 in
+    let eff2, res2, args2 = comp_eff_name_res_and_args c2 in
+    (check "comp eff"  (lid_equals eff1 eff2)) &&
     //(check "comp univs"  (c1.comp_univs = c2.comp_univs)) &&
-    (check "comp result typ"  (term_eq_dbg dbg c1.result_typ c2.result_typ)) &&
+    (check "comp result typ"  (term_eq_dbg dbg res1 res2)) &&
     (* (check "comp args"  (eqlist arg_eq_dbg dbg c1.effect_args c2.effect_args)) && *)
     true //eq_flags c1.flags c2.flags
 and branch_eq_dbg (dbg : bool) (p1,w1,t1) (p2,w2,t2) =
@@ -2144,8 +2147,8 @@ and unbound_variables_ascription asc =
 
 and unbound_variables_comp c =
     match c.n with
-    | GTotal (t, _)
-    | Total (t, _) ->
+    | GTotal t
+    | Total t ->
       unbound_variables t
 
     | Comp ct ->
