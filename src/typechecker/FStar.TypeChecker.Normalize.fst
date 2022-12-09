@@ -554,13 +554,11 @@ and close_comp cfg env c =
     | [] when not <| cfg.steps.compress_uvars -> c
     | _ ->
       match c.n with
-      | Total (t, uopt) ->
-        mk_Total' (inline_closure_env cfg env [] t)
-                  (Option.map (norm_universe cfg env) uopt)
+      | Total t ->
+        mk_Total (inline_closure_env cfg env [] t)
 
-      | GTotal (t, uopt) ->
-        mk_GTotal' (inline_closure_env cfg env [] t)
-                   (Option.map (norm_universe cfg env) uopt)
+      | GTotal t ->
+        mk_GTotal (inline_closure_env cfg env [] t)
 
       | Comp c ->
         let rt = inline_closure_env cfg env [] c.result_typ in
@@ -816,8 +814,8 @@ let should_reify cfg stack =
 let rec maybe_weakly_reduced tm :  bool =
     let aux_comp c =
         match c.n with
-        | GTotal (t, _)
-        | Total (t, _) ->
+        | GTotal t
+        | Total t ->
           maybe_weakly_reduced t
 
         | Comp ct ->
@@ -2139,21 +2137,13 @@ and norm_comp : cfg -> env -> comp -> comp =
                                         (Print.comp_to_string comp)
                                         (BU.string_of_int (List.length env)));
         match comp.n with
-            | Total (t, uopt) ->
+            | Total t ->
               let t = norm cfg env [] t in
-              let uopt = match uopt with
-                         | Some u -> Some <| norm_universe cfg env u
-                         | None -> None
-              in
-              { mk_Total' t uopt with pos = comp.pos }
+              { mk_Total t with pos = comp.pos }
 
-            | GTotal (t, uopt) ->
+            | GTotal t ->
               let t = norm cfg env [] t in
-              let uopt = match uopt with
-                         | Some u -> Some <| norm_universe cfg env u
-                         | None -> None
-              in
-              { mk_GTotal' t uopt with pos = comp.pos }
+              { mk_GTotal t with pos = comp.pos }
 
             | Comp ct ->
               //if for extraction then erase effect args to unit
@@ -3063,8 +3053,8 @@ let maybe_promote_t env non_informative_only t =
 let ghost_to_pure_aux env non_informative_only c =
     match c.n with
     | Total _ -> c
-    | GTotal (t, uopt) ->
-      if maybe_promote_t env non_informative_only t then {c with n = Total (t, uopt)} else c
+    | GTotal t ->
+      if maybe_promote_t env non_informative_only t then {c with n = Total t} else c
     | Comp ct ->
         let l = Env.norm_eff_name env ct.effect_name in
         if U.is_ghost_effect l

@@ -403,6 +403,7 @@ val get_top_level_effect   : env -> lident -> option lident
 val is_layered_effect      : env -> lident -> bool
 val wp_signature           : env -> lident -> (bv * term)
 val comp_to_comp_typ       : env -> comp -> comp_typ
+val comp_set_flags         : env -> comp -> list S.cflag -> comp
 val unfold_effect_abbrev   : env -> comp -> comp_typ
 val effect_repr            : env -> comp -> universe -> option term
 val reify_comp             : env -> comp -> universe -> term

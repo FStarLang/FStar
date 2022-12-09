@@ -1110,19 +1110,19 @@ and check_relation_comp (g:env) rel (c0 c1:comp)
       if U.eq_comp c0 c1 = U.Equal
       then return ()
       else (
-        let ct_eq ct0 ct1 =
-          check_relation g EQUALITY ct0.result_typ ct1.result_typ ;!
-          check_relation_args g EQUALITY ct0.effect_args ct1.effect_args
+        let ct_eq res0 args0 res1 args1 =
+          check_relation g EQUALITY res0 res1 ;!
+          check_relation_args g EQUALITY args0 args1
         in
-        let ct0 = U.comp_to_comp_typ_nouniv c0 in
-        let ct1 = U.comp_to_comp_typ_nouniv c1 in
-        if I.lid_equals ct0.effect_name ct1.effect_name
-        then ct_eq ct0 ct1
+        let eff0, res0, args0 = U.comp_eff_name_res_and_args c0 in
+        let eff1, res1, args1 = U.comp_eff_name_res_and_args c1 in
+        if I.lid_equals eff0 eff1
+        then ct_eq res0 args0 res1 args1
         else (
           let ct0 = Env.unfold_effect_abbrev g.tcenv c0 in
           let ct1 = Env.unfold_effect_abbrev g.tcenv c1 in          
           if I.lid_equals ct0.effect_name ct1.effect_name
-          then ct_eq ct0 ct1
+          then ct_eq ct0.result_typ ct0.effect_args ct1.result_typ ct1.effect_args
           else fail (BU.format2 "Subcomp failed: Unequal computation types %s and %s" 
                             (Ident.string_of_lid ct0.effect_name)
                             (Ident.string_of_lid ct1.effect_name))
@@ -1528,8 +1528,8 @@ and check_binders (g_initial:env) (xs:binders)
 and check_comp (g:env) (c:comp)
   : result universe
   = match c.n with
-    | Total(t, _)
-    | GTotal(t, _) ->
+    | Total t
+    | GTotal t ->
       let! _, t = check "(G)Tot comp result" g (U.comp_result c) in
       is_type g t
     | Comp ct ->

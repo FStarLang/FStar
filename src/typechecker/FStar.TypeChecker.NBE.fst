@@ -710,8 +710,8 @@ let rec translate (cfg:config) (bs:list t) (e:term) : t =
 
 and translate_comp cfg bs (c:S.comp) : comp =
   match c.n with
-  | S.Total  (typ, u) -> Tot (translate cfg bs typ, fmap_opt (translate_univ cfg bs) u)
-  | S.GTotal (typ, u) -> GTot (translate cfg bs typ, fmap_opt (translate_univ cfg bs) u)
+  | S.Total  typ -> Tot (translate cfg bs typ, None)
+  | S.GTotal typ -> GTot (translate cfg bs typ, None)
   | S.Comp   ctyp      -> Comp (translate_comp_typ cfg bs ctyp)
 
 (* uncurried application *)
@@ -974,8 +974,8 @@ and translate_constant (c : sconst) : constant =
 and readback_comp cfg (c: comp) : S.comp =
   let c' =
     match c with
-    | Tot  (typ, u) -> S.Total (readback cfg typ, u)
-    | GTot (typ, u) -> S.GTotal (readback cfg typ, u)
+    | Tot  (typ, _u) -> S.Total (readback cfg typ)
+    | GTot (typ, _u) -> S.GTotal (readback cfg typ)
     | Comp ctyp     -> S.Comp (readback_comp_typ cfg ctyp)
    in S.mk c' Range.dummyRange
 
