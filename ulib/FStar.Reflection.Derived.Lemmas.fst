@@ -105,7 +105,7 @@ let rec collect_arr_order' (bds: binders) (tt: term) (c: comp)
                     bds' <<: tt /\ c' << tt))
           (decreases c)
   = match inspect_comp c with
-    | C_Total ret _ _ ->
+    | C_Total ret ->
         ( match inspect_ln_unascribe ret with
         | Tv_Arrow b c -> collect_arr_order' (b::bds) tt c
         | _ -> ())
@@ -115,17 +115,17 @@ val collect_arr_ln_bs_order : (t:term) ->
             Lemma (ensures forall bds c. 
                            (bds, c) == collect_arr_ln_bs t ==>
                                 (c << t /\ bds <<: t)
-                              \/ (c == pack_comp (C_Total t u_unk []) /\ bds == [])
+                              \/ (c == pack_comp (C_Total t) /\ bds == [])
                   )
 let collect_arr_ln_bs_order t = 
   match inspect_ln_unascribe t with
   | Tv_Arrow b c -> collect_arr_order' [b] t c;
                    Classical.forall_intro_2 (rev_memP #binder);
-                   inspect_pack_comp_inv (C_Total t u_unk [])
-  | _ -> inspect_pack_comp_inv (C_Total t u_unk [])
+                   inspect_pack_comp_inv (C_Total t)
+  | _ -> inspect_pack_comp_inv (C_Total t)
 
 val collect_arr_ln_bs_ref : (t:term) -> list (bd:binder{bd << t}) 
-                                     * (c:comp{ c == pack_comp (C_Total t u_unk []) \/ c << t})
+                                     * (c:comp{ c == pack_comp (C_Total t) \/ c << t})
 let collect_arr_ln_bs_ref t =
     let bds, c = collect_arr_ln_bs t in
     collect_arr_ln_bs_order t;
