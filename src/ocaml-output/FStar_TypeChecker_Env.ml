@@ -4349,16 +4349,55 @@ let (comp_to_comp_typ :
   env -> FStar_Syntax_Syntax.comp -> FStar_Syntax_Syntax.comp_typ) =
   fun env1 ->
     fun c ->
-      let c1 =
-        match c.FStar_Syntax_Syntax.n with
-        | FStar_Syntax_Syntax.Total (t, FStar_Pervasives_Native.None) ->
-            let u = env1.universe_of env1 t in
-            FStar_Syntax_Syntax.mk_Total' t (FStar_Pervasives_Native.Some u)
-        | FStar_Syntax_Syntax.GTotal (t, FStar_Pervasives_Native.None) ->
-            let u = env1.universe_of env1 t in
-            FStar_Syntax_Syntax.mk_GTotal' t (FStar_Pervasives_Native.Some u)
-        | uu___ -> c in
-      FStar_Syntax_Util.comp_to_comp_typ c1
+      match c.FStar_Syntax_Syntax.n with
+      | FStar_Syntax_Syntax.Comp ct -> ct
+      | uu___ ->
+          let uu___1 =
+            match c.FStar_Syntax_Syntax.n with
+            | FStar_Syntax_Syntax.Total t ->
+                (FStar_Parser_Const.effect_Tot_lid, t)
+            | FStar_Syntax_Syntax.GTotal t ->
+                (FStar_Parser_Const.effect_GTot_lid, t) in
+          (match uu___1 with
+           | (effect_name, result_typ) ->
+               let uu___2 =
+                 let uu___3 = env1.universe_of env1 result_typ in [uu___3] in
+               {
+                 FStar_Syntax_Syntax.comp_univs = uu___2;
+                 FStar_Syntax_Syntax.effect_name = effect_name;
+                 FStar_Syntax_Syntax.result_typ = result_typ;
+                 FStar_Syntax_Syntax.effect_args = [];
+                 FStar_Syntax_Syntax.flags = (FStar_Syntax_Util.comp_flags c)
+               })
+let (comp_set_flags :
+  env ->
+    FStar_Syntax_Syntax.comp ->
+      FStar_Syntax_Syntax.cflag Prims.list -> FStar_Syntax_Syntax.comp)
+  =
+  fun env1 ->
+    fun c ->
+      fun f ->
+        let uu___ =
+          let uu___1 =
+            let uu___2 = comp_to_comp_typ env1 c in
+            {
+              FStar_Syntax_Syntax.comp_univs =
+                (uu___2.FStar_Syntax_Syntax.comp_univs);
+              FStar_Syntax_Syntax.effect_name =
+                (uu___2.FStar_Syntax_Syntax.effect_name);
+              FStar_Syntax_Syntax.result_typ =
+                (uu___2.FStar_Syntax_Syntax.result_typ);
+              FStar_Syntax_Syntax.effect_args =
+                (uu___2.FStar_Syntax_Syntax.effect_args);
+              FStar_Syntax_Syntax.flags = f
+            } in
+          FStar_Syntax_Syntax.Comp uu___1 in
+        {
+          FStar_Syntax_Syntax.n = uu___;
+          FStar_Syntax_Syntax.pos = (c.FStar_Syntax_Syntax.pos);
+          FStar_Syntax_Syntax.vars = (c.FStar_Syntax_Syntax.vars);
+          FStar_Syntax_Syntax.hash_code = (c.FStar_Syntax_Syntax.hash_code)
+        }
 let rec (unfold_effect_abbrev :
   env -> FStar_Syntax_Syntax.comp -> FStar_Syntax_Syntax.comp_typ) =
   fun env1 ->

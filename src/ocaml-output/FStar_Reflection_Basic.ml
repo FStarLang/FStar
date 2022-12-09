@@ -321,14 +321,8 @@ let (inspect_comp :
            [])
       | uu___1 -> failwith "Impossible!" in
     match c.FStar_Syntax_Syntax.n with
-    | FStar_Syntax_Syntax.Total (t, uopt) ->
-        FStar_Reflection_Data.C_Total
-          (t, (FStar_Compiler_Util.dflt FStar_Syntax_Syntax.U_unknown uopt),
-            [])
-    | FStar_Syntax_Syntax.GTotal (t, uopt) ->
-        FStar_Reflection_Data.C_GTotal
-          (t, (FStar_Compiler_Util.dflt FStar_Syntax_Syntax.U_unknown uopt),
-            [])
+    | FStar_Syntax_Syntax.Total t -> FStar_Reflection_Data.C_Total t
+    | FStar_Syntax_Syntax.GTotal t -> FStar_Reflection_Data.C_GTotal t
     | FStar_Syntax_Syntax.Comp ct ->
         let uopt =
           if
@@ -349,37 +343,19 @@ let (inspect_comp :
            | uu___1 ->
                failwith "inspect_comp: Lemma does not have enough arguments?")
         else
-          (let uu___2 =
-             FStar_Ident.lid_equals ct.FStar_Syntax_Syntax.effect_name
-               FStar_Parser_Const.effect_Tot_lid in
-           if uu___2
-           then
-             let md = get_dec ct.FStar_Syntax_Syntax.flags in
-             FStar_Reflection_Data.C_Total
-               ((ct.FStar_Syntax_Syntax.result_typ), uopt, md)
-           else
-             (let uu___4 =
-                FStar_Ident.lid_equals ct.FStar_Syntax_Syntax.effect_name
-                  FStar_Parser_Const.effect_GTot_lid in
-              if uu___4
-              then
-                let md = get_dec ct.FStar_Syntax_Syntax.flags in
-                FStar_Reflection_Data.C_GTotal
-                  ((ct.FStar_Syntax_Syntax.result_typ), uopt, md)
-              else
-                (let inspect_arg uu___6 =
-                   match uu___6 with
-                   | (a, q) -> let uu___7 = inspect_aqual q in (a, uu___7) in
-                 let uu___6 =
-                   let uu___7 =
-                     FStar_Ident.path_of_lid
-                       ct.FStar_Syntax_Syntax.effect_name in
-                   let uu___8 =
-                     FStar_Compiler_List.map inspect_arg
-                       ct.FStar_Syntax_Syntax.effect_args in
-                   ((ct.FStar_Syntax_Syntax.comp_univs), uu___7,
-                     (ct.FStar_Syntax_Syntax.result_typ), uu___8) in
-                 FStar_Reflection_Data.C_Eff uu___6)))
+          (let inspect_arg uu___2 =
+             match uu___2 with
+             | (a, q) -> let uu___3 = inspect_aqual q in (a, uu___3) in
+           let uu___2 =
+             let uu___3 =
+               FStar_Ident.path_of_lid ct.FStar_Syntax_Syntax.effect_name in
+             let uu___4 =
+               FStar_Compiler_List.map inspect_arg
+                 ct.FStar_Syntax_Syntax.effect_args in
+             let uu___5 = get_dec ct.FStar_Syntax_Syntax.flags in
+             ((ct.FStar_Syntax_Syntax.comp_univs), uu___3,
+               (ct.FStar_Syntax_Syntax.result_typ), uu___4, uu___5) in
+           FStar_Reflection_Data.C_Eff uu___2)
 let (pack_comp : FStar_Reflection_Data.comp_view -> FStar_Syntax_Syntax.comp)
   =
   fun cv ->
@@ -390,36 +366,8 @@ let (pack_comp : FStar_Reflection_Data.comp_view -> FStar_Syntax_Syntax.comp)
       then FStar_Pervasives_Native.None
       else FStar_Pervasives_Native.Some u in
     match cv with
-    | FStar_Reflection_Data.C_Total (t, u, []) ->
-        FStar_Syntax_Syntax.mk_Total' t (urefl_to_univ_opt u)
-    | FStar_Reflection_Data.C_Total (t, u, l) ->
-        let ct =
-          {
-            FStar_Syntax_Syntax.comp_univs = (urefl_to_univs u);
-            FStar_Syntax_Syntax.effect_name =
-              FStar_Parser_Const.effect_Tot_lid;
-            FStar_Syntax_Syntax.result_typ = t;
-            FStar_Syntax_Syntax.effect_args = [];
-            FStar_Syntax_Syntax.flags =
-              [FStar_Syntax_Syntax.DECREASES
-                 (FStar_Syntax_Syntax.Decreases_lex l)]
-          } in
-        FStar_Syntax_Syntax.mk_Comp ct
-    | FStar_Reflection_Data.C_GTotal (t, u, []) ->
-        FStar_Syntax_Syntax.mk_GTotal' t (urefl_to_univ_opt u)
-    | FStar_Reflection_Data.C_GTotal (t, u, l) ->
-        let ct =
-          {
-            FStar_Syntax_Syntax.comp_univs = (urefl_to_univs u);
-            FStar_Syntax_Syntax.effect_name =
-              FStar_Parser_Const.effect_GTot_lid;
-            FStar_Syntax_Syntax.result_typ = t;
-            FStar_Syntax_Syntax.effect_args = [];
-            FStar_Syntax_Syntax.flags =
-              [FStar_Syntax_Syntax.DECREASES
-                 (FStar_Syntax_Syntax.Decreases_lex l)]
-          } in
-        FStar_Syntax_Syntax.mk_Comp ct
+    | FStar_Reflection_Data.C_Total t -> FStar_Syntax_Syntax.mk_Total t
+    | FStar_Reflection_Data.C_GTotal t -> FStar_Syntax_Syntax.mk_GTotal t
     | FStar_Reflection_Data.C_Lemma (pre, post, pats) ->
         let ct =
           let uu___ =
@@ -439,7 +387,7 @@ let (pack_comp : FStar_Reflection_Data.comp_view -> FStar_Syntax_Syntax.comp)
             FStar_Syntax_Syntax.flags = []
           } in
         FStar_Syntax_Syntax.mk_Comp ct
-    | FStar_Reflection_Data.C_Eff (us, ef, res, args) ->
+    | FStar_Reflection_Data.C_Eff (us, ef, res, args, decrs) ->
         let pack_arg uu___ =
           match uu___ with
           | (a, q) -> let uu___1 = pack_aqual q in (a, uu___1) in
@@ -452,7 +400,9 @@ let (pack_comp : FStar_Reflection_Data.comp_view -> FStar_Syntax_Syntax.comp)
             FStar_Syntax_Syntax.effect_name = uu___;
             FStar_Syntax_Syntax.result_typ = res;
             FStar_Syntax_Syntax.effect_args = uu___1;
-            FStar_Syntax_Syntax.flags = []
+            FStar_Syntax_Syntax.flags =
+              [FStar_Syntax_Syntax.DECREASES
+                 (FStar_Syntax_Syntax.Decreases_lex decrs)]
           } in
         FStar_Syntax_Syntax.mk_Comp ct
 let (pack_const : FStar_Reflection_Data.vconst -> FStar_Syntax_Syntax.sconst)
@@ -1239,22 +1189,19 @@ and (comp_eq :
         let uu___1 = inspect_comp c1 in
         let uu___2 = inspect_comp c2 in (uu___1, uu___2) in
       match uu___ with
-      | (FStar_Reflection_Data.C_Total (t1, u1, dec1),
-         FStar_Reflection_Data.C_Total (t2, u2, dec2)) ->
-          ((term_eq t1 t2) && (univ_eq u1 u2)) &&
-            ((eqlist ()) term_eq dec1 dec2)
-      | (FStar_Reflection_Data.C_GTotal (t1, u1, dec1),
-         FStar_Reflection_Data.C_GTotal (t2, u2, dec2)) ->
-          ((term_eq t1 t2) && (univ_eq u1 u2)) &&
-            ((eqlist ()) term_eq dec1 dec2)
+      | (FStar_Reflection_Data.C_Total t1, FStar_Reflection_Data.C_Total t2)
+          -> term_eq t1 t2
+      | (FStar_Reflection_Data.C_GTotal t1, FStar_Reflection_Data.C_GTotal
+         t2) -> term_eq t1 t2
       | (FStar_Reflection_Data.C_Lemma (pre1, post1, pats1),
          FStar_Reflection_Data.C_Lemma (pre2, post2, pats2)) ->
           ((term_eq pre1 pre2) && (term_eq post1 post2)) &&
             (term_eq pats1 pats2)
-      | (FStar_Reflection_Data.C_Eff (us1, name1, t1, args1),
-         FStar_Reflection_Data.C_Eff (us2, name2, t2, args2)) ->
-          (((univs_eq us1 us2) && (name1 = name2)) && (term_eq t1 t2)) &&
-            ((eqlist ()) arg_eq args1 args2)
+      | (FStar_Reflection_Data.C_Eff (us1, name1, t1, args1, decrs1),
+         FStar_Reflection_Data.C_Eff (us2, name2, t2, args2, decrs2)) ->
+          ((((univs_eq us1 us2) && (name1 = name2)) && (term_eq t1 t2)) &&
+             ((eqlist ()) arg_eq args1 args2))
+            && ((eqlist ()) term_eq decrs1 decrs2)
       | uu___1 -> false
 and (match_ret_asc_eq :
   FStar_Syntax_Syntax.match_returns_ascription ->

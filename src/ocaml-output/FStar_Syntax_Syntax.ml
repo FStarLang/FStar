@@ -263,8 +263,8 @@ and comp_typ =
     (term' syntax * arg_qualifier FStar_Pervasives_Native.option) Prims.list ;
   flags: cflag Prims.list }
 and comp' =
-  | Total of (term' syntax * universe FStar_Pervasives_Native.option) 
-  | GTotal of (term' syntax * universe FStar_Pervasives_Native.option) 
+  | Total of term' syntax 
+  | GTotal of term' syntax 
   | Comp of comp_typ 
 and binder =
   {
@@ -645,13 +645,11 @@ let (__proj__Mkcomp_typ__item__flags : comp_typ -> cflag Prims.list) =
     | { comp_univs; effect_name; result_typ; effect_args; flags;_} -> flags
 let (uu___is_Total : comp' -> Prims.bool) =
   fun projectee -> match projectee with | Total _0 -> true | uu___ -> false
-let (__proj__Total__item___0 :
-  comp' -> (term' syntax * universe FStar_Pervasives_Native.option)) =
+let (__proj__Total__item___0 : comp' -> term' syntax) =
   fun projectee -> match projectee with | Total _0 -> _0
 let (uu___is_GTotal : comp' -> Prims.bool) =
   fun projectee -> match projectee with | GTotal _0 -> true | uu___ -> false
-let (__proj__GTotal__item___0 :
-  comp' -> (term' syntax * universe FStar_Pervasives_Native.option)) =
+let (__proj__GTotal__item___0 : comp' -> term' syntax) =
   fun projectee -> match projectee with | GTotal _0 -> _0
 let (uu___is_Comp : comp' -> Prims.bool) =
   fun projectee -> match projectee with | Comp _0 -> true | uu___ -> false
@@ -1792,14 +1790,8 @@ let (extend_app : term -> arg -> FStar_Compiler_Range.range -> term) =
   fun t -> fun arg1 -> fun r -> extend_app_n t [arg1] r
 let (mk_Tm_delayed : (term * subst_ts) -> FStar_Compiler_Range.range -> term)
   = fun lr -> fun pos -> mk (Tm_delayed lr) pos
-let (mk_Total' : typ -> universe FStar_Pervasives_Native.option -> comp) =
-  fun t -> fun u -> mk (Total (t, u)) t.pos
-let (mk_GTotal' : typ -> universe FStar_Pervasives_Native.option -> comp) =
-  fun t -> fun u -> mk (GTotal (t, u)) t.pos
-let (mk_Total : typ -> comp) =
-  fun t -> mk_Total' t FStar_Pervasives_Native.None
-let (mk_GTotal : typ -> comp) =
-  fun t -> mk_GTotal' t FStar_Pervasives_Native.None
+let (mk_Total : typ -> comp) = fun t -> mk (Total t) t.pos
+let (mk_GTotal : typ -> comp) = fun t -> mk (GTotal t) t.pos
 let (mk_Comp : comp_typ -> comp) = fun ct -> mk (Comp ct) (ct.result_typ).pos
 let (mk_lb :
   (lbname * univ_name Prims.list * FStar_Ident.lident * typ * term *

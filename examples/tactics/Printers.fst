@@ -48,7 +48,7 @@ let mk_print_bv (self : name) (f : term) (bv : bv) : Tac term =
 let mk_printer_type (t : term) : Tac term =
     let b = fresh_binder_named "arg" t in
     let str = pack (Tv_FVar (pack_fv string_lid)) in
-    let c = pack_comp (C_Total str u_unk []) in
+    let c = pack_comp (C_Total str) in
     pack (Tv_Arrow b c)
 
 

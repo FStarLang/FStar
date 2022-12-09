@@ -203,8 +203,8 @@ let (extract_let_rec_annotation :
                                  (pfx, FStar_Syntax_Syntax.DECREASES d, sfx)
                                  ->
                                  let c1 =
-                                   FStar_Syntax_Util.comp_set_flags c
-                                     (FStar_Compiler_List.op_At pfx sfx) in
+                                   FStar_TypeChecker_Env.comp_set_flags env1
+                                     c (FStar_Compiler_List.op_At pfx sfx) in
                                  let uu___8 = FStar_Syntax_Util.arrow bs c1 in
                                  (uu___8, tarr, true)
                              | uu___8 -> (tarr, tarr, true)))
@@ -232,12 +232,13 @@ let (extract_let_rec_annotation :
                                        FStar_Syntax_Subst.subst_decreasing_order
                                          s d in
                                      let c1 =
-                                       FStar_Syntax_Util.comp_set_flags c
-                                         flags in
+                                       FStar_TypeChecker_Env.comp_set_flags
+                                         env1 c flags in
                                      let tarr1 =
                                        FStar_Syntax_Util.arrow bs c1 in
                                      let c'1 =
-                                       FStar_Syntax_Util.comp_set_flags c'
+                                       FStar_TypeChecker_Env.comp_set_flags
+                                         env1 c'
                                          ((FStar_Syntax_Syntax.DECREASES d')
                                          :: flags') in
                                      let tannot =
@@ -581,8 +582,8 @@ let (comp_univ_opt :
   =
   fun c ->
     match c.FStar_Syntax_Syntax.n with
-    | FStar_Syntax_Syntax.Total (uu___, uopt) -> uopt
-    | FStar_Syntax_Syntax.GTotal (uu___, uopt) -> uopt
+    | FStar_Syntax_Syntax.Total uu___ -> FStar_Pervasives_Native.None
+    | FStar_Syntax_Syntax.GTotal uu___ -> FStar_Pervasives_Native.None
     | FStar_Syntax_Syntax.Comp c1 ->
         (match c1.FStar_Syntax_Syntax.comp_univs with
          | [] -> FStar_Pervasives_Native.None
@@ -664,12 +665,14 @@ let (effect_args_from_repr :
            | FStar_Syntax_Syntax.Tm_arrow (uu___1, c) ->
                let uu___2 =
                  FStar_Compiler_Effect.op_Bar_Greater c
-                   FStar_Syntax_Util.comp_to_comp_typ in
+                   FStar_Syntax_Util.comp_eff_name_res_and_args in
                FStar_Compiler_Effect.op_Bar_Greater uu___2
-                 (fun ct ->
-                    FStar_Compiler_Effect.op_Bar_Greater
-                      ct.FStar_Syntax_Syntax.effect_args
-                      (FStar_Compiler_List.map FStar_Pervasives_Native.fst))
+                 (fun uu___3 ->
+                    match uu___3 with
+                    | (uu___4, uu___5, args) ->
+                        FStar_Compiler_Effect.op_Bar_Greater args
+                          (FStar_Compiler_List.map
+                             FStar_Pervasives_Native.fst))
            | uu___1 -> err ())
 let (mk_wp_return :
   FStar_TypeChecker_Env.env ->
@@ -696,10 +699,7 @@ let (mk_wp_return :
                 else
                   (let uu___2 = FStar_Syntax_Util.is_unit a in
                    if uu___2
-                   then
-                     FStar_Syntax_Syntax.mk_Total' a
-                       (FStar_Pervasives_Native.Some
-                          FStar_Syntax_Syntax.U_zero)
+                   then FStar_Syntax_Syntax.mk_Total a
                    else
                      (let wp =
                         let uu___4 =
@@ -979,9 +979,7 @@ let (lax_mk_tot_or_comp_l :
           let uu___ =
             FStar_Ident.lid_equals mname FStar_Parser_Const.effect_Tot_lid in
           if uu___
-          then
-            FStar_Syntax_Syntax.mk_Total' result
-              (FStar_Pervasives_Native.Some u_result)
+          then FStar_Syntax_Syntax.mk_Total result
           else mk_comp_l mname u_result result FStar_Syntax_Syntax.tun flags
 let (is_function : FStar_Syntax_Syntax.term -> Prims.bool) =
   fun t ->
@@ -1981,16 +1979,15 @@ let (mk_indexed_return :
                          let uu___5 = FStar_Syntax_Subst.open_comp bs c in
                          (match uu___5 with
                           | (a_b::x_b::bs1, c1) ->
-                              let uu___6 =
-                                FStar_Syntax_Util.comp_to_comp_typ c1 in
-                              (a_b, x_b, bs1, uu___6))
+                              (a_b, x_b, bs1,
+                                (FStar_Syntax_Util.comp_result c1)))
                      | uu___5 ->
                          let uu___6 =
                            return_t_shape_error
                              "Either not an arrow or not enough binders" in
                          FStar_Errors.raise_error uu___6 r in
                    (match uu___3 with
-                    | (a_b, x_b, rest_bs, return_ct) ->
+                    | (a_b, x_b, rest_bs, return_typ) ->
                         let uu___4 =
                           FStar_TypeChecker_Env.uvars_for_binders env rest_bs
                             [FStar_Syntax_Syntax.NT
@@ -2027,8 +2024,7 @@ let (mk_indexed_return :
                              let is =
                                let uu___5 =
                                  let uu___6 =
-                                   FStar_Syntax_Subst.compress
-                                     return_ct.FStar_Syntax_Syntax.result_typ in
+                                   FStar_Syntax_Subst.compress return_typ in
                                  let uu___7 = FStar_Syntax_Util.is_layered ed in
                                  effect_args_from_repr uu___6 uu___7 r in
                                FStar_Compiler_Effect.op_Bar_Greater uu___5
@@ -2246,7 +2242,8 @@ let (mk_indexed_bind :
                                                           subst) in
                                                    FStar_Compiler_Effect.op_Bar_Greater
                                                      uu___8
-                                                     FStar_Syntax_Util.comp_to_comp_typ in
+                                                     (FStar_TypeChecker_Env.comp_to_comp_typ
+                                                        env) in
                                                  let fml =
                                                    let uu___8 =
                                                      let uu___9 =
@@ -2443,9 +2440,11 @@ let (mk_bind :
                         | (m, c11, c21, g_lift) ->
                             let uu___3 =
                               let uu___4 =
-                                FStar_Syntax_Util.comp_to_comp_typ c11 in
+                                FStar_TypeChecker_Env.comp_to_comp_typ env
+                                  c11 in
                               let uu___5 =
-                                FStar_Syntax_Util.comp_to_comp_typ c21 in
+                                FStar_TypeChecker_Env.comp_to_comp_typ env
+                                  c21 in
                               (uu___4, uu___5) in
                             (match uu___3 with
                              | (ct11, ct21) ->
@@ -3541,7 +3540,8 @@ let (assume_result_eq_pure_term_in_m :
                          Prims.op_Negation uu___5 in
                        if uu___4
                        then
-                         let retc1 = FStar_Syntax_Util.comp_to_comp_typ retc in
+                         let retc1 =
+                           FStar_TypeChecker_Env.comp_to_comp_typ env retc in
                          let retc2 =
                            {
                              FStar_Syntax_Syntax.comp_univs =
@@ -3558,7 +3558,8 @@ let (assume_result_eq_pure_term_in_m :
                          (uu___5, g_c1)
                        else
                          (let uu___6 =
-                            FStar_Syntax_Util.comp_set_flags retc flags in
+                            FStar_TypeChecker_Env.comp_set_flags env retc
+                              flags in
                           (uu___6, g_c1)))
                 else
                   (let c1 = FStar_TypeChecker_Env.unfold_effect_abbrev env c in
@@ -3577,7 +3578,7 @@ let (assume_result_eq_pure_term_in_m :
                    | (ret, g_ret) ->
                        let ret1 =
                          let uu___5 =
-                           FStar_Syntax_Util.comp_set_flags ret
+                           FStar_TypeChecker_Env.comp_set_flags env ret
                              [FStar_Syntax_Syntax.PARTIAL_RETURN] in
                          FStar_Compiler_Effect.op_Less_Bar
                            FStar_TypeChecker_Common.lcomp_of_comp uu___5 in
@@ -3596,7 +3597,8 @@ let (assume_result_eq_pure_term_in_m :
                        (match uu___5 with
                         | (bind_c, g_bind) ->
                             let uu___6 =
-                              FStar_Syntax_Util.comp_set_flags bind_c flags in
+                              FStar_TypeChecker_Env.comp_set_flags env bind_c
+                                flags in
                             let uu___7 =
                               FStar_TypeChecker_Env.conj_guards
                                 [g_c; g_ret; g_bind] in
@@ -4557,11 +4559,13 @@ let (bind_cases :
                                                           let uu___15 =
                                                             FStar_Compiler_Effect.op_Bar_Greater
                                                               cthen2
-                                                              FStar_Syntax_Util.comp_to_comp_typ in
+                                                              (FStar_TypeChecker_Env.comp_to_comp_typ
+                                                                 env) in
                                                           let uu___16 =
                                                             FStar_Compiler_Effect.op_Bar_Greater
                                                               celse1
-                                                              FStar_Syntax_Util.comp_to_comp_typ in
+                                                              (FStar_TypeChecker_Env.comp_to_comp_typ
+                                                                 env) in
                                                           (md1, uu___15,
                                                             uu___16,
                                                             g_lift_then,
@@ -7598,7 +7602,7 @@ let (lift_tf_layered_effect :
                  "Lifting indexed comp %s to  %s {\n" uu___1 uu___2)
             else ();
             (let r = FStar_TypeChecker_Env.get_range env in
-             let ct = FStar_Syntax_Util.comp_to_comp_typ c in
+             let ct = FStar_TypeChecker_Env.comp_to_comp_typ env c in
              check_non_informative_type_for_lift env
                ct.FStar_Syntax_Syntax.effect_name tgt
                ct.FStar_Syntax_Syntax.result_typ r;
@@ -7638,7 +7642,7 @@ let (lift_tf_layered_effect :
                                 FStar_Compiler_Effect.op_Bar_Greater lift_c
                                   (FStar_Syntax_Subst.subst_comp substs) in
                               FStar_Compiler_Effect.op_Bar_Greater uu___6
-                                FStar_Syntax_Util.comp_to_comp_typ in
+                                (FStar_TypeChecker_Env.comp_to_comp_typ env) in
                             let is =
                               let uu___6 =
                                 FStar_TypeChecker_Env.is_layered_effect env
@@ -7859,7 +7863,7 @@ let (get_mlift_for_subeff :
         }
       else
         (let mk_mlift_wp ts env1 c =
-           let ct = FStar_Syntax_Util.comp_to_comp_typ c in
+           let ct = FStar_TypeChecker_Env.comp_to_comp_typ env1 c in
            check_non_informative_type_for_lift env1
              ct.FStar_Syntax_Syntax.effect_name
              sub.FStar_Syntax_Syntax.target ct.FStar_Syntax_Syntax.result_typ
