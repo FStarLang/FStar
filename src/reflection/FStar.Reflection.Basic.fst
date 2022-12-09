@@ -298,8 +298,8 @@ let inspect_comp (c : comp) : comp_view =
         | _ -> failwith "Impossible!"
     in
     match c.n with
-    | Total (t, uopt) -> C_Total (t, BU.dflt U_unknown uopt, [])
-    | GTotal (t, uopt) -> C_GTotal (t, BU.dflt U_unknown uopt, [])
+    | Total t -> C_Total t
+    | GTotal t -> C_GTotal t
     | Comp ct -> begin
         let uopt =
           if List.length ct.comp_univs = 0
@@ -311,18 +311,13 @@ let inspect_comp (c : comp) : comp_view =
                 C_Lemma (pre, post, pats)
             | _ ->
                 failwith "inspect_comp: Lemma does not have enough arguments?"
-        else if Ident.lid_equals ct.effect_name PC.effect_Tot_lid then
-            let md = get_dec ct.flags in
-            C_Total (ct.result_typ, uopt, md)
-        else if Ident.lid_equals ct.effect_name PC.effect_GTot_lid then
-            let md = get_dec ct.flags in
-            C_GTotal (ct.result_typ, uopt, md)
         else
             let inspect_arg (a, q) = (a, inspect_aqual q) in
             C_Eff (ct.comp_univs,
                    Ident.path_of_lid ct.effect_name,
                    ct.result_typ,
-                   List.map inspect_arg ct.effect_args)
+                   List.map inspect_arg ct.effect_args,
+                   get_dec ct.flags)
       end
 
 let pack_comp (cv : comp_view) : comp =
@@ -335,26 +330,8 @@ let pack_comp (cv : comp_view) : comp =
       then None
       else Some u in
     match cv with
-    | C_Total (t, u, []) -> mk_Total' t (urefl_to_univ_opt u)
-    | C_Total (t, u, l) ->
-        let ct = { comp_univs=urefl_to_univs u
-                 ; effect_name=PC.effect_Tot_lid
-                 ; result_typ = t
-                 ; effect_args = []
-                 ; flags = [DECREASES (Decreases_lex l)] }
-        in
-        S.mk_Comp ct
-
-    | C_GTotal (t, u, []) -> mk_GTotal' t (urefl_to_univ_opt u)
-    | C_GTotal (t, u, l) ->
-        let ct = { comp_univs=urefl_to_univs u
-                 ; effect_name=PC.effect_GTot_lid
-                 ; result_typ = t
-                 ; effect_args = []
-                 ; flags = [DECREASES (Decreases_lex l)] }
-        in
-        S.mk_Comp ct
-
+    | C_Total t -> mk_Total t
+    | C_GTotal t -> mk_GTotal t
     | C_Lemma (pre, post, pats) ->
         let ct = { comp_univs  = []
                  ; effect_name = PC.effect_Lemma_lid
@@ -363,13 +340,13 @@ let pack_comp (cv : comp_view) : comp =
                  ; flags       = [] } in
         S.mk_Comp ct
 
-    | C_Eff (us, ef, res, args) ->
+    | C_Eff (us, ef, res, args, decrs) ->
         let pack_arg (a, q) = (a, pack_aqual q) in
         let ct = { comp_univs  = us
                  ; effect_name = Ident.lid_of_path ef Range.dummyRange
                  ; result_typ  = res
                  ; effect_args = List.map pack_arg args
-                 ; flags       = [] } in
+                 ; flags       = [DECREASES (Decreases_lex decrs)] } in
         S.mk_Comp ct
 
 let pack_const (c:vconst) : sconst =
@@ -875,22 +852,19 @@ and bv_eq (bv1 : bv) (bv2 : bv) : bool =
 
 and comp_eq (c1 : comp) (c2 : comp) : bool =
   match inspect_comp c1, inspect_comp c2 with
-  | C_Total (t1, u1, dec1), C_Total (t2, u2, dec2) ->
-    term_eq t1 t2 && univ_eq u1 u2
-    && eqlist term_eq dec1 dec2
-
-  | C_GTotal (t1, u1, dec1), C_GTotal (t2, u2, dec2) ->
-    term_eq t1 t2 && univ_eq u1 u2
-    && eqlist term_eq dec1 dec2
+  | C_Total t1, C_Total t2
+  | C_GTotal t1, C_GTotal t2 ->
+    term_eq t1 t2
 
   | C_Lemma (pre1, post1, pats1), C_Lemma (pre2, post2, pats2) ->
     term_eq pre1 pre2 && term_eq post1 post2 && term_eq pats1 pats2
 
-  | C_Eff (us1, name1, t1, args1), C_Eff (us2, name2, t2, args2) ->
+  | C_Eff (us1, name1, t1, args1, decrs1), C_Eff (us2, name2, t2, args2, decrs2) ->
     univs_eq us1 us2 &&
     name1 = name2 &&
     term_eq t1 t2 &&
-    eqlist arg_eq args1 args2
+    eqlist arg_eq args1 args2 &&
+    eqlist term_eq decrs1 decrs2
 
   | _ ->
     false

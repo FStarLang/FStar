@@ -126,10 +126,10 @@ type bv_view = {
 type binder_view = bv * (aqualv * list term)
 
 type comp_view =
-    | C_Total of typ * universe * list term  //decreases clause
-    | C_GTotal of typ * universe * list term //idem
+    | C_Total of typ
+    | C_GTotal of typ
     | C_Lemma of term * term * term
-    | C_Eff of universes * name * term * list argv
+    | C_Eff of universes * name * term * list argv * list term  // list term is the decreases clause
 
 type ctor = name * typ
 
