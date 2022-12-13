@@ -23,14 +23,9 @@ let m_bind l f = concatMap f l
 
 // w is an ordered (w_ord) monad with conjunction (w_conj) and actions from prop (w_act_prop)
 // In this example, good ol' continuations into prop
-// val w0 (a : Type u#a) : Type u#(max 1 a)
-// let w0 a = (a -> Type0) -> Type0
-
-// let monotonic (w:w0 'a) =
-//   forall p1 p2. (forall x. p1 x ==> p2 x) ==> w p1 ==> w p2
 
 val w (a : Type u#a) : Type u#(max 1 a)
-let w a = pure_wp a //w:(w0 a){monotonic w}
+let w a = pure_wp a
 
 val w_ord (#a : Type) : w a -> w a -> Type0
 let w_ord wp1 wp2 = forall p. wp1 p ==> wp2 p
@@ -134,19 +129,19 @@ let i_if_then_else (a : Type) (wp1 wp2 : w a) (f : irepr a wp1) (g : irepr a wp2
 total
 reifiable
 reflectable
-layered_effect {
-  ND : a:Type -> wp : w a -> Effect
-  with repr         = irepr;
-       return       = ireturn;
-       bind         = ibind;
-       subcomp      = isubcomp; 
-       if_then_else = i_if_then_else
+effect {
+  ND (a:Type) (wp:w a)
+  with {repr = irepr;
+        return = ireturn;
+        bind = ibind;
+        subcomp = isubcomp; 
+        if_then_else = i_if_then_else}
 }
 
-let lift_pure_nd (a:Type) (wp:pure_wp a) (f:(eqtype_as_type unit -> PURE a wp)) :
+let lift_pure_nd (a:Type) (wp:pure_wp a) (f:unit -> PURE a wp) :
   Pure (irepr a wp) (requires True)
                     (ensures (fun _ -> True))
-  = fun p _ -> let r = Common.elim_pure f p in [r]
+  = fun p _ -> let r = FStar.Monotonic.Pure.elim_pure f p in [r]
 
 sub_effect PURE ~> ND = lift_pure_nd
 
@@ -157,7 +152,7 @@ let test_f () =
 //let l () : (l:(list int){forall p. p 5 /\ p 3 ==> interp l p}) = reify (test_f ())
 // ^ This one doesn't work... datatype subtyping to blame?
 
-let l () : (l:(list int)) = reify (test_f ()) (fun _ -> True) ()
+let l () : list int = reify (test_f ()) (fun _ -> True) ()
 
 effect Nd (a:Type) (pre:pure_pre) (post:pure_post' a pre) =
         ND a (as_pure_wp (fun (p:pure_post a) -> pre /\ (forall (pure_result:a). post pure_result ==> p pure_result)))
@@ -224,3 +219,17 @@ let pyths_norm () = normalize_term (reify (pyths ()))
 Reducing ‘pyths_norm ()’…
 pyths_norm () ↓βδιζr [3, 4, 5; 4, 3, 5; 6, 8, 10; 8, 6, 10] <: list ((int * int) * int)
 *)
+
+
+//
+// The following usage of ND was reported in #2293
+//
+let test_u (t1:Type u#a) (t2:Type u#b) : (_:t1 -> ND t2 (as_pure_wp (fun p -> True))) = admit()
+
+class ml (t:Type) = { mldummy: unit }
+
+instance ml_totarrow (t1:Type u#a) (t2:Type u#b) {| ml t1 |} {| ml t2 |} : ml (t1 -> Tot t2) =
+  { mldummy = () }
+
+instance ml_ndarrow (t1:Type u#a) (t2:Type u#b) {| ml t1 |} {| ml t2 |} : ml (t1 -> ND t2 (as_pure_wp (fun p -> True))) =
+  { mldummy = () }

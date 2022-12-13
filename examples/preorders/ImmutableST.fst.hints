@@ -8,7 +8,7 @@
       1,
       [ "@query", "equation_ImmutableST.contains" ],
       0,
-      "e3bd9174939b3fe4b0238327f583f0d1"
+      "e777ad09fb1e5a356535021cb3016209"
     ],
     [
       "ImmutableST.heap_rel",
@@ -21,10 +21,10 @@
         "refinement_interpretation_Tm_refine_6f8aef5da32367b0818e015b75ddf1d7"
       ],
       0,
-      "ec53ba9e4557ff3f6ba5c5520bb29753"
+      "df31e4ce4162216fb10d14dd5e113998"
     ],
     [
-      "ImmutableST.2247",
+      "ImmutableST.2310",
       1,
       2,
       1,
@@ -38,27 +38,27 @@
         "token_correspondence_ImmutableST.heap_rel"
       ],
       0,
-      "0c36626402ba9c9dc4ea4bc6a12a12ef"
-    ],
-    [
-      "ImmutableST.ist_witnessed",
-      1,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query",
-        "equation_FStar.Preorder.preorder_rel",
-        "equation_FStar.Preorder.reflexive",
-        "equation_FStar.Preorder.transitive",
-        "equation_ImmutableST.heap_rel",
-        "refinement_interpretation_Tm_refine_6f8aef5da32367b0818e015b75ddf1d7",
-        "token_correspondence_ImmutableST.heap_rel"
-      ],
-      0,
-      "78e70e57e3e136c3e83b57715be9274d"
+      "95736b3755939145e973b74160de8d95"
     ],
     [
       "ImmutableST.ist_witnessed",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "equation_FStar.Preorder.preorder_rel",
+        "equation_FStar.Preorder.reflexive",
+        "equation_FStar.Preorder.transitive",
+        "equation_ImmutableST.heap_rel",
+        "refinement_interpretation_Tm_refine_6f8aef5da32367b0818e015b75ddf1d7",
+        "token_correspondence_ImmutableST.heap_rel"
+      ],
+      0,
+      "109f685dff1db33b8f744713174a3680"
+    ],
+    [
+      "ImmutableST.ist_witnessed",
       2,
       2,
       1,
@@ -72,7 +72,7 @@
         "token_correspondence_ImmutableST.heap_rel"
       ],
       0,
-      "66fe76cdb8d522a24dcd4e78514cc943"
+      "17b13e46075230d9c0be3e52f33bcbf8"
     ],
     [
       "ImmutableST.ist_witness",
@@ -89,7 +89,7 @@
         "token_correspondence_ImmutableST.heap_rel"
       ],
       0,
-      "a855455fe74786226af6ef0048019d24"
+      "1f7819c45c67dfd9a8aac57cb1ee86c0"
     ],
     [
       "ImmutableST.ist_recall",
@@ -106,7 +106,7 @@
         "token_correspondence_ImmutableST.heap_rel"
       ],
       0,
-      "bb7f88203f95a7d8cbda65eb30255b8e"
+      "c99dab272ff92ab2e79fbd8b391ee050"
     ],
     [
       "ImmutableST.ref",
@@ -120,7 +120,7 @@
         "token_correspondence_ImmutableST.heap_rel"
       ],
       0,
-      "2f8d019a6660b6a1ff046d74fa01eb3d"
+      "a3e976db208c408d36b0efac9489fd42"
     ],
     [
       "ImmutableST.alloc",
@@ -142,7 +142,7 @@
         "typing_FStar.Pervasives.Native.snd", "typing_NatHeap.ref"
       ],
       0,
-      "a18ed0bcc7c187a9224f86b209fd11b6"
+      "685b002512cc3aad3238707c01d045b5"
     ],
     [
       "ImmutableST.read",
@@ -151,7 +151,7 @@
       1,
       [ "@query", "equation_ImmutableST.contains" ],
       0,
-      "f153bde6bcdc335825a0991b3f8a8270"
+      "ff392f89c7173047a3ef3097602110d4"
     ],
     [
       "ImmutableST.read",
@@ -167,7 +167,7 @@
         "token_correspondence_ImmutableST.heap_rel"
       ],
       0,
-      "1724a645294ac773852cea364cdf5df4"
+      "ab9204e5cf7c5ba26a47fd5af46d3e9f"
     ],
     [
       "ImmutableST.write",
@@ -176,7 +176,7 @@
       1,
       [ "@query", "equation_ImmutableST.contains" ],
       0,
-      "e4b453753b68cd79a3b1620f003154be"
+      "499da0a14d439519cf80e21bb8bce318"
     ],
     [
       "ImmutableST.write",
@@ -185,7 +185,7 @@
       1,
       [ "@query", "equation_ImmutableST.heap_rel" ],
       0,
-      "6b834db57ef265f0bf1fba8b5f257ea7"
+      "74041ff3763e3879edba12adca61491d"
     ],
     [
       "ImmutableST.write_nop",
@@ -194,7 +194,7 @@
       1,
       [ "@query", "equation_ImmutableST.contains" ],
       0,
-      "9f511f89795704b0977f6866360885cd"
+      "7bfc268a6478ff8e992e4eef8c732784"
     ],
     [
       "ImmutableST.write_nop",
@@ -203,7 +203,7 @@
       1,
       [ "@query" ],
       0,
-      "2881ce879ced63627fa1d78a44987522"
+      "fe54d8da749bc0a43c5d1d4f5b1458be"
     ],
     [
       "ImmutableST.recall",
@@ -218,7 +218,7 @@
         "token_correspondence_ImmutableST.heap_rel"
       ],
       0,
-      "64d772cddb24f1a2744e13c730e62c14"
+      "db79b9caac8af7bc27fb0b762f758fd8"
     ]
   ]
 ]

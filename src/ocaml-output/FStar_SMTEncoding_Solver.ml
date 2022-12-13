@@ -57,7 +57,7 @@ let initialize_hints_db : 'uuuuu . Prims.string -> 'uuuuu -> unit =
              let uu___4 =
                let uu___5 =
                  FStar_Compiler_Util.format1
-                   "Malformed JSON hints file: %s; ran without hints\n"
+                   "Malformed JSON hints file: %s; ran without hints"
                    val_filename in
                (FStar_Errors.Warning_CouldNotReadHints, uu___5) in
              FStar_Errors.log_issue FStar_Compiler_Range.dummyRange uu___4
@@ -69,7 +69,7 @@ let initialize_hints_db : 'uuuuu . Prims.string -> 'uuuuu -> unit =
              let uu___4 =
                let uu___5 =
                  FStar_Compiler_Util.format1
-                   "Unable to open hints file: %s; ran without hints\n"
+                   "Unable to open hints file: %s; ran without hints"
                    val_filename in
                (FStar_Errors.Warning_CouldNotReadHints, uu___5) in
              FStar_Errors.log_issue FStar_Compiler_Range.dummyRange uu___4

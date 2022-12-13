@@ -248,6 +248,9 @@ let binop_guard f g1 g2 = {
 let conj_guard g1 g2 = binop_guard conj_guard_f g1 g2
 let imp_guard g1 g2 = binop_guard imp_guard_f g1 g2
 let conj_guards gs = List.fold_left conj_guard trivial_guard gs
+let split_guard g =
+ {g with guard_f = Trivial},
+ {trivial_guard with guard_f = g.guard_f}
 
 let weaken_guard_formula g fml =
   match g.guard_f with

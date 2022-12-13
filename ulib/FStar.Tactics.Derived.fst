@@ -14,6 +14,7 @@
    limitations under the License.
 *)
 module FStar.Tactics.Derived
+
 open FStar.List.Tot
 open FStar.Reflection
 open FStar.Reflection.Formula
@@ -23,9 +24,18 @@ open FStar.Tactics.Builtins
 open FStar.Tactics.Result
 open FStar.Tactics.Util
 open FStar.Tactics.SyntaxHelpers
+
 module L = FStar.List.Tot
+module V = FStar.Tactics.Visit
 
 exception Goal_not_trivial
+
+let rec inspect_unascribe (t:term) : Tac (tv:term_view{notAscription tv}) =
+  match inspect t with
+  | Tv_AscribedT t _ _ _
+  | Tv_AscribedC t _ _ _ ->
+    inspect_unascribe t
+  | tv -> tv
 
 let goals () : Tac (list goal) = goals_of (get ())
 let smt_goals () : Tac (list goal) = smt_goals_of (get ())
@@ -254,11 +264,6 @@ let cur_module () : Tac name =
 let open_modules () : Tac (list name) =
     env_open_modules (top_env ())
 
-let rec repeatn (#a:Type) (n : int) (t : unit -> Tac a) : Tac (list a) =
-    if n <= 0
-    then []
-    else t () :: repeatn (n - 1) t
-
 let fresh_uvar (o : option typ) : Tac term =
     let e = cur_env () in
     uvar_env e o
@@ -361,6 +366,8 @@ let ngoals () : Tac int = List.Tot.Base.length (goals ())
 (** [ngoals_smt ()] returns the number of SMT goals *)
 let ngoals_smt () : Tac int = List.Tot.Base.length (smt_goals ())
 
+(* Create a fresh bound variable (bv), using a generic name. See also
+[fresh_bv_named]. *)
 let fresh_bv t : Tac bv =
     (* These bvs are fresh anyway through a separate counter,
      * but adding the integer allows for more readability when
@@ -614,10 +621,24 @@ let mk_sq_eq (t1 t2 : term) : term =
     let eq : term = pack_ln (Tv_FVar (pack_fv eq2_qn)) in
     mk_squash (mk_e_app eq [t1; t2])
 
+(** Rewrites all appearances of a term [t1] in the goal into [t2].
+Creates a new goal for [t1 == t2]. *)
 let grewrite (t1 t2 : term) : Tac unit =
     let e = tcut (mk_sq_eq t1 t2) in
     let e = pack_ln (Tv_Var (bv_of_binder e)) in
-    pointwise (fun () -> try exact e with | _ -> trefl ())
+    pointwise (fun () ->
+      (* If the LHS is a uvar, do nothing, so we do not instantiate it. *)
+      let is_uvar =
+        match term_as_formula (cur_goal()) with
+        | Comp (Eq _) lhs rhs ->
+          (match inspect_ln lhs with
+           | Tv_Uvar _ _ -> true
+           | _ -> false)
+        | _ -> false
+      in
+      if is_uvar
+      then trefl ()
+      else try exact e with | _ -> trefl ())
 
 private
 let __un_sq_eq (#a:Type) (x y : a) (_ : (x == y)) : Lemma (x == y) = ()
@@ -681,7 +702,7 @@ let rec apply_squash_or_lem d t =
            fail "mapply: can't apply (1)"
        end
     | C_Total rt _ _ ->
-       begin match unsquash rt with
+       begin match unsquash_term rt with
        (* If the function returns a squash, just apply it, since our goals are squashed *)
        | Some rt ->
         // DUPLICATED, refactor!
@@ -821,125 +842,6 @@ let bump_nth (n:pos) : Tac unit =
   | None -> fail "bump_nth: not that many goals"
   | Some (h, t) -> set_goals (h :: t)
 
-let on_sort_bv (f : term -> Tac term) (xbv:bv) : Tac bv =
-  let bvv = inspect_bv xbv in
-  let bvv = { bvv with bv_sort = f bvv.bv_sort } in
-  let bv = pack_bv bvv in
-  bv
-
-let on_sort_binder (f : term -> Tac term) (b:binder) : Tac binder =
-  let bv, (q, attrs) = inspect_binder b in
-  let bv = on_sort_bv f bv in
-  let b = pack_binder bv q attrs in
-  b
-
-let rec visit_tm (ff : term -> Tac term) (t : term) : Tac term =
-  let tv = inspect_ln t in
-  let tv' =
-    match tv with
-    | Tv_FVar _
-    | Tv_UInst _ _ -> tv
-    | Tv_Var bv ->
-        let bv = on_sort_bv (visit_tm ff) bv in
-        Tv_Var bv
-
-    | Tv_BVar bv ->
-        let bv = on_sort_bv (visit_tm ff) bv in
-        Tv_BVar bv
-
-    | Tv_Type u -> Tv_Type u
-    | Tv_Const c -> Tv_Const c
-    | Tv_Uvar i u -> Tv_Uvar i u
-    | Tv_Unknown -> Tv_Unknown
-    | Tv_Arrow b c ->
-        let b = on_sort_binder (visit_tm ff) b in
-        let c = visit_comp ff c in
-        Tv_Arrow b c
-    | Tv_Abs b t ->
-        let b = on_sort_binder (visit_tm ff) b in
-        let t = visit_tm ff t in
-        Tv_Abs b t
-    | Tv_App l (r, q) ->
-         let l = visit_tm ff l in
-         let r = visit_tm ff r in
-         Tv_App l (r, q)
-    | Tv_Refine b r ->
-        let b = on_sort_bv (visit_tm ff) b in
-        let r = visit_tm ff r in
-        Tv_Refine b r
-    | Tv_Let r attrs b def t ->
-        let b = on_sort_bv (visit_tm ff) b in
-        let def = visit_tm ff def in
-        let t = visit_tm ff t in
-        Tv_Let r attrs b def t
-    | Tv_Match sc ret_opt brs ->
-        let sc = visit_tm ff sc in
-        let ret_opt = map_opt (fun (b, asc) ->
-          let b = on_sort_binder (visit_tm ff) b in
-          let asc =
-            match asc with
-            | Inl t, tacopt, use_eq ->
-              Inl (visit_tm ff t), map_opt (visit_tm ff) tacopt, use_eq
-            | Inr c, tacopt, use_eq->
-              Inr (visit_comp ff c), map_opt (visit_tm ff) tacopt, use_eq in
-          b, asc) ret_opt in
-        let brs = map (visit_br ff) brs in
-        Tv_Match sc ret_opt brs
-    | Tv_AscribedT e t topt use_eq ->
-        let e = visit_tm ff e in
-        let t = visit_tm ff t in
-        Tv_AscribedT e t topt use_eq
-    | Tv_AscribedC e c topt use_eq ->
-        let e = visit_tm ff e in
-        Tv_AscribedC e c topt use_eq
-  in
-  ff (pack_ln tv')
-and visit_br (ff : term -> Tac term) (b:branch) : Tac branch =
-  let (p, t) = b in
-  let p = visit_pat ff p in
-  let t = visit_tm ff t in
-  (p, t)
-and visit_pat (ff : term -> Tac term) (p:pattern) : Tac pattern =
-  match p with
-  | Pat_Constant c -> p
-  | Pat_Cons fv us l ->
-      let l = (map (fun(p,b) -> (visit_pat ff p, b)) l) in
-      Pat_Cons fv us l
-  | Pat_Var bv ->
-      let bv = on_sort_bv (visit_tm ff) bv in
-      Pat_Var bv
-  | Pat_Wild bv ->
-      let bv = on_sort_bv (visit_tm ff) bv in
-      Pat_Wild bv
-  | Pat_Dot_Term eopt ->
-      Pat_Dot_Term (map_opt (visit_tm ff) eopt)
-and visit_comp (ff : term -> Tac term) (c : comp) : Tac comp =
-  let cv = inspect_comp c in
-  let cv' =
-    match cv with
-    | C_Total ret uopt decr ->
-        let ret = visit_tm ff ret in
-        let decr = map (visit_tm ff) decr in
-        C_Total ret uopt decr
-
-    | C_GTotal ret uopt decr ->
-        let ret = visit_tm ff ret in
-        let decr = map (visit_tm ff) decr in
-        C_GTotal ret uopt decr
-
-    | C_Lemma pre post pats ->
-        let pre = visit_tm ff pre in
-        let post = visit_tm ff post in
-        let pats = visit_tm ff pats in
-        C_Lemma pre post pats
-
-    | C_Eff us eff res args ->
-        let res = visit_tm ff res in
-        let args = map (fun (a, q) -> (visit_tm ff a, q)) args in
-        C_Eff us eff res args
-  in
-  pack_comp cv'
-
 let rec destruct_list (t : term) : Tac (list term) =
     let head, args = collect_app t in
     match inspect_ln head, args with
@@ -956,9 +858,9 @@ let rec destruct_list (t : term) : Tac (list term) =
       raise NotAListLiteral
 
 private let get_match_body () : Tac term =
-  match FStar.Reflection.Formula.unsquash (cur_goal ()) with
+  match unsquash_term (cur_goal ()) with
   | None -> fail ""
-  | Some t -> match inspect t with
+  | Some t -> match inspect_unascribe t with
              | Tv_Match sc _ _ -> sc
              | _ -> fail "Goal is not a match"
 
@@ -1008,7 +910,7 @@ let name_appears_in (nm:name) (t:term) : Tac bool =
       t
     | t -> t
   in
-  try ignore (visit_tm ff t); false with
+  try ignore (V.visit_tm ff t); false with
   | Appears -> true
   | e -> raise e
 
@@ -1032,3 +934,12 @@ let string_to_term_with_lb
       ) (e, []) letbindings in
     let t = string_to_term e t in
     fold_left (fun t (i, bv) -> pack (Tv_Let false [] bv i t)) t lb_bvs
+
+private
+val lem_trans : (#a:Type) -> (#x:a) -> (#z:a) -> (#y:a) ->
+                    squash (x == y) -> squash (y == z) -> Lemma (x == z)
+private
+let lem_trans #a #x #z #y e1 e2 = ()
+
+(** Transivity of equality: reduce [x == z] to [x == ?u] and [?u == z].  *)
+let trans () : Tac unit = apply_lemma (`lem_trans)

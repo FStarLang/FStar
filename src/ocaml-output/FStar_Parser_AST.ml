@@ -49,8 +49,9 @@ type term' =
   | LetOpenRecord of (term * term * term) 
   | Seq of (term * term) 
   | Bind of (FStar_Ident.ident * term * term) 
-  | If of (term * (FStar_Ident.ident FStar_Pervasives_Native.option * term *
-  Prims.bool) FStar_Pervasives_Native.option * term * term) 
+  | If of (term * FStar_Ident.ident FStar_Pervasives_Native.option *
+  (FStar_Ident.ident FStar_Pervasives_Native.option * term * Prims.bool)
+  FStar_Pervasives_Native.option * term * term) 
   | Match of (term * FStar_Ident.ident FStar_Pervasives_Native.option *
   (FStar_Ident.ident FStar_Pervasives_Native.option * term * Prims.bool)
   FStar_Pervasives_Native.option * (pattern * term
@@ -223,8 +224,9 @@ let (uu___is_If : term' -> Prims.bool) =
   fun projectee -> match projectee with | If _0 -> true | uu___ -> false
 let (__proj__If__item___0 :
   term' ->
-    (term * (FStar_Ident.ident FStar_Pervasives_Native.option * term *
-      Prims.bool) FStar_Pervasives_Native.option * term * term))
+    (term * FStar_Ident.ident FStar_Pervasives_Native.option *
+      (FStar_Ident.ident FStar_Pervasives_Native.option * term * Prims.bool)
+      FStar_Pervasives_Native.option * term * term))
   = fun projectee -> match projectee with | If _0 -> _0
 let (uu___is_Match : term' -> Prims.bool) =
   fun projectee -> match projectee with | Match _0 -> true | uu___ -> false
@@ -571,11 +573,11 @@ type tycon =
   | TyconAbbrev of (FStar_Ident.ident * binder Prims.list * knd
   FStar_Pervasives_Native.option * term) 
   | TyconRecord of (FStar_Ident.ident * binder Prims.list * knd
-  FStar_Pervasives_Native.option * (FStar_Ident.ident * aqual * attributes_ *
-  term) Prims.list) 
+  FStar_Pervasives_Native.option * attributes_ * (FStar_Ident.ident * aqual *
+  attributes_ * term) Prims.list) 
   | TyconVariant of (FStar_Ident.ident * binder Prims.list * knd
   FStar_Pervasives_Native.option * (FStar_Ident.ident * term
-  FStar_Pervasives_Native.option * Prims.bool) Prims.list) 
+  FStar_Pervasives_Native.option * Prims.bool * attributes_) Prims.list) 
 let (uu___is_TyconAbstract : tycon -> Prims.bool) =
   fun projectee ->
     match projectee with | TyconAbstract _0 -> true | uu___ -> false
@@ -598,8 +600,8 @@ let (uu___is_TyconRecord : tycon -> Prims.bool) =
 let (__proj__TyconRecord__item___0 :
   tycon ->
     (FStar_Ident.ident * binder Prims.list * knd
-      FStar_Pervasives_Native.option * (FStar_Ident.ident * aqual *
-      attributes_ * term) Prims.list))
+      FStar_Pervasives_Native.option * attributes_ * (FStar_Ident.ident *
+      aqual * attributes_ * term) Prims.list))
   = fun projectee -> match projectee with | TyconRecord _0 -> _0
 let (uu___is_TyconVariant : tycon -> Prims.bool) =
   fun projectee ->
@@ -608,7 +610,7 @@ let (__proj__TyconVariant__item___0 :
   tycon ->
     (FStar_Ident.ident * binder Prims.list * knd
       FStar_Pervasives_Native.option * (FStar_Ident.ident * term
-      FStar_Pervasives_Native.option * Prims.bool) Prims.list))
+      FStar_Pervasives_Native.option * Prims.bool * attributes_) Prims.list))
   = fun projectee -> match projectee with | TyconVariant _0 -> _0
 type qualifier =
   | Private 
@@ -1791,25 +1793,29 @@ let rec (term_to_string : term -> Prims.string) =
         let uu___1 = term_to_string t1 in
         let uu___2 = term_to_string t2 in
         FStar_Compiler_Util.format3 "%s <- %s; %s" uu___ uu___1 uu___2
-    | If (t1, ret_opt, t2, t3) ->
-        let uu___ = FStar_Compiler_Effect.op_Bar_Greater t1 term_to_string in
-        let uu___1 =
+    | If (t1, op_opt, ret_opt, t2, t3) ->
+        let uu___ =
+          match op_opt with
+          | FStar_Pervasives_Native.Some op -> FStar_Ident.string_of_id op
+          | FStar_Pervasives_Native.None -> "" in
+        let uu___1 = FStar_Compiler_Effect.op_Bar_Greater t1 term_to_string in
+        let uu___2 =
           match ret_opt with
           | FStar_Pervasives_Native.None -> ""
           | FStar_Pervasives_Native.Some (as_opt, ret, use_eq) ->
               let s = if use_eq then "returns$" else "returns" in
-              let uu___2 =
+              let uu___3 =
                 match as_opt with
                 | FStar_Pervasives_Native.None -> ""
                 | FStar_Pervasives_Native.Some as_ident ->
-                    let uu___3 = FStar_Ident.string_of_id as_ident in
-                    FStar_Compiler_Util.format1 " as %s " uu___3 in
-              let uu___3 = term_to_string ret in
-              FStar_Compiler_Util.format3 "%s%s %s " uu___2 s uu___3 in
-        let uu___2 = FStar_Compiler_Effect.op_Bar_Greater t2 term_to_string in
-        let uu___3 = FStar_Compiler_Effect.op_Bar_Greater t3 term_to_string in
-        FStar_Compiler_Util.format4 "if %s %sthen %s else %s" uu___ uu___1
-          uu___2 uu___3
+                    let uu___4 = FStar_Ident.string_of_id as_ident in
+                    FStar_Compiler_Util.format1 " as %s " uu___4 in
+              let uu___4 = term_to_string ret in
+              FStar_Compiler_Util.format3 "%s%s %s " uu___3 s uu___4 in
+        let uu___3 = FStar_Compiler_Effect.op_Bar_Greater t2 term_to_string in
+        let uu___4 = FStar_Compiler_Effect.op_Bar_Greater t3 term_to_string in
+        FStar_Compiler_Util.format5 "if%s %s %sthen %s else %s" uu___ uu___1
+          uu___2 uu___3 uu___4
     | Match (t, op_opt, ret_opt, branches) ->
         try_or_match_to_string x t branches op_opt ret_opt
     | TryWith (t, branches) ->
@@ -2239,7 +2245,8 @@ let (id_of_tycon : tycon -> Prims.string) =
     match uu___ with
     | TyconAbstract (i, uu___1, uu___2) -> FStar_Ident.string_of_id i
     | TyconAbbrev (i, uu___1, uu___2, uu___3) -> FStar_Ident.string_of_id i
-    | TyconRecord (i, uu___1, uu___2, uu___3) -> FStar_Ident.string_of_id i
+    | TyconRecord (i, uu___1, uu___2, uu___3, uu___4) ->
+        FStar_Ident.string_of_id i
     | TyconVariant (i, uu___1, uu___2, uu___3) -> FStar_Ident.string_of_id i
 let (decl_to_string : decl -> Prims.string) =
   fun d ->

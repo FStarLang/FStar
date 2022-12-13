@@ -659,15 +659,15 @@ let rec p_decl (d: decl): document =
         p_qualifiers d.quals
     | _ -> p_qualifiers d.quals
   in
-  p_attributes d.attrs ^^
+  p_attributes true d.attrs ^^
   qualifiers ^^
   p_rawDecl d
 
-and p_attributes attrs =
+and p_attributes isTopLevel attrs =
     match attrs with
     | [] -> empty
-    | _ -> lbracket ^^ str "@@ " ^^
-             align ((flow (str "; ") (List.map (p_noSeqTermAndComment false false) attrs)) ^^ rbracket) ^^ hardline
+    | _ -> lbracket ^^ str (if isTopLevel then "@@ " else "@@@ ") ^^
+             align ((flow (str "; ") (List.map (p_noSeqTermAndComment false false) attrs)) ^^ rbracket) ^^ (if isTopLevel then hardline else empty)
 
 and p_justSig d = match d.d with
   | Val (lid, t) ->
@@ -769,7 +769,7 @@ and p_typeDecl pre = function
   | TyconAbbrev (lid, bs, typ_opt, t) ->
     let comm, doc = p_typ_sep false false t in
     comm, p_typeDeclPrefix pre true lid bs typ_opt, doc, jump2
-  | TyconRecord (lid, bs, typ_opt, record_field_decls) ->
+  | TyconRecord (lid, bs, typ_opt, attrs, record_field_decls) ->
     let p_recordField (ps: bool) (lid, aq, attrs, t) =
       let comm, field =
         with_comment_sep (p_recordFieldDecl ps) (lid, aq, attrs, t)
@@ -777,14 +777,14 @@ and p_typeDecl pre = function
       let sep = if ps then semi else empty in
       inline_comment_or_above comm field sep
     in
-    let p_fields = braces_with_nesting (
+    let p_fields = p_attributes false attrs ^^ braces_with_nesting (
         separate_map_last hardline p_recordField record_field_decls)
     in
     empty, p_typeDeclPrefix pre true lid bs typ_opt, p_fields, (fun d -> space ^^ d)
   | TyconVariant (lid, bs, typ_opt, ct_decls) ->
-    let p_constructorBranchAndComments (uid, t_opt, use_of) =
+    let p_constructorBranchAndComments (uid, t_opt, use_of, attrs) =
         let range = extend_to_end_of_line (dflt (range_of_id uid) (map_opt t_opt (fun t -> t.range))) in
-        let comm, ctor = with_comment_sep p_constructorBranch (uid, t_opt, use_of) range in
+        let comm, ctor = with_comment_sep p_constructorBranch (uid, t_opt, use_of, attrs) range in
         inline_comment_or_above comm ctor empty
     in
     (* Beware of side effects with comments printing *)
@@ -813,11 +813,11 @@ and p_typeDeclPrefix kw eq lid bs typ_opt =
     with_kw (fun n -> prefix2 (prefix2 n (flow break1 binders)) typ)
 
 and p_recordFieldDecl ps (lid, aq, attrs, t) =
-  group (optional p_aqual aq ^^ p_attributes attrs ^^ p_lident lid ^^ colon ^^ p_typ ps false t)
+  group (optional p_aqual aq ^^ p_attributes false attrs ^^ p_lident lid ^^ colon ^^ p_typ ps false t)
 
-and p_constructorBranch (uid, t_opt, use_of) =
+and p_constructorBranch (uid, t_opt, use_of, attrs) =
   let sep = if use_of then str "of" else colon in
-  let uid_doc = group (bar ^^ space ^^ p_uident uid) in
+  let uid_doc = group (bar ^^ space ^^ p_attributes false attrs ^^ p_uident uid) in
   default_or_map uid_doc (fun t -> (group (uid_doc ^^ space ^^ sep ^^ space ^^ p_typ false false t))) t_opt
 
 and p_letlhs kw (pat, _) inner_let =
@@ -1022,12 +1022,12 @@ and p_atomicPattern p = match p.pat with
   | PatOp op ->
     lparen ^^ space ^^ str (Ident.string_of_id op) ^^ space ^^ rparen
   | PatWild (aqual, attrs) ->
-    optional p_aqual aqual ^^ p_attributes attrs ^^ underscore
+    optional p_aqual aqual ^^ p_attributes false attrs ^^ underscore
   | PatConst c ->
     p_constant c
   | PatVQuote e -> group (str "`%" ^^ p_noSeqTermAndComment false false e)
   | PatVar (lid, aqual, attrs) ->
-    optional p_aqual aqual ^^ p_attributes attrs ^^ p_lident lid
+    optional p_aqual aqual ^^ p_attributes false attrs ^^ p_lident lid
   | PatName uid ->
       p_quident uid
   | PatOr _ -> failwith "Inner or pattern !"
@@ -1048,16 +1048,16 @@ and is_meta_qualifier aq =
   | _ -> false
 
 and p_binder is_atomic b =
-  let b', t', catf = p_binder' is_atomic b in
+  let b', t', catf = p_binder' false is_atomic b in
   match t' with
   | Some typ -> catf b' typ
   | None -> b'
 
 (* is_atomic is true if the binder must be parsed atomically *)
-and p_binder' (is_atomic: bool) (b: binder): document * option document * catf =
+and p_binder' (no_pars: bool) (is_atomic: bool) (b: binder): document * option document * catf =
   match b.b with
-  | Variable lid -> optional p_aqual b.aqual ^^ p_lident lid, None, cat_with_colon
-  | TVariable lid -> p_lident lid, None, cat_with_colon
+  | Variable lid -> optional p_aqual b.aqual ^^ p_attributes false b.battributes ^^ p_lident lid, None, cat_with_colon
+  | TVariable lid -> p_attributes false b.battributes ^^ p_lident lid, None, cat_with_colon
   | Annotated (lid, t) ->
       let b', t' =
         match t.tm with
@@ -1069,10 +1069,10 @@ and p_binder' (is_atomic: bool) (b: binder): document * option document * catf =
           else
             p_tmFormula t
           in
-          optional p_aqual b.aqual ^^ p_lident lid, t'
+          optional p_aqual b.aqual ^^ p_attributes false b.battributes ^^ p_lident lid, t'
         in
         let catf =
-          if is_atomic || (is_meta_qualifier b.aqual) then
+          if is_atomic || (is_meta_qualifier b.aqual && not no_pars) then
             (fun x y -> group (lparen ^^ (cat_with_colon x y) ^^ rparen))
           else
             (fun x y -> group (cat_with_colon x y))
@@ -1086,9 +1086,9 @@ and p_binder' (is_atomic: bool) (b: binder): document * option document * catf =
         b', Some t', cat_with_colon
       | _ ->
         if is_atomic
-        then p_atomicTerm t, None, cat_with_colon (* t is a type but it might need some parenthesis *)
-        else p_appTerm t, None, cat_with_colon (* This choice seems valid (used in p_tmNoEq') *)
-    end
+        then p_attributes false b.battributes ^^ p_atomicTerm t, None, cat_with_colon (* t is a type but it might need some parenthesis *)
+        else p_attributes false b.battributes ^^ p_appTerm t, None, cat_with_colon (* This choice seems valid (used in p_tmNoEq') *)
+    end 
 
 and p_refinement aqual_opt attrs binder t phi =
   let b, typ = p_refinement' aqual_opt attrs binder t phi in
@@ -1108,7 +1108,7 @@ and p_refinement' aqual_opt attrs binder t phi =
    * If t can be displayed on a single line, tightly surround it with braces,
    * otherwise pad with a space. *)
   let jump_break = if is_t_atomic then 0 else 1 in
-  (optional p_aqual aqual_opt ^^ p_attributes attrs ^^ binder),
+  (optional p_aqual aqual_opt ^^ p_attributes false attrs ^^ binder),
     (p_appTerm t ^^
       (jump 2 jump_break (group ((ifflat
         (soft_braces_with_nesting_tight phi) (soft_braces_with_nesting phi))))))
@@ -1251,18 +1251,20 @@ and p_noSeqTerm' ps pb e = match e.tm with
       group (str "decreases" ^/^ p_typ ps pb e)
   | Attributes es ->
       group (str "attributes" ^/^ separate_map break1 p_atomicTerm es)
-  | If (e1, ret_opt, e2, e3) ->
+  | If (e1, op_opt, ret_opt, e2, e3) ->
       (* No need to wrap with parentheses here, since if e1 then e2; e3 really
        * does parse as (if e1 then e2); e3 -- the IF does not swallow
        * semicolons. We forward our caller's [ps] parameter, though, because
        * something in [e2] may swallow. *)
       if is_unit e3
-      then group ((str "if" ^/+^ p_noSeqTermAndComment false false e1) ^/^ (str "then" ^/+^ p_noSeqTermAndComment ps pb e2))
+      then group ((str ("if" ^ (dflt "" (op_opt `map_opt` string_of_id
+                                          `bind_opt` strip_prefix "let")))
+                  ^/+^ p_noSeqTermAndComment false false e1) ^/^ (str "then" ^/+^ p_noSeqTermAndComment ps pb e2))
       else
            let e2_doc =
               match e2.tm with
                   (* Not protecting, since an ELSE follows. *)
-                  | If (_,_, _,e3) when is_unit e3 ->
+                  | If (_, _, _, _,e3) when is_unit e3 ->
                       (* Dangling else *)
                       soft_parens_with_nesting (p_noSeqTermAndComment false false e2)
                   | _ -> p_noSeqTermAndComment false false e2
@@ -1350,7 +1352,7 @@ and p_noSeqTerm' ps pb e = match e.tm with
      * in
      * ... *)
     let p_lb q (a, (pat, e)) is_last =
-      let attrs = p_attrs_opt a in
+      let attrs = p_attrs_opt true a in
       let doc_let_or_and = match q with
         | Some Rec -> group (str "let" ^/^ str "rec")
         | Some NoLetQualifier -> str "let"
@@ -1496,10 +1498,10 @@ and p_calcStep _ (CalcStep (rel, just, next)) =
   group (p_noSeqTermAndComment false false rel ^^ space ^^ lbrace ^^ space ^^ p_noSeqTermAndComment false false just ^^ space ^^ rbrace ^^ hardline
          ^^ p_noSeqTermAndComment false false next ^^ str ";")
 
-and p_attrs_opt = function
+and p_attrs_opt (isTopLevel: bool) = function
   | None -> empty
   | Some terms ->
-    group (str "[@@" ^/^
+    group (str (if isTopLevel then "[@@" else "[@@@") ^/^
            (separate_map (str "; ")
                          (p_noSeqTermAndComment false false)
                          terms) ^/^
@@ -1566,7 +1568,7 @@ and pats_as_binders_if_possible pats =
        when (string_of_id lid) = (string_of_id lid') ->
          Some (p_refinement' aqual attrs (p_ident lid) t phi)
      | PatVar (lid, aqual, attrs), _ ->
-       Some (optional p_aqual aqual ^^ p_attributes attrs ^^  p_ident lid, p_tmEqNoRefinement t)
+       Some (optional p_aqual aqual ^^ p_attributes false attrs ^^  p_ident lid, p_tmEqNoRefinement t)
      | _ -> None)
   | _ -> None
   in
@@ -1723,7 +1725,7 @@ and p_tmArrow' p_Tm e =
 and collapse_binders (p_Tm: term -> document) (e: term): list document =
   let rec accumulate_binders p_Tm e: list (document * option document * catf) =
     match e.tm with
-    | Product(bs, tgt) -> (List.map (fun b -> p_binder' false b) bs) @ (accumulate_binders p_Tm tgt)
+    | Product(bs, tgt) -> (List.map (fun b -> p_binder' true false b) bs) @ (accumulate_binders p_Tm tgt)
     | _ -> [(p_Tm e, None, cat_with_colon)]
   in
   let fold_fun (bs: list (list document * option document * catf)) (x: document * option document * catf) =
@@ -2063,10 +2065,8 @@ and p_constant = function
   | Const_unit -> str "()"
   | Const_bool b -> doc_of_bool b
   | Const_real r -> str (r ^"R")
-  | Const_float x -> str (Util.string_of_float x)
   | Const_char x -> doc_of_char x
   | Const_string(s, _) -> dquotes (str (FStar.String.escaped s))
-  | Const_bytearray(bytes,_) -> dquotes (str (Util.string_of_bytes bytes)) ^^ str "B"
   | Const_int (repr, sign_width_opt) ->
       let signedness = function
           | Unsigned -> str "u"
@@ -2165,3 +2165,4 @@ let modul_with_comments_to_document (m:modul) comments =
   let comments = !comment_stack in
   comment_stack := [] ;
   (initial_comment ^^ doc, comments)
+

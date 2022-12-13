@@ -45,6 +45,10 @@ let bytes_lid        = pconst "bytes"
 let int_lid          = pconst "int"
 let exn_lid          = pconst "exn"
 let list_lid         = pconst "list"
+let immutable_array_t_lid = p2l ["FStar"; "ImmutableArray"; "Base"; "t"]
+let immutable_array_of_list_lid  = p2l ["FStar"; "ImmutableArray"; "Base"; "of_list"]
+let immutable_array_length_lid   = p2l ["FStar"; "ImmutableArray"; "Base"; "length"]
+let immutable_array_index_lid    = p2l ["FStar"; "ImmutableArray"; "Base"; "index"]
 let eqtype_lid       = pconst "eqtype"
 let option_lid       = psnconst "option"
 let either_lid       = psconst "either"
@@ -121,6 +125,8 @@ let none_lid              = psnconst  "None"
 let assume_lid            = pconst  "_assume"
 let assert_lid            = pconst  "_assert"
 let pure_wp_lid           = pconst "pure_wp"
+let pure_wp_monotonic_lid = pconst "pure_wp_monotonic"
+let pure_wp_monotonic0_lid = pconst "pure_wp_monotonic0"
 let trivial_pure_post_lid = psconst "trivial_pure_post"
 let pure_assert_wp_lid    = pconst "pure_assert_wp0"
 let pure_assume_wp_lid    = pconst "pure_assume_wp0"
@@ -326,6 +332,7 @@ let steps_unfoldonly    = psconst "delta_only"
 let steps_unfoldfully   = psconst "delta_fully"
 let steps_unfoldattr    = psconst "delta_attr"
 let steps_unfoldqual    = psconst "delta_qualifier"
+let steps_unfoldnamespace = psconst "delta_namespace"
 let steps_unascribe     = psconst "unascribe"
 let steps_nbe           = psconst "nbe"
 let steps_unmeta        = psconst "unmeta"
@@ -357,15 +364,16 @@ let preprocess_with = p2l ["FStar"; "Tactics"; "Effect"; "preprocess_with"]
 let postprocess_extr_with = p2l ["FStar"; "Tactics"; "Effect"; "postprocess_for_extraction_with"]
 let check_with_lid = lid_of_path (["FStar"; "Reflection"; "Builtins"; "check_with"]) FStar.Compiler.Range.dummyRange
 let commute_nested_matches_lid = psconst "commute_nested_matches"
-let allow_informative_binders_attr = psconst "allow_informative_binders"
 let remove_unused_type_parameters_lid = psconst "remove_unused_type_parameters"
 let ite_soundness_by_attr = psconst "ite_soundness_by"
 let default_effect_attr = psconst "default_effect"
 let top_level_effect_attr = psconst "top_level_effect"
+let effect_parameter_attr = psconst "effect_param"
 let bind_has_range_args_attr = psconst "bind_has_range_args"
 let binder_strictly_positive_attr = psconst "strictly_positive"
 let no_auto_projectors_attr = psconst "no_auto_projectors"
 let no_subtping_attr_lid = psconst "no_subtyping"
+let attr_substitute_lid = p2l ["FStar"; "Pervasives"; "Substitute"]
 
 
 //the type of well-founded relations, used for decreases clauses with relations
@@ -388,9 +396,7 @@ let const_to_string x = match x with
   | Const_unit -> "()"
   | Const_bool b -> if b then "true" else "false"
   | Const_real r -> r^"R"
-  | Const_float x ->      U.string_of_float x
   | Const_string(s, _) -> U.format1 "\"%s\"" s
-  | Const_bytearray _  ->  "<bytearray>"
   | Const_int (x, _) -> x
   | Const_char c -> "'" ^ U.string_of_char c ^ "'"
   | Const_range r -> FStar.Compiler.Range.string_of_range r

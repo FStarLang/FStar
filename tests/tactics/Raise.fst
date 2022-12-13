@@ -17,55 +17,46 @@ module Raise
 
 open FStar.Tactics
 
-exception Wat
-exception Wut
+exception Ex1
+exception Ex2
 
 let _ =
   assert True by begin
     let i =
-      match catch (fun () -> raise #int Wat) with
+      match catch (fun () -> raise #int Ex1) with
       | Inr x -> 1
-      | Inl e -> begin match e with
-                | Wat -> 2
-                | e -> raise e
-                end
+      | Inl Ex1 -> 2
+      | Inl e -> raise e
     in ()
+  end
+
+[@@(expect_failure [228])]
+let x =
+  assert True by begin
+    let i =
+      match catch (fun () -> raise #int Ex2) with
+      | Inr x -> 1
+      | Inl Ex1 -> 2
+      | Inl e -> raise e
+    in ()
+  end
+
+let f =
+  assert True by begin
+    let i =
+      try raise Ex1; 1 with
+      | Ex1 -> 2
+      | e -> raise e
+    in
+    if i <> 2 then fail ""
   end
 
 [@@(expect_failure [228])]
 let _ =
   assert True by begin
     let i =
-      match catch (fun () -> raise #int Wut) with
-      | Inr x -> 1
-      | Inl e -> begin match e with
-                | Wat -> 2
-                | e -> raise e
-                end
-    in ()
-  end
-
-let _ =
-  assert True by begin
-    let i =
-      try raise Wat; 1
-      with
-      | e -> begin match e with
-            | Wat -> 2
-            | e -> raise e
-            end
-    in ()
-  end
-
-[@@(expect_failure [228])]
-let _ =
-  assert True by begin
-    let i =
-      try raise Wut; 1
-      with
-      | e -> begin match e with
-            | Wat -> 2
-            | e -> raise e
-            end
+      try raise Ex2; 1 with
+      | Ex1 -> 2
+      | e -> raise e
     in ()
   end
