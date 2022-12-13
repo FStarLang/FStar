@@ -43,6 +43,7 @@ type step =
   | UnfoldFully of list FStar.Ident.lid
   | UnfoldAttr  of list FStar.Ident.lid
   | UnfoldQual  of list string
+  | UnfoldNamespace of list string
   | UnfoldTac
   | PureSubtermsWithinComputations
   | Simplify        //Simplifies some basic logical tautologies: not part of definitional equality!

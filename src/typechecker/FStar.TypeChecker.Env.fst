@@ -69,6 +69,7 @@ let rec eq_step s1 s2 =
   | UnfoldAttr lids1, UnfoldAttr lids2 ->
       List.length lids1 = List.length lids2 && List.forall2 Ident.lid_equals lids1 lids2
   | UnfoldQual strs1, UnfoldQual strs2 -> strs1 = strs2
+  | UnfoldNamespace strs1, UnfoldNamespace strs2 -> strs1 = strs2  
   | _ -> false
 
 let preprocess env tau tm  = env.mpreprocess env tau tm
