@@ -22,6 +22,8 @@ open FStar.Reflection
 open FStar.Classical
 open FStar.Tactics.CanonCommSwaps
 
+let term_eq = FStar.Tactics.term_eq_old
+
 (* A simple expression canonizer for commutative monoids (working up to
    some given equivalence relation as opposed to just propositional equality).
    For a canonizer with more features see FStar.Tactics.CanonCommMonoid.fst.
@@ -142,8 +144,6 @@ let permute_correct (p:permute) =
 
 // In the general case, an arbitrary permutation can be done via swaps.
 // (see FStar.Tactics.CanonCommSwaps for a proof)
-
-let swap (n:nat) :Type = x:nat{x < n-1}
 
 let rec apply_swap_aux_correct (#a:Type) (n:nat) (eq:equiv a) (m:cm a eq) (am:amap a)
                            (xs:list atom) (s:swap (length xs + n))
@@ -269,7 +269,7 @@ let monoid_reflect (#a:Type) (eq:equiv a) (m:cm a eq) (am:amap a) (e1 e2:exp)
 (* Finds the position of first occurrence of x in xs.
    This is now specialized to terms and their funny term_eq. *)
 let rec where_aux (n:nat) (x:term) (xs:list term) :
-    Tot (option nat) (decreases xs) =
+    Tac (option nat) =
   match xs with
   | [] -> None
   | x'::xs' -> if term_eq x x' then Some n else where_aux (n+1) x xs'
@@ -361,8 +361,8 @@ let canon_lhs_rhs (eq: term) (m: term) (lhs rhs:term) : Tac unit =
   //dump ("after apply monoid_reflect");
   norm [iota; zeta; delta_only [`%canon; `%xsdenote; `%flatten; `%sort;
                     `%select; `%assoc; `%fst; `%__proj__Mktuple2__item___1;
-                    `%(@); `%append; `%List.Tot.Base.sortWith;
-                    `%List.Tot.Base.partition; `%bool_of_compare;
+                    `%(@); `%append; `%List.Tot.sortWith;
+                    `%List.Tot.partition; `%bool_of_compare;
                     `%compare_of_bool;
        ]; primops];
   //dump "before refl";

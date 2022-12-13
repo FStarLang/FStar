@@ -73,7 +73,7 @@ let ge e1 e2 = CompProp (Plus (Lit 1) e1) C_Gt e2
 private let st = p:(nat * list term){fst p == List.Tot.Base.length (snd p)}
 private let tm a = st -> Tac (either string (a * st))
 private let return (x:'a) : tm 'a = fun i -> Inr (x, i)
-private let bind (m : tm 'a) (f : 'a -> tm 'b) : tm 'b =
+private let (let!) (m : tm 'a) (f : 'a -> tm 'b) : tm 'b =
     fun i -> match m i with
              | Inr (x, j) -> f x j
              | s -> Inl (Inl?.v s) // why? To have a catch-all pattern and thus an easy WP
@@ -84,24 +84,24 @@ let lift f x st =
 
 val liftM : ('a -> 'b) -> (tm 'a -> tm 'b)
 let liftM f x =
-    xx <-- x;
+    let! xx = x in
     return (f xx)
 
 val liftM2 : ('a -> 'b -> 'c) -> (tm 'a -> tm 'b -> tm 'c)
 let liftM2 f x y =
-    xx <-- x;
-    yy <-- y;
+    let! xx = x in
+    let! yy = y in
     return (f xx yy)
 
 val liftM3 : ('a -> 'b -> 'c -> 'd) -> (tm 'a -> tm 'b -> tm 'c -> tm 'd)
 let liftM3 f x y z =
-    xx <-- x;
-    yy <-- y;
-    zz <-- z;
+    let! xx = x in
+    let! yy = y in
+    let! zz = z in
     return (f xx yy zz)
 
 
-private let rec find_idx (f : 'a -> bool) (l : list 'a) : option ((n:nat{n < List.Tot.Base.length l}) * 'a) =
+private let rec find_idx (f : 'a -> Tac bool) (l : list 'a) : Tac (option ((n:nat{n < List.Tot.Base.length l}) * 'a)) =
     match l with
     | [] -> None
     | x::xs ->
@@ -113,29 +113,24 @@ private let rec find_idx (f : 'a -> bool) (l : list 'a) : option ((n:nat{n < Lis
              end
 
 private let atom (t:term) : tm expr = fun (n, atoms) ->
-    match find_idx (term_eq t) atoms with
+    match find_idx (term_eq_old t) atoms with
     | None -> Inr (Atom n t, (n + 1, t::atoms))
     | Some (i, t) -> Inr (Atom (n - 1 - i) t, (n, atoms))
 
 private val fail : (#a:Type) -> string -> tm a
 private let fail #a s = fun i -> Inl s
 
-let refined_list_t (#a:Type) (p:(a -> Type0)) = list (x:a{p x})
-
-val list_unref : #a:Type -> #p:(a -> Type0) -> refined_list_t p -> Tot (l:list a{forall x. List.Tot.Base.memP x l ==> p x})
-let rec list_unref #a #p l =
-    match l with
-    | [] -> []
-    | x::xs -> x :: list_unref xs
-
-let collect_app_ref (t:term) : ((h:term{h == t \/ h << t}) * refined_list_t (fun (a:argv) -> fst a << t)) =
-  collect_app_ref t
-
 val as_arith_expr : term -> tm expr
 #push-options "--initial_fuel 4 --max_fuel 4"
 let rec as_arith_expr (t:term) =
-    let hd, tl = collect_app_ref t in
-    let tl = list_unref tl in //need to be careful to instantiate list_unref at the right type to allow SMT to unfold its recursive definition properly
+    let hd, tl = collect_app t in
+    // Invoke [collect_app_order]: forall (arg, qual) ∈ tl, (arg, qual) << t
+    collect_app_order t;
+    // [precedes_fst_tl]: forall (arg, qual) ∈ tl, arg << t
+    let precedes_fst_tl (arg: term) (q: aqualv)
+      : Lemma (List.Tot.memP (arg, q) tl ==> arg << t)
+      = let _: argv = arg, q in ()
+    in Classical.forall_intro_2 (precedes_fst_tl);
     match inspect_ln hd, tl with
     | Tv_FVar fv, [(e1, Q_Implicit); (e2, Q_Explicit) ; (e3, Q_Explicit)] ->
       let qn = inspect_fv fv in
@@ -182,7 +177,7 @@ let rec as_arith_expr (t:term) =
 
 val is_arith_expr : term -> tm expr
 let is_arith_expr t =
-  a <-- as_arith_expr t ;
+  let! a = as_arith_expr t in
   match a with
   | Atom _ t -> begin
     let hd, tl = collect_app_ref t in
@@ -190,7 +185,8 @@ let is_arith_expr t =
     | Tv_FVar _, []
     | Tv_BVar _, []
     | Tv_Var _, [] -> return a
-    | _ -> fail ("not an arithmetic expression: (" ^ term_to_string t ^ ")")
+    | _ -> let! s = lift term_to_string t in
+           fail ("not an arithmetic expression: (" ^ s ^ ")")
   end
   | _ -> return a
 
@@ -198,7 +194,7 @@ let is_arith_expr t =
 // val is_arith_prop : term -> tm prop
 val is_arith_prop : term -> st -> Tac (either string (prop * st))
 let rec is_arith_prop (t:term) = fun i ->
-    (f <-- lift term_as_formula t;
+   (let! f = lift term_as_formula t in
     match f with
     | Comp (Eq _) l r     -> liftM2 eq (is_arith_expr l) (is_arith_expr r)
     | Comp (BoolEq _) l r -> liftM2 eq (is_arith_expr l) (is_arith_expr r)
@@ -206,7 +202,9 @@ let rec is_arith_prop (t:term) = fun i ->
     | Comp Le l r     -> liftM2 le (is_arith_expr l) (is_arith_expr r)
     | And l r         -> liftM2 AndProp (is_arith_prop l) (is_arith_prop r)
     | Or l r          -> liftM2  OrProp (is_arith_prop l) (is_arith_prop r)
-    | _               -> fail ("connector (" ^ term_to_string t ^ ")")) i
+    | _               ->
+        let! s = lift term_to_string t in
+        fail ("connector (" ^ s ^ ")")) i
 
 
 // Run the monadic computations, disregard the counter

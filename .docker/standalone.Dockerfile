@@ -53,6 +53,15 @@ ENV OPAMYES=1
 
 ADD --chown=opam:opam ./ $HOME/FStar/
 
+# If CI_TEST_MIN_OPAM_DEPS is set, then for each package except ocaml,
+# when a lower bound constraint for its version number exists, replace
+# this constraint with an equality to install that lower version
+ARG CI_TEST_MIN_OPAM_DEPS=
+RUN if [[ -n "$CI_TEST_MIN_OPAM_DEPS" ]] ; then \
+  sed -i 's!>=!=!g' $HOME/FStar/fstar.opam && \
+  sed -i 's!"ocaml" {=!"ocaml" {>=!' $HOME/FStar/fstar.opam ; \
+fi
+
 # F* dependencies
 RUN opam install --confirm-level=unsafe-yes --deps-only $HOME/FStar/fstar.opam
 
@@ -62,7 +71,8 @@ WORKDIR $HOME/FStar
 ARG CI_TARGET=uregressions
 ARG CI_THREADS=24
 ARG CI_BRANCH=master
-RUN --mount=type=secret,id=DZOMO_GITHUB_TOKEN eval $(opam env) && DZOMO_GITHUB_TOKEN=$(sudo cat /run/secrets/DZOMO_GITHUB_TOKEN) .docker/build/build-standalone.sh $CI_TARGET $CI_THREADS $CI_BRANCH
+ARG CI_NO_KARAMEL=
+RUN --mount=type=secret,id=DZOMO_GITHUB_TOKEN eval $(opam env) && CI_NO_KARAMEL=$CI_NO_KARAMEL DZOMO_GITHUB_TOKEN=$(sudo cat /run/secrets/DZOMO_GITHUB_TOKEN) .docker/build/build-standalone.sh $CI_TARGET $CI_THREADS $CI_BRANCH
 
 WORKDIR $HOME
 ENV FSTAR_HOME $HOME/FStar

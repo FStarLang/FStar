@@ -1,0 +1,19 @@
+[
+  "_0žFØûpÒ´Ÿßt€6O¾",
+  [
+    [
+      "FStar.ImmutableArray.index_spec",
+      1,
+      2,
+      1,
+      [
+        "@MaxFuel_assumption",
+        "@fuel_correspondence_FStar.List.Tot.Base.length.fuel_instrumented",
+        "@fuel_irrelevance_FStar.List.Tot.Base.length.fuel_instrumented",
+        "@query", "lemma_FStar.ImmutableArray.length_spec"
+      ],
+      0,
+      "471903bf9ce1ca1865a7b5dfde679916"
+    ]
+  ]
+]

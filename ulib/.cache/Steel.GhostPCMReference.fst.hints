@@ -1,5 +1,5 @@
 [
-  "Œ^Òj\u0010$¥ëV\f(Í(ž‚\u001a",
+  "}s±v\u0018î,\u001bõ·4\bU>ÚN",
   [
     [
       "Steel.GhostPCMReference.alloc",
@@ -8,7 +8,7 @@
       1,
       [ "@query" ],
       0,
-      "f7fefa17715eb8101d65e64755c8a553"
+      "fe78444d2d55c6007108288b7215248c"
     ],
     [
       "Steel.GhostPCMReference.read",
@@ -20,7 +20,7 @@
         "refinement_interpretation_Tm_refine_38139a80be7280e4f39fe8cad1b7e3bc"
       ],
       0,
-      "5316a9edb7dab250a71b59f006f17c37"
+      "31c4717088793044da07958b6c12de7a"
     ],
     [
       "Steel.GhostPCMReference.write",
@@ -29,7 +29,7 @@
       1,
       [ "@query" ],
       0,
-      "c2d06458e3ccc8f7df3de8bc28eb9e51"
+      "c4bb16cb02a2f8d13b3b1542c585bda6"
     ],
     [
       "Steel.GhostPCMReference.upd_gen",
@@ -38,7 +38,7 @@
       1,
       [ "@query" ],
       0,
-      "ec17ac00a47922a488631e1eeb3851df"
+      "7a05b33fdc402815533aad1e359ad01e"
     ],
     [
       "Steel.GhostPCMReference.share",
@@ -47,7 +47,7 @@
       1,
       [ "@query" ],
       0,
-      "02aaf211a986a6595607ab419aea41db"
+      "d612ba245dd290738150f9271784c5d3"
     ],
     [
       "Steel.GhostPCMReference.share",
@@ -56,7 +56,7 @@
       1,
       [ "@query" ],
       0,
-      "0f57263e81d8049ac72aa0cd94648dc2"
+      "4581524f587199e27b2a6f273e7f7c24"
     ],
     [
       "Steel.GhostPCMReference.gather",
@@ -68,7 +68,7 @@
         "refinement_interpretation_Tm_refine_2312a63c4e89fea10d3f55e0bd838c5e"
       ],
       0,
-      "deb349d2814446dd4e5f87b83d2f04fe"
+      "d37b73b74ed069bb195c0d867e0af843"
     ],
     [
       "Steel.GhostPCMReference.gather",
@@ -80,7 +80,7 @@
         "refinement_interpretation_Tm_refine_2312a63c4e89fea10d3f55e0bd838c5e"
       ],
       0,
-      "ddb4b7a53b41d72d162b7720a54b5189"
+      "8deef163eec474932a022ef1b4cf75f7"
     ],
     [
       "Steel.GhostPCMReference.witness",
@@ -88,13 +88,14 @@
       2,
       1,
       [
-        "@MaxIFuel_assumption", "@query",
+        "@MaxIFuel_assumption", "@query", "equation_Prims.squash",
         "equation_Steel.GhostPCMReference.witnessed",
         "equation_Steel.Preorder.fact_valid_compat",
-        "fuel_guarded_inversion_FStar.PCM.pcm"
+        "fuel_guarded_inversion_FStar.PCM.pcm",
+        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
       ],
       0,
-      "990e7994712b318cea3468c0846d7f2b"
+      "6f86ed245345fe012f90f82de1d7d45d"
     ],
     [
       "Steel.GhostPCMReference.recall",
@@ -107,7 +108,7 @@
         "fuel_guarded_inversion_FStar.PCM.pcm"
       ],
       0,
-      "a06e37033b26c0f2d682df6e0f4c6a4c"
+      "d2a6f5143677434606179569644978ad"
     ]
   ]
 ]

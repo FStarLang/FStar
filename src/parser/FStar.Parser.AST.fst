@@ -61,7 +61,8 @@ type term' =
   | LetOpenRecord of term * term * term
   | Seq       of term * term
   | Bind      of ident * term * term
-  | If        of term * option match_returns_annotation * term * term
+  | If        of term * option ident (* is this a regular if or a if operator (i.e. [if*]) *)
+                      * option match_returns_annotation * term * term
   | Match     of term * option ident (* is this a regular match or a match operator (i.e. [match*]) *)
                       * option match_returns_annotation * list branch
   | TryWith   of term * list branch
@@ -156,8 +157,8 @@ type expr = term
 type tycon =
   | TyconAbstract of ident * list binder * option knd
   | TyconAbbrev   of ident * list binder * option knd * term
-  | TyconRecord   of ident * list binder * option knd * list (ident * aqual * attributes_ * term)
-  | TyconVariant  of ident * list binder * option knd * list (ident * option term * bool) (* bool is whether it's using 'of' notation *)
+  | TyconRecord   of ident * list binder * option knd * attributes_ * list (ident * aqual * attributes_ * term)
+  | TyconVariant  of ident * list binder * option knd * list (ident * option term * bool * attributes_) (* bool is whether it's using 'of' notation *)
 
 type qualifier =
   | Private
@@ -656,8 +657,9 @@ let rec term_to_string (x:term) = match x.tm with
   | Bind (id, t1, t2) ->
     Util.format3 "%s <- %s; %s" (string_of_id id) (term_to_string t1) (term_to_string t2)
 
-  | If(t1, ret_opt, t2, t3) ->
-    Util.format4 "if %s %sthen %s else %s"
+  | If(t1, op_opt, ret_opt, t2, t3) ->
+    Util.format5 "if%s %s %sthen %s else %s"
+      (match op_opt with | Some op -> string_of_id op | None -> "")
       (t1|> term_to_string)
       (match ret_opt with
        | None -> ""
@@ -905,7 +907,7 @@ let lids_of_let defs =  defs |> List.collect (fun (p, _) -> head_id_of_pat p)
 let id_of_tycon = function
   | TyconAbstract(i, _, _)
   | TyconAbbrev(i, _, _, _)
-  | TyconRecord(i, _, _, _)
+  | TyconRecord(i, _, _, _, _)
   | TyconVariant(i, _, _, _) -> (string_of_id i)
 
 let decl_to_string (d:decl) = match d.d with

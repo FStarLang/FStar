@@ -842,7 +842,7 @@ let resugar_pat g q p = match p with
 // match v with
 // | (| true, b |) -> ...
 //
-// In F*, the sort of b is computed to be bool, since the conditional 
+// In F*, the sort of b is computed to be bool, since the conditional
 // can be eliminated
 // But, in OCaml, this should be typed as Obj.t, since the type of v itself is
 // (bool, Obj.t) dtuple2
@@ -884,7 +884,7 @@ let rec extract_one_pat (imp : bool)
         in
         //these may be extracted to bigint, in which case, we need to emit a when clause
         let g, x = UEnv.new_mlident g in
-        let x_exp = 
+        let x_exp =
           let x_exp = with_ty expected_ty <| MLE_Var x in
           let coerce x = with_ty ml_ty <| (MLE_Coerce(x, ml_ty, expected_ty)) in
           match expected_ty with
@@ -945,7 +945,7 @@ let rec extract_one_pat (imp : bool)
         let f_ty =
             let mlty_args =
                 tysVarPats |>
-                List.map 
+                List.map
                   (fun (p, _) ->
                     match expected_ty with
                     | MLTY_Top ->
@@ -955,7 +955,7 @@ let rec extract_one_pat (imp : bool)
                     | _ ->
                       //Otherwise, if it has a dot pattern for matching the type parameters
                       match p.v with
-                      | Pat_dot_term (_, t) ->
+                      | Pat_dot_term (Some t) ->
                         //use the type that the dot patterns is instantiated to
                         term_as_mlty g t
                       | _ ->
@@ -971,7 +971,7 @@ let rec extract_one_pat (imp : bool)
                           (Print.fv_to_string f)
                           (let args, t = f_ty in
                            let args =
-                               List.map 
+                               List.map
                                  (Code.string_of_mlty (current_module_of_uenv g))
                                  args
                                |> String.concat " -> "
@@ -982,7 +982,7 @@ let rec extract_one_pat (imp : bool)
         // These should all come out as None, if they are dot patterns
         // Their expected type does not matter
         let g, tyMLPats =
-          BU.fold_map 
+          BU.fold_map
             (fun g (p, imp) ->
               let g, p, _ = extract_one_pat true g p MLTY_Top term_as_mlexpr in
               g, p)
@@ -1011,8 +1011,8 @@ let rec extract_one_pat (imp : bool)
           |> List.collect (function (Some x) -> [x] | _ -> [])
           |> List.split
         in
-        
-        let pat_ty_compat = 
+
+        let pat_ty_compat =
           match f_ty with
           | ([], t) -> ok t
           | _ -> false //arity mismatch, should be impossible
@@ -1471,7 +1471,11 @@ and term_as_mlexpr' (g:uenv) (top:term) : (mlexpr * e_tag * mlty) =
         | Tm_app({n=Tm_constant Const_set_range_of}, [(t, _); (r, _)]) ->
           term_as_mlexpr g t
 
-        | Tm_app({n=Tm_constant (Const_reflect _)}, _) -> failwith "Unreachable? Tm_app Const_reflect"
+        | Tm_app({n=Tm_constant (Const_reflect _)}, _) ->
+            let ({exp_b_expr=fw}) = UEnv.lookup_fv t.pos g (S.lid_as_fv (PC.failwith_lid()) delta_constant None) in
+            with_ty ml_int_ty <| MLE_App(fw, [with_ty ml_string_ty <| MLE_Const (MLC_String "Extraction of reflect is not supported")]),
+            E_PURE,
+            ml_int_ty
 
         | Tm_app (head, args)
           when is_match head &&

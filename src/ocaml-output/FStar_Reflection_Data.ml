@@ -45,7 +45,7 @@ type pattern =
   Prims.list) 
   | Pat_Var of FStar_Syntax_Syntax.bv 
   | Pat_Wild of FStar_Syntax_Syntax.bv 
-  | Pat_Dot_Term of (FStar_Syntax_Syntax.bv * FStar_Syntax_Syntax.term) 
+  | Pat_Dot_Term of FStar_Syntax_Syntax.term FStar_Pervasives_Native.option 
 let (uu___is_Pat_Constant : pattern -> Prims.bool) =
   fun projectee ->
     match projectee with | Pat_Constant _0 -> true | uu___ -> false
@@ -72,7 +72,7 @@ let (uu___is_Pat_Dot_Term : pattern -> Prims.bool) =
   fun projectee ->
     match projectee with | Pat_Dot_Term _0 -> true | uu___ -> false
 let (__proj__Pat_Dot_Term__item___0 :
-  pattern -> (FStar_Syntax_Syntax.bv * FStar_Syntax_Syntax.term)) =
+  pattern -> FStar_Syntax_Syntax.term FStar_Pervasives_Native.option) =
   fun projectee -> match projectee with | Pat_Dot_Term _0 -> _0
 type branch = (pattern * FStar_Syntax_Syntax.term)
 type aqualv =
@@ -335,6 +335,7 @@ let (uu___is_Effect : qualifier -> Prims.bool) =
   fun projectee -> match projectee with | Effect -> true | uu___ -> false
 let (uu___is_OnlyName : qualifier -> Prims.bool) =
   fun projectee -> match projectee with | OnlyName -> true | uu___ -> false
+type qualifiers = qualifier Prims.list
 type bv_view =
   {
   bv_ppname: Prims.string ;

@@ -168,9 +168,7 @@ let (goal_with_env : goal -> FStar_TypeChecker_Env.env -> goal) =
           FStar_Syntax_Syntax.ctx_uvar_range =
             (c.FStar_Syntax_Syntax.ctx_uvar_range);
           FStar_Syntax_Syntax.ctx_uvar_meta =
-            (c.FStar_Syntax_Syntax.ctx_uvar_meta);
-          FStar_Syntax_Syntax.ctx_uvar_apply_tac_prefix =
-            (c.FStar_Syntax_Syntax.ctx_uvar_apply_tac_prefix)
+            (c.FStar_Syntax_Syntax.ctx_uvar_meta)
         } in
       {
         goal_main_env = env;
@@ -317,8 +315,8 @@ let (goal_of_implicit :
             (env.FStar_TypeChecker_Env.unif_allow_ref_guards);
           FStar_TypeChecker_Env.erase_erasable_args =
             (env.FStar_TypeChecker_Env.erase_erasable_args);
-          FStar_TypeChecker_Env.rel_query_for_apply_tac_uvar =
-            (env.FStar_TypeChecker_Env.rel_query_for_apply_tac_uvar)
+          FStar_TypeChecker_Env.core_check =
+            (env.FStar_TypeChecker_Env.core_check)
         } i.FStar_TypeChecker_Common.imp_uvar uu___ false
         i.FStar_TypeChecker_Common.imp_reason
 let (decr_depth : proofstate -> proofstate) =

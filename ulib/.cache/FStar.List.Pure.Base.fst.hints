@@ -34,7 +34,7 @@
         "token_correspondence_FStar.List.Tot.Base.length.fuel_instrumented"
       ],
       0,
-      "e4f3227fd8de95a0b9376234ce61200c"
+      "8e2cdce0ba5ab42a6ee41b53e0b8ed71"
     ],
     [
       "FStar.List.Pure.Base.map3",
@@ -73,7 +73,7 @@
         "token_correspondence_FStar.List.Tot.Base.length.fuel_instrumented"
       ],
       0,
-      "4075c997801c3a9c4dfdd9d4c3bcbc18"
+      "80e754609fa31c079d6f5088df48205f"
     ],
     [
       "FStar.List.Pure.Base.zip",
@@ -82,7 +82,7 @@
       1,
       [ "@query" ],
       0,
-      "1a311c945ade368af4179e9625fe0620"
+      "18719a607fa98b8499e0b5078e0cfcaa"
     ],
     [
       "FStar.List.Pure.Base.zip3",
@@ -91,7 +91,7 @@
       1,
       [ "@query" ],
       0,
-      "a544835c23107b6632d548a37eb0a3de"
+      "614777683a5ad3422889963c85bcf7f8"
     ]
   ]
 ]

@@ -180,7 +180,8 @@ val get_field_projector_name : env -> datacon:lident -> index:int -> lident
 
 (* update the env functions *)
 val update_env_sub_eff : env -> sub_eff -> Range.range -> env
-val update_env_polymonadic_bind : env -> lident -> lident -> lident -> tscheme -> env
+val update_env_polymonadic_bind :
+  env -> lident -> lident -> lident -> tscheme -> indexed_effect_combinator_kind -> env
 
 val try_lookup_record_type : env -> lident -> option DsEnv.record_or_dc
 val find_record_or_dc_from_typ : env -> option typ -> unresolved_constructor -> Range.range -> DsEnv.record_or_dc * lident * fv

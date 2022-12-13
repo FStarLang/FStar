@@ -18,7 +18,7 @@
         "subterm_ordering_Prims.Cons"
       ],
       0,
-      "355c73ff8c6eff8802c6513f10e1b1ca"
+      "396e57066f9843b6a84bc64e8cf3c52f"
     ],
     [
       "Queue.emp_equiv_pure",
@@ -43,7 +43,7 @@
         "typing_Steel.Memory.pure"
       ],
       0,
-      "10dd523184384cae32f8937baf1f06d9"
+      "22e12655d2f99b141839fa4ad3583f56"
     ],
     [
       "Queue.next_last",
@@ -58,7 +58,7 @@
         "projection_inverse_BoxBool_proj_0", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "205b4cf05d0257b81808536111e19290"
+      "f05e6912360fb0ab8324b83960583084"
     ],
     [
       "Queue.next_last_correct",
@@ -70,7 +70,7 @@
         "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
       ],
       0,
-      "fb66604c9c1e902a19b314be84d8cde2"
+      "01df0541b7be4bb5a04a45f380ef5ab2"
     ],
     [
       "Queue.next_last_correct",
@@ -112,7 +112,7 @@
         "typing_Steel.Reference.ref"
       ],
       0,
-      "22df8772d190b096f0f3cd48212fe0ac"
+      "c276ead45b34a20d4990be60a163ba77"
     ],
     [
       "Queue.fragment_append",
@@ -159,7 +159,7 @@
         "typing_Steel.Effect.Common.star", "typing_Steel.Reference.ref"
       ],
       0,
-      "49fa7f9afdac43e372619e73627e6e08"
+      "8fdb95bc6bcd2a6870a362b90da891a1"
     ],
     [
       "Queue.intro_fragment_nil",
@@ -181,7 +181,7 @@
         "typing_Steel.Reference.ref"
       ],
       0,
-      "22aa3c164371beb2a4a8f9fe096d611d"
+      "102b38df8542f1af4d4f143c958db17b"
     ],
     [
       "Queue.intro_fragment_cons",
@@ -198,7 +198,7 @@
         "typing_tok_Prims.T@tok"
       ],
       0,
-      "b9e9c2e58f325c37474937dcbbea4428"
+      "d374f5aa2cf0e1a242da39dd65317ea2"
     ],
     [
       "Queue.fragment_append_singleton",
@@ -250,7 +250,7 @@
         "typing_Steel.Reference.ref"
       ],
       0,
-      "2db38e525f4142144c40f6538ec1d32d"
+      "551e3e72d21e66694cf7aaca203843c7"
     ],
     [
       "Queue.queue_lc_prop",
@@ -277,7 +277,7 @@
         "typing_Steel.Reference.ref"
       ],
       0,
-      "3daff850b301e2cd4fccc96dc314f2b3"
+      "afcde7dc0f25ed29047805657e52d7dd"
     ],
     [
       "Queue.new_queue",
@@ -347,7 +347,7 @@
         "typing_Steel.Reference.is_null", "typing_Steel.Reference.null"
       ],
       0,
-      "17a49932cf3e8c366382ca2be2e20c53"
+      "028ef7d4e9ef8783e3bfa6a3511a954b"
     ],
     [
       "Queue.snoc_inj",
@@ -360,7 +360,7 @@
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__2"
       ],
       0,
-      "3d30c0acb83bff416d7a579c2e95fa5f"
+      "132d5ce3e3e34e13e1263410041edff5"
     ],
     [
       "Queue.unsnoc",
@@ -381,7 +381,7 @@
         "token_correspondence_FStar.List.Tot.Base.length.fuel_instrumented"
       ],
       0,
-      "0f20bcd50519e13f365fef0654c3fa18"
+      "ddaba66e25c53438bd3a6f9ee0c0e7fe"
     ],
     [
       "Queue.unsnoc_hd",
@@ -390,7 +390,7 @@
       1,
       [ "@query" ],
       0,
-      "2cd86429b356840db6924781160cb5f1"
+      "516bf0fbd5a9cc4e3e289f37aa738169"
     ],
     [
       "Queue.unsnoc_tl",
@@ -399,7 +399,7 @@
       1,
       [ "@query" ],
       0,
-      "d6ee863df5e2905f3315f2a2dd069491"
+      "e10c64275e100f11e998e976de15644e"
     ],
     [
       "Queue.enqueue",
@@ -508,7 +508,7 @@
         "typing_Steel.Reference.pts_to_sl", "typing_Steel.Reference.ref"
       ],
       0,
-      "7d4f421db8c1095f56c49a8f9a4a8b8c"
+      "699b557e5bfd8f4afc00dedf48b25ee6"
     ],
     [
       "Queue.dequeue_post_success",
@@ -525,7 +525,7 @@
         "typing_Queue.Def.t"
       ],
       0,
-      "aceddcb32c37cdcfc45645b65410c5b6"
+      "a025b15767d57b33f29b94578b6a00f6"
     ],
     [
       "Queue.dequeue_post",
@@ -536,7 +536,7 @@
         "@query", "lemma_FStar.Pervasives.invertOption", "typing_Queue.Def.t"
       ],
       0,
-      "16fc7a7563bbdf371854a1168f969d7c"
+      "7ac58816881d7a6a2479df0cd95864e9"
     ],
     [
       "Queue.dequeue",
@@ -609,7 +609,7 @@
         "typing_Steel.Reference.ref"
       ],
       0,
-      "7d72edffa11f4705a63b16baf5936cca"
+      "d903fe99f4d7a743af5c71984668c606"
     ]
   ]
 ]

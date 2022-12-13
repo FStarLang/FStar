@@ -38,12 +38,9 @@ let bind a b s (f:nds a s) (g:a -> nds b s)
 
 total
 reflectable
-layered_effect {
-  NDS : a:Type -> st:Type0 -> Effect
-  with
-  repr = nds;
-  return = return;
-  bind = bind
+effect {
+  NDS (a:Type) ([@@@ effect_param] st:Type0)
+  with {repr = nds; return; bind}
 }
 
 /// Reading the state
@@ -61,7 +58,7 @@ let sample #s ()
   : NDS bool s
   = NDS?.reflect (fun t n s -> t n, s, n + 1)
 
-let lift_pure_nds a s wp (f : eqtype_as_type unit -> PURE a wp)
+let lift_pure_nds a (wp:pure_wp a) s (f : unit -> PURE a wp)
   : Pure (nds a s)
          (requires wp (fun _ -> True))
          (ensures fun _ -> True)

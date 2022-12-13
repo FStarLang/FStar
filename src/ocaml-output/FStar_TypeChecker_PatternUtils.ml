@@ -12,7 +12,7 @@ let rec (elaborate_pat :
         if inaccessible
         then
           FStar_Syntax_Syntax.withinfo
-            (FStar_Syntax_Syntax.Pat_dot_term (a, FStar_Syntax_Syntax.tun)) r
+            (FStar_Syntax_Syntax.Pat_dot_term FStar_Pervasives_Native.None) r
         else FStar_Syntax_Syntax.withinfo (FStar_Syntax_Syntax.Pat_var a) r in
       match p.FStar_Syntax_Syntax.v with
       | FStar_Syntax_Syntax.Pat_cons
@@ -190,12 +190,12 @@ let (raw_pat_as_exp :
                   FStar_Syntax_Syntax.mk (FStar_Syntax_Syntax.Tm_constant c)
                     p1.FStar_Syntax_Syntax.p in
             (e, bs)
-        | FStar_Syntax_Syntax.Pat_dot_term (uu___, t) ->
-            let t1 = FStar_Syntax_Subst.compress t in
-            (match t1.FStar_Syntax_Syntax.n with
-             | FStar_Syntax_Syntax.Tm_unknown ->
+        | FStar_Syntax_Syntax.Pat_dot_term eopt ->
+            (match eopt with
+             | FStar_Pervasives_Native.None ->
                  FStar_Compiler_Effect.raise Raw_pat_cannot_be_translated
-             | uu___1 -> (t1, bs))
+             | FStar_Pervasives_Native.Some e ->
+                 let uu___ = FStar_Syntax_Subst.compress e in (uu___, bs))
         | FStar_Syntax_Syntax.Pat_wild x ->
             let uu___ =
               FStar_Syntax_Syntax.mk (FStar_Syntax_Syntax.Tm_name x)
@@ -270,7 +270,7 @@ let (pat_as_exp :
                      let uu___4 = FStar_Syntax_Syntax.range_of_bv x in
                      FStar_TypeChecker_Env.new_implicit_var_aux
                        "pattern bv type" uu___4 env1 t
-                       FStar_Syntax_Syntax.Allow_untyped
+                       (FStar_Syntax_Syntax.Allow_untyped "pattern bv type")
                        FStar_Pervasives_Native.None in
                    (match uu___3 with
                     | (t_x, uu___4, guard) ->
@@ -300,45 +300,61 @@ let (pat_as_exp :
                         p1.FStar_Syntax_Syntax.p in
                 ([], [], [], env1, e, FStar_TypeChecker_Common.trivial_guard,
                   p1)
-            | FStar_Syntax_Syntax.Pat_dot_term (x, uu___) ->
-                let uu___1 = FStar_Syntax_Util.type_u () in
-                (match uu___1 with
-                 | (k, uu___2) ->
-                     let uu___3 =
-                       let uu___4 = FStar_Syntax_Syntax.range_of_bv x in
-                       FStar_TypeChecker_Env.new_implicit_var_aux
-                         "pat_dot_term type" uu___4 env1 k
-                         FStar_Syntax_Syntax.Allow_ghost
-                         FStar_Pervasives_Native.None in
-                     (match uu___3 with
-                      | (t, uu___4, g) ->
-                          let x1 =
-                            {
-                              FStar_Syntax_Syntax.ppname =
-                                (x.FStar_Syntax_Syntax.ppname);
-                              FStar_Syntax_Syntax.index =
-                                (x.FStar_Syntax_Syntax.index);
-                              FStar_Syntax_Syntax.sort = t
-                            } in
-                          let uu___5 =
-                            let uu___6 = FStar_Syntax_Syntax.range_of_bv x1 in
-                            FStar_TypeChecker_Env.new_implicit_var_aux
-                              "pat_dot_term" uu___6 env1 t
-                              FStar_Syntax_Syntax.Allow_ghost
-                              FStar_Pervasives_Native.None in
-                          (match uu___5 with
-                           | (e, uu___6, g') ->
-                               let p2 =
-                                 {
-                                   FStar_Syntax_Syntax.v =
-                                     (FStar_Syntax_Syntax.Pat_dot_term
-                                        (x1, e));
-                                   FStar_Syntax_Syntax.p =
-                                     (p1.FStar_Syntax_Syntax.p)
-                                 } in
-                               let uu___7 =
-                                 FStar_TypeChecker_Common.conj_guard g g' in
-                               ([], [], [], env1, e, uu___7, p2))))
+            | FStar_Syntax_Syntax.Pat_dot_term eopt ->
+                (match eopt with
+                 | FStar_Pervasives_Native.None ->
+                     ((let uu___1 =
+                         FStar_Compiler_Effect.op_Less_Bar
+                           (FStar_TypeChecker_Env.debug env1)
+                           (FStar_Options.Other "Patterns") in
+                       if uu___1
+                       then
+                         (if
+                            Prims.op_Negation
+                              env1.FStar_TypeChecker_Env.phase1
+                          then
+                            let uu___2 = FStar_Syntax_Print.pat_to_string p1 in
+                            FStar_Compiler_Util.print1
+                              "Found a non-instantiated dot pattern in phase2 (%s)\n"
+                              uu___2
+                          else ())
+                       else ());
+                      (let uu___1 = FStar_Syntax_Util.type_u () in
+                       match uu___1 with
+                       | (k, uu___2) ->
+                           let uu___3 =
+                             FStar_TypeChecker_Env.new_implicit_var_aux
+                               "pat_dot_term type" p1.FStar_Syntax_Syntax.p
+                               env1 k
+                               (FStar_Syntax_Syntax.Allow_ghost
+                                  "pat dot term type")
+                               FStar_Pervasives_Native.None in
+                           (match uu___3 with
+                            | (t, uu___4, g) ->
+                                let uu___5 =
+                                  FStar_TypeChecker_Env.new_implicit_var_aux
+                                    "pat_dot_term" p1.FStar_Syntax_Syntax.p
+                                    env1 t
+                                    (FStar_Syntax_Syntax.Allow_ghost
+                                       "pat dot term")
+                                    FStar_Pervasives_Native.None in
+                                (match uu___5 with
+                                 | (e, uu___6, g') ->
+                                     let p2 =
+                                       {
+                                         FStar_Syntax_Syntax.v =
+                                           (FStar_Syntax_Syntax.Pat_dot_term
+                                              (FStar_Pervasives_Native.Some e));
+                                         FStar_Syntax_Syntax.p =
+                                           (p1.FStar_Syntax_Syntax.p)
+                                       } in
+                                     let uu___7 =
+                                       FStar_TypeChecker_Common.conj_guard g
+                                         g' in
+                                     ([], [], [], env1, e, uu___7, p2)))))
+                 | FStar_Pervasives_Native.Some e ->
+                     ([], [], [], env1, e,
+                       FStar_TypeChecker_Env.trivial_guard, p1))
             | FStar_Syntax_Syntax.Pat_wild x ->
                 let uu___ = intro_bv env1 x in
                 (match uu___ with

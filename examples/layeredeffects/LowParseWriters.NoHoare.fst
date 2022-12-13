@@ -37,22 +37,26 @@ let read_return
 inline_for_extraction
 let read_bind_conv
   (a:Type) (b:Type)
-  (l: memory_invariant)
-  (f_bind : read_repr a l)
-  (g : (x: a -> read_repr b l))
+  (l_f: memory_invariant)
+  (l_g: memory_invariant)
+  (_:squash (l_f == l_g))
+  (f_bind : read_repr a l_f)
+  (g : (x: a -> read_repr b l_g))
   ()
-: ERead b True (fun _ -> True) (fun _ -> True) l
+: ERead b True (fun _ -> True) (fun _ -> True) l_g
 = let x = ERead?.reflect f_bind in
   ERead?.reflect (g x)
 
 inline_for_extraction
 let read_bind
   (a:Type) (b:Type)
-  (l: memory_invariant)
-  (f_bind : read_repr a l)
-  (g : (x: a -> read_repr b l))
-: Tot (read_repr b l)
-= read_reify_trivial (read_bind_conv a b l f_bind g)
+  ([@@@ refl_implicit] l_f: memory_invariant)
+  ([@@@ refl_implicit] l_g: memory_invariant)
+  ([@@@ refl_implicit] p:squash (l_f == l_g))
+  (f_bind : read_repr a l_f)
+  (g : (x: a -> read_repr b l_g))
+: Tot (read_repr b l_g)
+= read_reify_trivial (read_bind_conv a b l_f l_g () f_bind g)
 
 inline_for_extraction
 let read_subcomp_conv (a:Type)
@@ -77,23 +81,23 @@ let read_subcomp (a:Type)
 
 inline_for_extraction
 let read_if_then_else (a:Type)
-  (l:memory_invariant)
-  (f_ifthenelse:read_repr a l)
-  (g:read_repr a l)
+  ([@@@ refl_implicit] l_f: memory_invariant)
+  ([@@@ refl_implicit] l_g: memory_invariant)
+  ([@@@ refl_implicit] pr:squash (l_f == l_g))
+  (f_ifthenelse:read_repr a l_f)
+  (g:read_repr a l_g)
   (p:bool)
 : Tot Type
-= read_repr a l
+= read_repr a l_g
 
-// [@@ smt_reifiable_layered_effect ]
 reifiable reflectable total
-layered_effect {
-  TRead : a:Type -> (memory_invariant) -> Effect
-  with
-  repr = read_repr;
-  return = read_return;
-  bind = read_bind;
-  subcomp = read_subcomp;
-  if_then_else = read_if_then_else
+effect {
+  TRead (a:Type) (_:memory_invariant)
+  with {repr = read_repr;
+        return = read_return;
+        bind = read_bind;
+        subcomp = read_subcomp;
+        if_then_else = read_if_then_else}
 }
 
 inline_for_extraction
@@ -108,7 +112,7 @@ let lift_pure_read_conv (a:Type) (wp:pure_wp a)
 inline_for_extraction
 let lift_pure_read' (a:Type) (wp:pure_wp a)
   (l: memory_invariant)
-  (f_pure: eqtype_as_type unit -> PURE a wp)
+  (f_pure:unit -> PURE a wp)
 : Pure (read_repr a l)
   (requires (wp (fun _ -> True)))
   (ensures (fun _ -> True))
@@ -240,25 +244,35 @@ let returnc
 
 inline_for_extraction
 let bind_conv (a:Type) (b:Type)
-  (r_in_f:parser) (r_out_f: parser)
+  (r_in_f:parser)
+  (r_out_f: parser)
+  (l_f:memory_invariant)
+  (r_in_g:parser)
   (r_out_g: parser)
-  (l: memory_invariant)
-  (f_bind : repr a r_in_f r_out_f l)
-  (g : (x: a -> repr b (r_out_f) r_out_g l))
+  (l_g: memory_invariant)
+  (_:squash (r_out_f == r_in_g))
+  (_:squash (l_f == l_g))
+  (f_bind : repr a r_in_f r_out_f l_f)
+  (g : (x: a -> repr b r_in_g r_out_g l_g))
   ()
-: EWrite b r_in_f r_out_g (fun _ -> True) (fun _ _ _ -> True) (fun _ -> True) l
+: EWrite b r_in_f r_out_g (fun _ -> True) (fun _ _ _ -> True) (fun _ -> True) l_g
 = let x = EWrite?.reflect f_bind in
   EWrite?.reflect (g x)
 
 inline_for_extraction
 let bind (a:Type) (b:Type)
-  (r_in_f:parser) (r_out_f: parser)
+  (r_in_f:parser)
+  ([@@@ refl_implicit] r_out_f: parser)
+  ([@@@ refl_implicit] l_f: memory_invariant)
+  ([@@@ refl_implicit] r_in_g:parser)
   (r_out_g: parser)
-  (l: memory_invariant)
-  (f_bind : repr a r_in_f r_out_f l)
-  (g : (x: a -> repr b (r_out_f) r_out_g l))
-: Tot (repr b r_in_f r_out_g l)
-= reify_trivial (bind_conv a b r_in_f r_out_f r_out_g l f_bind g)
+  ([@@@ refl_implicit] l_g: memory_invariant)
+  ([@@@ refl_implicit] pr1:squash (r_out_f == r_in_g))
+  ([@@@ refl_implicit] pr2:squash (l_f == l_g))
+  (f_bind : repr a r_in_f r_out_f l_f)
+  (g : (x: a -> repr b (r_in_g) r_out_g l_g))
+: Tot (repr b r_in_f r_out_g l_g)
+= reify_trivial (bind_conv a b r_in_f r_out_f l_f r_in_g r_out_g l_g () () f_bind g)
 
 noeq
 type valid_rewrite_t'
@@ -327,7 +341,7 @@ let valid_rewrite_repr
   (#inv: memory_invariant)
   (v: squash (valid_rewrite_prop p1 p2))
 : Tot (repr unit p1 p2 inv)
-= reify_trivial (fun _ -> valid_rewrite _ _ _ _ _ (evalid_rewrite_of_tvalid_rewrite v))
+= reify_trivial (fun _ -> valid_rewrite _ _ _ _ inv (evalid_rewrite_of_tvalid_rewrite v))
 
 inline_for_extraction
 let subcomp_conv
@@ -371,44 +385,51 @@ let subcomp2
   ))
   (ensures (fun _ -> True))
 =
-  bind a a r_in r_out r_out' l f_subcomp (fun x -> bind unit a r_out r_out' r_out' l (valid_rewrite_repr ()) (fun _ -> returnc a x r_out' l))
+  bind a a r_in r_out l r_out r_out' l () () f_subcomp (fun x -> bind unit a r_out r_out' l r_out' r_out' l () () (valid_rewrite_repr ()) (fun _ -> returnc a x r_out' l))
 
 inline_for_extraction
 let subcomp
   (a:Type)
-  (r_in:parser) (r_out r_out': parser)
-  (l:memory_invariant)
-  (l' : memory_invariant)
-  (f_subcomp:repr a r_in r_out l)
-: Pure (repr a r_in r_out' l')
+  ([@@@ refl_implicit] r_in_f:parser)
+  (r_out_f:parser)
+  (l_f:memory_invariant)
+  ([@@@ refl_implicit] r_in_g:parser)
+  (r_out_g: parser)
+  (l_g:memory_invariant)
+  ([@@@ refl_implicit] pr:squash (r_in_f == r_in_g))
+  (f_subcomp:repr a r_in_f r_out_f l_f)
+: Pure (repr a r_in_g r_out_g l_g)
   (requires (
-    l `memory_invariant_includes` l' /\
-    valid_rewrite_prop r_out r_out'
+    l_f `memory_invariant_includes` l_g /\
+    valid_rewrite_prop r_out_f r_out_g
   ))
   (ensures (fun _ -> True))
-= subcomp2 a r_in r_out r_out' l' (subcomp1 a r_in r_out l l' f_subcomp)
+= subcomp2 a r_in_f r_out_f r_out_g l_g (subcomp1 a r_in_f r_out_f l_f l_g f_subcomp)
 
 let if_then_else (a:Type)
-  (r_in:parser) (r_out: parser)
-  (l:memory_invariant)
-  (f_ifthenelse:repr a r_in r_out l)
-  (g:repr a r_in r_out l)
+  ([@@@ refl_implicit] r_in_f:parser)
+  ([@@@ refl_implicit] r_out_f: parser)
+  ([@@@ refl_implicit] l_f: memory_invariant)
+  ([@@@ refl_implicit] r_in_g:parser)
+  ([@@@ refl_implicit] r_out_g: parser)
+  ([@@@ refl_implicit] l_g: memory_invariant)
+  ([@@@ refl_implicit] pr1:squash (r_in_f == r_in_g))
+  ([@@@ refl_implicit] pr2:squash (r_out_f == r_out_g))
+  ([@@@ refl_implicit] pr3:squash (l_f == l_g))
+  (f_ifthenelse:repr a r_in_f r_out_f l_f)
+  (g:repr a r_in_g r_out_g l_g)
   (p:bool)
 : Tot Type
-= repr a r_in r_out
-    l
+= repr a r_in_g r_out_g l_g
 
-// [@@smt_reifiable_layered_effect]
-[@@allow_informative_binders]
 reifiable reflectable total
-layered_effect {
-  TWrite : a:Type -> (pin: parser) -> (pout: (parser)) -> (memory_invariant) -> Effect
-  with
-  repr = repr;
-  return = returnc;
-  bind = bind;
-  subcomp = subcomp;
-  if_then_else = if_then_else
+effect {
+  TWrite (a:Type) (pin: parser) (pout:parser) (_:memory_invariant)
+  with {repr;
+        return = returnc;
+        bind;
+        subcomp;
+        if_then_else}
 }
 
 inline_for_extraction
@@ -621,7 +642,7 @@ let valid_rewrite
   (#inv: memory_invariant)
   (v: squash (valid_rewrite_prop p1 p2))
 : TWrite unit p1 p2 inv
-= twrite_of_ewrite (fun _ -> valid_rewrite _ _ _ _ _ (evalid_rewrite_of_tvalid_rewrite v))
+= twrite_of_ewrite (fun _ -> valid_rewrite _ _ _ _ inv (evalid_rewrite_of_tvalid_rewrite v))
 
 inline_for_extraction
 let cast

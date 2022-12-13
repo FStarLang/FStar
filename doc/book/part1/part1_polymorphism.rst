@@ -6,6 +6,7 @@ Polymorphism and type inference
 In this chapter, we'll learn about defining type polymorphic
 functions, or how to work with generic types.
 
+.. _Part1_type_of_types:
 
 Type: The type of types
 ^^^^^^^^^^^^^^^^^^^^^^^
@@ -163,8 +164,7 @@ the job of the F* typechecker to fill in the hole.
 
    Program holes are a very powerful concept and form the basis of
    Meta-F*, the metaprogramming and tactics framework embedded in
-   F*---we'll see more about holes in a :ref:`later
-   section<MetaFStar>`.
+   F*---we'll see more about holes in a later section.
 
 Implicit arguments
 ^^^^^^^^^^^^^^^^^^

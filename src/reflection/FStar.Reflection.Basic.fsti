@@ -40,8 +40,6 @@ val defs_in_module        : Env.env -> name -> list fv
 val binders_of_env        : Env.env -> binders
 val moduleof              : Env.env -> list string
 val term_eq               : term -> term -> bool
-val term_to_string        : term -> string
-val comp_to_string        : comp -> string
 val env_open_modules      : Env.env -> list name
 val sigelt_opts           : sigelt -> option vconfig
 val embed_vconfig         : vconfig -> term

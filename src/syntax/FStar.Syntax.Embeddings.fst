@@ -676,7 +676,7 @@ let e_list (ea:embedding 'a) =
         (S.t_list_of (type_of ea))
         printer
         emb_t_list_a
-
+  
 let e_string_list = e_list e_string
 
 (* the steps as terms *)
@@ -860,6 +860,7 @@ let e_vconfig =
                    S.as_arg (embed e_bool              vcfg.no_tactics                                rng None norm);
                    S.as_arg (embed (e_option e_string) vcfg.vcgen_optimize_bind_as_seq                rng None norm);
                    S.as_arg (embed e_string_list       vcfg.z3cliopt                                  rng None norm);
+                   S.as_arg (embed e_string_list       vcfg.z3smtopt                                  rng None norm);                   
                    S.as_arg (embed e_bool              vcfg.z3refresh                                 rng None norm);
                    S.as_arg (embed e_fsint             vcfg.z3rlimit                                  rng None norm);
                    S.as_arg (embed e_fsint             vcfg.z3rlimit_factor                           rng None norm);
@@ -896,6 +897,7 @@ let e_vconfig =
             (no_tactics, _);
             (vcgen_optimize_bind_as_seq, _);
             (z3cliopt, _);
+            (z3smtopt, _);            
             (z3refresh, _);
             (z3rlimit, _);
             (z3rlimit_factor, _);
@@ -924,6 +926,7 @@ let e_vconfig =
                   BU.bind_opt (unembed e_bool              no_tactics w norm) (fun no_tactics ->
                   BU.bind_opt (unembed (e_option e_string) vcgen_optimize_bind_as_seq w norm) (fun vcgen_optimize_bind_as_seq ->
                   BU.bind_opt (unembed e_string_list       z3cliopt w norm) (fun z3cliopt ->
+                  BU.bind_opt (unembed e_string_list       z3smtopt w norm) (fun z3smtopt ->                  
                   BU.bind_opt (unembed e_bool              z3refresh w norm) (fun z3refresh ->
                   BU.bind_opt (unembed e_fsint             z3rlimit w norm) (fun z3rlimit ->
                   BU.bind_opt (unembed e_fsint             z3rlimit_factor w norm) (fun z3rlimit_factor ->
@@ -952,13 +955,14 @@ let e_vconfig =
                     no_tactics = no_tactics;
                     vcgen_optimize_bind_as_seq = vcgen_optimize_bind_as_seq;
                     z3cliopt = z3cliopt;
+                    z3smtopt = z3smtopt;
                     z3refresh = z3refresh;
                     z3rlimit = z3rlimit;
                     z3rlimit_factor = z3rlimit_factor;
                     z3seed = z3seed;
                     trivial_pre_for_unannotated_effectful_fns = trivial_pre_for_unannotated_effectful_fns;
                     reuse_hint_for = reuse_hint_for;
-                  }))))))))))))))))))))))))))))
+                  })))))))))))))))))))))))))))))
         | _ ->
           if w then
             Err.log_issue t0.pos (Err.Warning_NotEmbedded, (BU.format1 "Not an embedded vconfig: %s" (Print.term_to_string t0)));

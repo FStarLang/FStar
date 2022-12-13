@@ -12,7 +12,7 @@ let bind (a b:Type) (f:repr a) (g:a -> repr b) : repr b = g f
 
 effect { M (a:Type) with {repr; return; bind}}
 
-let lift_PURE_M (a:Type) (wp:pure_wp a) (f:eqtype_as_type unit -> PURE a wp)
+let lift_PURE_M (a:Type) (wp:pure_wp a) (f:unit -> PURE a wp)
   : Pure (repr a)
          (requires wp (fun _ -> True))
          (ensures fun _ -> True)
@@ -57,6 +57,8 @@ let n : int = g ()
 // See e.g. Steel.ST.Effect.STBase that constrains the preconditions at the top-level
 //
 
+#push-options "--compat_pre_typed_indexed_effects"
+
 open Steel.FractionalPermission
 open Steel.ST.Effect
 open Steel.ST.SpinLock
@@ -81,3 +83,4 @@ let t0 : unit =
   write #int #(Ghost.hide 0) r 1
     <: STT unit
            (pts_to r full_perm (Ghost.hide 0)) (fun _ -> pts_to r full_perm (Ghost.hide 1))
+#pop-options

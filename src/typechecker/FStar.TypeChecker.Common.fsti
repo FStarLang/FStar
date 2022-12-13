@@ -158,6 +158,10 @@ val check_trivial : term -> guard_formula
 val imp_guard     : guard_t -> guard_t -> guard_t
 val conj_guards   : list guard_t -> guard_t
 
+// splits the guard into the logical component (snd in the returned tuple)
+//   and the rest (fst in the returned tuple)
+val split_guard   : guard_t -> guard_t & guard_t
+
 val weaken_guard_formula: guard_t -> typ -> guard_t
 type lcomp = { //a lazy computation
     eff_name: lident;

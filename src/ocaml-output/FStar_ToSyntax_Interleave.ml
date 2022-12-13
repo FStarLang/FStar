@@ -39,8 +39,9 @@ let (definition_lids :
                 match uu___2 with
                 | FStar_Parser_AST.TyconAbbrev (id, uu___3, uu___4, uu___5)
                     -> let uu___6 = FStar_Ident.lid_of_ids [id] in [uu___6]
-                | FStar_Parser_AST.TyconRecord (id, uu___3, uu___4, uu___5)
-                    -> let uu___6 = FStar_Ident.lid_of_ids [id] in [uu___6]
+                | FStar_Parser_AST.TyconRecord
+                    (id, uu___3, uu___4, uu___5, uu___6) ->
+                    let uu___7 = FStar_Ident.lid_of_ids [id] in [uu___7]
                 | FStar_Parser_AST.TyconVariant (id, uu___3, uu___4, uu___5)
                     -> let uu___6 = FStar_Ident.lid_of_ids [id] in [uu___6]
                 | uu___3 -> []))
@@ -244,11 +245,101 @@ let (ml_mode_prefix_with_iface_decls :
   fun iface ->
     fun impl ->
       match impl.FStar_Parser_AST.d with
-      | FStar_Parser_AST.TopLevelModule uu___ -> (iface, [impl])
-      | FStar_Parser_AST.Open uu___ -> (iface, [impl])
-      | FStar_Parser_AST.Friend uu___ -> (iface, [impl])
-      | FStar_Parser_AST.Include uu___ -> (iface, [impl])
-      | FStar_Parser_AST.ModuleAbbrev uu___ -> (iface, [impl])
+      | FStar_Parser_AST.TopLevelModule uu___ ->
+          let uu___1 =
+            FStar_Compiler_List.span
+              (fun d ->
+                 match d.FStar_Parser_AST.d with
+                 | FStar_Parser_AST.Open uu___2 -> true
+                 | FStar_Parser_AST.ModuleAbbrev uu___2 -> true
+                 | uu___2 -> false) iface in
+          (match uu___1 with
+           | (iface_prefix_opens, iface1) ->
+               let iface2 =
+                 FStar_Compiler_List.filter
+                   (fun d ->
+                      match d.FStar_Parser_AST.d with
+                      | FStar_Parser_AST.Val uu___2 -> true
+                      | FStar_Parser_AST.Tycon uu___2 -> true
+                      | uu___2 -> false) iface1 in
+               (iface2,
+                 (FStar_Compiler_List.op_At [impl] iface_prefix_opens)))
+      | FStar_Parser_AST.Open uu___ ->
+          let uu___1 =
+            FStar_Compiler_List.span
+              (fun d ->
+                 match d.FStar_Parser_AST.d with
+                 | FStar_Parser_AST.Open uu___2 -> true
+                 | FStar_Parser_AST.ModuleAbbrev uu___2 -> true
+                 | uu___2 -> false) iface in
+          (match uu___1 with
+           | (iface_prefix_opens, iface1) ->
+               let iface2 =
+                 FStar_Compiler_List.filter
+                   (fun d ->
+                      match d.FStar_Parser_AST.d with
+                      | FStar_Parser_AST.Val uu___2 -> true
+                      | FStar_Parser_AST.Tycon uu___2 -> true
+                      | uu___2 -> false) iface1 in
+               (iface2,
+                 (FStar_Compiler_List.op_At [impl] iface_prefix_opens)))
+      | FStar_Parser_AST.Friend uu___ ->
+          let uu___1 =
+            FStar_Compiler_List.span
+              (fun d ->
+                 match d.FStar_Parser_AST.d with
+                 | FStar_Parser_AST.Open uu___2 -> true
+                 | FStar_Parser_AST.ModuleAbbrev uu___2 -> true
+                 | uu___2 -> false) iface in
+          (match uu___1 with
+           | (iface_prefix_opens, iface1) ->
+               let iface2 =
+                 FStar_Compiler_List.filter
+                   (fun d ->
+                      match d.FStar_Parser_AST.d with
+                      | FStar_Parser_AST.Val uu___2 -> true
+                      | FStar_Parser_AST.Tycon uu___2 -> true
+                      | uu___2 -> false) iface1 in
+               (iface2,
+                 (FStar_Compiler_List.op_At [impl] iface_prefix_opens)))
+      | FStar_Parser_AST.Include uu___ ->
+          let uu___1 =
+            FStar_Compiler_List.span
+              (fun d ->
+                 match d.FStar_Parser_AST.d with
+                 | FStar_Parser_AST.Open uu___2 -> true
+                 | FStar_Parser_AST.ModuleAbbrev uu___2 -> true
+                 | uu___2 -> false) iface in
+          (match uu___1 with
+           | (iface_prefix_opens, iface1) ->
+               let iface2 =
+                 FStar_Compiler_List.filter
+                   (fun d ->
+                      match d.FStar_Parser_AST.d with
+                      | FStar_Parser_AST.Val uu___2 -> true
+                      | FStar_Parser_AST.Tycon uu___2 -> true
+                      | uu___2 -> false) iface1 in
+               (iface2,
+                 (FStar_Compiler_List.op_At [impl] iface_prefix_opens)))
+      | FStar_Parser_AST.ModuleAbbrev uu___ ->
+          let uu___1 =
+            FStar_Compiler_List.span
+              (fun d ->
+                 match d.FStar_Parser_AST.d with
+                 | FStar_Parser_AST.Open uu___2 -> true
+                 | FStar_Parser_AST.ModuleAbbrev uu___2 -> true
+                 | uu___2 -> false) iface in
+          (match uu___1 with
+           | (iface_prefix_opens, iface1) ->
+               let iface2 =
+                 FStar_Compiler_List.filter
+                   (fun d ->
+                      match d.FStar_Parser_AST.d with
+                      | FStar_Parser_AST.Val uu___2 -> true
+                      | FStar_Parser_AST.Tycon uu___2 -> true
+                      | uu___2 -> false) iface1 in
+               (iface2,
+                 (FStar_Compiler_List.op_At [impl] iface_prefix_opens)))
       | uu___ ->
           let uu___1 =
             FStar_Compiler_List.span
@@ -311,6 +402,8 @@ let ml_mode_check_initial_interface :
                     d.FStar_Parser_AST.drange
               | FStar_Parser_AST.Tycon uu___ -> true
               | FStar_Parser_AST.Val uu___ -> true
+              | FStar_Parser_AST.Open uu___ -> true
+              | FStar_Parser_AST.ModuleAbbrev uu___ -> true
               | uu___ -> false))
 let (ulib_modules : Prims.string Prims.list) =
   ["FStar.Calc";
@@ -390,18 +483,35 @@ let (prefix_with_interface_decls :
     fun impl ->
       fun env ->
         let uu___ =
-          let uu___1 = FStar_Syntax_DsEnv.current_module env in
-          FStar_Syntax_DsEnv.iface_decls env uu___1 in
+          let uu___1 =
+            let uu___2 = FStar_Syntax_DsEnv.current_module env in
+            FStar_Syntax_DsEnv.iface_decls env uu___2 in
+          match uu___1 with
+          | FStar_Pervasives_Native.None -> ([impl], env)
+          | FStar_Pervasives_Native.Some iface ->
+              let uu___2 = prefix_one_decl mname iface impl in
+              (match uu___2 with
+               | (iface1, impl1) ->
+                   let env1 =
+                     let uu___3 = FStar_Syntax_DsEnv.current_module env in
+                     FStar_Syntax_DsEnv.set_iface_decls env uu___3 iface1 in
+                   (impl1, env1)) in
         match uu___ with
-        | FStar_Pervasives_Native.None -> ([impl], env)
-        | FStar_Pervasives_Native.Some iface ->
-            let uu___1 = prefix_one_decl mname iface impl in
-            (match uu___1 with
-             | (iface1, impl1) ->
-                 let env1 =
-                   let uu___2 = FStar_Syntax_DsEnv.current_module env in
-                   FStar_Syntax_DsEnv.set_iface_decls env uu___2 iface1 in
-                 (impl1, env1))
+        | (decls, env1) ->
+            ((let uu___2 =
+                let uu___3 = FStar_Ident.string_of_lid mname in
+                FStar_Options.dump_module uu___3 in
+              if uu___2
+              then
+                let uu___3 =
+                  let uu___4 =
+                    FStar_Compiler_List.map FStar_Parser_AST.decl_to_string
+                      decls in
+                  FStar_Compiler_Effect.op_Bar_Greater uu___4
+                    (FStar_String.concat "\n") in
+                FStar_Compiler_Util.print1 "Interleaved decls:\n%s\n" uu___3
+              else ());
+             (decls, env1))
 let (interleave_module :
   FStar_Parser_AST.modul ->
     Prims.bool -> FStar_Parser_AST.modul FStar_Syntax_DsEnv.withenv)
@@ -477,4 +587,15 @@ let (interleave_module :
                                     uu___6) in
                                 let uu___6 = FStar_Ident.range_of_lid l in
                                 FStar_Errors.raise_error uu___5 uu___6
-                            | uu___3 -> (a1, env1)))))
+                            | uu___3 ->
+                                ((let uu___5 =
+                                    let uu___6 = FStar_Ident.string_of_lid l in
+                                    FStar_Options.dump_module uu___6 in
+                                  if uu___5
+                                  then
+                                    let uu___6 =
+                                      FStar_Parser_AST.modul_to_string a1 in
+                                    FStar_Compiler_Util.print1
+                                      "Interleaved module is:\n%s\n" uu___6
+                                  else ());
+                                 (a1, env1))))))

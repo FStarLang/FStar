@@ -498,7 +498,7 @@ let e_list (ea:embedding 'a) =
         | _ -> None)
     in
     mk_emb em un (lid_as_typ PC.list_lid [U_zero] [as_arg (type_of ea)]) etyp
-
+  
 let e_string_list = e_list e_string
 
 let e_arrow (ea:embedding 'a) (eb:embedding 'b) : embedding ('a -> 'b) =
@@ -651,10 +651,10 @@ let lift_binary (f : 'a -> 'a -> 'b) (aopts : list (option 'a)) : option 'b =
         | [Some a0; Some a1] -> Some (f a0 a1)
         | _ -> None
 
-let unary_op (as_a : arg -> option 'a) (f : 'a -> t) (args : args) : option t =
+let unary_op (as_a : arg -> option 'a) (f : 'a -> t) (us:universes) (args : args) : option t =
     lift_unary f (List.map as_a args)
 
-let binary_op (as_a : arg -> option 'a) (f : 'a -> 'a -> t) (args : args) : option t =
+let binary_op (as_a : arg -> option 'a) (f : 'a -> 'a -> t) _us (args : args) : option t =
     lift_binary f (List.map as_a args)
 
 let unary_int_op (f:Z.t -> Z.t) =
@@ -673,14 +673,34 @@ let binary_string_op (f : string -> string -> string) =
     binary_op arg_as_string (fun x y -> embed e_string bogus_cbs (f x y))
 
 let mixed_binary_op (as_a : arg -> option 'a) (as_b : arg -> option 'b)
-       (embed_c : 'c -> t) (f : 'a -> 'b -> option 'c) (args : args) : option t =
+       (embed_c : 'c -> t) (f : universes -> 'a -> 'b -> option 'c)
+       (us:universes) (args : args) : option t =
              match args with
              | [a;b] ->
                 begin
                 match as_a a, as_b b with
                 | Some a, Some b ->
-                  (match f a b with
+                  (match f us a b with
                    | Some c -> Some (embed_c c)
+                   | _ -> None)
+                | _ -> None
+                end
+             | _ -> None
+
+let mixed_ternary_op (as_a : arg -> option 'a)
+                     (as_b : arg -> option 'b)
+                     (as_c : arg -> option 'c)                     
+                     (embed_d : 'd -> t) 
+                     (f : universes -> 'a -> 'b -> 'c -> option 'd)
+                     (us: universes)
+                     (args : args) : option t =
+             match args with
+             | [a;b;c] ->
+                begin
+                match as_a a, as_b b, as_c c with
+                | Some a, Some b, Some c ->
+                  (match f us a b c with
+                   | Some d -> Some (embed_d d)
                    | _ -> None)
                 | _ -> None
                 end

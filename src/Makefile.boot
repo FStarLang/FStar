@@ -6,12 +6,17 @@ FSTAR_HOME ?= ..
 # and CACHE_DIR, shared with interactive mode targets
 include Makefile.boot.common
 
+# This variable can be defined to the path of a different F* binary for
+# bootstrapping (and only bootstrapping: the library will be checked
+# with the newly-compiled F*). This is useful when developing some
+# breaking changes that may not bootstrap. It can be passed as an
+# argument to make or via the environment.
 FSTAR_BOOT ?= $(FSTAR)
 
 # FSTAR_C: This is the way in which we invoke F* for boostrapping
 #   -- we use automatic dependence analysis based on files in ulib, src/{basic, ...} and boot
 #   -- MLish and lax tune type-inference for use with unverified ML programs
-FSTAR_C=$(FSTAR_BOOT) $(FSTAR_BOOT_OPTIONS) --cache_checked_modules --odir ocaml-output
+FSTAR_C=$(PREF) $(FSTAR_BOOT) $(SIL) $(FSTAR_BOOT_OPTIONS) --cache_checked_modules --odir ocaml-output
 
 # Each "project" for the compiler is in its own namespace.  We want to
 # extract them all to OCaml.  Would be more convenient if all of them
@@ -50,14 +55,14 @@ EXTRACT = $(addprefix --extract_module , $(EXTRACT_MODULES))		\
 # recent than its dependences.
 %.checked.lax:
 	@echo "[LAXCHECK  $(basename $(basename $(notdir $@)))]"
-	$(Q)$(FSTAR_C) $(SIL) $< --already_cached '*,'-$(basename $(notdir $<))
+	$(Q)$(FSTAR_C) $< --already_cached '*,'-$(basename $(notdir $<))
 	$(Q)@touch -c $@
 
 # And then, in a separate invocation, from each .checked.lax we
 # extract an .ml file
 ocaml-output/%.ml:
 	@echo "[EXTRACT   $(notdir $@)]"
-	$(Q)$(BENCHMARK_PRE) $(FSTAR_C) $(SIL) $(notdir $(subst .checked.lax,,$<)) \
+	$(Q)$(BENCHMARK_PRE) $(FSTAR_C) $(notdir $(subst .checked.lax,,$<)) \
                    --codegen OCaml \
                    --extract_module $(basename $(notdir $(subst .checked.lax,,$<)))
 
@@ -75,7 +80,7 @@ ocaml-output/%.ml:
 
 .depend:
 	@echo "[DEPEND]"
-	$(Q)$(FSTAR_C) $(SIL) --dep full	\
+	$(Q)$(FSTAR_C) --dep full		\
 		fstar/FStar.Main.fst		\
 		boot/FStar.Tests.Test.fst	\
 		$(EXTRACT)			> ._depend

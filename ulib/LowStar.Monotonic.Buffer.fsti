@@ -707,8 +707,8 @@ val loc_includes_loc_buffer_from_to
 /// If the contents of a buffer are equal in two given heaps, then so
 /// are the contents of any of its sub-buffers.
 
-val loc_includes_as_seq (#a:Type0) (#rrel1 #rrel2 #rel1 #rel2:srel a)
-  (h1 h2:HS.mem) (larger:mbuffer a rrel1 rel1) (smaller:mbuffer a rrel2 rel2)
+val loc_includes_as_seq (#a:Type0) (#rrel #rel1 #rel2:srel a)
+  (h1 h2:HS.mem) (larger:mbuffer a rrel rel1) (smaller:mbuffer a rrel rel2)
   :Lemma (requires (loc_includes (loc_buffer larger) (loc_buffer smaller) /\
                     as_seq h1 larger == as_seq h2 larger /\
 		    (live h1 larger \/ live h1 smaller) /\ (live h2 larger \/ live h2 smaller)))

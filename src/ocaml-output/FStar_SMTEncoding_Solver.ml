@@ -57,7 +57,7 @@ let initialize_hints_db : 'uuuuu . Prims.string -> 'uuuuu -> unit =
              let uu___4 =
                let uu___5 =
                  FStar_Compiler_Util.format1
-                   "Malformed JSON hints file: %s; ran without hints\n"
+                   "Malformed JSON hints file: %s; ran without hints"
                    val_filename in
                (FStar_Errors.Warning_CouldNotReadHints, uu___5) in
              FStar_Errors.log_issue FStar_Compiler_Range.dummyRange uu___4
@@ -69,7 +69,7 @@ let initialize_hints_db : 'uuuuu . Prims.string -> 'uuuuu -> unit =
              let uu___4 =
                let uu___5 =
                  FStar_Compiler_Util.format1
-                   "Unable to open hints file: %s; ran without hints\n"
+                   "Unable to open hints file: %s; ran without hints"
                    val_filename in
                (FStar_Errors.Warning_CouldNotReadHints, uu___5) in
              FStar_Errors.log_issue FStar_Compiler_Range.dummyRange uu___4
@@ -1642,31 +1642,38 @@ type solver_cfg =
   {
   seed: Prims.int ;
   cliopt: Prims.string Prims.list ;
+  smtopt: Prims.string Prims.list ;
   facts: (Prims.string Prims.list * Prims.bool) Prims.list ;
   valid_intro: Prims.bool ;
   valid_elim: Prims.bool }
 let (__proj__Mksolver_cfg__item__seed : solver_cfg -> Prims.int) =
   fun projectee ->
     match projectee with
-    | { seed; cliopt; facts; valid_intro; valid_elim;_} -> seed
+    | { seed; cliopt; smtopt; facts; valid_intro; valid_elim;_} -> seed
 let (__proj__Mksolver_cfg__item__cliopt :
   solver_cfg -> Prims.string Prims.list) =
   fun projectee ->
     match projectee with
-    | { seed; cliopt; facts; valid_intro; valid_elim;_} -> cliopt
+    | { seed; cliopt; smtopt; facts; valid_intro; valid_elim;_} -> cliopt
+let (__proj__Mksolver_cfg__item__smtopt :
+  solver_cfg -> Prims.string Prims.list) =
+  fun projectee ->
+    match projectee with
+    | { seed; cliopt; smtopt; facts; valid_intro; valid_elim;_} -> smtopt
 let (__proj__Mksolver_cfg__item__facts :
   solver_cfg -> (Prims.string Prims.list * Prims.bool) Prims.list) =
   fun projectee ->
     match projectee with
-    | { seed; cliopt; facts; valid_intro; valid_elim;_} -> facts
+    | { seed; cliopt; smtopt; facts; valid_intro; valid_elim;_} -> facts
 let (__proj__Mksolver_cfg__item__valid_intro : solver_cfg -> Prims.bool) =
   fun projectee ->
     match projectee with
-    | { seed; cliopt; facts; valid_intro; valid_elim;_} -> valid_intro
+    | { seed; cliopt; smtopt; facts; valid_intro; valid_elim;_} ->
+        valid_intro
 let (__proj__Mksolver_cfg__item__valid_elim : solver_cfg -> Prims.bool) =
   fun projectee ->
     match projectee with
-    | { seed; cliopt; facts; valid_intro; valid_elim;_} -> valid_elim
+    | { seed; cliopt; smtopt; facts; valid_intro; valid_elim;_} -> valid_elim
 let (_last_cfg :
   solver_cfg FStar_Pervasives_Native.option FStar_Compiler_Effect.ref) =
   FStar_Compiler_Util.mk_ref FStar_Pervasives_Native.None
@@ -1674,14 +1681,16 @@ let (get_cfg : FStar_TypeChecker_Env.env -> solver_cfg) =
   fun env ->
     let uu___ = FStar_Options.z3_seed () in
     let uu___1 = FStar_Options.z3_cliopt () in
-    let uu___2 = FStar_Options.smtencoding_valid_intro () in
-    let uu___3 = FStar_Options.smtencoding_valid_elim () in
+    let uu___2 = FStar_Options.z3_smtopt () in
+    let uu___3 = FStar_Options.smtencoding_valid_intro () in
+    let uu___4 = FStar_Options.smtencoding_valid_elim () in
     {
       seed = uu___;
       cliopt = uu___1;
+      smtopt = uu___2;
       facts = (env.FStar_TypeChecker_Env.proof_ns);
-      valid_intro = uu___2;
-      valid_elim = uu___3
+      valid_intro = uu___3;
+      valid_elim = uu___4
     }
 let (save_cfg : FStar_TypeChecker_Env.env -> unit) =
   fun env ->
