@@ -1,15 +1,12 @@
 open Prims
-
 type pattern = unit
 
 
 type eqtype_u = unit
 type 'p spinoff = 'p
-
 let id : 'a . 'a -> 'a = fun x -> x
 type ('a, 'uuuuu) trivial_pure_post = unit
 type ('uuuuu, 'uuuuu1) ambient = unit
-
 let normalize_term : 'uuuuu . 'uuuuu -> 'uuuuu = fun x -> x
 type 'a normalize = 'a
 type norm_step =
@@ -104,11 +101,6 @@ let (unmeta : norm_step) = Unmeta
 let (unascribe : norm_step) = Unascribe
 let (norm : norm_step Prims.list -> unit -> Obj.t -> Obj.t) =
   fun uu___ -> fun uu___1 -> fun x -> x
-
-
-
-
-
 type ('a, 'x, 'uuuuu) pure_return = unit
 type ('a, 'b, 'wp1, 'wp2, 'uuuuu) pure_bind_wp = 'wp1
 type ('a, 'p, 'wputhen, 'wpuelse, 'uuuuu) pure_if_then_else = unit
@@ -169,8 +161,6 @@ type ('heap, 'a, 'wp1, 'wp2) all_stronger = unit
 type ('heap, 'a, 'b, 'wp, 'p, 'h) all_close_wp = unit
 type ('heap, 'a, 'wp) all_trivial = unit
 type 'uuuuu inversion = unit
-
-
 type ('a, 'b) either =
   | Inl of 'a 
   | Inr of 'b 
@@ -212,7 +202,6 @@ let __proj__Mkdtuple4__item___3 :
 let __proj__Mkdtuple4__item___4 :
   'a 'b 'c 'd . ('a, 'b, 'c, 'd) dtuple4 -> 'd =
   fun projectee -> match projectee with | Mkdtuple4 (_1, _2, _3, _4) -> _4
-
 let rec false_elim : 'uuuuu . unit -> 'uuuuu = fun uu___ -> false_elim ()
 type __internal_ocaml_attributes =
   | PpxDerivingShow 
@@ -281,32 +270,6 @@ let (uu___is_CIfDef : __internal_ocaml_attributes -> Prims.bool) =
   fun projectee -> match projectee with | CIfDef -> true | uu___ -> false
 let (uu___is_CMacro : __internal_ocaml_attributes -> Prims.bool) =
   fun projectee -> match projectee with | CMacro -> true | uu___ -> false
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 let singleton : 'uuuuu . 'uuuuu -> 'uuuuu = fun x -> x
 let with_type : 'uuuuu . 'uuuuu -> 'uuuuu = fun e -> e
 type 'a eqtype_as_type = 'a
