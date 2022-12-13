@@ -96,6 +96,7 @@ def diff_hashtables(hashtable1, hashtable2):
 def sort_array(array):
     return sorted(array, key=lambda x: x[2])
 
+# generate_scatter_plot is lift and shift from runlim_stats.py
 
 def generate_scatter_plot(sorted_lines, xlabel, ylabel, title):
     import matplotlib.pyplot as plt
