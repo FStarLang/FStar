@@ -716,6 +716,6 @@ let (reflection_primops : FStar_TypeChecker_Cfg.primitive_step Prims.list) =
       uu___4 :: uu___5 in
     uu___2 :: uu___3 in
   uu___ :: uu___1
-let (uu___200 : unit) =
+let (uu___177 : unit) =
   FStar_Compiler_List.iter FStar_TypeChecker_Cfg.register_extra_step
     reflection_primops
