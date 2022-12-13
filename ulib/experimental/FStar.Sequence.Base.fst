@@ -172,13 +172,13 @@ private let rec index_into_build_helper (#ty: Type) (s: list ty) (v: ty) (i: nat
       if i = 0 then () else index_into_build_helper tl v (i - 1)
 
 private let index_into_build_lemma ()
-  : Lemma (requires build_increments_length_fact)
-          (ensures  index_into_build_fact ()) =
+  : Lemma (requires build_increments_length_fact u#a)
+          (ensures  index_into_build_fact u#a ()) =
   introduce forall (ty: Type) (s: seq ty) (v: ty) (i: nat{i < length (build s v)}).
                 (i = length s ==> index (build s v) i == v)
               /\ (i <> length s ==> index (build s v) i == index s i)
   with (
-    index_into_build_helper s v i
+    index_into_build_helper u#a s v i
   )
 
 private let append_sums_lengths_lemma () : Lemma (append_sums_lengths_fact) =
@@ -187,7 +187,7 @@ private let append_sums_lengths_lemma () : Lemma (append_sums_lengths_fact) =
     FLT.append_length s0 s1
   )
 
-private let index_into_singleton_lemma (_: squash singleton_length_one_fact) : Lemma (index_into_singleton_fact ()) =
+private let index_into_singleton_lemma (_: squash (singleton_length_one_fact u#a)) : Lemma (index_into_singleton_fact u#a ()) =
   ()
 
 private let rec index_after_append_helper (ty: Type) (s0: list ty) (s1: list ty) (n: nat)
@@ -197,7 +197,7 @@ private let rec index_after_append_helper (ty: Type) (s0: list ty) (s1: list ty)
   | [] -> ()
   | hd :: tl -> if n = 0 then () else index_after_append_helper ty tl s1 (n - 1)
 
-private let index_after_append_lemma (_: squash append_sums_lengths_fact) : Lemma (index_after_append_fact ()) =
+private let index_after_append_lemma (_: squash (append_sums_lengths_fact u#a)) : Lemma (index_after_append_fact u#a ()) =
   introduce
     forall (ty: Type) (s0: seq ty) (s1: seq ty) (n: nat{n < length (append s0 s1)}).
         (n < length s0 ==> index (append s0 s1) n == index s0 n)
@@ -345,6 +345,7 @@ private let take_contains_equiv_exists_lemma () : Lemma (take_contains_equiv_exi
     take_contains_equiv_exists_helper3 ty s n x
   )
 
+#push-options "--z3rlimit_factor 10 --fuel 1 --ifuel 1"
 private let rec drop_contains_equiv_exists_helper1 (ty: Type) (s: list ty) (n: nat{n <= length s}) (x: ty)
   : Lemma (requires FLT.memP x (drop s n))
           (ensures (exists (i: nat).{:pattern index s i} n <= i /\ i < length s /\ index s i == x)) =
@@ -367,6 +368,7 @@ private let rec drop_contains_equiv_exists_helper1 (ty: Type) (s: list ty) (n: n
        eliminate exists (i_tl: nat). n - 1 <= i_tl /\ i_tl < length tl /\ index tl i_tl == x
        returns _
        with _. introduce exists i. n <= i /\ i < length s /\ index s i == x with (i_tl + 1) and ())
+#pop-options
 
 private let rec drop_contains_equiv_exists_helper2 (ty: Type) (s: list ty) (n: nat{n <= length s}) (x: ty) (i: nat)
   : Lemma (requires (n <= i /\ i < length s /\ index s i == x))
@@ -445,7 +447,7 @@ private let rec index_into_take_helper (#ty: Type) (s: list ty) (n: nat) (j: nat
   | hd :: tl -> if j = 0 || n = 0 then () else index_into_take_helper tl (n - 1) (j - 1)
 
 private let index_into_take_lemma ()
-  : Lemma (requires take_length_fact) (ensures index_into_take_fact ()) =
+  : Lemma (requires take_length_fact u#a) (ensures index_into_take_fact u#a ()) =
   introduce 
     forall (ty: Type) (s: seq ty) (n: nat) (j: nat).
       j < n && n <= length s ==> index (take s n) j == index s j
@@ -472,7 +474,7 @@ private let rec index_into_drop_helper (#ty: Type) (s: list ty) (n: nat) (j: nat
   | hd :: tl -> if n = 0 then () else index_into_drop_helper tl (n - 1) j
 
 private let index_into_drop_lemma ()
-  : Lemma (requires drop_length_fact) (ensures index_into_drop_fact ()) =
+  : Lemma (requires drop_length_fact u#a) (ensures index_into_drop_fact u#a ()) =
   introduce 
     forall (ty: Type) (s: seq ty) (n: nat) (j: nat).
       j < length s - n ==> index (drop s n) j == index s (j + n)
@@ -484,7 +486,7 @@ private let index_into_drop_lemma ()
     )
 
 private let drop_index_offset_lemma ()
-  : Lemma (requires drop_length_fact) (ensures drop_index_offset_fact ()) =
+  : Lemma (requires drop_length_fact u#a) (ensures drop_index_offset_fact u#a ()) =
   introduce 
     forall (ty: Type) (s: seq ty) (n: nat) (k: nat).
       n <= k && k < length s ==> index (drop s n) (k - n) == index s k
@@ -503,7 +505,7 @@ private let rec append_then_take_or_drop_helper (#ty: Type) (s: list ty) (t: lis
   | hd :: tl -> append_then_take_or_drop_helper tl t (n - 1)
 
 private let append_then_take_or_drop_lemma ()
-  : Lemma (requires append_sums_lengths_fact) (ensures append_then_take_or_drop_fact ()) =
+  : Lemma (requires append_sums_lengths_fact u#a) (ensures append_then_take_or_drop_fact u#a ()) =
   introduce 
     forall (ty: Type) (s: seq ty) (t: seq ty) (n: nat).
       n = length s ==> take (append s t) n == s /\ drop (append s t) n == t
@@ -520,11 +522,11 @@ private let rec take_commutes_with_in_range_update_helper (#ty: Type) (s: list t
                     /\ length (take s n) = n)
           (ensures  take (update s i v) n == update (take s n) i v) =
   match s with
-  | hd :: tl -> if i = 0 then () else take_commutes_with_in_range_update_helper tl (i - 1) v (n - 1)
+  | hd :: tl -> if i = 0 then () else (update_maintains_length_lemma() ; take_commutes_with_in_range_update_helper tl (i - 1) v (n - 1))
 
 private let take_commutes_with_in_range_update_lemma ()
-  : Lemma (requires update_maintains_length_fact /\ take_length_fact)
-          (ensures take_commutes_with_in_range_update_fact ()) =
+  : Lemma (requires update_maintains_length_fact u#a /\ take_length_fact u#a)
+          (ensures take_commutes_with_in_range_update_fact u#a ()) =
   introduce 
     forall (ty: Type) (s: seq ty) (i: nat) (v: ty) (n: nat).
       i < n && n <= length s ==>
@@ -546,8 +548,8 @@ private let rec take_ignores_out_of_range_update_helper (#ty: Type) (s: list ty)
   | hd :: tl -> if n = 0 then () else take_ignores_out_of_range_update_helper tl (i - 1) v (n - 1)
 
 private let take_ignores_out_of_range_update_lemma ()
-  : Lemma (requires update_maintains_length_fact)
-          (ensures take_ignores_out_of_range_update_fact ()) =
+  : Lemma (requires update_maintains_length_fact u#a)
+          (ensures take_ignores_out_of_range_update_fact u#a ()) =
   introduce 
     forall (ty: Type) (s: seq ty) (i: nat) (v: ty) (n: nat).
       n <= i && i < length s ==>
@@ -559,6 +561,7 @@ private let take_ignores_out_of_range_update_lemma ()
       take_ignores_out_of_range_update_helper s i v n
     )
 
+#push-options "--fuel 2 --ifuel 1 --z3rlimit_factor 4"
 private let rec drop_commutes_with_in_range_update_helper (#ty: Type) (s: list ty) (i: nat) (v: ty) (n: nat)
   : Lemma (requires   n <= i
                     /\ i < length s
@@ -567,11 +570,19 @@ private let rec drop_commutes_with_in_range_update_helper (#ty: Type) (s: list t
           (ensures  drop (update s i v) n ==
                       update (drop s n) (i - n) v) =
   match s with
-  | hd :: tl -> if n = 0 then () else drop_commutes_with_in_range_update_helper tl (i - 1) v (n - 1)
+  | hd :: tl ->
+    if n = 0
+    then ()
+    else (
+      update_maintains_length_lemma ();
+      drop_length_lemma ();
+      drop_commutes_with_in_range_update_helper tl (i - 1) v (n - 1)
+    )
+#pop-options
 
 private let drop_commutes_with_in_range_update_lemma ()
-  : Lemma (requires update_maintains_length_fact /\ drop_length_fact)
-          (ensures drop_commutes_with_in_range_update_fact ()) =
+  : Lemma (requires update_maintains_length_fact u#a /\ drop_length_fact u#a)
+          (ensures drop_commutes_with_in_range_update_fact u#a ()) =
   introduce 
     forall (ty: Type) (s: seq ty) (i: nat) (v: ty) (n: nat).
       n <= i && i < length s ==>
@@ -593,8 +604,8 @@ private let rec drop_ignores_out_of_range_update_helper (#ty: Type) (s: list ty)
   | hd :: tl -> if i = 0 then () else drop_ignores_out_of_range_update_helper tl (i - 1) v (n - 1)
 
 private let drop_ignores_out_of_range_update_lemma ()
-  : Lemma (requires update_maintains_length_fact)
-          (ensures drop_ignores_out_of_range_update_fact ()) =
+  : Lemma (requires update_maintains_length_fact u#a)
+          (ensures drop_ignores_out_of_range_update_fact u#a ()) =
   introduce 
     forall (ty: Type) (s: seq ty) (i: nat) (v: ty) (n: nat).
       i < n && n <= length s ==>
@@ -610,12 +621,15 @@ private let rec drop_commutes_with_build_helper (#ty: Type) (s: list ty) (v: ty)
   : Lemma (requires n <= length s /\ length (append s [v]) = 1 + length s)
           (ensures  drop (append s [v]) n == append (drop s n) [v]) =
   match s with
-  | [] -> ()
+  | [] -> 
+    assert (append s [v] == [v]);
+    assert (n == 0);
+    ()
   | hd :: tl -> if n = 0 then () else drop_commutes_with_build_helper tl v (n - 1)
 
 private let drop_commutes_with_build_lemma ()
-  : Lemma (requires build_increments_length_fact)
-          (ensures  drop_commutes_with_build_fact ()) =
+  : Lemma (requires build_increments_length_fact u#a)
+          (ensures  drop_commutes_with_build_fact u#a ()) =
   introduce 
     forall (ty: Type) (s: seq ty) (v: ty) (n: nat).
       n <= length s ==> drop (build s v) n == build (drop s n) v
@@ -674,9 +688,15 @@ private let rec drop_then_drop_helper (#ty: Type) (s: seq ty) (m: nat) (n: nat)
           (ensures  drop (drop s m) n == drop s (m + n)) =
   match s with
   | [] -> ()
-  | hd :: tl -> if m = 0 then () else drop_then_drop_helper tl (m - 1) n
+  | hd :: tl -> 
+    if m = 0
+    then () 
+    else (
+      drop_length_lemma ();
+      drop_then_drop_helper tl (m - 1) n
+    )
 
-private let drop_then_drop_lemma () : Lemma (requires drop_length_fact) (ensures drop_then_drop_fact ()) =
+private let drop_then_drop_lemma () : Lemma (requires drop_length_fact u#a) (ensures drop_then_drop_fact u#a ()) =
   introduce forall (ty: Type) (s: seq ty) (m: nat) (n: nat).
               m + n <= length s ==> drop (drop s m) n == drop s (m + n)
   with
@@ -690,41 +710,41 @@ private let drop_then_drop_lemma () : Lemma (requires drop_length_fact) (ensures
 /// `all_seq_facts`.  To get all those facts in scope, one can
 /// invoke `all_seq_facts_lemma`.
 
-let all_seq_facts_lemma () : Lemma (all_seq_facts) =
-  length_of_empty_is_zero_lemma ();
-  length_zero_implies_empty_lemma ();
-  singleton_length_one_lemma ();
-  build_increments_length_lemma ();
-  index_into_build_lemma ();
-  append_sums_lengths_lemma ();
-  index_into_singleton_lemma ();
-  index_after_append_lemma ();
-  update_maintains_length_lemma ();
-  update_then_index_lemma ();
-  contains_iff_exists_index_lemma ();
-  empty_doesnt_contain_anything_lemma ();
-  build_contains_equiv_lemma ();
-  take_contains_equiv_exists_lemma ();
-  drop_contains_equiv_exists_lemma ();
-  equal_def_lemma ();
-  extensionality_lemma ();
-  is_prefix_def_lemma ();
-  take_length_lemma ();
-  index_into_take_lemma ();
-  drop_length_lemma ();
-  index_into_drop_lemma ();
-  drop_index_offset_lemma ();
-  append_then_take_or_drop_lemma ();
-  take_commutes_with_in_range_update_lemma ();
-  take_ignores_out_of_range_update_lemma ();
-  drop_commutes_with_in_range_update_lemma ();
-  drop_ignores_out_of_range_update_lemma ();
-  drop_commutes_with_build_lemma ();
-  rank_def_lemma ();
-  element_ranks_less_lemma ();
-  drop_ranks_less_lemma ();
-  take_ranks_less_lemma ();
-  append_take_drop_ranks_less_lemma ();
-  drop_zero_lemma ();
-  take_zero_lemma ();
-  drop_then_drop_lemma ()
+let all_seq_facts_lemma () : Lemma (all_seq_facts u#a) =
+  length_of_empty_is_zero_lemma u#a ();
+  length_zero_implies_empty_lemma u#a ();
+  singleton_length_one_lemma u#a ();
+  build_increments_length_lemma u#a ();
+  index_into_build_lemma u#a ();
+  append_sums_lengths_lemma u#a ();
+  index_into_singleton_lemma u#a ();
+  index_after_append_lemma u#a ();
+  update_maintains_length_lemma u#a ();
+  update_then_index_lemma u#a ();
+  contains_iff_exists_index_lemma u#a ();
+  empty_doesnt_contain_anything_lemma u#a ();
+  build_contains_equiv_lemma u#a ();
+  take_contains_equiv_exists_lemma u#a ();
+  drop_contains_equiv_exists_lemma u#a ();
+  equal_def_lemma u#a ();
+  extensionality_lemma u#a ();
+  is_prefix_def_lemma u#a ();
+  take_length_lemma u#a ();
+  index_into_take_lemma u#a ();
+  drop_length_lemma u#a ();
+  index_into_drop_lemma u#a ();
+  drop_index_offset_lemma u#a ();
+  append_then_take_or_drop_lemma u#a ();
+  take_commutes_with_in_range_update_lemma u#a ();
+  take_ignores_out_of_range_update_lemma u#a ();
+  drop_commutes_with_in_range_update_lemma u#a ();
+  drop_ignores_out_of_range_update_lemma u#a ();
+  drop_commutes_with_build_lemma u#a ();
+  rank_def_lemma u#a ();
+  element_ranks_less_lemma u#a ();
+  drop_ranks_less_lemma u#a ();
+  take_ranks_less_lemma u#a ();
+  append_take_drop_ranks_less_lemma u#a ();
+  drop_zero_lemma u#a ();
+  take_zero_lemma u#a ();
+  drop_then_drop_lemma u#a ()

@@ -1259,18 +1259,20 @@ and p_noSeqTerm' ps pb e = match e.tm with
       group (str "decreases" ^/^ p_typ ps pb e)
   | Attributes es ->
       group (str "attributes" ^/^ separate_map break1 p_atomicTerm es)
-  | If (e1, ret_opt, e2, e3) ->
+  | If (e1, op_opt, ret_opt, e2, e3) ->
       (* No need to wrap with parentheses here, since if e1 then e2; e3 really
        * does parse as (if e1 then e2); e3 -- the IF does not swallow
        * semicolons. We forward our caller's [ps] parameter, though, because
        * something in [e2] may swallow. *)
       if is_unit e3
-      then group ((str "if" ^/+^ p_noSeqTermAndComment false false e1) ^/^ (str "then" ^/+^ p_noSeqTermAndComment ps pb e2))
+      then group ((str ("if" ^ (dflt "" (op_opt `map_opt` string_of_id
+                                          `bind_opt` strip_prefix "let")))
+                  ^/+^ p_noSeqTermAndComment false false e1) ^/^ (str "then" ^/+^ p_noSeqTermAndComment ps pb e2))
       else
            let e2_doc =
               match e2.tm with
                   (* Not protecting, since an ELSE follows. *)
-                  | If (_,_, _,e3) when is_unit e3 ->
+                  | If (_, _, _, _,e3) when is_unit e3 ->
                       (* Dangling else *)
                       soft_parens_with_nesting (p_noSeqTermAndComment false false e2)
                   | _ -> p_noSeqTermAndComment false false e2
@@ -2071,10 +2073,8 @@ and p_constant = function
   | Const_unit -> str "()"
   | Const_bool b -> doc_of_bool b
   | Const_real r -> str (r ^"R")
-  | Const_float x -> str (Util.string_of_float x)
   | Const_char x -> doc_of_char x
   | Const_string(s, _) -> dquotes (str (FStar.String.escaped s))
-  | Const_bytearray(bytes,_) -> dquotes (str (Util.string_of_bytes bytes)) ^^ str "B"
   | Const_int (repr, sign_width_opt) ->
       let signedness = function
           | Unsigned -> str "u"

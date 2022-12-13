@@ -263,8 +263,10 @@ let (mk :
             FStar_TypeChecker_Cfg.auto_reflect = FStar_Pervasives_Native.None;
             FStar_TypeChecker_Cfg.strong_reduction_ok = true;
             FStar_TypeChecker_Cfg.requires_binder_substitution = false;
-            FStar_TypeChecker_Cfg.interpretation = fn;
-            FStar_TypeChecker_Cfg.interpretation_nbe = nbe_fn
+            FStar_TypeChecker_Cfg.interpretation =
+              (fun psc -> fun cbs -> fun _us -> fun args -> fn psc cbs args);
+            FStar_TypeChecker_Cfg.interpretation_nbe =
+              (fun cbs -> fun _us -> fun args -> nbe_fn cbs args)
           }
 type 'a dualemb =
   ('a FStar_Syntax_Embeddings.embedding * 'a
@@ -714,6 +716,6 @@ let (reflection_primops : FStar_TypeChecker_Cfg.primitive_step Prims.list) =
       uu___4 :: uu___5 in
     uu___2 :: uu___3 in
   uu___ :: uu___1
-let (uu___170 : unit) =
+let (uu___200 : unit) =
   FStar_Compiler_List.iter FStar_TypeChecker_Cfg.register_extra_step
     reflection_primops

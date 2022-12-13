@@ -421,7 +421,9 @@ let (tc_data :
                                                          FStar_Syntax_Syntax.pos
                                                            = uu___9;
                                                          FStar_Syntax_Syntax.vars
-                                                           = uu___10;_},
+                                                           = uu___10;
+                                                         FStar_Syntax_Syntax.hash_code
+                                                           = uu___11;_},
                                                        tuvs)
                                                       when
                                                       FStar_Syntax_Syntax.fv_eq_lid
@@ -438,15 +440,15 @@ let (tc_data :
                                                           (fun g ->
                                                              fun u1 ->
                                                                fun u2 ->
-                                                                 let uu___11
+                                                                 let uu___12
                                                                    =
-                                                                   let uu___12
+                                                                   let uu___13
                                                                     =
                                                                     FStar_Syntax_Syntax.mk
                                                                     (FStar_Syntax_Syntax.Tm_type
                                                                     u1)
                                                                     FStar_Compiler_Range.dummyRange in
-                                                                   let uu___13
+                                                                   let uu___14
                                                                     =
                                                                     FStar_Syntax_Syntax.mk
                                                                     (FStar_Syntax_Syntax.Tm_type
@@ -455,10 +457,10 @@ let (tc_data :
                                                                     FStar_Compiler_Range.dummyRange in
                                                                    FStar_TypeChecker_Rel.teq
                                                                     env'1
-                                                                    uu___12
-                                                                    uu___13 in
+                                                                    uu___13
+                                                                    uu___14 in
                                                                  FStar_TypeChecker_Env.conj_guard
-                                                                   g uu___11)
+                                                                   g uu___12)
                                                           FStar_TypeChecker_Env.trivial_guard
                                                           tuvs _uvs1
                                                       else
@@ -1042,7 +1044,9 @@ let (get_optimized_haseq_axiom :
                        FStar_Syntax_Syntax.pos =
                          (fml.FStar_Syntax_Syntax.pos);
                        FStar_Syntax_Syntax.vars =
-                         (fml.FStar_Syntax_Syntax.vars)
+                         (fml.FStar_Syntax_Syntax.vars);
+                       FStar_Syntax_Syntax.hash_code =
+                         (fml.FStar_Syntax_Syntax.hash_code)
                      } in
                    let fml2 =
                      FStar_Compiler_List.fold_right
@@ -1144,17 +1148,22 @@ let (optimized_haseq_soundness_for_data :
                    fun t ->
                      let uu___2 =
                        let uu___3 =
-                         let uu___4 =
-                           let uu___5 =
-                             let uu___6 =
-                               FStar_Syntax_Syntax.mk_binder
-                                 b.FStar_Syntax_Syntax.binder_bv in
-                             [uu___6] in
-                           let uu___6 = FStar_Syntax_Subst.close [b] t in
-                           FStar_Syntax_Util.abs uu___5 uu___6
-                             FStar_Pervasives_Native.None in
-                         FStar_Syntax_Syntax.as_arg uu___4 in
-                       [uu___3] in
+                         FStar_Syntax_Syntax.iarg
+                           (b.FStar_Syntax_Syntax.binder_bv).FStar_Syntax_Syntax.sort in
+                       let uu___4 =
+                         let uu___5 =
+                           let uu___6 =
+                             let uu___7 =
+                               let uu___8 =
+                                 FStar_Syntax_Syntax.mk_binder
+                                   b.FStar_Syntax_Syntax.binder_bv in
+                               [uu___8] in
+                             let uu___8 = FStar_Syntax_Subst.close [b] t in
+                             FStar_Syntax_Util.abs uu___7 uu___8
+                               FStar_Pervasives_Native.None in
+                           FStar_Syntax_Syntax.as_arg uu___6 in
+                         [uu___5] in
+                       uu___3 :: uu___4 in
                      FStar_Syntax_Syntax.mk_Tm_app FStar_Syntax_Util.tforall
                        uu___2 FStar_Compiler_Range.dummyRange) dbs3 cond
           | uu___1 -> FStar_Syntax_Util.t_true
@@ -1519,7 +1528,9 @@ let (unoptimized_haseq_ty :
                            FStar_Syntax_Syntax.pos =
                              (fml.FStar_Syntax_Syntax.pos);
                            FStar_Syntax_Syntax.vars =
-                             (fml.FStar_Syntax_Syntax.vars)
+                             (fml.FStar_Syntax_Syntax.vars);
+                           FStar_Syntax_Syntax.hash_code =
+                             (fml.FStar_Syntax_Syntax.hash_code)
                          } in
                        let fml2 =
                          FStar_Compiler_List.fold_right

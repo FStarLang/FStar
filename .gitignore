@@ -80,6 +80,7 @@ tags
 *.checked
 *.checked.lax
 *.dump
+*.runlim
 
 /.nubuild
 /nucache/

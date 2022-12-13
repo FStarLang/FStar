@@ -208,7 +208,9 @@ function fstar_default_build () {
     fi
 
     # Start fetching while we build F*
-    fetch_karamel &
+    if [[ -z "$CI_NO_KARAMEL" ]] ; then
+        fetch_karamel
+    fi &
 
     # Build F*, along with fstarlib
     if ! make -C src -j $threads utest-prelude; then
@@ -221,23 +223,24 @@ function fstar_default_build () {
 
     wait # for fetches above
 
-    # The commands above were executed in sub-shells and their EXPORTs are not
-    # propagated to the current shell. Re-do.
-    export_home KRML "$(pwd)/karamel"
-
-    # Fetch and build subprojects for orange tests
-    make_karamel
+    # Build karamel if enabled
+    if [[ -z "$CI_NO_KARAMEL" ]] ; then
+        # The commands above were executed in sub-shells and their EXPORTs are not
+        # propagated to the current shell. Re-do.
+        export_home KRML "$(pwd)/karamel"
+        make_karamel
+    fi
 
     # Once F* is built, run its main regression suite.
     $gnutime make -C src -j $threads -k $localTarget && echo true >$status_file
     echo Done building FStar
 
-    # Make it an orange if there's a git diff. Note: FStar_Version.ml is in the
+    # Make it a hard failure if there's a git diff. Note: FStar_Version.ml is in the
     # .gitignore.
     echo "Searching for a diff in src/ocaml-output"
     if ! git diff --exit-code src/ocaml-output; then
         echo "GIT DIFF: the files in the list above have a git diff"
-        { echo " - snapshot-diff (F*)" >>$ORANGE_FILE; }
+        echo false >$status_file
     fi
 
     # We should not generate hints when building on Windows
