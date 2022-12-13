@@ -3,8 +3,8 @@
 # It takes as input two identifiers, the identifiers for the new run and the old run resp.
 #
 # Suppose the requirement is to compare the runlim runs across two branches b1 and b2
-# First you would git checkout b1, and run F* with MON=1 and MONID=1 (or any other identifier)
-# Then you would git checkout b2, and run F* with MON=1 and MONID=2 (or something else)
+# First you would git checkout b1, and run F* with RESOURCEMONITOR=1 and MONID=1 (or any other identifier)
+# Then you would git checkout b2, and run F* with RESOURCEMONITOR=1 and MONID=2 (or something else)
 # And then you can invoke this script as `python3 runlim_diff.py 2 1`,
 #   and it would compare the run 2 with the baseline run 1
 #
