@@ -1,5 +1,5 @@
 module FStar.SizeT
-
+open FStar.Ghost
 module I64 = FStar.Int64
 
 (* This is only intended as a model, but will be extracted natively by Krml
@@ -8,7 +8,7 @@ module I64 = FStar.Int64
 (* We assume the existence of some lower bound on the size, 
    where the bound is at least 2^16 *)
 assume
-val bound : x:nat { x >= pow2 16 }
+val bound : x:erased nat { x >= pow2 16 }
 
 let t = x:U64.t { U64.v x < bound }
 
@@ -31,13 +31,25 @@ let size_uint_to_t_inj (x: nat) = ()
 /// These two predicates are only used for modeling purposes, and their definitions must
 /// remain abstract to ensure they can only be introduced through a static assert.
 /// We simply define them as True here
-let fits_u32 = (bound >= pow2 32) == true
-let fits_u64 = (bound == pow2 64)
+let fits_u32 = (reveal bound >= pow2 32) == true
+let fits_u64 = (reveal bound == pow2 64)
 
 let fits_u64_implies_fits_32 ()
   : Lemma
     (requires fits_u64)
     (ensures fits_u32)
+  = ()
+
+let fits_u32_implies_fits (x:nat)
+  : Lemma
+    (requires fits_u32 /\ x < pow2 32)
+    (ensures fits x)
+  = ()
+
+let fits_u64_implies_fits (x:nat)
+  : Lemma
+    (requires fits_u64 /\ x < pow2 64)
+    (ensures fits x)
   = ()
 
 let of_u32 (x: U32.t)
