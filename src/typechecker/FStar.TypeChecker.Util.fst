@@ -3953,9 +3953,11 @@ and ty_strictly_positive_in_type env (ty_lid:lident) (btype:term) (unfolded:unfo
    | Tm_arrow (sbs, c) ->  //binder type is an arrow type
      debug_positivity env (fun () -> "Checking strict positivity in Tm_arrow");
      let check_comp =
-       let c = Env.unfold_effect_abbrev env c |> mk_Comp in
-       U.is_pure_or_ghost_comp c || (Env.lookup_effect_quals env (U.comp_effect_name c) |> List.existsb (fun q -> q = S.TotalEffect))
-     in
+       U.is_pure_or_ghost_comp c ||
+       (c |> U.comp_effect_name
+          |> Env.norm_eff_name env
+          |> Env.lookup_effect_quals env
+          |> List.contains S.TotalEffect) in
      if not check_comp then
        let _ = debug_positivity env (fun () -> "Checking strict positivity , the arrow is impure, so return true") in
        true

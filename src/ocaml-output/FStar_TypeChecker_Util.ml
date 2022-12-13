@@ -8747,18 +8747,19 @@ and (ty_strictly_positive_in_type :
                        (fun uu___5 ->
                           "Checking strict positivity in Tm_arrow");
                      (let check_comp1 =
-                        let c1 =
-                          let uu___5 =
-                            FStar_TypeChecker_Env.unfold_effect_abbrev env c in
-                          FStar_Compiler_Effect.op_Bar_Greater uu___5
-                            FStar_Syntax_Syntax.mk_Comp in
-                        (FStar_Syntax_Util.is_pure_or_ghost_comp c1) ||
+                        (FStar_Syntax_Util.is_pure_or_ghost_comp c) ||
                           (let uu___5 =
-                             FStar_TypeChecker_Env.lookup_effect_quals env
-                               (FStar_Syntax_Util.comp_effect_name c1) in
+                             let uu___6 =
+                               let uu___7 =
+                                 FStar_Compiler_Effect.op_Bar_Greater c
+                                   FStar_Syntax_Util.comp_effect_name in
+                               FStar_Compiler_Effect.op_Bar_Greater uu___7
+                                 (FStar_TypeChecker_Env.norm_eff_name env) in
+                             FStar_Compiler_Effect.op_Bar_Greater uu___6
+                               (FStar_TypeChecker_Env.lookup_effect_quals env) in
                            FStar_Compiler_Effect.op_Bar_Greater uu___5
-                             (FStar_Compiler_List.existsb
-                                (fun q -> q = FStar_Syntax_Syntax.TotalEffect))) in
+                             (FStar_Compiler_List.contains
+                                FStar_Syntax_Syntax.TotalEffect)) in
                       if Prims.op_Negation check_comp1
                       then
                         (debug_positivity env
