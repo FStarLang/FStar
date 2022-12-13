@@ -1027,8 +1027,11 @@ let tc_decls env ses =
                  (fun () -> process_one_decl acc se)
                  (Some (Ident.string_of_lid (Env.current_module env)))
                  "FStar.TypeChecker.Tc.process_one_decl"
+      // ^ See a special case for this phase in FStar.Options. --timing
+      // enables it.
     in
     if Options.profile_group_by_decls()
+    || Options.timing () // --timing implies --profile_group_by_decls
     then begin
          let tag =
           match lids_of_sigelt se with

@@ -1160,7 +1160,9 @@ let rec specs_with_types warn_unsafe : list (char * string * opt_type * string) 
        ( noshort,
         "timing",
         Const (Bool true),
-        "Print the time it takes to verify each top-level definition");
+        "Print the time it takes to verify each top-level definition.\n\t\t\
+         This is just an alias for an invocation of the profiler, so it may not work well if combined with --profile.\n\t\t\
+         In particular, it implies --profile_group_by_decls.");
 
        ( noshort,
         "trace_error",
@@ -2054,8 +2056,16 @@ let profile_enabled modul_opt phase =
     matches_namespace_filter_opt phase (get_profile_component())
 
   | Some modul ->
-    matches_namespace_filter_opt modul (get_profile())
-    && matches_namespace_filter_opt phase (get_profile_component())
+    (matches_namespace_filter_opt modul (get_profile())
+     && matches_namespace_filter_opt phase (get_profile_component()))
+
+    // A special case for --timing: this option should print the time
+    // taken for each top-level decl, so we enable the profiler only for
+    // the FStar.TypeChecker.process_one_decl phase, and only for those
+    // modules given in the command line.
+    || (timing ()
+        && phase = "FStar.TypeChecker.Tc.process_one_decl"
+        && should_check modul)
 
 exception File_argument of string
 
