@@ -10,17 +10,20 @@ val t : eqtype
 
 val fits (x: nat) : Tot prop
 
+/// According to the C standard, "the bit width of t is not less than 16 since c99"
+/// (https://en.cppreference.com/w/c/types/t)
+
+val fits_at_least_16 (x:nat)
+  : Lemma 
+    (requires x < pow2 16)
+    (ensures fits x)
+    [SMTPat (fits x)]
+
 [@@noextract_to "krml"]
 val v (x: t) : Pure nat
   (requires True)
   (ensures (fun y -> fits y))
 
-val size_v_inj (x1 x2: t) : Lemma
-  (v x1 == v x2 ==> x1 == x2)
-  [SMTPat (v x1); SMTPat (v x2)]
-
-/// According to the C standard, "the bit width of t is not less than 16 since c99"
-/// (https://en.cppreference.com/w/c/types/t)
 /// We therefore offer two functions to create a t value.
 /// Any value that fits in a uint_16 can be cast directly to t
 /// Any value that might not fit in a uint_16 needs to satisfy the `fits_u32`
@@ -31,8 +34,25 @@ val uint_to_t (x: nat) : Pure t
   (requires (fits x))
   (ensures (fun y -> v y == x))
 
+/// v and uint_to_t are inverses
+val size_v_inj (x: t)
+  : Lemma
+    (ensures uint_to_t (v x) == x)
+    [SMTPat (v x)]
+
+val size_uint_to_t_inj (x: nat)
+  : Lemma
+    (requires fits x)
+    (ensures v (uint_to_t x) == x)
+    [SMTPat (uint_to_t x)]
+
 val fits_u32 : prop
 val fits_u64 : prop
+
+val fits_u64_implies_fits_32 (_:unit)
+  : Lemma
+    (requires fits_u64)
+    (ensures fits_u32)
 
 /// Creates a size_t when given a uint32 literal. Note, this will not
 /// extract if [x] is not a literal (e.g., 12ul). If you want to do a
@@ -66,7 +86,6 @@ val fits_lte (x y: nat) : Lemma
   (requires (x <= y /\ fits y))
   (ensures (fits x))
   [SMTPat (fits x); SMTPat (fits y)]
-
 (** Non-overflowing arithmetic operations *)
 
 val add (x y: t) : Pure t
@@ -90,7 +109,10 @@ val div (a:t) (b:t{v b <> 0}) : Pure t
 
 let mod_spec (a:nat{fits a}) (b:nat{fits b /\ b <> 0}) : GTot (n:nat{fits n}) =
   let open FStar.Mul in
-  a - ((a/b) * b)
+  let res = a - ((a/b) * b) in
+  fits_lte res a;
+  res
+
 
 (** Euclidean remainder
 
@@ -121,16 +143,15 @@ val lte (x y: t) : Pure bool
 
 (** Infix notations *)
 
-unfold let op_Plus_Hat = add
-unfold let op_Subtraction_Hat = sub
-unfold let op_Star_Hat = mul
-unfold let op_Percent_Hat = rem
-unfold let op_Greater_Hat = gt
-unfold let op_Greater_Equals_Hat = gte
-unfold let op_Less_Hat = lt
-unfold let op_Less_Equals_Hat = lte
+unfold let ( +^ ) = add
+unfold let ( -^ ) = sub
+unfold let ( *^ ) = mul
+unfold let ( %^ ) = rem
+unfold let ( >^ ) = gt
+unfold let ( >=^ ) = gte
+unfold let ( <^ ) = lt
+unfold let ( <=^ ) = lte
 
-#set-options "--lax"
 //This private primitive is used internally by the
 //compiler to translate bounded integer constants
 //with a desugaring-time check of the size of the number,
@@ -141,5 +162,4 @@ unfold let op_Less_Equals_Hat = lte
 private
 unfold
 let __uint_to_t (x:int) : Tot t
-    = uint_to_t x
-#reset-options
+    = assume (x >= 0 /\ fits x); uint_to_t x
