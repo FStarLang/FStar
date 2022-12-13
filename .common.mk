@@ -24,17 +24,17 @@
 
 Q?=@
 SIL?=--silent
-PREF=
+RUNLIM=
 ifneq ($(V),)
 	Q=
 	SIL=
 endif
 
-# Passing MON=1 will create .runlim files through the source tree with
+# Passing RESOURCEMONITOR=1 will create .runlim files through the source tree with
 # information about the time and space taken by each F* invocation.
-ifneq ($(MON),)
+ifneq ($(RESOURCEMONITOR),)
 	ifneq ($(MONID),)
 		MONPREFIX=$(MONID).
 	endif
-	PREF=runlim -p -o $@.$(MONPREFIX)runlim
+	RUNLIM=runlim -p -o $@.$(MONPREFIX)runlim
 endif
