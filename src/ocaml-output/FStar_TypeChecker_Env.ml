@@ -16,6 +16,7 @@ type step =
   | UnfoldFully of FStar_Ident.lid Prims.list 
   | UnfoldAttr of FStar_Ident.lid Prims.list 
   | UnfoldQual of Prims.string Prims.list 
+  | UnfoldNamespace of Prims.string Prims.list 
   | UnfoldTac 
   | PureSubtermsWithinComputations 
   | Simplify 
@@ -81,6 +82,11 @@ let (uu___is_UnfoldQual : step -> Prims.bool) =
     match projectee with | UnfoldQual _0 -> true | uu___ -> false
 let (__proj__UnfoldQual__item___0 : step -> Prims.string Prims.list) =
   fun projectee -> match projectee with | UnfoldQual _0 -> _0
+let (uu___is_UnfoldNamespace : step -> Prims.bool) =
+  fun projectee ->
+    match projectee with | UnfoldNamespace _0 -> true | uu___ -> false
+let (__proj__UnfoldNamespace__item___0 : step -> Prims.string Prims.list) =
+  fun projectee -> match projectee with | UnfoldNamespace _0 -> _0
 let (uu___is_UnfoldTac : step -> Prims.bool) =
   fun projectee -> match projectee with | UnfoldTac -> true | uu___ -> false
 let (uu___is_PureSubtermsWithinComputations : step -> Prims.bool) =
@@ -164,6 +170,7 @@ let rec (eq_step : step -> step -> Prims.bool) =
             &&
             (FStar_Compiler_List.forall2 FStar_Ident.lid_equals lids1 lids2)
       | (UnfoldQual strs1, UnfoldQual strs2) -> strs1 = strs2
+      | (UnfoldNamespace strs1, UnfoldNamespace strs2) -> strs1 = strs2
       | uu___ -> false
 type sig_binding =
   (FStar_Ident.lident Prims.list * FStar_Syntax_Syntax.sigelt)
