@@ -544,7 +544,22 @@ let inst_vprop_equiv_trans #g #v0 #v1 #v2
           RT.typing g pf (stt_vprop_equiv v0 v2))
   = admit()
 
-let rec vprop_equiv_soundness (f:stt_env) (g:env) (v0 v1:pure_term) 
+
+let inst_vprop_equiv_cong #g #v0 #v1 #v0' #v1'
+                         (d0:RT.typing g v0 (elab_pure Tm_VProp))
+                         (d1:RT.typing g v1 (elab_pure Tm_VProp))
+                         (d0':RT.typing g v0' (elab_pure Tm_VProp))
+                         (d1':RT.typing g v1' (elab_pure Tm_VProp))                         
+                         (#pf0:_)
+                         (eq0:RT.typing g pf0 (stt_vprop_equiv v0 v0'))
+                         (#pf1:_)                         
+                         (eq1:RT.typing g pf1 (stt_vprop_equiv v1 v1'))
+  : GTot (pf:R.term &
+          RT.typing g pf (stt_vprop_equiv (mk_star v0 v1) (mk_star v0' v1')))
+  = admit()
+
+
+let rec vprop_equiv_soundness (#f:stt_env) (#g:env) (#v0 #v1:pure_term) 
                               (d:tot_typing f g v0 Tm_VProp)
                               (eq:vprop_equiv f g v0 v1)
   : GTot (pf:R.term &
@@ -558,7 +573,7 @@ let rec vprop_equiv_soundness (f:stt_env) (g:env) (v0 v1:pure_term)
     | VE_Sym g _v1 _v0 eq' ->
       let fwd, _ = vprop_equiv_typing _ _ _ _ eq in
       let d' = fwd d in
-      let (| pf, dd |) = vprop_equiv_soundness _ _ _ _ d' eq' in
+      let (| pf, dd |) = vprop_equiv_soundness d' eq' in
       inst_vprop_equiv_sym (tot_typing_soundness d')
                            (tot_typing_soundness d)
                            dd
@@ -566,15 +581,27 @@ let rec vprop_equiv_soundness (f:stt_env) (g:env) (v0 v1:pure_term)
     | VE_Trans _ _ v _ eq_0v eq_v1 ->
       let dv = fst (vprop_equiv_typing _ _ _ _ eq_0v) d in
       let d1 = fst (vprop_equiv_typing _ _ _ _ eq_v1) dv in
-      let (| pf_0v, eq_0v |) = vprop_equiv_soundness _ _ _ _ d eq_0v in
-      let (| pf_v1, eq_v1 |) = vprop_equiv_soundness _ _ _ _ dv eq_v1 in
+      let (| pf_0v, eq_0v |) = vprop_equiv_soundness d eq_0v in
+      let (| pf_v1, eq_v1 |) = vprop_equiv_soundness dv eq_v1 in
       inst_vprop_equiv_trans 
         (tot_typing_soundness d)
         (tot_typing_soundness dv)        
         (tot_typing_soundness d1)
         eq_0v
         eq_v1
-                             
+
+    | VE_Ctxt _ t0 t1 t0' t1' eq0 eq1 ->
+      let t0_typing, t1_typing = star_typing_inversion _ _ t0 t1 d  in
+      let t0'_typing = fst (vprop_equiv_typing _ _ _ _ eq0) t0_typing in
+      let t1'_typing = fst (vprop_equiv_typing _ _ _ _ eq1) t1_typing in      
+      let (| pf0, dd0 |) = vprop_equiv_soundness t0_typing eq0 in
+      let (| pf1, dd1 |) = vprop_equiv_soundness t1_typing eq1 in      
+      inst_vprop_equiv_cong (tot_typing_soundness t0_typing)
+                            (tot_typing_soundness t1_typing)
+                            (tot_typing_soundness t0'_typing)
+                            (tot_typing_soundness t1'_typing)
+                            dd0 dd1
+      
     | _ -> admit()
 
 (*** Soundness of st equivalence **)
