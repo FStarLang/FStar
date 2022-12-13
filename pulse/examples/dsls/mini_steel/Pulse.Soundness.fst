@@ -559,6 +559,30 @@ let inst_vprop_equiv_cong #g #v0 #v1 #v0' #v1'
   = admit()
 
 
+let inst_vprop_equiv_unit #g #v
+                         (d:RT.typing g v (elab_pure Tm_VProp))
+  : GTot (pf:R.term &
+          RT.typing g pf (stt_vprop_equiv (mk_star (elab_pure Tm_Emp) v) v))
+  = admit()
+
+
+let inst_vprop_equiv_comm #g #v0 #v1
+                         (d0:RT.typing g v0 (elab_pure Tm_VProp))
+                         (d1:RT.typing g v1 (elab_pure Tm_VProp))                         
+  : GTot (pf:R.term &
+          RT.typing g pf (stt_vprop_equiv (mk_star v0 v1) (mk_star v1 v0)))
+  = admit()
+
+
+let inst_vprop_equiv_assoc #g #v0 #v1 #v2
+                         (d0:RT.typing g v0 (elab_pure Tm_VProp))
+                         (d1:RT.typing g v1 (elab_pure Tm_VProp))                         
+                         (d2:RT.typing g v2 (elab_pure Tm_VProp))                                                  
+  : GTot (pf:R.term &
+          RT.typing g pf (stt_vprop_equiv (mk_star v0 (mk_star v1 v2)) (mk_star (mk_star v0 v1) v2)))
+  = admit()
+
+
 let rec vprop_equiv_soundness (#f:stt_env) (#g:env) (#v0 #v1:pure_term) 
                               (d:tot_typing f g v0 Tm_VProp)
                               (eq:vprop_equiv f g v0 v1)
@@ -601,8 +625,23 @@ let rec vprop_equiv_soundness (#f:stt_env) (#g:env) (#v0 #v1:pure_term)
                             (tot_typing_soundness t0'_typing)
                             (tot_typing_soundness t1'_typing)
                             dd0 dd1
-      
-    | _ -> admit()
+
+    | VE_Unit _ _v1 ->
+      let v1_typing = fst (vprop_equiv_typing _ _ _ _ eq) d in
+      inst_vprop_equiv_unit (tot_typing_soundness v1_typing)
+
+    | VE_Comm _ t0 t1 ->
+      let t0_typing, t1_typing = star_typing_inversion _ _ t0 t1 d  in
+      inst_vprop_equiv_comm (tot_typing_soundness t0_typing)
+                            (tot_typing_soundness t1_typing)
+
+    | VE_Assoc _ t0 t1 t2 ->
+      let t0_typing, t12_typing = star_typing_inversion _ _ t0 (Tm_Star t1 t2) d  in
+      let t1_typing, t2_typing =  star_typing_inversion _ _ t1 t2 t12_typing in
+      inst_vprop_equiv_assoc (tot_typing_soundness t0_typing)
+                             (tot_typing_soundness t1_typing)
+                             (tot_typing_soundness t2_typing)                             
+
 
 (*** Soundness of st equivalence **)
 let st_equiv_soundness (f:stt_env) (g:env) (c0 c1:ln_comp)
