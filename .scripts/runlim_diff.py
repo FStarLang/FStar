@@ -1,9 +1,22 @@
+# This script compares two runlim runs and produces a scatter plot with linear regression
+#
+# It takes as input two identifiers, the identifiers for the new run and the old run resp.
+#
+# Suppose the requirement is to compare the runlim runs across two branches b1 and b2
+# First you would git checkout b1, and run F* with MON=1 and MONID=1 (or any other identifier)
+# Then you would git checkout b2, and run F* with MON=1 and MONID=2 (or something else)
+# And then you can invoke this script as `python3 runlim_diff.py 2 1`,
+#   and it would compare the run 2 with the baseline run 1
+#
+# It can be used across local changes also, not just to compare two branches
+#
+
 # a function that takes as input a filename, 2 hashtables, and a line
 # it removes the "[runlim] " prefix from the line
 # it splits the rest of the line into a list of strings
 # if the first element of the list is "time:", it adds the filename and the second string to the first hashtable
 # if the first element of the list is "space:", it adds the filename and the second string to the second hashtable
-# # it returns the two hashtables
+# it returns the two hashtables
 def parse_line(filename, time, space, line):
     line = line.replace("[runlim] ", "")
     line = line.split()
@@ -67,18 +80,21 @@ def parse_all(identifier):
 
 def diff_hashtables(hashtable1, hashtable2):
     diff = []
-    for key in hashtable1:
-        diff.append((key, hashtable1[key], hashtable2[key], (float(
-            hashtable1[key]) - float(hashtable2[key])) / float(hashtable2[key]) * 100))
+    for key in hashtable2:
+        if key in hashtable1:
+            diff.append((key, hashtable1[key], hashtable2[key], (float(
+                hashtable1[key]) - float(hashtable2[key])) / float(hashtable2[key]) * 100))
+        else:
+            print(key + " is in the base run but not the new run, dropping")
     return diff
 
 # a function that takes as input an array of tuples
-# it sorts the array by the second element of the tuples
+# it sorts the array by the third element of the tuples
 # it returns the sorted array
 
 
 def sort_array(array):
-    return sorted(array, key=lambda x: x[1])
+    return sorted(array, key=lambda x: x[2])
 
 
 def generate_scatter_plot(sorted_lines, xlabel, ylabel, title):
@@ -88,8 +104,8 @@ def generate_scatter_plot(sorted_lines, xlabel, ylabel, title):
     x_axis = []
     y_axis = []
     for line in sorted_lines:
-        x_axis.append(float(line[1]))
-        y_axis.append(float(line[2]))
+        x_axis.append(float(line[2]))
+        y_axis.append(float(line[1]))
     # plot the query timing differences
     plt.scatter(x_axis, y_axis)
     # label x-axis as xlabel
