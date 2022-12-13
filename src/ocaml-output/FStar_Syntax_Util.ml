@@ -4209,8 +4209,8 @@ and (unbound_variables_comp :
   FStar_Syntax_Syntax.comp -> FStar_Syntax_Syntax.bv Prims.list) =
   fun c ->
     match c.FStar_Syntax_Syntax.n with
-    | FStar_Syntax_Syntax.GTotal t -> unbound_variables t
     | FStar_Syntax_Syntax.Total t -> unbound_variables t
+    | FStar_Syntax_Syntax.GTotal t -> unbound_variables t
     | FStar_Syntax_Syntax.Comp ct ->
         let uu___ = unbound_variables ct.FStar_Syntax_Syntax.result_typ in
         let uu___1 =

@@ -244,7 +244,7 @@ let as_iarg (a:t) : arg = (a, S.as_aqual_implicit true)
 let as_arg (a:t) : arg = (a, None)
 
 //  Non-dependent total arrow
-let make_arrow1 t1 (a:arg) : t = mk_t <| Arrow (Inr ([a], Tot (t1, None)))
+let make_arrow1 t1 (a:arg) : t = mk_t <| Arrow (Inr ([a], Tot t1))
 
 let lazy_embed (et:emb_typ) (x:'a) (f:unit -> t) =
     if !Options.debug_embedding

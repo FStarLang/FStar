@@ -247,34 +247,6 @@ let comp_eff_name_res_and_args (c:comp) : lident & typ & args =
   | GTotal t -> PC.effect_GTot_lid, t, []
   | Comp c -> c.effect_name, c.result_typ, c.effect_args
 
-// (* Duplicate of the function below not failing when universe is not provided *)
-// let comp_to_comp_typ_nouniv (c:comp) : comp_typ =
-//     match c.n with
-//         | Comp c -> c
-//         | Total (t, u_opt)
-//         | GTotal(t, u_opt) ->
-//             {comp_univs=dflt [] (map_opt u_opt (fun x -> [x]));
-//              effect_name=comp_effect_name c;
-//              result_typ=t;
-//              effect_args=[];
-//              flags=comp_flags c}
-
-// let comp_set_flags (c:comp) f =
-//     {c with n=Comp ({comp_to_comp_typ_nouniv c with flags=f})}
-
-// let comp_to_comp_typ (c:comp) : comp_typ =
-//     match c.n with
-//     | Comp c -> c
-//     | Total (t, Some u)
-//     | GTotal(t, Some u) ->
-//       {comp_univs=[u];
-//        effect_name=comp_effect_name c;
-//        result_typ=t;
-//        effect_args=[];
-//        flags=comp_flags c}
-//     | _ -> failwith "Assertion failed: Computation type without universe"
-
-
 (*
  * For layered effects, given a (repr a is), return is
  * For wp effects, given a (unit -> M a wp), return wp
@@ -2147,8 +2119,8 @@ and unbound_variables_ascription asc =
 
 and unbound_variables_comp c =
     match c.n with
-    | GTotal t
-    | Total t ->
+    | Total t
+    | GTotal t ->
       unbound_variables t
 
     | Comp ct ->
