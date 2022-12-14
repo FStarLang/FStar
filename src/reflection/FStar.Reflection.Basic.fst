@@ -342,11 +342,15 @@ let pack_comp (cv : comp_view) : comp =
 
     | C_Eff (us, ef, res, args, decrs) ->
         let pack_arg (a, q) = (a, pack_aqual q) in
+        let flags =
+          if List.length decrs = 0
+          then []
+          else [DECREASES (Decreases_lex decrs)] in
         let ct = { comp_univs  = us
                  ; effect_name = Ident.lid_of_path ef Range.dummyRange
                  ; result_typ  = res
                  ; effect_args = List.map pack_arg args
-                 ; flags       = [DECREASES (Decreases_lex decrs)] } in
+                 ; flags       = flags } in
         S.mk_Comp ct
 
 let pack_const (c:vconst) : sconst =

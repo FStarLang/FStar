@@ -391,6 +391,12 @@ let (pack_comp : FStar_Reflection_Data.comp_view -> FStar_Syntax_Syntax.comp)
         let pack_arg uu___ =
           match uu___ with
           | (a, q) -> let uu___1 = pack_aqual q in (a, uu___1) in
+        let flags =
+          if (FStar_Compiler_List.length decrs) = Prims.int_zero
+          then []
+          else
+            [FStar_Syntax_Syntax.DECREASES
+               (FStar_Syntax_Syntax.Decreases_lex decrs)] in
         let ct =
           let uu___ =
             FStar_Ident.lid_of_path ef FStar_Compiler_Range.dummyRange in
@@ -400,9 +406,7 @@ let (pack_comp : FStar_Reflection_Data.comp_view -> FStar_Syntax_Syntax.comp)
             FStar_Syntax_Syntax.effect_name = uu___;
             FStar_Syntax_Syntax.result_typ = res;
             FStar_Syntax_Syntax.effect_args = uu___1;
-            FStar_Syntax_Syntax.flags =
-              [FStar_Syntax_Syntax.DECREASES
-                 (FStar_Syntax_Syntax.Decreases_lex decrs)]
+            FStar_Syntax_Syntax.flags = flags
           } in
         FStar_Syntax_Syntax.mk_Comp ct
 let (pack_const : FStar_Reflection_Data.vconst -> FStar_Syntax_Syntax.sconst)
