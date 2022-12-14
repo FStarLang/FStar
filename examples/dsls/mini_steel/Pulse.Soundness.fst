@@ -644,13 +644,17 @@ let rec vprop_equiv_soundness (#f:stt_env) (#g:env) (#v0 #v1:pure_term)
 
 
 (*** Soundness of st equivalence **)
-let st_equiv_soundness (f:stt_env) (g:env) (c0 c1:ln_comp)
+let st_equiv_soundness (f:stt_env) (g:env) (c0 c1:ln_comp) (d:st_equiv f g c0 c1)
   : GTot (RT.typing (extend_env_l f g) (`()) (stt_vprop_equiv (elab_pure (comp_pre c0)) (elab_pure (comp_pre c1))) &
           RT.typing (extend_env_l f g) (`()) (stt_vprop_post_equiv (elab_universe (comp_u c0))
                                                                    (elab_pure (comp_res c0))
                                                                    (elab_comp_post c0)
                                                                    (elab_comp_post c1)))
-  = admit()
+  = match d with
+    | ST_VPropEquiv _ _ _ x pre_typing post_typing eq_pre eq_post ->
+      admit()
+      
+    | ST_ElabEquiv _ _ _ _ -> admit()
 
 let mk_t_abs (f:stt_env) (g:env)
              (#u:universe)

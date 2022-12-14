@@ -436,6 +436,15 @@ let split_vprop (f:RT.fstar_top_env)
        (| list_as_vprop frame, typing, d |)
 
 #push-options "--query_stats --fuel 1 --ifuel 2 --z3rlimit_factor 4"
+let check_vprop (f:RT.fstar_top_env)
+                (g:env)
+                (t:pure_term)
+  : T.Tac (tot_typing f g t Tm_VProp)
+  = let (| ty, d |) = check_tot f g t in
+    match ty with
+    | Tm_VProp -> E d
+    | _ -> T.fail "Expected a vprop"
+                 
 let try_frame_pre (#f:RT.fstar_top_env)
                   (#g:env)
                   (#t:term)
@@ -467,8 +476,12 @@ let try_frame_pre (#f:RT.fstar_top_env)
     let ve' 
       : vprop_equiv f g'
                       (open_term (comp_post c') x)
-                      (open_term (comp_post c'') x) = VE_Refl _ _ in
-    let st_equiv = ST_VPropEquiv g c' c'' x ve ve' in
+                      (open_term (comp_post c'') x)
+      = VE_Refl _ _
+    in
+    let pre_typing = check_vprop f g (comp_pre c') in
+    let post_typing = check_vprop f g' (open_term (comp_post c') x) in
+    let st_equiv = ST_VPropEquiv g c' c'' x pre_typing post_typing ve ve' in
     let t_typing = T_Equiv _ _ _ _ t_typing st_equiv in
     (| C_ST s'', t_typing |)
 #pop-options
@@ -483,8 +496,8 @@ let frame_empty (f:RT.fstar_top_env)
                 (t:term)
                 (c:pure_comp_st{ comp_pre c == Tm_Emp })
                 (d:src_typing f g t c)
-  : (c:pure_comp_st { comp_pre c == pre} &
-     src_typing f g t c)
+  : T.Tac (c:pure_comp_st { comp_pre c == pre} &
+           src_typing f g t c)
   = let d = T_Frame g t c pre pre_typing d in
     let c = add_frame c pre in
     let C_ST s = c in
@@ -492,7 +505,17 @@ let frame_empty (f:RT.fstar_top_env)
     let s' = { s with pre = pre } in
     let c' = C_ST s' in
     let x = fresh g in
-    let eq : st_equiv f g c c' = ST_VPropEquiv g c c' x (VE_Unit g pre) (VE_Refl _ _) in
+    let pre_typing = check_vprop f g (comp_pre c) in
+    let post_typing = check_vprop f ((x, Inl (comp_res c))::g) 
+                                    (open_term (comp_post c) x) in
+    let eq 
+      : st_equiv f g c c'
+      = ST_VPropEquiv g c c' x
+                      pre_typing
+                      post_typing
+                      (VE_Unit g pre)
+                      (VE_Refl _ _)
+    in
     (| c', T_Equiv _ _ _ _ d eq |)
       
 #push-options "--query_stats --fuel 2 --ifuel 1 --z3rlimit_factor 10"
