@@ -54,6 +54,16 @@ val fits_u64_implies_fits_32 (_:unit)
     (requires fits_u64)
     (ensures fits_u32)
 
+val fits_u32_implies_fits (x:nat)
+  : Lemma
+    (requires fits_u32 /\ x < pow2 32)
+    (ensures fits x)
+
+val fits_u64_implies_fits (x:nat)
+  : Lemma
+    (requires fits_u64 /\ x < pow2 64)
+    (ensures fits x)
+
 /// Creates a size_t when given a uint32 literal. Note, this will not
 /// extract if [x] is not a literal (e.g., 12ul). If you want to do a
 /// cast, see `uint32_to_sizet` below

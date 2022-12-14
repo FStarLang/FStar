@@ -257,6 +257,18 @@ Guidelines for the changelog:
      provided (using UInt128).
 
 ## Syntax
+
+   * PR #2727 allows for custom unicode operators. As long as a
+     character belongs to the ["Math Symbol" unicode
+     category](https://www.compart.com/unicode/category/sm), it is
+     seen as a right-associative binary operator. Example:
+	 ```fstar
+	 let ( ∈ ) = List.Tot.memP
+	 let _ = assert_norm (3 ∈ [1;2;3;4])
+	 ```
+	 
+	 See `tests/micro-benchmarks/UnicodeOperators.fst` for more
+     examples.
     
    * PR #2745 adds support for `if` operators: the syntax `if* a then
      ...` (with `*` an operator) is now accepted and desugared as
