@@ -190,26 +190,6 @@ type vprop_equiv (f:RT.fstar_top_env) : env -> pure_term -> pure_term -> Type =
   //    vprop_equiv f g (Tm_ForallSL ty t0) (Tm_ForallSL ty t1)
 
 
-[@@erasable]
-noeq
-type st_equiv (f:RT.fstar_top_env) : env -> pure_comp -> pure_comp -> Type =
-  | ST_VPropEquiv :
-      g:env ->
-      c1:pure_comp_st ->
-      c2:pure_comp_st { comp_res c1 == comp_res c2 } -> 
-      x:var { None? (lookup_ty g x) } ->
-      vprop_equiv f g (comp_pre c1) (comp_pre c2) ->
-      vprop_equiv f ((x, Inl (comp_res c1))::g) (open_term (comp_post c1) x) (open_term (comp_post c2) x) ->      
-      st_equiv f g c1 c2
-
-  | ST_ElabEquiv:
-      g:env ->
-      c1:pure_comp_st ->
-      c2:pure_comp_st ->
-      RT.equiv (extend_env_l f g) (elab_pure_comp c1) (elab_pure_comp c2) ->
-      st_equiv f g c1 c2
-
-
 let add_frame (s:pure_comp_st) (frame:pure_term)
   : pure_comp_st
   = let C_ST s = s in
@@ -334,6 +314,27 @@ and bind_comp (f:RT.fstar_top_env) : env -> var -> pure_comp -> pure_comp -> pur
       y:var { None? (lookup g y) } ->      
       tot_typing f ((y, Inl (comp_res c2)) :: g) (open_term (comp_post c2) y) Tm_VProp ->
       bind_comp f g x c1 c2 (C_ST {u = comp_u c2; res = comp_res c2; pre = comp_pre c1; post=comp_post c2})
+
+and st_equiv (f:RT.fstar_top_env) : env -> pure_comp -> pure_comp -> Type =
+  | ST_VPropEquiv :
+      g:env ->
+      c1:pure_comp_st ->
+      c2:pure_comp_st { comp_res c1 == comp_res c2 } -> 
+      x:var { None? (lookup_ty g x) } ->
+      tot_typing f g (comp_pre c1) Tm_VProp ->
+      tot_typing f ((x, Inl (comp_res c1))::g) (open_term (comp_post c1) x) Tm_VProp ->
+      vprop_equiv f g (comp_pre c1) (comp_pre c2) ->
+      vprop_equiv f ((x, Inl (comp_res c1))::g) 
+                    (open_term (comp_post c1) x)
+                    (open_term (comp_post c2) x) ->      
+      st_equiv f g c1 c2
+
+  | ST_ElabEquiv:
+      g:env ->
+      c1:pure_comp_st ->
+      c2:pure_comp_st ->
+      RT.equiv (extend_env_l f g) (elab_pure_comp c1) (elab_pure_comp c2) ->
+      st_equiv f g c1 c2
 
 
 (* this requires some metatheory on Refl.Typing
