@@ -2277,7 +2277,9 @@ let refl_tc_term (g:env) (e:term) : tac (option typ) =
                (Print.term_to_string e)
                (Print.term_to_string t));
            t
-         | Inr _ -> Errors.raise_error (Errors.Fatal_IllTyped, "") Range.dummyRange)
+         | Inr err ->
+           dbg_refl g (fun _ -> BU.format1 "refl_tc_term failed: %s\n" (Core.print_error err));
+           Errors.raise_error (Errors.Fatal_IllTyped, "") Range.dummyRange)
   else ret None
 
 let refl_universe_of (g:env) (e:term) : tac (option universe) =

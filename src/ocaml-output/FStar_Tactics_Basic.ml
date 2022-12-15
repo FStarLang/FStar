@@ -7117,9 +7117,14 @@ let (refl_tc_term :
                           "refl_tc_term for %s computed type %s\n" uu___6
                           uu___7);
                    t)
-              | FStar_Pervasives.Inr uu___4 ->
-                  FStar_Errors.raise_error (FStar_Errors.Fatal_IllTyped, "")
-                    FStar_Compiler_Range.dummyRange))
+              | FStar_Pervasives.Inr err ->
+                  (dbg_refl g
+                     (fun uu___5 ->
+                        let uu___6 = FStar_TypeChecker_Core.print_error err in
+                        FStar_Compiler_Util.format1
+                          "refl_tc_term failed: %s\n" uu___6);
+                   FStar_Errors.raise_error (FStar_Errors.Fatal_IllTyped, "")
+                     FStar_Compiler_Range.dummyRange)))
       else FStar_Tactics_Monad.ret FStar_Pervasives_Native.None
 let (refl_universe_of :
   env ->
