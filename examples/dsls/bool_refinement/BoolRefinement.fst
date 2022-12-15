@@ -710,7 +710,7 @@ let src_types_are_closed3 (ty:s_ty) (x:R.var)
 let b2t_typing (g:RT.fstar_env) (t:R.term) (dt:RT.typing g t RT.bool_ty)
   : RT.typing g (r_b2t t) (RT.tm_type RT.u_zero)
   = let b2t_typing : RT.typing g _ RT.b2t_ty = RT.T_FVar g RT.b2t_fv in
-    let app_ty : _ = RT.T_App _ _ _ _ _ _ b2t_typing dt in
+    let app_ty : _ = RT.T_App _ _ _ _ _ b2t_typing dt in
     RT.open_with_spec (RT.tm_type RT.u_zero) t;
     app_ty
 
@@ -1537,7 +1537,7 @@ let rec soundness (#f:RT.fstar_top_env)
                     (elab_ty t)
         = RT.T_Sub _ _ _ _ dt2 st
       in
-      RT.T_App _ _ _ _ _ _ dt1 dt2
+      RT.T_App _ _ _ _ _ dt1 dt2
 
     | T_If _ b e1 e2 t1 t2 t hyp db d1 d2 s1 s2 ->
       let db = soundness db in
@@ -1592,7 +1592,6 @@ and src_ty_ok_soundness (#f:RT.fstar_top_env)
                        (arg_x)
                        (RT.as_binder 0 RT.bool_ty)
                        RT.bool_ty
-                       _
                        de
                        arg_x_typing
      in

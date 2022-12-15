@@ -26,7 +26,7 @@ let stt_tm = R.pack_ln (R.Tv_FVar stt_fv)
 let args_of (tms:list R.term) = List.Tot.map (fun x -> x, R.Q_Explicit) tms
 let mk_stt_app (u:R.universe) (args:list R.term) : Tot R.term = 
   R.mk_app (R.pack_ln (R.Tv_UInst stt_fv [u])) (args_of args)
-let mk_total t = R.C_Total t (R.pack_universe R.Uv_Unk) []
+let mk_total t = R.C_Total t
 let binder_of_t_q t q = RT.mk_binder "_" 0 t q
 let bound_var i : R.term = R.pack_ln (R.Tv_BVar (R.pack_bv (RT.make_bv i tun)))
 let mk_name i : R.term = R.pack_ln (R.Tv_Var (R.pack_bv (RT.make_bv i tun))) 

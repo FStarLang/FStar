@@ -241,23 +241,22 @@ and open_or_close_binder' (b:binder) (v:open_or_close) (i:nat)
 and open_or_close_comp' (c:comp) (v:open_or_close) (i:nat)
   : GTot comp (decreases c)
   = match inspect_comp c with
-    | C_Total t u decr ->
-      pack_comp (C_Total (open_or_close_term' t v i) u
-                         (open_or_close_terms' decr v i))
+    | C_Total t ->
+      pack_comp (C_Total (open_or_close_term' t v i))
 
-    | C_GTotal t u decr ->
-      pack_comp (C_GTotal (open_or_close_term' t v i) u
-                          (open_or_close_terms' decr v i))
+    | C_GTotal t ->
+      pack_comp (C_GTotal (open_or_close_term' t v i))
 
     | C_Lemma pre post pats ->
       pack_comp (C_Lemma (open_or_close_term' pre v i)
                          (open_or_close_term' post v i)
                          (open_or_close_term' pats v i))
 
-    | C_Eff us eff_name res args ->
+    | C_Eff us eff_name res args decrs ->
       pack_comp (C_Eff us eff_name
                        (open_or_close_term' res v i)
-                       (open_or_close_args' args v i))
+                       (open_or_close_args' args v i)
+                       (open_or_close_terms' decrs v i))
 
 and open_or_close_terms' (ts:list term) (v:open_or_close) (i:nat)
   : GTot (list term) (decreases ts)
@@ -371,7 +370,7 @@ let bool_ty = pack_ln (Tv_FVar bool_fv)
 let u_zero = pack_universe Uv_Zero
 let u_max u1 u2 = pack_universe (Uv_Max [u1; u2])
 let u_succ u = pack_universe (Uv_Succ u)
-let mk_total t = pack_comp (C_Total t u_unk [])
+let mk_total t = pack_comp (C_Total t)
 let tm_type u = pack_ln (Tv_Type u)
 let tm_prop = 
   let prop_fv = R.pack_fv ["Prims"; "prop"] in
@@ -500,8 +499,7 @@ type typing : env -> term -> term -> Type0 =
      e2:term ->
      x:binder ->
      t:term ->
-     u:universe ->
-     typing g e1 (pack_ln (Tv_Arrow x (pack_comp (C_Total t u [])))) ->
+     typing g e1 (pack_ln (Tv_Arrow x (pack_comp (C_Total t)))) ->
      typing g e2 (binder_sort x) ->
      typing g (pack_ln (Tv_App e1 (e2, binder_qual x)))
               (open_with t e2)
@@ -724,19 +722,18 @@ let rec ln' (e:term) (n:int)
 and ln'_comp (c:comp) (i:int)
   : Tot bool (decreases c)
   = match inspect_comp c with
-    | C_Total t u decr
-    | C_GTotal t u decr ->
-      ln' t i &&
-      ln'_terms decr i
+    | C_Total t
+    | C_GTotal t -> ln' t i
 
     | C_Lemma pre post pats ->
       ln' pre i &&
       ln' post i &&
       ln' pats i
 
-    | C_Eff us eff_name res args ->
+    | C_Eff us eff_name res args decrs ->
       ln' res i &&
-      ln'_args args i
+      ln'_args args i &&
+      ln'_terms decrs i
 
 and ln'_args (ts:list argv) (i:int)
   : Tot bool (decreases ts)
@@ -958,20 +955,19 @@ and open_close_inverse'_comp (i:nat) (c:comp { ln'_comp c (i - 1) }) (x:var)
              == c)
     (decreases c)
   = match inspect_comp c with
-    | C_Total t u decr
-    | C_GTotal t u decr ->    
-      open_close_inverse' i t x;
-      open_close_inverse'_terms i decr x
-
+    | C_Total t
+    | C_GTotal t -> open_close_inverse' i t x
 
     | C_Lemma pre post pats ->
       open_close_inverse' i pre x;
       open_close_inverse' i post x;
       open_close_inverse' i pats x
 
-    | C_Eff us eff_name res args ->
+    | C_Eff us eff_name res args decrs ->
       open_close_inverse' i res x;
-      open_close_inverse'_args i args x
+      open_close_inverse'_args i args x;
+      open_close_inverse'_terms i decrs x
+      
       
 
 and open_close_inverse'_args (i:nat) 

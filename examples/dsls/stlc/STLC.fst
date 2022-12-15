@@ -324,7 +324,7 @@ let rec elab_ty (t:stlc_ty)
       R.pack_ln 
         (R.Tv_Arrow
           (RT.mk_binder "x" 0 t1 R.Q_Explicit)
-          (R.pack_comp (C_Total t2 u_unk [])))
+          (R.pack_comp (C_Total t2)))
   
 let rec elab_exp (e:s_exp)
   : Tot R.term (decreases (size e))
@@ -532,7 +532,7 @@ let rec soundness (#sg:stlc_env)
         RT.typing (extend_env_l g sg)
                   (elab_exp (EApp e1 e2))
                   (RT.open_with (elab_ty t') (elab_exp e2))
-        = RT.T_App _ _ _ _ _ _ dt1 dt2
+        = RT.T_App _ _ _ _ _ dt1 dt2
       in
       dt
 

@@ -270,7 +270,7 @@ let inst_bind_t1 #u1 #u2 #g #head
       = RT.open_with_spec t v
     in
     let d : RT.typing g (R.mk_app head [(t1, R.Q_Implicit)]) _ =
-      RT.T_App _ _ _ _ _ _ head_typing t1_typing
+      RT.T_App _ _ _ _ _ head_typing t1_typing
     in
     assume (bind_type_t1 u1 u2 t1 ==
             RT.open_with (RT.open_or_close_term' (bind_type_t1 u1 u2 (mk_name 4))
@@ -329,7 +329,7 @@ let inst_bind_g #u1 #u2 #g #head #t1 #t2 #pre #post1 #post2
       = RT.open_with_spec t v
     in
     let d : RT.typing g (R.mk_app head [(gg, R.Q_Explicit)]) _ =
-      RT.T_App _ _ _ _ _ _ head_typing g_typing
+      RT.T_App _ _ _ _ _ head_typing g_typing
     in
     admit();
     d
@@ -731,7 +731,6 @@ let rec soundness (f:stt_env)
       elab_comp_open_commute res arg;
       RT.T_App _ _ _ (binder_of_t_q (elab_pure formal) R.Q_Explicit)
                      (elab_pure_comp res)
-                     ((R.pack_universe R.Uv_Unk))
                      r_head_typing
                      r_arg_typing
 
