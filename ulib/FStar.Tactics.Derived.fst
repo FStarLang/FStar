@@ -701,7 +701,7 @@ let rec apply_squash_or_lem d t =
        | _ ->
            fail "mapply: can't apply (1)"
        end
-    | C_Total rt _ _ ->
+    | C_Total rt ->
        begin match unsquash_term rt with
        (* If the function returns a squash, just apply it, since our goals are squashed *)
        | Some rt ->

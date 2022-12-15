@@ -207,7 +207,7 @@ let extract_let_rec_annotation env {lbname=lbname; lbunivs=univ_vars; lbtyp=t; l
         let bs, c = un_arrow tarr in
         (match get_decreases c with
          | Some (pfx, DECREASES d, sfx) ->
-           let c = U.comp_set_flags c (pfx @ sfx) in
+           let c = Env.comp_set_flags env c (pfx @ sfx) in
            U.arrow bs c, tarr, true
          | _ -> tarr, tarr, true)
 
@@ -222,9 +222,9 @@ let extract_let_rec_annotation env {lbname=lbname; lbunivs=univ_vars; lbtyp=t; l
             let s = U.rename_binders bs bs' in
             SS.subst_decreasing_order s d
           in
-          let c = U.comp_set_flags c flags in
+          let c = Env.comp_set_flags env c flags in
           let tarr = U.arrow bs c in
-          let c' = U.comp_set_flags c' (DECREASES d'::flags') in
+          let c' = Env.comp_set_flags env c' (DECREASES d'::flags') in
           let tannot = U.arrow bs' c' in
           tarr, tannot, true
         in
@@ -460,8 +460,7 @@ let extract_let_rec_annotation env {lbname=lbname; lbunivs=univ_vars; lbtyp=t; l
 
 let comp_univ_opt c =
     match c.n with
-    | Total (_, uopt)
-    | GTotal (_, uopt) -> uopt
+    | Total _ | GTotal _ -> None
     | Comp c ->
       match c.comp_univs with
       | [] -> None
@@ -491,7 +490,7 @@ let effect_args_from_repr (repr:term) (is_layered:bool) (r:Range.range) : list t
        | Tm_app (_, _::is) -> is |> List.map fst
        | _ -> err ()
   else match repr.n with
-       | Tm_arrow (_, c) -> c |> U.comp_to_comp_typ |> (fun ct -> ct.effect_args |> List.map fst)
+       | Tm_arrow (_, c) -> c |> U.comp_eff_name_res_and_args |> (fun (_, _, args) -> args |> List.map fst)
        | _ -> err ()
 
 
@@ -506,7 +505,7 @@ let mk_wp_return env (ed:S.eff_decl) (u_a:universe) (a:typ) (e:term) (r:Range.ra
     if not <| Env.lid_exists env C.effect_GTot_lid //we're still in prims, not yet having fully defined the primitive effects
     then mk_Total a
     else if U.is_unit a
-    then S.mk_Total' a (Some U_zero)
+    then S.mk_Total a
     else let wp =
            if env.lax
            && Options.ml_ish() //NS: Disabling this optimization temporarily
@@ -615,7 +614,7 @@ let is_pure_or_ghost_effect env l =
 
 let lax_mk_tot_or_comp_l mname u_result result flags =
     if Ident.lid_equals mname C.effect_Tot_lid
-    then S.mk_Total' result (Some u_result)
+    then S.mk_Total result
     else mk_comp_l mname u_result result S.tun flags
 
 let is_function t = match (compress t).n with
@@ -1004,11 +1003,11 @@ let mk_indexed_return env (ed:S.eff_decl) (u_a:universe) (a:typ) (e:term) (r:Ran
       "%s.return %s does not have proper shape (reason:%s)"
       (Ident.string_of_lid ed.mname) (Print.term_to_string return_t) s) in
 
-  let a_b, x_b, rest_bs, return_ct =
+  let a_b, x_b, rest_bs, return_typ =
     match (SS.compress return_t).n with
     | Tm_arrow (bs, c) when List.length bs >= 2 ->
       let ((a_b::x_b::bs, c)) = SS.open_comp bs c in
-      a_b, x_b, bs, U.comp_to_comp_typ c
+      a_b, x_b, bs, U.comp_result c
     | _ -> raise_error (return_t_shape_error "Either not an arrow or not enough binders") r in
 
   let rest_bs_uvars, g_uvars =
@@ -1027,7 +1026,7 @@ let mk_indexed_return env (ed:S.eff_decl) (u_a:universe) (a:typ) (e:term) (r:Ran
     (a_b::x_b::rest_bs) (a::e::rest_bs_uvars) in
 
   let is =
-    effect_args_from_repr (SS.compress return_ct.result_typ) (U.is_layered ed) r
+    effect_args_from_repr (SS.compress return_typ) (U.is_layered ed) r
     |> List.map (SS.subst subst) in
 
   let c = mk_Comp ({
@@ -1093,7 +1092,7 @@ let mk_indexed_bind env
          substitutive_indexed_bind_substs env m_ed n_ed p_ed
            bind_t_bs binder_kinds ct1 b ct2 r1 num_effect_params has_range_binders in
 
-  let bind_ct = bind_c |> SS.subst_comp subst |> U.comp_to_comp_typ in
+  let bind_ct = bind_c |> SS.subst_comp subst |> Env.comp_to_comp_typ env in
 
   //compute the formula `bind_c.wp (fun _ -> True)` and add it to the final guard
   let fml =
@@ -1176,7 +1175,7 @@ let mk_bind env
      *       so it's fine to return g_return as is
      *)
     let m, c1, c2, g_lift = lift_comps env c1 c2 b true in
-    let ct1, ct2 = U.comp_to_comp_typ c1, U.comp_to_comp_typ c2 in
+    let ct1, ct2 = Env.comp_to_comp_typ env c1, Env.comp_to_comp_typ env c2 in
 
     let c, g_bind =
       if Env.is_layered_effect env m
@@ -1708,10 +1707,10 @@ let assume_result_eq_pure_term_in_m env (m_opt:option lident) (e:term) (lc:lcomp
            let retc, g_retc = return_value env m (Some u_t) (U.comp_result c) e in
            let g_c = Env.conj_guard g_c g_retc in
            if not (U.is_pure_comp c) //it started in GTot, so it should end up in Ghost
-           then let retc = U.comp_to_comp_typ retc in
+           then let retc = Env.comp_to_comp_typ env retc in
                 let retc = {retc with effect_name=C.effect_GHOST_lid; flags=flags} in
                 S.mk_Comp retc, g_c
-           else U.comp_set_flags retc flags, g_c
+           else Env.comp_set_flags env retc flags, g_c
        else //AR: augment c's post-condition with a M.return
             let c = Env.unfold_effect_abbrev env c in
             let t = c.result_typ in
@@ -1720,11 +1719,11 @@ let assume_result_eq_pure_term_in_m env (m_opt:option lident) (e:term) (lc:lcomp
             let xexp = S.bv_to_name x in
             let env_x = Env.push_bv env x in
             let ret, g_ret = return_value env_x m (Some u_t) t xexp in
-            let ret = TcComm.lcomp_of_comp <| U.comp_set_flags ret [PARTIAL_RETURN] in
+            let ret = TcComm.lcomp_of_comp <| Env.comp_set_flags env ret [PARTIAL_RETURN] in
             let eq = U.mk_eq2 u_t t xexp e in
             let eq_ret = weaken_precondition env_x ret (NonTrivial eq) in
             let bind_c, g_bind = TcComm.lcomp_comp (bind e.pos env None (TcComm.lcomp_of_comp c) (Some x, eq_ret)) in
-            U.comp_set_flags bind_c flags, Env.conj_guards [g_c; g_ret; g_bind]
+            Env.comp_set_flags env bind_c flags, Env.conj_guards [g_c; g_ret; g_bind]
   in
 
   if should_not_inline_lc lc
@@ -2144,7 +2143,7 @@ let bind_cases env0 (res_t:typ)
                       lift_comps_sep_guards env cthen celse None false in
                     let md = Env.get_effect_decl env m in
                     md,
-                    cthen |> U.comp_to_comp_typ, celse |> U.comp_to_comp_typ,
+                    cthen |> Env.comp_to_comp_typ env, celse |> Env.comp_to_comp_typ env,
                     g_lift_then, g_lift_else in
 
                   //function to apply the if-then-else combinator
@@ -3467,7 +3466,7 @@ let lift_tf_layered_effect (tgt:lident) (lift_ts:tscheme) (kind:S.indexed_effect
 
   let r = Env.get_range env in
 
-  let ct = U.comp_to_comp_typ c in
+  let ct = Env.comp_to_comp_typ env c in
 
   check_non_informative_type_for_lift env ct.effect_name tgt ct.result_typ r;
 
@@ -3484,7 +3483,7 @@ let lift_tf_layered_effect (tgt:lident) (lift_ts:tscheme) (kind:S.indexed_effect
     then ad_hoc_indexed_lift_substs env bs ct (lift_name ()) r
     else substitutive_indexed_lift_substs env bs ct (lift_name ()) r in
     
-  let lift_ct = lift_c |> SS.subst_comp substs |> U.comp_to_comp_typ in
+  let lift_ct = lift_c |> SS.subst_comp substs |> Env.comp_to_comp_typ env in
 
   let is = effect_args_from_repr lift_ct.result_typ (Env.is_layered_effect env tgt) r in
 
@@ -3561,7 +3560,7 @@ let get_mlift_for_subeff env (sub:S.sub_eff) : Env.mlift =
 
   else
     let mk_mlift_wp ts env c =
-      let ct = U.comp_to_comp_typ c in
+      let ct = Env.comp_to_comp_typ env c in
       check_non_informative_type_for_lift env ct.effect_name sub.target ct.result_typ env.range;
       let _, lift_t = inst_tscheme_with ts ct.comp_univs in
       let wp = List.hd ct.effect_args in
@@ -3954,9 +3953,11 @@ and ty_strictly_positive_in_type env (ty_lid:lident) (btype:term) (unfolded:unfo
    | Tm_arrow (sbs, c) ->  //binder type is an arrow type
      debug_positivity env (fun () -> "Checking strict positivity in Tm_arrow");
      let check_comp =
-       let c = Env.unfold_effect_abbrev env c |> mk_Comp in
-       U.is_pure_or_ghost_comp c || (Env.lookup_effect_quals env (U.comp_effect_name c) |> List.existsb (fun q -> q = S.TotalEffect))
-     in
+       U.is_pure_or_ghost_comp c ||
+       (c |> U.comp_effect_name
+          |> Env.norm_eff_name env
+          |> Env.lookup_effect_quals env
+          |> List.contains S.TotalEffect) in
      if not check_comp then
        let _ = debug_positivity env (fun () -> "Checking strict positivity , the arrow is impure, so return true") in
        true

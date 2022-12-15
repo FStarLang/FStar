@@ -86,10 +86,8 @@ and t = {
   nbe_t: t' ;
   nbe_r: FStar_Compiler_Range.range }
 and comp =
-  | Tot of (t * FStar_Syntax_Syntax.universe FStar_Pervasives_Native.option)
-  
-  | GTot of (t * FStar_Syntax_Syntax.universe FStar_Pervasives_Native.option)
-  
+  | Tot of t 
+  | GTot of t 
   | Comp of comp_typ 
 and comp_typ =
   {
@@ -264,14 +262,12 @@ let (__proj__Mkt__item__nbe_r : t -> FStar_Compiler_Range.range) =
   fun projectee -> match projectee with | { nbe_t; nbe_r;_} -> nbe_r
 let (uu___is_Tot : comp -> Prims.bool) =
   fun projectee -> match projectee with | Tot _0 -> true | uu___ -> false
-let (__proj__Tot__item___0 :
-  comp -> (t * FStar_Syntax_Syntax.universe FStar_Pervasives_Native.option))
-  = fun projectee -> match projectee with | Tot _0 -> _0
+let (__proj__Tot__item___0 : comp -> t) =
+  fun projectee -> match projectee with | Tot _0 -> _0
 let (uu___is_GTot : comp -> Prims.bool) =
   fun projectee -> match projectee with | GTot _0 -> true | uu___ -> false
-let (__proj__GTot__item___0 :
-  comp -> (t * FStar_Syntax_Syntax.universe FStar_Pervasives_Native.option))
-  = fun projectee -> match projectee with | GTot _0 -> _0
+let (__proj__GTot__item___0 : comp -> t) =
+  fun projectee -> match projectee with | GTot _0 -> _0
 let (uu___is_Comp : comp -> Prims.bool) =
   fun projectee -> match projectee with | Comp _0 -> true | uu___ -> false
 let (__proj__Comp__item___0 : comp -> comp_typ) =
@@ -800,9 +796,7 @@ let (make_arrow1 : t -> arg -> t) =
   fun t1 ->
     fun a ->
       FStar_Compiler_Effect.op_Less_Bar mk_t
-        (Arrow
-           (FStar_Pervasives.Inr
-              ([a], (Tot (t1, FStar_Pervasives_Native.None)))))
+        (Arrow (FStar_Pervasives.Inr ([a], (Tot t1))))
 let lazy_embed : 'a . FStar_Syntax_Syntax.emb_typ -> 'a -> (unit -> t) -> t =
   fun et ->
     fun x ->

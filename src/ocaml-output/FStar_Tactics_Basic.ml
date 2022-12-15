@@ -3015,40 +3015,38 @@ let (lemma_or_sq :
       FStar_Pervasives_Native.option)
   =
   fun c ->
-    let ct = FStar_Syntax_Util.comp_to_comp_typ_nouniv c in
-    let uu___ =
-      FStar_Ident.lid_equals ct.FStar_Syntax_Syntax.effect_name
-        FStar_Parser_Const.effect_Lemma_lid in
-    if uu___
-    then
-      let uu___1 =
-        match ct.FStar_Syntax_Syntax.effect_args with
-        | pre::post::uu___2 ->
-            ((FStar_Pervasives_Native.fst pre),
-              (FStar_Pervasives_Native.fst post))
-        | uu___2 -> failwith "apply_lemma: impossible: not a lemma" in
-      match uu___1 with
-      | (pre, post) ->
-          let post1 =
-            let uu___2 =
-              let uu___3 =
-                FStar_Syntax_Syntax.as_arg FStar_Syntax_Util.exp_unit in
-              [uu___3] in
-            FStar_Syntax_Util.mk_app post uu___2 in
-          FStar_Pervasives_Native.Some (pre, post1)
-    else
-      (let uu___2 =
-         (FStar_Syntax_Util.is_pure_effect ct.FStar_Syntax_Syntax.effect_name)
-           ||
-           (FStar_Syntax_Util.is_ghost_effect
-              ct.FStar_Syntax_Syntax.effect_name) in
-       if uu___2
-       then
-         let uu___3 =
-           FStar_Syntax_Util.un_squash ct.FStar_Syntax_Syntax.result_typ in
-         FStar_Compiler_Util.map_opt uu___3
-           (fun post -> (FStar_Syntax_Util.t_true, post))
-       else FStar_Pervasives_Native.None)
+    let uu___ = FStar_Syntax_Util.comp_eff_name_res_and_args c in
+    match uu___ with
+    | (eff_name, res, args) ->
+        let uu___1 =
+          FStar_Ident.lid_equals eff_name FStar_Parser_Const.effect_Lemma_lid in
+        if uu___1
+        then
+          let uu___2 =
+            match args with
+            | pre::post::uu___3 ->
+                ((FStar_Pervasives_Native.fst pre),
+                  (FStar_Pervasives_Native.fst post))
+            | uu___3 -> failwith "apply_lemma: impossible: not a lemma" in
+          (match uu___2 with
+           | (pre, post) ->
+               let post1 =
+                 let uu___3 =
+                   let uu___4 =
+                     FStar_Syntax_Syntax.as_arg FStar_Syntax_Util.exp_unit in
+                   [uu___4] in
+                 FStar_Syntax_Util.mk_app post uu___3 in
+               FStar_Pervasives_Native.Some (pre, post1))
+        else
+          (let uu___3 =
+             (FStar_Syntax_Util.is_pure_effect eff_name) ||
+               (FStar_Syntax_Util.is_ghost_effect eff_name) in
+           if uu___3
+           then
+             let uu___4 = FStar_Syntax_Util.un_squash res in
+             FStar_Compiler_Util.map_opt uu___4
+               (fun post -> (FStar_Syntax_Util.t_true, post))
+           else FStar_Pervasives_Native.None)
 let rec fold_left :
   'a 'b .
     ('a -> 'b -> 'b FStar_Tactics_Monad.tac) ->

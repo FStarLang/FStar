@@ -1144,16 +1144,12 @@ and (close_comp :
             -> c
         | uu___ ->
             (match c.FStar_Syntax_Syntax.n with
-             | FStar_Syntax_Syntax.Total (t, uopt) ->
+             | FStar_Syntax_Syntax.Total t ->
                  let uu___1 = inline_closure_env cfg env1 [] t in
-                 let uu___2 =
-                   FStar_Compiler_Option.map (norm_universe cfg env1) uopt in
-                 FStar_Syntax_Syntax.mk_Total' uu___1 uu___2
-             | FStar_Syntax_Syntax.GTotal (t, uopt) ->
+                 FStar_Syntax_Syntax.mk_Total uu___1
+             | FStar_Syntax_Syntax.GTotal t ->
                  let uu___1 = inline_closure_env cfg env1 [] t in
-                 let uu___2 =
-                   FStar_Compiler_Option.map (norm_universe cfg env1) uopt in
-                 FStar_Syntax_Syntax.mk_GTotal' uu___1 uu___2
+                 FStar_Syntax_Syntax.mk_GTotal uu___1
              | FStar_Syntax_Syntax.Comp c1 ->
                  let rt =
                    inline_closure_env cfg env1 []
@@ -1850,8 +1846,8 @@ let rec (maybe_weakly_reduced :
   fun tm ->
     let aux_comp c =
       match c.FStar_Syntax_Syntax.n with
-      | FStar_Syntax_Syntax.GTotal (t, uu___) -> maybe_weakly_reduced t
-      | FStar_Syntax_Syntax.Total (t, uu___) -> maybe_weakly_reduced t
+      | FStar_Syntax_Syntax.GTotal t -> maybe_weakly_reduced t
+      | FStar_Syntax_Syntax.Total t -> maybe_weakly_reduced t
       | FStar_Syntax_Syntax.Comp ct ->
           (maybe_weakly_reduced ct.FStar_Syntax_Syntax.result_typ) ||
             (FStar_Compiler_Util.for_some
@@ -5487,17 +5483,9 @@ and (norm_comp :
              FStar_Compiler_Util.print2
                ">>> %s\nNormComp with with %s env elements\n" uu___2 uu___3);
         (match comp.FStar_Syntax_Syntax.n with
-         | FStar_Syntax_Syntax.Total (t, uopt) ->
+         | FStar_Syntax_Syntax.Total t ->
              let t1 = norm cfg env1 [] t in
-             let uopt1 =
-               match uopt with
-               | FStar_Pervasives_Native.Some u ->
-                   let uu___1 = norm_universe cfg env1 u in
-                   FStar_Compiler_Effect.op_Less_Bar
-                     (fun uu___2 -> FStar_Pervasives_Native.Some uu___2)
-                     uu___1
-               | FStar_Pervasives_Native.None -> FStar_Pervasives_Native.None in
-             let uu___1 = FStar_Syntax_Syntax.mk_Total' t1 uopt1 in
+             let uu___1 = FStar_Syntax_Syntax.mk_Total t1 in
              {
                FStar_Syntax_Syntax.n = (uu___1.FStar_Syntax_Syntax.n);
                FStar_Syntax_Syntax.pos = (comp.FStar_Syntax_Syntax.pos);
@@ -5505,17 +5493,9 @@ and (norm_comp :
                FStar_Syntax_Syntax.hash_code =
                  (uu___1.FStar_Syntax_Syntax.hash_code)
              }
-         | FStar_Syntax_Syntax.GTotal (t, uopt) ->
+         | FStar_Syntax_Syntax.GTotal t ->
              let t1 = norm cfg env1 [] t in
-             let uopt1 =
-               match uopt with
-               | FStar_Pervasives_Native.Some u ->
-                   let uu___1 = norm_universe cfg env1 u in
-                   FStar_Compiler_Effect.op_Less_Bar
-                     (fun uu___2 -> FStar_Pervasives_Native.Some uu___2)
-                     uu___1
-               | FStar_Pervasives_Native.None -> FStar_Pervasives_Native.None in
-             let uu___1 = FStar_Syntax_Syntax.mk_GTotal' t1 uopt1 in
+             let uu___1 = FStar_Syntax_Syntax.mk_GTotal t1 in
              {
                FStar_Syntax_Syntax.n = (uu___1.FStar_Syntax_Syntax.n);
                FStar_Syntax_Syntax.pos = (comp.FStar_Syntax_Syntax.pos);
@@ -8007,12 +7987,12 @@ let (ghost_to_pure_aux :
       fun c ->
         match c.FStar_Syntax_Syntax.n with
         | FStar_Syntax_Syntax.Total uu___ -> c
-        | FStar_Syntax_Syntax.GTotal (t, uopt) ->
+        | FStar_Syntax_Syntax.GTotal t ->
             let uu___ = maybe_promote_t env1 non_informative_only t in
             if uu___
             then
               {
-                FStar_Syntax_Syntax.n = (FStar_Syntax_Syntax.Total (t, uopt));
+                FStar_Syntax_Syntax.n = (FStar_Syntax_Syntax.Total t);
                 FStar_Syntax_Syntax.pos = (c.FStar_Syntax_Syntax.pos);
                 FStar_Syntax_Syntax.vars = (c.FStar_Syntax_Syntax.vars);
                 FStar_Syntax_Syntax.hash_code =

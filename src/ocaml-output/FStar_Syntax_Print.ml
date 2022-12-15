@@ -1040,7 +1040,7 @@ and (comp_to_string : FStar_Syntax_Syntax.comp -> Prims.string) =
       FStar_Errors.with_ctx "While ugly-printing a computation"
         (fun uu___2 ->
            match c.FStar_Syntax_Syntax.n with
-           | FStar_Syntax_Syntax.Total (t, uopt) ->
+           | FStar_Syntax_Syntax.Total t ->
                let uu___3 =
                  let uu___4 = FStar_Syntax_Subst.compress t in
                  uu___4.FStar_Syntax_Syntax.n in
@@ -1051,17 +1051,9 @@ and (comp_to_string : FStar_Syntax_Syntax.comp -> Prims.string) =
                         (FStar_Options.print_universes ()) in
                     Prims.op_Negation uu___5 -> term_to_string t
                 | uu___4 ->
-                    (match uopt with
-                     | FStar_Pervasives_Native.Some u when
-                         FStar_Options.print_universes () ->
-                         let uu___5 = univ_to_string u in
-                         let uu___6 = term_to_string t in
-                         FStar_Compiler_Util.format2 "Tot<%s> %s" uu___5
-                           uu___6
-                     | uu___5 ->
-                         let uu___6 = term_to_string t in
-                         FStar_Compiler_Util.format1 "Tot %s" uu___6))
-           | FStar_Syntax_Syntax.GTotal (t, uopt) ->
+                    let uu___5 = term_to_string t in
+                    FStar_Compiler_Util.format1 "Tot %s" uu___5)
+           | FStar_Syntax_Syntax.GTotal t ->
                let uu___3 =
                  let uu___4 = FStar_Syntax_Subst.compress t in
                  uu___4.FStar_Syntax_Syntax.n in
@@ -1072,16 +1064,8 @@ and (comp_to_string : FStar_Syntax_Syntax.comp -> Prims.string) =
                         (FStar_Options.print_universes ()) in
                     Prims.op_Negation uu___5 -> term_to_string t
                 | uu___4 ->
-                    (match uopt with
-                     | FStar_Pervasives_Native.Some u when
-                         FStar_Options.print_universes () ->
-                         let uu___5 = univ_to_string u in
-                         let uu___6 = term_to_string t in
-                         FStar_Compiler_Util.format2 "GTot<%s> %s" uu___5
-                           uu___6
-                     | uu___5 ->
-                         let uu___6 = term_to_string t in
-                         FStar_Compiler_Util.format1 "GTot %s" uu___6))
+                    let uu___5 = term_to_string t in
+                    FStar_Compiler_Util.format1 "GTot %s" uu___5)
            | FStar_Syntax_Syntax.Comp c1 ->
                let basic =
                  let uu___3 = FStar_Options.print_effect_args () in

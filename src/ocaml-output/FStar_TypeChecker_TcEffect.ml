@@ -1563,14 +1563,8 @@ let (validate_indexed_effect_bind_shape :
                                                       let uu___6 =
                                                         let uu___7 =
                                                           let uu___8 =
-                                                            let uu___9 =
-                                                              let uu___10 =
-                                                                FStar_TypeChecker_Env.new_u_univ
-                                                                  () in
-                                                              FStar_Pervasives_Native.Some
-                                                                uu___10 in
-                                                            FStar_Syntax_Syntax.mk_Total'
-                                                              repr uu___9 in
+                                                            FStar_Syntax_Syntax.mk_Total
+                                                              repr in
                                                           FStar_Syntax_Util.arrow
                                                             [x_a] uu___8 in
                                                         FStar_Syntax_Syntax.gen_bv
@@ -4065,14 +4059,8 @@ let (tc_layered_eff_decl :
                                             (fun uu___11 ->
                                                match uu___11 with
                                                | (t, u1) ->
-                                                   let uu___12 =
-                                                     let uu___13 =
-                                                       FStar_TypeChecker_Env.new_u_univ
-                                                         () in
-                                                     FStar_Pervasives_Native.Some
-                                                       uu___13 in
-                                                   FStar_Syntax_Syntax.mk_Total'
-                                                     t uu___12) in
+                                                   FStar_Syntax_Syntax.mk_Total
+                                                     t) in
                                         FStar_Syntax_Util.arrow bs uu___9 in
                                       let g =
                                         FStar_TypeChecker_Rel.teq env ty k in
@@ -4217,10 +4205,8 @@ let (tc_layered_eff_decl :
                                         | (repr1, g) ->
                                             let k =
                                               let uu___11 =
-                                                FStar_Syntax_Syntax.mk_Total'
-                                                  repr1
-                                                  (FStar_Pervasives_Native.Some
-                                                     u_a) in
+                                                FStar_Syntax_Syntax.mk_Total
+                                                  repr1 in
                                               FStar_Syntax_Util.arrow bs
                                                 uu___11 in
                                             let g_eq =
@@ -5270,8 +5256,8 @@ let (tc_layered_eff_decl :
                                                    | FStar_Syntax_Syntax.Tm_arrow
                                                        (bs, c) ->
                                                        let ct =
-                                                         FStar_Syntax_Util.comp_to_comp_typ
-                                                           c in
+                                                         FStar_TypeChecker_Env.comp_to_comp_typ
+                                                           env1 c in
                                                        let uu___17 =
                                                          FStar_Ident.lid_equals
                                                            ct.FStar_Syntax_Syntax.effect_name
@@ -5301,14 +5287,8 @@ let (tc_layered_eff_decl :
                                                            FStar_Syntax_Syntax.mk_Tm_app
                                                              repr1 uu___18 r in
                                                          let c1 =
-                                                           let uu___18 =
-                                                             let uu___19 =
-                                                               FStar_TypeChecker_Env.new_u_univ
-                                                                 () in
-                                                             FStar_Pervasives_Native.Some
-                                                               uu___19 in
-                                                           FStar_Syntax_Syntax.mk_Total'
-                                                             repr2 uu___18 in
+                                                           FStar_Syntax_Syntax.mk_Total
+                                                             repr2 in
                                                          FStar_Syntax_Util.arrow
                                                            bs c1
                                                        else
@@ -5576,22 +5556,8 @@ let (tc_layered_eff_decl :
                                                                     =
                                                                     let uu___29
                                                                     =
-                                                                    let uu___30
-                                                                    =
-                                                                    let uu___31
-                                                                    =
-                                                                    FStar_TypeChecker_Env.new_u_univ
-                                                                    () in
-                                                                    FStar_Compiler_Effect.op_Bar_Greater
-                                                                    uu___31
-                                                                    (fun
-                                                                    uu___32
-                                                                    ->
-                                                                    FStar_Pervasives_Native.Some
-                                                                    uu___32) in
-                                                                    FStar_Syntax_Syntax.mk_Total'
-                                                                    repr1
-                                                                    uu___30 in
+                                                                    FStar_Syntax_Syntax.mk_Total
+                                                                    repr1 in
                                                                     FStar_Syntax_Util.arrow
                                                                     bs1
                                                                     uu___29 in
@@ -6272,13 +6238,8 @@ let (tc_non_layered_eff_decl :
                            let uu___8 =
                              let tmp_t =
                                let uu___9 =
-                                 let uu___10 =
-                                   FStar_Compiler_Effect.op_Bar_Greater
-                                     FStar_Syntax_Syntax.U_zero
-                                     (fun uu___11 ->
-                                        FStar_Pervasives_Native.Some uu___11) in
-                                 FStar_Syntax_Syntax.mk_Total'
-                                   FStar_Syntax_Syntax.t_unit uu___10 in
+                                 FStar_Syntax_Syntax.mk_Total
+                                   FStar_Syntax_Syntax.t_unit in
                                FStar_Syntax_Util.arrow bs1 uu___9 in
                              let uu___9 =
                                FStar_TypeChecker_Generalize.generalize_universes
@@ -7681,8 +7642,8 @@ let (tc_non_layered_eff_decl :
                                                             | FStar_Syntax_Syntax.Tm_arrow
                                                                 (bs1, c) ->
                                                                 let c1 =
-                                                                  FStar_Syntax_Util.comp_to_comp_typ
-                                                                    c in
+                                                                  FStar_TypeChecker_Env.comp_to_comp_typ
+                                                                    env1 c in
                                                                 let uu___23 =
                                                                   FStar_Ident.lid_equals
                                                                     c1.FStar_Syntax_Syntax.effect_name

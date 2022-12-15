@@ -91,11 +91,11 @@ let u_unk : universe = pack_universe Uv_Unk
 let rec mk_tot_arr_ln (bs: list binder) (cod : term) : Tot term (decreases bs) =
     match bs with
     | [] -> cod
-    | (b::bs) -> pack_ln (Tv_Arrow b (pack_comp (C_Total (mk_tot_arr_ln bs cod) u_unk [])))
+    | (b::bs) -> pack_ln (Tv_Arrow b (pack_comp (C_Total (mk_tot_arr_ln bs cod))))
 
 let rec collect_arr' (bs : list binder) (c : comp) : Tot (list binder * comp) (decreases c) =
     begin match inspect_comp c with
-    | C_Total t _ _ ->
+    | C_Total t ->
         begin match inspect_ln_unascribe t with
         | Tv_Arrow b c ->
             collect_arr' (b::bs) c
@@ -107,7 +107,7 @@ let rec collect_arr' (bs : list binder) (c : comp) : Tot (list binder * comp) (d
 
 val collect_arr_ln_bs : typ -> list binder * comp
 let collect_arr_ln_bs t =
-    let (bs, c) = collect_arr' [] (pack_comp (C_Total t u_unk [])) in
+    let (bs, c) = collect_arr' [] (pack_comp (C_Total t)) in
     (List.Tot.Base.rev bs, c)
 
 val collect_arr_ln : typ -> list typ * comp

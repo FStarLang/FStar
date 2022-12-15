@@ -2330,11 +2330,12 @@ let (gamma_until :
           (match uu___3 with
            | FStar_Pervasives_Native.None -> []
            | FStar_Pervasives_Native.Some (uu___4, bx, rest) -> bx :: rest)
-let (restrict_ctx :
-  FStar_TypeChecker_Env.env ->
-    FStar_Syntax_Syntax.ctx_uvar ->
-      FStar_Syntax_Syntax.binders ->
-        FStar_Syntax_Syntax.ctx_uvar -> worklist -> worklist)
+let restrict_ctx :
+  'uuuuu .
+    'uuuuu ->
+      FStar_Syntax_Syntax.ctx_uvar ->
+        FStar_Syntax_Syntax.binders ->
+          FStar_Syntax_Syntax.ctx_uvar -> worklist -> worklist
   =
   fun env ->
     fun tgt ->
@@ -2412,14 +2413,8 @@ let (restrict_ctx :
                   (let uu___3 =
                      let t = FStar_Syntax_Util.ctx_uvar_typ src in
                      let uu___4 =
-                       let uu___5 =
-                         let uu___6 =
-                           FStar_Compiler_Effect.op_Bar_Greater t
-                             (env.FStar_TypeChecker_Env.universe_of env) in
-                         FStar_Compiler_Effect.op_Bar_Greater uu___6
-                           (fun uu___7 -> FStar_Pervasives_Native.Some uu___7) in
-                       FStar_Compiler_Effect.op_Bar_Greater uu___5
-                         (FStar_Syntax_Syntax.mk_Total' t) in
+                       FStar_Compiler_Effect.op_Bar_Greater t
+                         FStar_Syntax_Syntax.mk_Total in
                      FStar_Compiler_Effect.op_Bar_Greater uu___4
                        (FStar_Syntax_Util.arrow bs1) in
                    aux uu___3
@@ -2433,11 +2428,12 @@ let (restrict_ctx :
                                FStar_Syntax_Syntax.as_arg) in
                         FStar_Syntax_Syntax.mk_Tm_app src' uu___4
                           src.FStar_Syntax_Syntax.ctx_uvar_range))
-let (restrict_all_uvars :
-  FStar_TypeChecker_Env.env ->
-    FStar_Syntax_Syntax.ctx_uvar ->
-      FStar_Syntax_Syntax.binders ->
-        FStar_Syntax_Syntax.ctx_uvar Prims.list -> worklist -> worklist)
+let restrict_all_uvars :
+  'uuuuu .
+    'uuuuu ->
+      FStar_Syntax_Syntax.ctx_uvar ->
+        FStar_Syntax_Syntax.binders ->
+          FStar_Syntax_Syntax.ctx_uvar Prims.list -> worklist -> worklist
   =
   fun env ->
     fun tgt ->
@@ -4277,7 +4273,8 @@ let (apply_substitutive_indexed_subcomp :
                                                          subst4) in
                                                   FStar_Compiler_Effect.op_Bar_Greater
                                                     uu___5
-                                                    FStar_Syntax_Util.comp_to_comp_typ in
+                                                    (FStar_TypeChecker_Env.comp_to_comp_typ
+                                                       env) in
                                                 let fml =
                                                   let uu___5 =
                                                     let uu___6 =
@@ -4479,7 +4476,8 @@ let (apply_ad_hoc_indexed_subcomp :
                                         (FStar_Syntax_Subst.subst_comp substs) in
                                     FStar_Compiler_Effect.op_Bar_Greater
                                       uu___3
-                                      FStar_Syntax_Util.comp_to_comp_typ in
+                                      (FStar_TypeChecker_Env.comp_to_comp_typ
+                                         env) in
                                   let uu___3 =
                                     let g_sort_is =
                                       let uu___4 =
@@ -5698,34 +5696,23 @@ and (imitate_arrow :
                   match uu___ with
                   | Flex (uu___1, u_lhs, uu___2) ->
                       let imitate_comp bs bs_terms c wl1 =
-                        let imitate_tot_or_gtot t uopt f wl2 =
-                          let uu___3 =
-                            match uopt with
-                            | FStar_Pervasives_Native.None ->
-                                FStar_Syntax_Util.type_u ()
-                            | FStar_Pervasives_Native.Some univ ->
-                                let uu___4 =
-                                  FStar_Syntax_Syntax.mk
-                                    (FStar_Syntax_Syntax.Tm_type univ)
-                                    t.FStar_Syntax_Syntax.pos in
-                                (uu___4, univ) in
+                        let imitate_tot_or_gtot t f wl2 =
+                          let uu___3 = FStar_Syntax_Util.type_u () in
                           match uu___3 with
-                          | (k, univ) ->
-                              let uu___4 =
+                          | (k, uu___4) ->
+                              let uu___5 =
                                 copy_uvar u_lhs
                                   (FStar_Compiler_List.op_At bs_lhs bs) k wl2 in
-                              (match uu___4 with
-                               | (uu___5, u, wl3) ->
-                                   let uu___6 =
-                                     f u (FStar_Pervasives_Native.Some univ) in
-                                   (uu___6, wl3)) in
+                              (match uu___5 with
+                               | (uu___6, u, wl3) ->
+                                   let uu___7 = f u in (uu___7, wl3)) in
                         match c.FStar_Syntax_Syntax.n with
-                        | FStar_Syntax_Syntax.Total (t, uopt) ->
-                            imitate_tot_or_gtot t uopt
-                              FStar_Syntax_Syntax.mk_Total' wl1
-                        | FStar_Syntax_Syntax.GTotal (t, uopt) ->
-                            imitate_tot_or_gtot t uopt
-                              FStar_Syntax_Syntax.mk_GTotal' wl1
+                        | FStar_Syntax_Syntax.Total t ->
+                            imitate_tot_or_gtot t
+                              FStar_Syntax_Syntax.mk_Total wl1
+                        | FStar_Syntax_Syntax.GTotal t ->
+                            imitate_tot_or_gtot t
+                              FStar_Syntax_Syntax.mk_GTotal wl1
                         | FStar_Syntax_Syntax.Comp ct ->
                             let uu___3 =
                               let uu___4 =
@@ -6472,21 +6459,9 @@ and (solve_t_flex_rigid_eq :
                                             t_last_arg in
                                         let uu___10 =
                                           let uu___11 =
-                                            let uu___12 =
-                                              let uu___13 =
-                                                FStar_Compiler_Effect.op_Bar_Greater
-                                                  t_res_lhs
-                                                  (env1.FStar_TypeChecker_Env.universe_of
-                                                     env1) in
-                                              FStar_Compiler_Effect.op_Bar_Greater
-                                                uu___13
-                                                (fun uu___14 ->
-                                                   FStar_Pervasives_Native.Some
-                                                     uu___14) in
                                             FStar_Compiler_Effect.op_Bar_Greater
-                                              uu___12
-                                              (FStar_Syntax_Syntax.mk_Total'
-                                                 t_res_lhs) in
+                                              t_res_lhs
+                                              FStar_Syntax_Syntax.mk_Total in
                                           FStar_Compiler_Effect.op_Bar_Greater
                                             uu___11
                                             (FStar_Syntax_Util.arrow [b]) in
@@ -12012,7 +11987,8 @@ and (solve_c :
                     (fun uu___5 ->
                        match uu___5 with
                        | (c, g) ->
-                           let uu___6 = FStar_Syntax_Util.comp_to_comp_typ c in
+                           let uu___6 =
+                             FStar_TypeChecker_Env.comp_to_comp_typ env c in
                            (uu___6, g)) in
                 let uu___4 =
                   let uu___5 =
@@ -12342,7 +12318,7 @@ and (solve_c :
                               uu___7 uu___8 in
                           (FStar_Errors.Fatal_UnexpectedEffect, uu___6) in
                         FStar_Errors.raise_error uu___5 r
-                      else FStar_Syntax_Util.comp_to_comp_typ c) in
+                      else FStar_TypeChecker_Env.comp_to_comp_typ env c) in
            let uu___1 =
              should_fail_since_repr_subcomp_not_allowed
                wl.repr_subcomp_allowed c11.FStar_Syntax_Syntax.effect_name
@@ -12629,48 +12605,47 @@ and (solve_c :
                 (match ((c11.FStar_Syntax_Syntax.n),
                          (c21.FStar_Syntax_Syntax.n))
                  with
-                 | (FStar_Syntax_Syntax.GTotal (t1, uu___4),
-                    FStar_Syntax_Syntax.Total (t2, uu___5)) when
-                     FStar_TypeChecker_Env.non_informative env t2 ->
-                     let uu___6 =
+                 | (FStar_Syntax_Syntax.GTotal t1, FStar_Syntax_Syntax.Total
+                    t2) when FStar_TypeChecker_Env.non_informative env t2 ->
+                     let uu___4 =
                        problem_using_guard orig t1
                          problem.FStar_TypeChecker_Common.relation t2
                          FStar_Pervasives_Native.None "result type" in
-                     solve_t env uu___6 wl
+                     solve_t env uu___4 wl
                  | (FStar_Syntax_Syntax.GTotal uu___4,
                     FStar_Syntax_Syntax.Total uu___5) ->
                      let uu___6 =
                        FStar_Thunk.mkv
                          "incompatible monad ordering: GTot </: Tot" in
                      giveup env uu___6 orig
-                 | (FStar_Syntax_Syntax.Total (t1, uu___4),
-                    FStar_Syntax_Syntax.Total (t2, uu___5)) ->
-                     let uu___6 =
+                 | (FStar_Syntax_Syntax.Total t1, FStar_Syntax_Syntax.Total
+                    t2) ->
+                     let uu___4 =
                        problem_using_guard orig t1
                          problem.FStar_TypeChecker_Common.relation t2
                          FStar_Pervasives_Native.None "result type" in
-                     solve_t env uu___6 wl
-                 | (FStar_Syntax_Syntax.GTotal (t1, uu___4),
-                    FStar_Syntax_Syntax.GTotal (t2, uu___5)) ->
-                     let uu___6 =
+                     solve_t env uu___4 wl
+                 | (FStar_Syntax_Syntax.GTotal t1, FStar_Syntax_Syntax.GTotal
+                    t2) ->
+                     let uu___4 =
                        problem_using_guard orig t1
                          problem.FStar_TypeChecker_Common.relation t2
                          FStar_Pervasives_Native.None "result type" in
-                     solve_t env uu___6 wl
-                 | (FStar_Syntax_Syntax.Total (t1, uu___4),
-                    FStar_Syntax_Syntax.GTotal (t2, uu___5)) when
+                     solve_t env uu___4 wl
+                 | (FStar_Syntax_Syntax.Total t1, FStar_Syntax_Syntax.GTotal
+                    t2) when
                      problem.FStar_TypeChecker_Common.relation =
                        FStar_TypeChecker_Common.SUB
                      ->
-                     let uu___6 =
+                     let uu___4 =
                        problem_using_guard orig t1
                          problem.FStar_TypeChecker_Common.relation t2
                          FStar_Pervasives_Native.None "result type" in
-                     solve_t env uu___6 wl
-                 | (FStar_Syntax_Syntax.Total (t1, uu___4),
-                    FStar_Syntax_Syntax.GTotal (t2, uu___5)) ->
-                     let uu___6 = FStar_Thunk.mkv "GTot =/= Tot" in
-                     giveup env uu___6 orig
+                     solve_t env uu___4 wl
+                 | (FStar_Syntax_Syntax.Total t1, FStar_Syntax_Syntax.GTotal
+                    t2) ->
+                     let uu___4 = FStar_Thunk.mkv "GTot =/= Tot" in
+                     giveup env uu___4 orig
                  | (FStar_Syntax_Syntax.GTotal uu___4,
                     FStar_Syntax_Syntax.Comp uu___5) ->
                      let uu___6 =

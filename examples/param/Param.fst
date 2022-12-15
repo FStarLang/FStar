@@ -53,7 +53,7 @@ let rec param' (bvmap : bvmap) (t:term) : Tac term =
   | Tv_Arrow b c ->
     let bv, (q, _attrs) = inspect_binder b in
     begin match inspect_comp c with
-    | C_Total t2 _ _ ->
+    | C_Total t2 ->
       let t1 = (inspect_bv bv).bv_sort in
       // bv:t1 -> t2
 

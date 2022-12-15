@@ -631,28 +631,25 @@ let e_bv_view =
 let e_comp_view =
     let embed_comp_view (rng:Range.range) (cv : comp_view) : term =
         match cv with
-        | C_Total (t, u, md) ->
-            S.mk_Tm_app ref_C_Total.t [S.as_arg (embed e_term rng t);
-                                       S.as_arg (embed e_universe rng u);
-                                       S.as_arg (embed (e_list e_term) rng md)]
+        | C_Total t ->
+            S.mk_Tm_app ref_C_Total.t [S.as_arg (embed e_term rng t)]
                         rng
 
-        | C_GTotal (t, u, md) ->
-            S.mk_Tm_app ref_C_GTotal.t [S.as_arg (embed e_term rng t);
-                                        S.as_arg (embed e_universe rng u);
-                                        S.as_arg (embed (e_list e_term) rng md)]
+        | C_GTotal t ->
+            S.mk_Tm_app ref_C_GTotal.t [S.as_arg (embed e_term rng t)]
                         rng
 
         | C_Lemma (pre, post, pats) ->
             S.mk_Tm_app ref_C_Lemma.t [S.as_arg (embed e_term rng pre); S.as_arg (embed e_term rng post); S.as_arg (embed e_term rng pats)]
                         rng
 
-        | C_Eff (us, eff, res, args) ->
+        | C_Eff (us, eff, res, args, decrs) ->
             S.mk_Tm_app ref_C_Eff.t
                 [ S.as_arg (embed (e_list e_universe) rng us)
                 ; S.as_arg (embed e_string_list rng eff)
                 ; S.as_arg (embed e_term rng res)
-                ; S.as_arg (embed (e_list e_argv) rng args)] rng
+                ; S.as_arg (embed (e_list e_argv) rng args)
+                ; S.as_arg (embed (e_list e_term) rng decrs)] rng
 
 
     in
@@ -660,19 +657,15 @@ let e_comp_view =
         let t = U.unascribe t in
         let hd, args = U.head_and_args t in
         match (U.un_uinst hd).n, args with
-        | Tm_fvar fv, [(t, _); (u, _); (md, _)]
+        | Tm_fvar fv, [(t, _)]
           when S.fv_eq_lid fv ref_C_Total.lid ->
             BU.bind_opt (unembed' w e_term t) (fun t ->
-            BU.bind_opt (unembed' w e_universe u) (fun u ->
-            BU.bind_opt (unembed' w (e_list e_term) md) (fun md ->
-            Some <| C_Total (t, u, md))))
+            Some <| C_Total t)
 
-        | Tm_fvar fv, [(t, _); (u, _); (md, _)]
+        | Tm_fvar fv, [(t, _)]
           when S.fv_eq_lid fv ref_C_GTotal.lid ->
             BU.bind_opt (unembed' w e_term t) (fun t ->
-            BU.bind_opt (unembed' w e_universe u) (fun u ->
-            BU.bind_opt (unembed' w (e_list e_term) md) (fun md ->
-            Some <| C_GTotal (t, u, md))))
+            Some <| C_GTotal t)
 
         | Tm_fvar fv, [(pre, _); (post, _); (pats, _)] when S.fv_eq_lid fv ref_C_Lemma.lid ->
             BU.bind_opt (unembed' w e_term pre) (fun pre ->
@@ -680,13 +673,14 @@ let e_comp_view =
             BU.bind_opt (unembed' w e_term pats) (fun pats ->
             Some <| C_Lemma (pre, post, pats))))
 
-        | Tm_fvar fv, [(us, _); (eff, _); (res, _); (args, _)]
+        | Tm_fvar fv, [(us, _); (eff, _); (res, _); (args, _); (decrs, _)]
                 when S.fv_eq_lid fv ref_C_Eff.lid ->
             BU.bind_opt (unembed' w (e_list e_universe) us) (fun us ->
             BU.bind_opt (unembed' w e_string_list eff)    (fun eff ->
             BU.bind_opt (unembed' w e_term res)   (fun res->
             BU.bind_opt (unembed' w (e_list e_argv) args)  (fun args ->
-            Some <| C_Eff ([], eff, res, args)))))
+            BU.bind_opt (unembed' w (e_list e_term) decrs)  (fun decrs ->
+            Some <| C_Eff (us, eff, res, args, decrs))))))
 
         | _ ->
             if w then

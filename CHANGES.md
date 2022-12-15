@@ -14,6 +14,13 @@ Guidelines for the changelog:
 # Version 0.9.7.0
 
 ## Tactics & Reflection
+  * PR https://github.com/FStarLang/FStar/pull/2785 changes the reflection syntax
+    for computation types, by removing universe field from the Total and GTotal
+    comps. It also moves the decreases clause to the general C_Eff case.
+
+    This is a breaking change for the reflection clients, but the regressions should
+    only be syntactic.
+
   * As a better fix for Bug2635, F* now has a memoizing core typechecker for total
     (including ghost terms that are total) terms. The unification solutions, including
     those computed in the tactics engine, are typechecked using this core typechecker.

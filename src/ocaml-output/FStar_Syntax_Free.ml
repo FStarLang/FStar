@@ -384,20 +384,9 @@ and (free_names_and_uvars_comp :
       | uu___1 ->
           let n =
             match c.FStar_Syntax_Syntax.n with
-            | FStar_Syntax_Syntax.GTotal (t, FStar_Pervasives_Native.None) ->
+            | FStar_Syntax_Syntax.GTotal t ->
                 free_names_and_uvars t use_cache
-            | FStar_Syntax_Syntax.Total (t, FStar_Pervasives_Native.None) ->
-                free_names_and_uvars t use_cache
-            | FStar_Syntax_Syntax.GTotal (t, FStar_Pervasives_Native.Some u)
-                ->
-                let uu___2 = free_univs u in
-                let uu___3 = free_names_and_uvars t use_cache in
-                union uu___2 uu___3
-            | FStar_Syntax_Syntax.Total (t, FStar_Pervasives_Native.Some u)
-                ->
-                let uu___2 = free_univs u in
-                let uu___3 = free_names_and_uvars t use_cache in
-                union uu___2 uu___3
+            | FStar_Syntax_Syntax.Total t -> free_names_and_uvars t use_cache
             | FStar_Syntax_Syntax.Comp ct ->
                 let decreases_vars =
                   let uu___2 =
