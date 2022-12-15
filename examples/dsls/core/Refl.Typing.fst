@@ -35,8 +35,6 @@ let lookup_bvar (e:env) (x:int) : option term = magic ()
 let lookup_fvar_uinst (e:R.env) (x:R.fv) (us:list R.universe)
   : option R.term = magic ()
 
-let extend_env (e:env) (x:var) (ty:term) : env = magic ()
-
 let lookup_bvar_extend_env (g:env) (x y:var) (ty:term) = admit ()
 
 let lookup_fvar_extend_env (g:env) (x:fv) (us:universes) (y:var) (ty:term) = admit ()

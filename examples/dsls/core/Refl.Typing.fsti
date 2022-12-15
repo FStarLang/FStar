@@ -60,8 +60,17 @@ val lookup_fvar_uinst (e:R.env) (x:R.fv) (us:list R.universe) : option R.term
 
 let lookup_fvar (e:env) (x:fv) : option term = lookup_fvar_uinst e x []
 
-val extend_env (e:env) (x:var) (ty:term) : env
+let mk_binder (pp_name:string) (x:var) (ty:term) (q:aqualv)
+  = pack_binder
+      (pack_bv ({bv_ppname=pp_name;
+                 bv_index=x;
+                 bv_sort=ty}))
+      q
+      []
 
+let extend_env (e:env) (x:var) (ty:term) : env =
+  R.push_binder e (mk_binder "x" x ty Q_Explicit)
+  
 val lookup_bvar_extend_env (g:env) (x y:var) (ty:term)
   : Lemma 
     (ensures (
@@ -74,14 +83,6 @@ val lookup_fvar_extend_env (g:env) (x:fv) (us:universes) (y:var) (ty:term)
   : Lemma 
     (ensures lookup_fvar_uinst (extend_env g y ty) x us == lookup_fvar_uinst g x us)
     [SMTPat (lookup_fvar_uinst (extend_env g y ty) x us)]
-
-let mk_binder (pp_name:string) (x:var) (ty:term) (q:aqualv)
-  = pack_binder
-      (pack_bv ({bv_ppname=pp_name;
-                 bv_index=x;
-                 bv_sort=ty}))
-      q
-      []
 
 let as_binder (x:var) (ty:term) =
   mk_binder "x" x ty Q_Explicit
