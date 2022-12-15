@@ -53,8 +53,8 @@ verify-extra: $(filter $(addprefix %, $(addsuffix .checked, $(notdir $(EXTRA))))
 %.checked:
 	@echo "[CHECK     $(basename $(notdir $@))]"
 	@# MY_FSTAR is imported from ulib/gmake.Makefile.tmpl, so it does not
-	@# contain the $(SIL) flag nor the $(PREF) for monitoring resources.
-	$(Q)$(PREF) $(MY_FSTAR) $(SIL) $(COMPAT_INDEXED_EFFECTS) $<
+	@# contain the $(SIL) flag nor the $(RUNLIM) for monitoring resources.
+	$(Q)$(RUNLIM) $(MY_FSTAR) $(SIL) $(COMPAT_INDEXED_EFFECTS) $<
 
 # Benchmarking rules
 #

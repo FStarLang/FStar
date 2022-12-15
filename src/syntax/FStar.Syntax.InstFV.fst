@@ -106,8 +106,8 @@ and inst_binders s bs = bs |> List.map (inst_binder s)
 and inst_args s args = args |> List.map (fun (a, imp) -> inst s a, imp)
 
 and inst_comp s c = match c.n with
-    | Total (t, uopt) -> S.mk_Total' (inst s t) uopt
-    | GTotal (t, uopt) -> S.mk_GTotal' (inst s t) uopt
+    | Total t -> S.mk_Total (inst s t)
+    | GTotal t -> S.mk_GTotal (inst s t)
     | Comp ct -> let ct = {ct with result_typ=inst s ct.result_typ;
                                    effect_args=inst_args s ct.effect_args;
                                    flags=ct.flags |> List.map (function

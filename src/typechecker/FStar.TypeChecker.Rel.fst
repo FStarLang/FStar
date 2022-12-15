@@ -1079,7 +1079,7 @@ let restrict_ctx env (tgt:ctx_uvar) (bs:binders) (src:ctx_uvar) wl : worklist =
   if List.length bs = 0 then aux (U.ctx_uvar_typ src) (fun src' -> src')  //no abstraction over bs
   else begin
     aux
-      (let t = U.ctx_uvar_typ src in t |> env.universe_of env |> Some |> S.mk_Total' t |> U.arrow bs)  //bs -> Tot t_t
+      (let t = U.ctx_uvar_typ src in t |> S.mk_Total |> U.arrow bs)  //bs -> Tot t_t
       (fun src' -> S.mk_Tm_app  //?u bs
         src'
         (bs |> S.binders_to_names |> List.map S.as_arg)
@@ -1893,7 +1893,7 @@ let apply_substitutive_indexed_subcomp (env:Env.env)
 
   // apply the substitutions to subcomp_c,
   //   and get the precondition from the PURE wp
-  let subcomp_ct = subcomp_c |> SS.subst_comp subst |> U.comp_to_comp_typ in
+  let subcomp_ct = subcomp_c |> SS.subst_comp subst |> Env.comp_to_comp_typ env in
 
   let fml =
     let u, wp = List.hd subcomp_ct.comp_univs, fst (List.hd subcomp_ct.effect_args) in
@@ -1975,7 +1975,7 @@ let apply_ad_hoc_indexed_subcomp (env:Env.env)
         ps@[p], wl
     ) ([], wl) f_sort_is (ct1.effect_args |> List.map fst) in
 
-  let subcomp_ct = subcomp_c |> SS.subst_comp substs |> U.comp_to_comp_typ in
+  let subcomp_ct = subcomp_c |> SS.subst_comp substs |> Env.comp_to_comp_typ env in
 
   let g_sub_probs, wl =
     let g_sort_is =
@@ -2442,22 +2442,16 @@ and imitate_arrow (orig:prob) (env:Env.env) (wl:worklist)
         let bs_lhs_args = List.map (fun ({binder_bv=x;binder_qual=i}) -> S.bv_to_name x, i) bs_lhs in
         let (Flex (_, u_lhs, _)) = lhs in
         let imitate_comp bs bs_terms c wl =
-           let imitate_tot_or_gtot t uopt f wl =
-              let k, univ =
-                  match uopt with
-                  | None ->
-                    U.type_u()
-                  | Some univ ->
-                    S.mk (Tm_type univ) t.pos, univ
-              in
+           let imitate_tot_or_gtot t f wl =
+              let k, _ = U.type_u () in
               let _, u, wl = copy_uvar u_lhs (bs_lhs@bs) k wl in
-              f u (Some univ), wl
+              f u, wl
            in
            match c.n with
-           | Total (t, uopt) ->
-             imitate_tot_or_gtot t uopt S.mk_Total' wl
-           | GTotal (t, uopt) ->
-             imitate_tot_or_gtot t uopt S.mk_GTotal' wl
+           | Total t ->
+             imitate_tot_or_gtot t S.mk_Total wl
+           | GTotal t ->
+             imitate_tot_or_gtot t S.mk_GTotal wl
            | Comp ct ->
              let out_args, wl =
                List.fold_right
@@ -2852,7 +2846,7 @@ and solve_t_flex_rigid_eq env (orig:prob) wl
               let _, lhs', wl =
                 let b = S.null_binder t_last_arg in
                 copy_uvar u_lhs (bs_lhs@[b])
-                (t_res_lhs |> env.universe_of env |> Some |> S.mk_Total' t_res_lhs |> U.arrow [b]) wl
+                (t_res_lhs |> S.mk_Total |> U.arrow [b]) wl
               in
               let _, lhs'_last_arg, wl = copy_uvar u_lhs bs_lhs t_last_arg wl in
               lhs', lhs'_last_arg, wl
@@ -4228,7 +4222,7 @@ and solve_c (env:Env.env) (problem:problem comp) (wl:worklist) : solution =
 
           let lift_c1 (edge:edge) : comp_typ * guard_t =
             c1 |> S.mk_Comp |> edge.mlift.mlift_wp env
-               |> (fun (c, g) -> U.comp_to_comp_typ c, g) in
+               |> (fun (c, g) -> Env.comp_to_comp_typ env c, g) in
   
           let c1, g_lift, stronger_t_opt, kind, num_eff_params, is_polymonadic =
             match Env.exists_polymonadic_subcomp env c1.effect_name c2.effect_name with
@@ -4366,7 +4360,7 @@ and solve_c (env:Env.env) (problem:problem comp) (wl:worklist) : solution =
                  then raise_error (Errors.Fatal_UnexpectedEffect,
                    BU.format2 "Lift between wp-effects (%s~>%s) should not have returned a non-trivial guard"
                      (Ident.string_of_lid c1.effect_name) (Ident.string_of_lid c2.effect_name)) r
-                 else U.comp_to_comp_typ c)
+                 else Env.comp_to_comp_typ env c)
         in
         if should_fail_since_repr_subcomp_not_allowed
              wl.repr_subcomp_allowed
@@ -4455,20 +4449,20 @@ and solve_c (env:Env.env) (problem:problem comp) (wl:worklist) : solution =
            else N.ghost_to_pure2 env (c1, c2) in
 
          match c1.n, c2.n with
-         | GTotal (t1, _), Total (t2, _) when (Env.non_informative env t2) ->
+         | GTotal t1, Total t2 when (Env.non_informative env t2) ->
            solve_t env (problem_using_guard orig t1 problem.relation t2 None "result type") wl
 
          | GTotal _, Total _ ->
            giveup env (Thunk.mkv "incompatible monad ordering: GTot </: Tot")  orig
 
-         | Total  (t1, _), Total  (t2, _)
-         | GTotal (t1, _), GTotal (t2, _) -> //rigid-rigid 1
+         | Total  t1, Total  t2
+         | GTotal t1, GTotal t2 -> //rigid-rigid 1
            solve_t env (problem_using_guard orig t1 problem.relation t2 None "result type") wl
 
-         | Total  (t1, _), GTotal (t2, _) when problem.relation = SUB ->
+         | Total  t1, GTotal t2 when problem.relation = SUB ->
            solve_t env (problem_using_guard orig t1 problem.relation t2 None "result type") wl
 
-         | Total  (t1, _), GTotal (t2, _) ->
+         | Total  t1, GTotal t2 ->
            giveup env (Thunk.mkv "GTot =/= Tot") orig
 
          | GTotal _, Comp _

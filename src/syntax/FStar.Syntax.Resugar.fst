@@ -958,37 +958,15 @@ and resugar_comp' (env: DsEnv.env) (c:S.comp) : A.term =
         A.mk_term a c.pos A.Un
   in
   match (c.n) with
-  | Total (typ, u) ->
+  | Total typ ->
     let t = resugar_term' env typ in
     if not (Options.print_implicits())
     then t
-    else (
-      begin match u with
-      | None ->
-        mk (A.Construct(C.effect_Tot_lid, [(t, A.Nothing)]))
-      | Some u ->
-        // add the universe as the first argument
-        if (Options.print_universes()) then
-          let u = resugar_universe u c.pos in
-          mk (A.Construct(C.effect_Tot_lid, [(u, A.UnivApp);(t, A.Nothing)]))
-        else
-          mk (A.Construct(C.effect_Tot_lid, [(t, A.Nothing)]))
-      end
-    )
+    else mk (A.Construct(C.effect_Tot_lid, [(t, A.Nothing)]))
 
-  | GTotal (typ, u) ->
+  | GTotal typ ->
     let t = resugar_term' env typ in
-    begin match u with
-    | None ->
-      mk (A.Construct(C.effect_GTot_lid, [(t, A.Nothing)]))
-    | Some u ->
-      // add the universe as the first argument
-      if (Options.print_universes()) then
-        let u = resugar_universe u c.pos in
-        mk (A.Construct(C.effect_GTot_lid, [(u, A.UnivApp);(t, A.Nothing)]))
-      else
-        mk (A.Construct(C.effect_GTot_lid, [(t, A.Nothing)]))
-    end
+    mk (A.Construct(C.effect_GTot_lid, [(t, A.Nothing)]))
 
   | Comp c ->
     let result = (resugar_term' env c.result_typ, A.Nothing) in

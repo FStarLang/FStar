@@ -883,7 +883,7 @@ let splice (env:Env.env) (is_typed:bool) (lids:list Ident.lident) (tau:term) (rn
     ) lids;
 
     if !tacdbg then
-      BU.print1 "splice: got decls = %s\n"
+      BU.print1 "splice: got decls = {\n\n%s\n\n}\n"
                  (FStar.Common.string_of_list Print.sigelt_to_string sigelts);
 
     let sigelts = sigelts |> List.map (fun se ->

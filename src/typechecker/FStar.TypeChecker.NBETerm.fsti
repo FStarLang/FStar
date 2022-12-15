@@ -166,8 +166,8 @@ and t = {
 }
 
 and comp =
-  | Tot of t * option universe
-  | GTot of t * option universe
+  | Tot of t
+  | GTot of t
   | Comp of comp_typ
 
 and comp_typ = {

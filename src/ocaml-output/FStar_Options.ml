@@ -1275,7 +1275,7 @@ let rec (specs_with_types :
     (FStar_Getopt.noshort, "tcnorm", BoolStr,
       "Attempt to normalize definitions marked as tcnorm (default 'true')");
     (FStar_Getopt.noshort, "timing", (Const (Bool true)),
-      "Print the time it takes to verify each top-level definition");
+      "Print the time it takes to verify each top-level definition.\n\t\tThis is just an alias for an invocation of the profiler, so it may not work well if combined with --profile.\n\t\tIn particular, it implies --profile_group_by_decls.");
     (FStar_Getopt.noshort, "trace_error", (Const (Bool true)),
       "Don't print an error message; show an exception trace instead");
     (FStar_Getopt.noshort, "ugly", (Const (Bool true)),
@@ -2385,10 +2385,14 @@ let (profile_enabled :
           let uu___ = get_profile_component () in
           matches_namespace_filter_opt phase uu___
       | FStar_Pervasives_Native.Some modul ->
-          (let uu___ = get_profile () in
-           matches_namespace_filter_opt modul uu___) &&
-            (let uu___ = get_profile_component () in
-             matches_namespace_filter_opt phase uu___)
+          ((let uu___ = get_profile () in
+            matches_namespace_filter_opt modul uu___) &&
+             (let uu___ = get_profile_component () in
+              matches_namespace_filter_opt phase uu___))
+            ||
+            (((timing ()) &&
+                (phase = "FStar.TypeChecker.Tc.process_one_decl"))
+               && (should_check modul))
 exception File_argument of Prims.string 
 let (uu___is_File_argument : Prims.exn -> Prims.bool) =
   fun projectee ->

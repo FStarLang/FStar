@@ -2264,8 +2264,7 @@ and (tc_maybe_toplevel_term :
                                   let uu___12 =
                                     let uu___13 =
                                       let uu___14 =
-                                        FStar_Syntax_Syntax.mk_Total' repr
-                                          (FStar_Pervasives_Native.Some u_c) in
+                                        FStar_Syntax_Syntax.mk_Total repr in
                                       FStar_Pervasives.Inr uu___14 in
                                     (uu___13, FStar_Pervasives_Native.None,
                                       use_eq) in
@@ -3769,10 +3768,8 @@ and (tc_match :
                                 then
                                   let e = FStar_Syntax_Util.exp_true_bool in
                                   let c =
-                                    FStar_Syntax_Syntax.mk_GTotal'
-                                      FStar_Syntax_Util.t_bool
-                                      (FStar_Pervasives_Native.Some
-                                         FStar_Syntax_Syntax.U_zero) in
+                                    FStar_Syntax_Syntax.mk_GTotal
+                                      FStar_Syntax_Util.t_bool in
                                   let uu___6 =
                                     FStar_TypeChecker_Common.lcomp_of_comp c in
                                   FStar_TypeChecker_Util.bind
@@ -4691,28 +4688,24 @@ and (tc_comp :
     fun c ->
       let c0 = c in
       match c.FStar_Syntax_Syntax.n with
-      | FStar_Syntax_Syntax.Total (t, uu___) ->
-          let uu___1 = FStar_Syntax_Util.type_u () in
-          (match uu___1 with
+      | FStar_Syntax_Syntax.Total t ->
+          let uu___ = FStar_Syntax_Util.type_u () in
+          (match uu___ with
            | (k, u) ->
-               let uu___2 = tc_check_tot_or_gtot_term env t k "" in
-               (match uu___2 with
-                | (t1, uu___3, g) ->
-                    let uu___4 =
-                      FStar_Syntax_Syntax.mk_Total' t1
-                        (FStar_Pervasives_Native.Some u) in
-                    (uu___4, u, g)))
-      | FStar_Syntax_Syntax.GTotal (t, uu___) ->
-          let uu___1 = FStar_Syntax_Util.type_u () in
-          (match uu___1 with
+               let uu___1 = tc_check_tot_or_gtot_term env t k "" in
+               (match uu___1 with
+                | (t1, uu___2, g) ->
+                    let uu___3 = FStar_Syntax_Syntax.mk_Total t1 in
+                    (uu___3, u, g)))
+      | FStar_Syntax_Syntax.GTotal t ->
+          let uu___ = FStar_Syntax_Util.type_u () in
+          (match uu___ with
            | (k, u) ->
-               let uu___2 = tc_check_tot_or_gtot_term env t k "" in
-               (match uu___2 with
-                | (t1, uu___3, g) ->
-                    let uu___4 =
-                      FStar_Syntax_Syntax.mk_GTotal' t1
-                        (FStar_Pervasives_Native.Some u) in
-                    (uu___4, u, g)))
+               let uu___1 = tc_check_tot_or_gtot_term env t k "" in
+               (match uu___1 with
+                | (t1, uu___2, g) ->
+                    let uu___3 = FStar_Syntax_Syntax.mk_GTotal t1 in
+                    (uu___3, u, g)))
       | FStar_Syntax_Syntax.Comp c1 ->
           let head =
             FStar_Syntax_Syntax.fvar c1.FStar_Syntax_Syntax.effect_name
@@ -10086,10 +10079,8 @@ and (check_top_level_let :
                                 "Let binding AFTER tcnorm: %s\n" uu___6
                             else ());
                            (let cres =
-                              FStar_Syntax_Syntax.mk_Total'
-                                FStar_Syntax_Syntax.t_unit
-                                (FStar_Pervasives_Native.Some
-                                   FStar_Syntax_Syntax.U_zero) in
+                              FStar_Syntax_Syntax.mk_Total
+                                FStar_Syntax_Syntax.t_unit in
                             let lb1 =
                               FStar_Syntax_Util.close_univs_and_mk_letbinding
                                 FStar_Pervasives_Native.None
@@ -12664,15 +12655,14 @@ let rec (typeof_tot_or_gtot_term_fastpath :
               let uu___1 =
                 FStar_Ident.lid_equals eff FStar_Parser_Const.effect_Tot_lid in
               if uu___1
-              then FStar_Pervasives_Native.Some FStar_Syntax_Syntax.mk_Total'
+              then FStar_Pervasives_Native.Some FStar_Syntax_Syntax.mk_Total
               else
                 (let uu___3 =
                    FStar_Ident.lid_equals eff
                      FStar_Parser_Const.effect_GTot_lid in
                  if uu___3
                  then
-                   FStar_Pervasives_Native.Some
-                     FStar_Syntax_Syntax.mk_GTotal'
+                   FStar_Pervasives_Native.Some FStar_Syntax_Syntax.mk_GTotal
                  else FStar_Pervasives_Native.None) in
             FStar_Compiler_Util.bind_opt mk_comp
               (fun f ->
@@ -12700,8 +12690,7 @@ let rec (typeof_tot_or_gtot_term_fastpath :
                               FStar_TypeChecker_Env.push_binders env bs1 in
                             universe_of uu___2 tbody3 in
                           let uu___2 =
-                            let uu___3 =
-                              f tbody3 (FStar_Pervasives_Native.Some u) in
+                            let uu___3 = f tbody3 in
                             FStar_Syntax_Util.arrow bs1 uu___3 in
                           FStar_Pervasives_Native.Some uu___2))
         | FStar_Syntax_Syntax.Tm_abs uu___ -> FStar_Pervasives_Native.None

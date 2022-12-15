@@ -57,7 +57,7 @@ VERBOSE_FSTAR=$(BENCHMARK_PRE) $(FSTAR)                     \
 		  $(OTHERFLAGS) $(MAYBE_ADMIT)
 
 # As above, but perhaps with --silent, and perhaps with a prefix (usually for monitoring)
-MY_FSTAR=$(PREF) $(VERBOSE_FSTAR) $(SIL)
+MY_FSTAR=$(RUNLIM) $(VERBOSE_FSTAR) $(SIL)
 
 #--------------------------------------------------------------------------------
 # Default target: verify all FSTAR_FILES

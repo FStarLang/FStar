@@ -434,7 +434,7 @@ let validate_indexed_effect_bind_shape (env:env)
       n_repr_ts
       (U_name u_b)
       (b_b.binder_bv |> S.bv_to_name) in
-    S.gen_bv "g" None (U.arrow [x_a] (S.mk_Total' repr (Some (new_u_univ ())))) |> S.mk_binder,
+    S.gen_bv "g" None (U.arrow [x_a] (S.mk_Total repr)) |> S.mk_binder,
     g in
 
   // return repr type p_repr ?us
@@ -1223,7 +1223,7 @@ Errors.with_ctx (BU.format1 "While checking layered effect definition `%s`" (str
       let signature_ts = let us, t, _ = signature in (us, t) in
       TcUtil.layered_effect_indices_as_binders env r ed.mname signature_ts u (a.binder_bv |> S.bv_to_name) in
     let bs = a::rest_bs in
-    let k = U.arrow bs (U.type_u () |> (fun (t, u) -> S.mk_Total' t (Some (new_u_univ ())))) in  //note the universe of Tot need not be u
+    let k = U.arrow bs (U.type_u () |> (fun (t, u) -> S.mk_Total t)) in  //note the universe of Tot need not be u
     let g = Rel.teq env ty k in
     Rel.force_trivial_guard env g;
     (repr_us, repr_t, SS.close_univ_vars us (k |> N.remove_uvar_solutions env))
@@ -1277,7 +1277,7 @@ Errors.with_ctx (BU.format1 "While checking layered effect definition `%s`" (str
       | _ -> not_an_arrow_error "return" 2 ty r in
     let bs = a::x_a::rest_bs in
     let repr, g = fresh_repr r (Env.push_binders env bs) u_a (a.binder_bv |> S.bv_to_name) in
-    let k = U.arrow bs (S.mk_Total' repr (Some u_a)) in
+    let k = U.arrow bs (S.mk_Total repr) in
     let g_eq = Rel.teq env ty k in
     Rel.force_trivial_guard env (Env.conj_guard g g_eq);
 
@@ -1630,7 +1630,7 @@ Errors.with_ctx (BU.format1 "While checking layered effect definition `%s`" (str
     let act_typ =
       match (SS.compress act.action_typ).n with
       | Tm_arrow (bs, c) ->
-        let ct = U.comp_to_comp_typ c in
+        let ct = Env.comp_to_comp_typ env c in
         if lid_equals ct.effect_name ed.mname
         then
           let repr_ts = let us, t, _ = repr in (us, t) in
@@ -1639,7 +1639,7 @@ Errors.with_ctx (BU.format1 "While checking layered effect definition `%s`" (str
             repr
             (S.as_arg ct.result_typ::ct.effect_args)
             r in
-          let c = S.mk_Total' repr (Some (new_u_univ ())) in
+          let c = S.mk_Total repr in
           U.arrow bs c
         else act.action_typ
       | _ -> act.action_typ in
@@ -1664,7 +1664,7 @@ Errors.with_ctx (BU.format1 "While checking layered effect definition `%s`" (str
           (string_of_lid ed.mname) (string_of_lid act.action_name) in
         let a_tm, _, g_tm = TcUtil.new_implicit_var reason r env t in
         let repr, g = fresh_repr r env u a_tm in
-        U.arrow bs (S.mk_Total' repr (Env.new_u_univ () |> Some)), Env.conj_guard g g_tm
+        U.arrow bs (S.mk_Total repr), Env.conj_guard g g_tm
       | _ -> raise_error (Errors.Fatal_ActionMustHaveFunctionType,
         BU.format3 "Unexpected non-function type for action %s:%s (%s)"
           (string_of_lid ed.mname) (string_of_lid act.action_name) (Print.term_to_string act_typ)) r in
@@ -1823,7 +1823,7 @@ Errors.with_ctx (BU.format1 "While checking effect definition `%s`" (string_of_l
     //generalize the universes in bs
     //bs are closed with us and closed
     let us, bs =
-      let tmp_t = U.arrow bs (S.mk_Total' S.t_unit (U_zero |> Some)) in  //create a temporary bs -> Tot unit
+      let tmp_t = U.arrow bs (S.mk_Total S.t_unit) in  //create a temporary bs -> Tot unit
       let us, tmp_t = Gen.generalize_universes env0 tmp_t in
       us, tmp_t |> U.arrow_formals |> fst |> SS.close_binders in
 
@@ -2103,7 +2103,7 @@ Errors.with_ctx (BU.format1 "While checking effect definition `%s`" (string_of_l
           let act_typ =
             match (SS.compress act.action_typ).n with
             | Tm_arrow (bs, c) ->
-              let c = U.comp_to_comp_typ c in
+              let c = Env.comp_to_comp_typ env c in
               if lid_equals c.effect_name ed.mname
               then U.arrow bs (S.mk_Total (mk_repr' c.result_typ (fst (List.hd c.effect_args))))
               else act.action_typ

@@ -990,18 +990,18 @@ let t_apply (uopt:bool) (only_match:bool) (tc_resolved_uvars:bool) (tm:term) : t
 
 // returns pre and post
 let lemma_or_sq (c : comp) : option (term * term) =
-    let ct = U.comp_to_comp_typ_nouniv c in
-    if lid_equals ct.effect_name PC.effect_Lemma_lid then
-        let pre, post = match ct.effect_args with
+    let eff_name, res, args = U.comp_eff_name_res_and_args c in
+    if lid_equals eff_name PC.effect_Lemma_lid then
+        let pre, post = match args with
                         | pre::post::_ -> fst pre, fst post
                         | _ -> failwith "apply_lemma: impossible: not a lemma"
         in
         // Lemma post is thunked
         let post = U.mk_app post [S.as_arg U.exp_unit] in
         Some (pre, post)
-    else if U.is_pure_effect ct.effect_name
-         || U.is_ghost_effect ct.effect_name then
-        map_opt (U.un_squash ct.result_typ) (fun post -> (U.t_true, post))
+    else if U.is_pure_effect eff_name
+         || U.is_ghost_effect eff_name then
+        map_opt (U.un_squash res) (fun post -> (U.t_true, post))
     else
         None
 

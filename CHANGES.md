@@ -14,6 +14,13 @@ Guidelines for the changelog:
 # Version 0.9.7.0
 
 ## Tactics & Reflection
+  * PR https://github.com/FStarLang/FStar/pull/2785 changes the reflection syntax
+    for computation types, by removing universe field from the Total and GTotal
+    comps. It also moves the decreases clause to the general C_Eff case.
+
+    This is a breaking change for the reflection clients, but the regressions should
+    only be syntactic.
+
   * As a better fix for Bug2635, F* now has a memoizing core typechecker for total
     (including ghost terms that are total) terms. The unification solutions, including
     those computed in the tactics engine, are typechecked using this core typechecker.
@@ -257,6 +264,18 @@ Guidelines for the changelog:
      provided (using UInt128).
 
 ## Syntax
+
+   * PR #2727 allows for custom unicode operators. As long as a
+     character belongs to the ["Math Symbol" unicode
+     category](https://www.compart.com/unicode/category/sm), it is
+     seen as a right-associative binary operator. Example:
+	 ```fstar
+	 let ( ∈ ) = List.Tot.memP
+	 let _ = assert_norm (3 ∈ [1;2;3;4])
+	 ```
+	 
+	 See `tests/micro-benchmarks/UnicodeOperators.fst` for more
+     examples.
     
    * PR #2745 adds support for `if` operators: the syntax `if* a then
      ...` (with `*` an operator) is now accepted and desugared as

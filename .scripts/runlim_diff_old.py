@@ -1,3 +1,9 @@
+#
+# NOTE: This file may soon be removed from the repository,
+#       superseded by runlim_diff.py that provides an easier
+#       API to compare two runlim runs
+#
+
 from array import array
 import re
 
@@ -162,4 +168,8 @@ def main():
     generate_scatter_plot(sorted_time_lines, file1, file2, "time")
 
 
+#
+# SEE THE NOTE AT THE BEGINNING OF THE FILE
+#
+    
 main()

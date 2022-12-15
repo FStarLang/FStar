@@ -708,21 +708,18 @@ and visit_br (ff : term -> Tac unit) (b:branch) : Tac unit =
 and visit_comp (ff : term -> Tac unit) (c : comp) : Tac unit =
   let cv = inspect_comp c in
   match cv with
-  | C_Total ret _ decr ->
-      visit_tm ff ret;
-      iter (visit_tm ff) decr
-  | C_GTotal ret _ decr ->
-      visit_tm ff ret;
-      iter (visit_tm ff) decr
+  | C_Total ret -> visit_tm ff ret
+  | C_GTotal ret -> visit_tm ff ret
 
   | C_Lemma pre post pats ->
       visit_tm ff pre;
       visit_tm ff post;
       visit_tm ff pats
 
-  | C_Eff us eff res args ->
+  | C_Eff us eff res args decrs ->
       visit_tm ff res;
-      iter (fun (a, q) -> visit_tm ff a) args
+      iter (fun (a, q) -> visit_tm ff a) args;
+      iter (visit_tm ff) decrs
 
 /// Decides whether a top-level name [nm] syntactically
 /// appears in the term [t].
@@ -958,11 +955,17 @@ let rec new_args_for_smt_attrs (env:env) (l:list argv) (ty:typ) : Tac (list argv
       ) else (arg, aqualv)
     in
     begin
-    match inspect_comp comp with
-    | C_Total ty2 _ _ ->
-      let tl_argv, tl_terms = new_args_for_smt_attrs env tl ty2 in
-      new_hd::tl_argv, (if needs_smt then arg::tl_terms else tl_terms)
-    | _ -> fail "computation type not supported in definition of slprops"
+    let ty2 =
+      match inspect_comp comp with
+      | C_Total ty2 -> ty2
+      | C_Eff _ eff_name ty2 _ _ ->
+        if eff_name = ["Prims"; "Tot"]
+        then ty2
+        else fail "computation type not supported in definition of slprops"
+      | _ -> fail "computation type not supported in definition of slprops" in
+      
+    let tl_argv, tl_terms = new_args_for_smt_attrs env tl ty2 in
+    new_hd::tl_argv, (if needs_smt then arg::tl_terms else tl_terms)
     end
   | [], Tv_FVar fv -> [], []
   | _ -> fail "should not happen. Is an slprop partially applied?"
