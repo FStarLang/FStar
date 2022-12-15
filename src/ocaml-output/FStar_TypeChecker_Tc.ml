@@ -4510,7 +4510,9 @@ let (tc_decls :
                FStar_Profiling.profile
                  (fun uu___4 -> process_one_decl acc se) uu___3
                  "FStar.TypeChecker.Tc.process_one_decl" in
-             ((let uu___4 = FStar_Options.profile_group_by_decls () in
+             ((let uu___4 =
+                 (FStar_Options.profile_group_by_decls ()) ||
+                   (FStar_Options.timing ()) in
                if uu___4
                then
                  let tag =

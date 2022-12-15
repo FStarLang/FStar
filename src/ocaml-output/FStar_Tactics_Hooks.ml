@@ -1918,7 +1918,8 @@ let (splice :
                                         FStar_Syntax_Print.sigelt_to_string
                                         sigelts in
                                     FStar_Compiler_Util.print1
-                                      "splice: got decls = %s\n" uu___11
+                                      "splice: got decls = {\n\n%s\n\n}\n"
+                                      uu___11
                                   else ());
                                  (let sigelts1 =
                                     FStar_Compiler_Effect.op_Bar_Greater
