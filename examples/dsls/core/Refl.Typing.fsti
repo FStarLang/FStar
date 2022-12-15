@@ -1114,3 +1114,22 @@ type fstar_top_env = g:fstar_env {
 //
 
 type dsl_tac_t = g:fstar_top_env -> T.Tac (r:(R.term & R.typ){typing g (fst r) (snd r)})
+
+
+//
+// THIS IS A STOPGAP
+//
+// Used in mini steel where we don't have implicit
+//   arguments or universe instantiations
+//
+// And so we cannot correctly elaborate to a Prims.eq2
+//   which requires both of these
+//
+// SHOULD GO AWAY
+//
+// When we add both these to mini steel syntax
+//
+unfold
+let meq2 (a:Type0) (x y:a) = Prims.eq2 x y
+
+
