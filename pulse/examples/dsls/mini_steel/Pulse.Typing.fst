@@ -17,10 +17,18 @@ open Pulse.Elaborate.Pure
 let tm_bool : pure_term = Tm_FVar bool_lid
 let tm_true : pure_term = Tm_Constant (Bool true)
 let tm_false : pure_term = Tm_Constant (Bool false)
+
+//
+// Until we have implicits and universe instantiations,
+//   use meq2 from RT
+//
+// SHOULD GO AWAY
+//
+let eq2_lid = ["Refl"; "Typing"; "meq2"]
 let mk_eq2 (t:pure_term) (e0 e1:pure_term) 
   : pure_term
   = Tm_PureApp
-         (Tm_PureApp (Tm_PureApp (Tm_FVar R.eq2_qn) t)
+         (Tm_PureApp (Tm_PureApp (Tm_FVar eq2_lid) t)
                       e0) e1
 let return_comp (u:universe) (t:pure_term) (e:pure_term)
   : pure_comp 
