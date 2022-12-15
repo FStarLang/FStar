@@ -483,6 +483,7 @@ let try_frame_pre (#f:RT.fstar_top_env)
     (| C_ST s'', t_typing |)
 #pop-options
 
+#push-options "--z3rlimit_factor 2"
 let frame_empty (f:RT.fstar_top_env)
                 (g:env)
                 (pre:pure_term)
@@ -491,12 +492,12 @@ let frame_empty (f:RT.fstar_top_env)
                 (ty:pure_term) 
                 (ut:universe_of f g ty u)
                 (t:term)
-                (c:pure_comp_st{ comp_pre c == Tm_Emp })
-                (d:src_typing f g t c)
+                (c0:pure_comp_st{ comp_pre c0 == Tm_Emp })
+                (d:src_typing f g t c0)
   : T.Tac (c:pure_comp_st { comp_pre c == pre} &
            src_typing f g t c)
-  = let d = T_Frame g t c pre pre_typing d in
-    let c = add_frame c pre in
+  = let d = T_Frame g t c0 pre pre_typing d in
+    let c = add_frame c0 pre in
     let C_ST s = c in
     let d : src_typing f g t c = d in
     let s' = { s with pre = pre } in
@@ -505,7 +506,6 @@ let frame_empty (f:RT.fstar_top_env)
     let pre_typing = check_vprop f g (comp_pre c) in
     let post_typing = check_vprop f ((x, Inl (comp_res c))::g) 
                                     (open_term (comp_post c) x) in
-    assume (comp_res c == comp_res c');
     let eq
       : st_equiv f g c c'
       = ST_VPropEquiv g c c' x
@@ -515,7 +515,8 @@ let frame_empty (f:RT.fstar_top_env)
                       (VE_Refl _ _)
     in
     (| c', T_Equiv _ _ _ _ d eq |)
-      
+#pop-options
+
 #push-options "--query_stats --fuel 2 --ifuel 1 --z3rlimit_factor 10"
 let rec check (f:RT.fstar_top_env)
               (g:env)
