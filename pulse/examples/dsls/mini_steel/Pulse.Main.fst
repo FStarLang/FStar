@@ -33,4 +33,4 @@ open Steel.ST.Util
 
 open Pulse.Steel.Wrapper
 
-%splice_t[foo] (main (Tm_Constant (Bool true)) Tm_Emp)
+// %splice_t[foo] (main (Tm_Constant (Bool true)) Tm_Emp)

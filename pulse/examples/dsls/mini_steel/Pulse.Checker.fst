@@ -116,12 +116,9 @@ let rec readback_ty (t:R.term)
      
     let c_view = inspect_comp c in
     (match c_view with
-     | C_Total c_t u decrs ->
-      assume (inspect_universe u == R.Uv_Unk);
-      assume (decrs == []);
-
+     | C_Total c_t ->
       let? b_ty' = readback_ty bv_view.bv_sort in
-      let? c' = readback_comp u c_t in
+      let? c' = readback_comp c_t in
       Some (Tm_Arrow b_ty' c' <: ty:pure_term{ elab_term ty == Some t})
      | _ -> None)
 
@@ -161,7 +158,7 @@ let rec readback_ty (t:R.term)
 
   | Tv_Unknown -> T.fail "readbackty: unexpected Tv_Unknown"
 
-and readback_comp (u:R.universe) (t:R.term)
+and readback_comp (t:R.term)
   : T.Tac (option (c:comp{ elab_comp c == Some t})) =
 
   let is_stt_opt = is_stt t in
@@ -508,7 +505,8 @@ let frame_empty (f:RT.fstar_top_env)
     let pre_typing = check_vprop f g (comp_pre c) in
     let post_typing = check_vprop f ((x, Inl (comp_res c))::g) 
                                     (open_term (comp_post c) x) in
-    let eq 
+    assume (comp_res c == comp_res c');
+    let eq
       : st_equiv f g c c'
       = ST_VPropEquiv g c c' x
                       pre_typing
