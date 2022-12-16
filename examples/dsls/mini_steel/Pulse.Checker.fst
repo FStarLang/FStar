@@ -479,9 +479,13 @@ let try_frame_pre (#f:RT.fstar_top_env)
     let pre_typing = check_vprop f g (comp_pre c') in
     let post_typing = check_vprop f g' (open_term (comp_post c') x) in
     let (| u, res_typing |) = check_universe f g (comp_res c') in
-    let st_equiv = ST_VPropEquiv g c' c'' x pre_typing _ res_typing post_typing ve ve' in
-    let t_typing = T_Equiv _ _ _ _ t_typing st_equiv in
-    (| C_ST s'', t_typing |)
+    if u <> comp_u c' 
+    then T.fail "Unexpected universe"
+    else (
+      let st_equiv = ST_VPropEquiv g c' c'' x pre_typing res_typing post_typing ve ve' in
+      let t_typing = T_Equiv _ _ _ _ t_typing st_equiv in
+      (| C_ST s'', t_typing |)
+    )
 #pop-options
 
 #push-options "--z3rlimit_factor 2"
@@ -506,18 +510,22 @@ let frame_empty (f:RT.fstar_top_env)
     let x = fresh g in
     let pre_typing = check_vprop f g (comp_pre c) in
     let (| u, res_typing |) = check_universe f g (comp_res c) in
-    let post_typing = check_vprop f ((x, Inl (comp_res c))::g) 
-                                    (open_term (comp_post c) x) in
-    let eq
-      : st_equiv f g c c'
-      = ST_VPropEquiv g c c' x
-                      pre_typing
-                      _ res_typing
-                      post_typing
-                      (VE_Unit g pre)
-                      (VE_Refl _ _)
-    in
-    (| c', T_Equiv _ _ _ _ d eq |)
+    if u <> comp_u c
+    then T.fail "Unexpected universe"
+    else (
+      let post_typing = check_vprop f ((x, Inl (comp_res c))::g) 
+                                      (open_term (comp_post c) x) in
+      let eq
+        : st_equiv f g c c'
+        = ST_VPropEquiv g c c' x
+                        pre_typing
+                        res_typing
+                        post_typing
+                        (VE_Unit g pre)
+                        (VE_Refl _ _)
+      in
+      (| c', T_Equiv _ _ _ _ d eq |)
+    )
 #pop-options
 
 #push-options "--query_stats --fuel 2 --ifuel 1 --z3rlimit_factor 10"

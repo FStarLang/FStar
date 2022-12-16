@@ -73,13 +73,13 @@ let mk_frame (u:universe)
         [(frame, R.Q_Explicit)])
       [(t, R.Q_Explicit)]
 
-let mk_sub (u:universe)
+let mk_sub (u:R.universe)
            (ty:R.term)
            (pre1 pre2: R.term)
            (post1 post2: R.term)
            (t:R.term) 
   : R.term
-  = let head = subsumption_univ_inst (elab_universe u) in
+  = let head = subsumption_univ_inst u in
     R.mk_app
      (R.mk_app 
       (R.mk_app
@@ -161,7 +161,8 @@ let rec elab_src_typing (#f:RT.fstar_top_env)
       let C_ST c1 = c1 in
       let C_ST c2 = c2 in
       let ty = elab_pure c1.res in
-      mk_sub c1.u ty
+      mk_sub (elab_universe c1.u)
+             ty
              (elab_pure c1.pre)
              (elab_pure c2.pre)
              (mk_abs ty (elab_pure c1.post))

@@ -330,8 +330,7 @@ and st_equiv (f:RT.fstar_top_env) : env -> pure_comp -> pure_comp -> Type =
       c2:pure_comp_st { comp_res c1 == comp_res c2 } -> 
       x:var { None? (lookup g x) } ->
       tot_typing f g (comp_pre c1) Tm_VProp ->
-      u:universe -> 
-      tot_typing f g (comp_res c1) (Tm_Type u) ->
+      tot_typing f g (comp_res c1) (Tm_Type (comp_u c1)) ->
       tot_typing f ((x, Inl (comp_res c1))::g) (open_term (comp_post c1) x) Tm_VProp ->
       vprop_equiv f g (comp_pre c1) (comp_pre c2) ->
       vprop_equiv f ((x, Inl (comp_res c1))::g) 
