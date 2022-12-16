@@ -11,6 +11,7 @@ open Pulse.Elaborate
 open Pulse.Soundness.Common
 
 module STEquiv = Pulse.Soundness.STEquiv
+module Frame= Pulse.Soundness.Frame
 
 assume
 val equiv_beta (g:R.env) 
@@ -176,100 +177,6 @@ let elab_bind_typing (f:stt_env)
     d
        
 
-(*** Soundness of frame elaboration *)
-
-
-#push-options "--fuel 2 --ifuel 1 --query_stats"
-let inst_frame_t #u #g #head
-                 (head_typing: RT.typing g head (frame_type u))
-                 (#t:_)
-                 (t_typing: RT.typing g t (RT.tm_type u))
-  : GTot (RT.typing g (R.mk_app head [(t, R.Q_Implicit)]) (frame_type_t u t))
-  = admit()
-
-let inst_frame_pre #u #g #head #t
-                 (head_typing: RT.typing g head (frame_type_t u t))
-                 (#pre:_)
-                 (pre_typing: RT.typing g pre vprop_tm)
-  : GTot (RT.typing g (R.mk_app head [(pre, R.Q_Implicit)]) (frame_type_t_pre u t pre))
-  = admit()
-
-let inst_frame_post #u #g #head #t #pre
-                    (head_typing: RT.typing g head (frame_type_t_pre u t pre))
-                    (#post:_)
-                    (post_typing: RT.typing g post (mk_tot_arrow1 (t, R.Q_Explicit) vprop_tm))
-  : GTot (RT.typing g (R.mk_app head [(post, R.Q_Implicit)]) (frame_type_t_pre_post u t pre post))
-  = admit()
-
-let inst_frame_frame #u #g #head #t #pre #post
-                     (head_typing: RT.typing g head (frame_type_t_pre_post u t pre post))
-                     (#frame:_)
-                     (frame_typing: RT.typing g frame vprop_tm)
-  : GTot (RT.typing g (R.mk_app head [(frame, R.Q_Explicit)]) (frame_type_t_pre_post_frame u t pre post frame))
-  = admit()
-
-let inst_frame_comp #u #g #head #t #pre #post #frame
-                    (head_typing: RT.typing g head (frame_type_t_pre_post_frame u t pre post frame))
-                    (#f:_)
-                    (f_typing:RT.typing g f (mk_stt_app u [t; pre; post]))
-  : GTot (RT.typing g (R.mk_app head [(f, R.Q_Explicit)]) (frame_res u t pre post frame))
-  = admit()
-
-let elab_frame (c:pure_comp { C_ST? c }) (frame:pure_term) (e:R.term) =
-  let C_ST s = c in
-  Elaborate.mk_frame s.u (elab_pure s.res) (elab_pure s.pre) (elab_comp_post c) (elab_pure frame) e
-
-(* stt t pre (fun x -> (fun x -> post) x * frame)   ~ 
-   stt t pre (fun x -> post * frame) *)
-let equiv_frame_post (g:R.env) 
-                     (u:R.universe)
-                     (t:R.term)
-                     (pre:R.term) 
-                     (post:pure_term) // ln 1
-                     (frame:R.term) //ln 0
-  : GTot (RT.equiv g (mk_stt_app u [t; pre; mk_abs t (mk_star (R.mk_app (mk_abs t (elab_pure post))
-                                                                        [bound_var 0, R.Q_Explicit]) frame)])
-                     (mk_stt_app u [t; pre; mk_abs t (mk_star (elab_pure post) frame)]))
-  = admit()
-
-let elab_frame_typing (f:stt_env)
-                      (g:env)
-                      (e:R.term)
-                      (c:ln_comp)
-                      (frame:pure_term)
-                      (frame_typing: tot_typing f g frame Tm_VProp)
-                      (e_typing: RT.typing (extend_env_l f g) e (elab_pure_comp c))
-  : GTot (RT.typing (extend_env_l f g) (elab_frame c frame e) (elab_pure_comp (add_frame c frame)))
-  = let frame_typing = tot_typing_soundness frame_typing in
-    let rg = extend_env_l f g in
-    let u = elab_universe (comp_u c) in
-    let head = frame_univ_inst u in
-    assert (RT.lookup_fvar_uinst rg frame_fv [u] == Some (frame_type u));
-    let head_typing : RT.typing _ _ (frame_type u) = RT.T_UInst rg frame_fv [u] in
-    let (| _, c_typing |) = RT.type_correctness _ _ _ e_typing in
-    let t_typing, pre_typing, post_typing = inversion_of_stt_typing _ _ _ _ c_typing in
-    let t = elab_pure (comp_res c) in
-    let t_typing : RT.typing rg t (RT.tm_type u) = t_typing in
-    let d : RT.typing (extend_env_l f g)
-                      (elab_frame c frame e)
-                      (frame_res u t (elab_pure (comp_pre c))
-                                     (elab_comp_post c)
-                                     (elab_pure frame)) =
-        inst_frame_comp
-          (inst_frame_frame
-            (inst_frame_post
-                (inst_frame_pre 
-                  (inst_frame_t head_typing t_typing)
-                 pre_typing)
-             post_typing)
-           frame_typing)
-          e_typing
-    in
-    RT.T_Sub _ _ _ _ d RT.(ST_Equiv _ _ _ (equiv_frame_post rg u t 
-                                                         (elab_pure (Tm_Star (comp_pre c) frame))
-                                                         (comp_post c)
-                                                         (elab_pure frame)))
-#pop-options    
     
 #push-options "--query_stats --fuel 2 --ifuel 2 --z3rlimit_factor 10"
 let rec soundness (f:stt_env)
@@ -335,7 +242,7 @@ let rec soundness (f:stt_env)
     | T_Frame _ e c frame frame_typing e_typing ->
       let r_e_typing = soundness _ _ _ _ e_typing in
       assume (ln_c c);
-      elab_frame_typing f g _ _ frame frame_typing r_e_typing
+      Frame.elab_frame_typing f g _ _ frame frame_typing r_e_typing
 
     | T_Equiv _ e c c' e_typing equiv ->
       assume (ln_c c /\ ln_c c');
