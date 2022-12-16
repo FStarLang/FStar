@@ -858,8 +858,7 @@ let st_equiv_soundness (f:stt_env)
         RT.T_PropIrrelevance _ _ _ d 
                              (stt_vprop_post_equiv_is_prop r_res_typing abs_post0_typing abs_post1_typing)
     in
-    let d = 
-      inst_sub_stt r_res_typing 
+    inst_sub_stt r_res_typing 
                  (tot_typing_soundness pre_typing)
                  (tot_typing_soundness (fst (vprop_equiv_typing _ _ _ _ eq_pre) pre_typing))
                  abs_post0_typing
@@ -867,10 +866,6 @@ let st_equiv_soundness (f:stt_env)
                  pre_equiv
                  post_equiv
                  d_r
-    in
-    assume (comp_u c0 == comp_u c1);
-    d
-    
 
 let mk_t_abs (f:stt_env) (g:env)
              (#u:universe)
