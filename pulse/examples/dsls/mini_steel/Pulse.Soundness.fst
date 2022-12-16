@@ -102,7 +102,7 @@ let rec soundness (f:stt_env)
       let e_typing = soundness _ _ _ _ e_typing in
       Return.elab_return_noeq_typing t_typing e_typing
       
-    | _ -> admit()
+    // | T_If  -> admit()
 
 let soundness_lemma
   (f:stt_env)

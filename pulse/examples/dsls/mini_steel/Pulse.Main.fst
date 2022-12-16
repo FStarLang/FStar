@@ -12,7 +12,7 @@ open Pulse.Soundness
 
 let main (t:term) (pre:pure_term) : RT.dsl_tac_t =
   fun g ->
-  match check_top_level_environment g with
+  match Pulse.Soundness.Common.check_top_level_environment g with
   | None -> T.fail "pulse main: top-level environment does not include stt at the expected types"
   | Some g ->
     let (| ty, pre_typing |) = check_tot g [] pre in

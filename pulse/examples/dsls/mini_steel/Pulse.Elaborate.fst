@@ -147,14 +147,14 @@ let rec elab_src_typing (#f:RT.fstar_top_env)
       let post = elab_pure c.post in
       mk_frame c.u ty pre (mk_abs ty post) (elab_pure frame) e
       
-    | T_If _ b e1 e2 _c hyp _ e1_typing e2_typing ->
-      let b = elab_pure b in
-      let e1 = elab_src_typing e1_typing in
-      let e2 = elab_src_typing e2_typing in
-      let open R in
-      pack_ln (Tv_Match b None 
-                  [(Pat_Constant C_True, e1);
-                   (Pat_Constant C_False, e2)])
+    // | T_If _ b e1 e2 _c hyp _ e1_typing e2_typing ->
+    //   let b = elab_pure b in
+    //   let e1 = elab_src_typing e1_typing in
+    //   let e2 = elab_src_typing e2_typing in
+    //   let open R in
+    //   pack_ln (Tv_Match b None 
+    //               [(Pat_Constant C_True, e1);
+    //                (Pat_Constant C_False, e2)])
 
     | T_Equiv _ _ c1 c2 e_typing _ ->
       let e = elab_src_typing e_typing in
@@ -179,9 +179,9 @@ let rec elab_pure_equiv (#f:RT.fstar_top_env)
           (decreases d)
   = match d with
     | T_Tot _ _ _ d -> ()
-    | T_If _ _ _ _ _ _ _ d1 d2 -> 
-      elab_pure_equiv d1; 
-      elab_pure_equiv d2      
+    // | T_If _ _ _ _ _ _ _ d1 d2 -> 
+    //   elab_pure_equiv d1; 
+    //   elab_pure_equiv d2      
 #pop-options
 
 

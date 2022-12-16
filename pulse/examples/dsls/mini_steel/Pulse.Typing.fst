@@ -274,17 +274,18 @@ type src_typing (f:RT.fstar_top_env) : env -> term -> pure_comp -> Type =
       bind_comp f g x c1 c2 c ->
       src_typing f g (Tm_Bind (comp_res c1) e1 e2) c
 
-  | T_If:
-      g:env ->
-      b:pure_term -> 
-      e1:term ->
-      e2:term -> 
-      c:pure_comp ->
-      hyp:var { None? (lookup g hyp) } ->
-      tot_typing f g b tm_bool ->
-      src_typing f ((hyp, Inr (tm_bool, b, tm_true)) :: g) e1 c ->
-      src_typing f ((hyp, Inr (tm_bool, b, tm_false)) :: g) e2 c ->
-      src_typing f g (Tm_If b e1 e2) c
+  // Not handling if yet
+  // | T_If:
+  //     g:env ->
+  //     b:pure_term -> 
+  //     e1:term ->
+  //     e2:term -> 
+  //     c:pure_comp ->
+  //     hyp:var { None? (lookup g hyp) } ->
+  //     tot_typing f g b tm_bool ->
+  //     src_typing f ((hyp, Inr (tm_bool, b, tm_true)) :: g) e1 c ->
+  //     src_typing f ((hyp, Inr (tm_bool, b, tm_false)) :: g) e2 c ->
+  //     src_typing f g (Tm_If b e1 e2) c
 
   | T_Frame:
       g:env ->
@@ -337,13 +338,6 @@ and st_equiv (f:RT.fstar_top_env) : env -> pure_comp -> pure_comp -> Type =
                     (open_term (comp_post c1) x)
                     (open_term (comp_post c2) x) ->      
       st_equiv f g c1 c2
-
-  // | ST_ElabEquiv:
-  //     g:env ->
-  //     c1:pure_comp_st ->
-  //     c2:pure_comp_st ->
-  //     RT.equiv (extend_env_l f g) (elab_pure_comp c1) (elab_pure_comp c2) ->
-  //     st_equiv f g c1 c2
 
 
 (* this requires some metatheory on Refl.Typing
@@ -447,8 +441,3 @@ let rec vprop_equiv_typing (f:_) (g:_) (t0 t1:pure_term) (v:vprop_equiv f g t0 t
           star_typing tt0 (star_typing tt1 tt2)
       in
       fwd, bk
-
-    // | VE_Ex g x ty t0 t1 _
-    // | VE_Fa g x ty t0 t1 _ ->
-    //   //these require inversion of typing on abstractions
-    //   admit()
