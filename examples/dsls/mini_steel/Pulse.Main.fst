@@ -65,8 +65,8 @@ Tm_Abs
              (Tm_BVar 2))
         )
         (Tm_STApp
-           (Tm_STApp
-              (Tm_STApp
+           (Tm_PureApp
+              (Tm_PureApp
                  (Tm_FVar write_lid)
                  (Tm_BVar 2)
               )
