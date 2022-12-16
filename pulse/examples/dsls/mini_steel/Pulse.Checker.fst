@@ -196,7 +196,8 @@ let check_universe (f0:RT.fstar_top_env) (g:env) (t:term)
   : T.Tac (_:(u:universe & universe_of f0 g t u) { is_pure_term t })
   = let f = extend_env_l f0 g in
     match elab_term t with
-    | None -> T.fail "Not a syntactically pure term"
+    | None ->
+      T.fail ("Not a syntactically pure term: " ^ term_to_string t)
     | Some rt ->
       let ru_opt = RTB.universe_of f rt in
       match ru_opt  with
@@ -220,7 +221,8 @@ let check_tot_univ (f:RT.fstar_top_env) (g:env) (t:term)
               src_typing f g t (C_Tot ty)) { is_pure_term t } )
   = let fg = extend_env_l f g in
     match elab_term t with
-    | None -> T.fail "Not a syntactically pure term"
+    | None ->
+      T.fail ("Not a syntactically pure term: " ^ term_to_string t)
     | Some rt -> 
       match tc_meta_callback fg rt with
       | None -> T.fail "Not typeable"
@@ -236,7 +238,8 @@ let check_tot (f:RT.fstar_top_env) (g:env) (t:term)
               src_typing f g t (C_Tot ty)) { is_pure_term t })
   = let fg = extend_env_l f g in
     match elab_term t with
-    | None -> T.fail "Not a syntactically pure term"
+    | None ->
+      T.fail ("Not a syntactically pure term: " ^ term_to_string t)
     | Some rt -> 
       match tc_meta_callback fg rt with
       | None -> T.fail "Not typeable"

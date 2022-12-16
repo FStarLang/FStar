@@ -43,7 +43,7 @@ type term =
   | Tm_VProp    : term
   | Tm_If       : b:term -> then_:term -> else_:term -> term
 
-and comp = 
+and comp =
   | C_Tot : term -> comp
   | C_ST  : st_comp -> comp
 
@@ -280,3 +280,35 @@ let rec close_open_inverse (t:term) (x:var { ~(x `Set.mem` freevars t) } )
   : Lemma (ensures close_term (open_term t x) x== t)
           (decreases t)
   = admit()
+
+let constant_to_string (c:constant) : string =
+  match c with
+  | Unit -> "()"
+  | Bool b -> string_of_bool b
+  | Int n -> string_of_int n
+
+let rec term_to_string (t:term) : Tot string (decreases t) =
+  match t with
+  | Tm_BVar i -> "@" ^ (string_of_int i)
+  | Tm_Var v -> "#" ^ (string_of_int v)
+  | Tm_FVar l -> String.concat "." l
+  | Tm_Constant c -> constant_to_string c
+  | Tm_Abs t pre_hint body ->
+    "(" ^
+    "fun (_:" ^
+    (term_to_string t) ^ ")_(" ^
+    (term_to_string pre_hint) ^ ") -> " ^
+    (term_to_string body) ^
+    ")"
+  | Tm_PureApp head arg ->
+    "(" ^
+    (term_to_string head) ^ " " ^ (term_to_string arg) ^
+    ")"
+  | Tm_Let _ _ _ -> "<Tm_Let>"
+  | Tm_STApp head arg ->
+    "(" ^
+    (term_to_string head) ^ " " ^ (term_to_string arg) ^
+    ")"
+  | Tm_Bind _ _ _ -> "<Tm_Bind>"
+  | Tm_Emp -> "emp"
+  | _ -> "<term>"
