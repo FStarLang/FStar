@@ -94,7 +94,7 @@ let mk_sub (u:R.universe)
           [(post2, R.Q_Explicit)])
         [(t, R.Q_Explicit)])
       [(`(), R.Q_Explicit)])
-     [(`(), R.Q_Explicit)]      
+     [(`(), R.Q_Explicit)]
 
 let elab_bind (c1 c2:pure_comp_st) (e1 e2:R.term) =
   let C_ST c1 = c1 in
