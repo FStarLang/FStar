@@ -131,7 +131,7 @@ let rec elab_src_typing (#f:RT.fstar_top_env)
       mk_return u (elab_pure ty) (elab_pure t)
 
     | T_ReturnNoEq _ _ ty u t_typing _ ->
-      mk_return u (elab_pure ty) (elab_src_typing t_typing)
+      mk_return_noeq u (elab_pure ty) (elab_src_typing t_typing)
 
     | T_Bind _ e1 e2 c1 c2 x c e1_typing t_typing e2_typing _bc ->
       let e1 = elab_src_typing e1_typing in
