@@ -19,11 +19,18 @@ type universe =
 
 (* locally nameless.
    term is currently an eqtype. That makes some experiments a bit easier.
-   but it doesn't have to be. and if we include Embed it won't be. 
+   but it doesn't have to be. 
+   
+   if we include Embed it won't be. 
    So, we should remove reliance on this thing being an eqtype soon.
+   But, adding a Tm_Embed poses some other difficulties too, 
+   
+     e.g., opening/closing a term with embedded terms in it becomes
+           problematic since that makes opening/closing mutually
+           recursive with elaboration
 *)
 type term =
-(*  | Embed  of R.term *)
+  // | Tm_Embed    : R.term -> term // a host term included as is in Pulse
   | Tm_BVar     : i:index -> term
   | Tm_Var      : v:var -> term
   | Tm_FVar     : l:R.name -> term
@@ -67,6 +74,7 @@ let freevars_comp (c:comp) : Set.set var =
 
 let rec ln' (t:term) (i:int) =
   match t with
+  // | Tm_Embed t -> RT.ln' t i
   | Tm_BVar j -> j <= i
   | Tm_Var _
   | Tm_FVar _
@@ -124,6 +132,8 @@ let ln_c (c:comp) = ln'_comp c (-1)
 let rec open_term' (t:term) (v:term) (i:index)
   : Tot term (decreases t)
   = match t with
+    // | Tm_Embed t -> 
+    //   Tm_Embed (RT.open_or_close_term' t ??? *)
     | Tm_BVar j -> if i = j then v else t
 
     | Tm_Var _
