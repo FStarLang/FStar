@@ -87,7 +87,11 @@ val lookup_fvar_extend_env (g:env) (x:fv) (us:universes) (y:var) (ty:term)
 let as_binder (x:var) (ty:term) =
   mk_binder "x" x ty Q_Explicit
 
-let bv_index (x:bv) : int = (inspect_bv x).bv_index
+let bv_index (x:bv)
+  : var
+  = let n = (inspect_bv x).bv_index in
+    assume (n >= 0); //TODO: fix lib
+    n
 
 let binder_sort (b:binder) =
   let bv, _ = inspect_binder b in 
@@ -140,7 +144,7 @@ and binder_offset_pattern (p:pattern)
       binder_offset_patterns pats
 
 let rec open_or_close_term' (t:term) (v:open_or_close) (i:nat)
-  : GTot term (decreases t)
+  : Tot term (decreases t)
   = match inspect_ln t with
     | Tv_UInst _ _
     | Tv_FVar _
@@ -227,12 +231,12 @@ let rec open_or_close_term' (t:term) (v:open_or_close) (i:nat)
                              b)
 
 and open_or_close_bv' (b:bv) (v:open_or_close) (i:nat)
-  : GTot bv (decreases b)
+  : Tot bv (decreases b)
   = let bv = inspect_bv b in
     pack_bv ({bv with bv_sort = open_or_close_term' bv.bv_sort v i})
 
 and open_or_close_binder' (b:binder) (v:open_or_close) (i:nat)
-  : GTot binder (decreases b)
+  : Tot binder (decreases b)
   = let bndr  = inspect_binder b in
     let bv, (q, attrs) = bndr in
     pack_binder (open_or_close_bv' bv v i) 
@@ -240,7 +244,7 @@ and open_or_close_binder' (b:binder) (v:open_or_close) (i:nat)
                 (open_or_close_terms' attrs v i)
 
 and open_or_close_comp' (c:comp) (v:open_or_close) (i:nat)
-  : GTot comp (decreases c)
+  : Tot comp (decreases c)
   = match inspect_comp c with
     | C_Total t ->
       pack_comp (C_Total (open_or_close_term' t v i))
@@ -260,19 +264,19 @@ and open_or_close_comp' (c:comp) (v:open_or_close) (i:nat)
                        (open_or_close_terms' decrs v i))
 
 and open_or_close_terms' (ts:list term) (v:open_or_close) (i:nat)
-  : GTot (list term) (decreases ts)
+  : Tot (list term) (decreases ts)
   = match ts with
     | [] -> []
     | t::ts -> open_or_close_term' t v i :: open_or_close_terms' ts v i
 
 and open_or_close_args' (ts:list argv) (v:open_or_close) (i:nat)
-  : GTot (list argv) (decreases ts)
+  : Tot (list argv) (decreases ts)
   = match ts with
     | [] -> []
     | (t,q)::ts -> (open_or_close_term' t v i,q) :: open_or_close_args' ts v i
 
 and open_or_close_patterns' (ps:list (pattern & bool)) (v:open_or_close) (i:nat) 
-  : GTot (list (pattern & bool))
+  : Tot (list (pattern & bool))
          (decreases ps)
   = match ps with
     | [] -> ps
@@ -283,7 +287,7 @@ and open_or_close_patterns' (ps:list (pattern & bool)) (v:open_or_close) (i:nat)
       (p,b)::ps
 
 and open_or_close_pattern' (p:pattern) (v:open_or_close) (i:nat) 
-  : GTot pattern
+  : Tot pattern
          (decreases p)
   = match p with
     | Pat_Constant _ -> p
@@ -305,7 +309,7 @@ and open_or_close_pattern' (p:pattern) (v:open_or_close) (i:nat)
 
     
 and open_or_close_branch' (br:branch) (v:open_or_close) (i:nat)
-  : GTot branch (decreases br)
+  : Tot branch (decreases br)
   = let p, t = br in
     let p = open_or_close_pattern' p v i in
     let j = binder_offset_pattern p in
@@ -313,13 +317,13 @@ and open_or_close_branch' (br:branch) (v:open_or_close) (i:nat)
     p, t
   
 and open_or_close_branches' (brs:list branch) (v:open_or_close) (i:nat)
-  : GTot (list branch) (decreases brs)
+  : Tot (list branch) (decreases brs)
   = match brs with
     | [] -> []
     | br::brs -> open_or_close_branch' br v i :: open_or_close_branches' brs v i
   
 and open_or_close_match_returns' (m:match_returns_ascription) (v:open_or_close) (i:nat)
-  : GTot match_returns_ascription (decreases m)
+  : Tot match_returns_ascription (decreases m)
   = let b, (ret, as_, eq) = m in
     let b = open_or_close_binder' b v i in
     let ret =
@@ -718,8 +722,6 @@ let rec ln' (e:term) (n:int)
        | None -> true
        | Some tac -> ln' tac n)
                             
-    | _ -> false
-
 and ln'_comp (c:comp) (i:int)
   : Tot bool (decreases c)
   = match inspect_comp c with
@@ -847,7 +849,7 @@ and binder_offset_patterns_invariant (p:list (pattern & bool)) (s:open_or_close)
       binder_offset_pattern_invariant hd s i;
       let n = binder_offset_pattern hd in
       binder_offset_patterns_invariant tl s (i + n)
-  
+
 let rec open_close_inverse' (i:nat) (t:term { ln' t (i - 1) }) (x:var)
   : Lemma 
        (ensures open_or_close_term' 
@@ -868,7 +870,7 @@ let rec open_close_inverse' (i:nat) (t:term { ln' t (i - 1) }) (x:var)
       open_close_inverse' i t1 x;
       open_close_inverse' i (fst a) x
      
-    | Tv_Abs b body -> 
+     | Tv_Abs b body -> 
       open_close_inverse'_binder i b x;
       open_close_inverse' (i + 1) body x
 
@@ -967,9 +969,7 @@ and open_close_inverse'_comp (i:nat) (c:comp { ln'_comp c (i - 1) }) (x:var)
     | C_Eff us eff_name res args decrs ->
       open_close_inverse' i res x;
       open_close_inverse'_args i args x;
-      open_close_inverse'_terms i decrs x
-      
-      
+      open_close_inverse'_terms i decrs x          
 
 and open_close_inverse'_args (i:nat) 
                             (ts:list argv { ln'_args ts (i - 1) })
@@ -1089,6 +1089,399 @@ let open_close_inverse (e:R.term { ln e }) (x:var)
    = close_term_spec e x;
      open_term_spec (close_term e x) x;
      open_close_inverse' 0 e x
+
+
+////////////////////////////////////////////////////////////////////////////////
+// freevars
+////////////////////////////////////////////////////////////////////////////////
+
+
+let rec freevars (e:term)
+  : FStar.Set.set var
+  = match inspect_ln e with
+    | Tv_Uvar _ _ -> Set.complement Set.empty
+    
+    | Tv_UInst _ _
+    | Tv_FVar _
+    | Tv_Type _
+    | Tv_Const _
+    | Tv_Unknown 
+    | Tv_BVar _ -> Set.empty
+
+    | Tv_Var x -> Set.singleton (bv_index x)
+       
+    | Tv_App e1 (e2, _) ->
+      Set.union (freevars e1) (freevars e2)
+
+    | Tv_Abs b body -> 
+      Set.union (freevars_binder b) (freevars body)
+
+    | Tv_Arrow b c ->
+      Set.union (freevars_binder b) (freevars_comp c)
+
+    | Tv_Refine bv f ->
+      Set.union (freevars_bv bv) (freevars f)
+      
+    | Tv_Let recf attrs bv def body ->
+      freevars_terms attrs `Set.union`
+      freevars_bv bv `Set.union`
+      freevars def `Set.union`
+      freevars body
+
+    | Tv_Match scr ret brs ->
+      freevars scr `Set.union`
+      freevars_opt ret freevars_match_returns  `Set.union`
+      freevars_branches brs
+
+    | Tv_AscribedT e t tac b ->
+      freevars e `Set.union`
+      freevars t `Set.union`
+      freevars_opt tac freevars
+                            
+    | Tv_AscribedC e c tac b ->
+      freevars e `Set.union`
+      freevars_comp c `Set.union`
+      freevars_opt tac freevars
+
+and freevars_opt (#a:Type0) (o:option a) (f: (x:a { x << o } -> FStar.Set.set var))
+  : FStar.Set.set var
+  = match o with
+    | None -> Set.empty
+    | Some x -> f x
+
+and freevars_comp (c:comp)
+  : FStar.Set.set var
+  = match inspect_comp c with
+    | C_Total t
+    | C_GTotal t ->
+      freevars t
+
+    | C_Lemma pre post pats ->
+      freevars pre `Set.union`
+      freevars post `Set.union`
+      freevars pats
+
+    | C_Eff us eff_name res args decrs ->
+      freevars res `Set.union`
+      freevars_args args `Set.union`
+      freevars_terms decrs
+
+and freevars_args (ts:list argv)
+  : FStar.Set.set var
+  = match ts with
+    | [] -> Set.empty
+    | (t,q)::ts ->
+      freevars t `Set.union`
+      freevars_args ts
+
+and freevars_terms (ts:list term)
+  : FStar.Set.set var
+  = match ts with
+    | [] -> Set.empty
+    | t::ts ->
+      freevars t `Set.union`
+      freevars_terms ts
+
+and freevars_bv (b:bv)
+  : Tot (Set.set var) (decreases b)
+  = let bv = inspect_bv b in
+    freevars bv.bv_sort
+    
+and freevars_binder (b:binder)
+  : Tot (Set.set var) (decreases b)
+  = let bndr  = inspect_binder b in
+    let bv, (q, attrs) = bndr in
+    freevars_bv bv `Set.union`
+    freevars_terms attrs 
+    
+
+and freevars_pattern (p:pattern) 
+  : Tot (Set.set var) (decreases p)
+  = match p with
+    | Pat_Constant _ ->
+      Set.empty
+
+    | Pat_Cons fv us pats -> 
+      freevars_patterns pats
+      
+    | Pat_Var bv 
+    | Pat_Wild bv ->
+      freevars_bv bv
+
+    | Pat_Dot_Term topt ->
+      freevars_opt topt freevars
+
+and freevars_patterns (ps:list (pattern & bool))
+  : Tot (Set.set var) (decreases ps)
+  = match ps with
+    | [] -> Set.empty
+    | (p, b)::ps ->
+      freevars_pattern p `Set.union`
+      freevars_patterns ps
+
+and freevars_branch (br:branch)
+  : Tot (Set.set var) (decreases br)
+  = let p, t = br in
+    freevars_pattern p `Set.union`
+    freevars t
+
+and freevars_branches (brs:list branch)
+  : Tot (Set.set var) (decreases brs)
+  = match brs with
+    | [] -> Set.empty
+    | hd::tl -> freevars_branch hd `Set.union` freevars_branches tl
+  
+and freevars_match_returns (m:match_returns_ascription)
+  : Tot (Set.set var) (decreases m)
+  = let b, (ret, as_, eq) = m in
+    let b = freevars_binder b in
+    let ret =
+      match ret with
+      | Inl t -> freevars t
+      | Inr c -> freevars_comp c
+    in
+    let as_ = freevars_opt as_ freevars in
+    b `Set.union` ret `Set.union` as_
+
+
+let rec close_open_inverse' (i:nat)
+                            (t:term) 
+                            (x:var { ~(x `Set.mem` freevars t) })
+  : Lemma 
+       (ensures open_or_close_term' 
+                       (open_or_close_term' t (open_with_var x) i)
+                       (CloseVar x)
+                       i
+                == t)
+       (decreases t)
+  = match inspect_ln t with
+    | Tv_Uvar _ _ -> assert false
+    | Tv_UInst _ _
+    | Tv_FVar _
+    | Tv_Type _
+    | Tv_Const _
+    | Tv_Unknown
+    | Tv_Var _
+    | Tv_BVar _ -> ()
+    | Tv_App t1 a ->
+      close_open_inverse' i t1 x;
+      close_open_inverse' i (fst a) x
+      
+    | Tv_Abs b body -> 
+      close_open_inverse'_binder i b x;
+      close_open_inverse' (i + 1) body x
+
+    | Tv_Arrow b c ->
+      close_open_inverse'_binder i b x;
+      close_open_inverse'_comp (i + 1) c x
+
+    | Tv_Refine bv f ->
+      close_open_inverse'_bv i bv x;
+      close_open_inverse' (i + 1) f x
+      
+    | Tv_Let recf attrs bv def body ->
+      close_open_inverse'_terms i attrs x;
+      close_open_inverse'_bv i bv x;
+      close_open_inverse' (if recf then (i + 1) else i) def x;
+      close_open_inverse' (i + 1) body x
+
+    | Tv_Match scr ret brs ->
+      close_open_inverse' i scr x;
+      (match ret with
+       | None -> ()
+       | Some m -> close_open_inverse'_match_returns i m x);
+      close_open_inverse'_branches i brs x
+
+    | Tv_AscribedT e t tac b ->
+      close_open_inverse' i e x;
+      close_open_inverse' i t x;
+      (match tac with
+       | None -> ()
+       | Some t -> close_open_inverse' i t x)
+
+    | Tv_AscribedC e c tac b ->
+      close_open_inverse' i e x;
+      close_open_inverse'_comp i c x;
+      (match tac with
+       | None -> ()
+       | Some t -> close_open_inverse' i t x)
+      
+and close_open_inverse'_comp (i:nat)
+                             (c:comp)
+                             (x:var{ ~(x `Set.mem` freevars_comp c) })
+  : Lemma
+       (ensures open_or_close_comp' 
+                       (open_or_close_comp' c (open_with_var x) i)
+                       (CloseVar x)
+                       i
+                == c)
+       (decreases c)
+   = match inspect_comp c with
+    | C_Total t 
+    | C_GTotal t ->    
+      close_open_inverse' i t x
+
+    | C_Lemma pre post pats ->
+      close_open_inverse' i pre x;
+      close_open_inverse' i post x;
+      close_open_inverse' i pats x
+
+    | C_Eff us eff_name res args decrs ->
+      close_open_inverse' i res x;
+      close_open_inverse'_args i args x;
+      close_open_inverse'_terms i decrs x
+
+and close_open_inverse'_args (i:nat) (args:list argv) (x:var{ ~(x `Set.mem` freevars_args args) })
+  : Lemma
+       (ensures open_or_close_args' 
+                       (open_or_close_args' args (open_with_var x) i)
+                       (CloseVar x)
+                       i
+                == args)
+       (decreases args)
+  = match args with
+    | [] -> ()
+    | (a, q) :: args ->
+      close_open_inverse' i a x;
+      close_open_inverse'_args i args x
+
+and close_open_inverse'_binder (i:nat) (b:binder) (x:var{ ~(x `Set.mem` freevars_binder b) })
+  : Lemma 
+       (ensures open_or_close_binder' 
+                       (open_or_close_binder' b (open_with_var x) i)
+                       (CloseVar x)
+                       i
+                == b)
+       (decreases b)
+  = let bndr  = inspect_binder b in
+    let bv, (q, attrs) = bndr in
+    close_open_inverse'_bv i bv x;
+    close_open_inverse'_terms i attrs x;
+    pack_inspect_binder b
+
+and close_open_inverse'_bv (i:nat) (bv:bv) (x:var{ ~(x `Set.mem` freevars_bv bv) })
+  : Lemma 
+       (ensures open_or_close_bv' 
+                       (open_or_close_bv' bv (open_with_var x) i)
+                       (CloseVar x)
+                       i
+                == bv)
+       (decreases bv)
+  = let bv = inspect_bv bv in
+    close_open_inverse' i bv.bv_sort x
+
+and close_open_inverse'_terms (i:nat) (ts:list term) (x:var{ ~(x `Set.mem` freevars_terms ts) })
+  : Lemma 
+       (ensures open_or_close_terms' 
+                       (open_or_close_terms' ts (open_with_var x) i)
+                       (CloseVar x)
+                       i
+                == ts)
+       (decreases ts)
+  = match ts with
+    | [] -> ()
+    | hd :: tl ->
+      close_open_inverse' i hd x;
+      close_open_inverse'_terms i tl x
+
+and close_open_inverse'_branches (i:nat) (brs:list branch) 
+                                 (x:var{ ~(x `Set.mem` freevars_branches brs) })
+  : Lemma
+    (ensures open_or_close_branches'
+                       (open_or_close_branches' brs (open_with_var x) i)
+                       (CloseVar x)
+                       i
+                == brs)
+       (decreases brs)
+  = match brs with
+    | [] -> ()
+    | b :: brs ->
+      close_open_inverse'_branch i b x;
+      close_open_inverse'_branches i brs x
+
+and close_open_inverse'_branch (i:nat)
+                               (br:branch)
+                               (x:var{ ~(x `Set.mem` freevars_branch br) })
+  : Lemma
+    (ensures open_or_close_branch'
+                       (open_or_close_branch' br (open_with_var x) i)
+                       (CloseVar x)
+                       i
+                == br)
+    (decreases br)
+  = let p, t = br in
+    close_open_inverse'_pattern i p x;
+    binder_offset_pattern_invariant p (open_with_var x) i;
+    close_open_inverse' (i + binder_offset_pattern p) t x
+
+
+and close_open_inverse'_pattern (i:nat)
+                                (p:pattern)
+                                (x:var{ ~(x `Set.mem` freevars_pattern p) })
+  : Lemma
+    (ensures open_or_close_pattern'
+                       (open_or_close_pattern' p (open_with_var x) i)
+                       (CloseVar x)
+                       i
+                == p)
+    (decreases p)
+  = match p with
+    | Pat_Constant _ -> ()
+
+    | Pat_Cons fv us pats -> 
+      close_open_inverse'_patterns i pats x
+      
+    | Pat_Var bv
+    | Pat_Wild bv ->
+      close_open_inverse'_bv i bv x
+
+    | Pat_Dot_Term topt ->
+      match topt with
+      | None -> ()
+      | Some t -> close_open_inverse' i t x
+
+and close_open_inverse'_patterns (i:nat)
+                                 (ps:list (pattern & bool))
+                                 (x:var {~ (x `Set.mem` freevars_patterns ps) })
+  : Lemma 
+    (ensures open_or_close_patterns' (open_or_close_patterns' ps (open_with_var x) i)
+                                     (CloseVar x)
+                                     i
+             == ps)
+    (decreases ps)
+  = match ps with
+    | [] -> ()
+    | (p, b)::ps' ->
+      close_open_inverse'_pattern i p x;
+      let n = binder_offset_pattern p in
+      binder_offset_pattern_invariant p (open_with_var x) i;
+      close_open_inverse'_patterns (i + n) ps' x
+
+and close_open_inverse'_match_returns (i:nat) (m:match_returns_ascription)
+                                      (x:var{ ~(x `Set.mem` freevars_match_returns m) })
+  : Lemma
+    (ensures open_or_close_match_returns'
+                       (open_or_close_match_returns' m (open_with_var x) i)
+                       (CloseVar x)
+                       i
+                == m)
+       (decreases m)
+  = let b, (ret, as_, eq) = m in
+    close_open_inverse'_binder i b x;
+    (match ret with
+      | Inl t -> close_open_inverse' (i + 1) t x
+      | Inr c -> close_open_inverse'_comp (i + 1) c x);
+    (match as_ with
+     | None -> ()
+     | Some t -> close_open_inverse' (i + 1) t x)
+
+
+
+let close_open_inverse (e:R.term) (x:var {~ (x `Set.mem` freevars e) })
+  : Lemma (close_term (open_term e x) x == e)
+   = open_term_spec e x;
+     close_term_spec (open_term e x) x;
+     close_open_inverse' 0 e x
 
 //
 // Type of the top-level tactic that would splice-in the definitions
