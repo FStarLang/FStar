@@ -327,7 +327,7 @@ and st_equiv (f:RT.fstar_top_env) : env -> pure_comp -> pure_comp -> Type =
   | ST_VPropEquiv :
       g:env ->
       c1:pure_comp_st ->
-      c2:pure_comp_st { comp_res c1 == comp_res c2 } -> 
+      c2:pure_comp_st { comp_res c1 == comp_res c2 /\ comp_u c1 == comp_u c2} -> 
       x:var { None? (lookup g x) } ->
       tot_typing f g (comp_pre c1) Tm_VProp ->
       tot_typing f g (comp_res c1) (Tm_Type (comp_u c1)) ->
