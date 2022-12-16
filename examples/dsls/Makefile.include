@@ -27,5 +27,5 @@ verify_all: $(ALL_CHECKED_FILES)
 clean:
 	rm -rf .depend ._depend
 
-%.fst-in %.fst-in:
+%.fst-in %.fsti-in:
 	@echo --include ../core
