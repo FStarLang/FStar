@@ -34,3 +34,48 @@ open Steel.ST.Util
 open Pulse.Steel.Wrapper
 
 %splice_t[foo] (main (Tm_Constant (Bool true)) Tm_Emp)
+
+let erased_lid = ["Pulse"; "Steel"; "Wrapper"; "erased"]
+let hide_lid = ["Pulse"; "Steel"; "Wrapper"; "hide"]
+let reveal_lid = ["Pulse"; "Steel"; "Wrapper"; "reveal"]
+let u32_lid = ["Pulse"; "Steel"; "Wrapper"; "u32"]
+let ref_lid = ["Pulse"; "Steel"; "Wrapper"; "ref"]
+let pts_to_lid = ["Pulse"; "Steel"; "Wrapper"; "pts_to"]
+let read_lid = ["Pulse"; "Steel"; "Wrapper"; "read"]
+let write_lid = ["Pulse"; "Steel"; "Wrapper"; "write"]
+
+[@@ expect_failure]
+%splice_t[bar] (main
+
+(
+Tm_Abs
+  (Tm_FVar erased_lid)  //n:erased u32
+  Tm_Emp
+  (Tm_Abs
+     (Tm_FVar ref_lid)  //r:ref
+     Tm_Emp
+     (Tm_Abs
+        (Tm_FVar u32_lid)  //x:u32
+        (Tm_PureApp
+          (Tm_PureApp
+             (Tm_FVar pts_to_lid)
+             (Tm_BVar 1))
+          (Tm_PureApp
+             (Tm_FVar reveal_lid)
+             (Tm_BVar 2))
+        )
+        (Tm_STApp
+           (Tm_STApp
+              (Tm_STApp
+                 (Tm_FVar write_lid)
+                 (Tm_BVar 2)
+              )
+              (Tm_BVar 1)
+           )
+           (Tm_BVar 0)
+        )
+     )
+  )
+)
+Tm_Emp
+)
