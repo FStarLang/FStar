@@ -105,3 +105,26 @@ let vprop_equiv_cong (p1 p2 p3 p4:vprop)
                      (_: vprop_equiv p2 p4)
   : vprop_equiv (p1 `star` p2) (p3 `star` p4)
   = star_congruence p1 p2 p3 p4
+
+module G = FStar.Ghost
+module U32 = FStar.UInt32
+module R = Steel.ST.Reference
+
+type erased = G.erased u32
+let hide (x:u32) : erased = G.hide x
+let reveal (x:erased) = G.reveal x
+
+type ref = R.ref u32
+[@@ __reduce__]
+let pts_to (r:ref) (n:u32) = R.pts_to r full_perm n
+
+let read (n:erased) (r:ref)
+  = fun _ ->
+    let x = R.read r in
+    rewrite (pts_to r n) (pts_to r x);
+    return x
+
+let write (n:erased) (r:ref) (x:u32)
+  = fun _ ->
+    let _ = R.write r x in
+    rewrite _ (pts_to r x)
