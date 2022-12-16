@@ -95,7 +95,8 @@ let rec readback_ty (t:R.term)
     then Some Tm_Emp
     else Some (Tm_FVar (inspect_fv fv))
 
-  | Tv_UInst _ _ -> T.fail "readback_ty: Tv_UInst is not yet handled"
+  | Tv_UInst _ _ ->
+    T.fail ("readback_ty: Tv_UInst is not yet handled: " ^ T.term_to_ast_string t)
 
   | Tv_App hd arg ->
     let? hd' = readback_ty hd in
