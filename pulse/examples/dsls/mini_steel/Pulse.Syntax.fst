@@ -135,7 +135,7 @@ let rec open_term' (t:term) (v:term) (i:index)
 
     | Tm_Abs t pre_hint body ->
       Tm_Abs (open_term' t v i)
-             (open_term' pre_hint v i)
+             (open_term' pre_hint v (i + 1))
              (open_term' body v (i + 1))
 
     | Tm_PureApp head arg ->
