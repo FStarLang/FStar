@@ -208,7 +208,7 @@ let rec close_term' (t:term) (v:var) (i:index)
 
     | Tm_Abs t pre_hint body ->
       Tm_Abs (close_term' t v i)
-             (close_term' pre_hint v i)
+             (close_term' pre_hint v (i + 1))
              (close_term' body v (i + 1))
 
     | Tm_PureApp head arg ->
