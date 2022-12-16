@@ -32,7 +32,6 @@ let frame_stt (#a:Type u#a) (#pre:vprop) (#post:a -> vprop) (frame:vprop) (e:stt
 assume val admit__ (#a:Type u#a) (#p:vprop) (#q:a -> vprop) (_:unit) : ST a p q True (fun _ -> False)
 
 let vprop_equiv (p q:vprop) = squash (equiv p q)
-let vprop_post_equiv (#t:Type u#a) (p q: t -> vprop) = forall x. vprop_equiv (p x) (q x)
 let inst_vprop_post_equiv (#t:Type u#a)
                           (p q: t -> vprop) 
                           (pf:vprop_post_equiv p q)
@@ -97,8 +96,6 @@ module G = FStar.Ghost
 module U32 = FStar.UInt32
 module R = Steel.ST.Reference
 
-type u32 = U32.t
-
 type erased = G.erased u32
 let hide (x:u32) : erased = G.hide x
 let reveal (x:erased) = G.reveal x
@@ -108,14 +105,12 @@ type ref = R.ref u32
 let pts_to (r:ref) (n:u32) = R.pts_to r full_perm n
 
 let read (n:erased) (r:ref)
-  : stt u32 (pts_to r (reveal n)) (fun x -> pts_to r (hide x))
   = fun _ ->
     let x = R.read r in
     rewrite (pts_to r n) (pts_to r x);
     return x
 
 let write (n:erased) (r:ref) (x:u32)
-  : stt unit (pts_to r (reveal n)) (fun _ -> pts_to r (hide x))
   = fun _ ->
     let _ = R.write r x in
-    rewrite _ (pts_to r (hide x))
+    rewrite _ (pts_to r x)
