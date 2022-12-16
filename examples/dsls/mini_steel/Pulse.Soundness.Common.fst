@@ -43,7 +43,7 @@ let tot_typing_soundness (#f:RT.fstar_top_env)
   = let E d = d in
     match d with
     | T_Tot _ _ _ d -> d
-    | T_If _ _ _ _ _ _ _ _ _ -> admit() //make T_If stateful
+    // | T_If _ _ _ _ _ _ _ _ _ -> admit() //make T_If stateful
 
 let mk_t_abs_tot (f:RT.fstar_top_env) (g:env)
                  (#u:universe)
