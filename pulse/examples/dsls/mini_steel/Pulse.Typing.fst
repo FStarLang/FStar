@@ -328,8 +328,10 @@ and st_equiv (f:RT.fstar_top_env) : env -> pure_comp -> pure_comp -> Type =
       g:env ->
       c1:pure_comp_st ->
       c2:pure_comp_st { comp_res c1 == comp_res c2 } -> 
-      x:var { None? (lookup_ty g x) } ->
+      x:var { None? (lookup g x) } ->
       tot_typing f g (comp_pre c1) Tm_VProp ->
+      u:universe -> 
+      tot_typing f g (comp_res c1) (Tm_Type u) ->
       tot_typing f ((x, Inl (comp_res c1))::g) (open_term (comp_post c1) x) Tm_VProp ->
       vprop_equiv f g (comp_pre c1) (comp_pre c2) ->
       vprop_equiv f ((x, Inl (comp_res c1))::g) 
@@ -337,12 +339,12 @@ and st_equiv (f:RT.fstar_top_env) : env -> pure_comp -> pure_comp -> Type =
                     (open_term (comp_post c2) x) ->      
       st_equiv f g c1 c2
 
-  | ST_ElabEquiv:
-      g:env ->
-      c1:pure_comp_st ->
-      c2:pure_comp_st ->
-      RT.equiv (extend_env_l f g) (elab_pure_comp c1) (elab_pure_comp c2) ->
-      st_equiv f g c1 c2
+  // | ST_ElabEquiv:
+  //     g:env ->
+  //     c1:pure_comp_st ->
+  //     c2:pure_comp_st ->
+  //     RT.equiv (extend_env_l f g) (elab_pure_comp c1) (elab_pure_comp c2) ->
+  //     st_equiv f g c1 c2
 
 
 (* this requires some metatheory on Refl.Typing
