@@ -92,9 +92,9 @@ let mk_sub (u:R.universe)
               [(pre2, R.Q_Explicit)])
             [(post1, R.Q_Implicit)])
           [(post2, R.Q_Explicit)])
-        [(t, R.Q_Explicit)])
+        [(`(), R.Q_Explicit)])
       [(`(), R.Q_Explicit)])
-     [(`(), R.Q_Explicit)]
+     [(t, R.Q_Explicit)]
 
 let elab_bind (c1 c2:pure_comp_st) (e1 e2:R.term) =
   let C_ST c1 = c1 in
@@ -205,7 +205,7 @@ let elab_open_commute (t:pure_term) (x:var)
   = RT.open_term_spec (elab_pure t) x;
     elab_open_commute' t (Tm_Var x) 0
 
-#push-options "--fuel 8 --ifuel 4 --z3rlimit_factor 10"
+#push-options "--fuel 8 --ifuel 4 --z3rlimit_factor 20"
 let rec elab_close_commute' (e:pure_term)
                             (v:var)
                             (n:index)
