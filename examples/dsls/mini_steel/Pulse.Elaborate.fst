@@ -23,14 +23,14 @@ let subsumption_lid = mk_steel_wrapper_lid "sub_stt"
 let subsumption_fv = R.pack_fv subsumption_lid
 let subsumption_univ_inst u = R.pack_ln (R.Tv_UInst subsumption_fv [u])
 
-let mk_return (u:universe) (ty:R.term) (t:R.term) 
+let mk_return (u:R.universe) (ty:R.term) (t:R.term) 
   : R.term
-  = let head = R.pack_ln (R.Tv_UInst (R.pack_fv return_lid) [elab_universe u]) in
+  = let head = R.pack_ln (R.Tv_UInst (R.pack_fv return_lid) [u]) in
     R.mk_app head [(ty, R.Q_Implicit); (t, R.Q_Explicit)]
 
-let mk_return_noeq (u:universe) (ty:R.term) (t:R.term) 
+let mk_return_noeq (u:R.universe) (ty:R.term) (t:R.term) 
   : R.term
-  = let head = R.pack_ln (R.Tv_UInst (R.pack_fv return_noeq_lid) [elab_universe u]) in
+  = let head = R.pack_ln (R.Tv_UInst (R.pack_fv return_noeq_lid) [u]) in
     R.mk_app head [(ty, R.Q_Implicit); (t, R.Q_Explicit)]
 
 let mk_bind (u1 u2:universe)
@@ -128,10 +128,10 @@ let rec elab_src_typing (#f:RT.fstar_top_env)
       R.mk_app head [(arg, R.Q_Explicit)]
 
     | T_Return _ _ ty u _ _ ->
-      mk_return u (elab_pure ty) (elab_pure t)
+      mk_return (elab_universe u) (elab_pure ty) (elab_pure t)
 
     | T_ReturnNoEq _ _ ty u t_typing _ ->
-      mk_return_noeq u (elab_pure ty) (elab_src_typing t_typing)
+      mk_return_noeq (elab_universe u) (elab_pure ty) (elab_src_typing t_typing)
 
     | T_Bind _ e1 e2 c1 c2 x c e1_typing t_typing e2_typing _bc ->
       let e1 = elab_src_typing e1_typing in
