@@ -213,10 +213,10 @@ and (inst_comp :
   fun s ->
     fun c ->
       match c.FStar_Syntax_Syntax.n with
-      | FStar_Syntax_Syntax.Total (t, uopt) ->
-          let uu___ = inst s t in FStar_Syntax_Syntax.mk_Total' uu___ uopt
-      | FStar_Syntax_Syntax.GTotal (t, uopt) ->
-          let uu___ = inst s t in FStar_Syntax_Syntax.mk_GTotal' uu___ uopt
+      | FStar_Syntax_Syntax.Total t ->
+          let uu___ = inst s t in FStar_Syntax_Syntax.mk_Total uu___
+      | FStar_Syntax_Syntax.GTotal t ->
+          let uu___ = inst s t in FStar_Syntax_Syntax.mk_GTotal uu___
       | FStar_Syntax_Syntax.Comp ct ->
           let ct1 =
             let uu___ = inst s ct.FStar_Syntax_Syntax.result_typ in

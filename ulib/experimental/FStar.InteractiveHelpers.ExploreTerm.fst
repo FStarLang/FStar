@@ -29,10 +29,10 @@ val comp_qualifier (c : comp) : Tac string
 #push-options "--ifuel 1"
 let comp_qualifier (c : comp) : Tac string =
   match inspect_comp c with
-  | C_Total _ _ _ -> "C_Total"
-  | C_GTotal _ _ _ -> "C_GTotal"
+  | C_Total _ -> "C_Total"
+  | C_GTotal _ -> "C_GTotal"
   | C_Lemma _ _ _ -> "C_Lemma"
-  | C_Eff _ _ _ _ -> "C_Eff"
+  | C_Eff _ _ _ _ _ -> "C_Eff"
 #pop-options
 
 /// Effect information: we list the current supported effects
@@ -118,14 +118,14 @@ let get_type_info (e:env) (t:term) : Tac (option type_info) =
 val get_total_or_gtotal_ret_type : comp -> Tot (option typ)
 let get_total_or_gtotal_ret_type c =
   match inspect_comp c with
-  | C_Total ret_ty _ _ | C_GTotal ret_ty _ _ -> Some ret_ty
+  | C_Total ret_ty | C_GTotal ret_ty -> Some ret_ty
   | _ -> None
 
 val get_comp_ret_type : comp -> Tot typ
 let get_comp_ret_type c =
   match inspect_comp c with
-  | C_Total ret_ty _ _ | C_GTotal ret_ty _ _
-  | C_Eff _ _ ret_ty _ -> ret_ty
+  | C_Total ret_ty | C_GTotal ret_ty
+  | C_Eff _ _ ret_ty _ _ -> ret_ty
   | C_Lemma _ _ _ -> (`unit)
 
 val is_total_or_gtotal : comp -> Tot bool
@@ -371,7 +371,7 @@ let flush_typ_or_comp dbg e tyc =
   in
   try begin match tyc with
   | TC_Typ ty pl n ->
-    let c = pack_comp (C_Total ty u_unk []) in
+    let c = pack_comp (C_Total ty) in
     flush_comp pl n c
   | TC_Comp c pl n -> flush_comp pl n c
   end

@@ -174,12 +174,9 @@ and compare_comp (c1 c2 : comp) : Tot order (decreases c1) =
     let cv1 = inspect_comp c1 in
     let cv2 = inspect_comp c2 in
     match cv1, cv2 with
-    | C_Total t1 u1 md1, C_Total t2 u2 md2
+    | C_Total t1, C_Total t2
 
-    | C_GTotal t1 u1 md1, C_GTotal t2 u2 md2 -> 
-      lex (compare_term t1 t2)
-          (fun _ -> lex (compare_universe u1 u2)
-                     (fun _ -> compare_term_list md1 md2))
+    | C_GTotal t1, C_GTotal t2 -> compare_term t1 t2
 
     | C_Lemma p1 q1 s1, C_Lemma p2 q2 s2 ->
       lex (compare_term p1 p2)
@@ -188,14 +185,14 @@ and compare_comp (c1 c2 : comp) : Tot order (decreases c1) =
                 (fun () -> compare_term s1 s2)
           )
 
-    | C_Eff us1 eff1 res1 args1,
-      C_Eff us2 eff2 res2 args2 ->
+    | C_Eff us1 eff1 res1 args1 _decrs1,
+      C_Eff us2 eff2 res2 args2 _decrs2 ->
         (* This could be more complex, not sure it is worth it *)
         lex (compare_universes us1 us2)
             (fun _ -> lex (compare_name eff1 eff2)
                        (fun _ -> compare_term res1 res2))
 
-    | C_Total _ _ _, _  -> Lt     | _, C_Total _ _ _ -> Gt
-    | C_GTotal _ _ _, _  -> Lt    | _, C_GTotal _ _ _ -> Gt
+    | C_Total _, _  -> Lt     | _, C_Total _ -> Gt
+    | C_GTotal _, _  -> Lt    | _, C_GTotal _ -> Gt
     | C_Lemma _ _ _, _  -> Lt   | _, C_Lemma _ _ _ -> Gt
-    | C_Eff _ _ _ _, _ -> Lt    | _, C_Eff _ _ _ _ -> Gt
+    | C_Eff _ _ _ _ _, _ -> Lt    | _, C_Eff _ _ _ _ _ -> Gt

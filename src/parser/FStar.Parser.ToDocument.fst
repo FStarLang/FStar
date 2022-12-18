@@ -284,18 +284,26 @@ type associativity =
     | Right
     | NonAssoc
 
-(* A token is either a character c representing any string beginning with c or a complete string *)
-type token = either FStar.Char.char string
+(* A token is either a character c representing any string beginning with c, a complete string or a unicode operator *)
+type token =
+    | StartsWith: Char.char -> token
+    | Exact     : string    -> token
+    | UnicodeOperator
 
 type associativity_level = associativity * list token
 
 let token_to_string = function
-    | Inl c -> string_of_char c ^ ".*"
-    | Inr s -> s
+    | StartsWith      c -> string_of_char c ^ ".*"
+    | Exact           s -> s
+    | UnicodeOperator -> "<unicode-op>"
+
+let is_non_latin_char (s:Char.char): bool
+    = int_of_char s > 0x024f
 
 let matches_token (s:string) = function
-    | Inl c -> FStar.String.get s 0 = c
-    | Inr s' -> s = s'
+    | StartsWith c  -> FStar.String.get s 0 = c
+    | Exact      s' -> s = s'
+    | UnicodeOperator -> is_non_latin_char (FStar.String.get s 0)
 
 let matches_level s (assoc_levels, tokens) =
     List.tryFind (matches_token s) tokens <> None
@@ -303,21 +311,21 @@ let matches_level s (assoc_levels, tokens) =
 // GM 05/10/18, TODO: This still needs to be heavily annotated with the new unifier:
 
 (* Precedence and associativity levels, taken from ../src/parse.mly *)
-let opinfix4 : associativity_level = Right, [Inr "**"]
+let opinfix4 : associativity_level = Right, [Exact "**"; UnicodeOperator]
 // level backtick won't be used here
-let opinfix3 : associativity_level = Left,  [Inl '*' ; Inl '/' ; Inl '%']
-let opinfix2 : associativity_level = Left,  [Inl '+' ; Inl '-' ]
-let minus_lvl : associativity_level = Left, [Inr "-"] // Sublevel of opinfix2, not a level on its own !!!
-let opinfix1 : associativity_level = Right, [Inl '@' ; Inl '^']
-let pipe_right : associativity_level = Left,  [Inr "|>"]
-let opinfix0d : associativity_level = Left,  [Inl '$']
-let opinfix0c : associativity_level = Left,  [Inl '=' ; Inl '<' ; Inl '>']
-let equal : associativity_level = Left, [Inr "="] // Sublevel of opinfix0c, not a level on its own !!!
-let opinfix0b : associativity_level = Left,  [Inl '&']
-let opinfix0a : associativity_level = Left,  [Inl '|']
-let colon_equals : associativity_level = NonAssoc, [Inr ":="]
-let amp : associativity_level = Right, [Inr "&"]
-let colon_colon : associativity_level = Right, [Inr "::"]
+let opinfix3 : associativity_level = Left,  [StartsWith '*' ; StartsWith '/' ; StartsWith '%']
+let opinfix2 : associativity_level = Left,  [StartsWith '+' ; StartsWith '-' ]
+let minus_lvl : associativity_level = Left, [Exact "-"] // Sublevel of opinfix2, not a level on its own !!!
+let opinfix1 : associativity_level = Right, [StartsWith '@' ; StartsWith '^']
+let pipe_right : associativity_level = Left,  [Exact "|>"]
+let opinfix0d : associativity_level = Left,  [StartsWith '$']
+let opinfix0c : associativity_level = Left,  [StartsWith '=' ; StartsWith '<' ; StartsWith '>']
+let equal : associativity_level = Left, [Exact "="] // Sublevel of opinfix0c, not a level on its own !!!
+let opinfix0b : associativity_level = Left,  [StartsWith '&']
+let opinfix0a : associativity_level = Left,  [StartsWith '|']
+let colon_equals : associativity_level = NonAssoc, [Exact ":="]
+let amp : associativity_level = Right, [Exact "&"]
+let colon_colon : associativity_level = Right, [Exact "::"]
 
 (* The latter the element, the tighter it binds *)
 let level_associativity_spec : list associativity_level =

@@ -69,6 +69,7 @@ let rec eq_step s1 s2 =
   | UnfoldAttr lids1, UnfoldAttr lids2 ->
       List.length lids1 = List.length lids2 && List.forall2 Ident.lid_equals lids1 lids2
   | UnfoldQual strs1, UnfoldQual strs2 -> strs1 = strs2
+  | UnfoldNamespace strs1, UnfoldNamespace strs2 -> strs1 = strs2  
   | _ -> false
 
 let preprocess env tau tm  = env.mpreprocess env tau tm
@@ -1084,15 +1085,20 @@ let wp_sig_aux decls m =
 let wp_signature env m = wp_sig_aux env.effects.decls m
 
 let comp_to_comp_typ (env:env) c =
-    let c = match c.n with
-            | Total (t, None) ->
-              let u = env.universe_of env t in
-              S.mk_Total' t (Some u)
-            | GTotal (t, None) ->
-              let u = env.universe_of env t in
-              S.mk_GTotal' t (Some u)
-            | _ -> c in
-    U.comp_to_comp_typ c
+  match c.n with
+  | Comp ct -> ct
+  | _ ->
+    let effect_name, result_typ =
+      match c.n with
+      | Total t -> Const.effect_Tot_lid, t
+      | GTotal t -> Const.effect_GTot_lid, t in
+    {comp_univs = [env.universe_of env result_typ];
+     effect_name;
+     result_typ;
+     effect_args = [];
+     flags = U.comp_flags c}
+
+let comp_set_flags env c f = {c with n=Comp ({comp_to_comp_typ env c with flags=f})}
 
 let rec unfold_effect_abbrev env comp =
   let c = comp_to_comp_typ env comp in

@@ -113,10 +113,10 @@ val comp_view_to_effect_info : dbg:bool -> comp_view -> Tac (option effect_info)
 
 let comp_view_to_effect_info dbg cv =
   match cv with
-  | C_Total ret_ty _ decr ->
+  | C_Total ret_ty ->
     let ret_type_info = get_type_info_from_type ret_ty in
     Some (mk_effect_info E_Total ret_type_info None None)
-  | C_GTotal ret_ty _ decr ->
+  | C_GTotal ret_ty ->
     let ret_type_info = get_type_info_from_type ret_ty in
     Some (mk_effect_info E_Total ret_type_info None None)
   | C_Lemma pre post patterns ->
@@ -124,7 +124,7 @@ let comp_view_to_effect_info dbg cv =
     let pre = prettify_term dbg pre in
     let post = prettify_term dbg post in
     Some (mk_effect_info E_Lemma unit_type_info (Some pre) (Some post))
-  | C_Eff univs eff_name ret_ty eff_args ->
+  | C_Eff univs eff_name ret_ty eff_args _ ->
     print_dbg dbg ("comp_view_to_effect_info: C_Eff " ^ flatten_name eff_name);
     let ret_type_info = get_type_info_from_type ret_ty in
     let etype = effect_name_to_type eff_name in

@@ -16,6 +16,7 @@ type step =
   | UnfoldFully of FStar_Ident.lid Prims.list 
   | UnfoldAttr of FStar_Ident.lid Prims.list 
   | UnfoldQual of Prims.string Prims.list 
+  | UnfoldNamespace of Prims.string Prims.list 
   | UnfoldTac 
   | PureSubtermsWithinComputations 
   | Simplify 
@@ -81,6 +82,11 @@ let (uu___is_UnfoldQual : step -> Prims.bool) =
     match projectee with | UnfoldQual _0 -> true | uu___ -> false
 let (__proj__UnfoldQual__item___0 : step -> Prims.string Prims.list) =
   fun projectee -> match projectee with | UnfoldQual _0 -> _0
+let (uu___is_UnfoldNamespace : step -> Prims.bool) =
+  fun projectee ->
+    match projectee with | UnfoldNamespace _0 -> true | uu___ -> false
+let (__proj__UnfoldNamespace__item___0 : step -> Prims.string Prims.list) =
+  fun projectee -> match projectee with | UnfoldNamespace _0 -> _0
 let (uu___is_UnfoldTac : step -> Prims.bool) =
   fun projectee -> match projectee with | UnfoldTac -> true | uu___ -> false
 let (uu___is_PureSubtermsWithinComputations : step -> Prims.bool) =
@@ -164,6 +170,7 @@ let rec (eq_step : step -> step -> Prims.bool) =
             &&
             (FStar_Compiler_List.forall2 FStar_Ident.lid_equals lids1 lids2)
       | (UnfoldQual strs1, UnfoldQual strs2) -> strs1 = strs2
+      | (UnfoldNamespace strs1, UnfoldNamespace strs2) -> strs1 = strs2
       | uu___ -> false
 type sig_binding =
   (FStar_Ident.lident Prims.list * FStar_Syntax_Syntax.sigelt)
@@ -4349,16 +4356,55 @@ let (comp_to_comp_typ :
   env -> FStar_Syntax_Syntax.comp -> FStar_Syntax_Syntax.comp_typ) =
   fun env1 ->
     fun c ->
-      let c1 =
-        match c.FStar_Syntax_Syntax.n with
-        | FStar_Syntax_Syntax.Total (t, FStar_Pervasives_Native.None) ->
-            let u = env1.universe_of env1 t in
-            FStar_Syntax_Syntax.mk_Total' t (FStar_Pervasives_Native.Some u)
-        | FStar_Syntax_Syntax.GTotal (t, FStar_Pervasives_Native.None) ->
-            let u = env1.universe_of env1 t in
-            FStar_Syntax_Syntax.mk_GTotal' t (FStar_Pervasives_Native.Some u)
-        | uu___ -> c in
-      FStar_Syntax_Util.comp_to_comp_typ c1
+      match c.FStar_Syntax_Syntax.n with
+      | FStar_Syntax_Syntax.Comp ct -> ct
+      | uu___ ->
+          let uu___1 =
+            match c.FStar_Syntax_Syntax.n with
+            | FStar_Syntax_Syntax.Total t ->
+                (FStar_Parser_Const.effect_Tot_lid, t)
+            | FStar_Syntax_Syntax.GTotal t ->
+                (FStar_Parser_Const.effect_GTot_lid, t) in
+          (match uu___1 with
+           | (effect_name, result_typ) ->
+               let uu___2 =
+                 let uu___3 = env1.universe_of env1 result_typ in [uu___3] in
+               {
+                 FStar_Syntax_Syntax.comp_univs = uu___2;
+                 FStar_Syntax_Syntax.effect_name = effect_name;
+                 FStar_Syntax_Syntax.result_typ = result_typ;
+                 FStar_Syntax_Syntax.effect_args = [];
+                 FStar_Syntax_Syntax.flags = (FStar_Syntax_Util.comp_flags c)
+               })
+let (comp_set_flags :
+  env ->
+    FStar_Syntax_Syntax.comp ->
+      FStar_Syntax_Syntax.cflag Prims.list -> FStar_Syntax_Syntax.comp)
+  =
+  fun env1 ->
+    fun c ->
+      fun f ->
+        let uu___ =
+          let uu___1 =
+            let uu___2 = comp_to_comp_typ env1 c in
+            {
+              FStar_Syntax_Syntax.comp_univs =
+                (uu___2.FStar_Syntax_Syntax.comp_univs);
+              FStar_Syntax_Syntax.effect_name =
+                (uu___2.FStar_Syntax_Syntax.effect_name);
+              FStar_Syntax_Syntax.result_typ =
+                (uu___2.FStar_Syntax_Syntax.result_typ);
+              FStar_Syntax_Syntax.effect_args =
+                (uu___2.FStar_Syntax_Syntax.effect_args);
+              FStar_Syntax_Syntax.flags = f
+            } in
+          FStar_Syntax_Syntax.Comp uu___1 in
+        {
+          FStar_Syntax_Syntax.n = uu___;
+          FStar_Syntax_Syntax.pos = (c.FStar_Syntax_Syntax.pos);
+          FStar_Syntax_Syntax.vars = (c.FStar_Syntax_Syntax.vars);
+          FStar_Syntax_Syntax.hash_code = (c.FStar_Syntax_Syntax.hash_code)
+        }
 let rec (unfold_effect_abbrev :
   env -> FStar_Syntax_Syntax.comp -> FStar_Syntax_Syntax.comp_typ) =
   fun env1 ->

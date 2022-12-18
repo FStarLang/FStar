@@ -38,7 +38,7 @@ let rec unpack_fields (qname : list string) (ty : T.term) : T.Tac (list (string 
     | T.Tv_Arrow binder comp -> begin
         let f = unpack_field binder in
         match T.inspect_comp comp with
-        | T.C_Total ty2 _ _ -> f :: unpack_fields qname ty2
+        | T.C_Total ty2 -> f :: unpack_fields qname ty2
         | _ -> T.fail "Unsupported computation type"
         end
     | T.Tv_FVar fv -> begin

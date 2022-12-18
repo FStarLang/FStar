@@ -211,25 +211,17 @@ and (hash_term' : FStar_Syntax_Syntax.term -> FStar_Hash.hash_code mm) =
 and (hash_comp' : FStar_Syntax_Syntax.comp -> FStar_Hash.hash_code mm) =
   fun c ->
     match c.FStar_Syntax_Syntax.n with
-    | FStar_Syntax_Syntax.Total (t, ou) ->
+    | FStar_Syntax_Syntax.Total t ->
         let uu___ =
           let uu___1 = of_int (Prims.of_int (811)) in
-          let uu___2 =
-            let uu___3 = hash_term t in
-            let uu___4 =
-              let uu___5 = hash_option hash_universe ou in [uu___5] in
-            uu___3 :: uu___4 in
-          uu___1 :: uu___2 in
+          let uu___2 = let uu___3 = hash_term t in [uu___3] in uu___1 ::
+            uu___2 in
         mix_list_lit uu___
-    | FStar_Syntax_Syntax.GTotal (t, ou) ->
+    | FStar_Syntax_Syntax.GTotal t ->
         let uu___ =
           let uu___1 = of_int (Prims.of_int (821)) in
-          let uu___2 =
-            let uu___3 = hash_term t in
-            let uu___4 =
-              let uu___5 = hash_option hash_universe ou in [uu___5] in
-            uu___3 :: uu___4 in
-          uu___1 :: uu___2 in
+          let uu___2 = let uu___3 = hash_term t in [uu___3] in uu___1 ::
+            uu___2 in
         mix_list_lit uu___
     | FStar_Syntax_Syntax.Comp ct ->
         let uu___ =
@@ -776,12 +768,10 @@ and (equal_comp :
       then true
       else
         (match ((c1.FStar_Syntax_Syntax.n), (c2.FStar_Syntax_Syntax.n)) with
-         | (FStar_Syntax_Syntax.Total (t1, u1), FStar_Syntax_Syntax.Total
-            (t2, u2)) ->
-             (equal_term t1 t2) && (equal_opt equal_universe u1 u2)
-         | (FStar_Syntax_Syntax.GTotal (t1, u1), FStar_Syntax_Syntax.GTotal
-            (t2, u2)) ->
-             (equal_term t1 t2) && (equal_opt equal_universe u1 u2)
+         | (FStar_Syntax_Syntax.Total t1, FStar_Syntax_Syntax.Total t2) ->
+             equal_term t1 t2
+         | (FStar_Syntax_Syntax.GTotal t1, FStar_Syntax_Syntax.GTotal t2) ->
+             equal_term t1 t2
          | (FStar_Syntax_Syntax.Comp ct1, FStar_Syntax_Syntax.Comp ct2) ->
              ((((FStar_Ident.lid_equals ct1.FStar_Syntax_Syntax.effect_name
                    ct2.FStar_Syntax_Syntax.effect_name)

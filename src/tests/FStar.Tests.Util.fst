@@ -58,7 +58,7 @@ let rec term_eq' t1 t2 =
          && List.forall2 (fun (a, imp) (b, imp') -> term_eq' a b && U.eq_aqual imp imp'=U.Equal) xs ys in
     let comp_eq (c:S.comp) (d:S.comp) =
         match c.n, d.n with
-            | S.Total (t, _), S.Total (s, _) -> term_eq' t s
+            | S.Total t, S.Total s -> term_eq' t s
             | S.Comp ct1, S.Comp ct2 ->
               I.lid_equals ct1.effect_name ct2.effect_name
               && term_eq' ct1.result_typ ct2.result_typ

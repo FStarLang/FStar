@@ -529,21 +529,15 @@ and comp_to_string c =
   else
     Errors.with_ctx "While ugly-printing a computation" (fun () ->
     match c.n with
-    | Total (t, uopt) ->
+    | Total t ->
       begin match (compress t).n with
         | Tm_type _ when not (Options.print_implicits() || Options.print_universes()) -> term_to_string t
-        | _ ->
-          match uopt with
-          | Some u when Options.print_universes() -> U.format2 "Tot<%s> %s" (univ_to_string u) (term_to_string t)
-          | _ -> U.format1 "Tot %s" (term_to_string t)
+        | _ -> U.format1 "Tot %s" (term_to_string t)
       end
-    | GTotal (t, uopt) ->
+    | GTotal t ->
       begin match (compress t).n with
         | Tm_type _ when not (Options.print_implicits() || Options.print_universes()) -> term_to_string t
-        | _ ->
-          match uopt with
-          | Some u when Options.print_universes() -> U.format2 "GTot<%s> %s" (univ_to_string u) (term_to_string t)
-          | _ -> U.format1 "GTot %s" (term_to_string t)
+        | _ -> U.format1 "GTot %s" (term_to_string t)
       end
     | Comp c ->
         let basic =

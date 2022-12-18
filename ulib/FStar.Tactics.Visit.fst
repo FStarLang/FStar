@@ -118,15 +118,13 @@ and visit_comp (ff : term -> Tac term) (c : comp) : Tac comp =
   let cv = inspect_comp c in
   let cv' =
     match cv with
-    | C_Total ret uopt decr ->
+    | C_Total ret ->
         let ret = visit_tm ff ret in
-        let decr = map (visit_tm ff) decr in
-        C_Total ret uopt decr
+        C_Total ret
 
-    | C_GTotal ret uopt decr ->
+    | C_GTotal ret ->
         let ret = visit_tm ff ret in
-        let decr = map (visit_tm ff) decr in
-        C_GTotal ret uopt decr
+        C_GTotal ret
 
     | C_Lemma pre post pats ->
         let pre = visit_tm ff pre in
@@ -134,9 +132,10 @@ and visit_comp (ff : term -> Tac term) (c : comp) : Tac comp =
         let pats = visit_tm ff pats in
         C_Lemma pre post pats
 
-    | C_Eff us eff res args ->
+    | C_Eff us eff res args decrs ->
         let res = visit_tm ff res in
         let args = map (fun (a, q) -> (visit_tm ff a, q)) args in
-        C_Eff us eff res args
+        let decrs = map (visit_tm ff) decrs in
+        C_Eff us eff res args decrs
   in
   pack_comp cv'

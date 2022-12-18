@@ -1705,7 +1705,7 @@ and (resugar_comp' :
         FStar_Parser_AST.mk_term a c.FStar_Syntax_Syntax.pos
           FStar_Parser_AST.Un in
       match c.FStar_Syntax_Syntax.n with
-      | FStar_Syntax_Syntax.Total (typ, u) ->
+      | FStar_Syntax_Syntax.Total typ ->
           let t = resugar_term' env typ in
           let uu___ =
             let uu___1 = FStar_Options.print_implicits () in
@@ -1713,50 +1713,16 @@ and (resugar_comp' :
           if uu___
           then t
           else
-            (match u with
-             | FStar_Pervasives_Native.None ->
-                 mk
-                   (FStar_Parser_AST.Construct
-                      (FStar_Parser_Const.effect_Tot_lid,
-                        [(t, FStar_Parser_AST.Nothing)]))
-             | FStar_Pervasives_Native.Some u1 ->
-                 let uu___2 = FStar_Options.print_universes () in
-                 if uu___2
-                 then
-                   let u2 = resugar_universe u1 c.FStar_Syntax_Syntax.pos in
-                   mk
-                     (FStar_Parser_AST.Construct
-                        (FStar_Parser_Const.effect_Tot_lid,
-                          [(u2, FStar_Parser_AST.UnivApp);
-                          (t, FStar_Parser_AST.Nothing)]))
-                 else
-                   mk
-                     (FStar_Parser_AST.Construct
-                        (FStar_Parser_Const.effect_Tot_lid,
-                          [(t, FStar_Parser_AST.Nothing)])))
-      | FStar_Syntax_Syntax.GTotal (typ, u) ->
+            mk
+              (FStar_Parser_AST.Construct
+                 (FStar_Parser_Const.effect_Tot_lid,
+                   [(t, FStar_Parser_AST.Nothing)]))
+      | FStar_Syntax_Syntax.GTotal typ ->
           let t = resugar_term' env typ in
-          (match u with
-           | FStar_Pervasives_Native.None ->
-               mk
-                 (FStar_Parser_AST.Construct
-                    (FStar_Parser_Const.effect_GTot_lid,
-                      [(t, FStar_Parser_AST.Nothing)]))
-           | FStar_Pervasives_Native.Some u1 ->
-               let uu___ = FStar_Options.print_universes () in
-               if uu___
-               then
-                 let u2 = resugar_universe u1 c.FStar_Syntax_Syntax.pos in
-                 mk
-                   (FStar_Parser_AST.Construct
-                      (FStar_Parser_Const.effect_GTot_lid,
-                        [(u2, FStar_Parser_AST.UnivApp);
-                        (t, FStar_Parser_AST.Nothing)]))
-               else
-                 mk
-                   (FStar_Parser_AST.Construct
-                      (FStar_Parser_Const.effect_GTot_lid,
-                        [(t, FStar_Parser_AST.Nothing)])))
+          mk
+            (FStar_Parser_AST.Construct
+               (FStar_Parser_Const.effect_GTot_lid,
+                 [(t, FStar_Parser_AST.Nothing)]))
       | FStar_Syntax_Syntax.Comp c1 ->
           let result =
             let uu___ = resugar_term' env c1.FStar_Syntax_Syntax.result_typ in

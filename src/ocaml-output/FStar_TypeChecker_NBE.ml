@@ -180,6 +180,8 @@ let (zeta_false : config -> config) =
                  (uu___.FStar_TypeChecker_Cfg.unfold_attr);
                FStar_TypeChecker_Cfg.unfold_qual =
                  (uu___.FStar_TypeChecker_Cfg.unfold_qual);
+               FStar_TypeChecker_Cfg.unfold_namespace =
+                 (uu___.FStar_TypeChecker_Cfg.unfold_namespace);
                FStar_TypeChecker_Cfg.unfold_tac =
                  (uu___.FStar_TypeChecker_Cfg.unfold_tac);
                FStar_TypeChecker_Cfg.pure_subterms_within_computations =
@@ -1321,17 +1323,11 @@ and (translate_comp :
     fun bs ->
       fun c ->
         match c.FStar_Syntax_Syntax.n with
-        | FStar_Syntax_Syntax.Total (typ, u) ->
-            let uu___ =
-              let uu___1 = translate cfg bs typ in
-              let uu___2 = fmap_opt (translate_univ cfg bs) u in
-              (uu___1, uu___2) in
+        | FStar_Syntax_Syntax.Total typ ->
+            let uu___ = translate cfg bs typ in
             FStar_TypeChecker_NBETerm.Tot uu___
-        | FStar_Syntax_Syntax.GTotal (typ, u) ->
-            let uu___ =
-              let uu___1 = translate cfg bs typ in
-              let uu___2 = fmap_opt (translate_univ cfg bs) u in
-              (uu___1, uu___2) in
+        | FStar_Syntax_Syntax.GTotal typ ->
+            let uu___ = translate cfg bs typ in
             FStar_TypeChecker_NBETerm.GTot uu___
         | FStar_Syntax_Syntax.Comp ctyp ->
             let uu___ = translate_comp_typ cfg bs ctyp in
@@ -2038,12 +2034,10 @@ and (readback_comp :
     fun c ->
       let c' =
         match c with
-        | FStar_TypeChecker_NBETerm.Tot (typ, u) ->
-            let uu___ = let uu___1 = readback cfg typ in (uu___1, u) in
-            FStar_Syntax_Syntax.Total uu___
-        | FStar_TypeChecker_NBETerm.GTot (typ, u) ->
-            let uu___ = let uu___1 = readback cfg typ in (uu___1, u) in
-            FStar_Syntax_Syntax.GTotal uu___
+        | FStar_TypeChecker_NBETerm.Tot typ ->
+            let uu___ = readback cfg typ in FStar_Syntax_Syntax.Total uu___
+        | FStar_TypeChecker_NBETerm.GTot typ ->
+            let uu___ = readback cfg typ in FStar_Syntax_Syntax.GTotal uu___
         | FStar_TypeChecker_NBETerm.Comp ctyp ->
             let uu___ = readback_comp_typ cfg ctyp in
             FStar_Syntax_Syntax.Comp uu___ in
@@ -3200,6 +3194,8 @@ let (normalize :
                      (uu___.FStar_TypeChecker_Cfg.unfold_attr);
                    FStar_TypeChecker_Cfg.unfold_qual =
                      (uu___.FStar_TypeChecker_Cfg.unfold_qual);
+                   FStar_TypeChecker_Cfg.unfold_namespace =
+                     (uu___.FStar_TypeChecker_Cfg.unfold_namespace);
                    FStar_TypeChecker_Cfg.unfold_tac =
                      (uu___.FStar_TypeChecker_Cfg.unfold_tac);
                    FStar_TypeChecker_Cfg.pure_subterms_within_computations =
@@ -3308,6 +3304,8 @@ let (normalize_for_unit_test :
                    (uu___.FStar_TypeChecker_Cfg.unfold_attr);
                  FStar_TypeChecker_Cfg.unfold_qual =
                    (uu___.FStar_TypeChecker_Cfg.unfold_qual);
+                 FStar_TypeChecker_Cfg.unfold_namespace =
+                   (uu___.FStar_TypeChecker_Cfg.unfold_namespace);
                  FStar_TypeChecker_Cfg.unfold_tac =
                    (uu___.FStar_TypeChecker_Cfg.unfold_tac);
                  FStar_TypeChecker_Cfg.pure_subterms_within_computations =

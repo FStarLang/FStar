@@ -2226,46 +2226,50 @@ and (check_relation_comp :
               if uu___2
               then return ()
               else
-                (let ct_eq ct0 ct1 =
-                   let uu___4 =
-                     check_relation g EQUALITY
-                       ct0.FStar_Syntax_Syntax.result_typ
-                       ct1.FStar_Syntax_Syntax.result_typ in
+                (let ct_eq res0 args0 res1 args1 =
+                   let uu___4 = check_relation g EQUALITY res0 res1 in
                    op_let_Bang uu___4
                      (fun uu___5 ->
-                        check_relation_args g EQUALITY
-                          ct0.FStar_Syntax_Syntax.effect_args
-                          ct1.FStar_Syntax_Syntax.effect_args) in
-                 let ct0 = FStar_Syntax_Util.comp_to_comp_typ_nouniv c0 in
-                 let ct1 = FStar_Syntax_Util.comp_to_comp_typ_nouniv c1 in
-                 let uu___4 =
-                   FStar_Ident.lid_equals ct0.FStar_Syntax_Syntax.effect_name
-                     ct1.FStar_Syntax_Syntax.effect_name in
-                 if uu___4
-                 then ct_eq ct0 ct1
-                 else
-                   (let ct01 =
-                      FStar_TypeChecker_Env.unfold_effect_abbrev g.tcenv c0 in
-                    let ct11 =
-                      FStar_TypeChecker_Env.unfold_effect_abbrev g.tcenv c1 in
-                    let uu___6 =
-                      FStar_Ident.lid_equals
-                        ct01.FStar_Syntax_Syntax.effect_name
-                        ct11.FStar_Syntax_Syntax.effect_name in
-                    if uu___6
-                    then ct_eq ct01 ct11
-                    else
-                      (let uu___8 =
-                         let uu___9 =
-                           FStar_Ident.string_of_lid
-                             ct01.FStar_Syntax_Syntax.effect_name in
-                         let uu___10 =
-                           FStar_Ident.string_of_lid
-                             ct11.FStar_Syntax_Syntax.effect_name in
-                         FStar_Compiler_Util.format2
-                           "Subcomp failed: Unequal computation types %s and %s"
-                           uu___9 uu___10 in
-                       fail uu___8)))
+                        check_relation_args g EQUALITY args0 args1) in
+                 let uu___4 = FStar_Syntax_Util.comp_eff_name_res_and_args c0 in
+                 match uu___4 with
+                 | (eff0, res0, args0) ->
+                     let uu___5 =
+                       FStar_Syntax_Util.comp_eff_name_res_and_args c1 in
+                     (match uu___5 with
+                      | (eff1, res1, args1) ->
+                          let uu___6 = FStar_Ident.lid_equals eff0 eff1 in
+                          if uu___6
+                          then ct_eq res0 args0 res1 args1
+                          else
+                            (let ct0 =
+                               FStar_TypeChecker_Env.unfold_effect_abbrev
+                                 g.tcenv c0 in
+                             let ct1 =
+                               FStar_TypeChecker_Env.unfold_effect_abbrev
+                                 g.tcenv c1 in
+                             let uu___8 =
+                               FStar_Ident.lid_equals
+                                 ct0.FStar_Syntax_Syntax.effect_name
+                                 ct1.FStar_Syntax_Syntax.effect_name in
+                             if uu___8
+                             then
+                               ct_eq ct0.FStar_Syntax_Syntax.result_typ
+                                 ct0.FStar_Syntax_Syntax.effect_args
+                                 ct1.FStar_Syntax_Syntax.result_typ
+                                 ct1.FStar_Syntax_Syntax.effect_args
+                             else
+                               (let uu___10 =
+                                  let uu___11 =
+                                    FStar_Ident.string_of_lid
+                                      ct0.FStar_Syntax_Syntax.effect_name in
+                                  let uu___12 =
+                                    FStar_Ident.string_of_lid
+                                      ct1.FStar_Syntax_Syntax.effect_name in
+                                  FStar_Compiler_Util.format2
+                                    "Subcomp failed: Unequal computation types %s and %s"
+                                    uu___11 uu___12 in
+                                fail uu___10))))
           | (uu___1, FStar_Pervasives_Native.None) ->
               let uu___2 =
                 let uu___3 = FStar_Syntax_Util.eq_comp c0 c1 in
@@ -2273,46 +2277,50 @@ and (check_relation_comp :
               if uu___2
               then return ()
               else
-                (let ct_eq ct0 ct1 =
-                   let uu___4 =
-                     check_relation g EQUALITY
-                       ct0.FStar_Syntax_Syntax.result_typ
-                       ct1.FStar_Syntax_Syntax.result_typ in
+                (let ct_eq res0 args0 res1 args1 =
+                   let uu___4 = check_relation g EQUALITY res0 res1 in
                    op_let_Bang uu___4
                      (fun uu___5 ->
-                        check_relation_args g EQUALITY
-                          ct0.FStar_Syntax_Syntax.effect_args
-                          ct1.FStar_Syntax_Syntax.effect_args) in
-                 let ct0 = FStar_Syntax_Util.comp_to_comp_typ_nouniv c0 in
-                 let ct1 = FStar_Syntax_Util.comp_to_comp_typ_nouniv c1 in
-                 let uu___4 =
-                   FStar_Ident.lid_equals ct0.FStar_Syntax_Syntax.effect_name
-                     ct1.FStar_Syntax_Syntax.effect_name in
-                 if uu___4
-                 then ct_eq ct0 ct1
-                 else
-                   (let ct01 =
-                      FStar_TypeChecker_Env.unfold_effect_abbrev g.tcenv c0 in
-                    let ct11 =
-                      FStar_TypeChecker_Env.unfold_effect_abbrev g.tcenv c1 in
-                    let uu___6 =
-                      FStar_Ident.lid_equals
-                        ct01.FStar_Syntax_Syntax.effect_name
-                        ct11.FStar_Syntax_Syntax.effect_name in
-                    if uu___6
-                    then ct_eq ct01 ct11
-                    else
-                      (let uu___8 =
-                         let uu___9 =
-                           FStar_Ident.string_of_lid
-                             ct01.FStar_Syntax_Syntax.effect_name in
-                         let uu___10 =
-                           FStar_Ident.string_of_lid
-                             ct11.FStar_Syntax_Syntax.effect_name in
-                         FStar_Compiler_Util.format2
-                           "Subcomp failed: Unequal computation types %s and %s"
-                           uu___9 uu___10 in
-                       fail uu___8)))
+                        check_relation_args g EQUALITY args0 args1) in
+                 let uu___4 = FStar_Syntax_Util.comp_eff_name_res_and_args c0 in
+                 match uu___4 with
+                 | (eff0, res0, args0) ->
+                     let uu___5 =
+                       FStar_Syntax_Util.comp_eff_name_res_and_args c1 in
+                     (match uu___5 with
+                      | (eff1, res1, args1) ->
+                          let uu___6 = FStar_Ident.lid_equals eff0 eff1 in
+                          if uu___6
+                          then ct_eq res0 args0 res1 args1
+                          else
+                            (let ct0 =
+                               FStar_TypeChecker_Env.unfold_effect_abbrev
+                                 g.tcenv c0 in
+                             let ct1 =
+                               FStar_TypeChecker_Env.unfold_effect_abbrev
+                                 g.tcenv c1 in
+                             let uu___8 =
+                               FStar_Ident.lid_equals
+                                 ct0.FStar_Syntax_Syntax.effect_name
+                                 ct1.FStar_Syntax_Syntax.effect_name in
+                             if uu___8
+                             then
+                               ct_eq ct0.FStar_Syntax_Syntax.result_typ
+                                 ct0.FStar_Syntax_Syntax.effect_args
+                                 ct1.FStar_Syntax_Syntax.result_typ
+                                 ct1.FStar_Syntax_Syntax.effect_args
+                             else
+                               (let uu___10 =
+                                  let uu___11 =
+                                    FStar_Ident.string_of_lid
+                                      ct0.FStar_Syntax_Syntax.effect_name in
+                                  let uu___12 =
+                                    FStar_Ident.string_of_lid
+                                      ct1.FStar_Syntax_Syntax.effect_name in
+                                  FStar_Compiler_Util.format2
+                                    "Subcomp failed: Unequal computation types %s and %s"
+                                    uu___11 uu___12 in
+                                fail uu___10))))
           | (FStar_Pervasives_Native.Some (E_TOTAL, t0),
              FStar_Pervasives_Native.Some (uu___1, t1)) ->
               check_relation g rel t0 t1
@@ -3360,16 +3368,16 @@ and (check_comp :
   fun g ->
     fun c ->
       match c.FStar_Syntax_Syntax.n with
-      | FStar_Syntax_Syntax.Total (t, uu___) ->
-          let uu___1 =
+      | FStar_Syntax_Syntax.Total t ->
+          let uu___ =
             check "(G)Tot comp result" g (FStar_Syntax_Util.comp_result c) in
-          op_let_Bang uu___1
-            (fun uu___2 -> match uu___2 with | (uu___3, t1) -> is_type g t1)
-      | FStar_Syntax_Syntax.GTotal (t, uu___) ->
-          let uu___1 =
+          op_let_Bang uu___
+            (fun uu___1 -> match uu___1 with | (uu___2, t1) -> is_type g t1)
+      | FStar_Syntax_Syntax.GTotal t ->
+          let uu___ =
             check "(G)Tot comp result" g (FStar_Syntax_Util.comp_result c) in
-          op_let_Bang uu___1
-            (fun uu___2 -> match uu___2 with | (uu___3, t1) -> is_type g t1)
+          op_let_Bang uu___
+            (fun uu___1 -> match uu___1 with | (uu___2, t1) -> is_type g t1)
       | FStar_Syntax_Syntax.Comp ct ->
           if
             (FStar_Compiler_List.length ct.FStar_Syntax_Syntax.comp_univs) <>

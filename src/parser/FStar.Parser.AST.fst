@@ -510,7 +510,7 @@ let compile_op arity s r =
       |':' -> "Colon"
       |'$' -> "Dollar"
       |'.' -> "Dot"
-      | c -> raise_error (Fatal_UnexpectedOperatorSymbol, "Unexpected operator symbol: '" ^ string_of_char c ^ "'") r
+      | c -> "u" ^ (Util.string_of_int (Util.int_of_char c))
     in
     match s with
     | ".[]<-" -> "op_String_Assignment"
@@ -569,7 +569,12 @@ let string_to_op s =
     if starts_with s "op_"
     then let s = split (substring_from s (String.length "op_")) "_" in
          match s with
-         | [op] -> name_of_op op
+         | [op] ->
+                if starts_with op "u"
+                then map_opt (safe_int_of_string (substring_from op 1)) (
+                       fun op -> (string_of_char (char_of_int op), None)
+                     )
+                else name_of_op op
          | _ ->
            let maybeop =
              List.fold_left (fun acc x -> match acc with
