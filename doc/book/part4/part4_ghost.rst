@@ -7,7 +7,7 @@ When writing proof-oriented programs, inevitably, some parts of the
 program are there only to state and prove properties about the code
 that actually executes. Our first *effect* separates the
 computationally relevant parts of the program from the computationally
-irrelevant, specificational or *ghost* parts of a program. This
+irrelevant (i.e., specificational or *ghost*) parts of a program. This
 separation enables the F* compiler to guarantee that all the ghost
 parts of a program are optimized away entirely.
 
@@ -26,11 +26,20 @@ and a function to concatenate two vectors:
    :start-after: //SNIPPET_START: append
    :end-before: //SNIPPET_END: append
 
+Compare this with concatenating two lists:
+
+.. code-block:: fstar
+
+   let rec list_append #a (l1 l2:list a) =
+       match l1 with
+       | [] -> []
+       | hd::tl -> hd :: list_append tl l2
 
 Superficially, because of the implicit arguments, it may look like
 concatenating vectors with ``append`` is just as efficient as a
 concatenating lists---the length indexes seem to impose no
-overhead. But, let's look at the code that F* extracts to OCaml:
+overhead. But, let's look at the code that F* extracts to OCaml for
+length-indexed vectors.
 
 First, in the definition of the ``vec`` type, since OCaml is not
 dependently typed, the ``nat``-index of the F* ``vec`` is replaced by
@@ -59,9 +68,53 @@ time-efficient than ``List.append``.
 
 This is particularly unfortunate, since the computational behavior of
 ``append`` doesn't actually depend on the length indexes of the input
-vectors. What we need is a principled way to indicate to the F*
+vectors. What we need is a principled way to indicate to the F\*
 compiler that some parts of a computation are actually only there for
 specification or proof purposes and that they can be removed when
 compiling the code without changing the observable result computed by
 the program. This is what *erasure* is about---removing the
 computationally irrelevant parts of a term for compilation.
+
+Here's a revised version of vectors, making use of the ``erased`` type
+from the ``FStar.Ghost`` library to indicate to F* which parts must be
+erased by the compiler.
+
+.. literalinclude:: ../code/VecErased.fst
+   :language: fstar
+
+We'll look into this in much more detail in what follows, but notice
+for now that:
+
+  1. We type of the first argument of ``Cons`` is now ``erased nat``.
+
+  2. The two implicit arguments of ``append`` corresponding the
+     indexes of the input vectors also have type ``erased nat``.
+
+And, if we extract this code to OCaml, here's what we get:
+
+
+.. literalinclude:: ../code/VecErased.ml
+   :language: ocaml
+   :start-after: (* SNIPPET_START: vec *)
+   :end-before: (* SNIPPET_END: vec *)
+
+.. literalinclude:: ../code/VecErased.ml
+   :language: ocaml
+   :start-after: (* SNIPPET_START: append *)
+   :end-before: (* SNIPPET_END: append *)
+
+Notice that the erased arguments have all been turned into the unit
+value ``()``, and the needless addition in ``append`` is gone too.
+
+.. note:: 
+
+   Of course, the code would be cleaner still if F* were to have
+   entirely removed the argument instead of leaving behind a unit
+   term, but we leave it to the downstream compiler, e.g., OCaml
+   itself, to remove these needless units. Further, if we're compiling
+   the ML code extracted from F* to C using KaRaMeL, then its easy to
+   inspect the C code and confirm that KaRaMeL has really removed
+   those additional units.
+              
+
+   

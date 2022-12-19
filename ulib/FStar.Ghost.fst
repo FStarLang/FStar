@@ -25,6 +25,8 @@ let hide #a x = E x
 let hide_reveal #a x = ()
 let reveal_hide #a x = ()
 
+let pull #a #b f = admit()
+
 // let wfr_erased (a:Type)
 //   : GTot (wfr_t (erased a))
 //   = inverse_image_to_wfr #(erased a) #a (fun x y -> default_relation (reveal x) (reveal y)) (pull (reveal #a)) (default_wfr a)
