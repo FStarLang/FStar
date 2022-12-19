@@ -24,3 +24,13 @@ let reveal #a (E x) = x
 let hide #a x = E x
 let hide_reveal #a x = ()
 let reveal_hide #a x = ()
+
+// let wfr_erased (a:Type)
+//   : GTot (wfr_t (erased a))
+//   = inverse_image_to_wfr #(erased a) #a (fun x y -> default_relation (reveal x) (reveal y)) (pull (reveal #a)) (default_wfr a)
+
+// let erased_precedes (a:Type) (x:erased a) (y:erased a)
+//   : Lemma 
+//     (requires reveal x << reveal y)
+//     (ensures (wfr_erased a).decreaser x << (wfr_erased a).decreaser y)
+//   = ()
