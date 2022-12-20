@@ -1523,6 +1523,6 @@ type dsl_tac_t = g:fstar_top_env -> T.Tac (r:(R.term & R.typ){typing g (fst r) (
 // When we add both these to mini steel syntax
 //
 unfold
-let meq2 (a:Type0) (x y:a) = Prims.eq2 x y
+let meq2 (a:Type0) (x y:a) : prop = Prims.eq2 x y
 
 
