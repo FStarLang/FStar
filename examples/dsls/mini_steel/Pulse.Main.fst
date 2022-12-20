@@ -74,5 +74,3 @@ Tm_Abs
 [@@plugin]
 let check_bar (_:unit) : RT.dsl_tac_t =
   main bar Tm_Emp
-
-

@@ -109,6 +109,8 @@ type open_or_close =
 let tun = pack_ln Tv_Unknown
 
 let make_bv (n:int) (t:term) = { bv_ppname = "_"; bv_index = n; bv_sort = t}
+let make_bv_with_name (s:string) (n:int) (t:term) =
+  { bv_ppname = s; bv_index = n; bv_sort = t}
 let var_as_bv (v:int) = pack_bv (make_bv v tun)
 let var_as_term (v:var) = pack_ln (Tv_Var (var_as_bv v))
             
