@@ -533,6 +533,7 @@ let frame_empty (f:RT.fstar_top_env)
 #pop-options
 
 #push-options "--query_stats --fuel 2 --ifuel 1 --z3rlimit_factor 10"
+#push-options "--print_implicits --print_universes --print_full_names"
 let rec check (f:RT.fstar_top_env)
               (g:env)
               (t:term)
@@ -544,11 +545,18 @@ let rec check (f:RT.fstar_top_env)
       : (c:pure_comp { C_ST? c ==> comp_pre c == pre } & src_typing f g t c)
       = let (| c, d_c |) = x in (|c, d_c|)
     in
-    let force_st #g #pre #t (x:(c:pure_comp { C_ST? c ==> comp_pre c == pre } & src_typing f g t c))
+    let force_st #g #t (#pre:pure_term)
+                 (pre_typing:tot_typing f g pre Tm_VProp)
+                 (x:(c:pure_comp { C_ST? c ==> comp_pre c == pre } & src_typing f g t c))
       : T.Tac (c:pure_comp_st { comp_pre c == pre } & src_typing f g t c)
       = let (| c, d_c |) = x in
         match c with
-        | C_Tot _ -> T.fail "Expected an ST computation"
+        | C_Tot ty ->
+          let (| ures, ures_ty |) = check_universe f g ty in
+          let c = return_comp_noeq ures ty in
+          let d = T_ReturnNoEq _ _ _ _ d_c ures_ty in
+          frame_empty f g pre pre_typing ures ty ures_ty _ c d        
+
         | C_ST _ -> (|c, d_c|)
     in
     let frame_empty = frame_empty f g pre pre_typing in
@@ -611,7 +619,7 @@ let rec check (f:RT.fstar_top_env)
       end
 
     | Tm_Bind t e1 e2 ->
-      let (| c1, d1 |) = force_st (check f g e1 pre pre_typing) in
+      let (| c1, d1 |) = force_st pre_typing (check f g e1 pre pre_typing) in
       let C_ST s1 = c1 in
       if t <> s1.res 
       then T.fail "Annotated type of let-binding is incorrect"
@@ -630,7 +638,7 @@ let rec check (f:RT.fstar_top_env)
                 | (| Tm_VProp, nt |) -> E nt
                 | _ -> T.fail "next pre is not typable"
             in
-            let (| c2, d2 |) = force_st (check f g' (open_term e2 x) next_pre next_pre_typing) in
+            let (| c2, d2 |) = force_st next_pre_typing (check f g' (open_term e2 x) next_pre next_pre_typing) in
             let C_ST s2 = c2 in
             let (| u, res_typing |) = check_universe f g s2.res in
             if u <> s2.u || x `Set.mem` freevars s2.post
