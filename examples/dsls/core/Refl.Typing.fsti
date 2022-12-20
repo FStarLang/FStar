@@ -1524,5 +1524,3 @@ type dsl_tac_t = g:fstar_top_env -> T.Tac (r:(R.term & R.typ){typing g (fst r) (
 //
 unfold
 let meq2 (a:Type0) (x y:a) : prop = Prims.eq2 x y
-
-

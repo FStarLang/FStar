@@ -75,4 +75,71 @@ Tm_Abs
 let check_bar (_:unit) : RT.dsl_tac_t =
   main bar Tm_Emp
 
+// fun (n:erased) (r1:ref) (x:u32) (r2:ref) -> \\
+//   {pts_to r1 (reveal n) `star` pts_to r2 (reveal n)} call: write (r1, x))
 
+let baz = (
+Tm_Abs
+  (Tm_FVar erased_lid)  // n:erased
+  Tm_Emp
+  (
+    Tm_Abs
+      (Tm_FVar ref_lid)  // r1:ref
+      Tm_Emp
+      (
+        Tm_Abs
+          (Tm_FVar u32_lid)  // x:u32
+          Tm_Emp
+          (
+            Tm_Abs
+              (Tm_FVar ref_lid)  // r2:ref
+              (
+                Tm_Star
+                  (
+                    Tm_PureApp
+                      (
+                        Tm_PureApp
+                          (Tm_FVar pts_to_lid)
+                          (Tm_BVar 0)
+                      )
+                      (
+                        Tm_PureApp
+                          (Tm_FVar reveal_lid)
+                          (Tm_BVar 3)
+                      )
+                  )
+                  (
+                    Tm_PureApp
+                      (
+                        Tm_PureApp
+                          (Tm_FVar pts_to_lid)
+                          (Tm_BVar 2)
+                      )
+                      (
+                        Tm_PureApp
+                          (Tm_FVar reveal_lid)
+                          (Tm_BVar 3)
+                      )
+                  )
+              )
+              (
+                Tm_STApp
+                  (
+                    Tm_PureApp
+                      (
+                        Tm_PureApp
+                          (Tm_FVar write_lid)
+                          (Tm_BVar 3)
+                      )
+                      (Tm_BVar 2)
+                  )
+                  (Tm_BVar 1)
+              )
+          )
+      )
+  )
+)
+
+[@@plugin]
+let check_baz (_:unit) : RT.dsl_tac_t =
+  main baz Tm_Emp
