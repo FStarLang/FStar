@@ -12,7 +12,7 @@ open Pulse.Elaborate
 open Pulse.Soundness
 
 
-let main' (t:term) (pre:pure_term) (g:RT.fstar_top_env)
+let main' (t:term) (pre:term) (g:RT.fstar_top_env)
   : T.Tac (r:(R.term & R.typ){RT.typing g (fst r) (snd r)})
   = match Pulse.Soundness.Common.check_top_level_environment g with
     | None -> T.fail "pulse main: top-level environment does not include stt at the expected types"
