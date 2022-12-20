@@ -538,7 +538,7 @@ let frame_empty (f:RT.fstar_top_env)
     )
 #pop-options
 
-#push-options "--query_stats --fuel 2 --ifuel 1 --z3rlimit_factor 10"
+#push-options "--query_stats --fuel 2 --ifuel 1 --z3rlimit_factor 20"
 #push-options "--print_implicits --print_universes --print_full_names"
 let rec check (f:RT.fstar_top_env)
               (g:env)
@@ -625,7 +625,6 @@ let rec check (f:RT.fstar_top_env)
       end
 
     | Tm_Bind t e1 e2 ->
-      admit ();
       let (| c1, d1 |) = force_st pre_typing (check f g e1 pre pre_typing) in
       let C_ST s1 = c1 in
       if t <> s1.res 
