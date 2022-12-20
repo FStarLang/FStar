@@ -4,8 +4,7 @@ module R = FStar.Reflection
 module L = FStar.List.Tot
 open FStar.List.Tot
 open Pulse.Syntax
-assume
-val dummy_range : Prims.range 
+
 let tun = R.pack_ln R.Tv_Unknown
 let bool_lid = ["Prims"; "bool"]
 let vprop_lid = ["Steel"; "Effect"; "Common"; "vprop"]
@@ -43,7 +42,7 @@ let rec elab_universe (u:universe)
   = match u with
     | U_zero -> R.pack_universe (R.Uv_Zero)
     | U_succ u -> R.pack_universe (R.Uv_Succ (elab_universe u))
-    | U_var x -> R.pack_universe (R.Uv_Name (x, dummy_range))
+    | U_var x -> R.pack_universe (R.Uv_Name (x, Refl.Typing.Builtins.dummy_range))
     | U_max u1 u2 -> R.pack_universe (R.Uv_Max [elab_universe u1; elab_universe u2])
 
 let mk_st (u:universe) (res pre post:R.term)

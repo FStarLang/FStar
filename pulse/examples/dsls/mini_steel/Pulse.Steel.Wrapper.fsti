@@ -4,6 +4,7 @@ open Steel.ST.Effect
 open Steel.Memory
 open Steel.ST.Util
 
+inline_for_extraction
 val stt (a:Type u#a) (pre:vprop) (post:a -> vprop) : Type0
 
 inline_for_extraction
