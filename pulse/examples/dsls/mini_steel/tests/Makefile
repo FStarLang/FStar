@@ -1,4 +1,4 @@
-INCLUDE_PATHS=../core ..
+INCLUDE_PATHS=../../core .. ../_output/ ../_output/_build
 
 FSTAR_FLAGS=$(addprefix --include , $(INCLUDE_PATHS)) \
 	    --cache_checked_modules \
@@ -11,10 +11,11 @@ FSTAR=fstar.exe $(FSTAR_FLAGS)
 all: Pulse.Tests.fst.checked
 
 Pulse.Tests.fst.checked: prep
-	$(FSTAR) Pulse.Tests.fst
+	fstar.exe --load_cmxs Pulse.Main $(addprefix --include , $(INCLUDE_PATHS)) Pulse.Tests.fst --log_types --trace_error --debug Pulse.Tests --debug_level SMTQuery
 
 prep:
-	$(MAKE) -C .. extract_all
+	$(MAKE) -C .. plugin
+
 
 
 .PHONY: all prep
