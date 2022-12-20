@@ -42,30 +42,30 @@ let write_lid = ["Pulse"; "Steel"; "Wrapper"; "write"]
 //             { pts_to r (reveal n) } call: write(r, x))"
 let bar = (
 Tm_Abs
-  (Tm_FVar erased_lid)  //n:erased u32
+  (mk_binder "n" (Tm_FVar erased_lid))  //n:erased u32
   Tm_Emp
   (Tm_Abs
-     (Tm_FVar ref_lid)  //r:ref
+     (mk_binder "r" (Tm_FVar ref_lid))  //r:ref
      Tm_Emp
      (Tm_Abs
-        (Tm_FVar u32_lid)  //x:u32
+        (mk_binder "x" (Tm_FVar u32_lid))  //x:u32
         (Tm_PureApp
           (Tm_PureApp
              (Tm_FVar pts_to_lid)
-             (Tm_BVar 1))
+             (mk_bvar "r" 1))
           (Tm_PureApp
              (Tm_FVar reveal_lid)
-             (Tm_BVar 2))
+             (mk_bvar "n" 2))
         )
         (Tm_STApp
            (Tm_PureApp
               (Tm_PureApp
                  (Tm_FVar write_lid)
-                 (Tm_BVar 2)
+                 (mk_bvar "n" 2)
               )
-              (Tm_BVar 1)
+              (mk_bvar "r" 1)
            )
-           (Tm_BVar 0)
+           (mk_bvar "x" 0)
         )
      )
   )

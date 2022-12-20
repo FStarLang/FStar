@@ -348,3 +348,12 @@ let rec term_to_string (t:term) : Tot string (decreases t) =
 
 and binder_to_string (b:binder) : string =
   b.binder_ppname ^ ":" ^ term_to_string (b.binder_ty)
+
+let null_binder (t:term) : binder =
+  {binder_ty=t;binder_ppname="_"}
+
+let mk_binder (s:string) (t:term) : binder =
+  {binder_ty=t;binder_ppname=s}
+
+let mk_bvar (s:string) (i:index) : term =
+  Tm_BVar {bv_index=i;bv_ppname=s}
