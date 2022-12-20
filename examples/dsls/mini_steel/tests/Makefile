@@ -11,7 +11,10 @@ FSTAR=fstar.exe $(FSTAR_FLAGS)
 all: Pulse.Tests.fst.checked
 
 Pulse.Tests.fst.checked: prep
-	fstar.exe --load_cmxs Pulse.Main $(addprefix --include , $(INCLUDE_PATHS)) Pulse.Tests.fst --log_types --trace_error --debug Pulse.Tests --debug_level SMTQuery
+	fstar.exe --cache_checked_modules --load_cmxs Pulse.Main $(addprefix --include , $(INCLUDE_PATHS)) Pulse.Tests.fst --log_types --trace_error --debug Pulse.Tests --debug_level SMTQuery $(OTHERFLAGS)
+
+Pulse_Tests.ml:
+	fstar.exe --codegen OCaml --extract Pulse.Tests $(addprefix --include , $(INCLUDE_PATHS)) Pulse.Tests.fst $(OTHERFLAGS)
 
 prep:
 	$(MAKE) -C .. plugin

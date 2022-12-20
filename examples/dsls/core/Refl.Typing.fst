@@ -4,7 +4,8 @@ open FStar.Reflection
 
 module R = FStar.Reflection
 module T = FStar.Tactics
-module RTB = FStar.Tactics.Builtins
+module FTB = FStar.Tactics.Builtins
+module RTB = Refl.Typing.Builtins
 
 let inspect_pack t = R.inspect_pack_inv t
   
@@ -41,19 +42,19 @@ let lookup_fvar_extend_env (g:env) (x:fv) (us:universes) (y:var) (ty:term) = adm
 
 let open_or_close_ctx_uvar_and_subst (c:ctx_uvar_and_subst) (v:open_or_close) (i:nat) = magic ()
 
-let open_with (t:term) (v:term) = magic ()
+let open_with (t:term) (v:term) = RTB.open_with t v
   
 let open_with_spec (t v:term) = admit ()
 
-let open_term (t:term) (v:var) = magic ()
+let open_term (t:term) (v:var) = RTB.open_term t v
 
 let open_term_spec (t:term) (v:var) = admit ()
   
-let close_term (t:term) (v:var) = magic ()
+let close_term (t:term) (v:var) = RTB.close_term t v
 
 let close_term_spec (t:term) (v:var) = admit ()
 
-let rename (t:term) (x y:var)= magic ()
+let rename (t:term) (x y:var)= RTB.rename t x y
 
 let rename_spec (t:term) (x y:var) = admit ()
   
@@ -66,7 +67,7 @@ let subtyping_token_renaming (g:env)
                              (y:var { None? (lookup_bvar (extend_env_l g (bs1@bs0)) y) })
                              (t:term)
                              (t0 t1:term)
-                             (d:RTB.subtyping_token (extend_env_l g (bs1@(x,t)::bs0)) t0 t1) = magic ()
+                             (d:FTB.subtyping_token (extend_env_l g (bs1@(x,t)::bs0)) t0 t1) = magic ()
 
 let subtyping_token_weakening (g:env)
                               (bs0:bindings)
@@ -74,7 +75,7 @@ let subtyping_token_weakening (g:env)
                               (x:var { None? (lookup_bvar (extend_env_l g (bs1@bs0)) x) })
                               (t:term)
                               (t0 t1:term)
-                             (d:RTB.subtyping_token (extend_env_l g (bs1@bs0)) t0 t1) = magic ()
+                             (d:FTB.subtyping_token (extend_env_l g (bs1@bs0)) t0 t1) = magic ()
 
 let well_typed_terms_are_ln (g:R.env) (e:R.term) (t:R.term) (_:typing g e t) = admit ()
 

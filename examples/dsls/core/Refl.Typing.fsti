@@ -4,7 +4,7 @@ open FStar.List.Tot
 open FStar.Reflection
 module R = FStar.Reflection
 module T = FStar.Tactics
-module RTB = FStar.Tactics.Builtins
+module FTB = FStar.Tactics.Builtins
 
 val inspect_pack (t:R.term_view)
   : Lemma (ensures R.(inspect_ln (pack_ln t) == t))
@@ -457,7 +457,7 @@ type typing : env -> term -> term -> Type0 =
     g:env ->
     e:term ->
     t:typ ->
-    squash (RTB.typing_token g e t) ->
+    squash (FTB.typing_token g e t) ->
     typing g e t
 
   | T_Var : 
@@ -586,7 +586,7 @@ and sub_typing : env -> term -> term -> Type0 =
       g:env ->
       t0:term ->
       t1:term ->      
-      squash (RTB.subtyping_token g t0 t1) ->
+      squash (FTB.subtyping_token g t0 t1) ->
       sub_typing g t0 t1
 
   | ST_UnivEq:
@@ -622,7 +622,7 @@ and equiv : env -> term -> term -> Type0 =
       g:env ->
       t0:term ->
       t1:term ->
-      squash (RTB.equiv_token g t0 t1) ->
+      squash (FTB.equiv_token g t0 t1) ->
       equiv g t0 t1
       
 
@@ -644,8 +644,8 @@ val subtyping_token_renaming (g:env)
                              (y:var { None? (lookup_bvar (extend_env_l g (bs1@bs0)) y) })
                              (t:term)
                              (t0 t1:term)
-                             (d:RTB.subtyping_token (extend_env_l g (bs1@(x,t)::bs0)) t0 t1)
-  : RTB.subtyping_token (extend_env_l g (rename_bindings bs1 x y@(y,t)::bs0))
+                             (d:FTB.subtyping_token (extend_env_l g (bs1@(x,t)::bs0)) t0 t1)
+  : FTB.subtyping_token (extend_env_l g (rename_bindings bs1 x y@(y,t)::bs0))
                         (rename t0 x y)
                         (rename t1 x y)
 
@@ -655,8 +655,8 @@ val subtyping_token_weakening (g:env)
                               (x:var { None? (lookup_bvar (extend_env_l g (bs1@bs0)) x) })
                               (t:term)
                               (t0 t1:term)
-                              (d:RTB.subtyping_token (extend_env_l g (bs1@bs0)) t0 t1)
-  : RTB.subtyping_token (extend_env_l g (bs1@(x,t)::bs0)) t0 t1
+                              (d:FTB.subtyping_token (extend_env_l g (bs1@bs0)) t0 t1)
+  : FTB.subtyping_token (extend_env_l g (bs1@(x,t)::bs0)) t0 t1
 
 let simplify_umax (#g:R.env) (#t:R.term) (#u:R.universe)
                   (d:typing g t (tm_type (u_max u u)))

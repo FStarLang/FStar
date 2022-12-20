@@ -184,7 +184,7 @@ and readback_universe (u:R.universe)
     let? u' = readback_universe u' in
     Some (U_succ u' <: u':universe{ elab_universe u' == u })
   | R.Uv_Name (s, r) ->
-    assume (r == dummy_range);
+    assume (r == Refl.Typing.Builtins.dummy_range);
     Some (U_var s)
   | R.Uv_Max [u1; u2] ->
     let? u1' = readback_universe u1 in

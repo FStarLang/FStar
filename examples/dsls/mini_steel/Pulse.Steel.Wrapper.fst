@@ -4,7 +4,8 @@ open Steel.ST.Effect
 open Steel.Memory
 open Steel.ST.Util
 
-type stt (a:Type u#a) (pre:vprop) (post:a -> vprop) = unit -> STT a pre post
+inline_for_extraction
+let stt (a:Type u#a) (pre:vprop) (post:a -> vprop) = unit -> STT a pre post
 
 inline_for_extraction
 let return_stt (#a:Type u#a) (x:a) : stt a emp (fun r -> pure (r == x)) =
@@ -66,12 +67,15 @@ let sub_stt (#a:Type u#a)
             (e:stt a pre1 post1)
   : stt a pre2 post2 =
   fun _ ->
+    [@inline_let]
     let _ = unsquash_equiv pre1 pre2 () in
     rewrite_equiv pre2 pre1;
     let x = e () in
+    [@inline_let]    
     let pf : vprop_equiv (post1 x) (post2 x) = 
       elim_vprop_post_equiv post1 post2 pf2 x
     in
+    [@inline_let]    
     let _ = unsquash_equiv (post1 x) (post2 x) pf in
     rewrite_equiv (post1 x) (post2 x);
     return x
