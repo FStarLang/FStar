@@ -496,8 +496,9 @@ let interpret_plugin_as_term_fun (env:UEnv.uenv) (fv:fv) (t:typ) (arity_opt:opti
               (RC.fstar_refl_types_lid "sigelt", 0, "sigelt"), Refl_emb;
               (RC.fstar_refl_types_lid "fv", 0, "fv"), Refl_emb;
               (RC.fstar_refl_types_lid "binder", 0, "binder"), Refl_emb;
+              (RC.fstar_refl_types_lid "env", 0, "env"), Refl_emb;                            
               (RC.fstar_refl_syntax_lid "binders", 0, "binders"), Refl_emb;
-              (RC.fstar_refl_data_lid "exp", 0, "exp"), Refl_emb
+              (RC.fstar_refl_data_lid "exp", 0, "exp"), Refl_emb;
             ]
        in
        let nbe_cs =

@@ -521,19 +521,19 @@ let () =
 
       // reflection typechecker callbacks (part of the DSL framework)
 
-      mk_refl_typing_step_3 "check_subtyping"
+      mk_tac_step_3 0 "check_subtyping"
         refl_check_subtyping RE.e_env RE.e_term RE.e_term (e_option e_unit)
         refl_check_subtyping NRE.e_env NRE.e_term NRE.e_term (NBET.e_option NBET.e_unit);
 
-      mk_refl_typing_step_3 "check_equiv"
+      mk_tac_step_3 0 "check_equiv"
         refl_check_equiv RE.e_env RE.e_term RE.e_term (e_option e_unit)
         refl_check_equiv NRE.e_env NRE.e_term NRE.e_term (NBET.e_option NBET.e_unit);
 
-      mk_refl_typing_step_2 "tc_term"
+      mk_tac_step_2 0 "tc_term"
         refl_tc_term RE.e_env RE.e_term (e_option RE.e_term)
         refl_tc_term NRE.e_env NRE.e_term (NBET.e_option NRE.e_term);
 
-      mk_refl_typing_step_2 "universe_of"
+      mk_tac_step_2 0 "universe_of"
         refl_universe_of RE.e_env RE.e_term (e_option RE.e_universe)
         refl_universe_of NRE.e_env NRE.e_term (NBET.e_option NRE.e_universe);
 

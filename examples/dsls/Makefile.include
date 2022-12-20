@@ -4,12 +4,24 @@ SRC_FILES=$(wildcard *.fst)
 
 INCLUDE_PATHS=../core
 
-FSTAR=fstar.exe $(addprefix --include , $(INCLUDE_PATHS)) --cache_checked_modules $(OTHERFLAGS) --already_cached Prims,FStar,Steel
+CACHE_DIR=_output
 
-all: verify_all
+ML_DIR=$(CACHE_DIR)
+
+FSTAR=fstar.exe $(addprefix --include , $(INCLUDE_PATHS)) \
+      --cache_checked_modules --already_cached Prims,FStar,Steel --cache_dir $(CACHE_DIR) \
+      --odir $(ML_DIR) \
+      $(OTHERFLAGS) 
+
+EXTRACT_SELECTOR=+Pulse +Refl -Pulse.Steel
+
+all: verify_all $(CACHE_DIR)
+
+$(CACHE_DIR):
+	mkdir -p $(CACHE_DIR)
 
 .depend:
-	$(FSTAR) --dep full $(SRC_FILES) > ._depend
+	$(FSTAR) --dep full $(SRC_FILES) --codegen Plugin --extract '$(EXTRACT_SELECTOR)' > ._depend
 	mv ._depend .depend
 
 depend: .depend
@@ -22,10 +34,17 @@ include .depend
 %.fsti.checked:
 	$(FSTAR) $<
 
+%.ml:
+	$(FSTAR) --codegen Plugin --extract_module $(basename $(notdir $(subst .checked,,$<))) $(notdir $(subst .checked,,$<))
+
 verify_all: $(ALL_CHECKED_FILES)
+
+extract_all: $(ALL_ML_FILES)
 
 clean:
 	rm -rf .depend ._depend
 
 %.fst-in %.fsti-in:
 	@echo --include ../core
+
+.PHONY: verify_all extract_all

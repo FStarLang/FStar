@@ -1608,7 +1608,8 @@ let (uu___153 : unit) =
                                                                     =
                                                                     FStar_TypeChecker_NBETerm.e_option
                                                                     FStar_TypeChecker_NBETerm.e_unit in
-                                                                    FStar_Tactics_InterpFuns.mk_refl_typing_step_3
+                                                                    FStar_Tactics_InterpFuns.mk_tac_step_3
+                                                                    Prims.int_zero
                                                                     "check_subtyping"
                                                                     FStar_Tactics_Basic.refl_check_subtyping
                                                                     FStar_Reflection_Embeddings.e_env
@@ -1632,7 +1633,8 @@ let (uu___153 : unit) =
                                                                     =
                                                                     FStar_TypeChecker_NBETerm.e_option
                                                                     FStar_TypeChecker_NBETerm.e_unit in
-                                                                    FStar_Tactics_InterpFuns.mk_refl_typing_step_3
+                                                                    FStar_Tactics_InterpFuns.mk_tac_step_3
+                                                                    Prims.int_zero
                                                                     "check_equiv"
                                                                     FStar_Tactics_Basic.refl_check_equiv
                                                                     FStar_Reflection_Embeddings.e_env
@@ -1656,7 +1658,8 @@ let (uu___153 : unit) =
                                                                     =
                                                                     FStar_TypeChecker_NBETerm.e_option
                                                                     FStar_Reflection_NBEEmbeddings.e_term in
-                                                                    FStar_Tactics_InterpFuns.mk_refl_typing_step_2
+                                                                    FStar_Tactics_InterpFuns.mk_tac_step_2
+                                                                    Prims.int_zero
                                                                     "tc_term"
                                                                     FStar_Tactics_Basic.refl_tc_term
                                                                     FStar_Reflection_Embeddings.e_env
@@ -1678,7 +1681,8 @@ let (uu___153 : unit) =
                                                                     =
                                                                     FStar_TypeChecker_NBETerm.e_option
                                                                     FStar_Reflection_NBEEmbeddings.e_universe in
-                                                                    FStar_Tactics_InterpFuns.mk_refl_typing_step_2
+                                                                    FStar_Tactics_InterpFuns.mk_tac_step_2
+                                                                    Prims.int_zero
                                                                     "universe_of"
                                                                     FStar_Tactics_Basic.refl_universe_of
                                                                     FStar_Reflection_Embeddings.e_env

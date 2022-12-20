@@ -1,6 +1,7 @@
 module Pulse.Main
 
 module T = FStar.Tactics
+module R = FStar.Reflection
 module RT = Refl.Typing
 
 open Pulse.Syntax
@@ -10,30 +11,23 @@ open Pulse.Elaborate.Pure
 open Pulse.Elaborate
 open Pulse.Soundness
 
-let main (t:term) (pre:pure_term) : RT.dsl_tac_t =
-  fun g ->
-  match Pulse.Soundness.Common.check_top_level_environment g with
-  | None -> T.fail "pulse main: top-level environment does not include stt at the expected types"
-  | Some g ->
-    let (| ty, pre_typing |) = check_tot g [] pre in
-    if ty = Tm_VProp
-    then let pre_typing : tot_typing g [] pre Tm_VProp = E pre_typing in
-         let (| c, t_typing |) = check g [] t pre pre_typing in
-         let refl_e = elab_src_typing t_typing in
-         let refl_t = elab_pure_comp c in
-         soundness_lemma g [] t c t_typing;
-         (refl_e, refl_t)
-    else T.fail "pulse main: cannot typecheck pre at type vprop"
 
+let main' (t:term) (pre:pure_term) (g:RT.fstar_top_env)
+  : T.Tac (r:(R.term & R.typ){RT.typing g (fst r) (snd r)})
+  = match Pulse.Soundness.Common.check_top_level_environment g with
+    | None -> T.fail "pulse main: top-level environment does not include stt at the expected types"
+    | Some g ->
+      let (| ty, pre_typing |) = check_tot g [] pre in
+      if ty = Tm_VProp
+      then let pre_typing : tot_typing g [] pre Tm_VProp = E pre_typing in
+           let (| c, t_typing |) = check g [] t pre pre_typing in
+           let refl_e = elab_src_typing t_typing in
+           let refl_t = elab_pure_comp c in
+           soundness_lemma g [] t c t_typing;
+           (refl_e, refl_t)
+      else T.fail "pulse main: cannot typecheck pre at type vprop"
 
-(***** tests *****)
-
-open Steel.Effect.Common
-open Steel.ST.Util
-
-open Pulse.Steel.Wrapper
-
-%splice_t[foo] (main (Tm_Constant (Bool true)) Tm_Emp)
+let main t pre : RT.dsl_tac_t = main' t pre
 
 let erased_lid = ["Pulse"; "Steel"; "Wrapper"; "erased"]
 let hide_lid = ["Pulse"; "Steel"; "Wrapper"; "hide"]
@@ -44,10 +38,9 @@ let pts_to_lid = ["Pulse"; "Steel"; "Wrapper"; "pts_to"]
 let read_lid = ["Pulse"; "Steel"; "Wrapper"; "read"]
 let write_lid = ["Pulse"; "Steel"; "Wrapper"; "write"]
 
-[@@ expect_failure]
-%splice_t[bar] (main
-
-(
+// "(fun (n:erased) (r:ref) (x:u32) -> \
+//             { pts_to r (reveal n) } call: write(r, x))"
+let bar = (
 Tm_Abs
   (Tm_FVar erased_lid)  //n:erased u32
   Tm_Emp
@@ -77,5 +70,9 @@ Tm_Abs
      )
   )
 )
-Tm_Emp
-)
+
+[@@plugin]
+let check_bar (_:unit) : RT.dsl_tac_t =
+  main bar Tm_Emp
+
+

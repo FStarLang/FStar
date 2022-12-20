@@ -4,7 +4,7 @@ open FStar.List.Tot
 open FStar.Reflection
 module R = FStar.Reflection
 module T = FStar.Tactics
-module RTB = Refl.Typing.Builtins
+module RTB = FStar.Tactics.Builtins
 
 val inspect_pack (t:R.term_view)
   : Lemma (ensures R.(inspect_ln (pack_ln t) == t))

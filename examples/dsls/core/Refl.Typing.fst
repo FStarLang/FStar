@@ -4,7 +4,7 @@ open FStar.Reflection
 
 module R = FStar.Reflection
 module T = FStar.Tactics
-module RTB = Refl.Typing.Builtins
+module RTB = FStar.Tactics.Builtins
 
 let inspect_pack t = R.inspect_pack_inv t
   

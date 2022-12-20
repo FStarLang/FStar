@@ -8,7 +8,7 @@ open Pulse.Syntax
 open Pulse.Elaborate.Pure
 open Pulse.Typing
 
-module RTB = Refl.Typing.Builtins
+module RTB = FStar.Tactics.Builtins
 
 let tc_meta_callback (f:R.env) (e:R.term) 
   : T.Tac (option (t:R.term & RT.typing f e t))

@@ -20,6 +20,7 @@ Every tactic primitive, i.e., those built into the compiler
 module FStar.Tactics.Builtins
 
 open FStar.Tactics.Effect
+open FStar.Reflection.Builtins
 open FStar.Reflection.Types
 open FStar.Reflection.Data
 open FStar.Tactics.Types
@@ -422,3 +423,22 @@ val term_eq_old : term -> term -> Tac bool
 It is an escape hatch for maintaining backward compatibility
 for code that breaks with the core typechecker. *)
 val with_compat_pre_core : #a:Type -> n:int -> f:(unit -> Tac a) -> Tac a
+
+
+val subtyping_token (g:env) (t0 t1:typ) : Type0
+
+val equiv_token (g:env) (t0 t1:typ) : Type0
+
+val typing_token (g:env) (e:term) (t:typ) : Type0
+
+val check_subtyping (g:env) (t0 t1:typ)
+  : Tac (option (squash (subtyping_token g t0 t1)))
+
+val check_equiv (g:env) (t0 t1:typ)
+  : Tac (option (squash (equiv_token g t0 t1)))
+
+val tc_term (g:env) (e:term)
+  : Tac (option (t:typ{typing_token g e t}))
+
+val universe_of (g:env) (e:term)
+  : Tac (option (u:universe{typing_token g e (pack_ln (Tv_Type u))}))

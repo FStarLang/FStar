@@ -172,6 +172,15 @@ let term_eq_old             = from_tac_2 B.term_eq_old
 let with_compat_pre_core (n:Prims.int) (f: unit -> 'a __tac) : 'a __tac =
   from_tac_2 B.with_compat_pre_core n (to_tac_0 (f ()))
 
+type ('env, 't0, 't1) subtyping_token = unit
+type ('env, 't0, 't1) equiv_token = unit
+type ('env, 'e, 't) typing_token = unit
+
+let check_subtyping         = from_tac_3 B.refl_check_subtyping
+let check_equiv             = from_tac_3 B.refl_check_equiv
+let tc_term                 = from_tac_2 B.refl_tc_term
+let universe_of             = from_tac_2 B.refl_universe_of
+
 (* The handlers need to "embed" their argument. *)
 let catch   (t: unit -> 'a __tac): ((exn, 'a) either) __tac = from_tac_1 TM.catch   (to_tac_0 (t ()))
 let recover (t: unit -> 'a __tac): ((exn, 'a) either) __tac = from_tac_1 TM.recover (to_tac_0 (t ()))
