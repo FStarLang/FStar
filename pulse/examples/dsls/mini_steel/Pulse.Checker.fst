@@ -538,16 +538,32 @@ let rec check (f:RT.fstar_top_env)
               (t:term)
               (pre:pure_term)
               (pre_typing: tot_typing f g pre Tm_VProp)
-  : T.Tac (c:pure_comp_st { comp_pre c == pre } &
+  : T.Tac (c:pure_comp { C_ST? c ==> comp_pre c == pre } &
            src_typing f g t c)
-  = let frame_empty = frame_empty f g pre pre_typing in
+  = let repack #g #pre #t (x:(c:pure_comp_st { comp_pre c == pre } & src_typing f g t c))
+      : (c:pure_comp { C_ST? c ==> comp_pre c == pre } & src_typing f g t c)
+      = let (| c, d_c |) = x in (|c, d_c|)
+    in
+    let force_st #g #pre #t (x:(c:pure_comp { C_ST? c ==> comp_pre c == pre } & src_typing f g t c))
+      : T.Tac (c:pure_comp_st { comp_pre c == pre } & src_typing f g t c)
+      = let (| c, d_c |) = x in
+        match c with
+        | C_Tot _ -> T.fail "Expected an ST computation"
+        | C_ST _ -> (|c, d_c|)
+    in
+    let frame_empty = frame_empty f g pre pre_typing in
     match t with
     | Tm_BVar _ -> T.fail "not locally nameless"
     | Tm_Var _
     | Tm_FVar _ 
     | Tm_Constant _
     | Tm_PureApp _ _
-    | Tm_Let _ _ _ 
+    | Tm_Let _ _ _ ->
+      let (| u, ty, uty, d |) = check_tot_univ f g t in
+      let c = return_comp u ty t in
+      let d = T_Return _ _ _ _ (E d) uty in
+      repack (frame_empty u ty uty t c d)
+
     | Tm_Emp
     | Tm_Pure _
     | Tm_Star _ _ 
@@ -556,10 +572,8 @@ let rec check (f:RT.fstar_top_env)
     | Tm_Arrow _ _
     | Tm_Type _
     | Tm_VProp ->
-      let (| u, ty, uty, d |) = check_tot_univ f g t in
-      let c = return_comp u ty t in
-      let d = T_Return _ _ _ _ (E d) uty in
-      frame_empty u ty uty t c d
+      let (| ty, d_ty |) = check_tot f g t in
+      (| C_Tot ty, d_ty |)
 
     | Tm_Abs t pre_hint body ->  (* {pre}  (fun (x:t) -> body) : ? { pre } *)
       let (| u, t_typing |) = check_universe f g t in
@@ -572,11 +586,12 @@ let rec check (f:RT.fstar_top_env)
           let (| c_body, body_typing |) = check f g' (open_term body x) pre (E pre_typing) in
           let tt = T_Abs g x t u body c_body pre_hint t_typing body_typing in
           let tres = Tm_Arrow t (close_comp c_body x) in
-          (* could avoid this re-checking call if we had a lemma about arrow typing *)
-          let (| ures, ures_ty |) = check_universe f g tres in
-          let c = return_comp_noeq ures tres in
-          let d = T_ReturnNoEq _ _ _ _ tt ures_ty in
-          frame_empty ures tres ures_ty _ c d
+          (| C_Tot tres, tt |)
+          // (* could avoid this re-checking call if we had a lemma about arrow typing *)
+          // let (| ures, ures_ty |) = check_universe f g tres in
+          // let c = return_comp_noeq ures tres in
+          // let d = T_ReturnNoEq _ _ _ _ tt ures_ty in
+          // frame_empty ures tres ures_ty _ c d
           
         | _ -> T.fail "bad hint"
       )
@@ -591,12 +606,12 @@ let rec check (f:RT.fstar_top_env)
         then T.fail "Type of formal parameter does not match type of argument"
         else let d = T_STApp g head formal (C_ST res) arg dhead (E darg) in
              opening_pure_comp_with_pure_term (C_ST res) arg 0;
-             try_frame_pre pre_typing d
+             repack (try_frame_pre pre_typing d)
       | _ -> T.fail "Unexpected head type in impure application"
       end
 
     | Tm_Bind t e1 e2 ->
-      let (| c1, d1 |) = check f g e1 pre pre_typing in
+      let (| c1, d1 |) = force_st (check f g e1 pre pre_typing) in
       let C_ST s1 = c1 in
       if t <> s1.res 
       then T.fail "Annotated type of let-binding is incorrect"
@@ -609,13 +624,13 @@ let rec check (f:RT.fstar_top_env)
             let next_pre = open_term s1.post x in
             let g' = (x, Inl s1.res)::g in
             let next_pre_typing : tot_typing f g' next_pre Tm_VProp =
-              //would be nice to prove that this is typable as a lemma,
-              //without having to re-check it
-              match check_tot f g' next_pre with
-              | (| Tm_VProp, nt |) -> E nt
-              | _ -> T.fail "next pre is not typable"
+                //would be nice to prove that this is typable as a lemma,
+                //without having to re-check it
+                match check_tot f g' next_pre with
+                | (| Tm_VProp, nt |) -> E nt
+                | _ -> T.fail "next pre is not typable"
             in
-            let (| c2, d2 |) = check f g' (open_term e2 x) next_pre next_pre_typing in
+            let (| c2, d2 |) = force_st (check f g' (open_term e2 x) next_pre next_pre_typing) in
             let C_ST s2 = c2 in
             let (| u, res_typing |) = check_universe f g s2.res in
             if u <> s2.u || x `Set.mem` freevars s2.post
@@ -624,12 +639,12 @@ let rec check (f:RT.fstar_top_env)
               match check_tot f ((x, Inl s2.res)::g) (open_term s2.post x) with
               | (| Tm_VProp, post_typing |) ->
                 let bc : bind_comp f g x c1 c2 _ = (Bind_comp g x c1 c2 res_typing x (E post_typing)) in
-                (| _, T_Bind _ _ _ _ _ _ _ d1 (E t_typing) d2 bc |)
-              | _ -> T.fail "Ill-typed postcondition in bind"
+              (| _, T_Bind _ _ _ _ _ _ _ d1 (E t_typing) d2 bc |)
+            | _ -> T.fail "Ill-typed postcondition in bind"
             )
           )
         | _ -> T.fail "Ill-typed annotated type on `bind`"
-     )
+      )
     | Tm_If _ _ _ ->
       T.fail "Not handling if yet"
 #pop-options
