@@ -15,7 +15,8 @@ open Pulse.Parser
 
 let main' (t:term) (pre:term) (g:RT.fstar_top_env)
   : T.Tac (r:(R.term & R.typ){RT.typing g (fst r) (snd r)})
-  = match Pulse.Soundness.Common.check_top_level_environment g with
+  = T.print (term_to_string t);
+    match Pulse.Soundness.Common.check_top_level_environment g with
     | None -> T.fail "pulse main: top-level environment does not include stt at the expected types"
     | Some g ->
       let (| ty, pre_typing |) = check_tot g [] pre in
@@ -40,8 +41,8 @@ let read_lid = ["Pulse"; "Steel"; "Wrapper"; "read"]
 let write_lid = ["Pulse"; "Steel"; "Wrapper"; "write"]
 
 [@@plugin]
-let parse_and_elab (_:unit) : RT.dsl_tac_t =
-  let e = parse ("true") in
+let parse_and_check (_:unit) : RT.dsl_tac_t =
+  let e = parse "fun (n:Pulse.Steel.Wrapper.erased) { emp } -> (fun (r:Pulse.Steel.Wrapper.ref) { emp } -> (fun (x:Pulse.Steel.Wrapper.u32) {((Pulse.Steel.Wrapper.pts_to r) (Pulse.Steel.Wrapper.reveal n))} -> (Pulse.Steel.Wrapper.write (n, r, x))))" in
   main e Tm_Emp
 
 // // "(fun (n:erased) (r:ref) (x:u32) -> \
