@@ -75,7 +75,7 @@ module G = FStar.Ghost
 module U32 = FStar.UInt32
 module R = Steel.ST.Reference
 
-type u32 = U32.t
+type u32 : Type0 = U32.t
 
 val erased : Type0
 val hide (x:u32) : erased
@@ -83,9 +83,16 @@ val reveal (x:erased) : GTot u32
 
 val ref : Type0
 val pts_to (r:ref) (n:erased) : vprop
+val ptr (r:ref) : vprop
 
 val read (n:erased) (r:ref)
   : stt u32 (pts_to r n) (fun x -> pts_to r (hide x))
 
+val read_alt (n:erased) (r:ref)
+  : stt u32 (pts_to r n) (fun x -> pts_to r n)
+
 val write (n:erased) (r:ref) (x:u32)
   : stt unit (pts_to r n) (fun _ -> pts_to r (hide x))
+
+val write_alt (n:erased) (r:ref) (x:u32)
+  : stt unit (pts_to r n) (fun _ -> ptr r)

@@ -7,7 +7,7 @@ open FStar.List.Tot
 open Pulse.Syntax
 open Pulse.Elaborate.Pure
 open Pulse.Typing
-
+module P = Pulse.Syntax.Printer
 module RTB = FStar.Tactics.Builtins
 
 let tc_meta_callback (f:R.env) (e:R.term) 
@@ -198,7 +198,7 @@ let check_universe (f0:RT.fstar_top_env) (g:env) (t:term)
   = let f = extend_env_l f0 g in
     match elab_term t with
     | None ->
-      T.fail ("Not a syntactically pure term: " ^ term_to_string t)
+      T.fail ("Not a syntactically pure term: " ^ P.term_to_string t)
     | Some rt ->
       let ru_opt = RTB.universe_of f rt in
       match ru_opt  with
@@ -223,7 +223,7 @@ let check_tot_univ (f:RT.fstar_top_env) (g:env) (t:term)
   = let fg = extend_env_l f g in
     match elab_term t with
     | None ->
-      T.fail ("Not a syntactically pure term: " ^ term_to_string t)
+      T.fail ("Not a syntactically pure term: " ^ P.term_to_string t)
     | Some rt -> 
       match tc_meta_callback fg rt with
       | None -> T.fail "Not typeable"
@@ -240,7 +240,7 @@ let check_tot (f:RT.fstar_top_env) (g:env) (t:term)
   = let fg = extend_env_l f g in
     match elab_term t with
     | None ->
-      T.fail ("Not a syntactically pure term: " ^ term_to_string t)
+      T.fail ("Not a syntactically pure term: " ^ P.term_to_string t)
     | Some rt -> 
       match tc_meta_callback fg rt with
       | None -> T.fail "Not typeable"
@@ -409,7 +409,9 @@ let split_vprop (f:RT.fstar_top_env)
    = let ctxt_l = vprop_as_list ctxt in
      let req_l = vprop_as_list req in
      match try_split_vprop f g req_l ctxt_l with
-     | None -> T.fail "Could not find frame"
+     | None -> T.fail (Printf.sprintf "Could not find frame: \n\tcontext = %s\n\trequires = %s\n"
+                                            (P.term_to_string ctxt)
+                                            (P.term_to_string req))
      | Some (| frame, veq |) ->
        let d1 
          : vprop_equiv _ _ (Tm_Star (canon_vprop req) (list_as_vprop frame))
@@ -647,8 +649,10 @@ let rec check (f:RT.fstar_top_env)
             let (| c2, d2 |) = force_st next_pre_typing (check f g' (open_term e2 x) next_pre next_pre_typing) in
             let C_ST s2 = c2 in
             let (| u, res_typing |) = check_universe f g s2.res in
-            if u <> s2.u || x `Set.mem` freevars s2.post
-            then T.fail "Unexpected universe for result type or variable escapes scope in bind"
+            if u <> s2.u
+            then T.fail "Unexpected universe for result type"
+            else if x `Set.mem` freevars s2.post
+            then T.fail (Printf.sprintf "Bound variable %d escapes scope in postcondition %s" x (P.term_to_string s2.post))
             else (
               match check_tot f ((x, Inl s2.res)::g) (open_term s2.post x) with
               | (| Tm_VProp, post_typing |) ->
@@ -657,7 +661,11 @@ let rec check (f:RT.fstar_top_env)
             | _ -> T.fail "Ill-typed postcondition in bind"
             )
           )
-        | _ -> T.fail "Ill-typed annotated type on `bind`"
+        | (| ty, _ |) -> 
+          T.fail (Printf.sprintf "Ill-typed annotated type %s on `bind`; has type %s\n"
+                                 (P.term_to_string t)
+                                 (P.term_to_string ty))
+                                     
       )
     | Tm_If _ _ _ ->
       T.fail "Not handling if yet"
