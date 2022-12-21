@@ -41,9 +41,10 @@ let read_lid = ["Pulse"; "Steel"; "Wrapper"; "read"]
 let write_lid = ["Pulse"; "Steel"; "Wrapper"; "write"]
 
 [@@plugin]
-let parse_and_check (_:unit) : RT.dsl_tac_t =
-  let e = parse "fun (n:Pulse.Steel.Wrapper.erased) { emp } -> (fun (r:Pulse.Steel.Wrapper.ref) { emp } -> (fun (x:Pulse.Steel.Wrapper.u32) {((Pulse.Steel.Wrapper.pts_to r) (Pulse.Steel.Wrapper.reveal n))} -> (Pulse.Steel.Wrapper.write (n, r, x))))" in
-  main e Tm_Emp
+let parse_and_check (s:string) : RT.dsl_tac_t = main (parse s) Tm_Emp
+
+
+  // let e = parse "fun (n:Pulse.Steel.Wrapper.erased) { emp } -> (fun (r:Pulse.Steel.Wrapper.ref) { emp } -> (fun (x:Pulse.Steel.Wrapper.u32) {((Pulse.Steel.Wrapper.pts_to r) (Pulse.Steel.Wrapper.reveal n))} -> (Pulse.Steel.Wrapper.write (n, r, x))))" in
 
 // // "(fun (n:erased) (r:ref) (x:u32) -> \
 // //             { pts_to r (reveal n) } call: write(r, x))"
