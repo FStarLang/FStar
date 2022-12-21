@@ -6,7 +6,7 @@ else
   OCAMLPATH := $(FSTAR_HOME)/bin:$(OCAMLPATH)
 endif
 
-plugin: _build/Pulse_Main.cmxs
+plugin: verify_all _build/Pulse_Main.cmxs
 
 _build/Pulse_Main.cmxs: extract_all
 	(OCAMLPATH="$(OCAMLPATH)" ocamlbuild -I ml -I _output -use-ocamlfind -pkg fstar-tactics-lib -use-menhir Pulse_Main.cmxs -cflags -w,-8)
