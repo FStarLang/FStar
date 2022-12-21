@@ -99,13 +99,6 @@ binders:
   | bs=list(binder)    { bs }
 
 lambda:
-  | FUN b=binder LBRACE pre=expr RBRACE RARROW LPAREN e=expr RPAREN
-    {
-      let pre = end_name_scope b.binder_ppname pre in
-      let e = end_name_scope b.binder_ppname e in
-      Tm_Abs (b, pre, e)
-    }
-
   | FUN b=binder RARROW LPAREN e=expr RPAREN
     {
       let e = end_name_scope b.binder_ppname e in
