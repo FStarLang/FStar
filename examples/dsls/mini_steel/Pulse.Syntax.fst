@@ -342,7 +342,9 @@ let rec term_to_string (t:term) : Tot string (decreases t) =
     "(" ^
     (term_to_string head) ^ " " ^ (term_to_string arg) ^
     ")"
-  | Tm_Bind _ _ _ -> "<Tm_Bind>"
+  | Tm_Bind t e1 e2 ->
+    "let _:" ^ term_to_string t ^ " = " ^
+    term_to_string e1 ^ "; " ^ term_to_string e2
   | Tm_Emp -> "emp"
   | Tm_Pure p -> "pure (" ^ (term_to_string p) ^ ")"
   | Tm_Star l r -> "star (" ^ (term_to_string l) ^ ") (" ^ (term_to_string r) ^ ")"
