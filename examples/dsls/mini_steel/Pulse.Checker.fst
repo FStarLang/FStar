@@ -73,7 +73,7 @@ let rec readback_ty (t:R.term)
   | Tv_Var bv ->
     let bv_view = inspect_bv bv in
     assume (bv_view.bv_index >= 0);
-    let r = Tm_Var bv_view.bv_index in
+    let r = Tm_Var {nm_index=bv_view.bv_index;nm_ppname=bv_view.bv_ppname} in
     // Needs some tweaks to how names are designed in the DSL,
     //   e.g. may need to expose ppname, what happens to tun bv sort?
     assume (elab_term r == Some t);
@@ -82,7 +82,7 @@ let rec readback_ty (t:R.term)
   | Tv_BVar bv ->
     let bv_view = inspect_bv bv in
     assume (bv_view.bv_index >= 0);
-    let r = Tm_BVar bv_view.bv_index in
+    let r = Tm_BVar {bv_index=bv_view.bv_index;bv_ppname=bv_view.bv_ppname} in
     // Similar to the name case
     assume (elab_term r == Some t);
     Some r
@@ -120,7 +120,7 @@ let rec readback_ty (t:R.term)
      | C_Total c_t ->
       let? b_ty' = readback_ty bv_view.bv_sort in
       let? c' = readback_comp c_t in
-      Some (Tm_Arrow b_ty' c' <: ty:pure_term{ elab_term ty == Some t})
+      Some (Tm_Arrow {binder_ty=b_ty';binder_ppname=bv_view.bv_ppname} c' <: ty:pure_term{ elab_term ty == Some t})
      | _ -> None)
 
   | Tv_Type u ->
@@ -469,8 +469,14 @@ let try_frame_pre (#f:RT.fstar_top_env)
     assert (is_pure_comp (C_ST s'));
     assert (is_pure_comp (C_ST s''));
     assert (comp_post c' == comp_post c'');
-    opening_pure_term_with_pure_term (comp_post c') (Tm_Var x) 0;
-    opening_pure_term_with_pure_term (comp_post c'') (Tm_Var x) 0;    
+    opening_pure_term_with_pure_term
+      (comp_post c')
+      (Tm_Var {nm_index=x;nm_ppname="_"})
+      0;
+    opening_pure_term_with_pure_term
+      (comp_post c'')
+      (Tm_Var {nm_index=x;nm_ppname="_"})
+      0;    
     assert (is_pure_term (open_term (comp_post c') x));
     let g' = ((x, Inl (comp_res c'))::g) in
     let ve: vprop_equiv f g (comp_pre c') (comp_pre c'') = ve in    
@@ -532,7 +538,7 @@ let frame_empty (f:RT.fstar_top_env)
     )
 #pop-options
 
-#push-options "--query_stats --fuel 2 --ifuel 1 --z3rlimit_factor 10"
+#push-options "--query_stats --fuel 2 --ifuel 1 --z3rlimit_factor 20"
 #push-options "--print_implicits --print_universes --print_full_names"
 let rec check (f:RT.fstar_top_env)
               (g:env)
@@ -583,7 +589,7 @@ let rec check (f:RT.fstar_top_env)
       let (| ty, d_ty |) = check_tot f g t in
       (| C_Tot ty, d_ty |)
 
-    | Tm_Abs t pre_hint body ->  (* {pre}  (fun (x:t) -> body) : ? { pre } *)
+    | Tm_Abs {binder_ty=t;binder_ppname=ppname} pre_hint body ->  (* {pre}  (fun (x:t) -> body) : ? { pre } *)
       let (| u, t_typing |) = check_universe f g t in
       let x = fresh g in
       let g' = (x, Inl t) :: g in
@@ -592,8 +598,8 @@ let rec check (f:RT.fstar_top_env)
         match check_tot f g' pre with
         | (| Tm_VProp, pre_typing |) ->
           let (| c_body, body_typing |) = check f g' (open_term body x) pre (E pre_typing) in
-          let tt = T_Abs g x t u body c_body pre_hint t_typing body_typing in
-          let tres = Tm_Arrow t (close_comp c_body x) in
+          let tt = T_Abs g ppname x t u body c_body pre_hint t_typing body_typing in
+          let tres = Tm_Arrow {binder_ty=t;binder_ppname=ppname} (close_comp c_body x) in
           (| C_Tot tres, tt |)
           // (* could avoid this re-checking call if we had a lemma about arrow typing *)
           // let (| ures, ures_ty |) = check_universe f g tres in
@@ -609,10 +615,10 @@ let rec check (f:RT.fstar_top_env)
       let (| ty_arg, darg |) = check_tot f g arg in      
       begin
       match ty_head with
-      | Tm_Arrow formal (C_ST res) ->
+      | Tm_Arrow {binder_ty=formal;binder_ppname=ppname} (C_ST res) ->
         if ty_arg <> formal
         then T.fail "Type of formal parameter does not match type of argument"
-        else let d = T_STApp g head formal (C_ST res) arg dhead (E darg) in
+        else let d = T_STApp g head ppname formal (C_ST res) arg dhead (E darg) in
              opening_pure_comp_with_pure_term (C_ST res) arg 0;
              repack (try_frame_pre pre_typing d)
       | _ -> T.fail "Unexpected head type in impure application"

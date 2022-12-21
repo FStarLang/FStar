@@ -35,7 +35,7 @@ let return_comp (u:universe) (t:pure_term) (e:pure_term)
   = C_ST { u;
            res = t;
            pre = Tm_Emp;
-           post = Tm_Pure (mk_eq2 t (Tm_BVar 0) e) }
+           post = Tm_Pure (mk_eq2 t (Tm_BVar {bv_index=0; bv_ppname="_"}) e) }
 
 let return_comp_noeq (u:universe) (t:pure_term)
   : pure_comp 
@@ -221,6 +221,7 @@ type src_typing (f:RT.fstar_top_env) : env -> term -> pure_comp -> Type =
 
   | T_Abs: 
       g:env ->
+      ppname:string ->
       x:var { None? (lookup g x) } ->
       ty:pure_term ->
       u:universe ->
@@ -229,16 +230,17 @@ type src_typing (f:RT.fstar_top_env) : env -> term -> pure_comp -> Type =
       hint:vprop ->
       tot_typing f g ty (Tm_Type u) ->
       src_typing f ((x, Inl ty)::g) (open_term body x) c ->
-      src_typing f g (Tm_Abs ty hint body) 
-                     (C_Tot (Tm_Arrow ty (close_pure_comp c x)))
+      src_typing f g (Tm_Abs {binder_ty=ty;binder_ppname=ppname} hint body)
+                     (C_Tot (Tm_Arrow {binder_ty=ty;binder_ppname=ppname} (close_pure_comp c x)))
   
   | T_STApp :
       g:env ->
-      head:term -> 
+      head:term ->
+      ppname:string ->
       formal:pure_term ->
       res:pure_comp {C_ST? res} ->
       arg:pure_term ->
-      src_typing f g head (C_Tot (Tm_Arrow formal res)) ->
+      src_typing f g head (C_Tot (Tm_Arrow {binder_ty=formal;binder_ppname=ppname} res)) ->
       tot_typing f g arg formal ->
       src_typing f g (Tm_STApp head arg) (open_comp_with res arg)
 

@@ -27,15 +27,21 @@ let mk_stt_app (u:R.universe) (args:list R.term) : Tot R.term =
   R.mk_app (R.pack_ln (R.Tv_UInst stt_fv [u])) (args_of args)
 let mk_total t = R.C_Total t
 let binder_of_t_q t q = RT.mk_binder "_" 0 t q
+let binder_of_t_q_s t q s = RT.mk_binder s 0 t q
 let bound_var i : R.term = R.pack_ln (R.Tv_BVar (R.pack_bv (RT.make_bv i tun)))
 let mk_name i : R.term = R.pack_ln (R.Tv_Var (R.pack_bv (RT.make_bv i tun))) 
 let arrow_dom = (R.term & R.aqualv)
 let mk_tot_arrow1 (f:arrow_dom) (out:R.term) : R.term =
   let ty, q = f in
   R.pack_ln (R.Tv_Arrow (binder_of_t_q ty q) (R.pack_comp (mk_total out)))
+let mk_tot_arrow_with_name1 (s:string) (f:arrow_dom) (out:R.term) : R.term =
+  let ty, q = f in
+  R.pack_ln (R.Tv_Arrow (binder_of_t_q_s ty q s) (R.pack_comp (mk_total out)))
 
 
 let mk_abs ty t : R.term =  R.pack_ln (R.Tv_Abs (binder_of_t_q ty R.Q_Explicit) t)
+
+let mk_abs_with_name s ty t : R.term =  R.pack_ln (R.Tv_Abs (binder_of_t_q_s ty R.Q_Explicit s) t)
 
 let rec elab_universe (u:universe)
   : Tot R.universe
@@ -64,18 +70,17 @@ let elab_const (c:constant)
     | Bool false -> R.C_False
     | Int i -> R.C_Int i
 
-
 let rec elab_term (top:term)
   : option R.term
   = let open R in
     match top with
-    | Tm_BVar n -> 
-      let bv = pack_bv (RT.make_bv n tun) in
+    | Tm_BVar bv ->
+      let bv = pack_bv (RT.make_bv_with_name bv.bv_ppname bv.bv_index tun) in
       Some (pack_ln (Tv_BVar bv))
       
-    | Tm_Var n ->
+    | Tm_Var nm ->
       // tun because type does not matter at a use site
-      let bv = pack_bv (RT.make_bv n tun) in
+      let bv = pack_bv (RT.make_bv_with_name nm.nm_ppname nm.nm_index tun) in
       Some (pack_ln (Tv_Var bv))
 
     | Tm_FVar l ->
@@ -89,10 +94,10 @@ let rec elab_term (top:term)
       let? e2 = elab_term e2 in
       Some (R.mk_app e1 [(e2, Q_Explicit)])
 
-    | Tm_Arrow t c ->
-      let? t = elab_term t in
+    | Tm_Arrow b c ->
+      let? ty = elab_term b.binder_ty in
       let? c = elab_comp c in
-      Some (mk_tot_arrow1 (t, R.Q_Explicit) c)
+      Some (mk_tot_arrow_with_name1 b.binder_ppname (ty, R.Q_Explicit) c)
 
     | Tm_Let t e1 e2 ->
       let? t = elab_term t in
@@ -206,8 +211,8 @@ let rec opening_pure_term_with_pure_term (x:pure_term) (v:pure_term) (i:index)
     | Tm_ForallSL t body ->
       aux t i; aux body (i + 1)
     
-    | Tm_Arrow t c ->
-      aux t i;
+    | Tm_Arrow b c ->
+      aux b.binder_ty i;
       opening_pure_comp_with_pure_term c v (i + 1)
 
     | Tm_If b then_ else_ ->
@@ -261,8 +266,8 @@ let rec closing_pure_term (x:pure_term) (v:var) (i:index)
     | Tm_ForallSL t body ->
       aux t i; aux body (i + 1)
     
-    | Tm_Arrow t c ->
-      aux t i;
+    | Tm_Arrow b c ->
+      aux b.binder_ty i;
       closing_pure_comp c v (i + 1)
 
     | Tm_If b then_ else_ ->

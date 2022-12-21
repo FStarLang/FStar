@@ -9,7 +9,7 @@ type constant =
   | Int of int
 
 let var = nat
-let index = nat  
+let index = nat
 
 type universe = 
   | U_zero
@@ -29,13 +29,24 @@ type universe =
            problematic since that makes opening/closing mutually
            recursive with elaboration
 *)
+
+type bv = {
+  bv_index  : index;
+  bv_ppname : string
+}
+
+type nm = {
+  nm_index  : var;
+  nm_ppname : string
+}
+
 type term =
   // | Tm_Embed    : R.term -> term // a host term included as is in Pulse
-  | Tm_BVar     : i:index -> term
-  | Tm_Var      : v:var -> term
+  | Tm_BVar     : bv -> term
+  | Tm_Var      : nm -> term
   | Tm_FVar     : l:R.name -> term
   | Tm_Constant : c:constant -> term
-  | Tm_Abs      : t:term -> pre_hint:vprop -> body:term -> term
+  | Tm_Abs      : b:binder -> pre_hint:vprop -> body:term -> term
   | Tm_PureApp  : head:term -> arg:term -> term
   | Tm_Let      : t:term -> e1:term -> e2:term -> term  
   | Tm_STApp    : head:term -> arg:term -> term  
@@ -45,10 +56,15 @@ type term =
   | Tm_Star     : l:vprop -> r:vprop -> term
   | Tm_ExistsSL : t:term -> body:vprop -> term
   | Tm_ForallSL : t:term -> body:vprop -> term
-  | Tm_Arrow    : t:term -> body:comp -> term 
+  | Tm_Arrow    : b:binder -> body:comp -> term 
   | Tm_Type     : universe -> term
   | Tm_VProp    : term
   | Tm_If       : b:term -> then_:term -> else_:term -> term
+
+and binder = {
+  binder_ty     : term;
+  binder_ppname : string
+}
 
 and comp =
   | C_Tot : term -> comp
@@ -63,7 +79,6 @@ and st_comp = { (* ST pre (x:res) post ... x is free in post *)
 
 and vprop = term
 
-
 assume
 val freevars (t:term) : Set.set var
 
@@ -75,7 +90,7 @@ let freevars_comp (c:comp) : Set.set var =
 let rec ln' (t:term) (i:int) =
   match t with
   // | Tm_Embed t -> RT.ln' t i
-  | Tm_BVar j -> j <= i
+  | Tm_BVar {bv_index=j} -> j <= i
   | Tm_Var _
   | Tm_FVar _
   | Tm_Constant _  
@@ -83,8 +98,8 @@ let rec ln' (t:term) (i:int) =
   | Tm_Type _
   | Tm_VProp -> true
 
-  | Tm_Abs t pre_hint body ->
-    ln' t i &&
+  | Tm_Abs b pre_hint body ->
+    ln' b.binder_ty i &&
     ln' pre_hint (i + 1) &&
     ln' body (i + 1)
 
@@ -108,8 +123,8 @@ let rec ln' (t:term) (i:int) =
     ln' t i &&
     ln' t (i + 1)
     
-  | Tm_Arrow t c ->
-    ln' t i &&
+  | Tm_Arrow b c ->
+    ln' b.binder_ty i &&
     ln'_comp c (i + 1)
     
   | Tm_If b then_ else_ ->
@@ -134,8 +149,12 @@ let rec open_term' (t:term) (v:term) (i:index)
   = match t with
     // | Tm_Embed t -> 
     //   Tm_Embed (RT.open_or_close_term' t ??? *)
-    | Tm_BVar j -> if i = j then v else t
-
+    | Tm_BVar bv ->
+      if i = bv.bv_index
+      then match v with
+           | Tm_Var nm -> Tm_Var {nm with nm_ppname=bv.bv_ppname}
+           | _ -> v
+      else t
     | Tm_Var _
     | Tm_FVar _
     | Tm_Constant _
@@ -143,8 +162,8 @@ let rec open_term' (t:term) (v:term) (i:index)
     | Tm_VProp
     | Tm_Emp -> t
 
-    | Tm_Abs t pre_hint body ->
-      Tm_Abs (open_term' t v i)
+    | Tm_Abs b pre_hint body ->
+      Tm_Abs {b with binder_ty=open_term' b.binder_ty v i}
              (open_term' pre_hint v (i + 1))
              (open_term' body v (i + 1))
 
@@ -181,8 +200,8 @@ let rec open_term' (t:term) (v:term) (i:index)
       Tm_ForallSL (open_term' t v i)
                   (open_term' body v (i + 1))
     
-    | Tm_Arrow t c ->
-      Tm_Arrow (open_term' t v i)
+    | Tm_Arrow b c ->
+      Tm_Arrow {b with binder_ty=open_term' b.binder_ty v i}
                (open_comp' c v (i + 1))
 
     | Tm_If b then_ else_ ->
@@ -201,13 +220,17 @@ and open_comp' (c:comp) (v:term) (i:index)
                     pre = open_term' c.pre v i;
                     post = open_term' c.post v (i + 1) }
     
-let open_term t v = open_term' t (Tm_Var v) 0
+let open_term t v =
+  open_term' t (Tm_Var {nm_ppname="_";nm_index=v}) 0
 let open_comp_with (c:comp) (x:term) = open_comp' c x 0
 
 let rec close_term' (t:term) (v:var) (i:index)
   : term
   = match t with
-    | Tm_Var m -> if m = v then Tm_BVar i else t
+    | Tm_Var nm ->
+      if nm.nm_index = v
+      then Tm_BVar {bv_index=v;bv_ppname=nm.nm_ppname}
+      else t
     
     | Tm_BVar _
     | Tm_FVar _
@@ -216,8 +239,8 @@ let rec close_term' (t:term) (v:var) (i:index)
     | Tm_VProp
     | Tm_Emp -> t
 
-    | Tm_Abs t pre_hint body ->
-      Tm_Abs (close_term' t v i)
+    | Tm_Abs b pre_hint body ->
+      Tm_Abs {b with binder_ty=close_term' b.binder_ty v i}
              (close_term' pre_hint v (i + 1))
              (close_term' body v (i + 1))
 
@@ -254,8 +277,8 @@ let rec close_term' (t:term) (v:var) (i:index)
       Tm_ForallSL (close_term' t v i)
                   (close_term' body v (i + 1))
     
-    | Tm_Arrow t c ->
-      Tm_Arrow (close_term' t v i)
+    | Tm_Arrow b c ->
+      Tm_Arrow {b with binder_ty=close_term' b.binder_ty v i}
                (close_comp' c v (i + 1))
 
     | Tm_If b then_ else_ ->
@@ -299,14 +322,14 @@ let constant_to_string (c:constant) : string =
 
 let rec term_to_string (t:term) : Tot string (decreases t) =
   match t with
-  | Tm_BVar i -> "@" ^ (string_of_int i)
-  | Tm_Var v -> "#" ^ (string_of_int v)
+  | Tm_BVar bv -> bv.bv_ppname ^ "@" ^ (string_of_int bv.bv_index)
+  | Tm_Var nm -> nm.nm_ppname ^ "#" ^ (string_of_int nm.nm_index)
   | Tm_FVar l -> String.concat "." l
   | Tm_Constant c -> constant_to_string c
-  | Tm_Abs t pre_hint body ->
+  | Tm_Abs b pre_hint body ->
     "(" ^
-    "fun (_:" ^
-    (term_to_string t) ^ ")_(" ^
+    "fun (" ^
+    (binder_to_string b) ^ ")_(" ^
     (term_to_string pre_hint) ^ ") -> " ^
     (term_to_string body) ^
     ")"
@@ -324,3 +347,15 @@ let rec term_to_string (t:term) : Tot string (decreases t) =
   | Tm_Pure p -> "pure (" ^ (term_to_string p) ^ ")"
   | Tm_Star l r -> "star (" ^ (term_to_string l) ^ ") (" ^ (term_to_string r) ^ ")"
   | _ -> "<term>"
+
+and binder_to_string (b:binder) : string =
+  b.binder_ppname ^ ":" ^ term_to_string (b.binder_ty)
+
+let null_binder (t:term) : binder =
+  {binder_ty=t;binder_ppname="_"}
+
+let mk_binder (s:string) (t:term) : binder =
+  {binder_ty=t;binder_ppname=s}
+
+let mk_bvar (s:string) (i:index) : term =
+  Tm_BVar {bv_index=i;bv_ppname=s}

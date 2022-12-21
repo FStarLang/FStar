@@ -34,37 +34,38 @@ let rec soundness (f:stt_env)
          (decreases d)
   = let mk_t_abs (#u:universe)
                  (#ty:pure_term)
+                 (ppname:string)
                  (t_typing:tot_typing f g ty (Tm_Type u) { t_typing << d })
                  (#body:term)
                  (#x:var { None? (lookup g x) })
                  (#c:pure_comp)
                  (body_typing:src_typing f ((x, Inl ty)::g) (open_term body x) c { body_typing << d })
       : GTot (RT.typing (extend_env_l f g)
-                        (mk_abs (elab_pure ty) (RT.close_term (elab_src_typing body_typing) x))
-                        (elab_pure (Tm_Arrow ty (close_pure_comp c x))))
+                        (mk_abs_with_name ppname (elab_pure ty) (RT.close_term (elab_src_typing body_typing) x))
+                        (elab_pure (Tm_Arrow {binder_ty=ty;binder_ppname=ppname} (close_pure_comp c x))))
       = let E t_typing = t_typing in
         let r_t_typing = soundness _ _ _ _ t_typing in
         let r_body_typing = soundness _ _ _ _ body_typing in
-        mk_t_abs f g r_t_typing r_body_typing
+        mk_t_abs f g ppname r_t_typing r_body_typing
     in
     match d with
     | T_Tot _ _ _ d -> d
 
-    | T_Abs _ x ty u body c hint t_typing body_typing ->
-      mk_t_abs t_typing body_typing    
+    | T_Abs _ ppname x ty u body c hint t_typing body_typing ->
+      mk_t_abs ppname t_typing body_typing    
 
-    | T_STApp _ head formal res arg head_typing arg_typing ->
+    | T_STApp _ head ppname formal res arg head_typing arg_typing ->
       let E arg_typing = arg_typing in
       let r_head = elab_src_typing head_typing in
       let r_arg = elab_pure arg in
       elab_pure_equiv arg_typing;
       let r_head_typing
-        : RT.typing _ r_head (elab_pure (Tm_Arrow formal res))
+        : RT.typing _ r_head (elab_pure (Tm_Arrow {binder_ty=formal;binder_ppname=ppname} res))
         = soundness _ _ _ _ head_typing
       in
       let r_arg_typing = soundness _ _ _ _ arg_typing in
       elab_comp_open_commute res arg;
-      RT.T_App _ _ _ (binder_of_t_q (elab_pure formal) R.Q_Explicit)
+      RT.T_App _ _ _ (binder_of_t_q_s (elab_pure formal) R.Q_Explicit ppname)
                      (elab_pure_comp res)
                      r_head_typing
                      r_arg_typing
@@ -75,15 +76,15 @@ let rec soundness (f:stt_env)
         = soundness _ _ _ _ e1_typing
       in
       let r2_typing
-        : RT.typing _ _ (elab_pure (Tm_Arrow (comp_res c1) (close_pure_comp c2 x)))
-        = mk_t_abs t_typing e2_typing
+        : RT.typing _ _ (elab_pure (Tm_Arrow {binder_ty=comp_res c1;binder_ppname="_"} (close_pure_comp c2 x)))
+        = mk_t_abs "_" t_typing e2_typing
       in
       let Bind_comp _ _ _ _ t2_typing y post2_typing = bc in
       assume (~ (x `Set.mem` freevars_comp c1));
       assume (ln_c c1 /\ ln_c c2 /\ ln_c c);
       Bind.elab_bind_typing f g _ _ _ x _ r1_typing _ r2_typing bc 
                             (tot_typing_soundness t2_typing)
-                            (mk_t_abs_tot _ _ t2_typing post2_typing)
+                            (mk_t_abs_tot _ _ "_" t2_typing post2_typing)
 
     | T_Frame _ e c frame frame_typing e_typing ->
       let r_e_typing = soundness _ _ _ _ e_typing in
