@@ -81,13 +81,8 @@ constant:
 stapp:
   | head=expr LPAREN args=arguments RPAREN    { mk_app head args }
 
-right_flexible_list(SEP, X):
-  |     { [] }
-  | x=X { [x] }
-  | x=X SEP xs=right_flexible_list(SEP, X) { x :: xs }
-
 arguments:
-  | es=right_flexible_list(COMMA, expr)    { es }
+  | es=separated_nonempty_list(COMMA, expr)    { es }
 
 path:
   | id1=IDENT DOT id2=IDENT { [id1; id2] }
@@ -101,8 +96,7 @@ binder:
     }
 
 binders:
-  | b=binder               { [b] }
-  | b=binder bs=binders    {b::bs}
+  | bs=list(binder)    { bs }
 
 lambda:
   | FUN b=binder LBRACE pre=expr RBRACE RARROW LPAREN e=expr RPAREN
