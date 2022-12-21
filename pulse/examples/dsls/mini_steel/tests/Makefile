@@ -10,7 +10,7 @@ FSTAR=fstar.exe $(FSTAR_FLAGS)
 
 all: Pulse.Tests.fst.checked
 
-Pulse.Tests.fst.checked: prep wrapper
+Pulse.Tests.fst.checked: prep
 	fstar.exe --cache_checked_modules --load_cmxs Pulse.Main $(addprefix --include , $(INCLUDE_PATHS)) Pulse.Tests.fst --log_types --trace_error --debug Pulse.Tests --debug_level SMTQuery $(OTHERFLAGS)
 
 Pulse_Tests.ml: Pulse.Tests.fst.checked
@@ -18,11 +18,6 @@ Pulse_Tests.ml: Pulse.Tests.fst.checked
 
 prep:
 	$(MAKE) -C .. plugin
-
-wrapper:
-	fstar.exe --cache_checked_modules --load_cmxs Pulse.Main $(addprefix --include , $(INCLUDE_PATHS)) Pulse.Steel.Wrapper.fsti $(OTHERFLAGS)
-	fstar.exe --cache_checked_modules --load_cmxs Pulse.Main $(addprefix --include , $(INCLUDE_PATHS)) Pulse.Steel.Wrapper.fst $(OTHERFLAGS)
-
 
 .PHONY: all prep
 
