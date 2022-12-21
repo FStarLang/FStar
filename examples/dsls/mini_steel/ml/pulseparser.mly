@@ -55,7 +55,13 @@
                  end_name_scope b.binder_ppname body) in
       List.fold_right (fun b t ->
                         let t = end_name_scope b.binder_ppname t in
-                        Tm_Abs (b, Tm_Emp, t)) bs t      
+                        Tm_Abs (b, Tm_Emp, t)) bs t
+
+    let mk_pure_app (l:term list) : term =
+      if List.length l < 2
+      then failwith "mk_pure_app: list length < 2"
+      else List.fold_left (fun t e ->
+        Tm_PureApp (t, e)) (List.hd l) (List.tl l)
 %}
 
 %token<string> IDENT
@@ -79,10 +85,10 @@ constant:
   | FALSE  { Bool (false) }
 
 stapp:
-  | head=expr LPAREN args=arguments RPAREN    { mk_app head args }
+  | head=pure_expr LPAREN args=arguments RPAREN    { mk_app head args }
 
 arguments:
-  | es=separated_nonempty_list(COMMA, expr)    { es }
+  | es=separated_nonempty_list(COMMA, pure_expr)    { es }
 
 path:
   | id1=IDENT DOT id2=IDENT { [id1; id2] }
@@ -99,30 +105,37 @@ binders:
   | bs=list(binder)    { bs }
 
 lambda:
-  | FUN b=binder RARROW LPAREN e=expr RPAREN
+  | FUN b=binder RARROW e=expr
     {
       let e = end_name_scope b.binder_ppname e in
       Tm_Abs (b, Tm_Emp, e)
     }
 
-  | FUN bs=binders LBRACE pre=expr RBRACE RARROW LPAREN e=expr RPAREN
+  | FUN bs=binders LBRACE pre=pure_expr RBRACE RARROW e=expr
     {
       mk_abs bs pre e
     }
 
 pureapp:
-  | LPAREN e1=expr e2=expr RPAREN    { Tm_PureApp (e1, e2) }
+  | e1=pure_atomic_expr e2=pure_atomic_expr es=list(pure_atomic_expr)    { mk_pure_app (e1::e2::es) }
 
 expr:
+  | e=pure_expr             { e }
+  | f=lambda                { f }
+  | sapp=stapp              { sapp }
+  | LPAREN e=expr RPAREN    { e }
+
+pure_atomic_expr:
   | c=constant              { Tm_Constant (c) }
   | l=path                  { mk_fvar l }
   | i=IDENT                 { resolve_name i }
-  | f=lambda                { f }
-  | papp=pureapp            { papp }
-  | sapp=stapp              { sapp }
   | EMP                     { Tm_Emp }
-  | e1=expr STAR e2=expr    { Tm_Star (e1, e2) }
-  | LPAREN e=expr RPAREN    { e }
+
+pure_expr:
+  | e=pure_atomic_expr    { e }
+  | e=pureapp             { e }
+  | e1=pure_expr STAR e2=pure_expr    { Tm_Star (e1, e2) }
+  | LPAREN e=pure_expr RPAREN    { e }
 
 prog:
   | EOF         { None }
