@@ -216,7 +216,7 @@ let rec elab_close_commute' (e:pure_term)
           (decreases e)
   = closing_pure_term e v n;
     match e with
-    | Tm_Var _ -> admit ()
+    | Tm_Var _
     | Tm_BVar _
     | Tm_FVar _
     | Tm_Constant _

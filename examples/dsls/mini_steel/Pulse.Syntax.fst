@@ -229,7 +229,7 @@ let rec close_term' (t:term) (v:var) (i:index)
   = match t with
     | Tm_Var nm ->
       if nm.nm_index = v
-      then Tm_BVar {bv_index=v;bv_ppname=nm.nm_ppname}
+      then Tm_BVar {bv_index=i;bv_ppname=nm.nm_ppname}
       else t
     
     | Tm_BVar _
