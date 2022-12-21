@@ -76,15 +76,15 @@ let rec soundness (f:stt_env)
         = soundness _ _ _ _ e1_typing
       in
       let r2_typing
-        : RT.typing _ _ (elab_pure (Tm_Arrow {binder_ty=comp_res c1;binder_ppname="_"} (close_pure_comp c2 x)))
-        = mk_t_abs "_" t_typing e2_typing
+        : RT.typing _ _ (elab_pure (Tm_Arrow (null_binder (comp_res c1)) (close_pure_comp c2 x)))
+        = mk_t_abs _ t_typing e2_typing
       in
       let Bind_comp _ _ _ _ t2_typing y post2_typing = bc in
       assume (~ (x `Set.mem` freevars_comp c1));
       assume (ln_c c1 /\ ln_c c2 /\ ln_c c);
       Bind.elab_bind_typing f g _ _ _ x _ r1_typing _ r2_typing bc 
                             (tot_typing_soundness t2_typing)
-                            (mk_t_abs_tot _ _ "_" t2_typing post2_typing)
+                            (mk_t_abs_tot _ _ _ t2_typing post2_typing)
 
     | T_Frame _ e c frame frame_typing e_typing ->
       let r_e_typing = soundness _ _ _ _ e_typing in

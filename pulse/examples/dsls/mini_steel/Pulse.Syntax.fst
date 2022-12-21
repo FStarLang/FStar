@@ -359,3 +359,7 @@ let mk_binder (s:string) (t:term) : binder =
 
 let mk_bvar (s:string) (i:index) : term =
   Tm_BVar {bv_index=i;bv_ppname=s}
+
+let null_var (v:var) : term = Tm_Var {nm_index=v;nm_ppname="_"}
+
+let null_bvar (i:index) : term = Tm_BVar {bv_index=i;bv_ppname="_"}

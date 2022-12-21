@@ -80,7 +80,7 @@ let mk_t_abs_tot (f:RT.fstar_top_env) (g:env)
              r_t_typing
              r_body_typing
     in
-    elab_open_commute' body (Tm_Var {nm_index=x;nm_ppname="_"}) 0;
+    elab_open_commute' body (null_var x) 0;
     RT.open_term_spec (elab_pure body) x;
     assert (elab_pure (open_term body x) ==
             RT.open_term (elab_pure body) x);
@@ -323,4 +323,4 @@ val inversion_of_stt_typing (f:RT.fstar_top_env) (g:env) (c:pure_comp_st)
           RT.typing (extend_env_l f g) (elab_pure (comp_pre c)) (elab_pure (Tm_VProp)) &
           // _ |- (fun (x:t) -> post) : t -> vprop
           RT.typing (extend_env_l f g) (elab_comp_post c)
-                                       (elab_pure (Tm_Arrow {binder_ty=comp_res c;binder_ppname="_"} (C_Tot Tm_VProp))))
+                                       (elab_pure (Tm_Arrow (null_binder (comp_res c)) (C_Tot Tm_VProp))))
