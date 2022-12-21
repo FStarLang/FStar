@@ -7,28 +7,39 @@
       let r = !ctr in
       ctr := r + 1;
       r
+
+    (* the boolean is false when the name is
+       introduced from a let
+       since the ast does not yet have binder on Tm_Bind,
+       we need to turn the ppname of let name uses into _
     
-    let names : ((string * int) list) ref =  ref []
+       see resolve_name later *)
+    let names : ((string * int * bool) list) ref =  ref []
 
     let begin_name_scope (s:string) =
       let c = get_next () in
-      names := (s, c)::!names
+      names := (s, c, true)::!names
 
-    let lookup_name (s:string) : int option =
-      let rec aux (l:(string * int) list) : int option =
+    let begin_null_name_scope (s:string) =
+      let c = get_next () in
+      names := (s, c, false)::!names
+
+    let lookup_name (s:string) : (int * bool) option =
+      let rec aux (l:(string * int * bool) list) : (int * bool) option =
         match l with
         | [] -> None
-        | hd::tl -> if fst hd = s then Some (snd hd) else aux tl in
+        | (s', i, b)::tl -> if s' = s then Some (i, b) else aux tl in
       aux !names
 
     let resolve_name (s:string) : term =
       match lookup_name s with
-      | Some n -> Tm_Var {nm_ppname=s;nm_index=Z.of_int n}
+      | Some (n, b) ->
+        Tm_Var {nm_ppname=if b then s else "_";nm_index=Z.of_int n}
       | None -> failwith ("Cannot resolve name " ^ s)
 
     let end_name_scope (s:string) (t:term) : term =
       match lookup_name s with
-      | Some n -> close_term t (Z.of_int n)
+      | Some (n, _) -> close_term t (Z.of_int n)
       | None -> failwith ("end_name_scope, name not found " ^ s)
 
     let mk_app (head:term) (args:term list) : term =
@@ -68,9 +79,9 @@
 
 %token EOF
 
-%token FUN
+%token FUN LET
 %token TRUE FALSE
-%token LPAREN RPAREN COMMA DOT COLON RARROW LBRACE RBRACE
+%token LPAREN RPAREN COMMA DOT COLON RARROW LBRACE RBRACE EQUALS SEMICOLON
 
 %token EMP STAR
 
@@ -95,9 +106,16 @@ path:
   | id=IDENT DOT p=path { id::p }
 
 binder:
-  | LPAREN s=IDENT COLON t=expr RPAREN
+  | LPAREN s=IDENT COLON t=pure_expr RPAREN
     {
       begin_name_scope s;
+      {binder_ty=t; binder_ppname=s}
+    }
+
+null_binder:
+  | s=IDENT COLON t=pure_expr
+    {
+      begin_null_name_scope s;
       {binder_ty=t; binder_ppname=s}
     }
 
@@ -123,6 +141,11 @@ expr:
   | e=pure_expr             { e }
   | f=lambda                { f }
   | sapp=stapp              { sapp }
+  | LET b=null_binder EQUALS e1=expr SEMICOLON e2=expr
+    {
+      let e2 = end_name_scope b.binder_ppname e2 in
+      Tm_Bind (b.binder_ty, e1, e2)
+    }
   | LPAREN e=expr RPAREN    { e }
 
 pure_atomic_expr:

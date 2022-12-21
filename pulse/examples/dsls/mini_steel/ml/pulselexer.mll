@@ -21,6 +21,7 @@ rule token =
       else if i = "false" then FALSE
       else if i = "emp" then EMP
       else if i = "fun" then FUN
+      else if i = "let" then LET
       else IDENT (i)
     }
   | "("           { LPAREN }
@@ -31,7 +32,9 @@ rule token =
   | "."           { DOT }
   | "->"          { RARROW }
   | "*"           { STAR }
+  | ";"           { SEMICOLON }
   | ":"           { COLON }
+  | "="           { EQUALS }
   | space+        { token lexbuf }
   | newline       { Lexing.new_line lexbuf; token lexbuf }
   | eof           { EOF }
