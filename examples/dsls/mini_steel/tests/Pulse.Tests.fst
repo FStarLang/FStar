@@ -10,9 +10,9 @@ open Pulse.Main
 
 let foo_s = "true"
 let bar_s = "
-fun (n:Pulse.Steel.Wrapper.erased) (r:Pulse.Steel.Wrapper.ref) (x:Pulse.Steel.Wrapper.u32) \
-  {Pulse.Steel.Wrapper.pts_to r n} -> \
-    Pulse.Steel.Wrapper.write (n, r, x) \
+fun (n:Pulse.Steel.Wrapper.erased) (r1:Pulse.Steel.Wrapper.ref) (x:Pulse.Steel.Wrapper.u32) (r2:Pulse.Steel.Wrapper.ref) \
+  {Pulse.Steel.Wrapper.pts_to r1 n * Pulse.Steel.Wrapper.pts_to r2 n} -> \
+    Pulse.Steel.Wrapper.write (n, r1, x) \
 "
 
 %splice_t[foo] (parse_and_check foo_s)
