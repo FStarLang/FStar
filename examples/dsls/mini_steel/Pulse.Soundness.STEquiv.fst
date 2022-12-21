@@ -73,7 +73,7 @@ let inst_sub_stt (#g:R.env) (#u:_) (#a #pre1 #pre2 #post1 #post2 #r:R.term)
   : GTot (RT.typing g (mk_sub u a pre1 pre2 post1 post2 r) (mk_stt_app u [a;pre2;post2]))
   = admit()
 
-let vprop_arrow (t:pure_term) : pure_term = Tm_Arrow {binder_ty=t;binder_ppname="_"} (C_Tot Tm_VProp)
+let vprop_arrow (t:pure_term) : pure_term = Tm_Arrow (null_binder t) (C_Tot Tm_VProp)
 
 #push-options "--fuel 2 --ifuel 1 --z3rlimit_factor 4 --query_stats"
 let st_equiv_soundness (f:stt_env)
@@ -123,7 +123,7 @@ let st_equiv_soundness (f:stt_env)
                   (mk_tot_arrow1 (t0, R.Q_Explicit)
                                  (stt_vprop_equiv (elab_pure (comp_post c0))
                                                   (elab_pure (comp_post c1))))
-        = RT.T_Abs _ _ _ (`()) _ _ "_" R.Q_Explicit
+        = RT.T_Abs _ _ _ (`()) _ _ _ R.Q_Explicit
                  r_res_typing
                  post_equiv
     in
@@ -132,13 +132,13 @@ let st_equiv_soundness (f:stt_env)
       : RT.typing (extend_env_l f g)
                   (elab_comp_post c0) // mk_abs t0 (elab_pure (comp_post c0)))
                   (elab_pure (vprop_arrow (comp_res c0)))
-      = mk_t_abs_tot _ _ "_" res_typing post_typing
+      = mk_t_abs_tot _ _ _ res_typing post_typing
     in
     let abs_post1_typing
       : RT.typing (extend_env_l f g)
                   (elab_comp_post c1) //mk_abs t0 (elab_pure (comp_post c1)))
                   (elab_pure (vprop_arrow (comp_res c0)))
-      = mk_t_abs_tot _ _ "_" res_typing (fst (vprop_equiv_typing _ _ _ _ eq_post) post_typing)
+      = mk_t_abs_tot _ _ _ res_typing (fst (vprop_equiv_typing _ _ _ _ eq_post) post_typing)
     in
     let (| pf, d |) =
       inst_intro_vprop_post_equiv r_res_typing abs_post0_typing abs_post1_typing d in

@@ -471,11 +471,11 @@ let try_frame_pre (#f:RT.fstar_top_env)
     assert (comp_post c' == comp_post c'');
     opening_pure_term_with_pure_term
       (comp_post c')
-      (Tm_Var {nm_index=x;nm_ppname="_"})
+      (null_var x)
       0;
     opening_pure_term_with_pure_term
       (comp_post c'')
-      (Tm_Var {nm_index=x;nm_ppname="_"})
+      (null_var x)
       0;    
     assert (is_pure_term (open_term (comp_post c') x));
     let g' = ((x, Inl (comp_res c'))::g) in

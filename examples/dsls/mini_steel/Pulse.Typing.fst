@@ -35,7 +35,7 @@ let return_comp (u:universe) (t:pure_term) (e:pure_term)
   = C_ST { u;
            res = t;
            pre = Tm_Emp;
-           post = Tm_Pure (mk_eq2 t (Tm_BVar {bv_index=0; bv_ppname="_"}) e) }
+           post = Tm_Pure (mk_eq2 t (null_bvar 0) e) }
 
 let return_comp_noeq (u:universe) (t:pure_term)
   : pure_comp 

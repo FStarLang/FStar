@@ -203,7 +203,7 @@ and elab_comp_open_commute' (c:pure_comp) (v:pure_term) (n:index)
 let elab_open_commute (t:pure_term) (x:var)
   : Lemma (elab_pure (open_term t x) == RT.open_term (elab_pure t) x)
   = RT.open_term_spec (elab_pure t) x;
-    elab_open_commute' t (Tm_Var {nm_index=x;nm_ppname="_"}) 0
+    elab_open_commute' t (null_var x) 0
 
 #push-options "--fuel 8 --ifuel 4 --z3rlimit_factor 20"
 let rec elab_close_commute' (e:pure_term)
