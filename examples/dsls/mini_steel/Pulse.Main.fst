@@ -11,6 +11,7 @@ open Pulse.Elaborate.Pure
 open Pulse.Elaborate
 open Pulse.Soundness
 
+open Pulse.Parser
 
 let main' (t:term) (pre:term) (g:RT.fstar_top_env)
   : T.Tac (r:(R.term & R.typ){RT.typing g (fst r) (snd r)})
@@ -38,108 +39,113 @@ let pts_to_lid = ["Pulse"; "Steel"; "Wrapper"; "pts_to"]
 let read_lid = ["Pulse"; "Steel"; "Wrapper"; "read"]
 let write_lid = ["Pulse"; "Steel"; "Wrapper"; "write"]
 
-// "(fun (n:erased) (r:ref) (x:u32) -> \
-//             { pts_to r (reveal n) } call: write(r, x))"
-let bar = (
-Tm_Abs
-  (mk_binder "n" (Tm_FVar erased_lid))  //n:erased u32
-  Tm_Emp
-  (Tm_Abs
-     (mk_binder "r" (Tm_FVar ref_lid))  //r:ref
-     Tm_Emp
-     (Tm_Abs
-        (mk_binder "x" (Tm_FVar u32_lid))  //x:u32
-        (Tm_PureApp
-          (Tm_PureApp
-             (Tm_FVar pts_to_lid)
-             (mk_bvar "r" 1))
-          (Tm_PureApp
-             (Tm_FVar reveal_lid)
-             (mk_bvar "n" 2))
-        )
-        (Tm_STApp
-           (Tm_PureApp
-              (Tm_PureApp
-                 (Tm_FVar write_lid)
-                 (mk_bvar "n" 2)
-              )
-              (mk_bvar "r" 1)
-           )
-           (mk_bvar "x" 0)
-        )
-     )
-  )
-)
-
 [@@plugin]
-let check_bar (_:unit) : RT.dsl_tac_t =
-  main bar Tm_Emp
+let parse_and_elab (_:unit) : RT.dsl_tac_t =
+  let e = parse ("true") in
+  main e Tm_Emp
 
-// fun (n:erased) (r1:ref) (x:u32) (r2:ref) -> \\
-//   {pts_to r1 (reveal n) `star` pts_to r2 (reveal n)} call: write (r1, x))
+// // "(fun (n:erased) (r:ref) (x:u32) -> \
+// //             { pts_to r (reveal n) } call: write(r, x))"
+// let bar = (
+// Tm_Abs
+//   (mk_binder "n" (Tm_FVar erased_lid))  //n:erased u32
+//   Tm_Emp
+//   (Tm_Abs
+//      (mk_binder "r" (Tm_FVar ref_lid))  //r:ref
+//      Tm_Emp
+//      (Tm_Abs
+//         (mk_binder "x" (Tm_FVar u32_lid))  //x:u32
+//         (Tm_PureApp
+//           (Tm_PureApp
+//              (Tm_FVar pts_to_lid)
+//              (mk_bvar "r" 1))
+//           (Tm_PureApp
+//              (Tm_FVar reveal_lid)
+//              (mk_bvar "n" 2))
+//         )
+//         (Tm_STApp
+//            (Tm_PureApp
+//               (Tm_PureApp
+//                  (Tm_FVar write_lid)
+//                  (mk_bvar "n" 2)
+//               )
+//               (mk_bvar "r" 1)
+//            )
+//            (mk_bvar "x" 0)
+//         )
+//      )
+//   )
+// )
 
-let baz = (
-Tm_Abs
-  (mk_binder "n" (Tm_FVar erased_lid))  // n:erased
-  Tm_Emp
-  (
-    Tm_Abs
-      (mk_binder "r1" (Tm_FVar ref_lid))  // r1:ref
-      Tm_Emp
-      (
-        Tm_Abs
-          (mk_binder "x" (Tm_FVar u32_lid))  // x:u32
-          Tm_Emp
-          (
-            Tm_Abs
-              (mk_binder "r2" (Tm_FVar ref_lid))  // r2:ref
-              (
-                Tm_Star
-                  (
-                    Tm_PureApp
-                      (
-                        Tm_PureApp
-                          (Tm_FVar pts_to_lid)
-                          (mk_bvar "r2" 0)
-                      )
-                      (
-                        Tm_PureApp
-                          (Tm_FVar reveal_lid)
-                          (mk_bvar "n" 3)
-                      )
-                  )
-                  (
-                    Tm_PureApp
-                      (
-                        Tm_PureApp
-                          (Tm_FVar pts_to_lid)
-                          (mk_bvar "r1" 2)
-                      )
-                      (
-                        Tm_PureApp
-                          (Tm_FVar reveal_lid)
-                          (mk_bvar "n" 3)
-                      )
-                  )
-              )
-              (
-                Tm_STApp
-                  (
-                    Tm_PureApp
-                      (
-                        Tm_PureApp
-                          (Tm_FVar write_lid)
-                          (mk_bvar "n" 3)
-                      )
-                      (mk_bvar "r1" 2)
-                  )
-                  (mk_bvar "x" 1)
-              )
-          )
-      )
-  )
-)
+// [@@plugin]
+// let check_bar (_:unit) : RT.dsl_tac_t =
+//   main bar Tm_Emp
 
-[@@plugin]
-let check_baz (_:unit) : RT.dsl_tac_t =
-  main baz Tm_Emp
+// // fun (n:erased) (r1:ref) (x:u32) (r2:ref) -> \\
+// //   {pts_to r1 (reveal n) `star` pts_to r2 (reveal n)} call: write (r1, x))
+
+// let baz = (
+// Tm_Abs
+//   (mk_binder "n" (Tm_FVar erased_lid))  // n:erased
+//   Tm_Emp
+//   (
+//     Tm_Abs
+//       (mk_binder "r1" (Tm_FVar ref_lid))  // r1:ref
+//       Tm_Emp
+//       (
+//         Tm_Abs
+//           (mk_binder "x" (Tm_FVar u32_lid))  // x:u32
+//           Tm_Emp
+//           (
+//             Tm_Abs
+//               (mk_binder "r2" (Tm_FVar ref_lid))  // r2:ref
+//               (
+//                 Tm_Star
+//                   (
+//                     Tm_PureApp
+//                       (
+//                         Tm_PureApp
+//                           (Tm_FVar pts_to_lid)
+//                           (mk_bvar "r2" 0)
+//                       )
+//                       (
+//                         Tm_PureApp
+//                           (Tm_FVar reveal_lid)
+//                           (mk_bvar "n" 3)
+//                       )
+//                   )
+//                   (
+//                     Tm_PureApp
+//                       (
+//                         Tm_PureApp
+//                           (Tm_FVar pts_to_lid)
+//                           (mk_bvar "r1" 2)
+//                       )
+//                       (
+//                         Tm_PureApp
+//                           (Tm_FVar reveal_lid)
+//                           (mk_bvar "n" 3)
+//                       )
+//                   )
+//               )
+//               (
+//                 Tm_STApp
+//                   (
+//                     Tm_PureApp
+//                       (
+//                         Tm_PureApp
+//                           (Tm_FVar write_lid)
+//                           (mk_bvar "n" 3)
+//                       )
+//                       (mk_bvar "r1" 2)
+//                   )
+//                   (mk_bvar "x" 1)
+//               )
+//           )
+//       )
+//   )
+// )
+
+// [@@plugin]
+// let check_baz (_:unit) : RT.dsl_tac_t =
+//   main baz Tm_Emp
