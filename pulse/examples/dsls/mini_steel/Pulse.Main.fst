@@ -12,10 +12,11 @@ open Pulse.Elaborate
 open Pulse.Soundness
 
 open Pulse.Parser
+module P = Pulse.Syntax.Printer
 
 let main' (t:term) (pre:term) (g:RT.fstar_top_env)
   : T.Tac (r:(R.term & R.typ){RT.typing g (fst r) (snd r)})
-  = T.print (term_to_string t);
+  = T.print (P.term_to_string t);
     match Pulse.Soundness.Common.check_top_level_environment g with
     | None -> T.fail "pulse main: top-level environment does not include stt at the expected types"
     | Some g ->

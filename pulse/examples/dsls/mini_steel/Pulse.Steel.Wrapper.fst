@@ -122,13 +122,26 @@ type ref = R.ref u32
 [@@ __reduce__]
 let pts_to (r:ref) (n:erased) = R.pts_to r full_perm n
 
+[@@ __reduce__]
+let ptr (r:ref)  = exists_ (fun (n:erased) -> pts_to r n)
+
 let read (n:erased) (r:ref)
   = fun _ ->
     let x = R.read r in
     rewrite (pts_to r n) (pts_to r (hide x));
     return x
 
+let read_alt (n:erased) (r:ref)
+  = fun _ ->
+    let x = R.read r in
+    return x
+
 let write (n:erased) (r:ref) (x:u32)
   = fun _ ->
     let _ = R.write r x in
     rewrite _ (pts_to r (hide x))
+
+let write_alt (n:erased) (r:ref) (x:u32)
+  = fun _ ->
+    let _ = R.write r x in
+    ()

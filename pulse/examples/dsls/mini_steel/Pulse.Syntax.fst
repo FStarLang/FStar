@@ -79,10 +79,33 @@ and st_comp = { (* ST pre (x:res) post ... x is free in post *)
 
 and vprop = term
 
-assume
-val freevars (t:term) : Set.set var
+let rec freevars (t:term) 
+  : Set.set var
+  = match t with
+    | Tm_BVar _
+    | Tm_FVar  _
+    | Tm_Constant _
+    | Tm_Emp
+    | Tm_Type _
+    | Tm_VProp -> Set.empty
+    | Tm_Var nm -> Set.singleton nm.nm_index
+    | Tm_Abs b _ body -> Set.union (freevars b.binder_ty) (freevars body)
+    | Tm_PureApp t1 t2
+    | Tm_STApp t1 t2
+    | Tm_Star  t1 t2
+    | Tm_ExistsSL t1 t2
+    | Tm_ForallSL t1 t2  -> Set.union (freevars t1) (freevars t2)
 
-let freevars_comp (c:comp) : Set.set var =
+    | Tm_Let t e1 e2
+    | Tm_Bind t e1 e2
+    | Tm_If t e1 e2 ->
+      Set.union (Set.union (freevars t) (freevars e1)) (freevars e2)
+
+    | Tm_Pure p -> freevars p
+
+    | Tm_Arrow b body -> Set.union (freevars b.binder_ty) (freevars_comp body)
+  
+and freevars_comp (c:comp) : Set.set var =
   match c with
   | C_Tot t -> freevars t
   | C_ST st -> freevars st.res `Set.union` freevars st.pre `Set.union` freevars st.post
@@ -314,44 +337,44 @@ let rec close_open_inverse (t:term) (x:var { ~(x `Set.mem` freevars t) } )
           (decreases t)
   = admit()
 
-let constant_to_string (c:constant) : string =
-  match c with
-  | Unit -> "()"
-  | Bool b -> string_of_bool b
-  | Int n -> string_of_int n
+// let constant_to_string (c:constant) : string =
+//   match c with
+//   | Unit -> "()"
+//   | Bool b -> string_of_bool b
+//   | Int n -> string_of_int n
 
-let rec term_to_string (t:term) : Tot string (decreases t) =
-  match t with
-  | Tm_BVar bv -> bv.bv_ppname ^ "@" ^ (string_of_int bv.bv_index)
-  | Tm_Var nm -> nm.nm_ppname ^ "#" ^ (string_of_int nm.nm_index)
-  | Tm_FVar l -> String.concat "." l
-  | Tm_Constant c -> constant_to_string c
-  | Tm_Abs b pre_hint body ->
-    "(" ^
-    "fun (" ^
-    (binder_to_string b) ^ ")_(" ^
-    (term_to_string pre_hint) ^ ") -> " ^
-    (term_to_string body) ^
-    ")"
-  | Tm_PureApp head arg ->
-    "(" ^
-    (term_to_string head) ^ " " ^ (term_to_string arg) ^
-    ")"
-  | Tm_Let _ _ _ -> "<Tm_Let>"
-  | Tm_STApp head arg ->
-    "(" ^
-    (term_to_string head) ^ " " ^ (term_to_string arg) ^
-    ")"
-  | Tm_Bind t e1 e2 ->
-    "let _:" ^ term_to_string t ^ " = " ^
-    term_to_string e1 ^ "; " ^ term_to_string e2
-  | Tm_Emp -> "emp"
-  | Tm_Pure p -> "pure (" ^ (term_to_string p) ^ ")"
-  | Tm_Star l r -> "star (" ^ (term_to_string l) ^ ") (" ^ (term_to_string r) ^ ")"
-  | _ -> "<term>"
+// let rec term_to_string (t:term) : Tot string (decreases t) =
+//   match t with
+//   | Tm_BVar bv -> bv.bv_ppname ^ "@" ^ (string_of_int bv.bv_index)
+//   | Tm_Var nm -> nm.nm_ppname ^ "#" ^ (string_of_int nm.nm_index)
+//   | Tm_FVar l -> String.concat "." l
+//   | Tm_Constant c -> constant_to_string c
+//   | Tm_Abs b pre_hint body ->
+//     "(" ^
+//     "fun (" ^
+//     (binder_to_string b) ^ ")_(" ^
+//     (term_to_string pre_hint) ^ ") -> " ^
+//     (term_to_string body) ^
+//     ")"
+//   | Tm_PureApp head arg ->
+//     "(" ^
+//     (term_to_string head) ^ " " ^ (term_to_string arg) ^
+//     ")"
+//   | Tm_Let _ _ _ -> "<Tm_Let>"
+//   | Tm_STApp head arg ->
+//     "(" ^
+//     (term_to_string head) ^ " " ^ (term_to_string arg) ^
+//     ")"
+//   | Tm_Bind t e1 e2 ->
+//     "let _:" ^ term_to_string t ^ " = " ^
+//     term_to_string e1 ^ "; " ^ term_to_string e2
+//   | Tm_Emp -> "emp"
+//   | Tm_Pure p -> "pure (" ^ (term_to_string p) ^ ")"
+//   | Tm_Star l r -> "star (" ^ (term_to_string l) ^ ") (" ^ (term_to_string r) ^ ")"
+//   | _ -> "<term>"
 
-and binder_to_string (b:binder) : string =
-  b.binder_ppname ^ ":" ^ term_to_string (b.binder_ty)
+// and binder_to_string (b:binder) : string =
+//   b.binder_ppname ^ ":" ^ term_to_string (b.binder_ty)
 
 let null_binder (t:term) : binder =
   {binder_ty=t;binder_ppname="_"}
