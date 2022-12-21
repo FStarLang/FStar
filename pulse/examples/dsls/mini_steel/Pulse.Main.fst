@@ -42,30 +42,30 @@ let write_lid = ["Pulse"; "Steel"; "Wrapper"; "write"]
 //             { pts_to r (reveal n) } call: write(r, x))"
 let bar = (
 Tm_Abs
-  (Tm_FVar erased_lid)  //n:erased u32
+  (mk_binder "n" (Tm_FVar erased_lid))  //n:erased u32
   Tm_Emp
   (Tm_Abs
-     (Tm_FVar ref_lid)  //r:ref
+     (mk_binder "r" (Tm_FVar ref_lid))  //r:ref
      Tm_Emp
      (Tm_Abs
-        (Tm_FVar u32_lid)  //x:u32
+        (mk_binder "x" (Tm_FVar u32_lid))  //x:u32
         (Tm_PureApp
           (Tm_PureApp
              (Tm_FVar pts_to_lid)
-             (Tm_BVar 1))
+             (mk_bvar "r" 1))
           (Tm_PureApp
              (Tm_FVar reveal_lid)
-             (Tm_BVar 2))
+             (mk_bvar "n" 2))
         )
         (Tm_STApp
            (Tm_PureApp
               (Tm_PureApp
                  (Tm_FVar write_lid)
-                 (Tm_BVar 2)
+                 (mk_bvar "n" 2)
               )
-              (Tm_BVar 1)
+              (mk_bvar "r" 1)
            )
-           (Tm_BVar 0)
+           (mk_bvar "x" 0)
         )
      )
   )
@@ -80,19 +80,19 @@ let check_bar (_:unit) : RT.dsl_tac_t =
 
 let baz = (
 Tm_Abs
-  (Tm_FVar erased_lid)  // n:erased
+  (mk_binder "n" (Tm_FVar erased_lid))  // n:erased
   Tm_Emp
   (
     Tm_Abs
-      (Tm_FVar ref_lid)  // r1:ref
+      (mk_binder "r1" (Tm_FVar ref_lid))  // r1:ref
       Tm_Emp
       (
         Tm_Abs
-          (Tm_FVar u32_lid)  // x:u32
+          (mk_binder "x" (Tm_FVar u32_lid))  // x:u32
           Tm_Emp
           (
             Tm_Abs
-              (Tm_FVar ref_lid)  // r2:ref
+              (mk_binder "r2" (Tm_FVar ref_lid))  // r2:ref
               (
                 Tm_Star
                   (
@@ -100,12 +100,12 @@ Tm_Abs
                       (
                         Tm_PureApp
                           (Tm_FVar pts_to_lid)
-                          (Tm_BVar 0)
+                          (mk_bvar "r2" 0)
                       )
                       (
                         Tm_PureApp
                           (Tm_FVar reveal_lid)
-                          (Tm_BVar 3)
+                          (mk_bvar "n" 3)
                       )
                   )
                   (
@@ -113,12 +113,12 @@ Tm_Abs
                       (
                         Tm_PureApp
                           (Tm_FVar pts_to_lid)
-                          (Tm_BVar 2)
+                          (mk_bvar "r1" 2)
                       )
                       (
                         Tm_PureApp
                           (Tm_FVar reveal_lid)
-                          (Tm_BVar 3)
+                          (mk_bvar "n" 3)
                       )
                   )
               )
@@ -129,11 +129,11 @@ Tm_Abs
                       (
                         Tm_PureApp
                           (Tm_FVar write_lid)
-                          (Tm_BVar 3)
+                          (mk_bvar "n" 3)
                       )
-                      (Tm_BVar 2)
+                      (mk_bvar "r1" 2)
                   )
-                  (Tm_BVar 1)
+                  (mk_bvar "x" 1)
               )
           )
       )

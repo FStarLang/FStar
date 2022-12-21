@@ -117,12 +117,12 @@ let rec elab_src_typing (#f:RT.fstar_top_env)
   = match d with
     | T_Tot _ _ _ _ -> elab_pure t
 
-    | T_Abs _ x ty _u body _ _ ty_typing body_typing ->
+    | T_Abs _ ppname x ty _u body _ _ ty_typing body_typing ->
       let ty = elab_pure ty in
       let body = elab_src_typing body_typing in
-      mk_abs ty (RT.close_term body x) //this closure should be provably redundant by strengthening the conditions on x
+      mk_abs_with_name ppname ty (RT.close_term body x) //this closure should be provably redundant by strengthening the conditions on x
     
-    | T_STApp _ head _formal _res arg head_typing arg_typing ->
+    | T_STApp _ head _ppname _formal _res arg head_typing arg_typing ->
       let head = elab_src_typing head_typing in
       let arg = elab_pure arg in
       R.mk_app head [(arg, R.Q_Explicit)]
@@ -203,7 +203,7 @@ and elab_comp_open_commute' (c:pure_comp) (v:pure_term) (n:index)
 let elab_open_commute (t:pure_term) (x:var)
   : Lemma (elab_pure (open_term t x) == RT.open_term (elab_pure t) x)
   = RT.open_term_spec (elab_pure t) x;
-    elab_open_commute' t (Tm_Var x) 0
+    elab_open_commute' t (Tm_Var {nm_index=x;nm_ppname="_"}) 0
 
 #push-options "--fuel 8 --ifuel 4 --z3rlimit_factor 20"
 let rec elab_close_commute' (e:pure_term)
@@ -216,8 +216,8 @@ let rec elab_close_commute' (e:pure_term)
           (decreases e)
   = closing_pure_term e v n;
     match e with
-    | Tm_BVar _ 
-    | Tm_Var _ 
+    | Tm_Var _ -> admit ()
+    | Tm_BVar _
     | Tm_FVar _
     | Tm_Constant _
     | Tm_Emp 
@@ -239,8 +239,8 @@ let rec elab_close_commute' (e:pure_term)
     | Tm_ForallSL t body ->
       elab_close_commute' t v n;
       elab_close_commute' body v (n + 1)    
-    | Tm_Arrow t body ->
-      elab_close_commute' t v n;
+    | Tm_Arrow b body ->
+      elab_close_commute' b.binder_ty v n;
       elab_comp_close_commute' body v (n + 1)
     | Tm_If e1 e2 e3 ->
       elab_close_commute' e1 v n;
