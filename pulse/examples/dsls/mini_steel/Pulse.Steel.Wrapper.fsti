@@ -82,10 +82,10 @@ val hide (x:u32) : erased
 val reveal (x:erased) : GTot u32
 
 val ref : Type0
-val pts_to (r:ref) (n:u32) : vprop
+val pts_to (r:ref) (n:erased) : vprop
 
 val read (n:erased) (r:ref)
-  : stt u32 (pts_to r (reveal n)) (fun x -> pts_to r x)
+  : stt u32 (pts_to r n) (fun x -> pts_to r (hide x))
 
 val write (n:erased) (r:ref) (x:u32)
-  : stt unit (pts_to r (reveal n)) (fun _ -> pts_to r x)
+  : stt unit (pts_to r n) (fun _ -> pts_to r (hide x))

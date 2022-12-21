@@ -42,6 +42,20 @@
         aux head args
 
     let mk_fvar (l:string list) : term = Tm_FVar l
+
+    let unsnoc (l:'a list) : ('a list * 'a) =
+      let l = List.rev l in
+      List.rev (List.tl l), List.hd l
+    
+    let mk_abs (bs:binder list) (pre:term) (body:term) : term =
+      let bs, b = unsnoc bs in
+      let t = Tm_Abs
+                (b,
+                 end_name_scope b.binder_ppname pre,
+                 end_name_scope b.binder_ppname body) in
+      List.fold_right (fun b t ->
+                        let t = end_name_scope b.binder_ppname t in
+                        Tm_Abs (b, Tm_Emp, t)) bs t      
 %}
 
 %token<string> IDENT
@@ -86,12 +100,27 @@ binder:
       {binder_ty=t; binder_ppname=s}
     }
 
+binders:
+  | b=binder               { [b] }
+  | b=binder bs=binders    {b::bs}
+
 lambda:
   | FUN b=binder LBRACE pre=expr RBRACE RARROW LPAREN e=expr RPAREN
     {
       let pre = end_name_scope b.binder_ppname pre in
       let e = end_name_scope b.binder_ppname e in
       Tm_Abs (b, pre, e)
+    }
+
+  | FUN b=binder RARROW LPAREN e=expr RPAREN
+    {
+      let e = end_name_scope b.binder_ppname e in
+      Tm_Abs (b, Tm_Emp, e)
+    }
+
+  | FUN bs=binders LBRACE pre=expr RBRACE RARROW LPAREN e=expr RPAREN
+    {
+      mk_abs bs pre e
     }
 
 pureapp:

@@ -9,11 +9,10 @@ open Pulse.Main
 // %splice_t[baz] (check_baz ())
 
 let foo_s = "true"
-let bar_s = "\
-fun (n:Pulse.Steel.Wrapper.erased) { emp } -> \
-  (fun (r:Pulse.Steel.Wrapper.ref) { emp } -> \
-    (fun (x:Pulse.Steel.Wrapper.u32) {((Pulse.Steel.Wrapper.pts_to r) (Pulse.Steel.Wrapper.reveal n))} -> \
-      (Pulse.Steel.Wrapper.write (n, r, x)))) \
+let bar_s = "
+fun (n:Pulse.Steel.Wrapper.erased) (r:Pulse.Steel.Wrapper.ref) (x:Pulse.Steel.Wrapper.u32) \
+  {((Pulse.Steel.Wrapper.pts_to r) n)} -> \
+    (Pulse.Steel.Wrapper.write (n, r, x)) \
 "
 
 %splice_t[foo] (parse_and_check foo_s)

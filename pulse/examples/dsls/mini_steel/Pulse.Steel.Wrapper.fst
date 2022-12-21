@@ -120,15 +120,15 @@ let reveal (x:erased) = G.reveal x
 
 type ref = R.ref u32
 [@@ __reduce__]
-let pts_to (r:ref) (n:u32) = R.pts_to r full_perm n
+let pts_to (r:ref) (n:erased) = R.pts_to r full_perm n
 
 let read (n:erased) (r:ref)
   = fun _ ->
     let x = R.read r in
-    rewrite (pts_to r n) (pts_to r x);
+    rewrite (pts_to r n) (pts_to r (hide x));
     return x
 
 let write (n:erased) (r:ref) (x:u32)
   = fun _ ->
     let _ = R.write r x in
-    rewrite _ (pts_to r x)
+    rewrite _ (pts_to r (hide x))
