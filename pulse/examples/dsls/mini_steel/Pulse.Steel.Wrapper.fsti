@@ -4,6 +4,21 @@ open Steel.ST.Effect
 open Steel.Memory
 open Steel.ST.Util
 
+//
+// THIS IS A STOPGAP
+//
+// We don't have implicit arguments or universe instantiations yet
+//
+// And so we cannot correctly elaborate to a Prims.eq2
+//   which requires both of these
+//
+// SHOULD GO AWAY
+//
+// When we add both these to mini steel syntax
+//
+unfold
+let meq2 (a:Type0) (x y:a) : prop = Prims.eq2 x y
+
 inline_for_extraction
 val stt (a:Type u#a) (pre:vprop) (post:a -> vprop) : Type0
 
@@ -87,6 +102,9 @@ val ptr (r:ref) : vprop
 
 val read (n:erased) (r:ref)
   : stt u32 (pts_to r n) (fun x -> pts_to r (hide x))
+
+val read_refine (n:erased) (r:ref)
+  : stt (x:u32{meq2 u32 (reveal n) x}) (pts_to r n) (fun x -> pts_to r n)
 
 val read_alt (n:erased) (r:ref)
   : stt u32 (pts_to r n) (fun x -> pts_to r n)

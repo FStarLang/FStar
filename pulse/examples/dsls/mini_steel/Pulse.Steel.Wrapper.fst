@@ -131,6 +131,11 @@ let read (n:erased) (r:ref)
     rewrite (pts_to r n) (pts_to r (hide x));
     return x
 
+let read_refine n r =
+  fun _ ->
+  let x = R.read r in
+  return x
+
 let read_alt (n:erased) (r:ref)
   = fun _ ->
     let x = R.read r in

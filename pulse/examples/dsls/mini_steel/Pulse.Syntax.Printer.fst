@@ -17,6 +17,11 @@ let rec term_to_string (t:term)
     | Tm_Var x -> x.nm_ppname
     | Tm_FVar f -> name_to_string f
     | Tm_Constant c -> constant_to_string c
+    | Tm_Refine b phi ->
+      sprintf "%s:%s{%s}"
+              b.binder_ppname
+              (term_to_string b.binder_ty)
+              (term_to_string phi)
     | Tm_Abs b pre_hint body ->
       sprintf "(fun (%s) {%s} -> %s)"
               (binder_to_string b)

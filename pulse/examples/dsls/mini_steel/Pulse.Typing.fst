@@ -20,11 +20,11 @@ let tm_false : pure_term = Tm_Constant (Bool false)
 
 //
 // Until we have implicits and universe instantiations,
-//   use meq2 from RT
+//   use meq2
 //
 // SHOULD GO AWAY
 //
-let eq2_lid = ["Refl"; "Typing"; "meq2"]
+let eq2_lid = ["Pulse"; "Steel"; "Wrapper"; "meq2"]
 let mk_eq2 (t:pure_term) (e0 e1:pure_term) 
   : pure_term
   = Tm_PureApp

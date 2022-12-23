@@ -223,6 +223,9 @@ let rec elab_close_commute' (e:pure_term)
     | Tm_Emp 
     | Tm_Type _ 
     | Tm_VProp -> ()
+    | Tm_Refine b phi ->
+      elab_close_commute' b.binder_ty v n;
+      elab_close_commute' phi v (n + 1)
     | Tm_PureApp e1 e2 ->
       elab_close_commute' e1 v n;
       elab_close_commute' e2 v n

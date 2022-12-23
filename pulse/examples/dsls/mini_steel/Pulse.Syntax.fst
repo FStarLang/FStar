@@ -46,6 +46,7 @@ type term =
   | Tm_Var      : nm -> term
   | Tm_FVar     : l:R.name -> term
   | Tm_Constant : c:constant -> term
+  | Tm_Refine   : b:binder -> term -> term
   | Tm_Abs      : b:binder -> pre_hint:vprop -> body:term -> term
   | Tm_PureApp  : head:term -> arg:term -> term
   | Tm_Let      : t:term -> e1:term -> e2:term -> term  
@@ -89,7 +90,8 @@ let rec freevars (t:term)
     | Tm_Type _
     | Tm_VProp -> Set.empty
     | Tm_Var nm -> Set.singleton nm.nm_index
-    | Tm_Abs b _ body -> Set.union (freevars b.binder_ty) (freevars body)
+    | Tm_Refine b body
+    | Tm_Abs b _ body -> Set.union (freevars b.binder_ty) (freevars body)  // Why is this not taking freevars of pretype?
     | Tm_PureApp t1 t2
     | Tm_STApp t1 t2
     | Tm_Star  t1 t2
@@ -120,6 +122,10 @@ let rec ln' (t:term) (i:int) =
   | Tm_Emp
   | Tm_Type _
   | Tm_VProp -> true
+
+  | Tm_Refine b phi ->
+    ln' b.binder_ty i &&
+    ln' phi (i + 1)
 
   | Tm_Abs b pre_hint body ->
     ln' b.binder_ty i &&
@@ -184,6 +190,10 @@ let rec open_term' (t:term) (v:term) (i:index)
     | Tm_Type _
     | Tm_VProp
     | Tm_Emp -> t
+
+    | Tm_Refine b phi ->
+      Tm_Refine {b with binder_ty=open_term' b.binder_ty v i}
+                (open_term' phi v (i + 1))
 
     | Tm_Abs b pre_hint body ->
       Tm_Abs {b with binder_ty=open_term' b.binder_ty v i}
@@ -261,6 +271,10 @@ let rec close_term' (t:term) (v:var) (i:index)
     | Tm_Type _
     | Tm_VProp
     | Tm_Emp -> t
+
+    | Tm_Refine b phi ->
+      Tm_Refine {b with binder_ty=close_term' b.binder_ty v i}
+                (close_term' phi v (i + 1))
 
     | Tm_Abs b pre_hint body ->
       Tm_Abs {b with binder_ty=close_term' b.binder_ty v i}

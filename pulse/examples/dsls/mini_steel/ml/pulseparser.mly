@@ -155,10 +155,15 @@ pure_atomic_expr:
   | EMP                     { Tm_Emp }
 
 pure_expr:
-  | e=pure_atomic_expr    { e }
-  | e=pureapp             { e }
-  | e1=pure_expr STAR e2=pure_expr    { Tm_Star (e1, e2) }
-  | LPAREN e=pure_expr RPAREN    { e }
+  | e=pure_atomic_expr                    { e }
+  | e=pureapp                             { e }
+  | e1=pure_expr STAR e2=pure_expr        { Tm_Star (e1, e2) }
+  | b=binder LBRACE e=pure_expr RBRACE
+    {
+      let e = end_name_scope b.binder_ppname e in
+      Tm_Refine (b, e)
+    }
+  | LPAREN e=pure_expr RPAREN             { e }
 
 prog:
   | EOF         { None }

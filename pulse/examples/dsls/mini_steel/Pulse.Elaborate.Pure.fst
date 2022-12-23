@@ -60,8 +60,6 @@ let (let?) (f:option 'a) (g: 'a -> option 'b) : option 'b =
   | None -> None
   | Some x -> g x
 
-
-
 let elab_const (c:constant) 
   : R.vconst
   = match c with
@@ -88,7 +86,12 @@ let rec elab_term (top:term)
 
     | Tm_Constant c ->
       Some (pack_ln (Tv_Const (elab_const c)))
-    
+
+    | Tm_Refine b phi ->
+      let? ty = elab_term b.binder_ty in
+      let? phi = elab_term phi in
+      Some (pack_ln (Tv_Refine (pack_bv (RT.make_bv_with_name b.binder_ppname 0 ty)) phi))
+
     | Tm_PureApp e1 e2 ->
       let? e1 = elab_term e1 in
       let? e2 = elab_term e2 in
@@ -195,6 +198,10 @@ let rec opening_pure_term_with_pure_term (x:pure_term) (v:pure_term) (i:index)
     //   aux t i;
     //   aux body (i + 1)
 
+    | Tm_Refine b phi ->
+      aux b.binder_ty i;
+      aux phi (i + 1)        
+
     | Tm_PureApp l r
     // | Tm_STApp l r
     | Tm_Star l r ->    
@@ -249,6 +256,10 @@ let rec closing_pure_term (x:pure_term) (v:var) (i:index)
     // | Tm_Abs t pre_hint body ->
     //   aux t i;
     //   aux body (i + 1)
+
+    | Tm_Refine b phi ->
+      aux b.binder_ty i;
+      aux phi (i + 1)
 
     | Tm_PureApp l r
     // | Tm_STApp l r
