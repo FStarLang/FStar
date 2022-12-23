@@ -105,6 +105,14 @@ let rec readback_ty (t:R.term)
     let? arg' = readback_ty (fst arg) in
     Some (Tm_PureApp hd' arg' <: ty:pure_term {elab_term ty == Some t})
 
+  | Tv_Refine bv phi ->
+    let bv_view = inspect_bv bv in
+    let? ty = readback_ty bv_view.bv_sort in
+    let? phi = readback_ty phi in
+    let r = Tm_Refine {binder_ty=ty;binder_ppname=bv_view.bv_ppname} phi in
+    assume (elab_term r == Some t);
+    Some (r <: ty:pure_term {elab_term ty == Some t})
+
   | Tv_Abs _ _ -> T.fail "readback_ty: unexpected Tv_Abs"
 
   | Tv_Arrow b c ->
@@ -126,8 +134,6 @@ let rec readback_ty (t:R.term)
   | Tv_Type u ->
     let? u' = readback_universe u in
     Some (Tm_Type u' <: ty:pure_term{ elab_term ty == Some t })
-
-  | Tv_Refine _ _ -> T.fail "readback_ty: unexpected Tv_Refine"
 
   | Tv_Const c ->
     (match c with
@@ -587,7 +593,8 @@ let rec check (f:RT.fstar_top_env)
     | Tm_ForallSL _ _
     | Tm_Arrow _ _
     | Tm_Type _
-    | Tm_VProp ->
+    | Tm_VProp
+    | Tm_Refine _ _ ->
       let (| ty, d_ty |) = check_tot f g t in
       (| C_Tot ty, d_ty |)
 
