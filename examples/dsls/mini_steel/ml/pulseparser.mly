@@ -58,13 +58,15 @@
       let l = List.rev l in
       List.rev (List.tl l), List.hd l
     
-    let mk_abs (bs:binder list) (pre:term) (body:term) : term =
+    let mk_abs (bs:binder list) (pre:term) (body:term) (post_opt:term option) : term =
       let bs, b = unsnoc bs in
       let t = Tm_Abs
                 (b,
                  end_name_scope b.binder_ppname pre,
                  end_name_scope b.binder_ppname body,
-                 None) in
+                 (match post_opt with
+                  | None -> None
+                  | Some post -> Some (end_name_scope b.binder_ppname post))) in
       List.fold_right (fun b t ->
                         let t = end_name_scope b.binder_ppname t in
                         Tm_Abs (b, Tm_Emp, t, None)) bs t
@@ -120,6 +122,19 @@ null_binder:
       {binder_ty=t; binder_ppname=s}
     }
 
+null_name:
+  | s=IDENT
+    {
+      begin_null_name_scope s;
+      s
+    }
+
+lambda_post:
+  | s=null_name COLON post=pure_expr
+    {
+      end_name_scope s post
+    }
+
 binders:
   | bs=list(binder)    { bs }
 
@@ -132,7 +147,12 @@ lambda:
 
   | FUN bs=binders LBRACE pre=pure_expr RBRACE RARROW e=expr
     {
-      mk_abs bs pre e
+      mk_abs bs pre e None
+    }
+
+  | FUN bs=binders LBRACE pre=pure_expr RBRACE LBRACE post=lambda_post RBRACE RARROW e=expr
+    {
+      mk_abs bs pre e (Some post)
     }
 
 pureapp:
