@@ -37,10 +37,10 @@
         Tm_Var {nm_ppname=if b then s else "_";nm_index=Z.of_int n}
       | None -> failwith ("Cannot resolve name " ^ s)
 
-    let end_name_scope (s:string) (t:term) : term =
+    let lookup_var_index (s:string) : Z.t =
       match lookup_name s with
-      | Some (n, _) -> close_term t (Z.of_int n)
-      | None -> failwith ("end_name_scope, name not found " ^ s)
+      | Some (n, _) -> Z.of_int n
+      | None -> failwith ("lookup_var_index, name not found " ^ s)
 
     let mk_app (head:term) (args:term list) : term =
       if List.length args = 0
@@ -60,15 +60,17 @@
     
     let mk_abs (bs:binder list) (pre:term) (body:term) (post_opt:term option) : term =
       let bs, b = unsnoc bs in
+      let b_index = lookup_var_index b.binder_ppname in
       let t = Tm_Abs
                 (b,
-                 end_name_scope b.binder_ppname pre,
-                 end_name_scope b.binder_ppname body,
+                 close_term pre b_index,
+                 close_term body b_index,
                  (match post_opt with
                   | None -> None
-                  | Some post -> Some (end_name_scope b.binder_ppname post))) in
+                  | Some post ->
+                    Some (close_term' post b_index (Z.of_int 1)))) in
       List.fold_right (fun b t ->
-                        let t = end_name_scope b.binder_ppname t in
+                        let t = close_term t (lookup_var_index b.binder_ppname) in
                         Tm_Abs (b, Tm_Emp, t, None)) bs t
 
     let mk_pure_app (l:term list) : term =
@@ -132,7 +134,7 @@ null_name:
 lambda_post:
   | s=null_name DOT post=pure_expr
     {
-      end_name_scope s post
+      close_term post (lookup_var_index s)
     }
 
 binders:
@@ -141,7 +143,7 @@ binders:
 lambda:
   | FUN b=binder RARROW e=expr
     {
-      let e = end_name_scope b.binder_ppname e in
+      let e = close_term e (lookup_var_index b.binder_ppname) in
       Tm_Abs (b, Tm_Emp, e, None)
     }
 
@@ -164,7 +166,7 @@ expr:
   | sapp=stapp              { sapp }
   | LET b=null_binder EQUALS e1=expr SEMICOLON e2=expr
     {
-      let e2 = end_name_scope b.binder_ppname e2 in
+      let e2 = close_term e2 (lookup_var_index b.binder_ppname) in
       Tm_Bind (b.binder_ty, e1, e2)
     }
   | LPAREN e=expr RPAREN    { e }
@@ -181,7 +183,7 @@ pure_expr:
   | e1=pure_expr STAR e2=pure_expr        { Tm_Star (e1, e2) }
   | b=binder LBRACE e=pure_expr RBRACE
     {
-      let e = end_name_scope b.binder_ppname e in
+      let e = close_term e (lookup_var_index b.binder_ppname) in
       Tm_Refine (b, e)
     }
   | LPAREN e=pure_expr RPAREN             { e }

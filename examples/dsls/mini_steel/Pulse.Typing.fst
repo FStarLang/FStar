@@ -227,12 +227,11 @@ type src_typing (f:RT.fstar_top_env) : env -> term -> pure_comp -> Type =
       u:universe ->
       body:term ->
       c:pure_comp ->
-      hint:vprop ->
-      post:option vprop ->
+      pre_hint:vprop ->
+      post_hint:option vprop ->
       tot_typing f g ty (Tm_Type u) ->
       src_typing f ((x, Inl ty)::g) (open_term body x) c ->
-      _:squash (Some? post ==> (C_ST? c /\ comp_post c == Some?.v post)) ->
-      src_typing f g (Tm_Abs {binder_ty=ty;binder_ppname=ppname} hint body post)
+      src_typing f g (Tm_Abs {binder_ty=ty;binder_ppname=ppname} pre_hint body post_hint)
                      (C_Tot (Tm_Arrow {binder_ty=ty;binder_ppname=ppname} (close_pure_comp c x)))
   
   | T_STApp :
