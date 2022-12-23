@@ -47,7 +47,7 @@ type term =
   | Tm_FVar     : l:R.name -> term
   | Tm_Constant : c:constant -> term
   | Tm_Refine   : b:binder -> term -> term
-  | Tm_Abs      : b:binder -> pre_hint:vprop -> body:term -> post:option vprop -> term
+  | Tm_Abs      : b:binder -> pre_hint:vprop -> body:term -> opost:option vprop -> term  //pre and post hints
   | Tm_PureApp  : head:term -> arg:term -> term
   | Tm_Let      : t:term -> e1:term -> e2:term -> term  
   | Tm_STApp    : head:term -> arg:term -> term  
@@ -184,7 +184,11 @@ let rec open_term' (t:term) (v:term) (i:index)
     | Tm_BVar bv ->
       if i = bv.bv_index
       then match v with
-           | Tm_Var nm -> Tm_Var {nm with nm_ppname=bv.bv_ppname}
+           | Tm_Var nm ->
+             let ppname =
+               if nm.nm_ppname = "_" then bv.bv_ppname
+               else nm.nm_ppname in
+             Tm_Var {nm with nm_ppname=ppname}
            | _ -> v
       else t
     | Tm_Var _

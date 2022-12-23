@@ -51,7 +51,7 @@ let rec soundness (f:stt_env)
     match d with
     | T_Tot _ _ _ d -> d
 
-    | T_Abs _ ppname x ty u body c hint _ t_typing body_typing _ ->
+    | T_Abs _ ppname x ty u body c hint _ t_typing body_typing ->
       mk_t_abs ppname t_typing body_typing    
 
     | T_STApp _ head ppname formal res arg head_typing arg_typing ->

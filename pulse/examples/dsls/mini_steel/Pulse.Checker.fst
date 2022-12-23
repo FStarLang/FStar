@@ -444,6 +444,22 @@ let split_vprop (f:RT.fstar_top_env)
        in
        (| list_as_vprop frame, typing, d |)
 
+let rec check_equiv_emp (f:RT.fstar_top_env) (g:env) (vp:pure_term)
+  : option (vprop_equiv f g vp Tm_Emp)
+  = match vp with
+    | Tm_Emp -> Some (VE_Refl _ _)
+    | Tm_Star vp1 vp2 ->
+      (match check_equiv_emp f g vp1, check_equiv_emp f g vp2 with
+       | Some d1, Some d2 ->
+         let d3 : vprop_equiv f g (Tm_Star vp1 vp2) (Tm_Star Tm_Emp Tm_Emp)
+           = VE_Ctxt _ _ _ _ _ d1 d2 in
+         let d4 : vprop_equiv f g (Tm_Star Tm_Emp Tm_Emp) Tm_Emp =
+           VE_Unit _ _ in
+         Some (VE_Trans _ _ _ _ d3 d4)
+       | _, _ -> None)
+     | _ -> None
+
+#push-options "--z3rlimit_factor 2"
 let check_vprop_equiv
   (f:RT.fstar_top_env)
   (g:env)
@@ -453,18 +469,25 @@ let check_vprop_equiv
   : T.Tac (vprop_equiv f g vp1 vp2) =
 
   let (| frame, _, d |) = split_vprop f g vp1 vp1_typing vp2 in
-  if frame = Tm_Emp
-  then
-    let d  : vprop_equiv f g (Tm_Star vp2 Tm_Emp) vp1 = d in
-    let d  : vprop_equiv f g vp1 (Tm_Star vp2 Tm_Emp) = VE_Sym _ _ _ d in
+  match check_equiv_emp f g frame with
+  | Some d_frame_equiv_emp ->
+    let d : vprop_equiv f g (Tm_Star vp2 frame) vp1 = d in
+    let d : vprop_equiv f g vp1 (Tm_Star vp2 frame) =
+      VE_Sym _ _ _ d in
+    let d' : vprop_equiv f g (Tm_Star vp2 frame) (Tm_Star vp2 Tm_Emp) =
+      VE_Ctxt _ _ _ _ _ (VE_Refl _ vp2) d_frame_equiv_emp in
+    let d : vprop_equiv f g vp1 (Tm_Star vp2 Tm_Emp) =
+      VE_Trans _ _ _ _ d d' in
     let d' : vprop_equiv f g (Tm_Star vp2 Tm_Emp) (Tm_Star Tm_Emp vp2) = VE_Comm _ _ _ in
     let d  : vprop_equiv f g vp1 (Tm_Star Tm_Emp vp2) = VE_Trans _ _ _ _ d d' in
     let d' : vprop_equiv f g (Tm_Star Tm_Emp vp2) vp2 = VE_Unit _ _ in
     VE_Trans _ _ _ _ d d'
-  else T.fail (Printf.sprintf "check_vprop_equiv: %s and %s are not equivalent, frame: %s\n"
+  | None ->
+    T.fail (Printf.sprintf "check_vprop_equiv: %s and %s are not equivalent, frame: %s\n"
                  (P.term_to_string vp1)
                  (P.term_to_string vp2)
                  (P.term_to_string frame))
+#pop-options
 
 #push-options "--query_stats --fuel 1 --ifuel 2 --z3rlimit_factor 4"
 let check_vprop (f:RT.fstar_top_env)
@@ -631,7 +654,7 @@ let rec check (f:RT.fstar_top_env)
           let (| c_body, body_typing |) = check f g' (open_term body x) pre (E pre_typing) in
           if post_opt = None
           then 
-            let tt = T_Abs g ppname x t u body c_body pre_hint post_opt t_typing body_typing () in
+            let tt = T_Abs g ppname x t u body c_body pre_hint post_opt t_typing body_typing in
             let tres = Tm_Arrow {binder_ty=t;binder_ppname=ppname} (close_comp c_body x) in
             (| C_Tot tres, tt |)
           else if C_ST? c_body
@@ -644,7 +667,17 @@ let rec check (f:RT.fstar_top_env)
             let C_ST {u=u_c; res=res_c; pre=pre_c; post=post_c} = c_body in
             let y = fresh g' in
             let g_post = (y, Inl (comp_res c_body))::g' in
-            let post = Some?.v post_opt in
+            //
+            // we need to open post with x first
+            //   (the binder of the lambda)
+            // but since post is implicitly abstracted over
+            //   the return value, we have to manually
+            //   open the db index 1 to open with x :/
+            //
+            let post = open_term'
+              (Some?.v post_opt)
+              (Tm_Var {nm_ppname="_";nm_index=x})
+              1 in
             let post_opened = open_term post y in
 
             (
@@ -686,7 +719,7 @@ let rec check (f:RT.fstar_top_env)
                  : src_typing f g' (open_term body x) c_body_with_post
                  = T_Equiv g' (open_term body x) c_body c_body_with_post body_typing st_eq in
                  
-               let tt = T_Abs g ppname x t u body c_body_with_post pre_hint post_opt t_typing body_typing () in
+               let tt = T_Abs g ppname x t u body c_body_with_post pre_hint post_opt t_typing body_typing in
                let tres = Tm_Arrow {binder_ty=t;binder_ppname=ppname} (close_comp c_body_with_post x) in
                (| C_Tot tres, tt |)
                

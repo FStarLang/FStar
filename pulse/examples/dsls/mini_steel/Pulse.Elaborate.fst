@@ -117,7 +117,7 @@ let rec elab_src_typing (#f:RT.fstar_top_env)
   = match d with
     | T_Tot _ _ _ _ -> elab_pure t
 
-    | T_Abs _ ppname x ty _u body _ _ _ ty_typing body_typing _ ->
+    | T_Abs _ ppname x ty _u body _ _ _ ty_typing body_typing ->
       let ty = elab_pure ty in
       let body = elab_src_typing body_typing in
       mk_abs_with_name ppname ty (RT.close_term body x) //this closure should be provably redundant by strengthening the conditions on x

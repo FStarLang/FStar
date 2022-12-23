@@ -4,6 +4,8 @@ open Pulse.Syntax
 module R = FStar.Reflection
 let name_to_string (f:R.name) = String.concat "." f
 
+let dbg_printing : bool = true
+
 let constant_to_string = function
   | Unit -> "()"
   | Bool true -> "true"
@@ -13,8 +15,14 @@ let constant_to_string = function
 let rec term_to_string (t:term)
   : string
   = match t with
-    | Tm_BVar x -> x.bv_ppname
-    | Tm_Var x -> x.nm_ppname
+    | Tm_BVar x ->
+      if dbg_printing
+      then sprintf "%s@%d" x.bv_ppname x.bv_index
+      else x.bv_ppname
+    | Tm_Var x ->
+      if dbg_printing
+      then sprintf "%s#%d" x.nm_ppname x.nm_index
+      else x.nm_ppname
     | Tm_FVar f -> name_to_string f
     | Tm_Constant c -> constant_to_string c
     | Tm_Refine b phi ->
@@ -23,14 +31,13 @@ let rec term_to_string (t:term)
               (term_to_string b.binder_ty)
               (term_to_string phi)
     | Tm_Abs b pre_hint body post ->
-      sprintf "(fun (%s) {%s} {%s} -> %s)"
+      sprintf "(fun (%s) {%s} {_.%s} -> %s)"
               (binder_to_string b)
               (term_to_string pre_hint)
               (match post with
                | None -> "<none>"
-               | Some post -> sprintf " {%s}" (term_to_string post))
+               | Some post -> sprintf "%s" (term_to_string post))
               (term_to_string body)
-
 
     | Tm_PureApp head arg ->
       sprintf "(%s %s)" (term_to_string head) (term_to_string arg)
