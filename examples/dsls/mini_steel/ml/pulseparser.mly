@@ -63,10 +63,11 @@
       let t = Tm_Abs
                 (b,
                  end_name_scope b.binder_ppname pre,
-                 end_name_scope b.binder_ppname body) in
+                 end_name_scope b.binder_ppname body,
+                 None) in
       List.fold_right (fun b t ->
                         let t = end_name_scope b.binder_ppname t in
-                        Tm_Abs (b, Tm_Emp, t)) bs t
+                        Tm_Abs (b, Tm_Emp, t, None)) bs t
 
     let mk_pure_app (l:term list) : term =
       if List.length l < 2
@@ -126,7 +127,7 @@ lambda:
   | FUN b=binder RARROW e=expr
     {
       let e = end_name_scope b.binder_ppname e in
-      Tm_Abs (b, Tm_Emp, e)
+      Tm_Abs (b, Tm_Emp, e, None)
     }
 
   | FUN bs=binders LBRACE pre=pure_expr RBRACE RARROW e=expr

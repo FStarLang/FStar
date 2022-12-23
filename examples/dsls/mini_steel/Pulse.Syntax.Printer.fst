@@ -22,11 +22,14 @@ let rec term_to_string (t:term)
               b.binder_ppname
               (term_to_string b.binder_ty)
               (term_to_string phi)
-    | Tm_Abs b pre_hint body ->
-      sprintf "(fun (%s) {%s} -> %s)"
+    | Tm_Abs b pre_hint body post ->
+      sprintf "(fun (%s) {%s} -> %s%s)"
               (binder_to_string b)
               (term_to_string pre_hint)
               (term_to_string body)
+              (match post with
+               | None -> ""
+               | Some post -> sprintf " {%s}" (term_to_string post))
 
     | Tm_PureApp head arg ->
       sprintf "(%s %s)" (term_to_string head) (term_to_string arg)
