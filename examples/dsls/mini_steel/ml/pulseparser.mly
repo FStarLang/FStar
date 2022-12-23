@@ -130,7 +130,7 @@ null_name:
     }
 
 lambda_post:
-  | s=null_name COLON post=pure_expr
+  | s=null_name DOT post=pure_expr
     {
       end_name_scope s post
     }
