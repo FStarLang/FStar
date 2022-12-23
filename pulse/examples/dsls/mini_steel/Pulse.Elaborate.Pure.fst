@@ -151,7 +151,7 @@ let rec elab_term (top:term)
       let else_branch = R.Pat_Constant R.C_False, else_ in
       Some (R.pack_ln (Tv_Match b None [then_branch; else_branch]))
 
-    | Tm_Abs _ _ _
+    | Tm_Abs _ _ _ _
     | Tm_STApp _ _
     | Tm_Bind _ _ _ -> None
       //effectful constructs, explicitly not handled here

@@ -47,7 +47,7 @@ type term =
   | Tm_FVar     : l:R.name -> term
   | Tm_Constant : c:constant -> term
   | Tm_Refine   : b:binder -> term -> term
-  | Tm_Abs      : b:binder -> pre_hint:vprop -> body:term -> term
+  | Tm_Abs      : b:binder -> pre_hint:vprop -> body:term -> post:option vprop -> term
   | Tm_PureApp  : head:term -> arg:term -> term
   | Tm_Let      : t:term -> e1:term -> e2:term -> term  
   | Tm_STApp    : head:term -> arg:term -> term  
@@ -91,7 +91,7 @@ let rec freevars (t:term)
     | Tm_VProp -> Set.empty
     | Tm_Var nm -> Set.singleton nm.nm_index
     | Tm_Refine b body
-    | Tm_Abs b _ body -> Set.union (freevars b.binder_ty) (freevars body)  // Why is this not taking freevars of pretype?
+    | Tm_Abs b _ body _ -> Set.union (freevars b.binder_ty) (freevars body)  // Why is this not taking freevars of pre (and post)?
     | Tm_PureApp t1 t2
     | Tm_STApp t1 t2
     | Tm_Star  t1 t2
@@ -127,10 +127,13 @@ let rec ln' (t:term) (i:int) =
     ln' b.binder_ty i &&
     ln' phi (i + 1)
 
-  | Tm_Abs b pre_hint body ->
+  | Tm_Abs b pre_hint body post ->
     ln' b.binder_ty i &&
     ln' pre_hint (i + 1) &&
-    ln' body (i + 1)
+    ln' body (i + 1) &&
+    (match post with
+     | None -> true
+     | Some post -> ln' post (i + 2))
 
   | Tm_STApp t1 t2
   | Tm_PureApp t1 t2
@@ -195,10 +198,13 @@ let rec open_term' (t:term) (v:term) (i:index)
       Tm_Refine {b with binder_ty=open_term' b.binder_ty v i}
                 (open_term' phi v (i + 1))
 
-    | Tm_Abs b pre_hint body ->
+    | Tm_Abs b pre_hint body post ->
       Tm_Abs {b with binder_ty=open_term' b.binder_ty v i}
              (open_term' pre_hint v (i + 1))
              (open_term' body v (i + 1))
+             (match post with
+              | None -> None
+              | Some post -> Some (open_term' post v (i + 2)))
 
     | Tm_PureApp head arg ->
       Tm_PureApp (open_term' head v i)
@@ -276,10 +282,13 @@ let rec close_term' (t:term) (v:var) (i:index)
       Tm_Refine {b with binder_ty=close_term' b.binder_ty v i}
                 (close_term' phi v (i + 1))
 
-    | Tm_Abs b pre_hint body ->
+    | Tm_Abs b pre_hint body post ->
       Tm_Abs {b with binder_ty=close_term' b.binder_ty v i}
              (close_term' pre_hint v (i + 1))
              (close_term' body v (i + 1))
+             (match post with
+              | None -> None
+              | Some post -> Some (close_term' post v (i + 2)))
 
     | Tm_PureApp head arg ->
       Tm_PureApp (close_term' head v i)
