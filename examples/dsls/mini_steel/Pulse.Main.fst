@@ -23,7 +23,7 @@ let main' (t:term) (pre:term) (g:RT.fstar_top_env)
       let (| ty, pre_typing |) = check_tot g [] pre in
       if ty = Tm_VProp
       then let pre_typing : tot_typing g [] pre Tm_VProp = E pre_typing in
-           let (| c, t_typing |) = check g [] t pre pre_typing in
+           let (| c, t_typing |) = check g [] t pre pre_typing None in
            let refl_e = elab_src_typing t_typing in
            let refl_t = elab_pure_comp c in
            soundness_lemma g [] t c t_typing;

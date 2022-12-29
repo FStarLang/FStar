@@ -120,6 +120,9 @@ type erased = G.erased u32
 let hide (x:u32) : erased = G.hide x
 let reveal (x:erased) = G.reveal x
 
+let hide_reveal _ = ()
+let reveal_hide _ = ()
+
 type ref = R.ref u32
 [@@ __reduce__]
 let pts_to (r:ref) (n:erased) = R.pts_to r full_perm n
