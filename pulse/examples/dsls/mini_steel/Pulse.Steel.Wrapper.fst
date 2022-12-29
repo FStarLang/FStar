@@ -110,6 +110,8 @@ let vprop_equiv_cong (p1 p2 p3 p4:vprop)
   : vprop_equiv (p1 `star` p2) (p3 `star` p4)
   = star_congruence p1 p2 p3 p4
 
+let vprop_equiv_ext p1 p2 _ = equiv_refl p1
+
 module G = FStar.Ghost
 module U32 = FStar.UInt32
 module R = Steel.ST.Reference
