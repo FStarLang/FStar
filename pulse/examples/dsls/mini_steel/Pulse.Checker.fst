@@ -18,6 +18,20 @@ let tc_meta_callback (f:R.env) (e:R.term)
     | Some t ->
       Some (| t, RT.T_Token _ _ _ (FStar.Squash.get_proof _) |)
 
+let tc_expected_meta_callback (f:R.env) (e:R.term) (t:R.term)
+  : T.Tac (option (RT.typing f e t)) =
+
+  let te_opt = RTB.tc_term f e in
+  match te_opt with
+  | None -> None
+  | Some te ->
+    //we have typing_token f e te
+    match RTB.check_subtyping f te t with
+    | None -> None
+    | Some p -> //p:squash (subtyping_token f te t)
+      Some (RT.T_Sub _ _ _ _ (RT.T_Token _ _ _ (FStar.Squash.get_proof (RTB.typing_token f e te)))
+                             (RT.ST_Token _ _ _ p))
+
 let (let?) (f:option 'a) (g:'a -> T.Tac (option 'b)) : T.Tac (option 'b) =
   match f with
   | None -> None
@@ -256,6 +270,23 @@ let check_tot (f:RT.fstar_top_env) (g:env) (t:term)
         | Some ty -> 
           (| ty, T_Tot g t ty tok |)
 
+let check_tot_with_expected_typ (f:RT.fstar_top_env) (g:env) (e:term) (t:pure_term)
+  : T.Tac (_:src_typing f g e (C_Tot t){is_pure_term e}) =
+
+  let fg = extend_env_l f g in
+  match elab_term e with
+  | None -> 
+    T.fail ("check_tot_with_expected_typ: not a pure term: " ^ P.term_to_string e)
+  | Some re ->
+    match elab_term t with
+    | None ->
+      T.fail ("check_tot_with_expected_typ: not a pure type: " ^ P.term_to_string t)
+    | Some rt ->
+      match tc_expected_meta_callback fg re rt with
+      | None -> T.fail "check_tot_with_expected_typ: Not typeable"
+      | Some tok ->
+        T_Tot g e t tok
+    
 let rec vprop_as_list (vp:pure_term)
   : list pure_term
   = match vp with
@@ -805,24 +836,26 @@ let rec check (f:RT.fstar_top_env)
 
     | Tm_STApp head arg ->
       let (| ty_head, dhead |) = check_tot f g head in
-      let (| ty_arg, darg |) = check_tot f g arg in      
+      // let (| ty_arg, darg |) = check_tot f g arg in      
       begin
       match ty_head with
       | Tm_Arrow {binder_ty=formal;binder_ppname=ppname} (C_ST res) ->
-        if ty_arg <> formal
-        then T.fail "Type of formal parameter does not match type of argument"
-        else let d = T_STApp g head ppname formal (C_ST res) arg dhead (E darg) in
-             opening_pure_comp_with_pure_term (C_ST res) arg 0;
-             repack (try_frame_pre pre_typing d)
+        let darg = check_tot_with_expected_typ f g arg formal in
+        // if darg = None
+        // then T.fail (FStar.Printf.sprintf "Argument %s does not have expected type %s"
+        //                (P.term_to_string arg)
+        //                (P.term_to_string formal))
+        let d = T_STApp g head ppname formal (C_ST res) arg dhead (E darg) in
+        opening_pure_comp_with_pure_term (C_ST res) arg 0;
+        repack (try_frame_pre pre_typing d)
       | _ -> T.fail "Unexpected head type in impure application"
       end
 
-    | Tm_Bind t e1 e2 ->
+    | Tm_Bind e1 e2 ->
       let (| c1, d1 |) = force_st pre_typing (check f g e1 pre pre_typing) in
       let C_ST s1 = c1 in
-      if t <> s1.res 
-      then T.fail "Annotated type of let-binding is incorrect"
-      else (
+      let t = s1.res in
+      (
         match check_tot f g t with
         | (| Tm_Type u, t_typing |) ->
           if u <> s1.u then T.fail "incorrect universe"
@@ -856,7 +889,6 @@ let rec check (f:RT.fstar_top_env)
           T.fail (Printf.sprintf "Ill-typed annotated type %s on `bind`; has type %s\n"
                                  (P.term_to_string t)
                                  (P.term_to_string ty))
-                                     
       )
     | Tm_If _ _ _ ->
       T.fail "Not handling if yet"

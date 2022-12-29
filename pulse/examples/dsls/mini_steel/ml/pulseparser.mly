@@ -117,11 +117,11 @@ binder:
       {binder_ty=t; binder_ppname=s}
     }
 
-null_binder:
-  | s=IDENT COLON t=pure_expr
+let_binder:
+  | s=IDENT
     {
       begin_null_name_scope s;
-      {binder_ty=t; binder_ppname=s}
+      s
     }
 
 null_name:
@@ -132,7 +132,7 @@ null_name:
     }
 
 lambda_post:
-  | s=null_name DOT post=pure_expr
+   | s=null_name DOT post=pure_expr
     {
       close_term post (lookup_var_index s)
     }
@@ -164,10 +164,10 @@ expr:
   | e=pure_expr             { e }
   | f=lambda                { f }
   | sapp=stapp              { sapp }
-  | LET b=null_binder EQUALS e1=expr SEMICOLON e2=expr
+  | LET b=let_binder EQUALS e1=expr SEMICOLON e2=expr
     {
-      let e2 = close_term e2 (lookup_var_index b.binder_ppname) in
-      Tm_Bind (b.binder_ty, e1, e2)
+      let e2 = close_term e2 (lookup_var_index b) in
+      Tm_Bind (e1, e2)
     }
   | LPAREN e=expr RPAREN    { e }
 

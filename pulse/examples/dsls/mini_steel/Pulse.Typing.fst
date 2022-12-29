@@ -288,7 +288,7 @@ type src_typing (f:RT.fstar_top_env) : env -> term -> pure_comp -> Type =
       tot_typing f g (comp_res c1) (Tm_Type (comp_u c1)) -> //type-correctness; would be nice to derive it instead      
       src_typing f ((x, Inl (comp_res c1))::g) (open_term e2 x) c2 ->
       bind_comp f g x c1 c2 c ->
-      src_typing f g (Tm_Bind (comp_res c1) e1 e2) c
+      src_typing f g (Tm_Bind e1 e2) c
 
   // Not handling if yet
   // | T_If:

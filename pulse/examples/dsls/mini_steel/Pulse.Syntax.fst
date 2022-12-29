@@ -51,7 +51,7 @@ type term =
   | Tm_PureApp  : head:term -> arg:term -> term
   | Tm_Let      : t:term -> e1:term -> e2:term -> term  
   | Tm_STApp    : head:term -> arg:term -> term  
-  | Tm_Bind     : t:term -> e1:term -> e2:term -> term
+  | Tm_Bind     : e1:term -> e2:term -> term
   | Tm_Emp      : term
   | Tm_Pure     : p:term -> term (* pure p : vprop *)
   | Tm_Star     : l:vprop -> r:vprop -> term
@@ -96,10 +96,10 @@ let rec freevars (t:term)
     | Tm_STApp t1 t2
     | Tm_Star  t1 t2
     | Tm_ExistsSL t1 t2
-    | Tm_ForallSL t1 t2  -> Set.union (freevars t1) (freevars t2)
+    | Tm_ForallSL t1 t2 
+    | Tm_Bind t1 t2 -> Set.union (freevars t1) (freevars t2)
 
     | Tm_Let t e1 e2
-    | Tm_Bind t e1 e2
     | Tm_If t e1 e2 ->
       Set.union (Set.union (freevars t) (freevars e1)) (freevars e2)
 
@@ -137,12 +137,12 @@ let rec ln' (t:term) (i:int) =
 
   | Tm_STApp t1 t2
   | Tm_PureApp t1 t2
-  | Tm_Star t1 t2 ->
+  | Tm_Star t1 t2
+  | Tm_Bind t1 t2 ->
     ln' t1 i &&
     ln' t2 i
 
-  | Tm_Let t e1 e2
-  | Tm_Bind t e1 e2 ->
+  | Tm_Let t e1 e2 ->
     ln' t i &&
     ln' e1 i &&
     ln' e2 (i + 1)
@@ -223,9 +223,8 @@ let rec open_term' (t:term) (v:term) (i:index)
       Tm_STApp (open_term' head v i)
                (open_term' arg v i)
 
-    | Tm_Bind t e1 e2 ->
-      Tm_Bind (open_term' t v i)
-              (open_term' e1 v i)
+    | Tm_Bind e1 e2 ->
+      Tm_Bind (open_term' e1 v i)
               (open_term' e2 v (i + 1))
 
     | Tm_Pure p ->
@@ -307,9 +306,8 @@ let rec close_term' (t:term) (v:var) (i:index)
       Tm_STApp (close_term' head v i)
                (close_term' arg v i)
 
-    | Tm_Bind t e1 e2 ->
-      Tm_Bind (close_term' t v i)
-              (close_term' e1 v i)
+    | Tm_Bind e1 e2 ->
+      Tm_Bind (close_term' e1 v i)
               (close_term' e2 v (i + 1))
 
     | Tm_Pure p ->

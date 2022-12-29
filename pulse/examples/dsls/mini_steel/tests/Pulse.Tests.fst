@@ -12,8 +12,8 @@ open Pulse.Main
         {Pulse.Steel.Wrapper.pts_to r1 n1 * Pulse.Steel.Wrapper.pts_to r2 n2}
         {_.Pulse.Steel.Wrapper.pts_to r1 n2 * Pulse.Steel.Wrapper.pts_to r2 n1} ->
 
-        let x:Pulse.Steel.Wrapper.u32 = Pulse.Steel.Wrapper.read_refine (n1, r1);
-        let y:Pulse.Steel.Wrapper.u32 = Pulse.Steel.Wrapper.read_refine (n2, r2);
-        let z:Prims.unit = Pulse.Steel.Wrapper.write (n1, r1, y);
+        let x = Pulse.Steel.Wrapper.read_refine (n1, r1);
+        let y = Pulse.Steel.Wrapper.read_refine (n2, r2);
+        let z = Pulse.Steel.Wrapper.write (n1, r1, y);
         Pulse.Steel.Wrapper.write (n2, r2, x)
   ")
