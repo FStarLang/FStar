@@ -379,13 +379,21 @@ module L = FStar.List.Tot.Base
 let check_one_vprop f g (p q:pure_term) : T.Tac (option (vprop_equiv f g p q)) =
   if p = q
   then Some (VE_Refl _ _)
-  else let v0 = elab_pure p in
-       let v1 = elab_pure q in
-       let vprop_eq_tm = vprop_eq_tm v0 v1 in
-       match T.check_prop_validity (extend_env_l f g) vprop_eq_tm with
-       | Some token ->
-         Some (VE_Ext g p q token)
-       | None -> None
+  else
+    let check_extensional_equality =
+      match p, q with
+      | Tm_PureApp hd_p _, Tm_PureApp hd_q _ ->
+        hd_p = hd_q
+      | _, _ -> false in
+    if check_extensional_equality
+    then
+      let v0 = elab_pure p in
+      let v1 = elab_pure q in
+      let vprop_eq_tm = vprop_eq_tm v0 v1 in
+      match T.check_prop_validity (extend_env_l f g) vprop_eq_tm with
+      | Some token -> Some (VE_Ext g p q token)
+      | None -> None
+    else None
 
 type split_one_vprop_res f g (p:pure_term) (qs:list pure_term) =
   r:option (l:list pure_term & q:pure_term & vprop_equiv f g p q & list pure_term){
