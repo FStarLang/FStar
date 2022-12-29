@@ -311,13 +311,14 @@ let list_as_vprop_assoc f g (vp0 vp1 vp2:list pure_term)
 let list_as_vprop_ctx f g (vp0 vp1 vp2:list pure_term)
   (d:vprop_equiv f g (list_as_vprop vp0) (list_as_vprop vp1))
   : GTot (vprop_equiv f g (list_as_vprop (vp0 @ vp2)) (list_as_vprop (vp1 @ vp2)))
+
   = admit ()
 
 let list_as_vprop_singleton f g
   (p q:pure_term)
   (d:vprop_equiv f g p q)
   : GTot (vprop_equiv f g (list_as_vprop [p]) (list_as_vprop [q]))
-  = admit ()
+  = VE_Ctxt _ p Tm_Emp q Tm_Emp d (VE_Refl _ Tm_Emp)
 
 let rec vprop_list_equiv (f:RT.fstar_top_env)
                          (g:env)
@@ -343,13 +344,20 @@ let rec vprop_list_equiv (f:RT.fstar_top_env)
         (VE_Trans _ _ _ _ (VE_Comm g vp Tm_Emp) (VE_Unit _ vp))
 
 module L = FStar.List.Tot.Base
+
+let check_one_vprop f g (p q:pure_term) : option (vprop_equiv f g p q) =
+  if p = q
+  then Some (VE_Refl _ _)
+  else None
+
 let rec maybe_split_one_vprop f g (p:pure_term) (qs:list pure_term)
   : option (l:list pure_term & q:pure_term & vprop_equiv f g p q & list pure_term)
   = match qs with
     | [] -> None
-    | q::qs -> 
-      if p = q
-      then Some (| [], q, VE_Refl g p, qs |)
+    | q::qs ->
+      let d_opt = check_one_vprop f g p q in
+      if Some? d_opt
+      then Some (| [], q, Some?.v d_opt, qs |)
       else match maybe_split_one_vprop f g p qs with
            | None -> None
            | Some (| l, q', d, r |) -> Some (| q::l, q', d, r |)
@@ -417,16 +425,16 @@ let split_one_vprop f g
 
 let split_one_vprop_equiv f g (p:pure_term) (qs:list pure_term { can_split_one_vprop f g p qs })
   : vprop_equiv f g (list_as_vprop qs) (Tm_Star p (list_as_vprop (split_one_vprop f g p qs)))
-  = // let rec aux (qs:list pure_term { can_split_one_vprop f g p qs })
-    //   : Lemma (qs == ((split_one_vprop_l f g p qs @ [p]) @ split_one_vprop_r f g p qs))
-    //   = match qs with
-    //     | q :: qs ->
-    //       if p = q then ()
-    //       else aux qs
-    // in
-    // aux qs;
+  = let rec aux (qs:list pure_term { can_split_one_vprop f g p qs })
+      : Lemma (let Some (| l, q, _, r |) = maybe_split_one_vprop f g p qs in
+               qs == ((l @ [q]) @ r))
+      = match qs with
+        | q :: qs ->
+          if Some? (check_one_vprop f g p q) then ()
+          else aux qs
+    in
+    aux qs;
     let Some (| l, q, d, r |) = maybe_split_one_vprop f g p qs in
-    assume (qs == (l @ [q]) @ r);
     vprop_equiv_swap_equiv f g l r p q d
 
 let rec try_split_vprop f g (req:list pure_term) (ctxt:list pure_term)
