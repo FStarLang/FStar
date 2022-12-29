@@ -33,7 +33,6 @@ let mk_eq2 (t:pure_term) (e0 e1:pure_term)
          (Tm_PureApp (Tm_PureApp (Tm_FVar eq2_lid) t)
                       e0) e1
 
-let vprop_eq_lid = ["Pulse"; "Steel"; "Wrapper"; "eq_vprop"]
 let mk_vprop_eq (e0 e1:pure_term) : pure_term =
   Tm_PureApp (Tm_PureApp (Tm_FVar vprop_eq_lid) e0) e1
 
