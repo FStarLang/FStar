@@ -2302,6 +2302,29 @@ let refl_universe_of (g:env) (e:term) : tac (option universe) =
          | Inr _ -> Errors.raise_error (Errors.Fatal_IllTyped, "") Range.dummyRange)
   else ret None
 
+let refl_check_prop_validity (g:env) (e:term) : tac (option unit) =
+  if no_uvars_in_g g &&
+     no_uvars_in_term e
+  then refl_typing_builtin_wrapper (fun _ ->
+         dbg_refl g (fun _ ->
+           BU.format1 "refl_check_prop_validity: %s\n" (Print.term_to_string e));
+         let must_tot = false in
+         let _ =
+           match Core.check_term g e (U.fvar_const PC.prop_lid) must_tot with
+           | Inl None -> ()
+           | Inl (Some guard) ->
+             Rel.force_trivial_guard g
+               {Env.trivial_guard with guard_f=NonTrivial guard}
+           | Inr err ->
+             dbg_refl g (fun _ ->
+               BU.format1 "refl_check_prop_validity failed (not a prop): %s\n"
+                 (Core.print_error err));
+             Errors.raise_error (Errors.Fatal_IllTyped, "") Range.dummyRange
+         in
+         Rel.force_trivial_guard g
+           {Env.trivial_guard with guard_f=NonTrivial e})
+  else ret None
+
 (**** Creating proper environments and proofstates ****)
 
 let tac_env (env:Env.env) : Env.env =

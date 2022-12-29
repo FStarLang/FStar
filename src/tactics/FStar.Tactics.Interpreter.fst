@@ -537,6 +537,10 @@ let () =
         refl_universe_of RE.e_env RE.e_term (e_option RE.e_universe)
         refl_universe_of NRE.e_env NRE.e_term (NBET.e_option NRE.e_universe);
 
+      mk_tac_step_2 0 "check_prop_validity"
+        refl_check_prop_validity RE.e_env RE.e_term (e_option e_unit)
+        refl_check_prop_validity NRE.e_env NRE.e_term (NBET.e_option NBET.e_unit)
+
     ]
 
 let unembed_tactic_1_alt (ea:embedding 'a) (er:embedding 'r) (f:term) (ncb:norm_cb) : option ('a -> tac 'r) =

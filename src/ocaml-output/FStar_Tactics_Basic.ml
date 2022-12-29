@@ -7176,6 +7176,68 @@ let (refl_universe_of :
                         (FStar_Errors.Fatal_IllTyped, "")
                         FStar_Compiler_Range.dummyRange))
       else FStar_Tactics_Monad.ret FStar_Pervasives_Native.None
+let (refl_check_prop_validity :
+  env ->
+    FStar_Syntax_Syntax.term ->
+      unit FStar_Pervasives_Native.option FStar_Tactics_Monad.tac)
+  =
+  fun g ->
+    fun e ->
+      let uu___ = (no_uvars_in_g g) && (no_uvars_in_term e) in
+      if uu___
+      then
+        refl_typing_builtin_wrapper
+          (fun uu___1 ->
+             dbg_refl g
+               (fun uu___3 ->
+                  let uu___4 = FStar_Syntax_Print.term_to_string e in
+                  FStar_Compiler_Util.format1
+                    "refl_check_prop_validity: %s\n" uu___4);
+             (let must_tot = false in
+              (let uu___4 =
+                 let uu___5 =
+                   FStar_Syntax_Util.fvar_const FStar_Parser_Const.prop_lid in
+                 FStar_TypeChecker_Core.check_term g e uu___5 must_tot in
+               match uu___4 with
+               | FStar_Pervasives.Inl (FStar_Pervasives_Native.None) -> ()
+               | FStar_Pervasives.Inl (FStar_Pervasives_Native.Some guard) ->
+                   FStar_TypeChecker_Rel.force_trivial_guard g
+                     {
+                       FStar_TypeChecker_Common.guard_f =
+                         (FStar_TypeChecker_Common.NonTrivial guard);
+                       FStar_TypeChecker_Common.deferred_to_tac =
+                         (FStar_TypeChecker_Env.trivial_guard.FStar_TypeChecker_Common.deferred_to_tac);
+                       FStar_TypeChecker_Common.deferred =
+                         (FStar_TypeChecker_Env.trivial_guard.FStar_TypeChecker_Common.deferred);
+                       FStar_TypeChecker_Common.univ_ineqs =
+                         (FStar_TypeChecker_Env.trivial_guard.FStar_TypeChecker_Common.univ_ineqs);
+                       FStar_TypeChecker_Common.implicits =
+                         (FStar_TypeChecker_Env.trivial_guard.FStar_TypeChecker_Common.implicits)
+                     }
+               | FStar_Pervasives.Inr err ->
+                   (dbg_refl g
+                      (fun uu___6 ->
+                         let uu___7 = FStar_TypeChecker_Core.print_error err in
+                         FStar_Compiler_Util.format1
+                           "refl_check_prop_validity failed (not a prop): %s\n"
+                           uu___7);
+                    FStar_Errors.raise_error
+                      (FStar_Errors.Fatal_IllTyped, "")
+                      FStar_Compiler_Range.dummyRange));
+              FStar_TypeChecker_Rel.force_trivial_guard g
+                {
+                  FStar_TypeChecker_Common.guard_f =
+                    (FStar_TypeChecker_Common.NonTrivial e);
+                  FStar_TypeChecker_Common.deferred_to_tac =
+                    (FStar_TypeChecker_Env.trivial_guard.FStar_TypeChecker_Common.deferred_to_tac);
+                  FStar_TypeChecker_Common.deferred =
+                    (FStar_TypeChecker_Env.trivial_guard.FStar_TypeChecker_Common.deferred);
+                  FStar_TypeChecker_Common.univ_ineqs =
+                    (FStar_TypeChecker_Env.trivial_guard.FStar_TypeChecker_Common.univ_ineqs);
+                  FStar_TypeChecker_Common.implicits =
+                    (FStar_TypeChecker_Env.trivial_guard.FStar_TypeChecker_Common.implicits)
+                }))
+      else FStar_Tactics_Monad.ret FStar_Pervasives_Native.None
 let (tac_env : FStar_TypeChecker_Env.env -> FStar_TypeChecker_Env.env) =
   fun env1 ->
     let uu___ = FStar_TypeChecker_Env.clear_expected_typ env1 in

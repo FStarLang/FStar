@@ -58,6 +58,7 @@ let (float_lid : FStar_Ident.lident) = p2l ["FStar"; "Float"; "float"]
 let (char_lid : FStar_Ident.lident) = p2l ["FStar"; "Char"; "char"]
 let (heap_lid : FStar_Ident.lident) = p2l ["FStar"; "Heap"; "heap"]
 let (logical_lid : FStar_Ident.lident) = pconst "logical"
+let (prop_lid : FStar_Ident.lident) = pconst "prop"
 let (smt_theory_symbol_attr_lid : FStar_Ident.lident) =
   pconst "smt_theory_symbol"
 let (true_lid : FStar_Ident.lident) = pconst "l_True"
