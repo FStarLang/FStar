@@ -307,7 +307,18 @@ let list_as_vprop_assoc f g (vp0 vp1 vp2:list pure_term)
                           (list_as_vprop ((vp0 @ vp1) @ vp2)))
   = List.Tot.append_assoc vp0 vp1 vp2;
     VE_Refl _ _
-  
+
+let list_as_vprop_ctx f g (vp0 vp1 vp2:list pure_term)
+  (d:vprop_equiv f g (list_as_vprop vp0) (list_as_vprop vp1))
+  : GTot (vprop_equiv f g (list_as_vprop (vp0 @ vp2)) (list_as_vprop (vp1 @ vp2)))
+  = admit ()
+
+let list_as_vprop_singleton f g
+  (p q:pure_term)
+  (d:vprop_equiv f g p q)
+  : GTot (vprop_equiv f g (list_as_vprop [p]) (list_as_vprop [q]))
+  = admit ()
+
 let rec vprop_list_equiv (f:RT.fstar_top_env)
                          (g:env)
                          (vp:pure_term)
@@ -367,10 +378,26 @@ let split_one_vprop_q f g
     (| q, d |)
 
 let vprop_equiv_swap_equiv (f:_) (g:_) (l0 l2:list pure_term)
-  (p q:pure_term) (d:vprop_equiv f g p q)
+  (p q:pure_term) (d_p_q:vprop_equiv f g p q)
   : GTot (vprop_equiv f g (list_as_vprop ((l0 @ [q]) @ l2))
-                          (list_as_vprop ([p] @ (l0 @ l2))))
-  = admit ()
+                          (list_as_vprop ([p] @ (l0 @ l2)))) =
+  let d : vprop_equiv f g (list_as_vprop ((l0 @ [q]) @ l2))
+                          (list_as_vprop (([q] @ l0) @ l2))
+    = list_as_vprop_ctx f g (l0 @ [q]) ([q] @ l0) l2 (list_as_vprop_comm f g l0 [q]) in
+  let d' : vprop_equiv f g (list_as_vprop (([q] @ l0) @ l2))
+                           (list_as_vprop ([q] @ (l0 @ l2)))
+    = List.Tot.append_assoc [q] l0 l2;
+      VE_Refl _ _ in
+  let d : vprop_equiv f g (list_as_vprop ((l0 @ [q]) @ l2))
+                          (list_as_vprop ([q] @ (l0 @ l2)))
+    = VE_Trans _ _ _ _ d d' in
+  let d_q_p = VE_Sym _ _ _ d_p_q in
+  let d' : vprop_equiv f g (list_as_vprop [q]) (list_as_vprop [p]) =
+    list_as_vprop_singleton _ _ _ _ d_q_p in
+  let d' : vprop_equiv f g (list_as_vprop ([q] @ (l0 @ l2)))
+                           (list_as_vprop ([p] @ (l0 @ l2)))
+    = list_as_vprop_ctx f g [q] [p] (l0 @ l2) d' in
+  VE_Trans _ _ _ _ d d'
 
 let vprop_equiv_swap (f:_) (g:_) (l0 l1 l2:list pure_term)
   : GTot (vprop_equiv f g (list_as_vprop ((l0 @ l1) @ l2))
