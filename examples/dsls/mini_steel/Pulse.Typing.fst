@@ -6,6 +6,8 @@ open FStar.List.Tot
 open Pulse.Syntax
 open Pulse.Elaborate.Pure
 
+module FTB = FStar.Tactics
+
 // let fstar_env =
 //   g:R.env { 
 //     RT.lookup_fvar g RT.bool_fv == Some (RT.tm_type RT.u_zero) /\
@@ -30,6 +32,11 @@ let mk_eq2 (t:pure_term) (e0 e1:pure_term)
   = Tm_PureApp
          (Tm_PureApp (Tm_PureApp (Tm_FVar eq2_lid) t)
                       e0) e1
+
+let vprop_eq_lid = ["Pulse"; "Steel"; "Wrapper"; "eq_vprop"]
+let mk_vprop_eq (e0 e1:pure_term) : pure_term =
+  Tm_PureApp (Tm_PureApp (Tm_FVar vprop_eq_lid) e0) e1
+
 let return_comp (u:universe) (t:pure_term) (e:pure_term)
   : pure_comp 
   = C_ST { u;
@@ -178,6 +185,13 @@ type vprop_equiv (f:RT.fstar_top_env) : env -> pure_term -> pure_term -> Type =
      t1:pure_term ->
      t2:pure_term ->
      vprop_equiv f g (Tm_Star t0 (Tm_Star t1 t2)) (Tm_Star (Tm_Star t0 t1) t2)
+
+  | VE_Ext:
+     g:env ->
+     t0:pure_term ->
+     t1:pure_term ->
+     FTB.prop_validity_token (extend_env_l f g) (elab_pure (mk_vprop_eq t0 t1)) ->
+     vprop_equiv f g t0 t1
 
   // | VE_Ex:
   //    g:env ->
@@ -366,6 +380,12 @@ let star_typing_inversion (f:_) (g:_) (t0 t1:term) (d:tot_typing f g (Tm_Star t0
      tot_typing f g t1 Tm_VProp)
   = admit()
 
+let vprop_eq_typing_inversion (f:RT.fstar_top_env) g (t0 t1:pure_term)
+  (token:FTB.prop_validity_token (extend_env_l f g) (elab_pure (mk_vprop_eq t0 t1)))
+  : (tot_typing f g t0 Tm_VProp &
+     tot_typing f g t1 Tm_VProp)
+  = admit ()
+
 (* These I can easily prove *)
 let star_typing (#f:_) (#g:_) (#t0 #t1:term)
                 (d0:tot_typing f g t0 Tm_VProp)
@@ -444,3 +464,8 @@ let rec vprop_equiv_typing (f:_) (g:_) (t0 t1:pure_term) (v:vprop_equiv f g t0 t
           star_typing tt0 (star_typing tt1 tt2)
       in
       fwd, bk
+   
+    | VE_Ext g t0 t1 token ->
+      let d1, d2 = vprop_eq_typing_inversion f g t0 t1 token in
+      (fun _ -> d2),
+      (fun _ -> d1)

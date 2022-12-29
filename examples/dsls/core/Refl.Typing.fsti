@@ -380,7 +380,7 @@ let u_succ u = pack_universe (Uv_Succ u)
 let mk_total t = pack_comp (C_Total t)
 let tm_type u = pack_ln (Tv_Type u)
 let tm_prop = 
-  let prop_fv = R.pack_fv ["Prims"; "prop"] in
+  let prop_fv = R.pack_fv R.prop_qn in
   R.pack_ln (Tv_FVar prop_fv)
 let eqtype_lid : R.name = ["Prims"; "eqtype"]
 

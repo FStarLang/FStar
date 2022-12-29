@@ -102,7 +102,47 @@ let inst_vprop_equiv_assoc #g #v0 #v1 #v2
           RT.typing g pf (stt_vprop_equiv (mk_star v0 (mk_star v1 v2)) (mk_star (mk_star v0 v1) v2)))
   = admit()
 
+let vprop_eq_tm t1 t2 =
+  let open R in
+  let t = pack_ln (Tv_App (pack_ln (Tv_FVar (pack_fv (vprop_eq_lid))))
+                          (t1, Q_Explicit)) in
+  let t = pack_ln (Tv_App t (t2, Q_Explicit)) in
+  t
 
+let vprop_tm = R.pack_ln (R.Tv_FVar  (R.pack_fv vprop_lid))
+
+let vprop_equiv_ext_type : R.term =
+  let open R in
+  let v_typ = pack_ln (Tv_FVar  (pack_fv vprop_lid)) in
+  let mk_bv index = pack_ln (Tv_BVar (pack_bv {
+    bv_ppname = "_";
+    bv_index = index;
+    bv_sort = vprop_tm;
+  })) in
+
+  mk_tot_arrow1
+    (vprop_tm, Q_Explicit)
+    (
+     mk_tot_arrow1
+       (vprop_tm, Q_Explicit)
+       (
+        mk_tot_arrow1
+          (vprop_eq_tm (mk_bv 1) (mk_bv 0), Q_Explicit)
+          (
+           stt_vprop_equiv (mk_bv 2) (mk_bv 1)
+          )
+       )
+    )
+
+let inst_vprop_equiv_ext #g #v0 #v1
+  (d0:RT.typing g v0 vprop_tm)
+  (d1:RT.typing g v1 vprop_tm)
+  (token:T.prop_validity_token g (vprop_eq_tm v0 v1))
+  : GTot (pf:R.term &
+          RT.typing g pf (stt_vprop_equiv v0 v1))
+  = admit ()
+
+#push-options "--z3rlimit_factor 4"
 let rec vprop_equiv_soundness (#f:stt_env) (#g:env) (#v0 #v1:pure_term) 
                               (d:tot_typing f g v0 Tm_VProp)
                               (eq:vprop_equiv f g v0 v1)
@@ -160,7 +200,14 @@ let rec vprop_equiv_soundness (#f:stt_env) (#g:env) (#v0 #v1:pure_term)
       let t1_typing, t2_typing =  star_typing_inversion _ _ t1 t2 t12_typing in
       inst_vprop_equiv_assoc (tot_typing_soundness t0_typing)
                              (tot_typing_soundness t1_typing)
-                             (tot_typing_soundness t2_typing)                             
+                             (tot_typing_soundness t2_typing)
+
+    | VE_Ext _ t0 t1 token ->
+      let t0_typing, t1_typing = vprop_eq_typing_inversion _ _ t0 t1 token in
+      inst_vprop_equiv_ext (tot_typing_soundness t0_typing)
+                           (tot_typing_soundness t1_typing)
+                           token
+#pop-options
 
 let stt_vprop_equiv_is_prop (#g:R.env) (#v0 #v1:R.term)
                             (d0: RT.typing g v0 (elab_pure Tm_VProp))

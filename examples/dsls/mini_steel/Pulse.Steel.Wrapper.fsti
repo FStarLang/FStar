@@ -19,6 +19,8 @@ open Steel.ST.Util
 unfold
 let meq2 (a:Type0) (x y:a) : prop = Prims.eq2 x y
 
+unfold let eq_vprop (p1 p2:vprop) : prop = Prims.eq2 p1 p2
+
 inline_for_extraction
 val stt (a:Type u#a) (pre:vprop) (post:a -> vprop) : Type0
 
@@ -85,6 +87,9 @@ val vprop_equiv_cong (p1 p2 p3 p4:vprop)
                      (_: vprop_equiv p1 p3)
                      (_: vprop_equiv p2 p4)
   : vprop_equiv (p1 `star` p2) (p3 `star` p4)
+
+val vprop_equiv_ext (p1 p2:vprop) (_:eq_vprop p1 p2)
+  : vprop_equiv p1 p2
 
 module G = FStar.Ghost
 module U32 = FStar.UInt32
