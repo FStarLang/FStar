@@ -191,4 +191,5 @@ pure_expr:
 prog:
   | EOF           { None }
   | e=lambda EOF  { Some e }
+  | e=expr   EOF  { Some e }
 ;
