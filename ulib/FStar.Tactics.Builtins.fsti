@@ -20,9 +20,10 @@ Every tactic primitive, i.e., those built into the compiler
 module FStar.Tactics.Builtins
 
 open FStar.Tactics.Effect
-open FStar.Reflection.Builtins
+open FStar.Reflection
 open FStar.Reflection.Types
 open FStar.Reflection.Data
+open FStar.Reflection.Const
 open FStar.Tactics.Types
 open FStar.Tactics.Result
 
@@ -442,3 +443,9 @@ val tc_term (g:env) (e:term)
 
 val universe_of (g:env) (e:term)
   : Tac (option (u:universe{typing_token g e (pack_ln (Tv_Type u))}))
+
+type prop_validity_token (g:env) (t:term) =
+  e:term{typing_token g t (pack_ln (Tv_FVar (pack_fv prop_qn))) /\
+         typing_token g e t}
+
+val check_prop_validity (g:env) (t:term) : Tac (option (prop_validity_token g t))
