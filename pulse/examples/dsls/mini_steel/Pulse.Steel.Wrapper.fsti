@@ -101,6 +101,14 @@ val erased : Type0
 val hide (x:u32) : erased
 val reveal (x:erased) : GTot u32
 
+val hide_reveal (x:u32)
+  : Lemma (reveal (hide x) == x)
+          [SMTPat (reveal (hide x))]
+
+val reveal_hide (x:erased)
+  : Lemma (hide (reveal x) == x)
+          [SMTPat (hide (reveal x))]
+
 val ref : Type0
 val pts_to (r:ref) (n:erased) : vprop
 val ptr (r:ref) : vprop

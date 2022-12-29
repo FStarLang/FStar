@@ -590,8 +590,8 @@ let check_vprop_equiv
 #push-options "--query_stats --fuel 1 --ifuel 2 --z3rlimit_factor 4"
 let check_vprop (f:RT.fstar_top_env)
                 (g:env)
-                (t:pure_term)
-  : T.Tac (tot_typing f g t Tm_VProp)
+                (t:term)
+  : T.Tac (_:tot_typing f g t Tm_VProp{is_pure_term t})
   = let (| ty, d |) = check_tot f g t in
     match ty with
     | Tm_VProp -> E d
@@ -689,6 +689,51 @@ let frame_empty (f:RT.fstar_top_env)
     )
 #pop-options
 
+let replace_equiv_post
+  (f:RT.fstar_top_env)
+  (g:env)
+  (c:pure_comp{C_ST? c})
+  (post_hint:option term)
+
+  : T.Tac (c1:pure_comp & st_equiv f g c c1) =
+
+  let C_ST {u=u_c;res=res_c;pre=pre_c;post=post_c} = c in
+  let x = fresh g in
+  let g_post = (x, Inl res_c)::g in
+
+  let pre_c_typing : tot_typing f g pre_c Tm_VProp =
+    check_vprop f g pre_c in
+  let res_c_typing : tot_typing f g res_c (Tm_Type u_c) =
+    let (| u, ty |) = check_universe f g res_c in
+    if u = u_c
+    then ty
+    else T.fail "T_Abs: re-typechecking the return type returned different universe" in
+  let post_c_opened = open_term post_c x in
+  let post_c_typing
+    : tot_typing f g_post (open_term post_c x) Tm_VProp
+    = check_vprop f g_post post_c_opened in
+
+  match post_hint with
+  | None ->
+    (| c,
+       ST_VPropEquiv
+         g c c x pre_c_typing res_c_typing post_c_typing
+         (VE_Refl _ _)
+         (VE_Refl _ _) |)
+  | Some post ->
+    let post_opened = open_term post x in
+    let post_typing = check_vprop f g_post post_opened in
+    let post_c_post_eq : vprop_equiv f g_post post_c_opened post_opened =
+      check_vprop_equiv f g_post post_c_opened post_opened post_c_typing in
+
+    let c_with_post = C_ST {u=u_c;res=res_c;pre=pre_c;post=post} in
+    assume (is_pure_comp c_with_post);
+    (| c_with_post,
+       ST_VPropEquiv
+         g c c_with_post x pre_c_typing res_c_typing post_c_typing
+         (VE_Refl _ _)
+         post_c_post_eq |)
+
 #push-options "--query_stats --fuel 2 --ifuel 1 --z3rlimit_factor 20"
 #push-options "--print_implicits --print_universes --print_full_names"
 let rec check (f:RT.fstar_top_env)
@@ -696,12 +741,20 @@ let rec check (f:RT.fstar_top_env)
               (t:term)
               (pre:pure_term)
               (pre_typing: tot_typing f g pre Tm_VProp)
+              (post_hint:option term)
   : T.Tac (c:pure_comp { C_ST? c ==> comp_pre c == pre } &
            src_typing f g t c)
-  = let repack #g #pre #t (x:(c:pure_comp_st { comp_pre c == pre } & src_typing f g t c))
-      : (c:pure_comp { C_ST? c ==> comp_pre c == pre } & src_typing f g t c)
-      = let (| c, d_c |) = x in (|c, d_c|)
+  = let repack #g #pre #t (x:(c:pure_comp_st { comp_pre c == pre } & src_typing f g t c)) (apply_post_hint:bool)
+      : T.Tac (c:pure_comp { C_ST? c ==> comp_pre c == pre } & src_typing f g t c)
+      = let (| c, d_c |) = x in
+        if apply_post_hint && C_ST? c
+        then
+          let (| c1, c_c1_eq |) = replace_equiv_post f g c post_hint in
+          assume (comp_pre c1 == comp_pre c);
+          (| c1, T_Equiv _ _ _ _ d_c c_c1_eq |)
+        else (| c, d_c |)
     in
+
     let force_st #g #t (#pre:pure_term)
                  (pre_typing:tot_typing f g pre Tm_VProp)
                  (x:(c:pure_comp { C_ST? c ==> comp_pre c == pre } & src_typing f g t c))
@@ -727,7 +780,7 @@ let rec check (f:RT.fstar_top_env)
       let (| u, ty, uty, d |) = check_tot_univ f g t in
       let c = return_comp u ty t in
       let d = T_Return _ _ _ _ (E d) uty in
-      repack (frame_empty u ty uty t c d)
+      repack (frame_empty u ty uty t c d) false
 
     | Tm_Emp
     | Tm_Pure _
@@ -741,7 +794,7 @@ let rec check (f:RT.fstar_top_env)
       let (| ty, d_ty |) = check_tot f g t in
       (| C_Tot ty, d_ty |)
 
-    | Tm_Abs {binder_ty=t;binder_ppname=ppname} pre_hint body post_opt ->  (* {pre}  (fun (x:t) -> body) : ? { pre } *)
+    | Tm_Abs {binder_ty=t;binder_ppname=ppname} pre_hint body post_hint ->  (* {pre}  (fun (x:t) -> body) : ? { pre } *)
       let (| u, t_typing |) = check_universe f g t in
       let x = fresh g in
       let g' = (x, Inl t) :: g in
@@ -749,82 +802,17 @@ let rec check (f:RT.fstar_top_env)
       (
         match check_tot f g' pre with
         | (| Tm_VProp, pre_typing |) ->
-          let (| c_body, body_typing |) = check f g' (open_term body x) pre (E pre_typing) in
-          if post_opt = None
-          then 
-            let tt = T_Abs g ppname x t u body c_body pre_hint post_opt t_typing body_typing in
-            let tres = Tm_Arrow {binder_ty=t;binder_ppname=ppname} (close_comp c_body x) in
-            (| C_Tot tres, tt |)
-          else if C_ST? c_body
-          then
-            //
-            // Post is annotatated
-            // Check that it is equivalent to the inferred post,
-            //   and replace the inferred post with it
-            //
-            let C_ST {u=u_c; res=res_c; pre=pre_c; post=post_c} = c_body in
-            let y = fresh g' in
-            let g_post = (y, Inl (comp_res c_body))::g' in
-            //
-            // we need to open post with x first
-            //   (the binder of the lambda)
-            // but since post is implicitly abstracted over
-            //   the return value, we have to manually
-            //   open the db index 1 to open with x :/
-            //
-            let post = open_term'
-              (Some?.v post_opt)
-              (Tm_Var {nm_ppname="_";nm_index=x})
-              1 in
-            let post_opened = open_term post y in
+          let post =
+            match post_hint with
+            | None -> None
+            | Some post ->
+              Some (open_term' post (Tm_Var {nm_ppname="_";nm_index=x}) 1) in
 
-            (
-             match check_tot f g_post post_opened with
-             | (| Tm_VProp, post_typing |) ->
-
-               let post_c = comp_post c_body in
-               let post_c_opened = open_term post_c y in
-               let post_c_typing : tot_typing f g_post post_c_opened Tm_VProp =
-                 check_vprop f g_post post_c_opened in
-               let post_c_post_eq : vprop_equiv f g_post post_c_opened post_opened =
-                check_vprop_equiv f g_post post_c_opened post_opened post_c_typing in
-               let c_body_with_post = C_ST {u=u_c;res=res_c;pre=pre_c;post=post} in
-
-               let pre_c_typing : tot_typing f g' (comp_pre c_body) Tm_VProp =
-                 check_vprop f g' pre_c in
-               let res_c_typing : tot_typing f g' (comp_res c_body) (Tm_Type (comp_u c_body)) =
-                 let (| u, ty |) = check_universe f g' res_c in
-                 if u = u_c
-                 then ty
-                 else T.fail "T_Abs: re-typechecking the return type returned different universe" in
-               let post_c_typing
-                 : tot_typing f ((y, Inl (comp_res c_body))::g') (open_term (comp_post c_body) y) Tm_VProp
-                 = post_c_typing in
-               let c_and_c_with_post_pre_equiv
-                 : vprop_equiv f g' (comp_pre c_body) (comp_pre c_body_with_post)
-                 = VE_Refl g' _ in
-               let c_and_c_with_post_post_equiv
-                 : vprop_equiv f ((y, Inl (comp_res c_body))::g')
-                                 (open_term (comp_post c_body) y)
-                                 (open_term (comp_post c_body_with_post) y)
-                 = post_c_post_eq in
-               assume (is_pure_comp c_body_with_post);
-               let st_eq: st_equiv f g' c_body c_body_with_post =
-                 ST_VPropEquiv g' c_body c_body_with_post y pre_c_typing res_c_typing post_c_typing
-                   c_and_c_with_post_pre_equiv c_and_c_with_post_post_equiv in
-
-               let body_typing
-                 : src_typing f g' (open_term body x) c_body_with_post
-                 = T_Equiv g' (open_term body x) c_body c_body_with_post body_typing st_eq in
-                 
-               let tt = T_Abs g ppname x t u body c_body_with_post pre_hint post_opt t_typing body_typing in
-               let tres = Tm_Arrow {binder_ty=t;binder_ppname=ppname} (close_comp c_body_with_post x) in
-               (| C_Tot tres, tt |)
-               
-             | _ -> T.fail "T_Abs: failed to typecheck annotated post"
-            )
-
-          else T.fail "T_Abs: expected a stateful function (since post is annotated), found total"
+          let (| c_body, body_typing |) = check f g' (open_term body x) pre (E pre_typing) post in
+          
+          let tt = T_Abs g ppname x t u body c_body pre_hint post_hint t_typing body_typing in
+          let tres = Tm_Arrow {binder_ty=t;binder_ppname=ppname} (close_comp c_body x) in
+          (| C_Tot tres, tt |)
           // (* could avoid this re-checking call if we had a lemma about arrow typing *)
           // let (| ures, ures_ty |) = check_universe f g tres in
           // let c = return_comp_noeq ures tres in
@@ -847,12 +835,12 @@ let rec check (f:RT.fstar_top_env)
         //                (P.term_to_string formal))
         let d = T_STApp g head ppname formal (C_ST res) arg dhead (E darg) in
         opening_pure_comp_with_pure_term (C_ST res) arg 0;
-        repack (try_frame_pre pre_typing d)
+        repack (try_frame_pre pre_typing d) true
       | _ -> T.fail "Unexpected head type in impure application"
       end
 
     | Tm_Bind e1 e2 ->
-      let (| c1, d1 |) = force_st pre_typing (check f g e1 pre pre_typing) in
+      let (| c1, d1 |) = force_st pre_typing (check f g e1 pre pre_typing None) in
       let C_ST s1 = c1 in
       let t = s1.res in
       (
@@ -869,7 +857,7 @@ let rec check (f:RT.fstar_top_env)
               | (| Tm_VProp, nt |) -> E nt
               | _ -> T.fail "next pre is not typable"
           in
-          let (| c2, d2 |) = force_st next_pre_typing (check f g' (open_term e2 x) next_pre next_pre_typing) in
+          let (| c2, d2 |) = force_st next_pre_typing (check f g' (open_term e2 x) next_pre next_pre_typing post_hint) in
           let C_ST s2 = c2 in
           let (| u, res_typing |) = check_universe f g s2.res in
           if u <> s2.u
