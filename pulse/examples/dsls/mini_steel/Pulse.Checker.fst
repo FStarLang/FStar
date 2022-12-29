@@ -856,39 +856,34 @@ let rec check (f:RT.fstar_top_env)
       let C_ST s1 = c1 in
       let t = s1.res in
       (
-        match check_tot f g t with
-        | (| Tm_Type u, t_typing |) ->
-          if u <> s1.u then T.fail "incorrect universe"
+        let (| u, t_typing |) = check_universe f g t in
+        if u <> s1.u then T.fail "incorrect universe"
+        else (
+          let x = fresh g in
+          let next_pre = open_term s1.post x in
+          let g' = (x, Inl s1.res)::g in
+          let next_pre_typing : tot_typing f g' next_pre Tm_VProp =
+              //would be nice to prove that this is typable as a lemma,
+              //without having to re-check it
+              match check_tot f g' next_pre with
+              | (| Tm_VProp, nt |) -> E nt
+              | _ -> T.fail "next pre is not typable"
+          in
+          let (| c2, d2 |) = force_st next_pre_typing (check f g' (open_term e2 x) next_pre next_pre_typing) in
+          let C_ST s2 = c2 in
+          let (| u, res_typing |) = check_universe f g s2.res in
+          if u <> s2.u
+          then T.fail "Unexpected universe for result type"
+          else if x `Set.mem` freevars s2.post
+          then T.fail (Printf.sprintf "Bound variable %d escapes scope in postcondition %s" x (P.term_to_string s2.post))
           else (
-            let x = fresh g in
-            let next_pre = open_term s1.post x in
-            let g' = (x, Inl s1.res)::g in
-            let next_pre_typing : tot_typing f g' next_pre Tm_VProp =
-                //would be nice to prove that this is typable as a lemma,
-                //without having to re-check it
-                match check_tot f g' next_pre with
-                | (| Tm_VProp, nt |) -> E nt
-                | _ -> T.fail "next pre is not typable"
-            in
-            let (| c2, d2 |) = force_st next_pre_typing (check f g' (open_term e2 x) next_pre next_pre_typing) in
-            let C_ST s2 = c2 in
-            let (| u, res_typing |) = check_universe f g s2.res in
-            if u <> s2.u
-            then T.fail "Unexpected universe for result type"
-            else if x `Set.mem` freevars s2.post
-            then T.fail (Printf.sprintf "Bound variable %d escapes scope in postcondition %s" x (P.term_to_string s2.post))
-            else (
-              match check_tot f ((x, Inl s2.res)::g) (open_term s2.post x) with
-              | (| Tm_VProp, post_typing |) ->
-                let bc : bind_comp f g x c1 c2 _ = (Bind_comp g x c1 c2 res_typing x (E post_typing)) in
-              (| _, T_Bind _ _ _ _ _ _ _ d1 (E t_typing) d2 bc |)
-            | _ -> T.fail "Ill-typed postcondition in bind"
-            )
+            match check_tot f ((x, Inl s2.res)::g) (open_term s2.post x) with
+            | (| Tm_VProp, post_typing |) ->
+              let bc : bind_comp f g x c1 c2 _ = (Bind_comp g x c1 c2 res_typing x (E post_typing)) in
+            (| _, T_Bind _ _ _ _ _ _ _ d1 t_typing d2 bc |)
+          | _ -> T.fail "Ill-typed postcondition in bind"
           )
-        | (| ty, _ |) -> 
-          T.fail (Printf.sprintf "Ill-typed annotated type %s on `bind`; has type %s\n"
-                                 (P.term_to_string t)
-                                 (P.term_to_string ty))
+        )
       )
     | Tm_If _ _ _ ->
       T.fail "Not handling if yet"
