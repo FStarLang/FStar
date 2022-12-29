@@ -53,9 +53,8 @@ let rec term_to_string (t:term)
         (term_to_string head)
         (term_to_string arg)
         
-    | Tm_Bind t e1 e2 ->
-      sprintf "bind _ : %s = %s in %s"
-        (term_to_string t)
+    | Tm_Bind e1 e2 ->
+      sprintf "bind _ = %s in %s"
         (term_to_string e1)
         (term_to_string e2)        
 
