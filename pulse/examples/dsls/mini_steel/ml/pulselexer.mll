@@ -22,6 +22,7 @@ rule token =
       else if i = "emp" then EMP
       else if i = "fun" then FUN
       else if i = "let" then LET
+      else if i = "return" then RETURN
       else IDENT (i)
     }
   | "("           { LPAREN }

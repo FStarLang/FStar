@@ -4,7 +4,7 @@ open Pulse.Steel.Wrapper
 open Pulse.Syntax
 open Pulse.Main
 
-%splice_t[foo] (parse_and_check "true")
+%splice_t[foo] (parse_and_check "return true")
 
 %splice_t[read] (parse_and_check "
   fun (n:Pulse.Steel.Wrapper.erased)
@@ -75,6 +75,6 @@ open Pulse.Main
 
         let x = Pulse.Steel.Wrapper.read_refine (n1, r1);
         let y = Pulse.Steel.Wrapper.read_refine (n2, r2);
-        let z = Pulse.Steel.Wrapper.write (n1, r1, y);
+        Pulse.Steel.Wrapper.write (n1, r1, y);
         Pulse.Steel.Wrapper.write (n2, r2, x)
   ")

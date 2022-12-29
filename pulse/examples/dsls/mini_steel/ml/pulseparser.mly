@@ -84,7 +84,7 @@
 
 %token EOF
 
-%token FUN LET
+%token FUN LET RETURN
 %token TRUE FALSE
 %token LPAREN RPAREN COMMA DOT COLON RARROW LBRACE RBRACE EQUALS SEMICOLON
 
@@ -161,14 +161,14 @@ pureapp:
   | e1=pure_atomic_expr e2=pure_atomic_expr es=list(pure_atomic_expr)    { mk_pure_app (e1::e2::es) }
 
 expr:
-  | e=pure_expr             { e }
-  | f=lambda                { f }
+  | RETURN e=pure_expr      { e }
   | sapp=stapp              { sapp }
-  | LET b=let_binder EQUALS e1=expr SEMICOLON e2=expr
+  | LET b=let_binder EQUALS e1=stapp SEMICOLON e2=expr
     {
       let e2 = close_term e2 (lookup_var_index b) in
       Tm_Bind (e1, e2)
     }
+  | e1=stapp SEMICOLON e2=expr    { Tm_Bind (e1, e2) }
   | LPAREN e=expr RPAREN    { e }
 
 pure_atomic_expr:
@@ -189,6 +189,6 @@ pure_expr:
   | LPAREN e=pure_expr RPAREN             { e }
 
 prog:
-  | EOF         { None }
-  | e=expr EOF  { Some e }
+  | EOF           { None }
+  | e=lambda EOF  { Some e }
 ;
