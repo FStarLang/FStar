@@ -102,12 +102,6 @@ let inst_vprop_equiv_assoc #g #v0 #v1 #v2
           RT.typing g pf (stt_vprop_equiv (mk_star v0 (mk_star v1 v2)) (mk_star (mk_star v0 v1) v2)))
   = admit()
 
-let vprop_eq_tm t1 t2 =
-  let open R in
-  let t = pack_ln (Tv_App (pack_ln (Tv_FVar (pack_fv (vprop_eq_lid))))
-                          (t1, Q_Explicit)) in
-  let t = pack_ln (Tv_App t (t2, Q_Explicit)) in
-  t
 
 let vprop_tm = R.pack_ln (R.Tv_FVar  (R.pack_fv vprop_lid))
 
