@@ -66,6 +66,7 @@ Aside from user-defined effects, F*'s also supports the following
    :maxdepth: 1
    :caption: Contents:
 
+   part4_computation_types_and_tot
    part4_ghost
    part4_div
    part4_pure

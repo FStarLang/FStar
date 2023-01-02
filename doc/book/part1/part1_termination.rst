@@ -82,6 +82,9 @@ if any of the following are true:
       result of applying a sub-term of ``v2`` to some argument ``x``.
 
 
+.. _Part1_why_length_terminates:
+
+
 Why ``length`` terminates
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 
