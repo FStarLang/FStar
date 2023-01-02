@@ -69,11 +69,10 @@ sites, and the resulting value is then passed on to the callee
 functions. For example, if a function ``f`` is called as ``f e``,
 then ``e`` is first evaluated to a value---which also means that the
 effects of ``e`` happen at the call site---and then the
-resulting value is passed to ``f``. Therefore, the argument types of
-functions are always value types.
+resulting value is passed to ``f``.
 
 .. note::
 
    Since functions are first-class values in F*, including functions
    whose body have non-trivial effects, an effectful computation may
-   be thunked and then passed to a function.
+   be thunked and then passed as a value to a function.

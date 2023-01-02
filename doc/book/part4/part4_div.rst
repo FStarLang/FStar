@@ -4,16 +4,17 @@ Divergence, or Non-Termination
 ===============================
 
 Real-world programs are sometimes non-terminating. Think of a
-webserver that is listening to incoming requests on a socker and
-servicing them in an infinite loop. Clearly, the top-level loop of
-such a webserver cannot be programmed in the total computational world
+webserver that is listening to incoming requests on a network socket
+and servicing them in an infinite loop. Clearly, the top-level loop of
+such a webserver cannot be programmed in the total computations world
 of F* that we have seen so far.
 
 To allow for non-terminating programs, F* provides a primitive
-``Dv`` (for divergence) effect, with the semantics that computations
+``Dv`` (for divergence) effect. Computations
 in ``Dv`` may not terminate even with infinite resources. In other
 words, computations in the ``Dv`` effect have the observational
-behavior of non-termination::
+behavior of non-termination. For example, the following ``loop``
+function has type ``unit -> Dv unit`` and it diverges when called::
 
   let rec loop () : Dv unit = loop ()
 
@@ -30,23 +31,24 @@ specification ``t``. When we have ``e:t``, then at runtime, ``e``
 terminates and produces a value of type ``t``. This notion is also
 called *total correctness*.
 
-With ``Dv`` however, the meaning of ``e:Dv t`` changes to *partial
+With ``Dv`` however, the semantics changes to *partial
 correctness*---if F* typechecks an expression ``e:Dv t``, then at
-runtime, it may either diverge (i.e. run forever), or if it terminates
-then the resulting value will have type ``t``. This means the following example
-is untypeable::
+runtime, ``e`` may either diverge (i.e. run forever), or if it terminates
+then the resulting value has type ``t`` (i.e. it satisfies the
+specification ``t``). The following example is, therefore, untypeable::
 
   [@@ expect_failure]
   let rec decr (x:int) : Dv nat = if x = 0 then -1 else decr (x - 1)
 
 since ``-1``, the return value if the function terminates, does not
-have the annotated type ``nat``.
+have the annotated type ``nat``. On the other hand, the ``loop``
+example from earlier is fine since it never returns at runtime.
 
 
 Separating the logical core from ``Dv``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Many proof-assistants mandate all the programs to be total, and
+Usually proof-assistants mandate all the programs to be total, and
 for good reasons. With divergence, if we are not careful, the logical
 system can collapse very easily. For example, following is a
 well-typed program in F*::
@@ -59,20 +61,29 @@ done!
 
 Thankfully not so, the effect system of F* itself comes to the rescue.
 
-The effect system separates total computations (in ``Tot``) from other
-effectful computations, including ``Dv``, using the effect labels. And
-then F* ensures that the logical core of F* can refer only to the
-total computations. This means, for example, that the refinement
-formulas are total, ``Tot`` computations cannot have ``Dv``
-subcomputations, a ``Dv`` computation cannot be typed as a ``Tot``
-computation, etc. So an attempt to use ``helper`` to prove something
-unsound thankfully fails::
+The effect system carefully separates total computations (in ``Tot``)
+from other effectful computations, including ``Dv``. There are several
+aspects to it. As mentioned earlier, all expressions are typechecked
+to a computation type, with an effect label. Further, the effect
+system ensures that ``Tot`` computations cannot have effectful
+subcomputations or that effectful computations are not typeable as
+``Tot``.
+
+Relying on this separation, F* checks that the logical core can refer
+*only* to the total computations. For example, specifications such as
+refinements are checked to be total.
+
+And this is what ensures the soundness of the logical fragment of F*
+in the presence of arbitrary effects, including ``Dv``. A term ``e:Tot
+t`` can be soundly interpreted as the proof of ``t``---the effect
+system ensures that it is really so---and ``e:Dv t`` should be
+interpreted in the partial correctness semantics.
+
+As an example, the following attempt to use ``helper`` in a total
+function fails::
 
   [@@ expect_failure]
   let zero () : Tot (y:int{y == 0}) = helper (); 1
-
-If it did not fail, we would have a terminating function whose spec
-says that it returns ``0``, but it would return ``1`` at runtime.
 
 An attempt to cast ``helper`` to ``Tot`` also fails::
 
@@ -88,9 +99,9 @@ programming language.
 Lifting of ``Tot`` computations into ``Dv``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-While (for good reasons) F* does not allow ``Dv`` computations to be
-typed as/used in ``Tot`` computations, going the other way is totally
-fine (pun intended)---always terminating computations are also
+While F* does not allow ``Dv`` computations to be
+typed as/used in ``Tot`` computations, going the other way is *totally*
+fine. Intuitively, always terminating computations are
 potentially non-terminating. We can think of it like a *weakening* of
 the specification::
 
@@ -106,25 +117,22 @@ into ``Dv``, meaning that ``Tot`` functions can be seamlessly used in
     add_one_loop y
 
 
-Let's revisit our :ref:`intuition
-<Part4_Computation_Types_And_Tot>` regarding the meaning of ``e:M
-t``. Recall that an expression ``e`` can be typed as ``M t`` when
-executing ``e`` exhibits *at-most* the effect ``M`` and returns a
-value of type ``t``. Effects in F* have a partial-order among them,
+In general, effects in F* have a partial ordering among them,
 where sub-effects (e.g., ``Tot``) can be automatically lifted to
-super-effects (e.g., ``Dv``), and this is the intended meaning of
-having an effect *at-most* ``M``. The expression ``add_one x`` in the
-example above has effect ``Tot``, but it also has effect ``Div``.
+super-effects (e.g., ``Dv``) by the F* effect system.
 
-The partial-ordering among effects in F* is crucial for the effects to
+This also explains the meaning of :ref:`at-most
+<Part4_Computation_Types_And_Tot>` when intuitively understanding the
+meaning of ``e:M t``. Executing ``e`` should exhibit *at-most* the effect
+``M``---the expression ``add_one x`` in the
+example above has effect ``Tot``, but it also has ``Dv`` effect since
+``Tot`` can be lifted to ``Dv`` in the effects ordering.
+
+The partial ordering among effects in F* is crucial for the effects to
 seamlessly work with each other, we will see more examples when we
-discuss the user-defined effects.
+discuss user-defined effects.
 
 .. note::
 
    The logical core of F* includes the ghost effect, so it is also
-   separate from the ``Dv`` effect, as with ``Tot``.
-   
-
-
-   
+   separate from the ``Dv`` effect.
