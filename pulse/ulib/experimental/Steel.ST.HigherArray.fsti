@@ -40,7 +40,7 @@ val base_len (#elt: Type) (b: base_t elt) : GTot nat
 /// An abstract type to represent a C pointer, as a base and an offset
 /// into its base
 [@@noextract_to "krml"] // primitive
-val ptr (elt: Type u#a) : Type0
+val ptr ([@@@strictly_positive] elt: Type u#a) : Type0
 val base (#elt: Type) (p: ptr elt) : Tot (base_t elt)
 val offset (#elt: Type) (p: ptr elt) : Ghost nat (requires True) (ensures (fun offset -> offset <= base_len (base p)))
 val ptr_base_offset_inj (#elt: Type) (p1 p2: ptr elt) : Lemma
@@ -59,7 +59,7 @@ val ptr_base_offset_inj (#elt: Type) (p1 p2: ptr elt) : Lemma
 /// record type.
 inline_for_extraction
 [@@noextract_to "krml"]
-let array (elt: Type u#a) : Tot Type0 =
+let array ([@@@strictly_positive] elt: Type u#a) : Tot Type0 =
   (p: ptr elt & (length: Ghost.erased nat {offset p + length <= base_len (base p)}))
 
 /// This will extract to "let p = a"
@@ -189,7 +189,7 @@ let free
   let s = elim_exists () in
   rewrite (pts_to _ _ _)
           (pts_to (| p, Ghost.hide (base_len (base p)) |) full_perm s);
-  free_ptr p            
+  free_ptr p
 
 /// Sharing and gathering permissions on an array. Those only
 /// manipulate permissions, so they are nothing more than stateful
