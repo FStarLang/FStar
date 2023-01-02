@@ -41,6 +41,8 @@ val base_len (#elt: Type) (b: base_t elt) : GTot nat
 /// into its base
 [@@noextract_to "krml"] // primitive
 val ptr ([@@@strictly_positive] elt: Type u#a) : Type0
+[@@noextract_to "krml"]
+val null_ptr (elt: Type u#a) : ptr elt
 val base (#elt: Type) (p: ptr elt) : Tot (base_t elt)
 val offset (#elt: Type) (p: ptr elt) : Ghost nat (requires True) (ensures (fun offset -> offset <= base_len (base p)))
 val ptr_base_offset_inj (#elt: Type) (p1 p2: ptr elt) : Lemma
@@ -61,6 +63,10 @@ inline_for_extraction
 [@@noextract_to "krml"]
 let array ([@@@strictly_positive] elt: Type u#a) : Tot Type0 =
   (p: ptr elt & (length: Ghost.erased nat {offset p + length <= base_len (base p)}))
+
+inline_for_extraction
+[@@noextract_to "krml"]
+val null (#a: Type0) : array a
 
 /// This will extract to "let p = a"
 inline_for_extraction

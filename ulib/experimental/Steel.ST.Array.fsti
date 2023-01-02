@@ -62,6 +62,10 @@ inline_for_extraction
 let array ([@@@strictly_positive] elt: Type0) : Tot Type0 =
   (p: ptr elt & (length: Ghost.erased nat {offset p + length <= base_len (base p)}))
 
+inline_for_extraction
+[@@noextract_to "krml"]
+val null (#a: Type0) : array a
+
 /// This will extract to "let p = a"
 inline_for_extraction
 [@@noextract_to "krml"]

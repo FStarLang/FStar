@@ -87,6 +87,7 @@ type ptr (elt: Type u#a) : Type0 = {
   base: ref _ (pcm elt (US.v base_len));
   offset: (offset: nat { offset <= US.v base_len });
 }
+let null_ptr a = { base_len = 0sz; base = null #_ #(pcm a 0) ; offset = 0 }
 let base (#elt: Type) (p: ptr elt) : Tot (base_t elt) = (| Ghost.reveal p.base_len, p.base |)
 let offset (#elt: Type) (p: ptr elt) : Ghost nat (requires True) (ensures (fun offset -> offset <= base_len (base p))) = p.offset
 
@@ -99,6 +100,8 @@ let ptr_base_offset_inj (#elt: Type) (p1 p2: ptr elt) : Lemma
     p1 == p2
   ))
 = ()
+
+let null #a = (| null_ptr a, Ghost.hide 0 |)
 
 let length_fits #elt a = ()
 
