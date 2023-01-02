@@ -20,7 +20,8 @@ Every expression in F* is typechecked to have a computation type. This
 includes the total expressions we have been working with. Such
 expressions are classified in the default effect called ``Tot``, the
 effect of total computations that do not have any observable effect
-other than the input-output behavior.
+other than the input-output behavior. In other words, ``e:Tot t`` if
+``e`` terminates and produces a value of type ``t``.
 
 In fact, as we have already :ref:`seen <Part1_ch1_arrow_notations>`,
 notationally ``x:t0 -> t1`` is a shorthand for ``x:t0 -> Tot t1``
@@ -75,5 +76,4 @@ functions are always value types.
 
    Since functions are first-class values in F*, including functions
    whose body have non-trivial effects, an effectful computation may
-   be thunked and then passed to a function. We will see examples
-   later.
+   be thunked and then passed to a function.
