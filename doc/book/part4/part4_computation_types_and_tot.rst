@@ -14,14 +14,16 @@ types, etc.) are called *value types*.
 
 
 The default ``Tot`` effect
-^^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Every expression in F* is typechecked to have a computation type. This
 includes the total expressions we have been working with. Such
 expressions are classified in the default effect called ``Tot``, the
 effect of total computations that do not have any observable effect
-other than the input-output behavior. In other words, ``e:Tot t`` if
-``e`` terminates and produces a value of type ``t``.
+other than the input-output behavior. Any meaning or intuition that we
+have ascribed to ``e:t`` extends to ``e:Tot t``. For example,
+if ``e:Tot t``, then at runtime, ``e`` terminates and produces a value
+of type ``t``.
 
 In fact, as we have already :ref:`seen <Part1_ch1_arrow_notations>`,
 notationally ``x:t0 -> t1`` is a shorthand for ``x:t0 -> Tot t1``
@@ -39,7 +41,9 @@ is a shorthand for::
 
   let id (a:Type) (x:a) : Tot a = x
 
-and the type of ``id`` is ``a:Type -> a -> Tot a``.
+and the type of ``id`` is ``a:Type -> a -> Tot a``. More generally,
+the return type annotations on ``let`` definitions are computation
+types ``C``.
 
 
 Function argument types
@@ -70,6 +74,12 @@ functions. For example, if a function ``f`` is called as ``f e``,
 then ``e`` is first evaluated to a value---which also means that the
 effects of ``e`` happen at the call site---and then the
 resulting value is passed to ``f``.
+
+.. note::
+
+   We can think of ``f e`` when ``e`` is effectful, as ``let x = e in
+   f x``. In fact, this is what F* elaborates ``f e`` to, when ``e``
+   has a non-trivial effect.
 
 .. note::
 
