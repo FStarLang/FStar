@@ -3,13 +3,35 @@
 Divergence, or Non-Termination
 ===============================
 
-Real-world programs are sometimes non-terminating. Think of a
-webserver that is listening to incoming requests on a network socket
-and servicing them in an infinite loop. Clearly, the top-level loop of
-such a webserver cannot be programmed in the total computations world
-of F* that we have seen so far.
+Consider programming a webserver, whose top-level loop takes a network
+socket as argument, reads off an HTTP request from it, services the
+request, sends the response on the socket, and iterates. Can we program this top-level loop in F*? Let's
+try. Assume that we have the following API available::
 
-To allow for non-terminating programs, F* provides a primitive
+  val receive : socket -> http_request
+  val process : http_request -> http_response
+  val send : socket -> http_response -> unit
+
+(The API is only for illustration, in reality ``receive``,
+``process``, and ``send`` will be effectful functions rather than
+``Tot``.)
+
+We may try writing the top-level loop as a recursive function::
+
+  let rec main (s:socket) : unit =
+    let req = receive s in
+    let resp = process req in
+    send s resp;
+    main s  // trouble!
+
+Unfortunately, this doesn't work: F*
+would like us to prove that ``main`` terminates, whereas we
+intentionally would like to write a non-terminating function.
+
+The ``Dv`` effect
+^^^^^^^^^^^^^^^^^^^
+
+To allow for such non-terminating programs, F* provides a primitive
 ``Dv`` (for divergence) effect. Computations
 in ``Dv`` may not terminate even with infinite resources. In other
 words, computations in the ``Dv`` effect have the observational
@@ -20,6 +42,16 @@ function has type ``unit -> Dv unit`` and it diverges when called::
 
 (If we remove the ``Dv`` effect label, then F* will default the return
 type to ``Tot unit``, and fail as expected.)
+
+Since the ``Dv`` effect admits divergence, F* essentially turns-off
+the termination checker when typechecking ``Dv`` computations. So the
+recursive ``loop ()`` call does not require a decreasing termination
+metric and typechecks as is.
+
+Similarly, the ``main`` loop of our webserver can be annotated in the
+``Dv`` effect::
+
+  let main (s:socket) : Dv unit = ...
 
 
 Partial correctness semantics of ``Dv``
