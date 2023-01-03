@@ -84,10 +84,11 @@ noeq
 type ptr (elt: Type u#a) : Type0 = {
   base_len: Ghost.erased US.t;
                    // U32.t to prove that A.read, A.write offset computation does not overflow. TODO: replace U32.t with size_t
-  base: ref _ (pcm elt (US.v base_len));
+  base: (r: ref _ (pcm elt (US.v base_len)) { is_null r ==> US.v base_len == 0 });
   offset: (offset: nat { offset <= US.v base_len });
 }
 let null_ptr a = { base_len = 0sz; base = null #_ #(pcm a 0) ; offset = 0 }
+let is_null_ptr p = is_null p.base
 let base (#elt: Type) (p: ptr elt) : Tot (base_t elt) = (| Ghost.reveal p.base_len, p.base |)
 let offset (#elt: Type) (p: ptr elt) : Ghost nat (requires True) (ensures (fun offset -> offset <= base_len (base p))) = p.offset
 
@@ -265,6 +266,7 @@ let malloc0
 =
   let c : carrier elt (US.v n) = mk_carrier (US.v n) 0 (Seq.create (US.v n) x) P.full_perm in
   let base : ref (carrier elt (US.v n)) (pcm elt (US.v n)) = R.alloc c in
+  R.pts_to_not_null base _;
   let p = {
     base_len = n;
     base = base;
