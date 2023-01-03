@@ -298,7 +298,19 @@ functional setting of F*.
 
 Let's consider a simple functional language::
 
-  e ::= x | c | let x = e1 in e2 | if e then e1 else e2
+  Expression e ::= x | c | let x = e1 in e2 | if e then e1 else e2
+
+For this language, the postcondition that we may want to prove about
+an expression ``e`` is a predicate on the result of computing ``e``,
+while the precondition is simply a proposition. Adapting the ``WP``
+function from the imperative setting to this is straightforward::
+
+  WP c Q                      = Q c  // Q is a predicate
+  WP x Q                      = Q x
+  WP (let x = e1 in e2) Q     = WP e1 (fun x -> WP e2 Q)
+  WP (if e then e1 else e2) Q = (e ==> WP e1 Q) /\ (~e ==> WP e2 Q)
+
+
 
 
 ``PURE`` is a refinement of ``Tot``
