@@ -637,8 +637,6 @@ let memcpy0
                            (pts_to a1 _ e0);
     return ()
 
-#pop-options
-
 let blit0 (#t:_) (#p0:perm) (#s0 #s1:Ghost.erased (Seq.seq t))
            (src:array t)
            (idx_src: US.t)
@@ -671,6 +669,8 @@ let blit0 (#t:_) (#p0:perm) (#s0 #s1:Ghost.erased (Seq.seq t))
   vpattern_rewrite #_ #_ #(merge _ _) (fun a -> pts_to a _ _) src;
   vpattern_rewrite (pts_to src _) (Ghost.reveal s0);
   noop ()
+
+#pop-options
 
 let blit_ptr
   src len_src idx_src dst len_dst idx_dst len
