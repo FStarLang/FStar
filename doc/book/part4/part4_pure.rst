@@ -163,7 +163,7 @@ loop starts, is maintained by each iteration of the loop, and is
 provided as the postcondition of the loop. While the rule uses the
 loop invariant *declaratively*, without worrying about where the
 invariant comes from, an actual tool that implements Hoare Logic has
-to either infer it or require as an annotation from the user.
+to either infer it or require it as an annotation from the user.
 
 This rule establishes partial correctness, it does not ensure that
 the loop terminates. It is possible to augment the rule with
@@ -234,7 +234,7 @@ first assignment, using the rule of consequence, resulting in::
    transition system for how programs in a language execute, i.e. an
    *operational* view of the program. Denotational semantics ascribes
    denotations (meaning) to programs in some target domain. Finally,
-   the axiomatic semantics describes the meaning of a program as its
+   the axiomatic semantics defines the meaning of a program as its
    logical interpretation.
 
      
@@ -243,14 +243,19 @@ Weakest Precondition Calculus
 
 A closely related reasoning system based on *weakest
 preconditions* was given by `Edsger W. Dijkstra
-<https://dl.acm.org/doi/10.1145/360933.360975/>`_. While the Hoare
-Logic is *declarative* and aims proving validity of Hoare triples,
-weakest precondition calculus takes a more *algorithmic* approach, and
+<https://dl.acm.org/doi/10.1145/360933.360975/>`_. While Hoare
+Logic is declarative and defines a set of non syntax-directed
+inference rules, weakest precondition calculus takes a more
+*algorithmic* approach, and
 defines a function ``WP (s, Q)``, that computes a unique, weakest
-precondition ``P``. The semantics of ``WP`` is that ``WP (s, Q)`` is
+precondition ``P`` for the statement ``s`` and postcondition
+``Q``. The semantics of ``WP`` is that ``WP (s, Q)`` is
 the weakest precondition that should hold before executing ``s`` for
-the postcondition ``Q`` to be valid after executing ``s``. The ``WP``
-function is defined as follows on our imperative language::
+the postcondition ``Q`` to be valid after executing ``s``. Thus, the
+weakest precondition calculus assigns meaning to programs as a
+transformer of postconditions ``Q`` to preconditions ``WP (s,
+Q)``. The ``WP`` function is defined as follows for our imperative
+language::
 
   WP (skip,   Q)               = Q
   WP (x := e, Q)               = Q[e/x]
@@ -260,14 +265,23 @@ function is defined as follows on our imperative language::
 
 The ``while`` rule uses ``I``, the loop invariant as we introduced in
 the Hoare Logic. Since it does not ensure termination, the rules
-presented here are for partial correctness. The function ``WP`` as
-presented here is sometimes also called *weakest liberal
-precondition*. It assigns meaning to the programs as a transformer of
-postconditions ``Q`` to preconditions ``WP (s, Q)``.
+presented here are for partial correctness. The ``WP`` function for
+partial correctness is also known as *weakest liberal
+precondition*.
+
+Revisiting our example from the previous chapter, we have ``WP
+(x := y + 1; z := x + 1, z > 2) = y > 0``. Thus ``y > 0`` is the
+weakest precondition for the command to end up in a state with ``z >
+2``.
+
+The following propositions relate the Hoare triples and ``WP``:
+
+* ``{WP (s, Q)} s {Q}`` is a valid Hoare triple.
+* If ``{P} s {Q}`` then ``P ==> WP (s, Q)``.
 
 With this background knowledge on Hoare Logic and Weakest
-Precondition calculus, we can now get back to F* and how F* uses
-these.
+Precondition calculus, we can now get back to F* and how F* allows
+similar reasoning.
 
   
 A Dijkstra Monad for Pure Computations
@@ -281,6 +295,10 @@ in `this paper
 specifying and proving pure programs in F*. Let's begin by adapting
 the weakest precondition calculus from the previous section to the
 functional setting of F*.
+
+Let's consider a simple functional language::
+
+  e ::= x | c | let x = e1 in e2 | if e then e1 else e2
 
 
 ``PURE`` is a refinement of ``Tot``
