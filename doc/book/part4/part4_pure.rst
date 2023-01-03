@@ -274,11 +274,13 @@ A Dijkstra Monad for Pure Computations
 ----------------------------------------
 
 F* provides a weakest precondition calculus for pure computations. The
-calculus is based on *Dijkstra Monad*, first introduced in `this
-paper
+calculus is based on *Dijkstra Monad*, a construction first introduced
+in `this paper
 <https://www.microsoft.com/en-us/research/publication/verifying-higher-order-programs-with-the-dijkstra-monad/>`_
-. Let's begin by adapting the weakest precondition calculus from the previous
-section to the functional setting of F*.
+. In this chapter, we will learn about Dijkstra Monad and its usage in
+specifying and proving pure programs in F*. Let's begin by adapting
+the weakest precondition calculus from the previous section to the
+functional setting of F*.
 
 
 ``PURE`` is a refinement of ``Tot``
