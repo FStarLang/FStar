@@ -43,8 +43,8 @@ val base_len (#elt: Type) (b: base_t elt) : GTot nat
 val ptr ([@@@strictly_positive] elt: Type u#a) : Type0
 [@@noextract_to "krml"]
 val null_ptr (elt: Type u#a) : ptr elt
-
 // TODO: turn into a stateful operation to avoid comparing dangling pointers
+[@@noextract_to "krml"]
 val is_null_ptr (#elt: Type u#a) (p: ptr elt) : Pure bool
   (requires True)
   (ensures (fun res -> res == true <==> p == null_ptr elt))

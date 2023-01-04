@@ -41,6 +41,15 @@ val base_len (#elt: Type) (b: base_t elt) : GTot nat
 inline_for_extraction
 [@@noextract_to "krml"]
 val ptr ([@@@strictly_positive] elt: Type0) : Type0
+inline_for_extraction
+[@@noextract_to "krml"]
+val null_ptr (elt: Type0) : ptr elt
+// TODO: turn into a stateful operation to avoid comparing dangling pointers
+inline_for_extraction
+[@@noextract_to "krml"]
+val is_null_ptr (#elt: Type0) (p: ptr elt) : Pure bool
+  (requires True)
+  (ensures (fun res -> res == true <==> p == null_ptr elt))
 val base (#elt: Type) (p: ptr elt) : Tot (base_t elt)
 val offset (#elt: Type) (p: ptr elt) : Ghost nat (requires True) (ensures (fun offset -> offset <= base_len (base p)))
 val ptr_base_offset_inj (#elt: Type) (p1 p2: ptr elt) : Lemma
@@ -51,6 +60,9 @@ val ptr_base_offset_inj (#elt: Type) (p1 p2: ptr elt) : Lemma
   (ensures (
     p1 == p2
   ))
+val base_len_null_ptr (elt: Type0) : Lemma
+  (base_len (base (null_ptr elt)) == 0)
+  [SMTPat (base_len (base (null_ptr elt)))]
 
 /// A concrete type to represent a C array, as a C pointer and a ghost
 /// array length.  By virtue of the length being ghost, Karamel will
@@ -64,7 +76,8 @@ let array ([@@@strictly_positive] elt: Type0) : Tot Type0 =
 
 inline_for_extraction
 [@@noextract_to "krml"]
-val null (#a: Type0) : array a
+let null (#a: Type0) : array a
+= (| null_ptr a, Ghost.hide 0 |)
 
 /// This will extract to "let p = a"
 inline_for_extraction
@@ -75,6 +88,13 @@ let ptr_of
 : Tot (ptr elt)
 = match a with // dfst is not marked inline_for_extraction, so we need to reimplement it
   | (| p, _ |) -> p
+
+inline_for_extraction
+[@@noextract_to "krml"]
+let is_null (#a: Type0) (p: array a) : Pure bool
+  (requires True)
+  (ensures (fun res -> res == true <==> p == null))
+= is_null_ptr (ptr_of p)
 
 /// Returns the length of the array. Usable for specification and proof purposes,
 /// as modeled by the GTot effect
