@@ -102,7 +102,7 @@ let ptr_base_offset_inj (#elt: Type) (p1 p2: ptr elt) : Lemma
   ))
 = ()
 
-let null #a = (| null_ptr a, Ghost.hide 0 |)
+let base_len_null_ptr _ = ()
 
 let length_fits #elt a = ()
 
