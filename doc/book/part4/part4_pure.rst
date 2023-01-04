@@ -504,11 +504,13 @@ write and typecheck more precise specifications.
 
 So the next natural question is, when should we use ``Tot`` and when should we use ``PURE`` (or ``Pure``). The answer, as always, is: it depends.
 
-For very simple ``Tot`` functions, since F* allows for reasoning with
-the function definitions, more precise specifications may not be
+Since we can prove facts about ``Tot`` functions :ref:`extrinsically
+<Part1_intrinsic_extrinsic>`, for very simple
+``Tot`` functions, precise specifications may not be
 needed. For example, for ``let incr (x:nat) : nat = x + 1``, it is
-easy for F* to reason logically that ``incr x == x + 1``. For such
-functions, more precise specifications in ``PURE`` may be an overkill.
+easy for F* to reason logically that ``incr x == x + 1`` at the
+uses of ``incr``. For such functions, more precise specifications
+in ``PURE`` may be an overkill.
 
 This becomes a little tricky for the properties of recursive
 functions. Given the following definition of list append in ``Tot``::
@@ -519,9 +521,9 @@ functions. Given the following definition of list append in ``Tot``::
     | hd::tl -> hd::(append tl l2)
 
 If we want to reason that ``length (append l1 l2) == length l1 +
-length l2``, we need to write a lemma using induction, and then either
-invoke the lemma everywhere this property is needed or add an
-:ref:`SMT pattern <UTH_smt_patterns>` to it.
+length l2``, we need to write a lemma using induction (no automatic
+induction), and then either invoke the lemma everywhere this property
+is needed or add an :ref:`SMT pattern <UTH_smt_patterns>` to it.
 
 Alternatively, we could give ``append`` a more precise specification using ``Pure``::
 
@@ -530,11 +532,13 @@ Alternatively, we could give ``append`` a more precise specification using ``Pur
                     (ensures fun r -> length r == length l1 + length l2)
     = ...
 
-And now since the property about ``length`` is *intrinsic* in the type of ``append``, no separate lemma is required. This property is available whenever ``append`` is called.
+And now since the property about ``length`` is *intrinsic* in the type
+of ``append``, no separate lemma is required. This property is
+available whenever ``append`` is called.
 
 Even for non-recursive cases, say ``let f x : Tot t = e``, it may be
 the case that some property ``p`` is true of ``e``, but proving it is
-non-trivial, and hence cannot be left to the solver. In such cases
+non-trivial. In such cases
 also, either we can write a separate lemma that proves ``p`` about
 ``e``, or refine the type of ``f`` to provide ``p`` in its
 postcondition.
@@ -547,11 +551,13 @@ reverse, etc. etc.), it is not prudent to stuff all these in the spec
 of ``append`` itself.
 
 So it is basically a case-by-case judgment call whether to use ``Tot`` or
-``PURE``. Hopefully the discussion above helps making this call.
+``PURE``. Hopefully the discussion above helps making this
+call. Finally, as with ``Tot``, it is also possible to do extrinsic
+proofs for ``PURE`` computations.
 
       
-Some more on Dijkstra monad
------------------------------
+More on Dijkstra monad
+--------------------------
 
 Dijkstra monad was first introduced in
 the paper `Verifying Higher-order Programs with the Dijkstra Monad
@@ -563,11 +569,44 @@ in their full generality, showing Dijkstra monads for different
 effects (pure, state, exceptions, etc.), and their
 composition with each other.
 
+Dijkstra monads have a deep connection with the continuation
+monad. Continuation monad models the `Continuation Passing Style
+<https://en.wikipedia.org/wiki/Continuation-passing_style/>`_ programming,
+where the control is passed to the callee explicitly in the form of a
+continuation. For a result type ``r``, the continuation monad is
+defined as follows::
 
+  type cont (a:Type) = (a -> r) -> r
+  let return (#a:Type) (x:a) : cont a = fun k -> k x
+  let bind (#a #b:Type) (f:cont a) (g:a -> cont b) : cont b =
+    fun k -> f (fun x -> g x k)
 
+If we squint a bit, we see that the ``wp`` monad we defined earlier,
+is nothing but a continuation into ``prop``::
+
+  type wp (a:Type) = (a -> prop) -> prop
+
+The `Dijkstra Monads for Free
+<https://www.fstar-lang.org/papers/dm4free/>`_ paper explores this
+connection in more detail. We will also learn more about this in later
+chapters.
 
 
 ``GHOST`` and ``DIV``
 ---------------------
 
+F* provides two more primitive wp-indexed effects: ``GHOST
+a wp`` and ``DIV a wp``, where the type of ``wp`` is same as that of
+the ``PURE`` effect. Similar to how ``PURE`` refines ``Tot``,
+``GHOST`` refines ``GTot`` and ``DIV`` refines ``Dv``. I.e., ``GHOST``
+effect may be used to specify erased computations more precisely than
+``GTot``, and similarly ``DIV`` may be used to specify potentially
+divergent computations more precisely than ``Dv``. F* also provides
+``Ghost a req ens`` and ``Div a req ens`` as the Hoare variants of
+``GHOST`` and ``DIV`` respectively.
 
+The tradeoffs of using ``GHOST`` vs ``GTot`` are similar to
+those for ``PURE`` vs ``Tot``---since ``GHOST`` and ``GTot`` are also
+part of the logical core of F*. However, for other effectful
+computation types, such as ``Dv``, more precise specifications at the
+definitions can be very useful.

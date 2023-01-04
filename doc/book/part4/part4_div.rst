@@ -127,6 +127,26 @@ F*. Yet, the fact that we can write non-terminating programs in F*,
 cleanly separated from the logical core, makes F* a turing-complete
 programming language.
 
+No extrinsic proofs for ``Dv`` computations
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+One important consequence of any effectful code, including ``Dv``,
+being outside the logical core of F* is that it is not possible to do
+:ref:`extrinsic proofs <Part1_intrinsic_extrinsic>` about
+effectful code. As a result, all logical properties of interest must
+be encoded in the specifications of the effectful code. For example,
+if we wrote a ``factorial`` definition in ``Dv``::
+
+  let rec factorial (x:int) : Dv int =
+    if x = 0
+    then 1
+    else x * factorial (x - 1)
+
+that is allowed to diverge if called with negative inputs, then with
+the following signature, we cannot prove after-the-fact that
+``factorial`` returns a positive integer if it terminates. To be able
+to reason so, we would need to refine the return type and prove it
+intrinsically.
 
 Lifting of ``Tot`` computations into ``Dv``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
