@@ -5,7 +5,7 @@ Computation Types and the Tot effect
 
 To specify effectful computations, F* has a notion of *computation
 types*. A computation type, denoted with ``C``, takes the form ``M t``
-where ``M`` is an effect label and ``t`` is the return type of the
+where ``M`` is an *effect label* and ``t`` is the return type of the
 computation. Roughly, an expression ``e`` can be typed as ``M t`` when
 executing ``e`` exhibits *at-most* the effect ``M`` and returns a
 value of type ``t``. We will refine this intuition as we go along. The
@@ -21,7 +21,7 @@ includes the total expressions we have been working with. Such
 expressions are classified in the default effect called ``Tot``, the
 effect of total computations that do not have any observable effect
 other than the input-output behavior. Any meaning or intuition that we
-have ascribed to ``e:t`` extends to ``e:Tot t``. For example,
+have ascribed to typing ``e:t`` extends to ``e:Tot t``. For example,
 if ``e:Tot t``, then at runtime, ``e`` terminates and produces a value
 of type ``t``.
 
@@ -39,33 +39,27 @@ definitions is also a shorthand, e.g., the :ref:`id function
 
 is a shorthand for::
 
-  let id (a:Type) (x:a) : Tot a = x
+  let id (a:Type) (x:a) : Tot a = x  //the return type annotation is a computation type
 
 and the type of ``id`` is ``a:Type -> a -> Tot a``. More generally,
 the return type annotations on ``let`` definitions are computation
 types ``C``.
 
-
-Function argument types
-^^^^^^^^^^^^^^^^^^^^^^^^
-
-Since all the expressions in F* have computation types, in general,
-whereever a type annotation appears that types an expression, it is a
-computation type annotation ``C``. When the effect label is omitted,
-it defaults to ``Tot``. We have seen such examples of arrow co-domains
-and return type annotations on ``let``.
-
 .. note::
 
-   One exception to this rule is the :ref:`explicit annotation syntax
-   <Part1_ch1_named_function>` ``e <: t``. F* allows writing ``e <:
-   C``, and checks that ``e`` indeed has type ``C``. But when the
+   The :ref:`explicit annotation syntax
+   <Part1_ch1_named_function>` ``e <: t`` behaves a little
+   differently. F* allows writing ``e <: C``, and checks that ``e``
+   indeed has type ``C``. But when the
    effect label is omitted, ``e <: t``, it is interpreted as ``e <: _
    t``, where the omitted effect label is inferred by F* and does not
    default to ``Tot``.
 
 
-However, the function argument types in F* are always value
+Function argument types
+^^^^^^^^^^^^^^^^^^^^^^^^
+
+Function argument types in F* are always value
 types. This is because F* has a `call-by-value
 <https://en.wikipedia.org/wiki/Evaluation_strategy/>`_ semantics. It
 means that the function arguments are evaluated at the function call
@@ -78,8 +72,8 @@ resulting value is passed to ``f``.
 .. note::
 
    We can think of ``f e`` when ``e`` is effectful, as ``let x = e in
-   f x``. In fact, this is what F* elaborates ``f e`` to, when ``e``
-   has a non-trivial effect.
+   f x``. In fact, internally this is what F* elaborates ``f e`` to,
+   when ``e`` has a non-trivial effect.
 
 .. note::
 

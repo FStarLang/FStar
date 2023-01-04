@@ -4,7 +4,7 @@ Divergence, or Non-Termination
 ===============================
 
 Consider programming a webserver, whose top-level loop takes a network
-socket as argument, reads off an HTTP request from it, services the
+socket as argument, reads an HTTP request from it, services the
 request, sends the response on the socket, and iterates. Can we program this top-level loop in F*? Let's
 try. Assume that we have the following API available::
 
@@ -48,8 +48,8 @@ the termination checker when typechecking ``Dv`` computations. So the
 recursive ``loop ()`` call does not require a decreasing termination
 metric and typechecks as is.
 
-Similarly, the ``main`` loop of our webserver can be annotated in the
-``Dv`` effect::
+Now the ``main`` function of our webserver can be annotated in the
+``Dv`` effect, and we can program an infinite loop::
 
   let main (s:socket) : Dv unit = ...
 
@@ -59,11 +59,11 @@ Partial correctness semantics of ``Dv``
 
 Recall :ref:`that <Part1>` we understand the meaning of F* typing
 ``e:t`` (and ``e:Tot t``) as a proof of correctness of ``e`` with
-specification ``t``. When we have ``e:t``, then at runtime, ``e``
+specification ``t``. If ``e:t``, then at runtime, ``e``
 terminates and produces a value of type ``t``. This notion is also
-called *total correctness*.
+called *total correctness* of ``e`` w.r.t. the specification ``t``.
 
-With ``Dv`` however, the semantics changes to *partial
+With ``Dv`` however, the interpretation changes to *partial
 correctness*---if F* typechecks an expression ``e:Dv t``, then at
 runtime, ``e`` may either diverge (i.e. run forever), or if it terminates
 then the resulting value has type ``t`` (i.e. it satisfies the
@@ -87,18 +87,18 @@ well-typed program in F*::
 
   let rec helper () : Dv (squash False) = helper ()
 
-that returns a proof of ``False`` (whenever it terminates). So now to
-prove any theorem, we only need to call ``helper``, and voilà, we are
-done!
+that returns a proof of ``False`` (whenever it terminates). So now, to
+prove any theorem in F*, we can call ``helper``, and voilà, we are done!
 
 Thankfully not so, the effect system of F* itself comes to the rescue.
 
 The effect system carefully separates total computations (in ``Tot``)
 from other effectful computations, including ``Dv``. There are several
 aspects to it. As mentioned earlier, all expressions are typechecked
-to a computation type, with an effect label. Further, the effect
-system ensures that ``Tot`` computations cannot have effectful
-subcomputations or that effectful computations are not typeable as
+to a computation type with an effect label, where the effect label
+soundly captures all the effects of the typed expression. Further, the
+effect system ensures that ``Tot`` computations cannot have effectful
+subcomputations and that effectful computations are not typeable as
 ``Tot``.
 
 Relying on this separation, F* checks that the logical core can refer
@@ -142,11 +142,14 @@ if we wrote a ``factorial`` definition in ``Dv``::
     then 1
     else x * factorial (x - 1)
 
-that is allowed to diverge if called with negative inputs, then with
-the following signature, we cannot prove after-the-fact that
+that diverges when called with negative inputs, then with
+the given signature, we cannot prove after-the-fact that
 ``factorial`` returns a positive integer if it terminates. To be able
 to reason so, we would need to refine the return type and prove it
-intrinsically.
+intrinsically::
+
+  let rec factorial (x:int) : Dv (y:int{y >= 1}) = ...
+
 
 Lifting of ``Tot`` computations into ``Dv``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -187,4 +190,4 @@ discuss user-defined effects.
 .. note::
 
    The logical core of F* includes the ghost effect, so it is also
-   separate from the ``Dv`` effect.
+   kept separate from the ``Dv`` effect.

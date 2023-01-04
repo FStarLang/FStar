@@ -21,7 +21,7 @@ write the following specification for the ``factorial`` function::
     else x * factorial (x - 1)
 
 To understand what the specification means, let's start with a primer
-on Hoare Logic and Weakest Precondition-based reasoning. If the reader
+on Hoare Logic and Weakest Precondition calculus. If the reader
 is familiar with these, they may safely skip the next two subsections.
 
 
@@ -107,7 +107,7 @@ This rule also does not have premise. It says that, ``P`` holds after
 executing ``x := e``, if ``P[e/x]``, i.e. ``P`` with ``x`` substituted
 with ``e``, holds before executing the statement.
 
-For example, if we wanted to reason that after ``x := y + 1``, ``x >
+For example, to prove that after ``x := y + 1``, ``x >
 0`` holds, then the rule says that ``(x > 0)[(y + 1)/x]`` should hold
 before the assigment. Simplifying a little, if ``y > -1``, which is
 what we would expect. So, applying this rule, we can derive that the
@@ -140,7 +140,7 @@ The rule for conditionals is as follows::
   ------------------------------------- :: [If]
      {P} if e then s1 else s2 {Q}
 
-Intuitively, the rule says that to derive the postcondition ``Q``
+The rule says that to derive the postcondition ``Q``
 from the conditional statement, we should be able to derive it from
 each of the branch. In addition, since we know that ``s1`` executes
 only when ``e`` is true, ``e`` can be added to the precondition of
@@ -158,12 +158,13 @@ The rule for ``while`` requires a *loop invariant*::
   {I} while e s {I && ~e}
 
 
-Here, the loop invariant ``I`` is an assertion that holds before the
+The loop invariant ``I`` is an assertion that holds before the
 loop starts, is maintained by each iteration of the loop, and is
 provided as the postcondition of the loop. While the rule uses the
 loop invariant *declaratively*, without worrying about where the
 invariant comes from, an actual tool that implements Hoare Logic has
-to either infer it or require it as an annotation from the user.
+to either infer or require as an annotation from the
+user a suitable loop invariant.
 
 This rule establishes partial correctness, it does not ensure that
 the loop terminates. It is possible to augment the rule with
@@ -292,8 +293,7 @@ A Dijkstra Monad for Pure Computations
 F* provides a weakest precondition calculus for reasoning about pure
 computations. The calculus is based on *Dijkstra Monad*, a
 construction first introduced in `this paper
-<https://www.microsoft.com/en-us/research/publication/verifying-higher-order-programs-with-the-dijkstra-monad/>`_
-. In this chapter, we will learn about Dijkstra Monad and its usage in
+<https://www.microsoft.com/en-us/research/publication/verifying-higher-order-programs-with-the-dijkstra-monad/>`_. In this chapter, we will learn about Dijkstra Monad and its usage in
 specifying and proving pure programs in F*. Let's begin by adapting
 the weakest precondition calculus from the previous section to the
 functional setting of F*.
@@ -336,7 +336,7 @@ the names ``return_wp`` and ``bind_wp``). :ref:`Recall
 <Part2_monad_intro>` that a monad consists of a type operator
 (``wp``), a return function (``return_wp``), and a bind function
 (``bind_wp``), and satisfies the three monad laws over a suitable
-equivalence relation. For ``wp``, we can choose iff as the equivalence
+equivalence relation. For ``wp``, we can choose ``iff`` as the equivalence
 relation::
 
   let wp_equiv (#a:Type) (wp1 wp2:wp a) : prop = forall post. wp1 post <==> wp2 post
@@ -377,14 +377,14 @@ The ``PURE`` effect
 ^^^^^^^^^^^^^^^^^^^^
 
 F* provides a primitive ``PURE`` effect that allows writing and
-typechecking Dijkstra monad specifications for *pure* computations. A
+typechecking Dijkstra monad specifications for pure computations. A
 computation type in the ``PURE`` effect has the signature ``PURE t
 wp``, where ``t`` is the return type of the computation and ``wp:wp
 t``. The ``wp`` argument is also called an *index* of the ``PURE``
 effect. The interpretation of ``e:PURE t wp`` is as expected: ``wp``
 is the predicate transformer for ``e``. In other words, for any
 postcondition ``p``, if ``wp p`` holds, then ``e`` terminates to a
-value ``v:t``, and ``p v`` holds.
+value ``v:t``, it does not have any side-effects, and ``p v`` holds.
 
 Let's look at some examples of writing and typechecking ``PURE``::
 
@@ -603,7 +603,9 @@ effect may be used to specify erased computations more precisely than
 ``GTot``, and similarly ``DIV`` may be used to specify potentially
 divergent computations more precisely than ``Dv``. F* also provides
 ``Ghost a req ens`` and ``Div a req ens`` as the Hoare variants of
-``GHOST`` and ``DIV`` respectively.
+``GHOST`` and ``DIV`` respectively. As with ``Tot`` and ``Dv``, F*
+automatically lifts ``PURE`` computations to ``GHOST`` and ``DIV``
+whenever needed.
 
 The tradeoffs of using ``GHOST`` vs ``GTot`` are similar to
 those for ``PURE`` vs ``Tot``, since it is possible to do extrinsic
