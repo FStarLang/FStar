@@ -17,7 +17,7 @@ open Steel.ST.Util
 // When we add both these to mini steel syntax
 //
 unfold
-let meq2 (a:Type0) (x y:a) : prop = Prims.eq2 x y
+let meq2 (#a:Type0) (x y:a) : prop = Prims.eq2 x y
 
 unfold let eq_vprop (p1 p2:vprop) : prop = Prims.eq2 p1 p2
 
@@ -117,7 +117,7 @@ val read (n:erased) (r:ref)
   : stt u32 (pts_to r n) (fun x -> pts_to r (hide x))
 
 val read_refine (n:erased) (r:ref)
-  : stt (x:u32{meq2 u32 (reveal n) x}) (pts_to r n) (fun x -> pts_to r n)
+  : stt (x:u32{meq2 (reveal n) x}) (pts_to r n) (fun x -> pts_to r n)
 
 val read_alt (n:erased) (r:ref)
   : stt u32 (pts_to r n) (fun x -> pts_to r n)

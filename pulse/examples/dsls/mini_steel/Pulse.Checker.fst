@@ -37,14 +37,21 @@ let (let?) (f:option 'a) (g:'a -> T.Tac (option 'b)) : T.Tac (option 'b) =
   | None -> None
   | Some x -> g x
 
+let rec map_t (g:'a -> T.Tac (option 'b)) (l:list 'a) : T.Tac (option (list 'b)) = 
+  match l with
+  | [] -> Some []
+  | hd::tl -> 
+    let? hd = g hd in
+    let? tl = map_t g tl in
+    Some (hd :: tl)
+    
 let is_stt (t:R.term)
   : Pure (option (R.universe & R.typ & R.term & R.term))
          (requires True)
          (ensures fun r ->
             Some? r ==> (let u, res, pre, post = Some?.v r in
-                       let args = [res; pre; mk_abs res post] in
+                       let args = [res; pre; mk_abs res R.Q_Explicit post] in
                        t == mk_stt_app u args)) =
-          
   let open R in
   let hd, args = collect_app t in
   match inspect_ln hd with
@@ -67,7 +74,7 @@ let is_stt (t:R.term)
                       snd pre == Q_Explicit      /\
                       snd post == Q_Explicit);
 
-              let l = [fst res; fst pre; mk_abs (fst res) body] in
+              let l = [fst res; fst pre; mk_abs (fst res) R.Q_Explicit body] in
               assume (args_of l == args);
               // probably need some lemma for R.mk_app and R.collect_app
               assume (t == mk_stt_app u l);
@@ -75,6 +82,51 @@ let is_stt (t:R.term)
             | _ -> None)
          | _ -> None
     else None
+  | _ -> None
+
+let rec readback_universe (u:R.universe)
+  : o:option universe{ Some? o ==> elab_universe (Some?.v o) == u } =
+  match R.inspect_universe u with
+  | R.Uv_Zero ->
+    Some U_zero
+
+  | R.Uv_Succ u' -> (
+    match readback_universe u' with
+    | None -> None
+    | Some u' -> 
+      Some (U_succ u')
+    )
+
+  | R.Uv_Name (s, r) ->
+    assume (r == Refl.Typing.Builtins.dummy_range);
+    Some (U_var s)
+
+  | R.Uv_Max [u1; u2] -> (
+    assume (u2 << u);     //??
+    let u1' = readback_universe u1 in
+    let u2' = readback_universe u2 in
+    match u1', u2' with
+    | Some u1', Some u2' ->
+      Some (U_max u1' u2')
+    | _ -> None
+    )
+
+  | _ -> None
+
+let rec readback_universes (us:list R.universe)
+  : o:option (list universe) { Some? o ==> List.Tot.map elab_universe (Some?.v o) == us }
+  = match us with
+    | [] -> Some []
+    | hd::tl -> 
+      match readback_universe hd with
+      | None -> None
+      | Some hd -> 
+        match readback_universes tl with
+        | None -> None
+        | Some tl -> Some (hd::tl)
+    
+let readback_qual = function
+  | R.Q_Implicit -> Some Implicit
   | _ -> None
 
 let rec readback_ty (t:R.term)
@@ -109,16 +161,22 @@ let rec readback_ty (t:R.term)
     then Some Tm_Emp
     else Some (Tm_FVar (inspect_fv fv))
 
-  | Tv_UInst _ _ ->
-    T.fail ("readback_ty: Tv_UInst is not yet handled: " ^ T.term_to_ast_string t)
+  | Tv_UInst fv us -> (
+    let fv = inspect_fv fv in
+    match readback_universes us with
+    | None -> None
+    | Some us' -> Some (Tm_UInst fv us')
+    )
 
-  | Tv_App hd arg ->
+
+  | Tv_App hd (a, q) ->
     let? hd' = readback_ty hd in
-    // R.aqualv is noeq, we should add implicits to mini steel
-    assume (snd arg == R.Q_Explicit);
-    let? arg' = readback_ty (fst arg) in
-    Some (Tm_PureApp hd' arg' <: ty:pure_term {elab_term ty == Some t})
-
+    (match q with
+     | R.Q_Meta _ -> None
+     | _ -> 
+       let? arg' = readback_ty a in
+       Some (Tm_PureApp hd' (readback_qual q) arg' <: ty:pure_term {elab_term ty == Some t}))
+  
   | Tv_Refine bv phi ->
     let bv_view = inspect_bv bv in
     let? ty = readback_ty bv_view.bv_sort in
@@ -129,25 +187,30 @@ let rec readback_ty (t:R.term)
 
   | Tv_Abs _ _ -> T.fail "readback_ty: unexpected Tv_Abs"
 
-  | Tv_Arrow b c ->
+  | Tv_Arrow b c -> (
     let bv, (aq, attrs) = inspect_binder b in
     assume (attrs == []);
-    assume (aq == R.Q_Explicit);
-    RT.pack_inspect_binder b;  // This does not have SMTPat
-    let bv_view = inspect_bv bv in
-    assume (bv_view.bv_ppname == "_" /\ bv_view.bv_index == 0);
-     
-    let c_view = inspect_comp c in
-    (match c_view with
-     | C_Total c_t ->
-      let? b_ty' = readback_ty bv_view.bv_sort in
-      let? c' = readback_comp c_t in
-      Some (Tm_Arrow {binder_ty=b_ty';binder_ppname=bv_view.bv_ppname} c' <: ty:pure_term{ elab_term ty == Some t})
-     | _ -> None)
+    match aq with
+    | R.Q_Meta _ -> None
+    | _ -> 
+      let q = readback_qual aq in
+      RT.pack_inspect_binder b;  // This does not have SMTPat
+      let bv_view = inspect_bv bv in
+      assume (bv_view.bv_ppname == "_" /\ bv_view.bv_index == 0);
+      let c_view = inspect_comp c in
+      (match c_view with
+       | C_Total c_t ->
+         let? b_ty' = readback_ty bv_view.bv_sort in
+         let? c' = readback_comp c_t in
+         Some (Tm_Arrow {binder_ty=b_ty';binder_ppname=bv_view.bv_ppname} q c' <: ty:pure_term{ elab_term ty == Some t})
+      | _ -> None)
+    )
 
-  | Tv_Type u ->
-    let? u' = readback_universe u in
-    Some (Tm_Type u' <: ty:pure_term{ elab_term ty == Some t })
+  | Tv_Type u -> (
+    match readback_universe u with
+    | None -> None
+    | Some u' -> Some (Tm_Type u' <: ty:pure_term{ elab_term ty == Some t })
+    )
 
   | Tv_Const c ->
     (match c with
@@ -184,34 +247,19 @@ and readback_comp (t:R.term)
 
   let is_stt_opt = is_stt t in
   match is_stt_opt with
-  | Some (u', res, pre, post) ->
-    let? u'' = readback_universe u' in
-    let? res' = readback_ty res in
-    let? pre' = readback_ty pre in
-    let? post' = readback_ty post in
-    Some (C_ST ({u=u''; res=res'; pre=pre';post=post'}) <: c:comp{ elab_comp c == Some t })
+  | Some (u', res, pre, post) -> (
+    match readback_universe u' with
+    | None -> None
+    | Some u'' ->
+      let? res' = readback_ty res in
+      let? pre' = readback_ty pre in
+      let? post' = readback_ty post in
+      Some (C_ST ({u=u''; res=res'; pre=pre';post=post'}) <: c:comp{ elab_comp c == Some t })
+    )
 
   | _ ->
     let? t' = readback_ty t in
     Some (C_Tot t' <: c:comp{ elab_comp c == Some t })
-
-and readback_universe (u:R.universe)
-  : T.Tac (option (u':universe{ elab_universe u' == u })) =
-
-  match R.inspect_universe u with
-  | R.Uv_Zero -> Some U_zero
-  | R.Uv_Succ u' ->
-    let? u' = readback_universe u' in
-    Some (U_succ u' <: u':universe{ elab_universe u' == u })
-  | R.Uv_Name (s, r) ->
-    assume (r == Refl.Typing.Builtins.dummy_range);
-    Some (U_var s)
-  | R.Uv_Max [u1; u2] ->
-    let? u1' = readback_universe u1 in
-    let? u2' = readback_universe u2 in
-    Some (U_max u1' u2' <: u':universe{ elab_universe u' == u })
-
-  | _ -> T.fail "readback_universe: unexpected universe"
 
 let check_universe (f0:RT.fstar_top_env) (g:env) (t:term)
   : T.Tac (_:(u:universe & universe_of f0 g t u) { is_pure_term t })
@@ -382,7 +430,7 @@ let check_one_vprop f g (p q:pure_term) : T.Tac (option (vprop_equiv f g p q)) =
   else
     let check_extensional_equality =
       match p, q with
-      | Tm_PureApp hd_p _, Tm_PureApp hd_q _ ->
+      | Tm_PureApp hd_p _ _, Tm_PureApp hd_q _ _ ->
         hd_p = hd_q
       | _, _ -> false in
     if check_extensional_equality
@@ -753,7 +801,7 @@ let check_abs
   : T.Tac (c:pure_comp { C_ST? c ==> comp_pre c == pre } &
            src_typing f g t c) =
   match t with  
-  | Tm_Abs {binder_ty=t;binder_ppname=ppname} pre_hint body post_hint ->  (* {pre}  (fun (x:t) -> body) : ? { pre } *)
+  | Tm_Abs {binder_ty=t;binder_ppname=ppname} qual pre_hint body post_hint ->  (* {pre}  (fun (x:t) -> body) : ? { pre } *)
     let (| u, t_typing |) = check_universe f g t in
     let x = fresh g in
     let g' = (x, Inl t) :: g in
@@ -768,12 +816,12 @@ let check_abs
 
       let (| c_body, body_typing |) = check f g' (open_term body x) pre (E pre_typing) post in
           
-      let tt = T_Abs g ppname x t u body c_body pre_hint post_hint t_typing body_typing in
-      let tres = Tm_Arrow {binder_ty=t;binder_ppname=ppname} (close_comp c_body x) in
+      let tt = T_Abs g ppname x qual t u body c_body pre_hint post_hint t_typing body_typing in
+      let tres = Tm_Arrow {binder_ty=t;binder_ppname=ppname} qual (close_comp c_body x) in
       (| C_Tot tres, tt |)
     | _ -> T.fail "bad hint"
 
-#push-options "--z3rlimit_factor 4 --fuel 2 --ifuel 1"
+#push-options "--z3rlimit_factor 8 --fuel 2 --ifuel 1"
 let check_bind
   (f:RT.fstar_top_env)
   (g:env)
@@ -860,8 +908,9 @@ let rec check =
   | Tm_BVar _ -> T.fail "not locally nameless"
   | Tm_Var _
   | Tm_FVar _ 
+  | Tm_UInst _ _
   | Tm_Constant _
-  | Tm_PureApp _ _
+  | Tm_PureApp _ _ _
   | Tm_Let _ _ _ ->
     let (| u, ty, uty, d |) = check_tot_univ f g t in
     let c = return_comp u ty t in
@@ -873,23 +922,27 @@ let rec check =
   | Tm_Star _ _ 
   | Tm_ExistsSL _ _
   | Tm_ForallSL _ _
-  | Tm_Arrow _ _
+  | Tm_Arrow _ _ _
   | Tm_Type _
   | Tm_VProp
   | Tm_Refine _ _ ->
     let (| ty, d_ty |) = check_tot f g t in
     (| C_Tot ty, d_ty |)
 
-  | Tm_Abs _ _ _ _ -> check_abs f g t pre pre_typing post_hint check
-  | Tm_STApp head arg ->
+  | Tm_Abs _ _ _ _ _ -> check_abs f g t pre pre_typing post_hint check
+  | Tm_STApp head qual arg ->
     let (| ty_head, dhead |) = check_tot f g head in
     begin
     match ty_head with
-    | Tm_Arrow {binder_ty=formal;binder_ppname=ppname} (C_ST res) ->
+    | Tm_Arrow {binder_ty=formal;binder_ppname=ppname} bqual (C_ST res) ->
       let darg = check_tot_with_expected_typ f g arg formal in
-      let d = T_STApp g head ppname formal (C_ST res) arg dhead (E darg) in
-      opening_pure_comp_with_pure_term (C_ST res) arg 0;
-      repack (try_frame_pre pre_typing d) true
+      if bqual <> qual
+      then T.fail "Unexpected qualifier"
+      else (
+        let d = T_STApp g head ppname formal qual (C_ST res) arg dhead (E darg) in
+        opening_pure_comp_with_pure_term (C_ST res) arg 0;
+        repack (try_frame_pre pre_typing d) true
+      )
     | _ -> T.fail "Unexpected head type in impure application"
     end
 

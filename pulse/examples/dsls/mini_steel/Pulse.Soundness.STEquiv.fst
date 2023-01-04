@@ -22,7 +22,7 @@ let stt_vprop_equiv_closing (t0 t1:R.term) (x:var)
 let app0 t = R.mk_app t [bound_var 0, R.Q_Explicit]
 
 let abs_and_app0 (ty:R.term) (b:R.term) =
-    R.mk_app (mk_abs ty b) [bound_var 0, R.Q_Explicit]
+    R.mk_app (mk_abs ty R.Q_Explicit b) [bound_var 0, R.Q_Explicit]
 
 
 // x:ty -> vprop_equiv p q ~ x:ty -> vprop_equiv ((fun y -> p) x) ((fun y -> q) x)
@@ -73,7 +73,7 @@ let inst_sub_stt (#g:R.env) (#u:_) (#a #pre1 #pre2 #post1 #post2 #r:R.term)
   : GTot (RT.typing g (mk_sub u a pre1 pre2 post1 post2 r) (mk_stt_app u [a;pre2;post2]))
   = admit()
 
-let vprop_arrow (t:pure_term) : pure_term = Tm_Arrow (null_binder t) (C_Tot Tm_VProp)
+let vprop_arrow (t:pure_term) : pure_term = Tm_Arrow (null_binder t) None (C_Tot Tm_VProp)
 
 #push-options "--fuel 2 --ifuel 1 --z3rlimit_factor 4 --query_stats"
 let st_equiv_soundness (f:stt_env)

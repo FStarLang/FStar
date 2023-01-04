@@ -40,24 +40,28 @@ type nm = {
   nm_ppname : string
 }
 
+type qualifier =
+  | Implicit
+  
 type term =
   // | Tm_Embed    : R.term -> term // a host term included as is in Pulse
   | Tm_BVar     : bv -> term
   | Tm_Var      : nm -> term
   | Tm_FVar     : l:R.name -> term
+  | Tm_UInst    : l:R.name -> us:list universe -> term
   | Tm_Constant : c:constant -> term
   | Tm_Refine   : b:binder -> term -> term
-  | Tm_Abs      : b:binder -> pre_hint:vprop -> body:term -> opost:option vprop -> term  //pre and post hints
-  | Tm_PureApp  : head:term -> arg:term -> term
+  | Tm_Abs      : b:binder -> q:option qualifier -> pre_hint:vprop -> body:term -> opost:option vprop -> term  //pre and post hints
+  | Tm_PureApp  : head:term -> arg_qual:option qualifier -> arg:term -> term
   | Tm_Let      : t:term -> e1:term -> e2:term -> term  
-  | Tm_STApp    : head:term -> arg:term -> term  
+  | Tm_STApp    : head:term -> arg_qual:option qualifier -> arg:term -> term  
   | Tm_Bind     : e1:term -> e2:term -> term
   | Tm_Emp      : term
   | Tm_Pure     : p:term -> term (* pure p : vprop *)
   | Tm_Star     : l:vprop -> r:vprop -> term
   | Tm_ExistsSL : t:term -> body:vprop -> term
   | Tm_ForallSL : t:term -> body:vprop -> term
-  | Tm_Arrow    : b:binder -> body:comp -> term 
+  | Tm_Arrow    : b:binder -> q:option qualifier -> body:comp -> term 
   | Tm_Type     : universe -> term
   | Tm_VProp    : term
   | Tm_If       : b:term -> then_:term -> else_:term -> term
@@ -85,15 +89,16 @@ let rec freevars (t:term)
   = match t with
     | Tm_BVar _
     | Tm_FVar  _
+    | Tm_UInst _ _
     | Tm_Constant _
     | Tm_Emp
     | Tm_Type _
     | Tm_VProp -> Set.empty
     | Tm_Var nm -> Set.singleton nm.nm_index
     | Tm_Refine b body
-    | Tm_Abs b _ body _ -> Set.union (freevars b.binder_ty) (freevars body)  // Why is this not taking freevars of pre (and post)?
-    | Tm_PureApp t1 t2
-    | Tm_STApp t1 t2
+    | Tm_Abs b _ _ body _ -> Set.union (freevars b.binder_ty) (freevars body)  // Why is this not taking freevars of pre (and post)?
+    | Tm_PureApp t1 _ t2
+    | Tm_STApp t1 _ t2
     | Tm_Star  t1 t2
     | Tm_ExistsSL t1 t2
     | Tm_ForallSL t1 t2 
@@ -105,8 +110,8 @@ let rec freevars (t:term)
 
     | Tm_Pure p -> freevars p
 
-    | Tm_Arrow b body -> Set.union (freevars b.binder_ty) (freevars_comp body)
-  
+    | Tm_Arrow b _ body -> Set.union (freevars b.binder_ty) (freevars_comp body)
+
 and freevars_comp (c:comp) : Set.set var =
   match c with
   | C_Tot t -> freevars t
@@ -118,6 +123,7 @@ let rec ln' (t:term) (i:int) =
   | Tm_BVar {bv_index=j} -> j <= i
   | Tm_Var _
   | Tm_FVar _
+  | Tm_UInst _ _
   | Tm_Constant _  
   | Tm_Emp
   | Tm_Type _
@@ -127,7 +133,7 @@ let rec ln' (t:term) (i:int) =
     ln' b.binder_ty i &&
     ln' phi (i + 1)
 
-  | Tm_Abs b pre_hint body post ->
+  | Tm_Abs b _ pre_hint body post ->
     ln' b.binder_ty i &&
     ln' pre_hint (i + 1) &&
     ln' body (i + 1) &&
@@ -135,8 +141,8 @@ let rec ln' (t:term) (i:int) =
      | None -> true
      | Some post -> ln' post (i + 2))
 
-  | Tm_STApp t1 t2
-  | Tm_PureApp t1 t2
+  | Tm_STApp t1 _ t2
+  | Tm_PureApp t1 _ t2
   | Tm_Star t1 t2
   | Tm_Bind t1 t2 ->
     ln' t1 i &&
@@ -155,7 +161,7 @@ let rec ln' (t:term) (i:int) =
     ln' t i &&
     ln' t (i + 1)
     
-  | Tm_Arrow b c ->
+  | Tm_Arrow b _ c ->
     ln' b.binder_ty i &&
     ln'_comp c (i + 1)
     
@@ -193,6 +199,7 @@ let rec open_term' (t:term) (v:term) (i:index)
       else t
     | Tm_Var _
     | Tm_FVar _
+    | Tm_UInst _ _
     | Tm_Constant _
     | Tm_Type _
     | Tm_VProp
@@ -202,16 +209,16 @@ let rec open_term' (t:term) (v:term) (i:index)
       Tm_Refine {b with binder_ty=open_term' b.binder_ty v i}
                 (open_term' phi v (i + 1))
 
-    | Tm_Abs b pre_hint body post ->
-      Tm_Abs {b with binder_ty=open_term' b.binder_ty v i}
+    | Tm_Abs b q pre_hint body post ->
+      Tm_Abs {b with binder_ty=open_term' b.binder_ty v i} q
              (open_term' pre_hint v (i + 1))
              (open_term' body v (i + 1))
              (match post with
               | None -> None
               | Some post -> Some (open_term' post v (i + 2)))
 
-    | Tm_PureApp head arg ->
-      Tm_PureApp (open_term' head v i)
+    | Tm_PureApp head q arg ->
+      Tm_PureApp (open_term' head v i) q
                  (open_term' arg v i)
                  
     | Tm_Let t e1 e2 ->
@@ -219,8 +226,8 @@ let rec open_term' (t:term) (v:term) (i:index)
              (open_term' e1 v i)
              (open_term' e2 v (i + 1))
              
-    | Tm_STApp head arg ->
-      Tm_STApp (open_term' head v i)
+    | Tm_STApp head q arg ->
+      Tm_STApp (open_term' head v i) q
                (open_term' arg v i)
 
     | Tm_Bind e1 e2 ->
@@ -242,8 +249,8 @@ let rec open_term' (t:term) (v:term) (i:index)
       Tm_ForallSL (open_term' t v i)
                   (open_term' body v (i + 1))
     
-    | Tm_Arrow b c ->
-      Tm_Arrow {b with binder_ty=open_term' b.binder_ty v i}
+    | Tm_Arrow b q c ->
+      Tm_Arrow {b with binder_ty=open_term' b.binder_ty v i} q
                (open_comp' c v (i + 1))
 
     | Tm_If b then_ else_ ->
@@ -276,6 +283,7 @@ let rec close_term' (t:term) (v:var) (i:index)
     
     | Tm_BVar _
     | Tm_FVar _
+    | Tm_UInst _ _
     | Tm_Constant _
     | Tm_Type _
     | Tm_VProp
@@ -285,16 +293,16 @@ let rec close_term' (t:term) (v:var) (i:index)
       Tm_Refine {b with binder_ty=close_term' b.binder_ty v i}
                 (close_term' phi v (i + 1))
 
-    | Tm_Abs b pre_hint body post ->
-      Tm_Abs {b with binder_ty=close_term' b.binder_ty v i}
+    | Tm_Abs b q pre_hint body post ->
+      Tm_Abs {b with binder_ty=close_term' b.binder_ty v i} q
              (close_term' pre_hint v (i + 1))
              (close_term' body v (i + 1))
              (match post with
               | None -> None
               | Some post -> Some (close_term' post v (i + 2)))
 
-    | Tm_PureApp head arg ->
-      Tm_PureApp (close_term' head v i)
+    | Tm_PureApp head q arg ->
+      Tm_PureApp (close_term' head v i) q
                  (close_term' arg v i)
                  
     | Tm_Let t e1 e2 ->
@@ -302,8 +310,8 @@ let rec close_term' (t:term) (v:var) (i:index)
              (close_term' e1 v i)
              (close_term' e2 v (i + 1))
              
-    | Tm_STApp head arg ->
-      Tm_STApp (close_term' head v i)
+    | Tm_STApp head q arg ->
+      Tm_STApp (close_term' head v i) q
                (close_term' arg v i)
 
     | Tm_Bind e1 e2 ->
@@ -325,8 +333,8 @@ let rec close_term' (t:term) (v:var) (i:index)
       Tm_ForallSL (close_term' t v i)
                   (close_term' body v (i + 1))
     
-    | Tm_Arrow b c ->
-      Tm_Arrow {b with binder_ty=close_term' b.binder_ty v i}
+    | Tm_Arrow b q c ->
+      Tm_Arrow {b with binder_ty=close_term' b.binder_ty v i} q
                (close_comp' c v (i + 1))
 
     | Tm_If b then_ else_ ->

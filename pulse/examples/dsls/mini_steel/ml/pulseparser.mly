@@ -42,14 +42,14 @@
       | Some (n, _) -> Z.of_int n
       | None -> failwith ("lookup_var_index, name not found " ^ s)
 
-    let mk_app (head:term) (args:term list) : term =
+    let mk_app (head:term) (args:(qualifier option * term) list) : term =
       if List.length args = 0
-      then Tm_STApp (head, Tm_Constant Unit)
+      then Tm_STApp (head, None, Tm_Constant Unit)
       else
-        let rec aux (acc:term) (args:term list) : term =
+        let rec aux (acc:term) (args:(qualifier option * term) list) : term =
           match args with
-          | [arg] -> Tm_STApp (acc, arg)
-          | arg::args -> aux (Tm_PureApp (acc, arg)) args in
+          | [q, arg] -> Tm_STApp (acc, q, arg)
+          | (q, arg)::args -> aux (Tm_PureApp (acc, q, arg)) args in
         aux head args
 
     let mk_fvar (l:string list) : term = Tm_FVar l
@@ -58,33 +58,37 @@
       let l = List.rev l in
       List.rev (List.tl l), List.hd l
     
-    let mk_abs (bs:binder list) (pre:term) (body:term) (post_opt:term option) : term =
-      let bs, b = unsnoc bs in
+    let mk_abs (bs:(qualifier option * binder) list) (pre:term) (body:term) (post_opt:term option) : term =
+      let bs, (q, b) = unsnoc bs in
       let b_index = lookup_var_index b.binder_ppname in
       let t = Tm_Abs
                 (b,
+                 q,
                  close_term pre b_index,
                  close_term body b_index,
                  (match post_opt with
                   | None -> None
                   | Some post ->
                     Some (close_term' post b_index (Z.of_int 1)))) in
-      List.fold_right (fun b t ->
+      List.fold_right (fun (q, b) t ->
                         let t = close_term t (lookup_var_index b.binder_ppname) in
-                        Tm_Abs (b, Tm_Emp, t, None)) bs t
+                        Tm_Abs (b, q, Tm_Emp, t, None)) bs t
 
-    let mk_pure_app (l:term list) : term =
-      if List.length l < 2
-      then failwith "mk_pure_app: list length < 2"
-      else List.fold_left (fun t e ->
-        Tm_PureApp (t, e)) (List.hd l) (List.tl l)
+    let mk_pure_app (head:term) (l:(qualifier option * term) list) : term =
+      match l with
+      | [] -> failwith "mk_pure_app: no arguments"
+      | _ ->
+        List.fold_left
+                (fun t (q, e) -> Tm_PureApp (t, q, e))
+                head
+                l
 %}
 
 %token<string> IDENT
 
 %token EOF
 
-%token FUN LET RETURN
+%token FUN LET RETURN HASH_IMPLICIT
 %token TRUE FALSE
 %token LPAREN RPAREN COMMA DOT COLON RARROW LBRACE RBRACE EQUALS SEMICOLON
 
@@ -103,14 +107,25 @@ constant:
 stapp:
   | head=pure_expr LPAREN args=arguments RPAREN    { mk_app head args }
 
+arg:
+  | q=option(qualifier) e=pure_expr
+    { (q, e) }
+    
 arguments:
-  | es=separated_nonempty_list(COMMA, pure_expr)    { es }
+  | es=separated_nonempty_list(COMMA, arg)    { es }
 
 path:
   | id1=IDENT DOT id2=IDENT { [id1; id2] }
   | id=IDENT DOT p=path { id::p }
 
 binder:
+  | LPAREN q=option(qualifier) s=IDENT COLON t=pure_expr RPAREN
+    {
+      begin_name_scope s;
+      q, {binder_ty=t; binder_ppname=s}
+    }
+
+binder_noqual:
   | LPAREN s=IDENT COLON t=pure_expr RPAREN
     {
       begin_name_scope s;
@@ -143,8 +158,9 @@ binders:
 lambda:
   | FUN b=binder RARROW e=expr
     {
+      let q, b = b in
       let e = close_term e (lookup_var_index b.binder_ppname) in
-      Tm_Abs (b, Tm_Emp, e, None)
+      Tm_Abs (b, q, Tm_Emp, e, None)
     }
 
   | FUN bs=binders LBRACE pre=pure_expr RBRACE RARROW e=expr
@@ -157,8 +173,15 @@ lambda:
       mk_abs bs pre e (Some post)
     }
 
+qualifier:
+  | HASH_IMPLICIT { Implicit }
+
+qualified_arg:
+  | q=option(qualifier) e=pure_atomic_expr
+    { (q, e) }
+  
 pureapp:
-  | e1=pure_atomic_expr e2=pure_atomic_expr es=list(pure_atomic_expr)    { mk_pure_app (e1::e2::es) }
+  | e1=pure_atomic_expr e2=qualified_arg es=list(qualified_arg)    { mk_pure_app e1 (e2::es) }
 
 expr:
   | RETURN e=pure_expr      { e }
@@ -181,7 +204,7 @@ pure_expr:
   | e=pure_atomic_expr                    { e }
   | e=pureapp                             { e }
   | e1=pure_expr STAR e2=pure_expr        { Tm_Star (e1, e2) }
-  | b=binder LBRACE e=pure_expr RBRACE
+  | b=binder_noqual LBRACE e=pure_expr RBRACE
     {
       let e = close_term e (lookup_var_index b.binder_ppname) in
       Tm_Refine (b, e)

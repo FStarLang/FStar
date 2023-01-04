@@ -46,9 +46,9 @@ let vprop_eq_tm t1 t2 =
   let t = pack_ln (Tv_App t (t2, Q_Explicit)) in
   t
 
-let mk_abs ty t : R.term =  R.pack_ln (R.Tv_Abs (binder_of_t_q ty R.Q_Explicit) t)
+let mk_abs ty qual t : R.term =  R.pack_ln (R.Tv_Abs (binder_of_t_q ty qual) t)
 
-let mk_abs_with_name s ty t : R.term =  R.pack_ln (R.Tv_Abs (binder_of_t_q_s ty R.Q_Explicit s) t)
+let mk_abs_with_name s ty qual t : R.term =  R.pack_ln (R.Tv_Abs (binder_of_t_q_s ty qual s) t)
 
 let rec elab_universe (u:universe)
   : Tot R.universe
@@ -60,7 +60,7 @@ let rec elab_universe (u:universe)
 
 let mk_st (u:universe) (res pre post:R.term)
   : Tot R.term 
-  = mk_stt_app (elab_universe u) [res; pre; mk_abs res post]
+  = mk_stt_app (elab_universe u) [res; pre; mk_abs res R.Q_Explicit post]
 
 let (let?) (f:option 'a) (g: 'a -> option 'b) : option 'b = 
   match f with
@@ -75,6 +75,10 @@ let elab_const (c:constant)
     | Bool false -> R.C_False
     | Int i -> R.C_Int i
 
+let elab_qual = function
+  | None -> R.Q_Explicit
+  | Some Implicit -> R.Q_Implicit
+  
 let rec elab_term (top:term)
   : option R.term
   = let open R in
@@ -91,6 +95,9 @@ let rec elab_term (top:term)
     | Tm_FVar l ->
       Some (pack_ln (Tv_FVar (pack_fv l)))
 
+    | Tm_UInst l us ->
+      Some (pack_ln (Tv_UInst (pack_fv l) (List.Tot.map elab_universe us)))
+
     | Tm_Constant c ->
       Some (pack_ln (Tv_Const (elab_const c)))
 
@@ -99,15 +106,15 @@ let rec elab_term (top:term)
       let? phi = elab_term phi in
       Some (pack_ln (Tv_Refine (pack_bv (RT.make_bv_with_name b.binder_ppname 0 ty)) phi))
 
-    | Tm_PureApp e1 e2 ->
+    | Tm_PureApp e1 q e2 ->
       let? e1 = elab_term e1 in
       let? e2 = elab_term e2 in
-      Some (R.mk_app e1 [(e2, Q_Explicit)])
+      Some (R.mk_app e1 [(e2, elab_qual q)])
 
-    | Tm_Arrow b c ->
+    | Tm_Arrow b q c ->
       let? ty = elab_term b.binder_ty in
       let? c = elab_comp c in
-      Some (mk_tot_arrow_with_name1 b.binder_ppname (ty, R.Q_Explicit) c)
+      Some (mk_tot_arrow_with_name1 b.binder_ppname (ty, elab_qual q) c)
 
     | Tm_Let t e1 e2 ->
       let? t = elab_term t in
@@ -158,8 +165,8 @@ let rec elab_term (top:term)
       let else_branch = R.Pat_Constant R.C_False, else_ in
       Some (R.pack_ln (Tv_Match b None [then_branch; else_branch]))
 
-    | Tm_Abs _ _ _ _
-    | Tm_STApp _ _
+    | Tm_Abs _ _ _ _ _
+    | Tm_STApp _ _ _
     | Tm_Bind _ _ -> None
       //effectful constructs, explicitly not handled here
     
@@ -196,6 +203,7 @@ let rec opening_pure_term_with_pure_term (x:pure_term) (v:pure_term) (i:index)
     | Tm_BVar _
     | Tm_Var _
     | Tm_FVar _
+    | Tm_UInst _ _
     | Tm_Constant _
     | Tm_Type _
     | Tm_VProp
@@ -209,7 +217,7 @@ let rec opening_pure_term_with_pure_term (x:pure_term) (v:pure_term) (i:index)
       aux b.binder_ty i;
       aux phi (i + 1)        
 
-    | Tm_PureApp l r
+    | Tm_PureApp l _ r
     // | Tm_STApp l r
     | Tm_Star l r ->    
       aux l i; aux r i
@@ -225,7 +233,7 @@ let rec opening_pure_term_with_pure_term (x:pure_term) (v:pure_term) (i:index)
     | Tm_ForallSL t body ->
       aux t i; aux body (i + 1)
     
-    | Tm_Arrow b c ->
+    | Tm_Arrow b _ c ->
       aux b.binder_ty i;
       opening_pure_comp_with_pure_term c v (i + 1)
 
@@ -255,6 +263,7 @@ let rec closing_pure_term (x:pure_term) (v:var) (i:index)
     | Tm_BVar _
     | Tm_Var _
     | Tm_FVar _
+    | Tm_UInst _ _
     | Tm_Constant _
     | Tm_Type _
     | Tm_VProp
@@ -268,7 +277,7 @@ let rec closing_pure_term (x:pure_term) (v:var) (i:index)
       aux b.binder_ty i;
       aux phi (i + 1)
 
-    | Tm_PureApp l r
+    | Tm_PureApp l _ r
     // | Tm_STApp l r
     | Tm_Star l r ->    
       aux l i; aux r i
@@ -284,7 +293,7 @@ let rec closing_pure_term (x:pure_term) (v:var) (i:index)
     | Tm_ForallSL t body ->
       aux t i; aux body (i + 1)
     
-    | Tm_Arrow b c ->
+    | Tm_Arrow b _ c ->
       aux b.binder_ty i;
       closing_pure_comp c v (i + 1)
 

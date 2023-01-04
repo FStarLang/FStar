@@ -104,8 +104,8 @@ let elab_bind (c1 c2:pure_comp_st) (e1 e2:R.term) =
   mk_bind c1.u c2.u
           ty1 ty2
           (elab_pure c1.pre)
-          (mk_abs ty1 (elab_pure c1.post))
-          (mk_abs ty2 (elab_pure c2.post))
+          (mk_abs ty1 R.Q_Explicit (elab_pure c1.post))
+          (mk_abs ty2 R.Q_Explicit (elab_pure c2.post))
           e1 e2
 
 let rec elab_src_typing (#f:RT.fstar_top_env)
@@ -117,15 +117,15 @@ let rec elab_src_typing (#f:RT.fstar_top_env)
   = match d with
     | T_Tot _ _ _ _ -> elab_pure t
 
-    | T_Abs _ ppname x ty _u body _ _ _ ty_typing body_typing ->
+    | T_Abs _ ppname x qual ty _u body _ _ _ ty_typing body_typing ->
       let ty = elab_pure ty in
       let body = elab_src_typing body_typing in
-      mk_abs_with_name ppname ty (RT.close_term body x) //this closure should be provably redundant by strengthening the conditions on x
+      mk_abs_with_name ppname ty (elab_qual qual) (RT.close_term body x) //this closure should be provably redundant by strengthening the conditions on x
     
-    | T_STApp _ head _ppname _formal _res arg head_typing arg_typing ->
+    | T_STApp _ head _ppname _formal qual _res arg head_typing arg_typing ->
       let head = elab_src_typing head_typing in
       let arg = elab_pure arg in
-      R.mk_app head [(arg, R.Q_Explicit)]
+      R.mk_app head [(arg, elab_qual qual)]
 
     | T_Return _ _ ty u _ _ ->
       mk_return (elab_universe u) (elab_pure ty) (elab_pure t)
@@ -137,7 +137,7 @@ let rec elab_src_typing (#f:RT.fstar_top_env)
       let e1 = elab_src_typing e1_typing in
       let e2 = elab_src_typing e2_typing in
       let ty1 = elab_pure (comp_res c1) in
-      elab_bind c1 c2 e1 (mk_abs ty1 (RT.close_term e2 x))
+      elab_bind c1 c2 e1 (mk_abs ty1 R.Q_Explicit (RT.close_term e2 x))
       
     | T_Frame _ _ c frame _frame_typing e_typing ->
       let e = elab_src_typing e_typing in
@@ -145,7 +145,7 @@ let rec elab_src_typing (#f:RT.fstar_top_env)
       let ty = elab_pure c.res in
       let pre = elab_pure c.pre in
       let post = elab_pure c.post in
-      mk_frame c.u ty pre (mk_abs ty post) (elab_pure frame) e
+      mk_frame c.u ty pre (mk_abs ty R.Q_Explicit post) (elab_pure frame) e
       
     // | T_If _ b e1 e2 _c hyp _ e1_typing e2_typing ->
     //   let b = elab_pure b in
@@ -165,8 +165,8 @@ let rec elab_src_typing (#f:RT.fstar_top_env)
              ty
              (elab_pure c1.pre)
              (elab_pure c2.pre)
-             (mk_abs ty (elab_pure c1.post))
-             (mk_abs ty (elab_pure c2.post))
+             (mk_abs ty R.Q_Explicit (elab_pure c1.post))
+             (mk_abs ty R.Q_Explicit (elab_pure c2.post))
              e
 
 #push-options "--ifuel 2"
@@ -219,6 +219,7 @@ let rec elab_close_commute' (e:pure_term)
     | Tm_Var _
     | Tm_BVar _
     | Tm_FVar _
+    | Tm_UInst _ _
     | Tm_Constant _
     | Tm_Emp 
     | Tm_Type _ 
@@ -226,7 +227,7 @@ let rec elab_close_commute' (e:pure_term)
     | Tm_Refine b phi ->
       elab_close_commute' b.binder_ty v n;
       elab_close_commute' phi v (n + 1)
-    | Tm_PureApp e1 e2 ->
+    | Tm_PureApp e1 _ e2 ->
       elab_close_commute' e1 v n;
       elab_close_commute' e2 v n
     | Tm_Let t e1 e2 ->
@@ -242,7 +243,7 @@ let rec elab_close_commute' (e:pure_term)
     | Tm_ForallSL t body ->
       elab_close_commute' t v n;
       elab_close_commute' body v (n + 1)    
-    | Tm_Arrow b body ->
+    | Tm_Arrow b _ body ->
       elab_close_commute' b.binder_ty v n;
       elab_comp_close_commute' body v (n + 1)
     | Tm_If e1 e2 e3 ->
