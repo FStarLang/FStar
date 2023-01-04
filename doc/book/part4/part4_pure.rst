@@ -597,7 +597,7 @@ chapters.
 
 F* provides two more primitive wp-indexed effects: ``GHOST
 a wp`` and ``DIV a wp``, where the type of ``wp`` is same as that of
-the ``PURE`` effect. Similar to how ``PURE`` refines ``Tot``,
+wps in the ``PURE`` effect. Similar to how ``PURE`` refines ``Tot``,
 ``GHOST`` refines ``GTot`` and ``DIV`` refines ``Dv``. I.e., ``GHOST``
 effect may be used to specify erased computations more precisely than
 ``GTot``, and similarly ``DIV`` may be used to specify potentially
@@ -606,7 +606,22 @@ divergent computations more precisely than ``Dv``. F* also provides
 ``GHOST`` and ``DIV`` respectively.
 
 The tradeoffs of using ``GHOST`` vs ``GTot`` are similar to
-those for ``PURE`` vs ``Tot``---since ``GHOST`` and ``GTot`` are also
-part of the logical core of F*. However, for other effectful
-computation types, such as ``Dv``, more precise specifications at the
-definitions can be very useful.
+those for ``PURE`` vs ``Tot``, since it is possible to do extrinsic
+proofs for ``GHOST`` and ``GTot`` also. However, for other effectful
+computation types, such as ``Dv``, specifications at the time of
+definitions are the only way to reason about them
+logically. Therefore, refined computation types play an important role
+in specifying effectful computations.
+
+The primitive effects in F* provide a fixed specification and
+reasoning mechanism for pure, ghost, and divergent
+computations. :ref:`Earlier <Part2_par>` we also saw that using monads
+we can model different kind of effects and specify their
+semantics. For reasoning about effectful programs, however, such
+semantic models may not be the right tool. Indeed several
+monad-like abstractions have been proposed in the literature that are
+suitable for different tasks. With user-defined effects, F* allows
+building such custom abstractions and program logics, while still
+providing the same syntax that we have seen so far and seamlessly
+integrated with other features (recursion, inductive types,
+...). That's next.
