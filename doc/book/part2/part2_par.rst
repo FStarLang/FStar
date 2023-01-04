@@ -164,6 +164,8 @@ for all by our combinators.
    :start-after: //SNIPPET_START: inc_twice$
    :end-before: //SNIPPET_END: inc_twice$
 
+.. _Part2_monad_intro:
+
 ``st`` is a monad
 -----------------
 
@@ -178,7 +180,7 @@ structure. Specifically, a monad consists of:
 which satisfy the following laws, where `~` is some suitable
 equivalence relation on ``m a``
 
-  * Left identity: ``bind (return x) f ~ g``
+  * Left identity: ``bind (return x) f ~ f``
   * Right identity: ``bind f return ~ f``
   * Associativity: ``bind f1 (fun x -> bind (f2 x) f3) ~ bind (bind f1 f2) g``
 

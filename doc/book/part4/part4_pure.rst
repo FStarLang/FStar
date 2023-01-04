@@ -199,7 +199,9 @@ y + 1 {x > 4}`` and ``{x > 1} z := x + 1 {z > 2}``. But to combine
 these using the sequencing rule, we need to match the postcondition of
 the first assignment with the precondition of the second
 assignment. We can do that by weakening the postcondition of the
-first assignment, using the rule of consequence, resulting in::
+first assignment, using the rule of consequence, resulting in the
+following derivation. Here each of the dashed line represents
+instantiation of one of the rules above::
 
                     ------------------------------
    y > 3 ==> y > 3    {y > 3} x := y + 1 {x > 4}    x > 4 ==> x > 1
@@ -287,9 +289,9 @@ similar reasoning.
 A Dijkstra Monad for Pure Computations
 ----------------------------------------
 
-F* provides a weakest precondition calculus for pure computations. The
-calculus is based on *Dijkstra Monad*, a construction first introduced
-in `this paper
+F* provides a weakest precondition calculus for reasoning about pure
+computations. The calculus is based on *Dijkstra Monad*, a
+construction first introduced in `this paper
 <https://www.microsoft.com/en-us/research/publication/verifying-higher-order-programs-with-the-dijkstra-monad/>`_
 . In this chapter, we will learn about Dijkstra Monad and its usage in
 specifying and proving pure programs in F*. Let's begin by adapting
@@ -309,6 +311,62 @@ function from the imperative setting to this is straightforward::
   WP x Q                      = Q x
   WP (let x = e1 in e2) Q     = WP e1 (fun x -> WP e2 Q)
   WP (if e then e1 else e2) Q = (e ==> WP e1 Q) /\ (~e ==> WP e2 Q)
+
+Let's transcribe this in the F* parlance::
+
+  type pre = prop
+  type post (a:Type) = a -> prop
+  type wp (a:Type) = post a -> pre
+
+As mentioned above, preconditions are just propositions,
+postconditions are predicates on the values of result type ``a``, and
+the type ``wp`` is a predicate transformer.
+
+We next transcribe in F* two of the ``WP`` rules, for values and for ``let``::
+
+  let return_wp (#a:Type) (x:a) : wp a = fun post -> post x
+  let bind_wp (#a #b:Type) (wp1:wp a) (wp2:a -> wp b) : wp b = fun post -> wp1 (fun x -> wp2 x post)
+
+
+It's a monad!
+^^^^^^^^^^^^^^^
+
+It turns out that ``wp a`` is a monad (there had to be a reason behind
+the names ``return_wp`` and ``bind_wp``). :ref:`Recall
+<Part2_monad_intro>` that a monad consists of a type operator
+(``wp``), a return function (``return_wp``), and a bind function
+(``bind_wp``), and satisfies the three monad laws over a suitable
+equivalence relation. For ``wp``, we can choose iff as the equivalence
+relation::
+
+  let wp_equiv (#a:Type) (wp1 wp2:wp a) : prop = forall post. wp1 post <==> wp2 post
+
+And with this, we can prove that ``wp`` satisfies the three monad
+laws::
+
+  let left_identity (a b:Type) (x:a) (wp:a -> wp a)
+    : Lemma (wp_equiv (bind_wp (return_wp a) wp) (wp x))
+    = ()
+
+  let monotonic (#a:Type) (wp:wp a) =
+    forall (p q:post a). (forall x. p x ==> q x) ==> (wp p ==> wp q)
+
+  let right_identity (a b:Type) (wp:wp a) (_:squash (monotonic wp))
+    : Lemma (wp_equiv wp (bind_wp wp return_wp))
+    = ()
+
+  let associativity (a b c:Type) (wp1:wp a) (wp2:a -> wp b) (wp3:b -> wp c) (_:squash (monotonic wp1))
+    : Lemma (wp_equiv (bind_wp wp1 (fun x -> bind_wp (wp2 x) wp3))
+                      (bind_wp (bind_wp wp1 wp2) wp3))
+    = ()
+
+.. note::
+
+   The proofs above rely on the *monotonicity* property of wps, which
+   says that weaker postconditions should map to weaker
+   preconditions. In F* pure wps are always monotonic. We can also
+   check that ``return_wp`` is monotonic, and if ``wp1`` and ``wp2``
+   are monotonic, then ``bind_wp wp1 wp2`` is monotonic.
 
 
 
