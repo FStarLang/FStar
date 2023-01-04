@@ -85,13 +85,13 @@ let base_t elt = H.base_t (raise_t elt)
 let base_len b = H.base_len b
 
 let ptr elt = H.ptr (raise_t elt)
+let null_ptr elt = H.null_ptr (raise_t elt)
+let is_null_ptr p = H.is_null_ptr p
 let base p = H.base p
 let offset p = H.offset p
 let ptr_base_offset_inj p1 p2 = H.ptr_base_offset_inj p1 p2
 
-let null' #a : ptr a = H.null_ptr (raise_t a)
-let null #a = (| null' #a, Ghost.hide 0 |)
-
+let base_len_null_ptr elt = H.base_len_null_ptr (raise_t elt)
 let length_fits a = H.length_fits a
 
 let pts_to a p s = H.pts_to a p (seq_map raise s)
