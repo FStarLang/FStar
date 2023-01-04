@@ -55,9 +55,9 @@ let equiv_frame_post (g:R.env)
                      (pre:R.term) 
                      (post:pure_term) // ln 1
                      (frame:R.term) //ln 0
-  : GTot (RT.equiv g (mk_stt_app u [t; pre; mk_abs t (mk_star (R.mk_app (mk_abs t (elab_pure post))
-                                                                        [bound_var 0, R.Q_Explicit]) frame)])
-                     (mk_stt_app u [t; pre; mk_abs t (mk_star (elab_pure post) frame)]))
+  : GTot (RT.equiv g (mk_stt_app u [t; pre; mk_abs t R.Q_Explicit (mk_star (R.mk_app (mk_abs t R.Q_Explicit (elab_pure post))
+                                                                           [bound_var 0, R.Q_Explicit]) frame)])
+                     (mk_stt_app u [t; pre; mk_abs t R.Q_Explicit (mk_star (elab_pure post) frame)]))
   = admit()
 
 #push-options "--z3rlimit_factor 2"

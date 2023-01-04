@@ -12,6 +12,21 @@ let constant_to_string = function
   | Bool false -> "true"  
   | Int i -> sprintf "%d" i
 
+let rec universe_to_string (n:nat) (u:universe) 
+  : Tot string (decreases u) = 
+  match u with
+  | U_zero -> sprintf "%d" n
+  | U_succ u -> universe_to_string (n + 1) u
+  | U_var x -> if n = 0 then x else sprintf "(%s + %d)" x n
+  | U_max u0 u1 -> 
+    let r = sprintf "(max %s %s)" (universe_to_string 0 u0) (universe_to_string 0 u1) in
+    if n = 0 then r else sprintf "%s + %d" r n
+
+let univ_to_string u = sprintf "u#%s" (universe_to_string 0 u)
+let qual_to_string = function
+  | None -> ""
+  | Some Implicit -> "#"
+  
 let rec term_to_string (t:term)
   : string
   = match t with
@@ -24,14 +39,16 @@ let rec term_to_string (t:term)
       then sprintf "%s#%d" x.nm_ppname x.nm_index
       else x.nm_ppname
     | Tm_FVar f -> name_to_string f
+    | Tm_UInst f us -> sprintf "%s %s" (name_to_string f) (String.concat " " (List.Tot.map univ_to_string us))
     | Tm_Constant c -> constant_to_string c
     | Tm_Refine b phi ->
       sprintf "%s:%s{%s}"
               b.binder_ppname
               (term_to_string b.binder_ty)
               (term_to_string phi)
-    | Tm_Abs b pre_hint body post ->
-      sprintf "(fun (%s) {%s} {_.%s} -> %s)"
+    | Tm_Abs b q pre_hint body post ->
+      sprintf "(fun (%s%s) {%s} {_.%s} -> %s)"
+              (qual_to_string q)
               (binder_to_string b)
               (term_to_string pre_hint)
               (match post with
@@ -39,8 +56,11 @@ let rec term_to_string (t:term)
                | Some post -> sprintf "%s" (term_to_string post))
               (term_to_string body)
 
-    | Tm_PureApp head arg ->
-      sprintf "(%s %s)" (term_to_string head) (term_to_string arg)
+    | Tm_PureApp head q arg ->
+      sprintf "(%s %s%s)" 
+        (term_to_string head)
+        (qual_to_string q)
+        (term_to_string arg)
       
     | Tm_Let t e1 e2 ->
       sprintf "let _ : %s = %s in %s"
@@ -48,9 +68,10 @@ let rec term_to_string (t:term)
         (term_to_string e1)
         (term_to_string e2)        
       
-    | Tm_STApp head arg ->
-      sprintf "(%s{%s})"
+    | Tm_STApp head q arg ->
+      sprintf "(%s %s%s)"
         (term_to_string head)
+        (qual_to_string q)
         (term_to_string arg)
         
     | Tm_Bind e1 e2 ->
@@ -74,8 +95,9 @@ let rec term_to_string (t:term)
               (term_to_string t)
               (term_to_string body)
                           
-    | Tm_Arrow b c ->
-      sprintf "%s -> %s"
+    | Tm_Arrow b q c ->
+      sprintf "%s%s -> %s"
+        (qual_to_string q)
         (binder_to_string b)
         (comp_to_string c)
         

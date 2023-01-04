@@ -47,6 +47,7 @@ let tot_typing_soundness (#f:RT.fstar_top_env)
 
 let mk_t_abs_tot (f:RT.fstar_top_env) (g:env)
                  (#u:universe)
+                 (#q:option qualifier)
                  (#ty:pure_term)
                  (ppname:string)
                  (t_typing:tot_typing f g ty (Tm_Type u))
@@ -55,8 +56,8 @@ let mk_t_abs_tot (f:RT.fstar_top_env) (g:env)
                  (#body_ty:pure_term)
                  (body_typing:tot_typing f ((x, Inl ty)::g) (open_term body x) body_ty)
   : GTot (RT.typing (extend_env_l f g)
-                    (mk_abs_with_name ppname (elab_pure ty) (elab_pure body))
-                    (elab_pure (Tm_Arrow {binder_ty=ty; binder_ppname=ppname} (close_pure_comp (C_Tot body_ty) x))))
+                    (mk_abs_with_name ppname (elab_pure ty) (elab_qual q) (elab_pure body))
+                    (elab_pure (Tm_Arrow {binder_ty=ty; binder_ppname=ppname} q (close_pure_comp (C_Tot body_ty) x))))
   = let c = C_Tot body_ty in
     let r_ty = elab_pure ty in
     let r_body = elab_pure (open_term body x) in
@@ -67,16 +68,16 @@ let mk_t_abs_tot (f:RT.fstar_top_env) (g:env)
     RT.open_close_inverse r_body x;
     elab_comp_close_commute c x;      
     let d : RT.typing (extend_env_l f g)
-                      (mk_abs_with_name ppname (elab_pure ty)
+                      (mk_abs_with_name ppname (elab_pure ty) (elab_qual q)
                               (RT.close_term (elab_pure (open_term body x)) x))
-                      (elab_pure (Tm_Arrow {binder_ty=ty;binder_ppname=ppname} (close_pure_comp (C_Tot body_ty) x)))
+                      (elab_pure (Tm_Arrow {binder_ty=ty;binder_ppname=ppname} q (close_pure_comp (C_Tot body_ty) x)))
           = 
     RT.T_Abs (extend_env_l f g)
              x
              r_ty
              (RT.close_term r_body x)
              r_c
-             (elab_universe u) ppname _
+             (elab_universe u) ppname (elab_qual q)
              r_t_typing
              r_body_typing
     in
@@ -85,7 +86,7 @@ let mk_t_abs_tot (f:RT.fstar_top_env) (g:env)
     assert (elab_pure (open_term body x) ==
             RT.open_term (elab_pure body) x);
     let d : RT.typing _
-                      (mk_abs_with_name ppname (elab_pure ty)
+                      (mk_abs_with_name ppname (elab_pure ty) (elab_qual q)
                               (RT.close_term (RT.open_term (elab_pure body) x) x))
                       _
           = d 
@@ -97,6 +98,7 @@ let mk_t_abs_tot (f:RT.fstar_top_env) (g:env)
 let mk_t_abs (f:RT.fstar_top_env) (g:env)
              (#u:universe)
              (#ty:pure_term)
+             (#q:option qualifier)
              (#t_typing:src_typing f g ty (C_Tot (Tm_Type u)))
              (ppname:string)
              (r_t_typing:RT.typing (extend_env_l f g)
@@ -110,8 +112,8 @@ let mk_t_abs (f:RT.fstar_top_env) (g:env)
                                      (elab_src_typing body_typing)
                                      (elab_pure_comp c))
   : GTot (RT.typing (extend_env_l f g)
-                    (mk_abs_with_name ppname (elab_pure ty) (RT.close_term (elab_src_typing body_typing) x))
-                    (elab_pure (Tm_Arrow {binder_ty=ty;binder_ppname=ppname} (close_pure_comp c x))))
+                    (mk_abs_with_name ppname (elab_pure ty) (elab_qual q) (RT.close_term (elab_src_typing body_typing) x))
+                    (elab_pure (Tm_Arrow {binder_ty=ty;binder_ppname=ppname} q (close_pure_comp c x))))
   = let r_ty = elab_pure ty in
     let r_body = elab_src_typing body_typing in
     let r_c = elab_pure_comp c in
@@ -124,7 +126,7 @@ let mk_t_abs (f:RT.fstar_top_env) (g:env)
                    r_ty
                    (RT.close_term r_body x)
                    r_c
-                   (elab_universe u) ppname _
+                   (elab_universe u) ppname (elab_qual q)
                    r_t_typing
                    r_body_typing
 
@@ -195,7 +197,7 @@ let mk_star (l r:R.term) =
 let frame_res (u:R.universe) (t pre post frame:R.term) =
     mk_stt_app u [t; 
                   mk_star pre frame;
-                  mk_abs t (mk_star (R.mk_app post [bound_var 0, R.Q_Explicit]) frame)]
+                  mk_abs t R.Q_Explicit (mk_star (R.mk_app post [bound_var 0, R.Q_Explicit]) frame)]
 
 let frame_type_t_pre_post_frame (u:R.universe) (t pre post frame:R.term) =
   let open R in
@@ -306,7 +308,7 @@ let check_top_level_environment (f:RT.fstar_top_env)
 let elab_comp_post (c:pure_comp_st) : R.term =
   let t = elab_pure (comp_res c) in
   let post = elab_pure (comp_post c) in
-  mk_abs t post
+  mk_abs t R.Q_Explicit post
 
 let comp_post_type (c:pure_comp_st) : R.term = 
   let t = elab_pure (comp_res c) in
@@ -323,4 +325,4 @@ val inversion_of_stt_typing (f:RT.fstar_top_env) (g:env) (c:pure_comp_st)
           RT.typing (extend_env_l f g) (elab_pure (comp_pre c)) (elab_pure (Tm_VProp)) &
           // _ |- (fun (x:t) -> post) : t -> vprop
           RT.typing (extend_env_l f g) (elab_comp_post c)
-                                       (elab_pure (Tm_Arrow (null_binder (comp_res c)) (C_Tot Tm_VProp))))
+                                       (elab_pure (Tm_Arrow (null_binder (comp_res c)) None (C_Tot Tm_VProp))))

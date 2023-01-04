@@ -25,6 +25,7 @@ rule token =
       else if i = "return" then RETURN
       else IDENT (i)
     }
+  | "#"           { HASH_IMPLICIT }
   | "("           { LPAREN }
   | ")"           { RPAREN }
   | "{"           { LBRACE }

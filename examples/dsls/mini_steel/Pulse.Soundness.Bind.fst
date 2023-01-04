@@ -19,7 +19,7 @@ let equiv_arrow (g:R.env) (t1:R.term) (u2:R.universe) (t2:R.term) (pre:R.term) (
   : GTot (RT.equiv g (mk_tot_arrow1 (t1, R.Q_Explicit)
                                     (mk_stt_app u2 [t2; pre; post]))
                      (mk_tot_arrow1 (t1, R.Q_Explicit)
-                                    (mk_stt_app u2 [t2; R.mk_app (mk_abs t1 pre) [bound_var 0, R.Q_Explicit]; post])))
+                                    (mk_stt_app u2 [t2; R.mk_app (mk_abs t1 R.Q_Explicit pre) [bound_var 0, R.Q_Explicit]; post])))
   = admit()
 
 
@@ -108,7 +108,7 @@ let elab_bind_typing (f:stt_env)
                      (r1_typing: RT.typing (extend_env_l f g) r1 (elab_pure_comp c1))
                      (r2:R.term)
                      (r2_typing: RT.typing (extend_env_l f g) r2 
-                                           (elab_pure (Tm_Arrow (null_binder (comp_res c1)) (close_pure_comp c2 x))))
+                                           (elab_pure (Tm_Arrow (null_binder (comp_res c1)) None (close_pure_comp c2 x))))
                      (bc:bind_comp f g x c1 c2 c)
                      (t2_typing : RT.typing (extend_env_l f g) (elab_pure (comp_res c2)) (RT.tm_type (elab_universe (comp_u c2))))
                      (post2_typing: RT.typing (extend_env_l f g) 
@@ -134,7 +134,7 @@ let elab_bind_typing (f:stt_env)
     assert (~ (x `Set.mem` freevars (comp_post c1)));
     close_open_inverse (comp_post c1) x;
     assert (comp_post c1 == close_term (comp_pre c2) x);
-    assert (post1 == mk_abs t1 (elab_pure (comp_post c1)));
+    assert (post1 == mk_abs t1 R.Q_Explicit (elab_pure (comp_post c1)));
     assert (elab_pure (comp_post c1) == elab_pure (comp_pre (close_pure_comp c2 x)));
     //ln (comp_post c1) 0
     let g_typing
@@ -145,7 +145,10 @@ let elab_bind_typing (f:stt_env)
     let g_typing 
       : RT.typing _ _ 
                   (mk_tot_arrow1 (t1, R.Q_Explicit)
-                                 (mk_stt_app u2 [t2; R.mk_app (mk_abs t1 (elab_pure (comp_post c1))) [bound_var 0, R.Q_Explicit]; elab_comp_post c2]))
+                                 (mk_stt_app u2 [t2;
+                                                 R.mk_app (mk_abs t1 R.Q_Explicit (elab_pure (comp_post c1)))
+                                                          [bound_var 0, R.Q_Explicit];
+                                                elab_comp_post c2]))
       = RT.(T_Sub _ _ _ _ r2_typing (ST_Equiv _ _ _ (equiv_arrow _ _ _ _ _ _))) in
     let d : RT.typing _ (elab_bind c1 c2 r1 r2) _ = 
        inst_bind_g 

@@ -30,11 +30,11 @@ let eq2_lid = ["Pulse"; "Steel"; "Wrapper"; "meq2"]
 let mk_eq2 (t:pure_term) (e0 e1:pure_term) 
   : pure_term
   = Tm_PureApp
-         (Tm_PureApp (Tm_PureApp (Tm_FVar eq2_lid) t)
-                      e0) e1
+         (Tm_PureApp (Tm_PureApp (Tm_FVar eq2_lid) (Some Implicit) t)
+                     None e0) None e1
 
 let mk_vprop_eq (e0 e1:pure_term) : pure_term =
-  Tm_PureApp (Tm_PureApp (Tm_FVar vprop_eq_lid) e0) e1
+  Tm_PureApp (Tm_PureApp (Tm_FVar vprop_eq_lid) None e0) None e1
 
 let return_comp (u:universe) (t:pure_term) (e:pure_term)
   : pure_comp 
@@ -236,6 +236,7 @@ type src_typing (f:RT.fstar_top_env) : env -> term -> pure_comp -> Type =
       g:env ->
       ppname:string ->
       x:var { None? (lookup g x) } ->
+      q:option qualifier ->
       ty:pure_term ->
       u:universe ->
       body:term ->
@@ -244,19 +245,20 @@ type src_typing (f:RT.fstar_top_env) : env -> term -> pure_comp -> Type =
       post_hint:option vprop ->
       tot_typing f g ty (Tm_Type u) ->
       src_typing f ((x, Inl ty)::g) (open_term body x) c ->
-      src_typing f g (Tm_Abs {binder_ty=ty;binder_ppname=ppname} pre_hint body post_hint)
-                     (C_Tot (Tm_Arrow {binder_ty=ty;binder_ppname=ppname} (close_pure_comp c x)))
+      src_typing f g (Tm_Abs {binder_ty=ty;binder_ppname=ppname} q pre_hint body post_hint)
+                     (C_Tot (Tm_Arrow {binder_ty=ty;binder_ppname=ppname} q (close_pure_comp c x)))
   
   | T_STApp :
       g:env ->
       head:term ->
       ppname:string ->
       formal:pure_term ->
+      q:option qualifier ->
       res:pure_comp {C_ST? res} ->
       arg:pure_term ->
-      src_typing f g head (C_Tot (Tm_Arrow {binder_ty=formal;binder_ppname=ppname} res)) ->
+      src_typing f g head (C_Tot (Tm_Arrow {binder_ty=formal;binder_ppname=ppname} q res)) ->
       tot_typing f g arg formal ->
-      src_typing f g (Tm_STApp head arg) (open_comp_with res arg)
+      src_typing f g (Tm_STApp head q arg) (open_comp_with res arg)
 
   | T_Return:
       g:env ->
