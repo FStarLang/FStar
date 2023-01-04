@@ -364,15 +364,206 @@ laws::
 
    The proofs above rely on the *monotonicity* property of wps, which
    says that weaker postconditions should map to weaker
-   preconditions. In F* pure wps are always monotonic. We can also
-   check that ``return_wp`` is monotonic, and if ``wp1`` and ``wp2``
-   are monotonic, then ``bind_wp wp1 wp2`` is monotonic.
+   preconditions. In F* pure wps are always monotonic, though in the
+   proofs above we have required only one of the wps to be
+   monotonic. We can also check that ``return_wp`` is monotonic, and
+   if ``wp1`` and ``wp2`` are monotonic, then ``bind_wp wp1 wp2`` is
+   monotonic.
+
+The ``wp`` monad is called a Dijkstra monad, as it encodes Dijkstra's
+weakest precondition calculus in its combinators.
+
+The ``PURE`` effect
+^^^^^^^^^^^^^^^^^^^^
+
+F* provides a primitive ``PURE`` effect that allows writing and
+typechecking Dijkstra monad specifications for *pure* computations. A
+computation type in the ``PURE`` effect has the signature ``PURE t
+wp``, where ``t`` is the return type of the computation and ``wp:wp
+t``. The ``wp`` argument is also called an *index* of the ``PURE``
+effect. The interpretation of ``e:PURE t wp`` is as expected: ``wp``
+is the predicate transformer for ``e``. In other words, for any
+postcondition ``p``, if ``wp p`` holds, then ``e`` terminates to a
+value ``v:t``, and ``p v`` holds.
+
+Let's look at some examples of writing and typechecking ``PURE``::
+
+  open FStar.Monotonic.Pure
+  let incr (x:int) : PURE int (as_pure_wp (fun post -> post (x + 1))) = x + 1
+
+(The ``as_pure_wp`` is a technicality for coercing the wp functions
+into pure wps that are required to be monotonic in F*. It is defined
+in ulib/FStar.Monotonic.Pure.fst.)
+
+In general, when F* typechecks ``e:PURE a wp``, it first computes a wp
+for ``e``, let's call it ``wp_e``, and then checks that ``wp`` is
+*stronger* than ``wp_e``, where stronger is defined as follows::
+
+  //wp1 is stronger than wp2
+  let stronger_wp (#a:Type) (wp1 wp2:wp a) : prop =
+    forall post. wp1 post ==> wp2 post
+
+I.e. for any postcondition ``post``, the precondition ``wp post`` implies the
+precondition ``wp_e post``. This matches the intuition about
+preconditions that we built earlier: it is always sound to require
+more in the precondition. Thus, when we have ``e:PURE a wp`` in F*,
+the ``wp`` is *a* predicate transformer for ``e``, not necessarily the
+weakest one.
+
+When computing ``wp_e``, the F* typechecker applies the combinators
+``return_wp``, ``bind_wp``, ``if_then_else_wp`` (for composing
+conditionals), etc. Let's look at another example::
+
+  let maybe_incr (b:bool) (x:int)
+    : PURE int (as_pure_wp (fun post -> forall (y:int). y >= x ==> post y))
+    = if b then x + 1
+      else x
+
+It is worthwhile understanding the wp here. It says that to prove ``post`` of the return value, the precondition is to prove ``post`` on all ``y > x``. The ``y`` here is a valid, although much weaker, characterization of the function's return value.
+
+We can also write a stronger spec which basically mirrors the
+definition of wp for the conditionals::
+
+  let maybe_incr (b:bool) (x:int)
+    : PURE int (as_pure_wp (fun post -> (b ==> post (x + 1)) /\ ~b ==> post x)) = ...
+
+For recursive functions, ``PURE`` works as with ``Tot``: F* checks
+that some termination metric decreases in the recursive calls, and
+custom termination metrics may be provided using ``decreases``::
+
+  let rec ackermann (n m:nat)
+    : PURE int (as_pure_wp (fun post -> forall (x:int). x >= 0 ==> post x))
+               (decreases %[m;n])
+    = if m=0 then n + 1
+      else if n = 0 then ackermann 1 (m - 1)
+      else ackermann_flip (ackermann (n - 1) m) (m - 1)
 
 
+The wps may also encode the precondition on the function arguments,
+e.g.,::
+
+  let rec factorial (x:int)
+    : PURE int (as_pure_wp (fun post -> x >= 0 /\ (forall (y:int). y >= 0 ==> post y)))
+    = if x = 0
+      then 1
+      else x * factorial (x - 1)
+
+In this wp, for proving any postcondition, the precondition requires
+``x >= 0``.
 
 
-``PURE`` is a refinement of ``Tot``
------------------------------------
+The ``Pure`` abbreviation
+^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Arguably specifications in the Hoare-style are easier on the eyes, as
+the precondition and the postcondition components are more clearly
+separated. F* provides an effect called ``Pure`` for
+writing and typechecking Hoare-style specifications for pure
+programs. The signature of ``Pure`` is ``Pure a req ens``, where
+``req:prop`` is the precondition and ``ens:a -> prop`` is the
+postcondition. Using ``Pure``, we can write the ``factorial``
+function above as::
+
+  let rec factorial (x:int)
+    : Pure int (requires x >= 0)
+               (ensures fun r -> r >= 0)
+    = if x = 0
+      then 1
+      else x * factorial (x - 1)
+
+Internally, ``Pure`` is not a new effect, rather it is defined just as
+an abbreviation of ``PURE``, roughly as::
+
+  let req_ens_to_wp (#a:Type) (req:prop) (ens:a -> prop) =
+    fun post -> req /\ (forall x. ens x ==> post x)
+  
+  effect Pure (a:Type) (req:prop) (ens:a -> prop) =
+    PURE a (req_ens_to_wp req ens)
+
+This also means that ``PURE`` and ``Pure`` code seamlessly
+interoperate.
+
+Another advantage of using ``Pure`` specifications is that, we don't
+have to worry about monotonicity of wps (the ``as_pure_wp``), it is
+easy to check that ``req_ens_to_wp req ens`` is monotonic for all
+``req`` and ``ens``.
+
+``PURE`` and ``Tot``
+---------------------
+
+We can view ``PURE`` as refining ``Tot``. Just like the value refinement
+type ``x:t{p}`` refines the type ``t``, ``e:PURE t wp`` refines
+``e:Tot t``.
+
+For example, consider ``factorial:nat -> Tot nat`` vs ``factorial::nat
+-> PURE nat (fun post -> forall (y:nat). y >= 1 ==> post y)``. Whereas
+the first type only tells us that ``factorial`` returns a ``nat``, the
+second type refines this further and tells us that it returns a
+``y:nat`` s.t. ``y >= 1``. Using ``PURE`` computation type, we can
+write and typecheck more precise specifications.
+
+So the next natural question is, when should we use ``Tot`` and when should we use ``PURE`` (or ``Pure``). The answer, as always, is: it depends.
+
+For very simple ``Tot`` functions, since F* allows for reasoning with
+the function definitions, more precise specifications may not be
+needed. For example, for ``let incr (x:nat) : nat = x + 1``, it is
+easy for F* to reason logically that ``incr x == x + 1``. For such
+functions, more precise specifications in ``PURE`` may be an overkill.
+
+This becomes a little tricky for the properties of recursive
+functions. Given the following definition of list append in ``Tot``::
+
+  let rec append (#a:Type) (l1 l2:list a) : list a =
+    match l1 with
+    | [] -> l2
+    | hd::tl -> hd::(append tl l2)
+
+If we want to reason that ``length (append l1 l2) == length l1 +
+length l2``, we need to write a lemma using induction, and then either
+invoke the lemma everywhere this property is needed or add an
+:ref:`SMT pattern <UTH_smt_patterns>` to it.
+
+Alternatively, we could give ``append`` a more precise specification using ``Pure``::
+
+  let rec append (#a:Type) (l1 l2:list a)
+    : Pure (list a) (requires True)
+                    (ensures fun r -> length r == length l1 + length l2)
+    = ...
+
+And now since the property about ``length`` is *intrinsic* in the type of ``append``, no separate lemma is required. This property is available whenever ``append`` is called.
+
+Even for non-recursive cases, say ``let f x : Tot t = e``, it may be
+the case that some property ``p`` is true of ``e``, but proving it is
+non-trivial, and hence cannot be left to the solver. In such cases
+also, either we can write a separate lemma that proves ``p`` about
+``e``, or refine the type of ``f`` to provide ``p`` in its
+postcondition.
+
+On the flip side, we don't want to (and in most cases can't) cram
+all the properties in the specifications. That ``length (append l1 l2)
+== length l1 + length l2`` is one property, but there are several
+other properties of ``append`` (it is associative, its relation to
+reverse, etc. etc.), it is not prudent to stuff all these in the spec
+of ``append`` itself.
+
+So it is basically a case-by-case judgment call whether to use ``Tot`` or
+``PURE``. Hopefully the discussion above helps making this call.
+
+      
+Some more on Dijkstra monad
+-----------------------------
+
+Dijkstra monad was first introduced in
+the paper `Verifying Higher-order Programs with the Dijkstra Monad
+<https://www.microsoft.com/en-us/research/publication/verifying-higher-order-programs-with-the-dijkstra-monad/>`_,
+in the context of verifying stateful programs. Then the paper
+`Dependent Types and Multi-Monadic Effects in F*
+<https://www.fstar-lang.org/papers/mumon/>`_ unleashed Dijkstra monads
+in their full generality, showing Dijkstra monads for different
+effects (pure, state, exceptions, etc.), and their
+composition with each other.
+
+
 
 
 

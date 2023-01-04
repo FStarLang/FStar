@@ -1018,6 +1018,8 @@ new project:
    native --smtencoding.elim_box true`` is a good one to consider, and
    may yield some proof performance boosts over the default setting.
 
+.. _UTH_smt_patterns:
+   
 Designing a Library with SMT Patterns
 -------------------------------------
 
