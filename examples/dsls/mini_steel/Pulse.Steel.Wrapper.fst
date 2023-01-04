@@ -34,7 +34,7 @@ assume val admit__ (#a:Type u#a) (#p:vprop) (#q:a -> vprop) (_:unit) : ST a p q 
 
 let vprop_equiv (p q:vprop) = squash (equiv p q)
 let vprop_post_equiv (#t:Type u#a) (p q: t -> vprop) = forall x. vprop_equiv (p x) (q x)
-
+  
 let intro_vprop_post_equiv
        (#t:Type u#a) 
        (p q: t -> vprop)
@@ -67,16 +67,12 @@ let sub_stt (#a:Type u#a)
             (e:stt a pre1 post1)
   : stt a pre2 post2 =
   fun _ ->
-    [@inline_let]
-    let _ = unsquash_equiv pre1 pre2 () in
     rewrite_equiv pre2 pre1;
     let x = e () in
     [@inline_let]    
     let pf : vprop_equiv (post1 x) (post2 x) = 
       elim_vprop_post_equiv post1 post2 pf2 x
     in
-    [@inline_let]    
-    let _ = unsquash_equiv (post1 x) (post2 x) pf in
     rewrite_equiv (post1 x) (post2 x);
     return x
 
