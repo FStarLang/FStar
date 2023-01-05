@@ -122,6 +122,20 @@ let elim_varray
     )
 = elim_varrayp _ _
 
+let varrayp_not_null
+  (#opened: _) (#elt: Type) (a: array elt) (p: P.perm)
+: SteelGhost unit opened
+    (varrayp a p)
+    (fun _ -> varrayp a p)
+    (fun _ -> True)
+    (fun h _ h' ->
+      aselp a p h' == aselp a p h /\
+      a =!= null
+    )
+= let _ = elim_varrayp a p in
+  pts_to_not_null a _;
+  intro_varrayp a p _
+
 /// Allocating a new array of size n, where each cell is initialized
 /// with value x. We define the non-selector version of this operation
 /// (and others) with a _pt suffix in the name.

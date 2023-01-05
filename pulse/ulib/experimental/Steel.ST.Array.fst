@@ -99,6 +99,25 @@ let pts_to a p s = H.pts_to a p (seq_map raise s)
 let pts_to_length a s =
   H.pts_to_length a _
 
+let h_array_eq'
+  (#t: Type u#1)
+  (a1 a2: H.array t)
+: Lemma
+  (requires (
+    dfst a1 == dfst a2 /\
+    (Ghost.reveal (dsnd a1) <: nat) == Ghost.reveal (dsnd a2)
+  ))
+  (ensures (
+    a1 == a2
+  ))
+= ()
+
+let pts_to_not_null #_ #t #p a s =
+  let _ = H.pts_to_not_null #_ #_ #p a (seq_map raise s) in
+  assert (a =!= H.null #(raise_t t));
+  Classical.move_requires (h_array_eq' a) (H.null #(raise_t t));
+  noop ()
+
 let pts_to_inj a p1 s1 p2 s2 =
   H.pts_to_inj a p1 (seq_map raise s1) p2 (seq_map raise s2)
 

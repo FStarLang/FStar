@@ -146,6 +146,18 @@ val pts_to_length
     (True)
     (fun _ -> Seq.length s == length a)
 
+val pts_to_not_null
+  (#opened: _)
+  (#elt: Type0)
+  (#p: P.perm)
+  (a: array elt)
+  (s: Seq.seq elt)
+: STGhost unit opened
+    (pts_to a p s)
+    (fun _ -> pts_to a p s)
+    (True)
+    (fun _ -> a =!= null)
+
 /// An injectivity property, needed only to define a selector.  Such a
 /// selector can be only defined in universe 0, and universes are not
 /// cumulative, so we need to define a separate module for arrays of
