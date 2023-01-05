@@ -1,0 +1,21 @@
+TODOs:
+
+1. add uinst and implicit args in the DSL syntax and remove hacks like meq2, erased, ref, vprop_eq ... 
+    e.g., (reveal #nat v)
+
+2. instantiation of implicit args (calling the unifier to figure out implicit args)
+    - for indexes of vprops
+    - but also regular type arguments, e.g., id #nat x 
+
+-------------------------------------------------------------------------------
+
+3. conditionals: if easier; match?
+
+4. loop combinators
+
+5. pure, exists <---
+
+6. st ghost, st atomic (stt (C|G(opened)|A(opened))
+
+7. invariants with_invariant
+
