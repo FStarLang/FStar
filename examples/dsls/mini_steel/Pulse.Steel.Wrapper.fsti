@@ -100,7 +100,7 @@ type u32 : Type0 = U32.t
 // val ptr (r:ref) : vprop
 open FStar.Ghost
 val read (n:erased u32) (r:R.ref u32)
-  : stt u32 (R.pts_to r full_perm n) (fun x -> R.pts_to r full_perm (hide x))
+  : stt u32 (R.pts_to r full_perm n) (fun x -> R.pts_to r full_perm x)
 
 val read_refine (n:erased u32) (r:R.ref u32)
   : stt (x:u32{reveal n == x}) (R.pts_to r full_perm n) (fun x -> R.pts_to r full_perm n)

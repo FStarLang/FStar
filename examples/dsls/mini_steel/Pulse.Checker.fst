@@ -114,7 +114,9 @@ let rec readback_universe (u:R.universe)
   | _ -> None
 
 let rec readback_universes (us:list R.universe)
-  : o:option (list universe) { Some? o ==> List.Tot.map elab_universe (Some?.v o) == us }
+  : o:option (list universe) { 
+          Some? o ==> List.Tot.map elab_universe (Some?.v o) == us 
+    }
   = match us with
     | [] -> Some []
     | hd::tl -> 
@@ -169,13 +171,29 @@ let rec readback_ty (t:R.term)
     )
 
 
-  | Tv_App hd (a, q) ->
-    let? hd' = readback_ty hd in
-    (match q with
-     | R.Q_Meta _ -> None
-     | _ -> 
-       let? arg' = readback_ty a in
-       Some (Tm_PureApp hd' (readback_qual q) arg' <: ty:pure_term {elab_term ty == Some t}))
+  | Tv_App hd (a, q) -> 
+    let aux () = 
+      let? hd' = readback_ty hd in
+      match q with
+      | R.Q_Meta _ -> None
+      | _ -> 
+        let? arg' = readback_ty a in
+        Some (Tm_PureApp hd' (readback_qual q) arg' <: ty:pure_term {elab_term ty == Some t})
+    in
+    let head, args = R.collect_app t in
+    begin
+    match inspect_ln head, args with
+    | Tv_FVar fv, [(a1,_); (a2,_)] -> 
+      if inspect_fv fv = star_lid
+      then (
+        let? t1 = readback_ty a1 in
+        let? t2 = readback_ty a2 in
+        assume (elab_term (Tm_Star t1 t2) == Some t);
+        Some #(t':Pulse.Syntax.term {elab_term t' == Some t}) (Tm_Star t1 t2)
+      )
+      else aux ()
+    | _ -> aux ()
+    end
   
   | Tv_Refine bv phi ->
     let bv_view = inspect_bv bv in
@@ -241,7 +259,8 @@ let rec readback_ty (t:R.term)
   | Tv_AscribedC _ _ _ _ -> T.fail "readbackty: ascription nodes not supported"
 
   | Tv_Unknown -> T.fail "readbackty: unexpected Tv_Unknown"
-
+  
+  
 and readback_comp (t:R.term)
   : T.Tac (option (c:comp{ elab_comp c == Some t})) =
 
@@ -580,8 +599,8 @@ let split_vprop (f:RT.fstar_top_env)
      let req_l = vprop_as_list req in
      match try_split_vprop f g req_l ctxt_l with
      | None -> T.fail (Printf.sprintf "Could not find frame: \n\tcontext = %s\n\trequires = %s\n"
-                                            (P.term_to_string ctxt)
-                                            (P.term_to_string req))
+                                            (String.concat " ** " (List.Tot.map P.term_to_string ctxt_l))
+                                            (String.concat " ** " (List.Tot.map P.term_to_string req_l)))
      | Some (| frame, veq |) ->
        let d1 
          : vprop_equiv _ _ (Tm_Star (canon_vprop req) (list_as_vprop frame))
@@ -953,7 +972,7 @@ let rec check =
         opening_pure_comp_with_pure_term (C_ST res) arg 0;
         repack (try_frame_pre pre_typing d) true
       )
-    | _ -> T.fail "Unexpected head type in impure application"
+    | _ -> T.fail (Printf.sprintf "Unexpected head type in impure application: %s" (P.term_to_string ty_head))
     end
 
   | Tm_Bind _ _ ->
