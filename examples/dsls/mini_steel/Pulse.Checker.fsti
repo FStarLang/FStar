@@ -33,7 +33,8 @@ type check_t =
   pre:pure_term ->
   pre_typing:tot_typing f g pre Tm_VProp ->
   post_hint:option term ->
-  T.Tac (c:pure_comp{C_ST? c ==> comp_pre c == pre} &
+  T.Tac (t:term &
+         c:pure_comp{C_ST? c ==> comp_pre c == pre} &
          src_typing f g t c)
 
 val check : check_t

@@ -113,6 +113,11 @@ let rec term_to_string (t:term)
         (term_to_string t)
         (term_to_string e)        
 
+    | Tm_UVar t n ->
+      sprintf "(?u_%d:%s)"
+        n
+        (term_to_string t)
+
 and binder_to_string b =
   sprintf "%s:%s" 
     b.binder_ppname

@@ -3,6 +3,8 @@ module RT = Refl.Typing
 module R = FStar.Reflection
 open FStar.List.Tot
 
+module T = FStar.Tactics
+
 type constant =
   | Unit
   | Bool of bool
@@ -66,6 +68,8 @@ type term =
   | Tm_VProp    : term
   | Tm_If       : b:term -> then_:term -> else_:term -> term
 
+  | Tm_UVar     : term -> int -> term
+
 and binder = {
   binder_ty     : term;
   binder_ppname : string
@@ -111,6 +115,7 @@ let rec freevars (t:term)
     | Tm_Pure p -> freevars p
 
     | Tm_Arrow b _ body -> Set.union (freevars b.binder_ty) (freevars_comp body)
+    | Tm_UVar t _ -> freevars t
 
 and freevars_comp (c:comp) : Set.set var =
   match c with
@@ -169,6 +174,8 @@ let rec ln' (t:term) (i:int) =
     ln' b i &&
     ln' then_ i &&
     ln' else_ i
+
+  | Tm_UVar t _ -> ln' t i
 
 and ln'_comp (c:comp) (i:int)
   : Tot bool
@@ -258,6 +265,8 @@ let rec open_term' (t:term) (v:term) (i:index)
             (open_term' then_ v i)
             (open_term' else_ v i)
 
+    | Tm_UVar t n -> Tm_UVar (open_term' t v i) n
+
 and open_comp' (c:comp) (v:term) (i:index)
   : Tot comp (decreases c)
   = match c with
@@ -342,6 +351,8 @@ let rec close_term' (t:term) (v:var) (i:index)
             (close_term' then_ v i)
             (close_term' else_ v i)
 
+    | Tm_UVar t n -> Tm_UVar (close_term' t v i) n
+
 and close_comp' (c:comp) (v:var) (i:index)
   : Tot comp (decreases c)
   = match c with
@@ -421,3 +432,6 @@ let mk_bvar (s:string) (i:index) : term =
 let null_var (v:var) : term = Tm_Var {nm_index=v;nm_ppname="_"}
 
 let null_bvar (i:index) : term = Tm_BVar {bv_index=i;bv_ppname="_"}
+
+let gen_uvar (t:term) : T.Tac term =
+  Tm_UVar t (T.fresh ())

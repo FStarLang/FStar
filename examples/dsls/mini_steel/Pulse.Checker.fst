@@ -827,7 +827,8 @@ let check_abs
   (pre_typing:tot_typing f g pre Tm_VProp)
   (post_hint:option term)
   (check:check_t)
-  : T.Tac (c:pure_comp { C_ST? c ==> comp_pre c == pre } &
+  : T.Tac (t:term &
+           c:pure_comp { C_ST? c ==> comp_pre c == pre } &
            src_typing f g t c) =
   match t with  
   | Tm_Abs {binder_ty=t;binder_ppname=ppname} qual pre_hint body post_hint ->  (* {pre}  (fun (x:t) -> body) : ? { pre } *)
@@ -843,11 +844,16 @@ let check_abs
         | Some post ->
           Some (open_term' post (Tm_Var {nm_ppname="_";nm_index=x}) 1) in
 
-      let (| c_body, body_typing |) = check f g' (open_term body x) pre (E pre_typing) post in
-          
-      let tt = T_Abs g ppname x qual t u body c_body pre_hint post_hint t_typing body_typing in
+      let (| body', c_body, body_typing |) = check f g' (open_term body x) pre (E pre_typing) post in
+
+      let body_closed = close_term body' x in
+      assume (open_term body_closed x == body');
+
+      let tt = T_Abs g ppname x qual t u body_closed c_body pre_hint post_hint t_typing body_typing in
       let tres = Tm_Arrow {binder_ty=t;binder_ppname=ppname} qual (close_comp c_body x) in
-      (| C_Tot tres, tt |)
+      (| Tm_Abs {binder_ty=t;binder_ppname=ppname} qual pre_hint body_closed post_hint, 
+         C_Tot tres,
+         tt |)
     | _ -> T.fail "bad hint"
 
 #push-options "--z3rlimit_factor 8 --fuel 2 --ifuel 1"
@@ -859,7 +865,8 @@ let check_bind
   (pre_typing:tot_typing f g pre Tm_VProp)
   (post_hint:option term)
   (check:check_t)
-  : T.Tac (c:pure_comp { C_ST? c ==> comp_pre c == pre } &
+  : T.Tac (t:term &
+           c:pure_comp { C_ST? c ==> comp_pre c == pre } &
            src_typing f g t c) =
   
   let force_st #g #t (#pre:pure_term)
@@ -879,7 +886,8 @@ let check_bind
   let frame_empty = frame_empty f g pre pre_typing in
   match t with  
   | Tm_Bind e1 e2 ->
-    let (| c1, d1 |) = force_st pre_typing (check f g e1 pre pre_typing None) in
+    let (| e1, c1, d1 |) = check f g e1 pre pre_typing None in
+    let (| c1, d1 |) = force_st pre_typing (| c1, d1 |) in
     let C_ST s1 = c1 in
     let t = s1.res in
     let (| u, t_typing |) = check_universe f g t in
@@ -895,7 +903,12 @@ let check_bind
         | (| Tm_VProp, nt |) -> E nt
         | _ -> T.fail "next pre is not typable"
       in
-      let (| c2, d2 |) = force_st next_pre_typing (check f g' (open_term e2 x) next_pre next_pre_typing post_hint) in
+      let (| e2', c2, d2 |) = check f g' (open_term e2 x) next_pre next_pre_typing post_hint in
+      let (| c2, d2 |) = force_st #_ #e2' next_pre_typing (| c2, d2 |) in
+      let e2_closed = close_term e2' x in
+      assume (open_term e2_closed x == e2');
+      let d2 : src_typing f g' e2' c2 = d2 in
+      let d2 : src_typing f g' (open_term e2_closed x) c2 = d2 in
       let C_ST s2 = c2 in
       let (| u, res_typing |) = check_universe f g s2.res in
       if u <> s2.u
@@ -906,11 +919,143 @@ let check_bind
         match check_tot f ((x, Inl s2.res)::g) (open_term s2.post x) with
         | (| Tm_VProp, post_typing |) ->
           let bc : bind_comp f g x c1 c2 _ = (Bind_comp g x c1 c2 res_typing x (E post_typing)) in
-          (| _, T_Bind _ _ _ _ _ _ _ d1 t_typing d2 bc |)
+          (| Tm_Bind e1 e2_closed, _, T_Bind _ e1 e2_closed _ _ _ _ d1 t_typing d2 bc |)
         | _ -> T.fail "Ill-typed postcondition in bind"
       )
     )
 #pop-options
+
+let rec infer_gen_uvars (t_head:term) : T.Tac (list term & term & comp) =
+  match t_head with
+  | Tm_Arrow {binder_ty=t} (Some Implicit) (C_Tot rest) ->
+    let uv = gen_uvar t in
+    let rest = open_term' rest uv 0 in
+    let uv_rest, last_arg_t, comp_typ = infer_gen_uvars rest in
+    uv::uv_rest, last_arg_t, comp_typ
+
+  | Tm_Arrow {binder_ty=t} None st ->
+    [], t, st
+
+  | _ ->
+   T.fail (FStar.Printf.sprintf "infer_gen_uvars: unexpected t_head: %s" (P.term_to_string t_head))
+
+let rec infer_check_valid_solution (t1 t2:term) (uv_sols:list (term & term))
+  : T.Tac (list (term & term)) =
+
+  match uv_sols with
+  | [] -> [t1, t2]
+  | (t1', t2')::tl ->
+    if t1 = t1'
+    then if t2 = t2' then uv_sols
+         else T.fail "infer_check_valid_solution failed"
+    else (t1', t2')::(infer_check_valid_solution t1 t2 tl)
+
+let rec infer_match_typ (t1 t2:term) (uv_sols:list (term & term))
+  : T.Tac (list (term & term)) =
+
+  match t1, t2 with
+  | Tm_UVar _ n, _ ->
+    infer_check_valid_solution t1 t2 uv_sols
+  | _, Tm_UVar _ _ -> T.fail "infer_match_typ: t2 is a uvar"
+
+  | Tm_PureApp head1 arg_qual1 arg1, Tm_PureApp head2 arg_qual2 arg2 ->
+    if arg_qual1 = arg_qual2
+    then let uv_sols = infer_match_typ head1 head2 uv_sols in
+         infer_match_typ arg1 arg2 uv_sols
+    else uv_sols
+
+  | _, _ -> uv_sols
+
+let rec infer_atomic_vprop_has_uvar (t:term) : bool =
+  match t with
+  | Tm_UVar _ _ -> true
+  | Tm_PureApp head _ arg ->
+    infer_atomic_vprop_has_uvar head || infer_atomic_vprop_has_uvar arg
+  | Tm_Emp -> false
+  | _ -> false
+
+let rec infer_atomic_vprops_may_match (t1:term) (t2:pure_term) : bool =
+  match t1, t2 with
+  | Tm_UVar _ _, _ -> true
+  | Tm_PureApp head1 q1 arg1, Tm_PureApp head2 q2 arg2 ->
+    infer_atomic_vprops_may_match head1 head2 &&
+    q1 = q2 &&
+    infer_atomic_vprops_may_match arg1 arg2
+  | _, _ -> t1 = t2
+
+let infer_one_atomic_vprop (t:pure_term) (ctxt:list pure_term) (uv_sols:list (term & term))
+  : T.Tac (list (term & term)) =
+
+  if infer_atomic_vprop_has_uvar t
+  then
+    let matching_ctxt = List.Tot.filter (fun ctxt_vp -> infer_atomic_vprops_may_match t ctxt_vp) ctxt in
+    T.print (FStar.Printf.sprintf "infer_one_atomic_vprop %s, found %d matching candidates\n"
+               (P.term_to_string t)
+               (List.Tot.length matching_ctxt));
+    if List.Tot.length matching_ctxt = 1
+    then
+      let _ = T.print (FStar.Printf.sprintf "infer_one_atomic_vprop: matching %s and %s with %d exisiting solutions\n"
+                         (P.term_to_string t)
+                         (P.term_to_string (List.Tot.hd matching_ctxt))
+                         (List.Tot.length uv_sols)) in 
+      let uv_sols = infer_match_typ t (List.Tot.hd matching_ctxt) uv_sols in
+      T.print (FStar.Printf.sprintf "post matching, uv_sols has %d solutions\n"
+                 (List.Tot.length uv_sols));
+      uv_sols
+    else uv_sols
+  else uv_sols
+
+let rec infer_build_head (head:term) (uvs:list term) (uv_sols:list (term & term))
+  : T.Tac term
+  = match uvs with
+    | [] -> head
+    | hd::tl ->
+      let ropt = List.Tot.find (fun (t1, _) -> t1 = hd) uv_sols in
+      match ropt with
+      | None -> T.fail "inference failed in building head"
+      | Some (_, t2) ->
+        let app_node = Tm_PureApp head (Some Implicit) t2 in
+        infer_build_head app_node tl uv_sols
+
+let infer
+  (head:term)
+  (t_head:term)
+  (arg:term)
+  (t_arg:term)
+  qual
+  (ctxt_pre:term)
+  
+  : T.Tac term =
+
+  let uvs, t_arg_expected, pre =
+    let uvs, t_arg_expected, comp = infer_gen_uvars t_head in
+    let comp = open_comp' comp arg 0 in
+    match comp with
+    | C_ST st_comp -> uvs, t_arg_expected, st_comp.pre
+    | _ -> T.fail "infer:unexpected comp type" in
+
+  if List.Tot.length uvs = 0
+  then head
+  else begin
+    T.print (FStar.Printf.sprintf "infer: generated %d uvars, ctx: %s, st_comp.pre: %s\n"
+               (List.Tot.length uvs)
+               (P.term_to_string ctxt_pre)
+               (P.term_to_string pre));
+
+    let uv_sols = infer_match_typ t_arg_expected t_arg [] in
+
+    assume (is_pure_term pre);
+    let pre_list = vprop_as_list pre in
+
+    assume (is_pure_term ctxt_pre);
+    let ctxt_pre_list = vprop_as_list ctxt_pre in
+
+    let uv_sols = T.fold_left (fun uv_sols st_pre_vprop ->
+      infer_one_atomic_vprop st_pre_vprop ctxt_pre_list uv_sols) uv_sols pre_list in
+
+    let head = infer_build_head head uvs uv_sols in
+    Tm_STApp head qual arg
+  end
 
 #push-options "--query_stats --fuel 2 --ifuel 1 --z3rlimit_factor 4"
 #push-options "--print_implicits --print_universes --print_full_names"
@@ -922,14 +1067,14 @@ let rec check =
     (pre_typing: tot_typing f g pre Tm_VProp)
     (post_hint:option term) ->
   let repack #g #pre #t (x:(c:pure_comp_st { comp_pre c == pre } & src_typing f g t c)) (apply_post_hint:bool)
-    : T.Tac (c:pure_comp { C_ST? c ==> comp_pre c == pre } & src_typing f g t c) =
+    : T.Tac (t:term & c:pure_comp { C_ST? c ==> comp_pre c == pre } & src_typing f g t c) =
     let (| c, d_c |) = x in
     if apply_post_hint && C_ST? c
     then
       let (| c1, c_c1_eq |) = replace_equiv_post f g c post_hint in
       assume (comp_pre c1 == comp_pre c);
-      (| c1, T_Equiv _ _ _ _ d_c c_c1_eq |)
-    else (| c, d_c |)
+      (| t, c1, T_Equiv _ _ _ _ d_c c_c1_eq |)
+    else (| t, c, d_c |)
   in
 
   let frame_empty = frame_empty f g pre pre_typing in
@@ -956,18 +1101,27 @@ let rec check =
   | Tm_VProp
   | Tm_Refine _ _ ->
     let (| ty, d_ty |) = check_tot f g t in
-    (| C_Tot ty, d_ty |)
+    (| t, C_Tot ty, d_ty |)
 
   | Tm_Abs _ _ _ _ _ -> check_abs f g t pre pre_typing post_hint check
   | Tm_STApp head qual arg ->
     let (| ty_head, dhead |) = check_tot f g head in
     begin
     match ty_head with
-    | Tm_Arrow {binder_ty=formal;binder_ppname=ppname} bqual (C_ST res) ->
-      let darg = check_tot_with_expected_typ f g arg formal in
-      if bqual <> qual
+    | Tm_Arrow {binder_ty=formal;binder_ppname=ppname} bqual comp_typ ->
+      if bqual = Some Implicit && qual = None
+      then let (| ty_arg, _ |) = check_tot f g arg in
+           let t = infer head ty_head arg ty_arg qual pre in
+           check f g t pre pre_typing post_hint
+      else if bqual = None && qual = Some Implicit
       then T.fail "Unexpected qualifier"
       else (
+        let res =
+          match comp_typ with
+          | C_ST res -> res
+          | _ ->
+            T.fail (Printf.sprintf "Unexpected comp type in impure application: %s" (P.term_to_string ty_head)) in
+        let darg = check_tot_with_expected_typ f g arg formal in
         let d = T_STApp g head ppname formal qual (C_ST res) arg dhead (E darg) in
         opening_pure_comp_with_pure_term (C_ST res) arg 0;
         repack (try_frame_pre pre_typing d) true
@@ -979,4 +1133,7 @@ let rec check =
     check_bind f g t pre pre_typing post_hint check
   | Tm_If _ _ _ ->
     T.fail "Not handling if yet"
+
+  | Tm_UVar _ _ ->
+    T.fail "Unexpected Tm_Uvar in check"
 #pop-options

@@ -83,32 +83,17 @@ module R = Steel.ST.Reference
 
 type u32 : Type0 = U32.t
 
-// val erased : Type0
-// val hide (x:u32) : erased
-// val reveal (x:erased) : GTot u32
-
-// val hide_reveal (x:u32)
-//   : Lemma (reveal (hide x) == x)
-//           [SMTPat (reveal (hide x))]
-
-// val reveal_hide (x:erased)
-//   : Lemma (hide (reveal x) == x)
-//           [SMTPat (hide (reveal x))]
-
-// val ref (a:Type0) : Type0
-// val pts_to (r:ref) (n:erased) : vprop
-// val ptr (r:ref) : vprop
 open FStar.Ghost
 val read (n:erased u32) (r:R.ref u32)
   : stt u32 (R.pts_to r full_perm n) (fun x -> R.pts_to r full_perm x)
 
-val read_refine (n:erased u32) (r:R.ref u32)
+val read_refine (#n:erased u32) (r:R.ref u32)
   : stt (x:u32{reveal n == x}) (R.pts_to r full_perm n) (fun x -> R.pts_to r full_perm n)
 
 val read_alt (n:erased u32) (r:R.ref u32)
   : stt u32 (R.pts_to r full_perm n) (fun x -> R.pts_to r full_perm n)
 
-val write (n:erased u32) (r:R.ref u32) (x:u32)
+val write (#n:erased u32) (r:R.ref u32) (x:u32)
   : stt unit (R.pts_to r full_perm n) (fun _ -> R.pts_to r full_perm (hide x))
 
 val write_alt (n:erased u32) (r:R.ref u32) (x:u32)
