@@ -108,28 +108,28 @@ let vprop_equiv_cong (p1 p2 p3 p4:vprop)
 
 let vprop_equiv_ext p1 p2 _ = equiv_refl p1
 
-module G = FStar.Ghost
-module U32 = FStar.UInt32
+// module G = FStar.Ghost
+// module U32 = FStar.UInt32
 module R = Steel.ST.Reference
 
-type erased = G.erased u32
-let hide (x:u32) : erased = G.hide x
-let reveal (x:erased) = G.reveal x
+// type erased = G.erased u32
+// let hide (x:u32) : erased = G.hide x
+// let reveal (x:erased) = G.reveal x
 
-let hide_reveal _ = ()
-let reveal_hide _ = ()
+// let hide_reveal _ = ()
+// let reveal_hide _ = ()
 
-type ref = R.ref u32
-[@@ __reduce__]
-let pts_to (r:ref) (n:erased) = R.pts_to r full_perm n
+// type ref = R.ref u32
+// [@@ __reduce__]
+// let pts_to (r:ref) (n:erased) = R.pts_to r full_perm n
 
-[@@ __reduce__]
-let ptr (r:ref)  = exists_ (fun (n:erased) -> pts_to r n)
-
-let read (n:erased) (r:ref)
+// [@@ __reduce__]
+// let ptr (r:ref)  = exists_ (fun (n:erased) -> pts_to r n)
+open Steel.ST.Util
+let read (n:FStar.Ghost.erased u32) (r:R.ref u32) //(n:erased) (r:ref)
   = fun _ ->
     let x = R.read r in
-    rewrite (pts_to r n) (pts_to r (hide x));
+    rewrite (R.pts_to r full_perm n) (R.pts_to r full_perm (hide x));
     return x
 
 let read_refine n r =
@@ -137,17 +137,17 @@ let read_refine n r =
   let x = R.read r in
   return x
 
-let read_alt (n:erased) (r:ref)
+let read_alt n r
   = fun _ ->
     let x = R.read r in
     return x
 
-let write (n:erased) (r:ref) (x:u32)
+let write n r x
   = fun _ ->
     let _ = R.write r x in
-    rewrite _ (pts_to r (hide x))
+    rewrite _ (R.pts_to r full_perm (hide x))
 
-let write_alt (n:erased) (r:ref) (x:u32)
+let write_alt n r x
   = fun _ ->
     let _ = R.write r x in
     ()

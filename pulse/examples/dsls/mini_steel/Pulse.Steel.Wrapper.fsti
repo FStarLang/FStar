@@ -4,22 +4,8 @@ open Steel.ST.Effect
 open Steel.Memory
 open Steel.ST.Util
 
-//
-// THIS IS A STOPGAP
-//
-// We don't have implicit arguments or universe instantiations yet
-//
-// And so we cannot correctly elaborate to a Prims.eq2
-//   which requires both of these
-//
-// SHOULD GO AWAY
-//
-// When we add both these to mini steel syntax
-//
-unfold
-let meq2 (#a:Type0) (x y:a) : prop = Prims.eq2 x y
-
-unfold let eq_vprop (p1 p2:vprop) : prop = Prims.eq2 p1 p2
+unfold 
+let eq_vprop (p1 p2:vprop) : prop = Prims.eq2 p1 p2
 
 inline_for_extraction
 val stt (a:Type u#a) (pre:vprop) (post:a -> vprop) : Type0
@@ -97,33 +83,33 @@ module R = Steel.ST.Reference
 
 type u32 : Type0 = U32.t
 
-val erased : Type0
-val hide (x:u32) : erased
-val reveal (x:erased) : GTot u32
+// val erased : Type0
+// val hide (x:u32) : erased
+// val reveal (x:erased) : GTot u32
 
-val hide_reveal (x:u32)
-  : Lemma (reveal (hide x) == x)
-          [SMTPat (reveal (hide x))]
+// val hide_reveal (x:u32)
+//   : Lemma (reveal (hide x) == x)
+//           [SMTPat (reveal (hide x))]
 
-val reveal_hide (x:erased)
-  : Lemma (hide (reveal x) == x)
-          [SMTPat (hide (reveal x))]
+// val reveal_hide (x:erased)
+//   : Lemma (hide (reveal x) == x)
+//           [SMTPat (hide (reveal x))]
 
-val ref : Type0
-val pts_to (r:ref) (n:erased) : vprop
-val ptr (r:ref) : vprop
+// val ref (a:Type0) : Type0
+// val pts_to (r:ref) (n:erased) : vprop
+// val ptr (r:ref) : vprop
+open FStar.Ghost
+val read (n:erased u32) (r:R.ref u32)
+  : stt u32 (R.pts_to r full_perm n) (fun x -> R.pts_to r full_perm (hide x))
 
-val read (n:erased) (r:ref)
-  : stt u32 (pts_to r n) (fun x -> pts_to r (hide x))
+val read_refine (n:erased u32) (r:R.ref u32)
+  : stt (x:u32{reveal n == x}) (R.pts_to r full_perm n) (fun x -> R.pts_to r full_perm n)
 
-val read_refine (n:erased) (r:ref)
-  : stt (x:u32{meq2 (reveal n) x}) (pts_to r n) (fun x -> pts_to r n)
+val read_alt (n:erased u32) (r:R.ref u32)
+  : stt u32 (R.pts_to r full_perm n) (fun x -> R.pts_to r full_perm n)
 
-val read_alt (n:erased) (r:ref)
-  : stt u32 (pts_to r n) (fun x -> pts_to r n)
+val write (n:erased u32) (r:R.ref u32) (x:u32)
+  : stt unit (R.pts_to r full_perm n) (fun _ -> R.pts_to r full_perm (hide x))
 
-val write (n:erased) (r:ref) (x:u32)
-  : stt unit (pts_to r n) (fun _ -> pts_to r (hide x))
-
-val write_alt (n:erased) (r:ref) (x:u32)
-  : stt unit (pts_to r n) (fun _ -> ptr r)
+val write_alt (n:erased u32) (r:R.ref u32) (x:u32)
+  : stt unit (R.pts_to r full_perm n) (fun _ -> exists_ (R.pts_to r full_perm))

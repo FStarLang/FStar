@@ -52,7 +52,16 @@
           | (q, arg)::args -> aux (Tm_PureApp (acc, q, arg)) args in
         aux head args
 
-    let mk_fvar (l:string list) : term = Tm_FVar l
+    let mk_st_app (app:term) =
+        match app with
+        | Tm_PureApp(head, q, arg) -> Tm_STApp(head, q, arg)
+        | _ -> app
+        
+    let mk_fvar (l:string list) (us:universe list)
+        : term
+        = match us with
+          | [] -> Tm_FVar l
+          | _ -> Tm_UInst (l, us)
 
     let unsnoc (l:'a list) : ('a list * 'a) =
       let l = List.rev l in
@@ -88,7 +97,7 @@
 
 %token EOF
 
-%token FUN LET RETURN HASH_IMPLICIT
+%token FUN LET RETURN HASH_IMPLICIT U_HASH_ZERO REQUIRES ENSURES
 %token TRUE FALSE
 %token LPAREN RPAREN COMMA DOT COLON RARROW LBRACE RBRACE EQUALS SEMICOLON
 
@@ -105,7 +114,7 @@ constant:
   | FALSE  { Bool (false) }
 
 stapp:
-  | head=pure_expr LPAREN args=arguments RPAREN    { mk_app head args }
+  | head=pure_expr LBRACE args=arguments RBRACE    { mk_app head args }
 
 arg:
   | q=option(qualifier) e=pure_expr
@@ -155,6 +164,14 @@ lambda_post:
 binders:
   | bs=list(binder)    { bs }
 
+requires:
+  | REQUIRES pre=pure_expr
+    { pre }
+
+ensures:
+  | ENSURES post=lambda_post
+    { post }
+
 lambda:
   | FUN b=binder RARROW e=expr
     {
@@ -163,12 +180,12 @@ lambda:
       Tm_Abs (b, q, Tm_Emp, e, None)
     }
 
-  | FUN bs=binders LBRACE pre=pure_expr RBRACE RARROW e=expr
+  | FUN bs=binders pre=requires RARROW e=expr
     {
       mk_abs bs pre e None
     }
 
-  | FUN bs=binders LBRACE pre=pure_expr RBRACE LBRACE post=lambda_post RBRACE RARROW e=expr
+  | FUN bs=binders pre=requires post=ensures RARROW e=expr
     {
       mk_abs bs pre e (Some post)
     }
@@ -185,21 +202,27 @@ pureapp:
 
 expr:
   | RETURN e=pure_expr      { e }
-  | sapp=stapp              { sapp }
-  | LET b=let_binder EQUALS e1=stapp SEMICOLON e2=expr
+  | app=pureapp            { mk_st_app app }
+  | LET b=let_binder EQUALS e1=pureapp SEMICOLON e2=expr
     {
       let e2 = close_term e2 (lookup_var_index b) in
-      Tm_Bind (e1, e2)
+      Tm_Bind (mk_st_app e1, e2)
     }
-  | e1=stapp SEMICOLON e2=expr    { Tm_Bind (e1, e2) }
-  | LPAREN e=expr RPAREN    { e }
+  | e1=pureapp SEMICOLON e2=expr    { Tm_Bind (mk_st_app e1, e2) }
+(*  | LPAREN e=expr RPAREN    { e } *)
 
+
+universe:
+  | U_HASH_ZERO
+    { U_zero } 
+  
 pure_atomic_expr:
   | c=constant              { Tm_Constant (c) }
-  | l=path                  { mk_fvar l }
+  | l=path us=list(universe) { mk_fvar l us }
   | i=IDENT                 { resolve_name i }
   | EMP                     { Tm_Emp }
-
+  | LPAREN e=pure_expr RPAREN  { e }
+  
 pure_expr:
   | e=pure_atomic_expr                    { e }
   | e=pureapp                             { e }
@@ -209,7 +232,7 @@ pure_expr:
       let e = close_term e (lookup_var_index b.binder_ppname) in
       Tm_Refine (b, e)
     }
-  | LPAREN e=pure_expr RPAREN             { e }
+
 
 prog:
   | EOF           { None }

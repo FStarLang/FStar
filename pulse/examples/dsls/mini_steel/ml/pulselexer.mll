@@ -23,8 +23,11 @@ rule token =
       else if i = "fun" then FUN
       else if i = "let" then LET
       else if i = "return" then RETURN
+      else if i = "requires" then REQUIRES
+      else if i = "ensures" then ENSURES
       else IDENT (i)
     }
+  | "u#0"         { U_HASH_ZERO }
   | "#"           { HASH_IMPLICIT }
   | "("           { LPAREN }
   | ")"           { RPAREN }
