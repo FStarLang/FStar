@@ -11,26 +11,27 @@ module P = Pulse.Syntax.Printer
 module RTB = FStar.Tactics.Builtins
 
 let tc_meta_callback (f:R.env) (e:R.term) 
-  : T.Tac (option (t:R.term & RT.typing f e t))
-  = let topt = RTB.tc_term f e in
-    match topt with
+  : T.Tac (option (e:R.term & t:R.term & RT.typing f e t))
+  = let ropt = RTB.tc_term f e in
+    match ropt with
     | None -> None
-    | Some t ->
-      Some (| t, RT.T_Token _ _ _ (FStar.Squash.get_proof _) |)
+    | Some (e, t) ->
+      Some (| e, t, RT.T_Token _ _ _ (FStar.Squash.get_proof _) |)
 
 let tc_expected_meta_callback (f:R.env) (e:R.term) (t:R.term)
-  : T.Tac (option (RT.typing f e t)) =
+  : T.Tac (option (e:R.term & RT.typing f e t)) =
 
-  let te_opt = RTB.tc_term f e in
-  match te_opt with
+  let ropt = RTB.tc_term f e in
+  match ropt with
   | None -> None
-  | Some te ->
+  | Some (e, te) ->
     //we have typing_token f e te
     match RTB.check_subtyping f te t with
     | None -> None
     | Some p -> //p:squash (subtyping_token f te t)
-      Some (RT.T_Sub _ _ _ _ (RT.T_Token _ _ _ (FStar.Squash.get_proof (RTB.typing_token f e te)))
-                             (RT.ST_Token _ _ _ p))
+      Some (| e,
+              RT.T_Sub _ _ _ _ (RT.T_Token _ _ _ (FStar.Squash.get_proof (RTB.typing_token f e te)))
+                             (RT.ST_Token _ _ _ p) |)
 
 let (let?) (f:option 'a) (g:'a -> T.Tac (option 'b)) : T.Tac (option 'b) =
   match f with
@@ -305,7 +306,8 @@ let check_universe (f0:RT.fstar_top_env) (g:env) (t:term)
           (| u, proof |)
       
 let check_tot_univ (f:RT.fstar_top_env) (g:env) (t:term)
-  : T.Tac (_:(u:universe &
+  : T.Tac (_:(t:term &
+              u:universe &
               ty:pure_term &
               universe_of f g ty u &
               src_typing f g t (C_Tot ty)) { is_pure_term t } )
@@ -320,15 +322,17 @@ let check_tot_univ (f:RT.fstar_top_env) (g:env) (t:term)
           (Printf.sprintf "check_tot_univ: %s elaborated to %s Not typeable"
                           (P.term_to_string t)
                           (T.term_to_string rt))
-      | Some (| ty', tok |) ->
-        match readback_ty ty' with
-        | None -> T.fail "Inexpressible type"
-        | Some ty -> 
+      | Some (| rt, ty', tok |) ->
+        match readback_ty rt, readback_ty ty' with
+        | None, _
+        | _, None -> T.fail "Inexpressible type/term"
+        | Some t, Some ty -> 
           let (| u, uty |) = check_universe f g ty in
-          (| u, ty, uty, T_Tot g t ty tok |)
+          (| t, u, ty, uty, T_Tot g t ty tok |)
 
 let check_tot (f:RT.fstar_top_env) (g:env) (t:term)
-  : T.Tac (_:(ty:pure_term &
+  : T.Tac (_:(t:term &
+              ty:pure_term &
               src_typing f g t (C_Tot ty)) { is_pure_term t })
   = let fg = extend_env_l f g in
     match elab_term t with
@@ -341,14 +345,15 @@ let check_tot (f:RT.fstar_top_env) (g:env) (t:term)
           (Printf.sprintf "check_tot: %s elaborated to %s Not typeable"
             (P.term_to_string t)
             (T.term_to_string rt))
-      | Some (| ty', tok |) ->
-        match readback_ty ty' with
-        | None -> T.fail "Inexpressible type"
-        | Some ty -> 
-          (| ty, T_Tot g t ty tok |)
+      | Some (| rt, ty', tok |) ->
+        match readback_ty rt, readback_ty ty' with
+        | None, _
+        | _, None -> T.fail "Inexpressible type/term"
+        | Some t, Some ty -> 
+          (| t, ty, T_Tot g t ty tok |)
 
 let check_tot_with_expected_typ (f:RT.fstar_top_env) (g:env) (e:term) (t:pure_term)
-  : T.Tac (_:src_typing f g e (C_Tot t){is_pure_term e}) =
+  : T.Tac (_:(e:term & src_typing f g e (C_Tot t)){is_pure_term e}) =
 
   let fg = extend_env_l f g in
   match elab_term e with
@@ -361,8 +366,10 @@ let check_tot_with_expected_typ (f:RT.fstar_top_env) (g:env) (e:term) (t:pure_te
     | Some rt ->
       match tc_expected_meta_callback fg re rt with
       | None -> T.fail "check_tot_with_expected_typ: Not typeable"
-      | Some tok ->
-        T_Tot g e t tok
+      | Some (| re, tok |) ->
+        match readback_ty re with
+        | Some e -> (| e, T_Tot g e t tok |)
+        | None -> T.fail "readback failed"
     
 let rec vprop_as_list (vp:pure_term)
   : list pure_term
@@ -677,9 +684,13 @@ let check_vprop (f:RT.fstar_top_env)
                 (g:env)
                 (t:term)
   : T.Tac (_:tot_typing f g t Tm_VProp{is_pure_term t})
-  = let (| ty, d |) = check_tot f g t in
+  = let (| t', ty, d |) = check_tot f g t in
+    if t <> t'
+    then T.print (FStar.Printf.sprintf "check_vprop does not yet handle elabs %s and %s" (P.term_to_string t) (P.term_to_string t'));
     match ty with
-    | Tm_VProp -> E d
+    | Tm_VProp ->
+      assume (t = t');
+      E d
     | _ -> T.fail "Expected a vprop"
                  
 let try_frame_pre (#f:RT.fstar_top_env)
@@ -835,16 +846,17 @@ let check_abs
     let (| u, t_typing |) = check_universe f g t in
     let x = fresh g in
     let g' = (x, Inl t) :: g in
-    let pre = open_term pre_hint x in
-    match check_tot f g' pre with
-    | (| Tm_VProp, pre_typing |) ->
+    let pre_opened = open_term pre_hint x in
+    match check_tot f g' pre_opened with
+    | (| pre_opened, Tm_VProp, pre_typing |) ->
+      let pre = close_term pre_opened x in
       let post =
         match post_hint with
         | None -> None
         | Some post ->
           Some (open_term' post (Tm_Var {nm_ppname="_";nm_index=x}) 1) in
-
-      let (| body', c_body, body_typing |) = check f g' (open_term body x) pre (E pre_typing) post in
+      assume (is_pure_term pre_opened);
+      let (| body', c_body, body_typing |) = check f g' (open_term body x) pre_opened (E pre_typing) post in
 
       let body_closed = close_term body' x in
       assume (open_term body_closed x == body');
@@ -896,11 +908,14 @@ let check_bind
       let x = fresh g in
       let next_pre = open_term s1.post x in
       let g' = (x, Inl s1.res)::g in
-      let next_pre_typing : tot_typing f g' next_pre Tm_VProp =
+      let next_pre_typing
+        : tot_typing f g' next_pre Tm_VProp =
         //would be nice to prove that this is typable as a lemma,
         //without having to re-check it
         match check_tot f g' next_pre with
-        | (| Tm_VProp, nt |) -> E nt
+        | (| next_pre', Tm_VProp, nt |) ->
+          assume (next_pre' == next_pre);
+          E nt
         | _ -> T.fail "next pre is not typable"
       in
       let (| e2', c2, d2 |) = check f g' (open_term e2 x) next_pre next_pre_typing post_hint in
@@ -917,7 +932,8 @@ let check_bind
       then T.fail (Printf.sprintf "Bound variable %d escapes scope in postcondition %s" x (P.term_to_string s2.post))
       else (
         match check_tot f ((x, Inl s2.res)::g) (open_term s2.post x) with
-        | (| Tm_VProp, post_typing |) ->
+        | (| s2_post_opened, Tm_VProp, post_typing |) ->
+          assume (s2_post_opened == open_term s2.post x);
           let bc : bind_comp f g x c1 c2 _ = (Bind_comp g x c1 c2 res_typing x (E post_typing)) in
           (| Tm_Bind e1 e2_closed, _, T_Bind _ e1 e2_closed _ _ _ _ d1 t_typing d2 bc |)
         | _ -> T.fail "Ill-typed postcondition in bind"
@@ -1086,7 +1102,8 @@ let rec check =
   | Tm_Constant _
   | Tm_PureApp _ _ _
   | Tm_Let _ _ _ ->
-    let (| u, ty, uty, d |) = check_tot_univ f g t in
+    let (| t, u, ty, uty, d |) = check_tot_univ f g t in
+    assume (is_pure_term t);
     let c = return_comp u ty t in
     let d = T_Return _ _ _ _ (E d) uty in
     repack (frame_empty u ty uty t c d) false
@@ -1100,17 +1117,17 @@ let rec check =
   | Tm_Type _
   | Tm_VProp
   | Tm_Refine _ _ ->
-    let (| ty, d_ty |) = check_tot f g t in
+    let (| t, ty, d_ty |) = check_tot f g t in
     (| t, C_Tot ty, d_ty |)
 
   | Tm_Abs _ _ _ _ _ -> check_abs f g t pre pre_typing post_hint check
   | Tm_STApp head qual arg ->
-    let (| ty_head, dhead |) = check_tot f g head in
+    let (| head, ty_head, dhead |) = check_tot f g head in
     begin
     match ty_head with
     | Tm_Arrow {binder_ty=formal;binder_ppname=ppname} bqual comp_typ ->
       if bqual = Some Implicit && qual = None
-      then let (| ty_arg, _ |) = check_tot f g arg in
+      then let (| arg, ty_arg, _ |) = check_tot f g arg in
            let t = infer head ty_head arg ty_arg qual pre in
            check f g t pre pre_typing post_hint
       else if bqual = None && qual = Some Implicit
@@ -1121,7 +1138,8 @@ let rec check =
           | C_ST res -> res
           | _ ->
             T.fail (Printf.sprintf "Unexpected comp type in impure application: %s" (P.term_to_string ty_head)) in
-        let darg = check_tot_with_expected_typ f g arg formal in
+        let (| arg, darg |) = check_tot_with_expected_typ f g arg formal in
+        assume (is_pure_term arg);
         let d = T_STApp g head ppname formal qual (C_ST res) arg dhead (E darg) in
         opening_pure_comp_with_pure_term (C_ST res) arg 0;
         repack (try_frame_pre pre_typing d) true
