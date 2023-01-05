@@ -87,14 +87,17 @@ open FStar.Ghost
 val read (n:erased u32) (r:R.ref u32)
   : stt u32 (R.pts_to r full_perm n) (fun x -> R.pts_to r full_perm x)
 
-val read_refine (#n:erased u32) (r:R.ref u32)
+val read_refine (n:erased u32) (r:R.ref u32)
   : stt (x:u32{reveal n == x}) (R.pts_to r full_perm n) (fun x -> R.pts_to r full_perm n)
 
 val read_alt (n:erased u32) (r:R.ref u32)
   : stt u32 (R.pts_to r full_perm n) (fun x -> R.pts_to r full_perm n)
 
-val write (#n:erased u32) (r:R.ref u32) (x:u32)
+val write (n:erased u32) (r:R.ref u32) (x:u32)
   : stt unit (R.pts_to r full_perm n) (fun _ -> R.pts_to r full_perm (hide x))
 
 val write_alt (n:erased u32) (r:R.ref u32) (x:u32)
   : stt unit (R.pts_to r full_perm n) (fun _ -> exists_ (R.pts_to r full_perm))
+
+val read_implicit (#n:erased u32) (r:R.ref u32)
+  : stt u32 (R.pts_to r full_perm n) (fun _ -> R.pts_to r full_perm n)

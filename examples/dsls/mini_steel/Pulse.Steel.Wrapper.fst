@@ -117,7 +117,7 @@ let read (n:FStar.Ghost.erased u32) (r:R.ref u32) //(n:erased) (r:ref)
     rewrite (R.pts_to r full_perm n) (R.pts_to r full_perm (hide x));
     return x
 
-let read_refine #n r =
+let read_refine n r =
   fun _ ->
   let x = R.read r in
   return x
@@ -127,7 +127,7 @@ let read_alt n r
     let x = R.read r in
     return x
 
-let write #n r x
+let write n r x
   = fun _ ->
     let _ = R.write r x in
     rewrite _ (R.pts_to r full_perm (hide x))
@@ -136,3 +136,5 @@ let write_alt n r x
   = fun _ ->
     let _ = R.write r x in
     ()
+
+let read_implicit #n r = read_alt n r

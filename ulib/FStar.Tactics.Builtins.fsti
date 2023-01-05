@@ -439,7 +439,7 @@ val check_equiv (g:env) (t0 t1:typ)
   : Tac (option (squash (equiv_token g t0 t1)))
 
 val tc_term (g:env) (e:term)
-  : Tac (option (t:typ{typing_token g e t}))
+  : Tac (option (r:(term & typ){typing_token g (fst r) (snd r)}))
 
 val universe_of (g:env) (e:term)
   : Tac (option (u:universe{typing_token g e (pack_ln (Tv_Type u))}))

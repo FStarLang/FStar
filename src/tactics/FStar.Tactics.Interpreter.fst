@@ -530,8 +530,8 @@ let () =
         refl_check_equiv NRE.e_env NRE.e_term NRE.e_term (NBET.e_option NBET.e_unit);
 
       mk_tac_step_2 0 "tc_term"
-        refl_tc_term RE.e_env RE.e_term (e_option RE.e_term)
-        refl_tc_term NRE.e_env NRE.e_term (NBET.e_option NRE.e_term);
+        refl_tc_term RE.e_env RE.e_term (e_option (e_tuple2 RE.e_term RE.e_term))
+        refl_tc_term NRE.e_env NRE.e_term (NBET.e_option (NBET.e_tuple2 NRE.e_term NRE.e_term));
 
       mk_tac_step_2 0 "universe_of"
         refl_universe_of RE.e_env RE.e_term (e_option RE.e_universe)
