@@ -6,17 +6,35 @@ val t : eqtype
 
 val fits (x: int) : Tot prop
 
+val fits_lte (x y: int) : Lemma
+  (requires (abs x <= abs y /\ fits y))
+  (ensures (fits x))
+  [SMTPat (fits x); SMTPat (fits y)]
+
 [@@noextract_to "krml"]
 val v (x: t) : Pure int
   (requires True)
   (ensures (fun y -> fits y))
 
-val ptrdiff_v_inj (x1 x2: t) : Lemma
-  (v x1 == v x2 ==> x1 == x2)
-  [SMTPat (v x1); SMTPat (v x2)]
+val uint_to_t (x: int) : Pure t
+  (requires (fits x))
+  (ensures (fun y -> v y == x))
 
-/// According to the C standard, "the bit width of size_t is not less than 16 since c99"
-/// (https://en.cppreference.com/w/c/types/size_t)
+/// v and uint_to_t are inverses
+val ptrdiff_v_inj (x: t)
+  : Lemma
+    (ensures uint_to_t (v x) == x)
+    [SMTPat (v x)]
+
+val ptrdiff_uint_to_t_inj (x: int)
+  : Lemma
+    (requires fits x)
+    (ensures v (uint_to_t x) == x)
+    [SMTPat (uint_to_t x)]
+
+/// According to the C standard, "the bit width of ptrdiff_t is not less than 17 since c99,
+/// 16 since C23"
+/// (https://en.cppreference.com/w/c/types/ptrdiff_t)
 /// We therefore only offer a function to create a ptrdiff_t when we are sure it fits
 noextract inline_for_extraction
 val mk (x: I16.t) : Pure t
@@ -30,6 +48,21 @@ let zero : (zero_ptrdiff: t { v zero_ptrdiff == 0 }) =
 val add (x y: t) : Pure t
   (requires (fits (v x + v y)))
   (ensures (fun z -> v z == v x + v y))
+
+(** Modulo specification, similar to FStar.UInt.mod *)
+
+let mod_spec (a:int{fits a}) (b:int{fits b /\ b <> 0}) : GTot (n:int{fits n}) =
+  let open FStar.Mul in
+  let res = a - ((a/b) * b) in
+  fits_lte res b;
+  res
+
+(** Euclidean remainder
+
+    The result is the modulus of [a] with respect to a non-zero [b] *)
+val rem (a:t) (b:t{v b <> 0}) : Pure t
+  (requires True)
+  (ensures (fun c -> mod_spec (v a) (v b) = v c))
 
 (** Greater than *)
 val gt (x y:t) : Pure bool

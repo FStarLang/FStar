@@ -11,10 +11,10 @@ val t : eqtype
 val fits (x: nat) : Tot prop
 
 /// According to the C standard, "the bit width of t is not less than 16 since c99"
-/// (https://en.cppreference.com/w/c/types/t)
+/// (https://en.cppreference.com/w/c/types/size_t)
 
 val fits_at_least_16 (x:nat)
-  : Lemma 
+  : Lemma
     (requires x < pow2 16)
     (ensures fits x)
     [SMTPat (fits x)]
@@ -96,6 +96,7 @@ val fits_lte (x y: nat) : Lemma
   (requires (x <= y /\ fits y))
   (ensures (fits x))
   [SMTPat (fits x); SMTPat (fits y)]
+
 (** Non-overflowing arithmetic operations *)
 
 val add (x y: t) : Pure t
@@ -122,7 +123,6 @@ let mod_spec (a:nat{fits a}) (b:nat{fits b /\ b <> 0}) : GTot (n:nat{fits n}) =
   let res = a - ((a/b) * b) in
   fits_lte res a;
   res
-
 
 (** Euclidean remainder
 
