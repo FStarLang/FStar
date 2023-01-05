@@ -2259,6 +2259,29 @@ let refl_check_subtyping (g:env) (t0 t1:typ) : tac (option unit) =
 let refl_check_equiv (g:env) (t0 t1:typ) : tac (option unit) =
   refl_check_relation g t0 t1 Equality
 
+let refl_core_check_term (g:env) (e:term) : tac (option typ) =
+  if no_uvars_in_g g &&
+     no_uvars_in_term e
+  then refl_typing_builtin_wrapper (fun _ ->
+         dbg_refl g (fun _ ->
+           BU.format1 "refl_tc_term: %s\n" (Print.term_to_string e));
+         let must_tot = true in
+         let gh = fun g guard ->
+           Rel.force_trivial_guard g
+             {Env.trivial_guard with guard_f = NonTrivial guard};
+           true in
+         match Core.compute_term_type_handle_guards g e must_tot gh with
+         | Inl t ->
+           dbg_refl g (fun _ ->
+             BU.format2 "refl_tc_term for %s computed type %s\n"
+               (Print.term_to_string e)
+               (Print.term_to_string t));
+           t
+         | Inr err ->
+           dbg_refl g (fun _ -> BU.format1 "refl_tc_term failed: %s\n" (Core.print_error err));
+           Errors.raise_error (Errors.Fatal_IllTyped, "") Range.dummyRange)
+  else ret None
+
 let refl_tc_term (g:env) (e:term) : tac (option (term & typ)) =
   if no_uvars_in_g g &&
      no_uvars_in_term e

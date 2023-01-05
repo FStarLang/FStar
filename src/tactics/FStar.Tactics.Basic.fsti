@@ -120,6 +120,7 @@ val with_compat_pre_core   : Z.t -> tac 'a -> tac 'a
 (*****)
 val refl_check_subtyping     : env -> typ -> typ -> tac (option unit)
 val refl_check_equiv         : env -> typ -> typ -> tac (option unit)
+val refl_core_check_term     : env -> term -> tac (option typ)
 val refl_tc_term             : env -> term -> tac (option (term & typ))
 val refl_universe_of         : env -> term -> tac (option universe)
 val refl_check_prop_validity : env -> term -> tac (option unit)

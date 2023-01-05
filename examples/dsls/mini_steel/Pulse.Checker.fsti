@@ -8,20 +8,6 @@ open Pulse.Syntax
 open Pulse.Elaborate.Pure
 open Pulse.Typing
 
-val readback_universes (us:list R.universe)
-  : o:option (list universe) { 
-          Some? o ==> List.Tot.map elab_universe (Some?.v o) == us 
-    }
-
-val readback_qual (q:R.aqualv)
-  : option qualifier
-  
-val readback_ty (t:R.term)
-  : T.Tac (option (ty:pure_term { elab_term ty == Some t }))
-
-val readback_comp (t:R.term)
-  : T.Tac (option (c:comp{ elab_comp c == Some t}))
-
 val check_tot (f:RT.fstar_top_env) (g:env) (t:term)
   : T.Tac (_:(t:term &
               ty:pure_term &
