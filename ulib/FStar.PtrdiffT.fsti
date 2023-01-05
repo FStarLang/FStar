@@ -6,8 +6,8 @@ val t : eqtype
 
 val fits (x: int) : Tot prop
 
-val fits_lte (x y: int) : Lemma
-  (requires (abs x <= abs y /\ fits y))
+val fits_lt (x y: int) : Lemma
+  (requires (abs x < abs y /\ fits y))
   (ensures (fits x))
   [SMTPat (fits x); SMTPat (fits y)]
 
@@ -16,21 +16,21 @@ val v (x: t) : Pure int
   (requires True)
   (ensures (fun y -> fits y))
 
-val uint_to_t (x: int) : Pure t
+val int_to_t (x: int) : Pure t
   (requires (fits x))
   (ensures (fun y -> v y == x))
 
 /// v and uint_to_t are inverses
 val ptrdiff_v_inj (x: t)
   : Lemma
-    (ensures uint_to_t (v x) == x)
+    (ensures int_to_t (v x) == x)
     [SMTPat (v x)]
 
-val ptrdiff_uint_to_t_inj (x: int)
+val ptrdiff_int_to_t_inj (x: int)
   : Lemma
     (requires fits x)
-    (ensures v (uint_to_t x) == x)
-    [SMTPat (uint_to_t x)]
+    (ensures v (int_to_t x) == x)
+    [SMTPat (int_to_t x)]
 
 /// According to the C standard, "the bit width of ptrdiff_t is not less than 17 since c99,
 /// 16 since C23"
@@ -49,12 +49,12 @@ val add (x y: t) : Pure t
   (requires (fits (v x + v y)))
   (ensures (fun z -> v z == v x + v y))
 
-(** Modulo specification, similar to FStar.UInt.mod *)
+(** Modulo specification, similar to FStar.Int.mod *)
 
 let mod_spec (a:int{fits a}) (b:int{fits b /\ b <> 0}) : GTot (n:int{fits n}) =
   let open FStar.Mul in
   let res = a - ((a/b) * b) in
-  fits_lte res b;
+  fits_lt res b;
   res
 
 (** Euclidean remainder
