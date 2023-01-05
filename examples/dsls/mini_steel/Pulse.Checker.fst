@@ -640,7 +640,8 @@ let check_abs
            src_typing f g t c) =
   match t with  
   | Tm_Abs {binder_ty=t;binder_ppname=ppname} qual pre_hint body post_hint ->  (* {pre}  (fun (x:t) -> body) : ? { pre } *)
-    let (| u, t_typing |) = check_universe f g t in
+    let (| t, _, _ |) = check_tot f g t in //elaborate it first
+    let (| u, t_typing |) = check_universe f g t in //then check that its universe ... We could collapse the two calls
     let x = fresh g in
     let g' = (x, Inl t) :: g in
     let pre_opened = open_term pre_hint x in
@@ -667,7 +668,22 @@ let check_abs
          tt |)
     | _ -> T.fail "bad hint"
 
-#push-options "--z3rlimit_factor 8 --fuel 2 --ifuel 1"
+#push-options "--z3rlimit_factor 8 --fuel 2 --ifuel 1 --query_stats"
+
+let force_st #f #g #t (#pre:pure_term)
+             (pre_typing:tot_typing f g pre Tm_VProp)
+             (x:(c:pure_comp { C_ST? c ==> comp_pre c == pre } & src_typing f g t c))
+  : T.Tac (c:pure_comp_st { comp_pre c == pre } & src_typing f g t c)
+  = let (| c, d_c |) = x in
+    match c with
+    | C_Tot ty ->
+      let (| ures, ures_ty |) = check_universe f g ty in
+      let c = return_comp_noeq ures ty in
+      let d = T_ReturnNoEq _ _ _ _ d_c ures_ty in
+      frame_empty f g pre pre_typing ures ty ures_ty _ c d        
+
+    | C_ST _ -> (|c, d_c|)
+
 let check_bind
   (f:RT.fstar_top_env)
   (g:env)
@@ -679,46 +695,25 @@ let check_bind
   : T.Tac (t:term &
            c:pure_comp { C_ST? c ==> comp_pre c == pre } &
            src_typing f g t c) =
-  
-  let force_st #g #t (#pre:pure_term)
-    (pre_typing:tot_typing f g pre Tm_VProp)
-    (x:(c:pure_comp { C_ST? c ==> comp_pre c == pre } & src_typing f g t c))
-    : T.Tac (c:pure_comp_st { comp_pre c == pre } & src_typing f g t c) =
-    let (| c, d_c |) = x in
-    match c with
-    | C_Tot ty ->
-      let (| ures, ures_ty |) = check_universe f g ty in
-      let c = return_comp_noeq ures ty in
-      let d = T_ReturnNoEq _ _ _ _ d_c ures_ty in
-      frame_empty f g pre pre_typing ures ty ures_ty _ c d        
-
-    | C_ST _ -> (|c, d_c|)
-  in
   let frame_empty = frame_empty f g pre pre_typing in
-  match t with  
-  | Tm_Bind e1 e2 ->
-    let (| e1, c1, d1 |) = check f g e1 pre pre_typing None in
-    let (| c1, d1 |) = force_st pre_typing (| c1, d1 |) in
-    let C_ST s1 = c1 in
-    let t = s1.res in
-    let (| u, t_typing |) = check_universe f g t in
-    if u <> s1.u then T.fail "incorrect universe"
-    else (
+  let Tm_Bind e1 e2 = t  in
+  let (| e1, c1, d1 |) = check f g e1 pre pre_typing None in
+  let (| c1, d1 |) = force_st pre_typing (| c1, d1 |) in
+  let C_ST s1 = c1 in
+  let t = s1.res in
+  let (| u, t_typing |) = check_universe f g t in
+  if u <> s1.u then T.fail "incorrect universe"
+  else (
       let x = fresh g in
       let next_pre = open_term s1.post x in
       let g' = (x, Inl s1.res)::g in
-      let next_pre_typing
-        : tot_typing f g' next_pre Tm_VProp =
-        //would be nice to prove that this is typable as a lemma,
-        //without having to re-check it
-        match check_tot f g' next_pre with
-        | (| next_pre', Tm_VProp, nt |) ->
-          assume (next_pre' == next_pre);
-          E nt
-        | _ -> T.fail "next pre is not typable"
+      //would be nice to prove that this is typable as a lemma,
+      //without having to re-check it
+      let next_pre_typing : tot_typing f g' next_pre Tm_VProp
+        = check_vprop_no_inst f g' next_pre
       in
       let (| e2', c2, d2 |) = check f g' (open_term e2 x) next_pre next_pre_typing post_hint in
-      let (| c2, d2 |) = force_st #_ #e2' next_pre_typing (| c2, d2 |) in
+      let (| c2, d2 |) = force_st #_ #_ #e2' next_pre_typing (| c2, d2 |) in
       let e2_closed = close_term e2' x in
       assume (open_term e2_closed x == e2');
       let d2 : src_typing f g' e2' c2 = d2 in
@@ -730,14 +725,12 @@ let check_bind
       else if x `Set.mem` freevars s2.post
       then T.fail (Printf.sprintf "Bound variable %d escapes scope in postcondition %s" x (P.term_to_string s2.post))
       else (
-        match check_tot f ((x, Inl s2.res)::g) (open_term s2.post x) with
-        | (| s2_post_opened, Tm_VProp, post_typing |) ->
-          assume (s2_post_opened == open_term s2.post x);
-          let bc : bind_comp f g x c1 c2 _ = (Bind_comp g x c1 c2 res_typing x (E post_typing)) in
-          (| Tm_Bind e1 e2_closed, _, T_Bind _ e1 e2_closed _ _ _ _ d1 t_typing d2 bc |)
-        | _ -> T.fail "Ill-typed postcondition in bind"
+        let s2_post_opened = open_term s2.post x in
+        let post_typing = check_vprop_no_inst f ((x, Inl s2.res)::g) s2_post_opened in
+        let bc : bind_comp f g x c1 c2 _ = (Bind_comp g x c1 c2 res_typing x post_typing) in
+        (| Tm_Bind e1 e2_closed, _, T_Bind _ e1 e2_closed _ _ _ _ d1 t_typing d2 bc |)
       )
-    )
+  )
 #pop-options
 
 let rec infer_gen_uvars (t_head:term) : T.Tac (list term & term & comp) =
