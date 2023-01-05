@@ -270,7 +270,9 @@ let check_universe (f0:RT.fstar_top_env) (g:env) (t:term)
     | Some rt ->
       let ru_opt = RTB.universe_of f rt in
       match ru_opt  with
-      | None -> T.fail "Not typable as a universe"
+      | None -> T.fail (Printf.sprintf "%s elaborated to %s; Not typable as a universe"
+                         (P.term_to_string t)
+                         (T.term_to_string rt))
       | Some ru ->
         let uopt = readback_universe ru in
         let proof : squash (RTB.typing_token f rt (R.pack_ln (R.Tv_Type ru))) =
@@ -294,7 +296,11 @@ let check_tot_univ (f:RT.fstar_top_env) (g:env) (t:term)
       T.fail ("Not a syntactically pure term: " ^ P.term_to_string t)
     | Some rt -> 
       match tc_meta_callback fg rt with
-      | None -> T.fail "Not typeable"
+      | None -> 
+        T.fail
+          (Printf.sprintf "check_tot_univ: %s elaborated to %s Not typeable"
+                          (P.term_to_string t)
+                          (T.term_to_string rt))
       | Some (| ty', tok |) ->
         match readback_ty ty' with
         | None -> T.fail "Inexpressible type"
@@ -311,7 +317,11 @@ let check_tot (f:RT.fstar_top_env) (g:env) (t:term)
       T.fail ("Not a syntactically pure term: " ^ P.term_to_string t)
     | Some rt -> 
       match tc_meta_callback fg rt with
-      | None -> T.fail "Not typeable"
+      | None -> 
+        T.fail 
+          (Printf.sprintf "check_tot: %s elaborated to %s Not typeable"
+            (P.term_to_string t)
+            (T.term_to_string rt))
       | Some (| ty', tok |) ->
         match readback_ty ty' with
         | None -> T.fail "Inexpressible type"

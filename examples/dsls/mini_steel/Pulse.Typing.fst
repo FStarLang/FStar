@@ -26,11 +26,13 @@ let tm_false : pure_term = Tm_Constant (Bool false)
 //
 // SHOULD GO AWAY
 //
-let eq2_lid = ["Pulse"; "Steel"; "Wrapper"; "meq2"]
-let mk_eq2 (t:pure_term) (e0 e1:pure_term) 
+let eq2_lid = ["Prims"; "eq2"]
+let mk_eq2 (u:universe)
+           (t:pure_term)
+           (e0 e1:pure_term) 
   : pure_term
   = Tm_PureApp
-         (Tm_PureApp (Tm_PureApp (Tm_FVar eq2_lid) (Some Implicit) t)
+         (Tm_PureApp (Tm_PureApp (Tm_UInst eq2_lid [u]) (Some Implicit) t)
                      None e0) None e1
 
 let mk_vprop_eq (e0 e1:pure_term) : pure_term =
@@ -41,7 +43,7 @@ let return_comp (u:universe) (t:pure_term) (e:pure_term)
   = C_ST { u;
            res = t;
            pre = Tm_Emp;
-           post = Tm_Pure (mk_eq2 t (null_bvar 0) e) }
+           post = Tm_Pure (mk_eq2 u t (null_bvar 0) e) }
 
 let return_comp_noeq (u:universe) (t:pure_term)
   : pure_comp 

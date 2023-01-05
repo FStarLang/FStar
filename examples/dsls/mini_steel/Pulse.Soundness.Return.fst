@@ -18,8 +18,8 @@ let mk_pure t =
   let pure = R.(pack_ln (Tv_FVar (pack_fv pure_lid))) in
   R.mk_app pure [(t, R.Q_Explicit)]
 
-let mk_eq t v0 v1 = 
-  let m_eq2 = R.(pack_ln (Tv_FVar (pack_fv eq2_lid))) in
+let mk_eq u t v0 v1 = 
+  let m_eq2 = R.(pack_ln (Tv_UInst (pack_fv eq2_lid) [u])) in
   let eq = R.mk_app m_eq2 [(t, R.Q_Implicit);
                            (v0, R.Q_Explicit);
                            (v1, R.Q_Explicit)] in
@@ -31,7 +31,7 @@ let inst_stt_return (#g:R.env) (#u:R.universe) (#ty #v:R.term)
   : GTot (RT.typing g (mk_return u ty v)
                       (mk_stt_app u [ty;
                                      emp_tm; 
-                                     mk_abs ty R.Q_Explicit (mk_pure (mk_eq ty (var_as_bvar_term 0) v))]))
+                                     mk_abs ty R.Q_Explicit (mk_pure (mk_eq u ty (var_as_bvar_term 0) v))]))
    = admit()
                     
 #push-options "--query_stats --fuel 4 --ifuel 1"
