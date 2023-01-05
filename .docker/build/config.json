@@ -31,6 +31,6 @@
     "TrackPerformance" : false,
 
     "RepoVersions" : {
-        "karamel_version" : "origin/_taramana_is_null",
+        "karamel_version" : "origin/master",
     }
 }
