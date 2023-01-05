@@ -20,7 +20,7 @@ let warmup (x:int) = assert (x + 1 > x)
 %splice_t[test_syntax] (check  (`(
    fun (x:ref u32) (#n:erased u32) -> 
      (expects (
-        pts_to x full_perm n)) //(reveal n)))
+        pts_to x full_perm n))
      (provides (fun _ ->
         pts_to x full_perm 0ul))
      (
@@ -32,7 +32,7 @@ let warmup (x:int) = assert (x + 1 > x)
 %splice_t[test_read2] (check (`(
   fun (n:erased u32) (r:ref u32) ->
     (expects (
-       pts_to r full_perm (reveal n)))
+       pts_to r full_perm n))
     (provides (fun x ->
        pts_to r full_perm x))
     (
@@ -44,9 +44,9 @@ let warmup (x:int) = assert (x + 1 > x)
   fun (n:erased u32)
     (r:ref u32) ->
     (expects (
-       pts_to r full_perm (reveal n)))
+       pts_to r full_perm n))
     (provides (fun _ -> 
-       pts_to r full_perm (reveal n)))
+       pts_to r full_perm n))
     (
        read_alt n r
     )
@@ -56,11 +56,11 @@ let warmup (x:int) = assert (x + 1 > x)
     fun (n:erased u32)
       (r1 r2:ref u32) ->
       (expects (
-         pts_to r1 full_perm (reveal n) `star`
-         pts_to r2 full_perm (reveal n)))
+         pts_to r1 full_perm n `star`
+         pts_to r2 full_perm n))
       (provides (fun _ -> 
-         pts_to r1 full_perm (reveal n) `star`
-         pts_to r2 full_perm (reveal n)))
+         pts_to r1 full_perm n `star`
+         pts_to r2 full_perm n))
       (
          read_alt n r2
       )
@@ -70,7 +70,7 @@ let warmup (x:int) = assert (x + 1 > x)
       fun (n:erased u32)
         (r:ref u32) ->
         (expects (
-           pts_to r full_perm (reveal n)))
+           pts_to r full_perm n))
         (
            read_refine n r
         )
@@ -82,8 +82,8 @@ let warmup (x:int) = assert (x + 1 > x)
        (x:u32)
        (r2:ref u32) ->
        (expects (
-          pts_to r1 full_perm (reveal n) `star`
-          pts_to r2 full_perm (reveal n)))
+          pts_to r1 full_perm n `star`
+          pts_to r2 full_perm n))
        (
           write n r2 x
        )
@@ -95,7 +95,7 @@ let warmup (x:int) = assert (x + 1 > x)
   fun (n:erased u32)
     (r:ref u32) ->
     (expects (
-       pts_to r full_perm (reveal n)))
+       pts_to r full_perm n))
     (
        let x = read_alt n r in
        write n r x
@@ -103,7 +103,6 @@ let warmup (x:int) = assert (x + 1 > x)
 )))
 
 
-[@@ expect_failure]
 %splice_t[read_implicit] (check (`(
   fun (#n:erased u32)
     (r:ref u32) ->
@@ -118,11 +117,11 @@ let warmup (x:int) = assert (x + 1 > x)
   fun (n1 n2:erased u32)
     (r1 r2:ref u32) ->
     (expects  (
-      pts_to r1 full_perm (reveal n1) `star` 
-      pts_to r2 full_perm (reveal n2)))
+      pts_to r1 full_perm n1 `star` 
+      pts_to r2 full_perm n2))
     (provides (fun _ ->
-      pts_to r1 full_perm (reveal n2) `star` 
-      pts_to r2 full_perm (reveal n1)))
+      pts_to r1 full_perm n2 `star` 
+      pts_to r2 full_perm n1))
     (
       let x = read_refine n1 r1 in
       let y = read_refine n2 r2 in
@@ -136,11 +135,11 @@ let warmup (x:int) = assert (x + 1 > x)
   fun (n1 n2:erased u32)
     (r1 r2:ref u32) ->
     (expects  (
-      pts_to r1 full_perm (reveal n1) `star` 
-      pts_to r2 full_perm (reveal n2)))
+      pts_to r1 full_perm n1 `star` 
+      pts_to r2 full_perm n2))
     (provides (fun _ -> 
-      pts_to r1 full_perm (reveal n1) `star` 
-      pts_to r2 full_perm (reveal n2)))
+      pts_to r1 full_perm n1 `star` 
+      pts_to r2 full_perm n2))
     (
       test_swap2 n1 n2 r1 r2;
       test_swap2 n2 n1 r1 r2

@@ -2290,6 +2290,7 @@ let refl_tc_term (g:env) (e:term) : tac (option (term & typ)) =
       BU.format1 "refl_tc_term: %s\n" (Print.term_to_string e));
     dbg_refl g (fun _ -> "refl_tc_term: starting tc {\n");
     let must_tot = true in
+    let e, _, _ = g.typeof_tot_or_gtot_term { g with phase1=true } e must_tot in
     let e, _, guard = g.typeof_tot_or_gtot_term g e must_tot in
     Rel.force_trivial_guard g guard;
     let e = N.remove_uvar_solutions g e in

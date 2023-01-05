@@ -11,7 +11,7 @@ FSTAR=fstar.exe $(FSTAR_FLAGS)
 all: Pulse.Tests.fst.checked
 
 Pulse.Tests.fst.checked: prep
-	fstar.exe --cache_checked_modules --load_cmxs Pulse.Main $(addprefix --include , $(INCLUDE_PATHS)) Pulse.Tests.fst --debug Pulse.Tests --debug_level SMTQuery $(OTHERFLAGS) --warn_error -249
+	fstar.exe --cache_checked_modules --load_cmxs Pulse.Main $(addprefix --include , $(INCLUDE_PATHS)) Pulse.Tests.fst $(OTHERFLAGS) --warn_error -249
 
 Pulse_Tests.ml: Pulse.Tests.fst.checked
 	fstar.exe --cmi --codegen OCaml --extract Pulse.Tests $(addprefix --include , $(INCLUDE_PATHS)) Pulse.Tests.fst $(OTHERFLAGS)
