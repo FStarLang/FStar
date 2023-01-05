@@ -183,6 +183,12 @@ let pts_to_length
   elim_pts_to a _ s;
   intro_pts_to a _ s
 
+let pts_to_not_null
+  a s
+= elim_pts_to a _ s;
+  R.pts_to_not_null _ _;
+  intro_pts_to a _ s
+
 let mk_carrier_joinable
   (#elt: Type)
   (len: nat)
