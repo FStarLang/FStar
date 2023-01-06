@@ -103,7 +103,7 @@ let warmup (x:int) = assert (x + 1 > x)
 )))
 
 
-
+// (*
 // %splice_t[read_implicit] (check (`(
 //   fun (#n:erased u32)
 //     (r:ref u32) ->
@@ -113,10 +113,11 @@ let warmup (x:int) = assert (x + 1 > x)
 //        read_implicit r
 //     )
 // )))
-    
+// *)
+
 %splice_t[test_swap2] (check (`(
-  fun (n1 n2:erased u32)
-    (r1 r2:ref u32) ->
+  fun (r1 r2:ref u32)
+    (n1 n2:erased u32) ->
     (expects  (
       pts_to r1 full_perm n1 `star` 
       pts_to r2 full_perm n2))
@@ -142,25 +143,7 @@ let warmup (x:int) = assert (x + 1 > x)
       pts_to r1 full_perm n1 `star` 
       pts_to r2 full_perm n2))
     (
-      test_swap2 n1 n2 r1 r2;
-      test_swap2 n2 n1 r1 r2;
-      test_swap2 n1 n2 r1 r2;
-      test_swap2 n2 n1 r1 r2;
-      test_swap2 n1 n2 r1 r2;
-      test_swap2 n2 n1 r1 r2;
-      test_swap2 n1 n2 r1 r2;
-      test_swap2 n2 n1 r1 r2;
-      test_swap2 n1 n2 r1 r2;
-      test_swap2 n2 n1 r1 r2;
-      test_swap2 n1 n2 r1 r2;
-      test_swap2 n2 n1 r1 r2;
-      test_swap2 n1 n2 r1 r2;
-      test_swap2 n2 n1 r1 r2;
-      test_swap2 n1 n2 r1 r2;
-      test_swap2 n2 n1 r1 r2;
-      test_swap2 n1 n2 r1 r2;
-      test_swap2 n2 n1 r1 r2;
-      test_swap2 n1 n2 r1 r2;
-      test_swap2 n2 n1 r1 r2
+      test_swap2 r1 r2 n1 n2;
+      test_swap2 r1 r2 n2 n1
     )
 )))

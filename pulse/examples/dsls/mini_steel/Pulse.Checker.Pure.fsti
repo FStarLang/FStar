@@ -15,20 +15,20 @@ val check_universe (f0:RT.fstar_top_env) (g:env) (t:term)
   
       
 val check_tot_univ (f:RT.fstar_top_env) (g:env) (t:term)
-  : T.Tac (_:(t:term &
+  : T.Tac (_:(t:pure_term &
               u:universe &
               ty:pure_term &
               universe_of f g ty u &
               src_typing f g t (C_Tot ty)) { is_pure_term t } )
 
 val check_tot (f:RT.fstar_top_env) (g:env) (t:term)
-  : T.Tac (_:(t:term &
+  : T.Tac (_:(t:pure_term &
               ty:pure_term &
               src_typing f g t (C_Tot ty)) { is_pure_term t })
 
 val check_tot_with_expected_typ (f:RT.fstar_top_env) (g:env) (e:term) (t:pure_term)
-  : T.Tac (_:(e:term & src_typing f g e (C_Tot t)){is_pure_term e})
-  
+  : T.Tac (_:(e:pure_term & src_typing f g e (C_Tot t)){is_pure_term e})
+
 
 val check_tot_no_inst (f:RT.fstar_top_env) (g:env) (t:term)
   : T.Tac (_:(ty:pure_term &
@@ -42,4 +42,4 @@ val check_vprop_no_inst (f:RT.fstar_top_env)
 val check_vprop (f:RT.fstar_top_env)
                 (g:env)
                 (t:term)
-  : T.Tac (t:term & _:tot_typing f g t Tm_VProp{is_pure_term t})
+  : T.Tac (t:pure_term & _:tot_typing f g t Tm_VProp{is_pure_term t})
