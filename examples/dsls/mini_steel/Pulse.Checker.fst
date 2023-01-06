@@ -20,7 +20,7 @@ let replace_equiv_post
   (c:pure_comp{C_ST? c})
   (post_hint:option term)
 
-  : T.Tac (c1:pure_comp & st_equiv f g c c1) =
+  : T.Tac (c1:pure_comp { C_ST? c1 /\ comp_pre c1 == comp_pre c } & st_equiv f g c c1) =
 
   let C_ST {u=u_c;res=res_c;pre=pre_c;post=post_c} = c in
   let x = fresh g in
@@ -60,7 +60,7 @@ let replace_equiv_post
       }
     in
     assume (open_term (close_term post_opened x) x == post_opened);
-    assume (is_pure_comp c_with_post);
+    assert (is_pure_term (close_term post_opened x));
     (| c_with_post,
        ST_VPropEquiv
          g c c_with_post x pre_c_typing res_c_typing post_c_typing
@@ -95,7 +95,6 @@ let check_abs
           let post = open_term' post (Tm_Var {nm_ppname="_";nm_index=x}) 1 in
           Some post
       in
-      assume (is_pure_term pre_opened);
       let (| body', c_body, body_typing |) = check f g' (open_term body x) pre_opened (E pre_typing) post in
 
       let body_closed = close_term body' x in
@@ -256,7 +255,6 @@ let rec check =
     if apply_post_hint && C_ST? c
     then
       let (| c1, c_c1_eq |) = replace_equiv_post f g c post_hint in
-      assume (comp_pre c1 == comp_pre c);
       (| t, c1, T_Equiv _ _ _ _ d_c c_c1_eq |)
     else (| t, c, d_c |)
   in
@@ -269,7 +267,6 @@ let rec check =
   | Tm_PureApp _ _ _
   | Tm_Let _ _ _ ->
     let (| t, u, ty, uty, d |) = check_tot_univ f g t in
-    assume (is_pure_term t);
     let c = return_comp u ty t in
     let d = T_Return _ _ _ _ (E d) uty in
     repack (frame_empty pre_typing uty t c d) false
@@ -299,13 +296,13 @@ let rec check =
       else if bqual = None && qual = Some Implicit
       then T.fail "Unexpected qualifier"
       else (
+        T.print "Checking STApp\n";
         let res =
           match comp_typ with
           | C_ST res -> res
           | _ ->
             T.fail (Printf.sprintf "Unexpected comp type in impure application: %s" (P.term_to_string ty_head)) in
         let (| arg, darg |) = check_tot_with_expected_typ f g arg formal in
-        assume (is_pure_term arg);
         let d = T_STApp g head ppname formal qual (C_ST res) arg dhead (E darg) in
         opening_pure_comp_with_pure_term (C_ST res) arg 0;
         repack (try_frame_pre pre_typing d) true

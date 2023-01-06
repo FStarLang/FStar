@@ -3,6 +3,7 @@ module RT = Refl.Typing
 module R = FStar.Reflection
 module L = FStar.List.Tot
 module T = FStar.Tactics
+open FStar.Tactics
 open FStar.List.Tot
 open Pulse.Syntax
 open Pulse.Elaborate.Pure
@@ -11,10 +12,15 @@ open Pulse.Readback
 module P = Pulse.Syntax.Printer
 module RTB = FStar.Tactics.Builtins
 
-
+let catch_all (f:unit -> Tac (option 'a))
+  : Tac (option 'a)
+  = match T.catch f with
+    | Inl exn -> None
+    | Inr v -> v
+    
 let tc_no_inst (f:R.env) (e:R.term) 
   : T.Tac (option (t:R.term & RT.typing f e t))
-  = let ropt = RTB.core_check_term f e in
+  = let ropt = catch_all (fun _ -> RTB.core_check_term f e) in
     match ropt with
     | None -> None
     | Some (t) ->
@@ -22,25 +28,23 @@ let tc_no_inst (f:R.env) (e:R.term)
 
 let tc_meta_callback (f:R.env) (e:R.term) 
   : T.Tac (option (e:R.term & t:R.term & RT.typing f e t))
-  = let ropt = RTB.tc_term f e in
-    match ropt with
+  = match catch_all (fun _ -> RTB.tc_term f e) with
     | None -> None
     | Some (e, t) ->
       Some (| e, t, RT.T_Token _ _ _ (FStar.Squash.get_proof _) |)
 
 let tc_expected_meta_callback (f:R.env) (e:R.term) (t:R.term)
-  : T.Tac (option (e:R.term & RT.typing f e t)) =
-
-  let ropt = RTB.tc_term f e in
-  match ropt with
-  | None -> None
-  | Some (e, te) ->
-    //we have typing_token f e te
-    match RTB.check_subtyping f te t with
+  : T.Tac (option (e:R.term & RT.typing f e t))
+  = let ropt = catch_all (fun _ -> RTB.tc_term f e) in
+    match ropt with
     | None -> None
-    | Some p -> //p:squash (subtyping_token f te t)
-      Some (| e,
-              RT.T_Sub _ _ _ _ (RT.T_Token _ _ _ (FStar.Squash.get_proof (RTB.typing_token f e te)))
+    | Some (e, te) ->
+      //we have typing_token f e te
+      match catch_all (fun _ -> RTB.check_subtyping f te t) with
+      | None -> None
+      | Some p -> //p:squash (subtyping_token f te t)
+        Some (| e,
+                RT.T_Sub _ _ _ _ (RT.T_Token _ _ _ (FStar.Squash.get_proof (RTB.typing_token f e te)))
                              (RT.ST_Token _ _ _ p) |)
 
 
@@ -51,7 +55,7 @@ let check_universe (f0:RT.fstar_top_env) (g:env) (t:term)
     | None ->
       T.fail ("Not a syntactically pure term: " ^ P.term_to_string t)
     | Some rt ->
-      let ru_opt = RTB.universe_of f rt in
+      let ru_opt = catch_all (fun _ -> RTB.universe_of f rt) in
       match ru_opt  with
       | None -> T.fail (Printf.sprintf "%s elaborated to %s; Not typable as a universe"
                          (P.term_to_string t)
@@ -69,7 +73,7 @@ let check_universe (f0:RT.fstar_top_env) (g:env) (t:term)
           (| u, proof |)
       
 let check_tot_univ (f:RT.fstar_top_env) (g:env) (t:term)
-  : T.Tac (_:(t:term &
+  : T.Tac (_:(t:pure_term &
               u:universe &
               ty:pure_term &
               universe_of f g ty u &
@@ -94,7 +98,7 @@ let check_tot_univ (f:RT.fstar_top_env) (g:env) (t:term)
           (| t, u, ty, uty, T_Tot g t ty tok |)
 
 let check_tot (f:RT.fstar_top_env) (g:env) (t:term)
-  : T.Tac (_:(t:term &
+  : T.Tac (_:(t:pure_term &
               ty:pure_term &
               src_typing f g t (C_Tot ty)) { is_pure_term t })
   = let fg = extend_env_l f g in
@@ -116,7 +120,7 @@ let check_tot (f:RT.fstar_top_env) (g:env) (t:term)
           (| t, ty, T_Tot g t ty tok |)
 
 let check_tot_with_expected_typ (f:RT.fstar_top_env) (g:env) (e:term) (t:pure_term)
-  : T.Tac (_:(e:term & src_typing f g e (C_Tot t)){is_pure_term e}) =
+  : T.Tac (_:(e:pure_term & src_typing f g e (C_Tot t)){is_pure_term e}) =
 
   let fg = extend_env_l f g in
   match elab_term e with
@@ -169,7 +173,7 @@ let check_vprop_no_inst (f:RT.fstar_top_env)
 let check_vprop (f:RT.fstar_top_env)
                 (g:env)
                 (t:term)
-  : T.Tac (t:term & _:tot_typing f g t Tm_VProp{is_pure_term t})
+  : T.Tac (t:pure_term & _:tot_typing f g t Tm_VProp{is_pure_term t})
   = let (| t, ty, d |) = check_tot f g t in
     match ty with
     | Tm_VProp -> (| t, E d |)

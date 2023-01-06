@@ -2250,7 +2250,7 @@ let refl_check_relation (g:env) (t0 t1:typ) (rel:relation)
          | Inl (Some guard_f) ->
            Rel.force_trivial_guard g {Env.trivial_guard with guard_f=NonTrivial guard_f};
            dbg_refl g (fun _ -> "refl_check_relation: succeeded")
-         | Inr _ -> Errors.raise_error (Errors.Fatal_IllTyped, "") Range.dummyRange)
+         | Inr err -> Errors.raise_error (Errors.Fatal_IllTyped, "check_relation failed: " ^ (Core.print_error err)) Range.dummyRange)
   else ret None
 
 let refl_check_subtyping (g:env) (t0 t1:typ) : tac (option unit) =
@@ -2279,7 +2279,7 @@ let refl_core_check_term (g:env) (e:term) : tac (option typ) =
            t
          | Inr err ->
            dbg_refl g (fun _ -> BU.format1 "refl_tc_term failed: %s\n" (Core.print_error err));
-           Errors.raise_error (Errors.Fatal_IllTyped, "") Range.dummyRange)
+           Errors.raise_error (Errors.Fatal_IllTyped, "core_check_term callback failed: " ^(Core.print_error err)) Range.dummyRange)
   else ret None
 
 let refl_tc_term (g:env) (e:term) : tac (option (term & typ)) =
@@ -2298,7 +2298,7 @@ let refl_tc_term (g:env) (e:term) : tac (option (term & typ)) =
       BU.format1 "} finished tc with e = %s\n"
         (Print.term_to_string e));
     if not (no_uvars_in_term e)
-    then Errors.raise_error (Errors.Fatal_IllTyped, "") Range.dummyRange
+    then Errors.raise_error (Errors.Fatal_IllTyped, "UVars remaing in term after tc_term callback") Range.dummyRange
     else
       let gh = fun g guard ->
         Rel.force_trivial_guard g
@@ -2313,13 +2313,13 @@ let refl_tc_term (g:env) (e:term) : tac (option (term & typ)) =
         e, t
       | Inr err ->
         dbg_refl g (fun _ -> BU.format1 "refl_tc_term failed: %s\n" (Core.print_error err));
-        Errors.raise_error (Errors.Fatal_IllTyped, "") Range.dummyRange)
+        Errors.raise_error (Errors.Fatal_IllTyped, "tc_term callback failed: " ^ Core.print_error err) Range.dummyRange)
   else ret None
 
 let refl_universe_of (g:env) (e:term) : tac (option universe) =
   let check_univ_var_resolved u =
     match SS.compress_univ u with
-    | S.U_unif _ -> Errors.raise_error (Errors.Fatal_IllTyped, "") Range.dummyRange
+    | S.U_unif _ -> Errors.raise_error (Errors.Fatal_IllTyped, "Unresolved variable in universe_of callback") Range.dummyRange
     | u -> u in
 
   if no_uvars_in_g g &&
@@ -2333,7 +2333,7 @@ let refl_universe_of (g:env) (e:term) : tac (option universe) =
            Rel.force_trivial_guard g
              {Env.trivial_guard with guard_f=NonTrivial guard};
            check_univ_var_resolved u
-         | Inr _ -> Errors.raise_error (Errors.Fatal_IllTyped, "") Range.dummyRange)
+         | Inr err -> Errors.raise_error (Errors.Fatal_IllTyped, "universe_of failed: " ^ Core.print_error err) Range.dummyRange)
   else ret None
 
 let refl_check_prop_validity (g:env) (e:term) : tac (option unit) =
@@ -2350,10 +2350,10 @@ let refl_check_prop_validity (g:env) (e:term) : tac (option unit) =
              Rel.force_trivial_guard g
                {Env.trivial_guard with guard_f=NonTrivial guard}
            | Inr err ->
-             dbg_refl g (fun _ ->
-               BU.format1 "refl_check_prop_validity failed (not a prop): %s\n"
-                 (Core.print_error err));
-             Errors.raise_error (Errors.Fatal_IllTyped, "") Range.dummyRange
+             let msg = BU.format1 "refl_check_prop_validity failed (not a prop): %s\n"
+                                  (Core.print_error err) in
+             dbg_refl g (fun _ -> msg);
+             Errors.raise_error (Errors.Fatal_IllTyped, msg) Range.dummyRange
          in
          Rel.force_trivial_guard g
            {Env.trivial_guard with guard_f=NonTrivial e})

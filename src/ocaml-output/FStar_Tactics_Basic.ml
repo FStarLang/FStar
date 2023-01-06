@@ -7054,9 +7054,13 @@ let (refl_check_relation :
                          };
                        dbg_refl g
                          (fun uu___5 -> "refl_check_relation: succeeded"))
-                  | FStar_Pervasives.Inr uu___4 ->
-                      FStar_Errors.raise_error
-                        (FStar_Errors.Fatal_IllTyped, "")
+                  | FStar_Pervasives.Inr err ->
+                      let uu___4 =
+                        let uu___5 =
+                          let uu___6 = FStar_TypeChecker_Core.print_error err in
+                          Prims.op_Hat "check_relation failed: " uu___6 in
+                        (FStar_Errors.Fatal_IllTyped, uu___5) in
+                      FStar_Errors.raise_error uu___4
                         FStar_Compiler_Range.dummyRange))
           else FStar_Tactics_Monad.ret FStar_Pervasives_Native.None
 let (refl_check_subtyping :
@@ -7123,8 +7127,14 @@ let (refl_core_check_term :
                         let uu___6 = FStar_TypeChecker_Core.print_error err in
                         FStar_Compiler_Util.format1
                           "refl_tc_term failed: %s\n" uu___6);
-                   FStar_Errors.raise_error (FStar_Errors.Fatal_IllTyped, "")
-                     FStar_Compiler_Range.dummyRange)))
+                   (let uu___5 =
+                      let uu___6 =
+                        let uu___7 = FStar_TypeChecker_Core.print_error err in
+                        Prims.op_Hat "core_check_term callback failed: "
+                          uu___7 in
+                      (FStar_Errors.Fatal_IllTyped, uu___6) in
+                    FStar_Errors.raise_error uu___5
+                      FStar_Compiler_Range.dummyRange))))
       else FStar_Tactics_Monad.ret FStar_Pervasives_Native.None
 let (refl_tc_term :
   env ->
@@ -7272,7 +7282,8 @@ let (refl_tc_term :
                           if uu___11
                           then
                             FStar_Errors.raise_error
-                              (FStar_Errors.Fatal_IllTyped, "")
+                              (FStar_Errors.Fatal_IllTyped,
+                                "UVars remaing in term after tc_term callback")
                               FStar_Compiler_Range.dummyRange
                           else
                             (let gh g1 guard1 =
@@ -7314,9 +7325,16 @@ let (refl_tc_term :
                                            err in
                                        FStar_Compiler_Util.format1
                                          "refl_tc_term failed: %s\n" uu___16);
-                                  FStar_Errors.raise_error
-                                    (FStar_Errors.Fatal_IllTyped, "")
-                                    FStar_Compiler_Range.dummyRange))))))))
+                                  (let uu___15 =
+                                     let uu___16 =
+                                       let uu___17 =
+                                         FStar_TypeChecker_Core.print_error
+                                           err in
+                                       Prims.op_Hat
+                                         "tc_term callback failed: " uu___17 in
+                                     (FStar_Errors.Fatal_IllTyped, uu___16) in
+                                   FStar_Errors.raise_error uu___15
+                                     FStar_Compiler_Range.dummyRange)))))))))
       else FStar_Tactics_Monad.ret FStar_Pervasives_Native.None
 let (refl_universe_of :
   env ->
@@ -7330,7 +7348,9 @@ let (refl_universe_of :
         let uu___ = FStar_Syntax_Subst.compress_univ u in
         match uu___ with
         | FStar_Syntax_Syntax.U_unif uu___1 ->
-            FStar_Errors.raise_error (FStar_Errors.Fatal_IllTyped, "")
+            FStar_Errors.raise_error
+              (FStar_Errors.Fatal_IllTyped,
+                "Unresolved variable in universe_of callback")
               FStar_Compiler_Range.dummyRange
         | u1 -> u1 in
       let uu___ = (no_uvars_in_g g) && (no_uvars_in_term e) in
@@ -7363,9 +7383,13 @@ let (refl_universe_of :
                              (FStar_TypeChecker_Env.trivial_guard.FStar_TypeChecker_Common.implicits)
                          };
                        check_univ_var_resolved u)
-                  | FStar_Pervasives.Inr uu___4 ->
-                      FStar_Errors.raise_error
-                        (FStar_Errors.Fatal_IllTyped, "")
+                  | FStar_Pervasives.Inr err ->
+                      let uu___4 =
+                        let uu___5 =
+                          let uu___6 = FStar_TypeChecker_Core.print_error err in
+                          Prims.op_Hat "universe_of failed: " uu___6 in
+                        (FStar_Errors.Fatal_IllTyped, uu___5) in
+                      FStar_Errors.raise_error uu___4
                         FStar_Compiler_Range.dummyRange))
       else FStar_Tactics_Monad.ret FStar_Pervasives_Native.None
 let (refl_check_prop_validity :
@@ -7407,14 +7431,14 @@ let (refl_check_prop_validity :
                          (FStar_TypeChecker_Env.trivial_guard.FStar_TypeChecker_Common.implicits)
                      }
                | FStar_Pervasives.Inr err ->
-                   (dbg_refl g
-                      (fun uu___6 ->
-                         let uu___7 = FStar_TypeChecker_Core.print_error err in
-                         FStar_Compiler_Util.format1
-                           "refl_check_prop_validity failed (not a prop): %s\n"
-                           uu___7);
+                   let msg =
+                     let uu___5 = FStar_TypeChecker_Core.print_error err in
+                     FStar_Compiler_Util.format1
+                       "refl_check_prop_validity failed (not a prop): %s\n"
+                       uu___5 in
+                   (dbg_refl g (fun uu___6 -> msg);
                     FStar_Errors.raise_error
-                      (FStar_Errors.Fatal_IllTyped, "")
+                      (FStar_Errors.Fatal_IllTyped, msg)
                       FStar_Compiler_Range.dummyRange));
               FStar_TypeChecker_Rel.force_trivial_guard g
                 {
