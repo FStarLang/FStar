@@ -20,7 +20,7 @@ val int_to_t (x: int) : Pure t
   (requires (fits x))
   (ensures (fun y -> v y == x))
 
-/// v and uint_to_t are inverses
+/// v and int_to_t are inverses
 val ptrdiff_v_inj (x: t)
   : Lemma
     (ensures int_to_t (v x) == x)
@@ -59,7 +59,12 @@ let mod_spec (a:int{fits a}) (b:int{fits b /\ b <> 0}) : GTot (n:int{fits n}) =
 
 (** Euclidean remainder
 
-    The result is the modulus of [a] with respect to a non-zero [b] *)
+    The result is the modulus of [a] with respect to a non-zero [b].
+    Note, according to the C standard, this operation is only defined
+    if a/b is representable.
+    To avoid requiring the precondition `fits (v a / v b)`, we instead
+    restrict this primitive to positive integers only.
+    *)
 val rem (a:t{v a >= 0}) (b:t{v b > 0}) : Pure t
   (requires True)
   (ensures (fun c -> mod_spec (v a) (v b) = v c))
