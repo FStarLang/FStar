@@ -34,12 +34,16 @@ with argument type ``t0`` and body computation type ``C``.
 
 Similarly, the return type annotation that we have seen in the ``let``
 definitions is also a shorthand, e.g., the :ref:`id function
-<Part1_polymorphism_and_inference>`::
+<Part1_polymorphism_and_inference>`
 
+.. code-block:: fstar
+                
   let id (a:Type) (x:a) : a = x
 
-is a shorthand for::
+is a shorthand for
 
+.. code-block:: fstar
+                
   let id (a:Type) (x:a) : Tot a = x  //the return type annotation is a computation type
 
 and the type of ``id`` is ``a:Type -> a -> Tot a``. More generally,
