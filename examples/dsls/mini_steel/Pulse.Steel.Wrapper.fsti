@@ -85,15 +85,7 @@ type u32 : Type0 = U32.t
 
 open FStar.Ghost
 val read (r:R.ref u32) (#n:erased u32) (#p:perm)
-  : stt u32 (R.pts_to r p n) (fun x -> R.pts_to r p x)
-
-val read_refine (r:R.ref u32) (#n:erased u32) (#p:perm)
   : stt (x:u32{reveal n == x})
-        (R.pts_to r p n)
-        (fun x -> R.pts_to r p n)
-
-val read_alt (r:R.ref u32) (#n:erased u32) (#p:perm)
-  : stt u32 
         (R.pts_to r p n)
         (fun x -> R.pts_to r p n)
 
@@ -101,9 +93,3 @@ val write (r:R.ref u32) (x:u32) (#n:erased u32)
   : stt unit
         (R.pts_to r full_perm n) 
         (fun _ -> R.pts_to r full_perm (hide x))
-
-val write_alt (r:R.ref u32) (x:u32) (#n:erased u32)
-  : stt unit 
-        (R.pts_to r full_perm n)
-        (fun _ -> exists_ (R.pts_to r full_perm))
-

@@ -173,18 +173,18 @@ let infer_one_atomic_vprop (t:pure_term) (ctxt:list pure_term) (uv_sols:list (te
   if infer_atomic_vprop_has_uvar t
   then
     let matching_ctxt = List.Tot.filter (fun ctxt_vp -> infer_atomic_vprops_may_match t ctxt_vp) ctxt in
-    T.print (FStar.Printf.sprintf "infer_one_atomic_vprop %s, found %d matching candidates\n"
-               (P.term_to_string t)
-               (List.Tot.length matching_ctxt));
+    // T.print (FStar.Printf.sprintf "infer_one_atomic_vprop %s, found %d matching candidates\n"
+    //            (P.term_to_string t)
+    //            (List.Tot.length matching_ctxt));
     if List.Tot.length matching_ctxt = 1
     then
-      let _ = T.print (FStar.Printf.sprintf "infer_one_atomic_vprop: matching %s and %s with %d exisiting solutions\n"
-                         (P.term_to_string t)
-                         (P.term_to_string (List.Tot.hd matching_ctxt))
-                         (List.Tot.length uv_sols)) in 
+      // let _ = T.print (FStar.Printf.sprintf "infer_one_atomic_vprop: matching %s and %s with %d exisiting solutions\n"
+      //                    (P.term_to_string t)
+      //                    (P.term_to_string (List.Tot.hd matching_ctxt))
+      //                    (List.Tot.length uv_sols)) in 
       let uv_sols = infer_match_typ t (List.Tot.hd matching_ctxt) uv_sols in
-      T.print (FStar.Printf.sprintf "post matching, uv_sols has %d solutions\n"
-                 (List.Tot.length uv_sols));
+      // T.print (FStar.Printf.sprintf "post matching, uv_sols has %d solutions\n"
+      //            (List.Tot.length uv_sols));
       uv_sols
     else uv_sols
   else uv_sols
@@ -221,10 +221,10 @@ let infer
   if List.Tot.length uvs = 0
   then head
   else begin
-    T.print (FStar.Printf.sprintf "infer: generated %d uvars, ctx: %s, st_comp.pre: %s\n"
-               (List.Tot.length uvs)
-               (P.term_to_string ctxt_pre)
-               (P.term_to_string pre));
+    // T.print (FStar.Printf.sprintf "infer: generated %d uvars, ctx: %s, st_comp.pre: %s\n"
+    //            (List.Tot.length uvs)
+    //            (P.term_to_string ctxt_pre)
+    //            (P.term_to_string pre));
 
     let uv_sols = [] in
     
