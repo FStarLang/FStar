@@ -108,19 +108,20 @@ let check_abs
     | _ -> T.fail "bad hint"
 
 
-let rec infer_gen_uvars (t_head:term) : T.Tac (list term & term & comp) =
+let rec infer_gen_uvars (t_head:term) : T.Tac (list term & comp) =
   match t_head with
-  | Tm_Arrow {binder_ty=t} (Some Implicit) (C_Tot rest) ->
+  | Tm_Arrow {binder_ty=t} (Some Implicit) c_rest -> (
     let uv = gen_uvar t in
-    let rest = open_term' rest uv 0 in
-    let uv_rest, last_arg_t, comp_typ = infer_gen_uvars rest in
-    uv::uv_rest, last_arg_t, comp_typ
-
-  | Tm_Arrow {binder_ty=t} None st ->
-    [], t, st
-
+    let c_rest = open_comp_with c_rest uv in
+    match c_rest with
+    | C_ST c -> [uv], c_rest
+    | C_Tot t ->
+      let uv_rest, comp_typ = infer_gen_uvars t in
+      uv::uv_rest, comp_typ
+  )
   | _ ->
-   T.fail (FStar.Printf.sprintf "infer_gen_uvars: unexpected t_head: %s" (P.term_to_string t_head))
+   T.fail (FStar.Printf.sprintf "infer_gen_uvars: unexpected t_head: %s"
+                                  (P.term_to_string t_head))
 
 let rec infer_check_valid_solution (t1 t2:term) (uv_sols:list (term & term))
   : T.Tac (list (term & term)) =
@@ -197,25 +198,25 @@ let rec infer_build_head (head:term) (uvs:list term) (uv_sols:list (term & term)
       match ropt with
       | None -> T.fail "inference failed in building head"
       | Some (_, t2) ->
-        let app_node = Tm_PureApp head (Some Implicit) t2 in
-        infer_build_head app_node tl uv_sols
+        match tl with
+        | [] -> Tm_STApp head (Some Implicit) t2
+        | _ ->
+          let app_node = Tm_PureApp head (Some Implicit) t2 in
+          infer_build_head app_node tl uv_sols
 
 let infer
   (head:term)
   (t_head:term)
-  (arg:term)
-  (t_arg:term)
-  qual
   (ctxt_pre:term)
   
   : T.Tac term =
 
-  let uvs, t_arg_expected, pre =
-    let uvs, t_arg_expected, comp = infer_gen_uvars t_head in
-    let comp = open_comp' comp arg 0 in
+  let uvs, pre =
+    let uvs, comp = infer_gen_uvars t_head in
     match comp with
-    | C_ST st_comp -> uvs, t_arg_expected, st_comp.pre
-    | _ -> T.fail "infer:unexpected comp type" in
+    | C_ST st_comp -> uvs, st_comp.pre
+    | _ -> T.fail "infer:unexpected comp type"
+  in
 
   if List.Tot.length uvs = 0
   then head
@@ -225,8 +226,8 @@ let infer
                (P.term_to_string ctxt_pre)
                (P.term_to_string pre));
 
-    let uv_sols = infer_match_typ t_arg_expected t_arg [] in
-
+    let uv_sols = [] in
+    
     assume (is_pure_term pre);
     let pre_list = vprop_as_list pre in
 
@@ -237,7 +238,7 @@ let infer
       infer_one_atomic_vprop st_pre_vprop ctxt_pre_list uv_sols) uv_sols pre_list in
 
     let head = infer_build_head head uvs uv_sols in
-    Tm_STApp head qual arg
+    head
   end
 
 #push-options "--query_stats --fuel 2 --ifuel 1 --z3rlimit_factor 4"
@@ -288,25 +289,29 @@ let rec check =
     let (| head, ty_head, dhead |) = check_tot f g head in
     begin
     match ty_head with
-    | Tm_Arrow {binder_ty=formal;binder_ppname=ppname} bqual comp_typ ->
-      if bqual = Some Implicit && qual = None
-      then let (| arg, ty_arg, _ |) = check_tot f g arg in
-           let t = infer head ty_head arg ty_arg qual pre in
-           check f g t pre pre_typing post_hint
-      else if bqual = None && qual = Some Implicit
-      then T.fail "Unexpected qualifier"
-      else (
-        T.print "Checking STApp\n";
-        let res =
-          match comp_typ with
-          | C_ST res -> res
-          | _ ->
-            T.fail (Printf.sprintf "Unexpected comp type in impure application: %s" (P.term_to_string ty_head)) in
+    | Tm_Arrow {binder_ty=formal;binder_ppname=ppname} bqual comp_typ -> (
+      if qual = bqual
+      then (
         let (| arg, darg |) = check_tot_with_expected_typ f g arg formal in
-        let d = T_STApp g head ppname formal qual (C_ST res) arg dhead (E darg) in
-        opening_pure_comp_with_pure_term (C_ST res) arg 0;
-        repack (try_frame_pre pre_typing d) true
+        match comp_typ with
+        | C_ST res ->
+          // This is a real ST application
+          let d = T_STApp g head ppname formal qual (C_ST res) arg dhead (E darg) in
+          opening_pure_comp_with_pure_term (C_ST res) arg 0;
+          repack (try_frame_pre pre_typing d) true
+        | C_Tot (Tm_Arrow _  (Some implicit) _) -> 
+          let head = Tm_PureApp head qual arg in
+          let C_Tot ty_head = open_comp_with comp_typ arg in
+          //Some implicits to follow
+          let t = infer head ty_head pre in
+          check f g t pre pre_typing post_hint
+
+        | _ ->
+          T.fail "Unexpected head type in stateful application"
       )
+      else T.fail "Unexpected qualifier"
+    )
+    
     | _ -> T.fail (Printf.sprintf "Unexpected head type in impure application: %s" (P.term_to_string ty_head))
     end
 
