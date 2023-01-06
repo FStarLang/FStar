@@ -80,12 +80,12 @@ let check_abs
            src_typing f g t c) =
   match t with  
   | Tm_Abs {binder_ty=t;binder_ppname=ppname} qual pre_hint body post_hint ->  (* {pre}  (fun (x:t) -> body) : ? { pre } *)
-    let (| t, _, _ |) = check_tot f g t in //elaborate it first
+    let (| t, _, _ |) = check_tot true f g t in //elaborate it first
     let (| u, t_typing |) = check_universe f g t in //then check that its universe ... We could collapse the two calls
     let x = fresh g in
     let g' = (x, Inl t) :: g in
     let pre_opened = open_term pre_hint x in
-    match check_tot f g' pre_opened with
+    match check_tot true f g' pre_opened with
     | (| pre_opened, Tm_VProp, pre_typing |) ->
       let pre = close_term pre_opened x in
       let post =
@@ -243,8 +243,9 @@ let infer
 
 #push-options "--query_stats --fuel 2 --ifuel 1 --z3rlimit_factor 4"
 #push-options "--print_implicits --print_universes --print_full_names"
-let rec check =
-  fun (f:RT.fstar_top_env)
+let rec check' : bool -> check_t =
+  fun (allow_inst:bool)
+    (f:RT.fstar_top_env)
     (g:env)
     (t:term)
     (pre:pure_term)
@@ -267,7 +268,7 @@ let rec check =
   | Tm_Constant _
   | Tm_PureApp _ _ _
   | Tm_Let _ _ _ ->
-    let (| t, u, ty, uty, d |) = check_tot_univ f g t in
+    let (| t, u, ty, uty, d |) = check_tot_univ allow_inst f g t in
     let c = return_comp u ty t in
     let d = T_Return _ _ _ _ (E d) uty in
     repack (frame_empty pre_typing uty t c d) false
@@ -281,12 +282,14 @@ let rec check =
   | Tm_Type _
   | Tm_VProp
   | Tm_Refine _ _ ->
-    let (| t, ty, d_ty |) = check_tot f g t in
+    let (| t, ty, d_ty |) = check_tot allow_inst f g t in
     (| t, C_Tot ty, d_ty |)
 
-  | Tm_Abs _ _ _ _ _ -> check_abs f g t pre pre_typing post_hint check
+  | Tm_Abs _ _ _ _ _ ->
+    check_abs f g t pre pre_typing post_hint (check' true)
+  
   | Tm_STApp head qual arg ->
-    let (| head, ty_head, dhead |) = check_tot f g head in
+    let (| head, ty_head, dhead |) = check_tot allow_inst f g head in
     begin
     match ty_head with
     | Tm_Arrow {binder_ty=formal;binder_ppname=ppname} bqual comp_typ -> (
@@ -304,7 +307,7 @@ let rec check =
           let C_Tot ty_head = open_comp_with comp_typ arg in
           //Some implicits to follow
           let t = infer head ty_head pre in
-          check f g t pre pre_typing post_hint
+          check' false f g t pre pre_typing post_hint
 
         | _ ->
           T.fail "Unexpected head type in stateful application"
@@ -316,10 +319,13 @@ let rec check =
     end
 
   | Tm_Bind _ _ ->
-    check_bind f g t pre pre_typing post_hint check
+    check_bind f g t pre pre_typing post_hint (check' true)
+    
   | Tm_If _ _ _ ->
     T.fail "Not handling if yet"
 
   | Tm_UVar _ _ ->
     T.fail "Unexpected Tm_Uvar in check"
 #pop-options
+
+let check = check' true

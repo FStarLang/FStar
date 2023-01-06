@@ -19,7 +19,7 @@ let main' (t:term) (pre:term) (g:RT.fstar_top_env)
   = match Pulse.Soundness.Common.check_top_level_environment g with
     | None -> T.fail "pulse main: top-level environment does not include stt at the expected types"
     | Some g ->
-      let (| pre, ty, pre_typing |) = Pulse.Checker.Pure.check_tot g [] pre in
+      let (| pre, ty, pre_typing |) = Pulse.Checker.Pure.check_tot true g [] pre in
       if ty = Tm_VProp
       then let pre_typing : tot_typing g [] pre Tm_VProp = E pre_typing in
            let (| t, c, t_typing |) = check g [] t pre pre_typing None in

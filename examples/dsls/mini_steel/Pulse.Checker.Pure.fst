@@ -28,11 +28,24 @@ let tc_no_inst (f:R.env) (e:R.term)
 
 let tc_meta_callback (f:R.env) (e:R.term) 
   : T.Tac (option (e:R.term & t:R.term & RT.typing f e t))
-  = match catch_all (fun _ -> RTB.tc_term f e) with
-    | None -> None
-    | Some (e, t) ->
-      Some (| e, t, RT.T_Token _ _ _ (FStar.Squash.get_proof _) |)
+  = // T.print (Printf.sprintf "Calling tc_term on %s\n" (T.term_to_string e));
+    let res =
+      match catch_all (fun _ -> RTB.tc_term f e) with
+      | None -> None
+      | Some (e, t) ->
+        Some (| e, t, RT.T_Token _ _ _ (FStar.Squash.get_proof _) |)
+    in
+    // T.print "Returned\n";
+    res
 
+let tc_maybe_inst (allow_inst:bool) (f:R.env) (e:R.term)
+  : T.Tac (option (e:R.term & t:R.term & RT.typing f e t))
+  = if allow_inst
+    then tc_meta_callback f e
+    else match tc_no_inst f e with
+         | None -> None
+         | Some (| t, d |) -> Some (| e, t, d |)
+  
 let tc_expected_meta_callback (f:R.env) (e:R.term) (t:R.term)
   : T.Tac (option (e:R.term & RT.typing f e t))
   = let ropt = catch_all (fun _ -> RTB.tc_term f e) in
@@ -72,7 +85,7 @@ let check_universe (f0:RT.fstar_top_env) (g:env) (t:term)
             E (T_Tot g _ _ proof) in
           (| u, proof |)
       
-let check_tot_univ (f:RT.fstar_top_env) (g:env) (t:term)
+let check_tot_univ (allow_inst:bool) (f:RT.fstar_top_env) (g:env) (t:term)
   : T.Tac (_:(t:pure_term &
               u:universe &
               ty:pure_term &
@@ -83,7 +96,7 @@ let check_tot_univ (f:RT.fstar_top_env) (g:env) (t:term)
     | None ->
       T.fail ("Not a syntactically pure term: " ^ P.term_to_string t)
     | Some rt -> 
-      match tc_meta_callback fg rt with
+      match tc_maybe_inst allow_inst fg rt with
       | None -> 
         T.fail
           (Printf.sprintf "check_tot_univ: %s elaborated to %s Not typeable"
@@ -97,7 +110,7 @@ let check_tot_univ (f:RT.fstar_top_env) (g:env) (t:term)
           let (| u, uty |) = check_universe f g ty in
           (| t, u, ty, uty, T_Tot g t ty tok |)
 
-let check_tot (f:RT.fstar_top_env) (g:env) (t:term)
+let check_tot (allow_inst:bool) (f:RT.fstar_top_env) (g:env) (t:term)
   : T.Tac (_:(t:pure_term &
               ty:pure_term &
               src_typing f g t (C_Tot ty)) { is_pure_term t })
@@ -106,7 +119,7 @@ let check_tot (f:RT.fstar_top_env) (g:env) (t:term)
     | None ->
       T.fail ("Not a syntactically pure term: " ^ P.term_to_string t)
     | Some rt -> 
-      match tc_meta_callback fg rt with
+      match tc_maybe_inst allow_inst fg rt with
       | None -> 
         T.fail 
           (Printf.sprintf "check_tot: %s elaborated to %s Not typeable"
@@ -174,7 +187,7 @@ let check_vprop (f:RT.fstar_top_env)
                 (g:env)
                 (t:term)
   : T.Tac (t:pure_term & _:tot_typing f g t Tm_VProp{is_pure_term t})
-  = let (| t, ty, d |) = check_tot f g t in
+  = let (| t, ty, d |) = check_tot true f g t in
     match ty with
     | Tm_VProp -> (| t, E d |)
     | _ -> T.fail "Expected a vprop"
