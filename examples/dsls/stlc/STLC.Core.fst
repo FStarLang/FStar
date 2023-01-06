@@ -8,19 +8,8 @@ type stlc_ty =
   | TUnit
   | TArrow : stlc_ty -> stlc_ty -> stlc_ty
 
-let rec ty_to_string' should_paren (t:stlc_ty)
-  : Tot string (decreases t)
-  = match t with
-    | TUnit -> "unit"
-    | TArrow t1 t2 -> 
-      let t = Printf.sprintf "%s -> %s" (ty_to_string' true t1) (ty_to_string' false t2) in
-      if should_paren then Printf.sprintf "(%s)" t else t
-let ty_to_string = ty_to_string' false
-
 let var = nat
 let index = nat
-
-let tun = R.pack_ln R.Tv_Unknown
 
 noeq
 type stlc_exp =
@@ -193,7 +182,24 @@ type stlc_typing : stlc_env -> stlc_exp -> stlc_ty -> Type =
       stlc_typing g e1 (TArrow t t') ->
       stlc_typing g e2 t ->
       stlc_typing g (EApp e1 e2) t'
-  
+
+
+let tun = R.pack_ln R.Tv_Unknown
+
+let rec ty_to_string' should_paren (t:stlc_ty)
+  : Tot string (decreases t)
+  = match t with
+    | TUnit -> "unit"
+    | TArrow t1 t2 -> 
+      let t = Printf.sprintf "%s -> %s"
+                 (ty_to_string' true t1)
+                 (ty_to_string' false t2) in
+      if should_paren 
+      then Printf.sprintf "(%s)" t
+      else t
+      
+let ty_to_string = ty_to_string' false
+
 let rec check (g:R.env)
               (sg:list (var & stlc_ty))
               (e:stlc_exp { ln e })
@@ -235,14 +241,6 @@ let rec check (g:R.env)
       | _ -> 
         T.fail (Printf.sprintf "Expected an arrow, got %s"
                                (ty_to_string t1))
-
-// let infer_and_check (g:R.env)
-//                     (e:stlc_exp unit { ln e })
-//   : T.Tac (e':stlc_exp { ln e' } &
-//            t :stlc_ty { stlc_typing [] e' t })
-//   = let (| e', _ |) = infer g [] e in
-//     let (| e'', t', d |) = check g [] e' in
-//     (| e'', t' |)
 
 let rec elab_ty (t:stlc_ty) 
   : R.term 
