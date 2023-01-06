@@ -17,7 +17,7 @@ let warmup (x:int) = assert (x + 1 > x)
 
 %splice_t[test_true] (check (`(true)))
 
-%splice_t[test_syntax] (check  (`(
+%splice_t[test_write_10] (check  (`(
    fun (x:ref u32)
      (#n:erased u32) -> 
      (expects (
@@ -31,7 +31,7 @@ let warmup (x:int) = assert (x + 1 > x)
    )))
 
 
-%splice_t[test_read2] (check (`(
+%splice_t[test_read] (check (`(
   fun (r:ref u32)
     (#n:erased u32) (#p:perm) ->
     (expects (
@@ -43,7 +43,7 @@ let warmup (x:int) = assert (x + 1 > x)
     )
 )))       
 
-%splice_t[test_read_alt_with_post] (check (`(
+%splice_t[test_read_with_alt_post] (check (`(
   fun (r:ref u32)
     (#n:erased u32) (#p:perm) ->
     (expects (
@@ -51,32 +51,8 @@ let warmup (x:int) = assert (x + 1 > x)
     (provides (fun _ -> 
        pts_to r p n))
     (
-       read_alt r
+       read r
     )
-)))
-
-%splice_t[test_read_alt_with_post2] (check (`(
-    fun (r1 r2:ref u32) 
-      (#n1 #n2:erased u32) (#p1 #p2:perm) ->
-      (expects (
-         pts_to r1 p1 n1 `star`
-         pts_to r2 p2 n2))
-      (provides (fun _ -> 
-         pts_to r1 p1 n1 `star`
-         pts_to r2 p2 n2))
-      (
-         read_alt r2
-      )
-)))
-
-%splice_t[test_read_refine] (check (`(
-      fun (r:ref u32)
-        (#n:erased u32) (#p:perm) ->
-        (expects (
-           pts_to r p n))
-        (
-           read_refine r
-        )
 )))
 
 //Bound variable escapes scope
@@ -87,13 +63,13 @@ let warmup (x:int) = assert (x + 1 > x)
     (expects (
        pts_to r full_perm n))
     (
-       let x = read_alt r in
+       let x = read r in
        write r x
     )
 )))
 
 
-%splice_t[test_swap2] (check (`(
+%splice_t[swap] (check (`(
   fun (r1 r2:ref u32)
     (#n1 #n2:erased u32) ->
     (expects  (
@@ -103,8 +79,8 @@ let warmup (x:int) = assert (x + 1 > x)
       pts_to r1 full_perm n2 `star` 
       pts_to r2 full_perm n1))
     (
-      let x = read_refine r1 in
-      let y = read_refine r2 in
+      let x = read r1 in
+      let y = read r2 in
       write r1 y;
       write r2 x
     )
@@ -121,7 +97,7 @@ let warmup (x:int) = assert (x + 1 > x)
       pts_to r1 full_perm n1 `star` 
       pts_to r2 full_perm n2))
     (
-      test_swap2 r1 r2;
-      test_swap2 r1 r2
+      swap r1 r2;
+      swap r1 r2
     )
 )))

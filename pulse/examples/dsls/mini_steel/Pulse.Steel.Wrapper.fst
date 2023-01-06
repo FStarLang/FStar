@@ -30,8 +30,6 @@ let frame_stt (#a:Type u#a) (#pre:vprop) (#post:a -> vprop) (frame:vprop) (e:stt
   : stt a (pre `star` frame) (fun x -> post x `star` frame) =
   fun _ -> e ()
 
-assume val admit__ (#a:Type u#a) (#p:vprop) (#q:a -> vprop) (_:unit) : ST a p q True (fun _ -> False)
-
 let vprop_equiv (p q:vprop) = squash (equiv p q)
 let vprop_post_equiv (#t:Type u#a) (p q: t -> vprop) = forall x. vprop_equiv (p x) (q x)
   
@@ -111,28 +109,12 @@ let vprop_equiv_ext p1 p2 _ = equiv_refl p1
 module R = Steel.ST.Reference
 open Steel.ST.Util
 
-let read (r:R.ref u32) #n #p
-  = fun _ ->
-    let x = R.read r in
-    rewrite (R.pts_to r p n) (R.pts_to r p (hide x));
-    return x
-
-let read_refine r #n #p =
+let read r #n #p =
   fun _ ->
   let x = R.read r in
   return x
-
-let read_alt r #n
-  = fun _ ->
-    let x = R.read r in
-    return x
 
 let write r x #n
   = fun _ ->
     let _ = R.write r x in
     rewrite _ (R.pts_to r full_perm (hide x))
-
-let write_alt r x #n
-  = fun _ ->
-    let _ = R.write r x in
-    ()
