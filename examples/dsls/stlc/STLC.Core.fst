@@ -1,4 +1,4 @@
-module STLC
+module STLC.Core
 module T = FStar.Tactics
 module R = FStar.Reflection
 module L = FStar.List.Tot
@@ -8,20 +8,29 @@ type stlc_ty =
   | TUnit
   | TArrow : stlc_ty -> stlc_ty -> stlc_ty
 
+let rec ty_to_string' should_paren (t:stlc_ty)
+  : Tot string (decreases t)
+  = match t with
+    | TUnit -> "unit"
+    | TArrow t1 t2 -> 
+      let t = Printf.sprintf "%s -> %s" (ty_to_string' true t1) (ty_to_string' false t2) in
+      if should_paren then Printf.sprintf "(%s)" t else t
+let ty_to_string = ty_to_string' false
+
 let var = nat
 let index = nat
 
 let tun = R.pack_ln R.Tv_Unknown
 
 noeq
-type stlc_exp (t:Type) =
-  | EUnit : stlc_exp t
-  | EBVar : index -> stlc_exp t
-  | EVar  : var -> stlc_exp t
-  | ELam  : t -> stlc_exp t -> stlc_exp t
-  | EApp  : stlc_exp t -> stlc_exp t -> stlc_exp t
+type stlc_exp =
+  | EUnit : stlc_exp
+  | EBVar : index -> stlc_exp
+  | EVar  : var -> stlc_exp
+  | ELam  : stlc_ty -> stlc_exp -> stlc_exp
+  | EApp  : stlc_exp -> stlc_exp -> stlc_exp
 
-let rec size (e:stlc_exp 'a) 
+let rec size (e:stlc_exp) 
   : nat
   = match e with
     | EUnit
@@ -30,7 +39,7 @@ let rec size (e:stlc_exp 'a)
     | ELam _ e -> 1 + size e
     | EApp e1 e2 -> 1 + size e1 + size e2
 
-let rec ln' (e:stlc_exp 'a) (n:int)
+let rec ln' (e:stlc_exp) (n:int)
   : bool
   = match e with
     | EUnit
@@ -41,8 +50,8 @@ let rec ln' (e:stlc_exp 'a) (n:int)
 
 let ln e = ln' e (-1)
 
-let rec open_exp' (e:stlc_exp 'a) (v:var) (n:index)
-  : e':stlc_exp 'a { size e == size e'}
+let rec open_exp' (e:stlc_exp) (v:var) (n:index)
+  : e':stlc_exp { size e == size e'}
   = match e with
     | EUnit -> EUnit
     | EVar m -> EVar m
@@ -50,8 +59,8 @@ let rec open_exp' (e:stlc_exp 'a) (v:var) (n:index)
     | ELam t e -> ELam t (open_exp' e v (n + 1))
     | EApp e1 e2 -> EApp (open_exp' e1 v n) (open_exp' e2 v n)
 
-let rec close_exp' (e:stlc_exp 'a) (v:var) (n:nat)
-  : e':stlc_exp 'a { size e == size e'}
+let rec close_exp' (e:stlc_exp) (v:var) (n:nat)
+  : e':stlc_exp { size e == size e'}
   = match e with
     | EUnit -> EUnit
     | EVar m -> if m = v then EBVar n else EVar m
@@ -62,7 +71,7 @@ let rec close_exp' (e:stlc_exp 'a) (v:var) (n:nat)
 let open_exp e v = open_exp' e v 0
 let close_exp e v = close_exp' e v 0
 
-let rec open_close' (e:stlc_exp 'a) (x:var) (n:nat { ln' e (n - 1) })
+let rec open_close' (e:stlc_exp) (x:var) (n:nat { ln' e (n - 1) })
   : Lemma (open_exp' (close_exp' e x n) x n == e)
   = match e with
     | EUnit -> ()
@@ -73,14 +82,14 @@ let rec open_close' (e:stlc_exp 'a) (x:var) (n:nat { ln' e (n - 1) })
       open_close' e1 x n; 
       open_close' e2 x n
 
-let open_close (e:stlc_exp 'a) (x:var)
+let open_close (e:stlc_exp) (x:var)
   : Lemma 
     (requires ln e)
     (ensures open_exp (close_exp e x) x == e)
     [SMTPat (open_exp (close_exp e x) x)]
   = open_close' e x 0
 
-let rec open_exp_ln (e:stlc_exp 'a) (v:var) (n:index) (m:int)
+let rec open_exp_ln (e:stlc_exp) (v:var) (n:index) (m:int)
   : Lemma 
     (requires ln' e n /\
               m == n - 1)
@@ -94,7 +103,7 @@ let rec open_exp_ln (e:stlc_exp 'a) (v:var) (n:index) (m:int)
     | ELam _ e -> open_exp_ln e v (n + 1) (m + 1)
     | EApp e1 e2 -> open_exp_ln e1 v n m; open_exp_ln e2 v n m
 
-let rec close_exp_ln (e:stlc_exp 'a) (v:var) (n:nat)
+let rec close_exp_ln (e:stlc_exp) (v:var) (n:nat)
   : Lemma 
     (requires ln' e (n - 1))
     (ensures ln' (close_exp' e v n) n)
@@ -106,8 +115,6 @@ let rec close_exp_ln (e:stlc_exp 'a) (v:var) (n:nat)
     | ELam _ e -> close_exp_ln e v (n + 1)
     | EApp e1 e2 -> close_exp_ln e1 v n; close_exp_ln e2 v n
     
-let s_exp = e:stlc_exp stlc_ty
-
 let stlc_env = list (var & stlc_ty)
 
 let lookup (e:list (var & 'a)) (x:var)
@@ -158,7 +165,7 @@ let fresh_is_fresh (e:list (var & 'a))
   
 [@@erasable]
 noeq
-type stlc_typing : stlc_env -> s_exp -> stlc_ty -> Type =
+type stlc_typing : stlc_env -> stlc_exp -> stlc_ty -> Type =
   | T_Unit :
       g:stlc_env ->
       stlc_typing g EUnit TUnit
@@ -171,7 +178,7 @@ type stlc_typing : stlc_env -> s_exp -> stlc_ty -> Type =
   | T_Lam  :
       g:stlc_env ->
       t:stlc_ty ->
-      e:s_exp ->
+      e:stlc_exp ->
       t':stlc_ty ->
       x:var { None? (lookup g x) } ->
       stlc_typing ((x,t)::g) (open_exp e x) t' ->
@@ -179,98 +186,23 @@ type stlc_typing : stlc_env -> s_exp -> stlc_ty -> Type =
 
   | T_App  :
       g:stlc_env ->
-      e1:s_exp ->
-      e2:s_exp ->
+      e1:stlc_exp ->
+      e2:stlc_exp ->
       t:stlc_ty ->
       t':stlc_ty ->
       stlc_typing g e1 (TArrow t t') ->
       stlc_typing g e2 t ->
       stlc_typing g (EApp e1 e2) t'
   
-let new_hole (g:R.env)
-  : T.Tac R.term
-  = T.uvar_env g (Some (`stlc_ty))
-    
-let rec infer (g:R.env)
-              (sg:list (var & R.term))
-              (e:stlc_exp unit { ln e })
-  : T.Tac (e:stlc_exp R.term { ln e } & R.term)
-  = match e with
-    | EUnit ->
-      (| EUnit, `TUnit |)
-
-
-    | EVar x ->
-      begin
-      match lookup sg x with
-      | None -> T.fail "Unbound variable"
-      | Some ht -> (| EVar x, ht |)
-      end
-
-    | ELam _ e ->
-      let t0 = new_hole g in
-      let x = fresh sg in
-      let (| e, t |) = infer g ((x, t0) :: sg) (open_exp e x) in
-      (| ELam t0 (close_exp e x), `(TArrow (`#(t0)) (`#(t))) |)
-
-    | EApp e1 e2 ->
-      let (| e1, t1 |) = infer g sg e1 in
-      let (| e2, t2 |) = infer g sg e2 in
-      let res = new_hole g in
-      let ht = (`TArrow (`#(t2)) (`#(res))) in
-      if T.unify_env g t1 ht
-      then (| EApp e1 e2, res |)
-      else T.fail ("Expected arrow type " ^ T.term_to_string res ^ 
-                   " Got " ^ T.term_to_string t1)
-
-let is_fv (t:R.term) (n:R.name)
-  : T.Tac bool
-  = match T.inspect t with
-    | R.Tv_FVar fv ->
-      R.inspect_fv fv = n
-    | _ -> false
-   
-let rec read_back (g:R.env) (t:R.term)
-  : T.Tac stlc_ty
-  = let tt = T.inspect t in
-    match tt with
-    | R.Tv_Uvar _ _ -> 
-      if T.unify_env g t (`TUnit)
-      then read_back g t
-      else T.fail "Impossible: Unresolved uvar must be unifiable with TUnit"
-      
-    | R.Tv_FVar _ ->
-      if is_fv t ["STLC"; "TUnit"]
-      then TUnit
-      else T.fail "Got an FV of type stlc_ty, but it is not a TUnit"
-
-    | R.Tv_App _ _ ->
-      begin
-      let head, args = R.collect_app t in
-      if not (is_fv head ["STLC"; "TArrow"])
-      then T.fail "Got an application of type stlc_ty, but head is not a TArrow"
-      else match args with
-           | [t1;t2] ->
-             let t1 = read_back g (fst t1) in
-             let t2 = read_back g (fst t2) in
-             TArrow t1 t2
-             
-           | _ -> T.fail "Impossible: Incorrect arity of arrow"
-      end
-
-    | _ -> 
-      T.fail "Unexpected constructor of stlc_ty"
-  
 let rec check (g:R.env)
               (sg:list (var & stlc_ty))
-              (e:stlc_exp R.term { ln e })
-  : T.Tac (e':s_exp { ln e' } &
-           t':stlc_ty &
-           stlc_typing sg e' t')
+              (e:stlc_exp { ln e })
+  : T.Tac (t:stlc_ty &
+           stlc_typing sg e t)
   = match e with
     | EUnit ->
       let d = T_Unit sg in
-      (| EUnit, TUnit, d |)
+      (| TUnit, d |)
       
     | EVar n ->
       begin
@@ -278,37 +210,39 @@ let rec check (g:R.env)
       | None -> T.fail "Ill-typed"
       | Some t ->
         let d = T_Var sg n in
-        (| EVar n, t, d |)
+        (| t, d |)
       end
 
-    | ELam rt e ->
+    | ELam t e ->
       let x = fresh sg in
       fresh_is_fresh sg;
-      let t = read_back g rt in
-      let (| e, tbody, dbody |) = check g ((x,t)::sg) (open_exp e x) in
-      (| ELam t (close_exp e x), 
-         TArrow t tbody, 
-         T_Lam sg t (close_exp e x) tbody x dbody |)
+      let (| tbody, dbody |) = check g ((x,t)::sg) (open_exp e x) in
+      (| TArrow t tbody, 
+         T_Lam sg t e tbody x dbody |)
            
     | EApp e1 e2 ->
-      let (| e1, t1, d1 |) = check g sg e1  in
-      let (| e2, t2, d2 |) = check g sg e2 in
+      let (| t1, d1 |) = check g sg e1  in
+      let (| t2, d2 |) = check g sg e2 in
       match t1 with
       | TArrow t2' t ->
         if t2' = t2
-        then (| EApp e1 e2, t, T_App _ _ _ _ _ d1 d2 |)
-        else T.fail "Inference went wrong"
+        then (| t, T_App _ _ _ _ _ d1 d2 |)
+        else T.fail 
+               (Printf.sprintf "Expected argument of type %s got %s"
+                               (ty_to_string t2')
+                               (ty_to_string t2))
         
       | _ -> 
-        T.fail "Inference went wrong"
+        T.fail (Printf.sprintf "Expected an arrow, got %s"
+                               (ty_to_string t1))
 
-let infer_and_check (g:R.env)
-                    (e:stlc_exp unit { ln e })
-  : T.Tac (e':s_exp { ln e' } &
-           t :stlc_ty { stlc_typing [] e' t })
-  = let (| e', _ |) = infer g [] e in
-    let (| e'', t', d |) = check g [] e' in
-    (| e'', t' |)
+// let infer_and_check (g:R.env)
+//                     (e:stlc_exp unit { ln e })
+//   : T.Tac (e':stlc_exp { ln e' } &
+//            t :stlc_ty { stlc_typing [] e' t })
+//   = let (| e', _ |) = infer g [] e in
+//     let (| e'', t', d |) = check g [] e' in
+//     (| e'', t' |)
 
 let rec elab_ty (t:stlc_ty) 
   : R.term 
@@ -326,7 +260,7 @@ let rec elab_ty (t:stlc_ty)
           (RT.mk_binder "x" 0 t1 R.Q_Explicit)
           (R.pack_comp (C_Total t2)))
   
-let rec elab_exp (e:s_exp)
+let rec elab_exp (e:stlc_exp)
   : Tot R.term (decreases (size e))
   = let open R in
     match e with
@@ -401,7 +335,7 @@ let stlc_types_are_closed3 (ty:stlc_ty) (x:R.var)
   = stlc_types_are_closed_core ty (RT.OpenWith (RT.var_as_term x)) 0;
     RT.open_term_spec (elab_ty ty) x
 
-let rec elab_open_commute' (e:s_exp) (x:var) (n:nat)
+let rec elab_open_commute' (e:stlc_exp) (x:var) (n:nat)
   : Lemma (ensures
               RT.open_or_close_term' (elab_exp e) (RT.open_with_var x) n ==
               elab_exp (open_exp' e x n))
@@ -430,7 +364,7 @@ let rec elab_open_commute' (e:s_exp) (x:var) (n:nat)
           n;
       }
 
-let elab_open_commute (e:s_exp) (x:var)
+let elab_open_commute (e:stlc_exp) (x:var)
   : Lemma (RT.open_term (elab_exp e) x == elab_exp (open_exp e x))
           [SMTPat (RT.open_term (elab_exp e) x)]
   = elab_open_commute' e x 0;
@@ -471,7 +405,7 @@ let rec elab_ty_soundness (g:RT.fstar_top_env)
       RT.simplify_umax arr_max
   
 let rec soundness (#sg:stlc_env) 
-                  (#se:s_exp)
+                  (#se:stlc_exp)
                   (#st:stlc_ty)
                   (dd:stlc_typing sg se st)
                   (g:RT.fstar_top_env)
@@ -537,7 +471,7 @@ let rec soundness (#sg:stlc_env)
       dt
 
 let soundness_lemma (sg:stlc_env) 
-                    (se:s_exp)
+                    (se:stlc_exp)
                     (st:stlc_ty)
                     (g:RT.fstar_top_env)
   : Lemma
@@ -550,29 +484,27 @@ let soundness_lemma (sg:stlc_env)
       ()
       (fun dd -> FStar.Squash.return_squash (soundness dd g))
 
-let main (src:stlc_exp unit) : RT.dsl_tac_t =
+let main (src:stlc_exp) : RT.dsl_tac_t =
   fun g ->
   if ln src
   then
-    let (| src', src_ty |) = infer_and_check g src in
-    soundness_lemma [] src' src_ty g;
-    elab_exp src', elab_ty src_ty
+    let (| src_ty, d |) = check g [] src in
+    soundness_lemma [] src src_ty g;
+    elab_exp src, elab_ty src_ty
   else T.fail "Not locally nameless"
 
 (***** Tests *****)
 
 #set-options "--ugly"
 
-let stlc_id : stlc_exp unit = ELam () (EBVar 0)
-
-%splice_t[foo] (main stlc_id)
+%splice_t[foo] (main (ELam TUnit (EBVar 0)))
 
 #push-options "--no_smt"
 let test_id () = assert (foo () == ()) by (T.compute ())
 #pop-options
 
-let tm0 : stlc_exp unit = ELam () (ELam () (EBVar 1))
-%splice_t[bar] (main tm0)
+let bar_s = (ELam TUnit (ELam TUnit (EBVar 1)))
+%splice_t[bar] (main bar_s)
 
-let tm1 : stlc_exp unit = EApp tm0 EUnit
-%splice_t[baz] (main tm1)
+let baz_s : stlc_exp = EApp bar_s EUnit
+%splice_t[baz] (main bar_s)
