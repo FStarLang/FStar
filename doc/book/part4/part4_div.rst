@@ -201,4 +201,4 @@ discuss user-defined effects.
 
    The logical core of F* also includes the ghost effect. We can think
    of the partial order for the effects we have seen so far as: ``Tot
-   < GTot < Dv``.
+   < GTot`` and ``Tot < Dv``.

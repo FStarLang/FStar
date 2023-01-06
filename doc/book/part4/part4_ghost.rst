@@ -108,56 +108,111 @@ And, if we extract this code to OCaml, here's what we get:
 Notice that the erased arguments have all been turned into the unit
 value ``()``, and the needless addition in ``append`` is gone too.
 
-.. note:: 
-
-   Of course, the code would be cleaner if F* were to have entirely
-   removed the argument instead of leaving behind a unit term, but we
-   leave it to the downstream compiler, e.g., OCaml itself, to remove
-   these needless units. Further, if we're compiling the ML code
-   extracted from F* to C, then KaRaMeL does remove these additional
-   units in the C code it produces.
-
-..
-   Tracking Dependences with a Hierarchy of Effects
-   ------------------------------------------------
-
-   Recall our goal: We aim to track the irrelevant parts of a program,
-   ensuring that they remain separate from the part of the program that
-   gets compiled, i.e., the compiled part of the program should not have
-   any dependences on the erased part of the program. 
-
-   In a paper from 1999 called `A Core Calculus of Dependency
-   <https://dl.acm.org/doi/pdf/10.1145/292540.292555>`_, Abadi, Banerjee,
-   Heintze, and Riecke present DCC, a language with a very generic way to
-   track dependences. DCC's type system has a family of computation types
-   arranged in hierarchy (a partial order induced by lattice), where a
-   computations can only depend on other computations whose type is less
-   than (or equal to) it in the partial order.
-
-   Very briefly, DCC includes a family of computation types :math:`T_l`,
-   where the label :math:`l` ranges over the elements of a lattice
-   :math:`L`, where some pairs of labels may be related by :math:`l_1
-   \leq l_2`. The key typing rule in DCC defines how computations compose
-   sequentially using ``bind x = e1 in e2``: if ``e1`` has type
-   :math:`T_{l_1}(t)`, then assuming that ``x`` has type :math:`t`,
-   ``e2`` must have a type like :math:`T_{l_2}(t_2)`, where :math:`l_1
-   \leq l_2`. That is, since ``e2`` *depends* on the result of a
-   computation ``e1`` at level :math:`l_1`, ``e2``'s type must be at
-   least at the same level.
-
-   The design of F*'s effect system draws inspiration from DCC. The
-   effect label of an F* computation type is drawn from an open-ended,
-   user-extensible set of labels, where the labels are organized in a
-   user-chosen partial order. The rule for composing computations that
-   have different effect labels are based on a rule similar to DCC's,
-   though things become more involved due to F*'s dependent types. The
-   spirit of DCC's main result remains: computations can only depend on
-   other computations equal to or lower than it in the effect label
-   hierarchy.
+Of course, the code would be cleaner if F* were to have entirely
+removed the argument instead of leaving behind a unit term, but we
+leave it to the downstream compiler, e.g., OCaml itself, to remove
+these needless units. Further, if we're compiling the ML code
+extracted from F* to C, then KaRaMeL does remove these additional
+units in the C code it produces.
 
 
 Ghost: A Primitive Effect
 -------------------------
 
+The second, primitive effect in F*'s effect system is the effect of
+*ghost* computations, i.e., computation types whose effect label is
+``GTot``. [#]_ The label ``GTot`` is strictly above ``Tot`` in the
+effect hierarchy, i.e., ``Tot < GTot``. This means that a term with
+computation type ``GTot t`` cannot influence the behavior of a term
+whose type is ``Tot s``. Conversely, every ``Tot`` computation can be
+implicitly promoted to a ``GTot`` computation.
 
-   
+Ghost computations are just as well-behaved as pure, total
+terms---they always terminate on all inputs and exhibit no observable
+effects, except for the value they return. As such, F*'s logical core
+really includes both ``Tot`` and ``GTot`` computations. The
+distinction, however, is only relevant when considering how programs
+are compiled. Ghost computations are guaranteed to be erased by the
+the compiler---the effect hierarchy ``Tot < GTot`` serves to ensure
+that erasure ghost terms does not impact the runtime semantics of
+compiled, ``Tot`` terms.
+
+Since ``Tot`` terms are implicitly promoted to ``GTot``, it is easy to
+designate that some piece of code should be erased. For example, here
+is an ghost version of the factorial function:
+
+.. literalinclude:: ../code/FactorialTailRec.fst
+   :language: fstar
+   :start-after: //SNIPPET_START: factorial$
+   :end-before: //SNIPPET_END: factorial$
+
+Its definition is identical to the corresponding total function that
+we saw earlier, except that we have annotated the return computation
+type of the function as ``GTot nat``. This indicates to F* that
+``factorial`` is to be erased during compilation, and the F*
+type-and-effect checker imposes that no ``Tot`` computation depends on
+an application of ``factorial n``.
+
+.. [#] The name ``GTot`` is meant to stand for "Ghost and Total"
+       computations, and is pronounced "Gee-Tote". However, it's a
+       poor name and is far from self-explanatory. We plan to change
+       the name of this effect in the future (e.g., to something like
+       ``Spec``, ``Ghost``, or ``Erased``), though this is a breaking
+       change to a large amount of existing F* code.
+
+Ghost Computations as Specifications
+------------------------------------
+
+A ghost function like ``factorial`` can be used in specifications, as
+shown below, in a proof that a tail recursion optimization
+``factorial_tail`` is equivalent to ``factorial``.
+
+.. literalinclude:: ../code/FactorialTailRec.fst
+   :language: fstar
+   :start-after: //SNIPPET_START: factorial_tail$
+   :end-before: //SNIPPET_END: factorial_tail$
+
+This type allows a client to use the more efficient ``fact``, but for
+reasoning purposes, one can use the more canonical ``factorial``,
+proven equivalent to ``fact``.
+
+In contrast, if we were to try to implement the same specification by
+directly using the factorial ghost function, F* complains with a
+effect incompatibility error.
+      
+.. literalinclude:: ../code/FactorialTailRec.fst
+   :language: fstar
+   :start-after: //SNIPPET_START: factorial_bad$
+   :end-before: //SNIPPET_END: factorial_bad$
+
+The error is:
+
+.. code-block::
+
+   Computed type "r: nat{r == out * factorial n}" and effect "GTot" is
+   not compatible with the annotated type "r: nat{r == out * factorial n}"
+   effect "Tot"
+
+So, while F* forbids using ghost computations in ``Tot`` contexts, it
+seems to be fine with accepting a use of factorial in specifications,
+e.g., in the type ``r:nat { r == out * factorial n }``. We'll see in a
+moment why this is permitted.
+
+Erasable Types
+--------------
+
+
+Implicit coercions: `reveal` and `hide`
+---------------------------------------
+
+
+Non-informative Types
+---------------------
+
+
+Ghost Effect Promotion
+----------------------
+
+
+Revisiting Vector Concatenation
+-------------------------------

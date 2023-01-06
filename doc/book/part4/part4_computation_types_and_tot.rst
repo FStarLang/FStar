@@ -131,11 +131,11 @@ F*, including functions whose body may have non-trivial effects, one
 can always do this.
 
 .. [#] Since F* is an extensional type theory, pure F* terms are only
-       *weakly* normalizing. That is, some evaluation strategies need
+       *weakly* normalizing. That is, some evaluation strategies
        (e.g., repeatedly reducing a recursive function deep in an
        infeasible code path) need not terminate. However, for every
-       closed, pure F*, there is a reduction strategy that will reduce
-       it fully. As such, the evaluation order for pure functions is
-       irrelevant, except that some choices of evaluation order may
-       lead to non-termination.
+       closed, pure term, there is a reduction strategy that will
+       reduce it fully. As such, the evaluation order for pure
+       functions is irrelevant, except that some choices of evaluation
+       order may lead to non-termination.
        
