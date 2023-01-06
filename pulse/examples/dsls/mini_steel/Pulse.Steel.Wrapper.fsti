@@ -84,20 +84,26 @@ module R = Steel.ST.Reference
 type u32 : Type0 = U32.t
 
 open FStar.Ghost
-val read (n:erased u32) (r:R.ref u32)
-  : stt u32 (R.pts_to r full_perm n) (fun x -> R.pts_to r full_perm x)
+val read (r:R.ref u32) (#n:erased u32) (#p:perm)
+  : stt u32 (R.pts_to r p n) (fun x -> R.pts_to r p x)
 
-val read_refine (n:erased u32) (r:R.ref u32)
-  : stt (x:u32{reveal n == x}) (R.pts_to r full_perm n) (fun x -> R.pts_to r full_perm n)
+val read_refine (r:R.ref u32) (#n:erased u32) (#p:perm)
+  : stt (x:u32{reveal n == x})
+        (R.pts_to r p n)
+        (fun x -> R.pts_to r p n)
 
-val read_alt (n:erased u32) (r:R.ref u32)
-  : stt u32 (R.pts_to r full_perm n) (fun x -> R.pts_to r full_perm n)
+val read_alt (r:R.ref u32) (#n:erased u32) (#p:perm)
+  : stt u32 
+        (R.pts_to r p n)
+        (fun x -> R.pts_to r p n)
 
-val write (n:erased u32) (r:R.ref u32) (x:u32)
-  : stt unit (R.pts_to r full_perm n) (fun _ -> R.pts_to r full_perm (hide x))
+val write (r:R.ref u32) (x:u32) (#n:erased u32)
+  : stt unit
+        (R.pts_to r full_perm n) 
+        (fun _ -> R.pts_to r full_perm (hide x))
 
-val write_alt (n:erased u32) (r:R.ref u32) (x:u32)
-  : stt unit (R.pts_to r full_perm n) (fun _ -> exists_ (R.pts_to r full_perm))
+val write_alt (r:R.ref u32) (x:u32) (#n:erased u32)
+  : stt unit 
+        (R.pts_to r full_perm n)
+        (fun _ -> exists_ (R.pts_to r full_perm))
 
-val read_implicit (r:R.ref u32) (#n:erased u32)
-  : stt u32 (R.pts_to r full_perm n) (fun _ -> R.pts_to r full_perm n)
