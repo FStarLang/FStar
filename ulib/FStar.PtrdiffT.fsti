@@ -60,7 +60,7 @@ let mod_spec (a:int{fits a}) (b:int{fits b /\ b <> 0}) : GTot (n:int{fits n}) =
 (** Euclidean remainder
 
     The result is the modulus of [a] with respect to a non-zero [b] *)
-val rem (a:t) (b:t{v b <> 0}) : Pure t
+val rem (a:t{v a >= 0}) (b:t{v b > 0}) : Pure t
   (requires True)
   (ensures (fun c -> mod_spec (v a) (v b) = v c))
 
