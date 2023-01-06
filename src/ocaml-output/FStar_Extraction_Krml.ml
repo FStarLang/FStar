@@ -80,9 +80,6 @@ and expr =
   | EAbortT of (Prims.string * typ) 
   | EComment of (Prims.string * expr * Prims.string) 
   | EStandaloneComment of Prims.string 
-  | EAddrOf of expr 
-  | EBufNull of typ 
-  | EIsNull of (typ * expr) 
 and op =
   | Add 
   | AddW 
@@ -431,19 +428,6 @@ let (uu___is_EStandaloneComment : expr -> Prims.bool) =
     match projectee with | EStandaloneComment _0 -> true | uu___ -> false
 let (__proj__EStandaloneComment__item___0 : expr -> Prims.string) =
   fun projectee -> match projectee with | EStandaloneComment _0 -> _0
-let (uu___is_EAddrOf : expr -> Prims.bool) =
-  fun projectee -> match projectee with | EAddrOf _0 -> true | uu___ -> false
-let (__proj__EAddrOf__item___0 : expr -> expr) =
-  fun projectee -> match projectee with | EAddrOf _0 -> _0
-let (uu___is_EBufNull : expr -> Prims.bool) =
-  fun projectee ->
-    match projectee with | EBufNull _0 -> true | uu___ -> false
-let (__proj__EBufNull__item___0 : expr -> typ) =
-  fun projectee -> match projectee with | EBufNull _0 -> _0
-let (uu___is_EIsNull : expr -> Prims.bool) =
-  fun projectee -> match projectee with | EIsNull _0 -> true | uu___ -> false
-let (__proj__EIsNull__item___0 : expr -> (typ * expr)) =
-  fun projectee -> match projectee with | EIsNull _0 -> _0
 let (uu___is_Add : op -> Prims.bool) =
   fun projectee -> match projectee with | Add -> true | uu___ -> false
 let (uu___is_AddW : op -> Prims.bool) =
@@ -1083,43 +1067,6 @@ and (translate_expr : env -> FStar_Extraction_ML_Syntax.mlexpr -> expr) =
             let uu___2 = translate_branches env1 branches1 in
             (uu___1, uu___2) in
           EMatch uu___
-      | FStar_Extraction_ML_Syntax.MLE_App
-          ({
-             FStar_Extraction_ML_Syntax.expr =
-               FStar_Extraction_ML_Syntax.MLE_TApp
-               ({
-                  FStar_Extraction_ML_Syntax.expr =
-                    FStar_Extraction_ML_Syntax.MLE_Name p;
-                  FStar_Extraction_ML_Syntax.mlty = uu___;
-                  FStar_Extraction_ML_Syntax.loc = uu___1;_},
-                t::[]);
-             FStar_Extraction_ML_Syntax.mlty = uu___2;
-             FStar_Extraction_ML_Syntax.loc = uu___3;_},
-           uu___4)
-          when
-          let uu___5 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
-          uu___5 = "Steel.ST.HigherArray.null_ptr" ->
-          let uu___5 = translate_type env1 t in EBufNull uu___5
-      | FStar_Extraction_ML_Syntax.MLE_App
-          ({
-             FStar_Extraction_ML_Syntax.expr =
-               FStar_Extraction_ML_Syntax.MLE_TApp
-               ({
-                  FStar_Extraction_ML_Syntax.expr =
-                    FStar_Extraction_ML_Syntax.MLE_Name p;
-                  FStar_Extraction_ML_Syntax.mlty = uu___;
-                  FStar_Extraction_ML_Syntax.loc = uu___1;_},
-                t::[]);
-             FStar_Extraction_ML_Syntax.mlty = uu___2;
-             FStar_Extraction_ML_Syntax.loc = uu___3;_},
-           arg::[])
-          when
-          let uu___4 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
-          uu___4 = "Steel.ST.HigherArray.is_null_ptr" ->
-          let uu___4 =
-            let uu___5 = translate_type env1 t in
-            let uu___6 = translate_expr env1 arg in (uu___5, uu___6) in
-          EIsNull uu___4
       | FStar_Extraction_ML_Syntax.MLE_App
           ({
              FStar_Extraction_ML_Syntax.expr =
