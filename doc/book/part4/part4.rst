@@ -9,7 +9,7 @@ context is the value that the program returns---the inner workings of
 the program (e.g., whether it multiplies two numbers by repeated
 addition or by using a primitive operation for multiplication) cannot
 influence the behavior of its context. That is, pure terms can be
-reasoned about like pure mathematical functions.
+reasoned about like pure mathematical functions. [#]_
 
 However, many practical programs exhibit behaviors that are beyond
 just their output. For example, they may mutate some global state, or
@@ -50,19 +50,18 @@ Aside from user-defined effects, F*'s also supports the following
     functions as an effect. Although currently primitive, in the
     future, we hope to remove the special status of partial functions
     and make partial functions a user-defined notion too.
-    
-.. note ::
 
-   Although pure F* programs are mathematical functions in the ideal
-   sense, when executing these programs on a computer, they do exhibit
-   various side effects, including consuming resources like time,
-   power, and memory. Although these side effects are clearly
-   observable to an external observer of a running F* program, the
-   resourse-usage side effects of one component of a pure F* program
-   are not visible to another component of the same program.
-   
+  
+.. [#] Although pure F* programs are mathematical functions
+       in the ideal sense, when executing these programs on a
+       computer, they do exhibit various side effects, including
+       consuming resources like time, power, and memory. Although
+       these side effects are clearly observable to an external
+       observer of a running F* program, the resourse-usage side
+       effects of one component of a pure F* program are not visible
+       to another component of the same program.
+
 .. toctree::
-   :hidden:
    :maxdepth: 1
    :caption: Contents:
 

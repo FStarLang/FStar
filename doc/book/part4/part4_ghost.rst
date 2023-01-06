@@ -117,42 +117,43 @@ value ``()``, and the needless addition in ``append`` is gone too.
    extracted from F* to C, then KaRaMeL does remove these additional
    units in the C code it produces.
 
-Tracking Dependences with a Hierarchy of Effects
-------------------------------------------------
+..
+   Tracking Dependences with a Hierarchy of Effects
+   ------------------------------------------------
 
-Recall our goal: We aim to track the irrelevant parts of a program,
-ensuring that they remain separate from the part of the program that
-gets compiled, i.e., the compiled part of the program should not have
-any dependences on the erased part of the program. 
+   Recall our goal: We aim to track the irrelevant parts of a program,
+   ensuring that they remain separate from the part of the program that
+   gets compiled, i.e., the compiled part of the program should not have
+   any dependences on the erased part of the program. 
 
-In a paper from 1999 called `A Core Calculus of Dependency
-<https://dl.acm.org/doi/pdf/10.1145/292540.292555>`_, Abadi, Banerjee,
-Heintze, and Riecke present DCC, a language with a very generic way to
-track dependences. DCC's type system has a family of computation types
-arranged in hierarchy (a partial order induced by lattice), where a
-computations can only depend on other computations whose type is less
-than (or equal to) it in the partial order.
+   In a paper from 1999 called `A Core Calculus of Dependency
+   <https://dl.acm.org/doi/pdf/10.1145/292540.292555>`_, Abadi, Banerjee,
+   Heintze, and Riecke present DCC, a language with a very generic way to
+   track dependences. DCC's type system has a family of computation types
+   arranged in hierarchy (a partial order induced by lattice), where a
+   computations can only depend on other computations whose type is less
+   than (or equal to) it in the partial order.
 
-Very briefly, DCC includes a family of computation types :math:`T_l`,
-where the label :math:`l` ranges over the elements of a lattice
-:math:`L`, where some pairs of labels may be related by :math:`l_1
-\leq l_2`. The key typing rule in DCC defines how computations compose
-sequentially using ``bind x = e1 in e2``: if ``e1`` has type
-:math:`T_{l_1}(t)`, then assuming that ``x`` has type :math:`t`,
-``e2`` must have a type like :math:`T_{l_2}(t_2)`, where :math:`l_1
-\leq l_2`. That is, since ``e2`` *depends* on the result of a
-computation ``e1`` at level :math:`l_1`, ``e2``'s type must be at
-least at the same level.
+   Very briefly, DCC includes a family of computation types :math:`T_l`,
+   where the label :math:`l` ranges over the elements of a lattice
+   :math:`L`, where some pairs of labels may be related by :math:`l_1
+   \leq l_2`. The key typing rule in DCC defines how computations compose
+   sequentially using ``bind x = e1 in e2``: if ``e1`` has type
+   :math:`T_{l_1}(t)`, then assuming that ``x`` has type :math:`t`,
+   ``e2`` must have a type like :math:`T_{l_2}(t_2)`, where :math:`l_1
+   \leq l_2`. That is, since ``e2`` *depends* on the result of a
+   computation ``e1`` at level :math:`l_1`, ``e2``'s type must be at
+   least at the same level.
 
-The design of F*'s effect system draws inspiration from DCC. The
-effect label of an F* computation type is drawn from an open-ended,
-user-extensible set of labels, where the labels are organized in a
-user-chosen partial order. The rule for composing computations that
-have different effect labels are based on a rule similar to DCC's,
-though things become more involved due to F*'s dependent types. The
-spirit of DCC's main result remains: computations can only depend on
-other computations equal to or lower than it in the effect label
-hierarchy.
+   The design of F*'s effect system draws inspiration from DCC. The
+   effect label of an F* computation type is drawn from an open-ended,
+   user-extensible set of labels, where the labels are organized in a
+   user-chosen partial order. The rule for composing computations that
+   have different effect labels are based on a rule similar to DCC's,
+   though things become more involved due to F*'s dependent types. The
+   spirit of DCC's main result remains: computations can only depend on
+   other computations equal to or lower than it in the effect label
+   hierarchy.
 
 
 Ghost: A Primitive Effect
