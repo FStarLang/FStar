@@ -486,7 +486,7 @@ and t_height #f (#g:src_env) (#t:s_ty) (d:src_ty_ok f g t)
     | OK_TArrow _ _ _ d0 d1 -> max (t_height d0) (t_height d1) + 1
     | OK_TRefine _ _ d -> height d + 1
 
-module RTB = Refl.Typing.Builtins
+module FTB = FStar.Tactics.Builtins
 
 let check_sub_typing (f:RT.fstar_top_env)
                      (sg:src_env)
@@ -496,7 +496,7 @@ let check_sub_typing (f:RT.fstar_top_env)
     else let t0' = elab_ty t0 in
          let t1' = elab_ty t1 in
          let f' = extend_env_l f sg in
-         let token_opt = RTB.check_subtyping f' t0' t1' in
+         let token_opt = FTB.check_subtyping f' t0' t1' in
          match token_opt with
          | None -> T.fail "Not subtypes"
          | Some token ->
@@ -1024,8 +1024,6 @@ let rec rename_as_bindings_commute (sg:src_env) (x y:var)
         RT.rename_bindings (as_bindings sg) x y;
       }
 
-module RTB = Refl.Typing.Builtins
-
 let core_subtyping_renaming
                         (#f:RT.fstar_top_env)
                         (sg sg':src_env)
@@ -1046,7 +1044,7 @@ let core_subtyping_renaming
       (==) { as_bindings_append sg' ((x,b)::sg) }
         RT.extend_env_l f ((as_bindings sg')@(x, elab_binding b)::as_bindings sg);      
       };
-      let tok : squash (RTB.subtyping_token
+      let tok : squash (FTB.subtyping_token
                           (RT.extend_env_l f ((as_bindings sg')@(x, elab_binding b)::as_bindings sg))
                           (elab_ty t0)
                           (elab_ty t1))
@@ -1059,7 +1057,7 @@ let core_subtyping_renaming
       lookup_append_inverse sg sg' y;      
       assert (None? (RT.lookup_bvar (RT.extend_env_l f ((as_bindings sg')@as_bindings sg)) x));
       assert (None? (RT.lookup_bvar (RT.extend_env_l f ((as_bindings sg')@as_bindings sg)) y));      
-      let tok : squash (RTB.subtyping_token
+      let tok : squash (FTB.subtyping_token
                           (RT.extend_env_l f (RT.rename_bindings (as_bindings sg') x y@(y, elab_binding b)::as_bindings sg))
                           (RT.rename (elab_ty t0) x y)
                           (RT.rename (elab_ty t1) x y))
@@ -1068,7 +1066,7 @@ let core_subtyping_renaming
       RT.rename_spec (elab_ty t1) x y;       
       src_types_are_closed_core t0 (RT.Rename x y) 0;
       src_types_are_closed_core t1 (RT.Rename x y) 0;      
-      let tok : squash (RTB.subtyping_token
+      let tok : squash (FTB.subtyping_token
                           (RT.extend_env_l f (RT.rename_bindings (as_bindings sg') x y@(y, elab_binding b)::as_bindings sg))
                           (elab_ty t0)
                           (elab_ty t1))
@@ -1076,7 +1074,7 @@ let core_subtyping_renaming
       rename_as_bindings_commute sg' x y;
       assert (RT.rename_bindings (as_bindings sg') x y ==
               as_bindings (rename_env sg' x y));
-      let tok : squash (RTB.subtyping_token
+      let tok : squash (FTB.subtyping_token
                           (RT.extend_env_l f (as_bindings (rename_env sg' x y)@(y, elab_binding b)::as_bindings sg))
                           (elab_ty t0)
                           (elab_ty t1))
@@ -1090,7 +1088,7 @@ let core_subtyping_renaming
       (==) {extend_env_equiv f ((rename_env sg' x y)@(y,b)::sg) }
         extend_env_l f ((rename_env sg' x y)@(y, b)::sg);      
       };
-      let tok : squash (RTB.subtyping_token
+      let tok : squash (FTB.subtyping_token
                           (extend_env_l f ((rename_env sg' x y)@(y, b)::sg))
                           (elab_ty t0)
                           (elab_ty t1))
@@ -1267,7 +1265,7 @@ let sub_typing_weakening #f (sg sg':src_env)
         
       | RT.ST_Token _ _ _ tok ->
         let tok
-          : squash (RTB.subtyping_token 
+          : squash (FTB.subtyping_token 
                       (extend_env_l f (sg'@sg))
                       (elab_ty t1)
                       (elab_ty t2))
@@ -1283,7 +1281,7 @@ let sub_typing_weakening #f (sg sg':src_env)
         lookup_append_inverse sg sg' x;
         extend_env_l_lookup_bvar f (sg'@sg) x;
         let tok
-          : squash (RTB.subtyping_token 
+          : squash (FTB.subtyping_token 
                       (RT.extend_env_l f (as_bindings sg'@(x, elab_binding b)::as_bindings sg))
                       (elab_ty t1)
                       (elab_ty t2))
@@ -1297,7 +1295,7 @@ let sub_typing_weakening #f (sg sg':src_env)
            extend_env_l f (sg'@(x, b)::sg);        
         };
         let tok
-          : squash (RTB.subtyping_token 
+          : squash (FTB.subtyping_token 
                       (extend_env_l f (sg'@(x,b)::sg))
                       (elab_ty t1)
                       (elab_ty t2))
