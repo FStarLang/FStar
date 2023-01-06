@@ -44,7 +44,7 @@ The language consists of expressions ``e``, which include variables
 ``x, y, z, ...``. Assume that all the variables have global scope. We
 leave the rest of the expression forms unspecified, as the core
 reasoning rules are also abstract in them. The statements ``s`` in the
-language consist of ``skip`` (a no-op), assignment statement,
+language consist of ``skip`` (a no-op), assignment,
 sequencing, conditionals, and while loops with guard ``e`` and loop
 body ``s``.
 
@@ -59,11 +59,12 @@ that satisfies ``P`` results in a state that satisfies ``Q``. ``P``
 and ``Q`` are also called precondition and postcondition of ``s``
 respectively. There are both total correctness and partial correctness
 interpretations of the triple, depending on whether the termination of
-``s`` is ensured by the logical system.
+``s`` is ensured by the logical rules that manipulate the triples.
 
 The Hoare Logic *inference rules* provide axioms for valid Hoare
-triples for each statement form, reflecting their logical reasoning
-principles. A triple ``{P} s {Q}`` is *derivable* in the system
+triples for each of the statement forms, reflecting their logical
+reasoning principles. A triple ``{P} s {Q}`` is *derivable* in the
+system
 if these axioms can be instantiated and arranged together in a
 *derivation tree* with ``{P} s {Q}`` at the leaf. We first look at
 each individual axiom, and then examples of such derivation trees.
@@ -97,21 +98,24 @@ does not change the state.
 Assignment
 ^^^^^^^^^^^^
 
-The assignment rule is more interesting::
+The assignment rule is a little more interesting::
 
   ----------------------- :: [Assign]
     {P[e/x]} x := e {P}
 
 
-This rule also does not have premise. It says that, ``P`` holds after
+This rule also does not have any premises. It says that, ``P`` holds
+after
 executing ``x := e``, if ``P[e/x]``, i.e. ``P`` with ``x`` substituted
-with ``e``, holds before executing the statement.
+by ``e``, holds before executing the statement.
 
-For example, to prove that after ``x := y + 1``, ``x >
-0`` holds, then the rule says that ``(x > 0)[(y + 1)/x]`` should hold
-before the assigment. Simplifying a little, if ``y > -1``, which is
-what we would expect. So, applying this rule, we can derive that the
-Hoare triple ``{y > -1} x := y + 1 {x > 0}`` is valid.
+For example, to prove that after ``z := y + 1``, ``z >
+0`` holds, the rule says that ``(z > 0)[(y + 1)/z]`` should hold
+before the assigment. Simplifying, ``y > -1``, which is
+what we would expect. So, applying this rule, with instantiations of
+the metavariables ``P``, ``x``, and ``e``, we
+can derive that the Hoare triple ``{y > -1} x := y + 1 {x > 0}`` is
+valid.
 
 
 Sequence
@@ -163,18 +167,18 @@ loop starts, is maintained by each iteration of the loop, and is
 provided as the postcondition of the loop. While the rule uses the
 loop invariant *declaratively*, without worrying about where the
 invariant comes from, an actual tool that implements Hoare Logic has
-to either infer or require as an annotation from the
-user a suitable loop invariant.
+to either infer or require it as an annotation from the
+user.
 
 This rule establishes partial correctness, it does not ensure that
-the loop terminates. It is possible to augment the rule with
-termination metrics to ensure total correctness, see `here
+the loop terminates. It may be augmented with a
+termination metric to ensure total correctness, see `here
 <https://en.wikipedia.org/wiki/Hoare_logic/>`_ for example.
 
 Consequence
 ^^^^^^^^^^^^^^
 
-The final inference rule is the *rule of consequence* that allows
+The final inference rule is the rule of consequence that allows
 strengthening the precondition and weakening the postcondition::
 
 
@@ -185,7 +189,7 @@ strengthening the precondition and weakening the postcondition::
 One way to think of the precondition of a statement is as an
 obligation before the statement is executed. So if ``s`` requires
 ``P1``, we can always strengthen the precondition to ``P``, provided
-``P ==> P1``, i.e. it is always logically valid to require more than
+``P ==> P1``, i.e. it is logically valid to require more than
 necessary in the precondition. Similarly, postcondition is what a
 statement guarantees. So if ``s`` guarantees ``Q1``, we can always
 weaken it to guarantee less, i.e. some ``Q`` where ``Q1 ==> Q``.
@@ -341,7 +345,7 @@ relation::
 
   let wp_equiv (#a:Type) (wp1 wp2:wp a) : prop = forall post. wp1 post <==> wp2 post
 
-And with this, we can prove that ``wp`` satisfies the three monad
+With ``wp_equiv``, we can prove that ``wp`` satisfies the three monad
 laws::
 
   let left_identity (a b:Type) (x:a) (wp:a -> wp a)
@@ -393,10 +397,10 @@ Let's look at some examples of writing and typechecking ``PURE``::
 
 (The ``as_pure_wp`` is a technicality for coercing the wp functions
 into pure wps that are required to be monotonic in F*. It is defined
-in ulib/FStar.Monotonic.Pure.fst.)
+in ``ulib/FStar.Monotonic.Pure.fst``.)
 
-In general, when F* typechecks ``e:PURE a wp``, it first computes a wp
-for ``e``, let's call it ``wp_e``, and then checks that ``wp`` is
+When F* typechecks ``e:PURE a wp``, it computes a wp
+for ``e``, let's call it ``wp_e``, and checks that ``wp`` is
 *stronger* than ``wp_e``, where stronger is defined as follows::
 
   //wp1 is stronger than wp2
@@ -419,9 +423,9 @@ conditionals), etc. Let's look at another example::
     = if b then x + 1
       else x
 
-It is worthwhile understanding the wp here. It says that to prove ``post`` of the return value, the precondition is to prove ``post`` on all ``y > x``. The ``y`` here is a valid, although much weaker, characterization of the function's return value.
+It is worthwhile understanding the wp here. It says that to prove ``post`` of the return value, the precondition is to prove ``post`` on all ``y > x``. The ``y`` here is a valid, although weaker, characterization of the function's return value.
 
-We can also write a stronger spec which basically mirrors the
+We can write a stronger spec which basically mirrors the
 definition of wp for the conditionals::
 
   let maybe_incr (b:bool) (x:int)
@@ -455,7 +459,7 @@ In this wp, for proving any postcondition, the precondition requires
 The ``Pure`` abbreviation
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Arguably specifications in the Hoare-style are easier on the eyes, as
+Arguably, specifications in the Hoare-style are easier on the eyes, as
 the precondition and the postcondition components are more clearly
 separated. F* provides an effect called ``Pure`` for
 writing and typechecking Hoare-style specifications for pure
@@ -491,11 +495,11 @@ easy to check that ``req_ens_to_wp req ens`` is monotonic for all
 ``PURE`` and ``Tot``
 ---------------------
 
-We can view ``PURE`` as refining ``Tot``. Just like the value refinement
-type ``x:t{p}`` refines the type ``t``, ``e:PURE t wp`` refines
-``e:Tot t``.
+We can view ``PURE`` as refining ``Tot``---just like the refinement
+type ``x:t{p}`` refines ``t``, ``e:PURE t wp`` refines ``e:Tot t``.
 
-For example, consider ``factorial:nat -> Tot nat`` vs ``factorial::nat
+What does it mean? Consider ``factorial:nat -> Tot nat`` vs
+``factorial::nat
 -> PURE nat (fun post -> forall (y:nat). y >= 1 ==> post y)``. Whereas
 the first type only tells us that ``factorial`` returns a ``nat``, the
 second type refines this further and tells us that it returns a
@@ -569,27 +573,27 @@ in their full generality, showing Dijkstra monads for different
 effects (pure, state, exceptions, etc.), and their
 composition with each other.
 
-Dijkstra monads have a deep connection with the continuation
+Dijkstra monads also have a deep connection with the continuation
 monad. Continuation monad models the `Continuation Passing Style
 <https://en.wikipedia.org/wiki/Continuation-passing_style/>`_ programming,
 where the control is passed to the callee explicitly in the form of a
 continuation. For a result type ``r``, the continuation monad is
 defined as follows::
 
-  type cont (a:Type) = (a -> r) -> r
+  type cont (a:Type) = (a -> r) -> r  // (a -> r) is the continuation
   let return (#a:Type) (x:a) : cont a = fun k -> k x
   let bind (#a #b:Type) (f:cont a) (g:a -> cont b) : cont b =
     fun k -> f (fun x -> g x k)
 
-If we squint a bit, we see that the ``wp`` monad we defined earlier,
-is nothing but a continuation into ``prop``::
+If we squint a bit, we can see that the ``wp`` monad we defined
+earlier, is nothing but a continuation into ``prop``::
 
   type wp (a:Type) = (a -> prop) -> prop
 
 The `Dijkstra Monads for Free
 <https://www.fstar-lang.org/papers/dm4free/>`_ paper explores this
-connection in more detail. We will also learn more about this in later
-chapters.
+connection in more detail. We will learn more about Dijkstra Monad in
+a later chapter.
 
 
 ``GHOST`` and ``DIV``
@@ -623,7 +627,7 @@ semantics. For reasoning about effectful programs, however, such
 semantic models may not be the right tool. Indeed several
 monad-like abstractions have been proposed in the literature that are
 suitable for different tasks. With user-defined effects, F* allows
-building such custom abstractions and program logics, while still
-providing the same syntax that we have seen so far and seamlessly
+building such custom abstractions and program logics, seamlessly
 integrated with other features (recursion, inductive types,
-...). That's next.
+...) and programmability using the same syntax that we have seen so
+far. We turn our attention to user-defined effects next.
