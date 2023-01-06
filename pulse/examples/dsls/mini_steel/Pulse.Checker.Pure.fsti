@@ -14,14 +14,14 @@ val check_universe (f0:RT.fstar_top_env) (g:env) (t:term)
   : T.Tac (_:(u:universe & universe_of f0 g t u) { is_pure_term t })
   
       
-val check_tot_univ (f:RT.fstar_top_env) (g:env) (t:term)
-  : T.Tac (_:(t:pure_term &
+val check_tot_univ (allow_inst:bool) (f:RT.fstar_top_env) (g:env) (t:term)
+  : T.Tac (_:(t:pure_term  &
               u:universe &
               ty:pure_term &
               universe_of f g ty u &
               src_typing f g t (C_Tot ty)) { is_pure_term t } )
 
-val check_tot (f:RT.fstar_top_env) (g:env) (t:term)
+val check_tot (allow_inst:bool) (f:RT.fstar_top_env) (g:env) (t:term)
   : T.Tac (_:(t:pure_term &
               ty:pure_term &
               src_typing f g t (C_Tot ty)) { is_pure_term t })

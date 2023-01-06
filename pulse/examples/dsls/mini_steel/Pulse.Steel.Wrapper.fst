@@ -137,4 +137,4 @@ let write_alt n r x
     let _ = R.write r x in
     ()
 
-let read_implicit #n r = read_alt n r
+let read_implicit r #n = read_alt n r

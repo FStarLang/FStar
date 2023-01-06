@@ -99,5 +99,5 @@ val write (n:erased u32) (r:R.ref u32) (x:u32)
 val write_alt (n:erased u32) (r:R.ref u32) (x:u32)
   : stt unit (R.pts_to r full_perm n) (fun _ -> exists_ (R.pts_to r full_perm))
 
-val read_implicit (#n:erased u32) (r:R.ref u32)
+val read_implicit (r:R.ref u32) (#n:erased u32)
   : stt u32 (R.pts_to r full_perm n) (fun _ -> R.pts_to r full_perm n)
