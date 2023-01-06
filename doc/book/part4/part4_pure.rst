@@ -31,7 +31,7 @@ A Primer on Hoare Logic
 Hoare Logic is a system of specifications and reasoning principles to
 reason about the logical properties of programs. It was introduced by
 Tony Hoare in the paper `An axiomatic basis for computer
-programming <https://dl.acm.org/doi/10.1145/363235.363259/>`_, in the
+programming <https://dl.acm.org/doi/10.1145/363235.363259>`_, in the
 context of reasoning about imperative programs.
 
 Let's consider a small imperative language with the following grammar::
@@ -42,7 +42,7 @@ Let's consider a small imperative language with the following grammar::
 
 The language consists of expressions ``e``, which include variables
 ``x, y, z, ...``. Assume that all the variables have global scope. We
-leave the rest of the expression forms as underspecified, as the core
+leave the rest of the expression forms unspecified, as the core
 reasoning rules are also abstract in them. The statements ``s`` in the
 language consist of ``skip`` (a no-op), assignment statement,
 sequencing, conditionals, and while loops with guard ``e`` and loop

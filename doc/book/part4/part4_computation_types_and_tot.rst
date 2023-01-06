@@ -23,7 +23,8 @@ effect of total computations that do not have any observable effect
 other than the input-output behavior. Any meaning or intuition that we
 have ascribed to typing ``e:t`` extends to ``e:Tot t``. For example,
 if ``e:Tot t``, then at runtime, ``e`` terminates and produces a value
-of type ``t``.
+of type ``t``. In addition, since its effect label is ``Tot``, it has
+no side-effect.
 
 In fact, as we have already :ref:`seen <Part1_ch1_arrow_notations>`,
 notationally ``x:t0 -> t1`` is a shorthand for ``x:t0 -> Tot t1``
