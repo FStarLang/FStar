@@ -45,12 +45,8 @@ let ptrdifft_to_sizet x =
 
 let add x y = I64.add x y
 
-let lem (x:nat) (y:pos) : Lemma (x / y <= x) =
-  let open FStar.Mul in
-  FStar.Math.Lemmas.lemma_div_le x (x * y) y
-
 let div x y =
-  lem (v x) (v y);
+  FStar.Math.Lib.slash_decr_axiom (v x) (v y);
   I64.div x y
 
 let rem x y = I64.rem x y
