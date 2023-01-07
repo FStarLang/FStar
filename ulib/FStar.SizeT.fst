@@ -5,7 +5,7 @@ module I64 = FStar.Int64
 (* This is only intended as a model, but will be extracted natively by Krml
    with the correct C semantics *)
 
-(* We assume the existence of some lower bound on the size, 
+(* We assume the existence of some lower bound on the size,
    where the bound is at least 2^16 *)
 assume
 val bound : x:erased nat { x >= pow2 16 }
@@ -61,13 +61,14 @@ let of_u64 (x: U64.t)
 let uint16_to_sizet x = uint_to_t (U16.v x)
 let uint32_to_sizet x = uint_to_t (U32.v x)
 let uint64_to_sizet x = uint_to_t (U64.v x)
+let sizet_to_uint32 x = FStar.Int.Cast.uint64_to_uint32 x
 
 let fits_lte x y = ()
 
 let add x y = U64.add x y
 let sub x y = U64.sub x y
 let mul x y = U64.mul x y
-let div x y = 
+let div x y =
   let res = U64.div x y in
   fits_lte (U64.v res) (U64.v x);
   FStar.Math.Lib.slash_decr_axiom (U64.v x) (U64.v y);
