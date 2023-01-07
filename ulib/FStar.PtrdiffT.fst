@@ -23,6 +23,7 @@ let ptrdiff_int_to_t_inj x = ()
 let mk x = int_to_t (I16.v x)
 
 let add = I64.add
+let div x y = I64.div x y
 let rem x y = I64.rem x y
 let gt x y = I64.gt x y
 let gte x y = I64.gte x y
