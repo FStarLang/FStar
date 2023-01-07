@@ -1,4 +1,4 @@
-module Selectors.ArrayRef
+module Steel.ArrayRef
 
 module A = Steel.Array
 
@@ -72,7 +72,7 @@ let elim_vptr0
     (fun h _ h' ->
       A.aselp r p h' `Seq.equal` Seq.create 1 (h (vptr0 r p))
     )
-= 
+=
   change_equal_slprop (vptr0 r p) (vptr1 r p);
   elim_vrewrite (A.varrayp r p `vrefine` vptr0_refine r) (vptr0_rewrite r p);
   elim_vrefine (A.varrayp r p) (vptr0_refine r)

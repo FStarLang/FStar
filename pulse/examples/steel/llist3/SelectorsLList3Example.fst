@@ -3,7 +3,7 @@ module SelectorsLList3Example
 open Steel.Memory
 open Steel.Effect.Atomic
 open Steel.Effect
-open Selectors.ArrayRef
+open Steel.ArrayRef
 
 module L = FStar.List.Tot
 module LL = Selectors.LList3
