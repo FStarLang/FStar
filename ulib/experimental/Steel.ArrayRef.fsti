@@ -1,4 +1,4 @@
-module Selectors.ArrayRef
+module Steel.ArrayRef
 
 open Steel.FractionalPermission
 open Steel.Memory
