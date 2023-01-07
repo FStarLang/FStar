@@ -1,6 +1,7 @@
 module FStar.PtrdiffT
 
 module I16 = FStar.Int16
+module US = FStar.SizeT
 
 val t : eqtype
 
@@ -44,6 +45,12 @@ val mk (x: I16.t) : Pure t
 noextract inline_for_extraction
 let zero : (zero_ptrdiff: t { v zero_ptrdiff == 0 }) =
   mk 0s
+
+(** Cast from ptrdiff_to to size_t.
+    We restrict the cast to positive integers to avoid reasoning about modular arithmetic *)
+val ptrdifft_to_sizet (x:t{v x >= 0}) : Pure US.t
+  (requires True)
+  (ensures fun c -> v x == US.v c)
 
 val add (x y: t) : Pure t
   (requires (fits (v x + v y)))
