@@ -4,8 +4,8 @@ Erasure and the Ghost Effect
 ============================
 
 When writing proof-oriented programs, inevitably, some parts of the
-program are there only to state and prove properties about the code
-that actually executes. Our first *effect* separates the
+program serve only to state and prove properties about the code that
+actually executes. Our first non-trivial effect separates the
 computationally relevant parts of the program from the computationally
 irrelevant (i.e., specificational or *ghost*) parts of a program. This
 separation enables the F* compiler to guarantee that all the ghost
@@ -73,9 +73,7 @@ compiler that some parts of a computation are actually only there for
 specification or proof purposes and that they can be removed when
 compiling the code, without changing the observable result computed by
 the program. This is what *erasure* is about---removing the
-computationally irrelevant parts of a term for compilation. Put
-another way, erasure involves *slicing* the program to remove all the
-irrelevant or dead code.
+computationally irrelevant parts of a term for compilation. 
 
 Here's a revised version of vectors, making use of the ``erased`` type
 from the ``FStar.Ghost`` library to indicate to F* which parts must be
@@ -89,10 +87,10 @@ for now that:
 
   1. The first argument of ``Cons`` now has type ``erased nat``.
 
-  2. The two implicit arguments of ``append`` corresponding the
-     indexes of the input vectors also have type ``erased nat``.
+  2. The implicit arguments of ``append`` corresponding to the
+     indexes of the input vectors have type ``erased nat``.
 
-And, if we extract this code to OCaml, here's what we get:
+If we extract this code to OCaml, here's what we get:
 
 
 .. literalinclude:: ../code/VecErased.ml
@@ -131,15 +129,15 @@ Ghost computations are just as well-behaved as pure, total
 terms---they always terminate on all inputs and exhibit no observable
 effects, except for the value they return. As such, F*'s logical core
 really includes both ``Tot`` and ``GTot`` computations. The
-distinction, however, is only relevant when considering how programs
-are compiled. Ghost computations are guaranteed to be erased by the
-the compiler---the effect hierarchy ``Tot < GTot`` serves to ensure
-that erasure ghost terms does not impact the runtime semantics of
-compiled, ``Tot`` terms.
+distinction between ``Tot`` and ``GTot`` is only relevant when
+considering how programs are compiled. Ghost computations are
+guaranteed to be erased by the the compiler, while ``Tot``
+computations are retained.
 
 Since ``Tot`` terms are implicitly promoted to ``GTot``, it is easy to
-designate that some piece of code should be erased. For example, here
-is an ghost version of the factorial function:
+designate that some piece of code should be erased just by annotating
+it with a ``GTot`` effect label. For example, here is an ghost version
+of the factorial function:
 
 .. literalinclude:: ../code/FactorialTailRec.fst
    :language: fstar
@@ -150,11 +148,11 @@ Its definition is identical to the corresponding total function that
 we saw earlier, except that we have annotated the return computation
 type of the function as ``GTot nat``. This indicates to F* that
 ``factorial`` is to be erased during compilation, and the F*
-type-and-effect checker imposes that no ``Tot`` computation depends on
-an application of ``factorial n``.
+type-and-effect checker ensures that ``Tot`` computation cannot depend
+on an application of ``factorial n``.
 
 .. [#] The name ``GTot`` is meant to stand for "Ghost and Total"
-       computations, and is pronounced "Gee-Tote". However, it's a
+       computations, and is pronounced "gee tote". However, it's a
        poor name and is far from self-explanatory. We plan to change
        the name of this effect in the future (e.g., to something like
        ``Spec``, ``Ghost``, or ``Erased``), though this is a breaking
@@ -163,9 +161,9 @@ an application of ``factorial n``.
 Ghost Computations as Specifications
 ------------------------------------
 
-A ghost function like ``factorial`` can be used in specifications, as
-shown below, in a proof that a tail recursion optimization
-``factorial_tail`` is equivalent to ``factorial``.
+A ghost function like ``factorial`` can be used in specifications,
+e.g., in a proof that a tail recursion optimization ``factorial_tail``
+is equivalent to ``factorial``.
 
 .. literalinclude:: ../code/FactorialTailRec.fst
    :language: fstar
@@ -187,32 +185,331 @@ effect incompatibility error.
 
 The error is:
 
-.. code-block::
+.. code-block:: none
 
-   Computed type "r: nat{r == out * factorial n}" and effect "GTot" is
-   not compatible with the annotated type "r: nat{r == out * factorial n}"
-   effect "Tot"
+   Computed type "r: nat{r == out * factorial n}" and
+   effect "GTot" is not compatible with the annotated
+   type "r: nat{r == out * factorial n}" effect "Tot"
 
 So, while F* forbids using ghost computations in ``Tot`` contexts, it
 seems to be fine with accepting a use of factorial in specifications,
 e.g., in the type ``r:nat { r == out * factorial n }``. We'll see in a
 moment why this is permitted.
 
-Erasable Types
---------------
+Erasable and Non-informative Types
+----------------------------------
+
+In addition to using the ``GTot`` effect to classifies computations
+that must be erased, F* also provides a way to mark certain *value
+types* as erasable.
+
+Consider introducing an inductive type definition that is meant to
+describe a proof term only and for that proof term to introduce to
+runtime overhead. In a system like Coq, the type of Coq propositions
+``Prop`` serves this purpose, but ``prop`` in F* is quite
+different. Instead, F* allows an inductive type definition to be
+marked as ``erasable``.
+
+For example, when we looked at the :ref:`simply typed lambda calculus
+(STLC) <Part2_stlc_typing>`, we introduced the inductive type below,
+to represent a typing derivation for an STLC term. One could define a
+typechecker for STLC and give it the type shown below to prove it
+correct:
+
+.. code-block:: fstar
+
+   val check (g:env) (e:exp) : (t : typ & typing g e t)                
+
+However, this function returns both the type ``t:typ`` computed for
+``e``, we well as the typing derivation. Although the typing
+derivation may be useful in some cases, often returning the whole
+derivation is unnecessary. By marking the definition of the ``typing``
+inductive as shown below (and keeping the rest of the definition the
+same), F* guarantees that the compiler will extract ``typing g e t``
+to the ``unit`` type and correspondinly, all values of ``typing g e
+t`` will be erased to the unit value ``()``
+
+.. code-block:: fstar
+
+   [@@erasable]
+   noeq
+   type typing : env -> exp -> typ -> Type = ... 
+
+Marking a type with the ``erasable`` attribute and having it be erased
+to ``unit`` is safe because F* restricts how ``erasable`` types can be
+used. In particular, no ``Tot`` computations should be able to extract
+information from a value of an erasable type.
+
+Closely related to erasable types are a class of types that are called
+*non-informative*, defined inductively as follows:
+
+  1. The type ``Type`` is non-informative
+
+  2. The type ``prop`` is non-informative (i.e., unit and all its
+     subtypes)
+     
+  3. An erasable type is non-informative
+     
+  4. A function type ``x:t -> Tot s`` is non-informative, if ``s`` is
+     non-informative
+     
+  5. A ghost function type ``x:t -> GTot s`` is non-informative
+     
+  6. A function type ``x:t -> C``, with user-defined computation type
+     ``C``, is non-informative if the effect label of ``C`` has the
+     erasable attribute.
+
+Intuitively, a non-informative type is a type that cannot be
+case-analyzed in a ``Tot`` context.
+
+With this notion of non-informative types, we can now define the
+restrictions on an ``erasable`` type:
+
+   1. Any computation that pattern matches on an erasable type must
+      return a non-informative type.
+
+   2. Inductive types with the ``erasable`` attribute do not support
+      built-in decidable equality and must also be marked ``noeq``.
 
 
-Implicit coercions: `reveal` and `hide`
+The `erased` type, `reveal`, and `hide`
 ---------------------------------------
 
+The ``erasable`` attribute can only be added to new inductive type
+definitions and every instance of that type becomes erasable. If you
+have a type like ``nat``, which is not erasable, but some occurrences
+of it (e.g., in the arguments to ``Vector.append``) need to be erased,
+the F* standard library ``FStar.Ghost.fsti`` offers the following:
 
-Non-informative Types
----------------------
+.. code-block:: fstar
+                
+   (** [erased t] is the computationally irrelevant counterpart of [t] *)
+   [@@ erasable]
+   val erased (t:Type u#a) : Type u#a
+
+``FStar.Ghost`` also offers a pair of functions, ``reveal`` and
+``hide``, that form a bijection between ``a`` and ``erased a``.
+
+.. code-block:: fstar
+
+   val reveal (#a: Type u#a) (v:erased a) : GTot a
+
+   val hide (#a: Type u#a) (v:a) : Tot (erased a)
+
+   val hide_reveal (#a: Type) (x: erased a)
+     : Lemma (ensures (hide (reveal x) == x))
+             [SMTPat (reveal x)]
+             
+   val reveal_hide (#a: Type) (x: a)
+     : Lemma (ensures (reveal (hide x) == x))
+             [SMTPat (hide x)]                
+
+Importantly, ``reveal v`` breaks the abstraction of ``v:erased a``
+returning just an ``a``, but doing so incurs a ``GTot`` effect---so,
+``reveal`` cannot be used in an arbitrary ``Tot`` contexts.
+
+Dually, ``hide v`` can be used to erase ``v:a``, since a ``Tot``
+context cannot depend on the value of an ``erased a``.
+
+The SMT patterns on the two lemmas allow F* and Z3 to automatically
+instantiate the lemmas to relate a value and its hidden
+counterpart---:ref:`this chapter <UTH_smt>` provides more details on
+how SMT patterns work.
+
+**Implicit coercions**
+
+``FStar.Ghost.erased``, ``reveal``, and ``hide`` are so commonly used
+in F* that the compiler provides some special support for it. In
+particular, when a term ``v:t`` is used in a context that expects an
+``erased t``, F* implictly coerces ``v`` to ``hide v``. Likewise, when
+the context expects a ``t`` where ``v:erased t`` is provided, F*
+implicitly coerces ``v`` to ``reveal v``.
+
+The following examples illustrates a few usages and limitations. You
+can ask F* to print the code with implicits enabled by using
+``--dump_module RevealHideCoercions --print_implicits``.
+
+.. literalinclude:: ../code/RevealHideCoercions.fst
+   :language: fstar
+
+A few comments on these examples:
+      
+* The first two functions illustrate how a ``nat`` is coerced
+  implicitly to ``erased nat``. Note, the effect of ``auto_reveal`` is
+  ``GTot``
+
+* ``auto_reveal_2`` fails, since the the annotation claims,
+  incorrectly, that the effect label is ``Tot``
+
+* ``incr`` is just a ``nat -> nat`` function.
+
+* ``incr_e`` is interesting because it calls ``incr`` with an
+  ``erased nat`` and the annotation expects an ``erased nat``
+  too. The body of ``incr_e`` is implicitly coerced to ``hide (incr
+  (reveal x))``
+
+* ``incr'`` is interesting, since it calls ``incr_e``: its body
+  is implicitly coerced to ``reveal (incr_e (hide x))``
+
+* Finally, ``poly`` shows the limitations of implicit coercion: F*
+  only inserts coercions when the expected type of the term in a
+  context and the type of the term differ by an ``erased``
+  constructor. In ``poly``, since ``==`` is polymorphic, the expected
+  type of the context is just an unresolved unification variable and,
+  so, no coercion is inserted. Instead, F* complains that ``y`` has
+  type ``erased nat`` when the type ``nat`` was expected.
+  
+
+Using Ghost Computations in Total Contexts
+------------------------------------------
+
+We have already noted that ``Tot < GTot``, enabling ``Tot``
+computations to be re-used in ``GTot`` contexts. For erasure to be
+sound, it is crucial that ``GTot`` terms cannot be used in ``Tot``
+contexts, and indeed, F* forbids this in general. However, there are
+two exceptions.
 
 
-Ghost Effect Promotion
-----------------------
+Effect Promotion for Non-informative Types
+..........................................
 
+Consider a term ``f`` with type ``GTot s``, where ``s`` is a
+non-informative type. Since ``s`` is non-informative, no total context
+can extract any information from ``f``. As such, F* allows implicitly
+promoting ``GTot s`` to ``Tot s``, when ``s`` is a non-informative
+type.
+
+For instance, the following is derivable,
+``hide (factorial 0) : Tot (erased nat)``: let's work through it in detail.
+
+1. We know that that ``factorial n : GTot nat``
+   
+2. Recall from the discussion on :ref:`evaluation order
+   <Part4_evaluation_order>` and the application of functions to
+   effectful arguments, ``hide (factorial 0)`` is equivalent to ``let
+   x = factorial 0 in hide x``, where ``x:nat`` and
+   ``hide x : Tot (erased nat)``.
+   
+3. From the rule for sequential composition of effectful terms, the
+   type of ``let x = factorial 0 in hide x`` should be ``GTot (erased
+   nat)``, since ``GTot = lub GTot Tot``.
+
+4. Since ``erased nat`` is a non-informative type, ``GTot (erased
+   nat)`` is promoted to ``Tot (erased nat)``, which is then the type
+   of ``hide (factorial 0)``.
+
+
+Effect promotion for ghost functions returning non-informative types
+is very useful. It allows one to mix ghost computations with total
+computations, so long as the result of the ghost sub-computation is
+hidden with an erased type. For instance, in the code below, we use
+``hide (factorial (n - 1))`` and use the result ``f_n_1`` in an
+assertion to or some other proof step, all within a function that is
+in the ``Tot`` effect.
+
+.. literalinclude:: ../code/FactorialTailRec.fst
+   :language: fstar
+   :start-after: //SNIPPET_START: factorial_tail_alt$
+   :end-before: //SNIPPET_END: factorial_tail_alt$
+
+
+FStar.Ghost.pull
+................
+
+Consider applying ``map factorial [0;1;2]``, where ``map : (a ->
+Tot b) -> list a -> list b``. F* refuses to typecheck this written,
+since ``factorial : nat -> GTot nat``, which is not a subtype of ``nat
+-> Tot nat``.
+
+Using effect promotion, one could write ``map (fun x -> hide
+(factorial x)) [0;1;2]``, but this has type ``list (erased nat)``,
+which is not the same as ``list nat``.
+
+This is unfortunate since it seems that basic libraries designed for
+use with with higher-order total functions cannot be reused with ghost
+functions. [#]_
+
+The library function ``FStar.Ghost.pull`` can help in such
+situatinos. It has the following signature:
+
+.. code-block:: fstar
+
+   val pull (#a:Type) (#b:a -> Type) (f: (x:a -> GTot (b x)))
+     : GTot (g:(x:a -> b x) { forall x. f x == g x })
+                
+This type states that for any ghost function ``f``, we can exhibit a
+total function ``g`` that is pointwise equal to ``f``. However, it may
+not be possble, in general, to compute ``g`` in a way that enables it
+to be compiled by F*. So, ``pull f`` itself has ghost effect,
+indicating that applications of ``pull`` cannot be used in compilable
+code.
+
+Using ``pull``, one can write ``map (pull factorial) [0;1;2] : GTot
+(list nat)``, thereby reusing ghost functions where total functions
+are expected.
+
+.. [#] F* does not have any built-in support for effect-label
+       polymorphism. That is, one cannot write a type like this: ``map
+       #a #b #e (f: a -> e b) (l:list a) : e (list b)``, where ``e``
+       is an effect variable. However, using F*'s dependent types, one
+       can code up various `ad hoc forms of effect polymorphism
+       <../code/AdHocEffectPolymorphism.fst>`_. Some other languages
+       with effect systems, notably `Koka
+       <https://koka-lang.github.io/koka/doc/index.html>`_, do support
+       effect polymorphism primitively.
 
 Revisiting Vector Concatenation
 -------------------------------
+
+We now have all the ingredients to understand how the vector append
+example shown at the star of this chapter works. Here, below, is a
+version of the same code with all the implicit arguments and
+reveal/hide operations made explicit.
+
+.. literalinclude:: ../code/VecErasedExplicit.fst
+   :language: fstar
+
+**Definition of vec**
+
+In the definition of the inductive type ``vec a``, we have two
+occurrences of ``reveal``. Consider ``vec a (reveal n)``, the type of
+the ``tl`` of the vector. ``reveal n`` is a ghost computation of type
+``GTot nat``, so ``vec a (reveal n) : GTot Type``. But, since ``Type``
+is non-informative, ``GTot Type`` is promoted to ``Tot Type``. The
+promotion from ``GTot Type`` to ``Tot Type`` is pervasive in F* and
+enables ghost computations to be freely used in types and other
+specifications.
+
+The ``vec a (reveal n + 1)`` in the result type of ``Cons`` is
+similar. Here ``reveal n + 1`` has type ``GTot nat``, but applying it
+to ``vec a`` produces a ``GTot Type``, which is promoted to ``Tot
+Type``.
+
+**Type of append**
+
+The type of ``append`` has four occurrences of ``reveal``. Three of
+them, in the type of ``v0``, ``v1``, and the return type behave the
+same as the typing the fields of ``Cons``: the ``GTot Type`` is
+promoted to ``Tot Type``.
+
+One additional wrinkle is in the decreases clause, where we have an
+explicit ``reveal n``, since what decreases on each recursive call is
+the ``nat`` that's in bijection with the parameter ``n``, rather than
+``n`` itself. When F* infers a decreases clause for a function, any
+erased terms in the clause are automatically revealed.
+
+**Definition of append**
+
+The recursive call instantiates the index parameters to ``n_tl`` and
+``m``, which are both erased.
+
+When constructing the ``Cons`` node, its index argument is
+instantiated to ``hide (reveal n_tl + reveal m)``. The needless
+addition is marked with a ``hide`` enabling that F* compiler to erase
+it. As we saw before in ``factorial_tail_alt``, using ``hide`` allows
+one to mingle ghost computations (like ``(reveal n - 1)``) with total
+computations, as needed for specifications and proofs.
+
+All of this is painfully explicit, but the implicit reveal/hide
+coercions inserted by F* go a long way towards make things relatively
+smooth.

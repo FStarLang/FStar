@@ -30,7 +30,7 @@ def setup(app):
 
 project = u'Proof-Oriented Programming in F*'
 copyright = u'2020, Microsoft Research'
-author = u'Nikhil Swamy and Guido Martínez'
+author = u'Nikhil Swamy, Guido Martínez, and Aseem Rastogi'
 
 # The short X.Y version
 version = u''

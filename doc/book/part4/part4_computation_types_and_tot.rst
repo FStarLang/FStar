@@ -1,57 +1,7 @@
 .. _Part4_Computation_Types_And_Tot:
 
-Computation Types and the Tot effect
-=====================================
-
-At its core, a main goal for F*'s effect system is to *track
-dependences* among the various parts of a program. For example, the
-effect system needs to ensures that the total part of a program that
-is proven to always terminate never calls a function in the divergent
-fragment (since that function call may loop forever). Or, that the
-runtime behavior of a compiled program does not depend on ghost
-computations that get erased by the compiler.
-
-In a paper from 1999 called `A Core Calculus of Dependency
-<https://dl.acm.org/doi/pdf/10.1145/292540.292555>`_, Abadi, Banerjee,
-Heintze, and Riecke present DCC, a language with a very generic way to
-track dependences. DCC's type system has a family of computation types
-arranged in hierarchy (a partial order induced by lattice), where a
-computations can only depend on other computations whose type is less
-than (or at the same level as) it in the partial order.
-
-Very briefly, DCC includes a family of *computation types* :math:`T_l`,
-where the label :math:`l` ranges over the elements of a lattice
-:math:`L`, where some pairs of labels may be related by :math:`l_1
-\leq l_2`. The key typing rule in DCC defines how computations compose
-sequentially using ``bind x = e1 in e2``: if ``e1`` has type
-:math:`T_{l_1}(t)`, then assuming that ``x`` has type :math:`t`,
-``e2`` must have a type like :math:`T_{l_2}(t_2)`, where :math:`l_1
-\leq l_2`. That is, since ``e2`` *depends* on the result of a
-computation ``e1`` at level :math:`l_1`, ``e2``'s type must be at
-least at the same level.
-
-The design of F*'s effect system draws inspiration from DCC.
-Computation types in F* take the form ``M t`` where ``M`` is an
-*effect label* and ``t`` is the return type of the computation.  The
-effect label of an F* computation type is drawn from an open-ended,
-user-extensible set of labels, where the labels are organized in a
-user-chosen partial order. The rule for composing computations that
-have different effect labels are based on a rule similar to DCC's,
-though things become more involved due to F*'s dependent types. The
-spirit of DCC's main result remains: computations can only depend on
-other computations at the same level or lower than it in the effect
-label hierarchy.
-
-Roughly, a term ``e`` can be given the computation type ``M t`` when
-executing ``e`` exhibits *at-most* the effect ``M`` and (possibly)
-returns a value of type ``t``. We will refine this intuition as we go
-along. In contrast with computation types, the types that we have seen
-so far (``unit``, ``bool``, ``int``, ``list int``, other inductive
-types, refinement types, and arrows) are called *value types*.
-
-
-The default ``Tot`` effect
-^^^^^^^^^^^^^^^^^^^^^^^^^^
+The Effect of Total Computations
+================================
 
 At the very bottom of the effect label hierarchy is ``Tot``, used to
 describe pure, total functions. Since they are at the bottom of the
@@ -100,6 +50,8 @@ effect label is omitted, ``e <: t``, it is interpreted as ``e <: _
 t``, where the omitted effect label is inferred by F* and does not
 default to ``Tot``.
 
+
+.. _Part4_evaluation_order:
 
 Evaluation order
 ^^^^^^^^^^^^^^^^
