@@ -168,7 +168,7 @@ let rec elab_term (top:term)
     | Tm_Abs _ _ _ _ _
     | Tm_STApp _ _ _
     | Tm_Bind _ _
-    | Tm_UVar _ _ -> None
+    | Tm_UVar _ -> None
       //effectful constructs, explicitly not handled here
     
 and elab_comp (c:comp) 

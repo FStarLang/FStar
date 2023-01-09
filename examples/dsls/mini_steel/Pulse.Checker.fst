@@ -138,9 +138,9 @@ let rec infer_match_typ (t1 t2:term) (uv_sols:list (term & term))
   : T.Tac (list (term & term)) =
 
   match t1, t2 with
-  | Tm_UVar _ n, _ ->
+  | Tm_UVar n, _ ->
     infer_check_valid_solution t1 t2 uv_sols
-  | _, Tm_UVar _ _ -> T.fail "infer_match_typ: t2 is a uvar"
+  | _, Tm_UVar _ -> T.fail "infer_match_typ: t2 is a uvar"
 
   | Tm_PureApp head1 arg_qual1 arg1, Tm_PureApp head2 arg_qual2 arg2 ->
     if arg_qual1 = arg_qual2
@@ -152,7 +152,7 @@ let rec infer_match_typ (t1 t2:term) (uv_sols:list (term & term))
 
 let rec infer_atomic_vprop_has_uvar (t:term) : bool =
   match t with
-  | Tm_UVar _ _ -> true
+  | Tm_UVar _ -> true
   | Tm_PureApp head _ arg ->
     infer_atomic_vprop_has_uvar head || infer_atomic_vprop_has_uvar arg
   | Tm_Emp -> false
@@ -160,7 +160,7 @@ let rec infer_atomic_vprop_has_uvar (t:term) : bool =
 
 let rec infer_atomic_vprops_may_match (t1:term) (t2:pure_term) : bool =
   match t1, t2 with
-  | Tm_UVar _ _, _ -> true
+  | Tm_UVar _, _ -> true
   | Tm_PureApp head1 q1 arg1, Tm_PureApp head2 q2 arg2 ->
     infer_atomic_vprops_may_match head1 head2 &&
     q1 = q2 &&
@@ -324,7 +324,7 @@ let rec check' : bool -> check_t =
   | Tm_If _ _ _ ->
     T.fail "Not handling if yet"
 
-  | Tm_UVar _ _ ->
+  | Tm_UVar _ ->
     T.fail "Unexpected Tm_Uvar in check"
 #pop-options
 
