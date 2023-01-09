@@ -68,7 +68,7 @@ type term =
   | Tm_VProp    : term
   | Tm_If       : b:term -> then_:term -> else_:term -> term
 
-  | Tm_UVar     : term -> int -> term
+  | Tm_UVar     : int -> term
 
 and binder = {
   binder_ty     : term;
@@ -97,7 +97,8 @@ let rec freevars (t:term)
     | Tm_Constant _
     | Tm_Emp
     | Tm_Type _
-    | Tm_VProp -> Set.empty
+    | Tm_VProp
+    | Tm_UVar _ -> Set.empty
     | Tm_Var nm -> Set.singleton nm.nm_index
     | Tm_Refine b body
     | Tm_Abs b _ _ body _ -> Set.union (freevars b.binder_ty) (freevars body)  // Why is this not taking freevars of pre (and post)?
@@ -115,7 +116,6 @@ let rec freevars (t:term)
     | Tm_Pure p -> freevars p
 
     | Tm_Arrow b _ body -> Set.union (freevars b.binder_ty) (freevars_comp body)
-    | Tm_UVar t _ -> freevars t
 
 and freevars_comp (c:comp) : Set.set var =
   match c with
@@ -132,7 +132,8 @@ let rec ln' (t:term) (i:int) =
   | Tm_Constant _  
   | Tm_Emp
   | Tm_Type _
-  | Tm_VProp -> true
+  | Tm_VProp
+  | Tm_UVar _ -> true
 
   | Tm_Refine b phi ->
     ln' b.binder_ty i &&
@@ -175,8 +176,6 @@ let rec ln' (t:term) (i:int) =
     ln' then_ i &&
     ln' else_ i
 
-  | Tm_UVar t _ -> ln' t i
-
 and ln'_comp (c:comp) (i:int)
   : Tot bool
   = match c with
@@ -210,7 +209,8 @@ let rec open_term' (t:term) (v:term) (i:index)
     | Tm_Constant _
     | Tm_Type _
     | Tm_VProp
-    | Tm_Emp -> t
+    | Tm_Emp
+    | Tm_UVar _ -> t
 
     | Tm_Refine b phi ->
       Tm_Refine {b with binder_ty=open_term' b.binder_ty v i}
@@ -265,7 +265,6 @@ let rec open_term' (t:term) (v:term) (i:index)
             (open_term' then_ v i)
             (open_term' else_ v i)
 
-    | Tm_UVar t n -> Tm_UVar (open_term' t v i) n
 
 and open_comp' (c:comp) (v:term) (i:index)
   : Tot comp (decreases c)
@@ -296,7 +295,8 @@ let rec close_term' (t:term) (v:var) (i:index)
     | Tm_Constant _
     | Tm_Type _
     | Tm_VProp
-    | Tm_Emp -> t
+    | Tm_Emp
+    | Tm_UVar _ -> t
 
     | Tm_Refine b phi ->
       Tm_Refine {b with binder_ty=close_term' b.binder_ty v i}
@@ -350,8 +350,6 @@ let rec close_term' (t:term) (v:var) (i:index)
       Tm_If (close_term' b v i)
             (close_term' then_ v i)
             (close_term' else_ v i)
-
-    | Tm_UVar t n -> Tm_UVar (close_term' t v i) n
 
 and close_comp' (c:comp) (v:var) (i:index)
   : Tot comp (decreases c)
@@ -434,4 +432,4 @@ let null_var (v:var) : term = Tm_Var {nm_index=v;nm_ppname="_"}
 let null_bvar (i:index) : term = Tm_BVar {bv_index=i;bv_ppname="_"}
 
 let gen_uvar (t:term) : T.Tac term =
-  Tm_UVar t (T.fresh ())
+  Tm_UVar (T.fresh ())
