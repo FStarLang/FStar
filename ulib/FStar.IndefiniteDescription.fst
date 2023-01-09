@@ -17,14 +17,11 @@
 module FStar.IndefiniteDescription
 
 /// Indefinite description is an axiom that allows picking a witness
-/// for existentially quantified predicate.
+/// for existentially quantified predicate. See the interface for more
+/// context.
 ///
-/// Many other axioms can be derived from this one: Use it with care!
-///
-/// For some background on the axiom, see:
-///
-/// https://github.com/coq/coq/wiki/CoqAndAxioms#indefinite-description--hilberts-epsilon-operator
-/// https://en.wikipedia.org/wiki/Theory_of_descriptions#Indefinite_descriptions
+open FStar.Classical
+open FStar.Squash
 
 (** The main axiom:
 
@@ -32,10 +29,10 @@ module FStar.IndefiniteDescription
     (computationally irrelevant) a witness [x:erased a] validating
     [p x].
 *)
-assume
-val indefinite_description_tot (a:Type) (p:(a -> prop) { exists x. p x })
+irreducible
+let indefinite_description_tot (a:Type) (p:(a -> prop) { exists x. p x })
   : Tot (w:Ghost.erased a{ p w })
-
+  = admit() //this is an axiom
 
 (** A version in ghost is easily derivable *)
 let indefinite_description_ghost (a: Type) (p: (a -> prop) { exists x. p x })
@@ -43,22 +40,6 @@ let indefinite_description_ghost (a: Type) (p: (a -> prop) { exists x. p x })
   = let w = indefinite_description_tot a p in
     let x = Ghost.reveal w in
     x
-  
-(** An alternate formulation, mainly for legacy reasons.
-
-    Given a classical proof of [exists x. p x], we can exhibit (ghostly) a
-    witness [x:a] validating [p x].
-
-    We should take [p] to be [a -> prop]. However, see
-    [Prims.prop] for a description of the ongoing work on more
-    systematically using [prop] in the libraries *)
-[@@deprecated "Consider using indefinite_description_ghost instead"]
-assume
-val indefinite_description (a: Type) (p: (a -> GTot Type0))
-  : Ghost (x: a & p x) (requires (exists x. p x)) (ensures (fun _ -> True))
-  
-open FStar.Classical
-open FStar.Squash
 
 (** Indefinite description entails the a strong form of the excluded
     middle, i.e., one can case-analyze the truth of a proposition

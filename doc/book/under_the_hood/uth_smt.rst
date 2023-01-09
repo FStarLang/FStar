@@ -45,9 +45,192 @@ Some background and resources:
     implemented in Z3
     <http://leodemoura.github.io/files/ematching.pdf>`_ (at least
     circa 2007).
+
+A Primer on SMT2
+----------------
+
+SMT2 is a standardized input language supported by many SMT
+solvers. Its syntax is based on `S-expressions
+<https://en.wikipedia.org/wiki/S-expression>`_, inspired by languages
+in the LISP family. We review some basic elements of its syntax here,
+particularly the parts that are used by F*'s SMT encoding.
+
+* Multi-sorted logic
+
+  The logic provided by the SMT solver is multi-sorted: the sorts
+  provide a simple type system for the logic, ensuring, e.g., that
+  terms from two different sorts can never be equal. A user can define
+  a new sort ``T``, as shown below:
+
+  .. code-block:: smt2
+
+    (declare-sort T)
+
+  Every sort comes with a built-in notion of equality. Given two terms
+  ``p`` and ``q`` of the same sort ``T``, ``(= p q)`` is a term of
+  sort ``Bool`` expressing their equality.
+
+    
+* Declaring uninterpreted functions
+
+  A new function symbol ``F``, with arguments in sorts
+  ``sort_1 .. sort_n`` and returning a result in ``sort`` is declared
+  as shown below,
+  
+  .. code-block:: smt2
+
+     (declare-fun F (sort_1 ... sort_n) sort)                
+
+  The function symbol ``F`` is *uninterpreted*, meaning that the only
+  information the solver has about ``F`` is that it is a function,
+  i.e., when applied to equal arguments ``F`` produces equal results.
+
+* Theory symbols
+
+   Z3 provides support for several *theories*, notably integer and
+   real arithmetic. For example, on terms ``i`` and ``j`` of ``Int``
+   sort, the sort of unbounded integers, the following terms define
+   the expected arithmetic functions:
+
+   .. code-block:: smt2
+
+      (+ i j)       ; addition
+      (- i j)       ; subtraction
+      (* i j)       ; multiplication
+      (div i j)     ; Euclidean division
+      (mod i j)     ; Euclidean modulus
+
+     
+* Logical connectives
+
+  SMT2 provides basic logical connectives as shown below, where ``p``
+  and ``q`` are terms of sort ``Bool``
+
+  .. code-block:: smt2
+
+     (and p q)                ; conjunction
+     (or p q)                 ; disjunction
+     (not p)                  ; negation
+     (implies p q)            ; implication
+     (iff p q)                ; bi-implication
+
+
+  SMT2 also provides support for quantifiers, where the terms below
+  represent a term ``p`` with the variables ``x1 ... xn`` universally
+  and existentially quantified, respectively.
+
+
+  .. code-block:: smt2
+
+     (forall ((x1 sort_1) ... (xn sort_n)) p)
+     (exists ((x1 sort_1) ... (xn sort_n)) p)       
+
+* Attribute annotations
+
+  A term ``p`` can be decorated with attributes names ``a_1 .. a_n``
+  with values ``v_1 .. v_n`` using the following syntax---the ``!`` is
+  NOT to be confused with logical negation.
+
+  .. code-block:: smt2
+
+     (! p
+        :a_1 v_1
+        ...
+        :a_n v_n)
+
+  A common usage is with quantifiers, as we'll see below, e.g.,
+
+  .. code-block:: smt2
+
+     (forall ((x Int))
+             (! (implies (>= x 0) (f x))
+                :qid some_identifier))
+
+* An SMT2 theory and check-sat
+
+  An SMT2 theory is a collection of sort and function symbol
+  declarations, and assertions of facts about them. For example,
+  here's a simple theory declaring a function symbol ``f`` and an
+  assumption that ``f x y`` is equivalent to ``(>= x y)``---note,
+  unlike in F*, the ``assert`` keyword in SMT2 assumes that a fact is
+  true, rather than checking that it is valid, i.e., ``assert`` in
+  SMT2 is like ``assume`` in F*.
+
+
+  .. code-block:: smt2
+
+     (declare-fun f (Int Int) Bool)
+
+     (assert (forall ((x Int) (y Int))
+                     (iff (>= y x) (f x y))))
+
+
+  In the context of this theory, one can ask whether some facts about
+  ``f`` are valid. For example, to check if ``f`` is a transitive
+  function, one asserts the *negation* of the transitivity
+  property for ``f`` and then asks Z3 to check (using the
+  ``(check-sat)`` directive) if the resulting theory is satisfiable.
+
+  .. code-block:: smt2
+
+     (assert (not (forall ((x Int) (y Int) (z Int))
+                          (implies (and (f x y) (f y z))
+                                   (f x z)))))
+     (check-sat)
+                  
+  In this case, Z3 very quickly responds with ``unsat``, meaning that
+  there are no models for the theory that contain an interpretation of
+  ``f`` compatible with both assertions, or, equivalently, the
+  transitivity of ``f`` is true in all models. That is, we expect
+  successful queries to return ``unsat``.
+  
     
 A Brief Tour of F*'s SMT Encoding
 ---------------------------------
+
+Consider the following simple F* code:
+
+.. code-block:: fstar
+
+   let id x = x
+   let f (x:int) =
+      if x < 0
+      then assert (- (id x) >= 0)
+      else assert (id x >= 0)
+
+To encode the proof obligation of this program to SMT, F* generates an
+SMT2 file with the following rough shape.
+
+.. code-block:: smt2
+
+   ;; Some basic scaffoling
+
+   (declare-sort Term)
+   ...
+       
+   ;; Encoding of some basic modules
+
+   (declare-fun Prims.bool () Term)
+   ...
+    
+   ;; Encoding of background facts about the current module
+
+   (declare-fun id (Term) Term)
+   (assert (forall ((x Term)) (= (id x) x)))
+
+   ;; Encoding the query, i.e., negated proof obligation
+
+   (assert (not (forall ((x Term))
+                        (and (implies (lt x 0) (geq (minus (M.id x)) 0))
+                             (implies (not (lt x 0)) (geq (M.id x) 0))))))
+
+   (check-sat)
+
+   ;; Followed by some instrumentation for error reporting
+   ;; in case the check-sat call fails (i.e., does not return unsat)
+
+That was just just to give you a rough idea---the details of F*'s
+actual SMT encoding are a bit different, as we'll see below.
 
 To inspect F*'s SMT encoding, we'll work through several small
 examples and get F* to log the SMT2 theories that it generates. For
@@ -90,19 +273,17 @@ of the following kind:
 where each `End` line also describes the number of declarations in
 the module and its length in characters.
 
-
-              
+  
 ``Term`` sort
 .............
 
-The logic provided by the SMT solver is multi-sorted: the sorts
-provide a simple type system for the logic, ensuring, e.g., that terms
-from two different sorts can never be equal. However, F*'s encoding to
-SMT (mostly) uses just a single sort: every pure (or ghost) F* term is
-encoded to the SMT solver as an instance of an uninterpreted SMT sort
-called ``Term``. This allows the encoding to be very general, handling
-F*'s much richer type system, rather than trying to map F*'s complex
-type system into the much simpler type system of SMT sorts.
+Despite SMT2 being a multi-sorted logic, aside from the pervasive use
+the SMT sort ``Bool``, F*'s encoding to SMT (mostly) uses just a
+single sort: every pure (or ghost) F* term is encoded to the SMT
+solver as an instance of an uninterpreted SMT sort called
+``Term``. This allows the encoding to be very general, handling F*'s
+much richer type system, rather than trying to map F*'s complex type
+system into the much simpler type system of SMT sorts.
 
 
 Booleans
@@ -135,9 +316,6 @@ The axiom named ``projection_inverse_BoxBool_proj_0`` states that
 that ``BoxBool`` is an injective function from ``Bool`` to
 ``Term``. 
 
-Note, unlike in F*, the ``assert`` keyword in SMT2 assumes that a fact
-is true, rather than checking that it is valid, i.e., ``assert`` in
-SMT2 is like ``assume`` in F*.
 
 The ``qid`` is the quantifier identifier, usually equal to or derived
 from the name of the assumption that includes it---qids come up when
@@ -179,7 +357,7 @@ substituted patterns ``S(p1...pm)`` are equal to the active terms
 
 Existentially quantified formulas are dual to universally quantified
 formulas. Whereas a universal formula in the *context* (i.e., in
-negative position, or as a hypothesis) is inert until it's pattern is
+negative position, or as a hypothesis) is inert until its pattern is
 instantiated, an existential *goal* (or, in positive position) is
 inert until its pattern is instantiated. Existential quantifiers can
 be decorated with patterns that trigger instantiation when matched
@@ -481,8 +659,9 @@ We have one function for the type ``unat``; one for each constructor
 constructor (here, only ``S_prec``, corresponding to the F* projector
 ``S?.prec``).
 
-The type ``unat`` has its typing assumption---note F* does not encode
-the universe levels to SMT.
+The type ``unat`` has its typing assumption, where ``Tm_type`` is the
+SMT encoding of the F* type ``Type``---note F* does not encode the
+universe levels to SMT.
 
 .. code-block:: smt2
 
@@ -640,8 +819,8 @@ allow inversion within a scope for only a few selected types, e.g.,
 Logical Connectives
 ....................
 
-The :ref:`logical connectives <Part2_connectives>` that F* offers, all
-have derived forms. Given the encodings of datatypes and functions (and
+The :ref:`logical connectives <Part2_connectives>` that F* offers are all
+derived forms. Given the encodings of datatypes and functions (and
 arrow types, which we haven't shown), the encodings of all these
 connectives just fall out naturally. However, all these connectives
 also have built-in support in the SMT solver as part of its
@@ -691,9 +870,10 @@ Note, this quantifier does not have any explicitly annotated
 patterns. In this case, Z3's syntactic trigger selection heuristics
 pick a pattern: it is usually the smallest collection of sub-terms of
 the body of the quantifier that collectively mention all the bound
-variables. In this case, the likely choice for the pattern is
-``(SMTEncoding.factorial @x1)``, though ``(HasType @x1 Prims.nat)`` is
-also a candidate.
+variables. In this case, the choices for the pattern are
+``(SMTEncoding.factorial @x1)`` and ``(HasType @x1 Prims.nat)``: Z3
+picks both of these as patterns, allowing the quantifier to be
+triggered if an active term matches either one of them.
 
 For small developments, leaving the choice of pattern to Z3 is often
 fine, but as your project scales up, you probably want to be more
@@ -1559,17 +1739,19 @@ Existential quantifiers
 
 We have an existential formula in the goal ``exists (i:nat). abs(g i)
 > m`` and Z3 will try to solve this by finding an active term to
-instantiate ``i``. In this case, the pattern Z3 picks is ``(g
-i)``---there's no guarantee that that is what it will always pick, but
-empirically, it seems that it does in this case.
+instantiate ``i``. In this case, the patterns Z3 picks is ``(g i)`` as
+well the predicate ``(HasType i Prims.nat)``, which the SMT encoding
+introduces. Note, F* does not currently allow the existential
+quantifier in a ``returns`` annoation to be decorated with a
+pattern---that will likely change in the future.
 
-Since ``g i`` is the pattern, by asserting ``abs (g (n - 1)) > m`` in
-one branch, and ``abs (g (n1 - 1)) > m`` in the other, Z3 has the
-terms it needs to instantiate the quantifier with ``n - 1`` in one
+Since ``g i`` is one of the patterns, by asserting ``abs (g (n - 1)) >
+m`` in one branch, and ``abs (g (n1 - 1)) > m`` in the other, Z3 has
+the terms it needs to instantiate the quantifier with ``n - 1`` in one
 case, and ``n1 - 1`` in the other case.
 
-In fact, any assertion that mentions the ``g (n - 1)`` and ``g (n1 -
-1)`` will do, even trivial ones, as the example below shows.
+In fact, any assertion that mentions the ``g (n - 1)`` and
+``g (n1 - 1)`` will do, even trivial ones, as the example below shows.
 
 .. literalinclude:: ../code/AlexOpaque.fst
    :language: fstar
@@ -1581,15 +1763,24 @@ gives Z3 active terms for ``g (n - 1))`` and ``g (n1 - 1)``, which
 suffices for the instantiation. Note, asserting ``trigger (n - 1)`` is
 not enough, since that doesn't mention ``g``.
 
-Note, F* does not currently allow the existential quantifier in a
-``returns`` annoation to be decorated with a pattern---that will
-likely change in the future.
+However, recall that there's a second pattern that's also applicable
+``(HasType i Prims.nat)``--we can get Z3 to instantiate the quantifier
+if we can inject the predicate ``(HasType (n - 1) nat)`` into Z3's
+context. By using ``trigger_nat``, as shown below, does the trick,
+since F* inserts a proof obligation to show that the argument ``x`` in
+``trigger_nat x`` validates ``(HasType x Prims.nat)``.
+
+.. literalinclude:: ../code/AlexOpaque.fst
+   :language: fstar
+   :start-after: //SNIPPET_START: trigger_nat$
+   :end-before: //SNIPPET_END: trigger_nat$
 
 Of course, rather than relying on implicitly chosen triggers for the
 existentials, one can be explicit about it and provide the instance
 directly, as shown below, where the ``introduce exists ...`` in each
 branch directly provides the witness rather than relying on Z3 to find
-it.
+it. This style is much preferred, if possible, than relying implicit
+via various implicitly chosen patterns and artificial triggers.
 
 .. literalinclude:: ../code/AlexOpaque.fst
    :language: fstar
