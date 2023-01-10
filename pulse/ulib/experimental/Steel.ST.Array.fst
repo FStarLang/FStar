@@ -85,15 +85,38 @@ let base_t elt = H.base_t (raise_t elt)
 let base_len b = H.base_len b
 
 let ptr elt = H.ptr (raise_t elt)
+let null_ptr elt = H.null_ptr (raise_t elt)
+let is_null_ptr p = H.is_null_ptr p
 let base p = H.base p
 let offset p = H.offset p
 let ptr_base_offset_inj p1 p2 = H.ptr_base_offset_inj p1 p2
+
+let base_len_null_ptr elt = H.base_len_null_ptr (raise_t elt)
 let length_fits a = H.length_fits a
 
 let pts_to a p s = H.pts_to a p (seq_map raise s)
 
 let pts_to_length a s =
   H.pts_to_length a _
+
+let h_array_eq'
+  (#t: Type u#1)
+  (a1 a2: H.array t)
+: Lemma
+  (requires (
+    dfst a1 == dfst a2 /\
+    (Ghost.reveal (dsnd a1) <: nat) == Ghost.reveal (dsnd a2)
+  ))
+  (ensures (
+    a1 == a2
+  ))
+= ()
+
+let pts_to_not_null #_ #t #p a s =
+  let _ = H.pts_to_not_null #_ #_ #p a (seq_map raise s) in
+  assert (a =!= H.null #(raise_t t));
+  Classical.move_requires (h_array_eq' a) (H.null #(raise_t t));
+  noop ()
 
 let pts_to_inj a p1 s1 p2 s2 =
   H.pts_to_inj a p1 (seq_map raise s1) p2 (seq_map raise s2)
