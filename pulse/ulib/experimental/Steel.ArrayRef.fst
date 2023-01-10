@@ -2,8 +2,6 @@ module Steel.ArrayRef
 
 module A = Steel.Array
 
-let ref a = (r: A.array a { (A.length r == 1 /\ A.is_full_array r) \/ r == A.null })
-
 let null #a = A.null #a
 
 let is_null r = A.is_null r

@@ -6,13 +6,15 @@ open Steel.Effect.Common
 open Steel.Effect
 open Steel.Effect.Atomic
 
+module A = Steel.Array
+
 (** This module provides the same interface as Steel.Reference, however, it builds on top
     of Steel.Array to enable the interoperation between arrays and references.
     Similarly to C, a reference is defined as an array of length 1 *)
 
 /// An abstract datatype for references
 inline_for_extraction
-val ref ([@@@strictly_positive] a:Type0) : Type0
+let ref (a : Type0) : Type0 = (r: A.array a { A.length r == 1 \/ r == A.null })
 
 /// The null pointer
 [@@ noextract_to "krml"]
@@ -80,7 +82,7 @@ val malloc (#a:Type0) (x:a) : Steel (ref a)
 inline_for_extraction
 val free (#a:Type0) (r:ref a) : Steel unit
   (vptr r) (fun _ -> emp)
-  (requires fun _ -> True)
+  (requires fun _ -> A.is_full_array r)
   (ensures fun _ _ _ -> True)
 
 /// Reads the current value of reference [r]
