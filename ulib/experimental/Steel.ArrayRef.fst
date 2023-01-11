@@ -79,7 +79,7 @@ let ptrp r p = hp_of (vptr0 r p)
 
 let ptrp_sel r p = sel_of (vptr0 r p)
 
-let intro_vptrp
+let intro_vptrp'
   (#opened: _)
   (#a: Type0)
   (r: ref a)
@@ -102,6 +102,12 @@ let intro_vptrp
       assert (interp (hp_of (vptrp r p)) m);
       assert_norm (sel_of (vptrp r p) m === sel_of (vptr0 r p) m)
     )
+
+let intro_vptrp r p =
+  let h0 = get () in
+  intro_vptrp' r p;
+  let h1 = get () in
+  assert (Seq.create 1 (selp r p h1) `Seq.equal` A.aselp r p h0)
 
 let elim_vptrp
   (#opened: _)
@@ -128,7 +134,7 @@ let elim_vptrp
 let malloc
   x
 = let r = A.malloc x 1sz in
-  intro_vptrp r full_perm;
+  intro_vptrp' r full_perm;
   return r
 
 let free
@@ -148,14 +154,14 @@ let write
   r x
 = elim_vptrp r full_perm;
   A.upd r 0sz x;
-  intro_vptrp r full_perm
+  intro_vptrp' r full_perm
 
 let share
   #_ #_ #p r
 = elim_vptrp r p;
   A.share r p (half_perm p) (half_perm p);
-  intro_vptrp r (half_perm p);
-  intro_vptrp r (half_perm p)
+  intro_vptrp' r (half_perm p);
+  intro_vptrp' r (half_perm p)
 
 let gather_gen
   r p0 p1
@@ -166,7 +172,7 @@ let gather_gen
   change_equal_slprop
     (A.varrayp r (sum_perm p0 p1))
     (A.varrayp r s);
-  intro_vptrp r s;
+  intro_vptrp' r s;
   s
 
 let gather
@@ -180,4 +186,4 @@ let vptrp_not_null
   r p
 = elim_vptrp r p;
   A.varrayp_not_null r p;
-  intro_vptrp r p
+  intro_vptrp' r p
