@@ -83,7 +83,7 @@ val vrewrite_vrefine_equals_intro0
     True
     (fun res -> Ghost.reveal res == f x)
 
-let vrewrite_vrefine_equals_intro
+val vrewrite_vrefine_equals_intro
   (#inames: _)
   (#t: Type)
   (s: vprop)
@@ -92,10 +92,6 @@ let vrewrite_vrefine_equals_intro
 : STGhostT unit inames
     (s `vrefine` equals x)
     (fun res -> s `vrewrite` f `vrefine` equals (f x))
-= let res = vrewrite_vrefine_equals_intro0 s f x in
-  rewrite
-    (s `vrewrite` f `vrefine` equals (Ghost.reveal res))
-    (s `vrewrite` f `vrefine` equals (f x))
 
 val vrewrite_vrefine_equals_elim
   (#inames: _)
