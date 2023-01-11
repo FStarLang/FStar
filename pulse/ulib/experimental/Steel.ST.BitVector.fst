@@ -22,13 +22,13 @@ open Steel.ST.Effect.Ghost
 open Steel.ST.Effect
 open Steel.ST.Util
 
-module U32 = FStar.UInt32
+module US = FStar.SizeT
 module G = FStar.Ghost
 module A = Steel.ST.Array
 
 /// Implementation of bv_t using an array of bool
 
-type bv_t n = a:A.array bool{A.length a == U32.v n /\ A.is_full_array a}
+type bv_t n = a:A.array bool{A.length a == US.v n /\ A.is_full_array a}
 
 let pts_to bv p s = A.pts_to bv p s
 
