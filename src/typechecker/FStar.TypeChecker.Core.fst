@@ -1110,19 +1110,19 @@ and check_relation_comp (g:env) rel (c0 c1:comp)
       if U.eq_comp c0 c1 = U.Equal
       then return ()
       else (
-        let ct_eq ct0 ct1 =
-          check_relation g EQUALITY ct0.result_typ ct1.result_typ ;!
-          check_relation_args g EQUALITY ct0.effect_args ct1.effect_args
+        let ct_eq res0 args0 res1 args1 =
+          check_relation g EQUALITY res0 res1 ;!
+          check_relation_args g EQUALITY args0 args1
         in
-        let ct0 = U.comp_to_comp_typ_nouniv c0 in
-        let ct1 = U.comp_to_comp_typ_nouniv c1 in
-        if I.lid_equals ct0.effect_name ct1.effect_name
-        then ct_eq ct0 ct1
+        let eff0, res0, args0 = U.comp_eff_name_res_and_args c0 in
+        let eff1, res1, args1 = U.comp_eff_name_res_and_args c1 in
+        if I.lid_equals eff0 eff1
+        then ct_eq res0 args0 res1 args1
         else (
           let ct0 = Env.unfold_effect_abbrev g.tcenv c0 in
           let ct1 = Env.unfold_effect_abbrev g.tcenv c1 in          
           if I.lid_equals ct0.effect_name ct1.effect_name
-          then ct_eq ct0 ct1
+          then ct_eq ct0.result_typ ct0.effect_args ct1.result_typ ct1.effect_args
           else fail (BU.format2 "Subcomp failed: Unequal computation types %s and %s" 
                             (Ident.string_of_lid ct0.effect_name)
                             (Ident.string_of_lid ct1.effect_name))
@@ -1207,7 +1207,7 @@ and check' (g:env) (e:term)
 
   | Tm_lazy i ->
     return (E_TOTAL, i.ltyp)
-    
+
   | Tm_meta(t, _) ->
     memo_check g t
 
@@ -1376,14 +1376,12 @@ and check' (g:env) (e:term)
                return et
                
              | Some g ->
-               guard (U.b2t g) ;! 
+               guard (U.b2t g) ;!
                return et)
 
         | (p, None, b) :: rest ->
           let _, (p, _, b) = open_branch g (p, None, b) in
-          let! bvs = with_context "check_pat" None (fun _ -> check_pat g p t_sc) in
-          let bs = List.map S.mk_binder bvs in
-          let! us = with_context "check_pat_binders" None (fun _ -> check_binders g bs) in
+          let! (bs, us) = with_context "check_pat" None (fun _ -> check_pat g p t_sc) in
           let! branch_condition = pattern_branch_condition g sc p in
           let pat_sc_eq =
             U.mk_eq2 u_sc t_sc sc
@@ -1462,9 +1460,7 @@ and check' (g:env) (e:term)
 
         | (p, None, b) :: rest ->
           let _, (p, _, b) = open_branch g (p, None, b) in
-          let! bvs = with_context "check_pat" None (fun _ -> check_pat g p t_sc) in
-          let bs = List.map S.mk_binder bvs in
-          let! us = with_context "check_pat_binders" None (fun _ -> check_binders g bs) in
+          let! (bs, us) = with_context "check_pat" None (fun _ -> check_pat g p t_sc) in
           let! branch_condition = pattern_branch_condition g sc p in
           let pat_sc_eq =
             U.mk_eq2 u_sc t_sc sc
@@ -1532,8 +1528,8 @@ and check_binders (g_initial:env) (xs:binders)
 and check_comp (g:env) (c:comp)
   : result universe
   = match c.n with
-    | Total(t, _)
-    | GTotal(t, _) ->
+    | Total t
+    | GTotal t ->
       let! _, t = check "(G)Tot comp result" g (U.comp_result c) in
       is_type g t
     | Comp ct ->
@@ -1564,7 +1560,7 @@ and universe_of (g:env) (t:typ)
   = let! _, t = check "universe of" g t in
     is_type g t
 
-and check_pat (g:env) (p:pat) (t_sc:typ) : result (list bv) =
+and check_pat (g:env) (p:pat) (t_sc:typ) : result (binders & universes) =
   let unrefine_tsc t_sc =
     t_sc |> N.normalize_refinement N.whnf_steps g.tcenv
          |> U.unrefine in
@@ -1579,10 +1575,13 @@ and check_pat (g:env) (p:pat) (t_sc:typ) : result (list bv) =
         mk (Tm_constant c) p.p in
     let! _, t_const = check "pat_const" g e in
     let! _ = check_subtype g (Some e) t_const (unrefine_tsc t_sc) in
-    return []
+    return ([], [])
 
   | Pat_var bv
-  | Pat_wild bv -> return [{bv with sort=t_sc}]
+  | Pat_wild bv ->
+    let b = S.mk_binder {bv with sort=t_sc} in
+    let! [u] = with_context "check_pat_binder" None (fun _ -> check_binders g [b]) in
+    return ([b], [u])
 
   | Pat_cons (fv, usopt, pats) ->
     let us = if is_none usopt then [] else usopt |> must in
@@ -1614,21 +1613,20 @@ and check_pat (g:env) (p:pat) (t_sc:typ) : result (list bv) =
 
       return (ss@[NT (f, pat_dot_t)])) [] dot_formals dot_pats in
 
-    let! ss, bvs = fold2 (fun (ss, bvs) {binder_bv=f} p ->
+    let! _, ss, bs, us = fold2 (fun (g, ss, bs, us) {binder_bv=f} p ->
       let expected_t = Subst.subst ss f.sort in
-      let! bvs_p = check_pat
-        (push_binders g (bvs |> List.map S.mk_binder))
-        p
-        expected_t in
+      let! (bs_p, us_p) = with_binders bs us (check_pat g p expected_t) in
       let p_e = PatternUtils.raw_pat_as_exp g.tcenv p |> must |> fst in
-      return (ss@[NT (f, p_e)],
-              bvs@bvs_p)) (ss, []) rest_formals rest_pats in
+      return (push_binders g bs_p,
+              ss@[NT (f, p_e)],
+              bs@bs_p,
+              us@us_p)) (g, ss, [], []) rest_formals rest_pats in
 
     let t_pat = Subst.subst ss t_pat in
 
     let!_ = no_guard (check_scrutinee_pattern_type_compatible g (unrefine_tsc t_sc) t_pat) in
 
-    return bvs
+    return (bs, us)
   
   | _ -> fail "check_pat called with a dot pattern"
 
@@ -1828,11 +1826,20 @@ let check_term_top_gh g e topt (must_tot:bool) (gh:option guard_handler_t)
         if Env.debug g (Options.Other "CoreExit")
         || Env.debug g (Options.Other "Core")
         || Env.debug g (Options.Other "CoreTop")        
-        then
+        then begin
           BU.print3 "(%s) Exiting core: Simplified guard from {{%s}} to {{%s}}\n"
             (BU.string_of_int (get_goal_ctr()))
             (P.term_to_string guard0)
             (P.term_to_string guard);
+          let guard_names = Syntax.Free.names guard |> BU.set_elements in
+          match List.tryFind (fun bv -> List.for_all (fun binding_env ->
+            match binding_env with
+            | Binding_var bv_env -> not (S.bv_eq bv_env bv)
+            | _ -> true) g.gamma) guard_names with
+          | Some bv ->
+            BU.print1 "WARNING: %s is free in the core generated guard\n" (P.term_to_string (S.bv_to_name bv))
+          | _ -> ()
+        end;
         Inl (et, Some guard)
 
       | Inl _ ->

@@ -141,7 +141,6 @@ let subcomp (a:Type)
 // We did not define a bind between Div and Steel, so we indicate
 // SteelKF as total to be able to reify and compose it when implementing fork
 // This module is intended as proof of concept
-[@@allow_informative_binders]
 total
 reifiable
 reflectable

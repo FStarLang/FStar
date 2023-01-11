@@ -841,44 +841,44 @@ let tc_decl' env0 se: list sigelt * list sigelt * Env.env =
       (Some (Ident.string_of_lid (Env.current_module env)))
       "FStar.TypeChecker.Tc.tc_sig_let"
 
-  | Sig_polymonadic_bind (m, n, p, t, _) ->  //desugaring does not set the last field, tc does
+  | Sig_polymonadic_bind (m, n, p, t, _, _) ->  //desugaring does not set the last two fields, tc does
     let t =
       if do_two_phases env then run_phase1 (fun _ ->
         let t, ty =
           TcEff.tc_polymonadic_bind ({ env with phase1 = true; lax = true }) m n p t
-          |> (fun (t, ty) -> { se with sigel = Sig_polymonadic_bind (m, n, p, t, ty) })
+          |> (fun (t, ty, _) -> { se with sigel = Sig_polymonadic_bind (m, n, p, t, ty, None) })
           |> N.elim_uvars env
           |> (fun se ->
              match se.sigel with
-             | Sig_polymonadic_bind (_, _, _, t, ty) -> t, ty
+             | Sig_polymonadic_bind (_, _, _, t, ty, _) -> t, ty
              | _ -> failwith "Impossible! tc for Sig_polymonadic_bind must be a Sig_polymonadic_bind") in
         if Env.debug env <| Options.Other "TwoPhases"
           then BU.print1 "Polymonadic bind after phase 1: %s\n"
-                 (Print.sigelt_to_string ({ se with sigel = Sig_polymonadic_bind (m, n, p, t, ty) }));
+                 (Print.sigelt_to_string ({ se with sigel = Sig_polymonadic_bind (m, n, p, t, ty, None) }));
         t)
       else t in
-    let t, ty = TcEff.tc_polymonadic_bind env m n p t in
-    let se = ({ se with sigel = Sig_polymonadic_bind (m, n, p, t, ty) }) in
+    let t, ty, k = TcEff.tc_polymonadic_bind env m n p t in
+    let se = ({ se with sigel = Sig_polymonadic_bind (m, n, p, t, ty, Some k) }) in
     [se], [], env0
 
-  | Sig_polymonadic_subcomp (m, n, t, _) ->  //desugaring does not set the last field, tc does
+  | Sig_polymonadic_subcomp (m, n, t, _, _) ->  //desugaring does not set the last two fields, tc does
     let t =
       if do_two_phases env then run_phase1 (fun _ ->
         let t, ty =
           TcEff.tc_polymonadic_subcomp ({ env with phase1 = true; lax = true }) m n t
-          |> (fun (t, ty) -> { se with sigel = Sig_polymonadic_subcomp (m, n, t, ty) })
+          |> (fun (t, ty, _) -> { se with sigel = Sig_polymonadic_subcomp (m, n, t, ty, None) })
           |> N.elim_uvars env
           |> (fun se ->
              match se.sigel with
-             | Sig_polymonadic_subcomp (_, _, t, ty) -> t, ty
+             | Sig_polymonadic_subcomp (_, _, t, ty, _) -> t, ty
              | _ -> failwith "Impossible! tc for Sig_polymonadic_subcomp must be a Sig_polymonadic_subcomp") in
         if Env.debug env <| Options.Other "TwoPhases"
           then BU.print1 "Polymonadic subcomp after phase 1: %s\n"
-                 (Print.sigelt_to_string ({ se with sigel = Sig_polymonadic_subcomp (m, n, t, ty) }));
+                 (Print.sigelt_to_string ({ se with sigel = Sig_polymonadic_subcomp (m, n, t, ty, None) }));
         t)
       else t in
-    let t, ty = TcEff.tc_polymonadic_subcomp env m n t in
-    let se = ({ se with sigel = Sig_polymonadic_subcomp (m, n, t, ty) }) in
+    let t, ty, k = TcEff.tc_polymonadic_subcomp env m n t in
+    let se = ({ se with sigel = Sig_polymonadic_subcomp (m, n, t, ty, Some k) }) in
     [se], [], env0)
 
 
@@ -952,9 +952,9 @@ let add_sigelt_to_env (env:Env.env) (se:sigelt) (from_cache:bool) : Env.env =
 
     | Sig_sub_effect sub -> TcUtil.update_env_sub_eff env sub se.sigrng
 
-    | Sig_polymonadic_bind (m, n, p, _, ty) -> TcUtil.update_env_polymonadic_bind env m n p ty
+    | Sig_polymonadic_bind (m, n, p, _, ty, k) -> TcUtil.update_env_polymonadic_bind env m n p ty (k |> must)
 
-    | Sig_polymonadic_subcomp (m, n, _, ty) -> Env.add_polymonadic_subcomp env m n ty
+    | Sig_polymonadic_subcomp (m, n, _, ty, k) -> Env.add_polymonadic_subcomp env m n (ty, k |> must)
 
     | _ -> env
 
@@ -1027,8 +1027,11 @@ let tc_decls env ses =
                  (fun () -> process_one_decl acc se)
                  (Some (Ident.string_of_lid (Env.current_module env)))
                  "FStar.TypeChecker.Tc.process_one_decl"
+      // ^ See a special case for this phase in FStar.Options. --timing
+      // enables it.
     in
     if Options.profile_group_by_decls()
+    || Options.timing () // --timing implies --profile_group_by_decls
     then begin
          let tag =
           match lids_of_sigelt se with

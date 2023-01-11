@@ -67,3 +67,8 @@ Aside from user-defined effects, F*'s also supports the following
    :caption: Contents:
 
    part4_ghost
+   part4_div
+   part4_pure
+   part4_user_defined_effects
+   part4_dm4f
+

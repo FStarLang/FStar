@@ -76,17 +76,19 @@ let mk_carrier_inj
      M.sel (mk_carrier len offset s2 p2) (offset + i) == Some (Seq.index s2 i, p2))
 
 [@@erasable]
-let base_t (elt: Type u#a) : Tot Type0 = Ghost.erased (base_len: U32.t & ref _ (pcm elt (U32.v base_len)))
-let base_len (#elt: Type) (b: base_t elt) : GTot nat = U32.v (dfst b)
+let base_t (elt: Type u#a) : Tot Type0 = Ghost.erased (base_len: US.t & ref _ (pcm elt (US.v base_len)))
+let base_len (#elt: Type) (b: base_t elt) : GTot nat = US.v (dfst b)
 
 [@@noextract_to "krml"]
 noeq
 type ptr (elt: Type u#a) : Type0 = {
-  base_len: Ghost.erased U32.t;
+  base_len: Ghost.erased US.t;
                    // U32.t to prove that A.read, A.write offset computation does not overflow. TODO: replace U32.t with size_t
-  base: ref _ (pcm elt (U32.v base_len));
-  offset: (offset: nat { offset <= U32.v base_len });
+  base: (r: ref _ (pcm elt (US.v base_len)) { is_null r ==> US.v base_len == 0 });
+  offset: (offset: nat { offset <= US.v base_len });
 }
+let null_ptr a = { base_len = 0sz; base = null #_ #(pcm a 0) ; offset = 0 }
+let is_null_ptr p = is_null p.base
 let base (#elt: Type) (p: ptr elt) : Tot (base_t elt) = (| Ghost.reveal p.base_len, p.base |)
 let offset (#elt: Type) (p: ptr elt) : Ghost nat (requires True) (ensures (fun offset -> offset <= base_len (base p))) = p.offset
 
@@ -100,6 +102,10 @@ let ptr_base_offset_inj (#elt: Type) (p1 p2: ptr elt) : Lemma
   ))
 = ()
 
+let base_len_null_ptr _ = ()
+
+let length_fits #elt a = ()
+
 let valid_perm
   (len: nat)
   (offset: nat)
@@ -110,9 +116,9 @@ let valid_perm
 
 [@__reduce__]
 let pts_to0 (#elt: Type u#1) (a: array elt) (p: P.perm) (s: Seq.seq elt) : Tot vprop =
-  R.pts_to (ptr_of a).base (mk_carrier (U32.v (ptr_of a).base_len) (ptr_of a).offset s p) `star`
+  R.pts_to (ptr_of a).base (mk_carrier (US.v (ptr_of a).base_len) (ptr_of a).offset s p) `star`
   pure (
-    valid_perm (U32.v (ptr_of a).base_len) (ptr_of a).offset (Seq.length s) p /\
+    valid_perm (US.v (ptr_of a).base_len) (ptr_of a).offset (Seq.length s) p /\
     Seq.length s == length a
   )
 
@@ -147,12 +153,12 @@ let intro_pts_to (#opened: _) (#elt: Type u#1) (a: array elt) (#v: _) (p: P.perm
   (R.pts_to (ptr_of a).base v)
   (fun _ -> pts_to a p s)
   (
-    v == mk_carrier (U32.v (ptr_of a).base_len) (ptr_of a).offset s p /\
-    valid_perm (U32.v (ptr_of a).base_len) (ptr_of a).offset (Seq.length s) p /\
+    v == mk_carrier (US.v (ptr_of a).base_len) (ptr_of a).offset s p /\
+    valid_perm (US.v (ptr_of a).base_len) (ptr_of a).offset (Seq.length s) p /\
     Seq.length s == length a
   )
   (fun _ -> True)
-= change_r_pts_to (ptr_of a).base v (ptr_of a).base (mk_carrier (U32.v (ptr_of a).base_len) (ptr_of a).offset s p);
+= change_r_pts_to (ptr_of a).base v (ptr_of a).base (mk_carrier (US.v (ptr_of a).base_len) (ptr_of a).offset s p);
   intro_pure _;
   rewrite
     (pts_to0 a p s)
@@ -160,10 +166,10 @@ let intro_pts_to (#opened: _) (#elt: Type u#1) (a: array elt) (#v: _) (p: P.perm
 
 let elim_pts_to (#opened: _) (#elt: Type u#1) (a: array elt) (p: P.perm) (s: Seq.seq elt) : STGhost unit opened
   (pts_to a p s)
-  (fun _ -> R.pts_to (ptr_of a).base (mk_carrier (U32.v (ptr_of a).base_len) (ptr_of a).offset s p))
+  (fun _ -> R.pts_to (ptr_of a).base (mk_carrier (US.v (ptr_of a).base_len) (ptr_of a).offset s p))
   (True)
   (fun _ ->
-    valid_perm (U32.v (ptr_of a).base_len) (ptr_of a).offset (Seq.length s) p /\
+    valid_perm (US.v (ptr_of a).base_len) (ptr_of a).offset (Seq.length s) p /\
     Seq.length s == length a
   )
 = rewrite
@@ -175,6 +181,12 @@ let pts_to_length
   a s
 =
   elim_pts_to a _ s;
+  intro_pts_to a _ s
+
+let pts_to_not_null
+  a s
+= elim_pts_to a _ s;
+  R.pts_to_not_null _ _;
   intro_pts_to a _ s
 
 let mk_carrier_joinable
@@ -224,53 +236,54 @@ let pts_to_inj
 =
   Classical.forall_intro reveal_pure;
   pure_star_interp'
-    (hp_of (R.pts_to (ptr_of a).base (mk_carrier (U32.v (ptr_of a).base_len) (ptr_of a).offset s1 p1)))
+    (hp_of (R.pts_to (ptr_of a).base (mk_carrier (US.v (ptr_of a).base_len) (ptr_of a).offset s1 p1)))
     (
-      valid_perm (U32.v (ptr_of a).base_len) (ptr_of a).offset (Seq.length s1) p1 /\
+      valid_perm (US.v (ptr_of a).base_len) (ptr_of a).offset (Seq.length s1) p1 /\
       Seq.length s1 == length a
     )
     m;
   pure_star_interp'
-    (hp_of (R.pts_to (ptr_of a).base (mk_carrier (U32.v (ptr_of a).base_len) (ptr_of a).offset s2 p2)))
+    (hp_of (R.pts_to (ptr_of a).base (mk_carrier (US.v (ptr_of a).base_len) (ptr_of a).offset s2 p2)))
     (
-      valid_perm (U32.v (ptr_of a).base_len) (ptr_of a).offset (Seq.length s2) p2 /\
+      valid_perm (US.v (ptr_of a).base_len) (ptr_of a).offset (Seq.length s2) p2 /\
       Seq.length s2 == length a
     )
     m;
   pts_to_join
     (ptr_of a).base
-    (mk_carrier (U32.v (ptr_of a).base_len) (ptr_of a).offset s1 p1)
-    (mk_carrier (U32.v (ptr_of a).base_len) (ptr_of a).offset s2 p2)
+    (mk_carrier (US.v (ptr_of a).base_len) (ptr_of a).offset s1 p1)
+    (mk_carrier (US.v (ptr_of a).base_len) (ptr_of a).offset s2 p2)
     m;
-  mk_carrier_joinable (U32.v (ptr_of a).base_len) (ptr_of a).offset s1 p1 s2 p2
+  mk_carrier_joinable (US.v (ptr_of a).base_len) (ptr_of a).offset s1 p1 s2 p2
 
 [@@noextract_to "krml"]
 let malloc0
   (#elt: Type)
   (x: elt)
-  (n: U32.t)
+  (n: US.t)
 : ST (array elt)
     emp
-    (fun a -> pts_to a P.full_perm (Seq.create (U32.v n) x))
+    (fun a -> pts_to a P.full_perm (Seq.create (US.v n) x))
     (True)
     (fun a ->
-      length a == U32.v n /\
-      base_len (base (ptr_of a)) == U32.v n
+      length a == US.v n /\
+      base_len (base (ptr_of a)) == US.v n
     )
 =
-  let c : carrier elt (U32.v n) = mk_carrier (U32.v n) 0 (Seq.create (U32.v n) x) P.full_perm in
-  let base : ref (carrier elt (U32.v n)) (pcm elt (U32.v n)) = R.alloc c in
+  let c : carrier elt (US.v n) = mk_carrier (US.v n) 0 (Seq.create (US.v n) x) P.full_perm in
+  let base : ref (carrier elt (US.v n)) (pcm elt (US.v n)) = R.alloc c in
+  R.pts_to_not_null base _;
   let p = {
     base_len = n;
     base = base;
     offset = 0;
   }
   in
-  let a = (| p, Ghost.hide (U32.v n) |) in
+  let a = (| p, Ghost.hide (US.v n) |) in
   change_r_pts_to
     base c
     (ptr_of a).base c;
-  intro_pts_to a P.full_perm (Seq.create (U32.v n) x);
+  intro_pts_to a P.full_perm (Seq.create (US.v n) x);
   return a
 
 let malloc_ptr
@@ -280,7 +293,7 @@ let malloc_ptr
   let (| p, _ |) = a in
   rewrite
     (pts_to _ _ _)
-    (pts_to (| p, Ghost.hide (U32.v n) |) _ _);
+    (pts_to (| p, Ghost.hide (US.v n) |) _ _);
   return p
 
 [@@noextract_to "krml"]
@@ -328,10 +341,10 @@ let mk_carrier_share
 let share
   #_ #_ #x a p p1 p2
 = elim_pts_to a p x;
-  mk_carrier_share (U32.v (ptr_of a).base_len) (ptr_of a).offset x p1 p2;
+  mk_carrier_share (US.v (ptr_of a).base_len) (ptr_of a).offset x p1 p2;
   R.split (ptr_of a).base _
-    (mk_carrier (U32.v (ptr_of a).base_len) (ptr_of a).offset x p1)
-    (mk_carrier (U32.v (ptr_of a).base_len) (ptr_of a).offset x p2);
+    (mk_carrier (US.v (ptr_of a).base_len) (ptr_of a).offset x p1)
+    (mk_carrier (US.v (ptr_of a).base_len) (ptr_of a).offset x p2);
   intro_pts_to a p1 x;
   intro_pts_to a p2 x
 
@@ -387,11 +400,12 @@ let gather
   a #x1 p1 #x2 p2
 = elim_pts_to a p1 x1;
   elim_pts_to a p2 x2;
-  R.gather (ptr_of a).base
-    (mk_carrier (U32.v (ptr_of a).base_len) ((ptr_of a).offset) x1 p1)
-    (mk_carrier (U32.v (ptr_of a).base_len) ((ptr_of a).offset) x2 p2);
-  mk_carrier_gather (U32.v (ptr_of a).base_len) ((ptr_of a).offset) x1 x2 p1 p2;
-  mk_carrier_valid_sum_perm (U32.v (ptr_of a).base_len) ((ptr_of a).offset) x1 p1 p2;
+  let _ = R.gather (ptr_of a).base
+    (mk_carrier (US.v (ptr_of a).base_len) ((ptr_of a).offset) x1 p1)
+    (mk_carrier (US.v (ptr_of a).base_len) ((ptr_of a).offset) x2 p2)
+  in
+  mk_carrier_gather (US.v (ptr_of a).base_len) ((ptr_of a).offset) x1 x2 p1 p2;
+  mk_carrier_valid_sum_perm (US.v (ptr_of a).base_len) ((ptr_of a).offset) x1 p1 p2;
   intro_pts_to a (p1 `P.sum_perm` p2) x1
 
 #push-options "--z3rlimit 16"
@@ -401,15 +415,15 @@ let index0
   (#t: Type) (#p: P.perm)
   (a: array t)
   (#s: Ghost.erased (Seq.seq t))
-  (i: U32.t)
+  (i: US.t)
 : ST t
     (pts_to a p s)
     (fun _ -> pts_to a p s)
-    (U32.v i < length a \/ U32.v i < Seq.length s)
-    (fun res -> Seq.length s == length a /\ U32.v i < Seq.length s /\ res == Seq.index s (U32.v i))
+    (US.v i < length a \/ US.v i < Seq.length s)
+    (fun res -> Seq.length s == length a /\ US.v i < Seq.length s /\ res == Seq.index s (US.v i))
 = elim_pts_to a p s;
   let s' = R.read (ptr_of a).base _ in
-  let res = fst (Some?.v (M.sel s' ((ptr_of a).offset + U32.v i))) in
+  let res = fst (Some?.v (M.sel s' ((ptr_of a).offset + US.v i))) in
   intro_pts_to a p s;
   return res
 
@@ -437,30 +451,34 @@ let mk_carrier_upd
   ))
 = ()
 
+#push-options "--z3rlimit 20"
+
 [@@noextract_to "krml"]
 let upd0
   (#t: Type)
   (a: array t)
   (#s: Ghost.erased (Seq.seq t))
-  (i: U32.t { U32.v i < Seq.length s })
+  (i: US.t { US.v i < Seq.length s })
   (v: t)
 : STT unit
     (pts_to a P.full_perm s)
-    (fun res -> pts_to a P.full_perm (Seq.upd s (U32.v i) v))
+    (fun res -> pts_to a P.full_perm (Seq.upd s (US.v i) v))
 = elim_pts_to a _ _;
-  mk_carrier_upd (U32.v (ptr_of a).base_len) ((ptr_of a).offset) s (U32.v i) v ();
+  mk_carrier_upd (US.v (ptr_of a).base_len) ((ptr_of a).offset) s (US.v i) v ();
   R.upd_gen
     (ptr_of a).base
     _ _
     (PM.lift_frame_preserving_upd
       _ _
       (P.mk_frame_preserving_upd
-        (Seq.index s (U32.v i))
+        (Seq.index s (US.v i))
         v
       )
-      _ ((ptr_of a).offset + U32.v i)
+      _ ((ptr_of a).offset + US.v i)
     );
   intro_pts_to a _ _
+
+#pop-options
 
 let upd_ptr a i v =
   upd0 _ i v;
@@ -490,16 +508,16 @@ let ghost_join
   #_ #_ #x1 #x2 #p a1 a2 h
 = elim_pts_to a1 p x1;
   elim_pts_to a2 p x2;
-  mk_carrier_merge (U32.v (ptr_of a1).base_len) ((ptr_of a1).offset) x1 x2 (p);
+  mk_carrier_merge (US.v (ptr_of a1).base_len) ((ptr_of a1).offset) x1 x2 (p);
   change_r_pts_to
     (ptr_of a2).base _
-    (ptr_of a1).base (mk_carrier (U32.v (ptr_of a1).base_len) ((ptr_of a1).offset + Seq.length x1) x2 p);
+    (ptr_of a1).base (mk_carrier (US.v (ptr_of a1).base_len) ((ptr_of a1).offset + Seq.length x1) x2 p);
   R.gather (ptr_of a1).base
-    (mk_carrier (U32.v (ptr_of a1).base_len) ((ptr_of a1).offset) x1 (p))
-    (mk_carrier (U32.v (ptr_of a1).base_len) ((ptr_of a1).offset + Seq.length x1) x2 (p));
+    (mk_carrier (US.v (ptr_of a1).base_len) ((ptr_of a1).offset) x1 (p))
+    (mk_carrier (US.v (ptr_of a1).base_len) ((ptr_of a1).offset + Seq.length x1) x2 (p));
   change_r_pts_to
     (ptr_of a1).base _
-    (ptr_of (merge a1 a2)).base (mk_carrier (U32.v (ptr_of (merge a1 a2)).base_len) ((ptr_of (merge a1 a2)).offset) (x1 `Seq.append` x2) (p));
+    (ptr_of (merge a1 a2)).base (mk_carrier (US.v (ptr_of (merge a1 a2)).base_len) ((ptr_of (merge a1 a2)).offset) (x1 `Seq.append` x2) (p));
   intro_pts_to (merge a1 a2) p (Seq.append x1 x2)
 
 let mk_carrier_split
@@ -527,17 +545,17 @@ let mk_carrier_split
 let ptr_shift
   (#elt: Type)
   (p: ptr elt)
-  (off: U32.t)
+  (off: US.t)
 : Pure (ptr elt)
-  (requires (offset p + U32.v off <= base_len (base p)))
+  (requires (offset p + US.v off <= base_len (base p)))
   (ensures (fun p' ->
     base p' == base p /\
-    offset p' == offset p + U32.v off
+    offset p' == offset p + US.v off
   ))
 = {
   base_len = p.base_len;
   base = p.base;
-  offset = p.offset + U32.v off;
+  offset = p.offset + US.v off;
 }
 
 let ghost_split
@@ -545,25 +563,25 @@ let ghost_split
 =
   elim_pts_to a p x;
   mk_carrier_split
-    (U32.v (ptr_of a).base_len)
+    (US.v (ptr_of a).base_len)
     ((ptr_of a).offset)
     x
     (p)
-    (U32.v i);
-  Seq.lemma_split x (U32.v i);
-  let xl = Seq.slice x 0 (U32.v i) in
-  let xr = Seq.slice x (U32.v i) (Seq.length x) in
-  let vl = mk_carrier (U32.v (ptr_of a).base_len) ((ptr_of a).offset) xl (p) in
-  let vr = mk_carrier (U32.v (ptr_of a).base_len) ((ptr_of a).offset + U32.v i) xr (p) in
+    (US.v i);
+  Seq.lemma_split x (US.v i);
+  let xl = Seq.slice x 0 (US.v i) in
+  let xr = Seq.slice x (US.v i) (Seq.length x) in
+  let vl = mk_carrier (US.v (ptr_of a).base_len) ((ptr_of a).offset) xl (p) in
+  let vr = mk_carrier (US.v (ptr_of a).base_len) ((ptr_of a).offset + US.v i) xr (p) in
   R.split (ptr_of a).base _ vl vr;
   change_r_pts_to
     (ptr_of a).base vl
     (ptr_of (split_l a i)).base vl;
-  intro_pts_to (split_l a i) #vl p (Seq.slice x 0 (U32.v i));
+  intro_pts_to (split_l a i) #vl p (Seq.slice x 0 (US.v i));
   change_r_pts_to
     (ptr_of a).base vr
     (ptr_of (split_r a i)).base vr;
-  intro_pts_to (split_r a i) #vr p (Seq.slice x (U32.v i) (Seq.length x))
+  intro_pts_to (split_r a i) #vr p (Seq.slice x (US.v i) (Seq.length x))
 
 ////////////////////////////////////////////////////////////////////////////////
 // memcpy
@@ -581,7 +599,7 @@ let prefix_copied #t
 val memcpy0 (#t:_) (#p0:perm)
            (a0 a1:array t)
            (#s0 #s1:Ghost.erased (Seq.seq t))
-           (l:U32.t { U32.v l == length a0 /\ length a0 == length a1 } )
+           (l:US.t { US.v l == length a0 /\ length a0 == length a1 } )
   : STT unit
     (pts_to a0 p0 s0 `star` pts_to a1 full_perm s1)
     (fun _ -> pts_to a0 p0 s0  `star` pts_to a1 full_perm s0)
@@ -596,45 +614,43 @@ let memcpy0
       = pts_to a0 p0 e0 `star`
         pts_to a1 full_perm (prefix_copied e0 e1 j)
     in
-    assert (prefix_copied e0 e1 (U32.v 0ul) `Seq.equal` e1);
+    assert (prefix_copied e0 e1 0 `Seq.equal` e1);
     rewrite (pts_to a1 full_perm e1)
-                           (pts_to a1 full_perm (prefix_copied e0 e1 (U32.v 0ul)));
-    rewrite (pts_to a0 _ e0 `star` pts_to a1 full_perm (prefix_copied e0 e1 (U32.v 0ul)))
-                           (inv (U32.v 0ul));
-    let body (j:Steel.ST.Loops.u32_between 0ul i)
+                           (pts_to a1 full_perm (prefix_copied e0 e1 0));
+    rewrite (pts_to a0 _ e0 `star` pts_to a1 full_perm (prefix_copied e0 e1 0))
+                           (inv (US.v 0sz));
+    let body (j:Steel.ST.Loops.u32_between 0sz i)
       : STT unit
-        (inv (U32.v j))
-        (fun _ -> inv (U32.v j + 1))
+        (inv (US.v j))
+        (fun _ -> inv (US.v j + 1))
       = rewrite
-            (inv (U32.v j))
+            (inv (US.v j))
             (pts_to a0 p0 e0 `star`
-             pts_to a1 full_perm (prefix_copied e0 e1 (U32.v j)));
+             pts_to a1 full_perm (prefix_copied e0 e1 (US.v j)));
         let z = index a0 j in
         upd a1 j z;
-        assert (Seq.upd (prefix_copied e0 e1 (U32.v j)) (U32.v j) z `Seq.equal`
-                prefix_copied e0 e1 (U32.v j + 1));
+        assert (Seq.upd (prefix_copied e0 e1 (US.v j)) (US.v j) z `Seq.equal`
+                prefix_copied e0 e1 (US.v j + 1));
         rewrite (pts_to a0 _ e0 `star` pts_to a1 _ _)
-                               (inv (U32.v j + 1));
+                               (inv (US.v j + 1));
         return ()
     in
-    Steel.ST.Loops.for_loop 0ul i inv body;
-    assert_ (inv (U32.v i));
-    rewrite (inv (U32.v i))
+    Steel.ST.Loops.for_loop 0sz i inv body;
+    assert_ (inv (US.v i));
+    rewrite (inv (US.v i))
                            (pts_to a0 p0 e0 `star`
-                            pts_to a1 full_perm (prefix_copied e0 e1 (U32.v i)));
-    assert (prefix_copied e0 e1 (U32.v i) `Seq.equal` e0);
-    rewrite (pts_to a1 _ (prefix_copied e0 e1 (U32.v i)))
+                            pts_to a1 full_perm (prefix_copied e0 e1 (US.v i)));
+    assert (prefix_copied e0 e1 (US.v i) `Seq.equal` e0);
+    rewrite (pts_to a1 _ (prefix_copied e0 e1 (US.v i)))
                            (pts_to a1 _ e0);
     return ()
 
-#pop-options
-
 let blit0 (#t:_) (#p0:perm) (#s0 #s1:Ghost.erased (Seq.seq t))
            (src:array t)
-           (idx_src: U32.t)
+           (idx_src: US.t)
            (dst:array t)
-           (idx_dst: U32.t)
-           (len: U32.t)
+           (idx_dst: US.t)
+           (len: US.t)
   : ST unit
     (pts_to src p0 s0 `star` pts_to dst full_perm s1)
     (fun _ -> pts_to src p0 s0  `star` exists_ (fun s1' ->
@@ -642,16 +658,16 @@ let blit0 (#t:_) (#p0:perm) (#s0 #s1:Ghost.erased (Seq.seq t))
       pure (blit_post s0 s1 src idx_src dst idx_dst len s1')
     ))
     (
-        U32.v idx_src + U32.v len <= length src /\
-        U32.v idx_dst + U32.v len <= length dst
+        US.v idx_src + US.v len <= length src /\
+        US.v idx_dst + US.v len <= length dst
     )
     (fun _ -> True)
 = pts_to_length src s0;
   pts_to_length dst s1;
-  ghost_split src idx_src;
-  ghost_split (split_r src idx_src) len;
-  ghost_split dst idx_dst;
-  ghost_split (split_r dst idx_dst) len;
+  let _ = ghost_split src idx_src in
+  let _ = ghost_split (split_r src idx_src) len in
+  let _ = ghost_split dst idx_dst in
+  let _ = ghost_split (split_r dst idx_dst) len in
   memcpy0 (split_l (split_r src idx_src) len) (split_l (split_r dst idx_dst) len) len;
   ghost_join (split_l (split_r dst _) _) (split_r (split_r dst _) _) ();
   ghost_join (split_l dst _) (merge _ _) ();
@@ -661,6 +677,8 @@ let blit0 (#t:_) (#p0:perm) (#s0 #s1:Ghost.erased (Seq.seq t))
   vpattern_rewrite #_ #_ #(merge _ _) (fun a -> pts_to a _ _) src;
   vpattern_rewrite (pts_to src _) (Ghost.reveal s0);
   noop ()
+
+#pop-options
 
 let blit_ptr
   src len_src idx_src dst len_dst idx_dst len

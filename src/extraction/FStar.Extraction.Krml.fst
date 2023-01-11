@@ -130,6 +130,7 @@ and expr =
   | EComment of string * expr * string
   | EStandaloneComment of string
   | EAddrOf of expr
+  | EBufNull of typ
 
 and op =
   | Add | AddW | Sub | SubW | Div | DivW | Mult | MultW | Mod
@@ -433,6 +434,14 @@ let translate_cc flags =
   | [ "cdecl" ] -> Some CDecl
   | _ -> None
 
+(* Per FStarLang/karamel#324 *)
+let generate_is_null
+  (t: typ)
+  (x: expr)
+: Tot expr
+= let dummy = UInt64 in
+  EApp (ETypApp (EOp (Eq, dummy), [TBuf t]), [x; EBufNull t])
+
 let rec translate_type_without_decay env t: typ =
   match t with
   | MLTY_Tuple []
@@ -639,6 +648,14 @@ and translate_expr env e: expr =
 
   // We recognize certain distinguished names from [FStar.HST] and other
   // modules, and translate them into built-in Karamel constructs
+  | MLE_App ({expr = MLE_TApp ({expr = MLE_Name p}, [t]) }, _)
+    when string_of_mlpath p = "Steel.ST.HigherArray.null_ptr"
+    ->
+    EBufNull (translate_type env t)
+  | MLE_App ({expr = MLE_TApp ({expr = MLE_Name p }, [t])}, [arg])
+    when string_of_mlpath p = "Steel.ST.HigherArray.is_null_ptr"
+    ->
+    generate_is_null (translate_type env t) (translate_expr env arg)
   | MLE_App({expr=MLE_TApp ({ expr = MLE_Name p }, [t])}, [arg])
     when string_of_mlpath p = "FStar.Dyn.undyn" ->
       ECast (translate_expr env arg, translate_type env t)
@@ -1151,6 +1168,12 @@ IsNull nodes should be added to the KaRaMeL AST *)
   | MLE_App ({expr=MLE_TApp ({expr=MLE_Name p}, _)}, [_; a; i])
     when string_of_mlpath p = "Steel.C.Array.Base.split_right_from" ->
       EAddrOf (EBufRead (translate_expr env a, translate_expr env i))
+
+  | MLE_App ({ expr = MLE_Name p }, [ arg ])
+    when string_of_mlpath p = "FStar.SizeT.uint16_to_sizet" ||
+         string_of_mlpath p = "FStar.SizeT.uint32_to_sizet" ||
+         string_of_mlpath p = "FStar.SizeT.uint64_to_sizet" ->
+      ECast (translate_expr env arg, TInt SizeT)
 
   | MLE_App ({expr=MLE_Name p}, [ _inv; test; body ])
     when (string_of_mlpath p = "Steel.ST.Loops.while_loop") ->

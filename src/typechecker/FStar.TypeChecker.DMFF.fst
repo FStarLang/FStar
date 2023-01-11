@@ -83,7 +83,7 @@ let gen_wps_for_free
     | Tm_arrow (bs, comp) ->
         // TODO: dubious, assert no nested arrows
         let rest = match comp.n with
-          | Total (t, _) -> t
+          | Total t -> t
           | _ -> raise_error (Error_UnexpectedDM4FType,
                                BU.format1 "wp_a contains non-Tot arrow: %s" (Print.comp_to_string comp))
                     comp.pos
@@ -336,8 +336,8 @@ let gen_wps_for_free
     | Tm_type _ ->
         (* BU.print2 "type0, x=%s, y=%s\n" (Print.term_to_string x) (Print.term_to_string y); *)
         rel x y
-    | Tm_arrow ([ binder ], { n = GTotal (b, _) })
-    | Tm_arrow ([ binder ], { n = Total (b, _) }) ->
+    | Tm_arrow ([ binder ], { n = GTotal b })
+    | Tm_arrow ([ binder ], { n = Total b }) ->
         let a = binder.binder_bv.sort in
         if is_monotonic a  || is_monotonic b //this is an important special case; most monads have zero-order results
         then let a1 = S.gen_bv "a1" None a in
@@ -386,8 +386,8 @@ let gen_wps_for_free
                   | rel0 :: rels -> rel0, rels
           in
           List.fold_left U.mk_conj rel0 rels
-        | Tm_arrow (binders, { n = GTotal (b, _) })
-        | Tm_arrow (binders, { n = Total (b, _) }) ->
+        | Tm_arrow (binders, { n = GTotal b })
+        | Tm_arrow (binders, { n = Total b }) ->
           let bvs = List.mapi (fun i ({binder_bv=bv;binder_qual=q}) -> S.gen_bv ("a" ^ string_of_int i) None bv.sort) binders in
           let args = List.map (fun ai -> S.as_arg (S.bv_to_name ai)) bvs in
           let body = mk_stronger b (U.mk_app x args) (U.mk_app y args) in
@@ -483,7 +483,7 @@ type nm = | N of typ | M of typ
 type nm_ = nm
 
 let nm_of_comp c = match c.n with
-  | Total (t, _) ->
+  | Total t ->
       N t
   | Comp c when c.flags |> BU.for_some (function CPS -> true | _ -> false) ->
                 //lid_equals c.effect_name PC.monadic_lid ->
@@ -540,7 +540,7 @@ and star_type' env t =
       (* Catch the GTotal case early; it seems relatively innocuous to allow
        * GTotal to appear. TODO fix this as a clean, single pattern-matching. *)
       begin match t.n with
-      | Tm_arrow (_, { n = GTotal (hn, _) }) ->
+      | Tm_arrow (_, { n = GTotal hn }) ->
           mk (Tm_arrow (binders, mk_GTotal (star_type' env hn)))
       | _ ->
           match is_monadic_arrow t.n with
@@ -1024,7 +1024,7 @@ and infer (env: env) (e: term): nm * term * term =
       let is_arrow t = match (SS.compress t).n with | Tm_arrow _ -> true | _ -> false in
       // TODO: replace with BU.arrow_formals_comp
       let rec flatten t = match (SS.compress t).n with
-        | Tm_arrow (binders, { n = Total (t, _) }) when is_arrow t ->
+        | Tm_arrow (binders, { n = Total t }) when is_arrow t ->
             let binders', comp = flatten t in
             binders @ binders', comp
         | Tm_arrow (binders, comp) ->
@@ -1351,7 +1351,7 @@ let cps_and_elaborate (env:FStar.TypeChecker.Env.env) (ed:S.eff_decl)
     S.eff_decl *
     option S.sigelt =
   // Using [STInt: a:Type -> Effect] as an example...
-  let effect_binders_un, signature_un = SS.open_term ed.binders (snd ed.signature) in
+  let effect_binders_un, signature_un = SS.open_term ed.binders (ed.signature |> U.effect_sig_ts |> snd) in
   // [binders] is the empty list (for [ST (h: heap)], there would be one binder)
   let effect_binders, env, _ = TcTerm.tc_tparams env effect_binders_un in
   // [signature] is a:Type -> effect
@@ -1673,9 +1673,8 @@ let cps_and_elaborate (env:FStar.TypeChecker.Env.env) (ed:S.eff_decl)
         bind_repr = Some ([], apply_close bind_elab) })
     | _ -> failwith "Impossible! For a DM4F effect combinators must be in DM4f_eff" in
 
-
   let ed = { ed with
-    signature = ([], close effect_binders effect_signature);
+    signature = WP_eff_sig ([], close effect_binders effect_signature);
     binders = close_binders effect_binders;
     combinators = ed_combs;
     actions = actions; // already went through apply_close
@@ -1694,7 +1693,8 @@ let cps_and_elaborate (env:FStar.TypeChecker.Env.env) (ed:S.eff_decl)
           source = PC.effect_PURE_lid;
           target = ed.mname ;
           lift_wp = Some ([], apply_close lift_from_pure_wp) ;
-          lift = None //Some ([], apply_close return_elab)
+          lift = None; //Some ([], apply_close return_elab)
+          kind = None;
       } in
       Some (mk_sigelt (Sig_sub_effect (lift_from_pure)))
     end else None

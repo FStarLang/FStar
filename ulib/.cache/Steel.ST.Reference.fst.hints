@@ -8,7 +8,7 @@
       1,
       [ "@query", "equation_Steel.ST.Reference.null" ],
       0,
-      "29f8157893979ad67f585afb6494cd60"
+      "0a8f41f55ba518b1a758a6ae2ac9e83c"
     ],
     [
       "Steel.ST.Reference.pts_to_injective_eq",
@@ -17,7 +17,7 @@
       1,
       [ "@query", "lemma_FStar.Ghost.reveal_hide" ],
       0,
-      "8928157be05fdae36f573e0e19c61598"
+      "bf7ab3c2f6d6bf87a2a85d0b7e07d975"
     ],
     [
       "Steel.ST.Reference.pts_to_not_null",
@@ -46,7 +46,7 @@
         "typing_Steel.Reference.pts_to"
       ],
       0,
-      "fca4a7b9889453f1822ff790805f66ca"
+      "3ffbc3105f297d932fcc30a44071aa6f"
     ],
     [
       "Steel.ST.Reference.alloc",
@@ -55,7 +55,7 @@
       1,
       [ "@query", "equation_Steel.ST.Reference.is_null" ],
       0,
-      "3ff5dbe252d2e5d64bb18c1f4a43f4c3"
+      "529976114ea3dde74ce5ca608f7cd525"
     ],
     [
       "Steel.ST.Reference.read",
@@ -64,7 +64,7 @@
       1,
       [ "@query" ],
       0,
-      "f7fbf122629a46478a3160cf841268ba"
+      "f62fa2dada33655cd1d57936d1a194fe"
     ],
     [
       "Steel.ST.Reference._stack_frame",
@@ -80,27 +80,11 @@
         "typing_tok_Prims.T@tok"
       ],
       0,
-      "f2f9854706719d6e98143118cc64f846"
+      "09c81838f3af6363ee2f3cf43031d24a"
     ],
     [
       "Steel.ST.Reference._push_frame",
       1,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query",
-        "Prims_pretyping_e8ffb7d227a1bbf69407a8d2ad2c4c83",
-        "equality_tok_Prims.T@tok", "equation_Prims.l_True",
-        "equation_Prims.squash", "equation_Prims.subtype_of",
-        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c",
-        "typing_tok_Prims.T@tok"
-      ],
-      0,
-      "0fc4ed72af2610dd1538c6152ee9c63e"
-    ],
-    [
-      "Steel.ST.Reference._push_frame",
-      2,
       2,
       1,
       [
@@ -113,7 +97,7 @@
         "typing_tok_Prims.T@tok"
       ],
       0,
-      "8c6908213eebc9d83679b91c63d45b00"
+      "4b21b10351ee7d2e01d75672147982c2"
     ],
     [
       "Steel.ST.Reference._free_and_pop_frame",
@@ -130,7 +114,7 @@
         "typing_tok_Prims.T@tok"
       ],
       0,
-      "db1a36b7288ddaaa49a9309ced1327dd"
+      "5167b829c3340c69588e501af7b6cc4e"
     ],
     [
       "Steel.ST.Reference.gather",
@@ -142,7 +126,7 @@
         "refinement_interpretation_Tm_refine_0dee8cb03258a67c2f7ec66427696212"
       ],
       0,
-      "161b31e4dc78ff82810bd3a86b6ff4d2"
+      "0202bc4aef8c252c27792f3796b5ec9f"
     ],
     [
       "Steel.ST.Reference.atomic_read_u32",
@@ -151,7 +135,7 @@
       1,
       [ "@query" ],
       0,
-      "0b086bf81a4ac81c7e46580f8eb95e07"
+      "4f3156cfcf606205dfbab22fe3d00fcb"
     ]
   ]
 ]

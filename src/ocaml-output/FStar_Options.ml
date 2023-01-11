@@ -271,6 +271,7 @@ let (defaults : (Prims.string * option_val) Prims.list) =
   ("cache_dir", Unset);
   ("cache_off", (Bool false));
   ("compat_pre_core", Unset);
+  ("compat_pre_typed_indexed_effects", (Bool false));
   ("print_cache_version", (Bool false));
   ("cmi", (Bool false));
   ("codegen", Unset);
@@ -455,6 +456,8 @@ let (get_admit_except : unit -> Prims.string FStar_Pervasives_Native.option)
   = fun uu___ -> lookup_opt "admit_except" (as_option as_string)
 let (get_compat_pre_core : unit -> Prims.int FStar_Pervasives_Native.option)
   = fun uu___ -> lookup_opt "compat_pre_core" (as_option as_int)
+let (get_compat_pre_typed_indexed_effects : unit -> Prims.bool) =
+  fun uu___ -> lookup_opt "compat_pre_typed_indexed_effects" as_bool
 let (get_disallow_unification_guards : unit -> Prims.bool) =
   fun uu___ -> lookup_opt "disallow_unification_guards" as_bool
 let (get_already_cached :
@@ -959,7 +962,7 @@ let (interp_quake_arg : Prims.string -> (Prims.int * Prims.int * Prims.bool))
           let uu___ = ios f1 in let uu___1 = ios f2 in (uu___, uu___1, true)
         else failwith "unexpected value for --quake"
     | uu___ -> failwith "unexpected value for --quake"
-let (uu___448 : (((Prims.string -> unit) -> unit) * (Prims.string -> unit)))
+let (uu___449 : (((Prims.string -> unit) -> unit) * (Prims.string -> unit)))
   =
   let cb = FStar_Compiler_Util.mk_ref FStar_Pervasives_Native.None in
   let set1 f =
@@ -971,11 +974,11 @@ let (uu___448 : (((Prims.string -> unit) -> unit) * (Prims.string -> unit)))
     | FStar_Pervasives_Native.Some f -> f msg in
   (set1, call)
 let (set_option_warning_callback_aux : (Prims.string -> unit) -> unit) =
-  match uu___448 with
+  match uu___449 with
   | (set_option_warning_callback_aux1, option_warning_callback) ->
       set_option_warning_callback_aux1
 let (option_warning_callback : Prims.string -> unit) =
-  match uu___448 with
+  match uu___449 with
   | (set_option_warning_callback_aux1, option_warning_callback1) ->
       option_warning_callback1
 let (set_option_warning_callback : (Prims.string -> unit) -> unit) =
@@ -1011,6 +1014,8 @@ let rec (specs_with_types :
       "Admit all queries, except those with label ( symbol,  id)) (e.g. --admit_except '(FStar.Fin.pigeonhole, 1)' or --admit_except FStar.Fin.pigeonhole)");
     (FStar_Getopt.noshort, "compat_pre_core", (IntStr "0, 1, 2"),
       "Retain behavior of the tactic engine prior to the introduction of FStar.TypeChecker.Core (0 is most permissive, 2 is least permissive)");
+    (FStar_Getopt.noshort, "compat_pre_typed_indexed_effects",
+      (Const (Bool true)), "Retain untyped indexed effects implicits");
     (FStar_Getopt.noshort, "disallow_unification_guards", BoolStr,
       "Fail if the SMT guard are produced when the tactic engine re-checks solutions produced by the unifier (default 'false')");
     (FStar_Getopt.noshort, "already_cached",
@@ -1270,7 +1275,7 @@ let rec (specs_with_types :
     (FStar_Getopt.noshort, "tcnorm", BoolStr,
       "Attempt to normalize definitions marked as tcnorm (default 'true')");
     (FStar_Getopt.noshort, "timing", (Const (Bool true)),
-      "Print the time it takes to verify each top-level definition");
+      "Print the time it takes to verify each top-level definition.\n\t\tThis is just an alias for an invocation of the profiler, so it may not work well if combined with --profile.\n\t\tIn particular, it implies --profile_group_by_decls.");
     (FStar_Getopt.noshort, "trace_error", (Const (Bool true)),
       "Don't print an error message; show an exception trace instead");
     (FStar_Getopt.noshort, "ugly", (Const (Bool true)),
@@ -1384,6 +1389,7 @@ let (settable : Prims.string -> Prims.bool) =
     | "admit_except" -> true
     | "admit_smt_queries" -> true
     | "compat_pre_core" -> true
+    | "compat_pre_typed_indexed_effects" -> true
     | "disallow_unification_guards" -> true
     | "debug" -> true
     | "debug_level" -> true
@@ -1477,7 +1483,7 @@ let (settable_specs :
     (FStar_Compiler_List.filter
        (fun uu___ ->
           match uu___ with | (uu___1, x, uu___2, uu___3) -> settable x))
-let (uu___639 :
+let (uu___641 :
   (((unit -> FStar_Getopt.parse_cmdline_res) -> unit) *
     (unit -> FStar_Getopt.parse_cmdline_res)))
   =
@@ -1494,11 +1500,11 @@ let (uu___639 :
   (set1, call)
 let (set_error_flags_callback_aux :
   (unit -> FStar_Getopt.parse_cmdline_res) -> unit) =
-  match uu___639 with
+  match uu___641 with
   | (set_error_flags_callback_aux1, set_error_flags) ->
       set_error_flags_callback_aux1
 let (set_error_flags : unit -> FStar_Getopt.parse_cmdline_res) =
-  match uu___639 with
+  match uu___641 with
   | (set_error_flags_callback_aux1, set_error_flags1) -> set_error_flags1
 let (set_error_flags_callback :
   (unit -> FStar_Getopt.parse_cmdline_res) -> unit) =
@@ -1806,6 +1812,8 @@ let (compat_pre_core_set : unit -> Prims.bool) =
     match uu___1 with
     | FStar_Pervasives_Native.None -> false
     | uu___2 -> true
+let (compat_pre_typed_indexed_effects : unit -> Prims.bool) =
+  fun uu___ -> get_compat_pre_typed_indexed_effects ()
 let (disallow_unification_guards : unit -> Prims.bool) =
   fun uu___ -> get_disallow_unification_guards ()
 let (cache_checked_modules : unit -> Prims.bool) =
@@ -2377,10 +2385,14 @@ let (profile_enabled :
           let uu___ = get_profile_component () in
           matches_namespace_filter_opt phase uu___
       | FStar_Pervasives_Native.Some modul ->
-          (let uu___ = get_profile () in
-           matches_namespace_filter_opt modul uu___) &&
-            (let uu___ = get_profile_component () in
-             matches_namespace_filter_opt phase uu___)
+          ((let uu___ = get_profile () in
+            matches_namespace_filter_opt modul uu___) &&
+             (let uu___ = get_profile_component () in
+              matches_namespace_filter_opt phase uu___))
+            ||
+            (((timing ()) &&
+                (phase = "FStar.TypeChecker.Tc.process_one_decl"))
+               && (should_check modul))
 exception File_argument of Prims.string 
 let (uu___is_File_argument : Prims.exn -> Prims.bool) =
   fun projectee ->

@@ -263,8 +263,8 @@ and comp_typ =
     (term' syntax * arg_qualifier FStar_Pervasives_Native.option) Prims.list ;
   flags: cflag Prims.list }
 and comp' =
-  | Total of (term' syntax * universe FStar_Pervasives_Native.option) 
-  | GTotal of (term' syntax * universe FStar_Pervasives_Native.option) 
+  | Total of term' syntax 
+  | GTotal of term' syntax 
   | Comp of comp_typ 
 and binder =
   {
@@ -645,13 +645,11 @@ let (__proj__Mkcomp_typ__item__flags : comp_typ -> cflag Prims.list) =
     | { comp_univs; effect_name; result_typ; effect_args; flags;_} -> flags
 let (uu___is_Total : comp' -> Prims.bool) =
   fun projectee -> match projectee with | Total _0 -> true | uu___ -> false
-let (__proj__Total__item___0 :
-  comp' -> (term' syntax * universe FStar_Pervasives_Native.option)) =
+let (__proj__Total__item___0 : comp' -> term' syntax) =
   fun projectee -> match projectee with | Total _0 -> _0
 let (uu___is_GTotal : comp' -> Prims.bool) =
   fun projectee -> match projectee with | GTotal _0 -> true | uu___ -> false
-let (__proj__GTotal__item___0 :
-  comp' -> (term' syntax * universe FStar_Pervasives_Native.option)) =
+let (__proj__GTotal__item___0 : comp' -> term' syntax) =
   fun projectee -> match projectee with | GTotal _0 -> _0
 let (uu___is_Comp : comp' -> Prims.bool) =
   fun projectee -> match projectee with | Comp _0 -> true | uu___ -> false
@@ -1127,26 +1125,84 @@ let (__proj__Mkmonad_abbrev__item__parms : monad_abbrev -> binders) =
   fun projectee -> match projectee with | { mabbrev; parms; def;_} -> parms
 let (__proj__Mkmonad_abbrev__item__def : monad_abbrev -> typ) =
   fun projectee -> match projectee with | { mabbrev; parms; def;_} -> def
+type indexed_effect_binder_kind =
+  | Type_binder 
+  | Substitutive_binder 
+  | BindCont_no_abstraction_binder 
+  | Range_binder 
+  | Repr_binder 
+  | Ad_hoc_binder 
+let (uu___is_Type_binder : indexed_effect_binder_kind -> Prims.bool) =
+  fun projectee ->
+    match projectee with | Type_binder -> true | uu___ -> false
+let (uu___is_Substitutive_binder : indexed_effect_binder_kind -> Prims.bool)
+  =
+  fun projectee ->
+    match projectee with | Substitutive_binder -> true | uu___ -> false
+let (uu___is_BindCont_no_abstraction_binder :
+  indexed_effect_binder_kind -> Prims.bool) =
+  fun projectee ->
+    match projectee with
+    | BindCont_no_abstraction_binder -> true
+    | uu___ -> false
+let (uu___is_Range_binder : indexed_effect_binder_kind -> Prims.bool) =
+  fun projectee ->
+    match projectee with | Range_binder -> true | uu___ -> false
+let (uu___is_Repr_binder : indexed_effect_binder_kind -> Prims.bool) =
+  fun projectee ->
+    match projectee with | Repr_binder -> true | uu___ -> false
+let (uu___is_Ad_hoc_binder : indexed_effect_binder_kind -> Prims.bool) =
+  fun projectee ->
+    match projectee with | Ad_hoc_binder -> true | uu___ -> false
+type indexed_effect_combinator_kind =
+  | Substitutive_combinator of indexed_effect_binder_kind Prims.list 
+  | Substitutive_invariant_combinator 
+  | Ad_hoc_combinator 
+let (uu___is_Substitutive_combinator :
+  indexed_effect_combinator_kind -> Prims.bool) =
+  fun projectee ->
+    match projectee with
+    | Substitutive_combinator _0 -> true
+    | uu___ -> false
+let (__proj__Substitutive_combinator__item___0 :
+  indexed_effect_combinator_kind -> indexed_effect_binder_kind Prims.list) =
+  fun projectee -> match projectee with | Substitutive_combinator _0 -> _0
+let (uu___is_Substitutive_invariant_combinator :
+  indexed_effect_combinator_kind -> Prims.bool) =
+  fun projectee ->
+    match projectee with
+    | Substitutive_invariant_combinator -> true
+    | uu___ -> false
+let (uu___is_Ad_hoc_combinator :
+  indexed_effect_combinator_kind -> Prims.bool) =
+  fun projectee ->
+    match projectee with | Ad_hoc_combinator -> true | uu___ -> false
 type sub_eff =
   {
   source: FStar_Ident.lident ;
   target: FStar_Ident.lident ;
   lift_wp: tscheme FStar_Pervasives_Native.option ;
-  lift: tscheme FStar_Pervasives_Native.option }
+  lift: tscheme FStar_Pervasives_Native.option ;
+  kind: indexed_effect_combinator_kind FStar_Pervasives_Native.option }
 let (__proj__Mksub_eff__item__source : sub_eff -> FStar_Ident.lident) =
   fun projectee ->
-    match projectee with | { source; target; lift_wp; lift;_} -> source
+    match projectee with | { source; target; lift_wp; lift; kind;_} -> source
 let (__proj__Mksub_eff__item__target : sub_eff -> FStar_Ident.lident) =
   fun projectee ->
-    match projectee with | { source; target; lift_wp; lift;_} -> target
+    match projectee with | { source; target; lift_wp; lift; kind;_} -> target
 let (__proj__Mksub_eff__item__lift_wp :
   sub_eff -> tscheme FStar_Pervasives_Native.option) =
   fun projectee ->
-    match projectee with | { source; target; lift_wp; lift;_} -> lift_wp
+    match projectee with
+    | { source; target; lift_wp; lift; kind;_} -> lift_wp
 let (__proj__Mksub_eff__item__lift :
   sub_eff -> tscheme FStar_Pervasives_Native.option) =
   fun projectee ->
-    match projectee with | { source; target; lift_wp; lift;_} -> lift
+    match projectee with | { source; target; lift_wp; lift; kind;_} -> lift
+let (__proj__Mksub_eff__item__kind :
+  sub_eff -> indexed_effect_combinator_kind FStar_Pervasives_Native.option) =
+  fun projectee ->
+    match projectee with | { source; target; lift_wp; lift; kind;_} -> kind
 type action =
   {
   action_name: FStar_Ident.lident ;
@@ -1262,9 +1318,18 @@ type layered_eff_combinators =
   {
   l_repr: (tscheme * tscheme) ;
   l_return: (tscheme * tscheme) ;
-  l_bind: (tscheme * tscheme) ;
-  l_subcomp: (tscheme * tscheme) ;
-  l_if_then_else: (tscheme * tscheme) }
+  l_bind:
+    (tscheme * tscheme * indexed_effect_combinator_kind
+      FStar_Pervasives_Native.option)
+    ;
+  l_subcomp:
+    (tscheme * tscheme * indexed_effect_combinator_kind
+      FStar_Pervasives_Native.option)
+    ;
+  l_if_then_else:
+    (tscheme * tscheme * indexed_effect_combinator_kind
+      FStar_Pervasives_Native.option)
+    }
 let (__proj__Mklayered_eff_combinators__item__l_repr :
   layered_eff_combinators -> (tscheme * tscheme)) =
   fun projectee ->
@@ -1276,17 +1341,26 @@ let (__proj__Mklayered_eff_combinators__item__l_return :
     match projectee with
     | { l_repr; l_return; l_bind; l_subcomp; l_if_then_else;_} -> l_return
 let (__proj__Mklayered_eff_combinators__item__l_bind :
-  layered_eff_combinators -> (tscheme * tscheme)) =
+  layered_eff_combinators ->
+    (tscheme * tscheme * indexed_effect_combinator_kind
+      FStar_Pervasives_Native.option))
+  =
   fun projectee ->
     match projectee with
     | { l_repr; l_return; l_bind; l_subcomp; l_if_then_else;_} -> l_bind
 let (__proj__Mklayered_eff_combinators__item__l_subcomp :
-  layered_eff_combinators -> (tscheme * tscheme)) =
+  layered_eff_combinators ->
+    (tscheme * tscheme * indexed_effect_combinator_kind
+      FStar_Pervasives_Native.option))
+  =
   fun projectee ->
     match projectee with
     | { l_repr; l_return; l_bind; l_subcomp; l_if_then_else;_} -> l_subcomp
 let (__proj__Mklayered_eff_combinators__item__l_if_then_else :
-  layered_eff_combinators -> (tscheme * tscheme)) =
+  layered_eff_combinators ->
+    (tscheme * tscheme * indexed_effect_combinator_kind
+      FStar_Pervasives_Native.option))
+  =
   fun projectee ->
     match projectee with
     | { l_repr; l_return; l_bind; l_subcomp; l_if_then_else;_} ->
@@ -1311,13 +1385,27 @@ let (uu___is_Layered_eff : eff_combinators -> Prims.bool) =
 let (__proj__Layered_eff__item___0 :
   eff_combinators -> layered_eff_combinators) =
   fun projectee -> match projectee with | Layered_eff _0 -> _0
+type effect_signature =
+  | Layered_eff_sig of (Prims.int * tscheme) 
+  | WP_eff_sig of tscheme 
+let (uu___is_Layered_eff_sig : effect_signature -> Prims.bool) =
+  fun projectee ->
+    match projectee with | Layered_eff_sig _0 -> true | uu___ -> false
+let (__proj__Layered_eff_sig__item___0 :
+  effect_signature -> (Prims.int * tscheme)) =
+  fun projectee -> match projectee with | Layered_eff_sig _0 -> _0
+let (uu___is_WP_eff_sig : effect_signature -> Prims.bool) =
+  fun projectee ->
+    match projectee with | WP_eff_sig _0 -> true | uu___ -> false
+let (__proj__WP_eff_sig__item___0 : effect_signature -> tscheme) =
+  fun projectee -> match projectee with | WP_eff_sig _0 -> _0
 type eff_decl =
   {
   mname: FStar_Ident.lident ;
   cattributes: cflag Prims.list ;
   univs: univ_names ;
   binders: binders ;
-  signature: tscheme ;
+  signature: effect_signature ;
   combinators: eff_combinators ;
   actions: action Prims.list ;
   eff_attrs: attribute Prims.list }
@@ -1341,7 +1429,7 @@ let (__proj__Mkeff_decl__item__binders : eff_decl -> binders) =
     match projectee with
     | { mname; cattributes; univs; binders = binders1; signature;
         combinators; actions; eff_attrs;_} -> binders1
-let (__proj__Mkeff_decl__item__signature : eff_decl -> tscheme) =
+let (__proj__Mkeff_decl__item__signature : eff_decl -> effect_signature) =
   fun projectee ->
     match projectee with
     | { mname; cattributes; univs; binders = binders1; signature;
@@ -1401,9 +1489,11 @@ type sigelt' =
   | Sig_pragma of pragma 
   | Sig_splice of (FStar_Ident.lident Prims.list * term) 
   | Sig_polymonadic_bind of (FStar_Ident.lident * FStar_Ident.lident *
-  FStar_Ident.lident * tscheme * tscheme) 
+  FStar_Ident.lident * tscheme * tscheme * indexed_effect_combinator_kind
+  FStar_Pervasives_Native.option) 
   | Sig_polymonadic_subcomp of (FStar_Ident.lident * FStar_Ident.lident *
-  tscheme * tscheme) 
+  tscheme * tscheme * indexed_effect_combinator_kind
+  FStar_Pervasives_Native.option) 
   | Sig_fail of (Prims.int Prims.list * Prims.bool * sigelt Prims.list) 
 and sigelt =
   {
@@ -1486,7 +1576,8 @@ let (uu___is_Sig_polymonadic_bind : sigelt' -> Prims.bool) =
 let (__proj__Sig_polymonadic_bind__item___0 :
   sigelt' ->
     (FStar_Ident.lident * FStar_Ident.lident * FStar_Ident.lident * tscheme *
-      tscheme))
+      tscheme * indexed_effect_combinator_kind
+      FStar_Pervasives_Native.option))
   = fun projectee -> match projectee with | Sig_polymonadic_bind _0 -> _0
 let (uu___is_Sig_polymonadic_subcomp : sigelt' -> Prims.bool) =
   fun projectee ->
@@ -1494,8 +1585,10 @@ let (uu___is_Sig_polymonadic_subcomp : sigelt' -> Prims.bool) =
     | Sig_polymonadic_subcomp _0 -> true
     | uu___ -> false
 let (__proj__Sig_polymonadic_subcomp__item___0 :
-  sigelt' -> (FStar_Ident.lident * FStar_Ident.lident * tscheme * tscheme)) =
-  fun projectee -> match projectee with | Sig_polymonadic_subcomp _0 -> _0
+  sigelt' ->
+    (FStar_Ident.lident * FStar_Ident.lident * tscheme * tscheme *
+      indexed_effect_combinator_kind FStar_Pervasives_Native.option))
+  = fun projectee -> match projectee with | Sig_polymonadic_subcomp _0 -> _0
 let (uu___is_Sig_fail : sigelt' -> Prims.bool) =
   fun projectee ->
     match projectee with | Sig_fail _0 -> true | uu___ -> false
@@ -1697,14 +1790,8 @@ let (extend_app : term -> arg -> FStar_Compiler_Range.range -> term) =
   fun t -> fun arg1 -> fun r -> extend_app_n t [arg1] r
 let (mk_Tm_delayed : (term * subst_ts) -> FStar_Compiler_Range.range -> term)
   = fun lr -> fun pos -> mk (Tm_delayed lr) pos
-let (mk_Total' : typ -> universe FStar_Pervasives_Native.option -> comp) =
-  fun t -> fun u -> mk (Total (t, u)) t.pos
-let (mk_GTotal' : typ -> universe FStar_Pervasives_Native.option -> comp) =
-  fun t -> fun u -> mk (GTotal (t, u)) t.pos
-let (mk_Total : typ -> comp) =
-  fun t -> mk_Total' t FStar_Pervasives_Native.None
-let (mk_GTotal : typ -> comp) =
-  fun t -> mk_GTotal' t FStar_Pervasives_Native.None
+let (mk_Total : typ -> comp) = fun t -> mk (Total t) t.pos
+let (mk_GTotal : typ -> comp) = fun t -> mk (GTotal t) t.pos
 let (mk_Comp : comp_typ -> comp) = fun ct -> mk (Comp ct) (ct.result_typ).pos
 let (mk_lb :
   (lbname * univ_name Prims.list * FStar_Ident.lident * typ * term *

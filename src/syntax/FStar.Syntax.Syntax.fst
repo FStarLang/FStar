@@ -132,10 +132,8 @@ let extend_app_n t args' r = match t.n with
     | _ -> mk_Tm_app t args' r
 let extend_app t arg r = extend_app_n t [arg] r
 let mk_Tm_delayed lr pos : term = mk (Tm_delayed lr) pos
-let mk_Total' t  u: comp  = mk (Total(t, u)) t.pos
-let mk_GTotal' t u: comp = mk (GTotal(t, u)) t.pos
-let mk_Total t = mk_Total' t None
-let mk_GTotal t = mk_GTotal' t None
+let mk_Total t = mk (Total t) t.pos
+let mk_GTotal t : comp = mk (GTotal t) t.pos
 let mk_Comp (ct:comp_typ) : comp  = mk (Comp ct) ct.result_typ.pos
 let mk_lb (x, univs, eff, t, e, attrs, pos) = {
     lbname=x;

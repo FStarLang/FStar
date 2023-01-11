@@ -462,18 +462,12 @@ let (subst_comp' :
       | ([]::[], FStar_Syntax_Syntax.NoUseRange) -> t
       | uu___ ->
           (match t.FStar_Syntax_Syntax.n with
-           | FStar_Syntax_Syntax.Total (t1, uopt) ->
+           | FStar_Syntax_Syntax.Total t1 ->
                let uu___1 = subst' s t1 in
-               let uu___2 =
-                 FStar_Compiler_Option.map
-                   (subst_univ (FStar_Pervasives_Native.fst s)) uopt in
-               FStar_Syntax_Syntax.mk_Total' uu___1 uu___2
-           | FStar_Syntax_Syntax.GTotal (t1, uopt) ->
+               FStar_Syntax_Syntax.mk_Total uu___1
+           | FStar_Syntax_Syntax.GTotal t1 ->
                let uu___1 = subst' s t1 in
-               let uu___2 =
-                 FStar_Compiler_Option.map
-                   (subst_univ (FStar_Pervasives_Native.fst s)) uopt in
-               FStar_Syntax_Syntax.mk_GTotal' uu___1 uu___2
+               FStar_Syntax_Syntax.mk_GTotal uu___1
            | FStar_Syntax_Syntax.Comp ct ->
                let uu___1 = subst_comp_typ' s ct in
                FStar_Syntax_Syntax.mk_Comp uu___1)
@@ -764,7 +758,8 @@ let rec (push_subst :
         let uu___ = mk_range t.FStar_Syntax_Syntax.pos s in
         FStar_Syntax_Syntax.mk t' uu___ in
       match t.FStar_Syntax_Syntax.n with
-      | FStar_Syntax_Syntax.Tm_delayed uu___ -> failwith "Impossible"
+      | FStar_Syntax_Syntax.Tm_delayed uu___ ->
+          failwith "Impossible (delayed node in push_subst)"
       | FStar_Syntax_Syntax.Tm_lazy i ->
           (match i.FStar_Syntax_Syntax.lkind with
            | FStar_Syntax_Syntax.Lazy_embedding uu___ ->
@@ -1698,7 +1693,8 @@ let rec (deep_compress :
           FStar_Syntax_Syntax.sort = uu___
         } in
       match t1.FStar_Syntax_Syntax.n with
-      | FStar_Syntax_Syntax.Tm_delayed uu___ -> failwith "Impossible"
+      | FStar_Syntax_Syntax.Tm_delayed uu___ ->
+          failwith "Impossible (delayed node in deep_compress)"
       | FStar_Syntax_Syntax.Tm_fvar uu___ ->
           let uu___1 =
             FStar_Compiler_Util.mk_ref FStar_Pervasives_Native.None in
@@ -2027,20 +2023,14 @@ and (deep_compress_comp :
     fun c ->
       let mk x = FStar_Syntax_Syntax.mk x c.FStar_Syntax_Syntax.pos in
       match c.FStar_Syntax_Syntax.n with
-      | FStar_Syntax_Syntax.Total (t, uopt) ->
-          let uopt1 =
-            FStar_Compiler_Util.map_opt uopt (deep_compress_univ allow_uvars) in
+      | FStar_Syntax_Syntax.Total t ->
           let uu___ =
-            let uu___1 =
-              let uu___2 = deep_compress allow_uvars t in (uu___2, uopt1) in
+            let uu___1 = deep_compress allow_uvars t in
             FStar_Syntax_Syntax.Total uu___1 in
           mk uu___
-      | FStar_Syntax_Syntax.GTotal (t, uopt) ->
-          let uopt1 =
-            FStar_Compiler_Util.map_opt uopt (deep_compress_univ allow_uvars) in
+      | FStar_Syntax_Syntax.GTotal t ->
           let uu___ =
-            let uu___1 =
-              let uu___2 = deep_compress allow_uvars t in (uu___2, uopt1) in
+            let uu___1 = deep_compress allow_uvars t in
             FStar_Syntax_Syntax.GTotal uu___1 in
           mk uu___
       | FStar_Syntax_Syntax.Comp ct ->

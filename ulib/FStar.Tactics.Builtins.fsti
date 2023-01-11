@@ -70,7 +70,7 @@ val recover : #a:Type -> (unit -> Tac a) -> TacS (either exn a)
 (** [norm steps] will call the normalizer on the current goal's
 type and witness, with its reduction behaviour parameterized
 by the flags in [steps].
-Currently, the flags (provided in Prims) are
+Currently, the flags (provided in FStar.Pervasives) are
 [simpl] (do logical simplifications)
 [whnf] (only reduce until weak head-normal-form)
 [primops] (performing primitive reductions, such as arithmetic and
@@ -220,7 +220,13 @@ val t_commute_applied_match : unit -> Tac unit
 (** In case there are goals that are already solved which have
     non-trivial typing guards, make those guards as explicit proof
     obligations in the tactic state, solving any trivial ones by simplification.
-    See tests/bug-reports/Bug2635.fst for some examples *)
+    See tests/bug-reports/Bug2635.fst for some examples
+
+    Update 11/14/2022: with the introduction of the core typechecker,
+    this primitive should no longer be necessary. Try using the compat pre core
+    flags, or `with_compat_pre_core` primitive if your code breaks without
+    this.*)
+[@@deprecated "This will soon be removed, please use compat pre core settings if needed"]
 val gather_or_solve_explicit_guards_for_resolved_goals : unit -> Tac unit
 
 (** [ctrl_rewrite] will traverse the current goal, and call [ctrl]
@@ -412,5 +418,7 @@ This is only exposed as a migration path. Please use
 [@@deprecated "use Reflection.term_eq instead"]
 val term_eq_old : term -> term -> Tac bool
 
-
-val with_compat_pre_core : #a:Type -> int -> (unit -> Tac a) -> Tac a
+(** Runs the input tactic `f` with compat pre core setting `n`.
+It is an escape hatch for maintaining backward compatibility
+for code that breaks with the core typechecker. *)
+val with_compat_pre_core : #a:Type -> n:int -> f:(unit -> Tac a) -> Tac a

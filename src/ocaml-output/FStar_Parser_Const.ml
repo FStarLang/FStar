@@ -281,6 +281,7 @@ let (steps_unfoldonly : FStar_Ident.lident) = psconst "delta_only"
 let (steps_unfoldfully : FStar_Ident.lident) = psconst "delta_fully"
 let (steps_unfoldattr : FStar_Ident.lident) = psconst "delta_attr"
 let (steps_unfoldqual : FStar_Ident.lident) = psconst "delta_qualifier"
+let (steps_unfoldnamespace : FStar_Ident.lident) = psconst "delta_namespace"
 let (steps_unascribe : FStar_Ident.lident) = psconst "unascribe"
 let (steps_nbe : FStar_Ident.lident) = psconst "nbe"
 let (steps_unmeta : FStar_Ident.lident) = psconst "unmeta"
@@ -330,13 +331,12 @@ let (check_with_lid : FStar_Ident.lident) =
     FStar_Compiler_Range.dummyRange
 let (commute_nested_matches_lid : FStar_Ident.lident) =
   psconst "commute_nested_matches"
-let (allow_informative_binders_attr : FStar_Ident.lident) =
-  psconst "allow_informative_binders"
 let (remove_unused_type_parameters_lid : FStar_Ident.lident) =
   psconst "remove_unused_type_parameters"
 let (ite_soundness_by_attr : FStar_Ident.lident) = psconst "ite_soundness_by"
 let (default_effect_attr : FStar_Ident.lident) = psconst "default_effect"
 let (top_level_effect_attr : FStar_Ident.lident) = psconst "top_level_effect"
+let (effect_parameter_attr : FStar_Ident.lident) = psconst "effect_param"
 let (bind_has_range_args_attr : FStar_Ident.lident) =
   psconst "bind_has_range_args"
 let (binder_strictly_positive_attr : FStar_Ident.lident) =

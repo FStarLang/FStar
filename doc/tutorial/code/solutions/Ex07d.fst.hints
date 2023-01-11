@@ -618,10 +618,10 @@
       1,
       [
         "@MaxIFuel_assumption", "@query",
-        "refinement_interpretation_Tm_refine_62ca176a5243b31cd0d74eade88e5b0e"
+        "refinement_interpretation_Tm_refine_e217d9dee4ceb6482fb83e449fb7fc82"
       ],
       0,
-      "fa28984762e5318f72b369ba312d50e2"
+      "98fdedb772c16255ef7ea73a36f0ed3b"
     ],
     [
       "Ex07d.preservation",
@@ -682,7 +682,7 @@
         "typing_tok_Ex07d.TBool@tok"
       ],
       0,
-      "ffdf22b8f89681c41837d53113757304"
+      "72781538b465d3db0a75a492f6411ab6"
     ],
     [
       "Ex07d.typed_step",

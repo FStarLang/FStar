@@ -6,7 +6,7 @@ export FSTAR_HOME?=$(realpath ../..)
 FSTARLANG_ORG_ROOT?=www
 
 # You can set these variables from the command line.
-SPHINXOPTS    = -W
+SPHINXOPTS    =
 SPHINXBUILD   = sphinx-build
 SPHINXPROJ    = FStarBook
 SOURCEDIR     = .
@@ -18,6 +18,18 @@ html: Makefile
 	rm -rf _build/html/static
 	mv _build/html/_static _build/html/static
 
+LATEXFILE=proof-orientedprogramminginf.tex
+
+pdf:
+	@$(SPHINXBUILD) -M latex "$(SOURCEDIR)" "$(BUILDDIR)" $(SPHINXOPTS) $(O)
+	sed -i -e 's|\\chapter|\\part|g' $(BUILDDIR)/latex/$(LATEXFILE)
+	sed -i -e 's|\\section|\\chapter|g' $(BUILDDIR)/latex/$(LATEXFILE)
+	sed -i -e 's|\\subsection|\\section|g' $(BUILDDIR)/latex/$(LATEXFILE)
+	sed -i -e 's|\\subsubsection|\\subsection|g' $(BUILDDIR)/latex/$(LATEXFILE)
+	sed -i -e 's|\\sphinxhref{../code/|\\sphinxhref{https://fstar-lang.org/tutorial/book/code/|g' $(BUILDDIR)/latex/$(LATEXFILE)
+	sed -i -e 's|\\part{Structure of this book}|\\begin{center}\\bigskip{\\Large \\textbf{Structure of this book}}\\bigskip\\end{center}|g' $(BUILDDIR)/latex/$(LATEXFILE)
+	$(MAKE) -C $(BUILDDIR)/latex
+
 # Put it first so that "make" without argument is like "make help".
 help:
 	@$(SPHINXBUILD) -M help "$(SOURCEDIR)" "$(BUILDDIR)" $(SPHINXOPTS) $(O)
@@ -26,6 +38,7 @@ deploy:
 	rm -rf $(FSTARLANG_ORG_ROOT)/tutorial/book/
 	cp -R _build/html $(FSTARLANG_ORG_ROOT)/tutorial/book/
 	cp -R code $(FSTARLANG_ORG_ROOT)/tutorial/book/
+	cp _build/latex/proof-orientedprogramminginf.pdf $(FSTARLANG_ORG_ROOT)/tutorial/proof-oriented-programming-in-fstar.pdf
 
 .PHONY: help Makefile
 

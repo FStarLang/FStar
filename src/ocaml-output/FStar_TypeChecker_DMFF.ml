@@ -64,7 +64,7 @@ let (gen_wps_for_free :
                | FStar_Syntax_Syntax.Tm_arrow (bs, comp) ->
                    let rest =
                      match comp.FStar_Syntax_Syntax.n with
-                     | FStar_Syntax_Syntax.Total (t2, uu___2) -> t2
+                     | FStar_Syntax_Syntax.Total t2 -> t2
                      | uu___2 ->
                          let uu___3 =
                            let uu___4 =
@@ -745,20 +745,28 @@ let (gen_wps_for_free :
                         (binder::[],
                          {
                            FStar_Syntax_Syntax.n = FStar_Syntax_Syntax.GTotal
-                             (b, uu___4);
-                           FStar_Syntax_Syntax.pos = uu___5;
-                           FStar_Syntax_Syntax.vars = uu___6;
-                           FStar_Syntax_Syntax.hash_code = uu___7;_})
+                             b;
+                           FStar_Syntax_Syntax.pos = uu___4;
+                           FStar_Syntax_Syntax.vars = uu___5;
+                           FStar_Syntax_Syntax.hash_code = uu___6;_})
                         ->
                         let a2 =
                           (binder.FStar_Syntax_Syntax.binder_bv).FStar_Syntax_Syntax.sort in
-                        let uu___8 = (is_monotonic a2) || (is_monotonic b) in
-                        if uu___8
+                        let uu___7 = (is_monotonic a2) || (is_monotonic b) in
+                        if uu___7
                         then
                           let a11 =
                             FStar_Syntax_Syntax.gen_bv "a1"
                               FStar_Pervasives_Native.None a2 in
                           let body =
+                            let uu___8 =
+                              let uu___9 =
+                                let uu___10 =
+                                  let uu___11 =
+                                    FStar_Syntax_Syntax.bv_to_name a11 in
+                                  FStar_Syntax_Syntax.as_arg uu___11 in
+                                [uu___10] in
+                              FStar_Syntax_Util.mk_app x uu___9 in
                             let uu___9 =
                               let uu___10 =
                                 let uu___11 =
@@ -766,16 +774,8 @@ let (gen_wps_for_free :
                                     FStar_Syntax_Syntax.bv_to_name a11 in
                                   FStar_Syntax_Syntax.as_arg uu___12 in
                                 [uu___11] in
-                              FStar_Syntax_Util.mk_app x uu___10 in
-                            let uu___10 =
-                              let uu___11 =
-                                let uu___12 =
-                                  let uu___13 =
-                                    FStar_Syntax_Syntax.bv_to_name a11 in
-                                  FStar_Syntax_Syntax.as_arg uu___13 in
-                                [uu___12] in
-                              FStar_Syntax_Util.mk_app y uu___11 in
-                            mk_rel1 b uu___9 uu___10 in
+                              FStar_Syntax_Util.mk_app y uu___10 in
+                            mk_rel1 b uu___8 uu___9 in
                           mk_forall a11 body
                         else
                           (let a11 =
@@ -785,51 +785,59 @@ let (gen_wps_for_free :
                              FStar_Syntax_Syntax.gen_bv "a2"
                                FStar_Pervasives_Native.None a2 in
                            let body =
+                             let uu___9 =
+                               let uu___10 =
+                                 FStar_Syntax_Syntax.bv_to_name a11 in
+                               let uu___11 =
+                                 FStar_Syntax_Syntax.bv_to_name a21 in
+                               mk_rel1 a2 uu___10 uu___11 in
                              let uu___10 =
                                let uu___11 =
-                                 FStar_Syntax_Syntax.bv_to_name a11 in
-                               let uu___12 =
-                                 FStar_Syntax_Syntax.bv_to_name a21 in
-                               mk_rel1 a2 uu___11 uu___12 in
-                             let uu___11 =
+                                 let uu___12 =
+                                   let uu___13 =
+                                     let uu___14 =
+                                       FStar_Syntax_Syntax.bv_to_name a11 in
+                                     FStar_Syntax_Syntax.as_arg uu___14 in
+                                   [uu___13] in
+                                 FStar_Syntax_Util.mk_app x uu___12 in
                                let uu___12 =
                                  let uu___13 =
                                    let uu___14 =
                                      let uu___15 =
-                                       FStar_Syntax_Syntax.bv_to_name a11 in
+                                       FStar_Syntax_Syntax.bv_to_name a21 in
                                      FStar_Syntax_Syntax.as_arg uu___15 in
                                    [uu___14] in
-                                 FStar_Syntax_Util.mk_app x uu___13 in
-                               let uu___13 =
-                                 let uu___14 =
-                                   let uu___15 =
-                                     let uu___16 =
-                                       FStar_Syntax_Syntax.bv_to_name a21 in
-                                     FStar_Syntax_Syntax.as_arg uu___16 in
-                                   [uu___15] in
-                                 FStar_Syntax_Util.mk_app y uu___14 in
-                               mk_rel1 b uu___12 uu___13 in
-                             FStar_Syntax_Util.mk_imp uu___10 uu___11 in
-                           let uu___10 = mk_forall a21 body in
-                           mk_forall a11 uu___10)
+                                 FStar_Syntax_Util.mk_app y uu___13 in
+                               mk_rel1 b uu___11 uu___12 in
+                             FStar_Syntax_Util.mk_imp uu___9 uu___10 in
+                           let uu___9 = mk_forall a21 body in
+                           mk_forall a11 uu___9)
                     | FStar_Syntax_Syntax.Tm_arrow
                         (binder::[],
                          {
                            FStar_Syntax_Syntax.n = FStar_Syntax_Syntax.Total
-                             (b, uu___4);
-                           FStar_Syntax_Syntax.pos = uu___5;
-                           FStar_Syntax_Syntax.vars = uu___6;
-                           FStar_Syntax_Syntax.hash_code = uu___7;_})
+                             b;
+                           FStar_Syntax_Syntax.pos = uu___4;
+                           FStar_Syntax_Syntax.vars = uu___5;
+                           FStar_Syntax_Syntax.hash_code = uu___6;_})
                         ->
                         let a2 =
                           (binder.FStar_Syntax_Syntax.binder_bv).FStar_Syntax_Syntax.sort in
-                        let uu___8 = (is_monotonic a2) || (is_monotonic b) in
-                        if uu___8
+                        let uu___7 = (is_monotonic a2) || (is_monotonic b) in
+                        if uu___7
                         then
                           let a11 =
                             FStar_Syntax_Syntax.gen_bv "a1"
                               FStar_Pervasives_Native.None a2 in
                           let body =
+                            let uu___8 =
+                              let uu___9 =
+                                let uu___10 =
+                                  let uu___11 =
+                                    FStar_Syntax_Syntax.bv_to_name a11 in
+                                  FStar_Syntax_Syntax.as_arg uu___11 in
+                                [uu___10] in
+                              FStar_Syntax_Util.mk_app x uu___9 in
                             let uu___9 =
                               let uu___10 =
                                 let uu___11 =
@@ -837,16 +845,8 @@ let (gen_wps_for_free :
                                     FStar_Syntax_Syntax.bv_to_name a11 in
                                   FStar_Syntax_Syntax.as_arg uu___12 in
                                 [uu___11] in
-                              FStar_Syntax_Util.mk_app x uu___10 in
-                            let uu___10 =
-                              let uu___11 =
-                                let uu___12 =
-                                  let uu___13 =
-                                    FStar_Syntax_Syntax.bv_to_name a11 in
-                                  FStar_Syntax_Syntax.as_arg uu___13 in
-                                [uu___12] in
-                              FStar_Syntax_Util.mk_app y uu___11 in
-                            mk_rel1 b uu___9 uu___10 in
+                              FStar_Syntax_Util.mk_app y uu___10 in
+                            mk_rel1 b uu___8 uu___9 in
                           mk_forall a11 body
                         else
                           (let a11 =
@@ -856,33 +856,33 @@ let (gen_wps_for_free :
                              FStar_Syntax_Syntax.gen_bv "a2"
                                FStar_Pervasives_Native.None a2 in
                            let body =
+                             let uu___9 =
+                               let uu___10 =
+                                 FStar_Syntax_Syntax.bv_to_name a11 in
+                               let uu___11 =
+                                 FStar_Syntax_Syntax.bv_to_name a21 in
+                               mk_rel1 a2 uu___10 uu___11 in
                              let uu___10 =
                                let uu___11 =
-                                 FStar_Syntax_Syntax.bv_to_name a11 in
-                               let uu___12 =
-                                 FStar_Syntax_Syntax.bv_to_name a21 in
-                               mk_rel1 a2 uu___11 uu___12 in
-                             let uu___11 =
+                                 let uu___12 =
+                                   let uu___13 =
+                                     let uu___14 =
+                                       FStar_Syntax_Syntax.bv_to_name a11 in
+                                     FStar_Syntax_Syntax.as_arg uu___14 in
+                                   [uu___13] in
+                                 FStar_Syntax_Util.mk_app x uu___12 in
                                let uu___12 =
                                  let uu___13 =
                                    let uu___14 =
                                      let uu___15 =
-                                       FStar_Syntax_Syntax.bv_to_name a11 in
+                                       FStar_Syntax_Syntax.bv_to_name a21 in
                                      FStar_Syntax_Syntax.as_arg uu___15 in
                                    [uu___14] in
-                                 FStar_Syntax_Util.mk_app x uu___13 in
-                               let uu___13 =
-                                 let uu___14 =
-                                   let uu___15 =
-                                     let uu___16 =
-                                       FStar_Syntax_Syntax.bv_to_name a21 in
-                                     FStar_Syntax_Syntax.as_arg uu___16 in
-                                   [uu___15] in
-                                 FStar_Syntax_Util.mk_app y uu___14 in
-                               mk_rel1 b uu___12 uu___13 in
-                             FStar_Syntax_Util.mk_imp uu___10 uu___11 in
-                           let uu___10 = mk_forall a21 body in
-                           mk_forall a11 uu___10)
+                                 FStar_Syntax_Util.mk_app y uu___13 in
+                               mk_rel1 b uu___11 uu___12 in
+                             FStar_Syntax_Util.mk_imp uu___9 uu___10 in
+                           let uu___9 = mk_forall a21 body in
+                           mk_forall a11 uu___9)
                     | FStar_Syntax_Syntax.Tm_arrow (binder::binders1, comp)
                         ->
                         let t2 =
@@ -968,40 +968,40 @@ let (gen_wps_for_free :
                           (binders1,
                            {
                              FStar_Syntax_Syntax.n =
-                               FStar_Syntax_Syntax.GTotal (b, uu___4);
-                             FStar_Syntax_Syntax.pos = uu___5;
-                             FStar_Syntax_Syntax.vars = uu___6;
-                             FStar_Syntax_Syntax.hash_code = uu___7;_})
+                               FStar_Syntax_Syntax.GTotal b;
+                             FStar_Syntax_Syntax.pos = uu___4;
+                             FStar_Syntax_Syntax.vars = uu___5;
+                             FStar_Syntax_Syntax.hash_code = uu___6;_})
                           ->
                           let bvs =
                             FStar_Compiler_List.mapi
                               (fun i ->
-                                 fun uu___8 ->
-                                   match uu___8 with
+                                 fun uu___7 ->
+                                   match uu___7 with
                                    | { FStar_Syntax_Syntax.binder_bv = bv;
                                        FStar_Syntax_Syntax.binder_qual = q;
                                        FStar_Syntax_Syntax.binder_attrs =
-                                         uu___9;_}
+                                         uu___8;_}
                                        ->
-                                       let uu___10 =
-                                         let uu___11 =
+                                       let uu___9 =
+                                         let uu___10 =
                                            FStar_Compiler_Util.string_of_int
                                              i in
-                                         Prims.op_Hat "a" uu___11 in
-                                       FStar_Syntax_Syntax.gen_bv uu___10
+                                         Prims.op_Hat "a" uu___10 in
+                                       FStar_Syntax_Syntax.gen_bv uu___9
                                          FStar_Pervasives_Native.None
                                          bv.FStar_Syntax_Syntax.sort)
                               binders1 in
                           let args =
                             FStar_Compiler_List.map
                               (fun ai ->
-                                 let uu___8 =
+                                 let uu___7 =
                                    FStar_Syntax_Syntax.bv_to_name ai in
-                                 FStar_Syntax_Syntax.as_arg uu___8) bvs in
+                                 FStar_Syntax_Syntax.as_arg uu___7) bvs in
                           let body =
-                            let uu___8 = FStar_Syntax_Util.mk_app x args in
-                            let uu___9 = FStar_Syntax_Util.mk_app y args in
-                            mk_stronger b uu___8 uu___9 in
+                            let uu___7 = FStar_Syntax_Util.mk_app x args in
+                            let uu___8 = FStar_Syntax_Util.mk_app y args in
+                            mk_stronger b uu___7 uu___8 in
                           FStar_Compiler_List.fold_right
                             (fun bv -> fun body1 -> mk_forall bv body1) bvs
                             body
@@ -1009,40 +1009,40 @@ let (gen_wps_for_free :
                           (binders1,
                            {
                              FStar_Syntax_Syntax.n =
-                               FStar_Syntax_Syntax.Total (b, uu___4);
-                             FStar_Syntax_Syntax.pos = uu___5;
-                             FStar_Syntax_Syntax.vars = uu___6;
-                             FStar_Syntax_Syntax.hash_code = uu___7;_})
+                               FStar_Syntax_Syntax.Total b;
+                             FStar_Syntax_Syntax.pos = uu___4;
+                             FStar_Syntax_Syntax.vars = uu___5;
+                             FStar_Syntax_Syntax.hash_code = uu___6;_})
                           ->
                           let bvs =
                             FStar_Compiler_List.mapi
                               (fun i ->
-                                 fun uu___8 ->
-                                   match uu___8 with
+                                 fun uu___7 ->
+                                   match uu___7 with
                                    | { FStar_Syntax_Syntax.binder_bv = bv;
                                        FStar_Syntax_Syntax.binder_qual = q;
                                        FStar_Syntax_Syntax.binder_attrs =
-                                         uu___9;_}
+                                         uu___8;_}
                                        ->
-                                       let uu___10 =
-                                         let uu___11 =
+                                       let uu___9 =
+                                         let uu___10 =
                                            FStar_Compiler_Util.string_of_int
                                              i in
-                                         Prims.op_Hat "a" uu___11 in
-                                       FStar_Syntax_Syntax.gen_bv uu___10
+                                         Prims.op_Hat "a" uu___10 in
+                                       FStar_Syntax_Syntax.gen_bv uu___9
                                          FStar_Pervasives_Native.None
                                          bv.FStar_Syntax_Syntax.sort)
                               binders1 in
                           let args =
                             FStar_Compiler_List.map
                               (fun ai ->
-                                 let uu___8 =
+                                 let uu___7 =
                                    FStar_Syntax_Syntax.bv_to_name ai in
-                                 FStar_Syntax_Syntax.as_arg uu___8) bvs in
+                                 FStar_Syntax_Syntax.as_arg uu___7) bvs in
                           let body =
-                            let uu___8 = FStar_Syntax_Util.mk_app x args in
-                            let uu___9 = FStar_Syntax_Util.mk_app y args in
-                            mk_stronger b uu___8 uu___9 in
+                            let uu___7 = FStar_Syntax_Util.mk_app x args in
+                            let uu___8 = FStar_Syntax_Util.mk_app y args in
+                            mk_stronger b uu___7 uu___8 in
                           FStar_Compiler_List.fold_right
                             (fun bv -> fun body1 -> mk_forall bv body1) bvs
                             body
@@ -1311,7 +1311,7 @@ let (nm_of_comp : FStar_Syntax_Syntax.comp' FStar_Syntax_Syntax.syntax -> nm)
   =
   fun c ->
     match c.FStar_Syntax_Syntax.n with
-    | FStar_Syntax_Syntax.Total (t, uu___) -> N t
+    | FStar_Syntax_Syntax.Total t -> N t
     | FStar_Syntax_Syntax.Comp c1 when
         FStar_Compiler_Effect.op_Bar_Greater c1.FStar_Syntax_Syntax.flags
           (FStar_Compiler_Util.for_some
@@ -1427,21 +1427,19 @@ and (star_type' :
           (match t1.FStar_Syntax_Syntax.n with
            | FStar_Syntax_Syntax.Tm_arrow
                (uu___1,
-                {
-                  FStar_Syntax_Syntax.n = FStar_Syntax_Syntax.GTotal
-                    (hn, uu___2);
-                  FStar_Syntax_Syntax.pos = uu___3;
-                  FStar_Syntax_Syntax.vars = uu___4;
-                  FStar_Syntax_Syntax.hash_code = uu___5;_})
+                { FStar_Syntax_Syntax.n = FStar_Syntax_Syntax.GTotal hn;
+                  FStar_Syntax_Syntax.pos = uu___2;
+                  FStar_Syntax_Syntax.vars = uu___3;
+                  FStar_Syntax_Syntax.hash_code = uu___4;_})
                ->
-               let uu___6 =
-                 let uu___7 =
-                   let uu___8 =
-                     let uu___9 = star_type' env1 hn in
-                     FStar_Syntax_Syntax.mk_GTotal uu___9 in
-                   (binders1, uu___8) in
-                 FStar_Syntax_Syntax.Tm_arrow uu___7 in
-               mk uu___6
+               let uu___5 =
+                 let uu___6 =
+                   let uu___7 =
+                     let uu___8 = star_type' env1 hn in
+                     FStar_Syntax_Syntax.mk_GTotal uu___8 in
+                   (binders1, uu___7) in
+                 FStar_Syntax_Syntax.Tm_arrow uu___6 in
+               mk uu___5
            | uu___1 ->
                let uu___2 = is_monadic_arrow t1.FStar_Syntax_Syntax.n in
                (match uu___2 with
@@ -2530,15 +2528,13 @@ and (infer :
                  match uu___2 with
                  | FStar_Syntax_Syntax.Tm_arrow
                      (binders,
-                      {
-                        FStar_Syntax_Syntax.n = FStar_Syntax_Syntax.Total
-                          (t1, uu___3);
-                        FStar_Syntax_Syntax.pos = uu___4;
-                        FStar_Syntax_Syntax.vars = uu___5;
-                        FStar_Syntax_Syntax.hash_code = uu___6;_})
+                      { FStar_Syntax_Syntax.n = FStar_Syntax_Syntax.Total t1;
+                        FStar_Syntax_Syntax.pos = uu___3;
+                        FStar_Syntax_Syntax.vars = uu___4;
+                        FStar_Syntax_Syntax.hash_code = uu___5;_})
                      when is_arrow t1 ->
-                     let uu___7 = flatten t1 in
-                     (match uu___7 with
+                     let uu___6 = flatten t1 in
+                     (match uu___6 with
                       | (binders', comp) ->
                           ((FStar_Compiler_List.op_At binders binders'),
                             comp))
@@ -3503,8 +3499,14 @@ let (cps_and_elaborate :
   fun env1 ->
     fun ed ->
       let uu___ =
-        FStar_Syntax_Subst.open_term ed.FStar_Syntax_Syntax.binders
-          (FStar_Pervasives_Native.snd ed.FStar_Syntax_Syntax.signature) in
+        let uu___1 =
+          let uu___2 =
+            FStar_Compiler_Effect.op_Bar_Greater
+              ed.FStar_Syntax_Syntax.signature
+              FStar_Syntax_Util.effect_sig_ts in
+          FStar_Compiler_Effect.op_Bar_Greater uu___2
+            FStar_Pervasives_Native.snd in
+        FStar_Syntax_Subst.open_term ed.FStar_Syntax_Syntax.binders uu___1 in
       match uu___ with
       | (effect_binders_un, signature_un) ->
           let uu___1 =
@@ -4626,10 +4628,13 @@ let (cps_and_elaborate :
                                                            effect_binders1 in
                                                        let uu___21 =
                                                          let uu___22 =
-                                                           FStar_Syntax_Subst.close
-                                                             effect_binders1
-                                                             effect_signature in
-                                                         ([], uu___22) in
+                                                           let uu___23 =
+                                                             FStar_Syntax_Subst.close
+                                                               effect_binders1
+                                                               effect_signature in
+                                                           ([], uu___23) in
+                                                         FStar_Syntax_Syntax.WP_eff_sig
+                                                           uu___22 in
                                                        {
                                                          FStar_Syntax_Syntax.mname
                                                            =
@@ -4703,6 +4708,9 @@ let (cps_and_elaborate :
                                                                    FStar_Syntax_Syntax.lift_wp
                                                                     = uu___22;
                                                                    FStar_Syntax_Syntax.lift
+                                                                    =
+                                                                    FStar_Pervasives_Native.None;
+                                                                   FStar_Syntax_Syntax.kind
                                                                     =
                                                                     FStar_Pervasives_Native.None
                                                                  } in

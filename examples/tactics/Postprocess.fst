@@ -17,17 +17,18 @@ module Postprocess
 
 open FStar.Tactics
 
-let lem () : Lemma (1 == 2) = admit ()
+assume val foo : int -> int
+assume val lem : unit -> Lemma (foo 1 == foo 2)
 let tau () = apply_lemma (`lem)
 
 [@@(postprocess_with tau)]
-let x : int = 1
+let x : int = foo 1
 
 [@@(postprocess_for_extraction_with tau)]
-let y : int = 1
+let y : int = foo 1
 
-let _ = assert (x == 2)
-let _ = assert (y == 1) // but `2` in extracted code
+let _ = assert (x == foo 2)
+let _ = assert (y == foo 1) // but `foo 2` in extracted code
 
 (* More hardcore transformations *)
 

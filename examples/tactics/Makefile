@@ -1,7 +1,5 @@
 # Poly files are here for benchmarking, and expected to fail without tactics
-EXCLUDED_FSTAR_FILES=Launch.fst CanonDeep.fst Poly1.fst Poly2.fst \
-		     StringPrinterTest.fst StringPrinterTest.Aux.fst ReifiedTc.fst
-		     # ^ these last 3 should be fixed and restored
+EXCLUDED_FSTAR_FILES=Launch.fst Poly1.fst Poly2.fst
 
 ifndef KRML_HOME
   EXCLUDED_FSTAR_FILES += $(wildcard StringPrinter*)

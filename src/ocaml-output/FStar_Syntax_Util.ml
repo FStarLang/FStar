@@ -398,83 +398,20 @@ let (comp_flags :
     | FStar_Syntax_Syntax.Total uu___ -> [FStar_Syntax_Syntax.TOTAL]
     | FStar_Syntax_Syntax.GTotal uu___ -> [FStar_Syntax_Syntax.SOMETRIVIAL]
     | FStar_Syntax_Syntax.Comp ct -> ct.FStar_Syntax_Syntax.flags
-let (comp_to_comp_typ_nouniv :
-  FStar_Syntax_Syntax.comp -> FStar_Syntax_Syntax.comp_typ) =
-  fun c ->
-    match c.FStar_Syntax_Syntax.n with
-    | FStar_Syntax_Syntax.Comp c1 -> c1
-    | FStar_Syntax_Syntax.Total (t, u_opt) ->
-        let uu___ =
-          let uu___1 = FStar_Compiler_Util.map_opt u_opt (fun x -> [x]) in
-          FStar_Compiler_Util.dflt [] uu___1 in
-        {
-          FStar_Syntax_Syntax.comp_univs = uu___;
-          FStar_Syntax_Syntax.effect_name = (comp_effect_name c);
-          FStar_Syntax_Syntax.result_typ = t;
-          FStar_Syntax_Syntax.effect_args = [];
-          FStar_Syntax_Syntax.flags = (comp_flags c)
-        }
-    | FStar_Syntax_Syntax.GTotal (t, u_opt) ->
-        let uu___ =
-          let uu___1 = FStar_Compiler_Util.map_opt u_opt (fun x -> [x]) in
-          FStar_Compiler_Util.dflt [] uu___1 in
-        {
-          FStar_Syntax_Syntax.comp_univs = uu___;
-          FStar_Syntax_Syntax.effect_name = (comp_effect_name c);
-          FStar_Syntax_Syntax.result_typ = t;
-          FStar_Syntax_Syntax.effect_args = [];
-          FStar_Syntax_Syntax.flags = (comp_flags c)
-        }
-let (comp_set_flags :
+let (comp_eff_name_res_and_args :
   FStar_Syntax_Syntax.comp ->
-    FStar_Syntax_Syntax.cflag Prims.list ->
-      FStar_Syntax_Syntax.comp' FStar_Syntax_Syntax.syntax)
+    (FStar_Ident.lident * FStar_Syntax_Syntax.typ * FStar_Syntax_Syntax.args))
   =
   fun c ->
-    fun f ->
-      let uu___ =
-        let uu___1 =
-          let uu___2 = comp_to_comp_typ_nouniv c in
-          {
-            FStar_Syntax_Syntax.comp_univs =
-              (uu___2.FStar_Syntax_Syntax.comp_univs);
-            FStar_Syntax_Syntax.effect_name =
-              (uu___2.FStar_Syntax_Syntax.effect_name);
-            FStar_Syntax_Syntax.result_typ =
-              (uu___2.FStar_Syntax_Syntax.result_typ);
-            FStar_Syntax_Syntax.effect_args =
-              (uu___2.FStar_Syntax_Syntax.effect_args);
-            FStar_Syntax_Syntax.flags = f
-          } in
-        FStar_Syntax_Syntax.Comp uu___1 in
-      {
-        FStar_Syntax_Syntax.n = uu___;
-        FStar_Syntax_Syntax.pos = (c.FStar_Syntax_Syntax.pos);
-        FStar_Syntax_Syntax.vars = (c.FStar_Syntax_Syntax.vars);
-        FStar_Syntax_Syntax.hash_code = (c.FStar_Syntax_Syntax.hash_code)
-      }
-let (comp_to_comp_typ :
-  FStar_Syntax_Syntax.comp -> FStar_Syntax_Syntax.comp_typ) =
-  fun c ->
     match c.FStar_Syntax_Syntax.n with
-    | FStar_Syntax_Syntax.Comp c1 -> c1
-    | FStar_Syntax_Syntax.Total (t, FStar_Pervasives_Native.Some u) ->
-        {
-          FStar_Syntax_Syntax.comp_univs = [u];
-          FStar_Syntax_Syntax.effect_name = (comp_effect_name c);
-          FStar_Syntax_Syntax.result_typ = t;
-          FStar_Syntax_Syntax.effect_args = [];
-          FStar_Syntax_Syntax.flags = (comp_flags c)
-        }
-    | FStar_Syntax_Syntax.GTotal (t, FStar_Pervasives_Native.Some u) ->
-        {
-          FStar_Syntax_Syntax.comp_univs = [u];
-          FStar_Syntax_Syntax.effect_name = (comp_effect_name c);
-          FStar_Syntax_Syntax.result_typ = t;
-          FStar_Syntax_Syntax.effect_args = [];
-          FStar_Syntax_Syntax.flags = (comp_flags c)
-        }
-    | uu___ -> failwith "Assertion failed: Computation type without universe"
+    | FStar_Syntax_Syntax.Total t ->
+        (FStar_Parser_Const.effect_Tot_lid, t, [])
+    | FStar_Syntax_Syntax.GTotal t ->
+        (FStar_Parser_Const.effect_GTot_lid, t, [])
+    | FStar_Syntax_Syntax.Comp c1 ->
+        ((c1.FStar_Syntax_Syntax.effect_name),
+          (c1.FStar_Syntax_Syntax.result_typ),
+          (c1.FStar_Syntax_Syntax.effect_args))
 let (effect_indices_from_repr :
   FStar_Syntax_Syntax.term ->
     Prims.bool ->
@@ -500,12 +437,15 @@ let (effect_indices_from_repr :
             (match repr1.FStar_Syntax_Syntax.n with
              | FStar_Syntax_Syntax.Tm_arrow (uu___1, c) ->
                  let uu___2 =
-                   FStar_Compiler_Effect.op_Bar_Greater c comp_to_comp_typ in
+                   FStar_Compiler_Effect.op_Bar_Greater c
+                     comp_eff_name_res_and_args in
                  FStar_Compiler_Effect.op_Bar_Greater uu___2
-                   (fun ct ->
-                      FStar_Compiler_Effect.op_Bar_Greater
-                        ct.FStar_Syntax_Syntax.effect_args
-                        (FStar_Compiler_List.map FStar_Pervasives_Native.fst))
+                   (fun uu___3 ->
+                      match uu___3 with
+                      | (uu___4, uu___5, args) ->
+                          FStar_Compiler_Effect.op_Bar_Greater args
+                            (FStar_Compiler_List.map
+                               FStar_Pervasives_Native.fst))
              | uu___1 -> err1 ())
 let (destruct_comp :
   FStar_Syntax_Syntax.comp_typ ->
@@ -735,8 +675,8 @@ let (comp_result :
   =
   fun c ->
     match c.FStar_Syntax_Syntax.n with
-    | FStar_Syntax_Syntax.Total (t, uu___) -> t
-    | FStar_Syntax_Syntax.GTotal (t, uu___) -> t
+    | FStar_Syntax_Syntax.Total t -> t
+    | FStar_Syntax_Syntax.GTotal t -> t
     | FStar_Syntax_Syntax.Comp ct -> ct.FStar_Syntax_Syntax.result_typ
 let (set_result_typ :
   FStar_Syntax_Syntax.comp' FStar_Syntax_Syntax.syntax ->
@@ -1253,10 +1193,10 @@ and (eq_comp :
   fun c1 ->
     fun c2 ->
       match ((c1.FStar_Syntax_Syntax.n), (c2.FStar_Syntax_Syntax.n)) with
-      | (FStar_Syntax_Syntax.Total (t1, u1opt), FStar_Syntax_Syntax.Total
-         (t2, u2opt)) -> eq_tm t1 t2
-      | (FStar_Syntax_Syntax.GTotal (t1, u1opt), FStar_Syntax_Syntax.GTotal
-         (t2, u2opt)) -> eq_tm t1 t2
+      | (FStar_Syntax_Syntax.Total t1, FStar_Syntax_Syntax.Total t2) ->
+          eq_tm t1 t2
+      | (FStar_Syntax_Syntax.GTotal t1, FStar_Syntax_Syntax.GTotal t2) ->
+          eq_tm t1 t2
       | (FStar_Syntax_Syntax.Comp ct1, FStar_Syntax_Syntax.Comp ct2) ->
           let uu___ =
             let uu___1 =
@@ -1735,21 +1675,21 @@ let (flat_arrow :
       match uu___ with
       | FStar_Syntax_Syntax.Tm_arrow (bs1, c1) ->
           (match c1.FStar_Syntax_Syntax.n with
-           | FStar_Syntax_Syntax.Total (tres, uu___1) ->
-               let uu___2 =
-                 let uu___3 = FStar_Syntax_Subst.compress tres in
-                 uu___3.FStar_Syntax_Syntax.n in
-               (match uu___2 with
+           | FStar_Syntax_Syntax.Total tres ->
+               let uu___1 =
+                 let uu___2 = FStar_Syntax_Subst.compress tres in
+                 uu___2.FStar_Syntax_Syntax.n in
+               (match uu___1 with
                 | FStar_Syntax_Syntax.Tm_arrow (bs', c') ->
                     FStar_Syntax_Syntax.mk
                       (FStar_Syntax_Syntax.Tm_arrow
                          ((FStar_Compiler_List.op_At bs1 bs'), c'))
                       t.FStar_Syntax_Syntax.pos
-                | uu___3 -> t)
+                | uu___2 -> t)
            | uu___1 -> t)
       | uu___1 -> t
 let rec (canon_arrow :
-  FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax ->
+  FStar_Syntax_Syntax.term ->
     FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax)
   =
   fun t ->
@@ -1760,9 +1700,8 @@ let rec (canon_arrow :
     | FStar_Syntax_Syntax.Tm_arrow (bs, c) ->
         let cn =
           match c.FStar_Syntax_Syntax.n with
-          | FStar_Syntax_Syntax.Total (t1, u) ->
-              let uu___1 = let uu___2 = canon_arrow t1 in (uu___2, u) in
-              FStar_Syntax_Syntax.Total uu___1
+          | FStar_Syntax_Syntax.Total t1 ->
+              let uu___1 = canon_arrow t1 in FStar_Syntax_Syntax.Total uu___1
           | uu___1 -> c.FStar_Syntax_Syntax.n in
         let c1 =
           {
@@ -1884,15 +1823,15 @@ let (let_rec_arity :
           let uu___ = FStar_Syntax_Subst.open_comp bs c in
           (match uu___ with
            | (bs1, c1) ->
-               let ct = comp_to_comp_typ c1 in
                let uu___1 =
-                 FStar_Compiler_Effect.op_Bar_Greater
-                   ct.FStar_Syntax_Syntax.flags
+                 let uu___2 =
+                   FStar_Compiler_Effect.op_Bar_Greater c1 comp_flags in
+                 FStar_Compiler_Effect.op_Bar_Greater uu___2
                    (FStar_Compiler_Util.find_opt
-                      (fun uu___2 ->
-                         match uu___2 with
-                         | FStar_Syntax_Syntax.DECREASES uu___3 -> true
-                         | uu___3 -> false)) in
+                      (fun uu___3 ->
+                         match uu___3 with
+                         | FStar_Syntax_Syntax.DECREASES uu___4 -> true
+                         | uu___4 -> false)) in
                (match uu___1 with
                 | FStar_Pervasives_Native.Some (FStar_Syntax_Syntax.DECREASES
                     d) -> (bs1, (FStar_Pervasives_Native.Some d))
@@ -2224,6 +2163,10 @@ let (type_u :
       FStar_Syntax_Syntax.mk (FStar_Syntax_Syntax.Tm_type u)
         FStar_Compiler_Range.dummyRange in
     (uu___1, u)
+let (type_with_u : FStar_Syntax_Syntax.universe -> FStar_Syntax_Syntax.typ) =
+  fun u ->
+    FStar_Syntax_Syntax.mk (FStar_Syntax_Syntax.Tm_type u)
+      FStar_Compiler_Range.dummyRange
 let (attr_eq :
   FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.term -> Prims.bool) =
   fun a ->
@@ -3334,9 +3277,7 @@ let (destruct_typ_as_formula :
                if uu___2
                then FStar_Pervasives_Native.None
                else
-                 (let q =
-                    let uu___4 = comp_to_comp_typ_nouniv c in
-                    uu___4.FStar_Syntax_Syntax.result_typ in
+                 (let q = comp_result c in
                   let uu___4 = is_free_in b.FStar_Syntax_Syntax.binder_bv q in
                   if uu___4
                   then
@@ -3898,17 +3839,17 @@ and (comp_eq_dbg :
   fun dbg ->
     fun c1 ->
       fun c2 ->
-        let c11 = comp_to_comp_typ_nouniv c1 in
-        let c21 = comp_to_comp_typ_nouniv c2 in
-        ((let uu___ =
-            FStar_Ident.lid_equals c11.FStar_Syntax_Syntax.effect_name
-              c21.FStar_Syntax_Syntax.effect_name in
-          check "comp eff" uu___) &&
-           (let uu___ =
-              term_eq_dbg dbg c11.FStar_Syntax_Syntax.result_typ
-                c21.FStar_Syntax_Syntax.result_typ in
-            check "comp result typ" uu___))
-          && true
+        let uu___ = comp_eff_name_res_and_args c1 in
+        match uu___ with
+        | (eff1, res1, args1) ->
+            let uu___1 = comp_eff_name_res_and_args c2 in
+            (match uu___1 with
+             | (eff2, res2, args2) ->
+                 ((let uu___2 = FStar_Ident.lid_equals eff1 eff2 in
+                   check "comp eff" uu___2) &&
+                    (let uu___2 = term_eq_dbg dbg res1 res2 in
+                     check "comp result typ" uu___2))
+                   && true)
 and (branch_eq_dbg :
   Prims.bool ->
     (FStar_Syntax_Syntax.pat' FStar_Syntax_Syntax.withinfo_t *
@@ -4268,8 +4209,8 @@ and (unbound_variables_comp :
   FStar_Syntax_Syntax.comp -> FStar_Syntax_Syntax.bv Prims.list) =
   fun c ->
     match c.FStar_Syntax_Syntax.n with
-    | FStar_Syntax_Syntax.GTotal (t, uu___) -> unbound_variables t
-    | FStar_Syntax_Syntax.Total (t, uu___) -> unbound_variables t
+    | FStar_Syntax_Syntax.Total t -> unbound_variables t
+    | FStar_Syntax_Syntax.GTotal t -> unbound_variables t
     | FStar_Syntax_Syntax.Comp ct ->
         let uu___ = unbound_variables ct.FStar_Syntax_Syntax.result_typ in
         let uu___1 =
@@ -4530,6 +4471,25 @@ let (smt_lemma_as_forall :
                    fun out -> mk_forall u b.FStar_Syntax_Syntax.binder_bv out)
               binders uu___1 body in
           quant
+let (effect_sig_ts :
+  FStar_Syntax_Syntax.effect_signature -> FStar_Syntax_Syntax.tscheme) =
+  fun sig1 ->
+    match sig1 with
+    | FStar_Syntax_Syntax.Layered_eff_sig (uu___, ts) -> ts
+    | FStar_Syntax_Syntax.WP_eff_sig ts -> ts
+let (apply_eff_sig :
+  (FStar_Syntax_Syntax.tscheme -> FStar_Syntax_Syntax.tscheme) ->
+    FStar_Syntax_Syntax.effect_signature ->
+      FStar_Syntax_Syntax.effect_signature)
+  =
+  fun f ->
+    fun uu___ ->
+      match uu___ with
+      | FStar_Syntax_Syntax.Layered_eff_sig (n, ts) ->
+          let uu___1 = let uu___2 = f ts in (n, uu___2) in
+          FStar_Syntax_Syntax.Layered_eff_sig uu___1
+      | FStar_Syntax_Syntax.WP_eff_sig ts ->
+          let uu___1 = f ts in FStar_Syntax_Syntax.WP_eff_sig uu___1
 let (eff_decl_of_new_effect :
   FStar_Syntax_Syntax.sigelt -> FStar_Syntax_Syntax.eff_decl) =
   fun se ->
@@ -4586,15 +4546,19 @@ let (apply_layered_eff_combinators :
   =
   fun f ->
     fun combs ->
-      let map_tuple uu___ =
+      let map2 uu___ =
         match uu___ with
         | (ts1, ts2) ->
             let uu___1 = f ts1 in let uu___2 = f ts2 in (uu___1, uu___2) in
-      let uu___ = map_tuple combs.FStar_Syntax_Syntax.l_repr in
-      let uu___1 = map_tuple combs.FStar_Syntax_Syntax.l_return in
-      let uu___2 = map_tuple combs.FStar_Syntax_Syntax.l_bind in
-      let uu___3 = map_tuple combs.FStar_Syntax_Syntax.l_subcomp in
-      let uu___4 = map_tuple combs.FStar_Syntax_Syntax.l_if_then_else in
+      let map3 uu___ =
+        match uu___ with
+        | (ts1, ts2, k) ->
+            let uu___1 = f ts1 in let uu___2 = f ts2 in (uu___1, uu___2, k) in
+      let uu___ = map2 combs.FStar_Syntax_Syntax.l_repr in
+      let uu___1 = map2 combs.FStar_Syntax_Syntax.l_return in
+      let uu___2 = map3 combs.FStar_Syntax_Syntax.l_bind in
+      let uu___3 = map3 combs.FStar_Syntax_Syntax.l_subcomp in
+      let uu___4 = map3 combs.FStar_Syntax_Syntax.l_if_then_else in
       {
         FStar_Syntax_Syntax.l_repr = uu___;
         FStar_Syntax_Syntax.l_return = uu___1;
@@ -4640,21 +4604,26 @@ let (get_eff_repr :
         combs.FStar_Syntax_Syntax.repr
     | FStar_Syntax_Syntax.DM4F_eff combs -> combs.FStar_Syntax_Syntax.repr
     | FStar_Syntax_Syntax.Layered_eff combs ->
-        let uu___ =
-          FStar_Compiler_Effect.op_Bar_Greater
-            combs.FStar_Syntax_Syntax.l_repr FStar_Pervasives_Native.fst in
-        FStar_Compiler_Effect.op_Bar_Greater uu___
-          (fun uu___1 -> FStar_Pervasives_Native.Some uu___1)
+        FStar_Compiler_Effect.op_Bar_Greater
+          (FStar_Pervasives_Native.fst combs.FStar_Syntax_Syntax.l_repr)
+          (fun uu___ -> FStar_Pervasives_Native.Some uu___)
 let (get_bind_vc_combinator :
-  FStar_Syntax_Syntax.eff_decl -> FStar_Syntax_Syntax.tscheme) =
+  FStar_Syntax_Syntax.eff_decl ->
+    (FStar_Syntax_Syntax.tscheme *
+      FStar_Syntax_Syntax.indexed_effect_combinator_kind
+      FStar_Pervasives_Native.option))
+  =
   fun ed ->
     match ed.FStar_Syntax_Syntax.combinators with
     | FStar_Syntax_Syntax.Primitive_eff combs ->
-        combs.FStar_Syntax_Syntax.bind_wp
-    | FStar_Syntax_Syntax.DM4F_eff combs -> combs.FStar_Syntax_Syntax.bind_wp
+        ((combs.FStar_Syntax_Syntax.bind_wp), FStar_Pervasives_Native.None)
+    | FStar_Syntax_Syntax.DM4F_eff combs ->
+        ((combs.FStar_Syntax_Syntax.bind_wp), FStar_Pervasives_Native.None)
     | FStar_Syntax_Syntax.Layered_eff combs ->
-        FStar_Compiler_Effect.op_Bar_Greater combs.FStar_Syntax_Syntax.l_bind
-          FStar_Pervasives_Native.snd
+        ((FStar_Pervasives_Native.__proj__Mktuple3__item___2
+            combs.FStar_Syntax_Syntax.l_bind),
+          (FStar_Pervasives_Native.__proj__Mktuple3__item___3
+             combs.FStar_Syntax_Syntax.l_bind))
 let (get_return_vc_combinator :
   FStar_Syntax_Syntax.eff_decl -> FStar_Syntax_Syntax.tscheme) =
   fun ed ->
@@ -4663,8 +4632,7 @@ let (get_return_vc_combinator :
         combs.FStar_Syntax_Syntax.ret_wp
     | FStar_Syntax_Syntax.DM4F_eff combs -> combs.FStar_Syntax_Syntax.ret_wp
     | FStar_Syntax_Syntax.Layered_eff combs ->
-        FStar_Compiler_Effect.op_Bar_Greater
-          combs.FStar_Syntax_Syntax.l_return FStar_Pervasives_Native.snd
+        FStar_Pervasives_Native.snd combs.FStar_Syntax_Syntax.l_return
 let (get_bind_repr :
   FStar_Syntax_Syntax.eff_decl ->
     FStar_Syntax_Syntax.tscheme FStar_Pervasives_Native.option)
@@ -4676,11 +4644,10 @@ let (get_bind_repr :
     | FStar_Syntax_Syntax.DM4F_eff combs ->
         combs.FStar_Syntax_Syntax.bind_repr
     | FStar_Syntax_Syntax.Layered_eff combs ->
-        let uu___ =
-          FStar_Compiler_Effect.op_Bar_Greater
-            combs.FStar_Syntax_Syntax.l_bind FStar_Pervasives_Native.fst in
-        FStar_Compiler_Effect.op_Bar_Greater uu___
-          (fun uu___1 -> FStar_Pervasives_Native.Some uu___1)
+        FStar_Compiler_Effect.op_Bar_Greater
+          (FStar_Pervasives_Native.__proj__Mktuple3__item___1
+             combs.FStar_Syntax_Syntax.l_bind)
+          (fun uu___ -> FStar_Pervasives_Native.Some uu___)
 let (get_return_repr :
   FStar_Syntax_Syntax.eff_decl ->
     FStar_Syntax_Syntax.tscheme FStar_Pervasives_Native.option)
@@ -4692,11 +4659,9 @@ let (get_return_repr :
     | FStar_Syntax_Syntax.DM4F_eff combs ->
         combs.FStar_Syntax_Syntax.return_repr
     | FStar_Syntax_Syntax.Layered_eff combs ->
-        let uu___ =
-          FStar_Compiler_Effect.op_Bar_Greater
-            combs.FStar_Syntax_Syntax.l_return FStar_Pervasives_Native.fst in
-        FStar_Compiler_Effect.op_Bar_Greater uu___
-          (fun uu___1 -> FStar_Pervasives_Native.Some uu___1)
+        FStar_Compiler_Effect.op_Bar_Greater
+          (FStar_Pervasives_Native.fst combs.FStar_Syntax_Syntax.l_return)
+          (fun uu___ -> FStar_Pervasives_Native.Some uu___)
 let (get_wp_trivial_combinator :
   FStar_Syntax_Syntax.eff_decl ->
     FStar_Syntax_Syntax.tscheme FStar_Pervasives_Native.option)
@@ -4714,17 +4679,18 @@ let (get_wp_trivial_combinator :
     | uu___ -> FStar_Pervasives_Native.None
 let (get_layered_if_then_else_combinator :
   FStar_Syntax_Syntax.eff_decl ->
-    FStar_Syntax_Syntax.tscheme FStar_Pervasives_Native.option)
+    (FStar_Syntax_Syntax.tscheme *
+      FStar_Syntax_Syntax.indexed_effect_combinator_kind
+      FStar_Pervasives_Native.option) FStar_Pervasives_Native.option)
   =
   fun ed ->
     match ed.FStar_Syntax_Syntax.combinators with
     | FStar_Syntax_Syntax.Layered_eff combs ->
-        let uu___ =
-          FStar_Compiler_Effect.op_Bar_Greater
-            combs.FStar_Syntax_Syntax.l_if_then_else
-            FStar_Pervasives_Native.fst in
-        FStar_Compiler_Effect.op_Bar_Greater uu___
-          (fun uu___1 -> FStar_Pervasives_Native.Some uu___1)
+        FStar_Pervasives_Native.Some
+          ((FStar_Pervasives_Native.__proj__Mktuple3__item___1
+              combs.FStar_Syntax_Syntax.l_if_then_else),
+            (FStar_Pervasives_Native.__proj__Mktuple3__item___3
+               combs.FStar_Syntax_Syntax.l_if_then_else))
     | uu___ -> FStar_Pervasives_Native.None
 let (get_wp_if_then_else_combinator :
   FStar_Syntax_Syntax.eff_decl ->
@@ -4755,16 +4721,22 @@ let (get_wp_ite_combinator :
           (fun uu___ -> FStar_Pervasives_Native.Some uu___)
     | uu___ -> FStar_Pervasives_Native.None
 let (get_stronger_vc_combinator :
-  FStar_Syntax_Syntax.eff_decl -> FStar_Syntax_Syntax.tscheme) =
+  FStar_Syntax_Syntax.eff_decl ->
+    (FStar_Syntax_Syntax.tscheme *
+      FStar_Syntax_Syntax.indexed_effect_combinator_kind
+      FStar_Pervasives_Native.option))
+  =
   fun ed ->
     match ed.FStar_Syntax_Syntax.combinators with
     | FStar_Syntax_Syntax.Primitive_eff combs ->
-        combs.FStar_Syntax_Syntax.stronger
+        ((combs.FStar_Syntax_Syntax.stronger), FStar_Pervasives_Native.None)
     | FStar_Syntax_Syntax.DM4F_eff combs ->
-        combs.FStar_Syntax_Syntax.stronger
+        ((combs.FStar_Syntax_Syntax.stronger), FStar_Pervasives_Native.None)
     | FStar_Syntax_Syntax.Layered_eff combs ->
-        FStar_Compiler_Effect.op_Bar_Greater
-          combs.FStar_Syntax_Syntax.l_subcomp FStar_Pervasives_Native.snd
+        ((FStar_Pervasives_Native.__proj__Mktuple3__item___2
+            combs.FStar_Syntax_Syntax.l_subcomp),
+          (FStar_Pervasives_Native.__proj__Mktuple3__item___3
+             combs.FStar_Syntax_Syntax.l_subcomp))
 let (get_stronger_repr :
   FStar_Syntax_Syntax.eff_decl ->
     FStar_Syntax_Syntax.tscheme FStar_Pervasives_Native.option)
@@ -4774,11 +4746,10 @@ let (get_stronger_repr :
     | FStar_Syntax_Syntax.Primitive_eff uu___ -> FStar_Pervasives_Native.None
     | FStar_Syntax_Syntax.DM4F_eff uu___ -> FStar_Pervasives_Native.None
     | FStar_Syntax_Syntax.Layered_eff combs ->
-        let uu___ =
-          FStar_Compiler_Effect.op_Bar_Greater
-            combs.FStar_Syntax_Syntax.l_subcomp FStar_Pervasives_Native.fst in
-        FStar_Compiler_Effect.op_Bar_Greater uu___
-          (fun uu___1 -> FStar_Pervasives_Native.Some uu___1)
+        FStar_Compiler_Effect.op_Bar_Greater
+          (FStar_Pervasives_Native.__proj__Mktuple3__item___1
+             combs.FStar_Syntax_Syntax.l_subcomp)
+          (fun uu___ -> FStar_Pervasives_Native.Some uu___)
 let (aqual_is_erasable : FStar_Syntax_Syntax.aqual -> Prims.bool) =
   fun aq ->
     match aq with

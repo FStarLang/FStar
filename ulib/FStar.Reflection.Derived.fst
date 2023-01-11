@@ -91,11 +91,11 @@ let u_unk : universe = pack_universe Uv_Unk
 let rec mk_tot_arr_ln (bs: list binder) (cod : term) : Tot term (decreases bs) =
     match bs with
     | [] -> cod
-    | (b::bs) -> pack_ln (Tv_Arrow b (pack_comp (C_Total (mk_tot_arr_ln bs cod) u_unk [])))
+    | (b::bs) -> pack_ln (Tv_Arrow b (pack_comp (C_Total (mk_tot_arr_ln bs cod))))
 
 let rec collect_arr' (bs : list binder) (c : comp) : Tot (list binder * comp) (decreases c) =
     begin match inspect_comp c with
-    | C_Total t _ _ ->
+    | C_Total t ->
         begin match inspect_ln_unascribe t with
         | Tv_Arrow b c ->
             collect_arr' (b::bs) c
@@ -107,7 +107,7 @@ let rec collect_arr' (bs : list binder) (c : comp) : Tot (list binder * comp) (d
 
 val collect_arr_ln_bs : typ -> list binder * comp
 let collect_arr_ln_bs t =
-    let (bs, c) = collect_arr' [] (pack_comp (C_Total t u_unk [])) in
+    let (bs, c) = collect_arr' [] (pack_comp (C_Total t)) in
     (List.Tot.Base.rev bs, c)
 
 val collect_arr_ln : typ -> list typ * comp
@@ -234,3 +234,35 @@ let un_uinst (t:term) : term =
   match inspect_ln t with
   | Tv_UInst fv _ -> pack_ln (Tv_FVar fv)
   | _ -> t
+
+(* Returns [true] iff the term [t] is just the name [nm], though
+possibly universe-instantiated and applied to some implicit arguments.
+*)
+let rec is_name_imp (nm : name) (t : term) : bool =
+    begin match inspect_ln_unascribe t with
+    | Tv_FVar fv
+    | Tv_UInst fv _ ->
+        if inspect_fv fv = nm
+        then true
+        else false
+    | Tv_App l (_, Q_Implicit) ->
+        is_name_imp nm l
+    | _ -> false
+    end
+
+(* If t is of the shape [squash t'], return [Some t'],
+otherwise [None]. *)
+let unsquash_term (t : term) : option term =
+    match inspect_ln_unascribe t with
+    | Tv_App l (r, Q_Explicit) ->
+        if is_name_imp squash_qn l
+        then Some r
+        else None
+    | _ -> None
+
+(* As [unsquash_term], but returns the original term if
+[t] is not a squash. *)
+let maybe_unsquash_term (t : term) : term =
+    match unsquash_term t with
+    | Some t' -> t'
+    | None -> t

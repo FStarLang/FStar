@@ -379,54 +379,6 @@
       "fcecab42cfc2cc2ee4c7f9bea14f4c42"
     ],
     [
-      "Part2.Free.read",
-      1,
-      2,
-      1,
-      [
-        "@query", "Part2.Free_pretyping_69129c24deb5453953d5b5c0ea5451a1",
-        "constructor_distinct_Part2.Free.Read",
-        "data_typing_intro_Part2.Free.Write@tok",
-        "equality_tok_Part2.Free.Read@tok", "equation_Part2.Free.input_of",
-        "equation_Part2.Free.output_of",
-        "equation_Part2.Free.rw_action_class",
-        "proj_equation_Part2.Free.Mkaction_class_input_of",
-        "proj_equation_Part2.Free.Mkaction_class_output_of",
-        "projection_inverse_Part2.Free.Mkaction_class_input_of",
-        "projection_inverse_Part2.Free.Mkaction_class_output_of",
-        "token_correspondence_Part2.Free.__proj__Mkaction_class__item__input_of",
-        "token_correspondence_Part2.Free.__proj__Mkaction_class__item__output_of",
-        "token_correspondence_Part2.Free.input_of",
-        "token_correspondence_Part2.Free.output_of", "unit_typing"
-      ],
-      0,
-      "4b92e3ae98af2be2406bf76b88a168cb"
-    ],
-    [
-      "Part2.Free.write",
-      1,
-      2,
-      1,
-      [
-        "@query", "Part2.Free_pretyping_69129c24deb5453953d5b5c0ea5451a1",
-        "constructor_distinct_Part2.Free.Write",
-        "data_typing_intro_Part2.Free.Write@tok",
-        "equality_tok_Part2.Free.Write@tok", "equation_Part2.Free.input_of",
-        "equation_Part2.Free.output_of",
-        "equation_Part2.Free.rw_action_class",
-        "proj_equation_Part2.Free.Mkaction_class_input_of",
-        "proj_equation_Part2.Free.Mkaction_class_output_of",
-        "projection_inverse_Part2.Free.Mkaction_class_input_of",
-        "projection_inverse_Part2.Free.Mkaction_class_output_of",
-        "token_correspondence_Part2.Free.__proj__Mkaction_class__item__input_of",
-        "token_correspondence_Part2.Free.__proj__Mkaction_class__item__output_of",
-        "token_correspondence_Part2.Free.input_of",
-        "token_correspondence_Part2.Free.output_of"
-      ],
-      0,
-      "5854de2029f55afbbd3ea2f139ff7dc3"
-    ],
-    [
       "Part2.Free.interp",
       1,
       2,
@@ -443,29 +395,24 @@
         "disc_equation_Part2.Free.DoThen", "disc_equation_Part2.Free.Read",
         "disc_equation_Part2.Free.Return", "disc_equation_Part2.Free.Write",
         "equality_tok_Part2.Free.Read@tok",
-        "equality_tok_Part2.Free.Write@tok", "equation_Part2.Free.input_of",
-        "equation_Part2.Free.output_of",
+        "equality_tok_Part2.Free.Write@tok", "equation_Part2.Free.output_of",
         "equation_Part2.Free.rw_action_class",
         "fuel_guarded_inversion_Part2.Free.rw",
         "fuel_guarded_inversion_Part2.Free.tree", "int_inversion",
         "proj_equation_Part2.Free.DoThen_act",
-        "proj_equation_Part2.Free.Mkaction_class_input_of",
         "proj_equation_Part2.Free.Mkaction_class_output_of",
         "proj_equation_Part2.Free.Mkaction_class_t",
         "projection_inverse_BoxBool_proj_0",
         "projection_inverse_Part2.Free.DoThen_act",
         "projection_inverse_Part2.Free.DoThen_continue",
-        "projection_inverse_Part2.Free.Mkaction_class_input_of",
         "projection_inverse_Part2.Free.Mkaction_class_output_of",
         "projection_inverse_Part2.Free.Mkaction_class_t",
-        "token_correspondence_Part2.Free.__proj__Mkaction_class__item__input_of",
         "token_correspondence_Part2.Free.__proj__Mkaction_class__item__output_of",
-        "token_correspondence_Part2.Free.input_of",
         "token_correspondence_Part2.Free.output_of", "unit_typing",
         "well_founded_ordering_on_codomain_Part2.Free.DoThen"
       ],
       0,
-      "b6cf2f0dffe6cede6a33f779cc490475"
+      "10f053559660907cbd090a58989c304b"
     ],
     [
       "Part2.Free.interp_equiv",
@@ -527,7 +474,7 @@
         "well_founded_ordering_on_codomain_Part2.Free.DoThen"
       ],
       0,
-      "b9867cbe9f7b3a9d3a5bfd650a37c3fd"
+      "d771dbcc8ce8764c52482a488d20edea"
     ]
   ]
 ]

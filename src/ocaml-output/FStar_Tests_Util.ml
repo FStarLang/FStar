@@ -74,8 +74,8 @@ let rec (term_eq' :
                          uu___2 = FStar_Syntax_Util.Equal)) xs ys) in
       let comp_eq c d =
         match ((c.FStar_Syntax_Syntax.n), (d.FStar_Syntax_Syntax.n)) with
-        | (FStar_Syntax_Syntax.Total (t, uu___), FStar_Syntax_Syntax.Total
-           (s, uu___1)) -> term_eq' t s
+        | (FStar_Syntax_Syntax.Total t, FStar_Syntax_Syntax.Total s) ->
+            term_eq' t s
         | (FStar_Syntax_Syntax.Comp ct1, FStar_Syntax_Syntax.Comp ct2) ->
             ((FStar_Ident.lid_equals ct1.FStar_Syntax_Syntax.effect_name
                 ct2.FStar_Syntax_Syntax.effect_name)

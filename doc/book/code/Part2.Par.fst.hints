@@ -189,76 +189,26 @@
         "disc_equation_Part2.Par.DoThen", "disc_equation_Part2.Par.Or",
         "disc_equation_Part2.Par.Read", "disc_equation_Part2.Par.Return",
         "disc_equation_Part2.Par.Write", "equality_tok_Part2.Par.Read@tok",
-        "equality_tok_Part2.Par.Write@tok", "equation_Part2.Par.input_of",
-        "equation_Part2.Par.output_of", "equation_Part2.Par.rw_actions",
-        "equation_Prims.nat", "fuel_guarded_inversion_Part2.Par.rw",
+        "equality_tok_Part2.Par.Write@tok", "equation_Part2.Par.output_of",
+        "equation_Part2.Par.rw_actions", "equation_Prims.nat",
+        "fuel_guarded_inversion_Part2.Par.rw",
         "fuel_guarded_inversion_Part2.Par.tree", "int_inversion",
         "primitive_Prims.op_Addition", "proj_equation_Part2.Par.DoThen_act",
-        "proj_equation_Part2.Par.Mkaction_class_input_of",
         "proj_equation_Part2.Par.Mkaction_class_output_of",
         "proj_equation_Part2.Par.Mkaction_class_t",
         "projection_inverse_BoxBool_proj_0",
         "projection_inverse_BoxInt_proj_0",
         "projection_inverse_Part2.Par.DoThen_act",
-        "projection_inverse_Part2.Par.Mkaction_class_input_of",
         "projection_inverse_Part2.Par.Mkaction_class_output_of",
         "projection_inverse_Part2.Par.Mkaction_class_t",
         "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
         "subterm_ordering_Part2.Par.Or",
-        "token_correspondence_Part2.Par.__proj__Mkaction_class__item__input_of",
         "token_correspondence_Part2.Par.__proj__Mkaction_class__item__output_of",
-        "token_correspondence_Part2.Par.input_of",
         "token_correspondence_Part2.Par.output_of", "unit_typing",
         "well_founded_ordering_on_codomain_Part2.Par.DoThen"
       ],
       0,
-      "b8f0cf2b0f162c79d49ec543edee83cf"
-    ],
-    [
-      "Part2.Par.read",
-      1,
-      2,
-      1,
-      [
-        "@query", "Part2.Par_pretyping_0164e3de8a5c85e3e2c4b989dcddc887",
-        "constructor_distinct_Part2.Par.Read",
-        "data_typing_intro_Part2.Par.Write@tok",
-        "equality_tok_Part2.Par.Read@tok", "equation_Part2.Par.input_of",
-        "equation_Part2.Par.output_of", "equation_Part2.Par.rw_actions",
-        "proj_equation_Part2.Par.Mkaction_class_input_of",
-        "proj_equation_Part2.Par.Mkaction_class_output_of",
-        "projection_inverse_Part2.Par.Mkaction_class_input_of",
-        "projection_inverse_Part2.Par.Mkaction_class_output_of",
-        "token_correspondence_Part2.Par.__proj__Mkaction_class__item__input_of",
-        "token_correspondence_Part2.Par.__proj__Mkaction_class__item__output_of",
-        "token_correspondence_Part2.Par.input_of",
-        "token_correspondence_Part2.Par.output_of", "unit_typing"
-      ],
-      0,
-      "cec99c5a1797c3b5aab5f0a68ad9ea24"
-    ],
-    [
-      "Part2.Par.write",
-      1,
-      2,
-      1,
-      [
-        "@query", "Part2.Par_pretyping_0164e3de8a5c85e3e2c4b989dcddc887",
-        "constructor_distinct_Part2.Par.Write",
-        "data_typing_intro_Part2.Par.Write@tok",
-        "equality_tok_Part2.Par.Write@tok", "equation_Part2.Par.input_of",
-        "equation_Part2.Par.output_of", "equation_Part2.Par.rw_actions",
-        "proj_equation_Part2.Par.Mkaction_class_input_of",
-        "proj_equation_Part2.Par.Mkaction_class_output_of",
-        "projection_inverse_Part2.Par.Mkaction_class_input_of",
-        "projection_inverse_Part2.Par.Mkaction_class_output_of",
-        "token_correspondence_Part2.Par.__proj__Mkaction_class__item__input_of",
-        "token_correspondence_Part2.Par.__proj__Mkaction_class__item__output_of",
-        "token_correspondence_Part2.Par.input_of",
-        "token_correspondence_Part2.Par.output_of"
-      ],
-      0,
-      "b7a32459c3e1cfb3f81bf2cbc5189755"
+      "745759fde456acda7139cfa63a5a593d"
     ],
     [
       "Part2.Par.test_prog",
@@ -267,7 +217,7 @@
       1,
       [ "@query" ],
       0,
-      "4db6544b89aa5ae44994b000ac092e94"
+      "f414f9d8b1396be78a86214daecd4be9"
     ],
     [
       "Part2.Par.input_of_rwi",
@@ -281,7 +231,7 @@
         "projection_inverse_BoxBool_proj_0"
       ],
       0,
-      "75bba75f3c3af77e9c2254c113513369"
+      "08e0630cc44df809261d1f3b9999c518"
     ],
     [
       "Part2.Par.output_of_rwi",
@@ -295,30 +245,7 @@
         "projection_inverse_BoxBool_proj_0"
       ],
       0,
-      "fb66057a851516330e0171546fbdbccc"
-    ],
-    [
-      "Part2.Par.atomic_inc",
-      1,
-      2,
-      1,
-      [
-        "@query", "Part2.Par_pretyping_4a0d8c113364957e9670f23e95fac094",
-        "constructor_distinct_Part2.Par.Inc",
-        "data_typing_intro_Part2.Par.W@tok",
-        "equality_tok_Part2.Par.Inc@tok", "equation_Part2.Par.input_of_rwi",
-        "equation_Part2.Par.output_of_rwi", "equation_Part2.Par.rwi_actions",
-        "proj_equation_Part2.Par.Mkaction_class_input_of",
-        "proj_equation_Part2.Par.Mkaction_class_output_of",
-        "projection_inverse_Part2.Par.Mkaction_class_input_of",
-        "projection_inverse_Part2.Par.Mkaction_class_output_of",
-        "token_correspondence_Part2.Par.__proj__Mkaction_class__item__input_of",
-        "token_correspondence_Part2.Par.__proj__Mkaction_class__item__output_of",
-        "token_correspondence_Part2.Par.input_of_rwi",
-        "token_correspondence_Part2.Par.output_of_rwi", "unit_typing"
-      ],
-      0,
-      "d3173331c658c62b367e57c9a1dd1b89"
+      "ab7c18272d651ad060554940bbb4ab82"
     ],
     [
       "Part2.Par.interp_rwi",
@@ -363,7 +290,7 @@
         "well_founded_ordering_on_codomain_Part2.Par.DoThen"
       ],
       0,
-      "e7721252880bd00ca78883c8c289b686"
+      "6b62b31b20f8756ed8a05f63cd241e40"
     ],
     [
       "Part2.Par.test_par_atomic_inc",
@@ -375,7 +302,7 @@
         "projection_inverse_BoxInt_proj_0"
       ],
       0,
-      "9544c39858890ab939bdff52c25f1f65"
+      "4ace8c00dd965a429d0ef41044f04be7"
     ]
   ]
 ]

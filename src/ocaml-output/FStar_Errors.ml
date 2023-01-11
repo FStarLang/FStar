@@ -229,7 +229,6 @@ type raw_error =
   | Fatal_UnexpectedModuleDeclaration 
   | Fatal_UnexpectedNumberOfUniverse 
   | Fatal_UnexpectedNumericLiteral 
-  | Fatal_UnexpectedOperatorSymbol 
   | Fatal_UnexpectedPattern 
   | Fatal_UnexpectedPosition 
   | Fatal_UnExpectedPreCondition 
@@ -378,6 +377,7 @@ type raw_error =
   | Warning_SplitAndRetryQueries 
   | Warning_DeprecatedLightDoNotation 
   | Warning_FailedToCheckInitialTacticGoal 
+  | Warning_Adhoc_IndexedEffect_Combinator 
 let (uu___is_Error_DependencyAnalysisFailed : raw_error -> Prims.bool) =
   fun projectee ->
     match projectee with
@@ -1277,11 +1277,6 @@ let (uu___is_Fatal_UnexpectedNumericLiteral : raw_error -> Prims.bool) =
     match projectee with
     | Fatal_UnexpectedNumericLiteral -> true
     | uu___ -> false
-let (uu___is_Fatal_UnexpectedOperatorSymbol : raw_error -> Prims.bool) =
-  fun projectee ->
-    match projectee with
-    | Fatal_UnexpectedOperatorSymbol -> true
-    | uu___ -> false
 let (uu___is_Fatal_UnexpectedPattern : raw_error -> Prims.bool) =
   fun projectee ->
     match projectee with | Fatal_UnexpectedPattern -> true | uu___ -> false
@@ -1900,6 +1895,12 @@ let (uu___is_Warning_FailedToCheckInitialTacticGoal :
     match projectee with
     | Warning_FailedToCheckInitialTacticGoal -> true
     | uu___ -> false
+let (uu___is_Warning_Adhoc_IndexedEffect_Combinator :
+  raw_error -> Prims.bool) =
+  fun projectee ->
+    match projectee with
+    | Warning_Adhoc_IndexedEffect_Combinator -> true
+    | uu___ -> false
 type flag = error_flag
 type error_setting = (raw_error * error_flag * Prims.int)
 let (default_settings : error_setting Prims.list) =
@@ -2109,7 +2110,6 @@ let (default_settings : error_setting Prims.list) =
   (Fatal_UnexpectedModuleDeclaration, CFatal, (Prims.of_int (199)));
   (Fatal_UnexpectedNumberOfUniverse, CFatal, (Prims.of_int (200)));
   (Fatal_UnexpectedNumericLiteral, CFatal, (Prims.of_int (201)));
-  (Fatal_UnexpectedOperatorSymbol, CFatal, (Prims.of_int (202)));
   (Fatal_UnexpectedPattern, CFatal, (Prims.of_int (203)));
   (Fatal_UnexpectedPosition, CFatal, (Prims.of_int (204)));
   (Fatal_UnExpectedPreCondition, CFatal, (Prims.of_int (205)));
@@ -2259,7 +2259,8 @@ let (default_settings : error_setting Prims.list) =
   (Warning_AmbiguousResolveImplicitsHook, CWarning, (Prims.of_int (348)));
   (Warning_SplitAndRetryQueries, CWarning, (Prims.of_int (349)));
   (Warning_DeprecatedLightDoNotation, CWarning, (Prims.of_int (350)));
-  (Warning_FailedToCheckInitialTacticGoal, CSilent, (Prims.of_int (351)))]
+  (Warning_FailedToCheckInitialTacticGoal, CSilent, (Prims.of_int (351)));
+  (Warning_Adhoc_IndexedEffect_Combinator, CWarning, (Prims.of_int (352)))]
 let lookup_error :
   'uuuuu 'uuuuu1 'uuuuu2 .
     ('uuuuu * 'uuuuu1 * 'uuuuu2) Prims.list ->

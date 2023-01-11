@@ -554,13 +554,11 @@ and close_comp cfg env c =
     | [] when not <| cfg.steps.compress_uvars -> c
     | _ ->
       match c.n with
-      | Total (t, uopt) ->
-        mk_Total' (inline_closure_env cfg env [] t)
-                  (Option.map (norm_universe cfg env) uopt)
+      | Total t ->
+        mk_Total (inline_closure_env cfg env [] t)
 
-      | GTotal (t, uopt) ->
-        mk_GTotal' (inline_closure_env cfg env [] t)
-                   (Option.map (norm_universe cfg env) uopt)
+      | GTotal t ->
+        mk_GTotal (inline_closure_env cfg env [] t)
 
       | Comp c ->
         let rt = inline_closure_env cfg env [] c.result_typ in
@@ -816,8 +814,8 @@ let should_reify cfg stack =
 let rec maybe_weakly_reduced tm :  bool =
     let aux_comp c =
         match c.n with
-        | GTotal (t, _)
-        | Total (t, _) ->
+        | GTotal t
+        | Total t ->
           maybe_weakly_reduced t
 
         | Comp ct ->
@@ -917,7 +915,8 @@ let should_unfold cfg should_reify fv qninfo : should_unfold_res =
           cfg.steps.unfold_only,
           cfg.steps.unfold_fully,
           cfg.steps.unfold_attr,
-          cfg.steps.unfold_qual
+          cfg.steps.unfold_qual,
+          cfg.steps.unfold_namespace
     with
     // We unfold dm4f actions if and only if we are reifying
     | _ when Env.qninfo_is_action qninfo ->
@@ -933,27 +932,28 @@ let should_unfold cfg should_reify fv qninfo : should_unfold_res =
         no
 
     // Don't unfold HasMaskedEffect
-    | Some (Inr ({sigquals=qs; sigel=Sig_let((is_rec, _), _)}, _), _), _, _, _, _ when
+    | Some (Inr ({sigquals=qs; sigel=Sig_let((is_rec, _), _)}, _), _), _, _, _, _, _ when
             List.contains HasMaskedEffect qs ->
         log_unfolding cfg (fun () -> BU.print_string " >> HasMaskedEffect, not unfolding\n");
         no
 
     // UnfoldTac means never unfold FVs marked [@"tac_opaque"]
-    | _, _, _, _, _ when cfg.steps.unfold_tac && BU.for_some (U.attr_eq U.tac_opaque_attr) attrs ->
+    | _, _, _, _, _, _ when cfg.steps.unfold_tac && BU.for_some (U.attr_eq U.tac_opaque_attr) attrs ->
         log_unfolding cfg (fun () -> BU.print_string " >> tac_opaque, not unfolding\n");
         no
 
     // Recursive lets may only be unfolded when Zeta is on
-    | Some (Inr ({sigquals=qs; sigel=Sig_let((is_rec, _), _)}, _), _), _, _, _, _ when
+    | Some (Inr ({sigquals=qs; sigel=Sig_let((is_rec, _), _)}, _), _), _, _, _, _, _ when
             is_rec && not cfg.steps.zeta && not cfg.steps.zeta_full ->
         log_unfolding cfg (fun () -> BU.print_string " >> It's a recursive definition but we're not doing Zeta, not unfolding\n");
         no
 
     // We're doing selectively unfolding, assume it to not unfold unless it meets the criteria
-    | _, Some _, _, _, _
-    | _, _, Some _, _, _
-    | _, _, _, Some _, _
-    | _, _, _, _, Some _ ->
+    | _, Some _, _, _, _, _
+    | _, _, Some _, _, _, _
+    | _, _, _, Some _, _, _
+    | _, _, _, _, Some _, _
+    | _, _, _, _, _, Some _ ->
         log_unfolding cfg (fun () -> BU.print1 "should_unfold: Reached a %s with selective unfolding\n"
                                                (Print.fv_to_string fv));
         // How does the following code work?
@@ -987,6 +987,10 @@ let should_unfold cfg should_reify fv qninfo : should_unfold_res =
                      (fun qual -> Print.qual_to_string qual = q)
                      quals)
                qs)
+           ;(match cfg.steps.unfold_namespace with
+             | None -> no
+             | Some namespaces ->
+               yesno <| BU.for_some (fun ns -> BU.starts_with (FStar.Ident.nsstr (lid_of_fv fv)) ns) namespaces)
            ]
         in
         meets_some_criterion
@@ -1041,6 +1045,7 @@ let decide_unfolding cfg stack rng fv qninfo (* : option (cfg * stack) *) =
                      ; unfold_fully = None
                      ; unfold_attr  = None
                      ; unfold_qual  = None
+                     ; unfold_namespace = None
                      ; unfold_until = Some delta_constant } } in
 
         (* Take care to not change the stack's head if there's a universe
@@ -1879,7 +1884,7 @@ and do_reify_monadic fallback cfg env stack (top : term) (m : monad_name) (t : t
                   //for bind binders that are not fixed, we apply ()
                   //
                   let unit_args =
-                    match (ed |> U.get_bind_vc_combinator |> snd |> SS.compress).n with
+                    match (ed |> U.get_bind_vc_combinator |> fst |> snd |> SS.compress).n with
                     | Tm_arrow (_::_::bs, _) when List.length bs >= num_fixed_binders ->
                       bs
                       |> List.splitAt (List.length bs - num_fixed_binders)
@@ -1890,7 +1895,7 @@ and do_reify_monadic fallback cfg env stack (top : term) (m : monad_name) (t : t
                         BU.format3 "bind_wp for layered effect %s is not an arrow with >= %s arguments (%s)"
                           (Ident.string_of_lid ed.mname)
                           (string_of_int num_fixed_binders)
-                          (ed |> U.get_bind_vc_combinator |> snd |> Print.term_to_string)) rng in
+                          (ed |> U.get_bind_vc_combinator |> fst |> snd |> Print.term_to_string)) rng in
 
                   let range_args =
                     if bind_has_range_args
@@ -2139,21 +2144,13 @@ and norm_comp : cfg -> env -> comp -> comp =
                                         (Print.comp_to_string comp)
                                         (BU.string_of_int (List.length env)));
         match comp.n with
-            | Total (t, uopt) ->
+            | Total t ->
               let t = norm cfg env [] t in
-              let uopt = match uopt with
-                         | Some u -> Some <| norm_universe cfg env u
-                         | None -> None
-              in
-              { mk_Total' t uopt with pos = comp.pos }
+              { mk_Total t with pos = comp.pos }
 
-            | GTotal (t, uopt) ->
+            | GTotal t ->
               let t = norm cfg env [] t in
-              let uopt = match uopt with
-                         | Some u -> Some <| norm_universe cfg env u
-                         | None -> None
-              in
-              { mk_GTotal' t uopt with pos = comp.pos }
+              { mk_GTotal t with pos = comp.pos }
 
             | Comp ct ->
               //if for extraction then erase effect args to unit
@@ -2749,6 +2746,7 @@ and rebuild (cfg:cfg) (env:env) (stack:stack) (t:term) : term =
                     unfold_only = None;
                     unfold_attr = None;
                     unfold_qual = None;
+                    unfold_namespace = None;
                     unfold_tac = false
              }
              in
@@ -2928,22 +2926,28 @@ and rebuild (cfg:cfg) (env:env) (stack:stack) (t:term) : term =
                 //the elements of s are sub-terms of t
                 //the have no free de Bruijn indices; so their env=[]; see pre-condition at the top of rebuild
                 let env0 = env in
-                //
-                // AR: when adding the bindings for pattern arguments to the environment,
-                //     this code used to set the memo entry to t as well
-                //     (i.e. BU.mk_ref None used to be BU.mk_ref t), roughly
-                //
-                //     but unclear to me why is that ok
-                //     the scrutinee argument may not be normalized at all
-                //     in fact, in the core typechecker code, we had instances of this resulting
-                //       in incorrect behavior
-                //     there `t`, i.e. an argument to scrutinee was of the form `f x`,
-                //       where `f` did not get unfolded (we asked for whnf there),
-                //       because this memo entry was set to `f x`, and we returned it as is
-                //
+
+
+                // The scrutinee is (at least) in weak normal
+                // form. This means, it can be of the form (C v1
+                // ... (fun x -> e) ... vn)
+
+                //ie., it may have some sub-terms that are lambdas
+                //with unreduced bodies
+
+                //but, since the memo references are expected to hold
+                //weakly normal terms, it is safe to set them to the
+                //sub-terms of the scrutinee
+
+                //otherwise, we will keep reducing them over and over
+                //again. See, e.g., Issue #2757
+
+                //Except, if the normalizer is running in HEAD normal form mode, 
+                //then the sub-terms of the scrutinee might not be reduced yet.
+                //In that case, do not set the memo reference
                 let env = List.fold_left
                       (fun env (bv, t) -> (Some (S.mk_binder bv),
-                                        Clos([], t, BU.mk_ref None, false))::env)
+                                        Clos([], t, BU.mk_ref (if cfg.steps.hnf then None else Some ([], t)), false))::env)
                       env s in
                 norm cfg env stack (guard_when_clause wopt b rest)
         in
@@ -3057,8 +3061,8 @@ let maybe_promote_t env non_informative_only t =
 let ghost_to_pure_aux env non_informative_only c =
     match c.n with
     | Total _ -> c
-    | GTotal (t, uopt) ->
-      if maybe_promote_t env non_informative_only t then {c with n = Total (t, uopt)} else c
+    | GTotal t ->
+      if maybe_promote_t env non_informative_only t then {c with n = Total t} else c
     | Comp ct ->
         let l = Env.norm_eff_name env ct.effect_name in
         if U.is_ghost_effect l
@@ -3329,7 +3333,7 @@ let rec elim_uvars (env:Env.env) (s:sigelt) =
       let ed = { ed with
                  univs         = univs;
                  binders       = binders;
-                 signature     = elim_tscheme ed.signature;
+                 signature     = U.apply_eff_sig elim_tscheme ed.signature;
                  combinators   = apply_eff_combinators elim_tscheme ed.combinators;
                  actions       = List.map elim_action ed.actions } in
       {s with sigel=Sig_new_effect ed}
@@ -3355,15 +3359,15 @@ let rec elim_uvars (env:Env.env) (s:sigelt) =
     | Sig_splice _ ->
       s
 
-    | Sig_polymonadic_bind (m, n, p, (us_t, t), (us_ty, ty)) ->
+    | Sig_polymonadic_bind (m, n, p, (us_t, t), (us_ty, ty), k) ->
       let us_t, _, t = elim_uvars_aux_t env us_t [] t in
       let us_ty, _, ty = elim_uvars_aux_t env us_ty [] ty in
-      { s with sigel = Sig_polymonadic_bind (m, n, p, (us_t, t), (us_ty, ty)) }
+      { s with sigel = Sig_polymonadic_bind (m, n, p, (us_t, t), (us_ty, ty), k) }
 
-    | Sig_polymonadic_subcomp (m, n, (us_t, t), (us_ty, ty)) ->
+    | Sig_polymonadic_subcomp (m, n, (us_t, t), (us_ty, ty), k) ->
       let us_t, _, t = elim_uvars_aux_t env us_t [] t in
       let us_ty, _, ty = elim_uvars_aux_t env us_ty [] ty in
-      { s with sigel = Sig_polymonadic_subcomp (m, n, (us_t, t), (us_ty, ty)) }
+      { s with sigel = Sig_polymonadic_subcomp (m, n, (us_t, t), (us_ty, ty), k) }
 
 
 let erase_universes env t =

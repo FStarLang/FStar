@@ -167,13 +167,13 @@ Projectors
 ..........
 
 These projectors are common enough that F* auto-generates them for
-you. In particular, for any data constructor ``T`` of type ``x₁:t₁ ->
-... -> xₙ:tₙ -> t``, F* auto-generates the following function:
+you. In particular, for any data constructor ``T`` of type
+``x1:t1 -> ... -> xn:tn -> t``, F* auto-generates the following function:
 
-   * ``T?.xᵢ : y:t{T? y} -> tᵢ``
+   * ``T?.xi : y:t{T? y} -> ti``
 
-That is, ``T?.xᵢ`` is a function which when applied to a ``y:t`` in
-case ``T? y``, returns the ``xᵢ`` component of ``T x₁ ... xₙ``.
+That is, ``T?.xi`` is a function which when applied to a ``y:t`` in
+case ``T? y``, returns the ``xi`` component of ``T x1 ... xn``.
 
 In the case of our ``tup2`` and ``tup3`` types, we have
 
