@@ -25,6 +25,7 @@ module Steel.ST.HigherArray
 
 module P = Steel.FractionalPermission
 module US = FStar.SizeT
+module UP = FStar.PtrdiffT
 
 open Steel.ST.Util
 
@@ -576,3 +577,46 @@ val intro_fits_u32 (_:unit)
 val intro_fits_u64 (_:unit)
   : STT (squash (US.fits_u64))
         emp (fun _ -> emp)
+
+/// The pointer substraction, returning a ptrdiff_t.
+/// Note, this operation is only defined according to the C standard when
+/// both pointers belong to the same allocation unit, which is captured
+/// by the `base a0 == base a1` precondition
+[@@noextract_to "krml"] // primitive
+val ptrdiff_ptr (#t:_) (#p0 #p1:perm) (#s0 #s1:Ghost.erased (Seq.seq t))
+           (a0:ptr t)
+           (len0: Ghost.erased nat { offset a0 + len0 <= base_len (base a0) })
+           (a1:ptr t)
+           (len1: Ghost.erased nat { offset a1 + len1 <= base_len (base a1) })
+  : ST UP.t
+    (pts_to (| a0, len0 |) p0 s0 `star` pts_to (| a1, len1 |) p1 s1)
+    (fun _ -> pts_to (| a0, len0 |) p0 s0 `star` pts_to (| a1, len1 |) p1 s1)
+    (base a0 == base a1)
+    (fun r -> UP.v r == offset a0 - offset a1)
+
+inline_for_extraction
+[@@noextract_to "krml"]
+let ptrdiff (#t:_) (#p0 #p1:perm) (#s0 #s1:Ghost.erased (Seq.seq t))
+           (a0:array t)
+           (a1:array t)
+  : ST UP.t
+    (pts_to a0 p0 s0 `star` pts_to a1 p1 s1)
+    (fun _ -> pts_to a0 p0 s0 `star` pts_to a1 p1 s1)
+    (base (ptr_of a0) == base (ptr_of a1))
+    (fun r -> UP.v r == offset (ptr_of a0) - offset (ptr_of a1))
+  = let (| pt0, len0 |) = a0 in
+    let (| pt1, len1 |) = a1 in
+    rewrite
+      (pts_to a0 _ _)
+      (pts_to (| pt0, len0 |) p0 s0);
+    rewrite
+      (pts_to a1 _ _)
+      (pts_to (| pt1, len1 |) p1 s1);
+    let res = ptrdiff_ptr pt0 len0 pt1 len1 in
+    rewrite
+      (pts_to (| pt0, len0 |) p0 s0)
+      (pts_to a0 _ _);
+    rewrite
+      (pts_to (| pt1, len1 |) p1 s1)
+      (pts_to a1 _ _);
+    return res
