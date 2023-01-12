@@ -42,7 +42,7 @@ let test2 () : SteelT bool emp (fun _ -> emp) =
     (varray (merge r1l r1))
     (varray r);
   free r;
-  return (b = FStar.PtrdiffT.mk 1s)
+  return (b = FStar.PtrdiffT.mk 2s)
 
 let main () : SteelT Int32.t emp (fun _ -> emp) =
   let init = test_sizet_alloc () in
