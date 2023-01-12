@@ -581,7 +581,9 @@ val intro_fits_u64 (_:unit)
 /// The pointer substraction, returning a ptrdiff_t.
 /// Note, this operation is only defined according to the C standard when
 /// both pointers belong to the same allocation unit, which is captured
-/// by the `base a0 == base a1` precondition
+/// by the `base a0 == base a1` precondition, and when the difference between
+/// the two pointers is representable as a ptrdiff_t, captured by the `fits`
+/// precondition.
 [@@noextract_to "krml"] // primitive
 val ptrdiff_ptr (#t:_) (#p0 #p1:perm) (#s0 #s1:Ghost.erased (Seq.seq t))
            (a0:ptr t)
@@ -591,7 +593,7 @@ val ptrdiff_ptr (#t:_) (#p0 #p1:perm) (#s0 #s1:Ghost.erased (Seq.seq t))
   : ST UP.t
     (pts_to (| a0, len0 |) p0 s0 `star` pts_to (| a1, len1 |) p1 s1)
     (fun _ -> pts_to (| a0, len0 |) p0 s0 `star` pts_to (| a1, len1 |) p1 s1)
-    (base a0 == base a1)
+    (base a0 == base a1 /\ UP.fits (offset a0 - offset a1))
     (fun r -> UP.v r == offset a0 - offset a1)
 
 inline_for_extraction
@@ -602,7 +604,7 @@ let ptrdiff (#t:_) (#p0 #p1:perm) (#s0 #s1:Ghost.erased (Seq.seq t))
   : ST UP.t
     (pts_to a0 p0 s0 `star` pts_to a1 p1 s1)
     (fun _ -> pts_to a0 p0 s0 `star` pts_to a1 p1 s1)
-    (base (ptr_of a0) == base (ptr_of a1))
+    (base (ptr_of a0) == base (ptr_of a1) /\ UP.fits (offset (ptr_of a0) - offset (ptr_of a1)))
     (fun r -> UP.v r == offset (ptr_of a0) - offset (ptr_of a1))
   = let (| pt0, len0 |) = a0 in
     let (| pt1, len1 |) = a1 in

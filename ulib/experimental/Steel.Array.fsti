@@ -410,7 +410,9 @@ let ptrdiff (#a: Type) (#p1 #p2:P.perm) (arr1 arr2: array a)
   : Steel UP.t
   (varrayp arr1 p1 `star` varrayp arr2 p2)
   (fun _ -> varrayp arr1 p1 `star` varrayp arr2 p2)
-  (requires fun _ -> base (ptr_of arr1) == base (ptr_of arr2))
+  (requires fun _ ->
+    base (ptr_of arr1) == base (ptr_of arr2) /\
+    UP.fits (offset (ptr_of arr1) - offset (ptr_of arr2)))
   (ensures fun h0 r h1 ->
     aselp arr1 p1 h1 == aselp arr1 p1 h0 /\
     aselp arr2 p2 h1 == aselp arr2 p2 h0 /\

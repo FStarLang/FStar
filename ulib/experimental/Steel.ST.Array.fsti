@@ -481,5 +481,5 @@ val ptrdiff (#t:_) (#p0 #p1:perm) (#s0 #s1:Ghost.erased (Seq.seq t))
   : ST UP.t
     (pts_to a0 p0 s0 `star` pts_to a1 p1 s1)
     (fun _ -> pts_to a0 p0 s0 `star` pts_to a1 p1 s1)
-    (base (ptr_of a0) == base (ptr_of a1))
+    (base (ptr_of a0) == base (ptr_of a1) /\ UP.fits (offset (ptr_of a0) - offset (ptr_of a1)))
     (fun r -> UP.v r == offset (ptr_of a0) - offset (ptr_of a1))
