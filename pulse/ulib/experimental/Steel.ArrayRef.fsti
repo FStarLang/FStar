@@ -6,13 +6,15 @@ open Steel.Effect.Common
 open Steel.Effect
 open Steel.Effect.Atomic
 
+module A = Steel.Array
+
 (** This module provides the same interface as Steel.Reference, however, it builds on top
     of Steel.Array to enable the interoperation between arrays and references.
     Similarly to C, a reference is defined as an array of length 1 *)
 
 /// An abstract datatype for references
 inline_for_extraction
-val ref ([@@@strictly_positive] a:Type0) : Type0
+let ref (a : Type0) : Type0 = (r: A.array a { A.length r == 1 \/ r == A.null })
 
 /// The null pointer
 [@@ noextract_to "krml"]
@@ -69,6 +71,54 @@ let sel (#a:Type) (#p:vprop) (r:ref a)
   (h:rmem p{FStar.Tactics.with_tactic selector_tactic (can_be_split p (vptr r) /\ True)})
   = h (vptr r)
 
+/// Stateful lemmas to interoperate between Steel arrays and this module
+
+val intro_vptrp
+  (#opened: _)
+  (#a: Type0)
+  (r: ref a)
+  (p: perm)
+: SteelGhost unit opened
+    (A.varrayp r p)
+    (fun _ -> vptrp r p)
+    (fun _ -> True)
+    (fun h0 _ h1 ->
+      Seq.create 1 (selp r p h1) == A.aselp r p h0
+    )
+
+val elim_vptrp
+  (#opened: _)
+  (#a: Type0)
+  (r: ref a)
+  (p: perm)
+: SteelGhost unit opened
+    (vptrp r p)
+    (fun _ -> A.varrayp r p)
+    (fun _ -> True)
+    (fun h0 _ h1 ->
+      A.aselp r p h1 == Seq.create 1 (selp r p h0)
+    )
+
+let intro_vptr (#opened: _)
+  (#a: Type0)
+  (r: ref a)
+: SteelGhost unit opened
+    (A.varray r)
+    (fun _ -> vptr r)
+    (fun _ -> True)
+    (fun h0 _ h1 -> A.asel r h0 == Seq.create 1 (sel r h1))
+  = intro_vptrp r full_perm
+
+let elim_vptr (#opened: _)
+  (#a: Type0)
+  (r: ref a)
+: SteelGhost unit opened
+    (vptr r)
+    (fun _ -> A.varray r)
+    (fun _ -> True)
+    (fun h0 _ h1 -> A.asel r h1 == Seq.create 1 (sel r h0))
+  = elim_vptrp r full_perm
+
 /// Allocates a reference with value [x].
 inline_for_extraction
 val malloc (#a:Type0) (x:a) : Steel (ref a)
@@ -80,7 +130,7 @@ val malloc (#a:Type0) (x:a) : Steel (ref a)
 inline_for_extraction
 val free (#a:Type0) (r:ref a) : Steel unit
   (vptr r) (fun _ -> emp)
-  (requires fun _ -> True)
+  (requires fun _ -> A.is_full_array r)
   (ensures fun _ _ _ -> True)
 
 /// Reads the current value of reference [r]
