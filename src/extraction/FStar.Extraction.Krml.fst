@@ -39,6 +39,7 @@ module FC = FStar.Const
 - v28: added many things for which the AST wasn't bumped; bumped it for
   TConstBuf which will expect will be used soon
 - v29: added a SizeT and PtrdiffT width to machine integers
+- v30: Added EBufDiff
 *)
 
 (* COPY-PASTED ****************************************************************)
