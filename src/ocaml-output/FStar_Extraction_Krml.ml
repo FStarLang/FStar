@@ -841,6 +841,12 @@ let (generate_is_null : typ -> expr -> expr) =
     fun x ->
       let dummy = UInt64 in
       EApp ((ETypApp ((EOp (Eq, dummy)), [TBuf t])), [x; EBufNull t])
+let (generate_ptrdiff : typ -> expr -> expr -> expr) =
+  fun t ->
+    fun e0 ->
+      fun e1 ->
+        let dummy = UInt64 in
+        EApp ((ETypApp ((EOp (Sub, dummy)), [TBuf t])), [e0; e1])
 let rec (translate_type : env -> FStar_Extraction_ML_Syntax.mlty -> typ) =
   fun env1 ->
     fun t ->
@@ -1237,6 +1243,26 @@ and (translate_expr : env -> FStar_Extraction_ML_Syntax.mlexpr -> expr) =
             (let uu___5 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
              uu___5 = "LowStar.ToFStarBuffer.old_to_new_st")
           -> translate_expr env1 e1
+      | FStar_Extraction_ML_Syntax.MLE_App
+          ({
+             FStar_Extraction_ML_Syntax.expr =
+               FStar_Extraction_ML_Syntax.MLE_TApp
+               ({
+                  FStar_Extraction_ML_Syntax.expr =
+                    FStar_Extraction_ML_Syntax.MLE_Name p;
+                  FStar_Extraction_ML_Syntax.mlty = uu___;
+                  FStar_Extraction_ML_Syntax.loc = uu___1;_},
+                t::[]);
+             FStar_Extraction_ML_Syntax.mlty = uu___2;
+             FStar_Extraction_ML_Syntax.loc = uu___3;_},
+           _perm0::_perm1::_seq0::_seq1::e0::_len0::e1::_len1::[])
+          when
+          let uu___4 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
+          uu___4 = "Steel.ST.HigherArray.ptrdiff_ptr" ->
+          let uu___4 = translate_type env1 t in
+          let uu___5 = translate_expr env1 e0 in
+          let uu___6 = translate_expr env1 e1 in
+          generate_ptrdiff uu___4 uu___5 uu___6
       | FStar_Extraction_ML_Syntax.MLE_App
           ({
              FStar_Extraction_ML_Syntax.expr =
