@@ -490,65 +490,67 @@ let (uu___is_Right : associativity -> Prims.bool) =
   fun projectee -> match projectee with | Right -> true | uu___ -> false
 let (uu___is_NonAssoc : associativity -> Prims.bool) =
   fun projectee -> match projectee with | NonAssoc -> true | uu___ -> false
-type token = (FStar_Char.char, Prims.string) FStar_Pervasives.either
+type token =
+  | StartsWith of FStar_Char.char 
+  | Exact of Prims.string 
+  | UnicodeOperator 
+let (uu___is_StartsWith : token -> Prims.bool) =
+  fun projectee ->
+    match projectee with | StartsWith _0 -> true | uu___ -> false
+let (__proj__StartsWith__item___0 : token -> FStar_Char.char) =
+  fun projectee -> match projectee with | StartsWith _0 -> _0
+let (uu___is_Exact : token -> Prims.bool) =
+  fun projectee -> match projectee with | Exact _0 -> true | uu___ -> false
+let (__proj__Exact__item___0 : token -> Prims.string) =
+  fun projectee -> match projectee with | Exact _0 -> _0
+let (uu___is_UnicodeOperator : token -> Prims.bool) =
+  fun projectee ->
+    match projectee with | UnicodeOperator -> true | uu___ -> false
 type associativity_level = (associativity * token Prims.list)
-let (token_to_string :
-  (FStar_BaseTypes.char, Prims.string) FStar_Pervasives.either ->
-    Prims.string)
-  =
+let (token_to_string : token -> Prims.string) =
   fun uu___ ->
     match uu___ with
-    | FStar_Pervasives.Inl c ->
+    | StartsWith c ->
         Prims.op_Hat (FStar_Compiler_Util.string_of_char c) ".*"
-    | FStar_Pervasives.Inr s -> s
-let (matches_token :
-  Prims.string ->
-    (FStar_Char.char, Prims.string) FStar_Pervasives.either -> Prims.bool)
-  =
+    | Exact s -> s
+    | UnicodeOperator -> "<unicode-op>"
+let (is_non_latin_char : FStar_Char.char -> Prims.bool) =
+  fun s -> (FStar_Compiler_Util.int_of_char s) > (Prims.of_int (0x024f))
+let (matches_token : Prims.string -> token -> Prims.bool) =
   fun s ->
     fun uu___ ->
       match uu___ with
-      | FStar_Pervasives.Inl c ->
+      | StartsWith c ->
           let uu___1 = FStar_String.get s Prims.int_zero in uu___1 = c
-      | FStar_Pervasives.Inr s' -> s = s'
+      | Exact s' -> s = s'
+      | UnicodeOperator ->
+          let uu___1 = FStar_String.get s Prims.int_zero in
+          is_non_latin_char uu___1
 let matches_level :
-  'uuuuu .
-    Prims.string ->
-      ('uuuuu * (FStar_Char.char, Prims.string) FStar_Pervasives.either
-        Prims.list) -> Prims.bool
-  =
+  'uuuuu . Prims.string -> ('uuuuu * token Prims.list) -> Prims.bool =
   fun s ->
     fun uu___ ->
       match uu___ with
       | (assoc_levels, tokens) ->
           let uu___1 = FStar_Compiler_List.tryFind (matches_token s) tokens in
           uu___1 <> FStar_Pervasives_Native.None
-let (opinfix4 : associativity_level) = (Right, [FStar_Pervasives.Inr "**"])
+let (opinfix4 : associativity_level) = (Right, [Exact "**"; UnicodeOperator])
 let (opinfix3 : associativity_level) =
-  (Left,
-    [FStar_Pervasives.Inl 42;
-    FStar_Pervasives.Inl 47;
-    FStar_Pervasives.Inl 37])
-let (opinfix2 : associativity_level) =
-  (Left, [FStar_Pervasives.Inl 43; FStar_Pervasives.Inl 45])
-let (minus_lvl : associativity_level) = (Left, [FStar_Pervasives.Inr "-"])
+  (Left, [StartsWith 42; StartsWith 47; StartsWith 37])
+let (opinfix2 : associativity_level) = (Left, [StartsWith 43; StartsWith 45])
+let (minus_lvl : associativity_level) = (Left, [Exact "-"])
 let (opinfix1 : associativity_level) =
-  (Right, [FStar_Pervasives.Inl 64; FStar_Pervasives.Inl 94])
-let (pipe_right : associativity_level) = (Left, [FStar_Pervasives.Inr "|>"])
-let (opinfix0d : associativity_level) = (Left, [FStar_Pervasives.Inl 36])
+  (Right, [StartsWith 64; StartsWith 94])
+let (pipe_right : associativity_level) = (Left, [Exact "|>"])
+let (opinfix0d : associativity_level) = (Left, [StartsWith 36])
 let (opinfix0c : associativity_level) =
-  (Left,
-    [FStar_Pervasives.Inl 61;
-    FStar_Pervasives.Inl 60;
-    FStar_Pervasives.Inl 62])
-let (equal : associativity_level) = (Left, [FStar_Pervasives.Inr "="])
-let (opinfix0b : associativity_level) = (Left, [FStar_Pervasives.Inl 38])
-let (opinfix0a : associativity_level) = (Left, [FStar_Pervasives.Inl 124])
-let (colon_equals : associativity_level) =
-  (NonAssoc, [FStar_Pervasives.Inr ":="])
-let (amp : associativity_level) = (Right, [FStar_Pervasives.Inr "&"])
-let (colon_colon : associativity_level) =
-  (Right, [FStar_Pervasives.Inr "::"])
+  (Left, [StartsWith 61; StartsWith 60; StartsWith 62])
+let (equal : associativity_level) = (Left, [Exact "="])
+let (opinfix0b : associativity_level) = (Left, [StartsWith 38])
+let (opinfix0a : associativity_level) = (Left, [StartsWith 124])
+let (colon_equals : associativity_level) = (NonAssoc, [Exact ":="])
+let (amp : associativity_level) = (Right, [Exact "&"])
+let (colon_colon : associativity_level) = (Right, [Exact "::"])
 let (level_associativity_spec : associativity_level Prims.list) =
   [opinfix4;
   opinfix3;
@@ -2478,12 +2480,23 @@ and (p_noSeqTerm' :
               let uu___2 = FStar_Pprint.separate_map break1 p_atomicTerm es in
               FStar_Pprint.op_Hat_Slash_Hat uu___1 uu___2 in
             FStar_Pprint.group uu___
-        | FStar_Parser_AST.If (e1, ret_opt, e2, e3) ->
+        | FStar_Parser_AST.If (e1, op_opt, ret_opt, e2, e3) ->
             if is_unit e3
             then
               let uu___ =
                 let uu___1 =
-                  let uu___2 = str "if" in
+                  let uu___2 =
+                    let uu___3 =
+                      let uu___4 =
+                        let uu___5 =
+                          let uu___6 =
+                            FStar_Compiler_Util.map_opt op_opt
+                              FStar_Ident.string_of_id in
+                          FStar_Compiler_Util.bind_opt uu___6
+                            (FStar_Parser_AST.strip_prefix "let") in
+                        FStar_Compiler_Util.dflt "" uu___5 in
+                      Prims.op_Hat "if" uu___4 in
+                    str uu___3 in
                   let uu___3 = p_noSeqTermAndComment false false e1 in
                   op_Hat_Slash_Plus_Hat uu___2 uu___3 in
                 let uu___2 =
@@ -2495,10 +2508,10 @@ and (p_noSeqTerm' :
             else
               (let e2_doc =
                  match e2.FStar_Parser_AST.tm with
-                 | FStar_Parser_AST.If (uu___1, uu___2, uu___3, e31) when
-                     is_unit e31 ->
-                     let uu___4 = p_noSeqTermAndComment false false e2 in
-                     soft_parens_with_nesting uu___4
+                 | FStar_Parser_AST.If (uu___1, uu___2, uu___3, uu___4, e31)
+                     when is_unit e31 ->
+                     let uu___5 = p_noSeqTermAndComment false false e2 in
+                     soft_parens_with_nesting uu___5
                  | uu___1 -> p_noSeqTermAndComment false false e2 in
                match ret_opt with
                | FStar_Pervasives_Native.None ->
@@ -4640,17 +4653,10 @@ and (p_constant : FStar_Const.sconst -> FStar_Pprint.document) =
     | FStar_Const.Const_unit -> str "()"
     | FStar_Const.Const_bool b -> FStar_Pprint.doc_of_bool b
     | FStar_Const.Const_real r -> str (Prims.op_Hat r "R")
-    | FStar_Const.Const_float x ->
-        str (FStar_Compiler_Util.string_of_float x)
     | FStar_Const.Const_char x -> FStar_Pprint.doc_of_char x
     | FStar_Const.Const_string (s, uu___1) ->
         let uu___2 = str (FStar_String.escaped s) in
         FStar_Pprint.dquotes uu___2
-    | FStar_Const.Const_bytearray (bytes, uu___1) ->
-        let uu___2 =
-          let uu___3 = str (FStar_Compiler_Util.string_of_bytes bytes) in
-          FStar_Pprint.dquotes uu___3 in
-        let uu___3 = str "B" in FStar_Pprint.op_Hat_Hat uu___2 uu___3
     | FStar_Const.Const_int (repr, sign_width_opt) ->
         let signedness uu___1 =
           match uu___1 with

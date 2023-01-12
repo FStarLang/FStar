@@ -61,7 +61,8 @@ type term' =
   | LetOpenRecord of term * term * term
   | Seq       of term * term
   | Bind      of ident * term * term
-  | If        of term * option match_returns_annotation * term * term
+  | If        of term * option ident (* is this a regular if or a if operator (i.e. [if*]) *)
+                      * option match_returns_annotation * term * term
   | Match     of term * option ident (* is this a regular match or a match operator (i.e. [match*]) *)
                       * option match_returns_annotation * list branch
   | TryWith   of term * list branch
@@ -509,7 +510,7 @@ let compile_op arity s r =
       |':' -> "Colon"
       |'$' -> "Dollar"
       |'.' -> "Dot"
-      | c -> raise_error (Fatal_UnexpectedOperatorSymbol, "Unexpected operator symbol: '" ^ string_of_char c ^ "'") r
+      | c -> "u" ^ (Util.string_of_int (Util.int_of_char c))
     in
     match s with
     | ".[]<-" -> "op_String_Assignment"
@@ -568,7 +569,12 @@ let string_to_op s =
     if starts_with s "op_"
     then let s = split (substring_from s (String.length "op_")) "_" in
          match s with
-         | [op] -> name_of_op op
+         | [op] ->
+                if starts_with op "u"
+                then map_opt (safe_int_of_string (substring_from op 1)) (
+                       fun op -> (string_of_char (char_of_int op), None)
+                     )
+                else name_of_op op
          | _ ->
            let maybeop =
              List.fold_left (fun acc x -> match acc with
@@ -656,8 +662,9 @@ let rec term_to_string (x:term) = match x.tm with
   | Bind (id, t1, t2) ->
     Util.format3 "%s <- %s; %s" (string_of_id id) (term_to_string t1) (term_to_string t2)
 
-  | If(t1, ret_opt, t2, t3) ->
-    Util.format4 "if %s %sthen %s else %s"
+  | If(t1, op_opt, ret_opt, t2, t3) ->
+    Util.format5 "if%s %s %sthen %s else %s"
+      (match op_opt with | Some op -> string_of_id op | None -> "")
       (t1|> term_to_string)
       (match ret_opt with
        | None -> ""

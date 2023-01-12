@@ -43,6 +43,7 @@ type step =
   | UnfoldFully of list FStar.Ident.lid
   | UnfoldAttr  of list FStar.Ident.lid
   | UnfoldQual  of list string
+  | UnfoldNamespace of list string
   | UnfoldTac
   | PureSubtermsWithinComputations
   | Simplify        //Simplifies some basic logical tautologies: not part of definitional equality!
@@ -100,7 +101,14 @@ type lift_comp_t = env -> comp -> comp * guard_t
  * AR: Env maintains polymonadic binds as functions of type polymonadic_bind_t
  *     read as: env -> c1 -> x -> c2 -> flags -> r -> (c * g)
  *)
-and polymonadic_bind_t = env -> comp_typ -> option bv -> comp_typ -> list cflag -> Range.range -> comp * guard_t
+and polymonadic_bind_t =
+  env ->
+  comp_typ ->
+  option bv ->
+  comp_typ ->
+  list cflag ->
+  Range.range ->
+  comp * guard_t
 
 and mlift = {
   mlift_wp:lift_comp_t;
@@ -141,7 +149,7 @@ and effects = {
   order :list edge;                                       (* transitive closure of the order in the signature *)
   joins :list (lident * lident * lident * mlift * mlift); (* least upper bounds *)
   polymonadic_binds :list (lident * lident * lident * polymonadic_bind_t);  (* (m, n) | p *)
-  polymonadic_subcomps :list (lident * lident * tscheme);  (* m <: n *)
+  polymonadic_subcomps :list (lident * lident * tscheme * S.indexed_effect_combinator_kind);  (* m <: n *)
 }
 
 and env = {
@@ -200,14 +208,7 @@ and env = {
   unif_allow_ref_guards:bool;                     (* Allow guards when unifying refinements, even when SMT is disabled *)
   erase_erasable_args: bool;                      (* This flag is set when running normalize_for_extraction, see Extraction.ML.Modul *)
 
-  //
-  // When the tactics engine makes a Rel call while solving a goal that is an apply uvar,
-  //   it sets the following field
-  //
-  // Rel then makes use of it to properly typecheck the indirectly solved uvars
-  //   as part of this Rel call
-  //
-  rel_query_for_apply_tac_uvar: option S.ctx_uvar;
+  core_check: core_check_t;
 }
 
 and solver_depth_t = int * int * int
@@ -227,6 +228,9 @@ and solver_t = {
 }
 and tcenv_hooks =
   { tc_push_in_gamma_hook : (env -> either binding sig_binding -> unit) }
+
+and core_check_t =
+  env -> term -> typ -> bool -> either (option typ) (bool -> string)
 
 type implicit = TcComm.implicit
 type implicits = TcComm.implicits
@@ -249,7 +253,8 @@ val initial_env : FStar.Parser.Dep.deps ->
                   (env -> term -> term -> bool) ->
                   (env -> term -> term -> bool) ->
                   solver_t -> lident ->
-                  (list step -> env -> term -> term) -> env
+                  (list step -> env -> term -> term) ->
+                  core_check_t -> env
 
 (* Some utilities *)
 val should_verify   : env -> bool
@@ -292,6 +297,7 @@ val lookup_univ            : env -> univ_name -> bool
 val try_lookup_val_decl    : env -> lident -> option (tscheme * list qualifier)
 val lookup_val_decl        : env -> lident -> (universes * typ)
 val lookup_datacon         : env -> lident -> universes * typ
+val lookup_and_inst_datacon: env -> universes -> lident -> typ
 (* the boolean tells if the lident was actually a inductive *)
 val datacons_of_typ        : env -> lident -> (bool * list lident)
 val typ_of_datacon         : env -> lident -> lident
@@ -349,7 +355,7 @@ val push_new_effect       : env -> (eff_decl * list qualifier) -> env
 //client constructs the mlift and gives it to us
 
 val exists_polymonadic_bind: env -> lident -> lident -> option (lident * polymonadic_bind_t)
-val exists_polymonadic_subcomp: env -> lident -> lident -> option tscheme
+val exists_polymonadic_subcomp: env -> lident -> lident -> option (tscheme & S.indexed_effect_combinator_kind)
 
 //print the effects graph in dot format
 val print_effects_graph: env -> string
@@ -358,7 +364,7 @@ val update_effect_lattice  : env -> src:lident -> tgt:lident -> mlift -> env
 
 val join_opt               : env -> lident -> lident -> option (lident * mlift * mlift)
 val add_polymonadic_bind   : env -> m:lident -> n:lident -> p:lident -> polymonadic_bind_t -> env
-val add_polymonadic_subcomp: env -> m:lident -> n:lident -> tscheme -> env
+val add_polymonadic_subcomp: env -> m:lident -> n:lident -> (tscheme & S.indexed_effect_combinator_kind) -> env
 
 val push_bv               : env -> bv -> env
 val push_bvs              : env -> list bv -> env
@@ -398,6 +404,7 @@ val get_top_level_effect   : env -> lident -> option lident
 val is_layered_effect      : env -> lident -> bool
 val wp_signature           : env -> lident -> (bv * term)
 val comp_to_comp_typ       : env -> comp -> comp_typ
+val comp_set_flags         : env -> comp -> list S.cflag -> comp
 val unfold_effect_abbrev   : env -> comp -> comp_typ
 val effect_repr            : env -> comp -> universe -> option term
 val reify_comp             : env -> comp -> universe -> term
@@ -463,14 +470,14 @@ val def_check_closed_in_env   : Range.range -> msg:string -> env -> term -> unit
 val def_check_guard_wf        : Range.range -> msg:string -> env -> guard_t -> unit
 val close_forall              : env -> binders -> term -> term
 
-val new_tac_implicit_var : string ->
-                           Range.range ->
-                           env ->
-                           typ ->
-                           should_check_uvar ->
-                           option ctx_uvar_meta_t ->
-                           list S.ctx_uvar ->
-                           (term * list (ctx_uvar * Range.range) * guard_t)
+val new_tac_implicit_var (reason: string)
+                         (r: Range.range)
+                         (env:env)
+                         (uvar_typ:typ)
+                         (should_check:should_check_uvar)
+                         (uvar_typedness_deps:list ctx_uvar)
+                         (meta:option ctx_uvar_meta_t)
+  : (term * list (ctx_uvar * Range.range) * guard_t)
 
 val new_implicit_var_aux : string ->
                            Range.range ->
@@ -496,7 +503,13 @@ val print_gamma : gamma -> string
  * It returns the list of the uvars, and combined guard (which essentially contains the uvars as implicits)
  *)
 
-val uvars_for_binders : env -> bs:S.binders -> substs:S.subst_t -> reason:(S.binder -> string) -> r:Range.range -> (list S.term * guard_t)
+val uvars_for_binders :
+  env ->
+  bs:S.binders ->
+  substs:S.subst_t ->
+  reason:(S.binder -> string) ->
+  r:Range.range ->
+  (list S.term * guard_t)
 
 val pure_precondition_for_trivial_post : env -> universe -> typ -> typ -> Range.range -> typ
 

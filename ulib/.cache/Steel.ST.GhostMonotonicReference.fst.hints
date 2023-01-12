@@ -1,0 +1,32 @@
+[
+  "≥.ó[±†êü€2í\u001d¢tüå",
+  [
+    [
+      "Steel.ST.GhostMonotonicReference.witness'",
+      1,
+      2,
+      1,
+      [ "@query", "equation_Steel.ST.GhostMonotonicReference.witnessed" ],
+      0,
+      "7289937219a5ea7eadd17c1db5271c82"
+    ],
+    [
+      "Steel.ST.GhostMonotonicReference.witness",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "026d4b899061009d6cc99c84879e7663"
+    ],
+    [
+      "Steel.ST.GhostMonotonicReference.recall",
+      1,
+      2,
+      1,
+      [ "@query", "equation_Steel.ST.GhostMonotonicReference.witnessed" ],
+      0,
+      "95ed765010d44d062c14130e1ec922fa"
+    ]
+  ]
+]

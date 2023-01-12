@@ -66,18 +66,18 @@ let _ = assert True
 //  Taking the universe from Tot
 //  And applying Succ to it
 //
-let get_u () : Tac term =
-  let t = `(int -> Tot u#0 int) in
-  match inspect t with
-  | Tv_Arrow _ c ->
-    (match inspect_comp c with
-     | C_Total _ u _ -> pack_ln (Tv_Type (pack_universe (Uv_Succ u)))
-     | _ -> fail "2")
-  | _ -> fail "3"
+// let get_u () : Tac term =
+//   let t = `(int -> Tot u#0 int) in
+//   match inspect t with
+//   | Tv_Arrow _ c ->
+//     (match inspect_comp c with
+//      | C_Total _ u _ -> pack_ln (Tv_Type (pack_universe (Uv_Succ u)))
+//      | _ -> fail "2")
+//   | _ -> fail "3"
 
-let test0 (#[exact (get_u ())]t:Type u#2) () : Type u#2 = t
-let test1 () = test0 ()
+// let test0 (#[exact (get_u ())]t:Type u#2) () : Type u#2 = t
+// let test1 () = test0 ()
 
-let test2 (#[exact (get_u ())]t:Type u#1) () : Type u#1 = t
-[@@ expect_failure [228]]
-let test3 () = test2 ()
+// let test2 (#[exact (get_u ())]t:Type u#1) () : Type u#1 = t
+// [@@ expect_failure [228]]
+// let test3 () = test2 ()

@@ -57,6 +57,7 @@ type norm_step =
   | UnfoldFully : list string -> norm_step
   | UnfoldAttr : list string -> norm_step // Unfold definitions marked with the given attributes
   | UnfoldQual : list string -> norm_step
+  | UnfoldNamespace : list string -> norm_step
   | Unmeta : norm_step
   | Unascribe // Remove type ascriptions [t <: ty ~> t]
 
@@ -101,6 +102,9 @@ let delta_attr s = UnfoldAttr s
 
 irreducible
 let delta_qualifier s = UnfoldAttr s
+
+irreducible
+let delta_namespace s = UnfoldNamespace s
 
 irreducible
 let unmeta = Unmeta
@@ -156,8 +160,6 @@ let handle_smt_goals = ()
 
 let erasable = ()
 
-let allow_informative_binders = ()
-
 let commute_nested_matches = ()
 
 let noextract_to _ = ()
@@ -168,6 +170,7 @@ let ite_soundness_by _ = ()
 
 let default_effect _ = ()
 let top_level_effect _ = ()
+let effect_param = ()
 let bind_has_range_args = ()
 
 let strictly_positive = ()

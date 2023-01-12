@@ -96,10 +96,15 @@ let if_then_else
 total
 reflectable
 effect {
-  NMSTATETOT (a:Type) (state:Type u#2) (rel:P.preorder state) (req:M.pre_t state) (ens:M.post_t state a)
+  NMSTATETOT (a:Type)
+             ([@@@ effect_param] state:Type u#2)
+             ([@@@ effect_param] rel:P.preorder state)
+             (req:M.pre_t state)
+             (ens:M.post_t state a)
   with { repr; return; bind; subcomp; if_then_else }
 }
 
+[@@ noextract_to "krml"]
 let get (#state:Type u#2) (#rel:P.preorder state) ()
     : NMSTATETOT state state rel
       (fun _ -> True)
@@ -107,6 +112,7 @@ let get (#state:Type u#2) (#rel:P.preorder state) ()
     =
   NMSTATETOT?.reflect (fun (_, n) -> MSTTotal.get (), n)
 
+[@@ noextract_to "krml"]
 let put (#state:Type u#2) (#rel:P.preorder state) (s:state)
     : NMSTATETOT unit state rel
       (fun s0 -> rel s0 s)
@@ -122,6 +128,7 @@ let stable (state:Type u#2) (rel:P.preorder state) (p:s_predicate state) =
 let witnessed (state:Type u#2) (rel:P.preorder state) (p:s_predicate state) =
   M.witnessed state rel p
 
+[@@ noextract_to "krml"]
 let witness (state:Type u#2) (rel:P.preorder state) (p:s_predicate state)
     : NMSTATETOT unit state rel
       (fun s0 -> p s0 /\ stable state rel p)
@@ -129,6 +136,7 @@ let witness (state:Type u#2) (rel:P.preorder state) (p:s_predicate state)
     =
   NMSTATETOT?.reflect (fun (_, n) -> M.witness state rel p, n)
 
+[@@ noextract_to "krml"]
 let recall (state:Type u#2) (rel:P.preorder state) (p:s_predicate state)
     : NMSTATETOT unit state rel
       (fun _ -> witnessed state rel p)
@@ -136,7 +144,7 @@ let recall (state:Type u#2) (rel:P.preorder state) (p:s_predicate state)
     =
   NMSTATETOT?.reflect (fun (_, n) -> M.recall state rel p, n)
 
-
+[@@ noextract_to "krml"]
 let sample (#state:Type u#2) (#rel:P.preorder state) ()
     : NMSTATETOT bool state rel
       (fun _ -> True)
@@ -146,9 +154,9 @@ let sample (#state:Type u#2) (#rel:P.preorder state) ()
 
 let lift_pure_nmst
       (a:Type)
+      (wp:pure_wp a)
       (state:Type u#2)
       (rel:P.preorder state)
-      (wp:pure_wp a)
       (f:eqtype_as_type unit -> PURE a wp)
     : repr a state rel
       (fun s0 -> wp (fun _ -> True))

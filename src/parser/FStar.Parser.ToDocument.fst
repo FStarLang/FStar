@@ -284,18 +284,26 @@ type associativity =
     | Right
     | NonAssoc
 
-(* A token is either a character c representing any string beginning with c or a complete string *)
-type token = either FStar.Char.char string
+(* A token is either a character c representing any string beginning with c, a complete string or a unicode operator *)
+type token =
+    | StartsWith: Char.char -> token
+    | Exact     : string    -> token
+    | UnicodeOperator
 
 type associativity_level = associativity * list token
 
 let token_to_string = function
-    | Inl c -> string_of_char c ^ ".*"
-    | Inr s -> s
+    | StartsWith      c -> string_of_char c ^ ".*"
+    | Exact           s -> s
+    | UnicodeOperator -> "<unicode-op>"
+
+let is_non_latin_char (s:Char.char): bool
+    = int_of_char s > 0x024f
 
 let matches_token (s:string) = function
-    | Inl c -> FStar.String.get s 0 = c
-    | Inr s' -> s = s'
+    | StartsWith c  -> FStar.String.get s 0 = c
+    | Exact      s' -> s = s'
+    | UnicodeOperator -> is_non_latin_char (FStar.String.get s 0)
 
 let matches_level s (assoc_levels, tokens) =
     List.tryFind (matches_token s) tokens <> None
@@ -303,21 +311,21 @@ let matches_level s (assoc_levels, tokens) =
 // GM 05/10/18, TODO: This still needs to be heavily annotated with the new unifier:
 
 (* Precedence and associativity levels, taken from ../src/parse.mly *)
-let opinfix4 : associativity_level = Right, [Inr "**"]
+let opinfix4 : associativity_level = Right, [Exact "**"; UnicodeOperator]
 // level backtick won't be used here
-let opinfix3 : associativity_level = Left,  [Inl '*' ; Inl '/' ; Inl '%']
-let opinfix2 : associativity_level = Left,  [Inl '+' ; Inl '-' ]
-let minus_lvl : associativity_level = Left, [Inr "-"] // Sublevel of opinfix2, not a level on its own !!!
-let opinfix1 : associativity_level = Right, [Inl '@' ; Inl '^']
-let pipe_right : associativity_level = Left,  [Inr "|>"]
-let opinfix0d : associativity_level = Left,  [Inl '$']
-let opinfix0c : associativity_level = Left,  [Inl '=' ; Inl '<' ; Inl '>']
-let equal : associativity_level = Left, [Inr "="] // Sublevel of opinfix0c, not a level on its own !!!
-let opinfix0b : associativity_level = Left,  [Inl '&']
-let opinfix0a : associativity_level = Left,  [Inl '|']
-let colon_equals : associativity_level = NonAssoc, [Inr ":="]
-let amp : associativity_level = Right, [Inr "&"]
-let colon_colon : associativity_level = Right, [Inr "::"]
+let opinfix3 : associativity_level = Left,  [StartsWith '*' ; StartsWith '/' ; StartsWith '%']
+let opinfix2 : associativity_level = Left,  [StartsWith '+' ; StartsWith '-' ]
+let minus_lvl : associativity_level = Left, [Exact "-"] // Sublevel of opinfix2, not a level on its own !!!
+let opinfix1 : associativity_level = Right, [StartsWith '@' ; StartsWith '^']
+let pipe_right : associativity_level = Left,  [Exact "|>"]
+let opinfix0d : associativity_level = Left,  [StartsWith '$']
+let opinfix0c : associativity_level = Left,  [StartsWith '=' ; StartsWith '<' ; StartsWith '>']
+let equal : associativity_level = Left, [Exact "="] // Sublevel of opinfix0c, not a level on its own !!!
+let opinfix0b : associativity_level = Left,  [StartsWith '&']
+let opinfix0a : associativity_level = Left,  [StartsWith '|']
+let colon_equals : associativity_level = NonAssoc, [Exact ":="]
+let amp : associativity_level = Right, [Exact "&"]
+let colon_colon : associativity_level = Right, [Exact "::"]
 
 (* The latter the element, the tighter it binds *)
 let level_associativity_spec : list associativity_level =
@@ -1251,18 +1259,20 @@ and p_noSeqTerm' ps pb e = match e.tm with
       group (str "decreases" ^/^ p_typ ps pb e)
   | Attributes es ->
       group (str "attributes" ^/^ separate_map break1 p_atomicTerm es)
-  | If (e1, ret_opt, e2, e3) ->
+  | If (e1, op_opt, ret_opt, e2, e3) ->
       (* No need to wrap with parentheses here, since if e1 then e2; e3 really
        * does parse as (if e1 then e2); e3 -- the IF does not swallow
        * semicolons. We forward our caller's [ps] parameter, though, because
        * something in [e2] may swallow. *)
       if is_unit e3
-      then group ((str "if" ^/+^ p_noSeqTermAndComment false false e1) ^/^ (str "then" ^/+^ p_noSeqTermAndComment ps pb e2))
+      then group ((str ("if" ^ (dflt "" (op_opt `map_opt` string_of_id
+                                          `bind_opt` strip_prefix "let")))
+                  ^/+^ p_noSeqTermAndComment false false e1) ^/^ (str "then" ^/+^ p_noSeqTermAndComment ps pb e2))
       else
            let e2_doc =
               match e2.tm with
                   (* Not protecting, since an ELSE follows. *)
-                  | If (_,_, _,e3) when is_unit e3 ->
+                  | If (_, _, _, _,e3) when is_unit e3 ->
                       (* Dangling else *)
                       soft_parens_with_nesting (p_noSeqTermAndComment false false e2)
                   | _ -> p_noSeqTermAndComment false false e2
@@ -2063,10 +2073,8 @@ and p_constant = function
   | Const_unit -> str "()"
   | Const_bool b -> doc_of_bool b
   | Const_real r -> str (r ^"R")
-  | Const_float x -> str (Util.string_of_float x)
   | Const_char x -> doc_of_char x
   | Const_string(s, _) -> dquotes (str (FStar.String.escaped s))
-  | Const_bytearray(bytes,_) -> dquotes (str (Util.string_of_bytes bytes)) ^^ str "B"
   | Const_int (repr, sign_width_opt) ->
       let signedness = function
           | Unsigned -> str "u"

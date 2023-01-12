@@ -241,33 +241,11 @@ let comp_flags c = match c.n with
     | GTotal _ -> [SOMETRIVIAL]
     | Comp ct -> ct.flags
 
-(* Duplicate of the function below not failing when universe is not provided *)
-let comp_to_comp_typ_nouniv (c:comp) : comp_typ =
-    match c.n with
-        | Comp c -> c
-        | Total (t, u_opt)
-        | GTotal(t, u_opt) ->
-            {comp_univs=dflt [] (map_opt u_opt (fun x -> [x]));
-             effect_name=comp_effect_name c;
-             result_typ=t;
-             effect_args=[];
-             flags=comp_flags c}
-
-let comp_set_flags (c:comp) f =
-    {c with n=Comp ({comp_to_comp_typ_nouniv c with flags=f})}
-
-let comp_to_comp_typ (c:comp) : comp_typ =
-    match c.n with
-    | Comp c -> c
-    | Total (t, Some u)
-    | GTotal(t, Some u) ->
-      {comp_univs=[u];
-       effect_name=comp_effect_name c;
-       result_typ=t;
-       effect_args=[];
-       flags=comp_flags c}
-    | _ -> failwith "Assertion failed: Computation type without universe"
-
+let comp_eff_name_res_and_args (c:comp) : lident & typ & args =
+  match c.n with
+  | Total t -> PC.effect_Tot_lid, t, []
+  | GTotal t -> PC.effect_GTot_lid, t, []
+  | Comp c -> c.effect_name, c.result_typ, c.effect_args
 
 (*
  * For layered effects, given a (repr a is), return is
@@ -288,7 +266,7 @@ let effect_indices_from_repr (repr:term) (is_layered:bool) (r:Range.range) (err:
        | Tm_app (_, _::is) -> is |> List.map fst
        | _ -> err ()
   else match repr.n with
-       | Tm_arrow (_, c) -> c |> comp_to_comp_typ |> (fun ct -> ct.effect_args |> List.map fst)
+       | Tm_arrow (_, c) -> c |> comp_eff_name_res_and_args |> (fun (_, _, args) -> args |> List.map fst)
        | _ -> err ()
 
 let destruct_comp c : (universe * typ * typ) =
@@ -369,16 +347,44 @@ let rec head_of (t : term) : term =
 let head_and_args t =
     let t = compress t in
     match t.n with
-        | Tm_app(head, args) -> head, args
-        | _ -> t, []
+    | Tm_app(head, args) -> head, args
+    | _ -> t, []
 
 let rec head_and_args_full t =
     let t = compress t in
     match t.n with
-        | Tm_app(head, args) ->
-            let (head, args') = head_and_args_full head
-            in (head, args'@args)
-        | _ -> t, []
+    | Tm_app(head, args) ->
+      let (head, args') = head_and_args_full head
+      in (head, args'@args)
+    | _ -> t, []
+
+let rec leftmost_head t =
+    let t = compress t in
+    match t.n with
+    | Tm_app(t0, _)
+    | Tm_meta (t0, Meta_pattern _)
+    | Tm_meta (t0, Meta_named _)
+    | Tm_meta (t0, Meta_labeled _)
+    | Tm_meta (t0, Meta_desugared _)     
+    | Tm_ascribed (t0, _, _) ->
+      leftmost_head t0
+    | _ -> t
+
+
+let leftmost_head_and_args t =
+    let rec aux t args =
+      let t = compress t in
+      match t.n with
+      | Tm_app(t0, args') -> aux t0 (args'@args)
+      | Tm_meta (t0, Meta_pattern _)
+      | Tm_meta (t0, Meta_named _)
+      | Tm_meta (t0, Meta_labeled _)
+      | Tm_meta (t0, Meta_desugared _)     
+      | Tm_ascribed (t0, _, _) -> aux t0 args
+      | _ -> t, args
+    in
+    aux t []
+
 
 let un_uinst t =
     let t = Subst.compress t in
@@ -393,8 +399,8 @@ let is_ml_comp c = match c.n with
   | _ -> false
 
 let comp_result c = match c.n with
-  | Total (t, _)
-  | GTotal (t, _) -> t
+  | Total t
+  | GTotal t -> t
   | Comp ct -> ct.result_typ
 
 let set_result_typ c t = match c.n with
@@ -716,11 +722,9 @@ and eq_univs_list (us:universes) (vs:universes) : bool =
 
 and eq_comp (c1 c2:comp) : eq_result =
   match c1.n, c2.n with
-  | Total (t1, u1opt), Total (t2, u2opt)
-  | GTotal (t1, u1opt), GTotal (t2, u2opt) ->
-    eq_tm t1 t2 //Rel ignores the universe annotations when comparing these comps for equality.
-                //So, ignore them here too
-                //But, this should be sorted out: Can we always populate the universe?
+  | Total t1, Total t2
+  | GTotal t1, GTotal t2 ->
+    eq_tm t1 t2
   | Comp ct1, Comp ct2 ->
     eq_and (equal_if (eq_univs_list ct1.comp_univs ct2.comp_univs))
            (fun _ ->
@@ -969,7 +973,7 @@ let flat_arrow bs c =
   match (Subst.compress t).n with
   | Tm_arrow(bs, c) ->
     begin match c.n with
-        | Total (tres, _) ->
+        | Total tres ->
           begin match (Subst.compress tres).n with
                | Tm_arrow(bs', c') -> mk (Tm_arrow(bs@bs', c')) t.pos
                | _ -> t
@@ -982,7 +986,7 @@ let rec canon_arrow t =
   match (compress t).n with
   | Tm_arrow (bs, c) ->
       let cn = match c.n with
-               | Total (t, u) -> Total (canon_arrow t, u)
+               | Total t -> Total (canon_arrow t)
                | _ -> c.n
       in
       let c = { c with n = cn } in
@@ -1053,9 +1057,8 @@ let let_rec_arity (lb:letbinding) : int * option (list bool) =
         match k.n with
         | Tm_arrow(bs, c) ->
             let bs, c = Subst.open_comp bs c in
-            let ct = comp_to_comp_typ c in
            (match
-                ct.flags |> U.find_opt (function DECREASES _ -> true | _ -> false)
+                c |> comp_flags |> U.find_opt (function DECREASES _ -> true | _ -> false)
             with
             | Some (DECREASES d) ->
                 bs, Some d
@@ -1227,6 +1230,8 @@ let type_u () : typ * universe =
     let u = U_unif <| Unionfind.univ_fresh Range.dummyRange in
     mk (Tm_type u) dummyRange, u
 
+let type_with_u (u:universe) : typ = mk (Tm_type u) dummyRange
+
 // works on anything, really
 let attr_eq a a' =
    match eq_tm a a' with
@@ -1337,7 +1342,8 @@ let mk_and e1 e2 =
 let mk_and_l l = match l with
     | [] -> exp_true_bool
     | hd::tl -> List.fold_left mk_and hd tl
-
+let mk_boolean_negation b = 
+  mk (Tm_app(fvar_const PC.op_Negation, [as_arg b])) b.pos
 let mk_residual_comp l t f = {
     residual_effect=l;
     residual_typ=t;
@@ -1345,6 +1351,11 @@ let mk_residual_comp l t f = {
   }
 let residual_tot t = {
     residual_effect=PC.effect_Tot_lid;
+    residual_typ=Some t;
+    residual_flags=[TOTAL]
+  }
+let residual_gtot t = {
+    residual_effect=PC.effect_GTot_lid;
     residual_typ=Some t;
     residual_flags=[TOTAL]
   }
@@ -1603,7 +1614,7 @@ let destruct_typ_as_formula f : option connective =
             if not (is_tot_or_gtot_comp c)
             then None
             else
-                let q = (comp_to_comp_typ_nouniv c).result_typ in
+                let q = comp_result c in
                 if is_free_in b.binder_bv q
                 then (
                     let pats, q = patterns q in
@@ -1892,11 +1903,11 @@ and binder_eq_dbg (dbg : bool) b1 b2 =
     (check "binder attrs" (eqlist (term_eq_dbg dbg) b1.binder_attrs b2.binder_attrs))
 
 and comp_eq_dbg (dbg : bool) c1 c2 =
-    let c1 = comp_to_comp_typ_nouniv c1 in
-    let c2 = comp_to_comp_typ_nouniv c2 in
-    (check "comp eff"  (lid_equals c1.effect_name c2.effect_name)) &&
+    let eff1, res1, args1 = comp_eff_name_res_and_args c1 in
+    let eff2, res2, args2 = comp_eff_name_res_and_args c2 in
+    (check "comp eff"  (lid_equals eff1 eff2)) &&
     //(check "comp univs"  (c1.comp_univs = c2.comp_univs)) &&
-    (check "comp result typ"  (term_eq_dbg dbg c1.result_typ c2.result_typ)) &&
+    (check "comp result typ"  (term_eq_dbg dbg res1 res2)) &&
     (* (check "comp args"  (eqlist arg_eq_dbg dbg c1.effect_args c2.effect_args)) && *)
     true //eq_flags c1.flags c2.flags
 and branch_eq_dbg (dbg : bool) (p1,w1,t1) (p2,w2,t2) =
@@ -2108,8 +2119,8 @@ and unbound_variables_ascription asc =
 
 and unbound_variables_comp c =
     match c.n with
-    | GTotal (t, _)
-    | Total (t, _) ->
+    | Total t
+    | GTotal t ->
       unbound_variables t
 
     | Comp ct ->
@@ -2267,6 +2278,15 @@ let smt_lemma_as_forall (t:term) (universe_of_binders: binders -> list universe)
  * Leaving it to the callers to deal with it
  *)
 
+let effect_sig_ts (sig:effect_signature) : tscheme =
+  match sig with
+  | Layered_eff_sig (_, ts)
+  | WP_eff_sig ts -> ts
+
+let apply_eff_sig (f:tscheme -> tscheme) = function
+  | Layered_eff_sig (n, ts) -> Layered_eff_sig (n, f ts)
+  | WP_eff_sig ts -> WP_eff_sig (f ts)
+
 let eff_decl_of_new_effect (se:sigelt) :eff_decl =
   match se.sigel with
   | Sig_new_effect ne -> ne
@@ -2298,12 +2318,13 @@ let apply_wp_eff_combinators (f:tscheme -> tscheme) (combs:wp_eff_combinators)
 
 let apply_layered_eff_combinators (f:tscheme -> tscheme) (combs:layered_eff_combinators)
 : layered_eff_combinators
-= let map_tuple (ts1, ts2) = (f ts1, f ts2) in
-  { l_repr = map_tuple combs.l_repr;
-    l_return = map_tuple combs.l_return;
-    l_bind = map_tuple combs.l_bind;
-    l_subcomp = map_tuple combs.l_subcomp;
-    l_if_then_else = map_tuple combs.l_if_then_else }
+= let map2 (ts1, ts2) = (f ts1, f ts2) in
+  let map3 (ts1, ts2, k) = (f ts1, f ts2, k) in
+  { l_repr = map2 combs.l_repr;
+    l_return = map2 combs.l_return;
+    l_bind = map3 combs.l_bind;
+    l_subcomp = map3 combs.l_subcomp;
+    l_if_then_else = map3 combs.l_if_then_else }
 
 let apply_eff_combinators (f:tscheme -> tscheme) (combs:eff_combinators) : eff_combinators =
   match combs with
@@ -2321,31 +2342,31 @@ let get_eff_repr (ed:eff_decl) : option tscheme =
   match ed.combinators with
   | Primitive_eff combs
   | DM4F_eff combs -> combs.repr
-  | Layered_eff combs -> combs.l_repr |> fst |> Some
+  | Layered_eff combs -> fst combs.l_repr |> Some
 
-let get_bind_vc_combinator (ed:eff_decl) : tscheme =
+let get_bind_vc_combinator (ed:eff_decl) : tscheme & option indexed_effect_combinator_kind =
   match ed.combinators with
   | Primitive_eff combs
-  | DM4F_eff combs -> combs.bind_wp
-  | Layered_eff combs -> combs.l_bind |> snd
+  | DM4F_eff combs -> combs.bind_wp, None
+  | Layered_eff combs -> Mktuple3?._2 combs.l_bind, Mktuple3?._3 combs.l_bind
 
 let get_return_vc_combinator (ed:eff_decl) : tscheme =
   match ed.combinators with
   | Primitive_eff combs
   | DM4F_eff combs -> combs.ret_wp
-  | Layered_eff combs -> combs.l_return |> snd
+  | Layered_eff combs -> snd combs.l_return
 
 let get_bind_repr (ed:eff_decl) : option tscheme =
   match ed.combinators with
   | Primitive_eff combs
   | DM4F_eff combs -> combs.bind_repr
-  | Layered_eff combs -> combs.l_bind |> fst |> Some
+  | Layered_eff combs -> Mktuple3?._1 combs.l_bind |> Some
 
 let get_return_repr (ed:eff_decl) : option tscheme =
   match ed.combinators with
   | Primitive_eff combs
   | DM4F_eff combs -> combs.return_repr
-  | Layered_eff combs -> combs.l_return |> fst |> Some
+  | Layered_eff combs -> fst combs.l_return |> Some
 
 let get_wp_trivial_combinator (ed:eff_decl) : option tscheme =
   match ed.combinators with
@@ -2353,9 +2374,9 @@ let get_wp_trivial_combinator (ed:eff_decl) : option tscheme =
   | DM4F_eff combs -> combs.trivial |> Some
   | _ -> None
 
-let get_layered_if_then_else_combinator (ed:eff_decl) : option tscheme =
+let get_layered_if_then_else_combinator (ed:eff_decl) : option (tscheme & option indexed_effect_combinator_kind) =
   match ed.combinators with
-  | Layered_eff combs -> combs.l_if_then_else |> fst |> Some
+  | Layered_eff combs -> Some (Mktuple3?._1 combs.l_if_then_else, Mktuple3?._3 combs.l_if_then_else)
   | _ -> None
 
 let get_wp_if_then_else_combinator (ed:eff_decl) : option tscheme =
@@ -2370,17 +2391,17 @@ let get_wp_ite_combinator (ed:eff_decl) : option tscheme =
   | DM4F_eff combs -> combs.ite_wp |> Some
   | _ -> None
 
-let get_stronger_vc_combinator (ed:eff_decl) : tscheme =
+let get_stronger_vc_combinator (ed:eff_decl) : tscheme & option indexed_effect_combinator_kind =
   match ed.combinators with
   | Primitive_eff combs
-  | DM4F_eff combs -> combs.stronger
-  | Layered_eff combs -> combs.l_subcomp |> snd
+  | DM4F_eff combs -> combs.stronger, None
+  | Layered_eff combs -> Mktuple3?._2 combs.l_subcomp, Mktuple3?._3 combs.l_subcomp
 
 let get_stronger_repr (ed:eff_decl) : option tscheme =
   match ed.combinators with
   | Primitive_eff _
   | DM4F_eff _ -> None
-  | Layered_eff combs -> combs.l_subcomp |> fst |> Some
+  | Layered_eff combs -> Mktuple3?._1 combs.l_subcomp |> Some
 
 let aqual_is_erasable (aq:aqual) =
   match aq with
@@ -2403,7 +2424,30 @@ let check_mutual_universes (lbs:list letbinding)
         lbs
 
 let ctx_uvar_should_check (u:ctx_uvar) = 
-    (Unionfind.find_decoration u.ctx_uvar_head).uvar_decoration_should_check
+  (Unionfind.find_decoration u.ctx_uvar_head).uvar_decoration_should_check
 
 let ctx_uvar_typ (u:ctx_uvar) = 
-    (Unionfind.find_decoration u.ctx_uvar_head).uvar_decoration_typ
+  (Unionfind.find_decoration u.ctx_uvar_head).uvar_decoration_typ
+
+let ctx_uvar_typedness_deps (u:ctx_uvar) = 
+    (Unionfind.find_decoration u.ctx_uvar_head).uvar_decoration_typedness_depends_on
+
+let flatten_refinement t =
+  let rec aux t unascribe =
+    let t = compress t in
+    match t.n with
+    | Tm_ascribed(t, _, _) when unascribe ->
+      aux t true
+    | Tm_refine(x, phi) -> (
+      let t0 = aux x.sort true in
+      match t0.n with
+      | Tm_refine(y, phi1) ->
+        //NB: this is working on de Bruijn
+        //    representations; so no need
+        //    to substitute y/x in phi
+        mk (Tm_refine(y, mk_conj_simp phi1 phi)) t0.pos
+      | _ -> t
+      )
+    | _ -> t
+  in
+  aux t false

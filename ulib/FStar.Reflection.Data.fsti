@@ -95,13 +95,14 @@ let notAscription (tv:term_view) : bool =
 // Very basic for now
 noeq
 type comp_view =
-  | C_Total     : ret:typ -> u:universe -> decr:(list term) -> comp_view
-  | C_GTotal    : ret:typ -> u:universe -> decr:(list term) -> comp_view
+  | C_Total     : ret:typ -> comp_view
+  | C_GTotal    : ret:typ -> comp_view
   | C_Lemma     : term -> term -> term -> comp_view // pre, post, patterns
   | C_Eff       : us:universes ->
                   eff_name:name ->
                   result:term ->
                   eff_args:(list argv) ->
+                  decrs:list term ->
                   comp_view
 
 (* Constructor for an inductive type. See explanation in

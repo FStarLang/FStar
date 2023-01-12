@@ -710,9 +710,9 @@ let rec translate (cfg:config) (bs:list t) (e:term) : t =
 
 and translate_comp cfg bs (c:S.comp) : comp =
   match c.n with
-  | S.Total  (typ, u) -> Tot (translate cfg bs typ, fmap_opt (translate_univ cfg bs) u)
-  | S.GTotal (typ, u) -> GTot (translate cfg bs typ, fmap_opt (translate_univ cfg bs) u)
-  | S.Comp   ctyp      -> Comp (translate_comp_typ cfg bs ctyp)
+  | S.Total  typ -> Tot (translate cfg bs typ)
+  | S.GTotal typ -> GTot (translate cfg bs typ)
+  | S.Comp   ctyp -> Comp (translate_comp_typ cfg bs ctyp)
 
 (* uncurried application *)
 and iapp (cfg : config) (f:t) (args:args) : t =
@@ -881,13 +881,17 @@ and translate_fv (cfg: config) (bs:list t) (fvar:fv): t =
                         iapp = iapp cfg;
                         translate = translate cfg bs;
                       } in
-                      match prim_step.interpretation_nbe callbacks args' with
+                      debug (fun () -> BU.print1 "Caling primop with args = [%s]\n"
+                                    (List.map (fun (x, _) -> t_to_string x) args' |> String.concat "; "));
+                      let univs, rest = List.span (function ({nbe_t=Univ _ }, _) -> true | _ -> false) args' in
+                      let univs = List.map (function ({nbe_t=Univ u}, _) -> u | _ -> failwith "Impossible") univs in
+                      match prim_step.interpretation_nbe callbacks univs rest with
                       | Some x ->
                         debug (fun () -> BU.print2 "Primitive operator %s returned %s\n" (P.fv_to_string fvar) (t_to_string x));
                         x
                       | None ->
                         debug (fun () -> BU.print1 "Primitive operator %s failed\n" (P.fv_to_string fvar));
-                      iapp cfg (mkFV fvar [] []) args'),
+                        iapp cfg (mkFV fvar [] []) args'),
                      (let f (_:int) = S.mk_binder (S.new_bv None S.t_unit) in
                       Inl ([], FStar.Common.tabulate arity f, None)),
                      arity)
@@ -970,8 +974,8 @@ and translate_constant (c : sconst) : constant =
 and readback_comp cfg (c: comp) : S.comp =
   let c' =
     match c with
-    | Tot  (typ, u) -> S.Total (readback cfg typ, u)
-    | GTot (typ, u) -> S.GTotal (readback cfg typ, u)
+    | Tot  typ -> S.Total (readback cfg typ)
+    | GTot typ -> S.GTotal (readback cfg typ)
     | Comp ctyp     -> S.Comp (readback_comp_typ cfg ctyp)
    in S.mk c' Range.dummyRange
 

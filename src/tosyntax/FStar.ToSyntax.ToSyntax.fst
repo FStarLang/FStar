@@ -1682,7 +1682,18 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term * an
       then ds_let_rec_or_app()
       else ds_non_rec attrs head_pat defn body
 
-    | If(t1, asc_opt, t2, t3) ->
+    | If(e, Some op, asc_opt, t2, t3) ->
+      // A if operator is desugared into a let operator binding
+      // with name "uu___if_op_head" followed by a regular if on
+      // "uu___if_op_head"
+      let var_id = mk_ident(reserved_prefix ^ "if_op_head", e.range) in
+      let var = mk_term (Var (lid_of_ids [var_id])) e.range Expr in
+      let pat = mk_pattern (PatVar (var_id, None, [])) e.range in
+      let if_ = mk_term (If (var, None, asc_opt, t2, t3)) top.range Expr in
+      let t   = mk_term (LetOperator ([(op, pat, e)], if_)) e.range Expr in
+      desugar_term_aq env t
+
+    | If(t1, None, asc_opt, t2, t3) ->
       let x = Syntax.new_bv (Some t3.range) (tun_r t3.range) in
       let t_bool = mk (Tm_fvar(S.lid_as_fv C.bool_lid delta_constant None)) in
       let t1', aq1 = desugar_term_aq env t1 in
@@ -3173,8 +3184,9 @@ let rec desugar_effect env d (quals: qualifiers) (is_layered:bool) eff_name eff_
     let mname       =qualify env0 eff_name in
     let qualifiers  =List.map (trans_qual d.drange (Some mname)) quals in
     let dummy_tscheme = [], S.tun in
-    let combinators =
+    let eff_sig, combinators =
       if for_free then
+        WP_eff_sig ([], eff_t),
         DM4F_eff ({
           ret_wp = dummy_tscheme;
           bind_wp = dummy_tscheme;
@@ -3192,26 +3204,59 @@ let rec desugar_effect env d (quals: qualifiers) (is_layered:bool) eff_name eff_
         let has_subcomp = List.existsb (fun decl -> name_of_eff_decl decl = "subcomp") eff_decls in
         let has_if_then_else = List.existsb (fun decl -> name_of_eff_decl decl = "if_then_else") eff_decls in
 
-        //setting the second component to dummy_ts, typechecker fills them in
-        let to_comb (us, t) = (us, t), dummy_tscheme in
+        //setting the second component to dummy_ts,
+        //  and kind to None, typechecker fills them in
+        let to_comb (us, t) = (us, t), dummy_tscheme, None in
+
+ 
+        let eff_t, num_effect_params =
+          match (SS.compress eff_t).n with
+          | Tm_arrow (bs, c) ->
+            // peel off the first a:Type binder
+            let a::bs = bs in
+            //
+            // allow_param checks that all effect parameters
+            //   are upfront
+            // it is true initially, and is set to false as soon as
+            //   we see a non-parameter binder
+            // and if some parameter appears after that, we raise an error
+            //
+            let n, _, bs = List.fold_left (fun (n, allow_param, bs) b ->
+              let b_attrs = b.binder_attrs in
+              let is_param = U.has_attribute b_attrs C.effect_parameter_attr in
+              if is_param && not allow_param
+              then raise_error
+                     (Errors.Fatal_UnexpectedEffect,
+                      "Effect parameters must all be upfront")
+                     d.drange;
+              let b_attrs = U.remove_attr C.effect_parameter_attr b_attrs in
+              (if is_param then n+1 else n),
+              allow_param && is_param,
+              bs@[{b with binder_attrs=b_attrs}]) (0, true, []) bs in
+            {eff_t with n=Tm_arrow (a::bs, c)},
+            n
+          | _ -> failwith "desugaring indexed effect: effect type not an arrow" in
 
         (*
          * AR: if subcomp or if_then_else are not specified, then fill in dummy_tscheme
          *     typechecker will fill in an appropriate default
          *)
+
+        Layered_eff_sig (num_effect_params, ([], eff_t)),
         Layered_eff ({
-          l_repr = lookup "repr" |> to_comb;
-          l_return = lookup "return" |> to_comb;
+          l_repr = lookup "repr", dummy_tscheme;
+          l_return = lookup "return", dummy_tscheme;
           l_bind = lookup "bind" |> to_comb;
           l_subcomp =
             if has_subcomp then lookup "subcomp" |> to_comb
-            else dummy_tscheme, dummy_tscheme;
+            else dummy_tscheme, dummy_tscheme, None;
           l_if_then_else =
             if has_if_then_else then lookup "if_then_else" |> to_comb
-            else dummy_tscheme, dummy_tscheme;
+            else dummy_tscheme, dummy_tscheme, None;
         })
       else
         let rr = BU.for_some (function S.Reifiable | S.Reflectable _ -> true | _ -> false) qualifiers in
+        WP_eff_sig ([], eff_t),
         Primitive_eff ({
           ret_wp = lookup "return_wp";
           bind_wp = lookup "bind_wp";
@@ -3231,7 +3276,7 @@ let rec desugar_effect env d (quals: qualifiers) (is_layered:bool) eff_name eff_
       cattributes = [];
       univs = [];
       binders = binders;
-      signature = [], eff_t;
+      signature = eff_sig;
       combinators = combinators;
       actions = actions;
       eff_attrs = List.map (desugar_term env) attrs;
@@ -3292,7 +3337,7 @@ and desugar_redefine_effect env d trans_qual quals eff_name eff_binders defn =
             cattributes   = cattributes;
             univs         = ed.univs;
             binders       = binders;
-            signature     = sub ed.signature;
+            signature     = U.apply_eff_sig sub ed.signature;
             combinators   = apply_eff_combinators sub ed.combinators;
             actions       = List.map (fun action ->
                 let nparam = List.length action.action_params in
@@ -3800,7 +3845,11 @@ and desugar_decl_noattrs env (d:decl) : (env_t * sigelts) =
            | ReifiableLift (wp, t) -> Some ([],desugar_term env wp), Some([], desugar_term env t)
            | LiftForFree t -> None, Some ([],desugar_term env t)
          in
-         let se = { sigel = Sig_sub_effect({source=src_ed.mname; target=dst_ed.mname; lift_wp=lift_wp; lift=lift});
+         let se = { sigel = Sig_sub_effect({source=src_ed.mname;
+                                            target=dst_ed.mname;
+                                            lift_wp=lift_wp;
+                                            lift=lift;
+                                            kind=None});
                     sigquals = [];
                     sigrng = d.drange;
                     sigmeta = default_sigmeta  ;
@@ -3814,7 +3863,8 @@ and desugar_decl_noattrs env (d:decl) : (env_t * sigelts) =
            source = src_ed.mname;
            target = dst_ed.mname;
            lift_wp = None;
-           lift = Some ([], desugar_term env t)
+           lift = Some ([], desugar_term env t);
+           kind = None
          } in
          env, [{
            sigel = Sig_sub_effect sub_eff;
@@ -3833,7 +3883,8 @@ and desugar_decl_noattrs env (d:decl) : (env_t * sigelts) =
       sigel = Sig_polymonadic_bind (
         m.mname, n.mname, p.mname,
         ([], desugar_term env bind),
-        ([], S.tun));
+        ([], S.tun),
+        None);
       sigquals = [];
       sigrng = d.drange;
       sigmeta = default_sigmeta;
@@ -3847,7 +3898,8 @@ and desugar_decl_noattrs env (d:decl) : (env_t * sigelts) =
       sigel = Sig_polymonadic_subcomp (
         m.mname, n.mname,
         ([], desugar_term env subcomp),
-        ([], S.tun));
+        ([], S.tun),
+        None);
       sigquals = [];
       sigrng = d.drange;
       sigmeta = default_sigmeta;
@@ -4005,7 +4057,7 @@ let add_modul_to_env (m:Syntax.modul)
             { ed with
               univs         = [];
               binders       = Subst.close_binders binders;
-              signature     = erase_tscheme ed.signature;
+              signature     = U.apply_eff_sig erase_tscheme ed.signature;
               combinators   = apply_eff_combinators erase_tscheme ed.combinators;
               actions       = List.map erase_action ed.actions
           }

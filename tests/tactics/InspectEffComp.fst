@@ -11,9 +11,9 @@ let test () : Type0 =
      | Tv_Arrow bv c ->
        let c' =
          begin match inspect_comp c with
-         | C_Eff us eff res args ->
+         | C_Eff us eff res args decrs ->
                  let args' = [(`(as_pure_wp (fun p -> p 17)), Q_Explicit)] in
-                 pack_comp (C_Eff us eff res args')
+                 pack_comp (C_Eff us eff res args' decrs)
          | _ -> fail "no"
          end
        in

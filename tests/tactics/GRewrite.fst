@@ -50,8 +50,7 @@ let test_grewrite5 (n m : int) (p1 : squash (n == m))
             exact (quote p1))
 
 let guard (b:bool) : Tac unit =
-    if b then ()
-         else fail "failed guard"
+    if not b then fail "failed guard"
 
 // Sanity checks for term_eq
 let test_term_eq (m n o : int) =

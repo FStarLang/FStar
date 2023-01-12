@@ -29,7 +29,6 @@ let normalize (#t:Type) (steps : list norm_step) (x:t) : Tac unit =
 
 (* This tactic also depends on said behaviour of quote, and returns the definition of a top-level fvar *)
 let def_of (#t:Type) (x:t) : Tac term =
-  admit();
   let e = cur_env () in
   let t = quote x in
   match inspect t with

@@ -55,7 +55,7 @@ effect {
   with { repr; return; bind; subcomp; if_then_else }
 }
 
-let lift_pure_nd (a:Type) (wp:pure_wp a) (f:eqtype_as_type unit -> PURE a wp)
+let lift_pure_nd (a:Type) (wp:pure_wp a) (f:unit -> PURE a wp)
   : repr a wp
   = elim_pure_wp_monotonicity wp;
     fun _ -> f ()

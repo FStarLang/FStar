@@ -1400,15 +1400,6 @@ let (collect_one :
                      (false, uu___6) in
                    P_dep uu___5 in
                  add_to_parsing_data uu___4
-             | FStar_Const.Const_float uu___3 ->
-                 let uu___4 =
-                   let uu___5 =
-                     let uu___6 =
-                       FStar_Compiler_Effect.op_Bar_Greater "fstar.float"
-                         FStar_Ident.lid_of_str in
-                     (false, uu___6) in
-                   P_dep uu___5 in
-                 add_to_parsing_data uu___4
              | uu___3 -> ()
            and collect_term' uu___2 =
              match uu___2 with
@@ -1461,11 +1452,11 @@ let (collect_one :
                  (collect_term t1; collect_term t2)
              | FStar_Parser_AST.Seq (t1, t2) ->
                  (collect_term t1; collect_term t2)
-             | FStar_Parser_AST.If (t1, ret_opt, t2, t3) ->
+             | FStar_Parser_AST.If (t1, uu___3, ret_opt, t2, t3) ->
                  (collect_term t1;
                   (match ret_opt with
                    | FStar_Pervasives_Native.None -> ()
-                   | FStar_Pervasives_Native.Some (uu___5, ret, uu___6) ->
+                   | FStar_Pervasives_Native.Some (uu___6, ret, uu___7) ->
                        collect_term ret);
                   collect_term t2;
                   collect_term t3)

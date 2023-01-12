@@ -69,6 +69,7 @@ let rec eq_step s1 s2 =
   | UnfoldAttr lids1, UnfoldAttr lids2 ->
       List.length lids1 = List.length lids2 && List.forall2 Ident.lid_equals lids1 lids2
   | UnfoldQual strs1, UnfoldQual strs2 -> strs1 = strs2
+  | UnfoldNamespace strs1, UnfoldNamespace strs2 -> strs1 = strs2  
   | _ -> false
 
 let preprocess env tau tm  = env.mpreprocess env tau tm
@@ -120,7 +121,8 @@ let initial_env deps
   universe_of
   teq_nosmt_force
   subtype_nosmt_force
-  solver module_lid nbe : env =
+  solver module_lid nbe
+  core_check : env =
   { solver=solver;
     range=dummyRange;
     curmodule=module_lid;
@@ -179,7 +181,7 @@ let initial_env deps
     unif_allow_ref_guards=false;
     erase_erasable_args=false;
 
-    rel_query_for_apply_tac_uvar=None;
+    core_check
   }
 
 let dsenv env = env.dsenv
@@ -309,7 +311,7 @@ let variable_not_found v =
   (Errors.Fatal_VariableNotFound, (format1 "Variable \"%s\" not found" (Print.bv_to_string v)))
 
 //Construct a new universe unification variable
-let new_u_univ () = U_unif (Unionfind.univ_fresh Range.dummyRange)
+let new_u_univ () = U_unif (UF.univ_fresh Range.dummyRange)
 
 let mk_univ_subst (formals : list univ_name) (us : universes) : list subst_elt =
     assert (List.length us = List.length formals);
@@ -477,17 +479,18 @@ let effect_signature (us_opt:option universes) (se:sigelt) rng : option ((univer
   in
   match se.sigel with
   | Sig_new_effect ne ->
+    let sig_ts = U.effect_sig_ts ne.signature in
     check_effect_is_not_a_template ne rng;
     (match us_opt with
      | None -> ()
      | Some us ->
-       if List.length us <> List.length (fst ne.signature)
+       if List.length us <> List.length (fst sig_ts)
        then failwith ("effect_signature: incorrect number of universes for the signature of " ^
-         (string_of_lid ne.mname) ^ ", expected " ^ (string_of_int (List.length (fst ne.signature))) ^
+         (string_of_lid ne.mname) ^ ", expected " ^ (string_of_int (List.length (fst sig_ts))) ^
          ", got " ^ (string_of_int (List.length us)))
        else ());
 
-    Some (inst_ts us_opt ne.signature, se.sigrng)
+    Some (inst_ts us_opt sig_ts, se.sigrng)
 
   | Sig_effect_abbrev (lid, us, binders, _, _) ->
     Some (inst_ts us_opt (us, U.arrow binders (mk_Total teff)), se.sigrng)
@@ -628,6 +631,12 @@ let lookup_datacon env lid =
   match lookup_qname env lid with
     | Some (Inr ({ sigel = Sig_datacon (_, uvs, t, _, _, _) }, None), _) ->
       inst_tscheme_with_range (range_of_lid lid) (uvs, t)
+    | _ -> raise_error (name_not_found lid) (range_of_lid lid)
+
+let lookup_and_inst_datacon env us lid =
+  match lookup_qname env lid with
+    | Some (Inr ({ sigel = Sig_datacon (_, uvs, t, _, _, _) }, None), _) ->
+      inst_tscheme_with (uvs, t) us |> snd
     | _ -> raise_error (name_not_found lid) (range_of_lid lid)
 
 let datacons_of_typ env lid =
@@ -1067,7 +1076,7 @@ let wp_sig_aux decls m =
      *     i.e. implicitly there was an assumption that ed.binders is empty
      *     now when signature is itself a tscheme, this just translates to the following
      *)
-    let _, s = inst_tscheme md.signature in
+    let _, s = md.signature |> U.effect_sig_ts |> inst_tscheme in
     let s = Subst.compress s in
     match md.binders, s.n with
       | [], Tm_arrow([b; wp_b], c) when (is_teff (comp_result c)) -> b.binder_bv, wp_b.binder_bv.sort
@@ -1076,15 +1085,20 @@ let wp_sig_aux decls m =
 let wp_signature env m = wp_sig_aux env.effects.decls m
 
 let comp_to_comp_typ (env:env) c =
-    let c = match c.n with
-            | Total (t, None) ->
-              let u = env.universe_of env t in
-              S.mk_Total' t (Some u)
-            | GTotal (t, None) ->
-              let u = env.universe_of env t in
-              S.mk_GTotal' t (Some u)
-            | _ -> c in
-    U.comp_to_comp_typ c
+  match c.n with
+  | Comp ct -> ct
+  | _ ->
+    let effect_name, result_typ =
+      match c.n with
+      | Total t -> Const.effect_Tot_lid, t
+      | GTotal t -> Const.effect_GTot_lid, t in
+    {comp_univs = [env.universe_of env result_typ];
+     effect_name;
+     result_typ;
+     effect_args = [];
+     flags = U.comp_flags c}
+
+let comp_set_flags env c f = {c with n=Comp ({comp_to_comp_typ env c with flags=f})}
 
 let rec unfold_effect_abbrev env comp =
   let c = comp_to_comp_typ env comp in
@@ -1221,8 +1235,8 @@ let exists_polymonadic_bind env m n =
 
 let exists_polymonadic_subcomp env m n =
   match env.effects.polymonadic_subcomps
-        |> BU.find_opt (fun (m1, n1, _) -> lid_equals m m1 && lid_equals n n1) with
-  | Some (_, _, ts) -> Some ts
+        |> BU.find_opt (fun (m1, n1, _, _) -> lid_equals m m1 && lid_equals n n1) with
+  | Some (_, _, ts, k) -> Some (ts, k)
   | _ -> None
 
 let print_effects_graph env =
@@ -1270,7 +1284,7 @@ let print_effects_graph env =
     let key = BU.format3 "%s, %s |> %s" (eff_name m) (eff_name n) (eff_name p) in
     smap_add pbinds key "");
 
-  env.effects.polymonadic_subcomps |> List.iter (fun (m, n, _) ->
+  env.effects.polymonadic_subcomps |> List.iter (fun (m, n, _, _) ->
     let key = BU.format2 "%s <: %s" (eff_name m) (eff_name n) in
     smap_add psubcomps key "");
 
@@ -1309,7 +1323,8 @@ let update_effect_lattice env src tgt st_mlift =
     let composed_lift =
       let mlift_wp env c =
         c |> e1.mlift.mlift_wp env
-	  |> (fun (c, g1) -> c |> e2.mlift.mlift_wp env |> (fun (c, g2) -> c, TcComm.conj_guard g1 g2)) in
+	  |> (fun (c, g1) -> c |> e2.mlift.mlift_wp env
+                           |> (fun (c, g2) -> c, TcComm.conj_guard g1 g2)) in
       let mlift_term =
         match e1.mlift.mlift_term, e2.mlift.mlift_term with
         | Some l1, Some l2 -> Some (fun u t e -> l2 u t (l1 u t e))
@@ -1469,10 +1484,10 @@ let add_polymonadic_bind env m n p ty =
   { env with
     effects = ({ env.effects with polymonadic_binds = (m, n, p, ty)::env.effects.polymonadic_binds }) }
 
-let add_polymonadic_subcomp env m n ts =
+let add_polymonadic_subcomp env m n (ts, k) =
   { env with
     effects = ({ env.effects with
-                 polymonadic_subcomps = (m, n, ts)::env.effects.polymonadic_subcomps }) }
+                 polymonadic_subcomps = (m, n, ts, k)::env.effects.polymonadic_subcomps }) }
 
 let push_local_binding env b =
   {env with gamma=b::env.gamma}
@@ -1664,7 +1679,7 @@ let guard_form g = g.guard_f
 let is_trivial g = match g with
     | {guard_f=Trivial; deferred=[]; univ_ineqs=([], []); implicits=i} ->
       i |> BU.for_all (fun imp ->
-           (U.ctx_uvar_should_check imp.imp_uvar=Allow_unresolved)
+           (Allow_unresolved? (U.ctx_uvar_should_check imp.imp_uvar))
            || (match Unionfind.find imp.imp_uvar.ctx_uvar_head with
                | Some _ -> true
                | None -> false))
@@ -1767,7 +1782,7 @@ let close_guard env binders g =
 (* ------------------------------------------------*)
 
 (* Generating new implicit variables *)
-let new_tac_implicit_var reason r env k should_check meta apply_tac_deps =
+let new_tac_implicit_var reason r env k should_check uvar_typedness_deps meta =
     match U.destruct k FStar.Parser.Const.range_of_lid with
      | Some [_; (tm, _)] ->
        let t = S.mk (S.Tm_constant (FStar.Const.Const_range tm.pos)) tm.pos in
@@ -1778,6 +1793,7 @@ let new_tac_implicit_var reason r env k should_check meta apply_tac_deps =
       let gamma = env.gamma in
       let decoration = {
              uvar_decoration_typ = k;
+             uvar_decoration_typedness_depends_on = uvar_typedness_deps;
              uvar_decoration_should_check = should_check;
           }
       in
@@ -1788,8 +1804,6 @@ let new_tac_implicit_var reason r env k should_check meta apply_tac_deps =
           ctx_uvar_reason=reason;
           ctx_uvar_range=r;
           ctx_uvar_meta=meta;
-
-          ctx_uvar_apply_tac_prefix=apply_tac_deps;
       } in
       check_uvar_ctx_invariant reason r true gamma binders;
       let t = mk (Tm_uvar (ctx_uvar, ([], NoUseRange))) r in
@@ -1804,41 +1818,15 @@ let new_tac_implicit_var reason r env k should_check meta apply_tac_deps =
       t, [(ctx_uvar, r)], g
 
 let new_implicit_var_aux reason r env k should_check meta =
-  new_tac_implicit_var reason r env k should_check meta []
+  new_tac_implicit_var reason r env k should_check [] meta
 
 (***************************************************)
 
-(*
- * The Allow_untyped is a bit unfortunate here. But here is an explanation and plan to remove it:
- *
- * This gadget is used to create uvars when applying layered effect combinators
- * These uvars are typically for layered effect indices (or their subterms),
- *   which are analogous to wps in the wp-based effects
- *
- * Suppose we use Strict instead of Allow_untyped, that has two problems:
- *
- * (a) Performance: These uvars (indices) are repetedly resolved by the unifier and
- *     then typechecked (as done for normal implicits). If these terms are big, this
- *     can cause significant slowdowns.
- *
- *     If some day we have memoization in the typechecker, then this slowdown can go away.
- *
- * (b) Convincing the typechecker of their well-typedness: The layered effect indices (and wps)
- *     are many times constructed by the typechecker, and so far, there is no guarantee that they
- *     can be typechecked by the typechecker. For example, in the case of wp-based effects,
- *     the typechecker constructs wps by applying combinators, but these terms are often not typechecked
- *     again (even in 2-phase TC, there inference of wp is anyway out of scope). Analogous reasoning
- *     for layered effect indices. While it would be awesome if we could maintain this hygiene,
- *     it's not there right now. And it may not always be possible too (e.g. using projectors in the
- *     branch VCs).
- *
- * As a result for now we use Allow_untyped here, and TRUST the unifier to do the right thing.
- * When we have memoization, we can move to Strict and then it would be finding ill-typed instances
- *   one-by-one and fixing them.
- *
- * To guard against misuses of this, we typecheck the layered effect combinator types in a strict
- *   mode (with no smt and subtyping)
- *)
+//
+// Perhaps this should not return a guard,
+//   but only a list of implicits, so that callers don't have to
+//   be cautious about the logical payload of the guard
+//
 let uvars_for_binders env (bs:S.binders) substs reason r =
   bs |> List.fold_left (fun (substs, uvars, g) b ->
     let sort = SS.subst substs b.binder_bv.sort in
@@ -1847,20 +1835,25 @@ let uvars_for_binders env (bs:S.binders) substs reason r =
       match b.binder_qual, b.binder_attrs with
       | Some (Meta t), [] ->
         Some (Ctx_uvar_meta_tac (FStar.Compiler.Dyn.mkdyn env, t))
-      | _, t::_ ->
-        Some (Ctx_uvar_meta_attr t)
+      | _, t::_ -> Some (Ctx_uvar_meta_attr t)
       | _ -> None in
 
     let t, l_ctx_uvars, g_t = new_implicit_var_aux
-      (reason b) r env sort Allow_untyped ctx_uvar_meta_t in
+      (reason b) r env sort
+      (if Options.compat_pre_typed_indexed_effects ()
+       then Allow_untyped "indexed effect uvar in compat mode"
+       else Strict)
+      ctx_uvar_meta_t in
 
     if debug env <| Options.Other "LayeredEffectsEqns"
-    then List.iter (fun (ctx_uvar, _) -> BU.print1 "Layered Effect uvar : %s\n"
-      (Print.ctx_uvar_to_string_no_reason ctx_uvar)) l_ctx_uvars;
+    then List.iter (fun (ctx_uvar, _) ->
+                    BU.print1 "Layered Effect uvar : %s\n"
+                      (Print.ctx_uvar_to_string ctx_uvar)) l_ctx_uvars;
 
-    substs@[NT (b.binder_bv, t)], uvars@[t], conj_guard g g_t
+    substs@[NT (b.binder_bv, t)],
+    uvars@[t],
+    conj_guards [g; g_t]
   ) (substs, [], trivial_guard) |> (fun (_, uvars, g) -> uvars, g)
-
 
 let pure_precondition_for_trivial_post env u t wp r =
   let trivial_post =

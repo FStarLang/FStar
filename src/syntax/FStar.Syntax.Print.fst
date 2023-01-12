@@ -390,11 +390,11 @@ and ctx_uvar_to_string_aux print_reason ctx_uvar =
             (uvar_to_string ctx_uvar.ctx_uvar_head)
             (term_to_string (SU.ctx_uvar_typ ctx_uvar))
             (match SU.ctx_uvar_should_check ctx_uvar with
-             | Allow_unresolved -> "Allow_unresolved"
-             | Allow_untyped  -> "Allow_untyped"
-             | Allow_ghost  -> "Allow_ghost"
+             | Allow_unresolved s -> "Allow_unresolved " ^s
+             | Allow_untyped s -> "Allow_untyped " ^s
+             | Allow_ghost s -> "Allow_ghost " ^s
              | Strict   -> "Strict"
-             | Strict_no_fastpath -> "Strict_no_fastpath")
+             | Already_checked -> "Already_checked")
 
 
 and subst_elt_to_string = function
@@ -529,21 +529,15 @@ and comp_to_string c =
   else
     Errors.with_ctx "While ugly-printing a computation" (fun () ->
     match c.n with
-    | Total (t, uopt) ->
+    | Total t ->
       begin match (compress t).n with
         | Tm_type _ when not (Options.print_implicits() || Options.print_universes()) -> term_to_string t
-        | _ ->
-          match uopt with
-          | Some u when Options.print_universes() -> U.format2 "Tot<%s> %s" (univ_to_string u) (term_to_string t)
-          | _ -> U.format1 "Tot %s" (term_to_string t)
+        | _ -> U.format1 "Tot %s" (term_to_string t)
       end
-    | GTotal (t, uopt) ->
+    | GTotal t ->
       begin match (compress t).n with
         | Tm_type _ when not (Options.print_implicits() || Options.print_universes()) -> term_to_string t
-        | _ ->
-          match uopt with
-          | Some u when Options.print_universes() -> U.format2 "GTot<%s> %s" (univ_to_string u) (term_to_string t)
-          | _ -> U.format1 "GTot %s" (term_to_string t)
+        | _ -> U.format1 "GTot %s" (term_to_string t)
       end
     | Comp c ->
         let basic =
@@ -708,8 +702,47 @@ let wp_eff_combinators_to_string combs =
       tscheme_opt_to_string combs.return_repr;
       tscheme_opt_to_string combs.bind_repr ]
 
+let indexed_effect_binder_kind_to_string = function
+  | Type_binder -> "type_binder"
+  | Substitutive_binder -> "subst_binder"
+  | BindCont_no_abstraction_binder -> "bind_g_no_abs_binder"
+  | Range_binder -> "range_binder"
+  | Repr_binder -> "repr_binder"
+  | Ad_hoc_binder -> "ad_hoc_binder"
+
+let list_to_string f elts =
+    match elts with
+        | [] -> "[]"
+        | x::xs ->
+            let strb = U.new_string_builder () in
+            U.string_builder_append strb "[" ;
+            U.string_builder_append strb (f x) ;
+            List.iter (fun x ->
+                       U.string_builder_append strb "; " ;
+                       U.string_builder_append strb (f x)
+                       ) xs ;
+            U.string_builder_append strb "]" ;
+            U.string_of_string_builder strb
+
+let indexed_effect_combinator_kind_to_string = function
+  | Substitutive_combinator l ->
+    U.format1 "standard_combinator (%s)"
+      (list_to_string indexed_effect_binder_kind_to_string l)
+  | Substitutive_invariant_combinator -> "substitutive_invariant"
+  | Ad_hoc_combinator -> "ad_hoc_combinator"
+
+let indexed_effect_combinator_kind_opt_to_string k =
+  match k with
+  | None -> "kind not set"
+  | Some k -> indexed_effect_combinator_kind_to_string k
+
 let layered_eff_combinators_to_string combs =
-  let to_str (ts_t, ts_ty) =
+  let to_str (ts_t, ts_ty, kopt) =
+    U.format3 "(%s) : (%s)<%s>"
+      (tscheme_to_string ts_t) (tscheme_to_string ts_ty)
+      (indexed_effect_combinator_kind_opt_to_string kopt) in
+
+  let to_str2 (ts_t, ts_ty) =
     U.format2 "(%s) : (%s)"
       (tscheme_to_string ts_t) (tscheme_to_string ts_ty) in
 
@@ -720,11 +753,11 @@ let layered_eff_combinators_to_string combs =
   ; l_subcomp = %s\n\
   ; l_if_then_else = %s\n
   }\n"
-    [ to_str combs.l_repr;
-      to_str combs.l_return;
-      to_str combs.l_bind;
-      to_str combs.l_subcomp;
-      to_str combs.l_if_then_else ]
+    [ to_str2 combs.l_repr;
+      to_str2 combs.l_return;
+      to_str  combs.l_bind;
+      to_str  combs.l_subcomp;
+      to_str  combs.l_if_then_else ]
 
 let eff_combinators_to_string = function
   | Primitive_eff combs
@@ -751,7 +784,7 @@ let eff_decl_to_string' for_free r q ed =
          lid_to_string ed.mname;
          enclose_universes <| univ_names_to_string ed.univs;
          binders_to_string " " ed.binders;
-         tscheme_to_string ed.signature;
+         ed.signature |> SU.effect_sig_ts |> tscheme_to_string;
          eff_combinators_to_string ed.combinators;
          actions_to_string ed.actions]
 
@@ -831,19 +864,21 @@ let rec sigelt_to_string (x: sigelt) =
         else U.format3 "effect %s %s = %s" (sli l) (binders_to_string " " tps) (comp_to_string c)
       | Sig_splice (lids, t) ->
         U.format2 "splice[%s] (%s)" (String.concat "; " <| List.map Ident.string_of_lid lids) (term_to_string t)
-      | Sig_polymonadic_bind (m, n, p, t, ty) ->
-        U.format5 "polymonadic_bind (%s, %s) |> %s = (%s, %s)"
+      | Sig_polymonadic_bind (m, n, p, t, ty, k) ->
+        U.format6 "polymonadic_bind (%s, %s) |> %s = (%s, %s)<%s>"
           (Ident.string_of_lid m)
           (Ident.string_of_lid n)
           (Ident.string_of_lid p)
           (tscheme_to_string t)
           (tscheme_to_string ty)
-      | Sig_polymonadic_subcomp (m, n, t, ty) ->
-        U.format4 "polymonadic_subcomp %s <: %s = (%s, %s)"
+          (indexed_effect_combinator_kind_opt_to_string k)
+      | Sig_polymonadic_subcomp (m, n, t, ty, k) ->
+        U.format5 "polymonadic_subcomp %s <: %s = (%s, %s)<%s>"
           (Ident.string_of_lid m)
           (Ident.string_of_lid n)
           (tscheme_to_string t)
           (tscheme_to_string ty)
+          (indexed_effect_combinator_kind_opt_to_string k)
       in
       match x.sigattrs with
       | [] -> "[@ ]" ^ "\n" ^ basic //It is important to keep this empty attribute marker since the Vale type extractor uses it as a delimiter
@@ -906,11 +941,11 @@ let rec sigelt_to_string_short (x: sigelt) = match x.sigel with
               (String.concat "; " <| List.map Ident.string_of_lid lids)
               (term_to_string t)
 
-  | Sig_polymonadic_bind (m, n, p, t, ty) ->
+  | Sig_polymonadic_bind (m, n, p, t, ty, _) ->
     U.format3 "polymonadic_bind (%s, %s) |> %s"
               (Ident.string_of_lid m) (Ident.string_of_lid n) (Ident.string_of_lid p)
 
-  | Sig_polymonadic_subcomp (m, n, t, ty) ->
+  | Sig_polymonadic_subcomp (m, n, t, ty, _) ->
     U.format2 "polymonadic_subcomp %s <: %s" (Ident.string_of_lid m) (Ident.string_of_lid n)
 
 let tag_of_sigelt (se:sigelt) : string =
@@ -951,20 +986,6 @@ let modul_to_string (m:modul) =
 //          U.string_builder_append strb (Ident.string_of_lid lid)
 //  end ;
 //  U.string_of_string_builder strb
-
-let list_to_string f elts =
-    match elts with
-        | [] -> "[]"
-        | x::xs ->
-            let strb = U.new_string_builder () in
-            U.string_builder_append strb "[" ;
-            U.string_builder_append strb (f x) ;
-            List.iter (fun x ->
-                       U.string_builder_append strb "; " ;
-                       U.string_builder_append strb (f x)
-                       ) xs ;
-            U.string_builder_append strb "]" ;
-            U.string_of_string_builder strb
 
 let set_to_string f s =
     let elts = U.set_elements s in

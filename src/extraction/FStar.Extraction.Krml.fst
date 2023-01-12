@@ -130,6 +130,7 @@ and expr =
   | EComment of string * expr * string
   | EStandaloneComment of string
   | EAddrOf of expr
+  | EBufNull of typ
 
 and op =
   | Add | AddW | Sub | SubW | Div | DivW | Mult | MultW | Mod
@@ -433,6 +434,14 @@ let translate_cc flags =
   | [ "cdecl" ] -> Some CDecl
   | _ -> None
 
+(* Per FStarLang/karamel#324 *)
+let generate_is_null
+  (t: typ)
+  (x: expr)
+: Tot expr
+= let dummy = UInt64 in
+  EApp (ETypApp (EOp (Eq, dummy), [TBuf t]), [x; EBufNull t])
+
 let rec translate_type_without_decay env t: typ =
   match t with
   | MLTY_Tuple []
@@ -639,6 +648,14 @@ and translate_expr env e: expr =
 
   // We recognize certain distinguished names from [FStar.HST] and other
   // modules, and translate them into built-in Karamel constructs
+  | MLE_App ({expr = MLE_TApp ({expr = MLE_Name p}, [t]) }, _)
+    when string_of_mlpath p = "Steel.ST.HigherArray.null_ptr"
+    ->
+    EBufNull (translate_type env t)
+  | MLE_App ({expr = MLE_TApp ({expr = MLE_Name p }, [t])}, [arg])
+    when string_of_mlpath p = "Steel.ST.HigherArray.is_null_ptr"
+    ->
+    generate_is_null (translate_type env t) (translate_expr env arg)
   | MLE_App({expr=MLE_TApp ({ expr = MLE_Name p }, [t])}, [arg])
     when string_of_mlpath p = "FStar.Dyn.undyn" ->
       ECast (translate_expr env arg, translate_type env t)
@@ -1027,34 +1044,28 @@ and translate_expr env e: expr =
     when string_of_mlpath p = "Steel.Effect.Atomic.return" ->
     translate_expr env e
 
-(* BEGIN support for the Steel null pointer. Here, we "piggyback" to
-the current Low* operators for the null pointer, which KaRaMeL will
-extract to C later.
+(* BEGIN support for the Steel null pointer. *)
 
-TODO: these should be removed and those operators should be directly
-supported by KaRaMeL (in src/Builtin.ml) Or alternatively Null and
-IsNull nodes should be added to the KaRaMeL AST *)
-
-  | MLE_App ({expr=MLE_TApp ({expr=MLE_Name p}, _)}, [_ (* opened *); e; _ (* a' *); _ (* sq *) ])
+  | MLE_App ({expr=MLE_TApp ({expr=MLE_Name p}, [t])}, [_ (* opened *); e; _ (* a' *); _ (* sq *) ])
     when string_of_mlpath p = "Steel.C.Array.Base.is_null_from"
-    -> EApp (EQualified (["LowStar"; "Monotonic"; "Buffer"], "is_null"), [ translate_expr env e ])
+    -> generate_is_null (translate_type env t) (translate_expr env e)
 
-  | MLE_App ({expr=MLE_TApp ({expr=MLE_Name p}, _)}, [_ (* opened *); _ (* pcm *); e; _ (* view *)])
+  | MLE_App ({expr=MLE_TApp ({expr=MLE_Name p}, [_; t])}, [_ (* opened *); _ (* pcm *); e; _ (* view *)])
     when string_of_mlpath p = "Steel.C.Reference.is_null"
-    -> EApp (EQualified (["LowStar"; "Monotonic"; "Buffer"], "is_null"), [ translate_expr env e ])
+    -> generate_is_null (translate_type env t) (translate_expr env e)
 
-  | MLE_App ({expr=MLE_TApp ({expr=MLE_Name p}, _)}, [_ (* opened *); _ (* td *); _ (* v *); e])
+  | MLE_App ({expr=MLE_TApp ({expr=MLE_Name p}, [t])}, [_ (* opened *); _ (* td *); _ (* v *); e])
     when string_of_mlpath p = "Steel.C.Types.is_null"
-    -> EApp (EQualified (["LowStar"; "Monotonic"; "Buffer"], "is_null"), [ translate_expr env e ])
+    -> generate_is_null (translate_type env t) (translate_expr env e)
   
-  | MLE_TApp ({expr=MLE_Name p}, _)
+  | MLE_App ({expr=MLE_TApp ({expr=MLE_Name p}, [t])}, _)
     when Syntax.string_of_mlpath p = "Steel.C.Array.Base.null_from"
-    -> EQualified (["LowStar"; "Buffer"], "null")
+    -> EBufNull (translate_type env t)
 
-  | MLE_App ({expr=MLE_TApp ({expr=MLE_Name p}, _)}, [_ (* pcm *)])
+  | MLE_App ({expr=MLE_TApp ({expr=MLE_Name p}, t::_)}, [_ (* pcm *)])
     when string_of_mlpath p = "Steel.C.Reference.null"
     || string_of_mlpath p = "Steel.C.Types.null"
-    -> EApp (EQualified (["LowStar"; "Buffer"], "null"), [EUnit])
+    -> EBufNull (translate_type env t)
 
 (* END support for the Steel null pointer *)
 
@@ -1152,6 +1163,12 @@ IsNull nodes should be added to the KaRaMeL AST *)
     when string_of_mlpath p = "Steel.C.Array.Base.split_right_from" ->
       EAddrOf (EBufRead (translate_expr env a, translate_expr env i))
 
+  | MLE_App ({ expr = MLE_Name p }, [ arg ])
+    when string_of_mlpath p = "FStar.SizeT.uint16_to_sizet" ||
+         string_of_mlpath p = "FStar.SizeT.uint32_to_sizet" ||
+         string_of_mlpath p = "FStar.SizeT.uint64_to_sizet" ->
+      ECast (translate_expr env arg, TInt SizeT)
+
   | MLE_App ({expr=MLE_Name p}, [ _inv; test; body ])
     when (string_of_mlpath p = "Steel.ST.Loops.while_loop") ->
     EApp (EQualified (["Steel"; "Loops"], "while_loop"), [ EUnit; translate_expr env test; translate_expr env body ])
@@ -1166,11 +1183,13 @@ IsNull nodes should be added to the KaRaMeL AST *)
     translate_expr env e
 
   | MLE_App ({expr=MLE_TApp ({expr=MLE_Name p}, _)}, [_fp; _fp'; _opened; _p; _i; {expr=MLE_Fun (_, body)}])
-    when string_of_mlpath p = "Steel.ST.Util.with_invariant" ->
+    when string_of_mlpath p = "Steel.ST.Util.with_invariant" ||
+         string_of_mlpath p = "Steel.Effect.Atomic.with_invariant" ->
     translate_expr env body
 
   | MLE_App ({expr=MLE_TApp ({expr=MLE_Name p}, _)}, [_fp; _fp'; _opened; _p; _i; e])
-    when string_of_mlpath p = "Steel.ST.Util.with_invariant" ->
+    when string_of_mlpath p = "Steel.ST.Util.with_invariant" ||
+         string_of_mlpath p = "Steel.Effect.Atomic.with_invariant" ->
     Errors.raise_error
       (Errors.Fatal_ExtractionUnsupported,
        BU.format2

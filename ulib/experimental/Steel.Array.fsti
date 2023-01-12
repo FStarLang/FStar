@@ -31,7 +31,7 @@ include Steel.ST.Array
 module STC = Steel.ST.Coercions
 
 module P = Steel.FractionalPermission
-module U32 = FStar.UInt32
+module US = FStar.SizeT
 module A = Steel.ST.Array
 
 /// A selector version
@@ -122,6 +122,20 @@ let elim_varray
     )
 = elim_varrayp _ _
 
+let varrayp_not_null
+  (#opened: _) (#elt: Type) (a: array elt) (p: P.perm)
+: SteelGhost unit opened
+    (varrayp a p)
+    (fun _ -> varrayp a p)
+    (fun _ -> True)
+    (fun h _ h' ->
+      aselp a p h' == aselp a p h /\
+      a =!= null
+    )
+= let _ = elim_varrayp a p in
+  pts_to_not_null a _;
+  intro_varrayp a p _
+
 /// Allocating a new array of size n, where each cell is initialized
 /// with value x. We define the non-selector version of this operation
 /// (and others) with a _pt suffix in the name.
@@ -130,15 +144,15 @@ inline_for_extraction
 let malloc
   (#elt: Type)
   (x: elt)
-  (n: U32.t)
+  (n: US.t)
 : Steel (array elt)
     emp
     (fun a -> varray a)
     (fun _ -> True)
     (fun _ a h' ->
-      length a == U32.v n /\
+      length a == US.v n /\
       is_full_array a /\
-      asel a h' == Seq.create (U32.v n) x
+      asel a h' == Seq.create (US.v n) x
     )
 = let res = A.malloc x n in
   intro_varray res _;
@@ -210,16 +224,16 @@ inline_for_extraction
 let index
   (#t: Type) (#p: P.perm)
   (a: array t)
-  (i: U32.t)
+  (i: US.t)
 : Steel t
     (varrayp a p)
     (fun _ -> varrayp a p)
-    (fun _ -> U32.v i < length a)
+    (fun _ -> US.v i < length a)
     (fun h res h' ->
       let s = aselp a p h in
       aselp a p h' == s /\
-      U32.v i < Seq.length s /\
-      res == Seq.index s (U32.v i)
+      US.v i < Seq.length s /\
+      res == Seq.index s (US.v i)
     )
 = let _ = elim_varrayp a p in
   let res = A.index a i in
@@ -233,15 +247,15 @@ inline_for_extraction
 let upd
   (#t: Type)
   (a: array t)
-  (i: U32.t)
+  (i: US.t)
   (v: t)
 : Steel unit
     (varray a)
     (fun _ -> varray a)
-    (fun _ ->  U32.v i < length a)
+    (fun _ ->  US.v i < length a)
     (fun h _ h' ->
-      U32.v i < length a /\
-      asel a h' == Seq.upd (asel a h) (U32.v i) v
+      US.v i < length a /\
+      asel a h' == Seq.upd (asel a h) (US.v i) v
     )
 = let s = elim_varray a in
   A.pts_to_length a _;
@@ -306,15 +320,15 @@ let ghost_split
   (#elt: Type)
   (#p: P.perm)
   (a: array elt)
-  (i: U32.t { U32.v i <= length a })
+  (i: US.t { US.v i <= length a })
 : SteelGhost unit opened
     (varrayp a p)
     (fun _ -> varrayp (split_l a i) p `star` varrayp (split_r a i) p)
     (fun _ -> True)
     (fun h _ h' ->
       let x = aselp a p h in
-      let xl = Seq.slice x 0 (U32.v i) in
-      let xr = Seq.slice x (U32.v i) (Seq.length x) in
+      let xl = Seq.slice x 0 (US.v i) in
+      let xr = Seq.slice x (US.v i) (Seq.length x) in
       aselp (split_l a i) p h' == xl /\
       aselp (split_r a i) p h' == xr /\
       x == Seq.append xl xr
@@ -333,12 +347,12 @@ let ghost_split
 inline_for_extraction
 let memcpy (#t:_) (#p0:P.perm)
            (a0 a1:array t)
-           (i:U32.t)
+           (i:US.t)
   : Steel unit
     (varrayp a0 p0 `star` varray a1)
     (fun _ -> varrayp a0 p0  `star` varray a1)
     (requires fun _ ->
-       U32.v i == length a0 /\ length a0 == length a1)
+       US.v i == length a0 /\ length a0 == length a1)
     (ensures fun h0 _ h1 ->
       length a0 == length a1 /\
       aselp a0 p0 h0 == aselp a0 p0 h1 /\
@@ -354,7 +368,7 @@ let memcpy (#t:_) (#p0:P.perm)
 inline_for_extraction
 let compare (#t:eqtype) (#p0 #p1:P.perm)
             (a0 a1:array t)
-            (l:U32.t { length a0 == length a1 /\ U32.v l == length a0})
+            (l:US.t { length a0 == length a1 /\ US.v l == length a0})
   : Steel bool
     (varrayp a0 p0 `star` varrayp a1 p1)
     (fun _ -> varrayp a0 p0 `star` varrayp a1 p1)
@@ -376,10 +390,8 @@ let compare (#t:eqtype) (#p0 #p1:P.perm)
 inline_for_extraction
 [@@noextract_to "krml"]
 let intro_fits_u32 (_:unit)
-  : Steel unit
-          emp (fun _ -> emp)
-          (requires fun _ -> True)
-          (ensures fun _ _ _ -> FStar.SizeT.fits_u32)
+  : SteelT (squash (US.fits_u32))
+           emp (fun _ -> emp)
   = A.intro_fits_u32 ()
 
 /// An introduction function for the fits_u64 predicate.
@@ -387,8 +399,6 @@ let intro_fits_u32 (_:unit)
 inline_for_extraction
 [@@noextract_to "krml"]
 let intro_fits_u64 (_:unit)
-  : Steel unit
-          emp (fun _ -> emp)
-          (requires fun _ -> True)
-          (ensures fun _ _ _ -> FStar.SizeT.fits_u64)
+  : SteelT (squash (US.fits_u64))
+           emp (fun _ -> emp)
   = A.intro_fits_u64 ()

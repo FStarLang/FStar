@@ -74,8 +74,8 @@ let rec (term_eq' :
                          uu___2 = FStar_Syntax_Util.Equal)) xs ys) in
       let comp_eq c d =
         match ((c.FStar_Syntax_Syntax.n), (d.FStar_Syntax_Syntax.n)) with
-        | (FStar_Syntax_Syntax.Total (t, uu___), FStar_Syntax_Syntax.Total
-           (s, uu___1)) -> term_eq' t s
+        | (FStar_Syntax_Syntax.Total t, FStar_Syntax_Syntax.Total s) ->
+            term_eq' t s
         | (FStar_Syntax_Syntax.Comp ct1, FStar_Syntax_Syntax.Comp ct2) ->
             ((FStar_Ident.lid_equals ct1.FStar_Syntax_Syntax.effect_name
                 ct2.FStar_Syntax_Syntax.effect_name)
@@ -168,17 +168,19 @@ let rec (term_eq' :
       | (FStar_Syntax_Syntax.Tm_app
          ({ FStar_Syntax_Syntax.n = FStar_Syntax_Syntax.Tm_fvar fv_eq_1;
             FStar_Syntax_Syntax.pos = uu___;
-            FStar_Syntax_Syntax.vars = uu___1;_},
-          (uu___2, FStar_Pervasives_Native.Some
+            FStar_Syntax_Syntax.vars = uu___1;
+            FStar_Syntax_Syntax.hash_code = uu___2;_},
+          (uu___3, FStar_Pervasives_Native.Some
            { FStar_Syntax_Syntax.aqual_implicit = true;
-             FStar_Syntax_Syntax.aqual_attributes = uu___3;_})::t12::t22::[]),
+             FStar_Syntax_Syntax.aqual_attributes = uu___4;_})::t12::t22::[]),
          FStar_Syntax_Syntax.Tm_app
          ({ FStar_Syntax_Syntax.n = FStar_Syntax_Syntax.Tm_fvar fv_eq_2;
-            FStar_Syntax_Syntax.pos = uu___4;
-            FStar_Syntax_Syntax.vars = uu___5;_},
-          (uu___6, FStar_Pervasives_Native.Some
+            FStar_Syntax_Syntax.pos = uu___5;
+            FStar_Syntax_Syntax.vars = uu___6;
+            FStar_Syntax_Syntax.hash_code = uu___7;_},
+          (uu___8, FStar_Pervasives_Native.Some
            { FStar_Syntax_Syntax.aqual_implicit = true;
-             FStar_Syntax_Syntax.aqual_attributes = uu___7;_})::s1::s2::[]))
+             FStar_Syntax_Syntax.aqual_attributes = uu___9;_})::s1::s2::[]))
           when
           (FStar_Syntax_Syntax.fv_eq_lid fv_eq_1 FStar_Parser_Const.eq2_lid)
             &&

@@ -457,6 +457,9 @@ let rec resugar_term' (env: DsEnv.env) (t : S.term) : A.term =
           in
           Option.get out
 
+(* This is wrong: It treats the first N - 1 args of dtupleN as implicit
+   But, they are not *)
+(*   
         | Some ("dtuple", _) when List.length args > 0 ->
           (* this is desugared from Sum(binders*term) *)
           let args = last args in
@@ -481,7 +484,7 @@ let rec resugar_term' (env: DsEnv.env) (t : S.term) : A.term =
               let e = resugar_term' env e in
               List.fold_left(fun acc x -> mk (A.App(acc, x, A.Nothing))) e args
           end
-
+*)
         | Some ("dtuple", _) ->
           resugar_as_app e args
 
@@ -650,6 +653,7 @@ let rec resugar_term' (env: DsEnv.env) (t : S.term) : A.term =
       when is_true_pat pat1 && is_wild_pat pat2 ->
       let asc_opt = resugar_match_returns env e t.pos asc_opt in
       mk (A.If(resugar_term' env e,
+               None,
                asc_opt,
                resugar_term' env t1,
                resugar_term' env t2))
@@ -777,9 +781,8 @@ let rec resugar_term' (env: DsEnv.env) (t : S.term) : A.term =
           resugar_meta_desugared i
       | Meta_named t ->
           mk (A.Name t)
-      | Meta_monadic (_, t)
-      | Meta_monadic_lift (_, _, t) ->
-        resugar_term' env e
+      | Meta_monadic _
+      | Meta_monadic_lift _ -> resugar_term' env e
       end
 
     | Tm_unknown -> mk A.Wild
@@ -955,37 +958,15 @@ and resugar_comp' (env: DsEnv.env) (c:S.comp) : A.term =
         A.mk_term a c.pos A.Un
   in
   match (c.n) with
-  | Total (typ, u) ->
+  | Total typ ->
     let t = resugar_term' env typ in
     if not (Options.print_implicits())
     then t
-    else (
-      begin match u with
-      | None ->
-        mk (A.Construct(C.effect_Tot_lid, [(t, A.Nothing)]))
-      | Some u ->
-        // add the universe as the first argument
-        if (Options.print_universes()) then
-          let u = resugar_universe u c.pos in
-          mk (A.Construct(C.effect_Tot_lid, [(u, A.UnivApp);(t, A.Nothing)]))
-        else
-          mk (A.Construct(C.effect_Tot_lid, [(t, A.Nothing)]))
-      end
-    )
+    else mk (A.Construct(C.effect_Tot_lid, [(t, A.Nothing)]))
 
-  | GTotal (typ, u) ->
+  | GTotal typ ->
     let t = resugar_term' env typ in
-    begin match u with
-    | None ->
-      mk (A.Construct(C.effect_GTot_lid, [(t, A.Nothing)]))
-    | Some u ->
-      // add the universe as the first argument
-      if (Options.print_universes()) then
-        let u = resugar_universe u c.pos in
-        mk (A.Construct(C.effect_GTot_lid, [(u, A.UnivApp);(t, A.Nothing)]))
-      else
-        mk (A.Construct(C.effect_GTot_lid, [(t, A.Nothing)]))
-    end
+    mk (A.Construct(C.effect_GTot_lid, [(t, A.Nothing)]))
 
   | Comp c ->
     let result = (resugar_term' env c.result_typ, A.Nothing) in
@@ -1317,13 +1298,14 @@ let resugar_wp_eff_combinators env for_free combs =
     (repr@return_repr@bind_repr)
 
 let resugar_layered_eff_combinators env combs =
-  let resugar name (ts, _) = resugar_tscheme'' env name ts in
+  let resugar name (ts, _, _) = resugar_tscheme'' env name ts in
+  let resugar2 name (ts, _) = resugar_tscheme'' env name ts in
 
-  (resugar "repr" combs.l_repr)::
-  (resugar "return" combs.l_return)::
-  (resugar "bind" combs.l_bind)::
-  (resugar "subcomp" combs.l_subcomp)::
-  (resugar "if_then_else" combs.l_if_then_else)::[]
+  (resugar2 "repr"         combs.l_repr)::
+  (resugar2 "return"       combs.l_return)::
+  (resugar  "bind"         combs.l_bind)::
+  (resugar  "subcomp"      combs.l_subcomp)::
+  (resugar  "if_then_else" combs.l_if_then_else)::[]
 
 let resugar_combinators env combs =
   match combs with
@@ -1351,7 +1333,9 @@ let resugar_eff_decl' env r q ed =
       mk_decl r q (A.Tycon(false, false, [(A.TyconAbbrev(ident_of_lid d.action_name, action_params, None, action_defn))]))
   in
   let eff_name = ident_of_lid ed.mname in
-  let eff_binders, eff_typ = SS.open_term ed.binders (ed.signature |> snd) in
+  let eff_binders, eff_typ =
+    let sig_ts = U.effect_sig_ts ed.signature in
+    SS.open_term ed.binders (sig_ts |> snd) in
   let eff_binders =
     if (Options.print_implicits())
     then eff_binders
@@ -1472,10 +1456,10 @@ let resugar_sigelt' env se : option A.decl =
   | Sig_inductive_typ _
   | Sig_datacon _ -> None
 
-  | Sig_polymonadic_bind (m, n, p, (_, t), _) ->
+  | Sig_polymonadic_bind (m, n, p, (_, t), _, _) ->
     Some (decl'_to_decl se (A.Polymonadic_bind (m, n, p, resugar_term' env t)))
 
-  | Sig_polymonadic_subcomp (m, n, (_, t), _) ->
+  | Sig_polymonadic_subcomp (m, n, (_, t), _, _) ->
     Some (decl'_to_decl se (A.Polymonadic_subcomp (m, n, resugar_term' env t)))
 
 (* Old interface: no envs *)

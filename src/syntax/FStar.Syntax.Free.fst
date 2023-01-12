@@ -216,13 +216,9 @@ and free_names_and_uvars_comp c use_cache =
           else n, new_fv_set ()
         | _ ->
          let n = match c.n with
-            | GTotal (t, None)
-            | Total (t, None) ->
+            | GTotal t
+            | Total t ->
               free_names_and_uvars t use_cache
-
-            | GTotal (t, Some u)
-            | Total (t, Some u) ->
-              union (free_univs u) (free_names_and_uvars t use_cache)
 
             | Comp ct ->
               //collect from the decreases clause

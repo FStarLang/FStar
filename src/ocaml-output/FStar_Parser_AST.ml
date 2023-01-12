@@ -49,8 +49,9 @@ type term' =
   | LetOpenRecord of (term * term * term) 
   | Seq of (term * term) 
   | Bind of (FStar_Ident.ident * term * term) 
-  | If of (term * (FStar_Ident.ident FStar_Pervasives_Native.option * term *
-  Prims.bool) FStar_Pervasives_Native.option * term * term) 
+  | If of (term * FStar_Ident.ident FStar_Pervasives_Native.option *
+  (FStar_Ident.ident FStar_Pervasives_Native.option * term * Prims.bool)
+  FStar_Pervasives_Native.option * term * term) 
   | Match of (term * FStar_Ident.ident FStar_Pervasives_Native.option *
   (FStar_Ident.ident FStar_Pervasives_Native.option * term * Prims.bool)
   FStar_Pervasives_Native.option * (pattern * term
@@ -223,8 +224,9 @@ let (uu___is_If : term' -> Prims.bool) =
   fun projectee -> match projectee with | If _0 -> true | uu___ -> false
 let (__proj__If__item___0 :
   term' ->
-    (term * (FStar_Ident.ident FStar_Pervasives_Native.option * term *
-      Prims.bool) FStar_Pervasives_Native.option * term * term))
+    (term * FStar_Ident.ident FStar_Pervasives_Native.option *
+      (FStar_Ident.ident FStar_Pervasives_Native.option * term * Prims.bool)
+      FStar_Pervasives_Native.option * term * term))
   = fun projectee -> match projectee with | If _0 -> _0
 let (uu___is_Match : term' -> Prims.bool) =
   fun projectee -> match projectee with | Match _0 -> true | uu___ -> false
@@ -1472,8 +1474,8 @@ let (strip_prefix :
           FStar_Compiler_Util.substring_from s (FStar_String.length prefix) in
         FStar_Pervasives_Native.Some uu___
       else FStar_Pervasives_Native.None
-let (compile_op :
-  Prims.int -> Prims.string -> FStar_Compiler_Range.range -> Prims.string) =
+let compile_op : 'uuuuu . Prims.int -> Prims.string -> 'uuuuu -> Prims.string
+  =
   fun arity ->
     fun s ->
       fun r ->
@@ -1501,11 +1503,10 @@ let (compile_op :
           | 36 -> "Dollar"
           | 46 -> "Dot"
           | c ->
-              FStar_Errors.raise_error
-                (FStar_Errors.Fatal_UnexpectedOperatorSymbol,
-                  (Prims.op_Hat "Unexpected operator symbol: '"
-                     (Prims.op_Hat (FStar_Compiler_Util.string_of_char c) "'")))
-                r in
+              let uu___1 =
+                FStar_Compiler_Util.string_of_int
+                  (FStar_Compiler_Util.int_of_char c) in
+              Prims.op_Hat "u" uu___1 in
         match s with
         | ".[]<-" -> "op_String_Assignment"
         | ".()<-" -> "op_Array_Assignment"
@@ -1540,8 +1541,7 @@ let (compile_op :
                      FStar_String.concat "_" uu___4 in
                    Prims.op_Hat prefix uu___3 in
                  Prims.op_Hat "op_" uu___2)
-let (compile_op' :
-  Prims.string -> FStar_Compiler_Range.range -> Prims.string) =
+let compile_op' : 'uuuuu . Prims.string -> 'uuuuu -> Prims.string =
   fun s -> fun r -> compile_op (~- Prims.int_one) s r
 let (string_to_op :
   Prims.string ->
@@ -1627,7 +1627,19 @@ let (string_to_op :
                 (FStar_String.length "op_") in
             FStar_Compiler_Util.split uu___1 "_" in
           (match s1 with
-           | op::[] -> name_of_op op
+           | op::[] ->
+               if FStar_Compiler_Util.starts_with op "u"
+               then
+                 let uu___1 =
+                   let uu___2 =
+                     FStar_Compiler_Util.substring_from op Prims.int_one in
+                   FStar_Compiler_Util.safe_int_of_string uu___2 in
+                 FStar_Compiler_Util.map_opt uu___1
+                   (fun op1 ->
+                      ((FStar_Compiler_Util.string_of_char
+                          (FStar_Compiler_Util.char_of_int op1)),
+                        FStar_Pervasives_Native.None))
+               else name_of_op op
            | uu___1 ->
                let maybeop =
                  let uu___2 = FStar_Compiler_List.map name_of_op s1 in
@@ -1791,25 +1803,29 @@ let rec (term_to_string : term -> Prims.string) =
         let uu___1 = term_to_string t1 in
         let uu___2 = term_to_string t2 in
         FStar_Compiler_Util.format3 "%s <- %s; %s" uu___ uu___1 uu___2
-    | If (t1, ret_opt, t2, t3) ->
-        let uu___ = FStar_Compiler_Effect.op_Bar_Greater t1 term_to_string in
-        let uu___1 =
+    | If (t1, op_opt, ret_opt, t2, t3) ->
+        let uu___ =
+          match op_opt with
+          | FStar_Pervasives_Native.Some op -> FStar_Ident.string_of_id op
+          | FStar_Pervasives_Native.None -> "" in
+        let uu___1 = FStar_Compiler_Effect.op_Bar_Greater t1 term_to_string in
+        let uu___2 =
           match ret_opt with
           | FStar_Pervasives_Native.None -> ""
           | FStar_Pervasives_Native.Some (as_opt, ret, use_eq) ->
               let s = if use_eq then "returns$" else "returns" in
-              let uu___2 =
+              let uu___3 =
                 match as_opt with
                 | FStar_Pervasives_Native.None -> ""
                 | FStar_Pervasives_Native.Some as_ident ->
-                    let uu___3 = FStar_Ident.string_of_id as_ident in
-                    FStar_Compiler_Util.format1 " as %s " uu___3 in
-              let uu___3 = term_to_string ret in
-              FStar_Compiler_Util.format3 "%s%s %s " uu___2 s uu___3 in
-        let uu___2 = FStar_Compiler_Effect.op_Bar_Greater t2 term_to_string in
-        let uu___3 = FStar_Compiler_Effect.op_Bar_Greater t3 term_to_string in
-        FStar_Compiler_Util.format4 "if %s %sthen %s else %s" uu___ uu___1
-          uu___2 uu___3
+                    let uu___4 = FStar_Ident.string_of_id as_ident in
+                    FStar_Compiler_Util.format1 " as %s " uu___4 in
+              let uu___4 = term_to_string ret in
+              FStar_Compiler_Util.format3 "%s%s %s " uu___3 s uu___4 in
+        let uu___3 = FStar_Compiler_Effect.op_Bar_Greater t2 term_to_string in
+        let uu___4 = FStar_Compiler_Effect.op_Bar_Greater t3 term_to_string in
+        FStar_Compiler_Util.format5 "if%s %s %sthen %s else %s" uu___ uu___1
+          uu___2 uu___3 uu___4
     | Match (t, op_opt, ret_opt, branches) ->
         try_or_match_to_string x t branches op_opt ret_opt
     | TryWith (t, branches) ->

@@ -433,8 +433,8 @@ let (name_and_result :
   =
   fun c ->
     match c.FStar_Syntax_Syntax.n with
-    | FStar_Syntax_Syntax.Total (t, uu___) -> ("Tot", t)
-    | FStar_Syntax_Syntax.GTotal (t, uu___) -> ("GTot", t)
+    | FStar_Syntax_Syntax.Total t -> ("Tot", t)
+    | FStar_Syntax_Syntax.GTotal t -> ("GTot", t)
     | FStar_Syntax_Syntax.Comp ct ->
         let uu___ =
           FStar_Syntax_Print.lid_to_string ct.FStar_Syntax_Syntax.effect_name in

@@ -111,13 +111,13 @@ let print_binders_info (full : bool) (e:env) : Tac unit =
 
 let acomp_to_string (c:comp) : Tac string =
   match inspect_comp c with
-  | C_Total ret _ decr ->
+  | C_Total ret ->
     "C_Total (" ^ term_to_string ret ^ ")"
-  | C_GTotal ret _ decr ->
+  | C_GTotal ret ->
     "C_GTotal (" ^ term_to_string ret ^ ")"
   | C_Lemma pre post patterns ->
     "C_Lemma (" ^ term_to_string pre ^ ") (" ^ term_to_string post ^ ")"
-  | C_Eff us eff_name result eff_args ->
+  | C_Eff us eff_name result eff_args _ ->
     let eff_arg_to_string (a : term) : Tac string =
       " (" ^ term_to_string a ^ ")"
     in
@@ -398,23 +398,22 @@ let norm_apply_subst_in_comp e c subst =
     | Q_Meta t -> Q_Meta (subst t)
   in
   match inspect_comp c with
-  | C_Total ret uopt decr ->
+  | C_Total ret ->
     let ret = subst ret in
-    let decr = map subst decr in
-    pack_comp (C_Total ret uopt decr)
-  | C_GTotal ret uopt decr ->
+    pack_comp (C_Total ret)
+  | C_GTotal ret ->
     let ret = subst ret in
-    let decr = map subst decr in
-    pack_comp (C_GTotal ret uopt decr)
+    pack_comp (C_GTotal ret)
   | C_Lemma pre post patterns ->
     let pre = subst pre in
     let post = subst post in
     let patterns = subst patterns in
     pack_comp (C_Lemma pre post patterns)
-  | C_Eff us eff_name result eff_args ->
+  | C_Eff us eff_name result eff_args decrs ->
     let result = subst result in
     let eff_args = map (fun (x, a) -> (subst x, subst_in_aqualv a)) eff_args in
-    pack_comp (C_Eff us eff_name result eff_args)
+    let decrs = map subst decrs in
+    pack_comp (C_Eff us eff_name result eff_args decrs)
 
 /// As substitution with normalization is very expensive, we implemented another
 /// technique which works by exploring terms. This is super fast, but the terms
@@ -531,23 +530,22 @@ and deep_apply_subst_in_comp e c subst =
     | Q_Meta t -> Q_Meta (subst t)
   in
   match inspect_comp c with
-  | C_Total ret uopt decr ->
+  | C_Total ret ->
     let ret = subst ret in
-    let decr = map subst decr in
-    pack_comp (C_Total ret uopt decr)
-  | C_GTotal ret uopt decr ->
+    pack_comp (C_Total ret)
+  | C_GTotal ret ->
     let ret = subst ret in
-    let decr = map subst decr in
-    pack_comp (C_GTotal ret uopt decr)
+    pack_comp (C_GTotal ret)
   | C_Lemma pre post patterns ->
     let pre = subst pre in
     let post = subst post in
     let patterns = subst patterns in
     pack_comp (C_Lemma pre post patterns)
-  | C_Eff us eff_name result eff_args ->
+  | C_Eff us eff_name result eff_args decrs ->
     let result = subst result in
     let eff_args = map (fun (x, a) -> (subst x, subst_in_aqualv a)) eff_args in
-    pack_comp (C_Eff us eff_name result eff_args)
+    let decrs = map subst decrs in
+    pack_comp (C_Eff us eff_name result eff_args decrs)
 
 and deep_apply_subst_in_pattern e pat subst =
   match pat with
