@@ -180,6 +180,13 @@ let vrewrite_vrefine_equals_intro0
     (fun res -> Ghost.reveal res == f x)
 = C.coerce_ghost (fun _ -> vrewrite_vrefine_equals_intro' s f x)
 
+let vrewrite_vrefine_equals_intro
+  s f x
+= let res = vrewrite_vrefine_equals_intro0 s f x in
+  rewrite
+    (s `vrewrite` f `vrefine` equals (Ghost.reveal res))
+    (s `vrewrite` f `vrefine` equals (f x))
+
 let vrewrite_vrefine_equals_elim'
   (#inames: _)
   (#t: Type)

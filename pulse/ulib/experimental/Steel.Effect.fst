@@ -192,7 +192,7 @@ let req_frame frame snap =
   rmem_depends_only_on frame;
   req_frame' frame snap
 
-#push-options "--z3rlimit 20 --fuel 1 --ifuel 1"
+#push-options "--z3rlimit 50 --fuel 1 --ifuel 0"
 
 let frame_opaque frame h0 h1 = frame_equalities frame h0 h1
 
@@ -228,8 +228,15 @@ let frame00 #a #framed #pre #post #req #ens f frame =
 
       focus_is_restrict_mk_rmem (pre `star` frame) pre (core_mem m0);
 
+      assert (state.interp (((hp_of pre `state.star` hp_of frame) `state.star` frame' `state.star` state.locks_invariant m0)) m0);
+      let req' = 
+        (Steel.Semantics.Hoare.MST.frame_lpre #Steel.Semantics.Instantiate.state
+            #(Steel.Effect.Common.hp_of pre)
+            (req_to_act_req #pre req)
+            #(Steel.Effect.Common.hp_of frame)
+            (req_frame frame snap)) in
+      assert (req' (state.core m0));
       let x = Sem.run #state #_ #_ #_ #_ #_ frame' (Sem.Frame (Sem.Act f) (hp_of frame) (req_frame frame snap)) in
-
       let m1 = nmst_get () in
 
       can_be_split_star_r pre frame;

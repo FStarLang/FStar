@@ -14,29 +14,29 @@
    limitations under the License.
 *)
 module Steel.ST.Loops
-module U32 = FStar.UInt32
+module US = FStar.SizeT
 open Steel.ST.Util
 
 (* This module provides some common iterative looping combinators *)
 
-let nat_at_most (f:U32.t)
-  = x:nat{ x <= U32.v f }
+let nat_at_most (f:US.t)
+  = x:nat{ x <= US.v f }
 
-let u32_between (s f:U32.t)
-  = x:U32.t { U32.v s <= U32.v x /\ U32.v x < U32.v f}
+let u32_between (s f:US.t)
+  = x:US.t { US.v s <= US.v x /\ US.v x < US.v f}
 
 /// for_loop: for (i = start; i < finish; i++) inv { body i }
-val for_loop (start:U32.t)
-             (finish:U32.t { U32.v start <= U32.v finish })
+val for_loop (start:US.t)
+             (finish:US.t { US.v start <= US.v finish })
              (inv: nat_at_most finish -> vprop)
              (body:
                     (i:u32_between start finish ->
                           STT unit
-                          (inv (U32.v i))
-                          (fun _ -> inv (U32.v i + 1))))
+                          (inv (US.v i))
+                          (fun _ -> inv (US.v i + 1))))
   : STT unit
-      (inv (U32.v start))
-      (fun _ -> inv (U32.v finish))
+      (inv (US.v start))
+      (fun _ -> inv (US.v finish))
 
 /// while_loop: while (cond()) { body () }
 val while_loop (inv: bool -> vprop)

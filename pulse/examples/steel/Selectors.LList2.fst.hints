@@ -15,7 +15,7 @@
         "projection_inverse_Selectors.LList2.Mkcell_next"
       ],
       0,
-      "8bcc8cd1828ebf77c1406aaa5e26747f"
+      "6f3a6bead208b368f955fdc6a1dbc693"
     ],
     [
       "Selectors.LList2.is_null",
@@ -24,7 +24,7 @@
       1,
       [ "@query", "equation_Selectors.LList2.null_llist" ],
       0,
-      "ed155e099f669adbf5952ba3c444d684"
+      "6e9425c5dbab054b3603006a9a1a3d7b"
     ],
     [
       "Selectors.LList2.v_c",
@@ -39,7 +39,7 @@
         "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
       ],
       0,
-      "7e88d9ba1d80c53787e9d04be1cde950"
+      "f6050d077eeaa30b32e259e88e14d203"
     ],
     [
       "Selectors.LList2.v_c_dep",
@@ -53,7 +53,7 @@
         "refinement_interpretation_Tm_refine_0214c723e4f462bc81c1b20f4f38a4ac"
       ],
       0,
-      "e79b3b6a580f0f8d9bea1bc931c3bc55"
+      "37c100eb521bd2c6bdd80647efd99dd7"
     ],
     [
       "Selectors.LList2.v_c_l_rewrite",
@@ -87,7 +87,7 @@
         "typing_Steel.Reference.vptr_"
       ],
       0,
-      "d77433e0be9658d75984946772776597"
+      "c84e065a4a008241a9997b9de6510636"
     ],
     [
       "Selectors.LList2.v_c_l_rewrite",
@@ -152,7 +152,7 @@
         "typing_Steel.Reference.vptr_"
       ],
       0,
-      "b6fa7c6d6be3e1eb4bf5171334e8f0b3"
+      "72cd54e94eb7c5d8be34b5fb035f0768"
     ],
     [
       "Selectors.LList2.nllist",
@@ -197,7 +197,7 @@
         "typing_Steel.Reference.vptr_", "well-founded-ordering-on-nat"
       ],
       0,
-      "3b2fc63aa887f7659c471580aa770e7b"
+      "ae24a4e317158bd9ce70436dd3715c4a"
     ],
     [
       "Selectors.LList2.nllist_eq_not_null",
@@ -232,33 +232,11 @@
         "typing_Steel.Reference.vptr_"
       ],
       0,
-      "68201bb46cf8dca7d0ae96ad61358a08"
+      "042d7e29ac8e7e91f0e3744198d98e75"
     ],
     [
       "Selectors.LList2.llist_vrewrite",
       1,
-      2,
-      1,
-      [
-        "@MaxFuel_assumption", "@MaxIFuel_assumption",
-        "@fuel_correspondence_Steel.Effect.Common.t_of.fuel_instrumented",
-        "@query", "constructor_distinct_Steel.Effect.Common.VUnit",
-        "data_typing_intro_Steel.Effect.Common.VUnit@tok",
-        "equation_Selectors.LList2.t", "equation_Steel.Reference.vptr_",
-        "equation_with_fuel_Steel.Effect.Common.t_of.fuel_instrumented",
-        "kinding_Selectors.LList2.cell@tok",
-        "proj_equation_Steel.Effect.Common.Mkvprop__t",
-        "projection_inverse_Steel.Effect.Common.Mkvprop__t",
-        "projection_inverse_Steel.Effect.Common.VUnit__0",
-        "typing_Steel.FractionalPermission.full_perm",
-        "typing_Steel.Reference.vptr_"
-      ],
-      0,
-      "30fbfb471ec64b0c3b99781c2fb2acff"
-    ],
-    [
-      "Selectors.LList2.llist_vrewrite",
-      2,
       2,
       1,
       [
@@ -293,7 +271,7 @@
         "typing_Steel.Reference.ptrp", "typing_Steel.Reference.ptrp_sel"
       ],
       0,
-      "cadcfc4d0e1dcb3249f6d9421fe56a53"
+      "f84832f696f0aa320bf990ebcf03ae7e"
     ],
     [
       "Selectors.LList2.llist0",
@@ -321,7 +299,7 @@
         "typing_Steel.Reference.vptr_"
       ],
       0,
-      "b426fb66f1d28ff13959c87fc744fd90"
+      "7e10a8e783ea96f21109221a8efec436"
     ],
     [
       "Selectors.LList2.nllist_of_llist0",
@@ -375,7 +353,7 @@
         "typing_Selectors.LList2.null_llist"
       ],
       0,
-      "7fa70536a3f21ac621a851d64e86ab6d"
+      "5fe177a04a08fbcf72e4e902c84a5a7b"
     ],
     [
       "Selectors.LList2.llist0_of_nllist",
@@ -417,7 +395,7 @@
         "typing_Selectors.LList2.is_null"
       ],
       0,
-      "5c2338db1ee66566d51a301e4b56501b"
+      "69fe8e72db20d75c1b20634533239143"
     ],
     [
       "Selectors.LList2.llist_sel",
@@ -440,7 +418,7 @@
         "typing_Selectors.LList2.llist0"
       ],
       0,
-      "4749136aef9475e4062c56a390797107"
+      "8f0b4193cf8ae5e1190a9bbf578b6b6a"
     ],
     [
       "Selectors.LList2.v_llist",
@@ -452,7 +430,7 @@
         "refinement_interpretation_Tm_refine_f739d7585f85f9216ab76894ab82188b"
       ],
       0,
-      "de25154891a6fe145099b70a0be29db2"
+      "440552189dfaa9e5a4949cb9a30281f5"
     ],
     [
       "Selectors.LList2.llist_of_llist0",
@@ -486,7 +464,7 @@
         "typing_Selectors.LList2.llist_"
       ],
       0,
-      "3e68467b134e16942ab27dd3ab6b0ff3"
+      "0198d2e48b7e3e46734743b40c547dc6"
     ],
     [
       "Selectors.LList2.llist0_of_llist",
@@ -519,7 +497,7 @@
         "typing_Selectors.LList2.llist_"
       ],
       0,
-      "823e5bd168b12667376a3362c69a99e5"
+      "a8e5c353486f1d174d957dc0b7a2ab42"
     ],
     [
       "Selectors.LList2.intro_llist_nil",
@@ -539,7 +517,7 @@
         "typing_Steel.Reference.is_null", "typing_Steel.Reference.null"
       ],
       0,
-      "474110116e4c445814771e0c5d6a133d"
+      "0f8b72a7440db5ee8038916714e25a1a"
     ],
     [
       "Selectors.LList2.is_nil",
@@ -567,7 +545,7 @@
         "typing_Selectors.LList2.is_null"
       ],
       0,
-      "fdebda53c6fe4afab8c8eda793aa0a0b"
+      "19a712d6e8862b72f37f0894761145fe"
     ],
     [
       "Selectors.LList2.intro_llist_cons",
@@ -618,7 +596,7 @@
         "typing_Steel.Reference.ptrp", "typing_Steel.Reference.ptrp_sel"
       ],
       0,
-      "836d8f6d386e280f3f095521f510c011"
+      "c8594fbb094cade96012957f5f554a69"
     ],
     [
       "Selectors.LList2.tail",
@@ -627,7 +605,7 @@
       1,
       [ "@query" ],
       0,
-      "e8153a653aa534129cc78e0ff7a9f775"
+      "06fa9fbb4f694a54065407cd7ca91991"
     ],
     [
       "Selectors.LList2.tail",
@@ -666,7 +644,7 @@
         "typing_Selectors.LList2.is_null"
       ],
       0,
-      "cd649a0d553bb42161ecc0d5138a72eb"
+      "5598e3c1ddb30a8470961588fd1d0740"
     ]
   ]
 ]
