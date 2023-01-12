@@ -1044,34 +1044,28 @@ and translate_expr env e: expr =
     when string_of_mlpath p = "Steel.Effect.Atomic.return" ->
     translate_expr env e
 
-(* BEGIN support for the Steel null pointer. Here, we "piggyback" to
-the current Low* operators for the null pointer, which KaRaMeL will
-extract to C later.
+(* BEGIN support for the Steel null pointer. *)
 
-TODO: these should be removed and those operators should be directly
-supported by KaRaMeL (in src/Builtin.ml) Or alternatively Null and
-IsNull nodes should be added to the KaRaMeL AST *)
-
-  | MLE_App ({expr=MLE_TApp ({expr=MLE_Name p}, _)}, [_ (* opened *); e; _ (* a' *); _ (* sq *) ])
+  | MLE_App ({expr=MLE_TApp ({expr=MLE_Name p}, [t])}, [_ (* opened *); e; _ (* a' *); _ (* sq *) ])
     when string_of_mlpath p = "Steel.C.Array.Base.is_null_from"
-    -> EApp (EQualified (["LowStar"; "Monotonic"; "Buffer"], "is_null"), [ translate_expr env e ])
+    -> generate_is_null (translate_type env t) (translate_expr env e)
 
-  | MLE_App ({expr=MLE_TApp ({expr=MLE_Name p}, _)}, [_ (* opened *); _ (* pcm *); e; _ (* view *)])
+  | MLE_App ({expr=MLE_TApp ({expr=MLE_Name p}, [_; t])}, [_ (* opened *); _ (* pcm *); e; _ (* view *)])
     when string_of_mlpath p = "Steel.C.Reference.is_null"
-    -> EApp (EQualified (["LowStar"; "Monotonic"; "Buffer"], "is_null"), [ translate_expr env e ])
+    -> generate_is_null (translate_type env t) (translate_expr env e)
 
-  | MLE_App ({expr=MLE_TApp ({expr=MLE_Name p}, _)}, [_ (* opened *); _ (* td *); _ (* v *); e])
+  | MLE_App ({expr=MLE_TApp ({expr=MLE_Name p}, [t])}, [_ (* opened *); _ (* td *); _ (* v *); e])
     when string_of_mlpath p = "Steel.C.Types.is_null"
-    -> EApp (EQualified (["LowStar"; "Monotonic"; "Buffer"], "is_null"), [ translate_expr env e ])
+    -> generate_is_null (translate_type env t) (translate_expr env e)
   
-  | MLE_TApp ({expr=MLE_Name p}, _)
+  | MLE_App ({expr=MLE_TApp ({expr=MLE_Name p}, [t])}, _)
     when Syntax.string_of_mlpath p = "Steel.C.Array.Base.null_from"
-    -> EQualified (["LowStar"; "Buffer"], "null")
+    -> EBufNull (translate_type env t)
 
-  | MLE_App ({expr=MLE_TApp ({expr=MLE_Name p}, _)}, [_ (* pcm *)])
+  | MLE_App ({expr=MLE_TApp ({expr=MLE_Name p}, t::_)}, [_ (* pcm *)])
     when string_of_mlpath p = "Steel.C.Reference.null"
     || string_of_mlpath p = "Steel.C.Types.null"
-    -> EApp (EQualified (["LowStar"; "Buffer"], "null"), [EUnit])
+    -> EBufNull (translate_type env t)
 
 (* END support for the Steel null pointer *)
 
