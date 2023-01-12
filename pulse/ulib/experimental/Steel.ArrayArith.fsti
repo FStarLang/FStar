@@ -1,7 +1,9 @@
 module Steel.ArrayArith
 
+open Steel.FractionalPermission
 open Steel.Effect.Atomic
 open Steel.Effect
+open Steel.ST.Array
 open Steel.Array
 
 (* This module provides a very restricted way of doing pointer arithmetic comparison on Steel arrays.
@@ -28,18 +30,45 @@ let same_base_array (#a:Type) (arr1 arr2: array a) : prop
 /// of https://www.open-std.org/jtc1/sc22/wg14/www/docs/n2912.pdf. Instead, this
 /// function will be primitively extracted to C as a comparison on uintptr_t,
 /// i.e. (uintptr_t) arr1 <= (uintptr_t) p && (uintptr_t) p <= (uintptr_t) arr2
-val within_bounds_intro (#a: Type)
+val within_bounds_ptr (#a :Type) (arr1 p arr2: ptr a)
+  (len1: Ghost.erased nat { offset arr1 + len1 <= base_len (base arr1) })
+  (len2: Ghost.erased nat { offset arr2 + len2 <= base_len (base arr2) })
+  (lenp: Ghost.erased nat { offset p + lenp <= base_len (base p) })
+  (s1 s2 sp: Ghost.erased (Seq.seq a))
+  : Steel bool
+  (pts_to (| arr1, len1 |) full_perm s1 `star` pts_to (| arr2, len2 |) full_perm s2 `star` pts_to (| p, lenp |) full_perm sp)
+  (fun _ -> pts_to (| arr1, len1 |) full_perm s1 `star` pts_to (| arr2, len2 |) full_perm s2 `star` pts_to (| p, lenp |) full_perm sp)
+  (requires fun _ -> base arr1 == base arr2)
+  (ensures fun _ r _ -> if r then within_bounds (| arr1, len1 |) (| p, lenp |) (| arr2, len2 |) else True)
+
+inline_for_extraction
+[@@noextract_to "krml"]
+let within_bounds_intro (#a: Type)
   (arr1 p arr2: array a)
   : Steel bool
   (varray arr1 `star` varray p `star` varray arr2)
   (fun _ -> varray arr1 `star` varray p `star` varray arr2)
   (requires fun h0 -> same_base_array arr1 arr2)
   (ensures fun h0 r h1 ->
-    if r then within_bounds arr1 p arr2 else True /\
+    (if r then within_bounds arr1 p arr2 else True) /\
     asel arr1 h1 == asel arr1 h0 /\
     asel p h1 ==  asel p h0 /\
     asel arr2 h1 == asel arr2 h0
   )
+  = let s1 = elim_varray arr1 in
+    let s2 = elim_varray arr2 in
+    let sp = elim_varray p in
+    change_equal_slprop (pts_to arr1 full_perm _) (pts_to (| ptr_of arr1, Ghost.hide (length arr1) |) _ _);
+    change_equal_slprop (pts_to p full_perm _) (pts_to (| ptr_of p, Ghost.hide (length p) |) _ _);
+    change_equal_slprop (pts_to arr2 _ _) (pts_to (| ptr_of arr2, Ghost.hide (length arr2) |) _ _);
+    let b = within_bounds_ptr (ptr_of arr1) (ptr_of p) (ptr_of arr2) (length arr1) (length arr2) (length p) s1 s2 sp in
+    change_equal_slprop (pts_to (| ptr_of arr1, Ghost.hide (length arr1) |) _ _) (pts_to arr1 _ _) ;
+    change_equal_slprop (pts_to (| ptr_of p, Ghost.hide (length p) |) _ _) (pts_to p _ _);
+    change_equal_slprop (pts_to (| ptr_of arr2, Ghost.hide (length arr2) |) _ _) (pts_to arr2 _ _);
+    intro_varray arr1 s1;
+    intro_varray arr2 s2;
+    intro_varray p sp;
+    return b
 
 /// An elimination lemma for `within_bounds`. If [p] is within bounds of
 /// [arr1] and [arr2], then they are all part of the same allocation unit,
