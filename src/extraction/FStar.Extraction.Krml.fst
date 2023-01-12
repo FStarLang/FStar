@@ -103,6 +103,7 @@ and expr =
   | EBufRead of expr * expr
   | EBufWrite of expr * expr * expr
   | EBufSub of expr * expr
+  | EBufDiff of expr * expr
   | EBufBlit of expr * expr * expr * expr * expr
   | EMatch of expr * branches
   | EOp of op * width
@@ -372,13 +373,6 @@ let generate_is_null
 = let dummy = UInt64 in
   EApp (ETypApp (EOp (Eq, dummy), [TBuf t]), [x; EBufNull t])
 
-let generate_ptrdiff
-  (t: typ)
-  (e0 e1: expr)
-  : Tot expr
-= let dummy = UInt64 in
-  EApp (ETypApp (EOp (Sub, dummy), [TBuf t]), [e0; e1])
-
 let rec translate_type env t: typ =
   match t with
   | MLTY_Tuple []
@@ -565,9 +559,9 @@ and translate_expr env e: expr =
     ->
     translate_expr env e
 
-  | MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p}, [ t ]) }, [ _perm0; _perm1; _seq0; _seq1; e0; _len0; e1; _len1])
+  | MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p}, _) }, [ _perm0; _perm1; _seq0; _seq1; e0; _len0; e1; _len1])
     when string_of_mlpath p = "Steel.ST.HigherArray.ptrdiff_ptr" ->
-    generate_ptrdiff (translate_type env t) (translate_expr env e0) (translate_expr env e1)
+    EBufDiff (translate_expr env e0, translate_expr env e1)
 
   | MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, _) }, [ e1; e2 ])
     when string_of_mlpath p = "FStar.Buffer.index" || string_of_mlpath p = "FStar.Buffer.op_Array_Access"
