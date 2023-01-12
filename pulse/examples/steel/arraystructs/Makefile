@@ -13,6 +13,7 @@ world: verify test
 
 FSTAR_OPTIONS = --cache_checked_modules \
 		--cmi \
+		--compat_pre_typed_indexed_effects \
 	        --already_cached 'Prims,FStar,LowStar,Steel' \
 		$(addprefix --include ,$(INCLUDE_PATH)) \
 		$(OTHERFLAGS)
