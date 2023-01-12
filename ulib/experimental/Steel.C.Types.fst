@@ -1336,7 +1336,7 @@ let array_ref_of_ref
   rewrite_slprop (A.pts_to _ _) (array_pts_to _ _) (fun _ -> ());
   return res
 
-
+let unarray_of_ref = magic ()
 
 unfold
 let has_base_array_cell0
@@ -1380,10 +1380,26 @@ let has_array_cell_array_of_ref
 
 #pop-options
 
+let ghost_array_cell_focus = magic ()
+
+let ghost_array_cell = magic ()
 (*
-let ghost_array_cell
   #_ #_ #_ #s a i
 = let ma = model_array_of_array a in
 *)
+
+let array_ref_cell = magic ()
+
+let unarray_cell = magic ()
+
+let array_ref_shift = magic ()
+
+let ghost_array_split = magic ()
+
+let array_ref_split = magic ()
+
+let array_join = magic ()
+
+let mk_fraction_seq_split_gen = magic ()
 
 let mk_fraction_seq_join = magic ()
