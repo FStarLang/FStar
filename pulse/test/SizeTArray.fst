@@ -23,23 +23,25 @@ let test2 () : SteelT bool emp (fun _ -> emp) =
   let r = malloc 0ul 3sz in
   ghost_split r 1sz;
   let r1 = split_r r 1sz in
+  let r1l = split_l r 1sz in
+  change_equal_slprop (varray (split_l r 1sz)) (varray r1l);
   change_equal_slprop (varray (split_r r 1sz)) (varray r1);
   ghost_split r1 1sz;
   let r2 = split_r r1 1sz in
+  let r2l = split_l r1 1sz in
+  change_equal_slprop (varray (split_l r1 1sz)) (varray r2l);
   change_equal_slprop (varray (split_r r1 1sz)) (varray r2);
-  let b = ptrdiff r2 (split_l r1 1sz) in
-  drop (varray r2);
-  // ghost_join (split_l r1 1sz) r2 ();
-  // change_equal_slprop
-  //   (varray (merge (split_l r1 1sz) r2))
-  //   (varray r1);
-  drop (varray (split_l r1 1sz));
-  drop (varray _);
-  // ghost_join (split_l r 1sz) r1 ();
-  // change_equal_slprop
-  //   (varray (merge (split_l r 1sz) r1))
-  //   (varray r);
-  // free r;
+  let _ = mk 3s in
+  let b = ptrdiff r2 r1l in
+  ghost_join r2l r2 ();
+  change_equal_slprop
+    (varray (merge r2l r2))
+    (varray r1);
+  ghost_join r1l r1 ();
+  change_equal_slprop
+    (varray (merge r1l r1))
+    (varray r);
+  free r;
   return (b = FStar.PtrdiffT.mk 1s)
 
 let main () : SteelT Int32.t emp (fun _ -> emp) =
