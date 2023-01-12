@@ -690,6 +690,4 @@ let intro_fits_u64 () = admit_ ()
 
 let ptrdiff_ptr a0 len0 a1 len1 =
   let res = a0.offset - a1.offset in
-  /// This assume is justified by the C memory model
-  assume (UP.fits res);
   return (UP.int_to_t res)
