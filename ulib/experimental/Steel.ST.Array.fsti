@@ -20,6 +20,7 @@ module Steel.ST.Array
 
 module P = Steel.FractionalPermission
 module US = FStar.SizeT
+module UP = FStar.PtrdiffT
 
 open Steel.ST.Util
 
@@ -471,3 +472,14 @@ inline_for_extraction
 val intro_fits_u64 (_:unit)
   : STT (squash (US.fits_u64))
         emp (fun _ -> emp)
+
+inline_for_extraction
+[@@noextract_to "krml"]
+val ptrdiff (#t:_) (#p0 #p1:perm) (#s0 #s1:Ghost.erased (Seq.seq t))
+           (a0:array t)
+           (a1:array t)
+  : ST UP.t
+    (pts_to a0 p0 s0 `star` pts_to a1 p1 s1)
+    (fun _ -> pts_to a0 p0 s0 `star` pts_to a1 p1 s1)
+    (base (ptr_of a0) == base (ptr_of a1))
+    (fun r -> UP.v r == offset (ptr_of a0) - offset (ptr_of a1))

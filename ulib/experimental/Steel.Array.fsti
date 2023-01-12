@@ -32,6 +32,7 @@ module STC = Steel.ST.Coercions
 
 module P = Steel.FractionalPermission
 module US = FStar.SizeT
+module UP = FStar.PtrdiffT
 module A = Steel.ST.Array
 
 /// A selector version
@@ -402,3 +403,22 @@ let intro_fits_u64 (_:unit)
   : SteelT (squash (US.fits_u64))
            emp (fun _ -> emp)
   = A.intro_fits_u64 ()
+
+inline_for_extraction
+[@@noextract_to "krml"]
+let ptrdiff (#a: Type) (#p1 #p2:P.perm) (arr1 arr2: array a)
+  : Steel UP.t
+  (varrayp arr1 p1 `star` varrayp arr2 p2)
+  (fun _ -> varrayp arr1 p1 `star` varrayp arr2 p2)
+  (requires fun _ -> base (ptr_of arr1) == base (ptr_of arr2))
+  (ensures fun h0 r h1 ->
+    aselp arr1 p1 h1 == aselp arr1 p1 h0 /\
+    aselp arr2 p2 h1 == aselp arr2 p2 h0 /\
+    UP.v r == offset (ptr_of arr1) - offset (ptr_of arr2)
+  )
+  = let _ = elim_varrayp arr1 p1 in
+    let _ = elim_varrayp arr2 p2 in
+    let res = A.ptrdiff arr1 arr2 in
+    intro_varrayp arr1 _ _;
+    intro_varrayp arr2 _ _;
+    return res
