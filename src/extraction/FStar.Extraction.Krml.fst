@@ -104,7 +104,6 @@ and expr =
   | EBufRead of expr * expr
   | EBufWrite of expr * expr * expr
   | EBufSub of expr * expr
-  | EBufDiff of expr * expr
   | EBufBlit of expr * expr * expr * expr * expr
   | EMatch of expr * branches
   | EOp of op * width
@@ -132,6 +131,7 @@ and expr =
   | EStandaloneComment of string
   | EAddrOf of expr
   | EBufNull of typ
+  | EBufDiff of expr * expr
 
 and op =
   | Add | AddW | Sub | SubW | Div | DivW | Mult | MultW | Mod
