@@ -22,7 +22,8 @@ let test1 () : SteelT bool emp (fun _ -> emp) =
   change_equal_slprop
     (varray (merge r1 r2))
     (varray r);
-  free r;
+  // Free not supported in Wasm
+  drop (varray r);
   return (b = mk 4s)
 
 type t = { foo: UInt32.t; bar: UInt16.t }
@@ -43,7 +44,8 @@ let test2 () : SteelT bool emp (fun _ -> emp) =
   change_equal_slprop
     (varray (merge r1 r2))
     (varray r);
-  free r;
+  // Free not supported in wasm
+  drop (varray r);
   return (b = mk 4s)
 
 let main () : SteelT Int32.t emp (fun _ -> emp) =
