@@ -133,7 +133,7 @@ let exists_cong #a #u p q
   = coerce_ghost (fun _ -> SEA.exists_cong #a #u p q)
 
 let new_invariant #u p
-  = coerce_ghost (fun _ -> SEA.new_invariant #u p)
+  = coerce_atomic (fun _ -> SEA.new_invariant #u p)
 
 let with_invariant (#a:Type)
                    (#fp:vprop)
@@ -165,7 +165,7 @@ let with_invariant_g (#a:Type)
                           (p `star` fp)
                           (fun x -> p `star` fp' x) 
       = f () in
-    coerce_ghost (fun _ -> SEA.with_invariant_g i f)
+    coerce_atomic (fun _ -> SEA.with_invariant_g i f)
 
 let par #aL #aR #preL #postL #preR #postR f g =
   let f : unit -> SE.SteelT aL preL postL = fun _ -> f () in

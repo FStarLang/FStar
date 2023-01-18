@@ -203,7 +203,7 @@ val exists_cong (#a:_)
 /// Creation of a new invariant associated to vprop [p].
 /// After execution of this function, [p] is consumed and not available in the context anymore
 val new_invariant (#opened_invariants:inames) (p:vprop)
-  : STGhostT (inv p) opened_invariants p (fun _ -> emp)
+  : STAtomicUT (inv p) opened_invariants p (fun _ -> emp)
 
 /// Atomically executing function [f] which relies on the predicate [p] stored in invariant [i]
 /// as long as it maintains the validity of [p]
@@ -230,7 +230,7 @@ val with_invariant_g (#a:Type)
                      ($f:unit -> STGhostT a (add_inv opened_invariants i)
                                          (p `star` fp)
                                          (fun x -> p `star` fp' x))
-  : STGhostT a opened_invariants fp fp'
+  : STAtomicUT a opened_invariants fp fp'
 
 /// Parallel composition of two STT functions
 [@@noextract_to "Plugin"]
