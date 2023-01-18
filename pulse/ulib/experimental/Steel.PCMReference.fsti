@@ -117,7 +117,7 @@ let fact_valid_compat (#a:Type) (#pcm:pcm a)
 /// and if it is currently valid for any value that is compatible with
 /// our current knowledge [v], then we can witness the property
 val witness (#inames: _) (#a:Type) (#pcm:pcm a)
-            (r:ref a pcm)
+            (r:erased (ref a pcm))
             (fact:stable_property pcm)
             (v:erased a)
             (_:fact_valid_compat fact v)
@@ -131,7 +131,7 @@ val witness (#inames: _) (#a:Type) (#pcm:pcm a)
 /// is compatible with our previous knowledge [v]
 val recall (#inames: _) (#a:Type u#1) (#pcm:pcm a)
            (fact:property a)
-           (r:ref a pcm)
+           (r:erased (ref a pcm))
            (v:erased a)
            (w:witnessed r fact)
   : SteelAtomicU (erased a) inames

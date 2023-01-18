@@ -79,7 +79,7 @@ let gather r v0 v1 =
   gather' r v0 v1
 
 val witness' (#inames: _) (#a:Type) (#pcm:pcm a)
-            (r:ref a pcm)
+            (r:erased (ref a pcm))
             (fact:stable_property pcm)
             (v:erased a)
             (_:fact_valid_compat fact v)
@@ -93,7 +93,7 @@ let witness r fact v s =
   w
   
 val recall' (#inames: _) (#a:Type u#1) (#pcm:pcm a) (fact:property a)
-           (r:ref a pcm)
+           (r:erased (ref a pcm))
            (v:erased a)
            (w:witnessed r fact)
   : SteelAtomicUT (v1:erased a{compatible pcm v v1}) inames

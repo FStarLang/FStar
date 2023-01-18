@@ -35,9 +35,9 @@ let conditional_inv (r:ghost_ref bool) (p:vprop) =
 let ex_conditional_inv (r:ghost_ref bool) (p:vprop) =
     h_exists (conditional_inv r p)
 
-let inv (p:vprop) = erased (r:ghost_ref bool & inv (ex_conditional_inv r p))
+let inv (p:vprop) = r:ghost_ref bool & inv (ex_conditional_inv r p)
 
-let name (#p:_) (i:inv p) = dsnd i
+let name (#p:_) (i:inv p) = name_of_inv (dsnd i)
 let gref (#p:_) (i:inv p) = dfst i
 
 [@@__reduce__]
@@ -53,7 +53,7 @@ let new_inv #u p =
     (ghost_pts_to r (half_perm full_perm) true)
     (ghost_pts_to (gref (hide (| r, i |))) (half_perm full_perm) true)
     (fun _ -> ());
-  (| r, i |)
+  return (| r, i |)
 
 let share #p #f #u i = ghost_share_pt #_ #_ #_ #(hide true) (gref i)
 
@@ -65,7 +65,7 @@ let gather #p #f0 #f1 #u i =
     (fun _ -> assert (FStar.Real.two == 2.0R); assert (sum_perm (half_perm f0) (half_perm f1) == (half_perm (sum_perm f0 f1))))
 
 let dispose #p #u i
-  : SteelGhostT unit u
+  : SteelAtomicUT unit u
     (active full_perm i)
     (fun _ -> p)
   = let dispose_aux (r:ghost_ref bool) (_:unit)
@@ -86,7 +86,7 @@ let dispose #p #u i
       intro_exists false (conditional_inv r p);
       drop (ghost_pts_to r (half_perm full_perm) false)
     in
-    with_invariant_g (name i)
+    with_invariant_g (dsnd i)
                      (dispose_aux (gref i))
 
 let with_invariant #a #fp #fp' #u #p #perm i f
@@ -107,7 +107,7 @@ let with_invariant #a #fp #fp' #u #p #perm i f
       intro_exists true (conditional_inv r p);
       return x
     in
-    with_invariant (name i)
+    with_invariant (dsnd i)
                    (with_invariant_aux (gref i))
 
 let with_invariant_g #a #fp #fp' #u #p #perm i f
@@ -128,5 +128,5 @@ let with_invariant_g #a #fp #fp' #u #p #perm i f
       intro_exists true (conditional_inv r p);
       x
     in
-    with_invariant_g (name i)
+    with_invariant_g (dsnd i)
                      (with_invariant_aux (gref i))
