@@ -354,6 +354,7 @@ let lift_atomic_steel a o f = f
 
 let as_atomic_action f = SteelAtomic?.reflect f
 let as_atomic_action_ghost f = SteelGhost?.reflect f
+let as_atomic_unobservable_action f = SteelAtomicU?.reflect f
 
 (* Some helpers *)
 
@@ -631,9 +632,9 @@ let exists_cong p q =
 
 let new_invariant #uses p =
   rewrite_slprop p (to_vprop (hp_of p)) (fun _ -> ());
-  let i = as_atomic_action_ghost (new_invariant uses (hp_of p)) in
+  let i = as_atomic_unobservable_action (new_invariant uses (hp_of p)) in
   rewrite_slprop (to_vprop Mem.emp) emp (fun _ -> reveal_emp ());
-  i
+  return i
 
 (*
  * AR: SteelAtomic and SteelGhost are not marked reifiable since we intend to run Steel programs natively
@@ -661,9 +662,9 @@ assume val reify_steel_ghost_comp
 
 let with_invariant_g #a #fp #fp' #opened #p i f =
   rewrite_slprop fp (to_vprop (hp_of fp)) (fun _ -> ());
-  let x = as_atomic_action_ghost (Steel.Memory.with_invariant #a #(hp_of fp) #(fun x -> hp_of (fp' x)) #opened #(hp_of p) i (reify_steel_ghost_comp f)) in
+  let x = as_atomic_unobservable_action (Steel.Memory.with_invariant #a #(hp_of fp) #(fun x -> hp_of (fp' x)) #opened #(hp_of p) i (reify_steel_ghost_comp f)) in
   rewrite_slprop (to_vprop (hp_of (fp' x))) (fp' x) (fun _ -> ());
-  x
+  return x
 
 let intro_vrefine v p =
   let m = get () in
