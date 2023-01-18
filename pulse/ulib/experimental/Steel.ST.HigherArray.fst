@@ -594,7 +594,7 @@ let prefix_copied #t
    : Seq.seq t
    = (Seq.append (Seq.slice e0 0 i) (Seq.slice e1 i (Seq.length e1)))
 
-#push-options "--z3rlimit 16"
+#push-options "--z3rlimit 32"
 
 val memcpy0 (#t:_) (#p0:perm)
            (a0 a1:array t)
@@ -687,3 +687,7 @@ let blit_ptr
 /// These two functions will be natively extracted, we can simply admit them
 let intro_fits_u32 () = admit_ ()
 let intro_fits_u64 () = admit_ ()
+
+let ptrdiff_ptr a0 len0 a1 len1 =
+  let res = a0.offset - a1.offset in
+  return (UP.int_to_t res)
