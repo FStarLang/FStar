@@ -83,10 +83,10 @@ val witness' (#inames: _) (#a:Type) (#pcm:pcm a)
             (fact:stable_property pcm)
             (v:erased a)
             (_:fact_valid_compat fact v)
-  : SteelGhostT (witnessed r fact) inames (pts_to r v)
-                (fun _ -> to_vprop Mem.(pts_to r v))
+  : SteelAtomicUT (witnessed r fact) inames (pts_to r v)
+                  (fun _ -> to_vprop Mem.(pts_to r v))
 
-let witness' #inames r fact v _ = as_atomic_action_ghost (Steel.Memory.witness inames r fact v ())
+let witness' #inames r fact v _ = as_atomic_unobservable_action (Steel.Memory.witness inames r fact v ())
 
 let witness r fact v s =
   let w = witness' r fact v s in

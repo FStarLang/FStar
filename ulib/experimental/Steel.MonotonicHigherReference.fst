@@ -167,7 +167,7 @@ let witness_thunk (#inames: _) (#a:Type) (#pcm:FStar.PCM.pcm a)
                   (v:Ghost.erased a)
                   (_:squash (fact_valid_compat #_ #pcm fact v))
                   (_:unit)
-  : SteelGhostT (M.witnessed r fact) inames (PR.pts_to r v)
+  : SteelAtomicUT (M.witnessed r fact) inames (PR.pts_to r v)
                 (fun _ -> PR.pts_to r v)
   = witness r fact v ()
 
@@ -177,7 +177,7 @@ let witness (#inames: _) (#a:Type) (#q:perm) (#p:Preorder.preorder a) (r:ref a p
             (fact:stable_property p)
             (v:erased a)
             (_:squash (fact v))
-  : SteelGhostT (witnessed r fact) inames (pts_to r q v)
+  : SteelAtomicUT (witnessed r fact) inames (pts_to r q v)
                (fun _ -> pts_to r q v)
   = let h = witness_exists #_ #_ #(pts_to_body r q v) () in
     let _ = elim_pure #_ #_ #_ #q r v h in
@@ -192,7 +192,7 @@ let witness (#inames: _) (#a:Type) (#q:perm) (#p:Preorder.preorder a) (r:ref a p
       pure_star_interp (M.pts_to r h) (history_val h v q) m);
 
     intro_exists_erased h (pts_to_body r q v);
-    w
+    return w
 
 let recall (#inames: _) (#a:Type u#1) (#q:perm) (#p:Preorder.preorder a) (fact:property a)
            (r:ref a p) (v:erased a) (w:witnessed r fact)

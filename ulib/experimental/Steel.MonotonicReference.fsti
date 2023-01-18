@@ -85,8 +85,9 @@ val witness (#inames: _) (#a:Type) (#q:perm) (#p:Preorder.preorder a) (r:ref a p
             (fact:stable_property p)
             (v:erased a)
             (_:squash (fact v))
-  : SteelGhostT (witnessed r fact) inames (pts_to r q v)
-               (fun _ -> pts_to r q v)
+  : SteelAtomicUT (witnessed r fact) inames
+                  (pts_to r q v)
+                  (fun _ -> pts_to r q v)
 
 
 /// If we previously witnessed the validity of [fact], we can recall its validity

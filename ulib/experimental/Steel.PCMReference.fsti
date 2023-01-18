@@ -121,8 +121,9 @@ val witness (#inames: _) (#a:Type) (#pcm:pcm a)
             (fact:stable_property pcm)
             (v:erased a)
             (_:fact_valid_compat fact v)
-  : SteelGhostT (witnessed r fact) inames (pts_to r v)
-               (fun _ -> pts_to r v)
+  : SteelAtomicUT (witnessed r fact) inames
+                  (pts_to r v)
+                  (fun _ -> pts_to r v)
 
 
 /// If we previously witnessed the validity of a predicate [fact],
