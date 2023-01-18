@@ -208,3 +208,6 @@ let emp_unit_variant p = Mem.emp_unit (hp_of p)
 
 let solve_can_be_split_forall_dep_for _ = ()
 let solve_can_be_split_forall_dep_lookup = ()
+
+let inv (p:vprop) = Mem.inv (hp_of p)
+let name_of_inv #p (i:inv p) = Mem.name_of_inv i
