@@ -24,21 +24,24 @@ open Steel.FractionalPermission
 
 /// An invariant for lists, where each list node stores a lock to the rest of the list.
 
-#push-options "--__no_positivity"
+val h_exists (#[@@@strictly_positive] a:Type)
+             ([@@@strictly_positive] p:(a -> vprop))
+   : vprop
+
+val pts_to (#[@@@strictly_positive] a:Type)
+           (// [@@@strictly_positive]
+    r:ref a)
+           (// [@@@strictly_positive]
+    v:a) : vprop 
+
+val lock ([@@@strictly_positive] p:vprop) : Type0
+
+
 noeq
-type llist (a:Type0) : Type0 = {
-  v : a;
-  next : ref (llist a);
-  lock : lock_t
-}
-#pop-options
-
-
-let rec llist_inv (#a:Type) (repr:list (a -> vprop)) (n:ref (llist a))
-  = match repr with
-    | [] -> emp
-    | p::tl ->
-      h_exists (fun (cell:llist a) ->
-         p cell.v `star`
-         pts_to n full_perm cell `star`
-         pure (cell.lock `protects` llist_inv tl cell.next))
+type llist (a:Type0) : Type0 = 
+  | Nil : llist a
+  | Cons :
+           v : a ->
+           next : ref (llist a) ->
+           tl_repr: lock (h_exists (pts_to next)) ->
+           llist a
