@@ -21,15 +21,13 @@ let witness' (#inames: _) (#a:Type) (#pcm:pcm a)
             (v:erased a)
             (_:fact_valid_compat fact v)
             ()
-  : Steel.Effect.Atomic.SteelGhost unit inames (pts_to r v)
+  : Steel.Effect.Atomic.SteelAtomicUT (witnessed r fact) inames (pts_to r v)
                (fun _ -> pts_to r v)
-               (requires fun _ -> True)
-               (ensures fun _ _ _ -> witnessed r fact)
 = P.witness r fact v ()
 
-let witness r fact v vc = C.coerce_ghost (witness' r fact v vc)
+let witness r fact v vc = C.coerce_atomic (witness' r fact v vc)
 
-let recall fact r v = C.coerce_ghost (fun _ -> P.recall fact r v)
+let recall fact r v w = C.coerce_atomic (fun _ -> P.recall fact r v w)
 
 let select_refine r x f = C.coerce_steel (fun _ -> P.select_refine r x f)
 
