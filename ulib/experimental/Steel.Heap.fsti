@@ -494,18 +494,18 @@ val sel_v (#a:Type u#h) (#pcm:pcm a) (r:ref a pcm) (v:erased a) (m:full_hheap (p
 val sel_lemma (#a:_) (#pcm:_) (r:ref a pcm) (m:full_hheap (ptr r))
   : Lemma (interp (pts_to r (sel r m)) m)
 
-let witnessed_ref (#a:Type u#a)
-                  (#pcm:pcm a)
-                  (r:ref a pcm)
-                  (fact:a -> prop)
-                  (h:full_heap)
-  = interp (ptr r) h /\
-    fact (sel r h)
+// let witnessed_ref (#a:Type u#a)
+//                   (#pcm:pcm a)
+//                   (r:ref a pcm)
+//                   (fact:a -> prop)
+//                   (h:full_heap)
+//   = interp (ptr r) h /\
+//     fact (sel r h)
 
-val witnessed_ref_stability (#a:Type) (#pcm:pcm a) (r:ref a pcm) (fact:a -> prop)
-  : Lemma
-    (requires FStar.Preorder.stable fact (Steel.Preorder.preorder_of_pcm pcm))
-    (ensures FStar.Preorder.stable (witnessed_ref r fact) heap_evolves)
+// val witnessed_ref_stability (#a:Type) (#pcm:pcm a) (r:ref a pcm) (fact:a -> prop)
+//   : Lemma
+//     (requires FStar.Preorder.stable fact (Steel.Preorder.preorder_of_pcm pcm))
+//     (ensures FStar.Preorder.stable (witnessed_ref r fact) heap_evolves)
 
 (**
   The action variant of [sel], returning the "true" value inside the heap. This "true" value
