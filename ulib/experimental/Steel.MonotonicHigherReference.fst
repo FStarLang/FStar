@@ -167,10 +167,8 @@ let witness_thunk (#inames: _) (#a:Type) (#pcm:FStar.PCM.pcm a)
                   (v:Ghost.erased a)
                   (_:squash (fact_valid_compat #_ #pcm fact v))
                   (_:unit)
-  : SteelGhost unit inames (PR.pts_to r v)
-               (fun _ -> PR.pts_to r v)
-               (requires fun _ -> True)
-               (ensures fun _ _ _ -> M.witnessed r fact)
+  : SteelGhostT (M.witnessed r fact) inames (PR.pts_to r v)
+                (fun _ -> PR.pts_to r v)
   = witness r fact v ()
 
 #push-options "--print_implicits"
@@ -179,34 +177,33 @@ let witness (#inames: _) (#a:Type) (#q:perm) (#p:Preorder.preorder a) (r:ref a p
             (fact:stable_property p)
             (v:erased a)
             (_:squash (fact v))
-  : SteelGhost unit inames (pts_to r q v)
+  : SteelGhostT (witnessed r fact) inames (pts_to r q v)
                (fun _ -> pts_to r q v)
-               (requires fun _ -> True)
-               (ensures fun _ _ _ -> witnessed r fact)
   = let h = witness_exists #_ #_ #(pts_to_body r q v) () in
     let _ = elim_pure #_ #_ #_ #q r v h in
 
     assert (forall h'. compatible pcm_history h h' ==> lift_fact fact h');
     lift_fact_is_stable #a #p fact;
 
-    witness_thunk #_ #_ #(pcm_history #a #p)  r (lift_fact fact) h () _;
+    let w = witness_thunk #_ #_ #(pcm_history #a #p)  r (lift_fact fact) h () _ in
 
     rewrite_slprop (PR.pts_to r h) (pts_to_body r q v h) (fun m ->
       emp_unit (M.pts_to r h);
       pure_star_interp (M.pts_to r h) (history_val h v q) m);
 
-    intro_exists_erased h (pts_to_body r q v)
+    intro_exists_erased h (pts_to_body r q v);
+    w
 
 let recall (#inames: _) (#a:Type u#1) (#q:perm) (#p:Preorder.preorder a) (fact:property a)
-           (r:ref a p) (v:erased a)
-  : SteelGhost unit inames (pts_to r q v)
+           (r:ref a p) (v:erased a) (w:witnessed r fact)
+  : SteelAtomicU unit inames (pts_to r q v)
                (fun _ -> pts_to r q v)
-               (requires fun _ -> witnessed r fact)
+               (requires fun _ -> True)
                (ensures fun _ _ _ -> fact v)
   = let h = witness_exists #_ #_ #(pts_to_body r q v) () in
     let _ = elim_pure #_ #_ #_ #q r v h in
 
-    let h1 = recall (lift_fact fact) r h in
+    let h1 = recall (lift_fact fact) r h w in
 
     rewrite_slprop (PR.pts_to r h) (pts_to_body r q v h) (fun m ->
       emp_unit (M.pts_to r h);
@@ -252,6 +249,7 @@ let share #o (#a:Type) (#p:Preorder.preorder a) (r:ref a p) (f:perm) (v:Ghost.er
     intro_exists #(history a p) sh (pts_to_body r (half_perm f) v);
     intro_pts_to r (half_perm f) v
 
+#push-options "--compat_pre_core 1"
 let gather #o (#a:Type) (#p:Preorder.preorder a) (r:ref a p) (f g:perm) (v:Ghost.erased a)
   : SteelGhostT unit o
     (pts_to r f v `star` pts_to r g v)
@@ -267,3 +265,4 @@ let gather #o (#a:Type) (#p:Preorder.preorder a) (r:ref a p) (f g:perm) (v:Ghost
     intro_pure (history_val (op pcm_history hf hg) v (sum_perm f g));
     intro_exists (op pcm_history hf hg) (pts_to_body r (sum_perm f g) v);
     intro_pts_to r (sum_perm f g) v
+#pop-options
