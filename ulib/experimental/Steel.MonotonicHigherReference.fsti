@@ -78,7 +78,8 @@ let stable_property (#a:Type) (p:Preorder.preorder a)
 
 /// If [fact] is a stable property for the reference preorder [p], and if
 /// it holds for the current value [v] of the reference, then we can witness it
-val witness (#inames: _) (#a:Type) (#q:perm) (#p:Preorder.preorder a) (r:ref a p)
+val witness (#inames: _) (#a:Type) (#q:perm) (#p:Preorder.preorder a)
+            (r:erased (ref a p))
             (fact:stable_property p)
             (v:erased a)
             (_:squash (fact v))
@@ -88,7 +89,7 @@ val witness (#inames: _) (#a:Type) (#q:perm) (#p:Preorder.preorder a) (r:ref a p
 /// If we previously witnessed the validity of [fact], we can recall its validity
 val recall (#inames: _) (#a:Type u#1) (#q:perm) (#p:Preorder.preorder a)
            (fact:property a)
-           (r:ref a p)
+           (r:erased (ref a p))
            (v:erased a)
            (w:witnessed r fact)
   : SteelAtomicU unit inames (pts_to r q v)

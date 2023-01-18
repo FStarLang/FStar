@@ -477,7 +477,7 @@ let stable_property (#a:Type) (pcm:pcm a)
 
 val witness (#a:Type) (#pcm:pcm a)
             (e:inames)
-            (r:ref a pcm)
+            (r:erased (ref a pcm))
             (fact:stable_property pcm)
             (v:Ghost.erased a)
             (_:squash (forall z. compatible pcm v z ==> fact z))
@@ -485,7 +485,7 @@ val witness (#a:Type) (#pcm:pcm a)
 
 val recall (#a:Type u#1) (#pcm:pcm a) (#fact:property a)
            (e:inames)
-           (r:ref a pcm)
+           (r:erased (ref a pcm))
            (v:Ghost.erased a)
            (w:witnessed r fact)
   : action_except (v1:Ghost.erased a{compatible pcm v v1}) e

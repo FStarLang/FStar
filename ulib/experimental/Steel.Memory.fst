@@ -1046,9 +1046,10 @@ let preserves_frame_star_pure (e:inames) (p q:slprop) (r s:prop) (m:mem)
     in
     ()
 
+
 let witness (#a:Type) (#pcm:pcm a)
             (e:inames)
-            (r:ref a pcm)
+            (r:erased (ref a pcm))
             (fact:stable_property pcm)
             (v:Ghost.erased a)
             (_:squash (forall z. compatible pcm v z ==> fact z))
@@ -1059,30 +1060,29 @@ let witness (#a:Type) (#pcm:pcm a)
            (fun _ -> True)
            (fun _ _ _ -> True)
   = let m0 = NMSTTotal.get () in
-    let hr : H.ref a pcm = r in
-    let v' = H.sel_v hr v (heap_of_mem m0) in
-    assert (interp (H.ptr hr) m0 /\ H.sel #a #pcm hr (heap_of_mem m0) == v');
-    assert (compatible pcm v v');
-    assert (fact v');
-    assert (witnessed_ref r fact m0);
-    witnessed_ref_stability r fact;
-    assert (FStar.Preorder.stable (witnessed_ref r fact) mem_evolves);
+    let _ : unit = 
+      let hr : H.ref a pcm = r in
+      let v' = H.sel_v hr v (heap_of_mem m0) in
+      assert (interp (H.ptr hr) m0 /\ H.sel #a #pcm hr (heap_of_mem m0) == v');
+      assert (compatible pcm v v');
+      assert (fact v');
+      assert (witnessed_ref r fact m0);
+      witnessed_ref_stability r fact;
+      assert (FStar.Preorder.stable (witnessed_ref r fact) mem_evolves)
+    in
     let w = NMSTTotal.witness _ mem_evolves (witnessed_ref r fact) in
     w
 
 let recall (#a:Type u#1) (#pcm:pcm a) (#fact:property a)
            (e:inames)
-           (r:ref a pcm)
+           (r:erased (ref a pcm))
            (v:Ghost.erased a)
            (w:witnessed r fact)
            (frame:slprop)
   = let m0 = NMSTTotal.get () in
-    let hr : H.ref a pcm = r in
-    // pure_star_interp (pts_to r v) (witnessed r fact) m0;
-    // assert (witnessed r fact);
     NMSTTotal.recall _ mem_evolves (witnessed_ref r fact) w;
+    let hr : H.ref a pcm = r in
     assert (witnessed_ref r fact m0);
-    // affine_star (pts_to r v) (pure (witnessed r fact)) m0;
     let v1 = H.sel_v hr v (heap_of_mem m0) in
     assert (compatible pcm v v1);
     assert (H.sel hr (heap_of_mem m0) == v1);

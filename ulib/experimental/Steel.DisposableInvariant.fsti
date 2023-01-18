@@ -29,7 +29,6 @@ open Steel.FractionalPermission
 #push-options "--ide_id_info_off"
 
 /// The abstract type of ghost locks. Only used for proof purposes, will be erased at extraction time
-[@@ erasable]
 val inv (p:vprop) : Type0
 
 /// The name of a disposable invariant
@@ -46,7 +45,7 @@ val active (#p:_) ([@@@ smt_fallback] f:perm) (_:inv p) : vprop
 /// [p] is then removed from the context as it is now locked behind the invariant, and we
 /// have full ownership on the newly minted invariant.
 val new_inv (#u:_) (p:vprop)
-  : SteelGhostT (inv p) u
+  : SteelAtomicUT (inv p) u
     p
     (fun i -> active full_perm i)
 
@@ -72,7 +71,7 @@ let add_inv (#p:vprop) (u:inames) (i:inv p) : inames =
 /// If we have full ownership of the invariant, and it is not currently opened,
 /// then we can dispose of it, and retrieve the locked resource
 val dispose (#p:vprop) (#u:inames) (i:inv p{not (mem_inv u i)})
-  : SteelGhostT unit u
+  : SteelAtomicUT unit u
     (active full_perm i)
     (fun _ -> p)
 
@@ -103,4 +102,4 @@ val with_invariant_g (#a:Type)
                      ($f:unit -> SteelGhostT a (add_inv opened_invariants i)
                                                (p `star` fp)
                                                (fun x -> p `star` fp' x))
-  : SteelGhostT a opened_invariants (active perm i `star` fp) (fun x -> active perm i `star` fp' x)
+  : SteelAtomicUT a opened_invariants (active perm i `star` fp) (fun x -> active perm i `star` fp' x)

@@ -162,7 +162,7 @@ let witnessed #a #p r fact =
 let get_squash (#p:prop) (_:unit{p}) : squash p = ()
 
 let witness_thunk (#inames: _) (#a:Type) (#pcm:FStar.PCM.pcm a)
-                  (r:M.ref a pcm)
+                  (r:Ghost.erased (M.ref a pcm))
                   (fact:M.stable_property pcm)
                   (v:Ghost.erased a)
                   (_:squash (fact_valid_compat #_ #pcm fact v))
@@ -173,7 +173,8 @@ let witness_thunk (#inames: _) (#a:Type) (#pcm:FStar.PCM.pcm a)
 
 #push-options "--print_implicits"
 
-let witness (#inames: _) (#a:Type) (#q:perm) (#p:Preorder.preorder a) (r:ref a p)
+let witness (#inames: _) (#a:Type) (#q:perm) (#p:Preorder.preorder a)
+            (r:Ghost.erased (ref a p))
             (fact:stable_property p)
             (v:erased a)
             (_:squash (fact v))
@@ -195,7 +196,7 @@ let witness (#inames: _) (#a:Type) (#q:perm) (#p:Preorder.preorder a) (r:ref a p
     return w
 
 let recall (#inames: _) (#a:Type u#1) (#q:perm) (#p:Preorder.preorder a) (fact:property a)
-           (r:ref a p) (v:erased a) (w:witnessed r fact)
+           (r:Ghost.erased (ref a p)) (v:erased a) (w:witnessed r fact)
   : SteelAtomicU unit inames (pts_to r q v)
                (fun _ -> pts_to r q v)
                (requires fun _ -> True)
