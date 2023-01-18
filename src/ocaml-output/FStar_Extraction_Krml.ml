@@ -55,7 +55,6 @@ and expr =
   | EBufRead of (expr * expr) 
   | EBufWrite of (expr * expr * expr) 
   | EBufSub of (expr * expr) 
-  | EBufDiff of (expr * expr) 
   | EBufBlit of (expr * expr * expr * expr * expr) 
   | EMatch of (expr * (pattern * expr) Prims.list) 
   | EOp of (op * width) 
@@ -83,6 +82,7 @@ and expr =
   | EStandaloneComment of Prims.string 
   | EAddrOf of expr 
   | EBufNull of typ 
+  | EBufDiff of (expr * expr) 
 and op =
   | Add 
   | AddW 
@@ -329,11 +329,6 @@ let (uu___is_EBufSub : expr -> Prims.bool) =
   fun projectee -> match projectee with | EBufSub _0 -> true | uu___ -> false
 let (__proj__EBufSub__item___0 : expr -> (expr * expr)) =
   fun projectee -> match projectee with | EBufSub _0 -> _0
-let (uu___is_EBufDiff : expr -> Prims.bool) =
-  fun projectee ->
-    match projectee with | EBufDiff _0 -> true | uu___ -> false
-let (__proj__EBufDiff__item___0 : expr -> (expr * expr)) =
-  fun projectee -> match projectee with | EBufDiff _0 -> _0
 let (uu___is_EBufBlit : expr -> Prims.bool) =
   fun projectee ->
     match projectee with | EBufBlit _0 -> true | uu___ -> false
@@ -445,6 +440,11 @@ let (uu___is_EBufNull : expr -> Prims.bool) =
     match projectee with | EBufNull _0 -> true | uu___ -> false
 let (__proj__EBufNull__item___0 : expr -> typ) =
   fun projectee -> match projectee with | EBufNull _0 -> _0
+let (uu___is_EBufDiff : expr -> Prims.bool) =
+  fun projectee ->
+    match projectee with | EBufDiff _0 -> true | uu___ -> false
+let (__proj__EBufDiff__item___0 : expr -> (expr * expr)) =
+  fun projectee -> match projectee with | EBufDiff _0 -> _0
 let (uu___is_Add : op -> Prims.bool) =
   fun projectee -> match projectee with | Add -> true | uu___ -> false
 let (uu___is_AddW : op -> Prims.bool) =
