@@ -707,28 +707,28 @@ let sel_lemma (#a:_) (#pcm:_) (r:ref a pcm) (m:full_hheap (ptr r))
   = let Ref _ _ _ v = select_addr m (Addr?._0 r) in
     assert (sel r m == v);
     compatible_refl pcm v
-
-let witnessed_ref_stability #a #pcm (r:ref a pcm) (fact:a -> prop)
-  = let fact_h = witnessed_ref r fact in
-    let aux (h0 h1:full_heap)
-      : Lemma
-        (requires
-          fact_h h0 /\
-          heap_evolves h0 h1)
-        (ensures
-          fact_h h1)
-        [SMTPat ()]
-      = let Addr addr = r in
-        assert (interp (ptr r) h0);
-        assert (fact (sel r h0));
-        assert (contains_addr h1 addr);
-        compatible_refl pcm (select_addr h1 addr).v;
-        assert (compatible pcm (select_addr h1 addr).v (select_addr h1 addr).v);
-        assert (interp (pts_to r (select_addr h1 addr).v) h1);
-        assert (interp (ptr r) h1);
-        assert (fact (sel r h1))
-    in
-    ()
+  
+// let witnessed_ref_stability #a #pcm (r:ref a pcm) (fact:a -> prop)
+//   = let fact_h = witnessed_ref r fact in
+//     let aux (h0 h1:full_heap)
+//       : Lemma
+//         (requires
+//           fact_h h0 /\
+//           heap_evolves h0 h1)
+//         (ensures
+//           fact_h h1)
+//         [SMTPat ()]
+//       = let Addr addr = r in
+//         assert (interp (ptr r) h0);
+//         assert (fact (sel r h0));
+//         assert (contains_addr h1 addr);
+//         compatible_refl pcm (select_addr h1 addr).v;
+//         assert (compatible pcm (select_addr h1 addr).v (select_addr h1 addr).v);
+//         assert (interp (pts_to r (select_addr h1 addr).v) h1);
+//         assert (interp (ptr r) h1);
+//         assert (fact (sel r h1))
+//     in
+//     ()
 
 #set-options "--fuel 2 --ifuel 2"
 
