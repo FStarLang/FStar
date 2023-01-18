@@ -390,6 +390,10 @@ val bind_pure_steela_ (a:Type) (b:Type)
 polymonadic_bind (PURE, SteelAtomicBase) |> SteelAtomicBase = bind_pure_steela_
 
 /// A version of the SteelAtomic effect with trivial requires and ensures clauses
+///
+effect SteelAtomicBaseT (a:Type) (opened:inames) (obs:observability) (pre:pre_t) (post:post_t a) =
+  SteelAtomicBase a false opened obs pre post (fun _ -> True) (fun _ _ _ -> True)
+
 effect SteelAtomicT (a:Type) (opened:inames) (pre:pre_t) (post:post_t a) =
   SteelAtomic a opened pre post (fun _ -> True) (fun _ _ _ -> True)
 
@@ -718,13 +722,14 @@ val new_invariant (#opened_invariants:inames) (p:vprop)
 val with_invariant (#a:Type)
                    (#fp:vprop)
                    (#fp':a -> vprop)
+                   (#obs:_)
                    (#opened_invariants:inames)
                    (#p:vprop)
                    (i:inv p{not (mem_inv opened_invariants i)})
-                   ($f:unit -> SteelAtomicT a (add_inv opened_invariants i)
+                   ($f:unit -> SteelAtomicBaseT a (add_inv opened_invariants i) obs
                                              (p `star` fp)
                                              (fun x -> p `star` fp' x))
-  : SteelAtomicT a opened_invariants fp fp'
+  : SteelAtomicBaseT a opened_invariants obs fp fp'
 
 /// Variant of the above combinator for ghost computations
 val with_invariant_g (#a:Type)
@@ -736,7 +741,7 @@ val with_invariant_g (#a:Type)
                      ($f:unit -> SteelGhostT a (add_inv opened_invariants i)
                                               (p `star` fp)
                                               (fun x -> p `star` fp' x))
-  : SteelAtomicUT a opened_invariants fp fp'
+  : SteelAtomicUT (erased a) opened_invariants fp (fun x -> fp' x)
 
 (* Introduction and elimination principles for vprop combinators *)
 

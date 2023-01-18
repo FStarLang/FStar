@@ -139,15 +139,16 @@ let with_invariant (#a:Type)
                    (#fp:vprop)
                    (#fp':a -> vprop)
                    (#opened_invariants:inames)
+                   (#obs:observability)
                    (#p:vprop)
                    (i:inv p{not (mem_inv opened_invariants i)})
-                   ($f:unit -> STAtomicT a (add_inv opened_invariants i)
-                                          (p `star` fp)
-                                          (fun x -> p `star` fp' x))
+                   ($f:unit -> STAtomicBaseT a (add_inv opened_invariants i) obs
+                                              (p `star` fp)
+                                              (fun x -> p `star` fp' x))
   = let f (x:unit)
-      : SEA.SteelAtomicT a (add_inv opened_invariants i)
-                           (p `star` fp)
-                           (fun x -> p `star` fp' x) 
+      : SEA.SteelAtomicBaseT a (add_inv opened_invariants i) obs
+                               (p `star` fp)
+                               (fun x -> p `star` fp' x) 
       = f () in
     coerce_atomic (fun _ -> SEA.with_invariant i f)
 

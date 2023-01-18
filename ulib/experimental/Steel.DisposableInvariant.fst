@@ -86,13 +86,14 @@ let dispose #p #u i
       intro_exists false (conditional_inv r p);
       drop (ghost_pts_to r (half_perm full_perm) false)
     in
-    with_invariant_g (dsnd i)
-                     (dispose_aux (gref i))
+    let x = with_invariant_g (dsnd i)
+                             (dispose_aux (gref i)) in
+    ()
 
-let with_invariant #a #fp #fp' #u #p #perm i f
+let with_invariant #a #fp #fp' #u #obs #p #perm i f
   = let with_invariant_aux (r:ghost_ref bool)
                            (_:unit)
-      : SteelAtomicT a (add_inv u i)
+      : SteelAtomicBaseT a (add_inv u i) obs
           (ex_conditional_inv r p `star`
             (ghost_pts_to r (half_perm perm) true `star`
           fp))
@@ -128,5 +129,6 @@ let with_invariant_g #a #fp #fp' #u #p #perm i f
       intro_exists true (conditional_inv r p);
       x
     in
-    with_invariant_g (dsnd i)
-                     (with_invariant_aux (gref i))
+    let x = with_invariant_g (dsnd i)
+                             (with_invariant_aux (gref i)) in
+    x

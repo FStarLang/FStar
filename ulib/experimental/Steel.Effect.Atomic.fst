@@ -648,9 +648,29 @@ assume val reify_steel_atomic_comp
   ($f:unit -> SteelAtomicBase a framed opened_invariants g pre post req ens)
   : repr a framed opened_invariants g pre post req ens
 
-let with_invariant #a #fp #fp' #opened #p i f =
+
+[@@warn_on_use "as_unobservable_atomic_action is a trusted primitive"]
+let as_atomic_o_action
+              (#a:Type u#a)
+              (#opened_invariants:inames)
+              (#fp:slprop)
+              (#fp': a -> slprop)
+              (o:observability)
+              (f:action_except a opened_invariants fp fp')
+  : SteelAtomicBaseT a opened_invariants o (to_vprop fp) (fun x -> to_vprop (fp' x))
+  = SteelAtomicBaseT?.reflect f
+
+let with_invariant #a #fp #fp' #obs #opened #p i f =
   rewrite_slprop fp (to_vprop (hp_of fp)) (fun _ -> ());
-  let x = as_atomic_action (Steel.Memory.with_invariant #a #(hp_of fp) #(fun x -> hp_of (fp' x)) #opened #(hp_of p) i (reify_steel_atomic_comp f)) in
+  let x = as_atomic_o_action obs
+                (Steel.Memory.with_invariant
+                          #a
+                          #(hp_of fp)
+                          #(fun x -> hp_of (fp' x))
+                          #opened
+                          #(hp_of p)
+                          i
+                          (reify_steel_atomic_comp f)) in
   rewrite_slprop (to_vprop (hp_of (fp' x))) (fp' x) (fun _ -> ());
   return x
 
@@ -662,9 +682,11 @@ assume val reify_steel_ghost_comp
 
 let with_invariant_g #a #fp #fp' #opened #p i f =
   rewrite_slprop fp (to_vprop (hp_of fp)) (fun _ -> ());
-  let x = as_atomic_unobservable_action (Steel.Memory.with_invariant #a #(hp_of fp) #(fun x -> hp_of (fp' x)) #opened #(hp_of p) i (reify_steel_ghost_comp f)) in
+  let x = 
+    as_atomic_unobservable_action 
+      (Steel.Memory.with_invariant #a #(hp_of fp) #(fun x -> hp_of (fp' x)) #opened #(hp_of p) i (reify_steel_ghost_comp f)) in
   rewrite_slprop (to_vprop (hp_of (fp' x))) (fp' x) (fun _ -> ());
-  return x
+  return (hide x)
 
 let intro_vrefine v p =
   let m = get () in

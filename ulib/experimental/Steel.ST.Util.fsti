@@ -213,12 +213,13 @@ val with_invariant (#a:Type)
                    (#fp:vprop)
                    (#fp':a -> vprop)
                    (#opened_invariants:inames)
+                   (#obs:observability)
                    (#p:vprop)
                    (i:inv p{not (mem_inv opened_invariants i)})
-                   ($f:unit -> STAtomicT a (add_inv opened_invariants i)
-                                          (p `star` fp)
-                                          (fun x -> p `star` fp' x))
-  : STAtomicT a opened_invariants fp fp'
+                   ($f:unit -> STAtomicBaseT a (add_inv opened_invariants i) obs
+                                            (p `star` fp)
+                                            (fun x -> p `star` fp' x))
+  : STAtomicBaseT a opened_invariants obs fp fp'
 
 /// Variant of the above combinator for ghost computations
 val with_invariant_g (#a:Type)
@@ -230,7 +231,7 @@ val with_invariant_g (#a:Type)
                      ($f:unit -> STGhostT a (add_inv opened_invariants i)
                                          (p `star` fp)
                                          (fun x -> p `star` fp' x))
-  : STAtomicUT a opened_invariants fp fp'
+  : STAtomicUT (erased a) opened_invariants fp (fun x -> fp' x)
 
 /// Parallel composition of two STT functions
 [@@noextract_to "Plugin"]
