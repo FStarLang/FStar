@@ -128,6 +128,8 @@ and expr =
   | EAbortT of string * typ
   | EComment of string * expr * string
   | EStandaloneComment of string
+  | EAddrOf of expr
+  | EBufNull of typ
 
 and op =
   | Add | AddW | Sub | SubW | Div | DivW | Mult | MultW | Mod
@@ -362,6 +364,14 @@ let translate_cc flags =
   | [ "cdecl" ] -> Some CDecl
   | _ -> None
 
+(* Per FStarLang/karamel#324 *)
+let generate_is_null
+  (t: typ)
+  (x: expr)
+: Tot expr
+= let dummy = UInt64 in
+  EApp (ETypApp (EOp (Eq, dummy), [TBuf t]), [x; EBufNull t])
+
 let rec translate_type env t: typ =
   match t with
   | MLTY_Tuple []
@@ -511,6 +521,14 @@ and translate_expr env e: expr =
 
   // We recognize certain distinguished names from [FStar.HST] and other
   // modules, and translate them into built-in Karamel constructs
+  | MLE_App ({expr = MLE_TApp ({expr = MLE_Name p}, [t]) }, _)
+    when string_of_mlpath p = "Steel.ST.HigherArray.null_ptr"
+    ->
+    EBufNull (translate_type env t)
+  | MLE_App ({expr = MLE_TApp ({expr = MLE_Name p }, [t])}, [arg])
+    when string_of_mlpath p = "Steel.ST.HigherArray.is_null_ptr"
+    ->
+    generate_is_null (translate_type env t) (translate_expr env arg)
   | MLE_App({expr=MLE_TApp ({ expr = MLE_Name p }, [t])}, [arg])
     when string_of_mlpath p = "FStar.Dyn.undyn" ->
       ECast (translate_expr env arg, translate_type env t)
