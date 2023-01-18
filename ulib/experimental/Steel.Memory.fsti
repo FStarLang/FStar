@@ -461,43 +461,38 @@ val upd_gen (#a:Type) (#p:pcm a) (e:inames) (r:ref a p) (x y:Ghost.erased a)
                   (pts_to r x)
                   (fun _ -> pts_to r y)
 
-// let property (a:Type)
-//   = a -> prop
+let property (a:Type)
+  = a -> prop
 
-// val witnessed (#a:Type u#1)
-//               (#pcm:pcm a)
-//               (r:ref a pcm)
-//               (fact:property a)
-//   : prop
+val witnessed (#a:Type u#1)
+              (#pcm:pcm a)
+              (r:ref a pcm)
+              (fact:property a)
+  : Type0
 
-// let stable_property (#a:Type) (pcm:pcm a)
-//   = fact:property a {
-//        FStar.Preorder.stable fact (Steel.Preorder.preorder_of_pcm pcm)
-//     }
+let stable_property (#a:Type) (pcm:pcm a)
+  = fact:property a {
+       FStar.Preorder.stable fact (Steel.Preorder.preorder_of_pcm pcm)
+    }
 
-// val witness (#a:Type) (#pcm:pcm a)
-//             (e:inames)
-//             (r:ref a pcm)
-//             (fact:stable_property pcm)
-//             (v:Ghost.erased a)
-//             (_:squash (forall z. compatible pcm v z ==> fact z))
-//   : action_except unit e (pts_to r v) (fun _ -> pts_to r v `star` pure (witnessed r fact))
+val witness (#a:Type) (#pcm:pcm a)
+            (e:inames)
+            (r:ref a pcm)
+            (fact:stable_property pcm)
+            (v:Ghost.erased a)
+            (_:squash (forall z. compatible pcm v z ==> fact z))
+  : action_except (witnessed r fact) e (pts_to r v) (fun _ -> pts_to r v)
 
-// val recall (#a:Type u#1) (#pcm:pcm a) (#fact:property a)
-//            (e:inames)
-//            (r:ref a pcm)
-//            (v:Ghost.erased a)
-//   : action_except (v1:Ghost.erased a{compatible pcm v v1}) e
-//                   (pts_to r v `star` pure (witnessed r fact))
-//                   (fun v1 -> pts_to r v `star` pure (fact v1))
+val recall (#a:Type u#1) (#pcm:pcm a) (#fact:property a)
+           (e:inames)
+           (r:ref a pcm)
+           (v:Ghost.erased a)
+           (w:witnessed r fact)
+  : action_except (v1:Ghost.erased a{compatible pcm v v1}) e
+                  (pts_to r v)
+                  (fun v1 -> pts_to r v `star` pure (fact v1))
 
 (**** Invariants *)
-
-// (**
-//   This operator asserts that the logical content of invariant [i] is the separation logic
-//   predicate [p]
-// *)
-// val ( >--> ) (i:iname) (p:slprop u#1) : Type0
 
 (**[i : inv p] is an invariant whose content is [p] *)
 val inv (p:slprop u#1) : Type0
