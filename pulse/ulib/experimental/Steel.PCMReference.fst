@@ -19,7 +19,7 @@ module Steel.PCMReference
 
 module Mem = Steel.Memory
 
-let read r v0 = as_action (sel_action FStar.Set.empty r v0)
+let read r v0 = let v = as_action (sel_action FStar.Set.empty r v0) in v
 let write r v0 v1 = as_action (upd_action FStar.Set.empty r v0 v1)
 
 val alloc' (#a:Type)
@@ -83,33 +83,27 @@ val witness' (#inames: _) (#a:Type) (#pcm:pcm a)
             (fact:stable_property pcm)
             (v:erased a)
             (_:fact_valid_compat fact v)
-  : SteelGhostT unit inames (pts_to r v)
-                (fun _ -> to_vprop Mem.(pts_to r v `star` pure (witnessed r fact)))
+  : SteelGhostT (witnessed r fact) inames (pts_to r v)
+                (fun _ -> to_vprop Mem.(pts_to r v))
 
 let witness' #inames r fact v _ = as_atomic_action_ghost (Steel.Memory.witness inames r fact v ())
 
 let witness r fact v s =
-  witness' r fact v s;
-  rewrite_slprop (to_vprop Mem.(pts_to r v `star` pure (witnessed r fact)))
-                 (pts_to r v `star` pure (witnessed r fact))
-                 (fun _ -> ());
-  elim_pure (witnessed r fact)
-
+  let w = witness' r fact v s in
+  w
+  
 val recall' (#inames: _) (#a:Type u#1) (#pcm:pcm a) (fact:property a)
            (r:ref a pcm)
            (v:erased a)
-  : SteelGhostT (v1:erased a{compatible pcm v v1}) inames
-           (to_vprop Mem.(pts_to r v `star` pure (witnessed r fact)))
+           (w:witnessed r fact)
+  : SteelAtomicUT (v1:erased a{compatible pcm v v1}) inames
+           (to_vprop Mem.(pts_to r v))
            (fun v1 -> to_vprop Mem.(pts_to r v `star` pure (fact v1)))
 
-let recall' #inames #a #pcm fact r v = as_atomic_action_ghost (Steel.Memory.recall #a #pcm #fact inames r v)
+let recall' #inames #a #pcm fact r v w = as_atomic_unobservable_action (Steel.Memory.recall #a #pcm #fact inames r v w)
 
-let recall #inames #a #pcm fact r v =
-  intro_pure (witnessed r fact);
-  rewrite_slprop (pts_to r v `star` pure (witnessed r fact))
-                 (to_vprop Mem.(pts_to r v `star` pure (witnessed r fact)))
-                 (fun _ -> ());
-  let v1 = recall' fact r v in
+let recall #inames #a #pcm fact r v w =
+  let v1 = recall' fact r v w in
   rewrite_slprop (to_vprop Mem.(pts_to r v `star` pure (fact v1)))
                  (pts_to r v `star` pure (fact v1))
                  (fun _ -> ());
@@ -120,5 +114,5 @@ let select_refine #a #p r x f = as_action (Steel.Memory.select_refine Set.empty 
 
 let upd_gen #a #p r x y f = as_action (Steel.Memory.upd_gen Set.empty r x y f)
 
-let atomic_read #opened #_ #_ r v0 = as_atomic_action (sel_action opened r v0)
+let atomic_read #opened #_ #_ r v0 = let v = as_atomic_action (sel_action opened r v0) in v
 let atomic_write #opened #_ #_ r v0 v1 = as_atomic_action (upd_action opened r v0 v1)
