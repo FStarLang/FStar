@@ -40,7 +40,14 @@ val base_len (#elt: Type) (b: base_t elt) : GTot nat
 /// An abstract type to represent a C pointer, as a base and an offset
 /// into its base
 [@@noextract_to "krml"] // primitive
-val ptr (elt: Type u#a) : Type0
+val ptr ([@@@strictly_positive] elt: Type u#a) : Type0
+[@@noextract_to "krml"]
+val null_ptr (elt: Type u#a) : ptr elt
+// TODO: turn into a stateful operation to avoid comparing dangling pointers
+[@@noextract_to "krml"]
+val is_null_ptr (#elt: Type u#a) (p: ptr elt) : Pure bool
+  (requires True)
+  (ensures (fun res -> res == true <==> p == null_ptr elt))
 val base (#elt: Type) (p: ptr elt) : Tot (base_t elt)
 val offset (#elt: Type) (p: ptr elt) : Ghost nat (requires True) (ensures (fun offset -> offset <= base_len (base p)))
 val ptr_base_offset_inj (#elt: Type) (p1 p2: ptr elt) : Lemma
@@ -52,6 +59,10 @@ val ptr_base_offset_inj (#elt: Type) (p1 p2: ptr elt) : Lemma
     p1 == p2
   ))
 
+val base_len_null_ptr (elt: Type u#a) : Lemma
+  (base_len (base (null_ptr elt)) == 0)
+  [SMTPat (base_len (base (null_ptr elt)))]
+
 /// A concrete type to represent a C array, as a C pointer and a ghost
 /// array length.  By virtue of the length being ghost, Karamel will
 /// extract this type as just ptr, but to inline the definition of
@@ -59,8 +70,13 @@ val ptr_base_offset_inj (#elt: Type) (p1 p2: ptr elt) : Lemma
 /// record type.
 inline_for_extraction
 [@@noextract_to "krml"]
-let array (elt: Type u#a) : Tot Type0 =
+let array ([@@@strictly_positive] elt: Type u#a) : Tot Type0 =
   (p: ptr elt & (length: Ghost.erased nat {offset p + length <= base_len (base p)}))
+
+inline_for_extraction
+[@@noextract_to "krml"]
+let null (#a: Type u#a) : array a
+= (| null_ptr a, Ghost.hide 0 |)
 
 /// This will extract to "let p = a"
 inline_for_extraction
@@ -71,6 +87,13 @@ let ptr_of
 : Tot (ptr elt)
 = match a with // dfst is not marked inline_for_extraction, so we need to reimplement it
   | (| p, _ |) -> p
+
+inline_for_extraction
+[@@noextract_to "krml"]
+let is_null (#a: Type u#a) (p: array a) : Pure bool
+  (requires True)
+  (ensures (fun res -> res == true <==> p == null))
+= is_null_ptr (ptr_of p)
 
 let length (#elt: Type) (a: array elt) : GTot nat =
   dsnd a
@@ -100,6 +123,18 @@ val pts_to_length
     (fun _ -> pts_to a p s)
     (True)
     (fun _ -> Seq.length s == length a)
+
+val pts_to_not_null
+  (#opened: _)
+  (#elt: Type u#1)
+  (#p: P.perm)
+  (a: array elt)
+  (s: Seq.seq elt)
+: STGhost unit opened
+    (pts_to a p s)
+    (fun _ -> pts_to a p s)
+    (True)
+    (fun _ -> a =!= null)
 
 /// An injectivity property, needed only to define a selector.  Such a
 /// selector can be only defined in universe 0, and universes are not
@@ -189,7 +224,7 @@ let free
   let s = elim_exists () in
   rewrite (pts_to _ _ _)
           (pts_to (| p, Ghost.hide (base_len (base p)) |) full_perm s);
-  free_ptr p            
+  free_ptr p
 
 /// Sharing and gathering permissions on an array. Those only
 /// manipulate permissions, so they are nothing more than stateful

@@ -32,6 +32,22 @@ open Steel.ST.Util
 unfold
 let pts_to (#a:Type) (#pcm:pcm a) (r:ref a pcm) (v:a) = to_vprop (pts_to r v)
 
+let pts_to_not_null
+  (#opened: _)
+  (#t: Type)
+  (#p: pcm t)
+  (r: ref t p)
+  (v: t)
+: STGhost unit opened
+    (pts_to r v)
+    (fun _ -> pts_to r v)
+    True
+    (fun _ -> r =!= null)
+= extract_fact
+    (pts_to r v)
+    (r =!= null)
+    (fun m -> pts_to_not_null r v m)
+
 /// Reading the contents of reference [r] in memory.
 /// The returned value [v] is ensured to be compatible with respect
 /// to the PCM [pcm] with our current knowledge [v0]
