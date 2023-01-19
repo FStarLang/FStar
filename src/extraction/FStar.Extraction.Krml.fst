@@ -896,6 +896,10 @@ and translate_expr env e: expr =
          string_of_mlpath p = "FStar.PtrdiffT.ptrdifft_to_sizet" ->
       ECast (translate_expr env arg, TInt SizeT)
 
+  | MLE_App ({ expr = MLE_Name p }, [ arg ])
+    when string_of_mlpath p = "FStar.SizeT.sizet_to_uint32" ->
+      ECast (translate_expr env arg, TInt UInt32)
+
   | MLE_App ({expr=MLE_Name p}, [ _inv; test; body ])
     when (string_of_mlpath p = "Steel.ST.Loops.while_loop") ->
     EApp (EQualified (["Steel"; "Loops"], "while_loop"), [ EUnit; translate_expr env test; translate_expr env body ])
