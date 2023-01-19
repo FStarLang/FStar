@@ -892,7 +892,8 @@ and translate_expr env e: expr =
   | MLE_App ({ expr = MLE_Name p }, [ arg ])
     when string_of_mlpath p = "FStar.SizeT.uint16_to_sizet" ||
          string_of_mlpath p = "FStar.SizeT.uint32_to_sizet" ||
-         string_of_mlpath p = "FStar.SizeT.uint64_to_sizet" ->
+         string_of_mlpath p = "FStar.SizeT.uint64_to_sizet" ||
+         string_of_mlpath p = "FStar.PtrdiffT.ptrdifft_to_sizet" ->
       ECast (translate_expr env arg, TInt SizeT)
 
   | MLE_App ({expr=MLE_Name p}, [ _inv; test; body ])
