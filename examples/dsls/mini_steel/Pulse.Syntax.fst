@@ -68,6 +68,11 @@ type term =
   | Tm_VProp    : term
   | Tm_If       : b:term -> then_:term -> else_:term -> term
 
+  | Tm_Inames   : term  // type inames
+  // | Tm_EmpInames: term
+  // | Tm_Inv      : term -> term
+  // | Tm_AddInv   : term -> term -> term
+
   | Tm_UVar     : int -> term
 
 and binder = {
@@ -76,8 +81,10 @@ and binder = {
 }
 
 and comp =
-  | C_Tot : term -> comp
-  | C_ST  : st_comp -> comp
+  | C_Tot      : term -> comp
+  | C_ST       : st_comp -> comp
+  | C_STAtomic : term -> st_comp -> comp  // inames
+  | C_STGhost  : term -> st_comp -> comp  // inames
 
 and st_comp = { (* ST pre (x:res) post ... x is free in post *)
   u:universe;
@@ -98,6 +105,7 @@ let rec freevars (t:term)
     | Tm_Emp
     | Tm_Type _
     | Tm_VProp
+    | Tm_Inames
     | Tm_UVar _ -> Set.empty
     | Tm_Var nm -> Set.singleton nm.nm_index
     | Tm_Refine b body
@@ -120,7 +128,15 @@ let rec freevars (t:term)
 and freevars_comp (c:comp) : Set.set var =
   match c with
   | C_Tot t -> freevars t
-  | C_ST st -> freevars st.res `Set.union` freevars st.pre `Set.union` freevars st.post
+  | C_ST s -> freevars_st s
+  | C_STAtomic inames s
+  | C_STGhost inames s ->
+    freevars inames `Set.union` freevars_st s
+
+and freevars_st (s:st_comp) : Set.set var =
+  freevars s.res `Set.union`
+  freevars s.pre `Set.union`
+  freevars s.post
 
 let rec ln' (t:term) (i:int) =
   match t with
@@ -133,6 +149,7 @@ let rec ln' (t:term) (i:int) =
   | Tm_Emp
   | Tm_Type _
   | Tm_VProp
+  | Tm_Inames
   | Tm_UVar _ -> true
 
   | Tm_Refine b phi ->
@@ -180,10 +197,16 @@ and ln'_comp (c:comp) (i:int)
   : Tot bool
   = match c with
     | C_Tot t -> ln' t i
-    | C_ST st -> 
-      ln' st.res i &&
-      ln' st.pre i &&
-      ln' st.post (i + 1) (* post has 1 impliict abstraction *)
+    | C_ST s -> ln'_st_comp s i
+    | C_STAtomic inames s
+    | C_STGhost inames s ->
+      ln' inames i &&
+      ln'_st_comp s i
+
+and ln'_st_comp (s:st_comp) (i:int) : bool =
+  ln' s.res i &&
+  ln' s.pre i &&
+  ln' s.post (i + 1) (* post has 1 impliict abstraction *)
 
 let ln (t:term) = ln' t (-1)
 let ln_c (c:comp) = ln'_comp c (-1)
@@ -210,6 +233,7 @@ let rec open_term' (t:term) (v:term) (i:index)
     | Tm_Type _
     | Tm_VProp
     | Tm_Emp
+    | Tm_Inames
     | Tm_UVar _ -> t
 
     | Tm_Refine b phi ->
@@ -272,11 +296,23 @@ and open_comp' (c:comp) (v:term) (i:index)
     | C_Tot t ->
       C_Tot (open_term' t v i)
 
-    | C_ST c ->
-      C_ST { c with res = open_term' c.res v i;
-                    pre = open_term' c.pre v i;
-                    post = open_term' c.post v (i + 1) }
-    
+    | C_ST s -> C_ST (open_st_comp' s v i)
+
+    | C_STAtomic inames s ->
+      C_STAtomic (open_term' inames v i)
+                 (open_st_comp' s v i)
+
+    | C_STGhost inames s ->
+      C_STGhost (open_term' inames v i)
+                (open_st_comp' s v i)
+
+and open_st_comp' (s:st_comp) (v:term) (i:index)
+  : Tot st_comp (decreases s) =
+
+  { s with res = open_term' s.res v i;
+           pre = open_term' s.pre v i;
+           post = open_term' s.post v (i + 1) }
+
 let open_term t v =
   open_term' t (Tm_Var {nm_ppname="_";nm_index=v}) 0
 let open_comp_with (c:comp) (x:term) = open_comp' c x 0
@@ -296,6 +332,7 @@ let rec close_term' (t:term) (v:var) (i:index)
     | Tm_Type _
     | Tm_VProp
     | Tm_Emp
+    | Tm_Inames
     | Tm_UVar _ -> t
 
     | Tm_Refine b phi ->
@@ -357,10 +394,22 @@ and close_comp' (c:comp) (v:var) (i:index)
     | C_Tot t ->
       C_Tot (close_term' t v i)
 
-    | C_ST c ->
-      C_ST { c with res = close_term' c.res v i;
-                    pre = close_term' c.pre v i;
-                    post = close_term' c.post v (i + 1) }
+    | C_ST s -> C_ST (close_st_comp' s v i)
+
+    | C_STAtomic inames s ->
+      C_STAtomic (close_term' inames v i)
+                 (close_st_comp' s v i)
+
+    | C_STGhost inames s ->
+      C_STGhost (close_term' inames v i)
+                (close_st_comp' s v i)
+
+and close_st_comp' (s:st_comp) (v:var) (i:index)
+  : Tot st_comp (decreases s) =
+
+  { s with res = close_term' s.res v i;
+           pre = close_term' s.pre v i;
+           post = close_term' s.post v (i + 1) }
 
 let close_term t v = close_term' t v 0
 let close_comp t v = close_comp' t v 0
@@ -368,11 +417,30 @@ let close_comp t v = close_comp' t v 0
 let comp_res (c:comp) : term =
   match c with
   | C_Tot ty -> ty
-  | C_ST c -> c.res
+  | C_ST s
+  | C_STAtomic _ s
+  | C_STGhost _ s -> s.res
 
-let comp_u (c:comp { C_ST? c }) = let C_ST s = c in s.u
-let comp_pre (c:comp { C_ST? c }) = let C_ST s = c in s.pre
-let comp_post (c:comp { C_ST? c }) = let C_ST s = c in s.post
+let stateful_comp (c:comp) =
+  C_ST? c || C_STAtomic? c || C_STGhost? c
+
+let comp_u (c:comp { stateful_comp c }) =
+  match c with
+  | C_ST s
+  | C_STAtomic _ s
+  | C_STGhost _ s -> s.u
+
+let comp_pre (c:comp { stateful_comp c }) =
+  match c with
+  | C_ST s
+  | C_STAtomic _ s
+  | C_STGhost _ s -> s.pre
+
+let comp_post (c:comp { stateful_comp c }) =
+  match c with
+  | C_ST s
+  | C_STAtomic _ s
+  | C_STGhost _ s -> s.post
 
 let rec close_open_inverse (t:term) (x:var { ~(x `Set.mem` freevars t) } )
   : Lemma (ensures close_term (open_term t x) x== t)
