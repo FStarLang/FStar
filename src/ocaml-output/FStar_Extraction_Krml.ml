@@ -2542,6 +2542,19 @@ and (translate_expr : env -> FStar_Extraction_ML_Syntax.mlexpr -> expr) =
                FStar_Extraction_ML_Syntax.MLE_Name p;
              FStar_Extraction_ML_Syntax.mlty = uu___;
              FStar_Extraction_ML_Syntax.loc = uu___1;_},
+           arg::[])
+          when
+          let uu___2 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
+          uu___2 = "FStar.SizeT.sizet_to_uint32" ->
+          let uu___2 =
+            let uu___3 = translate_expr env1 arg in (uu___3, (TInt UInt32)) in
+          ECast uu___2
+      | FStar_Extraction_ML_Syntax.MLE_App
+          ({
+             FStar_Extraction_ML_Syntax.expr =
+               FStar_Extraction_ML_Syntax.MLE_Name p;
+             FStar_Extraction_ML_Syntax.mlty = uu___;
+             FStar_Extraction_ML_Syntax.loc = uu___1;_},
            _inv::test::body::[])
           when
           let uu___2 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
