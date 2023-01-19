@@ -1204,7 +1204,7 @@ let new_invariant_tot_action (e:inames) (p:slprop) (m0:hmem_with_inv_except e p{
     assert (frame_related_mems p emp e m0 m1);
     ( i, m1 )
 
-let inv (p:slprop u#1) = i:iname & (i >--> p)
+let inv (p:slprop u#1) = i:erased iname & (i >--> p)
 let name_of_inv #p (i:inv p) = dfst i
 
 let new_invariant (e:inames) (p:slprop) (frame:slprop)
@@ -1218,7 +1218,7 @@ let new_invariant (e:inames) (p:slprop) (frame:slprop)
     NMSTTotal.put #full_mem #mem_evolves m1;
     iname_for_p_stable i p;
     let w  = NMSTTotal.witness full_mem mem_evolves (iname_for_p_mem i p) in
-    (| i, w |)
+    (| hide i, w |)
 
 let rearrange_invariant (p q r : slprop) (q0 q1:slprop)
   : Lemma
