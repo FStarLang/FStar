@@ -7,25 +7,7 @@ open Steel.ST.Util
 unfold 
 let eq_vprop (p1 p2:vprop) : prop = Prims.eq2 p1 p2
 
-inline_for_extraction
-val stt (a:Type u#a) (pre:vprop) (post:a -> vprop) : Type0
-
-inline_for_extraction
-val return_stt (#a:Type u#a) (x:a) : stt a emp (fun r -> pure (r == x))
-
-inline_for_extraction
-val return_stt_noeq (#a:Type u#a) (x:a) : stt a emp (fun _ -> emp)
-
-inline_for_extraction
-val bind_stt (#a:Type u#a) (#b:Type u#b) (#pre1:vprop) (#post1:a -> vprop) (#post2:b -> vprop)
-  (e1:stt a pre1 post1)
-  (e2:(x:a -> stt b (post1 x) post2))
-
-  : stt b pre1 post2
-
-inline_for_extraction
-val frame_stt (#a:Type u#a) (#pre:vprop) (#post:a -> vprop) (frame:vprop) (e:stt a pre post)
-  : stt a (pre `star` frame) (fun x -> post x `star` frame)
+(***** begin vprop_equiv *****)
 
 val vprop_equiv (p q:vprop) : prop
 val vprop_post_equiv (#t:Type u#a) (p q: t -> vprop) : prop
@@ -41,17 +23,6 @@ val elim_vprop_post_equiv (#t:Type u#a)
                           (pf:vprop_post_equiv p q)
                           (x:t) 
     : vprop_equiv (p x) (q x)
-
-inline_for_extraction
-val sub_stt (#a:Type u#a)
-            (#pre1:vprop)
-            (pre2:vprop)
-            (#post1:a -> vprop)
-            (post2:a -> vprop)
-            (pf1 : vprop_equiv pre1 pre2)
-            (pf2 : vprop_post_equiv post1 post2)
-            (e:stt a pre1 post1)
-  : stt a pre2 post2
 
 val vprop_equiv_refl (v0:vprop) : vprop_equiv v0 v0
 
@@ -76,6 +47,121 @@ val vprop_equiv_cong (p1 p2 p3 p4:vprop)
 
 val vprop_equiv_ext (p1 p2:vprop) (_:eq_vprop p1 p2)
   : vprop_equiv p1 p2
+
+(***** end vprop_equiv *****)
+
+(***** begin computation types and combinators *****)
+
+inline_for_extraction
+val stt (a:Type u#a) (pre:vprop) (post:a -> vprop) : Type0
+
+inline_for_extraction
+val stt_atomic (a:Type u#a) (opened:inames) (pre:vprop) (post:a -> vprop) : Type u#(max 2 a)
+
+inline_for_extraction
+val stt_ghost (a:Type u#a) (opened:inames) (pre:vprop) (post:a -> vprop) : Type u#(max 2 a)
+
+inline_for_extraction
+val return_stt (#a:Type u#a) (opened:inames) (x:a) : stt_atomic a opened emp (fun r -> pure (r == x))
+
+inline_for_extraction
+val return_stt_noeq (#a:Type u#a) (opened:inames) (x:a) : stt_atomic a opened emp (fun _ -> emp)
+
+// Return in ghost?
+
+inline_for_extraction
+val bind_stt
+  (#a:Type u#a) (#b:Type u#b)
+  (#pre1:vprop) (#post1:a -> vprop) (#post2:b -> vprop)
+  (e1:stt a pre1 post1)
+  (e2:(x:a -> stt b (post1 x) post2))
+  : stt b pre1 post2
+
+inline_for_extraction
+val lift_stt_atomic (#a:Type u#a) (#pre:vprop) (#post:a -> vprop)
+  (e:stt_atomic a Set.empty pre post)
+  : stt a pre post
+
+inline_for_extraction
+val bind_sttg
+  (#a:Type u#a) (#b:Type u#b)
+  (#opened:inames)
+  (#pre1:vprop) (#post1:a -> vprop) (#post2:b -> vprop)
+  (e1:stt_ghost a opened pre1 post1)
+  (e2:(x:a -> stt_ghost b opened (post1 x) post2))
+  : stt_ghost b opened pre1 post2
+
+inline_for_extraction
+val lift_stt_ghost (#a:Type u#a) (#opened:inames) (#pre:vprop) (#post:a -> vprop)
+  (e:stt_ghost a opened pre post)
+  (reveal_a:(x:Ghost.erased a -> y:a{y == Ghost.reveal x}))
+  : stt_atomic a opened pre post
+
+inline_for_extraction
+val frame_stt
+  (#a:Type u#a)
+  (#pre:vprop) (#post:a -> vprop)
+  (frame:vprop)
+  (e:stt a pre post)
+  : stt a (pre `star` frame) (fun x -> post x `star` frame)
+
+inline_for_extraction
+val frame_stt_atomic
+  (#a:Type u#a)
+  (#opened:inames)
+  (#pre:vprop) (#post:a -> vprop)
+  (frame:vprop)
+  (e:stt_atomic a opened pre post)
+  : stt_atomic a opened (pre `star` frame) (fun x -> post x `star` frame)
+
+inline_for_extraction
+val frame_stt_ghost
+  (#a:Type u#a)
+  (#opened:inames)
+  (#pre:vprop) (#post:a -> vprop)
+  (frame:vprop)
+  (e:stt_ghost a opened pre post)
+  : stt_ghost a opened (pre `star` frame) (fun x -> post x `star` frame)
+
+inline_for_extraction
+val sub_stt (#a:Type u#a)
+            (#pre1:vprop)
+            (pre2:vprop)
+            (#post1:a -> vprop)
+            (post2:a -> vprop)
+            (pf1 : vprop_equiv pre1 pre2)
+            (pf2 : vprop_post_equiv post1 post2)
+            (e:stt a pre1 post1)
+  : stt a pre2 post2
+
+inline_for_extraction
+val sub_stt_atomic
+  (#a:Type u#a)
+  (#opened:inames)
+  (#pre1:vprop)
+  (pre2:vprop)
+  (#post1:a -> vprop)
+  (post2:a -> vprop)
+  (pf1 : vprop_equiv pre1 pre2)
+  (pf2 : vprop_post_equiv post1 post2)
+  (e:stt_atomic a opened pre1 post1)
+  : stt_atomic a opened pre2 post2
+
+inline_for_extraction
+val sub_stt_ghost
+  (#a:Type u#a)
+  (#opened:inames)
+  (#pre1:vprop)
+  (pre2:vprop)
+  (#post1:a -> vprop)
+  (post2:a -> vprop)
+  (pf1 : vprop_equiv pre1 pre2)
+  (pf2 : vprop_post_equiv post1 post2)
+  (e:stt_ghost a opened pre1 post1)
+  : stt_ghost a opened pre2 post2
+
+(***** end computation types and combinators *****)
+
 
 module G = FStar.Ghost
 module U32 = FStar.UInt32
