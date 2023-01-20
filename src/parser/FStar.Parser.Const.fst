@@ -530,3 +530,17 @@ let layered_effect_reify_val_lid (eff_name:lident) (r:range) : lident =
   let ns = Ident.ns_of_lid eff_name in
   let reify_fn_name = "reify___" ^ (eff_name |> ident_of_lid |> string_of_id) in
   lid_of_ns_and_id ns (mk_ident (reify_fn_name, r))
+
+
+let steel_memory_inv_lid = FStar.Ident.lid_of_path ["Steel"; "Memory"; "inv"] FStar.Compiler.Range.dummyRange
+
+let steel_new_invariant_lid = FStar.Ident.lid_of_path ["Steel"; "Effect"; "Atomic"; "new_invariant"] FStar.Compiler.Range.dummyRange
+let steel_st_new_invariant_lid = FStar.Ident.lid_of_path ["Steel"; "ST"; "Util"; "new_invariant"] FStar.Compiler.Range.dummyRange
+
+let steel_with_invariant_g_lid = FStar.Ident.lid_of_path ["Steel"; "Effect"; "Atomic"; "with_invariant_g"] FStar.Compiler.Range.dummyRange
+let steel_st_with_invariant_g_lid = FStar.Ident.lid_of_path ["Steel"; "ST"; "Util"; "with_invariant_g"] FStar.Compiler.Range.dummyRange
+
+let steel_with_invariant_lid = FStar.Ident.lid_of_path ["Steel"; "Effect"; "Atomic"; "with_invariant"] FStar.Compiler.Range.dummyRange
+let steel_st_with_invariant_lid = FStar.Ident.lid_of_path ["Steel"; "ST"; "Util"; "with_invariant"] FStar.Compiler.Range.dummyRange
+
+
