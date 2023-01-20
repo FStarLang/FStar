@@ -214,17 +214,103 @@ type vprop_equiv (f:RT.fstar_top_env) : env -> pure_term -> pure_term -> Type =
 
 
 let add_frame (s:pure_comp_st) (frame:pure_term)
-  : pure_comp_st
-  = let C_ST s = s in
-    C_ST { s with pre = Tm_Star s.pre frame;
-                  post = Tm_Star s.post frame }
+  : pure_comp_st =
+
+  let add_frame_s (s:st_comp) : st_comp =
+    { s with pre = Tm_Star s.pre frame;
+             post = Tm_Star s.post frame } in
+
+  match s with
+  | C_ST s -> C_ST (add_frame_s s)
+  | C_STAtomic inames s -> C_STAtomic inames (add_frame_s s)
+  | C_STGhost inames s -> C_STGhost inames (add_frame_s s)
 
 let close_pure_comp (c:pure_comp) (x:var) : pure_comp = close_comp c x
+
+let bind_comp_compatible (c1 c2:pure_comp_st) : prop =
+  match c1, c2 with
+  | C_STGhost inames1 _, C_STGhost inames2 _ -> inames1 == inames2
+  | C_STAtomic inames _, C_ST _
+  | C_ST _, C_STAtomic inames _ -> inames == Tm_EmpInames
+  | C_ST _, C_ST _ -> True
+  | _, _ -> False
+
+let bind_comp_pre (x:var) (c1 c2:pure_comp_st) : prop =
+  open_term (comp_post c1) x == comp_pre c2 /\
+  (~ (x `Set.mem` freevars (comp_post c2))) /\  //x doesn't escape in the result type
+  bind_comp_compatible c1 c2
+
+//
+// Surprising that this proof requires rlimit tweak
+//
+#push-options "--z3rlimit_factor 2"
+let bind_comp_out (c1:pure_comp_st) (c2:pure_comp_st{bind_comp_compatible c1 c2})
+  : pure_comp_st =
+  let s = {u=comp_u c2; res=comp_res c2; pre=comp_pre c1; post=comp_post c2} in
+  match c1, c2 with
+  | C_STGhost inames _, C_STGhost _ _ -> C_STGhost inames s
+
+  | C_STAtomic _ _, C_ST _
+  | C_ST _, C_STAtomic _ _
+  | C_ST _, C_ST _ -> C_ST s
+#pop-options
+
+let bind_comp_ghost_l_compatible (c1 c2:pure_comp_st) : prop =
+  match c1, c2 with
+  | C_STGhost inames1 _, C_STAtomic inames2 _ -> inames1 == inames2
+  | C_STGhost inames _, C_ST _ -> inames == Tm_EmpInames
+  | _, _ -> False
+
+let bind_comp_ghost_l_pre (x:var) (c1 c2:pure_comp_st) : prop =
+  open_term (comp_post c1) x == comp_pre c2 /\
+  (~ (x `Set.mem` freevars (comp_post c2))) /\  //x doesn't escape in the result type
+  bind_comp_ghost_l_compatible c1 c2
+
+#push-options "--z3rlimit_factor 2"
+let bind_comp_ghost_l_out (c1:pure_comp_st) (c2:pure_comp_st{bind_comp_ghost_l_compatible c1 c2})
+  : pure_comp_st =
+  let s = {u=comp_u c2; res=comp_res c2; pre=comp_pre c1; post=comp_post c2} in
+  match c1, c2 with
+  | C_STGhost inames _, C_STAtomic _ _ -> C_STAtomic inames s
+  | C_STGhost _ _, C_ST _ -> C_ST s
+#pop-options
+
+let bind_comp_ghost_r_compatible (c1 c2:pure_comp_st) : prop =
+  match c1, c2 with
+  | C_STAtomic inames1 _, C_STGhost inames2 _ -> inames1 == inames2
+  | C_ST _, C_STGhost inames _ -> inames == Tm_EmpInames
+  | _, _ -> False
+
+let bind_comp_ghost_r_pre (x:var) (c1 c2:pure_comp_st) : prop =
+  open_term (comp_post c1) x == comp_pre c2 /\
+  (~ (x `Set.mem` freevars (comp_post c2))) /\  //x doesn't escape in the result type
+  bind_comp_ghost_r_compatible c1 c2
+
+#push-options "--z3rlimit_factor 2"
+let bind_comp_ghost_r_out (c1:pure_comp_st) (c2:pure_comp_st{bind_comp_ghost_r_compatible c1 c2})
+  : pure_comp_st =
+  let s = {u=comp_u c2; res=comp_res c2; pre=comp_pre c1; post=comp_post c2} in
+  match c1, c2 with
+  | C_STAtomic inames _, C_STGhost _ _ -> C_STAtomic inames s
+  | C_ST _, C_STGhost _ _ -> C_ST s
+#pop-options
+
+let st_equiv_pre (c1 c2:pure_comp_st) : prop =
+  comp_u c1 == comp_u c2 /\ comp_res c1 == comp_res c2 /\
+  (match c1, c2 with
+   | C_ST _, C_ST _ -> True
+   | C_STAtomic inames1 _, C_STAtomic inames2 _ ->
+     inames1 == inames2
+   | C_STGhost inames1 _, C_STGhost inames2 _ ->
+     inames1 == inames2
+   | _, _ -> False)
 
 [@@erasable]
 noeq
 type my_erased (a:Type) = | E of a
 
+#push-options "--z3rlimit_factor 2"
+[@@ no_auto_projectors]
 noeq
 type src_typing (f:RT.fstar_top_env) : env -> term -> pure_comp -> Type =
   | T_Tot: 
@@ -256,7 +342,7 @@ type src_typing (f:RT.fstar_top_env) : env -> term -> pure_comp -> Type =
       ppname:string ->
       formal:pure_term ->
       q:option qualifier ->
-      res:pure_comp {C_ST? res} ->
+      res:pure_comp {stateful_comp res} ->
       arg:pure_term ->
       src_typing f g head (C_Tot (Tm_Arrow {binder_ty=formal;binder_ppname=ppname} q res)) ->
       tot_typing f g arg formal ->
@@ -332,23 +418,45 @@ and universe_of (f:RT.fstar_top_env) (g:env) (t:term) (u:universe) =
   tot_typing f g t (Tm_Type u)
 
 and bind_comp (f:RT.fstar_top_env) : env -> var -> pure_comp -> pure_comp -> pure_comp -> Type =
-  | Bind_comp : (* st t1 pre1 post1 -> (x:t1 -> st t2 (post1 x) post2) -> st (y:t2) pre1 post2 *)
-      g:env ->
-      x:var { None? (lookup g x) } ->
-      c1:pure_comp_st ->
-      c2:pure_comp_st {  open_term (comp_post c1) x == comp_pre c2 /\ ~ (x `Set.mem` freevars (comp_post c2)) } ->
-      //x doesn't escape in the result type
-      universe_of f g (comp_res c2) (comp_u c2) ->
-      //or in the result post; free var check isn't enough; we need typability
-      y:var { None? (lookup g y) } ->      
-      tot_typing f ((y, Inl (comp_res c2)) :: g) (open_term (comp_post c2) y) Tm_VProp ->
-      bind_comp f g x c1 c2 (C_ST {u = comp_u c2; res = comp_res c2; pre = comp_pre c1; post=comp_post c2})
+  | Bind_comp :
+    g:env ->
+    x:var { None? (lookup g x) } ->
+    c1:pure_comp_st ->
+    c2:pure_comp_st {bind_comp_pre x c1 c2} ->
+    universe_of f g (comp_res c2) (comp_u c2) ->
+    //or in the result post; free var check isn't enough; we need typability
+    y:var { None? (lookup g y) } ->      
+    tot_typing f ((y, Inl (comp_res c2)) :: g) (open_term (comp_post c2) y) Tm_VProp ->
+    bind_comp f g x c1 c2 (bind_comp_out c1 c2)
+
+  | Bind_comp_ghost_l :
+    g:env ->
+    x:var { None? (lookup g x) } ->
+    c1:pure_comp_st ->
+    c2:pure_comp_st {bind_comp_ghost_l_pre x c1 c2} ->
+    universe_of f g (comp_res c2) (comp_u c2) ->
+    //or in the result post; free var check isn't enough; we need typability
+    y:var { None? (lookup g y) } ->      
+    tot_typing f ((y, Inl (comp_res c2)) :: g) (open_term (comp_post c2) y) Tm_VProp ->
+    bind_comp f g x c1 c2 (bind_comp_ghost_l_out c1 c2)
+
+  | Bind_comp_ghost_r :
+    g:env ->
+    x:var { None? (lookup g x) } ->
+    c1:pure_comp_st ->
+    c2:pure_comp_st {bind_comp_ghost_r_pre x c1 c2} ->
+    universe_of f g (comp_res c2) (comp_u c2) ->
+    //or in the result post; free var check isn't enough; we need typability
+    y:var { None? (lookup g y) } ->      
+    tot_typing f ((y, Inl (comp_res c2)) :: g) (open_term (comp_post c2) y) Tm_VProp ->
+    bind_comp f g x c1 c2 (bind_comp_ghost_r_out c1 c2)
+
 
 and st_equiv (f:RT.fstar_top_env) : env -> pure_comp -> pure_comp -> Type =
   | ST_VPropEquiv :
       g:env ->
       c1:pure_comp_st ->
-      c2:pure_comp_st { comp_res c1 == comp_res c2 /\ comp_u c1 == comp_u c2} -> 
+      c2:pure_comp_st { st_equiv_pre c1 c2 } -> 
       x:var { None? (lookup g x) } ->
       tot_typing f g (comp_pre c1) Tm_VProp ->
       tot_typing f g (comp_res c1) (Tm_Type (comp_u c1)) ->
@@ -358,7 +466,7 @@ and st_equiv (f:RT.fstar_top_env) : env -> pure_comp -> pure_comp -> Type =
                     (open_term (comp_post c1) x)
                     (open_term (comp_post c2) x) ->      
       st_equiv f g c1 c2
-
+#pop-options
 
 (* this requires some metatheory on Refl.Typing
 

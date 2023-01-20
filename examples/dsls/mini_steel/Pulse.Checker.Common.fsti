@@ -16,7 +16,7 @@ let check_t =
   pre_typing:tot_typing f g pre Tm_VProp ->
   post_hint:option term ->
   T.Tac (t:term &
-         c:pure_comp{C_ST? c ==> comp_pre c == pre} &
+         c:pure_comp{stateful_comp c ==> comp_pre c == pre} &
          src_typing f g t c)
 
 

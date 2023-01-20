@@ -74,13 +74,13 @@ type stt_ghost (a:Type u#a) (opened:inames) (pre:vprop) (post:a -> vprop) =
   unit -> STGhostT a opened pre post
 
 inline_for_extraction
-let return_stt (#a:Type u#a) (opened:inames) (x:a)
-  : stt_atomic a opened emp (fun r -> pure (r == x)) =
+let return_stt (#a:Type u#a) (x:a)
+  : stt a emp (fun r -> pure (r == x)) =
   fun _ -> return x
 
 inline_for_extraction
-let return_stt_noeq (#a:Type u#a) (opened:inames) (x:a)
-  : stt_atomic a opened emp (fun _ -> emp) =
+let return_stt_noeq (#a:Type u#a) (x:a)
+  : stt a emp (fun _ -> emp) =
   fun _ -> return x
 
 inline_for_extraction
@@ -102,6 +102,23 @@ let bind_sttg #a #b #opened #pre1 #post1 #post2 e1 e2 =
   fun _ ->
   let x = e1 () in
   e2 x ()
+
+let bind_stt_atomic_ghost #a #b #opened #pre1 #post1 #post2 e1 e2 reveal_b =
+  fun _ ->
+  let x = e1 () in
+  let y =
+    let y = e2 x () in
+    rewrite (post2 y) (post2 (reveal_b (Ghost.hide y)));
+    Ghost.hide y in
+  return (reveal_b y)
+
+let bind_stt_ghost_atomic #a #b #opened #pre1 #post1 #post2 e1 e2 reveal_a =
+  fun _ ->
+  let x =
+    let x = e1 () in
+    rewrite (post1 x) (post1 (reveal_a (Ghost.hide x)));
+    Ghost.hide x in
+  e2 (reveal_a x) ()
 
 inline_for_extraction
 let lift_stt_ghost #a #opened #pre #post e reveal_a =

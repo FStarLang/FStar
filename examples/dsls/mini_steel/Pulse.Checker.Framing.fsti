@@ -24,7 +24,7 @@ val try_frame_pre (#f:RT.fstar_top_env)
                   (#t:term)
                   (#pre:pure_term)
                   (pre_typing: tot_typing f g pre Tm_VProp)
-                  (#c:pure_comp { C_ST? c })
+                  (#c:pure_comp { stateful_comp c })
                   (t_typing: src_typing f g t c)
   : T.Tac (c':pure_comp_st { comp_pre c' == pre } &
            src_typing f g t c')
@@ -41,4 +41,4 @@ val frame_empty (#f:RT.fstar_top_env)
                 (d:src_typing f g t c0)
   : T.Tac (c:pure_comp_st { comp_pre c == pre} &
            src_typing f g t c)
- 
+

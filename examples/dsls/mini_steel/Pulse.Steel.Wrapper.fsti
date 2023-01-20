@@ -61,11 +61,16 @@ val stt_atomic (a:Type u#a) (opened:inames) (pre:vprop) (post:a -> vprop) : Type
 inline_for_extraction
 val stt_ghost (a:Type u#a) (opened:inames) (pre:vprop) (post:a -> vprop) : Type u#(max 2 a)
 
-inline_for_extraction
-val return_stt (#a:Type u#a) (opened:inames) (x:a) : stt_atomic a opened emp (fun r -> pure (r == x))
+//
+// the returns should probably move to atomic,
+//   once we have support for bind etc.
+//
 
 inline_for_extraction
-val return_stt_noeq (#a:Type u#a) (opened:inames) (x:a) : stt_atomic a opened emp (fun _ -> emp)
+val return_stt (#a:Type u#a) (x:a) : stt a emp (fun r -> pure (r == x))
+
+inline_for_extraction
+val return_stt_noeq (#a:Type u#a) (x:a) : stt a emp (fun _ -> emp)
 
 // Return in ghost?
 
@@ -90,6 +95,26 @@ val bind_sttg
   (e1:stt_ghost a opened pre1 post1)
   (e2:(x:a -> stt_ghost b opened (post1 x) post2))
   : stt_ghost b opened pre1 post2
+
+inline_for_extraction
+val bind_stt_atomic_ghost
+  (#a:Type u#a) (#b:Type u#b)
+  (#opened:inames)
+  (#pre1:vprop) (#post1:a -> vprop) (#post2:b -> vprop)
+  (e1:stt_atomic a opened pre1 post1)
+  (e2:(x:a -> stt_ghost b opened (post1 x) post2))
+  (reveal_b:(x:Ghost.erased b -> y:b{y == Ghost.reveal x}))
+  : stt_atomic b opened pre1 post2
+
+inline_for_extraction
+val bind_stt_ghost_atomic
+  (#a:Type u#a) (#b:Type u#b)
+  (#opened:inames)
+  (#pre1:vprop) (#post1:a -> vprop) (#post2:b -> vprop)
+  (e1:stt_ghost a opened pre1 post1)
+  (e2:(x:a -> stt_atomic b opened (post1 x) post2))
+  (reveal_a:(x:Ghost.erased a -> y:a{y == Ghost.reveal x}))
+  : stt_atomic b opened pre1 post2
 
 inline_for_extraction
 val lift_stt_ghost (#a:Type u#a) (#opened:inames) (#pre:vprop) (#post:a -> vprop)

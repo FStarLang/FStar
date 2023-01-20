@@ -69,7 +69,7 @@ type term =
   | Tm_If       : b:term -> then_:term -> else_:term -> term
 
   | Tm_Inames   : term  // type inames
-  // | Tm_EmpInames: term
+  | Tm_EmpInames: term
   // | Tm_Inv      : term -> term
   // | Tm_AddInv   : term -> term -> term
 
@@ -106,6 +106,7 @@ let rec freevars (t:term)
     | Tm_Type _
     | Tm_VProp
     | Tm_Inames
+    | Tm_EmpInames
     | Tm_UVar _ -> Set.empty
     | Tm_Var nm -> Set.singleton nm.nm_index
     | Tm_Refine b body
@@ -150,6 +151,7 @@ let rec ln' (t:term) (i:int) =
   | Tm_Type _
   | Tm_VProp
   | Tm_Inames
+  | Tm_EmpInames
   | Tm_UVar _ -> true
 
   | Tm_Refine b phi ->
@@ -234,6 +236,7 @@ let rec open_term' (t:term) (v:term) (i:index)
     | Tm_VProp
     | Tm_Emp
     | Tm_Inames
+    | Tm_EmpInames
     | Tm_UVar _ -> t
 
     | Tm_Refine b phi ->
@@ -333,6 +336,7 @@ let rec close_term' (t:term) (v:var) (i:index)
     | Tm_VProp
     | Tm_Emp
     | Tm_Inames
+    | Tm_EmpInames
     | Tm_UVar _ -> t
 
     | Tm_Refine b phi ->
@@ -423,6 +427,18 @@ let comp_res (c:comp) : term =
 
 let stateful_comp (c:comp) =
   C_ST? c || C_STAtomic? c || C_STGhost? c
+
+let st_comp_of_comp (c:comp{stateful_comp c}) : st_comp =
+  match c with
+  | C_ST s
+  | C_STAtomic _ s
+  | C_STGhost _ s -> s
+
+let with_st_comp (c:comp{stateful_comp c}) (s:st_comp) : comp =
+  match c with
+  | C_ST _ -> C_ST s
+  | C_STAtomic inames _ -> C_STAtomic inames s
+  | C_STGhost inames _ -> C_STGhost inames s
 
 let comp_u (c:comp { stateful_comp c }) =
   match c with

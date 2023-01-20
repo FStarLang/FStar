@@ -97,8 +97,8 @@ let mk_sub (u:R.universe)
      [(t, R.Q_Explicit)]
 
 let elab_bind (c1 c2:pure_comp_st) (e1 e2:R.term) =
-  let C_ST c1 = c1 in
-  let C_ST c2 = c2 in
+  let c1 = st_comp_of_comp c1 in
+  let c2 = st_comp_of_comp c2 in
   let ty1 = elab_pure c1.res in
   let ty2 = elab_pure c2.res in
   mk_bind c1.u c2.u
@@ -134,18 +134,24 @@ let rec elab_src_typing (#f:RT.fstar_top_env)
       mk_return_noeq (elab_universe u) (elab_pure ty) (elab_src_typing t_typing)
 
     | T_Bind _ e1 e2 c1 c2 x c e1_typing t_typing e2_typing _bc ->
-      let e1 = elab_src_typing e1_typing in
-      let e2 = elab_src_typing e2_typing in
-      let ty1 = elab_pure (comp_res c1) in
-      elab_bind c1 c2 e1 (mk_abs ty1 R.Q_Explicit (RT.close_term e2 x))
+      if C_ST? c1 && C_ST? c2
+      then
+        let e1 = elab_src_typing e1_typing in
+        let e2 = elab_src_typing e2_typing in
+        let ty1 = elab_pure (comp_res c1) in
+        elab_bind c1 c2 e1 (mk_abs ty1 R.Q_Explicit (RT.close_term e2 x))
+      else admit ()
       
     | T_Frame _ _ c frame _frame_typing e_typing ->
-      let e = elab_src_typing e_typing in
-      let C_ST c = c in
-      let ty = elab_pure c.res in
-      let pre = elab_pure c.pre in
-      let post = elab_pure c.post in
-      mk_frame c.u ty pre (mk_abs ty R.Q_Explicit post) (elab_pure frame) e
+      if C_ST? c
+      then
+        let e = elab_src_typing e_typing in
+        let c = st_comp_of_comp c in
+        let ty = elab_pure c.res in
+        let pre = elab_pure c.pre in
+        let post = elab_pure c.post in
+        mk_frame c.u ty pre (mk_abs ty R.Q_Explicit post) (elab_pure frame) e
+      else admit ()
       
     // | T_If _ b e1 e2 _c hyp _ e1_typing e2_typing ->
     //   let b = elab_pure b in
@@ -157,17 +163,20 @@ let rec elab_src_typing (#f:RT.fstar_top_env)
     //                (Pat_Constant C_False, e2)])
 
     | T_Equiv _ _ c1 c2 e_typing _ ->
-      let e = elab_src_typing e_typing in
-      let C_ST c1 = c1 in
-      let C_ST c2 = c2 in
-      let ty = elab_pure c1.res in
-      mk_sub (elab_universe c1.u)
-             ty
-             (elab_pure c1.pre)
-             (elab_pure c2.pre)
-             (mk_abs ty R.Q_Explicit (elab_pure c1.post))
-             (mk_abs ty R.Q_Explicit (elab_pure c2.post))
-             e
+      if C_ST? c1 && C_ST? c2
+      then
+        let e = elab_src_typing e_typing in
+        let c1 = st_comp_of_comp c1 in
+        let c2 = st_comp_of_comp c2 in
+        let ty = elab_pure c1.res in
+        mk_sub (elab_universe c1.u)
+               ty
+               (elab_pure c1.pre)
+               (elab_pure c2.pre)
+               (mk_abs ty R.Q_Explicit (elab_pure c1.post))
+               (mk_abs ty R.Q_Explicit (elab_pure c2.post))
+               e
+      else admit ()
 
 #push-options "--ifuel 2"
 let rec elab_pure_equiv (#f:RT.fstar_top_env)
@@ -205,7 +214,7 @@ let elab_open_commute (t:pure_term) (x:var)
   = RT.open_term_spec (elab_pure t) x;
     elab_open_commute' t (null_var x) 0
 
-#push-options "--fuel 8 --ifuel 4 --z3rlimit_factor 20"
+#push-options "--fuel 10 --ifuel 6 --z3rlimit_factor 25"
 let rec elab_close_commute' (e:pure_term)
                             (v:var)
                             (n:index)
@@ -222,7 +231,9 @@ let rec elab_close_commute' (e:pure_term)
     | Tm_UInst _ _
     | Tm_Constant _
     | Tm_Emp 
-    | Tm_Type _ 
+    | Tm_Type _
+    | Tm_Inames
+    | Tm_EmpInames
     | Tm_VProp -> ()
     | Tm_Refine b phi ->
       elab_close_commute' b.binder_ty v n;
@@ -261,7 +272,14 @@ and elab_comp_close_commute' (c:pure_comp) (v:var) (n:index)
     | C_ST s -> 
       elab_close_commute' s.res v n;
       elab_close_commute' s.pre v n;
-      elab_close_commute' s.post v (n + 1)           
+      elab_close_commute' s.post v (n + 1)
+   | C_STAtomic inames s
+   | C_STGhost inames s ->
+      admit ();
+      elab_close_commute' inames v n;
+      elab_close_commute' s.res v n;
+      elab_close_commute' s.pre v n;
+      elab_close_commute' s.post v (n + 1)
 #pop-options
 
 

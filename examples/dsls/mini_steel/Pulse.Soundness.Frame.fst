@@ -69,7 +69,8 @@ let elab_frame_typing (f:stt_env)
                       (frame_typing: tot_typing f g frame Tm_VProp)
                       (e_typing: RT.typing (extend_env_l f g) e (elab_pure_comp c))
   : GTot (RT.typing (extend_env_l f g) (elab_frame c frame e) (elab_pure_comp (add_frame c frame)))
-  = let frame_typing = tot_typing_soundness frame_typing in
+  = if C_ST? c then
+    let frame_typing = tot_typing_soundness frame_typing in
     let rg = extend_env_l f g in
     let u = elab_universe (comp_u c) in
     let head = frame_univ_inst u in
@@ -98,6 +99,7 @@ let elab_frame_typing (f:stt_env)
                                                          (elab_pure (Tm_Star (comp_pre c) frame))
                                                          (comp_post c)
                                                          (elab_pure frame)))
+    else admit ()
 #pop-options
 
 #pop-options

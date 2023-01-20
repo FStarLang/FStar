@@ -17,5 +17,5 @@ val check_bind (f:RT.fstar_top_env)
                (post_hint:option term)
                (check:check_t)
   : T.Tac (t:term &
-           c:pure_comp { C_ST? c ==> comp_pre c == pre } &
+           c:pure_comp { stateful_comp c ==> comp_pre c == pre } &
            src_typing f g t c)

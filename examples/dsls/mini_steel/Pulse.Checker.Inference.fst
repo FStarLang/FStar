@@ -17,7 +17,10 @@ let rec gen_uvars (t_head:term) : T.Tac (list term & comp) =
     let uv = gen_uvar t in
     let c_rest = open_comp_with c_rest uv in
     match c_rest with
-    | C_ST c -> [uv], c_rest
+    | C_ST c
+    | C_STAtomic _ c
+    | C_STGhost _ c ->
+      [uv], c_rest
     | C_Tot t ->
       let uv_rest, comp_typ = gen_uvars t in
       uv::uv_rest, comp_typ
