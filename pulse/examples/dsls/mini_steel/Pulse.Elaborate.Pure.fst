@@ -64,6 +64,9 @@ let vprop_eq_tm t1 t2 =
   let t = pack_ln (Tv_App t (t2, Q_Explicit)) in
   t
 
+let emp_inames_tm : R.term =
+  `(FStar.Ghost.hide #(Steel.Memory.inames) (FStar.Set.empty #Steel.Memory.iname))
+
 let mk_abs ty qual t : R.term =  R.pack_ln (R.Tv_Abs (binder_of_t_q ty qual) t)
 
 let mk_abs_with_name s ty qual t : R.term =  R.pack_ln (R.Tv_Abs (binder_of_t_q_s ty qual s) t)
@@ -194,6 +197,7 @@ let rec elab_term (top:term)
     | Tm_Inames ->
       Some (pack_ln (Tv_FVar (pack_fv inames_lid)))
 
+    | Tm_EmpInames -> Some emp_inames_tm
 
     | Tm_Abs _ _ _ _ _
     | Tm_STApp _ _ _
@@ -254,6 +258,7 @@ let rec opening_pure_term_with_pure_term (x:pure_term) (v:pure_term) (i:index)
     | Tm_Type _
     | Tm_VProp
     | Tm_Inames
+    | Tm_EmpInames
     | Tm_Emp -> ()
 
     // | Tm_Abs t pre_hint body ->
@@ -322,6 +327,7 @@ let rec closing_pure_term (x:pure_term) (v:var) (i:index)
     | Tm_Type _
     | Tm_VProp
     | Tm_Inames
+    | Tm_EmpInames
     | Tm_Emp -> ()
 
     // | Tm_Abs t pre_hint body ->

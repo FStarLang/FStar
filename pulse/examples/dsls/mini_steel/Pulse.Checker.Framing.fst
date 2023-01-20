@@ -319,29 +319,29 @@ let check_vprop_equiv
                  (P.term_to_string frame))
 #pop-options
 
-#push-options "--query_stats --fuel 1 --ifuel 2 --z3rlimit_factor 8"
+#push-options "--query_stats --fuel 1 --ifuel 2 --z3rlimit_factor 10"
 let try_frame_pre (#f:RT.fstar_top_env)
                   (#g:env)
                   (#t:term)
                   (#pre:pure_term)
                   (pre_typing: tot_typing f g pre Tm_VProp)
-                  (#c:pure_comp { C_ST? c })
+                  (#c:pure_comp { stateful_comp c })
                   (t_typing: src_typing f g t c)
   : T.Tac (c':pure_comp_st { comp_pre c' == pre } &
            src_typing f g t c')
-  = let C_ST s = c in
+  = let s = st_comp_of_comp c in
     let (| frame, frame_typing, ve |) = split_vprop f g pre pre_typing s.pre in
     let t_typing
       : src_typing f g t (add_frame c frame)
       = T_Frame g t c frame frame_typing t_typing in
     let x = fresh g in
     let c' = add_frame c frame in
-    let C_ST s' = c' in
+    let s' = st_comp_of_comp c' in
     let ve: vprop_equiv f g s'.pre pre = ve in
     let s'' = { s' with pre = pre } in
-    let c'' = C_ST s'' in
-    assert (is_pure_comp (C_ST s'));
-    assert (is_pure_comp (C_ST s''));
+    let c'' = c' `with_st_comp` s'' in
+    assert (is_pure_comp (c `with_st_comp` s'));
+    assert (is_pure_comp c'');
     assert (comp_post c' == comp_post c'');
     opening_pure_term_with_pure_term
       (comp_post c')
@@ -368,7 +368,7 @@ let try_frame_pre (#f:RT.fstar_top_env)
     else (
       let st_equiv = ST_VPropEquiv g c' c'' x pre_typing res_typing post_typing ve ve' in
       let t_typing = T_Equiv _ _ _ _ t_typing st_equiv in
-      (| C_ST s'', t_typing |)
+      (| c'', t_typing |)
     )
 #pop-options
 
@@ -387,10 +387,10 @@ let frame_empty (#f:RT.fstar_top_env)
            src_typing f g t c)
   = let d = T_Frame g t c0 pre pre_typing d in
     let c = add_frame c0 pre in
-    let C_ST s = c in
+    let s = st_comp_of_comp c in
     let d : src_typing f g t c = d in
     let s' = { s with pre = pre } in
-    let c' = C_ST s' in
+    let c' = c `with_st_comp` s' in
     let x = fresh g in
     let pre_typing = check_vprop_no_inst f g (comp_pre c) in
     let (| u, res_typing |) = check_universe f g (comp_res c) in

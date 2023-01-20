@@ -115,7 +115,8 @@ let elab_bind_typing (f:stt_env)
                                               (elab_comp_post c2)
                                               (post2_type_bind (elab_pure (comp_res c2))))
   : GTot (RT.typing (extend_env_l f g) (elab_bind c1 c2 r1 r2) (elab_pure_comp c))
-  = let rg = extend_env_l f g in
+  = if C_ST? c1 && C_ST? c2 then
+    let rg = extend_env_l f g in
     let u1 = elab_universe (comp_u c1) in
     let u2 = elab_universe (comp_u c2) in
     let head = bind_univ_inst u1 u2 in
@@ -166,3 +167,4 @@ let elab_bind_typing (f:stt_env)
         g_typing
     in
     d
+    else admit ()

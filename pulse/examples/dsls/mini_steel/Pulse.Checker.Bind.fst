@@ -11,10 +11,9 @@ open Pulse.Typing
 open Pulse.Checker.Common
 open Pulse.Checker.Pure
 
-
 let force_st #f #g #t (#pre:pure_term)
              (pre_typing:tot_typing f g pre Tm_VProp)
-             (x:(c:pure_comp { C_ST? c ==> comp_pre c == pre } & src_typing f g t c))
+             (x:(c:pure_comp { stateful_comp c ==> comp_pre c == pre } & src_typing f g t c))
   : T.Tac (c:pure_comp_st { comp_pre c == pre } & src_typing f g t c)
   = let (| c, d_c |) = x in
     match c with
@@ -24,7 +23,9 @@ let force_st #f #g #t (#pre:pure_term)
       let d = T_ReturnNoEq _ _ _ _ d_c ures_ty in
       Framing.frame_empty pre_typing ures_ty _ c d        
 
-    | C_ST _ -> (|c, d_c|)
+    | C_ST _
+    | C_STAtomic _ _
+    | C_STGhost _ _ -> (|c, d_c|)
 
 #push-options "--z3rlimit_factor 8 --fuel 2 --ifuel 1 --query_stats"
 let check_bind
@@ -36,12 +37,12 @@ let check_bind
   (post_hint:option term)
   (check:check_t)
   : T.Tac (t:term &
-           c:pure_comp { C_ST? c ==> comp_pre c == pre } &
+           c:pure_comp { stateful_comp c ==> comp_pre c == pre } &
            src_typing f g t c) =
   let Tm_Bind e1 e2 = t  in
   let (| e1, c1, d1 |) = check f g e1 pre pre_typing None in
   let (| c1, d1 |) = force_st pre_typing (| c1, d1 |) in
-  let C_ST s1 = c1 in
+  let s1 = st_comp_of_comp c1 in
   let t = s1.res in
   let (| u, t_typing |) = check_universe f g t in
   if u <> s1.u then T.fail "incorrect universe"
@@ -60,12 +61,14 @@ let check_bind
       assume (open_term e2_closed x == e2');
       let d2 : src_typing f g' e2' c2 = d2 in
       let d2 : src_typing f g' (open_term e2_closed x) c2 = d2 in
-      let C_ST s2 = c2 in
+      let s2 = st_comp_of_comp c2 in
       let (| u, res_typing |) = check_universe f g s2.res in
       if u <> s2.u
       then T.fail "Unexpected universe for result type"
       else if x `Set.mem` freevars s2.post
       then T.fail (Printf.sprintf "Bound variable %d escapes scope in postcondition %s" x (P.term_to_string s2.post))
+      else if not (C_ST? c1 && C_ST? c2)
+      then T.fail (Printf.sprintf "bind of atomic and ghost computation types are not supported yet")
       else (
         let s2_post_opened = open_term s2.post x in
         let post_typing = check_vprop_no_inst f ((x, Inl s2.res)::g) s2_post_opened in

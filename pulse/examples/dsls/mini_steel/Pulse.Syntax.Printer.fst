@@ -106,6 +106,10 @@ let rec term_to_string (t:term)
       
     | Tm_VProp ->
       "vprop"
+
+    | Tm_Inames -> "inames"
+
+    | Tm_EmpInames -> "emp_inames"
       
     | Tm_If b t e ->
       sprintf "(if %s then %s else %s)"
@@ -127,6 +131,20 @@ and comp_to_string c =
     
   | C_ST s ->
     sprintf "ST %s %s %s"
+      (term_to_string s.res)
+      (term_to_string s.pre)
+      (term_to_string s.post)
+
+  | C_STAtomic inames s ->
+    sprintf "STAtomic %s %s %s %s"
+      (term_to_string inames)
+      (term_to_string s.res)
+      (term_to_string s.pre)
+      (term_to_string s.post)
+
+  | C_STGhost inames s ->
+    sprintf "STGhost %s %s %s %s"
+      (term_to_string inames)
       (term_to_string s.res)
       (term_to_string s.pre)
       (term_to_string s.post)

@@ -14,15 +14,16 @@ open Pulse.Checker.Bind
 module P = Pulse.Syntax.Printer
 module RTB = FStar.Tactics.Builtins
 
+#push-options "--z3rlimit_factor 2"
 let replace_equiv_post
   (f:RT.fstar_top_env)
   (g:env)
-  (c:pure_comp{C_ST? c})
+  (c:pure_comp{stateful_comp c})
   (post_hint:option term)
 
-  : T.Tac (c1:pure_comp { C_ST? c1 /\ comp_pre c1 == comp_pre c } & st_equiv f g c c1) =
+  : T.Tac (c1:pure_comp { stateful_comp c1 /\ comp_pre c1 == comp_pre c } & st_equiv f g c c1) =
 
-  let C_ST {u=u_c;res=res_c;pre=pre_c;post=post_c} = c in
+  let {u=u_c;res=res_c;pre=pre_c;post=post_c} = st_comp_of_comp c in
   let x = fresh g in
   let g_post = (x, Inl res_c)::g in
 
@@ -51,14 +52,13 @@ let replace_equiv_post
     let post_c_post_eq : vprop_equiv f g_post post_c_opened post_opened =
       check_vprop_equiv f g_post post_c_opened post_opened post_c_typing in
 
-    let c_with_post = 
-      C_ST {
+    let st_comp_with_post = {
         u=u_c;
         res=res_c;
         pre=pre_c;
         post=close_term post_opened x
-      }
-    in
+    } in
+    let c_with_post = c `with_st_comp` st_comp_with_post in
     assume (open_term (close_term post_opened x) x == post_opened);
     assert (is_pure_term (close_term post_opened x));
     (| c_with_post,
@@ -66,6 +66,7 @@ let replace_equiv_post
          g c c_with_post x pre_c_typing res_c_typing post_c_typing
          (VE_Refl _ _)
          post_c_post_eq |)
+#pop-options
 
 let check_abs
   (f:RT.fstar_top_env)
@@ -76,7 +77,7 @@ let check_abs
   (post_hint:option term)
   (check:check_t)
   : T.Tac (t:term &
-           c:pure_comp { C_ST? c ==> comp_pre c == pre } &
+           c:pure_comp { stateful_comp c ==> comp_pre c == pre } &
            src_typing f g t c) =
   match t with  
   | Tm_Abs {binder_ty=t;binder_ppname=ppname} qual pre_hint body post_hint ->  (* {pre}  (fun (x:t) -> body) : ? { pre } *)
@@ -118,9 +119,9 @@ let rec check' : bool -> check_t =
     (pre_typing: tot_typing f g pre Tm_VProp)
     (post_hint:option term) ->
   let repack #g #pre #t (x:(c:pure_comp_st { comp_pre c == pre } & src_typing f g t c)) (apply_post_hint:bool)
-    : T.Tac (t:term & c:pure_comp { C_ST? c ==> comp_pre c == pre } & src_typing f g t c) =
+    : T.Tac (t:term & c:pure_comp { stateful_comp c ==> comp_pre c == pre } & src_typing f g t c) =
     let (| c, d_c |) = x in
-    if apply_post_hint && C_ST? c
+    if apply_post_hint && stateful_comp c
     then
       let (| c1, c_c1_eq |) = replace_equiv_post f g c post_hint in
       (| t, c1, T_Equiv _ _ _ _ d_c c_c1_eq |)
@@ -147,7 +148,9 @@ let rec check' : bool -> check_t =
   | Tm_Arrow _ _ _
   | Tm_Type _
   | Tm_VProp
-  | Tm_Refine _ _ ->
+  | Tm_Refine _ _
+  | Tm_Inames
+  | Tm_EmpInames ->
     let (| t, ty, d_ty |) = check_tot allow_inst f g t in
     (| t, C_Tot ty, d_ty |)
 
@@ -163,10 +166,12 @@ let rec check' : bool -> check_t =
       then (
         let (| arg, darg |) = check_tot_with_expected_typ f g arg formal in
         match comp_typ with
-        | C_ST res ->
+        | C_ST res
+        | C_STAtomic _ res
+        | C_STGhost _ res ->
           // This is a real ST application
-          let d = T_STApp g head ppname formal qual (C_ST res) arg dhead (E darg) in
-          opening_pure_comp_with_pure_term (C_ST res) arg 0;
+          let d = T_STApp g head ppname formal qual comp_typ arg dhead (E darg) in
+          opening_pure_comp_with_pure_term comp_typ arg 0;
           repack (try_frame_pre pre_typing d) true
         | C_Tot (Tm_Arrow _  (Some implicit) _) -> 
           let head = Tm_PureApp head qual arg in
