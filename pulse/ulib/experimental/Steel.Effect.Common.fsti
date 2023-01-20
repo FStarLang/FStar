@@ -3197,6 +3197,7 @@ let join_obs (o1:observability) (o2:observability) =
 (* Lifting invariants to vprops *)
 
 /// [i : inv p] is an invariant whose content is [p]
+inline_for_extraction
 let inv (p:vprop) : Type0 = Mem.inv (hp_of p)
 
 let name_of_inv (#p:vprop) (i:inv p) : GTot iname = Mem.name_of_inv i
