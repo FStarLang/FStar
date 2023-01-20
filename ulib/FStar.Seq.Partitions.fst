@@ -126,7 +126,7 @@ let partition_split (#t: eqtype) (pt: partition t)
   let pp = tail pt.parts in   
   let ps_is_subset_of_pp_ith (i: under (length pp)) (x:t)
     : Lemma ((x `mem` index pp i) ==> (x `mem` ps)) = 
-      if x `mem` index pp i then assert x `mem` pt.s
+      if x `mem` index pp i then assert (x `mem` pt.s)
     in Classical.forall_intro_2 ps_is_subset_of_pp_ith; 
   assert (is_subpartition pt.s pt.parts ps pp); 
   assert (length ps == length pt.s - length (head pt.parts));
@@ -136,8 +136,8 @@ let partition_split (#t: eqtype) (pt: partition t)
 (* Final result, any partition will have total length 
    of [parts] equal to the length of base set [s] 
    
-   This one too works fast with split queries. *)
-#push-options "--split_queries"
+   This one wants a bit more resources to verify, somehow *)
+#push-options "--z3rlimit 2"
 let rec partition_length_lemma #t parts s
   : Lemma (requires (parts `are_parts_of` s)
                   /\ (parts `is_partition_of` s))
