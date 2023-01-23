@@ -20,23 +20,16 @@ let tm_bool : pure_term = Tm_FVar bool_lid
 let tm_true : pure_term = Tm_Constant (Bool true)
 let tm_false : pure_term = Tm_Constant (Bool false)
 
-//
-// Until we have implicits and universe instantiations,
-//   use meq2
-//
-// SHOULD GO AWAY
-//
-let eq2_lid = ["Prims"; "eq2"]
 let mk_eq2 (u:universe)
            (t:pure_term)
            (e0 e1:pure_term) 
   : pure_term
   = Tm_PureApp
-         (Tm_PureApp (Tm_PureApp (Tm_UInst eq2_lid [u]) (Some Implicit) t)
+         (Tm_PureApp (Tm_PureApp (Tm_UInst R.eq2_qn [u]) (Some Implicit) t)
                      None e0) None e1
 
 let mk_vprop_eq (e0 e1:pure_term) : pure_term =
-  Tm_PureApp (Tm_PureApp (Tm_FVar vprop_eq_lid) None e0) None e1
+  mk_eq2 (U_succ (U_succ U_zero)) Tm_VProp e0 e1
 
 let return_comp (u:universe) (t:pure_term) (e:pure_term)
   : pure_comp 

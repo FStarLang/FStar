@@ -4,10 +4,10 @@ open Steel.ST.Effect
 open Steel.Memory
 open Steel.ST.Util
 
-unfold 
-let eq_vprop (p1 p2:vprop) : prop = Prims.eq2 p1 p2
-
 (***** begin vprop_equiv *****)
+
+#set-options "--print_implicits --ugly --print_universes"
+let e (p q:vprop) = p == q
 
 val vprop_equiv (p q:vprop) : prop
 val vprop_post_equiv (#t:Type u#a) (p q: t -> vprop) : prop
@@ -45,7 +45,7 @@ val vprop_equiv_cong (p1 p2 p3 p4:vprop)
                      (_: vprop_equiv p2 p4)
   : vprop_equiv (p1 `star` p2) (p3 `star` p4)
 
-val vprop_equiv_ext (p1 p2:vprop) (_:eq_vprop p1 p2)
+val vprop_equiv_ext (p1 p2:vprop) (_:p1 == p2)
   : vprop_equiv p1 p2
 
 (***** end vprop_equiv *****)
