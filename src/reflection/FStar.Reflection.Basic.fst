@@ -281,7 +281,7 @@ let rec inspect_ln (t:term) : term_view =
         Tv_Unknown
 
     | _ ->
-        Err.log_issue t.pos (Err.Warning_CantInspect, BU.format2 "inspect_ln: outside of expected syntax (%s, %s)\n" (Print.tag_of_term t) (Print.term_to_string t));
+        Err.log_issue t.pos (Err.Warning_CantInspect, BU.format2 "inspect_ln: outside of expected syntax (%s, %s)" (Print.tag_of_term t) (Print.term_to_string t));
         Tv_Unknown
 
 let inspect_comp (c : comp) : comp_view =
@@ -687,6 +687,13 @@ let pack_lb (lbv:lb_view) : letbinding =
     U.mk_letbinding (Inr fv) us typ PC.effect_Tot_lid def [] Range.dummyRange
 
 let inspect_bv (bv:bv) : bv_view =
+    if bv.index < 0 then (
+        Err.log_issue Range.dummyRange
+            (Err.Warning_CantInspect, BU.format3 "inspect_bv: index is negative (%s : %s), index = %s"
+                                         (Ident.string_of_id bv.ppname)
+                                         (Print.term_to_string bv.sort)
+                                         (string_of_int bv.index))
+    );
     {
       bv_ppname = Ident.string_of_id bv.ppname;
       bv_index = Z.of_int_fs bv.index;
@@ -694,9 +701,16 @@ let inspect_bv (bv:bv) : bv_view =
     }
 
 let pack_bv (bvv:bv_view) : bv =
+    if Z.to_int_fs bvv.bv_index < 0 then (
+        Err.log_issue Range.dummyRange
+            (Err.Warning_CantInspect, BU.format3 "pack_bv: index is negative (%s : %s), index = %s"
+                                         bvv.bv_ppname
+                                         (Print.term_to_string bvv.bv_sort)
+                                         (string_of_int (Z.to_int_fs bvv.bv_index)))
+    );
     {
       ppname = Ident.mk_ident (bvv.bv_ppname, Range.dummyRange);
-      index = Z.to_int_fs bvv.bv_index;
+      index = Z.to_int_fs bvv.bv_index; // Guaranteed to be a nat
       sort = bvv.bv_sort;
     }
 

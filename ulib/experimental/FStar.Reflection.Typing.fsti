@@ -115,9 +115,7 @@ let as_binder (x:var) (ty:term) =
 
 let bv_index (x:bv)
   : var
-  = let n = (inspect_bv x).bv_index in
-    assume (n >= 0); //TODO: fix lib
-    n
+  = (inspect_bv x).bv_index
 
 let binder_sort (b:binder) =
   let { binder_bv = bv } = inspect_binder b in 
@@ -134,17 +132,17 @@ type open_or_close =
 
 let tun = pack_ln Tv_Unknown
 
-let make_bv (n:int) (t:term) = { 
+let make_bv (n:nat) (t:term) = {
   bv_ppname = seal_pp_name "_";
   bv_index = n;
   bv_sort = t
 }
-let make_bv_with_name (s:pp_name_t) (n:int) (t:term) = {
+let make_bv_with_name (s:pp_name_t) (n:nat) (t:term) = {
   bv_ppname = s;
   bv_index = n;
   bv_sort = t
 }
-let var_as_bv (v:int) = pack_bv (make_bv v tun)
+let var_as_bv (v:nat) = pack_bv (make_bv v tun)
 let var_as_term (v:var) = pack_ln (Tv_Var (var_as_bv v))
             
 let open_with_var (x:var) = OpenWith (pack_ln (Tv_Var (var_as_bv x)))
@@ -600,7 +598,7 @@ type term_ctxt =
   | Ctxt_match_scrutinee : term_ctxt -> option match_returns_ascription -> list branch -> term_ctxt
 
 and bv_ctxt =
-  | Ctxt_bv : sealed string -> int -> term_ctxt -> bv_ctxt
+  | Ctxt_bv : sealed string -> nat -> term_ctxt -> bv_ctxt
 
 and binder_ctxt =
   | Ctxt_binder : bv_ctxt -> aqualv -> list term -> binder_ctxt
