@@ -56,11 +56,13 @@ let mk_tot_arrow_with_name1 (s:string) (f:arrow_dom) (out:R.term) : R.term =
   let ty, q = f in
   R.pack_ln (R.Tv_Arrow (binder_of_t_q_s ty q s) (R.pack_comp (mk_total out)))
 
-let vprop_eq_lid = ["Pulse"; "Steel"; "Wrapper"; "eq_vprop"]
 let vprop_eq_tm t1 t2 =
   let open R in
-  let t = pack_ln (Tv_App (pack_ln (Tv_FVar (pack_fv (vprop_eq_lid))))
-                          (t1, Q_Explicit)) in
+  let u2 =
+    pack_universe (Uv_Succ (pack_universe (Uv_Succ (pack_universe Uv_Zero)))) in
+  let t = pack_ln (Tv_UInst (pack_fv eq2_qn) [u2]) in
+  let t = pack_ln (Tv_App t (pack_ln (Tv_FVar (pack_fv vprop_lid)), Q_Implicit)) in
+  let t = pack_ln (Tv_App t (t1, Q_Explicit)) in
   let t = pack_ln (Tv_App t (t2, Q_Explicit)) in
   t
 

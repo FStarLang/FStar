@@ -19,7 +19,7 @@ let mk_pure t =
   R.mk_app pure [(t, R.Q_Explicit)]
 
 let mk_eq u t v0 v1 = 
-  let m_eq2 = R.(pack_ln (Tv_UInst (pack_fv eq2_lid) [u])) in
+  let m_eq2 = R.(pack_ln (Tv_UInst (pack_fv R.eq2_qn) [u])) in
   let eq = R.mk_app m_eq2 [(t, R.Q_Implicit);
                            (v0, R.Q_Explicit);
                            (v1, R.Q_Explicit)] in
