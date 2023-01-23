@@ -22,12 +22,8 @@ let equiv_arrow (g:R.env) (t1:R.term) (u2:R.universe) (t2:R.term) (pre:R.term) (
                                     (mk_stt_app u2 [t2; R.mk_app (mk_abs t1 R.Q_Explicit pre) [bound_var 0, R.Q_Explicit]; post])))
   = admit()
 
-open FStar.Tactics
 
-let rewrite1 (t:term_view) : Lemma (inspect_ln (pack_ln t) == t) = admit ()
-let rewrite2 (t:term) : Lemma (pack_ln (inspect_ln t) == t) = admit ()
-
-#push-options "--fuel 2 --ifuel 1 --query_stats --print_implicits --ugly"
+#push-options "--fuel 2 --ifuel 1 --query_stats"
 let inst_bind_t1 #u1 #u2 #g #head
                    (head_typing: RT.typing g head (bind_type u1 u2))
                    (#t1:_)
@@ -41,15 +37,13 @@ let inst_bind_t1 #u1 #u2 #g #head
     let d : RT.typing g (R.mk_app head [(t1, R.Q_Implicit)]) _ =
       RT.T_App _ _ _ _ _ head_typing t1_typing
     in
-    assert (bind_type_t1 u1 u2 t1 ==
-            RT.open_or_close_term' (RT.open_or_close_term' (bind_type_t1 u1 u2 (mk_name 4))
+    assume (bind_type_t1 u1 u2 t1 ==
+            RT.open_with (RT.open_or_close_term' (bind_type_t1 u1 u2 (mk_name 4))
                                                  (RT.CloseVar 4) 0)
-                         (RT.OpenWith t1) 0) by (norm ([zeta; iota; delta_only [`%bind_type_t1; `%mk_tot_arrow1;]]);
-                                                 l_to_r [`rewrite1; `rewrite2];
-                                 fail "A");
-    admit ();
+                         t1);
+
     d
-#pop-options
+#pop-options    
 
 
 
