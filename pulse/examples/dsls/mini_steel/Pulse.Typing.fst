@@ -298,6 +298,12 @@ let st_equiv_pre (c1 c2:pure_comp_st) : prop =
      inames1 == inames2
    | _, _ -> False)
 
+let non_informative_witness_lid = mk_steel_wrapper_lid "non_informative_witness"
+let non_informative_witness_t (u:universe) (t:pure_term) : pure_term =
+  Tm_PureApp (Tm_UInst non_informative_witness_lid [u])
+             None
+             t
+
 [@@erasable]
 noeq
 type my_erased (a:Type) = | E of a
@@ -427,6 +433,7 @@ and bind_comp (f:RT.fstar_top_env) : env -> var -> pure_comp -> pure_comp -> pur
     x:var { None? (lookup g x) } ->
     c1:pure_comp_st ->
     c2:pure_comp_st {bind_comp_ghost_l_pre x c1 c2} ->
+    non_informative_c1:(w:term & tot_typing f g w (non_informative_witness_t (comp_u c1) (comp_res c1))) ->
     universe_of f g (comp_res c2) (comp_u c2) ->
     //or in the result post; free var check isn't enough; we need typability
     y:var { None? (lookup g y) } ->      
@@ -438,6 +445,7 @@ and bind_comp (f:RT.fstar_top_env) : env -> var -> pure_comp -> pure_comp -> pur
     x:var { None? (lookup g x) } ->
     c1:pure_comp_st ->
     c2:pure_comp_st {bind_comp_ghost_r_pre x c1 c2} ->
+    non_informative_c2:(w:term & tot_typing f g w (non_informative_witness_t (comp_u c2) (comp_res c2))) ->
     universe_of f g (comp_res c2) (comp_u c2) ->
     //or in the result post; free var check isn't enough; we need typability
     y:var { None? (lookup g y) } ->      
