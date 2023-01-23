@@ -535,14 +535,15 @@ let injectives =
      "FStar.UInt32.__uint_to_t";
      "FStar.UInt64.__uint_to_t"]
 
-let eq_inj f g =
-     match f, g with
+// Compose two eq_result injectively, as in a pair
+let eq_inj r s =
+     match r, s with
      | Equal, Equal -> Equal
      | NotEqual, _
      | _, NotEqual -> NotEqual
-     | Unknown, _
-     | _, Unknown -> Unknown
+     | _, _ -> Unknown
 
+// Promote a bool to eq_result, conservatively.
 let equal_if = function
     | true -> Equal
     | _ -> Unknown
@@ -554,10 +555,17 @@ let equal_iff = function
     | true -> Equal
     | _ -> NotEqual
 
-let eq_and f g =
-    match f with
-    | Equal -> g()
-    | _ -> Unknown
+// Compose two equality results, NOT assuming a NotEqual implies anything.
+// This is useful, e.g., for checking the equality of applications. Consider
+//  f x ~ g y
+// if f=g and x=y then we know these two expressions are equal, but cannot say
+// anything when either result is NotEqual or Unknown, hence this returns Unknown
+// in most cases.
+// The second comparison is thunked for efficiency.
+let eq_and r s =
+    if r = Equal && s () = Equal
+    then Equal
+    else Unknown
 
 (* Precondition: terms are well-typed in a common environment, or this can return false positives *)
 let rec eq_tm (t1:term) (t2:term) : eq_result =
@@ -664,7 +672,13 @@ let rec eq_tm (t1:term) (t2:term) : eq_result =
       equal_if (eq_univs u v)
 
     | Tm_quoted (t1, q1), Tm_quoted (t2, q2) ->
-      eq_and (eq_quoteinfo q1 q2) (fun () -> eq_tm t1 t2)
+      // NOTE: we do NOT ever provide a meaningful result for quoted terms. Even
+      // if term_eq (the syntactic equality) returns true, that does not mean we
+      // can present the equality to userspace since term_eq ignores the names
+      // of binders, but the view exposes them. Hence, we simply always return
+      // Unknown. We do not seem to rely anywhere on simplifying equalities of
+      // quoted literals. See also #2806.
+      Unknown
 
     | Tm_refine (t1, phi1), Tm_refine (t2, phi2) ->
       eq_and (eq_tm t1.sort t2.sort) (fun () -> eq_tm phi1 phi2)
@@ -687,11 +701,6 @@ let rec eq_tm (t1:term) (t2:term) : eq_result =
              (fun () -> eq_comp c1 c2)
 
     | _ -> Unknown
-
-and eq_quoteinfo q1 q2 =
-    if q1.qkind <> q2.qkind
-    then NotEqual
-    else eq_antiquotes q1.antiquotes q2.antiquotes
 
 and eq_antiquotes a1 a2 =
     match a1, a2 with
@@ -755,6 +764,13 @@ and eq_comp (c1 c2:comp) : eq_result =
                              //ignoring cflags
   | _ -> NotEqual
 
+(* Only used in term_eq *)
+let eq_quoteinfo q1 q2 =
+    if q1.qkind <> q2.qkind
+    then NotEqual
+    else eq_antiquotes q1.antiquotes q2.antiquotes
+
+(* Only used in term_eq *)
 let eq_bqual a1 a2 =
     match a1, a2 with
     | None, None -> Equal
@@ -765,6 +781,7 @@ let eq_bqual a1 a2 =
     | Some Equality, Some Equality -> Equal
     | _ -> NotEqual
 
+(* Only used in term_eq *)
 let eq_aqual a1 a2 =
   match a1, a2 with
   | Some a1, Some a2 ->
