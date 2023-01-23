@@ -7,6 +7,7 @@ open Pulse.Syntax
 
 let tun = R.pack_ln R.Tv_Unknown
 let bool_lid = ["Prims"; "bool"]
+let erased_lid = ["FStar"; "Ghost"; "erased"]
 let vprop_lid = ["Steel"; "Effect"; "Common"; "vprop"]
 let vprop_fv = R.pack_fv vprop_lid
 let vprop_tm = R.pack_ln (R.Tv_FVar vprop_fv)

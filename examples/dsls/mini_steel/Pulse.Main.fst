@@ -31,15 +31,6 @@ let main' (t:term) (pre:term) (g:RT.fstar_top_env)
 
 let main t pre : RT.dsl_tac_t = main' t pre
 
-let erased_lid = ["Pulse"; "Steel"; "Wrapper"; "erased"]
-let hide_lid = ["Pulse"; "Steel"; "Wrapper"; "hide"]
-let reveal_lid = ["Pulse"; "Steel"; "Wrapper"; "reveal"]
-let u32_lid = ["Pulse"; "Steel"; "Wrapper"; "u32"]
-let ref_lid = ["Pulse"; "Steel"; "Wrapper"; "ref"]
-let pts_to_lid = ["Pulse"; "Steel"; "Wrapper"; "pts_to"]
-let read_lid = ["Pulse"; "Steel"; "Wrapper"; "read"]
-let write_lid = ["Pulse"; "Steel"; "Wrapper"; "write"]
-
 [@@plugin]
 let parse_and_check (s:string) : RT.dsl_tac_t = main (parse s) Tm_Emp
 
