@@ -91,7 +91,8 @@ let st_equiv_soundness (f:stt_env)
                             (elab_comp_post c1)
                             r)
                     (elab_pure_comp c1))
-  = let ST_VPropEquiv _ _ _ x pre_typing res_typing post_typing eq_pre eq_post = d in
+  = if C_ST? c0 && C_ST? c1 then
+    let ST_VPropEquiv _ _ _ x pre_typing res_typing post_typing eq_pre eq_post = d in
     // assert (None? (lookup_ty g x));
     assert (None? (lookup g x));
     assume (~(x `Set.mem` RT.freevars (elab_pure (comp_post c0))));
@@ -154,4 +155,5 @@ let st_equiv_soundness (f:stt_env)
                  pre_equiv
                  post_equiv
                  d_r
+    else admit ()
 #pop-options

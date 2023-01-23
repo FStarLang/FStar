@@ -64,6 +64,7 @@ let rec soundness (f:stt_env)
                      r_arg_typing
 
     | T_Bind _ e1 e2 c1 c2 x c e1_typing t_typing e2_typing bc ->
+      if C_ST? c1 && C_ST? c2 then
       let r1_typing
         : RT.typing _ _ (elab_pure_comp c1)
         = soundness _ _ _ _ e1_typing
@@ -78,16 +79,21 @@ let rec soundness (f:stt_env)
       Bind.elab_bind_typing f g _ _ _ x _ r1_typing _ r2_typing bc 
                             (tot_typing_soundness t2_typing)
                             (mk_t_abs_tot _ _ _ t2_typing post2_typing)
-
+      else admit ()
     | T_Frame _ e c frame frame_typing e_typing ->
+      if C_ST? c then
       let r_e_typing = soundness _ _ _ _ e_typing in
       assume (ln_c c);
       Frame.elab_frame_typing f g _ _ frame frame_typing r_e_typing
+      else admit ()
 
     | T_Equiv _ e c c' e_typing equiv ->
+      if C_ST? c && C_ST? c' then begin
       assume (ln_c c /\ ln_c c');
       let r_e_typing = soundness _ _ _ _ e_typing in 
       STEquiv.st_equiv_soundness _ _ _ _ equiv _ r_e_typing
+      end
+      else admit ()
 
     | T_Return _ e t u e_typing t_typing ->
       Return.elab_return_typing t_typing e_typing
