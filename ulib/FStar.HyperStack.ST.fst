@@ -281,7 +281,7 @@ private let mem_rel_predicate (#a:Type0) (#rel:preorder a) (r:mreference a rel) 
     fun m ->
     (HS.rid_last_component rid < HS.get_rid_ctr m) /\ (  //will help us prove that a deallocated region remains deallocated
       (m `HS.contains` r /\ p m) \/  //the ref is contained and satisfies p
-      (m `contains_region` rid /\ not (m `HS.contains_ref_in_its_region` r) /\ HS.as_addr r < Heap.next_addr (HS.get_hmap m `Map.sel` rid) /\ r `HS.unused_in` m) \/  //the ref is deallocated, but its region is contained and next_addr > addr_of ref
+      (m `contains_region` rid /\ ~ (m `HS.contains_ref_in_its_region` r) /\ HS.as_addr r < Heap.next_addr (HS.get_hmap m `Map.sel` rid) /\ r `HS.unused_in` m) \/  //the ref is deallocated, but its region is contained and next_addr > addr_of ref
       (not (m `contains_region` rid)))  //the region itself is not there
 
 let token_p #_ #_ r p = witnessed (mem_rel_predicate r p)

@@ -280,9 +280,8 @@ let unused_in (#a:Type) (#rel:preorder a) (r:mreference a rel) (m:mem) =
   not ((get_hmap m) `Map.contains` (frameOf r)) \/
   Heap.unused_in (as_ref r) ((get_hmap m) `Map.sel` (frameOf r))
 
-let contains_ref_in_its_region (#a:Type) (#rel:preorder a) (m:mem) (r:mreference a rel) :GTot bool =
-  let i = frameOf r in
-  FStar.StrongExcludedMiddle.strong_excluded_middle (Heap.contains (get_hmap m `Map.sel` i) (as_ref r))
+let contains_ref_in_its_region (#a:Type) (#rel:preorder a) (m:mem) (r:mreference a rel) =
+  Heap.contains (get_hmap m `Map.sel` (frameOf r)) (as_ref r)
 
 let fresh_ref (#a:Type) (#rel:preorder a) (r:mreference a rel) (m0:mem) (m1:mem) :Type0 =
   let i = frameOf r in
