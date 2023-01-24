@@ -1,204 +1,377 @@
 .. _Part4_Div:
 
 Divergence, or Non-Termination
-===============================
+==============================
 
-Consider programming a webserver, whose top-level loop takes a network
-socket as argument, reads an HTTP request from it, services the
-request, sends the response on the socket, and iterates. Can we program this top-level loop in F*? Let's
-try. Assume that we have the following API available::
+Most dependently typed languages are not `Turing complete
+<https://en.wikipedia.org/wiki/Turing_completeness>`_. This is
+because, as explained :ref:`earlier <Part1_termination>`, it is
+crucial to the soundness of a type theory to have all functions
+terminate. This means that you cannot program, say, an interpreter for
+a general-purpose programming language in a language like Coq, since
+such an interpreter would not be able to handle programs that
+intentionally loop forever. [#]_
 
-  val receive : socket -> http_request
-  val process : http_request -> http_response
-  val send : socket -> http_response -> unit
+F*'s logical core of total (and ghost) functions can only express
+terminating computations. However, F*'s also allows expressing
+non-terminating or *divergent* computations, relying on the effect
+system to isolate divergent computations from the logical core. In
+particular, the computation type ``Dv t`` describes a computation that
+may loop forever, but if it completes, it returns a value of type
+``t``.
 
-(The API is only for illustration, in reality ``receive``,
-``process``, and ``send`` will be effectful functions rather than
-``Tot``.)
+Relying on the effect system as a dependency tracking mechanism, F*
+ensures that ``Tot`` computations cannot rely on ``Dv`` computations
+by placing ``Dv`` above ``Tot`` in the effect hierarchy, while,
+conversely, a total computation ``Tot t`` can be silently promoted to
+``Dv t``, the type of computations that may not terminate, i.e., ``Tot
+< Dv`` in the effect partial order.
 
-We may try writing the top-level loop as a recursive function::
+Recursive functions that return computations in the ``Dv`` effect are
+not checked for termination.  As such, using the ``Dv`` effect, one
+can write programs such as the one below, which computes `Collatz
+sequences
+<https://en.wikipedia.org/wiki/Collatz_conjecture>`_---whether or not
+this program terminates for all inputs is an open problem.
 
-  let rec main (s:socket) : unit =
-    let req = receive s in
-    let resp = process req in
-    send s resp;
-    main s  // trouble!
+.. literalinclude:: ../code/Divergence.fst
+   :language: fstar
+   :start-after: //SNIPPET_START: collatz$
+   :end-before: //SNIPPET_END: collatz$
 
-Unfortunately, this doesn't work: F*
-would like us to prove that ``main`` terminates, whereas we,
-intentionally, want to write a non-terminating function.
+In this chapter, we'll look in detail at the ``Dv`` effect and how it
+interacts with other features of the language, including the other
+effects, recursive type definitions, and the styles of programming and
+proving it enables.
+
+.. [#] In place of general recursion and potential non-termination,
+       other dependently typed languages like Coq and Agda offer
+       features like corecursion and coinduction. Coinduction can be
+       used to express a class of *productive* non-terminating
+       programs. For instance, using coinduction, one could program a
+       web server that loops forever to handle an infinite stream of
+       requests, while producing a response for each request in a
+       finite amount of time. Even the ``collatz`` function can be
+       given a corecursive definition that computes a potentially
+       infinite stream of numbers. However, not all non-terminating
+       computations can be implemented with
+       coinduction/corecursion. F* does not yet support coinduction.
+       
 
 The ``Dv`` effect
 ^^^^^^^^^^^^^^^^^^^
 
-To allow for such non-terminating programs, F* provides a primitive
-``Dv`` (for divergence) effect. Computations
-in ``Dv`` may not terminate, even with infinite resources. In other
-words, computations in the ``Dv`` effect have the observational
-behavior of non-termination. For example, the following ``loop``
-function has type ``unit -> Dv unit`` and it always diverges when
-called::
+The effect ``Dv`` (for divergence) is a primitive effect in F*.
+Computations in ``Dv`` may not terminate, even with infinite
+resources. In other words, computations in the ``Dv`` effect have the
+observational behavior of non-termination. For example, the following
+``loop`` function has type ``unit -> Dv unit`` and it always diverges
+when called:
 
-  let rec loop () : Dv unit = loop ()
+.. literalinclude:: ../code/Divergence.fst
+   :language: fstar
+   :start-after: //SNIPPET_START: loop$
+   :end-before: //SNIPPET_END: loop$
 
-(If we remove the ``Dv`` effect label, then F* will default the return
-type to ``Tot unit``, and fail as expected.)
+If we remove the ``Dv`` effect label annotation, then F* treats the
+function as total and will try to prove that the recursive call
+terminates, according to its usual termination checking rules, i.e.,
+F* will attempt to prove ``() << ()`` which fails, as expected.
 
 Since the ``Dv`` effect admits divergence, F* essentially turns-off
 the termination checker when typechecking ``Dv`` computations. So the
 recursive ``loop ()`` call does not require a decreasing termination
-metric and typechecks as is.
-
-Now the ``main`` function of our webserver can be annotated in the
-``Dv`` effect, and we can program it as an infinite loop::
-
-  let main (s:socket) : Dv unit = ...
-
+metric.
 
 Partial correctness semantics of ``Dv``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Recall :ref:`that <Part1>` we understand the meaning of F* typing
-``e:t`` (and ``e:Tot t``) as a proof of correctness of ``e`` with
-specification ``t``. If ``e:t``, then at runtime, ``e``
-terminates and produces a value of type ``t``. This notion is also
-called *total correctness* of ``e`` w.r.t. the specification ``t``.
+The ``Tot`` effect in F* has a *total correctness* semantics. That is,
+if a term has type ``e:Tot t``, then ``e`` terminates terminates and
+produces a value of type ``t``.
 
-With ``Dv`` however, the interpretation changes to *partial
-correctness*---if F* typechecks an expression ``e:Dv t``, then at
-runtime, ``e`` may either diverge (i.e. run forever), or if it terminates
-then the resulting value has type ``t`` (i.e. it satisfies the
-specification ``t``). The following example is, therefore, untypeable::
+Terms with type ``Dv t`` have a *partial correctness* semantics. That
+is, a term ``e:Dv t``, ``e`` may either run forever, but if it
+terminates then the resulting value has type ``t``.
 
-  [@@ expect_failure]
-  let rec decr (x:int) : Dv nat = if x = 0 then -1 else decr (x - 1)
+Another perspective is that aside from disabling the termination
+checking features of F*, all other type-checking constraints are
+enforced on ``Dv`` term. This means that one can still give
+interesting sound, specifications to ``Dv`` programs, e.g., the type
+below proves that if the Collatz function terminates, then the last
+element of the sequence is ``1``.
 
-since ``-1``, the return value if the function terminates, does not
-have the annotated type ``nat``. On the other hand, if we changed it
-to::
+.. literalinclude:: ../code/Divergence.fst
+   :language: fstar
+   :start-after: //SNIPPET_START: collatz_ends_in_one$
+   :end-before: //SNIPPET_END: collatz_ends_in_one$
 
-  let rec decr (x:int) : Dv nat = if x = 0 then 0 else decr (x - 1)
+If, for example, in the base case we were to return the empty list
+``[]`` rather than ``[n]``, then F* would refuse to accept the
+program, since the program could terminate while returning a value
+that does not an element of the annotated return type.
 
-then the function typechecks, and we can conclude that for any
-``x:int``, ``decr x`` either diverges or returns a ``nat``. We may
-further refine the return type to ``y:nat{y == 0}``, and conclude a
-more precise characterization of ``decr``.
+Isolating ``Dv`` from the logical core
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Separating the logical core from ``Dv``
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Since ``Dv`` terms need not terminate, a program that always loops
+forever can be given any return type. For instance, the program below
+has return type ``False``:
 
-Usually proof-assistants mandate all the programs to be total, and
-for good reasons. With divergence, if we are not careful, the logical
-system can collapse very easily. For example, following is a
-well-typed program in F*::
+.. literalinclude:: ../code/Divergence.fst
+   :language: fstar
+   :start-after: //SNIPPET_START: loop_false$
+   :end-before: //SNIPPET_END: loop_false$
 
-  let rec helper () : Dv False = helper ()
+Importantly, a term of type ``Dv False`` should not be confused as a
+*proof* of ``False``, since that would lead immediately to unsoundness
+of F*'s logical core. In particular, it should be impossible to turn a
+``e:Dv t`` into a term of type ``Tot t``. This is achieved by F*'s
+effect system, which treats ``Tot`` as a sub-effect of ``Dv``, i.e.,
+``Tot < Dv``, in the effect order. As explained in :ref:`earlier
+<Part4_Background>`, this ensures that no ``Tot`` term can depend on a
+``Dv`` term, maintaining soundness of the total correctness
+interpretation of ``Tot``.
 
-that returns a proof of ``False`` (whenever it terminates). So now, to
-prove any theorem in F*, we can call ``helper``, and voilà, we are done!
+As an example, the following attempt to "cast" ``dv_false`` to ``Tot``
+fails, as does trying to use ``dv_false`` to produce incorrect proofs
+of other types.
 
-Thankfully not so, the effect system of F* itself comes to the
-rescue. It carefully separates total computations (in
-``Tot``) from other effectful computations, including ``Dv``.
+.. literalinclude:: ../code/Divergence.fst
+   :language: fstar
+   :start-after: //SNIPPET_START: loop_false_failures$
+   :end-before: //SNIPPET_END: loop_false_failures$
 
-As mentioned earlier, all expressions are typechecked
-to a computation type with an effect label, where the effect label
-soundly captures all the effects of the typed expression. It implies
-that, for example, ``Tot`` computations cannot have effectful
-subcomputations and that effectful computations are not typeable as
-``Tot`` (if they were, then the effect label is not sound w.r.t. the
-effects of the computation).
 
-Relying on this separation, F* checks that the logical core can refer
-*only* to the total computations. For example, specifications such as
-refinements are checked to be total.
+While F* does not allow ``Tot`` computations to depend on ``Dv``
+computations, going the other way is perfectly fine. Intuitively,
+always terminating computations are potentially non-terminating. We
+can think of it like a *weakening* of the specification::
 
-And this is what ensures the soundness of the logical fragment of F*
-in the presence of arbitrary effects, including ``Dv``. A term ``e:Tot
-t`` can be soundly interpreted as the proof of ``t``---the effect
-system ensures that it is really so---whereas a judgment like ``e:Dv
-t`` should be interpreted in the partial correctness semantics.
+.. code-block:: fstar
+                
+   let add_one (x:int) : int = x + 1
+   let add_one_div (x:int) : Dv int = add_one x
 
-As an example, the following attempt to use ``helper`` in a total
-function fails::
+The effect system of F* automatically *lifts* ``Tot`` computations
+into ``Dv``, meaning that ``Tot`` functions can be seamlessly used in
+``Dv`` functions.
 
-  [@@ expect_failure]
-  let zero () : Tot (y:int{y == 0}) = helper (); 1
-
-An attempt to cast ``helper`` to ``Tot`` also fails::
-
-  [@@ expect_failure]
-  let helper_tot () : Tot False = helper ()
-
-Thus, the logical core of F* consists only of the total fragment of
-F*. Yet, the fact that we can write non-terminating programs in F*,
-cleanly separated from the logical core, makes F* a `Turing-complete
-<https://en.wikipedia.org/wiki/Turing_completeness/>`_.
-programming language.
-
+The weakening of ``Tot`` terms to other effects is so pervasive in F*
+that one hardly even thinks about it, e.g., in the ``collatz``
+program, sub-terms like ``n / 2`` are in ``Tot`` but are easily used
+within a computation in the ``Dv`` effect.
+   
 No extrinsic proofs for ``Dv`` computations
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 One important consequence of any effectful code, including ``Dv``,
 being outside the logical core of F* is that it is not possible to do
-:ref:`extrinsic proofs <Part1_intrinsic_extrinsic>` about
-effectful code. As a result, all logical properties of interest must
-be encoded in the specifications of the effectful code. For example,
-if we wrote a ``factorial`` definition in ``Dv``::
+:ref:`extrinsic proofs <Part1_intrinsic_extrinsic>` about effectful
+code. One cannot even state properties of ``Dv`` computations in
+specifications, since even specifications must be total. For example,
+even stating the following lemma is illegal:
 
-  let rec factorial (x:int) : Dv int =
-    if x = 0
-    then 1
-    else x * factorial (x - 1)
+.. code-block:: fstar
 
-that diverges when called with negative inputs, then with
-the given signature, we cannot derive after-the-fact that
-``factorial`` returns a positive integer if it terminates. To be able
-to reason so, we need to refine the return type and prove it
-intrinsically::
+   [@@expect_failure]
+   val collatz_property (n:pos)
+     : Lemma (Cons? (collatz n) /\ last (collatz n) = 1)
 
-  let rec factorial (x:int) : Dv (y:int{y >= 1}) = ...
+This is nonsensical in F* since writing ``Cons? (collatz n)`` supposes
+that ``collatz n`` is *defined*, whereas it might actually just loop
+forever.
 
+The only way to state properties about divergent programs is to encode
+the property intrinsically in the computation type, as we saw above.
 
-Lifting of ``Tot`` computations into ``Dv``
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.. literalinclude:: ../code/Divergence.fst
+   :language: fstar
+   :start-after: //SNIPPET_START: val collatz_ends_in_one$
+   :end-before: //SNIPPET_END: val collatz_ends_in_one$
 
-While F* does not allow ``Dv`` computations to be
-typed as/used in ``Tot`` computations, going the other way is *totally*
-fine. Intuitively, always terminating computations are
-potentially non-terminating. We can think of it like a *weakening* of
-the specification::
+Exercise
+++++++++
 
-  let add_one (x:int) : int = x + 1
-  let add_one_div (x:int) : Dv int = add_one x
+Define a predicate ``collatz_spec (n:pos) (l:list pos) : bool`` that
+decides if ``l`` is a valid Collatz sequence starting at ``n``.
 
-The effect system of F* automatically *lifts* ``Tot`` computations
-into ``Dv``, meaning that ``Tot`` functions can be seamlessly used in
-``Dv`` functions::
+Implement ``val collatz' (n:pos) : Dv (l:list pos { collatz_spec n l })``.
 
-  let rec add_one_loop (x:int) : Dv int =
-    let y = add_one x in
-    add_one_loop y
+What does this type mean? Are there other ways to implement
+``collatz'`` with the same type?
 
 
-In general, effects in F* have a partial ordering among them,
-where sub-effects (e.g., ``Tot``) can be automatically lifted to
-super-effects (e.g., ``Dv``) by the F* effect system.
+.. container:: toggle
 
-This also explains the meaning of :ref:`at-most
-<Part4_Computation_Types_And_Tot>` when intuitively understanding the
-meaning of ``e:M t``. Executing ``e`` should exhibit *at-most* the effect
-``M``---if the effect of ``e`` at runtime is ``N``, then ``N <= M`` in
-the partial ordering. In our example, the expression
-``add_one x`` has effect ``Tot``, but it may also be typed as ``Dv``
-since ``Tot`` is below ``Dv`` in the partial ordering.
+    .. container:: header
 
-The partial ordering among effects in F* is crucial for the effects to
-seamlessly work with each other, we will see more examples when we
-discuss user-defined effects.
+       **Answer**
 
-.. note::
+    .. literalinclude:: ../code/Divergence.fst
+       :language: fstar
+       :start-after: //SNIPPET_START: collatz_spec$
+       :end-before: //SNIPPET_END: collatz_spec$
 
-   The logical core of F* also includes the ghost effect. We can think
-   of the partial order for the effects we have seen so far as: ``Tot
-   < GTot`` and ``Tot < Dv``.
+--------------------------------------------------------------------------------
+
+General Recursive Types and Impredicativity with ``Dv``
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Aside from disabling the decreases metric on recursive functions in
+``Dv``, F* also disables two other forms of termination checking on
+``Dv`` computations.
+
+Recall from a :ref:`previous chapter <Part2_strict_positivity>` that
+inductive type definitions are subject to the *strict positivity*
+condition, since non-positive definitions allow the definition of
+recursive types and non-terminating computations. However, since
+computations in the ``Dv`` effect are already allowed to loop forever,
+the strict positivity condition can be relaxed when ``Dv`` types are
+involved. For example, one can define this:
+
+.. literalinclude:: ../code/Divergence.fst
+   :language: fstar
+   :start-after: //SNIPPET_START: nonpos$
+   :end-before: //SNIPPET_END: nonpos$
+
+The type ``nonpos`` is not strictly positive, since it appears to the
+left of an arrow in a field of one of its constructors. Indeed, usingn
+``nonpos`` it is possible to define (without using ``let rec``) an
+infinitely looping program ``loop_nonpos()``---however, the type ``Dv
+False`` tells us that this program may loop forever, and the infinite
+loop is safely isolated from F*'s logical core.
+
+The other place in F*'s type system where termination checking comes
+into play is in the :ref:`universe levels <Part2_universes>`. As we
+learned previously, the logical core of F* is organized into an
+infinite hierarchy with copies of the F* type system arranged in a
+tower of universes. This stratification is necessary to prevent
+inconsistencies within the logical core. However, term in the ``Dv``
+effect are outside the logical core and, as such, restrictions on the
+universe levels no longer apply. As the snippet below shows a total
+function returning a type in universe ``u#a`` resides in universe
+``u#(a + 1)``. However, a ``Dv`` function returning a type in ``u#a``
+is just in universe ``0``, since the only way to obtain the type
+``dv_type`` returns is by incurring a ``Dv`` effect and moving outside
+F*'s logical core.
+
+.. literalinclude:: ../code/Divergence.fst
+   :language: fstar
+   :start-after: //SNIPPET_START: universe_dv$
+   :end-before: //SNIPPET_END: universe_dv$
+
+Top-level Effects
+^^^^^^^^^^^^^^^^^
+
+A top-level F* term is not meant to be effectful. If one defines the
+following term, F* accepts the term but raises a warning saying
+"Top-level let bindings must be total---this term may have effects".
+
+.. code-block:: fstar
+
+   let inconsistent : False = loop_nonpos()                
+
+Top-level effects can be problematic for a few reasons:
+
+  1. The order of evaluation of the effects in top-level terms is
+     undefined for programs with multiple modules---it depends on the
+     order in which modules are loaded at runtime.
+
+  2. Top-level effects, particularly when divergence is involved, can
+     render F*'s typechecking context inconsistent. For example, once
+     ``inconsistent`` is defined, then any other assertion can be
+     proven.
+
+     .. code-block :: fstar
+
+         let _  = let _ = FStar.Squash.return_squash inconsistent in
+                  assert false
+
+Nevertheless, when used carefully, top-level effects can be useful,
+e.g., to initialize the state of a module, or to start the main
+function of a program. So, pay attention to the warning F* raises when
+you have a top-level effect and make sure you really know what you're
+doing.
+
+Example: Untyped Lambda Calculus
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+In this section, we put together the various things we've learned
+about ``Dv`` cmputations to define several variants of an untyped
+lambda calculus.
+
+You can refer back to our prior development of the :ref:`simply typed
+lambda calculus <Part2_stlc>` if you need some basic background on the
+lambda calculus.
+
+Interpreting Deeply Embedded Lambda Terms
++++++++++++++++++++++++++++++++++++++++++
+
+We start by defining the syntax of untyped lambda terms, below.  The
+variables use the de Bruijn convention, where a index of a variable
+counts the number of lambda-binders to traverse to reach its binding
+occurrence. The ``Lam`` case just has the body of the lambda term,
+with no type annotation on the binder, and no explicit name for the
+variable.
+
+.. literalinclude:: ../code/Divergence.fst
+   :language: fstar
+   :start-after: //SNIPPET_START: deep_embedding_syntax$
+   :end-before: //SNIPPET_END: deep_embedding_syntax$
+
+As usual, we can define what it means to substitute a variable ``x``
+with a (closed) term ``v`` in ``t``---this is just a regular ``Tot``
+function.
+
+.. literalinclude:: ../code/Divergence.fst
+   :language: fstar
+   :start-after: //SNIPPET_START: deep_embedding_subst$
+   :end-before: //SNIPPET_END: deep_embedding_subst$
+
+Finally, we can define an interpreter for ``term``, which can
+(intentionally) loop infinitely, as is clear from the ``Dv`` type
+annotation.
+
+Exercise
+........
+
+This exercise is designed to show how you can prove non-trivial
+properties of ``Dv`` computations by giving them interesting dependent
+types.
+
+The substitution function defined here is only sound when the term
+being substituted is closed, otherwise, any free variables it has can
+be captured when substituted beneath a lambda.
+
+A term is closed if it satisfies this definition:
+
+.. literalinclude:: ../code/Part4.UTLCEx1.fst
+   :language: fstar
+   :start-after: //SNIPPET_START: closed$
+   :end-before: //SNIPPET_END: closed$
+
+Restrict the type of ``subst`` so that its argument is ``v : term {
+closed v }``---you will have to also revise the type of its other
+argument for the proof to work.
+
+Next, give the following type to the interpreter itself, proving that
+interpreting closed terms produces closed terms, or loops forever.
+
+.. literalinclude:: ../code/Part4.UTLCEx1.fst
+   :language: fstar
+   :start-after: //SNIPPET_START: interpret$
+   :end-before: //SNIPPET_END: interpret$
+
+.. container:: toggle
+
+    .. container:: header
+
+       **Answer**
+
+    .. literalinclude:: ../code/Part4.UTLCEx1.fst
+       :language: fstar
+
+Denoting Lambda Terms into an F* Recursive Type
++++++++++++++++++++++++++++++++++++++++++++++++
+                  
