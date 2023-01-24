@@ -146,7 +146,7 @@ of other types.
 While F* does not allow ``Tot`` computations to depend on ``Dv``
 computations, going the other way is perfectly fine. Intuitively,
 always terminating computations are potentially non-terminating. We
-can think of it like a *weakening* of the specification::
+can think of it like a *weakening* of the specification:
 
 .. code-block:: fstar
                 
@@ -371,6 +371,9 @@ interpreting closed terms produces closed terms, or loops forever.
 
     .. literalinclude:: ../code/Part4.UTLCEx1.fst
        :language: fstar
+
+--------------------------------------------------------------------------------
+
 
 Denoting Lambda Terms into an F* Recursive Type
 +++++++++++++++++++++++++++++++++++++++++++++++
