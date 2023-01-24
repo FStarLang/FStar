@@ -356,7 +356,7 @@ type src_typing (f:RT.fstar_top_env) : env -> term -> pure_comp -> Type =
       e:term ->
       c1:pure_comp_st ->
       c2:pure_comp_st ->
-      src_typing f g e1 c1 ->
+      src_typing f g e c1 ->
       lift_comp f g c1 c2 ->
       src_typing f g e c2
 
