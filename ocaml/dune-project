@@ -1,0 +1,8 @@
+(lang dune 3.0)
+(name fstar)
+(generate_opam_files true)
+
+(package
+  (name fstar)
+  (synopsis "The F* programming language and proof assistant")
+)

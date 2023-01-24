@@ -1,0 +1,15 @@
+(include_subdirs unqualified)
+(library
+ (name fstar_base)
+ (public_name fstar.base)
+ (libraries
+    batteries
+    zarith
+    stdint
+    yojson
+    ppxlib
+ )
+ (modes native)
+ (wrapped false)
+ (preprocess (pps ppx_deriving.show ppx_deriving_yojson))
+)
