@@ -351,6 +351,15 @@ type src_typing (f:RT.fstar_top_env) : env -> term -> pure_comp -> Type =
       universe_of f g t u ->
       src_typing f g e (return_comp_noeq u t)
 
+  | T_Lift:
+      g:env ->
+      e:term ->
+      c1:pure_comp_st ->
+      c2:pure_comp_st ->
+      src_typing f g e1 c1 ->
+      lift_comp f g c1 c2 ->
+      src_typing f g e c2
+
   | T_Bind:
       g:env ->
       e1:term ->
@@ -437,28 +446,6 @@ and bind_comp (f:RT.fstar_top_env) : env -> var -> pure_comp -> pure_comp -> pur
     y:var { None? (lookup g y) } ->      
     tot_typing f ((y, Inl (comp_res c2)) :: g) (open_term (comp_post c2) y) Tm_VProp ->
     bind_comp f g x c1 c2 (bind_comp_ghost_r_out c1 c2)
-
-  | Bind_lift_l :
-    g:env ->
-    x:var {None? (lookup g x)} ->
-    c1:pure_comp_st ->
-    c2:pure_comp_st ->
-    c1_lifted:pure_comp_st ->
-    lc:lift_comp f g c1 c1_lifted ->
-    c:pure_comp_st ->
-    bc:bind_comp f g x c1_lifted c2 c ->
-    bind_comp f g x c1 c2 c
-
-  | Bind_lift_r :
-    g:env ->
-    x:var {None? (lookup g x)} ->
-    c1:pure_comp_st ->
-    c2:pure_comp_st ->
-    c2_lifted:pure_comp_st ->
-    lc:lift_comp f ((x, Inl (comp_res c1))::g) c2 c2_lifted ->
-    c:pure_comp_st ->
-    bc:bind_comp f g x c1 c2_lifted c ->
-    bind_comp f g x c1 c2 c
 
 and lift_comp (f:RT.fstar_top_env) : env -> pure_comp -> pure_comp -> Type =
   | Lift_STAtomic_ST :
