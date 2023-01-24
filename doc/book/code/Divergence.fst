@@ -135,55 +135,26 @@ let loops () : Dv _ = interpret (App (Lam (App (Var 0) (Var 0)))
                                      (Lam (App (Var 0) (Var 0))))
 //SNIPPET_END: deep_embedding_interpreter$
 
-(* Explain: top-level effect warning *)
-let loops_alt = interpret (App (Lam (App (Var 0) (Var 0)))
-                               (Lam (App (Var 0) (Var 0))))
-
 (* Dv can also be mixed with recursive type definitions, e.g., 
    to give a a denotation for untyped lambda terms
    (Illustrating the interaction of Dv with recursive types &
     lack of positivity requirement) *)
+//SNIPPET_START: dyn$    
 noeq
 type dyn = 
+  | DErr  : string -> dyn
   | DInt  : int -> dyn
   | DFun  : (dyn -> Dv dyn) -> dyn
-  | Err   : string -> dyn
+//SNIPPET_END: dyn$    
 
+//SNIPPET_START: denote$    
+let ctx_t = nat -> dyn
 
-let max (x y:int) : int = if x < y then y else x
-
-let rec max_free (t:term)
-  : int
-  = match t with
-    | Var x -> x
-    | Int _ -> -1
-    | Lam t -> max_free t - 1
-    | App t0 t1 -> max (max_free t0) (max_free t1)
-let free (t:term) = max_free t
-
-let rec closed_lem (t:term) (offset:int { offset >= -1 })
-  : Lemma 
-    (requires closed' t offset)
-    (ensures free t <= offset)
-  = match t with
-    | Int _ -> ()
-    | Var _ -> ()
-    | Lam t -> closed_lem t (offset + 1)
-    | App t0 t1 ->
-      closed_lem t0 offset;
-      closed_lem t1 offset
-
-let ctx_t (i:int) = x:nat{x <= i} -> dyn
-
-let shift #i (ctx:ctx_t i) (v:dyn) 
-  : ctx_t (i + 1)
+let shift (ctx:ctx_t) (v:dyn) 
+  : ctx_t
   = fun n -> if n = 0 then v else ctx (n - 1)
 
-(* This is similar to the interpreter, but
-   "interprets" terms into the F* type dyn
-    rather than just reducing syntax to syntax *)
-let rec denote (t:term)
-               (ctx:ctx_t (free t))
+let rec denote (t:term) (ctx:ctx_t)
   : Dv dyn 
   = match t with
     | Var v -> ctx v
@@ -192,14 +163,9 @@ let rec denote (t:term)
     | App t0 t1 -> 
       match denote t0 ctx with
       | DFun f -> f (denote t1 ctx)
-      | Err msg -> Err msg
-      | DInt _ -> Err "Cannot apply an integer"
-
-let denote_closed (t:term { closed t }) 
-  : Dv dyn
-  = closed_lem t (-1);
-    denote t (fun _ -> false_elim ())
- 
+      | DErr msg -> DErr msg
+      | DInt _ -> DErr "Cannot apply an integer"
+//SNIPPET_END: denote$     
 
 
 (* You can also use dyn for shallowly embedded *)
@@ -208,72 +174,68 @@ let denote_closed (t:term { closed t })
    as in lisp, scheme etc. can be embedded in F* with dyn *)
 
 (* Some convenience constructors for literals *)
-let i (i:int) : dyn = DInt i
-let lam (f:dyn -> Dv dyn) : dyn = DFun f
 
+
+//SNIPPET_START: lift_int$
 (* Lifting operations on integers to operations on dyn *)
 let lift (op: int -> int -> int) (n m:dyn) : dyn
   = match n, m with
     | DInt i, DInt j -> DInt (op i j)
-    | _ -> Err "Expected integers"
-
+    | _ -> DErr "Expected integers"
 let mul = lift op_Multiply
 let sub = lift op_Subtraction
 let add = lift op_Addition
 let div (n m:dyn)
   = match n, m with
     | DInt i, DInt j -> 
-      if j = 0 then Err "Division by zero"
+      if j = 0 then DErr "Division by zero"
       else DInt (i / j)
-    | _ -> Err "Expected integers"
+    | _ -> DErr "Expected integers"
 let mod (n m:dyn)
   = match n, m with
     | DInt i, DInt j -> 
-      if j = 0 then Err "Division by zero"
+      if j = 0 then DErr "Division by zero"
       else DInt (i % j)
-    | _ -> Err "Expected integers"
+    | _ -> DErr "Expected integers"
+//SNIPPET_END: lift_int$
 
-
-(* Dynamically typed application *)
-let app (f:dyn) (x:dyn)
-  : Dv dyn
-  = match f with
-    | DFun f -> f x
-    | _ -> Err "Can only apply a function"
-
+//SNIPPET_START: branch_eq$
 (* Branching *)
 let if_ (d:dyn) (then_ else_:dyn) =
   match d with
   | DInt b -> 
     if b<>0 then then_ else else_
-  | _ -> Err "Can only branch on integers"
+  | _ -> DErr "Can only branch on integers"
 
 (* comparison *)
 let eq_ (d:dyn) (d':dyn)
   : dyn 
   = match d, d' with
     | DInt i, DInt j -> DInt (if i = j then 1 else 0)
-    | _ -> Err "Can only compare integers"
+    | _ -> DErr "Can only compare integers"
+//SNIPPET_END: branch_eq$
 
+//SNIPPET_START: app_fix$
+(* Dynamically typed application *)
+let app (f:dyn) (x:dyn)
+  : Dv dyn
+  = match f with
+    | DFun f -> f x
+    | _ -> DErr "Can only apply a function"
 (* general recursion *)
 let rec fix (f: (dyn -> Dv dyn) -> dyn -> Dv dyn) (n:dyn)
   : Dv dyn
   = f (fix f) n
-
-(* explain arity of termination checking annotations *)
-let rec fix_alt (f: (dyn -> Dv dyn) -> dyn -> Dv dyn) 
-  : Dv (dyn -> Dv dyn)
-  = f (fix_alt f)
+//SNIPPET_END: app_fix$
 
 (* Now, a sample program: a dynamically typed factorial
    within our embedded language *)
-let factorial
-  : dyn
-  = lam (fix (fun factorial n ->
-                 if_ (eq_ n (i 0))
-                     (i 1) 
-                     (mul n (factorial (sub n (i 1))))))
-        
+
+//SNIPPET_START: collatz_dyn$
+(* shorthands *)
+let i (i:int) : dyn = DInt i
+let lam (f:dyn -> Dv dyn) : dyn = DFun f
+(* a dynamically typed analog of collatz *)
 let collatz_dyn 
   : dyn 
   = lam (fix (fun collatz n ->
@@ -282,9 +244,14 @@ let collatz_dyn
                     (if_ (eq_ (mod n (i 2)) (i 0))
                          (collatz (div n (i 2)))
                          (collatz (add (mul n (i 3)) (i 1))))))
+//SNIPPET_END: collatz_dyn$
 
 (* Exercise: Extend `dyn` to include a denotation for lists
    revise collatz_dyn so that it returns a list, similar to the
    collatz at the top of this file *)
 
-let t : Type0 = x:int -> Dv Type0
+//SNIPPET_START: fix_alt$
+let rec fix_alt (f: (dyn -> Dv dyn) -> dyn -> Dv dyn) 
+  : Dv (dyn -> Dv dyn)
+  = f (fix_alt f)
+//SNIPPET_END: fix_alt$

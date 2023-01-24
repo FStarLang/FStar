@@ -333,6 +333,11 @@ Finally, we can define an interpreter for ``term``, which can
 (intentionally) loop infinitely, as is clear from the ``Dv`` type
 annotation.
 
+.. literalinclude:: ../code/Divergence.fst
+   :language: fstar
+   :start-after: //SNIPPET_START: deep_embedding_interpreter$
+   :end-before: //SNIPPET_END: deep_embedding_interpreter$
+                
 Exercise
 ........
 
@@ -377,4 +382,166 @@ interpreting closed terms produces closed terms, or loops forever.
 
 Denoting Lambda Terms into an F* Recursive Type
 +++++++++++++++++++++++++++++++++++++++++++++++
-                  
+
+We now look at a variation on the interpreter above to illustrate how
+(non-positive) recursive types using ``Dv`` can also be used to give a
+semantics to untyped lambda terms.
+
+Consider the type ``dyn`` shown below---it has a non-positive
+constructor ``DFun``. We can use this type to interpret untyped lambda
+terms into dynamically typed, potentially divergent, F* terms,
+showing, in a way, that untyped lambda calculus is no more expressive
+than F* with the ``Dv`` effect.
+
+.. literalinclude:: ../code/Divergence.fst
+   :language: fstar
+   :start-after: //SNIPPET_START: dyn$
+   :end-before: //SNIPPET_END: dyn$
+
+The program ``denote`` shown below gives a semantics to ``term`` using
+``dyn``. It is parameterized by a ``ctx : ctx_t``, which interprets
+the free variables of the term into ``dyn``. 
+
+.. literalinclude:: ../code/Divergence.fst
+   :language: fstar
+   :start-after: //SNIPPET_START: dyn$
+   :end-before: //SNIPPET_END: dyn$
+
+We look at the cases in detail:
+
+  * In the ``Var`` case, the intepretation just refers to the context.
+
+  * Integers constants in ``term`` are directly interpreted to
+    integers in ``dyn``.
+
+  * The case of ``Lam`` is the most interesting: An lambda abstraction
+    in ``term`` is interpreted as an F* function ``dyn -> Dv dyn``,
+    recursively calling the denotation function on the body when the
+    function is applied. Here's where we see the non-positivity of
+    ``DFun`` at play---it allows us to inject the function into the
+    ``dyn`` type.
+
+  * Finally, in the application case, we interpret a syntactic
+    application in ``term`` as function application in F* (unless the
+    head is not a function, in which case we have a type error).
+
+Exercise
+........
+
+This exercise is similar in spirit to the previous one and designed to
+show that you can prove some simple properties of ``denote`` by
+enriching its type.
+
+Can you prove that a closed term can be interpreted in an empty
+context?
+
+First, let's refine the type of contexts so that it only provides an
+interpretation to only some variables:
+
+.. literalinclude:: ../code/Part4.UTLCEx2.fst
+   :language: fstar
+   :start-after: //SNIPPET_START: ctx_t$
+   :end-before: //SNIPPET_END: ctx_t$
+
+Next, let's define ``free t`` to compute the greatest index of a free
+variable in a term.
+
+.. literalinclude:: ../code/Part4.UTLCEx2.fst
+   :language: fstar
+   :start-after: //SNIPPET_START: free$
+   :end-before: //SNIPPET_END: free$
+
+Can you give the same ``denote`` function shown earlier the following
+type?
+
+.. code-block:: fstar
+
+   val denote (t:term) (ctx:ctx_t (free t))
+     : Dv dyn  
+
+Next, define the empty context as shown below:
+
+.. literalinclude:: ../code/Part4.UTLCEx2.fst
+   :language: fstar
+   :start-after: //SNIPPET_START: empty_context$
+   :end-before: //SNIPPET_END: empty_context$
+
+Given a closed term ``t : term { closed t }``, where ``closed t =
+(free t = -1)``, can you use ``denote`` to give an interpretation to
+closed terms in the empty context?
+                
+
+.. container:: toggle
+
+    .. container:: header
+
+       **Answer**
+
+    .. literalinclude:: ../code/Part4.UTLCEx2.fst
+       :language: fstar
+
+--------------------------------------------------------------------------------
+
+Shallowly Embedded Dynamically Typed Programming
+++++++++++++++++++++++++++++++++++++++++++++++++
+
+In the previous example, we saw how the syntax of untyped lambda terms
+can be interpreted into the F* type ``dyn``. In this example, rather
+than going via the indirection of the syntax of lambda terms, we show
+how the type ``dyn`` can be used directly to embed within F* a small
+Turing complete, dynamically typed programming language.
+
+We can start by lifting the F* operations on integers and functions to
+(possibly failing) operations on ``dyn``.
+
+.. literalinclude:: ../code/Divergence.fst
+   :language: fstar
+   :start-after: //SNIPPET_START: lift_int$
+   :end-before: //SNIPPET_END: lift_int$
+
+We also encode provide operations to compare dyn-typed integers and to
+branch on them, treating ``0`` as ``false``.
+
+.. literalinclude:: ../code/Divergence.fst
+   :language: fstar
+   :start-after: //SNIPPET_START: branch_eq$
+   :end-before: //SNIPPET_END: branch_eq$
+
+For functions, we can provide combinators to apply functions and,
+importantly, a combinator ``fix`` that provides general recursion.
+
+.. literalinclude:: ../code/Divergence.fst
+   :language: fstar
+   :start-after: //SNIPPET_START: app_fix$
+   :end-before: //SNIPPET_END: app_fix$
+
+An aside on the arity of recursive functions: You may wonder why
+``fix`` is defined as shown, rather than ``fix_alt`` below, which
+removes a needless additional abstraction. The reason is that with
+``fix_alt``, to instruct F* to disable the termination checker on the
+recursive definition, we need an additional ``Dv`` annotation: indeed,
+evaluating ``fixalt f`` in a call-by-value semantics would result,
+unconditionally, in an infinite loop, whereas ``fix f`` would
+immediately return the lambda term ``fun n -> f (fix f) n``. In other
+words, eta reduction (or removing redundant function applications)
+does not preserve semantics in the presence of divergence.
+
+.. literalinclude:: ../code/Divergence.fst
+   :language: fstar
+   :start-after: //SNIPPET_START: fix_alt$
+   :end-before: //SNIPPET_END: fix_alt$
+                
+With that, we can program non-trivial dynamically typed, general
+recursive programs within F* itself, as seen below.
+
+.. literalinclude:: ../code/Divergence.fst
+   :language: fstar
+   :start-after: //SNIPPET_START: collatz_dyn$
+   :end-before: //SNIPPET_END: collatz_dyn$
+
+All of which is to illustrate that with general recursion and
+non-positive datatypes using ``Dv``, F* is a general-purpose
+programming language like ML, Haskell, Lisp, or Scheme, or other
+functional languages you may be familiar with. 
+
+

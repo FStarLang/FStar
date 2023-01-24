@@ -45,7 +45,6 @@ let rec subst (x:var)
 let rec interpret (t:term { closed t })
   : Dv (option (t:term { closed t }))
   = match t with
-    | Var _
     | Int _
     | Lam _ -> Some t
     | App t0 t1 ->
