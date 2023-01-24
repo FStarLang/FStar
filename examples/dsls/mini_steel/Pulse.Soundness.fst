@@ -10,6 +10,7 @@ open Pulse.Typing
 open Pulse.Elaborate
 open Pulse.Soundness.Common
 module Bind = Pulse.Soundness.Bind
+module Lift = Pulse.Soundness.Lift
 module Frame = Pulse.Soundness.Frame
 module STEquiv = Pulse.Soundness.STEquiv
 module Return = Pulse.Soundness.Return
@@ -131,7 +132,17 @@ let rec soundness (f:stt_env)
       let e_typing = soundness _ _ _ _ e_typing in
       Return.elab_return_noeq_typing t_typing e_typing
 
-    | T_Lift _ _ _ _ _ _ -> admit ()
+    | T_Lift _ e c1 c2 e_typing lc ->
+      (match lc with
+       | Lift_STAtomic_ST _ _ ->
+         assume (ln_c c1 /\ ln_c c2);
+         Lift.elab_lift_stt_atomic_typing f g
+           c1 c2 _ (soundness _ _ _ _ e_typing) lc
+       | Lift_STGhost_STAtomic _ _ (| reveal_a, reveal_a_typing |) ->
+         assume (ln_c c1 /\ ln_c c2);
+         Lift.elab_lift_stt_ghost_typing f g
+           c1 c2 _ (soundness _ _ _ _ e_typing) lc
+           _ (soundness _ _ _ _ reveal_a_typing))
 #pop-options
 
 let soundness_lemma
