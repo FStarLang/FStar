@@ -251,31 +251,9 @@ let elab_sub (c1 c2:pure_comp_st) (e:R.term) =
             mk_sub_stt_ghost u ty opened pre1 pre2 post1 post2 e
 
 #push-options "--z3rlimit_factor 4"
-let rec elab_lift #f #g #c1 #c2 (d:lift_comp f g c1 c2) (e:R.term)
-  : Tot R.term (decreases d) =
-
-  match d with
-  | Lift_STAtomic_ST _ _ ->
-    let t = elab_pure (comp_res c1) in
-    mk_lift_atomic_stt
-      (elab_universe (comp_u c1))
-      (elab_pure (comp_res c1))
-      t
-      (mk_abs t R.Q_Explicit (elab_pure (comp_post c1)))
-      e
-      
-  | Lift_STGhost_STAtomic _ _ (| reveal_a, reveal_a_typing |) ->
-    let t = elab_pure (comp_res c1) in
-    mk_lift_ghost_atomic
-      (elab_universe (comp_u c1))
-      t
-      (elab_pure (comp_inames c1))
-      (elab_pure (comp_pre c1))
-      (mk_abs t R.Q_Explicit (elab_pure (comp_post c1)))
-      e
-      (elab_src_typing reveal_a_typing)
-
-and elab_bind #f #g #x #c1 #c2 #c (bc:bind_comp f g x c1 c2 c) (e1 e2:R.term)
+let rec elab_bind #f #g #x #c1 #c2 #c
+  (bc:bind_comp f g x c1 c2 c)
+  (e1 e2:R.term)
   : Tot R.term (decreases bc) =
 
   let t1 = elab_pure (comp_res c1) in
@@ -328,13 +306,29 @@ and elab_bind #f #g #x #c1 #c2 #c (bc:bind_comp f g x c1 c2 c) (e1 e2:R.term)
       e1 e2
       (elab_src_typing reveal_b_typing)
 
-  | Bind_lift_l _ _ _ _ _ lc _ bc ->
-    let e1 = elab_lift lc e1 in
-    elab_bind bc e1 e2
+and elab_lift #f #g #c1 #c2 (d:lift_comp f g c1 c2) (e:R.term)
+  : Tot R.term (decreases d) =
 
-  | Bind_lift_r _ _ _ _ _ lc _ bc ->
-    let e2 = elab_lift lc e2 in
-    elab_bind bc e1 e2
+  match d with
+  | Lift_STAtomic_ST _ _ ->
+    let t = elab_pure (comp_res c1) in
+    mk_lift_atomic_stt
+      (elab_universe (comp_u c1))
+      (elab_pure (comp_res c1))
+      t
+      (mk_abs t R.Q_Explicit (elab_pure (comp_post c1)))
+      e
+      
+  | Lift_STGhost_STAtomic _ _ (| reveal_a, reveal_a_typing |) ->
+    let t = elab_pure (comp_res c1) in
+    mk_lift_ghost_atomic
+      (elab_universe (comp_u c1))
+      t
+      (elab_pure (comp_inames c1))
+      (elab_pure (comp_pre c1))
+      (mk_abs t R.Q_Explicit (elab_pure (comp_post c1)))
+      e
+      (elab_src_typing reveal_a_typing)
 
 and elab_src_typing
   (#f:RT.fstar_top_env)
@@ -385,6 +379,10 @@ and elab_src_typing
     | T_Equiv _ _ c1 c2 e_typing _ ->
       let e = elab_src_typing e_typing in
       elab_sub c1 c2 e
+
+    | T_Lift _ _ c1 c2 e_typing lc ->
+      let e = elab_src_typing e_typing in
+      elab_lift lc e
 #pop-options
 
 #push-options "--ifuel 2"
