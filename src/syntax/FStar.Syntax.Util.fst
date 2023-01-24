@@ -547,6 +547,9 @@ let equal_if = function
     | true -> Equal
     | _ -> Unknown
 
+// Promote a bool to an eq_result, taking a false to bet NotEqual.
+// This is only useful for fully decidable equalities.
+// Use with care, see note about Const_real below and #2806.
 let equal_iff = function
     | true -> Equal
     | _ -> NotEqual
@@ -611,14 +614,31 @@ let rec eq_tm (t1:term) (t2:term) : eq_result =
     | Tm_fvar f, Tm_fvar g -> equal_if (fv_eq f g)
 
     | Tm_uinst(f, us), Tm_uinst(g, vs) ->
+      // If the fvars and universe instantiations match, then Equal,
+      // otherwise Unknown.
       eq_and (eq_tm f g) (fun () -> equal_if (eq_univs_list us vs))
 
-    // Ranges should be opaque, even to the normalizer. c.f. #1312
-    | Tm_constant (Const_range _), _
-    | _, Tm_constant (Const_range _) ->
+    | Tm_constant (Const_range _), Tm_constant (Const_range _) ->
+      // Ranges should be opaque, even to the normalizer. c.f. #1312
       Unknown
 
+    | Tm_constant (Const_real r1), Tm_constant (Const_real r2) ->
+      // We cannot decide equality of reals. Use a conservative approach here.
+      // If the strings match, they are equal, otherwise we don't know. If this
+      // goes via the eq_iff case below, it will falsely claim that "1.0R" and
+      // "01.R" are different, since eq_const does not canonizalize the string
+      // representations.
+      equal_if (r1 = r2)
+
     | Tm_constant c, Tm_constant d ->
+      // NOTE: this relies on the fact that eq_const *correctly decides*
+      // semantic equality of constants. This needs some care. For instance,
+      // since integers are represented by a string, eq_const needs to take care
+      // of ignoring leading zeroes, and match 0 with -0. An exception to this
+      // are real number literals (handled above). See #2806.
+      //
+      // Currently (24/Jan/23) this seems to be correctly implemented, but
+      // updates should be done with care.
       equal_iff (eq_const c d)
 
     | Tm_uvar (u1, ([], _)), Tm_uvar (u2, ([], _)) ->
