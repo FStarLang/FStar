@@ -458,11 +458,6 @@ let comp_post (c:comp { stateful_comp c }) =
   | C_STAtomic _ s
   | C_STGhost _ s -> s.post
 
-let comp_inames (c:comp { C_STAtomic? c \/ C_STGhost? c }) : term =
-  match c with
-  | C_STAtomic inames _
-  | C_STGhost inames _ -> inames
-
 let rec close_open_inverse (t:term) (x:var { ~(x `Set.mem` freevars t) } )
   : Lemma (ensures close_term (open_term t x) x== t)
           (decreases t)
