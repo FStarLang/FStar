@@ -473,7 +473,7 @@ let optimized_haseq_scheme (sig_bndle:sigelt) (tcs:list sigelt) (datas:list sige
   let ses = List.fold_left (fun (l:list sigelt) (lid, fml) ->
     let fml = SS.close_univ_vars us fml in
     l @ [ { sigel = Sig_assume (lid, us, fml);
-            sigquals = [];
+            sigquals = [InternalAssumption];
             sigrng = Range.dummyRange;
             sigmeta = default_sigmeta;
             sigattrs = [];
@@ -615,7 +615,7 @@ let unoptimized_haseq_scheme (sig_bndle:sigelt) (tcs:list sigelt) (datas:list si
 
   let se =  //FIXME: docs?
     { sigel = Sig_assume (get_haseq_axiom_lid lid, us, fml);
-              sigquals = [];
+              sigquals = [InternalAssumption];
               sigrng = Range.dummyRange;
               sigmeta = default_sigmeta;
               sigattrs = [];
