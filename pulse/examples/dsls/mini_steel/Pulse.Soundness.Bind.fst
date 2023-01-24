@@ -43,7 +43,9 @@ let inst_bind_t1 #u1 #u2 #g #head
                          t1);
 
     d
-#pop-options
+#pop-options    
+
+
 
 let inst_bind_t2 #u1 #u2 #g #head #t1
                    (head_typing: RT.typing g head (bind_type_t1 u1 u2 t1))
@@ -96,9 +98,8 @@ let inst_bind_g #u1 #u2 #g #head #t1 #t2 #pre #post1 #post2
     in
     admit();
     d
-#pop-options
 
-#push-options "--z3rlimit_factor 8"
+
 let elab_bind_typing (f:stt_env)
                      (g:env)
                      (c1 c2 c:ln_comp)
@@ -113,14 +114,13 @@ let elab_bind_typing (f:stt_env)
                      (post2_typing: RT.typing (extend_env_l f g) 
                                               (elab_comp_post c2)
                                               (post2_type_bind (elab_pure (comp_res c2))))
-  = assume (C_ST? c1 /\ C_ST? c2);
+  : GTot (RT.typing (extend_env_l f g) (elab_bind c1 c2 r1 r2) (elab_pure_comp c))
+  = if C_ST? c1 && C_ST? c2 then
     let rg = extend_env_l f g in
     let u1 = elab_universe (comp_u c1) in
     let u2 = elab_universe (comp_u c2) in
-    let bind_lid = mk_steel_wrapper_lid "bind_stt" in
-    let bind_fv = R.pack_fv bind_lid in
-    let head = R.pack_ln (R.Tv_UInst bind_fv [u1;u2]) in
-    assume (RT.lookup_fvar_uinst rg bind_fv [u1; u2] == Some (bind_type u1 u2));
+    let head = bind_univ_inst u1 u2 in
+    assert (RT.lookup_fvar_uinst rg bind_fv [u1; u2] == Some (bind_type u1 u2));
     let head_typing : RT.typing _ _ (bind_type u1 u2) = RT.T_UInst rg bind_fv [u1;u2] in
     let (| _, c1_typing |) = RT.type_correctness _ _ _ r1_typing in
     let t1_typing, pre_typing, post_typing = inversion_of_stt_typing _ _ _ _ c1_typing in
@@ -151,7 +151,7 @@ let elab_bind_typing (f:stt_env)
                                                           [bound_var 0, R.Q_Explicit];
                                                 elab_comp_post c2]))
       = RT.(T_Sub _ _ _ _ r2_typing (ST_Equiv _ _ _ (equiv_arrow _ _ _ _ _ _))) in
-    let d : RT.typing _ (elab_bind bc r1 r2) _ = 
+    let d : RT.typing _ (elab_bind c1 c2 r1 r2) _ = 
        inst_bind_g 
         (inst_bind_f
           (inst_bind_post2
@@ -167,12 +167,4 @@ let elab_bind_typing (f:stt_env)
         g_typing
     in
     d
-#pop-options
-
-let elab_bind_ghost_l_typing f g c1 c2 c x r1 r1_typing r2 r2_typing bc t2_typing post2_typing
-  reveal_a reveal_a_typing =
-  admit ()
-
-let elab_bind_ghost_r_typing f g c1 c2 c x r1 r1_typing r2 r2_typing bc t2_typing post2_typing
-  reveal_b reveal_b_typing =
-  admit ()
+    else admit ()

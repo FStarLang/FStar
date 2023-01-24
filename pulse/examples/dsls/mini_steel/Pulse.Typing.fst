@@ -220,14 +220,11 @@ let add_frame (s:pure_comp_st) (frame:pure_term)
 
 let close_pure_comp (c:pure_comp) (x:var) : pure_comp = close_comp c x
 
-//
-// TODO: there is a observability flag upcoming in the underlying steel framework
-//       the bind will then also allow for (statomic unobservable, statomic observable)
-//       and the symmetric one
-//
 let bind_comp_compatible (c1 c2:pure_comp_st) : prop =
   match c1, c2 with
   | C_STGhost inames1 _, C_STGhost inames2 _ -> inames1 == inames2
+  | C_STAtomic inames _, C_ST _
+  | C_ST _, C_STAtomic inames _ -> inames == Tm_EmpInames
   | C_ST _, C_ST _ -> True
   | _, _ -> False
 
@@ -236,16 +233,25 @@ let bind_comp_pre (x:var) (c1 c2:pure_comp_st) : prop =
   (~ (x `Set.mem` freevars (comp_post c2))) /\  //x doesn't escape in the result type
   bind_comp_compatible c1 c2
 
+//
+// Surprising that this proof requires rlimit tweak
+//
+#push-options "--z3rlimit_factor 2"
 let bind_comp_out (c1:pure_comp_st) (c2:pure_comp_st{bind_comp_compatible c1 c2})
   : pure_comp_st =
   let s = {u=comp_u c2; res=comp_res c2; pre=comp_pre c1; post=comp_post c2} in
   match c1, c2 with
   | C_STGhost inames _, C_STGhost _ _ -> C_STGhost inames s
+
+  | C_STAtomic _ _, C_ST _
+  | C_ST _, C_STAtomic _ _
   | C_ST _, C_ST _ -> C_ST s
+#pop-options
 
 let bind_comp_ghost_l_compatible (c1 c2:pure_comp_st) : prop =
   match c1, c2 with
   | C_STGhost inames1 _, C_STAtomic inames2 _ -> inames1 == inames2
+  | C_STGhost inames _, C_ST _ -> inames == Tm_EmpInames
   | _, _ -> False
 
 let bind_comp_ghost_l_pre (x:var) (c1 c2:pure_comp_st) : prop =
@@ -253,15 +259,19 @@ let bind_comp_ghost_l_pre (x:var) (c1 c2:pure_comp_st) : prop =
   (~ (x `Set.mem` freevars (comp_post c2))) /\  //x doesn't escape in the result type
   bind_comp_ghost_l_compatible c1 c2
 
+#push-options "--z3rlimit_factor 2"
 let bind_comp_ghost_l_out (c1:pure_comp_st) (c2:pure_comp_st{bind_comp_ghost_l_compatible c1 c2})
   : pure_comp_st =
   let s = {u=comp_u c2; res=comp_res c2; pre=comp_pre c1; post=comp_post c2} in
   match c1, c2 with
   | C_STGhost inames _, C_STAtomic _ _ -> C_STAtomic inames s
+  | C_STGhost _ _, C_ST _ -> C_ST s
+#pop-options
 
 let bind_comp_ghost_r_compatible (c1 c2:pure_comp_st) : prop =
   match c1, c2 with
   | C_STAtomic inames1 _, C_STGhost inames2 _ -> inames1 == inames2
+  | C_ST _, C_STGhost inames _ -> inames == Tm_EmpInames
   | _, _ -> False
 
 let bind_comp_ghost_r_pre (x:var) (c1 c2:pure_comp_st) : prop =
@@ -269,11 +279,14 @@ let bind_comp_ghost_r_pre (x:var) (c1 c2:pure_comp_st) : prop =
   (~ (x `Set.mem` freevars (comp_post c2))) /\  //x doesn't escape in the result type
   bind_comp_ghost_r_compatible c1 c2
 
+#push-options "--z3rlimit_factor 2"
 let bind_comp_ghost_r_out (c1:pure_comp_st) (c2:pure_comp_st{bind_comp_ghost_r_compatible c1 c2})
   : pure_comp_st =
   let s = {u=comp_u c2; res=comp_res c2; pre=comp_pre c1; post=comp_post c2} in
   match c1, c2 with
   | C_STAtomic inames _, C_STGhost _ _ -> C_STAtomic inames s
+  | C_ST _, C_STGhost _ _ -> C_ST s
+#pop-options
 
 let st_equiv_pre (c1 c2:pure_comp_st) : prop =
   comp_u c1 == comp_u c2 /\ comp_res c1 == comp_res c2 /\
@@ -285,6 +298,7 @@ let st_equiv_pre (c1 c2:pure_comp_st) : prop =
      inames1 == inames2
    | _, _ -> False)
 
+let non_informative_witness_lid = mk_steel_wrapper_lid "non_informative_witness"
 let non_informative_witness_t (u:universe) (t:pure_term) : pure_term =
   Tm_PureApp (Tm_UInst non_informative_witness_lid [u])
              None
@@ -403,7 +417,7 @@ and universe_of (f:RT.fstar_top_env) (g:env) (t:term) (u:universe) =
   tot_typing f g t (Tm_Type u)
 
 and bind_comp (f:RT.fstar_top_env) : env -> var -> pure_comp -> pure_comp -> pure_comp -> Type =
-  | Bind_comp :  // (C_ST and C_ST) or (C_STGhost and C_STGhost)
+  | Bind_comp :
     g:env ->
     x:var { None? (lookup g x) } ->
     c1:pure_comp_st ->
@@ -414,63 +428,30 @@ and bind_comp (f:RT.fstar_top_env) : env -> var -> pure_comp -> pure_comp -> pur
     tot_typing f ((y, Inl (comp_res c2)) :: g) (open_term (comp_post c2) y) Tm_VProp ->
     bind_comp f g x c1 c2 (bind_comp_out c1 c2)
 
-  | Bind_comp_ghost_l :  // (C_STGhost and C_STAtomic)
+  | Bind_comp_ghost_l :
     g:env ->
     x:var { None? (lookup g x) } ->
     c1:pure_comp_st ->
     c2:pure_comp_st {bind_comp_ghost_l_pre x c1 c2} ->
-    non_informative_c1:(w:pure_term & src_typing f g w (C_Tot (non_informative_witness_t (comp_u c1) (comp_res c1)))) ->
+    non_informative_c1:(w:term & tot_typing f g w (non_informative_witness_t (comp_u c1) (comp_res c1))) ->
     universe_of f g (comp_res c2) (comp_u c2) ->
     //or in the result post; free var check isn't enough; we need typability
     y:var { None? (lookup g y) } ->      
     tot_typing f ((y, Inl (comp_res c2)) :: g) (open_term (comp_post c2) y) Tm_VProp ->
     bind_comp f g x c1 c2 (bind_comp_ghost_l_out c1 c2)
 
-  | Bind_comp_ghost_r :  // (C_STAtomic and C_STGhost)
+  | Bind_comp_ghost_r :
     g:env ->
     x:var { None? (lookup g x) } ->
     c1:pure_comp_st ->
     c2:pure_comp_st {bind_comp_ghost_r_pre x c1 c2} ->
-    non_informative_c2:(w:pure_term & src_typing f g w (C_Tot (non_informative_witness_t (comp_u c2) (comp_res c2)))) ->
+    non_informative_c2:(w:term & tot_typing f g w (non_informative_witness_t (comp_u c2) (comp_res c2))) ->
     universe_of f g (comp_res c2) (comp_u c2) ->
     //or in the result post; free var check isn't enough; we need typability
     y:var { None? (lookup g y) } ->      
     tot_typing f ((y, Inl (comp_res c2)) :: g) (open_term (comp_post c2) y) Tm_VProp ->
     bind_comp f g x c1 c2 (bind_comp_ghost_r_out c1 c2)
 
-  | Bind_lift_l :
-    g:env ->
-    x:var {None? (lookup g x)} ->
-    c1:pure_comp_st ->
-    c2:pure_comp_st ->
-    c1_lifted:pure_comp_st ->
-    lc:lift_comp f g c1 c1_lifted ->
-    c:pure_comp_st ->
-    bc:bind_comp f g x c1_lifted c2 c ->
-    bind_comp f g x c1 c2 c
-
-  | Bind_lift_r :
-    g:env ->
-    x:var {None? (lookup g x)} ->
-    c1:pure_comp_st ->
-    c2:pure_comp_st ->
-    c2_lifted:pure_comp_st ->
-    lc:lift_comp f ((x, Inl (comp_res c1))::g) c2 c2_lifted ->
-    c:pure_comp_st ->
-    bc:bind_comp f g x c1 c2_lifted c ->
-    bind_comp f g x c1 c2 c
-
-and lift_comp (f:RT.fstar_top_env) : env -> pure_comp -> pure_comp -> Type =
-  | Lift_STAtomic_ST :
-    g:env ->
-    c:pure_comp_st{C_STAtomic? c /\ comp_inames c == Tm_EmpInames} ->
-    lift_comp f g c (C_ST (st_comp_of_comp c))
-
-  | Lift_STGhost_STAtomic :
-    g:env ->
-    c:pure_comp_st{C_STGhost? c} ->
-    non_informative_c:(w:pure_term & src_typing f g w (C_Tot (non_informative_witness_t (comp_u c) (comp_res c)))) ->
-    lift_comp f g c (C_STAtomic (comp_inames c) (st_comp_of_comp c))
 
 and st_equiv (f:RT.fstar_top_env) : env -> pure_comp -> pure_comp -> Type =
   | ST_VPropEquiv :
