@@ -73,8 +73,9 @@ let elab_frame_typing (f:stt_env)
     let frame_typing = tot_typing_soundness frame_typing in
     let rg = extend_env_l f g in
     let u = elab_universe (comp_u c) in
-    let head = frame_univ_inst u in
-    assert (RT.lookup_fvar_uinst rg frame_fv [u] == Some (frame_type u));
+    let frame_fv = R.pack_fv (mk_steel_wrapper_lid "frame_stt") in
+    let head = R.pack_ln (R.Tv_UInst frame_fv [u]) in
+    assume (RT.lookup_fvar_uinst rg frame_fv [u] == Some (frame_type u));
     let head_typing : RT.typing _ _ (frame_type u) = RT.T_UInst rg frame_fv [u] in
     let (| _, c_typing |) = RT.type_correctness _ _ _ e_typing in
     let t_typing, pre_typing, post_typing = inversion_of_stt_typing _ _ _ _ c_typing in

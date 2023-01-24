@@ -71,8 +71,14 @@ let emp_inames_tm : R.term =
   `(FStar.Ghost.hide #(Steel.Memory.inames) (FStar.Set.empty #Steel.Memory.iname))
 
 let mk_abs ty qual t : R.term =  R.pack_ln (R.Tv_Abs (binder_of_t_q ty qual) t)
-
 let mk_abs_with_name s ty qual t : R.term =  R.pack_ln (R.Tv_Abs (binder_of_t_q_s ty qual s) t)
+
+let non_informative_witness_lid = mk_steel_wrapper_lid "non_informative_witness"
+let non_informative_witness_rt (u:R.universe) (a:R.term) : R.term =
+  let open R in
+  let t = pack_ln (Tv_UInst (pack_fv non_informative_witness_lid) [u]) in
+  let t = pack_ln (Tv_App t (a, Q_Explicit)) in
+  t
 
 let rec elab_universe (u:universe)
   : Tot R.universe
