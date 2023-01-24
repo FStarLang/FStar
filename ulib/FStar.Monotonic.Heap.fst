@@ -69,9 +69,12 @@ let sel_tot #a #rel h r =
   let Some (| _, _, _, x |) = h.memory r.addr in
   x
 
+assume val contains_bool (#a:Type0) (#rel:preorder a) (h:heap) (r:mref a rel)
+  : GTot (b:bool{b <==> (h `contains` r)})
+
 let sel #a #rel h r =
-  if FStar.StrongExcludedMiddle.strong_excluded_middle (h `contains` r) then
-    sel_tot #a h r
+  if h `contains_bool` r
+  then sel_tot #a h r
   else r.init
 
 let upd_tot' (#a: Type0) (#rel: preorder a) (h: heap) (r: mref a rel) (x: a) =
@@ -82,7 +85,7 @@ let upd_tot' (#a: Type0) (#rel: preorder a) (h: heap) (r: mref a rel) (x: a) =
 let upd_tot #a #rel h r x = upd_tot' h r x
 
 let upd #a #rel h r x =
-  if FStar.StrongExcludedMiddle.strong_excluded_middle (h `contains` r)
+  if h `contains_bool` r
   then upd_tot' h r x
   else
     if r.addr >= h.next_addr
