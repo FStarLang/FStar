@@ -10,13 +10,6 @@ open Pulse.Typing
 open Pulse.Elaborate
 open Pulse.Soundness.Common
 
-let elab_frame (c:pure_comp { stateful_comp c }) (frame:pure_term) (e:R.term) =
-  if C_ST? c
-  then
-    let C_ST s = c in
-    Pulse.Elaborate.mk_frame s.u (elab_pure s.res) (elab_pure s.pre) (elab_comp_post c) (elab_pure frame) e
-  else admit ()
-
 val elab_frame_typing (f:stt_env)
                       (g:env)
                       (e:R.term)
