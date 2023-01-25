@@ -16,5 +16,5 @@ FSTAR_REALIZED_MODULES=All BaseTypes Buffer Bytes Char CommonST Constructive Dyn
 
 NOEXTRACT_STEEL_MODULES = -Steel -FStar.MSTTotal -FStar.MST -FStar.NMSTTotal -FStar.NMST
 
-NOEXTRACT_MODULES=$(addprefix -FStar., $(FSTAR_REALIZED_MODULES) Printf) \
+NOEXTRACT_MODULES:=$(addprefix -FStar., $(FSTAR_REALIZED_MODULES) Printf) \
   -LowStar.Printf +FStar.List.Tot.Properties +FStar.Int.Cast.Full $(NOEXTRACT_STEEL_MODULES)

@@ -101,6 +101,7 @@ dune-snapshot: generated-files
 	mkdir -p $(DUNE_SNAPSHOT)/fstar-runtime/generated
 	for f in $(SRC_INCLUDES) ; do cp ../../$$f/*.ml $(DUNE_SNAPSHOT)/fstar-runtime ; done
 	cp *.ml $(DUNE_SNAPSHOT)/fstar-runtime/generated
+	rm -rf $(DUNE_SNAPSHOT)/fstar-runtime/generated/FStar_Pervasives.ml
 	rm -rf $(DUNE_SNAPSHOT)/fstar-runtime/generated/get_branch.ml
 	mkdir -p $(DUNE_SNAPSHOT)/fstar-tests
 	cp ../../src/tests/ml/*.ml $(DUNE_SNAPSHOT)/fstar-tests

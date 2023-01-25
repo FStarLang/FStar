@@ -38,6 +38,7 @@ dune-base-snapshot: $(INTFILES)
 	mkdir -p $(DUNE_SNAPSHOT)/fstar-base/generated
 	cp $(INTFILES) $(DUNE_SNAPSHOT)/fstar-base/generated
 	cp $(filter-out $(INTFILES) $(ML_NOT_IN_BASE),$(wildcard *.ml *.mli)) $(DUNE_SNAPSHOT)/fstar-base
+	cp ../../src/ocaml-output/FStar_Pervasives.ml $(DUNE_SNAPSHOT)/fstar-base/generated
 
 .PHONY: clean-intfiles
 clean-intfiles:

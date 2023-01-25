@@ -3,6 +3,7 @@
 FSTAR_HOME=..
 
 include ml/Makefile.realized
+NOEXTRACT_MODULES += +FStar.Pervasives
 
 #AR: 01/03
 NOEXTRACT_FILES=$(wildcard experimental/Steel.*.fst experimental/Steel.*.fsti)
@@ -55,3 +56,4 @@ handwritten-tac:
 all-ml: $(ALL_ML_FILES)
 
 dune-snapshot: all-ml handwritten handwritten-tac
+	mv $(DUNE_SNAPSHOT)/fstar-stdlib/generated/FStar_Pervasives.ml $(DUNE_SNAPSHOT)/fstar-base/generated/
