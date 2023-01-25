@@ -69,6 +69,14 @@ let mk_bind (f:RT.fstar_top_env) (g:env)
       (| Tm_Bind e1 e2, _, T_Bind _ e1 e2 _ _ _ _ d_e1 d_c1res d_e2 bc |)
     end
     else T.fail "Cannot compose atomic with non-emp opened invariants with stt"
+  | C_STGhost inames1 _, C_STAtomic inames2 _ ->
+    if inames1 = inames2
+    then begin
+      let w = get_non_informative_witness f g (comp_u c1) (comp_res c1) in
+      let bc = Bind_comp_ghost_l g x c1 c2 w res_typing x post_typing in
+      (| Tm_Bind e1 e2, _, T_Bind _ e1 e2 _ _ _ _ d_e1 d_c1res d_e2 bc |)
+    end
+    else T.fail "Cannot compose ghost and atomic with different opened invariants"
   | C_ST _, C_STAtomic inames _ ->
     if inames = Tm_EmpInames
     then begin

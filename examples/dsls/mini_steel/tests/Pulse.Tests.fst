@@ -120,3 +120,13 @@ let warmup (x:int) = assert (x + 1 > x)
       read_atomic r1 n1 full_perm
     )
 )))
+
+%splice_t[ghost_read_atomic] (check (`(
+  fun (r:ref u32) (n:erased u32) ->
+    (expects (pts_to r full_perm n))
+    (provides (fun _ -> pts_to r full_perm n))
+    (
+      let x = ghost_noop r n full_perm in
+      read_atomic r n full_perm
+    )
+)))

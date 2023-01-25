@@ -199,3 +199,5 @@ let read_atomic r n p =
   fun _ -> R.atomic_read_u32 r
 
 let read_explicit r n p = read r #n #p
+
+let ghost_noop _ _ _ = fun _ -> noop ()

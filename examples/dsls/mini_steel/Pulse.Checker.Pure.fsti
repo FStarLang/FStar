@@ -43,3 +43,6 @@ val check_vprop (f:RT.fstar_top_env)
                 (g:env)
                 (t:term)
   : T.Tac (t:pure_term & _:tot_typing f g t Tm_VProp{is_pure_term t})
+
+val get_non_informative_witness (f:RT.fstar_top_env) (g:env) (u:universe) (t:pure_term)
+  : T.Tac (e:pure_term & src_typing f g e (C_Tot (non_informative_witness_t u t)))
