@@ -1304,7 +1304,8 @@ let (optimized_haseq_scheme :
                                                     =
                                                     FStar_Compiler_Range.dummyRange;
                                                   FStar_Syntax_Syntax.sigquals
-                                                    = [];
+                                                    =
+                                                    [FStar_Syntax_Syntax.InternalAssumption];
                                                   FStar_Syntax_Syntax.sigmeta
                                                     =
                                                     FStar_Syntax_Syntax.default_sigmeta;
@@ -1617,7 +1618,8 @@ let (unoptimized_haseq_scheme :
                        FStar_Syntax_Syntax.sigel = uu___2;
                        FStar_Syntax_Syntax.sigrng =
                          FStar_Compiler_Range.dummyRange;
-                       FStar_Syntax_Syntax.sigquals = [];
+                       FStar_Syntax_Syntax.sigquals =
+                         [FStar_Syntax_Syntax.InternalAssumption];
                        FStar_Syntax_Syntax.sigmeta =
                          FStar_Syntax_Syntax.default_sigmeta;
                        FStar_Syntax_Syntax.sigattrs = [];

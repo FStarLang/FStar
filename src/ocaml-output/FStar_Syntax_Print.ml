@@ -289,6 +289,7 @@ let (qual_to_string : FStar_Syntax_Syntax.qualifier -> Prims.string) =
   fun uu___ ->
     match uu___ with
     | FStar_Syntax_Syntax.Assumption -> "assume"
+    | FStar_Syntax_Syntax.InternalAssumption -> "internal_assume"
     | FStar_Syntax_Syntax.New -> "new"
     | FStar_Syntax_Syntax.Private -> "private"
     | FStar_Syntax_Syntax.Unfold_for_unification_and_vcgen -> "unfold"

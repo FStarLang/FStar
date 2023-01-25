@@ -3036,13 +3036,20 @@ let (tc_decl' :
                                 (se2.FStar_Syntax_Syntax.sigopts)
                             }], [], env0))))
            | FStar_Syntax_Syntax.Sig_assume (lid, uvs, t) ->
-               ((let uu___3 =
-                   let uu___4 =
-                     let uu___5 = FStar_Syntax_Print.lid_to_string lid in
-                     FStar_Compiler_Util.format1
-                       "Admitting a top-level assumption %s" uu___5 in
-                   (FStar_Errors.Warning_WarnOnUse, uu___4) in
-                 FStar_Errors.log_issue r uu___3);
+               (if
+                  Prims.op_Negation
+                    (FStar_Compiler_List.contains
+                       FStar_Syntax_Syntax.InternalAssumption
+                       se2.FStar_Syntax_Syntax.sigquals)
+                then
+                  (let uu___3 =
+                     let uu___4 =
+                       let uu___5 = FStar_Syntax_Print.lid_to_string lid in
+                       FStar_Compiler_Util.format1
+                         "Admitting a top-level assumption %s" uu___5 in
+                     (FStar_Errors.Warning_WarnOnUse, uu___4) in
+                   FStar_Errors.log_issue r uu___3)
+                else ();
                 (let env1 = FStar_TypeChecker_Env.set_range env r in
                  let uu___3 =
                    let uu___4 = do_two_phases env1 in
@@ -4565,7 +4572,7 @@ let (tc_decls :
                ([], env) ses) in
       match uu___ with
       | (ses1, env1) -> ((FStar_Compiler_List.rev_append ses1 []), env1)
-let (uu___922 : unit) =
+let (uu___923 : unit) =
   FStar_Compiler_Effect.op_Colon_Equals tc_decls_knot
     (FStar_Pervasives_Native.Some tc_decls)
 let (snapshot_context :
