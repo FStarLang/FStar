@@ -184,7 +184,7 @@ let check' (t:R.term) (g:RT.fstar_top_env)
   = match translate_term t with
     | Inr msg -> T.fail (Printf.sprintf "Failed to translate term: %s" msg)
     | Inl t -> 
-      // T.print (Printf.sprintf "Translated term is\n%s\n" (P.term_to_string t));
+      T.print (Printf.sprintf "Translated term is\n%s\n" (P.term_to_string t));
       main t Tm_Emp g
 
 [@@plugin]

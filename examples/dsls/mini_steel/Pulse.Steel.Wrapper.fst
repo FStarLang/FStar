@@ -194,3 +194,6 @@ let write r x #n
   = fun _ ->
     let _ = R.write r x in
     rewrite _ (R.pts_to r full_perm (hide x))
+
+let read_atomic r n p =
+  fun _ -> R.atomic_read_u32 r
