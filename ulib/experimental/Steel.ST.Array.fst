@@ -535,3 +535,19 @@ let compare
 
 let intro_fits_u32 () = H.intro_fits_u32 ()
 let intro_fits_u64 () = H.intro_fits_u64 ()
+
+let ptrdiff #_ #p0 #p1 #s0 #s1 a0 a1 =
+  rewrite
+    (pts_to a0 _ _)
+    (H.pts_to a0 p0 (seq_map raise s0));
+  rewrite
+    (pts_to a1 _ _)
+    (H.pts_to a1 p1 (seq_map raise s1));
+  let res = H.ptrdiff a0 a1 in
+  rewrite
+    (H.pts_to a1 _ _)
+    (pts_to a1 _ _);
+  rewrite
+    (H.pts_to a0 _ _)
+    (pts_to a0 _ _);
+  return res

@@ -186,6 +186,7 @@ let univ_names_to_string us = List.map (fun x -> (string_of_id x)) us |> String.
 
 let qual_to_string = function
   | Assumption            -> "assume"
+  | InternalAssumption    -> "internal_assume"
   | New                   -> "new"
   | Private               -> "private"
   | Unfold_for_unification_and_vcgen  -> "unfold"

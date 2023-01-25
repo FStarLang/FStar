@@ -7100,8 +7100,9 @@ let (check_sigelt_quals :
                    FStar_Compiler_Effect.op_Bar_Greater quals
                      (FStar_Compiler_Util.for_all
                         (fun x ->
-                           (visibility x) ||
-                             (x = FStar_Syntax_Syntax.Assumption))) in
+                           ((visibility x) ||
+                              (x = FStar_Syntax_Syntax.Assumption))
+                             || (x = FStar_Syntax_Syntax.InternalAssumption))) in
                  Prims.op_Negation uu___7 in
                if uu___6 then err'1 () else ()
            | FStar_Syntax_Syntax.Sig_new_effect uu___5 ->
