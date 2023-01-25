@@ -197,3 +197,5 @@ let write r x #n
 
 let read_atomic r n p =
   fun _ -> R.atomic_read_u32 r
+
+let read_explicit r n p = read r #n #p

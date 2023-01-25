@@ -106,5 +106,8 @@ let warmup (x:int) = assert (x + 1 > x)
   fun (r:ref u32) (n:erased u32) ->
     (expects (pts_to r full_perm n))
     (provides (fun _ -> pts_to r full_perm n))
-    (read_atomic r n full_perm)
+    (
+      let x = read_atomic r n full_perm in
+      read_explicit r n full_perm
+    )
 )))
