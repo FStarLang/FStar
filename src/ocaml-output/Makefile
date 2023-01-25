@@ -108,7 +108,9 @@ dune-snapshot: generated-files
 	+if test -x $(FSTAR_HOME)/bin/fstar.exe ; then \
 	  $(MAKE) -C ../../ulib && \
 	  mkdir -p $(DUNE_SNAPSHOT)/fstar-stdlib/generated && \
-	  $(MAKE) -C ../../ulib -f Makefile.extract-stdlib dune-snapshot ; \
+	  $(MAKE) -C ../../ulib -f Makefile.extract-stdlib dune-snapshot && \
+	  mkdir -p $(DUNE_SNAPSHOT)/fstar-taclib/generated && \
+	  $(MAKE) -C ../../ulib -f Makefile.extract-taclib dune-snapshot ; \
 	fi
 
 # https://stackoverflow.com/questions/38294095/ocaml-how-to-solve-findlib-warnings-of-multiple-cmis
