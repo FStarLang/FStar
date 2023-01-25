@@ -7,11 +7,23 @@ module O = FStar_Options
 let perr  s   = if O.debug_any () then U.print_error s
 let perr1 s x = if O.debug_any () then U.print1_error s x
 
-let find_taclib () =
+let find_taclib_old () =
   let default = FStar_Options.fstar_bin_directory ^ "/fstar-tactics-lib" in
   try
     begin
       let r = Process.run "ocamlfind" [| "query"; "fstar-tactics-lib" |] in
+      match r with
+      | { Process.Output.exit_status = Process.Exit.Exit 0; stdout; _ } ->
+         String.trim (List.hd stdout)
+      | _ -> default
+    end
+  with _ -> default
+
+let find_fstar_subpackage (s: string) =
+  let default = FStar_Options.fstar_bin_directory ^ "/../lib/fstar/" ^ s in
+  try
+    begin
+      let r = Process.run "ocamlfind" [| "query"; "fstar." ^ s |] in
       match r with
       | { Process.Output.exit_status = Process.Exit.Exit 0; stdout; _ } ->
          String.trim (List.hd stdout)
@@ -26,14 +38,30 @@ let dynlink fname =
   with Dynlink.Error e ->
     failwith (U.format2 "Dynlinking %s failed: %s" fname (Dynlink.error_message e))
 
+let dynlink_fstar_subpackage (s: string) =
+  dynlink (find_fstar_subpackage s ^ "/fstar_" ^ s ^ ".cmxs")
+
 let load_lib : unit -> unit =
   let already_loaded = ref false in
-  fun () ->
-    if not (!already_loaded) then begin
-      dynlink (find_taclib () ^ "/fstartaclib.cmxs");
-      already_loaded := true;
-      perr "Loaded fstartaclib successfully\n"
-    end
+  let load_old () =
+      dynlink (find_taclib_old () ^ "/fstartaclib.cmxs");
+      perr "Loaded old fstartaclib successfully\n"
+  in
+  let load () =
+      dynlink_fstar_subpackage "stdlib";
+      dynlink_fstar_subpackage "taclib";
+      perr "Loaded fstar.taclib successfully\n"
+  in
+  fun _ ->
+    if not (!already_loaded) then
+      begin
+        begin
+          try
+            load ();
+          with _ -> load_old ()
+        end;
+        already_loaded := true
+      end
 
 let try_load_lib () =
   (* It might not be there, just try to load it and ignore if not *)
@@ -57,6 +85,9 @@ let load_tactics_dir dir =
     |> List.iter load_tactic
 
 let compile_modules dir ms =
+   failwith "TODO: deprecated with new fstar.taclib"
+
+(*
    let compile m =
      let packages = ["fstar-tactics-lib"] in
      let pkg pname = "-package " ^ pname in
@@ -75,3 +106,4 @@ let compile_modules dir ms =
    in ms
       |> List.map (fun m -> dir ^ "/" ^ m)
       |> List.iter compile
+*)
