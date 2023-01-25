@@ -11,6 +11,13 @@ all:
 dune:
 	cd ocaml && dune build --profile release && dune install --prefix=$(PWD)
 
+.PHONY: dune-bootstrap
+dune-bootstrap:
+	+$(MAKE) -C src/ocaml-output dune-snapshot
+	+$(MAKE) dune
+	+$(MAKE) SKIP_EXPERIMENTAL=1 -C src/ocaml-output dune-snapshot
+	+$(MAKE) dune
+
 install:
 	$(Q)+$(MAKE) -C src/ocaml-output install
 

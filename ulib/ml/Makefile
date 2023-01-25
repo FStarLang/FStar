@@ -42,3 +42,7 @@ dune-base-snapshot: $(INTFILES)
 .PHONY: clean-intfiles
 clean-intfiles:
 	rm -rf $(INTFILES)
+
+.PHONY: dune-handwritten-snapshot
+dune-handwritten-snapshot: $(ML_NOT_IN_BASE)
+	cp $(ML_NOT_IN_BASE) $(DUNE_SNAPSHOT)/fstar-stdlib

@@ -90,7 +90,7 @@ endif
 generated-files: $(GENERATED_FILES) intfiles
 
 # EXPERIMENTAL: copy some snapshot to build with Dune
-DUNE_SNAPSHOT ?= ../../ocaml
+DUNE_SNAPSHOT ?= $(realpath ../../ocaml)
 export DUNE_SNAPSHOT
 
 .PHONY: dune-snapshot
@@ -104,6 +104,11 @@ dune-snapshot: generated-files
 	rm -rf $(DUNE_SNAPSHOT)/fstar-runtime/generated/get_branch.ml
 	mkdir -p $(DUNE_SNAPSHOT)/fstar-tests
 	cp ../../src/tests/ml/*.ml $(DUNE_SNAPSHOT)/fstar-tests
+	+if test -x $(FSTAR_HOME)/bin/fstar.exe ; then \
+	  $(MAKE) -C ../../ulib && \
+	  mkdir -p $(DUNE_SNAPSHOT)/fstar-stdlib/generated && \
+	  $(MAKE) -C ../../ulib -f Makefile.extract2 dune-snapshot ; \
+	fi
 
 # https://stackoverflow.com/questions/38294095/ocaml-how-to-solve-findlib-warnings-of-multiple-cmis
 FSTAR_MAIN_NATIVE=_build/src/fstar/ml/main.native

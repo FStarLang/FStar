@@ -1,0 +1,11 @@
+(include_subdirs unqualified)
+(library
+ (name fstar_stdlib)
+ (public_name fstar.stdlib)
+ (libraries
+    fstar_base
+ )
+ (modes native)
+ (wrapped false)
+ (preprocess (pps ppx_deriving.show ppx_deriving_yojson sedlex.ppx))
+)
