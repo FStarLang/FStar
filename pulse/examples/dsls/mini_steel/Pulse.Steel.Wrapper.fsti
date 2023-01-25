@@ -202,6 +202,10 @@ inline_for_extraction
 let erased_non_informative (a:Type u#a) : non_informative_witness (Ghost.erased a) =
   fun x -> Ghost.reveal x
 
+inline_for_extraction
+let squash_non_informative (a:Type u#a) : non_informative_witness (squash  u#a a) =
+  fun x -> x
+
 (***** end computation types and combinators *****)
 
 
@@ -233,6 +237,6 @@ val read_explicit (r:R.ref u32) (n:erased u32) (p:perm)
         (fun _ -> R.pts_to r p n)
 
 val ghost_noop (_:unit)
-  : stt_ghost unit emp_inames
+  : stt_ghost (squash True) emp_inames
               emp
               (fun _ -> emp)

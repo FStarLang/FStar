@@ -193,14 +193,25 @@ let check_vprop (f:RT.fstar_top_env)
     | _ -> T.fail "Expected a vprop"
 
 let get_non_informative_witness f g u t =
-  let err () = T.fail "non_informative_witness supported only for unit and prop" in
-  match t with
-  | Tm_FVar l ->
-    if l = R.unit_lid || l = R.prop_qn
-    then let w_lid = mk_steel_wrapper_lid
-                       (if l = R.unit_lid then "unit_non_informative"
-                        else "prop_non_informative") in
-         let e = Tm_FVar w_lid in
-         check_tot_with_expected_typ f g e (non_informative_witness_t u t)
-    else err ()
-  | _ -> err ()
+  let err () =
+    T.fail (Printf.sprintf
+              "non_informative_witness not supported for %s"        
+              (P.term_to_string t)) in
+  let eopt =
+    match t with
+    | Tm_FVar l ->
+      if l = R.unit_lid
+      then Some (Tm_FVar (mk_steel_wrapper_lid "unit_non_informative"))
+      else if l = R.prop_qn
+      then Some (Tm_FVar (mk_steel_wrapper_lid "prop_non_informative"))
+      else None
+    | Tm_PureApp (Tm_UInst l [u']) None arg ->
+      if l = R.squash_qn
+      then Some (Tm_PureApp (Tm_UInst (mk_steel_wrapper_lid "squash_non_informative") [u']) None arg)
+      else None
+    | _ -> None in
+
+  match eopt with
+  | None -> err ()
+  | Some e ->
+    check_tot_with_expected_typ f g e (non_informative_witness_t u t)
