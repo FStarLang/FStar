@@ -1169,6 +1169,7 @@ and resugar_aqual env (q:S.aqual) : A.imp =
 
 let resugar_qualifier : S.qualifier -> option A.qualifier = function
   | S.Assumption -> Some A.Assumption
+  | S.InternalAssumption -> None
   | S.New -> Some A.New
   | S.Private -> Some A.Private
   | S.Unfold_for_unification_and_vcgen -> Some A.Unfold_for_unification_and_vcgen
