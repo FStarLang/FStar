@@ -11,10 +11,14 @@ FLAKY=legacy/FStar.Relational.State.fst
 FSTAR_FILES := $(filter-out $(FLAKY), \
 	$(wildcard FStar.*.fst FStar.*.fsti) \
 	$(wildcard LowStar.*.fst LowStar.*.fsti) \
-	$(wildcard Steel.*.fst Steel.*.fsti) \
 	$(wildcard legacy/*fst legacy/*fsti) \
-	$(wildcard experimental/*fst experimental/*fsti))
+	)
 
+ifndef SKIP_EXPERIMENTAL
+FSTAR_FILES += $(filter-out $(FLAKY), \
+	$(wildcard experimental/*fst experimental/*fsti) \
+)
+endif
 
 WITH_CACHE_DIR=--cache_dir .cache --hint_dir .cache
 
