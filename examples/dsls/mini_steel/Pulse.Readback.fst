@@ -11,45 +11,6 @@ let (let?) (f:option 'a) (g:'a -> T.Tac (option 'b)) : T.Tac (option 'b) =
   | None -> None
   | Some x -> g x
 
-let is_stt (t:R.term)
-  : Pure (option (R.universe & R.typ & R.term & R.term))
-         (requires True)
-         (ensures fun r ->
-            Some? r ==> (let u, res, pre, post = Some?.v r in
-                       let args = [res; pre; mk_abs res R.Q_Explicit post] in
-                       t == mk_stt_app u args)) =
-  let open R in
-  let hd, args = collect_app t in
-  match inspect_ln hd with
-  | Tv_UInst fv [u] ->
-    if inspect_fv fv = stt_lid
-    then match args with
-         | [res; pre; post] ->
-           (match inspect_ln (fst post) with
-            | Tv_Abs b body ->
-              let bv, (aq, attrs) = inspect_binder b in    
-              RT.pack_inspect_binder b;  // This does not have SMTPat
-              let bv_view = inspect_bv bv in
-              assume (fv == stt_fv);
-              assume (aq == Q_Explicit           /\
-                      attrs == []                /\
-                      bv_view.bv_ppname == "_"   /\
-                      bv_view.bv_index == 0      /\
-                      bv_view.bv_sort == fst res /\
-                      snd res == Q_Explicit      /\
-                      snd pre == Q_Explicit      /\
-                      snd post == Q_Explicit);
-
-              let l = [fst res; fst pre; mk_abs (fst res) R.Q_Explicit body] in
-              assume (args_of l == args);
-              // probably need some lemma for R.mk_app and R.collect_app
-              assume (t == mk_stt_app u l);
-              Some (u, fst res, fst pre, body)
-            | _ -> None)
-         | _ -> None
-    else None
-  | _ -> None
-
 let rec readback_universe (u:R.universe)
   : o:option universe{ Some? o ==> elab_universe (Some?.v o) == u } =
   match R.inspect_universe u with
@@ -93,6 +54,76 @@ let rec readback_universes (us:list R.universe)
         | None -> None
         | Some tl -> Some (hd::tl)
     
+#push-options "--z3rlimit_factor 10"
+let try_readback_st_comp
+  (t:R.term)
+  (readback_ty:(t':R.term -> T.Tac (option (ty:pure_term { elab_term ty == Some t' }))))
+
+  : T.Tac (option (c:comp{elab_comp c == Some t})) =
+
+  let open R in
+  let hd, args = collect_app t in
+  match inspect_ln hd with
+  | Tv_UInst fv [u] ->
+    let fv_lid = inspect_fv fv in
+    if fv_lid = stt_lid
+    then match args with
+         | [res; pre; post] ->
+           (match inspect_ln (fst post) with
+            | Tv_Abs b body ->
+              let bv, (aq, attrs) = inspect_binder b in    
+              RT.pack_inspect_binder b;  // This does not have SMTPat
+              let bv_view = inspect_bv bv in
+              assume (fv == stt_fv);
+              assume (aq == Q_Explicit           /\
+                      attrs == []                /\
+                      bv_view.bv_ppname == "_"   /\
+                      bv_view.bv_index == 0      /\
+                      bv_view.bv_sort == fst res /\
+                      snd res == Q_Explicit      /\
+                      snd pre == Q_Explicit      /\
+                      snd post == Q_Explicit);
+
+              let l = [fst res; fst pre; mk_abs (fst res) R.Q_Explicit body] in
+              assume (args_of l == args);
+              // probably need some lemma for R.mk_app and R.collect_app
+              assume (t == mk_stt_app u l);
+              let? u'' = readback_universe u in
+              let? res' = readback_ty (fst res) in
+              let? pre' = readback_ty (fst pre) in
+              let? post' = readback_ty (fst post) in
+              Some (C_ST ({u=u''; res=res'; pre=pre';post=post'}) <: c:Pulse.Syntax.comp{ elab_comp c == Some t })
+            | _ -> None)
+         | _ -> None
+    else if fv_lid = stt_atomic_lid || fv_lid = stt_ghost_lid
+    then match args with
+         | [res; opened; pre; post] ->
+           (match inspect_ln (fst post) with
+            | Tv_Abs b body ->
+              let bv, (aq, attrs) = inspect_binder b in    
+              RT.pack_inspect_binder b;  // This does not have SMTPat
+              let bv_view = inspect_bv bv in
+              let l = [fst res; fst opened; fst pre; mk_abs (fst res) R.Q_Explicit body] in
+              let? u'' = readback_universe u in
+              let? res' = readback_ty (fst res) in
+              let? opened' = readback_ty (fst opened) in
+              let? pre' = readback_ty (fst pre) in
+              let? post' = readback_ty (fst post) in
+              if fv_lid = stt_atomic_lid
+              then begin
+                assume (t == mk_stt_atomic_app u l);
+                Some (C_STAtomic opened' ({u=u''; res=res'; pre=pre';post=post'}) <: c:Pulse.Syntax.comp{ elab_comp c == Some t })
+              end
+              else begin
+                assume (t == mk_stt_ghost_app u l);
+                Some (C_STGhost opened' ({u=u''; res=res'; pre=pre';post=post'}) <: c:Pulse.Syntax.comp{ elab_comp c == Some t })
+              end
+            | _ -> None)
+         | _ -> None
+    else None  
+  | _ -> None
+#pop-options
+
 let readback_qual = function
   | R.Q_Implicit -> Some Implicit
   | _ -> None
@@ -230,18 +261,9 @@ let rec readback_ty (t:R.term)
 and readback_comp (t:R.term)
   : T.Tac (option (c:comp{ elab_comp c == Some t})) =
 
-  let is_stt_opt = is_stt t in
-  match is_stt_opt with
-  | Some (u', res, pre, post) -> (
-    match readback_universe u' with
-    | None -> None
-    | Some u'' ->
-      let? res' = readback_ty res in
-      let? pre' = readback_ty pre in
-      let? post' = readback_ty post in
-      Some (C_ST ({u=u''; res=res'; pre=pre';post=post'}) <: c:comp{ elab_comp c == Some t })
-    )
-
+  let ropt = try_readback_st_comp t readback_ty in
+  match ropt with
+  | Some _ -> ropt
   | _ ->
     let? t' = readback_ty t in
     Some (C_Tot t' <: c:comp{ elab_comp c == Some t })
