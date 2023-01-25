@@ -27,22 +27,61 @@ let force_st #f #g #t (#pre:pure_term)
     | C_STAtomic _ _
     | C_STGhost _ _ -> (|c, d_c|)
 
-let get_bind_comp (f:RT.fstar_top_env) (g:env)
+#push-options "--z3rlimit_factor 8 --ifuel 1 --fuel 1"
+let mk_bind (f:RT.fstar_top_env) (g:env)
+  (pre:pure_term)
+  (e1:term)
+  (e2:term)
   (c1:pure_comp_st)
   (c2:pure_comp_st)
   (x:var)
+  (d_e1:src_typing f g e1 c1)
+  (d_c1res:tot_typing f g (comp_res c1) (Tm_Type (comp_u c1)))
+  (d_e2:src_typing f ((x, Inl (comp_res c1))::g) (open_term e2 x) c2)
   (res_typing:universe_of f g (comp_res c2) (comp_u c2))
   (post_typing:tot_typing f ((x, Inl (comp_res c2))::g) (open_term (comp_post c2) x) Tm_VProp)
-  : T.TacH (c:pure_comp_st{comp_pre c == comp_pre c1} & bind_comp f g x c1 c2 c)
+  : T.TacH (t:term &
+            c:pure_comp { stateful_comp c ==> comp_pre c == pre } &
+            src_typing f g t c)
            (requires fun _ ->
+              comp_pre c1 == pre /\
               None? (lookup g x) /\
               open_term (comp_post c1) x == comp_pre c2 /\
               (~ (x `Set.mem` freevars (comp_post c2))))
            (ensures fun _ _ -> True) =
 
-  if C_ST? c1 && C_ST? c2
-  then (| bind_comp_out c1 c2, Bind_comp g x c1 c2 res_typing x post_typing |)
-  else T.fail ""
+  match c1, c2 with
+  | C_ST _, C_ST _ ->
+    let bc = Bind_comp g x c1 c2 res_typing x post_typing in
+    (| Tm_Bind e1 e2, _, T_Bind _ e1 e2 _ _ _ _ d_e1 d_c1res d_e2 bc |)
+  | C_STGhost inames1 _, C_STGhost inames2 _ ->
+    if inames1 = inames2
+    then let bc = Bind_comp g x c1 c2 res_typing x post_typing in
+         (| Tm_Bind e1 e2, _, T_Bind _ e1 e2 _ _ _ _ d_e1 d_c1res d_e2 bc |)
+    else T.fail "Cannot compose two stghost computations with different opened invariants"
+  | C_STAtomic inames _, C_ST _ ->
+    if inames = Tm_EmpInames
+    then begin
+      let c1lifted = C_ST (st_comp_of_comp c1) in
+      let d_e1 : src_typing f g e1 c1lifted =
+        T_Lift _ _ _ c1lifted d_e1 (Lift_STAtomic_ST _ c1) in
+      let bc = Bind_comp g x c1lifted c2 res_typing x post_typing in
+      (| Tm_Bind e1 e2, _, T_Bind _ e1 e2 _ _ _ _ d_e1 d_c1res d_e2 bc |)
+    end
+    else T.fail "Cannot compose atomic with non-emp opened invariants with stt"
+  | C_ST _, C_STAtomic inames _ ->
+    if inames = Tm_EmpInames
+    then begin
+      let c2lifted = C_ST (st_comp_of_comp c2) in
+      let g' = (x, Inl (comp_res c1))::g in
+      let d_e2 : src_typing f g' (open_term e2 x) c2lifted =
+        T_Lift _ _ _ c2lifted d_e2 (Lift_STAtomic_ST _ c2) in
+      let bc = Bind_comp g x c1 c2lifted res_typing x post_typing in
+      (| Tm_Bind e1 e2, _, T_Bind _ e1 e2 _ _ _ _ d_e1 d_c1res d_e2 bc |)
+    end
+    else T.fail "Cannot compose stt with atomic with non-emp opened invariants"
+  | _, _ -> T.fail "bind either not implemented (e.g. ghost) or not possible"
+#pop-options
 
 #push-options "--z3rlimit_factor 8 --fuel 2 --ifuel 1 --query_stats"
 let check_bind
@@ -87,9 +126,7 @@ let check_bind
       else (
         let s2_post_opened = open_term s2.post x in
         let post_typing = check_vprop_no_inst f ((x, Inl s2.res)::g) s2_post_opened in
-        let (| _, bc |) = get_bind_comp f g c1 c2 x res_typing post_typing in
-        //let bc : bind_comp f g x c1 c2 _ = (Bind_comp g x c1 c2 res_typing x post_typing) in
-        (| Tm_Bind e1 e2_closed, _, T_Bind _ e1 e2_closed _ _ _ _ d1 t_typing d2 bc |)
+        mk_bind f g pre e1 e2_closed c1 c2 x d1 t_typing d2 res_typing post_typing
       )
   )
 #pop-options
