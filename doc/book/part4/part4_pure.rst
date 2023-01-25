@@ -21,8 +21,9 @@ that ``v`` is an ``int``, but also that ``v >= 0``.
 In a similar manner, F* allows refining computation types with
 specifications that describe some aspects of a program's computational
 behavior. These *effect refinements* can, in general, be defined by
-the user in a reasoning system of their chosing, e.g., the refinements
-may use separation logic, or they may count computation steps.
+the user in a reasoning system of their choosing, e.g., the
+refinements may use separation logic, or they may count computation
+steps.
 
 However, F* has built-in support for refining the specification of
 pure programs with effect refinements that encode the standard
@@ -55,271 +56,380 @@ user-provided specification of the form ``Tot t'``.
 In this chapter, we look into how these ``Pure`` specifications work,
 starting with a primer on Floyd-Hoare Logic and weakest precondition
 calculi. If the reader is familiar with these, they may safely skip
-the next subsections.
+the next subsections, though even if you are an expert, if may be of
+interest to see how such program logics can be formalized in F*.
 
 
-A Primer on Floyd-Hoare Logic and WP-calculi
---------------------------------------------
+A Primer on Floyd-Hoare Logic and Weakest Preconditions
+-------------------------------------------------------
 
-Floyd-Hoare Logic is a system of specifications and reasoning
-principles to reason about the logical properties of programs.  The
-ideas were introduced by Robert Floyd in a paper titled `Assigning
-Meaning to Programs
+Floyd-Hoare Logic is a system of specifications and rules to reason
+about the logical properties of programs, introduced by Robert Floyd
+in a paper titled `Assigning Meaning to Programs
 <https://link.springer.com/chapter/10.1007/978-94-011-1793-7_4>`_ and
 by Tony Hoare in `An axiomatic basis for computer programming
 <https://dl.acm.org/doi/10.1145/363235.363259>`_. The notation used in
-most modern presentations (called Hoare triples) is due to Hoare.
+most modern presentations (called Hoare triples) is due to Hoare.  An
+algorithm to compute Hoare triples was developed by Edsger Dijkstra
+`presented first in this paper
+<https://www.cs.utexas.edu/users/EWD/ewd04xx/EWD472.PDF>`_ , using a
+technique called *weakest preconditions*. All of them received Turing
+Awards for their work on these and other related topics.
 
-Let's consider a small imperative language with the following grammar.
+For an introduction to these ideas, we'll develop a small imperative
+language with global variables, presenting
 
-.. code-block:: none
+* An operational semantics for the language, formalized as an
+  interpreter.
 
-   Expression e ::= x | ...
+* A Floyd-Hoare program logic proven sound with respect to the
+  operational semantics.
 
-   Statement s ::= skip | x := e | s1; s2 | if e then s1 else s2 | while e s
+* And, finally, an algorithm to compute weakest preconditions proved
+  sound against the Floyd-Hoare logic.
 
-The language consists of expressions ``e``, which include global
-variables ``x, y, z, ...``.  We leave the rest of the expression forms
-unspecified, as the core reasoning rules are agnostic to them, e.g.,
-they may include arithmetic expressions. The statements ``s`` consist
-of ``skip`` (a no-op), assignment, sequencing, conditionals, and while
-loops with guard ``e`` and loop body ``s``.
-
-Floyd-Hoare Logic provides a reasoning system for such a language,
-sometimes called its *axiomatic semantics*. The unit of reasoning is a
-*Hoare triple* of the form ``{P} s {Q}``, where ``P`` and ``Q`` are
-assertions (logical formulas) about the state of the program. In its
-simplest form, program state is just a mapping of variables to values.
-
-A Hoare triple ``{P} s {Q}`` is valid, if executing ``s`` in a state
-that satisfies ``P`` results in a state that satisfies ``Q``. ``P``
-and ``Q`` are also called precondition and postcondition of ``s``,
-respectively. There are both total correctness and partial correctness
-interpretations of the triple, depending on whether the termination of
-``s`` is ensured by the logical rules that manipulate the triples.
-
-Inference rules provide axioms for valid Hoare triples for each of the
-statement forms, reflecting their logical reasoning principles. A
-triple ``{P} s {Q}`` is *derivable* in the system if these axioms can
-be instantiated and arranged together in a *derivation tree* with
-``{P} s {Q}`` at the root. We first look at each individual axiom, and
-then examples of such derivation trees.
+Our language has the following abstract syntax:
 
 
-Skip
-^^^^
+.. literalinclude:: ../code/Imp.fst
+   :language: fstar
+   :start-after: //SNIPPET_START: syntax$
+   :end-before: //SNIPPET_END: syntax$
 
-The inference rule for ``skip`` is as shown below.
+Expressions includes integer constants, global variables (represented
+just as natural numbers), and some other forms, e.g., arithmetic
+expressions like addition.
 
-.. code-block:: none
-                
-  ---------------- :: [Skip]
-    {P} skip {P}
+A program includes:
 
+* Assignments, ``EAssign x e``, representing the assignment of the
+  result of an expression ``e`` to a global variable ``x``, i.e., ``x := e``
 
-Inference rules are a general technique of specifying a reasoning
-system. An inference rule has two parts, premises and a conclusion,
-separated by a horizontal line. The interpretation of an inference
-rule is that, given the premises, the rule can be applied to derive
-the conclusion. An inference rule may optionally be named, the ``::
-[Skip]`` part here.
+* ``Seq``, to compose programs sequentially
 
-The ``[Skip]`` rule has no premises, meaning that it can be applied
-unconditionally, and the conclusion says that the triple ``{P} skip
-{P}`` is valid for all ``P`` (*meta variables* that denote assertions,
-statements, variables, etc., are implicitly universally
-quantified). Intuitively this reflects the no-op semantics of
-``skip``: for any assertion ``P``, if ``P`` holds for the current
-state, then it also holds after executing ``skip``, since ``skip``
-does not change the state.
+* ``If`` to compose programs conditionally
+
+* And ``Repeat n p``, which represents a construct similar to a
+  ``for``-loop (or primitive recursion), where the program ``p`` is
+  repeated ``n`` times, where ``n`` evaluates to a non-negative
+  integer.
+
+Our language does not have ``while`` loops, whose semantics are a bit
+more subtle to develop. We will look at a semantics for ``while`` in a
+subsequent chapter.
+
+Operational Semantics
+^^^^^^^^^^^^^^^^^^^^^
+
+Our first step in giving a semantics to programs is to define an
+interpreter for it to run a program while transforming a memory that
+stores the values of the global variables.
+
+To model this memory, we use the type ``state`` shown below:
+
+.. literalinclude:: ../code/Imp.fst
+   :language: fstar
+   :start-after: //SNIPPET_START: state$
+   :end-before: //SNIPPET_END: state$
+
+Writing a small evaluator for expressions is easy:
+
+.. literalinclude:: ../code/Imp.fst
+   :language: fstar
+   :start-after: //SNIPPET_START: eval_expr$
+   :end-before: //SNIPPET_END: eval_expr$
+
+The interpreter for programs itself takes a bit more work, since
+programs can both read and write the state. To structure our
+interpreter, we'll introduce a simple state monad ``st a``. We've seen
+this construction before in :ref:`a previous chapter
+<Part2_monad_intro>`---so, look there if the state monad is unfamiliar
+to you. Recall that F* has support for monadic let operators: the
+``let!`` provides syntactic sugar to convenient compose ``st`` terms.  
+
+.. literalinclude:: ../code/Imp.fst
+   :language: fstar
+   :start-after: //SNIPPET_START: monad$
+   :end-before: //SNIPPET_END: monad$
+
+Now, the interpreter itself is a total, recursive function ``run`` which
+interprets a program ``p`` as a state-passing function of type ``st
+unit``, or ``state -> unit & state``.
+
+.. literalinclude:: ../code/Imp.fst
+   :language: fstar
+   :start-after: //SNIPPET_START: run$
+   :end-before: //SNIPPET_END: run$
+
+Let's look at its definition in detail:
+
+   * ``Assign x e``: Evaluate ``e`` in the current state and then
+     update the state with a new value of ``x``.
+
+   * ``Seq p1 p2``: Simply run ``p1`` and then run ``p2``, where
+     ``;!`` is syntactic sugar for ``let! _ = run p1 in run p2``.
+
+   * ``If e p1 p2``: Evaluate ``e`` in the current state, branch on
+     its result and run either ``p1`` or ``p2``
+
+   * ``Repeat e p``: Evaluate ``e`` to ``n``, and if ``n`` is
+     greater than zero, call the mutually recursive ``run_repeat n
+     p``. Most of the subtlety here is in convincing F* that this
+     mutually recursive function terminates, but this is fairly
+     straightforward once you know how---we discussed
+     :ref:`termination proofs for mutually recursive functions earlier
+     <Part1_mutual_recursion>`.
+
+These operational semantics are the ground truth for our programming
+language---it defines how programs execute. Now that we have that
+settled, we can look at how a Floyd-Hoare logic makes it possible to
+reason about programs in a structured way.
+
+Floyd-Hoare Logic
+^^^^^^^^^^^^^^^^^
+
+The goal of a Floyd-Hoare logic is to provide a way to reason about a
+program based on the structure of its syntax, rather than reasoning
+directly about its operational semantics. The unit of reasoning is
+called a *Hoare triple*, a predicate of the form ``{P} c {Q}``, where
+``P`` and ``Q`` are predicates about the state of the program, and
+``c`` is the program itself.
+
+We can *define* Hoare triples for our language by interpreting them as
+an assertion about the operational semantics, where ``triple p c q``
+represents, formally, the Hoare triple ``{ p } c { q }``.
+
+.. literalinclude:: ../code/Imp.fst
+   :language: fstar
+   :start-after: //SNIPPET_START: triple$
+   :end-before: //SNIPPET_END: triple$
+
+The predicate ``triple p c q`` is valid, if when executing ``c`` in a
+state that satisfies ``p`` results in a state that satisfies ``q``.
+The predicates ``p`` and ``q`` are also called precondition and
+postcondition of ``c``, respectively.
+
+For each syntactic construct of our language, we can prove a lemma
+that shows how to build an instance of the ``triple`` predicate for
+that construct. Then, to build a proof of program, one stitches
+together these lemmas to obtain a ``triple p main q``, a statement of
+correctess of the ``main`` program.
 
 Assignment
-^^^^^^^^^^^^
+++++++++++
 
-The assignment rule is a little more interesting.
+Our first rule is for reasoning about variable assignment:
 
-.. code-block:: none
+.. literalinclude:: ../code/Imp.fst
+   :language: fstar
+   :start-after: //SNIPPET_START: assignment$
+   :end-before: //SNIPPET_END: assignment$
 
-  ----------------------- :: [Assign]
-    {P[e/x]} x := e {P}
+This lemma says that ``post`` holds after executing ``x := e`` in the
+initial state ``s0``, if ``post`` holds on the initial state updated
+at ``x`` with the value of ``e``.
 
-
-This rule also does not have any premises. It says that, ``P`` holds
-after
-executing ``x := e``, if ``P[e/x]``, i.e. ``P`` with ``x`` substituted
-by ``e``, holds before executing the statement.
-
-For example, to prove that after ``z := y + 1``, ``z >
-0`` holds, the rule says that ``(z > 0)[(y + 1)/z]`` should hold
-before the assigment. That is ``y + 1 > 0`` or ``y > -1``, which is
-what we would expect. So, applying this rule, with instantiations of
-the metavariables ``P``, ``x``, and ``e``, we
-can derive that the Hoare triple ``{y > -1} x := y + 1 {x > 0}`` is
-valid.
-
+For example, to prove that after executing ``z := y + 1`` in ``s0``,
+if we expect the value of ``z`` to be greater than zero`, then the
+assignment rule says that ``read s0 y + 1 > 0`` should hold before the
+assignment, which is what we would expect.
 
 Sequence
-^^^^^^^^^^^^
+++++++++
 
-The sequencing rule stitches together triples for the two statements:
+Our next lemma about triples stitches together triples for two
+programs that are sequentially composed:
 
-.. code-block:: none
+.. literalinclude:: ../code/Imp.fst
+   :language: fstar
+   :start-after: //SNIPPET_START: sequence$
+   :end-before: //SNIPPET_END: sequence$
 
-  {P} s1 {R}    {R} s2 {Q}
-  ------------------------- :: [Seq]
-    {P} s1; s2 {Q}
+The lemma says that if we can derive the Hoare triples of the two
+statements such that postcondition of ``p1`` matches the precondition
+of ``p2``, then we can compose them.
 
-
-The rule has two premises. It says that, if we can derive the Hoare
-triples of the two statements such that postcondition of ``s1``
-matches the precondition of ``s2``, then we can derive the Hoare
-triple for ``s1; s2`` as written in the conclusion.
-    
 
 Conditional
-^^^^^^^^^^^^^
++++++++++++
 
-The rule for conditionals is as follows:
+The lemma for conditionals is next:
 
-.. code-block:: none
+.. literalinclude:: ../code/Imp.fst
+   :language: fstar
+   :start-after: //SNIPPET_START: conditional$
+   :end-before: //SNIPPET_END: conditional$
 
-  {P /\ e} s1 {Q}    {P /\ ~e} s2 {Q}
-  ------------------------------------- :: [If]
-     {P} if e then s1 else s2 {Q}
+It says that to derive the postcondition ``post`` from the ``If e p1
+p2``, we should be able to derive it from each of the branches with the
+same precondition ``pre``. In addition, since we know that ``p1``
+executes only when ``e`` is non-zero, we can add these facts to the
+preconditions of each branch.
 
-The rule says that to derive the postcondition ``Q``
-from the conditional statement, we should be able to derive it from
-each of the branch. In addition, since we know that ``s1`` executes
-only when ``e`` is true, ``e`` can be added to the precondition of
-``s1``, and similarly for ``s2``.
+Repeat
+++++++
 
+In all the cases so far, these lemmas are proved automated by F* and
+Z3. In the case of repeats, however, we need to do a little more work,
+since an inductive argument is involved.
 
-While
-^^^^^^^^
+The rule for ``repeat`` requires a *loop invariant* ``inv``.  The loop
+invariant is an assertion that holds before the loop starts, is
+maintained by each iteration of the loop, and is provided as the
+postcondition of the loop.
 
-The rule for ``while`` requires a *loop invariant*:
+The lemma below states that if we can prove that ``triple inv p inv``,
+then we can also prove ``triple inv (Repeat e p) inv``.
 
-.. code-block:: none
+.. literalinclude:: ../code/Imp.fst
+   :language: fstar
+   :start-after: //SNIPPET_START: repeat$
+   :end-before: //SNIPPET_END: repeat$
 
+The auxiliary lemma ``repeat_n`` proves that ``run_repeat p n``
+preserves ``inv``, if ``p`` preserves ``inv``.
 
-  {I /\ e} s {I}
-  ------------------------ :: [While]
-  {I} while e s {I /\ ~e}
+To call this lemma from the main ``repeat`` lemma, we need to "get
+our hands on" the initial state ``s0``, and the :ref:`syntactic sugar
+to manipulate logical connectives <Part2_connectives>` makes this
+possible.
 
-
-The loop invariant ``I`` is an assertion that holds before the loop
-starts, is maintained by each iteration of the loop, and is provided
-as the postcondition of the loop. While the rule uses the loop
-invariant *declaratively*, without worrying about where the invariant
-comes from, an actual tool that implements Hoare Logic has to either
-infer or require it as an annotation from the user.
-
-This rule establishes partial correctness, it does not ensure that
-the loop terminates. It may be augmented with a
-termination metric to ensure total correctness, see `here
-<https://en.wikipedia.org/wiki/Hoare_logic/>`_ for example.
 
 Consequence
-^^^^^^^^^^^^^^
++++++++++++
 
-The final inference rule is the rule of consequence that allows
-strengthening the precondition and weakening the postcondition:
+The final lemma about our Hoare triples is called the rule of
+consequence. It allows strengthening the precondition and weakening
+the postcondition of a triple.
 
-.. code-block:: none
+.. literalinclude:: ../code/Imp.fst
+   :language: fstar
+   :start-after: //SNIPPET_START: consequence$
+   :end-before: //SNIPPET_END: consequence$
 
+A precondition of a program is an obligation before the statement
+is executed. So if ``p`` requires ``pre``, we can always strengthen
+the precondition to ``pre'``, provided ``pre' ==> pre``, i.e. it is
+logically valid to require more than necessary in the
+precondition. Similarly, postcondition is what a statement
+guarantees. So if ``p`` guarantees ``post``, we can always weaken it
+to guarantee less, i.e. some ``post'`` where ``post ==> post'``.
 
-  P ==> P1    {P1} s {Q1}    Q1 ==> Q
-  ------------------------------------- :: [Cons]
-              {P} s {Q}      
+Weakest Preconditions
+^^^^^^^^^^^^^^^^^^^^^
 
-One way to think of the precondition of a statement is as an
-obligation before the statement is executed. So if ``s`` requires
-``P1``, we can always strengthen the precondition to ``P``, provided
-``P ==> P1``, i.e. it is logically valid to require more than
-necessary in the precondition. Similarly, postcondition is what a
-statement guarantees. So if ``s`` guarantees ``Q1``, we can always
-weaken it to guarantee less, i.e. some ``Q`` where ``Q1 ==> Q``.
+The rules of Floyd-Hoare logic provide an abstract way to reason about
+programs. However, the rules of the logic are presented
+declaratively. For example, to apply the ``sequence`` rule, one has
+derive triples for each component in a way that they prove exactly the
+same assertion (``pre_mid``) about the intermediate state. There may
+be many ways to do this, e.g., one could apply the rule of
+consequence to weaken the postcondition of the first component, or to
+strengthen the precondition of the second component.
 
-Derivation trees
-^^^^^^^^^^^^^^^^^^
+Dijkstra's system of weakest preconditions eliminates such ambiguity
+and provides an *algorithm* for computing valid Hoare triples,
+provided the invariants of all loops are given. This makes weakest
+preconditions the basis of many program proof tools, since given a
+program annotated with loop invariants, one can simply compute a
+logical formula (called a verification condition) whose validity
+implies the correctness of the program.
 
-We can now try to construct some derivation trees. Suppose we want to
-derive the triple ``{y > 3} x := y + 1; z := x + 1 {z > 2}``. Using
-two applications of the assignment rule, we can derive ``{y > 3} x :=
-y + 1 {x > 4}`` and ``{x > 1} z := x + 1 {z > 2}``. But to combine
-these using the sequencing rule, we need to match the postcondition of
-the first assignment with the precondition of the second
-assignment. We can do that by weakening the postcondition of the
-first assignment, using the rule of consequence, resulting in the
-following derivation. Here each of the dashed line represents
-instantiation of one of the rules above:
+At the core of the approach is a function ``WP (c, Q)``, which
+computes a unique, weakest precondition ``P`` for the program ``c``
+and postcondition ``Q``. The semantics of ``WP`` is that ``WP (c, Q)``
+is the weakest precondition that should hold before executing ``c``
+for the postcondition ``Q`` to be valid after executing ``c``. Thus,
+the function ``WP`` assigns meaning to programs as a transformer of
+postconditions ``Q`` to preconditions ``WP (s, Q)``.
 
-.. code-block:: none
+The ``wp`` function for our small imperative language is shown below:
 
-                    ------------------------------ [Assign]
-   y > 3 ==> y > 3    {y > 3} x := y + 1 {x > 4}    x > 4 ==> x > 1
-   ----------------------------------------------------------------- [Cons]    --------------------------- [Assign]
-                      {y > 3} x:= y + 1 {x > 1}                                 {x > 1} z := x + 1 {z > 2}
-                      -------------------------------------------------------------------------------------------- [Seq]
-                                   {y > 3} x := y + 1; z := x + 1 {z > 2}
+.. literalinclude:: ../code/Imp.fst
+   :language: fstar
+   :start-after: //SNIPPET_START: wp$
+   :end-before: //SNIPPET_END: wp$
 
+* The case of ``Assign`` is identical to the ``assignment`` lemma
+  shown earlier.
 
-   
-There may be multiple derivations possible for the same Hoare
-triple. For example, another way to combine the two assignments in the
-example above would be to strengthen the precondition of the second
-assignment. This source of non-determinism comes from the *non syntax
-directed* rule of consequence. For every other rule, the shape of the
-conclusion uniquely determines when the rule may be applied. For
-example, the assignment rule is only applicable for statements of the
-form ``x := e``. Whereas the rule of consequence may be
-non-deterministically applied anywhere.
+* The case of ``Seq`` sequentially composes the wp's. That is, to
+  prove the ``post`` after running ``p1 ;; p2`` we need to prove ``wp
+  p2 post`` after running ``p1``. It may be helpful to read this case
+  as the equivalent form ``fun s0 -> wp p1 (fun s1 -> wp p2 post s1)
+  s0``, where ``s0`` is the initial state and ``s1`` is the state that
+  results after running just ``p1``.
+  
+* The ``If`` case computes the WPs for each branch and requires them
+  to be proven under the suitable branch condition.
 
-Weakest Precondition Calculus
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+* The ``Repeat`` case is most interesting: it involves an
+  existentially quantified invariant ``inv``, which is the loop
+  invariant. That is, to reason about ``Repeat n p``, one has to
+  somehow find an invariant ``inv`` that is true initially, and
+  implies both the WP of the loop body as well as the final
+  postcondition.
 
-A closely related reasoning system based on *weakest preconditions*
-was given by `Edsger W. Dijkstra
-<https://www.cs.utexas.edu/users/EWD/ewd04xx/EWD472.PDF>`_. While
-Hoare Logic is declarative and defines a set of non syntax-directed
-inference rules, weakest precondition calculus takes a more
-*algorithmic* approach, and defines a function ``WP (s, Q)``, that
-computes a unique, weakest precondition ``P`` for the statement ``s``
-and postcondition ``Q``. The semantics of ``WP`` is that ``WP (s, Q)``
-is the weakest precondition that should hold before executing ``s``
-for the postcondition ``Q`` to be valid after executing ``s``. Thus,
-the weakest precondition calculus assigns meaning to programs as a
-transformer of postconditions ``Q`` to preconditions ``WP (s, Q)``.
+The ``wp`` function is sound in the sense that it computes a
+sufficient precondition, as proven by the following lemma.
 
-The ``WP`` function is defined as follows for our imperative
-language:
+.. literalinclude:: ../code/Imp.fst
+   :language: fstar
+   :start-after: //SNIPPET_START: wp_soundness$
+   :end-before: //SNIPPET_END: wp_soundness$
 
-.. code-block:: none
+One could also prove that ``wp`` computes the weakest precondition,
+i.e., if ``triple p c q`` then ``forall s. p s ==> wp c q s``, though
+we do not prove that formally here.
+  
+A Sample Program Proof
+^^^^^^^^^^^^^^^^^^^^^^
+  
+We now illustrate some sample proofs using our Hoare triples and
+``wp`` function. To emphasize that Hoare triples provide an *abstract*
+way of reasoning about the execution of programs, we define the
+``hoare p c q`` an alias for ``triple p c q`` marked with an attribute
+to ensure that F* and Z3 cannot reason directly about the underlying
+definition of ``triple``---that would allow Z3 to find proofs by
+reasoning about the operational semantics directly, which we want to
+avoid , since it would not scale to larger programs. For more about
+the ``opaque_to_smt`` and ``reveal_opaque`` construct, please see
+:ref:`this section on opaque definitions <UTH_opaque_to_smt>`.
 
-  WP (skip,   Q)               = Q
-  WP (x := e, Q)               = Q[e/x]
-  WP (s1; s2, Q)               = WP (s1, WP (s2, Q))
-  WP (if e then s1 else e2, Q) = (e ==> WP (s1, Q)) /\ (~e ==> WP (s2, Q))
-  WP (while e s, Q)            = I /\ ((I /\ e) ==> WP (s, I)) /\ ((I /\ ~e) ==> Q)
+.. literalinclude:: ../code/Imp.fst
+   :language: fstar
+   :start-after: //SNIPPET_START: hoare$
+   :end-before: //SNIPPET_END: hoare$
 
-The ``while`` rule uses ``I``, the loop invariant as we introduced in
-the Hoare Logic. Since it does not ensure termination, the rules
-presented here are for partial correctness. The ``WP`` function for
-partial correctness is also known as *weakest liberal
-precondition*.
+The lemmas above are just restatements of the ``wp_soundness`` and
+``consequence`` lemmas that we've already proven. Now, these are the
+only two lemmas we have to reason about the ``hoare p c q`` predicate.
 
-Revisiting our example from the previous chapter, we have ``WP
-(x := y + 1; z := x + 1, z > 2) = y > 0``. Thus ``y > 0`` is the
-weakest precondition for the command to end up in a state with ``z >
-2``.
+Next, we define some notation to make it a bit more convenient to
+write programs in our small language.
 
-The following propositions relate the Hoare triples and ``WP``:
+.. literalinclude:: ../code/Imp.fst
+   :language: fstar
+   :start-after: //SNIPPET_START: notation$
+   :end-before: //SNIPPET_END: notation$
 
-* ``{WP (s, Q)} s {Q}`` is a valid Hoare triple.
-* If ``{P} s {Q}`` then ``P ==> WP (s, Q)``.
+Finally, we can build proofs of some simple, loop-free programs
+automatically by computing their ``wp`` using ``wp_hoare`` and
+applying ``hoare_consequence`` to get F* and Z3 to prove that the
+inferred WP is implied by the annotated precondition.
 
-With this background on Floyd-Hoare Logic and weakest preconditions,
-we now return to F* and its support for a similar reasoning style.
+.. literalinclude:: ../code/Imp.fst
+   :language: fstar
+   :start-after: //SNIPPET_START: swap$
+   :end-before: //SNIPPET_END: swap$
+
+This recipe of computing verification conditions using WPs and then
+checking the computed WP against the annotated specification using a
+solver like Z3 is a very common and powerful pattern. In fact, as
+we'll see below, the methodology that we've developed here for our
+small imperative language is exactly what the F* typechecker does (at
+a larger scale and for the whole F* language) when checking an F*
+program.
 
   
 The ``PURE`` Effect: A Dijkstra Monad for Pure Computations
@@ -332,37 +442,37 @@ construction first introduced in `this paper
 this chapter, we will learn about Dijkstra Monad and its usage in
 specifying and proving pure programs in F*.
 
-Let's begin by adapting the weakest precondition calculus from the
-previous section to a functional language rather than a language with
-global, mutable variables:
+The first main difference in adapting the Hoare triples and weakest
+precondition computations that we saw earlier to the setting of F*'s
+functional language is that there are no global variables or mutable
+state (we'll see about how model mutable state in F*'s effect system
+later). Instead, each pure expression in F*'s *returns* a value and
+the postconditions that we will manipulate are predicates about these
+values, rather than state predicates.
 
-.. code-block:: none
-
-  Expression e ::= x | c | let x = e1 in e2 | if e then e1 else e2
-
-For this language, the postcondition that we may want to prove about
-an expression ``e`` is a predicate on the result of computing ``e``,
-while the precondition is simply a proposition. Adapting the ``WP``
-function from the imperative setting to this is straightforward, where
-``WP`` is a function, applied to an expression ``e`` that returns a
-value of type ``t``, and a predicate ``Q`` on that returned value (a
-postcondition), computes a precondition.
+To illustrate, we sketch the definition of pure WPs below.
 
 .. code-block:: none
 
   WP c Q                      = Q c 
-  WP x Q                      = Q x
   WP (let x = e1 in e2) Q     = WP e1 (fun x -> WP e2 Q)
   WP (if e then e1 else e2) Q = (e ==> WP e1 Q) /\ (~e ==> WP e2 Q)
 
+* The WP of a constant ``c`` is just the postcondition ``Q`` applied to ``c``.
+  
+* The WP of a ``let`` binding is a sequential composition of WPs,
+  applied to the *values* returned by each sub-expression
+
+* The WP of a condition is the WP of each branch, weakened by the
+  suitable branch condition, as before.
+
 The F* type system internalizes and generalizes this WP construction
-to apply it to all F* terms, rather than just to this small expression
-language shown here. The form this takes is as a computation type in
-F*: ``PURE a wp``, where in ``prims.fst``, ``PURE`` is defined as an
-F* primitive effect with a signature as shown below--we'll see much
-more of the ``new_effect`` syntax as we look at user-defined effects
-in subsequent chapters; for now, just see it as a reserved syntax in
-F* to introduce a computation type constructor.
+to apply it to all F* terms. The form this takes is as a computation
+type in F*, ``PURE a wp``, where in ``prims.fst``, ``PURE`` is defined
+as an F* primitive effect with a signature as shown below--we'll see
+much more of the ``new_effect`` syntax as we look at user-defined
+effects in subsequent chapters; for now, just see it as a reserved
+syntax in F* to introduce a computation type constructor.
 
 .. code-block:: fstar
 
@@ -384,11 +494,7 @@ A program ``e`` of type ``PURE a wp`` is a computation which
     
 Notice that ``wp a`` is the type of a function transforming
 postconditions (``a -> Type0``) to preconditions (``Type0``). [#]_ The
-``wp`` argument is also called an *index* of the ``PURE`` effect.
-   
-It turns out that ``wp a`` is a also monad. :ref:`Recall
-<Part2_monad_intro>` that a monad consists of a type operator
-(``wp``), a return, and bind operator, together satisfying some laws. [#]_
+``wp`` argument is also called an *index* of the ``PURE`` effect. [#]_
 
 The return operator for ``wp a`` is shown below: it is analogous to
 the ``WP c Q`` and ``WP x Q`` rules for variables and constants that
@@ -526,7 +632,7 @@ annotated to have type ``PURE b wp_b``, then F* does the following:
 
   1. It computes a constraint ``p : a -> Type0``, which is sufficient
      to prove that ``a`` is a subtype of ``b``, e.g., is ``a = int``
-     and ``b = nat``, the constraint ``P`` is ``fun (x:int) -> x >=
+     and ``b = nat``, the constraint ``p`` is ``fun (x:int) -> x >=
      0``.
 
   2. Next, it strengthens ``wp_a`` to assert that the returned value
@@ -598,8 +704,8 @@ The signature of ``Pure`` is ``Pure a req ens``, where ``req`` is the
 precondition and ``ens:a -> Type0`` is the postcondition. Using
 ``Pure``, we can write the ``factorial`` function we saw at the top of
 this chapter---F* infers a ``PURE a wp`` type for it, and relates it
-to the annotated ``Pure int req ens`` type, proving that the latter is
-stronger.
+to the annotated ``Pure int req ens`` type, proving that the latter
+has a stronger precondition and weaker postcondition.
 
 One may wonder when one should write specifications using the notation
 ``x:a -> Pure b req ens`` versus ``x:a{req} -> Tot (y:b { ens y
@@ -670,10 +776,10 @@ as follows:
 That is, ``Lemma`` is an instance of the Hoare-style refinement of
 pure computations ``Pure a req ens``.  So, when you write a proof term
 and annotate it as ``e : Lemma (requires pre) (ensures post)``, F*
-infers a specicification for ``e : PURE a wp``, and then, as with all
+infers a specification for ``e : PURE a wp``, and then, as with all
 PURE computations, F* tries to check that the annotated ``Lemma``
 specification has a stronger WP-specification than the computed
-weakest precondition.x
+weakest precondition.
 
 Of course, F* still includes syntactic sugar for ``Lemma``, e.g.,
 ``Lemma (requires pre) (ensures post)`` is desugared to ``Lemma unit

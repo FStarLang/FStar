@@ -77,6 +77,7 @@ class CustomLexer(RegexLexer):
         'when'       ,
         'with'       ,
         '_'          ,
+        'Lemma'      ,
     )
     tokens = {
         'root': [

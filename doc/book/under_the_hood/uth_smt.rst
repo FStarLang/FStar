@@ -1632,6 +1632,7 @@ proof-performance problem. Besides, even putting stability aside,
 splitting queries into their conjuncts results in somewhat slower
 proofs.
 
+.. _UTH_opaque_to_smt:
 
 Taking Control of Quantifier Instantiations with Opaque Definitions
 ...................................................................

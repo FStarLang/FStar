@@ -244,6 +244,8 @@ correct—so, you'll have to write it explicitly, as shown below.
    :start-after: SNIPPET_START: ackermann_flip
    :end-before: SNIPPET_END: ackermann_flip
 
+.. _Part1_mutual_recursion:
+
 Mutual recursion
 ^^^^^^^^^^^^^^^^
 
