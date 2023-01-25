@@ -190,6 +190,18 @@ val sub_stt_ghost
   (e:stt_ghost a opened pre1 post1)
   : stt_ghost a opened pre2 post2
 
+inline_for_extraction
+let unit_non_informative : non_informative_witness unit =
+  fun u -> u
+
+inline_for_extraction
+let prop_non_informative : non_informative_witness prop =
+  fun p -> p
+
+inline_for_extraction
+let erased_non_informative (a:Type u#a) : non_informative_witness (Ghost.erased a) =
+  fun x -> Ghost.reveal x
+
 (***** end computation types and combinators *****)
 
 
@@ -219,3 +231,12 @@ val read_explicit (r:R.ref u32) (n:erased u32) (p:perm)
   : stt u32
         (R.pts_to r p n)
         (fun _ -> R.pts_to r p n)
+
+//
+// Framing with some context and required emp doesn't work,
+//   so these args pre post etc.
+//
+val ghost_noop (r:R.ref u32) (n:erased u32) (p:perm)
+  : stt_ghost unit emp_inames
+              (R.pts_to r p n)
+              (fun _ -> R.pts_to r p n)
