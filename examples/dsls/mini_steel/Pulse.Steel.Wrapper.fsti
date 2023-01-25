@@ -232,11 +232,7 @@ val read_explicit (r:R.ref u32) (n:erased u32) (p:perm)
         (R.pts_to r p n)
         (fun _ -> R.pts_to r p n)
 
-//
-// Framing with some context and required emp doesn't work,
-//   so these args pre post etc.
-//
-val ghost_noop (r:R.ref u32) (n:erased u32) (p:perm)
+val ghost_noop (_:unit)
   : stt_ghost unit emp_inames
-              (R.pts_to r p n)
-              (fun _ -> R.pts_to r p n)
+              emp
+              (fun _ -> emp)

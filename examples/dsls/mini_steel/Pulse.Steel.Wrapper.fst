@@ -200,4 +200,4 @@ let read_atomic r n p =
 
 let read_explicit r n p = read r #n #p
 
-let ghost_noop _ _ _ = fun _ -> noop ()
+let ghost_noop () = fun _ -> noop ()
