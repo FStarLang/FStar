@@ -130,3 +130,13 @@ let warmup (x:int) = assert (x + 1 > x)
       Pulse.Steel.Wrapper.read_atomic r n full_perm
     )
 )))
+
+%splice_t[ghost_read] (check (`(
+  fun (r:ref u32) (n:erased u32) ->
+    (expects (pts_to r full_perm n))
+    (provides (fun _ -> pts_to r full_perm n))
+    (
+      let x = ghost_noop () in
+      Pulse.Steel.Wrapper.read_explicit r n full_perm
+    )
+)))
