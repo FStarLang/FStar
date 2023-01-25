@@ -126,7 +126,7 @@ let warmup (x:int) = assert (x + 1 > x)
     (expects (pts_to r full_perm n))
     (provides (fun _ -> pts_to r full_perm n))
     (
-      let x = ghost_noop r n full_perm in
-      read_atomic r n full_perm
+      let x = ghost_noop () in
+      Pulse.Steel.Wrapper.read_atomic r n full_perm
     )
 )))

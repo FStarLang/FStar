@@ -14,6 +14,7 @@ module RTB = FStar.Tactics.Builtins
 let rec vprop_as_list (vp:pure_term)
   : list pure_term
   = match vp with
+    | Tm_Emp -> []
     | Tm_Star vp0 vp1 -> vprop_as_list vp0 @ vprop_as_list vp1
     | _ -> [vp]
 
@@ -81,6 +82,7 @@ let rec vprop_list_equiv (f:RT.fstar_top_env)
   : GTot (vprop_equiv f g vp (canon_vprop vp))
          (decreases vp)
   = match vp with
+    | Tm_Emp -> VE_Refl _ _
     | Tm_Star vp0 vp1 ->
       let eq0 = vprop_list_equiv f g vp0 in
       let eq1 = vprop_list_equiv f g vp1 in      
