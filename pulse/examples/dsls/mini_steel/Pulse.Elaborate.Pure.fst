@@ -23,6 +23,8 @@ let args_of (tms:list R.term) =
 let steel_wrapper = ["Pulse"; "Steel"; "Wrapper"]
 let mk_steel_wrapper_lid s = steel_wrapper@[s]
 
+let emp_inames_lid = mk_steel_wrapper_lid "emp_inames"
+
  //the thunked, value-type counterpart of the effect STT
 let stt_lid = mk_steel_wrapper_lid "stt"
 let stt_fv = R.pack_fv stt_lid
@@ -67,8 +69,7 @@ let vprop_eq_tm t1 t2 =
   let t = pack_ln (Tv_App t (t2, Q_Explicit)) in
   t
 
-let emp_inames_tm : R.term =
-  `(FStar.Ghost.hide #(Steel.Memory.inames) (FStar.Set.empty #Steel.Memory.iname))
+let emp_inames_tm : R.term = R.pack_ln (R.Tv_FVar (R.pack_fv emp_inames_lid))
 
 let mk_abs ty qual t : R.term =  R.pack_ln (R.Tv_Abs (binder_of_t_q ty qual) t)
 let mk_abs_with_name s ty qual t : R.term =  R.pack_ln (R.Tv_Abs (binder_of_t_q_s ty qual s) t)

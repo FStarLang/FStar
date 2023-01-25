@@ -62,6 +62,8 @@ let vprop_equiv_cong (p1 p2 p3 p4:vprop)
 
 let vprop_equiv_ext p1 p2 _ = equiv_refl p1
 
+let emp_inames = Ghost.hide Set.empty
+
 inline_for_extraction
 type stt (a:Type u#a) (pre:vprop) (post:a -> vprop) = unit -> STT a pre post
 

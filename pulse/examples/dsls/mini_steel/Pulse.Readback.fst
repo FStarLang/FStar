@@ -158,6 +158,10 @@ let rec readback_ty (t:R.term)
     then Some Tm_VProp
     else if fv_lid = emp_lid
     then Some Tm_Emp
+    else if fv_lid = inames_lid
+    then Some Tm_Inames
+    else if fv_lid = emp_inames_lid
+    then Some Tm_EmpInames
     else Some (Tm_FVar (inspect_fv fv))
 
   | Tv_UInst fv us -> (
