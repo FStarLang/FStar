@@ -80,6 +80,14 @@ of these papers throughout this part of the book.
     algorithm to construct Dijkstra monads automatically for a class
     of simple monads.
 
+  + `Dijkstra Monads for All
+    <https://dl.acm.org/doi/abs/10.1145/3341708>`_ generalizes the
+    construction to apply to relate any computational monad to a
+    specificational counterpart, so long as the two are related by a
+    monad morphism.
+    
   + `Programming and Proving with Indexed Effects
     <https://www.fstar-lang.org/papers/indexedeffects/>`_ describes
-    F*'s user-defined effect system in its most general form.
+    F*'s user-defined effect system in its most general form, allowing
+    it to be applied to any indexed effects, including Dijkstra
+    monads, but several other constructions as well.

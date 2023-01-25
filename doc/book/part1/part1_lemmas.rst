@@ -59,6 +59,8 @@ it out in detail:
   functions, we can write proofs about other pure expressions. We'll
   discuss such proofs in detail in the remainder of this section.
 
+.. _Part1_lemma_syntax:
+
 Some syntactic shorthands for Lemmas
 ....................................
 

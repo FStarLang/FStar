@@ -24,6 +24,30 @@ a section on Dijkstra monads generalized from before, as a morphism between comp
 a section on algebraic effects, with some background on what they're good for and and how we model them
 
 etc.
-  
+
+
+
+
+
+The primitive effects in F* provide a fixed specification and
+reasoning mechanism for pure, ghost, and divergent
+computations. :ref:`Earlier <Part2_par>` we also saw that using monads
+we can model different kind of effects and specify their
+semantics. For reasoning about effectful programs, however, such
+semantic models may not be the right tool. Indeed several
+monad-like abstractions have been proposed in the literature that are
+suitable for different tasks. With user-defined effects, F* allows
+building such custom abstractions and program logics, seamlessly
+integrated with other features (recursion, inductive types,
+...) and programmability using the same syntax that we have seen so
+far. We turn our attention to user-defined effects next.
+
+      
+
+
+
+
+
+
 
 
