@@ -7,6 +7,10 @@ all:
 	$(Q)+$(MAKE) -C ulib/ml
 	$(Q)+$(MAKE) -C ulib
 
+.PHONY: dune
+dune:
+	cd ocaml && dune build --profile release && dune install --prefix=$(PWD)
+
 install:
 	$(Q)+$(MAKE) -C src/ocaml-output install
 
