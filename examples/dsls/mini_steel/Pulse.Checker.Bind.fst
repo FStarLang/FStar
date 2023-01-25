@@ -27,6 +27,23 @@ let force_st #f #g #t (#pre:pure_term)
     | C_STAtomic _ _
     | C_STGhost _ _ -> (|c, d_c|)
 
+let get_bind_comp (f:RT.fstar_top_env) (g:env)
+  (c1:pure_comp_st)
+  (c2:pure_comp_st)
+  (x:var)
+  (res_typing:universe_of f g (comp_res c2) (comp_u c2))
+  (post_typing:tot_typing f ((x, Inl (comp_res c2))::g) (open_term (comp_post c2) x) Tm_VProp)
+  : T.TacH (c:pure_comp_st{comp_pre c == comp_pre c1} & bind_comp f g x c1 c2 c)
+           (requires fun _ ->
+              None? (lookup g x) /\
+              open_term (comp_post c1) x == comp_pre c2 /\
+              (~ (x `Set.mem` freevars (comp_post c2))))
+           (ensures fun _ _ -> True) =
+
+  if C_ST? c1 && C_ST? c2
+  then (| bind_comp_out c1 c2, Bind_comp g x c1 c2 res_typing x post_typing |)
+  else T.fail ""
+
 #push-options "--z3rlimit_factor 8 --fuel 2 --ifuel 1 --query_stats"
 let check_bind
   (f:RT.fstar_top_env)
@@ -67,12 +84,11 @@ let check_bind
       then T.fail "Unexpected universe for result type"
       else if x `Set.mem` freevars s2.post
       then T.fail (Printf.sprintf "Bound variable %d escapes scope in postcondition %s" x (P.term_to_string s2.post))
-      else if not (C_ST? c1 && C_ST? c2)
-      then T.fail (Printf.sprintf "bind of atomic and ghost computation types are not supported yet")
       else (
         let s2_post_opened = open_term s2.post x in
         let post_typing = check_vprop_no_inst f ((x, Inl s2.res)::g) s2_post_opened in
-        let bc : bind_comp f g x c1 c2 _ = (Bind_comp g x c1 c2 res_typing x post_typing) in
+        let (| _, bc |) = get_bind_comp f g c1 c2 x res_typing post_typing in
+        //let bc : bind_comp f g x c1 c2 _ = (Bind_comp g x c1 c2 res_typing x post_typing) in
         (| Tm_Bind e1 e2_closed, _, T_Bind _ e1 e2_closed _ _ _ _ d1 t_typing d2 bc |)
       )
   )
