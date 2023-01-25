@@ -209,3 +209,8 @@ val write (r:R.ref u32) (x:u32) (#n:erased u32)
   : stt unit
         (R.pts_to r full_perm n) 
         (fun _ -> R.pts_to r full_perm (hide x))
+
+val read_atomic (r:R.ref u32) (n:erased u32) (p:perm)
+  : stt_atomic u32 emp_inames
+               (R.pts_to r p n)
+               (fun _ -> R.pts_to r p n)

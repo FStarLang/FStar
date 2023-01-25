@@ -54,7 +54,7 @@ let rec readback_universes (us:list R.universe)
         | None -> None
         | Some tl -> Some (hd::tl)
     
-#push-options "--z3rlimit_factor 10"
+#push-options "--z3rlimit_factor 20"
 let try_readback_st_comp
   (t:R.term)
   (readback_ty:(t':R.term -> T.Tac (option (ty:pure_term { elab_term ty == Some t' }))))
@@ -85,14 +85,14 @@ let try_readback_st_comp
                       snd post == Q_Explicit);
 
               let l = [fst res; fst pre; mk_abs (fst res) R.Q_Explicit body] in
-              assume (args_of l == args);
-              // probably need some lemma for R.mk_app and R.collect_app
               assume (t == mk_stt_app u l);
               let? u'' = readback_universe u in
               let? res' = readback_ty (fst res) in
               let? pre' = readback_ty (fst pre) in
-              let? post' = readback_ty (fst post) in
-              Some (C_ST ({u=u''; res=res'; pre=pre';post=post'}) <: c:Pulse.Syntax.comp{ elab_comp c == Some t })
+              let? post' = readback_ty body in
+              let c = C_ST {u=u''; res=res'; pre=pre';post=post'} in
+              assume (elab_universe u'' == u);
+              Some (c <: c:Pulse.Syntax.comp{ elab_comp c == Some t })
             | _ -> None)
          | _ -> None
     else if fv_lid = stt_atomic_lid || fv_lid = stt_ghost_lid
@@ -108,15 +108,19 @@ let try_readback_st_comp
               let? res' = readback_ty (fst res) in
               let? opened' = readback_ty (fst opened) in
               let? pre' = readback_ty (fst pre) in
-              let? post' = readback_ty (fst post) in
+              let? post' = readback_ty body in
               if fv_lid = stt_atomic_lid
               then begin
                 assume (t == mk_stt_atomic_app u l);
-                Some (C_STAtomic opened' ({u=u''; res=res'; pre=pre';post=post'}) <: c:Pulse.Syntax.comp{ elab_comp c == Some t })
+                let c = C_STAtomic opened' ({u=u''; res=res'; pre=pre';post=post'}) in
+                assume (elab_universe u'' == u);
+                Some (c <: c:Pulse.Syntax.comp{ elab_comp c == Some t })
               end
               else begin
                 assume (t == mk_stt_ghost_app u l);
-                Some (C_STGhost opened' ({u=u''; res=res'; pre=pre';post=post'}) <: c:Pulse.Syntax.comp{ elab_comp c == Some t })
+                let c = C_STGhost opened' ({u=u''; res=res'; pre=pre';post=post'}) in
+                assume (elab_universe u'' == u);
+                Some (c <: c:Pulse.Syntax.comp{ elab_comp c == Some t })
               end
             | _ -> None)
          | _ -> None
