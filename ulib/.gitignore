@@ -9,6 +9,8 @@ tactics_ml/fstartaclib.mllib
 .depend.extract
 .depend.extract.fsharp
 .depend.extract.rsp
+.depend.extract-stdlib
+.depend.extract-stdlib.rsp
 fs/extracted
 [Bb]in/
 [Oo]bj/
