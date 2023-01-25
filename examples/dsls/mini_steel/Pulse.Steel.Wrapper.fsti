@@ -52,6 +52,8 @@ val vprop_equiv_ext (p1 p2:vprop) (_:p1 == p2)
 
 (***** begin computation types and combinators *****)
 
+val emp_inames : inames
+
 inline_for_extraction
 val stt (a:Type u#a) (pre:vprop) (post:a -> vprop) : Type0
 
