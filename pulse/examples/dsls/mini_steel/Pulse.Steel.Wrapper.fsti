@@ -249,7 +249,7 @@ val read_pure (r:R.ref u32) (n:erased u32)
         (fun x -> R.pts_to r full_perm n `star` pure (eq2_prop (reveal n) x))
 
 val elim_pure (p:prop)
-  : stt_ghost (squash p) Set.empty
+  : stt_ghost (squash p) emp_inames
               (pure p)
               (fun _ -> emp)
 

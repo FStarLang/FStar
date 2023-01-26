@@ -181,7 +181,12 @@ let rec check' : bool -> check_t =
           check' false f g t pre pre_typing post_hint
 
         | _ ->
-          T.fail "Unexpected head type in stateful application"
+          T.fail
+            (Printf.sprintf
+               "Unexpected head type in stateful application (head: %s, comp_typ: %s, and arg: %s"
+               (P.term_to_string head)
+               (P.comp_to_string comp_typ)
+               (P.term_to_string arg))
       )
       else T.fail "Unexpected qualifier"
     )
