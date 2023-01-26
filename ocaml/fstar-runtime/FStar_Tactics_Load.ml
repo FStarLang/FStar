@@ -19,18 +19,6 @@ let find_taclib_old () =
     end
   with _ -> default
 
-let find_fstar_subpackage (s: string) =
-  let default = FStar_Options.fstar_bin_directory ^ "/../lib/fstar/" ^ s in
-  try
-    begin
-      let r = Process.run "ocamlfind" [| "query"; "fstar." ^ s |] in
-      match r with
-      | { Process.Output.exit_status = Process.Exit.Exit 0; stdout; _ } ->
-         String.trim (List.hd stdout)
-      | _ -> default
-    end
-  with _ -> default
-
 let dynlink fname =
   try
     perr ("Attempting to load " ^ fname ^ "\n");
@@ -39,9 +27,6 @@ let dynlink fname =
     let msg = U.format2 "Dynlinking %s failed: %s" fname (Dynlink.error_message e) in
     perr msg;
     failwith msg
-
-let dynlink_fstar_subpackage (s: string) =
-  dynlink (find_fstar_subpackage s ^ "/fstar_" ^ s ^ ".cmxs")
 
 type load_ops_t = {
     load_lib: unit -> unit;
@@ -55,18 +40,12 @@ let load_ops : load_ops_t =
       perr "Loaded old fstartaclib successfully\n";
       "fstar-tactics-lib"
   in
-  let load () =
-      dynlink_fstar_subpackage "stdlib";
-      dynlink_fstar_subpackage "taclib";
-      perr "Loaded fstar.taclib successfully\n";
-      "fstar.taclib"
-  in
   let load_lib () =
     if !already_loaded = None then
       let taclib =
         try
-          load ()
-        with _ -> load_old ()
+          load_old ()
+        with _ -> "fstar.taclib" (* assume that we are in the new setting where the F* compiler is linked with fstar.taclib *)
       in
       already_loaded := Some taclib
   in
