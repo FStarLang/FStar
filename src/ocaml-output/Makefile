@@ -93,8 +93,8 @@ generated-files: $(GENERATED_FILES) intfiles
 DUNE_SNAPSHOT ?= $(realpath ../../ocaml)
 export DUNE_SNAPSHOT
 
-.PHONY: dune-snapshot
-dune-snapshot: generated-files
+.PHONY: dune-stdlib-snapshot dune-taclib-snapshot dune-snapshot dune-fstar-snapshot dune-verify-ulib
+dune-fstar-snapshot: generated-files
 	mkdir -p $(DUNE_SNAPSHOT)/fstar
 	cp ../../src/fstar/ml/*.ml $(DUNE_SNAPSHOT)/fstar
 	+$(MAKE) -C ../../ulib/ml dune-base-snapshot
@@ -105,13 +105,25 @@ dune-snapshot: generated-files
 	rm -rf $(DUNE_SNAPSHOT)/fstar-runtime/generated/get_branch.ml
 	mkdir -p $(DUNE_SNAPSHOT)/fstar-tests
 	cp ../../src/tests/ml/*.ml $(DUNE_SNAPSHOT)/fstar-tests
+
+dune-verify-ulib: dune-fstar-snapshot
 	+if test -x $(FSTAR_HOME)/bin/fstar.exe ; then \
-	  $(MAKE) -C ../../ulib && \
+	  $(MAKE) -C ../../ulib ; \
+	fi
+
+dune-stdlib-snapshot: dune-verify-ulib
+	+if test -x $(FSTAR_HOME)/bin/fstar.exe ; then \
 	  mkdir -p $(DUNE_SNAPSHOT)/fstar-stdlib/generated && \
-	  $(MAKE) -C ../../ulib -f Makefile.extract-stdlib dune-snapshot && \
+	  $(MAKE) -C ../../ulib -f Makefile.extract-stdlib dune-snapshot ; \
+	fi
+
+dune-taclib-snapshot: dune-verify-ulib
+	+if test -x $(FSTAR_HOME)/bin/fstar.exe ; then \
 	  mkdir -p $(DUNE_SNAPSHOT)/fstar-taclib/generated && \
 	  $(MAKE) -C ../../ulib -f Makefile.extract-taclib dune-snapshot ; \
 	fi
+
+dune-snapshot: dune-stdlib-snapshot dune-taclib-snapshot
 
 # https://stackoverflow.com/questions/38294095/ocaml-how-to-solve-findlib-warnings-of-multiple-cmis
 FSTAR_MAIN_NATIVE=_build/src/fstar/ml/main.native

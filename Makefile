@@ -35,6 +35,20 @@ clean-dune-snapshot:
 clean-full-dune-snapshot: clean-dune-snapshot
 	find ocaml -name *.ml | xargs rm -rf
 
+.PHONY: dune-extract-all
+
+dune-extract-all:
+	+$(MAKE) -C src ocaml
+	+$(MAKE) -C src/ocaml-output dune-snapshot
+
+dune-full-bootstrap:
+	+$(MAKE) dune
+	+$(MAKE) clean-full-dune-snapshot
+	rm -rf ulib/.depend*
+	+$(MAKE) dune-extract-all
+	rm -rf ulib/.depend*
+	+$(MAKE) dune
+
 install:
 	$(Q)+$(MAKE) -C src/ocaml-output install
 
