@@ -55,13 +55,17 @@ let rec mk_bind (f:RT.fstar_top_env) (g:env)
     let bc = Bind_comp g x c1 c2 res_typing x post_typing in
     (| Tm_Bind e1 e2, _, T_Bind _ e1 e2 _ _ _ _ d_e1 d_c1res d_e2 bc |)
   | C_STGhost inames1 _, C_STGhost inames2 _ ->
-    if inames1 = inames2
-    then let bc = Bind_comp g x c1 c2 res_typing x post_typing in
-         (| Tm_Bind e1 e2, _, T_Bind _ e1 e2 _ _ _ _ d_e1 d_c1res d_e2 bc |)
+    if eq_tm inames1 inames2
+    then begin
+      assume (inames1 == inames2);   
+      let bc = Bind_comp g x c1 c2 res_typing x post_typing in
+      (| Tm_Bind e1 e2, _, T_Bind _ e1 e2 _ _ _ _ d_e1 d_c1res d_e2 bc |)
+    end
     else T.fail "Cannot compose two stghost computations with different opened invariants"
   | C_STAtomic inames _, C_ST _ ->
-    if inames = Tm_EmpInames
+    if eq_tm inames Tm_EmpInames
     then begin
+      assume (inames == Tm_EmpInames);
       let c1lifted = C_ST (st_comp_of_comp c1) in
       let d_e1 : src_typing f g e1 c1lifted =
         T_Lift _ _ _ c1lifted d_e1 (Lift_STAtomic_ST _ c1) in
@@ -70,24 +74,27 @@ let rec mk_bind (f:RT.fstar_top_env) (g:env)
     end
     else T.fail "Cannot compose atomic with non-emp opened invariants with stt"
   | C_STGhost inames1 _, C_STAtomic inames2 _ ->
-    if inames1 = inames2
+    if eq_tm inames1 inames2
     then begin
+      assume (inames1 == inames2);
       let w = get_non_informative_witness f g (comp_u c1) (comp_res c1) in
       let bc = Bind_comp_ghost_l g x c1 c2 w res_typing x post_typing in
       (| Tm_Bind e1 e2, _, T_Bind _ e1 e2 _ _ _ _ d_e1 d_c1res d_e2 bc |)
     end
     else T.fail "Cannot compose ghost and atomic with different opened invariants"
   | C_STAtomic inames1 _, C_STGhost inames2 _ ->
-    if inames1 = inames2
+    if eq_tm inames1 inames2
     then begin
+      assume (inames1 == inames2);
       let w = get_non_informative_witness f g (comp_u c2) (comp_res c2) in
       let bc = Bind_comp_ghost_r g x c1 c2 w res_typing x post_typing in
       (| Tm_Bind e1 e2, _, T_Bind _ e1 e2 _ _ _ _ d_e1 d_c1res d_e2 bc |)
     end
     else T.fail "Cannot compose atomic and ghost with different opened invariants"
   | C_ST _, C_STAtomic inames _ ->
-    if inames = Tm_EmpInames
+    if eq_tm inames Tm_EmpInames
     then begin
+      assume (inames == Tm_EmpInames);
       let c2lifted = C_ST (st_comp_of_comp c2) in
       let g' = (x, Inl (comp_res c1))::g in
       let d_e2 : src_typing f g' (open_term e2 x) c2lifted =
@@ -97,8 +104,9 @@ let rec mk_bind (f:RT.fstar_top_env) (g:env)
     end
     else T.fail "Cannot compose stt with atomic with non-emp opened invariants"
   | C_STGhost inames _, C_ST _ ->
-    if inames = Tm_EmpInames
+    if eq_tm inames Tm_EmpInames
     then begin
+      assume (inames == Tm_EmpInames);
       let w = get_non_informative_witness f g (comp_u c1) (comp_res c1) in
       let c1lifted = C_STAtomic inames (st_comp_of_comp c1) in
       let d_e1 : src_typing f g e1 c1lifted =
@@ -107,8 +115,9 @@ let rec mk_bind (f:RT.fstar_top_env) (g:env)
     end
     else T.fail "Cannot compose ghost with stt with non-emp opened invariants"
   | C_ST _, C_STGhost inames _ ->
-    if inames = Tm_EmpInames
+    if eq_tm inames Tm_EmpInames
     then begin
+      assume (inames == Tm_EmpInames);
       let g' = (x, Inl (comp_res c1))::g in
       let w = get_non_informative_witness f g' (comp_u c2) (comp_res c2) in
       let c2lifted = C_STAtomic inames (st_comp_of_comp c2) in

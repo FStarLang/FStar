@@ -35,8 +35,8 @@ let rec check_valid_solution (t1 t2:term) (uv_sols:list (term & term))
   match uv_sols with
   | [] -> [t1, t2]
   | (t1', t2')::tl ->
-    if t1 = t1'
-    then if t2 = t2' then uv_sols
+    if eq_tm t1 t1'
+    then if eq_tm t2 t2' then uv_sols
          else T.fail "check_valid_solution failed"
     else (t1', t2')::(check_valid_solution t1 t2 tl)
 
@@ -71,7 +71,7 @@ let rec atomic_vprops_may_match (t1:term) (t2:pure_term) : bool =
     atomic_vprops_may_match head1 head2 &&
     q1 = q2 &&
     atomic_vprops_may_match arg1 arg2
-  | _, _ -> t1 = t2
+  | _, _ -> eq_tm t1 t2
 
 let infer_one_atomic_vprop (t:pure_term) (ctxt:list pure_term) (uv_sols:list (term & term))
   : T.Tac (list (term & term)) =
@@ -100,7 +100,7 @@ let rec rebuild_head (head:term) (uvs:list term) (uv_sols:list (term & term))
   = match uvs with
     | [] -> head
     | hd::tl ->
-      let ropt = List.Tot.find (fun (t1, _) -> t1 = hd) uv_sols in
+      let ropt = List.Tot.find (fun (t1, _) -> eq_tm t1 hd) uv_sols in
       match ropt with
       | None -> T.fail "inference failed in building head"
       | Some (_, t2) ->

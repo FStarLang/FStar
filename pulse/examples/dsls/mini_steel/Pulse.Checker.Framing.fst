@@ -102,14 +102,15 @@ let rec vprop_list_equiv (f:RT.fstar_top_env)
 
 module L = FStar.List.Tot.Base
 
+#push-options "--z3rlimit_factor 2"
 let check_one_vprop f g (p q:pure_term) : T.Tac (option (vprop_equiv f g p q)) =
-  if p = q
-  then Some (VE_Refl _ _)
+  if eq_tm p q
+  then (assume (p == q); Some (VE_Refl _ _))
   else
     let check_extensional_equality =
       match p, q with
       | Tm_PureApp hd_p _ _, Tm_PureApp hd_q _ _ ->
-        hd_p = hd_q
+        eq_tm hd_p hd_q
       | _, _ -> false in
     if check_extensional_equality
     then
@@ -120,6 +121,7 @@ let check_one_vprop f g (p q:pure_term) : T.Tac (option (vprop_equiv f g p q)) =
       | Some token -> Some (VE_Ext g p q token)
       | None -> None
     else None
+#pop-options
 
 type split_one_vprop_res f g (p:pure_term) (qs:list pure_term) =
   r:option (l:list pure_term & q:pure_term & vprop_equiv f g p q & list pure_term){
