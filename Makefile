@@ -45,6 +45,7 @@ dune-full-bootstrap:
 	+$(MAKE) dune
 	+$(MAKE) clean-full-dune-snapshot
 	rm -rf ulib/.depend*
+	rm -rf src/ocaml-output/FStar_*.ml* src/ocaml-output/parse.mly
 	+$(MAKE) dune-extract-all
 	rm -rf ulib/.depend*
 	+$(MAKE) dune
