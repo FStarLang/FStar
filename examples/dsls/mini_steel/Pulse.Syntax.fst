@@ -44,7 +44,8 @@ type nm = {
 
 type qualifier =
   | Implicit
-  
+
+noeq
 type term =
   // | Tm_Embed    : R.term -> term // a host term included as is in Pulse
   | Tm_BVar     : bv -> term
@@ -468,45 +469,6 @@ let rec close_open_inverse (t:term) (x:var { ~(x `Set.mem` freevars t) } )
           (decreases t)
   = admit()
 
-// let constant_to_string (c:constant) : string =
-//   match c with
-//   | Unit -> "()"
-//   | Bool b -> string_of_bool b
-//   | Int n -> string_of_int n
-
-// let rec term_to_string (t:term) : Tot string (decreases t) =
-//   match t with
-//   | Tm_BVar bv -> bv.bv_ppname ^ "@" ^ (string_of_int bv.bv_index)
-//   | Tm_Var nm -> nm.nm_ppname ^ "#" ^ (string_of_int nm.nm_index)
-//   | Tm_FVar l -> String.concat "." l
-//   | Tm_Constant c -> constant_to_string c
-//   | Tm_Abs b pre_hint body ->
-//     "(" ^
-//     "fun (" ^
-//     (binder_to_string b) ^ ")_(" ^
-//     (term_to_string pre_hint) ^ ") -> " ^
-//     (term_to_string body) ^
-//     ")"
-//   | Tm_PureApp head arg ->
-//     "(" ^
-//     (term_to_string head) ^ " " ^ (term_to_string arg) ^
-//     ")"
-//   | Tm_Let _ _ _ -> "<Tm_Let>"
-//   | Tm_STApp head arg ->
-//     "(" ^
-//     (term_to_string head) ^ " " ^ (term_to_string arg) ^
-//     ")"
-//   | Tm_Bind t e1 e2 ->
-//     "let _:" ^ term_to_string t ^ " = " ^
-//     term_to_string e1 ^ "; " ^ term_to_string e2
-//   | Tm_Emp -> "emp"
-//   | Tm_Pure p -> "pure (" ^ (term_to_string p) ^ ")"
-//   | Tm_Star l r -> "star (" ^ (term_to_string l) ^ ") (" ^ (term_to_string r) ^ ")"
-//   | _ -> "<term>"
-
-// and binder_to_string (b:binder) : string =
-//   b.binder_ppname ^ ":" ^ term_to_string (b.binder_ty)
-
 let null_binder (t:term) : binder =
   {binder_ty=t;binder_ppname="_"}
 
@@ -522,3 +484,78 @@ let null_bvar (i:index) : term = Tm_BVar {bv_index=i;bv_ppname="_"}
 
 let gen_uvar (t:term) : T.Tac term =
   Tm_UVar (T.fresh ())
+
+let rec eq_tm (t1 t2:term) : bool =
+  match t1, t2 with
+  | Tm_BVar bv1, Tm_BVar bv2 -> bv1.bv_index = bv2.bv_index
+  | Tm_Var nm1, Tm_Var nm2 -> nm1.nm_index = nm2.nm_index
+  | Tm_FVar l1, Tm_FVar l2 -> l1 = l2
+  | Tm_UInst l1 us1, Tm_UInst l2 us2 -> l1 = l2 && us1 = us2
+  | Tm_Constant c1, Tm_Constant c2 -> c1 = c2
+  | Tm_Refine b1 t1, Tm_Refine b2 t2 ->
+    eq_binder b1 b2 &&
+    eq_tm t1 t2
+  | Tm_Abs b1 q1 pre1 body1 opost1, Tm_Abs b2 q2 pre2 body2 opost2 ->
+    eq_binder b1 b2 &&
+    q1 = q1 &&
+    eq_tm pre1 pre2 &&
+    eq_tm body1 body2 &&
+    eq_tm_opt opost1 opost2
+  | Tm_PureApp head1 q1 arg1, Tm_PureApp head2 q2 arg2
+  | Tm_STApp head1 q1 arg1, Tm_STApp head2 q2 arg2 ->
+    eq_tm head1 head2 &&
+    q1 = q2 &&
+    eq_tm arg1 arg2
+  | Tm_Let t1 e11 e12, Tm_Let t2 e21 e22 ->
+    eq_tm t1 t2 &&
+    eq_tm e11 e21 &&
+    eq_tm e12 e22
+  | Tm_Bind e1 e2, Tm_Bind e3 e4 ->
+    eq_tm e1 e3 &&
+    eq_tm e2 e4
+  | Tm_Emp, Tm_Emp -> true
+  | Tm_Pure p1, Tm_Pure p2 -> eq_tm p1 p2
+  | Tm_Star l1 r1, Tm_Star l2 r2 ->
+    eq_tm l1 l2 &&
+    eq_tm r1 r2
+  | Tm_ExistsSL t1 body1, Tm_ExistsSL t2 body2
+  | Tm_ForallSL t1 body1, Tm_ForallSL t2 body2 ->
+    eq_tm t1 t2 &&
+    eq_tm body1 body2
+  | Tm_Arrow b1 q1 c1, Tm_Arrow b2 q2 c2 ->
+    eq_binder b1 b2 &&
+    q1 = q2 &&
+    eq_comp c1 c2
+  | Tm_Type u1, Tm_Type u2 -> u1 = u2
+  | Tm_VProp, Tm_VProp -> true
+  | Tm_If b1 t_then1 t_else1, Tm_If b2 t_then2 t_else2 ->
+    eq_tm b1 b2 &&
+    eq_tm t_then1 t_then2 &&
+    eq_tm t_else1 t_else2
+  | Tm_Inames, Tm_Inames -> true
+  | Tm_EmpInames, Tm_EmpInames -> true
+  | Tm_UVar n1, Tm_UVar n2 -> n1 = n2
+  | _, _ -> false
+
+and eq_tm_opt (t1 t2:option term) : bool =
+  match t1, t2 with
+  | None, None -> true
+  | Some t1, Some t2 -> eq_tm t1 t2
+  | _, _ -> false
+
+and eq_binder (b1 b2:binder) : bool = eq_tm b1.binder_ty b2.binder_ty
+and eq_comp (c1 c2:comp) : bool =
+  match c1, c2 with
+  | C_Tot t1, C_Tot t2 -> eq_tm t1 t2
+  | C_ST s1, C_ST s2 -> eq_st_comp s1 s2
+  | C_STAtomic inames1 s1, C_STAtomic inames2 s2
+  | C_STGhost inames1 s1, C_STGhost inames2 s2 ->
+    eq_tm inames1 inames2 &&
+    eq_st_comp s1 s2
+  | _, _ -> false
+
+and eq_st_comp (s1 s2:st_comp) : bool =
+  s1.u = s2.u &&
+  eq_tm s1.res s2.res &&
+  eq_tm s1.pre s2.pre &&
+  eq_tm s1.post s2.post
