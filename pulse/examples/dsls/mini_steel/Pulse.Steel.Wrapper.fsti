@@ -240,3 +240,20 @@ val ghost_noop (_:unit)
   : stt_ghost (squash True) emp_inames
               emp
               (fun _ -> emp)
+
+let eq2_prop (#a:Type) (x y:a) : prop = x == y
+
+val read_pure (r:R.ref u32) (n:erased u32)
+  : stt u32
+        (R.pts_to r full_perm n)
+        (fun x -> R.pts_to r full_perm n `star` pure (eq2_prop (reveal n) x))
+
+val elim_pure (p:prop)
+  : stt_ghost (squash p) Set.empty
+              (pure p)
+              (fun _ -> emp)
+
+val write_explicit (r:R.ref u32) (x:u32) (n:erased u32)
+  : stt unit
+        (R.pts_to r full_perm n) 
+        (fun _ -> R.pts_to r full_perm (hide x))

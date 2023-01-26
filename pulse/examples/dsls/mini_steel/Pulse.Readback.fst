@@ -197,6 +197,14 @@ let rec readback_ty (t:R.term)
         Some #(t':Pulse.Syntax.term {elab_term t' == Some t}) (Tm_Star t1 t2)
       )
       else aux ()
+    | Tv_FVar fv, [(a, _)] ->
+      if inspect_fv fv = pure_lid
+      then (
+        let? t1 = readback_ty a in
+        assume (elab_term (Tm_Pure t1) == Some t);
+        Some #(t':Pulse.Syntax.term {elab_term t' == Some t}) (Tm_Pure t1)
+      )
+      else aux ()
     | _ -> aux ()
     end
   
