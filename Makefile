@@ -11,12 +11,26 @@ all:
 dune:
 	cd ocaml && dune build --profile release && dune install --prefix=$(PWD)
 
-.PHONY: dune-bootstrap
-dune-bootstrap:
-	+$(MAKE) -C src/ocaml-output dune-snapshot
+.PHONY: dune-staged-bootstrap dune-bootstrap-stage
+dune-bootstrap-stage:
+	rm -rf ulib/.depend*
+	+$(MAKE) -C src/ocaml-output dune-snapshot # verifies everything
 	+$(MAKE) dune
-	+$(MAKE) SKIP_EXPERIMENTAL=1 -C src/ocaml-output dune-snapshot
-	+$(MAKE) dune
+
+dune-staged-bootstrap:
+	+$(MAKE) STAGE_EXPERIMENTAL=0 dune-bootstrap-stage
+	+$(MAKE) STAGE_EXPERIMENTAL=0 dune-bootstrap-stage # need to do stage 0 twice if fstar.exe was not present for the first time
+	+$(MAKE) STAGE_EXPERIMENTAL=1 dune-bootstrap-stage # generates Steel.Effect.Common
+	+$(MAKE) STAGE_EXPERIMENTAL=2 dune-bootstrap-stage # generates Steel.ST.GenElim.Base
+	+$(MAKE) dune-bootstrap-stage # verifies the rest of ulib/experimental
+
+.PHONY: clean-full-dune-snapshot clean-dune-snapshot
+
+clean-dune-snapshot:
+	rm -rf ocaml/*/generated
+
+clean-full-dune-snapshot: clean-dune-snapshot
+	find ocaml -name *.ml | xargs rm -rf
 
 install:
 	$(Q)+$(MAKE) -C src/ocaml-output install

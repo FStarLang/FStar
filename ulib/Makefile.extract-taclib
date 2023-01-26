@@ -17,16 +17,19 @@ include gmake/fstar.mk
 
 FSTAR_FILES:=$(filter-out $(NOEXTRACT_FILES),$(wildcard *.fst *.fsti)) $(wildcard FStar.InteractiveHelpers.*.fst)
 
-ifndef SKIP_EXPERIMENTAL
+ifneq ($(STAGE_EXPERIMENTAL),0)
   FSTAR_FILES += \
 	$(filter-out $(NOEXTRACT_FILES),$(wildcard experimental/*.fst experimental/*.fsti)) \
-        Steel.Effect.Common.fst \
+        Steel.Effect.Common.fst
+ifneq ($(STAGE_EXPERIMENTAL),1)
+  FSTAR_FILES += \
         Steel.ST.GenElim.Base.fst
+endif
 endif
 
 CODEGEN = Plugin
 MY_FSTAR=$(RUNLIM) $(FSTAR) $(SIL) $(OTHERFLAGS) --cache_checked_modules --odir $(OUTPUT_DIRECTORY) --cache_dir .cache --warn_error @241
-EXTRACT_MODULES=--extract '-FStar +FStar.Range +FStar.Reflection +FStar.Tactics $(NOEXTRACT_MODULES)'
+EXTRACT_MODULES=--extract '-FStar +FStar.Range +FStar.Reflection +FStar.Tactics $(NOEXTRACT_MODULES) -FStar.List.Tot.Properties -FStar.Int.Cast.Full +Steel.Effect.Common +Steel.ST.GenElim.Base +FStar.InteractiveHelpers'
 
 # And then, in a separate invocation, from each .checked we
 # extract an .ml file
