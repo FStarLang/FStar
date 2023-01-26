@@ -201,3 +201,12 @@ let read_atomic r n p =
 let read_explicit r n p = read r #n #p
 
 let ghost_noop () = fun _ -> noop ()
+
+let read_pure r n = fun _ ->
+  let x = read r #n #full_perm () in
+  intro_pure (eq2_prop (reveal n) x);
+  return x
+
+let elim_pure p = fun _ -> elim_pure p
+
+let write_explicit r x n = write r x #n
