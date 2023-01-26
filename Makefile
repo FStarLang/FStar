@@ -7,15 +7,18 @@ all:
 	$(Q)+$(MAKE) -C ulib/ml
 	$(Q)+$(MAKE) -C ulib
 
-.PHONY: dune
-dune:
+.PHONY: dune dune-fstar
+dune-fstar:
 	cd ocaml && dune build --profile release && dune install --prefix=$(PWD)
+
+dune: dune-fstar
+	+$(MAKE) -C ulib
 
 .PHONY: dune-staged-bootstrap dune-bootstrap-stage
 dune-bootstrap-stage:
 	rm -rf ulib/.depend*
-	+$(MAKE) -C src/ocaml-output dune-snapshot # verifies everything
-	+$(MAKE) dune
+	+$(MAKE) -C src/ocaml-output dune-snapshot
+	+$(MAKE) dune-fstar
 
 dune-staged-bootstrap:
 	+$(MAKE) STAGE_EXPERIMENTAL=0 dune-bootstrap-stage
