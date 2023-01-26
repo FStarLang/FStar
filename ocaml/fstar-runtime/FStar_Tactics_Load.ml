@@ -43,27 +43,44 @@ let dynlink fname =
 let dynlink_fstar_subpackage (s: string) =
   dynlink (find_fstar_subpackage s ^ "/fstar_" ^ s ^ ".cmxs")
 
-let load_lib : unit -> unit =
-  let already_loaded = ref false in
+type load_ops_t = {
+    load_lib: unit -> unit;
+    get_taclib_package: unit -> string;
+}
+
+let load_ops : load_ops_t =
+  let already_loaded = ref None in
   let load_old () =
       dynlink (find_taclib_old () ^ "/fstartaclib.cmxs");
-      perr "Loaded old fstartaclib successfully\n"
+      perr "Loaded old fstartaclib successfully\n";
+      "fstar-tactics-lib"
   in
   let load () =
       dynlink_fstar_subpackage "stdlib";
       dynlink_fstar_subpackage "taclib";
-      perr "Loaded fstar.taclib successfully\n"
+      perr "Loaded fstar.taclib successfully\n";
+      "fstar.taclib"
   in
-  fun _ ->
-    if not (!already_loaded) then
-      begin
-        begin
-          try
-            load ();
-          with _ -> load_old ()
-        end;
-        already_loaded := true
+  let load_lib () =
+    if !already_loaded = None then
+      let taclib =
+        try
+          load ()
+        with _ -> load_old ()
+      in
+      already_loaded := Some taclib
+  in
+  {
+    load_lib = load_lib;
+    get_taclib_package =
+      begin fun _ ->
+        load_lib ();
+        U.must !already_loaded
       end
+  }
+
+let load_lib = load_ops.load_lib
+let get_taclib_package = load_ops.get_taclib_package
 
 let try_load_lib () =
   (* It might not be there, just try to load it and ignore if not *)
@@ -87,25 +104,37 @@ let load_tactics_dir dir =
     |> List.iter load_tactic
 
 let compile_modules dir ms =
-   failwith "TODO: deprecated with new fstar.taclib"
-
-(*
    let compile m =
-     let packages = ["fstar-tactics-lib"] in
+     let packages = [ get_taclib_package () ] in
      let pkg pname = "-package " ^ pname in
      let args = ["ocamlopt"; "-shared"] (* FIXME shell injection *)
                 @ ["-I"; dir]
                 @ (List.map pkg packages)
                 @ ["-o"; m ^ ".cmxs"; m ^ ".ml"] in
      (* Note: not useful when in an OPAM setting *)
-     let env_setter = U.format1 "env OCAMLPATH=\"%s/\"" FStar_Options.fstar_bin_directory in
+     let ocamlpath_sep = match FStar_Platform.system with
+       | Windows -> ";"
+       | Posix -> ":"
+     in
+     let old_ocamlpath = try Sys.getenv "OCAMLPATH" with Not_found -> "" in
+     let env_setter = U.format5 "env OCAMLPATH=\"%s/../lib/%s%s/%s%s\""
+       FStar_Options.fstar_bin_directory
+       ocamlpath_sep
+       FStar_Options.fstar_bin_directory
+       ocamlpath_sep
+       old_ocamlpath
+     in
      let cmd = String.concat " " (env_setter :: "ocamlfind" :: args) in
      let rc = Sys.command cmd in
      if rc <> 0
      then E.raise_err (E.Fatal_FailToCompileNativeTactic, (U.format2 "Failed to compile native tactic. Command\n`%s`\nreturned with exit code %s"
                                   cmd (string_of_int rc)))
      else ()
-   in ms
+   in
+   try
+     ms
       |> List.map (fun m -> dir ^ "/" ^ m)
       |> List.iter compile
-*)
+   with e ->
+     perr (U.format1 "Failed to load native tactic: %s\n" (Printexc.to_string e));
+     raise e
