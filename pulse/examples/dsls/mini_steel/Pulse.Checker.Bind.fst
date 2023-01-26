@@ -142,6 +142,11 @@ let check_bind
   else (
       let x = fresh g in
       let next_pre = open_term s1.post x in
+      // T.print (Printf.sprintf "Bind::e1 %s \n\nx %s\n\ne2 %s\n\nnext_pre %s\n\n"
+      //            (P.term_to_string e1)
+      //            (string_of_int x)
+      //            (P.term_to_string (open_term e2 x))
+      //            (P.term_to_string next_pre));
       let g' = (x, Inl s1.res)::g in
       //would be nice to prove that this is typable as a lemma,
       //without having to re-check it
