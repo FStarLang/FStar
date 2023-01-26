@@ -36,7 +36,9 @@ let dynlink fname =
     perr ("Attempting to load " ^ fname ^ "\n");
     Dynlink.loadfile fname
   with Dynlink.Error e ->
-    failwith (U.format2 "Dynlinking %s failed: %s" fname (Dynlink.error_message e))
+    let msg = U.format2 "Dynlinking %s failed: %s" fname (Dynlink.error_message e) in
+    perr msg;
+    failwith msg
 
 let dynlink_fstar_subpackage (s: string) =
   dynlink (find_fstar_subpackage s ^ "/fstar_" ^ s ^ ".cmxs")
