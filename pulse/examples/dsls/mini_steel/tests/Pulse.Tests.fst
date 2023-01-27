@@ -120,3 +120,12 @@ let warmup (x:int) = assert (x + 1 > x)
       write_atomic r2 x
     )
 )))
+
+%splice_t[intro_pure_example] (check (`(
+  fun (r:ref u32) (n1:erased u32) (n2:erased u32) ->
+    (expects (pts_to r full_perm n1 `star` pure (eq2_prop (reveal n1) (reveal n2))))
+    (provides (fun x -> pts_to r full_perm n2 `star` pure (eq2_prop (reveal n2) (reveal n1))))
+    (
+      intro_pure (eq2_prop (reveal n2) (reveal n1)) ()
+    )
+)))
