@@ -120,7 +120,9 @@ let infer
   let uvs, pre =
     let uvs, comp = gen_uvars t_head in
     match comp with
-    | C_ST st_comp -> uvs, st_comp.pre
+    | C_ST st_comp
+    | C_STAtomic _ st_comp
+    | C_STGhost _ st_comp -> uvs, st_comp.pre
     | _ -> T.fail "infer:unexpected comp type"
   in
 
