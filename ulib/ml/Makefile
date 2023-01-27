@@ -35,10 +35,9 @@ ML_NOT_IN_BASE=\
 
 .PHONY: dune-base-snapshot
 dune-base-snapshot: $(INTFILES)
-	mkdir -p $(DUNE_SNAPSHOT)/fstar-base/generated
-	cp $(INTFILES) $(DUNE_SNAPSHOT)/fstar-base/generated
-	cp $(filter-out $(INTFILES) $(ML_NOT_IN_BASE),$(wildcard *.ml *.mli)) $(DUNE_SNAPSHOT)/fstar-base
-	cp ../../src/ocaml-output/FStar_Pervasives.ml $(DUNE_SNAPSHOT)/fstar-base/generated
+	mkdir -p $(DUNE_SNAPSHOT)/fstar-lib/generated
+	cp $(INTFILES) $(DUNE_SNAPSHOT)/fstar-lib/generated
+	cp $(filter-out $(INTFILES) $(ML_NOT_IN_BASE),$(wildcard *.ml *.mli)) $(DUNE_SNAPSHOT)/fstar-lib
 
 .PHONY: clean-intfiles
 clean-intfiles:
@@ -46,4 +45,4 @@ clean-intfiles:
 
 .PHONY: dune-handwritten-snapshot
 dune-handwritten-snapshot: $(ML_NOT_IN_BASE)
-	cp $(ML_NOT_IN_BASE) $(DUNE_SNAPSHOT)/fstar-stdlib
+	cp $(ML_NOT_IN_BASE) $(DUNE_SNAPSHOT)/fstar-lib

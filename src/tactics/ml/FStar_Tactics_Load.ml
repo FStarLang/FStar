@@ -45,7 +45,7 @@ let load_ops : load_ops_t =
       let taclib =
         try
           load_old ()
-        with _ -> "fstar.taclib" (* assume that we are in the new setting where the F* compiler is linked with fstar.taclib *)
+        with _ -> "fstar.lib" (* assume that we are in the new setting where the F* compiler is linked with fstar.lib *)
       in
       already_loaded := Some taclib
   in

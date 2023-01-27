@@ -2,7 +2,7 @@
 (executable
  (name FStar_Tests_Main)
  (libraries
-    fstar_runtime
+    fstar_lib
  )
  (modes (native exe))
 )

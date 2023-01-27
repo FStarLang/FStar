@@ -98,11 +98,10 @@ dune-fstar-snapshot: generated-files
 	mkdir -p $(DUNE_SNAPSHOT)/fstar
 	cp ../../src/fstar/ml/*.ml $(DUNE_SNAPSHOT)/fstar
 	+$(MAKE) -C ../../ulib/ml dune-base-snapshot
-	mkdir -p $(DUNE_SNAPSHOT)/fstar-runtime/generated
-	for f in $(SRC_INCLUDES) ; do cp ../../$$f/*.ml $(DUNE_SNAPSHOT)/fstar-runtime ; done
-	cp *.ml $(DUNE_SNAPSHOT)/fstar-runtime/generated
-	rm -rf $(DUNE_SNAPSHOT)/fstar-runtime/generated/FStar_Pervasives.ml
-	rm -rf $(DUNE_SNAPSHOT)/fstar-runtime/generated/get_branch.ml
+	mkdir -p $(DUNE_SNAPSHOT)/fstar-lib/generated
+	for f in $(SRC_INCLUDES) ; do cp ../../$$f/*.ml $(DUNE_SNAPSHOT)/fstar-lib ; done
+	cp *.ml $(DUNE_SNAPSHOT)/fstar-lib/generated
+	rm -rf $(DUNE_SNAPSHOT)/fstar-lib/generated/get_branch.ml
 	mkdir -p $(DUNE_SNAPSHOT)/fstar-tests
 	cp ../../src/tests/ml/*.ml $(DUNE_SNAPSHOT)/fstar-tests
 
@@ -113,13 +112,11 @@ dune-verify-ulib: dune-fstar-snapshot
 
 dune-stdlib-snapshot: dune-verify-ulib
 	+if test -x $(FSTAR_HOME)/bin/fstar.exe ; then \
-	  mkdir -p $(DUNE_SNAPSHOT)/fstar-stdlib/generated && \
 	  $(MAKE) -C ../../ulib -f Makefile.extract-stdlib dune-snapshot ; \
 	fi
 
 dune-taclib-snapshot: dune-verify-ulib
 	+if test -x $(FSTAR_HOME)/bin/fstar.exe ; then \
-	  mkdir -p $(DUNE_SNAPSHOT)/fstar-taclib/generated && \
 	  $(MAKE) -C ../../ulib -f Makefile.extract-taclib dune-snapshot ; \
 	fi
 
