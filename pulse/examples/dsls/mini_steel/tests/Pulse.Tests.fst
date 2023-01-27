@@ -149,8 +149,6 @@ let warmup (x:int) = assert (x + 1 > x)
     (
       let x = read_pure r1 n1 in
       let y = read_pure r2 n2 in
-      elim_pure (eq2_prop (reveal n1) x);
-      elim_pure (eq2_prop (reveal n2) y);
       write_explicit r1 y n1;
       write_explicit r2 x n2
     )
