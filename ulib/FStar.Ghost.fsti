@@ -58,6 +58,7 @@ val hide_reveal (#a: Type) (x: erased a)
 
 val reveal_hide (#a: Type) (x: a) : Lemma (ensures (reveal (hide x) == x)) [SMTPat (hide x)]
 
+
 /// The rest of this module includes several well-defined defined
 /// notions. They are not trusted.
 
@@ -80,7 +81,8 @@ let (let@) (x:erased 'a) (f:('a -> Tot (erased 'b))) : Tot (erased 'b) = bind x 
 (** Unary map *)
 irreducible
 let elift1 (#a #b: Type) (f: (a -> GTot b)) (x: erased a)
-    : Tot (y: erased b {reveal y == f (reveal x)}) = let@ xx = x in return (f xx)
+    : Tot (y: erased b {reveal y == f (reveal x)}) =
+  let@ xx = x in return (f xx)
 
 (** Binary map *)
 irreducible
