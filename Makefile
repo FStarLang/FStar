@@ -2,10 +2,14 @@
 
 include .common.mk
 
+ifdef FSTAR_USE_DUNE
+all: dune
+else # FSTAR_USE_DUNE
 all:
 	$(Q)+$(MAKE) -C src/ocaml-output
 	$(Q)+$(MAKE) -C ulib/ml
 	$(Q)+$(MAKE) -C ulib
+endif # FSTAR_USE_DUNE
 
 .PHONY: dune dune-fstar
 dune-fstar:
@@ -140,3 +144,37 @@ output:
 	$(Q)+$(MAKE) -C tests/error-messages accept
 	$(Q)+$(MAKE) -C tests/interactive accept
 	$(Q)+$(MAKE) -C tests/bug-reports output-accept
+
+.PHONY: ci-utest-prelude
+
+ifdef FSTAR_USE_DUNE
+
+ci-utest-prelude: dune
+	$(Q)+$(MAKE) dune-bootstrap
+
+else # FSTAR_USE_DUNE
+
+ci-utest-prelude:
+	$(Q)+$(MAKE) -C src utest-prelude
+
+endif # FSTAR_USE_DUNE
+
+.PHONY: ci-uregressions ci-uregressions-ulong
+
+ifdef FSTAR_USE_DUNE
+
+ci-uregressions:
+	$(Q)+$(MAKE) -C src uregressions-raw
+
+ci-uregressions-ulong:
+	$(Q)+$(MAKE) -C src uregressions-ulong-raw
+
+else # FSTAR_USE_DUNE
+
+ci-uregressions:
+	$(Q)+$(MAKE) -C src uregressions
+
+ci-uregressions-ulong:
+	$(Q)+$(MAKE) -C src uregressions-ulong
+
+endif # FSTAR_USE_DUNE
