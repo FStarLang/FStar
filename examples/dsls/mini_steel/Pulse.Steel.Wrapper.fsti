@@ -229,11 +229,6 @@ val write (r:R.ref u32) (x:u32) (#n:erased u32)
         (R.pts_to r full_perm n) 
         (fun _ -> R.pts_to r full_perm (hide x))
 
-val elim_pure (p:prop)
-  : stt_ghost (squash p) emp_inames
-              (pure p)
-              (fun _ -> emp)
-
 val read_pure (r:R.ref u32) (#n:erased u32) (#p:perm)
   : stt u32
         (R.pts_to r p n)
@@ -248,3 +243,14 @@ val write_atomic (r:R.ref u32) (x:u32) (#n:erased u32)
   : stt_atomic unit emp_inames
         (R.pts_to r full_perm n) 
         (fun _ -> R.pts_to r full_perm (hide x))
+
+val elim_pure (p:prop)
+  : stt_ghost (squash p) emp_inames
+              (pure p)
+              (fun _ -> emp)
+
+val intro_pure (p:prop) (_:squash p)
+  : stt_ghost unit emp_inames
+              emp
+              (fun _ -> pure p)
+

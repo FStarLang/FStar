@@ -195,8 +195,6 @@ let write r x #n
     let _ = R.write r x in
     rewrite _ (R.pts_to r full_perm (hide x))
 
-let elim_pure p = fun _ -> elim_pure p
-
 let read_pure r #n #p =
   fun _ ->
   let x = R.read r in
@@ -210,3 +208,7 @@ let read_atomic r #n #p =
 
 let write_atomic r x #n = fun _ ->
   R.atomic_write_u32 #_ #n r x
+
+let elim_pure p = fun _ -> elim_pure p
+
+let intro_pure p _ = fun _ -> intro_pure p
