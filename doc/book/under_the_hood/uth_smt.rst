@@ -1018,6 +1018,8 @@ new project:
    native --smtencoding.elim_box true`` is a good one to consider, and
    may yield some proof performance boosts over the default setting.
 
+.. _UTH_smt_patterns:
+   
 Designing a Library with SMT Patterns
 -------------------------------------
 
@@ -1630,6 +1632,7 @@ proof-performance problem. Besides, even putting stability aside,
 splitting queries into their conjuncts results in somewhat slower
 proofs.
 
+.. _UTH_opaque_to_smt:
 
 Taking Control of Quantifier Instantiations with Opaque Definitions
 ...................................................................

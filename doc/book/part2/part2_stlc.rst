@@ -492,6 +492,8 @@ or ``None``.
   new variable at index ``0`` involves shifting up the indexes of all
   other variables in ``g`` by ``1``.
 
+.. _Part2_stlc_typing:
+
 Typing Relation
 ---------------
 
