@@ -60,16 +60,16 @@ val lookup_fvar_uinst (e:R.env) (x:R.fv) (us:list R.universe) : option R.term
 
 let lookup_fvar (e:env) (x:fv) : option term = lookup_fvar_uinst e x []
 
-let mk_binder (pp_name:string) (x:var) (ty:term) (q:aqualv)
+let mk_binder (x:var) (ty:term) (q:aqualv)
   = pack_binder
-      (pack_bv ({bv_ppname=pp_name;
+      (pack_bv ({bv_ppname="x";
                  bv_index=x;
                  bv_sort=ty}))
       q
       []
 
 let extend_env (e:env) (x:var) (ty:term) : env =
-  R.push_binder e (mk_binder "x" x ty Q_Explicit)
+  R.push_binder e (mk_binder x ty Q_Explicit)
   
 val lookup_bvar_extend_env (g:env) (x y:var) (ty:term)
   : Lemma 
@@ -85,7 +85,7 @@ val lookup_fvar_extend_env (g:env) (x:fv) (us:universes) (y:var) (ty:term)
     [SMTPat (lookup_fvar_uinst (extend_env g y ty) x us)]
 
 let as_binder (x:var) (ty:term) =
-  mk_binder "x" x ty Q_Explicit
+  mk_binder x ty Q_Explicit
 
 let bv_index (x:bv)
   : var
@@ -108,7 +108,7 @@ type open_or_close =
 
 let tun = pack_ln Tv_Unknown
 
-let make_bv (n:int) (t:term) = { bv_ppname = "_"; bv_index = n; bv_sort = t}
+let make_bv (n:int) (t:term) = { bv_ppname = "x"; bv_index = n; bv_sort = t}
 let make_bv_with_name (s:string) (n:int) (t:term) =
   { bv_ppname = s; bv_index = n; bv_sort = t}
 let var_as_bv (v:int) = pack_bv (make_bv v tun)
@@ -496,8 +496,8 @@ type typing : env -> term -> term -> Type0 =
      q:aqualv ->
      typing g ty (tm_type u) ->
      typing (extend_env g x ty) (open_term body x) body_ty ->
-     typing g (pack_ln (Tv_Abs (mk_binder pp_name 0 ty q) body))
-              (pack_ln (Tv_Arrow (mk_binder pp_name 0 ty q)
+     typing g (pack_ln (Tv_Abs (mk_binder 0 ty q) body))
+              (pack_ln (Tv_Arrow (mk_binder 0 ty q)
                                  (mk_total (close_term body_ty x))))
 
   | T_App :
@@ -522,7 +522,7 @@ type typing : env -> term -> term -> Type0 =
      q:aqualv ->
      typing g t1 (tm_type u1) ->
      typing (extend_env g x t1) (open_term t2 x) (tm_type u2) ->
-     typing g (pack_ln (Tv_Arrow (mk_binder pp_name 0 t1 q) (mk_total t2)))
+     typing g (pack_ln (Tv_Arrow (mk_binder 0 t1 q) (mk_total t2)))
               (tm_type (u_max u1 u2))
 
   | T_Refine:
