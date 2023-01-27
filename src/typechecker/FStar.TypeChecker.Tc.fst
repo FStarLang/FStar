@@ -134,7 +134,7 @@ let tc_inductive' env ses quals attrs lids =
        let env = Env.push_sigelt env sig_bndle in
        (* Check positivity of the inductives within the Sig_bundle *)
        List.iter (fun ty ->
-         let b = TcUtil.check_positivity env ty in
+         let b = TcUtil.check_positivity env lids ty in
          if not b then
            let lid, r =
              match ty.sigel with

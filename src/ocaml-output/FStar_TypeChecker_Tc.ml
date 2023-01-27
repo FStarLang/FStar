@@ -382,7 +382,8 @@ let (tc_inductive' :
                       FStar_Compiler_List.iter
                         (fun ty ->
                            let b =
-                             FStar_TypeChecker_Util.check_positivity env1 ty in
+                             FStar_TypeChecker_Util.check_positivity env1
+                               lids ty in
                            if Prims.op_Negation b
                            then
                              let uu___6 =

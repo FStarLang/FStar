@@ -4151,7 +4151,7 @@ let ty_positive_in_datacon env (ty_lid:lident) (dlid:lident) (ty_bs:binders) (us
   | _ -> failwith "Unexpected data constructor type when checking positivity"
 
 
-let check_positivity (env:env_t) (ty:sigelt) :bool =
+let check_positivity (env:env_t) (mutuals:list lident) (ty:sigelt) :bool =
   //memo table, memoizes the Tm_app nodes for inductives that we have already unfolded
   let unfolded_inductives = BU.mk_ref [] in
 
@@ -4161,26 +4161,32 @@ let check_positivity (env:env_t) (ty:sigelt) :bool =
     | Sig_inductive_typ (lid, us, bs, _, _, _) -> lid, us, bs
     | _                                        -> failwith "Impossible!"
   in
-
+  let ty_lids = ty_lid::mutuals in
   //open the universe variables, we will use these universe names for data constructors also later on
   let ty_usubst, ty_us = SS.univ_var_opening ty_us in
   //push the universe names in the env
   let env = push_univ_vars env ty_us in
   //also push the parameters
   let env = push_binders env ty_bs in
+  let datacons = snd (datacons_of_typ env ty_lid) in
 
   //apply ty_usubst to ty_bs
   let ty_bs = SS.subst_binders ty_usubst ty_bs in
   let ty_bs = SS.open_binders ty_bs in
 
-  List.for_all (fun d ->
-    ty_positive_in_datacon
-      env
-      ty_lid
-      d
-      ty_bs
-      (List.map U_name ty_us)
-      unfolded_inductives) (snd (datacons_of_typ env ty_lid))
+  List.for_all 
+    (fun d ->
+        List.for_all
+          (fun ty_lid ->
+            ty_positive_in_datacon
+            env
+            ty_lid
+            d
+            ty_bs
+            (List.map U_name ty_us)
+            unfolded_inductives)
+          ty_lids)
+    datacons
 
 (* Special-casing the check for exceptions, the single open inductive type we handle. *)
 let check_exn_positivity (env:env_t) (data_ctor_lid:lid) : bool =
