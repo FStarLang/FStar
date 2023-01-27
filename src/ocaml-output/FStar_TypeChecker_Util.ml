@@ -9267,36 +9267,43 @@ let (ty_positive_in_datacon :
                    failwith
                      "Unexpected data constructor type when checking positivity")
 let (check_positivity :
-  FStar_TypeChecker_Env.env -> FStar_Syntax_Syntax.sigelt -> Prims.bool) =
+  FStar_TypeChecker_Env.env ->
+    FStar_Ident.lident Prims.list -> FStar_Syntax_Syntax.sigelt -> Prims.bool)
+  =
   fun env ->
-    fun ty ->
-      let unfolded_inductives = FStar_Compiler_Util.mk_ref [] in
-      let uu___ =
-        match ty.FStar_Syntax_Syntax.sigel with
-        | FStar_Syntax_Syntax.Sig_inductive_typ
-            (lid, us, bs, uu___1, uu___2, uu___3) -> (lid, us, bs)
-        | uu___1 -> failwith "Impossible!" in
-      match uu___ with
-      | (ty_lid, ty_us, ty_bs) ->
-          let uu___1 = FStar_Syntax_Subst.univ_var_opening ty_us in
-          (match uu___1 with
-           | (ty_usubst, ty_us1) ->
-               let env1 = FStar_TypeChecker_Env.push_univ_vars env ty_us1 in
-               let env2 = FStar_TypeChecker_Env.push_binders env1 ty_bs in
-               let ty_bs1 = FStar_Syntax_Subst.subst_binders ty_usubst ty_bs in
-               let ty_bs2 = FStar_Syntax_Subst.open_binders ty_bs1 in
-               let uu___2 =
-                 let uu___3 =
-                   FStar_TypeChecker_Env.datacons_of_typ env2 ty_lid in
-                 FStar_Pervasives_Native.snd uu___3 in
-               FStar_Compiler_List.for_all
-                 (fun d1 ->
-                    let uu___3 =
-                      FStar_Compiler_List.map
-                        (fun uu___4 -> FStar_Syntax_Syntax.U_name uu___4)
-                        ty_us1 in
-                    ty_positive_in_datacon env2 ty_lid d1 ty_bs2 uu___3
-                      unfolded_inductives) uu___2)
+    fun mutuals ->
+      fun ty ->
+        let unfolded_inductives = FStar_Compiler_Util.mk_ref [] in
+        let uu___ =
+          match ty.FStar_Syntax_Syntax.sigel with
+          | FStar_Syntax_Syntax.Sig_inductive_typ
+              (lid, us, bs, uu___1, uu___2, uu___3) -> (lid, us, bs)
+          | uu___1 -> failwith "Impossible!" in
+        match uu___ with
+        | (ty_lid, ty_us, ty_bs) ->
+            let ty_lids = ty_lid :: mutuals in
+            let uu___1 = FStar_Syntax_Subst.univ_var_opening ty_us in
+            (match uu___1 with
+             | (ty_usubst, ty_us1) ->
+                 let env1 = FStar_TypeChecker_Env.push_univ_vars env ty_us1 in
+                 let env2 = FStar_TypeChecker_Env.push_binders env1 ty_bs in
+                 let datacons =
+                   let uu___2 =
+                     FStar_TypeChecker_Env.datacons_of_typ env2 ty_lid in
+                   FStar_Pervasives_Native.snd uu___2 in
+                 let ty_bs1 =
+                   FStar_Syntax_Subst.subst_binders ty_usubst ty_bs in
+                 let ty_bs2 = FStar_Syntax_Subst.open_binders ty_bs1 in
+                 FStar_Compiler_List.for_all
+                   (fun d1 ->
+                      FStar_Compiler_List.for_all
+                        (fun ty_lid1 ->
+                           let uu___2 =
+                             FStar_Compiler_List.map
+                               (fun uu___3 ->
+                                  FStar_Syntax_Syntax.U_name uu___3) ty_us1 in
+                           ty_positive_in_datacon env2 ty_lid1 d1 ty_bs2
+                             uu___2 unfolded_inductives) ty_lids) datacons)
 let (check_exn_positivity :
   FStar_TypeChecker_Env.env -> FStar_Ident.lident -> Prims.bool) =
   fun env ->

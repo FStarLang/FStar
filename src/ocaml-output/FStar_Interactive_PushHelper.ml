@@ -56,7 +56,8 @@ let (set_check_kind :
   FStar_TypeChecker_Env.env_t -> push_kind -> FStar_TypeChecker_Env.env_t) =
   fun env ->
     fun check_kind ->
-      let uu___ =
+      let uu___ = (check_kind = LaxCheck) || (FStar_Options.lax ()) in
+      let uu___1 =
         FStar_Syntax_DsEnv.set_syntax_only env.FStar_TypeChecker_Env.dsenv
           (check_kind = SyntaxCheck) in
       {
@@ -88,7 +89,7 @@ let (set_check_kind :
           (env.FStar_TypeChecker_Env.use_eq_strict);
         FStar_TypeChecker_Env.is_iface = (env.FStar_TypeChecker_Env.is_iface);
         FStar_TypeChecker_Env.admit = (env.FStar_TypeChecker_Env.admit);
-        FStar_TypeChecker_Env.lax = (check_kind = LaxCheck);
+        FStar_TypeChecker_Env.lax = uu___;
         FStar_TypeChecker_Env.lax_universes =
           (env.FStar_TypeChecker_Env.lax_universes);
         FStar_TypeChecker_Env.phase1 = (env.FStar_TypeChecker_Env.phase1);
@@ -128,7 +129,7 @@ let (set_check_kind :
         FStar_TypeChecker_Env.identifier_info =
           (env.FStar_TypeChecker_Env.identifier_info);
         FStar_TypeChecker_Env.tc_hooks = (env.FStar_TypeChecker_Env.tc_hooks);
-        FStar_TypeChecker_Env.dsenv = uu___;
+        FStar_TypeChecker_Env.dsenv = uu___1;
         FStar_TypeChecker_Env.nbe = (env.FStar_TypeChecker_Env.nbe);
         FStar_TypeChecker_Env.strict_args_tab =
           (env.FStar_TypeChecker_Env.strict_args_tab);
