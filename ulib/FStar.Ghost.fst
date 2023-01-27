@@ -24,4 +24,3 @@ let reveal #a (E x) = x
 let hide #a x = E x
 let hide_reveal #a x = ()
 let reveal_hide #a x = ()
-let pull #a #b f = admit()
