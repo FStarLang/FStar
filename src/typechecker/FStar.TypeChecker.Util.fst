@@ -3244,7 +3244,7 @@ let check_sigelt_quals (env:FStar.TypeChecker.Env.env) se =
         if quals |> BU.for_some has_eq
         then err' ()
       | Sig_assume _ ->
-        if not (quals |> BU.for_all (fun x -> visibility x || x=Assumption))
+        if not (quals |> BU.for_all (fun x -> visibility x || x=Assumption || x=InternalAssumption))
         then err' ()
       | Sig_new_effect _ ->
         if not (quals |> BU.for_all (fun x ->

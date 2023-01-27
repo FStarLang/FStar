@@ -39,6 +39,7 @@ module FC = FStar.Const
 - v28: added many things for which the AST wasn't bumped; bumped it for
   TConstBuf which will expect will be used soon
 - v29: added a SizeT and PtrdiffT width to machine integers
+- v30: Added EBufDiff
 *)
 
 (* COPY-PASTED ****************************************************************)
@@ -128,6 +129,9 @@ and expr =
   | EAbortT of string * typ
   | EComment of string * expr * string
   | EStandaloneComment of string
+  | EAddrOf of expr
+  | EBufNull of typ
+  | EBufDiff of expr * expr
 
 and op =
   | Add | AddW | Sub | SubW | Div | DivW | Mult | MultW | Mod
@@ -362,6 +366,14 @@ let translate_cc flags =
   | [ "cdecl" ] -> Some CDecl
   | _ -> None
 
+(* Per FStarLang/karamel#324 *)
+let generate_is_null
+  (t: typ)
+  (x: expr)
+: Tot expr
+= let dummy = UInt64 in
+  EApp (ETypApp (EOp (Eq, dummy), [TBuf t]), [x; EBufNull t])
+
 let rec translate_type env t: typ =
   match t with
   | MLTY_Tuple []
@@ -511,6 +523,14 @@ and translate_expr env e: expr =
 
   // We recognize certain distinguished names from [FStar.HST] and other
   // modules, and translate them into built-in Karamel constructs
+  | MLE_App ({expr = MLE_TApp ({expr = MLE_Name p}, [t]) }, _)
+    when string_of_mlpath p = "Steel.ST.HigherArray.null_ptr"
+    ->
+    EBufNull (translate_type env t)
+  | MLE_App ({expr = MLE_TApp ({expr = MLE_Name p }, [t])}, [arg])
+    when string_of_mlpath p = "Steel.ST.HigherArray.is_null_ptr"
+    ->
+    generate_is_null (translate_type env t) (translate_expr env arg)
   | MLE_App({expr=MLE_TApp ({ expr = MLE_Name p }, [t])}, [arg])
     when string_of_mlpath p = "FStar.Dyn.undyn" ->
       ECast (translate_expr env arg, translate_type env t)
@@ -539,6 +559,10 @@ and translate_expr env e: expr =
          string_of_mlpath p = "LowStar.ToFStarBuffer.old_to_new_st"
     ->
     translate_expr env e
+
+  | MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p}, _) }, [ _perm0; _perm1; _seq0; _seq1; e0; _len0; e1; _len1])
+    when string_of_mlpath p = "Steel.ST.HigherArray.ptrdiff_ptr" ->
+    EBufDiff (translate_expr env e0, translate_expr env e1)
 
   | MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, _) }, [ e1; e2 ])
     when string_of_mlpath p = "FStar.Buffer.index" || string_of_mlpath p = "FStar.Buffer.op_Array_Access"
@@ -868,8 +892,13 @@ and translate_expr env e: expr =
   | MLE_App ({ expr = MLE_Name p }, [ arg ])
     when string_of_mlpath p = "FStar.SizeT.uint16_to_sizet" ||
          string_of_mlpath p = "FStar.SizeT.uint32_to_sizet" ||
-         string_of_mlpath p = "FStar.SizeT.uint64_to_sizet" ->
+         string_of_mlpath p = "FStar.SizeT.uint64_to_sizet" ||
+         string_of_mlpath p = "FStar.PtrdiffT.ptrdifft_to_sizet" ->
       ECast (translate_expr env arg, TInt SizeT)
+
+  | MLE_App ({ expr = MLE_Name p }, [ arg ])
+    when string_of_mlpath p = "FStar.SizeT.sizet_to_uint32" ->
+      ECast (translate_expr env arg, TInt UInt32)
 
   | MLE_App ({expr=MLE_Name p}, [ _inv; test; body ])
     when (string_of_mlpath p = "Steel.ST.Loops.while_loop") ->

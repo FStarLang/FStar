@@ -35,7 +35,8 @@ $(OUTPUT_DIRECTORY)/%.ml:
 
 .depend.extract:
 	$(Q)mkdir -p .cache.lax
-	$(Q)$(MY_FSTAR) --dep full $(EXTRACT_MODULES) $(addprefix --include , $(INCLUDE_PATHS)) $(FSTAR_FILES) > .depend.extract
+	@true $(shell rm -f .depend.extract.rsp) $(foreach f,$(FSTAR_FILES),$(shell echo $(f) >> .depend.extract.rsp))
+	$(Q)$(MY_FSTAR) --dep full $(EXTRACT_MODULES) $(addprefix --include , $(INCLUDE_PATHS)) @.depend.extract.rsp > .depend.extract
 	@echo "[DEPEND]"
 
 depend.extract: .depend.extract

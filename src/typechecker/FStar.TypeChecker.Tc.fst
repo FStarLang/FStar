@@ -793,9 +793,10 @@ let tc_decl' env0 se: list sigelt * list sigelt * Env.env =
     [ { se with sigel = Sig_declare_typ (lid, uvs, t) }], [], env0
 
   | Sig_assume(lid, uvs, t) ->
-    FStar.Errors.log_issue r
-                 (Warning_WarnOnUse,
-                  BU.format1 "Admitting a top-level assumption %s" (Print.lid_to_string lid));
+    if not (List.contains S.InternalAssumption se.sigquals) then
+      FStar.Errors.log_issue r
+                   (Warning_WarnOnUse,
+                    BU.format1 "Admitting a top-level assumption %s" (Print.lid_to_string lid));
     let env = Env.set_range env r in
 
     let uvs, t =

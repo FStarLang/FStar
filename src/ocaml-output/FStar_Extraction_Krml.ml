@@ -80,6 +80,9 @@ and expr =
   | EAbortT of (Prims.string * typ) 
   | EComment of (Prims.string * expr * Prims.string) 
   | EStandaloneComment of Prims.string 
+  | EAddrOf of expr 
+  | EBufNull of typ 
+  | EBufDiff of (expr * expr) 
 and op =
   | Add 
   | AddW 
@@ -428,6 +431,20 @@ let (uu___is_EStandaloneComment : expr -> Prims.bool) =
     match projectee with | EStandaloneComment _0 -> true | uu___ -> false
 let (__proj__EStandaloneComment__item___0 : expr -> Prims.string) =
   fun projectee -> match projectee with | EStandaloneComment _0 -> _0
+let (uu___is_EAddrOf : expr -> Prims.bool) =
+  fun projectee -> match projectee with | EAddrOf _0 -> true | uu___ -> false
+let (__proj__EAddrOf__item___0 : expr -> expr) =
+  fun projectee -> match projectee with | EAddrOf _0 -> _0
+let (uu___is_EBufNull : expr -> Prims.bool) =
+  fun projectee ->
+    match projectee with | EBufNull _0 -> true | uu___ -> false
+let (__proj__EBufNull__item___0 : expr -> typ) =
+  fun projectee -> match projectee with | EBufNull _0 -> _0
+let (uu___is_EBufDiff : expr -> Prims.bool) =
+  fun projectee ->
+    match projectee with | EBufDiff _0 -> true | uu___ -> false
+let (__proj__EBufDiff__item___0 : expr -> (expr * expr)) =
+  fun projectee -> match projectee with | EBufDiff _0 -> _0
 let (uu___is_Add : op -> Prims.bool) =
   fun projectee -> match projectee with | Add -> true | uu___ -> false
 let (uu___is_AddW : op -> Prims.bool) =
@@ -825,6 +842,11 @@ let (translate_cc :
     | "fastcall"::[] -> FStar_Pervasives_Native.Some FastCall
     | "cdecl"::[] -> FStar_Pervasives_Native.Some CDecl
     | uu___1 -> FStar_Pervasives_Native.None
+let (generate_is_null : typ -> expr -> expr) =
+  fun t ->
+    fun x ->
+      let dummy = UInt64 in
+      EApp ((ETypApp ((EOp (Eq, dummy)), [TBuf t])), [x; EBufNull t])
 let rec (translate_type : env -> FStar_Extraction_ML_Syntax.mlty -> typ) =
   fun env1 ->
     fun t ->
@@ -1079,6 +1101,42 @@ and (translate_expr : env -> FStar_Extraction_ML_Syntax.mlexpr -> expr) =
                 t::[]);
              FStar_Extraction_ML_Syntax.mlty = uu___2;
              FStar_Extraction_ML_Syntax.loc = uu___3;_},
+           uu___4)
+          when
+          let uu___5 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
+          uu___5 = "Steel.ST.HigherArray.null_ptr" ->
+          let uu___5 = translate_type env1 t in EBufNull uu___5
+      | FStar_Extraction_ML_Syntax.MLE_App
+          ({
+             FStar_Extraction_ML_Syntax.expr =
+               FStar_Extraction_ML_Syntax.MLE_TApp
+               ({
+                  FStar_Extraction_ML_Syntax.expr =
+                    FStar_Extraction_ML_Syntax.MLE_Name p;
+                  FStar_Extraction_ML_Syntax.mlty = uu___;
+                  FStar_Extraction_ML_Syntax.loc = uu___1;_},
+                t::[]);
+             FStar_Extraction_ML_Syntax.mlty = uu___2;
+             FStar_Extraction_ML_Syntax.loc = uu___3;_},
+           arg::[])
+          when
+          let uu___4 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
+          uu___4 = "Steel.ST.HigherArray.is_null_ptr" ->
+          let uu___4 = translate_type env1 t in
+          let uu___5 = translate_expr env1 arg in
+          generate_is_null uu___4 uu___5
+      | FStar_Extraction_ML_Syntax.MLE_App
+          ({
+             FStar_Extraction_ML_Syntax.expr =
+               FStar_Extraction_ML_Syntax.MLE_TApp
+               ({
+                  FStar_Extraction_ML_Syntax.expr =
+                    FStar_Extraction_ML_Syntax.MLE_Name p;
+                  FStar_Extraction_ML_Syntax.mlty = uu___;
+                  FStar_Extraction_ML_Syntax.loc = uu___1;_},
+                t::[]);
+             FStar_Extraction_ML_Syntax.mlty = uu___2;
+             FStar_Extraction_ML_Syntax.loc = uu___3;_},
            arg::[])
           when
           let uu___4 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
@@ -1185,6 +1243,26 @@ and (translate_expr : env -> FStar_Extraction_ML_Syntax.mlexpr -> expr) =
             (let uu___5 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
              uu___5 = "LowStar.ToFStarBuffer.old_to_new_st")
           -> translate_expr env1 e1
+      | FStar_Extraction_ML_Syntax.MLE_App
+          ({
+             FStar_Extraction_ML_Syntax.expr =
+               FStar_Extraction_ML_Syntax.MLE_TApp
+               ({
+                  FStar_Extraction_ML_Syntax.expr =
+                    FStar_Extraction_ML_Syntax.MLE_Name p;
+                  FStar_Extraction_ML_Syntax.mlty = uu___;
+                  FStar_Extraction_ML_Syntax.loc = uu___1;_},
+                uu___2);
+             FStar_Extraction_ML_Syntax.mlty = uu___3;
+             FStar_Extraction_ML_Syntax.loc = uu___4;_},
+           _perm0::_perm1::_seq0::_seq1::e0::_len0::e1::_len1::[])
+          when
+          let uu___5 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
+          uu___5 = "Steel.ST.HigherArray.ptrdiff_ptr" ->
+          let uu___5 =
+            let uu___6 = translate_expr env1 e0 in
+            let uu___7 = translate_expr env1 e1 in (uu___6, uu___7) in
+          EBufDiff uu___5
       | FStar_Extraction_ML_Syntax.MLE_App
           ({
              FStar_Extraction_ML_Syntax.expr =
@@ -2444,16 +2522,32 @@ and (translate_expr : env -> FStar_Extraction_ML_Syntax.mlexpr -> expr) =
              FStar_Extraction_ML_Syntax.loc = uu___1;_},
            arg::[])
           when
-          ((let uu___2 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
-            uu___2 = "FStar.SizeT.uint16_to_sizet") ||
+          (((let uu___2 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
+             uu___2 = "FStar.SizeT.uint16_to_sizet") ||
+              (let uu___2 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
+               uu___2 = "FStar.SizeT.uint32_to_sizet"))
+             ||
              (let uu___2 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
-              uu___2 = "FStar.SizeT.uint32_to_sizet"))
+              uu___2 = "FStar.SizeT.uint64_to_sizet"))
             ||
             (let uu___2 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
-             uu___2 = "FStar.SizeT.uint64_to_sizet")
+             uu___2 = "FStar.PtrdiffT.ptrdifft_to_sizet")
           ->
           let uu___2 =
             let uu___3 = translate_expr env1 arg in (uu___3, (TInt SizeT)) in
+          ECast uu___2
+      | FStar_Extraction_ML_Syntax.MLE_App
+          ({
+             FStar_Extraction_ML_Syntax.expr =
+               FStar_Extraction_ML_Syntax.MLE_Name p;
+             FStar_Extraction_ML_Syntax.mlty = uu___;
+             FStar_Extraction_ML_Syntax.loc = uu___1;_},
+           arg::[])
+          when
+          let uu___2 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
+          uu___2 = "FStar.SizeT.sizet_to_uint32" ->
+          let uu___2 =
+            let uu___3 = translate_expr env1 arg in (uu___3, (TInt UInt32)) in
           ECast uu___2
       | FStar_Extraction_ML_Syntax.MLE_App
           ({

@@ -1,9 +1,9 @@
-module Selectors.LList2
+module Selectors.LList3
 
 open Steel.Memory
 open Steel.Effect.Atomic
 open Steel.Effect
-open Steel.Reference
+open Steel.ArrayRef
 
 module L = FStar.List.Tot
 
