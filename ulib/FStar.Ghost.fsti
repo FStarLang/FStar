@@ -58,12 +58,12 @@ val hide_reveal (#a: Type) (x: erased a)
 
 val reveal_hide (#a: Type) (x: a) : Lemma (ensures (reveal (hide x) == x)) [SMTPat (hide x)]
 
-
-(* pull is an axiom.
+(** 
+   [pull] is an axiom.
 
    It type states that for any ghost function ``f``, we can exhibit a
    total function ``g`` that is pointwise equal to ``f``. However, it
-   may not be possble, in general, to compute ``g`` in a way that
+   may not be possible, in general, to compute ``g`` in a way that
    enables it to be compiled by F*. So, ``pull f`` itself has ghost
    effect, indicating that applications of ``pull`` cannot be used in
    compilable code.
