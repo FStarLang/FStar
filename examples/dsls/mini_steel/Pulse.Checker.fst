@@ -108,6 +108,21 @@ let check_abs
          tt |)
     | _ -> T.fail "bad hint"
 
+let maybe_add_elim_pure (pre:pure_term) (t:term) : bool & term =
+  let pure_vprops, rest_pre =
+    L.partition (fun (t:pure_term) ->
+      match t with
+      | Tm_PureApp (Tm_FVar l) None _ -> l = pure_lid
+      | _ -> false) (vprop_as_list pre) in
+
+  if L.length pure_vprops = 0
+  then false, t
+  else
+    let t = L.fold_left (fun t (p:pure_term) ->
+      let elim_pure_tm = Tm_STApp (Tm_FVar (mk_steel_wrapper_lid "elim_pure")) None p in
+      Tm_Bind elim_pure_tm t) t pure_vprops in
+    true, t
+  
 #push-options "--query_stats --fuel 2 --ifuel 1 --z3rlimit_factor 4"
 #push-options "--print_implicits --print_universes --print_full_names"
 let rec check' : bool -> check_t =
@@ -204,4 +219,7 @@ let rec check' : bool -> check_t =
     T.fail "Unexpected Tm_Uvar in check"
 #pop-options
 
-let check = check' true
+let check =
+  fun f g t pre pre_typing post_hint ->
+  let _, t = maybe_add_elim_pure pre t in
+  check' true f g t pre pre_typing post_hint

@@ -12,6 +12,8 @@ module P = Pulse.Syntax.Printer
 val vprop_as_list (vp:pure_term)
   : list pure_term
 
+val list_as_vprop (vps:list pure_term) : pure_term
+
 val check_vprop_equiv
   (f:RT.fstar_top_env)
   (g:env)

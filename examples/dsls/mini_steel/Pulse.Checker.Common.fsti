@@ -8,7 +8,7 @@ open Pulse.Syntax
 open Pulse.Elaborate.Pure
 open Pulse.Typing
   
-let check_t =
+type check_t =
   f:RT.fstar_top_env ->
   g:env ->
   t:term ->
@@ -18,5 +18,3 @@ let check_t =
   T.Tac (t:term &
          c:pure_comp{stateful_comp c ==> comp_pre c == pre} &
          src_typing f g t c)
-
-
