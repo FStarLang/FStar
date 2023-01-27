@@ -93,7 +93,7 @@ let check_abs
         match post_hint with
         | None -> None
         | Some post ->
-          let post = open_term' post (Tm_Var {nm_ppname="_";nm_index=x}) 1 in
+          let post = open_term' post (Tm_Var {nm_ppname="x";nm_index=x}) 1 in
           Some post
       in
       let (| body', c_body, body_typing |) = check f g' (open_term body x) pre_opened (E pre_typing) post in

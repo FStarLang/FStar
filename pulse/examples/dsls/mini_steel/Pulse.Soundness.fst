@@ -83,7 +83,7 @@ let stapp_soundess
   in
   let r_arg_typing = soundness _ _ _ _ arg_typing in
   elab_comp_open_commute res arg;
-  RT.T_App _ _ _ (binder_of_t_q_s (elab_pure formal) (elab_qual q) ppname)
+  RT.T_App _ _ _ (binder_of_t_q (elab_pure formal) (elab_qual q))
                  (elab_pure_comp res)
                  r_head_typing
                  r_arg_typing
@@ -124,7 +124,7 @@ let rec soundness (f:stt_env)
                  (#c:pure_comp)
                  (body_typing:src_typing f ((x, Inl ty)::g) (open_term body x) c { body_typing << d })
       : GTot (RT.typing (extend_env_l f g)
-                        (mk_abs_with_name ppname (elab_pure ty) (elab_qual q) (RT.close_term (elab_src_typing body_typing) x))
+                        (mk_abs (elab_pure ty) (elab_qual q) (RT.close_term (elab_src_typing body_typing) x))
                         (elab_pure (Tm_Arrow {binder_ty=ty;binder_ppname=ppname} q (close_pure_comp c x))))
       = let E t_typing = t_typing in
         let r_t_typing = soundness _ _ _ _ t_typing in
@@ -160,7 +160,7 @@ let rec soundness (f:stt_env)
          assume (ln_c c1 /\ ln_c c2 /\ ln_c c);
          Bind.elab_bind_typing f g _ _ _ x _ r1_typing _ r2_typing bc 
                                (tot_typing_soundness t2_typing)
-                               (mk_t_abs_tot _ _ _ t2_typing post2_typing)
+                               (mk_t_abs_tot _ _ "x" t2_typing post2_typing)
        | Bind_comp_ghost_l _ _ _ _ (| reveal_a, reveal_a_typing |) t2_typing y post2_typing ->
          let r1_typing
            : RT.typing _ _ (elab_pure_comp c1)
@@ -175,7 +175,7 @@ let rec soundness (f:stt_env)
          Bind.elab_bind_ghost_l_typing f g _ _ _ x _ r1_typing
            _ r2_typing bc
            (tot_typing_soundness t2_typing)
-           (mk_t_abs_tot _ _ _ t2_typing post2_typing)
+           (mk_t_abs_tot _ _ "x" t2_typing post2_typing)
            (elab_pure reveal_a)
            (soundness _ _ _ _ reveal_a_typing)
        | Bind_comp_ghost_r _ _ _ _ (| reveal_b, reveal_b_typing |) t2_typing y post2_typing ->
@@ -192,7 +192,7 @@ let rec soundness (f:stt_env)
          Bind.elab_bind_ghost_r_typing f g _ _ _ x _ r1_typing
            _ r2_typing bc
            (tot_typing_soundness t2_typing)
-           (mk_t_abs_tot _ _ _ t2_typing post2_typing)
+           (mk_t_abs_tot _ _ "x" t2_typing post2_typing)
            (elab_pure reveal_b)
            (soundness _ _ _ _ reveal_b_typing))
 

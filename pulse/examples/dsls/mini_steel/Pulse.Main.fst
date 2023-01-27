@@ -81,7 +81,7 @@ let transate_binder (b:R.binder)
       let q = Readback.readback_qual aq in
       RT.pack_inspect_binder b;  // This does not have SMTPat
       let bv_view = R.inspect_bv bv in
-      assume (bv_view.bv_ppname == "_" /\ bv_view.bv_index == 0);
+      assume (bv_view.bv_ppname == "x" /\ bv_view.bv_index == 0);
       let? b_ty' = readback_ty bv_view.bv_sort in      
       Inl ({binder_ty=b_ty';binder_ppname=bv_view.bv_ppname}, q)
 
