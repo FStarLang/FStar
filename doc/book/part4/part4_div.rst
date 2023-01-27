@@ -109,7 +109,7 @@ element of the sequence is ``1``.
 If, for example, in the base case we were to return the empty list
 ``[]`` rather than ``[n]``, then F* would refuse to accept the
 program, since the program could terminate while returning a value
-that does not an element of the annotated return type.
+that is not an element of the annotated return type.
 
 Isolating ``Dv`` from the logical core
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -298,7 +298,7 @@ Example: Untyped Lambda Calculus
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 In this section, we put together the various things we've learned
-about ``Dv`` cmputations to define several variants of an untyped
+about ``Dv`` computations to define several variants of an untyped
 lambda calculus.
 
 You can refer back to our prior development of the :ref:`simply typed
@@ -404,8 +404,8 @@ the free variables of the term into ``dyn``.
 
 .. literalinclude:: ../code/Divergence.fst
    :language: fstar
-   :start-after: //SNIPPET_START: dyn$
-   :end-before: //SNIPPET_END: dyn$
+   :start-after: //SNIPPET_START: denote$
+   :end-before: //SNIPPET_END: denote$
 
 We look at the cases in detail:
 

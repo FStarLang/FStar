@@ -462,7 +462,7 @@ Revisiting Vector Concatenation
 -------------------------------
 
 We now have all the ingredients to understand how the vector append
-example shown at the star of this chapter works. Here, below, is a
+example shown at the start of this chapter works. Here, below, is a
 version of the same code with all the implicit arguments and
 reveal/hide operations made explicit.
 
