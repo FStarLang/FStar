@@ -1,7 +1,7 @@
 module Pure
-open FStar.Mul
 
 //SNIPPET_START: factorial$
+open FStar.Mul
 let rec factorial (x:int)
   : Pure int (requires x >= 0) (ensures fun r -> r >= 1)
   = if x = 0
