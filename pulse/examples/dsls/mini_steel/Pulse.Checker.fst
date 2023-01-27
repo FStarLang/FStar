@@ -108,25 +108,28 @@ let check_abs
          tt |)
     | _ -> T.fail "bad hint"
 
-let maybe_add_elim_pure (pre:pure_term) (t:term) : bool & term =
-  let pure_vprops, rest_pre =
-    L.partition (fun (t:pure_term) ->
-      match t with
-      | Tm_PureApp (Tm_FVar l) None _ -> l = pure_lid
-      | _ -> false) (vprop_as_list pre) in
+let has_pure_vprops (pre:pure_term) = L.existsb Tm_Pure? (vprop_as_list pre)
 
-  if L.length pure_vprops = 0
+let maybe_add_elim_pure (pre:pure_term) (t:term) : T.Tac (bool & term) =
+  let pure_props =
+    L.flatten (L.map (fun (t:pure_term) ->
+                      match t with
+                      | Tm_Pure p -> [p]
+                      | _ -> []) (vprop_as_list pre)) in
+
+  if L.length pure_props = 0
   then false, t
   else
-    let t = L.fold_left (fun t (p:pure_term) ->
+    true,
+    L.fold_left (fun t (p:term) ->
       let elim_pure_tm = Tm_STApp (Tm_FVar (mk_steel_wrapper_lid "elim_pure")) None p in
-      Tm_Bind elim_pure_tm t) t pure_vprops in
-    true, t
+      Tm_Bind elim_pure_tm t) t pure_props
   
 #push-options "--query_stats --fuel 2 --ifuel 1 --z3rlimit_factor 4"
 #push-options "--print_implicits --print_universes --print_full_names"
-let rec check' : bool -> check_t =
+let rec check' : bool -> bool -> check_t =
   fun (allow_inst:bool)
+    (add_elim_pure:bool)
     (f:RT.fstar_top_env)
     (g:env)
     (t:term)
@@ -142,6 +145,14 @@ let rec check' : bool -> check_t =
       (| t, c1, T_Equiv _ _ _ _ d_c c_c1_eq |)
     else (| t, c, d_c |)
   in
+  let t =
+    if add_elim_pure &&
+       has_pure_vprops pre &&
+       (match t with
+        | Tm_STApp (Tm_FVar l) _ _ -> l <> elim_pure_lid
+        | _ -> true)
+    then snd (maybe_add_elim_pure pre t)
+    else t in
   match t with
   | Tm_BVar _ -> T.fail "not locally nameless"
   | Tm_Var _
@@ -170,7 +181,7 @@ let rec check' : bool -> check_t =
     (| t, C_Tot ty, d_ty |)
 
   | Tm_Abs _ _ _ _ _ ->
-    check_abs f g t pre pre_typing post_hint (check' true)
+    check_abs f g t pre pre_typing post_hint (check' true true)
   
   | Tm_STApp head qual arg ->
     let (| head, ty_head, dhead |) = check_tot allow_inst f g head in
@@ -193,7 +204,7 @@ let rec check' : bool -> check_t =
           let C_Tot ty_head = open_comp_with comp_typ arg in
           //Some implicits to follow
           let t = Pulse.Checker.Inference.infer head ty_head pre in
-          check' false f g t pre pre_typing post_hint
+          check' false false f g t pre pre_typing post_hint
 
         | _ ->
           T.fail
@@ -210,7 +221,7 @@ let rec check' : bool -> check_t =
     end
 
   | Tm_Bind _ _ ->
-    check_bind f g t pre pre_typing post_hint (check' true)
+    check_bind f g t pre pre_typing post_hint (check' true true)
     
   | Tm_If _ _ _ ->
     T.fail "Not handling if yet"
@@ -219,7 +230,4 @@ let rec check' : bool -> check_t =
     T.fail "Unexpected Tm_Uvar in check"
 #pop-options
 
-let check =
-  fun f g t pre pre_typing post_hint ->
-  let _, t = maybe_add_elim_pure pre t in
-  check' true f g t pre pre_typing post_hint
+let check = check' true true

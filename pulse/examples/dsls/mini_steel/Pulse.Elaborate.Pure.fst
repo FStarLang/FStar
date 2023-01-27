@@ -24,6 +24,7 @@ let steel_wrapper = ["Pulse"; "Steel"; "Wrapper"]
 let mk_steel_wrapper_lid s = steel_wrapper@[s]
 
 let emp_inames_lid = mk_steel_wrapper_lid "emp_inames"
+let elim_pure_lid = mk_steel_wrapper_lid "elim_pure"
 
  //the thunked, value-type counterpart of the effect STT
 let stt_lid = mk_steel_wrapper_lid "stt"
