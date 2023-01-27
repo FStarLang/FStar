@@ -2,6 +2,8 @@
 
 include .common.mk
 
+FSTAR_USE_DUNE=1
+
 ifdef FSTAR_USE_DUNE
 all: dune
 else # FSTAR_USE_DUNE
