@@ -127,9 +127,8 @@ let maybe_add_elim_pure (pre:pure_term) (t:term) : T.Tac (bool & term) =
   
 #push-options "--query_stats --fuel 2 --ifuel 1 --z3rlimit_factor 4"
 #push-options "--print_implicits --print_universes --print_full_names"
-let rec check' : bool -> bool -> check_t =
+let rec check' : bool -> check_t =
   fun (allow_inst:bool)
-    (add_elim_pure:bool)
     (f:RT.fstar_top_env)
     (g:env)
     (t:term)
@@ -146,8 +145,7 @@ let rec check' : bool -> bool -> check_t =
     else (| t, c, d_c |)
   in
   let t =
-    if add_elim_pure &&
-       has_pure_vprops pre &&
+    if has_pure_vprops pre &&
        (match t with
         | Tm_STApp (Tm_FVar l) _ _ -> l <> elim_pure_lid
         | _ -> true)
@@ -181,7 +179,7 @@ let rec check' : bool -> bool -> check_t =
     (| t, C_Tot ty, d_ty |)
 
   | Tm_Abs _ _ _ _ _ ->
-    check_abs f g t pre pre_typing post_hint (check' true true)
+    check_abs f g t pre pre_typing post_hint (check' true)
   
   | Tm_STApp head qual arg ->
     let (| head, ty_head, dhead |) = check_tot allow_inst f g head in
@@ -204,7 +202,7 @@ let rec check' : bool -> bool -> check_t =
           let C_Tot ty_head = open_comp_with comp_typ arg in
           //Some implicits to follow
           let t = Pulse.Checker.Inference.infer head ty_head pre in
-          check' false false f g t pre pre_typing post_hint
+          check' false f g t pre pre_typing post_hint
 
         | _ ->
           T.fail
@@ -221,7 +219,7 @@ let rec check' : bool -> bool -> check_t =
     end
 
   | Tm_Bind _ _ ->
-    check_bind f g t pre pre_typing post_hint (check' true true)
+    check_bind f g t pre pre_typing post_hint (check' true)
     
   | Tm_If _ _ _ ->
     T.fail "Not handling if yet"
@@ -230,4 +228,4 @@ let rec check' : bool -> bool -> check_t =
     T.fail "Unexpected Tm_Uvar in check"
 #pop-options
 
-let check = check' true true
+let check = check' true
