@@ -195,18 +195,18 @@ let write r x #n
     let _ = R.write r x in
     rewrite _ (R.pts_to r full_perm (hide x))
 
-let read_atomic r n p =
-  fun _ -> R.atomic_read_u32 r
+let elim_pure p = fun _ -> elim_pure p
 
-let read_explicit r n p = read r #n #p
+let read_pure r #n #p =
+  fun _ ->
+  let x = R.read r in
+  return x
 
-let ghost_noop () = fun _ -> noop ()
-
-let read_pure r n = fun _ ->
-  let x = read r #n #full_perm () in
+let read_atomic r #n #p =
+  fun _ ->
+  let x = R.atomic_read_u32 r in
   intro_pure (eq2_prop (reveal n) x);
   return x
 
-let elim_pure p = fun _ -> elim_pure p
-
-let write_explicit r x n = write r x #n
+let write_atomic r x #n = fun _ ->
+  R.atomic_write_u32 #_ #n r x

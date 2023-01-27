@@ -43,18 +43,6 @@ let warmup (x:int) = assert (x + 1 > x)
     )
 )))       
 
-%splice_t[test_read_with_alt_post] (check (`(
-  fun (r:ref u32)
-    (#n:erased u32) (#p:perm) ->
-    (expects (
-       pts_to r p n))
-    (provides (fun _ -> 
-       pts_to r p n))
-    (
-       read r
-    )
-)))
-
 //Bound variable escapes scope
 [@@ expect_failure]
 %splice_t[test_read_alt_write] (check (`(
@@ -104,42 +92,8 @@ let warmup (x:int) = assert (x + 1 > x)
 
 
 //
-// atomic and stt bind, framing, etc.
+// swap with elim_pure, bind of ghost and stt
 //
-
-%splice_t[read_atomic] (check (`(
-  fun (r1:ref u32) (r2:ref u32) (n1:erased u32) (n2:erased u32) ->
-    (expects (
-       pts_to r1 full_perm n1 `star`
-       pts_to r2 full_perm n2))
-    (provides (fun _ ->
-       pts_to r1 full_perm n1 `star`
-       pts_to r2 full_perm n2))
-    (
-      let x = read_explicit r2 n2 full_perm in
-      read_atomic r1 n1 full_perm
-    )
-)))
-
-%splice_t[ghost_read_atomic] (check (`(
-  fun (r:ref u32) (n:erased u32) ->
-    (expects (pts_to r full_perm n))
-    (provides (fun _ -> pts_to r full_perm n))
-    (
-      let x = ghost_noop () in
-      Pulse.Steel.Wrapper.read_atomic r n full_perm
-    )
-)))
-
-%splice_t[ghost_read] (check (`(
-  fun (r:ref u32) (n:erased u32) ->
-    (expects (pts_to r full_perm n))
-    (provides (fun _ -> pts_to r full_perm n))
-    (
-      let x = ghost_noop () in
-      Pulse.Steel.Wrapper.read_explicit r n full_perm
-    )
-)))
 
 %splice_t[swap_with_elim_pure] (check (`(
   fun (r1:ref u32) (r2:ref u32) (n1:erased u32) (n2:erased u32) ->
@@ -147,9 +101,22 @@ let warmup (x:int) = assert (x + 1 > x)
     (provides (fun _ ->
                pts_to r1 full_perm n2 `star` pts_to r2 full_perm n1))
     (
-      let x = read_pure r1 n1 in
-      let y = read_pure r2 n2 in
-      write_explicit r1 y n1;
-      write_explicit r2 x n2
+      let x = read_pure r1 in
+      let y = read_pure r2 in
+      write r1 y;
+      write r2 x
+    )
+)))
+
+%splice_t[swap_with_elim_pure_and_atomic] (check (`(
+  fun (r1:ref u32) (r2:ref u32) (n1:erased u32) (n2:erased u32) ->
+    (expects (pts_to r1 full_perm n1 `star` pts_to r2 full_perm n2))
+    (provides (fun _ ->
+               pts_to r1 full_perm n2 `star` pts_to r2 full_perm n1))
+    (
+      let x = read_atomic r1 in
+      let y = read_atomic r2 in
+      write_atomic r1 y;
+      write_atomic r2 x
     )
 )))

@@ -216,6 +216,9 @@ module R = Steel.ST.Reference
 type u32 : Type0 = U32.t
 
 open FStar.Ghost
+
+let eq2_prop (#a:Type) (x y:a) : prop = x == y
+
 val read (r:R.ref u32) (#n:erased u32) (#p:perm)
   : stt (x:u32{reveal n == x})
         (R.pts_to r p n)
@@ -226,34 +229,22 @@ val write (r:R.ref u32) (x:u32) (#n:erased u32)
         (R.pts_to r full_perm n) 
         (fun _ -> R.pts_to r full_perm (hide x))
 
-val read_atomic (r:R.ref u32) (n:erased u32) (p:perm)
-  : stt_atomic u32 emp_inames
-               (R.pts_to r p n)
-               (fun _ -> R.pts_to r p n)
-
-val read_explicit (r:R.ref u32) (n:erased u32) (p:perm)
-  : stt u32
-        (R.pts_to r p n)
-        (fun _ -> R.pts_to r p n)
-
-val ghost_noop (_:unit)
-  : stt_ghost (squash True) emp_inames
-              emp
-              (fun _ -> emp)
-
-let eq2_prop (#a:Type) (x y:a) : prop = x == y
-
-val read_pure (r:R.ref u32) (n:erased u32)
-  : stt u32
-        (R.pts_to r full_perm n)
-        (fun x -> R.pts_to r full_perm n `star` pure (eq2_prop (reveal n) x))
-
 val elim_pure (p:prop)
   : stt_ghost (squash p) emp_inames
               (pure p)
               (fun _ -> emp)
 
-val write_explicit (r:R.ref u32) (x:u32) (n:erased u32)
-  : stt unit
+val read_pure (r:R.ref u32) (#n:erased u32) (#p:perm)
+  : stt u32
+        (R.pts_to r p n)
+        (fun x -> R.pts_to r p n `star` pure (eq2_prop (reveal n) x))
+
+val read_atomic (r:R.ref u32) (#n:erased u32) (#p:perm)
+  : stt_atomic u32 emp_inames
+               (R.pts_to r p n)
+               (fun x -> R.pts_to r p n `star` pure (eq2_prop (reveal n) x))
+
+val write_atomic (r:R.ref u32) (x:u32) (#n:erased u32)
+  : stt_atomic unit emp_inames
         (R.pts_to r full_perm n) 
         (fun _ -> R.pts_to r full_perm (hide x))

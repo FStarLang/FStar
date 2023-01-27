@@ -126,6 +126,16 @@ let rec mk_bind (f:RT.fstar_top_env) (g:env)
       mk_bind f g pre e1 e2 c1 c2lifted x d_e1 d_c1res d_e2 res_typing post_typing
     end
     else T.fail "Cannot compose stt with ghost with non-emp opened invariants"
+  | C_STAtomic inames _, C_STAtomic _ _ ->
+    if eq_tm inames Tm_EmpInames
+    then begin
+      assume (inames == Tm_EmpInames);
+      let c1lifted = C_ST (st_comp_of_comp c1) in
+      let d_e1 : src_typing f g e1 c1lifted =
+        T_Lift _ _ _ c1lifted d_e1 (Lift_STAtomic_ST _ c1) in
+      mk_bind f g pre e1 e2 c1lifted c2 x d_e1 d_c1res d_e2 res_typing post_typing
+    end
+    else T.fail "Cannot compose statomics with non-emp opened invariants"
   | _, _ -> T.fail "bind either not implemented (e.g. ghost) or not possible"
 #pop-options
 
