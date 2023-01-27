@@ -413,8 +413,8 @@ in the ``Tot`` effect.
    :end-before: //SNIPPET_END: factorial_tail_alt$
 
 
-FStar.Ghost.pull
-................
+FStar.Ghost.Pull.pull
+.....................
 
 Consider applying ``map factorial [0;1;2]``, where ``map : (a ->
 Tot b) -> list a -> list b``. F* refuses to typecheck this written,
@@ -429,20 +429,26 @@ This is unfortunate since it seems that basic libraries designed for
 use with with higher-order total functions cannot be reused with ghost
 functions. [#]_
 
-The library function ``FStar.Ghost.pull`` can help in such
+The library function ``FStar.Ghost.Pull.pull`` can help in such
 situatinos. It has the following signature:
 
 .. code-block:: fstar
 
    val pull (#a:Type) (#b:a -> Type) (f: (x:a -> GTot (b x)))
-     : GTot (g:(x:a -> b x) { forall x. f x == g x })
+     : GTot (x:a -> b x)
+
+   val pull_equiv (#a:Type) (#b:a -> Type) (f: (x:a -> GTot (b x))) (x:a)
+     : Lemma (ensures pull f x == f x)
+             [SMTPat (pull f x)]
+               
                 
 This type states that for any ghost function ``f``, we can exhibit a
-total function ``g`` that is pointwise equal to ``f``. However, it may
-not be possble, in general, to compute ``g`` in a way that enables it
-to be compiled by F*. So, ``pull f`` itself has ghost effect,
-indicating that applications of ``pull`` cannot be used in compilable
-code.
+total function ``g`` with the same type as ``f``, while the lemma
+``pull_equiv`` states that ``g`` is pointwise equal to ``f``. [#]_ However,
+it may not be possible, in general, to compute ``g`` in a way that
+enables it to be compiled by F*. So, ``pull f`` itself has ghost
+effect, indicating that applications of ``pull`` cannot be used in
+compilable code.
 
 Using ``pull``, one can write ``map (pull factorial) [0;1;2] : GTot
 (list nat)``, thereby reusing ghost functions where total functions
@@ -458,6 +464,11 @@ are expected.
        <https://koka-lang.github.io/koka/doc/index.html>`_, do support
        effect polymorphism primitively.
 
+.. [#] The ``SMTPat`` annotation on the ``pull_equiv`` lemma instructs
+       F* to allow Z3 to instantiate this lemma automatically. You
+       can learn more :ref:`about SMT patterns and quantifier
+       instantiation in a later chapter <UTH_smt>`.
+       
 Revisiting Vector Concatenation
 -------------------------------
 
