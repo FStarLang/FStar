@@ -272,21 +272,30 @@ let rev_is_ok #a (l:list a)
     append_right_unit (reverse l)
 // SNIPPET_END: rev_is_ok
 
-let rec fib_aux (a b n:nat)
+// SNIPPET_START: fib_tail$
+let rec fib (a b n:nat)
   : Tot nat (decreases n)
   = match n with
     | 0 -> a
-    | _ -> fib_aux b (a+b) (n-1)
+    | _ -> fib b (a+b) (n-1)
 
-let fib (n:nat) : nat = fib_aux 1 1 n
+let fib_tail (n:nat) : nat = fib 1 1 n
+// SNIPPET_END: fib_tail$
 
-// SNIPPET_START: fib_is_ok
+
+//SNIPPET_START: val fib_tail_is_ok$
+val fib_tail_is_ok (n:nat)
+  : Lemma (fib_tail n == fibonacci n)
+//SNIPPET_END: val fib_tail_is_ok$  
+
+
+//SNIPPET_START: fib_is_ok$
 let rec fib_is_ok_aux (n: nat) (k: nat)
-  : Lemma (fib_aux (fibonacci k)
-                   (fibonacci (k + 1)) n == fibonacci (k + n))
+  : Lemma (fib (fibonacci k)
+               (fibonacci (k + 1)) n == fibonacci (k + n))
   = if n = 0 then () else fib_is_ok_aux (n - 1) (k + 1)
 
-let fib_is_ok (n:nat)
-  : Lemma (fibonacci n == fib n)
+let fib_tail_is_ok (n:nat)
+  : Lemma (fib_tail n == fibonacci n)
   = fib_is_ok_aux n 0
-// SNIPPET_END: fib_is_ok
+//SNIPPET_END: fib_is_ok$
