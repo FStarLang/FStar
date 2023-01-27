@@ -5,11 +5,14 @@ include .common.mk
 ifdef FSTAR_USE_DUNE
 all: dune
 else # FSTAR_USE_DUNE
-all:
+all: ocamlbuild
+endif # FSTAR_USE_DUNE
+
+.PHONY: ocamlbuild
+ocamlbuild:
 	$(Q)+$(MAKE) -C src/ocaml-output
 	$(Q)+$(MAKE) -C ulib/ml
 	$(Q)+$(MAKE) -C ulib
-endif # FSTAR_USE_DUNE
 
 .PHONY: dune dune-fstar
 dune-fstar:
