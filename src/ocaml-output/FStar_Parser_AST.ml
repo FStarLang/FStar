@@ -567,17 +567,38 @@ type aqual = arg_qualifier FStar_Pervasives_Native.option
 type knd = term
 type typ = term
 type expr = term
+type tycon_record =
+  (FStar_Ident.ident * aqual * attributes_ * term) Prims.list
+type constructor_payload =
+  | VpOfNotation of typ 
+  | VpArbitrary of typ 
+  | VpRecord of (tycon_record * typ FStar_Pervasives_Native.option) 
+let (uu___is_VpOfNotation : constructor_payload -> Prims.bool) =
+  fun projectee ->
+    match projectee with | VpOfNotation _0 -> true | uu___ -> false
+let (__proj__VpOfNotation__item___0 : constructor_payload -> typ) =
+  fun projectee -> match projectee with | VpOfNotation _0 -> _0
+let (uu___is_VpArbitrary : constructor_payload -> Prims.bool) =
+  fun projectee ->
+    match projectee with | VpArbitrary _0 -> true | uu___ -> false
+let (__proj__VpArbitrary__item___0 : constructor_payload -> typ) =
+  fun projectee -> match projectee with | VpArbitrary _0 -> _0
+let (uu___is_VpRecord : constructor_payload -> Prims.bool) =
+  fun projectee ->
+    match projectee with | VpRecord _0 -> true | uu___ -> false
+let (__proj__VpRecord__item___0 :
+  constructor_payload -> (tycon_record * typ FStar_Pervasives_Native.option))
+  = fun projectee -> match projectee with | VpRecord _0 -> _0
 type tycon =
   | TyconAbstract of (FStar_Ident.ident * binder Prims.list * knd
   FStar_Pervasives_Native.option) 
   | TyconAbbrev of (FStar_Ident.ident * binder Prims.list * knd
   FStar_Pervasives_Native.option * term) 
   | TyconRecord of (FStar_Ident.ident * binder Prims.list * knd
-  FStar_Pervasives_Native.option * attributes_ * (FStar_Ident.ident * aqual *
-  attributes_ * term) Prims.list) 
+  FStar_Pervasives_Native.option * attributes_ * tycon_record) 
   | TyconVariant of (FStar_Ident.ident * binder Prims.list * knd
-  FStar_Pervasives_Native.option * (FStar_Ident.ident * term
-  FStar_Pervasives_Native.option * Prims.bool * attributes_) Prims.list) 
+  FStar_Pervasives_Native.option * (FStar_Ident.ident * constructor_payload
+  FStar_Pervasives_Native.option * attributes_) Prims.list) 
 let (uu___is_TyconAbstract : tycon -> Prims.bool) =
   fun projectee ->
     match projectee with | TyconAbstract _0 -> true | uu___ -> false
@@ -600,8 +621,7 @@ let (uu___is_TyconRecord : tycon -> Prims.bool) =
 let (__proj__TyconRecord__item___0 :
   tycon ->
     (FStar_Ident.ident * binder Prims.list * knd
-      FStar_Pervasives_Native.option * attributes_ * (FStar_Ident.ident *
-      aqual * attributes_ * term) Prims.list))
+      FStar_Pervasives_Native.option * attributes_ * tycon_record))
   = fun projectee -> match projectee with | TyconRecord _0 -> _0
 let (uu___is_TyconVariant : tycon -> Prims.bool) =
   fun projectee ->
@@ -609,8 +629,9 @@ let (uu___is_TyconVariant : tycon -> Prims.bool) =
 let (__proj__TyconVariant__item___0 :
   tycon ->
     (FStar_Ident.ident * binder Prims.list * knd
-      FStar_Pervasives_Native.option * (FStar_Ident.ident * term
-      FStar_Pervasives_Native.option * Prims.bool * attributes_) Prims.list))
+      FStar_Pervasives_Native.option * (FStar_Ident.ident *
+      constructor_payload FStar_Pervasives_Native.option * attributes_)
+      Prims.list))
   = fun projectee -> match projectee with | TyconVariant _0 -> _0
 type qualifier =
   | Private 

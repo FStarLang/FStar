@@ -6106,6 +6106,129 @@ let rec (desugar_tycon :
                 FStar_Parser_AST.mk_term (FStar_Parser_AST.Tvar a) uu___
                   FStar_Parser_AST.Type_level
             | FStar_Parser_AST.NoName t -> t in
+          let desugar_tycon_variant_record uu___ =
+            match uu___ with
+            | FStar_Parser_AST.TyconVariant (id, bds, k, variants) ->
+                let uu___1 =
+                  let uu___2 =
+                    Obj.magic
+                      (FStar_Compiler_List.map
+                         (fun uu___3 ->
+                            match uu___3 with
+                            | (cid, payload, attrs) ->
+                                (match payload with
+                                 | FStar_Pervasives_Native.Some
+                                     (FStar_Parser_AST.VpRecord (r, k1)) ->
+                                     let record_id =
+                                       let uu___4 =
+                                         let uu___5 =
+                                           let uu___6 =
+                                             FStar_Ident.string_of_id id in
+                                           let uu___7 =
+                                             let uu___8 =
+                                               let uu___9 =
+                                                 FStar_Ident.string_of_id
+                                                   (Obj.magic cid) in
+                                               Prims.op_Hat uu___9
+                                                 "__payload" in
+                                             Prims.op_Hat "__" uu___8 in
+                                           Prims.op_Hat uu___6 uu___7 in
+                                         (uu___5,
+                                           (cid.FStar_Parser_AST.range)) in
+                                       FStar_Ident.mk_ident uu___4 in
+                                     let record_id_t =
+                                       let uu___4 =
+                                         let uu___5 =
+                                           FStar_Ident.lid_of_ns_and_id []
+                                             record_id in
+                                         FStar_Compiler_Effect.op_Bar_Greater
+                                           uu___5
+                                           (fun uu___6 ->
+                                              FStar_Parser_AST.Var uu___6) in
+                                       {
+                                         FStar_Parser_AST.tm = uu___4;
+                                         FStar_Parser_AST.range =
+                                           (cid.FStar_Parser_AST.range);
+                                         FStar_Parser_AST.level =
+                                           FStar_Parser_AST.Type_level
+                                       } in
+                                     let payload_typ =
+                                       let uu___4 =
+                                         FStar_Compiler_List.map
+                                           (fun bd ->
+                                              let uu___5 = binder_to_term bd in
+                                              (uu___5,
+                                                FStar_Parser_AST.Nothing))
+                                           bds in
+                                       let uu___5 =
+                                         FStar_Ident.range_of_id record_id in
+                                       FStar_Parser_AST.mkApp record_id_t
+                                         uu___4 uu___5 in
+                                     let uu___4 =
+                                       FStar_Compiler_Effect.op_Bar_Greater
+                                         (FStar_Parser_AST.TyconRecord
+                                            (record_id, bds,
+                                              FStar_Pervasives_Native.None,
+                                              attrs, r))
+                                         (fun uu___5 ->
+                                            FStar_Pervasives_Native.Some
+                                              uu___5) in
+                                     let uu___5 =
+                                       let uu___6 =
+                                         let uu___7 =
+                                           match k1 with
+                                           | FStar_Pervasives_Native.None ->
+                                               FStar_Parser_AST.VpOfNotation
+                                                 payload_typ
+                                           | FStar_Pervasives_Native.Some k2
+                                               ->
+                                               let uu___8 =
+                                                 let uu___9 =
+                                                   let uu___10 =
+                                                     let uu___11 =
+                                                       let uu___12 =
+                                                         let uu___13 =
+                                                           FStar_Ident.range_of_id
+                                                             record_id in
+                                                         FStar_Parser_AST.mk_binder
+                                                           (FStar_Parser_AST.NoName
+                                                              payload_typ)
+                                                           uu___13
+                                                           FStar_Parser_AST.Type_level
+                                                           FStar_Pervasives_Native.None in
+                                                       [uu___12] in
+                                                     (uu___11, k2) in
+                                                   FStar_Parser_AST.Product
+                                                     uu___10 in
+                                                 {
+                                                   FStar_Parser_AST.tm =
+                                                     uu___9;
+                                                   FStar_Parser_AST.range =
+                                                     (payload_typ.FStar_Parser_AST.range);
+                                                   FStar_Parser_AST.level =
+                                                     FStar_Parser_AST.Type_level
+                                                 } in
+                                               FStar_Parser_AST.VpArbitrary
+                                                 uu___8 in
+                                         FStar_Pervasives_Native.Some uu___7 in
+                                       (cid, uu___6, attrs) in
+                                     (uu___4, uu___5)
+                                 | uu___4 ->
+                                     (FStar_Pervasives_Native.None,
+                                       (cid, payload, attrs))))
+                         (Obj.magic variants)) in
+                  FStar_Compiler_Effect.op_Bar_Greater uu___2
+                    FStar_Compiler_List.unzip in
+                (match uu___1 with
+                 | (additional_records, variants1) ->
+                     let concat_options =
+                       FStar_Compiler_List.filter_map (fun r -> r) in
+                     let uu___2 = concat_options additional_records in
+                     FStar_Compiler_List.op_At uu___2
+                       [FStar_Parser_AST.TyconVariant (id, bds, k, variants1)])
+            | tycon -> [tycon] in
+          let tcs1 =
+            FStar_Compiler_List.concatMap desugar_tycon_variant_record tcs in
           let tot =
             FStar_Parser_AST.mk_term
               (FStar_Parser_AST.Name FStar_Parser_Const.effect_Tot_lid) rng
@@ -6197,7 +6320,8 @@ let rec (desugar_tycon :
                   ((FStar_Parser_AST.TyconVariant
                       (id, parms, kopt,
                         [(constrName,
-                           (FStar_Pervasives_Native.Some constrTyp), false,
+                           (FStar_Pervasives_Native.Some
+                              (FStar_Parser_AST.VpArbitrary constrTyp)),
                            attrs)])), uu___2)))
             | uu___1 -> failwith "impossible" in
           let desugar_abstract_tc quals1 _env mutuals uu___ =
@@ -6269,7 +6393,7 @@ let rec (desugar_tycon :
                               (env3, uu___3))) (env1, []) bs in
             match uu___ with
             | (env2, bs1) -> (env2, (FStar_Compiler_List.rev bs1)) in
-          match tcs with
+          match tcs1 with
           | (FStar_Parser_AST.TyconAbstract (id, bs, kopt))::[] ->
               let kopt1 =
                 match kopt with
@@ -6453,7 +6577,7 @@ let rec (desugar_tycon :
                    let env1 = FStar_Syntax_DsEnv.push_sigelt env se in
                    (env1, [se]))
           | (FStar_Parser_AST.TyconRecord uu___)::[] ->
-              let trec = FStar_Compiler_List.hd tcs in
+              let trec = FStar_Compiler_List.hd tcs1 in
               let uu___1 = tycon_record_as_variant trec in
               (match uu___1 with
                | (t, fs) ->
@@ -6473,11 +6597,11 @@ let rec (desugar_tycon :
                 FStar_Compiler_List.map
                   (fun x ->
                      FStar_Compiler_Effect.op_Less_Bar
-                       (FStar_Syntax_DsEnv.qualify env) (tycon_id x)) tcs in
+                       (FStar_Syntax_DsEnv.qualify env) (tycon_id x)) tcs1 in
               let rec collect_tcs quals1 et tc =
                 let uu___2 = et in
                 match uu___2 with
-                | (env1, tcs1) ->
+                | (env1, tcs2) ->
                     (match tc with
                      | FStar_Parser_AST.TyconRecord uu___3 ->
                          let trec = tc in
@@ -6495,7 +6619,7 @@ let rec (desugar_tycon :
                                     (uu___8, fs) in
                                   FStar_Syntax_Syntax.RecordType uu___7 in
                                 uu___6 :: quals1 in
-                              collect_tcs uu___5 (env1, tcs1) t)
+                              collect_tcs uu___5 (env1, tcs2) t)
                      | FStar_Parser_AST.TyconVariant
                          (id, binders, kopt, constructors) ->
                          let uu___3 =
@@ -6507,7 +6631,7 @@ let rec (desugar_tycon :
                               (env2,
                                 ((FStar_Pervasives.Inl
                                     (se, constructors, tconstr, quals1)) ::
-                                tcs1)))
+                                tcs2)))
                      | FStar_Parser_AST.TyconAbbrev (id, binders, kopt, t) ->
                          let uu___3 =
                            desugar_abstract_tc quals1 env1 mutuals
@@ -6517,7 +6641,7 @@ let rec (desugar_tycon :
                           | (env2, uu___4, se, tconstr) ->
                               (env2,
                                 ((FStar_Pervasives.Inr
-                                    (se, binders, t, quals1)) :: tcs1)))
+                                    (se, binders, t, quals1)) :: tcs2)))
                      | uu___3 ->
                          FStar_Errors.raise_error
                            (FStar_Errors.Fatal_NonInductiveInMutuallyDefinedType,
@@ -6525,12 +6649,12 @@ let rec (desugar_tycon :
                            rng) in
               let uu___2 =
                 FStar_Compiler_List.fold_left (collect_tcs quals) (env, [])
-                  tcs in
+                  tcs1 in
               (match uu___2 with
-               | (env1, tcs1) ->
-                   let tcs2 = FStar_Compiler_List.rev tcs1 in
+               | (env1, tcs2) ->
+                   let tcs3 = FStar_Compiler_List.rev tcs2 in
                    let tps_sigelts =
-                     FStar_Compiler_Effect.op_Bar_Greater tcs2
+                     FStar_Compiler_Effect.op_Bar_Greater tcs3
                        (FStar_Compiler_List.collect
                           (fun uu___3 ->
                              match uu___3 with
@@ -6631,36 +6755,34 @@ let rec (desugar_tycon :
                                             (FStar_Compiler_List.map
                                                (fun uu___12 ->
                                                   match uu___12 with
-                                                  | (id, topt, of_notation,
-                                                     cons_attrs) ->
+                                                  | (id, payload, cons_attrs)
+                                                      ->
                                                       let t =
-                                                        if of_notation
-                                                        then
-                                                          match topt with
-                                                          | FStar_Pervasives_Native.Some
-                                                              t1 ->
-                                                              FStar_Parser_AST.mk_term
-                                                                (FStar_Parser_AST.Product
-                                                                   ([
-                                                                    FStar_Parser_AST.mk_binder
+                                                        match payload with
+                                                        | FStar_Pervasives_Native.Some
+                                                            (FStar_Parser_AST.VpArbitrary
+                                                            t1) -> t1
+                                                        | FStar_Pervasives_Native.Some
+                                                            (FStar_Parser_AST.VpOfNotation
+                                                            t1) ->
+                                                            FStar_Parser_AST.mk_term
+                                                              (FStar_Parser_AST.Product
+                                                                 ([FStar_Parser_AST.mk_binder
                                                                     (FStar_Parser_AST.NoName
                                                                     t1)
                                                                     t1.FStar_Parser_AST.range
                                                                     t1.FStar_Parser_AST.level
                                                                     FStar_Pervasives_Native.None],
-                                                                    tot_tconstr))
-                                                                t1.FStar_Parser_AST.range
-                                                                t1.FStar_Parser_AST.level
-                                                          | FStar_Pervasives_Native.None
-                                                              -> tconstr
-                                                        else
-                                                          (match topt with
-                                                           | FStar_Pervasives_Native.None
-                                                               ->
-                                                               failwith
-                                                                 "Impossible"
-                                                           | FStar_Pervasives_Native.Some
-                                                               t1 -> t1) in
+                                                                   tot_tconstr))
+                                                              t1.FStar_Parser_AST.range
+                                                              t1.FStar_Parser_AST.level
+                                                        | FStar_Pervasives_Native.Some
+                                                            (FStar_Parser_AST.VpRecord
+                                                            uu___13) ->
+                                                            failwith
+                                                              "Impossible: [VpRecord _] should have disappeared after [desugar_tycon_variant_record]"
+                                                        | FStar_Pervasives_Native.None
+                                                            -> tconstr in
                                                       let t1 =
                                                         let uu___13 =
                                                           close env_tps t in
