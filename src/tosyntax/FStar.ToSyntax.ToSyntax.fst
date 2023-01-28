@@ -2766,6 +2766,34 @@ let rec desugar_tycon env (d: AST.decl) quals tcs : (env_t * sigelts) =
     | TAnnotated(a, _)
     | TVariable a -> mk_term (Tvar a) (range_of_id a) Type_level
     | NoName t -> t in
+  let desugar_tycon_variant_record = function
+    // for every variant, each constructor whose payload is a record
+    // is desugared into a reference to a _generated_ record type
+    // declaration
+    | TyconVariant (id, bds, k, variants) -> 
+        let additional_records, variants = map (fun (cid, payload, attrs) ->
+                match payload with
+              | Some (VpRecord (r, k)) -> 
+                  let record_id = mk_ident (string_of_id id ^ "__" ^ string_of_id cid ^ "__payload", cid.range) in
+                  let record_id_t = {tm = lid_of_ns_and_id [] record_id |> Var; range = cid.range; level = Type_level} in
+                  let payload_typ = mkApp record_id_t (List.map (fun bd -> binder_to_term bd, Nothing) bds) (range_of_id record_id) in
+                  TyconRecord (record_id, bds, None, attrs, r) |> Some
+                , (cid, Some ( match k with
+                             | None   -> VpOfNotation payload_typ
+                             | Some k -> 
+                                    VpArbitrary 
+                                       { tm = Product ([mk_binder (NoName payload_typ) (range_of_id record_id) Type_level None], k)
+                                       ; range = payload_typ.range
+                                       ; level = Type_level
+                                       }
+                             ), attrs)
+              | _ -> None, (cid, payload, attrs)
+            ) variants |> unzip in
+         // TODO: [concat_options] should live somewhere else
+         let concat_options = filter_map (fun r -> r) in
+         concat_options additional_records @ [TyconVariant (id, bds, k, variants)]
+    | tycon -> [tycon] in
+  let tcs = concatMap desugar_tycon_variant_record tcs in
   let tot = mk_term (Name (C.effect_Tot_lid)) rng Expr in
   let with_constructor_effect t = mk_term (App(tot, t, Nothing)) t.range t.level in
   let apply_binders t binders =
@@ -2790,7 +2818,7 @@ let rec desugar_tycon env (d: AST.decl) quals tcs : (env_t * sigelts) =
                               BU.format1 "Field %s shadows the record's name or a parameter of it, please rename it" (string_of_id f)) (range_of_id f))
           fields;
 
-      TyconVariant(id, parms, kopt, [(constrName, Some constrTyp, false, attrs)]), fields |> List.map (fun (f, _, _, _) -> f)
+      TyconVariant(id, parms, kopt, [(constrName, Some (VpArbitrary constrTyp), attrs)]), fields |> List.map (fun (f, _, _, _) -> f)
     | _ -> failwith "impossible" in
   let desugar_abstract_tc quals _env mutuals = function
     | TyconAbstract(id, binders, kopt) ->
@@ -2941,15 +2969,13 @@ let rec desugar_tycon env (d: AST.decl) quals tcs : (env_t * sigelts) =
           let attrs = List.map (desugar_term env) d.attrs in
           let val_attrs = Env.lookup_letbinding_quals_and_attrs env tname |> snd in
           let constrNames, constrs = List.split <|
-              (constrs |> List.map (fun (id, topt, of_notation, cons_attrs) ->
-                let t =
-                  if of_notation
-                  then match topt with
-                    | Some t -> mk_term (Product([mk_binder (NoName t) t.range t.level None], tot_tconstr)) t.range t.level
-                    | None -> tconstr
-                  else match topt with
-                    | None -> failwith "Impossible"
-                    | Some t -> t in
+              (constrs |> List.map (fun (id, payload, cons_attrs) ->
+                let t = match payload with
+                      | Some (VpArbitrary  t) -> t
+                      | Some (VpOfNotation t) -> mk_term (Product([mk_binder (NoName t) t.range t.level None], tot_tconstr)) t.range t.level
+                      | Some (VpRecord     _) -> failwith "Impossible: [VpRecord _] should have disappeared after [desugar_tycon_variant_record]"
+                      | None                  -> tconstr
+                in
                 let t = desugar_term env_tps (close env_tps t) in
                 let name = qualify env id in
                 let quals = tname_quals |> List.collect (function
