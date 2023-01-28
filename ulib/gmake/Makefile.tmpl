@@ -51,8 +51,9 @@ _tags:
 $(OUTPUT_DIRECTORY)/%.ml:
 	$(MY_FSTAR) $(subst .checked,,$(notdir $<)) --codegen OCaml --extract_module $(subst .fst.checked,,$(notdir $<))
 
-$(OCAML_EXE): _tags $(ML_FILES) $(TOP_LEVEL_FILE) $(FSTAR_HOME)/bin/fstarlib/fstarlib.cmxa
-	OCAMLPATH="$(FSTAR_HOME)/bin" ocamlbuild -I $(OUTPUT_DIRECTORY) -use-ocamlfind -pkg fstarlib $(subst .ml,.native,$(TOP_LEVEL_FILE))
+# FIXME: ocamlbuild is deprecated, use dune instead
+$(OCAML_EXE): _tags $(ML_FILES) $(TOP_LEVEL_FILE)
+	OCAMLPATH="$(FSTAR_HOME)/lib" ocamlbuild -I $(OUTPUT_DIRECTORY) -use-ocamlfind -pkg fstar.lib $(subst .ml,.native,$(TOP_LEVEL_FILE))
 	mv _build/$(subst .ml,.native,$(TOP_LEVEL_FILE)) $@
 
 test.ocaml: $(OCAML_EXE)
@@ -68,9 +69,6 @@ test.karamel: $(KRML_EXE)
 	./$< hello
 
 test: test.karamel test.ocaml
-
-$(FSTAR_HOME)/bin/fstarlib/fstarlib.cmxa:
-	+$(MAKE) -C $(FSTAR_HOME)/ulib/ml
 
 basic_clean:
 	rm -rf _build $(OUTPUT_DIRECTORY) *~ *.checked $(OCAML_EXE) $(KRML_EXE) .depend .depend.rsp

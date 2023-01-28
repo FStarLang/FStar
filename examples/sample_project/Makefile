@@ -43,8 +43,9 @@ _tags:
 $(OUTPUT_DIRECTORY)/%.ml:
 	$(FSTAR) $(subst .checked,,$<) --codegen OCaml --extract_module $(subst .fst.checked,,$<)
 
+# FIXME: ocamlbuild is deprecated, use dune instead
 $(OCAML_EXE): _tags $(ML_FILES) $(TOP_LEVEL_FILE)
-	OCAMLPATH="$(FSTAR_HOME)/bin" ocamlbuild -I $(OUTPUT_DIRECTORY) -use-ocamlfind -pkg fstarlib $(subst .ml,.native,$(TOP_LEVEL_FILE))
+	OCAMLPATH="$(FSTAR_HOME)/lib" ocamlbuild -I $(OUTPUT_DIRECTORY) -use-ocamlfind -pkg fstar.lib $(subst .ml,.native,$(TOP_LEVEL_FILE))
 	mv _build/$(subst .ml,.native,$(TOP_LEVEL_FILE)) $@
 
 test.ocaml: $(OCAML_EXE)
