@@ -4754,8 +4754,11 @@ and (p_atomicUniverse : FStar_Parser_AST.term -> FStar_Pprint.document) =
         failwith uu___1
 let (term_to_document : FStar_Parser_AST.term -> FStar_Pprint.document) =
   fun e ->
+    let old_unfold_tuples = FStar_Compiler_Effect.op_Bang unfold_tuples in
     FStar_Compiler_Effect.op_Colon_Equals unfold_tuples false;
-    p_term false false e
+    (let res = p_term false false e in
+     FStar_Compiler_Effect.op_Colon_Equals unfold_tuples old_unfold_tuples;
+     res)
 let (signature_to_document : FStar_Parser_AST.decl -> FStar_Pprint.document)
   = fun e -> p_justSig e
 let (decl_to_document : FStar_Parser_AST.decl -> FStar_Pprint.document) =
