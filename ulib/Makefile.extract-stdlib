@@ -35,10 +35,15 @@ depend.extract-stdlib: .depend.extract-stdlib
 
 include .depend.extract-stdlib
 
-.PHONY: handwritten handwritten-tac all-ml dune-snapshot
+.PHONY: handwritten handwritten-ml handwritten-ml-experimental all-ml dune-snapshot
 
-handwritten:
+handwritten-ml:
 	+$(MAKE) -C ml dune-handwritten-snapshot
+
+handwritten-ml-experimental:
+	+$(MAKE) -C experimental/ml dune-handwritten-snapshot
+
+handwritten: handwritten-ml handwritten-ml-experimental
 
 all-ml: $(ALL_ML_FILES)
 
