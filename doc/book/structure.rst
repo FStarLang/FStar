@@ -88,6 +88,13 @@ system. Typeclasses are suitable for more advanced developments,
 providing more flexible abstraction patterns coupled with
 custom type inference.
 
+* Part 4: Computational Effects
+
+We introduce F*'s effect system, starting with its primitive effects
+for total, ghost, and divergent computations. We also provide a brief
+primer on Floyd-Hoare logic and weakest precondition calculi,
+connecting them to Dijkstra monads, a core concept in the design of
+F*'s effect system.
 
 * Part 5: Tactics and Metaprogramming
 
@@ -119,10 +126,6 @@ The rest of the book is still in the works, but the planned content is
 the following:
 
   + Part 4: User-defined Effects
-
-    - Ghost: An Effect for Erasable Computations
-
-    - Nontermination: The Effect of Divergence
 
     - State
 

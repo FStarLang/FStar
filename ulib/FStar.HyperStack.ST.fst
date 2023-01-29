@@ -46,14 +46,11 @@ private let rid_last_component_pred (m1 m2:mem) :Type0
 private let eternal_refs_pred (m1 m2:mem) :Type0
   = forall (a:Type) (rel:preorder a) (r:HS.mreference a rel).
       {:pattern (m1 `HS.contains` r)}
-      if is_mm r then True
-      else
-        if m1 `HS.contains` r then
-	  if HS.is_eternal_region_hs (frameOf r) then m2 `HS.contains` r /\ rel (HS.sel m1 r) (HS.sel m2 r)
-	  else if m2 `contains_region` (HS.frameOf r) then m2 `HS.contains` r /\ rel (HS.sel m1 r) (HS.sel m2 r)
-	  else True
-	else True
-
+      (is_mm r) \/
+      (((m1 `HS.contains` r) /\
+        (HS.is_eternal_region_hs (frameOf r) \/
+         m2 `contains_region` (HS.frameOf r))) ==> (m2 `HS.contains` r /\ rel (HS.sel m1 r) (HS.sel m2 r)))
+       
 (*
  * Predicate for next ref address in a region's heap
  * For all regions, their next_addr increases monotonically (or the region ceases to exist)
@@ -79,12 +76,10 @@ private let unused_ref_next_addr_pred (m1 m2:mem) :Type0
 (* Predicate for mm refs *)
 private let mm_refs_pred (m1 m2:mem) :Type0
   = forall (a:Type) (rel:preorder a) (r:HS.mreference a rel).{:pattern (m1 `HS.contains` r)}
-      if not (is_mm r) then True
-      else
-        if m1 `HS.contains` r then
-	  (m2 `HS.contains` r /\ rel (HS.sel m1 r) (HS.sel m2 r)) \/
-	  (r `HS.unused_in` m2)
-	else True
+      (not (is_mm r)) \/
+      (m1 `HS.contains` r ==>
+       (m2 `HS.contains` r /\ rel (HS.sel m1 r) (HS.sel m2 r) \/
+        r `HS.unused_in` m2))
 
 (* The preorder is the conjunction of above predicates *)
 let mem_rel :preorder mem
@@ -286,7 +281,7 @@ private let mem_rel_predicate (#a:Type0) (#rel:preorder a) (r:mreference a rel) 
     fun m ->
     (HS.rid_last_component rid < HS.get_rid_ctr m) /\ (  //will help us prove that a deallocated region remains deallocated
       (m `HS.contains` r /\ p m) \/  //the ref is contained and satisfies p
-      (m `contains_region` rid /\ not (m `HS.contains_ref_in_its_region` r) /\ HS.as_addr r < Heap.next_addr (HS.get_hmap m `Map.sel` rid) /\ r `HS.unused_in` m) \/  //the ref is deallocated, but its region is contained and next_addr > addr_of ref
+      (m `contains_region` rid /\ ~ (m `HS.contains_ref_in_its_region` r) /\ HS.as_addr r < Heap.next_addr (HS.get_hmap m `Map.sel` rid) /\ r `HS.unused_in` m) \/  //the ref is deallocated, but its region is contained and next_addr > addr_of ref
       (not (m `contains_region` rid)))  //the region itself is not there
 
 let token_p #_ #_ r p = witnessed (mem_rel_predicate r p)

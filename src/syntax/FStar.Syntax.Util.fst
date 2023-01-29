@@ -2408,6 +2408,23 @@ let aqual_is_erasable (aq:aqual) =
   | None -> false
   | Some aq -> U.for_some (is_fvar PC.erasable_attr) aq.aqual_attributes
 
+let is_erased_head (t:term) : option (universe & term) = 
+  let head, args = head_and_args t in
+  match head.n, args with
+  | Tm_uinst({n=Tm_fvar fv}, [u]), [(ty, _)]
+    when fv_eq_lid fv PC.erased_lid ->
+    Some (u, ty)
+  | _ ->
+    None
+
+let apply_reveal (u:universe) (ty:term) (v:term) =
+  let head = fvar (Ident.set_lid_range PC.reveal v.pos)
+                  (Delta_constant_at_level 1)
+                   None in
+  mk_Tm_app (mk_Tm_uinst head [u])
+            [iarg ty; as_arg v]
+            v.pos
+                    
 let check_mutual_universes (lbs:list letbinding)
   : unit
   = let lb::lbs = lbs in

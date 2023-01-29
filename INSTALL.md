@@ -8,6 +8,7 @@
     * [Testing a binary package](#testing-a-binary-package)
   * [Running F* from a docker image](#running-f-from-a-docker-image)
   * [Chocolatey Package on Windows](#chocolatey-package-on-windows)
+  * [Nix Package](#nix-package)
   * [Building F* from the OCaml sources](#building-f-from-the-ocaml-sources)
     * [Prerequisites: Working OCaml setup](#prerequisites-working-ocaml-setup)
       * [Instructions for Windows](#instructions-for-windows)
@@ -177,6 +178,36 @@ or
     > cinst fstar
 
 you can find the package description [here](https://chocolatey.org/packages/FStar)
+
+## Nix Package ##
+
+On [Linux](https://nixos.org/download.html#nix-install-linux),
+[MacOS](https://nixos.org/download.html#nix-install-macos) or
+[Windows](https://nixos.org/download.html#nix-install-windows) (using
+WSL2), you can use the [Nix package manager](https://nixos.org/) to
+install F* from sources in a reproducible way, possibly with binaries
+cached.
+
+**Bleeding-edge F\* from sources:**
+
+Install Nix and F\* `master` in one go with two lines of bash:
+```bash
+# 1. Install the Nix package manager manager (as https://nixos.org/download.html)
+sh <(curl -L https://nixos.org/nix/install) --daemon
+# 2. Build and install F\* in your profile environment
+nix profile install github:FStarLang/FStar --experimental-features 'nix-command flakes'
+```
+
+For more information about building F\* from sources with Nix, see
+[`./.nix/README.md`](./.nix/README.md).
+
+**F\* release with binary cache**:
+
+If you don't need bleeding-edge F\*, the Nix package collection
+[Nixpkgs](https://github.com/NixOS/nixpkgs) provides F\* builds with
+binary cache. The command `nix-shell -p fstar` will drop you in a bash
+shell with F\*'s binary availaible in path.
+
 
 ## Building F\* from the OCaml sources ##
 

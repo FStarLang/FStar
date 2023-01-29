@@ -17,6 +17,7 @@ val v (x: t) : Pure int
   (requires True)
   (ensures (fun y -> fits y))
 
+[@@noextract_to "krml"]
 val int_to_t (x: int) : Pure t
   (requires (fits x))
   (ensures (fun y -> v y == x))

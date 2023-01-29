@@ -138,14 +138,40 @@ Now, you're probably thinking that this version is even worse than
 because it's using a convoluted syntax to call ``bind``. Many
 languages, most famously Haskell, provide specialized syntax to
 simplify writing computations that work with APIs like ``bind`` and
-``return``. And F* provides some very simple-minded syntax to handle
-this too.
+``return``. F* provides some syntactic sugar to handle this too.
 
-* Instead of writing ``bind f (fun x -> e)`` you can write ``x <-- f; e``.
+Monadic let bindings
+++++++++++++++++++++
 
-* And, instead of writing ``bind f (fun _ -> e)``  you can write ``f;; e``.
+The definition below defines a function with a special name
+``let!``. Names of this form, the token ``let`` followed by a sequence
+of one or more operator characters such as ``!``, ``?``, ``@``, ``$``,
+``<``, and ``>`` are monadic let-binding operators. 
 
-Using this bit of syntactic sugar, we come to our final version of
+.. literalinclude:: ../code/Part2.STInt.fst
+   :language: fstar
+   :start-after: //SNIPPET_START: let!$
+   :end-before: //SNIPPET_END: let!$
+
+With ``let!`` in scope, the following syntactic sugar becomes available:
+
+* Instead of writing ``bind f (fun x -> e)`` you can write ``let! x = f in e``.
+
+* Instead of writing ``bind f (fun _ -> e)`` you can write ``f ;!
+  e``, i.e., a semicolon followed the sequence of operator characters
+  uses in the monadic let-binding operator.
+
+* Instead of writing ``bind f (fun x -> match x with ...)``, you can
+  write ``match! f with ...``
+
+* Instead of writing ``bind f (fun x -> if x then ...)``, you can
+  write ``if! f then ...``
+
+See this file `MonadicLetBindings.fst
+<https://github.com/FStarLang/FStar/blob/master/examples/misc/MonadicLetBindings.fst>`_
+for more details an examples of the syntactic sugar.
+
+Using this syntactic sugar, we come to our final version of
 ``read_and_increment``, where now, hopefully, the imperative-looking
 state updates make the intent of our program clear.
 
@@ -164,6 +190,8 @@ for all by our combinators.
    :start-after: //SNIPPET_START: inc_twice$
    :end-before: //SNIPPET_END: inc_twice$
 
+.. _Part2_monad_intro:
+
 ``st`` is a monad
 -----------------
 
@@ -178,7 +206,7 @@ structure. Specifically, a monad consists of:
 which satisfy the following laws, where `~` is some suitable
 equivalence relation on ``m a``
 
-  * Left identity: ``bind (return x) f ~ g``
+  * Left identity: ``bind (return x) f ~ f``
   * Right identity: ``bind f return ~ f``
   * Associativity: ``bind f1 (fun x -> bind (f2 x) f3) ~ bind (bind f1 f2) g``
 

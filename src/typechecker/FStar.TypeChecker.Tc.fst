@@ -134,7 +134,7 @@ let tc_inductive' env ses quals attrs lids =
        let env = Env.push_sigelt env sig_bndle in
        (* Check positivity of the inductives within the Sig_bundle *)
        List.iter (fun ty ->
-         let b = TcUtil.check_positivity env ty in
+         let b = TcUtil.check_positivity env lids ty in
          if not b then
            let lid, r =
              match ty.sigel with
@@ -793,9 +793,10 @@ let tc_decl' env0 se: list sigelt * list sigelt * Env.env =
     [ { se with sigel = Sig_declare_typ (lid, uvs, t) }], [], env0
 
   | Sig_assume(lid, uvs, t) ->
-    FStar.Errors.log_issue r
-                 (Warning_WarnOnUse,
-                  BU.format1 "Admitting a top-level assumption %s" (Print.lid_to_string lid));
+    if not (List.contains S.InternalAssumption se.sigquals) then
+      FStar.Errors.log_issue r
+                   (Warning_WarnOnUse,
+                    BU.format1 "Admitting a top-level assumption %s" (Print.lid_to_string lid));
     let env = Env.set_range env r in
 
     let uvs, t =

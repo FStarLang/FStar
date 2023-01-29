@@ -4758,6 +4758,47 @@ let (aqual_is_erasable : FStar_Syntax_Syntax.aqual -> Prims.bool) =
         FStar_Compiler_Util.for_some
           (is_fvar FStar_Parser_Const.erasable_attr)
           aq1.FStar_Syntax_Syntax.aqual_attributes
+let (is_erased_head :
+  FStar_Syntax_Syntax.term ->
+    (FStar_Syntax_Syntax.universe * FStar_Syntax_Syntax.term)
+      FStar_Pervasives_Native.option)
+  =
+  fun t ->
+    let uu___ = head_and_args t in
+    match uu___ with
+    | (head, args) ->
+        (match ((head.FStar_Syntax_Syntax.n), args) with
+         | (FStar_Syntax_Syntax.Tm_uinst
+            ({ FStar_Syntax_Syntax.n = FStar_Syntax_Syntax.Tm_fvar fv;
+               FStar_Syntax_Syntax.pos = uu___1;
+               FStar_Syntax_Syntax.vars = uu___2;
+               FStar_Syntax_Syntax.hash_code = uu___3;_},
+             u::[]),
+            (ty, uu___4)::[]) when
+             FStar_Syntax_Syntax.fv_eq_lid fv FStar_Parser_Const.erased_lid
+             -> FStar_Pervasives_Native.Some (u, ty)
+         | uu___1 -> FStar_Pervasives_Native.None)
+let (apply_reveal :
+  FStar_Syntax_Syntax.universe ->
+    FStar_Syntax_Syntax.term ->
+      FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.term)
+  =
+  fun u ->
+    fun ty ->
+      fun v ->
+        let head =
+          let uu___ =
+            FStar_Ident.set_lid_range FStar_Parser_Const.reveal
+              v.FStar_Syntax_Syntax.pos in
+          FStar_Syntax_Syntax.fvar uu___
+            (FStar_Syntax_Syntax.Delta_constant_at_level Prims.int_one)
+            FStar_Pervasives_Native.None in
+        let uu___ = FStar_Syntax_Syntax.mk_Tm_uinst head [u] in
+        let uu___1 =
+          let uu___2 = FStar_Syntax_Syntax.iarg ty in
+          let uu___3 = let uu___4 = FStar_Syntax_Syntax.as_arg v in [uu___4] in
+          uu___2 :: uu___3 in
+        FStar_Syntax_Syntax.mk_Tm_app uu___ uu___1 v.FStar_Syntax_Syntax.pos
 let (check_mutual_universes :
   FStar_Syntax_Syntax.letbinding Prims.list -> unit) =
   fun lbs ->

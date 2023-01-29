@@ -2217,6 +2217,7 @@ let (resugar_qualifier :
     match uu___ with
     | FStar_Syntax_Syntax.Assumption ->
         FStar_Pervasives_Native.Some FStar_Parser_AST.Assumption
+    | FStar_Syntax_Syntax.InternalAssumption -> FStar_Pervasives_Native.None
     | FStar_Syntax_Syntax.New ->
         FStar_Pervasives_Native.Some FStar_Parser_AST.New
     | FStar_Syntax_Syntax.Private ->
