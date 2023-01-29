@@ -428,6 +428,8 @@ and pat_to_string x =
       if Options.print_bound_var_types()
       then U.format1 ".%s" (if topt = None then "_" else topt |> U.must |> term_to_string)
       else "._"
+    | Pat_view (pat, view) ->
+      U.format2 "%s <@ %s" (pat_to_string pat) (term_to_string view)
     | Pat_var x ->
       if Options.print_bound_var_types()
       then U.format2 "%s:%s" (bv_to_string x) (term_to_string x.sort)

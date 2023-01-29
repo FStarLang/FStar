@@ -1114,6 +1114,9 @@ let collect_one
             collect_pattern p;
             collect_term t;
             collect_term tac
+        | PatView (subpat, view) ->
+            collect_term view;
+            collect_pattern subpat
 
 
       and collect_branches bs =

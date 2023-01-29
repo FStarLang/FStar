@@ -3515,16 +3515,21 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
                   then BU.print2 "Heuristic applicable with scrutinee %s and other side = %s\n"
                                 (Print.term_to_string scrutinee)
                                 (Print.term_to_string t);
-                  let pat_discriminates = function
-                      | ({v=Pat_constant _}, None, _)
-                      | ({v=Pat_cons _}, None, _) -> true
+                  let rec pat_discriminates pat
+                      = match pat.v with
+                      | Pat_constant _ | Pat_cons _ -> true
+                      | Pat_view (subpat, _) -> pat_discriminates subpat
                       | _ -> false //other patterns do not discriminate
+                  in
+                  let branch_discriminates = function
+                      | pat, None, _ -> pat_discriminates pat
+                      | _ -> false
                   in
                   let head_matching_branch =
                       branches |>
                       BU.try_find
                           (fun b ->
-                            if pat_discriminates b
+                            if branch_discriminates b
                             then
                               let (_, _, t') = SS.open_branch b in
                               match head_matches_delta env wl.smt_ok s t' with
@@ -3540,7 +3545,7 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
                     if Env.debug env <| Options.Other "Rel"
                     then BU.print_string "No head_matching branch\n";
                     let try_branches =
-                        match BU.prefix_until (fun b -> not (pat_discriminates b)) branches with
+                        match BU.prefix_until (fun b -> not (branch_discriminates b)) branches with
                         | Some (branches, _, _) -> branches
                         | _ -> branches
                     in

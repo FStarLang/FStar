@@ -232,6 +232,8 @@ let pickBranch (cfg:config) (scrut : t) (branches : list branch) : option (term 
             in
             if matches_const scrutinee s then Inl [] else Inr false
 
+        | Pat_view _ -> failwith "TODO: pat view nbe"
+
         | Pat_cons(fv, _us_opt, arg_pats) ->
             let rec matches_args out (a:list (t * aqual)) (p:list (pat * bool))
                 : either (list t) bool =
@@ -556,6 +558,7 @@ let rec translate (cfg:config) (bs:list t) (e:term) : t =
           let (bs, p_new) =
             match p.v with
             | Pat_constant c -> (bs, Pat_constant c)
+            | Pat_view _ -> failwith "TODO: NBE pat view"
             | Pat_cons (fvar, us_opt, args) ->
               let (bs', args') =
                   List.fold_left (fun (bs, args) (arg, b) ->

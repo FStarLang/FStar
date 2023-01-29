@@ -144,6 +144,8 @@ let raw_pat_as_exp (env:Env.env) (p:pat)
         | Pat_var x ->
           mk (Tm_name x) p.p, x::bs
 
+        | Pat_view _ -> raise Raw_pat_cannot_be_translated
+
         | Pat_cons(fv, us_opt, pats) ->
           let args, bs = 
             List.fold_right
@@ -229,6 +231,10 @@ let pat_as_exp (introduce_bv_uvars:bool)
              let x, g, env = intro_bv env x in
              let e = mk (Tm_name x) p.p in
              ([x], [x], [], env, e, g, p)
+
+           | Pat_view (x, view) ->
+             let (b, a, w, env, te, guard, x) = pat_as_arg_with_env env x in
+             (b, a, w, env, te, guard, {p with v = Pat_view (x, view)})
 
            | Pat_cons(fv, us_opt, pats) -> 
              let (b, a, w, env, args, guard, pats) =

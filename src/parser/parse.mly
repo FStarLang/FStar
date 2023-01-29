@@ -516,6 +516,7 @@ constructorPattern:
       { pat }
 
 atomicPattern:
+  | pat=atomicPattern SUBKIND t=atomicTerm { mk_pattern (PatView (pat, t)) (rhs2 parseState 1 3) }
   | LPAREN pat=tuplePattern COLON t=simpleArrow phi_opt=refineOpt RPAREN
       {
         let pos_t = rhs2 parseState 2 4 in

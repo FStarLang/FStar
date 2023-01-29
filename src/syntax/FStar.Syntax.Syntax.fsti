@@ -171,6 +171,8 @@ and pat' =
   | Pat_wild     of bv                                           (* need stable names for even the wild patterns *)
   | Pat_dot_term of option term                                  (* dot patterns: determined by other elements in the pattern *)
                                                                  (* the option term is the optionally resolved pat dot term *)
+  | Pat_view     of pat * term
+
 and letbinding = {  //let f : forall u1..un. M t = e
     lbname :lbname;          //f
     lbunivs:list univ_name; //u1..un

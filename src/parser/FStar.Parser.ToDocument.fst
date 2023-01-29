@@ -1042,6 +1042,7 @@ and p_atomicPattern p = match p.pat with
   | PatApp ({pat = PatName _}, _)
   | PatTuple (_, false) ->
       soft_parens_with_nesting (p_tuplePattern p)
+  | PatView (subpat, view) -> group (p_atomicPattern subpat ^^ space ^^ str "<@" ^^ space ^^ p_term false false view)
   | _ -> failwith (Util.format1 "Invalid pattern %s" (pat_to_string p))
 
 (* Skipping patternOrMultibinder since it would need retro-engineering the flattening of binders *)

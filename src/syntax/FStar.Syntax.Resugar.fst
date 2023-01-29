@@ -1084,6 +1084,11 @@ and resugar_pat' env (p:S.pat) (branch_bv: set bv) : A.pattern =
     match p.v with
     | Pat_constant c -> mk (A.PatConst c)
 
+    | Pat_view (subpat, view) -> 
+      let subpat = aux subpat imp_opt in
+      let view = resugar_term' env view in
+      mk (A.PatView (subpat, view))
+
     | Pat_cons (fv, _, []) ->
       mk (A.PatName fv.fv_name.v)
 

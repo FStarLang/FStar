@@ -452,6 +452,12 @@ and rebuild_closure cfg env stack t =
             match p.v with
             | Pat_constant _ ->
               p, env
+
+            | Pat_view (x, view) ->
+              let view = non_tail_inline_closure_env cfg env view in
+              let x, env = norm_pat env x in
+              {p with v=Pat_view (x, view)}, env
+
             | Pat_cons(fv, us_opt, pats) ->
               let us_opt =
                 if cfg.steps.erase_universes
@@ -2759,6 +2765,11 @@ and rebuild (cfg:cfg) (env:env) (stack:stack) (t:term) : term =
           in
           let rec norm_pat env p = match p.v with
             | Pat_constant _ -> p, env
+            | Pat_view (x, view) ->
+              let view = norm_or_whnf env view in
+              let x, env = norm_pat env x in
+              {p with v=Pat_view (x, view)}, env
+              
             | Pat_cons(fv, us_opt, pats) ->
               let us_opt =
                 if cfg.steps.erase_universes
@@ -2799,6 +2810,7 @@ and rebuild (cfg:cfg) (env:env) (stack:stack) (t:term) : term =
           in
           let maybe_commute_matches () =
             let can_commute =
+                // TODO: what about Pat_view?
                 match branches with
                 | ({v=Pat_cons(fv, _, _)}, _, _)::_ ->
                   Env.fv_has_attr cfg.tcenv fv FStar.Parser.Const.commute_nested_matches_lid
@@ -2892,6 +2904,28 @@ and rebuild (cfg:cfg) (env:env) (stack:stack) (t:term) : term =
                   Inl []
                 | _ -> Inr (not (is_cons head)) //if it's not a constant, it may match
               end
+            | Pat_view (x, view) ->
+              let applied_view = mk (Tm_app (view, [scrutinee, None])) Range.dummyRange in
+              
+              print1 ">> applied_view: %s" (Print.term_to_string applied_view);
+              let applied_view =
+                if cfg.steps.iota
+                && (not cfg.steps.weak)
+                && (not cfg.steps.compress_uvars)
+                && cfg.steps.weakly_reduce_scrutinee
+                && maybe_weakly_reduced applied_view
+                then norm ({cfg with steps={cfg.steps //@ [UnfoldUntil (Delta_equational_at_level 4)]
+                                                      with weakly_reduce_scrutinee=false; unfold_until = Some (Delta_equational_at_level 4)
+                                                      }
+                                                      })
+                          env
+                          []
+                          applied_view
+                else applied_view
+              in
+              print1 ">> applied_view(normalzied): %s" (Print.term_to_string applied_view);
+              matches_pat applied_view x
+              
             | Pat_cons(fv, _, arg_pats) -> begin
               match (U.un_uinst head).n with
                 | Tm_fvar fv' when fv_eq fv fv' ->
