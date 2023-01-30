@@ -215,6 +215,7 @@ let pat_bvs (p:pat) : list bv =
         | Pat_constant _ -> b
         | Pat_wild x
         | Pat_var x -> x::b
+        | Pat_cons (*TODO*)(_, _, pats) -> List.fold_left (fun b (p, _) -> aux b p) b pats
         | Pat_view (pat,_) -> aux b pat
     in
   List.rev <| aux [] p

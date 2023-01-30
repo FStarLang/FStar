@@ -258,7 +258,7 @@ type pattern = {
   pat_vars: list (bv * fv);
   pat_term: unit -> (term * decls_t);                   (* the pattern as a term(exp) *)
   guard: term -> (term * decls_t);                      (* the guard condition of the pattern, as applied to a particular scrutinee term(exp) *)
-  projections: term -> list (bv * term)                (* bound variables of the pattern, and the corresponding projected components of the scrutinee *)
+  projections: term -> (list (bv * term) * decls_t)     (* bound variables of the pattern, and the corresponding projected components of the scrutinee *)
  }
 
 let as_function_typ env t0 =
@@ -1268,14 +1268,14 @@ and encode_match (e:S.term) (pats:list S.branch) (default_case:term) (env:env_t)
         let p, w, br = SS.open_branch b in
         let env0, pattern = encode_pat env p in
         let guard, decls_guard = pattern.guard scr' in
-        let projections = pattern.projections scr' in
+        let projections, projs_decls = pattern.projections scr' in
         let env = projections |> List.fold_left (fun env (x, t) -> push_term_var env x t) env in
         let guard, decls2 =
             match w with
             | None -> guard, []
             | Some w ->
               let w, decls2 = encode_term w env in
-              mkAnd(guard, mkEq(w, Term.boxBool mkTrue)), decls2
+              mkAnd(guard, mkEq(w, Term.boxBool mkTrue)), decls_guard @ projs_decls @ decls2
        in
        let br, decls3 = encode_br br env in
        mkITE(guard, br, else_case), decls@decls2@decls3
@@ -1292,7 +1292,7 @@ and encode_pat (env:env_t) (pat:S.pat) : (env_t * pattern) =
             let xx, _, env = gen_term_var env v in
             env, (v, mk_fv (xx, Term_sort))::vars) (env, []) in
 
-    let rec mk_guard pat (scrutinee:term) : term * decls_t =
+    let rec mk_guard (*env: env_t*) pat (scrutinee:term) : (*env_t * *)term * decls_t =
         match pat.v with
         | Pat_var _
         | Pat_wild _
@@ -1302,6 +1302,11 @@ and encode_pat (env:env_t) (pat:S.pat) : (env_t * pattern) =
             let _ = match decls with _::_ -> failwith "Unexpected encoding of constant pattern" | _ -> () in
             mkEq(scrutinee, tm), []
         | Pat_view (subpat, view) ->
+            let gen_term_var (env:env_t) (x:bv) =
+              let ysym = "@patbinder"^(string_of_int env.depth) in
+              let y = mk_fv (ysym, Term_sort) in
+              ysym, y, {env with bvar_bindings=add_bvar_binding (x, mkFreeV y) env.bvar_bindings; depth=env.depth + 1}
+            in
             let viewsym, view', env = gen_term_var env (S.null_bv (S.mk S.Tm_unknown Range.dummyRange)) in
             let view, decls = encode_term view env in
             // if Cons? decls then failwith "Unexpected encoding of view pattern AAAAA";
@@ -1323,24 +1328,28 @@ and encode_pat (env:env_t) (pat:S.pat) : (env_t * pattern) =
 
     let rec mk_projections pat (scrutinee:term) =
         match pat.v with
-        | Pat_dot_term _ -> []
+        | Pat_dot_term _ -> [], []
         | Pat_var x
-        | Pat_wild x -> [x, scrutinee]
+        | Pat_wild x -> [x, scrutinee], []
 
-        | Pat_constant _ -> []
+        | Pat_constant _ -> [], []
 
         | Pat_view (subpat, view) ->
             let viewsym, view', env = gen_term_var env (S.null_bv (S.mk S.Tm_unknown Range.dummyRange)) in
             let view, decls = encode_term view env in
             // if Cons? decls then failwith "Unexpected encoding of view pattern BBBB";
-            mk_projections subpat (mkApp(viewsym, [scrutinee]))
-
+            let projs, pdecls = mk_projections subpat (mkApp(viewsym, [scrutinee])) in
+            projs, decls @ pdecls
+            
         | Pat_cons (f, _, args) ->
-            args
-            |> List.mapi (fun i (arg, _) ->
-                let proj = primitive_projector_by_pos env.tcenv f.fv_name.v i in
-                mk_projections arg (mkApp(proj, [scrutinee]))) //arity ok, primitive projector (#1383)
-            |> List.flatten
+            let projs, decls = 
+              args
+              |> List.mapi (fun i (arg, _) ->
+                  let proj = primitive_projector_by_pos env.tcenv f.fv_name.v i in
+                  mk_projections arg (mkApp(proj, [scrutinee]))) //arity ok, primitive projector (#1383)
+              |> List.unzip
+            in
+            List.flatten projs, List.flatten decls
     in
 
     let pat_term () = encode_term pat_term env in

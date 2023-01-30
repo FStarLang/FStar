@@ -711,8 +711,8 @@ let check_linear_pattern_variables pats r =
     | Pat_wild _
     | Pat_constant _ -> S.no_names
     | Pat_var x -> BU.set_add x S.no_names
-    | Pat_cons(_, _, pats) ->
     | Pat_view (pat, _) -> pat_vars pat
+    | Pat_cons (_, _, pats) ->
       let aux out (p, _) =
           let p_vars = pat_vars p in
           let intersection = BU.set_intersect p_vars out in
@@ -1084,6 +1084,14 @@ and desugar_machine_integer env repr (signedness, width) range =
   let app = S.mk (Tm_app (lid, [repr', S.as_aqual_implicit false])) range in
   S.mk (Tm_meta (app, Meta_desugared
                  (Machine_integer (signedness, width)))) range
+
+// and desugar_view_patterns
+//   (env:env_t)
+//   (scrut: term)
+//   (ret_annot: option match_returns_annotation)
+//   (branches: list branch)
+//   : term * option match_returns_annotation * list branch
+//   = 
 
 and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term * antiquotations =
   let mk e = S.mk e top.range in
