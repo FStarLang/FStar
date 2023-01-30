@@ -833,6 +833,10 @@ and (pat_to_string : FStar_Syntax_Syntax.pat -> Prims.string) =
                   FStar_Compiler_Effect.op_Bar_Greater uu___5 term_to_string) in
              FStar_Compiler_Util.format1 ".%s" uu___3
            else "._"
+       | FStar_Syntax_Syntax.Pat_view (pat, view) ->
+           let uu___2 = pat_to_string pat in
+           let uu___3 = term_to_string view in
+           FStar_Compiler_Util.format2 "%s <@ %s" uu___2 uu___3
        | FStar_Syntax_Syntax.Pat_var x1 ->
            let uu___2 = FStar_Options.print_bound_var_types () in
            if uu___2

@@ -656,7 +656,17 @@ let (subst_pat' :
                FStar_Syntax_Syntax.v =
                  (FStar_Syntax_Syntax.Pat_dot_term eopt1);
                FStar_Syntax_Syntax.p = (p1.FStar_Syntax_Syntax.p)
-             }, n) in
+             }, n)
+        | FStar_Syntax_Syntax.Pat_view (sub, view) ->
+            let view1 = subst' s view in
+            let uu___ = aux n sub in
+            (match uu___ with
+             | (sub1, n1) ->
+                 ({
+                    FStar_Syntax_Syntax.v =
+                      (FStar_Syntax_Syntax.Pat_view (sub1, view1));
+                    FStar_Syntax_Syntax.p = (p1.FStar_Syntax_Syntax.p)
+                  }, n1)) in
       aux Prims.int_zero p
 let (push_subst_lcomp :
   FStar_Syntax_Syntax.subst_ts ->
@@ -1228,7 +1238,17 @@ let (open_pat :
           ({
              FStar_Syntax_Syntax.v = (FStar_Syntax_Syntax.Pat_dot_term eopt1);
              FStar_Syntax_Syntax.p = (p1.FStar_Syntax_Syntax.p)
-           }, sub) in
+           }, sub)
+      | FStar_Syntax_Syntax.Pat_view (x, view) ->
+          let view1 = subst sub view in
+          let uu___ = open_pat_aux sub x in
+          (match uu___ with
+           | (x1, sub1) ->
+               ({
+                  FStar_Syntax_Syntax.v =
+                    (FStar_Syntax_Syntax.Pat_view (x1, view1));
+                  FStar_Syntax_Syntax.p = (p1.FStar_Syntax_Syntax.p)
+                }, sub1)) in
     open_pat_aux [] p
 let (open_branch' :
   FStar_Syntax_Syntax.branch ->
@@ -1358,7 +1378,17 @@ let (close_pat :
           ({
              FStar_Syntax_Syntax.v = (FStar_Syntax_Syntax.Pat_dot_term eopt1);
              FStar_Syntax_Syntax.p = (p1.FStar_Syntax_Syntax.p)
-           }, sub) in
+           }, sub)
+      | FStar_Syntax_Syntax.Pat_view (x, view) ->
+          let view1 = subst sub view in
+          let uu___ = aux sub x in
+          (match uu___ with
+           | (x1, sub1) ->
+               ({
+                  FStar_Syntax_Syntax.v =
+                    (FStar_Syntax_Syntax.Pat_view (x1, view1));
+                  FStar_Syntax_Syntax.p = (p1.FStar_Syntax_Syntax.p)
+                }, sub1)) in
     aux [] p
 let (close_branch : FStar_Syntax_Syntax.branch -> FStar_Syntax_Syntax.branch)
   =
@@ -1844,6 +1874,15 @@ let rec (deep_compress :
                         pats in
                     (fv, us_opt1, uu___2) in
                   FStar_Syntax_Syntax.Pat_cons uu___1 in
+                {
+                  FStar_Syntax_Syntax.v = uu___;
+                  FStar_Syntax_Syntax.p = (p.FStar_Syntax_Syntax.p)
+                }
+            | FStar_Syntax_Syntax.Pat_view (x, view) ->
+                let view1 = deep_compress allow_uvars view in
+                let uu___ =
+                  let uu___1 = let uu___2 = elim_pat x in (uu___2, view1) in
+                  FStar_Syntax_Syntax.Pat_view uu___1 in
                 {
                   FStar_Syntax_Syntax.v = uu___;
                   FStar_Syntax_Syntax.p = (p.FStar_Syntax_Syntax.p)

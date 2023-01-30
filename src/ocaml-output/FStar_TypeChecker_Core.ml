@@ -228,7 +228,18 @@ let (open_pat :
                 FStar_Syntax_Syntax.v =
                   (FStar_Syntax_Syntax.Pat_dot_term eopt1);
                 FStar_Syntax_Syntax.p = (p1.FStar_Syntax_Syntax.p)
-              }, sub) in
+              }, sub)
+        | FStar_Syntax_Syntax.Pat_view (x, view) ->
+            let view1 = FStar_Syntax_Subst.subst sub view in
+            let uu___ = open_pat_aux g1 x sub in
+            (match uu___ with
+             | (g2, x1, sub1) ->
+                 (g2,
+                   {
+                     FStar_Syntax_Syntax.v =
+                       (FStar_Syntax_Syntax.Pat_view (x1, view1));
+                     FStar_Syntax_Syntax.p = (p1.FStar_Syntax_Syntax.p)
+                   }, sub1)) in
       open_pat_aux g p []
 let (open_term :
   env ->
@@ -3524,6 +3535,29 @@ and (check_pat :
                 (fun uu___1 -> check_binders g [b]) in
             op_let_Bang uu___
               (fun uu___1 -> match uu___1 with | u::[] -> return ([b], [u]))
+        | FStar_Syntax_Syntax.Pat_view (subpat, view) ->
+            let uu___ = check "pat_view" g view in
+            op_let_Bang uu___
+              (fun uu___1 ->
+                 match uu___1 with
+                 | (uu___2, view_t) ->
+                     let view_t1 =
+                       let uu___3 = unrefine_tsc view_t in
+                       FStar_Syntax_Subst.compress uu___3 in
+                     let uu___3 =
+                       let uu___4 = FStar_Syntax_Util.arrow_formals view_t1 in
+                       match uu___4 with
+                       | (from::[], to1) -> return (from, to1)
+                       | uu___5 ->
+                           fail "error: view has more than one parameter" in
+                     op_let_Bang uu___3
+                       (fun uu___4 ->
+                          match uu___4 with
+                          | (from, to1) ->
+                              op_let_Bang
+                                (check_subtype g FStar_Pervasives_Native.None
+                                   t_sc view_t1)
+                                (fun uu___5 -> check_pat g subpat to1)))
         | FStar_Syntax_Syntax.Pat_cons (fv, usopt, pats) ->
             let us =
               if FStar_Compiler_Util.is_none usopt
@@ -3857,6 +3891,12 @@ and (pattern_branch_condition :
                            const_exp in
                        FStar_Pervasives_Native.Some uu___4 in
                      return uu___3)
+        | FStar_Syntax_Syntax.Pat_view (subpat, view) ->
+            let scrutinee1 =
+              FStar_Syntax_Syntax.mk_Tm_app view
+                [(scrutinee, FStar_Pervasives_Native.None)]
+                pat.FStar_Syntax_Syntax.p in
+            pattern_branch_condition g scrutinee1 subpat
         | FStar_Syntax_Syntax.Pat_cons (fv, us_opt, sub_pats) ->
             let wild_pat pos =
               let uu___ =

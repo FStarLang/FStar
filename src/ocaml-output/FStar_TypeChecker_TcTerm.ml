@@ -7801,7 +7801,7 @@ and (tc_pat :
                let uu___1 = FStar_Syntax_Print.term_to_string pat_t1 in
                let uu___2 = FStar_Syntax_Print.term_to_string scrutinee_t in
                FStar_Compiler_Util.format3
-                 "Type of pattern (%s) does not match type of scrutinee (%s)%s"
+                 "AAA-OJNKE Type of pattern (%s) does not match type of scrutinee (%s)%s"
                  uu___1 uu___2 msg in
              FStar_Errors.raise_error
                (FStar_Errors.Fatal_MismatchedPatternType, msg1)
@@ -7844,12 +7844,12 @@ and (tc_pat :
                                   if uu___11
                                   then
                                     fail1
-                                      "Pattern matching a non-inductive type"
+                                      "F1: Pattern matching a non-inductive type"
                                   else ());
                                  if
                                    (FStar_Compiler_List.length args_p) <>
                                      (FStar_Compiler_List.length args_s)
-                                 then fail1 ""
+                                 then fail1 "F2:"
                                  else ();
                                  (let uu___12 =
                                     let uu___13 =
@@ -7889,14 +7889,17 @@ and (tc_pat :
                                                         ->
                                                         let uu___18 =
                                                           let uu___19 =
-                                                            FStar_Syntax_Print.term_to_string
-                                                              p in
-                                                          let uu___20 =
-                                                            FStar_Syntax_Print.term_to_string
-                                                              s in
-                                                          FStar_Compiler_Util.format2
-                                                            "; parameter %s <> parameter %s"
-                                                            uu___19 uu___20 in
+                                                            let uu___20 =
+                                                              FStar_Syntax_Print.term_to_string
+                                                                p in
+                                                            let uu___21 =
+                                                              FStar_Syntax_Print.term_to_string
+                                                                s in
+                                                            FStar_Compiler_Util.format2
+                                                              "; parameter %s <> parameter %s"
+                                                              uu___20 uu___21 in
+                                                          Prims.op_Hat "F3:"
+                                                            uu___19 in
                                                         fail1 uu___18
                                                     | FStar_Pervasives_Native.Some
                                                         g ->
@@ -7908,7 +7911,8 @@ and (tc_pat :
                                         FStar_TypeChecker_Env.trivial_guard
                                         params_p params_s))
                             | uu___10 ->
-                                fail1 "Pattern matching a non-inductive type")
+                                fail1
+                                  "F4: Pattern matching a non-inductive type")
                          else
                            (let uu___10 =
                               let uu___11 =
@@ -7916,13 +7920,14 @@ and (tc_pat :
                               let uu___12 =
                                 FStar_Syntax_Print.term_to_string head_s in
                               FStar_Compiler_Util.format2
-                                "; head mismatch %s vs %s" uu___11 uu___12 in
+                                "F5: ICI ; head mismatch %s vs %s" uu___11
+                                uu___12 in
                             fail1 uu___10))
                 | uu___3 ->
                     let uu___4 =
                       FStar_TypeChecker_Rel.teq_nosmt env1 pat_t2 scrutinee_t in
                     (match uu___4 with
-                     | FStar_Pervasives_Native.None -> fail1 ""
+                     | FStar_Pervasives_Native.None -> fail1 "F6:"
                      | FStar_Pervasives_Native.Some g ->
                          let g1 =
                            FStar_TypeChecker_Rel.discharge_guard_no_smt env1
@@ -8380,6 +8385,132 @@ and (tc_pat :
                    FStar_Syntax_Syntax.v = (FStar_Syntax_Syntax.Pat_var x1);
                    FStar_Syntax_Syntax.p = (p.FStar_Syntax_Syntax.p)
                  }, FStar_TypeChecker_Env.trivial_guard, false)
+           | FStar_Syntax_Syntax.Pat_view (subpat, view) ->
+               let fake_scrutinee =
+                 let uu___1 =
+                   FStar_Syntax_Syntax.fvar FStar_Parser_Const.magic_lid
+                     (FStar_Syntax_Syntax.Delta_constant_at_level
+                        Prims.int_one) FStar_Pervasives_Native.None in
+                 let uu___2 =
+                   let uu___3 = FStar_Syntax_Syntax.iarg t in
+                   let uu___4 =
+                     let uu___5 =
+                       FStar_Syntax_Syntax.as_arg
+                         FStar_Syntax_Syntax.unit_const in
+                     [uu___5] in
+                   uu___3 :: uu___4 in
+                 FStar_Syntax_Syntax.mk_Tm_app uu___1 uu___2
+                   FStar_Compiler_Range.dummyRange in
+               let uu___1 =
+                 let uu___2 =
+                   let uu___3 = FStar_TypeChecker_Env.clear_expected_typ env1 in
+                   FStar_Pervasives_Native.fst uu___3 in
+                 tc_tot_or_gtot_term uu___2 view in
+               (match uu___1 with
+                | (view1, uu___2, g0) ->
+                    let applied_view =
+                      FStar_Syntax_Syntax.mk
+                        (FStar_Syntax_Syntax.Tm_app
+                           (view1,
+                             [(fake_scrutinee, FStar_Pervasives_Native.None)]))
+                        FStar_Compiler_Range.dummyRange in
+                    ((let uu___4 =
+                        FStar_Syntax_Print.term_to_string applied_view in
+                      FStar_Compiler_Util.print1
+                        "\194\187\194\187 applied_view=%s" uu___4);
+                     (let uu___4 =
+                        let uu___5 =
+                          let uu___6 =
+                            FStar_TypeChecker_Env.clear_expected_typ env1 in
+                          FStar_Pervasives_Native.fst uu___6 in
+                        tc_tot_or_gtot_term uu___5 applied_view in
+                      match uu___4 with
+                      | (applied_view_tc,
+                         { FStar_TypeChecker_Common.eff_name = uu___5;
+                           FStar_TypeChecker_Common.res_typ = t_target;
+                           FStar_TypeChecker_Common.cflags = uu___6;
+                           FStar_TypeChecker_Common.comp_thunk = uu___7;_},
+                         g1) ->
+                          ((let uu___9 =
+                              FStar_Syntax_Print.term_to_string
+                                applied_view_tc in
+                            FStar_Compiler_Util.print1
+                              "\194\187\194\187 applied_view_tc=%s" uu___9);
+                           (let uu___10 =
+                              FStar_Syntax_Print.term_to_string t_target in
+                            FStar_Compiler_Util.print1
+                              "\194\187\194\187 applied_view_tc.type=%s"
+                              uu___10);
+                           (let uu___10 =
+                              check_nested_pattern env1 subpat t_target in
+                            match uu___10 with
+                            | (bvs, tms, e, p1, g2, erasable) ->
+                                let tms1 =
+                                  FStar_Compiler_Effect.op_Bar_Greater tms
+                                    (FStar_Compiler_List.map
+                                       (mk_disc_t view1)) in
+                                let g =
+                                  let uu___11 =
+                                    FStar_TypeChecker_Env.conj_guard g0 g1 in
+                                  FStar_TypeChecker_Env.conj_guard uu___11 g2 in
+                                (FStar_Compiler_Util.print1
+                                   "\194\187\194\187 DONE %s" "!!";
+                                 (let uu___13 =
+                                    let uu___14 =
+                                      FStar_Compiler_List.map
+                                        FStar_Syntax_Print.bv_to_string bvs in
+                                    FStar_Compiler_Effect.op_Bar_Greater
+                                      uu___14 (FStar_String.concat ";") in
+                                  FStar_Compiler_Util.print1 "::::::: bvs=%s"
+                                    uu___13);
+                                 (let uu___14 =
+                                    let uu___15 =
+                                      FStar_Compiler_List.map
+                                        FStar_Syntax_Print.term_to_string
+                                        tms1 in
+                                    FStar_Compiler_Effect.op_Bar_Greater
+                                      uu___15 (FStar_String.concat ";") in
+                                  FStar_Compiler_Util.print1 "::::::: tms=%s"
+                                    uu___14);
+                                 (let uu___15 =
+                                    FStar_Syntax_Print.term_to_string e in
+                                  FStar_Compiler_Util.print1 "::::::: e=%s"
+                                    uu___15);
+                                 (let uu___16 =
+                                    FStar_Syntax_Print.pat_to_string p1 in
+                                  FStar_Compiler_Util.print1 "::::::: p=%s"
+                                    uu___16);
+                                 (let uu___17 =
+                                    FStar_TypeChecker_Rel.guard_to_string
+                                      env1 g in
+                                  FStar_Compiler_Util.print1 "::::::: g=%s"
+                                    uu___17);
+                                 (let uu___18 =
+                                    FStar_Compiler_Util.string_of_bool
+                                      erasable in
+                                  FStar_Compiler_Util.print1
+                                    "::::::: erasbale=%s" uu___18);
+                                 (let uu___18 =
+                                    FStar_TypeChecker_PatternUtils.pat_as_exp
+                                      false false env1 subpat in
+                                  match uu___18 with
+                                  | (uu___19, e_subpat, uu___20, uu___21) ->
+                                      let e1 =
+                                        FStar_Syntax_Syntax.mk
+                                          (FStar_Syntax_Syntax.Tm_app
+                                             (view1,
+                                               [(e_subpat,
+                                                  FStar_Pervasives_Native.None)]))
+                                          FStar_Compiler_Range.dummyRange in
+                                      let p2 =
+                                        {
+                                          FStar_Syntax_Syntax.v =
+                                            (FStar_Syntax_Syntax.Pat_view
+                                               (p1, view1));
+                                          FStar_Syntax_Syntax.p =
+                                            (p1.FStar_Syntax_Syntax.p)
+                                        } in
+                                      (bvs, tms1, e1, p2, g, erasable))))))))
            | FStar_Syntax_Syntax.Pat_constant c ->
                ((match c with
                  | FStar_Const.Const_unit -> ()
@@ -8422,7 +8553,7 @@ and (tc_pat :
                                    FStar_Syntax_Print.term_to_string
                                      expected_t in
                                  FStar_Compiler_Util.format2
-                                   "Type of pattern (%s) does not match type of scrutinee (%s)"
+                                   "BBB-KJASD Type of pattern (%s) does not match type of scrutinee (%s)"
                                    uu___11 uu___12 in
                                fail uu___10
                              else ());
@@ -9138,6 +9269,30 @@ and (tc_eqn :
                                                               t uu___19
                                                               pat_exp2 in
                                                           [uu___18])
+                                                 | (FStar_Syntax_Syntax.Pat_view
+                                                    (subpat, view), uu___12)
+                                                     ->
+                                                     let uu___13 =
+                                                       FStar_TypeChecker_PatternUtils.pat_as_exp
+                                                         false false env
+                                                         subpat in
+                                                     (match uu___13 with
+                                                      | (uu___14, subpat_exp,
+                                                         uu___15, uu___16) ->
+                                                          let uu___17 =
+                                                            FStar_Compiler_Util.map_opt
+                                                              scrutinee_tm1
+                                                              (fun s ->
+                                                                 FStar_Syntax_Syntax.mk
+                                                                   (FStar_Syntax_Syntax.Tm_app
+                                                                    (view,
+                                                                    [
+                                                                    (s,
+                                                                    FStar_Pervasives_Native.None)]))
+                                                                   FStar_Compiler_Range.dummyRange) in
+                                                          build_branch_guard
+                                                            uu___17 subpat
+                                                            subpat_exp)
                                                  | (FStar_Syntax_Syntax.Pat_cons
                                                     (uu___12, uu___13, []),
                                                     FStar_Syntax_Syntax.Tm_uinst

@@ -8249,39 +8249,38 @@ and (solve_t' : FStar_TypeChecker_Env.env -> tprob -> worklist -> solution) =
                                "Heuristic applicable with scrutinee %s and other side = %s\n"
                                uu___14 uu___15
                            else ());
-                          (let pat_discriminates uu___13 =
+                          (let rec pat_discriminates pat =
+                             match pat.FStar_Syntax_Syntax.v with
+                             | FStar_Syntax_Syntax.Pat_constant uu___13 ->
+                                 true
+                             | FStar_Syntax_Syntax.Pat_cons uu___13 -> true
+                             | FStar_Syntax_Syntax.Pat_view (subpat, uu___13)
+                                 -> pat_discriminates subpat
+                             | uu___13 -> false in
+                           let branch_discriminates uu___13 =
                              match uu___13 with
-                             | ({
-                                  FStar_Syntax_Syntax.v =
-                                    FStar_Syntax_Syntax.Pat_constant uu___14;
-                                  FStar_Syntax_Syntax.p = uu___15;_},
-                                FStar_Pervasives_Native.None, uu___16) ->
-                                 true
-                             | ({
-                                  FStar_Syntax_Syntax.v =
-                                    FStar_Syntax_Syntax.Pat_cons uu___14;
-                                  FStar_Syntax_Syntax.p = uu___15;_},
-                                FStar_Pervasives_Native.None, uu___16) ->
-                                 true
+                             | (pat, FStar_Pervasives_Native.None, uu___14)
+                                 -> pat_discriminates pat
                              | uu___14 -> false in
                            let head_matching_branch =
                              FStar_Compiler_Effect.op_Bar_Greater branches
                                (FStar_Compiler_Util.try_find
                                   (fun b ->
-                                     if pat_discriminates b
+                                     let uu___13 = branch_discriminates b in
+                                     if uu___13
                                      then
-                                       let uu___13 =
+                                       let uu___14 =
                                          FStar_Syntax_Subst.open_branch b in
-                                       match uu___13 with
-                                       | (uu___14, uu___15, t') ->
-                                           let uu___16 =
+                                       match uu___14 with
+                                       | (uu___15, uu___16, t') ->
+                                           let uu___17 =
                                              head_matches_delta env1
                                                wl1.smt_ok s t' in
-                                           (match uu___16 with
-                                            | (FullMatch, uu___17) -> true
-                                            | (HeadMatch uu___17, uu___18) ->
+                                           (match uu___17 with
+                                            | (FullMatch, uu___18) -> true
+                                            | (HeadMatch uu___18, uu___19) ->
                                                 true
-                                            | uu___17 -> false)
+                                            | uu___18 -> false)
                                      else false)) in
                            match head_matching_branch with
                            | FStar_Pervasives_Native.None ->
@@ -8298,8 +8297,9 @@ and (solve_t' : FStar_TypeChecker_Env.env -> tprob -> worklist -> solution) =
                                    let uu___14 =
                                      FStar_Compiler_Util.prefix_until
                                        (fun b ->
-                                          Prims.op_Negation
-                                            (pat_discriminates b)) branches in
+                                          let uu___15 =
+                                            branch_discriminates b in
+                                          Prims.op_Negation uu___15) branches in
                                    match uu___14 with
                                    | FStar_Pervasives_Native.Some
                                        (branches1, uu___15, uu___16) ->
@@ -8394,39 +8394,38 @@ and (solve_t' : FStar_TypeChecker_Env.env -> tprob -> worklist -> solution) =
                                "Heuristic applicable with scrutinee %s and other side = %s\n"
                                uu___14 uu___15
                            else ());
-                          (let pat_discriminates uu___13 =
+                          (let rec pat_discriminates pat =
+                             match pat.FStar_Syntax_Syntax.v with
+                             | FStar_Syntax_Syntax.Pat_constant uu___13 ->
+                                 true
+                             | FStar_Syntax_Syntax.Pat_cons uu___13 -> true
+                             | FStar_Syntax_Syntax.Pat_view (subpat, uu___13)
+                                 -> pat_discriminates subpat
+                             | uu___13 -> false in
+                           let branch_discriminates uu___13 =
                              match uu___13 with
-                             | ({
-                                  FStar_Syntax_Syntax.v =
-                                    FStar_Syntax_Syntax.Pat_constant uu___14;
-                                  FStar_Syntax_Syntax.p = uu___15;_},
-                                FStar_Pervasives_Native.None, uu___16) ->
-                                 true
-                             | ({
-                                  FStar_Syntax_Syntax.v =
-                                    FStar_Syntax_Syntax.Pat_cons uu___14;
-                                  FStar_Syntax_Syntax.p = uu___15;_},
-                                FStar_Pervasives_Native.None, uu___16) ->
-                                 true
+                             | (pat, FStar_Pervasives_Native.None, uu___14)
+                                 -> pat_discriminates pat
                              | uu___14 -> false in
                            let head_matching_branch =
                              FStar_Compiler_Effect.op_Bar_Greater branches
                                (FStar_Compiler_Util.try_find
                                   (fun b ->
-                                     if pat_discriminates b
+                                     let uu___13 = branch_discriminates b in
+                                     if uu___13
                                      then
-                                       let uu___13 =
+                                       let uu___14 =
                                          FStar_Syntax_Subst.open_branch b in
-                                       match uu___13 with
-                                       | (uu___14, uu___15, t') ->
-                                           let uu___16 =
+                                       match uu___14 with
+                                       | (uu___15, uu___16, t') ->
+                                           let uu___17 =
                                              head_matches_delta env1
                                                wl1.smt_ok s t' in
-                                           (match uu___16 with
-                                            | (FullMatch, uu___17) -> true
-                                            | (HeadMatch uu___17, uu___18) ->
+                                           (match uu___17 with
+                                            | (FullMatch, uu___18) -> true
+                                            | (HeadMatch uu___18, uu___19) ->
                                                 true
-                                            | uu___17 -> false)
+                                            | uu___18 -> false)
                                      else false)) in
                            match head_matching_branch with
                            | FStar_Pervasives_Native.None ->
@@ -8443,8 +8442,9 @@ and (solve_t' : FStar_TypeChecker_Env.env -> tprob -> worklist -> solution) =
                                    let uu___14 =
                                      FStar_Compiler_Util.prefix_until
                                        (fun b ->
-                                          Prims.op_Negation
-                                            (pat_discriminates b)) branches in
+                                          let uu___15 =
+                                            branch_discriminates b in
+                                          Prims.op_Negation uu___15) branches in
                                    match uu___14 with
                                    | FStar_Pervasives_Native.Some
                                        (branches1, uu___15, uu___16) ->

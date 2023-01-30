@@ -864,6 +864,19 @@ and (rebuild_closure :
                      let rec norm_pat env4 p =
                        match p.FStar_Syntax_Syntax.v with
                        | FStar_Syntax_Syntax.Pat_constant uu___2 -> (p, env4)
+                       | FStar_Syntax_Syntax.Pat_view (x, view) ->
+                           let view1 =
+                             non_tail_inline_closure_env cfg1 env4 view in
+                           let uu___2 = norm_pat env4 x in
+                           (match uu___2 with
+                            | (x1, env5) ->
+                                ({
+                                   FStar_Syntax_Syntax.v =
+                                     (FStar_Syntax_Syntax.Pat_view
+                                        (x1, view1));
+                                   FStar_Syntax_Syntax.p =
+                                     (p.FStar_Syntax_Syntax.p)
+                                 }, env5))
                        | FStar_Syntax_Syntax.Pat_cons (fv, us_opt, pats) ->
                            let us_opt1 =
                              if
@@ -7295,6 +7308,18 @@ and (rebuild :
                          match p.FStar_Syntax_Syntax.v with
                          | FStar_Syntax_Syntax.Pat_constant uu___6 ->
                              (p, env3)
+                         | FStar_Syntax_Syntax.Pat_view (x, view) ->
+                             let view1 = norm_or_whnf env3 view in
+                             let uu___6 = norm_pat env3 x in
+                             (match uu___6 with
+                              | (x1, env4) ->
+                                  ({
+                                     FStar_Syntax_Syntax.v =
+                                       (FStar_Syntax_Syntax.Pat_view
+                                          (x1, view1));
+                                     FStar_Syntax_Syntax.p =
+                                       (p.FStar_Syntax_Syntax.p)
+                                   }, env4))
                          | FStar_Syntax_Syntax.Pat_cons (fv, us_opt, pats) ->
                              let us_opt1 =
                                if
@@ -7635,6 +7660,184 @@ and (rebuild :
                                       let uu___7 = is_cons head in
                                       Prims.op_Negation uu___7 in
                                     FStar_Pervasives.Inr uu___6)
+                           | FStar_Syntax_Syntax.Pat_view (x, view) ->
+                               let applied_view =
+                                 FStar_Syntax_Syntax.mk
+                                   (FStar_Syntax_Syntax.Tm_app
+                                      (view,
+                                        [(scrutinee2,
+                                           FStar_Pervasives_Native.None)]))
+                                   FStar_Compiler_Range.dummyRange in
+                               ((let uu___6 =
+                                   FStar_Syntax_Print.term_to_string
+                                     applied_view in
+                                 FStar_Compiler_Util.print1
+                                   "\194\182\194\182\194\182 applied_view: %s"
+                                   uu___6);
+                                (let applied_view1 =
+                                   if true
+                                   then
+                                     norm
+                                       {
+                                         FStar_TypeChecker_Cfg.steps =
+                                           (let uu___6 =
+                                              cfg1.FStar_TypeChecker_Cfg.steps in
+                                            {
+                                              FStar_TypeChecker_Cfg.beta =
+                                                true;
+                                              FStar_TypeChecker_Cfg.iota =
+                                                (uu___6.FStar_TypeChecker_Cfg.iota);
+                                              FStar_TypeChecker_Cfg.zeta =
+                                                true;
+                                              FStar_TypeChecker_Cfg.zeta_full
+                                                = true;
+                                              FStar_TypeChecker_Cfg.weak =
+                                                false;
+                                              FStar_TypeChecker_Cfg.hnf =
+                                                (uu___6.FStar_TypeChecker_Cfg.hnf);
+                                              FStar_TypeChecker_Cfg.primops =
+                                                true;
+                                              FStar_TypeChecker_Cfg.do_not_unfold_pure_lets
+                                                =
+                                                (uu___6.FStar_TypeChecker_Cfg.do_not_unfold_pure_lets);
+                                              FStar_TypeChecker_Cfg.unfold_until
+                                                =
+                                                FStar_Pervasives_Native.None;
+                                              FStar_TypeChecker_Cfg.unfold_only
+                                                =
+                                                (uu___6.FStar_TypeChecker_Cfg.unfold_only);
+                                              FStar_TypeChecker_Cfg.unfold_fully
+                                                =
+                                                (uu___6.FStar_TypeChecker_Cfg.unfold_fully);
+                                              FStar_TypeChecker_Cfg.unfold_attr
+                                                =
+                                                (uu___6.FStar_TypeChecker_Cfg.unfold_attr);
+                                              FStar_TypeChecker_Cfg.unfold_qual
+                                                =
+                                                (uu___6.FStar_TypeChecker_Cfg.unfold_qual);
+                                              FStar_TypeChecker_Cfg.unfold_namespace
+                                                =
+                                                (uu___6.FStar_TypeChecker_Cfg.unfold_namespace);
+                                              FStar_TypeChecker_Cfg.unfold_tac
+                                                =
+                                                (uu___6.FStar_TypeChecker_Cfg.unfold_tac);
+                                              FStar_TypeChecker_Cfg.pure_subterms_within_computations
+                                                =
+                                                (uu___6.FStar_TypeChecker_Cfg.pure_subterms_within_computations);
+                                              FStar_TypeChecker_Cfg.simplify
+                                                =
+                                                (uu___6.FStar_TypeChecker_Cfg.simplify);
+                                              FStar_TypeChecker_Cfg.erase_universes
+                                                =
+                                                (uu___6.FStar_TypeChecker_Cfg.erase_universes);
+                                              FStar_TypeChecker_Cfg.allow_unbound_universes
+                                                =
+                                                (uu___6.FStar_TypeChecker_Cfg.allow_unbound_universes);
+                                              FStar_TypeChecker_Cfg.reify_ =
+                                                (uu___6.FStar_TypeChecker_Cfg.reify_);
+                                              FStar_TypeChecker_Cfg.compress_uvars
+                                                =
+                                                (uu___6.FStar_TypeChecker_Cfg.compress_uvars);
+                                              FStar_TypeChecker_Cfg.no_full_norm
+                                                = false;
+                                              FStar_TypeChecker_Cfg.check_no_uvars
+                                                =
+                                                (uu___6.FStar_TypeChecker_Cfg.check_no_uvars);
+                                              FStar_TypeChecker_Cfg.unmeta =
+                                                (uu___6.FStar_TypeChecker_Cfg.unmeta);
+                                              FStar_TypeChecker_Cfg.unascribe
+                                                =
+                                                (uu___6.FStar_TypeChecker_Cfg.unascribe);
+                                              FStar_TypeChecker_Cfg.in_full_norm_request
+                                                =
+                                                (uu___6.FStar_TypeChecker_Cfg.in_full_norm_request);
+                                              FStar_TypeChecker_Cfg.weakly_reduce_scrutinee
+                                                = false;
+                                              FStar_TypeChecker_Cfg.nbe_step
+                                                =
+                                                (uu___6.FStar_TypeChecker_Cfg.nbe_step);
+                                              FStar_TypeChecker_Cfg.for_extraction
+                                                =
+                                                (uu___6.FStar_TypeChecker_Cfg.for_extraction);
+                                              FStar_TypeChecker_Cfg.unrefine
+                                                =
+                                                (uu___6.FStar_TypeChecker_Cfg.unrefine)
+                                            });
+                                         FStar_TypeChecker_Cfg.tcenv =
+                                           (cfg1.FStar_TypeChecker_Cfg.tcenv);
+                                         FStar_TypeChecker_Cfg.debug =
+                                           (cfg1.FStar_TypeChecker_Cfg.debug);
+                                         FStar_TypeChecker_Cfg.delta_level =
+                                           (cfg1.FStar_TypeChecker_Cfg.delta_level);
+                                         FStar_TypeChecker_Cfg.primitive_steps
+                                           =
+                                           (cfg1.FStar_TypeChecker_Cfg.primitive_steps);
+                                         FStar_TypeChecker_Cfg.strong =
+                                           (cfg1.FStar_TypeChecker_Cfg.strong);
+                                         FStar_TypeChecker_Cfg.memoize_lazy =
+                                           (cfg1.FStar_TypeChecker_Cfg.memoize_lazy);
+                                         FStar_TypeChecker_Cfg.normalize_pure_lets
+                                           =
+                                           (cfg1.FStar_TypeChecker_Cfg.normalize_pure_lets);
+                                         FStar_TypeChecker_Cfg.reifying =
+                                           (cfg1.FStar_TypeChecker_Cfg.reifying)
+                                       } env2 [] applied_view
+                                   else applied_view in
+                                 (let uu___7 =
+                                    FStar_Syntax_Print.term_to_string
+                                      applied_view1 in
+                                  FStar_Compiler_Util.print1
+                                    "\194\182\194\182\194\182 applied_view(normalzied): %s"
+                                    uu___7);
+                                 (let uu___8 =
+                                    FStar_Syntax_Print.term_to_string
+                                      scrutinee2 in
+                                  let uu___9 =
+                                    FStar_Syntax_Print.pat_to_string p in
+                                  FStar_Compiler_Util.print2
+                                    ">> Does expr [%s] matches pat [%s]?"
+                                    uu___8 uu___9);
+                                 (let uu___9 =
+                                    FStar_Syntax_Print.term_to_string
+                                      applied_view1 in
+                                  let uu___10 =
+                                    FStar_Syntax_Print.pat_to_string x in
+                                  FStar_Compiler_Util.print2
+                                    "    (in other words, does [%s] matches [%s])"
+                                    uu___9 uu___10);
+                                 (let result = matches_pat applied_view1 x in
+                                  (let uu___10 =
+                                     match result with
+                                     | FStar_Pervasives.Inl l ->
+                                         let uu___11 =
+                                           let uu___12 =
+                                             let uu___13 =
+                                               FStar_Compiler_List.map
+                                                 (fun uu___14 ->
+                                                    match uu___14 with
+                                                    | (bv, t2) ->
+                                                        let uu___15 =
+                                                          FStar_Syntax_Print.bv_to_string
+                                                            bv in
+                                                        let uu___16 =
+                                                          let uu___17 =
+                                                            FStar_Syntax_Print.term_to_string
+                                                              t2 in
+                                                          FStar_String.op_Hat
+                                                            "\226\134\146"
+                                                            uu___17 in
+                                                        FStar_String.op_Hat
+                                                          uu___15 uu___16) l in
+                                             FStar_String.concat "; " uu___13 in
+                                           FStar_String.op_Hat uu___12 "]" in
+                                         FStar_String.op_Hat "Matches with ["
+                                           uu___11
+                                     | FStar_Pervasives.Inr (false) ->
+                                         "Pattern doesn't match scrutinee"
+                                     | FStar_Pervasives.Inr (true) ->
+                                         "Pattern may match but we don't know" in
+                                   FStar_Compiler_Util.print1 "%s" uu___10);
+                                  result)))
                            | FStar_Syntax_Syntax.Pat_cons
                                (fv, uu___5, arg_pats) ->
                                let uu___6 =

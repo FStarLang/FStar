@@ -129,6 +129,7 @@ and pattern' =
   | PatAscribed of (pattern * (term * term FStar_Pervasives_Native.option)) 
   | PatOr of pattern Prims.list 
   | PatOp of FStar_Ident.ident 
+  | PatView of (pattern * term) 
   | PatVQuote of term 
 and pattern = {
   pat: pattern' ;
@@ -526,6 +527,10 @@ let (uu___is_PatOp : pattern' -> Prims.bool) =
   fun projectee -> match projectee with | PatOp _0 -> true | uu___ -> false
 let (__proj__PatOp__item___0 : pattern' -> FStar_Ident.ident) =
   fun projectee -> match projectee with | PatOp _0 -> _0
+let (uu___is_PatView : pattern' -> Prims.bool) =
+  fun projectee -> match projectee with | PatView _0 -> true | uu___ -> false
+let (__proj__PatView__item___0 : pattern' -> (pattern * term)) =
+  fun projectee -> match projectee with | PatView _0 -> _0
 let (uu___is_PatVQuote : pattern' -> Prims.bool) =
   fun projectee ->
     match projectee with | PatVQuote _0 -> true | uu___ -> false
@@ -2224,6 +2229,10 @@ and (pat_to_string : pattern -> Prims.string) =
         let uu___1 = FStar_Compiler_Effect.op_Bar_Greater t term_to_string in
         let uu___2 = FStar_Compiler_Effect.op_Bar_Greater tac term_to_string in
         FStar_Compiler_Util.format3 "(%s:%s by %s)" uu___ uu___1 uu___2
+    | PatView (subpat, view) ->
+        let uu___ = pat_to_string subpat in
+        let uu___1 = term_to_string view in
+        FStar_Compiler_Util.format2 "(%s <@ %s)" uu___ uu___1
 and (attrs_opt_to_string :
   term Prims.list FStar_Pervasives_Native.option -> Prims.string) =
   fun uu___ ->
