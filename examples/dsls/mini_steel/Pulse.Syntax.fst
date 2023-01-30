@@ -559,3 +559,18 @@ and eq_st_comp (s1 s2:st_comp) : bool =
   eq_tm s1.res s2.res &&
   eq_tm s1.pre s2.pre &&
   eq_tm s1.post s2.post
+
+unfold
+let eq_tm_prop (t1 t2:term) : prop = eq_tm t1 t2 == true
+unfold
+let eq_comp_prop (c1 c2:comp) : prop = eq_comp c1 c2 == true
+
+let eq_tm_refl (t:term)
+  : Lemma (eq_tm t t)
+          [SMTPat (eq_tm t t)]
+  = admit ()
+
+let eq_comp_refl (c:comp)
+  : Lemma (eq_comp c c)
+          [SMTPat (eq_comp c c)]
+  = admit ()
