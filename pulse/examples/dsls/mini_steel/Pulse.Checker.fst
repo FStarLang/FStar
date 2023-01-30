@@ -44,8 +44,8 @@ let replace_equiv_post
     (| c,
        ST_VPropEquiv
          g c c x pre_c_typing res_c_typing post_c_typing
-         (VE_Refl _ _)
-         (VE_Refl _ _) |)
+         (VE_Refl _ _ _)
+         (VE_Refl _ _ _) |)
   | Some post ->
     let post_opened = open_term post x in
     let (| post_opened, post_typing |) = check_vprop f g_post post_opened in
@@ -64,7 +64,7 @@ let replace_equiv_post
     (| c_with_post,
        ST_VPropEquiv
          g c c_with_post x pre_c_typing res_c_typing post_c_typing
-         (VE_Refl _ _)
+         (VE_Refl _ _ _)
          post_c_post_eq |)
 #pop-options
 
