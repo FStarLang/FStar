@@ -2897,7 +2897,7 @@ and solve_t_flex_rigid_eq (orig:prob) (wl:worklist) (lhs:flex_t) (rhs:term)
               let t_last_arg, _ =
                 let env = p_env wl orig in
                 env.typeof_well_typed_tot_or_gtot_term
-                  ({env with lax=true; use_bv_sorts=true; expected_typ=None})
+                  ({env with lax=true; expected_typ=None})
                   (fst last_arg_rhs)
                   false
               in  //AR: 03/30: WARNING: dropping the guard
@@ -3018,7 +3018,7 @@ and solve_t_flex_rigid_eq (orig:prob) (wl:worklist) (lhs:flex_t) (rhs:term)
         else (
           let t_head, _ =
              env.typeof_well_typed_tot_or_gtot_term
-                  ({env with lax=true; use_bv_sorts=true; expected_typ=None})
+                  ({env with lax=true; expected_typ=None})
                   head
                   false
           in
@@ -5182,7 +5182,7 @@ let check_implicit_solution_and_discharge_guard env
 
               let k', g =
                 env.typeof_well_typed_tot_or_gtot_term
-                  {env with use_bv_sorts=true}
+                  env
                   imp_tm must_tot in
 
               match get_subtyping_predicate env k' uvar_ty with

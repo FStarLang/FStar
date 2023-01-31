@@ -161,7 +161,6 @@ let initial_env deps
     universe_of=universe_of;
     teq_nosmt_force=teq_nosmt_force;
     subtype_nosmt_force=subtype_nosmt_force;
-    use_bv_sorts=false;
     qtbl_name_and_index=BU.smap_create 10, None;  //10?
     normalized_eff_names=BU.smap_create 20;  //20?
     fv_delta_depths = BU.smap_create 50;

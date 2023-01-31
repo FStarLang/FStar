@@ -1681,10 +1681,7 @@ and tc_value env (e:term) : term
     e, S.mk_Total t |> TcComm.lcomp_of_comp, (Env.conj_guard g0 g1)
 
   | Tm_name x ->
-    let t, rng =
-        if env.use_bv_sorts
-        then x.sort, S.range_of_bv x
-        else Env.lookup_bv env x in
+    let t, rng = Env.lookup_bv env x in
     let x = S.set_range_of_bv ({x with sort=t}) rng in
     Env.insert_bv_info env x t;
     let e = S.bv_to_name x in
@@ -1939,7 +1936,7 @@ and tc_universe env u : universe =
         | U_succ u  -> U_succ (aux u)
         | U_max us  -> U_max (List.map aux us)
         | U_name x  ->
-          if env.use_bv_sorts || Env.lookup_univ env x
+          if Env.lookup_univ env x
           then u
           else failwith ("Universe variable " ^ (Print.univ_to_string u) ^ " not found")
    in if env.lax_universes then U_zero
@@ -4518,13 +4515,8 @@ let rec universe_of_aux env e : term =
    | Tm_uvar (u, s) -> SS.subst' s (U.ctx_uvar_typ u)
    | Tm_meta(t, _) -> universe_of_aux env t
    | Tm_name n ->
-     //
-     // AR: This is unsatisfactory,
-     //     We should always be able to find n in the env
-     //
-     (match Env.try_lookup_bv env n with
-      | Some (t, _) -> t
-      | None -> n.sort)
+     let (t, _rng) = Env.lookup_bv env n in
+     t
    | Tm_fvar fv ->
      let (_, t), _ = Env.lookup_lid env fv.fv_name.v in
      t
@@ -4607,7 +4599,7 @@ let rec universe_of_aux env e : term =
           type_of_head false env hd args
         | _ ->
           let env, _ = Env.clear_expected_typ env in
-          let env = {env with lax=true; use_bv_sorts=true; top_level=false} in
+          let env = {env with lax=true; top_level=false} in
           if Env.debug env <| Options.Other "UniverseOf"
           then BU.print2 "%s: About to type-check %s\n"
                         (Range.string_of_range (Env.get_range env))
