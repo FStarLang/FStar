@@ -318,7 +318,7 @@ and open_st_comp' (s:st_comp) (v:term) (i:index)
            post = open_term' s.post v (i + 1) }
 
 let open_term t v =
-  open_term' t (Tm_Var {nm_ppname="x";nm_index=v}) 0
+  open_term' t (Tm_Var {nm_ppname="_";nm_index=v}) 0
 let open_comp_with (c:comp) (x:term) = open_comp' c x 0
 
 let rec close_term' (t:term) (v:var) (i:index)
@@ -470,7 +470,7 @@ let rec close_open_inverse (t:term) (x:var { ~(x `Set.mem` freevars t) } )
   = admit()
 
 let null_binder (t:term) : binder =
-  {binder_ty=t;binder_ppname="x"}
+  {binder_ty=t;binder_ppname="_"}
 
 let mk_binder (s:string) (t:term) : binder =
   {binder_ty=t;binder_ppname=s}
@@ -478,9 +478,9 @@ let mk_binder (s:string) (t:term) : binder =
 let mk_bvar (s:string) (i:index) : term =
   Tm_BVar {bv_index=i;bv_ppname=s}
 
-let null_var (v:var) : term = Tm_Var {nm_index=v;nm_ppname="x"}
+let null_var (v:var) : term = Tm_Var {nm_index=v;nm_ppname="_"}
 
-let null_bvar (i:index) : term = Tm_BVar {bv_index=i;bv_ppname="x"}
+let null_bvar (i:index) : term = Tm_BVar {bv_index=i;bv_ppname="_"}
 
 let gen_uvar (t:term) : T.Tac term =
   Tm_UVar (T.fresh ())

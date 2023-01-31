@@ -341,10 +341,10 @@ and elab_src_typing
   = match d with
     | T_Tot _ _ _ _ -> elab_pure t
 
-    | T_Abs _ _ x qual ty _u body _ _ _ ty_typing body_typing ->
+    | T_Abs _ ppname x qual ty _u body _ _ _ ty_typing body_typing ->
       let ty = elab_pure ty in
       let body = elab_src_typing body_typing in
-      mk_abs ty (elab_qual qual) (RT.close_term body x) //this closure should be provably redundant by strengthening the conditions on x
+      mk_abs_with_name ppname ty (elab_qual qual) (RT.close_term body x) //this closure should be provably redundant by strengthening the conditions on x
     
     | T_STApp _ head _ppname _formal qual _res arg head_typing arg_typing ->
       let head = elab_src_typing head_typing in
