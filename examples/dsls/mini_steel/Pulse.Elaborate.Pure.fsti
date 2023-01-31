@@ -144,7 +144,7 @@ let rec elab_term (top:term)
     | Tm_Refine b phi ->
       let? ty = elab_term b.binder_ty in
       let? phi = elab_term phi in
-      Some (pack_ln (Tv_Refine (pack_bv (RT.make_bv 0 ty)) phi))
+      Some (pack_ln (Tv_Refine (pack_bv (RT.make_bv_with_name b.binder_ppname 0 ty)) phi))
 
     | Tm_PureApp e1 q e2 ->
       let? e1 = elab_term e1 in
@@ -265,13 +265,3 @@ val closing_pure_term (x:pure_term) (v:var) (i:index)
 val closing_pure_comp (x:pure_comp) (v:var) (i:index)
   : Lemma (ensures is_pure_comp (close_comp' x v i))
           [SMTPat (is_pure_comp (close_comp' x v i))]
-
-val elab_pure_eq_tm (t1 t2:pure_term)
-  : Lemma (requires eq_tm t1 t2)
-          (ensures elab_term t1 == elab_term t2)
-          [SMTPat (eq_tm t1 t2); SMTPat (elab_term t1); SMTPat (elab_term t2)]
-
-val elab_pure_eq_comp (c1 c2:pure_comp)
-  : Lemma (requires eq_comp c1 c2)
-          (ensures elab_comp c1 == elab_comp c2)
-          [SMTPat (eq_comp c1 c2); SMTPat (elab_comp c1); SMTPat (elab_comp c2)]
