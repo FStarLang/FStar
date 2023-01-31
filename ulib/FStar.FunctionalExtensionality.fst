@@ -17,7 +17,7 @@
 module FStar.FunctionalExtensionality
 
 inline_for_extraction
-let on_domain (a:Type) (#b:a -> Type) (f:arrow a b)
+let on_domain (a:Type) (#b:a -> Type) ([@@@strictly_positive] f:arrow a b)
   = fun (x:a) -> f x
 
 let feq_on_domain (#a:Type) (#b:a -> Type) (f:arrow a b)
