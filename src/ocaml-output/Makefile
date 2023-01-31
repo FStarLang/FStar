@@ -64,13 +64,18 @@ generated-files: $(GENERATED_ML_FILES)
 
 .PHONY: dune-stdlib-snapshot dune-taclib-snapshot dune-snapshot dune-fstar-snapshot dune-verify-ulib source-files
 
+# FIXME: dune-fstar-snapshot should also depend on dune-verify-ulib,
+# once we no longer lax-typecheck
 dune-fstar-snapshot:
 	+$(MAKE) -C .. ocaml
 
-dune-stdlib-snapshot:
+dune-verify-ulib:
+	+$(MAKE) -C ../../ulib
+
+dune-stdlib-snapshot: dune-verify-ulib
 	$(MAKE) -C ../../ulib -f Makefile.extract-stdlib dune-snapshot
 
-dune-taclib-snapshot:
+dune-taclib-snapshot: dune-verify-ulib
 	$(MAKE) -C ../../ulib -f Makefile.extract-taclib dune-snapshot
 
 dune-snapshot: generated-files dune-fstar-snapshot dune-stdlib-snapshot dune-taclib-snapshot
