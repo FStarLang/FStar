@@ -4155,6 +4155,7 @@ Errors.with_ctx (BU.format1 "While checking constructor %s" (string_of_lid dlid)
 )
 
 let check_positivity (env:env_t) (mutuals:list lident) (ty:sigelt) :bool =
+ Errors.with_ctx ("While checking the positivity of an inductive type") (fun () ->
   //memo table, memoizes the Tm_app nodes for inductives that we have already unfolded
   let unfolded_inductives = BU.mk_ref [] in
 
@@ -4190,6 +4191,7 @@ let check_positivity (env:env_t) (mutuals:list lident) (ty:sigelt) :bool =
             unfolded_inductives)
           ty_lids)
     datacons
+ )
 
 (* Special-casing the check for exceptions, the single open inductive type we handle. *)
 let check_exn_positivity (env:env_t) (data_ctor_lid:lid) : bool =
