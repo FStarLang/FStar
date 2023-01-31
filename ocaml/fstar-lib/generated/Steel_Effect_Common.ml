@@ -46,14 +46,10 @@ let (frame_vc_norm : unit -> (unit, unit) FStar_Tactics_Effect.tac_repr) =
     FStar_Tactics_Builtins.with_compat_pre_core Prims.int_zero
       (fun uu___1 ->
          FStar_Tactics_Effect.tac_bind
-           (Prims.mk_range
-              "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
-              (Prims.of_int (420)) (Prims.of_int (2)) (Prims.of_int (425))
-              (Prims.of_int (32)))
-           (Prims.mk_range
-              "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
-              (Prims.of_int (432)) (Prims.of_int (2)) (Prims.of_int (456))
-              (Prims.of_int (10)))
+           (Prims.mk_range "Steel.Effect.Common.fsti" (Prims.of_int (420))
+              (Prims.of_int (2)) (Prims.of_int (425)) (Prims.of_int (32)))
+           (Prims.mk_range "Steel.Effect.Common.fsti" (Prims.of_int (432))
+              (Prims.of_int (2)) (Prims.of_int (456)) (Prims.of_int (10)))
            (Obj.magic
               (FStar_Tactics_Builtins.norm
                  [FStar_Pervasives.delta_attr
@@ -73,22 +69,18 @@ let (frame_vc_norm : unit -> (unit, unit) FStar_Tactics_Effect.tac_repr) =
               (fun uu___2 ->
                  Obj.magic
                    (FStar_Tactics_Effect.tac_bind
-                      (Prims.mk_range
-                         "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                      (Prims.mk_range "Steel.Effect.Common.fsti"
                          (Prims.of_int (432)) (Prims.of_int (2))
                          (Prims.of_int (447)) (Prims.of_int (4)))
-                      (Prims.mk_range
-                         "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                      (Prims.mk_range "Steel.Effect.Common.fsti"
                          (Prims.of_int (450)) (Prims.of_int (2))
                          (Prims.of_int (456)) (Prims.of_int (10)))
                       (Obj.magic
                          (FStar_Tactics_Effect.tac_bind
-                            (Prims.mk_range
-                               "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                            (Prims.mk_range "Steel.Effect.Common.fsti"
                                (Prims.of_int (432)) (Prims.of_int (9))
                                (Prims.of_int (447)) (Prims.of_int (4)))
-                            (Prims.mk_range
-                               "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                            (Prims.mk_range "Steel.Effect.Common.fsti"
                                (Prims.of_int (432)) (Prims.of_int (2))
                                (Prims.of_int (447)) (Prims.of_int (4)))
                             (Obj.magic
@@ -96,13 +88,13 @@ let (frame_vc_norm : unit -> (unit, unit) FStar_Tactics_Effect.tac_repr) =
                                   (fun uu___3 ->
                                      FStar_Tactics_Effect.tac_bind
                                        (Prims.mk_range
-                                          "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                          "Steel.Effect.Common.fsti"
                                           (Prims.of_int (434))
                                           (Prims.of_int (4))
                                           (Prims.of_int (434))
                                           (Prims.of_int (35)))
                                        (Prims.mk_range
-                                          "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                          "Steel.Effect.Common.fsti"
                                           (Prims.of_int (436))
                                           (Prims.of_int (4))
                                           (Prims.of_int (446))
@@ -121,13 +113,13 @@ let (frame_vc_norm : unit -> (unit, unit) FStar_Tactics_Effect.tac_repr) =
                                              Obj.magic
                                                (FStar_Tactics_Effect.tac_bind
                                                   (Prims.mk_range
-                                                     "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                     "Steel.Effect.Common.fsti"
                                                      (Prims.of_int (436))
                                                      (Prims.of_int (4))
                                                      (Prims.of_int (436))
                                                      (Prims.of_int (14)))
                                                   (Prims.mk_range
-                                                     "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                     "Steel.Effect.Common.fsti"
                                                      (Prims.of_int (437))
                                                      (Prims.of_int (4))
                                                      (Prims.of_int (446))
@@ -140,13 +132,13 @@ let (frame_vc_norm : unit -> (unit, unit) FStar_Tactics_Effect.tac_repr) =
                                                         Obj.magic
                                                           (FStar_Tactics_Effect.tac_bind
                                                              (Prims.mk_range
-                                                                "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                "Steel.Effect.Common.fsti"
                                                                 (Prims.of_int (437))
                                                                 (Prims.of_int (4))
                                                                 (Prims.of_int (437))
                                                                 (Prims.of_int (14)))
                                                              (Prims.mk_range
-                                                                "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                "Steel.Effect.Common.fsti"
                                                                 (Prims.of_int (439))
                                                                 (Prims.of_int (4))
                                                                 (Prims.of_int (446))
@@ -160,13 +152,13 @@ let (frame_vc_norm : unit -> (unit, unit) FStar_Tactics_Effect.tac_repr) =
                                                                    Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
                                                                     (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (439))
                                                                     (Prims.of_int (4))
                                                                     (Prims.of_int (439))
                                                                     (Prims.of_int (12)))
                                                                     (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (441))
                                                                     (Prims.of_int (4))
                                                                     (Prims.of_int (446))
@@ -181,13 +173,13 @@ let (frame_vc_norm : unit -> (unit, unit) FStar_Tactics_Effect.tac_repr) =
                                                                     Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
                                                                     (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (441))
                                                                     (Prims.of_int (4))
                                                                     (Prims.of_int (441))
                                                                     (Prims.of_int (78)))
                                                                     (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (443))
                                                                     (Prims.of_int (4))
                                                                     (Prims.of_int (446))
@@ -198,13 +190,13 @@ let (frame_vc_norm : unit -> (unit, unit) FStar_Tactics_Effect.tac_repr) =
                                                                     uu___8 ->
                                                                     FStar_Tactics_Effect.tac_bind
                                                                     (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (441))
                                                                     (Prims.of_int (22))
                                                                     (Prims.of_int (441))
                                                                     (Prims.of_int (52)))
                                                                     (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (441))
                                                                     (Prims.of_int (54))
                                                                     (Prims.of_int (441))
@@ -243,13 +235,13 @@ let (frame_vc_norm : unit -> (unit, unit) FStar_Tactics_Effect.tac_repr) =
                                                                     Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
                                                                     (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (443))
                                                                     (Prims.of_int (4))
                                                                     (Prims.of_int (443))
                                                                     (Prims.of_int (86)))
                                                                     (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (444))
                                                                     (Prims.of_int (4))
                                                                     (Prims.of_int (446))
@@ -260,13 +252,13 @@ let (frame_vc_norm : unit -> (unit, unit) FStar_Tactics_Effect.tac_repr) =
                                                                     uu___9 ->
                                                                     FStar_Tactics_Effect.tac_bind
                                                                     (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (443))
                                                                     (Prims.of_int (22))
                                                                     (Prims.of_int (443))
                                                                     (Prims.of_int (59)))
                                                                     (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (443))
                                                                     (Prims.of_int (61))
                                                                     (Prims.of_int (443))
@@ -307,13 +299,13 @@ let (frame_vc_norm : unit -> (unit, unit) FStar_Tactics_Effect.tac_repr) =
                                                                     Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
                                                                     (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (444))
                                                                     (Prims.of_int (4))
                                                                     (Prims.of_int (444))
                                                                     (Prims.of_int (21)))
                                                                     (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (446))
                                                                     (Prims.of_int (4))
                                                                     (Prims.of_int (446))
@@ -358,12 +350,10 @@ let (frame_vc_norm : unit -> (unit, unit) FStar_Tactics_Effect.tac_repr) =
                          (fun uu___3 ->
                             Obj.magic
                               (FStar_Tactics_Effect.tac_bind
-                                 (Prims.mk_range
-                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                 (Prims.mk_range "Steel.Effect.Common.fsti"
                                     (Prims.of_int (450)) (Prims.of_int (2))
                                     (Prims.of_int (450)) (Prims.of_int (76)))
-                                 (Prims.mk_range
-                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                 (Prims.mk_range "Steel.Effect.Common.fsti"
                                     (Prims.of_int (454)) (Prims.of_int (2))
                                     (Prims.of_int (456)) (Prims.of_int (10)))
                                  (Obj.magic
@@ -371,13 +361,13 @@ let (frame_vc_norm : unit -> (unit, unit) FStar_Tactics_Effect.tac_repr) =
                                        (fun uu___4 ->
                                           FStar_Tactics_Effect.tac_bind
                                             (Prims.mk_range
-                                               "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                               "Steel.Effect.Common.fsti"
                                                (Prims.of_int (450))
                                                (Prims.of_int (20))
                                                (Prims.of_int (450))
                                                (Prims.of_int (50)))
                                             (Prims.mk_range
-                                               "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                               "Steel.Effect.Common.fsti"
                                                (Prims.of_int (450))
                                                (Prims.of_int (52))
                                                (Prims.of_int (450))
@@ -406,13 +396,13 @@ let (frame_vc_norm : unit -> (unit, unit) FStar_Tactics_Effect.tac_repr) =
                                        Obj.magic
                                          (FStar_Tactics_Effect.tac_bind
                                             (Prims.mk_range
-                                               "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                               "Steel.Effect.Common.fsti"
                                                (Prims.of_int (454))
                                                (Prims.of_int (2))
                                                (Prims.of_int (454))
                                                (Prims.of_int (84)))
                                             (Prims.mk_range
-                                               "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                               "Steel.Effect.Common.fsti"
                                                (Prims.of_int (455))
                                                (Prims.of_int (2))
                                                (Prims.of_int (456))
@@ -422,13 +412,13 @@ let (frame_vc_norm : unit -> (unit, unit) FStar_Tactics_Effect.tac_repr) =
                                                   (fun uu___5 ->
                                                      FStar_Tactics_Effect.tac_bind
                                                        (Prims.mk_range
-                                                          "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                          "Steel.Effect.Common.fsti"
                                                           (Prims.of_int (454))
                                                           (Prims.of_int (20))
                                                           (Prims.of_int (454))
                                                           (Prims.of_int (57)))
                                                        (Prims.mk_range
-                                                          "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                          "Steel.Effect.Common.fsti"
                                                           (Prims.of_int (454))
                                                           (Prims.of_int (59))
                                                           (Prims.of_int (454))
@@ -458,13 +448,13 @@ let (frame_vc_norm : unit -> (unit, unit) FStar_Tactics_Effect.tac_repr) =
                                                   Obj.magic
                                                     (FStar_Tactics_Effect.tac_bind
                                                        (Prims.mk_range
-                                                          "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                          "Steel.Effect.Common.fsti"
                                                           (Prims.of_int (455))
                                                           (Prims.of_int (2))
                                                           (Prims.of_int (455))
                                                           (Prims.of_int (19)))
                                                        (Prims.mk_range
-                                                          "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                          "Steel.Effect.Common.fsti"
                                                           (Prims.of_int (456))
                                                           (Prims.of_int (2))
                                                           (Prims.of_int (456))
@@ -534,14 +524,10 @@ let (on_sort_binder :
   fun f ->
     fun b ->
       FStar_Tactics_Effect.tac_bind
-        (Prims.mk_range
-           "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
-           (Prims.of_int (656)) (Prims.of_int (16)) (Prims.of_int (656))
-           (Prims.of_int (32)))
-        (Prims.mk_range
-           "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
-           (Prims.of_int (656)) (Prims.of_int (2)) (Prims.of_int (657))
-           (Prims.of_int (17)))
+        (Prims.mk_range "Steel.Effect.Common.fsti" (Prims.of_int (656))
+           (Prims.of_int (16)) (Prims.of_int (656)) (Prims.of_int (32)))
+        (Prims.mk_range "Steel.Effect.Common.fsti" (Prims.of_int (656))
+           (Prims.of_int (2)) (Prims.of_int (657)) (Prims.of_int (17)))
         (FStar_Tactics_Effect.lift_div_tac
            (fun uu___ -> FStar_Reflection_Builtins.inspect_binder b))
         (fun uu___ ->
@@ -556,26 +542,20 @@ let rec (visit_tm :
   fun ff ->
     fun t ->
       FStar_Tactics_Effect.tac_bind
-        (Prims.mk_range
-           "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
-           (Prims.of_int (660)) (Prims.of_int (11)) (Prims.of_int (660))
-           (Prims.of_int (23)))
-        (Prims.mk_range
-           "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
-           (Prims.of_int (661)) (Prims.of_int (2)) (Prims.of_int (702))
-           (Prims.of_int (9)))
+        (Prims.mk_range "Steel.Effect.Common.fsti" (Prims.of_int (660))
+           (Prims.of_int (11)) (Prims.of_int (660)) (Prims.of_int (23)))
+        (Prims.mk_range "Steel.Effect.Common.fsti" (Prims.of_int (661))
+           (Prims.of_int (2)) (Prims.of_int (702)) (Prims.of_int (9)))
         (FStar_Tactics_Effect.lift_div_tac
            (fun uu___ -> FStar_Reflection_Builtins.inspect_ln t))
         (fun uu___ ->
            (fun tv ->
               Obj.magic
                 (FStar_Tactics_Effect.tac_bind
-                   (Prims.mk_range
-                      "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                   (Prims.mk_range "Steel.Effect.Common.fsti"
                       (Prims.of_int (661)) (Prims.of_int (2))
                       (Prims.of_int (702)) (Prims.of_int (3)))
-                   (Prims.mk_range
-                      "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                   (Prims.mk_range "Steel.Effect.Common.fsti"
                       (Prims.of_int (702)) (Prims.of_int (5))
                       (Prims.of_int (702)) (Prims.of_int (9)))
                    (match tv with
@@ -617,12 +597,10 @@ let rec (visit_tm :
                         Obj.magic
                           (Obj.repr
                              (FStar_Tactics_Effect.tac_bind
-                                (Prims.mk_range
-                                   "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                (Prims.mk_range "Steel.Effect.Common.fsti"
                                    (Prims.of_int (674)) (Prims.of_int (6))
                                    (Prims.of_int (674)) (Prims.of_int (25)))
-                                (Prims.mk_range
-                                   "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                (Prims.mk_range "Steel.Effect.Common.fsti"
                                    (Prims.of_int (675)) (Prims.of_int (6))
                                    (Prims.of_int (675)) (Prims.of_int (21)))
                                 (Obj.magic (on_sort_binder ff b))
@@ -633,12 +611,10 @@ let rec (visit_tm :
                         Obj.magic
                           (Obj.repr
                              (FStar_Tactics_Effect.tac_bind
-                                (Prims.mk_range
-                                   "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                (Prims.mk_range "Steel.Effect.Common.fsti"
                                    (Prims.of_int (677)) (Prims.of_int (14))
                                    (Prims.of_int (677)) (Prims.of_int (44)))
-                                (Prims.mk_range
-                                   "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                (Prims.mk_range "Steel.Effect.Common.fsti"
                                    (Prims.of_int (678)) (Prims.of_int (6))
                                    (Prims.of_int (678)) (Prims.of_int (19)))
                                 (Obj.magic (on_sort_binder (visit_tm ff) b))
@@ -649,12 +625,10 @@ let rec (visit_tm :
                         Obj.magic
                           (Obj.repr
                              (FStar_Tactics_Effect.tac_bind
-                                (Prims.mk_range
-                                   "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                (Prims.mk_range "Steel.Effect.Common.fsti"
                                    (Prims.of_int (681)) (Prims.of_int (7))
                                    (Prims.of_int (681)) (Prims.of_int (20)))
-                                (Prims.mk_range
-                                   "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                (Prims.mk_range "Steel.Effect.Common.fsti"
                                    (Prims.of_int (682)) (Prims.of_int (7))
                                    (Prims.of_int (682)) (Prims.of_int (20)))
                                 (Obj.magic (visit_tm ff l))
@@ -667,12 +641,10 @@ let rec (visit_tm :
                         Obj.magic
                           (Obj.repr
                              (FStar_Tactics_Effect.tac_bind
-                                (Prims.mk_range
-                                   "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                (Prims.mk_range "Steel.Effect.Common.fsti"
                                    (Prims.of_int (688)) (Prims.of_int (6))
                                    (Prims.of_int (688)) (Prims.of_int (21)))
-                                (Prims.mk_range
-                                   "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                (Prims.mk_range "Steel.Effect.Common.fsti"
                                    (Prims.of_int (689)) (Prims.of_int (6))
                                    (Prims.of_int (689)) (Prims.of_int (19)))
                                 (Obj.magic (visit_tm ff def))
@@ -683,12 +655,10 @@ let rec (visit_tm :
                         Obj.magic
                           (Obj.repr
                              (FStar_Tactics_Effect.tac_bind
-                                (Prims.mk_range
-                                   "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                (Prims.mk_range "Steel.Effect.Common.fsti"
                                    (Prims.of_int (692)) (Prims.of_int (6))
                                    (Prims.of_int (692)) (Prims.of_int (20)))
-                                (Prims.mk_range
-                                   "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                (Prims.mk_range "Steel.Effect.Common.fsti"
                                    (Prims.of_int (693)) (Prims.of_int (6))
                                    (Prims.of_int (693)) (Prims.of_int (28)))
                                 (Obj.magic (visit_tm ff sc))
@@ -702,12 +672,10 @@ let rec (visit_tm :
                         Obj.magic
                           (Obj.repr
                              (FStar_Tactics_Effect.tac_bind
-                                (Prims.mk_range
-                                   "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                (Prims.mk_range "Steel.Effect.Common.fsti"
                                    (Prims.of_int (696)) (Prims.of_int (6))
                                    (Prims.of_int (696)) (Prims.of_int (19)))
-                                (Prims.mk_range
-                                   "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                (Prims.mk_range "Steel.Effect.Common.fsti"
                                    (Prims.of_int (697)) (Prims.of_int (6))
                                    (Prims.of_int (697)) (Prims.of_int (19)))
                                 (Obj.magic (visit_tm ff e))
@@ -727,14 +695,10 @@ and (visit_br :
   fun ff ->
     fun b ->
       FStar_Tactics_Effect.tac_bind
-        (Prims.mk_range
-           "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
-           (Prims.of_int (705)) (Prims.of_int (15)) (Prims.of_int (705))
-           (Prims.of_int (16)))
-        (Prims.mk_range
-           "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
-           (Prims.of_int (705)) (Prims.of_int (2)) (Prims.of_int (706))
-           (Prims.of_int (15)))
+        (Prims.mk_range "Steel.Effect.Common.fsti" (Prims.of_int (705))
+           (Prims.of_int (15)) (Prims.of_int (705)) (Prims.of_int (16)))
+        (Prims.mk_range "Steel.Effect.Common.fsti" (Prims.of_int (705))
+           (Prims.of_int (2)) (Prims.of_int (706)) (Prims.of_int (15)))
         (FStar_Tactics_Effect.lift_div_tac (fun uu___ -> b))
         (fun uu___ ->
            (fun uu___ ->
@@ -747,14 +711,10 @@ and (visit_comp :
   fun ff ->
     fun c ->
       FStar_Tactics_Effect.tac_bind
-        (Prims.mk_range
-           "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
-           (Prims.of_int (709)) (Prims.of_int (11)) (Prims.of_int (709))
-           (Prims.of_int (25)))
-        (Prims.mk_range
-           "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
-           (Prims.of_int (710)) (Prims.of_int (2)) (Prims.of_int (722))
-           (Prims.of_int (30)))
+        (Prims.mk_range "Steel.Effect.Common.fsti" (Prims.of_int (709))
+           (Prims.of_int (11)) (Prims.of_int (709)) (Prims.of_int (25)))
+        (Prims.mk_range "Steel.Effect.Common.fsti" (Prims.of_int (710))
+           (Prims.of_int (2)) (Prims.of_int (722)) (Prims.of_int (30)))
         (FStar_Tactics_Effect.lift_div_tac
            (fun uu___ -> FStar_Reflection_Builtins.inspect_comp c))
         (fun uu___ ->
@@ -767,12 +727,10 @@ and (visit_comp :
               | FStar_Reflection_Data.C_Lemma (pre, post, pats) ->
                   Obj.magic
                     (FStar_Tactics_Effect.tac_bind
-                       (Prims.mk_range
-                          "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                       (Prims.mk_range "Steel.Effect.Common.fsti"
                           (Prims.of_int (715)) (Prims.of_int (6))
                           (Prims.of_int (715)) (Prims.of_int (21)))
-                       (Prims.mk_range
-                          "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                       (Prims.mk_range "Steel.Effect.Common.fsti"
                           (Prims.of_int (716)) (Prims.of_int (6))
                           (Prims.of_int (717)) (Prims.of_int (22)))
                        (Obj.magic (visit_tm ff pre))
@@ -780,12 +738,10 @@ and (visit_comp :
                           (fun uu___ ->
                              Obj.magic
                                (FStar_Tactics_Effect.tac_bind
-                                  (Prims.mk_range
-                                     "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                  (Prims.mk_range "Steel.Effect.Common.fsti"
                                      (Prims.of_int (716)) (Prims.of_int (6))
                                      (Prims.of_int (716)) (Prims.of_int (22)))
-                                  (Prims.mk_range
-                                     "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                  (Prims.mk_range "Steel.Effect.Common.fsti"
                                      (Prims.of_int (717)) (Prims.of_int (6))
                                      (Prims.of_int (717)) (Prims.of_int (22)))
                                   (Obj.magic (visit_tm ff post))
@@ -796,12 +752,10 @@ and (visit_comp :
               | FStar_Reflection_Data.C_Eff (us, eff, res, args, decrs) ->
                   Obj.magic
                     (FStar_Tactics_Effect.tac_bind
-                       (Prims.mk_range
-                          "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                       (Prims.mk_range "Steel.Effect.Common.fsti"
                           (Prims.of_int (720)) (Prims.of_int (6))
                           (Prims.of_int (720)) (Prims.of_int (21)))
-                       (Prims.mk_range
-                          "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                       (Prims.mk_range "Steel.Effect.Common.fsti"
                           (Prims.of_int (721)) (Prims.of_int (6))
                           (Prims.of_int (722)) (Prims.of_int (30)))
                        (Obj.magic (visit_tm ff res))
@@ -809,12 +763,10 @@ and (visit_comp :
                           (fun uu___ ->
                              Obj.magic
                                (FStar_Tactics_Effect.tac_bind
-                                  (Prims.mk_range
-                                     "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                  (Prims.mk_range "Steel.Effect.Common.fsti"
                                      (Prims.of_int (721)) (Prims.of_int (6))
                                      (Prims.of_int (721)) (Prims.of_int (45)))
-                                  (Prims.mk_range
-                                     "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                  (Prims.mk_range "Steel.Effect.Common.fsti"
                                      (Prims.of_int (722)) (Prims.of_int (6))
                                      (Prims.of_int (722)) (Prims.of_int (30)))
                                   (Obj.magic
@@ -836,24 +788,18 @@ let (name_appears_in :
   fun nm ->
     fun t ->
       FStar_Tactics_Effect.tac_bind
-        (Prims.mk_range
-           "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
-           (Prims.of_int (728)) (Prims.of_int (4)) (Prims.of_int (730))
-           (Prims.of_int (13)))
-        (Prims.mk_range
-           "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
-           (Prims.of_int (732)) (Prims.of_int (2)) (Prims.of_int (734))
-           (Prims.of_int (16)))
+        (Prims.mk_range "Steel.Effect.Common.fsti" (Prims.of_int (728))
+           (Prims.of_int (4)) (Prims.of_int (730)) (Prims.of_int (13)))
+        (Prims.mk_range "Steel.Effect.Common.fsti" (Prims.of_int (732))
+           (Prims.of_int (2)) (Prims.of_int (734)) (Prims.of_int (16)))
         (FStar_Tactics_Effect.lift_div_tac
            (fun uu___ ->
               fun t1 ->
                 FStar_Tactics_Effect.tac_bind
-                  (Prims.mk_range
-                     "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                  (Prims.mk_range "Steel.Effect.Common.fsti"
                      (Prims.of_int (727)) (Prims.of_int (10))
                      (Prims.of_int (727)) (Prims.of_int (11)))
-                  (Prims.mk_range
-                     "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                  (Prims.mk_range "Steel.Effect.Common.fsti"
                      (Prims.of_int (728)) (Prims.of_int (4))
                      (Prims.of_int (730)) (Prims.of_int (13)))
                   (Obj.magic (FStar_Tactics_Builtins.inspect t1))
@@ -886,22 +832,18 @@ let (name_appears_in :
                       match () with
                       | () ->
                           FStar_Tactics_Effect.tac_bind
-                            (Prims.mk_range
-                               "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                            (Prims.mk_range "Steel.Effect.Common.fsti"
                                (Prims.of_int (732)) (Prims.of_int (6))
                                (Prims.of_int (732)) (Prims.of_int (28)))
-                            (Prims.mk_range
-                               "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                            (Prims.mk_range "Steel.Effect.Common.fsti"
                                (Prims.of_int (732)) (Prims.of_int (30))
                                (Prims.of_int (732)) (Prims.of_int (35)))
                             (Obj.magic
                                (FStar_Tactics_Effect.tac_bind
-                                  (Prims.mk_range
-                                     "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                  (Prims.mk_range "Steel.Effect.Common.fsti"
                                      (Prims.of_int (732)) (Prims.of_int (13))
                                      (Prims.of_int (732)) (Prims.of_int (28)))
-                                  (Prims.mk_range
-                                     "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                  (Prims.mk_range "Steel.Effect.Common.fsti"
                                      (Prims.of_int (732)) (Prims.of_int (6))
                                      (Prims.of_int (732)) (Prims.of_int (28)))
                                   (Obj.magic (visit_tm ff t))
@@ -931,24 +873,16 @@ let (term_appears_in :
   fun t ->
     fun i ->
       FStar_Tactics_Effect.tac_bind
-        (Prims.mk_range
-           "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
-           (Prims.of_int (738)) (Prims.of_int (18)) (Prims.of_int (738))
-           (Prims.of_int (49)))
-        (Prims.mk_range
-           "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
-           (Prims.of_int (738)) (Prims.of_int (2)) (Prims.of_int (738))
-           (Prims.of_int (51)))
+        (Prims.mk_range "Steel.Effect.Common.fsti" (Prims.of_int (738))
+           (Prims.of_int (18)) (Prims.of_int (738)) (Prims.of_int (49)))
+        (Prims.mk_range "Steel.Effect.Common.fsti" (Prims.of_int (738))
+           (Prims.of_int (2)) (Prims.of_int (738)) (Prims.of_int (51)))
         (Obj.magic
            (FStar_Tactics_Effect.tac_bind
-              (Prims.mk_range
-                 "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
-                 (Prims.of_int (738)) (Prims.of_int (30))
-                 (Prims.of_int (738)) (Prims.of_int (48)))
-              (Prims.mk_range
-                 "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
-                 (Prims.of_int (738)) (Prims.of_int (18))
-                 (Prims.of_int (738)) (Prims.of_int (49)))
+              (Prims.mk_range "Steel.Effect.Common.fsti" (Prims.of_int (738))
+                 (Prims.of_int (30)) (Prims.of_int (738)) (Prims.of_int (48)))
+              (Prims.mk_range "Steel.Effect.Common.fsti" (Prims.of_int (738))
+                 (Prims.of_int (18)) (Prims.of_int (738)) (Prims.of_int (49)))
               (Obj.magic (FStar_Tactics_Builtins.term_to_string t))
               (fun uu___ ->
                  FStar_Tactics_Effect.lift_div_tac
@@ -1011,14 +945,11 @@ let (is_uvar :
   =
   fun t ->
     FStar_Tactics_Effect.tac_bind
-      (Prims.mk_range
-         "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
-         (Prims.of_int (791)) (Prims.of_int (13)) (Prims.of_int (791))
-         (Prims.of_int (14)))
-      (Prims.mk_range
-         "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
-         (Prims.of_int (791)) (Prims.of_int (34)) (Prims.of_int (796))
-         (Prims.of_int (14))) (Obj.magic (FStar_Tactics_Builtins.inspect t))
+      (Prims.mk_range "Steel.Effect.Common.fsti" (Prims.of_int (791))
+         (Prims.of_int (13)) (Prims.of_int (791)) (Prims.of_int (14)))
+      (Prims.mk_range "Steel.Effect.Common.fsti" (Prims.of_int (791))
+         (Prims.of_int (34)) (Prims.of_int (796)) (Prims.of_int (14)))
+      (Obj.magic (FStar_Tactics_Builtins.inspect t))
       (fun uu___ ->
          (fun uu___ ->
             match uu___ with
@@ -1030,12 +961,10 @@ let (is_uvar :
                 Obj.magic
                   (Obj.repr
                      (FStar_Tactics_Effect.tac_bind
-                        (Prims.mk_range
-                           "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                        (Prims.mk_range "Steel.Effect.Common.fsti"
                            (Prims.of_int (794)) (Prims.of_int (21))
                            (Prims.of_int (794)) (Prims.of_int (34)))
-                        (Prims.mk_range
-                           "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                        (Prims.mk_range "Steel.Effect.Common.fsti"
                            (Prims.of_int (794)) (Prims.of_int (6))
                            (Prims.of_int (795)) (Prims.of_int (17)))
                         (FStar_Tactics_Effect.lift_div_tac
@@ -1048,13 +977,13 @@ let (is_uvar :
                                   Obj.magic
                                     (FStar_Tactics_Effect.tac_bind
                                        (Prims.mk_range
-                                          "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                          "Steel.Effect.Common.fsti"
                                           (Prims.of_int (794))
                                           (Prims.of_int (10))
                                           (Prims.of_int (794))
                                           (Prims.of_int (12)))
                                        (Prims.mk_range
-                                          "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                          "Steel.Effect.Common.fsti"
                                           (Prims.of_int (795))
                                           (Prims.of_int (6))
                                           (Prims.of_int (795))
@@ -1080,14 +1009,10 @@ let rec (get_candidates :
   fun t ->
     fun l ->
       FStar_Tactics_Effect.tac_bind
-        (Prims.mk_range
-           "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
-           (Prims.of_int (800)) (Prims.of_int (16)) (Prims.of_int (800))
-           (Prims.of_int (29)))
-        (Prims.mk_range
-           "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
-           (Prims.of_int (800)) (Prims.of_int (2)) (Prims.of_int (807))
-           (Prims.of_int (32)))
+        (Prims.mk_range "Steel.Effect.Common.fsti" (Prims.of_int (800))
+           (Prims.of_int (16)) (Prims.of_int (800)) (Prims.of_int (29)))
+        (Prims.mk_range "Steel.Effect.Common.fsti" (Prims.of_int (800))
+           (Prims.of_int (2)) (Prims.of_int (807)) (Prims.of_int (32)))
         (FStar_Tactics_Effect.lift_div_tac
            (fun uu___ -> FStar_Reflection_Derived.collect_app t))
         (fun uu___ ->
@@ -1104,12 +1029,10 @@ let rec (get_candidates :
                        Obj.magic
                          (Obj.repr
                             (FStar_Tactics_Effect.tac_bind
-                               (Prims.mk_range
-                                  "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                               (Prims.mk_range "Steel.Effect.Common.fsti"
                                   (Prims.of_int (804)) (Prims.of_int (17))
                                   (Prims.of_int (804)) (Prims.of_int (31)))
-                               (Prims.mk_range
-                                  "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                               (Prims.mk_range "Steel.Effect.Common.fsti"
                                   (Prims.of_int (804)) (Prims.of_int (6))
                                   (Prims.of_int (807)) (Prims.of_int (32)))
                                (FStar_Tactics_Effect.lift_div_tac
@@ -1122,13 +1045,13 @@ let rec (get_candidates :
                                          Obj.magic
                                            (FStar_Tactics_Effect.tac_bind
                                               (Prims.mk_range
-                                                 "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                 "Steel.Effect.Common.fsti"
                                                  (Prims.of_int (805))
                                                  (Prims.of_int (9))
                                                  (Prims.of_int (805))
                                                  (Prims.of_int (27)))
                                               (Prims.mk_range
-                                                 "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                 "Steel.Effect.Common.fsti"
                                                  (Prims.of_int (805))
                                                  (Prims.of_int (6))
                                                  (Prims.of_int (807))
@@ -1143,13 +1066,13 @@ let rec (get_candidates :
                                                       Obj.magic
                                                         (FStar_Tactics_Effect.tac_bind
                                                            (Prims.mk_range
-                                                              "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                              "Steel.Effect.Common.fsti"
                                                               (Prims.of_int (806))
                                                               (Prims.of_int (12))
                                                               (Prims.of_int (806))
                                                               (Prims.of_int (33)))
                                                            (Prims.mk_range
-                                                              "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                              "Steel.Effect.Common.fsti"
                                                               (Prims.of_int (805))
                                                               (Prims.of_int (33))
                                                               (Prims.of_int (807))
@@ -1203,12 +1126,10 @@ let rec (trivial_cancels :
                    Obj.magic
                      (Obj.repr
                         (FStar_Tactics_Effect.tac_bind
-                           (Prims.mk_range
-                              "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                           (Prims.mk_range "Steel.Effect.Common.fsti"
                               (Prims.of_int (828)) (Prims.of_int (21))
                               (Prims.of_int (828)) (Prims.of_int (41)))
-                           (Prims.mk_range
-                              "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                           (Prims.mk_range "Steel.Effect.Common.fsti"
                               (Prims.of_int (828)) (Prims.of_int (6))
                               (Prims.of_int (831)) (Prims.of_int (76)))
                            (FStar_Tactics_Effect.lift_div_tac
@@ -1220,13 +1141,13 @@ let rec (trivial_cancels :
                                      Obj.magic
                                        (FStar_Tactics_Effect.tac_bind
                                           (Prims.mk_range
-                                             "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                             "Steel.Effect.Common.fsti"
                                              (Prims.of_int (829))
                                              (Prims.of_int (37))
                                              (Prims.of_int (829))
                                              (Prims.of_int (62)))
                                           (Prims.mk_range
-                                             "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                             "Steel.Effect.Common.fsti"
                                              (Prims.of_int (829))
                                              (Prims.of_int (6))
                                              (Prims.of_int (831))
@@ -1278,12 +1199,10 @@ let rec (print_atoms :
                Obj.magic
                  (Obj.repr
                     (FStar_Tactics_Effect.tac_bind
-                       (Prims.mk_range
-                          "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                       (Prims.mk_range "Steel.Effect.Common.fsti"
                           (Prims.of_int (841)) (Prims.of_int (14))
                           (Prims.of_int (841)) (Prims.of_int (43)))
-                       (Prims.mk_range
-                          "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                       (Prims.mk_range "Steel.Effect.Common.fsti"
                           (Prims.of_int (841)) (Prims.of_int (14))
                           (Prims.of_int (841)) (Prims.of_int (71)))
                        (Obj.magic
@@ -1293,8 +1212,7 @@ let rec (print_atoms :
                           (fun uu___ ->
                              Obj.magic
                                (FStar_Tactics_Effect.tac_bind
-                                  (Prims.mk_range
-                                     "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                  (Prims.mk_range "Steel.Effect.Common.fsti"
                                      (Prims.of_int (841)) (Prims.of_int (46))
                                      (Prims.of_int (841)) (Prims.of_int (71)))
                                   (Prims.mk_range "prims.fst"
@@ -1303,7 +1221,7 @@ let rec (print_atoms :
                                   (Obj.magic
                                      (FStar_Tactics_Effect.tac_bind
                                         (Prims.mk_range
-                                           "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                           "Steel.Effect.Common.fsti"
                                            (Prims.of_int (841))
                                            (Prims.of_int (54))
                                            (Prims.of_int (841))
@@ -1345,12 +1263,10 @@ let rec (try_candidates :
                    Obj.magic
                      (Obj.repr
                         (FStar_Tactics_Effect.tac_bind
-                           (Prims.mk_range
-                              "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                           (Prims.mk_range "Steel.Effect.Common.fsti"
                               (Prims.of_int (851)) (Prims.of_int (9))
                               (Prims.of_int (851)) (Prims.of_int (31)))
-                           (Prims.mk_range
-                              "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                           (Prims.mk_range "Steel.Effect.Common.fsti"
                               (Prims.of_int (851)) (Prims.of_int (6))
                               (Prims.of_int (857)) (Prims.of_int (55)))
                            (Obj.magic (is_uvar (select hd am)))
@@ -1362,13 +1278,13 @@ let rec (try_candidates :
                                    Obj.magic
                                      (FStar_Tactics_Effect.tac_bind
                                         (Prims.mk_range
-                                           "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                           "Steel.Effect.Common.fsti"
                                            (Prims.of_int (854))
                                            (Prims.of_int (18))
                                            (Prims.of_int (855))
                                            (Prims.of_int (53)))
                                         (Prims.mk_range
-                                           "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                           "Steel.Effect.Common.fsti"
                                            (Prims.of_int (856))
                                            (Prims.of_int (8))
                                            (Prims.of_int (857))
@@ -1380,13 +1296,13 @@ let rec (try_candidates :
                                                  | () ->
                                                      FStar_Tactics_Effect.tac_bind
                                                        (Prims.mk_range
-                                                          "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                          "Steel.Effect.Common.fsti"
                                                           (Prims.of_int (854))
                                                           (Prims.of_int (25))
                                                           (Prims.of_int (854))
                                                           (Prims.of_int (59)))
                                                        (Prims.mk_range
-                                                          "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                          "Steel.Effect.Common.fsti"
                                                           (Prims.of_int (854))
                                                           (Prims.of_int (22))
                                                           (Prims.of_int (854))
@@ -1421,13 +1337,13 @@ let rec (try_candidates :
                                               Obj.magic
                                                 (FStar_Tactics_Effect.tac_bind
                                                    (Prims.mk_range
-                                                      "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                      "Steel.Effect.Common.fsti"
                                                       (Prims.of_int (856))
                                                       (Prims.of_int (21))
                                                       (Prims.of_int (856))
                                                       (Prims.of_int (43)))
                                                    (Prims.mk_range
-                                                      "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                      "Steel.Effect.Common.fsti"
                                                       (Prims.of_int (856))
                                                       (Prims.of_int (8))
                                                       (Prims.of_int (857))
@@ -1462,12 +1378,10 @@ let rec (remove_from_list :
                Obj.magic
                  (Obj.repr
                     (FStar_Tactics_Effect.tac_bind
-                       (Prims.mk_range
-                          "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                       (Prims.mk_range "Steel.Effect.Common.fsti"
                           (Prims.of_int (863)) (Prims.of_int (10))
                           (Prims.of_int (863)) (Prims.of_int (70)))
-                       (Prims.mk_range
-                          "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                       (Prims.mk_range "Steel.Effect.Common.fsti"
                           (Prims.of_int (863)) (Prims.of_int (72))
                           (Prims.of_int (863)) (Prims.of_int (74)))
                        (Obj.magic
@@ -1486,12 +1400,10 @@ let rec (remove_from_list :
                      else
                        Obj.repr
                          (FStar_Tactics_Effect.tac_bind
-                            (Prims.mk_range
-                               "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                            (Prims.mk_range "Steel.Effect.Common.fsti"
                                (Prims.of_int (864)) (Prims.of_int (41))
                                (Prims.of_int (864)) (Prims.of_int (62)))
-                            (Prims.mk_range
-                               "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                            (Prims.mk_range "Steel.Effect.Common.fsti"
                                (Prims.of_int (864)) (Prims.of_int (39))
                                (Prims.of_int (864)) (Prims.of_int (41)))
                             (Obj.magic (remove_from_list t tl))
@@ -1529,14 +1441,12 @@ let rec (equivalent_lists_once :
                            Obj.magic
                              (Obj.repr
                                 (FStar_Tactics_Effect.tac_bind
-                                   (Prims.mk_range
-                                      "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                   (Prims.mk_range "Steel.Effect.Common.fsti"
                                       (Prims.of_int (875))
                                       (Prims.of_int (15))
                                       (Prims.of_int (875))
                                       (Prims.of_int (38)))
-                                   (Prims.mk_range
-                                      "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                   (Prims.mk_range "Steel.Effect.Common.fsti"
                                       (Prims.of_int (875)) (Prims.of_int (4))
                                       (Prims.of_int (883)) (Prims.of_int (5)))
                                    (Obj.magic (try_candidates hd l2 am))
@@ -1549,13 +1459,13 @@ let rec (equivalent_lists_once :
                                                Obj.magic
                                                  (FStar_Tactics_Effect.tac_bind
                                                     (Prims.mk_range
-                                                       "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                       "Steel.Effect.Common.fsti"
                                                        (Prims.of_int (877))
                                                        (Prims.of_int (15))
                                                        (Prims.of_int (877))
                                                        (Prims.of_int (36)))
                                                     (Prims.mk_range
-                                                       "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                       "Steel.Effect.Common.fsti"
                                                        (Prims.of_int (878))
                                                        (Prims.of_int (6))
                                                        (Prims.of_int (878))
@@ -1574,13 +1484,13 @@ let rec (equivalent_lists_once :
                                                Obj.magic
                                                  (FStar_Tactics_Effect.tac_bind
                                                     (Prims.mk_range
-                                                       "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                       "Steel.Effect.Common.fsti"
                                                        (Prims.of_int (881))
                                                        (Prims.of_int (41))
                                                        (Prims.of_int (881))
                                                        (Prims.of_int (85)))
                                                     (Prims.mk_range
-                                                       "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                       "Steel.Effect.Common.fsti"
                                                        (Prims.of_int (879))
                                                        (Prims.of_int (11))
                                                        (Prims.of_int (883))
@@ -1633,13 +1543,11 @@ let rec (equivalent_lists_once_l2 :
                            Obj.magic
                              (Obj.repr
                                 (FStar_Tactics_Effect.tac_bind
-                                   (Prims.mk_range
-                                      "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                   (Prims.mk_range "Steel.Effect.Common.fsti"
                                       (Prims.of_int (896)) (Prims.of_int (7))
                                       (Prims.of_int (896))
                                       (Prims.of_int (29)))
-                                   (Prims.mk_range
-                                      "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                   (Prims.mk_range "Steel.Effect.Common.fsti"
                                       (Prims.of_int (896)) (Prims.of_int (4))
                                       (Prims.of_int (910)) (Prims.of_int (5)))
                                    (Obj.magic (is_uvar (select hd am)))
@@ -1650,13 +1558,13 @@ let rec (equivalent_lists_once_l2 :
                                            Obj.magic
                                              (FStar_Tactics_Effect.tac_bind
                                                 (Prims.mk_range
-                                                   "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                   "Steel.Effect.Common.fsti"
                                                    (Prims.of_int (898))
                                                    (Prims.of_int (41))
                                                    (Prims.of_int (898))
                                                    (Prims.of_int (88)))
                                                 (Prims.mk_range
-                                                   "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                   "Steel.Effect.Common.fsti"
                                                    (Prims.of_int (898))
                                                    (Prims.of_int (6))
                                                    (Prims.of_int (899))
@@ -1678,13 +1586,13 @@ let rec (equivalent_lists_once_l2 :
                                            Obj.magic
                                              (FStar_Tactics_Effect.tac_bind
                                                 (Prims.mk_range
-                                                   "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                   "Steel.Effect.Common.fsti"
                                                    (Prims.of_int (901))
                                                    (Prims.of_int (17))
                                                    (Prims.of_int (901))
                                                    (Prims.of_int (40)))
                                                 (Prims.mk_range
-                                                   "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                   "Steel.Effect.Common.fsti"
                                                    (Prims.of_int (900))
                                                    (Prims.of_int (9))
                                                    (Prims.of_int (910))
@@ -1701,13 +1609,13 @@ let rec (equivalent_lists_once_l2 :
                                                             Obj.magic
                                                               (FStar_Tactics_Effect.tac_bind
                                                                  (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (903))
                                                                     (Prims.of_int (17))
                                                                     (Prims.of_int (903))
                                                                     (Prims.of_int (38)))
                                                                  (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (904))
                                                                     (Prims.of_int (8))
                                                                     (Prims.of_int (904))
@@ -1733,13 +1641,13 @@ let rec (equivalent_lists_once_l2 :
                                                             Obj.magic
                                                               (FStar_Tactics_Effect.tac_bind
                                                                  (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (907))
                                                                     (Prims.of_int (43))
                                                                     (Prims.of_int (907))
                                                                     (Prims.of_int (90)))
                                                                  (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (905))
                                                                     (Prims.of_int (13))
                                                                     (Prims.of_int (909))
@@ -1825,13 +1733,13 @@ let rec (try_unifying_remaining :
                               | () ->
                                   FStar_Tactics_Effect.tac_bind
                                     (Prims.mk_range
-                                       "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                       "Steel.Effect.Common.fsti"
                                        (Prims.of_int (928))
                                        (Prims.of_int (13))
                                        (Prims.of_int (928))
                                        (Prims.of_int (35)))
                                     (Prims.mk_range
-                                       "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                       "Steel.Effect.Common.fsti"
                                        (Prims.of_int (928))
                                        (Prims.of_int (10))
                                        (Prims.of_int (928))
@@ -1856,13 +1764,13 @@ let rec (try_unifying_remaining :
                               | uu___1 ->
                                   FStar_Tactics_Effect.tac_bind
                                     (Prims.mk_range
-                                       "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                       "Steel.Effect.Common.fsti"
                                        (Prims.of_int (930))
                                        (Prims.of_int (18))
                                        (Prims.of_int (930))
                                        (Prims.of_int (93)))
                                     (Prims.mk_range
-                                       "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                       "Steel.Effect.Common.fsti"
                                        (Prims.of_int (930))
                                        (Prims.of_int (13))
                                        (Prims.of_int (930))
@@ -1870,7 +1778,7 @@ let rec (try_unifying_remaining :
                                     (Obj.magic
                                        (FStar_Tactics_Effect.tac_bind
                                           (Prims.mk_range
-                                             "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                             "Steel.Effect.Common.fsti"
                                              (Prims.of_int (930))
                                              (Prims.of_int (63))
                                              (Prims.of_int (930))
@@ -1901,14 +1809,10 @@ let (is_smt_binder :
   =
   fun b ->
     FStar_Tactics_Effect.tac_bind
-      (Prims.mk_range
-         "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
-         (Prims.of_int (934)) (Prims.of_int (20)) (Prims.of_int (934))
-         (Prims.of_int (36)))
-      (Prims.mk_range
-         "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
-         (Prims.of_int (934)) (Prims.of_int (2)) (Prims.of_int (936))
-         (Prims.of_int (73)))
+      (Prims.mk_range "Steel.Effect.Common.fsti" (Prims.of_int (934))
+         (Prims.of_int (20)) (Prims.of_int (934)) (Prims.of_int (36)))
+      (Prims.mk_range "Steel.Effect.Common.fsti" (Prims.of_int (934))
+         (Prims.of_int (2)) (Prims.of_int (936)) (Prims.of_int (73)))
       (FStar_Tactics_Effect.lift_div_tac
          (fun uu___ -> FStar_Reflection_Builtins.inspect_binder b))
       (fun uu___ ->
@@ -1917,12 +1821,10 @@ let (is_smt_binder :
             | (bv, aqual) ->
                 Obj.magic
                   (FStar_Tactics_Effect.tac_bind
-                     (Prims.mk_range
-                        "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                     (Prims.mk_range "Steel.Effect.Common.fsti"
                         (Prims.of_int (935)) (Prims.of_int (10))
                         (Prims.of_int (935)) (Prims.of_int (19)))
-                     (Prims.mk_range
-                        "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                     (Prims.mk_range "Steel.Effect.Common.fsti"
                         (Prims.of_int (936)) (Prims.of_int (2))
                         (Prims.of_int (936)) (Prims.of_int (73)))
                      (FStar_Tactics_Effect.lift_div_tac
@@ -1931,24 +1833,22 @@ let (is_smt_binder :
                         (fun l ->
                            Obj.magic
                              (FStar_Tactics_Effect.tac_bind
-                                (Prims.mk_range
-                                   "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                (Prims.mk_range "Steel.Effect.Common.fsti"
                                    (Prims.of_int (936)) (Prims.of_int (6))
                                    (Prims.of_int (936)) (Prims.of_int (73)))
-                                (Prims.mk_range
-                                   "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                (Prims.mk_range "Steel.Effect.Common.fsti"
                                    (Prims.of_int (936)) (Prims.of_int (2))
                                    (Prims.of_int (936)) (Prims.of_int (73)))
                                 (Obj.magic
                                    (FStar_Tactics_Effect.tac_bind
                                       (Prims.mk_range
-                                         "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                         "Steel.Effect.Common.fsti"
                                          (Prims.of_int (936))
                                          (Prims.of_int (24))
                                          (Prims.of_int (936))
                                          (Prims.of_int (72)))
                                       (Prims.mk_range
-                                         "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                         "Steel.Effect.Common.fsti"
                                          (Prims.of_int (936))
                                          (Prims.of_int (6))
                                          (Prims.of_int (936))
@@ -1985,24 +1885,18 @@ let rec (new_args_for_smt_attrs :
     fun l ->
       fun ty ->
         FStar_Tactics_Effect.tac_bind
-          (Prims.mk_range
-             "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
-             (Prims.of_int (942)) (Prims.of_int (4)) (Prims.of_int (943))
-             (Prims.of_int (23)))
-          (Prims.mk_range
-             "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
-             (Prims.of_int (945)) (Prims.of_int (2)) (Prims.of_int (971))
-             (Prims.of_int (66)))
+          (Prims.mk_range "Steel.Effect.Common.fsti" (Prims.of_int (942))
+             (Prims.of_int (4)) (Prims.of_int (943)) (Prims.of_int (23)))
+          (Prims.mk_range "Steel.Effect.Common.fsti" (Prims.of_int (945))
+             (Prims.of_int (2)) (Prims.of_int (971)) (Prims.of_int (66)))
           (FStar_Tactics_Effect.lift_div_tac
              (fun uu___ ->
                 fun ty1 ->
                   FStar_Tactics_Effect.tac_bind
-                    (Prims.mk_range
-                       "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                    (Prims.mk_range "Steel.Effect.Common.fsti"
                        (Prims.of_int (942)) (Prims.of_int (12))
                        (Prims.of_int (942)) (Prims.of_int (22)))
-                    (Prims.mk_range
-                       "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                    (Prims.mk_range "Steel.Effect.Common.fsti"
                        (Prims.of_int (943)) (Prims.of_int (4))
                        (Prims.of_int (943)) (Prims.of_int (23)))
                     (Obj.magic (FStar_Tactics_Derived.cur_env ()))
@@ -2015,22 +1909,18 @@ let rec (new_args_for_smt_attrs :
              (fun fresh_ghost_uvar ->
                 Obj.magic
                   (FStar_Tactics_Effect.tac_bind
-                     (Prims.mk_range
-                        "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                     (Prims.mk_range "Steel.Effect.Common.fsti"
                         (Prims.of_int (945)) (Prims.of_int (8))
                         (Prims.of_int (945)) (Prims.of_int (31)))
-                     (Prims.mk_range
-                        "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                     (Prims.mk_range "Steel.Effect.Common.fsti"
                         (Prims.of_int (945)) (Prims.of_int (2))
                         (Prims.of_int (971)) (Prims.of_int (66)))
                      (Obj.magic
                         (FStar_Tactics_Effect.tac_bind
-                           (Prims.mk_range
-                              "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                           (Prims.mk_range "Steel.Effect.Common.fsti"
                               (Prims.of_int (945)) (Prims.of_int (11))
                               (Prims.of_int (945)) (Prims.of_int (31)))
-                           (Prims.mk_range
-                              "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                           (Prims.mk_range "Steel.Effect.Common.fsti"
                               (Prims.of_int (945)) (Prims.of_int (8))
                               (Prims.of_int (945)) (Prims.of_int (31)))
                            (Obj.magic
@@ -2048,13 +1938,13 @@ let rec (new_args_for_smt_attrs :
                                  (Obj.repr
                                     (FStar_Tactics_Effect.tac_bind
                                        (Prims.mk_range
-                                          "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                          "Steel.Effect.Common.fsti"
                                           (Prims.of_int (947))
                                           (Prims.of_int (20))
                                           (Prims.of_int (947))
                                           (Prims.of_int (40)))
                                        (Prims.mk_range
-                                          "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                          "Steel.Effect.Common.fsti"
                                           (Prims.of_int (948))
                                           (Prims.of_int (4))
                                           (Prims.of_int (969))
@@ -2065,13 +1955,13 @@ let rec (new_args_for_smt_attrs :
                                              Obj.magic
                                                (FStar_Tactics_Effect.tac_bind
                                                   (Prims.mk_range
-                                                     "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                     "Steel.Effect.Common.fsti"
                                                      (Prims.of_int (949))
                                                      (Prims.of_int (6))
                                                      (Prims.of_int (955))
                                                      (Prims.of_int (26)))
                                                   (Prims.mk_range
-                                                     "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                     "Steel.Effect.Common.fsti"
                                                      (Prims.of_int (958))
                                                      (Prims.of_int (4))
                                                      (Prims.of_int (968))
@@ -2082,13 +1972,13 @@ let rec (new_args_for_smt_attrs :
                                                        (Obj.repr
                                                           (FStar_Tactics_Effect.tac_bind
                                                              (Prims.mk_range
-                                                                "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                "Steel.Effect.Common.fsti"
                                                                 (Prims.of_int (950))
                                                                 (Prims.of_int (21))
                                                                 (Prims.of_int (950))
                                                                 (Prims.of_int (31)))
                                                              (Prims.mk_range
-                                                                "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                "Steel.Effect.Common.fsti"
                                                                 (Prims.of_int (951))
                                                                 (Prims.of_int (8))
                                                                 (Prims.of_int (954))
@@ -2102,13 +1992,13 @@ let rec (new_args_for_smt_attrs :
                                                                    Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
                                                                     (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (951))
                                                                     (Prims.of_int (19))
                                                                     (Prims.of_int (951))
                                                                     (Prims.of_int (42)))
                                                                     (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (952))
                                                                     (Prims.of_int (8))
                                                                     (Prims.of_int (954))
@@ -2123,13 +2013,13 @@ let rec (new_args_for_smt_attrs :
                                                                     Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
                                                                     (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (952))
                                                                     (Prims.of_int (8))
                                                                     (Prims.of_int (952))
                                                                     (Prims.of_int (21)))
                                                                     (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (953))
                                                                     (Prims.of_int (8))
                                                                     (Prims.of_int (954))
@@ -2144,13 +2034,13 @@ let rec (new_args_for_smt_attrs :
                                                                     Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
                                                                     (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (953))
                                                                     (Prims.of_int (8))
                                                                     (Prims.of_int (953))
                                                                     (Prims.of_int (15)))
                                                                     (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (954))
                                                                     (Prims.of_int (8))
                                                                     (Prims.of_int (954))
@@ -2179,13 +2069,13 @@ let rec (new_args_for_smt_attrs :
                                                         Obj.magic
                                                           (FStar_Tactics_Effect.tac_bind
                                                              (Prims.mk_range
-                                                                "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                "Steel.Effect.Common.fsti"
                                                                 (Prims.of_int (959))
                                                                 (Prims.of_int (6))
                                                                 (Prims.of_int (965))
                                                                 (Prims.of_int (75)))
                                                              (Prims.mk_range
-                                                                "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                "Steel.Effect.Common.fsti"
                                                                 (Prims.of_int (967))
                                                                 (Prims.of_int (4))
                                                                 (Prims.of_int (968))
@@ -2238,13 +2128,13 @@ let rec (new_args_for_smt_attrs :
                                                                    Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
                                                                     (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (967))
                                                                     (Prims.of_int (28))
                                                                     (Prims.of_int (967))
                                                                     (Prims.of_int (61)))
                                                                     (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (967))
                                                                     (Prims.of_int (4))
                                                                     (Prims.of_int (968))
@@ -2300,14 +2190,10 @@ let (rewrite_term_for_smt :
     fun am ->
       fun a ->
         FStar_Tactics_Effect.tac_bind
-          (Prims.mk_range
-             "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
-             (Prims.of_int (975)) (Prims.of_int (30)) (Prims.of_int (975))
-             (Prims.of_int (32)))
-          (Prims.mk_range
-             "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
-             (Prims.of_int (975)) (Prims.of_int (4)) (Prims.of_int (981))
-             (Prims.of_int (68)))
+          (Prims.mk_range "Steel.Effect.Common.fsti" (Prims.of_int (975))
+             (Prims.of_int (30)) (Prims.of_int (975)) (Prims.of_int (32)))
+          (Prims.mk_range "Steel.Effect.Common.fsti" (Prims.of_int (975))
+             (Prims.of_int (4)) (Prims.of_int (981)) (Prims.of_int (68)))
           (FStar_Tactics_Effect.lift_div_tac (fun uu___ -> am))
           (fun uu___ ->
              (fun uu___ ->
@@ -2315,12 +2201,10 @@ let (rewrite_term_for_smt :
                 | (am1, prev_uvar_terms) ->
                     Obj.magic
                       (FStar_Tactics_Effect.tac_bind
-                         (Prims.mk_range
-                            "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                         (Prims.mk_range "Steel.Effect.Common.fsti"
                             (Prims.of_int (976)) (Prims.of_int (15))
                             (Prims.of_int (976)) (Prims.of_int (26)))
-                         (Prims.mk_range
-                            "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                         (Prims.mk_range "Steel.Effect.Common.fsti"
                             (Prims.of_int (977)) (Prims.of_int (4))
                             (Prims.of_int (981)) (Prims.of_int (68)))
                          (FStar_Tactics_Effect.lift_div_tac
@@ -2330,13 +2214,13 @@ let (rewrite_term_for_smt :
                                Obj.magic
                                  (FStar_Tactics_Effect.tac_bind
                                     (Prims.mk_range
-                                       "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                       "Steel.Effect.Common.fsti"
                                        (Prims.of_int (977))
                                        (Prims.of_int (19))
                                        (Prims.of_int (977))
                                        (Prims.of_int (35)))
                                     (Prims.mk_range
-                                       "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                       "Steel.Effect.Common.fsti"
                                        (Prims.of_int (977))
                                        (Prims.of_int (4))
                                        (Prims.of_int (981))
@@ -2352,13 +2236,13 @@ let (rewrite_term_for_smt :
                                               Obj.magic
                                                 (FStar_Tactics_Effect.tac_bind
                                                    (Prims.mk_range
-                                                      "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                      "Steel.Effect.Common.fsti"
                                                       (Prims.of_int (978))
                                                       (Prims.of_int (12))
                                                       (Prims.of_int (978))
                                                       (Prims.of_int (21)))
                                                    (Prims.mk_range
-                                                      "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                      "Steel.Effect.Common.fsti"
                                                       (Prims.of_int (979))
                                                       (Prims.of_int (4))
                                                       (Prims.of_int (981))
@@ -2371,13 +2255,13 @@ let (rewrite_term_for_smt :
                                                          Obj.magic
                                                            (FStar_Tactics_Effect.tac_bind
                                                               (Prims.mk_range
-                                                                 "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                 "Steel.Effect.Common.fsti"
                                                                  (Prims.of_int (979))
                                                                  (Prims.of_int (31))
                                                                  (Prims.of_int (979))
                                                                  (Prims.of_int (64)))
                                                               (Prims.mk_range
-                                                                 "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                 "Steel.Effect.Common.fsti"
                                                                  (Prims.of_int (979))
                                                                  (Prims.of_int (4))
                                                                  (Prims.of_int (981))
@@ -2418,18 +2302,13 @@ let fail_atoms :
     fun l2 ->
       fun am ->
         FStar_Tactics_Effect.tac_bind
-          (Prims.mk_range
-             "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
-             (Prims.of_int (985)) (Prims.of_int (9)) (Prims.of_int (985))
-             (Prims.of_int (105)))
-          (Prims.mk_range
-             "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
-             (Prims.of_int (985)) (Prims.of_int (4)) (Prims.of_int (985))
-             (Prims.of_int (105)))
+          (Prims.mk_range "Steel.Effect.Common.fsti" (Prims.of_int (985))
+             (Prims.of_int (9)) (Prims.of_int (985)) (Prims.of_int (105)))
+          (Prims.mk_range "Steel.Effect.Common.fsti" (Prims.of_int (985))
+             (Prims.of_int (4)) (Prims.of_int (985)) (Prims.of_int (105)))
           (Obj.magic
              (FStar_Tactics_Effect.tac_bind
-                (Prims.mk_range
-                   "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                (Prims.mk_range "Steel.Effect.Common.fsti"
                    (Prims.of_int (985)) (Prims.of_int (55))
                    (Prims.of_int (985)) (Prims.of_int (104)))
                 (Prims.mk_range "prims.fst" (Prims.of_int (606))
@@ -2437,12 +2316,10 @@ let fail_atoms :
                    (Prims.of_int (31)))
                 (Obj.magic
                    (FStar_Tactics_Effect.tac_bind
-                      (Prims.mk_range
-                         "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                      (Prims.mk_range "Steel.Effect.Common.fsti"
                          (Prims.of_int (985)) (Prims.of_int (55))
                          (Prims.of_int (985)) (Prims.of_int (72)))
-                      (Prims.mk_range
-                         "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                      (Prims.mk_range "Steel.Effect.Common.fsti"
                          (Prims.of_int (985)) (Prims.of_int (55))
                          (Prims.of_int (985)) (Prims.of_int (104)))
                       (Obj.magic (print_atoms l1 am))
@@ -2450,8 +2327,7 @@ let fail_atoms :
                          (fun uu___ ->
                             Obj.magic
                               (FStar_Tactics_Effect.tac_bind
-                                 (Prims.mk_range
-                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                 (Prims.mk_range "Steel.Effect.Common.fsti"
                                     (Prims.of_int (985)) (Prims.of_int (75))
                                     (Prims.of_int (985)) (Prims.of_int (104)))
                                  (Prims.mk_range "prims.fst"
@@ -2460,7 +2336,7 @@ let fail_atoms :
                                  (Obj.magic
                                     (FStar_Tactics_Effect.tac_bind
                                        (Prims.mk_range
-                                          "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                          "Steel.Effect.Common.fsti"
                                           (Prims.of_int (985))
                                           (Prims.of_int (87))
                                           (Prims.of_int (985))
@@ -2523,13 +2399,13 @@ let rec (equivalent_lists_fallback :
                                          Obj.repr
                                            (FStar_Tactics_Effect.tac_bind
                                               (Prims.mk_range
-                                                 "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                 "Steel.Effect.Common.fsti"
                                                  (Prims.of_int (998))
                                                  (Prims.of_int (9))
                                                  (Prims.of_int (998))
                                                  (Prims.of_int (31)))
                                               (Prims.mk_range
-                                                 "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                 "Steel.Effect.Common.fsti"
                                                  (Prims.of_int (998))
                                                  (Prims.of_int (6))
                                                  (Prims.of_int (1002))
@@ -2553,13 +2429,13 @@ let rec (equivalent_lists_fallback :
                                                         (Obj.repr
                                                            (FStar_Tactics_Effect.tac_bind
                                                               (Prims.mk_range
-                                                                 "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                 "Steel.Effect.Common.fsti"
                                                                  (Prims.of_int (1002))
                                                                  (Prims.of_int (16))
                                                                  (Prims.of_int (1002))
                                                                  (Prims.of_int (84)))
                                                               (Prims.mk_range
-                                                                 "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                 "Steel.Effect.Common.fsti"
                                                                  (Prims.of_int (1002))
                                                                  (Prims.of_int (11))
                                                                  (Prims.of_int (1002))
@@ -2568,7 +2444,7 @@ let rec (equivalent_lists_fallback :
                                                                  (FStar_Tactics_Effect.tac_bind
                                                                     (
                                                                     Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (1002))
                                                                     (Prims.of_int (52))
                                                                     (Prims.of_int (1002))
@@ -2606,13 +2482,13 @@ let rec (equivalent_lists_fallback :
                                          Obj.repr
                                            (FStar_Tactics_Effect.tac_bind
                                               (Prims.mk_range
-                                                 "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                 "Steel.Effect.Common.fsti"
                                                  (Prims.of_int (1003))
                                                  (Prims.of_int (16))
                                                  (Prims.of_int (1003))
                                                  (Prims.of_int (84)))
                                               (Prims.mk_range
-                                                 "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                 "Steel.Effect.Common.fsti"
                                                  (Prims.of_int (1003))
                                                  (Prims.of_int (11))
                                                  (Prims.of_int (1003))
@@ -2620,7 +2496,7 @@ let rec (equivalent_lists_fallback :
                                               (Obj.magic
                                                  (FStar_Tactics_Effect.tac_bind
                                                     (Prims.mk_range
-                                                       "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                       "Steel.Effect.Common.fsti"
                                                        (Prims.of_int (1003))
                                                        (Prims.of_int (52))
                                                        (Prims.of_int (1003))
@@ -2650,13 +2526,13 @@ let rec (equivalent_lists_fallback :
                                  (Obj.repr
                                     (FStar_Tactics_Effect.tac_bind
                                        (Prims.mk_range
-                                          "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                          "Steel.Effect.Common.fsti"
                                           (Prims.of_int (1006))
                                           (Prims.of_int (7))
                                           (Prims.of_int (1006))
                                           (Prims.of_int (25)))
                                        (Prims.mk_range
-                                          "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                          "Steel.Effect.Common.fsti"
                                           (Prims.of_int (1006))
                                           (Prims.of_int (4))
                                           (Prims.of_int (1019))
@@ -2669,13 +2545,13 @@ let rec (equivalent_lists_fallback :
                                                Obj.magic
                                                  (FStar_Tactics_Effect.tac_bind
                                                     (Prims.mk_range
-                                                       "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                       "Steel.Effect.Common.fsti"
                                                        (Prims.of_int (1010))
                                                        (Prims.of_int (6))
                                                        (Prims.of_int (1010))
                                                        (Prims.of_int (51)))
                                                     (Prims.mk_range
-                                                       "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                       "Steel.Effect.Common.fsti"
                                                        (Prims.of_int (1011))
                                                        (Prims.of_int (6))
                                                        (Prims.of_int (1011))
@@ -2696,13 +2572,13 @@ let rec (equivalent_lists_fallback :
                                                Obj.magic
                                                  (FStar_Tactics_Effect.tac_bind
                                                     (Prims.mk_range
-                                                       "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                       "Steel.Effect.Common.fsti"
                                                        (Prims.of_int (1013))
                                                        (Prims.of_int (41))
                                                        (Prims.of_int (1013))
                                                        (Prims.of_int (85)))
                                                     (Prims.mk_range
-                                                       "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                       "Steel.Effect.Common.fsti"
                                                        (Prims.of_int (1013))
                                                        (Prims.of_int (6))
                                                        (Prims.of_int (1019))
@@ -2720,13 +2596,13 @@ let rec (equivalent_lists_fallback :
                                                               Obj.magic
                                                                 (FStar_Tactics_Effect.tac_bind
                                                                    (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (1014))
                                                                     (Prims.of_int (15))
                                                                     (Prims.of_int (1014))
                                                                     (Prims.of_int (35)))
                                                                    (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (1015))
                                                                     (Prims.of_int (6))
                                                                     (Prims.of_int (1019))
@@ -2770,14 +2646,10 @@ let (replace_smt_uvars :
     fun l2 ->
       fun am ->
         FStar_Tactics_Effect.tac_bind
-          (Prims.mk_range
-             "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
-             (Prims.of_int (1023)) (Prims.of_int (14)) (Prims.of_int (1023))
-             (Prims.of_int (24)))
-          (Prims.mk_range
-             "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
-             (Prims.of_int (1024)) (Prims.of_int (4)) (Prims.of_int (1024))
-             (Prims.of_int (52)))
+          (Prims.mk_range "Steel.Effect.Common.fsti" (Prims.of_int (1023))
+             (Prims.of_int (14)) (Prims.of_int (1023)) (Prims.of_int (24)))
+          (Prims.mk_range "Steel.Effect.Common.fsti" (Prims.of_int (1024))
+             (Prims.of_int (4)) (Prims.of_int (1024)) (Prims.of_int (52)))
           (Obj.magic (FStar_Tactics_Derived.cur_env ()))
           (fun uu___ ->
              (fun env ->
@@ -2825,13 +2697,13 @@ let rec (equivalent_lists' :
                                              Obj.repr
                                                (FStar_Tactics_Effect.tac_bind
                                                   (Prims.mk_range
-                                                     "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                     "Steel.Effect.Common.fsti"
                                                      (Prims.of_int (1040))
                                                      (Prims.of_int (9))
                                                      (Prims.of_int (1040))
                                                      (Prims.of_int (31)))
                                                   (Prims.mk_range
-                                                     "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                     "Steel.Effect.Common.fsti"
                                                      (Prims.of_int (1040))
                                                      (Prims.of_int (6))
                                                      (Prims.of_int (1044))
@@ -2856,13 +2728,13 @@ let rec (equivalent_lists' :
                                                             (Obj.repr
                                                                (FStar_Tactics_Effect.tac_bind
                                                                   (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (1044))
                                                                     (Prims.of_int (16))
                                                                     (Prims.of_int (1044))
                                                                     (Prims.of_int (84)))
                                                                   (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (1044))
                                                                     (Prims.of_int (11))
                                                                     (Prims.of_int (1044))
@@ -2870,7 +2742,7 @@ let rec (equivalent_lists' :
                                                                   (Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
                                                                     (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (1044))
                                                                     (Prims.of_int (52))
                                                                     (Prims.of_int (1044))
@@ -2906,13 +2778,13 @@ let rec (equivalent_lists' :
                                              Obj.repr
                                                (FStar_Tactics_Effect.tac_bind
                                                   (Prims.mk_range
-                                                     "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                     "Steel.Effect.Common.fsti"
                                                      (Prims.of_int (1045))
                                                      (Prims.of_int (16))
                                                      (Prims.of_int (1045))
                                                      (Prims.of_int (84)))
                                                   (Prims.mk_range
-                                                     "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                     "Steel.Effect.Common.fsti"
                                                      (Prims.of_int (1045))
                                                      (Prims.of_int (11))
                                                      (Prims.of_int (1045))
@@ -2920,7 +2792,7 @@ let rec (equivalent_lists' :
                                                   (Obj.magic
                                                      (FStar_Tactics_Effect.tac_bind
                                                         (Prims.mk_range
-                                                           "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                           "Steel.Effect.Common.fsti"
                                                            (Prims.of_int (1045))
                                                            (Prims.of_int (52))
                                                            (Prims.of_int (1045))
@@ -2950,13 +2822,13 @@ let rec (equivalent_lists' :
                                      (Obj.repr
                                         (FStar_Tactics_Effect.tac_bind
                                            (Prims.mk_range
-                                              "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                              "Steel.Effect.Common.fsti"
                                               (Prims.of_int (1048))
                                               (Prims.of_int (7))
                                               (Prims.of_int (1048))
                                               (Prims.of_int (25)))
                                            (Prims.mk_range
-                                              "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                              "Steel.Effect.Common.fsti"
                                               (Prims.of_int (1048))
                                               (Prims.of_int (4))
                                               (Prims.of_int (1071))
@@ -2969,13 +2841,13 @@ let rec (equivalent_lists' :
                                                    Obj.magic
                                                      (FStar_Tactics_Effect.tac_bind
                                                         (Prims.mk_range
-                                                           "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                           "Steel.Effect.Common.fsti"
                                                            (Prims.of_int (1052))
                                                            (Prims.of_int (6))
                                                            (Prims.of_int (1052))
                                                            (Prims.of_int (51)))
                                                         (Prims.mk_range
-                                                           "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                           "Steel.Effect.Common.fsti"
                                                            (Prims.of_int (1053))
                                                            (Prims.of_int (6))
                                                            (Prims.of_int (1053))
@@ -2997,13 +2869,13 @@ let rec (equivalent_lists' :
                                                    Obj.magic
                                                      (FStar_Tactics_Effect.tac_bind
                                                         (Prims.mk_range
-                                                           "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                           "Steel.Effect.Common.fsti"
                                                            (Prims.of_int (1055))
                                                            (Prims.of_int (41))
                                                            (Prims.of_int (1055))
                                                            (Prims.of_int (85)))
                                                         (Prims.mk_range
-                                                           "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                           "Steel.Effect.Common.fsti"
                                                            (Prims.of_int (1055))
                                                            (Prims.of_int (6))
                                                            (Prims.of_int (1071))
@@ -3023,13 +2895,13 @@ let rec (equivalent_lists' :
                                                                     (
                                                                     FStar_Tactics_Effect.tac_bind
                                                                     (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (1056))
                                                                     (Prims.of_int (15))
                                                                     (Prims.of_int (1056))
                                                                     (Prims.of_int (35)))
                                                                     (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (1057))
                                                                     (Prims.of_int (6))
                                                                     (Prims.of_int (1071))
@@ -3049,13 +2921,13 @@ let rec (equivalent_lists' :
                                                                     Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
                                                                     (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (1059))
                                                                     (Prims.of_int (43))
                                                                     (Prims.of_int (1059))
                                                                     (Prims.of_int (96)))
                                                                     (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (1057))
                                                                     (Prims.of_int (22))
                                                                     (Prims.of_int (1071))
@@ -3081,13 +2953,13 @@ let rec (equivalent_lists' :
                                                                     Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
                                                                     (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (1060))
                                                                     (Prims.of_int (17))
                                                                     (Prims.of_int (1060))
                                                                     (Prims.of_int (37)))
                                                                     (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (1061))
                                                                     (Prims.of_int (8))
                                                                     (Prims.of_int (1070))
@@ -3110,13 +2982,13 @@ let rec (equivalent_lists' :
                                                                     Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
                                                                     (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (1066))
                                                                     (Prims.of_int (38))
                                                                     (Prims.of_int (1066))
                                                                     (Prims.of_int (68)))
                                                                     (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (1066))
                                                                     (Prims.of_int (12))
                                                                     (Prims.of_int (1068))
@@ -3138,13 +3010,13 @@ let rec (equivalent_lists' :
                                                                     Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
                                                                     (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (1067))
                                                                     (Prims.of_int (32))
                                                                     (Prims.of_int (1067))
                                                                     (Prims.of_int (93)))
                                                                     (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (1067))
                                                                     (Prims.of_int (12))
                                                                     (Prims.of_int (1068))
@@ -3222,12 +3094,10 @@ let rec (unifies_with_all_uvars :
                    Obj.magic
                      (Obj.repr
                         (FStar_Tactics_Effect.tac_bind
-                           (Prims.mk_range
-                              "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                           (Prims.mk_range "Steel.Effect.Common.fsti"
                               (Prims.of_int (1078)) (Prims.of_int (9))
                               (Prims.of_int (1078)) (Prims.of_int (39)))
-                           (Prims.mk_range
-                              "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                           (Prims.mk_range "Steel.Effect.Common.fsti"
                               (Prims.of_int (1078)) (Prims.of_int (6))
                               (Prims.of_int (1086)) (Prims.of_int (18)))
                            (Obj.magic (unifies_with_all_uvars t tl am))
@@ -3239,13 +3109,13 @@ let rec (unifies_with_all_uvars :
                                      (Obj.repr
                                         (FStar_Tactics_Effect.tac_bind
                                            (Prims.mk_range
-                                              "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                              "Steel.Effect.Common.fsti"
                                               (Prims.of_int (1080))
                                               (Prims.of_int (19))
                                               (Prims.of_int (1080))
                                               (Prims.of_int (31)))
                                            (Prims.mk_range
-                                              "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                              "Steel.Effect.Common.fsti"
                                               (Prims.of_int (1081))
                                               (Prims.of_int (8))
                                               (Prims.of_int (1085))
@@ -3257,13 +3127,13 @@ let rec (unifies_with_all_uvars :
                                                  Obj.magic
                                                    (FStar_Tactics_Effect.tac_bind
                                                       (Prims.mk_range
-                                                         "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                         "Steel.Effect.Common.fsti"
                                                          (Prims.of_int (1081))
                                                          (Prims.of_int (11))
                                                          (Prims.of_int (1081))
                                                          (Prims.of_int (23)))
                                                       (Prims.mk_range
-                                                         "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                         "Steel.Effect.Common.fsti"
                                                          (Prims.of_int (1081))
                                                          (Prims.of_int (8))
                                                          (Prims.of_int (1085))
@@ -3285,13 +3155,13 @@ let rec (unifies_with_all_uvars :
                                                                     () ->
                                                                     FStar_Tactics_Effect.tac_bind
                                                                     (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (1083))
                                                                     (Prims.of_int (17))
                                                                     (Prims.of_int (1083))
                                                                     (Prims.of_int (29)))
                                                                     (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (1083))
                                                                     (Prims.of_int (14))
                                                                     (Prims.of_int (1083))
@@ -3365,12 +3235,10 @@ let rec (most_restricted_at_top :
                    Obj.magic
                      (Obj.repr
                         (FStar_Tactics_Effect.tac_bind
-                           (Prims.mk_range
-                              "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                           (Prims.mk_range "Steel.Effect.Common.fsti"
                               (Prims.of_int (1094)) (Prims.of_int (7))
                               (Prims.of_int (1094)) (Prims.of_int (50)))
-                           (Prims.mk_range
-                              "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                           (Prims.mk_range "Steel.Effect.Common.fsti"
                               (Prims.of_int (1094)) (Prims.of_int (4))
                               (Prims.of_int (1095)) (Prims.of_int (46)))
                            (Obj.magic
@@ -3382,13 +3250,13 @@ let rec (most_restricted_at_top :
                                    Obj.magic
                                      (FStar_Tactics_Effect.tac_bind
                                         (Prims.mk_range
-                                           "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                           "Steel.Effect.Common.fsti"
                                            (Prims.of_int (1094))
                                            (Prims.of_int (56))
                                            (Prims.of_int (1094))
                                            (Prims.of_int (89)))
                                         (Prims.mk_range
-                                           "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                           "Steel.Effect.Common.fsti"
                                            (Prims.of_int (1094))
                                            (Prims.of_int (56))
                                            (Prims.of_int (1094))
@@ -3404,13 +3272,13 @@ let rec (most_restricted_at_top :
                                    Obj.magic
                                      (FStar_Tactics_Effect.tac_bind
                                         (Prims.mk_range
-                                           "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                           "Steel.Effect.Common.fsti"
                                            (Prims.of_int (1095))
                                            (Prims.of_int (13))
                                            (Prims.of_int (1095))
                                            (Prims.of_int (46)))
                                         (Prims.mk_range
-                                           "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                           "Steel.Effect.Common.fsti"
                                            (Prims.of_int (1095))
                                            (Prims.of_int (11))
                                            (Prims.of_int (1095))
@@ -3435,26 +3303,21 @@ let (equivalent_lists :
       fun l2 ->
         fun am ->
           FStar_Tactics_Effect.tac_bind
-            (Prims.mk_range
-               "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
-               (Prims.of_int (1104)) (Prims.of_int (31))
-               (Prims.of_int (1104)) (Prims.of_int (55)))
-            (Prims.mk_range
-               "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
-               (Prims.of_int (1104)) (Prims.of_int (2)) (Prims.of_int (1108))
-               (Prims.of_int (39))) (Obj.magic (trivial_cancels l1 l2 am))
+            (Prims.mk_range "Steel.Effect.Common.fsti" (Prims.of_int (1104))
+               (Prims.of_int (31)) (Prims.of_int (1104)) (Prims.of_int (55)))
+            (Prims.mk_range "Steel.Effect.Common.fsti" (Prims.of_int (1104))
+               (Prims.of_int (2)) (Prims.of_int (1108)) (Prims.of_int (39)))
+            (Obj.magic (trivial_cancels l1 l2 am))
             (fun uu___ ->
                (fun uu___ ->
                   match uu___ with
                   | (l11, l21, l1_del, l2_del) ->
                       Obj.magic
                         (FStar_Tactics_Effect.tac_bind
-                           (Prims.mk_range
-                              "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                           (Prims.mk_range "Steel.Effect.Common.fsti"
                               (Prims.of_int (1105)) (Prims.of_int (11))
                               (Prims.of_int (1105)) (Prims.of_int (42)))
-                           (Prims.mk_range
-                              "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                           (Prims.mk_range "Steel.Effect.Common.fsti"
                               (Prims.of_int (1106)) (Prims.of_int (2))
                               (Prims.of_int (1108)) (Prims.of_int (39)))
                            (Obj.magic (most_restricted_at_top l11 l21 am))
@@ -3463,13 +3326,13 @@ let (equivalent_lists :
                                  Obj.magic
                                    (FStar_Tactics_Effect.tac_bind
                                       (Prims.mk_range
-                                         "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                         "Steel.Effect.Common.fsti"
                                          (Prims.of_int (1106))
                                          (Prims.of_int (10))
                                          (Prims.of_int (1106))
                                          (Prims.of_int (28)))
                                       (Prims.mk_range
-                                         "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                         "Steel.Effect.Common.fsti"
                                          (Prims.of_int (1107))
                                          (Prims.of_int (2))
                                          (Prims.of_int (1108))
@@ -3482,13 +3345,13 @@ let (equivalent_lists :
                                             Obj.magic
                                               (FStar_Tactics_Effect.tac_bind
                                                  (Prims.mk_range
-                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                    "Steel.Effect.Common.fsti"
                                                     (Prims.of_int (1107))
                                                     (Prims.of_int (46))
                                                     (Prims.of_int (1107))
                                                     (Prims.of_int (96)))
                                                  (Prims.mk_range
-                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                    "Steel.Effect.Common.fsti"
                                                     (Prims.of_int (1107))
                                                     (Prims.of_int (2))
                                                     (Prims.of_int (1108))
@@ -3524,12 +3387,10 @@ let rec (list_to_string :
            Obj.magic
              (Obj.repr
                 (FStar_Tactics_Effect.tac_bind
-                   (Prims.mk_range
-                      "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                   (Prims.mk_range "Steel.Effect.Common.fsti"
                       (Prims.of_int (1117)) (Prims.of_int (14))
                       (Prims.of_int (1117)) (Prims.of_int (31)))
-                   (Prims.mk_range
-                      "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                   (Prims.mk_range "Steel.Effect.Common.fsti"
                       (Prims.of_int (1117)) (Prims.of_int (14))
                       (Prims.of_int (1117)) (Prims.of_int (57)))
                    (Obj.magic (FStar_Tactics_Builtins.term_to_string hd))
@@ -3537,8 +3398,7 @@ let rec (list_to_string :
                       (fun uu___ ->
                          Obj.magic
                            (FStar_Tactics_Effect.tac_bind
-                              (Prims.mk_range
-                                 "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                              (Prims.mk_range "Steel.Effect.Common.fsti"
                                  (Prims.of_int (1117)) (Prims.of_int (34))
                                  (Prims.of_int (1117)) (Prims.of_int (57)))
                               (Prims.mk_range "prims.fst"
@@ -3547,7 +3407,7 @@ let rec (list_to_string :
                               (Obj.magic
                                  (FStar_Tactics_Effect.tac_bind
                                     (Prims.mk_range
-                                       "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                       "Steel.Effect.Common.fsti"
                                        (Prims.of_int (1117))
                                        (Prims.of_int (40))
                                        (Prims.of_int (1117))
@@ -3661,24 +3521,16 @@ let rec (dismiss_slprops :
   unit -> (unit, unit) FStar_Tactics_Effect.tac_repr) =
   fun uu___ ->
     FStar_Tactics_Effect.tac_bind
-      (Prims.mk_range
-         "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
-         (Prims.of_int (1559)) (Prims.of_int (8)) (Prims.of_int (1559))
-         (Prims.of_int (38)))
-      (Prims.mk_range
-         "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
-         (Prims.of_int (1559)) (Prims.of_int (2)) (Prims.of_int (1561))
-         (Prims.of_int (40)))
+      (Prims.mk_range "Steel.Effect.Common.fsti" (Prims.of_int (1559))
+         (Prims.of_int (8)) (Prims.of_int (1559)) (Prims.of_int (38)))
+      (Prims.mk_range "Steel.Effect.Common.fsti" (Prims.of_int (1559))
+         (Prims.of_int (2)) (Prims.of_int (1561)) (Prims.of_int (40)))
       (Obj.magic
          (FStar_Tactics_Effect.tac_bind
-            (Prims.mk_range
-               "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
-               (Prims.of_int (1559)) (Prims.of_int (25))
-               (Prims.of_int (1559)) (Prims.of_int (38)))
-            (Prims.mk_range
-               "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
-               (Prims.of_int (1559)) (Prims.of_int (8)) (Prims.of_int (1559))
-               (Prims.of_int (38)))
+            (Prims.mk_range "Steel.Effect.Common.fsti" (Prims.of_int (1559))
+               (Prims.of_int (25)) (Prims.of_int (1559)) (Prims.of_int (38)))
+            (Prims.mk_range "Steel.Effect.Common.fsti" (Prims.of_int (1559))
+               (Prims.of_int (8)) (Prims.of_int (1559)) (Prims.of_int (38)))
             (Obj.magic (FStar_Tactics_Derived.cur_goal ()))
             (fun uu___1 ->
                (fun uu___1 ->
@@ -3699,12 +3551,10 @@ let rec (dismiss_slprops :
                       else
                         Obj.repr
                           (FStar_Tactics_Effect.tac_bind
-                             (Prims.mk_range
-                                "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                             (Prims.mk_range "Steel.Effect.Common.fsti"
                                 (Prims.of_int (1560)) (Prims.of_int (55))
                                 (Prims.of_int (1560)) (Prims.of_int (64)))
-                             (Prims.mk_range
-                                "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                             (Prims.mk_range "Steel.Effect.Common.fsti"
                                 (Prims.of_int (1560)) (Prims.of_int (66))
                                 (Prims.of_int (1560)) (Prims.of_int (84)))
                              (Obj.magic (FStar_Tactics_Derived.dismiss ()))
@@ -3715,12 +3565,10 @@ let rec (dismiss_slprops :
                 Obj.magic
                   (Obj.repr
                      (FStar_Tactics_Effect.tac_bind
-                        (Prims.mk_range
-                           "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                        (Prims.mk_range "Steel.Effect.Common.fsti"
                            (Prims.of_int (1561)) (Prims.of_int (11))
                            (Prims.of_int (1561)) (Prims.of_int (20)))
-                        (Prims.mk_range
-                           "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                        (Prims.mk_range "Steel.Effect.Common.fsti"
                            (Prims.of_int (1561)) (Prims.of_int (22))
                            (Prims.of_int (1561)) (Prims.of_int (40)))
                         (Obj.magic (FStar_Tactics_Derived.dismiss ()))
@@ -3739,14 +3587,10 @@ let rec (n_identity_left :
         if n = Prims.int_zero
         then
           FStar_Tactics_Effect.tac_bind
-            (Prims.mk_range
-               "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
-               (Prims.of_int (1566)) (Prims.of_int (6)) (Prims.of_int (1566))
-               (Prims.of_int (48)))
-            (Prims.mk_range
-               "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
-               (Prims.of_int (1568)) (Prims.of_int (6)) (Prims.of_int (1568))
-               (Prims.of_int (18)))
+            (Prims.mk_range "Steel.Effect.Common.fsti" (Prims.of_int (1566))
+               (Prims.of_int (6)) (Prims.of_int (1566)) (Prims.of_int (48)))
+            (Prims.mk_range "Steel.Effect.Common.fsti" (Prims.of_int (1568))
+               (Prims.of_int (6)) (Prims.of_int (1568)) (Prims.of_int (18)))
             (Obj.magic
                (FStar_Tactics_Derived.apply_lemma
                   (FStar_Reflection_Builtins.pack_ln
@@ -3765,14 +3609,10 @@ let rec (n_identity_left :
                  uu___)
         else
           FStar_Tactics_Effect.tac_bind
-            (Prims.mk_range
-               "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
-               (Prims.of_int (1570)) (Prims.of_int (6)) (Prims.of_int (1570))
-               (Prims.of_int (53)))
-            (Prims.mk_range
-               "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
-               (Prims.of_int (1572)) (Prims.of_int (6)) (Prims.of_int (1573))
-               (Prims.of_int (32)))
+            (Prims.mk_range "Steel.Effect.Common.fsti" (Prims.of_int (1570))
+               (Prims.of_int (6)) (Prims.of_int (1570)) (Prims.of_int (53)))
+            (Prims.mk_range "Steel.Effect.Common.fsti" (Prims.of_int (1572))
+               (Prims.of_int (6)) (Prims.of_int (1573)) (Prims.of_int (32)))
             (Obj.magic
                (FStar_Tactics_Derived.apply_lemma
                   (FStar_Reflection_Builtins.pack_ln
@@ -3792,12 +3632,10 @@ let rec (n_identity_left :
                (fun uu___1 ->
                   Obj.magic
                     (FStar_Tactics_Effect.tac_bind
-                       (Prims.mk_range
-                          "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                       (Prims.mk_range "Steel.Effect.Common.fsti"
                           (Prims.of_int (1572)) (Prims.of_int (6))
                           (Prims.of_int (1572)) (Prims.of_int (24)))
-                       (Prims.mk_range
-                          "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                       (Prims.mk_range "Steel.Effect.Common.fsti"
                           (Prims.of_int (1573)) (Prims.of_int (6))
                           (Prims.of_int (1573)) (Prims.of_int (32)))
                        (Obj.magic (dismiss_slprops ()))
@@ -3829,12 +3667,10 @@ let rec (where_aux :
                    Obj.magic
                      (Obj.repr
                         (FStar_Tactics_Effect.tac_bind
-                           (Prims.mk_range
-                              "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                           (Prims.mk_range "Steel.Effect.Common.fsti"
                               (Prims.of_int (1616)) (Prims.of_int (18))
                               (Prims.of_int (1616)) (Prims.of_int (34)))
-                           (Prims.mk_range
-                              "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                           (Prims.mk_range "Steel.Effect.Common.fsti"
                               (Prims.of_int (1616)) (Prims.of_int (15))
                               (Prims.of_int (1616)) (Prims.of_int (73)))
                            (Obj.magic
@@ -3871,14 +3707,11 @@ let (fatom :
     fun ts ->
       fun am ->
         FStar_Tactics_Effect.tac_bind
-          (Prims.mk_range
-             "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
-             (Prims.of_int (1620)) (Prims.of_int (8)) (Prims.of_int (1620))
-             (Prims.of_int (18)))
-          (Prims.mk_range
-             "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
-             (Prims.of_int (1620)) (Prims.of_int (2)) (Prims.of_int (1625))
-             (Prims.of_int (63))) (Obj.magic (where t ts))
+          (Prims.mk_range "Steel.Effect.Common.fsti" (Prims.of_int (1620))
+             (Prims.of_int (8)) (Prims.of_int (1620)) (Prims.of_int (18)))
+          (Prims.mk_range "Steel.Effect.Common.fsti" (Prims.of_int (1620))
+             (Prims.of_int (2)) (Prims.of_int (1625)) (Prims.of_int (63)))
+          (Obj.magic (where t ts))
           (fun uu___ ->
              (fun uu___ ->
                 match uu___ with
@@ -3891,12 +3724,10 @@ let (fatom :
                     Obj.magic
                       (Obj.repr
                          (FStar_Tactics_Effect.tac_bind
-                            (Prims.mk_range
-                               "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                            (Prims.mk_range "Steel.Effect.Common.fsti"
                                (Prims.of_int (1623)) (Prims.of_int (17))
                                (Prims.of_int (1623)) (Prims.of_int (40)))
-                            (Prims.mk_range
-                               "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                            (Prims.mk_range "Steel.Effect.Common.fsti"
                                (Prims.of_int (1624)) (Prims.of_int (4))
                                (Prims.of_int (1625)) (Prims.of_int (63)))
                             (FStar_Tactics_Effect.lift_div_tac
@@ -3906,13 +3737,13 @@ let (fatom :
                                   Obj.magic
                                     (FStar_Tactics_Effect.tac_bind
                                        (Prims.mk_range
-                                          "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                          "Steel.Effect.Common.fsti"
                                           (Prims.of_int (1624))
                                           (Prims.of_int (12))
                                           (Prims.of_int (1624))
                                           (Prims.of_int (36)))
                                        (Prims.mk_range
-                                          "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                          "Steel.Effect.Common.fsti"
                                           (Prims.of_int (1625))
                                           (Prims.of_int (4))
                                           (Prims.of_int (1625))
@@ -3945,12 +3776,10 @@ let rec (reification_aux :
         fun unit ->
           fun t ->
             FStar_Tactics_Effect.tac_bind
-              (Prims.mk_range
-                 "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+              (Prims.mk_range "Steel.Effect.Common.fsti"
                  (Prims.of_int (1633)) (Prims.of_int (15))
                  (Prims.of_int (1633)) (Prims.of_int (32)))
-              (Prims.mk_range
-                 "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+              (Prims.mk_range "Steel.Effect.Common.fsti"
                  (Prims.of_int (1633)) (Prims.of_int (2))
                  (Prims.of_int (1644)) (Prims.of_int (22)))
               (FStar_Tactics_Effect.lift_div_tac
@@ -3962,24 +3791,20 @@ let rec (reification_aux :
                     | (hd, tl) ->
                         Obj.magic
                           (FStar_Tactics_Effect.tac_bind
-                             (Prims.mk_range
-                                "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                             (Prims.mk_range "Steel.Effect.Common.fsti"
                                 (Prims.of_int (1634)) (Prims.of_int (8))
                                 (Prims.of_int (1634)) (Prims.of_int (57)))
-                             (Prims.mk_range
-                                "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                             (Prims.mk_range "Steel.Effect.Common.fsti"
                                 (Prims.of_int (1634)) (Prims.of_int (2))
                                 (Prims.of_int (1644)) (Prims.of_int (22)))
                              (Obj.magic
                                 (FStar_Tactics_Effect.tac_bind
-                                   (Prims.mk_range
-                                      "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                   (Prims.mk_range "Steel.Effect.Common.fsti"
                                       (Prims.of_int (1634))
                                       (Prims.of_int (8))
                                       (Prims.of_int (1634))
                                       (Prims.of_int (28)))
-                                   (Prims.mk_range
-                                      "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                   (Prims.mk_range "Steel.Effect.Common.fsti"
                                       (Prims.of_int (1634))
                                       (Prims.of_int (8))
                                       (Prims.of_int (1634))
@@ -4003,13 +3828,13 @@ let rec (reification_aux :
                                        Obj.magic
                                          (FStar_Tactics_Effect.tac_bind
                                             (Prims.mk_range
-                                               "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                               "Steel.Effect.Common.fsti"
                                                (Prims.of_int (1636))
                                                (Prims.of_int (7))
                                                (Prims.of_int (1636))
                                                (Prims.of_int (43)))
                                             (Prims.mk_range
-                                               "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                               "Steel.Effect.Common.fsti"
                                                (Prims.of_int (1636))
                                                (Prims.of_int (4))
                                                (Prims.of_int (1640))
@@ -4017,13 +3842,13 @@ let rec (reification_aux :
                                             (Obj.magic
                                                (FStar_Tactics_Effect.tac_bind
                                                   (Prims.mk_range
-                                                     "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                     "Steel.Effect.Common.fsti"
                                                      (Prims.of_int (1636))
                                                      (Prims.of_int (19))
                                                      (Prims.of_int (1636))
                                                      (Prims.of_int (38)))
                                                   (Prims.mk_range
-                                                     "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                     "Steel.Effect.Common.fsti"
                                                      (Prims.of_int (1636))
                                                      (Prims.of_int (7))
                                                      (Prims.of_int (1636))
@@ -4045,13 +3870,13 @@ let rec (reification_aux :
                                                     Obj.magic
                                                       (FStar_Tactics_Effect.tac_bind
                                                          (Prims.mk_range
-                                                            "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                            "Steel.Effect.Common.fsti"
                                                             (Prims.of_int (1637))
                                                             (Prims.of_int (29))
                                                             (Prims.of_int (1637))
                                                             (Prims.of_int (63)))
                                                          (Prims.mk_range
-                                                            "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                            "Steel.Effect.Common.fsti"
                                                             (Prims.of_int (1637))
                                                             (Prims.of_int (9))
                                                             (Prims.of_int (1639))
@@ -4069,13 +3894,13 @@ let rec (reification_aux :
                                                                    Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
                                                                     (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (1638))
                                                                     (Prims.of_int (29))
                                                                     (Prims.of_int (1638))
                                                                     (Prims.of_int (63)))
                                                                     (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (1638))
                                                                     (Prims.of_int (10))
                                                                     (Prims.of_int (1639))
@@ -4106,13 +3931,13 @@ let rec (reification_aux :
                                        Obj.magic
                                          (FStar_Tactics_Effect.tac_bind
                                             (Prims.mk_range
-                                               "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                               "Steel.Effect.Common.fsti"
                                                (Prims.of_int (1642))
                                                (Prims.of_int (7))
                                                (Prims.of_int (1642))
                                                (Prims.of_int (25)))
                                             (Prims.mk_range
-                                               "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                               "Steel.Effect.Common.fsti"
                                                (Prims.of_int (1642))
                                                (Prims.of_int (4))
                                                (Prims.of_int (1644))
@@ -4150,12 +3975,10 @@ let (reification :
         fun am ->
           fun t ->
             FStar_Tactics_Effect.tac_bind
-              (Prims.mk_range
-                 "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+              (Prims.mk_range "Steel.Effect.Common.fsti"
                  (Prims.of_int (1649)) (Prims.of_int (13))
                  (Prims.of_int (1649)) (Prims.of_int (63)))
-              (Prims.mk_range
-                 "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+              (Prims.mk_range "Steel.Effect.Common.fsti"
                  (Prims.of_int (1650)) (Prims.of_int (2))
                  (Prims.of_int (1652)) (Prims.of_int (35)))
               (Obj.magic
@@ -4178,12 +4001,10 @@ let (reification :
                  (fun mult ->
                     Obj.magic
                       (FStar_Tactics_Effect.tac_bind
-                         (Prims.mk_range
-                            "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                         (Prims.mk_range "Steel.Effect.Common.fsti"
                             (Prims.of_int (1650)) (Prims.of_int (13))
                             (Prims.of_int (1650)) (Prims.of_int (63)))
-                         (Prims.mk_range
-                            "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                         (Prims.mk_range "Steel.Effect.Common.fsti"
                             (Prims.of_int (1651)) (Prims.of_int (2))
                             (Prims.of_int (1652)) (Prims.of_int (35)))
                          (Obj.magic
@@ -4207,13 +4028,13 @@ let (reification :
                                Obj.magic
                                  (FStar_Tactics_Effect.tac_bind
                                     (Prims.mk_range
-                                       "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                       "Steel.Effect.Common.fsti"
                                        (Prims.of_int (1651))
                                        (Prims.of_int (13))
                                        (Prims.of_int (1651))
                                        (Prims.of_int (37)))
                                     (Prims.mk_range
-                                       "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                       "Steel.Effect.Common.fsti"
                                        (Prims.of_int (1652))
                                        (Prims.of_int (2))
                                        (Prims.of_int (1652))
@@ -4379,14 +4200,10 @@ let (close_equality_typ' :
   =
   fun t ->
     FStar_Tactics_Effect.tac_bind
-      (Prims.mk_range
-         "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
-         (Prims.of_int (1713)) (Prims.of_int (10)) (Prims.of_int (1713))
-         (Prims.of_int (28)))
-      (Prims.mk_range
-         "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
-         (Prims.of_int (1714)) (Prims.of_int (2)) (Prims.of_int (1716))
-         (Prims.of_int (11)))
+      (Prims.mk_range "Steel.Effect.Common.fsti" (Prims.of_int (1713))
+         (Prims.of_int (10)) (Prims.of_int (1713)) (Prims.of_int (28)))
+      (Prims.mk_range "Steel.Effect.Common.fsti" (Prims.of_int (1714))
+         (Prims.of_int (2)) (Prims.of_int (1716)) (Prims.of_int (11)))
       (Obj.magic (FStar_Reflection_Formula.term_as_formula' t))
       (fun uu___ ->
          (fun f ->
@@ -4398,12 +4215,10 @@ let (close_equality_typ' :
                 Obj.magic
                   (Obj.repr
                      (FStar_Tactics_Effect.tac_bind
-                        (Prims.mk_range
-                           "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                        (Prims.mk_range "Steel.Effect.Common.fsti"
                            (Prims.of_int (1715)) (Prims.of_int (33))
                            (Prims.of_int (1715)) (Prims.of_int (42)))
-                        (Prims.mk_range
-                           "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                        (Prims.mk_range "Steel.Effect.Common.fsti"
                            (Prims.of_int (1715)) (Prims.of_int (30))
                            (Prims.of_int (1715)) (Prims.of_int (95)))
                         (Obj.magic (is_uvar u))
@@ -4415,13 +4230,13 @@ let (close_equality_typ' :
                                   (Obj.repr
                                      (FStar_Tactics_Effect.tac_bind
                                         (Prims.mk_range
-                                           "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                           "Steel.Effect.Common.fsti"
                                            (Prims.of_int (1715))
                                            (Prims.of_int (49))
                                            (Prims.of_int (1715))
                                            (Prims.of_int (59)))
                                         (Prims.mk_range
-                                           "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                           "Steel.Effect.Common.fsti"
                                            (Prims.of_int (1715))
                                            (Prims.of_int (61))
                                            (Prims.of_int (1715))
@@ -4433,13 +4248,13 @@ let (close_equality_typ' :
                                               Obj.magic
                                                 (FStar_Tactics_Effect.tac_bind
                                                    (Prims.mk_range
-                                                      "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                      "Steel.Effect.Common.fsti"
                                                       (Prims.of_int (1715))
                                                       (Prims.of_int (76))
                                                       (Prims.of_int (1715))
                                                       (Prims.of_int (94)))
                                                    (Prims.mk_range
-                                                      "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                      "Steel.Effect.Common.fsti"
                                                       (Prims.of_int (1715))
                                                       (Prims.of_int (61))
                                                       (Prims.of_int (1715))
@@ -4447,13 +4262,13 @@ let (close_equality_typ' :
                                                    (Obj.magic
                                                       (FStar_Tactics_Effect.tac_bind
                                                          (Prims.mk_range
-                                                            "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                            "Steel.Effect.Common.fsti"
                                                             (Prims.of_int (1715))
                                                             (Prims.of_int (80))
                                                             (Prims.of_int (1715))
                                                             (Prims.of_int (91)))
                                                          (Prims.mk_range
-                                                            "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                            "Steel.Effect.Common.fsti"
                                                             (Prims.of_int (1715))
                                                             (Prims.of_int (76))
                                                             (Prims.of_int (1715))
@@ -4516,14 +4331,10 @@ let rec (unify_pr_with_true :
   =
   fun pr ->
     FStar_Tactics_Effect.tac_bind
-      (Prims.mk_range
-         "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
-         (Prims.of_int (1790)) (Prims.of_int (15)) (Prims.of_int (1790))
-         (Prims.of_int (29)))
-      (Prims.mk_range
-         "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
-         (Prims.of_int (1790)) (Prims.of_int (2)) (Prims.of_int (1811))
-         (Prims.of_int (73)))
+      (Prims.mk_range "Steel.Effect.Common.fsti" (Prims.of_int (1790))
+         (Prims.of_int (15)) (Prims.of_int (1790)) (Prims.of_int (29)))
+      (Prims.mk_range "Steel.Effect.Common.fsti" (Prims.of_int (1790))
+         (Prims.of_int (2)) (Prims.of_int (1811)) (Prims.of_int (73)))
       (FStar_Tactics_Effect.lift_div_tac
          (fun uu___ -> FStar_Reflection_Derived.collect_app pr))
       (fun uu___ ->
@@ -4536,12 +4347,10 @@ let rec (unify_pr_with_true :
                    | (pr_l, uu___1)::(pr_r, uu___2)::[] ->
                        Obj.magic
                          (FStar_Tactics_Effect.tac_bind
-                            (Prims.mk_range
-                               "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                            (Prims.mk_range "Steel.Effect.Common.fsti"
                                (Prims.of_int (1795)) (Prims.of_int (6))
                                (Prims.of_int (1795)) (Prims.of_int (29)))
-                            (Prims.mk_range
-                               "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                            (Prims.mk_range "Steel.Effect.Common.fsti"
                                (Prims.of_int (1796)) (Prims.of_int (6))
                                (Prims.of_int (1796)) (Prims.of_int (29)))
                             (Obj.magic (unify_pr_with_true pr_l))
@@ -4555,12 +4364,10 @@ let rec (unify_pr_with_true :
                 else
                   Obj.magic
                     (FStar_Tactics_Effect.tac_bind
-                       (Prims.mk_range
-                          "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                       (Prims.mk_range "Steel.Effect.Common.fsti"
                           (Prims.of_int (1799)) (Prims.of_int (10))
                           (Prims.of_int (1799)) (Prims.of_int (30)))
-                       (Prims.mk_range
-                          "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                       (Prims.mk_range "Steel.Effect.Common.fsti"
                           (Prims.of_int (1799)) (Prims.of_int (4))
                           (Prims.of_int (1811)) (Prims.of_int (73)))
                        (Obj.magic
@@ -4574,13 +4381,13 @@ let rec (unify_pr_with_true :
                                    (Obj.repr
                                       (FStar_Tactics_Effect.tac_bind
                                          (Prims.mk_range
-                                            "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                            "Steel.Effect.Common.fsti"
                                             (Prims.of_int (1801))
                                             (Prims.of_int (9))
                                             (Prims.of_int (1801))
                                             (Prims.of_int (27)))
                                          (Prims.mk_range
-                                            "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                            "Steel.Effect.Common.fsti"
                                             (Prims.of_int (1801))
                                             (Prims.of_int (6))
                                             (Prims.of_int (1805))
@@ -4632,14 +4439,10 @@ let rec (set_abduction_variable_term :
   =
   fun pr ->
     FStar_Tactics_Effect.tac_bind
-      (Prims.mk_range
-         "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
-         (Prims.of_int (1831)) (Prims.of_int (15)) (Prims.of_int (1831))
-         (Prims.of_int (29)))
-      (Prims.mk_range
-         "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
-         (Prims.of_int (1831)) (Prims.of_int (2)) (Prims.of_int (1852))
-         (Prims.of_int (54)))
+      (Prims.mk_range "Steel.Effect.Common.fsti" (Prims.of_int (1831))
+         (Prims.of_int (15)) (Prims.of_int (1831)) (Prims.of_int (29)))
+      (Prims.mk_range "Steel.Effect.Common.fsti" (Prims.of_int (1831))
+         (Prims.of_int (2)) (Prims.of_int (1852)) (Prims.of_int (54)))
       (FStar_Tactics_Effect.lift_div_tac
          (fun uu___ -> FStar_Reflection_Derived.collect_app pr))
       (fun uu___ ->
@@ -4659,12 +4462,10 @@ let rec (set_abduction_variable_term :
                        then
                          Obj.magic
                            (FStar_Tactics_Effect.tac_bind
-                              (Prims.mk_range
-                                 "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                              (Prims.mk_range "Steel.Effect.Common.fsti"
                                  (Prims.of_int (1838)) (Prims.of_int (18))
                                  (Prims.of_int (1838)) (Prims.of_int (50)))
-                              (Prims.mk_range
-                                 "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                              (Prims.mk_range "Steel.Effect.Common.fsti"
                                  (Prims.of_int (1839)) (Prims.of_int (8))
                                  (Prims.of_int (1839)) (Prims.of_int (53)))
                               (Obj.magic (set_abduction_variable_term pr_l))
@@ -4689,12 +4490,10 @@ let rec (set_abduction_variable_term :
                          then
                            Obj.magic
                              (FStar_Tactics_Effect.tac_bind
-                                (Prims.mk_range
-                                   "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                (Prims.mk_range "Steel.Effect.Common.fsti"
                                    (Prims.of_int (1842)) (Prims.of_int (18))
                                    (Prims.of_int (1842)) (Prims.of_int (50)))
-                                (Prims.mk_range
-                                   "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                (Prims.mk_range "Steel.Effect.Common.fsti"
                                    (Prims.of_int (1843)) (Prims.of_int (8))
                                    (Prims.of_int (1843)) (Prims.of_int (53)))
                                 (Obj.magic (set_abduction_variable_term pr_r))
@@ -4723,12 +4522,10 @@ let rec (set_abduction_variable_term :
                 else
                   Obj.magic
                     (FStar_Tactics_Effect.tac_bind
-                       (Prims.mk_range
-                          "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                       (Prims.mk_range "Steel.Effect.Common.fsti"
                           (Prims.of_int (1831)) (Prims.of_int (6))
                           (Prims.of_int (1831)) (Prims.of_int (8)))
-                       (Prims.mk_range
-                          "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                       (Prims.mk_range "Steel.Effect.Common.fsti"
                           (Prims.of_int (1849)) (Prims.of_int (4))
                           (Prims.of_int (1852)) (Prims.of_int (54)))
                        (Obj.magic (FStar_Tactics_Builtins.inspect hd))
@@ -4763,24 +4560,19 @@ let (set_abduction_variable :
   unit -> (unit, unit) FStar_Tactics_Effect.tac_repr) =
   fun uu___ ->
     FStar_Tactics_Effect.tac_bind
-      (Prims.mk_range
-         "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
-         (Prims.of_int (1855)) (Prims.of_int (10)) (Prims.of_int (1855))
-         (Prims.of_int (21)))
-      (Prims.mk_range
-         "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
-         (Prims.of_int (1856)) (Prims.of_int (2)) (Prims.of_int (1862))
-         (Prims.of_int (33))) (Obj.magic (FStar_Tactics_Derived.cur_goal ()))
+      (Prims.mk_range "Steel.Effect.Common.fsti" (Prims.of_int (1855))
+         (Prims.of_int (10)) (Prims.of_int (1855)) (Prims.of_int (21)))
+      (Prims.mk_range "Steel.Effect.Common.fsti" (Prims.of_int (1856))
+         (Prims.of_int (2)) (Prims.of_int (1862)) (Prims.of_int (33)))
+      (Obj.magic (FStar_Tactics_Derived.cur_goal ()))
       (fun uu___1 ->
          (fun g ->
             Obj.magic
               (FStar_Tactics_Effect.tac_bind
-                 (Prims.mk_range
-                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                 (Prims.mk_range "Steel.Effect.Common.fsti"
                     (Prims.of_int (1856)) (Prims.of_int (8))
                     (Prims.of_int (1856)) (Prims.of_int (27)))
-                 (Prims.mk_range
-                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                 (Prims.mk_range "Steel.Effect.Common.fsti"
                     (Prims.of_int (1856)) (Prims.of_int (2))
                     (Prims.of_int (1862)) (Prims.of_int (33)))
                  (Obj.magic (FStar_Tactics_Derived.inspect_unascribe g))
@@ -4790,12 +4582,10 @@ let (set_abduction_variable :
                        | FStar_Reflection_Data.Tv_Arrow (b, uu___2) ->
                            Obj.magic
                              (FStar_Tactics_Effect.tac_bind
-                                (Prims.mk_range
-                                   "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                (Prims.mk_range "Steel.Effect.Common.fsti"
                                    (Prims.of_int (1858)) (Prims.of_int (18))
                                    (Prims.of_int (1858)) (Prims.of_int (34)))
-                                (Prims.mk_range
-                                   "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                (Prims.mk_range "Steel.Effect.Common.fsti"
                                    (Prims.of_int (1858)) (Prims.of_int (4))
                                    (Prims.of_int (1861)) (Prims.of_int (42)))
                                 (FStar_Tactics_Effect.lift_div_tac
@@ -4809,13 +4599,13 @@ let (set_abduction_variable :
                                           Obj.magic
                                             (FStar_Tactics_Effect.tac_bind
                                                (Prims.mk_range
-                                                  "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                  "Steel.Effect.Common.fsti"
                                                   (Prims.of_int (1859))
                                                   (Prims.of_int (13))
                                                   (Prims.of_int (1859))
                                                   (Prims.of_int (26)))
                                                (Prims.mk_range
-                                                  "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                  "Steel.Effect.Common.fsti"
                                                   (Prims.of_int (1860))
                                                   (Prims.of_int (4))
                                                   (Prims.of_int (1861))
@@ -4829,13 +4619,13 @@ let (set_abduction_variable :
                                                      Obj.magic
                                                        (FStar_Tactics_Effect.tac_bind
                                                           (Prims.mk_range
-                                                             "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                             "Steel.Effect.Common.fsti"
                                                              (Prims.of_int (1860))
                                                              (Prims.of_int (13))
                                                              (Prims.of_int (1860))
                                                              (Prims.of_int (23)))
                                                           (Prims.mk_range
-                                                             "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                             "Steel.Effect.Common.fsti"
                                                              (Prims.of_int (1861))
                                                              (Prims.of_int (4))
                                                              (Prims.of_int (1861))
@@ -4848,13 +4638,13 @@ let (set_abduction_variable :
                                                                 Obj.magic
                                                                   (FStar_Tactics_Effect.tac_bind
                                                                     (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (1861))
                                                                     (Prims.of_int (10))
                                                                     (Prims.of_int (1861))
                                                                     (Prims.of_int (42)))
                                                                     (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (1861))
                                                                     (Prims.of_int (4))
                                                                     (Prims.of_int (1861))
@@ -4898,12 +4688,10 @@ let (canon_l_r :
                 fun rel ->
                   fun rhs ->
                     FStar_Tactics_Effect.tac_bind
-                      (Prims.mk_range
-                         "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                      (Prims.mk_range "Steel.Effect.Common.fsti"
                          (Prims.of_int (1870)) (Prims.of_int (15))
                          (Prims.of_int (1870)) (Prims.of_int (67)))
-                      (Prims.mk_range
-                         "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                      (Prims.mk_range "Steel.Effect.Common.fsti"
                          (Prims.of_int (1871)) (Prims.of_int (2))
                          (Prims.of_int (2077)) (Prims.of_int (29)))
                       (Obj.magic
@@ -4926,12 +4714,10 @@ let (canon_l_r :
                          (fun m_unit ->
                             Obj.magic
                               (FStar_Tactics_Effect.tac_bind
-                                 (Prims.mk_range
-                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                 (Prims.mk_range "Steel.Effect.Common.fsti"
                                     (Prims.of_int (1871)) (Prims.of_int (15))
                                     (Prims.of_int (1871)) (Prims.of_int (67)))
-                                 (Prims.mk_range
-                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                 (Prims.mk_range "Steel.Effect.Common.fsti"
                                     (Prims.of_int (1873)) (Prims.of_int (2))
                                     (Prims.of_int (2077)) (Prims.of_int (29)))
                                  (Obj.magic
@@ -4956,13 +4742,13 @@ let (canon_l_r :
                                        Obj.magic
                                          (FStar_Tactics_Effect.tac_bind
                                             (Prims.mk_range
-                                               "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                               "Steel.Effect.Common.fsti"
                                                (Prims.of_int (1873))
                                                (Prims.of_int (11))
                                                (Prims.of_int (1873))
                                                (Prims.of_int (23)))
                                             (Prims.mk_range
-                                               "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                               "Steel.Effect.Common.fsti"
                                                (Prims.of_int (1874))
                                                (Prims.of_int (2))
                                                (Prims.of_int (2077))
@@ -4974,13 +4760,13 @@ let (canon_l_r :
                                                   Obj.magic
                                                     (FStar_Tactics_Effect.tac_bind
                                                        (Prims.mk_range
-                                                          "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                          "Steel.Effect.Common.fsti"
                                                           (Prims.of_int (1874))
                                                           (Prims.of_int (25))
                                                           (Prims.of_int (1874))
                                                           (Prims.of_int (51)))
                                                        (Prims.mk_range
-                                                          "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                          "Steel.Effect.Common.fsti"
                                                           (Prims.of_int (1874))
                                                           (Prims.of_int (2))
                                                           (Prims.of_int (2077))
@@ -4996,13 +4782,13 @@ let (canon_l_r :
                                                                  Obj.magic
                                                                    (FStar_Tactics_Effect.tac_bind
                                                                     (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (1875))
                                                                     (Prims.of_int (25))
                                                                     (Prims.of_int (1875))
                                                                     (Prims.of_int (51)))
                                                                     (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (1875))
                                                                     (Prims.of_int (2))
                                                                     (Prims.of_int (2077))
@@ -5024,13 +4810,13 @@ let (canon_l_r :
                                                                     Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
                                                                     (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (1879))
                                                                     (Prims.of_int (4))
                                                                     (Prims.of_int (1884))
                                                                     (Prims.of_int (56)))
                                                                     (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (1878))
                                                                     (Prims.of_int (2))
                                                                     (Prims.of_int (2077))
@@ -5045,13 +4831,13 @@ let (canon_l_r :
                                                                     () ->
                                                                     FStar_Tactics_Effect.tac_bind
                                                                     (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (1880))
                                                                     (Prims.of_int (16))
                                                                     (Prims.of_int (1880))
                                                                     (Prims.of_int (77)))
                                                                     (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (1881))
                                                                     (Prims.of_int (6))
                                                                     (Prims.of_int (1881))
@@ -5117,13 +4903,13 @@ let (canon_l_r :
                                                                     Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
                                                                     (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (1904))
                                                                     (Prims.of_int (33))
                                                                     (Prims.of_int (1906))
                                                                     (Prims.of_int (20)))
                                                                     (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (1908))
                                                                     (Prims.of_int (2))
                                                                     (Prims.of_int (2077))
@@ -5141,13 +4927,13 @@ let (canon_l_r :
                                                                     ->
                                                                     FStar_Tactics_Effect.tac_bind
                                                                     (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (1905))
                                                                     (Prims.of_int (12))
                                                                     (Prims.of_int (1905))
                                                                     (Prims.of_int (62)))
                                                                     (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (1906))
                                                                     (Prims.of_int (4))
                                                                     (Prims.of_int (1906))
@@ -5173,13 +4959,13 @@ let (canon_l_r :
                                                                     Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
                                                                     (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (1908))
                                                                     (Prims.of_int (31))
                                                                     (Prims.of_int (1908))
                                                                     (Prims.of_int (85)))
                                                                     (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (1910))
                                                                     (Prims.of_int (2))
                                                                     (Prims.of_int (2077))
@@ -5187,13 +4973,13 @@ let (canon_l_r :
                                                                     (Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
                                                                     (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (1908))
                                                                     (Prims.of_int (31))
                                                                     (Prims.of_int (1908))
                                                                     (Prims.of_int (77)))
                                                                     (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (1908))
                                                                     (Prims.of_int (31))
                                                                     (Prims.of_int (1908))
@@ -5209,13 +4995,13 @@ let (canon_l_r :
                                                                     ->
                                                                     FStar_Tactics_Effect.tac_bind
                                                                     (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (1908))
                                                                     (Prims.of_int (54))
                                                                     (Prims.of_int (1908))
                                                                     (Prims.of_int (70)))
                                                                     (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (1908))
                                                                     (Prims.of_int (51))
                                                                     (Prims.of_int (1908))
@@ -5248,13 +5034,13 @@ let (canon_l_r :
                                                                     Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
                                                                     (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (1910))
                                                                     (Prims.of_int (34))
                                                                     (Prims.of_int (1914))
                                                                     (Prims.of_int (5)))
                                                                     (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (1916))
                                                                     (Prims.of_int (2))
                                                                     (Prims.of_int (2077))
@@ -5285,13 +5071,13 @@ let (canon_l_r :
                                                                     Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
                                                                     (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (1916))
                                                                     (Prims.of_int (41))
                                                                     (Prims.of_int (1920))
                                                                     (Prims.of_int (5)))
                                                                     (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (1924))
                                                                     (Prims.of_int (2))
                                                                     (Prims.of_int (2077))
@@ -5322,13 +5108,13 @@ let (canon_l_r :
                                                                     Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
                                                                     (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (1924))
                                                                     (Prims.of_int (18))
                                                                     (Prims.of_int (1924))
                                                                     (Prims.of_int (35)))
                                                                     (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (1925))
                                                                     (Prims.of_int (2))
                                                                     (Prims.of_int (2077))
@@ -5346,13 +5132,13 @@ let (canon_l_r :
                                                                     Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
                                                                     (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (1925))
                                                                     (Prims.of_int (18))
                                                                     (Prims.of_int (1925))
                                                                     (Prims.of_int (35)))
                                                                     (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (1927))
                                                                     (Prims.of_int (2))
                                                                     (Prims.of_int (2077))
@@ -5370,13 +5156,13 @@ let (canon_l_r :
                                                                     Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
                                                                     (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (1927))
                                                                     (Prims.of_int (25))
                                                                     (Prims.of_int (1927))
                                                                     (Prims.of_int (43)))
                                                                     (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (1928))
                                                                     (Prims.of_int (2))
                                                                     (Prims.of_int (2077))
@@ -5394,13 +5180,13 @@ let (canon_l_r :
                                                                     Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
                                                                     (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (1928))
                                                                     (Prims.of_int (25))
                                                                     (Prims.of_int (1928))
                                                                     (Prims.of_int (43)))
                                                                     (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (1936))
                                                                     (Prims.of_int (2))
                                                                     (Prims.of_int (2077))
@@ -5418,13 +5204,13 @@ let (canon_l_r :
                                                                     Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
                                                                     (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (1937))
                                                                     (Prims.of_int (4))
                                                                     (Prims.of_int (1937))
                                                                     (Prims.of_int (49)))
                                                                     (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (1939))
                                                                     (Prims.of_int (2))
                                                                     (Prims.of_int (2077))
@@ -5448,13 +5234,13 @@ let (canon_l_r :
                                                                     Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
                                                                     (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (1939))
                                                                     (Prims.of_int (16))
                                                                     (Prims.of_int (1939))
                                                                     (Prims.of_int (42)))
                                                                     (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (1940))
                                                                     (Prims.of_int (2))
                                                                     (Prims.of_int (2077))
@@ -5473,13 +5259,13 @@ let (canon_l_r :
                                                                     Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
                                                                     (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (1940))
                                                                     (Prims.of_int (16))
                                                                     (Prims.of_int (1940))
                                                                     (Prims.of_int (56)))
                                                                     (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (1942))
                                                                     (Prims.of_int (2))
                                                                     (Prims.of_int (2077))
@@ -5498,13 +5284,13 @@ let (canon_l_r :
                                                                     Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
                                                                     (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (1943))
                                                                     (Prims.of_int (4))
                                                                     (Prims.of_int (1943))
                                                                     (Prims.of_int (91)))
                                                                     (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (1947))
                                                                     (Prims.of_int (2))
                                                                     (Prims.of_int (2077))
@@ -5512,13 +5298,13 @@ let (canon_l_r :
                                                                     (Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
                                                                     (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (1943))
                                                                     (Prims.of_int (11))
                                                                     (Prims.of_int (1943))
                                                                     (Prims.of_int (44)))
                                                                     (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (1943))
                                                                     (Prims.of_int (4))
                                                                     (Prims.of_int (1943))
@@ -5547,13 +5333,13 @@ let (canon_l_r :
                                                                     Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
                                                                     (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (1947))
                                                                     (Prims.of_int (17))
                                                                     (Prims.of_int (1951))
                                                                     (Prims.of_int (74)))
                                                                     (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (1956))
                                                                     (Prims.of_int (2))
                                                                     (Prims.of_int (2077))
@@ -5570,13 +5356,13 @@ let (canon_l_r :
                                                                     bv) ->
                                                                     FStar_Tactics_Effect.tac_bind
                                                                     (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (1948))
                                                                     (Prims.of_int (12))
                                                                     (Prims.of_int (1948))
                                                                     (Prims.of_int (40)))
                                                                     (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (1949))
                                                                     (Prims.of_int (4))
                                                                     (Prims.of_int (1951))
@@ -5594,13 +5380,13 @@ let (canon_l_r :
                                                                     Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
                                                                     (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (1949))
                                                                     (Prims.of_int (12))
                                                                     (Prims.of_int (1949))
                                                                     (Prims.of_int (26)))
                                                                     (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (1950))
                                                                     (Prims.of_int (4))
                                                                     (Prims.of_int (1951))
@@ -5617,13 +5403,13 @@ let (canon_l_r :
                                                                     Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
                                                                     (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (1950))
                                                                     (Prims.of_int (12))
                                                                     (Prims.of_int (1950))
                                                                     (Prims.of_int (32)))
                                                                     (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (1951))
                                                                     (Prims.of_int (4))
                                                                     (Prims.of_int (1951))
@@ -5641,13 +5427,13 @@ let (canon_l_r :
                                                                     Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
                                                                     (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (1951))
                                                                     (Prims.of_int (11))
                                                                     (Prims.of_int (1951))
                                                                     (Prims.of_int (47)))
                                                                     (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (1951))
                                                                     (Prims.of_int (4))
                                                                     (Prims.of_int (1951))
@@ -5679,13 +5465,13 @@ let (canon_l_r :
                                                                     Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
                                                                     (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (1956))
                                                                     (Prims.of_int (2))
                                                                     (Prims.of_int (1956))
                                                                     (Prims.of_int (33)))
                                                                     (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (1962))
                                                                     (Prims.of_int (2))
                                                                     (Prims.of_int (2077))
@@ -5710,13 +5496,13 @@ let (canon_l_r :
                                                                     Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
                                                                     (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (1962))
                                                                     (Prims.of_int (2))
                                                                     (Prims.of_int (1962))
                                                                     (Prims.of_int (10)))
                                                                     (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (1966))
                                                                     (Prims.of_int (2))
                                                                     (Prims.of_int (2077))
@@ -5731,13 +5517,13 @@ let (canon_l_r :
                                                                     Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
                                                                     (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (1966))
                                                                     (Prims.of_int (2))
                                                                     (Prims.of_int (2034))
                                                                     (Prims.of_int (8)))
                                                                     (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (2036))
                                                                     (Prims.of_int (2))
                                                                     (Prims.of_int (2077))
@@ -5748,13 +5534,13 @@ let (canon_l_r :
                                                                     uu___6 ->
                                                                     FStar_Tactics_Effect.tac_bind
                                                                     (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (1974))
                                                                     (Prims.of_int (13))
                                                                     (Prims.of_int (1977))
                                                                     (Prims.of_int (49)))
                                                                     (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (1981))
                                                                     (Prims.of_int (4))
                                                                     (Prims.of_int (2034))
@@ -5762,13 +5548,13 @@ let (canon_l_r :
                                                                     (Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
                                                                     (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (1974))
                                                                     (Prims.of_int (13))
                                                                     (Prims.of_int (1977))
                                                                     (Prims.of_int (41)))
                                                                     (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (1974))
                                                                     (Prims.of_int (13))
                                                                     (Prims.of_int (1977))
@@ -5787,13 +5573,13 @@ let (canon_l_r :
                                                                     ->
                                                                     FStar_Tactics_Effect.tac_bind
                                                                     (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (1975))
                                                                     (Prims.of_int (14))
                                                                     (Prims.of_int (1975))
                                                                     (Prims.of_int (29)))
                                                                     (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (1976))
                                                                     (Prims.of_int (6))
                                                                     (Prims.of_int (1977))
@@ -5807,13 +5593,13 @@ let (canon_l_r :
                                                                     Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
                                                                     (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (1976))
                                                                     (Prims.of_int (18))
                                                                     (Prims.of_int (1976))
                                                                     (Prims.of_int (34)))
                                                                     (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (1976))
                                                                     (Prims.of_int (6))
                                                                     (Prims.of_int (1977))
@@ -5836,13 +5622,13 @@ let (canon_l_r :
                                                                     Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
                                                                     (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (1977))
                                                                     (Prims.of_int (6))
                                                                     (Prims.of_int (1977))
                                                                     (Prims.of_int (27)))
                                                                     (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (1977))
                                                                     (Prims.of_int (27))
                                                                     (Prims.of_int (1977))
@@ -5850,13 +5636,13 @@ let (canon_l_r :
                                                                     (Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
                                                                     (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (1977))
                                                                     (Prims.of_int (10))
                                                                     (Prims.of_int (1977))
                                                                     (Prims.of_int (26)))
                                                                     (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (1977))
                                                                     (Prims.of_int (6))
                                                                     (Prims.of_int (1977))
@@ -5901,13 +5687,13 @@ let (canon_l_r :
                                                                     Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
                                                                     (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (1981))
                                                                     (Prims.of_int (12))
                                                                     (Prims.of_int (1981))
                                                                     (Prims.of_int (28)))
                                                                     (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (1985))
                                                                     (Prims.of_int (4))
                                                                     (Prims.of_int (2034))
@@ -5921,13 +5707,13 @@ let (canon_l_r :
                                                                     Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
                                                                     (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (1985))
                                                                     (Prims.of_int (13))
                                                                     (Prims.of_int (1985))
                                                                     (Prims.of_int (26)))
                                                                     (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (1986))
                                                                     (Prims.of_int (4))
                                                                     (Prims.of_int (2034))
@@ -5944,13 +5730,13 @@ let (canon_l_r :
                                                                     Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
                                                                     (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (1986))
                                                                     (Prims.of_int (13))
                                                                     (Prims.of_int (1986))
                                                                     (Prims.of_int (29)))
                                                                     (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (1987))
                                                                     (Prims.of_int (4))
                                                                     (Prims.of_int (2034))
@@ -5967,13 +5753,13 @@ let (canon_l_r :
                                                                     Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
                                                                     (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (1987))
                                                                     (Prims.of_int (13))
                                                                     (Prims.of_int (1987))
                                                                     (Prims.of_int (29)))
                                                                     (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (1989))
                                                                     (Prims.of_int (4))
                                                                     (Prims.of_int (2034))
@@ -5990,13 +5776,13 @@ let (canon_l_r :
                                                                     Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
                                                                     (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (1989))
                                                                     (Prims.of_int (4))
                                                                     (Prims.of_int (1991))
                                                                     (Prims.of_int (54)))
                                                                     (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (1993))
                                                                     (Prims.of_int (4))
                                                                     (Prims.of_int (2034))
@@ -6084,13 +5870,13 @@ let (canon_l_r :
                                                                     Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
                                                                     (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (1993))
                                                                     (Prims.of_int (4))
                                                                     (Prims.of_int (1993))
                                                                     (Prims.of_int (30)))
                                                                     (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (1994))
                                                                     (Prims.of_int (4))
                                                                     (Prims.of_int (2034))
@@ -6111,13 +5897,13 @@ let (canon_l_r :
                                                                     Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
                                                                     (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (1994))
                                                                     (Prims.of_int (4))
                                                                     (Prims.of_int (1994))
                                                                     (Prims.of_int (28)))
                                                                     (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (1996))
                                                                     (Prims.of_int (4))
                                                                     (Prims.of_int (2034))
@@ -6138,13 +5924,13 @@ let (canon_l_r :
                                                                     Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
                                                                     (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (1996))
                                                                     (Prims.of_int (13))
                                                                     (Prims.of_int (1996))
                                                                     (Prims.of_int (31)))
                                                                     (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (1997))
                                                                     (Prims.of_int (4))
                                                                     (Prims.of_int (2034))
@@ -6163,13 +5949,13 @@ let (canon_l_r :
                                                                     Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
                                                                     (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (1997))
                                                                     (Prims.of_int (13))
                                                                     (Prims.of_int (1997))
                                                                     (Prims.of_int (31)))
                                                                     (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (1999))
                                                                     (Prims.of_int (4))
                                                                     (Prims.of_int (2034))
@@ -6188,13 +5974,13 @@ let (canon_l_r :
                                                                     Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
                                                                     (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (1999))
                                                                     (Prims.of_int (4))
                                                                     (Prims.of_int (1999))
                                                                     (Prims.of_int (70)))
                                                                     (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (2001))
                                                                     (Prims.of_int (4))
                                                                     (Prims.of_int (2034))
@@ -6237,13 +6023,13 @@ let (canon_l_r :
                                                                     Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
                                                                     (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (2001))
                                                                     (Prims.of_int (7))
                                                                     (Prims.of_int (2001))
                                                                     (Prims.of_int (37)))
                                                                     (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (2001))
                                                                     (Prims.of_int (4))
                                                                     (Prims.of_int (2034))
@@ -6251,13 +6037,13 @@ let (canon_l_r :
                                                                     (Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
                                                                     (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (2001))
                                                                     (Prims.of_int (7))
                                                                     (Prims.of_int (2001))
                                                                     (Prims.of_int (33)))
                                                                     (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (2001))
                                                                     (Prims.of_int (7))
                                                                     (Prims.of_int (2001))
@@ -6265,13 +6051,13 @@ let (canon_l_r :
                                                                     (Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
                                                                     (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (2001))
                                                                     (Prims.of_int (23))
                                                                     (Prims.of_int (2001))
                                                                     (Prims.of_int (33)))
                                                                     (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (2001))
                                                                     (Prims.of_int (7))
                                                                     (Prims.of_int (2001))
@@ -6317,13 +6103,13 @@ let (canon_l_r :
                                                                     (Obj.repr
                                                                     (FStar_Tactics_Effect.tac_bind
                                                                     (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (2003))
                                                                     (Prims.of_int (6))
                                                                     (Prims.of_int (2017))
                                                                     (Prims.of_int (7)))
                                                                     (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (2021))
                                                                     (Prims.of_int (6))
                                                                     (Prims.of_int (2033))
@@ -6363,13 +6149,13 @@ let (canon_l_r :
                                                                     Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
                                                                     (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (2021))
                                                                     (Prims.of_int (6))
                                                                     (Prims.of_int (2021))
                                                                     (Prims.of_int (14)))
                                                                     (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (2022))
                                                                     (Prims.of_int (6))
                                                                     (Prims.of_int (2033))
@@ -6386,13 +6172,13 @@ let (canon_l_r :
                                                                     Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
                                                                     (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (2022))
                                                                     (Prims.of_int (6))
                                                                     (Prims.of_int (2022))
                                                                     (Prims.of_int (14)))
                                                                     (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (2026))
                                                                     (Prims.of_int (6))
                                                                     (Prims.of_int (2033))
@@ -6409,13 +6195,13 @@ let (canon_l_r :
                                                                     Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
                                                                     (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (2026))
                                                                     (Prims.of_int (6))
                                                                     (Prims.of_int (2026))
                                                                     (Prims.of_int (14)))
                                                                     (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (2027))
                                                                     (Prims.of_int (6))
                                                                     (Prims.of_int (2033))
@@ -6432,13 +6218,13 @@ let (canon_l_r :
                                                                     Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
                                                                     (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (2027))
                                                                     (Prims.of_int (6))
                                                                     (Prims.of_int (2027))
                                                                     (Prims.of_int (14)))
                                                                     (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (2032))
                                                                     (Prims.of_int (6))
                                                                     (Prims.of_int (2033))
@@ -6455,13 +6241,13 @@ let (canon_l_r :
                                                                     Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
                                                                     (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (2032))
                                                                     (Prims.of_int (6))
                                                                     (Prims.of_int (2032))
                                                                     (Prims.of_int (41)))
                                                                     (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (2033))
                                                                     (Prims.of_int (6))
                                                                     (Prims.of_int (2033))
@@ -6483,13 +6269,13 @@ let (canon_l_r :
                                                                     Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
                                                                     (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (2033))
                                                                     (Prims.of_int (12))
                                                                     (Prims.of_int (2033))
                                                                     (Prims.of_int (30)))
                                                                     (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (2033))
                                                                     (Prims.of_int (6))
                                                                     (Prims.of_int (2033))
@@ -6532,13 +6318,13 @@ let (canon_l_r :
                                                                     Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
                                                                     (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (2036))
                                                                     (Prims.of_int (2))
                                                                     (Prims.of_int (2036))
                                                                     (Prims.of_int (19)))
                                                                     (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (2042))
                                                                     (Prims.of_int (2))
                                                                     (Prims.of_int (2077))
@@ -6553,13 +6339,13 @@ let (canon_l_r :
                                                                     Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
                                                                     (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (2042))
                                                                     (Prims.of_int (2))
                                                                     (Prims.of_int (2042))
                                                                     (Prims.of_int (76)))
                                                                     (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (2046))
                                                                     (Prims.of_int (2))
                                                                     (Prims.of_int (2077))
@@ -6567,13 +6353,13 @@ let (canon_l_r :
                                                                     (Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
                                                                     (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (2042))
                                                                     (Prims.of_int (9))
                                                                     (Prims.of_int (2042))
                                                                     (Prims.of_int (76)))
                                                                     (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (2042))
                                                                     (Prims.of_int (2))
                                                                     (Prims.of_int (2042))
@@ -6605,13 +6391,13 @@ let (canon_l_r :
                                                                     Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
                                                                     (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (2046))
                                                                     (Prims.of_int (2))
                                                                     (Prims.of_int (2046))
                                                                     (Prims.of_int (29)))
                                                                     (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (2054))
                                                                     (Prims.of_int (2))
                                                                     (Prims.of_int (2077))
@@ -6648,13 +6434,13 @@ let (canon_l_r :
                                                                     () ->
                                                                     FStar_Tactics_Effect.tac_bind
                                                                     (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (2058))
                                                                     (Prims.of_int (8))
                                                                     (Prims.of_int (2058))
                                                                     (Prims.of_int (31)))
                                                                     (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (2059))
                                                                     (Prims.of_int (8))
                                                                     (Prims.of_int (2063))
@@ -6677,13 +6463,13 @@ let (canon_l_r :
                                                                     Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
                                                                     (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (2059))
                                                                     (Prims.of_int (8))
                                                                     (Prims.of_int (2059))
                                                                     (Prims.of_int (16)))
                                                                     (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (2060))
                                                                     (Prims.of_int (8))
                                                                     (Prims.of_int (2063))
@@ -6700,13 +6486,13 @@ let (canon_l_r :
                                                                     Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
                                                                     (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (2060))
                                                                     (Prims.of_int (8))
                                                                     (Prims.of_int (2061))
                                                                     (Prims.of_int (55)))
                                                                     (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (2062))
                                                                     (Prims.of_int (8))
                                                                     (Prims.of_int (2063))
@@ -6755,13 +6541,13 @@ let (canon_l_r :
                                                                     Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
                                                                     (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (2062))
                                                                     (Prims.of_int (8))
                                                                     (Prims.of_int (2062))
                                                                     (Prims.of_int (29)))
                                                                     (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (2063))
                                                                     (Prims.of_int (8))
                                                                     (Prims.of_int (2063))
@@ -6809,13 +6595,13 @@ let (canon_l_r :
                                                                     Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
                                                                     (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (2069))
                                                                     (Prims.of_int (4))
                                                                     (Prims.of_int (2073))
                                                                     (Prims.of_int (5)))
                                                                     (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (2074))
                                                                     (Prims.of_int (4))
                                                                     (Prims.of_int (2077))
@@ -6863,13 +6649,13 @@ let (canon_l_r :
                                                                     Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
                                                                     (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (2074))
                                                                     (Prims.of_int (4))
                                                                     (Prims.of_int (2074))
                                                                     (Prims.of_int (16)))
                                                                     (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (2075))
                                                                     (Prims.of_int (4))
                                                                     (Prims.of_int (2077))
@@ -6886,13 +6672,13 @@ let (canon_l_r :
                                                                     Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
                                                                     (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (2075))
                                                                     (Prims.of_int (4))
                                                                     (Prims.of_int (2075))
                                                                     (Prims.of_int (35)))
                                                                     (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (2076))
                                                                     (Prims.of_int (4))
                                                                     (Prims.of_int (2077))
@@ -6900,13 +6686,13 @@ let (canon_l_r :
                                                                     (Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
                                                                     (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (2075))
                                                                     (Prims.of_int (23))
                                                                     (Prims.of_int (2075))
                                                                     (Prims.of_int (35)))
                                                                     (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (2075))
                                                                     (Prims.of_int (4))
                                                                     (Prims.of_int (2075))
@@ -6933,13 +6719,13 @@ let (canon_l_r :
                                                                     Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
                                                                     (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (2076))
                                                                     (Prims.of_int (4))
                                                                     (Prims.of_int (2076))
                                                                     (Prims.of_int (13)))
                                                                     (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (2077))
                                                                     (Prims.of_int (4))
                                                                     (Prims.of_int (2077))
@@ -6999,12 +6785,10 @@ let (canon_monoid :
           fun pr ->
             fun pr_bind ->
               FStar_Tactics_Effect.tac_bind
-                (Prims.mk_range
-                   "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                (Prims.mk_range "Steel.Effect.Common.fsti"
                    (Prims.of_int (2082)) (Prims.of_int (2))
                    (Prims.of_int (2082)) (Prims.of_int (19)))
-                (Prims.mk_range
-                   "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                (Prims.mk_range "Steel.Effect.Common.fsti"
                    (Prims.of_int (2083)) (Prims.of_int (2))
                    (Prims.of_int (2102)) (Prims.of_int (68)))
                 (Obj.magic
@@ -7014,12 +6798,10 @@ let (canon_monoid :
                    (fun uu___ ->
                       Obj.magic
                         (FStar_Tactics_Effect.tac_bind
-                           (Prims.mk_range
-                              "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                           (Prims.mk_range "Steel.Effect.Common.fsti"
                               (Prims.of_int (2083)) (Prims.of_int (10))
                               (Prims.of_int (2083)) (Prims.of_int (21)))
-                           (Prims.mk_range
-                              "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                           (Prims.mk_range "Steel.Effect.Common.fsti"
                               (Prims.of_int (2085)) (Prims.of_int (2))
                               (Prims.of_int (2102)) (Prims.of_int (68)))
                            (Obj.magic (FStar_Tactics_Derived.cur_goal ()))
@@ -7028,13 +6810,13 @@ let (canon_monoid :
                                  Obj.magic
                                    (FStar_Tactics_Effect.tac_bind
                                       (Prims.mk_range
-                                         "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                         "Steel.Effect.Common.fsti"
                                          (Prims.of_int (2085))
                                          (Prims.of_int (19))
                                          (Prims.of_int (2085))
                                          (Prims.of_int (36)))
                                       (Prims.mk_range
-                                         "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                         "Steel.Effect.Common.fsti"
                                          (Prims.of_int (2085))
                                          (Prims.of_int (2))
                                          (Prims.of_int (2102))
@@ -7052,13 +6834,13 @@ let (canon_monoid :
                                                      Obj.magic
                                                        (FStar_Tactics_Effect.tac_bind
                                                           (Prims.mk_range
-                                                             "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                             "Steel.Effect.Common.fsti"
                                                              (Prims.of_int (2090))
                                                              (Prims.of_int (21))
                                                              (Prims.of_int (2090))
                                                              (Prims.of_int (43)))
                                                           (Prims.mk_range
-                                                             "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                             "Steel.Effect.Common.fsti"
                                                              (Prims.of_int (2090))
                                                              (Prims.of_int (7))
                                                              (Prims.of_int (2100))
@@ -7129,14 +6911,10 @@ let (canon' :
     fun pr ->
       fun pr_bind ->
         FStar_Tactics_Effect.tac_bind
-          (Prims.mk_range
-             "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
-             (Prims.of_int (2106)) (Prims.of_int (23)) (Prims.of_int (2106))
-             (Prims.of_int (59)))
-          (Prims.mk_range
-             "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
-             (Prims.of_int (2106)) (Prims.of_int (2)) (Prims.of_int (2106))
-             (Prims.of_int (83)))
+          (Prims.mk_range "Steel.Effect.Common.fsti" (Prims.of_int (2106))
+             (Prims.of_int (23)) (Prims.of_int (2106)) (Prims.of_int (59)))
+          (Prims.mk_range "Steel.Effect.Common.fsti" (Prims.of_int (2106))
+             (Prims.of_int (2)) (Prims.of_int (2106)) (Prims.of_int (83)))
           (Obj.magic
              (FStar_Tactics_Builtins.pack
                 (FStar_Reflection_Data.Tv_FVar
@@ -7161,14 +6939,10 @@ let rec (slterm_nbr_uvars :
   =
   fun t ->
     FStar_Tactics_Effect.tac_bind
-      (Prims.mk_range
-         "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
-         (Prims.of_int (2110)) (Prims.of_int (8)) (Prims.of_int (2110))
-         (Prims.of_int (27)))
-      (Prims.mk_range
-         "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
-         (Prims.of_int (2110)) (Prims.of_int (2)) (Prims.of_int (2120))
-         (Prims.of_int (10)))
+      (Prims.mk_range "Steel.Effect.Common.fsti" (Prims.of_int (2110))
+         (Prims.of_int (8)) (Prims.of_int (2110)) (Prims.of_int (27)))
+      (Prims.mk_range "Steel.Effect.Common.fsti" (Prims.of_int (2110))
+         (Prims.of_int (2)) (Prims.of_int (2120)) (Prims.of_int (10)))
       (Obj.magic (FStar_Tactics_Derived.inspect_unascribe t))
       (fun uu___ ->
          (fun uu___ ->
@@ -7182,12 +6956,10 @@ let rec (slterm_nbr_uvars :
                 Obj.magic
                   (Obj.repr
                      (FStar_Tactics_Effect.tac_bind
-                        (Prims.mk_range
-                           "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                        (Prims.mk_range "Steel.Effect.Common.fsti"
                            (Prims.of_int (2113)) (Prims.of_int (19))
                            (Prims.of_int (2113)) (Prims.of_int (32)))
-                        (Prims.mk_range
-                           "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                        (Prims.mk_range "Steel.Effect.Common.fsti"
                            (Prims.of_int (2113)) (Prims.of_int (4))
                            (Prims.of_int (2118)) (Prims.of_int (10)))
                         (FStar_Tactics_Effect.lift_div_tac
@@ -7203,13 +6975,13 @@ let rec (slterm_nbr_uvars :
                                     Obj.magic
                                       (FStar_Tactics_Effect.tac_bind
                                          (Prims.mk_range
-                                            "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                            "Steel.Effect.Common.fsti"
                                             (Prims.of_int (2117))
                                             (Prims.of_int (12))
                                             (Prims.of_int (2117))
                                             (Prims.of_int (22)))
                                          (Prims.mk_range
-                                            "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                            "Steel.Effect.Common.fsti"
                                             (Prims.of_int (2117))
                                             (Prims.of_int (9))
                                             (Prims.of_int (2118))
@@ -7240,12 +7012,10 @@ and (slterm_nbr_uvars_argv :
            match uu___ with
            | (x, uu___1) ->
                FStar_Tactics_Effect.tac_bind
-                 (Prims.mk_range
-                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                 (Prims.mk_range "Steel.Effect.Common.fsti"
                     (Prims.of_int (2123)) (Prims.of_int (33))
                     (Prims.of_int (2123)) (Prims.of_int (51)))
-                 (Prims.mk_range
-                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                 (Prims.mk_range "Steel.Effect.Common.fsti"
                     (Prims.of_int (2123)) (Prims.of_int (29))
                     (Prims.of_int (2123)) (Prims.of_int (51)))
                  (Obj.magic (slterm_nbr_uvars x))
@@ -7258,14 +7028,10 @@ let rec (all_guards_solved :
   =
   fun t ->
     FStar_Tactics_Effect.tac_bind
-      (Prims.mk_range
-         "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
-         (Prims.of_int (2128)) (Prims.of_int (8)) (Prims.of_int (2128))
-         (Prims.of_int (27)))
-      (Prims.mk_range
-         "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
-         (Prims.of_int (2128)) (Prims.of_int (2)) (Prims.of_int (2150))
-         (Prims.of_int (13)))
+      (Prims.mk_range "Steel.Effect.Common.fsti" (Prims.of_int (2128))
+         (Prims.of_int (8)) (Prims.of_int (2128)) (Prims.of_int (27)))
+      (Prims.mk_range "Steel.Effect.Common.fsti" (Prims.of_int (2128))
+         (Prims.of_int (2)) (Prims.of_int (2150)) (Prims.of_int (13)))
       (Obj.magic (FStar_Tactics_Derived.inspect_unascribe t))
       (fun uu___ ->
          (fun uu___ ->
@@ -7276,12 +7042,10 @@ let rec (all_guards_solved :
                 Obj.magic
                   (Obj.repr
                      (FStar_Tactics_Effect.tac_bind
-                        (Prims.mk_range
-                           "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                        (Prims.mk_range "Steel.Effect.Common.fsti"
                            (Prims.of_int (2131)) (Prims.of_int (19))
                            (Prims.of_int (2131)) (Prims.of_int (32)))
-                        (Prims.mk_range
-                           "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                        (Prims.mk_range "Steel.Effect.Common.fsti"
                            (Prims.of_int (2131)) (Prims.of_int (4))
                            (Prims.of_int (2149)) (Prims.of_int (10)))
                         (FStar_Tactics_Effect.lift_div_tac
@@ -7298,13 +7062,13 @@ let rec (all_guards_solved :
                                     Obj.magic
                                       (FStar_Tactics_Effect.tac_bind
                                          (Prims.mk_range
-                                            "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                            "Steel.Effect.Common.fsti"
                                             (Prims.of_int (2134))
                                             (Prims.of_int (6))
                                             (Prims.of_int (2134))
                                             (Prims.of_int (32)))
                                          (Prims.mk_range
-                                            "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                            "Steel.Effect.Common.fsti"
                                             (Prims.of_int (2134))
                                             (Prims.of_int (6))
                                             (Prims.of_int (2134))
@@ -7319,13 +7083,13 @@ let rec (all_guards_solved :
                                     Obj.magic
                                       (FStar_Tactics_Effect.tac_bind
                                          (Prims.mk_range
-                                            "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                            "Steel.Effect.Common.fsti"
                                             (Prims.of_int (2135))
                                             (Prims.of_int (12))
                                             (Prims.of_int (2135))
                                             (Prims.of_int (38)))
                                          (Prims.mk_range
-                                            "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                            "Steel.Effect.Common.fsti"
                                             (Prims.of_int (2135))
                                             (Prims.of_int (9))
                                             (Prims.of_int (2149))
@@ -7333,13 +7097,13 @@ let rec (all_guards_solved :
                                          (Obj.magic
                                             (FStar_Tactics_Effect.tac_bind
                                                (Prims.mk_range
-                                                  "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                  "Steel.Effect.Common.fsti"
                                                   (Prims.of_int (2135))
                                                   (Prims.of_int (16))
                                                   (Prims.of_int (2135))
                                                   (Prims.of_int (38)))
                                                (Prims.mk_range
-                                                  "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                  "Steel.Effect.Common.fsti"
                                                   (Prims.of_int (2135))
                                                   (Prims.of_int (12))
                                                   (Prims.of_int (2135))
@@ -7373,13 +7137,13 @@ let rec (all_guards_solved :
                                                                     ->
                                                                     FStar_Tactics_Effect.tac_bind
                                                                     (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (2141))
                                                                     (Prims.of_int (15))
                                                                     (Prims.of_int (2141))
                                                                     (Prims.of_int (35)))
                                                                     (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (2141))
                                                                     (Prims.of_int (12))
                                                                     (Prims.of_int (2143))
@@ -7426,24 +7190,16 @@ let (unfold_guard : unit -> (Prims.bool, unit) FStar_Tactics_Effect.tac_repr)
   =
   fun uu___ ->
     FStar_Tactics_Effect.tac_bind
-      (Prims.mk_range
-         "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
-         (Prims.of_int (2153)) (Prims.of_int (5)) (Prims.of_int (2153))
-         (Prims.of_int (36)))
-      (Prims.mk_range
-         "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
-         (Prims.of_int (2153)) (Prims.of_int (2)) (Prims.of_int (2158))
-         (Prims.of_int (9)))
+      (Prims.mk_range "Steel.Effect.Common.fsti" (Prims.of_int (2153))
+         (Prims.of_int (5)) (Prims.of_int (2153)) (Prims.of_int (36)))
+      (Prims.mk_range "Steel.Effect.Common.fsti" (Prims.of_int (2153))
+         (Prims.of_int (2)) (Prims.of_int (2158)) (Prims.of_int (9)))
       (Obj.magic
          (FStar_Tactics_Effect.tac_bind
-            (Prims.mk_range
-               "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
-               (Prims.of_int (2153)) (Prims.of_int (23))
-               (Prims.of_int (2153)) (Prims.of_int (36)))
-            (Prims.mk_range
-               "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
-               (Prims.of_int (2153)) (Prims.of_int (5)) (Prims.of_int (2153))
-               (Prims.of_int (36)))
+            (Prims.mk_range "Steel.Effect.Common.fsti" (Prims.of_int (2153))
+               (Prims.of_int (23)) (Prims.of_int (2153)) (Prims.of_int (36)))
+            (Prims.mk_range "Steel.Effect.Common.fsti" (Prims.of_int (2153))
+               (Prims.of_int (5)) (Prims.of_int (2153)) (Prims.of_int (36)))
             (Obj.magic (FStar_Tactics_Derived.cur_goal ()))
             (fun uu___1 ->
                (fun uu___1 -> Obj.magic (all_guards_solved uu___1)) uu___1)))
@@ -7454,12 +7210,10 @@ let (unfold_guard : unit -> (Prims.bool, unit) FStar_Tactics_Effect.tac_repr)
               Obj.magic
                 (Obj.repr
                    (FStar_Tactics_Effect.tac_bind
-                      (Prims.mk_range
-                         "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                      (Prims.mk_range "Steel.Effect.Common.fsti"
                          (Prims.of_int (2155)) (Prims.of_int (4))
                          (Prims.of_int (2155)) (Prims.of_int (56)))
-                      (Prims.mk_range
-                         "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                      (Prims.mk_range "Steel.Effect.Common.fsti"
                          (Prims.of_int (2156)) (Prims.of_int (4))
                          (Prims.of_int (2156)) (Prims.of_int (8)))
                       (Obj.magic
@@ -7483,14 +7237,10 @@ let rec (term_is_uvar :
   fun t ->
     fun i ->
       FStar_Tactics_Effect.tac_bind
-        (Prims.mk_range
-           "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
-           (Prims.of_int (2160)) (Prims.of_int (22)) (Prims.of_int (2160))
-           (Prims.of_int (23)))
-        (Prims.mk_range
-           "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
-           (Prims.of_int (2160)) (Prims.of_int (53)) (Prims.of_int (2165))
-           (Prims.of_int (14)))
+        (Prims.mk_range "Steel.Effect.Common.fsti" (Prims.of_int (2160))
+           (Prims.of_int (22)) (Prims.of_int (2160)) (Prims.of_int (23)))
+        (Prims.mk_range "Steel.Effect.Common.fsti" (Prims.of_int (2160))
+           (Prims.of_int (53)) (Prims.of_int (2165)) (Prims.of_int (14)))
         (Obj.magic (FStar_Tactics_Builtins.inspect t))
         (fun uu___ ->
            (fun uu___ ->
@@ -7504,12 +7254,10 @@ let rec (term_is_uvar :
                   Obj.magic
                     (Obj.repr
                        (FStar_Tactics_Effect.tac_bind
-                          (Prims.mk_range
-                             "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                          (Prims.mk_range "Steel.Effect.Common.fsti"
                              (Prims.of_int (2163)) (Prims.of_int (21))
                              (Prims.of_int (2163)) (Prims.of_int (34)))
-                          (Prims.mk_range
-                             "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                          (Prims.mk_range "Steel.Effect.Common.fsti"
                              (Prims.of_int (2163)) (Prims.of_int (6))
                              (Prims.of_int (2164)) (Prims.of_int (23)))
                           (FStar_Tactics_Effect.lift_div_tac
@@ -7538,14 +7286,11 @@ let (dismiss_all_but_last :
   unit -> (unit, unit) FStar_Tactics_Effect.tac_repr) =
   fun uu___ ->
     FStar_Tactics_Effect.tac_bind
-      (Prims.mk_range
-         "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
-         (Prims.of_int (2177)) (Prims.of_int (24)) (Prims.of_int (2177))
-         (Prims.of_int (34)))
-      (Prims.mk_range
-         "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
-         (Prims.of_int (2177)) (Prims.of_int (2)) (Prims.of_int (2177))
-         (Prims.of_int (34))) (Obj.magic (FStar_Tactics_Derived.goals ()))
+      (Prims.mk_range "Steel.Effect.Common.fsti" (Prims.of_int (2177))
+         (Prims.of_int (24)) (Prims.of_int (2177)) (Prims.of_int (34)))
+      (Prims.mk_range "Steel.Effect.Common.fsti" (Prims.of_int (2177))
+         (Prims.of_int (2)) (Prims.of_int (2177)) (Prims.of_int (34)))
+      (Obj.magic (FStar_Tactics_Derived.goals ()))
       (fun uu___1 ->
          (fun uu___1 -> Obj.magic (dismiss_all_but_last' uu___1)) uu___1)
 let rec (dismiss_non_squash_goals' :
@@ -7559,14 +7304,10 @@ let rec (dismiss_non_squash_goals' :
       | [] -> FStar_Tactics_Builtins.set_goals (FStar_List_Tot_Base.rev keep)
       | hd::tl ->
           FStar_Tactics_Effect.tac_bind
-            (Prims.mk_range
-               "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
-               (Prims.of_int (2184)) (Prims.of_int (13))
-               (Prims.of_int (2184)) (Prims.of_int (44)))
-            (Prims.mk_range
-               "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
-               (Prims.of_int (2185)) (Prims.of_int (5)) (Prims.of_int (2192))
-               (Prims.of_int (40)))
+            (Prims.mk_range "Steel.Effect.Common.fsti" (Prims.of_int (2184))
+               (Prims.of_int (13)) (Prims.of_int (2184)) (Prims.of_int (44)))
+            (Prims.mk_range "Steel.Effect.Common.fsti" (Prims.of_int (2185))
+               (Prims.of_int (5)) (Prims.of_int (2192)) (Prims.of_int (40)))
             (Obj.magic
                (FStar_Reflection_Formula.term_as_formula'
                   (FStar_Tactics_Types.goal_type hd)))
@@ -7584,14 +7325,11 @@ let (dismiss_non_squash_goals :
   unit -> (unit, unit) FStar_Tactics_Effect.tac_repr) =
   fun uu___ ->
     FStar_Tactics_Effect.tac_bind
-      (Prims.mk_range
-         "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
-         (Prims.of_int (2195)) (Prims.of_int (10)) (Prims.of_int (2195))
-         (Prims.of_int (18)))
-      (Prims.mk_range
-         "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
-         (Prims.of_int (2196)) (Prims.of_int (2)) (Prims.of_int (2196))
-         (Prims.of_int (32))) (Obj.magic (FStar_Tactics_Derived.goals ()))
+      (Prims.mk_range "Steel.Effect.Common.fsti" (Prims.of_int (2195))
+         (Prims.of_int (10)) (Prims.of_int (2195)) (Prims.of_int (18)))
+      (Prims.mk_range "Steel.Effect.Common.fsti" (Prims.of_int (2196))
+         (Prims.of_int (2)) (Prims.of_int (2196)) (Prims.of_int (32)))
+      (Obj.magic (FStar_Tactics_Derived.goals ()))
       (fun uu___1 ->
          (fun g -> Obj.magic (dismiss_non_squash_goals' [] g)) uu___1)
 let rec (term_mem :
@@ -7612,12 +7350,10 @@ let rec (term_mem :
                Obj.magic
                  (Obj.repr
                     (FStar_Tactics_Effect.tac_bind
-                       (Prims.mk_range
-                          "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                       (Prims.mk_range "Steel.Effect.Common.fsti"
                           (Prims.of_int (2202)) (Prims.of_int (7))
                           (Prims.of_int (2202)) (Prims.of_int (26)))
-                       (Prims.mk_range
-                          "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                       (Prims.mk_range "Steel.Effect.Common.fsti"
                           (Prims.of_int (2202)) (Prims.of_int (4))
                           (Prims.of_int (2202)) (Prims.of_int (55)))
                        (Obj.magic (FStar_Tactics_Builtins.term_eq_old te t'))
@@ -7657,12 +7393,10 @@ let rec (lookup_by_term_attr' :
                        Obj.magic
                          (Obj.repr
                             (FStar_Tactics_Effect.tac_bind
-                               (Prims.mk_range
-                                  "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                               (Prims.mk_range "Steel.Effect.Common.fsti"
                                   (Prims.of_int (2209)) (Prims.of_int (12))
                                   (Prims.of_int (2209)) (Prims.of_int (24)))
-                               (Prims.mk_range
-                                  "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                               (Prims.mk_range "Steel.Effect.Common.fsti"
                                   (Prims.of_int (2210)) (Prims.of_int (10))
                                   (Prims.of_int (2218)) (Prims.of_int (42)))
                                (FStar_Tactics_Effect.lift_div_tac
@@ -7681,13 +7415,13 @@ let rec (lookup_by_term_attr' :
                                          Obj.magic
                                            (FStar_Tactics_Effect.tac_bind
                                               (Prims.mk_range
-                                                 "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                 "Steel.Effect.Common.fsti"
                                                  (Prims.of_int (2214))
                                                  (Prims.of_int (8))
                                                  (Prims.of_int (2216))
                                                  (Prims.of_int (18)))
                                               (Prims.mk_range
-                                                 "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                 "Steel.Effect.Common.fsti"
                                                  (Prims.of_int (2218))
                                                  (Prims.of_int (6))
                                                  (Prims.of_int (2218))
@@ -7695,13 +7429,13 @@ let rec (lookup_by_term_attr' :
                                               (Obj.magic
                                                  (FStar_Tactics_Effect.tac_bind
                                                     (Prims.mk_range
-                                                       "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                       "Steel.Effect.Common.fsti"
                                                        (Prims.of_int (2214))
                                                        (Prims.of_int (11))
                                                        (Prims.of_int (2214))
                                                        (Prims.of_int (42)))
                                                     (Prims.mk_range
-                                                       "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                       "Steel.Effect.Common.fsti"
                                                        (Prims.of_int (2214))
                                                        (Prims.of_int (8))
                                                        (Prims.of_int (2216))
@@ -7732,25 +7466,19 @@ let (lookup_by_term_attr :
   fun label_attr ->
     fun attr ->
       FStar_Tactics_Effect.tac_bind
-        (Prims.mk_range
-           "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
-           (Prims.of_int (2222)) (Prims.of_int (10)) (Prims.of_int (2222))
-           (Prims.of_int (20)))
-        (Prims.mk_range
-           "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
-           (Prims.of_int (2223)) (Prims.of_int (2)) (Prims.of_int (2224))
-           (Prims.of_int (43)))
+        (Prims.mk_range "Steel.Effect.Common.fsti" (Prims.of_int (2222))
+           (Prims.of_int (10)) (Prims.of_int (2222)) (Prims.of_int (20)))
+        (Prims.mk_range "Steel.Effect.Common.fsti" (Prims.of_int (2223))
+           (Prims.of_int (2)) (Prims.of_int (2224)) (Prims.of_int (43)))
         (Obj.magic (FStar_Tactics_Derived.cur_env ()))
         (fun uu___ ->
            (fun e ->
               Obj.magic
                 (FStar_Tactics_Effect.tac_bind
-                   (Prims.mk_range
-                      "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                   (Prims.mk_range "Steel.Effect.Common.fsti"
                       (Prims.of_int (2223)) (Prims.of_int (19))
                       (Prims.of_int (2223)) (Prims.of_int (43)))
-                   (Prims.mk_range
-                      "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                   (Prims.mk_range "Steel.Effect.Common.fsti"
                       (Prims.of_int (2224)) (Prims.of_int (2))
                       (Prims.of_int (2224)) (Prims.of_int (43)))
                    (FStar_Tactics_Effect.lift_div_tac
@@ -7779,14 +7507,11 @@ let (bring_last_goal_on_top :
   unit -> (unit, unit) FStar_Tactics_Effect.tac_repr) =
   fun uu___ ->
     FStar_Tactics_Effect.tac_bind
-      (Prims.mk_range
-         "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
-         (Prims.of_int (2233)) (Prims.of_int (10)) (Prims.of_int (2233))
-         (Prims.of_int (18)))
-      (Prims.mk_range
-         "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
-         (Prims.of_int (2234)) (Prims.of_int (2)) (Prims.of_int (2234))
-         (Prims.of_int (30))) (Obj.magic (FStar_Tactics_Derived.goals ()))
+      (Prims.mk_range "Steel.Effect.Common.fsti" (Prims.of_int (2233))
+         (Prims.of_int (10)) (Prims.of_int (2233)) (Prims.of_int (18)))
+      (Prims.mk_range "Steel.Effect.Common.fsti" (Prims.of_int (2234))
+         (Prims.of_int (2)) (Prims.of_int (2234)) (Prims.of_int (30)))
+      (Obj.magic (FStar_Tactics_Derived.goals ()))
       (fun uu___1 ->
          (fun g -> Obj.magic (bring_last_goal_on_top' [] g)) uu___1)
 let rec (extract_contexts :
@@ -7805,12 +7530,10 @@ let rec (extract_contexts :
         fun attr ->
           fun t ->
             FStar_Tactics_Effect.tac_bind
-              (Prims.mk_range
-                 "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+              (Prims.mk_range "Steel.Effect.Common.fsti"
                  (Prims.of_int (2241)) (Prims.of_int (15))
                  (Prims.of_int (2241)) (Prims.of_int (28)))
-              (Prims.mk_range
-                 "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+              (Prims.mk_range "Steel.Effect.Common.fsti"
                  (Prims.of_int (2241)) (Prims.of_int (2))
                  (Prims.of_int (2292)) (Prims.of_int (7)))
               (FStar_Tactics_Effect.lift_div_tac
@@ -7831,13 +7554,13 @@ let rec (extract_contexts :
                                     Obj.repr
                                       (FStar_Tactics_Effect.tac_bind
                                          (Prims.mk_range
-                                            "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                            "Steel.Effect.Common.fsti"
                                             (Prims.of_int (2247))
                                             (Prims.of_int (8))
                                             (Prims.of_int (2254))
                                             (Prims.of_int (11)))
                                          (Prims.mk_range
-                                            "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                            "Steel.Effect.Common.fsti"
                                             (Prims.of_int (2256))
                                             (Prims.of_int (12))
                                             (Prims.of_int (2269))
@@ -7847,13 +7570,13 @@ let rec (extract_contexts :
                                                fun uu___2 ->
                                                  FStar_Tactics_Effect.tac_bind
                                                    (Prims.mk_range
-                                                      "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                      "Steel.Effect.Common.fsti"
                                                       (Prims.of_int (2247))
                                                       (Prims.of_int (14))
                                                       (Prims.of_int (2247))
                                                       (Prims.of_int (77)))
                                                    (Prims.mk_range
-                                                      "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                      "Steel.Effect.Common.fsti"
                                                       (Prims.of_int (2247))
                                                       (Prims.of_int (8))
                                                       (Prims.of_int (2254))
@@ -7878,13 +7601,13 @@ let rec (extract_contexts :
                                                                     ->
                                                                     FStar_Tactics_Effect.tac_bind
                                                                     (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (2251))
                                                                     (Prims.of_int (12))
                                                                     (Prims.of_int (2251))
                                                                     (Prims.of_int (35)))
                                                                     (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (2252))
                                                                     (Prims.of_int (12))
                                                                     (Prims.of_int (2253))
@@ -7899,13 +7622,13 @@ let rec (extract_contexts :
                                                                     Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
                                                                     (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (2252))
                                                                     (Prims.of_int (12))
                                                                     (Prims.of_int (2252))
                                                                     (Prims.of_int (35)))
                                                                     (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (2253))
                                                                     (Prims.of_int (12))
                                                                     (Prims.of_int (2253))
@@ -7926,13 +7649,13 @@ let rec (extract_contexts :
                                                Obj.magic
                                                  (FStar_Tactics_Effect.tac_bind
                                                     (Prims.mk_range
-                                                       "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                       "Steel.Effect.Common.fsti"
                                                        (Prims.of_int (2256))
                                                        (Prims.of_int (18))
                                                        (Prims.of_int (2256))
                                                        (Prims.of_int (80)))
                                                     (Prims.mk_range
-                                                       "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                       "Steel.Effect.Common.fsti"
                                                        (Prims.of_int (2256))
                                                        (Prims.of_int (12))
                                                        (Prims.of_int (2269))
@@ -7971,13 +7694,13 @@ let rec (extract_contexts :
                                                                     () ->
                                                                     FStar_Tactics_Effect.tac_bind
                                                                     (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (2261))
                                                                     (Prims.of_int (12))
                                                                     (Prims.of_int (2261))
                                                                     (Prims.of_int (34)))
                                                                     (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (2262))
                                                                     (Prims.of_int (12))
                                                                     (Prims.of_int (2263))
@@ -7992,13 +7715,13 @@ let rec (extract_contexts :
                                                                     Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
                                                                     (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (2262))
                                                                     (Prims.of_int (12))
                                                                     (Prims.of_int (2262))
                                                                     (Prims.of_int (35)))
                                                                     (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (2263))
                                                                     (Prims.of_int (12))
                                                                     (Prims.of_int (2263))
@@ -8018,13 +7741,13 @@ let rec (extract_contexts :
                                                                     uu___4 ->
                                                                     FStar_Tactics_Effect.tac_bind
                                                                     (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (2265))
                                                                     (Prims.of_int (24))
                                                                     (Prims.of_int (2265))
                                                                     (Prims.of_int (40)))
                                                                     (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (2265))
                                                                     (Prims.of_int (18))
                                                                     (Prims.of_int (2267))
@@ -8060,25 +7783,23 @@ let rec (extract_contexts :
                           Obj.magic
                             (Obj.repr
                                (FStar_Tactics_Effect.tac_bind
-                                  (Prims.mk_range
-                                     "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                  (Prims.mk_range "Steel.Effect.Common.fsti"
                                      (Prims.of_int (2274)) (Prims.of_int (6))
                                      (Prims.of_int (2284))
                                      (Prims.of_int (71)))
-                                  (Prims.mk_range
-                                     "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                  (Prims.mk_range "Steel.Effect.Common.fsti"
                                      (Prims.of_int (2286)) (Prims.of_int (4))
                                      (Prims.of_int (2292)) (Prims.of_int (7)))
                                   (Obj.magic
                                      (FStar_Tactics_Effect.tac_bind
                                         (Prims.mk_range
-                                           "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                           "Steel.Effect.Common.fsti"
                                            (Prims.of_int (2274))
                                            (Prims.of_int (18))
                                            (Prims.of_int (2277))
                                            (Prims.of_int (17)))
                                         (Prims.mk_range
-                                           "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                           "Steel.Effect.Common.fsti"
                                            (Prims.of_int (2279))
                                            (Prims.of_int (6))
                                            (Prims.of_int (2284))
@@ -8086,13 +7807,13 @@ let rec (extract_contexts :
                                         (Obj.magic
                                            (FStar_Tactics_Effect.tac_bind
                                               (Prims.mk_range
-                                                 "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                 "Steel.Effect.Common.fsti"
                                                  (Prims.of_int (2274))
                                                  (Prims.of_int (24))
                                                  (Prims.of_int (2274))
                                                  (Prims.of_int (44)))
                                               (Prims.mk_range
-                                                 "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                 "Steel.Effect.Common.fsti"
                                                  (Prims.of_int (2274))
                                                  (Prims.of_int (18))
                                                  (Prims.of_int (2277))
@@ -8129,13 +7850,13 @@ let rec (extract_contexts :
                                                     (Obj.repr
                                                        (FStar_Tactics_Effect.tac_bind
                                                           (Prims.mk_range
-                                                             "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                             "Steel.Effect.Common.fsti"
                                                              (Prims.of_int (2282))
                                                              (Prims.of_int (20))
                                                              (Prims.of_int (2282))
                                                              (Prims.of_int (49)))
                                                           (Prims.mk_range
-                                                             "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                             "Steel.Effect.Common.fsti"
                                                              (Prims.of_int (2283))
                                                              (Prims.of_int (8))
                                                              (Prims.of_int (2284))
@@ -8150,13 +7871,13 @@ let rec (extract_contexts :
                                                                 Obj.magic
                                                                   (FStar_Tactics_Effect.tac_bind
                                                                     (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (2283))
                                                                     (Prims.of_int (19))
                                                                     (Prims.of_int (2283))
                                                                     (Prims.of_int (51)))
                                                                     (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (2284))
                                                                     (Prims.of_int (8))
                                                                     (Prims.of_int (2284))
@@ -8191,13 +7912,13 @@ let rec (extract_contexts :
                                               ((fun uu___4 ->
                                                   FStar_Tactics_Effect.tac_bind
                                                     (Prims.mk_range
-                                                       "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                       "Steel.Effect.Common.fsti"
                                                        (Prims.of_int (2290))
                                                        (Prims.of_int (8))
                                                        (Prims.of_int (2290))
                                                        (Prims.of_int (104)))
                                                     (Prims.mk_range
-                                                       "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                       "Steel.Effect.Common.fsti"
                                                        (Prims.of_int (2291))
                                                        (Prims.of_int (8))
                                                        (Prims.of_int (2291))
@@ -8211,14 +7932,14 @@ let rec (extract_contexts :
                                                                   FStar_Tactics_Effect.tac_bind
                                                                     (
                                                                     Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (2290))
                                                                     (Prims.of_int (60))
                                                                     (Prims.of_int (2290))
                                                                     (Prims.of_int (79)))
                                                                     (
                                                                     Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (2290))
                                                                     (Prims.of_int (48))
                                                                     (Prims.of_int (2290))
@@ -8271,24 +7992,19 @@ let (open_existentials : unit -> (unit, unit) FStar_Tactics_Effect.tac_repr)
   =
   fun uu___ ->
     FStar_Tactics_Effect.tac_bind
-      (Prims.mk_range
-         "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
-         (Prims.of_int (2302)) (Prims.of_int (15)) (Prims.of_int (2302))
-         (Prims.of_int (25)))
-      (Prims.mk_range
-         "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
-         (Prims.of_int (2303)) (Prims.of_int (7)) (Prims.of_int (2326))
-         (Prims.of_int (57))) (Obj.magic (FStar_Tactics_Derived.cur_env ()))
+      (Prims.mk_range "Steel.Effect.Common.fsti" (Prims.of_int (2302))
+         (Prims.of_int (15)) (Prims.of_int (2302)) (Prims.of_int (25)))
+      (Prims.mk_range "Steel.Effect.Common.fsti" (Prims.of_int (2303))
+         (Prims.of_int (7)) (Prims.of_int (2326)) (Prims.of_int (57)))
+      (Obj.magic (FStar_Tactics_Derived.cur_env ()))
       (fun uu___1 ->
          (fun e ->
             Obj.magic
               (FStar_Tactics_Effect.tac_bind
-                 (Prims.mk_range
-                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                 (Prims.mk_range "Steel.Effect.Common.fsti"
                     (Prims.of_int (2303)) (Prims.of_int (7))
                     (Prims.of_int (2304)) (Prims.of_int (66)))
-                 (Prims.mk_range
-                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                 (Prims.mk_range "Steel.Effect.Common.fsti"
                     (Prims.of_int (2305)) (Prims.of_int (7))
                     (Prims.of_int (2326)) (Prims.of_int (57)))
                  (if
@@ -8315,12 +8031,10 @@ let (open_existentials : unit -> (unit, unit) FStar_Tactics_Effect.tac_repr)
                     (fun uu___1 ->
                        Obj.magic
                          (FStar_Tactics_Effect.tac_bind
-                            (Prims.mk_range
-                               "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                            (Prims.mk_range "Steel.Effect.Common.fsti"
                                (Prims.of_int (2305)) (Prims.of_int (7))
                                (Prims.of_int (2305)) (Prims.of_int (39)))
-                            (Prims.mk_range
-                               "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                            (Prims.mk_range "Steel.Effect.Common.fsti"
                                (Prims.of_int (2306)) (Prims.of_int (7))
                                (Prims.of_int (2326)) (Prims.of_int (57)))
                             (Obj.magic
@@ -8332,13 +8046,13 @@ let (open_existentials : unit -> (unit, unit) FStar_Tactics_Effect.tac_repr)
                                   Obj.magic
                                     (FStar_Tactics_Effect.tac_bind
                                        (Prims.mk_range
-                                          "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                          "Steel.Effect.Common.fsti"
                                           (Prims.of_int (2306))
                                           (Prims.of_int (16))
                                           (Prims.of_int (2306))
                                           (Prims.of_int (27)))
                                        (Prims.mk_range
-                                          "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                          "Steel.Effect.Common.fsti"
                                           (Prims.of_int (2307))
                                           (Prims.of_int (7))
                                           (Prims.of_int (2326))
@@ -8357,13 +8071,13 @@ let (open_existentials : unit -> (unit, unit) FStar_Tactics_Effect.tac_repr)
                                                  Obj.magic
                                                    (FStar_Tactics_Effect.tac_bind
                                                       (Prims.mk_range
-                                                         "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                         "Steel.Effect.Common.fsti"
                                                          (Prims.of_int (2309))
                                                          (Prims.of_int (22))
                                                          (Prims.of_int (2309))
                                                          (Prims.of_int (36)))
                                                       (Prims.mk_range
-                                                         "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                         "Steel.Effect.Common.fsti"
                                                          (Prims.of_int (2309))
                                                          (Prims.of_int (9))
                                                          (Prims.of_int (2325))
@@ -8391,13 +8105,13 @@ let (open_existentials : unit -> (unit, unit) FStar_Tactics_Effect.tac_repr)
                                                                     Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
                                                                     (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (2314))
                                                                     (Prims.of_int (25))
                                                                     (Prims.of_int (2314))
                                                                     (Prims.of_int (49)))
                                                                     (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (2314))
                                                                     (Prims.of_int (19))
                                                                     (Prims.of_int (2321))
@@ -8423,13 +8137,13 @@ let (open_existentials : unit -> (unit, unit) FStar_Tactics_Effect.tac_repr)
                                                                     Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
                                                                     (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (2317))
                                                                     (Prims.of_int (17))
                                                                     (Prims.of_int (2317))
                                                                     (Prims.of_int (54)))
                                                                     (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (2318))
                                                                     (Prims.of_int (17))
                                                                     (Prims.of_int (2321))
@@ -8450,13 +8164,13 @@ let (open_existentials : unit -> (unit, unit) FStar_Tactics_Effect.tac_repr)
                                                                     Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
                                                                     (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (2318))
                                                                     (Prims.of_int (17))
                                                                     (Prims.of_int (2318))
                                                                     (Prims.of_int (40)))
                                                                     (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (2319))
                                                                     (Prims.of_int (17))
                                                                     (Prims.of_int (2321))
@@ -8471,13 +8185,13 @@ let (open_existentials : unit -> (unit, unit) FStar_Tactics_Effect.tac_repr)
                                                                     Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
                                                                     (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (2319))
                                                                     (Prims.of_int (17))
                                                                     (Prims.of_int (2319))
                                                                     (Prims.of_int (25)))
                                                                     (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (2320))
                                                                     (Prims.of_int (17))
                                                                     (Prims.of_int (2321))
@@ -8492,13 +8206,13 @@ let (open_existentials : unit -> (unit, unit) FStar_Tactics_Effect.tac_repr)
                                                                     Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
                                                                     (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (2320))
                                                                     (Prims.of_int (17))
                                                                     (Prims.of_int (2320))
                                                                     (Prims.of_int (24)))
                                                                     (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (2321))
                                                                     (Prims.of_int (17))
                                                                     (Prims.of_int (2321))
@@ -8547,12 +8261,10 @@ let (try_open_existentials :
               match () with
               | () ->
                   FStar_Tactics_Effect.tac_bind
-                    (Prims.mk_range
-                       "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                    (Prims.mk_range "Steel.Effect.Common.fsti"
                        (Prims.of_int (2331)) (Prims.of_int (6))
                        (Prims.of_int (2331)) (Prims.of_int (26)))
-                    (Prims.mk_range
-                       "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                    (Prims.mk_range "Steel.Effect.Common.fsti"
                        (Prims.of_int (2332)) (Prims.of_int (6))
                        (Prims.of_int (2332)) (Prims.of_int (10)))
                     (Obj.magic (open_existentials ()))
@@ -8574,12 +8286,10 @@ let rec (solve_can_be_split :
            Obj.magic
              (Obj.repr
                 (FStar_Tactics_Effect.tac_bind
-                   (Prims.mk_range
-                      "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                   (Prims.mk_range "Steel.Effect.Common.fsti"
                       (Prims.of_int (2348)) (Prims.of_int (17))
                       (Prims.of_int (2348)) (Prims.of_int (36)))
-                   (Prims.mk_range
-                      "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                   (Prims.mk_range "Steel.Effect.Common.fsti"
                       (Prims.of_int (2349)) (Prims.of_int (6))
                       (Prims.of_int (2380)) (Prims.of_int (18)))
                    (Obj.magic (slterm_nbr_uvars t1))
@@ -8587,12 +8297,10 @@ let rec (solve_can_be_split :
                       (fun lnbr ->
                          Obj.magic
                            (FStar_Tactics_Effect.tac_bind
-                              (Prims.mk_range
-                                 "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                              (Prims.mk_range "Steel.Effect.Common.fsti"
                                  (Prims.of_int (2349)) (Prims.of_int (17))
                                  (Prims.of_int (2349)) (Prims.of_int (36)))
-                              (Prims.mk_range
-                                 "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                              (Prims.mk_range "Steel.Effect.Common.fsti"
                                  (Prims.of_int (2350)) (Prims.of_int (6))
                                  (Prims.of_int (2380)) (Prims.of_int (18)))
                               (Obj.magic (slterm_nbr_uvars t2))
@@ -8601,13 +8309,13 @@ let rec (solve_can_be_split :
                                     Obj.magic
                                       (FStar_Tactics_Effect.tac_bind
                                          (Prims.mk_range
-                                            "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                            "Steel.Effect.Common.fsti"
                                             (Prims.of_int (2351))
                                             (Prims.of_int (8))
                                             (Prims.of_int (2353))
                                             (Prims.of_int (18)))
                                          (Prims.mk_range
-                                            "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                            "Steel.Effect.Common.fsti"
                                             (Prims.of_int (2350))
                                             (Prims.of_int (6))
                                             (Prims.of_int (2380))
@@ -8633,13 +8341,13 @@ let rec (solve_can_be_split :
                                                             | () ->
                                                                 FStar_Tactics_Effect.tac_bind
                                                                   (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (2357))
                                                                     (Prims.of_int (10))
                                                                     (Prims.of_int (2373))
                                                                     (Prims.of_int (57)))
                                                                   (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (2374))
                                                                     (Prims.of_int (10))
                                                                     (Prims.of_int (2374))
@@ -8650,13 +8358,13 @@ let rec (solve_can_be_split :
                                                                     uu___4 ->
                                                                     FStar_Tactics_Effect.tac_bind
                                                                     (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (2357))
                                                                     (Prims.of_int (26))
                                                                     (Prims.of_int (2357))
                                                                     (Prims.of_int (59)))
                                                                     (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (2358))
                                                                     (Prims.of_int (21))
                                                                     (Prims.of_int (2373))
@@ -8677,13 +8385,13 @@ let rec (solve_can_be_split :
                                                                     Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
                                                                     (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (2358))
                                                                     (Prims.of_int (21))
                                                                     (Prims.of_int (2358))
                                                                     (Prims.of_int (38)))
                                                                     (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (2361))
                                                                     (Prims.of_int (21))
                                                                     (Prims.of_int (2373))
@@ -8711,13 +8419,13 @@ let rec (solve_can_be_split :
                                                                     uu___7 ->
                                                                     FStar_Tactics_Effect.tac_bind
                                                                     (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (2363))
                                                                     (Prims.of_int (22))
                                                                     (Prims.of_int (2363))
                                                                     (Prims.of_int (63)))
                                                                     (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (2365))
                                                                     (Prims.of_int (23))
                                                                     (Prims.of_int (2373))
@@ -8750,13 +8458,13 @@ let rec (solve_can_be_split :
                                                                     Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
                                                                     (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (2365))
                                                                     (Prims.of_int (23))
                                                                     (Prims.of_int (2372))
                                                                     (Prims.of_int (48)))
                                                                     (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (2373))
                                                                     (Prims.of_int (23))
                                                                     (Prims.of_int (2373))
@@ -8811,13 +8519,13 @@ let rec (solve_can_be_split :
                                                          (fun uu___3 ->
                                                             FStar_Tactics_Effect.tac_bind
                                                               (Prims.mk_range
-                                                                 "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                 "Steel.Effect.Common.fsti"
                                                                  (Prims.of_int (2377))
                                                                  (Prims.of_int (28))
                                                                  (Prims.of_int (2377))
                                                                  (Prims.of_int (52)))
                                                               (Prims.mk_range
-                                                                 "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                 "Steel.Effect.Common.fsti"
                                                                  (Prims.of_int (2378))
                                                                  (Prims.of_int (10))
                                                                  (Prims.of_int (2379))
@@ -8863,24 +8571,19 @@ let (solve_can_be_split_dep :
     match args with
     | (p, uu___)::(t1, uu___1)::(t2, uu___2)::[] ->
         FStar_Tactics_Effect.tac_bind
-          (Prims.mk_range
-             "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
-             (Prims.of_int (2388)) (Prims.of_int (17)) (Prims.of_int (2388))
-             (Prims.of_int (36)))
-          (Prims.mk_range
-             "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
-             (Prims.of_int (2389)) (Prims.of_int (6)) (Prims.of_int (2420))
-             (Prims.of_int (18))) (Obj.magic (slterm_nbr_uvars t1))
+          (Prims.mk_range "Steel.Effect.Common.fsti" (Prims.of_int (2388))
+             (Prims.of_int (17)) (Prims.of_int (2388)) (Prims.of_int (36)))
+          (Prims.mk_range "Steel.Effect.Common.fsti" (Prims.of_int (2389))
+             (Prims.of_int (6)) (Prims.of_int (2420)) (Prims.of_int (18)))
+          (Obj.magic (slterm_nbr_uvars t1))
           (fun uu___3 ->
              (fun lnbr ->
                 Obj.magic
                   (FStar_Tactics_Effect.tac_bind
-                     (Prims.mk_range
-                        "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                     (Prims.mk_range "Steel.Effect.Common.fsti"
                         (Prims.of_int (2389)) (Prims.of_int (17))
                         (Prims.of_int (2389)) (Prims.of_int (36)))
-                     (Prims.mk_range
-                        "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                     (Prims.mk_range "Steel.Effect.Common.fsti"
                         (Prims.of_int (2390)) (Prims.of_int (6))
                         (Prims.of_int (2420)) (Prims.of_int (18)))
                      (Obj.magic (slterm_nbr_uvars t2))
@@ -8888,12 +8591,10 @@ let (solve_can_be_split_dep :
                         (fun rnbr ->
                            Obj.magic
                              (FStar_Tactics_Effect.tac_bind
-                                (Prims.mk_range
-                                   "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                (Prims.mk_range "Steel.Effect.Common.fsti"
                                    (Prims.of_int (2391)) (Prims.of_int (8))
                                    (Prims.of_int (2393)) (Prims.of_int (18)))
-                                (Prims.mk_range
-                                   "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                (Prims.mk_range "Steel.Effect.Common.fsti"
                                    (Prims.of_int (2390)) (Prims.of_int (6))
                                    (Prims.of_int (2420)) (Prims.of_int (18)))
                                 (if (lnbr + rnbr) <= Prims.int_one
@@ -8911,13 +8612,13 @@ let (solve_can_be_split_dep :
                                           (Obj.repr
                                              (FStar_Tactics_Effect.tac_bind
                                                 (Prims.mk_range
-                                                   "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                   "Steel.Effect.Common.fsti"
                                                    (Prims.of_int (2396))
                                                    (Prims.of_int (8))
                                                    (Prims.of_int (2416))
                                                    (Prims.of_int (36)))
                                                 (Prims.mk_range
-                                                   "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                   "Steel.Effect.Common.fsti"
                                                    (Prims.of_int (2418))
                                                    (Prims.of_int (8))
                                                    (Prims.of_int (2418))
@@ -8927,13 +8628,13 @@ let (solve_can_be_split_dep :
                                                       (fun uu___4 ->
                                                          FStar_Tactics_Effect.tac_bind
                                                            (Prims.mk_range
-                                                              "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                              "Steel.Effect.Common.fsti"
                                                               (Prims.of_int (2397))
                                                               (Prims.of_int (23))
                                                               (Prims.of_int (2397))
                                                               (Prims.of_int (39)))
                                                            (Prims.mk_range
-                                                              "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                              "Steel.Effect.Common.fsti"
                                                               (Prims.of_int (2398))
                                                               (Prims.of_int (10))
                                                               (Prims.of_int (2416))
@@ -8946,13 +8647,13 @@ let (solve_can_be_split_dep :
                                                                  Obj.magic
                                                                    (FStar_Tactics_Effect.tac_bind
                                                                     (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (2398))
                                                                     (Prims.of_int (10))
                                                                     (Prims.of_int (2398))
                                                                     (Prims.of_int (43)))
                                                                     (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (2399))
                                                                     (Prims.of_int (10))
                                                                     (Prims.of_int (2416))
@@ -8973,13 +8674,13 @@ let (solve_can_be_split_dep :
                                                                     Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
                                                                     (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (2399))
                                                                     (Prims.of_int (10))
                                                                     (Prims.of_int (2399))
                                                                     (Prims.of_int (28)))
                                                                     (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (2400))
                                                                     (Prims.of_int (10))
                                                                     (Prims.of_int (2416))
@@ -8997,13 +8698,13 @@ let (solve_can_be_split_dep :
                                                                     uu___7 ->
                                                                     FStar_Tactics_Effect.tac_bind
                                                                     (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (2402))
                                                                     (Prims.of_int (22))
                                                                     (Prims.of_int (2402))
                                                                     (Prims.of_int (39)))
                                                                     (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (2403))
                                                                     (Prims.of_int (14))
                                                                     (Prims.of_int (2404))
@@ -9024,13 +8725,13 @@ let (solve_can_be_split_dep :
                                                                     Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
                                                                     (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (2403))
                                                                     (Prims.of_int (14))
                                                                     (Prims.of_int (2403))
                                                                     (Prims.of_int (69)))
                                                                     (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (2404))
                                                                     (Prims.of_int (14))
                                                                     (Prims.of_int (2404))
@@ -9069,13 +8770,13 @@ let (solve_can_be_split_dep :
                                                                     uu___7 ->
                                                                     FStar_Tactics_Effect.tac_bind
                                                                     (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (2406))
                                                                     (Prims.of_int (14))
                                                                     (Prims.of_int (2406))
                                                                     (Prims.of_int (68)))
                                                                     (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (2407))
                                                                     (Prims.of_int (14))
                                                                     (Prims.of_int (2416))
@@ -9111,13 +8812,13 @@ let (solve_can_be_split_dep :
                                                                     Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
                                                                     (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (2407))
                                                                     (Prims.of_int (14))
                                                                     (Prims.of_int (2407))
                                                                     (Prims.of_int (54)))
                                                                     (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (2408))
                                                                     (Prims.of_int (14))
                                                                     (Prims.of_int (2416))
@@ -9145,13 +8846,13 @@ let (solve_can_be_split_dep :
                                                                     Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
                                                                     (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (2408))
                                                                     (Prims.of_int (14))
                                                                     (Prims.of_int (2415))
                                                                     (Prims.of_int (39)))
                                                                     (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (2416))
                                                                     (Prims.of_int (14))
                                                                     (Prims.of_int (2416))
@@ -9181,13 +8882,13 @@ let (solve_can_be_split_dep :
                                                                     Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
                                                                     (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (2397))
                                                                     (Prims.of_int (14))
                                                                     (Prims.of_int (2397))
                                                                     (Prims.of_int (20)))
                                                                     (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (2416))
                                                                     (Prims.of_int (14))
                                                                     (Prims.of_int (2416))
@@ -9230,24 +8931,19 @@ let (solve_can_be_split_forall :
     match args with
     | uu___::(t1, uu___1)::(t2, uu___2)::[] ->
         FStar_Tactics_Effect.tac_bind
-          (Prims.mk_range
-             "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
-             (Prims.of_int (2432)) (Prims.of_int (17)) (Prims.of_int (2432))
-             (Prims.of_int (36)))
-          (Prims.mk_range
-             "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
-             (Prims.of_int (2433)) (Prims.of_int (6)) (Prims.of_int (2458))
-             (Prims.of_int (18))) (Obj.magic (slterm_nbr_uvars t1))
+          (Prims.mk_range "Steel.Effect.Common.fsti" (Prims.of_int (2432))
+             (Prims.of_int (17)) (Prims.of_int (2432)) (Prims.of_int (36)))
+          (Prims.mk_range "Steel.Effect.Common.fsti" (Prims.of_int (2433))
+             (Prims.of_int (6)) (Prims.of_int (2458)) (Prims.of_int (18)))
+          (Obj.magic (slterm_nbr_uvars t1))
           (fun uu___3 ->
              (fun lnbr ->
                 Obj.magic
                   (FStar_Tactics_Effect.tac_bind
-                     (Prims.mk_range
-                        "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                     (Prims.mk_range "Steel.Effect.Common.fsti"
                         (Prims.of_int (2433)) (Prims.of_int (17))
                         (Prims.of_int (2433)) (Prims.of_int (36)))
-                     (Prims.mk_range
-                        "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                     (Prims.mk_range "Steel.Effect.Common.fsti"
                         (Prims.of_int (2434)) (Prims.of_int (6))
                         (Prims.of_int (2458)) (Prims.of_int (18)))
                      (Obj.magic (slterm_nbr_uvars t2))
@@ -9255,12 +8951,10 @@ let (solve_can_be_split_forall :
                         (fun rnbr ->
                            Obj.magic
                              (FStar_Tactics_Effect.tac_bind
-                                (Prims.mk_range
-                                   "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                (Prims.mk_range "Steel.Effect.Common.fsti"
                                    (Prims.of_int (2435)) (Prims.of_int (8))
                                    (Prims.of_int (2437)) (Prims.of_int (18)))
-                                (Prims.mk_range
-                                   "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                (Prims.mk_range "Steel.Effect.Common.fsti"
                                    (Prims.of_int (2434)) (Prims.of_int (6))
                                    (Prims.of_int (2458)) (Prims.of_int (18)))
                                 (if (lnbr + rnbr) <= Prims.int_one
@@ -9278,13 +8972,13 @@ let (solve_can_be_split_forall :
                                           (Obj.repr
                                              (FStar_Tactics_Effect.tac_bind
                                                 (Prims.mk_range
-                                                   "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                   "Steel.Effect.Common.fsti"
                                                    (Prims.of_int (2440))
                                                    (Prims.of_int (8))
                                                    (Prims.of_int (2456))
                                                    (Prims.of_int (46)))
                                                 (Prims.mk_range
-                                                   "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                   "Steel.Effect.Common.fsti"
                                                    (Prims.of_int (2457))
                                                    (Prims.of_int (8))
                                                    (Prims.of_int (2457))
@@ -9294,13 +8988,13 @@ let (solve_can_be_split_forall :
                                                       (fun uu___4 ->
                                                          FStar_Tactics_Effect.tac_bind
                                                            (Prims.mk_range
-                                                              "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                              "Steel.Effect.Common.fsti"
                                                               (Prims.of_int (2441))
                                                               (Prims.of_int (10))
                                                               (Prims.of_int (2441))
                                                               (Prims.of_int (33)))
                                                            (Prims.mk_range
-                                                              "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                              "Steel.Effect.Common.fsti"
                                                               (Prims.of_int (2442))
                                                               (Prims.of_int (10))
                                                               (Prims.of_int (2456))
@@ -9308,13 +9002,13 @@ let (solve_can_be_split_forall :
                                                            (Obj.magic
                                                               (FStar_Tactics_Effect.tac_bind
                                                                  (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (2441))
                                                                     (Prims.of_int (17))
                                                                     (Prims.of_int (2441))
                                                                     (Prims.of_int (33)))
                                                                  (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (2441))
                                                                     (Prims.of_int (10))
                                                                     (Prims.of_int (2441))
@@ -9334,13 +9028,13 @@ let (solve_can_be_split_forall :
                                                                  Obj.magic
                                                                    (FStar_Tactics_Effect.tac_bind
                                                                     (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (2442))
                                                                     (Prims.of_int (10))
                                                                     (Prims.of_int (2442))
                                                                     (Prims.of_int (43)))
                                                                     (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (2443))
                                                                     (Prims.of_int (10))
                                                                     (Prims.of_int (2456))
@@ -9361,13 +9055,13 @@ let (solve_can_be_split_forall :
                                                                     Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
                                                                     (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (2443))
                                                                     (Prims.of_int (10))
                                                                     (Prims.of_int (2443))
                                                                     (Prims.of_int (27)))
                                                                     (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (2444))
                                                                     (Prims.of_int (10))
                                                                     (Prims.of_int (2456))
@@ -9395,13 +9089,13 @@ let (solve_can_be_split_forall :
                                                                     uu___8 ->
                                                                     FStar_Tactics_Effect.tac_bind
                                                                     (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (2446))
                                                                     (Prims.of_int (12))
                                                                     (Prims.of_int (2446))
                                                                     (Prims.of_int (66)))
                                                                     (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (2447))
                                                                     (Prims.of_int (12))
                                                                     (Prims.of_int (2456))
@@ -9437,13 +9131,13 @@ let (solve_can_be_split_forall :
                                                                     Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
                                                                     (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (2447))
                                                                     (Prims.of_int (12))
                                                                     (Prims.of_int (2447))
                                                                     (Prims.of_int (52)))
                                                                     (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (2448))
                                                                     (Prims.of_int (12))
                                                                     (Prims.of_int (2456))
@@ -9476,13 +9170,13 @@ let (solve_can_be_split_forall :
                                                                     Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
                                                                     (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (2448))
                                                                     (Prims.of_int (12))
                                                                     (Prims.of_int (2455))
                                                                     (Prims.of_int (37)))
                                                                     (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (2456))
                                                                     (Prims.of_int (12))
                                                                     (Prims.of_int (2456))
@@ -9577,24 +9271,19 @@ let (open_existentials_forall_dep :
   unit -> (unit, unit) FStar_Tactics_Effect.tac_repr) =
   fun uu___ ->
     FStar_Tactics_Effect.tac_bind
-      (Prims.mk_range
-         "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
-         (Prims.of_int (2476)) (Prims.of_int (10)) (Prims.of_int (2476))
-         (Prims.of_int (20)))
-      (Prims.mk_range
-         "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
-         (Prims.of_int (2477)) (Prims.of_int (2)) (Prims.of_int (2515))
-         (Prims.of_int (71))) (Obj.magic (FStar_Tactics_Derived.cur_env ()))
+      (Prims.mk_range "Steel.Effect.Common.fsti" (Prims.of_int (2476))
+         (Prims.of_int (10)) (Prims.of_int (2476)) (Prims.of_int (20)))
+      (Prims.mk_range "Steel.Effect.Common.fsti" (Prims.of_int (2477))
+         (Prims.of_int (2)) (Prims.of_int (2515)) (Prims.of_int (71)))
+      (Obj.magic (FStar_Tactics_Derived.cur_env ()))
       (fun uu___1 ->
          (fun e ->
             Obj.magic
               (FStar_Tactics_Effect.tac_bind
-                 (Prims.mk_range
-                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                 (Prims.mk_range "Steel.Effect.Common.fsti"
                     (Prims.of_int (2477)) (Prims.of_int (2))
                     (Prims.of_int (2478)) (Prims.of_int (61)))
-                 (Prims.mk_range
-                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                 (Prims.mk_range "Steel.Effect.Common.fsti"
                     (Prims.of_int (2479)) (Prims.of_int (2))
                     (Prims.of_int (2515)) (Prims.of_int (71)))
                  (if
@@ -9622,12 +9311,10 @@ let (open_existentials_forall_dep :
                     (fun uu___1 ->
                        Obj.magic
                          (FStar_Tactics_Effect.tac_bind
-                            (Prims.mk_range
-                               "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                            (Prims.mk_range "Steel.Effect.Common.fsti"
                                (Prims.of_int (2479)) (Prims.of_int (2))
                                (Prims.of_int (2487)) (Prims.of_int (3)))
-                            (Prims.mk_range
-                               "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                            (Prims.mk_range "Steel.Effect.Common.fsti"
                                (Prims.of_int (2488)) (Prims.of_int (2))
                                (Prims.of_int (2515)) (Prims.of_int (71)))
                             (Obj.magic
@@ -9644,13 +9331,13 @@ let (open_existentials_forall_dep :
                                   Obj.magic
                                     (FStar_Tactics_Effect.tac_bind
                                        (Prims.mk_range
-                                          "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                          "Steel.Effect.Common.fsti"
                                           (Prims.of_int (2488))
                                           (Prims.of_int (11))
                                           (Prims.of_int (2488))
                                           (Prims.of_int (22)))
                                        (Prims.mk_range
-                                          "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                          "Steel.Effect.Common.fsti"
                                           (Prims.of_int (2489))
                                           (Prims.of_int (2))
                                           (Prims.of_int (2515))
@@ -9669,13 +9356,13 @@ let (open_existentials_forall_dep :
                                                  Obj.magic
                                                    (FStar_Tactics_Effect.tac_bind
                                                       (Prims.mk_range
-                                                         "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                         "Steel.Effect.Common.fsti"
                                                          (Prims.of_int (2491))
                                                          (Prims.of_int (17))
                                                          (Prims.of_int (2491))
                                                          (Prims.of_int (31)))
                                                       (Prims.mk_range
-                                                         "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                         "Steel.Effect.Common.fsti"
                                                          (Prims.of_int (2491))
                                                          (Prims.of_int (4))
                                                          (Prims.of_int (2513))
@@ -9703,13 +9390,13 @@ let (open_existentials_forall_dep :
                                                                     Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
                                                                     (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (2497))
                                                                     (Prims.of_int (20))
                                                                     (Prims.of_int (2497))
                                                                     (Prims.of_int (41)))
                                                                     (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (2497))
                                                                     (Prims.of_int (14))
                                                                     (Prims.of_int (2509))
@@ -9730,13 +9417,13 @@ let (open_existentials_forall_dep :
                                                                     Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
                                                                     (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (2499))
                                                                     (Prims.of_int (22))
                                                                     (Prims.of_int (2499))
                                                                     (Prims.of_int (58)))
                                                                     (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (2499))
                                                                     (Prims.of_int (16))
                                                                     (Prims.of_int (2507))
@@ -9762,13 +9449,13 @@ let (open_existentials_forall_dep :
                                                                     Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
                                                                     (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (2502))
                                                                     (Prims.of_int (12))
                                                                     (Prims.of_int (2502))
                                                                     (Prims.of_int (60)))
                                                                     (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (2503))
                                                                     (Prims.of_int (12))
                                                                     (Prims.of_int (2507))
@@ -9791,13 +9478,13 @@ let (open_existentials_forall_dep :
                                                                     Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
                                                                     (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (2503))
                                                                     (Prims.of_int (12))
                                                                     (Prims.of_int (2503))
                                                                     (Prims.of_int (35)))
                                                                     (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (2504))
                                                                     (Prims.of_int (12))
                                                                     (Prims.of_int (2507))
@@ -9814,13 +9501,13 @@ let (open_existentials_forall_dep :
                                                                     Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
                                                                     (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (2504))
                                                                     (Prims.of_int (12))
                                                                     (Prims.of_int (2504))
                                                                     (Prims.of_int (20)))
                                                                     (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (2505))
                                                                     (Prims.of_int (12))
                                                                     (Prims.of_int (2507))
@@ -9837,13 +9524,13 @@ let (open_existentials_forall_dep :
                                                                     Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
                                                                     (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (2505))
                                                                     (Prims.of_int (12))
                                                                     (Prims.of_int (2505))
                                                                     (Prims.of_int (19)))
                                                                     (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (2506))
                                                                     (Prims.of_int (12))
                                                                     (Prims.of_int (2507))
@@ -9860,13 +9547,13 @@ let (open_existentials_forall_dep :
                                                                     Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
                                                                     (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (2506))
                                                                     (Prims.of_int (12))
                                                                     (Prims.of_int (2506))
                                                                     (Prims.of_int (37)))
                                                                     (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (2507))
                                                                     (Prims.of_int (12))
                                                                     (Prims.of_int (2507))
@@ -9883,13 +9570,13 @@ let (open_existentials_forall_dep :
                                                                     Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
                                                                     (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (2507))
                                                                     (Prims.of_int (15))
                                                                     (Prims.of_int (2507))
                                                                     (Prims.of_int (31)))
                                                                     (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (2507))
                                                                     (Prims.of_int (12))
                                                                     (Prims.of_int (2507))
@@ -9897,13 +9584,13 @@ let (open_existentials_forall_dep :
                                                                     (Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
                                                                     (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (2507))
                                                                     (Prims.of_int (21))
                                                                     (Prims.of_int (2507))
                                                                     (Prims.of_int (31)))
                                                                     (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (2507))
                                                                     (Prims.of_int (15))
                                                                     (Prims.of_int (2507))
@@ -9962,13 +9649,13 @@ let (open_existentials_forall_dep :
                                                                     Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
                                                                     (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (2497))
                                                                     (Prims.of_int (20))
                                                                     (Prims.of_int (2497))
                                                                     (Prims.of_int (41)))
                                                                     (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (2497))
                                                                     (Prims.of_int (14))
                                                                     (Prims.of_int (2509))
@@ -9989,13 +9676,13 @@ let (open_existentials_forall_dep :
                                                                     Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
                                                                     (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (2499))
                                                                     (Prims.of_int (22))
                                                                     (Prims.of_int (2499))
                                                                     (Prims.of_int (58)))
                                                                     (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (2499))
                                                                     (Prims.of_int (16))
                                                                     (Prims.of_int (2507))
@@ -10023,13 +9710,13 @@ let (open_existentials_forall_dep :
                                                                     Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
                                                                     (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (2502))
                                                                     (Prims.of_int (12))
                                                                     (Prims.of_int (2502))
                                                                     (Prims.of_int (60)))
                                                                     (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (2503))
                                                                     (Prims.of_int (12))
                                                                     (Prims.of_int (2507))
@@ -10052,13 +9739,13 @@ let (open_existentials_forall_dep :
                                                                     Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
                                                                     (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (2503))
                                                                     (Prims.of_int (12))
                                                                     (Prims.of_int (2503))
                                                                     (Prims.of_int (35)))
                                                                     (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (2504))
                                                                     (Prims.of_int (12))
                                                                     (Prims.of_int (2507))
@@ -10075,13 +9762,13 @@ let (open_existentials_forall_dep :
                                                                     Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
                                                                     (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (2504))
                                                                     (Prims.of_int (12))
                                                                     (Prims.of_int (2504))
                                                                     (Prims.of_int (20)))
                                                                     (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (2505))
                                                                     (Prims.of_int (12))
                                                                     (Prims.of_int (2507))
@@ -10098,13 +9785,13 @@ let (open_existentials_forall_dep :
                                                                     Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
                                                                     (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (2505))
                                                                     (Prims.of_int (12))
                                                                     (Prims.of_int (2505))
                                                                     (Prims.of_int (19)))
                                                                     (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (2506))
                                                                     (Prims.of_int (12))
                                                                     (Prims.of_int (2507))
@@ -10121,13 +9808,13 @@ let (open_existentials_forall_dep :
                                                                     Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
                                                                     (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (2506))
                                                                     (Prims.of_int (12))
                                                                     (Prims.of_int (2506))
                                                                     (Prims.of_int (37)))
                                                                     (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (2507))
                                                                     (Prims.of_int (12))
                                                                     (Prims.of_int (2507))
@@ -10144,13 +9831,13 @@ let (open_existentials_forall_dep :
                                                                     Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
                                                                     (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (2507))
                                                                     (Prims.of_int (15))
                                                                     (Prims.of_int (2507))
                                                                     (Prims.of_int (31)))
                                                                     (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (2507))
                                                                     (Prims.of_int (12))
                                                                     (Prims.of_int (2507))
@@ -10158,13 +9845,13 @@ let (open_existentials_forall_dep :
                                                                     (Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
                                                                     (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (2507))
                                                                     (Prims.of_int (21))
                                                                     (Prims.of_int (2507))
                                                                     (Prims.of_int (31)))
                                                                     (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (2507))
                                                                     (Prims.of_int (15))
                                                                     (Prims.of_int (2507))
@@ -10241,12 +9928,10 @@ let (try_open_existentials_forall_dep :
               match () with
               | () ->
                   FStar_Tactics_Effect.tac_bind
-                    (Prims.mk_range
-                       "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                    (Prims.mk_range "Steel.Effect.Common.fsti"
                        (Prims.of_int (2521)) (Prims.of_int (6))
                        (Prims.of_int (2521)) (Prims.of_int (37)))
-                    (Prims.mk_range
-                       "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                    (Prims.mk_range "Steel.Effect.Common.fsti"
                        (Prims.of_int (2522)) (Prims.of_int (6))
                        (Prims.of_int (2522)) (Prims.of_int (10)))
                     (Obj.magic (open_existentials_forall_dep ()))
@@ -10265,24 +9950,19 @@ let rec (solve_can_be_split_forall_dep :
     match args with
     | uu___::(pr, uu___1)::(t1, uu___2)::(t2, uu___3)::[] ->
         FStar_Tactics_Effect.tac_bind
-          (Prims.mk_range
-             "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
-             (Prims.of_int (2530)) (Prims.of_int (17)) (Prims.of_int (2530))
-             (Prims.of_int (36)))
-          (Prims.mk_range
-             "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
-             (Prims.of_int (2531)) (Prims.of_int (6)) (Prims.of_int (2575))
-             (Prims.of_int (18))) (Obj.magic (slterm_nbr_uvars t1))
+          (Prims.mk_range "Steel.Effect.Common.fsti" (Prims.of_int (2530))
+             (Prims.of_int (17)) (Prims.of_int (2530)) (Prims.of_int (36)))
+          (Prims.mk_range "Steel.Effect.Common.fsti" (Prims.of_int (2531))
+             (Prims.of_int (6)) (Prims.of_int (2575)) (Prims.of_int (18)))
+          (Obj.magic (slterm_nbr_uvars t1))
           (fun uu___4 ->
              (fun lnbr ->
                 Obj.magic
                   (FStar_Tactics_Effect.tac_bind
-                     (Prims.mk_range
-                        "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                     (Prims.mk_range "Steel.Effect.Common.fsti"
                         (Prims.of_int (2531)) (Prims.of_int (17))
                         (Prims.of_int (2531)) (Prims.of_int (36)))
-                     (Prims.mk_range
-                        "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                     (Prims.mk_range "Steel.Effect.Common.fsti"
                         (Prims.of_int (2532)) (Prims.of_int (6))
                         (Prims.of_int (2575)) (Prims.of_int (18)))
                      (Obj.magic (slterm_nbr_uvars t2))
@@ -10290,12 +9970,10 @@ let rec (solve_can_be_split_forall_dep :
                         (fun rnbr ->
                            Obj.magic
                              (FStar_Tactics_Effect.tac_bind
-                                (Prims.mk_range
-                                   "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                (Prims.mk_range "Steel.Effect.Common.fsti"
                                    (Prims.of_int (2533)) (Prims.of_int (8))
                                    (Prims.of_int (2535)) (Prims.of_int (18)))
-                                (Prims.mk_range
-                                   "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                (Prims.mk_range "Steel.Effect.Common.fsti"
                                    (Prims.of_int (2532)) (Prims.of_int (6))
                                    (Prims.of_int (2575)) (Prims.of_int (18)))
                                 (if (lnbr + rnbr) <= Prims.int_one
@@ -10317,13 +9995,13 @@ let rec (solve_can_be_split_forall_dep :
                                                    | () ->
                                                        FStar_Tactics_Effect.tac_bind
                                                          (Prims.mk_range
-                                                            "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                            "Steel.Effect.Common.fsti"
                                                             (Prims.of_int (2539))
                                                             (Prims.of_int (9))
                                                             (Prims.of_int (2563))
                                                             (Prims.of_int (37)))
                                                          (Prims.mk_range
-                                                            "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                            "Steel.Effect.Common.fsti"
                                                             (Prims.of_int (2565))
                                                             (Prims.of_int (9))
                                                             (Prims.of_int (2565))
@@ -10334,14 +10012,14 @@ let rec (solve_can_be_split_forall_dep :
                                                                   FStar_Tactics_Effect.tac_bind
                                                                     (
                                                                     Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (2540))
                                                                     (Prims.of_int (10))
                                                                     (Prims.of_int (2540))
                                                                     (Prims.of_int (17)))
                                                                     (
                                                                     Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (2541))
                                                                     (Prims.of_int (10))
                                                                     (Prims.of_int (2563))
@@ -10358,13 +10036,13 @@ let rec (solve_can_be_split_forall_dep :
                                                                     Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
                                                                     (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (2541))
                                                                     (Prims.of_int (18))
                                                                     (Prims.of_int (2541))
                                                                     (Prims.of_int (33)))
                                                                     (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (2542))
                                                                     (Prims.of_int (10))
                                                                     (Prims.of_int (2563))
@@ -10378,13 +10056,13 @@ let rec (solve_can_be_split_forall_dep :
                                                                     Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
                                                                     (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (2542))
                                                                     (Prims.of_int (19))
                                                                     (Prims.of_int (2542))
                                                                     (Prims.of_int (61)))
                                                                     (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (2543))
                                                                     (Prims.of_int (10))
                                                                     (Prims.of_int (2563))
@@ -10392,13 +10070,13 @@ let rec (solve_can_be_split_forall_dep :
                                                                     (Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
                                                                     (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (2542))
                                                                     (Prims.of_int (29))
                                                                     (Prims.of_int (2542))
                                                                     (Prims.of_int (61)))
                                                                     (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (2542))
                                                                     (Prims.of_int (19))
                                                                     (Prims.of_int (2542))
@@ -10406,13 +10084,13 @@ let rec (solve_can_be_split_forall_dep :
                                                                     (Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
                                                                     (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (2542))
                                                                     (Prims.of_int (30))
                                                                     (Prims.of_int (2542))
                                                                     (Prims.of_int (60)))
                                                                     (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (2542))
                                                                     (Prims.of_int (29))
                                                                     (Prims.of_int (2542))
@@ -10420,13 +10098,13 @@ let rec (solve_can_be_split_forall_dep :
                                                                     (Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
                                                                     (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (2542))
                                                                     (Prims.of_int (31))
                                                                     (Prims.of_int (2542))
                                                                     (Prims.of_int (47)))
                                                                     (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (2542))
                                                                     (Prims.of_int (30))
                                                                     (Prims.of_int (2542))
@@ -10461,13 +10139,13 @@ let rec (solve_can_be_split_forall_dep :
                                                                     Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
                                                                     (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (2543))
                                                                     (Prims.of_int (23))
                                                                     (Prims.of_int (2543))
                                                                     (Prims.of_int (39)))
                                                                     (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (2544))
                                                                     (Prims.of_int (10))
                                                                     (Prims.of_int (2563))
@@ -10482,13 +10160,13 @@ let rec (solve_can_be_split_forall_dep :
                                                                     Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
                                                                     (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (2544))
                                                                     (Prims.of_int (10))
                                                                     (Prims.of_int (2544))
                                                                     (Prims.of_int (43)))
                                                                     (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (2545))
                                                                     (Prims.of_int (10))
                                                                     (Prims.of_int (2563))
@@ -10509,13 +10187,13 @@ let rec (solve_can_be_split_forall_dep :
                                                                     Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
                                                                     (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (2545))
                                                                     (Prims.of_int (10))
                                                                     (Prims.of_int (2545))
                                                                     (Prims.of_int (49)))
                                                                     (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (2546))
                                                                     (Prims.of_int (10))
                                                                     (Prims.of_int (2563))
@@ -10543,13 +10221,13 @@ let rec (solve_can_be_split_forall_dep :
                                                                     Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
                                                                     (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (2546))
                                                                     (Prims.of_int (19))
                                                                     (Prims.of_int (2546))
                                                                     (Prims.of_int (34)))
                                                                     (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (2547))
                                                                     (Prims.of_int (10))
                                                                     (Prims.of_int (2563))
@@ -10569,13 +10247,13 @@ let rec (solve_can_be_split_forall_dep :
                                                                     ->
                                                                     FStar_Tactics_Effect.tac_bind
                                                                     (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (2549))
                                                                     (Prims.of_int (22))
                                                                     (Prims.of_int (2549))
                                                                     (Prims.of_int (40)))
                                                                     (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (2550))
                                                                     (Prims.of_int (14))
                                                                     (Prims.of_int (2551))
@@ -10597,13 +10275,13 @@ let rec (solve_can_be_split_forall_dep :
                                                                     Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
                                                                     (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (2550))
                                                                     (Prims.of_int (14))
                                                                     (Prims.of_int (2550))
                                                                     (Prims.of_int (69)))
                                                                     (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (2551))
                                                                     (Prims.of_int (14))
                                                                     (Prims.of_int (2551))
@@ -10645,13 +10323,13 @@ let rec (solve_can_be_split_forall_dep :
                                                                     ->
                                                                     FStar_Tactics_Effect.tac_bind
                                                                     (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (2553))
                                                                     (Prims.of_int (14))
                                                                     (Prims.of_int (2553))
                                                                     (Prims.of_int (68)))
                                                                     (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (2554))
                                                                     (Prims.of_int (14))
                                                                     (Prims.of_int (2563))
@@ -10689,13 +10367,13 @@ let rec (solve_can_be_split_forall_dep :
                                                                     Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
                                                                     (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (2554))
                                                                     (Prims.of_int (14))
                                                                     (Prims.of_int (2554))
                                                                     (Prims.of_int (54)))
                                                                     (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (2555))
                                                                     (Prims.of_int (14))
                                                                     (Prims.of_int (2563))
@@ -10728,13 +10406,13 @@ let rec (solve_can_be_split_forall_dep :
                                                                     Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
                                                                     (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (2555))
                                                                     (Prims.of_int (14))
                                                                     (Prims.of_int (2562))
                                                                     (Prims.of_int (39)))
                                                                     (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (2563))
                                                                     (Prims.of_int (14))
                                                                     (Prims.of_int (2563))
@@ -10764,13 +10442,13 @@ let rec (solve_can_be_split_forall_dep :
                                                                     Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
                                                                     (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (2543))
                                                                     (Prims.of_int (14))
                                                                     (Prims.of_int (2543))
                                                                     (Prims.of_int (20)))
                                                                     (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (2563))
                                                                     (Prims.of_int (14))
                                                                     (Prims.of_int (2563))
@@ -10818,13 +10496,13 @@ let rec (solve_can_be_split_forall_dep :
                                                             (Obj.repr
                                                                (FStar_Tactics_Effect.tac_bind
                                                                   (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (2570))
                                                                     (Prims.of_int (22))
                                                                     (Prims.of_int (2570))
                                                                     (Prims.of_int (57)))
                                                                   (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (2571))
                                                                     (Prims.of_int (9))
                                                                     (Prims.of_int (2573))
@@ -10869,24 +10547,19 @@ let (solve_equiv_forall :
     match args with
     | uu___::(t1, uu___1)::(t2, uu___2)::[] ->
         FStar_Tactics_Effect.tac_bind
-          (Prims.mk_range
-             "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
-             (Prims.of_int (2583)) (Prims.of_int (17)) (Prims.of_int (2583))
-             (Prims.of_int (36)))
-          (Prims.mk_range
-             "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
-             (Prims.of_int (2584)) (Prims.of_int (6)) (Prims.of_int (2612))
-             (Prims.of_int (18))) (Obj.magic (slterm_nbr_uvars t1))
+          (Prims.mk_range "Steel.Effect.Common.fsti" (Prims.of_int (2583))
+             (Prims.of_int (17)) (Prims.of_int (2583)) (Prims.of_int (36)))
+          (Prims.mk_range "Steel.Effect.Common.fsti" (Prims.of_int (2584))
+             (Prims.of_int (6)) (Prims.of_int (2612)) (Prims.of_int (18)))
+          (Obj.magic (slterm_nbr_uvars t1))
           (fun uu___3 ->
              (fun lnbr ->
                 Obj.magic
                   (FStar_Tactics_Effect.tac_bind
-                     (Prims.mk_range
-                        "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                     (Prims.mk_range "Steel.Effect.Common.fsti"
                         (Prims.of_int (2584)) (Prims.of_int (17))
                         (Prims.of_int (2584)) (Prims.of_int (36)))
-                     (Prims.mk_range
-                        "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                     (Prims.mk_range "Steel.Effect.Common.fsti"
                         (Prims.of_int (2585)) (Prims.of_int (6))
                         (Prims.of_int (2612)) (Prims.of_int (18)))
                      (Obj.magic (slterm_nbr_uvars t2))
@@ -10894,12 +10567,10 @@ let (solve_equiv_forall :
                         (fun rnbr ->
                            Obj.magic
                              (FStar_Tactics_Effect.tac_bind
-                                (Prims.mk_range
-                                   "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                (Prims.mk_range "Steel.Effect.Common.fsti"
                                    (Prims.of_int (2586)) (Prims.of_int (8))
                                    (Prims.of_int (2588)) (Prims.of_int (18)))
-                                (Prims.mk_range
-                                   "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                (Prims.mk_range "Steel.Effect.Common.fsti"
                                    (Prims.of_int (2585)) (Prims.of_int (6))
                                    (Prims.of_int (2612)) (Prims.of_int (18)))
                                 (if (lnbr + rnbr) <= Prims.int_one
@@ -10917,13 +10588,13 @@ let (solve_equiv_forall :
                                           (Obj.repr
                                              (FStar_Tactics_Effect.tac_bind
                                                 (Prims.mk_range
-                                                   "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                   "Steel.Effect.Common.fsti"
                                                    (Prims.of_int (2591))
                                                    (Prims.of_int (8))
                                                    (Prims.of_int (2610))
                                                    (Prims.of_int (62)))
                                                 (Prims.mk_range
-                                                   "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                   "Steel.Effect.Common.fsti"
                                                    (Prims.of_int (2611))
                                                    (Prims.of_int (8))
                                                    (Prims.of_int (2611))
@@ -10933,13 +10604,13 @@ let (solve_equiv_forall :
                                                       (fun uu___4 ->
                                                          FStar_Tactics_Effect.tac_bind
                                                            (Prims.mk_range
-                                                              "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                              "Steel.Effect.Common.fsti"
                                                               (Prims.of_int (2591))
                                                               (Prims.of_int (24))
                                                               (Prims.of_int (2591))
                                                               (Prims.of_int (56)))
                                                            (Prims.mk_range
-                                                              "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                              "Steel.Effect.Common.fsti"
                                                               (Prims.of_int (2592))
                                                               (Prims.of_int (22))
                                                               (Prims.of_int (2610))
@@ -10959,13 +10630,13 @@ let (solve_equiv_forall :
                                                                  Obj.magic
                                                                    (FStar_Tactics_Effect.tac_bind
                                                                     (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (2592))
                                                                     (Prims.of_int (28))
                                                                     (Prims.of_int (2592))
                                                                     (Prims.of_int (36)))
                                                                     (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (2592))
                                                                     (Prims.of_int (22))
                                                                     (Prims.of_int (2610))
@@ -10993,13 +10664,13 @@ let (solve_equiv_forall :
                                                                     (Obj.repr
                                                                     (FStar_Tactics_Effect.tac_bind
                                                                     (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (2595))
                                                                     (Prims.of_int (24))
                                                                     (Prims.of_int (2595))
                                                                     (Prims.of_int (42)))
                                                                     (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (2596))
                                                                     (Prims.of_int (24))
                                                                     (Prims.of_int (2610))
@@ -11014,13 +10685,13 @@ let (solve_equiv_forall :
                                                                     Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
                                                                     (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (2596))
                                                                     (Prims.of_int (24))
                                                                     (Prims.of_int (2596))
                                                                     (Prims.of_int (47)))
                                                                     (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (2597))
                                                                     (Prims.of_int (24))
                                                                     (Prims.of_int (2610))
@@ -11028,13 +10699,13 @@ let (solve_equiv_forall :
                                                                     (Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
                                                                     (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (2596))
                                                                     (Prims.of_int (31))
                                                                     (Prims.of_int (2596))
                                                                     (Prims.of_int (47)))
                                                                     (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (2596))
                                                                     (Prims.of_int (24))
                                                                     (Prims.of_int (2596))
@@ -11070,13 +10741,13 @@ let (solve_equiv_forall :
                                                                     ->
                                                                     FStar_Tactics_Effect.tac_bind
                                                                     (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (2600))
                                                                     (Prims.of_int (28))
                                                                     (Prims.of_int (2600))
                                                                     (Prims.of_int (82)))
                                                                     (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (2601))
                                                                     (Prims.of_int (28))
                                                                     (Prims.of_int (2610))
@@ -11114,13 +10785,13 @@ let (solve_equiv_forall :
                                                                     Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
                                                                     (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (2601))
                                                                     (Prims.of_int (28))
                                                                     (Prims.of_int (2601))
                                                                     (Prims.of_int (68)))
                                                                     (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (2602))
                                                                     (Prims.of_int (28))
                                                                     (Prims.of_int (2610))
@@ -11153,13 +10824,13 @@ let (solve_equiv_forall :
                                                                     Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
                                                                     (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (2602))
                                                                     (Prims.of_int (28))
                                                                     (Prims.of_int (2609))
                                                                     (Prims.of_int (54)))
                                                                     (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (2610))
                                                                     (Prims.of_int (28))
                                                                     (Prims.of_int (2610))
@@ -11230,24 +10901,19 @@ let (solve_equiv :
     match args with
     | (t1, uu___)::(t2, uu___1)::[] ->
         FStar_Tactics_Effect.tac_bind
-          (Prims.mk_range
-             "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
-             (Prims.of_int (2620)) (Prims.of_int (17)) (Prims.of_int (2620))
-             (Prims.of_int (36)))
-          (Prims.mk_range
-             "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
-             (Prims.of_int (2621)) (Prims.of_int (6)) (Prims.of_int (2645))
-             (Prims.of_int (18))) (Obj.magic (slterm_nbr_uvars t1))
+          (Prims.mk_range "Steel.Effect.Common.fsti" (Prims.of_int (2620))
+             (Prims.of_int (17)) (Prims.of_int (2620)) (Prims.of_int (36)))
+          (Prims.mk_range "Steel.Effect.Common.fsti" (Prims.of_int (2621))
+             (Prims.of_int (6)) (Prims.of_int (2645)) (Prims.of_int (18)))
+          (Obj.magic (slterm_nbr_uvars t1))
           (fun uu___2 ->
              (fun lnbr ->
                 Obj.magic
                   (FStar_Tactics_Effect.tac_bind
-                     (Prims.mk_range
-                        "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                     (Prims.mk_range "Steel.Effect.Common.fsti"
                         (Prims.of_int (2621)) (Prims.of_int (17))
                         (Prims.of_int (2621)) (Prims.of_int (36)))
-                     (Prims.mk_range
-                        "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                     (Prims.mk_range "Steel.Effect.Common.fsti"
                         (Prims.of_int (2622)) (Prims.of_int (6))
                         (Prims.of_int (2645)) (Prims.of_int (18)))
                      (Obj.magic (slterm_nbr_uvars t2))
@@ -11255,12 +10921,10 @@ let (solve_equiv :
                         (fun rnbr ->
                            Obj.magic
                              (FStar_Tactics_Effect.tac_bind
-                                (Prims.mk_range
-                                   "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                (Prims.mk_range "Steel.Effect.Common.fsti"
                                    (Prims.of_int (2623)) (Prims.of_int (8))
                                    (Prims.of_int (2625)) (Prims.of_int (18)))
-                                (Prims.mk_range
-                                   "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                (Prims.mk_range "Steel.Effect.Common.fsti"
                                    (Prims.of_int (2622)) (Prims.of_int (6))
                                    (Prims.of_int (2645)) (Prims.of_int (18)))
                                 (if (lnbr + rnbr) <= Prims.int_one
@@ -11278,13 +10942,13 @@ let (solve_equiv :
                                           (Obj.repr
                                              (FStar_Tactics_Effect.tac_bind
                                                 (Prims.mk_range
-                                                   "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                   "Steel.Effect.Common.fsti"
                                                    (Prims.of_int (2628))
                                                    (Prims.of_int (8))
                                                    (Prims.of_int (2642))
                                                    (Prims.of_int (48)))
                                                 (Prims.mk_range
-                                                   "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                   "Steel.Effect.Common.fsti"
                                                    (Prims.of_int (2643))
                                                    (Prims.of_int (8))
                                                    (Prims.of_int (2643))
@@ -11305,13 +10969,13 @@ let (solve_equiv :
                                                            (fun uu___4 ->
                                                               FStar_Tactics_Effect.tac_bind
                                                                 (Prims.mk_range
-                                                                   "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                   "Steel.Effect.Common.fsti"
                                                                    (Prims.of_int (2632))
                                                                    (Prims.of_int (14))
                                                                    (Prims.of_int (2632))
                                                                    (Prims.of_int (68)))
                                                                 (Prims.mk_range
-                                                                   "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                   "Steel.Effect.Common.fsti"
                                                                    (Prims.of_int (2633))
                                                                    (Prims.of_int (14))
                                                                    (Prims.of_int (2642))
@@ -11347,13 +11011,13 @@ let (solve_equiv :
                                                                     Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
                                                                     (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (2633))
                                                                     (Prims.of_int (14))
                                                                     (Prims.of_int (2633))
                                                                     (Prims.of_int (54)))
                                                                     (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (2634))
                                                                     (Prims.of_int (14))
                                                                     (Prims.of_int (2642))
@@ -11381,13 +11045,13 @@ let (solve_equiv :
                                                                     Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
                                                                     (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (2634))
                                                                     (Prims.of_int (14))
                                                                     (Prims.of_int (2641))
                                                                     (Prims.of_int (40)))
                                                                     (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (2642))
                                                                     (Prims.of_int (14))
                                                                     (Prims.of_int (2642))
@@ -11451,24 +11115,19 @@ let (solve_can_be_split_post :
     match args with
     | uu___::uu___1::(t1, uu___2)::(t2, uu___3)::[] ->
         FStar_Tactics_Effect.tac_bind
-          (Prims.mk_range
-             "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
-             (Prims.of_int (2653)) (Prims.of_int (17)) (Prims.of_int (2653))
-             (Prims.of_int (36)))
-          (Prims.mk_range
-             "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
-             (Prims.of_int (2654)) (Prims.of_int (6)) (Prims.of_int (2685))
-             (Prims.of_int (18))) (Obj.magic (slterm_nbr_uvars t1))
+          (Prims.mk_range "Steel.Effect.Common.fsti" (Prims.of_int (2653))
+             (Prims.of_int (17)) (Prims.of_int (2653)) (Prims.of_int (36)))
+          (Prims.mk_range "Steel.Effect.Common.fsti" (Prims.of_int (2654))
+             (Prims.of_int (6)) (Prims.of_int (2685)) (Prims.of_int (18)))
+          (Obj.magic (slterm_nbr_uvars t1))
           (fun uu___4 ->
              (fun lnbr ->
                 Obj.magic
                   (FStar_Tactics_Effect.tac_bind
-                     (Prims.mk_range
-                        "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                     (Prims.mk_range "Steel.Effect.Common.fsti"
                         (Prims.of_int (2654)) (Prims.of_int (17))
                         (Prims.of_int (2654)) (Prims.of_int (36)))
-                     (Prims.mk_range
-                        "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                     (Prims.mk_range "Steel.Effect.Common.fsti"
                         (Prims.of_int (2655)) (Prims.of_int (6))
                         (Prims.of_int (2685)) (Prims.of_int (18)))
                      (Obj.magic (slterm_nbr_uvars t2))
@@ -11476,12 +11135,10 @@ let (solve_can_be_split_post :
                         (fun rnbr ->
                            Obj.magic
                              (FStar_Tactics_Effect.tac_bind
-                                (Prims.mk_range
-                                   "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                (Prims.mk_range "Steel.Effect.Common.fsti"
                                    (Prims.of_int (2656)) (Prims.of_int (8))
                                    (Prims.of_int (2658)) (Prims.of_int (18)))
-                                (Prims.mk_range
-                                   "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                (Prims.mk_range "Steel.Effect.Common.fsti"
                                    (Prims.of_int (2655)) (Prims.of_int (6))
                                    (Prims.of_int (2685)) (Prims.of_int (18)))
                                 (if (lnbr + rnbr) <= Prims.int_one
@@ -11499,13 +11156,13 @@ let (solve_can_be_split_post :
                                           (Obj.repr
                                              (FStar_Tactics_Effect.tac_bind
                                                 (Prims.mk_range
-                                                   "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                   "Steel.Effect.Common.fsti"
                                                    (Prims.of_int (2661))
                                                    (Prims.of_int (8))
                                                    (Prims.of_int (2683))
                                                    (Prims.of_int (62)))
                                                 (Prims.mk_range
-                                                   "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                   "Steel.Effect.Common.fsti"
                                                    (Prims.of_int (2684))
                                                    (Prims.of_int (8))
                                                    (Prims.of_int (2684))
@@ -11515,13 +11172,13 @@ let (solve_can_be_split_post :
                                                       (fun uu___5 ->
                                                          FStar_Tactics_Effect.tac_bind
                                                            (Prims.mk_range
-                                                              "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                              "Steel.Effect.Common.fsti"
                                                               (Prims.of_int (2661))
                                                               (Prims.of_int (24))
                                                               (Prims.of_int (2661))
                                                               (Prims.of_int (30)))
                                                            (Prims.mk_range
-                                                              "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                              "Steel.Effect.Common.fsti"
                                                               (Prims.of_int (2662))
                                                               (Prims.of_int (22))
                                                               (Prims.of_int (2683))
@@ -11534,13 +11191,13 @@ let (solve_can_be_split_post :
                                                                  Obj.magic
                                                                    (FStar_Tactics_Effect.tac_bind
                                                                     (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (2662))
                                                                     (Prims.of_int (30))
                                                                     (Prims.of_int (2662))
                                                                     (Prims.of_int (42)))
                                                                     (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (2663))
                                                                     (Prims.of_int (22))
                                                                     (Prims.of_int (2683))
@@ -11554,13 +11211,13 @@ let (solve_can_be_split_post :
                                                                     Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
                                                                     (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (2663))
                                                                     (Prims.of_int (22))
                                                                     (Prims.of_int (2663))
                                                                     (Prims.of_int (45)))
                                                                     (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (2664))
                                                                     (Prims.of_int (22))
                                                                     (Prims.of_int (2683))
@@ -11568,13 +11225,13 @@ let (solve_can_be_split_post :
                                                                     (Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
                                                                     (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (2663))
                                                                     (Prims.of_int (29))
                                                                     (Prims.of_int (2663))
                                                                     (Prims.of_int (45)))
                                                                     (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (2663))
                                                                     (Prims.of_int (22))
                                                                     (Prims.of_int (2663))
@@ -11595,13 +11252,13 @@ let (solve_can_be_split_post :
                                                                     Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
                                                                     (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (2664))
                                                                     (Prims.of_int (22))
                                                                     (Prims.of_int (2664))
                                                                     (Prims.of_int (54)))
                                                                     (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (2665))
                                                                     (Prims.of_int (22))
                                                                     (Prims.of_int (2683))
@@ -11622,13 +11279,13 @@ let (solve_can_be_split_post :
                                                                     Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
                                                                     (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (2665))
                                                                     (Prims.of_int (28))
                                                                     (Prims.of_int (2665))
                                                                     (Prims.of_int (36)))
                                                                     (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (2665))
                                                                     (Prims.of_int (22))
                                                                     (Prims.of_int (2683))
@@ -11657,13 +11314,13 @@ let (solve_can_be_split_post :
                                                                     (Obj.repr
                                                                     (FStar_Tactics_Effect.tac_bind
                                                                     (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (2668))
                                                                     (Prims.of_int (24))
                                                                     (Prims.of_int (2668))
                                                                     (Prims.of_int (42)))
                                                                     (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (2669))
                                                                     (Prims.of_int (24))
                                                                     (Prims.of_int (2683))
@@ -11680,13 +11337,13 @@ let (solve_can_be_split_post :
                                                                     Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
                                                                     (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (2669))
                                                                     (Prims.of_int (24))
                                                                     (Prims.of_int (2669))
                                                                     (Prims.of_int (47)))
                                                                     (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (2670))
                                                                     (Prims.of_int (24))
                                                                     (Prims.of_int (2683))
@@ -11694,13 +11351,13 @@ let (solve_can_be_split_post :
                                                                     (Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
                                                                     (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (2669))
                                                                     (Prims.of_int (31))
                                                                     (Prims.of_int (2669))
                                                                     (Prims.of_int (47)))
                                                                     (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (2669))
                                                                     (Prims.of_int (24))
                                                                     (Prims.of_int (2669))
@@ -11739,13 +11396,13 @@ let (solve_can_be_split_post :
                                                                     ->
                                                                     FStar_Tactics_Effect.tac_bind
                                                                     (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (2673))
                                                                     (Prims.of_int (28))
                                                                     (Prims.of_int (2673))
                                                                     (Prims.of_int (82)))
                                                                     (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (2674))
                                                                     (Prims.of_int (28))
                                                                     (Prims.of_int (2683))
@@ -11783,13 +11440,13 @@ let (solve_can_be_split_post :
                                                                     Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
                                                                     (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (2674))
                                                                     (Prims.of_int (28))
                                                                     (Prims.of_int (2674))
                                                                     (Prims.of_int (68)))
                                                                     (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (2675))
                                                                     (Prims.of_int (28))
                                                                     (Prims.of_int (2683))
@@ -11822,13 +11479,13 @@ let (solve_can_be_split_post :
                                                                     Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
                                                                     (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (2675))
                                                                     (Prims.of_int (28))
                                                                     (Prims.of_int (2682))
                                                                     (Prims.of_int (54)))
                                                                     (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (2683))
                                                                     (Prims.of_int (28))
                                                                     (Prims.of_int (2683))
@@ -11926,12 +11583,10 @@ let rec (solve_indirection_eqs :
          Obj.magic
            (Obj.repr
               (FStar_Tactics_Effect.tac_bind
-                 (Prims.mk_range
-                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                 (Prims.mk_range "Steel.Effect.Common.fsti"
                     (Prims.of_int (2701)) (Prims.of_int (13))
                     (Prims.of_int (2701)) (Prims.of_int (21)))
-                 (Prims.mk_range
-                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                 (Prims.mk_range "Steel.Effect.Common.fsti"
                     (Prims.of_int (2701)) (Prims.of_int (7))
                     (Prims.of_int (2709)) (Prims.of_int (52)))
                  (Obj.magic (FStar_Tactics_Derived.goals ()))
@@ -11947,14 +11602,12 @@ let rec (solve_indirection_eqs :
                            Obj.magic
                              (Obj.repr
                                 (FStar_Tactics_Effect.tac_bind
-                                   (Prims.mk_range
-                                      "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                   (Prims.mk_range "Steel.Effect.Common.fsti"
                                       (Prims.of_int (2704))
                                       (Prims.of_int (12))
                                       (Prims.of_int (2704))
                                       (Prims.of_int (43)))
-                                   (Prims.mk_range
-                                      "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                   (Prims.mk_range "Steel.Effect.Common.fsti"
                                       (Prims.of_int (2705))
                                       (Prims.of_int (4))
                                       (Prims.of_int (2709))
@@ -11972,13 +11625,13 @@ let rec (solve_indirection_eqs :
                                              Obj.magic
                                                (FStar_Tactics_Effect.tac_bind
                                                   (Prims.mk_range
-                                                     "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                     "Steel.Effect.Common.fsti"
                                                      (Prims.of_int (2707))
                                                      (Prims.of_int (8))
                                                      (Prims.of_int (2707))
                                                      (Prims.of_int (53)))
                                                   (Prims.mk_range
-                                                     "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                     "Steel.Effect.Common.fsti"
                                                      (Prims.of_int (2708))
                                                      (Prims.of_int (8))
                                                      (Prims.of_int (2708))
@@ -11986,13 +11639,13 @@ let rec (solve_indirection_eqs :
                                                   (Obj.magic
                                                      (FStar_Tactics_Effect.tac_bind
                                                         (Prims.mk_range
-                                                           "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                           "Steel.Effect.Common.fsti"
                                                            (Prims.of_int (2707))
                                                            (Prims.of_int (11))
                                                            (Prims.of_int (2707))
                                                            (Prims.of_int (27)))
                                                         (Prims.mk_range
-                                                           "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                           "Steel.Effect.Common.fsti"
                                                            (Prims.of_int (2707))
                                                            (Prims.of_int (8))
                                                            (Prims.of_int (2707))
@@ -12022,13 +11675,13 @@ let rec (solve_indirection_eqs :
                                              Obj.magic
                                                (FStar_Tactics_Effect.tac_bind
                                                   (Prims.mk_range
-                                                     "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                     "Steel.Effect.Common.fsti"
                                                      (Prims.of_int (2709))
                                                      (Prims.of_int (11))
                                                      (Prims.of_int (2709))
                                                      (Prims.of_int (18)))
                                                   (Prims.mk_range
-                                                     "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                     "Steel.Effect.Common.fsti"
                                                      (Prims.of_int (2709))
                                                      (Prims.of_int (20))
                                                      (Prims.of_int (2709))
@@ -12056,12 +11709,10 @@ let rec (solve_all_eqs :
          Obj.magic
            (Obj.repr
               (FStar_Tactics_Effect.tac_bind
-                 (Prims.mk_range
-                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                 (Prims.mk_range "Steel.Effect.Common.fsti"
                     (Prims.of_int (2715)) (Prims.of_int (13))
                     (Prims.of_int (2715)) (Prims.of_int (21)))
-                 (Prims.mk_range
-                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                 (Prims.mk_range "Steel.Effect.Common.fsti"
                     (Prims.of_int (2715)) (Prims.of_int (7))
                     (Prims.of_int (2723)) (Prims.of_int (44)))
                  (Obj.magic (FStar_Tactics_Derived.goals ()))
@@ -12077,14 +11728,12 @@ let rec (solve_all_eqs :
                            Obj.magic
                              (Obj.repr
                                 (FStar_Tactics_Effect.tac_bind
-                                   (Prims.mk_range
-                                      "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                   (Prims.mk_range "Steel.Effect.Common.fsti"
                                       (Prims.of_int (2718))
                                       (Prims.of_int (12))
                                       (Prims.of_int (2718))
                                       (Prims.of_int (43)))
-                                   (Prims.mk_range
-                                      "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                   (Prims.mk_range "Steel.Effect.Common.fsti"
                                       (Prims.of_int (2719))
                                       (Prims.of_int (4))
                                       (Prims.of_int (2723))
@@ -12102,13 +11751,13 @@ let rec (solve_all_eqs :
                                              Obj.magic
                                                (FStar_Tactics_Effect.tac_bind
                                                   (Prims.mk_range
-                                                     "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                     "Steel.Effect.Common.fsti"
                                                      (Prims.of_int (2721))
                                                      (Prims.of_int (8))
                                                      (Prims.of_int (2721))
                                                      (Prims.of_int (15)))
                                                   (Prims.mk_range
-                                                     "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                     "Steel.Effect.Common.fsti"
                                                      (Prims.of_int (2722))
                                                      (Prims.of_int (8))
                                                      (Prims.of_int (2722))
@@ -12127,13 +11776,13 @@ let rec (solve_all_eqs :
                                              Obj.magic
                                                (FStar_Tactics_Effect.tac_bind
                                                   (Prims.mk_range
-                                                     "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                     "Steel.Effect.Common.fsti"
                                                      (Prims.of_int (2723))
                                                      (Prims.of_int (11))
                                                      (Prims.of_int (2723))
                                                      (Prims.of_int (18)))
                                                   (Prims.mk_range
-                                                     "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                     "Steel.Effect.Common.fsti"
                                                      (Prims.of_int (2723))
                                                      (Prims.of_int (20))
                                                      (Prims.of_int (2723))
@@ -12161,12 +11810,10 @@ let rec (solve_return_eqs :
          Obj.magic
            (Obj.repr
               (FStar_Tactics_Effect.tac_bind
-                 (Prims.mk_range
-                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                 (Prims.mk_range "Steel.Effect.Common.fsti"
                     (Prims.of_int (2730)) (Prims.of_int (13))
                     (Prims.of_int (2730)) (Prims.of_int (21)))
-                 (Prims.mk_range
-                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                 (Prims.mk_range "Steel.Effect.Common.fsti"
                     (Prims.of_int (2730)) (Prims.of_int (7))
                     (Prims.of_int (2738)) (Prims.of_int (47)))
                  (Obj.magic (FStar_Tactics_Derived.goals ()))
@@ -12182,14 +11829,12 @@ let rec (solve_return_eqs :
                            Obj.magic
                              (Obj.repr
                                 (FStar_Tactics_Effect.tac_bind
-                                   (Prims.mk_range
-                                      "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                   (Prims.mk_range "Steel.Effect.Common.fsti"
                                       (Prims.of_int (2733))
                                       (Prims.of_int (12))
                                       (Prims.of_int (2733))
                                       (Prims.of_int (43)))
-                                   (Prims.mk_range
-                                      "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                   (Prims.mk_range "Steel.Effect.Common.fsti"
                                       (Prims.of_int (2734))
                                       (Prims.of_int (4))
                                       (Prims.of_int (2738))
@@ -12207,13 +11852,13 @@ let rec (solve_return_eqs :
                                              Obj.magic
                                                (FStar_Tactics_Effect.tac_bind
                                                   (Prims.mk_range
-                                                     "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                     "Steel.Effect.Common.fsti"
                                                      (Prims.of_int (2736))
                                                      (Prims.of_int (8))
                                                      (Prims.of_int (2736))
                                                      (Prims.of_int (15)))
                                                   (Prims.mk_range
-                                                     "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                     "Steel.Effect.Common.fsti"
                                                      (Prims.of_int (2737))
                                                      (Prims.of_int (8))
                                                      (Prims.of_int (2737))
@@ -12232,13 +11877,13 @@ let rec (solve_return_eqs :
                                              Obj.magic
                                                (FStar_Tactics_Effect.tac_bind
                                                   (Prims.mk_range
-                                                     "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                     "Steel.Effect.Common.fsti"
                                                      (Prims.of_int (2738))
                                                      (Prims.of_int (11))
                                                      (Prims.of_int (2738))
                                                      (Prims.of_int (18)))
                                                   (Prims.mk_range
-                                                     "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                     "Steel.Effect.Common.fsti"
                                                      (Prims.of_int (2738))
                                                      (Prims.of_int (20))
                                                      (Prims.of_int (2738))
@@ -12258,24 +11903,19 @@ let (goal_to_equiv :
   Prims.string -> (unit, unit) FStar_Tactics_Effect.tac_repr) =
   fun loc ->
     FStar_Tactics_Effect.tac_bind
-      (Prims.mk_range
-         "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
-         (Prims.of_int (2742)) (Prims.of_int (12)) (Prims.of_int (2742))
-         (Prims.of_int (23)))
-      (Prims.mk_range
-         "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
-         (Prims.of_int (2743)) (Prims.of_int (4)) (Prims.of_int (2769))
-         (Prims.of_int (42))) (Obj.magic (FStar_Tactics_Derived.cur_goal ()))
+      (Prims.mk_range "Steel.Effect.Common.fsti" (Prims.of_int (2742))
+         (Prims.of_int (12)) (Prims.of_int (2742)) (Prims.of_int (23)))
+      (Prims.mk_range "Steel.Effect.Common.fsti" (Prims.of_int (2743))
+         (Prims.of_int (4)) (Prims.of_int (2769)) (Prims.of_int (42)))
+      (Obj.magic (FStar_Tactics_Derived.cur_goal ()))
       (fun uu___ ->
          (fun t ->
             Obj.magic
               (FStar_Tactics_Effect.tac_bind
-                 (Prims.mk_range
-                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                 (Prims.mk_range "Steel.Effect.Common.fsti"
                     (Prims.of_int (2743)) (Prims.of_int (12))
                     (Prims.of_int (2743)) (Prims.of_int (30)))
-                 (Prims.mk_range
-                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                 (Prims.mk_range "Steel.Effect.Common.fsti"
                     (Prims.of_int (2744)) (Prims.of_int (4))
                     (Prims.of_int (2769)) (Prims.of_int (42)))
                  (Obj.magic (FStar_Reflection_Formula.term_as_formula' t))
@@ -12285,12 +11925,10 @@ let (goal_to_equiv :
                        | FStar_Reflection_Formula.App (hd0, t1) ->
                            Obj.magic
                              (FStar_Tactics_Effect.tac_bind
-                                (Prims.mk_range
-                                   "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                (Prims.mk_range "Steel.Effect.Common.fsti"
                                    (Prims.of_int (2746)) (Prims.of_int (6))
                                    (Prims.of_int (2747)) (Prims.of_int (70)))
-                                (Prims.mk_range
-                                   "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                (Prims.mk_range "Steel.Effect.Common.fsti"
                                    (Prims.of_int (2748)) (Prims.of_int (6))
                                    (Prims.of_int (2768)) (Prims.of_int (51)))
                                 (if
@@ -12313,13 +11951,13 @@ let (goal_to_equiv :
                                       Obj.magic
                                         (FStar_Tactics_Effect.tac_bind
                                            (Prims.mk_range
-                                              "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                              "Steel.Effect.Common.fsti"
                                               (Prims.of_int (2748))
                                               (Prims.of_int (21))
                                               (Prims.of_int (2748))
                                               (Prims.of_int (34)))
                                            (Prims.mk_range
-                                              "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                              "Steel.Effect.Common.fsti"
                                               (Prims.of_int (2748))
                                               (Prims.of_int (6))
                                               (Prims.of_int (2768))
@@ -12355,13 +11993,13 @@ let (goal_to_equiv :
                                                          Obj.magic
                                                            (FStar_Tactics_Effect.tac_bind
                                                               (Prims.mk_range
-                                                                 "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                 "Steel.Effect.Common.fsti"
                                                                  (Prims.of_int (2752))
                                                                  (Prims.of_int (8))
                                                                  (Prims.of_int (2752))
                                                                  (Prims.of_int (32)))
                                                               (Prims.mk_range
-                                                                 "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                 "Steel.Effect.Common.fsti"
                                                                  (Prims.of_int (2753))
                                                                  (Prims.of_int (8))
                                                                  (Prims.of_int (2753))
@@ -12370,14 +12008,14 @@ let (goal_to_equiv :
                                                                  (FStar_Tactics_Effect.tac_bind
                                                                     (
                                                                     Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (2752))
                                                                     (Prims.of_int (15))
                                                                     (Prims.of_int (2752))
                                                                     (Prims.of_int (32)))
                                                                     (
                                                                     Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (2752))
                                                                     (Prims.of_int (8))
                                                                     (Prims.of_int (2752))
@@ -12415,13 +12053,13 @@ let (goal_to_equiv :
                                                            Obj.magic
                                                              (FStar_Tactics_Effect.tac_bind
                                                                 (Prims.mk_range
-                                                                   "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                   "Steel.Effect.Common.fsti"
                                                                    (Prims.of_int (2755))
                                                                    (Prims.of_int (8))
                                                                    (Prims.of_int (2755))
                                                                    (Prims.of_int (40)))
                                                                 (Prims.mk_range
-                                                                   "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                   "Steel.Effect.Common.fsti"
                                                                    (Prims.of_int (2756))
                                                                    (Prims.of_int (8))
                                                                    (Prims.of_int (2756))
@@ -12442,13 +12080,13 @@ let (goal_to_equiv :
                                                                     Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
                                                                     (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (2756))
                                                                     (Prims.of_int (15))
                                                                     (Prims.of_int (2756))
                                                                     (Prims.of_int (32)))
                                                                     (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (2756))
                                                                     (Prims.of_int (8))
                                                                     (Prims.of_int (2756))
@@ -12472,13 +12110,13 @@ let (goal_to_equiv :
                                                              Obj.magic
                                                                (FStar_Tactics_Effect.tac_bind
                                                                   (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (2758))
                                                                     (Prims.of_int (8))
                                                                     (Prims.of_int (2758))
                                                                     (Prims.of_int (45)))
                                                                   (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (2759))
                                                                     (Prims.of_int (8))
                                                                     (Prims.of_int (2761))
@@ -12499,13 +12137,13 @@ let (goal_to_equiv :
                                                                     Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
                                                                     (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (2759))
                                                                     (Prims.of_int (8))
                                                                     (Prims.of_int (2759))
                                                                     (Prims.of_int (25)))
                                                                     (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (2760))
                                                                     (Prims.of_int (8))
                                                                     (Prims.of_int (2761))
@@ -12520,13 +12158,13 @@ let (goal_to_equiv :
                                                                     Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
                                                                     (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (2760))
                                                                     (Prims.of_int (8))
                                                                     (Prims.of_int (2760))
                                                                     (Prims.of_int (32)))
                                                                     (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (2761))
                                                                     (Prims.of_int (8))
                                                                     (Prims.of_int (2761))
@@ -12534,13 +12172,13 @@ let (goal_to_equiv :
                                                                     (Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
                                                                     (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (2760))
                                                                     (Prims.of_int (15))
                                                                     (Prims.of_int (2760))
                                                                     (Prims.of_int (32)))
                                                                     (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (2760))
                                                                     (Prims.of_int (8))
                                                                     (Prims.of_int (2760))
@@ -12561,13 +12199,13 @@ let (goal_to_equiv :
                                                                     Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
                                                                     (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (2761))
                                                                     (Prims.of_int (15))
                                                                     (Prims.of_int (2761))
                                                                     (Prims.of_int (32)))
                                                                     (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (2761))
                                                                     (Prims.of_int (8))
                                                                     (Prims.of_int (2761))
@@ -12638,12 +12276,10 @@ let rec term_dict_assoc :
                Obj.magic
                  (Obj.repr
                     (FStar_Tactics_Effect.tac_bind
-                       (Prims.mk_range
-                          "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                       (Prims.mk_range "Steel.Effect.Common.fsti"
                           (Prims.of_int (2779)) (Prims.of_int (13))
                           (Prims.of_int (2779)) (Prims.of_int (34)))
-                       (Prims.mk_range
-                          "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                       (Prims.mk_range "Steel.Effect.Common.fsti"
                           (Prims.of_int (2780)) (Prims.of_int (4))
                           (Prims.of_int (2782)) (Prims.of_int (11)))
                        (Obj.magic (term_dict_assoc key q))
@@ -12651,13 +12287,11 @@ let rec term_dict_assoc :
                           (fun q' ->
                              Obj.magic
                                (FStar_Tactics_Effect.tac_bind
-                                  (Prims.mk_range
-                                     "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                  (Prims.mk_range "Steel.Effect.Common.fsti"
                                      (Prims.of_int (2780)) (Prims.of_int (7))
                                      (Prims.of_int (2780))
                                      (Prims.of_int (26)))
-                                  (Prims.mk_range
-                                     "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                  (Prims.mk_range "Steel.Effect.Common.fsti"
                                      (Prims.of_int (2780)) (Prims.of_int (4))
                                      (Prims.of_int (2782))
                                      (Prims.of_int (11)))
@@ -12676,34 +12310,27 @@ let (solve_or_delay :
   =
   fun dict ->
     FStar_Tactics_Effect.tac_bind
-      (Prims.mk_range
-         "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
-         (Prims.of_int (2787)) (Prims.of_int (2)) (Prims.of_int (2787))
-         (Prims.of_int (9)))
-      (Prims.mk_range
-         "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
-         (Prims.of_int (2788)) (Prims.of_int (2)) (Prims.of_int (2822))
-         (Prims.of_int (14))) (Obj.magic (FStar_Tactics_Builtins.norm []))
+      (Prims.mk_range "Steel.Effect.Common.fsti" (Prims.of_int (2787))
+         (Prims.of_int (2)) (Prims.of_int (2787)) (Prims.of_int (9)))
+      (Prims.mk_range "Steel.Effect.Common.fsti" (Prims.of_int (2788))
+         (Prims.of_int (2)) (Prims.of_int (2822)) (Prims.of_int (14)))
+      (Obj.magic (FStar_Tactics_Builtins.norm []))
       (fun uu___ ->
          (fun uu___ ->
             Obj.magic
               (FStar_Tactics_Effect.tac_bind
-                 (Prims.mk_range
-                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                 (Prims.mk_range "Steel.Effect.Common.fsti"
                     (Prims.of_int (2788)) (Prims.of_int (10))
                     (Prims.of_int (2788)) (Prims.of_int (40)))
-                 (Prims.mk_range
-                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                 (Prims.mk_range "Steel.Effect.Common.fsti"
                     (Prims.of_int (2789)) (Prims.of_int (2))
                     (Prims.of_int (2822)) (Prims.of_int (14)))
                  (Obj.magic
                     (FStar_Tactics_Effect.tac_bind
-                       (Prims.mk_range
-                          "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                       (Prims.mk_range "Steel.Effect.Common.fsti"
                           (Prims.of_int (2788)) (Prims.of_int (27))
                           (Prims.of_int (2788)) (Prims.of_int (40)))
-                       (Prims.mk_range
-                          "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                       (Prims.mk_range "Steel.Effect.Common.fsti"
                           (Prims.of_int (2788)) (Prims.of_int (10))
                           (Prims.of_int (2788)) (Prims.of_int (40)))
                        (Obj.magic (FStar_Tactics_Derived.cur_goal ()))
@@ -12725,13 +12352,13 @@ let (solve_or_delay :
                                    Obj.repr
                                      (FStar_Tactics_Effect.tac_bind
                                         (Prims.mk_range
-                                           "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                           "Steel.Effect.Common.fsti"
                                            (Prims.of_int (2793))
                                            (Prims.of_int (21))
                                            (Prims.of_int (2793))
                                            (Prims.of_int (34)))
                                         (Prims.mk_range
-                                           "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                           "Steel.Effect.Common.fsti"
                                            (Prims.of_int (2793))
                                            (Prims.of_int (6))
                                            (Prims.of_int (2813))
@@ -12810,13 +12437,13 @@ let (solve_or_delay :
                                                                 Obj.magic
                                                                   (FStar_Tactics_Effect.tac_bind
                                                                     (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (2802))
                                                                     (Prims.of_int (25))
                                                                     (Prims.of_int (2802))
                                                                     (Prims.of_int (48)))
                                                                     (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (2803))
                                                                     (Prims.of_int (8))
                                                                     (Prims.of_int (2813))
@@ -12832,13 +12459,13 @@ let (solve_or_delay :
                                                                     Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
                                                                     (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (2804))
                                                                     (Prims.of_int (10))
                                                                     (Prims.of_int (2804))
                                                                     (Prims.of_int (19)))
                                                                     (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (2806))
                                                                     (Prims.of_int (14))
                                                                     (Prims.of_int (2812))
@@ -12884,13 +12511,13 @@ let (solve_or_delay :
                                                                     (Obj.repr
                                                                     (FStar_Tactics_Effect.tac_bind
                                                                     (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (2811))
                                                                     (Prims.of_int (16))
                                                                     (Prims.of_int (2811))
                                                                     (Prims.of_int (22)))
                                                                     (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (2811))
                                                                     (Prims.of_int (24))
                                                                     (Prims.of_int (2811))
@@ -12925,14 +12552,12 @@ let (solve_or_delay :
                            Obj.magic
                              (Obj.repr
                                 (FStar_Tactics_Effect.tac_bind
-                                   (Prims.mk_range
-                                      "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                   (Prims.mk_range "Steel.Effect.Common.fsti"
                                       (Prims.of_int (2818))
                                       (Prims.of_int (15))
                                       (Prims.of_int (2818))
                                       (Prims.of_int (71)))
-                                   (Prims.mk_range
-                                      "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                   (Prims.mk_range "Steel.Effect.Common.fsti"
                                       (Prims.of_int (2819))
                                       (Prims.of_int (4))
                                       (Prims.of_int (2821))
@@ -12947,13 +12572,13 @@ let (solve_or_delay :
                                          Obj.magic
                                            (FStar_Tactics_Effect.tac_bind
                                               (Prims.mk_range
-                                                 "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                 "Steel.Effect.Common.fsti"
                                                  (Prims.of_int (2819))
                                                  (Prims.of_int (15))
                                                  (Prims.of_int (2819))
                                                  (Prims.of_int (71)))
                                               (Prims.mk_range
-                                                 "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                 "Steel.Effect.Common.fsti"
                                                  (Prims.of_int (2821))
                                                  (Prims.of_int (4))
                                                  (Prims.of_int (2821))
@@ -12975,13 +12600,13 @@ let (solve_or_delay :
                                                         (Obj.repr
                                                            (FStar_Tactics_Effect.tac_bind
                                                               (Prims.mk_range
-                                                                 "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                 "Steel.Effect.Common.fsti"
                                                                  (Prims.of_int (2821))
                                                                  (Prims.of_int (34))
                                                                  (Prims.of_int (2821))
                                                                  (Prims.of_int (42)))
                                                               (Prims.mk_range
-                                                                 "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                 "Steel.Effect.Common.fsti"
                                                                  (Prims.of_int (2821))
                                                                  (Prims.of_int (44))
                                                                  (Prims.of_int (2821))
@@ -13012,14 +12637,10 @@ let rec (vprop_term_uvars :
   =
   fun t ->
     FStar_Tactics_Effect.tac_bind
-      (Prims.mk_range
-         "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
-         (Prims.of_int (2829)) (Prims.of_int (8)) (Prims.of_int (2829))
-         (Prims.of_int (27)))
-      (Prims.mk_range
-         "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
-         (Prims.of_int (2829)) (Prims.of_int (2)) (Prims.of_int (2839))
-         (Prims.of_int (11)))
+      (Prims.mk_range "Steel.Effect.Common.fsti" (Prims.of_int (2829))
+         (Prims.of_int (8)) (Prims.of_int (2829)) (Prims.of_int (27)))
+      (Prims.mk_range "Steel.Effect.Common.fsti" (Prims.of_int (2829))
+         (Prims.of_int (2)) (Prims.of_int (2839)) (Prims.of_int (11)))
       (Obj.magic (FStar_Tactics_Derived.inspect_unascribe t))
       (fun uu___ ->
          (fun uu___ ->
@@ -13032,12 +12653,10 @@ let rec (vprop_term_uvars :
                 Obj.magic
                   (Obj.repr
                      (FStar_Tactics_Effect.tac_bind
-                        (Prims.mk_range
-                           "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                        (Prims.mk_range "Steel.Effect.Common.fsti"
                            (Prims.of_int (2832)) (Prims.of_int (19))
                            (Prims.of_int (2832)) (Prims.of_int (32)))
-                        (Prims.mk_range
-                           "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                        (Prims.mk_range "Steel.Effect.Common.fsti"
                            (Prims.of_int (2832)) (Prims.of_int (4))
                            (Prims.of_int (2837)) (Prims.of_int (25)))
                         (FStar_Tactics_Effect.lift_div_tac
@@ -13064,14 +12683,10 @@ and (argv_uvars :
   =
   fun args ->
     FStar_Tactics_Effect.tac_bind
-      (Prims.mk_range
-         "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
-         (Prims.of_int (2843)) (Prims.of_int (4)) (Prims.of_int (2852))
-         (Prims.of_int (8)))
-      (Prims.mk_range
-         "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
-         (Prims.of_int (2854)) (Prims.of_int (2)) (Prims.of_int (2854))
-         (Prims.of_int (6)))
+      (Prims.mk_range "Steel.Effect.Common.fsti" (Prims.of_int (2843))
+         (Prims.of_int (4)) (Prims.of_int (2852)) (Prims.of_int (8)))
+      (Prims.mk_range "Steel.Effect.Common.fsti" (Prims.of_int (2854))
+         (Prims.of_int (2)) (Prims.of_int (2854)) (Prims.of_int (6)))
       (Obj.magic
          (FStar_Tactics_Util.fold_left
             (fun uu___1 ->
@@ -13086,13 +12701,13 @@ and (argv_uvars :
                                   (fun uu___3 ->
                                      FStar_Tactics_Effect.tac_bind
                                        (Prims.mk_range
-                                          "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                          "Steel.Effect.Common.fsti"
                                           (Prims.of_int (2845))
                                           (Prims.of_int (17))
                                           (Prims.of_int (2845))
                                           (Prims.of_int (21)))
                                        (Prims.mk_range
-                                          "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                          "Steel.Effect.Common.fsti"
                                           (Prims.of_int (2846))
                                           (Prims.of_int (8))
                                           (Prims.of_int (2847))
@@ -13103,13 +12718,13 @@ and (argv_uvars :
                                              Obj.magic
                                                (FStar_Tactics_Effect.tac_bind
                                                   (Prims.mk_range
-                                                     "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                     "Steel.Effect.Common.fsti"
                                                      (Prims.of_int (2846))
                                                      (Prims.of_int (17))
                                                      (Prims.of_int (2846))
                                                      (Prims.of_int (35)))
                                                   (Prims.mk_range
-                                                     "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                     "Steel.Effect.Common.fsti"
                                                      (Prims.of_int (2847))
                                                      (Prims.of_int (8))
                                                      (Prims.of_int (2847))
@@ -13148,14 +12763,10 @@ let (goal_term_uvars :
   =
   fun t ->
     FStar_Tactics_Effect.tac_bind
-      (Prims.mk_range
-         "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
-         (Prims.of_int (2864)) (Prims.of_int (15)) (Prims.of_int (2864))
-         (Prims.of_int (28)))
-      (Prims.mk_range
-         "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
-         (Prims.of_int (2864)) (Prims.of_int (2)) (Prims.of_int (2873))
-         (Prims.of_int (6)))
+      (Prims.mk_range "Steel.Effect.Common.fsti" (Prims.of_int (2864))
+         (Prims.of_int (15)) (Prims.of_int (2864)) (Prims.of_int (28)))
+      (Prims.mk_range "Steel.Effect.Common.fsti" (Prims.of_int (2864))
+         (Prims.of_int (2)) (Prims.of_int (2873)) (Prims.of_int (6)))
       (FStar_Tactics_Effect.lift_div_tac
          (fun uu___ -> FStar_Reflection_Derived.collect_app t))
       (fun uu___ ->
@@ -13169,12 +12780,10 @@ let (goal_term_uvars :
                        (match tl with
                         | (tl0, FStar_Reflection_Data.Q_Explicit)::[] ->
                             FStar_Tactics_Effect.tac_bind
-                              (Prims.mk_range
-                                 "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                              (Prims.mk_range "Steel.Effect.Common.fsti"
                                  (Prims.of_int (2869)) (Prims.of_int (19))
                                  (Prims.of_int (2869)) (Prims.of_int (34)))
-                              (Prims.mk_range
-                                 "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                              (Prims.mk_range "Steel.Effect.Common.fsti"
                                  (Prims.of_int (2869)) (Prims.of_int (6))
                                  (Prims.of_int (2870)) (Prims.of_int (36)))
                               (FStar_Tactics_Effect.lift_div_tac
@@ -13187,13 +12796,13 @@ let (goal_term_uvars :
                                         Obj.magic
                                           (FStar_Tactics_Effect.tac_bind
                                              (Prims.mk_range
-                                                "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                "Steel.Effect.Common.fsti"
                                                 (Prims.of_int (2870))
                                                 (Prims.of_int (20))
                                                 (Prims.of_int (2870))
                                                 (Prims.of_int (36)))
                                              (Prims.mk_range
-                                                "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                "Steel.Effect.Common.fsti"
                                                 (Prims.of_int (2870))
                                                 (Prims.of_int (6))
                                                 (Prims.of_int (2870))
@@ -13206,12 +12815,10 @@ let (goal_term_uvars :
                                    uu___1)
                         | uu___1 ->
                             FStar_Tactics_Effect.tac_bind
-                              (Prims.mk_range
-                                 "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                              (Prims.mk_range "Steel.Effect.Common.fsti"
                                  (Prims.of_int (2871)) (Prims.of_int (11))
                                  (Prims.of_int (2871)) (Prims.of_int (35)))
-                              (Prims.mk_range
-                                 "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                              (Prims.mk_range "Steel.Effect.Common.fsti"
                                  (Prims.of_int (2871)) (Prims.of_int (37))
                                  (Prims.of_int (2871)) (Prims.of_int (39)))
                               (Obj.magic
@@ -13275,12 +12882,10 @@ let rec (compute_guarded_uvars1 :
                Obj.magic
                  (Obj.repr
                     (FStar_Tactics_Effect.tac_bind
-                       (Prims.mk_range
-                          "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                       (Prims.mk_range "Steel.Effect.Common.fsti"
                           (Prims.of_int (2911)) (Prims.of_int (12))
                           (Prims.of_int (2911)) (Prims.of_int (23)))
-                       (Prims.mk_range
-                          "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                       (Prims.mk_range "Steel.Effect.Common.fsti"
                           (Prims.of_int (2912)) (Prims.of_int (4))
                           (Prims.of_int (2917)) (Prims.of_int (34)))
                        (FStar_Tactics_Effect.lift_div_tac
@@ -13289,26 +12894,24 @@ let rec (compute_guarded_uvars1 :
                           (fun t ->
                              Obj.magic
                                (FStar_Tactics_Effect.tac_bind
-                                  (Prims.mk_range
-                                     "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                  (Prims.mk_range "Steel.Effect.Common.fsti"
                                      (Prims.of_int (2913)) (Prims.of_int (6))
                                      (Prims.of_int (2915))
                                      (Prims.of_int (48)))
-                                  (Prims.mk_range
-                                     "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                  (Prims.mk_range "Steel.Effect.Common.fsti"
                                      (Prims.of_int (2917)) (Prims.of_int (4))
                                      (Prims.of_int (2917))
                                      (Prims.of_int (34)))
                                   (Obj.magic
                                      (FStar_Tactics_Effect.tac_bind
                                         (Prims.mk_range
-                                           "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                           "Steel.Effect.Common.fsti"
                                            (Prims.of_int (2913))
                                            (Prims.of_int (9))
                                            (Prims.of_int (2913))
                                            (Prims.of_int (28)))
                                         (Prims.mk_range
-                                           "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                           "Steel.Effect.Common.fsti"
                                            (Prims.of_int (2913))
                                            (Prims.of_int (6))
                                            (Prims.of_int (2915))
@@ -13327,13 +12930,13 @@ let rec (compute_guarded_uvars1 :
                                                   (Obj.repr
                                                      (FStar_Tactics_Effect.tac_bind
                                                         (Prims.mk_range
-                                                           "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                           "Steel.Effect.Common.fsti"
                                                            (Prims.of_int (2915))
                                                            (Prims.of_int (29))
                                                            (Prims.of_int (2915))
                                                            (Prims.of_int (48)))
                                                         (Prims.mk_range
-                                                           "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                           "Steel.Effect.Common.fsti"
                                                            (Prims.of_int (2915))
                                                            (Prims.of_int (11))
                                                            (Prims.of_int (2915))
@@ -13369,12 +12972,10 @@ let rec (compute_guarded_uvars2 :
                Obj.magic
                  (Obj.repr
                     (FStar_Tactics_Effect.tac_bind
-                       (Prims.mk_range
-                          "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                       (Prims.mk_range "Steel.Effect.Common.fsti"
                           (Prims.of_int (2924)) (Prims.of_int (12))
                           (Prims.of_int (2924)) (Prims.of_int (23)))
-                       (Prims.mk_range
-                          "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                       (Prims.mk_range "Steel.Effect.Common.fsti"
                           (Prims.of_int (2925)) (Prims.of_int (4))
                           (Prims.of_int (2931)) (Prims.of_int (34)))
                        (FStar_Tactics_Effect.lift_div_tac
@@ -13383,14 +12984,12 @@ let rec (compute_guarded_uvars2 :
                           (fun t ->
                              Obj.magic
                                (FStar_Tactics_Effect.tac_bind
-                                  (Prims.mk_range
-                                     "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                  (Prims.mk_range "Steel.Effect.Common.fsti"
                                      (Prims.of_int (2925))
                                      (Prims.of_int (12))
                                      (Prims.of_int (2925))
                                      (Prims.of_int (29)))
-                                  (Prims.mk_range
-                                     "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                  (Prims.mk_range "Steel.Effect.Common.fsti"
                                      (Prims.of_int (2926)) (Prims.of_int (4))
                                      (Prims.of_int (2931))
                                      (Prims.of_int (34)))
@@ -13400,13 +12999,13 @@ let rec (compute_guarded_uvars2 :
                                         Obj.magic
                                           (FStar_Tactics_Effect.tac_bind
                                              (Prims.mk_range
-                                                "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                "Steel.Effect.Common.fsti"
                                                 (Prims.of_int (2927))
                                                 (Prims.of_int (6))
                                                 (Prims.of_int (2929))
                                                 (Prims.of_int (15)))
                                              (Prims.mk_range
-                                                "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                "Steel.Effect.Common.fsti"
                                                 (Prims.of_int (2931))
                                                 (Prims.of_int (4))
                                                 (Prims.of_int (2931))
@@ -13432,14 +13031,11 @@ let rec (compute_guarded_uvars3 :
   fun accu ->
     fun g ->
       FStar_Tactics_Effect.tac_bind
-        (Prims.mk_range
-           "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
-           (Prims.of_int (2934)) (Prims.of_int (14)) (Prims.of_int (2934))
-           (Prims.of_int (43)))
-        (Prims.mk_range
-           "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
-           (Prims.of_int (2935)) (Prims.of_int (2)) (Prims.of_int (2937))
-           (Prims.of_int (37))) (Obj.magic (compute_guarded_uvars2 accu g))
+        (Prims.mk_range "Steel.Effect.Common.fsti" (Prims.of_int (2934))
+           (Prims.of_int (14)) (Prims.of_int (2934)) (Prims.of_int (43)))
+        (Prims.mk_range "Steel.Effect.Common.fsti" (Prims.of_int (2935))
+           (Prims.of_int (2)) (Prims.of_int (2937)) (Prims.of_int (37)))
+        (Obj.magic (compute_guarded_uvars2 accu g))
         (fun uu___ ->
            (fun accu' ->
               if accu = accu'
@@ -13453,24 +13049,19 @@ let (compute_guarded_uvars :
   unit -> (Prims.int Prims.list, unit) FStar_Tactics_Effect.tac_repr) =
   fun uu___ ->
     FStar_Tactics_Effect.tac_bind
-      (Prims.mk_range
-         "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
-         (Prims.of_int (2940)) (Prims.of_int (10)) (Prims.of_int (2940))
-         (Prims.of_int (18)))
-      (Prims.mk_range
-         "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
-         (Prims.of_int (2941)) (Prims.of_int (2)) (Prims.of_int (2942))
-         (Prims.of_int (31))) (Obj.magic (FStar_Tactics_Derived.goals ()))
+      (Prims.mk_range "Steel.Effect.Common.fsti" (Prims.of_int (2940))
+         (Prims.of_int (10)) (Prims.of_int (2940)) (Prims.of_int (18)))
+      (Prims.mk_range "Steel.Effect.Common.fsti" (Prims.of_int (2941))
+         (Prims.of_int (2)) (Prims.of_int (2942)) (Prims.of_int (31)))
+      (Obj.magic (FStar_Tactics_Derived.goals ()))
       (fun uu___1 ->
          (fun g ->
             Obj.magic
               (FStar_Tactics_Effect.tac_bind
-                 (Prims.mk_range
-                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                 (Prims.mk_range "Steel.Effect.Common.fsti"
                     (Prims.of_int (2941)) (Prims.of_int (13))
                     (Prims.of_int (2941)) (Prims.of_int (40)))
-                 (Prims.mk_range
-                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                 (Prims.mk_range "Steel.Effect.Common.fsti"
                     (Prims.of_int (2942)) (Prims.of_int (2))
                     (Prims.of_int (2942)) (Prims.of_int (31)))
                  (Obj.magic (compute_guarded_uvars1 [] g))
@@ -13498,12 +13089,10 @@ let rec (pick_next :
                  Obj.magic
                    (Obj.repr
                       (FStar_Tactics_Effect.tac_bind
-                         (Prims.mk_range
-                            "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                         (Prims.mk_range "Steel.Effect.Common.fsti"
                             (Prims.of_int (2947)) (Prims.of_int (13))
                             (Prims.of_int (2947)) (Prims.of_int (21)))
-                         (Prims.mk_range
-                            "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                         (Prims.mk_range "Steel.Effect.Common.fsti"
                             (Prims.of_int (2947)) (Prims.of_int (7))
                             (Prims.of_int (2960)) (Prims.of_int (16)))
                          (Obj.magic (FStar_Tactics_Derived.goals ()))
@@ -13520,13 +13109,13 @@ let rec (pick_next :
                                      (Obj.repr
                                         (FStar_Tactics_Effect.tac_bind
                                            (Prims.mk_range
-                                              "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                              "Steel.Effect.Common.fsti"
                                               (Prims.of_int (2950))
                                               (Prims.of_int (12))
                                               (Prims.of_int (2950))
                                               (Prims.of_int (23)))
                                            (Prims.mk_range
-                                              "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                              "Steel.Effect.Common.fsti"
                                               (Prims.of_int (2951))
                                               (Prims.of_int (4))
                                               (Prims.of_int (2960))
@@ -13540,13 +13129,13 @@ let rec (pick_next :
                                                  Obj.magic
                                                    (FStar_Tactics_Effect.tac_bind
                                                       (Prims.mk_range
-                                                         "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                         "Steel.Effect.Common.fsti"
                                                          (Prims.of_int (2951))
                                                          (Prims.of_int (12))
                                                          (Prims.of_int (2951))
                                                          (Prims.of_int (29)))
                                                       (Prims.mk_range
-                                                         "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                         "Steel.Effect.Common.fsti"
                                                          (Prims.of_int (2952))
                                                          (Prims.of_int (4))
                                                          (Prims.of_int (2960))
@@ -13558,13 +13147,13 @@ let rec (pick_next :
                                                             Obj.magic
                                                               (FStar_Tactics_Effect.tac_bind
                                                                  (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (2953))
                                                                     (Prims.of_int (6))
                                                                     (Prims.of_int (2954))
                                                                     (Prims.of_int (45)))
                                                                  (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (2956))
                                                                     (Prims.of_int (4))
                                                                     (Prims.of_int (2960))
@@ -13577,13 +13166,13 @@ let rec (pick_next :
                                                                     uu___4 ->
                                                                     FStar_Tactics_Effect.tac_bind
                                                                     (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (2953))
                                                                     (Prims.of_int (6))
                                                                     (Prims.of_int (2953))
                                                                     (Prims.of_int (14)))
                                                                     (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (2954))
                                                                     (Prims.of_int (6))
                                                                     (Prims.of_int (2954))
@@ -13617,13 +13206,13 @@ let rec (pick_next :
                                                                     Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
                                                                     (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (2958))
                                                                     (Prims.of_int (12))
                                                                     (Prims.of_int (2958))
                                                                     (Prims.of_int (31)))
                                                                     (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (2958))
                                                                     (Prims.of_int (9))
                                                                     (Prims.of_int (2960))
@@ -13658,14 +13247,11 @@ let rec (resolve_tac :
   =
   fun dict ->
     FStar_Tactics_Effect.tac_bind
-      (Prims.mk_range
-         "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
-         (Prims.of_int (2965)) (Prims.of_int (8)) (Prims.of_int (2965))
-         (Prims.of_int (16)))
-      (Prims.mk_range
-         "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
-         (Prims.of_int (2965)) (Prims.of_int (2)) (Prims.of_int (2972))
-         (Prims.of_int (63))) (Obj.magic (FStar_Tactics_Derived.goals ()))
+      (Prims.mk_range "Steel.Effect.Common.fsti" (Prims.of_int (2965))
+         (Prims.of_int (8)) (Prims.of_int (2965)) (Prims.of_int (16)))
+      (Prims.mk_range "Steel.Effect.Common.fsti" (Prims.of_int (2965))
+         (Prims.of_int (2)) (Prims.of_int (2972)) (Prims.of_int (63)))
+      (Obj.magic (FStar_Tactics_Derived.goals ()))
       (fun uu___ ->
          (fun uu___ ->
             match uu___ with
@@ -13677,12 +13263,10 @@ let rec (resolve_tac :
                 Obj.magic
                   (Obj.repr
                      (FStar_Tactics_Effect.tac_bind
-                        (Prims.mk_range
-                           "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                        (Prims.mk_range "Steel.Effect.Common.fsti"
                            (Prims.of_int (2968)) (Prims.of_int (4))
                            (Prims.of_int (2968)) (Prims.of_int (11)))
-                        (Prims.mk_range
-                           "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                        (Prims.mk_range "Steel.Effect.Common.fsti"
                            (Prims.of_int (2969)) (Prims.of_int (4))
                            (Prims.of_int (2972)) (Prims.of_int (63)))
                         (Obj.magic (FStar_Tactics_Builtins.norm []))
@@ -13690,14 +13274,12 @@ let rec (resolve_tac :
                            (fun uu___1 ->
                               Obj.magic
                                 (FStar_Tactics_Effect.tac_bind
-                                   (Prims.mk_range
-                                      "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                   (Prims.mk_range "Steel.Effect.Common.fsti"
                                       (Prims.of_int (2969))
                                       (Prims.of_int (24))
                                       (Prims.of_int (2969))
                                       (Prims.of_int (48)))
-                                   (Prims.mk_range
-                                      "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                   (Prims.mk_range "Steel.Effect.Common.fsti"
                                       (Prims.of_int (2971))
                                       (Prims.of_int (4))
                                       (Prims.of_int (2972))
@@ -13708,13 +13290,13 @@ let rec (resolve_tac :
                                          Obj.magic
                                            (FStar_Tactics_Effect.tac_bind
                                               (Prims.mk_range
-                                                 "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                 "Steel.Effect.Common.fsti"
                                                  (Prims.of_int (2971))
                                                  (Prims.of_int (7))
                                                  (Prims.of_int (2971))
                                                  (Prims.of_int (55)))
                                               (Prims.mk_range
-                                                 "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                 "Steel.Effect.Common.fsti"
                                                  (Prims.of_int (2971))
                                                  (Prims.of_int (4))
                                                  (Prims.of_int (2972))
@@ -13754,12 +13336,10 @@ let rec (pick_next_logical :
              Obj.magic
                (Obj.repr
                   (FStar_Tactics_Effect.tac_bind
-                     (Prims.mk_range
-                        "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                     (Prims.mk_range "Steel.Effect.Common.fsti"
                         (Prims.of_int (2977)) (Prims.of_int (13))
                         (Prims.of_int (2977)) (Prims.of_int (21)))
-                     (Prims.mk_range
-                        "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                     (Prims.mk_range "Steel.Effect.Common.fsti"
                         (Prims.of_int (2977)) (Prims.of_int (7))
                         (Prims.of_int (2979)) (Prims.of_int (95)))
                      (Obj.magic (FStar_Tactics_Derived.goals ()))
@@ -13776,13 +13356,13 @@ let rec (pick_next_logical :
                                  (Obj.repr
                                     (FStar_Tactics_Effect.tac_bind
                                        (Prims.mk_range
-                                          "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                          "Steel.Effect.Common.fsti"
                                           (Prims.of_int (2979))
                                           (Prims.of_int (15))
                                           (Prims.of_int (2979))
                                           (Prims.of_int (34)))
                                        (Prims.mk_range
-                                          "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                          "Steel.Effect.Common.fsti"
                                           (Prims.of_int (2979))
                                           (Prims.of_int (12))
                                           (Prims.of_int (2979))
@@ -13801,13 +13381,13 @@ let rec (pick_next_logical :
                                                  (Obj.repr
                                                     (FStar_Tactics_Effect.tac_bind
                                                        (Prims.mk_range
-                                                          "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                          "Steel.Effect.Common.fsti"
                                                           (Prims.of_int (2979))
                                                           (Prims.of_int (51))
                                                           (Prims.of_int (2979))
                                                           (Prims.of_int (59)))
                                                        (Prims.mk_range
-                                                          "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                          "Steel.Effect.Common.fsti"
                                                           (Prims.of_int (2979))
                                                           (Prims.of_int (61))
                                                           (Prims.of_int (2979))
@@ -13831,14 +13411,11 @@ let rec (resolve_tac_logical :
   =
   fun dict ->
     FStar_Tactics_Effect.tac_bind
-      (Prims.mk_range
-         "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
-         (Prims.of_int (2983)) (Prims.of_int (8)) (Prims.of_int (2983))
-         (Prims.of_int (16)))
-      (Prims.mk_range
-         "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
-         (Prims.of_int (2983)) (Prims.of_int (2)) (Prims.of_int (2993))
-         (Prims.of_int (24))) (Obj.magic (FStar_Tactics_Derived.goals ()))
+      (Prims.mk_range "Steel.Effect.Common.fsti" (Prims.of_int (2983))
+         (Prims.of_int (8)) (Prims.of_int (2983)) (Prims.of_int (16)))
+      (Prims.mk_range "Steel.Effect.Common.fsti" (Prims.of_int (2983))
+         (Prims.of_int (2)) (Prims.of_int (2993)) (Prims.of_int (24)))
+      (Obj.magic (FStar_Tactics_Derived.goals ()))
       (fun uu___ ->
          (fun uu___ ->
             match uu___ with
@@ -13850,12 +13427,10 @@ let rec (resolve_tac_logical :
                 Obj.magic
                   (Obj.repr
                      (FStar_Tactics_Effect.tac_bind
-                        (Prims.mk_range
-                           "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                        (Prims.mk_range "Steel.Effect.Common.fsti"
                            (Prims.of_int (2986)) (Prims.of_int (15))
                            (Prims.of_int (2986)) (Prims.of_int (32)))
-                        (Prims.mk_range
-                           "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                        (Prims.mk_range "Steel.Effect.Common.fsti"
                            (Prims.of_int (2987)) (Prims.of_int (4))
                            (Prims.of_int (2993)) (Prims.of_int (24)))
                         (FStar_Tactics_Effect.lift_div_tac
@@ -13864,14 +13439,12 @@ let rec (resolve_tac_logical :
                            (fun fuel ->
                               Obj.magic
                                 (FStar_Tactics_Effect.tac_bind
-                                   (Prims.mk_range
-                                      "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                   (Prims.mk_range "Steel.Effect.Common.fsti"
                                       (Prims.of_int (2987))
                                       (Prims.of_int (7))
                                       (Prims.of_int (2987))
                                       (Prims.of_int (34)))
-                                   (Prims.mk_range
-                                      "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                   (Prims.mk_range "Steel.Effect.Common.fsti"
                                       (Prims.of_int (2987))
                                       (Prims.of_int (4))
                                       (Prims.of_int (2993))
@@ -13919,12 +13492,10 @@ let rec (filter_goals :
            Obj.magic
              (Obj.repr
                 (FStar_Tactics_Effect.tac_bind
-                   (Prims.mk_range
-                      "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                   (Prims.mk_range "Steel.Effect.Common.fsti"
                       (Prims.of_int (3005)) (Prims.of_int (30))
                       (Prims.of_int (3005)) (Prims.of_int (45)))
-                   (Prims.mk_range
-                      "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                   (Prims.mk_range "Steel.Effect.Common.fsti"
                       (Prims.of_int (3005)) (Prims.of_int (6))
                       (Prims.of_int (3020)) (Prims.of_int (30)))
                    (Obj.magic (filter_goals tl))
@@ -13934,14 +13505,12 @@ let rec (filter_goals :
                          | (slgoals, loggoals) ->
                              Obj.magic
                                (FStar_Tactics_Effect.tac_bind
-                                  (Prims.mk_range
-                                     "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                  (Prims.mk_range "Steel.Effect.Common.fsti"
                                      (Prims.of_int (3006))
                                      (Prims.of_int (12))
                                      (Prims.of_int (3006))
                                      (Prims.of_int (43)))
-                                  (Prims.mk_range
-                                     "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                  (Prims.mk_range "Steel.Effect.Common.fsti"
                                      (Prims.of_int (3006)) (Prims.of_int (6))
                                      (Prims.of_int (3020))
                                      (Prims.of_int (30)))
@@ -13964,13 +13533,13 @@ let rec (filter_goals :
                                                     Obj.repr
                                                       (FStar_Tactics_Effect.tac_bind
                                                          (Prims.mk_range
-                                                            "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                            "Steel.Effect.Common.fsti"
                                                             (Prims.of_int (3009))
                                                             (Prims.of_int (18))
                                                             (Prims.of_int (3009))
                                                             (Prims.of_int (50)))
                                                          (Prims.mk_range
-                                                            "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                            "Steel.Effect.Common.fsti"
                                                             (Prims.of_int (3010))
                                                             (Prims.of_int (10))
                                                             (Prims.of_int (3015))
@@ -14025,14 +13594,10 @@ let (is_true :
   fun t ->
     fun uu___ ->
       FStar_Tactics_Effect.tac_bind
-        (Prims.mk_range
-           "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
-           (Prims.of_int (3023)) (Prims.of_int (8)) (Prims.of_int (3023))
-           (Prims.of_int (25)))
-        (Prims.mk_range
-           "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
-           (Prims.of_int (3023)) (Prims.of_int (2)) (Prims.of_int (3025))
-           (Prims.of_int (31)))
+        (Prims.mk_range "Steel.Effect.Common.fsti" (Prims.of_int (3023))
+           (Prims.of_int (8)) (Prims.of_int (3023)) (Prims.of_int (25)))
+        (Prims.mk_range "Steel.Effect.Common.fsti" (Prims.of_int (3023))
+           (Prims.of_int (2)) (Prims.of_int (3025)) (Prims.of_int (31)))
         (Obj.magic (FStar_Reflection_Formula.term_as_formula t))
         (fun uu___1 ->
            (fun uu___1 ->
@@ -14059,12 +13624,10 @@ let rec (solve_maybe_emps :
          Obj.magic
            (Obj.repr
               (FStar_Tactics_Effect.tac_bind
-                 (Prims.mk_range
-                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                 (Prims.mk_range "Steel.Effect.Common.fsti"
                     (Prims.of_int (3033)) (Prims.of_int (13))
                     (Prims.of_int (3033)) (Prims.of_int (21)))
-                 (Prims.mk_range
-                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                 (Prims.mk_range "Steel.Effect.Common.fsti"
                     (Prims.of_int (3033)) (Prims.of_int (7))
                     (Prims.of_int (3054)) (Prims.of_int (31)))
                  (Obj.magic (FStar_Tactics_Derived.goals ()))
@@ -14080,14 +13643,12 @@ let rec (solve_maybe_emps :
                            Obj.magic
                              (Obj.repr
                                 (FStar_Tactics_Effect.tac_bind
-                                   (Prims.mk_range
-                                      "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                   (Prims.mk_range "Steel.Effect.Common.fsti"
                                       (Prims.of_int (3036))
                                       (Prims.of_int (12))
                                       (Prims.of_int (3036))
                                       (Prims.of_int (42)))
-                                   (Prims.mk_range
-                                      "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                   (Prims.mk_range "Steel.Effect.Common.fsti"
                                       (Prims.of_int (3036))
                                       (Prims.of_int (46))
                                       (Prims.of_int (3054))
@@ -14095,13 +13656,13 @@ let rec (solve_maybe_emps :
                                    (Obj.magic
                                       (FStar_Tactics_Effect.tac_bind
                                          (Prims.mk_range
-                                            "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                            "Steel.Effect.Common.fsti"
                                             (Prims.of_int (3036))
                                             (Prims.of_int (29))
                                             (Prims.of_int (3036))
                                             (Prims.of_int (42)))
                                          (Prims.mk_range
-                                            "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                            "Steel.Effect.Common.fsti"
                                             (Prims.of_int (3036))
                                             (Prims.of_int (12))
                                             (Prims.of_int (3036))
@@ -14119,13 +13680,13 @@ let rec (solve_maybe_emps :
                                          Obj.magic
                                            (FStar_Tactics_Effect.tac_bind
                                               (Prims.mk_range
-                                                 "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                 "Steel.Effect.Common.fsti"
                                                  (Prims.of_int (3036))
                                                  (Prims.of_int (46))
                                                  (Prims.of_int (3053))
                                                  (Prims.of_int (5)))
                                               (Prims.mk_range
-                                                 "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                 "Steel.Effect.Common.fsti"
                                                  (Prims.of_int (3054))
                                                  (Prims.of_int (4))
                                                  (Prims.of_int (3054))
@@ -14145,13 +13706,13 @@ let rec (solve_maybe_emps :
                                                      Obj.magic
                                                        (FStar_Tactics_Effect.tac_bind
                                                           (Prims.mk_range
-                                                             "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                             "Steel.Effect.Common.fsti"
                                                              (Prims.of_int (3042))
                                                              (Prims.of_int (23))
                                                              (Prims.of_int (3042))
                                                              (Prims.of_int (36)))
                                                           (Prims.mk_range
-                                                             "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                             "Steel.Effect.Common.fsti"
                                                              (Prims.of_int (3042))
                                                              (Prims.of_int (8))
                                                              (Prims.of_int (3051))
@@ -14174,13 +13735,13 @@ let rec (solve_maybe_emps :
                                                                     Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
                                                                     (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (3044))
                                                                     (Prims.of_int (11))
                                                                     (Prims.of_int (3044))
                                                                     (Prims.of_int (73)))
                                                                     (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (3045))
                                                                     (Prims.of_int (10))
                                                                     (Prims.of_int (3046))
@@ -14201,13 +13762,13 @@ let rec (solve_maybe_emps :
                                                                     Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
                                                                     (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (3045))
                                                                     (Prims.of_int (18))
                                                                     (Prims.of_int (3045))
                                                                     (Prims.of_int (29)))
                                                                     (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (3046))
                                                                     (Prims.of_int (10))
                                                                     (Prims.of_int (3046))
@@ -14234,13 +13795,13 @@ let rec (solve_maybe_emps :
                                                                     Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
                                                                     (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (3048))
                                                                     (Prims.of_int (11))
                                                                     (Prims.of_int (3048))
                                                                     (Prims.of_int (77)))
                                                                     (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (3049))
                                                                     (Prims.of_int (10))
                                                                     (Prims.of_int (3050))
@@ -14261,13 +13822,13 @@ let rec (solve_maybe_emps :
                                                                     Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
                                                                     (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (3049))
                                                                     (Prims.of_int (18))
                                                                     (Prims.of_int (3049))
                                                                     (Prims.of_int (29)))
                                                                     (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (3050))
                                                                     (Prims.of_int (10))
                                                                     (Prims.of_int (3050))
@@ -14286,13 +13847,13 @@ let rec (solve_maybe_emps :
                                                                     uu___8 ->
                                                                     FStar_Tactics_Effect.tac_bind
                                                                     (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (3050))
                                                                     (Prims.of_int (40))
                                                                     (Prims.of_int (3050))
                                                                     (Prims.of_int (64)))
                                                                     (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (3050))
                                                                     (Prims.of_int (66))
                                                                     (Prims.of_int (3050))
@@ -14300,13 +13861,13 @@ let rec (solve_maybe_emps :
                                                                     (Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
                                                                     (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (3050))
                                                                     (Prims.of_int (47))
                                                                     (Prims.of_int (3050))
                                                                     (Prims.of_int (64)))
                                                                     (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (3050))
                                                                     (Prims.of_int (40))
                                                                     (Prims.of_int (3050))
@@ -14359,12 +13920,10 @@ let rec (norm_return_pre :
          Obj.magic
            (Obj.repr
               (FStar_Tactics_Effect.tac_bind
-                 (Prims.mk_range
-                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                 (Prims.mk_range "Steel.Effect.Common.fsti"
                     (Prims.of_int (3060)) (Prims.of_int (13))
                     (Prims.of_int (3060)) (Prims.of_int (21)))
-                 (Prims.mk_range
-                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                 (Prims.mk_range "Steel.Effect.Common.fsti"
                     (Prims.of_int (3060)) (Prims.of_int (7))
                     (Prims.of_int (3062)) (Prims.of_int (81)))
                  (Obj.magic (FStar_Tactics_Derived.goals ()))
@@ -14380,14 +13939,12 @@ let rec (norm_return_pre :
                            Obj.magic
                              (Obj.repr
                                 (FStar_Tactics_Effect.tac_bind
-                                   (Prims.mk_range
-                                      "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                   (Prims.mk_range "Steel.Effect.Common.fsti"
                                       (Prims.of_int (3062))
                                       (Prims.of_int (12))
                                       (Prims.of_int (3062))
                                       (Prims.of_int (44)))
-                                   (Prims.mk_range
-                                      "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                   (Prims.mk_range "Steel.Effect.Common.fsti"
                                       (Prims.of_int (3062))
                                       (Prims.of_int (46))
                                       (Prims.of_int (3062))
@@ -14401,13 +13958,13 @@ let rec (norm_return_pre :
                                          Obj.magic
                                            (FStar_Tactics_Effect.tac_bind
                                               (Prims.mk_range
-                                                 "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                 "Steel.Effect.Common.fsti"
                                                  (Prims.of_int (3062))
                                                  (Prims.of_int (46))
                                                  (Prims.of_int (3062))
                                                  (Prims.of_int (53)))
                                               (Prims.mk_range
-                                                 "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                 "Steel.Effect.Common.fsti"
                                                  (Prims.of_int (3062))
                                                  (Prims.of_int (55))
                                                  (Prims.of_int (3062))
@@ -14429,14 +13986,10 @@ let (print_goal :
   =
   fun g ->
     FStar_Tactics_Effect.tac_bind
-      (Prims.mk_range
-         "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
-         (Prims.of_int (3065)) (Prims.of_int (10)) (Prims.of_int (3065))
-         (Prims.of_int (21)))
-      (Prims.mk_range
-         "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
-         (Prims.of_int (3066)) (Prims.of_int (2)) (Prims.of_int (3066))
-         (Prims.of_int (18)))
+      (Prims.mk_range "Steel.Effect.Common.fsti" (Prims.of_int (3065))
+         (Prims.of_int (10)) (Prims.of_int (3065)) (Prims.of_int (21)))
+      (Prims.mk_range "Steel.Effect.Common.fsti" (Prims.of_int (3066))
+         (Prims.of_int (2)) (Prims.of_int (3066)) (Prims.of_int (18)))
       (FStar_Tactics_Effect.lift_div_tac
          (fun uu___ -> FStar_Tactics_Types.goal_type g))
       (fun uu___ ->
@@ -14447,14 +14000,10 @@ let (print_goals :
   =
   fun g ->
     FStar_Tactics_Effect.tac_bind
-      (Prims.mk_range
-         "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
-         (Prims.of_int (3069)) (Prims.of_int (13)) (Prims.of_int (3069))
-         (Prims.of_int (29)))
-      (Prims.mk_range
-         "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
-         (Prims.of_int (3070)) (Prims.of_int (2)) (Prims.of_int (3070))
-         (Prims.of_int (25)))
+      (Prims.mk_range "Steel.Effect.Common.fsti" (Prims.of_int (3069))
+         (Prims.of_int (13)) (Prims.of_int (3069)) (Prims.of_int (29)))
+      (Prims.mk_range "Steel.Effect.Common.fsti" (Prims.of_int (3070))
+         (Prims.of_int (2)) (Prims.of_int (3070)) (Prims.of_int (25)))
       (Obj.magic (FStar_Tactics_Util.map print_goal g))
       (fun strs ->
          FStar_Tactics_Effect.lift_div_tac
@@ -14466,24 +14015,16 @@ let (init_resolve_tac' :
   =
   fun dict ->
     FStar_Tactics_Effect.tac_bind
-      (Prims.mk_range
-         "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
-         (Prims.of_int (3080)) (Prims.of_int (20)) (Prims.of_int (3080))
-         (Prims.of_int (42)))
-      (Prims.mk_range
-         "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
-         (Prims.of_int (3080)) (Prims.of_int (2)) (Prims.of_int (3114))
-         (Prims.of_int (26)))
+      (Prims.mk_range "Steel.Effect.Common.fsti" (Prims.of_int (3080))
+         (Prims.of_int (20)) (Prims.of_int (3080)) (Prims.of_int (42)))
+      (Prims.mk_range "Steel.Effect.Common.fsti" (Prims.of_int (3080))
+         (Prims.of_int (2)) (Prims.of_int (3114)) (Prims.of_int (26)))
       (Obj.magic
          (FStar_Tactics_Effect.tac_bind
-            (Prims.mk_range
-               "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
-               (Prims.of_int (3080)) (Prims.of_int (33))
-               (Prims.of_int (3080)) (Prims.of_int (42)))
-            (Prims.mk_range
-               "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
-               (Prims.of_int (3080)) (Prims.of_int (20))
-               (Prims.of_int (3080)) (Prims.of_int (42)))
+            (Prims.mk_range "Steel.Effect.Common.fsti" (Prims.of_int (3080))
+               (Prims.of_int (33)) (Prims.of_int (3080)) (Prims.of_int (42)))
+            (Prims.mk_range "Steel.Effect.Common.fsti" (Prims.of_int (3080))
+               (Prims.of_int (20)) (Prims.of_int (3080)) (Prims.of_int (42)))
             (Obj.magic (FStar_Tactics_Derived.goals ()))
             (fun uu___ -> (fun uu___ -> Obj.magic (filter_goals uu___)) uu___)))
       (fun uu___ ->
@@ -14492,12 +14033,10 @@ let (init_resolve_tac' :
             | (slgs, loggs) ->
                 Obj.magic
                   (FStar_Tactics_Effect.tac_bind
-                     (Prims.mk_range
-                        "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                     (Prims.mk_range "Steel.Effect.Common.fsti"
                         (Prims.of_int (3085)) (Prims.of_int (2))
                         (Prims.of_int (3085)) (Prims.of_int (16)))
-                     (Prims.mk_range
-                        "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                     (Prims.mk_range "Steel.Effect.Common.fsti"
                         (Prims.of_int (3088)) (Prims.of_int (2))
                         (Prims.of_int (3114)) (Prims.of_int (26)))
                      (Obj.magic (FStar_Tactics_Builtins.set_goals slgs))
@@ -14505,24 +14044,22 @@ let (init_resolve_tac' :
                         (fun uu___1 ->
                            Obj.magic
                              (FStar_Tactics_Effect.tac_bind
-                                (Prims.mk_range
-                                   "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                (Prims.mk_range "Steel.Effect.Common.fsti"
                                    (Prims.of_int (3088)) (Prims.of_int (2))
                                    (Prims.of_int (3088)) (Prims.of_int (47)))
-                                (Prims.mk_range
-                                   "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                (Prims.mk_range "Steel.Effect.Common.fsti"
                                    (Prims.of_int (3093)) (Prims.of_int (2))
                                    (Prims.of_int (3114)) (Prims.of_int (26)))
                                 (Obj.magic
                                    (FStar_Tactics_Effect.tac_bind
                                       (Prims.mk_range
-                                         "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                         "Steel.Effect.Common.fsti"
                                          (Prims.of_int (3088))
                                          (Prims.of_int (19))
                                          (Prims.of_int (3088))
                                          (Prims.of_int (47)))
                                       (Prims.mk_range
-                                         "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                         "Steel.Effect.Common.fsti"
                                          (Prims.of_int (3088))
                                          (Prims.of_int (2))
                                          (Prims.of_int (3088))
@@ -14530,13 +14067,13 @@ let (init_resolve_tac' :
                                       (Obj.magic
                                          (FStar_Tactics_Effect.tac_bind
                                             (Prims.mk_range
-                                               "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                               "Steel.Effect.Common.fsti"
                                                (Prims.of_int (3088))
                                                (Prims.of_int (36))
                                                (Prims.of_int (3088))
                                                (Prims.of_int (46)))
                                             (Prims.mk_range
-                                               "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                               "Steel.Effect.Common.fsti"
                                                (Prims.of_int (3088))
                                                (Prims.of_int (19))
                                                (Prims.of_int (3088))
@@ -14559,13 +14096,13 @@ let (init_resolve_tac' :
                                       Obj.magic
                                         (FStar_Tactics_Effect.tac_bind
                                            (Prims.mk_range
-                                              "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                              "Steel.Effect.Common.fsti"
                                               (Prims.of_int (3093))
                                               (Prims.of_int (2))
                                               (Prims.of_int (3093))
                                               (Prims.of_int (51)))
                                            (Prims.mk_range
-                                              "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                              "Steel.Effect.Common.fsti"
                                               (Prims.of_int (3099))
                                               (Prims.of_int (2))
                                               (Prims.of_int (3114))
@@ -14573,13 +14110,13 @@ let (init_resolve_tac' :
                                            (Obj.magic
                                               (FStar_Tactics_Effect.tac_bind
                                                  (Prims.mk_range
-                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                    "Steel.Effect.Common.fsti"
                                                     (Prims.of_int (3093))
                                                     (Prims.of_int (24))
                                                     (Prims.of_int (3093))
                                                     (Prims.of_int (51)))
                                                  (Prims.mk_range
-                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                    "Steel.Effect.Common.fsti"
                                                     (Prims.of_int (3093))
                                                     (Prims.of_int (2))
                                                     (Prims.of_int (3093))
@@ -14587,13 +14124,13 @@ let (init_resolve_tac' :
                                                  (Obj.magic
                                                     (FStar_Tactics_Effect.tac_bind
                                                        (Prims.mk_range
-                                                          "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                          "Steel.Effect.Common.fsti"
                                                           (Prims.of_int (3093))
                                                           (Prims.of_int (41))
                                                           (Prims.of_int (3093))
                                                           (Prims.of_int (50)))
                                                        (Prims.mk_range
-                                                          "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                          "Steel.Effect.Common.fsti"
                                                           (Prims.of_int (3093))
                                                           (Prims.of_int (24))
                                                           (Prims.of_int (3093))
@@ -14616,13 +14153,13 @@ let (init_resolve_tac' :
                                                  Obj.magic
                                                    (FStar_Tactics_Effect.tac_bind
                                                       (Prims.mk_range
-                                                         "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                         "Steel.Effect.Common.fsti"
                                                          (Prims.of_int (3099))
                                                          (Prims.of_int (2))
                                                          (Prims.of_int (3099))
                                                          (Prims.of_int (46)))
                                                       (Prims.mk_range
-                                                         "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                         "Steel.Effect.Common.fsti"
                                                          (Prims.of_int (3105))
                                                          (Prims.of_int (2))
                                                          (Prims.of_int (3114))
@@ -14630,13 +14167,13 @@ let (init_resolve_tac' :
                                                       (Obj.magic
                                                          (FStar_Tactics_Effect.tac_bind
                                                             (Prims.mk_range
-                                                               "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                               "Steel.Effect.Common.fsti"
                                                                (Prims.of_int (3099))
                                                                (Prims.of_int (19))
                                                                (Prims.of_int (3099))
                                                                (Prims.of_int (46)))
                                                             (Prims.mk_range
-                                                               "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                               "Steel.Effect.Common.fsti"
                                                                (Prims.of_int (3099))
                                                                (Prims.of_int (2))
                                                                (Prims.of_int (3099))
@@ -14644,13 +14181,13 @@ let (init_resolve_tac' :
                                                             (Obj.magic
                                                                (FStar_Tactics_Effect.tac_bind
                                                                   (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (3099))
                                                                     (Prims.of_int (36))
                                                                     (Prims.of_int (3099))
                                                                     (Prims.of_int (45)))
                                                                   (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (3099))
                                                                     (Prims.of_int (19))
                                                                     (Prims.of_int (3099))
@@ -14677,13 +14214,13 @@ let (init_resolve_tac' :
                                                             Obj.magic
                                                               (FStar_Tactics_Effect.tac_bind
                                                                  (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (3105))
                                                                     (Prims.of_int (2))
                                                                     (Prims.of_int (3105))
                                                                     (Prims.of_int (45)))
                                                                  (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (3108))
                                                                     (Prims.of_int (2))
                                                                     (Prims.of_int (3114))
@@ -14692,13 +14229,13 @@ let (init_resolve_tac' :
                                                                     (
                                                                     FStar_Tactics_Effect.tac_bind
                                                                     (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (3105))
                                                                     (Prims.of_int (18))
                                                                     (Prims.of_int (3105))
                                                                     (Prims.of_int (45)))
                                                                     (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (3105))
                                                                     (Prims.of_int (2))
                                                                     (Prims.of_int (3105))
@@ -14706,13 +14243,13 @@ let (init_resolve_tac' :
                                                                     (Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
                                                                     (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (3105))
                                                                     (Prims.of_int (35))
                                                                     (Prims.of_int (3105))
                                                                     (Prims.of_int (44)))
                                                                     (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (3105))
                                                                     (Prims.of_int (18))
                                                                     (Prims.of_int (3105))
@@ -14742,13 +14279,13 @@ let (init_resolve_tac' :
                                                                     Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
                                                                     (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (3108))
                                                                     (Prims.of_int (2))
                                                                     (Prims.of_int (3108))
                                                                     (Prims.of_int (18)))
                                                                     (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (3112))
                                                                     (Prims.of_int (2))
                                                                     (Prims.of_int (3114))
@@ -14763,13 +14300,13 @@ let (init_resolve_tac' :
                                                                     Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
                                                                     (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (3112))
                                                                     (Prims.of_int (2))
                                                                     (Prims.of_int (3112))
                                                                     (Prims.of_int (17)))
                                                                     (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (3114))
                                                                     (Prims.of_int (2))
                                                                     (Prims.of_int (3114))
@@ -14805,14 +14342,10 @@ let _ =
 let (selector_tactic : unit -> (unit, unit) FStar_Tactics_Effect.tac_repr) =
   fun uu___ ->
     FStar_Tactics_Effect.tac_bind
-      (Prims.mk_range
-         "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
-         (Prims.of_int (3127)) (Prims.of_int (2)) (Prims.of_int (3127))
-         (Prims.of_int (21)))
-      (Prims.mk_range
-         "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
-         (Prims.of_int (3128)) (Prims.of_int (2)) (Prims.of_int (3138))
-         (Prims.of_int (34)))
+      (Prims.mk_range "Steel.Effect.Common.fsti" (Prims.of_int (3127))
+         (Prims.of_int (2)) (Prims.of_int (3127)) (Prims.of_int (21)))
+      (Prims.mk_range "Steel.Effect.Common.fsti" (Prims.of_int (3128))
+         (Prims.of_int (2)) (Prims.of_int (3138)) (Prims.of_int (34)))
       (Obj.magic
          (FStar_Tactics_Derived.apply
             (FStar_Reflection_Builtins.pack_ln
@@ -14823,12 +14356,10 @@ let (selector_tactic : unit -> (unit, unit) FStar_Tactics_Effect.tac_repr) =
          (fun uu___1 ->
             Obj.magic
               (FStar_Tactics_Effect.tac_bind
-                 (Prims.mk_range
-                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                 (Prims.mk_range "Steel.Effect.Common.fsti"
                     (Prims.of_int (3128)) (Prims.of_int (2))
                     (Prims.of_int (3128)) (Prims.of_int (41)))
-                 (Prims.mk_range
-                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                 (Prims.mk_range "Steel.Effect.Common.fsti"
                     (Prims.of_int (3129)) (Prims.of_int (2))
                     (Prims.of_int (3138)) (Prims.of_int (34)))
                  (Obj.magic
@@ -14844,12 +14375,10 @@ let (selector_tactic : unit -> (unit, unit) FStar_Tactics_Effect.tac_repr) =
                     (fun uu___2 ->
                        Obj.magic
                          (FStar_Tactics_Effect.tac_bind
-                            (Prims.mk_range
-                               "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                            (Prims.mk_range "Steel.Effect.Common.fsti"
                                (Prims.of_int (3129)) (Prims.of_int (2))
                                (Prims.of_int (3129)) (Prims.of_int (9)))
-                            (Prims.mk_range
-                               "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                            (Prims.mk_range "Steel.Effect.Common.fsti"
                                (Prims.of_int (3130)) (Prims.of_int (2))
                                (Prims.of_int (3138)) (Prims.of_int (34)))
                             (Obj.magic (FStar_Tactics_Derived.flip ()))
@@ -14858,13 +14387,13 @@ let (selector_tactic : unit -> (unit, unit) FStar_Tactics_Effect.tac_repr) =
                                   Obj.magic
                                     (FStar_Tactics_Effect.tac_bind
                                        (Prims.mk_range
-                                          "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                          "Steel.Effect.Common.fsti"
                                           (Prims.of_int (3130))
                                           (Prims.of_int (2))
                                           (Prims.of_int (3137))
                                           (Prims.of_int (27)))
                                        (Prims.mk_range
-                                          "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                          "Steel.Effect.Common.fsti"
                                           (Prims.of_int (3138))
                                           (Prims.of_int (2))
                                           (Prims.of_int (3138))
@@ -14918,24 +14447,16 @@ let (ite_soundness_tac : unit -> (unit, unit) FStar_Tactics_Effect.tac_repr)
   =
   fun uu___ ->
     FStar_Tactics_Effect.tac_bind
-      (Prims.mk_range
-         "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
-         (Prims.of_int (3145)) (Prims.of_int (23)) (Prims.of_int (3145))
-         (Prims.of_int (46)))
-      (Prims.mk_range
-         "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
-         (Prims.of_int (3145)) (Prims.of_int (2)) (Prims.of_int (3169))
-         (Prims.of_int (8)))
+      (Prims.mk_range "Steel.Effect.Common.fsti" (Prims.of_int (3145))
+         (Prims.of_int (23)) (Prims.of_int (3145)) (Prims.of_int (46)))
+      (Prims.mk_range "Steel.Effect.Common.fsti" (Prims.of_int (3145))
+         (Prims.of_int (2)) (Prims.of_int (3169)) (Prims.of_int (8)))
       (Obj.magic
          (FStar_Tactics_Effect.tac_bind
-            (Prims.mk_range
-               "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
-               (Prims.of_int (3145)) (Prims.of_int (36))
-               (Prims.of_int (3145)) (Prims.of_int (46)))
-            (Prims.mk_range
-               "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
-               (Prims.of_int (3145)) (Prims.of_int (23))
-               (Prims.of_int (3145)) (Prims.of_int (46)))
+            (Prims.mk_range "Steel.Effect.Common.fsti" (Prims.of_int (3145))
+               (Prims.of_int (36)) (Prims.of_int (3145)) (Prims.of_int (46)))
+            (Prims.mk_range "Steel.Effect.Common.fsti" (Prims.of_int (3145))
+               (Prims.of_int (23)) (Prims.of_int (3145)) (Prims.of_int (46)))
             (Obj.magic (FStar_Tactics_Derived.goals ()))
             (fun uu___1 ->
                (fun uu___1 -> Obj.magic (filter_goals uu___1)) uu___1)))
@@ -14945,12 +14466,10 @@ let (ite_soundness_tac : unit -> (unit, unit) FStar_Tactics_Effect.tac_repr)
             | (slgs, loggoals) ->
                 Obj.magic
                   (FStar_Tactics_Effect.tac_bind
-                     (Prims.mk_range
-                        "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                     (Prims.mk_range "Steel.Effect.Common.fsti"
                         (Prims.of_int (3146)) (Prims.of_int (2))
                         (Prims.of_int (3146)) (Prims.of_int (16)))
-                     (Prims.mk_range
-                        "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                     (Prims.mk_range "Steel.Effect.Common.fsti"
                         (Prims.of_int (3147)) (Prims.of_int (2))
                         (Prims.of_int (3169)) (Prims.of_int (8)))
                      (Obj.magic (FStar_Tactics_Builtins.set_goals slgs))
@@ -14958,12 +14477,10 @@ let (ite_soundness_tac : unit -> (unit, unit) FStar_Tactics_Effect.tac_repr)
                         (fun uu___2 ->
                            Obj.magic
                              (FStar_Tactics_Effect.tac_bind
-                                (Prims.mk_range
-                                   "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                (Prims.mk_range "Steel.Effect.Common.fsti"
                                    (Prims.of_int (3147)) (Prims.of_int (2))
                                    (Prims.of_int (3147)) (Prims.of_int (46)))
-                                (Prims.mk_range
-                                   "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                (Prims.mk_range "Steel.Effect.Common.fsti"
                                    (Prims.of_int (3150)) (Prims.of_int (2))
                                    (Prims.of_int (3169)) (Prims.of_int (8)))
                                 (Obj.magic
@@ -14974,13 +14491,13 @@ let (ite_soundness_tac : unit -> (unit, unit) FStar_Tactics_Effect.tac_repr)
                                       Obj.magic
                                         (FStar_Tactics_Effect.tac_bind
                                            (Prims.mk_range
-                                              "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                              "Steel.Effect.Common.fsti"
                                               (Prims.of_int (3150))
                                               (Prims.of_int (21))
                                               (Prims.of_int (3150))
                                               (Prims.of_int (33)))
                                            (Prims.mk_range
-                                              "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                              "Steel.Effect.Common.fsti"
                                               (Prims.of_int (3151))
                                               (Prims.of_int (2))
                                               (Prims.of_int (3169))
@@ -14993,13 +14510,13 @@ let (ite_soundness_tac : unit -> (unit, unit) FStar_Tactics_Effect.tac_repr)
                                                  Obj.magic
                                                    (FStar_Tactics_Effect.tac_bind
                                                       (Prims.mk_range
-                                                         "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                         "Steel.Effect.Common.fsti"
                                                          (Prims.of_int (3151))
                                                          (Prims.of_int (8))
                                                          (Prims.of_int (3151))
                                                          (Prims.of_int (16)))
                                                       (Prims.mk_range
-                                                         "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                         "Steel.Effect.Common.fsti"
                                                          (Prims.of_int (3151))
                                                          (Prims.of_int (2))
                                                          (Prims.of_int (3169))
@@ -15018,13 +14535,13 @@ let (ite_soundness_tac : unit -> (unit, unit) FStar_Tactics_Effect.tac_repr)
                                                                 Obj.magic
                                                                   (FStar_Tactics_Effect.tac_bind
                                                                     (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (3153))
                                                                     (Prims.of_int (13))
                                                                     (Prims.of_int (3153))
                                                                     (Prims.of_int (25)))
                                                                     (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (3155))
                                                                     (Prims.of_int (2))
                                                                     (Prims.of_int (3169))
@@ -15039,13 +14556,13 @@ let (ite_soundness_tac : unit -> (unit, unit) FStar_Tactics_Effect.tac_repr)
                                                                     Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
                                                                     (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (3155))
                                                                     (Prims.of_int (2))
                                                                     (Prims.of_int (3155))
                                                                     (Prims.of_int (64)))
                                                                     (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (3156))
                                                                     (Prims.of_int (2))
                                                                     (Prims.of_int (3169))
@@ -15070,13 +14587,13 @@ let (ite_soundness_tac : unit -> (unit, unit) FStar_Tactics_Effect.tac_repr)
                                                                     Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
                                                                     (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (3156))
                                                                     (Prims.of_int (2))
                                                                     (Prims.of_int (3159))
                                                                     (Prims.of_int (16)))
                                                                     (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (3162))
                                                                     (Prims.of_int (2))
                                                                     (Prims.of_int (3169))
@@ -15114,13 +14631,13 @@ let (ite_soundness_tac : unit -> (unit, unit) FStar_Tactics_Effect.tac_repr)
                                                                     Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
                                                                     (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (3162))
                                                                     (Prims.of_int (2))
                                                                     (Prims.of_int (3162))
                                                                     (Prims.of_int (8)))
                                                                     (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (3164))
                                                                     (Prims.of_int (2))
                                                                     (Prims.of_int (3169))
@@ -15135,13 +14652,13 @@ let (ite_soundness_tac : unit -> (unit, unit) FStar_Tactics_Effect.tac_repr)
                                                                     Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
                                                                     (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (3164))
                                                                     (Prims.of_int (2))
                                                                     (Prims.of_int (3164))
                                                                     (Prims.of_int (20)))
                                                                     (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (3165))
                                                                     (Prims.of_int (2))
                                                                     (Prims.of_int (3169))
@@ -15158,13 +14675,13 @@ let (ite_soundness_tac : unit -> (unit, unit) FStar_Tactics_Effect.tac_repr)
                                                                     Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
                                                                     (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (3165))
                                                                     (Prims.of_int (2))
                                                                     (Prims.of_int (3165))
                                                                     (Prims.of_int (24)))
                                                                     (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (3167))
                                                                     (Prims.of_int (2))
                                                                     (Prims.of_int (3169))
@@ -15181,13 +14698,13 @@ let (ite_soundness_tac : unit -> (unit, unit) FStar_Tactics_Effect.tac_repr)
                                                                     Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
                                                                     (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (3167))
                                                                     (Prims.of_int (2))
                                                                     (Prims.of_int (3167))
                                                                     (Prims.of_int (26)))
                                                                     (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (3168))
                                                                     (Prims.of_int (2))
                                                                     (Prims.of_int (3169))
@@ -15204,13 +14721,13 @@ let (ite_soundness_tac : unit -> (unit, unit) FStar_Tactics_Effect.tac_repr)
                                                                     Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
                                                                     (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (3168))
                                                                     (Prims.of_int (2))
                                                                     (Prims.of_int (3168))
                                                                     (Prims.of_int (9)))
                                                                     (Prims.mk_range
-                                                                    "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
+                                                                    "Steel.Effect.Common.fsti"
                                                                     (Prims.of_int (3169))
                                                                     (Prims.of_int (2))
                                                                     (Prims.of_int (3169))
@@ -15242,14 +14759,10 @@ let (vc_norm : unit -> (unit, unit) FStar_Tactics_Effect.tac_repr) =
     FStar_Tactics_Builtins.with_compat_pre_core Prims.int_zero
       (fun uu___1 ->
          FStar_Tactics_Effect.tac_bind
-           (Prims.mk_range
-              "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
-              (Prims.of_int (3175)) (Prims.of_int (61)) (Prims.of_int (3175))
-              (Prims.of_int (78)))
-           (Prims.mk_range
-              "/home/tahina/everest/master/FStar/ulib/experimental/Steel.Effect.Common.fsti"
-              (Prims.of_int (3175)) (Prims.of_int (80)) (Prims.of_int (3175))
-              (Prims.of_int (87)))
+           (Prims.mk_range "Steel.Effect.Common.fsti" (Prims.of_int (3175))
+              (Prims.of_int (61)) (Prims.of_int (3175)) (Prims.of_int (78)))
+           (Prims.mk_range "Steel.Effect.Common.fsti" (Prims.of_int (3175))
+              (Prims.of_int (80)) (Prims.of_int (3175)) (Prims.of_int (87)))
            (Obj.magic
               (FStar_Tactics_Builtins.norm
                  [FStar_Pervasives.delta_attr
