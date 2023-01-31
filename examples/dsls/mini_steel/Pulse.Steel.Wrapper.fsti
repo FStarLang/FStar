@@ -67,11 +67,9 @@ val stt_ghost (a:Type u#a) (opened:inames) (pre:vprop) (post:a -> vprop) : Type 
 // the returns should probably move to atomic,
 //   once we have support for bind etc.
 //
-let eq2_prop (#a:Type) (x y:a) : prop = x == y
 
 inline_for_extraction
-val return_stt (#a:Type u#a) (x:a)
-  : stt a emp (fun r -> pure (eq2_prop r x))
+val return_stt (#a:Type u#a) (x:a) : stt a emp (fun r -> pure (r == x))
 
 inline_for_extraction
 val return_stt_noeq (#a:Type u#a) (x:a) : stt a emp (fun _ -> emp)
@@ -219,6 +217,8 @@ type u32 : Type0 = U32.t
 
 open FStar.Ghost
 
+let eq2_prop (#a:Type) (x y:a) : prop = x == y
+
 val read (r:R.ref u32) (#n:erased u32) (#p:perm)
   : stt (x:u32{reveal n == x})
         (R.pts_to r p n)
@@ -253,3 +253,4 @@ val intro_pure (p:prop) (_:squash p)
   : stt_ghost unit emp_inames
               emp
               (fun _ -> pure p)
+
