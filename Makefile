@@ -21,7 +21,6 @@ clean-dune-snapshot:
 .PHONY: dune-extract-all
 
 dune-extract-all:
-	+$(MAKE) -C src ocaml
 	+$(MAKE) -C src/ocaml-output dune-snapshot
 
 dune-full-bootstrap:

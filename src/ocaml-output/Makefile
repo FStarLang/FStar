@@ -61,25 +61,18 @@ endif
 .PHONY: generated-files
 generated-files: $(GENERATED_ML_FILES)
 
-.PHONY: dune-stdlib-snapshot dune-taclib-snapshot dune-snapshot dune-fstar-snapshot dune-verify-ulib
-dune-fstar-snapshot: generated-files
+.PHONY: dune-stdlib-snapshot dune-taclib-snapshot dune-snapshot dune-fstar-snapshot dune-verify-ulib source-files
 
-dune-verify-ulib: dune-fstar-snapshot
-	+if test -x $(FSTAR_HOME)/bin/fstar.exe ; then \
-	  $(MAKE) -C ../../ulib ; \
-	fi
+dune-fstar-snapshot:
+	+$(MAKE) -C .. ocaml
 
-dune-stdlib-snapshot: dune-verify-ulib
-	+if test -x $(FSTAR_HOME)/bin/fstar.exe ; then \
-	  $(MAKE) -C ../../ulib -f Makefile.extract-stdlib dune-snapshot ; \
-	fi
+dune-stdlib-snapshot:
+	$(MAKE) -C ../../ulib -f Makefile.extract-stdlib dune-snapshot
 
-dune-taclib-snapshot: dune-verify-ulib
-	+if test -x $(FSTAR_HOME)/bin/fstar.exe ; then \
-	  $(MAKE) -C ../../ulib -f Makefile.extract-taclib dune-snapshot ; \
-	fi
+dune-taclib-snapshot:
+	$(MAKE) -C ../../ulib -f Makefile.extract-taclib dune-snapshot
 
-dune-snapshot: dune-stdlib-snapshot dune-taclib-snapshot
+dune-snapshot: generated-files dune-fstar-snapshot dune-stdlib-snapshot dune-taclib-snapshot
 
 $(FStar_Parser_Parse_ml): parse.mly
 	@# We are opening the same module twice but we need these modules
