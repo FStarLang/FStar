@@ -31,6 +31,8 @@ cache/
 /bin/z3-x64.exe
 /src/*/obj
 
+/lib
+
 examples/*/*.ml
 examples/crypto/CntProtocol.exe
 examples/wysteria/ocaml-output/*
