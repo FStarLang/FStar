@@ -227,8 +227,7 @@ let close_pure_comp (c:pure_comp) (x:var) : pure_comp = close_comp c x
 //
 let bind_comp_compatible (c1 c2:pure_comp_st) : prop =
   match c1, c2 with
-  | C_STGhost inames1 _, C_STGhost inames2 _ ->
-    eq_tm_prop inames1 inames2
+  | C_STGhost inames1 _, C_STGhost inames2 _ -> inames1 == inames2
   | C_ST _, C_ST _ -> True
   | _, _ -> False
 
@@ -237,19 +236,16 @@ let bind_comp_pre (x:var) (c1 c2:pure_comp_st) : prop =
   (~ (x `Set.mem` freevars (comp_post c2))) /\  //x doesn't escape in the result type
   bind_comp_compatible c1 c2
 
-#push-options "--z3rlimit_factor 2"
 let bind_comp_out (c1:pure_comp_st) (c2:pure_comp_st{bind_comp_compatible c1 c2})
   : pure_comp_st =
   let s = {u=comp_u c2; res=comp_res c2; pre=comp_pre c1; post=comp_post c2} in
   match c1, c2 with
   | C_STGhost inames _, C_STGhost _ _ -> C_STGhost inames s
   | C_ST _, C_ST _ -> C_ST s
-#pop-options
 
 let bind_comp_ghost_l_compatible (c1 c2:pure_comp_st) : prop =
   match c1, c2 with
-  | C_STGhost inames1 _, C_STAtomic inames2 _ ->
-    eq_tm_prop inames1 inames2
+  | C_STGhost inames1 _, C_STAtomic inames2 _ -> inames1 == inames2
   | _, _ -> False
 
 let bind_comp_ghost_l_pre (x:var) (c1 c2:pure_comp_st) : prop =
@@ -265,8 +261,7 @@ let bind_comp_ghost_l_out (c1:pure_comp_st) (c2:pure_comp_st{bind_comp_ghost_l_c
 
 let bind_comp_ghost_r_compatible (c1 c2:pure_comp_st) : prop =
   match c1, c2 with
-  | C_STAtomic inames1 _, C_STGhost inames2 _ ->
-    eq_tm_prop inames1 inames2
+  | C_STAtomic inames1 _, C_STGhost inames2 _ -> inames1 == inames2
   | _, _ -> False
 
 let bind_comp_ghost_r_pre (x:var) (c1 c2:pure_comp_st) : prop =
@@ -285,9 +280,9 @@ let st_equiv_pre (c1 c2:pure_comp_st) : prop =
   (match c1, c2 with
    | C_ST _, C_ST _ -> True
    | C_STAtomic inames1 _, C_STAtomic inames2 _ ->
-     eq_tm_prop inames1 inames2
+     inames1 == inames2
    | C_STGhost inames1 _, C_STGhost inames2 _ ->
-     eq_tm_prop inames1 inames2
+     inames1 == inames2
    | _, _ -> False)
 
 let non_informative_witness_t (u:universe) (t:pure_term) : pure_term =
