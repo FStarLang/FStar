@@ -3916,6 +3916,7 @@ let rec check_strictly_positive_argument
 
 //check if ty_lid occurs strictly positively in some binder type btype
 and ty_strictly_positive_in_type env (ty_lid:lident) (btype:term) (unfolded:unfolded_memo_t) : bool =
+  def_check_closed_in_env btype.pos "ty_strictly_positive_in_type" env btype;
   debug_positivity env (fun () -> "Checking strict positivity in type: " ^ (Print.term_to_string btype));
   //normalize the type to unfold any type abbreviations
   let btype = N.normalize
@@ -4125,6 +4126,8 @@ Errors.with_ctx (BU.format1 "While checking constructor %s" (string_of_lid dlid)
     let dbs = SS.subst_binders (SS.opening_of_binders ty_bs) dbs in
     //open dbs
     let dbs = SS.open_binders dbs in
+    // the parameters are in scope
+    let env = Env.push_binders env ty_bs in
     //check that ty occurs strictly positively in each binder sort
     debug_positivity env (fun () -> "Data constructor type is an arrow type, so checking strict positivity in " ^ (string_of_int (List.length dbs)) ^ " binders");
     let b, _ =
