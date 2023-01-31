@@ -4,16 +4,16 @@ include .common.mk
 
 all: dune
 
+DUNE_SNAPSHOT ?= $(PWD)/ocaml
+
 .PHONY: dune dune-fstar
 dune-fstar:
-	cd ocaml && dune build --profile release && dune install --prefix=$(PWD)
+	cd $(DUNE_SNAPSHOT) && dune build --profile release && dune install --prefix=$(PWD)
 
 dune: dune-fstar
 	+$(MAKE) -C ulib
 
 .PHONY: clean-dune-snapshot
-
-DUNE_SNAPSHOT ?= $(PWD)/ocaml
 
 clean-dune-snapshot:
 	rm -rf $(DUNE_SNAPSHOT)/fstar-lib/generated/*
