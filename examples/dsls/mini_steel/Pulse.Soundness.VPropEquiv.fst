@@ -144,7 +144,7 @@ let rec vprop_equiv_soundness (#f:stt_env) (#g:env) (#v0 #v1:pure_term)
           RT.typing (extend_env_l f g) pf (stt_vprop_equiv (elab_pure v0) (elab_pure v1)))
          (decreases eq)
   = match eq with
-    | VE_Refl _ _ _ ->
+    | VE_Refl _ _ ->
       let d = tot_typing_soundness d in
       inst_vprop_equiv_refl d
 

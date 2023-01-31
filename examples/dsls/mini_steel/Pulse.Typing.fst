@@ -133,9 +133,8 @@ noeq
 type vprop_equiv (f:RT.fstar_top_env) : env -> pure_term -> pure_term -> Type =
   | VE_Refl:
      g:env ->
-     t1:pure_term ->
-     t2:pure_term{eq_tm_prop t1 t2} ->
-     vprop_equiv f g t1 t2
+     t:pure_term ->
+     vprop_equiv f g t t
 
   | VE_Sym:
      g:env ->
@@ -526,7 +525,7 @@ let rec vprop_equiv_typing (f:_) (g:_) (t0 t1:pure_term) (v:vprop_equiv f g t0 t
           (tot_typing f g t1 Tm_VProp -> tot_typing f g t0 Tm_VProp))
         (decreases v)
   = match v with
-    | VE_Refl _ _ _ -> admit () //(fun x -> x), (fun x -> x)
+    | VE_Refl _ _ -> (fun x -> x), (fun x -> x)
 
     | VE_Sym _ _ _ v' -> 
       let f, g = vprop_equiv_typing f g t1 t0 v' in
