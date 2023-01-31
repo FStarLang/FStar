@@ -2651,6 +2651,7 @@ let pure_or_ghost_pre_and_post env comp =
 (* that is env |- t : M t' for some effect M and type t' where M is reifiable *)
 (* and returns the result of reifying t *)
 let reify_body (env:Env.env) (steps:Env.steps) (t:S.term) : S.term =
+    def_check_closed_in_env t.pos "reify_body" env t;
     let tm = U.mk_reify t in
     let tm' = N.normalize
       ([Env.Beta; Env.Reify; Env.Eager_unfolding; Env.EraseUniverses; Env.AllowUnboundUniverses; Env.Exclude Env.Zeta]@steps)

@@ -405,13 +405,14 @@ let encode_free_var uninterpreted env fv tt t_norm quals :decls_t * env_t =
          else let encode_non_total_function_typ = nsstr lid <> "Prims" in
               let formals, (pre_opt, res_t) =
                 let args, comp = curried_arrow_formals_comp t_norm in
+                let tcenv_comp = Env.push_binders env.tcenv args in
                 let comp =
                   if is_smt_reifiable_comp env.tcenv comp
-                  then S.mk_Total (reify_comp ({env.tcenv with lax=true}) comp U_unknown)
+                  then S.mk_Total (reify_comp ({tcenv_comp with lax=true}) comp U_unknown)
                   else comp
                 in
                 if encode_non_total_function_typ
-                then args, TypeChecker.Util.pure_or_ghost_pre_and_post env.tcenv comp
+                then args, TypeChecker.Util.pure_or_ghost_pre_and_post tcenv_comp comp
                 else args, (None, U.comp_result comp)
               in
               let mk_disc_proj_axioms guard encoded_res_t vapp (vars:fvs) = quals |> List.collect (function
@@ -689,6 +690,7 @@ let encode_top_level_let :
       in
       let binders, body, comp = aux t e in
       let binders, body, comp =
+          let tcenv = Env.push_binders tcenv binders in
           if is_smt_reifiable_comp tcenv comp
           then let comp = reify_comp tcenv comp U_unknown in
                let body = TcUtil.reify_body tcenv [] body in
