@@ -1080,7 +1080,7 @@ and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked 
 
       let (expected_repr_typ, g_repr), u_a, a, g_a =
         let a, u_a = U.type_u () in
-        let a_uvar, _, g_a = TcUtil.new_implicit_var "" e.pos env_no_ex a in
+        let a_uvar, _, g_a = TcUtil.new_implicit_var "tc_term reflect" e.pos env_no_ex a in
         TcUtil.fresh_effect_repr_en env_no_ex e.pos l u_a a_uvar, u_a, a_uvar, g_a in
 
       let g_eq = Rel.teq env_no_ex c_e.res_typ expected_repr_typ in

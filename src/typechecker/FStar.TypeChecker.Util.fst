@@ -824,7 +824,7 @@ let substitutive_indexed_bind_substs env
                       (Print.binder_to_string b)
                       (bind_name ())
                       (Range.string_of_range r1)
-               else "")
+               else "substitutive_indexed_bind_substs.1")
                r1 in
           let g_unif = Rel.layered_effect_teq
             (Env.push_binders env [x_bv |> S.mk_binder])
@@ -857,7 +857,7 @@ let substitutive_indexed_bind_substs env
               (Print.binder_to_string b)
               (bind_name ())
               (Range.string_of_range r1)
-       else "") r1 in
+       else "substitutive_indexed_bind_substs.2") r1 in
     ss@[NT (b.binder_bv, uv_t)],
     Env.conj_guard g g_uv
   ) (subst, guard) bs
@@ -913,7 +913,7 @@ let ad_hoc_indexed_bind_substs env
        then BU.format3
               "implicit var for binder %s of %s at %s"
               (Print.binder_to_string b) (bind_name ()) (Range.string_of_range r1)
-       else "") r1 in
+       else "ad_hoc_indexed_bind_substs") r1 in
 
   if Env.debug env <| Options.Other "ResolveImplicitsHook"
   then rest_bs_uvars |>
@@ -1019,7 +1019,7 @@ let mk_indexed_return env (ed:S.eff_decl) (u_a:universe) (a:typ) (e:term) (r:Ran
               (Print.binder_to_string b)
               (BU.format1 "%s.return" (Ident.string_of_lid ed.mname))
               (Range.string_of_range r)
-       else "") r in
+       else "mk_indexed_return_env") r in
 
   let subst = List.map2
     (fun b t -> NT (b.binder_bv, t))
@@ -1862,7 +1862,7 @@ let substitutive_indexed_ite_substs (env:env)
               (Print.binder_to_string b)
               (string_of_lid ct_then.effect_name)
              (Range.string_of_range r)
-       else "")
+       else "substitutive_indexed_ite_substs")
       r in
     subst@[NT (b.binder_bv, uv_t)],
     Env.conj_guard g g_uv) (subst, guard) bs in
@@ -1907,7 +1907,7 @@ let ad_hoc_indexed_ite_substs (env:env)
               "implicit var for binder %s of %s:conjunction at %s"
               (Print.binder_to_string b) (Ident.string_of_lid ct_then.effect_name)
               (r |> Range.string_of_range)
-       else "") r in
+       else "ad_hoc_indexed_ite_substs") r in
 
   let substs = List.map2
     (fun b t -> NT (b.binder_bv, t))
@@ -2912,7 +2912,7 @@ let check_top_level env g lc : (bool * comp) =
                            "implicit for binder %s in effect abbreviation %s while checking top-level effect"
                            (Print.binder_to_string b)
                           (Ident.string_of_lid top_level_eff)
-                    else "")
+                    else "check_top_level")
                    (Env.get_range env) in
                let top_level_comp =
                  ({ comp_univs = us;
@@ -3321,7 +3321,7 @@ let fresh_effect_repr env r eff_name signature_ts repr_ts_opt u a_tm =
             then BU.format3
                    "uvar for binder %s when creating a fresh repr for %s at %s"
                    (Print.binder_to_string b) (string_of_lid eff_name) (Range.string_of_range r)
-            else "") r in
+            else "fresh_effect_repr") r in
        (match repr_ts_opt with
         | None ->  //no repr, return thunked computation type
           let eff_c = mk_Comp ({
@@ -3406,7 +3406,7 @@ let substitutive_indexed_lift_substs (env:env)
               (Print.binder_to_string b)
               lift_name
               (Range.string_of_range r)
-       else "") r in
+       else "substitutive_indexed_lift_substs") r in
     subst@[NT (b.binder_bv, uv_t)],
     Env.conj_guard g g_uv) (subst, Env.trivial_guard) bs
 
@@ -3441,7 +3441,7 @@ let ad_hoc_indexed_lift_substs (env:env)
               (Print.binder_to_string b)
               lift_name
               (Range.string_of_range r)
-       else "") r in
+       else "ad_hoc_indexed_lift_substs") r in
 
   let substs = List.map2
     (fun b t -> NT (b.binder_bv, t))

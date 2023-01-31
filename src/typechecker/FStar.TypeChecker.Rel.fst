@@ -1887,7 +1887,7 @@ let apply_substitutive_indexed_subcomp (env:Env.env)
                 (Print.binder_to_string b)
                 subcomp_name
                 (Range.string_of_range r1)
-         else "") r1 in
+         else "apply_substitutive_indexed_subcomp") r1 in
       ss@[NT (b.binder_bv, uv_t)],
       {wl with wl_implicits=g.implicits@wl.wl_implicits}) (subst, wl) bs in
 
@@ -1951,7 +1951,7 @@ let apply_ad_hoc_indexed_subcomp (env:Env.env)
               (Print.binder_to_string b)
               subcomp_name
               (Range.string_of_range r1)
-       else "") r1 in
+       else "apply_ad_hoc_indexed_subcomp") r1 in
 
   let wl = { wl with wl_implicits = g_uvars.implicits@wl.wl_implicits } in
 
