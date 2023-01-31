@@ -12,6 +12,7 @@ MENHIR=menhir #--explain --infer -la 1 --table
 OCAMLLEX=ocamllex
 FSTAR_OCAMLBUILD_EXTRAS ?= -cflag -g
 
+FSTAR_HOME = ../..
 DUNE_SNAPSHOT ?= $(realpath $(FSTAR_HOME)/ocaml)
 export DUNE_SNAPSHOT
 
