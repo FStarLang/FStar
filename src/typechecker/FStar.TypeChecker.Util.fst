@@ -3894,12 +3894,29 @@ let rec check_strictly_positive_argument
     | [], _ ->
       List.for_all (fun (arg, _) -> not (ty_occurs_in ty_lid arg)) args
     | b::bs, (arg, _)::args ->
-      ((not (ty_occurs_in ty_lid arg)) ||
-       (ty_strictly_positive_in_type env ty_lid arg unfolded &&
-        U.has_attribute
-          b.binder_attrs
-          FStar.Parser.Const.binder_strictly_positive_attr))
-      && aux bs args
+      debug_positivity env (fun _ -> 
+        BU.format3 "Checking positivity of %s in argument %s and binder %s"
+          (Ident.string_of_lid ty_lid)
+          (Print.term_to_string arg)
+          (Print.binder_to_string b));
+      let this_occurrence_ok = 
+        ((not (ty_occurs_in ty_lid arg)) ||
+        (ty_strictly_positive_in_type env ty_lid arg unfolded &&
+          U.has_attribute
+            b.binder_attrs
+            FStar.Parser.Const.binder_strictly_positive_attr))
+      in
+      if not this_occurrence_ok
+      then ( debug_positivity env 
+                (fun _ -> 
+                   BU.format3 "Failed checking positivity of %s in argument %s and binder %s"
+                              (Ident.string_of_lid ty_lid)
+                              (Print.term_to_string arg)
+                              (Print.binder_to_string b));
+             false
+     ) else (
+       aux bs args
+     ) 
   in
   aux bs args
 
@@ -3913,10 +3930,7 @@ and ty_strictly_positive_in_type env (ty_lid:lident) (btype:term) (unfolded:unfo
      Env.Weak;
      Env.Iota;
      Env.Exclude Env.Zeta;
-     Env.UnfoldUntil delta_constant;
-     Env.ForExtraction;
-     Env.Unascribe;
-     Env.AllowUnboundUniverses] env btype in
+     Env.UnfoldUntil delta_constant] env btype in
   debug_positivity env
     (fun () -> "Checking strict positivity in type, after normalization: " ^
             (Print.term_to_string btype));
@@ -3942,12 +3956,22 @@ and ty_strictly_positive_in_type env (ty_lid:lident) (btype:term) (unfolded:unfo
        let fv, us = fv_us_opt |> must in
        //if it's same as ty_lid, then check that ty_lid does not occur in the arguments
        if Ident.lid_equals fv.fv_name.v ty_lid then
-         let _ = debug_positivity env (fun () -> "Checking strict positivity in the Tm_app node where head lid is ty itself, checking that ty does not occur in the arguments") in
+         let _ = debug_positivity env 
+           (fun () -> 
+             BU.format1 
+               "Checking strict positivity in the Tm_app node where head lid is %s itself, \
+                checking that ty does not occur in the arguments"
+                (Ident.string_of_lid ty_lid))
+         in
          List.for_all (fun (t, _) -> not (ty_occurs_in ty_lid t)) args
          //else it must be another inductive type, and we would check nested positivity, ty_nested_positive fails if fv is not another inductive
          //that case could arise when, for example, it's a type constructor that we could not unfold in normalization
        else
-         let _ = debug_positivity env (fun () -> "Checking strict positivity in the Tm_app node, head lid is not ty, so checking nested positivity") in
+         let _ = debug_positivity env 
+           (fun () -> 
+              BU.format1 "Checking strict positivity in the Tm_app node, head lid is not %s, so checking nested positivity"
+                (Ident.string_of_lid ty_lid))
+         in
          ty_nested_positive_in_inductive env ty_lid fv.fv_name.v us args unfolded
 
    | Tm_arrow (sbs, c) ->  //binder type is an arrow type
@@ -3971,9 +3995,12 @@ and ty_strictly_positive_in_type env (ty_lid:lident) (btype:term) (unfolded:unfo
    | Tm_type _ ->
      debug_positivity env (fun () -> "Checking strict positivity in an fvar/Tm_uinst/Tm_type, return true");
      true  //if it's just an fvar, should be fine
-   | Tm_refine (bv, _) ->
+   | Tm_refine (bv, f) ->
      debug_positivity env (fun () -> "Checking strict positivity in an Tm_refine, recur in the bv sort)");
-     ty_strictly_positive_in_type env ty_lid bv.sort unfolded
+     if ty_strictly_positive_in_type env ty_lid bv.sort unfolded
+     then let env = push_binders env [mk_binder bv] in
+          ty_strictly_positive_in_type env ty_lid f unfolded
+     else false
    | Tm_match (_, _, branches, _) ->
      debug_positivity env (fun () -> "Checking strict positivity in an Tm_match, recur in the branches)");
      List.for_all (fun (p, _, t) ->
@@ -3983,6 +4010,22 @@ and ty_strictly_positive_in_type env (ty_lid:lident) (btype:term) (unfolded:unfo
      ) branches
    | Tm_ascribed (t, _, _) ->
      debug_positivity env (fun () -> "Checking strict positivity in an Tm_ascribed, recur)");
+     ty_strictly_positive_in_type env ty_lid t unfolded
+   | Tm_abs _ -> 
+     let bs, body, _ = U.abs_formals btype in
+     let rec aux env bs = 
+       match bs with
+       | [] -> ty_strictly_positive_in_type env ty_lid body unfolded
+       | b::bs ->
+         if ty_strictly_positive_in_type env ty_lid b.binder_bv.sort unfolded
+         then (
+           let env = push_binders env [b] in
+           aux env bs
+         )
+         else false
+     in
+     aux env bs
+   | Tm_meta (t, _) ->
      ty_strictly_positive_in_type env ty_lid t unfolded
    | _ ->
      debug_positivity env (fun () -> "Checking strict positivity, unexpected tag: " ^ (Print.tag_of_term btype) ^ " and term: " ^ (Print.term_to_string btype));
