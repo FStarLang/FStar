@@ -303,7 +303,16 @@ and term_to_string x =
 
       | Tm_bvar x ->        db_to_string x ^ ":(" ^ (tag_of_term x.sort) ^  ")"
       | Tm_name x ->        nm_to_string x // ^ "@@(" ^ term_to_string x.sort ^ ")"
-      | Tm_fvar f ->        fv_to_string f
+      | Tm_fvar f ->
+        // Add a prefix to unresolved constructors/projectors, otherwise
+        // we print a unqualified fvar, which looks exactly like a Tm_name
+        let pref =
+          match f.fv_qual with
+          | Some (Unresolved_projector _) -> "(Unresolved_projector)"
+          | Some (Unresolved_constructor _) -> "(Unresolved_constructor)"
+          | _ -> ""
+        in
+        pref ^ fv_to_string f
       | Tm_uvar (u, ([], _)) ->
         if Options.print_bound_var_types()
         && Options.print_effect_args()
