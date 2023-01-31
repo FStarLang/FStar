@@ -16,19 +16,30 @@
 module TupleSyntax
 open FStar.Mul
 
-(* non-dependent tuples: (t & t') *)
+/// The operator [&] is overloaded and might denotes:
+///  - dependent tuples ([dtuple2], [dtuple3], ...)
+///  - non-dependent tuples ([tuple2], [tuple3], ...)
+///
+/// The operator [&] is desugared into a non-dependent tuple whenever
+/// it is possible to, that is, whenever there is no actual
+/// dependency. Otherwise, the tuple is desugared as a dependent
+/// tuple.
+
+(** Non-dependent tuples *)
 let f1 (x: int & int) : int = fst x
 let f2 (x: int & (int & int)) : int = fst x
 let f3 (x: int & (int & int)) : int & int = snd x
 let f4 (x: int & int & int) : int = let fst, snd, third = x in fst * snd * third
 let f5 (x: (int & int) & int) : int = fst (fst x) * snd (fst x) * snd x
+let f6 (x: (x:int & int)) : int = fst x
+let f7 (x: (x:int & y:int {y > 0})) : int = fst x
 
-(* dependent tuples: (x:t & t') *)
-let g1 (x: (x:int & int)) : int = dfst x
-let g2 (x: (x:int & (int & int))) : int = dfst x
-let g3 (x: (x:int & (y:int & int))) : (y:int & int) = dsnd x
-let g4 (x: (x:int & y:int & int)) : int = let (|fst, snd, third|) = x in fst * snd * third
-let g5 (x: (x:(int & int) & int)) : int = fst (dfst x) + snd (dfst x) + dsnd x
-
-(* mixed, resolved as dependent tuple *)
-let h4 (x: (int & y:int & int)) : int = let (|fst, snd, third|) = x in fst * snd * third
+(** Dependent tuples *)
+let g1 (x: (x:int & y:int {x > 3})) : int = dfst x
+let g2 (x: (x:int & y:int {x > 3} & z:int {y>z})) : int = let (|x,y,z|) = x in 0
+// [g3]'s last component [z] doesn't depends on [x] or [y], but since
+// [y] depends on [x], it's a dependent tuple anyway
+let g3 (x: (x:int & y:int {x > 3} & z:int)) : int = let (|x,y,z|) = x in x
+let g4 (x: (x:int & (y:int {x > 3} & z:int))) : int = let (|x,(y,z)|) = x in x
+let g5 (x: (x:int & y:int {x > 3}) & int) : int = let ((|x,y|),z) = x in x
+let g6 (x y: unit) (t: (x:int & y:int {x > y})) = let (|x, y|) = t in x

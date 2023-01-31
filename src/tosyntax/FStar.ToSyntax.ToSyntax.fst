@@ -1272,40 +1272,61 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term * an
             in
             raise_error err top.range
         end
-
-    | Sum(binders, t)
-      when BU.for_all (function Inr _ -> true | _ -> false) binders ->
-      //non-dependent tuple
-      let terms =
-         (binders |>
-          List.map (function Inr x -> x | Inl _ -> failwith "Impossible"))
-         @[t]
+      
+    | Sum(binders, t) ->
+      // [desugar_arg] tries to desugar a binder or type in a given environment
+      let desugar_arg (env': env_t): either binder typ -> (option ident * S.typ * list S.attribute)
+        = function | Inr t -> None, desugar_typ env' t, []
+                   | Inl b -> desugar_binder env' b
       in
-      let targs, aqs =
-        terms |>
-        List.map (fun t -> let t', aq = desugar_typ_aq env t in as_arg t', aq) |>
-        List.unzip
-      in
-      let tup = fail_or env (Env.try_lookup_lid env) (C.mk_tuple_lid (List.length targs) top.range) in
-      mk (Tm_app(tup, targs)), join_aqs aqs
-
-    | Sum(binders, t) -> //dependent tuple
-      let env, _, targs = List.fold_left (fun (env, tparams, typs) b ->
-                let xopt, t, attrs =
-                  match b with
-                  | Inl b -> desugar_binder env b
-                  | Inr t -> None, desugar_typ env t, []
-                in
-                let env, x =
-                    match xopt with
-                    | None -> env, S.new_bv (Some top.range) (setpos tun)
-                    | Some x -> push_bv env x in
-                (env, tparams@[S.mk_binder_with_attrs ({x with sort=t}) None attrs],
-                 typs@[as_arg <| no_annot_abs tparams t]))
-        (env, [], [])
-        (binders@[Inl <| mk_binder (NoName t) t.range Type_level None]) in
-      let tup = fail_or env (try_lookup_lid env) (C.mk_dtuple_lid (List.length targs) top.range) in
-      mk <| Tm_app(tup, targs), noaqs
+      let (binders, dep_env, dep_typs), nondep_typs
+        = // We want to turn a list of types and binders [a1; ...; aN]
+          // (a list of arguments) into either [dtuple ...] or [tuple
+          // ...]
+          binders @ [Inl <| mk_binder (NoName t) t.range Type_level None] |>
+          // We fold over arguments, accumulating binders, an
+          // environment binding those binders (for the dependent
+          // case), a list of dependent types, and a list of simple
+          // types. The argument [nondep_typs] is either a None,
+          // either a list of non-dependent types.
+          // If [nondep_typs] is [None], we are certain we deal with a
+          // dependent tuple: we detected some dependency.
+          List.fold_left (fun ((binders, dep_env, dep_typs), nondep_typs) b ->
+            let (xopt, t, attrs), nondep_typs =
+                let dep = desugar_arg dep_env b in
+                match nondep_typs with
+              | None -> dep, None // we know already we're facing a dtup
+              | Some nondep_typs -> 
+                  // is argument [b] dependent on any previous binder?
+                  try let v, t, attrs = desugar_arg env b
+                      // we could desugar, but maybe there is shadowing
+                      // (e.g. [fun x -> x:int & y:int {x < y}])
+                      in let vars = FStar.Syntax.Free.names t |> set_elements
+                                  |> map (fun bv -> string_of_id bv.ppname)
+                      in let is_dependent = List.existsb (
+                             fun b -> mem (string_of_id b.binder_bv.ppname) vars
+                          ) binders in
+                      if is_dependent 
+                      then           dep, None
+                      else (v, t, attrs), Some (nondep_typs@[t])
+                  with // an identifier is missing: it is a dtup
+                     | Error (Fatal_IdentifierNotFound, _,_,_) -> dep, None
+            in
+            let dep_env, x = match xopt with
+               | None   -> dep_env, S.new_bv (Some top.range) (setpos tun)
+               | Some x -> push_bv dep_env x
+            in ( binders@[S.mk_binder_with_attrs {x with sort=t} None attrs]
+               , dep_env
+               , dep_typs@[no_annot_abs binders t] 
+               ), nondep_typs
+          ) (([], env, []), Some [])
+      in let args = match nondep_typs with
+                  | Some args -> args
+                  | None      -> dep_typs
+      in let tup = fail_or env (try_lookup_lid env)
+                 <| C.(if None? nondep_typs then mk_dtuple_lid else mk_tuple_lid)
+                       (List.length args) top.range
+      in mk <| Tm_app(tup, List.map as_arg args), noaqs
 
     | Product(binders, t) ->
       let bs, t = uncurry binders t in
