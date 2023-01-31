@@ -1,6 +1,7 @@
 .PHONY: indent extra
 
 FSTAR_HOME=..
+DUNE_SNAPSHOT ?= $(realpath $(FSTAR_HOME)/ocaml)
 
 include ml/Makefile.realized
 
@@ -47,11 +48,8 @@ depend.extract-taclib: .depend.extract-taclib
 
 include .depend.extract-taclib
 
-.PHONY: handwritten handwritten-tac all-ml dune-snapshot
-
-handwritten-tac:
-	cp tactics_ml/*.ml $(DUNE_SNAPSHOT)/fstar-lib
+.PHONY: all-ml dune-snapshot
 
 all-ml: $(ALL_ML_FILES)
 
-dune-snapshot: all-ml handwritten-tac
+dune-snapshot: all-ml

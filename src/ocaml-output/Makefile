@@ -12,40 +12,15 @@ MENHIR=menhir #--explain --infer -la 1 --table
 OCAMLLEX=ocamllex
 FSTAR_OCAMLBUILD_EXTRAS ?= -cflag -g
 
-# From the root
-SRC_INCLUDES= \
-	src/basic/ml \
-	src/parser/ml \
-	src/extraction/ml \
-	src/prettyprint/ml \
-	src/tactics/ml \
+DUNE_SNAPSHOT ?= $(realpath $(FSTAR_HOME)/ocaml)
+export DUNE_SNAPSHOT
 
+FStar_Parser_Parse_ml=$(DUNE_SNAPSHOT)/fstar-lib/generated/FStar_Parser_Parse.ml
+FStar_Version_ml=$(DUNE_SNAPSHOT)/fstar-lib/generated/FStar_Version.ml
 
-ALL_SRC_INCLUDES= \
-	$(SRC_INCLUDES) \
-	src/fstar/ml \
-	src/tests/ml \
+GENERATED_ML_FILES=$(FStar_Parser_Parse_ml) $(FStar_Version_ml)
 
-
-OCAMLBUILD_INCLUDES := \
-	src/ocaml-output \
-	$(ALL_SRC_INCLUDES) \
-	ulib/ml
-
-OCAMLBUILD_INCLUDE_FLAGS := $(addprefix -I , $(OCAMLBUILD_INCLUDES))
-
-OCAMLBUILD=cd ../../ &&                                                 \
-             ocamlbuild $(FSTAR_OCAMLBUILD_EXTRAS)                      \
-                      $(OCAMLBUILD_INCLUDE_FLAGS)                       \
-                      -j 4 -build-dir src/ocaml-output/_build           \
-                      -use-ocamlfind
-
-COMPILER_ML_LIB=FStar_Util.cmx FStar_Compiler_Bytes.cmx			\
-		FStar_Getopt.cmx FStar_Range.cmx FStar_Platform.cmx	\
-		FStar_Unionfind.cmx
-PARSER_ML_LIB=FStar_Parser_Util.cmx
-PRETTYPRINT_ML_LIB=FStar_Pprint.cmx
-GENERATED_FILES=FStar_Parser_Parse.ml FStar_Version.ml parse.mly
+GENERATED_FILES=$(GENERATED_ML_FILES) parse.mly
 
 # The directory where we install files when doing "make install".
 # Overridden via the command-line by the OPAM invocation.
@@ -66,10 +41,7 @@ endif
 # Final sanity check for the OCaml version
 OCAML_BRANCH=$(shell ocaml get_branch.ml)
 
-# Complete build: generate fstar.exe and derive a fresh F#-compatible parser
-# from our reference parser (i.e. ../parser/parse.mly) using Menhir (if
-# possible).
-all:  ../../bin/fstar.exe ../../bin/fstar.ocaml ../../bin/tests.exe install-compiler-lib
+all: dune-snapshot
 
 # We derive parse.mly in two ways:
 # - if we have menhir, we generate it from from the Menhir parser
@@ -86,24 +58,11 @@ else
 	$(error Correct version of menhir not found (needs a version newer than $(MENHIR_MIN_VERSION)))
 endif
 
-.PHONY: generated-files intfiles
-generated-files: $(GENERATED_FILES) intfiles
-
-# EXPERIMENTAL: copy some snapshot to build with Dune
-DUNE_SNAPSHOT ?= $(realpath ../../ocaml)
-export DUNE_SNAPSHOT
+.PHONY: generated-files
+generated-files: $(GENERATED_ML_FILES)
 
 .PHONY: dune-stdlib-snapshot dune-taclib-snapshot dune-snapshot dune-fstar-snapshot dune-verify-ulib
 dune-fstar-snapshot: generated-files
-	mkdir -p $(DUNE_SNAPSHOT)/fstar
-	cp ../../src/fstar/ml/*.ml $(DUNE_SNAPSHOT)/fstar
-	+$(MAKE) -C ../../ulib/ml dune-base-snapshot
-	mkdir -p $(DUNE_SNAPSHOT)/fstar-lib/generated
-	for f in $(SRC_INCLUDES) ; do cp ../../$$f/*.ml $(DUNE_SNAPSHOT)/fstar-lib ; done
-	cp *.ml $(DUNE_SNAPSHOT)/fstar-lib/generated
-	rm -rf $(DUNE_SNAPSHOT)/fstar-lib/generated/get_branch.ml
-	mkdir -p $(DUNE_SNAPSHOT)/fstar-tests
-	cp ../../src/tests/ml/*.ml $(DUNE_SNAPSHOT)/fstar-tests
 
 dune-verify-ulib: dune-fstar-snapshot
 	+if test -x $(FSTAR_HOME)/bin/fstar.exe ; then \
@@ -122,32 +81,7 @@ dune-taclib-snapshot: dune-verify-ulib
 
 dune-snapshot: dune-stdlib-snapshot dune-taclib-snapshot
 
-# https://stackoverflow.com/questions/38294095/ocaml-how-to-solve-findlib-warnings-of-multiple-cmis
-FSTAR_MAIN_NATIVE=_build/src/fstar/ml/main.native
-$(FSTAR_MAIN_NATIVE): export OCAMLFIND_IGNORE_DUPS_IN = $(shell ocamlfind query compiler-libs)
-$(FSTAR_MAIN_NATIVE): generated-files
-	@echo "[OCAMLBUILD]"
-	$(Q)$(OCAMLBUILD) $(notdir $(FSTAR_MAIN_NATIVE)) FStar_Syntax_Syntax.inferred.mli
-
-../../bin/fstar.exe: $(FSTAR_MAIN_NATIVE)
-	$(Q)rm -f $@
-	$(Q)cp $^ $@
-
-../../bin/fstar.ocaml: $(FSTAR_MAIN_NATIVE)
-	$(Q)rm -f $@
-	$(Q)cp $^ $@
-
-install-compiler-lib: $(FSTAR_MAIN_NATIVE)
-	@echo "[INSTALL   fstar-compiler-lib]"
-	$(Q)mkdir -p ../../bin/fstar-compiler-lib/
-	@# VD: forcing the recompilation of modules in ulib/tactics_ml whenever the compiler is rebuilt
-	@# in order to avoid inconsistent assumption errors between fstartaclib and compiler-lib
-	$(Q)$(FIND) ../../ulib/tactics_ml \( -name '*.cmi' -or -name '*.cmx' \) -exec rm {} \;
-	$(Q)$(FIND) . \( -name '*.cmi' -or -name '*.cmx' \) -exec cp {} ../../bin/fstar-compiler-lib/ \;
-	$(Q)sed "s/__FSTAR_VERSION__/$$(cat ../../version.txt)/" <../../ulib/ml/fstar-compiler-lib-META >../../bin/fstar-compiler-lib/META
-	$(Q)touch $@
-
-FStar_Parser_Parse.ml: parse.mly
+$(FStar_Parser_Parse_ml): parse.mly
 	@# We are opening the same module twice but we need these modules
 	@# open for the definition of tokens
 	$(Q)echo "open Prims" > $@
@@ -179,11 +113,6 @@ FStar_Parser_Parse.ml: parse.mly
 	$(Q)cat parse.ml >> $@
 	$(Q)rm parse.ml parse.mli
 
-../../bin/tests.exe: export OCAMLFIND_IGNORE_DUPS_IN = $(shell ocamlfind query compiler-libs)
-../../bin/tests.exe: ../../bin/fstar.exe
-	$(Q)$(OCAMLBUILD) FStar_Tests_Main.native
-	$(Q)cp -f _build/src/tests/ml/FStar_Tests_Main.native $@
-
 # always bump version for a release; always bump it when recompiling so that one
 # can easily help debugging
 VERSION=$(shell head -n 1 ../../version.txt)
@@ -201,8 +130,8 @@ DATE = $(shell date '+%Y-%m-%dT%H:%M:%S%z')
 COMMIT = $(shell ../tools/get_commit)
 COMMITDATE = $(shell git log --pretty=format:%ci -n 1 2>/dev/null || echo unset) # If a system does not have git, or we are not in a git repo, fallback with "unset"
 
-.PHONY: FStar_Version.ml
-FStar_Version.ml:
+.PHONY: $(FStar_Version_ml)
+$(FStar_Version_ml):
 	@echo '[MAKE      FStar_Version.ml]'
 	$(Q)rm -rf $@
 	$(Q)echo 'let dummy () = ();;' >> $@
@@ -232,7 +161,7 @@ install_fstarlib = $(INSTALL_EXEC) -m 755 -D ../../$(1)/$(2) $(PREFIX)/lib/fstar
 # structure.  NOTE: this rule needs ocamlfind to install the fstarlib,
 # fstar-tactics-lib and fstar-compiler-lib packages. It works with the
 # opam package, but it has not been tested in any other settings.
-install: all
+install:
 	@# Install the binary
 	$(INSTALL_EXEC) -m 755 -D $(FSTAR_MAIN_NATIVE) $(PREFIX)/bin/fstar.exe
 	@# Then the standard library
@@ -323,19 +252,5 @@ endif
 # Clean up all files generated by targets in _this_ Makefile
 clean:
 	@echo "[CLEAN     src/ocaml-output]"
-	$(Q)rm -rf _build
 	$(Q)rm -f $(GENERATED_FILES)
-	$(Q)make -C ../../ulib/ml/ clean-intfiles
 	$(Q)rm -f *.tar.gz *.zip
-	$(Q)rm -f ../../bin/fstar-compiler-lib/*.cm[aiox]
-	$(Q)rm -f ../../bin/fstar-compiler-lib/*.cmx[as]
-
-# Purge (clean + delete *all* automatically generated files)
-# if you do this you'll need to run `make ocaml` in `src` to get them back
-purge: clean
-	rm -f *.ml || true
-
--include .depend
-
-intfiles:
-	+$(MAKE) -C ../../ulib/ml/ intfiles

@@ -16,7 +16,9 @@ FSTAR_BOOT ?= $(FSTAR)
 # FSTAR_C: This is the way in which we invoke F* for boostrapping
 #   -- we use automatic dependence analysis based on files in ulib, src/{basic, ...} and boot
 #   -- MLish and lax tune type-inference for use with unverified ML programs
-FSTAR_C=$(RUNLIM) $(FSTAR_BOOT) $(SIL) $(FSTAR_BOOT_OPTIONS) --cache_checked_modules --odir ocaml-output
+DUNE_SNAPSHOT ?= $(FSTAR_HOME)/ocaml
+OUTPUT_DIRECTORY = $(DUNE_SNAPSHOT)/fstar-lib/generated
+FSTAR_C=$(RUNLIM) $(FSTAR_BOOT) $(SIL) $(FSTAR_BOOT_OPTIONS) --cache_checked_modules --odir $(OUTPUT_DIRECTORY)
 
 # Each "project" for the compiler is in its own namespace.  We want to
 # extract them all to OCaml.  Would be more convenient if all of them
@@ -60,7 +62,7 @@ EXTRACT = $(addprefix --extract_module , $(EXTRACT_MODULES))		\
 
 # And then, in a separate invocation, from each .checked.lax we
 # extract an .ml file
-ocaml-output/%.ml:
+%.ml:
 	@echo "[EXTRACT   $(notdir $@)]"
 	$(Q)$(BENCHMARK_PRE) $(FSTAR_C) $(notdir $(subst .checked.lax,,$<)) \
                    --codegen OCaml \

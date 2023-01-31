@@ -1,6 +1,7 @@
 .PHONY: indent extra
 
 FSTAR_HOME=..
+DUNE_SNAPSHOT ?= $(realpath $(FSTAR_HOME)/ocaml)
 
 include ml/Makefile.realized
 NOEXTRACT_MODULES += +FStar.Pervasives -FStar.Pervasives.Native -FStar.Reflection -FStar.Tactics -Steel
@@ -35,16 +36,11 @@ depend.extract-stdlib: .depend.extract-stdlib
 
 include .depend.extract-stdlib
 
-.PHONY: handwritten handwritten-ml handwritten-ml-experimental all-ml dune-snapshot
-
-handwritten-ml:
-	+$(MAKE) -C ml dune-handwritten-snapshot
-
-handwritten-ml-experimental:
-	+$(MAKE) -C experimental/ml dune-handwritten-snapshot
-
-handwritten: handwritten-ml handwritten-ml-experimental
+.PHONY: all-ml dune-snapshot intfiles
 
 all-ml: $(ALL_ML_FILES)
 
-dune-snapshot: all-ml handwritten
+intfiles:
+	+$(MAKE) -C ml intfiles
+
+dune-snapshot: all-ml intfiles

@@ -2,19 +2,7 @@
 
 include .common.mk
 
-FSTAR_USE_DUNE=1
-
-ifdef FSTAR_USE_DUNE
 all: dune
-else # FSTAR_USE_DUNE
-all: ocamlbuild
-endif # FSTAR_USE_DUNE
-
-.PHONY: ocamlbuild
-ocamlbuild:
-	$(Q)+$(MAKE) -C src/ocaml-output
-	$(Q)+$(MAKE) -C ulib/ml
-	$(Q)+$(MAKE) -C ulib
 
 .PHONY: dune dune-fstar
 dune-fstar:
@@ -23,26 +11,12 @@ dune-fstar:
 dune: dune-fstar
 	+$(MAKE) -C ulib
 
-.PHONY: dune-staged-bootstrap dune-bootstrap-stage
-dune-bootstrap-stage:
-	rm -rf ulib/.depend*
-	+$(MAKE) -C src/ocaml-output dune-snapshot
-	+$(MAKE) dune-fstar
+.PHONY: clean-dune-snapshot
 
-dune-staged-bootstrap:
-	+$(MAKE) STAGE_EXPERIMENTAL=0 dune-bootstrap-stage
-	+$(MAKE) STAGE_EXPERIMENTAL=0 dune-bootstrap-stage # need to do stage 0 twice if fstar.exe was not present for the first time
-	+$(MAKE) STAGE_EXPERIMENTAL=1 dune-bootstrap-stage # generates Steel.Effect.Common
-	+$(MAKE) STAGE_EXPERIMENTAL=2 dune-bootstrap-stage # generates Steel.ST.GenElim.Base
-	+$(MAKE) dune-bootstrap-stage # verifies the rest of ulib/experimental
-
-.PHONY: clean-full-dune-snapshot clean-dune-snapshot
+DUNE_SNAPSHOT ?= $(PWD)/ocaml
 
 clean-dune-snapshot:
-	rm -rf ocaml/*/generated
-
-clean-full-dune-snapshot: clean-dune-snapshot
-	find ocaml -name *.ml | xargs rm -rf
+	rm -rf $(DUNE_SNAPSHOT)/fstar-lib/generated/*
 
 .PHONY: dune-extract-all
 
@@ -52,9 +26,9 @@ dune-extract-all:
 
 dune-full-bootstrap:
 	+$(MAKE) dune
-	+$(MAKE) clean-full-dune-snapshot
+	+$(MAKE) clean-dune-snapshot
 	rm -rf ulib/.depend*
-	rm -rf src/ocaml-output/FStar_*.ml* src/ocaml-output/parse.mly
+	+$(MAKE) -C src/ocaml-output clean
 	+$(MAKE) dune-extract-all
 	rm -rf ulib/.depend*
 	+$(MAKE) dune
@@ -64,18 +38,16 @@ dune-bootstrap:
 	+$(MAKE) dune-extract-all
 	+$(MAKE) dune
 
-
 install:
 	$(Q)+$(MAKE) -C src/ocaml-output install
 
 # The directory where we install files when doing "make install".
 # Overridden via the command-line by the OPAM invocation.
-PREFIX=$(shell pwd)/fstar
+PREFIX ?= $(PWD)
 
 uninstall:
-	ocamlfind remove fstarlib
-	ocamlfind remove fstar-compiler-lib
-	ocamlfind remove fstar-tactics-lib
+	ocamlfind remove fstar
+	ocamlfind remove fstar.lib
 	rm -rf \
 	  $(PREFIX)/lib/fstar \
 	  $(PREFIX)/doc/fstar \
@@ -93,52 +65,10 @@ clean:
 	$(Q)+$(MAKE) -C ulib clean
 	$(Q)+$(MAKE) -C src/ocaml-output clean
 
-# Shortcuts for developers
-
-# Build the OCaml snapshot. NOTE: This will not build the standard library,
-# nor tests, and native tactics will not run
-1:
-	$(Q)+$(MAKE) -C src/ocaml-output ../../bin/fstar.exe
-
-# Bootstrap just the compiler, not the library and tests;
-# fastest way to incrementally build a patch to the compiler
-boot:
-	$(Q)+$(MAKE) -C src/ ocaml
-	$(Q)+$(MAKE) -C src/ocaml-output ../../bin/fstar.exe
-
-boot_tests:
-	$(Q)+$(MAKE) -C src/ ocaml
-	$(Q)+$(MAKE) -C src/ocaml-output ../../bin/tests.exe
-
-boot_libs: boot
-	$(Q)+$(MAKE) libs
-
-boot.ocaml:
-	$(Q)+$(MAKE) -C src/ ocaml
-	$(Q)+$(MAKE) -C src/ocaml-output ../../bin/fstar.ocaml
-
-# Alias for boot
-2: boot
-
-# Build the snapshot and then regen, i.e. 1 + 2
-3:
-	$(Q)+$(MAKE) -C src/ocaml-output ../../bin/fstar.exe
-	$(Q)+$(MAKE) -C src/ ocaml
-	$(Q)+$(MAKE) -C src/ocaml-output ../../bin/fstar.exe
-
-# Build the binary libraries: fstar-compiler-lib, fstarlib, fstartaclib
-# Removes the .mgen files to trigger rebuild of the libraries if needed.
-# This does NOT verify the library modules.
-libs:
-	$(Q)+$(MAKE) -C src/ocaml-output
-	$(Q)rm -f ulib/*.mgen
-	$(Q)+$(MAKE) -C ulib/ml
-
 # Regenerate all hints for the standard library and regression test suite
 hints:
 	+$(Q)OTHERFLAGS=--record_hints $(MAKE) -C ulib/
-	+$(Q)OTHERFLAGS=--record_hints $(MAKE) -C ulib/ml
-	+$(Q)OTHERFLAGS=--record_hints $(MAKE) -C src/ uregressions
+	+$(Q)OTHERFLAGS=--record_hints $(MAKE) ci-uregressions
 
 bench:
 	./bin/run_benchmark.sh
@@ -152,34 +82,14 @@ output:
 
 .PHONY: ci-utest-prelude
 
-ifdef FSTAR_USE_DUNE
-
 ci-utest-prelude: dune
 	$(Q)+$(MAKE) dune-bootstrap
-
-else # FSTAR_USE_DUNE
-
-ci-utest-prelude:
-	$(Q)+$(MAKE) -C src utest-prelude
-
-endif # FSTAR_USE_DUNE
+	$(Q)+$(MAKE) -C ulib ulib-in-fsharp    #build ulibfs
 
 .PHONY: ci-uregressions ci-uregressions-ulong
-
-ifdef FSTAR_USE_DUNE
-
-ci-uregressions:
-	$(Q)+$(MAKE) -C src uregressions-raw
-
-ci-uregressions-ulong:
-	$(Q)+$(MAKE) -C src uregressions-ulong-raw
-
-else # FSTAR_USE_DUNE
 
 ci-uregressions:
 	$(Q)+$(MAKE) -C src uregressions
 
 ci-uregressions-ulong:
 	$(Q)+$(MAKE) -C src uregressions-ulong
-
-endif # FSTAR_USE_DUNE
