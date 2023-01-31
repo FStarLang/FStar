@@ -3997,8 +3997,9 @@ and ty_strictly_positive_in_type env (ty_lid:lident) (btype:term) (unfolded:unfo
      true  //if it's just an fvar, should be fine
    | Tm_refine (bv, f) ->
      debug_positivity env (fun () -> "Checking strict positivity in an Tm_refine, recur in the bv sort)");
-     if ty_strictly_positive_in_type env ty_lid bv.sort unfolded
-     then let env = push_binders env [mk_binder bv] in
+     let [b], f = SS.open_term [S.mk_binder bv] f in
+     if ty_strictly_positive_in_type env ty_lid b.binder_bv.sort unfolded
+     then let env = push_binders env [b] in
           ty_strictly_positive_in_type env ty_lid f unfolded
      else false
    | Tm_match (_, _, branches, _) ->

@@ -8841,17 +8841,23 @@ and (ty_strictly_positive_in_type :
                        (fun uu___5 ->
                           "Checking strict positivity in an Tm_refine, recur in the bv sort)");
                      (let uu___5 =
-                        ty_strictly_positive_in_type env ty_lid
-                          bv.FStar_Syntax_Syntax.sort unfolded in
-                      if uu___5
-                      then
-                        let env1 =
+                        let uu___6 =
+                          let uu___7 = FStar_Syntax_Syntax.mk_binder bv in
+                          [uu___7] in
+                        FStar_Syntax_Subst.open_term uu___6 f in
+                      match uu___5 with
+                      | (b::[], f1) ->
                           let uu___6 =
-                            let uu___7 = FStar_Syntax_Syntax.mk_binder bv in
-                            [uu___7] in
-                          FStar_TypeChecker_Env.push_binders env uu___6 in
-                        ty_strictly_positive_in_type env1 ty_lid f unfolded
-                      else false))
+                            ty_strictly_positive_in_type env ty_lid
+                              (b.FStar_Syntax_Syntax.binder_bv).FStar_Syntax_Syntax.sort
+                              unfolded in
+                          if uu___6
+                          then
+                            let env1 =
+                              FStar_TypeChecker_Env.push_binders env [b] in
+                            ty_strictly_positive_in_type env1 ty_lid f1
+                              unfolded
+                          else false))
                 | FStar_Syntax_Syntax.Tm_match
                     (uu___4, uu___5, branches, uu___6) ->
                     (debug_positivity env
