@@ -15,33 +15,43 @@
 *)
 
 module Steel.LockCoupling
-open Steel.Memory
-open Steel.Effect.Atomic
-open Steel.Effect
-open Steel.SpinLock
-open Steel.Reference
+open Steel.ST.Util
+open Steel.ST.Reference
 open Steel.FractionalPermission
 
 /// An invariant for lists, where each list node stores a lock to the rest of the list.
 
-val h_exists (#[@@@strictly_positive] a:Type)
-             ([@@@strictly_positive] p:(a -> vprop))
+val existsp_ (#[@@@strictly_positive] a:Type)
+            ([@@@strictly_positive] p:(a -> vprop))
    : vprop
-
+//   = fun m -> exists x. p x m
+   
 val pts_to (#[@@@strictly_positive] a:Type)
-           (// [@@@strictly_positive]
-    r:ref a)
-           (// [@@@strictly_positive]
-    v:a) : vprop 
+           (r:ref a)
+           (frac:perm)
+           (v:a) : vprop 
 
 val lock ([@@@strictly_positive] p:vprop) : Type0
 
+let half = half_perm full_perm
 
 noeq
-type llist (a:Type0) : Type0 = 
-  | Nil : llist a
-  | Cons :
-           v : a ->
-           next : ref (llist a) ->
-           tl_repr: lock (h_exists (pts_to next)) ->
-           llist a
+type llist_cell (a:Type0) : Type0 = {
+     v : a;
+     tl : ref (llist_cell a);
+     tl_repr: lock (existsp_ (pts_to tl half))
+}
+
+let rec llist_inv (#a:Type) (repr:list a) (ptr:ref (llist_cell a)) = 
+  match repr with
+  | [] -> pure (ptr == null)
+  | hd::tl ->
+    exists_ (fun cell ->
+      pts_to ptr half cell `star`
+      pure (cell.v  == hd) `star`
+      llist_inv tl cell.tl)
+
+      
+  
+
+

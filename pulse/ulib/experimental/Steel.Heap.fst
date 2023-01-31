@@ -343,10 +343,14 @@ let wand (p1 p2: slprop u#a) : slprop u#a =
         interp p1 h1 ==>
         interp p2 (join h h1))
 
-let h_exists_body (#a:Type u#b) (f: (a -> slprop u#a)) (h:heap) (x:a) : prop =
+let h_exists_body (#[@@@strictly_positive] a:Type u#b)
+                  ([@@@strictly_positive] f: (a -> slprop u#a))
+                  (h:heap)
+                  (x:a) : prop =
   interp (f x) h
 
-let h_exists  (#a:Type u#b) (f: (a -> slprop u#a)) : slprop u#a =
+let h_exists  (#[@@@strictly_positive] a:Type u#b)
+              ([@@@strictly_positive] f: (a -> slprop u#a)) : slprop u#a =
   as_slprop (fun (h: heap) -> exists x. h_exists_body f h x)
 
 let h_forall_body (#a:Type u#b) (f: (a -> slprop u#a)) (h:heap) (x:a) : prop =
