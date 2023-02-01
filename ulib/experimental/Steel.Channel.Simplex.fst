@@ -414,16 +414,17 @@ let history_p' (#p:prot) (t:partial_trace_of p) (s:partial_trace_of p) : prop =
 let history_p (#p:prot) (t:partial_trace_of p) : MRef.stable_property extended_to =
   history_p' t
 
-let history (#p:prot) (c:chan p) (t:partial_trace_of p) : prop =
+let history (#p:prot) (c:chan p) (t:partial_trace_of p) : Type0 =
   MRef.witnessed c.chan_chan.trace (history_p t)
 
 let recall_trace_ref #q (r:trace_ref q) (tr tr':partial_trace_of q)
+                        (tok:MRef.witnessed r (history_p tr))
   : Steel unit
           (MRef.pts_to r full_perm tr')
           (fun _ -> MRef.pts_to r full_perm tr')
-          (requires fun _ -> MRef.witnessed r (history_p tr))
+          (requires fun _ -> True)
           (ensures fun _ _ _ -> history_p tr tr')
-  = MRef.recall (history_p tr) r tr'
+  = MRef.recall (history_p tr) r tr' tok
 
 let prot_equals #q  (#p:_) (#vr:chan_val) (cc:chan q)
   : Steel unit
@@ -438,21 +439,18 @@ let prot_equals #q  (#p:_) (#vr:chan_val) (cc:chan q)
     intro_in_state _ _ vr
 
 let witness_trace_until #q (#vr:chan_val) (r:trace_ref q)
-  : Steel (partial_trace_of q)
-          (trace_until r vr)
-          (fun tr -> trace_until r vr)
-          (requires fun _ -> True)
-          (ensures fun _ tr _ -> MRef.witnessed r (history_p tr))
+  : SteelT (tr:partial_trace_of q & MRef.witnessed r (history_p tr))
+           (trace_until r vr)
+           (fun _ -> trace_until r vr)
   = let tr = MRef.read_refine r in
-    MRef.witness r (history_p tr) tr ();
+    let tok = MRef.witness r (history_p tr) tr () in
     elim_pure (until tr == step vr.chan_prot vr.chan_msg);
     intro_trace_until r tr vr;
-    tr
+    (| tr, tok |)
 
 let trace #q (cc:chan q)
-  : Steel (partial_trace_of q) emp (fun _ -> emp)
-          (requires fun _ -> True)
-          (ensures fun _ tr _ -> history cc tr)
+  : SteelT (tr:partial_trace_of q & history cc tr)
+           emp (fun _ -> emp)
   = let _ = send_receive_prelude cc in
     let tr = witness_trace_until cc.chan_chan.trace in
     intro_chan_inv_auxT cc.chan_chan;
@@ -460,31 +458,35 @@ let trace #q (cc:chan q)
     tr
 
 let extend_history #q (#tr:partial_trace_of q)
-                       (#v:chan_val)
-                       (c:chan q)
-  : Steel (extension_of tr)
+                      (#v:chan_val)
+                      (c:chan q)
+                      (tok:history c tr)
+  : Steel (tr':extension_of tr & history c tr')
           (pts_to c.chan_chan.recv half v `star`
             trace_until c.chan_chan.trace v)
-           (fun tr' -> pts_to c.chan_chan.recv half v `star`
-                    trace_until c.chan_chan.trace v)
-           (requires fun _ -> history c tr)
-           (ensures fun _ tr' _ -> history c tr' /\ until tr' == step v.chan_prot v.chan_msg)
+          (fun _  -> pts_to c.chan_chan.recv half v `star`
+                  trace_until c.chan_chan.trace v)
+           (requires fun _ -> True)
+           (ensures fun _ tr' _ -> until (dfst tr') == step v.chan_prot v.chan_msg)
   = let tr' = MRef.read_refine c.chan_chan.trace in
-    let _ = recall_trace_ref c.chan_chan.trace tr tr' in
-    MRef.witness c.chan_chan.trace (history_p tr') tr' ();
+    let _ = recall_trace_ref c.chan_chan.trace tr tr' tok in
+    let tok' = MRef.witness c.chan_chan.trace (history_p tr') tr' () in
     elim_pure (until tr' == step v.chan_prot v.chan_msg);
     intro_trace_until c.chan_chan.trace tr' v;
     let tr'' : extension_of tr = tr' in
-    tr''
+    (| tr'', tok' |)
 
-let extend_trace (#q:prot) (#p:prot) (cc:chan q) (tr:partial_trace_of q)
-  : Steel (extension_of tr)
+let extend_trace (#q:prot) (#p:prot) 
+                 (cc:chan q)
+                 (tr:partial_trace_of q)
+                 (htr:history cc tr)
+  : Steel (tr':extension_of tr & history cc tr')
           (receiver cc p)
           (fun t -> receiver cc p)
-          (requires fun _ -> history cc tr)
-          (ensures fun _ t _ -> until t == p /\ history cc t)
+          (requires fun _ -> True)
+          (ensures fun _ t _ -> until (dfst t) == p)
   = let _ = send_receive_prelude cc in
-    let tr' = extend_history cc in
+    let tr' = extend_history cc htr in
     let _ = prot_equals cc in
     intro_chan_inv_auxT cc.chan_chan;
     Steel.SpinLock.release cc.chan_lock;

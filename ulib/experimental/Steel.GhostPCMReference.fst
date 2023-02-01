@@ -111,7 +111,7 @@ let gather (#o:inames)
   = P.gather r v0 v1
 
 let witnessed (#a:Type) (#p:pcm a) (r:ref a p) (fact:property a)
-  : prop
+  : Type0
   = Steel.Memory.witnessed r fact
 
 let witness (#o:inames)
@@ -119,13 +119,8 @@ let witness (#o:inames)
             (#pcm:pcm a)
             (r:ref a pcm)
             (fact:Steel.Preorder.stable_property pcm)
-            (v:a)
+            (v:erased a)
             (_:squash (Steel.Preorder.fact_valid_compat fact v))
-  : SteelGhost unit o
-      (pts_to r v)
-      (fun _ -> pts_to r v)
-      (requires fun _ -> True)
-      (ensures fun _ _ _ -> witnessed r fact)
   = P.witness r fact v ()
 
 let recall (#o: _)
@@ -134,10 +129,6 @@ let recall (#o: _)
            (fact:property a)
            (r:ref a pcm)
            (v:erased a)
-  : SteelGhost a o
-          (pts_to r v)
-          (fun v1 -> pts_to r v)
-          (requires fun _ -> witnessed r fact)
-          (ensures fun _ v1 _ -> fact v1 /\ compatible pcm v v1)
-  = let x = P.recall fact r v in
-    reveal x
+           (w:witnessed r fact)
+  = P.recall fact r v w
+

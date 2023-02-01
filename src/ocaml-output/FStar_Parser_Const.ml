@@ -570,3 +570,24 @@ let (layered_effect_reify_val_lid :
         FStar_String.op_Hat "reify___" uu___ in
       let uu___ = FStar_Ident.mk_ident (reify_fn_name, r) in
       FStar_Ident.lid_of_ns_and_id ns uu___
+let (steel_memory_inv_lid : FStar_Ident.lident) =
+  FStar_Ident.lid_of_path ["Steel"; "Memory"; "inv"]
+    FStar_Compiler_Range.dummyRange
+let (steel_new_invariant_lid : FStar_Ident.lident) =
+  FStar_Ident.lid_of_path ["Steel"; "Effect"; "Atomic"; "new_invariant"]
+    FStar_Compiler_Range.dummyRange
+let (steel_st_new_invariant_lid : FStar_Ident.lident) =
+  FStar_Ident.lid_of_path ["Steel"; "ST"; "Util"; "new_invariant"]
+    FStar_Compiler_Range.dummyRange
+let (steel_with_invariant_g_lid : FStar_Ident.lident) =
+  FStar_Ident.lid_of_path ["Steel"; "Effect"; "Atomic"; "with_invariant_g"]
+    FStar_Compiler_Range.dummyRange
+let (steel_st_with_invariant_g_lid : FStar_Ident.lident) =
+  FStar_Ident.lid_of_path ["Steel"; "ST"; "Util"; "with_invariant_g"]
+    FStar_Compiler_Range.dummyRange
+let (steel_with_invariant_lid : FStar_Ident.lident) =
+  FStar_Ident.lid_of_path ["Steel"; "Effect"; "Atomic"; "with_invariant"]
+    FStar_Compiler_Range.dummyRange
+let (steel_st_with_invariant_lid : FStar_Ident.lident) =
+  FStar_Ident.lid_of_path ["Steel"; "ST"; "Util"; "with_invariant"]
+    FStar_Compiler_Range.dummyRange
