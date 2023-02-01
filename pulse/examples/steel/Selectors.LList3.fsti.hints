@@ -1,0 +1,26 @@
+[
+  "@=”\u0019Ið\u0005g\u001fdÙÕÀÐ\u0016c",
+  [
+    [
+      "Selectors.LList3.v_llist",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_849eedf149e40552ded7cbb05d91021f"
+      ],
+      0,
+      "2913280a209ab37b01fc2a448fca5623"
+    ],
+    [
+      "Selectors.LList3.tail",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "e280c5d1aae6fcc3214c059991aaf29a"
+    ]
+  ]
+]

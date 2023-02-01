@@ -1,0 +1,37 @@
+[
+  "I6^\u007fÛt/À—\u0012Z8µú\u0004¸",
+  [
+    [
+      "Steel.ArrayArith.same_base_array",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.eq2",
+        "equation_Prims.squash", "equation_Prims.subtype_of",
+        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
+      ],
+      0,
+      "32dfa0a508bc23ea45eef6eaa07e6394"
+    ],
+    [
+      "Steel.ArrayArith.within_bounds_intro",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "data_elim_Prims.Mkdtuple2",
+        "equation_FStar.Pervasives.dsnd", "equation_Prims.nat",
+        "equation_Steel.ST.Array.array", "equation_Steel.ST.Array.length",
+        "equation_Steel.ST.Array.ptr_of",
+        "fuel_guarded_inversion_Prims.dtuple2",
+        "interpretation_Tm_abs_4d5e86439a4b92fb1d3f2062e682ba81",
+        "lemma_FStar.Ghost.hide_reveal", "proj_equation_Prims.Mkdtuple2__2",
+        "refinement_interpretation_Tm_refine_14d43361b7e9404d179ef736339e2265",
+        "refinement_kinding_Tm_refine_542f9d4f129664613f2483a6c88bc7c2"
+      ],
+      0,
+      "35f000b76dfb858b81bc94ab4077c0be"
+    ]
+  ]
+]

@@ -18,7 +18,7 @@
         "subterm_ordering_Prims.Cons"
       ],
       0,
-      "396e57066f9843b6a84bc64e8cf3c52f"
+      "f6eef98aef01221aff297e49ea2588b1"
     ],
     [
       "Queue.emp_equiv_pure",
@@ -43,7 +43,7 @@
         "typing_Steel.Memory.pure"
       ],
       0,
-      "22e12655d2f99b141839fa4ad3583f56"
+      "74dea5e55f234738cadaea9eb7a92e5a"
     ],
     [
       "Queue.next_last",
@@ -58,7 +58,7 @@
         "projection_inverse_BoxBool_proj_0", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "f05e6912360fb0ab8324b83960583084"
+      "f30cb965f4280a21c96ab1ee184b3ff8"
     ],
     [
       "Queue.next_last_correct",
@@ -70,7 +70,7 @@
         "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
       ],
       0,
-      "01df0541b7be4bb5a04a45f380ef5ab2"
+      "8368e9616ebb824b624bf9caaee326ce"
     ],
     [
       "Queue.next_last_correct",
@@ -112,7 +112,7 @@
         "typing_Steel.Reference.ref"
       ],
       0,
-      "c276ead45b34a20d4990be60a163ba77"
+      "e2cbbbdf36bfcc17e990d7dabeab1a8e"
     ],
     [
       "Queue.fragment_append",
@@ -159,7 +159,7 @@
         "typing_Steel.Effect.Common.star", "typing_Steel.Reference.ref"
       ],
       0,
-      "8fdb95bc6bcd2a6870a362b90da891a1"
+      "e77b1154ce1d68a39ae3c9aef5e65060"
     ],
     [
       "Queue.intro_fragment_nil",
@@ -181,7 +181,7 @@
         "typing_Steel.Reference.ref"
       ],
       0,
-      "102b38df8542f1af4d4f143c958db17b"
+      "a2165ccfb5d7e6ce360f2620d59070db"
     ],
     [
       "Queue.intro_fragment_cons",
@@ -198,7 +198,7 @@
         "typing_tok_Prims.T@tok"
       ],
       0,
-      "d374f5aa2cf0e1a242da39dd65317ea2"
+      "bef50556bcef02be0becea6e035ef7df"
     ],
     [
       "Queue.fragment_append_singleton",
@@ -250,7 +250,7 @@
         "typing_Steel.Reference.ref"
       ],
       0,
-      "551e3e72d21e66694cf7aaca203843c7"
+      "85c24de870af7d97435ef5aa64dd6b70"
     ],
     [
       "Queue.queue_lc_prop",
@@ -277,7 +277,7 @@
         "typing_Steel.Reference.ref"
       ],
       0,
-      "afcde7dc0f25ed29047805657e52d7dd"
+      "1580cc6d165d0523752a2c3eadd9b227"
     ],
     [
       "Queue.new_queue",
@@ -347,7 +347,7 @@
         "typing_Steel.Reference.is_null", "typing_Steel.Reference.null"
       ],
       0,
-      "028ef7d4e9ef8783e3bfa6a3511a954b"
+      "c08e4f1f5200343d7e92916b957295a4"
     ],
     [
       "Queue.snoc_inj",
@@ -360,7 +360,7 @@
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__2"
       ],
       0,
-      "132d5ce3e3e34e13e1263410041edff5"
+      "3b7cc11270bc6b1854db523f51af28fe"
     ],
     [
       "Queue.unsnoc",
@@ -381,7 +381,7 @@
         "token_correspondence_FStar.List.Tot.Base.length.fuel_instrumented"
       ],
       0,
-      "ddaba66e25c53438bd3a6f9ee0c0e7fe"
+      "472f8a48cac41fbf82a87cc36ed5df15"
     ],
     [
       "Queue.unsnoc_hd",
@@ -390,7 +390,7 @@
       1,
       [ "@query" ],
       0,
-      "516bf0fbd5a9cc4e3e289f37aa738169"
+      "4107ddd7d4c4f14656ed50f3f1027de1"
     ],
     [
       "Queue.unsnoc_tl",
@@ -399,7 +399,7 @@
       1,
       [ "@query" ],
       0,
-      "e10c64275e100f11e998e976de15644e"
+      "74000703f831724084a83343783c7490"
     ],
     [
       "Queue.enqueue",
@@ -508,7 +508,7 @@
         "typing_Steel.Reference.pts_to_sl", "typing_Steel.Reference.ref"
       ],
       0,
-      "699b557e5bfd8f4afc00dedf48b25ee6"
+      "99e82b652f62e625508c7913ccc70f34"
     ],
     [
       "Queue.dequeue_post_success",
@@ -525,7 +525,7 @@
         "typing_Queue.Def.t"
       ],
       0,
-      "a025b15767d57b33f29b94578b6a00f6"
+      "9e1d72b8e94889317ac81a86f8058797"
     ],
     [
       "Queue.dequeue_post",
@@ -536,7 +536,7 @@
         "@query", "lemma_FStar.Pervasives.invertOption", "typing_Queue.Def.t"
       ],
       0,
-      "7ac58816881d7a6a2479df0cd95864e9"
+      "df363be8ad8177253cbea7fd4073f662"
     ],
     [
       "Queue.dequeue",
@@ -609,7 +609,7 @@
         "typing_Steel.Reference.ref"
       ],
       0,
-      "d903fe99f4d7a743af5c71984668c606"
+      "ff35b437c9ca8ac5be2967da37b3a0bc"
     ]
   ]
 ]
