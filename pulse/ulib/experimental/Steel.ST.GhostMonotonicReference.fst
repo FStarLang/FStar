@@ -51,7 +51,7 @@ let witnessed (#a:Type u#0)
               (#p:Preorder.preorder a)
               (r:ref a p)
               (fact:property a)
-  : prop
+  : Type0
   = MR.witnessed r fact
 
 let witness' (#inames: _)
@@ -60,14 +60,12 @@ let witness' (#inames: _)
             (#p:Preorder.preorder a)
             (r:ref a p)
             (fact:stable_property p)
-            (v:a)
+            (v:erased a)
             (pf:squash (fact v))
             (_:unit)
-  : Steel.Effect.Atomic.SteelGhost unit inames
+  : Steel.Effect.Atomic.SteelAtomicUT (witnessed r fact) inames
       (pts_to r q v)
       (fun _ -> pts_to r q v)
-      (requires fun _ -> True)
-      (ensures fun _ _ _ -> witnessed r fact)
   = MR.witness #inames #a #q #p r fact v pf
 
 let witness (#inames: _)
@@ -76,14 +74,9 @@ let witness (#inames: _)
             (#p:Preorder.preorder a)
             (r:ref a p)
             (fact:stable_property p)
-            (v:a)
+            (v:erased a)
             (pf:squash (fact v))
-  : STGhost unit inames
-      (pts_to r q v)
-      (fun _ -> pts_to r q v)
-      (requires True)
-      (ensures fun _ -> witnessed r fact)
-  = coerce_ghost (witness' r fact v pf); ()
+  = coerce_atomic (witness' r fact v pf)
 
 let recall (#inames: _)
            (#a:Type u#0)
@@ -91,13 +84,9 @@ let recall (#inames: _)
            (#p:Preorder.preorder a)
            (fact:property a)
            (r:ref a p)
-           (v:a)
-  : STGhost unit inames
-      (pts_to r q v)
-      (fun _ -> pts_to r q v)
-      (requires witnessed r fact)
-      (ensures fun _ -> fact v)
-  = coerce_ghost (fun _ -> MR.recall #inames #a #q #p fact r v)
+           (v:erased a)
+           (w:witnessed r fact)
+  = coerce_atomic (fun _ -> MR.recall #inames #a #q #p fact r v w)
 
 let share (#inames:_)
           (#a:Type)

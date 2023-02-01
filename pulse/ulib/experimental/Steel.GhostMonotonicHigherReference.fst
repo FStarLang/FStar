@@ -117,44 +117,41 @@ let get_squash (#p:prop) (_:unit{p}) : squash p = ()
 let witness_thunk (#inames: _) (#a:Type) (#pcm:FStar.PCM.pcm a)
                   (r:PR.ref a pcm)
                   (fact:M.stable_property pcm)
-                  (v:a)
+                  (v:erased a)
                   (sq:squash (fact_valid_compat #_ #pcm fact v))
                   (_:unit)
-  : SteelGhost unit inames (PR.pts_to r v)
-               (fun _ -> PR.pts_to r v)
-               (requires fun _ -> True)
-               (ensures fun _ _ _ -> PR.witnessed r fact)
+  : SteelAtomicUT (PR.witnessed r fact) inames
+                  (PR.pts_to r v)
+                  (fun _ -> PR.pts_to r v)
   = witness r fact v sq
 
-let witness (#inames: _) (#a:Type) (#q:perm) (#p:Preorder.preorder a) (r:ref a p)
+let witness (#inames: _) (#a:Type) (#q:perm) (#p:Preorder.preorder a)
+            (r:ref a p)
             (fact:stable_property p)
-            (v:a)
+            (v:erased a)
             (_:squash (fact v))
-  : SteelGhost unit inames (pts_to r q v)
-               (fun _ -> pts_to r q v)
-               (requires fun _ -> True)
-               (ensures fun _ _ _ -> witnessed r fact)
+  : SteelAtomicUT (witnessed r fact) inames
+                  (pts_to r q v)
+                  (fun _ -> pts_to r q v)
   = let h = witness_exists #_ #_ #(pts_to_body r q v) () in
     let _ = elim_pure #_ #_ #_ #q r v h in
 
     assert (forall h'. compatible pcm_history h h' ==> lift_fact fact h');
     lift_fact_is_stable #a #p fact;
 
-    witness_thunk #_ #_ #(pcm_history #a #p)  r (lift_fact fact) h () _;
+    let w = witness_thunk #_ #_ #(pcm_history #a #p)  r (lift_fact fact) h () () in
 
+  
     intro_pure_full r v h;
-    rewrite_slprop (pts_to _ q _) (pts_to r q v) (fun _ -> ())
+    rewrite_slprop (pts_to _ q _) (pts_to r q v) (fun _ -> ());
+    return w
 
 let recall (#inames: _) (#a:Type u#1) (#q:perm) (#p:Preorder.preorder a) (fact:property a)
-           (r:ref a p) (v:a)
-  : SteelGhost unit inames (pts_to r q v)
-               (fun _ -> pts_to r q v)
-               (requires fun _ -> witnessed r fact)
-               (ensures fun _ _ _ -> fact v)
+           (r:ref a p) (v:erased a) (w:witnessed r fact)
   = let h = witness_exists #_ #_ #(pts_to_body r q v) () in
     let _ = elim_pure #_ #_ #_ #q r v h in
 
-    let h1 = recall (lift_fact fact) r h in
+    let h1 = recall (lift_fact fact) r h w in
 
     intro_pure_full r v h;
     rewrite_slprop (pts_to _ q _) (pts_to r q v) (fun _ -> ())

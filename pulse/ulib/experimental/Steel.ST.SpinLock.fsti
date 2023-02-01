@@ -22,13 +22,7 @@ open Steel.ST.Util
 
 /// The type of a lock.  This is implemented as a pair of a boolean
 /// reference, and an invariant name
-val lock_t : Type u#0
-
-/// A predicate relating a lock to a vprop.
-val protects (l:lock_t) (p:vprop) : prop
-
-/// The type of locks associated to a given vprop [p]
-let lock (p:vprop) = l:lock_t{l `protects` p}
+val lock (p:vprop): Type u#0
 
 /// If we have vprop [p] in the context, we can create a new lock
 /// associated to [p]. [p] is then removed from the context, and only

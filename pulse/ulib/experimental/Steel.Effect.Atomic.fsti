@@ -331,6 +331,22 @@ effect SteelAtomicF (a:Type)
   (ens:ens_t pre a post)
   = SteelAtomicBase a true opened Observable pre post req ens
 
+effect SteelAtomicU (a:Type)
+  (opened:inames)
+  (pre:pre_t)
+  (post:post_t a)
+  (req:req_t pre)
+  (ens:ens_t pre a post)
+  = SteelAtomicBase a false opened Unobservable pre post req ens
+
+effect SteelAtomicUF (a:Type)
+  (opened:inames)
+  (pre:pre_t)
+  (post:post_t a)
+  (req:req_t pre)
+  (ens:ens_t pre a post)
+  = SteelAtomicBase a true opened Unobservable pre post req ens
+
 (* Composing SteelAtomic and Pure computations *)
 
 /// Logical precondition of a Pure and a SteelAtomic computation composition.
@@ -374,8 +390,15 @@ val bind_pure_steela_ (a:Type) (b:Type)
 polymonadic_bind (PURE, SteelAtomicBase) |> SteelAtomicBase = bind_pure_steela_
 
 /// A version of the SteelAtomic effect with trivial requires and ensures clauses
+///
+effect SteelAtomicBaseT (a:Type) (opened:inames) (obs:observability) (pre:pre_t) (post:post_t a) =
+  SteelAtomicBase a false opened obs pre post (fun _ -> True) (fun _ _ _ -> True)
+
 effect SteelAtomicT (a:Type) (opened:inames) (pre:pre_t) (post:post_t a) =
   SteelAtomic a opened pre post (fun _ -> True) (fun _ _ _ -> True)
+
+effect SteelAtomicUT (a:Type) (opened:inames) (pre:pre_t) (post:post_t a) =
+  SteelAtomicU a opened pre post (fun _ -> True) (fun _ _ _ -> True)
 
 (*** SteelGhost effect ***)
 
@@ -471,6 +494,16 @@ val as_atomic_action_ghost (#a:Type u#a)
                            (#fp': a -> slprop)
                            (f:action_except a opened_invariants fp fp')
   : SteelGhostT a opened_invariants (to_vprop fp) (fun x -> to_vprop (fp' x))
+
+
+[@@warn_on_use "as_unobservable_atomic_action is a trusted primitive"]
+val as_atomic_unobservable_action
+                           (#a:Type u#a)
+                           (#opened_invariants:inames)
+                           (#fp:slprop)
+                           (#fp': a -> slprop)
+                           (f:action_except a opened_invariants fp fp')
+  : SteelAtomicUT a opened_invariants (to_vprop fp) (fun x -> to_vprop (fp' x))
 
 (*** Some helper functions ***)
 
@@ -681,7 +714,7 @@ val exists_cong (#a:_) (#u:_) (p:a -> vprop) (q:a -> vprop {forall x. equiv (p x
 /// Creation of a new invariant associated to vprop [p].
 /// After execution of this function, [p] is consumed and not available in the context anymore
 val new_invariant (#opened_invariants:inames) (p:vprop)
-  : SteelGhostT (inv p) opened_invariants p (fun _ -> emp)
+  : SteelAtomicUT (inv p) opened_invariants p (fun _ -> emp)
 
 /// Atomically executing function [f] which relies on the predicate [p] stored in invariant [i]
 /// as long as it maintains the validity of [p]
@@ -689,13 +722,14 @@ val new_invariant (#opened_invariants:inames) (p:vprop)
 val with_invariant (#a:Type)
                    (#fp:vprop)
                    (#fp':a -> vprop)
+                   (#obs:_)
                    (#opened_invariants:inames)
                    (#p:vprop)
                    (i:inv p{not (mem_inv opened_invariants i)})
-                   ($f:unit -> SteelAtomicT a (add_inv opened_invariants i)
-                                         (p `star` fp)
-                                         (fun x -> p `star` fp' x))
-  : SteelAtomicT a opened_invariants fp fp'
+                   ($f:unit -> SteelAtomicBaseT a (add_inv opened_invariants i) obs
+                                             (p `star` fp)
+                                             (fun x -> p `star` fp' x))
+  : SteelAtomicBaseT a opened_invariants obs fp fp'
 
 /// Variant of the above combinator for ghost computations
 val with_invariant_g (#a:Type)
@@ -705,9 +739,9 @@ val with_invariant_g (#a:Type)
                      (#p:vprop)
                      (i:inv p{not (mem_inv opened_invariants i)})
                      ($f:unit -> SteelGhostT a (add_inv opened_invariants i)
-                                         (p `star` fp)
-                                         (fun x -> p `star` fp' x))
-  : SteelGhostT a opened_invariants fp fp'
+                                              (p `star` fp)
+                                              (fun x -> p `star` fp' x))
+  : SteelAtomicUT (erased a) opened_invariants fp (fun x -> fp' x)
 
 (* Introduction and elimination principles for vprop combinators *)
 
