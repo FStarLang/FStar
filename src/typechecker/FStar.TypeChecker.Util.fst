@@ -2837,6 +2837,7 @@ let check_has_type_maybe_coerce env (e:term) (lc:lcomp) (t2:typ) use_eq : term *
 
 /////////////////////////////////////////////////////////////////////////////////
 let check_top_level env g lc : (bool * comp) =
+ Errors.with_ctx "While checking for top-level effects" (fun () ->
   if debug env Options.Medium then
     BU.print1 "check_top_level, lc = %s\n" (TcComm.lcomp_to_string lc);
   let discharge g =
@@ -2940,6 +2941,7 @@ let check_top_level env g lc : (bool * comp) =
             if Env.debug env <| Options.Other "Simplification"
             then BU.print1 "top-level VC: %s\n" (Print.term_to_string vc);
             discharge (Env.conj_guard g (Env.conj_guard g_c g_pre)), ct |> S.mk_Comp
+ )
 
 (* Having already seen_args to head (from right to left),
    compute the guard, if any, for the next argument,
