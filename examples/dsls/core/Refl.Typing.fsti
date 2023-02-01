@@ -398,7 +398,135 @@ let b2t_lid : R.name = ["Prims"; "b2t"]
 let b2t_fv : R.fv = R.pack_fv b2t_lid
 let b2t_ty : R.term = R.(pack_ln (Tv_Arrow (as_binder 0 bool_ty) (mk_total (tm_type u_zero))))
 
+#push-options "--z3rlimit_factor 4"
+let rec term_view_no_pp (e:R.term_view) : R.term_view =
+  match e with
+  | Tv_Var bv -> Tv_Var (bv_no_pp bv)
+  | Tv_BVar bv -> Tv_BVar (bv_no_pp bv)
+  | Tv_FVar _ -> e
+  | Tv_UInst _ _ -> e
+  | Tv_App head arg -> Tv_App (term_no_pp head) (arg_no_pp arg)
+  | Tv_Abs b body -> Tv_Abs (binder_no_pp b) (term_no_pp body)
+  | Tv_Arrow b c -> Tv_Arrow (binder_no_pp b) (comp_no_pp c)
+  | Tv_Type _ -> e
+  | Tv_Refine bv phi -> Tv_Refine (bv_no_pp bv) (term_no_pp phi)
+  | Tv_Const _ -> e
+  | Tv_Uvar _ _ -> e
+  | Tv_Let is_rec attrs x def body ->
+    Tv_Let is_rec (attrs_no_pp attrs) (bv_no_pp x) (term_no_pp def) (term_no_pp body)
+  | Tv_Match scrutinee asc brs ->
+    Tv_Match (term_no_pp scrutinee) (match_asc_no_pp asc) (branches_no_pp brs)
+  | Tv_AscribedT e t tac use_eq ->
+    Tv_AscribedT (term_no_pp e) (term_no_pp t) (term_opt_no_pp tac) use_eq
+  | Tv_AscribedC e c tac use_eq ->
+    Tv_AscribedC (term_no_pp e) (comp_no_pp c) (term_opt_no_pp tac) use_eq
 
+  | Tv_Unknown -> e
+
+and bv_no_pp (bv:R.bv) : R.bv =
+  pack_bv (bv_view_no_pp (inspect_bv bv))
+
+and term_no_pp (e:R.term) : R.term =
+  pack_ln (term_view_no_pp (inspect_ln e))
+
+and arg_no_pp (a:R.argv) : R.argv =
+  let t, q = a in
+  term_no_pp t, q
+
+and binder_no_pp (b:R.binder) : R.binder =
+  let bv, (q, attrs) = inspect_binder b in
+  pack_binder (bv_no_pp bv) q (attrs_no_pp attrs)
+
+and comp_no_pp (c:comp) : R.comp =
+  pack_comp (comp_view_no_pp (inspect_comp c))
+
+and attrs_no_pp (attrs:list R.term) : list R.term =
+  match attrs with
+  | [] -> []
+  | hd::tl -> (term_no_pp hd)::(attrs_no_pp tl)
+
+and match_asc_no_pp (asc:option match_returns_ascription)
+  : option match_returns_ascription =
+
+  match asc with
+  | None -> None
+  | Some (b, (term_or_comp, topt, use_eq)) ->
+    assume (term_or_comp << asc);
+    assume (topt << asc);
+    Some
+      (binder_no_pp b,
+       (term_or_comp_no_pp term_or_comp,
+        term_opt_no_pp topt,
+        use_eq))
+
+and branches_no_pp (brs:list branch) : list branch =
+  match brs with
+  | [] -> []
+  | hd::tl -> (branch_no_pp hd)::(branches_no_pp tl)
+
+and term_opt_no_pp (topt:option term) : option term =
+  match topt with
+  | None -> None
+  | Some t -> Some (term_no_pp t)
+
+and bv_view_no_pp (bv:bv_view) : bv_view =
+  {bv with bv_ppname="_";
+           bv_sort=term_no_pp bv.bv_sort}
+
+and comp_view_no_pp (c:comp_view) : comp_view =
+  match c with
+  | C_Total ret -> C_Total (term_no_pp ret)
+  | C_GTotal ret -> C_GTotal (term_no_pp ret)
+  | C_Lemma pre post pat -> C_Lemma (term_no_pp pre) (term_no_pp post) (term_no_pp pat)
+  | C_Eff us eff_name res args decrs ->
+    C_Eff us eff_name (term_no_pp res) (args_no_pp args) (attrs_no_pp decrs)
+
+and term_or_comp_no_pp (x:either term comp) : either term comp =
+  match x with
+  | Inl t -> Inl (term_no_pp t)
+  | Inr c -> Inr (comp_no_pp c)
+
+and branch_no_pp (br:branch) : branch =
+  let p, t = br in
+  pat_no_pp p, term_no_pp t
+
+and args_no_pp (args:list argv) : list argv =
+  match args with
+  | [] -> []
+  | hd::tl -> (arg_no_pp hd)::(args_no_pp tl)
+
+and pat_no_pp (p:pattern) : pattern =
+  match p with
+  | Pat_Constant _ -> p
+  | Pat_Cons fv us l ->
+    Pat_Cons fv us (pat_and_bool_no_pp l)
+  | Pat_Var bv -> Pat_Var (bv_no_pp bv)
+  | Pat_Wild bv -> Pat_Wild (bv_no_pp bv)
+  | Pat_Dot_Term topt -> Pat_Dot_Term (term_opt_no_pp topt)
+
+and pat_and_bool_no_pp (l:list (pattern & bool)) : list (pattern & bool) =
+  match l with
+  | [] -> []
+  | (p, b)::tl -> (pat_no_pp p, b)::(pat_and_bool_no_pp tl)
+#pop-options
+
+let alpha_equivalent_terms (e1 e2:term) : prop =
+  term_no_pp e1 == term_no_pp e2
+
+let alpha_equivalent_envs (g1 g2:env) : prop =
+  (forall (x:int).
+     (match lookup_bvar g1 x, lookup_bvar g2 x with
+      | None, None -> True
+      | Some t1, Some t2 -> alpha_equivalent_terms t1 t2
+      | _, _ -> False))
+
+  /\
+
+  (forall (x:fv) (us:list universe).
+     (match lookup_fvar_uinst g1 x us, lookup_fvar_uinst g2 x us with
+      | None, None -> True
+      | Some t1, Some t2 -> alpha_equivalent_terms t1 t2
+      | _, _ -> False))
 
 noeq
 type constant_typing: vconst -> term -> Type0 = 
@@ -406,6 +534,7 @@ type constant_typing: vconst -> term -> Type0 =
   | CT_True: constant_typing C_True bool_ty
   | CT_False: constant_typing C_False bool_ty
 
+[@@ no_auto_projectors]
 noeq
 type univ_eq : universe -> universe -> Type0 = 
   | UN_Refl : 
@@ -453,6 +582,7 @@ and univ_leq : universe -> universe -> Type0 =
     v:universe ->
     univ_leq u (u_max u v)
 
+[@@ no_auto_projectors]
 noeq
 type typing : env -> term -> term -> Type0 =
   | T_Token :
@@ -575,7 +705,17 @@ type typing : env -> term -> term -> Type0 =
      typing g scrutinee i_ty ->
      branches_typing g scrutinee i_ty branches ty ->
      typing g (pack_ln (Tv_Match scrutinee None branches)) ty
-    
+
+  | T_AlphaRenaming:
+     g:env ->
+     e:term ->
+     t:term ->
+     typing g e t ->
+     g':env{alpha_equivalent_envs g g'} ->
+     e':term{alpha_equivalent_terms e e'} ->
+     t':term{alpha_equivalent_terms t t'} ->
+     typing g' e' t'
+
 and sub_typing : env -> term -> term -> Type0 =
   | ST_Equiv:
       g:env ->
@@ -626,7 +766,6 @@ and equiv : env -> term -> term -> Type0 =
       t1:term ->
       squash (FTB.equiv_token g t0 t1) ->
       equiv g t0 t1
-      
 
 and branches_typing : env -> term -> term -> list branch -> term -> Type0 =
 

@@ -144,9 +144,15 @@ let rec vprop_equiv_soundness (#f:stt_env) (#g:env) (#v0 #v1:pure_term)
           RT.typing (extend_env_l f g) pf (stt_vprop_equiv (elab_pure v0) (elab_pure v1)))
          (decreases eq)
   = match eq with
-    | VE_Refl _ _ ->
+    | VE_Refl _ _ _ ->
+      assert (RT.term_no_pp (stt_vprop_equiv (elab_pure v0) (elab_pure v0)) ==
+              stt_vprop_equiv (RT.term_no_pp (elab_pure v0)) (RT.term_no_pp (elab_pure v0)));
+      elab_pure_eq_tm v0 v1;
+      assert (RT.alpha_equivalent_terms (stt_vprop_equiv (elab_pure v0) (elab_pure v0))
+                                        (stt_vprop_equiv (elab_pure v0) (elab_pure v1)));
       let d = tot_typing_soundness d in
-      inst_vprop_equiv_refl d
+      let (| pf, d |) = inst_vprop_equiv_refl d in
+      (| pf, RT.T_AlphaRenaming _ _ _ d _ _ _ |)
 
     | VE_Sym g _v1 _v0 eq' ->
       let fwd, _ = vprop_equiv_typing _ _ _ _ eq in

@@ -391,3 +391,68 @@ and closing_pure_comp (x:pure_comp) (v:var) (i:index)
       closing_pure_term pre v i;
       closing_pure_term post v (i + 1)
 #pop-options
+
+#push-options "--z3rlimit_factor 30 --fuel 8 --ifuel 1"
+let rec elab_pure_eq_tm (t1 t2:pure_term)
+  : Lemma (requires eq_tm t1 t2)
+          (ensures RT.alpha_equivalent_terms (elab_pure t1) (elab_pure t2)) =
+
+  match t1, t2 with
+  | Tm_BVar _, _ -> ()
+  | Tm_Var _, _ -> ()
+  | Tm_FVar _, _ -> ()
+  | Tm_UInst _ _, _ -> ()
+  | Tm_Constant _, _ -> ()
+  | Tm_Refine b1 phi1, Tm_Refine b2 phi2 ->
+    elab_pure_eq_tm b1.binder_ty b2.binder_ty;
+    elab_pure_eq_tm phi1 phi2
+  | Tm_PureApp head1 _ arg1, Tm_PureApp head2 _ arg2 ->
+    elab_pure_eq_tm head1 head2;
+    elab_pure_eq_tm arg1 arg2
+  | Tm_Arrow b1 _ c1, Tm_Arrow b2 _ c2 ->
+    elab_pure_eq_tm b1.binder_ty b2.binder_ty;
+    elab_pure_eq_comp c1 c2
+  | Tm_Let t1 e11 e12, Tm_Let t2 e21 e22 ->
+    elab_pure_eq_tm t1 t2;
+    elab_pure_eq_tm e11 e21;
+    elab_pure_eq_tm e12 e22
+  | Tm_Type _, _ -> ()
+  | Tm_VProp, _ -> ()
+  | Tm_Emp, _ -> ()
+  | Tm_Pure p1, Tm_Pure p2 -> elab_pure_eq_tm p1 p2
+  | Tm_Star l1 r1, Tm_Star l2 r2 ->
+    elab_pure_eq_tm l1 l2;
+    elab_pure_eq_tm r1 r2
+  | Tm_ExistsSL t1 body1, Tm_ExistsSL t2 body2
+  | Tm_ForallSL t1 body1, Tm_ForallSL t2 body2 ->
+    elab_pure_eq_tm t1 t2;
+    elab_pure_eq_tm body1 body2
+  | Tm_If b1 e11 e12, Tm_If b2 e21 e22 ->
+    elab_pure_eq_tm b1 b2;
+    elab_pure_eq_tm e11 e21;
+    elab_pure_eq_tm e12 e22
+  | Tm_Inames, _ -> ()
+  | Tm_EmpInames, _ -> ()
+  | _, _ -> ()
+
+and elab_pure_eq_comp (c1 c2:pure_comp)
+  : Lemma (requires eq_comp c1 c2)
+          (ensures RT.alpha_equivalent_terms (elab_pure_comp c1) (elab_pure_comp c2)) =
+  match c1, c2 with
+  | C_Tot t1, C_Tot t2 -> elab_pure_eq_tm t1 t2
+  | C_ST s1, C_ST s2 ->
+    elab_pure_eq_tm s1.res s2.res;
+    elab_pure_eq_tm s1.pre s2.pre;
+    elab_pure_eq_tm s1.post s2.post;
+    admit ()  // This should be easy, I think we should write mk_stt_app etc. inlined
+              //   else they are using R.mk_app, which is recursive
+  | C_STAtomic inames1 s1, C_STAtomic inames2 s2
+  | C_STGhost inames1 s1, C_STGhost inames2 s2 ->
+    elab_pure_eq_tm inames1 inames2;
+    elab_pure_eq_tm s1.res s2.res;
+    elab_pure_eq_tm s1.pre s2.pre;
+    elab_pure_eq_tm s1.post s2.post;
+    admit ()  // This should be easy, I think we should write mk_stt_app etc. inlined
+              //   else they are using R.mk_app, which is recursive
+  | _, _ -> ()
+#pop-options
