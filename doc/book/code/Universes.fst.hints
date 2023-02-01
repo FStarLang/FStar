@@ -1,0 +1,192 @@
+[
+  "vöÍ\u00173?µ\feä\u0001Ð\u001b¸q!",
+  [
+    [
+      "Universes.uu___0",
+      1,
+      2,
+      1,
+      [ "@query", "equation_Universes.ty0", "equation_Universes.ty_poly" ],
+      0,
+      "0a22f298ff08d8feee68269f7da37ec0"
+    ],
+    [
+      "Universes.uu___1",
+      1,
+      2,
+      1,
+      [ "@query", "equation_Universes.ty1", "equation_Universes.ty_poly" ],
+      0,
+      "447f73d3fca8619f2e90aaeafba9bcbb"
+    ],
+    [
+      "Universes.uu___2",
+      1,
+      2,
+      1,
+      [ "@query", "equation_Universes.ty2", "equation_Universes.ty_poly" ],
+      0,
+      "7626c330123407b63c448ad8049ff431"
+    ],
+    [
+      "Universes.uu___3",
+      1,
+      2,
+      1,
+      [ "@query", "equation_Universes.ty0", "equation_Universes.ty_poly" ],
+      0,
+      "a9a6fae985aa380270ba8730bea79090"
+    ],
+    [
+      "Universes.list",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "46d48938bce10f7928e2ef9cbeba2a83"
+    ],
+    [
+      "Universes.__proj__Cons__item__hd",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_3c1b97e4120bd80fe1302fd106a008d6"
+      ],
+      0,
+      "afbb8d4d5caa9c60d18dfb9587053d9f"
+    ],
+    [
+      "Universes.__proj__Cons__item__tl",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_3c1b97e4120bd80fe1302fd106a008d6"
+      ],
+      0,
+      "0672750615bcef2af486cbdc5f1e8f5b"
+    ],
+    [
+      "Universes.list'",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "6701128c448572a9117733a6923f9a08"
+    ],
+    [
+      "Universes.__proj__Cons'__item__hd",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_8f39bc31184d8ae0acdd1e5c0bc83fc5"
+      ],
+      0,
+      "7f29d0e56537ec75b499a943436560b5"
+    ],
+    [
+      "Universes.__proj__Cons'__item__tl",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_8f39bc31184d8ae0acdd1e5c0bc83fc5"
+      ],
+      0,
+      "ac07887b08fc41950f14785d2a2dda3c"
+    ],
+    [
+      "Universes.pair",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "acd6902ba8b8fd06158739856fcbe9e2"
+    ],
+    [
+      "Universes.uu___65",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.l_Forall",
+        "equation_Prims.prop", "equation_Prims.squash",
+        "equation_Prims.subtype_of",
+        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
+      ],
+      0,
+      "4e274a3b7913bb39ba65a8daec11fe5c"
+    ],
+    [
+      "Universes.uu___67",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.l_Exists",
+        "equation_Prims.prop", "equation_Prims.squash",
+        "equation_Prims.subtype_of",
+        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
+      ],
+      0,
+      "5ffd9bb28bbea95c8415aa93b9a6dba5"
+    ],
+    [
+      "Universes.__proj__NilAlt__item__a",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_1fc10e6a73e2f6e1644f0cd1b482aba1"
+      ],
+      0,
+      "01743be7e3a1e124b609f73ac1dde3c3"
+    ],
+    [
+      "Universes.__proj__ConsAlt__item__a",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_41fa5c7070b4aa2b5223068ef430c5a0"
+      ],
+      0,
+      "d9141e533f6d018f115aff884b68bfe5"
+    ],
+    [
+      "Universes.__proj__ConsAlt__item__hd",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "data_elim_Universes.ConsAlt",
+        "refinement_interpretation_Tm_refine_41fa5c7070b4aa2b5223068ef430c5a0"
+      ],
+      0,
+      "c0d4c15357ccd92a1778907f24ebc100"
+    ],
+    [
+      "Universes.__proj__ConsAlt__item__tl",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "data_elim_Universes.ConsAlt",
+        "refinement_interpretation_Tm_refine_41fa5c7070b4aa2b5223068ef430c5a0"
+      ],
+      0,
+      "99c67b73f049c8cb43d384e6d601d9ec"
+    ]
+  ]
+]

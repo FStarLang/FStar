@@ -12,7 +12,7 @@
         "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
       ],
       0,
-      "6ec9c83ca5fe58194953efe572c89ced"
+      "6b04a1e3167be347dfb921108f9637c9"
     ],
     [
       "OPLSS2021.DijkstraMonads.return_wp",
@@ -24,7 +24,7 @@
         "interpretation_Tm_abs_a53e7fdfe19e2acb9ae53a9cdca91170"
       ],
       0,
-      "fb46deda54ffb3a623f98697a8395694"
+      "be593d286f84df00ffea0b339426fbbb"
     ],
     [
       "OPLSS2021.DijkstraMonads.bind_wp",
@@ -44,7 +44,7 @@
         "typing_Tm_abs_811e8b5e3738987d804ef8609b0e9eff"
       ],
       0,
-      "32822624ebc93e95eff5566189a2532e"
+      "ee3034fecddc2305dbfe40d89c5890f0"
     ],
     [
       "OPLSS2021.DijkstraMonads.repr",
@@ -64,7 +64,7 @@
         "true_interp"
       ],
       0,
-      "0dbe6c906242f0d6685df1ca8b293b9b"
+      "de6da323c9172ffcabe4d0aa1ccb7b1a"
     ],
     [
       "OPLSS2021.DijkstraMonads.return",
@@ -73,7 +73,7 @@
       1,
       [ "@query" ],
       0,
-      "374a1f97711154d7e333b166649bc3b2"
+      "651d6c8d17507299c9b72214411f0e1e"
     ],
     [
       "OPLSS2021.DijkstraMonads.bind",
@@ -102,7 +102,7 @@
         "typing_Tm_abs_ade907d0cf068369deec49e03ec454f6"
       ],
       0,
-      "fabe48708b8558da7f06a80194e0405b"
+      "bbbfc8e66912b09beee767147cd6c1ca"
     ],
     [
       "OPLSS2021.DijkstraMonads.subcomp",
@@ -120,7 +120,7 @@
         "true_interp"
       ],
       0,
-      "27af7e44b90e144df2409de86cd5d943"
+      "3a5c42dfda86c0e63bbcbe51d12dffb8"
     ],
     [
       "OPLSS2021.DijkstraMonads.ST",
@@ -129,7 +129,7 @@
       1,
       [ "@query", "equation_OPLSS2021.DijkstraMonads.stronger" ],
       0,
-      "349b4a1a826406f542d14ba2da21faf4"
+      "0e504aad2e9bb1e62ec49a051fe3e138"
     ],
     [
       "OPLSS2021.DijkstraMonads.ST",
@@ -138,7 +138,16 @@
       1,
       [ "@query", "equation_OPLSS2021.DijkstraMonads.stronger" ],
       0,
-      "c4816a2166226638c5d4b1c5a95368f2"
+      "0fe7598b0882007cb8a9c9a8506d3484"
+    ],
+    [
+      "OPLSS2021.DijkstraMonads.ST",
+      3,
+      2,
+      1,
+      [ "@query", "equation_OPLSS2021.DijkstraMonads.stronger" ],
+      0,
+      "3a3c9d760ea32cdb76d70cc65b2a3eca"
     ],
     [
       "OPLSS2021.DijkstraMonads.lift_wp",
@@ -158,7 +167,7 @@
         "typing_Tm_abs_963d181e5476598451a0d753ab150aec"
       ],
       0,
-      "9df4980ee6dd4ac2935e10f438b20e96"
+      "f04142c9ba6690d2e11dcf44eae6a469"
     ],
     [
       "OPLSS2021.DijkstraMonads.lift_pure_st",
@@ -179,7 +188,7 @@
         "typing_Tm_abs_da437716eb372fac740da22fdb123c4f"
       ],
       0,
-      "7624524af6d5f84890c90a723ce612c3"
+      "2326df8cdf94ed3b2cee93c4266f299a"
     ],
     [
       "OPLSS2021.DijkstraMonads.get",
@@ -191,7 +200,7 @@
         "interpretation_Tm_abs_20a7238fd07f9d31c2887ac37e91b7a4"
       ],
       0,
-      "eead9d225badd694bbdfc3cf08d2c3e1"
+      "b3820ae7c6489224943f7d64687d2651"
     ],
     [
       "OPLSS2021.DijkstraMonads.put",
@@ -204,7 +213,7 @@
         "unit_typing"
       ],
       0,
-      "6afd77d63c411f82914d65ba794aa7ac"
+      "fc5de6b416bbac62eaf1c43c6350a3f7"
     ],
     [
       "OPLSS2021.DijkstraMonads.as_wp",
@@ -217,11 +226,70 @@
         "l_and-interp", "l_quant_interp_617aeba1a2c47db2d75435e2f7ebe528"
       ],
       0,
-      "17040c250713813a287642fe56193f58"
+      "665a78166b65eb30dbbbc540ba2177d2"
     ],
     [
       "OPLSS2021.DijkstraMonads.double",
       1,
+      2,
+      1,
+      [
+        "@query", "equation_OPLSS2021.DijkstraMonads.st_monotonic",
+        "interpretation_Tm_abs_5a9b2eb4aa1a06829eeb53225933a1e3"
+      ],
+      0,
+      "0a5ee03c6db7ee793ec00cff677a3f0a"
+    ],
+    [
+      "OPLSS2021.DijkstraMonads.double",
+      2,
+      2,
+      1,
+      [
+        "@query", "equation_OPLSS2021.DijkstraMonads.st_monotonic",
+        "int_typing",
+        "interpretation_Tm_abs_1dd604bb860fe77b06d50765dee9a3a0",
+        "unit_typing"
+      ],
+      0,
+      "a190d9cac3585337f7e1a77c6bef299c"
+    ],
+    [
+      "OPLSS2021.DijkstraMonads.double",
+      3,
+      2,
+      1,
+      [
+        "@query", "equation_OPLSS2021.DijkstraMonads.st_monotonic",
+        "int_typing",
+        "interpretation_Tm_abs_85c156ab626dae4553c445dfaab6e79a",
+        "unit_typing"
+      ],
+      0,
+      "98172c0110bf275fc123e809e5dcab3f"
+    ],
+    [
+      "OPLSS2021.DijkstraMonads.double",
+      4,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "Prims_pretyping_ae567c2fb75be05905677af440075565",
+        "Prims_pretyping_e8ffb7d227a1bbf69407a8d2ad2c4c83",
+        "equality_tok_Prims.T@tok", "equation_Prims.eq2",
+        "equation_Prims.l_True", "equation_Prims.squash",
+        "equation_Prims.subtype_of",
+        "function_token_typing_Prims.__cache_version_number__",
+        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c",
+        "typing_tok_Prims.T@tok"
+      ],
+      0,
+      "ee218daff09cf6aadb8f06d1c0f6fda0"
+    ],
+    [
+      "OPLSS2021.DijkstraMonads.double",
+      5,
       2,
       1,
       [
@@ -239,11 +307,12 @@
         "interpretation_Tm_abs_6592360d441032b091f63245dfa901b2",
         "interpretation_Tm_abs_85c156ab626dae4553c445dfaab6e79a",
         "l_and-interp", "l_quant_interp_617aeba1a2c47db2d75435e2f7ebe528",
+        "projection_inverse_BoxInt_proj_0",
         "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c",
         "typing_tok_Prims.T@tok", "unit_typing"
       ],
       0,
-      "faaa751afb7f92e2834a9127dcddb3d8"
+      "dd2082d661efeec5e01f70f4a79a9e69"
     ]
   ]
 ]

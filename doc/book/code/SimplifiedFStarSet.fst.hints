@@ -1,0 +1,164 @@
+[
+  "Ôdzg±ïa\u0001%\u001bEÏ\u0007W¨Ÿ",
+  [
+    [
+      "SimplifiedFStarSet.equal",
+      1,
+      0,
+      0,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "defn_equation_FStar.FunctionalExtensionality.feq",
+        "equation_Prims.l_Forall", "equation_Prims.squash",
+        "equation_Prims.subtype_of",
+        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
+      ],
+      0,
+      "72eded5d1ca1836a12159f8be68db355"
+    ],
+    [
+      "SimplifiedFStarSet.mem_empty",
+      1,
+      0,
+      0,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "FStar.FunctionalExtensionality_interpretation_Tm_arrow_a7d5cc170be69663c495e8582d2bc62a",
+        "SimplifiedFStarSet_interpretation_Tm_arrow_84543425b818e2d10a976186b8e8c250",
+        "equation_FStar.FunctionalExtensionality.feq",
+        "equation_Prims.eqtype", "equation_SimplifiedFStarSet.empty",
+        "equation_SimplifiedFStarSet.mem",
+        "interpretation_Tm_abs_127f4bac4ee3e4017241bd48c0dd39aa",
+        "interpretation_Tm_abs_6326eea4887383ba76f88bbb04bea6d8",
+        "lemma_FStar.FunctionalExtensionality.feq_on_domain",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
+        "typing_Tm_abs_127f4bac4ee3e4017241bd48c0dd39aa",
+        "typing_Tm_abs_6326eea4887383ba76f88bbb04bea6d8"
+      ],
+      0,
+      "f127e09794c1ac397e5eca91a200509e"
+    ],
+    [
+      "SimplifiedFStarSet.mem_singleton",
+      1,
+      0,
+      0,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "FStar.FunctionalExtensionality_interpretation_Tm_arrow_a7d5cc170be69663c495e8582d2bc62a",
+        "SimplifiedFStarSet_interpretation_Tm_arrow_84543425b818e2d10a976186b8e8c250",
+        "equation_FStar.FunctionalExtensionality.feq",
+        "equation_Prims.eqtype", "equation_SimplifiedFStarSet.mem",
+        "equation_SimplifiedFStarSet.singleton",
+        "interpretation_Tm_abs_3b0ace08b3d34b1b9c6190ea8851f44c",
+        "interpretation_Tm_abs_6326eea4887383ba76f88bbb04bea6d8",
+        "lemma_FStar.FunctionalExtensionality.feq_on_domain",
+        "primitive_Prims.op_Equality",
+        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
+        "typing_Tm_abs_3b0ace08b3d34b1b9c6190ea8851f44c",
+        "typing_Tm_abs_6326eea4887383ba76f88bbb04bea6d8"
+      ],
+      0,
+      "46b5d0540d81d84e0c53567b96e6bad3"
+    ],
+    [
+      "SimplifiedFStarSet.mem_union",
+      1,
+      0,
+      0,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "FStar.FunctionalExtensionality_interpretation_Tm_arrow_a7d5cc170be69663c495e8582d2bc62a",
+        "SimplifiedFStarSet_interpretation_Tm_arrow_84543425b818e2d10a976186b8e8c250",
+        "equation_FStar.FunctionalExtensionality.feq",
+        "equation_Prims.eqtype", "equation_SimplifiedFStarSet.mem",
+        "equation_SimplifiedFStarSet.union",
+        "interpretation_Tm_abs_6326eea4887383ba76f88bbb04bea6d8",
+        "interpretation_Tm_abs_7a5911b2344bd347a4c522edac0401df",
+        "lemma_FStar.FunctionalExtensionality.feq_on_domain",
+        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
+        "typing_Tm_abs_6326eea4887383ba76f88bbb04bea6d8",
+        "typing_Tm_abs_7a5911b2344bd347a4c522edac0401df"
+      ],
+      0,
+      "845537f6f3f837b7419f2c278d480d4c"
+    ],
+    [
+      "SimplifiedFStarSet.mem_intersect",
+      1,
+      0,
+      0,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "FStar.FunctionalExtensionality_interpretation_Tm_arrow_a7d5cc170be69663c495e8582d2bc62a",
+        "SimplifiedFStarSet_interpretation_Tm_arrow_84543425b818e2d10a976186b8e8c250",
+        "equation_FStar.FunctionalExtensionality.feq",
+        "equation_Prims.eqtype", "equation_SimplifiedFStarSet.intersect",
+        "equation_SimplifiedFStarSet.mem",
+        "interpretation_Tm_abs_6326eea4887383ba76f88bbb04bea6d8",
+        "interpretation_Tm_abs_920217650fd17cad0a0f1ea71d8a3e64",
+        "lemma_FStar.FunctionalExtensionality.feq_on_domain",
+        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
+        "typing_Tm_abs_6326eea4887383ba76f88bbb04bea6d8",
+        "typing_Tm_abs_920217650fd17cad0a0f1ea71d8a3e64"
+      ],
+      0,
+      "c5ea27d54c13805ea2198c9bd39d31c3"
+    ],
+    [
+      "SimplifiedFStarSet.mem_complement",
+      1,
+      0,
+      0,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "FStar.FunctionalExtensionality_interpretation_Tm_arrow_a7d5cc170be69663c495e8582d2bc62a",
+        "SimplifiedFStarSet_interpretation_Tm_arrow_84543425b818e2d10a976186b8e8c250",
+        "equation_FStar.FunctionalExtensionality.feq",
+        "equation_Prims.eqtype", "equation_SimplifiedFStarSet.complement",
+        "equation_SimplifiedFStarSet.mem",
+        "interpretation_Tm_abs_6326eea4887383ba76f88bbb04bea6d8",
+        "interpretation_Tm_abs_e818836335067047224d0c19c4cabb2d",
+        "lemma_FStar.FunctionalExtensionality.feq_on_domain",
+        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
+        "typing_Tm_abs_6326eea4887383ba76f88bbb04bea6d8",
+        "typing_Tm_abs_e818836335067047224d0c19c4cabb2d"
+      ],
+      0,
+      "674dc38a0fb6a2007fec09232d719b6f"
+    ],
+    [
+      "SimplifiedFStarSet.equal_intro",
+      1,
+      0,
+      0,
+      [
+        "@query", "equation_FStar.FunctionalExtensionality.feq",
+        "equation_SimplifiedFStarSet.equal",
+        "equation_SimplifiedFStarSet.mem"
+      ],
+      0,
+      "e36d9178b9bf2b6006f17ff358b5a99b"
+    ],
+    [
+      "SimplifiedFStarSet.equal_elim",
+      1,
+      0,
+      0,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "equation_FStar.FunctionalExtensionality.is_restricted",
+        "equation_FStar.FunctionalExtensionality.restricted_t",
+        "equation_Prims.eqtype", "equation_SimplifiedFStarSet.equal",
+        "equation_SimplifiedFStarSet.set",
+        "lemma_FStar.FunctionalExtensionality.extensionality",
+        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
+        "refinement_interpretation_Tm_refine_7e4a6c5999db731b5d17d0418dfeea3e",
+        "typing_Tm_abs_6326eea4887383ba76f88bbb04bea6d8"
+      ],
+      0,
+      "92e3ba2f690bf171c7043314d25202a9"
+    ]
+  ]
+]

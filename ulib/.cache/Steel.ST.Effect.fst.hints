@@ -8,7 +8,7 @@
       1,
       [ "@query" ],
       0,
-      "4f85d2e3a8ded302e2ad98dbc5bae7d4"
+      "e08fd67b0c2e86ff58da2eb58aeda457"
     ],
     [
       "Steel.ST.Effect.weaken_repr",
@@ -36,7 +36,7 @@
         "typing_Steel.Effect.Common.star", "typing_tok_Prims.T@tok"
       ],
       0,
-      "65ea4b7dc25e884589d5562706e52406"
+      "ba964e8daa0cbdd071d1b68c32f9abc3"
     ],
     [
       "Steel.ST.Effect.return_",
@@ -49,7 +49,7 @@
         "lemma_Steel.Effect.Common.can_be_split_refl"
       ],
       0,
-      "a794c4b1e4ba6ea2425183fd5f7fe164"
+      "b645813d74e63f81e19b6af84260645d"
     ],
     [
       "Steel.ST.Effect.bind",
@@ -58,7 +58,7 @@
       1,
       [ "@query" ],
       0,
-      "2906024ed5dcbc25faeb033094825814"
+      "5914e3947a7f5eb4419915b78e7179e3"
     ],
     [
       "Steel.ST.Effect.subcomp",
@@ -76,7 +76,7 @@
         "typing_tok_Prims.T@tok"
       ],
       0,
-      "697f2b1cd34d74add3a14205b61b611f"
+      "fb014d2c21562fbc3c9dce568c0b3eed"
     ],
     [
       "Steel.ST.Effect.STBase",
@@ -88,7 +88,7 @@
         "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
       ],
       0,
-      "99393a3ed52c83f73a56079fbba05ed7"
+      "e878d526394ecba3fdd236c8284fcef0"
     ],
     [
       "Steel.ST.Effect.STBase",
@@ -96,11 +96,11 @@
       2,
       1,
       [
-        "@MaxIFuel_assumption", "@query", "equation_Prims.squash",
+        "@MaxIFuel_assumption", "@query", "b2t_def", "equation_Prims.squash",
         "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
       ],
       0,
-      "4788579520ab88b1456e2ca0978292ac"
+      "6606b942bd80a999a17fe3f266e45532"
     ],
     [
       "Steel.ST.Effect.STBase",
@@ -108,11 +108,11 @@
       2,
       1,
       [
-        "@MaxIFuel_assumption", "@query",
-        "refinement_interpretation_Tm_refine_de09779676242898794a0b057d5f5bb4"
+        "@MaxIFuel_assumption", "@query", "equation_Prims.squash",
+        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
       ],
       0,
-      "6b78c2b3e08a96b7a884a7909df0c75a"
+      "48969e767f4ed4e094432a10c33d4051"
     ],
     [
       "Steel.ST.Effect.STBase",
@@ -120,11 +120,23 @@
       2,
       1,
       [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_de09779676242898794a0b057d5f5bb4"
+      ],
+      0,
+      "947c7f5057966feec34135914b4c7436"
+    ],
+    [
+      "Steel.ST.Effect.STBase",
+      5,
+      2,
+      1,
+      [
         "@MaxIFuel_assumption", "@query", "equation_Prims.squash",
         "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
       ],
       0,
-      "3d38a355cd5429ba68815c3c6c9c16b3"
+      "d99f4a9a27e5d87f0ca4a49901167e3a"
     ],
     [
       "Steel.ST.Effect.bind_pure_st_",
@@ -142,7 +154,7 @@
         "typing_Tm_abs_6ba36691ee58dee85cd144324b083848"
       ],
       0,
-      "66d2e4d987439c852b9b746dc9f1f1bf"
+      "2164731ba66bb599f4a99478435b5da0"
     ]
   ]
 ]

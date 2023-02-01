@@ -1,0 +1,44 @@
+[
+  "{GM¬ÐÅ;©›À\u001e\u001aÊÇõÚ",
+  [
+    [
+      "Part5.Pow2.pow2_bound_19''",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_Tm_refine_9a75c5cc72eea156d9d6fd6947ebe325",
+        "true_interp"
+      ],
+      0,
+      "8f94322edcc74f49b5dce691cdb42f88"
+    ],
+    [
+      "Part5.Pow2.pow2_bound_19'''",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_Tm_refine_9a75c5cc72eea156d9d6fd6947ebe325",
+        "true_interp"
+      ],
+      0,
+      "bd09539464fd384226fd50b1f770f0ca"
+    ],
+    [
+      "Part5.Pow2.pow2_bound_19''''",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_Tm_refine_9a75c5cc72eea156d9d6fd6947ebe325",
+        "true_interp"
+      ],
+      0,
+      "7813f85bb8044249bc3ddf5060dbe4dc"
+    ]
+  ]
+]

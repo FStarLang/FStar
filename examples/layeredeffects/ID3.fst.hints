@@ -1,5 +1,5 @@
 [
-  "€Š2ô4»™‡äÜ5{©Ï\f¿",
+  "kû_¶c>±°\u0013h®²2ëa—",
   [
     [
       "ID3.return",
@@ -8,7 +8,7 @@
       1,
       [ "@query" ],
       0,
-      "b49311802ee2bccc44da7e58f1526f00"
+      "7d6ddc7d8c078737d37df5f1fd1798a1"
     ],
     [
       "ID3.bind_wp",
@@ -27,7 +27,7 @@
         "typing_Tm_abs_d0f415a5361a9d7988d8e425dc193472"
       ],
       0,
-      "1fc9fabefbf83e622e3012478a24984a"
+      "068ede5375525dbc3c76b50c103c2d46"
     ],
     [
       "ID3.bind",
@@ -41,7 +41,7 @@
         "typing_Tm_abs_d0f415a5361a9d7988d8e425dc193472"
       ],
       0,
-      "dc3ad9d78ed9b29694d1e0ef3355f482"
+      "174eb62b5d2e812c5ae280389eea439a"
     ],
     [
       "ID3.subcomp",
@@ -58,7 +58,7 @@
         "refinement_interpretation_Tm_refine_8d65e998a07dd53ec478e27017d9dba5"
       ],
       0,
-      "4cc8ba8c53b3321cc617773e530a39ce"
+      "84b29cc55f5d51987f6acd8fb332c800"
     ],
     [
       "ID3.if_then_else_wp",
@@ -67,7 +67,7 @@
       1,
       [ "@query", "equation_ID3.w" ],
       0,
-      "edd21d4e0b05c0ee320684567c0c8509"
+      "364df48f2712a23c0a8637a99542faf8"
     ],
     [
       "ID3.ID",
@@ -79,7 +79,7 @@
         "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
       ],
       0,
-      "05f8e536ed371ee93181f4a6975dc360"
+      "1fa0ebcba952b7d86ebc5c43dd508108"
     ],
     [
       "ID3.ID",
@@ -91,7 +91,7 @@
         "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
       ],
       0,
-      "5520be87d9a48a14d33617ba8f587a02"
+      "e0f56606c51987a1a0fb1cc53534249f"
     ],
     [
       "ID3.ID",
@@ -99,11 +99,23 @@
       2,
       1,
       [
+        "@MaxIFuel_assumption", "@query", "b2t_def", "equation_Prims.squash",
+        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
+      ],
+      0,
+      "c7526fbf0a0dd776b93d27c14476ac27"
+    ],
+    [
+      "ID3.ID",
+      4,
+      2,
+      1,
+      [
         "@MaxIFuel_assumption", "@query",
         "refinement_interpretation_Tm_refine_de09779676242898794a0b057d5f5bb4"
       ],
       0,
-      "ef819c7caf64ce3b65f4c30e9f28ce2f"
+      "4ab1cc0d34e5db18e33db1ac9583b8cc"
     ],
     [
       "ID3.lift_pure_nd",
@@ -127,7 +139,16 @@
         "typing_Tm_abs_7449511e63cff31881fe505864197781"
       ],
       0,
-      "400a413ab2c5cee0b4bc01859651b0bc"
+      "7179f7cbff312e254ec14090bab06d06"
+    ],
+    [
+      "ID3.5736",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "bab7593baed3312217bfa2f3db1cb2ea"
     ],
     [
       "ID3.test_f",
@@ -136,7 +157,7 @@
       1,
       [ "@query", "int_typing" ],
       0,
-      "c35639e2a8040913e42d3ed7539fc23d"
+      "39e15f12cd297aa079fc46ca92a7a182"
     ],
     [
       "ID3.test_f",
@@ -145,10 +166,10 @@
       1,
       [ "@query" ],
       0,
-      "ceb986c03f289b03352b8631678cea30"
+      "a831c8551b09c2696a839342bf22c8ef"
     ],
     [
-      "ID3.Id", 1, 2, 1, [ "@query" ], 0, "dc6962bf6d3cb58c6ebb7657722ebb4f"
+      "ID3.Id", 1, 2, 1, [ "@query" ], 0, "90e179f93880fb2872b07f3cdb96ec57"
     ],
     [
       "ID3.sum",
@@ -166,7 +187,7 @@
         "projection_inverse_Prims.Cons_tl", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "d3e7c199d321bbe425b6d0a3221945b6"
+      "7b74487e406e3c6a6cb3ab3940aaa0b5"
     ]
   ]
 ]

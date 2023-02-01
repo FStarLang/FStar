@@ -16,7 +16,7 @@
         "typing_OPLSS2021.IFC.loc"
       ],
       0,
-      "4e789e52a3ed6d3dd74684849c287ee5"
+      "43d815c9d91cbe2242ff1b8a87fb5870"
     ],
     [
       "OPLSS2021.IFC.iread",
@@ -48,7 +48,7 @@
         "refinement_interpretation_Tm_refine_b8b641de3e685f31761a268514ea803d"
       ],
       0,
-      "d9d0c83e6cade3e7e44723eb6d4e6044"
+      "b83432a35408592a00637876301026db"
     ],
     [
       "OPLSS2021.IFC.iwrite",
@@ -81,7 +81,7 @@
         "typing_FStar.Map.upd", "typing_OPLSS2021.IFC.havoc"
       ],
       0,
-      "d3fe4fbd647a8fb2b929da944943dbde"
+      "42342e6764f336936e93cf225b1fdb20"
     ],
     [
       "OPLSS2021.IFC.return",
@@ -111,7 +111,7 @@
         "refinement_interpretation_Tm_refine_b8b641de3e685f31761a268514ea803d"
       ],
       0,
-      "7e9f221400ed00c33abbe7a143b97040"
+      "2d76032202ee2e56cf841985f0e1a668"
     ],
     [
       "OPLSS2021.IFC.flows_equiv_refl",
@@ -123,7 +123,7 @@
         "equation_OPLSS2021.IFC.flows_included_in"
       ],
       0,
-      "8b5f4df9f2d63fea35a0092d67adee7a"
+      "3f2acb97a11628cd1ef4bd5e02d4f46a"
     ],
     [
       "OPLSS2021.IFC.flows_equiv_trans",
@@ -142,7 +142,7 @@
         "function_token_typing_OPLSS2021.IFC.flow", "int_inversion"
       ],
       0,
-      "591b2e0a28c625c4a680b4fcb4d15282"
+      "b57dab258382c60790bd696f2d34e60e"
     ],
     [
       "OPLSS2021.IFC.flows_included_in_union_distr_dest",
@@ -185,7 +185,7 @@
         "typing_OPLSS2021.IFC.union"
       ],
       0,
-      "03f271e26f1a151e1d63b5595e6d8702"
+      "2b36c68db006f6e701fd9a8635a48e7f"
     ],
     [
       "OPLSS2021.IFC.flows_included_in_union_distr_src",
@@ -269,7 +269,7 @@
         "typing_OPLSS2021.IFC.union"
       ],
       0,
-      "b33251665b5e64ef445dec753bf082cc"
+      "6dd7e91ae9f0a381e907e34d35b19a19"
     ],
     [
       "OPLSS2021.IFC.bind_comp_reads_ok",
@@ -309,7 +309,7 @@
         "typing_OPLSS2021.IFC.union"
       ],
       0,
-      "b5cfb27233b136b3942d759df2aeb71e"
+      "535c560b1d8d3c097ceb352319d2b862"
     ],
     [
       "OPLSS2021.IFC.bind_comp_writes_ok",
@@ -335,7 +335,7 @@
         "typing_OPLSS2021.IFC.union"
       ],
       0,
-      "f554f5d95dc5bffbae07e4575b67eb60"
+      "c9f88b8b80eda5db7985a8c33a3dc704"
     ],
     [
       "OPLSS2021.IFC.memP_append_or",
@@ -365,7 +365,7 @@
         "subterm_ordering_Prims.Cons", "typing_FStar.List.Tot.Base.op_At"
       ],
       0,
-      "89909f2ef6a6a6eba463164ebdd8f5ac"
+      "6de19dc78bfc05a16c0b7771a899eaf3"
     ],
     [
       "OPLSS2021.IFC.has_flow_append",
@@ -381,7 +381,7 @@
         "int_inversion"
       ],
       0,
-      "d45074ed676c3c8659f69a153ad3d9d8"
+      "7eb61cd63f3db7ba2daffe08a255e55b"
     ],
     [
       "OPLSS2021.IFC.elim_has_flow_seq",
@@ -435,7 +435,7 @@
         "typing_Tm_abs_96b3163aad7f0725bcb56376ed288210"
       ],
       0,
-      "1a0494b8eedd2a375203789a79927828"
+      "8a89b74a357a8e5b56ea01ebb670a197"
     ],
     [
       "OPLSS2021.IFC.add_source_monotonic",
@@ -489,7 +489,7 @@
         "typing_Tm_abs_96b3163aad7f0725bcb56376ed288210"
       ],
       0,
-      "0fb095e976d4c81323d76619df08a2df"
+      "130ea725df229076b036446221f40606"
     ],
     [
       "OPLSS2021.IFC.has_flow_soundness",
@@ -510,7 +510,7 @@
         "refinement_interpretation_Tm_refine_b1f0e49e305f52c8e0295d877470bada"
       ],
       0,
-      "ca96a78d531d43ddad245a686ce7d79a"
+      "d4b2c838eb7a809fa35a790774003369"
     ],
     [
       "OPLSS2021.IFC.bind_comp_no_leakage",
@@ -556,7 +556,7 @@
         "unit_inversion", "unit_typing"
       ],
       0,
-      "f51935884b39d754514a460cd86d5e3d"
+      "13333e6befa7122d1b5398bc2a14c9da"
     ],
     [
       "OPLSS2021.IFC.bind_comp_flows_ok",
@@ -576,7 +576,7 @@
         "proj_equation_FStar.Pervasives.Native.Mktuple2__2"
       ],
       0,
-      "daec52a5a904f5a529cf68f25b9987f3"
+      "8bd6598f87a6c914723aba880ffba68b"
     ],
     [
       "OPLSS2021.IFC.triple_equiv_refl",
@@ -597,7 +597,7 @@
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__2"
       ],
       0,
-      "2bd70a38254a23e08a80d6bca3b61e0b"
+      "75dc32296aec2976efb3a2b37dd8446e"
     ],
     [
       "OPLSS2021.IFC.add_source_bot",
@@ -649,7 +649,7 @@
         "typing_Tm_abs_96b3163aad7f0725bcb56376ed288210"
       ],
       0,
-      "de68af18fdd0ad1420b9179433a87eeb"
+      "b1209b0a6b287ec341902fa7ac0c4deb"
     ],
     [
       "OPLSS2021.IFC.left_unit",
@@ -708,7 +708,7 @@
         "typing_Tm_abs_96b3163aad7f0725bcb56376ed288210"
       ],
       0,
-      "cac374a276027f1855fb786f3a1f1b9a"
+      "d857b204e3fb01abba68b9985b8f5385"
     ],
     [
       "OPLSS2021.IFC.flows_included_append",
@@ -721,7 +721,7 @@
         "equation_OPLSS2021.IFC.loc", "int_inversion"
       ],
       0,
-      "17d0b40caa95e087de1bc89072257883"
+      "63c8f85239a2c8a080161f6276d6c1e6"
     ],
     [
       "OPLSS2021.IFC.flows_equiv_append",
@@ -733,7 +733,7 @@
         "equation_OPLSS2021.IFC.flow", "equation_OPLSS2021.IFC.flows_equiv"
       ],
       0,
-      "2eb96d224dcd50dc7fbff61f765fdd63"
+      "28a671d6a2956faeaae7fc6a9590fc36"
     ],
     [
       "OPLSS2021.IFC.append_nil_r",
@@ -750,7 +750,7 @@
         "projection_inverse_BoxBool_proj_0", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "a8b46d8847add94342361e40aa7d75b3"
+      "37bacc47ebfec1d1620ffe726c3dc03f"
     ],
     [
       "OPLSS2021.IFC.right_unit",
@@ -806,7 +806,7 @@
         "typing_Tm_abs_96b3163aad7f0725bcb56376ed288210"
       ],
       0,
-      "bf7bc8372d3eca213de25660f261da99"
+      "dd797f6253008a2a1c5eee5671431361"
     ],
     [
       "OPLSS2021.IFC.assoc_comp",
@@ -850,7 +850,7 @@
         "typing_Tm_abs_96b3163aad7f0725bcb56376ed288210"
       ],
       0,
-      "6fa71c8f06e9c9913c1f72b396df65cc"
+      "5ec682f6df6d4564f19f01a4762ea21a"
     ],
     [
       "OPLSS2021.IFC.bind",
@@ -876,7 +876,7 @@
         "typing_OPLSS2021.IFC.union"
       ],
       0,
-      "77e0d7200dfc2d6f206fea942334c911"
+      "33bacb04b06d10e5e6185b9660bf79fe"
     ],
     [
       "OPLSS2021.IFC.subcomp",
@@ -910,7 +910,7 @@
         "typing_FStar.Set.mem", "typing_OPLSS2021.IFC.havoc"
       ],
       0,
-      "af85000d5142ccf823a5ee7f604d476d"
+      "8c6a3905180e685494079495222d96b3"
     ],
     [
       "OPLSS2021.IFC.IST",
@@ -924,7 +924,7 @@
         "equation_OPLSS2021.IFC.loc"
       ],
       0,
-      "69e240e8b57eacb699970c1ba7451770"
+      "8eb36cb1af20ee1ea0babc7a53bdb07c"
     ],
     [
       "OPLSS2021.IFC.IST",
@@ -938,7 +938,21 @@
         "equation_OPLSS2021.IFC.loc"
       ],
       0,
-      "80891f2491841e02b03eb83eff6eb053"
+      "3d0330c9b00b9e88dcf073df2573117c"
+    ],
+    [
+      "OPLSS2021.IFC.IST",
+      3,
+      2,
+      1,
+      [
+        "@query", "equation_FStar.Set.subset",
+        "equation_OPLSS2021.IFC.flows_included_in",
+        "equation_OPLSS2021.IFC.label_inclusion",
+        "equation_OPLSS2021.IFC.loc"
+      ],
+      0,
+      "14ffb36d7f1d2f4d4ddc78b7c5fbd196"
     ],
     [
       "OPLSS2021.IFC.test",
@@ -970,7 +984,7 @@
         "typing_OPLSS2021.IFC.single"
       ],
       0,
-      "c31a9368dfacc70ede88e9428c671a2f"
+      "e605761853d6197628ae3279ec9f26fe"
     ],
     [
       "OPLSS2021.IFC.test2",
@@ -1032,7 +1046,7 @@
         "typing_Tm_abs_96b3163aad7f0725bcb56376ed288210"
       ],
       0,
-      "9ff27dd7d43f978f7225bdeea53bfcee"
+      "b3094719382471514c55eb8a03294012"
     ],
     [
       "OPLSS2021.IFC.test3",
@@ -1094,7 +1108,7 @@
         "typing_Tm_abs_96b3163aad7f0725bcb56376ed288210"
       ],
       0,
-      "65cd9159ae8cffb41e4faf3955991fe4"
+      "a88a02f0dc5b63c1e7e574ed0dcc5479"
     ],
     [
       "OPLSS2021.IFC.test3_lab",
@@ -1158,7 +1172,7 @@
         "typing_Tm_abs_96b3163aad7f0725bcb56376ed288210"
       ],
       0,
-      "826bbc66e60d690ed6579cbb4fde4d35"
+      "243fc4dd8064a4d9aaec177da7b0c6b9"
     ],
     [
       "OPLSS2021.IFC.test3_1",
@@ -1216,7 +1230,7 @@
         "typing_Tm_abs_96b3163aad7f0725bcb56376ed288210"
       ],
       0,
-      "b9c2ad6235041b10b7d0b249260de06a"
+      "5beaa453445bc1c4b9603290306e14ed"
     ],
     [
       "OPLSS2021.IFC.test4",
@@ -1274,7 +1288,7 @@
         "typing_Tm_abs_96b3163aad7f0725bcb56376ed288210"
       ],
       0,
-      "f9bc249dcb2a23a33c11d5175db0ad9f"
+      "d326cb321df28cf2f714683313ed5e5e"
     ],
     [
       "OPLSS2021.IFC.test5",
@@ -1332,7 +1346,7 @@
         "typing_Tm_abs_96b3163aad7f0725bcb56376ed288210"
       ],
       0,
-      "65b44d42fe6a504848c827d2b40f8f5f"
+      "15ce640a960974ed79bea239798dd392"
     ],
     [
       "OPLSS2021.IFC.test6",
@@ -1396,7 +1410,7 @@
         "typing_Tm_abs_96b3163aad7f0725bcb56376ed288210"
       ],
       0,
-      "180fc7ce09818b02ae731a9e8f7e1484"
+      "35af6c6695559bb303f2ca453606dbf1"
     ],
     [
       "OPLSS2021.IFC.test7",
@@ -1459,7 +1473,7 @@
         "typing_Tm_abs_96b3163aad7f0725bcb56376ed288210"
       ],
       0,
-      "356a10796c8cfbd3b3182c3a24ba786f"
+      "43aa312fa9e0e8945dd383a478edde6f"
     ],
     [
       "OPLSS2021.IFC.test8",
@@ -1525,7 +1539,7 @@
         "typing_Tm_abs_96b3163aad7f0725bcb56376ed288210"
       ],
       0,
-      "42f7a7f7d7efe5f28eb3263da91f929c"
+      "3c869875f1b28413f40428b4a1eef898"
     ],
     [
       "OPLSS2021.IFC.test9",
@@ -1591,7 +1605,7 @@
         "typing_Tm_abs_96b3163aad7f0725bcb56376ed288210"
       ],
       0,
-      "38e005906bbd72483e2f6390d83780f4"
+      "fc7bf8b3aec3457da9ee93b55a41409b"
     ],
     [
       "OPLSS2021.IFC.test10",
@@ -1622,7 +1636,7 @@
         "typing_OPLSS2021.IFC.union"
       ],
       0,
-      "d63a004a1ac20bcfc48951bfd13cc404"
+      "09663b64229f6f1e91272c03cdfe54f7"
     ],
     [
       "OPLSS2021.IFC.test12",
@@ -1682,7 +1696,7 @@
         "typing_Tm_abs_96b3163aad7f0725bcb56376ed288210"
       ],
       0,
-      "2521151d516fbcb3492605cc1b32d40b"
+      "68951a27c09ee0bf35878ffa73f3a4f8"
     ],
     [
       "OPLSS2021.IFC.test12_1",
@@ -1742,7 +1756,7 @@
         "typing_Tm_abs_96b3163aad7f0725bcb56376ed288210"
       ],
       0,
-      "95767f5269cd6bbee7d501a862b34a50"
+      "29e323a9ae2c647fb86a043047e92871"
     ],
     [
       "OPLSS2021.IFC.test13",
@@ -1771,7 +1785,7 @@
         "typing_OPLSS2021.IFC.cw1"
       ],
       0,
-      "8a1a3700683481f198abb88a77927243"
+      "7b88b2e77ac72366ad665fdfc6ad31cc"
     ],
     [
       "OPLSS2021.IFC.test14",
@@ -1830,7 +1844,7 @@
         "typing_Tm_abs_96b3163aad7f0725bcb56376ed288210"
       ],
       0,
-      "487e104c55a55ddb2f4f0c9d5062eb9d"
+      "845a638894d77337d6ac0b91adc79e73"
     ],
     [
       "OPLSS2021.IFC.test15",
@@ -1891,7 +1905,7 @@
         "typing_Tm_abs_96b3163aad7f0725bcb56376ed288210"
       ],
       0,
-      "9f9750260a20a5f4031b1d3c02ee2cae"
+      "704098cf92a791a132d3b1947c81e272"
     ]
   ]
 ]
