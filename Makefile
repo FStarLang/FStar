@@ -38,6 +38,12 @@ dune-bootstrap:
 	+$(MAKE) dune-extract-all
 	+$(MAKE) dune
 
+.PHONY: boot
+
+boot:
+	+$(MAKE) dune
+	+$(MAKE) dune-bootstrap
+
 install:
 	$(Q)+$(MAKE) -C src/ocaml-output install
 
