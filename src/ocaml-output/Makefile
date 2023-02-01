@@ -46,6 +46,7 @@ COMPILER_ML_LIB=FStar_Util.cmx FStar_Compiler_Bytes.cmx			\
 PARSER_ML_LIB=FStar_Parser_Util.cmx
 PRETTYPRINT_ML_LIB=FStar_Pprint.cmx
 GENERATED_FILES=FStar_Parser_Parse.ml FStar_Version.ml parse.mly
+FSTAR_HOME = ../..
 
 # The directory where we install files when doing "make install".
 # Overridden via the command-line by the OPAM invocation.
