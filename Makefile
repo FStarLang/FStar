@@ -6,12 +6,15 @@ all: dune
 
 DUNE_SNAPSHOT ?= $(PWD)/ocaml
 
-.PHONY: dune dune-fstar
+.PHONY: dune dune-fstar verify-ulib
 dune-fstar:
 	cd $(DUNE_SNAPSHOT) && dune build --profile release && dune install --prefix=$(PWD)
 
-dune: dune-fstar
+verify-ulib:
 	+$(MAKE) -C ulib
+
+dune: dune-fstar
+	+$(MAKE) verify-ulib
 
 .PHONY: clean-dune-snapshot
 
