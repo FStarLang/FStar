@@ -17,7 +17,7 @@ DUNE_SNAPSHOT ?= $(realpath $(FSTAR_HOME)/ocaml)
 export DUNE_SNAPSHOT
 
 FStar_Parser_Parse_ml=$(DUNE_SNAPSHOT)/fstar-lib/generated/FStar_Parser_Parse.ml
-FStar_Version_ml=$(DUNE_SNAPSHOT)/fstar-lib/generated/FStar_Version.ml
+FStar_Version_ml=$(DUNE_SNAPSHOT)/fstar-lib/dynamic/FStar_Version.ml
 
 GENERATED_ML_FILES=$(FStar_Parser_Parse_ml) $(FStar_Version_ml)
 
@@ -133,6 +133,7 @@ COMMITDATE = $(shell git log --pretty=format:%ci -n 1 2>/dev/null || echo unset)
 $(FStar_Version_ml):
 	@echo '[MAKE      FStar_Version.ml]'
 	$(Q)rm -rf $@
+	$(Q)mkdir -p $(dir $@)
 	$(Q)echo 'let dummy () = ();;' >> $@
 	$(Q)echo 'FStar_Options._version := "$(VERSION)";;' >> $@
 	$(Q)echo 'FStar_Options._platform := "$(PLATFORM)";;' >> $@

@@ -17,6 +17,7 @@ dune: dune-fstar
 
 clean-dune-snapshot:
 	rm -rf $(DUNE_SNAPSHOT)/fstar-lib/generated/*
+	rm -rf $(DUNE_SNAPSHOT)/fstar-lib/dynamic/*
 
 .PHONY: dune-extract-all
 
