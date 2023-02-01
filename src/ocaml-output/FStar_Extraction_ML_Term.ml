@@ -324,6 +324,67 @@ let (is_type :
                FStar_Compiler_Util.print2 "not a type %s (%s)\n" uu___4
                  uu___5));
        b)
+let (is_steel_with_invariant_g : FStar_Syntax_Syntax.term -> Prims.bool) =
+  fun t ->
+    let uu___ = FStar_Syntax_Util.head_and_args t in
+    match uu___ with
+    | (head, args) ->
+        let uu___1 =
+          let uu___2 =
+            let uu___3 = FStar_Syntax_Util.un_uinst head in
+            uu___3.FStar_Syntax_Syntax.n in
+          (uu___2, args) in
+        (match uu___1 with
+         | (FStar_Syntax_Syntax.Tm_fvar fv,
+            _a::_fp::_fp'::_o::_p::_i::_body::[]) ->
+             (FStar_Syntax_Syntax.fv_eq_lid fv
+                FStar_Parser_Const.steel_with_invariant_g_lid)
+               ||
+               (FStar_Syntax_Syntax.fv_eq_lid fv
+                  FStar_Parser_Const.steel_st_with_invariant_g_lid)
+         | uu___2 -> false)
+let (is_steel_with_invariant :
+  FStar_Syntax_Syntax.term ->
+    FStar_Syntax_Syntax.term FStar_Pervasives_Native.option)
+  =
+  fun t ->
+    let uu___ = FStar_Syntax_Util.head_and_args t in
+    match uu___ with
+    | (head, args) ->
+        let uu___1 =
+          let uu___2 =
+            let uu___3 = FStar_Syntax_Util.un_uinst head in
+            uu___3.FStar_Syntax_Syntax.n in
+          (uu___2, args) in
+        (match uu___1 with
+         | (FStar_Syntax_Syntax.Tm_fvar fv,
+            _a::_fp::_fp'::_o::_obs::_p::_i::body::[]) when
+             (FStar_Syntax_Syntax.fv_eq_lid fv
+                FStar_Parser_Const.steel_with_invariant_lid)
+               ||
+               (FStar_Syntax_Syntax.fv_eq_lid fv
+                  FStar_Parser_Const.steel_st_with_invariant_lid)
+             ->
+             FStar_Pervasives_Native.Some (FStar_Pervasives_Native.fst body)
+         | uu___2 -> FStar_Pervasives_Native.None)
+let (is_steel_new_invariant : FStar_Syntax_Syntax.term -> Prims.bool) =
+  fun t ->
+    let uu___ = FStar_Syntax_Util.head_and_args t in
+    match uu___ with
+    | (head, args) ->
+        let uu___1 =
+          let uu___2 =
+            let uu___3 = FStar_Syntax_Util.un_uinst head in
+            uu___3.FStar_Syntax_Syntax.n in
+          (uu___2, args) in
+        (match uu___1 with
+         | (FStar_Syntax_Syntax.Tm_fvar fv, _o::_p::[]) ->
+             (FStar_Syntax_Syntax.fv_eq_lid fv
+                FStar_Parser_Const.steel_new_invariant_lid)
+               ||
+               (FStar_Syntax_Syntax.fv_eq_lid fv
+                  FStar_Parser_Const.steel_st_new_invariant_lid)
+         | uu___2 -> false)
 let (is_type_binder :
   FStar_Extraction_ML_UEnv.uenv -> FStar_Syntax_Syntax.binder -> Prims.bool)
   =
@@ -1063,18 +1124,25 @@ let rec (translate_term_to_mlty :
         | FStar_Syntax_Syntax.Tm_app (head, args) ->
             let res =
               let uu___ =
-                let uu___1 = FStar_Syntax_Util.un_uinst head in
-                uu___1.FStar_Syntax_Syntax.n in
+                let uu___1 =
+                  let uu___2 = FStar_Syntax_Util.un_uinst head in
+                  uu___2.FStar_Syntax_Syntax.n in
+                (uu___1, args) in
               match uu___ with
-              | FStar_Syntax_Syntax.Tm_name bv -> bv_as_mlty env bv
-              | FStar_Syntax_Syntax.Tm_fvar fv -> fv_app_as_mlty env fv args
-              | FStar_Syntax_Syntax.Tm_app (head1, args') ->
-                  let uu___1 =
+              | (FStar_Syntax_Syntax.Tm_name bv, uu___1) -> bv_as_mlty env bv
+              | (FStar_Syntax_Syntax.Tm_fvar fv, uu___1::[]) when
+                  FStar_Syntax_Syntax.fv_eq_lid fv
+                    FStar_Parser_Const.steel_memory_inv_lid
+                  -> translate_term_to_mlty env FStar_Syntax_Syntax.t_unit
+              | (FStar_Syntax_Syntax.Tm_fvar fv, uu___1) ->
+                  fv_app_as_mlty env fv args
+              | (FStar_Syntax_Syntax.Tm_app (head1, args'), uu___1) ->
+                  let uu___2 =
                     FStar_Syntax_Syntax.mk
                       (FStar_Syntax_Syntax.Tm_app
                          (head1, (FStar_Compiler_List.op_At args' args)))
                       t1.FStar_Syntax_Syntax.pos in
-                  translate_term_to_mlty env uu___1
+                  translate_term_to_mlty env uu___2
               | uu___1 -> FStar_Extraction_ML_Syntax.MLTY_Top in
             res
         | FStar_Syntax_Syntax.Tm_abs (bs, ty, uu___) ->
@@ -2888,6 +2956,29 @@ and (term_as_mlexpr' :
                        FStar_Extraction_ML_Syntax.ml_int_ty) uu___10 in
                 (uu___9, FStar_Extraction_ML_Syntax.E_PURE,
                   FStar_Extraction_ML_Syntax.ml_int_ty))
+       | FStar_Syntax_Syntax.Tm_app uu___1 when is_steel_with_invariant_g t
+           ->
+           (FStar_Extraction_ML_Syntax.ml_unit,
+             FStar_Extraction_ML_Syntax.E_PURE,
+             FStar_Extraction_ML_Syntax.MLTY_Erased)
+       | FStar_Syntax_Syntax.Tm_app uu___1 when
+           let uu___2 = is_steel_with_invariant t in
+           FStar_Pervasives_Native.uu___is_Some uu___2 ->
+           let body =
+             let uu___2 = is_steel_with_invariant t in
+             FStar_Pervasives_Native.__proj__Some__item__v uu___2 in
+           let tm =
+             let uu___2 =
+               let uu___3 =
+                 FStar_Syntax_Syntax.as_arg FStar_Syntax_Syntax.unit_const in
+               [uu___3] in
+             FStar_Syntax_Syntax.mk_Tm_app body uu___2
+               body.FStar_Syntax_Syntax.pos in
+           term_as_mlexpr g tm
+       | FStar_Syntax_Syntax.Tm_app uu___1 when is_steel_new_invariant t ->
+           (FStar_Extraction_ML_Syntax.ml_unit,
+             FStar_Extraction_ML_Syntax.E_PURE,
+             FStar_Extraction_ML_Syntax.ml_unit_ty)
        | FStar_Syntax_Syntax.Tm_app (head, args) when
            (is_match head) &&
              (FStar_Compiler_Effect.op_Bar_Greater args
