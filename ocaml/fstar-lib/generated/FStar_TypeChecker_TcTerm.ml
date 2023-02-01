@@ -1298,7 +1298,7 @@ let (guard_letrecs :
                              let uu___12 =
                                FStar_Syntax_Print.term_to_string t2 in
                              FStar_Compiler_Util.format6
-                               "SMT may not be able to prove the types of %s at %s (%s) and %s at %s (%s) to be equal, if the proof fails, try annotating these with the same type\n"
+                               "SMT may not be able to prove the types of %s at %s (%s) and %s at %s (%s) to be equal, if the proof fails, try annotating these with the same type"
                                uu___7 uu___8 uu___9 uu___10 uu___11 uu___12 in
                            (FStar_Errors.Warning_Defensive, uu___6) in
                          FStar_Errors.log_issue e1.FStar_Syntax_Syntax.pos

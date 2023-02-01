@@ -532,7 +532,7 @@ let guard_letrecs env actuals expected_c : list (lbname*typ*univ_names) =
                  | Tm_name _, Tm_name _ -> ()
                  | _, _ ->
                    Errors.log_issue e1.pos (Errors.Warning_Defensive,
-                     BU.format6 "SMT may not be able to prove the types of %s at %s (%s) and %s at %s (%s) to be equal, if the proof fails, try annotating these with the same type\n"
+                     BU.format6 "SMT may not be able to prove the types of %s at %s (%s) and %s at %s (%s) to be equal, if the proof fails, try annotating these with the same type"
                        (Print.term_to_string e1)
                        (Range.string_of_range e1.pos)
                        (Print.term_to_string t1)

@@ -905,20 +905,22 @@ let (injectives : Prims.string Prims.list) =
   "FStar.UInt32.__uint_to_t";
   "FStar.UInt64.__uint_to_t"]
 let (eq_inj : eq_result -> eq_result -> eq_result) =
-  fun f ->
-    fun g ->
-      match (f, g) with
+  fun r ->
+    fun s ->
+      match (r, s) with
       | (Equal, Equal) -> Equal
       | (NotEqual, uu___) -> NotEqual
       | (uu___, NotEqual) -> NotEqual
-      | (Unknown, uu___) -> Unknown
-      | (uu___, Unknown) -> Unknown
+      | (uu___, uu___1) -> Unknown
 let (equal_if : Prims.bool -> eq_result) =
   fun uu___ -> if uu___ then Equal else Unknown
 let (equal_iff : Prims.bool -> eq_result) =
   fun uu___ -> if uu___ then Equal else NotEqual
 let (eq_and : eq_result -> (unit -> eq_result) -> eq_result) =
-  fun f -> fun g -> match f with | Equal -> g () | uu___ -> Unknown
+  fun r ->
+    fun s ->
+      let uu___ = (r = Equal) && (let uu___1 = s () in uu___1 = Equal) in
+      if uu___ then Equal else Unknown
 let rec (eq_tm :
   FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.term -> eq_result) =
   fun t1 ->
@@ -1004,9 +1006,11 @@ let rec (eq_tm :
             (fun uu___1 ->
                let uu___2 = eq_univs_list us vs in equal_if uu___2)
       | (FStar_Syntax_Syntax.Tm_constant (FStar_Const.Const_range uu___),
-         uu___1) -> Unknown
-      | (uu___, FStar_Syntax_Syntax.Tm_constant (FStar_Const.Const_range
-         uu___1)) -> Unknown
+         FStar_Syntax_Syntax.Tm_constant (FStar_Const.Const_range uu___1)) ->
+          Unknown
+      | (FStar_Syntax_Syntax.Tm_constant (FStar_Const.Const_real r1),
+         FStar_Syntax_Syntax.Tm_constant (FStar_Const.Const_real r2)) ->
+          equal_if (r1 = r2)
       | (FStar_Syntax_Syntax.Tm_constant c, FStar_Syntax_Syntax.Tm_constant
          d) -> let uu___ = FStar_Const.eq_const c d in equal_iff uu___
       | (FStar_Syntax_Syntax.Tm_uvar (u1, ([], uu___)),
@@ -1054,9 +1058,7 @@ let rec (eq_tm :
       | (FStar_Syntax_Syntax.Tm_type u, FStar_Syntax_Syntax.Tm_type v) ->
           let uu___ = eq_univs u v in equal_if uu___
       | (FStar_Syntax_Syntax.Tm_quoted (t13, q1),
-         FStar_Syntax_Syntax.Tm_quoted (t23, q2)) ->
-          let uu___ = eq_quoteinfo q1 q2 in
-          eq_and uu___ (fun uu___1 -> eq_tm t13 t23)
+         FStar_Syntax_Syntax.Tm_quoted (t23, q2)) -> Unknown
       | (FStar_Syntax_Syntax.Tm_refine (t13, phi1),
          FStar_Syntax_Syntax.Tm_refine (t23, phi2)) ->
           let uu___ =
@@ -1095,21 +1097,10 @@ let rec (eq_tm :
               Equal bs1 bs2 in
           eq_and uu___ (fun uu___1 -> eq_comp c1 c2)
       | uu___ -> Unknown
-and (eq_quoteinfo :
-  FStar_Syntax_Syntax.quoteinfo -> FStar_Syntax_Syntax.quoteinfo -> eq_result)
-  =
-  fun q1 ->
-    fun q2 ->
-      if q1.FStar_Syntax_Syntax.qkind <> q2.FStar_Syntax_Syntax.qkind
-      then NotEqual
-      else
-        eq_antiquotes q1.FStar_Syntax_Syntax.antiquotes
-          q2.FStar_Syntax_Syntax.antiquotes
 and (eq_antiquotes :
-  (FStar_Syntax_Syntax.bv * FStar_Syntax_Syntax.term'
-    FStar_Syntax_Syntax.syntax) Prims.list ->
-    (FStar_Syntax_Syntax.bv * FStar_Syntax_Syntax.term'
-      FStar_Syntax_Syntax.syntax) Prims.list -> eq_result)
+  (FStar_Syntax_Syntax.bv * FStar_Syntax_Syntax.term) Prims.list ->
+    (FStar_Syntax_Syntax.bv * FStar_Syntax_Syntax.term) Prims.list ->
+      eq_result)
   =
   fun a1 ->
     fun a2 ->
@@ -1220,6 +1211,16 @@ and (eq_comp :
                          eq_args ct1.FStar_Syntax_Syntax.effect_args
                            ct2.FStar_Syntax_Syntax.effect_args)))
       | uu___ -> NotEqual
+let (eq_quoteinfo :
+  FStar_Syntax_Syntax.quoteinfo -> FStar_Syntax_Syntax.quoteinfo -> eq_result)
+  =
+  fun q1 ->
+    fun q2 ->
+      if q1.FStar_Syntax_Syntax.qkind <> q2.FStar_Syntax_Syntax.qkind
+      then NotEqual
+      else
+        eq_antiquotes q1.FStar_Syntax_Syntax.antiquotes
+          q2.FStar_Syntax_Syntax.antiquotes
 let (eq_bqual :
   FStar_Syntax_Syntax.binder_qualifier FStar_Pervasives_Native.option ->
     FStar_Syntax_Syntax.binder_qualifier FStar_Pervasives_Native.option ->
