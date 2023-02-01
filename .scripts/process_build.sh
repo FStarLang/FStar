@@ -86,13 +86,13 @@ else
   echo -e "* ${GREEN}PASSED!${NC} for examples/hello"
 fi
 
-diag "-- Rebuilding ulib/ml (to make sure it works) --"
-make -C ulib rebuild
+diag "-- Rebuilding ulib (to make sure it works) --"
+make -j6 dune-bootstrap
 if [ $? -ne 0 ]; then
-  echo -e "* ${RED}FAIL!${NC} for install-fstarlib - make returned $?"
+  echo -e "* ${RED}FAIL!${NC} for dune-bootstrap - make returned $?"
   exit 1
 else
-  echo -e "* ${GREEN}PASSED!${NC} for install-fstarlib"
+  echo -e "* ${GREEN}PASSED!${NC} for dune-bootstrap"
 fi
 
 diag "-- Verify all examples --"

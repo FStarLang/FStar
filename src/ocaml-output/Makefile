@@ -154,12 +154,8 @@ $(FStar_Version_ml):
 #  installs we cannot assume the user has git installed.)
 install_dir = cd ../../$(1) && find . -type f -exec $(INSTALL_EXEC) -m 644 -D {} $(PREFIX)/$(2)/{} \;
 
-# install the standard library binary files
-install_fstarlib = $(INSTALL_EXEC) -m 755 -D ../../$(1)/$(2) $(PREFIX)/lib/fstar/$(2)
-
 # Install FStar into $(PREFIX) using the standard Unix directory
-# structure.  NOTE: this rule needs ocamlfind to install the fstarlib,
-# fstar-tactics-lib and fstar-compiler-lib packages. It works with the
+# structure.  NOTE: this rule works with the
 # opam package, but it has not been tested in any other settings.
 install:
 	@# Install the binary
@@ -167,9 +163,7 @@ install:
 	@# Then the standard library
 	$(call install_dir,ulib,lib/fstar)
 	@# Then the binary library
-	cd ../../bin/fstarlib && ocamlfind install fstarlib *
-	cd ../../bin/fstar-compiler-lib && ocamlfind install fstar-compiler-lib *
-	cd ../../bin/fstar-tactics-lib && ocamlfind install fstar-tactics-lib *
+	true # FIXME: install the contents of the local lib/fstar
 	@# Then the rest of the static files.
 	@# (those are not used in the opam package, not sure if their Makefiles work)
 	$(call install_dir,examples,share/fstar/examples)

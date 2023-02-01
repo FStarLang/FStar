@@ -36,7 +36,6 @@ clean: clean_checked clean_ocaml
 	$(Q)rm -f .depend.extract.rsp
 	$(Q)rm -f .depend.extract
 	$(Q)rm -f *.checked.lax .cache/*.checked.lax
-	$(Q)rm -fr ml/extracted tactics_ml/extracted tactics_ml/fstarlib_leftovers
 
 clean_ocaml:
 	@echo "[CLEAN OCAML LIBS]"

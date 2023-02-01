@@ -14,7 +14,6 @@ include .depend
 %.fsti.checked:
 	$(FSTAR) $<
 
-FSTARTACLIB=$(FSTAR_HOME)/bin/fstar-tactics-lib/fstartaclib.cmxs
 CACHE = _cache
 
 %.cmxs: %.Lib.fst.checked

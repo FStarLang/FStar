@@ -336,9 +336,8 @@ This does three things:
    special `flexlink` technology for this. See `examples/crypto` and
    `contrib/CoreCrypto/ml` for examples.
 
-2. It builds the various OCaml libraries (`fstar-compiler-lib`, `fstarlib`,
-   `fstartaclib`), needed for building OCaml code extracted from F\*, native
-   tactics, etc.
+2. It builds the various OCaml libraries needed for building OCaml
+   code extracted from F\*, native tactics, etc.
 
 3. It verifies the F\* standard library, producing `.checked` files that cache
    definitions to speed up subsequent usage.

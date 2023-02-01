@@ -7,18 +7,6 @@ module O = FStar_Options
 let perr  s   = if O.debug_any () then U.print_error s
 let perr1 s x = if O.debug_any () then U.print1_error s x
 
-let find_taclib_old () =
-  let default = FStar_Options.fstar_bin_directory ^ "/fstar-tactics-lib" in
-  try
-    begin
-      let r = Process.run "ocamlfind" [| "query"; "fstar-tactics-lib" |] in
-      match r with
-      | { Process.Output.exit_status = Process.Exit.Exit 0; stdout; _ } ->
-         String.trim (List.hd stdout)
-      | _ -> default
-    end
-  with _ -> default
-
 let dynlink fname =
   try
     perr ("Attempting to load " ^ fname ^ "\n");
@@ -35,18 +23,9 @@ type load_ops_t = {
 
 let load_ops : load_ops_t =
   let already_loaded = ref None in
-  let load_old () =
-      dynlink (find_taclib_old () ^ "/fstartaclib.cmxs");
-      perr "Loaded old fstartaclib successfully\n";
-      "fstar-tactics-lib"
-  in
   let load_lib () =
     if !already_loaded = None then
-      let taclib =
-        try
-          load_old ()
-        with _ -> "fstar.lib" (* assume that we are in the new setting where the F* compiler is linked with fstar.lib *)
-      in
+      let taclib = "fstar.lib" in
       already_loaded := Some taclib
   in
   {

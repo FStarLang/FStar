@@ -16,7 +16,7 @@ endif
 #cache_dir: where to find checked files
 #odir: where to put all output artifacts
 #include: where to find source and checked files
-#already_cached: fstarlib is already built
+#already_cached: fstar ulib is already built
 
 FSTAR=$(FSTAR_EXE) \
 	--cache_dir $(OUTPUT_DIR) \

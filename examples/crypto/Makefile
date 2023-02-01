@@ -89,9 +89,6 @@ CONTRIB_LIBS=$(FSTAR_UCONTRIB)/CoreCrypto/ml/CoreCrypto.cmxa
 
 include $(FSTAR_ULIB)/ml/Makefile.include
 
-#OCAMLOPT automatically contains fstarlib
-SUPPORT_LIBS=$(FSTARLIB_DIR)/fstarlib.cmxa
-
 $(CONTRIB_LIBS):
 	+$(MAKE) -C $(FSTAR_UCONTRIB)
 
