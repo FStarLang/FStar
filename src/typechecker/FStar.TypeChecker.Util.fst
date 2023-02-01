@@ -3843,17 +3843,17 @@ let ty_occurs_in (ty_lid:lident) (t:term) :bool = FStar.Compiler.Util.set_mem ty
 
 //this function is called during the positivity check, when we have a binder type that is a Tm_app, and t is the head node of Tm_app
 //it tries to get fvar from this t, since the type is already normalized, other cases should have been handled
-let rec try_get_fv (t:term) :option (fv * universes) =
+let rec try_get_fv (t:term) 
+  : option (either (fv * universes) bv) =
   match (SS.compress t).n with
-  | Tm_name _ -> None  //names are ok, e.g. some parameter or binder
-  | Tm_fvar fv -> Some (fv, [])
+  | Tm_name x -> Some (Inr x)  //names are ok, e.g. some parameter or binder
+  | Tm_fvar fv -> Some (Inl (fv, []))
   | Tm_uinst (t, us) ->
     (match (SS.compress t).n with
-     | Tm_fvar fv -> Some (fv, us)
+     | Tm_fvar fv -> Some (Inl (fv, us))
      | _ -> failwith "try_get_fv: Node is a Tm_uinst, but Tm_uinst is not an fvar")
   | Tm_ascribed (t, _, _) -> try_get_fv t
-  | _ ->
-    failwith ("try_get_fv: did not expect t to be a : " ^ (Print.tag_of_term t))
+  | _ -> None
 
 type unfolded_memo_elt = list (lident * args)
 type unfolded_memo_t = ref unfolded_memo_elt
@@ -3921,7 +3921,10 @@ let rec check_strictly_positive_argument
   aux bs args
 
 //check if ty_lid occurs strictly positively in some binder type btype
-and ty_strictly_positive_in_type env (ty_lid:lident) (btype:term) (unfolded:unfolded_memo_t) : bool =
+and ty_strictly_positive_in_type env (ty_lid:lident)
+                                     (btype:term)
+                                     (unfolded:unfolded_memo_t)
+  : bool =
   debug_positivity env (fun () -> "Checking strict positivity in type: " ^ (Print.term_to_string btype));
   //normalize the type to unfold any type abbreviations
   let btype = N.normalize
@@ -3940,8 +3943,17 @@ and ty_strictly_positive_in_type env (ty_lid:lident) (btype:term) (unfolded:unfo
    | Tm_app (t, args) ->  //the binder type is an application
      //get the head node fv
      let fv_us_opt = try_get_fv t in
-     if fv_us_opt |> is_none then begin
-       debug_positivity env (fun () -> "ty is an app node with head that is not an fv");
+     begin
+     match fv_us_opt with
+     | None ->
+       debug_positivity env (fun _ -> 
+         BU.format2 "Failed to check positivity of %s in a term with head %s"
+           (Ident.string_of_lid ty_lid)
+           (Print.term_to_string t));
+       false
+     | Some (Inr _) -> //head is a bv
+       begin
+       debug_positivity env (fun () -> "ty is an app node with head that is a bv");
        //
        // AR: note that we are dropping the guard here
        //     the inductive has already been typechecked, so things are well-typed
@@ -3952,8 +3964,8 @@ and ty_strictly_positive_in_type env (ty_lid:lident) (btype:term) (unfolded:unfo
          (let must_tot = false in must_tot) in
        check_strictly_positive_argument env ty_lid t_ty args unfolded
      end
-     else
-       let fv, us = fv_us_opt |> must in
+    | Some (Inl (fv, us)) ->
+      begin
        //if it's same as ty_lid, then check that ty_lid does not occur in the arguments
        if Ident.lid_equals fv.fv_name.v ty_lid then
          let _ = debug_positivity env 
@@ -3973,6 +3985,8 @@ and ty_strictly_positive_in_type env (ty_lid:lident) (btype:term) (unfolded:unfo
                 (Ident.string_of_lid ty_lid))
          in
          ty_nested_positive_in_inductive env ty_lid fv.fv_name.v us args unfolded
+       end
+     end
 
    | Tm_arrow (sbs, c) ->  //binder type is an arrow type
      debug_positivity env (fun () -> "Checking strict positivity in Tm_arrow");
@@ -4108,19 +4122,25 @@ and ty_nested_positive_in_type (ty_lid:lident) (t:term') (ilid:lident) (num_ibs:
   | Tm_app (t, args) ->
     //if it's an application node, it must be ilid directly
     debug_positivity env (fun () -> "Checking nested positivity in an Tm_app node, which is expected to be the ilid itself");
-    let fv, _ = try_get_fv t |> must in
-    if Ident.lid_equals fv.fv_name.v ilid then true  //TODO: in this case Coq manual says we should check for indexes
-    else failwith "Impossible, expected the type to be ilid"
+    begin
+    match try_get_fv t with
+    | None 
+    | Some (Inr _) -> failwith "Impossible, expected the type to be ilid"
+    | Some (Inl (fv, _)) ->
+      if Ident.lid_equals fv.fv_name.v ilid
+      then true  //TODO: in this case Coq manual says we should check for indexes
+      else false
+    end
   | Tm_arrow (sbs, c) ->
     //if it's an arrow type, we want to check that ty occurs strictly positive in the sort of every binder
     //TODO: do something with c also?
     debug_positivity env (fun () -> "Checking nested positivity in an Tm_arrow node, with binders as: " ^ (Print.binders_to_string "; " sbs));
     let sbs = SS.open_binders sbs in
     let b, _ =
-    List.fold_left (fun (r, env) b ->
-        if not r then r, env  //we have already seen a problematic binder
-        else ty_strictly_positive_in_type env ty_lid b.binder_bv.sort unfolded, push_binders env [b]
-    ) (true, env) sbs
+      List.fold_left (fun (r, env) b ->
+            if not r then r, env  //we have already seen a problematic binder
+            else ty_strictly_positive_in_type env ty_lid b.binder_bv.sort unfolded, push_binders env [b]
+      ) (true, env) sbs
     in
     b
 | _ -> failwith "Nested positive check, unhandled case"

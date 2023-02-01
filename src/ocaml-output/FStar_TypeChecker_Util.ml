@@ -8552,7 +8552,8 @@ let (ty_occurs_in :
       FStar_Compiler_Util.set_mem ty_lid uu___
 let rec (try_get_fv :
   FStar_Syntax_Syntax.term ->
-    (FStar_Syntax_Syntax.fv * FStar_Syntax_Syntax.universes)
+    ((FStar_Syntax_Syntax.fv * FStar_Syntax_Syntax.universes),
+      FStar_Syntax_Syntax.bv) FStar_Pervasives.either
       FStar_Pervasives_Native.option)
   =
   fun t ->
@@ -8560,24 +8561,22 @@ let rec (try_get_fv :
       let uu___1 = FStar_Syntax_Subst.compress t in
       uu___1.FStar_Syntax_Syntax.n in
     match uu___ with
-    | FStar_Syntax_Syntax.Tm_name uu___1 -> FStar_Pervasives_Native.None
-    | FStar_Syntax_Syntax.Tm_fvar fv -> FStar_Pervasives_Native.Some (fv, [])
+    | FStar_Syntax_Syntax.Tm_name x ->
+        FStar_Pervasives_Native.Some (FStar_Pervasives.Inr x)
+    | FStar_Syntax_Syntax.Tm_fvar fv ->
+        FStar_Pervasives_Native.Some (FStar_Pervasives.Inl (fv, []))
     | FStar_Syntax_Syntax.Tm_uinst (t1, us) ->
         let uu___1 =
           let uu___2 = FStar_Syntax_Subst.compress t1 in
           uu___2.FStar_Syntax_Syntax.n in
         (match uu___1 with
          | FStar_Syntax_Syntax.Tm_fvar fv ->
-             FStar_Pervasives_Native.Some (fv, us)
+             FStar_Pervasives_Native.Some (FStar_Pervasives.Inl (fv, us))
          | uu___2 ->
              failwith
                "try_get_fv: Node is a Tm_uinst, but Tm_uinst is not an fvar")
     | FStar_Syntax_Syntax.Tm_ascribed (t1, uu___1, uu___2) -> try_get_fv t1
-    | uu___1 ->
-        let uu___2 =
-          let uu___3 = FStar_Syntax_Print.tag_of_term t in
-          Prims.op_Hat "try_get_fv: did not expect t to be a : " uu___3 in
-        failwith uu___2
+    | uu___1 -> FStar_Pervasives_Native.None
 type unfolded_memo_elt =
   (FStar_Ident.lident * FStar_Syntax_Syntax.args) Prims.list
 type unfolded_memo_t = unfolded_memo_elt FStar_Compiler_Effect.ref
@@ -8721,57 +8720,61 @@ and (ty_strictly_positive_in_type :
                 match uu___3 with
                 | FStar_Syntax_Syntax.Tm_app (t, args) ->
                     let fv_us_opt = try_get_fv t in
-                    let uu___4 =
-                      FStar_Compiler_Effect.op_Bar_Greater fv_us_opt
-                        FStar_Compiler_Util.is_none in
-                    if uu___4
-                    then
-                      (debug_positivity env
-                         (fun uu___6 ->
-                            "ty is an app node with head that is not an fv");
-                       (let uu___6 =
-                          env.FStar_TypeChecker_Env.typeof_well_typed_tot_or_gtot_term
-                            env t (let must_tot = false in must_tot) in
-                        match uu___6 with
-                        | (t_ty, uu___7) ->
-                            check_strictly_positive_argument env ty_lid t_ty
-                              args unfolded))
-                    else
-                      (let uu___6 =
-                         FStar_Compiler_Effect.op_Bar_Greater fv_us_opt
-                           FStar_Compiler_Util.must in
-                       match uu___6 with
-                       | (fv, us) ->
-                           let uu___7 =
-                             FStar_Ident.lid_equals
-                               (fv.FStar_Syntax_Syntax.fv_name).FStar_Syntax_Syntax.v
-                               ty_lid in
-                           if uu___7
-                           then
-                             (debug_positivity env
-                                (fun uu___9 ->
-                                   let uu___10 =
-                                     FStar_Ident.string_of_lid ty_lid in
-                                   FStar_Compiler_Util.format1
-                                     "Checking strict positivity in the Tm_app node where head lid is %s itself, checking that ty does not occur in the arguments"
-                                     uu___10);
-                              FStar_Compiler_List.for_all
-                                (fun uu___9 ->
-                                   match uu___9 with
-                                   | (t1, uu___10) ->
-                                       let uu___11 = ty_occurs_in ty_lid t1 in
-                                       Prims.op_Negation uu___11) args)
-                           else
-                             (debug_positivity env
-                                (fun uu___10 ->
-                                   let uu___11 =
-                                     FStar_Ident.string_of_lid ty_lid in
-                                   FStar_Compiler_Util.format1
-                                     "Checking strict positivity in the Tm_app node, head lid is not %s, so checking nested positivity"
-                                     uu___11);
-                              ty_nested_positive_in_inductive env ty_lid
-                                (fv.FStar_Syntax_Syntax.fv_name).FStar_Syntax_Syntax.v
-                                us args unfolded))
+                    (match fv_us_opt with
+                     | FStar_Pervasives_Native.None ->
+                         (debug_positivity env
+                            (fun uu___5 ->
+                               let uu___6 = FStar_Ident.string_of_lid ty_lid in
+                               let uu___7 =
+                                 FStar_Syntax_Print.term_to_string t in
+                               FStar_Compiler_Util.format2
+                                 "Failed to check positivity of %s in a term with head %s"
+                                 uu___6 uu___7);
+                          false)
+                     | FStar_Pervasives_Native.Some (FStar_Pervasives.Inr
+                         uu___4) ->
+                         (debug_positivity env
+                            (fun uu___6 ->
+                               "ty is an app node with head that is a bv");
+                          (let uu___6 =
+                             env.FStar_TypeChecker_Env.typeof_well_typed_tot_or_gtot_term
+                               env t (let must_tot = false in must_tot) in
+                           match uu___6 with
+                           | (t_ty, uu___7) ->
+                               check_strictly_positive_argument env ty_lid
+                                 t_ty args unfolded))
+                     | FStar_Pervasives_Native.Some (FStar_Pervasives.Inl
+                         (fv, us)) ->
+                         let uu___4 =
+                           FStar_Ident.lid_equals
+                             (fv.FStar_Syntax_Syntax.fv_name).FStar_Syntax_Syntax.v
+                             ty_lid in
+                         if uu___4
+                         then
+                           (debug_positivity env
+                              (fun uu___6 ->
+                                 let uu___7 =
+                                   FStar_Ident.string_of_lid ty_lid in
+                                 FStar_Compiler_Util.format1
+                                   "Checking strict positivity in the Tm_app node where head lid is %s itself, checking that ty does not occur in the arguments"
+                                   uu___7);
+                            FStar_Compiler_List.for_all
+                              (fun uu___6 ->
+                                 match uu___6 with
+                                 | (t1, uu___7) ->
+                                     let uu___8 = ty_occurs_in ty_lid t1 in
+                                     Prims.op_Negation uu___8) args)
+                         else
+                           (debug_positivity env
+                              (fun uu___7 ->
+                                 let uu___8 =
+                                   FStar_Ident.string_of_lid ty_lid in
+                                 FStar_Compiler_Util.format1
+                                   "Checking strict positivity in the Tm_app node, head lid is not %s, so checking nested positivity"
+                                   uu___8);
+                            ty_nested_positive_in_inductive env ty_lid
+                              (fv.FStar_Syntax_Syntax.fv_name).FStar_Syntax_Syntax.v
+                              us args unfolded))
                 | FStar_Syntax_Syntax.Tm_arrow (sbs, c) ->
                     (debug_positivity env
                        (fun uu___5 ->
@@ -9146,20 +9149,20 @@ and (ty_nested_positive_in_type :
                   (debug_positivity env
                      (fun uu___1 ->
                         "Checking nested positivity in an Tm_app node, which is expected to be the ilid itself");
-                   (let uu___1 =
-                      let uu___2 = try_get_fv t1 in
-                      FStar_Compiler_Effect.op_Bar_Greater uu___2
-                        FStar_Compiler_Util.must in
+                   (let uu___1 = try_get_fv t1 in
                     match uu___1 with
-                    | (fv, uu___2) ->
+                    | FStar_Pervasives_Native.None ->
+                        failwith "Impossible, expected the type to be ilid"
+                    | FStar_Pervasives_Native.Some (FStar_Pervasives.Inr
+                        uu___2) ->
+                        failwith "Impossible, expected the type to be ilid"
+                    | FStar_Pervasives_Native.Some (FStar_Pervasives.Inl
+                        (fv, uu___2)) ->
                         let uu___3 =
                           FStar_Ident.lid_equals
                             (fv.FStar_Syntax_Syntax.fv_name).FStar_Syntax_Syntax.v
                             ilid in
-                        if uu___3
-                        then true
-                        else
-                          failwith "Impossible, expected the type to be ilid"))
+                        if uu___3 then true else false))
               | FStar_Syntax_Syntax.Tm_arrow (sbs, c) ->
                   (debug_positivity env
                      (fun uu___1 ->

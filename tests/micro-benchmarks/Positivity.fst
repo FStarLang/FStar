@@ -41,6 +41,7 @@ noeq type t4 =
   | C4: t3 t4 -> t4
 
 open FStar.ST
+[@@expect_failure [3]]
 noeq
 type t =
   | MkT : ref t -> t

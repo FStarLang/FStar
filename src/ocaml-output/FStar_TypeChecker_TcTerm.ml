@@ -6274,9 +6274,13 @@ and (tc_abs :
                             FStar_Compiler_List.iter
                               (fun b ->
                                  let uu___8 =
-                                   FStar_Syntax_Util.has_attribute
-                                     b.FStar_Syntax_Syntax.binder_attrs
-                                     FStar_Parser_Const.binder_strictly_positive_attr in
+                                   (FStar_Syntax_Util.has_attribute
+                                      b.FStar_Syntax_Syntax.binder_attrs
+                                      FStar_Parser_Const.binder_strictly_positive_attr)
+                                     &&
+                                     (let uu___9 =
+                                        FStar_Options.no_positivity () in
+                                      Prims.op_Negation uu___9) in
                                  if uu___8
                                  then
                                    let r =
