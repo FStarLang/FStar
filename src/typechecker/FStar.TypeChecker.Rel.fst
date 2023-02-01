@@ -361,6 +361,8 @@ let attempt probs wl             =
     {wl with attempting=probs@wl.attempting}
 
 let mk_eq2 wl env prob t1 t2 : term * worklist =
+    def_check_closed_in_env t1.pos "mk_eq2.t1" env t1;
+    def_check_closed_in_env t2.pos "mk_eq2.t2" env t2;
     (* NS: Rather than introducing a new variable, it would be much preferable
             to simply compute the type of t1 here.
             Sadly, it seems to be way too expensive to call env.type_of here.
@@ -1666,12 +1668,14 @@ let match_num_binders (bc1: (list 'a * (list 'a -> 'b)))
     aux bs1 bs2
 
 let guard_of_prob (env:Env.env) (wl:worklist) (problem:tprob) (t1 : term) (t2 : term) : term * worklist =
+   def_check_prob "guard_of_prob" (TProb problem);
     let has_type_guard t1 t2 =
         match problem.element with
         | Some t ->
             U.mk_has_type t1 (S.bv_to_name t) t2
         | None ->
             let x = S.new_bv None t1 in
+            def_check_closed_in_env t1.pos "guard_of_prob.universe_of" env t1;
             let u_x = env.universe_of env t1 in
             U.mk_forall u_x x (U.mk_has_type t1 (S.bv_to_name x) t2)
     in
@@ -2150,7 +2154,7 @@ and solve_rigid_flex_or_flex_rigid_subtyping
             t1 op t2 is only defined when t1 and t2
             are refinements of the same base type
     *)
-    let meet_or_join op ts env wl =
+    let meet_or_join (op : term -> term -> term) (ts : list term) (env:Env.env) (wl:worklist) : term & list prob & worklist =
         let eq_prob t1 t2 wl =
             let p, wl =
             new_problem wl env t1 EQ t2 None t1.pos

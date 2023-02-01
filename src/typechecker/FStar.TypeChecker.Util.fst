@@ -622,6 +622,7 @@ let is_function t = match (compress t).n with
     | _ -> false
 
 let close_wp_comp env bvs (c:comp) =
+    def_check_comp_closed_in_env c.pos "close_wp_comp" (Env.push_bvs env bvs) c;
     if U.is_ml_comp c then c
     else if env.lax
     && Options.ml_ish() //NS: disabling this optimization temporarily
@@ -657,7 +658,7 @@ let close_wp_comp env bvs (c:comp) =
               (c.flags |> List.filter (function | MLEFFECT | SHOULD_NOT_INLINE -> true | _ -> false))
         end
 
-let close_wp_lcomp env bvs (lc:lcomp) =
+let close_wp_lcomp env bvs (lc:lcomp) : lcomp =
   let bs = bvs |> List.map S.mk_binder in
   lc |>
   TcComm.apply_lcomp
@@ -1396,7 +1397,7 @@ let maybe_capture_unit_refinement (env:env) (t:term) (x:bv) (c:comp) : comp * gu
     else c, Env.trivial_guard
   | _ -> c, Env.trivial_guard
 
-let bind r1 env e1opt (lc1:lcomp) ((b, lc2):lcomp_with_binder) : lcomp =
+let bind (r1:Range.range) (env:Env.env) (e1opt:option term) (lc1:lcomp) ((b, lc2):lcomp_with_binder) : lcomp =
   let debug f =
       if debug env Options.Extreme
       || debug env <| Options.Other "bind"
@@ -2049,7 +2050,14 @@ let get_neg_branch_conds (branch_conds:list formula)
     |> (fun (l1, l2) -> l1, List.hd l2)
 
 (*
- * The formula in lcases is the individual branch guard, a boolean
+ * The formula in each element of lcases is the individual branch guard, a boolean
+ *
+ * This function returns a computation type for the match expression, though
+ * without considering the scrutinee expression (that is the job of tc_match).
+ * The most interesting bit is its WP, which combines the WP for each branch
+ * under the appropriate reachability hypothesis (see also get_neg_branch_conds
+ * above). It also includes a `False` obligation under the hypothesis that no
+ * branch matches: i.e. the exhaustiveness check.
  *)
 let bind_cases env0 (res_t:typ)
   (lcases:list (formula * lident * list cflag * (bool -> lcomp)))
@@ -2094,10 +2102,11 @@ let bind_cases env0 (res_t:typ)
              * The last element of the list becomes the branch condition for the
              *   unreachable branch (will be used to check pattern exhaustiveness)
              *
-             * The rest of the list will be used to weaken the lift guards when combining the branches (for layered effects, lift guards can be non-trivial)
-             *
-             * note that we don't need to this just to combine cases because the shape of if_then_else
-             *   (p ==> ...) /\ (not p ==> ...) takes care of it
+             * The rest of the list will be used to weaken the lift guards when combining the
+             * branches (for layered effects, lift guards can be non-trivial). Note that
+             * we don't need to do this to combine cases, because the shape of if_then_else
+             *   (p ==> ...) /\ (not p ==> ...)
+             * already takes care of it
              *)
             let neg_branch_conds, exhaustiveness_branch_cond =
               get_neg_branch_conds (lcases |> List.map (fun (g, _, _, _) -> g)) in

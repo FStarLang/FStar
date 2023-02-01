@@ -1154,6 +1154,7 @@ let def_check_guard_wf rng msg env g =
     | NonTrivial f -> def_check_closed_in_env rng msg env f
 
 let comp_to_comp_typ (env:env) c =
+  def_check_comp_closed_in_env c.pos "comp_to_comp_typ" env c;
   match c.n with
   | Comp ct -> ct
   | _ ->
@@ -1167,9 +1168,14 @@ let comp_to_comp_typ (env:env) c =
      effect_args = [];
      flags = U.comp_flags c}
 
-let comp_set_flags env c f = {c with n=Comp ({comp_to_comp_typ env c with flags=f})}
+let comp_set_flags env c f =
+    def_check_comp_closed_in_env c.pos "comp_set_flags.IN" env c;
+    let r = {c with n=Comp ({comp_to_comp_typ env c with flags=f})} in
+    def_check_comp_closed_in_env c.pos "comp_set_flags.OUT" env r;
+    r
 
 let rec unfold_effect_abbrev env comp =
+  def_check_comp_closed_in_env comp.pos "unfold_effect_abbrev" env comp;
   let c = comp_to_comp_typ env comp in
   match lookup_effect_abbrev env c.comp_univs c.effect_name with
     | None -> c

@@ -666,6 +666,7 @@ let is_comp_ascribed_reflect (e:term) : option (lident * term * aqual) =
 (* Main type-checker begins here                                                                            *)
 (************************************************************************************************************)
 let rec tc_term env e =
+    def_check_closed_in_env e.pos "tc_term.entry" env e;
     if Env.debug env Options.Medium then
         BU.print5 "(%s) Starting tc_term (phase1=%s) of %s (%s), %s {\n"
           (Range.string_of_range <| Env.get_range env)
@@ -693,6 +694,7 @@ and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked 
                                         * lcomp                 (* computation type where the WPs are lazily evaluated *)
                                         * guard_t =             (* well-formedness condition                           *)
   let env = if e.pos=Range.dummyRange then env else Env.set_range env e.pos in
+  def_check_closed_in_env e.pos "tc_maybe_toplevel_term.entry" env e;
   let top = SS.compress e in
   if debug env Options.Medium then
     BU.print3 "Typechecking %s (%s): %s\n" (Range.string_of_range <| Env.get_range env) (Print.tag_of_term top) (Print.term_to_string top);
@@ -3375,14 +3377,14 @@ and tc_pat env (pat_t:typ) (p0:pat) :
 (* the returned terms are well-formed in an environment extended with the scrutinee only                            *)
 
 (*
- * ret_opt is the optional return annotation on the match
+ * ret_opt is the optional return annotation on the match (NB: if any, the ascription has been opened)
  * if this is set, then ascribe it on the branches for typechecking
  * but unascribe it before returning to the caller
  *)
 (********************************************************************************************************************)
-and tc_eqn scrutinee env ret_opt branch
+and tc_eqn (scrutinee:bv) (env:Env.env) (ret_opt : option match_returns_ascription) (branch:S.branch)
         : (pat * option term * term)  (* checked branch *)
-        * term                        (* the guard condition for taking this branch,
+        * formula                     (* the guard condition for taking this branch,
                                           used by the caller for the exhaustiveness check *)
         * lident                      (* effect label of the branch lcomp *)
         * option (list cflag)         (* flags for the branch lcomp,
