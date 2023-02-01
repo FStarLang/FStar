@@ -135,10 +135,9 @@ val witness (#inames: _) (#a:Type) (#pcm:pcm a)
             (fact:stable_property pcm)
             (v:erased a)
             (_:fact_valid_compat fact v)
-  : STGhost unit inames (pts_to r v)
+  : STAtomicUT (witnessed r fact) inames (pts_to r v)
                (fun _ -> pts_to r v)
-               (requires True)
-               (ensures fun _ -> witnessed r fact)
+
 
 /// If we previously witnessed the validity of a predicate [fact],
 /// then we can recall this validity on the current value [v1], which
@@ -147,10 +146,11 @@ val recall (#inames: _) (#a:Type u#1) (#pcm:pcm a)
            (fact:property a)
            (r:ref a pcm)
            (v:erased a)
-  : STGhost (erased a) inames
+           (w:witnessed r fact)
+  : STAtomicU (erased a) inames
           (pts_to r v)
           (fun v1 -> pts_to r v)
-          (requires witnessed r fact)
+          (requires True)
           (ensures fun v1 -> fact v1 /\ compatible pcm v v1)
 
 /// Refines our current knowledge [x] about reference [r] by applying function [f]
