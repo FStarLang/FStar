@@ -28,20 +28,8 @@ projects.
 It'll serve you well to learn a bit more about how an SMT solver works
 and how F* interfaces with it---this is covered in a few upcoming
 sections, including a section on :ref:`classical proofs
-<Part2_connectives>`.
-
-* In particular, when trying to use universally quantified hypotheses
-  or when proving existentially quantified goals, you will need to
-  learn a bit about `E-matching and quantifier patterns
-  <https://github.com/FStarLang/FStar/wiki/Quantifiers-and-patterns>`_. This
-  will take some investment, but learning how to use them effectively
-  can significantly reduce the complexity of proofs in the long run.
-
-* If you're interested in doing proofs about arithmetic, particularly
-  nonlinear arithmetic, then before diving in, you would do well to
-  read more about the F* library ``FStar.Math.Lemmas`` and F*
-  arithmetic settings.
-
-* `Profiling and debugging failed proofs <https://github.com/FStarLang/FStar/wiki/Profiling-Z3-queries>`_.
-
-* `Replaying proofs using unsat cores <https://github.com/FStarLang/FStar/wiki/Robust,-replayable-proofs-using-unsat-cores,-(aka,-hints,-or-how-to-replay-verification-in-milliseconds-instead-of-minutes)>`_
+<Part2_connectives>` and in :ref:`understanding how F* uses Z3
+<UTH_smt>`. Additionally, if you're interested in doing proofs about
+arithmetic, particularly nonlinear arithmetic, before diving in, you
+would do well to read more about the F* library ``FStar.Math.Lemmas``
+and F* arithmetic settings.
