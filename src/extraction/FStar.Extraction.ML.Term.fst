@@ -272,6 +272,33 @@ let is_type env t =
         else BU.print2 "not a type %s (%s)\n" (Print.term_to_string t) (Print.tag_of_term t));
     b
 
+let is_steel_with_invariant_g t =
+  let head, args = U.head_and_args t in
+  match (U.un_uinst head).n, args with
+  | Tm_fvar fv, [_a; _fp; _fp'; _o; _p; _i; _body] ->
+    S.fv_eq_lid fv PC.steel_with_invariant_g_lid ||
+    S.fv_eq_lid fv PC.steel_st_with_invariant_g_lid
+  | _ -> false
+
+let is_steel_with_invariant t : option term =
+  let head, args = U.head_and_args t in
+  match (U.un_uinst head).n, args with
+  | Tm_fvar fv, [_a; _fp; _fp'; _o; _obs; _p; _i; body]
+    when
+      S.fv_eq_lid fv PC.steel_with_invariant_lid ||
+      S.fv_eq_lid fv PC.steel_st_with_invariant_lid -> 
+    Some (fst body)
+
+  | _ -> None
+
+let is_steel_new_invariant t =
+  let head, args = U.head_and_args t in
+  match (U.un_uinst head).n, args with
+  | Tm_fvar fv, [_o; _p] ->
+    S.fv_eq_lid fv PC.steel_new_invariant_lid ||
+    S.fv_eq_lid fv PC.steel_st_new_invariant_lid
+  | _ -> false
+
 let is_type_binder env x = is_arity env x.binder_bv.sort
 
 let is_constructor t = match (SS.compress t).n with
@@ -710,15 +737,21 @@ let rec translate_term_to_mlty (g:uenv) (t0:term) : mlty =
           (*can this be a partial type application? , i.e can the result of this application be something like Type -> Type, or nat -> Type? : Yes *)
           (* should we try to apply additional arguments here? if not, where? FIX!! *)
           | Tm_app (head, args) ->
-            let res = match (U.un_uinst head).n with
-                | Tm_name bv ->
+            let res = match (U.un_uinst head).n, args with
+                | Tm_name bv, _ ->
                   (*the args are thrown away, because in OCaml, type variables have type Type and not something like -> .. -> .. Type *)
                   bv_as_mlty env bv
 
-                | Tm_fvar fv ->
+                | Tm_fvar fv, [_]
+                  when S.fv_eq_lid fv PC.steel_memory_inv_lid ->
+                  translate_term_to_mlty env S.t_unit
+
+                | Tm_fvar fv, _ ->
                   fv_app_as_mlty env fv args
 
-                | Tm_app (head, args') ->
+                
+
+                | Tm_app (head, args'), _ ->
                   translate_term_to_mlty env (S.mk (Tm_app(head, args'@args)) t.pos)
 
                 | _ -> MLTY_Top in
@@ -1476,6 +1509,20 @@ and term_as_mlexpr' (g:uenv) (top:term) : (mlexpr * e_tag * mlty) =
             with_ty ml_int_ty <| MLE_App(fw, [with_ty ml_string_ty <| MLE_Const (MLC_String "Extraction of reflect is not supported")]),
             E_PURE,
             ml_int_ty
+
+        | Tm_app _
+          when is_steel_with_invariant_g t ->
+          ml_unit, E_PURE, MLTY_Erased
+
+        | Tm_app _
+          when Some? (is_steel_with_invariant t) ->
+          let body = Some?.v (is_steel_with_invariant t) in
+          let tm = S.mk_Tm_app body [as_arg unit_const] body.pos in
+          term_as_mlexpr g tm 
+
+        | Tm_app _
+          when is_steel_new_invariant t ->
+          ml_unit, E_PURE, ml_unit_ty
 
         | Tm_app (head, args)
           when is_match head &&

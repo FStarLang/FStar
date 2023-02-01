@@ -707,7 +707,7 @@ let sel_lemma (#a:_) (#pcm:_) (r:ref a pcm) (m:full_hheap (ptr r))
   = let Ref _ _ _ v = select_addr m (Addr?._0 r) in
     assert (sel r m == v);
     compatible_refl pcm v
-
+  
 let witnessed_ref_stability #a #pcm (r:ref a pcm) (fact:a -> prop)
   = let fact_h = witnessed_ref r fact in
     let aux (h0 h1:full_heap)

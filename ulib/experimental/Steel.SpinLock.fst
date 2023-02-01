@@ -31,9 +31,7 @@ let lockinv (p:vprop) (r:ref bool) : vprop =
   h_exists (fun b -> pts_to r full_perm b `star` (if b then emp else p))
 
 noeq
-type lock_t = | Lock: r: ref bool -> i: erased iname -> lock_t
-
-let protects (l:lock_t) (p:vprop) : prop = l.i >--> lockinv p l.r
+type lock (p:vprop) = | Lock: r: ref bool -> i: inv (lockinv p r) -> lock p
 
 val intro_lockinv_available (#uses:inames) (p:vprop) (r:ref bool)
   : SteelGhostT unit uses (pts_to r full_perm available `star` p) (fun _ -> lockinv p r)
