@@ -1801,12 +1801,28 @@ let close_guard_univs us bs g =
         us bs f in
     {g with guard_f=NonTrivial f}
 
-let close_forall env bs f =
-    List.fold_right (fun b f ->
-            if Syntax.is_null_binder b then f
-            else let u = env.universe_of env b.binder_bv.sort in
-                 U.mk_forall u b.binder_bv f)
-    bs f
+let close_forall (env:env) (bs:binders) (f:formula) : formula =
+  Errors.with_ctx "While closing a formula" (fun () ->
+    def_check_closed_in_env f.pos "close_forall" env (U.arrow bs (S.mk_Total f));
+    let bvs = List.map (fun b -> b.binder_bv) bs in
+    (* We start with env_full and pop bvs one-by-one. This way each
+     * bv sort is always well scoped in the call to universe_of below. *)
+    let env_full = push_bvs env bvs in
+
+    let (f', e) =
+      List.fold_right (fun bv (f, e) ->
+        let e' = pop_bv e |> must |> snd in
+        def_check_closed_in_env Range.dummyRange "close_forall.sort" e' bv.sort;
+        let f' =
+              if Syntax.is_null_bv bv then f
+              else let u = e'.universe_of e' bv.sort in
+                   U.mk_forall u bv f
+        in
+        (f', e')
+      ) bvs (f, env_full)
+    in
+    f'
+  )
 
 let close_guard env binders g =
     match g.guard_f with
