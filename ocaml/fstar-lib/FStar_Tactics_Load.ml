@@ -2,6 +2,7 @@ open Dynlink
 
 module U = FStar_Compiler_Util
 module E = FStar_Errors
+module EC = FStar_Errors_Codes
 module O = FStar_Options
 
 let perr  s   = if O.debug_any () then U.print_error s
@@ -15,11 +16,11 @@ let dynlink (fname:string) : unit =
     let msg = U.format2 "Dynlinking %s failed: %s" fname (Dynlink.error_message e) in
     perr (msg ^ "\n");
     E.log_issue FStar_Compiler_Range.dummyRange
-        (E.Error_PluginDynlink,
+        (EC.Error_PluginDynlink,
          (U.format3 "Failed to load plugin file %s\n  Reason: `%s`.\n  Remove the `--load` option or use `--warn_error -%s` to ignore and continue."
                     fname
                     (Dynlink.error_message e)
-                    (string_of_int (Z.to_int (E.errno E.Error_PluginDynlink)))))
+                    (string_of_int (Z.to_int (E.errno EC.Error_PluginDynlink)))))
 
 let load_tactic tac =
   dynlink tac;
@@ -61,7 +62,7 @@ let compile_modules dir ms =
      let cmd = String.concat " " (env_setter :: "ocamlfind" :: args) in
      let rc = Sys.command cmd in
      if rc <> 0
-     then E.raise_err (E.Fatal_FailToCompileNativeTactic, (U.format2 "Failed to compile native tactic. Command\n`%s`\nreturned with exit code %s"
+     then E.raise_err (Fatal_FailToCompileNativeTactic, (U.format2 "Failed to compile native tactic. Command\n`%s`\nreturned with exit code %s"
                                   cmd (string_of_int rc)))
      else ()
    in
