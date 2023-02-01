@@ -318,7 +318,7 @@ This does two things:
    `.checked` files that cache definitions to speed up subsequent
    usage.
    
-   This step can be isolatedly run with `make -C ulib`
+   This step can be isolatedly run with `make verify-ulib`
 
 ## Bootstrapping F\* in OCaml
 
