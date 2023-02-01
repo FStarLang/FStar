@@ -85,10 +85,13 @@ let (mlexpr_of_range :
       FStar_Compiler_Effect.op_Bar_Greater uu___
         (FStar_Extraction_ML_Syntax.with_ty
            FStar_Extraction_ML_Syntax.ml_string_ty) in
+    let drop_path s = FStar_Compiler_List.last (FStar_String.split [47] s) in
     let uu___ =
       let uu___1 =
         let uu___2 =
-          let uu___3 = FStar_Compiler_Range.file_of_range r in
+          let uu___3 =
+            let uu___4 = FStar_Compiler_Range.file_of_range r in
+            FStar_Compiler_Effect.op_Bar_Greater uu___4 drop_path in
           FStar_Compiler_Effect.op_Bar_Greater uu___3 cstr in
         let uu___3 =
           let uu___4 =

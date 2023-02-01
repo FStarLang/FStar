@@ -52,12 +52,10 @@ let opt_tapply :
                Obj.magic
                  (Obj.repr
                     (FStar_Tactics_Effect.tac_bind
-                       (Prims.mk_range
-                          "experimental/FStar.InteractiveHelpers.Base.fst"
+                       (Prims.mk_range "FStar.InteractiveHelpers.Base.fst"
                           (Prims.of_int (42)) (Prims.of_int (20))
                           (Prims.of_int (42)) (Prims.of_int (26)))
-                       (Prims.mk_range
-                          "experimental/FStar.InteractiveHelpers.Base.fst"
+                       (Prims.mk_range "FStar.InteractiveHelpers.Base.fst"
                           (Prims.of_int (42)) (Prims.of_int (15))
                           (Prims.of_int (42)) (Prims.of_int (26)))
                        (Obj.magic (f x'))
@@ -84,8 +82,7 @@ let option_to_string :
                Obj.magic
                  (Obj.repr
                     (FStar_Tactics_Effect.tac_bind
-                       (Prims.mk_range
-                          "experimental/FStar.InteractiveHelpers.Base.fst"
+                       (Prims.mk_range "FStar.InteractiveHelpers.Base.fst"
                           (Prims.of_int (48)) (Prims.of_int (26))
                           (Prims.of_int (48)) (Prims.of_int (36)))
                        (Prims.mk_range "prims.fst" (Prims.of_int (606))
@@ -94,7 +91,7 @@ let option_to_string :
                        (Obj.magic
                           (FStar_Tactics_Effect.tac_bind
                              (Prims.mk_range
-                                "experimental/FStar.InteractiveHelpers.Base.fst"
+                                "FStar.InteractiveHelpers.Base.fst"
                                 (Prims.of_int (48)) (Prims.of_int (26))
                                 (Prims.of_int (48)) (Prims.of_int (30)))
                              (Prims.mk_range "prims.fst" (Prims.of_int (606))
@@ -122,7 +119,7 @@ let list_to_string :
   fun f ->
     fun ls ->
       FStar_Tactics_Effect.tac_bind
-        (Prims.mk_range "experimental/FStar.InteractiveHelpers.Base.fst"
+        (Prims.mk_range "FStar.InteractiveHelpers.Base.fst"
            (Prims.of_int (58)) (Prims.of_int (2)) (Prims.of_int (58))
            (Prims.of_int (68)))
         (Prims.mk_range "prims.fst" (Prims.of_int (606)) (Prims.of_int (19))
@@ -132,8 +129,7 @@ let list_to_string :
               (fun s ->
                  fun x ->
                    FStar_Tactics_Effect.tac_bind
-                     (Prims.mk_range
-                        "experimental/FStar.InteractiveHelpers.Base.fst"
+                     (Prims.mk_range "FStar.InteractiveHelpers.Base.fst"
                         (Prims.of_int (58)) (Prims.of_int (42))
                         (Prims.of_int (58)) (Prims.of_int (59)))
                      (Prims.mk_range "prims.fst" (Prims.of_int (606))
@@ -142,7 +138,7 @@ let list_to_string :
                      (Obj.magic
                         (FStar_Tactics_Effect.tac_bind
                            (Prims.mk_range
-                              "experimental/FStar.InteractiveHelpers.Base.fst"
+                              "FStar.InteractiveHelpers.Base.fst"
                               (Prims.of_int (58)) (Prims.of_int (49))
                               (Prims.of_int (58)) (Prims.of_int (59)))
                            (Prims.mk_range "prims.fst" (Prims.of_int (606))
@@ -151,7 +147,7 @@ let list_to_string :
                            (Obj.magic
                               (FStar_Tactics_Effect.tac_bind
                                  (Prims.mk_range
-                                    "experimental/FStar.InteractiveHelpers.Base.fst"
+                                    "FStar.InteractiveHelpers.Base.fst"
                                     (Prims.of_int (58)) (Prims.of_int (49))
                                     (Prims.of_int (58)) (Prims.of_int (52)))
                                  (Prims.mk_range "prims.fst"
@@ -180,10 +176,10 @@ let (mk_app_norm :
     fun t ->
       fun params ->
         FStar_Tactics_Effect.tac_bind
-          (Prims.mk_range "experimental/FStar.InteractiveHelpers.Base.fst"
+          (Prims.mk_range "FStar.InteractiveHelpers.Base.fst"
              (Prims.of_int (65)) (Prims.of_int (11)) (Prims.of_int (65))
              (Prims.of_int (28)))
-          (Prims.mk_range "experimental/FStar.InteractiveHelpers.Base.fst"
+          (Prims.mk_range "FStar.InteractiveHelpers.Base.fst"
              (Prims.of_int (66)) (Prims.of_int (2)) (Prims.of_int (67))
              (Prims.of_int (4)))
           (FStar_Tactics_Effect.lift_div_tac
@@ -192,12 +188,10 @@ let (mk_app_norm :
              (fun t1 ->
                 Obj.magic
                   (FStar_Tactics_Effect.tac_bind
-                     (Prims.mk_range
-                        "experimental/FStar.InteractiveHelpers.Base.fst"
+                     (Prims.mk_range "FStar.InteractiveHelpers.Base.fst"
                         (Prims.of_int (66)) (Prims.of_int (11))
                         (Prims.of_int (66)) (Prims.of_int (32)))
-                     (Prims.mk_range
-                        "experimental/FStar.InteractiveHelpers.Base.fst"
+                     (Prims.mk_range "FStar.InteractiveHelpers.Base.fst"
                         (Prims.of_int (66)) (Prims.of_int (6))
                         (Prims.of_int (66)) (Prims.of_int (8)))
                      (Obj.magic
@@ -229,20 +223,17 @@ let (abv_to_string :
   =
   fun bv ->
     FStar_Tactics_Effect.tac_bind
-      (Prims.mk_range "experimental/FStar.InteractiveHelpers.Base.fst"
-         (Prims.of_int (84)) (Prims.of_int (12)) (Prims.of_int (84))
-         (Prims.of_int (25)))
-      (Prims.mk_range "experimental/FStar.InteractiveHelpers.Base.fst"
-         (Prims.of_int (85)) (Prims.of_int (2)) (Prims.of_int (86))
-         (Prims.of_int (28)))
+      (Prims.mk_range "FStar.InteractiveHelpers.Base.fst" (Prims.of_int (84))
+         (Prims.of_int (12)) (Prims.of_int (84)) (Prims.of_int (25)))
+      (Prims.mk_range "FStar.InteractiveHelpers.Base.fst" (Prims.of_int (85))
+         (Prims.of_int (2)) (Prims.of_int (86)) (Prims.of_int (28)))
       (FStar_Tactics_Effect.lift_div_tac
          (fun uu___ -> FStar_Reflection_Builtins.inspect_bv bv))
       (fun uu___ ->
          (fun bvv ->
             Obj.magic
               (FStar_Tactics_Effect.tac_bind
-                 (Prims.mk_range
-                    "experimental/FStar.InteractiveHelpers.Base.fst"
+                 (Prims.mk_range "FStar.InteractiveHelpers.Base.fst"
                     (Prims.of_int (85)) (Prims.of_int (18))
                     (Prims.of_int (86)) (Prims.of_int (28)))
                  (Prims.mk_range "prims.fst" (Prims.of_int (606))
@@ -250,8 +241,7 @@ let (abv_to_string :
                     (Prims.of_int (31)))
                  (Obj.magic
                     (FStar_Tactics_Effect.tac_bind
-                       (Prims.mk_range
-                          "experimental/FStar.InteractiveHelpers.Base.fst"
+                       (Prims.mk_range "FStar.InteractiveHelpers.Base.fst"
                           (Prims.of_int (85)) (Prims.of_int (26))
                           (Prims.of_int (86)) (Prims.of_int (28)))
                        (Prims.mk_range "prims.fst" (Prims.of_int (606))
@@ -260,7 +250,7 @@ let (abv_to_string :
                        (Obj.magic
                           (FStar_Tactics_Effect.tac_bind
                              (Prims.mk_range
-                                "experimental/FStar.InteractiveHelpers.Base.fst"
+                                "FStar.InteractiveHelpers.Base.fst"
                                 (Prims.of_int (85)) (Prims.of_int (57))
                                 (Prims.of_int (86)) (Prims.of_int (28)))
                              (Prims.mk_range "prims.fst" (Prims.of_int (606))
@@ -269,7 +259,7 @@ let (abv_to_string :
                              (Obj.magic
                                 (FStar_Tactics_Effect.tac_bind
                                    (Prims.mk_range
-                                      "experimental/FStar.InteractiveHelpers.Base.fst"
+                                      "FStar.InteractiveHelpers.Base.fst"
                                       (Prims.of_int (86)) (Prims.of_int (2))
                                       (Prims.of_int (86)) (Prims.of_int (28)))
                                    (Prims.mk_range "prims.fst"
@@ -307,10 +297,10 @@ let (print_binder_info :
   fun full ->
     fun b ->
       FStar_Tactics_Effect.tac_bind
-        (Prims.mk_range "experimental/FStar.InteractiveHelpers.Base.fst"
+        (Prims.mk_range "FStar.InteractiveHelpers.Base.fst"
            (Prims.of_int (89)) (Prims.of_int (24)) (Prims.of_int (89))
            (Prims.of_int (40)))
-        (Prims.mk_range "experimental/FStar.InteractiveHelpers.Base.fst"
+        (Prims.mk_range "FStar.InteractiveHelpers.Base.fst"
            (Prims.of_int (89)) (Prims.of_int (2)) (Prims.of_int (107))
            (Prims.of_int (33)))
         (FStar_Tactics_Effect.lift_div_tac
@@ -321,12 +311,10 @@ let (print_binder_info :
               | (bv, (a, _attrs)) ->
                   Obj.magic
                     (FStar_Tactics_Effect.tac_bind
-                       (Prims.mk_range
-                          "experimental/FStar.InteractiveHelpers.Base.fst"
+                       (Prims.mk_range "FStar.InteractiveHelpers.Base.fst"
                           (Prims.of_int (90)) (Prims.of_int (14))
                           (Prims.of_int (93)) (Prims.of_int (45)))
-                       (Prims.mk_range
-                          "experimental/FStar.InteractiveHelpers.Base.fst"
+                       (Prims.mk_range "FStar.InteractiveHelpers.Base.fst"
                           (Prims.of_int (96)) (Prims.of_int (2))
                           (Prims.of_int (107)) (Prims.of_int (33)))
                        (match a with
@@ -345,7 +333,7 @@ let (print_binder_info :
                               (Obj.repr
                                  (FStar_Tactics_Effect.tac_bind
                                     (Prims.mk_range
-                                       "experimental/FStar.InteractiveHelpers.Base.fst"
+                                       "FStar.InteractiveHelpers.Base.fst"
                                        (Prims.of_int (93))
                                        (Prims.of_int (29))
                                        (Prims.of_int (93))
@@ -367,11 +355,11 @@ let (print_binder_info :
                              Obj.magic
                                (FStar_Tactics_Effect.tac_bind
                                   (Prims.mk_range
-                                     "experimental/FStar.InteractiveHelpers.Base.fst"
+                                     "FStar.InteractiveHelpers.Base.fst"
                                      (Prims.of_int (96)) (Prims.of_int (14))
                                      (Prims.of_int (96)) (Prims.of_int (27)))
                                   (Prims.mk_range
-                                     "experimental/FStar.InteractiveHelpers.Base.fst"
+                                     "FStar.InteractiveHelpers.Base.fst"
                                      (Prims.of_int (97)) (Prims.of_int (2))
                                      (Prims.of_int (107)) (Prims.of_int (33)))
                                   (FStar_Tactics_Effect.lift_div_tac
@@ -385,13 +373,13 @@ let (print_binder_info :
                                           Obj.magic
                                             (FStar_Tactics_Effect.tac_bind
                                                (Prims.mk_range
-                                                  "experimental/FStar.InteractiveHelpers.Base.fst"
+                                                  "FStar.InteractiveHelpers.Base.fst"
                                                   (Prims.of_int (98))
                                                   (Prims.of_int (10))
                                                   (Prims.of_int (106))
                                                   (Prims.of_int (5)))
                                                (Prims.mk_range
-                                                  "experimental/FStar.InteractiveHelpers.Base.fst"
+                                                  "FStar.InteractiveHelpers.Base.fst"
                                                   (Prims.of_int (98))
                                                   (Prims.of_int (4))
                                                   (Prims.of_int (106))
@@ -399,7 +387,7 @@ let (print_binder_info :
                                                (Obj.magic
                                                   (FStar_Tactics_Effect.tac_bind
                                                      (Prims.mk_range
-                                                        "experimental/FStar.InteractiveHelpers.Base.fst"
+                                                        "FStar.InteractiveHelpers.Base.fst"
                                                         (Prims.of_int (100))
                                                         (Prims.of_int (6))
                                                         (Prims.of_int (105))
@@ -413,7 +401,7 @@ let (print_binder_info :
                                                      (Obj.magic
                                                         (FStar_Tactics_Effect.tac_bind
                                                            (Prims.mk_range
-                                                              "experimental/FStar.InteractiveHelpers.Base.fst"
+                                                              "FStar.InteractiveHelpers.Base.fst"
                                                               (Prims.of_int (100))
                                                               (Prims.of_int (21))
                                                               (Prims.of_int (105))
@@ -427,7 +415,7 @@ let (print_binder_info :
                                                            (Obj.magic
                                                               (FStar_Tactics_Effect.tac_bind
                                                                  (Prims.mk_range
-                                                                    "experimental/FStar.InteractiveHelpers.Base.fst"
+                                                                    "FStar.InteractiveHelpers.Base.fst"
                                                                     (Prims.of_int (101))
                                                                     (Prims.of_int (6))
                                                                     (Prims.of_int (105))
@@ -442,7 +430,7 @@ let (print_binder_info :
                                                                     (
                                                                     FStar_Tactics_Effect.tac_bind
                                                                     (Prims.mk_range
-                                                                    "experimental/FStar.InteractiveHelpers.Base.fst"
+                                                                    "FStar.InteractiveHelpers.Base.fst"
                                                                     (Prims.of_int (101))
                                                                     (Prims.of_int (26))
                                                                     (Prims.of_int (105))
@@ -456,7 +444,7 @@ let (print_binder_info :
                                                                     (Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
                                                                     (Prims.mk_range
-                                                                    "experimental/FStar.InteractiveHelpers.Base.fst"
+                                                                    "FStar.InteractiveHelpers.Base.fst"
                                                                     (Prims.of_int (102))
                                                                     (Prims.of_int (6))
                                                                     (Prims.of_int (105))
@@ -470,7 +458,7 @@ let (print_binder_info :
                                                                     (Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
                                                                     (Prims.mk_range
-                                                                    "experimental/FStar.InteractiveHelpers.Base.fst"
+                                                                    "FStar.InteractiveHelpers.Base.fst"
                                                                     (Prims.of_int (102))
                                                                     (Prims.of_int (22))
                                                                     (Prims.of_int (105))
@@ -484,7 +472,7 @@ let (print_binder_info :
                                                                     (Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
                                                                     (Prims.mk_range
-                                                                    "experimental/FStar.InteractiveHelpers.Base.fst"
+                                                                    "FStar.InteractiveHelpers.Base.fst"
                                                                     (Prims.of_int (103))
                                                                     (Prims.of_int (6))
                                                                     (Prims.of_int (105))
@@ -498,7 +486,7 @@ let (print_binder_info :
                                                                     (Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
                                                                     (Prims.mk_range
-                                                                    "experimental/FStar.InteractiveHelpers.Base.fst"
+                                                                    "FStar.InteractiveHelpers.Base.fst"
                                                                     (Prims.of_int (103))
                                                                     (Prims.of_int (23))
                                                                     (Prims.of_int (105))
@@ -512,7 +500,7 @@ let (print_binder_info :
                                                                     (Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
                                                                     (Prims.mk_range
-                                                                    "experimental/FStar.InteractiveHelpers.Base.fst"
+                                                                    "FStar.InteractiveHelpers.Base.fst"
                                                                     (Prims.of_int (104))
                                                                     (Prims.of_int (6))
                                                                     (Prims.of_int (105))
@@ -526,7 +514,7 @@ let (print_binder_info :
                                                                     (Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
                                                                     (Prims.mk_range
-                                                                    "experimental/FStar.InteractiveHelpers.Base.fst"
+                                                                    "FStar.InteractiveHelpers.Base.fst"
                                                                     (Prims.of_int (104))
                                                                     (Prims.of_int (22))
                                                                     (Prims.of_int (105))
@@ -540,7 +528,7 @@ let (print_binder_info :
                                                                     (Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
                                                                     (Prims.mk_range
-                                                                    "experimental/FStar.InteractiveHelpers.Base.fst"
+                                                                    "FStar.InteractiveHelpers.Base.fst"
                                                                     (Prims.of_int (105))
                                                                     (Prims.of_int (6))
                                                                     (Prims.of_int (105))
@@ -554,7 +542,7 @@ let (print_binder_info :
                                                                     (Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
                                                                     (Prims.mk_range
-                                                                    "experimental/FStar.InteractiveHelpers.Base.fst"
+                                                                    "FStar.InteractiveHelpers.Base.fst"
                                                                     (Prims.of_int (105))
                                                                     (Prims.of_int (21))
                                                                     (Prims.of_int (105))
@@ -689,15 +677,14 @@ let (acomp_to_string :
     match FStar_Reflection_Builtins.inspect_comp c with
     | FStar_Reflection_Data.C_Total ret ->
         FStar_Tactics_Effect.tac_bind
-          (Prims.mk_range "experimental/FStar.InteractiveHelpers.Base.fst"
+          (Prims.mk_range "FStar.InteractiveHelpers.Base.fst"
              (Prims.of_int (115)) (Prims.of_int (18)) (Prims.of_int (115))
              (Prims.of_int (42)))
           (Prims.mk_range "prims.fst" (Prims.of_int (606))
              (Prims.of_int (19)) (Prims.of_int (606)) (Prims.of_int (31)))
           (Obj.magic
              (FStar_Tactics_Effect.tac_bind
-                (Prims.mk_range
-                   "experimental/FStar.InteractiveHelpers.Base.fst"
+                (Prims.mk_range "FStar.InteractiveHelpers.Base.fst"
                    (Prims.of_int (115)) (Prims.of_int (18))
                    (Prims.of_int (115)) (Prims.of_int (36)))
                 (Prims.mk_range "prims.fst" (Prims.of_int (606))
@@ -712,15 +699,14 @@ let (acomp_to_string :
                (fun uu___1 -> Prims.strcat "C_Total (" uu___))
     | FStar_Reflection_Data.C_GTotal ret ->
         FStar_Tactics_Effect.tac_bind
-          (Prims.mk_range "experimental/FStar.InteractiveHelpers.Base.fst"
+          (Prims.mk_range "FStar.InteractiveHelpers.Base.fst"
              (Prims.of_int (117)) (Prims.of_int (19)) (Prims.of_int (117))
              (Prims.of_int (43)))
           (Prims.mk_range "prims.fst" (Prims.of_int (606))
              (Prims.of_int (19)) (Prims.of_int (606)) (Prims.of_int (31)))
           (Obj.magic
              (FStar_Tactics_Effect.tac_bind
-                (Prims.mk_range
-                   "experimental/FStar.InteractiveHelpers.Base.fst"
+                (Prims.mk_range "FStar.InteractiveHelpers.Base.fst"
                    (Prims.of_int (117)) (Prims.of_int (19))
                    (Prims.of_int (117)) (Prims.of_int (37)))
                 (Prims.mk_range "prims.fst" (Prims.of_int (606))
@@ -735,19 +721,17 @@ let (acomp_to_string :
                (fun uu___1 -> Prims.strcat "C_GTotal (" uu___))
     | FStar_Reflection_Data.C_Lemma (pre, post, patterns) ->
         FStar_Tactics_Effect.tac_bind
-          (Prims.mk_range "experimental/FStar.InteractiveHelpers.Base.fst"
+          (Prims.mk_range "FStar.InteractiveHelpers.Base.fst"
              (Prims.of_int (119)) (Prims.of_int (18)) (Prims.of_int (119))
              (Prims.of_int (72)))
           (Prims.mk_range "prims.fst" (Prims.of_int (606))
              (Prims.of_int (19)) (Prims.of_int (606)) (Prims.of_int (31)))
           (Obj.magic
              (FStar_Tactics_Effect.tac_bind
-                (Prims.mk_range
-                   "experimental/FStar.InteractiveHelpers.Base.fst"
+                (Prims.mk_range "FStar.InteractiveHelpers.Base.fst"
                    (Prims.of_int (119)) (Prims.of_int (18))
                    (Prims.of_int (119)) (Prims.of_int (36)))
-                (Prims.mk_range
-                   "experimental/FStar.InteractiveHelpers.Base.fst"
+                (Prims.mk_range "FStar.InteractiveHelpers.Base.fst"
                    (Prims.of_int (119)) (Prims.of_int (18))
                    (Prims.of_int (119)) (Prims.of_int (72)))
                 (Obj.magic (FStar_Tactics_Builtins.term_to_string pre))
@@ -756,7 +740,7 @@ let (acomp_to_string :
                       Obj.magic
                         (FStar_Tactics_Effect.tac_bind
                            (Prims.mk_range
-                              "experimental/FStar.InteractiveHelpers.Base.fst"
+                              "FStar.InteractiveHelpers.Base.fst"
                               (Prims.of_int (119)) (Prims.of_int (39))
                               (Prims.of_int (119)) (Prims.of_int (72)))
                            (Prims.mk_range "prims.fst" (Prims.of_int (606))
@@ -765,7 +749,7 @@ let (acomp_to_string :
                            (Obj.magic
                               (FStar_Tactics_Effect.tac_bind
                                  (Prims.mk_range
-                                    "experimental/FStar.InteractiveHelpers.Base.fst"
+                                    "FStar.InteractiveHelpers.Base.fst"
                                     (Prims.of_int (119)) (Prims.of_int (47))
                                     (Prims.of_int (119)) (Prims.of_int (72)))
                                  (Prims.mk_range "prims.fst"
@@ -774,7 +758,7 @@ let (acomp_to_string :
                                  (Obj.magic
                                     (FStar_Tactics_Effect.tac_bind
                                        (Prims.mk_range
-                                          "experimental/FStar.InteractiveHelpers.Base.fst"
+                                          "FStar.InteractiveHelpers.Base.fst"
                                           (Prims.of_int (119))
                                           (Prims.of_int (47))
                                           (Prims.of_int (119))
@@ -804,18 +788,17 @@ let (acomp_to_string :
                (fun uu___1 -> Prims.strcat "C_Lemma (" uu___))
     | FStar_Reflection_Data.C_Eff (us, eff_name, result, eff_args, uu___) ->
         FStar_Tactics_Effect.tac_bind
-          (Prims.mk_range "experimental/FStar.InteractiveHelpers.Base.fst"
+          (Prims.mk_range "FStar.InteractiveHelpers.Base.fst"
              (Prims.of_int (122)) (Prims.of_int (6)) (Prims.of_int (122))
              (Prims.of_int (35)))
-          (Prims.mk_range "experimental/FStar.InteractiveHelpers.Base.fst"
+          (Prims.mk_range "FStar.InteractiveHelpers.Base.fst"
              (Prims.of_int (124)) (Prims.of_int (4)) (Prims.of_int (126))
              (Prims.of_int (86)))
           (FStar_Tactics_Effect.lift_div_tac
              (fun uu___1 ->
                 fun a ->
                   FStar_Tactics_Effect.tac_bind
-                    (Prims.mk_range
-                       "experimental/FStar.InteractiveHelpers.Base.fst"
+                    (Prims.mk_range "FStar.InteractiveHelpers.Base.fst"
                        (Prims.of_int (122)) (Prims.of_int (13))
                        (Prims.of_int (122)) (Prims.of_int (35)))
                     (Prims.mk_range "prims.fst" (Prims.of_int (606))
@@ -823,8 +806,7 @@ let (acomp_to_string :
                        (Prims.of_int (31)))
                     (Obj.magic
                        (FStar_Tactics_Effect.tac_bind
-                          (Prims.mk_range
-                             "experimental/FStar.InteractiveHelpers.Base.fst"
+                          (Prims.mk_range "FStar.InteractiveHelpers.Base.fst"
                              (Prims.of_int (122)) (Prims.of_int (13))
                              (Prims.of_int (122)) (Prims.of_int (29)))
                           (Prims.mk_range "prims.fst" (Prims.of_int (606))
@@ -842,12 +824,10 @@ let (acomp_to_string :
              (fun eff_arg_to_string ->
                 Obj.magic
                   (FStar_Tactics_Effect.tac_bind
-                     (Prims.mk_range
-                        "experimental/FStar.InteractiveHelpers.Base.fst"
+                     (Prims.mk_range "FStar.InteractiveHelpers.Base.fst"
                         (Prims.of_int (124)) (Prims.of_int (19))
                         (Prims.of_int (124)) (Prims.of_int (67)))
-                     (Prims.mk_range
-                        "experimental/FStar.InteractiveHelpers.Base.fst"
+                     (Prims.mk_range "FStar.InteractiveHelpers.Base.fst"
                         (Prims.of_int (125)) (Prims.of_int (4))
                         (Prims.of_int (126)) (Prims.of_int (86)))
                      (Obj.magic
@@ -860,11 +840,11 @@ let (acomp_to_string :
                            Obj.magic
                              (FStar_Tactics_Effect.tac_bind
                                 (Prims.mk_range
-                                   "experimental/FStar.InteractiveHelpers.Base.fst"
+                                   "FStar.InteractiveHelpers.Base.fst"
                                    (Prims.of_int (125)) (Prims.of_int (19))
                                    (Prims.of_int (125)) (Prims.of_int (68)))
                                 (Prims.mk_range
-                                   "experimental/FStar.InteractiveHelpers.Base.fst"
+                                   "FStar.InteractiveHelpers.Base.fst"
                                    (Prims.of_int (126)) (Prims.of_int (4))
                                    (Prims.of_int (126)) (Prims.of_int (86)))
                                 (FStar_Tactics_Effect.lift_div_tac
@@ -877,7 +857,7 @@ let (acomp_to_string :
                                       Obj.magic
                                         (FStar_Tactics_Effect.tac_bind
                                            (Prims.mk_range
-                                              "experimental/FStar.InteractiveHelpers.Base.fst"
+                                              "FStar.InteractiveHelpers.Base.fst"
                                               (Prims.of_int (126))
                                               (Prims.of_int (16))
                                               (Prims.of_int (126))
@@ -890,7 +870,7 @@ let (acomp_to_string :
                                            (Obj.magic
                                               (FStar_Tactics_Effect.tac_bind
                                                  (Prims.mk_range
-                                                    "experimental/FStar.InteractiveHelpers.Base.fst"
+                                                    "FStar.InteractiveHelpers.Base.fst"
                                                     (Prims.of_int (126))
                                                     (Prims.of_int (40))
                                                     (Prims.of_int (126))
@@ -903,7 +883,7 @@ let (acomp_to_string :
                                                  (Obj.magic
                                                     (FStar_Tactics_Effect.tac_bind
                                                        (Prims.mk_range
-                                                          "experimental/FStar.InteractiveHelpers.Base.fst"
+                                                          "FStar.InteractiveHelpers.Base.fst"
                                                           (Prims.of_int (126))
                                                           (Prims.of_int (48))
                                                           (Prims.of_int (126))
@@ -917,7 +897,7 @@ let (acomp_to_string :
                                                        (Obj.magic
                                                           (FStar_Tactics_Effect.tac_bind
                                                              (Prims.mk_range
-                                                                "experimental/FStar.InteractiveHelpers.Base.fst"
+                                                                "FStar.InteractiveHelpers.Base.fst"
                                                                 (Prims.of_int (126))
                                                                 (Prims.of_int (48))
                                                                 (Prims.of_int (126))
@@ -1017,10 +997,10 @@ let (term_construct :
   =
   fun t ->
     FStar_Tactics_Effect.tac_bind
-      (Prims.mk_range "experimental/FStar.InteractiveHelpers.Base.fst"
+      (Prims.mk_range "FStar.InteractiveHelpers.Base.fst"
          (Prims.of_int (162)) (Prims.of_int (22)) (Prims.of_int (162))
          (Prims.of_int (33)))
-      (Prims.mk_range "experimental/FStar.InteractiveHelpers.Base.fst"
+      (Prims.mk_range "FStar.InteractiveHelpers.Base.fst"
          (Prims.of_int (162)) (Prims.of_int (2)) (Prims.of_int (162))
          (Prims.of_int (33))) (Obj.magic (FStar_Tactics_Builtins.inspect t))
       (fun uu___ ->
@@ -1033,26 +1013,23 @@ let (filter_ascriptions :
   fun dbg ->
     fun t ->
       FStar_Tactics_Effect.tac_bind
-        (Prims.mk_range "experimental/FStar.InteractiveHelpers.Base.fst"
+        (Prims.mk_range "FStar.InteractiveHelpers.Base.fst"
            (Prims.of_int (175)) (Prims.of_int (2)) (Prims.of_int (175))
            (Prims.of_int (94)))
-        (Prims.mk_range "experimental/FStar.InteractiveHelpers.Base.fst"
+        (Prims.mk_range "FStar.InteractiveHelpers.Base.fst"
            (Prims.of_int (176)) (Prims.of_int (2)) (Prims.of_int (180))
            (Prims.of_int (15)))
         (Obj.magic
            (FStar_Tactics_Effect.tac_bind
-              (Prims.mk_range
-                 "experimental/FStar.InteractiveHelpers.Base.fst"
+              (Prims.mk_range "FStar.InteractiveHelpers.Base.fst"
                  (Prims.of_int (175)) (Prims.of_int (16))
                  (Prims.of_int (175)) (Prims.of_int (94)))
-              (Prims.mk_range
-                 "experimental/FStar.InteractiveHelpers.Base.fst"
+              (Prims.mk_range "FStar.InteractiveHelpers.Base.fst"
                  (Prims.of_int (175)) (Prims.of_int (2)) (Prims.of_int (175))
                  (Prims.of_int (94)))
               (Obj.magic
                  (FStar_Tactics_Effect.tac_bind
-                    (Prims.mk_range
-                       "experimental/FStar.InteractiveHelpers.Base.fst"
+                    (Prims.mk_range "FStar.InteractiveHelpers.Base.fst"
                        (Prims.of_int (175)) (Prims.of_int (45))
                        (Prims.of_int (175)) (Prims.of_int (92)))
                     (Prims.mk_range "prims.fst" (Prims.of_int (606))
@@ -1060,22 +1037,20 @@ let (filter_ascriptions :
                        (Prims.of_int (31)))
                     (Obj.magic
                        (FStar_Tactics_Effect.tac_bind
-                          (Prims.mk_range
-                             "experimental/FStar.InteractiveHelpers.Base.fst"
+                          (Prims.mk_range "FStar.InteractiveHelpers.Base.fst"
                              (Prims.of_int (175)) (Prims.of_int (45))
                              (Prims.of_int (175)) (Prims.of_int (66)))
-                          (Prims.mk_range
-                             "experimental/FStar.InteractiveHelpers.Base.fst"
+                          (Prims.mk_range "FStar.InteractiveHelpers.Base.fst"
                              (Prims.of_int (175)) (Prims.of_int (45))
                              (Prims.of_int (175)) (Prims.of_int (92)))
                           (Obj.magic
                              (FStar_Tactics_Effect.tac_bind
                                 (Prims.mk_range
-                                   "experimental/FStar.InteractiveHelpers.Base.fst"
+                                   "FStar.InteractiveHelpers.Base.fst"
                                    (Prims.of_int (174)) (Prims.of_int (27))
                                    (Prims.of_int (174)) (Prims.of_int (28)))
                                 (Prims.mk_range
-                                   "experimental/FStar.InteractiveHelpers.Base.fst"
+                                   "FStar.InteractiveHelpers.Base.fst"
                                    (Prims.of_int (175)) (Prims.of_int (45))
                                    (Prims.of_int (175)) (Prims.of_int (66)))
                                 (Obj.magic (FStar_Tactics_Builtins.inspect t))
@@ -1088,7 +1063,7 @@ let (filter_ascriptions :
                                 Obj.magic
                                   (FStar_Tactics_Effect.tac_bind
                                      (Prims.mk_range
-                                        "experimental/FStar.InteractiveHelpers.Base.fst"
+                                        "FStar.InteractiveHelpers.Base.fst"
                                         (Prims.of_int (175))
                                         (Prims.of_int (69))
                                         (Prims.of_int (175))
@@ -1101,7 +1076,7 @@ let (filter_ascriptions :
                                      (Obj.magic
                                         (FStar_Tactics_Effect.tac_bind
                                            (Prims.mk_range
-                                              "experimental/FStar.InteractiveHelpers.Base.fst"
+                                              "FStar.InteractiveHelpers.Base.fst"
                                               (Prims.of_int (175))
                                               (Prims.of_int (76))
                                               (Prims.of_int (175))
@@ -1135,12 +1110,10 @@ let (filter_ascriptions :
                 (FStar_Tactics_Visit.visit_tm
                    (fun t1 ->
                       FStar_Tactics_Effect.tac_bind
-                        (Prims.mk_range
-                           "experimental/FStar.InteractiveHelpers.Base.fst"
+                        (Prims.mk_range "FStar.InteractiveHelpers.Base.fst"
                            (Prims.of_int (177)) (Prims.of_int (10))
                            (Prims.of_int (177)) (Prims.of_int (19)))
-                        (Prims.mk_range
-                           "experimental/FStar.InteractiveHelpers.Base.fst"
+                        (Prims.mk_range "FStar.InteractiveHelpers.Base.fst"
                            (Prims.of_int (177)) (Prims.of_int (4))
                            (Prims.of_int (180)) (Prims.of_int (12)))
                         (Obj.magic (FStar_Tactics_Builtins.inspect t1))
@@ -1221,18 +1194,17 @@ let (genv_to_string :
   genv -> (Prims.string, unit) FStar_Tactics_Effect.tac_repr) =
   fun ge ->
     FStar_Tactics_Effect.tac_bind
-      (Prims.mk_range "experimental/FStar.InteractiveHelpers.Base.fst"
+      (Prims.mk_range "FStar.InteractiveHelpers.Base.fst"
          (Prims.of_int (248)) (Prims.of_int (4)) (Prims.of_int (248))
          (Prims.of_int (41)))
-      (Prims.mk_range "experimental/FStar.InteractiveHelpers.Base.fst"
+      (Prims.mk_range "FStar.InteractiveHelpers.Base.fst"
          (Prims.of_int (250)) (Prims.of_int (2)) (Prims.of_int (261))
          (Prims.of_int (34)))
       (FStar_Tactics_Effect.lift_div_tac
          (fun uu___ ->
             fun b ->
               FStar_Tactics_Effect.tac_bind
-                (Prims.mk_range
-                   "experimental/FStar.InteractiveHelpers.Base.fst"
+                (Prims.mk_range "FStar.InteractiveHelpers.Base.fst"
                    (Prims.of_int (248)) (Prims.of_int (4))
                    (Prims.of_int (248)) (Prims.of_int (34)))
                 (Prims.mk_range "prims.fst" (Prims.of_int (606))
@@ -1247,12 +1219,10 @@ let (genv_to_string :
          (fun binder_to_string ->
             Obj.magic
               (FStar_Tactics_Effect.tac_bind
-                 (Prims.mk_range
-                    "experimental/FStar.InteractiveHelpers.Base.fst"
+                 (Prims.mk_range "FStar.InteractiveHelpers.Base.fst"
                     (Prims.of_int (250)) (Prims.of_int (20))
                     (Prims.of_int (250)) (Prims.of_int (64)))
-                 (Prims.mk_range
-                    "experimental/FStar.InteractiveHelpers.Base.fst"
+                 (Prims.mk_range "FStar.InteractiveHelpers.Base.fst"
                     (Prims.of_int (251)) (Prims.of_int (2))
                     (Prims.of_int (261)) (Prims.of_int (34)))
                  (Obj.magic
@@ -1263,11 +1233,11 @@ let (genv_to_string :
                        Obj.magic
                          (FStar_Tactics_Effect.tac_bind
                             (Prims.mk_range
-                               "experimental/FStar.InteractiveHelpers.Base.fst"
+                               "FStar.InteractiveHelpers.Base.fst"
                                (Prims.of_int (252)) (Prims.of_int (4))
                                (Prims.of_int (254)) (Prims.of_int (57)))
                             (Prims.mk_range
-                               "experimental/FStar.InteractiveHelpers.Base.fst"
+                               "FStar.InteractiveHelpers.Base.fst"
                                (Prims.of_int (256)) (Prims.of_int (2))
                                (Prims.of_int (261)) (Prims.of_int (34)))
                             (FStar_Tactics_Effect.lift_div_tac
@@ -1275,13 +1245,13 @@ let (genv_to_string :
                                   fun e ->
                                     FStar_Tactics_Effect.tac_bind
                                       (Prims.mk_range
-                                         "experimental/FStar.InteractiveHelpers.Base.fst"
+                                         "FStar.InteractiveHelpers.Base.fst"
                                          (Prims.of_int (252))
                                          (Prims.of_int (23))
                                          (Prims.of_int (252))
                                          (Prims.of_int (24)))
                                       (Prims.mk_range
-                                         "experimental/FStar.InteractiveHelpers.Base.fst"
+                                         "FStar.InteractiveHelpers.Base.fst"
                                          (Prims.of_int (252))
                                          (Prims.of_int (4))
                                          (Prims.of_int (254))
@@ -1295,7 +1265,7 @@ let (genv_to_string :
                                                 Obj.magic
                                                   (FStar_Tactics_Effect.tac_bind
                                                      (Prims.mk_range
-                                                        "experimental/FStar.InteractiveHelpers.Base.fst"
+                                                        "FStar.InteractiveHelpers.Base.fst"
                                                         (Prims.of_int (253))
                                                         (Prims.of_int (10))
                                                         (Prims.of_int (254))
@@ -1309,13 +1279,13 @@ let (genv_to_string :
                                                      (Obj.magic
                                                         (FStar_Tactics_Effect.tac_bind
                                                            (Prims.mk_range
-                                                              "experimental/FStar.InteractiveHelpers.Base.fst"
+                                                              "FStar.InteractiveHelpers.Base.fst"
                                                               (Prims.of_int (253))
                                                               (Prims.of_int (10))
                                                               (Prims.of_int (253))
                                                               (Prims.of_int (26)))
                                                            (Prims.mk_range
-                                                              "experimental/FStar.InteractiveHelpers.Base.fst"
+                                                              "FStar.InteractiveHelpers.Base.fst"
                                                               (Prims.of_int (253))
                                                               (Prims.of_int (10))
                                                               (Prims.of_int (254))
@@ -1328,7 +1298,7 @@ let (genv_to_string :
                                                                  Obj.magic
                                                                    (FStar_Tactics_Effect.tac_bind
                                                                     (Prims.mk_range
-                                                                    "experimental/FStar.InteractiveHelpers.Base.fst"
+                                                                    "FStar.InteractiveHelpers.Base.fst"
                                                                     (Prims.of_int (253))
                                                                     (Prims.of_int (28))
                                                                     (Prims.of_int (254))
@@ -1342,7 +1312,7 @@ let (genv_to_string :
                                                                     (Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
                                                                     (Prims.mk_range
-                                                                    "experimental/FStar.InteractiveHelpers.Base.fst"
+                                                                    "FStar.InteractiveHelpers.Base.fst"
                                                                     (Prims.of_int (254))
                                                                     (Prims.of_int (4))
                                                                     (Prims.of_int (254))
@@ -1356,7 +1326,7 @@ let (genv_to_string :
                                                                     (Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
                                                                     (Prims.mk_range
-                                                                    "experimental/FStar.InteractiveHelpers.Base.fst"
+                                                                    "FStar.InteractiveHelpers.Base.fst"
                                                                     (Prims.of_int (254))
                                                                     (Prims.of_int (25))
                                                                     (Prims.of_int (254))
@@ -1370,7 +1340,7 @@ let (genv_to_string :
                                                                     (Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
                                                                     (Prims.mk_range
-                                                                    "experimental/FStar.InteractiveHelpers.Base.fst"
+                                                                    "FStar.InteractiveHelpers.Base.fst"
                                                                     (Prims.of_int (254))
                                                                     (Prims.of_int (32))
                                                                     (Prims.of_int (254))
@@ -1384,7 +1354,7 @@ let (genv_to_string :
                                                                     (Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
                                                                     (Prims.mk_range
-                                                                    "experimental/FStar.InteractiveHelpers.Base.fst"
+                                                                    "FStar.InteractiveHelpers.Base.fst"
                                                                     (Prims.of_int (254))
                                                                     (Prims.of_int (32))
                                                                     (Prims.of_int (254))
@@ -1451,13 +1421,13 @@ let (genv_to_string :
                                   Obj.magic
                                     (FStar_Tactics_Effect.tac_bind
                                        (Prims.mk_range
-                                          "experimental/FStar.InteractiveHelpers.Base.fst"
+                                          "FStar.InteractiveHelpers.Base.fst"
                                           (Prims.of_int (256))
                                           (Prims.of_int (17))
                                           (Prims.of_int (256))
                                           (Prims.of_int (48)))
                                        (Prims.mk_range
-                                          "experimental/FStar.InteractiveHelpers.Base.fst"
+                                          "FStar.InteractiveHelpers.Base.fst"
                                           (Prims.of_int (257))
                                           (Prims.of_int (2))
                                           (Prims.of_int (261))
@@ -1470,7 +1440,7 @@ let (genv_to_string :
                                              Obj.magic
                                                (FStar_Tactics_Effect.tac_bind
                                                   (Prims.mk_range
-                                                     "experimental/FStar.InteractiveHelpers.Base.fst"
+                                                     "FStar.InteractiveHelpers.Base.fst"
                                                      (Prims.of_int (257))
                                                      (Prims.of_int (18))
                                                      (Prims.of_int (257))
@@ -1485,7 +1455,7 @@ let (genv_to_string :
                                                         (fun bv ->
                                                            FStar_Tactics_Effect.tac_bind
                                                              (Prims.mk_range
-                                                                "experimental/FStar.InteractiveHelpers.Base.fst"
+                                                                "FStar.InteractiveHelpers.Base.fst"
                                                                 (Prims.of_int (257))
                                                                 (Prims.of_int (33))
                                                                 (Prims.of_int (257))
@@ -1561,10 +1531,10 @@ let (genv_push_bv :
       fun abs ->
         fun t ->
           FStar_Tactics_Effect.tac_bind
-            (Prims.mk_range "experimental/FStar.InteractiveHelpers.Base.fst"
+            (Prims.mk_range "FStar.InteractiveHelpers.Base.fst"
                (Prims.of_int (272)) (Prims.of_int (11)) (Prims.of_int (272))
                (Prims.of_int (22)))
-            (Prims.mk_range "experimental/FStar.InteractiveHelpers.Base.fst"
+            (Prims.mk_range "FStar.InteractiveHelpers.Base.fst"
                (Prims.of_int (273)) (Prims.of_int (2)) (Prims.of_int (278))
                (Prims.of_int (25)))
             (FStar_Tactics_Effect.lift_div_tac
@@ -1573,12 +1543,10 @@ let (genv_push_bv :
                (fun br ->
                   Obj.magic
                     (FStar_Tactics_Effect.tac_bind
-                       (Prims.mk_range
-                          "experimental/FStar.InteractiveHelpers.Base.fst"
+                       (Prims.mk_range "FStar.InteractiveHelpers.Base.fst"
                           (Prims.of_int (273)) (Prims.of_int (11))
                           (Prims.of_int (273)) (Prims.of_int (47)))
-                       (Prims.mk_range
-                          "experimental/FStar.InteractiveHelpers.Base.fst"
+                       (Prims.mk_range "FStar.InteractiveHelpers.Base.fst"
                           (Prims.of_int (274)) (Prims.of_int (2))
                           (Prims.of_int (278)) (Prims.of_int (25)))
                        (FStar_Tactics_Effect.lift_div_tac
@@ -1590,11 +1558,11 @@ let (genv_push_bv :
                              Obj.magic
                                (FStar_Tactics_Effect.tac_bind
                                   (Prims.mk_range
-                                     "experimental/FStar.InteractiveHelpers.Base.fst"
+                                     "FStar.InteractiveHelpers.Base.fst"
                                      (Prims.of_int (274)) (Prims.of_int (15))
                                      (Prims.of_int (274)) (Prims.of_int (74)))
                                   (Prims.mk_range
-                                     "experimental/FStar.InteractiveHelpers.Base.fst"
+                                     "FStar.InteractiveHelpers.Base.fst"
                                      (Prims.of_int (275)) (Prims.of_int (2))
                                      (Prims.of_int (278)) (Prims.of_int (25)))
                                   (FStar_Tactics_Effect.lift_div_tac
@@ -1613,13 +1581,13 @@ let (genv_push_bv :
                                         Obj.magic
                                           (FStar_Tactics_Effect.tac_bind
                                              (Prims.mk_range
-                                                "experimental/FStar.InteractiveHelpers.Base.fst"
+                                                "FStar.InteractiveHelpers.Base.fst"
                                                 (Prims.of_int (275))
                                                 (Prims.of_int (11))
                                                 (Prims.of_int (275))
                                                 (Prims.of_int (32)))
                                              (Prims.mk_range
-                                                "experimental/FStar.InteractiveHelpers.Base.fst"
+                                                "FStar.InteractiveHelpers.Base.fst"
                                                 (Prims.of_int (276))
                                                 (Prims.of_int (2))
                                                 (Prims.of_int (278))
@@ -1633,13 +1601,13 @@ let (genv_push_bv :
                                                    Obj.magic
                                                      (FStar_Tactics_Effect.tac_bind
                                                         (Prims.mk_range
-                                                           "experimental/FStar.InteractiveHelpers.Base.fst"
+                                                           "FStar.InteractiveHelpers.Base.fst"
                                                            (Prims.of_int (276))
                                                            (Prims.of_int (11))
                                                            (Prims.of_int (276))
                                                            (Prims.of_int (57)))
                                                         (Prims.mk_range
-                                                           "experimental/FStar.InteractiveHelpers.Base.fst"
+                                                           "FStar.InteractiveHelpers.Base.fst"
                                                            (Prims.of_int (278))
                                                            (Prims.of_int (2))
                                                            (Prims.of_int (278))
@@ -1735,10 +1703,10 @@ let rec (_fresh_bv :
       fun i ->
         fun ty ->
           FStar_Tactics_Effect.tac_bind
-            (Prims.mk_range "experimental/FStar.InteractiveHelpers.Base.fst"
+            (Prims.mk_range "FStar.InteractiveHelpers.Base.fst"
                (Prims.of_int (315)) (Prims.of_int (13)) (Prims.of_int (315))
                (Prims.of_int (39)))
-            (Prims.mk_range "experimental/FStar.InteractiveHelpers.Base.fst"
+            (Prims.mk_range "FStar.InteractiveHelpers.Base.fst"
                (Prims.of_int (318)) (Prims.of_int (2)) (Prims.of_int (319))
                (Prims.of_int (29)))
             (FStar_Tactics_Effect.lift_div_tac
@@ -1762,10 +1730,10 @@ let (fresh_bv :
     fun basename ->
       fun ty ->
         FStar_Tactics_Effect.tac_bind
-          (Prims.mk_range "experimental/FStar.InteractiveHelpers.Base.fst"
+          (Prims.mk_range "FStar.InteractiveHelpers.Base.fst"
              (Prims.of_int (322)) (Prims.of_int (16)) (Prims.of_int (322))
              (Prims.of_int (32)))
-          (Prims.mk_range "experimental/FStar.InteractiveHelpers.Base.fst"
+          (Prims.mk_range "FStar.InteractiveHelpers.Base.fst"
              (Prims.of_int (323)) (Prims.of_int (2)) (Prims.of_int (324))
              (Prims.of_int (38)))
           (FStar_Tactics_Effect.lift_div_tac
@@ -1774,12 +1742,10 @@ let (fresh_bv :
              (fun binders ->
                 Obj.magic
                   (FStar_Tactics_Effect.tac_bind
-                     (Prims.mk_range
-                        "experimental/FStar.InteractiveHelpers.Base.fst"
+                     (Prims.mk_range "FStar.InteractiveHelpers.Base.fst"
                         (Prims.of_int (323)) (Prims.of_int (21))
                         (Prims.of_int (323)) (Prims.of_int (56)))
-                     (Prims.mk_range
-                        "experimental/FStar.InteractiveHelpers.Base.fst"
+                     (Prims.mk_range "FStar.InteractiveHelpers.Base.fst"
                         (Prims.of_int (324)) (Prims.of_int (2))
                         (Prims.of_int (324)) (Prims.of_int (38)))
                      (FStar_Tactics_Effect.lift_div_tac
@@ -1801,10 +1767,10 @@ let (fresh_binder :
     fun basename ->
       fun ty ->
         FStar_Tactics_Effect.tac_bind
-          (Prims.mk_range "experimental/FStar.InteractiveHelpers.Base.fst"
+          (Prims.mk_range "FStar.InteractiveHelpers.Base.fst"
              (Prims.of_int (327)) (Prims.of_int (11)) (Prims.of_int (327))
              (Prims.of_int (33)))
-          (Prims.mk_range "experimental/FStar.InteractiveHelpers.Base.fst"
+          (Prims.mk_range "FStar.InteractiveHelpers.Base.fst"
              (Prims.of_int (328)) (Prims.of_int (2)) (Prims.of_int (328))
              (Prims.of_int (14))) (Obj.magic (fresh_bv e basename ty))
           (fun bv ->
@@ -1821,10 +1787,10 @@ let (genv_push_fresh_binder :
     fun basename ->
       fun ty ->
         FStar_Tactics_Effect.tac_bind
-          (Prims.mk_range "experimental/FStar.InteractiveHelpers.Base.fst"
+          (Prims.mk_range "FStar.InteractiveHelpers.Base.fst"
              (Prims.of_int (331)) (Prims.of_int (10)) (Prims.of_int (331))
              (Prims.of_int (41)))
-          (Prims.mk_range "experimental/FStar.InteractiveHelpers.Base.fst"
+          (Prims.mk_range "FStar.InteractiveHelpers.Base.fst"
              (Prims.of_int (333)) (Prims.of_int (2)) (Prims.of_int (334))
              (Prims.of_int (8)))
           (Obj.magic (fresh_binder ge.env basename ty))
@@ -1832,12 +1798,10 @@ let (genv_push_fresh_binder :
              (fun b ->
                 Obj.magic
                   (FStar_Tactics_Effect.tac_bind
-                     (Prims.mk_range
-                        "experimental/FStar.InteractiveHelpers.Base.fst"
+                     (Prims.mk_range "FStar.InteractiveHelpers.Base.fst"
                         (Prims.of_int (333)) (Prims.of_int (12))
                         (Prims.of_int (333)) (Prims.of_int (43)))
-                     (Prims.mk_range
-                        "experimental/FStar.InteractiveHelpers.Base.fst"
+                     (Prims.mk_range "FStar.InteractiveHelpers.Base.fst"
                         (Prims.of_int (334)) (Prims.of_int (2))
                         (Prims.of_int (334)) (Prims.of_int (8)))
                      (Obj.magic
@@ -1857,10 +1821,10 @@ let (push_fresh_binder :
     fun basename ->
       fun ty ->
         FStar_Tactics_Effect.tac_bind
-          (Prims.mk_range "experimental/FStar.InteractiveHelpers.Base.fst"
+          (Prims.mk_range "FStar.InteractiveHelpers.Base.fst"
              (Prims.of_int (338)) (Prims.of_int (10)) (Prims.of_int (338))
              (Prims.of_int (36)))
-          (Prims.mk_range "experimental/FStar.InteractiveHelpers.Base.fst"
+          (Prims.mk_range "FStar.InteractiveHelpers.Base.fst"
              (Prims.of_int (339)) (Prims.of_int (2)) (Prims.of_int (340))
              (Prims.of_int (7))) (Obj.magic (fresh_binder e basename ty))
           (fun b ->
@@ -1877,10 +1841,10 @@ let (genv_push_fresh_bv :
     fun basename ->
       fun ty ->
         FStar_Tactics_Effect.tac_bind
-          (Prims.mk_range "experimental/FStar.InteractiveHelpers.Base.fst"
+          (Prims.mk_range "FStar.InteractiveHelpers.Base.fst"
              (Prims.of_int (343)) (Prims.of_int (15)) (Prims.of_int (343))
              (Prims.of_int (52)))
-          (Prims.mk_range "experimental/FStar.InteractiveHelpers.Base.fst"
+          (Prims.mk_range "FStar.InteractiveHelpers.Base.fst"
              (Prims.of_int (343)) (Prims.of_int (2)) (Prims.of_int (344))
              (Prims.of_int (21)))
           (Obj.magic (genv_push_fresh_binder ge basename ty))
@@ -1902,10 +1866,10 @@ let (push_fresh_var :
     fun basename ->
       fun ty ->
         FStar_Tactics_Effect.tac_bind
-          (Prims.mk_range "experimental/FStar.InteractiveHelpers.Base.fst"
+          (Prims.mk_range "FStar.InteractiveHelpers.Base.fst"
              (Prims.of_int (348)) (Prims.of_int (15)) (Prims.of_int (348))
              (Prims.of_int (47)))
-          (Prims.mk_range "experimental/FStar.InteractiveHelpers.Base.fst"
+          (Prims.mk_range "FStar.InteractiveHelpers.Base.fst"
              (Prims.of_int (348)) (Prims.of_int (2)) (Prims.of_int (350))
              (Prims.of_int (12)))
           (Obj.magic (push_fresh_binder e0 basename ty))
@@ -1915,12 +1879,10 @@ let (push_fresh_var :
                 | (e1, b1) ->
                     Obj.magic
                       (FStar_Tactics_Effect.tac_bind
-                         (Prims.mk_range
-                            "experimental/FStar.InteractiveHelpers.Base.fst"
+                         (Prims.mk_range "FStar.InteractiveHelpers.Base.fst"
                             (Prims.of_int (349)) (Prims.of_int (11))
                             (Prims.of_int (349)) (Prims.of_int (42)))
-                         (Prims.mk_range
-                            "experimental/FStar.InteractiveHelpers.Base.fst"
+                         (Prims.mk_range "FStar.InteractiveHelpers.Base.fst"
                             (Prims.of_int (350)) (Prims.of_int (2))
                             (Prims.of_int (350)) (Prims.of_int (12)))
                          (Obj.magic
@@ -1941,10 +1903,10 @@ let (genv_push_fresh_var :
     fun basename ->
       fun ty ->
         FStar_Tactics_Effect.tac_bind
-          (Prims.mk_range "experimental/FStar.InteractiveHelpers.Base.fst"
+          (Prims.mk_range "FStar.InteractiveHelpers.Base.fst"
              (Prims.of_int (354)) (Prims.of_int (16)) (Prims.of_int (354))
              (Prims.of_int (54)))
-          (Prims.mk_range "experimental/FStar.InteractiveHelpers.Base.fst"
+          (Prims.mk_range "FStar.InteractiveHelpers.Base.fst"
              (Prims.of_int (354)) (Prims.of_int (2)) (Prims.of_int (356))
              (Prims.of_int (13)))
           (Obj.magic (genv_push_fresh_binder ge0 basename ty))
@@ -1954,12 +1916,10 @@ let (genv_push_fresh_var :
                 | (ge1, b1) ->
                     Obj.magic
                       (FStar_Tactics_Effect.tac_bind
-                         (Prims.mk_range
-                            "experimental/FStar.InteractiveHelpers.Base.fst"
+                         (Prims.mk_range "FStar.InteractiveHelpers.Base.fst"
                             (Prims.of_int (355)) (Prims.of_int (11))
                             (Prims.of_int (355)) (Prims.of_int (42)))
-                         (Prims.mk_range
-                            "experimental/FStar.InteractiveHelpers.Base.fst"
+                         (Prims.mk_range "FStar.InteractiveHelpers.Base.fst"
                             (Prims.of_int (356)) (Prims.of_int (2))
                             (Prims.of_int (356)) (Prims.of_int (13)))
                          (Obj.magic
@@ -1982,10 +1942,10 @@ let (push_two_fresh_vars :
     fun basename ->
       fun ty ->
         FStar_Tactics_Effect.tac_bind
-          (Prims.mk_range "experimental/FStar.InteractiveHelpers.Base.fst"
+          (Prims.mk_range "FStar.InteractiveHelpers.Base.fst"
              (Prims.of_int (360)) (Prims.of_int (15)) (Prims.of_int (360))
              (Prims.of_int (47)))
-          (Prims.mk_range "experimental/FStar.InteractiveHelpers.Base.fst"
+          (Prims.mk_range "FStar.InteractiveHelpers.Base.fst"
              (Prims.of_int (360)) (Prims.of_int (2)) (Prims.of_int (364))
              (Prims.of_int (20)))
           (Obj.magic (push_fresh_binder e0 basename ty))
@@ -1995,12 +1955,10 @@ let (push_two_fresh_vars :
                 | (e1, b1) ->
                     Obj.magic
                       (FStar_Tactics_Effect.tac_bind
-                         (Prims.mk_range
-                            "experimental/FStar.InteractiveHelpers.Base.fst"
+                         (Prims.mk_range "FStar.InteractiveHelpers.Base.fst"
                             (Prims.of_int (361)) (Prims.of_int (15))
                             (Prims.of_int (361)) (Prims.of_int (47)))
-                         (Prims.mk_range
-                            "experimental/FStar.InteractiveHelpers.Base.fst"
+                         (Prims.mk_range "FStar.InteractiveHelpers.Base.fst"
                             (Prims.of_int (361)) (Prims.of_int (2))
                             (Prims.of_int (364)) (Prims.of_int (20)))
                          (Obj.magic (push_fresh_binder e1 basename ty))
@@ -2011,13 +1969,13 @@ let (push_two_fresh_vars :
                                    Obj.magic
                                      (FStar_Tactics_Effect.tac_bind
                                         (Prims.mk_range
-                                           "experimental/FStar.InteractiveHelpers.Base.fst"
+                                           "FStar.InteractiveHelpers.Base.fst"
                                            (Prims.of_int (362))
                                            (Prims.of_int (11))
                                            (Prims.of_int (362))
                                            (Prims.of_int (42)))
                                         (Prims.mk_range
-                                           "experimental/FStar.InteractiveHelpers.Base.fst"
+                                           "FStar.InteractiveHelpers.Base.fst"
                                            (Prims.of_int (363))
                                            (Prims.of_int (2))
                                            (Prims.of_int (364))
@@ -2032,13 +1990,13 @@ let (push_two_fresh_vars :
                                               Obj.magic
                                                 (FStar_Tactics_Effect.tac_bind
                                                    (Prims.mk_range
-                                                      "experimental/FStar.InteractiveHelpers.Base.fst"
+                                                      "FStar.InteractiveHelpers.Base.fst"
                                                       (Prims.of_int (363))
                                                       (Prims.of_int (11))
                                                       (Prims.of_int (363))
                                                       (Prims.of_int (42)))
                                                    (Prims.mk_range
-                                                      "experimental/FStar.InteractiveHelpers.Base.fst"
+                                                      "FStar.InteractiveHelpers.Base.fst"
                                                       (Prims.of_int (364))
                                                       (Prims.of_int (2))
                                                       (Prims.of_int (364))
@@ -2067,10 +2025,10 @@ let (genv_push_two_fresh_vars :
     fun basename ->
       fun ty ->
         FStar_Tactics_Effect.tac_bind
-          (Prims.mk_range "experimental/FStar.InteractiveHelpers.Base.fst"
+          (Prims.mk_range "FStar.InteractiveHelpers.Base.fst"
              (Prims.of_int (368)) (Prims.of_int (16)) (Prims.of_int (368))
              (Prims.of_int (54)))
-          (Prims.mk_range "experimental/FStar.InteractiveHelpers.Base.fst"
+          (Prims.mk_range "FStar.InteractiveHelpers.Base.fst"
              (Prims.of_int (368)) (Prims.of_int (2)) (Prims.of_int (372))
              (Prims.of_int (21)))
           (Obj.magic (genv_push_fresh_binder ge0 basename ty))
@@ -2080,12 +2038,10 @@ let (genv_push_two_fresh_vars :
                 | (ge1, b1) ->
                     Obj.magic
                       (FStar_Tactics_Effect.tac_bind
-                         (Prims.mk_range
-                            "experimental/FStar.InteractiveHelpers.Base.fst"
+                         (Prims.mk_range "FStar.InteractiveHelpers.Base.fst"
                             (Prims.of_int (369)) (Prims.of_int (16))
                             (Prims.of_int (369)) (Prims.of_int (54)))
-                         (Prims.mk_range
-                            "experimental/FStar.InteractiveHelpers.Base.fst"
+                         (Prims.mk_range "FStar.InteractiveHelpers.Base.fst"
                             (Prims.of_int (369)) (Prims.of_int (2))
                             (Prims.of_int (372)) (Prims.of_int (21)))
                          (Obj.magic (genv_push_fresh_binder ge1 basename ty))
@@ -2096,13 +2052,13 @@ let (genv_push_two_fresh_vars :
                                    Obj.magic
                                      (FStar_Tactics_Effect.tac_bind
                                         (Prims.mk_range
-                                           "experimental/FStar.InteractiveHelpers.Base.fst"
+                                           "FStar.InteractiveHelpers.Base.fst"
                                            (Prims.of_int (370))
                                            (Prims.of_int (11))
                                            (Prims.of_int (370))
                                            (Prims.of_int (42)))
                                         (Prims.mk_range
-                                           "experimental/FStar.InteractiveHelpers.Base.fst"
+                                           "FStar.InteractiveHelpers.Base.fst"
                                            (Prims.of_int (371))
                                            (Prims.of_int (2))
                                            (Prims.of_int (372))
@@ -2117,13 +2073,13 @@ let (genv_push_two_fresh_vars :
                                               Obj.magic
                                                 (FStar_Tactics_Effect.tac_bind
                                                    (Prims.mk_range
-                                                      "experimental/FStar.InteractiveHelpers.Base.fst"
+                                                      "FStar.InteractiveHelpers.Base.fst"
                                                       (Prims.of_int (371))
                                                       (Prims.of_int (11))
                                                       (Prims.of_int (371))
                                                       (Prims.of_int (42)))
                                                    (Prims.mk_range
-                                                      "experimental/FStar.InteractiveHelpers.Base.fst"
+                                                      "FStar.InteractiveHelpers.Base.fst"
                                                       (Prims.of_int (372))
                                                       (Prims.of_int (2))
                                                       (Prims.of_int (372))
@@ -2149,10 +2105,10 @@ let (norm_apply_subst :
     fun t ->
       fun subst ->
         FStar_Tactics_Effect.tac_bind
-          (Prims.mk_range "experimental/FStar.InteractiveHelpers.Base.fst"
+          (Prims.mk_range "FStar.InteractiveHelpers.Base.fst"
              (Prims.of_int (386)) (Prims.of_int (15)) (Prims.of_int (386))
              (Prims.of_int (26)))
-          (Prims.mk_range "experimental/FStar.InteractiveHelpers.Base.fst"
+          (Prims.mk_range "FStar.InteractiveHelpers.Base.fst"
              (Prims.of_int (386)) (Prims.of_int (2)) (Prims.of_int (390))
              (Prims.of_int (23)))
           (FStar_Tactics_Effect.lift_div_tac (fun uu___ -> unzip subst))
@@ -2162,12 +2118,10 @@ let (norm_apply_subst :
                 | (bl, vl) ->
                     Obj.magic
                       (FStar_Tactics_Effect.tac_bind
-                         (Prims.mk_range
-                            "experimental/FStar.InteractiveHelpers.Base.fst"
+                         (Prims.mk_range "FStar.InteractiveHelpers.Base.fst"
                             (Prims.of_int (387)) (Prims.of_int (11))
                             (Prims.of_int (387)) (Prims.of_int (36)))
-                         (Prims.mk_range
-                            "experimental/FStar.InteractiveHelpers.Base.fst"
+                         (Prims.mk_range "FStar.InteractiveHelpers.Base.fst"
                             (Prims.of_int (388)) (Prims.of_int (2))
                             (Prims.of_int (390)) (Prims.of_int (23)))
                          (FStar_Tactics_Effect.lift_div_tac
@@ -2179,13 +2133,13 @@ let (norm_apply_subst :
                                Obj.magic
                                  (FStar_Tactics_Effect.tac_bind
                                     (Prims.mk_range
-                                       "experimental/FStar.InteractiveHelpers.Base.fst"
+                                       "FStar.InteractiveHelpers.Base.fst"
                                        (Prims.of_int (388))
                                        (Prims.of_int (11))
                                        (Prims.of_int (388))
                                        (Prims.of_int (22)))
                                     (Prims.mk_range
-                                       "experimental/FStar.InteractiveHelpers.Base.fst"
+                                       "FStar.InteractiveHelpers.Base.fst"
                                        (Prims.of_int (389))
                                        (Prims.of_int (2))
                                        (Prims.of_int (390))
@@ -2197,13 +2151,13 @@ let (norm_apply_subst :
                                           Obj.magic
                                             (FStar_Tactics_Effect.tac_bind
                                                (Prims.mk_range
-                                                  "experimental/FStar.InteractiveHelpers.Base.fst"
+                                                  "FStar.InteractiveHelpers.Base.fst"
                                                   (Prims.of_int (389))
                                                   (Prims.of_int (11))
                                                   (Prims.of_int (389))
                                                   (Prims.of_int (25)))
                                                (Prims.mk_range
-                                                  "experimental/FStar.InteractiveHelpers.Base.fst"
+                                                  "FStar.InteractiveHelpers.Base.fst"
                                                   (Prims.of_int (390))
                                                   (Prims.of_int (2))
                                                   (Prims.of_int (390))
@@ -2228,10 +2182,10 @@ let (norm_apply_subst_in_comp :
     fun c ->
       fun subst ->
         FStar_Tactics_Effect.tac_bind
-          (Prims.mk_range "experimental/FStar.InteractiveHelpers.Base.fst"
+          (Prims.mk_range "FStar.InteractiveHelpers.Base.fst"
              (Prims.of_int (393)) (Prims.of_int (14)) (Prims.of_int (393))
              (Prims.of_int (51)))
-          (Prims.mk_range "experimental/FStar.InteractiveHelpers.Base.fst"
+          (Prims.mk_range "FStar.InteractiveHelpers.Base.fst"
              (Prims.of_int (394)) (Prims.of_int (2)) (Prims.of_int (416))
              (Prims.of_int (55)))
           (FStar_Tactics_Effect.lift_div_tac
@@ -2240,12 +2194,10 @@ let (norm_apply_subst_in_comp :
              (fun subst1 ->
                 Obj.magic
                   (FStar_Tactics_Effect.tac_bind
-                     (Prims.mk_range
-                        "experimental/FStar.InteractiveHelpers.Base.fst"
+                     (Prims.mk_range "FStar.InteractiveHelpers.Base.fst"
                         (Prims.of_int (395)) (Prims.of_int (4))
                         (Prims.of_int (398)) (Prims.of_int (34)))
-                     (Prims.mk_range
-                        "experimental/FStar.InteractiveHelpers.Base.fst"
+                     (Prims.mk_range "FStar.InteractiveHelpers.Base.fst"
                         (Prims.of_int (400)) (Prims.of_int (2))
                         (Prims.of_int (416)) (Prims.of_int (55)))
                      (FStar_Tactics_Effect.lift_div_tac
@@ -2269,13 +2221,13 @@ let (norm_apply_subst_in_comp :
                                         (Obj.repr
                                            (FStar_Tactics_Effect.tac_bind
                                               (Prims.mk_range
-                                                 "experimental/FStar.InteractiveHelpers.Base.fst"
+                                                 "FStar.InteractiveHelpers.Base.fst"
                                                  (Prims.of_int (398))
                                                  (Prims.of_int (25))
                                                  (Prims.of_int (398))
                                                  (Prims.of_int (34)))
                                               (Prims.mk_range
-                                                 "experimental/FStar.InteractiveHelpers.Base.fst"
+                                                 "FStar.InteractiveHelpers.Base.fst"
                                                  (Prims.of_int (398))
                                                  (Prims.of_int (18))
                                                  (Prims.of_int (398))
@@ -2295,13 +2247,13 @@ let (norm_apply_subst_in_comp :
                                Obj.magic
                                  (FStar_Tactics_Effect.tac_bind
                                     (Prims.mk_range
-                                       "experimental/FStar.InteractiveHelpers.Base.fst"
+                                       "FStar.InteractiveHelpers.Base.fst"
                                        (Prims.of_int (402))
                                        (Prims.of_int (14))
                                        (Prims.of_int (402))
                                        (Prims.of_int (23)))
                                     (Prims.mk_range
-                                       "experimental/FStar.InteractiveHelpers.Base.fst"
+                                       "FStar.InteractiveHelpers.Base.fst"
                                        (Prims.of_int (403))
                                        (Prims.of_int (4))
                                        (Prims.of_int (403))
@@ -2317,13 +2269,13 @@ let (norm_apply_subst_in_comp :
                                Obj.magic
                                  (FStar_Tactics_Effect.tac_bind
                                     (Prims.mk_range
-                                       "experimental/FStar.InteractiveHelpers.Base.fst"
+                                       "FStar.InteractiveHelpers.Base.fst"
                                        (Prims.of_int (405))
                                        (Prims.of_int (14))
                                        (Prims.of_int (405))
                                        (Prims.of_int (23)))
                                     (Prims.mk_range
-                                       "experimental/FStar.InteractiveHelpers.Base.fst"
+                                       "FStar.InteractiveHelpers.Base.fst"
                                        (Prims.of_int (406))
                                        (Prims.of_int (4))
                                        (Prims.of_int (406))
@@ -2340,13 +2292,13 @@ let (norm_apply_subst_in_comp :
                                Obj.magic
                                  (FStar_Tactics_Effect.tac_bind
                                     (Prims.mk_range
-                                       "experimental/FStar.InteractiveHelpers.Base.fst"
+                                       "FStar.InteractiveHelpers.Base.fst"
                                        (Prims.of_int (408))
                                        (Prims.of_int (14))
                                        (Prims.of_int (408))
                                        (Prims.of_int (23)))
                                     (Prims.mk_range
-                                       "experimental/FStar.InteractiveHelpers.Base.fst"
+                                       "FStar.InteractiveHelpers.Base.fst"
                                        (Prims.of_int (409))
                                        (Prims.of_int (4))
                                        (Prims.of_int (411))
@@ -2357,13 +2309,13 @@ let (norm_apply_subst_in_comp :
                                           Obj.magic
                                             (FStar_Tactics_Effect.tac_bind
                                                (Prims.mk_range
-                                                  "experimental/FStar.InteractiveHelpers.Base.fst"
+                                                  "FStar.InteractiveHelpers.Base.fst"
                                                   (Prims.of_int (409))
                                                   (Prims.of_int (15))
                                                   (Prims.of_int (409))
                                                   (Prims.of_int (25)))
                                                (Prims.mk_range
-                                                  "experimental/FStar.InteractiveHelpers.Base.fst"
+                                                  "FStar.InteractiveHelpers.Base.fst"
                                                   (Prims.of_int (410))
                                                   (Prims.of_int (4))
                                                   (Prims.of_int (411))
@@ -2374,13 +2326,13 @@ let (norm_apply_subst_in_comp :
                                                      Obj.magic
                                                        (FStar_Tactics_Effect.tac_bind
                                                           (Prims.mk_range
-                                                             "experimental/FStar.InteractiveHelpers.Base.fst"
+                                                             "FStar.InteractiveHelpers.Base.fst"
                                                              (Prims.of_int (410))
                                                              (Prims.of_int (19))
                                                              (Prims.of_int (410))
                                                              (Prims.of_int (33)))
                                                           (Prims.mk_range
-                                                             "experimental/FStar.InteractiveHelpers.Base.fst"
+                                                             "FStar.InteractiveHelpers.Base.fst"
                                                              (Prims.of_int (411))
                                                              (Prims.of_int (4))
                                                              (Prims.of_int (411))
@@ -2402,13 +2354,13 @@ let (norm_apply_subst_in_comp :
                                Obj.magic
                                  (FStar_Tactics_Effect.tac_bind
                                     (Prims.mk_range
-                                       "experimental/FStar.InteractiveHelpers.Base.fst"
+                                       "FStar.InteractiveHelpers.Base.fst"
                                        (Prims.of_int (413))
                                        (Prims.of_int (17))
                                        (Prims.of_int (413))
                                        (Prims.of_int (29)))
                                     (Prims.mk_range
-                                       "experimental/FStar.InteractiveHelpers.Base.fst"
+                                       "FStar.InteractiveHelpers.Base.fst"
                                        (Prims.of_int (414))
                                        (Prims.of_int (4))
                                        (Prims.of_int (416))
@@ -2419,13 +2371,13 @@ let (norm_apply_subst_in_comp :
                                           Obj.magic
                                             (FStar_Tactics_Effect.tac_bind
                                                (Prims.mk_range
-                                                  "experimental/FStar.InteractiveHelpers.Base.fst"
+                                                  "FStar.InteractiveHelpers.Base.fst"
                                                   (Prims.of_int (414))
                                                   (Prims.of_int (19))
                                                   (Prims.of_int (414))
                                                   (Prims.of_int (76)))
                                                (Prims.mk_range
-                                                  "experimental/FStar.InteractiveHelpers.Base.fst"
+                                                  "FStar.InteractiveHelpers.Base.fst"
                                                   (Prims.of_int (415))
                                                   (Prims.of_int (4))
                                                   (Prims.of_int (416))
@@ -2437,13 +2389,13 @@ let (norm_apply_subst_in_comp :
                                                         | (x, a) ->
                                                             FStar_Tactics_Effect.tac_bind
                                                               (Prims.mk_range
-                                                                 "experimental/FStar.InteractiveHelpers.Base.fst"
+                                                                 "FStar.InteractiveHelpers.Base.fst"
                                                                  (Prims.of_int (414))
                                                                  (Prims.of_int (39))
                                                                  (Prims.of_int (414))
                                                                  (Prims.of_int (46)))
                                                               (Prims.mk_range
-                                                                 "experimental/FStar.InteractiveHelpers.Base.fst"
+                                                                 "FStar.InteractiveHelpers.Base.fst"
                                                                  (Prims.of_int (414))
                                                                  (Prims.of_int (38))
                                                                  (Prims.of_int (414))
@@ -2456,13 +2408,13 @@ let (norm_apply_subst_in_comp :
                                                                     Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
                                                                     (Prims.mk_range
-                                                                    "experimental/FStar.InteractiveHelpers.Base.fst"
+                                                                    "FStar.InteractiveHelpers.Base.fst"
                                                                     (Prims.of_int (414))
                                                                     (Prims.of_int (48))
                                                                     (Prims.of_int (414))
                                                                     (Prims.of_int (65)))
                                                                     (Prims.mk_range
-                                                                    "experimental/FStar.InteractiveHelpers.Base.fst"
+                                                                    "FStar.InteractiveHelpers.Base.fst"
                                                                     (Prims.of_int (414))
                                                                     (Prims.of_int (38))
                                                                     (Prims.of_int (414))
@@ -2484,13 +2436,13 @@ let (norm_apply_subst_in_comp :
                                                      Obj.magic
                                                        (FStar_Tactics_Effect.tac_bind
                                                           (Prims.mk_range
-                                                             "experimental/FStar.InteractiveHelpers.Base.fst"
+                                                             "FStar.InteractiveHelpers.Base.fst"
                                                              (Prims.of_int (415))
                                                              (Prims.of_int (16))
                                                              (Prims.of_int (415))
                                                              (Prims.of_int (31)))
                                                           (Prims.mk_range
-                                                             "experimental/FStar.InteractiveHelpers.Base.fst"
+                                                             "FStar.InteractiveHelpers.Base.fst"
                                                              (Prims.of_int (416))
                                                              (Prims.of_int (4))
                                                              (Prims.of_int (416))
@@ -2521,10 +2473,10 @@ let rec (deep_apply_subst :
     fun t ->
       fun subst ->
         FStar_Tactics_Effect.tac_bind
-          (Prims.mk_range "experimental/FStar.InteractiveHelpers.Base.fst"
+          (Prims.mk_range "FStar.InteractiveHelpers.Base.fst"
              (Prims.of_int (435)) (Prims.of_int (8)) (Prims.of_int (435))
              (Prims.of_int (17)))
-          (Prims.mk_range "experimental/FStar.InteractiveHelpers.Base.fst"
+          (Prims.mk_range "FStar.InteractiveHelpers.Base.fst"
              (Prims.of_int (435)) (Prims.of_int (2)) (Prims.of_int (508))
              (Prims.of_int (5)))
           (Obj.magic (FStar_Tactics_Builtins.inspect t))
@@ -2556,11 +2508,11 @@ let rec (deep_apply_subst :
                       (Obj.repr
                          (FStar_Tactics_Effect.tac_bind
                             (Prims.mk_range
-                               "experimental/FStar.InteractiveHelpers.Base.fst"
+                               "FStar.InteractiveHelpers.Base.fst"
                                (Prims.of_int (449)) (Prims.of_int (13))
                                (Prims.of_int (449)) (Prims.of_int (40)))
                             (Prims.mk_range
-                               "experimental/FStar.InteractiveHelpers.Base.fst"
+                               "FStar.InteractiveHelpers.Base.fst"
                                (Prims.of_int (450)) (Prims.of_int (4))
                                (Prims.of_int (451)) (Prims.of_int (30)))
                             (Obj.magic (deep_apply_subst e hd subst))
@@ -2569,13 +2521,13 @@ let rec (deep_apply_subst :
                                   Obj.magic
                                     (FStar_Tactics_Effect.tac_bind
                                        (Prims.mk_range
-                                          "experimental/FStar.InteractiveHelpers.Base.fst"
+                                          "FStar.InteractiveHelpers.Base.fst"
                                           (Prims.of_int (450))
                                           (Prims.of_int (12))
                                           (Prims.of_int (450))
                                           (Prims.of_int (38)))
                                        (Prims.mk_range
-                                          "experimental/FStar.InteractiveHelpers.Base.fst"
+                                          "FStar.InteractiveHelpers.Base.fst"
                                           (Prims.of_int (451))
                                           (Prims.of_int (4))
                                           (Prims.of_int (451))
@@ -2594,11 +2546,11 @@ let rec (deep_apply_subst :
                       (Obj.repr
                          (FStar_Tactics_Effect.tac_bind
                             (Prims.mk_range
-                               "experimental/FStar.InteractiveHelpers.Base.fst"
+                               "FStar.InteractiveHelpers.Base.fst"
                                (Prims.of_int (453)) (Prims.of_int (15))
                                (Prims.of_int (453)) (Prims.of_int (44)))
                             (Prims.mk_range
-                               "experimental/FStar.InteractiveHelpers.Base.fst"
+                               "FStar.InteractiveHelpers.Base.fst"
                                (Prims.of_int (454)) (Prims.of_int (4))
                                (Prims.of_int (454)) (Prims.of_int (25)))
                             (Obj.magic (deep_apply_subst e body subst))
@@ -2613,11 +2565,11 @@ let rec (deep_apply_subst :
                       (Obj.repr
                          (FStar_Tactics_Effect.tac_bind
                             (Prims.mk_range
-                               "experimental/FStar.InteractiveHelpers.Base.fst"
+                               "FStar.InteractiveHelpers.Base.fst"
                                (Prims.of_int (456)) (Prims.of_int (20))
                                (Prims.of_int (456)) (Prims.of_int (57)))
                             (Prims.mk_range
-                               "experimental/FStar.InteractiveHelpers.Base.fst"
+                               "FStar.InteractiveHelpers.Base.fst"
                                (Prims.of_int (456)) (Prims.of_int (4))
                                (Prims.of_int (458)) (Prims.of_int (24)))
                             (Obj.magic
@@ -2629,13 +2581,13 @@ let rec (deep_apply_subst :
                                       Obj.magic
                                         (FStar_Tactics_Effect.tac_bind
                                            (Prims.mk_range
-                                              "experimental/FStar.InteractiveHelpers.Base.fst"
+                                              "FStar.InteractiveHelpers.Base.fst"
                                               (Prims.of_int (457))
                                               (Prims.of_int (12))
                                               (Prims.of_int (457))
                                               (Prims.of_int (46)))
                                            (Prims.mk_range
-                                              "experimental/FStar.InteractiveHelpers.Base.fst"
+                                              "FStar.InteractiveHelpers.Base.fst"
                                               (Prims.of_int (458))
                                               (Prims.of_int (4))
                                               (Prims.of_int (458))
@@ -2659,11 +2611,11 @@ let rec (deep_apply_subst :
                       (Obj.repr
                          (FStar_Tactics_Effect.tac_bind
                             (Prims.mk_range
-                               "experimental/FStar.InteractiveHelpers.Base.fst"
+                               "FStar.InteractiveHelpers.Base.fst"
                                (Prims.of_int (461)) (Prims.of_int (20))
                                (Prims.of_int (461)) (Prims.of_int (53)))
                             (Prims.mk_range
-                               "experimental/FStar.InteractiveHelpers.Base.fst"
+                               "FStar.InteractiveHelpers.Base.fst"
                                (Prims.of_int (461)) (Prims.of_int (4))
                                (Prims.of_int (463)) (Prims.of_int (27)))
                             (Obj.magic (deep_apply_subst_in_bv e bv subst))
@@ -2674,13 +2626,13 @@ let rec (deep_apply_subst :
                                       Obj.magic
                                         (FStar_Tactics_Effect.tac_bind
                                            (Prims.mk_range
-                                              "experimental/FStar.InteractiveHelpers.Base.fst"
+                                              "FStar.InteractiveHelpers.Base.fst"
                                               (Prims.of_int (462))
                                               (Prims.of_int (14))
                                               (Prims.of_int (462))
                                               (Prims.of_int (42)))
                                            (Prims.mk_range
-                                              "experimental/FStar.InteractiveHelpers.Base.fst"
+                                              "FStar.InteractiveHelpers.Base.fst"
                                               (Prims.of_int (463))
                                               (Prims.of_int (4))
                                               (Prims.of_int (463))
@@ -2708,11 +2660,11 @@ let rec (deep_apply_subst :
                       (Obj.repr
                          (FStar_Tactics_Effect.tac_bind
                             (Prims.mk_range
-                               "experimental/FStar.InteractiveHelpers.Base.fst"
+                               "FStar.InteractiveHelpers.Base.fst"
                                (Prims.of_int (468)) (Prims.of_int (20))
                                (Prims.of_int (468)) (Prims.of_int (53)))
                             (Prims.mk_range
-                               "experimental/FStar.InteractiveHelpers.Base.fst"
+                               "FStar.InteractiveHelpers.Base.fst"
                                (Prims.of_int (468)) (Prims.of_int (4))
                                (Prims.of_int (471)) (Prims.of_int (37)))
                             (Obj.magic (deep_apply_subst_in_bv e bv subst))
@@ -2723,13 +2675,13 @@ let rec (deep_apply_subst :
                                       Obj.magic
                                         (FStar_Tactics_Effect.tac_bind
                                            (Prims.mk_range
-                                              "experimental/FStar.InteractiveHelpers.Base.fst"
+                                              "FStar.InteractiveHelpers.Base.fst"
                                               (Prims.of_int (469))
                                               (Prims.of_int (14))
                                               (Prims.of_int (469))
                                               (Prims.of_int (42)))
                                            (Prims.mk_range
-                                              "experimental/FStar.InteractiveHelpers.Base.fst"
+                                              "FStar.InteractiveHelpers.Base.fst"
                                               (Prims.of_int (470))
                                               (Prims.of_int (4))
                                               (Prims.of_int (471))
@@ -2741,13 +2693,13 @@ let rec (deep_apply_subst :
                                                  Obj.magic
                                                    (FStar_Tactics_Effect.tac_bind
                                                       (Prims.mk_range
-                                                         "experimental/FStar.InteractiveHelpers.Base.fst"
+                                                         "FStar.InteractiveHelpers.Base.fst"
                                                          (Prims.of_int (470))
                                                          (Prims.of_int (15))
                                                          (Prims.of_int (470))
                                                          (Prims.of_int (44)))
                                                       (Prims.mk_range
-                                                         "experimental/FStar.InteractiveHelpers.Base.fst"
+                                                         "FStar.InteractiveHelpers.Base.fst"
                                                          (Prims.of_int (471))
                                                          (Prims.of_int (4))
                                                          (Prims.of_int (471))
@@ -2772,11 +2724,11 @@ let rec (deep_apply_subst :
                       (Obj.repr
                          (FStar_Tactics_Effect.tac_bind
                             (Prims.mk_range
-                               "experimental/FStar.InteractiveHelpers.Base.fst"
+                               "FStar.InteractiveHelpers.Base.fst"
                                (Prims.of_int (473)) (Prims.of_int (20))
                                (Prims.of_int (473)) (Prims.of_int (54)))
                             (Prims.mk_range
-                               "experimental/FStar.InteractiveHelpers.Base.fst"
+                               "FStar.InteractiveHelpers.Base.fst"
                                (Prims.of_int (474)) (Prims.of_int (4))
                                (Prims.of_int (495)) (Prims.of_int (46)))
                             (Obj.magic (deep_apply_subst e scrutinee subst))
@@ -2785,13 +2737,13 @@ let rec (deep_apply_subst :
                                   Obj.magic
                                     (FStar_Tactics_Effect.tac_bind
                                        (Prims.mk_range
-                                          "experimental/FStar.InteractiveHelpers.Base.fst"
+                                          "FStar.InteractiveHelpers.Base.fst"
                                           (Prims.of_int (474))
                                           (Prims.of_int (18))
                                           (Prims.of_int (486))
                                           (Prims.of_int (21)))
                                        (Prims.mk_range
-                                          "experimental/FStar.InteractiveHelpers.Base.fst"
+                                          "FStar.InteractiveHelpers.Base.fst"
                                           (Prims.of_int (488))
                                           (Prims.of_int (4))
                                           (Prims.of_int (495))
@@ -2803,13 +2755,13 @@ let rec (deep_apply_subst :
                                                 | (b, asc) ->
                                                     FStar_Tactics_Effect.tac_bind
                                                       (Prims.mk_range
-                                                         "experimental/FStar.InteractiveHelpers.Base.fst"
+                                                         "FStar.InteractiveHelpers.Base.fst"
                                                          (Prims.of_int (475))
                                                          (Prims.of_int (21))
                                                          (Prims.of_int (475))
                                                          (Prims.of_int (57)))
                                                       (Prims.mk_range
-                                                         "experimental/FStar.InteractiveHelpers.Base.fst"
+                                                         "FStar.InteractiveHelpers.Base.fst"
                                                          (Prims.of_int (475))
                                                          (Prims.of_int (6))
                                                          (Prims.of_int (486))
@@ -2824,13 +2776,13 @@ let rec (deep_apply_subst :
                                                                 Obj.magic
                                                                   (FStar_Tactics_Effect.tac_bind
                                                                     (Prims.mk_range
-                                                                    "experimental/FStar.InteractiveHelpers.Base.fst"
+                                                                    "FStar.InteractiveHelpers.Base.fst"
                                                                     (Prims.of_int (477))
                                                                     (Prims.of_int (8))
                                                                     (Prims.of_int (485))
                                                                     (Prims.of_int (16)))
                                                                     (Prims.mk_range
-                                                                    "experimental/FStar.InteractiveHelpers.Base.fst"
+                                                                    "FStar.InteractiveHelpers.Base.fst"
                                                                     (Prims.of_int (486))
                                                                     (Prims.of_int (6))
                                                                     (Prims.of_int (486))
@@ -2846,13 +2798,13 @@ let rec (deep_apply_subst :
                                                                     Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
                                                                     (Prims.mk_range
-                                                                    "experimental/FStar.InteractiveHelpers.Base.fst"
+                                                                    "FStar.InteractiveHelpers.Base.fst"
                                                                     (Prims.of_int (479))
                                                                     (Prims.of_int (10))
                                                                     (Prims.of_int (479))
                                                                     (Prims.of_int (42)))
                                                                     (Prims.mk_range
-                                                                    "experimental/FStar.InteractiveHelpers.Base.fst"
+                                                                    "FStar.InteractiveHelpers.Base.fst"
                                                                     (Prims.of_int (479))
                                                                     (Prims.of_int (10))
                                                                     (Prims.of_int (481))
@@ -2860,13 +2812,13 @@ let rec (deep_apply_subst :
                                                                     (Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
                                                                     (Prims.mk_range
-                                                                    "experimental/FStar.InteractiveHelpers.Base.fst"
+                                                                    "FStar.InteractiveHelpers.Base.fst"
                                                                     (Prims.of_int (479))
                                                                     (Prims.of_int (14))
                                                                     (Prims.of_int (479))
                                                                     (Prims.of_int (42)))
                                                                     (Prims.mk_range
-                                                                    "experimental/FStar.InteractiveHelpers.Base.fst"
+                                                                    "FStar.InteractiveHelpers.Base.fst"
                                                                     (Prims.of_int (479))
                                                                     (Prims.of_int (10))
                                                                     (Prims.of_int (479))
@@ -2889,13 +2841,13 @@ let rec (deep_apply_subst :
                                                                     Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
                                                                     (Prims.mk_range
-                                                                    "experimental/FStar.InteractiveHelpers.Base.fst"
+                                                                    "FStar.InteractiveHelpers.Base.fst"
                                                                     (Prims.of_int (480))
                                                                     (Prims.of_int (10))
                                                                     (Prims.of_int (480))
                                                                     (Prims.of_int (66)))
                                                                     (Prims.mk_range
-                                                                    "experimental/FStar.InteractiveHelpers.Base.fst"
+                                                                    "FStar.InteractiveHelpers.Base.fst"
                                                                     (Prims.of_int (479))
                                                                     (Prims.of_int (10))
                                                                     (Prims.of_int (481))
@@ -2926,13 +2878,13 @@ let rec (deep_apply_subst :
                                                                     Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
                                                                     (Prims.mk_range
-                                                                    "experimental/FStar.InteractiveHelpers.Base.fst"
+                                                                    "FStar.InteractiveHelpers.Base.fst"
                                                                     (Prims.of_int (483))
                                                                     (Prims.of_int (10))
                                                                     (Prims.of_int (483))
                                                                     (Prims.of_int (50)))
                                                                     (Prims.mk_range
-                                                                    "experimental/FStar.InteractiveHelpers.Base.fst"
+                                                                    "FStar.InteractiveHelpers.Base.fst"
                                                                     (Prims.of_int (483))
                                                                     (Prims.of_int (10))
                                                                     (Prims.of_int (485))
@@ -2940,13 +2892,13 @@ let rec (deep_apply_subst :
                                                                     (Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
                                                                     (Prims.mk_range
-                                                                    "experimental/FStar.InteractiveHelpers.Base.fst"
+                                                                    "FStar.InteractiveHelpers.Base.fst"
                                                                     (Prims.of_int (483))
                                                                     (Prims.of_int (14))
                                                                     (Prims.of_int (483))
                                                                     (Prims.of_int (50)))
                                                                     (Prims.mk_range
-                                                                    "experimental/FStar.InteractiveHelpers.Base.fst"
+                                                                    "FStar.InteractiveHelpers.Base.fst"
                                                                     (Prims.of_int (483))
                                                                     (Prims.of_int (10))
                                                                     (Prims.of_int (483))
@@ -2969,13 +2921,13 @@ let rec (deep_apply_subst :
                                                                     Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
                                                                     (Prims.mk_range
-                                                                    "experimental/FStar.InteractiveHelpers.Base.fst"
+                                                                    "FStar.InteractiveHelpers.Base.fst"
                                                                     (Prims.of_int (484))
                                                                     (Prims.of_int (10))
                                                                     (Prims.of_int (484))
                                                                     (Prims.of_int (66)))
                                                                     (Prims.mk_range
-                                                                    "experimental/FStar.InteractiveHelpers.Base.fst"
+                                                                    "FStar.InteractiveHelpers.Base.fst"
                                                                     (Prims.of_int (483))
                                                                     (Prims.of_int (10))
                                                                     (Prims.of_int (485))
@@ -3010,13 +2962,13 @@ let rec (deep_apply_subst :
                                              Obj.magic
                                                (FStar_Tactics_Effect.tac_bind
                                                   (Prims.mk_range
-                                                     "experimental/FStar.InteractiveHelpers.Base.fst"
+                                                     "FStar.InteractiveHelpers.Base.fst"
                                                      (Prims.of_int (489))
                                                      (Prims.of_int (6))
                                                      (Prims.of_int (492))
                                                      (Prims.of_int (13)))
                                                   (Prims.mk_range
-                                                     "experimental/FStar.InteractiveHelpers.Base.fst"
+                                                     "FStar.InteractiveHelpers.Base.fst"
                                                      (Prims.of_int (494))
                                                      (Prims.of_int (4))
                                                      (Prims.of_int (495))
@@ -3026,13 +2978,13 @@ let rec (deep_apply_subst :
                                                         fun branch ->
                                                           FStar_Tactics_Effect.tac_bind
                                                             (Prims.mk_range
-                                                               "experimental/FStar.InteractiveHelpers.Base.fst"
+                                                               "FStar.InteractiveHelpers.Base.fst"
                                                                (Prims.of_int (489))
                                                                (Prims.of_int (20))
                                                                (Prims.of_int (489))
                                                                (Prims.of_int (26)))
                                                             (Prims.mk_range
-                                                               "experimental/FStar.InteractiveHelpers.Base.fst"
+                                                               "FStar.InteractiveHelpers.Base.fst"
                                                                (Prims.of_int (489))
                                                                (Prims.of_int (6))
                                                                (Prims.of_int (492))
@@ -3049,13 +3001,13 @@ let rec (deep_apply_subst :
                                                                     Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
                                                                     (Prims.mk_range
-                                                                    "experimental/FStar.InteractiveHelpers.Base.fst"
+                                                                    "FStar.InteractiveHelpers.Base.fst"
                                                                     (Prims.of_int (490))
                                                                     (Prims.of_int (23))
                                                                     (Prims.of_int (490))
                                                                     (Prims.of_int (62)))
                                                                     (Prims.mk_range
-                                                                    "experimental/FStar.InteractiveHelpers.Base.fst"
+                                                                    "FStar.InteractiveHelpers.Base.fst"
                                                                     (Prims.of_int (490))
                                                                     (Prims.of_int (6))
                                                                     (Prims.of_int (492))
@@ -3077,13 +3029,13 @@ let rec (deep_apply_subst :
                                                                     Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
                                                                     (Prims.mk_range
-                                                                    "experimental/FStar.InteractiveHelpers.Base.fst"
+                                                                    "FStar.InteractiveHelpers.Base.fst"
                                                                     (Prims.of_int (491))
                                                                     (Prims.of_int (15))
                                                                     (Prims.of_int (491))
                                                                     (Prims.of_int (42)))
                                                                     (Prims.mk_range
-                                                                    "experimental/FStar.InteractiveHelpers.Base.fst"
+                                                                    "FStar.InteractiveHelpers.Base.fst"
                                                                     (Prims.of_int (492))
                                                                     (Prims.of_int (6))
                                                                     (Prims.of_int (492))
@@ -3108,13 +3060,13 @@ let rec (deep_apply_subst :
                                                         Obj.magic
                                                           (FStar_Tactics_Effect.tac_bind
                                                              (Prims.mk_range
-                                                                "experimental/FStar.InteractiveHelpers.Base.fst"
+                                                                "FStar.InteractiveHelpers.Base.fst"
                                                                 (Prims.of_int (494))
                                                                 (Prims.of_int (19))
                                                                 (Prims.of_int (494))
                                                                 (Prims.of_int (58)))
                                                              (Prims.mk_range
-                                                                "experimental/FStar.InteractiveHelpers.Base.fst"
+                                                                "FStar.InteractiveHelpers.Base.fst"
                                                                 (Prims.of_int (495))
                                                                 (Prims.of_int (4))
                                                                 (Prims.of_int (495))
@@ -3142,11 +3094,11 @@ let rec (deep_apply_subst :
                       (Obj.repr
                          (FStar_Tactics_Effect.tac_bind
                             (Prims.mk_range
-                               "experimental/FStar.InteractiveHelpers.Base.fst"
+                               "FStar.InteractiveHelpers.Base.fst"
                                (Prims.of_int (497)) (Prims.of_int (14))
                                (Prims.of_int (497)) (Prims.of_int (42)))
                             (Prims.mk_range
-                               "experimental/FStar.InteractiveHelpers.Base.fst"
+                               "FStar.InteractiveHelpers.Base.fst"
                                (Prims.of_int (498)) (Prims.of_int (4))
                                (Prims.of_int (500)) (Prims.of_int (42)))
                             (Obj.magic (deep_apply_subst e exp subst))
@@ -3155,13 +3107,13 @@ let rec (deep_apply_subst :
                                   Obj.magic
                                     (FStar_Tactics_Effect.tac_bind
                                        (Prims.mk_range
-                                          "experimental/FStar.InteractiveHelpers.Base.fst"
+                                          "FStar.InteractiveHelpers.Base.fst"
                                           (Prims.of_int (498))
                                           (Prims.of_int (13))
                                           (Prims.of_int (498))
                                           (Prims.of_int (40)))
                                        (Prims.mk_range
-                                          "experimental/FStar.InteractiveHelpers.Base.fst"
+                                          "FStar.InteractiveHelpers.Base.fst"
                                           (Prims.of_int (500))
                                           (Prims.of_int (4))
                                           (Prims.of_int (500))
@@ -3182,11 +3134,11 @@ let rec (deep_apply_subst :
                       (Obj.repr
                          (FStar_Tactics_Effect.tac_bind
                             (Prims.mk_range
-                               "experimental/FStar.InteractiveHelpers.Base.fst"
+                               "FStar.InteractiveHelpers.Base.fst"
                                (Prims.of_int (502)) (Prims.of_int (14))
                                (Prims.of_int (502)) (Prims.of_int (42)))
                             (Prims.mk_range
-                               "experimental/FStar.InteractiveHelpers.Base.fst"
+                               "FStar.InteractiveHelpers.Base.fst"
                                (Prims.of_int (503)) (Prims.of_int (4))
                                (Prims.of_int (505)) (Prims.of_int (41)))
                             (Obj.magic (deep_apply_subst e exp subst))
@@ -3195,13 +3147,13 @@ let rec (deep_apply_subst :
                                   Obj.magic
                                     (FStar_Tactics_Effect.tac_bind
                                        (Prims.mk_range
-                                          "experimental/FStar.InteractiveHelpers.Base.fst"
+                                          "FStar.InteractiveHelpers.Base.fst"
                                           (Prims.of_int (503))
                                           (Prims.of_int (12))
                                           (Prims.of_int (503))
                                           (Prims.of_int (46)))
                                        (Prims.mk_range
-                                          "experimental/FStar.InteractiveHelpers.Base.fst"
+                                          "FStar.InteractiveHelpers.Base.fst"
                                           (Prims.of_int (505))
                                           (Prims.of_int (4))
                                           (Prims.of_int (505))
@@ -3234,10 +3186,10 @@ and (deep_apply_subst_in_bv :
     fun bv ->
       fun subst ->
         FStar_Tactics_Effect.tac_bind
-          (Prims.mk_range "experimental/FStar.InteractiveHelpers.Base.fst"
+          (Prims.mk_range "FStar.InteractiveHelpers.Base.fst"
              (Prims.of_int (511)) (Prims.of_int (12)) (Prims.of_int (511))
              (Prims.of_int (25)))
-          (Prims.mk_range "experimental/FStar.InteractiveHelpers.Base.fst"
+          (Prims.mk_range "FStar.InteractiveHelpers.Base.fst"
              (Prims.of_int (512)) (Prims.of_int (2)) (Prims.of_int (514))
              (Prims.of_int (37)))
           (FStar_Tactics_Effect.lift_div_tac
@@ -3246,12 +3198,10 @@ and (deep_apply_subst_in_bv :
              (fun bvv ->
                 Obj.magic
                   (FStar_Tactics_Effect.tac_bind
-                     (Prims.mk_range
-                        "experimental/FStar.InteractiveHelpers.Base.fst"
+                     (Prims.mk_range "FStar.InteractiveHelpers.Base.fst"
                         (Prims.of_int (512)) (Prims.of_int (11))
                         (Prims.of_int (512)) (Prims.of_int (47)))
-                     (Prims.mk_range
-                        "experimental/FStar.InteractiveHelpers.Base.fst"
+                     (Prims.mk_range "FStar.InteractiveHelpers.Base.fst"
                         (Prims.of_int (513)) (Prims.of_int (2))
                         (Prims.of_int (514)) (Prims.of_int (37)))
                      (Obj.magic
@@ -3262,11 +3212,11 @@ and (deep_apply_subst_in_bv :
                            Obj.magic
                              (FStar_Tactics_Effect.tac_bind
                                 (Prims.mk_range
-                                   "experimental/FStar.InteractiveHelpers.Base.fst"
+                                   "FStar.InteractiveHelpers.Base.fst"
                                    (Prims.of_int (513)) (Prims.of_int (12))
                                    (Prims.of_int (513)) (Prims.of_int (51)))
                                 (Prims.mk_range
-                                   "experimental/FStar.InteractiveHelpers.Base.fst"
+                                   "FStar.InteractiveHelpers.Base.fst"
                                    (Prims.of_int (514)) (Prims.of_int (2))
                                    (Prims.of_int (514)) (Prims.of_int (37)))
                                 (Obj.magic
@@ -3277,13 +3227,13 @@ and (deep_apply_subst_in_bv :
                                       Obj.magic
                                         (FStar_Tactics_Effect.tac_bind
                                            (Prims.mk_range
-                                              "experimental/FStar.InteractiveHelpers.Base.fst"
+                                              "FStar.InteractiveHelpers.Base.fst"
                                               (Prims.of_int (514))
                                               (Prims.of_int (30))
                                               (Prims.of_int (514))
                                               (Prims.of_int (32)))
                                            (Prims.mk_range
-                                              "experimental/FStar.InteractiveHelpers.Base.fst"
+                                              "FStar.InteractiveHelpers.Base.fst"
                                               (Prims.of_int (514))
                                               (Prims.of_int (2))
                                               (Prims.of_int (514))
@@ -3291,13 +3241,13 @@ and (deep_apply_subst_in_bv :
                                            (Obj.magic
                                               (FStar_Tactics_Effect.tac_bind
                                                  (Prims.mk_range
-                                                    "experimental/FStar.InteractiveHelpers.Base.fst"
+                                                    "FStar.InteractiveHelpers.Base.fst"
                                                     (Prims.of_int (514))
                                                     (Prims.of_int (7))
                                                     (Prims.of_int (514))
                                                     (Prims.of_int (30)))
                                                  (Prims.mk_range
-                                                    "experimental/FStar.InteractiveHelpers.Base.fst"
+                                                    "FStar.InteractiveHelpers.Base.fst"
                                                     (Prims.of_int (514))
                                                     (Prims.of_int (30))
                                                     (Prims.of_int (514))
@@ -3305,13 +3255,13 @@ and (deep_apply_subst_in_bv :
                                                  (Obj.magic
                                                     (FStar_Tactics_Effect.tac_bind
                                                        (Prims.mk_range
-                                                          "experimental/FStar.InteractiveHelpers.Base.fst"
+                                                          "FStar.InteractiveHelpers.Base.fst"
                                                           (Prims.of_int (514))
                                                           (Prims.of_int (12))
                                                           (Prims.of_int (514))
                                                           (Prims.of_int (29)))
                                                        (Prims.mk_range
-                                                          "experimental/FStar.InteractiveHelpers.Base.fst"
+                                                          "FStar.InteractiveHelpers.Base.fst"
                                                           (Prims.of_int (514))
                                                           (Prims.of_int (7))
                                                           (Prims.of_int (514))
@@ -3344,10 +3294,10 @@ and (deep_apply_subst_in_binder :
     fun br ->
       fun subst ->
         FStar_Tactics_Effect.tac_bind
-          (Prims.mk_range "experimental/FStar.InteractiveHelpers.Base.fst"
+          (Prims.mk_range "FStar.InteractiveHelpers.Base.fst"
              (Prims.of_int (520)) (Prims.of_int (26)) (Prims.of_int (520))
              (Prims.of_int (43)))
-          (Prims.mk_range "experimental/FStar.InteractiveHelpers.Base.fst"
+          (Prims.mk_range "FStar.InteractiveHelpers.Base.fst"
              (Prims.of_int (520)) (Prims.of_int (2)) (Prims.of_int (522))
              (Prims.of_int (34)))
           (FStar_Tactics_Effect.lift_div_tac
@@ -3358,12 +3308,10 @@ and (deep_apply_subst_in_binder :
                 | (bv, (qual, attrs)) ->
                     Obj.magic
                       (FStar_Tactics_Effect.tac_bind
-                         (Prims.mk_range
-                            "experimental/FStar.InteractiveHelpers.Base.fst"
+                         (Prims.mk_range "FStar.InteractiveHelpers.Base.fst"
                             (Prims.of_int (521)) (Prims.of_int (18))
                             (Prims.of_int (521)) (Prims.of_int (51)))
-                         (Prims.mk_range
-                            "experimental/FStar.InteractiveHelpers.Base.fst"
+                         (Prims.mk_range "FStar.InteractiveHelpers.Base.fst"
                             (Prims.of_int (521)) (Prims.of_int (2))
                             (Prims.of_int (522)) (Prims.of_int (34)))
                          (Obj.magic (deep_apply_subst_in_bv e bv subst))
@@ -3384,10 +3332,10 @@ and (deep_apply_subst_in_comp :
     fun c ->
       fun subst ->
         FStar_Tactics_Effect.tac_bind
-          (Prims.mk_range "experimental/FStar.InteractiveHelpers.Base.fst"
+          (Prims.mk_range "FStar.InteractiveHelpers.Base.fst"
              (Prims.of_int (525)) (Prims.of_int (14)) (Prims.of_int (525))
              (Prims.of_int (51)))
-          (Prims.mk_range "experimental/FStar.InteractiveHelpers.Base.fst"
+          (Prims.mk_range "FStar.InteractiveHelpers.Base.fst"
              (Prims.of_int (526)) (Prims.of_int (2)) (Prims.of_int (548))
              (Prims.of_int (55)))
           (FStar_Tactics_Effect.lift_div_tac
@@ -3396,12 +3344,10 @@ and (deep_apply_subst_in_comp :
              (fun subst1 ->
                 Obj.magic
                   (FStar_Tactics_Effect.tac_bind
-                     (Prims.mk_range
-                        "experimental/FStar.InteractiveHelpers.Base.fst"
+                     (Prims.mk_range "FStar.InteractiveHelpers.Base.fst"
                         (Prims.of_int (527)) (Prims.of_int (4))
                         (Prims.of_int (530)) (Prims.of_int (34)))
-                     (Prims.mk_range
-                        "experimental/FStar.InteractiveHelpers.Base.fst"
+                     (Prims.mk_range "FStar.InteractiveHelpers.Base.fst"
                         (Prims.of_int (532)) (Prims.of_int (2))
                         (Prims.of_int (548)) (Prims.of_int (55)))
                      (FStar_Tactics_Effect.lift_div_tac
@@ -3425,13 +3371,13 @@ and (deep_apply_subst_in_comp :
                                         (Obj.repr
                                            (FStar_Tactics_Effect.tac_bind
                                               (Prims.mk_range
-                                                 "experimental/FStar.InteractiveHelpers.Base.fst"
+                                                 "FStar.InteractiveHelpers.Base.fst"
                                                  (Prims.of_int (530))
                                                  (Prims.of_int (25))
                                                  (Prims.of_int (530))
                                                  (Prims.of_int (34)))
                                               (Prims.mk_range
-                                                 "experimental/FStar.InteractiveHelpers.Base.fst"
+                                                 "FStar.InteractiveHelpers.Base.fst"
                                                  (Prims.of_int (530))
                                                  (Prims.of_int (18))
                                                  (Prims.of_int (530))
@@ -3451,13 +3397,13 @@ and (deep_apply_subst_in_comp :
                                Obj.magic
                                  (FStar_Tactics_Effect.tac_bind
                                     (Prims.mk_range
-                                       "experimental/FStar.InteractiveHelpers.Base.fst"
+                                       "FStar.InteractiveHelpers.Base.fst"
                                        (Prims.of_int (534))
                                        (Prims.of_int (14))
                                        (Prims.of_int (534))
                                        (Prims.of_int (23)))
                                     (Prims.mk_range
-                                       "experimental/FStar.InteractiveHelpers.Base.fst"
+                                       "FStar.InteractiveHelpers.Base.fst"
                                        (Prims.of_int (535))
                                        (Prims.of_int (4))
                                        (Prims.of_int (535))
@@ -3473,13 +3419,13 @@ and (deep_apply_subst_in_comp :
                                Obj.magic
                                  (FStar_Tactics_Effect.tac_bind
                                     (Prims.mk_range
-                                       "experimental/FStar.InteractiveHelpers.Base.fst"
+                                       "FStar.InteractiveHelpers.Base.fst"
                                        (Prims.of_int (537))
                                        (Prims.of_int (14))
                                        (Prims.of_int (537))
                                        (Prims.of_int (23)))
                                     (Prims.mk_range
-                                       "experimental/FStar.InteractiveHelpers.Base.fst"
+                                       "FStar.InteractiveHelpers.Base.fst"
                                        (Prims.of_int (538))
                                        (Prims.of_int (4))
                                        (Prims.of_int (538))
@@ -3496,13 +3442,13 @@ and (deep_apply_subst_in_comp :
                                Obj.magic
                                  (FStar_Tactics_Effect.tac_bind
                                     (Prims.mk_range
-                                       "experimental/FStar.InteractiveHelpers.Base.fst"
+                                       "FStar.InteractiveHelpers.Base.fst"
                                        (Prims.of_int (540))
                                        (Prims.of_int (14))
                                        (Prims.of_int (540))
                                        (Prims.of_int (23)))
                                     (Prims.mk_range
-                                       "experimental/FStar.InteractiveHelpers.Base.fst"
+                                       "FStar.InteractiveHelpers.Base.fst"
                                        (Prims.of_int (541))
                                        (Prims.of_int (4))
                                        (Prims.of_int (543))
@@ -3513,13 +3459,13 @@ and (deep_apply_subst_in_comp :
                                           Obj.magic
                                             (FStar_Tactics_Effect.tac_bind
                                                (Prims.mk_range
-                                                  "experimental/FStar.InteractiveHelpers.Base.fst"
+                                                  "FStar.InteractiveHelpers.Base.fst"
                                                   (Prims.of_int (541))
                                                   (Prims.of_int (15))
                                                   (Prims.of_int (541))
                                                   (Prims.of_int (25)))
                                                (Prims.mk_range
-                                                  "experimental/FStar.InteractiveHelpers.Base.fst"
+                                                  "FStar.InteractiveHelpers.Base.fst"
                                                   (Prims.of_int (542))
                                                   (Prims.of_int (4))
                                                   (Prims.of_int (543))
@@ -3530,13 +3476,13 @@ and (deep_apply_subst_in_comp :
                                                      Obj.magic
                                                        (FStar_Tactics_Effect.tac_bind
                                                           (Prims.mk_range
-                                                             "experimental/FStar.InteractiveHelpers.Base.fst"
+                                                             "FStar.InteractiveHelpers.Base.fst"
                                                              (Prims.of_int (542))
                                                              (Prims.of_int (19))
                                                              (Prims.of_int (542))
                                                              (Prims.of_int (33)))
                                                           (Prims.mk_range
-                                                             "experimental/FStar.InteractiveHelpers.Base.fst"
+                                                             "FStar.InteractiveHelpers.Base.fst"
                                                              (Prims.of_int (543))
                                                              (Prims.of_int (4))
                                                              (Prims.of_int (543))
@@ -3558,13 +3504,13 @@ and (deep_apply_subst_in_comp :
                                Obj.magic
                                  (FStar_Tactics_Effect.tac_bind
                                     (Prims.mk_range
-                                       "experimental/FStar.InteractiveHelpers.Base.fst"
+                                       "FStar.InteractiveHelpers.Base.fst"
                                        (Prims.of_int (545))
                                        (Prims.of_int (17))
                                        (Prims.of_int (545))
                                        (Prims.of_int (29)))
                                     (Prims.mk_range
-                                       "experimental/FStar.InteractiveHelpers.Base.fst"
+                                       "FStar.InteractiveHelpers.Base.fst"
                                        (Prims.of_int (546))
                                        (Prims.of_int (4))
                                        (Prims.of_int (548))
@@ -3575,13 +3521,13 @@ and (deep_apply_subst_in_comp :
                                           Obj.magic
                                             (FStar_Tactics_Effect.tac_bind
                                                (Prims.mk_range
-                                                  "experimental/FStar.InteractiveHelpers.Base.fst"
+                                                  "FStar.InteractiveHelpers.Base.fst"
                                                   (Prims.of_int (546))
                                                   (Prims.of_int (19))
                                                   (Prims.of_int (546))
                                                   (Prims.of_int (76)))
                                                (Prims.mk_range
-                                                  "experimental/FStar.InteractiveHelpers.Base.fst"
+                                                  "FStar.InteractiveHelpers.Base.fst"
                                                   (Prims.of_int (547))
                                                   (Prims.of_int (4))
                                                   (Prims.of_int (548))
@@ -3593,13 +3539,13 @@ and (deep_apply_subst_in_comp :
                                                         | (x, a) ->
                                                             FStar_Tactics_Effect.tac_bind
                                                               (Prims.mk_range
-                                                                 "experimental/FStar.InteractiveHelpers.Base.fst"
+                                                                 "FStar.InteractiveHelpers.Base.fst"
                                                                  (Prims.of_int (546))
                                                                  (Prims.of_int (39))
                                                                  (Prims.of_int (546))
                                                                  (Prims.of_int (46)))
                                                               (Prims.mk_range
-                                                                 "experimental/FStar.InteractiveHelpers.Base.fst"
+                                                                 "FStar.InteractiveHelpers.Base.fst"
                                                                  (Prims.of_int (546))
                                                                  (Prims.of_int (38))
                                                                  (Prims.of_int (546))
@@ -3612,13 +3558,13 @@ and (deep_apply_subst_in_comp :
                                                                     Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
                                                                     (Prims.mk_range
-                                                                    "experimental/FStar.InteractiveHelpers.Base.fst"
+                                                                    "FStar.InteractiveHelpers.Base.fst"
                                                                     (Prims.of_int (546))
                                                                     (Prims.of_int (48))
                                                                     (Prims.of_int (546))
                                                                     (Prims.of_int (65)))
                                                                     (Prims.mk_range
-                                                                    "experimental/FStar.InteractiveHelpers.Base.fst"
+                                                                    "FStar.InteractiveHelpers.Base.fst"
                                                                     (Prims.of_int (546))
                                                                     (Prims.of_int (38))
                                                                     (Prims.of_int (546))
@@ -3640,13 +3586,13 @@ and (deep_apply_subst_in_comp :
                                                      Obj.magic
                                                        (FStar_Tactics_Effect.tac_bind
                                                           (Prims.mk_range
-                                                             "experimental/FStar.InteractiveHelpers.Base.fst"
+                                                             "FStar.InteractiveHelpers.Base.fst"
                                                              (Prims.of_int (547))
                                                              (Prims.of_int (16))
                                                              (Prims.of_int (547))
                                                              (Prims.of_int (31)))
                                                           (Prims.mk_range
-                                                             "experimental/FStar.InteractiveHelpers.Base.fst"
+                                                             "FStar.InteractiveHelpers.Base.fst"
                                                              (Prims.of_int (548))
                                                              (Prims.of_int (4))
                                                              (Prims.of_int (548))
@@ -3692,11 +3638,11 @@ and (deep_apply_subst_in_pattern :
                      (Obj.repr
                         (FStar_Tactics_Effect.tac_bind
                            (Prims.mk_range
-                              "experimental/FStar.InteractiveHelpers.Base.fst"
+                              "FStar.InteractiveHelpers.Base.fst"
                               (Prims.of_int (557)) (Prims.of_int (6))
                               (Prims.of_int (559)) (Prims.of_int (69)))
                            (Prims.mk_range
-                              "experimental/FStar.InteractiveHelpers.Base.fst"
+                              "FStar.InteractiveHelpers.Base.fst"
                               (Prims.of_int (556)) (Prims.of_int (4))
                               (Prims.of_int (561)) (Prims.of_int (34)))
                            (Obj.magic
@@ -3707,13 +3653,13 @@ and (deep_apply_subst_in_pattern :
                                       | ((pat1, b), (pats, subst1)) ->
                                           FStar_Tactics_Effect.tac_bind
                                             (Prims.mk_range
-                                               "experimental/FStar.InteractiveHelpers.Base.fst"
+                                               "FStar.InteractiveHelpers.Base.fst"
                                                (Prims.of_int (558))
                                                (Prims.of_int (39))
                                                (Prims.of_int (558))
                                                (Prims.of_int (78)))
                                             (Prims.mk_range
-                                               "experimental/FStar.InteractiveHelpers.Base.fst"
+                                               "FStar.InteractiveHelpers.Base.fst"
                                                (Prims.of_int (558))
                                                (Prims.of_int (22))
                                                (Prims.of_int (559))
@@ -3741,11 +3687,11 @@ and (deep_apply_subst_in_pattern :
                      (Obj.repr
                         (FStar_Tactics_Effect.tac_bind
                            (Prims.mk_range
-                              "experimental/FStar.InteractiveHelpers.Base.fst"
+                              "FStar.InteractiveHelpers.Base.fst"
                               (Prims.of_int (563)) (Prims.of_int (20))
                               (Prims.of_int (563)) (Prims.of_int (53)))
                            (Prims.mk_range
-                              "experimental/FStar.InteractiveHelpers.Base.fst"
+                              "FStar.InteractiveHelpers.Base.fst"
                               (Prims.of_int (563)) (Prims.of_int (4))
                               (Prims.of_int (564)) (Prims.of_int (21)))
                            (Obj.magic (deep_apply_subst_in_bv e bv subst))
@@ -3761,11 +3707,11 @@ and (deep_apply_subst_in_pattern :
                      (Obj.repr
                         (FStar_Tactics_Effect.tac_bind
                            (Prims.mk_range
-                              "experimental/FStar.InteractiveHelpers.Base.fst"
+                              "FStar.InteractiveHelpers.Base.fst"
                               (Prims.of_int (566)) (Prims.of_int (20))
                               (Prims.of_int (566)) (Prims.of_int (53)))
                            (Prims.mk_range
-                              "experimental/FStar.InteractiveHelpers.Base.fst"
+                              "FStar.InteractiveHelpers.Base.fst"
                               (Prims.of_int (566)) (Prims.of_int (4))
                               (Prims.of_int (567)) (Prims.of_int (22)))
                            (Obj.magic (deep_apply_subst_in_bv e bv subst))
@@ -3781,21 +3727,21 @@ and (deep_apply_subst_in_pattern :
                      (Obj.repr
                         (FStar_Tactics_Effect.tac_bind
                            (Prims.mk_range
-                              "experimental/FStar.InteractiveHelpers.Base.fst"
+                              "FStar.InteractiveHelpers.Base.fst"
                               (Prims.of_int (569)) (Prims.of_int (4))
                               (Prims.of_int (569)) (Prims.of_int (69)))
                            (Prims.mk_range
-                              "experimental/FStar.InteractiveHelpers.Base.fst"
+                              "FStar.InteractiveHelpers.Base.fst"
                               (Prims.of_int (569)) (Prims.of_int (4))
                               (Prims.of_int (569)) (Prims.of_int (76)))
                            (Obj.magic
                               (FStar_Tactics_Effect.tac_bind
                                  (Prims.mk_range
-                                    "experimental/FStar.InteractiveHelpers.Base.fst"
+                                    "FStar.InteractiveHelpers.Base.fst"
                                     (Prims.of_int (569)) (Prims.of_int (17))
                                     (Prims.of_int (569)) (Prims.of_int (69)))
                                  (Prims.mk_range
-                                    "experimental/FStar.InteractiveHelpers.Base.fst"
+                                    "FStar.InteractiveHelpers.Base.fst"
                                     (Prims.of_int (569)) (Prims.of_int (4))
                                     (Prims.of_int (569)) (Prims.of_int (69)))
                                  (Obj.magic
@@ -3847,11 +3793,11 @@ let (opt_apply_subst :
                      (Obj.repr
                         (FStar_Tactics_Effect.tac_bind
                            (Prims.mk_range
-                              "experimental/FStar.InteractiveHelpers.Base.fst"
+                              "FStar.InteractiveHelpers.Base.fst"
                               (Prims.of_int (585)) (Prims.of_int (19))
                               (Prims.of_int (585)) (Prims.of_int (42)))
                            (Prims.mk_range
-                              "experimental/FStar.InteractiveHelpers.Base.fst"
+                              "FStar.InteractiveHelpers.Base.fst"
                               (Prims.of_int (585)) (Prims.of_int (14))
                               (Prims.of_int (585)) (Prims.of_int (42)))
                            (Obj.magic (apply_subst e t subst))
@@ -3885,11 +3831,11 @@ let rec (_generate_shadowed_subst :
                      (Obj.repr
                         (FStar_Tactics_Effect.tac_bind
                            (Prims.mk_range
-                              "experimental/FStar.InteractiveHelpers.Base.fst"
+                              "FStar.InteractiveHelpers.Base.fst"
                               (Prims.of_int (604)) (Prims.of_int (10))
                               (Prims.of_int (604)) (Prims.of_int (19)))
                            (Prims.mk_range
-                              "experimental/FStar.InteractiveHelpers.Base.fst"
+                              "FStar.InteractiveHelpers.Base.fst"
                               (Prims.of_int (604)) (Prims.of_int (4))
                               (Prims.of_int (618)) (Prims.of_int (55)))
                            (Obj.magic (FStar_Tactics_Builtins.inspect t))
@@ -3901,13 +3847,13 @@ let rec (_generate_shadowed_subst :
                                      Obj.magic
                                        (FStar_Tactics_Effect.tac_bind
                                           (Prims.mk_range
-                                             "experimental/FStar.InteractiveHelpers.Base.fst"
+                                             "FStar.InteractiveHelpers.Base.fst"
                                              (Prims.of_int (607))
                                              (Prims.of_int (18))
                                              (Prims.of_int (607))
                                              (Prims.of_int (34)))
                                           (Prims.mk_range
-                                             "experimental/FStar.InteractiveHelpers.Base.fst"
+                                             "FStar.InteractiveHelpers.Base.fst"
                                              (Prims.of_int (607))
                                              (Prims.of_int (6))
                                              (Prims.of_int (617))
@@ -3923,13 +3869,13 @@ let rec (_generate_shadowed_subst :
                                                     Obj.magic
                                                       (FStar_Tactics_Effect.tac_bind
                                                          (Prims.mk_range
-                                                            "experimental/FStar.InteractiveHelpers.Base.fst"
+                                                            "FStar.InteractiveHelpers.Base.fst"
                                                             (Prims.of_int (608))
                                                             (Prims.of_int (16))
                                                             (Prims.of_int (608))
                                                             (Prims.of_int (29)))
                                                          (Prims.mk_range
-                                                            "experimental/FStar.InteractiveHelpers.Base.fst"
+                                                            "FStar.InteractiveHelpers.Base.fst"
                                                             (Prims.of_int (609))
                                                             (Prims.of_int (6))
                                                             (Prims.of_int (617))
@@ -3944,14 +3890,14 @@ let rec (_generate_shadowed_subst :
                                                                  (FStar_Tactics_Effect.tac_bind
                                                                     (
                                                                     Prims.mk_range
-                                                                    "experimental/FStar.InteractiveHelpers.Base.fst"
+                                                                    "FStar.InteractiveHelpers.Base.fst"
                                                                     (Prims.of_int (609))
                                                                     (Prims.of_int (15))
                                                                     (Prims.of_int (609))
                                                                     (Prims.of_int (26)))
                                                                     (
                                                                     Prims.mk_range
-                                                                    "experimental/FStar.InteractiveHelpers.Base.fst"
+                                                                    "FStar.InteractiveHelpers.Base.fst"
                                                                     (Prims.of_int (610))
                                                                     (Prims.of_int (6))
                                                                     (Prims.of_int (617))
@@ -3969,13 +3915,13 @@ let rec (_generate_shadowed_subst :
                                                                     Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
                                                                     (Prims.mk_range
-                                                                    "experimental/FStar.InteractiveHelpers.Base.fst"
+                                                                    "FStar.InteractiveHelpers.Base.fst"
                                                                     (Prims.of_int (610))
                                                                     (Prims.of_int (17))
                                                                     (Prims.of_int (610))
                                                                     (Prims.of_int (30)))
                                                                     (Prims.mk_range
-                                                                    "experimental/FStar.InteractiveHelpers.Base.fst"
+                                                                    "FStar.InteractiveHelpers.Base.fst"
                                                                     (Prims.of_int (611))
                                                                     (Prims.of_int (6))
                                                                     (Prims.of_int (617))
@@ -3991,13 +3937,13 @@ let rec (_generate_shadowed_subst :
                                                                     Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
                                                                     (Prims.mk_range
-                                                                    "experimental/FStar.InteractiveHelpers.Base.fst"
+                                                                    "FStar.InteractiveHelpers.Base.fst"
                                                                     (Prims.of_int (611))
                                                                     (Prims.of_int (23))
                                                                     (Prims.of_int (611))
                                                                     (Prims.of_int (61)))
                                                                     (Prims.mk_range
-                                                                    "experimental/FStar.InteractiveHelpers.Base.fst"
+                                                                    "FStar.InteractiveHelpers.Base.fst"
                                                                     (Prims.of_int (611))
                                                                     (Prims.of_int (6))
                                                                     (Prims.of_int (617))
@@ -4020,13 +3966,13 @@ let rec (_generate_shadowed_subst :
                                                                     Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
                                                                     (Prims.mk_range
-                                                                    "experimental/FStar.InteractiveHelpers.Base.fst"
+                                                                    "FStar.InteractiveHelpers.Base.fst"
                                                                     (Prims.of_int (612))
                                                                     (Prims.of_int (15))
                                                                     (Prims.of_int (612))
                                                                     (Prims.of_int (47)))
                                                                     (Prims.mk_range
-                                                                    "experimental/FStar.InteractiveHelpers.Base.fst"
+                                                                    "FStar.InteractiveHelpers.Base.fst"
                                                                     (Prims.of_int (613))
                                                                     (Prims.of_int (6))
                                                                     (Prims.of_int (617))
@@ -4034,13 +3980,13 @@ let rec (_generate_shadowed_subst :
                                                                     (Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
                                                                     (Prims.mk_range
-                                                                    "experimental/FStar.InteractiveHelpers.Base.fst"
+                                                                    "FStar.InteractiveHelpers.Base.fst"
                                                                     (Prims.of_int (612))
                                                                     (Prims.of_int (26))
                                                                     (Prims.of_int (612))
                                                                     (Prims.of_int (47)))
                                                                     (Prims.mk_range
-                                                                    "experimental/FStar.InteractiveHelpers.Base.fst"
+                                                                    "FStar.InteractiveHelpers.Base.fst"
                                                                     (Prims.of_int (612))
                                                                     (Prims.of_int (15))
                                                                     (Prims.of_int (612))
@@ -4048,13 +3994,13 @@ let rec (_generate_shadowed_subst :
                                                                     (Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
                                                                     (Prims.mk_range
-                                                                    "experimental/FStar.InteractiveHelpers.Base.fst"
+                                                                    "FStar.InteractiveHelpers.Base.fst"
                                                                     (Prims.of_int (612))
                                                                     (Prims.of_int (27))
                                                                     (Prims.of_int (612))
                                                                     (Prims.of_int (46)))
                                                                     (Prims.mk_range
-                                                                    "experimental/FStar.InteractiveHelpers.Base.fst"
+                                                                    "FStar.InteractiveHelpers.Base.fst"
                                                                     (Prims.of_int (612))
                                                                     (Prims.of_int (26))
                                                                     (Prims.of_int (612))
@@ -4083,13 +4029,13 @@ let rec (_generate_shadowed_subst :
                                                                     Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
                                                                     (Prims.mk_range
-                                                                    "experimental/FStar.InteractiveHelpers.Base.fst"
+                                                                    "FStar.InteractiveHelpers.Base.fst"
                                                                     (Prims.of_int (613))
                                                                     (Prims.of_int (15))
                                                                     (Prims.of_int (613))
                                                                     (Prims.of_int (42)))
                                                                     (Prims.mk_range
-                                                                    "experimental/FStar.InteractiveHelpers.Base.fst"
+                                                                    "FStar.InteractiveHelpers.Base.fst"
                                                                     (Prims.of_int (615))
                                                                     (Prims.of_int (6))
                                                                     (Prims.of_int (617))
@@ -4105,13 +4051,13 @@ let rec (_generate_shadowed_subst :
                                                                     Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
                                                                     (Prims.mk_range
-                                                                    "experimental/FStar.InteractiveHelpers.Base.fst"
+                                                                    "FStar.InteractiveHelpers.Base.fst"
                                                                     (Prims.of_int (615))
                                                                     (Prims.of_int (22))
                                                                     (Prims.of_int (615))
                                                                     (Prims.of_int (58)))
                                                                     (Prims.mk_range
-                                                                    "experimental/FStar.InteractiveHelpers.Base.fst"
+                                                                    "FStar.InteractiveHelpers.Base.fst"
                                                                     (Prims.of_int (615))
                                                                     (Prims.of_int (6))
                                                                     (Prims.of_int (617))
@@ -4154,10 +4100,10 @@ let (generate_shadowed_subst :
   =
   fun ge ->
     FStar_Tactics_Effect.tac_bind
-      (Prims.mk_range "experimental/FStar.InteractiveHelpers.Base.fst"
+      (Prims.mk_range "FStar.InteractiveHelpers.Base.fst"
          (Prims.of_int (622)) (Prims.of_int (12)) (Prims.of_int (622))
          (Prims.of_int (33)))
-      (Prims.mk_range "experimental/FStar.InteractiveHelpers.Base.fst"
+      (Prims.mk_range "FStar.InteractiveHelpers.Base.fst"
          (Prims.of_int (623)) (Prims.of_int (2)) (Prims.of_int (625))
          (Prims.of_int (39)))
       (FStar_Tactics_Effect.lift_div_tac
@@ -4166,12 +4112,10 @@ let (generate_shadowed_subst :
          (fun bvl ->
             Obj.magic
               (FStar_Tactics_Effect.tac_bind
-                 (Prims.mk_range
-                    "experimental/FStar.InteractiveHelpers.Base.fst"
+                 (Prims.mk_range "FStar.InteractiveHelpers.Base.fst"
                     (Prims.of_int (623)) (Prims.of_int (11))
                     (Prims.of_int (623)) (Prims.of_int (37)))
-                 (Prims.mk_range
-                    "experimental/FStar.InteractiveHelpers.Base.fst"
+                 (Prims.mk_range "FStar.InteractiveHelpers.Base.fst"
                     (Prims.of_int (624)) (Prims.of_int (2))
                     (Prims.of_int (625)) (Prims.of_int (39)))
                  (FStar_Tactics_Effect.lift_div_tac
@@ -4183,11 +4127,11 @@ let (generate_shadowed_subst :
                        Obj.magic
                          (FStar_Tactics_Effect.tac_bind
                             (Prims.mk_range
-                               "experimental/FStar.InteractiveHelpers.Base.fst"
+                               "FStar.InteractiveHelpers.Base.fst"
                                (Prims.of_int (624)) (Prims.of_int (14))
                                (Prims.of_int (624)) (Prims.of_int (29)))
                             (Prims.mk_range
-                               "experimental/FStar.InteractiveHelpers.Base.fst"
+                               "FStar.InteractiveHelpers.Base.fst"
                                (Prims.of_int (625)) (Prims.of_int (2))
                                (Prims.of_int (625)) (Prims.of_int (39)))
                             (Obj.magic
