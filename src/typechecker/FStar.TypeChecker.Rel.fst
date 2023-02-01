@@ -4662,8 +4662,19 @@ let sub_or_eq_comp env (use_eq:bool) c1 c2 =
   (Some (Ident.string_of_lid (Env.current_module env)))
   "FStar.TypeChecker.Rel.sub_comp"
 
-let sub_comp env c1 c2 = sub_or_eq_comp env false c1 c2
-let eq_comp env c1 c2 = sub_or_eq_comp env true c1 c2
+let sub_comp env c1 c2 =
+    Errors.with_ctx "While trying to subtype computation types" (fun () ->
+      def_check_comp_closed_in_env c1.pos "sub_comp c1" env c1;
+      def_check_comp_closed_in_env c2.pos "sub_comp c2" env c2;
+      sub_or_eq_comp env false c1 c2
+    )
+
+let eq_comp env c1 c2 =
+    Errors.with_ctx "While trying to equate computation types" (fun () ->
+      def_check_comp_closed_in_env c1.pos "sub_comp c1" env c1;
+      def_check_comp_closed_in_env c2.pos "sub_comp c2" env c2;
+      sub_or_eq_comp env true c1 c2
+    )
 
 let solve_universe_inequalities' tx env (variables, ineqs) : unit =
    //variables: ?u1, ..., ?un are the universes of the inductive types we're trying to compute
@@ -4971,16 +4982,24 @@ let check_subtyping env t1 t2 =
   "FStar.TypeChecker.Rel.check_subtyping"
 
 let get_subtyping_predicate env t1 t2 =
+  Errors.with_ctx "While trying to get a subtyping predicate" (fun () ->
+    def_check_closed_in_env t1.pos "get_subtyping_predicate.1" env t1;
+    def_check_closed_in_env t2.pos "get_subtyping_predicate.2" env t2;
     match check_subtyping env t1 t2 with
     | None -> None
     | Some (x, g) ->
       Some (abstract_guard (S.mk_binder x) g)
+  )
 
 let get_subtyping_prop env t1 t2 =
+  Errors.with_ctx "While trying to get a subtyping proposition" (fun () ->
+    def_check_closed_in_env t1.pos "get_subtyping_prop.1" env t1;
+    def_check_closed_in_env t2.pos "get_subtyping_prop.2" env t2;
     match check_subtyping env t1 t2 with
     | None -> None
     | Some (x, g) ->
       Some (close_guard env [S.mk_binder x] g)
+  )
 
 (*
  * Solve the uni-valued implicits
