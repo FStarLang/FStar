@@ -69,7 +69,7 @@ let extend_env_l (f:R.env) (g:env) : R.env =
   L.fold_right 
     (fun (x, b) g ->  
       let t = elab_binding b in
-      RT.extend_env g x t)
+      RT.extend_env g x (RT.term_no_pp t))
      g
      f
 
@@ -302,7 +302,7 @@ type src_typing (f:RT.fstar_top_env) : env -> term -> pure_comp -> Type =
       g:env ->
       e:pure_term ->
       ty:pure_term ->
-      RT.typing (extend_env_l f g) (elab_pure e) (elab_pure ty) ->
+      RT.typing (extend_env_l f g) (RT.term_no_pp (elab_pure e)) (RT.term_no_pp (elab_pure ty)) ->
       src_typing f g e (C_Tot ty)
 
   | T_Abs: 

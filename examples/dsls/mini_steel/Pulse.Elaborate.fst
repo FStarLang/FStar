@@ -228,20 +228,20 @@ let elab_frame (c:pure_comp_st) (frame:pure_term) (e:R.term) =
   let pre = elab_pure (comp_pre c) in
   let post = elab_pure (comp_post c) in
   if C_ST? c
-  then mk_frame_stt u ty pre (mk_abs ty R.Q_Explicit post) (elab_pure frame) e
+  then mk_frame_stt u ty pre (RT.mk_abs_with_name "_" ty R.Q_Explicit post) (elab_pure frame) e
   else let opened = elab_pure (comp_inames c) in      
        if C_STAtomic? c
-       then mk_frame_stt_atomic u ty opened pre (mk_abs ty R.Q_Explicit post) (elab_pure frame) e
+       then mk_frame_stt_atomic u ty opened pre (RT.mk_abs_with_name "_" ty R.Q_Explicit post) (elab_pure frame) e
        else let _ = assert (C_STGhost? c) in
-            mk_frame_stt_ghost u ty opened pre (mk_abs ty R.Q_Explicit post) (elab_pure frame) e
+            mk_frame_stt_ghost u ty opened pre (RT.mk_abs_with_name "_" ty R.Q_Explicit post) (elab_pure frame) e
 
 let elab_sub (c1 c2:pure_comp_st) (e:R.term) =
   let ty = elab_pure (comp_res c1) in
   let u = elab_universe (comp_u c1) in
   let pre1 = elab_pure (comp_pre c1) in
   let pre2 = elab_pure (comp_pre c2) in
-  let post1 = mk_abs ty R.Q_Explicit (elab_pure (comp_post c1)) in
-  let post2 = mk_abs ty R.Q_Explicit (elab_pure (comp_post c2)) in
+  let post1 = RT.mk_abs_with_name "_" ty R.Q_Explicit (elab_pure (comp_post c1)) in
+  let post2 = RT.mk_abs_with_name "_" ty R.Q_Explicit (elab_pure (comp_post c2)) in
   if C_ST? c1
   then mk_sub_stt u ty pre1 pre2 post1 post2 e
   else let opened = elab_pure (comp_inames c1) in
@@ -268,8 +268,8 @@ let rec elab_bind #f #g #x #c1 #c2 #c
         (elab_universe (comp_u c2))
         t1 t2
         (elab_pure (comp_pre c1))
-        (mk_abs t1 R.Q_Explicit (elab_pure (comp_post c1)))
-        (mk_abs t2 R.Q_Explicit (elab_pure (comp_post c2)))
+        (RT.mk_abs_with_name "_" t1 R.Q_Explicit (elab_pure (comp_post c1)))
+        (RT.mk_abs_with_name "_" t2 R.Q_Explicit (elab_pure (comp_post c2)))
         e1 e2
     else 
       mk_bind_ghost
@@ -278,8 +278,8 @@ let rec elab_bind #f #g #x #c1 #c2 #c
         t1 t2
         (elab_pure (comp_inames c1))
         (elab_pure (comp_pre c1))
-        (mk_abs t1 R.Q_Explicit (elab_pure (comp_post c1)))
-        (mk_abs t2 R.Q_Explicit (elab_pure (comp_post c2)))
+        (RT.mk_abs_with_name "_" t1 R.Q_Explicit (elab_pure (comp_post c1)))
+        (RT.mk_abs_with_name "_" t2 R.Q_Explicit (elab_pure (comp_post c2)))
         e1 e2
 
   | Bind_comp_ghost_l _ _ _ _ (| reveal_a, reveal_a_typing |) _ _ _ ->
@@ -289,8 +289,8 @@ let rec elab_bind #f #g #x #c1 #c2 #c
       t1 t2
       (elab_pure (comp_inames c1))
       (elab_pure (comp_pre c1))
-      (mk_abs t1 R.Q_Explicit (elab_pure (comp_post c1)))
-      (mk_abs t2 R.Q_Explicit (elab_pure (comp_post c2)))
+      (RT.mk_abs_with_name "_" t1 R.Q_Explicit (elab_pure (comp_post c1)))
+      (RT.mk_abs_with_name "_" t2 R.Q_Explicit (elab_pure (comp_post c2)))
       e1 e2
       (elab_src_typing reveal_a_typing)
 
@@ -301,8 +301,8 @@ let rec elab_bind #f #g #x #c1 #c2 #c
       t1 t2
       (elab_pure (comp_inames c1))
       (elab_pure (comp_pre c1))
-      (mk_abs t1 R.Q_Explicit (elab_pure (comp_post c1)))
-      (mk_abs t2 R.Q_Explicit (elab_pure (comp_post c2)))
+      (RT.mk_abs_with_name "_" t1 R.Q_Explicit (elab_pure (comp_post c1)))
+      (RT.mk_abs_with_name "_" t2 R.Q_Explicit (elab_pure (comp_post c2)))
       e1 e2
       (elab_src_typing reveal_b_typing)
 
@@ -316,7 +316,7 @@ and elab_lift #f #g #c1 #c2 (d:lift_comp f g c1 c2) (e:R.term)
       (elab_universe (comp_u c1))
       (elab_pure (comp_res c1))
       t
-      (mk_abs t R.Q_Explicit (elab_pure (comp_post c1)))
+      (RT.mk_abs_with_name "_" t R.Q_Explicit (elab_pure (comp_post c1)))
       e
       
   | Lift_STGhost_STAtomic _ _ (| reveal_a, reveal_a_typing |) ->
@@ -326,7 +326,7 @@ and elab_lift #f #g #c1 #c2 (d:lift_comp f g c1 c2) (e:R.term)
       t
       (elab_pure (comp_inames c1))
       (elab_pure (comp_pre c1))
-      (mk_abs t R.Q_Explicit (elab_pure (comp_post c1)))
+      (RT.mk_abs_with_name "_" t R.Q_Explicit (elab_pure (comp_post c1)))
       e
       (elab_src_typing reveal_a_typing)
 
@@ -344,7 +344,7 @@ and elab_src_typing
     | T_Abs _ ppname x qual ty _u body _ _ _ ty_typing body_typing ->
       let ty = elab_pure ty in
       let body = elab_src_typing body_typing in
-      mk_abs_with_name ppname ty (elab_qual qual) (RT.close_term body x) //this closure should be provably redundant by strengthening the conditions on x
+      RT.mk_abs_with_name ppname ty (elab_qual qual) (RT.close_term body x) //this closure should be provably redundant by strengthening the conditions on x
     
     | T_STApp _ head _ppname _formal qual _res arg head_typing arg_typing ->
       let head = elab_src_typing head_typing in
@@ -361,7 +361,7 @@ and elab_src_typing
       let e1 = elab_src_typing e1_typing in
       let e2 = elab_src_typing e2_typing in
       let ty1 = elab_pure (comp_res c1) in
-      elab_bind bc e1 (mk_abs ty1 R.Q_Explicit (RT.close_term e2 x))
+      elab_bind bc e1 (RT.mk_abs_with_name "_" ty1 R.Q_Explicit (RT.close_term e2 x))
       
     | T_Frame _ _ c frame _frame_typing e_typing ->
       let e = elab_src_typing e_typing in

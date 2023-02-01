@@ -53,12 +53,10 @@ let binder_of_t_q_s t q s = RT.mk_binder s 0 t q
 let bound_var i : R.term = R.pack_ln (R.Tv_BVar (R.pack_bv (RT.make_bv i tun)))
 let mk_name i : R.term = R.pack_ln (R.Tv_Var (R.pack_bv (RT.make_bv i tun))) 
 let arrow_dom = (R.term & R.aqualv)
-let mk_tot_arrow1 (f:arrow_dom) (out:R.term) : R.term =
-  let ty, q = f in
-  R.pack_ln (R.Tv_Arrow (binder_of_t_q ty q) (R.pack_comp (mk_total out)))
-let mk_tot_arrow_with_name1 (s:string) (f:arrow_dom) (out:R.term) : R.term =
-  let ty, q = f in
-  R.pack_ln (R.Tv_Arrow (binder_of_t_q_s ty q s) (R.pack_comp (mk_total out)))
+let mk_binder_no_pp (t:R.term) q s
+  : Lemma (RT.binder_no_pp (binder_of_t_q_s t q s) == binder_of_t_q (RT.term_no_pp t) q)
+          [SMTPat (RT.binder_no_pp (binder_of_t_q_s t q s))]
+  = ()
 
 let vprop_eq_tm t1 t2 =
   let open R in
@@ -71,9 +69,6 @@ let vprop_eq_tm t1 t2 =
   t
 
 let emp_inames_tm : R.term = R.pack_ln (R.Tv_FVar (R.pack_fv emp_inames_lid))
-
-let mk_abs ty qual t : R.term =  R.pack_ln (R.Tv_Abs (binder_of_t_q ty qual) t)
-let mk_abs_with_name s ty qual t : R.term =  R.pack_ln (R.Tv_Abs (binder_of_t_q_s ty qual s) t)
 
 let non_informative_witness_lid = mk_steel_wrapper_lid "non_informative_witness"
 let non_informative_witness_rt (u:R.universe) (a:R.term) : R.term =
@@ -92,15 +87,15 @@ let rec elab_universe (u:universe)
 
 let mk_st (u:universe) (res pre post:R.term)
   : Tot R.term =
-  mk_stt_app (elab_universe u) [res; pre; mk_abs res R.Q_Explicit post]
+  mk_stt_app (elab_universe u) [res; pre; RT.mk_abs_with_name "_" res R.Q_Explicit post]
 
 let mk_st_atomic (u:universe) (res inames pre post:R.term)
   : Tot R.term =
-  mk_stt_atomic_app (elab_universe u) [res; inames; pre; mk_abs res R.Q_Explicit post]
+  mk_stt_atomic_app (elab_universe u) [res; inames; pre; RT.mk_abs_with_name "_" res R.Q_Explicit post]
 
 let mk_st_ghost (u:universe) (res inames pre post:R.term)
   : Tot R.term =
-  mk_stt_ghost_app (elab_universe u) [res; inames; pre; mk_abs res R.Q_Explicit post]
+  mk_stt_ghost_app (elab_universe u) [res; inames; pre; RT.mk_abs_with_name "_" res R.Q_Explicit post]
 
 let (let?) (f:option 'a) (g: 'a -> option 'b) : option 'b = 
   match f with
@@ -154,7 +149,7 @@ let rec elab_term (top:term)
     | Tm_Arrow b q c ->
       let? ty = elab_term b.binder_ty in
       let? c = elab_comp c in
-      Some (mk_tot_arrow_with_name1 b.binder_ppname (ty, elab_qual q) c)
+      Some (RT.mk_tot_arrow_with_name b.binder_ppname ty (elab_qual q) c)
 
     | Tm_Let t e1 e2 ->
       let? t = elab_term t in

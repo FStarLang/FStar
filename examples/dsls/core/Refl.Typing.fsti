@@ -6,6 +6,13 @@ module R = FStar.Reflection
 module T = FStar.Tactics
 module FTB = FStar.Tactics.Builtins
 
+type binder_view = R.bv & (R.aqualv & list R.term)
+
+let inspect_binder (b:R.binder) : binder_view = R.inspect_binder b
+let pack_binder (b:binder_view) : R.binder =
+  let bv, (q, attrs) = b in
+  R.pack_binder bv q attrs
+
 val inspect_pack (t:R.term_view)
   : Lemma (ensures R.(inspect_ln (pack_ln t) == t))
           [SMTPat R.(inspect_ln (pack_ln t))]
@@ -27,8 +34,8 @@ val inspect_pack_binder (b:_) (q:_) (a:_)
           [SMTPat R.(inspect_binder (pack_binder b q a))]
   
 val pack_inspect_binder (t:R.binder)
-  : Lemma (ensures (let b, (q, a) = R.inspect_binder t in
-                    R.(pack_binder b q a == t)))
+  : Lemma (ensures (pack_binder (inspect_binder t) == t))
+          [SMTPat (pack_binder (inspect_binder t))]
   
 val pack_inspect_comp (t:R.comp)
   : Lemma (ensures (R.pack_comp (R.inspect_comp t) == t))
@@ -62,11 +69,10 @@ let lookup_fvar (e:env) (x:fv) : option term = lookup_fvar_uinst e x []
 
 let mk_binder (pp_name:string) (x:var) (ty:term) (q:aqualv)
   = pack_binder
-      (pack_bv ({bv_ppname=pp_name;
+      ((pack_bv ({bv_ppname=pp_name;
                  bv_index=x;
-                 bv_sort=ty}))
-      q
-      []
+                 bv_sort=ty})),
+       (q, []))
 
 let extend_env (e:env) (x:var) (ty:term) : env =
   R.push_binder e (mk_binder "x" x ty Q_Explicit)
@@ -241,9 +247,8 @@ and open_or_close_binder' (b:binder) (v:open_or_close) (i:nat)
   : Tot binder (decreases b)
   = let bndr  = inspect_binder b in
     let bv, (q, attrs) = bndr in
-    pack_binder (open_or_close_bv' bv v i) 
-                q
-                (open_or_close_terms' attrs v i)
+    pack_binder ((open_or_close_bv' bv v i),
+                 (q, (open_or_close_terms' attrs v i)))
 
 and open_or_close_comp' (c:comp) (v:open_or_close) (i:nat)
   : Tot comp (decreases c)
@@ -361,7 +366,7 @@ val rename (t:term) (x y:var) : term
 val rename_spec (t:term) (x y:var)
   : Lemma (rename t x y == open_or_close_term' t (Rename x y) 0)
   
-let bv_as_binder bv = pack_binder bv Q_Explicit []
+let bv_as_binder bv = pack_binder (bv, (Q_Explicit, []))
 
 val bv_index_of_make_bv (n:nat) (t:term)
   : Lemma (ensures bv_index (pack_bv (make_bv n t)) == n)
@@ -453,6 +458,13 @@ and univ_leq : universe -> universe -> Type0 =
     v:universe ->
     univ_leq u (u_max u v)
 
+let mk_abs_with_name s ty qual t : R.term =  R.pack_ln (R.Tv_Abs (mk_binder s 0 ty qual) t)
+let mk_abs ty qual t : R.term = mk_abs_with_name "_" ty qual t
+
+let mk_tot_arrow_with_name (s:string) (ty:R.term) (q:R.aqualv) (out:R.term) : R.term =
+  R.pack_ln (R.Tv_Arrow (mk_binder s 0 ty q) (R.pack_comp (R.C_Total out)))
+let mk_tot_arrow ty q out = mk_tot_arrow_with_name "_" ty q out
+
 noeq
 type typing : env -> term -> term -> Type0 =
   | T_Token :
@@ -492,13 +504,12 @@ type typing : env -> term -> term -> Type0 =
      body:term ->
      body_ty:term ->
      u:universe ->
-     pp_name:string ->
+     ppname:string ->
      q:aqualv ->
      typing g ty (tm_type u) ->
      typing (extend_env g x ty) (open_term body x) body_ty ->
-     typing g (pack_ln (Tv_Abs (mk_binder pp_name 0 ty q) body))
-              (pack_ln (Tv_Arrow (mk_binder pp_name 0 ty q)
-                                 (mk_total (close_term body_ty x))))
+     typing g (mk_abs_with_name ppname ty q body)
+              (mk_tot_arrow_with_name ppname ty q (close_term body_ty x))
 
   | T_App :
      g:env ->
@@ -938,7 +949,7 @@ and open_close_inverse'_binder (i:nat) (b:binder { ln'_binder b (i - 1) }) (x:va
     assert (open_or_close_bv' (open_or_close_bv' bv (CloseVar x) i) (open_with_var x) i == bv);
     assert (open_or_close_terms' (open_or_close_terms' attrs (CloseVar x) i) (open_with_var x) i == attrs);    
     pack_inspect_binder b;    
-    assert (pack_binder bv q attrs == b)
+    assert (pack_binder (bv, (q, attrs)) == b)
 
 and open_close_inverse'_terms (i:nat) (ts:list term { ln'_terms ts (i - 1) }) (x:var)
   : Lemma (ensures open_or_close_terms' (open_or_close_terms' ts (CloseVar x) i)
@@ -1509,3 +1520,135 @@ type fstar_top_env = g:fstar_env {
 //
 
 type dsl_tac_t = g:fstar_top_env -> T.Tac (r:(R.term & R.typ){typing g (fst r) (snd r)})
+
+
+#push-options "--z3rlimit_factor 4"
+let rec term_view_no_pp (e:R.term_view) : R.term_view =
+  match e with
+  | Tv_Var bv -> Tv_Var (bv_no_pp bv)
+  | Tv_BVar bv -> Tv_BVar (bv_no_pp bv)
+  | Tv_FVar _ -> e
+  | Tv_UInst _ _ -> e
+  | Tv_App head arg -> Tv_App (term_no_pp head) (arg_no_pp arg)
+  | Tv_Abs b body -> Tv_Abs (binder_no_pp b) (term_no_pp body)
+  | Tv_Arrow b c -> Tv_Arrow (binder_no_pp b) (comp_no_pp c)
+  | Tv_Type _ -> e
+  | Tv_Refine bv phi -> Tv_Refine (bv_no_pp bv) (term_no_pp phi)
+  | Tv_Const _ -> e
+  | Tv_Uvar _ _ -> e
+  | Tv_Let is_rec attrs x def body ->
+    Tv_Let is_rec (attrs_no_pp attrs) (bv_no_pp x) (term_no_pp def) (term_no_pp body)
+  | Tv_Match scrutinee asc brs ->
+    Tv_Match (term_no_pp scrutinee) (match_asc_no_pp asc) (branches_no_pp brs)
+  | Tv_AscribedT e t tac use_eq ->
+    Tv_AscribedT (term_no_pp e) (term_no_pp t) (term_opt_no_pp tac) use_eq
+  | Tv_AscribedC e c tac use_eq ->
+    Tv_AscribedC (term_no_pp e) (comp_no_pp c) (term_opt_no_pp tac) use_eq
+
+  | Tv_Unknown -> e
+
+and bv_no_pp (bv:R.bv) : R.bv =
+  pack_bv (bv_view_no_pp (inspect_bv bv))
+
+and term_no_pp (e:R.term) : R.term =
+  pack_ln (term_view_no_pp (inspect_ln e))
+
+and arg_no_pp (a:R.argv) : R.argv =
+  let t, q = a in
+  term_no_pp t, q
+
+and binder_no_pp (b:R.binder) : R.binder =
+  pack_binder (binder_view_no_pp (inspect_binder b))
+
+and comp_no_pp (c:comp) : R.comp =
+  pack_comp (comp_view_no_pp (inspect_comp c))
+
+and attrs_no_pp (attrs:list R.term) : list R.term =
+  match attrs with
+  | [] -> []
+  | hd::tl -> (term_no_pp hd)::(attrs_no_pp tl)
+
+and match_asc_no_pp (asc:option match_returns_ascription)
+  : option match_returns_ascription =
+
+  match asc with
+  | None -> None
+  | Some (b, (term_or_comp, topt, use_eq)) ->
+    assume (term_or_comp << asc);
+    assume (topt << asc);
+    Some
+      (binder_no_pp b,
+       (term_or_comp_no_pp term_or_comp,
+        term_opt_no_pp topt,
+        use_eq))
+
+and branches_no_pp (brs:list branch) : list branch =
+  match brs with
+  | [] -> []
+  | hd::tl -> (branch_no_pp hd)::(branches_no_pp tl)
+
+and term_opt_no_pp (topt:option term) : option term =
+  match topt with
+  | None -> None
+  | Some t -> Some (term_no_pp t)
+
+and bv_view_no_pp (bv:bv_view) : bv_view =
+  {bv with bv_ppname="_";
+           bv_sort=term_no_pp bv.bv_sort}
+
+and binder_view_no_pp (b:binder_view) : binder_view =
+  let bv, (q, attrs) = b in
+  bv_no_pp bv, (q, attrs_no_pp attrs)
+
+and comp_view_no_pp (c:comp_view) : comp_view =
+  match c with
+  | C_Total ret -> C_Total (term_no_pp ret)
+  | C_GTotal ret -> C_GTotal (term_no_pp ret)
+  | C_Lemma pre post pat -> C_Lemma (term_no_pp pre) (term_no_pp post) (term_no_pp pat)
+  | C_Eff us eff_name res args decrs ->
+    C_Eff us eff_name (term_no_pp res) (args_no_pp args) (attrs_no_pp decrs)
+
+and term_or_comp_no_pp (x:either term comp) : either term comp =
+  match x with
+  | Inl t -> Inl (term_no_pp t)
+  | Inr c -> Inr (comp_no_pp c)
+
+and branch_no_pp (br:branch) : branch =
+  let p, t = br in
+  pat_no_pp p, term_no_pp t
+
+and args_no_pp (args:list argv) : list argv =
+  match args with
+  | [] -> []
+  | hd::tl -> (arg_no_pp hd)::(args_no_pp tl)
+
+and pat_no_pp (p:pattern) : pattern =
+  match p with
+  | Pat_Constant _ -> p
+  | Pat_Cons fv us l ->
+    Pat_Cons fv us (pat_and_bool_no_pp l)
+  | Pat_Var bv -> Pat_Var (bv_no_pp bv)
+  | Pat_Wild bv -> Pat_Wild (bv_no_pp bv)
+  | Pat_Dot_Term topt -> Pat_Dot_Term (term_opt_no_pp topt)
+
+and pat_and_bool_no_pp (l:list (pattern & bool)) : list (pattern & bool) =
+  match l with
+  | [] -> []
+  | (p, b)::tl -> (pat_no_pp p, b)::(pat_and_bool_no_pp tl)
+
+let term_no_pp_close_term (t:term) (x:var)
+  : Lemma (term_no_pp (close_term t x) == close_term (term_no_pp t) x)
+          [SMTPat (term_no_pp (close_term t x))]
+  = admit ()
+
+let mk_abs_with_name_no_pp s ty qual t
+  : Lemma (term_no_pp (mk_abs_with_name s ty qual t) ==
+           mk_abs_with_name "_" (term_no_pp ty) qual (term_no_pp t))
+          [SMTPat (term_no_pp (mk_abs_with_name s ty qual t))]
+  = ()
+
+let mk_tot_arrow_with_name_no_pp (s:string) (ty:R.term) (q:R.aqualv) (out:R.term)
+  : Lemma (term_no_pp (mk_tot_arrow_with_name s ty q out) ==
+           mk_tot_arrow_with_name "_" (term_no_pp ty) q (term_no_pp out))
+          [SMTPat (term_no_pp (mk_tot_arrow_with_name s ty q out))]
+  = ()
