@@ -222,9 +222,9 @@ let extract_let_rec_annotation env {lbname=lbname; lbunivs=univ_vars; lbtyp=t; l
             let s = U.rename_binders bs bs' in
             SS.subst_decreasing_order s d
           in
-          let c = Env.comp_set_flags env c flags in
+          let c = Env.comp_set_flags (Env.push_binders env bs) c flags in
           let tarr = U.arrow bs c in
-          let c' = Env.comp_set_flags env c' (DECREASES d'::flags') in
+          let c' = Env.comp_set_flags (Env.push_binders env bs') c' (DECREASES d'::flags') in
           let tannot = U.arrow bs' c' in
           tarr, tannot, true
         in
@@ -559,6 +559,14 @@ let join_lcomp env c1 c2 =
   then C.effect_Tot_lid
   else join_effects env c1.eff_name c2.eff_name
 
+// GM, 2023/01/30: This is here to make c2 well-scoped in lift_comps_sep_guards
+// below. Is it needed to push a null_binder, as below, when b is None? Not for
+// scoping, at least.
+let maybe_push (env : Env.env) (b : option bv) : Env.env =
+  match b with
+  | None -> env
+  | Some bv -> Env.push_bv env bv
+
 (*
  * This functions returns the two lifted computations,
  *   and guards for each of them
@@ -569,12 +577,13 @@ let join_lcomp env c1 c2 =
 let lift_comps_sep_guards env c1 c2 (b:option bv) (for_bind:bool)
 : lident * comp * comp * guard_t * guard_t =
   let c1 = Env.unfold_effect_abbrev env c1 in
-  let c2 = Env.unfold_effect_abbrev env c2 in
+  let env2 = maybe_push env b in
+  let c2 = Env.unfold_effect_abbrev env2 c2 in
   match Env.join_opt env c1.effect_name c2.effect_name with
   | Some (m, lift1, lift2) ->
     let c1, g1 = lift_comp env c1 lift1 in
     let c2, g2 =
-      if not for_bind then lift_comp env c2 lift2
+      if not for_bind then lift_comp env2 c2 lift2
       else
         let x_a =
           match b with
@@ -628,15 +637,22 @@ let close_wp_comp env bvs (c:comp) =
     && Options.ml_ish() //NS: disabling this optimization temporarily
     then c
     else begin
+            (*
+             * We make an environment containing all the BVs so the calls
+             * to env.universe_of and unfold_effect_abbrev below are properly scoped.
+             * Note: this only works since variables in the environment are named and
+             * fresh, so it is OK to use a larger environment to check a term.
+             *)
+            let env_bvs = Env.push_bvs env bvs in
             let close_wp u_res md res_t bvs wp0 =
               let close = md |> U.get_wp_close_combinator |> must in
               List.fold_right (fun x wp ->
                   let bs = [mk_binder x] in
-                  let us = u_res::[env.universe_of env x.sort] in
+                  let us = u_res::[env.universe_of env_bvs x.sort] in
                   let wp = U.abs bs wp (Some (U.mk_residual_comp C.effect_Tot_lid None [TOTAL])) in
                   mk_Tm_app (inst_effect_fun_with us env md close) [S.as_arg res_t; S.as_arg x.sort; S.as_arg wp] wp0.pos)
               bvs wp0 in
-            let c = Env.unfold_effect_abbrev env c in
+            let c = Env.unfold_effect_abbrev env_bvs c in
             let u_res_t, res_t, wp = destruct_wp_comp c in
             let md = Env.get_effect_decl env c.effect_name in
             let wp = close_wp u_res_t md res_t bvs wp in
@@ -1162,7 +1178,8 @@ let mk_bind env
   (flags:list cflag)
   (r1:Range.range) : comp * guard_t =
 
-  let ct1, ct2 = Env.unfold_effect_abbrev env c1, Env.unfold_effect_abbrev env c2 in
+  let env2 = maybe_push env b in
+  let ct1, ct2 = Env.unfold_effect_abbrev env c1, Env.unfold_effect_abbrev env2 c2 in
 
   match Env.exists_polymonadic_bind env ct1.effect_name ct2.effect_name with
   | Some (p, f_bind) -> f_bind env ct1 b ct2 flags r1
@@ -1176,7 +1193,7 @@ let mk_bind env
      *       so it's fine to return g_return as is
      *)
     let m, c1, c2, g_lift = lift_comps env c1 c2 b true in
-    let ct1, ct2 = Env.comp_to_comp_typ env c1, Env.comp_to_comp_typ env c2 in
+    let ct1, ct2 = Env.comp_to_comp_typ env c1, Env.comp_to_comp_typ env2 c2 in
 
     let c, g_bind =
       if Env.is_layered_effect env m
@@ -1720,7 +1737,7 @@ let assume_result_eq_pure_term_in_m env (m_opt:option lident) (e:term) (lc:lcomp
             let xexp = S.bv_to_name x in
             let env_x = Env.push_bv env x in
             let ret, g_ret = return_value env_x m (Some u_t) t xexp in
-            let ret = TcComm.lcomp_of_comp <| Env.comp_set_flags env ret [PARTIAL_RETURN] in
+            let ret = TcComm.lcomp_of_comp <| Env.comp_set_flags env_x ret [PARTIAL_RETURN] in
             let eq = U.mk_eq2 u_t t xexp e in
             let eq_ret = weaken_precondition env_x ret (NonTrivial eq) in
             let bind_c, g_bind = TcComm.lcomp_comp (bind e.pos env None (TcComm.lcomp_of_comp c) (Some x, eq_ret)) in
@@ -3976,8 +3993,9 @@ and ty_strictly_positive_in_type env (ty_lid:lident) (btype:term) (unfolded:unfo
        true
      else
        let _ = debug_positivity env (fun () -> "Checking struict positivity, Pure arrow, checking that ty does not occur in the binders, and that it is strictly positive in the return type") in
+       let sbs, c = SS.open_comp sbs c in
        List.for_all (fun ({binder_bv=b}) -> not (ty_occurs_in ty_lid b.sort)) sbs &&  //ty must not occur on the left of any arrow
-         (let _, return_type = SS.open_term sbs (FStar.Syntax.Util.comp_result c) in  //and it must occur strictly positive in the result type
+         (let return_type = FStar.Syntax.Util.comp_result c in  //and it must occur strictly positive in the result type
           ty_strictly_positive_in_type (push_binders env sbs) ty_lid return_type unfolded)
    | Tm_fvar _
    | Tm_uinst _ 
