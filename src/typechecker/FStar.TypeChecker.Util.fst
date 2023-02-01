@@ -4090,6 +4090,7 @@ let name_strictly_positive_in_type env bv t =
 
 //ty_bs are the opended type parameters of the inductive, and ty_usubst is the universe substitution, again from the ty_lid type
 let ty_positive_in_datacon env (ty_lid:lident) (dlid:lident) (ty_bs:binders) (us:universes) (unfolded:unfolded_memo_t) : bool =
+Errors.with_ctx (BU.format1 "While checking constructor %s" (string_of_lid dlid)) (fun () ->
   //get the type of the data constructor
   let dt =
     match Env.try_lookup_and_inst_lid env us dlid with
@@ -4149,7 +4150,7 @@ let ty_positive_in_datacon env (ty_lid:lident) (dlid:lident) (ty_bs:binders) (us
     true  //if the data constructor type is a simple app, it must be t ..., and we already don't allow t (t ..), so nothing to check here
 
   | _ -> failwith "Unexpected data constructor type when checking positivity"
-
+)
 
 let check_positivity (env:env_t) (mutuals:list lident) (ty:sigelt) :bool =
   //memo table, memoizes the Tm_app nodes for inductives that we have already unfolded
