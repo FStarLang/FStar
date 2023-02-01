@@ -16,37 +16,7 @@ let dynlink fname =
     perr msg;
     failwith msg
 
-type load_ops_t = {
-    load_lib: unit -> unit;
-    get_taclib_package: unit -> string;
-}
-
-let load_ops : load_ops_t =
-  let already_loaded = ref None in
-  let load_lib () =
-    if !already_loaded = None then
-      let taclib = "fstar.lib" in
-      already_loaded := Some taclib
-  in
-  {
-    load_lib = load_lib;
-    get_taclib_package =
-      begin fun _ ->
-        load_lib ();
-        U.must !already_loaded
-      end
-  }
-
-let load_lib = load_ops.load_lib
-let get_taclib_package = load_ops.get_taclib_package
-
-let try_load_lib () =
-  (* It might not be there, just try to load it and ignore if not *)
-  try load_lib ()
-  with | _ -> perr "Did NOT load fstartaclib\n"
-
 let load_tactic tac =
-  load_lib ();
   dynlink tac;
   perr1 "Loaded %s\n" tac
 
@@ -63,7 +33,7 @@ let load_tactics_dir dir =
 
 let compile_modules dir ms =
    let compile m =
-     let packages = [ get_taclib_package () ] in
+     let packages = [ "fstar.lib" ] in
      let pkg pname = "-package " ^ pname in
      let args = ["ocamlopt"; "-shared"] (* FIXME shell injection *)
                 @ ["-I"; dir]
