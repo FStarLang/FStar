@@ -174,7 +174,8 @@ ifeq ($(MADOKO),Madoko)
 	@# Build the tutorial first
 	+$(MAKE) -C ../../doc/tutorial
 endif
-	$(call install_dir,doc/tutorial,share/fstar/tutorial)
+	$(INSTALL_EXEC) -m 644 -D ../../doc/Makefile.include $(PREFIX)/share/fstar/doc/Makefile.include
+	$(call install_dir,doc/tutorial,share/fstar/doc/tutorial)
 
 NAME=fstar_$(VERSION)_$(PLATFORM)
 
