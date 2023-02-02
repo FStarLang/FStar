@@ -1,9 +1,10 @@
-FSTAR_HOME?=../../../../../FStar
 
-ifeq ($(OS),Windows_NT)
-  OCAMLPATH := $(shell cygpath -m $(FSTAR_HOME)/lib);$(OCAMLPATH)
-else
-  OCAMLPATH := $(FSTAR_HOME)/lib:$(OCAMLPATH)
+ifdef FSTAR_HOME
+  ifeq ($(OS),Windows_NT)
+    OCAMLPATH := $(shell cygpath -m $(FSTAR_HOME)/lib);$(OCAMLPATH)
+  else
+    OCAMLPATH := $(FSTAR_HOME)/lib:$(OCAMLPATH)
+  endif
 endif
 
 # with dune
