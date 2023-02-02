@@ -23,7 +23,7 @@ let pre (x:int) = x = 1 || x = 0
 unfold
 let encoded_snd (x:refined int pre): Type0 =
   match x with
-  | 0 -> (n1:nat_dep 8 & (n2:nat_dep (n1 + 0) & nat_dep n1))
+  | 0 -> (n1:nat_dep 8 & (_:nat_dep (n1 + 0) & nat_dep n1))
   | 1 -> unit
 
 unfold

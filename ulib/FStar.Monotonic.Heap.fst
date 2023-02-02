@@ -306,7 +306,7 @@ let gref_of a t rel =
   let k : (exists (h: heap { aref_live_at h a t rel} ) . squash True ) =
     FStar.Squash.bind_squash
       #(h: heap & aref_live_at h a t rel)
-      #(h: (h: heap { aref_live_at h a t rel} ) & squash True)
+      #(_: (h: heap { aref_live_at h a t rel} ) & squash True)
       l
       (fun h -> let (| h', _ |) = h in Squash.return_squash (| h', () |) )
   in
