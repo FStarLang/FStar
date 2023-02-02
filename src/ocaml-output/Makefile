@@ -164,11 +164,8 @@ install:
 	cd $(DUNE_SNAPSHOT) && dune install --prefix=$(PREFIX)
 	@# Then the standard library sources and checked files
 	+$(MAKE) -C $(FSTAR_HOME)/ulib install
-	@# Then the rest of the static files.
-	@# (those are not used in the opam package, not sure if their Makefiles work)
+	@# Then the examples (those now work from any F* installation flavor, sources, binary package or opam)
 	$(call install_dir,examples,share/fstar/examples)
-	$(call install_dir,tests,share/fstar/tests)
-	$(call install_dir,ucontrib,share/fstar/contrib)
 	@# Then the tutorial
 ifeq ($(MADOKO),Madoko)
 	@# Build the tutorial first
@@ -203,7 +200,6 @@ package:
 	+PREFIX=$(package_prefix) $(MAKE) install
 	@# Then the version file.
 	cp ../../version.txt $(package_prefix)/
-	@# Then the rest of the static files.
 	@# Documentation and licenses
 	cp ../../README.md ../../INSTALL.md ../../LICENSE ../../LICENSE-fsharp.txt $(package_prefix)
 	cp $(Z3_LICENSE) $(package_prefix)/LICENSE-z3.txt
