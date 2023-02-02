@@ -130,7 +130,7 @@ COMMITDATE = $(shell git log --pretty=format:%ci -n 1 2>/dev/null || echo unset)
 .PHONY: $(FStar_Version_ml)
 $(FStar_Version_ml):
 	@echo '[MAKE      FStar_Version.ml]'
-	$(Q)rm -rf $@
+	$(Q)rm -f $@
 	$(Q)mkdir -p $(dir $@)
 	$(Q)echo 'let dummy () = ();;' >> $@
 	$(Q)echo 'FStar_Options._version := "$(VERSION)";;' >> $@
@@ -140,6 +140,8 @@ $(FStar_Version_ml):
 	$(Q)echo 'FStar_Options._date := "$(COMMITDATE)";;' >> $@
 	$(Q)echo 'FStar_Options._commit:= "$(COMMIT)";;' >> $@
 
+# Rule to generate the version file from an external makefile.
+fstar-version-ml-install: $(FStar_Version_ml)
 
 # ------------------------------------------------------------------------------
 # Preparing a release... these targets are not optimized and the Makefile is

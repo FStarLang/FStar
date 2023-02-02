@@ -105,9 +105,7 @@ function update_version_number () {
 
 function git_add_fstar_snapshot () {
     if ! git diff-index --quiet --cached HEAD -- ocaml/*/generated ; then
-        git ls-files ocaml/*/generated ocaml/*/dynamic | xargs git add
-    else
-        git checkout ocaml/*/dynamic
+        git ls-files ocaml/*/generated | xargs git add
     fi
 }
 

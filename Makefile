@@ -8,6 +8,7 @@ DUNE_SNAPSHOT ?= $(CURDIR)/ocaml
 
 .PHONY: dune dune-fstar verify-ulib
 dune-fstar:
+	$(Q)+$(MAKE) -C src/ocaml-output fstar-version-ml-install
 	cd $(DUNE_SNAPSHOT) && dune build --profile release && dune install --prefix=$(CURDIR)
 
 verify-ulib:
