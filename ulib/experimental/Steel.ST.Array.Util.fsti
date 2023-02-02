@@ -45,6 +45,8 @@ val array_literal
 
 /// Check if all the elements of an array satisfy a predicate
 
+type for_all_predicate_t (a:Type0) (n:US.t) = i:US.t{US.v i < US.v n} -> a -> bool
+
 inline_for_extraction
 val for_all
   (#a:Type0)
@@ -52,7 +54,7 @@ val for_all
   (#s:G.erased (Seq.seq a))
   (n:US.t)
   (arr:A.array a)
-  (p:US.t -> a -> bool)
+  (p:for_all_predicate_t a n)
   : ST bool
        (A.pts_to arr perm s)
        (fun _ -> A.pts_to arr perm s)
@@ -64,6 +66,8 @@ val for_all
 
 /// for_all2, for predicates over elements of two arrays
 
+type for_all2_predicate_t (a b:Type0) (n:US.t) = i:US.t{US.v i < US.v n} -> a -> b -> bool
+
 inline_for_extraction
 val for_all2
   (#a #b:Type0)
@@ -73,7 +77,7 @@ val for_all2
   (n:US.t)
   (a0:A.array a)
   (a1:A.array b)
-  (p:US.t -> a -> b -> bool)
+  (p:for_all2_predicate_t a b n)
   : ST bool
        (A.pts_to a0 p0 s0
           `star`
