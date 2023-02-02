@@ -4,11 +4,11 @@ include .common.mk
 
 all: dune
 
-DUNE_SNAPSHOT ?= $(PWD)/ocaml
+DUNE_SNAPSHOT ?= $(CURDIR)/ocaml
 
 .PHONY: dune dune-fstar verify-ulib
 dune-fstar:
-	cd $(DUNE_SNAPSHOT) && dune build --profile release && dune install --prefix=$(PWD)
+	cd $(DUNE_SNAPSHOT) && dune build --profile release && dune install --prefix=$(CURDIR)
 
 verify-ulib:
 	+$(MAKE) -C ulib
@@ -52,7 +52,7 @@ install:
 
 # The directory where we install files when doing "make install".
 # Overridden via the command-line by the OPAM invocation.
-PREFIX ?= $(PWD)
+PREFIX ?= $(CURDIR)
 
 uninstall:
 	ocamlfind remove fstar
