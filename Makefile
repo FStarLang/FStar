@@ -94,6 +94,7 @@ output:
 
 ci-utest-prelude: dune
 	$(Q)+$(MAKE) dune-bootstrap
+	$(Q)+$(MAKE) -C src ocaml-unit-tests
 	$(Q)+$(MAKE) -C ulib ulib-in-fsharp    #build ulibfs
 
 .PHONY: ci-uregressions ci-uregressions-ulong

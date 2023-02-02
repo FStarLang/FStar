@@ -34,7 +34,7 @@ clean-ocaml: clean_boot
 # --------------------------------------------------------------------
 
 ocaml-unit-tests:
-	$(BIN)/tests.exe
+	$(BIN)/fstar_tests.exe
 
 ulib-in-fsharp:
 	$(MAKE) -C ../ulib ulib-in-fsharp
