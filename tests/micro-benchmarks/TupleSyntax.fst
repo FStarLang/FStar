@@ -43,3 +43,6 @@ let g3 (x: (x:int & y:int {x > 3} & z:int)) : int = let (|x,y,z|) = x in x
 let g4 (x: (x:int & (y:int {x > 3} & z:int))) : int = let (|x,(y,z)|) = x in x
 let g5 (x: (x:int & y:int {x > 3}) & int) : int = let ((|x,y|),z) = x in x
 let g6 (x y: unit) (t: (x:int & y:int {x > y})) = let (|x, y|) = t in x
+
+// [_] binders forces dependent tuples
+let g7 (x: (_:int & int)) = dfst x

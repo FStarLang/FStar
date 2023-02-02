@@ -1294,7 +1294,9 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term * an
           List.fold_left (fun ((binders, dep_env, dep_typs), nondep_typs) b ->
             let (xopt, t, attrs), nondep_typs =
                 let dep = desugar_arg dep_env b in
-                match nondep_typs with
+                if starts_with (map_opt dep._1 string_of_id |> dflt "") reserved_prefix
+                then dep, None // if the binder is named `_`, we force dtup
+                else match nondep_typs with
               | None -> dep, None // we know already we're facing a dtup
               | Some nondep_typs -> 
                   // is argument [b] dependent on any previous binder?
