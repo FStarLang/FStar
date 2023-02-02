@@ -104,30 +104,30 @@ let array_literal #a n f =
 let forall_pure_inv
   (#a:Type0)
   (n:US.t)
-  (p:a -> bool)
+  (p:US.t -> a -> bool)
   (s:Seq.seq a)
   (_:squash (Seq.length s == US.v n))
   (i:US.t)
   : prop
-  = i `US.lte` n /\ (forall (j:nat). j < US.v i ==> p (Seq.index s j))
+  = i `US.lte` n /\ (forall (j:nat). j < US.v i ==> p (US.uint_to_t j) (Seq.index s j))
 
 let forall_pure_inv_b
   (#a:Type0)
   (n:US.t)
-  (p:a -> bool)
+  (p:US.t -> a -> bool)
   (s:Seq.seq a)
   (_:squash (Seq.length s == US.v n))
   (i:US.t)
   (b:bool)
   : prop
-  = b == (i `US.lt` n && p (Seq.index s (US.v i)))
+  = b == (i `US.lt` n && p i (Seq.index s (US.v i)))
 
 [@@ __reduce__]
 let forall_pred
   (#a:Type0)
   (n:US.t)
   (arr:A.array a)
-  (p:a -> bool)
+  (p:US.t -> a -> bool)
   (r:R.ref US.t)
   (perm:perm)
   (s:Seq.seq a)
@@ -148,7 +148,7 @@ let forall_inv
   (#a:Type0)
   (n:US.t)
   (arr:A.array a)
-  (p:a -> bool)
+  (p:US.t -> a -> bool)
   (r:R.ref US.t)
   (perm:perm)
   (s:Seq.seq a)
@@ -161,7 +161,7 @@ let forall_cond
   (#a:Type0)
   (n:US.t)
   (arr:A.array a)
-  (p:a -> bool)
+  (p:US.t -> a -> bool)
   (r:R.ref US.t)
   (perm:perm)
   (s:G.erased (Seq.seq a))
@@ -181,7 +181,7 @@ let forall_cond
     let res =
       if b then return false
       else let elt = A.read arr i in
-           return (p elt) in
+           return (p i elt) in
 
     intro_pure (forall_pure_inv n p s () i);
     intro_pure (forall_pure_inv_b n p s () i res);
@@ -193,7 +193,7 @@ let forall_body
   (#a:Type0)
   (n:US.t)
   (arr:A.array a)
-  (p:a -> bool)
+  (p:US.t -> a -> bool)
   (r:R.ref US.t)
   (perm:perm)
   (s:G.erased (Seq.seq a))
@@ -214,17 +214,18 @@ let forall_body
     intro_pure (forall_pure_inv n p s () (US.add i 1sz));
     intro_pure (forall_pure_inv_b n p s ()
       (US.add i 1sz)
-      ((US.add i 1sz) `US.lt` n && p (Seq.index s (US.v (US.add i 1sz)))));
+      ((US.add i 1sz) `US.lt` n && p (US.add i 1sz) (Seq.index s (US.v (US.add i 1sz)))));
     intro_exists
       (US.add i 1sz)
       (forall_pred n arr p r perm s ()
-         ((US.add i 1sz) `US.lt` n && p (Seq.index s (US.v (US.add i 1sz)))));
+         ((US.add i 1sz) `US.lt` n && p (US.add i 1sz) (Seq.index s (US.v (US.add i 1sz)))));
     intro_exists
-      ((US.add i 1sz) `US.lt` n && p (Seq.index s (US.v (US.add i 1sz))))
+      ((US.add i 1sz) `US.lt` n && p (US.add i 1sz) (Seq.index s (US.v (US.add i 1sz))))
       (forall_inv n arr p r perm s ())
 
 let for_all #a #perm #s n arr p =
   A.pts_to_length arr s;
+  let _ : squash (Seq.length s == US.v n) = () in
 
   let b = n = 0sz in
 
@@ -236,12 +237,12 @@ let for_all #a #perm #s n arr p =
     intro_pure (forall_pure_inv n p s () 0sz);
     intro_pure
       (forall_pure_inv_b n p s () 0sz
-         (0sz `US.lt` n && p (Seq.index s (US.v 0sz))));
+         (0sz `US.lt` n && p 0sz (Seq.index s (US.v 0sz))));
     intro_exists 0sz
       (forall_pred n arr p r perm s ()
-         (0sz `US.lt` n && p (Seq.index s (US.v 0sz))));
+         (0sz `US.lt` n && p 0sz (Seq.index s (US.v 0sz))));
     intro_exists
-      (0sz `US.lt` n && p (Seq.index s (US.v 0sz)))
+      (0sz `US.lt` n && p 0sz (Seq.index s (US.v 0sz)))
       (forall_inv n arr p r perm s ());
 
     Loops.while_loop
@@ -267,25 +268,25 @@ let for_all #a #perm #s n arr p =
 let forall2_pure_inv
   (#a #b:Type0)
   (n:US.t)
-  (p:a -> b -> bool)
+  (p:US.t -> a -> b -> bool)
   (s0:Seq.seq a)
   (s1:Seq.seq b)
   (_:squash (Seq.length s0 == US.v n /\ Seq.length s0 == Seq.length s1))
   (i:US.t)
   : prop
-  = i `US.lte` n /\ (forall (j:nat). j < US.v i ==> p (Seq.index s0 j) (Seq.index s1 j))
+  = i `US.lte` n /\ (forall (j:nat). j < US.v i ==> p (US.uint_to_t j) (Seq.index s0 j) (Seq.index s1 j))
 
 let forall2_pure_inv_b
   (#a #b:Type0)
   (n:US.t)
-  (p:a -> b -> bool)
+  (p:US.t -> a -> b -> bool)
   (s0:Seq.seq a)
   (s1:Seq.seq b)
   (_:squash (Seq.length s0 == US.v n /\ Seq.length s0 == Seq.length s1))
   (i:US.t)
   (g:bool)
   : prop
-  = g == (i `US.lt` n && p (Seq.index s0 (US.v i)) (Seq.index s1 (US.v i)))
+  = g == (i `US.lt` n && p i (Seq.index s0 (US.v i)) (Seq.index s1 (US.v i)))
 
 [@@ __reduce__]
 let forall2_pred
@@ -293,7 +294,7 @@ let forall2_pred
   (n:US.t)
   (a0:A.array a)
   (a1:A.array b)
-  (p:a -> b -> bool)
+  (p:US.t -> a -> b -> bool)
   (r:R.ref US.t)
   (p0 p1:perm)
   (s0:Seq.seq a)
@@ -318,7 +319,7 @@ let forall2_inv
   (n:US.t)
   (a0:A.array a)
   (a1:A.array b)
-  (p:a -> b -> bool)
+  (p:US.t -> a -> b -> bool)
   (r:R.ref US.t)
   (p0 p1:perm)
   (s0:Seq.seq a)
@@ -333,7 +334,7 @@ let forall2_cond
   (n:US.t)
   (a0:A.array a)
   (a1:A.array b)
-  (p:a -> b -> bool)
+  (p:US.t -> a -> b -> bool)
   (r:R.ref US.t)
   (p0 p1:perm)
   (s0:G.erased (Seq.seq a))
@@ -355,7 +356,7 @@ let forall2_cond
       if b then return false
       else let elt0 = A.read a0 i in
            let elt1 = A.read a1 i in
-           return (p elt0 elt1) in
+           return (p i elt0 elt1) in
 
     intro_pure (forall2_pure_inv n p s0 s1 () i);
     intro_pure (forall2_pure_inv_b n p s0 s1 () i res);
@@ -368,7 +369,7 @@ let forall2_body
   (n:US.t)
   (a0:A.array a)
   (a1:A.array b)
-  (p:a -> b -> bool)
+  (p:US.t -> a -> b -> bool)
   (r:R.ref US.t)
   (p0 p1:perm)
   (s0:G.erased (Seq.seq a))
@@ -387,24 +388,28 @@ let forall2_body
     let i = R.read r in
     R.write r (US.add i 1sz);
 
-    intro_pure (forall2_pure_inv n p s0 s1 () (US.add i 1sz));
+    intro_pure (forall2_pure_inv n p s0 s1 () (US.add i 1sz));    
     intro_pure (forall2_pure_inv_b n p s0 s1 ()
       (US.add i 1sz)
-      ((US.add i 1sz) `US.lt` n && p (Seq.index s0 (US.v (US.add i 1sz)))
-                                       (Seq.index s1 (US.v (US.add i 1sz)))));
+      ((US.add i 1sz) `US.lt` n && p (US.add i 1sz)
+                                    (Seq.index s0 (US.v (US.add i 1sz)))
+                                    (Seq.index s1 (US.v (US.add i 1sz)))));
     intro_exists
       (US.add i 1sz)
       (forall2_pred n a0 a1 p r p0 p1 s0 s1 ()
-         ((US.add i 1sz) `US.lt` n && p (Seq.index s0 (US.v (US.add i 1sz)))
-                                          (Seq.index s1 (US.v (US.add i 1sz)))));
+         ((US.add i 1sz) `US.lt` n && p (US.add i 1sz)
+                                       (Seq.index s0 (US.v (US.add i 1sz)))
+                                       (Seq.index s1 (US.v (US.add i 1sz)))));
     intro_exists
-      ((US.add i 1sz) `US.lt` n && p (Seq.index s0 (US.v (US.add i 1sz)))
-                                       (Seq.index s1 (US.v (US.add i 1sz))))
+      ((US.add i 1sz) `US.lt` n && p (US.add i 1sz)
+                                    (Seq.index s0 (US.v (US.add i 1sz)))
+                                    (Seq.index s1 (US.v (US.add i 1sz))))
       (forall2_inv n a0 a1 p r p0 p1 s0 s1 ())
 
 let for_all2 #a #b #p0 #p1 #s0 #s1 n a0 a1 p =
   A.pts_to_length a0 s0;
   A.pts_to_length a1 s1;
+  let _ : squash (Seq.length s0 == US.v n /\ Seq.length s1 == US.v n) = () in
 
   let b = n = 0sz in
 
@@ -416,15 +421,15 @@ let for_all2 #a #b #p0 #p1 #s0 #s1 n a0 a1 p =
     intro_pure (forall2_pure_inv n p s0 s1 () 0sz);
     intro_pure
       (forall2_pure_inv_b n p s0 s1 () 0sz
-         (0sz `US.lt` n && p (Seq.index s0 (US.v 0sz))
-                              (Seq.index s1 (US.v 0sz))));
+         (0sz `US.lt` n && p 0sz (Seq.index s0 (US.v 0sz))
+                                (Seq.index s1 (US.v 0sz))));
     intro_exists 0sz
       (forall2_pred n a0 a1 p r p0 p1 s0 s1 ()
-         (0sz `US.lt` n && p (Seq.index s0 (US.v 0sz))
-                              (Seq.index s1 (US.v 0sz))));
+         (0sz `US.lt` n && p 0sz (Seq.index s0 (US.v 0sz))
+                                (Seq.index s1 (US.v 0sz))));
     intro_exists
-      (0sz `US.lt` n && p (Seq.index s0 (US.v 0sz))
-                           (Seq.index s1 (US.v 0sz)))
+      (0sz `US.lt` n && p 0sz (Seq.index s0 (US.v 0sz))
+                             (Seq.index s1 (US.v 0sz)))
       (forall2_inv n a0 a1 p r p0 p1 s0 s1 ());
 
     Loops.while_loop

@@ -52,13 +52,14 @@ val for_all
   (#s:G.erased (Seq.seq a))
   (n:US.t)
   (arr:A.array a)
-  (p:a -> bool)
+  (p:US.t -> a -> bool)
   : ST bool
        (A.pts_to arr perm s)
        (fun _ -> A.pts_to arr perm s)
        (requires A.length arr == US.v n)
-       (ensures fun b -> b <==> (forall (i:nat). i < Seq.length s ==>
-                                    p (Seq.index s i)))
+       (ensures fun b ->
+                Seq.length s == US.v n /\
+                (b <==> (forall (i:nat). i < Seq.length s ==> p (US.uint_to_t i) (Seq.index s i))))
 
 
 /// for_all2, for predicates over elements of two arrays
@@ -72,7 +73,7 @@ val for_all2
   (n:US.t)
   (a0:A.array a)
   (a1:A.array b)
-  (p:a -> b -> bool)
+  (p:US.t -> a -> b -> bool)
   : ST bool
        (A.pts_to a0 p0 s0
           `star`
@@ -84,8 +85,10 @@ val for_all2
        (requires
          A.length a0 == US.v n /\
          A.length a0 == A.length a1)
-       (ensures fun b -> b <==> (forall (i:nat). (i < Seq.length s0 /\ i < Seq.length s1) ==>
-                                    p (Seq.index s0 i) (Seq.index s1 i)))
+       (ensures fun b ->
+                Seq.length s0 == US.v n /\
+                Seq.length s0 == Seq.length s1 /\
+                (b <==> (forall (i:nat). (i < Seq.length s0 /\ i < Seq.length s1) ==> p (US.uint_to_t i) (Seq.index s0 i) (Seq.index s1 i))))
 
 
 /// An array compare function that uses for_all2
@@ -106,7 +109,7 @@ let compare (#a:eqtype) (#p0 #p1:perm)
         A.pts_to a1 p1 s1)
        (requires True)
        (ensures fun b -> b <==> s0 == s1)
-  = let b = for_all2 n a0 a1 (fun x y -> x = y) in
+  = let b = for_all2 n a0 a1 (fun _ x y -> x = y) in
     A.pts_to_length a0 s0;
     A.pts_to_length a1 s1;
     assert (b <==> Seq.equal s0 s1);
