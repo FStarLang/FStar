@@ -60,3 +60,8 @@ $(DOC_DIR):
 $(DOC_DIR)/%.md: %
 	../bin/fstar --print_in_place $^
 	python3 ../.scripts/fstardoc/fstardoc.py $^ > $@
+
+INSTALL_EXEC ?= install
+
+install: all
+	+./install-ulib.sh

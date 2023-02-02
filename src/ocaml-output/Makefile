@@ -23,9 +23,6 @@ GENERATED_ML_FILES=$(FStar_Parser_Parse_ml) $(FStar_Version_ml)
 
 GENERATED_FILES=$(GENERATED_ML_FILES) parse.mly
 
-# The directory where we install files when doing "make install".
-# Overridden via the command-line by the OPAM invocation.
-PREFIX=$(shell pwd)/fstar
 # The string "Madoko" if madoko is installed, something else otherwise.
 MADOKO = $(shell madoko --version 2>/dev/null | cut -c -6)
 DOS2UNIX=$(shell which dos2unix >/dev/null 2>&1 && echo dos2unix || echo true)
@@ -38,6 +35,7 @@ ifdef INSTALL_EXEC
 else
    INSTALL_EXEC := install
 endif
+export INSTALL_EXEC
 
 # Final sanity check for the OCaml version
 OCAML_BRANCH=$(shell ocaml get_branch.ml)
@@ -158,12 +156,12 @@ install_dir = cd ../../$(1) && find . -type f -exec $(INSTALL_EXEC) -m 644 -D {}
 # structure.  NOTE: this rule works with the
 # opam package, but it has not been tested in any other settings.
 install:
-	@# Install the binary
-	$(INSTALL_EXEC) -m 755 -D $(FSTAR_MAIN_NATIVE) $(PREFIX)/bin/fstar.exe
-	@# Then the standard library
-	$(call install_dir,ulib,lib/fstar)
-	@# Then the binary library
-	true # FIXME: install the contents of the local lib/fstar
+	@# Rebuild everything
+	+$(MAKE) -C $(FSTAR_HOME)
+	@# Install the binary and the binary library
+	cd $(DUNE_SNAPSHOT) && dune install --prefix=$(PREFIX)
+	@# Then the standard library sources and checked files
+	+$(MAKE) -C $(FSTAR_HOME)/ulib install
 	@# Then the rest of the static files.
 	@# (those are not used in the opam package, not sure if their Makefiles work)
 	$(call install_dir,examples,share/fstar/examples)
@@ -178,14 +176,6 @@ endif
 
 NAME=fstar_$(VERSION)_$(PLATFORM)
 
-# the `fexport` function takes a path relative to the top of the F* repo
-# and exports the contents of that directory to the $(PREFIX) dir
-fexport = cd ../.. && git archive "--format=tar" "--prefix=$(1)/" HEAD:$(1)/ |\
-          tar -x -C $(PREFIX)
-
-# Similar, but exports every file instead of only those in version control.
-fexport-all = cp -a ../../$(1) $(PREFIX)/$(1)
-
 ifeq ($(OS),Windows_NT)
   Z3_NAME=z3.exe
 else
@@ -198,33 +188,30 @@ Z3_LICENSE?=$(shell dirname $(Z3_DIR))/LICENSE.txt
 
 # Create a zip / tar.gz package of FStar that contains a Z3 binary and
 # proper license files.
+
+package_prefix=$(shell pwd)/fstar
+package_dir = cd ../../$(1) && find . -type f -exec $(INSTALL_EXEC) -m 644 -D {} $(package_prefix)/$(2)/{} \;
+
 package:
 	@# Clean previous packages.
-	! [ -d "$(PREFIX)" ]
+	! [ -d "$(package_prefix)" ]
 	rm -f $(NAME).zip $(NAME).tar.gz
-	mkdir -p $(PREFIX)
-	@# Install the F* binary
-	$(call fexport-all,bin)
-	@# Then the standard library.
-	$(call fexport-all,ulib)
-	mkdir -p $(PREFIX)/src/ocaml-output/
-	cp ../../src/ocaml-output/FStar_Pervasives.ml $(PREFIX)/src/ocaml-output/
-	cp ../../version.txt $(PREFIX)/
-	cp ../../_tags $(PREFIX)/
-	cp ../../.common.mk $(PREFIX)/
+	@# Install F* into the package
+	+PREFIX=$(package_prefix) $(MAKE) install
+	@# Then the version file.
+	cp ../../version.txt $(package_prefix)/
 	@# Then the rest of the static files.
-	$(call fexport,ucontrib)
 	@# Documentation and licenses
-	cp ../../README.md ../../INSTALL.md ../../LICENSE ../../LICENSE-fsharp.txt $(PREFIX)
-	cp $(Z3_LICENSE) $(PREFIX)/LICENSE-z3.txt
+	cp ../../README.md ../../INSTALL.md ../../LICENSE ../../LICENSE-fsharp.txt $(package_prefix)
+	cp $(Z3_LICENSE) $(package_prefix)/LICENSE-z3.txt
 	@# Z3
 ifeq ($(OS),Windows_NT)
-	cp $(shell which libgmp-10.dll) $(PREFIX)/bin
-	cp $(Z3_DIR)/*.exe $(Z3_DIR)/*.dll $(Z3_DIR)/*.lib $(PREFIX)/bin
-	chmod a+x $(PREFIX)/bin/z3.exe $(PREFIX)/bin/*.dll
+	cp $(shell which libgmp-10.dll) $(package_prefix)/bin
+	cp $(Z3_DIR)/*.exe $(Z3_DIR)/*.dll $(Z3_DIR)/*.lib $(package_prefix)/bin
+	chmod a+x $(package_prefix)/bin/z3.exe $(package_prefix)/bin/*.dll
 	zip -r -9 $(NAME).zip fstar
 else
-	cp $(Z3_DIR)/z3 $(PREFIX)/bin
+	cp $(Z3_DIR)/z3 $(package_prefix)/bin
 	tar czf $(NAME).tar.gz fstar
 endif
 
