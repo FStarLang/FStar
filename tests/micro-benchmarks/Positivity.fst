@@ -79,7 +79,7 @@ assume val t_t17 ([@@@ strictly_positive] a:Type0) (b:Type0) : Type0
 
 
 //fails since we don't know if the second binder of t_t17 is positive
-[@@ expect_failure]
+[@@ expect_failure [3]]
 noeq
 type t_t18 =
   | C181: t_t17 t_t18 t_t18 -> t_t18
@@ -106,7 +106,7 @@ let t_t19 a = list a
  *
  *)
 
-[@@ expect_failure]
+[@@ expect_failure [3]]
 noeq
 type t_t20 (f:Type0 -> Type0) =
   | C201 : f (t_t20 f) -> t_t20 f
@@ -137,7 +137,7 @@ type t_t21 ([@@@ strictly_positive] a:Type0) : Type0 =
   | C211 : a -> t_t21 a
 
 //binder a is not used in a strictly positive position
-[@@ expect_failure]
+[@@ expect_failure [3]]
 noeq
 type t_t22 ([@@@ strictly_positive] a:Type0) : Type0 =
   | C221 : (a -> int) -> t_t22 a
@@ -146,7 +146,7 @@ type t_t22 ([@@@ strictly_positive] a:Type0) : Type0 =
 //binder b is not used in a strictly positive position
 //e.g. if a is instantiated with something like fun t -> (t -> int)
 //
-[@@ expect_failure]
+[@@ expect_failure [3]]
 noeq
 type t_t22 (a:Type0 -> Type0) ([@@@ strictly_positive] b:Type0) =
   | C221 : a b -> t_t22 a b
@@ -164,14 +164,14 @@ type t_t22
 //instantiating t_t22 with a argument that doesn't satisfy
 //  the strictly positive constraint fails
 
-[@@ expect_failure]
+[@@ expect_failure [3]]
 type t_t23 (a:Type0) = t_t22 (fun t -> (t -> False)) a
 
 //
 //Though a promises to treat its first argument as strictly positive,
 //  the argument that we pass to it is negative for t_t24
 
-[@@ expect_failure]
+[@@ expect_failure [3]]
 noeq
 type t_t24 (a:([@@@ strictly_positive] _:Type0 -> Type0)) =
   | C241 : a (t_t24 a -> False) -> t_t24 a
@@ -179,7 +179,8 @@ type t_t24 (a:([@@@ strictly_positive] _:Type0 -> Type0)) =
 //
 //the classic free monad is not strictly positive
 //
-[@@ expect_failure]
+[@@ expect_failure [3]]
+noeq
 type free (f:Type -> Type) (a:Type) : Type =
   | Pure   : a -> free f a
   | Impure : f (free f a) -> free f a
@@ -195,5 +196,37 @@ type free (f:([@@@ strictly_positive] _:Type -> Type)) (a:Type) : Type =
 
 type free_inst0 = free list int
 
-[@@ expect_failure]
+[@@ expect_failure [3]]
 type free_inst1 = free (fun t -> t -> False) int
+
+[@@expect_failure [3]]
+type sdyn =
+  | S : squash (sdyn → GTot ⊥) → sdyn
+
+(* If we don't enforce positivity in refinements,
+   things become inconsistent *)
+
+#push-options "--__no_positivity"
+type bad =
+  | Bad : squash (bad → GTot ⊥) → bad
+#pop-options
+
+open FStar.Squash
+
+let loop' (s:bad) : GTot (squash ⊥) =
+  let Bad sf =s in
+  bind_squash sf (λ f →
+  return_squash (f s))
+  
+let loop'' : squash (bad → GTot ⊥) = FStar.Squash.squash_double_arrow (FStar.Squash.return_squash loop')
+let loop : squash bad = bind_squash loop'' (λ l → FStar.Squash.return_squash (l (Bad loop'')))
+let ff (_:unit) : squash ⊥ = bind_squash loop loop'
+
+
+irreducible
+let f (a:Type) (x:a) : option a = Some x
+
+[@@expect_failure [3]]
+noeq
+type neg_match =
+  | MNM : (match f Type0 neg_match with | Some t -> (t -> bool) | None -> unit) -> neg_match

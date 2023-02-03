@@ -6284,7 +6284,7 @@ and (tc_abs :
                                  if uu___8
                                  then
                                    let r =
-                                     FStar_TypeChecker_Util.name_strictly_positive_in_type
+                                     FStar_TypeChecker_Positivity.name_strictly_positive_in_type
                                        env1 b.FStar_Syntax_Syntax.binder_bv
                                        body2 in
                                    (if Prims.op_Negation r
