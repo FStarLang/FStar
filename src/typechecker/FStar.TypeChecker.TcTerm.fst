@@ -4615,7 +4615,7 @@ let rec universe_of_aux env e : term =
      level_of_type_fail env e "empty match cases"
 
 
-let universe_of env e = Errors.with_ctx (BU.format1 "While attempting to compute a universe level (%s)" (Print.term_to_string e)) (fun () ->
+let universe_of env e = Errors.with_ctx "While attempting to compute a universe level" (fun () ->
     if debug env Options.High then
       BU.print1 "Calling universe_of_aux with %s {\n" (Print.term_to_string e);
     def_check_closed_in_env e.pos "universe_of entry" env e;
