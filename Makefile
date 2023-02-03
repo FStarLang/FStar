@@ -6,6 +6,10 @@ all: dune
 
 DUNE_SNAPSHOT ?= $(CURDIR)/ocaml
 
+# The directory where we install files when doing "make install".
+# Overridden via the command-line by the OPAM invocation.
+PREFIX ?= /usr/local
+
 .PHONY: dune dune-fstar verify-ulib
 dune-fstar:
 	$(Q)+$(MAKE) -C src/ocaml-output fstar-version-ml-install
@@ -51,17 +55,15 @@ boot:
 install:
 	$(Q)+$(MAKE) -C src/ocaml-output install
 
-# The directory where we install files when doing "make install".
-# Overridden via the command-line by the OPAM invocation.
-PREFIX ?= $(CURDIR)
+# The `uninstall` rule is only necessary for users who manually ran
+# `make install`. It is not needed if F* was installed with opam,
+# since `opam remove` can uninstall packages automatically with its
+# own way.
 
 uninstall:
-	ocamlfind remove fstar
-	ocamlfind remove fstar.lib
 	rm -rf \
 	  $(PREFIX)/lib/fstar \
-	  $(PREFIX)/doc/fstar \
-	  $(PREFIX)/etc/fstar \
+	  $(PREFIX)/bin/fstar_tests.exe \
 	  $(PREFIX)/bin/fstar.exe \
 	  $(PREFIX)/share/fstar
 
