@@ -1084,7 +1084,77 @@ let wp_sig_aux decls m =
 
 let wp_signature env m = wp_sig_aux env.effects.decls m
 
+let bound_vars_of_bindings bs =
+  bs |> List.collect (function
+        | Binding_var x -> [x]
+        | Binding_lid _
+        | Binding_univ _ -> [])
+
+let binders_of_bindings bs = bound_vars_of_bindings bs |> List.map Syntax.mk_binder |> List.rev
+
+let bound_vars env = bound_vars_of_bindings env.gamma
+
+let all_binders env = binders_of_bindings env.gamma
+
+let def_check_vars_in_set rng msg vset t =
+    if Options.defensive () then begin
+        let s = Free.names t in
+        if not (BU.set_is_empty <| BU.set_difference s vset)
+        then Errors.log_issue rng
+                    (Errors.Warning_Defensive,
+                     BU.format4 "Internal: term is not closed (%s).\nt = (%s)\nFVs = (%s)\nScope = (%s)\n"
+                                      msg
+                                      (Print.term_to_string t)
+                                      (BU.set_elements s |> Print.bvs_to_string ",\n\t")
+                                      (BU.set_elements vset |> Print.bvs_to_string ",")
+                                      )
+    end
+
+let def_check_closed_in rng msg l t =
+    if not (Options.defensive ()) then () else
+    def_check_vars_in_set rng msg (BU.as_set l Syntax.order_bv) t
+
+let def_check_closed_in_env rng msg e t =
+    if not (Options.defensive ()) then () else
+    def_check_closed_in rng msg (bound_vars e) t
+
+let def_check_comp_closed_in rng msg l c =
+    if not (Options.defensive ()) then () else
+    match c.n with
+    | Total t
+    | GTotal t -> def_check_closed_in rng (msg^".typ") l t
+    | Comp ct -> begin
+      def_check_closed_in rng (msg^".typ") l (ct.result_typ);
+      List.iter (fun (a, _) -> def_check_closed_in rng (msg^".arg") l a) ct.effect_args
+    end
+
+let def_check_comp_closed_in_env rng msg e c =
+    if not (Options.defensive ()) then () else
+    match c.n with
+    | Total t
+    | GTotal t -> def_check_closed_in_env rng (msg^".typ") e t
+    | Comp ct -> begin
+      def_check_closed_in_env rng (msg^".typ") e (ct.result_typ);
+      List.iter (fun (a, _) -> def_check_closed_in_env rng (msg^".arg") e a) ct.effect_args
+    end
+
+let def_check_lcomp_closed_in rng msg l lc =
+  if Options.defensive () then
+    let c, _ = lcomp_comp lc in
+    def_check_comp_closed_in rng msg l c
+
+let def_check_lcomp_closed_in_env rng msg env lc =
+  if Options.defensive () then
+    let c, _ = lcomp_comp lc in
+    def_check_comp_closed_in_env rng msg env c
+
+let def_check_guard_wf rng msg env g =
+    match g.guard_f with
+    | Trivial -> ()
+    | NonTrivial f -> def_check_closed_in_env rng msg env f
+
 let comp_to_comp_typ (env:env) c =
+  def_check_comp_closed_in_env c.pos "comp_to_comp_typ" env c;
   match c.n with
   | Comp ct -> ct
   | _ ->
@@ -1098,9 +1168,14 @@ let comp_to_comp_typ (env:env) c =
      effect_args = [];
      flags = U.comp_flags c}
 
-let comp_set_flags env c f = {c with n=Comp ({comp_to_comp_typ env c with flags=f})}
+let comp_set_flags env c f =
+    def_check_comp_closed_in_env c.pos "comp_set_flags.IN" env c;
+    let r = {c with n=Comp ({comp_to_comp_typ env c with flags=f})} in
+    def_check_comp_closed_in_env c.pos "comp_set_flags.OUT" env r;
+    r
 
 let rec unfold_effect_abbrev env comp =
+  def_check_comp_closed_in_env comp.pos "unfold_effect_abbrev" env comp;
   let c = comp_to_comp_typ env comp in
   match lookup_effect_abbrev env c.comp_univs c.effect_name with
     | None -> c
@@ -1588,18 +1663,6 @@ let univnames env =
     in
     aux no_univ_names env.gamma
 
-let bound_vars_of_bindings bs =
-  bs |> List.collect (function
-        | Binding_var x -> [x]
-        | Binding_lid _
-        | Binding_univ _ -> [])
-
-let binders_of_bindings bs = bound_vars_of_bindings bs |> List.map Syntax.mk_binder |> List.rev
-
-let bound_vars env = bound_vars_of_bindings env.gamma
-
-let all_binders env = binders_of_bindings env.gamma
-
 let print_gamma gamma =
     (gamma |> List.map (function
         | Binding_var x -> "Binding_var (" ^ (Print.bv_to_string x) ^ ":" ^ (Print.term_to_string x.sort) ^ ")"
@@ -1701,34 +1764,8 @@ let abstract_guard_n bs g =
 let abstract_guard b g =
     abstract_guard_n [b] g
 
-let def_check_vars_in_set rng msg vset t =
-    if Options.defensive () then begin
-        let s = Free.names t in
-        if not (BU.set_is_empty <| BU.set_difference s vset)
-        then Errors.log_issue rng
-                    (Errors.Warning_Defensive,
-                     BU.format3 "Internal: term is not closed (%s).\nt = (%s)\nFVs = (%s)\n"
-                                      msg
-                                      (Print.term_to_string t)
-                                      (BU.set_elements s |> Print.bvs_to_string ",\n\t"))
-    end
-
-
 let too_early_in_prims env =
   not (lid_exists env Const.effect_GTot_lid)
-
-let def_check_closed_in rng msg l t =
-    if not (Options.defensive ()) then () else
-    def_check_vars_in_set rng msg (BU.as_set l Syntax.order_bv) t
-
-let def_check_closed_in_env rng msg e t =
-    if not (Options.defensive ()) then () else
-    def_check_closed_in rng msg (bound_vars e) t
-
-let def_check_guard_wf rng msg env g =
-    match g.guard_f with
-    | Trivial -> ()
-    | NonTrivial f -> def_check_closed_in_env rng msg env f
 
 let apply_guard g e = match g.guard_f with
   | Trivial -> g

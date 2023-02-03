@@ -666,6 +666,7 @@ let is_comp_ascribed_reflect (e:term) : option (lident * term * aqual) =
 (* Main type-checker begins here                                                                            *)
 (************************************************************************************************************)
 let rec tc_term env e =
+    def_check_closed_in_env e.pos "tc_term.entry" env e;
     if Env.debug env Options.Medium then
         BU.print5 "(%s) Starting tc_term (phase1=%s) of %s (%s), %s {\n"
           (Range.string_of_range <| Env.get_range env)
@@ -693,6 +694,7 @@ and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked 
                                         * lcomp                 (* computation type where the WPs are lazily evaluated *)
                                         * guard_t =             (* well-formedness condition                           *)
   let env = if e.pos=Range.dummyRange then env else Env.set_range env e.pos in
+  def_check_closed_in_env e.pos "tc_maybe_toplevel_term.entry" env e;
   let top = SS.compress e in
   if debug env Options.Medium then
     BU.print3 "Typechecking %s (%s): %s\n" (Range.string_of_range <| Env.get_range env) (Print.tag_of_term top) (Print.term_to_string top);
@@ -1080,7 +1082,7 @@ and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked 
 
       let (expected_repr_typ, g_repr), u_a, a, g_a =
         let a, u_a = U.type_u () in
-        let a_uvar, _, g_a = TcUtil.new_implicit_var "" e.pos env_no_ex a in
+        let a_uvar, _, g_a = TcUtil.new_implicit_var "tc_term reflect" e.pos env_no_ex a in
         TcUtil.fresh_effect_repr_en env_no_ex e.pos l u_a a_uvar, u_a, a_uvar, g_a in
 
       let g_eq = Rel.teq env_no_ex c_e.res_typ expected_repr_typ in
@@ -3375,14 +3377,14 @@ and tc_pat env (pat_t:typ) (p0:pat) :
 (* the returned terms are well-formed in an environment extended with the scrutinee only                            *)
 
 (*
- * ret_opt is the optional return annotation on the match
+ * ret_opt is the optional return annotation on the match (NB: if any, the ascription has been opened)
  * if this is set, then ascribe it on the branches for typechecking
  * but unascribe it before returning to the caller
  *)
 (********************************************************************************************************************)
-and tc_eqn scrutinee env ret_opt branch
+and tc_eqn (scrutinee:bv) (env:Env.env) (ret_opt : option match_returns_ascription) (branch:S.branch)
         : (pat * option term * term)  (* checked branch *)
-        * term                        (* the guard condition for taking this branch,
+        * formula                     (* the guard condition for taking this branch,
                                           used by the caller for the exhaustiveness check *)
         * lident                      (* effect label of the branch lcomp *)
         * option (list cflag)         (* flags for the branch lcomp,
@@ -4485,8 +4487,10 @@ let rec apply_well_typed env (t_hd:typ) (args:args) : option typ =
       For instance, if e is an application (f _), we compute the type of f to be bs -> C,
       and we take the universe level of e to be (level_of (comp_result C)),
       disregarding the arguments of f.
+
+      This a returns a term of shape Tm_type at the wanted universe.
  *)
-let rec universe_of_aux env e =
+let rec universe_of_aux env e : term =
    match (SS.compress e).n with
    | Tm_bvar _
    | Tm_unknown
@@ -4610,13 +4614,17 @@ let rec universe_of_aux env e =
    | Tm_match(_, _, [], _) ->  //AR: TODO: use return annotation?
      level_of_type_fail env e "empty match cases"
 
-let universe_of env e =
+
+let universe_of env e = Errors.with_ctx (BU.format1 "While attempting to compute a universe level (%s)" (Print.term_to_string e)) (fun () ->
     if debug env Options.High then
       BU.print1 "Calling universe_of_aux with %s {\n" (Print.term_to_string e);
+    def_check_closed_in_env e.pos "universe_of entry" env e;
+
     let r = universe_of_aux env e in
     if debug env Options.High then
       BU.print1 "Got result from universe_of_aux = %s }\n" (Print.term_to_string r);
     level_of_type env e r
+)
 
 let tc_tparams env0 (tps:binders) : (binders * Env.env * universes) =
     let tps, env, g, us = tc_binders env0 tps in
@@ -4625,22 +4633,7 @@ let tc_tparams env0 (tps:binders) : (binders * Env.env * universes) =
 
 ////////////////////////////////////////////////////////////////////////////////
 
-(*
-    Pre-condition: exists k. env |- t : (G)Tot k
-    i.e., t is well-typed in env at some type k
-
-    And t is Tot or GTot, meaning if it is PURE or GHOST, its wp has been accounted for
-      (which is the case for the terms in the unifier)
-
-    Returns (Some k), if it can find k quickly and the effect of t is consistent with must_tot
-
-    If either the type cannot be computed or effect does not match with must_tot, returns None
-
-    A possible restructuring would be to treat these two (type and effect) separately
-      in the return type
-*)
-
-let rec typeof_tot_or_gtot_term_fastpath (env:env) (t:term) (must_tot:bool) : option typ =
+let rec __typeof_tot_or_gtot_term_fastpath (env:env) (t:term) (must_tot:bool) : option typ =
   let mk_tm_type u = S.mk (Tm_type u) t.pos in
   let effect_ok k = (not must_tot) || (N.non_info_norm env k) in
   let t = SS.compress t in
@@ -4654,6 +4647,10 @@ let rec typeof_tot_or_gtot_term_fastpath (env:env) (t:term) (must_tot:bool) : op
 
   //For the following nodes, use the universe_of_aux function
   //since these are already Tot, we don't need to check the must_tot flag
+  // GM: calling universe_of for Tm_name/Tv_fvar here is a bit shady,
+  // sinc the variable may not represent a type. However universe_of_aux
+  // will currently simply return the sort of bv from the environment,
+  // be it Tm_type or not, and that's what we want here.
   | Tm_name _
   | Tm_fvar _
   | Tm_uinst _
@@ -4662,7 +4659,7 @@ let rec typeof_tot_or_gtot_term_fastpath (env:env) (t:term) (must_tot:bool) : op
   | Tm_arrow _ -> universe_of_aux env t |> Some
 
   | Tm_lazy i ->
-    typeof_tot_or_gtot_term_fastpath env (U.unfold_lazy i) must_tot
+    __typeof_tot_or_gtot_term_fastpath env (U.unfold_lazy i) must_tot
 
   | Tm_abs(bs, body, Some ({residual_effect=eff; residual_typ=tbody})) ->  //AR: maybe keep residual univ too?
     let mk_comp =
@@ -4678,7 +4675,7 @@ let rec typeof_tot_or_gtot_term_fastpath (env:env) (t:term) (must_tot:bool) : op
         | Some _ -> tbody
         | None ->
           let bs, body = SS.open_term bs body in
-          BU.map_opt (typeof_tot_or_gtot_term_fastpath (Env.push_binders env bs) body false) (SS.close bs) in
+          BU.map_opt (__typeof_tot_or_gtot_term_fastpath (Env.push_binders env bs) body false) (SS.close bs) in
       bind_opt tbody (fun tbody ->
         let bs, tbody = SS.open_term bs tbody in
         let u = universe_of (Env.push_binders env bs) tbody in
@@ -4686,7 +4683,7 @@ let rec typeof_tot_or_gtot_term_fastpath (env:env) (t:term) (must_tot:bool) : op
 
   | Tm_abs _ -> None
 
-  | Tm_refine(x, _) -> typeof_tot_or_gtot_term_fastpath env x.sort must_tot
+  | Tm_refine(x, _) -> __typeof_tot_or_gtot_term_fastpath env x.sort must_tot
 
   (* Unary operators. Explicitly curry extra arguments *)
   | Tm_app({n=Tm_constant Const_range_of}, a::hd::rest) ->
@@ -4694,7 +4691,7 @@ let rec typeof_tot_or_gtot_term_fastpath (env:env) (t:term) (must_tot:bool) : op
     let unary_op, _ = U.head_and_args t in
     let head = mk (Tm_app(unary_op, [a])) (Range.union_ranges unary_op.pos (fst a).pos) in
     let t = mk (Tm_app(head, rest)) t.pos in
-    typeof_tot_or_gtot_term_fastpath env t must_tot
+    __typeof_tot_or_gtot_term_fastpath env t must_tot
 
   (* Binary operators *)
   | Tm_app({n=Tm_constant Const_set_range_of}, a1::a2::hd::rest) ->
@@ -4702,27 +4699,27 @@ let rec typeof_tot_or_gtot_term_fastpath (env:env) (t:term) (must_tot:bool) : op
     let unary_op, _ = U.head_and_args t in
     let head = mk (Tm_app(unary_op, [a1; a2])) (Range.union_ranges unary_op.pos (fst a1).pos) in
     let t = mk (Tm_app(head, rest)) t.pos in
-    typeof_tot_or_gtot_term_fastpath env t must_tot
+    __typeof_tot_or_gtot_term_fastpath env t must_tot
 
   | Tm_app({n=Tm_constant Const_range_of}, [_]) ->
     Some (t_range)
 
   | Tm_app({n=Tm_constant Const_set_range_of}, [(t, _); _]) ->
-    typeof_tot_or_gtot_term_fastpath env t must_tot
+    __typeof_tot_or_gtot_term_fastpath env t must_tot
 
   | Tm_app(hd, args) ->
-    let t_hd = typeof_tot_or_gtot_term_fastpath env hd must_tot in
+    let t_hd = __typeof_tot_or_gtot_term_fastpath env hd must_tot in
     bind_opt t_hd (fun t_hd ->
       bind_opt (apply_well_typed env t_hd args) (fun t ->
         if (effect_ok t) ||
-           (List.for_all (fun (a, _) -> typeof_tot_or_gtot_term_fastpath env a must_tot |> is_some) args)
+           (List.for_all (fun (a, _) -> __typeof_tot_or_gtot_term_fastpath env a must_tot |> is_some) args)
         then Some t
         else None))
 
   | Tm_ascribed(t, (Inl k, _, _), _) ->
     if effect_ok k
     then Some k
-    else typeof_tot_or_gtot_term_fastpath env t must_tot
+    else __typeof_tot_or_gtot_term_fastpath env t must_tot
 
   | Tm_ascribed(_, (Inr c, _, _), _) ->
     let k = U.comp_result c in
@@ -4736,13 +4733,33 @@ let rec typeof_tot_or_gtot_term_fastpath (env:env) (t:term) (must_tot:bool) : op
 
   | Tm_quoted (tm, qi) -> if not must_tot then Some (S.t_term) else None
 
-  | Tm_meta(t, _) -> typeof_tot_or_gtot_term_fastpath env t must_tot
+  | Tm_meta(t, _) -> __typeof_tot_or_gtot_term_fastpath env t must_tot
 
   | Tm_match (_, _, _, Some rc) -> rc.residual_typ
   | Tm_match _
   | Tm_let _
   | Tm_unknown
   | _ -> failwith ("Impossible! (" ^ (Print.tag_of_term t) ^ ")")
+
+(*
+    Pre-condition: exists k. env |- t : (G)Tot k
+    i.e., t is well-typed in env at some type k
+
+    And t is Tot or GTot, meaning if it is PURE or GHOST, its wp has been accounted for
+      (which is the case for the terms in the unifier)
+
+    Returns (Some k), if it can find k quickly and the effect of t is consistent with must_tot
+
+    If either the type cannot be computed or effect does not match with must_tot, returns None
+
+    A possible restructuring would be to treat these two (type and effect) separately
+      in the return type
+*)
+let typeof_tot_or_gtot_term_fastpath (env:env) (t:term) (must_tot:bool) : option typ =
+  def_check_closed_in_env t.pos "fastpath" env t;
+  Errors.with_ctx
+    (BU.format1 "In a call to typeof_tot_or_gtot_term_fastpath, t=%s" (Print.term_to_string t))
+    (fun () -> __typeof_tot_or_gtot_term_fastpath env t must_tot)
 
 (*
  * Precondition: G |- t : Tot _ or G |- t : GTot _

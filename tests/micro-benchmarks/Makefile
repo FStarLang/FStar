@@ -26,9 +26,11 @@ $(CACHE_DIR)/MustEraseForExtraction.fst.checked: OTHERFLAGS += --warn_error @318
 
 %.ml-cmp: %.ml %.ml.expected
 	diff -u --strip-trailing-cr $< $<.expected
-
+	touch $@
 
 clean:
 	rm -f .depend
 	rm -rf _cache
 	rm -rf _output
+
+.PRECIOUS: *.ml
