@@ -103,8 +103,9 @@ dune-fstar-snapshot: generated-files
 	for f in $(SRC_INCLUDES) ; do cp ../../$$f/*.ml $(DUNE_SNAPSHOT)/fstar-lib ; done
 	cp *.ml $(DUNE_SNAPSHOT)/fstar-lib/generated
 	rm -rf $(DUNE_SNAPSHOT)/fstar-lib/generated/get_branch.ml
-	mkdir -p $(DUNE_SNAPSHOT)/fstar-tests
+	mkdir -p $(DUNE_SNAPSHOT)/fstar-tests/generated
 	cp ../../src/tests/ml/*.ml $(DUNE_SNAPSHOT)/fstar-tests
+	mv $(DUNE_SNAPSHOT)/fstar-lib/generated/FStar_Tests_* $(DUNE_SNAPSHOT)/fstar-tests/generated/
 
 dune-verify-ulib: dune-fstar-snapshot
 	+if test -x $(FSTAR_HOME)/bin/fstar.exe ; then \
