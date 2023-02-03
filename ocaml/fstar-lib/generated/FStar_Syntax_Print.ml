@@ -527,7 +527,17 @@ and (term_to_string : FStar_Syntax_Syntax.term -> Prims.string) =
                  Prims.op_Hat ":(" uu___5 in
                Prims.op_Hat uu___3 uu___4
            | FStar_Syntax_Syntax.Tm_name x3 -> nm_to_string x3
-           | FStar_Syntax_Syntax.Tm_fvar f -> fv_to_string f
+           | FStar_Syntax_Syntax.Tm_fvar f ->
+               let pref =
+                 match f.FStar_Syntax_Syntax.fv_qual with
+                 | FStar_Pervasives_Native.Some
+                     (FStar_Syntax_Syntax.Unresolved_projector uu___3) ->
+                     "(Unresolved_projector)"
+                 | FStar_Pervasives_Native.Some
+                     (FStar_Syntax_Syntax.Unresolved_constructor uu___3) ->
+                     "(Unresolved_constructor)"
+                 | uu___3 -> "" in
+               let uu___3 = fv_to_string f in Prims.op_Hat pref uu___3
            | FStar_Syntax_Syntax.Tm_uvar (u, ([], uu___3)) ->
                let uu___4 =
                  (FStar_Options.print_bound_var_types ()) &&
