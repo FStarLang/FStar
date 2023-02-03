@@ -27,9 +27,6 @@ build: [
 install: [
   [make "PREFIX=%{prefix}%" "install"]
 ]
-remove: [
-  [make "PREFIX=%{prefix}%" "uninstall"]
-]
 dev-repo: "git://github.com/FStarLang/FStar"
 bug-reports: "https://github.com/FStarLang/FStar/issues"
 synopsis: "Verification system for effectful programs"
