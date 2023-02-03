@@ -34,7 +34,7 @@ HyE.CCA2.fst \
 HyE.HCCA2.fst \
 
 ifdef FSTAR_HOME
-FSTAR_UCONTRIB = $(FSTAR_HOME)/ucontrib
+FSTAR_UCONTRIB = $(shell if test -d $(FSTAR_HOME)/ucontrib ; then echo $(FSTAR_HOME)/ucontrib ; else echo $(FSTAR_HOME)/share/fstar/contrib ; fi)
 else
    # FSTAR_HOME not defined, assume fstar.exe installed through opam
    # or binary package, and reachable from PATH

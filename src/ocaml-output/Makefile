@@ -165,7 +165,9 @@ install:
 	@# Then the standard library sources and checked files
 	+$(MAKE) -C $(FSTAR_HOME)/ulib install
 	@# Then the examples (those now work from any F* installation flavor, sources, binary package or opam)
+	@# ucontrib is needed by examples/crypto
 	$(call install_dir,examples,share/fstar/examples)
+	$(call install_dir,ucontrib,share/fstar/contrib)
 	@# Then the tutorial
 ifeq ($(MADOKO),Madoko)
 	@# Build the tutorial first
