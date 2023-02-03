@@ -12583,28 +12583,24 @@ let (universe_of :
   =
   fun env ->
     fun e ->
-      let uu___ =
-        let uu___1 = FStar_Syntax_Print.term_to_string e in
-        FStar_Compiler_Util.format1
-          "While attempting to compute a universe level (%s)" uu___1 in
-      FStar_Errors.with_ctx uu___
-        (fun uu___1 ->
-           (let uu___3 = FStar_TypeChecker_Env.debug env FStar_Options.High in
-            if uu___3
+      FStar_Errors.with_ctx "While attempting to compute a universe level"
+        (fun uu___ ->
+           (let uu___2 = FStar_TypeChecker_Env.debug env FStar_Options.High in
+            if uu___2
             then
-              let uu___4 = FStar_Syntax_Print.term_to_string e in
+              let uu___3 = FStar_Syntax_Print.term_to_string e in
               FStar_Compiler_Util.print1
-                "Calling universe_of_aux with %s {\n" uu___4
+                "Calling universe_of_aux with %s {\n" uu___3
             else ());
            FStar_TypeChecker_Env.def_check_closed_in_env
              e.FStar_Syntax_Syntax.pos "universe_of entry" env e;
            (let r = universe_of_aux env e in
-            (let uu___5 = FStar_TypeChecker_Env.debug env FStar_Options.High in
-             if uu___5
+            (let uu___4 = FStar_TypeChecker_Env.debug env FStar_Options.High in
+             if uu___4
              then
-               let uu___6 = FStar_Syntax_Print.term_to_string r in
+               let uu___5 = FStar_Syntax_Print.term_to_string r in
                FStar_Compiler_Util.print1
-                 "Got result from universe_of_aux = %s }\n" uu___6
+                 "Got result from universe_of_aux = %s }\n" uu___5
              else ());
             level_of_type env e r))
 let (tc_tparams :
