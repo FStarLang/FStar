@@ -18,7 +18,11 @@ FSTAR_BOOT ?= $(FSTAR)
 #   -- MLish and lax tune type-inference for use with unverified ML programs
 DUNE_SNAPSHOT ?= $(FSTAR_HOME)/ocaml
 OUTPUT_DIRECTORY = $(DUNE_SNAPSHOT)/fstar-lib/generated
-FSTAR_C=$(RUNLIM) $(FSTAR_BOOT) $(SIL) $(FSTAR_BOOT_OPTIONS) --cache_checked_modules --odir $(OUTPUT_DIRECTORY)
+FSTAR_C=$(RUNLIM) $(FSTAR_BOOT) $(SIL) $(FSTAR_BOOT_OPTIONS) --cache_checked_modules
+
+# Tests.* goes to fstar-tests, the rest to fstar-lib
+OUTPUT_DIRECTORY_FOR = $(if $(findstring FStar_Tests_,$(1)),$(DUNE_SNAPSHOT)/fstar-tests/generated,$(DUNE_SNAPSHOT)/fstar-lib/generated)
+FSTAR_C=$(RUNLIM) $(FSTAR_BOOT) $(SIL) $(FSTAR_BOOT_OPTIONS) --cache_checked_modules
 
 # Each "project" for the compiler is in its own namespace.  We want to
 # extract them all to OCaml.  Would be more convenient if all of them
@@ -65,6 +69,7 @@ EXTRACT = $(addprefix --extract_module , $(EXTRACT_MODULES))		\
 %.ml:
 	@echo "[EXTRACT   $(notdir $@)]"
 	$(Q)$(BENCHMARK_PRE) $(FSTAR_C) $(notdir $(subst .checked.lax,,$<)) \
+		   --odir "$(call OUTPUT_DIRECTORY_FOR,"$@")" \
                    --codegen OCaml \
                    --extract_module $(basename $(notdir $(subst .checked.lax,,$<)))
 
@@ -85,8 +90,11 @@ EXTRACT = $(addprefix --extract_module , $(EXTRACT_MODULES))		\
 	$(Q)$(FSTAR_C) --dep full		\
 		fstar/FStar.Main.fst		\
 		boot/FStar.Tests.Test.fst	\
+		--odir $(OUTPUT_DIRECTORY)	\
 		$(EXTRACT)			> ._depend
-	$(Q)mv ._depend .depend
+	@# We've generated deps for everything into fstar-lib/generated.
+	@# Here we fix up the .depend file to move tests out of the library.
+	$(Q)$(SED) 's,fstar-lib/generated/FStar_Test,fstar-tests/generated/FStar_Test,g' <._depend >.depend
 	$(Q)mkdir -p $(CACHE_DIR)
 
 depend: .depend
