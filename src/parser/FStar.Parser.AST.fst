@@ -921,7 +921,9 @@ let decl_to_string (d:decl) = match d.d with
   | Friend l -> "friend " ^ (string_of_lid l)
   | Include l -> "include " ^ (string_of_lid l)
   | ModuleAbbrev (i, l) -> Util.format2 "module %s = %s" (string_of_id i) (string_of_lid l)
-  | TopLevelLet(_, pats) -> "let " ^ (lids_of_let pats |> List.map (fun l -> (string_of_lid l)) |> String.concat ", ")
+  | TopLevelLet(q, pats) -> Util.format2 "let %s %s"
+                                        (string_of_let_qualifier q)
+                                        (List.map (fun (p,t) -> pat_to_string p ^ " = " ^ term_to_string t) pats |> String.concat "\n and")
   | Assume(i, _) -> "assume " ^ (string_of_id i)
   | Tycon(_, _, tys) -> "type " ^ (tys |> List.map id_of_tycon |> String.concat ", ")
   | Val(i, _) -> "val " ^ (string_of_id i)

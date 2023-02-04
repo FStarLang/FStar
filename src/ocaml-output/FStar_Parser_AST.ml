@@ -2276,15 +2276,22 @@ let (decl_to_string : decl -> Prims.string) =
         let uu___ = FStar_Ident.string_of_id i in
         let uu___1 = FStar_Ident.string_of_lid l in
         FStar_Compiler_Util.format2 "module %s = %s" uu___ uu___1
-    | TopLevelLet (uu___, pats) ->
-        let uu___1 =
-          let uu___2 =
-            let uu___3 = lids_of_let pats in
-            FStar_Compiler_Effect.op_Bar_Greater uu___3
-              (FStar_Compiler_List.map (fun l -> FStar_Ident.string_of_lid l)) in
-          FStar_Compiler_Effect.op_Bar_Greater uu___2
-            (FStar_String.concat ", ") in
-        Prims.op_Hat "let " uu___1
+    | TopLevelLet (q, pats) ->
+        let uu___ =
+          let uu___1 =
+            FStar_Compiler_List.map
+              (fun uu___2 ->
+                 match uu___2 with
+                 | (p, t) ->
+                     let uu___3 = pat_to_string p in
+                     let uu___4 =
+                       let uu___5 = term_to_string t in
+                       Prims.op_Hat " = " uu___5 in
+                     Prims.op_Hat uu___3 uu___4) pats in
+          FStar_Compiler_Effect.op_Bar_Greater uu___1
+            (FStar_String.concat "\n and") in
+        FStar_Compiler_Util.format2 "let %s %s" (string_of_let_qualifier q)
+          uu___
     | Assume (i, uu___) ->
         let uu___1 = FStar_Ident.string_of_id i in
         Prims.op_Hat "assume " uu___1

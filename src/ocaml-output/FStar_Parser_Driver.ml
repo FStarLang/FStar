@@ -41,7 +41,14 @@ let (parse_file :
     let uu___ = FStar_Parser_ParseIt.parse (FStar_Parser_ParseIt.Filename fn) in
     match uu___ with
     | FStar_Parser_ParseIt.ASTFragment (FStar_Pervasives.Inl ast, comments)
-        -> (ast, comments)
+        ->
+        ((let uu___2 = FStar_Options.print_ast () in
+          if uu___2
+          then
+            let uu___3 = FStar_Parser_AST.modul_to_string ast in
+            FStar_Compiler_Util.print1 "Parsed AST:\n%s\n" uu___3
+          else ());
+         (ast, comments))
     | FStar_Parser_ParseIt.ASTFragment (FStar_Pervasives.Inr uu___1, uu___2)
         ->
         let msg = FStar_Compiler_Util.format1 "%s: expected a module\n" fn in

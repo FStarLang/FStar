@@ -44,6 +44,8 @@ let parse_fragment (frag: ParseIt.input_frag) : fragment =
 let parse_file fn =
     match ParseIt.parse (Filename fn) with
     | ASTFragment (Inl ast, comments) ->
+        if Options.print_ast()
+        then Util.print1 "Parsed AST:\n%s\n" (Parser.AST.modul_to_string ast);
         ast, comments
     | ASTFragment (Inr _ , _) ->
         let msg = Util.format1 "%s: expected a module\n" fn in

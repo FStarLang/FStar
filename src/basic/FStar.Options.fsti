@@ -141,6 +141,7 @@ val ide                         : unit    -> bool
 val ide_id_info_off             : unit    -> bool
 val include_path                : unit    -> list string
 val print                       : unit    -> bool
+val print_ast                   : unit    -> bool
 val print_in_place              : unit    -> bool
 val initial_fuel                : unit    -> int
 val initial_ifuel               : unit    -> int

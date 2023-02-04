@@ -178,6 +178,7 @@ let defaults =
       ("lsp"                          , Bool false);
       ("include"                      , List []);
       ("print"                        , Bool false);
+      ("print_ast"                    , Bool false);      
       ("print_in_place"               , Bool false);
       ("force"                        , Bool false);
       ("fuel"                         , Unset);
@@ -367,6 +368,7 @@ let get_ide_id_info_off         ()      = lookup_opt "ide_id_info_off"          
 let get_lsp                     ()      = lookup_opt "lsp"                      as_bool
 let get_include                 ()      = lookup_opt "include"                  (as_list as_string)
 let get_print                   ()      = lookup_opt "print"                    as_bool
+let get_print_ast               ()      = lookup_opt "print_ast"                as_bool
 let get_print_in_place          ()      = lookup_opt "print_in_place"           as_bool
 let get_initial_fuel            ()      = lookup_opt "initial_fuel"             as_int
 let get_initial_ifuel           ()      = lookup_opt "initial_ifuel"            as_int
@@ -835,6 +837,11 @@ let rec specs_with_types warn_unsafe : list (char * string * opt_type * string) 
         "print",
         Const (Bool true),
         "Parses and prettyprints the files included on the command line");
+
+       ( noshort,
+        "print_ast",
+        Const (Bool true),
+        "Parses and print the AST to stdout in an ad hoc format");
 
        ( noshort,
         "print_in_place",
@@ -1756,6 +1763,7 @@ let hint_file_for_src src_filename =
 let ide                          () = get_ide                         ()
 let ide_id_info_off              () = get_ide_id_info_off             ()
 let print                        () = get_print                       ()
+let print_ast                    () = get_print_ast                   ()
 let print_in_place               () = get_print_in_place              ()
 let initial_fuel                 () = min (get_initial_fuel ()) (get_max_fuel ())
 let initial_ifuel                () = min (get_initial_ifuel ()) (get_max_ifuel ())

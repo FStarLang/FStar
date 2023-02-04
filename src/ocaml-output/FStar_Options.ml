@@ -301,6 +301,7 @@ let (defaults : (Prims.string * option_val) Prims.list) =
   ("lsp", (Bool false));
   ("include", (List []));
   ("print", (Bool false));
+  ("print_ast", (Bool false));
   ("print_in_place", (Bool false));
   ("force", (Bool false));
   ("fuel", Unset);
@@ -522,6 +523,8 @@ let (get_include : unit -> Prims.string Prims.list) =
   fun uu___ -> lookup_opt "include" (as_list as_string)
 let (get_print : unit -> Prims.bool) =
   fun uu___ -> lookup_opt "print" as_bool
+let (get_print_ast : unit -> Prims.bool) =
+  fun uu___ -> lookup_opt "print_ast" as_bool
 let (get_print_in_place : unit -> Prims.bool) =
   fun uu___ -> lookup_opt "print_in_place" as_bool
 let (get_initial_fuel : unit -> Prims.int) =
@@ -962,7 +965,7 @@ let (interp_quake_arg : Prims.string -> (Prims.int * Prims.int * Prims.bool))
           let uu___ = ios f1 in let uu___1 = ios f2 in (uu___, uu___1, true)
         else failwith "unexpected value for --quake"
     | uu___ -> failwith "unexpected value for --quake"
-let (uu___449 : (((Prims.string -> unit) -> unit) * (Prims.string -> unit)))
+let (uu___450 : (((Prims.string -> unit) -> unit) * (Prims.string -> unit)))
   =
   let cb = FStar_Compiler_Util.mk_ref FStar_Pervasives_Native.None in
   let set1 f =
@@ -974,11 +977,11 @@ let (uu___449 : (((Prims.string -> unit) -> unit) * (Prims.string -> unit)))
     | FStar_Pervasives_Native.Some f -> f msg in
   (set1, call)
 let (set_option_warning_callback_aux : (Prims.string -> unit) -> unit) =
-  match uu___449 with
+  match uu___450 with
   | (set_option_warning_callback_aux1, option_warning_callback) ->
       set_option_warning_callback_aux1
 let (option_warning_callback : Prims.string -> unit) =
-  match uu___449 with
+  match uu___450 with
   | (set_option_warning_callback_aux1, option_warning_callback1) ->
       option_warning_callback1
 let (set_option_warning_callback : (Prims.string -> unit) -> unit) =
@@ -1095,6 +1098,8 @@ let rec (specs_with_types :
       "A directory in which to search for files included on the command line");
     (FStar_Getopt.noshort, "print", (Const (Bool true)),
       "Parses and prettyprints the files included on the command line");
+    (FStar_Getopt.noshort, "print_ast", (Const (Bool true)),
+      "Parses and print the AST to stdout in an ad hoc format");
     (FStar_Getopt.noshort, "print_in_place", (Const (Bool true)),
       "Parses and prettyprints in place the files included on the command line");
     (102, "force", (Const (Bool true)),
@@ -1483,7 +1488,7 @@ let (settable_specs :
     (FStar_Compiler_List.filter
        (fun uu___ ->
           match uu___ with | (uu___1, x, uu___2, uu___3) -> settable x))
-let (uu___641 :
+let (uu___642 :
   (((unit -> FStar_Getopt.parse_cmdline_res) -> unit) *
     (unit -> FStar_Getopt.parse_cmdline_res)))
   =
@@ -1500,11 +1505,11 @@ let (uu___641 :
   (set1, call)
 let (set_error_flags_callback_aux :
   (unit -> FStar_Getopt.parse_cmdline_res) -> unit) =
-  match uu___641 with
+  match uu___642 with
   | (set_error_flags_callback_aux1, set_error_flags) ->
       set_error_flags_callback_aux1
 let (set_error_flags : unit -> FStar_Getopt.parse_cmdline_res) =
-  match uu___641 with
+  match uu___642 with
   | (set_error_flags_callback_aux1, set_error_flags1) -> set_error_flags1
 let (set_error_flags_callback :
   (unit -> FStar_Getopt.parse_cmdline_res) -> unit) =
@@ -1927,6 +1932,7 @@ let (ide : unit -> Prims.bool) = fun uu___ -> get_ide ()
 let (ide_id_info_off : unit -> Prims.bool) =
   fun uu___ -> get_ide_id_info_off ()
 let (print : unit -> Prims.bool) = fun uu___ -> get_print ()
+let (print_ast : unit -> Prims.bool) = fun uu___ -> get_print_ast ()
 let (print_in_place : unit -> Prims.bool) =
   fun uu___ -> get_print_in_place ()
 let (initial_fuel : unit -> Prims.int) =
