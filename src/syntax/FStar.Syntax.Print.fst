@@ -61,58 +61,6 @@ let nm_to_string bv =
 
 let db_to_string bv = (string_of_id bv.ppname) ^ "@" ^ string_of_int bv.index
 
-(* CH: This should later be shared with ocaml-codegen.fs and util.fs (is_primop and destruct_typ_as_formula) *)
-let infix_prim_ops = [
-    (C.op_Addition    , "+" );
-    (C.op_Subtraction , "-" );
-    (C.op_Multiply    , "*" );
-    (C.op_Division    , "/" );
-    (C.op_Eq          , "=" );
-    (C.op_ColonEq     , ":=");
-    (C.op_notEq       , "<>");
-    (C.op_And         , "&&");
-    (C.op_Or          , "||");
-    (C.op_LTE         , "<=");
-    (C.op_GTE         , ">=");
-    (C.op_LT          , "<" );
-    (C.op_GT          , ">" );
-    (C.op_Modulus     , "mod");
-    (C.and_lid     , "/\\");
-    (C.or_lid      , "\\/");
-    (C.imp_lid     , "==>");
-    (C.iff_lid     , "<==>");
-    (C.precedes_lid, "<<");
-    (C.eq2_lid     , "==");
-]
-
-let unary_prim_ops = [
-    (C.op_Negation, "not");
-    (C.op_Minus, "-");
-    (C.not_lid, "~")
-]
-
-let is_prim_op ps f = match f.n with
-  | Tm_fvar fv -> ps |> U.for_some (fv_eq_lid fv)
-  | _ -> false
-
-let get_lid f = match f.n with
-  | Tm_fvar fv -> fv.fv_name.v
-  | _ -> failwith "get_lid"
-
-let is_infix_prim_op (e:term) = is_prim_op (fst (List.split infix_prim_ops)) e
-let is_unary_prim_op (e:term) = is_prim_op (fst (List.split unary_prim_ops)) e
-
-let quants = [
-  (C.forall_lid, "forall");
-  (C.exists_lid, "exists")
-]
-type exp = term
-
-let is_b2t (t:typ)   = is_prim_op [C.b2t_lid] t
-let is_quant (t:typ) = is_prim_op (fst (List.split quants)) t
-let is_ite (t:typ)   = is_prim_op [C.ite_lid] t
-
-let is_inr = function Inl _ -> false | Inr _ -> true
 let filter_imp aq =
    (* keep typeclass args *)
    match aq with
@@ -125,19 +73,7 @@ let filter_imp_args args =
 let filter_imp_binders bs =
   bs |> List.filter (fun b -> b.binder_qual |> filter_imp)
 
-(* CH: F# List.find has a different type from find in list.fst ... so just a hack for now *)
-let rec find  (f:'a -> bool) (l:list 'a) : 'a = match l with
-  | [] -> failwith "blah"
-  | hd::tl -> if f hd then hd else find f tl
-
-let find_lid (x:lident) xs : string =
-  snd (find (fun p -> lid_equals x (fst p)) xs)
-
-let infix_prim_op_to_string e = find_lid (get_lid e)      infix_prim_ops
-let unary_prim_op_to_string e = find_lid (get_lid e)      unary_prim_ops
-let quant_to_string t = find_lid (get_lid t) quants
-
-let const_to_string x = C.const_to_string x
+let const_to_string = C.const_to_string
 
 let lbname_to_string = function
   | Inl l -> bv_to_string l
