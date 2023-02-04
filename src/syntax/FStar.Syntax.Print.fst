@@ -30,12 +30,10 @@ open FStar.Const
 module Errors     = FStar.Errors
 module U          = FStar.Compiler.Util
 module A          = FStar.Parser.AST
-module Resugar    = FStar.Syntax.Resugar
-module ToDocument = FStar.Parser.ToDocument
-module Pp         = FStar.Pprint
 module Unionfind  = FStar.Syntax.Unionfind
 module C          = FStar.Parser.Const
 module SU         = FStar.Syntax.Util
+module Pretty     = FStar.Syntax.Print.Pretty
 
 let rec delta_depth_to_string = function
     | Delta_constant_at_level i   -> "Delta_constant_at_level " ^ string_of_int i
@@ -162,9 +160,7 @@ let rec univ_to_string u =
 Errors.with_ctx "While printing universe" (fun () ->
   // VD: commented out for testing NBE
   // if not (Options.ugly()) then
-  //   let e = Resugar.resugar_universe u Range.dummyRange in
-  //   let d = ToDocument.term_to_document e in
-  //   Pp.pretty_string (float_of_string "1.0") 100 d
+  //   Pretty.univ_to_string u
   // else
   match Subst.compress_univ u with
     | U_unif u -> "U_unif "^univ_uvar_to_string u
@@ -252,9 +248,7 @@ let rec tag_of_term (t:term) = match t.n with
 
 and term_to_string x =
   if not (Options.ugly()) then
-    let e = Errors.with_ctx "While resugaring a term" (fun () -> Resugar.resugar_term x) in
-    let d = ToDocument.term_to_document e in
-    Pp.pretty_string (float_of_string "1.0") 100 d
+    Pretty.term_to_string x
   else begin
     Errors.with_ctx "While ugly-printing a term" (fun () ->
       let x = Subst.compress x in
@@ -418,9 +412,7 @@ and subst_to_string s = s |> List.map subst_elt_to_string |> String.concat "; "
 
 and pat_to_string x =
   if not (Options.ugly()) then
-    let e = Resugar.resugar_pat x (new_bv_set ()) in
-    let d = ToDocument.pat_to_document e in
-    Pp.pretty_string (float_of_string "1.0") 100 d
+    Pretty.pat_to_string x
   else match x.v with
     | Pat_cons(l, us_opt, pats) ->
       U.format3 "(%s%s%s)" 
@@ -495,11 +487,7 @@ and aqual_to_string' s = function
   
 and binder_to_string' is_arrow b =
   if not (Options.ugly()) then
-    match Resugar.resugar_binder b Range.dummyRange with
-    | None -> ""
-    | Some e ->
-      let d = ToDocument.binder_to_document e in
-      Pp.pretty_string (float_of_string "1.0") 100 d
+    Pretty.binder_to_string' is_arrow b
   else
     let attrs = attrs_to_string b.binder_attrs in
     if is_null_binder b
@@ -533,9 +521,7 @@ and args_to_string args =
 
 and comp_to_string c =
   if not (Options.ugly()) then
-    let e = Errors.with_ctx "While resugaring a computation" (fun () -> Resugar.resugar_comp c) in
-    let d = ToDocument.term_to_document e in
-    Pp.pretty_string (float_of_string "1.0") 100 d
+    Pretty.comp_to_string c
   else
     Errors.with_ctx "While ugly-printing a computation" (fun () ->
     match c.n with
@@ -632,16 +618,12 @@ let bqual_to_string bq = bqual_to_string' "" bq
 let comp_to_string' env c =
   if Options.ugly ()
   then comp_to_string c
-  else let e = Resugar.resugar_comp' env c in
-       let d = ToDocument.term_to_document e in
-       Pp.pretty_string (float_of_string "1.0") 100 d
+  else Pretty.comp_to_string' env c
 
 let term_to_string' env x =
   if Options.ugly ()
   then term_to_string x
-  else let e = Resugar.resugar_term' env x in
-       let d = ToDocument.term_to_document e in
-       Pp.pretty_string (float_of_string "1.0") 100 d
+  else Pretty.term_to_string' env x
 
 let binder_to_json env b =
     let n = JsonStr (bqual_to_string' (nm_to_string b.binder_bv) b.binder_qual) in
@@ -669,9 +651,7 @@ let enclose_universes s =
 
 let tscheme_to_string s =
   if not (Options.ugly()) then
-    let d = Resugar.resugar_tscheme s in
-    let d = ToDocument.decl_to_document d in
-    Pp.pretty_string (float_of_string "1.0") 100 d
+    Pretty.tscheme_to_string s
   else
     let (us, t) = s in
     U.format2 "%s%s" (enclose_universes <| univ_names_to_string us) (term_to_string t)
@@ -776,9 +756,7 @@ let eff_combinators_to_string = function
 
 let eff_decl_to_string' for_free r q ed =
  if not (Options.ugly()) then
-    let d = Resugar.resugar_eff_decl r q ed in
-    let d = ToDocument.decl_to_document d in
-    Pp.pretty_string (float_of_string "1.0") 100 d
+    Pretty.eff_decl_to_string' for_free r q ed
  else
     let actions_to_string actions =
         actions |>
@@ -822,13 +800,7 @@ let pragma_to_string (p:pragma) : string =
 
 let rec sigelt_to_string (x: sigelt) =
  // if not (Options.ugly()) then
- //    let e = Resugar.resugar_sigelt x in
- //    begin match e with
- //    | Some d ->
- //      let d = ToDocument.decl_to_document d in
- //      Pp.pretty_string (float_of_string "1.0") 100 d
- //    | _ -> ""
- //    end
+ //    Pretty.sigelt_to_string x
  // else
    let basic =
       match x.sigel with
