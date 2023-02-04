@@ -39,7 +39,7 @@ dune-staged-bootstrap:
 .PHONY: clean-full-dune-snapshot clean-dune-snapshot
 
 clean-dune-snapshot:
-	rm -rf ocaml/*/generated
+	rm -rf ocaml/*/generated ocaml/*/dynamic
 
 clean-full-dune-snapshot: clean-dune-snapshot
 	find ocaml -name *.ml | xargs rm -rf
