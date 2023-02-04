@@ -341,6 +341,8 @@ let (bind_has_range_args_attr : FStar_Ident.lident) =
   psconst "bind_has_range_args"
 let (binder_strictly_positive_attr : FStar_Ident.lident) =
   psconst "strictly_positive"
+let (binder_non_uniformly_recursive_parameter_attr : FStar_Ident.lident) =
+  psconst "non_uniformly_recursive_parameter"
 let (no_auto_projectors_attr : FStar_Ident.lident) =
   psconst "no_auto_projectors"
 let (no_subtping_attr_lid : FStar_Ident.lident) = psconst "no_subtyping"

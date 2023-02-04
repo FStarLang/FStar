@@ -175,6 +175,8 @@ let bind_has_range_args = ()
 
 let strictly_positive = ()
 
+let non_uniformly_recursive_parameter = ()
+
 let no_auto_projectors = ()
 
 let no_subtyping = ()

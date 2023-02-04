@@ -33,6 +33,16 @@ module N = FStar.TypeChecker.Normalize
 module L = FStar.Compiler.List
 module C = FStar.Parser.Const
 
+let normalize env t =
+    N.normalize [Env.Beta;
+                 Env.HNF;
+                 Env.Weak;
+                 Env.Iota;
+                 Env.Exclude Env.Zeta;
+                 Env.UnfoldUntil delta_constant]
+                 env
+                 t
+
 let debug_positivity (env:env_t) (msg:unit -> string) : unit =
   if Env.debug env <| Options.Other "Positivity"
   then BU.print_string ("Positivity::" ^ msg () ^ "\n")
@@ -145,16 +155,7 @@ let rec ty_strictly_positive_in_type (env:env)
   = debug_positivity env (fun _ ->
        "Checking strict positivity in type: " ^ (Print.term_to_string in_type));
     //normalize the type to unfold any type abbreviations
-    let in_type =
-      N.normalize [Env.Beta;
-                   Env.HNF;
-                   Env.Weak;
-                   Env.Iota;
-                   Env.Exclude Env.Zeta;
-                   Env.UnfoldUntil delta_constant]
-                  env
-                  in_type
-    in
+    let in_type = normalize env in_type in
     debug_positivity env (fun _ ->
       "Checking strict positivity in type, after normalization: " ^
             (Print.term_to_string in_type));
@@ -436,21 +437,23 @@ and ty_strictly_positive_in_arguments_to_fvar
                    (string_of_lid ty_lid)
                    (string_of_lid fv)
                    (Print.args_to_string args));
-                   
+    let fv_ty = 
+      match Env.try_lookup_lid env fv with
+      | Some ((_, fv_ty), _) -> fv_ty
+      | _ ->
+        raise_error 
+          (Errors.Error_InductiveTypeNotSatisfyPositivityCondition,
+           BU.format1 "Type of %s not found when checking positivity"
+                      (string_of_lid fv))
+          (range_of_lid fv)
+    in
     let b, idatas = datacons_of_typ env fv in
     if not b
     then ( 
       (*
        * Check if ilid's corresponding binder is marked "strictly_positive"
        *)
-      match Env.try_lookup_lid env fv with
-      | Some ((_, fv_ty), _) ->
-        check_ty_strictly_positive_in_args env mutuals ty_lid fv_ty args unfolded
-        
-      | None ->
-        debug_positivity env (fun _ ->
-          "Checking positivity of an application, head type not found, return false");
-        false
+      check_ty_strictly_positive_in_args env mutuals ty_lid fv_ty args unfolded
     )
     //if fv has already been unfolded with same arguments, return true
     else (
@@ -465,17 +468,54 @@ and ty_strictly_positive_in_arguments_to_fvar
         //note that num_ibs gives us only the type parameters,
         //and not inductives, which is what we need since we will
         //substitute them in the data constructor type
-        let num_ibs = Option.get (num_inductive_ty_params env ilid) in
-        let params = fst (List.splitAt num_ibs args) in
+        let num_params = Option.get (num_inductive_ty_params env ilid) in
+        let params, indexes = List.splitAt num_params args in            
+        let fv_formals, _ = U.arrow_formals fv_ty in
+        if num_params > List.length fv_formals
+        then raise_error (Errors.Error_InductiveTypeNotSatisfyPositivityCondition,
+                              BU.format4 "Expected a type with %s parameters, \
+                                          but %s : %s has only %s parameters"
+                                         (string_of_int num_params)
+                                         (string_of_lid fv)
+                                         (Print.term_to_string fv_ty)
+                                         (string_of_int (List.length fv_formals)))
+                             (range_of_lid fv);
+        let fv_params = fst (List.splitAt num_params fv_formals) in
+        let rec prefix_of_uniform_params uniform_params params formals =
+          match params, formals with
+          | [], [] -> List.rev uniform_params, []
+          | p::params, f::formals ->
+            if U.has_attribute f.binder_attrs
+                               C.binder_non_uniformly_recursive_parameter_attr
+            then List.rev uniform_params, p::params
+            else prefix_of_uniform_params (p::uniform_params) params formals
+          | _ -> failwith "impossible: they have the same length"
+        in
+        let params, non_uniform_params = prefix_of_uniform_params [] params fv_params in
+        let indexes = non_uniform_params@indexes in
+        L.iter 
+          (fun (index, _) ->
+             match L.tryFind (fun mutual -> ty_occurs_in mutual index) (ty_lid::mutuals) with
+             | Some mutual ->
+               raise_error
+                 (Errors.Error_InductiveTypeNotSatisfyPositivityCondition,
+                   BU.format2 "Type %s is not strictly positive since it instantiates \
+                               a non-uniformly recursive parameter or index of %s"
+                              (string_of_lid mutual)
+                              (string_of_lid fv))
+                 (range_of_lid fv)
+             | _ -> ())
+          indexes;        
+        let num_uniform_params = List.length params in
         debug_positivity env (fun _ -> 
           BU.format3 "Checking positivity in datacon, number of type parameters is %s, \
-                      adding %s to the memo table"          
-                     (string_of_int num_ibs)
+                      adding %s %s to the memo table"          
+                     (string_of_int num_uniform_params)
                      (Ident.string_of_lid ilid)
                      (Print.args_to_string params));
         //update the memo table with the inductive name and the args,
-        //note we keep only the parameters and not indices
-        unfolded := !unfolded @ [ilid, params, num_ibs];
+        //note we keep only the uniform parameters and not indices
+        unfolded := !unfolded @ [ilid, params, num_uniform_params];
         List.for_all
           (fun d -> ty_strictly_positive_in_datacon_of_applied_inductive
                      env
@@ -485,7 +525,7 @@ and ty_strictly_positive_in_arguments_to_fvar
                      ilid
                      us
                      args
-                     num_ibs
+                     num_uniform_params
                      unfolded)
           idatas
       )
@@ -571,6 +611,73 @@ let name_strictly_positive_in_type env bv t =
   ty_strictly_positive_in_type env [] fv_lid t (BU.mk_ref [])
 
 
+let no_constructed_occurrences (env:env_t) (var:bv) (ty:term)
+  : bool
+  = if BU.set_mem var (Free.names ty) 
+    then match (SS.compress ty).n with
+         | Tm_name _ -> true
+         | _ -> false
+    else true
+      
+let check_parameter_is_recursively_uniform_in_type (env:env_t)
+                                                   (mutuals:list lident)
+                                                   (var:bv)
+                                                   (ty:term)
+  : bool
+  = let ty = normalize env ty in
+    let rec aux ty =
+        debug_positivity env (fun _ ->
+          BU.format2 "Recursively uniform? %s in %s"
+                     (Print.bv_to_string var)
+                     (Print.term_to_string ty));
+        match (SS.compress ty).n with
+        | Tm_name _
+        | Tm_fvar _
+        | Tm_uinst _
+        | Tm_type _
+        | Tm_constant _ -> true
+        | Tm_refine(x, f) ->
+          if aux x.sort 
+          then let _, f = SS.open_term [S.mk_binder x] f in
+               aux f
+          else false
+        | Tm_app _ ->
+          let head, args = U.head_and_args ty in
+          begin
+          match (U.un_uinst head).n with
+          | Tm_fvar fv ->
+            if L.existsML (fv_eq_lid fv) mutuals
+            then L.for_all (fun (arg, _) -> no_constructed_occurrences env var arg) args
+            else L.for_all (fun (arg, _) -> aux arg) args
+            
+          | _ ->
+            aux head && List.for_all (fun (arg, _) -> aux arg) args
+          end
+        | Tm_abs _ ->
+          let bs, body, _ = U.abs_formals ty in
+          List.for_all 
+            (fun b -> aux b.binder_bv.sort)
+            bs
+          && aux body
+        | Tm_arrow _ -> 
+          let bs, r = U.arrow_formals ty in
+          List.for_all 
+            (fun b -> aux b.binder_bv.sort)
+            bs
+          && aux r        
+        | Tm_match(scrutinee, _, branches, _) ->
+          aux scrutinee &&
+          List.for_all
+          (fun (p, _, t) ->
+            let bs = List.map mk_binder (pat_bvs p) in
+            let bs, t = SS.open_term bs t in
+            aux t)
+         branches
+        | _ ->
+          false
+    in
+    aux ty
+
 (*  Check that ty_lid (defined along with mutuals)
     is strictly positive in every field of the data constructor dlid
     AND
@@ -633,7 +740,8 @@ let ty_strictly_positive_in_datacon_decl (env:env_t)
             L.tryFind 
               (fun b -> 
                  if U.has_attribute b.binder_attrs C.binder_strictly_positive_attr
-                 then not (name_strictly_positive_in_type env b.binder_bv f.binder_bv.sort)
+                 then not (check_parameter_is_recursively_uniform_in_type env mutuals b.binder_bv f.binder_bv.sort) ||
+                      not (name_strictly_positive_in_type env b.binder_bv f.binder_bv.sort)
                  else false)
               ty_bs
         in
@@ -660,7 +768,17 @@ let ty_strictly_positive_in_datacon_decl (env:env_t)
     in
     check_all_fields env fields
       
-
+let open_sig_inductive_typ env se =
+    match se.sigel with
+    | Sig_inductive_typ (lid, ty_us, ty_params, _, _, _) -> 
+      let ty_usubst, ty_us = SS.univ_var_opening ty_us in
+      let env = push_univ_vars env ty_us in
+      let ty_params = SS.subst_binders ty_usubst ty_params in
+      let ty_params = SS.open_binders ty_params in
+      let env = push_binders env ty_params in
+      env, (lid, ty_us, ty_params)
+    | _                                        -> failwith "Impossible!"
+  
 (* An entry point from the interface:
      Check that the inductive type ty, defined mutually with mutuals
      is strictly positive *)
@@ -673,24 +791,8 @@ let check_strict_positivity (env:env_t)
     let unfolded_inductives = BU.mk_ref [] in
 
     //ty_params are the parameters of ty, it does not include the indexes
-    let ty_lid, ty_us, ty_params =
-      match ty.sigel with
-      | Sig_inductive_typ (lid, us, bs, _, _, _) -> lid, us, bs
-      | _                                        -> failwith "Impossible!"
-    in
-    
+    let env, (ty_lid, ty_us, ty_params) =  open_sig_inductive_typ env ty in
     let mutuals = ty_lid::mutuals in
-    
-    //open the universe variables, we will use these universe names 
-    //for checking each field of each data constructors
-    let ty_usubst, ty_us = SS.univ_var_opening ty_us in
-    //push the universe names in the env
-    let env = push_univ_vars env ty_us in
-    //apply ty_usubst to ty_bs
-    let ty_params = SS.subst_binders ty_usubst ty_params in
-    let ty_params = SS.open_binders ty_params in
-    //also push the parameters
-    let env = push_binders env ty_params in
     let datacons = snd (datacons_of_typ env ty_lid) in
     List.for_all 
       (fun d ->
@@ -713,3 +815,72 @@ let check_exn_strict_positivity (env:env_t)
   : bool
   = let unfolded_inductives = BU.mk_ref [] in
     ty_strictly_positive_in_datacon_decl env [] C.exn_lid data_ctor_lid [] [] unfolded_inductives
+
+let mark_uniform_type_parameters (env:env_t)
+                                 (sig:sigelt)
+  : sigelt
+  = let mark_tycon_parameters tc datas =
+        let Sig_inductive_typ (tc_lid, us, ty_param_binders, t, mutuals, data_lids) = tc.sigel in
+        let env, (tc_lid, us, ty_params) = open_sig_inductive_typ env tc in
+        let _, ty_param_args = U.args_of_binders ty_params in
+        let datacon_fields =
+          List.filter_map
+            (fun data ->
+              match data.sigel with
+              | Sig_datacon(d_lid, d_us, dt, tc_lid', _, _) ->
+                if Ident.lid_equals tc_lid tc_lid'
+                then (
+                  let dt = SS.subst (mk_univ_subst d_us (L.map U_name us)) dt in
+                  Some (fst (U.arrow_formals (apply_datacon_arrow d_lid dt ty_param_args)))
+                )
+                else None
+              | _ -> None)
+            datas
+        in
+        let uniformity_flags =
+          List.map
+            (fun ty_param ->
+              List.for_all 
+                (fun fields_of_one_datacon ->
+                  List.for_all 
+                    (fun field ->
+                       check_parameter_is_recursively_uniform_in_type
+                        env
+                        mutuals
+                        ty_param.binder_bv
+                        field.binder_bv.sort)
+                    fields_of_one_datacon)
+                datacon_fields)
+          ty_params
+        in
+        let attr = 
+          let fv = S.lid_as_fv C.binder_non_uniformly_recursive_parameter_attr
+                               S.delta_constant
+                               None
+          in
+          S.fv_to_tm fv
+        in
+        //the suffix of non-uniform parameters is non-uniform
+        let _, ty_param_binders_rev =
+          List.fold_left2
+            (fun (seen_non_uniform, ty_param_binders) this_param_uniform ty_param_binder ->
+               if seen_non_uniform || not (this_param_uniform)
+               then true, { ty_param_binder with binder_attrs=attr::ty_param_binder.binder_attrs}
+                          :: ty_param_binders
+               else false, ty_param_binder::ty_param_binders)
+            (false, [])
+            uniformity_flags
+            ty_param_binders
+        in
+        let ty_param_binders = List.rev ty_param_binders_rev in
+        let sigel = Sig_inductive_typ (tc_lid, us, ty_param_binders, t, mutuals, data_lids) in
+        { tc with sigel }
+    in 
+    match sig.sigel with
+    | Sig_bundle (ses, lids) ->
+      let tcs, datas = L.partition (fun se -> Sig_inductive_typ? se.sigel) ses in
+      let tcs = List.map (fun tc -> mark_tycon_parameters tc datas) tcs in
+      { sig with sigel = Sig_bundle(tcs@datas, lids) }
+    
+    | _ -> sig
+    

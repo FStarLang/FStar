@@ -1110,6 +1110,25 @@ val bind_has_range_args : unit
   *)
 val strictly_positive : unit
 
+(** A parameter of an inductive type is non-uniformly recursive if one of its recursive
+    occurrences is not literally a variable. E.g., `a` is non-uniformly recursive.
+
+    type t (a:Type) =
+      | N : t a
+      | T : t (a & a) -> t a
+
+    F* infers this annotation on the parameters of an inductive type, so as a user, 
+    you shouldn't have to write it yourself.
+
+    This impacts the positivity check on inductive types, e.g., given the type `t` above
+    the type `s` below is illegal, since the occurrence of `s` as a non-uniform parameter
+    instantiation of `t` is rejected by the positivity checker.
+
+    type s =
+      | S : t s -> s
+*)
+val non_uniformly_recursive_parameter : unit
+
 (** This attribute may be added to an inductive type
     to disable auto generated projectors
 

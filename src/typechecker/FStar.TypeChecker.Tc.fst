@@ -187,6 +187,8 @@ let tc_inductive' env ses quals attrs lids =
       is_noeq ||
       is_erasable () in
 
+    let sig_bndle = Positivity.mark_uniform_type_parameters env sig_bndle in
+    
     let res =
         if skip_haseq
         then sig_bndle, data_ops_ses

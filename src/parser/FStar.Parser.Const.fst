@@ -371,6 +371,7 @@ let top_level_effect_attr = psconst "top_level_effect"
 let effect_parameter_attr = psconst "effect_param"
 let bind_has_range_args_attr = psconst "bind_has_range_args"
 let binder_strictly_positive_attr = psconst "strictly_positive"
+let binder_non_uniformly_recursive_parameter_attr = psconst "non_uniformly_recursive_parameter"
 let no_auto_projectors_attr = psconst "no_auto_projectors"
 let no_subtping_attr_lid = psconst "no_subtyping"
 let attr_substitute_lid = p2l ["FStar"; "Pervasives"; "Substitute"]

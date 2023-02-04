@@ -25,3 +25,4 @@ open FStar.Ident
 val check_strict_positivity: env -> list lident -> sigelt -> bool
 val name_strictly_positive_in_type: env -> bv -> term -> bool
 val check_exn_strict_positivity: env -> lident -> bool
+val mark_uniform_type_parameters: env -> sigelt -> sigelt

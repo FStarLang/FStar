@@ -473,9 +473,12 @@ let (tc_inductive' :
                             && (skip_prims_type ())))
                         || is_noeq)
                        || (is_erasable ()) in
+                   let sig_bndle1 =
+                     FStar_TypeChecker_Positivity.mark_uniform_type_parameters
+                       env sig_bndle in
                    let res =
                      if skip_haseq
-                     then (sig_bndle, data_ops_ses)
+                     then (sig_bndle1, data_ops_ses)
                      else
                        (let is_unopteq =
                           FStar_Compiler_List.existsb
@@ -484,11 +487,11 @@ let (tc_inductive' :
                           if is_unopteq
                           then
                             FStar_TypeChecker_TcInductive.unoptimized_haseq_scheme
-                              sig_bndle tcs datas env
+                              sig_bndle1 tcs datas env
                           else
                             FStar_TypeChecker_TcInductive.optimized_haseq_scheme
-                              sig_bndle tcs datas env in
-                        (sig_bndle,
+                              sig_bndle1 tcs datas env in
+                        (sig_bndle1,
                           (FStar_Compiler_List.op_At ses2 data_ops_ses))) in
                    res)))
 let (tc_inductive :
@@ -4573,7 +4576,7 @@ let (tc_decls :
                ([], env) ses) in
       match uu___ with
       | (ses1, env1) -> ((FStar_Compiler_List.rev_append ses1 []), env1)
-let (uu___923 : unit) =
+let (uu___924 : unit) =
   FStar_Compiler_Effect.op_Colon_Equals tc_decls_knot
     (FStar_Pervasives_Native.Some tc_decls)
 let (snapshot_context :
