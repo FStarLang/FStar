@@ -72,16 +72,53 @@ let raise_failed_assertion : 'uuuuu . Prims.string -> 'uuuuu =
 let (runtime_assert : Prims.bool -> Prims.string -> unit) =
   fun b ->
     fun msg -> if Prims.op_Negation b then raise_failed_assertion msg else ()
+let __string_of_list :
+  'a . Prims.string -> ('a -> Prims.string) -> 'a Prims.list -> Prims.string
+  =
+  fun delim ->
+    fun f ->
+      fun l ->
+        match l with
+        | [] -> "[]"
+        | x::xs ->
+            let strb = FStar_Compiler_Util.new_string_builder () in
+            (FStar_Compiler_Util.string_builder_append strb "[";
+             (let uu___2 = f x in
+              FStar_Compiler_Util.string_builder_append strb uu___2);
+             FStar_Compiler_List.iter
+               (fun x1 ->
+                  FStar_Compiler_Util.string_builder_append strb delim;
+                  (let uu___4 = f x1 in
+                   FStar_Compiler_Util.string_builder_append strb uu___4)) xs;
+             FStar_Compiler_Util.string_builder_append strb "]";
+             FStar_Compiler_Util.string_of_string_builder strb)
 let string_of_list :
-  'a . ('a -> Prims.string) -> 'a Prims.list -> Prims.string =
+  'uuuuu .
+    unit -> ('uuuuu -> Prims.string) -> 'uuuuu Prims.list -> Prims.string
+  = fun uu___ -> __string_of_list ", "
+let string_of_list' :
+  'uuuuu .
+    unit -> ('uuuuu -> Prims.string) -> 'uuuuu Prims.list -> Prims.string
+  = fun uu___ -> __string_of_list "; "
+let string_of_set :
+  'a . ('a -> Prims.string) -> 'a FStar_Compiler_Util.set -> Prims.string =
   fun f ->
     fun l ->
-      let uu___ =
-        let uu___1 =
-          let uu___2 = FStar_Compiler_List.map f l in
-          FStar_String.concat ", " uu___2 in
-        Prims.op_Hat uu___1 "]" in
-      Prims.op_Hat "[" uu___
+      let uu___ = FStar_Compiler_Util.set_elements l in
+      match uu___ with
+      | [] -> "{}"
+      | x::xs ->
+          let strb = FStar_Compiler_Util.new_string_builder () in
+          (FStar_Compiler_Util.string_builder_append strb "{";
+           (let uu___3 = f x in
+            FStar_Compiler_Util.string_builder_append strb uu___3);
+           FStar_Compiler_List.iter
+             (fun x1 ->
+                FStar_Compiler_Util.string_builder_append strb ", ";
+                (let uu___5 = f x1 in
+                 FStar_Compiler_Util.string_builder_append strb uu___5)) xs;
+           FStar_Compiler_Util.string_builder_append strb "}";
+           FStar_Compiler_Util.string_of_string_builder strb)
 let list_of_option : 'a . 'a FStar_Pervasives_Native.option -> 'a Prims.list
   =
   fun o ->
