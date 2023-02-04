@@ -62,7 +62,7 @@ let tscheme_to_string (ts:tscheme) : string =
   pp d
 
 let pat_to_string (p:pat) : string =
-  let e = Resugar.resugar_pat p (new_bv_set ()) in
+  let e = Resugar.resugar_pat p Syntax.no_names in
   let d = ToDocument.pat_to_document e in
   pp d
 
