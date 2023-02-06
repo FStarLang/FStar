@@ -200,7 +200,7 @@ let analyze_effectful_term dbg with_gpre with_gpost res =
        * assertions) *)
       print_dbg dbg ("Restraining to: " ^ term_to_string fterm);
       let shadowed_bv =
-        match genv_get_from_name ge (name_of_bv bv0) with
+        match genv_get_from_name ge (bv_ppname bv0) with
         | None -> None
         | Some (sbv, _) -> Some sbv
       in
@@ -212,7 +212,7 @@ let analyze_effectful_term dbg with_gpre with_gpost res =
       let ge2, (bv1 : bv) =
         let bvv0 = inspect_bv bv0 in
         let _ = print_dbg dbg ("Variable bound in let: " ^ abv_to_string bv0) in
-        if bvv0.bv_ppname = "uu___" (* this is a bit hacky *)
+        if bv_ppname bv0 = "uu___" (* this is a bit hacky *)
         then genv_push_fresh_bv ge1 "ret" bvv0.bv_sort
         else ge1, bv0
       in

@@ -14,7 +14,7 @@ let bv_eq (bv1 bv2 : bv) =
   (* We don't check for type equality: the fact that no two different binders
    * have the same name and index is an invariant which must be enforced -
    * and actually we could limit ourselves to checking the index *)
-  bvv1.bv_ppname = bvv2.bv_ppname && bvv1.bv_index = bvv2.bv_index
+  bvv1.bv_index = bvv2.bv_index
 
 val fv_eq : fv -> fv -> Tot bool
 let fv_eq fv1 fv2 =
@@ -82,7 +82,7 @@ let rec unzip #a #b (l : list (a & b)) : Tot (list a & list b) =
 /// It can be very useful for debugging.
 let abv_to_string bv : Tac string =
   let bvv = inspect_bv bv in
-  bvv.bv_ppname ^ " (%" ^ string_of_int (bvv.bv_index) ^ ") : " ^
+  bv_ppname bv ^ " (%" ^ string_of_int (bvv.bv_index) ^ ") : " ^
   term_to_string bvv.bv_sort
 
 let print_binder_info (full : bool) (b : binder) : Tac unit =
@@ -100,7 +100,7 @@ let print_binder_info (full : bool) (b : binder) : Tac unit =
       "\n- name: " ^ (name_of_binder b) ^
       "\n- as string: " ^ (binder_to_string b) ^
       "\n- aqual: " ^ a_str ^
-      "\n- ppname: " ^ bview.bv_ppname ^
+      "\n- ppname: " ^ bv_ppname bv ^
       "\n- index: " ^ string_of_int bview.bv_index ^
       "\n- sort: " ^ term_to_string bview.bv_sort
     )
@@ -204,12 +204,12 @@ let rec bind_map_get (#a:Type) (m:bind_map a) (b:bv) : Tot (option a) =
     if compare_bv b b' = Order.Eq then Some x else bind_map_get m' b
 
 let rec bind_map_get_from_name (#a:Type) (m:bind_map a) (name:string) :
-  Tot (option (bv & a)) =
+  Tac (option (bv & a)) =
   match m with
   | [] -> None
   | (b', x)::m' ->
     let b'v = inspect_bv b' in
-    if b'v.bv_ppname = name then Some (b', x) else bind_map_get_from_name m' name
+    if bv_ppname b' = name then Some (b', x) else bind_map_get_from_name m' name
 
 noeq type genv =
 {
@@ -263,14 +263,14 @@ let genv_to_string ge =
 let genv_get (ge:genv) (b:bv) : Tot (option (bool & term)) =
   bind_map_get ge.bmap b
 
-let genv_get_from_name (ge:genv) (name:string) : Tot (option (bv & (bool & term))) =
+let genv_get_from_name (ge:genv) (name:string) : Tac (option (bv & (bool & term))) =
   bind_map_get_from_name ge.bmap name
 
 /// Push a binder to a ``genv``. Optionally takes a ``term`` which provides the
 /// term the binder is bound to (in a `let _ = _ in` construct for example).
 let genv_push_bv (ge:genv) (b:bv) (abs:bool) (t:option term) : Tac genv =
   let br = mk_binder b in
-  let sv = genv_get_from_name ge (name_of_bv b) in
+  let sv = genv_get_from_name ge (bv_ppname b) in
   let svars' = if Some? sv then fst (Some?.v sv) :: ge.svars else ge.svars in
   let e' = push_binder ge.env br in
   let tm = if Some? t then Some?.v t else pack (Tv_Var b) in
@@ -320,7 +320,7 @@ let rec _fresh_bv binder_names basename i ty : Tac bv =
 
 let fresh_bv (e : env) (basename : string) (ty : typ) : Tac bv =
   let binders = binders_of_env e in
-  let binder_names = List.Tot.map name_of_binder binders in
+  let binder_names = FStar.Tactics.Util.map name_of_binder binders in
   _fresh_bv binder_names basename 0 ty
 
 let fresh_binder (e : env) (basename : string) (ty : typ) : Tac binder =
@@ -510,7 +510,7 @@ let rec deep_apply_subst e t subst =
 and deep_apply_subst_in_bv e bv subst =
   let bvv = inspect_bv bv in
   let ty = deep_apply_subst e bvv.bv_sort subst in
-  let bv' = Tactics.fresh_bv_named bvv.bv_ppname ty in
+  let bv' = Tactics.fresh_bv_named (bv_ppname bv) ty in
   bv', (bv, pack (Tv_Var bv'))::subst
 
 (*
@@ -607,7 +607,7 @@ let rec _generate_shadowed_subst (ge:genv) (t:term) (bvl : list bv) :
       let bv, _ = inspect_binder b in
       let bvv = inspect_bv bv in
       let ty = bvv.bv_sort in
-      let name = bvv.bv_ppname in
+      let name = bv_ppname bv in
       let ge1, fresh = genv_push_fresh_bv ge ("__" ^ name) ty in
       let t1 = mk_e_app t [pack (Tv_Var fresh)] in
       let t2 = norm_term_env ge1.env [] t1 in

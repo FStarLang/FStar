@@ -10,7 +10,11 @@ let paren (s:string) : string = "(" ^ s ^ ")"
 (* Redefine bv_to_string, which is able to show the type of the bv when in TAC *)
 let bv_to_string (bv : bv) : Tac string =
     let bvv = inspect_bv bv in
-    "(" ^ bvv.bv_ppname ^ ":" ^ term_to_string bvv.bv_sort ^ ")"
+    "(" ^ bv_ppname bv ^ ":" ^ term_to_string bvv.bv_sort ^ ")"
+
+let binder_to_string (b:binder) : Tac string =
+  let bv, _ = inspect_binder b in
+  bv_ppname bv  // TODO: print aqual, attributes
 
 (* TODO: making this a local definition in print_list fails to extract. *)
 private

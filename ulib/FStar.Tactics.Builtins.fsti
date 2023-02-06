@@ -361,6 +361,8 @@ val pack    : term_view -> Tac term
     then in a curried form instead *)
 val pack_curried : term_view -> Tac term
 
+val bv_ppname : bv -> Tac string
+
 (** Join the first two goals, which must be irrelevant, in a single
 one by finding a maximal prefix of their environment and reverting
 appropriately. Useful to minimize SMT queries that share internal

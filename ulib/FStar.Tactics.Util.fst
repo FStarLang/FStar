@@ -113,6 +113,14 @@ let rec tryPick f l = match l with
          | None -> tryPick f tl
 #pop-options
 
+#push-options "--ifuel 1"
+let rec tryFind (#a:Type) (f:a -> Tac bool) (l:list a) : Tac bool = match l with
+    | [] -> false
+    | hd::tl ->
+      if f hd then true
+      else tryFind f tl
+#pop-options
+
 let map_opt (f:'a -> Tac 'b) (x:option 'a) : Tac (option 'b) =
   match x with
   | None -> None

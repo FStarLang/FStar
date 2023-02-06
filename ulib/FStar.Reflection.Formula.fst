@@ -49,15 +49,13 @@ noeq type formula =
   | F_Unknown : formula // Also a baked-in "None"
 
 let mk_Forall (typ : term) (pred : term) : Tac formula =
-    let b = pack_bv ({ bv_ppname = "x";
-                       bv_sort = typ;
-                       bv_index = 0; }) in
+    let b = pack_bv "x" ({ bv_sort = typ;
+                           bv_index = 0; }) in
     Forall b (pack_ln (Tv_App pred (pack_ln (Tv_BVar b), Q_Explicit)))
 
 let mk_Exists (typ : term) (pred : term) : Tac formula =
-    let b = pack_bv ({ bv_ppname = "x";
-                       bv_sort = typ;
-                       bv_index = 0; }) in
+    let b = pack_bv "x" ({ bv_sort = typ;
+                           bv_index = 0; }) in
     Exists b (pack_ln (Tv_App pred (pack_ln (Tv_BVar b), Q_Explicit)))
 
 let term_as_formula' (t:term) : Tac formula =
@@ -209,7 +207,7 @@ let formula_to_string (f:formula) : Tac string =
     | Forall bs t -> "Forall <bs> (" ^ term_to_string t ^ ")"
     | Exists bs t -> "Exists <bs> (" ^ term_to_string t ^ ")"
     | App p q ->  "App (" ^ term_to_string p ^ ") (" ^ term_to_string q ^ ")"
-    | Name bv ->  "Name (" ^ bv_to_string bv ^ ")"
+    | Name bv ->  "Name (" ^ bv_ppname bv ^ ")"
     | FV fv -> "FV (" ^ flatten_name (inspect_fv fv) ^ ")"
     | IntLit i -> "Int " ^ string_of_int i
     | F_Unknown -> "?"

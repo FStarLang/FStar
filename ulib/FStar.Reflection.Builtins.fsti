@@ -65,7 +65,7 @@ val inspect_fv     : fv -> name
 val pack_fv        : name -> fv
 
 val inspect_bv     : v:bv -> bvv:bv_view {bvv << v}
-val pack_bv        : bv_view -> bv
+val pack_bv        : ppname:string -> bv_view -> bv
 
 val inspect_lb     : lb:letbinding -> lbv:lb_view {lbv << lb}
 val pack_lb        : lb_view -> letbinding

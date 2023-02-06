@@ -163,7 +163,7 @@ let _debug_print_var (name : string) (t : term) : Tac unit =
   begin match inspect t with
   | Tv_Var bv ->
     let b : bv_view = inspect_bv bv in
-    print ("Tv_Var: ppname: " ^ b.bv_ppname ^
+    print ("Tv_Var: ppname: " ^ bv_ppname bv ^
            "; index: " ^ (string_of_int b.bv_index) ^
            "; sort: " ^ term_to_string b.bv_sort)
   | _ -> ()

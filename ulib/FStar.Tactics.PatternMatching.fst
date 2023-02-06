@@ -506,7 +506,7 @@ let solve_mp #a (problem: matching_problem)
 let rec pattern_of_term_ex tm : Tac (match_res pattern) =
   match inspect tm with
   | Tv_Var bv ->
-    return (PVar (name_of_bv bv))
+    return (PVar (bv_ppname bv))
   | Tv_FVar fv
   | Tv_UInst fv _ ->
     let qn = fv_to_string fv in

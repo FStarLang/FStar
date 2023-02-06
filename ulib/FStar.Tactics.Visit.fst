@@ -21,11 +21,12 @@ open FStar.Reflection
 open FStar.Tactics.Effect
 open FStar.Tactics.Types
 open FStar.Tactics.Util
+open FStar.Tactics.Builtins
 
 let on_sort_bv (f : term -> Tac term) (xbv:bv) : Tac bv =
   let bvv = inspect_bv xbv in
   let bvv = { bvv with bv_sort = f bvv.bv_sort } in
-  let bv = pack_bv bvv in
+  let bv = pack_bv (bv_ppname xbv) bvv in
   bv
 
 let on_sort_binder (f : term -> Tac term) (b:binder) : Tac binder =
