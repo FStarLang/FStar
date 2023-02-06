@@ -25,14 +25,14 @@ all: uall
 uall: $(POSTARGETS) $(NEGTARGETS)
 
 $(POSTARGETS): %.pver: %
-	@echo "[CHECK     $(basename $(notdir $@))]"
+	$(call msg, "CHECK", $(basename $(notdir $@)))
 	$(Q)$(FSTAR) $(SIL) --include $(FSTAR_HOME)/ulib --include $^ --odir $^ Test.fst
 
 $(NEGTARGETS): %.nver: %
-	@echo "[CHECKFAIL $(basename $(notdir $@))]"
+	$(call msg, "CHECKFAIL", $(basename $(notdir $@)))
 	$(Q)! $(FSTAR) $(SIL) --include $(FSTAR_HOME)/ulib --include $^ --odir $^ Test.fst > $^/error.log 2>&1
 	@echo $^ failed as expected
 
 clean:
-	@echo "[CLEAN]"
+	$(call msg, "CLEAN")
 	$(Q)for f in $(NEGTESTS) ; do rm -f $$f/error.log ; done

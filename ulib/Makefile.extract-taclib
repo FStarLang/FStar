@@ -35,14 +35,14 @@ EXTRACT_MODULES=--extract '-FStar +FStar.Range +FStar.Reflection +FStar.Tactics 
 # And then, in a separate invocation, from each .checked we
 # extract an .ml file
 $(OUTPUT_DIRECTORY)/%.ml:
-	@echo "[EXTRACT   $(basename $(notdir $@))]"
+	$(call msg, "EXTRACT", $(basename $(notdir $@)))
 	$(Q)$(MY_FSTAR) $(subst .checked,,$(notdir $<)) --codegen $(CODEGEN) --extract_module $(basename $(notdir $(subst .checked,,$<)))
 
 .depend.extract-taclib:
+	$(call msg, "DEPEND")
 	$(Q)mkdir -p .cache
-	true $(shell rm -f .depend.extract-taclib.rsp) $(foreach f,$(FSTAR_FILES),$(shell echo $(f) >> .depend.extract-taclib.rsp))
+	$(Q)true $(shell rm -f .depend.extract-taclib.rsp) $(foreach f,$(FSTAR_FILES),$(shell echo $(f) >> .depend.extract-taclib.rsp))
 	$(Q)$(MY_FSTAR) --dep full $(EXTRACT_MODULES) $(addprefix --include , $(INCLUDE_PATHS)) @.depend.extract-taclib.rsp > .depend.extract-taclib
-	@echo "[DEPEND]"
 
 depend.extract-taclib: .depend.extract-taclib
 

@@ -136,7 +136,7 @@ CAPPED=$(subst Bug,Bug,$*)
 
 
 %.verify: %.fst
-	@echo '[CHECK     $<]'
+	$(call msg, "CHECK", $<)
 	$(Q)$(FSTAR) $(SIL) $^
 
 Bug1383.verify: OTHERFLAGS += --warn_error @275 #Z3 warnings are fatal
@@ -159,7 +159,7 @@ verify-maybe-close: $(subst .fst,.verify,$(SHOULD_VERIFY_MAYBE_CLOSE))
 
 
 %.not-verify: %.fst
-	@echo '[CHECKFAIL $<]'
+	$(call msg, "CHECKFAIL", $<)
 	$(Q)(! $(FSTAR) $(SIL) $^ >/dev/null 2>&1) || (echo "Negative test failed ($@)!" ; false)
 
 not-verify: $(subst .fst,.not-verify,$(SHOULD_NOT_VERIFY_CLOSED))

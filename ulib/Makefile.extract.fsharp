@@ -21,9 +21,9 @@ $(OUTPUT_DIRECTORY)/%.fs:
 	$(MY_FSTAR) $(subst .checked.lax,,$(notdir $<)) --codegen $(CODEGEN) --extract_module $(basename $(notdir $(subst .checked.lax,,$<)))
 
 .depend.extract.fsharp:
+	$(call msg, "DEPEND")
 	$(Q)mkdir -p .cache.lax
 	$(Q)$(MY_FSTAR) --extract 'FSharp:*;OCaml:None;krml:None' --dep full $(EXTRACT_MODULES) $(addprefix --include , $(INCLUDE_PATHS)) $(FSTAR_FILES) > .depend.extract.fsharp
-	@echo "[DEPEND]"
 
 depend.extract.fsharp: .depend.extract.fsharp
 
