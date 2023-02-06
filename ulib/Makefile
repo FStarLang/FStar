@@ -24,8 +24,14 @@ include $(FSTAR_HOME)/ulib/ml/Makefile.realized
 include $(FSTAR_HOME)/ulib/ml/Makefile.include
 include $(FSTAR_HOME)/.common.mk
 
-ulib-in-fsharp:
-	+$(MAKE) -f Makefile.extract.fsharp all-fs
+# Builds ulibfs.dll and the nuget package
+ulib-in-fsharp: ulib-in-fsharp-dll
+	+$(MAKE) -f Makefile.extract.fsharp nuget
+
+ulib-in-fsharp-dll:
+	+$(MAKE) -f Makefile.extract.fsharp dll
+
+.PHONY: ulib-in-fsharp-dll
 
 clean_checked:
 	$(Q)rm -f *.checked .cache/*.checked .depend

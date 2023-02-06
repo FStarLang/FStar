@@ -200,8 +200,8 @@ package:
 	rm -f $(NAME).zip $(NAME).tar.gz
 	@# Install F* into the package
 	+PREFIX=$(package_prefix) $(MAKE) install
-	@# Make the F* ulib nuget package
-	+FSTAR_HOME=$(package_prefix) $(MAKE) -C $(package_prefix)/lib/fstar -f Makefile.extract.fsharp
+	@# Make the F* ulib F# DLL (NOT the nuget package)
+	+PREFIX=$(package_prefix) $(MAKE) -C $(FSTAR_HOME)/ulib -f Makefile.extract.fsharp dll
 	@# Then the version file.
 	cp ../../version.txt $(package_prefix)/
 	@# Documentation and licenses

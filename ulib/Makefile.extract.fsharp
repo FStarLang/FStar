@@ -1,6 +1,6 @@
 .PHONY: indent extra
 
-all: world
+all: nuget
 
 ifndef FSTAR_HOME
   FSTAR_EXE := $(shell which fstar.exe)
@@ -79,5 +79,10 @@ all-fs: $(addprefix $(OUTPUT_DIRECTORY)/, $(FS_FILES))
 
 lax-all: $(addsuffix .checked.lax, $(FSTAR_FILES))
 
-world: all-fs
-	+$(MAKE) -C fs/VS
+.PHONY: lax-all all-fs nuget dll
+
+dll: all-fs
+	+$(MAKE) -C fs/VS build
+
+nuget: dll
+	+$(MAKE) -C fs/VS all
