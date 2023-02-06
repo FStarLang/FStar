@@ -584,17 +584,15 @@ let e_term_view = e_term_view_aq []
 
 let e_bv_view =
     let embed_bv_view cb (bvv:bv_view) : t =
-        mkConstruct ref_Mk_bv.fv [] [as_arg (embed e_string cb bvv.bv_ppname);
-                              as_arg (embed e_int    cb bvv.bv_index);
-                              as_arg (embed e_term   cb bvv.bv_sort)]
+        mkConstruct ref_Mk_bv.fv [] [as_arg (embed e_int    cb bvv.bv_index);
+                                     as_arg (embed e_term   cb bvv.bv_sort)]
     in
     let unembed_bv_view cb (t : t) : option bv_view =
         match t.nbe_t with
-        | Construct (fv, _, [(s, _); (idx, _); (nm, _)]) when S.fv_eq_lid fv ref_Mk_bv.lid ->
-            BU.bind_opt (unembed e_string cb nm) (fun nm ->
+        | Construct (fv, _, [(s, _); (idx, _)]) when S.fv_eq_lid fv ref_Mk_bv.lid ->
             BU.bind_opt (unembed e_int cb idx) (fun idx ->
             BU.bind_opt (unembed e_term cb s) (fun s ->
-            Some <| { bv_ppname = nm ; bv_index = idx ; bv_sort = s })))
+            Some <| { bv_index = idx ; bv_sort = s }))
 
         | _ ->
             Err.log_issue Range.dummyRange (Err.Warning_NotEmbedded, (BU.format1 "Not an embedded bv_view: %s" (t_to_string t)));

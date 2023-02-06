@@ -2104,6 +2104,7 @@ let pack' (tv:term_view) (leave_curried:bool) : tac term =
 
 let pack (tv:term_view) : tac term = pack' tv false
 let pack_curried (tv:term_view) : tac term = pack' tv true
+let bv_ppname (bv:bv) : tac string = ret (Ident.string_of_id bv.ppname)
 
 let lget (ty:term) (k:string) : tac term = wrap_err "lget" <| (
     let! ps = get in

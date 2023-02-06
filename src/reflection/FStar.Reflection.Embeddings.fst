@@ -606,8 +606,7 @@ let e_lid : embedding I.lid =
 
 let e_bv_view =
     let embed_bv_view (rng:Range.range) (bvv:bv_view) : term =
-        S.mk_Tm_app ref_Mk_bv.t [S.as_arg (embed e_string rng bvv.bv_ppname);
-                                 S.as_arg (embed e_int    rng bvv.bv_index);
+        S.mk_Tm_app ref_Mk_bv.t [S.as_arg (embed e_int    rng bvv.bv_index);
                                  S.as_arg (embed e_term   rng bvv.bv_sort)]
                     rng
     in
@@ -615,11 +614,10 @@ let e_bv_view =
         let t = U.unascribe t in
         let hd, args = U.head_and_args t in
         match (U.un_uinst hd).n, args with
-        | Tm_fvar fv, [(nm, _); (idx, _); (s, _)] when S.fv_eq_lid fv ref_Mk_bv.lid ->
-            BU.bind_opt (unembed' w e_string nm) (fun nm ->
+        | Tm_fvar fv, [(idx, _); (s, _)] when S.fv_eq_lid fv ref_Mk_bv.lid ->
             BU.bind_opt (unembed' w e_int idx) (fun idx ->
             BU.bind_opt (unembed' w e_term s) (fun s ->
-            Some <| { bv_ppname = nm ; bv_index = idx ; bv_sort = s })))
+            Some <| { bv_index = idx ; bv_sort = s }))
 
         | _ ->
             if w then
@@ -1033,7 +1031,8 @@ let e_qualifiers = e_list e_qualifier
 
 let unfold_lazy_bv  (i : lazyinfo) : term =
     let bv : bv = undyn i.blob in
-    S.mk_Tm_app fstar_refl_pack_bv.t [S.as_arg (embed e_bv_view i.rng (inspect_bv bv))]
+    S.mk_Tm_app fstar_refl_pack_bv.t [S.as_arg (embed e_string i.rng (Ident.string_of_id bv.ppname));
+                                      S.as_arg (embed e_bv_view i.rng (inspect_bv bv))]
                 i.rng
 
 (* TODO: non-uniform *)

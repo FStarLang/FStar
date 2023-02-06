@@ -687,14 +687,13 @@ let pack_lb (lbv:lb_view) : letbinding =
 
 let inspect_bv (bv:bv) : bv_view =
     {
-      bv_ppname = Ident.string_of_id bv.ppname;
       bv_index = Z.of_int_fs bv.index;
       bv_sort = bv.sort;
     }
 
-let pack_bv (bvv:bv_view) : bv =
+let pack_bv (ppname:string) (bvv:bv_view) : bv =
     {
-      ppname = Ident.mk_ident (bvv.bv_ppname, Range.dummyRange);
+      ppname = Ident.mk_ident (ppname, Range.dummyRange);
       index = Z.to_int_fs bvv.bv_index;
       sort = bvv.bv_sort;
     }

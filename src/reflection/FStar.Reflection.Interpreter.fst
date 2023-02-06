@@ -258,8 +258,9 @@ let reflection_primops : list Cfg.primitive_step = [
     e_bv
     e_bv_view;
 
-  mk1 "pack_bv"
+  mk2 "pack_bv"
     RB.pack_bv
+    e_string
     e_bv_view
     e_bv;
 

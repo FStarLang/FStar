@@ -139,7 +139,6 @@ let fstar_refl_universe_view_fv = mk_refl_data_lid_as_fv   "universe_view"
 let ref_Mk_bv =
     let lid = fstar_refl_data_lid "Mkbv_view" in
     let attr = Record_ctor (fstar_refl_data_lid "bv_view", [
-                                Ident.mk_ident ("bv_ppname", Range.dummyRange);
                                 Ident.mk_ident ("bv_index" , Range.dummyRange);
                                 Ident.mk_ident ("bv_sort"  , Range.dummyRange)]) in
     let fv = lid_as_fv lid delta_constant (Some attr) in

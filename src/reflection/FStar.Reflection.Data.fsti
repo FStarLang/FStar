@@ -118,7 +118,6 @@ type qualifier =
 type qualifiers = list qualifier
 
 type bv_view = {
-    bv_ppname : string;
     bv_index : Z.t;
     bv_sort : typ;
 }

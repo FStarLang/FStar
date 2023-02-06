@@ -100,6 +100,7 @@ val tadmit_t               : term -> tac unit
 val inspect                : term -> tac term_view
 val pack                   : term_view -> tac term
 val pack_curried           : term_view -> tac term
+val bv_ppname              : bv -> tac string
 val join                   : unit -> tac unit
 val lget                   : typ -> string -> tac term
 val lset                   : typ -> string -> term -> tac unit
