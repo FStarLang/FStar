@@ -37,7 +37,8 @@ $(OUTPUT_DIRECTORY)/%.fs:
 
 .depend.extract.fsharp:
 	$(Q)mkdir -p .cache.lax
-	$(Q)$(MY_FSTAR) --extract 'FSharp:*;OCaml:None;krml:None' --dep full $(EXTRACT_MODULES) $(addprefix --include , $(INCLUDE_PATHS)) $(FSTAR_FILES) > .depend.extract.fsharp
+	true $(shell rm -f .depend.extract.fsharp.rsp) $(foreach f,$(FSTAR_FILES),$(shell echo $(f) >> .depend.extract.fsharp.rsp))
+	$(Q)$(MY_FSTAR) --extract 'FSharp:*;OCaml:None;krml:None' --dep full $(EXTRACT_MODULES) $(addprefix --include , $(INCLUDE_PATHS)) @.depend.extract.fsharp.rsp > .depend.extract.fsharp
 	@echo "[DEPEND]"
 
 depend.extract.fsharp: .depend.extract.fsharp

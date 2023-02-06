@@ -1,12 +1,7 @@
 *.fst-ver
 *.fsti-ver
 *.mgen
-.depend.extract.fsharp
-.depend.extract.rsp
-.depend.extract-stdlib
-.depend.extract-stdlib.rsp
-.depend.extract-taclib
-.depend.extract-taclib.rsp
+.depend*
 fs/extracted
 [Bb]in/
 [Oo]bj/
