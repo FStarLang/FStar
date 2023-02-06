@@ -1,6 +1,21 @@
 .PHONY: indent extra
 
-include ../src/Makefile.config
+all: world
+
+ifndef FSTAR_HOME
+  FSTAR_EXE := $(shell which fstar.exe)
+  ifeq ($(FSTAR_EXE),)
+    # assuming F* source directory
+    FSTAR_HOME=..
+    FSTAR_EXE := $(FSTAR_HOME)/bin/fstar.exe
+  else
+    FSTAR_HOME=$(dir $(FSTAR_EXE))/..
+  endif
+  export FSTAR_HOME
+endif
+FSTAR_ULIB=$(shell if test -d $(FSTAR_HOME)/ulib ; then echo $(FSTAR_HOME)/ulib ; else echo $(FSTAR_HOME)/lib/fstar ; fi)
+include $(FSTAR_ULIB)/gmake/z3.mk
+include $(FSTAR_ULIB)/gmake/fstar.mk
 
 FSTAR_FILES:=$(wildcard *.fst *.fsti) \
 	     $(wildcard experimental/*fst experimental/*fsti)
@@ -63,3 +78,6 @@ FS_FILES= \
 all-fs: $(addprefix $(OUTPUT_DIRECTORY)/, $(FS_FILES))
 
 lax-all: $(addsuffix .checked.lax, $(FSTAR_FILES))
+
+world: all-fs
+	+$(MAKE) -C fs/VS

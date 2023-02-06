@@ -26,7 +26,6 @@ include $(FSTAR_HOME)/.common.mk
 
 ulib-in-fsharp:
 	+$(MAKE) -f Makefile.extract.fsharp all-fs
-	+$(MAKE) -C fs/VS
 
 clean_checked:
 	$(Q)rm -f *.checked .cache/*.checked .depend
