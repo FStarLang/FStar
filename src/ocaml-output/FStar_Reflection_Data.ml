@@ -336,20 +336,13 @@ let (uu___is_Effect : qualifier -> Prims.bool) =
 let (uu___is_OnlyName : qualifier -> Prims.bool) =
   fun projectee -> match projectee with | OnlyName -> true | uu___ -> false
 type qualifiers = qualifier Prims.list
-type bv_view =
-  {
-  bv_ppname: Prims.string ;
+type bv_view = {
   bv_index: FStar_BigInt.t ;
   bv_sort: typ }
-let (__proj__Mkbv_view__item__bv_ppname : bv_view -> Prims.string) =
-  fun projectee ->
-    match projectee with | { bv_ppname; bv_index; bv_sort;_} -> bv_ppname
 let (__proj__Mkbv_view__item__bv_index : bv_view -> FStar_BigInt.t) =
-  fun projectee ->
-    match projectee with | { bv_ppname; bv_index; bv_sort;_} -> bv_index
+  fun projectee -> match projectee with | { bv_index; bv_sort;_} -> bv_index
 let (__proj__Mkbv_view__item__bv_sort : bv_view -> typ) =
-  fun projectee ->
-    match projectee with | { bv_ppname; bv_index; bv_sort;_} -> bv_sort
+  fun projectee -> match projectee with | { bv_index; bv_sort;_} -> bv_sort
 type binder_view =
   (FStar_Syntax_Syntax.bv * (aqualv * FStar_Syntax_Syntax.term Prims.list))
 type comp_view =

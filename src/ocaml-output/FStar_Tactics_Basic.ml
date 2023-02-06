@@ -6575,6 +6575,11 @@ let (pack_curried :
   FStar_Reflection_Data.term_view ->
     FStar_Syntax_Syntax.term FStar_Tactics_Monad.tac)
   = fun tv -> pack' tv true
+let (bv_ppname :
+  FStar_Syntax_Syntax.bv -> Prims.string FStar_Tactics_Monad.tac) =
+  fun bv ->
+    let uu___ = FStar_Ident.string_of_id bv.FStar_Syntax_Syntax.ppname in
+    FStar_Tactics_Monad.ret uu___
 let (lget :
   FStar_Reflection_Data.typ ->
     Prims.string -> FStar_Syntax_Syntax.term FStar_Tactics_Monad.tac)

@@ -465,8 +465,8 @@ let (reflection_primops : FStar_TypeChecker_Cfg.primitive_step Prims.list) =
                               e_bv_view in
                           let uu___25 =
                             let uu___26 =
-                              mk1 "pack_bv" FStar_Reflection_Basic.pack_bv
-                                e_bv_view e_bv in
+                              mk2 "pack_bv" FStar_Reflection_Basic.pack_bv
+                                e_string e_bv_view e_bv in
                             let uu___27 =
                               let uu___28 =
                                 mk1 "inspect_binder"

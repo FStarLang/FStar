@@ -245,17 +245,11 @@ let (ref_Mk_bv : refl_constant) =
       let uu___1 = fstar_refl_data_lid "bv_view" in
       let uu___2 =
         let uu___3 =
-          FStar_Ident.mk_ident ("bv_ppname", FStar_Compiler_Range.dummyRange) in
+          FStar_Ident.mk_ident ("bv_index", FStar_Compiler_Range.dummyRange) in
         let uu___4 =
           let uu___5 =
-            FStar_Ident.mk_ident
-              ("bv_index", FStar_Compiler_Range.dummyRange) in
-          let uu___6 =
-            let uu___7 =
-              FStar_Ident.mk_ident
-                ("bv_sort", FStar_Compiler_Range.dummyRange) in
-            [uu___7] in
-          uu___5 :: uu___6 in
+            FStar_Ident.mk_ident ("bv_sort", FStar_Compiler_Range.dummyRange) in
+          [uu___5] in
         uu___3 :: uu___4 in
       (uu___1, uu___2) in
     FStar_Syntax_Syntax.Record_ctor uu___ in
