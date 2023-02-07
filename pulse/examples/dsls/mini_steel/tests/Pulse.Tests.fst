@@ -7,6 +7,9 @@ open Steel.ST.Reference
 open Pulse.Steel.Wrapper
 open Steel.FractionalPermission
 open FStar.Ghost
+
+module U32 = FStar.UInt32
+
 #push-options "--print_universes --print_implicits"
 let expects = ()
 let provides = ()
@@ -127,5 +130,17 @@ let warmup (x:int) = assert (x + 1 > x)
     (provides (fun x -> pts_to r full_perm n2 `star` pure (eq2_prop (reveal n2) (reveal n1))))
     (
       intro_pure (eq2_prop (reveal n2) (reveal n1)) ()
+    )
+)))
+
+%splice_t[if_example] (check (`(
+  fun (r:ref u32) (n:erased u32{eq2_prop (U32.v (reveal n)) 1}) (b:bool) ->
+    (expects (pts_to r full_perm n))
+    (provides (fun _ -> pts_to r full_perm (U32.add (reveal n) 2ul)))
+    (
+      if b
+      then let x = read r in
+           write r (U32.add x 2ul)
+      else write r 3ul
     )
 )))

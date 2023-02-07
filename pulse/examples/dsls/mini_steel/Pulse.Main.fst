@@ -97,6 +97,70 @@ let is_head_fv (t:R.term) (fv:list string) : option (list R.argv) =
 let expects_fv = ["Pulse";"Tests";"expects"]
 let provides_fv = ["Pulse";"Tests";"provides"]
 
+//
+// shift bvs > n by -1
+//
+// When we translate F* syntax to Pulse,
+//   the else branch when translating if (i.e. Tm_match)
+//   are an issue, as the pattern there is Pat_Wild bv,
+//   which eats up 0th bv index
+//
+let rec shift_bvs_in_else (t:term) (n:nat) : Tac term =
+  match t with
+  | Tm_BVar bv ->
+    if n < bv.bv_index
+    then Tm_BVar {bv with bv_index = bv.bv_index - 1}
+    else t
+  | Tm_Var _
+  | Tm_FVar _
+  | Tm_UInst _ _
+  | Tm_Constant _ -> t
+  | Tm_Refine b t ->
+    Tm_Refine {b with binder_ty=shift_bvs_in_else b.binder_ty n}
+              (shift_bvs_in_else t (n + 1))
+  | Tm_Abs _ _ _ _ _ ->
+    T.fail "Did not expect an Tm_Abs in shift_bvs_in_else"
+  | Tm_PureApp head q arg ->
+    Tm_PureApp (shift_bvs_in_else head n)
+               q
+               (shift_bvs_in_else arg n)
+  | Tm_Let t e1 e2 ->
+    Tm_Let (shift_bvs_in_else t n)
+           (shift_bvs_in_else e1 n)
+           (shift_bvs_in_else e2 (n + 1))
+  | Tm_STApp head q arg ->
+    Tm_STApp (shift_bvs_in_else head n)
+             q
+             (shift_bvs_in_else arg n)
+  | Tm_Bind e1 e2 ->
+    Tm_Bind (shift_bvs_in_else e1 n)
+            (shift_bvs_in_else e2 (n + 1))
+  | Tm_Emp -> t
+  | Tm_Pure p -> Tm_Pure (shift_bvs_in_else p n)
+  | Tm_Star l r ->
+    Tm_Star (shift_bvs_in_else l n)
+            (shift_bvs_in_else r n)
+  | Tm_ExistsSL t body ->
+    Tm_ExistsSL (shift_bvs_in_else t n)
+                (shift_bvs_in_else body (n + 1))
+  | Tm_ForallSL t body ->
+    Tm_ForallSL (shift_bvs_in_else t n)
+                (shift_bvs_in_else body (n + 1))
+  | Tm_Arrow _ _ _ ->
+    T.fail "Unexpected Tm_Arrow in shift_bvs_in_else"
+  | Tm_Type _
+  | Tm_VProp -> t
+  | Tm_If b e1 e2 post ->
+    Tm_If (shift_bvs_in_else b n)
+          (shift_bvs_in_else e1 n)
+          (shift_bvs_in_else e2 n)
+          (match post with
+           | None -> None
+           | Some post -> Some (shift_bvs_in_else post (n + 1)))
+  | Tm_Inames
+  | Tm_EmpInames
+  | Tm_UVar _ -> t
+
 let rec translate_term' (t:R.term)
   : T.Tac (err term)
   = match R.inspect_ln t with
@@ -169,6 +233,14 @@ and translate_st_term (t:R.term)
       let? def = translate_st_term def in 
       let? body = translate_st_term body in 
       Inl (Tm_Bind def body)
+
+    | R.Tv_Match b _ [(Pat_Constant C_True, then_);
+                      (Pat_Wild _, else_)] ->
+      let? b = readback_ty (pack_ln (inspect_ln_unascribe b)) in
+      let? then_ = translate_st_term then_ in
+      let? else_ = translate_st_term else_ in
+      let else_ = shift_bvs_in_else else_ 0 in
+      Inl (Tm_If b then_ else_ None)
 
     | _ ->
       unexpected_term "st_term" t
