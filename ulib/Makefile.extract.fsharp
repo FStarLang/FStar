@@ -32,9 +32,9 @@ $(OUTPUT_DIRECTORY)/%.fs:
 	$(MY_FSTAR) $(subst .checked,,$(notdir $<)) --codegen $(CODEGEN) --extract_module $(basename $(notdir $(subst .checked,,$<)))
 
 .depend.extract.fsharp:
+	$(call msg, "DEPEND")
 	true $(shell rm -f .depend.extract.fsharp.rsp) $(foreach f,$(FSTAR_FILES),$(shell echo $(f) >> .depend.extract.fsharp.rsp))
 	$(Q)$(MY_FSTAR) --extract 'FSharp:*;OCaml:None;krml:None' --dep full $(EXTRACT_MODULES) $(addprefix --include , $(INCLUDE_PATHS)) @.depend.extract.fsharp.rsp > .depend.extract.fsharp
-	@echo "[DEPEND]"
 
 depend.extract.fsharp: .depend.extract.fsharp
 

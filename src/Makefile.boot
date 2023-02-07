@@ -60,14 +60,14 @@ EXTRACT = $(addprefix --extract_module , $(EXTRACT_MODULES))		\
 # ensures that if this rule is successful then %.checked.lax is more
 # recent than its dependences.
 %.checked.lax:
-	@echo "[LAXCHECK  $(basename $(basename $(notdir $@)))]"
+	$(call msg, "LAXCHECK", $(basename $(basename $(notdir $@))))
 	$(Q)$(FSTAR_C) $< --already_cached '*,'-$(basename $(notdir $<))
 	$(Q)@touch -c $@
 
 # And then, in a separate invocation, from each .checked.lax we
 # extract an .ml file
 %.ml:
-	@echo "[EXTRACT   $(notdir $@)]"
+	$(call msg, "EXTRACT", $(notdir $@))
 	$(Q)$(BENCHMARK_PRE) $(FSTAR_C) $(notdir $(subst .checked.lax,,$<)) \
 		   --odir "$(call OUTPUT_DIRECTORY_FOR,"$@")" \
                    --codegen OCaml \
@@ -86,7 +86,7 @@ EXTRACT = $(addprefix --extract_module , $(EXTRACT_MODULES))		\
 # the dependency analysis failed.
 
 .depend:
-	@echo "[DEPEND]"
+	$(call msg, "DEPEND")
 	$(Q)$(FSTAR_C) --dep full		\
 		fstar/FStar.Main.fst		\
 		boot/FStar.Tests.Test.fst	\

@@ -37,12 +37,12 @@ clean_checked:
 	$(Q)rm -f *.checked .cache/*.checked .depend
 
 clean: clean_checked clean_ocaml
-	@echo "[CLEAN     ulib/]"
+	$(call msg, "CLEAN", "ulib/")
 	$(Q)rm -f .depend.*
 	$(Q)rm -f *.checked.lax .cache/*.checked.lax
 
 clean_ocaml:
-	@echo "[CLEAN OCAML LIBS]"
+	$(call msg, "CLEAN", "OCAML LIBS")
 	$(Q)+$(MAKE) -C ulib/ml clean
 
 DOC_FILES=prims.fst FStar.Pervasives.Native.fst FStar.Pervasives.fst \

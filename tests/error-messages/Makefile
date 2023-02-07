@@ -35,7 +35,7 @@ include $(FSTAR_HOME)/examples/Makefile.common
 	$(Q)cp $< $(patsubst %.output,%.expected,$<)
 
 clean:
-	@echo "[CLEAN]"
+	$(call msg, "CLEAN", $<)
 	$(Q)rm -f .depend
 	$(Q)rm -f *.check
 	$(Q)rm -f *.output

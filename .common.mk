@@ -4,7 +4,7 @@
 # follows (taken from src/Makefile.boot):
 #
 # ocaml-output/%.ml:
-# 	@echo "[EXTRACT   $(notdir $@)]"
+# 	$(call msg, "EXTRACT", $(notdir $@))
 # 	$(Q)$(BENCHMARK_PRE) $(FSTAR_C) $(SIL) $(notdir $(subst .checked.lax,,$<)) \
 #                   --codegen OCaml \
 #                   --extract_module $(basename $(notdir $(subst .checked.lax,,$<)))
@@ -17,10 +17,6 @@
 #
 # Besides that, when not using V=1, F* receives the --silent flag to
 # reduce non-critical output.
-#
-# It would be nice to define a function to print messages instead of
-# copying the same echo invocation everywhere, but AFAIK that would mean
-# we require GNU make.
 
 Q?=@
 SIL?=--silent
@@ -29,6 +25,10 @@ ifneq ($(V),)
 	Q=
 	SIL=
 endif
+
+define msg =
+@printf "  %-8s  %s\n" $(1) $(2)
+endef
 
 # Passing RESOURCEMONITOR=1 will create .runlim files through the source tree with
 # information about the time and space taken by each F* invocation.
