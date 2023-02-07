@@ -24,19 +24,14 @@ OUTPUT_DIRECTORY=fs/extracted
 
 CODEGEN ?= FSharp
 
-MY_FSTAR=$(FSTAR) $(OTHERFLAGS) --lax --cache_checked_modules --odir $(OUTPUT_DIRECTORY) --cache_dir .cache.lax
+MY_FSTAR=$(FSTAR) $(OTHERFLAGS) --already_cached '*' --warn_error @241 --cache_checked_modules --odir $(OUTPUT_DIRECTORY) --cache_dir .cache
 
-%.checked.lax:
-	$(MY_FSTAR) $< --already_cached '*,'-$(basename $(notdir $<))
-	touch -c $@
-
-# And then, in a separate invocation, from each .checked.lax we
+# And then, in a separate invocation, from each .checked file we
 # extract an .fs file
 $(OUTPUT_DIRECTORY)/%.fs:
-	$(MY_FSTAR) $(subst .checked.lax,,$(notdir $<)) --codegen $(CODEGEN) --extract_module $(basename $(notdir $(subst .checked.lax,,$<)))
+	$(MY_FSTAR) $(subst .checked,,$(notdir $<)) --codegen $(CODEGEN) --extract_module $(basename $(notdir $(subst .checked,,$<)))
 
 .depend.extract.fsharp:
-	$(Q)mkdir -p .cache.lax
 	true $(shell rm -f .depend.extract.fsharp.rsp) $(foreach f,$(FSTAR_FILES),$(shell echo $(f) >> .depend.extract.fsharp.rsp))
 	$(Q)$(MY_FSTAR) --extract 'FSharp:*;OCaml:None;krml:None' --dep full $(EXTRACT_MODULES) $(addprefix --include , $(INCLUDE_PATHS)) @.depend.extract.fsharp.rsp > .depend.extract.fsharp
 	@echo "[DEPEND]"
@@ -78,9 +73,7 @@ FS_FILES= \
 
 all-fs: $(addprefix $(OUTPUT_DIRECTORY)/, $(FS_FILES))
 
-lax-all: $(addsuffix .checked.lax, $(FSTAR_FILES))
-
-.PHONY: lax-all all-fs nuget dll
+.PHONY: all-fs nuget dll
 
 dll: all-fs
 	+$(MAKE) -C fs/VS build

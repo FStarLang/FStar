@@ -28,7 +28,7 @@ include $(FSTAR_HOME)/.common.mk
 ulib-in-fsharp: ulib-in-fsharp-dll
 	+$(MAKE) -f Makefile.extract.fsharp nuget
 
-ulib-in-fsharp-dll:
+ulib-in-fsharp-dll: all
 	+$(MAKE) -f Makefile.extract.fsharp dll
 
 .PHONY: ulib-in-fsharp-dll
