@@ -112,7 +112,7 @@ let rec term_to_string (t:term)
 
     | Tm_EmpInames -> "emp_inames"
       
-    | Tm_If b t e ->
+    | Tm_If b t e _ ->
       sprintf "(if %s then %s else %s)"
         (term_to_string b)
         (term_to_string t)

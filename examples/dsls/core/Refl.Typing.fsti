@@ -386,9 +386,10 @@ let eqtype_lid : R.name = ["Prims"; "eqtype"]
 
 let true_bool = pack_ln (Tv_Const C_True)
 let false_bool = pack_ln (Tv_Const C_False)
-let eq2 (t v0 v1:term) 
+let eq2 (u:universe) (t v0 v1:term) 
   : term 
-  = let eq2 = pack_ln (Tv_FVar (pack_fv eq2_qn)) in
+  = let eq2 = pack_fv eq2_qn in
+    let eq2 = pack_ln (Tv_UInst eq2 [u]) in
     let h = pack_ln (Tv_App eq2 (t, Q_Implicit)) in
     let h1 = pack_ln (Tv_App h (v0, Q_Explicit)) in
     let h2 = pack_ln (Tv_App h1 (v1, Q_Explicit)) in    
@@ -582,6 +583,10 @@ and univ_leq : universe -> universe -> Type0 =
     v:universe ->
     univ_leq u (u_max u v)
 
+let mk_if (scrutinee then_ else_:R.term) : R.term =
+  pack_ln (Tv_Match scrutinee None [(Pat_Constant C_True, then_); 
+                                    (Pat_Constant C_False, else_)])
+
 [@@ no_auto_projectors]
 noeq
 type typing : env -> term -> term -> Type0 =
@@ -691,10 +696,9 @@ type typing : env -> term -> term -> Type0 =
      ty:term ->
      hyp:var { None? (lookup_bvar g hyp) } ->
      typing g scrutinee bool_ty ->
-     typing (extend_env g hyp (eq2 bool_ty scrutinee true_bool)) then_ ty ->
-     typing (extend_env g hyp (eq2 bool_ty scrutinee false_bool)) else_ ty ->     
-     typing g (pack_ln (Tv_Match scrutinee None [(Pat_Constant C_True, then_); 
-                                                 (Pat_Constant C_False, else_)])) ty
+     typing (extend_env g hyp (eq2 (pack_universe Uv_Zero) bool_ty scrutinee true_bool)) then_ ty ->
+     typing (extend_env g hyp (eq2 (pack_universe Uv_Zero) bool_ty scrutinee false_bool)) else_ ty ->     
+     typing g (mk_if scrutinee then_ else_) ty
 
   | T_Match: 
      g:env ->

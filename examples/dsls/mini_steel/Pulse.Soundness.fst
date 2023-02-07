@@ -106,6 +106,52 @@ let stequiv_soundess
   let r_e_typing = soundness _ _ _ _ e_typing in 
   STEquiv.st_equiv_soundness _ _ _ _ equiv _ r_e_typing
 
+#push-options "--z3rlimit_factor 4"
+let if_soundness
+  (f:stt_env)
+  (g:env)
+  (t:term)
+  (c:pure_comp)
+  (d:src_typing f g t c{T_If? d})
+  (soundness:(f:stt_env -> g:env -> t:term -> c:pure_comp ->
+              d':src_typing f g t c{d' << d} ->
+              GTot (RT.typing (extend_env_l f g)
+                              (elab_src_typing d')
+                              (elab_pure_comp c))))
+  : GTot (RT.typing (extend_env_l f g)
+                    (elab_src_typing d)
+                    (elab_pure_comp c)) =
+
+  let T_If _ b e1 e2 _ _ hyp b_typing e1_typing e2_typing = d in
+  let rb_typing : RT.typing (extend_env_l f g)
+                            (elab_pure b)
+                            RT.bool_ty =
+    tot_typing_soundness b_typing in
+  let g_then = (hyp, Inl (mk_eq2 U_zero tm_bool b tm_true))::g in
+  let re1_typing
+    : RT.typing (RT.extend_env (extend_env_l f g)
+                               hyp
+                               (RT.eq2 (R.pack_universe R.Uv_Zero)
+                                       RT.bool_ty
+                                       (elab_pure b)
+                                       RT.true_bool))
+                (elab_src_typing e1_typing)
+                (elab_pure_comp c) =
+    soundness f g_then e1 c e1_typing in
+  let g_else = (hyp, Inl (mk_eq2 U_zero tm_bool b tm_false))::g in
+  let re2_typing
+    : RT.typing (RT.extend_env (extend_env_l f g)
+                               hyp
+                               (RT.eq2 (R.pack_universe R.Uv_Zero)
+                                       RT.bool_ty
+                                       (elab_pure b)
+                                       RT.false_bool))
+                (elab_src_typing e2_typing)
+                (elab_pure_comp c) =
+    soundness f g_else e2 c e2_typing in
+  RT.T_If _ _ _ _ _ _ rb_typing re1_typing re2_typing
+#pop-options
+
 #push-options "--query_stats --fuel 2 --ifuel 2 --z3rlimit_factor 30"
 let rec soundness (f:stt_env)
                   (g:env)
@@ -205,6 +251,10 @@ let rec soundness (f:stt_env)
     | T_ReturnNoEq _ e t u e_typing t_typing ->
       let e_typing = soundness _ _ _ _ e_typing in
       Return.elab_return_noeq_typing t_typing e_typing
+
+    | T_If _ _ _ _ _ _ _ _ _ _ ->
+      if_soundness _ _ _ _ d soundness
+
 #pop-options
 
 let soundness_lemma

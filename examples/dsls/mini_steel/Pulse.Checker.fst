@@ -221,7 +221,7 @@ let rec check' : bool -> check_t =
   | Tm_Bind _ _ ->
     check_bind f g t pre pre_typing post_hint (check' true)
     
-  | Tm_If _ _ _ ->
+  | Tm_If _ _ _ _ ->
     T.fail "Not handling if yet"
 
   | Tm_UVar _ ->

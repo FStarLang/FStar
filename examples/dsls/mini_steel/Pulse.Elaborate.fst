@@ -383,6 +383,13 @@ and elab_src_typing
     | T_Lift _ _ c1 c2 e_typing lc ->
       let e = elab_src_typing e_typing in
       elab_lift lc e
+
+    | T_If _ b _ _ _ _ _ _ e1_typing e2_typing ->
+      let rb = elab_pure b in
+      let re1 = elab_src_typing e1_typing in
+      let re2 = elab_src_typing e2_typing in
+      RT.mk_if rb re1 re2
+
 #pop-options
 
 #push-options "--ifuel 2"
@@ -464,10 +471,6 @@ let rec elab_close_commute' (e:pure_term)
     | Tm_Arrow b _ body ->
       elab_close_commute' b.binder_ty v n;
       elab_comp_close_commute' body v (n + 1)
-    | Tm_If e1 e2 e3 ->
-      elab_close_commute' e1 v n;
-      elab_close_commute' e2 v n;
-      elab_close_commute' e3 v n
 
 and elab_comp_close_commute' (c:pure_comp) (v:var) (n:index)
   : Lemma (ensures
@@ -488,7 +491,6 @@ and elab_comp_close_commute' (c:pure_comp) (v:var) (n:index)
       elab_close_commute' s.pre v n;
       elab_close_commute' s.post v (n + 1)
 #pop-options
-
 
 let elab_comp_close_commute (c:pure_comp) (x:var)
   : Lemma (elab_pure_comp (close_pure_comp c x) == RT.close_term (elab_pure_comp c) x)

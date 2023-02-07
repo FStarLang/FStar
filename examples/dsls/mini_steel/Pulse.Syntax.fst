@@ -45,6 +45,7 @@ type nm = {
 type qualifier =
   | Implicit
 
+[@@ no_auto_projectors]
 type term =
   // | Tm_Embed    : R.term -> term // a host term included as is in Pulse
   | Tm_BVar     : bv -> term
@@ -53,20 +54,20 @@ type term =
   | Tm_UInst    : l:R.name -> us:list universe -> term
   | Tm_Constant : c:constant -> term
   | Tm_Refine   : b:binder -> term -> term
-  | Tm_Abs      : b:binder -> q:option qualifier -> pre_hint:vprop -> body:term -> opost:option vprop -> term  //pre and post hints
+  | Tm_Abs      : b:binder -> q:option qualifier -> pre:vprop -> body:term -> post:option vprop -> term
   | Tm_PureApp  : head:term -> arg_qual:option qualifier -> arg:term -> term
   | Tm_Let      : t:term -> e1:term -> e2:term -> term  
   | Tm_STApp    : head:term -> arg_qual:option qualifier -> arg:term -> term  
   | Tm_Bind     : e1:term -> e2:term -> term
   | Tm_Emp      : term
-  | Tm_Pure     : p:term -> term (* pure p : vprop *)
+  | Tm_Pure     : p:term -> term
   | Tm_Star     : l:vprop -> r:vprop -> term
   | Tm_ExistsSL : t:term -> body:vprop -> term
   | Tm_ForallSL : t:term -> body:vprop -> term
   | Tm_Arrow    : b:binder -> q:option qualifier -> body:comp -> term 
   | Tm_Type     : universe -> term
   | Tm_VProp    : term
-  | Tm_If       : b:term -> then_:term -> else_:term -> term
+  | Tm_If       : term -> term -> term -> post:option vprop -> term
 
   | Tm_Inames   : term  // type inames
   | Tm_EmpInames: term
@@ -110,7 +111,9 @@ let rec freevars (t:term)
     | Tm_UVar _ -> Set.empty
     | Tm_Var nm -> Set.singleton nm.nm_index
     | Tm_Refine b body
-    | Tm_Abs b _ _ body _ -> Set.union (freevars b.binder_ty) (freevars body)  // Why is this not taking freevars of pre (and post)?
+    | Tm_Abs b _ _ body _ ->
+      // Why is this not taking freevars of pre (and post)?
+      Set.union (freevars b.binder_ty) (freevars body)
     | Tm_PureApp t1 _ t2
     | Tm_STApp t1 _ t2
     | Tm_Star  t1 t2
@@ -118,9 +121,11 @@ let rec freevars (t:term)
     | Tm_ForallSL t1 t2 
     | Tm_Bind t1 t2 -> Set.union (freevars t1) (freevars t2)
 
-    | Tm_Let t e1 e2
-    | Tm_If t e1 e2 ->
+    | Tm_Let t e1 e2 ->
       Set.union (Set.union (freevars t) (freevars e1)) (freevars e2)
+    | Tm_If t e1 e2 post ->
+      Set.union (Set.union (freevars t) (freevars e1))
+                (Set.union (freevars e2) (freevars_term_option post))
 
     | Tm_Pure p -> freevars p
 
@@ -138,6 +143,11 @@ and freevars_st (s:st_comp) : Set.set var =
   freevars s.res `Set.union`
   freevars s.pre `Set.union`
   freevars s.post
+
+and freevars_term_option (topt:option term) : Set.set var =
+  match topt with
+  | None -> Set.empty
+  | Some t -> freevars t
 
 let rec ln' (t:term) (i:int) =
   match t with
@@ -190,10 +200,13 @@ let rec ln' (t:term) (i:int) =
     ln' b.binder_ty i &&
     ln'_comp c (i + 1)
     
-  | Tm_If b then_ else_ ->
+  | Tm_If b then_ else_ post ->
     ln' b i &&
     ln' then_ i &&
-    ln' else_ i
+    ln' else_ i &&
+    (match post with
+     | None -> true
+     | Some post -> ln' post (i+1))
 
 and ln'_comp (c:comp) (i:int)
   : Tot bool
@@ -287,10 +300,13 @@ let rec open_term' (t:term) (v:term) (i:index)
       Tm_Arrow {b with binder_ty=open_term' b.binder_ty v i} q
                (open_comp' c v (i + 1))
 
-    | Tm_If b then_ else_ ->
+    | Tm_If b then_ else_ post ->
       Tm_If (open_term' b v i)
             (open_term' then_ v i)
             (open_term' else_ v i)
+            (match post with
+             | None -> None
+             | Some post -> Some (open_term' post v (i + 1)))
 
 
 and open_comp' (c:comp) (v:term) (i:index)
@@ -387,10 +403,13 @@ let rec close_term' (t:term) (v:var) (i:index)
       Tm_Arrow {b with binder_ty=close_term' b.binder_ty v i} q
                (close_comp' c v (i + 1))
 
-    | Tm_If b then_ else_ ->
+    | Tm_If b then_ else_ post ->
       Tm_If (close_term' b v i)
             (close_term' then_ v i)
             (close_term' else_ v i)
+            (match post with
+             | None -> None
+             | Some post -> Some (close_term' post v (i + 1)))
 
 and close_comp' (c:comp) (v:var) (i:index)
   : Tot comp (decreases c)
@@ -510,8 +529,9 @@ let rec term_no_pp (t:term) : term =
     Tm_Arrow (binder_no_pp b) q (comp_no_pp c)
   | Tm_Type _ -> t
   | Tm_VProp -> t
-  | Tm_If e1 e2 e3 ->
+  | Tm_If e1 e2 e3 post ->
     Tm_If (term_no_pp e1) (term_no_pp e2) (term_no_pp e3)
+          (term_opt_no_pp post)
   | Tm_Inames
   | Tm_EmpInames
   | Tm_UVar _ -> t
