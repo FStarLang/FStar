@@ -575,7 +575,8 @@ let (uvi_to_string : FStar_TypeChecker_Env.env -> uvi -> Prims.string) =
           FStar_Compiler_Util.format2 "TERM %s <- %s" x uu___1
 let (uvis_to_string :
   FStar_TypeChecker_Env.env -> uvi Prims.list -> Prims.string) =
-  fun env -> fun uvis -> FStar_Common.string_of_list (uvi_to_string env) uvis
+  fun env ->
+    fun uvis -> (FStar_Common.string_of_list ()) (uvi_to_string env) uvis
 let (names_to_string :
   FStar_Syntax_Syntax.bv FStar_Compiler_Util.set -> Prims.string) =
   fun nms ->
@@ -978,22 +979,27 @@ let mk_eq2 :
     worklist ->
       FStar_TypeChecker_Env.env ->
         'uuuuu ->
-          FStar_Syntax_Syntax.term ->
-            FStar_Syntax_Syntax.term -> (FStar_Syntax_Syntax.term * worklist)
+          FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax ->
+            FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax ->
+              (FStar_Syntax_Syntax.term * worklist)
   =
   fun wl ->
     fun env ->
       fun prob ->
         fun t1 ->
           fun t2 ->
-            let uu___ =
-              env.FStar_TypeChecker_Env.typeof_well_typed_tot_or_gtot_term
-                env t1 false in
-            match uu___ with
-            | (tt, uu___1) ->
-                let u = env.FStar_TypeChecker_Env.universe_of env tt in
-                let uu___2 = FStar_Syntax_Util.mk_eq2 u tt t1 t2 in
-                (uu___2, wl)
+            FStar_TypeChecker_Env.def_check_closed_in_env
+              t1.FStar_Syntax_Syntax.pos "mk_eq2.t1" env t1;
+            FStar_TypeChecker_Env.def_check_closed_in_env
+              t2.FStar_Syntax_Syntax.pos "mk_eq2.t2" env t2;
+            (let uu___2 =
+               env.FStar_TypeChecker_Env.typeof_well_typed_tot_or_gtot_term
+                 env t1 false in
+             match uu___2 with
+             | (tt, uu___3) ->
+                 let u = env.FStar_TypeChecker_Env.universe_of env tt in
+                 let uu___4 = FStar_Syntax_Util.mk_eq2 u tt t1 t2 in
+                 (uu___4, wl))
 let (p_invert :
   FStar_TypeChecker_Common.prob -> FStar_TypeChecker_Common.prob) =
   fun uu___ ->
@@ -3743,27 +3749,32 @@ let (guard_of_prob :
       fun problem ->
         fun t1 ->
           fun t2 ->
-            let has_type_guard t11 t21 =
-              match problem.FStar_TypeChecker_Common.element with
-              | FStar_Pervasives_Native.Some t ->
-                  let uu___ = FStar_Syntax_Syntax.bv_to_name t in
-                  FStar_Syntax_Util.mk_has_type t11 uu___ t21
-              | FStar_Pervasives_Native.None ->
-                  let x =
-                    FStar_Syntax_Syntax.new_bv FStar_Pervasives_Native.None
-                      t11 in
-                  let u_x = env.FStar_TypeChecker_Env.universe_of env t11 in
-                  let uu___ =
-                    let uu___1 = FStar_Syntax_Syntax.bv_to_name x in
-                    FStar_Syntax_Util.mk_has_type t11 uu___1 t21 in
-                  FStar_Syntax_Util.mk_forall u_x x uu___ in
-            match problem.FStar_TypeChecker_Common.relation with
-            | FStar_TypeChecker_Common.EQ ->
-                mk_eq2 wl env (FStar_TypeChecker_Common.TProb problem) t1 t2
-            | FStar_TypeChecker_Common.SUB ->
-                let uu___ = has_type_guard t1 t2 in (uu___, wl)
-            | FStar_TypeChecker_Common.SUBINV ->
-                let uu___ = has_type_guard t2 t1 in (uu___, wl)
+            def_check_prob "guard_of_prob"
+              (FStar_TypeChecker_Common.TProb problem);
+            (let has_type_guard t11 t21 =
+               match problem.FStar_TypeChecker_Common.element with
+               | FStar_Pervasives_Native.Some t ->
+                   let uu___1 = FStar_Syntax_Syntax.bv_to_name t in
+                   FStar_Syntax_Util.mk_has_type t11 uu___1 t21
+               | FStar_Pervasives_Native.None ->
+                   let x =
+                     FStar_Syntax_Syntax.new_bv FStar_Pervasives_Native.None
+                       t11 in
+                   (FStar_TypeChecker_Env.def_check_closed_in_env
+                      t11.FStar_Syntax_Syntax.pos "guard_of_prob.universe_of"
+                      env t11;
+                    (let u_x = env.FStar_TypeChecker_Env.universe_of env t11 in
+                     let uu___2 =
+                       let uu___3 = FStar_Syntax_Syntax.bv_to_name x in
+                       FStar_Syntax_Util.mk_has_type t11 uu___3 t21 in
+                     FStar_Syntax_Util.mk_forall u_x x uu___2)) in
+             match problem.FStar_TypeChecker_Common.relation with
+             | FStar_TypeChecker_Common.EQ ->
+                 mk_eq2 wl env (FStar_TypeChecker_Common.TProb problem) t1 t2
+             | FStar_TypeChecker_Common.SUB ->
+                 let uu___1 = has_type_guard t1 t2 in (uu___1, wl)
+             | FStar_TypeChecker_Common.SUBINV ->
+                 let uu___1 = has_type_guard t2 t1 in (uu___1, wl))
 let (is_flex_pat : flex_t -> Prims.bool) =
   fun uu___ ->
     match uu___ with | Flex (uu___1, uu___2, []) -> true | uu___1 -> false
@@ -4225,7 +4236,9 @@ let (apply_substitutive_indexed_subcomp :
                                                                    uu___7
                                                                    subcomp_name
                                                                    uu___8
-                                                               else "") r1 in
+                                                               else
+                                                                 "apply_substitutive_indexed_subcomp")
+                                                            r1 in
                                                         (match uu___6 with
                                                          | (uv_t::[], g) ->
                                                              ((FStar_Compiler_List.op_At
@@ -4384,7 +4397,7 @@ let (apply_ad_hoc_indexed_subcomp :
                                  FStar_Compiler_Util.format3
                                    "implicit for binder %s in subcomp %s at %s"
                                    uu___2 subcomp_name uu___3
-                               else "") r1 in
+                               else "apply_ad_hoc_indexed_subcomp") r1 in
                         (match uu___1 with
                          | (rest_bs_uvars, g_uvars) ->
                              let wl1 =
@@ -7697,7 +7710,8 @@ and (solve_t' : FStar_TypeChecker_Env.env -> tprob -> worklist -> solution) =
                                                      FStar_Compiler_Util.string_of_bool
                                                        wl3.smt_ok in
                                                    let uu___13 =
-                                                     FStar_Syntax_Print.list_to_string
+                                                     (FStar_Common.string_of_list
+                                                        ())
                                                        (prob_to_string env1)
                                                        subprobs in
                                                    FStar_Compiler_Util.print2
@@ -13040,7 +13054,7 @@ let (solve_and_commit :
          if uu___1
          then
            let uu___2 =
-             FStar_Common.string_of_list
+             (FStar_Common.string_of_list ())
                (fun p -> FStar_Compiler_Util.string_of_int (p_pid p))
                wl.attempting in
            FStar_Compiler_Util.print1 "solving problems %s {\n" uu___2
@@ -13366,13 +13380,33 @@ let (sub_comp :
     FStar_Syntax_Syntax.comp ->
       FStar_Syntax_Syntax.comp ->
         FStar_TypeChecker_Common.guard_t FStar_Pervasives_Native.option)
-  = fun env -> fun c1 -> fun c2 -> sub_or_eq_comp env false c1 c2
+  =
+  fun env ->
+    fun c1 ->
+      fun c2 ->
+        FStar_Errors.with_ctx "While trying to subtype computation types"
+          (fun uu___ ->
+             FStar_TypeChecker_Env.def_check_comp_closed_in_env
+               c1.FStar_Syntax_Syntax.pos "sub_comp c1" env c1;
+             FStar_TypeChecker_Env.def_check_comp_closed_in_env
+               c2.FStar_Syntax_Syntax.pos "sub_comp c2" env c2;
+             sub_or_eq_comp env false c1 c2)
 let (eq_comp :
   FStar_TypeChecker_Env.env ->
     FStar_Syntax_Syntax.comp ->
       FStar_Syntax_Syntax.comp ->
         FStar_TypeChecker_Common.guard_t FStar_Pervasives_Native.option)
-  = fun env -> fun c1 -> fun c2 -> sub_or_eq_comp env true c1 c2
+  =
+  fun env ->
+    fun c1 ->
+      fun c2 ->
+        FStar_Errors.with_ctx "While trying to equate computation types"
+          (fun uu___ ->
+             FStar_TypeChecker_Env.def_check_comp_closed_in_env
+               c1.FStar_Syntax_Syntax.pos "sub_comp c1" env c1;
+             FStar_TypeChecker_Env.def_check_comp_closed_in_env
+               c2.FStar_Syntax_Syntax.pos "sub_comp c2" env c2;
+             sub_or_eq_comp env true c1 c2)
 let (solve_universe_inequalities' :
   FStar_Syntax_Unionfind.tx ->
     FStar_TypeChecker_Env.env ->
@@ -14127,14 +14161,20 @@ let (get_subtyping_predicate :
   fun env ->
     fun t1 ->
       fun t2 ->
-        let uu___ = check_subtyping env t1 t2 in
-        match uu___ with
-        | FStar_Pervasives_Native.None -> FStar_Pervasives_Native.None
-        | FStar_Pervasives_Native.Some (x, g) ->
-            let uu___1 =
-              let uu___2 = FStar_Syntax_Syntax.mk_binder x in
-              FStar_TypeChecker_Env.abstract_guard uu___2 g in
-            FStar_Pervasives_Native.Some uu___1
+        FStar_Errors.with_ctx "While trying to get a subtyping predicate"
+          (fun uu___ ->
+             FStar_TypeChecker_Env.def_check_closed_in_env
+               t1.FStar_Syntax_Syntax.pos "get_subtyping_predicate.1" env t1;
+             FStar_TypeChecker_Env.def_check_closed_in_env
+               t2.FStar_Syntax_Syntax.pos "get_subtyping_predicate.2" env t2;
+             (let uu___3 = check_subtyping env t1 t2 in
+              match uu___3 with
+              | FStar_Pervasives_Native.None -> FStar_Pervasives_Native.None
+              | FStar_Pervasives_Native.Some (x, g) ->
+                  let uu___4 =
+                    let uu___5 = FStar_Syntax_Syntax.mk_binder x in
+                    FStar_TypeChecker_Env.abstract_guard uu___5 g in
+                  FStar_Pervasives_Native.Some uu___4))
 let (get_subtyping_prop :
   FStar_TypeChecker_Env.env ->
     FStar_Syntax_Syntax.typ ->
@@ -14144,15 +14184,22 @@ let (get_subtyping_prop :
   fun env ->
     fun t1 ->
       fun t2 ->
-        let uu___ = check_subtyping env t1 t2 in
-        match uu___ with
-        | FStar_Pervasives_Native.None -> FStar_Pervasives_Native.None
-        | FStar_Pervasives_Native.Some (x, g) ->
-            let uu___1 =
-              let uu___2 =
-                let uu___3 = FStar_Syntax_Syntax.mk_binder x in [uu___3] in
-              FStar_TypeChecker_Env.close_guard env uu___2 g in
-            FStar_Pervasives_Native.Some uu___1
+        FStar_Errors.with_ctx "While trying to get a subtyping proposition"
+          (fun uu___ ->
+             FStar_TypeChecker_Env.def_check_closed_in_env
+               t1.FStar_Syntax_Syntax.pos "get_subtyping_prop.1" env t1;
+             FStar_TypeChecker_Env.def_check_closed_in_env
+               t2.FStar_Syntax_Syntax.pos "get_subtyping_prop.2" env t2;
+             (let uu___3 = check_subtyping env t1 t2 in
+              match uu___3 with
+              | FStar_Pervasives_Native.None -> FStar_Pervasives_Native.None
+              | FStar_Pervasives_Native.Some (x, g) ->
+                  let uu___4 =
+                    let uu___5 =
+                      let uu___6 = FStar_Syntax_Syntax.mk_binder x in
+                      [uu___6] in
+                    FStar_TypeChecker_Env.close_guard env uu___5 g in
+                  FStar_Pervasives_Native.Some uu___4))
 let (try_solve_single_valued_implicits :
   FStar_TypeChecker_Env.env ->
     Prims.bool ->

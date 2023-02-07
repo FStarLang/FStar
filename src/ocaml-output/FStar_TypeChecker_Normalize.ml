@@ -1956,7 +1956,7 @@ let (should_unfold :
                    FStar_Syntax_Print.delta_depth_to_string
                      fv.FStar_Syntax_Syntax.fv_delta in
                  let uu___5 =
-                   FStar_Common.string_of_list
+                   (FStar_Common.string_of_list ())
                      FStar_TypeChecker_Env.string_of_delta_level
                      cfg.FStar_TypeChecker_Cfg.delta_level in
                  FStar_Compiler_Util.print3

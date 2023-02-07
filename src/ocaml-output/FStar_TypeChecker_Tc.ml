@@ -349,7 +349,7 @@ let (tc_inductive' :
              if uu___1
              then
                let uu___2 =
-                 FStar_Common.string_of_list
+                 (FStar_Common.string_of_list ())
                    FStar_Syntax_Print.sigelt_to_string ses in
                FStar_Compiler_Util.print1 ">>>>>>>>>>>>>>tc_inductive %s\n"
                  uu___2
@@ -2152,11 +2152,11 @@ let (tc_decl' :
                                     (let uu___11 =
                                        let uu___12 =
                                          let uu___13 =
-                                           FStar_Common.string_of_list
+                                           (FStar_Common.string_of_list ())
                                              FStar_Compiler_Util.string_of_int
                                              expected_errors in
                                          let uu___14 =
-                                           FStar_Common.string_of_list
+                                           (FStar_Common.string_of_list ())
                                              FStar_Compiler_Util.string_of_int
                                              actual_errors in
                                          let uu___15 =

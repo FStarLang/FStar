@@ -622,6 +622,7 @@ let is_function t = match (compress t).n with
     | _ -> false
 
 let close_wp_comp env bvs (c:comp) =
+    def_check_comp_closed_in_env c.pos "close_wp_comp" (Env.push_bvs env bvs) c;
     if U.is_ml_comp c then c
     else if env.lax
     && Options.ml_ish() //NS: disabling this optimization temporarily
@@ -657,7 +658,7 @@ let close_wp_comp env bvs (c:comp) =
               (c.flags |> List.filter (function | MLEFFECT | SHOULD_NOT_INLINE -> true | _ -> false))
         end
 
-let close_wp_lcomp env bvs (lc:lcomp) =
+let close_wp_lcomp env bvs (lc:lcomp) : lcomp =
   let bs = bvs |> List.map S.mk_binder in
   lc |>
   TcComm.apply_lcomp
@@ -824,7 +825,7 @@ let substitutive_indexed_bind_substs env
                       (Print.binder_to_string b)
                       (bind_name ())
                       (Range.string_of_range r1)
-               else "")
+               else "substitutive_indexed_bind_substs.1")
                r1 in
           let g_unif = Rel.layered_effect_teq
             (Env.push_binders env [x_bv |> S.mk_binder])
@@ -857,7 +858,7 @@ let substitutive_indexed_bind_substs env
               (Print.binder_to_string b)
               (bind_name ())
               (Range.string_of_range r1)
-       else "") r1 in
+       else "substitutive_indexed_bind_substs.2") r1 in
     ss@[NT (b.binder_bv, uv_t)],
     Env.conj_guard g g_uv
   ) (subst, guard) bs
@@ -913,7 +914,7 @@ let ad_hoc_indexed_bind_substs env
        then BU.format3
               "implicit var for binder %s of %s at %s"
               (Print.binder_to_string b) (bind_name ()) (Range.string_of_range r1)
-       else "") r1 in
+       else "ad_hoc_indexed_bind_substs") r1 in
 
   if Env.debug env <| Options.Other "ResolveImplicitsHook"
   then rest_bs_uvars |>
@@ -1019,7 +1020,7 @@ let mk_indexed_return env (ed:S.eff_decl) (u_a:universe) (a:typ) (e:term) (r:Ran
               (Print.binder_to_string b)
               (BU.format1 "%s.return" (Ident.string_of_lid ed.mname))
               (Range.string_of_range r)
-       else "") r in
+       else "mk_indexed_return_env") r in
 
   let subst = List.map2
     (fun b t -> NT (b.binder_bv, t))
@@ -1396,7 +1397,7 @@ let maybe_capture_unit_refinement (env:env) (t:term) (x:bv) (c:comp) : comp * gu
     else c, Env.trivial_guard
   | _ -> c, Env.trivial_guard
 
-let bind r1 env e1opt (lc1:lcomp) ((b, lc2):lcomp_with_binder) : lcomp =
+let bind (r1:Range.range) (env:Env.env) (e1opt:option term) (lc1:lcomp) ((b, lc2):lcomp_with_binder) : lcomp =
   let debug f =
       if debug env Options.Extreme
       || debug env <| Options.Other "bind"
@@ -1862,7 +1863,7 @@ let substitutive_indexed_ite_substs (env:env)
               (Print.binder_to_string b)
               (string_of_lid ct_then.effect_name)
              (Range.string_of_range r)
-       else "")
+       else "substitutive_indexed_ite_substs")
       r in
     subst@[NT (b.binder_bv, uv_t)],
     Env.conj_guard g g_uv) (subst, guard) bs in
@@ -1907,7 +1908,7 @@ let ad_hoc_indexed_ite_substs (env:env)
               "implicit var for binder %s of %s:conjunction at %s"
               (Print.binder_to_string b) (Ident.string_of_lid ct_then.effect_name)
               (r |> Range.string_of_range)
-       else "") r in
+       else "ad_hoc_indexed_ite_substs") r in
 
   let substs = List.map2
     (fun b t -> NT (b.binder_bv, t))
@@ -2049,7 +2050,14 @@ let get_neg_branch_conds (branch_conds:list formula)
     |> (fun (l1, l2) -> l1, List.hd l2)
 
 (*
- * The formula in lcases is the individual branch guard, a boolean
+ * The formula in each element of lcases is the individual branch guard, a boolean
+ *
+ * This function returns a computation type for the match expression, though
+ * without considering the scrutinee expression (that is the job of tc_match).
+ * The most interesting bit is its WP, which combines the WP for each branch
+ * under the appropriate reachability hypothesis (see also get_neg_branch_conds
+ * above). It also includes a `False` obligation under the hypothesis that no
+ * branch matches: i.e. the exhaustiveness check.
  *)
 let bind_cases env0 (res_t:typ)
   (lcases:list (formula * lident * list cflag * (bool -> lcomp)))
@@ -2094,10 +2102,11 @@ let bind_cases env0 (res_t:typ)
              * The last element of the list becomes the branch condition for the
              *   unreachable branch (will be used to check pattern exhaustiveness)
              *
-             * The rest of the list will be used to weaken the lift guards when combining the branches (for layered effects, lift guards can be non-trivial)
-             *
-             * note that we don't need to this just to combine cases because the shape of if_then_else
-             *   (p ==> ...) /\ (not p ==> ...) takes care of it
+             * The rest of the list will be used to weaken the lift guards when combining the
+             * branches (for layered effects, lift guards can be non-trivial). Note that
+             * we don't need to do this to combine cases, because the shape of if_then_else
+             *   (p ==> ...) /\ (not p ==> ...)
+             * already takes care of it
              *)
             let neg_branch_conds, exhaustiveness_branch_cond =
               get_neg_branch_conds (lcases |> List.map (fun (g, _, _, _) -> g)) in
@@ -2837,6 +2846,7 @@ let check_has_type_maybe_coerce env (e:term) (lc:lcomp) (t2:typ) use_eq : term *
 
 /////////////////////////////////////////////////////////////////////////////////
 let check_top_level env g lc : (bool * comp) =
+ Errors.with_ctx "While checking for top-level effects" (fun () ->
   if debug env Options.Medium then
     BU.print1 "check_top_level, lc = %s\n" (TcComm.lcomp_to_string lc);
   let discharge g =
@@ -2911,7 +2921,7 @@ let check_top_level env g lc : (bool * comp) =
                            "implicit for binder %s in effect abbreviation %s while checking top-level effect"
                            (Print.binder_to_string b)
                           (Ident.string_of_lid top_level_eff)
-                    else "")
+                    else "check_top_level")
                    (Env.get_range env) in
                let top_level_comp =
                  ({ comp_univs = us;
@@ -2940,6 +2950,7 @@ let check_top_level env g lc : (bool * comp) =
             if Env.debug env <| Options.Other "Simplification"
             then BU.print1 "top-level VC: %s\n" (Print.term_to_string vc);
             discharge (Env.conj_guard g (Env.conj_guard g_c g_pre)), ct |> S.mk_Comp
+ )
 
 (* Having already seen_args to head (from right to left),
    compute the guard, if any, for the next argument,
@@ -3319,7 +3330,7 @@ let fresh_effect_repr env r eff_name signature_ts repr_ts_opt u a_tm =
             then BU.format3
                    "uvar for binder %s when creating a fresh repr for %s at %s"
                    (Print.binder_to_string b) (string_of_lid eff_name) (Range.string_of_range r)
-            else "") r in
+            else "fresh_effect_repr") r in
        (match repr_ts_opt with
         | None ->  //no repr, return thunked computation type
           let eff_c = mk_Comp ({
@@ -3404,7 +3415,7 @@ let substitutive_indexed_lift_substs (env:env)
               (Print.binder_to_string b)
               lift_name
               (Range.string_of_range r)
-       else "") r in
+       else "substitutive_indexed_lift_substs") r in
     subst@[NT (b.binder_bv, uv_t)],
     Env.conj_guard g g_uv) (subst, Env.trivial_guard) bs
 
@@ -3439,7 +3450,7 @@ let ad_hoc_indexed_lift_substs (env:env)
               (Print.binder_to_string b)
               lift_name
               (Range.string_of_range r)
-       else "") r in
+       else "ad_hoc_indexed_lift_substs") r in
 
   let substs = List.map2
     (fun b t -> NT (b.binder_bv, t))

@@ -19,39 +19,53 @@ open Steel.ST.Util
 open Steel.ST.Reference
 open Steel.FractionalPermission
 
-/// An invariant for lists, where each list node stores a lock to the rest of the list.
+(*
+   This example sketches how an invariant for lock-coupling list
+     (a list that stores a lock at each cell protecting its tail pointer)
+   might work.
 
-val existsp_ (#[@@@strictly_positive] a:Type)
-            ([@@@strictly_positive] p:(a -> vprop))
+   It relies on strictly positive version of the exists and pts_to
+   separation logic predicates, although the libraries are not
+   currently annotated with such positivity annotations.=
+*)
+
+(* It is relatively easy to show that h_exists is strictly positive *)
+val h_exists (#[@@@strictly_positive] a:Type)
+             ([@@@strictly_positive] p:(a -> vprop))
    : vprop
-//   = fun m -> exists x. p x m
-   
+
+(* the pts_to predicate is a bit more subtle. It is an instance
+   of a more general form that involves assertions about a PCM,
+   and it is possible to construct PCMs that are not strictly
+   positive. However, the basic pts_to predicate that this refers to,
+   for the fractional permission PCM, is strictly positive.
+   Revising the library to enable decorating pts_to predicates derived
+   from positive PCMs remains to be done. *)
 val pts_to (#[@@@strictly_positive] a:Type)
            (r:ref a)
-           (frac:perm)
+           (f:perm)
            (v:a) : vprop 
 
 val lock ([@@@strictly_positive] p:vprop) : Type0
 
 let half = half_perm full_perm
 
+(* The lock at each cell holds half permission to the next pointer *)
 noeq
-type llist_cell (a:Type0) : Type0 = {
-     v : a;
-     tl : ref (llist_cell a);
-     tl_repr: lock (existsp_ (pts_to tl half))
+type llist_cell (a:Type0) : Type = {
+  v : a;
+  next : ref (llist_cell a);
+  lock : lock (h_exists (pts_to next half))
 }
 
-let rec llist_inv (#a:Type) (repr:list a) (ptr:ref (llist_cell a)) = 
-  match repr with
-  | [] -> pure (ptr == null)
-  | hd::tl ->
-    exists_ (fun cell ->
-      pts_to ptr half cell `star`
-      pure (cell.v  == hd) `star`
-      llist_inv tl cell.tl)
-
-      
-  
-
+(* A separation list_inv holds the other half permission *)
+let rec list_inv (#a:Type) (p:ref (llist_cell a)) (repr:list a) 
+  : Tot vprop (decreases repr) 
+  = match repr with
+    | [] -> pure (p == null)
+    | hd::tl ->
+      h_exists (fun cell ->
+        pts_to p half cell `star`
+        pure (cell.v == hd) `star`
+        list_inv cell.next tl)
 
