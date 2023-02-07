@@ -31,6 +31,8 @@ dune-bootstrap-stage:
 
 dune-staged-bootstrap:
 	+$(MAKE) STAGE_EXPERIMENTAL=0 dune-bootstrap-stage
+	+$(MAKE) -C src ocaml # extract a F* snapshot before verifying ulib (this is so that the checked files have the right version number)
+	+$(MAKE) dune-fstar
 	+$(MAKE) STAGE_EXPERIMENTAL=0 dune-bootstrap-stage # need to do stage 0 twice if fstar.exe was not present for the first time
 	+$(MAKE) STAGE_EXPERIMENTAL=1 dune-bootstrap-stage # generates Steel.Effect.Common
 	+$(MAKE) STAGE_EXPERIMENTAL=2 dune-bootstrap-stage # generates Steel.ST.GenElim.Base
