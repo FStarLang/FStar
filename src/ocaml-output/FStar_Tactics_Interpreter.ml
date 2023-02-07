@@ -2018,7 +2018,7 @@ let run_tactic_on_ps' :
                                 if uu___10
                                 then
                                   let uu___11 =
-                                    FStar_Common.string_of_list
+                                    (FStar_Common.string_of_list ())
                                       (fun imp ->
                                          FStar_Syntax_Print.ctx_uvar_to_string
                                            imp.FStar_TypeChecker_Common.imp_uvar)
@@ -2053,7 +2053,7 @@ let run_tactic_on_ps' :
                                        (FStar_Compiler_List.length
                                           ps1.FStar_Tactics_Types.all_implicits) in
                                    let uu___13 =
-                                     FStar_Common.string_of_list
+                                     (FStar_Common.string_of_list ())
                                        (fun imp ->
                                           FStar_Syntax_Print.ctx_uvar_to_string
                                             imp.FStar_TypeChecker_Common.imp_uvar)
@@ -2074,7 +2074,7 @@ let run_tactic_on_ps' :
                                         (FStar_Compiler_List.length
                                            ps1.FStar_Tactics_Types.all_implicits) in
                                     let uu___14 =
-                                      FStar_Common.string_of_list
+                                      (FStar_Common.string_of_list ())
                                         (fun imp ->
                                            FStar_Syntax_Print.ctx_uvar_to_string
                                              imp.FStar_TypeChecker_Common.imp_uvar)

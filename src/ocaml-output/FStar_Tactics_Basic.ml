@@ -2889,7 +2889,8 @@ let (t_apply :
                                                  FStar_Tactics_Monad.if_verbose
                                                    (fun uu___10 ->
                                                       let uu___11 =
-                                                        FStar_Common.string_of_list
+                                                        (FStar_Common.string_of_list
+                                                           ())
                                                           (fun uu___12 ->
                                                              match uu___12
                                                              with

@@ -138,6 +138,7 @@ CAPPED=$(subst Bug,Bug,$*)
 %.verify: %.fst
 	@echo '[CHECK     $<]'
 	$(Q)$(FSTAR) $(SIL) $^
+	@touch $@
 
 Bug1383.verify: OTHERFLAGS += --warn_error @275 #Z3 warnings are fatal
 Bug1694.verify: OTHERFLAGS += --codegen OCaml
@@ -151,16 +152,18 @@ Bug2684d.verify: OTHERFLAGS += --cache_checked_modules
 verify: $(subst .fst,.verify,$(SHOULD_VERIFY_CLOSED))
 
 %.iverify: %.fsti
-	$(FSTAR) $^
+	@echo '[CHECK_I   $<]'
+	$(Q)$(FSTAR) $(SIL) $^
+	@touch $@
 
 iverify: $(subst .fsti,.iverify,$(SHOULD_VERIFY_INTERFACE_CLOSED))
 
 verify-maybe-close: $(subst .fst,.verify,$(SHOULD_VERIFY_MAYBE_CLOSE))
 
-
 %.not-verify: %.fst
 	@echo '[CHECKFAIL $<]'
 	$(Q)(! $(FSTAR) $(SIL) $^ >/dev/null 2>&1) || (echo "Negative test failed ($@)!" ; false)
+	@touch $@
 
 not-verify: $(subst .fst,.not-verify,$(SHOULD_NOT_VERIFY_CLOSED))
 
@@ -215,10 +218,14 @@ output-accept: Bug310.ml Bug2058.ml
 	cp Bug2595.ml Bug2595.ml.expected
 
 %.extract: %.fst
-	mkdir -p out_$*
-	$(FSTAR) $(FSTAR_DEFAULT_ARGS) --odir out_$* --codegen OCaml $^
-	$(OCAMLOPT) out_$*/$(CAPPED).ml -o $(CAPPED).exe
-	./$(CAPPED).exe
+	@mkdir -p out_$*
+	@echo '[EXTRACT   $<]'
+	$(Q)$(FSTAR) $(SIL) $(FSTAR_DEFAULT_ARGS) --odir out_$* --codegen OCaml $^
+	@echo '[OCAMLOPT  $<]'
+	@$(OCAMLOPT) out_$*/$(CAPPED).ml -o $(CAPPED).exe
+	@echo '[RUN       $(CAPPED).exe]'
+	@./$(CAPPED).exe
+	@touch $@
 
 extract: $(subst .fst,.extract,$(SHOULD_EXTRACT_CLOSED))
 
