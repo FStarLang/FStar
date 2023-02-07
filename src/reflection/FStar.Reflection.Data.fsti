@@ -126,7 +126,11 @@ type bv_view = {
     bv_sort : typ;
 }
 
-type binder_view = bv * (aqualv * list term)
+type binder_view = {
+  binder_bv : bv;
+  binder_qual : aqualv;
+  binder_attrs : list term
+}
 
 type comp_view =
     | C_Total of typ
@@ -160,4 +164,3 @@ type exp =
 
 (* Needed so this appears in the ocaml output for fstar-tactics-lib *)
 type decls = list sigelt
-

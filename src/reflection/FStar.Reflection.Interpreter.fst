@@ -269,9 +269,9 @@ let reflection_primops : list Cfg.primitive_step = [
     e_binder
     e_binder_view;
 
-  mk3 "pack_binder"
+  mk1 "pack_binder"
     RB.pack_binder
-    e_bv e_aqualv (e_list e_term)
+    e_binder_view
     e_binder;
 
   (****** Actual primitives ******)
