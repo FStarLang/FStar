@@ -938,6 +938,7 @@ let qninfo_is_action (qninfo : qninfo) =
 let is_action env lid =
     qninfo_is_action <| lookup_qname env lid
 
+// FIXME? Does not use environment.
 let is_interpreted =
     let interpreted_symbols =
        [Const.op_Eq;
