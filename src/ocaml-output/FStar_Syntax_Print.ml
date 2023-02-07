@@ -47,78 +47,6 @@ let (db_to_string : FStar_Syntax_Syntax.bv -> Prims.string) =
         FStar_Compiler_Util.string_of_int bv.FStar_Syntax_Syntax.index in
       Prims.op_Hat "@" uu___2 in
     Prims.op_Hat uu___ uu___1
-let (infix_prim_ops : (FStar_Ident.lident * Prims.string) Prims.list) =
-  [(FStar_Parser_Const.op_Addition, "+");
-  (FStar_Parser_Const.op_Subtraction, "-");
-  (FStar_Parser_Const.op_Multiply, "*");
-  (FStar_Parser_Const.op_Division, "/");
-  (FStar_Parser_Const.op_Eq, "=");
-  (FStar_Parser_Const.op_ColonEq, ":=");
-  (FStar_Parser_Const.op_notEq, "<>");
-  (FStar_Parser_Const.op_And, "&&");
-  (FStar_Parser_Const.op_Or, "||");
-  (FStar_Parser_Const.op_LTE, "<=");
-  (FStar_Parser_Const.op_GTE, ">=");
-  (FStar_Parser_Const.op_LT, "<");
-  (FStar_Parser_Const.op_GT, ">");
-  (FStar_Parser_Const.op_Modulus, "mod");
-  (FStar_Parser_Const.and_lid, "/\\");
-  (FStar_Parser_Const.or_lid, "\\/");
-  (FStar_Parser_Const.imp_lid, "==>");
-  (FStar_Parser_Const.iff_lid, "<==>");
-  (FStar_Parser_Const.precedes_lid, "<<");
-  (FStar_Parser_Const.eq2_lid, "==")]
-let (unary_prim_ops : (FStar_Ident.lident * Prims.string) Prims.list) =
-  [(FStar_Parser_Const.op_Negation, "not");
-  (FStar_Parser_Const.op_Minus, "-");
-  (FStar_Parser_Const.not_lid, "~")]
-let (is_prim_op :
-  FStar_Ident.lident Prims.list ->
-    FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax -> Prims.bool)
-  =
-  fun ps ->
-    fun f ->
-      match f.FStar_Syntax_Syntax.n with
-      | FStar_Syntax_Syntax.Tm_fvar fv ->
-          FStar_Compiler_Effect.op_Bar_Greater ps
-            (FStar_Compiler_Util.for_some (FStar_Syntax_Syntax.fv_eq_lid fv))
-      | uu___ -> false
-let (get_lid :
-  FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax -> FStar_Ident.lident)
-  =
-  fun f ->
-    match f.FStar_Syntax_Syntax.n with
-    | FStar_Syntax_Syntax.Tm_fvar fv ->
-        (fv.FStar_Syntax_Syntax.fv_name).FStar_Syntax_Syntax.v
-    | uu___ -> failwith "get_lid"
-let (is_infix_prim_op : FStar_Syntax_Syntax.term -> Prims.bool) =
-  fun e ->
-    is_prim_op
-      (FStar_Pervasives_Native.fst (FStar_Compiler_List.split infix_prim_ops))
-      e
-let (is_unary_prim_op : FStar_Syntax_Syntax.term -> Prims.bool) =
-  fun e ->
-    is_prim_op
-      (FStar_Pervasives_Native.fst (FStar_Compiler_List.split unary_prim_ops))
-      e
-let (quants : (FStar_Ident.lident * Prims.string) Prims.list) =
-  [(FStar_Parser_Const.forall_lid, "forall");
-  (FStar_Parser_Const.exists_lid, "exists")]
-type exp = FStar_Syntax_Syntax.term
-let (is_b2t : FStar_Syntax_Syntax.typ -> Prims.bool) =
-  fun t -> is_prim_op [FStar_Parser_Const.b2t_lid] t
-let (is_quant : FStar_Syntax_Syntax.typ -> Prims.bool) =
-  fun t ->
-    is_prim_op
-      (FStar_Pervasives_Native.fst (FStar_Compiler_List.split quants)) t
-let (is_ite : FStar_Syntax_Syntax.typ -> Prims.bool) =
-  fun t -> is_prim_op [FStar_Parser_Const.ite_lid] t
-let is_inr :
-  'uuuuu 'uuuuu1 . ('uuuuu, 'uuuuu1) FStar_Pervasives.either -> Prims.bool =
-  fun uu___ ->
-    match uu___ with
-    | FStar_Pervasives.Inl uu___1 -> false
-    | FStar_Pervasives.Inr uu___1 -> true
 let (filter_imp :
   FStar_Syntax_Syntax.binder_qualifier FStar_Pervasives_Native.option ->
     Prims.bool)
@@ -156,34 +84,8 @@ let (filter_imp_binders :
          (fun b ->
             FStar_Compiler_Effect.op_Bar_Greater
               b.FStar_Syntax_Syntax.binder_qual filter_imp))
-let rec find : 'a . ('a -> Prims.bool) -> 'a Prims.list -> 'a =
-  fun f ->
-    fun l ->
-      match l with
-      | [] -> failwith "blah"
-      | hd::tl -> let uu___ = f hd in if uu___ then hd else find f tl
-let (find_lid :
-  FStar_Ident.lident ->
-    (FStar_Ident.lident * Prims.string) Prims.list -> Prims.string)
-  =
-  fun x ->
-    fun xs ->
-      let uu___ =
-        find
-          (fun p -> FStar_Ident.lid_equals x (FStar_Pervasives_Native.fst p))
-          xs in
-      FStar_Pervasives_Native.snd uu___
-let (infix_prim_op_to_string :
-  FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax -> Prims.string) =
-  fun e -> let uu___ = get_lid e in find_lid uu___ infix_prim_ops
-let (unary_prim_op_to_string :
-  FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax -> Prims.string) =
-  fun e -> let uu___ = get_lid e in find_lid uu___ unary_prim_ops
-let (quant_to_string :
-  FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax -> Prims.string) =
-  fun t -> let uu___ = get_lid t in find_lid uu___ quants
 let (const_to_string : FStar_Const.sconst -> Prims.string) =
-  fun x -> FStar_Parser_Const.const_to_string x
+  FStar_Parser_Const.const_to_string
 let (lbname_to_string : FStar_Syntax_Syntax.lbname -> Prims.string) =
   fun uu___ ->
     match uu___ with
@@ -401,13 +303,7 @@ and (term_to_string : FStar_Syntax_Syntax.term -> Prims.string) =
     let uu___ =
       let uu___1 = FStar_Options.ugly () in Prims.op_Negation uu___1 in
     if uu___
-    then
-      let e =
-        FStar_Errors.with_ctx "While resugaring a term"
-          (fun uu___1 -> FStar_Syntax_Resugar.resugar_term x) in
-      let d = FStar_Parser_ToDocument.term_to_document e in
-      FStar_Pprint.pretty_string (FStar_Compiler_Util.float_of_string "1.0")
-        (Prims.of_int (100)) d
+    then FStar_Syntax_Print_Pretty.term_to_string x
     else
       FStar_Errors.with_ctx "While ugly-printing a term"
         (fun uu___2 ->
@@ -457,7 +353,7 @@ and (term_to_string : FStar_Syntax_Syntax.term -> Prims.string) =
                             uu___5 in
                     let uu___3 = term_to_string tm in
                     let uu___4 =
-                      FStar_Common.string_of_list print_aq
+                      (FStar_Common.string_of_list ()) print_aq
                         qi.FStar_Syntax_Syntax.antiquotes in
                     FStar_Compiler_Util.format2 "`(%s)%s" uu___3 uu___4
                 | FStar_Syntax_Syntax.Quote_dynamic ->
@@ -527,7 +423,17 @@ and (term_to_string : FStar_Syntax_Syntax.term -> Prims.string) =
                  Prims.op_Hat ":(" uu___5 in
                Prims.op_Hat uu___3 uu___4
            | FStar_Syntax_Syntax.Tm_name x3 -> nm_to_string x3
-           | FStar_Syntax_Syntax.Tm_fvar f -> fv_to_string f
+           | FStar_Syntax_Syntax.Tm_fvar f ->
+               let pref =
+                 match f.FStar_Syntax_Syntax.fv_qual with
+                 | FStar_Pervasives_Native.Some
+                     (FStar_Syntax_Syntax.Unresolved_projector uu___3) ->
+                     "(Unresolved_projector)"
+                 | FStar_Pervasives_Native.Some
+                     (FStar_Syntax_Syntax.Unresolved_constructor uu___3) ->
+                     "(Unresolved_constructor)"
+                 | uu___3 -> "" in
+               let uu___3 = fv_to_string f in Prims.op_Hat pref uu___3
            | FStar_Syntax_Syntax.Tm_uvar (u, ([], uu___3)) ->
                let uu___4 =
                  (FStar_Options.print_bound_var_types ()) &&
@@ -782,13 +688,7 @@ and (pat_to_string : FStar_Syntax_Syntax.pat -> Prims.string) =
     let uu___ =
       let uu___1 = FStar_Options.ugly () in Prims.op_Negation uu___1 in
     if uu___
-    then
-      let e =
-        let uu___1 = FStar_Syntax_Syntax.new_bv_set () in
-        FStar_Syntax_Resugar.resugar_pat x uu___1 in
-      let d = FStar_Parser_ToDocument.pat_to_document e in
-      FStar_Pprint.pretty_string (FStar_Compiler_Util.float_of_string "1.0")
-        (Prims.of_int (100)) d
+    then FStar_Syntax_Print_Pretty.pat_to_string x
     else
       (match x.FStar_Syntax_Syntax.v with
        | FStar_Syntax_Syntax.Pat_cons (l, us_opt, pats) ->
@@ -940,17 +840,7 @@ and (binder_to_string' :
       let uu___ =
         let uu___1 = FStar_Options.ugly () in Prims.op_Negation uu___1 in
       if uu___
-      then
-        let uu___1 =
-          FStar_Syntax_Resugar.resugar_binder b
-            FStar_Compiler_Range.dummyRange in
-        match uu___1 with
-        | FStar_Pervasives_Native.None -> ""
-        | FStar_Pervasives_Native.Some e ->
-            let d = FStar_Parser_ToDocument.binder_to_document e in
-            FStar_Pprint.pretty_string
-              (FStar_Compiler_Util.float_of_string "1.0")
-              (Prims.of_int (100)) d
+      then FStar_Syntax_Print_Pretty.binder_to_string' is_arrow b
       else
         (let attrs = attrs_to_string b.FStar_Syntax_Syntax.binder_attrs in
          let uu___2 = FStar_Syntax_Syntax.is_null_binder b in
@@ -1030,13 +920,7 @@ and (comp_to_string : FStar_Syntax_Syntax.comp -> Prims.string) =
     let uu___ =
       let uu___1 = FStar_Options.ugly () in Prims.op_Negation uu___1 in
     if uu___
-    then
-      let e =
-        FStar_Errors.with_ctx "While resugaring a computation"
-          (fun uu___1 -> FStar_Syntax_Resugar.resugar_comp c) in
-      let d = FStar_Parser_ToDocument.term_to_document e in
-      FStar_Pprint.pretty_string (FStar_Compiler_Util.float_of_string "1.0")
-        (Prims.of_int (100)) d
+    then FStar_Syntax_Print_Pretty.comp_to_string c
     else
       FStar_Errors.with_ctx "While ugly-printing a computation"
         (fun uu___2 ->
@@ -1206,7 +1090,7 @@ and (cflag_to_string : FStar_Syntax_Syntax.cflag -> Prims.string) =
     | FStar_Syntax_Syntax.CPS -> "cps"
     | FStar_Syntax_Syntax.DECREASES uu___ -> ""
 and (cflags_to_string : FStar_Syntax_Syntax.cflag Prims.list -> Prims.string)
-  = fun fs -> FStar_Common.string_of_list cflag_to_string fs
+  = fun fs -> (FStar_Common.string_of_list ()) cflag_to_string fs
 and (formula_to_string :
   FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax -> Prims.string) =
   fun phi -> term_to_string phi
@@ -1258,11 +1142,7 @@ let (comp_to_string' :
       let uu___ = FStar_Options.ugly () in
       if uu___
       then comp_to_string c
-      else
-        (let e = FStar_Syntax_Resugar.resugar_comp' env c in
-         let d = FStar_Parser_ToDocument.term_to_document e in
-         FStar_Pprint.pretty_string
-           (FStar_Compiler_Util.float_of_string "1.0") (Prims.of_int (100)) d)
+      else FStar_Syntax_Print_Pretty.comp_to_string' env c
 let (term_to_string' :
   FStar_Syntax_DsEnv.env -> FStar_Syntax_Syntax.term -> Prims.string) =
   fun env ->
@@ -1270,11 +1150,7 @@ let (term_to_string' :
       let uu___ = FStar_Options.ugly () in
       if uu___
       then term_to_string x
-      else
-        (let e = FStar_Syntax_Resugar.resugar_term' env x in
-         let d = FStar_Parser_ToDocument.term_to_document e in
-         FStar_Pprint.pretty_string
-           (FStar_Compiler_Util.float_of_string "1.0") (Prims.of_int (100)) d)
+      else FStar_Syntax_Print_Pretty.term_to_string' env x
 let (binder_to_json :
   FStar_Syntax_DsEnv.env ->
     FStar_Syntax_Syntax.binder -> FStar_Compiler_Util.json)
@@ -1309,11 +1185,7 @@ let (tscheme_to_string : FStar_Syntax_Syntax.tscheme -> Prims.string) =
     let uu___ =
       let uu___1 = FStar_Options.ugly () in Prims.op_Negation uu___1 in
     if uu___
-    then
-      let d = FStar_Syntax_Resugar.resugar_tscheme s in
-      let d1 = FStar_Parser_ToDocument.decl_to_document d in
-      FStar_Pprint.pretty_string (FStar_Compiler_Util.float_of_string "1.0")
-        (Prims.of_int (100)) d1
+    then FStar_Syntax_Print_Pretty.tscheme_to_string s
     else
       (let uu___2 = s in
        match uu___2 with
@@ -1393,30 +1265,14 @@ let (indexed_effect_binder_kind_to_string :
     | FStar_Syntax_Syntax.Range_binder -> "range_binder"
     | FStar_Syntax_Syntax.Repr_binder -> "repr_binder"
     | FStar_Syntax_Syntax.Ad_hoc_binder -> "ad_hoc_binder"
-let list_to_string :
-  'a . ('a -> Prims.string) -> 'a Prims.list -> Prims.string =
-  fun f ->
-    fun elts ->
-      match elts with
-      | [] -> "[]"
-      | x::xs ->
-          let strb = FStar_Compiler_Util.new_string_builder () in
-          (FStar_Compiler_Util.string_builder_append strb "[";
-           (let uu___2 = f x in
-            FStar_Compiler_Util.string_builder_append strb uu___2);
-           FStar_Compiler_List.iter
-             (fun x1 ->
-                FStar_Compiler_Util.string_builder_append strb "; ";
-                (let uu___4 = f x1 in
-                 FStar_Compiler_Util.string_builder_append strb uu___4)) xs;
-           FStar_Compiler_Util.string_builder_append strb "]";
-           FStar_Compiler_Util.string_of_string_builder strb)
 let (indexed_effect_combinator_kind_to_string :
   FStar_Syntax_Syntax.indexed_effect_combinator_kind -> Prims.string) =
   fun uu___ ->
     match uu___ with
     | FStar_Syntax_Syntax.Substitutive_combinator l ->
-        let uu___1 = list_to_string indexed_effect_binder_kind_to_string l in
+        let uu___1 =
+          (FStar_Common.string_of_list' ())
+            indexed_effect_binder_kind_to_string l in
         FStar_Compiler_Util.format1 "standard_combinator (%s)" uu___1
     | FStar_Syntax_Syntax.Substitutive_invariant_combinator ->
         "substitutive_invariant"
@@ -1487,12 +1343,7 @@ let (eff_decl_to_string' :
           let uu___ =
             let uu___1 = FStar_Options.ugly () in Prims.op_Negation uu___1 in
           if uu___
-          then
-            let d = FStar_Syntax_Resugar.resugar_eff_decl r q ed in
-            let d1 = FStar_Parser_ToDocument.decl_to_document d in
-            FStar_Pprint.pretty_string
-              (FStar_Compiler_Util.float_of_string "1.0")
-              (Prims.of_int (100)) d1
+          then FStar_Syntax_Print_Pretty.eff_decl_to_string' for_free r q ed
           else
             (let actions_to_string actions =
                let uu___2 =
@@ -1653,8 +1504,8 @@ let rec (sigelt_to_string : FStar_Syntax_Syntax.sigelt -> Prims.string) =
       | FStar_Syntax_Syntax.Sig_fail (errs, lax, ses) ->
           let uu___ = FStar_Compiler_Util.string_of_bool lax in
           let uu___1 =
-            FStar_Common.string_of_list FStar_Compiler_Util.string_of_int
-              errs in
+            (FStar_Common.string_of_list ())
+              FStar_Compiler_Util.string_of_int errs in
           let uu___2 =
             let uu___3 = FStar_Compiler_List.map sigelt_to_string ses in
             FStar_Compiler_Effect.op_Bar_Greater uu___3
@@ -1873,25 +1724,6 @@ let (modul_to_string : FStar_Syntax_Syntax.modul -> Prims.string) =
     FStar_Compiler_Util.format3
       "module %s\nDeclarations: [\n%s\n]\nExports: [\n%s\n]\n" uu___ uu___1
       uu___2
-let set_to_string :
-  'a . ('a -> Prims.string) -> 'a FStar_Compiler_Util.set -> Prims.string =
-  fun f ->
-    fun s ->
-      let elts = FStar_Compiler_Util.set_elements s in
-      match elts with
-      | [] -> "{}"
-      | x::xs ->
-          let strb = FStar_Compiler_Util.new_string_builder () in
-          (FStar_Compiler_Util.string_builder_append strb "{";
-           (let uu___2 = f x in
-            FStar_Compiler_Util.string_builder_append strb uu___2);
-           FStar_Compiler_List.iter
-             (fun x1 ->
-                FStar_Compiler_Util.string_builder_append strb ", ";
-                (let uu___4 = f x1 in
-                 FStar_Compiler_Util.string_builder_append strb uu___4)) xs;
-           FStar_Compiler_Util.string_builder_append strb "}";
-           FStar_Compiler_Util.string_of_string_builder strb)
 let (bvs_to_string :
   Prims.string -> FStar_Syntax_Syntax.bv Prims.list -> Prims.string) =
   fun sep ->

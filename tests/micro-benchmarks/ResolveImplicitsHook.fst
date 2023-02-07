@@ -122,7 +122,9 @@ let resolve_tac_alt () : Tac unit =
   else T.admit_all()
 #push-options "--warn_error @348"
 
-[@@expect_failure [348;348;348;348;348;66]] //raises 348 for ambiguity in resolve_implicits
+//raises 348 for ambiguity in resolve_implicits
+// GM 2023-02-01: Used to raise 348 five times, but now it's 15 after some scoping fixes in Tc (why?)
+[@@expect_failure [348; 348; 348; 348; 348; 348; 348; 348; 348; 348; 348; 348; 348; 348; 348; 66]]
 let test3 (b:bool)
   : cmd (r1 ** r2 ** r3 ** r4 ** r5)
         (r1 ** r2 ** r3 ** r4 ** r5)

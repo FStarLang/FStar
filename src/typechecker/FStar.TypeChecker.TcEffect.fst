@@ -1570,7 +1570,7 @@ Errors.with_ctx (BU.format1 "While checking layered effect definition `%s`" (str
         match attr_opt with
         | None -> fml  |> NonTrivial |> Env.guard_of_guard_formula
         | Some attr ->
-          let _, _, g = Env.new_implicit_var_aux "" r env
+          let _, _, g = Env.new_implicit_var_aux "tc_layered_effect_decl.g_precondition" r env
             (U.mk_squash S.U_zero fml)
             Strict
             (Ctx_uvar_meta_attr attr |> Some) in

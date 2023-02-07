@@ -361,6 +361,8 @@ let attempt probs wl             =
     {wl with attempting=probs@wl.attempting}
 
 let mk_eq2 wl env prob t1 t2 : term * worklist =
+    def_check_closed_in_env t1.pos "mk_eq2.t1" env t1;
+    def_check_closed_in_env t2.pos "mk_eq2.t2" env t2;
     (* NS: Rather than introducing a new variable, it would be much preferable
             to simply compute the type of t1 here.
             Sadly, it seems to be way too expensive to call env.type_of here.
@@ -1666,12 +1668,14 @@ let match_num_binders (bc1: (list 'a * (list 'a -> 'b)))
     aux bs1 bs2
 
 let guard_of_prob (env:Env.env) (wl:worklist) (problem:tprob) (t1 : term) (t2 : term) : term * worklist =
+   def_check_prob "guard_of_prob" (TProb problem);
     let has_type_guard t1 t2 =
         match problem.element with
         | Some t ->
             U.mk_has_type t1 (S.bv_to_name t) t2
         | None ->
             let x = S.new_bv None t1 in
+            def_check_closed_in_env t1.pos "guard_of_prob.universe_of" env t1;
             let u_x = env.universe_of env t1 in
             U.mk_forall u_x x (U.mk_has_type t1 (S.bv_to_name x) t2)
     in
@@ -1887,7 +1891,7 @@ let apply_substitutive_indexed_subcomp (env:Env.env)
                 (Print.binder_to_string b)
                 subcomp_name
                 (Range.string_of_range r1)
-         else "") r1 in
+         else "apply_substitutive_indexed_subcomp") r1 in
       ss@[NT (b.binder_bv, uv_t)],
       {wl with wl_implicits=g.implicits@wl.wl_implicits}) (subst, wl) bs in
 
@@ -1951,7 +1955,7 @@ let apply_ad_hoc_indexed_subcomp (env:Env.env)
               (Print.binder_to_string b)
               subcomp_name
               (Range.string_of_range r1)
-       else "") r1 in
+       else "apply_ad_hoc_indexed_subcomp") r1 in
 
   let wl = { wl with wl_implicits = g_uvars.implicits@wl.wl_implicits } in
 
@@ -2150,7 +2154,7 @@ and solve_rigid_flex_or_flex_rigid_subtyping
             t1 op t2 is only defined when t1 and t2
             are refinements of the same base type
     *)
-    let meet_or_join op ts env wl =
+    let meet_or_join (op : term -> term -> term) (ts : list term) (env:Env.env) (wl:worklist) : term & list prob & worklist =
         let eq_prob t1 t2 wl =
             let p, wl =
             new_problem wl env t1 EQ t2 None t1.pos
@@ -3296,7 +3300,7 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
                    then BU.print2
                             "Adding subproblems for arguments (smtok=%s): %s"
                             (string_of_bool wl.smt_ok)
-                            (Print.list_to_string (prob_to_string env) subprobs);
+                            (FStar.Common.string_of_list (prob_to_string env) subprobs);
                    if Options.defensive ()
                    then List.iter (def_check_prob "solve_t' subprobs") subprobs;
                    subprobs, wl
@@ -4662,8 +4666,19 @@ let sub_or_eq_comp env (use_eq:bool) c1 c2 =
   (Some (Ident.string_of_lid (Env.current_module env)))
   "FStar.TypeChecker.Rel.sub_comp"
 
-let sub_comp env c1 c2 = sub_or_eq_comp env false c1 c2
-let eq_comp env c1 c2 = sub_or_eq_comp env true c1 c2
+let sub_comp env c1 c2 =
+    Errors.with_ctx "While trying to subtype computation types" (fun () ->
+      def_check_comp_closed_in_env c1.pos "sub_comp c1" env c1;
+      def_check_comp_closed_in_env c2.pos "sub_comp c2" env c2;
+      sub_or_eq_comp env false c1 c2
+    )
+
+let eq_comp env c1 c2 =
+    Errors.with_ctx "While trying to equate computation types" (fun () ->
+      def_check_comp_closed_in_env c1.pos "sub_comp c1" env c1;
+      def_check_comp_closed_in_env c2.pos "sub_comp c2" env c2;
+      sub_or_eq_comp env true c1 c2
+    )
 
 let solve_universe_inequalities' tx env (variables, ineqs) : unit =
    //variables: ?u1, ..., ?un are the universes of the inductive types we're trying to compute
@@ -4971,16 +4986,24 @@ let check_subtyping env t1 t2 =
   "FStar.TypeChecker.Rel.check_subtyping"
 
 let get_subtyping_predicate env t1 t2 =
+  Errors.with_ctx "While trying to get a subtyping predicate" (fun () ->
+    def_check_closed_in_env t1.pos "get_subtyping_predicate.1" env t1;
+    def_check_closed_in_env t2.pos "get_subtyping_predicate.2" env t2;
     match check_subtyping env t1 t2 with
     | None -> None
     | Some (x, g) ->
       Some (abstract_guard (S.mk_binder x) g)
+  )
 
 let get_subtyping_prop env t1 t2 =
+  Errors.with_ctx "While trying to get a subtyping proposition" (fun () ->
+    def_check_closed_in_env t1.pos "get_subtyping_prop.1" env t1;
+    def_check_closed_in_env t2.pos "get_subtyping_prop.2" env t2;
     match check_subtyping env t1 t2 with
     | None -> None
     | Some (x, g) ->
       Some (close_guard env [S.mk_binder x] g)
+  )
 
 (*
  * Solve the uni-valued implicits
