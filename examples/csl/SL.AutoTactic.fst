@@ -163,7 +163,7 @@ let canon_monoid_sl' () : Tac unit =
                           sort_sl (fun #a -> sort_sl_correct #a) memory_cm
 
 let binder_to_term (b : binder) : Tac term =
-  let bv, _ = inspect_binder b in pack (Tv_Var bv)
+  let bv = (inspect_binder b).binder_bv in pack (Tv_Var bv)
 
 noeq
 type cmd =

@@ -24,12 +24,12 @@ let rec fv_eq (fv1 : list string) (fv2 : list string) : bool =
     | _, _ -> false
 
 let unpack_field (b : T.binder) : T.Tac (string * option T.term * T.term) = 
-    let (bv, (_, attrs)) = T.inspect_binder b in
+    let (bv, (_, attrs)) =
+      let bview = T.inspect_binder b in
+      bview.binder_bv, (bview.binder_qual, bview.binder_attrs) in
     let attr_opt = match attrs with | [] -> None | _ -> Some (FStar.List.Tot.hd attrs) in
     let bvv = T.inspect_bv bv in
-    // Need to make fields of bv_view 
-    let open FStar.Tactics in
-    (bvv.bv_ppname, attr_opt, bvv.bv_sort)
+    (FStar.Tactics.Builtins.bv_ppname bv, attr_opt, bvv.bv_sort)
 
 // returns a list of (field name, optional attribute, field type)
 let rec unpack_fields (qname : list string) (ty : T.term) : T.Tac (list (string * option T.term * T.term)) = 

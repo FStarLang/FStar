@@ -18,7 +18,7 @@ let resolve' (): Tac unit =
     match bs with
     | [] -> fail "found no suitable type class"
     | b :: bs ->
-        let b, _ = inspect_binder b in
+        let b = (inspect_binder b).binder_bv in
         try exact (pack_ln (Tv_BVar b))
         with | TacticFailure _ -> try_binders bs
              | _ -> ()
