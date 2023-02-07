@@ -11,22 +11,6 @@ open Pulse.Typing
 open Pulse.Checker.Common
 open Pulse.Checker.Pure
 
-let force_st #f #g #t (#pre:pure_term)
-             (pre_typing:tot_typing f g pre Tm_VProp)
-             (x:(c:pure_comp { stateful_comp c ==> comp_pre c == pre } & src_typing f g t c))
-  : T.Tac (c:pure_comp_st { comp_pre c == pre } & src_typing f g t c)
-  = let (| c, d_c |) = x in
-    match c with
-    | C_Tot ty ->
-      let (| ures, ures_ty |) = check_universe f g ty in
-      let c = return_comp_noeq ures ty in
-      let d = T_ReturnNoEq _ _ _ _ d_c ures_ty in
-      Framing.frame_empty pre_typing ures_ty _ c d        
-
-    | C_ST _
-    | C_STAtomic _ _
-    | C_STGhost _ _ -> (|c, d_c|)
-
 #push-options "--z3rlimit_factor 8 --ifuel 1 --fuel 1"
 let rec mk_bind (f:RT.fstar_top_env) (g:env)
   (pre:pure_term)

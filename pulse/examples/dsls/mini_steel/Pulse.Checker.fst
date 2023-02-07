@@ -125,7 +125,7 @@ let maybe_add_elim_pure (pre:pure_term) (t:term) : T.Tac (bool & term) =
       let elim_pure_tm = Tm_STApp (Tm_FVar (mk_steel_wrapper_lid "elim_pure")) None p in
       Tm_Bind elim_pure_tm t) t pure_props
   
-#push-options "--query_stats --fuel 2 --ifuel 1 --z3rlimit_factor 4"
+#push-options "--query_stats --fuel 2 --ifuel 1 --z3rlimit_factor 10"
 #push-options "--print_implicits --print_universes --print_full_names"
 let rec check' : bool -> check_t =
   fun (allow_inst:bool)
@@ -221,8 +221,55 @@ let rec check' : bool -> check_t =
   | Tm_Bind _ _ ->
     check_bind f g t pre pre_typing post_hint (check' true)
     
-  | Tm_If _ _ _ _ ->
-    T.fail "Not handling if yet"
+  | Tm_If b e1 e2 post_if ->
+    let (| b, b_typing |) =
+      check_tot_with_expected_typ f g b tm_bool in
+
+    let post =
+      match post_if, post_hint with
+      | None, Some _ -> post_hint
+      | Some _, None -> post_if
+      | _, _ -> T.fail "Either two annotations for if post or none" in
+
+    let hyp = fresh g in
+    let g_then =
+      (hyp, Inl (mk_eq2 U_zero tm_bool b tm_true))::g in
+    let (| e1, c1, e1_typing |) =
+      //
+      // TODO: this is unnecessary
+      //       we have typing of pre in g
+      //       weakening should give typing of pre in g_then
+      //
+      let pre_typing : tot_typing f g_then pre Tm_VProp =
+        check_vprop_no_inst f g_then pre in
+      let (| e1, c1, e1_typing |) =
+        check' allow_inst f g_then e1 pre pre_typing post in
+      let (| c1, e1_typing |) =
+        force_st pre_typing (| c1, e1_typing |) in
+      (| e1, c1, e1_typing |) in
+
+    let g_else =
+      (hyp, Inl (mk_eq2 U_zero tm_bool b tm_false))::g in
+    let (| e2, c2, e2_typing |) =
+      //
+      // TODO: this is unnecessary
+      //       we have typing of pre in g
+      //       weakening should give typing of pre in g_then
+      //
+      let pre_typing : tot_typing f g_else pre Tm_VProp =
+        check_vprop_no_inst f g_else pre in
+      let (| e2, c2, e2_typing |) =
+        check' allow_inst f g_else e2 pre pre_typing post in
+      let (| c2, e2_typing |) =
+        force_st pre_typing (| c2, e2_typing |) in
+      (| e2, c2, e2_typing |) in
+    if c1 = c2
+    then begin
+      (| Tm_If b e1 e2 post_if,
+         c1,
+         T_If g b e1 e2 post_if c1 hyp (E b_typing) e1_typing e2_typing |)
+    end
+    else T.fail "Different comps for the if branches"
 
   | Tm_UVar _ ->
     T.fail "Unexpected Tm_Uvar in check"
