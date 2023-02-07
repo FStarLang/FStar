@@ -20,7 +20,7 @@ let replace_var (bvmap:bvmap) (b:bool) (t:term) : Tac term =
   match inspect_ln t with
   | Tv_Var bv ->
     let (x, y, _) = lookup bvmap bv in
-    let bv = if b then fst (inspect_binder y) else fst (inspect_binder x) in
+    let bv = if b then (inspect_binder y).binder_bv else (inspect_binder x).binder_bv in
     pack (Tv_Var bv)
   | _ -> t
 
@@ -39,8 +39,8 @@ let param_list = (fun (t1 t2 : Type) rel_f l1 l2 -> squash (list_rec #t1 #t2 rel
 let param_int = (fun (x y : int) -> squash (x == y))
 
 let binder_set_qual (b:binder) (q:aqualv) : Tac binder =
-  let bv, (_, attrs) = inspect_binder b in
-  pack_binder bv q attrs
+  let bview = inspect_binder b in
+  pack_binder {bview with binder_qual=q}
 
 let rec param' (bvmap : bvmap) (t:term) : Tac term =
   let r =
@@ -51,7 +51,9 @@ let rec param' (bvmap : bvmap) (t:term) : Tac term =
     let (_, _, b) = lookup bvmap bv in
     binder_to_term b
   | Tv_Arrow b c ->
-    let bv, (q, _attrs) = inspect_binder b in
+    let bv, (q, _attrs) =
+      let bview = inspect_binder b in
+      bview.binder_bv, (bview.binder_qual, bview.binder_attrs) in
     begin match inspect_comp c with
     | C_Total t2 ->
       let t1 = (inspect_bv bv).bv_sort in
@@ -79,7 +81,7 @@ let rec param' (bvmap : bvmap) (t:term) : Tac term =
 
  | Tv_Abs b t ->
     let abs b t : Tac term = pack (Tv_Abs b t) in
-    let (bv, q) = inspect_binder b in
+    let bv = (inspect_binder b).binder_bv in
     let bvs = (inspect_bv bv).bv_sort in
     let bx0 = fresh_binder_named "z0" (replace_by bvmap false bvs) in
     let bx1 = fresh_binder_named "z1" (replace_by bvmap true bvs) in
