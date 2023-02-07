@@ -161,6 +161,7 @@ clean_checked:
 
 clean: clean_checked clean_ocaml
 	@echo "[CLEAN     ulib/]"
+	$(Q)rm -f .depend.extract.rsp
 	$(Q)rm -f .depend.extract
 	$(Q)rm -f *.mgen
 	$(Q)rm -f *.checked.lax .cache/*.checked.lax

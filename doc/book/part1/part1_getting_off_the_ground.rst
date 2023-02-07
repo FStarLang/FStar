@@ -302,6 +302,8 @@ a lambda term, which adds 1 to its integer-typed parameter ``x``. You
 can also let F* infer the type of the parameter and write ``fun x ->
 x + 1`` instead.
 
+.. _Part1_ch1_named_function:
+
 Named functions
 ...............
 
@@ -403,6 +405,10 @@ languages.
    call to fail to return due to resource exhaustion, e.g., running
    out of memory. Later, as we look at :ref:`effects <effects>`, we
    will see that F* also supports writing non-terminating functions.
+
+
+.. _Part1_ch1_arrow_notations:
+
 
 Some examples and common notation
 .................................

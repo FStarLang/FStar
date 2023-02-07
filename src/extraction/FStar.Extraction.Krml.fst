@@ -39,6 +39,7 @@ module FC = FStar.Const
 - v28: added many things for which the AST wasn't bumped; bumped it for
   TConstBuf which will expect will be used soon
 - v29: added a SizeT and PtrdiffT width to machine integers
+- v30: Added EBufDiff
 *)
 
 (* COPY-PASTED ****************************************************************)
@@ -131,6 +132,7 @@ and expr =
   | EStandaloneComment of string
   | EAddrOf of expr
   | EBufNull of typ
+  | EBufDiff of expr * expr
 
 and op =
   | Add | AddW | Sub | SubW | Div | DivW | Mult | MultW | Mod
@@ -685,6 +687,10 @@ and translate_expr env e: expr =
     ->
     translate_expr env e
 
+  | MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p}, _) }, [ _perm0; _perm1; _seq0; _seq1; e0; _len0; e1; _len1])
+    when string_of_mlpath p = "Steel.ST.HigherArray.ptrdiff_ptr" ->
+    EBufDiff (translate_expr env e0, translate_expr env e1)
+
   | MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, _) }, [ e1; e2 ])
     when string_of_mlpath p = "FStar.Buffer.index" || string_of_mlpath p = "FStar.Buffer.op_Array_Access"
       || string_of_mlpath p = "LowStar.Monotonic.Buffer.index"
@@ -1166,8 +1172,13 @@ and translate_expr env e: expr =
   | MLE_App ({ expr = MLE_Name p }, [ arg ])
     when string_of_mlpath p = "FStar.SizeT.uint16_to_sizet" ||
          string_of_mlpath p = "FStar.SizeT.uint32_to_sizet" ||
-         string_of_mlpath p = "FStar.SizeT.uint64_to_sizet" ->
+         string_of_mlpath p = "FStar.SizeT.uint64_to_sizet" ||
+         string_of_mlpath p = "FStar.PtrdiffT.ptrdifft_to_sizet" ->
       ECast (translate_expr env arg, TInt SizeT)
+
+  | MLE_App ({ expr = MLE_Name p }, [ arg ])
+    when string_of_mlpath p = "FStar.SizeT.sizet_to_uint32" ->
+      ECast (translate_expr env arg, TInt UInt32)
 
   | MLE_App ({expr=MLE_Name p}, [ _inv; test; body ])
     when (string_of_mlpath p = "Steel.ST.Loops.while_loop") ->

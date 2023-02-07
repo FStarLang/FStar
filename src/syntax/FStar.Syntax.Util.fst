@@ -535,26 +535,37 @@ let injectives =
      "FStar.UInt32.__uint_to_t";
      "FStar.UInt64.__uint_to_t"]
 
-let eq_inj f g =
-     match f, g with
+// Compose two eq_result injectively, as in a pair
+let eq_inj r s =
+     match r, s with
      | Equal, Equal -> Equal
      | NotEqual, _
      | _, NotEqual -> NotEqual
-     | Unknown, _
-     | _, Unknown -> Unknown
+     | _, _ -> Unknown
 
+// Promote a bool to eq_result, conservatively.
 let equal_if = function
     | true -> Equal
     | _ -> Unknown
 
+// Promote a bool to an eq_result, taking a false to bet NotEqual.
+// This is only useful for fully decidable equalities.
+// Use with care, see note about Const_real below and #2806.
 let equal_iff = function
     | true -> Equal
     | _ -> NotEqual
 
-let eq_and f g =
-    match f with
-    | Equal -> g()
-    | _ -> Unknown
+// Compose two equality results, NOT assuming a NotEqual implies anything.
+// This is useful, e.g., for checking the equality of applications. Consider
+//  f x ~ g y
+// if f=g and x=y then we know these two expressions are equal, but cannot say
+// anything when either result is NotEqual or Unknown, hence this returns Unknown
+// in most cases.
+// The second comparison is thunked for efficiency.
+let eq_and r s =
+    if r = Equal && s () = Equal
+    then Equal
+    else Unknown
 
 (* Precondition: terms are well-typed in a common environment, or this can return false positives *)
 let rec eq_tm (t1:term) (t2:term) : eq_result =
@@ -611,14 +622,31 @@ let rec eq_tm (t1:term) (t2:term) : eq_result =
     | Tm_fvar f, Tm_fvar g -> equal_if (fv_eq f g)
 
     | Tm_uinst(f, us), Tm_uinst(g, vs) ->
+      // If the fvars and universe instantiations match, then Equal,
+      // otherwise Unknown.
       eq_and (eq_tm f g) (fun () -> equal_if (eq_univs_list us vs))
 
-    // Ranges should be opaque, even to the normalizer. c.f. #1312
-    | Tm_constant (Const_range _), _
-    | _, Tm_constant (Const_range _) ->
+    | Tm_constant (Const_range _), Tm_constant (Const_range _) ->
+      // Ranges should be opaque, even to the normalizer. c.f. #1312
       Unknown
 
+    | Tm_constant (Const_real r1), Tm_constant (Const_real r2) ->
+      // We cannot decide equality of reals. Use a conservative approach here.
+      // If the strings match, they are equal, otherwise we don't know. If this
+      // goes via the eq_iff case below, it will falsely claim that "1.0R" and
+      // "01.R" are different, since eq_const does not canonizalize the string
+      // representations.
+      equal_if (r1 = r2)
+
     | Tm_constant c, Tm_constant d ->
+      // NOTE: this relies on the fact that eq_const *correctly decides*
+      // semantic equality of constants. This needs some care. For instance,
+      // since integers are represented by a string, eq_const needs to take care
+      // of ignoring leading zeroes, and match 0 with -0. An exception to this
+      // are real number literals (handled above). See #2806.
+      //
+      // Currently (24/Jan/23) this seems to be correctly implemented, but
+      // updates should be done with care.
       equal_iff (eq_const c d)
 
     | Tm_uvar (u1, ([], _)), Tm_uvar (u2, ([], _)) ->
@@ -644,7 +672,13 @@ let rec eq_tm (t1:term) (t2:term) : eq_result =
       equal_if (eq_univs u v)
 
     | Tm_quoted (t1, q1), Tm_quoted (t2, q2) ->
-      eq_and (eq_quoteinfo q1 q2) (fun () -> eq_tm t1 t2)
+      // NOTE: we do NOT ever provide a meaningful result for quoted terms. Even
+      // if term_eq (the syntactic equality) returns true, that does not mean we
+      // can present the equality to userspace since term_eq ignores the names
+      // of binders, but the view exposes them. Hence, we simply always return
+      // Unknown. We do not seem to rely anywhere on simplifying equalities of
+      // quoted literals. See also #2806.
+      Unknown
 
     | Tm_refine (t1, phi1), Tm_refine (t2, phi2) ->
       eq_and (eq_tm t1.sort t2.sort) (fun () -> eq_tm phi1 phi2)
@@ -667,11 +701,6 @@ let rec eq_tm (t1:term) (t2:term) : eq_result =
              (fun () -> eq_comp c1 c2)
 
     | _ -> Unknown
-
-and eq_quoteinfo q1 q2 =
-    if q1.qkind <> q2.qkind
-    then NotEqual
-    else eq_antiquotes q1.antiquotes q2.antiquotes
 
 and eq_antiquotes a1 a2 =
     match a1, a2 with
@@ -735,6 +764,13 @@ and eq_comp (c1 c2:comp) : eq_result =
                              //ignoring cflags
   | _ -> NotEqual
 
+(* Only used in term_eq *)
+let eq_quoteinfo q1 q2 =
+    if q1.qkind <> q2.qkind
+    then NotEqual
+    else eq_antiquotes q1.antiquotes q2.antiquotes
+
+(* Only used in term_eq *)
 let eq_bqual a1 a2 =
     match a1, a2 with
     | None, None -> Equal
@@ -745,6 +781,7 @@ let eq_bqual a1 a2 =
     | Some Equality, Some Equality -> Equal
     | _ -> NotEqual
 
+(* Only used in term_eq *)
 let eq_aqual a1 a2 =
   match a1, a2 with
   | Some a1, Some a2 ->
@@ -2408,6 +2445,23 @@ let aqual_is_erasable (aq:aqual) =
   | None -> false
   | Some aq -> U.for_some (is_fvar PC.erasable_attr) aq.aqual_attributes
 
+let is_erased_head (t:term) : option (universe & term) = 
+  let head, args = head_and_args t in
+  match head.n, args with
+  | Tm_uinst({n=Tm_fvar fv}, [u]), [(ty, _)]
+    when fv_eq_lid fv PC.erased_lid ->
+    Some (u, ty)
+  | _ ->
+    None
+
+let apply_reveal (u:universe) (ty:term) (v:term) =
+  let head = fvar (Ident.set_lid_range PC.reveal v.pos)
+                  (Delta_constant_at_level 1)
+                   None in
+  mk_Tm_app (mk_Tm_uinst head [u])
+            [iarg ty; as_arg v]
+            v.pos
+                    
 let check_mutual_universes (lbs:list letbinding)
   : unit
   = let lb::lbs = lbs in

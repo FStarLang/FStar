@@ -462,13 +462,31 @@ let guard_letrecs env actuals expected_c : list (lbname*typ*univ_names) =
                 (Print.binders_to_string ", " bs) (Print.comp_to_string c);
 
           //exclude types and function-typed arguments from the decreases clause
+          //and reveal and erased arguments
           let filter_types_and_functions (bs:binders)  =
-            bs |> List.collect (fun ({binder_bv=b}) ->
-                    let t = N.unfold_whnf env (U.unrefine b.sort) in
-                    match t.n with
-                        | Tm_type _
-                        | Tm_arrow _ -> []
-                        | _ -> [S.bv_to_name b]) in
+            let out_rev, env = 
+              List.fold_left 
+                (fun (out, env) binder ->
+                  let b = binder.binder_bv in
+                  let t = N.unfold_whnf env (U.unrefine b.sort) in
+                  let env = Env.push_binders env [binder] in
+                  match t.n with
+                  | Tm_type _
+                  | Tm_arrow _ -> 
+                    (out, env)
+                  | _ ->
+                    let arg = S.bv_to_name b in
+                    let arg =
+                      match is_erased_head t with
+                      | Some (u, ty) -> U.apply_reveal u ty arg
+                      | _ -> arg
+                    in
+                    (arg::out, env))
+                ([], env)
+                bs
+            in
+            List.rev out_rev
+          in
           let cflags = U.comp_flags c in
           match cflags |> List.tryFind (function DECREASES _ -> true | _ -> false) with
                 | Some (DECREASES d) -> d
@@ -514,7 +532,7 @@ let guard_letrecs env actuals expected_c : list (lbname*typ*univ_names) =
                  | Tm_name _, Tm_name _ -> ()
                  | _, _ ->
                    Errors.log_issue e1.pos (Errors.Warning_Defensive,
-                     BU.format6 "SMT may not be able to prove the types of %s at %s (%s) and %s at %s (%s) to be equal, if the proof fails, try annotating these with the same type\n"
+                     BU.format6 "SMT may not be able to prove the types of %s at %s (%s) and %s at %s (%s) to be equal, if the proof fails, try annotating these with the same type"
                        (Print.term_to_string e1)
                        (Range.string_of_range e1.pos)
                        (Print.term_to_string t1)

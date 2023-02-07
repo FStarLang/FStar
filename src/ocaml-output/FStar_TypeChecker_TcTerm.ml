@@ -1145,26 +1145,41 @@ let (guard_letrecs :
                    uu___3
                else ());
               (let filter_types_and_functions bs1 =
-                 FStar_Compiler_Effect.op_Bar_Greater bs1
-                   (FStar_Compiler_List.collect
-                      (fun uu___1 ->
-                         match uu___1 with
-                         | { FStar_Syntax_Syntax.binder_bv = b;
-                             FStar_Syntax_Syntax.binder_qual = uu___2;
-                             FStar_Syntax_Syntax.binder_attrs = uu___3;_} ->
-                             let t =
-                               let uu___4 =
-                                 FStar_Syntax_Util.unrefine
-                                   b.FStar_Syntax_Syntax.sort in
-                               FStar_TypeChecker_Normalize.unfold_whnf env1
-                                 uu___4 in
-                             (match t.FStar_Syntax_Syntax.n with
-                              | FStar_Syntax_Syntax.Tm_type uu___4 -> []
-                              | FStar_Syntax_Syntax.Tm_arrow uu___4 -> []
-                              | uu___4 ->
-                                  let uu___5 =
-                                    FStar_Syntax_Syntax.bv_to_name b in
-                                  [uu___5]))) in
+                 let uu___1 =
+                   FStar_Compiler_List.fold_left
+                     (fun uu___2 ->
+                        fun binder ->
+                          match uu___2 with
+                          | (out, env2) ->
+                              let b = binder.FStar_Syntax_Syntax.binder_bv in
+                              let t =
+                                let uu___3 =
+                                  FStar_Syntax_Util.unrefine
+                                    b.FStar_Syntax_Syntax.sort in
+                                FStar_TypeChecker_Normalize.unfold_whnf env2
+                                  uu___3 in
+                              let env3 =
+                                FStar_TypeChecker_Env.push_binders env2
+                                  [binder] in
+                              (match t.FStar_Syntax_Syntax.n with
+                               | FStar_Syntax_Syntax.Tm_type uu___3 ->
+                                   (out, env3)
+                               | FStar_Syntax_Syntax.Tm_arrow uu___3 ->
+                                   (out, env3)
+                               | uu___3 ->
+                                   let arg = FStar_Syntax_Syntax.bv_to_name b in
+                                   let arg1 =
+                                     let uu___4 =
+                                       FStar_Syntax_Util.is_erased_head t in
+                                     match uu___4 with
+                                     | FStar_Pervasives_Native.Some (u, ty)
+                                         ->
+                                         FStar_Syntax_Util.apply_reveal u ty
+                                           arg
+                                     | uu___5 -> arg in
+                                   ((arg1 :: out), env3))) ([], env1) bs1 in
+                 match uu___1 with
+                 | (out_rev, env2) -> FStar_Compiler_List.rev out_rev in
                let cflags = FStar_Syntax_Util.comp_flags c in
                let uu___1 =
                  FStar_Compiler_Effect.op_Bar_Greater cflags
@@ -1283,7 +1298,7 @@ let (guard_letrecs :
                              let uu___12 =
                                FStar_Syntax_Print.term_to_string t2 in
                              FStar_Compiler_Util.format6
-                               "SMT may not be able to prove the types of %s at %s (%s) and %s at %s (%s) to be equal, if the proof fails, try annotating these with the same type\n"
+                               "SMT may not be able to prove the types of %s at %s (%s) and %s at %s (%s) to be equal, if the proof fails, try annotating these with the same type"
                                uu___7 uu___8 uu___9 uu___10 uu___11 uu___12 in
                            (FStar_Errors.Warning_Defensive, uu___6) in
                          FStar_Errors.log_issue e1.FStar_Syntax_Syntax.pos

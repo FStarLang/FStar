@@ -78,6 +78,7 @@ let selector (a:Type) (hp:slprop) : Type =
 /// The basis of our selector framework: Separation logic assertions enhanced with selectors
 /// Note that selectors are "optional", it is always possible to use a non-informative selector,
 /// such as fun _ -> () and to rely on the standard separation logic reasoning
+[@@ erasable]
 noeq
 type vprop' =
   { hp: slprop u#1;
@@ -962,7 +963,7 @@ let rec new_args_for_smt_attrs (env:env) (l:list argv) (ty:typ) : Tac (list argv
         then ty2
         else fail "computation type not supported in definition of slprops"
       | _ -> fail "computation type not supported in definition of slprops" in
-      
+
     let tl_argv, tl_terms = new_args_for_smt_attrs env tl ty2 in
     new_hd::tl_argv, (if needs_smt then arg::tl_terms else tl_terms)
     end
