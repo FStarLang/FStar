@@ -49,14 +49,19 @@ let eqn = pure_term & pure_term & pure_term
 let binding = either pure_term eqn
 let env = list (var & binding)
 
-
+//
+// THIS IS BROKEN:
+//
+// It is always setting universe to 0
+// But we are also not using it currently
+//
 let elab_eqn (e:eqn)
   : R.term
   = let ty, l, r = e in
     let ty = elab_pure ty in
     let l = elab_pure l in
     let r = elab_pure r in
-    RT.eq2 ty l r
+    RT.eq2 (R.pack_universe R.Uv_Zero) ty l r
 
 let elab_binding (b:binding)
   : R.term 
@@ -375,18 +380,18 @@ type src_typing (f:RT.fstar_top_env) : env -> term -> pure_comp -> Type =
       bind_comp f g x c1 c2 c ->
       src_typing f g (Tm_Bind e1 e2) c
 
-  // Not handling if yet
-  // | T_If:
-  //     g:env ->
-  //     b:pure_term -> 
-  //     e1:term ->
-  //     e2:term -> 
-  //     c:pure_comp ->
-  //     hyp:var { None? (lookup g hyp) } ->
-  //     tot_typing f g b tm_bool ->
-  //     src_typing f ((hyp, Inr (tm_bool, b, tm_true)) :: g) e1 c ->
-  //     src_typing f ((hyp, Inr (tm_bool, b, tm_false)) :: g) e2 c ->
-  //     src_typing f g (Tm_If b e1 e2) c
+  | T_If:
+      g:env ->
+      b:pure_term -> 
+      e1:term ->
+      e2:term ->
+      post:option vprop ->
+      c:pure_comp_st ->
+      hyp:var { None? (lookup g hyp) } ->
+      tot_typing f g b tm_bool ->
+      src_typing f ((hyp, Inl (mk_eq2 U_zero tm_bool b tm_true)) :: g) e1 c ->
+      src_typing f ((hyp, Inl (mk_eq2 U_zero tm_bool b tm_false)) :: g) e2 c ->
+      src_typing f g (Tm_If b e1 e2 post) c
 
   | T_Frame:
       g:env ->

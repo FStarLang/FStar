@@ -197,19 +197,20 @@ let rec elab_term (top:term)
         pack_ln (Tv_FVar (pack_fv head_lid)) in
       Some (R.mk_app head ([(t, Q_Implicit); (body, Q_Explicit)]))
 
-    | Tm_If b then_ else_ -> (* this should be stateful *)
-      let? b = elab_term b in
-      let? then_ = elab_term then_ in
-      let? else_ = elab_term else_ in
-      let then_branch = R.Pat_Constant R.C_True, then_ in
-      let else_branch = R.Pat_Constant R.C_False, else_ in
-      Some (R.pack_ln (Tv_Match b None [then_branch; else_branch]))
+    // | Tm_If b then_ else_ -> (* this should be stateful *)
+    //   let? b = elab_term b in
+    //   let? then_ = elab_term then_ in
+    //   let? else_ = elab_term else_ in
+    //   let then_branch = R.Pat_Constant R.C_True, then_ in
+    //   let else_branch = R.Pat_Constant R.C_False, else_ in
+    //   Some (R.pack_ln (Tv_Match b None [then_branch; else_branch]))
 
     | Tm_Inames ->
       Some (pack_ln (Tv_FVar (pack_fv inames_lid)))
 
     | Tm_EmpInames -> Some emp_inames_tm
 
+    | Tm_If _ _ _ _
     | Tm_Abs _ _ _ _ _
     | Tm_STApp _ _ _
     | Tm_Bind _ _
@@ -252,7 +253,7 @@ let pure_comp_st = c:pure_comp { stateful_comp c }
   
 let ln_comp = c:pure_comp_st{ ln_c c }
 
-#push-options "--z3rlimit_factor 2"
+#push-options "--z3rlimit_factor 4"
 let rec opening_pure_term_with_pure_term (x:pure_term) (v:pure_term) (i:index)
   : Lemma (ensures is_pure_term (open_term' x v i))
           [SMTPat (is_pure_term (open_term' x v i))]
@@ -299,9 +300,6 @@ let rec opening_pure_term_with_pure_term (x:pure_term) (v:pure_term) (i:index)
     | Tm_Arrow b _ c ->
       aux b.binder_ty i;
       opening_pure_comp_with_pure_term c v (i + 1)
-
-    | Tm_If b then_ else_ ->
-      aux b i; aux then_ i; aux else_ i
 
 and opening_pure_comp_with_pure_term (x:pure_comp) (v:pure_term) (i:index)
   : Lemma (ensures is_pure_comp (open_comp' x v i))
@@ -369,9 +367,6 @@ let rec closing_pure_term (x:pure_term) (v:var) (i:index)
       aux b.binder_ty i;
       closing_pure_comp c v (i + 1)
 
-    | Tm_If b then_ else_ ->
-      aux b i; aux then_ i; aux else_ i
-
 and closing_pure_comp (x:pure_comp) (v:var) (i:index)
   : Lemma (ensures is_pure_comp (close_comp' x v i))
           [SMTPat (is_pure_comp (close_comp' x v i))]
@@ -427,10 +422,6 @@ let rec elab_pure_eq_tm (t1 t2:pure_term)
   | Tm_ForallSL t1 body1, Tm_ForallSL t2 body2 ->
     elab_pure_eq_tm t1 t2;
     elab_pure_eq_tm body1 body2
-  | Tm_If b1 e11 e12, Tm_If b2 e21 e22 ->
-    elab_pure_eq_tm b1 b2;
-    elab_pure_eq_tm e11 e21;
-    elab_pure_eq_tm e12 e22
   | Tm_Inames, _ -> ()
   | Tm_EmpInames, _ -> ()
   | _, _ -> ()
