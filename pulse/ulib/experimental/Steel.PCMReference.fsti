@@ -117,26 +117,27 @@ let fact_valid_compat (#a:Type) (#pcm:pcm a)
 /// and if it is currently valid for any value that is compatible with
 /// our current knowledge [v], then we can witness the property
 val witness (#inames: _) (#a:Type) (#pcm:pcm a)
-            (r:ref a pcm)
+            (r:erased (ref a pcm))
             (fact:stable_property pcm)
             (v:erased a)
             (_:fact_valid_compat fact v)
-  : SteelGhost unit inames (pts_to r v)
-               (fun _ -> pts_to r v)
-               (requires fun _ -> True)
-               (ensures fun _ _ _ -> witnessed r fact)
+  : SteelAtomicUT (witnessed r fact) inames
+                  (pts_to r v)
+                  (fun _ -> pts_to r v)
+
 
 /// If we previously witnessed the validity of a predicate [fact],
 /// then we can recall this validity on the current value [v1], which
 /// is compatible with our previous knowledge [v]
 val recall (#inames: _) (#a:Type u#1) (#pcm:pcm a)
            (fact:property a)
-           (r:ref a pcm)
+           (r:erased (ref a pcm))
            (v:erased a)
-  : SteelGhost (erased a) inames
+           (w:witnessed r fact)
+  : SteelAtomicU (erased a) inames
           (pts_to r v)
           (fun v1 -> pts_to r v)
-          (requires fun _ -> witnessed r fact)
+          (requires fun _ -> True)
           (ensures fun _ v1 _ -> fact v1 /\ compatible pcm v v1)
 
 /// Refines our current knowledge [x] about reference [r] by applying function [f]

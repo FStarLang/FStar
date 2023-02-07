@@ -64,12 +64,27 @@ effect STAtomicF (a:Type)
                  (ens:pure_post a)
   = STAtomicBase a true opened Observable pre post req ens
 
+effect STAtomicU (a:Type)
+                 (opened:inames)
+                 (pre:pre_t)
+                 (post:post_t a)
+                 (req:pure_pre)
+                 (ens:pure_post a)
+  = STAtomicBase a false opened Unobservable pre post req ens
+
 (* Composing SteelAtomic and Pure computations *)
 polymonadic_bind (PURE, STAtomicBase) |> STAtomicBase = STAG.bind_pure_stag
+
+effect STAtomicBaseT (a:Type) (opened:inames) (obs:observability) (pre:pre_t) (post:post_t a) =
+  STAtomicBase a false opened obs pre post True (fun _ -> True)
 
 /// A version of the SteelAtomic effect with trivial requires and ensures clauses
 effect STAtomicT (a:Type) (opened:inames) (pre:pre_t) (post:post_t a) =
   STAtomic a opened pre post True (fun _ -> True)
+
+/// A version of the SteelAtomic effect with trivial requires and ensures clauses
+effect STAtomicUT (a:Type) (opened:inames) (pre:pre_t) (post:post_t a) =
+  STAtomicU a opened pre post True (fun _ -> True)
 
 sub_effect STAtomicBase ~> Steel.ST.Effect.STBase = STAG.lift_atomic_st
 
@@ -82,4 +97,15 @@ val as_atomic_action (#a:Type u#a)
                      (#fp': a -> slprop)
                      (f:action_except a opened_invariants fp fp')
   : STAtomicT a opened_invariants (to_vprop fp) (fun x -> to_vprop (fp' x))
+
+
+/// Lifting actions from the memory model to atomic and ghost computations.
+/// Only to be used internally, for the core primitives of the Steel framework
+[@@warn_on_use "as_atomic_action is a trusted primitive"]
+val as_atomic_unobservable_action (#a:Type u#a)
+                                  (#opened_invariants:inames)
+                                  (#fp:slprop)
+                                  (#fp': a -> slprop)
+                                  (f:action_except a opened_invariants fp fp')
+  : STAtomicUT a opened_invariants (to_vprop fp) (fun x -> to_vprop (fp' x))
 

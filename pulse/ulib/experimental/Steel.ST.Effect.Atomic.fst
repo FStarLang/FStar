@@ -29,3 +29,13 @@ let as_atomic_action (#a:Type u#a)
   : STAtomicT a opened_invariants (to_vprop fp) (fun x -> to_vprop (fp' x))
   = let ff = SEA.reify_steel_atomic_comp (fun _ -> SEA.as_atomic_action f) in
     STAtomicBase?.reflect ff
+
+
+let as_atomic_unobservable_action (#a:Type u#a)
+                                  (#opened_invariants:inames)
+                                  (#fp:slprop)
+                                  (#fp': a -> slprop)
+                                  (f:action_except a opened_invariants fp fp')
+  : STAtomicUT a opened_invariants (to_vprop fp) (fun x -> to_vprop (fp' x))
+  = let ff = SEA.reify_steel_atomic_comp (fun _ -> SEA.as_atomic_unobservable_action f) in
+    STAtomicBase?.reflect ff

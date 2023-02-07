@@ -63,7 +63,7 @@ let property (a:Type)
 /// A wrapper around a property [fact] that has been witnessed to be true and stable
 /// with respect to preorder [p]
 val witnessed (#a:Type u#1) (#p:Preorder.preorder a) (r:ref a p) (fact:property a)
-  : prop
+  : Type0
 
 /// The type of properties depending on values of type [a], and that
 /// are stable with respect to the preorder [p]
@@ -74,21 +74,24 @@ let stable_property (#a:Type) (p:Preorder.preorder a)
 /// it holds for the current value [v] of the reference, then we can witness it
 val witness (#inames: _) (#a:Type) (#q:perm) (#p:Preorder.preorder a) (r:ref a p)
             (fact:stable_property p)
-            (v:a)
+            (v:erased a)
             (_:squash (fact v))
-  : SteelGhost unit inames (pts_to r q v)
-               (fun _ -> pts_to r q v)
-               (requires fun _ -> True)
-               (ensures fun _ _ _ -> witnessed r fact)
+  : SteelAtomicUT (witnessed r fact) inames
+                  (pts_to r q v)
+                  (fun _ -> pts_to r q v)
+
 
 /// If we previously witnessed the validity of [fact], we can recall its validity
 val recall (#inames: _) (#a:Type u#1) (#q:perm) (#p:Preorder.preorder a)
            (fact:property a)
-           (r:ref a p) (v:a)
-  : SteelGhost unit inames (pts_to r q v)
-               (fun _ -> pts_to r q v)
-               (requires fun _ -> witnessed r fact)
-               (ensures fun _ _ _ -> fact v)
+           (r:ref a p)
+           (v:erased a)
+           (w:witnessed r fact)
+  : SteelAtomicU unit inames
+                 (pts_to r q v)
+                 (fun _ -> pts_to r q v)
+                 (requires fun _ -> True)
+                 (ensures fun _ _ _ -> fact v)
 
 /// Monotonic references are also equipped with the usual fractional permission discipline
 /// So, you can split a reference into two read-only shares
