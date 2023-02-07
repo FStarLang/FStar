@@ -65,9 +65,9 @@ let gather_free_univnames env t : BU.set univ_name =
     let univnames = BU.set_difference tm_univnames ctx_univnames in
     // BU.print4 "Closing universe variables in term %s : %s in ctx, %s in tm, %s globally\n"
     //     (Print.term_to_string t)
-    //     (Print.set_to_string Ident.string_of_id ctx_univnames)
-    //     (Print.set_to_string Ident.string_of_id tm_univnames)
-    //     (Print.list_to_string Ident.string_of_id univnames);
+    //     (Common.string_of_set Ident.string_of_id ctx_univnames)
+    //     (Common.string_of_set Ident.string_of_id tm_univnames)
+    //     (Common.string_of_list Ident.string_of_id univnames);
     univnames
 
 let check_universe_generalization

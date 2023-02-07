@@ -219,7 +219,7 @@ let (ps_to_string :
                   if uu___8
                   then
                     let uu___9 =
-                      FStar_Common.string_of_list p_imp
+                      (FStar_Common.string_of_list ()) p_imp
                         ps.FStar_Tactics_Types.all_implicits in
                     FStar_Compiler_Util.format1 "Imps: %s\n" uu___9
                   else "" in

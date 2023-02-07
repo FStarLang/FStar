@@ -3300,7 +3300,7 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
                    then BU.print2
                             "Adding subproblems for arguments (smtok=%s): %s"
                             (string_of_bool wl.smt_ok)
-                            (Print.list_to_string (prob_to_string env) subprobs);
+                            (FStar.Common.string_of_list (prob_to_string env) subprobs);
                    if Options.defensive ()
                    then List.iter (def_check_prob "solve_t' subprobs") subprobs;
                    subprobs, wl

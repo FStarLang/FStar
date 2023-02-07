@@ -1883,10 +1883,11 @@ and p_with_clause e = p_appTerm e ^^ space ^^ str "with" ^^ break1
 and p_refinedBinder b phi =
     match b.b with
     | Annotated (lid, t) -> p_refinement b.aqual b.battributes (p_lident lid) t phi
+    | Variable lid ->       p_refinement b.aqual b.battributes (p_lident lid) (mk_term Wild (range_of_id lid) Type_level) phi
     | TAnnotated _ -> failwith "Is this still used ?"
-    | Variable _
     | TVariable _
-    | NoName _ -> failwith (Util.format1 "Imposible : a refined binder ought to be annotated %s" (binder_to_string b))
+    | NoName _ ->
+      failwith (Util.format1 "Impossible: a refined binder ought to be annotated (%s)" (binder_to_string b))
 
 (* A simple def can be followed by a ';'. Protect except for the last one. *)
 and p_simpleDef ps (lid, e) =
