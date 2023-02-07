@@ -360,6 +360,9 @@ let (tc_inductive' :
                  env ses1 quals lids in
              match uu___1 with
              | (sig_bndle, tcs, datas) ->
+                 let sig_bndle1 =
+                   FStar_TypeChecker_Positivity.mark_uniform_type_parameters
+                     env sig_bndle in
                  let attrs' =
                    FStar_Syntax_Util.remove_attr
                      FStar_Parser_Const.erasable_attr attrs in
@@ -378,7 +381,7 @@ let (tc_inductive' :
                    then ()
                    else
                      (let env1 =
-                        FStar_TypeChecker_Env.push_sigelt env sig_bndle in
+                        FStar_TypeChecker_Env.push_sigelt env sig_bndle1 in
                       FStar_Compiler_List.iter
                         (fun ty ->
                            let b =
@@ -473,9 +476,6 @@ let (tc_inductive' :
                             && (skip_prims_type ())))
                         || is_noeq)
                        || (is_erasable ()) in
-                   let sig_bndle1 =
-                     FStar_TypeChecker_Positivity.mark_uniform_type_parameters
-                       env sig_bndle in
                    let res =
                      if skip_haseq
                      then (sig_bndle1, data_ops_ses)

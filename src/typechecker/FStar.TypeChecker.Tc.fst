@@ -119,6 +119,7 @@ let tc_inductive' env ses quals attrs lids =
             we still need to check whether or not it supports equality
             and whether it is strictly positive
        *)
+    let sig_bndle = Positivity.mark_uniform_type_parameters env sig_bndle in
 
     (* Once the datacons are generalized we can construct the projectors with the right types *)
     let attrs' = U.remove_attr PC.erasable_attr attrs in
@@ -187,7 +188,6 @@ let tc_inductive' env ses quals attrs lids =
       is_noeq ||
       is_erasable () in
 
-    let sig_bndle = Positivity.mark_uniform_type_parameters env sig_bndle in
     
     let res =
         if skip_haseq

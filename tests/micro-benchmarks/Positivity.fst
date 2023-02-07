@@ -45,8 +45,8 @@ type t =
 
 
 (*
-// //  * #868
-// //  *)
+// // //  * #868
+// // //  *)
 let l_868: eqtype = (y: Seq.seq int {Seq.mem 2 y })
 type essai_868 = | T of list (l_868 * essai_868)
 
@@ -63,8 +63,8 @@ noeq type t14 =
 
 
 (*
-// //  * Using the strictly_positive attribute on binders
-// //  *)
+ * Using the strictly_positive attribute on binders
+ *)
 assume val t_t15 (a:Type0) : Type0
 
 [@@ expect_failure]
@@ -86,8 +86,8 @@ type t_t18 =
   | C181: t_t17 t_t18 nat -> t_t18
 
 (*
-// //  * strictly positive attribute is checked properly
-// //  *)
+// // //  * strictly positive attribute is checked properly
+// // //  *)
 
 val t_t19 ([@@@ strictly_positive] a:Type0) : Type0
 
@@ -98,10 +98,10 @@ let t_t19 a = list a
 
 
 (*
-// //  * This type should be rejected since f may be instantiated with an arrow
-// //  *   that could lead to proof of False, as shown below
-// //  *
-// //  *)
+ * This type should be rejected since f may be instantiated with an arrow
+ *   that could lead to proof of False, as shown below
+ *
+ *)
 
 [@@ expect_failure [3]]
 noeq
@@ -126,9 +126,9 @@ let r1 (_:unit) : squash False = g (C201 g)
 
 
 (*
-// //  * If inductive type parameters are marked strictly_positive,
-// //  *   they should be checked properly
-// //  *)
+ * If inductive type parameters are marked strictly_positive,
+ *   they should be checked properly
+ *)
 
 type t_t21 ([@@@ strictly_positive] a:Type0) : Type0 =
   | C211 : a -> t_t21 a
@@ -201,7 +201,7 @@ type sdyn =
   | S : squash (sdyn → GTot ⊥) → sdyn
 
 (* If we don't enforce positivity in refinements,
-// //    things become inconsistent *)
+   things become inconsistent *)
 
 #push-options "--__no_positivity"
 type bad =
@@ -256,5 +256,42 @@ type reject_safe_mixed_non_uniform_prefix_use =
 type flip (a:Type) (b:Type) =
   | Flip: flip b a -> flip a b
 
+[@@expect_failure[3]]
 type fail_use_flip =
   | FUF : flip fail_use_flip bool -> fail_use_flip
+
+type indexing (a:Type) : Type -> Type = 
+  | Mkindexing : indexing a a
+
+type raise_t (a:Type u#a) : Type u#(max a b) = | Raise : x:a -> raise_t a
+
+[@@expect_failure [3]]
+type reject_indexing_use : Type u#0 =
+  | MkRejectIndexingUse: indexing reject_indexing_use reject_indexing_use -> reject_indexing_use
+  
+[@@expect_failure [3]]
+type reject_indexing_use : Type u#1 =
+  | MkRejectIndexingUse: a:Type u#0 -> indexing reject_indexing_use (raise_t a) -> reject_indexing_use
+
+assume
+val something ([@@@strictly_positive] t:Type) : Type0
+
+noeq
+type indexing2 (a:Type) : Type -> Type = 
+  | Mkindexing2 : something (indexing2 a a) -> indexing2 a (raise_t unit)
+
+[@@expect_failure [3]]
+type reject_indexing_use2 : Type u#0 =
+  | MkRejectIndexingUse2: indexing2 reject_indexing_use2 reject_indexing_use2 -> reject_indexing_use2
+
+[@@expect_failure [3]]
+noeq
+type reject_indexing_use2 : Type u#1 =
+  | MkRejectIndexingUse: a:Type u#0 -> indexing2 reject_indexing_use2 (raise_t a) -> reject_indexing_use2
+
+[@@expect_failure [3]]
+noeq
+type mut1 =
+  | Mut1 : mut2 -> mut1
+and mut2 =
+  | Mut2 : (mut1 -> mut1) -> mut2
