@@ -1,0 +1,17 @@
+[
+  "n[¯I\u001c¥…\u0011ÛŒ±†\u000e¡K\u0002",
+  [
+    [
+      "FStar.Witnessed.Core.witnessed_proof_irrelevant",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "equation_FStar.Witnessed.Core.witnessed", "unit_inversion"
+      ],
+      0,
+      "353710f6d20e7d81b917b75ab08b04f2"
+    ]
+  ]
+]

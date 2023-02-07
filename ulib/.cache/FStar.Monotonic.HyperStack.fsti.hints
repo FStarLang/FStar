@@ -244,7 +244,7 @@
         "typing_FStar.Monotonic.HyperStack.live_region"
       ],
       0,
-      "209042f29f43eb5a5ed1563f6928d8fe"
+      "e6c71f7ecff59955c55362e623423800"
     ],
     [
       "FStar.Monotonic.HyperStack.upd_tot",
@@ -280,7 +280,7 @@
         "typing_FStar.Monotonic.HyperStack.live_region"
       ],
       0,
-      "7a42cbb9e445776fbea460c6161d589a"
+      "6cec0171c6af059c066c63843ac52a39"
     ],
     [
       "FStar.Monotonic.HyperStack.sel_tot",
@@ -293,7 +293,7 @@
         "refinement_interpretation_Tm_refine_778b19525c5cb6c7b65c06252db153f7"
       ],
       0,
-      "60e16f2fd894fc13dce6898fea2cce4d"
+      "eaa61e2c852e103e4c908ac0958a4983"
     ],
     [
       "FStar.Monotonic.HyperStack.fresh_frame",

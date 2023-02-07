@@ -291,7 +291,7 @@
       1,
       [ "@query", "lemma_LatticeEff.sublist_at" ],
       0,
-      "2e670e617061d1a11ca363785efb3018"
+      "d561cda7ccc5b0e1aebb15c47ff1a432"
     ],
     [
       "LatticeEff.lift_pure_eff",
@@ -322,16 +322,16 @@
         "typing_Tm_abs_5e34897418ce4950a4effcc8c159cf53"
       ],
       0,
-      "b69d76960ae4e9e8da371bbbc8d557e0"
+      "2242ea7e743480bb9b0a278901dfe187"
     ],
     [
-      "LatticeEff.8936",
+      "LatticeEff.8975",
       1,
       2,
       1,
       [ "@query" ],
       0,
-      "463ed2f2697a0e4737be4fcf40febc99"
+      "a2cd2dcb3e3e0c2ac9b802cf314610bf"
     ],
     [
       "LatticeEff.get",

@@ -932,7 +932,7 @@
         "equation_Sec2.IFC.label_inclusion", "equation_Sec2.IFC.loc"
       ],
       0,
-      "4694d06b45420f32bf300964e535bfe0"
+      "852b3a8f1de67cced3bd3a012e50f9b0"
     ],
     [
       "Sec2.IFC.lift_pure",
@@ -954,16 +954,16 @@
         "typing_Tm_abs_5e34897418ce4950a4effcc8c159cf53"
       ],
       0,
-      "35b1eb29f091ca01c3bfa2e701206803"
+      "fe4fb110c20da6afe00cc187548bfb89"
     ],
     [
-      "Sec2.IFC.57653",
+      "Sec2.IFC.57885",
       1,
       2,
       1,
       [ "@query" ],
       0,
-      "ceb07cf79a256d053917877dfe0c1757"
+      "78fc9a014c12faeb44aa8bc0f5efcacf"
     ],
     [
       "Sec2.IFC.test",
