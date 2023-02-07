@@ -260,8 +260,7 @@ let reflection_primops : list Cfg.primitive_step = [
 
   mk2 "pack_bv"
     RB.pack_bv
-    e_string
-    e_bv_view
+    e_string e_bv_view
     e_bv;
 
   (* TODO: Make this consistent with others? No good reason for it to be "exploded" *)

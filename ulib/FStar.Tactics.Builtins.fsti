@@ -361,6 +361,7 @@ val pack    : term_view -> Tac term
     then in a curried form instead *)
 val pack_curried : term_view -> Tac term
 
+(** Get the pretty printing name of a bv *)
 val bv_ppname : bv -> Tac string
 
 (** Join the first two goals, which must be irrelevant, in a single

@@ -117,6 +117,10 @@ type qualifier =
 
 type qualifiers = list qualifier
 
+//
+// We don't expose the ppname as part of bv_view,
+//   see the corresponding definition in ulib/FStar.Reflection.Data.fsti
+//
 type bv_view = {
     bv_index : Z.t;
     bv_sort : typ;

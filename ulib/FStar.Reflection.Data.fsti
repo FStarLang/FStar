@@ -53,6 +53,10 @@ type aqualv =
 
 type argv = term * aqualv
 
+//
+// bv_view does not expose the pretty printing name of the bv
+// see FStar.Tactics.Builtins::bv_ppname
+//
 noeq
 type bv_view = {
     bv_index : int;
