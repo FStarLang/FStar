@@ -183,10 +183,12 @@ ifeq ($(OS),Windows_NT)
 else
   Z3_NAME=z3
 endif
-Z3_DIR=$(shell dirname $$(which $(Z3_NAME)))
+Z3_DIR=$(dir $(shell which $(Z3_NAME)))
 # Z3_LICENSE MUST be explicitly overridden if z3 is installed from an opam package.
 # See for instance $(FSTAR_HOME)/.docker/package.Dockerfile
-Z3_LICENSE?=$(shell dirname $(Z3_DIR))/LICENSE.txt
+ifndef Z3_LICENSE
+  Z3_LICENSE?=$(shell if test -f $(Z3_DIR)/LICENSE.txt ; then echo $(Z3_DIR)/LICENSE.txt ; elif test -f $(Z3_DIR)/../LICENSE.txt ; then echo $(Z3_DIR)/../LICENSE.txt ; fi)
+endif
 
 # Create a zip / tar.gz package of FStar that contains a Z3 binary and
 # proper license files.
@@ -195,6 +197,7 @@ package_prefix=$(shell pwd)/fstar
 package_dir = cd ../../$(1) && find . -type f -exec $(INSTALL_EXEC) -m 644 -D {} $(package_prefix)/$(2)/{} \;
 
 package:
+	if test -z "$(Z3_LICENSE)" ; then echo Please set Z3_LICENSE to the location of the license file for Z3 ; false ; fi
 	@# Clean previous packages.
 	! [ -d "$(package_prefix)" ]
 	rm -f $(NAME).zip $(NAME).tar.gz

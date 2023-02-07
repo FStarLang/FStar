@@ -45,6 +45,8 @@ _build/
 /ulib/fs/obj
 /ulib/fs/bin
 
+/release
+
 *.native
 *.byte
 
