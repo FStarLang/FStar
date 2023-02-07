@@ -64,6 +64,13 @@ type bv_view = {
 }
 
 noeq
+type binder_view = {
+  binder_bv : bv;
+  binder_qual : aqualv;
+  binder_attrs : list term
+}
+
+noeq
 type universe_view =
   | Uv_Zero : universe_view
   | Uv_Succ : universe -> universe_view

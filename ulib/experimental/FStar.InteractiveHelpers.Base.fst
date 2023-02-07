@@ -86,7 +86,9 @@ let abv_to_string bv : Tac string =
   term_to_string bvv.bv_sort
 
 let print_binder_info (full : bool) (b : binder) : Tac unit =
-  let bv, (a, _attrs) = inspect_binder b in
+  let bv, (a, _attrs) =
+    let bview = inspect_binder b in
+    bview.binder_bv, (bview.binder_qual, bview.binder_attrs) in
   let a_str = match a with
     | Q_Implicit -> "Implicit"
     | Q_Explicit -> "Explicit"
@@ -517,9 +519,15 @@ and deep_apply_subst_in_bv e bv subst =
  * AR: TODO: should apply subst in attrs?
  *)
 and deep_apply_subst_in_binder e br subst =
-  let bv, (qual, attrs) = inspect_binder br in
+  let bv, (qual, attrs) =
+    let bview = inspect_binder br in
+    bview.binder_bv, (bview.binder_qual, bview.binder_attrs) in
   let bv, subst = deep_apply_subst_in_bv e bv subst in
-  pack_binder bv qual attrs, subst 
+  pack_binder {
+    binder_bv=bv;
+    binder_qual=qual;
+    binder_attrs=attrs
+  }, subst 
 
 and deep_apply_subst_in_comp e c subst =
   let subst = (fun x -> deep_apply_subst e x subst) in
@@ -604,7 +612,7 @@ let rec _generate_shadowed_subst (ge:genv) (t:term) (bvl : list bv) :
     match inspect t with
     | Tv_Abs b _ ->
       (* Introduce the new binder *)
-      let bv, _ = inspect_binder b in
+      let bv = (inspect_binder b).binder_bv in
       let bvv = inspect_bv bv in
       let ty = bvv.bv_sort in
       let name = bv_ppname bv in

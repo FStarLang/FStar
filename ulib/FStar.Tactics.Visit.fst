@@ -30,10 +30,9 @@ let on_sort_bv (f : term -> Tac term) (xbv:bv) : Tac bv =
   bv
 
 let on_sort_binder (f : term -> Tac term) (b:binder) : Tac binder =
-  let bv, (q, attrs) = inspect_binder b in
-  let bv = on_sort_bv f bv in
-  let b = pack_binder bv q attrs in
-  b
+  let bview = inspect_binder b in
+  let bv = on_sort_bv f bview.binder_bv in
+  pack_binder {bview with binder_bv=bv}
 
 let rec visit_tm (ff : term -> Tac term) (t : term) : Tac term =
   let tv = inspect_ln t in

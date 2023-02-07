@@ -13,8 +13,8 @@ let bv_to_string (bv : bv) : Tac string =
     "(" ^ bv_ppname bv ^ ":" ^ term_to_string bvv.bv_sort ^ ")"
 
 let binder_to_string (b:binder) : Tac string =
-  let bv, _ = inspect_binder b in
-  bv_ppname bv  // TODO: print aqual, attributes
+  let bview = inspect_binder b in
+  bv_ppname bview.binder_bv  // TODO: print aqual, attributes
 
 (* TODO: making this a local definition in print_list fails to extract. *)
 private

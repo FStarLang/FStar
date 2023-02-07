@@ -653,7 +653,7 @@ let on_sort_bv (f : term -> Tac unit) (xbv:bv) : Tac unit =
   f (inspect_bv xbv).bv_sort
 
 let on_sort_binder (f : term -> Tac unit) (b:binder) : Tac unit =
-  let (bv, q) = inspect_binder b in
+  let bv = (inspect_binder b).binder_bv in
   on_sort_bv f bv
 
 let rec visit_tm (ff : term -> Tac unit) (t : term) : Tac unit =
@@ -931,8 +931,7 @@ let rec try_unifying_remaining (l:list atom) (u:term) (am:amap term) : Tac unit 
 
 /// Is SMT rewriting enabled for this binder
 let is_smt_binder (b:binder) : Tac bool =
-  let (bv, aqual) = inspect_binder b in
-  let l = snd aqual in
+  let l = (inspect_binder b).binder_attrs in
   not (List.Tot.isEmpty (filter (fun t -> is_fvar t (`%smt_fallback)) l))
 
 /// Creates a new term, where all arguments where SMT rewriting is enabled have been replaced
@@ -1855,7 +1854,7 @@ let set_abduction_variable () : Tac unit =
   let g = cur_goal () in
   match inspect_unascribe g with
   | Tv_Arrow b _ ->
-    let (bv, _) = inspect_binder b in
+    let bv = (inspect_binder b).binder_bv in
     let bv = inspect_bv bv in
     let pr = bv.bv_sort in
     exact (set_abduction_variable_term pr)
@@ -1945,7 +1944,11 @@ let canon_l_r (use_smt:bool)
   //fold over names and quantify over them
 
   let aux_goal = fold_right (fun (_, bv) t ->
-    let b = pack_binder bv Q_Explicit [] in
+    let b = pack_binder {
+      binder_bv=bv;
+      binder_qual=Q_Explicit;
+      binder_attrs=[]
+    } in
     let t = close_term b t in
     let t = pack_ln (Tv_Abs b t) in
     mk_app (pack (Tv_FVar (pack_fv forall_qn))) [t, Q_Explicit]) am_bv imp in
@@ -1973,7 +1976,7 @@ let canon_l_r (use_smt:bool)
 
     let am = fold_left (fun am (a, _) ->
       let b = forall_intro () in
-      let bv, _ = inspect_binder b in
+      let bv = (inspect_binder b).binder_bv in
       (a, pack (Tv_Var bv))::am) [] am_bv, snd am in
 
     //Introduce the lhs of implication
