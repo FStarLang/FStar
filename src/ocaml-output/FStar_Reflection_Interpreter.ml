@@ -474,10 +474,9 @@ let (reflection_primops : FStar_TypeChecker_Cfg.primitive_step Prims.list) =
                                   e_binder e_binder_view in
                               let uu___29 =
                                 let uu___30 =
-                                  let uu___31 = e_list e_term in
-                                  mk3 "pack_binder"
-                                    FStar_Reflection_Basic.pack_binder e_bv
-                                    e_aqualv uu___31 e_binder in
+                                  mk1 "pack_binder"
+                                    FStar_Reflection_Basic.pack_binder
+                                    e_binder_view e_binder in
                                 let uu___31 =
                                   let uu___32 =
                                     let uu___33 = e_option e_vconfig in
