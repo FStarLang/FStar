@@ -4,3 +4,8 @@ RemoveUnusedTypars_A.fs
 RemoveUnusedTypars_B.fs
 RemoveUnusedTyparsIFace_A.fs
 RemoveUnusedTyparsIFace_B.fs
+
+*.iverify
+*.verify
+*.not-verify
+*.extract

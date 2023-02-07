@@ -30,12 +30,10 @@ open FStar.Const
 module Errors     = FStar.Errors
 module U          = FStar.Compiler.Util
 module A          = FStar.Parser.AST
-module Resugar    = FStar.Syntax.Resugar
-module ToDocument = FStar.Parser.ToDocument
-module Pp         = FStar.Pprint
 module Unionfind  = FStar.Syntax.Unionfind
 module C          = FStar.Parser.Const
 module SU         = FStar.Syntax.Util
+module Pretty     = FStar.Syntax.Print.Pretty
 
 let rec delta_depth_to_string = function
     | Delta_constant_at_level i   -> "Delta_constant_at_level " ^ string_of_int i
@@ -63,58 +61,6 @@ let nm_to_string bv =
 
 let db_to_string bv = (string_of_id bv.ppname) ^ "@" ^ string_of_int bv.index
 
-(* CH: This should later be shared with ocaml-codegen.fs and util.fs (is_primop and destruct_typ_as_formula) *)
-let infix_prim_ops = [
-    (C.op_Addition    , "+" );
-    (C.op_Subtraction , "-" );
-    (C.op_Multiply    , "*" );
-    (C.op_Division    , "/" );
-    (C.op_Eq          , "=" );
-    (C.op_ColonEq     , ":=");
-    (C.op_notEq       , "<>");
-    (C.op_And         , "&&");
-    (C.op_Or          , "||");
-    (C.op_LTE         , "<=");
-    (C.op_GTE         , ">=");
-    (C.op_LT          , "<" );
-    (C.op_GT          , ">" );
-    (C.op_Modulus     , "mod");
-    (C.and_lid     , "/\\");
-    (C.or_lid      , "\\/");
-    (C.imp_lid     , "==>");
-    (C.iff_lid     , "<==>");
-    (C.precedes_lid, "<<");
-    (C.eq2_lid     , "==");
-]
-
-let unary_prim_ops = [
-    (C.op_Negation, "not");
-    (C.op_Minus, "-");
-    (C.not_lid, "~")
-]
-
-let is_prim_op ps f = match f.n with
-  | Tm_fvar fv -> ps |> U.for_some (fv_eq_lid fv)
-  | _ -> false
-
-let get_lid f = match f.n with
-  | Tm_fvar fv -> fv.fv_name.v
-  | _ -> failwith "get_lid"
-
-let is_infix_prim_op (e:term) = is_prim_op (fst (List.split infix_prim_ops)) e
-let is_unary_prim_op (e:term) = is_prim_op (fst (List.split unary_prim_ops)) e
-
-let quants = [
-  (C.forall_lid, "forall");
-  (C.exists_lid, "exists")
-]
-type exp = term
-
-let is_b2t (t:typ)   = is_prim_op [C.b2t_lid] t
-let is_quant (t:typ) = is_prim_op (fst (List.split quants)) t
-let is_ite (t:typ)   = is_prim_op [C.ite_lid] t
-
-let is_inr = function Inl _ -> false | Inr _ -> true
 let filter_imp aq =
    (* keep typeclass args *)
    match aq with
@@ -127,19 +73,7 @@ let filter_imp_args args =
 let filter_imp_binders bs =
   bs |> List.filter (fun b -> b.binder_qual |> filter_imp)
 
-(* CH: F# List.find has a different type from find in list.fst ... so just a hack for now *)
-let rec find  (f:'a -> bool) (l:list 'a) : 'a = match l with
-  | [] -> failwith "blah"
-  | hd::tl -> if f hd then hd else find f tl
-
-let find_lid (x:lident) xs : string =
-  snd (find (fun p -> lid_equals x (fst p)) xs)
-
-let infix_prim_op_to_string e = find_lid (get_lid e)      infix_prim_ops
-let unary_prim_op_to_string e = find_lid (get_lid e)      unary_prim_ops
-let quant_to_string t = find_lid (get_lid t) quants
-
-let const_to_string x = C.const_to_string x
+let const_to_string = C.const_to_string
 
 let lbname_to_string = function
   | Inl l -> bv_to_string l
@@ -162,9 +96,7 @@ let rec univ_to_string u =
 Errors.with_ctx "While printing universe" (fun () ->
   // VD: commented out for testing NBE
   // if not (Options.ugly()) then
-  //   let e = Resugar.resugar_universe u Range.dummyRange in
-  //   let d = ToDocument.term_to_document e in
-  //   Pp.pretty_string (float_of_string "1.0") 100 d
+  //   Pretty.univ_to_string u
   // else
   match Subst.compress_univ u with
     | U_unif u -> "U_unif "^univ_uvar_to_string u
@@ -252,9 +184,7 @@ let rec tag_of_term (t:term) = match t.n with
 
 and term_to_string x =
   if not (Options.ugly()) then
-    let e = Errors.with_ctx "While resugaring a term" (fun () -> Resugar.resugar_term x) in
-    let d = ToDocument.term_to_document e in
-    Pp.pretty_string (float_of_string "1.0") 100 d
+    Pretty.term_to_string x
   else begin
     Errors.with_ctx "While ugly-printing a term" (fun () ->
       let x = Subst.compress x in
@@ -418,9 +348,7 @@ and subst_to_string s = s |> List.map subst_elt_to_string |> String.concat "; "
 
 and pat_to_string x =
   if not (Options.ugly()) then
-    let e = Resugar.resugar_pat x (new_bv_set ()) in
-    let d = ToDocument.pat_to_document e in
-    Pp.pretty_string (float_of_string "1.0") 100 d
+    Pretty.pat_to_string x
   else match x.v with
     | Pat_cons(l, us_opt, pats) ->
       U.format3 "(%s%s%s)" 
@@ -495,11 +423,7 @@ and aqual_to_string' s = function
   
 and binder_to_string' is_arrow b =
   if not (Options.ugly()) then
-    match Resugar.resugar_binder b Range.dummyRange with
-    | None -> ""
-    | Some e ->
-      let d = ToDocument.binder_to_document e in
-      Pp.pretty_string (float_of_string "1.0") 100 d
+    Pretty.binder_to_string' is_arrow b
   else
     let attrs = attrs_to_string b.binder_attrs in
     if is_null_binder b
@@ -533,9 +457,7 @@ and args_to_string args =
 
 and comp_to_string c =
   if not (Options.ugly()) then
-    let e = Errors.with_ctx "While resugaring a computation" (fun () -> Resugar.resugar_comp c) in
-    let d = ToDocument.term_to_document e in
-    Pp.pretty_string (float_of_string "1.0") 100 d
+    Pretty.comp_to_string c
   else
     Errors.with_ctx "While ugly-printing a computation" (fun () ->
     match c.n with
@@ -632,16 +554,12 @@ let bqual_to_string bq = bqual_to_string' "" bq
 let comp_to_string' env c =
   if Options.ugly ()
   then comp_to_string c
-  else let e = Resugar.resugar_comp' env c in
-       let d = ToDocument.term_to_document e in
-       Pp.pretty_string (float_of_string "1.0") 100 d
+  else Pretty.comp_to_string' env c
 
 let term_to_string' env x =
   if Options.ugly ()
   then term_to_string x
-  else let e = Resugar.resugar_term' env x in
-       let d = ToDocument.term_to_document e in
-       Pp.pretty_string (float_of_string "1.0") 100 d
+  else Pretty.term_to_string' env x
 
 let binder_to_json env b =
     let n = JsonStr (bqual_to_string' (nm_to_string b.binder_bv) b.binder_qual) in
@@ -669,9 +587,7 @@ let enclose_universes s =
 
 let tscheme_to_string s =
   if not (Options.ugly()) then
-    let d = Resugar.resugar_tscheme s in
-    let d = ToDocument.decl_to_document d in
-    Pp.pretty_string (float_of_string "1.0") 100 d
+    Pretty.tscheme_to_string s
   else
     let (us, t) = s in
     U.format2 "%s%s" (enclose_universes <| univ_names_to_string us) (term_to_string t)
@@ -720,24 +636,10 @@ let indexed_effect_binder_kind_to_string = function
   | Repr_binder -> "repr_binder"
   | Ad_hoc_binder -> "ad_hoc_binder"
 
-let list_to_string f elts =
-    match elts with
-        | [] -> "[]"
-        | x::xs ->
-            let strb = U.new_string_builder () in
-            U.string_builder_append strb "[" ;
-            U.string_builder_append strb (f x) ;
-            List.iter (fun x ->
-                       U.string_builder_append strb "; " ;
-                       U.string_builder_append strb (f x)
-                       ) xs ;
-            U.string_builder_append strb "]" ;
-            U.string_of_string_builder strb
-
 let indexed_effect_combinator_kind_to_string = function
   | Substitutive_combinator l ->
     U.format1 "standard_combinator (%s)"
-      (list_to_string indexed_effect_binder_kind_to_string l)
+      (Common.string_of_list' indexed_effect_binder_kind_to_string l)
   | Substitutive_invariant_combinator -> "substitutive_invariant"
   | Ad_hoc_combinator -> "ad_hoc_combinator"
 
@@ -776,9 +678,7 @@ let eff_combinators_to_string = function
 
 let eff_decl_to_string' for_free r q ed =
  if not (Options.ugly()) then
-    let d = Resugar.resugar_eff_decl r q ed in
-    let d = ToDocument.decl_to_document d in
-    Pp.pretty_string (float_of_string "1.0") 100 d
+    Pretty.eff_decl_to_string' for_free r q ed
  else
     let actions_to_string actions =
         actions |>
@@ -822,13 +722,7 @@ let pragma_to_string (p:pragma) : string =
 
 let rec sigelt_to_string (x: sigelt) =
  // if not (Options.ugly()) then
- //    let e = Resugar.resugar_sigelt x in
- //    begin match e with
- //    | Some d ->
- //      let d = ToDocument.decl_to_document d in
- //      Pp.pretty_string (float_of_string "1.0") 100 d
- //    | _ -> ""
- //    end
+ //    Pretty.sigelt_to_string x
  // else
    let basic =
       match x.sigel with
@@ -996,22 +890,6 @@ let modul_to_string (m:modul) =
 //          U.string_builder_append strb (Ident.string_of_lid lid)
 //  end ;
 //  U.string_of_string_builder strb
-
-let set_to_string f s =
-    let elts = U.set_elements s in
-    match elts with
-        | [] -> "{}"
-        | x::xs ->
-            let strb = U.new_string_builder () in
-            U.string_builder_append strb "{" ;
-            U.string_builder_append strb (f x) ;
-            List.iter (fun x ->
-                       U.string_builder_append strb ", " ;
-                       U.string_builder_append strb (f x)
-                       ) xs ;
-            U.string_builder_append strb "}" ;
-            (* U.string_builder_append strb (list_to_string f (raw_list s)) ; *)
-            U.string_of_string_builder strb
 
 let bvs_to_string sep bvs = binders_to_string sep (List.map mk_binder bvs)
 

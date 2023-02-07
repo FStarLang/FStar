@@ -546,7 +546,7 @@ let (implicits_to_string : implicits -> Prims.string) =
     let imp_to_string i =
       FStar_Syntax_Print.uvar_to_string
         (i.imp_uvar).FStar_Syntax_Syntax.ctx_uvar_head in
-    FStar_Common.string_of_list imp_to_string imps
+    (FStar_Common.string_of_list ()) imp_to_string imps
 type guard_t =
   {
   guard_f: guard_formula ;
