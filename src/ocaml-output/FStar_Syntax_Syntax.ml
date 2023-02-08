@@ -1657,14 +1657,7 @@ let withsort : 'a . 'a -> 'a withinfo_t =
   fun v -> withinfo v FStar_Compiler_Range.dummyRange
 let (bv_eq : bv -> bv -> Prims.bool) =
   fun bv1 -> fun bv2 -> bv1.index = bv2.index
-let (order_bv : bv -> bv -> Prims.int) =
-  fun x ->
-    fun y ->
-      let i =
-        let uu___ = FStar_Ident.string_of_id x.ppname in
-        let uu___1 = FStar_Ident.string_of_id y.ppname in
-        FStar_String.compare uu___ uu___1 in
-      if i = Prims.int_zero then x.index - y.index else i
+let (order_bv : bv -> bv -> Prims.int) = fun x -> fun y -> x.index - y.index
 let (order_ident : FStar_Ident.ident -> FStar_Ident.ident -> Prims.int) =
   fun x ->
     fun y ->
