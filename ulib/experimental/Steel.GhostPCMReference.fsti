@@ -123,7 +123,7 @@ val gather (#o:inames)
 // API for witness/recall of monotonic facts
 ////////////////////////////////////////////////////////////////////////////////
 val witnessed (#a:Type u#1) (#p:pcm a) (r:ref a p) (fact:property a)
-  : prop
+  : Type0
   
 /// If property [fact] is stable with respect to the governing PCM,
 /// and if it is currently valid for any value that is compatible with
@@ -133,13 +133,12 @@ val witness (#o:inames)
             (#pcm:pcm a)
             (r:ref a pcm)
             (fact:Steel.Preorder.stable_property pcm)
-            (v:a)
+            (v:erased a)
             (_:squash (Steel.Preorder.fact_valid_compat fact v))
-  : SteelGhost unit o
+  : SteelAtomicUT (witnessed r fact) o
       (pts_to r v)
       (fun _ -> pts_to r v)
-      (requires fun _ -> True)
-      (ensures fun _ _ _ -> witnessed r fact)
+
 
 /// If we previously witnessed the validity of a predicate [fact],
 /// then we can recall this validity on the current value [v1], which
@@ -150,8 +149,9 @@ val recall (#o: _)
            (fact:property a)
            (r:ref a pcm)
            (v:erased a)
-  : SteelGhost a o
+           (w:witnessed r fact)
+  : SteelAtomicU (erased a) o
           (pts_to r v)
           (fun v1 -> pts_to r v)
-          (requires fun _ -> witnessed r fact)
+          (requires fun _ -> True)
           (ensures fun _ v1 _ -> fact v1 /\ compatible pcm v v1)

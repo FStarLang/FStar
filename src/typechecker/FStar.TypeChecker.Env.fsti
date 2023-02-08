@@ -469,6 +469,13 @@ val too_early_in_prims : env -> bool
 
 val def_check_closed_in       : Range.range -> msg:string -> scope:list bv -> term -> unit
 val def_check_closed_in_env   : Range.range -> msg:string -> env -> term -> unit
+
+val def_check_comp_closed_in     : Range.range -> msg:string -> scope:list bv -> comp -> unit
+val def_check_comp_closed_in_env : Range.range -> msg:string -> env -> comp -> unit
+
+val def_check_lcomp_closed_in     : Range.range -> msg:string -> scope:list bv -> lcomp -> unit
+val def_check_lcomp_closed_in_env : Range.range -> msg:string -> env -> lcomp -> unit
+
 val def_check_guard_wf        : Range.range -> msg:string -> env -> guard_t -> unit
 val close_forall              : env -> binders -> term -> term
 

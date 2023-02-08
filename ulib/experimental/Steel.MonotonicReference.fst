@@ -83,15 +83,10 @@ let witness (#inames: _)
            (#a:Type)
            (#q:perm)
            (#p:Preorder.preorder a)
-           (r:ref a p)
+           (r:erased (ref a p))
            (fact:stable_property p)
            (v:erased a)
            (_:squash (fact v))
-  : SteelGhost unit inames
-               (pts_to r q v)
-               (fun _ -> pts_to r q v)
-               (requires fun _ -> True)
-               (ensures fun _ _ _ -> witnessed r fact)
   = MHR.witness r (lift_property fact) (hide (U.raise_val (reveal v))) ()
 
 /// If we previously witnessed the validity of [fact], we can recall its validity
@@ -100,13 +95,10 @@ let recall (#inames: _)
            (#q:perm)
            (#p:Preorder.preorder a)
            (fact:property a)
-           (r:ref a p)
+           (r:erased (ref a p))
            (v:erased a)
-  : SteelGhost unit inames (pts_to r q v)
-               (fun _ -> pts_to r q v)
-               (requires fun _ -> witnessed r fact)
-               (ensures fun _ _ _ -> fact v)
-  = MHR.recall (lift_property fact) r (hide (U.raise_val (reveal v)))
+           (w:witnessed r fact)
+  = MHR.recall (lift_property fact) r (hide (U.raise_val (reveal v))) w
 
 /// Monotonic references are also equipped with the usual fractional permission discipline
 /// So, you can split a reference into two read-only shares

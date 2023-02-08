@@ -15,7 +15,7 @@
 *)
 
 module FStar.MSTTotal
-
+module W = FStar.Witnessed.Core
 module P = FStar.Preorder
 
 open FStar.Monotonic.Pure
@@ -127,21 +127,21 @@ let put (#state:Type u#2) (#rel:P.preorder state) (s:state)
     =
   MSTATETOT?.reflect (fun _ -> (), s)
 
-type s_predicate (state:Type u#2) = state -> Type0
+assume
+val witness (state:Type u#2)
+            (rel:P.preorder state)
+            (p:W.s_predicate state)
+    : MSTATETOT (W.witnessed state rel p) state rel
+      (fun s0 -> p s0 /\ W.stable state rel p)
+      (fun s0 _ s1 -> s0 == s1)
 
-let stable (state:Type u#2) (rel:P.preorder state) (p:s_predicate state) =
-  forall s0 s1. (p s0 /\ rel s0 s1) ==> p s1
-
-assume val witnessed (state:Type u#2) (rel:P.preorder state) (p:s_predicate state) : prop
-
-assume val witness (state:Type u#2) (rel:P.preorder state) (p:s_predicate state)
+assume
+val recall (state:Type u#2)
+           (rel:P.preorder state)
+           (p:W.s_predicate state)
+           (w:W.witnessed state rel p)
     : MSTATETOT unit state rel
-      (fun s0 -> p s0 /\ stable state rel p)
-      (fun s0 _ s1 -> s0 == s1 /\ witnessed state rel p)
-
-assume val recall (state:Type u#2) (rel:P.preorder state) (p:s_predicate state)
-    : MSTATETOT unit state rel
-      (fun _ -> witnessed state rel p)
+      (fun _ -> True)
       (fun s0 _ s1 -> s0 == s1 /\ p s1)
 
 

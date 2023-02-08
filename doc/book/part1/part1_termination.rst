@@ -82,6 +82,9 @@ if any of the following are true:
       result of applying a sub-term of ``v2`` to some argument ``x``.
 
 
+.. _Part1_why_length_terminates:
+
+
 Why ``length`` terminates
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -240,6 +243,8 @@ correct—so, you'll have to write it explicitly, as shown below.
    :language: fstar
    :start-after: SNIPPET_START: ackermann_flip
    :end-before: SNIPPET_END: ackermann_flip
+
+.. _Part1_mutual_recursion:
 
 Mutual recursion
 ^^^^^^^^^^^^^^^^

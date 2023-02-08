@@ -5075,7 +5075,8 @@ let (tc_layered_eff_decl :
                                                                     FStar_Pervasives_Native.Some
                                                                     uu___24) in
                                                                     FStar_TypeChecker_Env.new_implicit_var_aux
-                                                                    "" r env1
+                                                                    "tc_layered_effect_decl.g_precondition"
+                                                                    r env1
                                                                     uu___22
                                                                     FStar_Syntax_Syntax.Strict
                                                                     uu___23 in

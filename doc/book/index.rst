@@ -38,10 +38,8 @@ development of F* over the past decade. Many parts of this book too
 are based on research papers, libraries, code samples, and language
 features co-authored with several other people. However, the
 presentation here, including especially any errors or oversights, are
-due to the authors. So far, Guido Martínez is the author of the part
-on Metaprogramming, while Nikhil Swamy is the author of the rest. That
-said, contributions are most welcome and we hope this book will soon
-include chapters authored by others.
+due to the authors. That said, contributions are most welcome and we
+hope this book will soon include chapters authored by others.
 
 
    

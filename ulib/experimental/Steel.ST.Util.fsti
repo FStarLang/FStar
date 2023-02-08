@@ -203,7 +203,7 @@ val exists_cong (#a:_)
 /// Creation of a new invariant associated to vprop [p].
 /// After execution of this function, [p] is consumed and not available in the context anymore
 val new_invariant (#opened_invariants:inames) (p:vprop)
-  : STGhostT (inv p) opened_invariants p (fun _ -> emp)
+  : STAtomicUT (inv p) opened_invariants p (fun _ -> emp)
 
 /// Atomically executing function [f] which relies on the predicate [p] stored in invariant [i]
 /// as long as it maintains the validity of [p]
@@ -213,12 +213,13 @@ val with_invariant (#a:Type)
                    (#fp:vprop)
                    (#fp':a -> vprop)
                    (#opened_invariants:inames)
+                   (#obs:observability)
                    (#p:vprop)
                    (i:inv p{not (mem_inv opened_invariants i)})
-                   ($f:unit -> STAtomicT a (add_inv opened_invariants i)
-                                          (p `star` fp)
-                                          (fun x -> p `star` fp' x))
-  : STAtomicT a opened_invariants fp fp'
+                   ($f:unit -> STAtomicBaseT a (add_inv opened_invariants i) obs
+                                            (p `star` fp)
+                                            (fun x -> p `star` fp' x))
+  : STAtomicBaseT a opened_invariants obs fp fp'
 
 /// Variant of the above combinator for ghost computations
 val with_invariant_g (#a:Type)
@@ -230,7 +231,7 @@ val with_invariant_g (#a:Type)
                      ($f:unit -> STGhostT a (add_inv opened_invariants i)
                                          (p `star` fp)
                                          (fun x -> p `star` fp' x))
-  : STGhostT a opened_invariants fp fp'
+  : STAtomicUT (erased a) opened_invariants fp (fun x -> fp' x)
 
 /// Parallel composition of two STT functions
 [@@noextract_to "Plugin"]
