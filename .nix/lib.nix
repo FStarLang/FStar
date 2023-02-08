@@ -66,9 +66,13 @@ let
                        remove-references-to -t '${ocamlPackages.ocaml}' $out/bin/$1
                        wrapProgram "$out/bin/$1" --prefix PATH ":" "$Z3_PATH/bin"
                      }
+          # Here we do the equivalent of `dune install` by hand
+          # because of copyBin above.
           mkdir -p $out/{bin,lib}
           copyBin fstar.exe
           copyBin fstar_tests.exe
+          cp -p -r lib/fstar $out/lib/fstar
+          # Install the rest of F* (ulib, examples, tutorial, etc.)
           MAKE_FLAGS="-j$NIX_BUILD_CORES"
           make $MAKE_FLAGS -C src/ocaml-output install-sides PREFIX=$out
           # We need to provide fstar.lib to the OCaml library site
