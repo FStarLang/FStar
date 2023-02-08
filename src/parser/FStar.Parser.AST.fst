@@ -140,6 +140,7 @@ and arg_qualifier =
     | Implicit
     | Equality
     | Meta of term
+    | TypeClassArg
 and aqual = option arg_qualifier
 and imp =
     | FsTypApp
@@ -854,22 +855,30 @@ and calc_step_to_string (CalcStep (rel, just, next)) =
     Util.format3 "%s{ %s } %s" (term_to_string rel) (term_to_string just) (term_to_string next)
 
 and binder_to_string x =
-  let s = match x.b with
-  | Variable i -> (string_of_id i)
-  | TVariable i -> Util.format1 "%s:_" ((string_of_id i))
-  | TAnnotated(i,t)
-  | Annotated(i,t) -> Util.format2 "%s:%s" ((string_of_id i)) (t |> term_to_string)
-  | NoName t -> t |> term_to_string in
-  Util.format3 "%s%s%s"
-    (aqual_to_string x.aqual)
-    (attr_list_to_string x.battributes)
-    s
+  let pr x =
+    let s = match x.b with
+    | Variable i -> (string_of_id i)
+    | TVariable i -> Util.format1 "%s:_" ((string_of_id i))
+    | TAnnotated(i,t)
+    | Annotated(i,t) -> Util.format2 "%s:%s" ((string_of_id i)) (t |> term_to_string)
+    | NoName t -> t |> term_to_string in
+    Util.format3 "%s%s%s"
+      (aqual_to_string x.aqual)
+      (attr_list_to_string x.battributes)
+      s
+  in
+  (* Handle typeclass qualifier here *)
+  match x.aqual with
+  | Some TypeClassArg -> "{| " ^ pr x ^ " |}"
+  | _ -> pr x
 
 and aqual_to_string = function
   | Some Equality -> "$"
   | Some Implicit -> "#"
-  | Some (Meta t) -> "#[" ^ term_to_string t ^ "]"
   | None -> ""
+  | Some (Meta _)
+  | Some TypeClassArg ->
+    failwith "aqual_to_strings: meta arg qualifier?"
 
 and attr_list_to_string = function
   | [] -> ""

@@ -971,6 +971,9 @@ and p_aqual = function
       | _ -> mk_term (App (t, unit_const t.range, Nothing)) t.range Expr
     in
     str "#[" ^^ p_term false false t ^^ str "]" ^^ break1
+  | TypeClassArg ->
+    (* fake it for now *)
+    str "#[tcresolve()]"
 
 (* ****************************************************************************)
 (*                                                                            *)

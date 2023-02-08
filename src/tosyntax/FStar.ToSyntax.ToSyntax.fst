@@ -2603,6 +2603,9 @@ and trans_bqual env = function
   | Some AST.Equality -> Some S.Equality
   | Some (AST.Meta t) ->
     Some (S.Meta (desugar_term env t))
+  | Some (AST.TypeClassArg) ->
+    let tcresolve = desugar_term env (mk_term (Var C.tcresolve_lid) Range.dummyRange Expr) in
+    Some (S.Meta tcresolve)
   | None -> None
 
 let typars_of_binders env bs : _ * binders =
