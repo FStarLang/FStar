@@ -68,9 +68,9 @@ let
                      }
           mkdir -p $out/{bin,lib}
           copyBin fstar.exe
-          cp -p -r lib/fstar $out/lib/fstar
+          copyBin fstar_tests.exe
           MAKE_FLAGS="-j$NIX_BUILD_CORES"
-          make $MAKE_FLAGS -C ulib install PREFIX=$out
+          make $MAKE_FLAGS -C src/ocaml-output install-sides PREFIX=$out
           # We need to provide fstar.lib to the OCaml library site
           # so that it can be seen by OCAMLPATH
           # However, it is easier to just do a symlink from the F* library

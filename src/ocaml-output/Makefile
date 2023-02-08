@@ -155,13 +155,22 @@ fstar-version-ml-install: $(FStar_Version_ml)
 install_dir = cd ../../$(1) && find . -type f -exec $(INSTALL_EXEC) -m 644 -D {} $(PREFIX)/$(2)/{} \;
 
 # Install FStar into $(PREFIX) using the standard Unix directory
-# structure.  NOTE: this rule works with the
-# opam package, but it has not been tested in any other settings.
+# structure.
+
 install:
 	@# Rebuild everything
 	+$(MAKE) -C $(FSTAR_HOME)
 	@# Install the binary and the binary library
 	cd $(DUNE_SNAPSHOT) && dune install --prefix=$(PREFIX)
+	@# Then the rest
+	+$(MAKE) install-sides
+
+# The `install-sides` rule is intended to be run only by the nix flake.
+# Indeed, nix needs to patch binaries created by OCaml (here fstar.exe),
+# thus nix cannot use `dune install`
+
+.PHONY: install-sides
+install-sides:
 	@# Then the standard library sources and checked files
 	+$(MAKE) -C $(FSTAR_HOME)/ulib install
 	@# Then the examples (those now work from any F* installation flavor, sources, binary package or opam)
