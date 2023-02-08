@@ -87,9 +87,9 @@ type core_ref : Type u#0 =
   | Null
   | Addr of addr
 
-let null (#a:Type u#a) (#pcm:pcm a) : ref a pcm = Null
+let core_ref_null = Null
 
-let is_null (#a:Type u#a) (#pcm:pcm a) (r:ref a pcm) : (b:bool{b <==> r == null}) = Null? r
+let core_ref_is_null (r:core_ref) = Null? r
 
 let disjoint (m0 m1:heap u#h)
   : prop

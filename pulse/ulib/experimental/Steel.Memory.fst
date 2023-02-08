@@ -94,10 +94,8 @@ let slprop_extensionality p q =
 let reveal_equiv p1 p2 = ()
 
 let core_ref = H.core_ref
-
-let null = H.null
-
-let is_null = H.is_null
+let core_ref_null = H.core_ref_null
+let core_ref_is_null r = H.core_ref_is_null r
 
 let emp : slprop u#a = H.emp
 let pure = H.pure

@@ -116,11 +116,17 @@ let ref (a:Type u#a) (pcm:pcm a) : Type u#0 = core_ref
 
 (** [null] is a specific reference, that is not associated to any value
 *)
-val null (#a:Type u#a) (#pcm:pcm a) : ref a pcm
+val core_ref_null : core_ref
+
+(** [null] is a specific reference, that is not associated to any value
+*)
+let null (#a:Type u#a) (#pcm:pcm a) : ref a pcm = core_ref_null
+
+val core_ref_is_null (r:core_ref) : b:bool { b <==> r == core_ref_null }
 
 (** Checking whether [r] is the null pointer is decidable through [is_null]
 *)
-val is_null (#a:Type u#a) (#pcm:pcm a) (r:ref a pcm) : (b:bool{b <==> r == null})
+let is_null (#a:Type u#a) (#pcm:pcm a) (r:ref a pcm) : (b:bool{b <==> r == null}) = core_ref_is_null r
 
 (** All the standard connectives of separation logic, based on [Steel.Heap] *)
 val emp : slprop u#a
