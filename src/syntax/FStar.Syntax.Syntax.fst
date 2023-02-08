@@ -48,11 +48,7 @@ let withsort v = withinfo v dummyRange
 
 let bv_eq (bv1:bv) (bv2:bv) = bv1.index=bv2.index
 
-let order_bv x y =
-  let i = String.compare (string_of_id x.ppname) (string_of_id y.ppname) in
-  if i = 0
-  then x.index - y.index
-  else i
+let order_bv x y = x.index - y.index
 
 let order_ident x y = String.compare (string_of_id x) (string_of_id y)
 let order_fv x y = String.compare (string_of_lid x) (string_of_lid y)
