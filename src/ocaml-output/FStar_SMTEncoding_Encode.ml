@@ -4760,14 +4760,14 @@ and (encode_sigelt' :
                else
                  (let uu___4 = FStar_Ident.range_of_lid t in
                   FStar_SMTEncoding_Term.constructor_to_decl uu___4 c) in
-             let inversion_axioms tapp vars =
+             let inversion_axioms env1 tapp vars =
                let uu___3 =
                  FStar_Compiler_Effect.op_Bar_Greater datas
                    (FStar_Compiler_Util.for_some
                       (fun l ->
                          let uu___4 =
                            FStar_TypeChecker_Env.try_lookup_lid
-                             env.FStar_SMTEncoding_Env.tcenv l in
+                             env1.FStar_SMTEncoding_Env.tcenv l in
                          FStar_Compiler_Effect.op_Bar_Greater uu___4
                            FStar_Compiler_Option.isNone)) in
                if uu___3
@@ -4775,7 +4775,7 @@ and (encode_sigelt' :
                else
                  (let uu___5 =
                     FStar_SMTEncoding_Env.fresh_fvar
-                      env.FStar_SMTEncoding_Env.current_module_name "x"
+                      env1.FStar_SMTEncoding_Env.current_module_name "x"
                       FStar_SMTEncoding_Term.Term_sort in
                   match uu___5 with
                   | (xxsym, xx) ->
@@ -4788,7 +4788,7 @@ and (encode_sigelt' :
                                   | (out, decls) ->
                                       let uu___8 =
                                         FStar_TypeChecker_Env.lookup_datacon
-                                          env.FStar_SMTEncoding_Env.tcenv l in
+                                          env1.FStar_SMTEncoding_Env.tcenv l in
                                       (match uu___8 with
                                        | (uu___9, data_t) ->
                                            let uu___10 =
@@ -4804,11 +4804,11 @@ and (encode_sigelt' :
                                                   FStar_Compiler_Effect.op_Bar_Greater
                                                     uu___11
                                                     FStar_Pervasives_Native.snd in
-                                                let env1 =
+                                                let env2 =
                                                   FStar_Compiler_Effect.op_Bar_Greater
                                                     args
                                                     (FStar_Compiler_List.fold_left
-                                                       (fun env2 ->
+                                                       (fun env3 ->
                                                           fun uu___11 ->
                                                             match uu___11
                                                             with
@@ -4832,12 +4832,12 @@ and (encode_sigelt' :
                                                                   FStar_SMTEncoding_Util.mkApp
                                                                     uu___15 in
                                                                 FStar_SMTEncoding_Env.push_term_var
-                                                                  env2 x
+                                                                  env3 x
                                                                   uu___14)
-                                                       env) in
+                                                       env1) in
                                                 let uu___11 =
                                                   FStar_SMTEncoding_EncodeTerm.encode_args
-                                                    indices env1 in
+                                                    indices env2 in
                                                 (match uu___11 with
                                                  | (indices1, decls') ->
                                                      (if
@@ -4873,7 +4873,7 @@ and (encode_sigelt' :
                                                              let uu___16 =
                                                                let uu___17 =
                                                                  FStar_SMTEncoding_Env.mk_data_tester
-                                                                   env1 l xx in
+                                                                   env2 l xx in
                                                                let uu___18 =
                                                                  FStar_Compiler_Effect.op_Bar_Greater
                                                                    eqs
@@ -4893,7 +4893,7 @@ and (encode_sigelt' :
                        | (data_ax, decls) ->
                            let uu___7 =
                              FStar_SMTEncoding_Env.fresh_fvar
-                               env.FStar_SMTEncoding_Env.current_module_name
+                               env1.FStar_SMTEncoding_Env.current_module_name
                                "f" FStar_SMTEncoding_Term.Fuel_sort in
                            (match uu___7 with
                             | (ffsym, ff) ->
@@ -5146,7 +5146,8 @@ and (encode_sigelt' :
                                       FStar_Compiler_List.op_At decls1 uu___9 in
                                 let aux =
                                   let uu___8 =
-                                    let uu___9 = inversion_axioms tapp vars in
+                                    let uu___9 =
+                                      inversion_axioms env2 tapp vars in
                                     let uu___10 =
                                       let uu___11 =
                                         let uu___12 =

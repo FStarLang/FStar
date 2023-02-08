@@ -1296,7 +1296,7 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
             then let name, args, _, _, _ = c in
                  [Term.DeclFun(name, args |> List.map (fun (_, sort, _) -> sort), Term_sort, None)]
             else constructor_to_decl (Ident.range_of_lid t) c in
-        let inversion_axioms tapp vars =
+        let inversion_axioms env tapp vars =
             if datas |> BU.for_some (fun l -> Env.try_lookup_lid env.tcenv l |> Option.isNone) //Q: Why would this happen?
             then []
             else
@@ -1388,7 +1388,7 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
                    |> mk_decls_trivial) in
         let aux =
             kindingAx
-            @(inversion_axioms tapp vars)
+            @(inversion_axioms env tapp vars)
             @([pretype_axiom (Ident.range_of_lid t) env tapp vars] |> mk_decls_trivial) in
 
         let g = (decls |> mk_decls_trivial)

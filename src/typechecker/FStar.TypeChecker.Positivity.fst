@@ -882,40 +882,10 @@ let ty_strictly_positive_in_datacon_decl (env:env_t)
                             (range_of_lid dlid)
     in
     debug_positivity env (fun () -> "Checking data constructor type: " ^ (Print.term_to_string dt));
-    let raise_unexpected_type () =
-        raise_error (Error_InductiveTypeNotSatisfyPositivityCondition,
-                     BU.format2 "Unexpected type for data constructor %s : %s"
-                                  (Ident.string_of_lid dlid)
-                                  (Print.term_to_string dt))
-                    (Ident.range_of_lid dlid)
-                     
-    in
-    let check_return_type t =
-        let head, args = U.head_and_args t in
-        match (U.un_uinst head).n with 
-        | Tm_fvar fv ->
-          if L.existsML (S.fv_eq_lid fv) mutuals
-          then (
-            // The constructed type must be one of the mutuals
-            // and it should not be of the form t (t ...)
-            if 
-              L.for_all
-                (fun mutual ->
-                  L.for_all (fun (arg, _) -> not (ty_occurs_in mutual arg)) args)
-                mutuals
-            then ()
-            else raise_unexpected_type ()
-          )
-          else (
-            raise_unexpected_type ()
-          )
-        | _ -> 
-          raise_unexpected_type ()
-    in
     let ty_bs, args = U.args_of_binders ty_bs in
     let dt = apply_constr_arrow dlid dt args in
     let fields, return_type = U.arrow_formals dt in
-    check_return_type return_type;
+    check_no_index_occurrences_in_arities env mutuals return_type;
     let check_annotated_binders_are_strictly_positive_in_field f =
         let incorrectly_annotated_binder =
             L.tryFind 

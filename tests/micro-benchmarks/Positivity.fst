@@ -240,6 +240,7 @@ type non_uniform_is_not_sp ([@@@strictly_positive]a:Type) =
   | NUNSP : non_uniform_is_not_sp (a & a) -> non_uniform_is_not_sp a
 
 
+//Accepted by Agda, rejected by Coq
 [@@expect_failure [3]]
 type reject_non_uniform_use =
   | RNUS : non_uniform reject_non_uniform_use -> reject_non_uniform_use
@@ -310,6 +311,7 @@ let opt ([@@@strictly_positive] a:Type) = refine option (fun t -> Some? #t) a
 type i1 (a:Type) : Type -> Type =
   | I1 : i1 a a
 
+//rejected by both Coq and Agda
 [@@expect_failure [3]]
 type i2 =
   | I2 : i1 i2 i2 -> i2
@@ -317,12 +319,18 @@ type i2 =
 type foo (a:Type -> Type) : Type =
   | MkFoo : foo a
 
-(* //this crashes F*'s SMT encoding
+//this is accepted by Agda, rejected by Coq
+[@@expect_failure [3]]
 type bar : Type -> Type =
   | MkBar : bar (foo bar)
-*)
 
+let n (a:Type) = x:a{ x == x }
+//Accepted by Agda and Coq
+type nn = 
+ | MkNN : n nn -> nn
+ 
 let m (a:Type) = o:option a { Some? o }
+//Accepted by Agda, rejected by Coq
 type mm =
   | MkMM: m mm -> mm
 
