@@ -2087,7 +2087,14 @@ and p_constant = function
           | Int32 -> str "l"
           | Int64 -> str "L"
       in
-      let ending = default_or_map empty (fun (s, w) -> signedness s ^^ width w) sign_width_opt in
+      let suffix (s, w) =
+        (* This handles the Sizet case, which is unsigned but
+         * does not have a "u" suffix. *)
+        match (s, w) with
+        | _, Sizet -> str "sz"
+        | _ -> signedness s ^^ width w
+      in
+      let ending = default_or_map empty suffix sign_width_opt in
       str repr ^^ ending
   | Const_range_of -> str "range_of"
   | Const_set_range_of -> str "set_range_of"
