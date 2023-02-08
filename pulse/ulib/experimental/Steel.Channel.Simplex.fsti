@@ -59,22 +59,23 @@ val send (#p:prot) (c:chan p) (#next:prot{more next}) (x:msg_t next)
 val recv (#p:prot) (#next:prot{more next}) (c:chan p)
   : SteelT (msg_t next) (receiver c next) (fun x -> receiver c (step next x))
 
-/// A pure predicate stating that trace [t] contains messages exchanged on channel [c],
+/// A token stating that trace [t] contains messages exchanged on channel [c],
 /// which follows protocol [p]
-val history (#p:prot) (c:chan p) (t:partial_trace_of p) : prop
+val history (#p:prot) (c:chan p) (t:partial_trace_of p) : Type0
 
 /// Extracting the current trace of messages exchanged on channel [cc]
 val trace (#q:prot) (cc:chan q)
-  : Steel (partial_trace_of q) emp (fun _ -> emp)
-          (requires fun _ -> True)
-          (ensures fun _ tr _ -> history cc tr)
+  : SteelT (tr:partial_trace_of q & history cc tr) emp (fun _ -> emp)
+
 
 /// If [previous] is a trace of messages that were previously exchanged on channel [c],
 /// and if the protocol on this channel has since advanced to stage [next], then
 /// we can extend [previous] with the newly exchanged messages
-val extend_trace (#p:prot) (#next:prot) (c:chan p) (previous:partial_trace_of p)
-  : Steel (extension_of previous)
+val extend_trace (#p:prot) (#next:prot) (c:chan p) 
+                 (previous:partial_trace_of p)
+                 (hprevious:history c previous)
+  : Steel (t:extension_of previous & history c t)
           (receiver c next)
           (fun t -> receiver c next)
-          (requires fun _ -> history c previous)
-          (ensures fun _ t _ -> until t == next /\ history c t)
+          (requires fun _ -> True)
+          (ensures fun _ t _ -> until (dfst t) == next)

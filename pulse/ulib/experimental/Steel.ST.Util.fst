@@ -133,21 +133,22 @@ let exists_cong #a #u p q
   = coerce_ghost (fun _ -> SEA.exists_cong #a #u p q)
 
 let new_invariant #u p
-  = coerce_ghost (fun _ -> SEA.new_invariant #u p)
+  = coerce_atomic (fun _ -> SEA.new_invariant #u p)
 
 let with_invariant (#a:Type)
                    (#fp:vprop)
                    (#fp':a -> vprop)
                    (#opened_invariants:inames)
+                   (#obs:observability)
                    (#p:vprop)
                    (i:inv p{not (mem_inv opened_invariants i)})
-                   ($f:unit -> STAtomicT a (add_inv opened_invariants i)
-                                          (p `star` fp)
-                                          (fun x -> p `star` fp' x))
+                   ($f:unit -> STAtomicBaseT a (add_inv opened_invariants i) obs
+                                              (p `star` fp)
+                                              (fun x -> p `star` fp' x))
   = let f (x:unit)
-      : SEA.SteelAtomicT a (add_inv opened_invariants i)
-                           (p `star` fp)
-                           (fun x -> p `star` fp' x) 
+      : SEA.SteelAtomicBaseT a (add_inv opened_invariants i) obs
+                               (p `star` fp)
+                               (fun x -> p `star` fp' x) 
       = f () in
     coerce_atomic (fun _ -> SEA.with_invariant i f)
 
@@ -165,7 +166,7 @@ let with_invariant_g (#a:Type)
                           (p `star` fp)
                           (fun x -> p `star` fp' x) 
       = f () in
-    coerce_ghost (fun _ -> SEA.with_invariant_g i f)
+    coerce_atomic (fun _ -> SEA.with_invariant_g i f)
 
 let par #aL #aR #preL #postL #preR #postR f g =
   let f : unit -> SE.SteelT aL preL postL = fun _ -> f () in
