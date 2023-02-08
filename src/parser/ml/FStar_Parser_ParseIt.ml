@@ -114,9 +114,10 @@ let parse fn =
       create s.frag_text s.frag_fname (Z.to_int s.frag_line) (Z.to_int s.frag_col), "<input>"
   in
 
-  let lexer () =
-    let tok = FStar_Parser_LexFStar.token lexbuf in
-    (tok, lexbuf.start_p, lexbuf.cur_p)
+  let lexer =
+    let lexer = FStar_Parser_LexFStar.make_lexer () in
+    fun () -> let tok = lexer lexbuf in
+              (tok, lexbuf.start_p, lexbuf.cur_p)
   in
 
   try

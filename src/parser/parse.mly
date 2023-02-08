@@ -73,6 +73,13 @@ let none_to_empty_list x =
 */
 %token <string option> SEMICOLON_OP
 
+%token <string> QQ_START
+%token <string> QQ_RAW
+%token <string> QQ_QUOTE
+%token QQ_END
+%token QQ_QUOTE_START
+%token QQ_QUOTE_END
+
 %token FORALL EXISTS ASSUME NEW LOGIC ATTRIBUTES
 %token IRREDUCIBLE UNFOLDABLE INLINE OPAQUE UNFOLD INLINE_FOR_EXTRACTION
 %token NOEXTRACT
@@ -913,6 +920,44 @@ noSeqTerm:
         match xs with
         | [x;y] -> mk_term (ElimAnd(p, q, r, x, y, e)) (rhs2 parseState 1 10) Expr
      }
+  | id=QQ_START chunks=list(qqBody) QQ_END
+    {
+      let entire_range, name_range, body_range
+	= lhs parseState, rhs parseState 1, rhs parseState 2 in
+      (* we prepare some long identifiers (lid) *)
+      let qq_lid = lid_of_ids [mk_ident (id, name_range)] in
+      mkExplicitApp (mk_term (Var qq_lid) entire_range Expr) [
+		      (* Feed the input chunks as the TAC lambda (fun _ -> "chunks").
+		         This allows for arbitrary dynamic quotes inside the quasiquote.
+		       *)
+		      mk_term (Abs ( (* the lambda takes one binder, `_` *)
+				     [mk_pattern (PatWild (None, [])) body_range]
+	                           , (* mkConsList transforms the list of terms
+				     `chunks` into a term representing a list. *)
+				     mkConsList entire_range chunks )
+			      ) body_range Expr
+		      (* last argument is `()` *)
+		    ; mk_term (Const Const_unit) entire_range Expr
+		    ] entire_range
+    }
+
+qqBody:
+  | raw=QQ_RAW
+    {
+      let r = lhs(parseState) in
+      mk_term (Construct(inl_lid, [mk_term (Const (Const_string (raw, r))) r Expr, Nothing])) r Expr
+    }
+  | id=QQ_QUOTE
+    {
+      let r = lhs(parseState) in
+      let t = mk_term (Var (lid_of_ids [mk_ident(id, rhs parseState 1)])) (rhs parseState 1) Expr in
+      mk_term (Construct(inr_lid, [mk_term (Quote (t, Dynamic)) r Expr, Nothing])) r Expr
+    }
+  | QQ_QUOTE_START t=term QQ_QUOTE_END
+    {
+      let r = lhs parseState in
+      mk_term (Construct(inr_lid, [mk_term (Quote (t, Dynamic)) r Expr, Nothing])) r Expr
+    }
 
 singleBinder:
   | bs=binders
