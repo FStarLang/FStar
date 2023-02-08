@@ -42,11 +42,15 @@ let (apply_datacon_arrow :
               uu___2.FStar_Syntax_Syntax.n in
             (uu___1, args) in
           match uu___ with
-          | (uu___1, []) -> t
+          | (uu___1, []) -> FStar_Syntax_Util.canon_arrow t
           | (FStar_Syntax_Syntax.Tm_arrow (b::bs, c), a::args1) ->
               let tail =
-                FStar_Syntax_Syntax.mk (FStar_Syntax_Syntax.Tm_arrow (bs, c))
-                  t.FStar_Syntax_Syntax.pos in
+                match bs with
+                | [] -> FStar_Syntax_Util.comp_result c
+                | uu___1 ->
+                    FStar_Syntax_Syntax.mk
+                      (FStar_Syntax_Syntax.Tm_arrow (bs, c))
+                      t.FStar_Syntax_Syntax.pos in
               let uu___1 = FStar_Syntax_Subst.open_term_1 b tail in
               (match uu___1 with
                | (b1, tail1) ->
@@ -698,9 +702,10 @@ and (ty_strictly_positive_in_datacon_of_applied_inductive :
                      debug_positivity env
                        (fun uu___2 ->
                           let uu___3 = FStar_Syntax_Print.term_to_string dt in
-                          Prims.op_Hat
-                            "Checking positivity in the data constructor type: "
-                            uu___3);
+                          let uu___4 = FStar_Syntax_Print.args_to_string args in
+                          FStar_Compiler_Util.format3
+                            "Checking positivity in the data constructor type: %s\n\tnum_ibs=%s, args=%s,"
+                            uu___3 (Prims.string_of_int num_ibs) uu___4);
                      (let uu___2 = FStar_Compiler_List.splitAt num_ibs args in
                       match uu___2 with
                       | (args1, rest) ->
@@ -756,42 +761,53 @@ and (ty_strictly_positive_in_datacon_of_applied_inductive :
                                           check_no_occurrences uu___6)
                                  | uu___5 -> ()) in
                           let applied_dt = apply_datacon_arrow dlid dt args1 in
-                          let uu___3 =
-                            FStar_Syntax_Util.arrow_formals applied_dt in
-                          (match uu___3 with
-                           | (fields, t) ->
-                               let uu___4 =
-                                 FStar_Syntax_Util.head_and_args_full t in
-                               (match uu___4 with
-                                | (head, params_indexes) ->
-                                    ((let uu___6 =
-                                        let uu___7 =
-                                          FStar_Compiler_List.splitAt num_ibs
-                                            params_indexes in
-                                        FStar_Pervasives_Native.snd uu___7 in
-                                      check_no_occurrences uu___6);
-                                     (let rec strictly_positive_in_all_fields
-                                        env1 fields1 =
-                                        match fields1 with
-                                        | [] -> true
-                                        | f::fields2 ->
-                                            (check_no_index_occurrences
-                                               (f.FStar_Syntax_Syntax.binder_bv).FStar_Syntax_Syntax.sort;
-                                             (let uu___7 =
-                                                ty_strictly_positive_in_type
-                                                  env1 mutuals ty_lid
-                                                  (f.FStar_Syntax_Syntax.binder_bv).FStar_Syntax_Syntax.sort
-                                                  unfolded in
-                                              if uu___7
-                                              then
-                                                let env2 =
-                                                  FStar_TypeChecker_Env.push_binders
-                                                    env1 [f] in
-                                                strictly_positive_in_all_fields
-                                                  env2 fields2
-                                              else false)) in
-                                      strictly_positive_in_all_fields env
-                                        fields))))))
+                          (debug_positivity env
+                             (fun uu___4 ->
+                                let uu___5 = FStar_Ident.string_of_lid dlid in
+                                let uu___6 =
+                                  FStar_Syntax_Print.args_to_string args1 in
+                                let uu___7 =
+                                  FStar_Syntax_Print.term_to_string
+                                    applied_dt in
+                                FStar_Compiler_Util.format3
+                                  "Applied data constructor type: %s %s : %s"
+                                  uu___5 uu___6 uu___7);
+                           (let uu___4 =
+                              FStar_Syntax_Util.arrow_formals applied_dt in
+                            match uu___4 with
+                            | (fields, t) ->
+                                let uu___5 =
+                                  FStar_Syntax_Util.head_and_args_full t in
+                                (match uu___5 with
+                                 | (head, params_indexes) ->
+                                     ((let uu___7 =
+                                         let uu___8 =
+                                           FStar_Compiler_List.splitAt
+                                             num_ibs params_indexes in
+                                         FStar_Pervasives_Native.snd uu___8 in
+                                       check_no_occurrences uu___7);
+                                      (let rec strictly_positive_in_all_fields
+                                         env1 fields1 =
+                                         match fields1 with
+                                         | [] -> true
+                                         | f::fields2 ->
+                                             (check_no_index_occurrences
+                                                (f.FStar_Syntax_Syntax.binder_bv).FStar_Syntax_Syntax.sort;
+                                              (let uu___8 =
+                                                 ty_strictly_positive_in_type
+                                                   env1 mutuals ty_lid
+                                                   (f.FStar_Syntax_Syntax.binder_bv).FStar_Syntax_Syntax.sort
+                                                   unfolded in
+                                               if uu___8
+                                               then
+                                                 let env2 =
+                                                   FStar_TypeChecker_Env.push_binders
+                                                     env1 [f] in
+                                                 strictly_positive_in_all_fields
+                                                   env2 fields2
+                                               else false)) in
+                                       strictly_positive_in_all_fields env
+                                         fields)))))))
 let (name_strictly_positive_in_type :
   FStar_TypeChecker_Env.env ->
     FStar_Syntax_Syntax.bv -> FStar_Syntax_Syntax.term -> Prims.bool)
@@ -800,7 +816,12 @@ let (name_strictly_positive_in_type :
     fun bv ->
       fun t ->
         let fv_lid =
-          FStar_Ident.lid_of_str "__fv_lid_for_positivity_checking__" in
+          let uu___ =
+            let uu___1 =
+              FStar_Ident.string_of_id bv.FStar_Syntax_Syntax.ppname in
+            FStar_Ident.lid_of_str uu___1 in
+          let uu___1 = FStar_Syntax_Syntax.range_of_bv bv in
+          FStar_Ident.set_lid_range uu___ uu___1 in
         let fv = FStar_Syntax_Syntax.tconst fv_lid in
         let t1 = FStar_Syntax_Subst.subst [FStar_Syntax_Syntax.NT (bv, fv)] t in
         let uu___ = FStar_Compiler_Util.mk_ref [] in
@@ -856,93 +877,143 @@ let (max_recursively_uniform_parameters :
                 FStar_Syntax_Syntax.bv_eq x1 y
             | uu___1 -> false in
           let min_l1 f l = min_l n_params f l in
-          let rec aux ty2 =
-            let uu___ =
-              let uu___1 = FStar_Syntax_Subst.compress ty2 in
-              uu___1.FStar_Syntax_Syntax.n in
-            match uu___ with
-            | FStar_Syntax_Syntax.Tm_name uu___1 -> n_params
-            | FStar_Syntax_Syntax.Tm_fvar uu___1 -> n_params
-            | FStar_Syntax_Syntax.Tm_uinst uu___1 -> n_params
-            | FStar_Syntax_Syntax.Tm_type uu___1 -> n_params
-            | FStar_Syntax_Syntax.Tm_constant uu___1 -> n_params
-            | FStar_Syntax_Syntax.Tm_refine (x, f) ->
-                let uu___1 = aux x.FStar_Syntax_Syntax.sort in
-                let uu___2 =
-                  let uu___3 =
-                    let uu___4 =
-                      let uu___5 = FStar_Syntax_Syntax.mk_binder x in
-                      [uu___5] in
-                    FStar_Syntax_Subst.open_term uu___4 f in
-                  match uu___3 with | (uu___4, f1) -> aux f1 in
-                Prims.min uu___1 uu___2
-            | FStar_Syntax_Syntax.Tm_app uu___1 ->
-                let uu___2 = FStar_Syntax_Util.head_and_args ty2 in
-                (match uu___2 with
-                 | (head, args) ->
-                     let uu___3 =
-                       let uu___4 = FStar_Syntax_Util.un_uinst head in
-                       uu___4.FStar_Syntax_Syntax.n in
-                     (match uu___3 with
-                      | FStar_Syntax_Syntax.Tm_fvar fv ->
-                          let uu___4 =
-                            FStar_Compiler_List.existsML
-                              (FStar_Syntax_Syntax.fv_eq_lid fv) mutuals in
-                          if uu___4
-                          then
-                            let uu___5 =
-                              max_matching_prefix args params compare_name_bv in
-                            (match uu___5 with
-                             | FStar_Pervasives_Native.None -> Prims.int_zero
-                             | FStar_Pervasives_Native.Some n -> n)
-                          else
-                            min_l1 args
-                              (fun uu___6 ->
-                                 match uu___6 with | (arg, uu___7) -> aux arg)
-                      | uu___4 ->
-                          let uu___5 = aux head in
-                          let uu___6 =
-                            min_l1 args
-                              (fun uu___7 ->
-                                 match uu___7 with | (arg, uu___8) -> aux arg) in
-                          Prims.min uu___5 uu___6))
-            | FStar_Syntax_Syntax.Tm_abs uu___1 ->
-                let uu___2 = FStar_Syntax_Util.abs_formals ty2 in
-                (match uu___2 with
-                 | (bs, body, uu___3) ->
-                     let uu___4 =
-                       min_l1 bs
-                         (fun b ->
-                            aux
-                              (b.FStar_Syntax_Syntax.binder_bv).FStar_Syntax_Syntax.sort) in
-                     let uu___5 = aux body in Prims.min uu___4 uu___5)
-            | FStar_Syntax_Syntax.Tm_arrow uu___1 ->
-                let uu___2 = FStar_Syntax_Util.arrow_formals ty2 in
-                (match uu___2 with
-                 | (bs, r) ->
-                     let uu___3 =
-                       min_l1 bs
-                         (fun b ->
-                            aux
-                              (b.FStar_Syntax_Syntax.binder_bv).FStar_Syntax_Syntax.sort) in
-                     let uu___4 = aux r in Prims.min uu___3 uu___4)
-            | FStar_Syntax_Syntax.Tm_match
-                (scrutinee, uu___1, branches, uu___2) ->
-                let uu___3 = aux scrutinee in
-                let uu___4 =
-                  min_l1 branches
-                    (fun uu___5 ->
-                       match uu___5 with
-                       | (p, uu___6, t) ->
-                           let bs =
-                             let uu___7 = FStar_Syntax_Syntax.pat_bvs p in
-                             FStar_Compiler_List.map
-                               FStar_Syntax_Syntax.mk_binder uu___7 in
-                           let uu___7 = FStar_Syntax_Subst.open_term bs t in
-                           (match uu___7 with | (bs1, t1) -> aux t1)) in
-                Prims.min uu___3 uu___4
-            | uu___1 -> Prims.int_zero in
-          aux ty1
+          let params_to_string uu___ =
+            let uu___1 =
+              FStar_Compiler_List.map FStar_Syntax_Print.bv_to_string params in
+            FStar_Compiler_Effect.op_Bar_Greater uu___1
+              (FStar_String.concat ", ") in
+          debug_positivity env
+            (fun uu___1 ->
+               let uu___2 = params_to_string () in
+               let uu___3 = FStar_Syntax_Print.term_to_string ty1 in
+               FStar_Compiler_Util.format2
+                 "max_recursively_uniform_parameters? params=%s in %s" uu___2
+                 uu___3);
+          (let rec aux ty2 =
+             debug_positivity env
+               (fun uu___2 ->
+                  let uu___3 = FStar_Syntax_Print.term_to_string ty2 in
+                  FStar_Compiler_Util.format1
+                    "max_recursively_uniform_parameters.aux? %s" uu___3);
+             (let uu___2 =
+                FStar_Compiler_List.for_all
+                  (fun mutual ->
+                     let uu___3 = ty_occurs_in mutual ty2 in
+                     Prims.op_Negation uu___3) mutuals in
+              if uu___2
+              then n_params
+              else
+                (let uu___4 =
+                   let uu___5 = FStar_Syntax_Subst.compress ty2 in
+                   uu___5.FStar_Syntax_Syntax.n in
+                 match uu___4 with
+                 | FStar_Syntax_Syntax.Tm_name uu___5 -> n_params
+                 | FStar_Syntax_Syntax.Tm_fvar uu___5 -> n_params
+                 | FStar_Syntax_Syntax.Tm_uinst uu___5 -> n_params
+                 | FStar_Syntax_Syntax.Tm_type uu___5 -> n_params
+                 | FStar_Syntax_Syntax.Tm_constant uu___5 -> n_params
+                 | FStar_Syntax_Syntax.Tm_refine (x, f) ->
+                     let uu___5 = aux x.FStar_Syntax_Syntax.sort in
+                     let uu___6 =
+                       let uu___7 =
+                         let uu___8 =
+                           let uu___9 = FStar_Syntax_Syntax.mk_binder x in
+                           [uu___9] in
+                         FStar_Syntax_Subst.open_term uu___8 f in
+                       match uu___7 with | (uu___8, f1) -> aux f1 in
+                     Prims.min uu___5 uu___6
+                 | FStar_Syntax_Syntax.Tm_app uu___5 ->
+                     let uu___6 = FStar_Syntax_Util.head_and_args ty2 in
+                     (match uu___6 with
+                      | (head, args) ->
+                          let uu___7 =
+                            let uu___8 = FStar_Syntax_Util.un_uinst head in
+                            uu___8.FStar_Syntax_Syntax.n in
+                          (match uu___7 with
+                           | FStar_Syntax_Syntax.Tm_fvar fv ->
+                               let uu___8 =
+                                 FStar_Compiler_List.existsML
+                                   (FStar_Syntax_Syntax.fv_eq_lid fv) mutuals in
+                               if uu___8
+                               then
+                                 (debug_positivity env
+                                    (fun uu___10 ->
+                                       let uu___11 = params_to_string () in
+                                       let uu___12 =
+                                         FStar_Syntax_Print.args_to_string
+                                           args in
+                                       FStar_Compiler_Util.format2
+                                         "Searching for max matching prefix of params=%s in args=%s"
+                                         uu___11 uu___12);
+                                  (let uu___10 =
+                                     max_matching_prefix args params
+                                       compare_name_bv in
+                                   match uu___10 with
+                                   | FStar_Pervasives_Native.None ->
+                                       Prims.int_zero
+                                   | FStar_Pervasives_Native.Some n -> n))
+                               else
+                                 min_l1 args
+                                   (fun uu___10 ->
+                                      match uu___10 with
+                                      | (arg, uu___11) -> aux arg)
+                           | uu___8 ->
+                               let uu___9 = aux head in
+                               let uu___10 =
+                                 min_l1 args
+                                   (fun uu___11 ->
+                                      match uu___11 with
+                                      | (arg, uu___12) -> aux arg) in
+                               Prims.min uu___9 uu___10))
+                 | FStar_Syntax_Syntax.Tm_abs uu___5 ->
+                     let uu___6 = FStar_Syntax_Util.abs_formals ty2 in
+                     (match uu___6 with
+                      | (bs, body, uu___7) ->
+                          let uu___8 =
+                            min_l1 bs
+                              (fun b ->
+                                 aux
+                                   (b.FStar_Syntax_Syntax.binder_bv).FStar_Syntax_Syntax.sort) in
+                          let uu___9 = aux body in Prims.min uu___8 uu___9)
+                 | FStar_Syntax_Syntax.Tm_arrow uu___5 ->
+                     let uu___6 = FStar_Syntax_Util.arrow_formals ty2 in
+                     (match uu___6 with
+                      | (bs, r) ->
+                          let uu___7 =
+                            min_l1 bs
+                              (fun b ->
+                                 aux
+                                   (b.FStar_Syntax_Syntax.binder_bv).FStar_Syntax_Syntax.sort) in
+                          let uu___8 = aux r in Prims.min uu___7 uu___8)
+                 | FStar_Syntax_Syntax.Tm_match
+                     (scrutinee, uu___5, branches, uu___6) ->
+                     let uu___7 = aux scrutinee in
+                     let uu___8 =
+                       min_l1 branches
+                         (fun uu___9 ->
+                            match uu___9 with
+                            | (p, uu___10, t) ->
+                                let bs =
+                                  let uu___11 = FStar_Syntax_Syntax.pat_bvs p in
+                                  FStar_Compiler_List.map
+                                    FStar_Syntax_Syntax.mk_binder uu___11 in
+                                let uu___11 =
+                                  FStar_Syntax_Subst.open_term bs t in
+                                (match uu___11 with | (bs1, t1) -> aux t1)) in
+                     Prims.min uu___7 uu___8
+                 | FStar_Syntax_Syntax.Tm_meta (t, uu___5) -> aux t
+                 | FStar_Syntax_Syntax.Tm_ascribed (t, uu___5, uu___6) ->
+                     aux t
+                 | uu___5 -> Prims.int_zero)) in
+           let res = aux ty1 in
+           debug_positivity env
+             (fun uu___2 ->
+                let uu___3 = params_to_string () in
+                let uu___4 = FStar_Syntax_Print.term_to_string ty1 in
+                FStar_Compiler_Util.format3
+                  "result: max_recursively_uniform_parameters(params=%s in %s) = %s"
+                  uu___3 uu___4 (Prims.string_of_int res));
+           res)
 let (ty_strictly_positive_in_datacon_decl :
   FStar_TypeChecker_Env.env_t ->
     FStar_Ident.lident Prims.list ->
@@ -1135,8 +1206,8 @@ let (check_exn_strict_positivity :
   fun env ->
     fun data_ctor_lid ->
       let unfolded_inductives = FStar_Compiler_Util.mk_ref [] in
-      ty_strictly_positive_in_datacon_decl env [] FStar_Parser_Const.exn_lid
-        data_ctor_lid [] [] unfolded_inductives
+      ty_strictly_positive_in_datacon_decl env [FStar_Parser_Const.exn_lid]
+        FStar_Parser_Const.exn_lid data_ctor_lid [] [] unfolded_inductives
 let (mark_uniform_type_parameters :
   FStar_TypeChecker_Env.env ->
     FStar_Syntax_Syntax.sigelt -> FStar_Syntax_Syntax.sigelt)

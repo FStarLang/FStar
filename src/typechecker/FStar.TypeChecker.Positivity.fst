@@ -55,9 +55,13 @@ let apply_datacon_arrow (dlid:lident) (dt:term) (all_params:list arg)
   : term 
   = let rec aux t args =
         match (SS.compress t).n, args with
-        | _, [] -> t
+        | _, [] -> U.canon_arrow t
         | Tm_arrow(b::bs, c), a::args ->
-          let tail = S.mk (Tm_arrow(bs, c)) t.pos in
+          let tail = 
+            match bs with
+            | [] -> U.comp_result c
+            | _ -> S.mk (Tm_arrow(bs, c)) t.pos
+          in
           let b, tail = SS.open_term_1 b tail in
           let tail = SS.subst [NT(b.binder_bv, fst a)] tail in
           aux tail args
@@ -342,11 +346,11 @@ let rec ty_strictly_positive_in_type (env:env)
  *   the corresponding parameter in t is marked strictly positive
  *)
 and check_ty_strictly_positive_in_args (env:env)
-                                           (mutuals:list lident)
-                                           (ty_lid:lident)
-                                           (head_t:typ)
-                                           (args:args)
-                                           (unfolded:unfolded_memo_t)
+                                       (mutuals:list lident)
+                                       (ty_lid:lident)
+                                       (head_t:typ)
+                                       (args:args)
+                                       (unfolded:unfolded_memo_t)
   : bool
   = let bs, _ = U.arrow_formals head_t in
     let rec aux (bs:binders) args
@@ -569,7 +573,12 @@ and ty_strictly_positive_in_datacon_of_applied_inductive (env:env_t)
     in
 
     debug_positivity env (fun _ ->
-      "Checking positivity in the data constructor type: " ^ (Print.term_to_string dt));
+      BU.format3
+        "Checking positivity in the data constructor type: %s\n\t\
+         num_ibs=%s, args=%s,"
+         (Print.term_to_string dt)
+         (string_of_int num_ibs)
+         (Print.args_to_string args));
 
     //get the number of arguments that cover the type parameters num_ibs,
     //the rest are indexes and these should not mention the mutuals at all
@@ -600,6 +609,12 @@ and ty_strictly_positive_in_datacon_of_applied_inductive (env:env_t)
       | _ -> ()
     in
     let applied_dt = apply_datacon_arrow dlid dt args in
+    debug_positivity env (fun _ ->
+      BU.format3
+        "Applied data constructor type: %s %s : %s"
+         (string_of_lid dlid)
+         (Print.args_to_string args)
+         (Print.term_to_string applied_dt));
     let fields, t = U.arrow_formals applied_dt in
     let head, params_indexes = U.head_and_args_full t in    
     check_no_occurrences (snd (List.splitAt num_ibs params_indexes));
@@ -617,11 +632,11 @@ and ty_strictly_positive_in_datacon_of_applied_inductive (env:env_t)
 
 (* Check that the name bv (e.g., a binder annotated with a strictly_positive attribute)
    is strictly positive in t *)
-let name_strictly_positive_in_type env bv t =
+let name_strictly_positive_in_type env (bv:bv) t =
   (* An unqualified long identifier just for positivity-checking
      It cannot clash with any user long identifier, since those
      are always qualified to a module *)
-  let fv_lid = lid_of_str "__fv_lid_for_positivity_checking__" in
+  let fv_lid = set_lid_range (lid_of_str (FStar.Ident.string_of_id bv.ppname)) (range_of_bv bv) in
   let fv = S.tconst fv_lid in
   let t = SS.subst [NT (bv, fv)] t in
   (* For checking if a bv is positive, there are no mutually defined names *)
@@ -658,7 +673,20 @@ let max_recursively_uniform_parameters (env:env_t)
       | _ -> false
     in
     let min_l (#a:Type) f l = min_l #a n_params f l in
+    let params_to_string () =
+        (List.map Print.bv_to_string params |> String.concat ", ")
+    in
+    debug_positivity env (fun _ ->
+      BU.format2 "max_recursively_uniform_parameters? params=%s in %s"
+                 (params_to_string())
+                 (Print.term_to_string ty));
     let rec aux ty =
+        debug_positivity env (fun _ ->
+          BU.format1 "max_recursively_uniform_parameters.aux? %s"
+                 (Print.term_to_string ty));
+        if List.for_all (fun mutual -> not (ty_occurs_in mutual ty)) mutuals
+        then n_params
+        else (
         match (SS.compress ty).n with
         | Tm_name _
         | Tm_fvar _
@@ -676,9 +704,15 @@ let max_recursively_uniform_parameters (env:env_t)
           match (U.un_uinst head).n with
           | Tm_fvar fv ->
             if L.existsML (fv_eq_lid fv) mutuals
-            then match max_matching_prefix args params compare_name_bv with
-                 | None -> 0
-                 | Some n -> n
+            then (
+              debug_positivity env (fun _ -> 
+                BU.format2 "Searching for max matching prefix of params=%s in args=%s"
+                           (params_to_string())
+                           (Print.args_to_string args));
+              match max_matching_prefix args params compare_name_bv with
+              | None -> 0
+              | Some n -> n
+            )
             else min_l args (fun (arg, _) -> aux arg)
           | _ ->
             min (aux head)
@@ -699,10 +733,21 @@ let max_recursively_uniform_parameters (env:env_t)
                        let bs = List.map mk_binder (pat_bvs p) in
                        let bs, t = SS.open_term bs t in
                        aux t))
+        | Tm_meta(t, _)
+        | Tm_ascribed(t, _, _) ->
+          aux t
         | _ ->
           0
+        )
     in
-    aux ty
+    let res = aux ty in
+    debug_positivity env (fun _ ->
+      BU.format3 "result: max_recursively_uniform_parameters(params=%s in %s) = %s"
+                 (params_to_string())
+                 (Print.term_to_string ty)
+                 (string_of_int res));
+    res
+    
 
 (*  Check that ty_lid (defined along with mutuals)
     is strictly positive in every field of the data constructor dlid
@@ -839,7 +884,7 @@ let check_exn_strict_positivity (env:env_t)
                                 (data_ctor_lid:lid)
   : bool
   = let unfolded_inductives = BU.mk_ref [] in
-    ty_strictly_positive_in_datacon_decl env [] C.exn_lid data_ctor_lid [] [] unfolded_inductives
+    ty_strictly_positive_in_datacon_decl env [C.exn_lid] C.exn_lid data_ctor_lid [] [] unfolded_inductives
 
 let mark_uniform_type_parameters (env:env_t)
                                  (sig:sigelt)
@@ -889,7 +934,9 @@ let mark_uniform_type_parameters (env:env_t)
         //the suffix of non-uniform parameters is non-uniform
         let _, ty_param_binders_rev =
           List.fold_left2
-            (fun (seen_non_uniform, ty_param_binders) this_param_uniform ty_param_binder ->
+            (fun (seen_non_uniform, ty_param_binders) 
+               this_param_uniform
+               ty_param_binder ->
                if seen_non_uniform || not (this_param_uniform)
                then (
                  if U.has_attribute ty_param_binder.binder_attrs C.binder_strictly_positive_attr
