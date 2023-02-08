@@ -188,6 +188,11 @@ and build_constructor_pat ((path, sym), p) =
         | "Cons" -> ([], "::")
         | "Nil" -> ([], "[]")
         | x -> (path, x))
+     | ["FStar"; "Pervasives"; "Native"] ->
+       (match sym with
+        | "None" -> ([], "None")
+        | "Some" -> ([], "Some")
+        | x -> (path, x))
      | _ -> (path, sym)) in
   match p with
   | [] ->
@@ -220,6 +225,17 @@ let rec build_core_type ?(annots = []) (ty: mlty): core_type =
          * the condition below might need to be more specific. *)
         if BatString.starts_with sym "tuple" then
           Typ.mk (Ptyp_tuple (map build_core_type tys))
+        else
+        if BatString.equal sym "option" then
+          Typ.mk (Ptyp_constr (mk_lident "Stdlib.Option.t", c_tys))
+        else
+          ty
+      | ["Prims"] ->
+        if BatString.equal sym "bool" then
+          Typ.mk (Ptyp_constr (mk_lident "Stdlib.Bool.t", []))
+        else
+        if BatString.equal sym "list" then
+          Typ.mk (Ptyp_constr (mk_lident "Stdlib.List.t", c_tys))
         else
           ty
       | _ -> ty)
@@ -361,6 +377,8 @@ and build_constructor_expr ((path, sym), exp): expression =
     (match path, sym with
     | ["Prims"], "Cons" -> ([], "::")
     | ["Prims"], "Nil" -> ([], "[]")
+    | ["FStar"; "Pervasives"; "Native"], "None" -> ([], "None")
+    | ["FStar"; "Pervasives"; "Native"], "Some" -> ([], "Some")
     | path, x -> (path, x)) in
   match exp with
   | [] -> Exp.construct (path_to_ident(path', name)) None
