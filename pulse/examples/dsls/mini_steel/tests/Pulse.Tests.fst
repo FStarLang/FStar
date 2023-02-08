@@ -138,9 +138,9 @@ let warmup (x:int) = assert (x + 1 > x)
     (expects (pts_to r full_perm n))
     (provides (fun _ -> pts_to r full_perm (U32.add (reveal n) 2ul)))
     (
+      let x = read_atomic r in
       if b
-      then let x = read r in
-           write r (U32.add x 2ul)
-      else write r 3ul
+      then write r (U32.add x 2ul)
+      else write_atomic r 3ul
     )
 )))

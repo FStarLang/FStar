@@ -23,7 +23,7 @@ type universe =
    term is currently an eqtype. That makes some experiments a bit easier.
    but it doesn't have to be. 
    
-   if we include Embed it won't be. 
+   if we include Embed it won't be.
    So, we should remove reliance on this thing being an eqtype soon.
    But, adding a Tm_Embed poses some other difficulties too, 
    
