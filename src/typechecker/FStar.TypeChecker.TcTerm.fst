@@ -3770,6 +3770,7 @@ and check_top_level_let env e =
                  let comp1, g_comp1 = lcomp_comp c1 in
                  let g1 = Env.conj_guard g1 g_comp1 in
                  let _, univs, e1, c1, gvs = List.hd (Gen.generalize env false [lb.lbname, e1, comp1]) in
+                 let g1 = Rel.resolve_generalization_implicits env g1 in
                  let g1 = map_guard g1 <| N.normalize [Env.Beta; Env.DoNotUnfoldPureLets; Env.CompressUvars; Env.NoFullNorm; Env.Exclude Env.Zeta] env in
                  let g1 = abstract_guard_n gvs g1 in
                  g1, e1, univs, TcComm.lcomp_of_comp c1
@@ -3959,19 +3960,25 @@ and check_top_level_let_rec env top =
 
            let all_lb_names = lbs |> List.map (fun lb -> right lb.lbname) |> Some in
 
-           let lbs =
+           let lbs, g_lbs =
               if not env.generalize
-              then lbs |> List.map (fun lb ->
+              then
+                let lbs =
+                  lbs |> List.map (fun lb ->
             (* TODO : Should we gather the fre univnames ? e.g. (TcUtil.gather_free_univnames env e1)@lb.lbunivs *)
                     let lbdef = N.reduce_uvar_solutions env lb.lbdef in
                     if lb.lbunivs = []
                     then lb
                     else U.close_univs_and_mk_letbinding all_lb_names lb.lbname lb.lbunivs lb.lbtyp lb.lbeff lbdef lb.lbattrs lb.lbpos)
-              else let ecs = Gen.generalize env true (lbs |> List.map (fun lb ->
+                in
+                lbs, g_lbs (* g_lbs untouched *)
+              else
+                let ecs = Gen.generalize env true (lbs |> List.map (fun lb ->
                                 lb.lbname,
                                 lb.lbdef,
-                                S.mk_Total lb.lbtyp)) in
-                   List.map2 (fun (x, uvs, e, c, gvs) lb ->
+                                S.mk_Total lb.lbtyp))
+                in
+                let lbs = List.map2 (fun (x, uvs, e, c, gvs) lb ->
                                   U.close_univs_and_mk_letbinding
                                         all_lb_names
                                         x
@@ -3983,6 +3990,10 @@ and check_top_level_let_rec env top =
                                         lb.lbpos)
                               ecs
                               lbs
+                in
+                (* discharge generalization uvars *)
+                let g_lbs = Rel.resolve_generalization_implicits env g_lbs in
+                lbs, g_lbs
            in
 
           let cres = TcComm.lcomp_of_comp <| S.mk_Total t_unit in

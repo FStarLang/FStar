@@ -5211,7 +5211,14 @@ let is_tac_implicit_resolved (env:env) (i:implicit) : bool =
     |> BU.set_elements
     |> List.for_all (fun uv -> Allow_unresolved? (U.ctx_uvar_should_check uv))
 
-let resolve_implicits' env is_tac (implicits:Env.implicits) 
+
+// is_tac: this is a call from within the tactic engine, hence do not use
+//         tactics for resolving implicits to avoid reentrancy.
+//
+// is_gen: this is a call after generalization, hence we only check that
+//         implicits have a solution, and do not typecheck it. This still allows
+//         some implicits to remain unresolved, but those will remain in the guard.
+let resolve_implicits' env is_tac is_gen (implicits:Env.implicits)
   : list (implicit * implicit_checking_status) =
   
   let rec until_fixpoint (acc:tagged_implicits * bool)
@@ -5268,7 +5275,8 @@ let resolve_implicits' env is_tac (implicits:Env.implicits)
                  until_fixpoint (out, true) (extra @ tl)
             else until_fixpoint ((hd, Implicit_unresolved)::out, changed) tl)
       else if Allow_untyped? uvar_decoration_should_check ||
-              Already_checked? uvar_decoration_should_check
+              Already_checked? uvar_decoration_should_check ||
+              is_gen
       then until_fixpoint (out, true) tl
       else begin
         let env = {env with gamma=ctx_u.ctx_uvar_gamma} in
@@ -5320,11 +5328,17 @@ let resolve_implicits env g =
     then BU.print1 "//////////////////////////ResolveImplicitsHook: resolve_implicits begin////////////\n\
                     guard = %s {\n"
                     (guard_to_string env g);
-    let tagged_implicits = resolve_implicits' env false g.implicits in
+    let tagged_implicits = resolve_implicits' env false false g.implicits in
     if Env.debug env <| Options.Other "ResolveImplicitsHook"
     then BU.print_string "//////////////////////////ResolveImplicitsHook: resolve_implicits end////////////\n\
                     }\n";
     {g with implicits = List.map fst tagged_implicits}
+
+let resolve_generalization_implicits env g =
+    let tagged_implicits = resolve_implicits' env false true g.implicits in
+    {g with implicits = List.map fst tagged_implicits}
+
+let resolve_implicits_tac env g = resolve_implicits' env true false g.implicits
 
 let force_trivial_guard env g =
     if Env.debug env <| Options.Other "ResolveImplicitsHook"
@@ -5340,8 +5354,6 @@ let force_trivial_guard env g =
                                 (Print.uvar_to_string imp.imp_uvar.ctx_uvar_head)
                                 (N.term_to_string env (U.ctx_uvar_typ imp.imp_uvar))
                                 imp.imp_reason) imp.imp_range
-
-let resolve_implicits_tac env g = resolve_implicits' env true g.implicits
 
 let subtype_nosmt_force env t1 t2 =
     match subtype_nosmt env t1 t2 with
