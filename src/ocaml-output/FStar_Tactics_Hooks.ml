@@ -1914,7 +1914,7 @@ let (splice :
                                   if uu___10
                                   then
                                     let uu___11 =
-                                      FStar_Common.string_of_list
+                                      (FStar_Common.string_of_list ())
                                         FStar_Syntax_Print.sigelt_to_string
                                         sigelts in
                                     FStar_Compiler_Util.print1

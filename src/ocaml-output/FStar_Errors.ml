@@ -2572,16 +2572,16 @@ let (mk_default_handler : Prims.bool -> error_handler) =
   fun print ->
     let issues = FStar_Compiler_Util.mk_ref [] in
     let add_one e =
-      (let uu___1 =
-         (FStar_Options.defensive_abort ()) &&
-           (e.issue_number = (FStar_Pervasives_Native.Some defensive_errno)) in
-       if uu___1 then failwith "Aborting due to --defensive abort" else ());
       (match e.issue_level with
        | EInfo -> print_issue e
        | uu___1 ->
            let uu___2 =
              let uu___3 = FStar_Compiler_Effect.op_Bang issues in e :: uu___3 in
-           FStar_Compiler_Effect.op_Colon_Equals issues uu___2) in
+           FStar_Compiler_Effect.op_Colon_Equals issues uu___2);
+      (let uu___2 =
+         (FStar_Options.defensive_abort ()) &&
+           (e.issue_number = (FStar_Pervasives_Native.Some defensive_errno)) in
+       if uu___2 then failwith "Aborting due to --defensive abort" else ()) in
     let count_errors uu___ =
       let uu___1 = FStar_Compiler_Effect.op_Bang issues in
       FStar_Compiler_List.fold_left
@@ -2756,7 +2756,7 @@ let (set_option_warning_callback_range :
   FStar_Compiler_Range.range FStar_Pervasives_Native.option -> unit) =
   fun ropt ->
     FStar_Options.set_option_warning_callback (warn_unsafe_options ropt)
-let (uu___253 :
+let (uu___254 :
   (((Prims.string -> error_setting Prims.list) -> unit) *
     (unit -> error_setting Prims.list)))
   =
@@ -2801,10 +2801,10 @@ let (uu___253 :
   (set_callbacks, get_error_flags)
 let (set_parse_warn_error :
   (Prims.string -> error_setting Prims.list) -> unit) =
-  match uu___253 with
+  match uu___254 with
   | (set_parse_warn_error1, error_flags) -> set_parse_warn_error1
 let (error_flags : unit -> error_setting Prims.list) =
-  match uu___253 with | (set_parse_warn_error1, error_flags1) -> error_flags1
+  match uu___254 with | (set_parse_warn_error1, error_flags1) -> error_flags1
 let (lookup : raw_error -> (raw_error * error_flag * Prims.int)) =
   fun err ->
     let flags = error_flags () in

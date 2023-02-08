@@ -7946,11 +7946,11 @@ and (desugar_decl_aux :
                               (let uu___7 =
                                  let uu___8 =
                                    let uu___9 =
-                                     FStar_Common.string_of_list
+                                     (FStar_Common.string_of_list ())
                                        FStar_Compiler_Util.string_of_int
                                        expected_errs in
                                    let uu___10 =
-                                     FStar_Common.string_of_list
+                                     (FStar_Common.string_of_list ())
                                        FStar_Compiler_Util.string_of_int
                                        errnos in
                                    let uu___11 =

@@ -4263,24 +4263,28 @@ and (p_refinedBinder :
           let uu___ = p_lident lid in
           p_refinement b.FStar_Parser_AST.aqual
             b.FStar_Parser_AST.battributes uu___ t phi
-      | FStar_Parser_AST.TAnnotated uu___ -> failwith "Is this still used ?"
-      | FStar_Parser_AST.Variable uu___ ->
+      | FStar_Parser_AST.Variable lid ->
+          let uu___ = p_lident lid in
           let uu___1 =
-            let uu___2 = FStar_Parser_AST.binder_to_string b in
-            FStar_Compiler_Util.format1
-              "Imposible : a refined binder ought to be annotated %s" uu___2 in
-          failwith uu___1
+            let uu___2 = FStar_Ident.range_of_id lid in
+            FStar_Parser_AST.mk_term FStar_Parser_AST.Wild uu___2
+              FStar_Parser_AST.Type_level in
+          p_refinement b.FStar_Parser_AST.aqual
+            b.FStar_Parser_AST.battributes uu___ uu___1 phi
+      | FStar_Parser_AST.TAnnotated uu___ -> failwith "Is this still used ?"
       | FStar_Parser_AST.TVariable uu___ ->
           let uu___1 =
             let uu___2 = FStar_Parser_AST.binder_to_string b in
             FStar_Compiler_Util.format1
-              "Imposible : a refined binder ought to be annotated %s" uu___2 in
+              "Impossible: a refined binder ought to be annotated (%s)"
+              uu___2 in
           failwith uu___1
       | FStar_Parser_AST.NoName uu___ ->
           let uu___1 =
             let uu___2 = FStar_Parser_AST.binder_to_string b in
             FStar_Compiler_Util.format1
-              "Imposible : a refined binder ought to be annotated %s" uu___2 in
+              "Impossible: a refined binder ought to be annotated (%s)"
+              uu___2 in
           failwith uu___1
 and (p_simpleDef :
   Prims.bool ->

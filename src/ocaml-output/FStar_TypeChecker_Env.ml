@@ -4361,30 +4361,230 @@ let (wp_signature :
   env ->
     FStar_Ident.lident -> (FStar_Syntax_Syntax.bv * FStar_Syntax_Syntax.term))
   = fun env1 -> fun m -> wp_sig_aux (env1.effects).decls m
+let (bound_vars_of_bindings :
+  FStar_Syntax_Syntax.binding Prims.list -> FStar_Syntax_Syntax.bv Prims.list)
+  =
+  fun bs ->
+    FStar_Compiler_Effect.op_Bar_Greater bs
+      (FStar_Compiler_List.collect
+         (fun uu___ ->
+            match uu___ with
+            | FStar_Syntax_Syntax.Binding_var x -> [x]
+            | FStar_Syntax_Syntax.Binding_lid uu___1 -> []
+            | FStar_Syntax_Syntax.Binding_univ uu___1 -> []))
+let (binders_of_bindings :
+  FStar_Syntax_Syntax.binding Prims.list -> FStar_Syntax_Syntax.binders) =
+  fun bs ->
+    let uu___ =
+      let uu___1 = bound_vars_of_bindings bs in
+      FStar_Compiler_Effect.op_Bar_Greater uu___1
+        (FStar_Compiler_List.map FStar_Syntax_Syntax.mk_binder) in
+    FStar_Compiler_Effect.op_Bar_Greater uu___ FStar_Compiler_List.rev
+let (bound_vars : env -> FStar_Syntax_Syntax.bv Prims.list) =
+  fun env1 -> bound_vars_of_bindings env1.gamma
+let (all_binders : env -> FStar_Syntax_Syntax.binders) =
+  fun env1 -> binders_of_bindings env1.gamma
+let (def_check_vars_in_set :
+  FStar_Compiler_Range.range ->
+    Prims.string ->
+      FStar_Syntax_Syntax.bv FStar_Compiler_Util.set ->
+        FStar_Syntax_Syntax.term -> unit)
+  =
+  fun rng ->
+    fun msg ->
+      fun vset ->
+        fun t ->
+          let uu___ = FStar_Options.defensive () in
+          if uu___
+          then
+            let s = FStar_Syntax_Free.names t in
+            let uu___1 =
+              let uu___2 =
+                let uu___3 = FStar_Compiler_Util.set_difference s vset in
+                FStar_Compiler_Effect.op_Less_Bar
+                  FStar_Compiler_Util.set_is_empty uu___3 in
+              Prims.op_Negation uu___2 in
+            (if uu___1
+             then
+               let uu___2 =
+                 let uu___3 =
+                   let uu___4 = FStar_Syntax_Print.term_to_string t in
+                   let uu___5 =
+                     let uu___6 = FStar_Compiler_Util.set_elements s in
+                     FStar_Compiler_Effect.op_Bar_Greater uu___6
+                       (FStar_Syntax_Print.bvs_to_string ",\n\t") in
+                   let uu___6 =
+                     let uu___7 = FStar_Compiler_Util.set_elements vset in
+                     FStar_Compiler_Effect.op_Bar_Greater uu___7
+                       (FStar_Syntax_Print.bvs_to_string ",") in
+                   FStar_Compiler_Util.format4
+                     "Internal: term is not closed (%s).\nt = (%s)\nFVs = (%s)\nScope = (%s)\n"
+                     msg uu___4 uu___5 uu___6 in
+                 (FStar_Errors.Warning_Defensive, uu___3) in
+               FStar_Errors.log_issue rng uu___2
+             else ())
+          else ()
+let (def_check_closed_in :
+  FStar_Compiler_Range.range ->
+    Prims.string ->
+      FStar_Syntax_Syntax.bv Prims.list -> FStar_Syntax_Syntax.term -> unit)
+  =
+  fun rng ->
+    fun msg ->
+      fun l ->
+        fun t ->
+          let uu___ =
+            let uu___1 = FStar_Options.defensive () in
+            Prims.op_Negation uu___1 in
+          if uu___
+          then ()
+          else
+            (let uu___2 =
+               FStar_Compiler_Util.as_set l FStar_Syntax_Syntax.order_bv in
+             def_check_vars_in_set rng msg uu___2 t)
+let (def_check_closed_in_env :
+  FStar_Compiler_Range.range ->
+    Prims.string -> env -> FStar_Syntax_Syntax.term -> unit)
+  =
+  fun rng ->
+    fun msg ->
+      fun e ->
+        fun t ->
+          let uu___ =
+            let uu___1 = FStar_Options.defensive () in
+            Prims.op_Negation uu___1 in
+          if uu___
+          then ()
+          else
+            (let uu___2 = bound_vars e in
+             def_check_closed_in rng msg uu___2 t)
+let (def_check_comp_closed_in :
+  FStar_Compiler_Range.range ->
+    Prims.string ->
+      FStar_Syntax_Syntax.bv Prims.list -> FStar_Syntax_Syntax.comp -> unit)
+  =
+  fun rng ->
+    fun msg ->
+      fun l ->
+        fun c ->
+          let uu___ =
+            let uu___1 = FStar_Options.defensive () in
+            Prims.op_Negation uu___1 in
+          if uu___
+          then ()
+          else
+            (match c.FStar_Syntax_Syntax.n with
+             | FStar_Syntax_Syntax.Total t ->
+                 def_check_closed_in rng (Prims.op_Hat msg ".typ") l t
+             | FStar_Syntax_Syntax.GTotal t ->
+                 def_check_closed_in rng (Prims.op_Hat msg ".typ") l t
+             | FStar_Syntax_Syntax.Comp ct ->
+                 (def_check_closed_in rng (Prims.op_Hat msg ".typ") l
+                    ct.FStar_Syntax_Syntax.result_typ;
+                  FStar_Compiler_List.iter
+                    (fun uu___3 ->
+                       match uu___3 with
+                       | (a, uu___4) ->
+                           def_check_closed_in rng (Prims.op_Hat msg ".arg")
+                             l a) ct.FStar_Syntax_Syntax.effect_args))
+let (def_check_comp_closed_in_env :
+  FStar_Compiler_Range.range ->
+    Prims.string -> env -> FStar_Syntax_Syntax.comp -> unit)
+  =
+  fun rng ->
+    fun msg ->
+      fun e ->
+        fun c ->
+          let uu___ =
+            let uu___1 = FStar_Options.defensive () in
+            Prims.op_Negation uu___1 in
+          if uu___
+          then ()
+          else
+            (match c.FStar_Syntax_Syntax.n with
+             | FStar_Syntax_Syntax.Total t ->
+                 def_check_closed_in_env rng (Prims.op_Hat msg ".typ") e t
+             | FStar_Syntax_Syntax.GTotal t ->
+                 def_check_closed_in_env rng (Prims.op_Hat msg ".typ") e t
+             | FStar_Syntax_Syntax.Comp ct ->
+                 (def_check_closed_in_env rng (Prims.op_Hat msg ".typ") e
+                    ct.FStar_Syntax_Syntax.result_typ;
+                  FStar_Compiler_List.iter
+                    (fun uu___3 ->
+                       match uu___3 with
+                       | (a, uu___4) ->
+                           def_check_closed_in_env rng
+                             (Prims.op_Hat msg ".arg") e a)
+                    ct.FStar_Syntax_Syntax.effect_args))
+let (def_check_lcomp_closed_in :
+  FStar_Compiler_Range.range ->
+    Prims.string ->
+      FStar_Syntax_Syntax.bv Prims.list ->
+        FStar_TypeChecker_Common.lcomp -> unit)
+  =
+  fun rng ->
+    fun msg ->
+      fun l ->
+        fun lc ->
+          let uu___ = FStar_Options.defensive () in
+          if uu___
+          then
+            let uu___1 = FStar_TypeChecker_Common.lcomp_comp lc in
+            match uu___1 with
+            | (c, uu___2) -> def_check_comp_closed_in rng msg l c
+          else ()
+let (def_check_lcomp_closed_in_env :
+  FStar_Compiler_Range.range ->
+    Prims.string -> env -> FStar_TypeChecker_Common.lcomp -> unit)
+  =
+  fun rng ->
+    fun msg ->
+      fun env1 ->
+        fun lc ->
+          let uu___ = FStar_Options.defensive () in
+          if uu___
+          then
+            let uu___1 = FStar_TypeChecker_Common.lcomp_comp lc in
+            match uu___1 with
+            | (c, uu___2) -> def_check_comp_closed_in_env rng msg env1 c
+          else ()
+let (def_check_guard_wf :
+  FStar_Compiler_Range.range -> Prims.string -> env -> guard_t -> unit) =
+  fun rng ->
+    fun msg ->
+      fun env1 ->
+        fun g ->
+          match g.FStar_TypeChecker_Common.guard_f with
+          | FStar_TypeChecker_Common.Trivial -> ()
+          | FStar_TypeChecker_Common.NonTrivial f ->
+              def_check_closed_in_env rng msg env1 f
 let (comp_to_comp_typ :
   env -> FStar_Syntax_Syntax.comp -> FStar_Syntax_Syntax.comp_typ) =
   fun env1 ->
     fun c ->
-      match c.FStar_Syntax_Syntax.n with
-      | FStar_Syntax_Syntax.Comp ct -> ct
-      | uu___ ->
-          let uu___1 =
-            match c.FStar_Syntax_Syntax.n with
-            | FStar_Syntax_Syntax.Total t ->
-                (FStar_Parser_Const.effect_Tot_lid, t)
-            | FStar_Syntax_Syntax.GTotal t ->
-                (FStar_Parser_Const.effect_GTot_lid, t) in
-          (match uu___1 with
-           | (effect_name, result_typ) ->
-               let uu___2 =
-                 let uu___3 = env1.universe_of env1 result_typ in [uu___3] in
-               {
-                 FStar_Syntax_Syntax.comp_univs = uu___2;
-                 FStar_Syntax_Syntax.effect_name = effect_name;
-                 FStar_Syntax_Syntax.result_typ = result_typ;
-                 FStar_Syntax_Syntax.effect_args = [];
-                 FStar_Syntax_Syntax.flags = (FStar_Syntax_Util.comp_flags c)
-               })
+      def_check_comp_closed_in_env c.FStar_Syntax_Syntax.pos
+        "comp_to_comp_typ" env1 c;
+      (match c.FStar_Syntax_Syntax.n with
+       | FStar_Syntax_Syntax.Comp ct -> ct
+       | uu___1 ->
+           let uu___2 =
+             match c.FStar_Syntax_Syntax.n with
+             | FStar_Syntax_Syntax.Total t ->
+                 (FStar_Parser_Const.effect_Tot_lid, t)
+             | FStar_Syntax_Syntax.GTotal t ->
+                 (FStar_Parser_Const.effect_GTot_lid, t) in
+           (match uu___2 with
+            | (effect_name, result_typ) ->
+                let uu___3 =
+                  let uu___4 = env1.universe_of env1 result_typ in [uu___4] in
+                {
+                  FStar_Syntax_Syntax.comp_univs = uu___3;
+                  FStar_Syntax_Syntax.effect_name = effect_name;
+                  FStar_Syntax_Syntax.result_typ = result_typ;
+                  FStar_Syntax_Syntax.effect_args = [];
+                  FStar_Syntax_Syntax.flags =
+                    (FStar_Syntax_Util.comp_flags c)
+                }))
 let (comp_set_flags :
   env ->
     FStar_Syntax_Syntax.comp ->
@@ -4393,101 +4593,110 @@ let (comp_set_flags :
   fun env1 ->
     fun c ->
       fun f ->
-        let uu___ =
-          let uu___1 =
-            let uu___2 = comp_to_comp_typ env1 c in
-            {
-              FStar_Syntax_Syntax.comp_univs =
-                (uu___2.FStar_Syntax_Syntax.comp_univs);
-              FStar_Syntax_Syntax.effect_name =
-                (uu___2.FStar_Syntax_Syntax.effect_name);
-              FStar_Syntax_Syntax.result_typ =
-                (uu___2.FStar_Syntax_Syntax.result_typ);
-              FStar_Syntax_Syntax.effect_args =
-                (uu___2.FStar_Syntax_Syntax.effect_args);
-              FStar_Syntax_Syntax.flags = f
-            } in
-          FStar_Syntax_Syntax.Comp uu___1 in
-        {
-          FStar_Syntax_Syntax.n = uu___;
-          FStar_Syntax_Syntax.pos = (c.FStar_Syntax_Syntax.pos);
-          FStar_Syntax_Syntax.vars = (c.FStar_Syntax_Syntax.vars);
-          FStar_Syntax_Syntax.hash_code = (c.FStar_Syntax_Syntax.hash_code)
-        }
+        def_check_comp_closed_in_env c.FStar_Syntax_Syntax.pos
+          "comp_set_flags.IN" env1 c;
+        (let r =
+           let uu___1 =
+             let uu___2 =
+               let uu___3 = comp_to_comp_typ env1 c in
+               {
+                 FStar_Syntax_Syntax.comp_univs =
+                   (uu___3.FStar_Syntax_Syntax.comp_univs);
+                 FStar_Syntax_Syntax.effect_name =
+                   (uu___3.FStar_Syntax_Syntax.effect_name);
+                 FStar_Syntax_Syntax.result_typ =
+                   (uu___3.FStar_Syntax_Syntax.result_typ);
+                 FStar_Syntax_Syntax.effect_args =
+                   (uu___3.FStar_Syntax_Syntax.effect_args);
+                 FStar_Syntax_Syntax.flags = f
+               } in
+             FStar_Syntax_Syntax.Comp uu___2 in
+           {
+             FStar_Syntax_Syntax.n = uu___1;
+             FStar_Syntax_Syntax.pos = (c.FStar_Syntax_Syntax.pos);
+             FStar_Syntax_Syntax.vars = (c.FStar_Syntax_Syntax.vars);
+             FStar_Syntax_Syntax.hash_code =
+               (c.FStar_Syntax_Syntax.hash_code)
+           } in
+         def_check_comp_closed_in_env c.FStar_Syntax_Syntax.pos
+           "comp_set_flags.OUT" env1 r;
+         r)
 let rec (unfold_effect_abbrev :
   env -> FStar_Syntax_Syntax.comp -> FStar_Syntax_Syntax.comp_typ) =
   fun env1 ->
     fun comp ->
-      let c = comp_to_comp_typ env1 comp in
-      let uu___ =
-        lookup_effect_abbrev env1 c.FStar_Syntax_Syntax.comp_univs
-          c.FStar_Syntax_Syntax.effect_name in
-      match uu___ with
-      | FStar_Pervasives_Native.None -> c
-      | FStar_Pervasives_Native.Some (binders, cdef) ->
-          let uu___1 = FStar_Syntax_Subst.open_comp binders cdef in
-          (match uu___1 with
-           | (binders1, cdef1) ->
-               (if
-                  (FStar_Compiler_List.length binders1) <>
-                    ((FStar_Compiler_List.length
-                        c.FStar_Syntax_Syntax.effect_args)
-                       + Prims.int_one)
-                then
-                  (let uu___3 =
-                     let uu___4 =
-                       let uu___5 =
-                         FStar_Compiler_Util.string_of_int
-                           (FStar_Compiler_List.length binders1) in
-                       let uu___6 =
-                         FStar_Compiler_Util.string_of_int
-                           ((FStar_Compiler_List.length
-                               c.FStar_Syntax_Syntax.effect_args)
-                              + Prims.int_one) in
-                       let uu___7 =
-                         let uu___8 = FStar_Syntax_Syntax.mk_Comp c in
-                         FStar_Syntax_Print.comp_to_string uu___8 in
-                       FStar_Compiler_Util.format3
-                         "Effect constructor is not fully applied; expected %s args, got %s args, i.e., %s"
-                         uu___5 uu___6 uu___7 in
-                     (FStar_Errors.Fatal_ConstructorArgLengthMismatch,
-                       uu___4) in
-                   FStar_Errors.raise_error uu___3
-                     comp.FStar_Syntax_Syntax.pos)
-                else ();
-                (let inst =
-                   let uu___3 =
-                     let uu___4 =
-                       FStar_Syntax_Syntax.as_arg
-                         c.FStar_Syntax_Syntax.result_typ in
-                     uu___4 :: (c.FStar_Syntax_Syntax.effect_args) in
-                   FStar_Compiler_List.map2
-                     (fun b ->
-                        fun uu___4 ->
-                          match uu___4 with
-                          | (t, uu___5) ->
-                              FStar_Syntax_Syntax.NT
-                                ((b.FStar_Syntax_Syntax.binder_bv), t))
-                     binders1 uu___3 in
-                 let c1 = FStar_Syntax_Subst.subst_comp inst cdef1 in
-                 let c2 =
-                   let uu___3 =
-                     let uu___4 = comp_to_comp_typ env1 c1 in
-                     {
-                       FStar_Syntax_Syntax.comp_univs =
-                         (uu___4.FStar_Syntax_Syntax.comp_univs);
-                       FStar_Syntax_Syntax.effect_name =
-                         (uu___4.FStar_Syntax_Syntax.effect_name);
-                       FStar_Syntax_Syntax.result_typ =
-                         (uu___4.FStar_Syntax_Syntax.result_typ);
-                       FStar_Syntax_Syntax.effect_args =
-                         (uu___4.FStar_Syntax_Syntax.effect_args);
-                       FStar_Syntax_Syntax.flags =
-                         (c.FStar_Syntax_Syntax.flags)
-                     } in
-                   FStar_Compiler_Effect.op_Bar_Greater uu___3
-                     FStar_Syntax_Syntax.mk_Comp in
-                 unfold_effect_abbrev env1 c2)))
+      def_check_comp_closed_in_env comp.FStar_Syntax_Syntax.pos
+        "unfold_effect_abbrev" env1 comp;
+      (let c = comp_to_comp_typ env1 comp in
+       let uu___1 =
+         lookup_effect_abbrev env1 c.FStar_Syntax_Syntax.comp_univs
+           c.FStar_Syntax_Syntax.effect_name in
+       match uu___1 with
+       | FStar_Pervasives_Native.None -> c
+       | FStar_Pervasives_Native.Some (binders, cdef) ->
+           let uu___2 = FStar_Syntax_Subst.open_comp binders cdef in
+           (match uu___2 with
+            | (binders1, cdef1) ->
+                (if
+                   (FStar_Compiler_List.length binders1) <>
+                     ((FStar_Compiler_List.length
+                         c.FStar_Syntax_Syntax.effect_args)
+                        + Prims.int_one)
+                 then
+                   (let uu___4 =
+                      let uu___5 =
+                        let uu___6 =
+                          FStar_Compiler_Util.string_of_int
+                            (FStar_Compiler_List.length binders1) in
+                        let uu___7 =
+                          FStar_Compiler_Util.string_of_int
+                            ((FStar_Compiler_List.length
+                                c.FStar_Syntax_Syntax.effect_args)
+                               + Prims.int_one) in
+                        let uu___8 =
+                          let uu___9 = FStar_Syntax_Syntax.mk_Comp c in
+                          FStar_Syntax_Print.comp_to_string uu___9 in
+                        FStar_Compiler_Util.format3
+                          "Effect constructor is not fully applied; expected %s args, got %s args, i.e., %s"
+                          uu___6 uu___7 uu___8 in
+                      (FStar_Errors.Fatal_ConstructorArgLengthMismatch,
+                        uu___5) in
+                    FStar_Errors.raise_error uu___4
+                      comp.FStar_Syntax_Syntax.pos)
+                 else ();
+                 (let inst =
+                    let uu___4 =
+                      let uu___5 =
+                        FStar_Syntax_Syntax.as_arg
+                          c.FStar_Syntax_Syntax.result_typ in
+                      uu___5 :: (c.FStar_Syntax_Syntax.effect_args) in
+                    FStar_Compiler_List.map2
+                      (fun b ->
+                         fun uu___5 ->
+                           match uu___5 with
+                           | (t, uu___6) ->
+                               FStar_Syntax_Syntax.NT
+                                 ((b.FStar_Syntax_Syntax.binder_bv), t))
+                      binders1 uu___4 in
+                  let c1 = FStar_Syntax_Subst.subst_comp inst cdef1 in
+                  let c2 =
+                    let uu___4 =
+                      let uu___5 = comp_to_comp_typ env1 c1 in
+                      {
+                        FStar_Syntax_Syntax.comp_univs =
+                          (uu___5.FStar_Syntax_Syntax.comp_univs);
+                        FStar_Syntax_Syntax.effect_name =
+                          (uu___5.FStar_Syntax_Syntax.effect_name);
+                        FStar_Syntax_Syntax.result_typ =
+                          (uu___5.FStar_Syntax_Syntax.result_typ);
+                        FStar_Syntax_Syntax.effect_args =
+                          (uu___5.FStar_Syntax_Syntax.effect_args);
+                        FStar_Syntax_Syntax.flags =
+                          (c.FStar_Syntax_Syntax.flags)
+                      } in
+                    FStar_Compiler_Effect.op_Bar_Greater uu___4
+                      FStar_Syntax_Syntax.mk_Comp in
+                  unfold_effect_abbrev env1 c2))))
 let effect_repr_aux :
   'uuuuu .
     'uuuuu ->
@@ -5873,29 +6082,6 @@ let (univnames :
             let uu___3 = FStar_Syntax_Free.univnames t in ext out uu___3 in
           aux uu___2 tl in
     aux no_univ_names env1.gamma
-let (bound_vars_of_bindings :
-  FStar_Syntax_Syntax.binding Prims.list -> FStar_Syntax_Syntax.bv Prims.list)
-  =
-  fun bs ->
-    FStar_Compiler_Effect.op_Bar_Greater bs
-      (FStar_Compiler_List.collect
-         (fun uu___ ->
-            match uu___ with
-            | FStar_Syntax_Syntax.Binding_var x -> [x]
-            | FStar_Syntax_Syntax.Binding_lid uu___1 -> []
-            | FStar_Syntax_Syntax.Binding_univ uu___1 -> []))
-let (binders_of_bindings :
-  FStar_Syntax_Syntax.binding Prims.list -> FStar_Syntax_Syntax.binders) =
-  fun bs ->
-    let uu___ =
-      let uu___1 = bound_vars_of_bindings bs in
-      FStar_Compiler_Effect.op_Bar_Greater uu___1
-        (FStar_Compiler_List.map FStar_Syntax_Syntax.mk_binder) in
-    FStar_Compiler_Effect.op_Bar_Greater uu___ FStar_Compiler_List.rev
-let (bound_vars : env -> FStar_Syntax_Syntax.bv Prims.list) =
-  fun env1 -> bound_vars_of_bindings env1.gamma
-let (all_binders : env -> FStar_Syntax_Syntax.binders) =
-  fun env1 -> binders_of_bindings env1.gamma
 let (print_gamma : FStar_Syntax_Syntax.gamma -> Prims.string) =
   fun gamma ->
     let uu___ =
@@ -6185,90 +6371,10 @@ let (abstract_guard_n :
           }
 let (abstract_guard : FStar_Syntax_Syntax.binder -> guard_t -> guard_t) =
   fun b -> fun g -> abstract_guard_n [b] g
-let (def_check_vars_in_set :
-  FStar_Compiler_Range.range ->
-    Prims.string ->
-      FStar_Syntax_Syntax.bv FStar_Compiler_Util.set ->
-        FStar_Syntax_Syntax.term -> unit)
-  =
-  fun rng ->
-    fun msg ->
-      fun vset ->
-        fun t ->
-          let uu___ = FStar_Options.defensive () in
-          if uu___
-          then
-            let s = FStar_Syntax_Free.names t in
-            let uu___1 =
-              let uu___2 =
-                let uu___3 = FStar_Compiler_Util.set_difference s vset in
-                FStar_Compiler_Effect.op_Less_Bar
-                  FStar_Compiler_Util.set_is_empty uu___3 in
-              Prims.op_Negation uu___2 in
-            (if uu___1
-             then
-               let uu___2 =
-                 let uu___3 =
-                   let uu___4 = FStar_Syntax_Print.term_to_string t in
-                   let uu___5 =
-                     let uu___6 = FStar_Compiler_Util.set_elements s in
-                     FStar_Compiler_Effect.op_Bar_Greater uu___6
-                       (FStar_Syntax_Print.bvs_to_string ",\n\t") in
-                   FStar_Compiler_Util.format3
-                     "Internal: term is not closed (%s).\nt = (%s)\nFVs = (%s)\n"
-                     msg uu___4 uu___5 in
-                 (FStar_Errors.Warning_Defensive, uu___3) in
-               FStar_Errors.log_issue rng uu___2
-             else ())
-          else ()
 let (too_early_in_prims : env -> Prims.bool) =
   fun env1 ->
     let uu___ = lid_exists env1 FStar_Parser_Const.effect_GTot_lid in
     Prims.op_Negation uu___
-let (def_check_closed_in :
-  FStar_Compiler_Range.range ->
-    Prims.string ->
-      FStar_Syntax_Syntax.bv Prims.list -> FStar_Syntax_Syntax.term -> unit)
-  =
-  fun rng ->
-    fun msg ->
-      fun l ->
-        fun t ->
-          let uu___ =
-            let uu___1 = FStar_Options.defensive () in
-            Prims.op_Negation uu___1 in
-          if uu___
-          then ()
-          else
-            (let uu___2 =
-               FStar_Compiler_Util.as_set l FStar_Syntax_Syntax.order_bv in
-             def_check_vars_in_set rng msg uu___2 t)
-let (def_check_closed_in_env :
-  FStar_Compiler_Range.range ->
-    Prims.string -> env -> FStar_Syntax_Syntax.term -> unit)
-  =
-  fun rng ->
-    fun msg ->
-      fun e ->
-        fun t ->
-          let uu___ =
-            let uu___1 = FStar_Options.defensive () in
-            Prims.op_Negation uu___1 in
-          if uu___
-          then ()
-          else
-            (let uu___2 = bound_vars e in
-             def_check_closed_in rng msg uu___2 t)
-let (def_check_guard_wf :
-  FStar_Compiler_Range.range -> Prims.string -> env -> guard_t -> unit) =
-  fun rng ->
-    fun msg ->
-      fun env1 ->
-        fun g ->
-          match g.FStar_TypeChecker_Common.guard_f with
-          | FStar_TypeChecker_Common.Trivial -> ()
-          | FStar_TypeChecker_Common.NonTrivial f ->
-              def_check_closed_in_env rng msg env1 f
 let (apply_guard : guard_t -> FStar_Syntax_Syntax.term -> guard_t) =
   fun g ->
     fun e ->
