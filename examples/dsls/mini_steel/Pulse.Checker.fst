@@ -124,7 +124,68 @@ let maybe_add_elim_pure (pre:pure_term) (t:term) : T.Tac (bool & term) =
     L.fold_left (fun t (p:term) ->
       let elim_pure_tm = Tm_STApp (Tm_FVar (mk_steel_wrapper_lid "elim_pure")) None p in
       Tm_Bind elim_pure_tm t) t pure_props
-  
+
+#push-options "--z3rlimit_factor 10"
+let rec combine_if_branches (f:RT.fstar_top_env)
+  (g_then:env)
+  (e_then:term)
+  (c_then:pure_comp_st)
+  (e_then_typing:src_typing f g_then e_then c_then)
+  (g_else:env)
+  (e_else:term)
+  (c_else:pure_comp_st)
+  (e_else_typing:src_typing f g_else e_else c_else)
+  : T.TacH (c:pure_comp_st{comp_pre c == comp_pre c_then} &
+            src_typing f g_then e_then c &
+            src_typing f g_else e_else c)
+           (requires fun _ ->
+              comp_pre c_then == comp_pre c_else)
+           (ensures fun _ _ -> True) =
+
+  if st_comp_of_comp c_then = st_comp_of_comp c_else
+  then begin
+    match c_then, c_else with
+    | C_ST _, C_ST _ -> (| c_then, e_then_typing, e_else_typing |)
+    | C_STAtomic inames1 _, C_STAtomic inames2 _
+    | C_STGhost inames1 _, C_STGhost inames2 _ ->
+      if inames1 = inames2
+      then (| c_then, e_then_typing, e_else_typing |)
+      else T.fail "Cannot combine then and else branches (different inames)"
+    | C_ST _, C_STAtomic inames _ ->
+      if inames = Tm_EmpInames
+      then begin
+        let e_else_typing =
+          T_Lift g_else e_else c_else c_then e_else_typing
+            (Lift_STAtomic_ST g_else c_else) in
+        (| c_then, e_then_typing, e_else_typing |)
+      end
+      else T.fail "Cannot lift STAtomic else branch to match then"
+    | C_STAtomic inames _, C_ST _ ->
+      if inames = Tm_EmpInames
+      then begin
+        let e_then_typing =
+          T_Lift g_then e_then c_then c_else e_then_typing
+            (Lift_STAtomic_ST g_then c_then) in
+        (| c_else, e_then_typing, e_else_typing |)
+      end
+      else T.fail "Cannot lift STAtomic else branch to match then"
+    | C_STGhost _ _, _ ->
+      let w = get_non_informative_witness f g_then (comp_u c_then) (comp_res c_then) in
+      let e_then_typing =
+        T_Lift _ _ _ _ e_then_typing (Lift_STGhost_STAtomic _ _ w) in
+      let (| c, e1_typing, e2_typing |) =
+        combine_if_branches _ _ _ _ e_then_typing _ _ _ e_else_typing in
+      (| c, e1_typing, e2_typing |)
+    | _, C_STGhost _ _ ->
+      let w = get_non_informative_witness f g_else (comp_u c_else) (comp_res c_else) in
+      let e_else_typing =
+        T_Lift _ _ _ _ e_else_typing (Lift_STGhost_STAtomic _ _ w) in
+      combine_if_branches _ _ _ _ e_then_typing _ _ _ e_else_typing
+    | _, _ -> T.fail "Cannot combine then and else branches (incompatible effects)"
+  end
+  else T.fail "Cannot combine then and else branches (different st_comp)"
+#pop-options
+
 #push-options "--query_stats --fuel 2 --ifuel 1 --z3rlimit_factor 10"
 #push-options "--print_implicits --print_universes --print_full_names"
 let rec check' : bool -> check_t =
@@ -263,13 +324,11 @@ let rec check' : bool -> check_t =
       let (| c2, e2_typing |) =
         force_st pre_typing (| c2, e2_typing |) in
       (| e2, c2, e2_typing |) in
-    if c1 = c2
-    then begin
-      (| Tm_If b e1 e2 post_if,
-         c1,
-         T_If g b e1 e2 post_if c1 hyp (E b_typing) e1_typing e2_typing |)
-    end
-    else T.fail "Different comps for the if branches"
+    let (| c, e1_typing, e2_typing |) =
+      combine_if_branches _ _ _ _ e1_typing _ _ _ e2_typing in
+    (| Tm_If b e1 e2 post_if,
+       c,
+       T_If g b e1 e2 post_if c hyp (E b_typing) e1_typing e2_typing |)
 
   | Tm_UVar _ ->
     T.fail "Unexpected Tm_Uvar in check"
