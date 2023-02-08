@@ -66,6 +66,7 @@ $(DOC_DIR)/%.md: %
 	python3 ../.scripts/fstardoc/fstardoc.py $^ > $@
 
 INSTALL_EXEC ?= install
+export INSTALL_EXEC
 
 install: all
 	+./install-ulib.sh
