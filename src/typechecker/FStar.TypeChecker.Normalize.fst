@@ -1072,9 +1072,7 @@ let decide_unfolding cfg stack rng fv qninfo (* : option (cfg * stack) *) =
         Some (cfg, stack)
 
 (* on_domain_lids are constant, so compute them once *)
-let on_domain_lids =
-  let fext_lid (s:string) = Ident.lid_of_path ["FStar"; "FunctionalExtensionality"; s] Range.dummyRange in
-  ["on_domain"; "on_dom"; "on_domain_g"; "on_dom_g"] |> List.map fext_lid
+let on_domain_lids = [ PC.fext_on_domain_lid; PC.fext_on_dom_lid; PC.fext_on_domain_g_lid; PC.fext_on_dom_g_lid ]
 
 let is_fext_on_domain (t:term) :option term =
   let is_on_dom fv = on_domain_lids |> List.existsb (fun l -> S.fv_eq_lid fv l) in

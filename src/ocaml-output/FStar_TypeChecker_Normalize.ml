@@ -2790,12 +2790,10 @@ let decide_unfolding :
                          FStar_Compiler_Range.dummyRange)) stack1 in
                 FStar_Pervasives_Native.Some (cfg, stack2)
 let (on_domain_lids : FStar_Ident.lident Prims.list) =
-  let fext_lid s =
-    FStar_Ident.lid_of_path ["FStar"; "FunctionalExtensionality"; s]
-      FStar_Compiler_Range.dummyRange in
-  FStar_Compiler_Effect.op_Bar_Greater
-    ["on_domain"; "on_dom"; "on_domain_g"; "on_dom_g"]
-    (FStar_Compiler_List.map fext_lid)
+  [FStar_Parser_Const.fext_on_domain_lid;
+  FStar_Parser_Const.fext_on_dom_lid;
+  FStar_Parser_Const.fext_on_domain_g_lid;
+  FStar_Parser_Const.fext_on_dom_g_lid]
 let (is_fext_on_domain :
   FStar_Syntax_Syntax.term ->
     FStar_Syntax_Syntax.term FStar_Pervasives_Native.option)

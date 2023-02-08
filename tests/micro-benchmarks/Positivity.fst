@@ -16,7 +16,6 @@
 module Positivity
 open FStar.All
 
-[@@expect_failure [3]]
 let option_is_some ([@@@strictly_positive] a:Type) = o:option a { Some? o }
 
 exception EExn of bool

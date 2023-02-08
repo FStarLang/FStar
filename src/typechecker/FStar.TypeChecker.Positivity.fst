@@ -82,6 +82,32 @@ let ty_occurs_in (ty_lid:lident)
   : bool
   = FStar.Compiler.Util.set_mem ty_lid (Free.fvars t)
 
+let fext_on_domain_index_sub_term index =
+    let head, args = U.head_and_args index in
+    match (U.un_uinst head).n, args with
+    | Tm_fvar fv, [_td; _tr; (f, _)] -> 
+      if S.fv_eq_lid fv C.fext_on_domain_lid 
+      ||  S.fv_eq_lid fv C.fext_on_domain_g_lid
+      then f
+      else index
+    | _ -> index
+
+let no_occurrence_in_indexes fv mutuals (indexes:list arg) =
+    L.iter 
+      (fun (index, _) ->
+        L.iter (fun mutual -> 
+                  if ty_occurs_in mutual (fext_on_domain_index_sub_term index)
+                  then raise_error
+                           (Errors.Error_InductiveTypeNotSatisfyPositivityCondition,
+                             BU.format3 "Type %s is not strictly positive since it instantiates \
+                                        a non-uniformly recursive parameter or index %s of %s"
+                              (string_of_lid mutual)
+                              (Print.term_to_string index)
+                              (string_of_lid fv))
+                           index.pos)
+                  mutuals)
+      indexes
+
 (* Checks is `t` is a name or fv and returns it, if so. *)
 let rec term_as_fv_or_name (t:term) 
   : option (either (fv * universes) bv)
@@ -441,6 +467,23 @@ and ty_strictly_positive_in_arguments_to_fvar
                    (string_of_lid ty_lid)
                    (string_of_lid fv)
                    (Print.args_to_string args));
+    let special_case_of_boolean_equality () =
+        if Ident.lid_equals fv C.c_eq2_lid
+        then match args with
+             | [(t, _); _; _] ->
+               begin
+               match (SS.compress t).n with
+               | Tm_fvar fv ->
+                 let res = S.fv_eq_lid fv C.bool_lid in
+                 if res
+                 then debug_positivity env (fun _ -> "special case of boolean equality succeeded");
+                 res
+               | _ -> false
+               end
+             | _ -> false
+        else false
+    in
+    if special_case_of_boolean_equality () then true else
     let fv_ty = 
       match Env.try_lookup_lid env fv with
       | Some ((_, fv_ty), _) -> fv_ty
@@ -462,21 +505,6 @@ and ty_strictly_positive_in_arguments_to_fvar
     //if fv has already been unfolded with same arguments, return true
     else (
       let ilid = fv in //fv is an inductive
-      let no_occurrence_in_indexes (indexes:list arg) =
-          L.iter 
-            (fun (index, _) ->
-              match L.tryFind (fun mutual -> ty_occurs_in mutual index) (ty_lid::mutuals) with
-              | Some mutual ->
-                raise_error
-                  (Errors.Error_InductiveTypeNotSatisfyPositivityCondition,
-                    BU.format2 "Type %s is not strictly positive since it instantiates \
-                               a non-uniformly recursive parameter or index of %s"
-                              (string_of_lid mutual)
-                              (string_of_lid fv))
-                  (range_of_lid fv)
-              | _ -> ())
-            indexes
-      in
       //note that num_ibs gives us only the type parameters,
       //and not indexes, which is what we need since we will
       //substitute them in the data constructor type
@@ -505,7 +533,7 @@ and ty_strictly_positive_in_arguments_to_fvar
       in
       let params, non_uniform_params = prefix_of_uniform_params [] params fv_params in
       let indexes = non_uniform_params@indexes in
-      no_occurrence_in_indexes indexes;
+      no_occurrence_in_indexes fv (ty_lid::mutuals) indexes;
       if already_unfolded ilid args unfolded env
       then (
         debug_positivity env (fun _ ->
@@ -583,20 +611,6 @@ and ty_strictly_positive_in_datacon_of_applied_inductive (env:env_t)
     //get the number of arguments that cover the type parameters num_ibs,
     //the rest are indexes and these should not mention the mutuals at all
     let args, rest = List.splitAt num_ibs args in
-    let check_no_occurrences (rest:list arg) =
-      match L.tryFind 
-               (fun mutual -> List.existsML (fun (a,_) -> ty_occurs_in mutual a) rest)
-               (ty_lid::mutuals)
-      with
-      | None -> ()
-      | Some mutual -> 
-        raise_error 
-          (Errors.Error_InductiveTypeNotSatisfyPositivityCondition,
-           BU.format2 "%s is not strictly positive in %s, since it occurs in an index"
-                      (string_of_lid mutual)           
-                      (string_of_lid dlid))
-          (range_of_lid ty_lid)
-    in
     let check_no_index_occurrences (t:term) =
       let head, args = U.head_and_args t in
       match (U.un_uinst head).n with
@@ -604,7 +618,8 @@ and ty_strictly_positive_in_datacon_of_applied_inductive (env:env_t)
         begin
         match num_inductive_ty_params env fv.fv_name.v with
         | None -> ()
-        | Some n -> check_no_occurrences (snd (List.splitAt n args))
+        | Some n -> 
+          no_occurrence_in_indexes dlid (ty_lid::mutuals) (snd (List.splitAt n args))
         end
       | _ -> ()
     in
@@ -617,7 +632,7 @@ and ty_strictly_positive_in_datacon_of_applied_inductive (env:env_t)
          (Print.term_to_string applied_dt));
     let fields, t = U.arrow_formals applied_dt in
     let head, params_indexes = U.head_and_args_full t in    
-    check_no_occurrences (snd (List.splitAt num_ibs params_indexes));
+    no_occurrence_in_indexes dlid (ty_lid::mutuals) (snd (List.splitAt num_ibs params_indexes));
     let rec strictly_positive_in_all_fields env fields =
         match fields with
         | [] -> true
