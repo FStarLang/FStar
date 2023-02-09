@@ -6128,6 +6128,8 @@ let rec (desugar_tycon :
                   FStar_Parser_AST.Hash
               | FStar_Pervasives_Native.Some (FStar_Parser_AST.Meta uu___) ->
                   FStar_Parser_AST.Hash
+              | FStar_Pervasives_Native.Some (FStar_Parser_AST.TypeClassArg)
+                  -> FStar_Parser_AST.Hash
               | uu___ -> FStar_Parser_AST.Nothing in
             FStar_Compiler_List.fold_left
               (fun out ->
