@@ -2773,8 +2773,9 @@ let rec desugar_tycon env (d: AST.decl) quals tcs : (env_t * sigelts) =
   let with_constructor_effect t = mk_term (App(tot, t, Nothing)) t.range t.level in
   let apply_binders t binders =
     let imp_of_aqual (b:AST.binder) = match b.aqual with
-        | Some Implicit -> Hash
-        | Some (Meta _) -> Hash
+        | Some Implicit
+        | Some (Meta _)
+        | Some TypeClassArg -> Hash
         | _ -> Nothing in
     List.fold_left (fun out b -> mk_term (App(out, binder_to_term b, imp_of_aqual b)) out.range out.level)
       t binders in
