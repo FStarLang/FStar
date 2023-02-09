@@ -64,6 +64,7 @@ dump
 *.cmxs
 *.cmxa
 *.o
+fstar.install
 
 .depend
 .depend.rsp
