@@ -350,3 +350,14 @@ type ptr_typ =
  | TUInt8 : ptr_typ
  | TStruct : l:list (string & ptr_typ) { no_repeats (map fst l) }  -> ptr_typ
 
+type sp_index (a:Type) : ([@@@strictly_positive] Type -> Type) = 
+  | MkSpIndex : sp_index a a
+
+assume
+val ptr ([@@@strictly_positive] elt : Type0) : Type0
+assume
+val offset (#elt:Type) (p:ptr elt) : nat
+
+let array ([@@@strictly_positive] elt : Type0) =
+  (p:ptr elt & l:nat { offset p == 0})
+

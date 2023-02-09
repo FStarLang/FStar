@@ -238,16 +238,18 @@ let (no_occurrence_in_indexes :
       fun indexes ->
         FStar_Compiler_List.iter (no_occurrence_in_index fv mutuals) indexes
 let (num_uniform_ty_params :
-  FStar_TypeChecker_Env.env -> FStar_Ident.lid -> Prims.int) =
+  FStar_TypeChecker_Env.env ->
+    FStar_Ident.lid -> Prims.int FStar_Pervasives_Native.option)
+  =
   fun env ->
     fun fv ->
       let uu___ = FStar_TypeChecker_Env.try_lookup_lid env fv in
       match uu___ with
-      | FStar_Pervasives_Native.None -> Prims.int_zero
+      | FStar_Pervasives_Native.None -> FStar_Pervasives_Native.None
       | FStar_Pervasives_Native.Some ((uu___1, fv_ty), uu___2) ->
           let uu___3 = FStar_TypeChecker_Env.num_inductive_ty_params env fv in
           (match uu___3 with
-           | FStar_Pervasives_Native.None -> Prims.int_zero
+           | FStar_Pervasives_Native.None -> FStar_Pervasives_Native.None
            | FStar_Pervasives_Native.Some num_params ->
                let uu___4 = FStar_Syntax_Util.arrow_formals fv_ty in
                (match uu___4 with
@@ -275,14 +277,14 @@ let (num_uniform_ty_params :
                       | (fv_params, uu___8) ->
                           let rec aux n formals =
                             match formals with
-                            | [] -> n
+                            | [] -> FStar_Pervasives_Native.Some n
                             | f::formals1 ->
                                 let uu___9 =
                                   FStar_Syntax_Util.has_attribute
                                     f.FStar_Syntax_Syntax.binder_attrs
                                     FStar_Parser_Const.binder_non_uniformly_recursive_parameter_attr in
                                 if uu___9
-                                then n
+                                then FStar_Pervasives_Native.Some n
                                 else aux (n + Prims.int_one) formals1 in
                           aux Prims.int_zero fv_params))))
 let (check_no_index_occurrences_in_arities :
@@ -307,90 +309,98 @@ let (check_no_index_occurrences_in_arities :
                uu___3.FStar_Syntax_Syntax.n in
              (match uu___2 with
               | FStar_Syntax_Syntax.Tm_fvar fv ->
-                  let n =
+                  let uu___3 =
                     num_uniform_ty_params env
                       (fv.FStar_Syntax_Syntax.fv_name).FStar_Syntax_Syntax.v in
-                  if (FStar_Compiler_List.length args) <= n
-                  then ()
-                  else
-                    (let uu___4 =
-                       FStar_TypeChecker_Env.try_lookup_lid env
-                         (fv.FStar_Syntax_Syntax.fv_name).FStar_Syntax_Syntax.v in
-                     match uu___4 with
-                     | FStar_Pervasives_Native.None ->
-                         no_occurrence_in_indexes
-                           (fv.FStar_Syntax_Syntax.fv_name).FStar_Syntax_Syntax.v
-                           mutuals args
-                     | FStar_Pervasives_Native.Some ((_us, i_typ), uu___5) ->
-                         (debug_positivity env
-                            (fun uu___7 ->
-                               let uu___8 =
-                                 FStar_Syntax_Print.term_to_string t in
-                               FStar_Compiler_Util.format2
-                                 "Checking arity indexes of %s (num uniform params = %s)"
-                                 uu___8 (Prims.string_of_int n));
-                          (let uu___7 = FStar_Compiler_List.splitAt n args in
-                           match uu___7 with
-                           | (params, indices) ->
-                               let inst_i_typ =
-                                 apply_constr_arrow
-                                   (fv.FStar_Syntax_Syntax.fv_name).FStar_Syntax_Syntax.v
-                                   i_typ params in
-                               let uu___8 =
-                                 FStar_Syntax_Util.arrow_formals inst_i_typ in
-                               (match uu___8 with
-                                | (formals, _sort) ->
-                                    let rec aux subst formals1 indices1 =
-                                      match (formals1, indices1) with
-                                      | (uu___9, []) -> ()
-                                      | (f::formals2, i::indices2) ->
-                                          let f_t =
-                                            FStar_Syntax_Subst.subst subst
-                                              (f.FStar_Syntax_Syntax.binder_bv).FStar_Syntax_Syntax.sort in
-                                          ((let uu___10 =
-                                              may_be_an_arity env f_t in
-                                            if uu___10
-                                            then
-                                              (debug_positivity env
-                                                 (fun uu___12 ->
-                                                    let uu___13 =
-                                                      FStar_Syntax_Print.term_to_string
+                  (match uu___3 with
+                   | FStar_Pervasives_Native.None -> ()
+                   | FStar_Pervasives_Native.Some n ->
+                       if (FStar_Compiler_List.length args) <= n
+                       then ()
+                       else
+                         (let uu___5 =
+                            FStar_TypeChecker_Env.try_lookup_lid env
+                              (fv.FStar_Syntax_Syntax.fv_name).FStar_Syntax_Syntax.v in
+                          match uu___5 with
+                          | FStar_Pervasives_Native.None ->
+                              no_occurrence_in_indexes
+                                (fv.FStar_Syntax_Syntax.fv_name).FStar_Syntax_Syntax.v
+                                mutuals args
+                          | FStar_Pervasives_Native.Some
+                              ((_us, i_typ), uu___6) ->
+                              (debug_positivity env
+                                 (fun uu___8 ->
+                                    let uu___9 =
+                                      FStar_Syntax_Print.term_to_string t in
+                                    FStar_Compiler_Util.format2
+                                      "Checking arity indexes of %s (num uniform params = %s)"
+                                      uu___9 (Prims.string_of_int n));
+                               (let uu___8 =
+                                  FStar_Compiler_List.splitAt n args in
+                                match uu___8 with
+                                | (params, indices) ->
+                                    let inst_i_typ =
+                                      apply_constr_arrow
+                                        (fv.FStar_Syntax_Syntax.fv_name).FStar_Syntax_Syntax.v
+                                        i_typ params in
+                                    let uu___9 =
+                                      FStar_Syntax_Util.arrow_formals
+                                        inst_i_typ in
+                                    (match uu___9 with
+                                     | (formals, _sort) ->
+                                         let rec aux subst formals1 indices1
+                                           =
+                                           match (formals1, indices1) with
+                                           | (uu___10, []) -> ()
+                                           | (f::formals2, i::indices2) ->
+                                               let f_t =
+                                                 FStar_Syntax_Subst.subst
+                                                   subst
+                                                   (f.FStar_Syntax_Syntax.binder_bv).FStar_Syntax_Syntax.sort in
+                                               ((let uu___11 =
+                                                   may_be_an_arity env f_t in
+                                                 if uu___11
+                                                 then
+                                                   (debug_positivity env
+                                                      (fun uu___13 ->
+                                                         let uu___14 =
+                                                           FStar_Syntax_Print.term_to_string
+                                                             (FStar_Pervasives_Native.fst
+                                                                i) in
+                                                         let uu___15 =
+                                                           FStar_Syntax_Print.term_to_string
+                                                             f_t in
+                                                         FStar_Compiler_Util.format2
+                                                           "Checking %s : %s (arity)"
+                                                           uu___14 uu___15);
+                                                    no_occurrence_in_index
+                                                      (fv.FStar_Syntax_Syntax.fv_name).FStar_Syntax_Syntax.v
+                                                      mutuals i)
+                                                 else
+                                                   debug_positivity env
+                                                     (fun uu___13 ->
+                                                        let uu___14 =
+                                                          FStar_Syntax_Print.term_to_string
+                                                            (FStar_Pervasives_Native.fst
+                                                               i) in
+                                                        let uu___15 =
+                                                          FStar_Syntax_Print.term_to_string
+                                                            f_t in
+                                                        FStar_Compiler_Util.format2
+                                                          "Skipping %s : %s (non-arity)"
+                                                          uu___14 uu___15));
+                                                (let subst1 =
+                                                   (FStar_Syntax_Syntax.NT
+                                                      ((f.FStar_Syntax_Syntax.binder_bv),
                                                         (FStar_Pervasives_Native.fst
-                                                           i) in
-                                                    let uu___14 =
-                                                      FStar_Syntax_Print.term_to_string
-                                                        f_t in
-                                                    FStar_Compiler_Util.format2
-                                                      "Checking %s : %s (arity)"
-                                                      uu___13 uu___14);
-                                               no_occurrence_in_index
+                                                           i)))
+                                                   :: subst in
+                                                 aux subst1 formals2 indices2))
+                                           | ([], uu___10) ->
+                                               no_occurrence_in_indexes
                                                  (fv.FStar_Syntax_Syntax.fv_name).FStar_Syntax_Syntax.v
-                                                 mutuals i)
-                                            else
-                                              debug_positivity env
-                                                (fun uu___12 ->
-                                                   let uu___13 =
-                                                     FStar_Syntax_Print.term_to_string
-                                                       (FStar_Pervasives_Native.fst
-                                                          i) in
-                                                   let uu___14 =
-                                                     FStar_Syntax_Print.term_to_string
-                                                       f_t in
-                                                   FStar_Compiler_Util.format2
-                                                     "Skipping %s : %s (non-arity)"
-                                                     uu___13 uu___14));
-                                           (let subst1 =
-                                              (FStar_Syntax_Syntax.NT
-                                                 ((f.FStar_Syntax_Syntax.binder_bv),
-                                                   (FStar_Pervasives_Native.fst
-                                                      i)))
-                                              :: subst in
-                                            aux subst1 formals2 indices2))
-                                      | ([], uu___9) ->
-                                          no_occurrence_in_indexes
-                                            (fv.FStar_Syntax_Syntax.fv_name).FStar_Syntax_Syntax.v
-                                            mutuals indices1 in
-                                    aux [] formals indices))))
+                                                 mutuals indices1 in
+                                         aux [] formals indices)))))
               | uu___3 -> ()))
 let rec (term_as_fv_or_name :
   FStar_Syntax_Syntax.term ->
@@ -819,7 +829,11 @@ and (ty_strictly_positive_in_arguments_to_fvar :
                        (check_no_index_occurrences_in_arities env mutuals t;
                         (let ilid = fv in
                          let num_uniform_params =
-                           num_uniform_ty_params env ilid in
+                           let uu___4 = num_uniform_ty_params env ilid in
+                           match uu___4 with
+                           | FStar_Pervasives_Native.None ->
+                               failwith "Unexpected type"
+                           | FStar_Pervasives_Native.Some n -> n in
                          let uu___4 =
                            FStar_Compiler_List.splitAt num_uniform_params
                              args in

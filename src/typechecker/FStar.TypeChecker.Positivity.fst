@@ -165,10 +165,10 @@ let no_occurrence_in_indexes fv mutuals (indexes:list arg) =
 
 let num_uniform_ty_params env (fv:lid) =
     match Env.try_lookup_lid env fv with
-    | None -> 0
+    | None -> None
     | Some ((_, fv_ty), _) ->
       match num_inductive_ty_params env fv with
-      | None -> 0
+      | None -> None
       | Some num_params ->
         let fv_formals, _ = U.arrow_formals fv_ty in
         if num_params > List.length fv_formals
@@ -183,11 +183,11 @@ let num_uniform_ty_params env (fv:lid) =
         let fv_params, _ = List.splitAt num_params fv_formals in
         let rec aux n formals =
             match formals with
-            | [] -> n
+            | [] -> Some n
             | f::formals ->
               if U.has_attribute f.binder_attrs
                                  C.binder_non_uniformly_recursive_parameter_attr
-              then n
+              then Some n
               else aux (n + 1) formals
         in
         aux 0 fv_params
@@ -207,46 +207,52 @@ let check_no_index_occurrences_in_arities env mutuals (t:term) =
   let head, args = U.head_and_args t in
   match (U.un_uinst head).n with
   | Tm_fvar fv -> 
-    let n = num_uniform_ty_params env fv.fv_name.v in
-    if List.length args <= n
-    then () //they are all uniform parameters, nothing to check
-    else (
-      match Env.try_lookup_lid env fv.fv_name.v with
-      | None -> no_occurrence_in_indexes fv.fv_name.v mutuals args
-      | Some ((_us, i_typ), _) ->
-        debug_positivity env (fun _ -> 
-          BU.format2 "Checking arity indexes of %s (num uniform params = %s)"
+    begin
+    match num_uniform_ty_params env fv.fv_name.v with
+    | None -> 
+      //the head is not (visibly) a inductive type; nothing to check
+      ()
+    | Some n ->
+      if List.length args <= n
+      then () //they are all uniform parameters, nothing to check
+      else (
+        match Env.try_lookup_lid env fv.fv_name.v with
+        | None -> no_occurrence_in_indexes fv.fv_name.v mutuals args
+        | Some ((_us, i_typ), _) ->
+          debug_positivity env (fun _ -> 
+            BU.format2 "Checking arity indexes of %s (num uniform params = %s)"
                      (Print.term_to_string t)
                      (string_of_int n));
-        let params, indices = List.splitAt n args in
-        let inst_i_typ = apply_constr_arrow fv.fv_name.v i_typ params in
-        let formals, _sort = U.arrow_formals inst_i_typ in
-        let rec aux subst formals indices =
-          match formals, indices with
-          | _, [] -> ()
-          | f::formals, i::indices ->
-            let f_t = SS.subst subst f.binder_bv.sort in
-            if may_be_an_arity env f_t
-            then (
-              debug_positivity env (fun _ ->
-                BU.format2 "Checking %s : %s (arity)"
-                  (Print.term_to_string (fst i))
-                  (Print.term_to_string f_t));
-              no_occurrence_in_index fv.fv_name.v mutuals i
-            )
-            else (
-              debug_positivity env (fun _ ->
-                BU.format2 "Skipping %s : %s (non-arity)"
-                  (Print.term_to_string (fst i))
-                  (Print.term_to_string f_t))
-            );
-            let subst = NT(f.binder_bv, fst i)::subst in
-            aux subst formals indices
-          | [], _ ->
-            no_occurrence_in_indexes fv.fv_name.v mutuals indices
-        in
-        aux [] formals indices
-      )
+          let params, indices = List.splitAt n args in
+          let inst_i_typ = apply_constr_arrow fv.fv_name.v i_typ params in
+          let formals, _sort = U.arrow_formals inst_i_typ in
+          let rec aux subst formals indices =
+            match formals, indices with
+            | _, [] -> ()
+            | f::formals, i::indices ->
+              let f_t = SS.subst subst f.binder_bv.sort in
+              if may_be_an_arity env f_t
+              then (
+                debug_positivity env (fun _ ->
+                  BU.format2 "Checking %s : %s (arity)"
+                    (Print.term_to_string (fst i))
+                    (Print.term_to_string f_t));
+                no_occurrence_in_index fv.fv_name.v mutuals i
+              )
+              else (
+                debug_positivity env (fun _ ->
+                  BU.format2 "Skipping %s : %s (non-arity)"
+                    (Print.term_to_string (fst i))
+                    (Print.term_to_string f_t))
+              );
+              let subst = NT(f.binder_bv, fst i)::subst in
+              aux subst formals indices
+            | [], _ ->
+              no_occurrence_in_indexes fv.fv_name.v mutuals indices
+          in
+          aux [] formals indices
+        )
+      end
   | _ -> ()
 
 (* Checks is `t` is a name or fv and returns it, if so. *)
@@ -640,7 +646,12 @@ and ty_strictly_positive_in_arguments_to_fvar
       //note that num_ibs gives us only the type parameters,
       //and not indexes, which is what we need since we will
       //substitute them in the data constructor type
-      let num_uniform_params = num_uniform_ty_params env ilid in
+      let num_uniform_params = 
+        match num_uniform_ty_params env ilid with
+        | None -> //impossible; we know that ilid is an inductive
+          failwith "Unexpected type"
+        | Some n -> n
+      in
       let params, _rest = List.splitAt num_uniform_params args in            
       if already_unfolded ilid args unfolded env
       then (
