@@ -1380,7 +1380,7 @@ let (lids_of_sigelt :
     | FStar_Syntax_Syntax.Sig_splice (lids, uu___) -> lids
     | FStar_Syntax_Syntax.Sig_bundle (uu___, lids) -> lids
     | FStar_Syntax_Syntax.Sig_inductive_typ
-        (lid, uu___, uu___1, uu___2, uu___3, uu___4) -> [lid]
+        (lid, uu___, uu___1, uu___2, uu___3, uu___4, uu___5) -> [lid]
     | FStar_Syntax_Syntax.Sig_effect_abbrev
         (lid, uu___, uu___1, uu___2, uu___3) -> [lid]
     | FStar_Syntax_Syntax.Sig_datacon

@@ -1286,7 +1286,7 @@ let (open_sig_inductive_typ :
     fun se ->
       match se.FStar_Syntax_Syntax.sigel with
       | FStar_Syntax_Syntax.Sig_inductive_typ
-          (lid, ty_us, ty_params, uu___, uu___1, uu___2) ->
+          (lid, ty_us, ty_params, _num_uniform, uu___, uu___1, uu___2) ->
           let uu___3 = FStar_Syntax_Subst.univ_var_opening ty_us in
           (match uu___3 with
            | (ty_usubst, ty_us1) ->
@@ -1349,7 +1349,9 @@ let (mark_uniform_type_parameters :
         let uu___ = tc.FStar_Syntax_Syntax.sigel in
         match uu___ with
         | FStar_Syntax_Syntax.Sig_inductive_typ
-            (tc_lid, us, ty_param_binders, t, mutuals, data_lids) ->
+            (tc_lid, us, ty_param_binders, _num_uniform, t, mutuals,
+             data_lids)
+            ->
             let uu___1 = open_sig_inductive_typ env tc in
             (match uu___1 with
              | (env1, (tc_lid1, us1, ty_params)) ->
@@ -1467,7 +1469,9 @@ let (mark_uniform_type_parameters :
                              FStar_Compiler_List.rev ty_param_binders_rev in
                            let sigel =
                              FStar_Syntax_Syntax.Sig_inductive_typ
-                               (tc_lid1, us1, ty_param_binders1, t, mutuals,
+                               (tc_lid1, us1, ty_param_binders1,
+                                 (FStar_Pervasives_Native.Some
+                                    max_uniform_prefix), t, mutuals,
                                  data_lids) in
                            {
                              FStar_Syntax_Syntax.sigel = sigel;

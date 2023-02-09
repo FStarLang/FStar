@@ -556,7 +556,7 @@ let inspect_sigelt (se : sigelt) : sigelt_view =
         in
         Sg_Let (r, List.map inspect_letbinding lbs)
 
-    | Sig_inductive_typ (lid, us, param_bs, ty, _mutual, c_lids) ->
+    | Sig_inductive_typ (lid, us, param_bs, _num_uniform, ty, _mutual, c_lids) ->
         let nm = Ident.path_of_lid lid in
         let s, us = SS.univ_var_opening us in
         let param_bs = SS.subst_binders s param_bs in
@@ -653,8 +653,9 @@ let pack_sigelt (sv:sigelt_view) : sigelt =
         (* close univs *)
         let param_bs = SS.subst_binders s param_bs in
         let ty = SS.subst s ty in
-
-        mk_sigelt <| Sig_inductive_typ (ind_lid, us_names, param_bs, ty, [], c_lids)
+        //We can't trust the assignment of num uniform binders from the reflection API
+        //So, set it to None; it has to be checked and recomputed
+        mk_sigelt <| Sig_inductive_typ (ind_lid, us_names, param_bs, None, ty, [], c_lids)
       in
       let se = mk_sigelt <| Sig_bundle (ind_se::ctor_ses, ind_lid::c_lids) in
       { se with sigquals = Noeq::se.sigquals }

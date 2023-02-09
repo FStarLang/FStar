@@ -139,7 +139,7 @@ let tc_inductive' env ses quals attrs lids =
          if not b then
            let lid, r =
              match ty.sigel with
-             | Sig_inductive_typ (lid, _, _, _, _, _) -> lid, ty.sigrng
+             | Sig_inductive_typ (lid, _, _, _, _, _, _) -> lid, ty.sigrng
              | _                                         -> failwith "Impossible!"
            in
            Errors.log_issue r (Errors.Error_InductiveTypeNotSatisfyPositivityCondition, ("Inductive type " ^ (string_of_lid lid) ^ " does not satisfy the strict positivity condition"))
@@ -171,7 +171,7 @@ let tc_inductive' env ses quals attrs lids =
         let lid =
           let ty = List.hd tcs in
           match ty.sigel with
-          | Sig_inductive_typ (lid, _, _, _, _, _) -> lid
+          | Sig_inductive_typ (lid, _, _, _, _, _, _) -> lid
           | _                                         -> failwith "Impossible"
         in
         //these are the prims type we are skipping

@@ -393,7 +393,7 @@ let (tc_inductive' :
                                match ty.FStar_Syntax_Syntax.sigel with
                                | FStar_Syntax_Syntax.Sig_inductive_typ
                                    (lid, uu___7, uu___8, uu___9, uu___10,
-                                    uu___11)
+                                    uu___11, uu___12)
                                    -> (lid, (ty.FStar_Syntax_Syntax.sigrng))
                                | uu___7 -> failwith "Impossible!" in
                              match uu___6 with
@@ -450,7 +450,8 @@ let (tc_inductive' :
                          let ty = FStar_Compiler_List.hd tcs in
                          match ty.FStar_Syntax_Syntax.sigel with
                          | FStar_Syntax_Syntax.Sig_inductive_typ
-                             (lid1, uu___4, uu___5, uu___6, uu___7, uu___8)
+                             (lid1, uu___4, uu___5, uu___6, uu___7, uu___8,
+                              uu___9)
                              -> lid1
                          | uu___4 -> failwith "Impossible" in
                        FStar_Compiler_List.existsb
@@ -4576,7 +4577,7 @@ let (tc_decls :
                ([], env) ses) in
       match uu___ with
       | (ses1, env1) -> ((FStar_Compiler_List.rev_append ses1 []), env1)
-let (uu___924 : unit) =
+let (uu___926 : unit) =
   FStar_Compiler_Effect.op_Colon_Equals tc_decls_knot
     (FStar_Pervasives_Native.Some tc_decls)
 let (snapshot_context :

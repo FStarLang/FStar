@@ -1232,7 +1232,7 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
        ) ([], [], []) g' in
        (decls |> mk_decls_trivial) @ elts @ rest @ (inversions |> mk_decls_trivial), env
 
-     | Sig_inductive_typ(t, universe_names, tps, k, _, datas) ->
+     | Sig_inductive_typ(t, universe_names, tps, _num_uniform, k, _, datas) ->
          let tcenv = env.tcenv in
          let is_injective  =
              let usubst, uvs = SS.univ_var_opening universe_names in

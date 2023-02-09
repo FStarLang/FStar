@@ -3236,9 +3236,9 @@ let rec elim_uvars (env:Env.env) (s:sigelt) =
     let sigattrs = List.map Mktuple3?._3 <| List.map (elim_uvars_aux_t env [] []) s.sigattrs in
     let s = { s with sigattrs } in
     match s.sigel with
-    | Sig_inductive_typ (lid, univ_names, binders, typ, lids, lids') ->
+    | Sig_inductive_typ (lid, univ_names, binders, num_uniform, typ, lids, lids') ->
       let univ_names, binders, typ = elim_uvars_aux_t env univ_names binders typ in
-      {s with sigel = Sig_inductive_typ(lid, univ_names, binders, typ, lids, lids')}
+      {s with sigel = Sig_inductive_typ(lid, univ_names, binders, num_uniform, typ, lids, lids')}
 
     | Sig_bundle (sigs, lids) ->
       {s with sigel = Sig_bundle(List.map (elim_uvars env) sigs, lids)}

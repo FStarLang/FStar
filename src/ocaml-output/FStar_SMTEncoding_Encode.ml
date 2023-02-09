@@ -4557,7 +4557,7 @@ and (encode_sigelt' :
                             FStar_Compiler_List.op_At uu___6 uu___7 in
                           (uu___5, env1))))
        | FStar_Syntax_Syntax.Sig_inductive_typ
-           (t, universe_names, tps, k, uu___1, datas) ->
+           (t, universe_names, tps, _num_uniform, k, uu___1, datas) ->
            let tcenv = env.FStar_SMTEncoding_Env.tcenv in
            let is_injective =
              let uu___2 = FStar_Syntax_Subst.univ_var_opening universe_names in

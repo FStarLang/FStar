@@ -181,11 +181,11 @@ let disentangle_abbrevs_from_bundle
           in
 
           let unfold_in_sig (x: sigelt) = match x.sigel with
-              | Sig_inductive_typ (lid, univs, bnd, ty, mut, dc) ->
+              | Sig_inductive_typ (lid, univs, bnd, num_uniform, ty, mut, dc) ->
                 let bnd' = inst_binders unfold_fv bnd in
                 let ty'  = inst unfold_fv ty in
                 let mut' = filter_out_type_abbrevs mut in
-                [{ x with sigel = Sig_inductive_typ (lid, univs, bnd', ty', mut', dc) }]
+                [{ x with sigel = Sig_inductive_typ (lid, univs, bnd', num_uniform, ty', mut', dc) }]
 
               | Sig_datacon (lid, univs, ty, res, npars, mut) ->
                 let ty' = inst unfold_fv ty in

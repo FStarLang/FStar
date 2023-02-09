@@ -5437,7 +5437,8 @@ let (t_destruct :
                                            (match se.FStar_Syntax_Syntax.sigel
                                             with
                                             | FStar_Syntax_Syntax.Sig_inductive_typ
-                                                (_lid, t_us, t_ps, t_ty, mut,
+                                                (_lid, t_us, t_ps,
+                                                 _num_uniform, t_ty, mut,
                                                  c_lids)
                                                 ->
                                                 let erasable =

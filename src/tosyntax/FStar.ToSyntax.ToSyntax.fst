@@ -566,7 +566,7 @@ let rec generalize_annotated_univs (s:sigelt) :sigelt =
     let uvs = sigs |> List.fold_left (fun uvs se ->
       let se_univs =
         match se.sigel with
-        | Sig_inductive_typ (_, _, bs, t, _, _) -> BU.set_union (bs_univnames bs) (Free.univnames t)
+        | Sig_inductive_typ (_, _, bs, _, t, _, _) -> BU.set_union (bs_univnames bs) (Free.univnames t)
         | Sig_datacon (_, _, t, _, _, _) -> Free.univnames t
         | _ -> failwith "Impossible: collect_annotated_universes: Sig_bundle should not have a non data/type sigelt"
       in
@@ -575,8 +575,14 @@ let rec generalize_annotated_univs (s:sigelt) :sigelt =
     let usubst = Subst.univ_var_closing uvs in
     { s with sigel = Sig_bundle (sigs |> List.map (fun se ->
       match se.sigel with
-      | Sig_inductive_typ (lid, _, bs, t, lids1, lids2) ->
-        { se with sigel = Sig_inductive_typ (lid, uvs, Subst.subst_binders usubst bs, Subst.subst (Subst.shift_subst (List.length bs) usubst) t, lids1, lids2) }
+      | Sig_inductive_typ (lid, _, bs, num_uniform, t, lids1, lids2) ->
+        { se with sigel = Sig_inductive_typ (lid,
+                                             uvs,
+                                             Subst.subst_binders usubst bs,
+                                             num_uniform,
+                                             Subst.subst (Subst.shift_subst (List.length bs) usubst) t,
+                                             lids1,
+                                             lids2) }
       | Sig_datacon (lid, _, t, tlid, n, lids) ->
         { se with sigel = Sig_datacon (lid, uvs, Subst.subst usubst t, tlid, n, lids) }
       | _ -> failwith "Impossible: collect_annotated_universes: Sig_bundle should not have a non data/type sigelt"
@@ -2802,7 +2808,7 @@ let rec desugar_tycon env (d: AST.decl) quals tcs : (env_t * sigelts) =
       let qlid = qualify _env id in
       let typars = Subst.close_binders typars in
       let k = Subst.close typars k in
-      let se = { sigel = Sig_inductive_typ(qlid, [], typars, k, mutuals, []);
+      let se = { sigel = Sig_inductive_typ(qlid, [], typars, None, k, mutuals, []);
                  sigquals = quals;
                  sigrng = rng;
                  sigmeta = default_sigmeta;
@@ -2825,7 +2831,7 @@ let rec desugar_tycon env (d: AST.decl) quals tcs : (env_t * sigelts) =
         let tc = TyconAbstract(id, bs, kopt) in
         let _, _, se, _ = desugar_abstract_tc quals env [] tc in
         let se = match se.sigel with
-           | Sig_inductive_typ(l, _, typars, k, [], []) ->
+           | Sig_inductive_typ(l, _, typars, _, k, [], []) ->
              let quals = se.sigquals in
              let quals = if List.contains S.Assumption quals
                          then quals
@@ -2920,7 +2926,7 @@ let rec desugar_tycon env (d: AST.decl) quals tcs : (env_t * sigelts) =
       let env, tcs = List.fold_left (collect_tcs quals) (env, []) tcs in
       let tcs = List.rev tcs in
       let tps_sigelts = tcs |> List.collect (function
-        | Inr ({ sigel = Sig_inductive_typ(id, uvs, tpars, k, _, _) }, binders, t, quals) -> //type abbrevs in mutual type definitions
+        | Inr ({ sigel = Sig_inductive_typ(id, uvs, tpars, _, k, _, _) }, binders, t, quals) -> //type abbrevs in mutual type definitions
               let t =
                   let env, tpars = typars_of_binders env binders in
                   let env_tps, tpars = push_tparams env tpars in
@@ -2930,7 +2936,8 @@ let rec desugar_tycon env (d: AST.decl) quals tcs : (env_t * sigelts) =
           in
           [([], mk_typ_abbrev env d id uvs tpars (Some k) t [id] quals rng)]
 
-        | Inl ({ sigel = Sig_inductive_typ(tname, univs, tpars, k, mutuals, _); sigquals = tname_quals }, constrs, tconstr, quals) ->
+        | Inl ({ sigel = Sig_inductive_typ(tname, univs, tpars, num_uniform, k, mutuals, _); sigquals = tname_quals },
+               constrs, tconstr, quals) ->
           let mk_tot t =
             let tot = mk_term (Name C.effect_Tot_lid) t.range t.level in
             mk_term (App(tot, t, Nothing)) t.range t.level in
@@ -2964,7 +2971,7 @@ let rec desugar_tycon env (d: AST.decl) quals tcs : (env_t * sigelts) =
                                             sigattrs = val_attrs @ attrs @ map (desugar_term env) cons_attrs;
                                             sigopts = None; }))))
           in
-          ([], { sigel = Sig_inductive_typ(tname, univs, tpars, k, mutuals, constrNames);
+          ([], { sigel = Sig_inductive_typ(tname, univs, tpars, num_uniform, k, mutuals, constrNames);
                                  sigquals = tname_quals;
                                  sigrng = rng;
                                  sigmeta = default_sigmeta  ;
@@ -2979,7 +2986,7 @@ let rec desugar_tycon env (d: AST.decl) quals tcs : (env_t * sigelts) =
       (* NOTE: derived operators such as projectors and discriminators are using the type names before unfolding. *)
       let data_ops = tps_sigelts |> List.collect (fun (tps, se) -> mk_data_projector_names quals env se) in
       let discs = sigelts |> List.collect (fun se -> match se.sigel with
-        | Sig_inductive_typ(tname, _, tps, k, _, constrs) ->
+        | Sig_inductive_typ(tname, _, tps, _, k, _, constrs) ->
           let quals = se.sigquals in
           mk_data_discriminators quals env
             (constrs |> List.filter (fun data_lid ->  //AR: create data discriminators only for non-record data constructors
@@ -3562,7 +3569,7 @@ and desugar_decl_noattrs env (d:decl) : (env_t * sigelts) =
     let rec splice_decl meths se =
         match se.sigel with
         | Sig_bundle (ses, _) -> List.concatMap (splice_decl meths) ses
-        | Sig_inductive_typ (lid, _univs, _binders, ty, _mutuals, _datas) ->
+        | Sig_inductive_typ (lid, _univs, _binders, _num_uniform, ty, _mutuals, _datas) ->
           let formals =
             match formals with
             | None -> []

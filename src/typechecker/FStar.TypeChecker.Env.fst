@@ -518,13 +518,13 @@ let try_lookup_lid_aux us_opt env lid =
            else None
       else Some (inst_tscheme (uvs, t), rng)
 
-    | Inr ({sigel = Sig_inductive_typ (lid, uvs, tps, k, _, _) }, None) ->
+    | Inr ({sigel = Sig_inductive_typ (lid, uvs, tps, _, k, _, _) }, None) ->
       begin match tps with
         | [] -> Some (inst_tscheme (uvs, k), rng)
         | _ ->  Some (inst_tscheme (uvs, U.flat_arrow tps (mk_Total k)), rng)
       end
 
-    | Inr ({sigel = Sig_inductive_typ (lid, uvs, tps, k, _, _) }, Some us) ->
+    | Inr ({sigel = Sig_inductive_typ (lid, uvs, tps, _, k, _, _) }, Some us) ->
       begin match tps with
         | [] -> Some (inst_tscheme_with (uvs, k) us, rng)
         | _ ->  Some (inst_tscheme_with (uvs, U.flat_arrow tps (mk_Total k)) us, rng)
@@ -641,7 +641,7 @@ let lookup_and_inst_datacon env us lid =
 
 let datacons_of_typ env lid =
   match lookup_qname env lid with
-    | Some (Inr ({ sigel = Sig_inductive_typ(_, _, _, _, _, dcs) }, _), _) -> true, dcs
+    | Some (Inr ({ sigel = Sig_inductive_typ(_, _, _, _, _, _, dcs) }, _), _) -> true, dcs
     | _ -> false, []
 
 let typ_of_datacon env lid =
@@ -925,7 +925,7 @@ let is_datacon env lid =
 
 let is_record env lid =
   match lookup_qname env lid with
-    | Some (Inr ({ sigel = Sig_inductive_typ(_, _, _, _, _, _); sigquals=quals }, _), _) ->
+    | Some (Inr ({ sigel = Sig_inductive_typ _; sigquals=quals }, _), _) ->
         BU.for_some (function RecordType _ | RecordConstructor _ -> true | _ -> false) quals
     | _ -> false
 
@@ -988,7 +988,7 @@ let is_type_constructor env lid =
 
 let num_inductive_ty_params env lid =
   match lookup_qname env lid with
-  | Some (Inr ({ sigel = Sig_inductive_typ (_, _, tps, _, _, _) }, _), _) ->
+  | Some (Inr ({ sigel = Sig_inductive_typ (_, _, tps, _, _, _, _) }, _), _) ->
     Some (List.length tps)
   | _ ->
     None

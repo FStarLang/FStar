@@ -8713,14 +8713,15 @@ let rec (elim_uvars :
         } in
       match s1.FStar_Syntax_Syntax.sigel with
       | FStar_Syntax_Syntax.Sig_inductive_typ
-          (lid, univ_names, binders, typ, lids, lids') ->
+          (lid, univ_names, binders, num_uniform, typ, lids, lids') ->
           let uu___ = elim_uvars_aux_t env1 univ_names binders typ in
           (match uu___ with
            | (univ_names1, binders1, typ1) ->
                {
                  FStar_Syntax_Syntax.sigel =
                    (FStar_Syntax_Syntax.Sig_inductive_typ
-                      (lid, univ_names1, binders1, typ1, lids, lids'));
+                      (lid, univ_names1, binders1, num_uniform, typ1, lids,
+                        lids'));
                  FStar_Syntax_Syntax.sigrng = (s1.FStar_Syntax_Syntax.sigrng);
                  FStar_Syntax_Syntax.sigquals =
                    (s1.FStar_Syntax_Syntax.sigquals);
