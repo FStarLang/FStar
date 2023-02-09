@@ -232,6 +232,7 @@ noeq
 type neg_match =
   | MNM : (match f Type0 neg_match with | Some t -> (t -> bool) | None -> unit) -> neg_match
 
+[@@expect_failure[3]]
 type non_uniform (a:Type) =
   | NU : non_uniform (a & a) -> non_uniform a
 
@@ -240,30 +241,33 @@ type non_uniform_is_not_sp ([@@@strictly_positive]a:Type) =
   | NUNSP : non_uniform_is_not_sp (a & a) -> non_uniform_is_not_sp a
 
 
-//Accepted by Agda, rejected by Coq
-[@@expect_failure [3]]
-type reject_non_uniform_use =
-  | RNUS : non_uniform reject_non_uniform_use -> reject_non_uniform_use
+// //Accepted by Agda, rejected by Coq
+// [@@expect_failure [3]]
+// type reject_non_uniform_use =
+//   | RNUS : non_uniform reject_non_uniform_use -> reject_non_uniform_use
 
+[@@expect_failure[3]]
 type mixed_non_uniform (a:Type) (b:Type)  =
   | MNU : mixed_non_uniform a (b & b) -> mixed_non_uniform a b
 
-type accept_safe_mixed_non_uniform_use =
-  | RNUS : mixed_non_uniform accept_safe_mixed_non_uniform_use unit -> accept_safe_mixed_non_uniform_use
+// type accept_safe_mixed_non_uniform_use =
+//   | RNUS : mixed_non_uniform accept_safe_mixed_non_uniform_use unit -> accept_safe_mixed_non_uniform_use
 
+[@@expect_failure[3]]
 type mixed_non_uniform_prefix (a:Type) (b:Type)  =
   | MNUP : mixed_non_uniform_prefix (a & a) b -> mixed_non_uniform_prefix a b
 
-[@@expect_failure [3]]
-type reject_safe_mixed_non_uniform_prefix_use =
-  | RNUSP : mixed_non_uniform_prefix unit reject_safe_mixed_non_uniform_prefix_use -> reject_safe_mixed_non_uniform_prefix_use
+// [@@expect_failure [3]]
+// type reject_safe_mixed_non_uniform_prefix_use =
+//   | RNUSP : mixed_non_uniform_prefix unit reject_safe_mixed_non_uniform_prefix_use -> reject_safe_mixed_non_uniform_prefix_use
 
+[@@expect_failure[3]]
 type flip (a:Type) (b:Type) =
   | Flip: flip b a -> flip a b
 
-[@@expect_failure[3]]
-type fail_use_flip =
-  | FUF : flip fail_use_flip bool -> fail_use_flip
+// [@@expect_failure[3]]
+// type fail_use_flip =
+//   | FUF : flip fail_use_flip bool -> fail_use_flip
 
 type indexing (a:Type) : Type -> Type = 
   | Mkindexing : indexing a a

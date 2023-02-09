@@ -1034,6 +1034,16 @@ let mark_uniform_type_parameters (env:env_t)
                               ty_param_bvs
                               field.binder_bv.sort))
         in
+        if max_uniform_prefix < n_params
+        then (
+          //forbidding non-uniform parameters
+          let _, (non_uniform_param::_) = List.splitAt max_uniform_prefix ty_params in
+          raise_error (Error_InductiveTypeNotSatisfyPositivityCondition,
+                       BU.format1 "Parameter %s is not uniformly recursive"
+                                  (Print.binder_to_string non_uniform_param))
+                       (range_of_bv non_uniform_param.binder_bv)
+
+        );
         let uniformity_flags =
             List.mapi (fun i p -> i < max_uniform_prefix) ty_params
         in
