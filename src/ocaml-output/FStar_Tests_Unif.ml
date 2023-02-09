@@ -58,38 +58,36 @@ let (guard_eq :
               FStar_Compiler_Effect.op_Colon_Equals success uu___2))
 let (unify :
   Prims.int ->
-    FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax ->
+    FStar_Syntax_Syntax.bv Prims.list ->
       FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax ->
-        FStar_TypeChecker_Common.guard_formula -> (unit -> unit) -> unit)
+        FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax ->
+          FStar_TypeChecker_Common.guard_formula -> (unit -> unit) -> unit)
   =
   fun i ->
-    fun x ->
-      fun y ->
-        fun g' ->
-          fun check ->
-            (let uu___1 = FStar_Compiler_Util.string_of_int i in
-             FStar_Compiler_Util.print1 "%s ..." uu___1);
-            (let uu___2 = FStar_Main.process_args () in
-             FStar_Compiler_Effect.op_Bar_Greater uu___2 (fun uu___3 -> ()));
-            (let uu___3 = FStar_Syntax_Print.term_to_string x in
-             let uu___4 = FStar_Syntax_Print.term_to_string y in
-             FStar_Compiler_Util.print2 "Unify %s\nand %s\n" uu___3 uu___4);
-            (let g =
-               let uu___3 =
-                 let uu___4 =
-                   let uu___5 = tcenv () in
-                   FStar_TypeChecker_Rel.teq uu___5 x y in
-                 let uu___5 =
-                   let uu___6 = tcenv () in
-                   FStar_TypeChecker_Rel.solve_deferred_constraints uu___6 in
-                 FStar_Compiler_Effect.op_Bar_Greater uu___4 uu___5 in
-               let uu___4 =
-                 let uu___5 = tcenv () in
-                 FStar_TypeChecker_Rel.simplify_guard uu___5 in
-               FStar_Compiler_Effect.op_Bar_Greater uu___3 uu___4 in
-             guard_eq i g.FStar_TypeChecker_Common.guard_f g';
-             check ();
-             FStar_Options.init ())
+    fun bvs ->
+      fun x ->
+        fun y ->
+          fun g' ->
+            fun check ->
+              (let uu___1 = FStar_Compiler_Util.string_of_int i in
+               FStar_Compiler_Util.print1 "%s ..." uu___1);
+              (let uu___2 = FStar_Main.process_args () in
+               FStar_Compiler_Effect.op_Bar_Greater uu___2 (fun uu___3 -> ()));
+              (let uu___3 = FStar_Syntax_Print.term_to_string x in
+               let uu___4 = FStar_Syntax_Print.term_to_string y in
+               FStar_Compiler_Util.print2 "Unify %s\nand %s\n" uu___3 uu___4);
+              (let tcenv1 = tcenv () in
+               let tcenv2 = FStar_TypeChecker_Env.push_bvs tcenv1 bvs in
+               let g =
+                 let uu___3 =
+                   let uu___4 = FStar_TypeChecker_Rel.teq tcenv2 x y in
+                   FStar_Compiler_Effect.op_Bar_Greater uu___4
+                     (FStar_TypeChecker_Rel.solve_deferred_constraints tcenv2) in
+                 FStar_Compiler_Effect.op_Bar_Greater uu___3
+                   (FStar_TypeChecker_Rel.simplify_guard tcenv2) in
+               guard_eq i g.FStar_TypeChecker_Common.guard_f g';
+               check ();
+               FStar_Options.init ())
 let (should_fail :
   FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax ->
     FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax -> unit)
@@ -238,41 +236,38 @@ let (run_all : unit -> Prims.bool) =
   fun uu___ ->
     FStar_Compiler_Util.print_string "Testing the unifier\n";
     FStar_Options.__set_unit_tests ();
-    (let unify_check n x y g f = unify n x y g f in
-     let unify1 n x y g = unify n x y g (fun uu___3 -> ()) in
+    (let unify_check n bvs x y g f = unify n bvs x y g f in
+     let unify1 n bvs x y g = unify n bvs x y g (fun uu___3 -> ()) in
      let int_t = FStar_Tests_Pars.tc "Prims.int" in
-     let x =
-       let uu___3 =
-         FStar_Syntax_Syntax.gen_bv "x" FStar_Pervasives_Native.None int_t in
-       FStar_Compiler_Effect.op_Bar_Greater uu___3
-         FStar_Syntax_Syntax.bv_to_name in
-     let y =
-       let uu___3 =
-         FStar_Syntax_Syntax.gen_bv "y" FStar_Pervasives_Native.None int_t in
-       FStar_Compiler_Effect.op_Bar_Greater uu___3
-         FStar_Syntax_Syntax.bv_to_name in
-     unify1 Prims.int_zero x x FStar_TypeChecker_Common.Trivial;
+     let x_bv =
+       FStar_Syntax_Syntax.gen_bv "x" FStar_Pervasives_Native.None int_t in
+     let y_bv =
+       FStar_Syntax_Syntax.gen_bv "y" FStar_Pervasives_Native.None int_t in
+     let x = FStar_Syntax_Syntax.bv_to_name x_bv in
+     let y = FStar_Syntax_Syntax.bv_to_name y_bv in
+     unify1 Prims.int_zero [x_bv] x x FStar_TypeChecker_Common.Trivial;
      (let uu___5 =
         let uu___6 =
           FStar_Syntax_Util.mk_eq2 FStar_Syntax_Syntax.U_zero
             FStar_Syntax_Util.t_bool x y in
         FStar_TypeChecker_Common.NonTrivial uu___6 in
-      unify1 Prims.int_one x y uu___5);
+      unify1 Prims.int_one [x_bv; y_bv] x y uu___5);
      (let id = FStar_Tests_Pars.tc "fun (x:bool) -> x" in
       (let uu___6 = FStar_Tests_Util.app id [x] in
-       unify1 (Prims.of_int (2)) x uu___6 FStar_TypeChecker_Common.Trivial);
+       unify1 (Prims.of_int (2)) [x_bv] x uu___6
+         FStar_TypeChecker_Common.Trivial);
       (let id1 = FStar_Tests_Pars.tc "fun (x:bool) -> x" in
-       unify1 (Prims.of_int (3)) id1 id1 FStar_TypeChecker_Common.Trivial;
+       unify1 (Prims.of_int (3)) [] id1 id1 FStar_TypeChecker_Common.Trivial;
        (let id2 = FStar_Tests_Pars.tc "fun (x:bool) -> x" in
         let id' = FStar_Tests_Pars.tc "fun (y:bool) -> y" in
-        unify1 (Prims.of_int (4)) id2 id' FStar_TypeChecker_Common.Trivial;
+        unify1 (Prims.of_int (4)) [] id2 id' FStar_TypeChecker_Common.Trivial;
         (let uu___9 = FStar_Tests_Pars.tc "fun (x y:bool) -> x" in
          let uu___10 = FStar_Tests_Pars.tc "fun (a b:bool) -> a" in
-         unify1 (Prims.of_int (5)) uu___9 uu___10
+         unify1 (Prims.of_int (5)) [] uu___9 uu___10
            FStar_TypeChecker_Common.Trivial);
         (let uu___10 = FStar_Tests_Pars.tc "fun (x y z:bool) -> y" in
          let uu___11 = FStar_Tests_Pars.tc "fun (a b c:bool) -> b" in
-         unify1 (Prims.of_int (6)) uu___10 uu___11
+         unify1 (Prims.of_int (6)) [] uu___10 uu___11
            FStar_TypeChecker_Common.Trivial);
         (let uu___11 = FStar_Tests_Pars.tc "fun (x:int) (y:int) -> y" in
          let uu___12 = FStar_Tests_Pars.tc "fun (x:int) (y:int) -> x" in
@@ -280,7 +275,7 @@ let (run_all : unit -> Prims.bool) =
            let uu___14 =
              FStar_Tests_Pars.tc "(forall (x:int). (forall (y:int). y==x))" in
            FStar_TypeChecker_Common.NonTrivial uu___14 in
-         unify1 (Prims.of_int (7)) uu___11 uu___12 uu___13);
+         unify1 (Prims.of_int (7)) [] uu___11 uu___12 uu___13);
         (let uu___12 = FStar_Tests_Pars.tc "fun (x:int) (y:int) (z:int) -> y" in
          let uu___13 = FStar_Tests_Pars.tc "fun (x:int) (y:int) (z:int) -> z" in
          let uu___14 =
@@ -288,7 +283,7 @@ let (run_all : unit -> Prims.bool) =
              FStar_Tests_Pars.tc
                "(forall (x:int). (forall (y:int). (forall (z:int). y==z)))" in
            FStar_TypeChecker_Common.NonTrivial uu___15 in
-         unify1 (Prims.of_int (8)) uu___12 uu___13 uu___14);
+         unify1 (Prims.of_int (8)) [] uu___12 uu___13 uu___14);
         (let uu___13 = FStar_Main.process_args () in
          FStar_Compiler_Effect.op_Bar_Greater uu___13 (fun uu___14 -> ()));
         (let uu___13 =
@@ -305,7 +300,7 @@ let (run_all : unit -> Prims.bool) =
                  FStar_Compiler_Util.string_of_bool uu___16 in
                FStar_Compiler_Util.print1
                  "Processed args: debug_at_level Core? %s\n" uu___15);
-              unify_check (Prims.of_int (9)) tm sol
+              unify_check (Prims.of_int (9)) [] tm sol
                 FStar_TypeChecker_Common.Trivial
                 (fun uu___16 ->
                    let uu___17 =
@@ -323,7 +318,7 @@ let (run_all : unit -> Prims.bool) =
                match uu___16 with
                | (tm1, us1) ->
                    let sol1 = FStar_Tests_Pars.tc "fun (x y:int) -> x + y" in
-                   (unify_check (Prims.of_int (10)) tm1 sol1
+                   (unify_check (Prims.of_int (10)) [] tm1 sol1
                       FStar_TypeChecker_Common.Trivial
                       (fun uu___18 ->
                          let uu___19 =
@@ -341,14 +336,14 @@ let (run_all : unit -> Prims.bool) =
                           FStar_Tests_Pars.tc
                             "forall (x:int). (forall (y:int). y==x)" in
                         FStar_TypeChecker_Common.NonTrivial uu___20 in
-                      unify1 (Prims.of_int (11)) tm11 tm2 uu___19);
+                      unify1 (Prims.of_int (11)) [] tm11 tm2 uu___19);
                      (let tm12 =
                         FStar_Tests_Pars.tc
                           "a:Type0 -> b:(a -> Type0) -> x:a -> y:b x -> Tot Type0" in
                       let tm21 =
                         FStar_Tests_Pars.tc
                           "a:Type0 -> b:(a -> Type0) -> x:a -> y:b x -> Tot Type0" in
-                      unify1 (Prims.of_int (12)) tm12 tm21
+                      unify1 (Prims.of_int (12)) [] tm12 tm21
                         FStar_TypeChecker_Common.Trivial;
                       (let uu___20 =
                          let int_typ = FStar_Tests_Pars.tc "int" in
@@ -391,10 +386,10 @@ let (run_all : unit -> Prims.bool) =
                                  let uu___25 = FStar_Tests_Util.app l1 [u_p] in
                                  norm uu___25 in
                                FStar_Tests_Util.app uu___24 [unit] in
-                             (tm13, tm22) in
+                             (tm13, tm22, [x1; q]) in
                        match uu___20 with
-                       | (tm13, tm22) ->
-                           (unify1 (Prims.of_int (13)) tm13 tm22
+                       | (tm13, tm22, bvs_13) ->
+                           (unify1 (Prims.of_int (13)) bvs_13 tm13 tm22
                               FStar_TypeChecker_Common.Trivial;
                             (let uu___22 =
                                let int_typ = FStar_Tests_Pars.tc "int" in
@@ -443,10 +438,10 @@ let (run_all : unit -> Prims.bool) =
                                          FStar_Tests_Util.app l1 [u_p] in
                                        norm uu___27 in
                                      FStar_Tests_Util.app uu___26 [unit] in
-                                   (tm14, tm23) in
+                                   (tm14, tm23, [x1; q]) in
                              match uu___22 with
-                             | (tm14, tm23) ->
-                                 (unify1 (Prims.of_int (14)) tm14 tm23
+                             | (tm14, tm23, bvs_14) ->
+                                 (unify1 (Prims.of_int (14)) bvs_14 tm14 tm23
                                     FStar_TypeChecker_Common.Trivial;
                                   (let uu___24 =
                                      FStar_Tests_Pars.pars_and_tc_fragment

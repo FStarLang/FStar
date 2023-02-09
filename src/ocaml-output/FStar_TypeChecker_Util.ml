@@ -232,13 +232,19 @@ let (extract_let_rec_annotation :
                                        FStar_Syntax_Subst.subst_decreasing_order
                                          s d in
                                      let c1 =
+                                       let uu___9 =
+                                         FStar_TypeChecker_Env.push_binders
+                                           env1 bs in
                                        FStar_TypeChecker_Env.comp_set_flags
-                                         env1 c flags in
+                                         uu___9 c flags in
                                      let tarr1 =
                                        FStar_Syntax_Util.arrow bs c1 in
                                      let c'1 =
+                                       let uu___9 =
+                                         FStar_TypeChecker_Env.push_binders
+                                           env1 bs' in
                                        FStar_TypeChecker_Env.comp_set_flags
-                                         env1 c'
+                                         uu___9 c'
                                          ((FStar_Syntax_Syntax.DECREASES d')
                                          :: flags') in
                                      let tannot =
@@ -867,6 +873,17 @@ let (join_lcomp :
         else
           join_effects env c1.FStar_TypeChecker_Common.eff_name
             c2.FStar_TypeChecker_Common.eff_name
+let (maybe_push :
+  FStar_TypeChecker_Env.env ->
+    FStar_Syntax_Syntax.bv FStar_Pervasives_Native.option ->
+      FStar_TypeChecker_Env.env)
+  =
+  fun env ->
+    fun b ->
+      match b with
+      | FStar_Pervasives_Native.None -> env
+      | FStar_Pervasives_Native.Some bv ->
+          FStar_TypeChecker_Env.push_bv env bv
 let (lift_comps_sep_guards :
   FStar_TypeChecker_Env.env ->
     FStar_Syntax_Syntax.comp ->
@@ -883,7 +900,8 @@ let (lift_comps_sep_guards :
         fun b ->
           fun for_bind ->
             let c11 = FStar_TypeChecker_Env.unfold_effect_abbrev env c1 in
-            let c21 = FStar_TypeChecker_Env.unfold_effect_abbrev env c2 in
+            let env2 = maybe_push env b in
+            let c21 = FStar_TypeChecker_Env.unfold_effect_abbrev env2 c2 in
             let uu___ =
               FStar_TypeChecker_Env.join_opt env
                 c11.FStar_Syntax_Syntax.effect_name
@@ -895,7 +913,7 @@ let (lift_comps_sep_guards :
                  | (c12, g1) ->
                      let uu___2 =
                        if Prims.op_Negation for_bind
-                       then lift_comp env c21 lift2
+                       then lift_comp env2 c21 lift2
                        else
                          (let x_a =
                             match b with
@@ -1009,7 +1027,8 @@ let (close_wp_comp :
             if uu___3
             then c
             else
-              (let close_wp u_res md res_t bvs1 wp0 =
+              (let env_bvs = FStar_TypeChecker_Env.push_bvs env bvs in
+               let close_wp u_res md res_t bvs1 wp0 =
                  let close =
                    let uu___5 =
                      FStar_Compiler_Effect.op_Bar_Greater md
@@ -1025,7 +1044,7 @@ let (close_wp_comp :
                         let us =
                           let uu___5 =
                             let uu___6 =
-                              env.FStar_TypeChecker_Env.universe_of env
+                              env.FStar_TypeChecker_Env.universe_of env_bvs
                                 x.FStar_Syntax_Syntax.sort in
                             [uu___6] in
                           u_res :: uu___5 in
@@ -1052,7 +1071,7 @@ let (close_wp_comp :
                           uu___7 :: uu___8 in
                         FStar_Syntax_Syntax.mk_Tm_app uu___5 uu___6
                           wp0.FStar_Syntax_Syntax.pos) bvs1 wp0 in
-               let c1 = FStar_TypeChecker_Env.unfold_effect_abbrev env c in
+               let c1 = FStar_TypeChecker_Env.unfold_effect_abbrev env_bvs c in
                let uu___5 = destruct_wp_comp c1 in
                match uu___5 with
                | (u_res_t, res_t, wp) ->
@@ -2425,11 +2444,12 @@ let (mk_bind :
         fun c2 ->
           fun flags ->
             fun r1 ->
+              let env2 = maybe_push env b in
               let uu___ =
                 let uu___1 =
                   FStar_TypeChecker_Env.unfold_effect_abbrev env c1 in
                 let uu___2 =
-                  FStar_TypeChecker_Env.unfold_effect_abbrev env c2 in
+                  FStar_TypeChecker_Env.unfold_effect_abbrev env2 c2 in
                 (uu___1, uu___2) in
               match uu___ with
               | (ct1, ct2) ->
@@ -2449,7 +2469,7 @@ let (mk_bind :
                                 FStar_TypeChecker_Env.comp_to_comp_typ env
                                   c11 in
                               let uu___5 =
-                                FStar_TypeChecker_Env.comp_to_comp_typ env
+                                FStar_TypeChecker_Env.comp_to_comp_typ env2
                                   c21 in
                               (uu___4, uu___5) in
                             (match uu___3 with
@@ -3584,7 +3604,7 @@ let (assume_result_eq_pure_term_in_m :
                    | (ret, g_ret) ->
                        let ret1 =
                          let uu___5 =
-                           FStar_TypeChecker_Env.comp_set_flags env ret
+                           FStar_TypeChecker_Env.comp_set_flags env_x ret
                              [FStar_Syntax_Syntax.PARTIAL_RETURN] in
                          FStar_Compiler_Effect.op_Less_Bar
                            FStar_TypeChecker_Common.lcomp_of_comp uu___5 in
@@ -5894,29 +5914,31 @@ let (reify_body :
   fun env ->
     fun steps ->
       fun t ->
-        let tm = FStar_Syntax_Util.mk_reify t in
-        let tm' =
-          FStar_TypeChecker_Normalize.normalize
-            (FStar_Compiler_List.op_At
-               [FStar_TypeChecker_Env.Beta;
-               FStar_TypeChecker_Env.Reify;
-               FStar_TypeChecker_Env.Eager_unfolding;
-               FStar_TypeChecker_Env.EraseUniverses;
-               FStar_TypeChecker_Env.AllowUnboundUniverses;
-               FStar_TypeChecker_Env.Exclude FStar_TypeChecker_Env.Zeta]
-               steps) env tm in
-        (let uu___1 =
-           FStar_Compiler_Effect.op_Less_Bar
-             (FStar_TypeChecker_Env.debug env)
-             (FStar_Options.Other "SMTEncodingReify") in
-         if uu___1
-         then
-           let uu___2 = FStar_Syntax_Print.term_to_string tm in
-           let uu___3 = FStar_Syntax_Print.term_to_string tm' in
-           FStar_Compiler_Util.print2 "Reified body %s \nto %s\n" uu___2
-             uu___3
-         else ());
-        tm'
+        FStar_TypeChecker_Env.def_check_closed_in_env
+          t.FStar_Syntax_Syntax.pos "reify_body" env t;
+        (let tm = FStar_Syntax_Util.mk_reify t in
+         let tm' =
+           FStar_TypeChecker_Normalize.normalize
+             (FStar_Compiler_List.op_At
+                [FStar_TypeChecker_Env.Beta;
+                FStar_TypeChecker_Env.Reify;
+                FStar_TypeChecker_Env.Eager_unfolding;
+                FStar_TypeChecker_Env.EraseUniverses;
+                FStar_TypeChecker_Env.AllowUnboundUniverses;
+                FStar_TypeChecker_Env.Exclude FStar_TypeChecker_Env.Zeta]
+                steps) env tm in
+         (let uu___2 =
+            FStar_Compiler_Effect.op_Less_Bar
+              (FStar_TypeChecker_Env.debug env)
+              (FStar_Options.Other "SMTEncodingReify") in
+          if uu___2
+          then
+            let uu___3 = FStar_Syntax_Print.term_to_string tm in
+            let uu___4 = FStar_Syntax_Print.term_to_string tm' in
+            FStar_Compiler_Util.print2 "Reified body %s \nto %s\n" uu___3
+              uu___4
+          else ());
+         tm')
 let (reify_body_with_arg :
   FStar_TypeChecker_Env.env ->
     FStar_TypeChecker_Env.steps ->
@@ -8047,8 +8069,6 @@ let (update_env_sub_eff :
                 (env.FStar_TypeChecker_Env.teq_nosmt_force);
               FStar_TypeChecker_Env.subtype_nosmt_force =
                 (env.FStar_TypeChecker_Env.subtype_nosmt_force);
-              FStar_TypeChecker_Env.use_bv_sorts =
-                (env.FStar_TypeChecker_Env.use_bv_sorts);
               FStar_TypeChecker_Env.qtbl_name_and_index =
                 (env.FStar_TypeChecker_Env.qtbl_name_and_index);
               FStar_TypeChecker_Env.normalized_eff_names =
@@ -8143,8 +8163,6 @@ let (update_env_sub_eff :
             (env1.FStar_TypeChecker_Env.teq_nosmt_force);
           FStar_TypeChecker_Env.subtype_nosmt_force =
             (env1.FStar_TypeChecker_Env.subtype_nosmt_force);
-          FStar_TypeChecker_Env.use_bv_sorts =
-            (env1.FStar_TypeChecker_Env.use_bv_sorts);
           FStar_TypeChecker_Env.qtbl_name_and_index =
             (env1.FStar_TypeChecker_Env.qtbl_name_and_index);
           FStar_TypeChecker_Env.normalized_eff_names =
@@ -8700,10 +8718,13 @@ and (ty_strictly_positive_in_type :
     fun ty_lid ->
       fun btype ->
         fun unfolded ->
+          FStar_TypeChecker_Env.def_check_closed_in_env
+            btype.FStar_Syntax_Syntax.pos "ty_strictly_positive_in_type" env
+            btype;
           debug_positivity env
-            (fun uu___1 ->
-               let uu___2 = FStar_Syntax_Print.term_to_string btype in
-               Prims.op_Hat "Checking strict positivity in type: " uu___2);
+            (fun uu___2 ->
+               let uu___3 = FStar_Syntax_Print.term_to_string btype in
+               Prims.op_Hat "Checking strict positivity in type: " uu___3);
           (let btype1 =
              FStar_TypeChecker_Normalize.normalize
                [FStar_TypeChecker_Env.Beta;
@@ -8717,174 +8738,177 @@ and (ty_strictly_positive_in_type :
                FStar_TypeChecker_Env.Unascribe;
                FStar_TypeChecker_Env.AllowUnboundUniverses] env btype in
            debug_positivity env
-             (fun uu___2 ->
-                let uu___3 = FStar_Syntax_Print.term_to_string btype1 in
+             (fun uu___3 ->
+                let uu___4 = FStar_Syntax_Print.term_to_string btype1 in
                 Prims.op_Hat
                   "Checking strict positivity in type, after normalization: "
-                  uu___3);
-           (let uu___2 = ty_occurs_in ty_lid btype1 in
-            Prims.op_Negation uu___2) ||
+                  uu___4);
+           (let uu___3 = ty_occurs_in ty_lid btype1 in
+            Prims.op_Negation uu___3) ||
              ((debug_positivity env
-                 (fun uu___3 -> "ty does occur in this type, pressing ahead");
-               (let uu___3 =
-                  let uu___4 = FStar_Syntax_Subst.compress btype1 in
-                  uu___4.FStar_Syntax_Syntax.n in
-                match uu___3 with
+                 (fun uu___4 -> "ty does occur in this type, pressing ahead");
+               (let uu___4 =
+                  let uu___5 = FStar_Syntax_Subst.compress btype1 in
+                  uu___5.FStar_Syntax_Syntax.n in
+                match uu___4 with
                 | FStar_Syntax_Syntax.Tm_app (t, args) ->
                     let fv_us_opt = try_get_fv t in
-                    let uu___4 =
+                    let uu___5 =
                       FStar_Compiler_Effect.op_Bar_Greater fv_us_opt
                         FStar_Compiler_Util.is_none in
-                    if uu___4
+                    if uu___5
                     then
                       (debug_positivity env
-                         (fun uu___6 ->
+                         (fun uu___7 ->
                             "ty is an app node with head that is not an fv");
-                       (let uu___6 =
+                       (let uu___7 =
                           env.FStar_TypeChecker_Env.typeof_well_typed_tot_or_gtot_term
                             env t (let must_tot = false in must_tot) in
-                        match uu___6 with
-                        | (t_ty, uu___7) ->
+                        match uu___7 with
+                        | (t_ty, uu___8) ->
                             check_strictly_positive_argument env ty_lid t_ty
                               args unfolded))
                     else
-                      (let uu___6 =
+                      (let uu___7 =
                          FStar_Compiler_Effect.op_Bar_Greater fv_us_opt
                            FStar_Compiler_Util.must in
-                       match uu___6 with
+                       match uu___7 with
                        | (fv, us) ->
-                           let uu___7 =
+                           let uu___8 =
                              FStar_Ident.lid_equals
                                (fv.FStar_Syntax_Syntax.fv_name).FStar_Syntax_Syntax.v
                                ty_lid in
-                           if uu___7
+                           if uu___8
                            then
                              (debug_positivity env
-                                (fun uu___9 ->
+                                (fun uu___10 ->
                                    "Checking strict positivity in the Tm_app node where head lid is ty itself, checking that ty does not occur in the arguments");
                               FStar_Compiler_List.for_all
-                                (fun uu___9 ->
-                                   match uu___9 with
-                                   | (t1, uu___10) ->
-                                       let uu___11 = ty_occurs_in ty_lid t1 in
-                                       Prims.op_Negation uu___11) args)
+                                (fun uu___10 ->
+                                   match uu___10 with
+                                   | (t1, uu___11) ->
+                                       let uu___12 = ty_occurs_in ty_lid t1 in
+                                       Prims.op_Negation uu___12) args)
                            else
                              (debug_positivity env
-                                (fun uu___10 ->
+                                (fun uu___11 ->
                                    "Checking strict positivity in the Tm_app node, head lid is not ty, so checking nested positivity");
                               ty_nested_positive_in_inductive env ty_lid
                                 (fv.FStar_Syntax_Syntax.fv_name).FStar_Syntax_Syntax.v
                                 us args unfolded))
                 | FStar_Syntax_Syntax.Tm_arrow (sbs, c) ->
                     (debug_positivity env
-                       (fun uu___5 ->
+                       (fun uu___6 ->
                           "Checking strict positivity in Tm_arrow");
                      (let check_comp1 =
                         (FStar_Syntax_Util.is_pure_or_ghost_comp c) ||
-                          (let uu___5 =
-                             let uu___6 =
-                               let uu___7 =
+                          (let uu___6 =
+                             let uu___7 =
+                               let uu___8 =
                                  FStar_Compiler_Effect.op_Bar_Greater c
                                    FStar_Syntax_Util.comp_effect_name in
-                               FStar_Compiler_Effect.op_Bar_Greater uu___7
+                               FStar_Compiler_Effect.op_Bar_Greater uu___8
                                  (FStar_TypeChecker_Env.norm_eff_name env) in
-                             FStar_Compiler_Effect.op_Bar_Greater uu___6
+                             FStar_Compiler_Effect.op_Bar_Greater uu___7
                                (FStar_TypeChecker_Env.lookup_effect_quals env) in
-                           FStar_Compiler_Effect.op_Bar_Greater uu___5
+                           FStar_Compiler_Effect.op_Bar_Greater uu___6
                              (FStar_Compiler_List.contains
                                 FStar_Syntax_Syntax.TotalEffect)) in
                       if Prims.op_Negation check_comp1
                       then
                         (debug_positivity env
-                           (fun uu___6 ->
+                           (fun uu___7 ->
                               "Checking strict positivity , the arrow is impure, so return true");
                          true)
                       else
                         (debug_positivity env
-                           (fun uu___7 ->
+                           (fun uu___8 ->
                               "Checking struict positivity, Pure arrow, checking that ty does not occur in the binders, and that it is strictly positive in the return type");
-                         (FStar_Compiler_List.for_all
-                            (fun uu___7 ->
-                               match uu___7 with
-                               | { FStar_Syntax_Syntax.binder_bv = b;
-                                   FStar_Syntax_Syntax.binder_qual = uu___8;
-                                   FStar_Syntax_Syntax.binder_attrs = uu___9;_}
-                                   ->
-                                   let uu___10 =
-                                     ty_occurs_in ty_lid
-                                       b.FStar_Syntax_Syntax.sort in
-                                   Prims.op_Negation uu___10) sbs)
-                           &&
-                           ((let uu___7 =
-                               FStar_Syntax_Subst.open_term sbs
-                                 (FStar_Syntax_Util.comp_result c) in
-                             match uu___7 with
-                             | (uu___8, return_type) ->
+                         (let uu___8 = FStar_Syntax_Subst.open_comp sbs c in
+                          match uu___8 with
+                          | (sbs1, c1) ->
+                              (FStar_Compiler_List.for_all
+                                 (fun uu___9 ->
+                                    match uu___9 with
+                                    | { FStar_Syntax_Syntax.binder_bv = b;
+                                        FStar_Syntax_Syntax.binder_qual =
+                                          uu___10;
+                                        FStar_Syntax_Syntax.binder_attrs =
+                                          uu___11;_}
+                                        ->
+                                        let uu___12 =
+                                          ty_occurs_in ty_lid
+                                            b.FStar_Syntax_Syntax.sort in
+                                        Prims.op_Negation uu___12) sbs1)
+                                &&
+                                (let return_type =
+                                   FStar_Syntax_Util.comp_result c1 in
                                  let uu___9 =
-                                   FStar_TypeChecker_Env.push_binders env sbs in
+                                   FStar_TypeChecker_Env.push_binders env
+                                     sbs1 in
                                  ty_strictly_positive_in_type uu___9 ty_lid
                                    return_type unfolded)))))
-                | FStar_Syntax_Syntax.Tm_fvar uu___4 ->
+                | FStar_Syntax_Syntax.Tm_fvar uu___5 ->
                     (debug_positivity env
-                       (fun uu___6 ->
+                       (fun uu___7 ->
                           "Checking strict positivity in an fvar/Tm_uinst/Tm_type, return true");
                      true)
-                | FStar_Syntax_Syntax.Tm_uinst uu___4 ->
+                | FStar_Syntax_Syntax.Tm_uinst uu___5 ->
                     (debug_positivity env
-                       (fun uu___6 ->
+                       (fun uu___7 ->
                           "Checking strict positivity in an fvar/Tm_uinst/Tm_type, return true");
                      true)
-                | FStar_Syntax_Syntax.Tm_type uu___4 ->
+                | FStar_Syntax_Syntax.Tm_type uu___5 ->
                     (debug_positivity env
-                       (fun uu___6 ->
+                       (fun uu___7 ->
                           "Checking strict positivity in an fvar/Tm_uinst/Tm_type, return true");
                      true)
-                | FStar_Syntax_Syntax.Tm_refine (bv, uu___4) ->
+                | FStar_Syntax_Syntax.Tm_refine (bv, uu___5) ->
                     (debug_positivity env
-                       (fun uu___6 ->
+                       (fun uu___7 ->
                           "Checking strict positivity in an Tm_refine, recur in the bv sort)");
                      ty_strictly_positive_in_type env ty_lid
                        bv.FStar_Syntax_Syntax.sort unfolded)
                 | FStar_Syntax_Syntax.Tm_match
-                    (uu___4, uu___5, branches, uu___6) ->
+                    (uu___5, uu___6, branches, uu___7) ->
                     (debug_positivity env
-                       (fun uu___8 ->
+                       (fun uu___9 ->
                           "Checking strict positivity in an Tm_match, recur in the branches)");
                      FStar_Compiler_List.for_all
-                       (fun uu___8 ->
-                          match uu___8 with
-                          | (p, uu___9, t) ->
+                       (fun uu___9 ->
+                          match uu___9 with
+                          | (p, uu___10, t) ->
                               let bs =
-                                let uu___10 = FStar_Syntax_Syntax.pat_bvs p in
+                                let uu___11 = FStar_Syntax_Syntax.pat_bvs p in
                                 FStar_Compiler_List.map
-                                  FStar_Syntax_Syntax.mk_binder uu___10 in
-                              let uu___10 = FStar_Syntax_Subst.open_term bs t in
-                              (match uu___10 with
+                                  FStar_Syntax_Syntax.mk_binder uu___11 in
+                              let uu___11 = FStar_Syntax_Subst.open_term bs t in
+                              (match uu___11 with
                                | (bs1, t1) ->
-                                   let uu___11 =
+                                   let uu___12 =
                                      FStar_TypeChecker_Env.push_binders env
                                        bs1 in
-                                   ty_strictly_positive_in_type uu___11
+                                   ty_strictly_positive_in_type uu___12
                                      ty_lid t1 unfolded)) branches)
-                | FStar_Syntax_Syntax.Tm_ascribed (t, uu___4, uu___5) ->
+                | FStar_Syntax_Syntax.Tm_ascribed (t, uu___5, uu___6) ->
                     (debug_positivity env
-                       (fun uu___7 ->
+                       (fun uu___8 ->
                           "Checking strict positivity in an Tm_ascribed, recur)");
                      ty_strictly_positive_in_type env ty_lid t unfolded)
-                | uu___4 ->
+                | uu___5 ->
                     (debug_positivity env
-                       (fun uu___6 ->
-                          let uu___7 =
-                            let uu___8 =
-                              FStar_Syntax_Print.tag_of_term btype1 in
+                       (fun uu___7 ->
+                          let uu___8 =
                             let uu___9 =
-                              let uu___10 =
+                              FStar_Syntax_Print.tag_of_term btype1 in
+                            let uu___10 =
+                              let uu___11 =
                                 FStar_Syntax_Print.term_to_string btype1 in
-                              Prims.op_Hat " and term: " uu___10 in
-                            Prims.op_Hat uu___8 uu___9 in
+                              Prims.op_Hat " and term: " uu___11 in
+                            Prims.op_Hat uu___9 uu___10 in
                           Prims.op_Hat
                             "Checking strict positivity, unexpected tag: "
-                            uu___7);
+                            uu___8);
                      false)))))
 and (ty_nested_positive_in_inductive :
   FStar_TypeChecker_Env.env ->
@@ -9231,7 +9255,9 @@ let (ty_positive_in_datacon :
                             FStar_Syntax_Subst.opening_of_binders ty_bs in
                           FStar_Syntax_Subst.subst_binders uu___5 dbs1 in
                         let dbs3 = FStar_Syntax_Subst.open_binders dbs2 in
-                        (debug_positivity env
+                        let env1 =
+                          FStar_TypeChecker_Env.push_binders env ty_bs in
+                        (debug_positivity env1
                            (fun uu___6 ->
                               let uu___7 =
                                 let uu___8 =
@@ -9246,9 +9272,9 @@ let (ty_positive_in_datacon :
                               (fun uu___7 ->
                                  fun b ->
                                    match uu___7 with
-                                   | (r, env1) ->
+                                   | (r, env2) ->
                                        if Prims.op_Negation r
-                                       then (r, env1)
+                                       then (r, env2)
                                        else
                                          (FStar_Compiler_List.iter
                                             (fun uu___10 ->
@@ -9268,7 +9294,7 @@ let (ty_positive_in_datacon :
                                                        &&
                                                        (let uu___13 =
                                                           name_strictly_positive_in_type
-                                                            env1 ty_bv
+                                                            env2 ty_bv
                                                             (b.FStar_Syntax_Syntax.binder_bv).FStar_Syntax_Syntax.sort in
                                                         Prims.op_Negation
                                                           uu___13) in
@@ -9292,13 +9318,13 @@ let (ty_positive_in_datacon :
                                                    else ()) ty_bs;
                                           (let uu___10 =
                                              ty_strictly_positive_in_type
-                                               env1 ty_lid
+                                               env2 ty_lid
                                                (b.FStar_Syntax_Syntax.binder_bv).FStar_Syntax_Syntax.sort
                                                unfolded in
                                            let uu___11 =
                                              FStar_TypeChecker_Env.push_binders
-                                               env1 [b] in
-                                           (uu___10, uu___11)))) (true, env)
+                                               env2 [b] in
+                                           (uu___10, uu___11)))) (true, env1)
                               dbs3 in
                           match uu___6 with | (b, uu___7) -> b))
                     | FStar_Syntax_Syntax.Tm_app (uu___4, uu___5) ->
