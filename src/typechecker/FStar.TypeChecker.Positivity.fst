@@ -33,6 +33,25 @@ module N = FStar.TypeChecker.Normalize
 module L = FStar.Compiler.List
 module C = FStar.Parser.Const
 
+(**
+
+  This module implements the strict positivity check on inductive type
+  definitions
+
+    * The idea of strict positivity is broadly described here:
+      http://fstar-lang.org/tutorial/book/part2/part2_inductive_type_families.html#strictly-positive-definitions
+
+
+    * tests/micro-benchmarks/Positivity.fst provides several 
+      small examples to exercises various cases.
+
+  A challenge is that the definition of strict positivity is not
+  completely settled among the various dependently typed proof
+  assistants. Notably, Lean, Coq, Agda, all implement slight
+  variations, all incomparable in permissiveness
+
+ *)
+
 let string_of_lids lids =
     List.map string_of_lid lids |> String.concat ", "
     
