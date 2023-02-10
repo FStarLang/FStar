@@ -48,8 +48,71 @@ module C = FStar.Parser.Const
   A challenge is that the definition of strict positivity is not
   completely settled among the various dependently typed proof
   assistants. Notably, Lean, Coq, Agda, all implement slight
-  variations, all incomparable in permissiveness
+  variations, all incomparable in permissiveness.
 
+  What is standard is that every occurrence of the type in question
+  must be strictly positive, i.e., no occurrences allowed to the left
+  of an arrow.
+
+  However, there is a lot of variation in how the indices and
+  parameters of an inductive type are handled.
+
+  Here's a summary of what F* supports:
+
+  1. Non-uniformly recursive parameters
+
+     type t a b c = 
+       | T : t a (b & b) c -> t a b c
+
+
+     Here, a is uniformly recursive.
+     b is non-uniformly recursive.     
+     Since c follows b, which is non-uniform, it is also considered non-uniform
+     
+     i.e., only a prefix of the parameters may be considered uniform
+
+  2. For an inductive type constructor, every non-uniform parameter or index
+     may be considered to be an _arity_ or not
+
+     An arity is a Type, or a function t -> arity
+
+     A term is indexed by an arity if it has type t -> arity
+     where t is itself an arity
+     
+     E.g., Consider a term  (t :   a:Type -> x:a -> x -> (Type -> Type) -> bool -> Type)
+           applied as (t Type nat 0 option true)
+           The first index of t is an arity
+           (t Type : x:Type -> x -> (Type -> Type) -> bool -> Type) is arity indexed
+           (t Type nat : nat -> ...) is not arity indexed
+           (t Type nat 0 : (Type -> Type) -> ...) is arity indexed
+           (t Type nat 0 option : bool -> Type) is not arity indexed
+           (t Type nat 0 option true : Type) is not arity indexed           
+           
+  3. A type t is strictly-positive in the indexing of s, if `t` does
+     not appear free in any of the arity indexes of s.
+
+     E.g., 
+
+     type s (a:Type) : bool -> Type =
+       | S : s a true
+
+     type t =
+       | T : f:option t -> s t (Some? #t f) -> t
+
+     The type `t` is well-formed in `s t (Some? #t f)`
+     since it appears only in a parameter of `s`
+     and in a non-arity index of s
+     
+
+     However, this is forbidden:
+
+     type f (a:Type -> Type) : Type 
+     
+     type t : Type -> Type = 
+       | T : t (f t)
+
+     since although in `f t`, `t` only instantiates a parameter of `f`
+     in `t (f t)`, `t` appears free in an arity index of `t` itself
  *)
 
 let string_of_lids lids =
