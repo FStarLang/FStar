@@ -205,6 +205,33 @@ let rec readback_ty (t:R.term)
         Some #(t':Pulse.Syntax.term {elab_term t' == Some t}) (Tm_Pure t1)
       )
       else aux ()
+    | Tv_UInst fv _, [(a, _); (p, _)] ->
+      if inspect_fv fv = exists_lid ||
+         inspect_fv fv = forall_lid
+      then begin
+        let? ty = readback_ty a in
+        let? p =
+          match inspect_ln p with
+          | Tv_Abs _ body ->
+            let? p = readback_ty body in
+            Some p <: option pure_term
+          | _ ->
+            T.fail "readback_ty: only lambda expressions allowed when reading back exists/forall" in
+
+        let pulse_t : (t':Pulse.Syntax.term{elab_term t' == Some t}) =
+          if inspect_fv fv = exists_lid
+          then begin
+            assume (elab_term (Tm_ExistsSL ty p) == Some t);
+            Tm_ExistsSL ty p
+          end
+          else begin
+            assume (elab_term (Tm_ForallSL ty p) == Some t);
+            Tm_ForallSL ty p
+          end in
+          
+        Some pulse_t
+      end
+      else aux ()
     | _ -> aux ()
     end
   

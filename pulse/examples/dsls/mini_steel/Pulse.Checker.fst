@@ -205,13 +205,18 @@ let rec check' : bool -> check_t =
       (| t, c1, T_Equiv _ _ _ _ d_c c_c1_eq |)
     else (| t, c, d_c |)
   in
-  let t =
-    if has_pure_vprops pre &&
-       (match t with
-        | Tm_STApp (Tm_FVar l) _ _ -> l <> elim_pure_lid
-        | _ -> true)
-    then snd (maybe_add_elim_pure pre t)
-    else t in
+  //
+  // Turing off the heuristic to add elim_pure if there is a
+  //   pure vprop in the context
+  // This doesn't work well when we have intro_pure in the program
+  //
+  // let t =
+  //   if has_pure_vprops pre &&
+  //      (match t with
+  //       | Tm_STApp (Tm_FVar l) _ _ -> l <> elim_pure_lid
+  //       | _ -> true)
+  //   then snd (maybe_add_elim_pure pre t)
+  //   else t in
   match t with
   | Tm_BVar _ -> T.fail "not locally nameless"
   | Tm_Var _

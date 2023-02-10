@@ -253,4 +253,3 @@ val intro_pure (p:prop) (_:squash p)
   : stt_ghost unit emp_inames
               emp
               (fun _ -> pure p)
-
