@@ -5699,6 +5699,13 @@ and (trans_bqual :
             let uu___2 = desugar_term env t in
             FStar_Syntax_Syntax.Meta uu___2 in
           FStar_Pervasives_Native.Some uu___1
+      | FStar_Pervasives_Native.Some (FStar_Parser_AST.TypeClassArg) ->
+          let tcresolve =
+            desugar_term env
+              (FStar_Parser_AST.mk_term
+                 (FStar_Parser_AST.Var FStar_Parser_Const.tcresolve_lid)
+                 FStar_Compiler_Range.dummyRange FStar_Parser_AST.Expr) in
+          FStar_Pervasives_Native.Some (FStar_Syntax_Syntax.Meta tcresolve)
       | FStar_Pervasives_Native.None -> FStar_Pervasives_Native.None
 let (typars_of_binders :
   FStar_Syntax_DsEnv.env ->
@@ -6123,6 +6130,8 @@ let rec (desugar_tycon :
                   FStar_Parser_AST.Hash
               | FStar_Pervasives_Native.Some (FStar_Parser_AST.Meta uu___) ->
                   FStar_Parser_AST.Hash
+              | FStar_Pervasives_Native.Some (FStar_Parser_AST.TypeClassArg)
+                  -> FStar_Parser_AST.Hash
               | uu___ -> FStar_Parser_AST.Nothing in
             FStar_Compiler_List.fold_left
               (fun out ->

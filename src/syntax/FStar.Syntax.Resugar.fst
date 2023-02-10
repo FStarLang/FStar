@@ -1159,6 +1159,8 @@ and resugar_bqual env (q:S.bqual) : option (option A.arg_qualifier) =
     if b then None
     else Some (Some A.Implicit)
   | Some S.Equality -> Some (Some A.Equality)
+  | Some (S.Meta t) when U.is_fvar C.tcresolve_lid t ->
+    Some (Some (A.TypeClassArg))
   | Some (S.Meta t) ->
     Some (Some (A.Meta (resugar_term' env t)))
 
