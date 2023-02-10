@@ -857,6 +857,7 @@ let collect_one
 
       and collect_aqual = function
         | Some (Meta t) -> collect_term t
+        | Some TypeClassArg -> add_to_parsing_data (P_lid Const.tcresolve_lid)
         | _ -> ()
 
       and collect_term t =
