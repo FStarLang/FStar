@@ -181,36 +181,6 @@ let no_occurrence_in_index fv mutuals (index:arg) =
 
 let no_occurrence_in_indexes fv mutuals (indexes:list arg) =
     L.iter (no_occurrence_in_index fv mutuals) indexes
-
-let num_uniform_ty_params env (fv:lid) =
-    match Env.try_lookup_lid env fv with
-    | None -> None
-    | Some ((_, fv_ty), _) ->
-      match num_inductive_ty_params env fv with
-      | None -> None
-      | Some num_params ->
-        let fv_formals, _ = U.arrow_formals fv_ty in
-        if num_params > List.length fv_formals
-        then raise_error (Errors.Error_InductiveTypeNotSatisfyPositivityCondition,
-                          BU.format4 "Expected a type with %s parameters, \
-                                      but %s : %s has only %s parameters"
-                                            (string_of_int num_params)
-                                            (string_of_lid fv)
-                                            (Print.term_to_string fv_ty)
-                                            (string_of_int (List.length fv_formals)))
-                                  (range_of_lid fv);
-        let fv_params, _ = List.splitAt num_params fv_formals in
-        let rec aux n formals =
-            match formals with
-            | [] -> Some n
-            | f::formals ->
-              if U.has_attribute f.binder_attrs
-                                 C.binder_non_uniformly_recursive_parameter_attr
-              then Some n
-              else aux (n + 1) formals
-        in
-        aux 0 fv_params
-
     
     
 (* t is an application of a type constructor T ps is 
@@ -227,7 +197,7 @@ let check_no_index_occurrences_in_arities env mutuals (t:term) =
   match (U.un_uinst head).n with
   | Tm_fvar fv -> 
     begin
-    match num_uniform_ty_params env fv.fv_name.v with
+    match Env.num_inductive_uniform_ty_params env fv.fv_name.v with
     | None -> 
       //the head is not (visibly) a inductive type; nothing to check
       ()
@@ -666,7 +636,7 @@ and ty_strictly_positive_in_arguments_to_fvar
       //and not indexes, which is what we need since we will
       //substitute them in the data constructor type
       let num_uniform_params = 
-        match num_uniform_ty_params env ilid with
+        match Env.num_inductive_uniform_ty_params env ilid with
         | None -> //impossible; we know that ilid is an inductive
           failwith "Unexpected type"
         | Some n -> n
@@ -1034,41 +1004,21 @@ let mark_uniform_type_parameters (env:env_t)
                               ty_param_bvs
                               field.binder_bv.sort))
         in
-        let uniformity_flags =
-            List.mapi (fun i p -> i < max_uniform_prefix) ty_params
-        in
-        let attr = 
-          let fv = S.lid_as_fv C.binder_non_uniformly_recursive_parameter_attr
-                               S.delta_constant
-                               None
-          in
-          S.fv_to_tm fv
-        in
-        //the suffix of non-uniform parameters is non-uniform
-        let _, ty_param_binders_rev =
-          List.fold_left2
-            (fun (seen_non_uniform, ty_param_binders) 
-               this_param_uniform
-               ty_param_binder ->
-               if seen_non_uniform || not (this_param_uniform)
-               then (
-                 if U.has_attribute ty_param_binder.binder_attrs C.binder_strictly_positive_attr
+        if max_uniform_prefix < n_params
+        then (
+          let _, non_uniform_params = List.splitAt max_uniform_prefix ty_param_binders in
+          List.iter 
+            (fun param ->
+                 if U.has_attribute param.binder_attrs C.binder_strictly_positive_attr
                  then ( //if marked strictly positive, it must be uniform
                    raise_error (Error_InductiveTypeNotSatisfyPositivityCondition,
                                 BU.format1 "Binder %s is marked strictly positive, \
                                            but it is not uniformly recursive"
-                                           (Print.binder_to_string ty_param_binder))
-                               (range_of_bv ty_param_binder.binder_bv)
-                 );
-                 true, { ty_param_binder with binder_attrs=attr::ty_param_binder.binder_attrs}
-                       :: ty_param_binders
-               )
-               else false, ty_param_binder::ty_param_binders)
-            (false, [])
-            uniformity_flags
-            ty_param_binders
-        in
-        let ty_param_binders = List.rev ty_param_binders_rev in
+                                           (Print.binder_to_string param))
+                               (range_of_bv param.binder_bv)
+                 ))
+            non_uniform_params
+        );            
         let sigel = Sig_inductive_typ (tc_lid, us, ty_param_binders, Some max_uniform_prefix, t, mutuals, data_lids) in
         { tc with sigel }
     in 

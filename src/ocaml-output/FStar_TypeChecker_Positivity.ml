@@ -237,56 +237,6 @@ let (no_occurrence_in_indexes :
     fun mutuals ->
       fun indexes ->
         FStar_Compiler_List.iter (no_occurrence_in_index fv mutuals) indexes
-let (num_uniform_ty_params :
-  FStar_TypeChecker_Env.env ->
-    FStar_Ident.lid -> Prims.int FStar_Pervasives_Native.option)
-  =
-  fun env ->
-    fun fv ->
-      let uu___ = FStar_TypeChecker_Env.try_lookup_lid env fv in
-      match uu___ with
-      | FStar_Pervasives_Native.None -> FStar_Pervasives_Native.None
-      | FStar_Pervasives_Native.Some ((uu___1, fv_ty), uu___2) ->
-          let uu___3 = FStar_TypeChecker_Env.num_inductive_ty_params env fv in
-          (match uu___3 with
-           | FStar_Pervasives_Native.None -> FStar_Pervasives_Native.None
-           | FStar_Pervasives_Native.Some num_params ->
-               let uu___4 = FStar_Syntax_Util.arrow_formals fv_ty in
-               (match uu___4 with
-                | (fv_formals, uu___5) ->
-                    (if num_params > (FStar_Compiler_List.length fv_formals)
-                     then
-                       (let uu___7 =
-                          let uu___8 =
-                            let uu___9 = FStar_Ident.string_of_lid fv in
-                            let uu___10 =
-                              FStar_Syntax_Print.term_to_string fv_ty in
-                            FStar_Compiler_Util.format4
-                              "Expected a type with %s parameters, but %s : %s has only %s parameters"
-                              (Prims.string_of_int num_params) uu___9 uu___10
-                              (Prims.string_of_int
-                                 (FStar_Compiler_List.length fv_formals)) in
-                          (FStar_Errors.Error_InductiveTypeNotSatisfyPositivityCondition,
-                            uu___8) in
-                        let uu___8 = FStar_Ident.range_of_lid fv in
-                        FStar_Errors.raise_error uu___7 uu___8)
-                     else ();
-                     (let uu___7 =
-                        FStar_Compiler_List.splitAt num_params fv_formals in
-                      match uu___7 with
-                      | (fv_params, uu___8) ->
-                          let rec aux n formals =
-                            match formals with
-                            | [] -> FStar_Pervasives_Native.Some n
-                            | f::formals1 ->
-                                let uu___9 =
-                                  FStar_Syntax_Util.has_attribute
-                                    f.FStar_Syntax_Syntax.binder_attrs
-                                    FStar_Parser_Const.binder_non_uniformly_recursive_parameter_attr in
-                                if uu___9
-                                then FStar_Pervasives_Native.Some n
-                                else aux (n + Prims.int_one) formals1 in
-                          aux Prims.int_zero fv_params))))
 let (check_no_index_occurrences_in_arities :
   FStar_TypeChecker_Env.env ->
     FStar_Ident.lident Prims.list -> FStar_Syntax_Syntax.term -> unit)
@@ -310,7 +260,7 @@ let (check_no_index_occurrences_in_arities :
              (match uu___2 with
               | FStar_Syntax_Syntax.Tm_fvar fv ->
                   let uu___3 =
-                    num_uniform_ty_params env
+                    FStar_TypeChecker_Env.num_inductive_uniform_ty_params env
                       (fv.FStar_Syntax_Syntax.fv_name).FStar_Syntax_Syntax.v in
                   (match uu___3 with
                    | FStar_Pervasives_Native.None -> ()
@@ -829,7 +779,9 @@ and (ty_strictly_positive_in_arguments_to_fvar :
                        (check_no_index_occurrences_in_arities env mutuals t;
                         (let ilid = fv in
                          let num_uniform_params =
-                           let uu___4 = num_uniform_ty_params env ilid in
+                           let uu___4 =
+                             FStar_TypeChecker_Env.num_inductive_uniform_ty_params
+                               env ilid in
                            match uu___4 with
                            | FStar_Pervasives_Native.None ->
                                failwith "Unexpected type"
@@ -1403,89 +1355,55 @@ let (mark_uniform_type_parameters :
                                   max_recursively_uniform_parameters env1
                                     mutuals ty_param_bvs
                                     (field.FStar_Syntax_Syntax.binder_bv).FStar_Syntax_Syntax.sort)) in
-                      let uniformity_flags =
-                        FStar_Compiler_List.mapi
-                          (fun i -> fun p -> i < max_uniform_prefix)
-                          ty_params in
-                      let attr =
-                        let fv =
-                          FStar_Syntax_Syntax.lid_as_fv
-                            FStar_Parser_Const.binder_non_uniformly_recursive_parameter_attr
-                            FStar_Syntax_Syntax.delta_constant
-                            FStar_Pervasives_Native.None in
-                        FStar_Syntax_Syntax.fv_to_tm fv in
-                      let uu___4 =
-                        FStar_Compiler_List.fold_left2
-                          (fun uu___5 ->
-                             fun this_param_uniform ->
-                               fun ty_param_binder ->
-                                 match uu___5 with
-                                 | (seen_non_uniform, ty_param_binders1) ->
-                                     if
-                                       seen_non_uniform ||
-                                         (Prims.op_Negation
-                                            this_param_uniform)
-                                     then
-                                       ((let uu___7 =
-                                           FStar_Syntax_Util.has_attribute
-                                             ty_param_binder.FStar_Syntax_Syntax.binder_attrs
-                                             FStar_Parser_Const.binder_strictly_positive_attr in
-                                         if uu___7
-                                         then
-                                           let uu___8 =
-                                             let uu___9 =
-                                               let uu___10 =
-                                                 FStar_Syntax_Print.binder_to_string
-                                                   ty_param_binder in
-                                               FStar_Compiler_Util.format1
-                                                 "Binder %s is marked strictly positive, but it is not uniformly recursive"
-                                                 uu___10 in
-                                             (FStar_Errors.Error_InductiveTypeNotSatisfyPositivityCondition,
-                                               uu___9) in
-                                           let uu___9 =
-                                             FStar_Syntax_Syntax.range_of_bv
-                                               ty_param_binder.FStar_Syntax_Syntax.binder_bv in
-                                           FStar_Errors.raise_error uu___8
-                                             uu___9
-                                         else ());
-                                        (true,
-                                          ({
-                                             FStar_Syntax_Syntax.binder_bv =
-                                               (ty_param_binder.FStar_Syntax_Syntax.binder_bv);
-                                             FStar_Syntax_Syntax.binder_qual
-                                               =
-                                               (ty_param_binder.FStar_Syntax_Syntax.binder_qual);
-                                             FStar_Syntax_Syntax.binder_attrs
-                                               = (attr ::
-                                               (ty_param_binder.FStar_Syntax_Syntax.binder_attrs))
-                                           } :: ty_param_binders1)))
-                                     else
-                                       (false, (ty_param_binder ::
-                                         ty_param_binders1))) (false, [])
-                          uniformity_flags ty_param_binders in
-                      (match uu___4 with
-                       | (uu___5, ty_param_binders_rev) ->
-                           let ty_param_binders1 =
-                             FStar_Compiler_List.rev ty_param_binders_rev in
-                           let sigel =
-                             FStar_Syntax_Syntax.Sig_inductive_typ
-                               (tc_lid1, us1, ty_param_binders1,
-                                 (FStar_Pervasives_Native.Some
-                                    max_uniform_prefix), t, mutuals,
-                                 data_lids) in
-                           {
-                             FStar_Syntax_Syntax.sigel = sigel;
-                             FStar_Syntax_Syntax.sigrng =
-                               (tc.FStar_Syntax_Syntax.sigrng);
-                             FStar_Syntax_Syntax.sigquals =
-                               (tc.FStar_Syntax_Syntax.sigquals);
-                             FStar_Syntax_Syntax.sigmeta =
-                               (tc.FStar_Syntax_Syntax.sigmeta);
-                             FStar_Syntax_Syntax.sigattrs =
-                               (tc.FStar_Syntax_Syntax.sigattrs);
-                             FStar_Syntax_Syntax.sigopts =
-                               (tc.FStar_Syntax_Syntax.sigopts)
-                           }))) in
+                      (if max_uniform_prefix < n_params
+                       then
+                         (let uu___5 =
+                            FStar_Compiler_List.splitAt max_uniform_prefix
+                              ty_param_binders in
+                          match uu___5 with
+                          | (uu___6, non_uniform_params) ->
+                              FStar_Compiler_List.iter
+                                (fun param ->
+                                   let uu___7 =
+                                     FStar_Syntax_Util.has_attribute
+                                       param.FStar_Syntax_Syntax.binder_attrs
+                                       FStar_Parser_Const.binder_strictly_positive_attr in
+                                   if uu___7
+                                   then
+                                     let uu___8 =
+                                       let uu___9 =
+                                         let uu___10 =
+                                           FStar_Syntax_Print.binder_to_string
+                                             param in
+                                         FStar_Compiler_Util.format1
+                                           "Binder %s is marked strictly positive, but it is not uniformly recursive"
+                                           uu___10 in
+                                       (FStar_Errors.Error_InductiveTypeNotSatisfyPositivityCondition,
+                                         uu___9) in
+                                     let uu___9 =
+                                       FStar_Syntax_Syntax.range_of_bv
+                                         param.FStar_Syntax_Syntax.binder_bv in
+                                     FStar_Errors.raise_error uu___8 uu___9
+                                   else ()) non_uniform_params)
+                       else ();
+                       (let sigel =
+                          FStar_Syntax_Syntax.Sig_inductive_typ
+                            (tc_lid1, us1, ty_param_binders,
+                              (FStar_Pervasives_Native.Some
+                                 max_uniform_prefix), t, mutuals, data_lids) in
+                        {
+                          FStar_Syntax_Syntax.sigel = sigel;
+                          FStar_Syntax_Syntax.sigrng =
+                            (tc.FStar_Syntax_Syntax.sigrng);
+                          FStar_Syntax_Syntax.sigquals =
+                            (tc.FStar_Syntax_Syntax.sigquals);
+                          FStar_Syntax_Syntax.sigmeta =
+                            (tc.FStar_Syntax_Syntax.sigmeta);
+                          FStar_Syntax_Syntax.sigattrs =
+                            (tc.FStar_Syntax_Syntax.sigattrs);
+                          FStar_Syntax_Syntax.sigopts =
+                            (tc.FStar_Syntax_Syntax.sigopts)
+                        })))) in
       match sig1.FStar_Syntax_Syntax.sigel with
       | FStar_Syntax_Syntax.Sig_bundle (ses, lids) ->
           let uu___ =

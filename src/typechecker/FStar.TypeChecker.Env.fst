@@ -993,6 +993,21 @@ let num_inductive_ty_params env lid =
   | _ ->
     None
 
+let num_inductive_uniform_ty_params env lid =
+  match lookup_qname env lid with
+  | Some (Inr ({ sigel = Sig_inductive_typ (_, _, _, num_uniform, _, _, _) }, _), _) ->
+    (
+      match num_uniform with
+      | None ->
+        raise_error (Errors.Fatal_UnexpectedInductivetype,
+                     BU.format1 "Internal error: Inductive %s is not decorated with its uniform type parameters"
+                                (string_of_lid lid))
+                    (range_of_lid lid)
+      | Some n -> Some n
+    )
+  | _ ->
+    None
+
 ////////////////////////////////////////////////////////////
 // Operations on the monad lattice                        //
 ////////////////////////////////////////////////////////////

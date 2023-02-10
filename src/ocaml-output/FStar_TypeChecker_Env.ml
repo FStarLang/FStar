@@ -4101,6 +4101,39 @@ let (num_inductive_ty_params :
            uu___13)
           -> FStar_Pervasives_Native.Some (FStar_Compiler_List.length tps)
       | uu___1 -> FStar_Pervasives_Native.None
+let (num_inductive_uniform_ty_params :
+  env -> FStar_Ident.lident -> Prims.int FStar_Pervasives_Native.option) =
+  fun env1 ->
+    fun lid ->
+      let uu___ = lookup_qname env1 lid in
+      match uu___ with
+      | FStar_Pervasives_Native.Some
+          (FStar_Pervasives.Inr
+           ({
+              FStar_Syntax_Syntax.sigel =
+                FStar_Syntax_Syntax.Sig_inductive_typ
+                (uu___1, uu___2, uu___3, num_uniform, uu___4, uu___5, uu___6);
+              FStar_Syntax_Syntax.sigrng = uu___7;
+              FStar_Syntax_Syntax.sigquals = uu___8;
+              FStar_Syntax_Syntax.sigmeta = uu___9;
+              FStar_Syntax_Syntax.sigattrs = uu___10;
+              FStar_Syntax_Syntax.sigopts = uu___11;_},
+            uu___12),
+           uu___13)
+          ->
+          (match num_uniform with
+           | FStar_Pervasives_Native.None ->
+               let uu___14 =
+                 let uu___15 =
+                   let uu___16 = FStar_Ident.string_of_lid lid in
+                   FStar_Compiler_Util.format1
+                     "Internal error: Inductive %s is not decorated with its uniform type parameters"
+                     uu___16 in
+                 (FStar_Errors.Fatal_UnexpectedInductivetype, uu___15) in
+               let uu___15 = FStar_Ident.range_of_lid lid in
+               FStar_Errors.raise_error uu___14 uu___15
+           | FStar_Pervasives_Native.Some n -> FStar_Pervasives_Native.Some n)
+      | uu___1 -> FStar_Pervasives_Native.None
 let (effect_decl_opt :
   env ->
     FStar_Ident.lident ->
