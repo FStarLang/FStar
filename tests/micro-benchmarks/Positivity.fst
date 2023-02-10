@@ -15,7 +15,7 @@
 *)
 module Positivity
 open FStar.All
-
+ 
 let option_is_some ([@@@strictly_positive] a:Type) = o:option a { Some? o }
 
 exception EExn of bool
@@ -361,3 +361,12 @@ val offset (#elt:Type) (p:ptr elt) : nat
 let array ([@@@strictly_positive] elt : Type0) =
   (p:ptr elt & l:nat { offset p == 0})
 
+[@@expect_failure [3]]
+noeq
+type t_np (a: Type -> Type) = 
+  | T_np : a (t_np (fun _ -> unit)) -> t_np a
+
+
+noeq
+type t_np' (a: [@@@strictly_positive]Type -> Type) = 
+  | T_np' : a (t_np' (fun _ -> unit)) -> t_np' a

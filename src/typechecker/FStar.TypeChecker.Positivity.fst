@@ -114,10 +114,21 @@ module C = FStar.Parser.Const
      since although in `f t`, `t` only instantiates a parameter of `f`
      in `t (f t)`, `t` appears free in an arity index of `t` itself
  *)
+ 
+////////////////////////////////////////////////////////////////////////////////
+// Some general utilities
+////////////////////////////////////////////////////////////////////////////////
 
+(* A debugging utility to print a list of lids *)
 let string_of_lids lids =
     List.map string_of_lid lids |> String.concat ", "
-    
+
+(* Used extensively for verbose debugging output at debug_level Positivity *)
+let debug_positivity (env:env_t) (msg:unit -> string) : unit =
+  if Env.debug env <| Options.Other "Positivity"
+  then BU.print_string ("Positivity::" ^ msg () ^ "\n")
+
+(* Normalize a term before checking for non-strictly positive occurrences *)
 let normalize env t =
     N.normalize [Env.Beta;
                  Env.HNF;
@@ -128,9 +139,6 @@ let normalize env t =
                  env
                  t
 
-let debug_positivity (env:env_t) (msg:unit -> string) : unit =
-  if Env.debug env <| Options.Other "Positivity"
-  then BU.print_string ("Positivity::" ^ msg () ^ "\n")
 
 (* Given a type or data constructor d : dt
    and parameters to an instance of the type
@@ -167,6 +175,233 @@ let ty_occurs_in (ty_lid:lident)
   : bool
   = FStar.Compiler.Util.set_mem ty_lid (Free.fvars t)
 
+(* Checks if `t` is a name or fv and returns it, if so. *)
+let rec term_as_fv_or_name (t:term) 
+  : option (either (fv * universes) bv)
+  = match (SS.compress t).n with
+    | Tm_name x -> 
+      Some (Inr x)
+      
+    | Tm_fvar fv ->
+      Some (Inl (fv, []))
+      
+    | Tm_uinst (t, us) ->
+      (match (SS.compress t).n with
+       | Tm_fvar fv -> Some (Inl (fv, us))
+       | _ -> failwith "term_as_fv_or_name: impossible non fvar in uinst")
+      
+    | Tm_ascribed (t, _, _) -> 
+      term_as_fv_or_name t
+      
+    | _ -> None
+
+let open_sig_inductive_typ env se =
+    match se.sigel with
+    | Sig_inductive_typ (lid, ty_us, ty_params, _num_uniform, _, _, _) -> 
+      let ty_usubst, ty_us = SS.univ_var_opening ty_us in
+      let env = push_univ_vars env ty_us in
+      let ty_params = SS.subst_binders ty_usubst ty_params in
+      let ty_params = SS.open_binders ty_params in
+      let env = push_binders env ty_params in
+      env, (lid, ty_us, ty_params)
+    | _                                        -> failwith "Impossible!"
+
+////////////////////////////////////////////////////////////////////////////////
+// Uniformly recursive parameters
+////////////////////////////////////////////////////////////////////////////////
+
+(* The least value of f on the elements of l, or def if l is empty *)
+let rec min_l (#a:Type) (def:int) (l:list a) (f:a -> int) =
+    match l with
+    | [] -> def
+    | hd::tl -> min (f hd) (min_l def tl f)
+
+(* For each m in mutuals,
+   find the greatest prefix of (p0...pi) of params such that
+   every occurrence of m in ty
+   is of the form (m p0 ... pi)
+
+   The (p0 ... pi) are uniformly recursive in ty.
+
+   If m does not occur in ty, then ALL the params are considered uniformly recursive
+ *)
+let max_uniformly_recursive_parameters (env:env_t)
+                                       (mutuals:list lident)
+                                       (params:list bv)
+                                       (ty:term)
+  : int
+  = let max_matching_prefix (longer:list 'a) (shorter:list 'b) (f:'a -> 'b -> bool)
+      : option int
+      = let rec aux n ls ms =
+          match ls, ms with
+          | _, [] -> Some n
+          | l::ls, m::ms -> 
+            if f l m then aux (n + 1) ls ms
+            else Some n
+          | _ -> None
+        in
+        aux 0 longer shorter
+    in
+    let ty = normalize env ty in
+    let n_params = L.length params in
+    let compare_name_bv (x:arg) (y:bv) =
+      match (SS.compress (fst x)).n with
+      | Tm_name x -> S.bv_eq x y
+      | _ -> false
+    in
+    let min_l (#a:Type) f l = min_l #a n_params f l in
+    let params_to_string () =
+        (List.map Print.bv_to_string params |> String.concat ", ")
+    in
+    debug_positivity env (fun _ ->
+      BU.format2 "max_uniformly_recursive_parameters? params=%s in %s"
+                 (params_to_string())
+                 (Print.term_to_string ty));
+    let rec aux ty =
+        debug_positivity env (fun _ ->
+          BU.format1 "max_uniformly_recursive_parameters.aux? %s"
+                 (Print.term_to_string ty));
+        if List.for_all (fun mutual -> not (ty_occurs_in mutual ty)) mutuals
+        then n_params
+        else (
+        match (SS.compress ty).n with
+        | Tm_name _
+        | Tm_fvar _
+        | Tm_uinst _
+        | Tm_type _
+        | Tm_constant _ ->
+          n_params
+        | Tm_refine(x, f) ->
+          min (aux x.sort)
+              (let _, f = SS.open_term [S.mk_binder x] f in
+               aux f)
+        | Tm_app _ ->
+          let head, args = U.head_and_args ty in
+          begin
+          match (U.un_uinst head).n with
+          | Tm_fvar fv ->
+            if L.existsML (fv_eq_lid fv) mutuals
+            then (
+              debug_positivity env (fun _ -> 
+                BU.format2 "Searching for max matching prefix of params=%s in args=%s"
+                           (params_to_string())
+                           (Print.args_to_string args));
+              match max_matching_prefix args params compare_name_bv with
+              | None -> 0
+              | Some n -> n
+            )
+            else min_l args (fun (arg, _) -> aux arg)
+          | _ ->
+            min (aux head)
+                (min_l args (fun (arg, _) -> aux arg))
+          end
+        | Tm_abs _ ->
+          let bs, body, _ = U.abs_formals ty in
+          min (min_l bs (fun b -> aux b.binder_bv.sort))
+              (aux body)
+        | Tm_arrow _ -> 
+          let bs, r = U.arrow_formals ty in
+          min (min_l bs (fun b -> aux b.binder_bv.sort))
+              (aux r)
+        | Tm_match(scrutinee, _, branches, _) ->
+          min (aux scrutinee)
+              (min_l branches
+                     (fun (p, _, t) ->
+                       let bs = List.map mk_binder (pat_bvs p) in
+                       let bs, t = SS.open_term bs t in
+                       aux t))
+        | Tm_meta(t, _)
+        | Tm_ascribed(t, _, _) ->
+          aux t
+        | _ ->
+          0
+        )
+    in
+    let res = aux ty in
+    debug_positivity env (fun _ ->
+      BU.format3 "result: max_uniformly_recursive_parameters(params=%s in %s) = %s"
+                 (params_to_string())
+                 (Print.term_to_string ty)
+                 (string_of_int res));
+    res
+
+(* The sig : sigelt is a Sig_bundle describing a mutually inductive nest of types
+
+   For every type constructor Sig_inductive_typ, find the greatest prefix of
+   its parameters that occur uniformly recursively in all its data
+   constructors.
+
+   This populates the num_uniform_parameters field of the Sig_inductive_typ
+
+   Note: Every parameter marked strictly_positive MUST be uniformly recursive
+
+*)
+let mark_uniform_type_parameters (env:env_t)
+                                 (sig:sigelt)
+  : sigelt
+  = let mark_tycon_parameters tc datas =
+        let Sig_inductive_typ (tc_lid, us, ty_param_binders, _num_uniform, t, mutuals, data_lids) = tc.sigel in
+        let env, (tc_lid, us, ty_params) = open_sig_inductive_typ env tc in
+        let _, ty_param_args = U.args_of_binders ty_params in
+        let datacon_fields : list (list binder) =
+          List.filter_map
+            (fun data ->
+              match data.sigel with
+              | Sig_datacon(d_lid, d_us, dt, tc_lid', _, _) ->
+                if Ident.lid_equals tc_lid tc_lid'
+                then (
+                  let dt = SS.subst (mk_univ_subst d_us (L.map U_name us)) dt in
+                  Some (fst (U.arrow_formals (apply_constr_arrow d_lid dt ty_param_args)))
+                )
+                else None
+              | _ -> None)
+            datas
+        in
+        let ty_param_bvs = L.map (fun b -> b.binder_bv) ty_params in
+        let n_params = L.length ty_params in
+        let min_l #a f l = min_l #a n_params f l in
+        let max_uniform_prefix =
+           min_l datacon_fields
+                 (fun (fields_of_one_datacon:list binder) ->
+                    min_l fields_of_one_datacon 
+                          (fun (field:binder) ->
+                            max_uniformly_recursive_parameters
+                              env
+                              mutuals
+                              ty_param_bvs
+                              field.binder_bv.sort))
+        in
+        if max_uniform_prefix < n_params
+        then (
+          let _, non_uniform_params = List.splitAt max_uniform_prefix ty_param_binders in
+          List.iter 
+            (fun param ->
+                 if U.has_attribute param.binder_attrs C.binder_strictly_positive_attr
+                 then ( //if marked strictly positive, it must be uniform
+                   raise_error (Error_InductiveTypeNotSatisfyPositivityCondition,
+                                BU.format1 "Binder %s is marked strictly positive, \
+                                           but it is not uniformly recursive"
+                                           (Print.binder_to_string param))
+                               (range_of_bv param.binder_bv)
+                 ))
+            non_uniform_params
+        );            
+        let sigel = Sig_inductive_typ (tc_lid, us, ty_param_binders, Some max_uniform_prefix, t, mutuals, data_lids) in
+        { tc with sigel }
+    in 
+    match sig.sigel with
+    | Sig_bundle (ses, lids) ->
+      let tcs, datas = L.partition (fun se -> Sig_inductive_typ? se.sigel) ses in
+      let tcs = List.map (fun tc -> mark_tycon_parameters tc datas) tcs in
+      { sig with sigel = Sig_bundle(tcs@datas, lids) }
+    
+    | _ -> sig
+
+////////////////////////////////////////////////////////////////////////////////
+// Arities and indexes
+////////////////////////////////////////////////////////////////////////////////
+
+(* Decides if t could be an arity? i.e., a Type or a t -> ... -> Type? *)
 let may_be_an_arity env (t:term)
   : bool
   = let t = normalize env t in
@@ -185,10 +420,13 @@ let may_be_an_arity env (t:term)
         match (U.un_uinst head).n with
         | Tm_fvar fv ->
           (match Env.lookup_sigelt env fv.fv_name.v with
-           | None -> true
+           | None ->
+             //We couldn't find it; err conservatively ... this could be an arity
+             true
            | Some se ->
              match se.sigel with
-             | Sig_let _ -> true //maybe an arity, this definition was not unfolded
+             | Sig_let _ ->
+               true //maybe an arity, this definition was not unfolded
              | _ -> false
            )
            
@@ -207,6 +445,7 @@ let may_be_an_arity env (t:term)
            let bs, t = SS.open_term bs t in
            aux t)
          branches
+
       | Tm_meta (t, _)
       | Tm_ascribed(t, _, _) ->
         aux t
@@ -215,24 +454,55 @@ let may_be_an_arity env (t:term)
       | Tm_uvar _
       | Tm_let _ ->
         true
+
+      | Tm_delayed _
+      | Tm_bvar _
+      | Tm_unknown ->
+        failwith "Impossible"
     in
     aux t
-      
-let no_occurrence_in_index fv mutuals (index:arg) =
-  let fext_on_domain_index_sub_term index =
-    let head, args = U.head_and_args index in
-    match (U.un_uinst head).n, args with
-    | Tm_fvar fv, [_td; _tr; (f, _)] -> 
-      if S.fv_eq_lid fv C.fext_on_domain_lid 
-      ||  S.fv_eq_lid fv C.fext_on_domain_g_lid
-      then f
-      else index
-    | _ -> index
-  in
-  let index, _ = index in
-  L.iter (fun mutual -> 
-            if ty_occurs_in mutual (fext_on_domain_index_sub_term index)
-            then raise_error
+        
+(* t is an application of a type constructor T ps is 
+   with parameters ps and indexes is.
+   
+   Check that the mutuals do not occur in any of the indexes
+   whose instantiated type may be arity.
+
+   See the comment at the head of the file for some context about
+   indexes and arities
+ *)
+let check_no_index_occurrences_in_arities env mutuals (t:term) =
+  debug_positivity env (fun _ ->
+    BU.format2 "check_no_index_occurrences of (mutuals %s) in arities of %s"
+      (string_of_lids mutuals)
+      (Print.term_to_string t));
+
+  (* Check that none of the mutuals appear free in the index term *)
+  let no_occurrence_in_index fv mutuals (index:arg) =
+    (* The built-in predicates:
+         FStar.FunctionalExtensionality.on_domain
+         FStar.FunctionalExtensionality.on_domain_g
+       are special.
+     
+       Their two type arguments do not count towards positivity,
+       since they are there only as an artifact of describing the
+       type of their third argument
+   *)
+   let fext_on_domain_index_sub_term index =
+     let head, args = U.head_and_args index in
+     match (U.un_uinst head).n, args with
+     | Tm_fvar fv, [_td; _tr; (f, _)] -> 
+       if S.fv_eq_lid fv C.fext_on_domain_lid 
+       ||  S.fv_eq_lid fv C.fext_on_domain_g_lid
+       then f (* if the index is on_domain(_g) #t #s f, 
+                 return only f *)
+       else index
+     | _ -> index
+   in
+   let index, _ = index in
+   L.iter (fun mutual -> 
+             if ty_occurs_in mutual (fext_on_domain_index_sub_term index)
+             then raise_error
                            (Errors.Error_InductiveTypeNotSatisfyPositivityCondition,
                              BU.format3 "Type %s is not strictly positive since it instantiates \
                                         a non-uniformly recursive parameter or index %s of %s"
@@ -240,22 +510,11 @@ let no_occurrence_in_index fv mutuals (index:arg) =
                               (Print.term_to_string index)
                               (string_of_lid fv))
                            index.pos)
-           mutuals
-
-let no_occurrence_in_indexes fv mutuals (indexes:list arg) =
-    L.iter (no_occurrence_in_index fv mutuals) indexes
-    
-    
-(* t is an application of a type constructor T ps is 
-   with parameters ps and indexes is.
-   
-   Check that the mutuals do not occur in any of the indexes
-   whose instantiated type may be arity *)
-let check_no_index_occurrences_in_arities env mutuals (t:term) =
-  debug_positivity env (fun _ ->
-    BU.format2 "check_no_index_occurrences of (mutuals %s) in arities of %s"
-      (string_of_lids mutuals)
-      (Print.term_to_string t));
+          mutuals
+  in
+  let no_occurrence_in_indexes fv mutuals (indexes:list arg) =
+      L.iter (no_occurrence_in_index fv mutuals) indexes
+  in
   let head, args = U.head_and_args t in
   match (U.un_uinst head).n with
   | Tm_fvar fv -> 
@@ -307,27 +566,13 @@ let check_no_index_occurrences_in_arities env mutuals (t:term) =
       end
   | _ -> ()
 
-(* Checks is `t` is a name or fv and returns it, if so. *)
-let rec term_as_fv_or_name (t:term) 
-  : option (either (fv * universes) bv)
-  = match (SS.compress t).n with
-    | Tm_name x -> 
-      Some (Inr x)
-      
-    | Tm_fvar fv ->
-      Some (Inl (fv, []))
-      
-    | Tm_uinst (t, us) ->
-      (match (SS.compress t).n with
-       | Tm_fvar fv -> Some (Inl (fv, us))
-       | _ -> failwith "term_as_fv_or_name: impossible non fvar in uinst")
-      
-    | Tm_ascribed (t, _, _) -> 
-      term_as_fv_or_name t
-      
-    | _ -> None
 
-(* unfolded_memo_t: This is a key data structure in the 
+////////////////////////////////////////////////////////////////////////////////
+// Main strict positivity check
+////////////////////////////////////////////////////////////////////////////////
+
+(**
+   unfolded_memo_t: This is a key data structure in the 
    strict positivity check for inductive types.
 
    Consider, for example, checking the positivity of
@@ -346,7 +591,6 @@ let rec term_as_fv_or_name (t:term)
 //A type name, the instantiation, and the number of arguments
 type unfolded_memo_elt = list (lident & args & int) 
 type unfolded_memo_t = ref unfolded_memo_elt
-
 
 
 (* Check if `ilid args` is in the memo table.
@@ -372,8 +616,39 @@ let already_unfolded (ilid:lident)
 
 (** The main check for strict positivity
 
-      Checks if all the mutuals
-      occurs strictly positively in the type `in_type`
+    A summary of its general structure:
+    
+    There are four mutually recursive functions
+
+    1. ty_strictly_positive_in_type _ mutuals in_type _
+
+       This is the main function and checks that none of the mutuals
+       appear in_type in a non-strictly positive position
+       and in arity indexes of in_type
+
+    2. ty_strictly_positive_in_args _ mutuals head_t args _
+
+       Given a head term applied to args, where head is of type
+       head_t, this checks that if the mutuals appear in a arg, that
+       it does no strictly positive and the corresponding binder
+       of head_t is marked strictly positive.
+
+       The head term is not an inductive type constructor
+
+    3. ty_strictly_positive_in_arguments_to_fvar _ mutuals t fv _ args _
+
+       fv may or may not be an inductive, and is not one of the
+       mutuals, and this checks that all the mutuals are strictly
+       positive in the arguments
+
+       if is is not an inductive, we fall back to 2
+       if it is an inductive, we check each of its constructors using 4
+
+    4. ty_strictly_positive_in_datacon_of_applied_inductive _ mutuals dlid ilid _ args _ _
+
+       This considers every field of dlid applied to the type
+       parameters of the inductive ilid in args, and checks that the
+       mutuals are strictly positive in all the field types. 
 *)
 let rec ty_strictly_positive_in_type (env:env)
                                      (mutuals:list lident)
@@ -413,22 +688,21 @@ let rec ty_strictly_positive_in_type (env:env)
             BU.format2 "Failed to check positivity of %s in a term with head %s"
                        (string_of_lids mutuals)
                        (Print.term_to_string t));
+          //The head is not a name or an fv
+          //conservatively return false
           false
           
-        | Some (Inr _) -> //head is a bv
+        | Some (Inr x) -> //head is an name
           begin
-          debug_positivity env (fun () -> "ty is an app node with head that is a bv");
-          //
-          // AR: note that we are dropping the guard here
-          //     the inductive has already been typechecked, so things are well-typed
-          //
-          let head_ty, _ =
-            env.typeof_well_typed_tot_or_gtot_term
-                env
-                t
-                (let must_tot = false in must_tot)
-          in
-          check_ty_strictly_positive_in_args env mutuals head_ty args unfolded
+          let head_ty, _pos = Env.lookup_bv env x in
+          debug_positivity env (fun _ ->
+            BU.format3 "Tm_app, head bv, in_type=%s, head_bv=%s, head_ty=%s"
+                       (Print.term_to_string in_type)
+                       (Print.nm_to_string x)
+                       (Print.term_to_string head_ty));
+                           
+          //The check depends on the strict positivity annotations on the type of the name
+          ty_strictly_positive_in_args env mutuals head_ty args unfolded
           end
           
         | Some (Inl (fv, us)) ->
@@ -482,6 +756,9 @@ let rec ty_strictly_positive_in_type (env:env)
           |> List.contains S.TotalEffect) in
      if not check_comp
      then (
+       //t -> Dv _
+       //is accepted as strictly positive in t
+       //since it is behind a Dv effect
        debug_positivity env (fun _ ->
          "Checking strict positivity , the arrow is impure, so return true");
        true
@@ -543,6 +820,7 @@ let rec ty_strictly_positive_in_type (env:env)
             
    | Tm_abs _ -> 
      let bs, body, _ = U.abs_formals in_type in
+     //strictly positive in all the binders and the result
      let rec aux env bs = 
        match bs with
        | [] -> ty_strictly_positive_in_type env mutuals body unfolded
@@ -566,18 +844,18 @@ let rec ty_strictly_positive_in_type (env:env)
      false) 
 
 (*
- * We are checking for positive occurrences of (ty_lid in mutuals) in a term
- *   (head args), and we know ty_lid occurs somewhere in args
- * In some env, we also have    env |- head : Tot t
+ * We are checking for positive occurrences of mutuals in a term
+ *   (head args), and we know one of the mutuals occurs somewhere in args
+ * We also have   env |- head : Tot t
  *
  * This function checks that whereever ty_lid appears in the args,
  *   the corresponding parameter in t is marked strictly positive
  *)
-and check_ty_strictly_positive_in_args (env:env)
-                                       (mutuals:list lident)
-                                       (head_t:typ)
-                                       (args:args)
-                                       (unfolded:unfolded_memo_t)
+and ty_strictly_positive_in_args (env:env)
+                                 (mutuals:list lident)
+                                 (head_t:typ)
+                                 (args:args)
+                                 (unfolded:unfolded_memo_t)
   : bool
   = let bs, _ = U.arrow_formals head_t in
     let rec aux (bs:binders) args
@@ -689,7 +967,7 @@ and ty_strictly_positive_in_arguments_to_fvar
       (*
        * Check if ilid's corresponding binder is marked "strictly_positive"
        *)
-      check_ty_strictly_positive_in_args env mutuals fv_ty args unfolded
+      ty_strictly_positive_in_args env mutuals fv_ty args unfolded
     )
     //if fv has already been unfolded with same arguments, return true
     else (
@@ -804,130 +1082,35 @@ and ty_strictly_positive_in_datacon_of_applied_inductive (env:env_t)
     in
     strictly_positive_in_all_fields env fields
 
-(* Check that the name bv (e.g., a binder annotated with a strictly_positive attribute)
-   is strictly positive in t *)
+////////////////////////////////////////////////////////////////////////////////
+// External API for strict positivity checking
+////////////////////////////////////////////////////////////////////////////////
+
+
+(* 
+   Check that the name bv (a binder annotated with a strictly_positive
+   attribute) is strictly positive in t
+*)
 let name_strictly_positive_in_type env (bv:bv) t =
-  (* An unqualified long identifier just for positivity-checking
+  (* We map bv to an unqualified long identifier with the same pp_name
+     just for positivity-checking.
+     
      It cannot clash with any user long identifier, since those
      are always qualified to a module *)
   let fv_lid = set_lid_range (lid_of_str (FStar.Ident.string_of_id bv.ppname)) (range_of_bv bv) in
   let fv = S.tconst fv_lid in
   let t = SS.subst [NT (bv, fv)] t in
-  (* For checking if a bv is positive, there are no mutually defined names *)
   ty_strictly_positive_in_type env [fv_lid] t (BU.mk_ref [])
 
 
-let max_matching_prefix (longer:list 'a) (shorter:list 'b) (f:'a -> 'b -> bool)
-  : option int
-  = let rec aux n ls ms =
-        match ls, ms with
-        | _, [] -> Some n
-        | l::ls, m::ms -> 
-          if f l m then aux (n + 1) ls ms
-          else Some n
-        | _ -> None
-    in
-    aux 0 longer shorter
-      
-let rec min_l (#a:Type) (def:int) (l:list a) (f:a -> int) =
-    match l with
-    | [] -> def
-    | hd::tl -> min (f hd) (min_l def tl f)
 
-let max_recursively_uniform_parameters (env:env_t)
-                                       (mutuals:list lident)
-                                       (params:list bv)
-                                       (ty:term)
-  : int
-  = let ty = normalize env ty in
-    let n_params = L.length params in
-    let compare_name_bv (x:arg) (y:bv) =
-      match (SS.compress (fst x)).n with
-      | Tm_name x -> S.bv_eq x y
-      | _ -> false
-    in
-    let min_l (#a:Type) f l = min_l #a n_params f l in
-    let params_to_string () =
-        (List.map Print.bv_to_string params |> String.concat ", ")
-    in
-    debug_positivity env (fun _ ->
-      BU.format2 "max_recursively_uniform_parameters? params=%s in %s"
-                 (params_to_string())
-                 (Print.term_to_string ty));
-    let rec aux ty =
-        debug_positivity env (fun _ ->
-          BU.format1 "max_recursively_uniform_parameters.aux? %s"
-                 (Print.term_to_string ty));
-        if List.for_all (fun mutual -> not (ty_occurs_in mutual ty)) mutuals
-        then n_params
-        else (
-        match (SS.compress ty).n with
-        | Tm_name _
-        | Tm_fvar _
-        | Tm_uinst _
-        | Tm_type _
-        | Tm_constant _ ->
-          n_params
-        | Tm_refine(x, f) ->
-          min (aux x.sort)
-              (let _, f = SS.open_term [S.mk_binder x] f in
-               aux f)
-        | Tm_app _ ->
-          let head, args = U.head_and_args ty in
-          begin
-          match (U.un_uinst head).n with
-          | Tm_fvar fv ->
-            if L.existsML (fv_eq_lid fv) mutuals
-            then (
-              debug_positivity env (fun _ -> 
-                BU.format2 "Searching for max matching prefix of params=%s in args=%s"
-                           (params_to_string())
-                           (Print.args_to_string args));
-              match max_matching_prefix args params compare_name_bv with
-              | None -> 0
-              | Some n -> n
-            )
-            else min_l args (fun (arg, _) -> aux arg)
-          | _ ->
-            min (aux head)
-                (min_l args (fun (arg, _) -> aux arg))
-          end
-        | Tm_abs _ ->
-          let bs, body, _ = U.abs_formals ty in
-          min (min_l bs (fun b -> aux b.binder_bv.sort))
-              (aux body)
-        | Tm_arrow _ -> 
-          let bs, r = U.arrow_formals ty in
-          min (min_l bs (fun b -> aux b.binder_bv.sort))
-              (aux r)
-        | Tm_match(scrutinee, _, branches, _) ->
-          min (aux scrutinee)
-              (min_l branches
-                     (fun (p, _, t) ->
-                       let bs = List.map mk_binder (pat_bvs p) in
-                       let bs, t = SS.open_term bs t in
-                       aux t))
-        | Tm_meta(t, _)
-        | Tm_ascribed(t, _, _) ->
-          aux t
-        | _ ->
-          0
-        )
-    in
-    let res = aux ty in
-    debug_positivity env (fun _ ->
-      BU.format3 "result: max_recursively_uniform_parameters(params=%s in %s) = %s"
-                 (params_to_string())
-                 (Print.term_to_string ty)
-                 (string_of_int res));
-    res
-    
-
-(*  Check that ty_lid (defined along with mutuals)
-    is strictly positive in every field of the data constructor dlid
+(*  Check that the mutuals are
+    strictly positive in every field of the data constructor dlid
     AND
     that any parameters of the type annotated with a strictly positive
-    attribute is also strictly positive in the fields of the constructor
+    attribute are also strictly positive in the fields of the constructor
+
+    The env must already contain all the ty_bs
  *)
 let ty_strictly_positive_in_datacon_decl (env:env_t)
                                          (mutuals:list lident)
@@ -981,16 +1164,6 @@ let ty_strictly_positive_in_datacon_decl (env:env_t)
     in
     check_all_fields env fields
       
-let open_sig_inductive_typ env se =
-    match se.sigel with
-    | Sig_inductive_typ (lid, ty_us, ty_params, _num_uniform, _, _, _) -> 
-      let ty_usubst, ty_us = SS.univ_var_opening ty_us in
-      let env = push_univ_vars env ty_us in
-      let ty_params = SS.subst_binders ty_usubst ty_params in
-      let ty_params = SS.open_binders ty_params in
-      let env = push_binders env ty_params in
-      env, (lid, ty_us, ty_params)
-    | _                                        -> failwith "Impossible!"
   
 (* An entry point from the interface:
      Check that the inductive type ty, defined mutually with mutuals
@@ -1004,13 +1177,15 @@ let check_strict_positivity (env:env_t)
     let unfolded_inductives = BU.mk_ref [] in
 
     //ty_params are the parameters of ty, it does not include the indexes
-    let env, (ty_lid, ty_us, ty_params) =  open_sig_inductive_typ env ty in
+    let env, (ty_lid, ty_us, ty_params) = open_sig_inductive_typ env ty in
     let mutuals = List.filter (fun m -> not (Env.is_datacon env m)) mutuals in
     let mutuals = 
+      //make sure that ty_lid itself is part of the mutuals
       if List.existsML (Ident.lid_equals ty_lid) mutuals
       then mutuals
       else ty_lid::mutuals in
     let datacons = snd (datacons_of_typ env ty_lid) in
+    let us = List.map U_name ty_us in
     List.for_all 
       (fun d ->
          List.for_all
@@ -1020,7 +1195,7 @@ let check_strict_positivity (env:env_t)
                mutuals
                d
                ty_params
-               (List.map U_name ty_us)
+               us
                unfolded_inductives)
           mutuals)
     datacons
@@ -1032,64 +1207,4 @@ let check_exn_strict_positivity (env:env_t)
   = let unfolded_inductives = BU.mk_ref [] in
     ty_strictly_positive_in_datacon_decl env [C.exn_lid] data_ctor_lid [] [] unfolded_inductives
 
-let mark_uniform_type_parameters (env:env_t)
-                                 (sig:sigelt)
-  : sigelt
-  = let mark_tycon_parameters tc datas =
-        let Sig_inductive_typ (tc_lid, us, ty_param_binders, _num_uniform, t, mutuals, data_lids) = tc.sigel in
-        let env, (tc_lid, us, ty_params) = open_sig_inductive_typ env tc in
-        let _, ty_param_args = U.args_of_binders ty_params in
-        let datacon_fields : list (list binder) =
-          List.filter_map
-            (fun data ->
-              match data.sigel with
-              | Sig_datacon(d_lid, d_us, dt, tc_lid', _, _) ->
-                if Ident.lid_equals tc_lid tc_lid'
-                then (
-                  let dt = SS.subst (mk_univ_subst d_us (L.map U_name us)) dt in
-                  Some (fst (U.arrow_formals (apply_constr_arrow d_lid dt ty_param_args)))
-                )
-                else None
-              | _ -> None)
-            datas
-        in
-        let ty_param_bvs = L.map (fun b -> b.binder_bv) ty_params in
-        let n_params = L.length ty_params in
-        let min_l #a f l = min_l #a n_params f l in
-        let max_uniform_prefix =
-           min_l datacon_fields
-                 (fun (fields_of_one_datacon:list binder) ->
-                    min_l fields_of_one_datacon 
-                          (fun (field:binder) ->
-                            max_recursively_uniform_parameters
-                              env
-                              mutuals
-                              ty_param_bvs
-                              field.binder_bv.sort))
-        in
-        if max_uniform_prefix < n_params
-        then (
-          let _, non_uniform_params = List.splitAt max_uniform_prefix ty_param_binders in
-          List.iter 
-            (fun param ->
-                 if U.has_attribute param.binder_attrs C.binder_strictly_positive_attr
-                 then ( //if marked strictly positive, it must be uniform
-                   raise_error (Error_InductiveTypeNotSatisfyPositivityCondition,
-                                BU.format1 "Binder %s is marked strictly positive, \
-                                           but it is not uniformly recursive"
-                                           (Print.binder_to_string param))
-                               (range_of_bv param.binder_bv)
-                 ))
-            non_uniform_params
-        );            
-        let sigel = Sig_inductive_typ (tc_lid, us, ty_param_binders, Some max_uniform_prefix, t, mutuals, data_lids) in
-        { tc with sigel }
-    in 
-    match sig.sigel with
-    | Sig_bundle (ses, lids) ->
-      let tcs, datas = L.partition (fun se -> Sig_inductive_typ? se.sigel) ses in
-      let tcs = List.map (fun tc -> mark_tycon_parameters tc datas) tcs in
-      { sig with sigel = Sig_bundle(tcs@datas, lids) }
-    
-    | _ -> sig
     
