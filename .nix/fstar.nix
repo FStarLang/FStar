@@ -5,25 +5,20 @@ stdenv.mkDerivation {
   pname = "fstar";
   inherit version;
 
-  dontUnpack = true;
-
   buildInputs = [ installShellFiles makeWrapper ];
+
+  src = ./..;
+
+  buildPhase = "true";
 
   installPhase = ''
     mkdir $out
-    cd $out
 
     CP="cp -r --no-preserve=mode"
-    $CP ${fstar-dune}/* .
-    $CP ${ulib}/* .
+    $CP ${fstar-dune}/* $out
+    $CP ${ulib}/* $out
 
-    # FIXME: Why not use `make -C src/ocaml-output install-sides` ?
-    # (after moving the ulib install command back to `install`)
-    mkdir -p share/fstar/doc
-    $CP ${../examples} share/fstar/examples
-    $CP ${../ucontrib} share/fstar/contrib
-    $CP ${../doc/Makefile.include} share/fstar/doc/Makefile.include
-    $CP ${../doc/tutorial} share/fstar/doc/tutorial
+    PREFIX=$out make -C src/ocaml-output install-sides -j $NIX_BUILD_CORES
 
     for binary in $out/bin/*
     do
@@ -31,6 +26,7 @@ stdenv.mkDerivation {
       wrapProgram $binary --prefix PATH ":" ${z3}/bin
     done
 
+    cd $out
     installShellCompletion --bash ${../.completion/bash/fstar.exe.bash}
     installShellCompletion --fish ${../.completion/fish/fstar.exe.fish}
     installShellCompletion --zsh --name _fstar.exe ${

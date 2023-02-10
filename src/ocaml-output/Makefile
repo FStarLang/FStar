@@ -128,6 +128,8 @@ install:
 	+$(MAKE) -C $(FSTAR_HOME)
 	@# Install the binary and the binary library
 	cd $(DUNE_SNAPSHOT) && dune install --prefix=$(PREFIX)
+	@# Then the standard library sources and checked files
+	+$(MAKE) -C $(FSTAR_HOME)/ulib install
 	@# Then the rest
 	+$(MAKE) install-sides
 
@@ -137,8 +139,6 @@ install:
 
 .PHONY: install-sides
 install-sides:
-	@# Then the standard library sources and checked files
-	+$(MAKE) -C $(FSTAR_HOME)/ulib install
 	@# Then the examples (those now work from any F* installation flavor, sources, binary package or opam)
 	@# ucontrib is needed by examples/crypto
 	$(call install_dir,examples,share/fstar/examples)
