@@ -45,7 +45,7 @@ let (parse_file :
         ((let uu___2 = FStar_Options.print_ast () in
           if uu___2
           then
-            let uu___3 = FStar_Parser_AST.modul_to_string ast in
+            let uu___3 = FStar_Parser_ParseIt.modul_to_json_string ast in
             FStar_Compiler_Util.print1 "Parsed AST:\n%s\n" uu___3
           else ());
          (ast, comments))

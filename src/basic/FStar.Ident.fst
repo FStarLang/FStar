@@ -7,11 +7,15 @@ open FStar.Compiler.List
 module List = FStar.Compiler.List
 module Util = FStar.Compiler.Util
 
-// IN F*: [@@ PpxDerivingYoJson; PpxDerivingShow ]
-type ident = {idText:string;
-              idRange:range}
+type ident_t 'a = { idText : 'a ; idRange : range }
+let ident_t_to_yojson (f:'a -> 'b) (x:ident_t 'a) = f x.idText
+let ident_t_of_yojson (f:'a -> 'b) (x:'a) = failwith "Parsing from JSON is not yet supported"
+let pp_ident_t (f:'a -> 'b -> 'c) (fmt:'a) (x:ident_t 'b) = f fmt x.idText
 
-// IN F*: [@@ PpxDerivingYoJson; PpxDerivingShow ]
+[@@ PpxDerivingYoJson; PpxDerivingShow ]
+type ident = ident_t string
+
+[@@ PpxDerivingYoJson; PpxDerivingShow ]
 type lident = {ns:ipath; //["FStar"; "Basic"]
                ident:ident;    //"lident"
                nsstr:string; // Cached version of the namespace

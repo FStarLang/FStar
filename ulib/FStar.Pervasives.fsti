@@ -689,72 +689,6 @@ new_effect {
   ; trivial = all_trivial heap
 }
 
-(**
- Controlling inversions of inductive type
-
- Given a value of an inductive type [v:t], where [t = A | B], the SMT
- solver can only prove that [v=A \/ v=B] by _inverting_ [t]. This
- inversion is controlled by the [ifuel] setting, which usually limits
- the recursion depth of the number of such inversions that the solver
- can perform.
-
- The [inversion] predicate below is a way to circumvent the
- [ifuel]-based restrictions on inversion depth. In particular, if the
- [inversion t] is available in the SMT solver's context, it is free to
- invert [t] infinitely, regardless of the [ifuel] setting.
-
- Be careful using this, since it explicitly subverts the [ifuel]
- setting. If used unwisely, this can lead to very poor SMT solver
- performance.  *)
-[@@ remove_unused_type_parameters [0]]
-val inversion (a: Type) : Type0
-
-(** To introduce [inversion t] in the SMT solver's context, call
-    [allow_inversion t]. *)
-val allow_inversion (a: Type) : Pure unit (requires True) (ensures (fun x -> inversion a))
-
-(** Since the [option] type is so common, we always allow inverting
-    options, regardless of [ifuel] *)
-val invertOption (a: Type)
-    : Lemma (requires True) (ensures (forall (x: option a). None? x \/ Some? x)) [SMTPat (option a)]
-
-(** Values of type [a] or type [b] *)
-type either a b =
-  | Inl : v: a -> either a b
-  | Inr : v: b -> either a b
-
-(** Projections for the components of a dependent pair *)
-let dfst (#a: Type) (#b: a -> GTot Type) (t: dtuple2 a b)
-    : Tot a
-  = Mkdtuple2?._1 t
-
-let dsnd (#a: Type) (#b: a -> GTot Type) (t: dtuple2 a b)
-    : Tot (b  (Mkdtuple2?._1 t))
-  = Mkdtuple2?._2 t
-
-(** Dependent triples, with sugar [x:a & y:b x & c x y] *)
-unopteq
-type dtuple3 (a: Type) (b: (a -> GTot Type)) (c: (x: a -> b x -> GTot Type)) =
-  | Mkdtuple3 : _1: a -> _2: b _1 -> _3: c _1 _2 -> dtuple3 a b c
-
-(** Dependent quadruples, with sugar [x:a & y:b x & z:c x y & d x y z] *)
-unopteq
-type dtuple4
-  (a: Type) (b: (x: a -> GTot Type)) (c: (x: a -> b x -> GTot Type))
-  (d: (x: a -> y: b x -> z: c x y -> GTot Type))
-  = | Mkdtuple4 : _1: a -> _2: b _1 -> _3: c _1 _2 -> _4: d _1 _2 _3 -> dtuple4 a b c d
-
-(** Explicitly discarding a value *)
-let ignore (#a: Type) (x: a) : Tot unit = ()
-
-(** In a context where [false] is provable, you can prove that any
-    type [a] is inhabited.
-
-    There are many proofs of this fact in F*. Here, in the implementation, we build an
-    infinitely looping function, since the termination check succeeds
-    in a [False] context. *)
-val false_elim (#a: Type) (u: unit{False}) : Tot a
-
 /// Attributes:
 ///
 /// An attribute is any F* term.
@@ -817,6 +751,75 @@ type __internal_ocaml_attributes =
   | CIfDef
   | CMacro (* KaRaMeL-only: on a given `val foo`, compile if foo with #ifdef. *)
 (* KaRaMeL-only: for a top-level `let v = e`, compile as a macro *)
+
+
+(**
+ Controlling inversions of inductive type
+
+ Given a value of an inductive type [v:t], where [t = A | B], the SMT
+ solver can only prove that [v=A \/ v=B] by _inverting_ [t]. This
+ inversion is controlled by the [ifuel] setting, which usually limits
+ the recursion depth of the number of such inversions that the solver
+ can perform.
+
+ The [inversion] predicate below is a way to circumvent the
+ [ifuel]-based restrictions on inversion depth. In particular, if the
+ [inversion t] is available in the SMT solver's context, it is free to
+ invert [t] infinitely, regardless of the [ifuel] setting.
+
+ Be careful using this, since it explicitly subverts the [ifuel]
+ setting. If used unwisely, this can lead to very poor SMT solver
+ performance.  *)
+[@@ remove_unused_type_parameters [0]]
+val inversion (a: Type) : Type0
+
+(** To introduce [inversion t] in the SMT solver's context, call
+    [allow_inversion t]. *)
+val allow_inversion (a: Type) : Pure unit (requires True) (ensures (fun x -> inversion a))
+
+(** Since the [option] type is so common, we always allow inverting
+    options, regardless of [ifuel] *)
+val invertOption (a: Type)
+    : Lemma (requires True) (ensures (forall (x: option a). None? x \/ Some? x)) [SMTPat (option a)]
+
+(** Values of type [a] or type [b] *)
+[@@ PpxDerivingYoJson; PpxDerivingShow ]
+type either a b =
+  | Inl : v: a -> either a b
+  | Inr : v: b -> either a b
+
+(** Projections for the components of a dependent pair *)
+let dfst (#a: Type) (#b: a -> GTot Type) (t: dtuple2 a b)
+    : Tot a
+  = Mkdtuple2?._1 t
+
+let dsnd (#a: Type) (#b: a -> GTot Type) (t: dtuple2 a b)
+    : Tot (b  (Mkdtuple2?._1 t))
+  = Mkdtuple2?._2 t
+
+(** Dependent triples, with sugar [x:a & y:b x & c x y] *)
+unopteq
+type dtuple3 (a: Type) (b: (a -> GTot Type)) (c: (x: a -> b x -> GTot Type)) =
+  | Mkdtuple3 : _1: a -> _2: b _1 -> _3: c _1 _2 -> dtuple3 a b c
+
+(** Dependent quadruples, with sugar [x:a & y:b x & z:c x y & d x y z] *)
+unopteq
+type dtuple4
+  (a: Type) (b: (x: a -> GTot Type)) (c: (x: a -> b x -> GTot Type))
+  (d: (x: a -> y: b x -> z: c x y -> GTot Type))
+  = | Mkdtuple4 : _1: a -> _2: b _1 -> _3: c _1 _2 -> _4: d _1 _2 _3 -> dtuple4 a b c d
+
+(** Explicitly discarding a value *)
+let ignore (#a: Type) (x: a) : Tot unit = ()
+
+(** In a context where [false] is provable, you can prove that any
+    type [a] is inhabited.
+
+    There are many proofs of this fact in F*. Here, in the implementation, we build an
+    infinitely looping function, since the termination check succeeds
+    in a [False] context. *)
+val false_elim (#a: Type) (u: unit{False}) : Tot a
+
 
 (** The [inline_let] attribute on a local let-binding, instructs the
     extraction pipeline to inline the definition. This may be both to

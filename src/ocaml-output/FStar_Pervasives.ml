@@ -160,49 +160,6 @@ type ('heap, 'a, 'wp, 'post, 'h0) all_ite_wp = unit
 type ('heap, 'a, 'wp1, 'wp2) all_stronger = unit
 type ('heap, 'a, 'b, 'wp, 'p, 'h) all_close_wp = unit
 type ('heap, 'a, 'wp) all_trivial = unit
-type 'uuuuu inversion = unit
-type ('a, 'b) either =
-  | Inl of 'a 
-  | Inr of 'b 
-let uu___is_Inl : 'a 'b . ('a, 'b) either -> Prims.bool =
-  fun projectee -> match projectee with | Inl v -> true | uu___ -> false
-let __proj__Inl__item__v : 'a 'b . ('a, 'b) either -> 'a =
-  fun projectee -> match projectee with | Inl v -> v
-let uu___is_Inr : 'a 'b . ('a, 'b) either -> Prims.bool =
-  fun projectee -> match projectee with | Inr v -> true | uu___ -> false
-let __proj__Inr__item__v : 'a 'b . ('a, 'b) either -> 'b =
-  fun projectee -> match projectee with | Inr v -> v
-let dfst : 'a 'b . ('a, 'b) Prims.dtuple2 -> 'a =
-  fun t -> Prims.__proj__Mkdtuple2__item___1 t
-let dsnd : 'a 'b . ('a, 'b) Prims.dtuple2 -> 'b =
-  fun t -> Prims.__proj__Mkdtuple2__item___2 t
-type ('a, 'b, 'c) dtuple3 =
-  | Mkdtuple3 of 'a * 'b * 'c 
-let uu___is_Mkdtuple3 : 'a 'b 'c . ('a, 'b, 'c) dtuple3 -> Prims.bool =
-  fun projectee -> true
-let __proj__Mkdtuple3__item___1 : 'a 'b 'c . ('a, 'b, 'c) dtuple3 -> 'a =
-  fun projectee -> match projectee with | Mkdtuple3 (_1, _2, _3) -> _1
-let __proj__Mkdtuple3__item___2 : 'a 'b 'c . ('a, 'b, 'c) dtuple3 -> 'b =
-  fun projectee -> match projectee with | Mkdtuple3 (_1, _2, _3) -> _2
-let __proj__Mkdtuple3__item___3 : 'a 'b 'c . ('a, 'b, 'c) dtuple3 -> 'c =
-  fun projectee -> match projectee with | Mkdtuple3 (_1, _2, _3) -> _3
-type ('a, 'b, 'c, 'd) dtuple4 =
-  | Mkdtuple4 of 'a * 'b * 'c * 'd 
-let uu___is_Mkdtuple4 : 'a 'b 'c 'd . ('a, 'b, 'c, 'd) dtuple4 -> Prims.bool
-  = fun projectee -> true
-let __proj__Mkdtuple4__item___1 :
-  'a 'b 'c 'd . ('a, 'b, 'c, 'd) dtuple4 -> 'a =
-  fun projectee -> match projectee with | Mkdtuple4 (_1, _2, _3, _4) -> _1
-let __proj__Mkdtuple4__item___2 :
-  'a 'b 'c 'd . ('a, 'b, 'c, 'd) dtuple4 -> 'b =
-  fun projectee -> match projectee with | Mkdtuple4 (_1, _2, _3, _4) -> _2
-let __proj__Mkdtuple4__item___3 :
-  'a 'b 'c 'd . ('a, 'b, 'c, 'd) dtuple4 -> 'c =
-  fun projectee -> match projectee with | Mkdtuple4 (_1, _2, _3, _4) -> _3
-let __proj__Mkdtuple4__item___4 :
-  'a 'b 'c 'd . ('a, 'b, 'c, 'd) dtuple4 -> 'd =
-  fun projectee -> match projectee with | Mkdtuple4 (_1, _2, _3, _4) -> _4
-let rec false_elim : 'uuuuu . unit -> 'uuuuu = fun uu___ -> false_elim ()
 type __internal_ocaml_attributes =
   | PpxDerivingShow 
   | PpxDerivingShowConstant of Prims.string 
@@ -270,6 +227,49 @@ let (uu___is_CIfDef : __internal_ocaml_attributes -> Prims.bool) =
   fun projectee -> match projectee with | CIfDef -> true | uu___ -> false
 let (uu___is_CMacro : __internal_ocaml_attributes -> Prims.bool) =
   fun projectee -> match projectee with | CMacro -> true | uu___ -> false
+type 'uuuuu inversion = unit
+type ('a, 'b) either =
+  | Inl of 'a 
+  | Inr of 'b [@@deriving yojson,show]
+let uu___is_Inl : 'a 'b . ('a, 'b) either -> Prims.bool =
+  fun projectee -> match projectee with | Inl v -> true | uu___ -> false
+let __proj__Inl__item__v : 'a 'b . ('a, 'b) either -> 'a =
+  fun projectee -> match projectee with | Inl v -> v
+let uu___is_Inr : 'a 'b . ('a, 'b) either -> Prims.bool =
+  fun projectee -> match projectee with | Inr v -> true | uu___ -> false
+let __proj__Inr__item__v : 'a 'b . ('a, 'b) either -> 'b =
+  fun projectee -> match projectee with | Inr v -> v
+let dfst : 'a 'b . ('a, 'b) Prims.dtuple2 -> 'a =
+  fun t -> Prims.__proj__Mkdtuple2__item___1 t
+let dsnd : 'a 'b . ('a, 'b) Prims.dtuple2 -> 'b =
+  fun t -> Prims.__proj__Mkdtuple2__item___2 t
+type ('a, 'b, 'c) dtuple3 =
+  | Mkdtuple3 of 'a * 'b * 'c 
+let uu___is_Mkdtuple3 : 'a 'b 'c . ('a, 'b, 'c) dtuple3 -> Prims.bool =
+  fun projectee -> true
+let __proj__Mkdtuple3__item___1 : 'a 'b 'c . ('a, 'b, 'c) dtuple3 -> 'a =
+  fun projectee -> match projectee with | Mkdtuple3 (_1, _2, _3) -> _1
+let __proj__Mkdtuple3__item___2 : 'a 'b 'c . ('a, 'b, 'c) dtuple3 -> 'b =
+  fun projectee -> match projectee with | Mkdtuple3 (_1, _2, _3) -> _2
+let __proj__Mkdtuple3__item___3 : 'a 'b 'c . ('a, 'b, 'c) dtuple3 -> 'c =
+  fun projectee -> match projectee with | Mkdtuple3 (_1, _2, _3) -> _3
+type ('a, 'b, 'c, 'd) dtuple4 =
+  | Mkdtuple4 of 'a * 'b * 'c * 'd 
+let uu___is_Mkdtuple4 : 'a 'b 'c 'd . ('a, 'b, 'c, 'd) dtuple4 -> Prims.bool
+  = fun projectee -> true
+let __proj__Mkdtuple4__item___1 :
+  'a 'b 'c 'd . ('a, 'b, 'c, 'd) dtuple4 -> 'a =
+  fun projectee -> match projectee with | Mkdtuple4 (_1, _2, _3, _4) -> _1
+let __proj__Mkdtuple4__item___2 :
+  'a 'b 'c 'd . ('a, 'b, 'c, 'd) dtuple4 -> 'b =
+  fun projectee -> match projectee with | Mkdtuple4 (_1, _2, _3, _4) -> _2
+let __proj__Mkdtuple4__item___3 :
+  'a 'b 'c 'd . ('a, 'b, 'c, 'd) dtuple4 -> 'c =
+  fun projectee -> match projectee with | Mkdtuple4 (_1, _2, _3, _4) -> _3
+let __proj__Mkdtuple4__item___4 :
+  'a 'b 'c 'd . ('a, 'b, 'c, 'd) dtuple4 -> 'd =
+  fun projectee -> match projectee with | Mkdtuple4 (_1, _2, _3, _4) -> _4
+let rec false_elim : 'uuuuu . unit -> 'uuuuu = fun uu___ -> false_elim ()
 let singleton : 'uuuuu . 'uuuuu -> 'uuuuu = fun x -> x
 let with_type : 'uuuuu . 'uuuuu -> 'uuuuu = fun e -> e
 type 'a eqtype_as_type = 'a

@@ -165,3 +165,18 @@ let parse_warn_error s =
         failwith (U.format1 "Malformed warn-error list: %s" s)
   in
   FStar_Errors.update_flags user_flags
+
+module A = FStar_Parser_AST
+  
+let modul_to_json_string (m:A.modul)
+  : string
+  = Yojson.Safe.to_string (A.modul_to_yojson m)
+  
+let modul_of_json_string (s:string)
+  : (A.modul, string) FStar_Pervasives.either
+  = try
+      match A.modul_of_yojson (Yojson.Safe.from_string s) with
+      | Result.Ok m -> FStar_Pervasives.Inl m
+      | Result.Error s -> FStar_Pervasives.Inr s
+    with Yojson.Json_error msg -> FStar_Pervasives.Inr msg
+  

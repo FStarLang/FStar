@@ -170,8 +170,8 @@ let tc_one_fragment curmod (env:TcEnv.env_t) frag =
 
   let range_of_first_mod_decl modul =
     match modul with
-    | Parser.AST.Module (_, { Parser.AST.drange = d } :: _)
-    | Parser.AST.Interface (_, { Parser.AST.drange = d } :: _, _) -> d
+    | Parser.AST.Module (_, { d } :: _)
+    | Parser.AST.Interface (_, { d } :: _, _) -> d.range
     | _ -> Range.dummyRange in
 
   match Parser.Driver.parse_fragment frag with
@@ -205,8 +205,8 @@ let tc_one_fragment curmod (env:TcEnv.env_t) frag =
   | Parser.Driver.Decls ast_decls ->
     match curmod with
     | None ->
-      let { Parser.AST.drange = rng } = List.hd ast_decls in
-      Errors.raise_error (Errors.Fatal_ModuleFirstStatement, "First statement must be a module declaration") rng
+      let { d } = List.hd ast_decls in
+      Errors.raise_error (Errors.Fatal_ModuleFirstStatement, "First statement must be a module declaration") d.range
     | Some modul ->
       let env, ast_decls_l =
         BU.fold_map

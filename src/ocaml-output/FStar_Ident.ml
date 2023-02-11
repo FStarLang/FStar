@@ -1,11 +1,19 @@
 open Prims
-type ident = {
-  idText: Prims.string ;
-  idRange: FStar_Compiler_Range.range }[@@deriving yojson,show,yojson,show]
-let (__proj__Mkident__item__idText : ident -> Prims.string) =
+type 'a ident_t = {
+  idText: 'a ;
+  idRange: FStar_Compiler_Range.range }
+let __proj__Mkident_t__item__idText : 'a . 'a ident_t -> 'a =
   fun projectee -> match projectee with | { idText; idRange;_} -> idText
-let (__proj__Mkident__item__idRange : ident -> FStar_Compiler_Range.range) =
+let __proj__Mkident_t__item__idRange :
+  'a . 'a ident_t -> FStar_Compiler_Range.range =
   fun projectee -> match projectee with | { idText; idRange;_} -> idRange
+let ident_t_to_yojson : 'a 'b . ('a -> 'b) -> 'a ident_t -> 'b =
+  fun f -> fun x -> f x.idText
+let ident_t_of_yojson : 'uuuuu 'a 'b . ('a -> 'b) -> 'a -> 'uuuuu =
+  fun f -> fun x -> failwith "Parsing from JSON is not yet supported"
+let pp_ident_t : 'a 'b 'c . ('a -> 'b -> 'c) -> 'a -> 'b ident_t -> 'c =
+  fun f -> fun fmt -> fun x -> f fmt x.idText
+type ident = Prims.string ident_t[@@deriving yojson,show,yojson,show]
 type path = Prims.string Prims.list[@@deriving yojson,show]
 type ipath = ident Prims.list[@@deriving yojson,show]
 type lident =
