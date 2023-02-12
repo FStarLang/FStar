@@ -2056,9 +2056,10 @@ let (u_abs :
               (let c1 =
                  let uu___2 = FStar_Syntax_Util.rename_binders xs ys1 in
                  FStar_Syntax_Subst.subst_comp uu___2 c in
-               FStar_Syntax_Util.abs ys1 t1
-                 (FStar_Pervasives_Native.Some
-                    (FStar_Syntax_Util.residual_comp_of_comp c1)))
+               let uu___2 =
+                 let uu___3 = FStar_Syntax_Util.residual_comp_of_comp c1 in
+                 FStar_Pervasives_Native.Some uu___3 in
+               FStar_Syntax_Util.abs ys1 t1 uu___2)
 let (solve_prob' :
   Prims.bool ->
     FStar_TypeChecker_Common.prob ->

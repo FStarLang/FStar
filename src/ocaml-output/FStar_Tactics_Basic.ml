@@ -2274,9 +2274,11 @@ let (intro : unit -> FStar_Syntax_Syntax.binder FStar_Tactics_Monad.tac) =
                        match uu___6 with
                        | (body, ctx_uvar) ->
                            let sol =
-                             FStar_Syntax_Util.abs [b] body
-                               (FStar_Pervasives_Native.Some
-                                  (FStar_Syntax_Util.residual_comp_of_comp c)) in
+                             let uu___7 =
+                               let uu___8 =
+                                 FStar_Syntax_Util.residual_comp_of_comp c in
+                               FStar_Pervasives_Native.Some uu___8 in
+                             FStar_Syntax_Util.abs [b] body uu___7 in
                            let uu___7 = set_solution goal sol in
                            FStar_Tactics_Monad.op_let_Bang uu___7
                              (fun uu___8 ->
@@ -5406,15 +5408,17 @@ let (t_destruct :
                                match uu___7 with
                                | FStar_Syntax_Syntax.Tm_fvar fv ->
                                    FStar_Tactics_Monad.ret (fv, [])
-                               | FStar_Syntax_Syntax.Tm_uinst
-                                   ({
-                                      FStar_Syntax_Syntax.n =
-                                        FStar_Syntax_Syntax.Tm_fvar fv;
-                                      FStar_Syntax_Syntax.pos = uu___8;
-                                      FStar_Syntax_Syntax.vars = uu___9;
-                                      FStar_Syntax_Syntax.hash_code = uu___10;_},
-                                    us)
-                                   -> FStar_Tactics_Monad.ret (fv, us)
+                               | FStar_Syntax_Syntax.Tm_uinst (h', us) ->
+                                   let uu___8 =
+                                     let uu___9 =
+                                       FStar_Syntax_Subst.compress h' in
+                                     uu___9.FStar_Syntax_Syntax.n in
+                                   (match uu___8 with
+                                    | FStar_Syntax_Syntax.Tm_fvar fv ->
+                                        FStar_Tactics_Monad.ret (fv, us)
+                                    | uu___9 ->
+                                        failwith
+                                          "impossible: uinst over something that's not an fvar")
                                | uu___8 ->
                                    FStar_Tactics_Monad.fail
                                      "type is not an fv" in

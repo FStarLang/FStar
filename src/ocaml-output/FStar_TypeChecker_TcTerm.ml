@@ -6283,10 +6283,12 @@ and (tc_abs :
                             let tfun_computed =
                               FStar_Syntax_Util.arrow bs1 cbody in
                             let e =
-                              FStar_Syntax_Util.abs bs1 body2
-                                (FStar_Pervasives_Native.Some
-                                   (FStar_Syntax_Util.residual_comp_of_comp
-                                      (FStar_Compiler_Util.dflt cbody c_opt))) in
+                              let uu___7 =
+                                let uu___8 =
+                                  FStar_Syntax_Util.residual_comp_of_comp
+                                    (FStar_Compiler_Util.dflt cbody c_opt) in
+                                FStar_Pervasives_Native.Some uu___8 in
+                              FStar_Syntax_Util.abs bs1 body2 uu___7 in
                             FStar_Compiler_List.iter
                               (fun b ->
                                  let uu___8 =
@@ -12894,12 +12896,8 @@ let (typeof_tot_or_gtot_term_fastpath :
       fun must_tot ->
         FStar_TypeChecker_Env.def_check_closed_in_env
           t.FStar_Syntax_Syntax.pos "fastpath" env t;
-        (let uu___1 =
-           let uu___2 = FStar_Syntax_Print.term_to_string t in
-           FStar_Compiler_Util.format1
-             "In a call to typeof_tot_or_gtot_term_fastpath, t=%s" uu___2 in
-         FStar_Errors.with_ctx uu___1
-           (fun uu___2 -> __typeof_tot_or_gtot_term_fastpath env t must_tot))
+        FStar_Errors.with_ctx "In a call to typeof_tot_or_gtot_term_fastpath"
+          (fun uu___1 -> __typeof_tot_or_gtot_term_fastpath env t must_tot)
 let rec (effectof_tot_or_gtot_term_fastpath :
   FStar_TypeChecker_Env.env ->
     FStar_Syntax_Syntax.term ->

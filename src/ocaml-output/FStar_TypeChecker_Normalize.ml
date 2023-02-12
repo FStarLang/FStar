@@ -8337,9 +8337,11 @@ let (eta_expand_with_type :
                              let uu___7 =
                                FStar_Syntax_Syntax.mk_Tm_app e args
                                  e.FStar_Syntax_Syntax.pos in
-                             FStar_Syntax_Util.abs binders uu___7
-                               (FStar_Pervasives_Native.Some
-                                  (FStar_Syntax_Util.residual_comp_of_comp c)))))
+                             let uu___8 =
+                               let uu___9 =
+                                 FStar_Syntax_Util.residual_comp_of_comp c in
+                               FStar_Pervasives_Native.Some uu___9 in
+                             FStar_Syntax_Util.abs binders uu___7 uu___8)))
 let (eta_expand :
   FStar_TypeChecker_Env.env ->
     FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.term)

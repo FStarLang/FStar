@@ -1635,15 +1635,14 @@ let rec (sigelt_to_string_short : FStar_Syntax_Syntax.sigelt -> Prims.string)
         (lid, uu___, uu___1, uu___2, uu___3, uu___4) ->
         let uu___5 = FStar_Ident.string_of_lid lid in
         FStar_Compiler_Util.format1 "type %s" uu___5
-    | FStar_Syntax_Syntax.Sig_datacon (lid, uu___, t, uu___1, uu___2, uu___3)
-        ->
+    | FStar_Syntax_Syntax.Sig_datacon
+        (lid, uu___, uu___1, t_lid, uu___2, uu___3) ->
         let uu___4 = FStar_Ident.string_of_lid lid in
-        let uu___5 = term_to_string t in
-        FStar_Compiler_Util.format2 "datacon %s : %s" uu___4 uu___5
-    | FStar_Syntax_Syntax.Sig_assume (lid, us, f) ->
-        let uu___ = FStar_Ident.string_of_lid lid in
-        let uu___1 = term_to_string f in
-        FStar_Compiler_Util.format2 "assume %s : %s" uu___ uu___1
+        let uu___5 = FStar_Ident.string_of_lid t_lid in
+        FStar_Compiler_Util.format2 "datacon %s for type %s" uu___4 uu___5
+    | FStar_Syntax_Syntax.Sig_assume (lid, us, uu___) ->
+        let uu___1 = FStar_Ident.string_of_lid lid in
+        FStar_Compiler_Util.format1 "assume %s" uu___1
     | FStar_Syntax_Syntax.Sig_bundle (ses, uu___) ->
         let uu___1 = FStar_Compiler_List.hd ses in
         FStar_Compiler_Effect.op_Bar_Greater uu___1 sigelt_to_string_short
@@ -1676,8 +1675,7 @@ let rec (sigelt_to_string_short : FStar_Syntax_Syntax.sigelt -> Prims.string)
         let uu___ =
           let uu___1 = FStar_Compiler_List.map FStar_Ident.string_of_lid lids in
           FStar_Compiler_Effect.op_Less_Bar (FStar_String.concat "; ") uu___1 in
-        let uu___1 = term_to_string t in
-        FStar_Compiler_Util.format3 "%splice[%s] (%s)" "%s" uu___ uu___1
+        FStar_Compiler_Util.format2 "%splice[%s] (...)" "%s" uu___
     | FStar_Syntax_Syntax.Sig_polymonadic_bind (m, n, p, t, ty, uu___) ->
         let uu___1 = FStar_Ident.string_of_lid m in
         let uu___2 = FStar_Ident.string_of_lid n in
