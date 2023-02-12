@@ -1399,7 +1399,7 @@ let residual_gtot t = {
 let residual_comp_of_comp (c:comp) = {
     residual_effect=comp_effect_name c;
     residual_typ=Some (comp_result c);
-    residual_flags=comp_flags c;
+    residual_flags=List.filter (function DECREASES _ -> false | _ -> true) <| comp_flags c;
   }
 
 let mk_forall_aux fa x body =
