@@ -1,5 +1,5 @@
-{ callPackage, fstar-dune, installShellFiles, makeWrapper, stdenv, ulib, version
-, z3 }:
+{ callPackage, fstar-dune, fstar-ulib, installShellFiles, lib, makeWrapper
+, stdenv, version, z3 }:
 
 stdenv.mkDerivation {
   pname = "fstar";
@@ -7,18 +7,24 @@ stdenv.mkDerivation {
 
   buildInputs = [ installShellFiles makeWrapper ];
 
-  src = ./..;
+  src = lib.sourceByRegex ./.. [
+    ".common.mk"
+    "doc.*"
+    "examples.*"
+    "src(/ocaml-output(/Makefile)?)?"
+    "ucontrib.*"
+  ];
 
-  buildPhase = "true";
+  dontBuild = true;
 
   installPhase = ''
     mkdir $out
 
     CP="cp -r --no-preserve=mode"
     $CP ${fstar-dune}/* $out
-    $CP ${ulib}/* $out
+    $CP ${fstar-ulib}/* $out
 
-    PREFIX=$out make -C src/ocaml-output install-sides -j $NIX_BUILD_CORES
+    PREFIX=$out make -C src/ocaml-output install-sides
 
     for binary in $out/bin/*
     do

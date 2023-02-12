@@ -32,9 +32,11 @@ buildDunePackage {
     zarith
   ];
 
+  enableParallelBuilding = true;
+
   postFixup = ''
-    # OCaml leaves it's full store path in produced binaries
-    # Thus we need to remove every reference to the path of OCaml
+    # OCaml leaves its full store path in produced binaries
+    # Thus we remove every reference to the path of OCaml
     for binary in $out/bin/*
     do
       remove-references-to -t '${ocaml}' $binary

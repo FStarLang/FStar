@@ -22,7 +22,7 @@ stdenv.mkDerivation {
 
   nativeBuildInputs = with ocamlPackages; [ ocaml menhir ];
 
-  buildTargets = [ "dune-snapshot" ];
+  enableParallelBuilding = true;
 
   installPhase = "mv ../../ocaml $out";
 }
