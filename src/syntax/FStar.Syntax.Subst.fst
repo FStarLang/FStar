@@ -917,12 +917,15 @@ let rec deep_compress (allow_uvars:bool) (t:term) : term =
                   deep_compress allow_uvars t))
 
     | Tm_uvar _ ->
-      t
-      // // GM: Currently, this function is only called from the normalizer
-      // // on a sigelt that has already been typechecked, so this case should
-      // // be impossible.
-      // Err.raise_err (Err.Error_UnexpectedUnresolvedUvar,
-      //                "Internal error: unexpected unresolved uvar in deep_compress")
+      if allow_uvars
+      then t
+      else (
+        // GM: Currently, this function is only called from the normalizer
+        // on a sigelt that has already been typechecked, so this case should
+        // be impossible.
+        Err.raise_err (Err.Error_UnexpectedUnresolvedUvar,
+                       "Internal error: unexpected unresolved uvar in deep_compress")
+      )
 
     | Tm_quoted (tm, qi) ->
       let qi = S.on_antiquoted (deep_compress allow_uvars) qi in
