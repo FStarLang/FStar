@@ -338,7 +338,14 @@ let subst_pat' s p : (pat * int) =
 
 let push_subst_lcomp s lopt = match lopt with
     | None -> None
-    | Some rc -> Some ({rc with residual_typ = FStar.Compiler.Util.map_opt rc.residual_typ (subst' s)})
+    | Some rc ->
+        let residual_typ = U.map_opt rc.residual_typ (subst' s) in
+        (* NB: residual flags MUST be closed. DECREASES cannot
+        appear there *)
+        let rc = { residual_effect = rc.residual_effect
+                 ; residual_typ    = residual_typ
+                 ; residual_flags  = rc.residual_flags } in
+        Some rc
 
 let compose_uvar_subst (u:ctx_uvar) (s0:subst_ts) (s:subst_ts) : subst_ts =
     let should_retain x =
