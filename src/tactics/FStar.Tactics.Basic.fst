@@ -1747,7 +1747,11 @@ let t_destruct (s_tm : term) : tac (list (fv * Z.t)) = wrap_err "destruct" <| (
     let! fv, a_us = 
          match (SS.compress h).n with
          | Tm_fvar fv -> ret (fv, [])
-         | Tm_uinst ({ n = Tm_fvar fv }, us) -> ret (fv, us)
+         | Tm_uinst (h', us) ->
+           begin match (SS.compress h').n with
+           | Tm_fvar fv -> ret (fv, us)
+           | _ -> failwith "impossible: uinst over something that's not an fvar"
+           end
          | _ -> fail "type is not an fv"
     in
     let t_lid = lid_of_fv fv in
