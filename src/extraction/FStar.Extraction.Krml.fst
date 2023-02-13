@@ -461,7 +461,7 @@ let rec translate_type_without_decay env t: typ =
     ->
       TQualified (must (lident_of_typestring tag))
   
-  | MLTY_Named ([arg; _; _], p) when
+  | MLTY_Named ([_; arg; _; _], p) when
     Syntax.string_of_mlpath p = "Steel.C.Reference.ptr"
     ->
       TBuf (translate_type_without_decay env arg)
@@ -473,7 +473,7 @@ let rec translate_type_without_decay env t: typ =
         translate_type_without_decay env t,
         (UInt32, string_of_int (must (int_of_typenat n))))
   
-  | MLTY_Named ([arg], p) when
+  | MLTY_Named ([_; arg], p) when
     Syntax.string_of_mlpath p = "Steel.C.Array.Base.array_or_null_from"
     ->
       TBuf (translate_type_without_decay env arg)
@@ -1027,7 +1027,7 @@ IsNull nodes should be added to the KaRaMeL AST *)
     when string_of_mlpath p = "Steel.C.UnionLiteral.unaddr_of_union_field" ->
       EUnit
 
-  | MLE_App ({expr=MLE_TApp ({expr=MLE_Name p}, [_; _; struct_name])},
+  | MLE_App ({expr=MLE_TApp ({expr=MLE_Name p}, [_; _; _; struct_name])},
              [_; _; {expr=MLE_Const (MLC_String field_name)}; r])
     when string_of_mlpath p = "Steel.C.StructLiteral.addr_of_struct_field''" ->
       EAddrOf (EField (
@@ -1035,7 +1035,7 @@ IsNull nodes should be added to the KaRaMeL AST *)
         EBufRead (translate_expr env r, EConstant (UInt32, "0")),
         field_name))
 
-  | MLE_App ({expr=MLE_TApp ({expr=MLE_Name p}, [_; _; union_name])},
+  | MLE_App ({expr=MLE_TApp ({expr=MLE_Name p}, [_; _; _; union_name])},
              [_; {expr=MLE_Const (MLC_String field_name)}; r])
     when string_of_mlpath p = "Steel.C.UnionLiteral.addr_of_union_field''" ->
       EAddrOf (EField (
@@ -1043,7 +1043,7 @@ IsNull nodes should be added to the KaRaMeL AST *)
         EBufRead (translate_expr env r, EConstant (UInt32, "0")),
         field_name))
 
-  | MLE_App ({expr=MLE_TApp ({expr=MLE_Name p}, [_; union_name])},
+  | MLE_App ({expr=MLE_TApp ({expr=MLE_Name p}, [_; _; union_name])},
              [_; {expr=MLE_Const (MLC_String field_name)}; new_value; r])
     when string_of_mlpath p = "Steel.C.UnionLiteral.switch_union_field'" ->
       EAssign (
@@ -1053,37 +1053,37 @@ IsNull nodes should be added to the KaRaMeL AST *)
           field_name),
         translate_expr env new_value)
 
-  | MLE_App ({expr=MLE_TApp ({expr=MLE_Name p}, _)}, [r])
+  | MLE_App ({expr=MLE_TApp ({expr=MLE_Name p}, [_; _])}, [r])
     when string_of_mlpath p = "Steel.C.Opt.opt_read_sel" ->
       EBufRead (translate_expr env r, EConstant (UInt32, "0"))
 
-  | MLE_App ({expr=MLE_TApp ({expr=MLE_Name p}, _)}, [r; x])
+  | MLE_App ({expr=MLE_TApp ({expr=MLE_Name p}, [_; _])}, [r; x])
     when string_of_mlpath p = "Steel.C.Opt.opt_write_sel" ->
       EAssign (
         EBufRead (translate_expr env r, EConstant (UInt32, "0")),
         translate_expr env x)
 
-  | MLE_App ({expr=MLE_TApp ({expr=MLE_Name p}, _)}, [_ (* opened *); r; _ (* r_to *); _ (* sq *) ])
+  | MLE_App ({expr=MLE_TApp ({expr=MLE_Name p}, [_; _])}, [_ (* opened *); r; _ (* r_to *); _ (* sq *) ])
     when string_of_mlpath p = "Steel.C.Array.Base.ref_of_array_from" ->
       translate_expr env r
 
-  | MLE_App ({expr=MLE_TApp ({expr=MLE_Name p}, _)}, [_ (* opened *); r])
+  | MLE_App ({expr=MLE_TApp ({expr=MLE_Name p}, [_; _])}, [_ (* opened *); r])
     when string_of_mlpath p = "Steel.C.Array.Base.mk_array_of_ref_from" ->
       translate_expr env r
 
-  | MLE_App ({expr=MLE_TApp ({expr=MLE_Name p}, _)}, [_ (* opened*); _ (* n *); r; _ (* squash *)])
+  | MLE_App ({expr=MLE_TApp ({expr=MLE_Name p}, [_; _])}, [_ (* opened*); _ (* n *); r; _ (* squash *)])
     when string_of_mlpath p = "Steel.C.Array.Base.intro_varray_from" ->
       EBufRead (translate_expr env r, EConstant (UInt32, "0"))
 
-  | MLE_App ({expr=MLE_TApp ({expr=MLE_Name p}, _)}, [r; _ (* r' *); i])
+  | MLE_App ({expr=MLE_TApp ({expr=MLE_Name p}, [_; _])}, [r; _ (* r' *); i])
     when string_of_mlpath p = "Steel.C.Array.index_from" ->
       EBufRead (translate_expr env r, translate_expr env i)
 
-  | MLE_App ({expr=MLE_TApp ({expr=MLE_Name p}, _)}, [r; _ (* r' *); i; x])
+  | MLE_App ({expr=MLE_TApp ({expr=MLE_Name p}, [_; _])}, [r; _ (* r' *); i; x])
     when string_of_mlpath p = "Steel.C.Array.upd_from" ->
       EBufWrite (translate_expr env r, translate_expr env i, translate_expr env x)
 
-  | MLE_App ({expr=MLE_TApp ({expr=MLE_Name p}, _)}, [_; a; i])
+  | MLE_App ({expr=MLE_TApp ({expr=MLE_Name p}, [_; _])}, [_; a; i])
     when string_of_mlpath p = "Steel.C.Array.Base.split_right_from" ->
       EAddrOf (EBufRead (translate_expr env a, translate_expr env i))
 

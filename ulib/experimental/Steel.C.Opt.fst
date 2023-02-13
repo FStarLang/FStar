@@ -8,14 +8,14 @@ let opt_read r =
   let Some x = ref_read r in
   x
 
-let opt_write #b #x r y =
+let opt_write #a #b #x r y =
   A.change_equal_slprop (r `pts_to` _) (r `pts_to` _);
   ref_upd r (Some (Ghost.reveal x)) (Some y) (fun (Some _) -> Some y);
   A.change_equal_slprop (r `pts_to` _) (r `pts_to` _)
 
 let opt_pcm_write
-  (#b: Type)
-  (r: ref (opt_pcm #b)) (x: Ghost.erased (option b)) (y: b)
+  (#a:Type) (#b: Type)
+  (r: ref a (opt_pcm #b)) (x: Ghost.erased (option b)) (y: b)
 : Steel unit (r `pts_to` x) (fun _ -> r `pts_to` Some y)
   (requires (fun _ -> Some? x))
   (ensures (fun _ _ _ -> True))
@@ -24,8 +24,8 @@ let opt_pcm_write
   A.change_equal_slprop (r `pts_to` _) (r `pts_to` _)
 
 let opt_pcm_read
-  (#b: Type)
-  (r: ref (opt_pcm #b)) (x: Ghost.erased (option b))
+  (#a:Type) (#b: Type)
+  (r: ref a (opt_pcm #b)) (x: Ghost.erased (option b))
 : Steel b (r `pts_to` x) (fun _ -> r `pts_to` x)
   (requires (fun _ -> Some? x))
   (ensures (fun _ y _ -> Ghost.reveal x == Some y))
@@ -40,7 +40,7 @@ let malloc
   let xc = ((opt_view c).to_carrier x) in
   let r = Steel.C.Ref.ref_alloc _ xc in
   pts_to_view_intro r xc (opt_view c) x;
-  let r' : ref c (opt_pcm #c) = r in
+  let r' : ref (option c) c (opt_pcm #c) = r in
   A.change_equal_slprop
     (Steel.C.Ref.pts_to_view r (opt_view c))
     (pts_to_view r' (opt_view c));
@@ -50,6 +50,6 @@ let malloc
 let free
   #c r
 =
-  let r' : Steel.C.Ref.ref (opt_pcm #c) = r in 
+  let r' : Steel.C.Ref.ref (option c) (opt_pcm #c) = r in 
   let _ = pts_to_view_elim r (opt_view c) in
   Steel.C.Ref.ref_free r

@@ -268,12 +268,13 @@ val extract_field_unextracted'
 val addr_of_struct_field_ref
   (#tag: Type0) (#fields: c_fields) (#excluded: excluded_fields)
   (field: field_of fields)
-  (p: ref (struct_pcm tag fields))
-: Steel (ref (fields.get_field field).pcm)
+  (p: ref 'a (struct_pcm tag fields))
+: Steel (ref 'a (fields.get_field field).pcm)
     (p `pts_to_view` struct_view tag fields excluded)
     (fun q ->
       (p `pts_to_view` struct_view tag fields (insert field excluded)) `star`
       (pts_to_view u#0
+                  #'a
                   #(norm simplify_typedefs (norm unfold_typedefs (fields.get_field field).carrier))
                   #(norm simplify_typedefs (norm unfold_typedefs (fields.get_field field).pcm))
                   q
@@ -294,8 +295,8 @@ val addr_of_struct_field_ref
 val unaddr_of_struct_field_ref'
   (#tag: Type0) (#fields: c_fields) (#excluded: excluded_fields)
   (field: field_of fields)
-  (p: ref (struct_pcm tag fields))
-  (q: ref (fields.get_field field).pcm)
+  (p: ref 'a (struct_pcm tag fields))
+  (q: ref 'a (fields.get_field field).pcm)
 : Steel unit
     ((p `pts_to_view` struct_view tag fields excluded) `star`
      (q `pts_to_view` (fields.get_field field).view))
@@ -321,11 +322,12 @@ val dummy_def : unit
 val unaddr_of_struct_field_ref
   (#tag: Type0) (#fields: c_fields) (#excluded: excluded_fields)
   (field: field_of fields)
-  (p: ref (struct_pcm tag fields))
-  (q: ref (fields.get_field field).pcm)
+  (p: ref 'a (struct_pcm tag fields))
+  (q: ref 'a (fields.get_field field).pcm)
 : Steel unit
     ((p `pts_to_view` struct_view tag fields excluded) `star`
      (pts_to_view u#0
+                  #'a
                   #(norm simplify_typedefs (norm unfold_typedefs (fields.get_field field).carrier))
                   #(norm simplify_typedefs (norm unfold_typedefs (fields.get_field field).pcm))
                   q
@@ -357,12 +359,13 @@ let addr_of_struct_field''
   (field: field_of fields{
     return_view_type == (fields.get_field field).view_type /\
     return_carrier == (fields.get_field field).carrier})
-  (p: ref (struct tag fields) (struct_pcm tag fields))
-: Steel (ref return_view_type #return_carrier (fields.get_field field).pcm)
+  (p: ref 'a (struct tag fields) (struct_pcm tag fields))
+: Steel (ref 'a return_view_type #return_carrier (fields.get_field field).pcm)
     (p `pts_to_view` struct_view tag fields excluded)
     (fun q ->
       (p `pts_to_view` struct_view tag fields (insert field excluded)) `star`
       (pts_to_view u#0
+                  #'a
                   #(norm simplify_typedefs (norm unfold_typedefs (fields.get_field field).view_type))
                   #(norm simplify_typedefs (norm unfold_typedefs (fields.get_field field).view_type))
                   #(norm simplify_typedefs (norm unfold_typedefs (fields.get_field field).carrier))
@@ -381,7 +384,7 @@ let addr_of_struct_field''
         snd (extract_field tag fields excluded field
         (h (p `pts_to_view` struct_view tag fields excluded))) ==
          h' (q `pts_to_view` (fields.get_field field).view))
-= addr_of_struct_field_ref #tag #fields #excluded field p
+= addr_of_struct_field_ref #'a #tag #fields #excluded field p
 
 (** Take the address of a field of a struct.
     The above definitions are set up so that calls to addr_of_struct_field are erased to calls to addr_of_struct_field'' with
@@ -399,8 +402,8 @@ inline_for_extraction noextract
 let addr_of_struct_field
   (#tag: Type0) (#fields: c_fields) (#excluded: excluded_fields)
   (field: field_of fields)
-  (p: ref (struct tag fields) (struct_pcm tag fields))
-: Steel (ref
+  (p: ref 'a (struct tag fields) (struct_pcm tag fields))
+: Steel (ref 'a
           (norm simplify_typedefs (fields.get_field field).view_type)
           #(norm simplify_typedefs (fields.get_field field).carrier)
           (fields.get_field field).pcm)
@@ -408,6 +411,7 @@ let addr_of_struct_field
     (fun q ->
       (p `pts_to_view` struct_view tag fields (insert field excluded)) `star`
       (pts_to_view u#0
+                  #'a
                   #(norm simplify_typedefs (norm unfold_typedefs (fields.get_field field).view_type))
                   #(norm simplify_typedefs (norm unfold_typedefs (fields.get_field field).view_type))
                   #(norm simplify_typedefs (norm unfold_typedefs (fields.get_field field).carrier))
@@ -434,13 +438,14 @@ let addr_of_struct_field
 let unaddr_of_struct_field
   (#tag: Type0) (#fields: c_fields) (#excluded: excluded_fields)
   (field: field_of fields)
-  (p: ref (struct tag fields) (struct_pcm tag fields))
-  (q: ref
+  (p: ref 'a (struct tag fields) (struct_pcm tag fields))
+  (q: ref 'a
     (norm simplify_typedefs (norm unfold_typedefs (fields.get_field field).view_type))
     (fields.get_field field).pcm)
 : Steel unit
     ((p `pts_to_view` struct_view tag fields excluded) `star`
      (pts_to_view u#0
+                  #'a
                   #(norm simplify_typedefs (norm unfold_typedefs (fields.get_field field).view_type))
                   #(norm simplify_typedefs (norm unfold_typedefs (fields.get_field field).view_type))
                   #(norm simplify_typedefs (norm unfold_typedefs (fields.get_field field).carrier))

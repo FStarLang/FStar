@@ -458,10 +458,10 @@ let union_peel (#a:eqtype) #b (p:(k:a -> pcm (b k))) (k:a)
 = assert (xs `feq` field_to_union_f p k (xs k))
 
 let addr_of_union_field
-  (#a:eqtype) #b (#p:(k:a -> pcm (b k)))
-  (r: ref (union_pcm p)) (k:a)
+  #base (#a:eqtype) #b (#p:(k:a -> pcm (b k)))
+  (r: ref base (union_pcm p)) (k:a)
   (xs: Ghost.erased (union p))
-: Steel (ref (p k))
+: Steel (ref base (p k))
     (r `pts_to` xs)
     (fun r' -> r' `pts_to` Ghost.reveal xs k)
     (requires fun _ -> ~ (Ghost.reveal xs k == one (p k)))
@@ -474,8 +474,8 @@ let addr_of_union_field
 
 module M = Steel.Memory 
 let unaddr_of_union_field
-  (#opened:M.inames) (#a:eqtype) #b (#p:(k:a -> pcm (b k))) (k:a)
-  (r': ref (p k)) (r: ref (union_pcm p))
+  (#opened:M.inames) #base (#a:eqtype) #b (#p:(k:a -> pcm (b k))) (k:a)
+  (r': ref base (p k)) (r: ref base (union_pcm p))
   (x: Ghost.erased (b k))
 : A.SteelGhost unit opened
     (r' `pts_to` x)

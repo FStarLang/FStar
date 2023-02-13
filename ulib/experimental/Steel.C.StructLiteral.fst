@@ -246,8 +246,8 @@ let extract_field_unextracted'
 val addr_of_struct_field_ref'
   (#tag: Type0) (#fields: c_fields) (#excluded: excluded_fields)
   (field: field_of fields)
-  (p: ref (struct_pcm tag fields))
-: Steel (ref (fields.get_field field).pcm)
+  (p: ref 'a (struct_pcm tag fields))
+: Steel (ref 'a (fields.get_field field).pcm)
     (p `pts_to_view` struct_view tag fields excluded)
     (fun q ->
       (p `pts_to_view` struct_view tag fields (insert field excluded)) `star`
@@ -267,7 +267,7 @@ val addr_of_struct_field_ref'
         h' (q `pts_to_view` (fields.get_field field).view))
 
 #push-options "--z3rlimit 30"
-let addr_of_struct_field_ref' #tag #fields #excluded field p =
+let addr_of_struct_field_ref' #a #tag #fields #excluded field p =
   let v: Ghost.erased (struct' tag fields excluded) =
     gget (p `pts_to_view` struct_view tag fields excluded)
   in
@@ -287,7 +287,7 @@ let addr_of_struct_field_ref' #tag #fields #excluded field p =
   return q
 #pop-options
 
-let addr_of_struct_field_ref #tag #fields #excluded field p =
+let addr_of_struct_field_ref #a #tag #fields #excluded field p =
   addr_of_struct_field_ref' field p
 
 let struct'_with_field
@@ -336,7 +336,7 @@ let extract_field_with_field
     `feq` v)
 
 #push-options "--z3rlimit 50"
-let unaddr_of_struct_field_ref' #tag #fields #excluded field p q =
+let unaddr_of_struct_field_ref' #a #tag #fields #excluded field p q =
   let v: Ghost.erased (struct' tag fields excluded) =
     gget (p `pts_to_view` struct_view tag fields excluded)
   in
@@ -349,7 +349,7 @@ let unaddr_of_struct_field_ref' #tag #fields #excluded field p q =
   let t: Ghost.erased (fields.get_field field).carrier =
     pts_to_view_elim q (fields.get_field field).view
   in
-  unaddr_of_struct_field #_ #_ #(struct_pcms fields) field q p s t;
+  unaddr_of_struct_field #_ #_ #_ #(struct_pcms fields) field q p s t;
   let h1: squash (excluded field == true) = () in
   let h2: squash (Ghost.reveal s == (struct_view tag fields excluded).to_carrier v) = () in
   let h3: squash (Ghost.reveal t == (fields.get_field field).view.to_carrier w) = () in
@@ -370,6 +370,6 @@ let unaddr_of_struct_field_ref' #tag #fields #excluded field p q =
 
 let dummy_def = ()
 
-let unaddr_of_struct_field_ref #tag #fields #excluded field p q =
+let unaddr_of_struct_field_ref #a #tag #fields #excluded field p q =
   unaddr_of_struct_field_ref' field p q
 #pop-options

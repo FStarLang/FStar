@@ -134,13 +134,14 @@ open Steel.C.Reference
 let addr_of_union_field'
   (#tag: Type0) (#fields: c_fields)
   (field: field_of fields)
-  (p: ref (union tag fields) (union_pcm tag fields))
-: Steel (ref
+  (p: ref 'a (union tag fields) (union_pcm tag fields))
+: Steel (ref 'a
           (fields.get_field field).view_type
           (fields.get_field field).pcm)
     (p `pts_to_view` union_view tag fields)
     (fun q ->
       pts_to_view u#0
+                  #'a
                   #(fields.get_field field).view_type
                   #(fields.get_field field).view_type
                   #(fields.get_field field).carrier
@@ -160,7 +161,7 @@ let addr_of_union_field'
     pts_to_view_elim p (union_view tag fields)
   in
   //  assert (Ghost.reveal s == (union_view tag fields).to_carrier v);
-  let q = Steel.C.Union.addr_of_union_field #_ #_ #(union_pcms fields) p field s in
+  let q = Steel.C.Union.addr_of_union_field #'a #_ #_ #(union_pcms fields) p field s in
 //  change_equal_slprop (q `pts_to` _) (q `pts_to` _);
   pts_to_view_intro q (Ghost.reveal s field)
     (fields.get_field field).view
@@ -169,16 +170,17 @@ let addr_of_union_field'
   return q
 #pop-options
 
-let addr_of_union_field'' return_view_type return_carrier tag fields field p =
-  addr_of_union_field' #tag #fields field p
+let addr_of_union_field'' #a return_view_type return_carrier tag fields field p =
+  addr_of_union_field' #a #tag #fields field p
 
 let unaddr_of_union_field'
   (#tag: Type0) (#fields: c_fields)
   (field: field_of fields)
-  (p: ref (union tag fields) (union_pcm tag fields))
-  (q: ref (fields.get_field field).view_type (fields.get_field field).pcm)
+  (p: ref 'a (union tag fields) (union_pcm tag fields))
+  (q: ref 'a (fields.get_field field).view_type (fields.get_field field).pcm)
 : Steel unit
     (pts_to_view u#0
+                 #'a
                  #(fields.get_field field).view_type
                  #(fields.get_field field).view_type
                  #(fields.get_field field).carrier
@@ -196,15 +198,15 @@ let unaddr_of_union_field'
   let s: Ghost.erased (fields.get_field field).carrier =
     pts_to_view_elim q (fields.get_field field).view
   in
-  Steel.C.Union.unaddr_of_union_field #_ #_ #_ #(union_pcms fields) field q p s;
+  Steel.C.Union.unaddr_of_union_field #_ #_ #_ #_ #(union_pcms fields) field q p s;
   pts_to_view_intro p
     (field_to_union_f (union_pcms fields) field s)
     (union_view tag fields)
     (|field, Ghost.reveal v|);
   return ()
 
-let unaddr_of_union_field #tag #fields field p q =
-  unaddr_of_union_field' #tag #fields field p q
+let unaddr_of_union_field #a #tag #fields field p q =
+  unaddr_of_union_field' #a #tag #fields field p q
 
 #restart-solver
 #push-options "--z3rlimit 64"
@@ -240,7 +242,7 @@ let exclusive_refine_union_field
 let switch_union_field''
   (#tag: Type0) (#fields: c_fields)
   (field: field_of fields) (new_value: (fields.get_field field).view_type)
-  (p: ref (union tag fields) (union_pcm tag fields))
+  (p: ref 'a (union tag fields) (union_pcm tag fields))
 : Steel unit
     (p `pts_to_view` union_view tag fields)
     (fun _ -> p `pts_to_view` union_view tag fields)
@@ -289,7 +291,7 @@ let switch_union_field'
   (new_value_ty: Type0) (tag: Type0) (fields: c_fields)
   (field: field_of fields{new_value_ty == (fields.get_field field).view_type})
   (new_value: new_value_ty)
-  (p: ref (union tag fields) (union_pcm tag fields))
+  (p: ref 'a (union tag fields) (union_pcm tag fields))
 : Steel unit
     (p `pts_to_view` union_view tag fields)
     (fun _ -> p `pts_to_view` union_view tag fields)
@@ -303,4 +305,4 @@ let switch_union_field'
     (ensures fun _ _ h' ->
       dtuple2_of_union #tag #fields (h' (p `pts_to_view` union_view tag fields))
         == (|field, new_value|))
-= switch_union_field'' #tag #fields field new_value p
+= switch_union_field'' #'a #tag #fields field new_value p

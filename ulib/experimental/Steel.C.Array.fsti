@@ -32,7 +32,7 @@ open Steel.C.Typenat
 /// Accesses index [i] in array [r], as long as [i] is in bounds and the array
 /// is currently valid in memory
 
-val index_from (#t:Type) (r:array_or_null_from t) (r' : array_or_null_to t { array_or_null_spec (r, r') /\ g_is_null (r, r') == false }) (i:size_t)
+val index_from (#base: Type) (#t:Type) (r:array_or_null_from base t) (r' : array_or_null_to base t { array_or_null_spec (r, r') /\ g_is_null (r, r') == false }) (i:size_t)
   : Steel t
              (varray (r, r'))
              (fun _ -> varray (r, r'))
@@ -44,7 +44,7 @@ val index_from (#t:Type) (r:array_or_null_from t) (r' : array_or_null_to t { arr
                x == Seq.index s (size_v i))
 
 inline_for_extraction
-let index (#t:Type) (r:array t) (i:size_t)
+let index (#base: Type) (#t:Type) (r:array base t) (i:size_t)
   : Steel t
              (varray r)
              (fun _ -> varray r)
@@ -70,7 +70,7 @@ let index (#t:Type) (r:array t) (i:size_t)
 /// is in bounds and the array is currently valid in memory
 
 
-val upd_from (#t:Type) (r:array_or_null_from t) (r' : array_or_null_to t { array_or_null_spec (r, r') /\ g_is_null (r, r') == false }) (i:size_t) (x:t)
+val upd_from (#base: Type) (#t:Type) (r:array_or_null_from base t) (r' : array_or_null_to base t { array_or_null_spec (r, r') /\ g_is_null (r, r') == false }) (i:size_t) (x:t)
   : Steel unit
              (varray (r, r'))
              (fun _ -> varray (r, r'))
@@ -80,7 +80,7 @@ val upd_from (#t:Type) (r:array_or_null_from t) (r' : array_or_null_to t { array
                h1 (varray (r, r')) == Seq.upd (h0 (varray (r, r'))) (size_v i) x)
 
 inline_for_extraction
-let upd (#t:Type) (r:array t) (i:size_t) (x:t)
+let upd (#base: Type) (#t:Type) (r:array base t) (i:size_t) (x:t)
   : Steel unit
              (varray r)
              (fun _ -> varray r)

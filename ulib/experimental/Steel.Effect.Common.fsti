@@ -3190,7 +3190,7 @@ let ( >--> ) (i:iname) (p:vprop) : prop = i >--> (hp_of p)
 let inv (p:vprop) = i:Ghost.erased iname{reveal i >--> p}
 
 /// Ghost check to determing whether invariant [i] belongs to the set of opened invariants [e]
-let mem_inv (e:inames) (i:iname) : erased bool = elift2 (fun e i -> Set.mem i e) e i
+let mem_inv (#p:vprop) (e:inames) (i:inv p) : erased bool = elift2 (fun e i -> Set.mem i e) e i
 
 /// Adding invariant [i] to the set of opened invariants [e]
 noextract
