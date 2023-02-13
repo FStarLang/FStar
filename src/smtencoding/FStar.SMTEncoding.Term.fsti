@@ -282,10 +282,10 @@ val mk_Term_unit:    term
 
 val mk_PreType:      term -> term
 val mk_Valid:        term -> term
+val mk_subtype_of_unit: term -> term
 val mk_HasType:      term -> term -> term
 val mk_HasTypeZ:     term -> term -> term
 val mk_IsTotFun:     term -> term
-val mk_IsTyped:      term -> term
 val mk_HasTypeFuel:  term -> term -> term -> term
 val mk_HasTypeWithFuel: option term -> term -> term -> term
 val mk_NoHoist:      term -> term -> term
@@ -295,8 +295,6 @@ val mk_ApplyTF:      term -> term -> term
 val mk_ApplyTT:      term -> term -> Range.range -> term
 val mk_String_const: string -> Range.range -> term
 val mk_Precedes:     term -> term -> term -> term -> Range.range -> term
-val fuel_2: term
-val fuel_100:term
 val n_fuel: int -> term
 
 val mk_haseq: term -> term

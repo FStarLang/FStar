@@ -269,6 +269,8 @@ val delta_attr (s: list string) : Tot norm_step
   *)
 val delta_qualifier (s: list string) : Tot norm_step
 
+val delta_namespace (s: list string) : Tot norm_step
+
 (**
     This step removes the some internal meta nodes during normalization
 
@@ -955,16 +957,6 @@ val handle_smt_goals : unit
     see https://github.com/FStarLang/FStar/issues/1844 *)
 val erasable : unit
 
-(** THIS ATTRIBUTE CAN BREAK EXTRACTION SOUNDNESS, USE WITH CARE
-
-    Combinators for reifiable layered effects must have binders with
-    non-informative types, since at extraction time, those binders are
-    substituted with ().
-    This attribute can be added to a layered effect definition to skip this
-    check, i.e. adding it will allow informative binder types, but then
-    the code should not be extracted *)
-val allow_informative_binders : unit
-
 (** [commute_nested_matches]
     This attribute can be used to decorate an inductive type [t]
 
@@ -1045,7 +1037,7 @@ val normalize_for_extraction (steps:list norm_step) : Tot unit
 
     See examples/layeredeffects/IteSoundess.fst for a few examples
   *)
-val ite_soundness_by : unit
+val ite_soundness_by (attribute: unit): Tot unit
 
 (** By-default functions that have a layered effect, need to have a type
     annotation for their bodies
@@ -1062,6 +1054,43 @@ val ite_soundness_by : unit
       the result type of the computation
   *)
 val default_effect (s:string) : Tot unit
+
+(** A layered effect may optionally be annotated with the
+    top_level_effect attribute so indicate that this effect may
+    appear at the top-level
+    (e.g., a top-level let x = e, where e has a layered effect type)
+
+    The top_level_effect attribute takes (optional) string argument, that is the
+    name of the effect abbreviation that may constrain effect arguments
+    for the top-level effect
+
+    As with default effect, the string argument must be a string constant,
+    and fully qualified
+
+    E.g. a Hoare-style effect `M a pre post`, may have the attribute
+    `@@ top_level_effect "N"`, where the effect abbreviation `N` may be:
+
+    effect N a post = M a True post
+
+    i.e., enforcing a trivial precondition if `M` appears at the top-level
+
+    If the argument to `top_level_effect` is absent, then the effect itself
+    is allowed at the top-level with any effect arguments
+
+    See tests/micro-benchmarks/TopLevelIndexedEffects.fst for examples
+
+    *)
+val top_level_effect (s:string) : Tot unit
+
+(** This attribute can be annotated on the binders in an effect signature
+    to indicate that they are effect parameters. For example, for a
+    state effect that is parametric in the type of the state, the state
+    index may be marked as an effect parameter.
+
+    Also see https://github.com/FStarLang/FStar/wiki/Indexed-effects
+
+    *)
+val effect_param : unit
 
 (** Bind definition for a layered effect may optionally contain range
     arguments, that are provided by the typechecker during reification

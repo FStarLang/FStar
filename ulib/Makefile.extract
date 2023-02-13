@@ -20,22 +20,23 @@ FSTAR_FILES:=$(filter-out $(NOEXTRACT_FILES), \
         $(wildcard FStar.InteractiveHelpers.*.fst)
 
 CODEGEN ?= OCaml
-MY_FSTAR=$(FSTAR) $(OTHERFLAGS) --lax --cache_checked_modules --odir $(OUTPUT_DIRECTORY) --cache_dir .cache.lax
+MY_FSTAR=$(RUNLIM) $(FSTAR) $(SIL) $(OTHERFLAGS) --lax --cache_checked_modules --odir $(OUTPUT_DIRECTORY) --cache_dir .cache.lax
 
 %.checked.lax:
 	@echo "[LAXCHECK  $(basename $(notdir $@))]"
-	$(Q)$(MY_FSTAR) $(SIL) $< --already_cached '*,'-$(basename $(notdir $<))
+	$(Q)$(MY_FSTAR) $< --already_cached '*,'-$(basename $(notdir $<))
 	$(Q)touch -c $@
 
 # And then, in a separate invocation, from each .checked.lax we
 # extract an .ml file
 $(OUTPUT_DIRECTORY)/%.ml:
 	@echo "[EXTRACT   $(basename $(notdir $@))]"
-	$(Q)$(MY_FSTAR) $(SIL) $(subst .checked.lax,,$(notdir $<)) --codegen $(CODEGEN) --extract_module $(basename $(notdir $(subst .checked.lax,,$<)))
+	$(Q)$(MY_FSTAR) $(subst .checked.lax,,$(notdir $<)) --codegen $(CODEGEN) --extract_module $(basename $(notdir $(subst .checked.lax,,$<)))
 
 .depend.extract:
 	$(Q)mkdir -p .cache.lax
-	$(Q)$(MY_FSTAR) --dep full $(EXTRACT_MODULES) $(addprefix --include , $(INCLUDE_PATHS)) $(FSTAR_FILES) > .depend.extract
+	@true $(shell rm -f .depend.extract.rsp) $(foreach f,$(FSTAR_FILES),$(shell echo $(f) >> .depend.extract.rsp))
+	$(Q)$(MY_FSTAR) --dep full $(EXTRACT_MODULES) $(addprefix --include , $(INCLUDE_PATHS)) @.depend.extract.rsp > .depend.extract
 	@echo "[DEPEND]"
 
 depend.extract: .depend.extract

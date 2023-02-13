@@ -26,7 +26,7 @@ let is_null #a ptr = is_null ptr
 let v_null_rewrite
   (a: Type0)
   (_: t_of emp)
-: Tot (list a)
+: GTot (list a)
 = []
 
 let v_c
@@ -34,7 +34,7 @@ let v_c
   (#a: Type0)
   (r: t a)
   (c: normal (t_of (vptr r)))
-: Tot prop
+: GTot prop
 = (Ghost.reveal c.tail_fuel < Ghost.reveal n) == true // to ensure vprop termination
 
 let v_c_dep
@@ -95,7 +95,7 @@ let llist_vrewrite
   (#a: Type0)
   (r: t a)
   (cl: normal (t_of (vptr r `vdep` llist_vdep r)))
-: Tot (list a)
+: GTot (list a)
 = (dfst cl).data :: dsnd cl
 
 let llist0
@@ -109,9 +109,10 @@ let llist0
   else (vptr r `vdep` llist_vdep r) `vrewrite` llist_vrewrite r
 
 let nllist_of_llist0
+  (#opened: _)
   (#a: Type0)
   (r: t a)
-: Steel (Ghost.erased nat)
+: SteelGhost (Ghost.erased nat) opened
     (llist0 r)
     (fun res -> nllist a res r)
     (fun _ -> True)
@@ -147,10 +148,11 @@ let nllist_of_llist0
   end
 
 let llist0_of_nllist
+  (#opened: _)
   (#a: Type0)
   (n: Ghost.erased nat)
   (r: t a)
-: Steel unit
+: SteelGhost unit opened
     (nllist a n r)
     (fun _ -> llist0 r)
     (fun _ -> True)
@@ -191,9 +193,10 @@ let llist_sel
 = fun m -> sel_of (llist0 r) m // eta necessary because sel_of is GTot
 
 let llist_of_llist0
+  (#opened: _)
   (#a: Type)
   (r: t a)
-: Steel unit
+: SteelGhost unit opened
     (llist0 r)
     (fun _ -> llist r)
     (fun _ -> True)
@@ -206,9 +209,10 @@ let llist_of_llist0
     (fun _ -> ())
 
 let llist0_of_llist
+  (#opened: _)
   (#a: Type)
   (r: t a)
-: Steel unit
+: SteelGhost unit opened
     (llist r)
     (fun _ -> llist0 r)
     (fun _ -> True)
@@ -227,11 +231,17 @@ let intro_llist_nil a =
     (llist0 (null_llist #a));
   llist_of_llist0 (null_llist #a)
 
-let is_nil
-  #a ptr
+let is_nil' (#opened: _) (#a:Type0) (ptr:t a)
+  : SteelGhost unit opened (llist ptr) (fun _ -> llist ptr)
+          (requires fun _ -> True)
+          (ensures fun h0 _ h1 ->
+            let res = is_null ptr in
+            (res == true <==> ptr == null_llist #a) /\
+            v_llist ptr h0 == v_llist ptr h1 /\
+            res == Nil? (v_llist ptr h1))
 =
-  llist0_of_llist ptr;
   let res = is_null ptr in
+  llist0_of_llist ptr;
   if res
   then begin
     change_equal_slprop
@@ -252,9 +262,12 @@ let is_nil
       ((vptr ptr `vdep` llist_vdep ptr) `vrewrite` llist_vrewrite ptr)
       (llist0 ptr)
   end;
-  llist_of_llist0 ptr;
-  res
+  llist_of_llist0 ptr
 
+let is_nil
+  #a ptr
+= is_nil' ptr;
+  return (is_null ptr)
 
 let intro_llist_cons
   #a ptr1 ptr2
@@ -298,4 +311,4 @@ let tail
     (nllist a c.tail_fuel c.next);
   llist0_of_nllist c.tail_fuel c.next;
   llist_of_llist0 c.next;
-  c.next
+  return c.next

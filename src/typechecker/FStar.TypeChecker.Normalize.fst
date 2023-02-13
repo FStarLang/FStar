@@ -80,6 +80,8 @@ type closure =
   | Dummy                                          //Dummy is a placeholder for a binder when doing strong reduction
 and env = list (option binder*closure)
 
+let empty_env : env = []
+
 let dummy : option binder * closure = None,Dummy
 
 type branches = list (pat * option term * term)
@@ -473,10 +475,9 @@ and rebuild_closure cfg env stack t =
             | Pat_wild x ->
               let x = {x with sort=non_tail_inline_closure_env cfg env x.sort} in
               {p with v=Pat_wild x}, dummy::env
-            | Pat_dot_term(x, t) ->
-              let x = {x with sort=non_tail_inline_closure_env cfg env x.sort} in
-              let t = non_tail_inline_closure_env cfg env t in
-              {p with v=Pat_dot_term(x, t)}, env
+            | Pat_dot_term eopt ->
+              let eopt = BU.map_option (non_tail_inline_closure_env cfg env) eopt in
+              {p with v=Pat_dot_term eopt}, env
           in
           let pat, env = norm_pat env pat in
           let w_opt =
@@ -553,13 +554,11 @@ and close_comp cfg env c =
     | [] when not <| cfg.steps.compress_uvars -> c
     | _ ->
       match c.n with
-      | Total (t, uopt) ->
-        mk_Total' (inline_closure_env cfg env [] t)
-                  (Option.map (norm_universe cfg env) uopt)
+      | Total t ->
+        mk_Total (inline_closure_env cfg env [] t)
 
-      | GTotal (t, uopt) ->
-        mk_GTotal' (inline_closure_env cfg env [] t)
-                   (Option.map (norm_universe cfg env) uopt)
+      | GTotal t ->
+        mk_GTotal (inline_closure_env cfg env [] t)
 
       | Comp c ->
         let rt = inline_closure_env cfg env [] c.result_typ in
@@ -635,7 +634,13 @@ let reduce_primops norm_cb cfg env tm =
     then tm
     else begin
          let head, args = U.head_and_args tm in
-         match (U.un_uinst head).n with
+         let head_term, universes = 
+           let head = SS.compress head in
+           match head.n with
+           | Tm_uinst(fv, us) -> fv, us
+           | _ -> head, []
+         in
+         match head_term.n with
          | Tm_fvar fv -> begin
            match find_prim_step cfg fv with
            | Some prim_step when prim_step.strong_reduction_ok || not cfg.strong ->
@@ -661,11 +666,11 @@ let reduce_primops norm_cb cfg env tm =
                   } in
                   let r =
                       if false
-                      then begin let (r, ms) = BU.record_time (fun () -> prim_step.interpretation psc norm_cb args_1) in
+                      then begin let (r, ms) = BU.record_time (fun () -> prim_step.interpretation psc norm_cb universes args_1) in
                                  primop_time_count (Ident.string_of_lid fv.fv_name.v) ms;
                                  r
                            end
-                      else prim_step.interpretation psc norm_cb args_1
+                      else prim_step.interpretation psc norm_cb universes args_1
                   in
                   match r with
                   | None ->
@@ -809,8 +814,8 @@ let should_reify cfg stack =
 let rec maybe_weakly_reduced tm :  bool =
     let aux_comp c =
         match c.n with
-        | GTotal (t, _)
-        | Total (t, _) ->
+        | GTotal t
+        | Total t ->
           maybe_weakly_reduced t
 
         | Comp ct ->
@@ -910,7 +915,8 @@ let should_unfold cfg should_reify fv qninfo : should_unfold_res =
           cfg.steps.unfold_only,
           cfg.steps.unfold_fully,
           cfg.steps.unfold_attr,
-          cfg.steps.unfold_qual
+          cfg.steps.unfold_qual,
+          cfg.steps.unfold_namespace
     with
     // We unfold dm4f actions if and only if we are reifying
     | _ when Env.qninfo_is_action qninfo ->
@@ -926,27 +932,28 @@ let should_unfold cfg should_reify fv qninfo : should_unfold_res =
         no
 
     // Don't unfold HasMaskedEffect
-    | Some (Inr ({sigquals=qs; sigel=Sig_let((is_rec, _), _)}, _), _), _, _, _, _ when
+    | Some (Inr ({sigquals=qs; sigel=Sig_let((is_rec, _), _)}, _), _), _, _, _, _, _ when
             List.contains HasMaskedEffect qs ->
         log_unfolding cfg (fun () -> BU.print_string " >> HasMaskedEffect, not unfolding\n");
         no
 
     // UnfoldTac means never unfold FVs marked [@"tac_opaque"]
-    | _, _, _, _, _ when cfg.steps.unfold_tac && BU.for_some (U.attr_eq U.tac_opaque_attr) attrs ->
+    | _, _, _, _, _, _ when cfg.steps.unfold_tac && BU.for_some (U.attr_eq U.tac_opaque_attr) attrs ->
         log_unfolding cfg (fun () -> BU.print_string " >> tac_opaque, not unfolding\n");
         no
 
     // Recursive lets may only be unfolded when Zeta is on
-    | Some (Inr ({sigquals=qs; sigel=Sig_let((is_rec, _), _)}, _), _), _, _, _, _ when
+    | Some (Inr ({sigquals=qs; sigel=Sig_let((is_rec, _), _)}, _), _), _, _, _, _, _ when
             is_rec && not cfg.steps.zeta && not cfg.steps.zeta_full ->
         log_unfolding cfg (fun () -> BU.print_string " >> It's a recursive definition but we're not doing Zeta, not unfolding\n");
         no
 
     // We're doing selectively unfolding, assume it to not unfold unless it meets the criteria
-    | _, Some _, _, _, _
-    | _, _, Some _, _, _
-    | _, _, _, Some _, _
-    | _, _, _, _, Some _ ->
+    | _, Some _, _, _, _, _
+    | _, _, Some _, _, _, _
+    | _, _, _, Some _, _, _
+    | _, _, _, _, Some _, _
+    | _, _, _, _, _, Some _ ->
         log_unfolding cfg (fun () -> BU.print1 "should_unfold: Reached a %s with selective unfolding\n"
                                                (Print.fv_to_string fv));
         // How does the following code work?
@@ -980,6 +987,10 @@ let should_unfold cfg should_reify fv qninfo : should_unfold_res =
                      (fun qual -> Print.qual_to_string qual = q)
                      quals)
                qs)
+           ;(match cfg.steps.unfold_namespace with
+             | None -> no
+             | Some namespaces ->
+               yesno <| BU.for_some (fun ns -> BU.starts_with (FStar.Ident.nsstr (lid_of_fv fv)) ns) namespaces)
            ]
         in
         meets_some_criterion
@@ -1015,7 +1026,7 @@ let should_unfold cfg should_reify fv qninfo : should_unfold_res =
       plugin_unfold_warn_ctr := !plugin_unfold_warn_ctr - 1
     end;
     r
-let decide_unfolding cfg env stack rng fv qninfo (* : option (cfg * stack) *) =
+let decide_unfolding cfg stack rng fv qninfo (* : option (cfg * stack) *) =
     let res =
         should_unfold cfg (fun cfg -> should_reify cfg stack) fv qninfo
     in
@@ -1034,6 +1045,7 @@ let decide_unfolding cfg env stack rng fv qninfo (* : option (cfg * stack) *) =
                      ; unfold_fully = None
                      ; unfold_attr  = None
                      ; unfold_qual  = None
+                     ; unfold_namespace = None
                      ; unfold_until = Some delta_constant } } in
 
         (* Take care to not change the stack's head if there's a universe
@@ -1056,7 +1068,7 @@ let decide_unfolding cfg env stack rng fv qninfo (* : option (cfg * stack) *) =
         in
         let ref = S.mk (Tm_constant (Const_reflect (S.lid_of_fv fv)))
                        Range.dummyRange in
-        let stack = push (App (env, ref, None, Range.dummyRange)) stack in
+        let stack = push (App (empty_env, ref, None, Range.dummyRange)) stack in
         Some (cfg, stack)
 
 (* on_domain_lids are constant, so compute them once *)
@@ -1100,6 +1112,14 @@ let maybe_drop_rc_typ cfg (rc:residual_comp) : residual_comp =
  * time. *)
 let rec norm : cfg -> env -> stack -> term -> term =
     fun cfg env stack t ->
+        let rec collapse_metas st =
+          match st with
+          (* Keep only the outermost Meta_monadic *)
+          | Meta (_, Meta_monadic _, _) :: Meta(e, Meta_monadic m, r) :: st' ->
+            collapse_metas (Meta (e, Meta_monadic m, r) :: st')
+          | _ -> st
+        in
+        let stack = collapse_metas stack in
         let t =
             if cfg.debug.norm_delayed
             then (match t.n with
@@ -1109,7 +1129,7 @@ let rec norm : cfg -> env -> stack -> term -> term =
             compress t
         in
         log cfg (fun () ->
-          BU.print5 ">>> %s (no_full_norm=%s)\nNorm %s  with with %s env elements top of the stack %s \n"
+          BU.print5 ">>> %s (no_full_norm=%s)\nNorm %s with %s env elements; top of the stack = %s\n"
                                         (Print.tag_of_term t)
                                         (BU.string_of_bool (cfg.steps.no_full_norm))
                                         (Print.term_to_string t)
@@ -1117,30 +1137,34 @@ let rec norm : cfg -> env -> stack -> term -> term =
                                         (stack_to_string (fst <| firstn 4 stack)));
         log_cfg cfg (fun () -> BU.print1 ">>> cfg = %s\n" (cfg_to_string cfg));
         match t.n with
+          // Values
           | Tm_unknown
           | Tm_constant _
           | Tm_name _
+          | Tm_lazy _ ->
+            rebuild cfg empty_env stack t
 
-          | Tm_lazy _
-
-          //these three are just constructors; no delta steps can apply
+          // These three are just constructors; no delta steps can apply.
+          // Note: we drop the environment, no free indices here
           | Tm_fvar({ fv_qual = Some Data_ctor })
           | Tm_fvar({ fv_qual = Some (Record_ctor _) }) ->
             log_unfolding cfg (fun () -> BU.print1 ">>> Tm_fvar case 0 for %s\n" (Print.term_to_string t));
-            rebuild cfg env stack t
+            rebuild cfg empty_env stack t
 
+          // A top-level name, possibly unfold it.
+          // In either case, also drop the environment, no free indices here.
           | Tm_fvar fv ->
             let lid = S.lid_of_fv fv in
             let qninfo = Env.lookup_qname cfg.tcenv lid in
             begin
             match Env.delta_depth_of_qninfo fv qninfo with
             | Some (Delta_constant_at_level 0) ->
-              log_unfolding cfg (fun () -> BU.print1 ">>> Tm_fvar case 0 for %s\n" (Print.term_to_string t));
-              rebuild cfg env stack t
+              log_unfolding cfg (fun () -> BU.print1 ">>> Tm_fvar case 1 for %s\n" (Print.term_to_string t));
+              rebuild cfg empty_env stack t
             | _ ->
-              match decide_unfolding cfg env stack t.pos fv qninfo with
-              | Some (cfg, stack) -> do_unfold_fv cfg env stack t qninfo fv
-              | None -> rebuild cfg env stack t
+              match decide_unfolding cfg stack t.pos fv qninfo with
+              | Some (cfg, stack) -> do_unfold_fv cfg stack t qninfo fv
+              | None -> rebuild cfg empty_env stack t
             end
 
           | Tm_quoted (qt, qi) ->
@@ -1379,6 +1403,17 @@ let rec norm : cfg -> env -> stack -> term -> term =
                       && U.aqual_is_erasable aq //If we're extracting, then erase erasable arguments eagerly
                       then U.exp_unit
                       else a
+                    in
+                    // !! Optimization: if the argument we are pushing is an obvious
+                    // value/closed term, then drop the environment. This can save
+                    // a ton of memory, particularly when running tactics in tight loop.
+                    let env =
+                      match (Subst.compress a).n with
+                      | Tm_name _
+                      | Tm_constant _
+                      | Tm_lazy _
+                      | Tm_fvar _ -> empty_env
+                      | _ -> env
                     in
                     Arg (Clos(env, a, BU.mk_ref None, false),aq,t.pos)::stack)
                   args
@@ -1683,12 +1718,14 @@ let rec norm : cfg -> env -> stack -> term -> term =
           else rebuild cfg env stack (inline_closure_env cfg env [] t)
 
 
-and do_unfold_fv cfg env stack (t0:term) (qninfo : qninfo) (f:fv) : term =
+(* NOTE: we do not need any environment here, since an fv does not
+ * have any free indices. Hence, we use empty_env as environment when needed. *)
+and do_unfold_fv cfg stack (t0:term) (qninfo : qninfo) (f:fv) : term =
     match Env.lookup_definition_qninfo cfg.delta_level f.fv_name.v qninfo with
        | None ->
          log_unfolding cfg (fun () -> // printfn "delta_level = %A, qninfo=%A" cfg.delta_level qninfo;
                                       BU.print1 " >> Tm_fvar case 2 for %s\n" (Print.fv_to_string f));
-         rebuild cfg env stack t0
+         rebuild cfg empty_env stack t0
 
        | Some (us, t) ->
          begin
@@ -1709,12 +1746,12 @@ and do_unfold_fv cfg env stack (t0:term) (qninfo : qninfo) (f:fv) : term =
                   if Env.debug cfg.tcenv <| Options.Other "univ_norm" then
                       List.iter (fun x -> BU.print1 "Univ (normalizer) %s\n" (Print.univ_to_string x)) us'
                   else ();
-                  let env = us' |> List.fold_left (fun env u -> (None, Univ u)::env) env in
+                  let env = us' |> List.fold_left (fun env u -> (None, Univ u)::env) empty_env in
                   norm cfg env stack t
                 | _ when cfg.steps.erase_universes || cfg.steps.allow_unbound_universes ->
-                  norm cfg env stack t
+                  norm cfg empty_env stack t
                 | _ -> failwith (BU.format1 "Impossible: missing universe instantiation on %s" (Print.lid_to_string f.fv_name.v))
-         else norm cfg env stack t
+         else norm cfg empty_env stack t
          end
 
 and reduce_impure_comp cfg env stack (head : term) // monadic term
@@ -1847,7 +1884,7 @@ and do_reify_monadic fallback cfg env stack (top : term) (m : monad_name) (t : t
                   //for bind binders that are not fixed, we apply ()
                   //
                   let unit_args =
-                    match (ed |> U.get_bind_vc_combinator |> snd |> SS.compress).n with
+                    match (ed |> U.get_bind_vc_combinator |> fst |> snd |> SS.compress).n with
                     | Tm_arrow (_::_::bs, _) when List.length bs >= num_fixed_binders ->
                       bs
                       |> List.splitAt (List.length bs - num_fixed_binders)
@@ -1858,7 +1895,7 @@ and do_reify_monadic fallback cfg env stack (top : term) (m : monad_name) (t : t
                         BU.format3 "bind_wp for layered effect %s is not an arrow with >= %s arguments (%s)"
                           (Ident.string_of_lid ed.mname)
                           (string_of_int num_fixed_binders)
-                          (ed |> U.get_bind_vc_combinator |> snd |> Print.term_to_string)) rng in
+                          (ed |> U.get_bind_vc_combinator |> fst |> snd |> Print.term_to_string)) rng in
 
                   let range_args =
                     if bind_has_range_args
@@ -2107,21 +2144,13 @@ and norm_comp : cfg -> env -> comp -> comp =
                                         (Print.comp_to_string comp)
                                         (BU.string_of_int (List.length env)));
         match comp.n with
-            | Total (t, uopt) ->
+            | Total t ->
               let t = norm cfg env [] t in
-              let uopt = match uopt with
-                         | Some u -> Some <| norm_universe cfg env u
-                         | None -> None
-              in
-              { mk_Total' t uopt with pos = comp.pos }
+              { mk_Total t with pos = comp.pos }
 
-            | GTotal (t, uopt) ->
+            | GTotal t ->
               let t = norm cfg env [] t in
-              let uopt = match uopt with
-                         | Some u -> Some <| norm_universe cfg env u
-                         | None -> None
-              in
-              { mk_GTotal' t uopt with pos = comp.pos }
+              { mk_GTotal t with pos = comp.pos }
 
             | Comp ct ->
               //if for extraction then erase effect args to unit
@@ -2717,6 +2746,7 @@ and rebuild (cfg:cfg) (env:env) (stack:stack) (t:term) : term =
                     unfold_only = None;
                     unfold_attr = None;
                     unfold_qual = None;
+                    unfold_namespace = None;
                     unfold_tac = false
              }
              in
@@ -2750,10 +2780,9 @@ and rebuild (cfg:cfg) (env:env) (stack:stack) (t:term) : term =
             | Pat_wild x ->
               let x = {x with sort=norm_or_whnf env x.sort} in
               {p with v=Pat_wild x}, dummy::env
-            | Pat_dot_term(x, t) ->
-              let x = {x with sort=norm_or_whnf env x.sort} in
-              let t = norm_or_whnf env t in
-              {p with v=Pat_dot_term(x, t)}, env
+            | Pat_dot_term eopt ->
+              let eopt = BU.map_option (norm_or_whnf env) eopt in
+              {p with v=Pat_dot_term eopt}, env
           in
           let norm_branches () =
             match env with
@@ -2897,9 +2926,28 @@ and rebuild (cfg:cfg) (env:env) (stack:stack) (t:term) : term =
                 //the elements of s are sub-terms of t
                 //the have no free de Bruijn indices; so their env=[]; see pre-condition at the top of rebuild
                 let env0 = env in
+
+
+                // The scrutinee is (at least) in weak normal
+                // form. This means, it can be of the form (C v1
+                // ... (fun x -> e) ... vn)
+
+                //ie., it may have some sub-terms that are lambdas
+                //with unreduced bodies
+
+                //but, since the memo references are expected to hold
+                //weakly normal terms, it is safe to set them to the
+                //sub-terms of the scrutinee
+
+                //otherwise, we will keep reducing them over and over
+                //again. See, e.g., Issue #2757
+
+                //Except, if the normalizer is running in HEAD normal form mode, 
+                //then the sub-terms of the scrutinee might not be reduced yet.
+                //In that case, do not set the memo reference
                 let env = List.fold_left
                       (fun env (bv, t) -> (Some (S.mk_binder bv),
-                                           Clos([], t, BU.mk_ref (Some ([], t)), false))::env)
+                                        Clos([], t, BU.mk_ref (if cfg.steps.hnf then None else Some ([], t)), false))::env)
                       env s in
                 norm cfg env stack (guard_when_clause wopt b rest)
         in
@@ -3013,8 +3061,8 @@ let maybe_promote_t env non_informative_only t =
 let ghost_to_pure_aux env non_informative_only c =
     match c.n with
     | Total _ -> c
-    | GTotal (t, uopt) ->
-      if maybe_promote_t env non_informative_only t then {c with n = Total (t, uopt)} else c
+    | GTotal t ->
+      if maybe_promote_t env non_informative_only t then {c with n = Total t} else c
     | Comp ct ->
         let l = Env.norm_eff_name env ct.effect_name in
         if U.is_ghost_effect l
@@ -3105,21 +3153,7 @@ let comp_to_string env c =
 
 let normalize_refinement steps env t0 =
    let t = normalize (steps@[Beta]) env t0 in
-   let rec aux t =
-    let t = compress t in
-    match t.n with
-       | Tm_refine(x, phi) ->
-         let t0 = aux x.sort in
-         begin match t0.n with
-            | Tm_refine(y, phi1) ->
-              //NB: this is working on de Bruijn
-              //    representations; so no need
-              //    to substitute y/x in phi
-              mk (Tm_refine(y, U.mk_conj_simp phi1 phi)) t0.pos
-            | _ -> t
-         end
-       | _ -> t in
-   aux t
+   U.flatten_refinement t
 
 let whnf_steps = [Primops; Weak; HNF; UnfoldUntil delta_constant; Beta]
 let unfold_whnf' steps env t = normalize (steps@whnf_steps) env t
@@ -3178,7 +3212,7 @@ let elim_uvars_aux_tc (env:Env.env) (univ_names:univ_names) (binders:binders) (t
     let univ_names, t = Subst.open_univ_vars univ_names t in
     let t = remove_uvar_solutions env t in
     let t = Subst.close_univ_vars univ_names t in
-    let t = Subst.deep_compress t in
+    let t = Subst.deep_compress false t in
     let binders, tc =
         match binders with
         | [] -> [], Inl t
@@ -3200,9 +3234,9 @@ let elim_uvars_aux_c env univ_names binders c =
    let univ_names, binders, tc = elim_uvars_aux_tc env univ_names binders (Inr c) in
    univ_names, binders, BU.right tc
 
-// GM: Maybe this should take a pass over the attributes just to be safe?
 let rec elim_uvars (env:Env.env) (s:sigelt) =
-    let s = { s with sigattrs = List.map deep_compress s.sigattrs } in
+    let sigattrs = List.map Mktuple3?._3 <| List.map (elim_uvars_aux_t env [] []) s.sigattrs in
+    let s = { s with sigattrs } in
     match s.sigel with
     | Sig_inductive_typ (lid, univ_names, binders, typ, lids, lids') ->
       let univ_names, binders, typ = elim_uvars_aux_t env univ_names binders typ in
@@ -3222,7 +3256,7 @@ let rec elim_uvars (env:Env.env) (s:sigelt) =
     | Sig_let((b, lbs), lids) ->
       let lbs = lbs |> List.map (fun lb ->
         let opening, lbunivs = Subst.univ_var_opening lb.lbunivs in
-        let elim t = Subst.deep_compress (Subst.close_univ_vars lbunivs (remove_uvar_solutions env (Subst.subst opening t))) in
+        let elim t = Subst.deep_compress false (Subst.close_univ_vars lbunivs (remove_uvar_solutions env (Subst.subst opening t))) in
         let lbtyp = elim lb.lbtyp in
         let lbdef = elim lb.lbdef in
         {lb with lbunivs = lbunivs;
@@ -3299,7 +3333,7 @@ let rec elim_uvars (env:Env.env) (s:sigelt) =
       let ed = { ed with
                  univs         = univs;
                  binders       = binders;
-                 signature     = elim_tscheme ed.signature;
+                 signature     = U.apply_eff_sig elim_tscheme ed.signature;
                  combinators   = apply_eff_combinators elim_tscheme ed.combinators;
                  actions       = List.map elim_action ed.actions } in
       {s with sigel=Sig_new_effect ed}
@@ -3325,15 +3359,15 @@ let rec elim_uvars (env:Env.env) (s:sigelt) =
     | Sig_splice _ ->
       s
 
-    | Sig_polymonadic_bind (m, n, p, (us_t, t), (us_ty, ty)) ->
+    | Sig_polymonadic_bind (m, n, p, (us_t, t), (us_ty, ty), k) ->
       let us_t, _, t = elim_uvars_aux_t env us_t [] t in
       let us_ty, _, ty = elim_uvars_aux_t env us_ty [] ty in
-      { s with sigel = Sig_polymonadic_bind (m, n, p, (us_t, t), (us_ty, ty)) }
+      { s with sigel = Sig_polymonadic_bind (m, n, p, (us_t, t), (us_ty, ty), k) }
 
-    | Sig_polymonadic_subcomp (m, n, (us_t, t), (us_ty, ty)) ->
+    | Sig_polymonadic_subcomp (m, n, (us_t, t), (us_ty, ty), k) ->
       let us_t, _, t = elim_uvars_aux_t env us_t [] t in
       let us_ty, _, ty = elim_uvars_aux_t env us_ty [] ty in
-      { s with sigel = Sig_polymonadic_subcomp (m, n, (us_t, t), (us_ty, ty)) }
+      { s with sigel = Sig_polymonadic_subcomp (m, n, (us_t, t), (us_ty, ty), k) }
 
 
 let erase_universes env t =
@@ -3387,3 +3421,39 @@ let get_n_binders (env:Env.env) (n:int) (t:term) : list binder * comp =
       (bs, c)
   in
   aux true n t
+
+let maybe_unfold_head_fv (env:Env.env) (head:term)
+  : option term
+  = let fv_us_opt =
+      match (SS.compress head).n with
+      | Tm_uinst ({n=Tm_fvar fv}, us) -> Some (fv, us)
+      | Tm_fvar fv -> Some (fv, [])
+      | _ -> failwith "Impossible: maybe_unfold_head_fv is called with a non fvar/uinst"
+    in
+    match fv_us_opt with
+    | None -> None
+    | Some (fv, us) ->
+      match Env.lookup_nonrec_definition [Unfold delta_constant] env fv.fv_name.v with
+      | None -> None
+      | Some (us_formals, defn) ->
+        let subst = mk_univ_subst us_formals us in
+        SS.subst subst defn |> Some
+
+let rec maybe_unfold_aux (env:Env.env) (t:term) : option term =
+  match (SS.compress t).n with
+  | Tm_match (t0, ret_opt, brs, rc_opt) ->
+    BU.map_option
+      (fun t0 -> S.mk (Tm_match (t0, ret_opt, brs, rc_opt)) t.pos)
+      (maybe_unfold_aux env t0)
+  | Tm_fvar _
+  | Tm_uinst _ -> maybe_unfold_head_fv env t
+  | _ ->
+    let head, args = U.leftmost_head_and_args t in
+    match maybe_unfold_aux env head with
+    | None -> None
+    | Some head -> S.mk_Tm_app head args t.pos |> Some
+
+let maybe_unfold_head (env:Env.env) (t:term) : option term =
+  BU.map_option
+    (normalize [Beta;Iota;Weak;HNF] env)
+    (maybe_unfold_aux env t)

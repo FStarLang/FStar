@@ -59,6 +59,8 @@ it out in detail:
   functions, we can write proofs about other pure expressions. We'll
   discuss such proofs in detail in the remainder of this section.
 
+.. _Part1_lemma_syntax:
+
 Some syntactic shorthands for Lemmas
 ....................................
 
@@ -457,25 +459,20 @@ Exercise: Optimizing Fibonacci
 
 
 Earlier, we saw how to implement :ref:`a tail-recursive variant
-<Part1_termination_fibonacci>` of ``fibonacci``.
+<Part1_termination_fibonacci>` of ``fibonacci``---we show it again below.
 
-.. literalinclude:: ../code/Part1.Termination.fst
+.. literalinclude:: ../code/Part1.Lemmas.fst
        :language: fstar
-       :start-after: SNIPPET_START: fib
-       :end-before: SNIPPET_END: fib
+       :start-after: SNIPPET_START: fib_tail$
+       :end-before: SNIPPET_END: fib_tail$
 
 Prove the following lemma to show that it is equivalent to the
-previous non-tail-recursive implementation, i.e.,
+non-tail-recursive implementation, i.e.,
 
-.. code-block:: fstar
-
-   let rec slow_fib (n:nat)
-     : nat
-     = if n <= 1
-       then 1
-       else slow_fib (n - 1) + slow_fib (n - 2)
-
-   val fib_is_ok (n:nat) : Lemma (fibonacci n = slow_fib n)
+.. literalinclude:: ../code/Part1.Lemmas.fst
+       :language: fstar
+       :start-after: SNIPPET_START: val fib_tail_is_ok$
+       :end-before: SNIPPET_END: val fib_tail_is_ok$                     
 
 .. container:: toggle
 
@@ -485,8 +482,8 @@ previous non-tail-recursive implementation, i.e.,
 
     .. literalinclude:: ../code/Part1.Lemmas.fst
        :language: fstar
-       :start-after: SNIPPET_START: fib_is_ok
-       :end-before: SNIPPET_END: fib_is_ok
+       :start-after: SNIPPET_START: fib_is_ok$
+       :end-before: SNIPPET_END: fib_is_ok$
 
 .. _Part1_higher_order_functions:
 
@@ -506,7 +503,7 @@ the ``map`` function on lists.
 
 It takes a function ``f`` and a list ``l`` and it applies ``f`` to
 each element in ``l`` producing a new list. More precisely ``map f
-[v₁; ...; vₙ]`` produces the list ``[f v₁; ...; f vₙ]``. For example:
+[v1; ...; vn]`` produces the list ``[f v1; ...; f vn]``. For example:
 
 .. code-block:: fstar
 

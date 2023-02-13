@@ -1,11 +1,11 @@
 open List
 open Lexing
 open Ppxlib_ast
-open Parsetree
+open Astlib.Ast_500.Parsetree
 open Location
 open Pprintast
 open Ast_helper
-open Asttypes
+open Astlib.Ast_500.Asttypes
 open Longident
 
 open FStar_Extraction_ML_Syntax
@@ -115,7 +115,8 @@ let build_constant (c: mlconstant): Parsetree.constant =
     | FStar_Const.Int8 -> with_w "8"
     | FStar_Const.Int16 -> with_w "16"
     | FStar_Const.Int32 -> with_w "32"
-    | FStar_Const.Int64 -> with_w "64" in
+    | FStar_Const.Int64 -> with_w "64"
+    | FStar_Const.Sizet -> with_w "64" in
   match c with
   | MLC_Int (v, None) ->
       let s = match Z.of_string v with
@@ -192,10 +193,10 @@ and build_constructor_pat ((path, sym), p) =
   | [] ->
      Ppat_construct (path_to_ident (path', name), None)
   | [pat] ->
-     Ppat_construct (path_to_ident (path', name), Some (build_pattern pat))
+     Ppat_construct (path_to_ident (path', name), Some ([], build_pattern pat))
   | pats ->
      let inner = Pat.tuple (map build_pattern pats) in
-     Ppat_construct (path_to_ident(path', name), Some inner)
+     Ppat_construct (path_to_ident(path', name), Some ([], inner))
 
 let rec build_core_type ?(annots = []) (ty: mlty): core_type =
   let t =

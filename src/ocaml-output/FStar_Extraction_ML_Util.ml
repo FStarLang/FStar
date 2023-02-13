@@ -35,9 +35,6 @@ let (mlconst_of_const' :
     | FStar_Const.Const_int (s, i) ->
         FStar_Extraction_ML_Syntax.MLC_Int (s, i)
     | FStar_Const.Const_bool b -> FStar_Extraction_ML_Syntax.MLC_Bool b
-    | FStar_Const.Const_float d -> FStar_Extraction_ML_Syntax.MLC_Float d
-    | FStar_Const.Const_bytearray (bytes, uu___) ->
-        FStar_Extraction_ML_Syntax.MLC_Bytes bytes
     | FStar_Const.Const_string (s, uu___) ->
         FStar_Extraction_ML_Syntax.MLC_String s
     | FStar_Const.Const_range_of ->

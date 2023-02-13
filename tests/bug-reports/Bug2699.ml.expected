@@ -1,0 +1,7 @@
+open Prims
+let (broken_length_f32 : (FStar_UInt32.t * FStar_UInt32.t)) =
+  ((FStar_UInt32.uint_to_t (Prims.of_int (24))),
+    (FStar_UInt32.uint_to_t (Prims.of_int (28))))
+let (works_length_f32 : (FStar_UInt32.t * FStar_UInt32.t)) =
+  ((FStar_UInt32.uint_to_t (Prims.of_int (24))),
+    (FStar_UInt32.uint_to_t (Prims.of_int (28))))

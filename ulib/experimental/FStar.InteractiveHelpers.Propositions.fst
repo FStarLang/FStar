@@ -6,6 +6,8 @@ open FStar.Mul
 open FStar.InteractiveHelpers.Base
 open FStar.InteractiveHelpers.ExploreTerm
 
+let term_eq = FStar.Tactics.term_eq_old
+
 /// Propositions and assertions.
 /// Assertions are propositions to be inserted in the F* code: we differentiate
 /// between pre and post assertions, which are to be inserted before a point in
@@ -20,7 +22,7 @@ open FStar.InteractiveHelpers.ExploreTerm
 
 type proposition = term
 
-val proposition_to_string : proposition -> Tot string
+val proposition_to_string : proposition -> Tac string
 let proposition_to_string p = term_to_string p
 
 /// Propositions split between pre and post assertions

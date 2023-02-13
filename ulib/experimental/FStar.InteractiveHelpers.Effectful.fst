@@ -9,6 +9,8 @@ open FStar.InteractiveHelpers.Base
 open FStar.InteractiveHelpers.ExploreTerm
 open FStar.InteractiveHelpers.Propositions
 
+let term_eq = FStar.Tactics.term_eq_old
+
 /// Effectful term analysis: retrieve information about an effectful term, including
 /// its return type, its arguments, its correctly instantiated pre/postcondition, etc.
 
@@ -26,7 +28,7 @@ noeq type cast_info = {
 let mk_cast_info t p_ty exp_ty : cast_info =
   Mkcast_info t p_ty exp_ty
 
-val cast_info_to_string : cast_info -> Tot string
+val cast_info_to_string : cast_info -> Tac string
 let cast_info_to_string info =
   "Mkcast_info (" ^ term_to_string info.term ^ ") (" ^
   option_to_string type_info_to_string info.p_ty ^ ") (" ^
@@ -43,7 +45,7 @@ noeq type effect_info = {
 let mk_effect_info = Mkeffect_info
 
 /// Convert a ``typ_or_comp`` to cast information
-val effect_info_to_string : effect_info -> Tot string
+val effect_info_to_string : effect_info -> Tac string
 let effect_info_to_string c =
   "Mkeffect_info " ^
   effect_type_to_string c.ei_type ^ " (" ^
@@ -59,9 +61,9 @@ noeq type eterm_info = {
   parameters : list cast_info;
 }
 
-val eterm_info_to_string : eterm_info -> Tot string
+val eterm_info_to_string : eterm_info -> Tac string
 let eterm_info_to_string info =
-  let params = List.Tot.map (fun x -> "(" ^ cast_info_to_string x ^ ");  \n") info.parameters in
+  let params = map (fun x -> "(" ^ cast_info_to_string x ^ ");  \n") info.parameters in
   let params_str = List.Tot.fold_left (fun x y -> x ^ y) "" params in
   "Mketerm_info (" ^
   effect_info_to_string info.einfo ^ ") (" ^
@@ -111,10 +113,10 @@ val comp_view_to_effect_info : dbg:bool -> comp_view -> Tac (option effect_info)
 
 let comp_view_to_effect_info dbg cv =
   match cv with
-  | C_Total ret_ty _ decr ->
+  | C_Total ret_ty ->
     let ret_type_info = get_type_info_from_type ret_ty in
     Some (mk_effect_info E_Total ret_type_info None None)
-  | C_GTotal ret_ty _ decr ->
+  | C_GTotal ret_ty ->
     let ret_type_info = get_type_info_from_type ret_ty in
     Some (mk_effect_info E_Total ret_type_info None None)
   | C_Lemma pre post patterns ->
@@ -122,7 +124,7 @@ let comp_view_to_effect_info dbg cv =
     let pre = prettify_term dbg pre in
     let post = prettify_term dbg post in
     Some (mk_effect_info E_Lemma unit_type_info (Some pre) (Some post))
-  | C_Eff univs eff_name ret_ty eff_args ->
+  | C_Eff univs eff_name ret_ty eff_args _ ->
     print_dbg dbg ("comp_view_to_effect_info: C_Eff " ^ flatten_name eff_name);
     let ret_type_info = get_type_info_from_type ret_ty in
     let etype = effect_name_to_type eff_name in

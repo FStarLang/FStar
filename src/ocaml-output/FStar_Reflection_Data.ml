@@ -45,7 +45,7 @@ type pattern =
   Prims.list) 
   | Pat_Var of FStar_Syntax_Syntax.bv 
   | Pat_Wild of FStar_Syntax_Syntax.bv 
-  | Pat_Dot_Term of (FStar_Syntax_Syntax.bv * FStar_Syntax_Syntax.term) 
+  | Pat_Dot_Term of FStar_Syntax_Syntax.term FStar_Pervasives_Native.option 
 let (uu___is_Pat_Constant : pattern -> Prims.bool) =
   fun projectee ->
     match projectee with | Pat_Constant _0 -> true | uu___ -> false
@@ -72,7 +72,7 @@ let (uu___is_Pat_Dot_Term : pattern -> Prims.bool) =
   fun projectee ->
     match projectee with | Pat_Dot_Term _0 -> true | uu___ -> false
 let (__proj__Pat_Dot_Term__item___0 :
-  pattern -> (FStar_Syntax_Syntax.bv * FStar_Syntax_Syntax.term)) =
+  pattern -> FStar_Syntax_Syntax.term FStar_Pervasives_Native.option) =
   fun projectee -> match projectee with | Pat_Dot_Term _0 -> _0
 type branch = (pattern * FStar_Syntax_Syntax.term)
 type aqualv =
@@ -335,6 +335,7 @@ let (uu___is_Effect : qualifier -> Prims.bool) =
   fun projectee -> match projectee with | Effect -> true | uu___ -> false
 let (uu___is_OnlyName : qualifier -> Prims.bool) =
   fun projectee -> match projectee with | OnlyName -> true | uu___ -> false
+type qualifiers = qualifier Prims.list
 type bv_view =
   {
   bv_ppname: Prims.string ;
@@ -352,28 +353,21 @@ let (__proj__Mkbv_view__item__bv_sort : bv_view -> typ) =
 type binder_view =
   (FStar_Syntax_Syntax.bv * (aqualv * FStar_Syntax_Syntax.term Prims.list))
 type comp_view =
-  | C_Total of (typ * FStar_Syntax_Syntax.universe * FStar_Syntax_Syntax.term
-  Prims.list) 
-  | C_GTotal of (typ * FStar_Syntax_Syntax.universe *
-  FStar_Syntax_Syntax.term Prims.list) 
+  | C_Total of typ 
+  | C_GTotal of typ 
   | C_Lemma of (FStar_Syntax_Syntax.term * FStar_Syntax_Syntax.term *
   FStar_Syntax_Syntax.term) 
-  | C_Eff of (universes * name * FStar_Syntax_Syntax.term * argv Prims.list) 
+  | C_Eff of (universes * name * FStar_Syntax_Syntax.term * argv Prims.list *
+  FStar_Syntax_Syntax.term Prims.list) 
 let (uu___is_C_Total : comp_view -> Prims.bool) =
   fun projectee -> match projectee with | C_Total _0 -> true | uu___ -> false
-let (__proj__C_Total__item___0 :
-  comp_view ->
-    (typ * FStar_Syntax_Syntax.universe * FStar_Syntax_Syntax.term
-      Prims.list))
-  = fun projectee -> match projectee with | C_Total _0 -> _0
+let (__proj__C_Total__item___0 : comp_view -> typ) =
+  fun projectee -> match projectee with | C_Total _0 -> _0
 let (uu___is_C_GTotal : comp_view -> Prims.bool) =
   fun projectee ->
     match projectee with | C_GTotal _0 -> true | uu___ -> false
-let (__proj__C_GTotal__item___0 :
-  comp_view ->
-    (typ * FStar_Syntax_Syntax.universe * FStar_Syntax_Syntax.term
-      Prims.list))
-  = fun projectee -> match projectee with | C_GTotal _0 -> _0
+let (__proj__C_GTotal__item___0 : comp_view -> typ) =
+  fun projectee -> match projectee with | C_GTotal _0 -> _0
 let (uu___is_C_Lemma : comp_view -> Prims.bool) =
   fun projectee -> match projectee with | C_Lemma _0 -> true | uu___ -> false
 let (__proj__C_Lemma__item___0 :
@@ -385,7 +379,8 @@ let (uu___is_C_Eff : comp_view -> Prims.bool) =
   fun projectee -> match projectee with | C_Eff _0 -> true | uu___ -> false
 let (__proj__C_Eff__item___0 :
   comp_view ->
-    (universes * name * FStar_Syntax_Syntax.term * argv Prims.list))
+    (universes * name * FStar_Syntax_Syntax.term * argv Prims.list *
+      FStar_Syntax_Syntax.term Prims.list))
   = fun projectee -> match projectee with | C_Eff _0 -> _0
 type ctor = (name * typ)
 type lb_view =

@@ -66,8 +66,8 @@ let native_tactics_steps () =
     ; Cfg.auto_reflect                 = Some (s.arity - 1)
     ; Cfg.strong_reduction_ok          = s.strong_reduction_ok
     ; Cfg.requires_binder_substitution = false // GM: Don't think we care about pretty-printing on native
-    ; Cfg.interpretation               = s.tactic
-    ; Cfg.interpretation_nbe           = fun _cb -> NBET.dummy_interp s.name
+    ; Cfg.interpretation               = (fun psc cb _us t -> s.tactic psc cb t)
+    ; Cfg.interpretation_nbe           = fun _cb _us -> NBET.dummy_interp s.name
     }
   in
   List.map step_from_native_step (Native.list_all ())
@@ -419,6 +419,10 @@ let () =
         pack    RE.e_term_view RE.e_term
         pack    NRE.e_term_view NRE.e_term;
 
+      mk_tac_step_1 0 "pack_curried"
+        pack_curried    RE.e_term_view RE.e_term
+        pack_curried    NRE.e_term_view NRE.e_term;
+
       mk_tac_step_1 0 "fresh"
         fresh       e_unit e_int
         fresh       NBET.e_unit NBET.e_int;
@@ -491,6 +495,29 @@ let () =
         gather_explicit_guards_for_resolved_goals e_unit e_unit
         gather_explicit_guards_for_resolved_goals NBET.e_unit NBET.e_unit;
 
+      mk_tac_step_2 0 "string_to_term"
+        string_to_term RE.e_env e_string RE.e_term
+        string_to_term NRE.e_env NBET.e_string NRE.e_term;
+
+      mk_tac_step_2 0 "push_bv_dsenv"
+        push_bv_dsenv RE.e_env e_string (e_tuple2 RE.e_env RE.e_bv)
+        push_bv_dsenv NRE.e_env NBET.e_string (NBET.e_tuple2 NRE.e_env NRE.e_bv);
+
+      mk_tac_step_1 0 "term_to_string"
+        term_to_string RE.e_term e_string
+        term_to_string NRE.e_term NBET.e_string;
+
+      mk_tac_step_1 0 "comp_to_string"
+        comp_to_string RE.e_comp e_string
+        comp_to_string NRE.e_comp NBET.e_string;
+
+      mk_tac_step_2 0 "term_eq_old"
+        term_eq_old RE.e_term RE.e_term e_bool
+        term_eq_old NRE.e_term NRE.e_term NBET.e_bool;
+
+      mk_tac_step_3 1 "with_compat_pre_core"
+        (fun _ -> with_compat_pre_core) e_any e_int (e_tactic_thunk e_any) e_any
+        (fun _ -> with_compat_pre_core) NBET.e_any NBET.e_int (e_tactic_nbe_thunk NBET.e_any) NBET.e_any;
     ]
 
 let unembed_tactic_1_alt (ea:embedding 'a) (er:embedding 'r) (f:term) (ncb:norm_cb) : option ('a -> tac 'r) =
@@ -545,7 +572,7 @@ let run_tactic_on_ps'
   = let env = ps.main_context in
     if !tacdbg then
         BU.print1 "Typechecking tactic: (%s) {\n" (Print.term_to_string tactic);
-
+    
     (* Do NOT use the returned tactic, the typechecker is not idempotent and
      * will mess up the monadic lifts. We're just making sure it's well-typed
      * so it won't get stuck. c.f #1307 *)
@@ -559,11 +586,14 @@ let run_tactic_on_ps'
 
     (* if !tacdbg then *)
     (*     BU.print1 "Running tactic with goal = (%s) {\n" (Print.term_to_string typ); *)
-    let res, ms = BU.record_time (fun () -> run_safe (tau arg) ps) in
+    let res =
+      Profiling.profile
+        (fun () -> run_safe (tau arg) ps)
+        (Some (Ident.string_of_lid (Env.current_module ps.main_context)))
+        "FStar.Tactics.Interpreter.run_safe"
+    in
     if !tacdbg then
         BU.print_string "}\n";
-    if !tacdbg || Options.tactics_info () then
-        BU.print3 "Tactic %s ran in %s ms (%s)\n" (Print.term_to_string tactic) (string_of_int ms) (Print.lid_to_string env.curmodule);
 
     match res with
     | Success (ret, ps) ->
@@ -572,7 +602,7 @@ let run_tactic_on_ps'
         let remaining_smt_goals = ps.goals@ps.smt_goals in
         List.iter 
           (fun g -> 
-            FStar.Tactics.Basic.mark_goal_implicit_allow_untyped g;//all of these will be fed to SMT anyway
+            FStar.Tactics.Basic.mark_goal_implicit_already_checked g;//all of these will be fed to SMT anyway
             if is_irrelevant g
             then (
               if !tacdbg then BU.print1 "Assigning irrelevant goal %s\n" (Print.term_to_string (goal_witness g));

@@ -54,6 +54,10 @@ val size_le (x y: size_t) : Pure bool
   (requires True)
   (ensures (fun z -> z == (size_v x <= size_v y)))
 
+val size_lt (x y: size_t) : Pure bool
+  (requires True)
+  (ensures (fun z -> z == (size_v x < size_v y)))
+
 let zero_size : (zero_size: size_t { size_v zero_size == 0 }) = mk_size_t 0ul
 
 let one_size : (zero_size: size_t { size_v zero_size == 1 }) = mk_size_t 1ul

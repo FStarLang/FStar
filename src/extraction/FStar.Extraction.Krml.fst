@@ -38,6 +38,8 @@ module FC = FStar.Const
 - v27: Added PConstant
 - v28: added many things for which the AST wasn't bumped; bumped it for
   TConstBuf which will expect will be used soon
+- v29: added a SizeT and PtrdiffT width to machine integers
+- v30: Added EBufDiff
 *)
 
 (* COPY-PASTED ****************************************************************)
@@ -129,6 +131,8 @@ and expr =
   | EComment of string * expr * string
   | EStandaloneComment of string
   | EAddrOf of expr
+  | EBufNull of typ
+  | EBufDiff of expr * expr
 
 and op =
   | Add | AddW | Sub | SubW | Div | DivW | Mult | MultW | Mod
@@ -156,6 +160,7 @@ and width =
   | Int8 | Int16 | Int32 | Int64
   | Bool
   | CInt
+  | SizeT | PtrdiffT
 
 and constant = width * string
 
@@ -206,6 +211,8 @@ let mk_width = function
   | "Int16" -> Some Int16
   | "Int32" -> Some Int32
   | "Int64" -> Some Int64
+  | "SizeT" -> Some SizeT
+  | "PtrdiffT" -> Some PtrdiffT
   | _ -> None
 
 let mk_bool_op = function
@@ -429,6 +436,14 @@ let translate_cc flags =
   | [ "cdecl" ] -> Some CDecl
   | _ -> None
 
+(* Per FStarLang/karamel#324 *)
+let generate_is_null
+  (t: typ)
+  (x: expr)
+: Tot expr
+= let dummy = UInt64 in
+  EApp (ETypApp (EOp (Eq, dummy), [TBuf t]), [x; EBufNull t])
+
 let rec translate_type_without_decay env t: typ =
   match t with
   | MLTY_Tuple []
@@ -455,7 +470,12 @@ let rec translate_type_without_decay env t: typ =
     BU.starts_with (Syntax.string_of_mlpath p) "Steel.C.StructLiteral.struct'"
     ->
       TQualified (must (lident_of_typestring tag))
-  
+
+  | MLTY_Named ([tag; _; _; _], p) when
+    BU.starts_with (Syntax.string_of_mlpath p) "Steel.C.Types.struct_t0"
+    ->
+      TQualified (must (lident_of_typestring tag))
+
   | MLTY_Named ([tag; _], p) when
     BU.starts_with (Syntax.string_of_mlpath p) "Steel.C.UnionLiteral.union"
     ->
@@ -465,7 +485,17 @@ let rec translate_type_without_decay env t: typ =
     Syntax.string_of_mlpath p = "Steel.C.Reference.ptr"
     ->
       TBuf (translate_type_without_decay env arg)
-      
+
+  | MLTY_Named ([arg; _], p) when
+    Syntax.string_of_mlpath p = "Steel.C.Types.ptr"
+    ->
+      TBuf (translate_type_without_decay env arg)
+
+  | MLTY_Named ([arg], p) when
+    Syntax.string_of_mlpath p = "Steel.C.Types.scalar_t"
+    ->
+      translate_type_without_decay env arg
+
   | MLTY_Named ([t; n; s], p)
     when Syntax.string_of_mlpath p = "Steel.C.Array.Base.array_view_type_sized"
     ->
@@ -505,8 +535,9 @@ let rec translate_type_without_decay env t: typ =
     Syntax.string_of_mlpath p = "LowStar.Monotonic.Buffer.mbuffer" -> TBuf (translate_type_without_decay env arg)
   
   | MLTY_Named ([arg], p) when
-    Syntax.string_of_mlpath p = "LowStar.ConstBuffer.const_buffer" -> TConstBuf (translate_type_without_decay env arg)
-  
+    Syntax.string_of_mlpath p = "LowStar.ConstBuffer.const_buffer" ||
+    Syntax.string_of_mlpath p = "Steel.TLArray.t" -> TConstBuf (translate_type_without_decay env arg)
+
   | MLTY_Named ([arg], p) when
     Syntax.string_of_mlpath p = "FStar.Buffer.buffer" ||
     Syntax.string_of_mlpath p = "LowStar.Buffer.buffer" ||
@@ -619,6 +650,14 @@ and translate_expr env e: expr =
 
   // We recognize certain distinguished names from [FStar.HST] and other
   // modules, and translate them into built-in Karamel constructs
+  | MLE_App ({expr = MLE_TApp ({expr = MLE_Name p}, [t]) }, _)
+    when string_of_mlpath p = "Steel.ST.HigherArray.null_ptr"
+    ->
+    EBufNull (translate_type env t)
+  | MLE_App ({expr = MLE_TApp ({expr = MLE_Name p }, [t])}, [arg])
+    when string_of_mlpath p = "Steel.ST.HigherArray.is_null_ptr"
+    ->
+    generate_is_null (translate_type env t) (translate_expr env arg)
   | MLE_App({expr=MLE_TApp ({ expr = MLE_Name p }, [t])}, [arg])
     when string_of_mlpath p = "FStar.Dyn.undyn" ->
       ECast (translate_expr env arg, translate_type env t)
@@ -648,11 +687,16 @@ and translate_expr env e: expr =
     ->
     translate_expr env e
 
+  | MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p}, _) }, [ _perm0; _perm1; _seq0; _seq1; e0; _len0; e1; _len1])
+    when string_of_mlpath p = "Steel.ST.HigherArray.ptrdiff_ptr" ->
+    EBufDiff (translate_expr env e0, translate_expr env e1)
+
   | MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, _) }, [ e1; e2 ])
     when string_of_mlpath p = "FStar.Buffer.index" || string_of_mlpath p = "FStar.Buffer.op_Array_Access"
       || string_of_mlpath p = "LowStar.Monotonic.Buffer.index"
       || string_of_mlpath p = "LowStar.UninitializedBuffer.uindex"
-      || string_of_mlpath p = "LowStar.ConstBuffer.index" ->
+      || string_of_mlpath p = "LowStar.ConstBuffer.index"
+      || string_of_mlpath p = "Steel.TLArray.get" ->
       EBufRead (translate_expr env e1, translate_expr env e2)
 
   | MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, _) }, [ _perm; e1; _len; _seq; e2 ])
@@ -662,11 +706,11 @@ and translate_expr env e: expr =
   | MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, _) }, [ e ])
     when string_of_mlpath p = "FStar.HyperStack.ST.op_Bang"
        || string_of_mlpath p = "Steel.Reference.read" ->
-      EBufRead (translate_expr env e, EConstant (UInt32, "0"))
+      EBufRead (translate_expr env e, EQualified (["C"], "_zero_for_deref"))
 
   | MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, _) }, [ _perm; _v; e ])
     when string_of_mlpath p = "Steel.ST.Reference.read" ->
-      EBufRead (translate_expr env e, EConstant (UInt32, "0"))
+      EBufRead (translate_expr env e, EQualified (["C"], "_zero_for_deref"))
 
   (* Flatten all universes *)
 
@@ -768,6 +812,12 @@ and translate_expr env e: expr =
           false) ->
       EBufCreate (ManuallyManaged, translate_expr env e, EConstant (UInt32, "1"))
 
+  | MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, _) }, [ _ (* typedef *) ])
+    when (
+          string_of_mlpath p = "Steel.C.Types.alloc" ||
+          false) ->
+      EBufCreateNoInit (ManuallyManaged, EConstant (UInt32, "1"))
+
   | MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, _) }, [ e0; e1 ])
     when string_of_mlpath p = "Steel.ST.HigherArray.malloc_ptr" ->
       EBufCreate (ManuallyManaged, translate_expr env e0, translate_expr env e1)
@@ -799,6 +849,10 @@ and translate_expr env e: expr =
           string_of_mlpath p = "Steel.C.Array.Base.free_from" ||
           false) ->
       EBufFree (translate_expr env e2)
+
+  | MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, _) }, [ _ (* typedef *); _ (* v *); e ]) when
+       string_of_mlpath p = "Steel.C.Types.free" ->
+      EBufFree (translate_expr env e)
 
   (* Generic buffer operations. *)
   | MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, _) }, [ e1; e2; _e3 ]) when (string_of_mlpath p = "FStar.Buffer.sub") ->
@@ -834,11 +888,11 @@ and translate_expr env e: expr =
   | MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, _) }, [ e1; e2 ])
     when string_of_mlpath p = "FStar.HyperStack.ST.op_Colon_Equals"
       || string_of_mlpath p = "Steel.Reference.write" ->
-      EBufWrite (translate_expr env e1, EConstant (UInt32, "0"), translate_expr env e2)
+      EBufWrite (translate_expr env e1, EQualified (["C"], "_zero_for_deref"), translate_expr env e2)
 
   | MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, _) }, [ _v; e1; e2 ])
     when string_of_mlpath p = "Steel.ST.Reference.write" ->
-      EBufWrite (translate_expr env e1, EConstant (UInt32, "0"), translate_expr env e2)
+      EBufWrite (translate_expr env e1, EQualified (["C"], "_zero_for_deref"), translate_expr env e2)
 
   | MLE_App ({ expr = MLE_Name p }, [ _ ]) when (
         string_of_mlpath p = "FStar.HyperStack.ST.push_frame" ||
@@ -853,6 +907,10 @@ and translate_expr env e: expr =
       string_of_mlpath p = "FStar.Buffer.blit" ||
       string_of_mlpath p = "LowStar.Monotonic.Buffer.blit" ||
       string_of_mlpath p = "LowStar.UninitializedBuffer.ublit"
+    ) ->
+      EBufBlit (translate_expr env e1, translate_expr env e2, translate_expr env e3, translate_expr env e4, translate_expr env e5)
+  | MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, _) }, [ _; _; _; e1; _; e2; e3; _; e4; e5 ]) when (
+      string_of_mlpath p = "Steel.ST.HigherArray.blit_ptr"
     ) ->
       EBufBlit (translate_expr env e1, translate_expr env e2, translate_expr env e3, translate_expr env e4, translate_expr env e5)
   | MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, _) }, [ e1; e2; e3 ])
@@ -992,29 +1050,28 @@ and translate_expr env e: expr =
     when string_of_mlpath p = "Steel.Effect.Atomic.return" ->
     translate_expr env e
 
-(* BEGIN support for the Steel null pointer. Here, we "piggyback" to
-the current Low* operators for the null pointer, which KaRaMeL will
-extract to C later.
+(* BEGIN support for the Steel null pointer. *)
 
-TODO: these should be removed and those operators should be directly
-supported by KaRaMeL (in src/Builtin.ml) Or alternatively Null and
-IsNull nodes should be added to the KaRaMeL AST *)
-
-  | MLE_App ({expr=MLE_TApp ({expr=MLE_Name p}, _)}, [_ (* opened *); e; _ (* a' *); _ (* sq *) ])
+  | MLE_App ({expr=MLE_TApp ({expr=MLE_Name p}, [t])}, [_ (* opened *); e; _ (* a' *); _ (* sq *) ])
     when string_of_mlpath p = "Steel.C.Array.Base.is_null_from"
-    -> EApp (EQualified (["LowStar"; "Monotonic"; "Buffer"], "is_null"), [ translate_expr env e ])
+    -> generate_is_null (translate_type env t) (translate_expr env e)
 
-  | MLE_App ({expr=MLE_TApp ({expr=MLE_Name p}, _)}, [_ (* opened *); _ (* pcm *); e; _ (* view *)])
+  | MLE_App ({expr=MLE_TApp ({expr=MLE_Name p}, [_; t])}, [_ (* opened *); _ (* pcm *); e; _ (* view *)])
     when string_of_mlpath p = "Steel.C.Reference.is_null"
-    -> EApp (EQualified (["LowStar"; "Monotonic"; "Buffer"], "is_null"), [ translate_expr env e ])
+    -> generate_is_null (translate_type env t) (translate_expr env e)
 
-  | MLE_TApp ({expr=MLE_Name p}, _)
+  | MLE_App ({expr=MLE_TApp ({expr=MLE_Name p}, [t])}, [_ (* opened *); _ (* td *); _ (* v *); e])
+    when string_of_mlpath p = "Steel.C.Types.is_null"
+    -> generate_is_null (translate_type env t) (translate_expr env e)
+  
+  | MLE_App ({expr=MLE_TApp ({expr=MLE_Name p}, [t])}, _)
     when Syntax.string_of_mlpath p = "Steel.C.Array.Base.null_from"
-    -> EQualified (["LowStar"; "Buffer"], "null")
+    -> EBufNull (translate_type env t)
 
-  | MLE_App ({expr=MLE_TApp ({expr=MLE_Name p}, _)}, [_ (* pcm *)])
+  | MLE_App ({expr=MLE_TApp ({expr=MLE_Name p}, t::_)}, [_ (* pcm *)])
     when string_of_mlpath p = "Steel.C.Reference.null"
-    -> EApp (EQualified (["LowStar"; "Buffer"], "null"), [EUnit])
+    || string_of_mlpath p = "Steel.C.Types.null"
+    -> EBufNull (translate_type env t)
 
 (* END support for the Steel null pointer *)
 
@@ -1035,7 +1092,22 @@ IsNull nodes should be added to the KaRaMeL AST *)
         EBufRead (translate_expr env r, EConstant (UInt32, "0")),
         field_name))
 
-  | MLE_App ({expr=MLE_TApp ({expr=MLE_Name p}, [_; _; _; union_name])},
+  | MLE_App ({expr=MLE_TApp ({expr=MLE_Name p}, _)},
+             [_ (* opened *)
+               ; ({expr=MLE_Const (MLC_String struct_name)})
+               ; _ (* fields *)
+               ; _ (* v *)
+               ; r
+               ; ({expr=MLE_Const (MLC_String field_name)})
+               ; _ (* td' *)
+             ])
+    when string_of_mlpath p = "Steel.C.Types.struct_field0" ->
+      EAddrOf (EField (
+        TQualified (must (lident_of_string struct_name)),
+        EBufRead (translate_expr env r, EQualified (["C"], "_zero_for_deref")),
+        field_name))
+
+  | MLE_App ({expr=MLE_TApp ({expr=MLE_Name p}, [_; _; union_name])},
              [_; {expr=MLE_Const (MLC_String field_name)}; r])
     when string_of_mlpath p = "Steel.C.UnionLiteral.addr_of_union_field''" ->
       EAddrOf (EField (
@@ -1063,7 +1135,17 @@ IsNull nodes should be added to the KaRaMeL AST *)
         EBufRead (translate_expr env r, EConstant (UInt32, "0")),
         translate_expr env x)
 
-  | MLE_App ({expr=MLE_TApp ({expr=MLE_Name p}, [_; _])}, [_ (* opened *); r; _ (* r_to *); _ (* sq *) ])
+  | MLE_App ({expr=MLE_TApp ({expr=MLE_Name p}, _)}, [_ (* value *) ; _ (* perm *) ; r])
+    when string_of_mlpath p = "Steel.C.Types.read0" ->
+      EBufRead (translate_expr env r, EQualified (["C"], "_zero_for_deref"))
+
+  | MLE_App ({expr=MLE_TApp ({expr=MLE_Name p}, _)}, [_ (* value *); r; x])
+    when string_of_mlpath p = "Steel.C.Types.write" ->
+      EAssign (
+        EBufRead (translate_expr env r, EQualified (["C"], "_zero_for_deref")),
+        translate_expr env x)
+
+  | MLE_App ({expr=MLE_TApp ({expr=MLE_Name p}, _)}, [_ (* opened *); r; _ (* r_to *); _ (* sq *) ])
     when string_of_mlpath p = "Steel.C.Array.Base.ref_of_array_from" ->
       translate_expr env r
 
@@ -1087,6 +1169,17 @@ IsNull nodes should be added to the KaRaMeL AST *)
     when string_of_mlpath p = "Steel.C.Array.Base.split_right_from" ->
       EAddrOf (EBufRead (translate_expr env a, translate_expr env i))
 
+  | MLE_App ({ expr = MLE_Name p }, [ arg ])
+    when string_of_mlpath p = "FStar.SizeT.uint16_to_sizet" ||
+         string_of_mlpath p = "FStar.SizeT.uint32_to_sizet" ||
+         string_of_mlpath p = "FStar.SizeT.uint64_to_sizet" ||
+         string_of_mlpath p = "FStar.PtrdiffT.ptrdifft_to_sizet" ->
+      ECast (translate_expr env arg, TInt SizeT)
+
+  | MLE_App ({ expr = MLE_Name p }, [ arg ])
+    when string_of_mlpath p = "FStar.SizeT.sizet_to_uint32" ->
+      ECast (translate_expr env arg, TInt UInt32)
+
   | MLE_App ({expr=MLE_Name p}, [ _inv; test; body ])
     when (string_of_mlpath p = "Steel.ST.Loops.while_loop") ->
     EApp (EQualified (["Steel"; "Loops"], "while_loop"), [ EUnit; translate_expr env test; translate_expr env body ])
@@ -1101,11 +1194,13 @@ IsNull nodes should be added to the KaRaMeL AST *)
     translate_expr env e
 
   | MLE_App ({expr=MLE_TApp ({expr=MLE_Name p}, _)}, [_fp; _fp'; _opened; _p; _i; {expr=MLE_Fun (_, body)}])
-    when string_of_mlpath p = "Steel.ST.Util.with_invariant" ->
+    when string_of_mlpath p = "Steel.ST.Util.with_invariant" ||
+         string_of_mlpath p = "Steel.Effect.Atomic.with_invariant" ->
     translate_expr env body
 
   | MLE_App ({expr=MLE_TApp ({expr=MLE_Name p}, _)}, [_fp; _fp'; _opened; _p; _i; e])
-    when string_of_mlpath p = "Steel.ST.Util.with_invariant" ->
+    when string_of_mlpath p = "Steel.ST.Util.with_invariant" ||
+         string_of_mlpath p = "Steel.Effect.Atomic.with_invariant" ->
     Errors.raise_error
       (Errors.Fatal_ExtractionUnsupported,
        BU.format2
@@ -1193,6 +1288,7 @@ and translate_width = function
   | Some (FC.Unsigned, FC.Int16) -> UInt16
   | Some (FC.Unsigned, FC.Int32) -> UInt32
   | Some (FC.Unsigned, FC.Int64) -> UInt64
+  | Some (FC.Unsigned, FC.Sizet) -> SizeT
 
 and translate_pat env p =
   match p with
@@ -1264,27 +1360,25 @@ and translate_constant c: expr =
 and mk_op_app env w op args =
   EApp (EOp (op, w), List.map (translate_expr env) args)
 
-let translate_type_decl env ty: option decl =
-  if List.mem Syntax.NoExtract ty.tydecl_meta then
-    None
-  else
-    // JL: TODO: hoist?
-    let parse_fields (fields: mlty): option (list _) =
+let parse_steel_c_fields env (fields: mlty): option (list _) =
       let rec go fields =
         match fields with
         | MLTY_Named ([], p)
           when Syntax.string_of_mlpath p = "Steel.C.Fields.c_fields_t_nil"
+          || Syntax.string_of_mlpath p = "Steel.C.Types.field_t_nil"
           -> Some []
           
         | MLTY_Named ([field; t; fields], p)
           when Syntax.string_of_mlpath p = "Steel.C.Fields.c_fields_t_cons"
+          || Syntax.string_of_mlpath p = "Steel.C.Types.field_t_cons"
           ->
           opt_bind (string_of_typestring field) (fun field ->
           if field = "" then go fields else
           opt_bind (go fields) (fun fields ->
           Some ((field, t) :: fields)))
-  
-        | _ -> None
+
+        | _ ->
+          None
       in
       match go fields with
       | None ->
@@ -1308,12 +1402,14 @@ let translate_type_decl env ty: option decl =
                    (FStar.Extraction.ML.Code.string_of_mlty ([], "") ty);
                  (field, translate_type_without_decay env ty))
               fields)
-    in
-    match ty with
-    | {tydecl_defn=Some (MLTD_Abbrev (MLTY_Named ([tag; fields], p)))}
-      when Syntax.string_of_mlpath p = "Steel.C.StructLiteral.mk_struct_def"
-      ->
-      begin
+
+let translate_type_decl env ty: option decl =
+  if List.mem Syntax.NoExtract ty.tydecl_meta then
+    None
+  else
+    let define_struct
+      tag fields
+    =
         (* JL: TODO remove/improve these print commands *)
         print_endline "Parsing struct definition.";
         begin match lident_of_typestring tag with
@@ -1322,11 +1418,21 @@ let translate_type_decl env ty: option decl =
             (FStar.Extraction.ML.Code.string_of_mlty ([], "") tag);
           None
         | Some p ->
-          let fields = must (parse_fields fields) in
+          let fields = must (parse_steel_c_fields env fields) in
           Some (DTypeFlat (p, [], 0,
             List.map (fun (field, ty) -> (field, (ty, true))) fields))
         end
-      end
+    in
+    match ty with
+    | {tydecl_defn=Some (MLTD_Abbrev (MLTY_Named ([tag; fields], p)))}
+      when Syntax.string_of_mlpath p = "Steel.C.StructLiteral.mk_struct_def"
+      ->
+      define_struct tag fields
+
+    | {tydecl_defn=Some (MLTD_Abbrev (MLTY_Named ([tag; fields; _; _], p)))}
+      when Syntax.string_of_mlpath p = "Steel.C.Types.define_struct0"
+      ->
+      define_struct tag fields
 
     | {tydecl_defn=Some (MLTD_Abbrev (MLTY_Named ([tag; fields], p)))}
       when Syntax.string_of_mlpath p = "Steel.C.UnionLiteral.mk_union_def"
@@ -1340,7 +1446,7 @@ let translate_type_decl env ty: option decl =
             (FStar.Extraction.ML.Code.string_of_mlty ([], "") tag);
           None
         | Some p ->
-          let fields = must (parse_fields fields) in
+          let fields = must (parse_steel_c_fields env fields) in
           Some (DUntaggedUnion (p, [], 0, fields))
         end
       end
@@ -1390,33 +1496,6 @@ let translate_type_decl env ty: option decl =
 
 let translate_let env flavor lb: option decl =
   match lb with
-  | {
-      mllb_tysc = Some (_, MLTY_Named ([MLTY_Named ([], view_type_name)], p));
-      mllb_def = fields;
-    } when Syntax.string_of_mlpath p = "Steel.C.StructLiteral.register_fields_of" ->
-      begin
-        BU.print1 "Found _ : register_fields_of %s. Fields are:\n"
-          (Syntax.string_of_mlpath view_type_name);
-        let rec parse_fields fields =
-          match fields with
-          | {expr=MLE_Name p}
-            when Syntax.string_of_mlpath p = "Steel.C.StructLiteral.fields_nil"
-            ->
-            print_endline "End of fields"
-          | {expr=MLE_App ({expr=MLE_Name p},
-                           [{expr=MLE_Const (MLC_String name)}; typedef; fields])}
-            when Syntax.string_of_mlpath p = "Steel.C.StructLiteral.fields_cons"
-            ->
-            BU.print2 "  Field %s : %s\n"
-              name
-              (FStar.Extraction.ML.Code.string_of_mlexpr ([], "") typedef);
-            parse_fields fields
-          | _ -> failwith "Couldn't parse fields from struct_fields"
-        in
-        parse_fields fields;
-        None
-      end
-
   | {
       mllb_name = name;
       mllb_tysc = Some (tvars, t0);
@@ -1482,6 +1561,29 @@ let translate_let env flavor lb: option decl =
           Some (DFunction (cc, meta, List.length tvars, t, name, binders, EAbortS msg))
         end
 
+  | {
+      mllb_name = name;
+      mllb_tysc = Some (tvars, t);
+      mllb_def = { expr = MLE_App ({
+        expr = MLE_TApp ({expr = MLE_Name p}, _)}, [ l ] ) };
+      mllb_meta = meta
+    }
+    when string_of_mlpath p = "Steel.TLArray.create" ->
+    if List.mem Syntax.NoExtract meta then
+      None
+    else
+      // This is a global const array, defined using Steel.TLArray
+      let meta = translate_flags meta in
+      let env = List.fold_left (fun env name -> extend_t env name) env tvars in
+      let t = translate_type env t in
+      let name = env.module_name, name in
+      begin try
+        let expr = List.map (translate_expr env) (list_elements l) in
+        Some (DGlobal (meta, name, List.length tvars, t, EBufCreateL (Eternal, expr)))
+      with e ->
+          Errors. log_issue Range.dummyRange (Errors.Warning_DefinitionNotTranslated, (BU.format2 "Error extracting %s to KaRaMeL (%s)\n" (Syntax.string_of_mlpath name) (BU.print_exn e)));
+          Some (DGlobal (meta, name, List.length tvars, t, EAny))
+        end
   | {
       mllb_name = name;
       mllb_tysc = Some (tvars, t);

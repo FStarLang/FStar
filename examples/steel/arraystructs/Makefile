@@ -3,7 +3,7 @@ all: world
 FSTAR_HOME ?= $(realpath $(dir $(shell which fstar.exe))/..)
 FSTAR_EXE = $(FSTAR_HOME)/bin/fstar.exe
 
-INCLUDE_PATH = $(FSTAR_HOME)/ulib/.cache $(FSTAR_HOME)/ulib/experimental
+INCLUDE_PATH = $(FSTAR_HOME)/ulib/.cache $(FSTAR_HOME)/ulib/experimental $(KRML_HOME)/krmllib $(KRML_HOME)/krmllib/obj
 
 ifdef KRML_HOME
 KRML_EXE = $(KRML_HOME)/krml
@@ -13,6 +13,7 @@ world: verify test
 
 FSTAR_OPTIONS = --cache_checked_modules \
 		--cmi \
+		--compat_pre_typed_indexed_effects \
 	        --already_cached 'Prims,FStar,LowStar,Steel' \
 		$(addprefix --include ,$(INCLUDE_PATH)) \
 		$(OTHERFLAGS)
@@ -63,7 +64,7 @@ ALL_MODULE_NAMES=$(basename $(ALL_SOURCE_FILES))
 FILTERED_KRML_FILES=$(filter-out FStar_NMST.krml Steel_%.krml,$(ALL_KRML_FILES))
 
 extract: $(FILTERED_KRML_FILES)
-	$(KRML_EXE) -skip-compilation -skip-makefiles -bundle 'FStar.\*,Steel.\*' $^
+	$(KRML_EXE) -skip-compilation -skip-makefiles -bundle 'FStar.\*,Steel.\*,C' -add-include '"steel_c.h"' $^
 	touch $@
 
 ALL_C_FILES=$(addsuffix .c,$(ALL_MODULE_NAMES))
@@ -75,7 +76,7 @@ $(ALL_C_FILES): %.c: extract
 ALL_O_FILES=$(subst .c,.o,$(ALL_C_FILES))
 
 $(ALL_O_FILES): %.o: %.c
-	$(CC) $(CFLAGS) -DKRML_VERIFIED_UINT128 -I $(KRML_HOME)/include -I $(KRML_HOME)/krmllib/dist/minimal -o $@ -c $<
+	$(CC) $(CFLAGS) -DKRML_VERIFIED_UINT128 -I $(KRML_HOME)/include -I $(KRML_HOME)/krmllib/dist/minimal -I lib -o $@ -c $<
 
 test: $(ALL_O_FILES)
 

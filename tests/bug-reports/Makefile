@@ -47,7 +47,9 @@ SHOULD_VERIFY_CLOSED=Bug022.fst Bug024.fst Bug025.fst Bug026.fst Bug026b.fst Bug
   Bug1418.fst Bug171.fst Bug2496.fst Bug2478.fst Bug2414.fst Bug2515.fst \
   Bug2535.fst Bug2557.fst Bug2572.fst Bug2522.fst Bug2486.fst \
   Bug2552.fst Bug2597.fst Bug2471_B.fst Bug2605.fst Bug2614.fst Bug2622.fst \
-  Bug2637.fst Bug2641.fst
+  Bug2635.fst Bug2637.fst Bug2641.fst Bug1486.fst PropProofs.fst \
+  Bug2684a.fst Bug2684b.fst Bug2684c.fst Bug2684d.fst Bug2659b.fst\
+  Bug2756.fst MutualRecPositivity.fst Bug2806a.fst Bug2806b.fst Bug2806c.fst Bug2806d.fst
 
 SHOULD_VERIFY_INTERFACE_CLOSED=Bug771.fsti Bug771b.fsti
 SHOULD_VERIFY_AND_WARN_CLOSED=Bug016.fst
@@ -60,7 +62,7 @@ SHOULD_VERIFY_OPEN=Bug045.fst Bug057.fst Bug064.fst Bug065.fst Bug071.fst Bug121
   Bug171b.fst Bug171c.fst Bug259.fst Bug282.fst Bug291.fst Bug419.fst \
   Bug442b.fst Bug484.fst Bug542.fst Bug543.fst Bug554.fst Bug604.fst Bug606.fst\
   Bug626.fst Bug682.fst Bug715.fst Bug739.fst Bug815.fst Bug815b.fst Bug851.fst Bug933.fst Bug933b.fst\
-  Bug1038.fst Bug1091.fst Bug807d.fst Bug1486.fst Bug1392.fst Bug1867.fst
+  Bug1038.fst Bug1091.fst Bug807d.fst Bug1392.fst Bug1867.fst
 
 # These examples go through but their corresponding GitHub issue is still open. Consider closing and adding them
 # to SHOULD_VERIFY_CLOSED.
@@ -109,7 +111,7 @@ SHOULD_NOT_VERIFY_NOT_WORKING=Bug186.fst Bug397b.fst
 SHOULD_EXTRACT_CLOSED=Bug086.fst Bug314.fst Bug540.fst Bug541.fst Bug589.fst \
 	ExtractionBug2.fst Bug1101.fst Bug1485.fst Bug734.fst Bug310.fst \
 	Bug2058.fst RemoveUnusedTypars.B.fst RemoveUnusedTyparsIFace.B.fst \
-	PushPopProjectors.fst Bug2412.fst Bug2595.fst
+	PushPopProjectors.fst Bug2412.fst Bug2595.fst Bug2699.fst
 #ExtractionBug03.fst
 
 # Bug1479.fst Crashes when in CI with "Error: Unbound module FStar_Tactics_Effect"
@@ -134,11 +136,17 @@ CAPPED=$(subst Bug,Bug,$*)
 
 
 %.verify: %.fst
-	$(FSTAR) $^
+	@echo '[CHECK     $<]'
+	$(Q)$(FSTAR) $(SIL) $^
 
 Bug1383.verify: OTHERFLAGS += --warn_error @275 #Z3 warnings are fatal
 Bug1694.verify: OTHERFLAGS += --codegen OCaml
 Bug2210.verify: OTHERFLAGS += --codegen OCaml
+
+Bug2684a.verify: OTHERFLAGS += --cache_checked_modules
+Bug2684b.verify: OTHERFLAGS += --cache_checked_modules
+Bug2684c.verify: OTHERFLAGS += --cache_checked_modules
+Bug2684d.verify: OTHERFLAGS += --cache_checked_modules
 
 verify: $(subst .fst,.verify,$(SHOULD_VERIFY_CLOSED))
 
@@ -151,15 +159,16 @@ verify-maybe-close: $(subst .fst,.verify,$(SHOULD_VERIFY_MAYBE_CLOSE))
 
 
 %.not-verify: %.fst
-	(! $(FSTAR) $^ >/dev/null 2>&1) || (echo "Negative test failed ($@)!" ; false)
+	@echo '[CHECKFAIL $<]'
+	$(Q)(! $(FSTAR) $(SIL) $^ >/dev/null 2>&1) || (echo "Negative test failed ($@)!" ; false)
 
 not-verify: $(subst .fst,.not-verify,$(SHOULD_NOT_VERIFY_CLOSED))
 
 Bug310.ml:
-	$(FSTAR) $(FSTAR_DEFAULT_ARGS) --extract Bug310 --codegen OCaml Bug310.fst
+	$(Q)$(FSTAR) $(FSTAR_DEFAULT_ARGS) --extract Bug310 --codegen OCaml Bug310.fst
 
 Bug310.extract: Bug310.ml
-	diff -u --strip-trailing-cr Bug310.ml Bug310.ml.expected
+	$(Q)diff -u --strip-trailing-cr Bug310.ml Bug310.ml.expected
 
 Bug2058.ml:
 	$(FSTAR) $(FSTAR_DEFAULT_ARGS) --extract Bug2058 --codegen OCaml Bug2058.fst
@@ -172,6 +181,12 @@ Bug2595.ml:
 
 Bug2595.extract: Bug2595.ml
 	diff -u --strip-trailing-cr Bug2595.ml Bug2595.ml.expected
+
+Bug2699.ml:
+	$(FSTAR) $(FSTAR_DEFAULT_ARGS) --extract Bug2699 --codegen OCaml Bug2699.fst
+
+Bug2699.extract: Bug2699.ml
+	diff -u --strip-trailing-cr Bug2699.ml Bug2699.ml.expected
 
 
 RemoveUnusedTypars.B.extract: RemoveUnusedTypars.A.fst RemoveUnusedTypars.B.fst

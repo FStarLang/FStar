@@ -7,11 +7,33 @@ To start writing some F* programs, we'll need to learn some basics
 about the syntax of the language and some core concepts of types and
 functions.
 
+.. _Part1_editors:
+
+Text Editors
+^^^^^^^^^^^^
+
+F* can be used as a command line tool with any text editor. If you're
+viewing this in the interactive online tutorial, you can use the
+`Ace-based <https://ace.c9.io/>`_ text editor alongside, which
+provides some basic conveniences like syntax highlighting. However,
+most advanced users of F* use emacs and `fstar-mode.el
+<https://github.com/FStarLang/fstar-mode.el>`_, which provides several
+utilities for interactively editing and checking F* files. We'll refer
+to some features specific to fstar-mode.el as we go.
+
+fstar-mode.el relies on a generic but custom interaction protocol
+implemented by the F* compiler. F* also provides a basic
+implementation of the `Language Server Protocol
+<https://microsoft.github.io/language-server-protocol/>`_, which could
+form the basis of integration with other editors. More information
+about F*'s editor support can be found `here
+<https://github.com/FStarLang/FStar/wiki/Editor-support-for-F*>`_.
+
 
 Basic syntactic structure
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 
-An F* program is a collection of :ref:`modules<modules>`, with each
+An F* program is a collection of modules, with each
 module represented by a single file with the filename extension
 ``.fst``. Later, we'll see that a module's interface is in a separate
 ``.fsti`` file and allows hiding details of a module's implementation
@@ -51,7 +73,7 @@ Primitives
 ^^^^^^^^^^
 
 Every F* program is checked in the context of some ambient primitive
-definitions taken from the core F* module :ref:`Prims<corelib_Prims>`.
+definitions taken from the core F* module ``Prims``.
 
 False
 .....
@@ -121,7 +143,7 @@ precedence.
 Boolean refinement types
 ^^^^^^^^^^^^^^^^^^^^^^^^
 
-The F* core library, :ref:`Prims<corelib_Prims>`, defines the type of
+The F* core library, ``Prims``, defines the type of
 natural numbers as follows
 
 .. code-block:: fstar
@@ -132,7 +154,7 @@ This is an instance of a boolean refinement type, whose general form
 is ``x:t { e }`` where ``t`` is a type, and ``e`` is a ``bool``-typed term
 that may refer to the ``t``-typed bound variable ``x``. The term ``e``
 *refines* the type ``t``, in the sense that the set ``S`` denoted by ``t``
-is restricted to those elements ``x ∈ S``  for which ``e`` evaluates to
+is restricted to those elements ``x`` :math:`\in` ``S``  for which ``e`` evaluates to
 ``true``.
 
 That is, the type ``nat`` describes the set of terms that evaluate to an
@@ -265,7 +287,7 @@ any side effect, like looping forever, or printing a message etc.).
 Functions are first-class values in F*, e.g., they can be passed as
 arguments to other functions and returned as results. While F*
 provides several ways to define functions, the most basic form is the
-λ term, also called a function literal, an anonymous function, or a
+:math:`\lambda` term, also called a function literal, an anonymous function, or a
 simply a *lambda*. The syntax is largely inherited from OCaml, and
 this `OCaml tutorial
 <https://ocaml.org/learn/tutorials/basics.html#Defining-a-function>`_
@@ -279,6 +301,8 @@ The term ``fun (x:int) -> x + 1`` defines a function,
 a lambda term, which adds 1 to its integer-typed parameter ``x``. You
 can also let F* infer the type of the parameter and write ``fun x ->
 x + 1`` instead.
+
+.. _Part1_ch1_named_function:
 
 Named functions
 ...............
@@ -381,6 +405,10 @@ languages.
    call to fail to return due to resource exhaustion, e.g., running
    out of memory. Later, as we look at :ref:`effects <effects>`, we
    will see that F* also supports writing non-terminating functions.
+
+
+.. _Part1_ch1_arrow_notations:
+
 
 Some examples and common notation
 .................................

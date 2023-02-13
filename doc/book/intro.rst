@@ -1,5 +1,9 @@
+############
+Introduction
+############
+
 A Capsule Summary of F*
-=======================
+-----------------------
 
 F* is a dependently type programming language that aims to play
 several roles:
@@ -47,7 +51,7 @@ you---that's okay, you'll learn about it as we go.
 
 
 DSLs Embedded in F*
-^^^^^^^^^^^^^^^^^^^
+~~~~~~~~~~~~~~~~~~~
 
 In practice, rather than a single language, the F* ecosystem is also a
 collection of domain-specific languages (DSLs). A common use of F* is
@@ -85,7 +89,7 @@ stage, we don't expect you to understand these examples in detail,
 though it should give you a flavor of what is possible with F*.
 
 F* is a dependently typed language
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Dependently typed programming enables one to more precisely capture
 properties and invariants of a program using types. Here's a classic
@@ -122,7 +126,7 @@ does not change its length.
    :end-before: SNIPPET_END: reverse
 
 Finally, to get an element from a vector, one can program a selector
-whose type also includes a :ref:`*refinement type* <refinements>` to specify that the index
+whose type also includes a *refinement type* to specify that the index
 ``i`` is less than the length of the vector.
 
 .. literalinclude:: code/Vec.fst
@@ -142,7 +146,7 @@ chapter <Part2_equality>`.
 
 
 F* supports user-defined effectful programming
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 While functional programming is at the heart of the language, F* is
 about more than just pure functions. In fact, F* is a Turing complete
@@ -158,7 +162,7 @@ computational effects which can be used to model a variety of
 programming idioms, including things like mutable state, exceptions,
 concurrency, IO, etc.
 
-Here below is some code in an F* dialect called :ref:`Low* <LowStar>`
+Here below is some code in an F* dialect called Low*
 which provides a sequential, imperative C-like programming model with
 mutable memory. The function ``malloc_copy_free`` allocates an array
 ``dest``, copies the contents of an array of bytes ``src`` into a
@@ -169,7 +173,7 @@ mutable memory. The function ``malloc_copy_free`` allocates an array
    :start-after: SNIPPET_START: malloc_copy_free
    :end-before: SNIPPET_END: malloc_copy_free
 
-It'll take us until :ref:`much later<LowStar>` to explain this code in
+It'll take us until much later to explain this code in
 full detail, but here are two main points to take away:
 
   * The type signature of the procedure claims that under specific
@@ -193,7 +197,7 @@ a particular kind of `Floyd-Hoare logic
 special about it in F*.
 
 Here, for example, is a concurrent program in another user-defined F*
-dialect called :ref:`Steel <Steel>`. It increments two heap-allocated
+dialect called Steel. It increments two heap-allocated
 references in parallel and is specified for safety and correctness in
 `concurrent separation logic
 <https://en.wikipedia.org/wiki/Separation_logic>`_, a different kind
@@ -208,8 +212,10 @@ As an F* user, you can choose a programming model and a suite of
 program proof abstractions to match your needs. You'll learn more
 about this in the section on :ref:`user-defined effects <effects>`.
 
+.. _Part1_symbolic_computation:
+
 F* proofs use SMT solving, symbolic computation and tactics
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Stating a theorem or lemma in F* amounts to declaring a type signature
 and a doing a proof corresponds to providing an implementation of that
@@ -226,8 +232,7 @@ occur. All these little proofs can quickly overwhelm a user.
 The main workhorse for proofs in F* is an automated theorem prover,
 known as a *Satisfiability Modulo Theories*, or SMT, solver. The F*
 toolchain integrates the `Z3 SMT Solver
-<https://www.microsoft.com/en-us/research/blog/the-inner-magic-behind-the-z3-theorem-prover/>`_,
-which it Z3 SMT solver, which is integrated with the F* toolchain.
+<https://www.microsoft.com/en-us/research/blog/the-inner-magic-behind-the-z3-theorem-prover/>`_.
 
 By default, the F* typechecker collects all the facts that must be
 proven in a program and encodes them to the SMT solver, an engine that
@@ -242,11 +247,12 @@ postcondition and a loop invariant, and the system took care of all
 the remaining proofs.
 
 You'll learn more about how to use leverage Z3 to prove theorems in F*
-in :ref:`this chapter <SMTProofs>`.
+in :ref:`this chapter <Part1_prop_assertions>`.
 
 That said, Z3 cannot solve all problems that F* feeds to it. As such,
 F* offers several other mechanisms with varying levels of user
 control.
+
 
 **Symbolic computation**
 
@@ -298,17 +304,15 @@ This style of proof is similar to what you might find in systems like
 Coq or Lean. An F* tactic is just an F* program that can manipulate F*
 proof states. In this case, to prove the theorem
 ``a ==> b ==> (b /\ a)``, we apply commands to transform the proof
-state by applying the rules of propositional logic, building of
+state by applying the rules of propositional logic, building a
 proof of the theorem.
 
 Tactics are an instance of a more general metaprogramming system in
-F*, which allows an F* program to generate other F* programs. You'll
-learn more about tactics and metaprogramming in :ref:`this chapter
-<MetaFStar>`.
+F*, which allows an F* program to generate other F* programs.
 
 
 F* programs compile to OCaml and F#, C and Wasm
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Of course, you'll want a way to actually execute the programs you
 write. For this, F* provides several ways to compile a program to
@@ -338,7 +342,7 @@ all the proof and specification effort is done before the program is
 compiled, imposing no runtime overhead at all.
 
 To F*, or not to F*?
-^^^^^^^^^^^^^^^^^^^^
+~~~~~~~~~~~~~~~~~~~~
 
 We've quickly seen a bit of what F* has to offer---that may have been
 bit overwhelming, if you're new to program proofs. So, you may be
@@ -448,15 +452,14 @@ also have a good and growing track record of industrial adoption.
 
 
 A Bit of F* History
-^^^^^^^^^^^^^^^^^^^
+~~~~~~~~~~~~~~~~~~~
 
 F* is an open source project at `GitHub
 <https://github.com/FStarLang/FStar>`_ by researchers at a number of
 institutions, including `Microsoft Research
 <http://research.microsoft.com/en-us>`_, `MSR-Inria
 <https://www.microsoft.com/en-us/research/collaboration/inria-joint-centre/>`_, `Inria <https://www.inria.fr/>`_,
-`Rosario <https://www.cifasis-conicet.gov.ar/en/>`_, `Carnegie-Mellon
-<https://www.cs.cmu.edu/>`_.
+`Rosario <https://www.cifasis-conicet.gov.ar/en/>`_, and `Carnegie-Mellon <https://www.cs.cmu.edu/>`_.
 
 **The name** The F in F* is a homage to System F
 (https://en.wikipedia.org/wiki/System_F) which was the base calculus
@@ -478,6 +481,6 @@ be a sort of fixpoint of all those languages. The first version of F*
 also had affine types and part of the intention then was to use affine
 types to encode separation logic---so the "\*" was also meant to evoke
 the separation logic "\*". But, the early affine versions of F* never
-really did have separation logic in that version. It took until almost
+really did have separation logic. It took until almost
 a decade later to have a separation logic embedded in F* (see Steel),
 though without relying on affine types.

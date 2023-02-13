@@ -42,11 +42,14 @@ let decr_at_every_level = false
 let rec mk_tot_arr_decr (bs: list binder) (cod : term) decr : Tac term =
     match bs with
     | [] -> cod
-    | (b::bs) -> pack (Tv_Arrow b (pack_comp (C_Total (mk_tot_arr_decr bs cod decr) (pack_universe Uv_Zero) (
-      if decr_at_every_level || FStar.List.Tot.length bs = 0
-      then [decr]
-      else []
-    ))))
+    | (b::bs) -> pack (Tv_Arrow b
+      (pack_comp (C_Eff [pack_universe Uv_Zero]
+                        ["Prims"; "Tot"]
+                        (mk_tot_arr_decr bs cod decr)
+                        []
+                        (if decr_at_every_level || FStar.List.Tot.length bs = 0
+                         then [decr]
+                         else []))))
 
 let craft_f' use_f_type: Tac decls =
   let name = pack_fv (cur_module () @ ["f'" ^ (
@@ -85,4 +88,4 @@ let craft_f' use_f_type: Tac decls =
 
 // however, crafting f' with a crafted type
 // result in F* failing because of termination issues
-%splice[] (craft_f' false)
+// %splice[] (craft_f' false)

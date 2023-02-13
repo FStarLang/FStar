@@ -18,6 +18,7 @@ class CustomLexer(RegexLexer):
         'calc'       ,
         'class'      ,
         'decreases'  ,
+        'Dv'         ,
         'effect'     ,
         'eliminate'  ,
         'else'       ,
@@ -30,6 +31,7 @@ class CustomLexer(RegexLexer):
         'forall'     ,
         'fun'        ,
         'function'   ,
+        'GTot'       ,
         'if'         ,
         'in'         ,
         'include'    ,
@@ -47,6 +49,7 @@ class CustomLexer(RegexLexer):
         'layered_effect'            ,
         'polymonadic_bind'          ,
         'polymonadic_subcomp'       ,
+        'SMTPat'     ,        
         'noextract',
         'of'         ,
         'open'       ,
@@ -64,6 +67,7 @@ class CustomLexer(RegexLexer):
         'synth'      ,
         'then'       ,
         'total'      ,
+        'Tot'        ,
         'true'       ,
         'try'        ,
         'type'       ,
@@ -73,6 +77,7 @@ class CustomLexer(RegexLexer):
         'when'       ,
         'with'       ,
         '_'          ,
+        'Lemma'      ,
     )
     tokens = {
         'root': [

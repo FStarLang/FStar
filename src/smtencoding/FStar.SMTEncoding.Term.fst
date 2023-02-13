@@ -847,7 +847,14 @@ and mkPrelude z3options =
                     (exists ((t Term)) (HasTypeZ x t)))\n\
                 (declare-fun ApplyTF (Term Fuel) Term)\n\
                 (declare-fun ApplyTT (Term Term) Term)\n\
-                (declare-fun Rank (Term) Int)\n\
+                (declare-fun Prec (Term Term) Bool)\n\
+                (assert (forall ((x Term) (y Term) (z Term))\n\
+                                (! (implies (and (Prec x y) (Prec y z))\n\
+                                            (Prec x z))
+                                   :pattern ((Prec x z) (Prec x y)))))\n\
+                (assert (forall ((x Term) (y Term))\n\
+                         (implies (Prec x y)\n\
+                                  (not (Prec y x)))))\n\
                 (declare-fun Closure (Term) Term)\n\
                 (declare-fun ConsTerm (Term Term) Term)\n\
                 (declare-fun ConsFuel (Fuel Term) Term)\n\
@@ -903,7 +910,7 @@ and mkPrelude z3options =
                                                           :pattern (Prims.precedes t1 t2 e1 e2))))\n\
                       (assert (forall ((t1 Term) (t2 Term))\n\
                                       (! (iff (Valid (Prims.precedes Prims.lex_t Prims.lex_t t1 t2)) \n\
-                                      (< (Rank t1) (Rank t2)))\n\
+                                              (Prec t1 t2))\n\
                                       :pattern ((Prims.precedes Prims.lex_t Prims.lex_t t1 t2)))))\n" in
 
    let valid_intro =
@@ -1017,10 +1024,11 @@ let mk_Valid t        = match t.tm with
     | App(Var "Prims.b2t", [t1]) -> {unboxBool t1 with rng=t.rng}
     | _ ->
         mkApp("Valid",  [t]) t.rng
+let mk_unit_type = mkApp("Prims.unit", []) norng
+let mk_subtype_of_unit v = mkApp("Prims.subtype_of", [v;mk_unit_type]) v.rng
 let mk_HasType v t    = mkApp("HasType", [v;t]) t.rng
 let mk_HasTypeZ v t   = mkApp("HasTypeZ", [v;t]) t.rng
 let mk_IsTotFun t     = mkApp("IsTotFun", [t]) t.rng
-let mk_IsTyped v      = mkApp("IsTyped", [v]) norng
 let mk_HasTypeFuel f v t =
    if Options.unthrottle_inductives()
    then mk_HasType v t
@@ -1029,8 +1037,6 @@ let mk_HasTypeWithFuel f v t = match f with
     | None -> mk_HasType v t
     | Some f -> mk_HasTypeFuel f v t
 let mk_NoHoist dummy b = mkApp("NoHoist", [dummy;b]) b.rng
-let mk_Destruct v     = mkApp("Destruct", [v])
-let mk_Rank x         = mkApp("Rank", [x])
 let mk_tester n t     = mkApp("is-"^n,   [t]) t.rng
 let mk_ApplyTF t t'   = mkApp("ApplyTF", [t;t']) t.rng
 let mk_ApplyTT t t'  r  = mkApp("ApplyTT", [t;t']) r
@@ -1040,17 +1046,6 @@ let mk_Precedes x1 x2 x3 x4 r = mkApp("Prims.precedes", [x1;x2;x3;x4])  r|> mk_V
 let rec n_fuel n =
     if n = 0 then mkApp("ZFuel", []) norng
     else mkApp("SFuel", [n_fuel (n - 1)]) norng
-let fuel_2 = n_fuel 2
-let fuel_100 = n_fuel 100
-
-let mk_and_opt p1 p2 r = match p1, p2  with
-  | Some p1, Some p2 -> Some (mkAnd(p1, p2) r)
-  | Some p, None
-  | None, Some p -> Some p
-  | None, None -> None
-
-let mk_and_opt_l pl r =
-  List.fold_right (fun p out -> mk_and_opt p out r) pl None
 
 let mk_and_l l r = List.fold_right (fun p1 p2 -> mkAnd(p1, p2) r) l (mkTrue r)
 

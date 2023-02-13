@@ -101,6 +101,11 @@ val __temp_fast_implicits       : unit    -> bool
 val admit_smt_queries           : unit    -> bool
 val set_admit_smt_queries       : bool    -> unit
 val admit_except                : unit    -> option string
+val compat_pre_core_should_register : unit    -> bool
+val compat_pre_core_should_check : unit    -> bool
+val compat_pre_core_set         : unit    -> bool
+val compat_pre_typed_indexed_effects: unit -> bool
+val disallow_unification_guards : unit    -> bool
 val cache_checked_modules       : unit    -> bool
 val cache_off                   : unit    -> bool
 val print_cache_version         : unit    -> bool
@@ -227,6 +232,7 @@ val warn_default_effects        : unit    -> bool
 val with_saved_options          : (unit -> 'a) -> 'a
 val z3_exe                      : unit    -> string
 val z3_cliopt                   : unit    -> list string
+val z3_smtopt                   : unit    -> list string
 val z3_refresh                  : unit    -> bool
 val z3_rlimit                   : unit    -> int
 val z3_rlimit_factor            : unit    -> int

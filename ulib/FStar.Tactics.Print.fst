@@ -7,6 +7,11 @@ open FStar.Tactics.Builtins
 private
 let paren (s:string) : string = "(" ^ s ^ ")"
 
+(* Redefine bv_to_string, which is able to show the type of the bv when in TAC *)
+let bv_to_string (bv : bv) : Tac string =
+    let bvv = inspect_bv bv in
+    "(" ^ bvv.bv_ppname ^ ":" ^ term_to_string bvv.bv_sort ^ ")"
+
 (* TODO: making this a local definition in print_list fails to extract. *)
 private
 let rec print_list_aux (f:'a -> Tac string) (xs:list 'a) : Tac string =
@@ -86,10 +91,10 @@ and branch_to_ast_string (b:branch) : Tac string =
 
 and comp_to_ast_string (c:comp) : Tac string =
   match inspect_comp c with
-  | C_Total t u _ -> "Tot" ^ universe_to_ast_string u ^ term_to_ast_string t
-  | C_GTotal t u _ -> "GTot" ^ universe_to_ast_string u ^  term_to_ast_string t
+  | C_Total t -> "Tot " ^ term_to_ast_string t
+  | C_GTotal t -> "GTot " ^ term_to_ast_string t
   | C_Lemma pre post _ -> "Lemma " ^ term_to_ast_string pre ^ " " ^ term_to_ast_string post
-  | C_Eff us eff res _ ->
+  | C_Eff us eff res _ _ ->
     "Effect" ^ "<" ^ universes_to_ast_string us ^ "> " ^ paren (implode_qn eff ^ ", " ^ term_to_ast_string res)
 
 and const_to_ast_string (c:vconst) : Tac string =

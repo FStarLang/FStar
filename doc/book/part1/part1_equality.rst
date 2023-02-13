@@ -7,7 +7,8 @@ Equality is a subtle issue that pervades the design of all dependent
 type theories, and F* is no exception. In this first chapter, we
 briefly touch upon two different kinds of equality in F*, providing
 some basic information sufficient for the simplest usages. In a
-subsequent chapter, we'll cover equality in greater depth.
+:ref:`subsequent chapter <Part2_equality>`, we'll cover equality in
+much greater depth.
 
 Decidable equality and ``eqtype``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

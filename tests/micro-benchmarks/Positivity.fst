@@ -17,6 +17,8 @@ module Positivity
 
 open FStar.All
 
+
+
 type mlist (a:Type) =
   | MNil : mlist a
   | MCons: a -> nlist a -> mlist a
@@ -42,6 +44,7 @@ open FStar.ST
 noeq
 type t =
   | MkT : ref t -> t
+
 
 (*
  * #868
@@ -73,6 +76,7 @@ type t_t16 =
 
 assume val t_t17 ([@@@ strictly_positive] a:Type0) (b:Type0) : Type0
 
+
 //fails since we don't know if the second binder of t_t17 is positive
 [@@ expect_failure]
 noeq
@@ -94,6 +98,7 @@ let t_t19 a = a -> int
 
 let t_t19 a = list a
 
+
 (*
  * This type should be rejected since f may be instantiated with an arrow
  *   that could lead to proof of False, as shown below
@@ -111,13 +116,16 @@ type t_t20 (f:Type0 -> Type0) =
   | C201 : f (t_t20 f) -> t_t20 f
 #pop-options
 
+
 let f_false : Type0 -> Type0 = fun a -> (a -> squash False)
 let g : f_false (t_t20 f_false) =
    fun x ->
      match x with
      | C201 h -> h x
 
-let r1 : squash False = g (C201 g)
+// Thunk to avoid polluting the SMT context for the rest of the file with False
+let r1 (_:unit) : squash False = g (C201 g)
+
 
 (*
  * If inductive type parameters are marked strictly_positive,
@@ -179,6 +187,7 @@ type free (f:Type -> Type) (a:Type) : Type =
 //but we can use strictly positive annotation on the
 //  parameter of f, and instantiate it with functors that are positive in their argument
 //
+noeq
 type free (f:([@@@ strictly_positive] _:Type -> Type)) (a:Type) : Type =
   | Pure   : a -> free f a
   | Impure : f (free f a) -> free f a

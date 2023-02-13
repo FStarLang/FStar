@@ -970,6 +970,10 @@ let maybe_register_plugin (g:env_t) (se:sigelt) : list mlmodule1 =
            | _ -> []
            end
 
+let lb_irrelevant (g:env_t) (lb:letbinding) : bool =
+    Env.non_informative (tcenv_of_uenv g) lb.lbtyp && // result type is non informative
+    not (Term.is_arity g lb.lbtyp) &&  // but not a type definition
+    U.is_pure_or_ghost_effect lb.lbeff // and not top-level effectful
 
 (*****************************************************************************)
 (* Extracting the top-level definitions in a module                          *)
@@ -1002,6 +1006,10 @@ let rec extract_sig (g:env_t) (se:sigelt) : env_t * list mlmodule1 =
           failwith "impossible: trying to extract Sig_fail"
 
         | Sig_new_effect _ ->
+          g, []
+
+        (* Ignore all non-informative sigelts *)
+        | Sig_let ((_, lbs), _) when List.for_all (lb_irrelevant g) lbs ->
           g, []
 
         | Sig_declare_typ(lid, univs, t)  when Term.is_arity g t -> //lid is a type

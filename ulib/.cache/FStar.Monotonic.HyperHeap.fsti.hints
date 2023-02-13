@@ -1,6 +1,27 @@
 [
-  "\u007f¤XÓÎ.\u001cf¡\u0011ûžÏZÑq",
+  "q½z8yJ\"4\nõ\r\u007f\u0005[ˆÝ",
   [
+    [
+      "FStar.Monotonic.HyperHeap.rid_last_component",
+      1,
+      2,
+      1,
+      [
+        "@MaxFuel_assumption", "@MaxIFuel_assumption",
+        "@fuel_correspondence_FStar.List.Tot.Base.length.fuel_instrumented",
+        "@query", "constructor_distinct_Tm_unit", "disc_equation_Prims.Cons",
+        "equation_Prims.eqtype", "equation_Prims.nat",
+        "equation_with_fuel_FStar.List.Tot.Base.length.fuel_instrumented",
+        "function_token_typing_Prims.int", "int_inversion",
+        "kinding_FStar.Pervasives.Native.tuple2@tok",
+        "primitive_Prims.op_Equality", "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
+        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "typing_FStar.List.Tot.Base.length"
+      ],
+      0,
+      "41fdb9e7760207a6b32974d0ee6108fd"
+    ],
     [
       "FStar.Monotonic.HyperHeap.root_has_color_zero",
       1,
@@ -12,7 +33,7 @@
         "typing_FStar.Monotonic.HyperHeap.root"
       ],
       0,
-      "f5cdb392d523923fa2787ac8ec5c5739"
+      "cc968f84843c9b258305d1e3e9c6735c"
     ],
     [
       "FStar.Monotonic.HyperHeap.lemma_extends_not_root",
@@ -21,7 +42,7 @@
       1,
       [ "@query" ],
       0,
-      "d7a80c74762d7b4802b3fcaadbedd7a3"
+      "e9f57aff14c4e2b689e08f7f3cc49de0"
     ],
     [
       "FStar.Monotonic.HyperHeap.lemma_extends_only_parent",
@@ -30,7 +51,7 @@
       1,
       [ "@query", "lemma_FStar.Monotonic.HyperHeap.lemma_extends_not_root" ],
       0,
-      "e0ce54df148479abaf177962fd9d1c4b"
+      "c532402364c977d571cc7df9cd15f5d6"
     ],
     [
       "FStar.Monotonic.HyperHeap.lemma_modifies_just_trans",
@@ -61,7 +82,7 @@
         "typing_FStar.Set.union"
       ],
       0,
-      "1b4b3b9337e96974caed900bfbe8e1b9"
+      "3087954728ac95562bc0022d3f9883c7"
     ],
     [
       "FStar.Monotonic.HyperHeap.lemma_modifies_trans",
@@ -95,7 +116,7 @@
         "typing_FStar.Set.union"
       ],
       0,
-      "505705f202801f2812be919093ea5d67"
+      "40f3191d1898e6c6459693f3488b31a8"
     ],
     [
       "FStar.Monotonic.HyperHeap.extend_post",
@@ -104,7 +125,7 @@
       1,
       [ "@query" ],
       0,
-      "63a81304774e9c7f9e7ae2890ac76709"
+      "7b12786c27ae7a44a10fc0b4c8de3468"
     ]
   ]
 ]

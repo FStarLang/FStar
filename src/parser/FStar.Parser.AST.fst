@@ -61,7 +61,8 @@ type term' =
   | LetOpenRecord of term * term * term
   | Seq       of term * term
   | Bind      of ident * term * term
-  | If        of term * option match_returns_annotation * term * term
+  | If        of term * option ident (* is this a regular if or a if operator (i.e. [if*]) *)
+                      * option match_returns_annotation * term * term
   | Match     of term * option ident (* is this a regular match or a match operator (i.e. [match*]) *)
                       * option match_returns_annotation * list branch
   | TryWith   of term * list branch
@@ -131,6 +132,7 @@ and pattern' =
   | PatAscribed of pattern * (term * option term)
   | PatOr       of list pattern
   | PatOp       of ident
+  | PatVQuote   of term (* [`%foo], transformed into "X.Y.Z.foo" by the desugarer *)
 and pattern = {pat:pattern'; prange:range}
 
 and branch = (pattern * option term * term)
@@ -155,8 +157,8 @@ type expr = term
 type tycon =
   | TyconAbstract of ident * list binder * option knd
   | TyconAbbrev   of ident * list binder * option knd * term
-  | TyconRecord   of ident * list binder * option knd * list (ident * aqual * attributes_ * term)
-  | TyconVariant  of ident * list binder * option knd * list (ident * option term * bool) (* bool is whether it's using 'of' notation *)
+  | TyconRecord   of ident * list binder * option knd * attributes_ * list (ident * aqual * attributes_ * term)
+  | TyconVariant  of ident * list binder * option knd * list (ident * option term * bool * attributes_) (* bool is whether it's using 'of' notation *)
 
 type qualifier =
   | Private
@@ -479,6 +481,12 @@ let as_frag (ds:list decl) : inputFragment =
       ) ds;
       Inr ds
 
+// TODO: Move to something like FStar.Compiler.Util
+let strip_prefix (prefix s: string): option string
+  = if starts_with s prefix
+    then Some (substring_from s (String.length prefix))
+    else None
+
 let compile_op arity s r =
     let name_of_char = function
       |'&' -> "Amp"
@@ -502,7 +510,7 @@ let compile_op arity s r =
       |':' -> "Colon"
       |'$' -> "Dollar"
       |'.' -> "Dot"
-      | c -> raise_error (Fatal_UnexpectedOperatorSymbol, "Unexpected operator symbol: '" ^ string_of_char c ^ "'") r
+      | c -> "u" ^ (Util.string_of_int (Util.int_of_char c))
     in
     match s with
     | ".[]<-" -> "op_String_Assignment"
@@ -513,7 +521,11 @@ let compile_op arity s r =
     | ".()" -> "op_Array_Access"
     | ".[||]" -> "op_Brack_Lens_Access"
     | ".(||)" -> "op_Lens_Access"
-    | _ -> "op_"^ (String.concat "_" (List.map name_of_char (String.list_of_string s)))
+    | _ -> // handle let operators (i.e. [let?] or [and*])
+          let prefix, s = if starts_with s "let" || starts_with s "and"
+                          then substring s 0 3 ^ "_", substring_from s 3
+                          else "", s in
+          "op_" ^ prefix ^ String.concat "_" (List.map name_of_char (String.list_of_string s))
 
 let compile_op' s r =
   compile_op (-1) s r
@@ -541,6 +553,7 @@ let string_to_op s =
     | "Colon" -> Some (":", None)
     | "Dollar" -> Some ("$", None)
     | "Dot" -> Some (".", None)
+    | "let" | "and" -> Some (s, None)
     | _ -> None
   in
   match s with
@@ -556,7 +569,12 @@ let string_to_op s =
     if starts_with s "op_"
     then let s = split (substring_from s (String.length "op_")) "_" in
          match s with
-         | [op] -> name_of_op op
+         | [op] ->
+                if starts_with op "u"
+                then map_opt (safe_int_of_string (substring_from op 1)) (
+                       fun op -> (string_of_char (char_of_int op), None)
+                     )
+                else name_of_op op
          | _ ->
            let maybeop =
              List.fold_left (fun acc x -> match acc with
@@ -644,8 +662,9 @@ let rec term_to_string (x:term) = match x.tm with
   | Bind (id, t1, t2) ->
     Util.format3 "%s <- %s; %s" (string_of_id id) (term_to_string t1) (term_to_string t2)
 
-  | If(t1, ret_opt, t2, t3) ->
-    Util.format4 "if %s %sthen %s else %s"
+  | If(t1, op_opt, ret_opt, t2, t3) ->
+    Util.format5 "if%s %s %sthen %s else %s"
+      (match op_opt with | Some op -> string_of_id op | None -> "")
       (t1|> term_to_string)
       (match ret_opt with
        | None -> ""
@@ -860,6 +879,7 @@ and pat_to_string x = match x.pat with
   | PatWild (None, attrs) -> attr_list_to_string attrs ^ "_"
   | PatWild (_, attrs) -> "#" ^ (attr_list_to_string attrs) ^ "_" 
   | PatConst c -> C.const_to_string c
+  | PatVQuote t -> Util.format1 "`%%%s" (term_to_string t)
   | PatApp(p, ps) -> Util.format2 "(%s %s)" (p |> pat_to_string) (to_string_l " " pat_to_string ps)
   | PatTvar (i, aq, attrs)
   | PatVar (i,  aq, attrs) -> Util.format3 "%s%s%s"
@@ -892,7 +912,7 @@ let lids_of_let defs =  defs |> List.collect (fun (p, _) -> head_id_of_pat p)
 let id_of_tycon = function
   | TyconAbstract(i, _, _)
   | TyconAbbrev(i, _, _, _)
-  | TyconRecord(i, _, _, _)
+  | TyconRecord(i, _, _, _, _)
   | TyconVariant(i, _, _, _) -> (string_of_id i)
 
 let decl_to_string (d:decl) = match d.d with

@@ -58,6 +58,7 @@ val hide_reveal (#a: Type) (x: erased a)
 
 val reveal_hide (#a: Type) (x: a) : Lemma (ensures (reveal (hide x) == x)) [SMTPat (hide x)]
 
+
 /// The rest of this module includes several well-defined defined
 /// notions. They are not trusted.
 
@@ -74,16 +75,22 @@ let bind (#a #b: Type) (x: erased a) (f: (a -> Tot (erased b))) : Tot (erased b)
   let y = reveal x in
   f y
 
+unfold
+let (let@) (x:erased 'a) (f:('a -> Tot (erased 'b))) : Tot (erased 'b) = bind x f
+
 (** Unary map *)
 irreducible
 let elift1 (#a #b: Type) (f: (a -> GTot b)) (x: erased a)
-    : Tot (y: erased b {reveal y == f (reveal x)}) = xx <-- x ; return (f xx)
+    : Tot (y: erased b {reveal y == f (reveal x)}) =
+  let@ xx = x in return (f xx)
 
 (** Binary map *)
 irreducible
 let elift2 (#a #b #c: Type) (f: (a -> b -> GTot c)) (x: erased a) (y: erased b)
     : Tot (z: erased c {reveal z == f (reveal x) (reveal y)}) =
-  xx <-- x ; yy <-- y ; return (f xx yy)
+  let@ xx = x in
+  let@ yy = y in
+  return (f xx yy)
 
 (** Ternary map *)
 irreducible
@@ -94,7 +101,10 @@ let elift3
       (gb: erased b)
       (gc: erased c)
     : Tot (gd: erased d {reveal gd == f (reveal ga) (reveal gb) (reveal gc)}) =
-  a <-- ga ; b <-- gb ; c <-- gc ; return (f a b c)
+  let@ a = ga in
+  let@ b = gb in
+  let@ c = gc in
+  return (f a b c)
 
 (** Pushing a refinement type under the [erased] constructor *)
 let push_refinement #a (#p: (a -> Type0)) (r: erased a {p (reveal r)})

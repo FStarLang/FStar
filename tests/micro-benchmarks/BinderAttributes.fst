@@ -21,6 +21,9 @@ let f (#[@@@ description "x_imp"] x_imp:int) ([@@@ description "y"] y:string) : 
 let f2 (#[@@@ description "x_imp"]x_imp [@@@ description "y"]y : int) : Tot unit =
     ()
 
+let attributes_with_local_name (s: string)
+  = [@@@ description s] y:string -> unit
+
 type binder =
     {
         qual : string;
@@ -67,7 +70,7 @@ let rec binders_from_arrow (ty : T.term) : T.Tac binders =
     | T.Tv_Arrow b comp -> begin
         let ba = binder_from_term b in
         match T.inspect_comp comp with
-        | T.C_Total ty2 _ _ -> ba :: binders_from_arrow ty2
+        | T.C_Total ty2 -> ba :: binders_from_arrow ty2
         | _ -> T.fail "Unsupported computation type"
         end
     | T.Tv_FVar fv -> [] //last part
@@ -143,4 +146,13 @@ let _ =
         let bss = T.map (fun b -> binders_to_string b) b in
         let expected = [[{ name = "x_imp"; qual = "Implicit"; desc = Some "x_imp"; }; { name = "y"; qual = "Explicit"; desc = Some "y"; }]] in
         iter2 (fun ex bs -> validate ex bs) expected b
+    end
+
+let _ =
+    // Substitution within attributes
+    assert True by begin
+        let foo = "foo" in
+        let t = attributes_with_local_name foo in
+        let bs = binders_from_arrow (quote t) in
+        validate [{ name = "y"; qual = "Explicit"; desc = Some foo; }] bs
     end

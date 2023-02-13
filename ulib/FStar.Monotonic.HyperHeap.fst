@@ -42,6 +42,8 @@ let rid_freeable r =
 
 let root = hide []
 
+let root_last_component () = ()
+
 let lemma_root_has_color_zero _ = ()
 
 let root_is_not_freeable () = ()

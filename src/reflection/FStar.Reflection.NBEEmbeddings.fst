@@ -287,8 +287,8 @@ let rec e_pattern' () =
             mkConstruct ref_Pat_Var.fv [] [as_arg (embed e_bv cb bv)]
         | Pat_Wild bv ->
             mkConstruct ref_Pat_Wild.fv [] [as_arg (embed e_bv cb bv)]
-        | Pat_Dot_Term (bv, t) ->
-            mkConstruct ref_Pat_Dot_Term.fv [] [as_arg (embed e_bv cb bv); as_arg (embed e_term cb t)]
+        | Pat_Dot_Term eopt ->
+            mkConstruct ref_Pat_Dot_Term.fv [] [as_arg (embed (e_option e_term) cb eopt)]
     in
     let unembed_pattern cb (t : t) : option pattern =
         match t.nbe_t with
@@ -310,10 +310,9 @@ let rec e_pattern' () =
             BU.bind_opt (unembed e_bv cb bv) (fun bv ->
             Some <| Pat_Wild bv)
 
-        | Construct (fv, [], [(t, _); (bv, _)]) when S.fv_eq_lid fv ref_Pat_Dot_Term.lid ->
-            BU.bind_opt (unembed e_bv cb bv) (fun bv ->
-            BU.bind_opt (unembed e_term cb t) (fun t ->
-            Some <| Pat_Dot_Term (bv, t)))
+        | Construct (fv, [], [(eopt, _)]) when S.fv_eq_lid fv ref_Pat_Dot_Term.lid ->
+            BU.bind_opt (unembed (e_option e_term) cb eopt) (fun eopt ->
+            Some <| Pat_Dot_Term eopt)
 
         | _ ->
             Err.log_issue Range.dummyRange (Err.Warning_NotEmbedded, (BU.format1 "Not an embedded pattern: %s" (t_to_string t)));
@@ -606,43 +605,36 @@ let e_bv_view =
 let e_comp_view =
     let embed_comp_view cb (cv : comp_view) : t =
         match cv with
-        | C_Total (t, u, md) ->
+        | C_Total t ->
             mkConstruct ref_C_Total.fv [] [
-              as_arg (embed e_term cb t);
-              as_arg (embed e_universe cb u);
-              as_arg (embed (e_list e_term) cb md)]
+              as_arg (embed e_term cb t)]
 
-        | C_GTotal (t, u, md) ->
+        | C_GTotal t ->
             mkConstruct ref_C_GTotal.fv [] [
-              as_arg (embed e_term cb t);
-              as_arg (embed e_universe cb u);
-              as_arg (embed (e_list e_term) cb md)]
+              as_arg (embed e_term cb t)]
 
         | C_Lemma (pre, post, pats) ->
             mkConstruct ref_C_Lemma.fv [] [as_arg (embed e_term cb pre); as_arg (embed e_term cb post); as_arg (embed e_term cb pats)]
 
-        | C_Eff (us, eff, res, args) ->
+        | C_Eff (us, eff, res, args, decrs) ->
             mkConstruct ref_C_Eff.fv []
                 [ as_arg (embed (e_list e_universe) cb us)
                 ; as_arg (embed e_string_list cb eff)
                 ; as_arg (embed e_term cb res)
-                ; as_arg (embed (e_list e_argv) cb args)]
+                ; as_arg (embed (e_list e_argv) cb args)
+                ; as_arg (embed (e_list e_term) cb decrs)]
     in
     let unembed_comp_view cb (t : t) : option comp_view =
         match t.nbe_t with
-        | Construct (fv, _, [(md, _); (u, _); (t, _)])
+        | Construct (fv, _, [(t, _)])
           when S.fv_eq_lid fv ref_C_Total.lid ->
             BU.bind_opt (unembed e_term cb t) (fun t ->
-            BU.bind_opt (unembed e_universe cb u) (fun u ->
-            BU.bind_opt (unembed (e_list e_term) cb md) (fun md ->
-            Some <| C_Total (t, u, md))))
+            Some <| C_Total t)
 
-        | Construct (fv, _, [(md, _); (u, _); (t, _)])
+        | Construct (fv, _, [(t, _)])
           when S.fv_eq_lid fv ref_C_GTotal.lid ->
             BU.bind_opt (unembed e_term cb t) (fun t ->
-            BU.bind_opt (unembed e_universe cb u) (fun u ->
-            BU.bind_opt (unembed (e_list e_term) cb md) (fun md ->
-            Some <| C_GTotal (t, u, md))))
+            Some <| C_GTotal t)
 
         | Construct (fv, _, [(post, _); (pre, _); (pats, _)]) when S.fv_eq_lid fv ref_C_Lemma.lid ->
             BU.bind_opt (unembed e_term cb pre) (fun pre ->
@@ -650,13 +642,14 @@ let e_comp_view =
             BU.bind_opt (unembed e_term cb pats) (fun pats ->
             Some <| C_Lemma (pre, post, pats))))
 
-        | Construct (fv, _, [(args, _); (res, _); (eff, _); (us, _)])
+        | Construct (fv, _, [(decrs, _); (args, _); (res, _); (eff, _); (us, _)])
           when S.fv_eq_lid fv ref_C_Eff.lid ->
             BU.bind_opt (unembed (e_list e_universe) cb us) (fun us ->
             BU.bind_opt (unembed e_string_list cb eff) (fun eff ->
             BU.bind_opt (unembed e_term cb res) (fun res->
             BU.bind_opt (unembed (e_list e_argv) cb args) (fun args ->
-            Some <| C_Eff (us, eff, res, args)))))
+            BU.bind_opt (unembed (e_list e_term) cb decrs) (fun decrs ->
+            Some <| C_Eff (us, eff, res, args, decrs))))))
 
         | _ ->
             Err.log_issue Range.dummyRange (Err.Warning_NotEmbedded, (BU.format1 "Not an embedded comp_view: %s" (t_to_string t)));

@@ -14,6 +14,37 @@ Guidelines for the changelog:
 # Version 0.9.7.0
 
 ## Tactics & Reflection
+  * PR https://github.com/FStarLang/FStar/pull/2785 changes the reflection syntax
+    for computation types, by removing universe field from the Total and GTotal
+    comps. It also moves the decreases clause to the general C_Eff case.
+
+    This is a breaking change for the reflection clients, but the regressions should
+    only be syntactic.
+
+  * As a better fix for Bug2635, F* now has a memoizing core typechecker for total
+    (including ghost terms that are total) terms. The unification solutions, including
+    those computed in the tactics engine, are typechecked using this core typechecker.
+
+    This is a breaking change, since the core typechecker may fail to typecheck those
+    solutions, or produce SMT guards that, for example, may need to be handled by the
+    tactics.
+
+    There are a couple of ways to maintain backward compatibility.
+
+    There is a new command line option (also settable via `#set-options` in a file)
+    `--compat_pre_core <n>` , where n is either 0, 1, or 2. Value 0 is most permissive and
+    value 2 is most strict, with the metric being how much of the core typechecker is applied.
+
+    This flag is a global setting that applies "relaxed" treatment to all the unification
+    solutions. For controlling this more locally, there is a new tactic primitive
+    `with_compat_pre_core` (see https://github.com/FStarLang/FStar/blob/master/ulib/FStar.Tactics.Builtins.fsti),
+    that applies the compat pre core setting only to the input tactic invocation.
+    See https://github.com/FStarLang/FStar/blob/master/ulib/experimental/Steel.Effect.Common.fsti
+    for an example usage.
+
+  * Pat_Dot_Term now only has an `option term` as argument, where a `Some e` indicates that
+    the dot pattern has been resolved to `e`.
+
   * Pat_Cons, the case of constructed patterns, now takes an additional argument representing
     the universe instantiation of the constructor.
   
@@ -63,6 +94,12 @@ Guidelines for the changelog:
   * Friend modules (https://github.com/FStarLang/FStar/wiki/Friend-modules)
 
 ## Core typechecker
+  * PR https://github.com/FStarLang/FStar/pull/2760 introduces core typechecking for
+    implicits introduced for application of indexed effects combinators. This is a
+    breaking change, since indexed effects clients are subject to stricter typechecking.
+
+    See the PR description for more details.
+
   * Cf. #2641, F* now supports only type-based reasoning of reification of indexed
     effects. See https://github.com/FStarLang/FStar/issues/2641 for more discussions
     and associated pull request. This may be a breaking change for clients relying on
@@ -227,6 +264,48 @@ Guidelines for the changelog:
      provided (using UInt128).
 
 ## Syntax
+
+   * PR #2727 allows for custom unicode operators. As long as a
+     character belongs to the ["Math Symbol" unicode
+     category](https://www.compart.com/unicode/category/sm), it is
+     seen as a right-associative binary operator. Example:
+	 ```fstar
+	 let ( ∈ ) = List.Tot.memP
+	 let _ = assert_norm (3 ∈ [1;2;3;4])
+	 ```
+	 
+	 See `tests/micro-benchmarks/UnicodeOperators.fst` for more
+     examples.
+    
+   * PR #2745 adds support for `if` operators: the syntax `if* a then
+     ...` (with `*` an operator) is now accepted and desugared as
+     `let* [c] = a in if [c] then ...`.
+
+   * PR #2671 allows operators as field names in record expressions
+     and record type declaration. Example:
+
+	 ```fstar
+	 type foo = { ( ^ ): int  }
+	 let _: foo = { ( ^ ) = 3 }
+	 ```
+
+	 See `tests/micro-benchmarks/RecordFieldOperator.fst` for details.
+
+   * PR #2670 makes F*'s parser accept unparenthesised record
+     expressions on function application. `f {x = 1}` is now legal
+     F\*, while before one was forced to write `f ({x = 1})`.
+
+	   Note that in the context of a (possible) refinement, this is not
+     allowed since it is a parser conflict.
+
+   * PR #2669 allows name quotes in patterns, i.e. ``%`foo`` is a
+     valid pattern and is desugared to the constant string
+     pattern `"X.Y.Z.foo"`, with `X.Y.Z` being `foo`'s module.
+
+   * PR #2686 forbids the sequence `//` in operators. For instance,
+     `+//` used to be a legal operator, it is not the case anymore,
+     since it is ambiguous with the comment syntax.
+
    * PR #2644 introduces monadic let operators in the surface
      syntax. One can now write:
 
@@ -241,6 +320,11 @@ Guidelines for the changelog:
 		match? b with
 		...
 	 ```
+
+     Where `?` is any operator sequence; there is also support for
+     `and?`, `;?`, etc. See [example module
+     `MonadicLetBindings`](./examples/misc/MonadicLetBindings.fst) for
+     more details.
 
    * PR #2603 introduces universes in the reflection syntax.
      It is a potentially breaking change for reflection clients.

@@ -14,7 +14,7 @@
    limitations under the License.
 *)
 module Steel.ST.Loops
-module U32 = FStar.UInt32
+module US = FStar.SizeT
 open Steel.ST.Util
 open Steel.ST.Coercions
 module L = Steel.Loops
@@ -24,30 +24,36 @@ open FStar.Ghost
 
 (* This module provides some common iterative looping combinators *)
 
-let for_loop' (start:U32.t)
-              (finish:U32.t { U32.v start <= U32.v finish })
+let for_loop' (start:US.t)
+              (finish:US.t { US.v start <= US.v finish })
               (inv: nat_at_most finish -> vprop)
               ($body:
                     (i:u32_between start finish ->
                           STT unit
-                          (inv (U32.v i))
-                          (fun _ -> inv (U32.v i + 1))))
+                          (inv (US.v i))
+                          (fun _ -> inv (US.v i + 1))))
   : SE.SteelT unit
-      (inv (U32.v start))
-      (fun _ -> inv (U32.v finish))
-  = L.for_loop start finish inv body //lift works for body
+      (inv (US.v start))
+      (fun _ -> inv (US.v finish))
+  = let body (i:u32_between start finish)
+      : SE.SteelT unit
+                  (inv (US.v i))
+                  (fun _ -> inv (US.v i + 1))
+      = body i
+    in
+    L.for_loop start finish inv body //lift works for body; NS 12/10: Need to eta expand for the lift
 
-let for_loop (start:U32.t)
-             (finish:U32.t { U32.v start <= U32.v finish })
+let for_loop (start:US.t)
+             (finish:US.t { US.v start <= US.v finish })
              (inv: nat_at_most finish -> vprop)
              (body:
                     (i:u32_between start finish ->
                           STT unit
-                          (inv (U32.v i))
-                          (fun _ -> inv (U32.v i + 1))))
+                          (inv (US.v i))
+                          (fun _ -> inv (US.v i + 1))))
   : STT unit
-      (inv (U32.v start))
-      (fun _ -> inv (U32.v finish))
+      (inv (US.v start))
+      (fun _ -> inv (US.v finish))
   = coerce_steel (fun _ -> for_loop' start finish inv body); ()
 
 let elim_h_exists (#a:Type) #o (p:a -> vprop)
@@ -73,7 +79,7 @@ let coerce_cond (inv: Ghost.erased bool -> vprop)
                                    (exists_ inv)
                                    (fun b -> inv b)))
                 (_:unit)
-  : STT bool (SEA.h_exists inv) (fun b -> inv b)
+  : SE.SteelT bool (SEA.h_exists inv) (fun b -> inv b)
   = let w = elim_h_exists inv in
     intro_exists_erased w inv;
     cond ()
@@ -83,7 +89,7 @@ let coerce_body (inv: Ghost.erased bool -> vprop)
                                    (inv true)
                                    (fun _ -> exists_ inv)))
                 (_:unit)
-  : STT unit (inv true) (fun _ -> SEA.h_exists inv)
+  : SE.SteelT unit (inv true) (fun _ -> SEA.h_exists inv)
   = let b = body () in
     let w = elim_exists () in
     intro_h_exists w inv;

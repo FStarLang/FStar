@@ -1,9 +1,9 @@
 module PointStruct
 
-open Steel.C.PCM
+open Steel.C.Model.PCM
 open Steel.C.Opt
-open Steel.C.Connection
-open Steel.C.Struct
+open Steel.C.Model.Connection
+open Steel.C.Model.Struct
 open Steel.C.StructLiteral
 open Steel.C.Typedef
 open FStar.FunctionalExtensionality

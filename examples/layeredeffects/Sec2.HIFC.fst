@@ -20,14 +20,27 @@ let bind_hst (a b:Type)
   : hst b (fun s0 -> p s0 /\ (forall x s1. q s0 x s1 ==> r x s1))
            (fun s0 r s2 -> (exists x s1. q s0 x s1 /\ s x s1 r s2))
   = fun s0 -> let v, s1 = x s0 in y v s1
+let subcomp_hst (a:Type) p q r s (x:hst a p q)
+  : Pure (hst a r s)
+         (requires (forall st. r st ==> p st) /\
+                   (forall st0 res st1. q st0 res st1 ==> s st0 res st1))
+         (ensures fun _ -> True)
+  = x
+let if_then_else_hst (a:Type) p q r s (x:hst a p q) (y:hst a r s) (b:bool) : Type =
+  hst a (fun st -> (b ==> p st) /\ ((~ b) ==> r st))
+        (fun st0 res st1 -> (b ==> q st0 res st1) /\ ((~ b) ==> s st0 res st1))
 
-layered_effect {
-  HST : a:Type -> p:pre -> q:post a -> Effect
-  with
+effect {
+  HST (a:Type) (p:pre) (q:post a)
+  with {
     repr = hst;
     return = return_hst;
-    bind = bind_hst
+    bind = bind_hst;
+    subcomp = subcomp_hst;
+    if_then_else = if_then_else_hst
+  }
 }
+
 
 (*** Now, HIFC ***)
 
@@ -276,6 +289,7 @@ let rec add_source_monotonic (from to:loc) (r:label) (fs:flows)
     | [] -> ()
     | _::tl -> add_source_monotonic from to r tl
 
+#push-options "--warn_error -271"  // intentional empty SMTPat
 let has_flow_soundness #a #r #w #fs #p #q (f:hifc a r w fs p q)
                        (from to:loc) (s:store{p s}) (k:int{p (upd s from k)})
     : Lemma (requires
@@ -292,6 +306,7 @@ let has_flow_soundness #a #r #w #fs #p #q (f:hifc a r w fs p q)
          assert (no_leakage f from to)
       in
       ()
+#pop-options
 
 let bind_hst_no_leakage (#a #b:Type)
                          (#w0 #r0 #w1 #r1:label)
@@ -518,6 +533,7 @@ let assoc_hst (w0, r0, fs0) (w1, r1, fs1) (w2, r2, fs2) =
 
 (* Adding a frame combinator, refining the Hoare postcondition with 
    the interpretation of the write index *)
+#push-options "--warn_error -271"  // intentional empty SMTPat
 let frame (a:Type) (r w:label) (fs:flows) #p #q (f:hifc a r w fs p q)
   : hifc a r w fs p (fun s0 x s1 -> q s0 x s1 /\ modifies w s0 s1)
   = let aux (s0:store{p s0}) (l:loc{~(Set.mem l w)})
@@ -547,14 +563,17 @@ let frame (a:Type) (r w:label) (fs:flows) #p #q (f:hifc a r w fs p q)
     in
     assert (respects g fs);
     g
-
+#pop-options
 
 (*** And there we have our bind for hifc ***)
 (* It is similar to pre_bind, but we integrate the use of `frame`
    so that all HIFC computations are auto-framed *)
 let bind (a b:Type)
-         (r0 w0 r1 w1:label) (fs0 fs1:flows)
-         #p #q #r #s
+         (r0 w0:label)
+         (fs0:flows)
+         (p:pre) (q:post a)
+         (r1 w1:label) (fs1:flows)
+         (r:a -> pre) (s:a -> post b)
          (x:hifc a r0 w0 fs0 p q)
          (y: (x:a -> hifc b r1 w1 fs1 (r x) (s x)))
   : hifc b (union r0 r1) (union w0 w1) (fs0 @ add_source r0 ((bot, w1)::fs1))
@@ -603,7 +622,7 @@ let norm_spec_inv (p:Type)
   = ()
 
 (* A subsumption rule for hifc *)
-let sub_hifc (a:Type) (r0 w0 r1 w1:label) #p #q #p' #q' (fs0 fs1:flows) 
+let sub_hifc (a:Type) (r0 w0:label) (fs0:flows) p q (r1 w1:label) (fs1:flows) #p' #q'
              (f:hifc a r0 w0 fs0 p q)
   : Pure (hifc a r1 w1 fs1 p' q')
          (requires
@@ -649,6 +668,7 @@ let rec append_memP #a (x:a) (l0 l1:list a)
 
     
 (* An auxiliary lemma needed to prove if_then_else sound *)
+#push-options "--warn_error -271"  // intentional empty SMTPat
 let weaken_flows_append (fs fs':flows)
   : Lemma (ensures (norm [delta;iota;zeta] (fs `flows_included_in` (fs @ fs')) /\
                    (norm [delta;iota;zeta] (fs' `flows_included_in` (fs @ fs')))))
@@ -669,26 +689,22 @@ let weaken_flows_append (fs fs':flows)
     in
     norm_spec_inv (fs `flows_included_in` (fs @ fs'));
     norm_spec_inv (fs' `flows_included_in` (fs @ fs'))
+#pop-options
 
 (*** We now create our HIFC effect *)
-[@@allow_informative_binders]
+
 total
 reifiable
 reflectable
-layered_effect {
-  HIFC : a:Type ->
-        reads:label ->
-        writes:label ->
-        flows:flows ->
-        p:pre ->
-        q:(store -> a -> store -> Type0) ->
-        Effect
-  with
+effect {
+  HIFC (a:Type) (reads:label) (writes:label) (flows:flows) (p:pre) (q:post a)
+  with {
     repr = hifc;
-    return = return;
-    bind = bind;
+    return;
+    bind;
     subcomp = sub_hifc;
     if_then_else = if_then_else
+  }
 }
 
 (* reflecting actions into it *)
@@ -705,13 +721,13 @@ let write (l:loc) (x:int)
 
 (* This is a technical bit to lift the F*'s WP-calculus of PURE
    computations into the Hoare types of HIFC *)
-let u : Type = unit
-let lift_PURE_HIFC (a:Type) (wp:pure_wp a) (f:eqtype_as_type unit -> PURE a wp)
+let lift_PURE_HIFC (a:Type) (wp:pure_wp a) (f:unit -> PURE a wp)
   : Pure (hifc a bot bot [] (fun _ -> True) (fun s0 _ s1 -> s0 == s1))
       (requires wp (fun _ -> True))
       (ensures fun _ -> True)
   = FStar.Monotonic.Pure.elim_pure_wp_monotonicity_forall ();
     return a (f ())
+
 sub_effect PURE ~> HIFC = lift_PURE_HIFC
 
 (* reflecting the flow refinement into the effect *)
@@ -927,7 +943,7 @@ let ist_exn a w r fs (p:pre) (q:post a) =
                  | Some x -> q s0 x s1)
 
 
-let lift_ist_hst a w r fs p q (x:hifc a r w fs p q) 
+let lift_ist_hst a r w fs p q (x:hifc a r w fs p q) 
   : hst a p (fun s0 x s1 -> q s0 x s1 /\ modifies w s0 s1) 
   = frame _ _ _ _ x
 sub_effect HIFC ~> HST = lift_ist_hst

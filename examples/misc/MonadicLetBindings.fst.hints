@@ -1,14 +1,14 @@
 [
-  "IŽàä*–\u0017]“ÓsÆª”K„",
+  "š_a¦Ú\u0003\u0015GÑÒTM\\‚Hÿ",
   [
     [
-      "MonadicLetBindings.let_op_Question",
+      "MonadicLetBindings.op_let_Question",
       1,
       2,
       1,
       [ "@query", "lemma_FStar.Pervasives.invertOption" ],
       0,
-      "ee51da2ec0d0ae3ad59f0439a6f2b51e"
+      "206d65c3d73db8f0ccd5d8cefcb0f9df"
     ],
     [
       "MonadicLetBindings.option_example",
@@ -17,25 +17,52 @@
       1,
       [ "@MaxIFuel_assumption", "@query", "bool_inversion" ],
       0,
-      "5c353797e8a6958bdd41ba57d459c067"
+      "68c631ce97374ebb59b40cf6bda10a38"
     ],
     [
-      "MonadicLetBindings.uu___38",
+      "MonadicLetBindings.sequence_example",
+      1,
+      2,
+      1,
+      [ "@query", "primitive_Prims.op_Equality" ],
+      0,
+      "a653bbefbb9174d41d6fdb833c41aef0"
+    ],
+    [
+      "MonadicLetBindings.uu___45",
       1,
       2,
       1,
       [ "@query" ],
       0,
-      "088cdafd73cb8be30494cc14ffde89e6"
+      "a7b7053bba5edb79ce379bf7a445ba83"
     ],
     [
-      "MonadicLetBindings.uu___39",
+      "MonadicLetBindings.uu___46",
       1,
       2,
       1,
       [ "@query" ],
       0,
-      "fec768fadb21f582c09b5f817441bdbb"
+      "7f70eaa4dcf09f710ec386432d384551"
+    ],
+    [
+      "MonadicLetBindings.sugared2",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "979c91fb740fc4984f4cf391b8181b0e"
+    ],
+    [
+      "MonadicLetBindings.desugared2",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "78016f358d0f7b080b271f0328ded1f8"
     ],
     [
       "MonadicLetBindings.zip",
@@ -49,25 +76,25 @@
         "subterm_ordering_Prims.Cons"
       ],
       0,
-      "e914354a0ac8451c57c224f5e961945c"
+      "ef5c14661674b5ec87e55d8931b9e21e"
     ],
     [
-      "MonadicLetBindings.uu___61",
+      "MonadicLetBindings.uu___119",
       1,
       2,
       1,
       [ "@query" ],
       0,
-      "c4f729d1acc24bcd667d0098bb44333f"
+      "44d1378fcb136b4752fe07c84779ce2c"
     ],
     [
-      "MonadicLetBindings.uu___65",
+      "MonadicLetBindings.uu___123",
       1,
       2,
       1,
       [ "@query" ],
       0,
-      "357d9601e7e8bae51e3de7c83179e0ca"
+      "3141bde42c41305f774cd468603a5281"
     ],
     [
       "MonadicLetBindings.exp",
@@ -76,7 +103,7 @@
       1,
       [ "@query" ],
       0,
-      "26b53303c1d7cbe381cd31ef78d5c823"
+      "7d9a47aef4c29619879705f8bd6df76b"
     ],
     [
       "MonadicLetBindings.__proj__Const__item___0",
@@ -88,7 +115,7 @@
         "refinement_interpretation_Tm_refine_d405158072015f458f791f5ac15aeb94"
       ],
       0,
-      "81fb9728d86a88b0a0acea3c51ebe329"
+      "b8aecb33d16f509d640a39217a1d042c"
     ],
     [
       "MonadicLetBindings.__proj__Addition__item___0",
@@ -100,7 +127,7 @@
         "refinement_interpretation_Tm_refine_63574e1869a11ca1d9c7d14d978c92a7"
       ],
       0,
-      "57b1ff96de65c10f998733a313578c91"
+      "2c24418377e33fe5acf04f5c8a179ecb"
     ],
     [
       "MonadicLetBindings.__proj__Addition__item___1",
@@ -112,7 +139,7 @@
         "refinement_interpretation_Tm_refine_63574e1869a11ca1d9c7d14d978c92a7"
       ],
       0,
-      "6a1ffa424cf794547459604eb67d7f2f"
+      "ca96c6d41ba10b170b6da8b03888b62a"
     ],
     [
       "MonadicLetBindings.__proj__Division__item___0",
@@ -124,7 +151,7 @@
         "refinement_interpretation_Tm_refine_217c480e43cb68047d7a89fd94e54252"
       ],
       0,
-      "b0e27bbb203703d0d53247619879db12"
+      "e316dbb91aa39699f096d3795b141120"
     ],
     [
       "MonadicLetBindings.__proj__Division__item___1",
@@ -136,7 +163,7 @@
         "refinement_interpretation_Tm_refine_217c480e43cb68047d7a89fd94e54252"
       ],
       0,
-      "61b1be7f35cbbc3bccf500549ecea850"
+      "c343442b5b6dac28ae249746898c78db"
     ],
     [
       "MonadicLetBindings.eval",
@@ -156,7 +183,7 @@
         "subterm_ordering_MonadicLetBindings.Division"
       ],
       0,
-      "54627cbc2db2d3b340824a0171efd56e"
+      "90f50a1deb0aa2cbe6b3bf646721db27"
     ]
   ]
 ]

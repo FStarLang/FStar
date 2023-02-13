@@ -243,7 +243,6 @@ type raw_error =
   | Fatal_UnexpectedModuleDeclaration
   | Fatal_UnexpectedNumberOfUniverse
   | Fatal_UnexpectedNumericLiteral
-  | Fatal_UnexpectedOperatorSymbol
   | Fatal_UnexpectedPattern
   | Fatal_UnexpectedPosition
   | Fatal_UnExpectedPreCondition
@@ -391,7 +390,10 @@ type raw_error =
   | Error_UnexpectedTypeclassInstance
   | Warning_AmbiguousResolveImplicitsHook
   | Warning_SplitAndRetryQueries
-
+  | Warning_DeprecatedLightDoNotation
+  | Warning_FailedToCheckInitialTacticGoal
+  | Warning_Adhoc_IndexedEffect_Combinator
+  
 type flag = error_flag
 type error_setting = raw_error * error_flag * int
 let default_settings : list error_setting =
@@ -598,7 +600,6 @@ let default_settings : list error_setting =
     Fatal_UnexpectedModuleDeclaration                 , CFatal, 199;
     Fatal_UnexpectedNumberOfUniverse                  , CFatal, 200;
     Fatal_UnexpectedNumericLiteral                    , CFatal, 201;
-    Fatal_UnexpectedOperatorSymbol                    , CFatal, 202;
     Fatal_UnexpectedPattern                           , CFatal, 203;
     Fatal_UnexpectedPosition                          , CFatal, 204;
     Fatal_UnExpectedPreCondition                      , CFatal, 205;
@@ -745,6 +746,9 @@ let default_settings : list error_setting =
     Error_UnexpectedTypeclassInstance                 , CAlwaysError, 347;
     Warning_AmbiguousResolveImplicitsHook             , CWarning, 348;    
     Warning_SplitAndRetryQueries                      , CWarning, 349;
+    Warning_DeprecatedLightDoNotation                 , CWarning, 350;
+    Warning_FailedToCheckInitialTacticGoal            , CSilent,  351;
+    Warning_Adhoc_IndexedEffect_Combinator            , CWarning, 352;
     ]
 
 let lookup_error settings e =

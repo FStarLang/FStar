@@ -49,8 +49,9 @@ type term' =
   | LetOpenRecord of (term * term * term) 
   | Seq of (term * term) 
   | Bind of (FStar_Ident.ident * term * term) 
-  | If of (term * (FStar_Ident.ident FStar_Pervasives_Native.option * term *
-  Prims.bool) FStar_Pervasives_Native.option * term * term) 
+  | If of (term * FStar_Ident.ident FStar_Pervasives_Native.option *
+  (FStar_Ident.ident FStar_Pervasives_Native.option * term * Prims.bool)
+  FStar_Pervasives_Native.option * term * term) 
   | Match of (term * FStar_Ident.ident FStar_Pervasives_Native.option *
   (FStar_Ident.ident FStar_Pervasives_Native.option * term * Prims.bool)
   FStar_Pervasives_Native.option * (pattern * term
@@ -128,6 +129,7 @@ and pattern' =
   | PatAscribed of (pattern * (term * term FStar_Pervasives_Native.option)) 
   | PatOr of pattern Prims.list 
   | PatOp of FStar_Ident.ident 
+  | PatVQuote of term 
 and pattern = {
   pat: pattern' ;
   prange: FStar_Compiler_Range.range }
@@ -222,8 +224,9 @@ let (uu___is_If : term' -> Prims.bool) =
   fun projectee -> match projectee with | If _0 -> true | uu___ -> false
 let (__proj__If__item___0 :
   term' ->
-    (term * (FStar_Ident.ident FStar_Pervasives_Native.option * term *
-      Prims.bool) FStar_Pervasives_Native.option * term * term))
+    (term * FStar_Ident.ident FStar_Pervasives_Native.option *
+      (FStar_Ident.ident FStar_Pervasives_Native.option * term * Prims.bool)
+      FStar_Pervasives_Native.option * term * term))
   = fun projectee -> match projectee with | If _0 -> _0
 let (uu___is_Match : term' -> Prims.bool) =
   fun projectee -> match projectee with | Match _0 -> true | uu___ -> false
@@ -523,6 +526,11 @@ let (uu___is_PatOp : pattern' -> Prims.bool) =
   fun projectee -> match projectee with | PatOp _0 -> true | uu___ -> false
 let (__proj__PatOp__item___0 : pattern' -> FStar_Ident.ident) =
   fun projectee -> match projectee with | PatOp _0 -> _0
+let (uu___is_PatVQuote : pattern' -> Prims.bool) =
+  fun projectee ->
+    match projectee with | PatVQuote _0 -> true | uu___ -> false
+let (__proj__PatVQuote__item___0 : pattern' -> term) =
+  fun projectee -> match projectee with | PatVQuote _0 -> _0
 let (__proj__Mkpattern__item__pat : pattern -> pattern') =
   fun projectee -> match projectee with | { pat; prange;_} -> pat
 let (__proj__Mkpattern__item__prange : pattern -> FStar_Compiler_Range.range)
@@ -565,11 +573,11 @@ type tycon =
   | TyconAbbrev of (FStar_Ident.ident * binder Prims.list * knd
   FStar_Pervasives_Native.option * term) 
   | TyconRecord of (FStar_Ident.ident * binder Prims.list * knd
-  FStar_Pervasives_Native.option * (FStar_Ident.ident * aqual * attributes_ *
-  term) Prims.list) 
+  FStar_Pervasives_Native.option * attributes_ * (FStar_Ident.ident * aqual *
+  attributes_ * term) Prims.list) 
   | TyconVariant of (FStar_Ident.ident * binder Prims.list * knd
   FStar_Pervasives_Native.option * (FStar_Ident.ident * term
-  FStar_Pervasives_Native.option * Prims.bool) Prims.list) 
+  FStar_Pervasives_Native.option * Prims.bool * attributes_) Prims.list) 
 let (uu___is_TyconAbstract : tycon -> Prims.bool) =
   fun projectee ->
     match projectee with | TyconAbstract _0 -> true | uu___ -> false
@@ -592,8 +600,8 @@ let (uu___is_TyconRecord : tycon -> Prims.bool) =
 let (__proj__TyconRecord__item___0 :
   tycon ->
     (FStar_Ident.ident * binder Prims.list * knd
-      FStar_Pervasives_Native.option * (FStar_Ident.ident * aqual *
-      attributes_ * term) Prims.list))
+      FStar_Pervasives_Native.option * attributes_ * (FStar_Ident.ident *
+      aqual * attributes_ * term) Prims.list))
   = fun projectee -> match projectee with | TyconRecord _0 -> _0
 let (uu___is_TyconVariant : tycon -> Prims.bool) =
   fun projectee ->
@@ -602,7 +610,7 @@ let (__proj__TyconVariant__item___0 :
   tycon ->
     (FStar_Ident.ident * binder Prims.list * knd
       FStar_Pervasives_Native.option * (FStar_Ident.ident * term
-      FStar_Pervasives_Native.option * Prims.bool) Prims.list))
+      FStar_Pervasives_Native.option * Prims.bool * attributes_) Prims.list))
   = fun projectee -> match projectee with | TyconVariant _0 -> _0
 type qualifier =
   | Private 
@@ -1455,8 +1463,19 @@ let (as_frag : decl Prims.list -> inputFragment) =
                            "Unexpected module declaration") r
                    | uu___4 -> ()) ds2;
               FStar_Pervasives.Inr ds2))
-let (compile_op :
-  Prims.int -> Prims.string -> FStar_Compiler_Range.range -> Prims.string) =
+let (strip_prefix :
+  Prims.string -> Prims.string -> Prims.string FStar_Pervasives_Native.option)
+  =
+  fun prefix ->
+    fun s ->
+      if FStar_Compiler_Util.starts_with s prefix
+      then
+        let uu___ =
+          FStar_Compiler_Util.substring_from s (FStar_String.length prefix) in
+        FStar_Pervasives_Native.Some uu___
+      else FStar_Pervasives_Native.None
+let compile_op : 'uuuuu . Prims.int -> Prims.string -> 'uuuuu -> Prims.string
+  =
   fun arity ->
     fun s ->
       fun r ->
@@ -1484,11 +1503,10 @@ let (compile_op :
           | 36 -> "Dollar"
           | 46 -> "Dot"
           | c ->
-              FStar_Errors.raise_error
-                (FStar_Errors.Fatal_UnexpectedOperatorSymbol,
-                  (Prims.op_Hat "Unexpected operator symbol: '"
-                     (Prims.op_Hat (FStar_Compiler_Util.string_of_char c) "'")))
-                r in
+              let uu___1 =
+                FStar_Compiler_Util.string_of_int
+                  (FStar_Compiler_Util.int_of_char c) in
+              Prims.op_Hat "u" uu___1 in
         match s with
         | ".[]<-" -> "op_String_Assignment"
         | ".()<-" -> "op_Array_Assignment"
@@ -1500,13 +1518,30 @@ let (compile_op :
         | ".(||)" -> "op_Lens_Access"
         | uu___ ->
             let uu___1 =
-              let uu___2 =
-                let uu___3 = FStar_String.list_of_string s in
-                FStar_Compiler_List.map name_of_char uu___3 in
-              FStar_String.concat "_" uu___2 in
-            Prims.op_Hat "op_" uu___1
-let (compile_op' :
-  Prims.string -> FStar_Compiler_Range.range -> Prims.string) =
+              if
+                (FStar_Compiler_Util.starts_with s "let") ||
+                  (FStar_Compiler_Util.starts_with s "and")
+              then
+                let uu___2 =
+                  let uu___3 =
+                    FStar_Compiler_Util.substring s Prims.int_zero
+                      (Prims.of_int (3)) in
+                  Prims.op_Hat uu___3 "_" in
+                let uu___3 =
+                  FStar_Compiler_Util.substring_from s (Prims.of_int (3)) in
+                (uu___2, uu___3)
+              else ("", s) in
+            (match uu___1 with
+             | (prefix, s1) ->
+                 let uu___2 =
+                   let uu___3 =
+                     let uu___4 =
+                       let uu___5 = FStar_String.list_of_string s1 in
+                       FStar_Compiler_List.map name_of_char uu___5 in
+                     FStar_String.concat "_" uu___4 in
+                   Prims.op_Hat prefix uu___3 in
+                 Prims.op_Hat "op_" uu___2)
+let compile_op' : 'uuuuu . Prims.string -> 'uuuuu -> Prims.string =
   fun s -> fun r -> compile_op (~- Prims.int_one) s r
 let (string_to_op :
   Prims.string ->
@@ -1559,6 +1594,10 @@ let (string_to_op :
           FStar_Pervasives_Native.Some ("$", FStar_Pervasives_Native.None)
       | "Dot" ->
           FStar_Pervasives_Native.Some (".", FStar_Pervasives_Native.None)
+      | "let" ->
+          FStar_Pervasives_Native.Some (s, FStar_Pervasives_Native.None)
+      | "and" ->
+          FStar_Pervasives_Native.Some (s, FStar_Pervasives_Native.None)
       | uu___1 -> FStar_Pervasives_Native.None in
     match s with
     | "op_String_Assignment" ->
@@ -1588,7 +1627,19 @@ let (string_to_op :
                 (FStar_String.length "op_") in
             FStar_Compiler_Util.split uu___1 "_" in
           (match s1 with
-           | op::[] -> name_of_op op
+           | op::[] ->
+               if FStar_Compiler_Util.starts_with op "u"
+               then
+                 let uu___1 =
+                   let uu___2 =
+                     FStar_Compiler_Util.substring_from op Prims.int_one in
+                   FStar_Compiler_Util.safe_int_of_string uu___2 in
+                 FStar_Compiler_Util.map_opt uu___1
+                   (fun op1 ->
+                      ((FStar_Compiler_Util.string_of_char
+                          (FStar_Compiler_Util.char_of_int op1)),
+                        FStar_Pervasives_Native.None))
+               else name_of_op op
            | uu___1 ->
                let maybeop =
                  let uu___2 = FStar_Compiler_List.map name_of_op s1 in
@@ -1752,25 +1803,29 @@ let rec (term_to_string : term -> Prims.string) =
         let uu___1 = term_to_string t1 in
         let uu___2 = term_to_string t2 in
         FStar_Compiler_Util.format3 "%s <- %s; %s" uu___ uu___1 uu___2
-    | If (t1, ret_opt, t2, t3) ->
-        let uu___ = FStar_Compiler_Effect.op_Bar_Greater t1 term_to_string in
-        let uu___1 =
+    | If (t1, op_opt, ret_opt, t2, t3) ->
+        let uu___ =
+          match op_opt with
+          | FStar_Pervasives_Native.Some op -> FStar_Ident.string_of_id op
+          | FStar_Pervasives_Native.None -> "" in
+        let uu___1 = FStar_Compiler_Effect.op_Bar_Greater t1 term_to_string in
+        let uu___2 =
           match ret_opt with
           | FStar_Pervasives_Native.None -> ""
           | FStar_Pervasives_Native.Some (as_opt, ret, use_eq) ->
               let s = if use_eq then "returns$" else "returns" in
-              let uu___2 =
+              let uu___3 =
                 match as_opt with
                 | FStar_Pervasives_Native.None -> ""
                 | FStar_Pervasives_Native.Some as_ident ->
-                    let uu___3 = FStar_Ident.string_of_id as_ident in
-                    FStar_Compiler_Util.format1 " as %s " uu___3 in
-              let uu___3 = term_to_string ret in
-              FStar_Compiler_Util.format3 "%s%s %s " uu___2 s uu___3 in
-        let uu___2 = FStar_Compiler_Effect.op_Bar_Greater t2 term_to_string in
-        let uu___3 = FStar_Compiler_Effect.op_Bar_Greater t3 term_to_string in
-        FStar_Compiler_Util.format4 "if %s %sthen %s else %s" uu___ uu___1
-          uu___2 uu___3
+                    let uu___4 = FStar_Ident.string_of_id as_ident in
+                    FStar_Compiler_Util.format1 " as %s " uu___4 in
+              let uu___4 = term_to_string ret in
+              FStar_Compiler_Util.format3 "%s%s %s " uu___3 s uu___4 in
+        let uu___3 = FStar_Compiler_Effect.op_Bar_Greater t2 term_to_string in
+        let uu___4 = FStar_Compiler_Effect.op_Bar_Greater t3 term_to_string in
+        FStar_Compiler_Util.format5 "if%s %s %sthen %s else %s" uu___ uu___1
+          uu___2 uu___3 uu___4
     | Match (t, op_opt, ret_opt, branches) ->
         try_or_match_to_string x t branches op_opt ret_opt
     | TryWith (t, branches) ->
@@ -2118,6 +2173,9 @@ and (pat_to_string : pattern -> Prims.string) =
           let uu___2 = attr_list_to_string attrs in Prims.op_Hat uu___2 "_" in
         Prims.op_Hat "#" uu___1
     | PatConst c -> FStar_Parser_Const.const_to_string c
+    | PatVQuote t ->
+        let uu___ = term_to_string t in
+        FStar_Compiler_Util.format1 "`%%%s" uu___
     | PatApp (p, ps) ->
         let uu___ = FStar_Compiler_Effect.op_Bar_Greater p pat_to_string in
         let uu___1 = to_string_l " " pat_to_string ps in
@@ -2197,7 +2255,8 @@ let (id_of_tycon : tycon -> Prims.string) =
     match uu___ with
     | TyconAbstract (i, uu___1, uu___2) -> FStar_Ident.string_of_id i
     | TyconAbbrev (i, uu___1, uu___2, uu___3) -> FStar_Ident.string_of_id i
-    | TyconRecord (i, uu___1, uu___2, uu___3) -> FStar_Ident.string_of_id i
+    | TyconRecord (i, uu___1, uu___2, uu___3, uu___4) ->
+        FStar_Ident.string_of_id i
     | TyconVariant (i, uu___1, uu___2, uu___3) -> FStar_Ident.string_of_id i
 let (decl_to_string : decl -> Prims.string) =
   fun d ->

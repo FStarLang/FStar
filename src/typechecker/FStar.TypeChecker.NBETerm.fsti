@@ -166,8 +166,8 @@ and t = {
 }
 
 and comp =
-  | Tot of t * option universe
-  | GTot of t * option universe
+  | Tot of t
+  | GTot of t
   | Comp of comp_typ
 
 and comp_typ = {
@@ -314,13 +314,13 @@ val arg_as_bounded_int : arg -> option (fv * Z.t * option S.meta_source_info)
 val int_as_bounded : fv -> Z.t -> t
 val with_meta_ds : t -> option meta_source_info -> t
 
-val unary_int_op : (Z.t -> Z.t) -> (args -> option t)
-val binary_int_op : (Z.t -> Z.t -> Z.t) -> (args -> option t)
+val unary_int_op : (Z.t -> Z.t) -> (universes -> args -> option t)
+val binary_int_op : (Z.t -> Z.t -> Z.t) -> (universes -> args -> option t)
 
-val unary_bool_op : (bool -> bool) -> (args -> option t)
-val binary_bool_op : (bool -> bool -> bool) -> (args -> option t)
+val unary_bool_op : (bool -> bool) -> (universes -> args -> option t)
+val binary_bool_op : (bool -> bool -> bool) -> (universes -> args -> option t)
 
-val binary_string_op : (string -> string -> string) -> (args -> option t)
+val binary_string_op : (string -> string -> string) -> (universes -> args -> option t)
 
 val string_of_int : Z.t -> t
 val string_of_bool : bool -> t
@@ -340,9 +340,18 @@ val decidable_eq : bool -> args -> option t
 val interp_prop_eq2 : args -> option t
 
 val mixed_binary_op : (arg -> option 'a) -> (arg -> option 'b) -> ('c -> t) ->
-                      ('a -> 'b -> option 'c) -> args -> option t
-val unary_op : (arg -> option 'a) -> ('a -> t) -> (args -> option t)
-val binary_op : (arg -> option 'a) -> ('a -> 'a -> t) -> (args -> option t)
+                      (universes -> 'a -> 'b -> option 'c) -> universes -> args -> option t
+
+val mixed_ternary_op (as_a : arg -> option 'a)
+                     (as_b : arg -> option 'b)
+                     (as_c : arg -> option 'c)                     
+                     (embed_d : 'd -> t) 
+                     (f : universes -> 'a -> 'b -> 'c -> option 'd)
+                     (us:universes)
+                     (args : args) : option t
+
+val unary_op : (arg -> option 'a) -> ('a -> t) -> (universes -> args -> option t)
+val binary_op : (arg -> option 'a) -> ('a -> 'a -> t) -> (universes -> args -> option t)
 
 val dummy_interp : Ident.lid -> args -> option t
 val prims_to_fstar_range_step : args -> option t

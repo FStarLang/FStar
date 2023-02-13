@@ -63,12 +63,6 @@ unfold private let downward_closed_predicate (h:hmap) :Type0 =
 unfold private let tip_top_predicate (tip:rid) (h:hmap) :Type0 =
   forall (r:sid). r `is_in` h <==> r `is_above` tip
 
-let rid_last_component (r:rid) :GTot int
-  = let open FStar.List.Tot in
-    let r = reveal r in
-    if length r = 0 then 0
-    else snd (hd r)
-
 [@@"opaque_to_smt"]
 unfold private let rid_ctr_pred_predicate (h:hmap) (n:int) :Type0 =
   forall (r:rid). h `Map.contains` r ==> rid_last_component r < n
@@ -182,7 +176,7 @@ let empty_mem : mem =
   let empty_map = Map.restrict Set.empty (Map.const Heap.emp) in
   let h = Map.upd empty_map root Heap.emp in
   let tip = root in
-  assume (rid_last_component root == 0);
+  root_last_component ();
   lemma_is_wf_ctr_and_tip_intro h 1 tip;
   mk_mem 1 h tip
 
@@ -278,19 +272,16 @@ let s_mref (i:rid) (a:Type) (rel:preorder a) = s:mreference a rel{frameOf s = i}
  *)
 let live_region (m:mem) (i:rid) :bool = get_hmap m `Map.contains` i
 
-let contains (#a:Type) (#rel:preorder a) (m:mem) (s:mreference a rel) :GTot bool =
-  let i = frameOf s in
-  live_region m i && (FStar.StrongExcludedMiddle.strong_excluded_middle (Heap.contains (get_hmap m `Map.sel` i) (as_ref s)))
+let contains (#a:Type) (#rel:preorder a) (m:mem) (s:mreference a rel) =
+  live_region m (frameOf s) /\
+  Heap.contains (get_hmap m `Map.sel` (frameOf s)) (as_ref s)
 
-let unused_in (#a:Type) (#rel:preorder a) (r:mreference a rel) (m:mem) :GTot bool =
-  let h = get_hmap m in
-  let i = frameOf r in
-  not (h `Map.contains` i) ||
-  FStar.StrongExcludedMiddle.strong_excluded_middle (Heap.unused_in (as_ref r) (h `Map.sel` i))
+let unused_in (#a:Type) (#rel:preorder a) (r:mreference a rel) (m:mem) =
+  not ((get_hmap m) `Map.contains` (frameOf r)) \/
+  Heap.unused_in (as_ref r) ((get_hmap m) `Map.sel` (frameOf r))
 
-let contains_ref_in_its_region (#a:Type) (#rel:preorder a) (m:mem) (r:mreference a rel) :GTot bool =
-  let i = frameOf r in
-  FStar.StrongExcludedMiddle.strong_excluded_middle (Heap.contains (get_hmap m `Map.sel` i) (as_ref r))
+let contains_ref_in_its_region (#a:Type) (#rel:preorder a) (m:mem) (r:mreference a rel) =
+  Heap.contains (get_hmap m `Map.sel` (frameOf r)) (as_ref r)
 
 let fresh_ref (#a:Type) (#rel:preorder a) (r:mreference a rel) (m0:mem) (m1:mem) :Type0 =
   let i = frameOf r in

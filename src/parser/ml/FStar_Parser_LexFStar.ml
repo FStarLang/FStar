@@ -171,7 +171,6 @@ let () =
    ":", COLON;
    "::", COLON_COLON;
    ":=", COLON_EQUALS;
-   ";;", SEMICOLON_SEMICOLON;
    ";", SEMICOLON;
    "=", EQUALS;
    "%[", PERCENT_LBRACK;
@@ -354,8 +353,7 @@ let anywhite  = [%sedlex.regexp? u_space | u_space_extra]
 let newline   = [%sedlex.regexp? "\r\n" | 10 | 13 | 0x2028 | 0x2029]
 
 (* -------------------------------------------------------------------- *)
-let op_char = [%sedlex.regexp? Chars "!$%&*+-./<=?^|~:"]
-let ignored_op_char = [%sedlex.regexp? Chars ".$"]
+let op_char = [%sedlex.regexp? Chars "!$%&*+-.<>=?^|~:@#\\/"]
 
 (* op_token must be splt into seperate regular expressions to prevent
    compliation from hanging *)
@@ -383,6 +381,7 @@ let uint32 = [%sedlex.regexp? any_integer, unsigned, 'l']
 let int64 = [%sedlex.regexp? any_integer, 'L']
 let uint64 = [%sedlex.regexp? any_integer, unsigned, 'L']
 let char8 = [%sedlex.regexp? any_integer, 'z']
+let sizet = [%sedlex.regexp? any_integer, "sz"]
 
 let floatp     = [%sedlex.regexp? Plus digit, '.', Star digit]
 let floate     = [%sedlex.regexp? Plus digit, Opt ('.', Star digit), Chars "eE", Opt (Chars "+-"), Plus digit]
@@ -419,6 +418,24 @@ let constructor = [%sedlex.regexp? constructor_start_char, Star ident_char]
 let ident       = [%sedlex.regexp? ident_start_char, Star ident_char]
 let tvar        = [%sedlex.regexp? '\'', (ident_start_char | constructor_start_char), Star tvar_char]
 
+(* [ensure_no_comment lexbuf next] takes a [lexbuf] and [next], a
+   continuation. It is to be called after a regexp was matched, to
+   ensure match text does not contain any comment start.
+
+   If the match [s] contains a comment start (an occurence of [//])
+   then we place the lexer at that comment start.  We continue with
+   [next s], [s] being either the whole match, or the chunk before
+   [//].
+*)
+let ensure_no_comment lexbuf (next: string -> token): token =
+  let s = L.lexeme lexbuf in
+  next (try let before, _after = BatString.split s "//" in
+            (* rollback to the begining of the match *)
+            L.rollback lexbuf;
+            (* skip [n] characters in the lexer, with [n] being [hd]'s len *)
+            BatString.iter (fun _ -> let _ = L.next lexbuf in ()) before;
+            before with | Not_found -> s)
+
 let rec token lexbuf =
 match%sedlex lexbuf with
  | "%splice" -> SPLICE
@@ -443,16 +460,41 @@ match%sedlex lexbuf with
  | '`' -> BACKTICK
 
  | "match", Plus op_char ->
-   let s = L.lexeme lexbuf in
-   MATCH_OP (String.sub s 5 (String.length s - 5))
+    ensure_no_comment lexbuf (fun s ->
+        match BatString.lchop ~n:5 s with
+        | "" -> MATCH
+        | s  -> MATCH_OP s
+      )
+
+ | "if", Plus op_char ->
+    ensure_no_comment lexbuf (fun s ->
+        match BatString.lchop ~n:2 s with
+        | "" -> IF
+        | s  -> IF_OP s
+      )
 
  | "let", Plus op_char ->
-   let s = L.lexeme lexbuf in
-   LET_OP (String.sub s 3 (String.length s - 3))
+    ensure_no_comment lexbuf (fun s ->
+        match BatString.lchop ~n:3 s with
+        | "" -> LET false
+        | s  -> LET_OP s
+      )
 
  | "and", Plus op_char ->
-   let s = L.lexeme lexbuf in
-   AND_OP (String.sub s 3 (String.length s - 3))
+    ensure_no_comment lexbuf (fun s ->
+        match BatString.lchop ~n:3 s with
+        | "" -> AND
+        | s  -> AND_OP s
+      )
+
+ | ";", Plus op_char ->
+    ensure_no_comment lexbuf (fun s ->
+        match BatString.lchop ~n:1 s with
+        | "" -> SEMICOLON
+        | s  -> SEMICOLON_OP (Some s)
+      )
+
+ | ";;" -> SEMICOLON_OP None
 
  | ident -> let id = L.lexeme lexbuf in
    if FStar_Compiler_Util.starts_with id FStar_Ident.reserved_prefix
@@ -478,9 +520,9 @@ match%sedlex lexbuf with
  | int32 -> INT32 (clean_number (L.lexeme lexbuf), false)
  | uint64 -> UINT64 (clean_number (L.lexeme lexbuf))
  | int64 -> INT64 (clean_number (L.lexeme lexbuf), false)
+ | sizet -> SIZET (clean_number (L.lexeme lexbuf))
  | range -> RANGE (L.lexeme lexbuf)
  | real -> REAL(trim_right lexbuf 1)
- | (ieee64 | xieee64) -> IEEE64 (float_of_string (L.lexeme lexbuf))
  | (integer | xinteger | ieee64 | xieee64), Plus ident_char ->
    fail lexbuf (E.Fatal_SyntaxError, "This is not a valid numeric literal: " ^ L.lexeme lexbuf)
 
@@ -505,29 +547,31 @@ match%sedlex lexbuf with
  | op_token_4
  | op_token_5 -> L.lexeme lexbuf |> Hashtbl.find operators
 
- | "<"       -> OPINFIX0c("<")
- | ">"       -> if is_typ_app_gt () then TYP_APP_GREATER else symbolchar_parser lexbuf
+ | "<" -> OPINFIX0c("<")
+ | ">" -> if is_typ_app_gt ()
+          then TYP_APP_GREATER
+          else begin match%sedlex lexbuf with
+               | Star symbolchar -> ensure_no_comment lexbuf (fun s -> OPINFIX0c (">" ^ s))
+               | _ -> assert false end
 
  (* Operators. *)
- | op_prefix,  Star symbolchar -> OPPREFIX (L.lexeme lexbuf)
- | op_infix0a, Star symbolchar -> OPINFIX0a (L.lexeme lexbuf)
- | op_infix0b, Star symbolchar -> OPINFIX0b (L.lexeme lexbuf)
- | op_infix0c_nogt, Star symbolchar -> OPINFIX0c (L.lexeme lexbuf)
- | op_infix0d, Star symbolchar -> OPINFIX0d (L.lexeme lexbuf)
- | op_infix1,  Star symbolchar -> OPINFIX1 (L.lexeme lexbuf)
- | op_infix2,  Star symbolchar -> OPINFIX2 (L.lexeme lexbuf)
- | "**"     ,  Star symbolchar -> OPINFIX4 (L.lexeme lexbuf)
+ | op_prefix,  Star symbolchar -> ensure_no_comment lexbuf (fun s -> OPPREFIX  s)
+ | op_infix0a, Star symbolchar -> ensure_no_comment lexbuf (fun s -> OPINFIX0a s)
+ | op_infix0b, Star symbolchar -> ensure_no_comment lexbuf (fun s -> OPINFIX0b s)
+ | op_infix0c_nogt, Star symbolchar -> ensure_no_comment lexbuf (fun s -> OPINFIX0c s)
+ | op_infix0d, Star symbolchar -> ensure_no_comment lexbuf (fun s -> OPINFIX0d s)
+ | op_infix1,  Star symbolchar -> ensure_no_comment lexbuf (fun s -> OPINFIX1  s)
+ | op_infix2,  Star symbolchar -> ensure_no_comment lexbuf (fun s -> OPINFIX2  s)
+ | op_infix3,  Star symbolchar -> ensure_no_comment lexbuf (function
+                                      | "" -> one_line_comment "" lexbuf
+                                      | s  -> OPINFIX3 s
+                                    )
+ | "**"     ,  Star symbolchar -> ensure_no_comment lexbuf (fun s -> OPINFIX4  s)
 
  (* Unicode Operators *)
  | uoperator -> let id = L.lexeme lexbuf in
    Hashtbl.find_option operators id |> Option.default (OPINFIX4 id)
 
- | op_infix3, Star symbolchar ->
-     let l = L.lexeme lexbuf in
-     if String.length l >= 2 && String.sub l 0 2 = "//" then
-       one_line_comment l lexbuf
-     else
-        OPINFIX3 l
  | ".[]<-"                 -> OP_MIXFIX_ASSIGNMENT (L.lexeme lexbuf)
  | ".()<-"                 -> OP_MIXFIX_ASSIGNMENT (L.lexeme lexbuf)
  | ".(||)<-"                -> OP_MIXFIX_ASSIGNMENT (L.lexeme lexbuf)
@@ -545,11 +589,6 @@ match%sedlex lexbuf with
  | Star (Compl (10 | 13 | 0x2028 | 0x2029)) -> push_one_line_comment pre lexbuf; token lexbuf
  | _ -> assert false
 
-and symbolchar_parser lexbuf =
-match%sedlex lexbuf with
- | Star symbolchar -> OPINFIX0c (">" ^  L.lexeme lexbuf)
- | _ -> assert false
-
 and string buffer start_pos lexbuf =
 match%sedlex lexbuf with
  | '\\', newline, Star anywhite -> L.new_line lexbuf; string buffer start_pos lexbuf
@@ -563,10 +602,6 @@ match%sedlex lexbuf with
    (* position info must be set since the start of the string *)
    lexbuf.Sedlexing.start_p <- start_pos;
    STRING (Buffer.contents buffer)
- | '"', 'B' ->
-   (* as above *)
-   lexbuf.Sedlexing.start_p <- start_pos;
-   BYTEARRAY (ba_of_string (Buffer.contents buffer))
  | eof -> fail lexbuf (E.Fatal_SyntaxError, "unterminated string")
  | any ->
   Buffer.add_string buffer (L.lexeme lexbuf);

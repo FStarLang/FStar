@@ -31,6 +31,9 @@ let old_attribute_syntax_warning =
   "The `[@ ...]` syntax of attributes is deprecated. \
    Use `[@@ a1; a2; ...; an]`, a semi-colon separated list of attributes, instead"
 
+let do_notation_deprecation_warning =
+  "The lightweight do notation [x <-- y; z] or [x ;; z] is deprecated, use let operators (i.e. [let* x = y in z] or [y ;* z], [*] being any sequence of operator characters) instead."
+
 let none_to_empty_list x =
   match x with
   | None -> []
@@ -38,7 +41,6 @@ let none_to_empty_list x =
 
 %}
 
-%token <bytes> BYTEARRAY
 %token <string> STRING
 %token <string> IDENT
 %token <string> NAME
@@ -57,13 +59,19 @@ let none_to_empty_list x =
 %token <string> UINT16
 %token <string> UINT32
 %token <string> UINT64
-%token <float> IEEE64
+%token <string> SIZET
 %token <string> REAL
 %token <char> CHAR
 %token <bool> LET
 %token <string> LET_OP
 %token <string> AND_OP
 %token <string> MATCH_OP
+%token <string> IF_OP
+/* [SEMICOLON_OP] encodes either:
+- [;;], which used to be SEMICOLON_SEMICOLON, or
+- [;<OP>], with <OP> a sequence of [op_char] (see FStar_Parser_LexFStar).
+*/
+%token <string option> SEMICOLON_OP
 
 %token FORALL EXISTS ASSUME NEW LOGIC ATTRIBUTES
 %token IRREDUCIBLE UNFOLDABLE INLINE OPAQUE UNFOLD INLINE_FOR_EXTRACTION
@@ -81,7 +89,7 @@ let none_to_empty_list x =
 %token DOT COLON COLON_COLON SEMICOLON
 %token QMARK_DOT
 %token QMARK
-%token SEMICOLON_SEMICOLON EQUALS PERCENT_LBRACK LBRACK_AT LBRACK_AT_AT LBRACK_AT_AT_AT DOT_LBRACK
+%token EQUALS PERCENT_LBRACK LBRACK_AT LBRACK_AT_AT LBRACK_AT_AT_AT DOT_LBRACK
 %token DOT_LENS_PAREN_LEFT DOT_LPAREN DOT_LBRACK_BAR LBRACK LBRACK_BAR LBRACE_BAR LBRACE BANG_LBRACE
 %token BAR_RBRACK BAR_RBRACE UNDERSCORE LENS_PAREN_LEFT LENS_PAREN_RIGHT
 %token BAR RBRACK RBRACE DOLLAR
@@ -285,33 +293,38 @@ typeDefinition:
   | EQUALS t=typ
       { (fun id binders kopt ->  check_id id; TyconAbbrev(id, binders, kopt, t)) }
   /* A documentation on the first branch creates a conflict with { x with a = ... }/{ a = ... } */
-  | EQUALS LBRACE
+  | EQUALS attrs_opt=ioption(binderAttributes) LBRACE
       record_field_decls=right_flexible_nonempty_list(SEMICOLON, recordFieldDecl)
    RBRACE
-      { (fun id binders kopt -> check_id id; TyconRecord(id, binders, kopt, record_field_decls)) }
+      { (fun id binders kopt -> check_id id; TyconRecord(id, binders, kopt, none_to_empty_list attrs_opt, record_field_decls)) }
   (* having the first BAR optional using left-flexible list creates a s/r on FSDOC since any decl can be preceded by a FSDOC *)
   | EQUALS ct_decls=list(constructorDecl)
       { (fun id binders kopt -> check_id id; TyconVariant(id, binders, kopt, ct_decls)) }
 
 recordFieldDecl:
-  | qualified_lid=aqualifiedWithAttrs(lident) COLON t=typ
+  | qualified_lid=aqualifiedWithAttrs(lidentOrOperator) COLON t=typ
       {
         let (qual, attrs), lid = qualified_lid in
         (lid, qual, attrs, t)
       }
 
 constructorDecl:
-  | BAR uid=uident COLON t=typ                { (uid, Some t, false) }
-  | BAR uid=uident t_opt=option(OF t=typ {t}) { (uid, t_opt, true) }
+  | BAR attrs_opt=ioption(binderAttributes) uid=uident COLON t=typ                { (uid, Some t, false, none_to_empty_list attrs_opt) }
+  | BAR attrs_opt=ioption(binderAttributes) uid=uident t_opt=option(OF t=typ {t}) { (uid, t_opt, true, none_to_empty_list attrs_opt) }
 
 attr_letbinding:
   | attr=ioption(attribute) AND lb=letbinding
     { attr, lb }
 
 letoperatorbinding:
-  | pat=tuplePattern tm=option(EQUALS tm=term {tm})
+  | pat=tuplePattern ascr_opt=ascribeTyp? tm=option(EQUALS tm=term {tm})
     {
-        let h tm = (pat, tm) in
+        let h tm
+	  = ( ( match ascr_opt with
+              | None   -> pat
+              | Some t -> mk_pattern (PatAscribed(pat, t)) (rhs2 parseState 1 2) )
+	    , tm)
+	in
 	match pat.pat, tm with
         | _               , Some tm -> h tm
         | PatVar (v, _, _), None    ->
@@ -519,16 +532,14 @@ atomicPattern:
   | tv=tvar                   { mk_pattern (PatTvar (tv, None, [])) (rhs parseState 1) }
   | LPAREN op=operator RPAREN
       { mk_pattern (PatOp op) (rhs2 parseState 1 3) }
-  | LPAREN op=let_op RPAREN
-      { mk_pattern (PatVar (op, None, [])) (rhs2 parseState 1 3) }
-  | LPAREN op=and_op RPAREN
-      { mk_pattern (PatVar (op, None, [])) (rhs2 parseState 1 3) }
   | UNDERSCORE
       { mk_pattern (PatWild (None, [])) (rhs parseState 1) }
   | HASH UNDERSCORE
       { mk_pattern (PatWild (Some Implicit, [])) (rhs parseState 1) }
   | c=constant
       { mk_pattern (PatConst c) (rhs parseState 1) }
+  | BACKTICK_PERC q=atomicTerm
+      { mk_pattern (PatVQuote q) (rhs2 parseState 1 2) }
   | qual_id=aqualifiedWithAttrs(lident)
     {
       let (aqual, attrs), lid = qual_id in
@@ -638,28 +649,23 @@ ident:
   | x=lident { x }
   | x=uident  { x }
 
-lidentOrOperator:
-  | id=IDENT
-    { mk_ident(id, rhs parseState 1) }
-  | LPAREN op=let_op RPAREN { op }
-  | LPAREN op=and_op RPAREN { op }
+qlidentOrOperator:
+  | qid=qlident { qid }
+  | LPAREN id=operator RPAREN
+    { lid_of_ns_and_id [] (id_of_text (compile_op' (string_of_id id) (range_of_id id))) }
+
+%inline lidentOrOperator:
+  | id=lident { id }
   | LPAREN id=operator RPAREN
     { mk_ident (compile_op' (string_of_id id) (range_of_id id), range_of_id id) }
 
-%inline and_op:
-  | op=AND_OP { let r = rhs parseState 1 in
-                mk_ident ("and_" ^ compile_op' op r, r) }
-
-%inline let_op:
-  | op=LET_OP { let r = rhs parseState 1 in
-                mk_ident ("let_" ^ compile_op' op r, r) }
-
 matchMaybeOp:
   | MATCH {None}
-  | op=MATCH_OP {
-	   let r = rhs parseState 1 in
-           Some (mk_ident ("let_" ^ compile_op' op r, r))
-	 }
+  | op=MATCH_OP { Some (mk_ident ("let" ^ op, rhs parseState 1)) }
+
+ifMaybeOp:
+  | IF {None}
+  | op=IF_OP { Some (mk_ident ("let" ^ op, rhs parseState 1)) }
 
 lidentOrUnderscore:
   | id=IDENT { mk_ident(id, rhs parseState 1)}
@@ -708,10 +714,20 @@ term:
 (* but it results in an additional shift/reduce conflict *)
 (* ... which is actually be benign, since the same conflict already *)
 (*     exists for the previous production *)
-  | e1=noSeqTerm SEMICOLON_SEMICOLON e2=term
-      { mk_term (Bind(gen (rhs parseState 2), e1, e2)) (rhs2 parseState 1 3) Expr }
+  | e1=noSeqTerm op=SEMICOLON_OP e2=term
+      { let t = match op with
+	  | Some op ->
+	     let op = mk_ident ("let" ^ op, rhs parseState 2) in
+	     let pat = mk_pattern (PatWild(None, [])) (rhs parseState 2) in
+	     LetOperator ([(op, pat, e1)], e2)
+	  | None   ->
+             log_issue (lhs parseState) (Warning_DeprecatedLightDoNotation, do_notation_deprecation_warning);
+	     Bind(gen (rhs parseState 2), e1, e2)
+        in mk_term t (rhs2 parseState 1 3) Expr
+      }
   | x=lidentOrUnderscore LONG_LEFT_ARROW e1=noSeqTerm SEMICOLON e2=term
-      { mk_term (Bind(x, e1, e2)) (rhs2 parseState 1 5) Expr }
+    { log_issue (lhs parseState) (Warning_DeprecatedLightDoNotation, do_notation_deprecation_warning);
+      mk_term (Bind(x, e1, e2)) (rhs2 parseState 1 5) Expr }
 
 match_returning:
   | as_opt=option(AS i=lident {i}) RETURNS t=tmIff {as_opt,t,false}
@@ -757,12 +773,12 @@ noSeqTerm:
 
   | ATTRIBUTES es=nonempty_list(atomicTerm)
       { mk_term (Attributes es) (rhs2 parseState 1 2) Type_level }
-  | IF e1=noSeqTerm ret_opt=option(match_returning) THEN e2=noSeqTerm ELSE e3=noSeqTerm
-      { mk_term (If(e1, ret_opt, e2, e3)) (rhs2 parseState 1 7) Expr }
-  | IF e1=noSeqTerm ret_opt=option(match_returning) THEN e2=noSeqTerm
+  | op=ifMaybeOp e1=noSeqTerm ret_opt=option(match_returning) THEN e2=noSeqTerm ELSE e3=noSeqTerm
+      { mk_term (If(e1, op, ret_opt, e2, e3)) (rhs2 parseState 1 7) Expr }
+  | op=ifMaybeOp e1=noSeqTerm ret_opt=option(match_returning) THEN e2=noSeqTerm
       {
         let e3 = mk_term (Const Const_unit) (rhs2 parseState 1 5) Expr in
-        mk_term (If(e1, ret_opt, e2, e3)) (rhs2 parseState 1 5) Expr
+        mk_term (If(e1, op, ret_opt, e2, e3)) (rhs2 parseState 1 5) Expr
       }
   | TRY e1=term WITH pbs=left_flexible_nonempty_list(BAR, patternBranch)
       {
@@ -1128,7 +1144,7 @@ binop_name:
   | o=OP_MIXFIX_ACCESS       { mk_ident (o, rhs parseState 1) }
 
 tmEqNoRefinement:
-  | e=tmEqWith(appTerm) { e }
+  | e=tmEqWith(appTermNoRecordExp) { e }
 
 tmEq:
   | e=tmEqWith(tmRefinement)  { e }
@@ -1137,7 +1153,7 @@ tmNoEq:
   | e=tmNoEqWith(tmRefinement) { e }
 
 tmRefinement:
-  | id=lidentOrUnderscore COLON e=appTerm phi_opt=refineOpt
+  | id=lidentOrUnderscore COLON e=appTermNoRecordExp phi_opt=refineOpt
       {
         let t = match phi_opt with
           | None -> NamedTyp(id, e)
@@ -1159,12 +1175,18 @@ recordExp:
       { mk_term (Record (Some e, record_fields)) (rhs2 parseState 1 3) Expr }
 
 simpleDef:
-  | e=separated_pair(qlident, EQUALS, noSeqTerm) { e }
-  | lid=qlident { lid, mk_term (Name (lid_of_ids [ ident_of_lid lid ])) (rhs parseState 1) Un }
+  | e=separated_pair(qlidentOrOperator, EQUALS, noSeqTerm) { e }
+  | lid=qlidentOrOperator { lid, mk_term (Name (lid_of_ids [ ident_of_lid lid ])) (rhs parseState 1) Un }
 
-appTerm:
+%inline appTermCommon(argTerm):
   | head=indexingTerm args=list(argTerm)
       { mkApp head (map (fun (x,y) -> (y,x)) args) (rhs2 parseState 1 2) }
+
+appTerm:
+  | t=appTermCommon(t=argTerm {t} | h=maybeHash LBRACE t=recordExp RBRACE {h, t}) {t}
+
+appTermNoRecordExp:
+  | t=appTermCommon(argTerm) {t}
 
 argTerm:
   | x=pair(maybeHash, indexingTerm) { x }
@@ -1212,10 +1234,6 @@ atomicTermNotQUident:
     { x }
   | LPAREN op=operator RPAREN
       { mk_term (Op(op, [])) (rhs2 parseState 1 3) Un }
-  | LPAREN op=let_op RPAREN
-      { mk_term (Name(lid_of_ns_and_id [] op)) (rhs2 parseState 1 3) Un }
-  | LPAREN op=and_op RPAREN
-      { mk_term (Name(lid_of_ns_and_id [] op)) (rhs2 parseState 1 3) Un }
   | LENS_PAREN_LEFT e0=tmEq COMMA el=separated_nonempty_list(COMMA, tmEq) LENS_PAREN_RIGHT
       { mkDTuple (e0::el) (rhs2 parseState 1 5) }
   | e=projectionLHS field_projs=list(DOT id=qlident {id})
@@ -1299,11 +1317,9 @@ constant:
      }
   | c=CHAR { Const_char c }
   | s=STRING { Const_string (s,lhs(parseState)) }
-  | bs=BYTEARRAY { Const_bytearray (bs,lhs(parseState)) }
   | TRUE { Const_bool true }
   | FALSE { Const_bool false }
   | r=REAL { Const_real r }
-  | f=IEEE64 { Const_float f }
   | n=UINT8 { Const_int (n, Some (Unsigned, Int8)) }
   | n=INT8
       {
@@ -1332,6 +1348,7 @@ constant:
           log_issue (lhs(parseState)) (Error_OutOfRange, "This number is outside the allowable range for 64-bit signed integers");
         Const_int (fst n, Some (Signed, Int64))
       }
+  | n=SIZET { Const_int (n, Some (Unsigned, Sizet)) }
   (* TODO : What about reflect ? There is also a constant representing it *)
   | REIFY   { Const_reify }
   | RANGE_OF     { Const_range_of }
@@ -1411,6 +1428,13 @@ string:
     { op }
   | op=TILDE
     { mk_ident (op, rhs parseState 1) }
+  | op=and_op       {op}
+  | op=let_op       {op}
+
+%inline and_op:
+  | op=AND_OP { mk_ident ("and" ^ op, rhs parseState 1) }
+%inline let_op:
+  | op=LET_OP { mk_ident ("let" ^ op, rhs parseState 1) }
 
 /* These infix operators have a lower precedence than EQUALS */
 %inline operatorInfix0ad12:
