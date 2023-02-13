@@ -1,4 +1,4 @@
-module Steel.C.PCM
+module Steel.C.Model.PCM
 module P = FStar.PCM
 open FStar.FunctionalExtensionality
 open FStar.IndefiniteDescription
@@ -185,6 +185,28 @@ let op_assoc_r
 
 let p_refine (#a: Type) (p: pcm0 a) (x: a) : Tot prop =
   p.refine x == true
+
+let pcm0_ext #a p1 p2 composable_eq op_eq p_refine_eq one_eq =
+  let composable_eq'
+    (xy: (a & a))
+  : Lemma
+    (p1.p.composable xy == p2.p.composable xy)
+  = let (x, y) = xy in
+    composable_eq x y
+  in
+  Classical.forall_intro composable_eq';
+  assert (p1.p.composable `feq_g` p2.p.composable);
+  assert (op_dom p1.p.composable == op_dom p2.p.composable);
+  let op_eq'
+    (xy: op_dom p1.p.composable)
+  : Lemma
+    (p1.p.op xy == p2.p.op xy)
+  = let (x, y) = xy in
+    op_eq x y
+  in
+  Classical.forall_intro op_eq';
+  Classical.forall_intro p_refine_eq;
+  pcm_eq p1 p2
 
 let pcm_of_fstar_pcm
   (#a: Type)

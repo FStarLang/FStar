@@ -1,5 +1,5 @@
-module Steel.C.Universe
-open Steel.C.PCM
+module Steel.C.Model.Universe
+open Steel.C.Model.PCM
 include FStar.Universe
 module P = FStar.PCM
 
@@ -96,7 +96,7 @@ let raise_pcm
   in
   res
 
-open Steel.C.Connection
+open Steel.C.Model.Connection
 
 let raise_pcm_morphism
   (#a: Type u#a)

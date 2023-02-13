@@ -1,6 +1,6 @@
 module Steel.C.Reference
-open Steel.C.PCM
-open Steel.C.Ref
+open Steel.C.Model.PCM
+open Steel.C.Model.Ref
 open Steel.Effect
 open Steel.Effect.Atomic
 
@@ -22,7 +22,7 @@ unfold
 let ref_of_ref
   (#a: Type u#0) (#view_t: Type u#0) (#b: Type u#b) (#q: pcm b)
   (r: ref a view_t q)
-: Tot (Steel.C.Ref.ref a q)
+: Tot (Steel.C.Model.Ref.ref a q)
 = r
 
 [@@__steel_reduce__] // ; __reduce__]
@@ -137,7 +137,7 @@ let freeable
   (#a: Type u#0) (#view_t: Type u#0) (#b: Type u#0) (#q: pcm b)
   (r: ref a view_t q)
 : Tot prop
-= freeable (r <: Steel.C.Ref.ref a q)
+= freeable (r <: Steel.C.Model.Ref.ref a q)
 
 (* Operations on views *)
 
@@ -266,7 +266,7 @@ let rewrite_view
   (#view' : Type u#c)
   (f: view -> view')
   (g: view' -> view)
-  (prf: squash (f `Steel.C.Connection.is_inverse_of` g))
+  (prf: squash (f `Steel.C.Model.Connection.is_inverse_of` g))
 : Tot (sel_view p view' can_view_unit)
 = {
   to_view_prop = vw.to_view_prop;
@@ -285,7 +285,7 @@ let intro_rewrite_view'
   (#view' : Type)
   (f: view -> view')
   (g: view' -> view)
-  (prf: squash (f `Steel.C.Connection.is_inverse_of` g))
+  (prf: squash (f `Steel.C.Model.Connection.is_inverse_of` g))
   (#base: _)
   (r: ref base view p)
   (x' : Ghost.erased view')
@@ -311,7 +311,7 @@ let intro_rewrite_view
   (#view' : Type)
   (f: view -> view')
   (g: view' -> view)
-  (prf: squash (f `Steel.C.Connection.is_inverse_of` g))
+  (prf: squash (f `Steel.C.Model.Connection.is_inverse_of` g))
   (#base: _)
   (r: ref base view p)
   (x' : Ghost.erased view')
@@ -339,7 +339,7 @@ let elim_rewrite_view'
   (#view' : Type)
   (f: view -> view')
   (g: view' -> view)
-  (prf: squash (f `Steel.C.Connection.is_inverse_of` g))
+  (prf: squash (f `Steel.C.Model.Connection.is_inverse_of` g))
   (#base: _)
   (r: ref base view' p)
 : SteelGhost unit opened
@@ -367,7 +367,7 @@ let elim_rewrite_view
   (#view' : Type)
   (f: view -> view')
   (g: view' -> view)
-  (prf: squash (f `Steel.C.Connection.is_inverse_of` g))
+  (prf: squash (f `Steel.C.Model.Connection.is_inverse_of` g))
   (#base: _)
   (r: ref base view' p)
 : SteelAtomicBase (ref base view p) false opened Unobservable

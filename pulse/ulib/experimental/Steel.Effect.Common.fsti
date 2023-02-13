@@ -78,6 +78,7 @@ let selector (a:Type) (hp:slprop) : Type =
 /// The basis of our selector framework: Separation logic assertions enhanced with selectors
 /// Note that selectors are "optional", it is always possible to use a non-informative selector,
 /// such as fun _ -> () and to rely on the standard separation logic reasoning
+[@@ erasable]
 noeq
 type vprop' =
   { hp: slprop u#1;
@@ -413,7 +414,7 @@ val elim_conjunction (p1 p1' p2 p2':Type0)
 /// When that happens, we want to replace frame_equalities by an equality on the frame,
 /// mimicking reduction
 [@@plugin]
-let frame_vc_norm () : Tac unit =
+let frame_vc_norm () : Tac unit = with_compat_pre_core 0 (fun _ ->
   // Do not normalize mk_rmem/focus_rmem to simplify application of
   // the reflexivity lemma on frame_equalities'
   norm [delta_attr [`%__steel_reduce__];
@@ -452,7 +453,7 @@ let frame_vc_norm () : Tac unit =
   // If it fails, the frame was not symbolic, so there is nothing to do
   or_else (fun _ -> apply_lemma (`lemma_frame_equalities); dismiss ()) (fun _ -> ());
   norm normal_steps;
-  trefl ()
+  trefl ())
 
 [@@ __steel_reduce__]
 unfold
@@ -707,21 +708,18 @@ and visit_br (ff : term -> Tac unit) (b:branch) : Tac unit =
 and visit_comp (ff : term -> Tac unit) (c : comp) : Tac unit =
   let cv = inspect_comp c in
   match cv with
-  | C_Total ret _ decr ->
-      visit_tm ff ret;
-      iter (visit_tm ff) decr
-  | C_GTotal ret _ decr ->
-      visit_tm ff ret;
-      iter (visit_tm ff) decr
+  | C_Total ret -> visit_tm ff ret
+  | C_GTotal ret -> visit_tm ff ret
 
   | C_Lemma pre post pats ->
       visit_tm ff pre;
       visit_tm ff post;
       visit_tm ff pats
 
-  | C_Eff us eff res args ->
+  | C_Eff us eff res args decrs ->
       visit_tm ff res;
-      iter (fun (a, q) -> visit_tm ff a) args
+      iter (fun (a, q) -> visit_tm ff a) args;
+      iter (visit_tm ff) decrs
 
 /// Decides whether a top-level name [nm] syntactically
 /// appears in the term [t].
@@ -804,7 +802,7 @@ let rec get_candidates (t:term) (l:list term) : Tac (list term) =
   | [] -> []
   | hd::tl ->
       let n, _ = collect_app hd in
-      if term_eq n name then (
+      if term_eq_old n name then (
         hd::(get_candidates t tl)
       ) else get_candidates t tl
 
@@ -935,29 +933,39 @@ let rec try_unifying_remaining (l:list atom) (u:term) (am:amap term) : Tac unit 
 let is_smt_binder (b:binder) : Tac bool =
   let (bv, aqual) = inspect_binder b in
   let l = snd aqual in
-  not (List.Tot.isEmpty (filter (fun t -> term_eq t (`smt_fallback)) l))
+  not (List.Tot.isEmpty (filter (fun t -> is_fvar t (`%smt_fallback)) l))
 
 /// Creates a new term, where all arguments where SMT rewriting is enabled have been replaced
 /// by fresh, unconstrained unification variables
 let rec new_args_for_smt_attrs (env:env) (l:list argv) (ty:typ) : Tac (list argv * list term) =
-  match l, inspect ty with
+  let fresh_ghost_uvar ty =
+    let e = cur_env () in
+    ghost_uvar_env e ty
+  in
+  match l, inspect_unascribe ty with
   | (arg, aqualv)::tl, Tv_Arrow binder comp ->
     let needs_smt = is_smt_binder binder in
     let new_hd =
       if needs_smt then (
         let arg_ty = tc env arg in
-        let uvar = fresh_uvar (Some arg_ty) in
+        let uvar = fresh_ghost_uvar arg_ty in
         unshelve uvar;
         flip ();
         (uvar, aqualv)
       ) else (arg, aqualv)
     in
     begin
-    match inspect_comp comp with
-    | C_Total ty2 _ _ ->
-      let tl_argv, tl_terms = new_args_for_smt_attrs env tl ty2 in
-      new_hd::tl_argv, (if needs_smt then arg::tl_terms else tl_terms)
-    | _ -> fail "computation type not supported in definition of slprops"
+    let ty2 =
+      match inspect_comp comp with
+      | C_Total ty2 -> ty2
+      | C_Eff _ eff_name ty2 _ _ ->
+        if eff_name = ["Prims"; "Tot"]
+        then ty2
+        else fail "computation type not supported in definition of slprops"
+      | _ -> fail "computation type not supported in definition of slprops" in
+
+    let tl_argv, tl_terms = new_args_for_smt_attrs env tl ty2 in
+    new_hd::tl_argv, (if needs_smt then arg::tl_terms else tl_terms)
     end
   | [], Tv_FVar fv -> [], []
   | _ -> fail "should not happen. Is an slprop partially applied?"
@@ -1549,7 +1557,7 @@ let identity_right_diff (#a:Type) (eq:CE.equiv a) (m:CE.cm a eq) (x y:a) : Lemma
 /// These vprops will be instantiated at a later stage; else, Meta-F* will raise an error
 let rec dismiss_slprops () : Tac unit =
   match term_as_formula' (cur_goal ()) with
-    | App t _ -> if term_eq t (`squash) then () else (dismiss(); dismiss_slprops ())
+    | App t _ -> if is_fvar t (`%squash) then () else (dismiss(); dismiss_slprops ())
     | _ -> dismiss(); dismiss_slprops ()
 
 /// Recursively removing trailing empty assertions
@@ -1600,12 +1608,12 @@ let equivalent_sorted (#a:Type) (eq:CE.equiv a) (m:CE.cm a eq) (am:amap a) (l1 l
 #pop-options
 
 /// Finds the position of first occurrence of x in xs.
-/// This is now specialized to terms and their funny term_eq.
+/// This is now specialized to terms and their funny term_eq_old.
 let rec where_aux (n:nat) (x:term) (xs:list term) :
-    Tot (option nat) (decreases xs) =
+    Tac (option nat) (decreases xs) =
   match xs with
   | [] -> None
-  | x'::xs' -> if term_eq x x' then Some n else where_aux (n+1) x xs'
+  | x'::xs' -> if term_eq_old x x' then Some n else where_aux (n+1) x xs'
 let where = where_aux 0
 
 let fatom (t:term) (ts:list term) (am:amap term) : Tac (exp * list term * amap term) =
@@ -1623,15 +1631,15 @@ let fatom (t:term) (ts:list term) (am:amap term) : Tac (exp * list term * amap t
 let rec reification_aux (ts:list term) (am:amap term)
                         (mult unit t : term) : Tac (exp * list term * amap term) =
   let hd, tl = collect_app_ref t in
-  match inspect hd, List.Tot.Base.list_unref tl with
+  match inspect_unascribe hd, List.Tot.Base.list_unref tl with
   | Tv_FVar fv, [(t1, Q_Explicit) ; (t2, Q_Explicit)] ->
-    if term_eq (pack (Tv_FVar fv)) mult
+    if term_eq_old (pack (Tv_FVar fv)) mult
     then (let (e1, ts, am) = reification_aux ts am mult unit t1 in
           let (e2, ts, am) = reification_aux ts am mult unit t2 in
           (Mult e1 e2, ts, am))
     else fatom t ts am
   | _, _ ->
-    if term_eq t unit
+    if term_eq_old t unit
     then (Unit, ts, am)
     else fatom t ts am
 
@@ -1757,9 +1765,30 @@ let solve_implies_true (p: Type0) : Lemma (p ==> True) = ()
 // hard but should allow postponing the goal instead
 exception Postpone of string
 
+(* NOTE! Redefining boolean disjunction to *not* be short-circuiting,
+since we cannot use an effectful result as argument of Prims.op_BarBar *)
+private
+let bor = op_BarBar
+
+private
+let is_and (t:term) : bool =
+  is_any_fvar t [`%(/\); `%prop_and]
+
+private
+let is_squash (t:term) : bool =
+  is_any_fvar t [`%squash; `%auto_squash]
+
+private
+let is_star (t:term) : bool =
+  is_any_fvar t [`%star; `%VStar]
+
+private
+let is_star_or_unit (t:term) : bool =
+  is_any_fvar t [`%star; `%VStar; `%VUnit]
+
 let rec unify_pr_with_true (pr: term) : Tac unit =
   let hd, tl = collect_app pr in
-  if hd `term_eq` (`(/\)) || hd `term_eq` (`prop_and)
+  if is_and hd
   then
     match tl with
     | [pr_l, _; pr_r, _] ->
@@ -1767,7 +1796,7 @@ let rec unify_pr_with_true (pr: term) : Tac unit =
       unify_pr_with_true pr_r
     | _ -> fail "unify_pr_with_true: ill-formed /\\"
   else
-    match inspect hd with
+    match inspect_unascribe hd with
     | Tv_Uvar _ _ ->
       if unify pr (`true_p)
       then ()
@@ -1800,7 +1829,7 @@ let _return_squash (#a: Type) () (x: a) : Tot (squash a) =
 
 let rec set_abduction_variable_term (pr: term) : Tac term =
   let hd, tl = collect_app pr in
-  if hd `term_eq` (`(/\)) || hd `term_eq` (`prop_and)
+  if is_and hd
   then
     match tl with
     | (pr_l, Q_Explicit) :: (pr_r, Q_Explicit) :: [] ->
@@ -1824,7 +1853,7 @@ let rec set_abduction_variable_term (pr: term) : Tac term =
 
 let set_abduction_variable () : Tac unit =
   let g = cur_goal () in
-  match inspect g with
+  match inspect_unascribe g with
   | Tv_Arrow b _ ->
     let (bv, _) = inspect_binder b in
     let bv = inspect_bv bv in
@@ -2078,11 +2107,11 @@ let canon' (use_smt:bool) (pr:term) (pr_bind:term) : Tac unit =
 
 /// Counts the number of unification variables corresponding to vprops in the term [t]
 let rec slterm_nbr_uvars (t:term) : Tac int =
-  match inspect t with
+  match inspect_unascribe t with
   | Tv_Uvar _ _ -> 1
   | Tv_App _ _ ->
     let hd, args = collect_app t in
-    if term_eq hd (`star) || term_eq hd (`VStar) || term_eq hd (`VUnit) then
+    if is_star_or_unit hd then
       // Only count the number of unresolved slprops, not program implicits
       slterm_nbr_uvars_argv args
     else if is_uvar hd then 1
@@ -2096,11 +2125,11 @@ and slterm_nbr_uvars_argv (args: list argv) : Tac int =
 let guard_vprop (v: vprop) : Tot vprop = v
 
 let rec all_guards_solved (t: term) : Tac bool =
-  match inspect t with
+  match inspect_unascribe t with
   | Tv_Abs _ t -> all_guards_solved t
   | Tv_App _ _ ->
     let hd, args = collect_app t in
-    if term_eq hd (`guard_vprop)
+    if hd `is_fvar` (`%guard_vprop)
     then
       slterm_nbr_uvars_argv args = 0
     else if not (all_guards_solved hd)
@@ -2155,7 +2184,7 @@ let rec dismiss_non_squash_goals' (keep:list goal) (goals:list goal)
      let f = term_as_formula' (goal_type hd) in
      match f with
      | App hs _ ->
-       if hs `term_eq` (`squash) || hs `term_eq` (`auto_squash)
+       if is_squash hs
        then dismiss_non_squash_goals' (hd::keep) tl
        else dismiss_non_squash_goals' keep tl
 
@@ -2166,14 +2195,13 @@ let dismiss_non_squash_goals () =
   let g = goals () in
   dismiss_non_squash_goals' [] g
 
-let rec term_mem (te: term) (l: list term) : Tot bool =
+let rec term_mem (te: term) (l: list term) : Tac bool =
   match l with
   | [] -> false
   | t' :: q ->
-    if te `term_eq` t' then true else term_mem te q
+    if te `term_eq_old` t' then true else term_mem te q
 
-let rec lookup_by_term_attr' (attr: term) (e: env) (found: list fv) (l: list fv) : Tot (list fv)
-  (decreases l)
+let rec lookup_by_term_attr' (attr: term) (e: env) (found: list fv) (l: list fv) : Tac (list fv)
 =
   match l with
   | [] -> List.Tot.rev found
@@ -2211,7 +2239,7 @@ let rec extract_contexts
 : Tac (option (unit -> Tac unit))
 =
   let hd, tl = collect_app t in
-  if hd `term_eq` (`star) || hd `term_eq` (`VStar)
+  if is_star hd
   then
     match tl with
     | (t_left, Q_Explicit) :: (t_right, Q_Explicit) :: [] ->
@@ -2243,7 +2271,7 @@ let rec extract_contexts
     | _ -> None
   else
     let candidates =
-      let hd_fv = match inspect hd with
+      let hd_fv = match inspect_unascribe hd with
       | Tv_FVar fv -> Some fv
       | Tv_UInst fv _ -> Some fv
       | _ -> None
@@ -2279,7 +2307,7 @@ let open_existentials () : Tac unit
        match collect_app t0 with
        | _ (* squash/auto_squash *) , (t1, Q_Explicit) :: [] ->
          let hd, tl = collect_app t1 in
-         if hd `term_eq` (`can_be_split)
+         if hd `is_fvar` (`%can_be_split)
          then
            match tl with
            | _ (* lhs *) :: (rhs, Q_Explicit) :: [] ->
@@ -2461,12 +2489,12 @@ let open_existentials_forall_dep () : Tac unit
   match collect_app t0 with
   | _ (* squash/auto_squash *) , (t1, Q_Explicit) :: [] ->
     let hd, tl = collect_app t1 in
-    if hd `term_eq` (`can_be_split_forall_dep)
+    if hd `is_fvar` (`%can_be_split_forall_dep)
     then
       match tl with
       | _ (* cond *) :: _ (* lhs *) :: (rhs, Q_Explicit) :: []
       | (_, Q_Implicit) (* #a *) :: _ (* cond *) :: _ (* lhs *) :: (rhs, Q_Explicit) :: [] ->
-        begin match inspect rhs with
+        begin match inspect_unascribe rhs with
         | Tv_Abs _ body ->
           begin match extract_cbs_forall_dep_contexts body with
           | None -> fail "open_existentials_forall_dep: no candidate"
@@ -2662,7 +2690,7 @@ let solve_can_be_split_post (args:list argv) : Tac bool =
 let is_return_eq (l r:term) : Tac bool =
   let nl, al = collect_app l in
   let nr, ar = collect_app r in
-  term_eq nl (`return_pre) || term_eq nr (`return_pre)
+  is_fvar nl (`%return_pre) || is_fvar nr (`%return_pre)
 
 /// Solves indirection equalities introduced by the layered effects framework.
 /// If these equalities were introduced during a monadic return, they need to be solved
@@ -2715,25 +2743,25 @@ let goal_to_equiv (loc:string) : Tac unit
     let f = term_as_formula' t in
     match f with
     | App hd0 t ->
-      if not (hd0 `term_eq` (`squash))
+      if not (is_fvar hd0 (`%squash))
       then fail (loc ^ " unexpected non-squash goal in goal_to_equiv");
       let hd, args = collect_app t in
-      if term_eq hd (`can_be_split) then (
+      if hd `is_fvar` (`%can_be_split) then (
         apply_lemma (`equiv_can_be_split)
-      ) else if term_eq hd (`can_be_split_forall) then (
+      ) else if hd `is_fvar` (`%can_be_split_forall) then (
         ignore (forall_intro ());
         apply_lemma (`equiv_can_be_split)
-      ) else if term_eq hd (`equiv_forall) then (
+      ) else if hd `is_fvar` (`%equiv_forall) then (
         apply_lemma (`equiv_forall_elim);
         ignore (forall_intro ())
-      ) else if term_eq hd (`can_be_split_post) then (
+      ) else if hd `is_fvar` (`%can_be_split_post) then (
         apply_lemma (`can_be_split_post_elim);
         dismiss_slprops();
         ignore (forall_intro ());
         ignore (forall_intro ())
-      ) else if term_eq hd (`can_be_split_dep) then (
+      ) else if hd `is_fvar` (`%can_be_split_dep) then (
         fail ("can_be_split_dep not supported in " ^ loc)
-      ) else if term_eq hd (`can_be_split_forall_dep) then (
+      ) else if hd `is_fvar` (`%can_be_split_forall_dep) then (
         fail ("can_be_split_forall_dep not supported in " ^ loc)
       ) else
         // This should never happen
@@ -2749,7 +2777,7 @@ let rec term_dict_assoc
   | [] -> []
   | (k, v) :: q ->
     let q' = term_dict_assoc key q in
-    if k `term_eq` key
+    if k `term_eq_old` key
     then (v :: q')
     else q'
 
@@ -2760,16 +2788,16 @@ let solve_or_delay (dict: list (term & (unit -> Tac bool))) : Tac bool =
   let f = term_as_formula' (cur_goal ()) in
   match f with
   | App hd0 t ->
-    if hd0 `term_eq` (`squash)
+    if is_fvar hd0 (`%squash)
     then
       let hd, args = collect_app t in
-      if term_eq hd (`can_be_split) then solve_can_be_split args
-      else if term_eq hd (`can_be_split_forall) then solve_can_be_split_forall args
-      else if term_eq hd (`equiv_forall) then solve_equiv_forall args
-      else if term_eq hd (`can_be_split_post) then solve_can_be_split_post args
-      else if term_eq hd (`equiv) then solve_equiv args
-      else if term_eq hd (`can_be_split_dep) then solve_can_be_split_dep args
-      else if term_eq hd (`can_be_split_forall_dep) then solve_can_be_split_forall_dep args
+      if hd `is_fvar` (`%can_be_split) then solve_can_be_split args
+      else if hd `is_fvar` (`%can_be_split_forall) then solve_can_be_split_forall args
+      else if hd `is_fvar` (`%equiv_forall) then solve_equiv_forall args
+      else if hd `is_fvar` (`%can_be_split_post) then solve_can_be_split_post args
+      else if hd `is_fvar` (`%equiv) then solve_equiv args
+      else if hd `is_fvar` (`%can_be_split_dep) then solve_can_be_split_dep args
+      else if hd `is_fvar` (`%can_be_split_forall_dep) then solve_can_be_split_forall_dep args
       else
         let candidates = term_dict_assoc hd dict in
         let run_tac (tac: unit -> Tac bool) () : Tac bool =
@@ -2798,11 +2826,11 @@ let solve_or_delay (dict: list (term & (unit -> Tac bool))) : Tac bool =
 /// which should mean only delayed goals are left
 
 let rec vprop_term_uvars (t:term) : Tac (list int) =
-  match inspect t with
+  match inspect_unascribe t with
   | Tv_Uvar i' _ -> [i']
   | Tv_App _ _ ->
     let hd, args = collect_app t in
-    if term_eq hd (`star) || term_eq hd (`VStar) || term_eq hd (`VUnit) then
+    if is_star_or_unit hd then
       // Only count the number of unresolved slprops, not program implicits
       argv_uvars args
     else
@@ -2834,7 +2862,7 @@ let simplify_list (l: list int) : Tot (list int) =
 
 let goal_term_uvars (t: term) : Tac (list int) =
   let hd, tl = collect_app t in
-  if hd `term_eq` (`squash)
+  if hd `is_fvar` (`%squash)
   then
     match tl with
     | [tl0, Q_Explicit] ->
@@ -2967,13 +2995,7 @@ let rec resolve_tac_logical (dict: _) : Tac unit =
 /// Determining whether the type represented by term [t] corresponds to one of the logical (requires/ensures) goals
 let typ_contains_req_ens (t:term) : Tac bool =
   let name, _ = collect_app t in
-  if term_eq name (`req_t) ||
-     term_eq name (`ens_t) ||
-     term_eq name (`pure_wp) ||
-     term_eq name (`pure_pre) ||
-     term_eq name (`pure_post)
-  then true
-  else false
+  is_any_fvar name [`%req_t; `%ens_t; `%pure_wp; `%pure_pre; `%pure_post]
 
 /// Splits goals between separation logic goals (slgoals) and requires/ensures goals (loggoals)
 let rec filter_goals (l:list goal) : Tac (list goal * list goal) =
@@ -2994,7 +3016,7 @@ let rec filter_goals (l:list goal) : Tac (list goal * list goal) =
         else (
           hd::slgoals, loggoals
         )
-      | App t _ -> if term_eq t (`squash) then hd::slgoals, loggoals else slgoals, loggoals
+      | App t _ -> if is_fvar t (`%squash) then hd::slgoals, loggoals else slgoals, loggoals
       | _ -> slgoals, loggoals
 
 let is_true (t:term) () : Tac unit =
@@ -3014,15 +3036,15 @@ let rec solve_maybe_emps (fuel: nat) : Tac unit =
     let f = term_as_formula' (cur_goal ()) in (
     match f with
     | App hd0 t ->
-      if not (hd0 `term_eq` (`squash))
+      if not (is_fvar hd0 (`%squash))
       then later ()
       else
         let hd, args = collect_app t in
-        if term_eq hd (`maybe_emp) then
+        if hd `is_fvar` (`%maybe_emp) then
           (norm [delta_only [`%maybe_emp]; iota; zeta; primops; simplify];
           let g = cur_goal () in
           or_else (is_true g) trefl)
-        else if term_eq hd (`maybe_emp_dep) then
+        else if hd `is_fvar` (`%maybe_emp_dep) then
           (norm [delta_only [`%maybe_emp_dep]; iota; zeta; primops; simplify];
           let g = cur_goal () in
           or_else (is_true g) (fun _ -> ignore (forall_intro ()); trefl ()))
@@ -3039,12 +3061,12 @@ let rec norm_return_pre (fuel: nat) : Tac unit =
   | [] -> ()
   | _::_ -> norm [delta_only [`%return_pre]]; later(); norm_return_pre (fuel - 1)
 
-let print_goal (g:goal) =
+let print_goal (g:goal) : Tac string =
   let t = goal_type g in
   term_to_string t
 
-let print_goals (g:list goal) =
-  let strs = List.Tot.map print_goal g in
+let print_goals (g:list goal) : Tac string =
+  let strs = map print_goal g in
   String.concat "\n" strs
 
 /// The entry point of the frame inference tactic:
@@ -3144,19 +3166,13 @@ let ite_soundness_tac () : Tac unit =
   // Now taking care of the actual subcomp VC
   set_goals [subcomp_goal];
   norm [];
-  // We remove the with_tactic call with executing the tactic before calling the SMT.
-  split ();
-  // Remove the `rewrite_by_tactic` nodes
-  pointwise' (fun _ -> or_else
-    (fun _ -> apply_lemma (`unfold_rewrite_with_tactic))
-    trefl);
   smt ()
 
 
 /// Normalization step for VC generation, used in Steel and SteelAtomic subcomps
 /// This tactic is executed after frame inference, and just before sending the query to the SMT
 /// As such, it is a good place to add debugging features to inspect SMT queries when needed
-let vc_norm () : Tac unit = norm normal_steps; trefl()
+let vc_norm () : Tac unit = with_compat_pre_core 0 (fun _ -> norm normal_steps; trefl())
 
 ////////////////////////////////////////////////////////////////////////////////
 //Common datatypes for the atomic & ghost effects

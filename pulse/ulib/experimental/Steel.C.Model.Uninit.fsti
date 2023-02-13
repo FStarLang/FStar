@@ -1,9 +1,9 @@
-module Steel.C.Uninit
+module Steel.C.Model.Uninit
 
 module P = FStar.PCM
-open Steel.C.PCM
-open Steel.C.Ref
-open Steel.C.Connection
+open Steel.C.Model.PCM
+open Steel.C.Model.Ref
+open Steel.C.Model.Connection
 open Steel.Effect
 
 /// Uninitialized
@@ -52,7 +52,7 @@ let fstar_pcm_uninit #a (p: pcm a) : Tot (P.pcm (uninit_t a)) = let open P in {
   p = {
          composable = uninit_composable p;
          op = uninit_compose p;
-         one = InitOrUnit (Steel.C.PCM.one p);
+         one = InitOrUnit (Steel.C.Model.PCM.one p);
       };
   comm = (fun _ _ -> ());
   assoc = (fun x1 x2 x3 -> ());

@@ -23,7 +23,7 @@ open FStar.Ghost
 open Steel.Effect.Atomic
 
 open Steel.C.Typedef
-open Steel.C.PCM
+open Steel.C.Model.PCM
 open Steel.C.Fields
 open Steel.C.Typenat
 
@@ -34,7 +34,7 @@ open Steel.C.Typenat
 
 val array_pcm_carrier (t: Type u#0) (n: Ghost.erased size_t) : Type u#0
 
-val array_pcm (t: Type u#0) (n: Ghost.erased size_t) : Tot (Steel.C.PCM.pcm (array_pcm_carrier t n))
+val array_pcm (t: Type u#0) (n: Ghost.erased size_t) : Tot (Steel.C.Model.PCM.pcm (array_pcm_carrier t n))
 
 // FIXME: how to produce array type t[n] as the type of some struct field?
 let array_view_type (t: Type u#0) (n: size_t)
@@ -49,7 +49,7 @@ let array_view_type_sized (t: Type u#0) (n': Type u#0) (n: size_t_of n')
 = array_view_type t n
 
 val array_view (t: Type u#0) (n: size_t)
-  : Pure (Steel.C.Ref.sel_view (array_pcm t n) (array_view_type t n) false)
+  : Pure (Steel.C.Model.Ref.sel_view (array_pcm t n) (array_view_type t n) false)
     (requires (size_v n > 0))
     (ensures (fun _ -> True))
 
@@ -115,7 +115,7 @@ let array_typedef_sized (t: Type0) (n': Type0) (n: size_t_of n'{size_v n > 0}): 
 
 // [@@ __steel_reduce__]
 // let varray (#base: Type) (#t: Type) (x: array base t) : Tot vprop
-// = Steel.C.Ref.pts_to_view (g_array_as_ref x) (array_view t (len x))
+// = Steel.C.Model.Ref.pts_to_view (g_array_as_ref x) (array_view t (len x))
 
 val varray_hp (#base: Type0) (#t: Type0) (x: array base t) : Tot (slprop u#1)
 
@@ -168,13 +168,13 @@ val intro_varray_from (#base: Type u#0) (#t: Type u#0) (#opened: _) (#n: size_t)
   (_: squash (size_v n > 0))
 : SteelAtomicBase (al: array_or_null_from base t { g_mk_array_from r al })
     false opened Unobservable
-    (Steel.C.Ref.pts_to_view r (array_view t n))
+    (Steel.C.Model.Ref.pts_to_view r (array_view t n))
     (fun al -> varray (al, g_mk_array_to r al))
     (requires fun _ -> True)
   (ensures (fun h al h' ->
     let a = (al, g_mk_array_to r al) in
     g_mk_array r a /\
-    h' (varray a) == h (Steel.C.Ref.pts_to_view r (array_view t n))
+    h' (varray a) == h (Steel.C.Model.Ref.pts_to_view r (array_view t n))
   ))
 
 inline_for_extraction
@@ -182,12 +182,12 @@ let intro_varray (#base: Type u#0) (#t: Type u#0) (#opened: _) (#n: size_t) (r: 
   (_: squash (size_v n > 0))
 : SteelAtomicBase (array base t)
   false opened Unobservable
-    (Steel.C.Ref.pts_to_view r (array_view t n))
+    (Steel.C.Model.Ref.pts_to_view r (array_view t n))
     (fun a -> varray a)
     (requires fun _ -> True)
   (ensures (fun h a h' ->
     g_mk_array r a /\
-    h' (varray a) == h (Steel.C.Ref.pts_to_view r (array_view t n))
+    h' (varray a) == h (Steel.C.Model.Ref.pts_to_view r (array_view t n))
   ))
 =
   let al = intro_varray_from r () in
@@ -200,11 +200,11 @@ let intro_varray (#base: Type u#0) (#t: Type u#0) (#opened: _) (#n: size_t) (r: 
 val elim_varray (#inames: _) (#base: Type u#0) (#t: Type u#0) (#n: size_t) (r: Steel.C.Reference.ref base (array_view_type t n) (array_pcm t n)) (a: array base t) (_: squash (size_v n > 0))
 : SteelGhost unit inames
   (varray a)
-  (fun _ -> Steel.C.Ref.pts_to_view r (array_view t n))
+  (fun _ -> Steel.C.Model.Ref.pts_to_view r (array_view t n))
   (requires fun _ -> g_mk_array r a)
   (ensures (fun h _ h' ->
     g_mk_array r a /\
-    h (varray a) == h' (Steel.C.Ref.pts_to_view r (array_view t n))
+    h (varray a) == h' (Steel.C.Model.Ref.pts_to_view r (array_view t n))
   ))
 
 /// Splitting an array into subarrays
@@ -447,27 +447,27 @@ val v_ref_of_array
 val ref_of_array_ghost (#inames: _) (#base: Type) (#t:Type0) (r:array base t) (sq: squash (length r == 1))
   : SteelGhost unit inames
              (varray r)
-             (fun _ -> Steel.C.Ref.pts_to_view (g_ref_of_array r) (Steel.C.Opt.opt_view t) `star` v_ref_of_array r)
+             (fun _ -> Steel.C.Model.Ref.pts_to_view (g_ref_of_array r) (Steel.C.Opt.opt_view t) `star` v_ref_of_array r)
              (requires fun _ -> True)
              (ensures fun h0 _ h1 ->
                let r' = g_ref_of_array r in
                let s = h0 (varray r) in
                Seq.length s == 1 /\
-               h1 (Steel.C.Ref.pts_to_view r' (Steel.C.Opt.opt_view t)) == Seq.index s 0
+               h1 (Steel.C.Model.Ref.pts_to_view r' (Steel.C.Opt.opt_view t)) == Seq.index s 0
              )
 
 val ref_of_array_from (#base: Type) (#t:Type0) (#opened: _) (r_from:array_or_null_from base t) (r_to: array_or_null_to base t) (sq: squash (let r = (r_from, r_to) in array_or_null_spec r /\ length r == 1))
   : SteelAtomicBase (Steel.C.Reference.ref base t (Steel.C.Opt.opt_pcm #t))
     false opened Unobservable
              (varray (r_from, r_to))
-             (fun r' -> Steel.C.Ref.pts_to_view r' (Steel.C.Opt.opt_view t) `star` v_ref_of_array (r_from, r_to))
+             (fun r' -> Steel.C.Model.Ref.pts_to_view r' (Steel.C.Opt.opt_view t) `star` v_ref_of_array (r_from, r_to))
              (requires fun _ -> True)
              (ensures fun h0 r' h1 ->
                let r = (r_from, r_to) in
                let s = h0 (varray r) in
                Seq.length s == 1 /\
                g_ref_of_array r == r' /\
-               h1 (Steel.C.Ref.pts_to_view r' (Steel.C.Opt.opt_view t)) == Seq.index s 0
+               h1 (Steel.C.Model.Ref.pts_to_view r' (Steel.C.Opt.opt_view t)) == Seq.index s 0
              )
 
 inline_for_extraction
@@ -475,13 +475,13 @@ let ref_of_array (#base: Type) (#t:Type0) (#opened: _) (r:array base t) (sq: squ
   : SteelAtomicBase (Steel.C.Reference.ref base t (Steel.C.Opt.opt_pcm #t))
     false opened Unobservable
              (varray r)
-             (fun r' -> Steel.C.Ref.pts_to_view r' (Steel.C.Opt.opt_view t) `star` v_ref_of_array r)
+             (fun r' -> Steel.C.Model.Ref.pts_to_view r' (Steel.C.Opt.opt_view t) `star` v_ref_of_array r)
              (requires fun _ -> True)
              (ensures fun h0 r' h1 ->
                let s = h0 (varray r) in
                Seq.length s == 1 /\
                g_ref_of_array r == r' /\
-               h1 (Steel.C.Ref.pts_to_view r' (Steel.C.Opt.opt_view t)) == Seq.index s 0
+               h1 (Steel.C.Model.Ref.pts_to_view r' (Steel.C.Opt.opt_view t)) == Seq.index s 0
              )
 = match r with
   | (r_from, r_to) ->
@@ -496,14 +496,14 @@ let ref_of_array (#base: Type) (#t:Type0) (#opened: _) (r:array base t) (sq: squ
 
 val array_of_ref (#inames: _) (#base: Type) (#t:Type0) (r': array base t) (r: Steel.C.Reference.ref base t (Steel.C.Opt.opt_pcm #t)) (sq: squash (length r' == 1))
   : SteelGhost unit inames
-             (Steel.C.Ref.pts_to_view r (Steel.C.Opt.opt_view t) `star` v_ref_of_array r')
+             (Steel.C.Model.Ref.pts_to_view r (Steel.C.Opt.opt_view t) `star` v_ref_of_array r')
              (fun _ -> varray r')
              (requires fun _ -> g_ref_of_array r' == r)
              (ensures fun h0 _ h1 ->
                let s = h1 (varray r') in
                Seq.length s == 1 /\
                g_ref_of_array r' == r /\
-               h0 (Steel.C.Ref.pts_to_view r (Steel.C.Opt.opt_view t)) == Seq.index s 0
+               h0 (Steel.C.Model.Ref.pts_to_view r (Steel.C.Opt.opt_view t)) == Seq.index s 0
              )
 
 // this function should be used only to pass a pointer as an argument to a function that expects an array
@@ -527,7 +527,7 @@ val mk_array_of_ref_to
 val mk_array_of_ref_from (#base: Type) (#t:Type0) (#opened: _) (r: Steel.C.Reference.ref base t (Steel.C.Opt.opt_pcm #t))
   : SteelAtomicBase (r0: array_or_null_from base t { mk_array_of_ref_from_spec r r0 })
     false opened Unobservable
-             (Steel.C.Ref.pts_to_view r (Steel.C.Opt.opt_view t))
+             (Steel.C.Model.Ref.pts_to_view r (Steel.C.Opt.opt_view t))
              (fun r0 -> varray (r0, mk_array_of_ref_to r r0))
              (requires fun _ -> True)
              (ensures fun h0 r0 h1 ->
@@ -535,21 +535,21 @@ val mk_array_of_ref_from (#base: Type) (#t:Type0) (#opened: _) (r: Steel.C.Refer
                let s = h1 (varray r') in
                Seq.length s == 1 /\
                g_ref_of_array r' == r /\
-               h0 (Steel.C.Ref.pts_to_view r (Steel.C.Opt.opt_view t)) == Seq.index s 0
+               h0 (Steel.C.Model.Ref.pts_to_view r (Steel.C.Opt.opt_view t)) == Seq.index s 0
              )
 
 inline_for_extraction
 let mk_array_of_ref (#base: Type) (#t:Type0) (#opened: _) (r: Steel.C.Reference.ref base t (Steel.C.Opt.opt_pcm #t))
   : SteelAtomicBase (array base t)
     false opened Unobservable
-             (Steel.C.Ref.pts_to_view r (Steel.C.Opt.opt_view t))
+             (Steel.C.Model.Ref.pts_to_view r (Steel.C.Opt.opt_view t))
              (fun r' -> varray r')
              (requires fun _ -> True)
              (ensures fun h0 r' h1 ->
                let s = h1 (varray r') in
                Seq.length s == 1 /\
                g_ref_of_array r' == r /\
-               h0 (Steel.C.Ref.pts_to_view r (Steel.C.Opt.opt_view t)) == Seq.index s 0
+               h0 (Steel.C.Model.Ref.pts_to_view r (Steel.C.Opt.opt_view t)) == Seq.index s 0
              )
 = let from = mk_array_of_ref_from r in
   let r' = (from, mk_array_of_ref_to r from) in

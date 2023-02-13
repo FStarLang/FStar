@@ -5,11 +5,11 @@ open Steel.Effect
 open Steel.Effect.Common
 open Steel.Effect.Atomic
 
-open Steel.C.PCM
-open Steel.C.Union
+open Steel.C.Model.PCM
+open Steel.C.Model.Union
 open Steel.C.Typedef
-open Steel.C.Ref
-open Steel.C.Connection
+open Steel.C.Model.Ref
+open Steel.C.Model.Connection
 open Steel.C.Opt
 open Steel.C.Fields
 

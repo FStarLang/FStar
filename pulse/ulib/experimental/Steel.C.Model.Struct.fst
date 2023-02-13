@@ -1,10 +1,10 @@
-module Steel.C.Struct
+module Steel.C.Model.Struct
 
 module P = FStar.PCM
-open Steel.C.PCM
-open Steel.C.Connection
-open Steel.C.Ref
-// module Ptr = Steel.C.Ptr
+open Steel.C.Model.PCM
+open Steel.C.Model.Connection
+open Steel.C.Model.Ref
+// module Ptr = Steel.C.Model.Ptr
 open Steel.Effect
 module A = Steel.Effect.Atomic
 
@@ -94,6 +94,24 @@ let prod_pcm (p:(k:'a -> pcm ('b k))): pcm (restricted_t 'a 'b) =
   ));
   assert (forall x frame . (prod_refine p x /\ prod_comp p x frame) ==> frame `feq` prod_one p);
   prod_pcm' p
+
+let prod_pcm_ext
+  (#a: Type)
+  (#b: (a -> Type))
+  (p1 p2: ((k: a) -> pcm (b k)))
+  (p_eq: (
+    (k: a) ->
+    Lemma
+    (p1 k == p2 k)
+  ))
+: Lemma
+  (prod_pcm p1 == prod_pcm p2)
+= Classical.forall_intro p_eq;
+  pcm0_ext (prod_pcm p1) (prod_pcm p2)
+    (fun x y -> ())
+    (fun x y -> assert (op (prod_pcm p1) x y `feq` op (prod_pcm p2) x y))
+    (fun _ -> ())
+    (assert (one (prod_pcm p1) `feq` one (prod_pcm p2)))
 
 let prod_pcm_composable_intro0
   (p:(k:'a -> pcm ('b k)))
@@ -238,6 +256,496 @@ let struct_field
     ()
     (struct_field_lift_fpu p k)
 
+#push-options "--split_queries"
+
+#restart-solver
+let struct_field_ext
+  (#a: eqtype)
+  (#b: a -> Type u#b)
+  (p1 p2:(k: a -> pcm (b k)))
+  (p_eq: (
+    (k: a) ->
+    Lemma
+    (p1 k == p2 k)
+  ))
+  (k: a)
+: Lemma
+  (prod_pcm p1 == prod_pcm p2 /\
+    p1 k == p2 k /\
+    struct_field p1 k === struct_field p2 k
+  )
+= prod_pcm_ext p1 p2 p_eq;
+  p_eq k;
+  Classical.forall_intro p_eq;
+  let l = struct_field p1 k in
+  let m : connection (prod_pcm p1) (p1 k) = coerce_eq () (struct_field p2 k) in
+  assert (forall x . field_to_struct_f p1 k x `feq` field_to_struct_f p2 k x);
+  connection_eq_gen
+    l
+    m
+    ()
+    (fun x y f v ->
+      struct_field_lift_fpu_prf p1 k x y f v;
+      struct_field_lift_fpu_prf p2 k x y f v;
+      assert (forall k' . struct_field_lift_fpu' p1 k x y f v k' == struct_field_lift_fpu' p2 k x y f v k');
+      assert (struct_field_lift_fpu' p1 k x y f v == struct_field_lift_fpu' p2 k x y f v);
+      assert ((l.conn_lift_frame_preserving_upd ({ fpu_lift_dom_x = x; fpu_lift_dom_y = y; fpu_lift_dom_f = f; })).fpu_f v == (m.conn_lift_frame_preserving_upd ({ fpu_lift_dom_x = x; fpu_lift_dom_y = y; fpu_lift_dom_f = f; })).fpu_f v)
+    )
+
+#pop-options
+
+let is_substruct
+  (#a: eqtype)
+  (#b: a -> Type)
+  (p:(k: a -> pcm (b k)))
+  (#a': eqtype)
+  (#b': (a' -> Type))
+  (p': (k: a' -> pcm (b' k)))
+  (inj: (a' -> a))
+  (surj: (a -> option a'))
+: Tot prop
+= (forall (k: a') . b' k == b (inj k) /\ p' k == p (inj k)) /\
+  (forall (k: a') . surj (inj k) == Some k) /\
+  (forall (k: a) . (match surj k with None -> True | Some k' -> inj k' == k))
+
+let substruct_to_struct_f
+  (#a: eqtype)
+  (#b: a -> Type)
+  (p:(k: a -> pcm (b k)))
+  (#a': eqtype)
+  (#b': (a' -> Type))
+  (p': (k: a' -> pcm (b' k)))
+  (inj: (a' -> a))
+  (surj: (a -> option a'))
+  (sq: squash (is_substruct p p' inj surj))
+  (x: restricted_t a' b')
+: Pure (restricted_t a b)
+  (requires True)
+  (ensures (fun y -> forall k . y k == (match surj k with Some k' -> (x k' <: b k) | _ -> one (p k))))
+= on_dom a (fun k -> match surj k with Some k' -> (x k' <: b k) | _ -> one (p k))
+
+let substruct_to_struct
+  (#a: eqtype)
+  (#b: a -> Type)
+  (p:(k: a -> pcm (b k)))
+  (#a': eqtype)
+  (#b': (a' -> Type))
+  (p': (k: a' -> pcm (b' k)))
+  (inj: (a' -> a))
+  (surj: (a -> option a'))
+  (sq: squash (is_substruct p p' inj surj))
+: Tot (morphism (prod_pcm p') (prod_pcm p))
+= mkmorphism
+    (substruct_to_struct_f p p' inj surj sq)
+    (assert (substruct_to_struct_f p p' inj surj sq (one (prod_pcm p')) `feq` one (prod_pcm p)))
+    (fun x1 x2 ->
+      assert (prod_op p (substruct_to_struct_f p p' inj surj sq x1) (substruct_to_struct_f p p' inj surj sq x2) `feq` substruct_to_struct_f p p' inj surj sq (prod_op p' x1 x2))
+    )
+
+let struct_to_substruct_f
+  (#a: eqtype)
+  (#b: a -> Type)
+  (p:(k: a -> pcm (b k)))
+  (#a': eqtype)
+  (#b': (a' -> Type))
+  (p': (k: a' -> pcm (b' k)))
+  (inj: (a' -> a))
+  (surj: (a -> option a'))
+  (sq: squash (is_substruct p p' inj surj))
+  (x: restricted_t a b)
+: Pure (restricted_t a' b')
+  (requires True)
+  (ensures (fun y -> forall k . y k == x (inj k)))
+= on_dom a' (fun k -> x (inj k) <: b' k)
+
+let struct_to_substruct
+  (#a: eqtype)
+  (#b: a -> Type)
+  (p:(k: a -> pcm (b k)))
+  (#a': eqtype)
+  (#b': (a' -> Type))
+  (p': (k: a' -> pcm (b' k)))
+  (inj: (a' -> a))
+  (surj: (a -> option a'))
+  (sq: squash (is_substruct p p' inj surj))
+: Tot (morphism (prod_pcm p) (prod_pcm p'))
+= mkmorphism
+    (struct_to_substruct_f p p' inj surj sq)
+    (assert (struct_to_substruct_f p p' inj surj sq (one (prod_pcm p)) `feq` one (prod_pcm p')))
+    (fun x1 x2 ->
+      assert (prod_op p' (struct_to_substruct_f p p' inj surj sq x1) (struct_to_substruct_f p p' inj surj sq x2) `feq` struct_to_substruct_f p p' inj surj sq (prod_op p x1 x2))
+    )
+
+let substruct_lift_fpu'
+  (#a: eqtype)
+  (#b: a -> Type)
+  (p:(k: a -> pcm (b k)))
+  (#a': eqtype)
+  (#b': (a' -> Type))
+  (p': (k: a' -> pcm (b' k)))
+  (inj: (a' -> a))
+  (surj: (a -> option a'))
+  (sq: squash (is_substruct p p' inj surj))
+  (x': Ghost.erased (restricted_t a' b') { ~ (Ghost.reveal x' == one (prod_pcm p')) })
+  (y': Ghost.erased (restricted_t a' b'))
+  (f': frame_preserving_upd (prod_pcm p') x' y')
+  (v: restricted_t a b {
+    p_refine (prod_pcm p) v /\
+    compatible (prod_pcm p) ((substruct_to_struct p p' inj surj sq).morph x') v
+  })
+: Tot (restricted_t a b)
+= 
+    on_dom a (fun k ->
+      let v' = ((struct_to_substruct p p' inj surj sq).morph v) in
+      let x = Ghost.hide ((substruct_to_struct p p' inj surj sq).morph x') in
+      assert (forall frame . (composable (prod_pcm p) x frame /\ op (prod_pcm p) x frame == v) ==> (
+        let frame' = (struct_to_substruct p p' inj surj sq).morph frame in
+        composable (prod_pcm p') x' frame' /\ op (prod_pcm p') x' frame' `feq` v'
+      ));
+      assert ((~ (exists (k' : a') . True)) ==> Ghost.reveal x' `feq` one (prod_pcm p'));
+      match surj k with
+      | Some k' -> f' v' k' <: b k
+      | _ -> v k
+    )
+
+#push-options "--query_stats --z3rlimit 64 --split_queries"
+
+#restart-solver
+let substruct_lift_fpu_prf
+  (#a: eqtype)
+  (#b: a -> Type)
+  (p:(k: a -> pcm (b k)))
+  (#a': eqtype)
+  (#b': (a' -> Type))
+  (p': (k: a' -> pcm (b' k)))
+  (inj: (a' -> a))
+  (surj: (a -> option a'))
+  (sq: squash (is_substruct p p' inj surj))
+  (x': Ghost.erased (restricted_t a' b') { ~ (Ghost.reveal x' == one (prod_pcm p')) })
+  (y': Ghost.erased (restricted_t a' b'))
+  (f': frame_preserving_upd (prod_pcm p') x' y')
+  (v: restricted_t a b {
+    p_refine (prod_pcm p) v /\
+    compatible (prod_pcm p) ((substruct_to_struct p p' inj surj sq).morph x') v
+  })
+: Lemma
+  (let v_new = substruct_lift_fpu' p p' inj surj sq x' y' f' v in
+    frame_preserving_upd_post (prod_pcm p)
+    ((substruct_to_struct p p' inj surj sq).morph x')
+    ((substruct_to_struct p p' inj surj sq).morph y')
+    v
+    (substruct_lift_fpu' p p' inj surj sq x' y' f' v)
+  )
+=
+  let y = (substruct_to_struct p p' inj surj sq).morph y' in
+  let v_new = substruct_lift_fpu' p p' inj surj sq x' y' f' v in
+  let v' = ((struct_to_substruct p p' inj surj sq).morph v) in
+  let x = Ghost.hide ((substruct_to_struct p p' inj surj sq).morph x') in
+  assert (forall frame . (composable (prod_pcm p) x frame /\ op (prod_pcm p) x frame == v) ==> (
+    let frame' = (struct_to_substruct p p' inj surj sq).morph frame in
+    composable (prod_pcm p') x' frame' /\ op (prod_pcm p') x' frame' `feq` v'
+  ));
+  assert ((~ (exists (k' : a') . True)) ==> Ghost.reveal x' `feq` one (prod_pcm p'));
+  assert (compatible (prod_pcm p') y' (f' v'));
+  assert (forall (frame': restricted_t a' b') .
+    (composable (prod_pcm p') y' frame' /\ op (prod_pcm p') frame' y' == f' v') ==> (
+    let frame : restricted_t a b = on_dom a (fun k -> match surj k with None -> v_new k | Some k' -> frame' k' <: b k) in
+    composable (prod_pcm p) y frame /\
+    op (prod_pcm p) frame y `feq` v_new
+  ));
+  assert (compatible (prod_pcm p) y v_new);
+  assert (p_refine (prod_pcm p) v_new);
+  Classical.forall_intro_2 (fun k -> is_unit (p k));
+  let prf (frame: restricted_t a b) : Lemma
+    (requires (
+      composable (prod_pcm p) x frame
+    ))
+    (ensures (
+      composable (prod_pcm p) x frame /\
+      composable (prod_pcm p) y frame /\
+      (op (prod_pcm p) x frame == v ==> op (prod_pcm p) y frame `feq` v_new)
+    ))
+  =
+    let frame' = struct_to_substruct_f p p' inj surj sq frame in
+    assert (composable (prod_pcm p') x' frame');
+    assert (composable (prod_pcm p') y' frame');
+    assert (op (prod_pcm p) x frame == v ==> op (prod_pcm p') x' frame' `feq` v');
+    ()
+  in
+  Classical.forall_intro (Classical.move_requires prf)
+
+#pop-options
+
+let substruct_lift_fpu
+  (#a: eqtype)
+  (#b: a -> Type)
+  (p:(k: a -> pcm (b k)))
+  (#a': eqtype)
+  (#b': (a' -> Type))
+  (p': (k: a' -> pcm (b' k)))
+  (inj: (a' -> a))
+  (surj: (a -> option a'))
+  (sq: squash (is_substruct p p' inj surj))
+  (x': Ghost.erased (restricted_t a' b') { ~ (Ghost.reveal x' == one (prod_pcm p')) })
+  (y': Ghost.erased (restricted_t a' b'))
+  (f': frame_preserving_upd (prod_pcm p') x' y')
+: Tot (frame_preserving_upd (prod_pcm p) ((substruct_to_struct p p' inj surj sq).morph x') ((substruct_to_struct p p' inj surj sq).morph y'))
+= fun v ->
+    substruct_lift_fpu_prf p p' inj surj sq x' y' f' v;
+    substruct_lift_fpu' p p' inj surj sq x' y' f' v
+
+let substruct
+  (#a: eqtype)
+  (#b: a -> Type)
+  (p:(k: a -> pcm (b k)))
+  (#a': eqtype)
+  (#b': (a' -> Type))
+  (p': (k: a' -> pcm (b' k)))
+  (inj: (a' -> a))
+  (surj: (a -> option a'))
+  (sq: squash (is_substruct p p' inj surj))
+: Tot (connection (prod_pcm p) (prod_pcm p'))
+= mkconnection
+    (substruct_to_struct p p' inj surj sq)
+    (struct_to_substruct p p' inj surj sq)
+    (assert (forall x .
+      struct_to_substruct_f p p' inj surj sq (substruct_to_struct_f p p' inj surj sq x) `feq` x
+    ))
+    (substruct_lift_fpu p p' inj surj sq)
+
+#push-options "--query_stats --z3rlimit 64"
+
+#restart-solver
+let substruct_id
+  (#a: eqtype)
+  (#b: a -> Type)
+  (p:(k: a -> pcm (b k)))
+  (inj: (a -> a))
+  (surj: (a -> option a))
+  (sq: squash (
+    (forall x . inj x == x) /\
+    (forall x . surj x == Some x)
+  ))
+: Lemma
+  (substruct p p inj surj () == connection_id (prod_pcm p))
+= let l = substruct p p inj surj () in
+  let m = connection_id (prod_pcm p) in
+  let _ : squash (l.conn_small_to_large.morph `feq` m.conn_small_to_large.morph) =
+    assert (forall x . l.conn_small_to_large.morph x `feq` m.conn_small_to_large.morph x)
+  in
+  let _ : squash (l.conn_large_to_small.morph `feq` m.conn_large_to_small.morph) = () in
+  connection_eq_gen
+    l
+    m
+    ()
+    (fun x y f v ->
+      assert ((l.conn_lift_frame_preserving_upd ({ fpu_lift_dom_x = x; fpu_lift_dom_y = y; fpu_lift_dom_f = f; })).fpu_f v `feq` (m.conn_lift_frame_preserving_upd ({ fpu_lift_dom_x = x; fpu_lift_dom_y = y; fpu_lift_dom_f = f; })).fpu_f v)
+    )
+
+#pop-options
+
+#push-options "--query_stats --z3rlimit 256"
+
+#restart-solver
+let substruct_compose
+  (#a1: eqtype)
+  (#b1: a1 -> Type)
+  (p1:(k: a1 -> pcm (b1 k)))
+  (#a2: eqtype)
+  (#b2: (a2 -> Type))
+  (p2: (k: a2 -> pcm (b2 k)))
+  (inj21: (a2 -> a1))
+  (surj12: (a1 -> option a2))
+  (sq12: squash (is_substruct p1 p2 inj21 surj12))
+  (#a3: eqtype)
+  (#b3: (a3 -> Type))
+  (p3: (k: a3 -> pcm (b3 k)))
+  (inj32: (a3 -> a2))
+  (surj23: (a2 -> option a3))
+  (sq23: squash (is_substruct p2 p3 inj32 surj23))
+  (inj31: (a3 -> a1))
+  (surj13: (a1 -> option a3))
+  (sq13: squash (is_substruct p1 p3 inj31 surj13))
+: Lemma
+  (requires (
+    (forall x3 . inj31 x3 == inj21 (inj32 x3)) /\
+    (forall x1 . surj13 x1 == (match surj12 x1 with
+    | None -> None
+    | Some x2 -> surj23 x2
+  ))))
+  (ensures (
+    substruct p1 p3 inj31 surj13 sq13 ==
+      substruct p1 p2 inj21 surj12 sq12 `connection_compose`
+      substruct p2 p3 inj32 surj23 sq23
+  ))
+=
+  let c12 = substruct p1 p2 inj21 surj12 sq12 in
+  let c23 = substruct p2 p3 inj32 surj23 sq23 in
+  let l = substruct p1 p3 inj31 surj13 sq13 in
+  let m = connection_compose c12 c23 in
+  let _ : squash (l.conn_small_to_large.morph `feq` m.conn_small_to_large.morph) =
+    assert (forall x . l.conn_small_to_large.morph x `feq` m.conn_small_to_large.morph x)
+  in
+  let _ : squash (l.conn_large_to_small.morph `feq` m.conn_large_to_small.morph) =
+    assert (forall x . l.conn_large_to_small.morph x `feq` m.conn_large_to_small.morph x)
+  in
+  connection_eq_gen
+    l
+    m
+    ()
+    (fun x y f v ->
+      assert ((l.conn_lift_frame_preserving_upd ({ fpu_lift_dom_x = x; fpu_lift_dom_y = y; fpu_lift_dom_f = f; })).fpu_f v `feq` (m.conn_lift_frame_preserving_upd ({ fpu_lift_dom_x = x; fpu_lift_dom_y = y; fpu_lift_dom_f = f; })).fpu_f v)
+    )
+
+#pop-options
+
+#push-options "--query_stats --z3rlimit 64"
+
+#restart-solver
+let substruct_field
+  (#a: eqtype)
+  (#b: a -> Type)
+  (p:(k: a -> pcm (b k)))
+  (#a': eqtype)
+  (#b': (a' -> Type))
+  (p': (k: a' -> pcm (b' k)))
+  (inj: (a' -> a))
+  (surj: (a -> option a'))
+  (sq: squash (is_substruct p p' inj surj))
+  (field': a')
+: Lemma
+  (substruct p p' inj surj sq `connection_compose` struct_field p' field' ==
+    struct_field p (inj field')
+  )
+=
+  let l = substruct p p' inj surj sq `connection_compose` struct_field p' field' in
+  let m = struct_field p (inj field') in
+  let _ : squash (l.conn_small_to_large.morph `feq` m.conn_small_to_large.morph) =
+    assert (forall x . l.conn_small_to_large.morph x `feq` m.conn_small_to_large.morph x)
+  in
+  let _ : squash (l.conn_large_to_small.morph `feq` m.conn_large_to_small.morph) = () in
+  connection_eq_gen
+    l
+    m
+    ()
+    (fun x y f v ->
+      assert ((l.conn_lift_frame_preserving_upd ({ fpu_lift_dom_x = x; fpu_lift_dom_y = y; fpu_lift_dom_f = f; })).fpu_f v `feq` (m.conn_lift_frame_preserving_upd ({ fpu_lift_dom_x = x; fpu_lift_dom_y = y; fpu_lift_dom_f = f; })).fpu_f v)
+    )
+
+#pop-options
+
+let substruct_erase_fields
+  (#a: eqtype)
+  (#b: a -> Type)
+  (p:(k: a -> pcm (b k)))
+  (#a': eqtype)
+  (surj: (a -> option a'))
+  (f: restricted_t a b)
+: Tot (restricted_t a b)
+= on_dom a (fun x -> if Some? (surj x) then one (p x) else f x)
+
+let substruct_erase_fields_op
+  (#a: eqtype)
+  (#b: a -> Type)
+  (p:(k: a -> pcm (b k)))
+  (#a': eqtype)
+  (#b': (a' -> Type))
+  (p': (k: a' -> pcm (b' k)))
+  (inj: (a' -> a))
+  (surj: (a -> option a'))
+  (sq: squash (is_substruct p p' inj surj))
+  (f: restricted_t a b)
+: Lemma
+  (
+    let f_sub = substruct_to_struct_f p p' inj surj sq (struct_to_substruct_f p p' inj surj sq f) in
+    let f_rem = substruct_erase_fields p surj f in
+    composable (prod_pcm p) f_sub f_rem /\
+    op (prod_pcm p) f_sub f_rem `feq` f
+  )
+= Classical.forall_intro_2 (fun k -> is_unit (p k))
+
+let substruct_composable
+  (#a: eqtype)
+  (#b: a -> Type)
+  (p:(k: a -> pcm (b k)))
+  (#a': eqtype)
+  (#b': (a' -> Type))
+  (p': (k: a' -> pcm (b' k)))
+  (inj: (a' -> a))
+  (surj: (a -> option a'))
+  (sq: squash (is_substruct p p' inj surj))
+  (f: restricted_t a b)
+  (g': restricted_t a' b')
+: Lemma
+  (requires (
+    forall x' . f (inj x') == one (p' x')
+  ))
+  (ensures (
+    let g = substruct_to_struct_f p p' inj surj sq g' in
+    composable (prod_pcm p) f g /\
+    (forall x . op (prod_pcm p) f g x == (match surj x with None -> f x | Some x' -> g' x' <: b x))
+  ))
+= Classical.forall_intro_2 (fun k -> is_unit (p k))
+
+let substruct_pts_to_intro
+  (#opened: _)
+  (#a: eqtype)
+  (#b: a -> Type)
+  (p:(k: a -> pcm (b k)))
+  (#a': eqtype)
+  (#b': (a' -> Type))
+  (p': (k: a' -> pcm (b' k)))
+  (inj: (a' -> a))
+  (surj: (a -> option a'))
+  (sq: squash (is_substruct p p' inj surj))
+  (r: ref (prod_pcm p))
+  (f: restricted_t a b)
+: A.SteelGhostT unit opened
+    (pts_to r f)
+    (fun _ ->
+      pts_to r (substruct_erase_fields p surj f) `star`
+      pts_to (r `ref_focus` substruct p p' inj surj sq) (struct_to_substruct_f p p' inj surj sq f)
+    )
+= substruct_erase_fields_op p p' inj surj sq f;
+  split r _ (substruct_erase_fields p surj f) (substruct_to_struct_f p p' inj surj sq (struct_to_substruct_f p p' inj surj sq f));
+  gfocus r (substruct p p' inj surj sq) (substruct_to_struct_f _ _ _ _ _ _) _
+
+let substruct_pts_to_elim
+  (#opened: _)
+  (#a: eqtype)
+  (#b: a -> Type)
+  (p:(k: a -> pcm (b k)))
+  (#a': eqtype)
+  (#b': (a' -> Type))
+  (p': (k: a' -> pcm (b' k)))
+  (inj: (a' -> a))
+  (surj: (a -> option a'))
+  (sq: squash (is_substruct p p' inj surj))
+  (r: ref (prod_pcm p))
+  (f: restricted_t a b)
+  (g': restricted_t a' b')
+: A.SteelGhost (Ghost.erased (restricted_t a b)) opened
+    (pts_to r f `star` pts_to (r `ref_focus` substruct p p' inj surj sq) g')
+    (fun res -> pts_to r res)
+    (fun _ ->
+      forall x' . f (inj x') == one (p' x')
+    )
+    (fun _ res _ ->
+      let g = substruct_to_struct_f p p' inj surj sq g' in
+      composable (prod_pcm p) f g /\
+      Ghost.reveal res == op (prod_pcm p) f g /\
+      (forall x . Ghost.reveal res x == (match surj x with None -> f x | Some x' -> g' x' <: b x))
+    )
+= substruct_composable p p' inj surj sq f g';
+  let g = substruct_to_struct_f p p' inj surj sq g' in
+  let res = Ghost.hide (op (prod_pcm p) f g) in
+  unfocus (r `ref_focus` _) r (substruct p p' inj surj sq) _;
+  gather r f _;
+  A.change_equal_slprop
+    (pts_to r _)
+    (pts_to r res);
+  res
+
 let exclusive_struct_intro
   (#a: Type)
   (#b: a -> Type)
@@ -298,6 +806,21 @@ let struct_peel (#a:eqtype) (#b: a -> Type u#b) (p:(k:a -> pcm (b k))) (k:a)
 = Classical.forall_intro_2 (fun k -> is_unit (p k));
   assert (xs `feq` op (prod_pcm p) (struct_without_field p k xs) (field_to_struct_f p k (xs k)))
 
+let g_addr_of_struct_field
+  (#opened: _)
+  (#base:Type) (#a:eqtype) (#b: a -> Type u#b) (#p:(k:a -> pcm (b k)))
+  (r: ref (prod_pcm p)) (k:a)
+  (xs: Ghost.erased (restricted_t a b))
+: A.SteelGhostT unit opened
+    (r `pts_to` xs)
+    (fun _ ->
+      (r `pts_to` struct_without_field p k xs) `star` 
+      (ref_focus r (struct_field p k) `pts_to` Ghost.reveal xs k))
+= struct_peel p k xs;
+  split r xs (struct_without_field p k xs) (field_to_struct_f p k (Ghost.reveal xs k));
+  A.change_equal_slprop (r `pts_to` _) (r `pts_to` _);
+  gfocus r (struct_field p k) (field_to_struct_f p k (Ghost.reveal xs k)) (Ghost.reveal xs k)
+
 let addr_of_struct_field
   (#base:Type) (#a:eqtype) (#b: a -> Type u#b) (#p:(k:a -> pcm (b k)))
   (r: ref base (prod_pcm p)) (k:a)
@@ -350,19 +873,19 @@ let struct_unpeel (#a:eqtype) (#b: a -> Type u#b) (p:(k:a -> pcm (b k))) (k:a)
   assert (struct_with_field p k x xs `feq` op (prod_pcm p) xs (field_to_struct_f p k x))
 
 let unaddr_of_struct_field
+  (#opened: _)
   (#base:Type) (#a:eqtype) (#b: a -> Type u#b) (#p:(k:a -> pcm (b k))) (k:a)
   (r': ref base (p k)) (r: ref base (prod_pcm p))
   (xs: Ghost.erased (restricted_t a b)) (x: Ghost.erased (b k))
 : Steel unit
     ((r `pts_to` xs) `star` (r' `pts_to` x))
     (fun s -> r `pts_to` struct_with_field p k x xs)
-    (requires fun _ -> r' == ref_focus r (struct_field p k) /\ Ghost.reveal xs k == one (p k))
+    (requires fun _ -> r' == ref_focus r (struct_field p k) /\ xs k == one (p k))
     (ensures fun _ _ _ -> True)
 = unfocus r' r (struct_field p k) x;
   gather r xs (field_to_struct_f p k x);
   struct_unpeel p k x xs;
-  A.change_equal_slprop (r `pts_to` _) (r `pts_to` _);
-  A.return ()
+  A.change_equal_slprop (r `pts_to` _) (r `pts_to` _)
 
 (*
 let struct_view_to_view_prop

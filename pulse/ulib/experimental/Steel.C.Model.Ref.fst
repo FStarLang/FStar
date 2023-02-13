@@ -1,6 +1,6 @@
-module Steel.C.Ref
+module Steel.C.Model.Ref
 module P = FStar.PCM
-module U = Steel.C.Universe
+module U = Steel.C.Model.Universe
 open FStar.FunctionalExtensionality
 
 #push-options "--print_universes"
@@ -101,8 +101,8 @@ let ref_alloc #a p x =
   A.return r
 
 let ref_free #a #b #p #x r =
-  // TODO: use Steel.PCMReference.free, but we are blocked by (p.refine (one p)), which we explicitly excluded in Steel.C.PCM
-  Steel.Effect.Atomic.drop ((NonNull?.v r).r `mpts_to` _)
+  // TODO: use Steel.PCMReference.free, but we are blocked by (p.refine (one p)), which we explicitly excluded in Steel.C.Model.PCM
+  A.drop (pts_to _ _)
 
 #pop-options
 

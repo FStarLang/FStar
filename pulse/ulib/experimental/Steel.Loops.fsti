@@ -17,28 +17,64 @@ module Steel.Loops
 open Steel.Effect.Common
 open Steel.Effect
 module AT = Steel.Effect.Atomic
-module U32 = FStar.UInt32
+module US = FStar.SizeT
 
 (* This module provides some common iterative looping combinators *)
 
-let nat_at_most (f:U32.t)
-  = x:nat{ x <= U32.v f }
+let nat_at_most (f:US.t)
+  = x:nat{ x <= US.v f }
 
-let u32_between (s f:U32.t)
-  = x:U32.t { U32.v s <= U32.v x /\ U32.v x < U32.v f}
+let u32_between (s f:US.t)
+  = x:US.t { US.v s <= US.v x /\ US.v x < US.v f}
 
 /// for_loop: for (i = start; i < finish; i++) inv { body i }
-val for_loop (start:U32.t)
-             (finish:U32.t { U32.v start <= U32.v finish })
+val for_loop (start:US.t)
+             (finish:US.t { US.v start <= US.v finish })
              (inv: nat_at_most finish -> vprop)
              (body:
                     (i:u32_between start finish ->
                           SteelT unit
-                          (inv (U32.v i))
-                          (fun _ -> inv (U32.v i + 1))))
+                          (inv (US.v i))
+                          (fun _ -> inv (US.v i + 1))))
   : SteelT unit
-      (inv (U32.v start))
-      (fun _ -> inv (U32.v finish))
+      (inv (US.v start))
+      (fun _ -> inv (US.v finish))
+
+inline_for_extraction
+noextract
+let for_loop_full
+  (start:US.t)
+  (finish:US.t { US.v start <= US.v finish })
+  (inv: nat_at_most finish -> vprop)
+  (inv_sel: (i:nat_at_most finish) -> t_of (inv i) -> prop)
+  (body:
+    (i:u32_between start finish ->
+    Steel unit
+    (inv (US.v i))
+    (fun _ -> inv (US.v i + 1))
+    (requires fun h -> inv_sel (US.v i) (h (inv (US.v i))))
+    (ensures fun h0 _ h1 ->
+      inv_sel (US.v i) (h0 (inv (US.v i))) /\
+      inv_sel (US.v i + 1) (h1 (inv (US.v i + 1)))
+    )))
+: Steel unit
+    (inv (US.v start))
+    (fun _ -> inv (US.v finish))
+    (requires fun h -> inv_sel (US.v start) (h (inv (US.v start))))
+    (ensures fun h0 _ h1 ->
+      inv_sel (US.v start) (h0 (inv (US.v start))) /\
+      inv_sel (US.v finish) (h1 (inv (US.v finish)))
+    )
+= AT.intro_vrefine (inv (US.v start)) (inv_sel (US.v start));
+  for_loop start finish
+    (fun n -> inv n `vrefine` inv_sel n)
+    (fun i ->
+      AT.elim_vrefine (inv (US.v i)) (inv_sel (US.v i));
+      body i;
+      AT.intro_vrefine (inv (US.v i + 1)) (inv_sel (US.v i + 1))
+    );
+  AT.elim_vrefine (inv (US.v finish)) (inv_sel (US.v finish))
+
 
 /// while_loop: while (cond()) { body () }
 val while_loop (inv: Ghost.erased bool -> vprop)

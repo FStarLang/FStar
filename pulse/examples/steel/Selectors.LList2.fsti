@@ -15,12 +15,16 @@ module L = FStar.List.Tot
 /// Abstract type of a list cell containing a value of type [a]
 val cell (a:Type0) : Type0
 /// The type of a list: A reference to a cell
+inline_for_extraction
 let t (a:Type0) = ref (cell a)
 
 (* Helpers to manipulate cells while keeping its definition abstract *)
 
+inline_for_extraction
 val next (#a:Type0) (c:cell a) : t a
+inline_for_extraction
 val data (#a:Type0) (c:cell a) : a
+inline_for_extraction
 val mk_cell (#a:Type0) (n: t a) (d:a)
   : Pure (cell a)
     (requires True)
@@ -30,9 +34,11 @@ val mk_cell (#a:Type0) (n: t a) (d:a)
 
 
 /// The null list pointer
+inline_for_extraction
 val null_llist (#a:Type) : t a
 
 /// Lifting the null pointer check to empty lists
+inline_for_extraction
 val is_null (#a:Type) (ptr:t a) : (b:bool{b <==> ptr == null_llist})
 
 
@@ -61,11 +67,12 @@ let v_llist (#a:Type0) (#p:vprop) (r:t a)
 
 (** Stateful lemmas to fold and unfold the llist predicate **)
 
-val intro_llist_nil (a:Type0)
-  : Steel unit emp (fun _ -> llist (null_llist #a))
+val intro_llist_nil (#opened: _) (a:Type0)
+  : SteelGhost unit opened emp (fun _ -> llist (null_llist #a))
           (requires fun _ -> True)
           (ensures fun _ _ h1 -> v_llist #a null_llist h1 == [])
 
+inline_for_extraction
 val is_nil (#a:Type0) (ptr:t a)
   : Steel bool (llist ptr) (fun _ -> llist ptr)
           (requires fun _ -> True)
@@ -74,12 +81,14 @@ val is_nil (#a:Type0) (ptr:t a)
             v_llist ptr h0 == v_llist ptr h1 /\
             res == Nil? (v_llist ptr h1))
 
+inline_for_extraction
 val intro_llist_cons (#a:Type0) (ptr1 ptr2:t a)
   : Steel unit (vptr ptr1 `star` llist ptr2)
                   (fun _ -> llist ptr1)
                   (requires fun h -> next (sel ptr1 h) == ptr2)
                   (ensures fun h0 _ h1 -> v_llist ptr1 h1 == (data (sel ptr1 h0)) :: v_llist ptr2 h0)
 
+inline_for_extraction
 val tail (#a:Type0) (ptr:t a)
   : Steel (t a) (llist ptr)
                    (fun n -> vptr ptr `star` llist n)
