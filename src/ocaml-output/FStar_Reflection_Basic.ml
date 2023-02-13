@@ -269,6 +269,8 @@ let rec (inspect_ln :
                            let uu___4 = inspect_pat p1 in (uu___4, b)) ps in
                 (fv, us_opt, uu___2) in
               FStar_Reflection_Data.Pat_Cons uu___1
+          | FStar_Syntax_Syntax.Pat_view uu___1 ->
+              failwith "todo: reflection for pat view"
           | FStar_Syntax_Syntax.Pat_var bv ->
               FStar_Reflection_Data.Pat_Var bv
           | FStar_Syntax_Syntax.Pat_wild bv ->

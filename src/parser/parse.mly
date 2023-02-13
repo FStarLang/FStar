@@ -516,6 +516,44 @@ constructorPattern:
       { pat }
 
 atomicPattern:
+  | pat=atomicPattern IF LPAREN t=term RPAREN {
+      let r = rhs2 parseState 1 3 in
+      let mk_pair_abs =
+        let r = rhs parseState 3 in
+        let var = id_of_text "x" in
+        let var_pat = mk_pattern (PatVar (var, None, [])) r in
+        let none = mk_term (Name none_lid) r Expr in
+        let some = mk_term (Name some_lid) r Expr in
+        let var_term = mk_term (Var (lid_of_ns_and_id [] var)) r Expr in
+        let some_var = mk_term (App(some, var_term, Nothing)) r Expr in
+        let branches = [
+            pat, None, mk_term (If(t, None, None, some_var, none)) r Expr
+          ] in
+        let body = mk_term (Match(var_term, None, None, branches)) r Expr in
+        mk_term (Abs ([var_pat], body)) r Expr
+      in
+      let some_pat = mk_pattern (PatApp (mk_pattern (PatName some_lid) r, [pat])) r in
+      let pat = mk_pattern (PatView (some_pat, mk_pair_abs)) r in
+      print_endline ("PAT IS NOW: " ^ pat_to_string pat);
+      pat
+    }
+  | pat=atomicPattern AS n=lident {
+      let r = rhs2 parseState 1 3 in
+      let mk_pair_abs =
+        let r = rhs parseState 3 in
+        let mk_tuple_2 = mk_term (Name (mk_tuple_data_lid (Z.of_int 2) r)) r Expr in
+        let var = id_of_text "x" in
+        let var_pat = mk_pattern (PatVar (var, None, [])) r in
+        let var_arg = mk_term (Var (lid_of_ns_and_id [] var)) r Expr, Nothing in
+        let tup_term = mkApp mk_tuple_2 [var_arg; var_arg] r in
+        mk_term (Abs ([var_pat], tup_term)) r Expr
+      in
+      let var_pat = mk_pattern (PatVar (n, None, [])) (rhs parseState 3) in
+      let tup_pat = mk_pattern (PatTuple ([pat; var_pat], false)) r in
+      let pat = mk_pattern (PatView (tup_pat, mk_pair_abs)) r in
+      pat
+    }
+  | pat=atomicPattern LARROW t=atomicTerm { mk_pattern (PatView (pat, t)) (rhs2 parseState 1 3) }
   | LPAREN pat=tuplePattern COLON t=simpleArrow phi_opt=refineOpt RPAREN
       {
         let pos_t = rhs2 parseState 2 4 in

@@ -2013,6 +2013,19 @@ and (p_atomicPattern : FStar_Parser_AST.pattern -> FStar_Pprint.document) =
         -> let uu___3 = p_tuplePattern p in soft_parens_with_nesting uu___3
     | FStar_Parser_AST.PatTuple (uu___, false) ->
         let uu___1 = p_tuplePattern p in soft_parens_with_nesting uu___1
+    | FStar_Parser_AST.PatView (subpat, view) ->
+        let uu___ =
+          let uu___1 = p_atomicPattern subpat in
+          let uu___2 =
+            let uu___3 =
+              let uu___4 = str "<@" in
+              let uu___5 =
+                let uu___6 = p_term false false view in
+                FStar_Pprint.op_Hat_Hat FStar_Pprint.space uu___6 in
+              FStar_Pprint.op_Hat_Hat uu___4 uu___5 in
+            FStar_Pprint.op_Hat_Hat FStar_Pprint.space uu___3 in
+          FStar_Pprint.op_Hat_Hat uu___1 uu___2 in
+        FStar_Pprint.group uu___
     | uu___ ->
         let uu___1 =
           let uu___2 = FStar_Parser_AST.pat_to_string p in

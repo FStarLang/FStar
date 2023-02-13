@@ -1706,6 +1706,8 @@ let (collect_one :
              | FStar_Parser_AST.PatAscribed
                  (p, (t, FStar_Pervasives_Native.Some tac)) ->
                  (collect_pattern p; collect_term t; collect_term tac)
+             | FStar_Parser_AST.PatView (subpat, view) ->
+                 (collect_term view; collect_pattern subpat)
            and collect_branches bs =
              FStar_Compiler_List.iter collect_branch bs
            and collect_branch uu___2 =

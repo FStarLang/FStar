@@ -431,10 +431,14 @@ type pattern =
   pat_vars: (FStar_Syntax_Syntax.bv * FStar_SMTEncoding_Term.fv) Prims.list ;
   pat_term:
     unit -> (FStar_SMTEncoding_Term.term * FStar_SMTEncoding_Term.decls_t) ;
-  guard: FStar_SMTEncoding_Term.term -> FStar_SMTEncoding_Term.term ;
+  guard:
+    FStar_SMTEncoding_Term.term ->
+      (FStar_SMTEncoding_Term.term * FStar_SMTEncoding_Term.decls_t)
+    ;
   projections:
     FStar_SMTEncoding_Term.term ->
-      (FStar_Syntax_Syntax.bv * FStar_SMTEncoding_Term.term) Prims.list
+      ((FStar_Syntax_Syntax.bv * FStar_SMTEncoding_Term.term) Prims.list *
+        FStar_SMTEncoding_Term.decls_t)
     }
 let (__proj__Mkpattern__item__pat_vars :
   pattern -> (FStar_Syntax_Syntax.bv * FStar_SMTEncoding_Term.fv) Prims.list)
@@ -450,14 +454,18 @@ let (__proj__Mkpattern__item__pat_term :
     match projectee with
     | { pat_vars; pat_term; guard; projections;_} -> pat_term
 let (__proj__Mkpattern__item__guard :
-  pattern -> FStar_SMTEncoding_Term.term -> FStar_SMTEncoding_Term.term) =
+  pattern ->
+    FStar_SMTEncoding_Term.term ->
+      (FStar_SMTEncoding_Term.term * FStar_SMTEncoding_Term.decls_t))
+  =
   fun projectee ->
     match projectee with
     | { pat_vars; pat_term; guard; projections;_} -> guard
 let (__proj__Mkpattern__item__projections :
   pattern ->
     FStar_SMTEncoding_Term.term ->
-      (FStar_Syntax_Syntax.bv * FStar_SMTEncoding_Term.term) Prims.list)
+      ((FStar_Syntax_Syntax.bv * FStar_SMTEncoding_Term.term) Prims.list *
+        FStar_SMTEncoding_Term.decls_t))
   =
   fun projectee ->
     match projectee with
@@ -3167,54 +3175,74 @@ and (encode_match :
                                   let uu___5 = encode_pat env1 p in
                                   (match uu___5 with
                                    | (env0, pattern1) ->
-                                       let guard = pattern1.guard scr' in
-                                       let projections =
-                                         pattern1.projections scr' in
-                                       let env2 =
-                                         FStar_Compiler_Effect.op_Bar_Greater
-                                           projections
-                                           (FStar_Compiler_List.fold_left
-                                              (fun env3 ->
-                                                 fun uu___6 ->
-                                                   match uu___6 with
-                                                   | (x, t) ->
-                                                       FStar_SMTEncoding_Env.push_term_var
-                                                         env3 x t) env1) in
-                                       let uu___6 =
-                                         match w with
-                                         | FStar_Pervasives_Native.None ->
-                                             (guard, [])
-                                         | FStar_Pervasives_Native.Some w1 ->
-                                             let uu___7 = encode_term w1 env2 in
-                                             (match uu___7 with
-                                              | (w2, decls2) ->
-                                                  let uu___8 =
-                                                    let uu___9 =
-                                                      let uu___10 =
-                                                        let uu___11 =
-                                                          let uu___12 =
-                                                            FStar_SMTEncoding_Term.boxBool
-                                                              FStar_SMTEncoding_Util.mkTrue in
-                                                          (w2, uu___12) in
-                                                        FStar_SMTEncoding_Util.mkEq
-                                                          uu___11 in
-                                                      (guard, uu___10) in
-                                                    FStar_SMTEncoding_Util.mkAnd
-                                                      uu___9 in
-                                                  (uu___8, decls2)) in
+                                       let uu___6 = pattern1.guard scr' in
                                        (match uu___6 with
-                                        | (guard1, decls2) ->
-                                            let uu___7 = encode_br br env2 in
+                                        | (guard, decls_guard) ->
+                                            let uu___7 =
+                                              pattern1.projections scr' in
                                             (match uu___7 with
-                                             | (br1, decls3) ->
+                                             | (projections, projs_decls) ->
+                                                 let env2 =
+                                                   FStar_Compiler_Effect.op_Bar_Greater
+                                                     projections
+                                                     (FStar_Compiler_List.fold_left
+                                                        (fun env3 ->
+                                                           fun uu___8 ->
+                                                             match uu___8
+                                                             with
+                                                             | (x, t) ->
+                                                                 FStar_SMTEncoding_Env.push_term_var
+                                                                   env3 x t)
+                                                        env1) in
                                                  let uu___8 =
-                                                   FStar_SMTEncoding_Util.mkITE
-                                                     (guard1, br1, else_case) in
-                                                 (uu___8,
-                                                   (FStar_Compiler_List.op_At
-                                                      decls1
-                                                      (FStar_Compiler_List.op_At
-                                                         decls2 decls3))))))) in
+                                                   match w with
+                                                   | FStar_Pervasives_Native.None
+                                                       -> (guard, [])
+                                                   | FStar_Pervasives_Native.Some
+                                                       w1 ->
+                                                       let uu___9 =
+                                                         encode_term w1 env2 in
+                                                       (match uu___9 with
+                                                        | (w2, decls2) ->
+                                                            let uu___10 =
+                                                              let uu___11 =
+                                                                let uu___12 =
+                                                                  let uu___13
+                                                                    =
+                                                                    let uu___14
+                                                                    =
+                                                                    FStar_SMTEncoding_Term.boxBool
+                                                                    FStar_SMTEncoding_Util.mkTrue in
+                                                                    (w2,
+                                                                    uu___14) in
+                                                                  FStar_SMTEncoding_Util.mkEq
+                                                                    uu___13 in
+                                                                (guard,
+                                                                  uu___12) in
+                                                              FStar_SMTEncoding_Util.mkAnd
+                                                                uu___11 in
+                                                            (uu___10,
+                                                              (FStar_Compiler_List.op_At
+                                                                 decls_guard
+                                                                 (FStar_Compiler_List.op_At
+                                                                    projs_decls
+                                                                    decls2)))) in
+                                                 (match uu___8 with
+                                                  | (guard1, decls2) ->
+                                                      let uu___9 =
+                                                        encode_br br env2 in
+                                                      (match uu___9 with
+                                                       | (br1, decls3) ->
+                                                           let uu___10 =
+                                                             FStar_SMTEncoding_Util.mkITE
+                                                               (guard1, br1,
+                                                                 else_case) in
+                                                           (uu___10,
+                                                             (FStar_Compiler_List.op_At
+                                                                decls1
+                                                                (FStar_Compiler_List.op_At
+                                                                   decls2
+                                                                   decls3))))))))) in
                        FStar_Compiler_List.fold_right encode_branch pats
                          (default_case, decls) in
                      (match uu___2 with
@@ -3275,11 +3303,11 @@ and (encode_pat :
                 let rec mk_guard pat1 scrutinee =
                   match pat1.FStar_Syntax_Syntax.v with
                   | FStar_Syntax_Syntax.Pat_var uu___3 ->
-                      FStar_SMTEncoding_Util.mkTrue
+                      (FStar_SMTEncoding_Util.mkTrue, [])
                   | FStar_Syntax_Syntax.Pat_wild uu___3 ->
-                      FStar_SMTEncoding_Util.mkTrue
+                      (FStar_SMTEncoding_Util.mkTrue, [])
                   | FStar_Syntax_Syntax.Pat_dot_term uu___3 ->
-                      FStar_SMTEncoding_Util.mkTrue
+                      (FStar_SMTEncoding_Util.mkTrue, [])
                   | FStar_Syntax_Syntax.Pat_constant c ->
                       let uu___3 = encode_const c env1 in
                       (match uu___3 with
@@ -3289,7 +3317,87 @@ and (encode_pat :
                                  failwith
                                    "Unexpected encoding of constant pattern"
                              | uu___5 -> ());
-                            FStar_SMTEncoding_Util.mkEq (scrutinee, tm)))
+                            (let uu___5 =
+                               FStar_SMTEncoding_Util.mkEq (scrutinee, tm) in
+                             (uu___5, []))))
+                  | FStar_Syntax_Syntax.Pat_view (subpat, view) ->
+                      let gen_term_var env2 x =
+                        let ysym =
+                          Prims.op_Hat "@patbinder"
+                            (Prims.string_of_int
+                               env2.FStar_SMTEncoding_Env.depth) in
+                        let y =
+                          FStar_SMTEncoding_Term.mk_fv
+                            (ysym, FStar_SMTEncoding_Term.Term_sort) in
+                        let uu___3 =
+                          let uu___4 =
+                            let uu___5 =
+                              let uu___6 = FStar_SMTEncoding_Util.mkFreeV y in
+                              (x, uu___6) in
+                            FStar_SMTEncoding_Env.add_bvar_binding uu___5
+                              env2.FStar_SMTEncoding_Env.bvar_bindings in
+                          {
+                            FStar_SMTEncoding_Env.bvar_bindings = uu___4;
+                            FStar_SMTEncoding_Env.fvar_bindings =
+                              (env2.FStar_SMTEncoding_Env.fvar_bindings);
+                            FStar_SMTEncoding_Env.depth =
+                              (env2.FStar_SMTEncoding_Env.depth +
+                                 Prims.int_one);
+                            FStar_SMTEncoding_Env.tcenv =
+                              (env2.FStar_SMTEncoding_Env.tcenv);
+                            FStar_SMTEncoding_Env.warn =
+                              (env2.FStar_SMTEncoding_Env.warn);
+                            FStar_SMTEncoding_Env.nolabels =
+                              (env2.FStar_SMTEncoding_Env.nolabels);
+                            FStar_SMTEncoding_Env.use_zfuel_name =
+                              (env2.FStar_SMTEncoding_Env.use_zfuel_name);
+                            FStar_SMTEncoding_Env.encode_non_total_function_typ
+                              =
+                              (env2.FStar_SMTEncoding_Env.encode_non_total_function_typ);
+                            FStar_SMTEncoding_Env.current_module_name =
+                              (env2.FStar_SMTEncoding_Env.current_module_name);
+                            FStar_SMTEncoding_Env.encoding_quantifier =
+                              (env2.FStar_SMTEncoding_Env.encoding_quantifier);
+                            FStar_SMTEncoding_Env.global_cache =
+                              (env2.FStar_SMTEncoding_Env.global_cache)
+                          } in
+                        (ysym, y, uu___3) in
+                      let uu___3 =
+                        let uu___4 =
+                          let uu___5 =
+                            FStar_Syntax_Syntax.mk
+                              FStar_Syntax_Syntax.Tm_unknown
+                              FStar_Compiler_Range.dummyRange in
+                          FStar_Syntax_Syntax.null_bv uu___5 in
+                        gen_term_var env1 uu___4 in
+                      (match uu___3 with
+                       | (viewsym, view', env2) ->
+                           let uu___4 = encode_term view env2 in
+                           (match uu___4 with
+                            | (view1, decls) ->
+                                let uu___5 =
+                                  let uu___6 =
+                                    FStar_SMTEncoding_Util.mkApp
+                                      (viewsym, [scrutinee]) in
+                                  mk_guard subpat uu___6 in
+                                (match uu___5 with
+                                 | (guard, sub_decls) ->
+                                     let uu___6 =
+                                       let uu___7 =
+                                         let uu___8 =
+                                           let uu___9 =
+                                             let uu___10 =
+                                               FStar_SMTEncoding_Term.mk_fv
+                                                 (viewsym,
+                                                   FStar_SMTEncoding_Term.Term_sort) in
+                                             (uu___10, view1) in
+                                           [uu___9] in
+                                         (uu___8, guard) in
+                                       FStar_SMTEncoding_Term.mkLet' uu___7
+                                         FStar_Compiler_Range.dummyRange in
+                                     (uu___6,
+                                       (FStar_Compiler_List.op_At sub_decls
+                                          decls)))))
                   | FStar_Syntax_Syntax.Pat_cons (f, uu___3, args) ->
                       let is_f =
                         let tc_name =
@@ -3306,49 +3414,85 @@ and (encode_pat :
                             FStar_SMTEncoding_Env.mk_data_tester env1
                               (f.FStar_Syntax_Syntax.fv_name).FStar_Syntax_Syntax.v
                               scrutinee in
-                      let sub_term_guards =
-                        FStar_Compiler_Effect.op_Bar_Greater args
-                          (FStar_Compiler_List.mapi
-                             (fun i ->
-                                fun uu___4 ->
-                                  match uu___4 with
-                                  | (arg, uu___5) ->
-                                      let proj =
-                                        FStar_SMTEncoding_Env.primitive_projector_by_pos
-                                          env1.FStar_SMTEncoding_Env.tcenv
-                                          (f.FStar_Syntax_Syntax.fv_name).FStar_Syntax_Syntax.v
-                                          i in
-                                      let uu___6 =
-                                        FStar_SMTEncoding_Util.mkApp
-                                          (proj, [scrutinee]) in
-                                      mk_guard arg uu___6)) in
-                      FStar_SMTEncoding_Util.mk_and_l (is_f ::
-                        sub_term_guards) in
+                      let uu___4 =
+                        let uu___5 =
+                          FStar_Compiler_Effect.op_Bar_Greater args
+                            (FStar_Compiler_List.mapi
+                               (fun i ->
+                                  fun uu___6 ->
+                                    match uu___6 with
+                                    | (arg, uu___7) ->
+                                        let proj =
+                                          FStar_SMTEncoding_Env.primitive_projector_by_pos
+                                            env1.FStar_SMTEncoding_Env.tcenv
+                                            (f.FStar_Syntax_Syntax.fv_name).FStar_Syntax_Syntax.v
+                                            i in
+                                        let uu___8 =
+                                          FStar_SMTEncoding_Util.mkApp
+                                            (proj, [scrutinee]) in
+                                        mk_guard arg uu___8)) in
+                        FStar_Compiler_Effect.op_Bar_Greater uu___5
+                          FStar_Compiler_List.unzip in
+                      (match uu___4 with
+                       | (sub_term_guards, decls) ->
+                           let uu___5 =
+                             FStar_SMTEncoding_Util.mk_and_l (is_f ::
+                               sub_term_guards) in
+                           (uu___5, (FStar_Compiler_List.flatten decls))) in
                 let rec mk_projections pat1 scrutinee =
                   match pat1.FStar_Syntax_Syntax.v with
-                  | FStar_Syntax_Syntax.Pat_dot_term uu___3 -> []
-                  | FStar_Syntax_Syntax.Pat_var x -> [(x, scrutinee)]
-                  | FStar_Syntax_Syntax.Pat_wild x -> [(x, scrutinee)]
-                  | FStar_Syntax_Syntax.Pat_constant uu___3 -> []
+                  | FStar_Syntax_Syntax.Pat_dot_term uu___3 -> ([], [])
+                  | FStar_Syntax_Syntax.Pat_var x -> ([(x, scrutinee)], [])
+                  | FStar_Syntax_Syntax.Pat_wild x -> ([(x, scrutinee)], [])
+                  | FStar_Syntax_Syntax.Pat_constant uu___3 -> ([], [])
+                  | FStar_Syntax_Syntax.Pat_view (subpat, view) ->
+                      let uu___3 =
+                        let uu___4 =
+                          let uu___5 =
+                            FStar_Syntax_Syntax.mk
+                              FStar_Syntax_Syntax.Tm_unknown
+                              FStar_Compiler_Range.dummyRange in
+                          FStar_Syntax_Syntax.null_bv uu___5 in
+                        FStar_SMTEncoding_Env.gen_term_var env1 uu___4 in
+                      (match uu___3 with
+                       | (viewsym, view', env2) ->
+                           let uu___4 = encode_term view env2 in
+                           (match uu___4 with
+                            | (view1, decls) ->
+                                let uu___5 =
+                                  let uu___6 =
+                                    FStar_SMTEncoding_Util.mkApp
+                                      (viewsym, [scrutinee]) in
+                                  mk_projections subpat uu___6 in
+                                (match uu___5 with
+                                 | (projs, pdecls) ->
+                                     (projs,
+                                       (FStar_Compiler_List.op_At decls
+                                          pdecls)))))
                   | FStar_Syntax_Syntax.Pat_cons (f, uu___3, args) ->
                       let uu___4 =
-                        FStar_Compiler_Effect.op_Bar_Greater args
-                          (FStar_Compiler_List.mapi
-                             (fun i ->
-                                fun uu___5 ->
-                                  match uu___5 with
-                                  | (arg, uu___6) ->
-                                      let proj =
-                                        FStar_SMTEncoding_Env.primitive_projector_by_pos
-                                          env1.FStar_SMTEncoding_Env.tcenv
-                                          (f.FStar_Syntax_Syntax.fv_name).FStar_Syntax_Syntax.v
-                                          i in
-                                      let uu___7 =
-                                        FStar_SMTEncoding_Util.mkApp
-                                          (proj, [scrutinee]) in
-                                      mk_projections arg uu___7)) in
-                      FStar_Compiler_Effect.op_Bar_Greater uu___4
-                        FStar_Compiler_List.flatten in
+                        let uu___5 =
+                          FStar_Compiler_Effect.op_Bar_Greater args
+                            (FStar_Compiler_List.mapi
+                               (fun i ->
+                                  fun uu___6 ->
+                                    match uu___6 with
+                                    | (arg, uu___7) ->
+                                        let proj =
+                                          FStar_SMTEncoding_Env.primitive_projector_by_pos
+                                            env1.FStar_SMTEncoding_Env.tcenv
+                                            (f.FStar_Syntax_Syntax.fv_name).FStar_Syntax_Syntax.v
+                                            i in
+                                        let uu___8 =
+                                          FStar_SMTEncoding_Util.mkApp
+                                            (proj, [scrutinee]) in
+                                        mk_projections arg uu___8)) in
+                        FStar_Compiler_Effect.op_Bar_Greater uu___5
+                          FStar_Compiler_List.unzip in
+                      (match uu___4 with
+                       | (projs, decls) ->
+                           ((FStar_Compiler_List.flatten projs),
+                             (FStar_Compiler_List.flatten decls))) in
                 let pat_term1 uu___3 = encode_term pat_term env1 in
                 let pattern1 =
                   {

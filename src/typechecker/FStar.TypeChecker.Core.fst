@@ -92,6 +92,11 @@ let open_pat (g:env) (p:pat)
         | Pat_dot_term eopt ->
           let eopt = BU.map_option (Subst.subst sub) eopt in
           g, {p with v=Pat_dot_term eopt}, sub
+
+        | Pat_view (x, view) ->
+            let view = Subst.subst sub view in
+            let g, x, sub = open_pat_aux g x sub in
+            g, {p with v=Pat_view (x, view)}, sub
     in
     open_pat_aux g p []
 
@@ -1583,6 +1588,18 @@ and check_pat (g:env) (p:pat) (t_sc:typ) : result (binders & universes) =
     let! [u] = with_context "check_pat_binder" None (fun _ -> check_binders g [b]) in
     return ([b], [u])
 
+  | Pat_view (subpat, view) ->
+    // let scrutinee = mk_Tm_app view [scrutinee, None] pat.p in
+    let! _, view_t = check "pat_view" g view in
+    let view_t = Subst.compress (unrefine_tsc view_t) in
+    let! from, to = match U.arrow_formals view_t with
+                  | [from], to -> return (from, to)
+                        // TODO, improve: (might have implicits or something)
+                  | _ -> fail "error: view has more than one parameter"
+    in
+    let! _ = check_subtype g None t_sc view_t in
+    check_pat g subpat to
+
   | Pat_cons (fv, usopt, pats) ->
     let us = if is_none usopt then [] else usopt |> must in
 
@@ -1692,7 +1709,10 @@ and pattern_branch_condition (g:env)
       in
       let! _, t_const = check "constant pattern" g const_exp in
       return (Some (U.mk_decidable_eq t_const scrutinee const_exp))
-
+    | Pat_view (subpat, view) ->
+      let scrutinee = mk_Tm_app view [scrutinee, None] pat.p in
+      pattern_branch_condition g scrutinee subpat
+  
     | Pat_cons(fv, us_opt, sub_pats) ->
       let wild_pat pos = S.withinfo (Pat_wild (S.new_bv None S.tun)) pos in
       let mk_head_discriminator () =

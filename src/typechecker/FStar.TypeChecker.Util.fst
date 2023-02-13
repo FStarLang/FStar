@@ -437,6 +437,10 @@ let extract_let_rec_annotation env {lbname=lbname; lbunivs=univ_vars; lbtyp=t; l
     | Pat_var x  ->
         [x], mk (Tm_name x)
 
+    | Pat_view (x, view) ->
+        let bvs, x = decorated_pattern_as_term x in
+        bvs, mk (Tm_app(view, [x, None]))
+
     | Pat_cons(fv, us_opt, pats) ->
         let vars, args = pats |> List.map pat_as_arg |> List.unzip in
         let vars = List.flatten vars in

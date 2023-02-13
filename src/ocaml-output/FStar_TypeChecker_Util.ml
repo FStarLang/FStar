@@ -552,6 +552,15 @@ let rec (decorated_pattern_as_term :
         let uu___ = mk (FStar_Syntax_Syntax.Tm_name x) in ([x], uu___)
     | FStar_Syntax_Syntax.Pat_var x ->
         let uu___ = mk (FStar_Syntax_Syntax.Tm_name x) in ([x], uu___)
+    | FStar_Syntax_Syntax.Pat_view (x, view) ->
+        let uu___ = decorated_pattern_as_term x in
+        (match uu___ with
+         | (bvs, x1) ->
+             let uu___1 =
+               mk
+                 (FStar_Syntax_Syntax.Tm_app
+                    (view, [(x1, FStar_Pervasives_Native.None)])) in
+             (bvs, uu___1))
     | FStar_Syntax_Syntax.Pat_cons (fv, us_opt, pats) ->
         let uu___ =
           let uu___1 =

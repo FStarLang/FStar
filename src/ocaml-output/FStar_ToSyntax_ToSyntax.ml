@@ -851,6 +851,8 @@ let rec (gather_pattern_bound_vars_maybe_top :
           let uu___ =
             FStar_Compiler_List.map FStar_Pervasives_Native.snd guarded_pats in
           gather_pattern_bound_vars_from_list uu___
+      | FStar_Parser_AST.PatView (pat, uu___) ->
+          gather_pattern_bound_vars_maybe_top acc pat
       | FStar_Parser_AST.PatAscribed (pat, uu___) ->
           gather_pattern_bound_vars_maybe_top acc pat
 let (gather_pattern_bound_vars :
@@ -1442,6 +1444,7 @@ let (check_linear_pattern_variables :
             FStar_Syntax_Syntax.no_names
         | FStar_Syntax_Syntax.Pat_var x ->
             FStar_Compiler_Util.set_add x FStar_Syntax_Syntax.no_names
+        | FStar_Syntax_Syntax.Pat_view (pat, uu___) -> pat_vars pat
         | FStar_Syntax_Syntax.Pat_cons (uu___, uu___1, pats1) ->
             let aux out uu___2 =
               match uu___2 with
@@ -1894,6 +1897,19 @@ let rec (desugar_data_pat :
                    (loc1, env2,
                      (LocalBinder (x, FStar_Pervasives_Native.None, [])),
                      uu___1, annots))
+          | FStar_Parser_AST.PatView (subpat, view) ->
+              let x =
+                let uu___ = tun_r p1.FStar_Parser_AST.prange in
+                FStar_Syntax_Syntax.new_bv
+                  (FStar_Pervasives_Native.Some (p1.FStar_Parser_AST.prange))
+                  uu___ in
+              let view1 = desugar_term env1 view in
+              let uu___ = aux loc env1 subpat in
+              (match uu___ with
+               | (loc1, env2, b, subpat1, l) ->
+                   let uu___1 =
+                     pos (FStar_Syntax_Syntax.Pat_view (subpat1, view1)) in
+                   (loc1, env2, b, uu___1, l))
           | FStar_Parser_AST.PatRecord [] ->
               FStar_Errors.raise_error
                 (FStar_Errors.Fatal_UnexpectedPattern, "Unexpected pattern")

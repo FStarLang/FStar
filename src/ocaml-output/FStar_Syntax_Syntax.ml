@@ -241,6 +241,7 @@ and pat' =
   | Pat_var of bv 
   | Pat_wild of bv 
   | Pat_dot_term of term' syntax FStar_Pervasives_Native.option 
+  | Pat_view of (pat' withinfo_t * term' syntax) 
 and letbinding =
   {
   lbname: (bv, fv) FStar_Pervasives.either ;
@@ -577,6 +578,11 @@ let (uu___is_Pat_dot_term : pat' -> Prims.bool) =
 let (__proj__Pat_dot_term__item___0 :
   pat' -> term' syntax FStar_Pervasives_Native.option) =
   fun projectee -> match projectee with | Pat_dot_term _0 -> _0
+let (uu___is_Pat_view : pat' -> Prims.bool) =
+  fun projectee ->
+    match projectee with | Pat_view _0 -> true | uu___ -> false
+let (__proj__Pat_view__item___0 : pat' -> (pat' withinfo_t * term' syntax)) =
+  fun projectee -> match projectee with | Pat_view _0 -> _0
 let (__proj__Mkletbinding__item__lbname :
   letbinding -> (bv, fv) FStar_Pervasives.either) =
   fun projectee ->
@@ -1970,7 +1976,8 @@ let (pat_bvs : pat -> bv Prims.list) =
           FStar_Compiler_List.fold_left
             (fun b1 ->
                fun uu___2 -> match uu___2 with | (p2, uu___3) -> aux b1 p2) b
-            pats in
+            pats
+      | Pat_view (pat1, uu___) -> aux b pat1 in
     let uu___ = aux [] p in
     FStar_Compiler_Effect.op_Less_Bar FStar_Compiler_List.rev uu___
 let (freshen_binder : binder -> binder) =
@@ -2085,6 +2092,7 @@ let rec (eq_pat : pat -> pat -> Prims.bool) =
       | (Pat_var uu___, Pat_var uu___1) -> true
       | (Pat_wild uu___, Pat_wild uu___1) -> true
       | (Pat_dot_term uu___, Pat_dot_term uu___1) -> true
+      | (Pat_view uu___, Pat_view uu___1) -> true
       | (uu___, uu___1) -> false
 let (delta_constant : delta_depth) = Delta_constant_at_level Prims.int_zero
 let (delta_equational : delta_depth) =

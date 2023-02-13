@@ -206,6 +206,8 @@ let (raw_pat_as_exp :
               FStar_Syntax_Syntax.mk (FStar_Syntax_Syntax.Tm_name x)
                 p1.FStar_Syntax_Syntax.p in
             (uu___, (x :: bs))
+        | FStar_Syntax_Syntax.Pat_view uu___ ->
+            FStar_Compiler_Effect.raise Raw_pat_cannot_be_translated
         | FStar_Syntax_Syntax.Pat_cons (fv, us_opt, pats) ->
             let uu___ =
               FStar_Compiler_List.fold_right
@@ -373,6 +375,16 @@ let (pat_as_exp :
                          (FStar_Syntax_Syntax.Tm_name x1)
                          p1.FStar_Syntax_Syntax.p in
                      ([x1], [x1], [], env2, e, g, p1))
+            | FStar_Syntax_Syntax.Pat_view (x, view) ->
+                let uu___ = pat_as_arg_with_env env1 x in
+                (match uu___ with
+                 | (b, a, w, env2, te, guard, x1) ->
+                     (b, a, w, env2, te, guard,
+                       {
+                         FStar_Syntax_Syntax.v =
+                           (FStar_Syntax_Syntax.Pat_view (x1, view));
+                         FStar_Syntax_Syntax.p = (p1.FStar_Syntax_Syntax.p)
+                       }))
             | FStar_Syntax_Syntax.Pat_cons (fv, us_opt, pats) ->
                 let uu___ =
                   FStar_Compiler_Effect.op_Bar_Greater pats

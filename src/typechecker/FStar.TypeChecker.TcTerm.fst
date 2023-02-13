@@ -3162,6 +3162,35 @@ and tc_pat env (pat_t:typ) (p0:pat) :
           Env.trivial_guard,
           false
 
+        | Pat_view (subpat, view) ->
+          let fake_scrutinee = 
+            mk_Tm_app
+              (S.fvar Const.magic_lid (S.Delta_constant_at_level 1) None)
+              [S.iarg t; S.as_arg S.unit_const]
+              Range.dummyRange
+          in
+          // print1 "»» e_subpat=%s" (PP.term_to_string e_subpat);
+          let view, _, g0 = tc_tot_or_gtot_term (fst (clear_expected_typ env)) view in
+          let applied_view = mk (Tm_app (view, [fake_scrutinee, None])) Range.dummyRange in
+          print1 "»» applied_view=%s" (PP.term_to_string applied_view);
+          let applied_view_tc, {res_typ = t_target}, g1 = tc_tot_or_gtot_term (fst (clear_expected_typ env)) applied_view in
+          print1 "»» applied_view_tc=%s" (PP.term_to_string applied_view_tc);
+          print1 "»» applied_view_tc.type=%s" (PP.term_to_string t_target);
+          let bvs, tms, e, p, g2, erasable = check_nested_pattern env subpat t_target in
+          let tms = tms |> List.map (mk_disc_t view) in
+          let g = g0 `Env.conj_guard` g1 `Env.conj_guard` g2 in
+          print1 "»» DONE %s" "!!";
+          print1 "::::::: bvs=%s" (List.map PP.bv_to_string bvs |> String.concat ";");
+          print1 "::::::: tms=%s" (List.map PP.term_to_string tms |> String.concat ";");
+          print1 "::::::: e=%s" (PP.term_to_string e);
+          print1 "::::::: p=%s" (PP.pat_to_string p);
+          print1 "::::::: g=%s" (guard_to_string env g);
+          print1 "::::::: erasbale=%s" (string_of_bool erasable);
+          let _, e_subpat, _, _ = PatternUtils.pat_as_exp false false env subpat in
+          let e = mk (Tm_app (view, [e_subpat, None])) Range.dummyRange in
+          let p = {p with v = Pat_view (p, view)} in
+          (bvs, tms, e, p, g, erasable)
+
         | Pat_constant c ->
           (*
            * AR: enforcing decidable equality, since the branch guards are in boolean now
@@ -3534,6 +3563,13 @@ and tc_eqn (scrutinee:bv) (env:Env.env) (ret_opt : option match_returns_ascripti
                 env.typeof_tot_or_gtot_term env pat_exp true
               in
               [U.mk_decidable_eq t (force_scrutinee ()) pat_exp]
+
+            | Pat_view (subpat, view), _ -> 
+                let _, subpat_exp, _, _ = PatternUtils.pat_as_exp false false env subpat in
+                build_branch_guard
+                  (map_opt scrutinee_tm (fun s -> mk (Tm_app (view, [s, None])) Range.dummyRange))
+                  subpat
+                  subpat_exp
 
             | Pat_cons (_, _, []), Tm_uinst _
             | Pat_cons (_, _, []), Tm_fvar _ ->

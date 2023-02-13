@@ -6379,6 +6379,8 @@ let rec (inspect :
                            ps in
                        (fv, us_opt, uu___4) in
                      FStar_Reflection_Data.Pat_Cons uu___3
+                 | FStar_Syntax_Syntax.Pat_view uu___3 ->
+                     failwith "TODO tactic view"
                  | FStar_Syntax_Syntax.Pat_var bv ->
                      FStar_Reflection_Data.Pat_Var bv
                  | FStar_Syntax_Syntax.Pat_wild bv ->

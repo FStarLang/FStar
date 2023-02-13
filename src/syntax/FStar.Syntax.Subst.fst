@@ -334,6 +334,12 @@ let subst_pat' s p : (pat * int) =
         let s = shift_subst' n s in
         let eopt = U.map_option (subst' s) eopt in
         {p with v=Pat_dot_term eopt}, n
+
+      | Pat_view (sub, view) ->
+                 let view = subst' s view in
+                 let sub, n = aux n sub in
+                 {p with v=Pat_view (sub, view)}, n
+
   in aux 0 p
 
 let push_subst_lcomp s lopt = match lopt with
@@ -593,6 +599,11 @@ let open_pat (p:pat) : pat * subst_t =
         | Pat_dot_term eopt ->
             let eopt = U.map_option (subst sub) eopt in
             {p with v=Pat_dot_term eopt}, sub
+
+        | Pat_view (x, view) ->
+            let view = subst sub view in
+            let x, sub = open_pat_aux sub x in
+            {p with v=Pat_view (x, view)}, sub
     in
     open_pat_aux [] p
 
@@ -646,7 +657,13 @@ let close_pat p =
 
        | Pat_dot_term eopt ->
          let eopt = U.map_option (subst sub) eopt in
-         {p with v=Pat_dot_term eopt}, sub in
+         {p with v=Pat_dot_term eopt}, sub 
+
+       | Pat_view (x, view) ->
+         let view = subst sub view in
+         let x, sub = aux sub x in
+         {p with v=Pat_view (x, view)}, sub
+    in
     aux [] p
 
 let close_branch (p, wopt, e) =
@@ -879,6 +896,10 @@ let rec deep_compress (allow_uvars:bool) (t:term) : term =
             | Some us -> Some (List.map (deep_compress_univ allow_uvars) us)
           in
           {p with v=Pat_cons(fv, us_opt, List.map (fun (x, b) -> elim_pat x, b) pats)}
+
+        | Pat_view (x, view) ->
+          let view = deep_compress allow_uvars view in
+          {p with v=Pat_view(elim_pat x, view)}
 
         (* Nothing to inline *)
         | Pat_constant _ ->

@@ -132,6 +132,7 @@ and pattern' =
   | PatAscribed of pattern * (term * option term)
   | PatOr       of list pattern
   | PatOp       of ident
+  | PatView     of pattern * term
   | PatVQuote   of term (* [`%foo], transformed into "X.Y.Z.foo" by the desugarer *)
 and pattern = {pat:pattern'; prange:range}
 
@@ -904,6 +905,7 @@ and pat_to_string x = match x.pat with
   | PatOp op ->  Util.format1 "(%s)" (Ident.string_of_id op)
   | PatAscribed(p,(t, None)) -> Util.format2 "(%s:%s)" (p |> pat_to_string) (t |> term_to_string)
   | PatAscribed(p,(t, Some tac)) -> Util.format3 "(%s:%s by %s)" (p |> pat_to_string) (t |> term_to_string) (tac |> term_to_string)
+  | PatView (subpat, view) -> Util.format2 "(%s <@ %s)" (pat_to_string subpat) (term_to_string view)
 
 and attrs_opt_to_string = function
   | None -> ""

@@ -339,6 +339,8 @@ let (pickBranch :
                    if uu___1
                    then FStar_Pervasives.Inl []
                    else FStar_Pervasives.Inr false
+               | FStar_Syntax_Syntax.Pat_view uu___1 ->
+                   failwith "TODO: pat view nbe"
                | FStar_Syntax_Syntax.Pat_cons (fv, _us_opt, arg_pats) ->
                    let rec matches_args out a p1 =
                      match (a, p1) with
@@ -969,6 +971,8 @@ let rec (translate :
                    match p.FStar_Syntax_Syntax.v with
                    | FStar_Syntax_Syntax.Pat_constant c ->
                        (bs1, (FStar_Syntax_Syntax.Pat_constant c))
+                   | FStar_Syntax_Syntax.Pat_view uu___4 ->
+                       failwith "TODO: NBE pat view"
                    | FStar_Syntax_Syntax.Pat_cons (fvar, us_opt, args) ->
                        let uu___4 =
                          FStar_Compiler_List.fold_left

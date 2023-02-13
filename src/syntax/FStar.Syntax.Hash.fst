@@ -183,6 +183,7 @@ and hash_pat p =
   | Pat_var bv -> mix (of_int 101) (hash_bv bv)
   | Pat_wild bv -> mix (of_int 103) (hash_bv bv)
   | Pat_dot_term t -> mix_list_lit [of_int 107; hash_option hash_term t]
+  | Pat_view (sub, t) -> mix_list_lit [of_int 109; hash_pat sub; hash_term t]
 
 
 and hash_bv b = hash_term b.sort
@@ -530,6 +531,8 @@ and equal_pat p1 p2 =
     equal_bv bv1 bv2
   | Pat_dot_term t1, Pat_dot_term t2 ->
     equal_opt equal_term t1 t2
+  | Pat_view (subpat1, view1), Pat_view (subpat2, view2) ->
+    equal_pat subpat1 subpat2 && equal_term view1 view2
   | _ -> false
 
 and equal_meta m1 m2 =

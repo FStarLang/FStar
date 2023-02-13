@@ -215,7 +215,8 @@ let pat_bvs (p:pat) : list bv =
         | Pat_constant _ -> b
         | Pat_wild x
         | Pat_var x -> x::b
-        | Pat_cons(_, _, pats) -> List.fold_left (fun b (p, _) -> aux b p) b pats
+        | Pat_cons (*TODO*)(_, _, pats) -> List.fold_left (fun b (p, _) -> aux b p) b pats
+        | Pat_view (pat,_) -> aux b pat
     in
   List.rev <| aux [] p
 
@@ -270,6 +271,7 @@ let rec eq_pat (p1 : pat) (p2 : pat) : bool =
     | Pat_var _, Pat_var _ -> true
     | Pat_wild _, Pat_wild _ -> true
     | Pat_dot_term _, Pat_dot_term _ -> true
+    | Pat_view _, Pat_view _ -> true
     | _, _ -> false
 
 ///////////////////////////////////////////////////////////////////////

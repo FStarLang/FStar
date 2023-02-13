@@ -2022,6 +2022,10 @@ and (resugar_pat' :
           match p1.FStar_Syntax_Syntax.v with
           | FStar_Syntax_Syntax.Pat_constant c ->
               mk (FStar_Parser_AST.PatConst c)
+          | FStar_Syntax_Syntax.Pat_view (subpat, view) ->
+              let subpat1 = aux subpat imp_opt in
+              let view1 = resugar_term' env view in
+              mk (FStar_Parser_AST.PatView (subpat1, view1))
           | FStar_Syntax_Syntax.Pat_cons (fv, uu___, []) ->
               mk
                 (FStar_Parser_AST.PatName
