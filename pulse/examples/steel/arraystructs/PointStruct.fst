@@ -105,7 +105,7 @@ open Steel.C.Reference
 
 (** To illustrate pointer-to-field in action, we write a function swap
     that swaps x and y coordinates of a point struct. *)
-val swap (p: ref point point_pcm)
+val swap (p: ref 'a point point_pcm)
 : Steel unit
     (p `pts_to_view` point_view emptyset)
     (fun _ -> p `pts_to_view` point_view emptyset)
@@ -150,7 +150,7 @@ let swap p =
     pointers in a generic way: the helper function does not need to
     know that its inputs are pointers to fields of a struct in order
     to work. *)
-let generic_swap_sel (p:ref 'c (opt_pcm #'c)) (q:ref 'c (opt_pcm #'c))
+let generic_swap_sel (p:ref 'a 'c (opt_pcm #'c)) (q:ref 'b 'c (opt_pcm #'c))
 : Steel unit
   ((p `pts_to_view` opt_view _) `star` (q `pts_to_view` opt_view _))
   (fun _ -> (p `pts_to_view` opt_view _) `star` (q `pts_to_view` opt_view _))
@@ -168,8 +168,8 @@ let generic_swap_sel (p:ref 'c (opt_pcm #'c)) (q:ref 'c (opt_pcm #'c))
   opt_write_sel q tmp;
   return ()
 
-val swap' (p: ref point point_pcm)
-: Steel (ptr point point_pcm)
+val swap' (p: ref 'a point point_pcm)
+: Steel (ptr 'a point point_pcm)
     (p `pts_to_view` point_view emptyset)
     (fun _ -> p `pts_to_view` point_view emptyset)
     (requires fun _ -> True)
@@ -187,13 +187,13 @@ let swap' p =
   unaddr_of_struct_field "y" p r;
   unaddr_of_struct_field "x" p q;
   change_equal_slprop (p `pts_to_view` _) (p `pts_to_view` _);
-  return (null _ _)
+  return (null _ _ _)
 
 let test_malloc_free () : SteelT unit emp (fun _ -> emp) =
   let c = malloc 42ul in
   if is_null c _
   then begin
-    elim_pts_to_view_or_null_null c (opt_view _);
+    elim_pts_to_view_or_null_null _ c (opt_view _);
     return ()
   end else begin
     elim_pts_to_view_or_null_not_null c (opt_view _);

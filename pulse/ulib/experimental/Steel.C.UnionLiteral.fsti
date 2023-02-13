@@ -99,11 +99,12 @@ val addr_of_union_field''
   (field: field_of fields{
     return_view_type == (fields.get_field field).view_type /\
     return_carrier == (fields.get_field field).carrier})
-  (p: ref (union tag fields) (union_pcm tag fields))
-: Steel (ref return_view_type #return_carrier (fields.get_field field).pcm)
+  (p: ref 'a (union tag fields) (union_pcm tag fields))
+: Steel (ref 'a return_view_type #return_carrier (fields.get_field field).pcm)
     (p `pts_to_view` union_view tag fields)
     (fun q ->
       pts_to_view u#0
+                  #'a
                   #(norm simplify_typedefs (norm unfold_typedefs (fields.get_field field).view_type))
                   #(norm simplify_typedefs (norm unfold_typedefs (fields.get_field field).view_type))
                   #(norm simplify_typedefs (norm unfold_typedefs (fields.get_field field).carrier))
@@ -124,14 +125,15 @@ inline_for_extraction noextract
 let addr_of_union_field
   (#tag: Type0) (#fields: c_fields)
   (field: field_of fields)
-  (p: ref (union tag fields) (union_pcm tag fields))
-: Steel (ref
+  (p: ref 'a (union tag fields) (union_pcm tag fields))
+: Steel (ref 'a
           (norm simplify_typedefs (norm unfold_typedefs (fields.get_field field).view_type))
           #(norm simplify_typedefs (norm unfold_typedefs (fields.get_field field).carrier))
           (fields.get_field field).pcm)
     (p `pts_to_view` union_view tag fields)
     (fun q ->
       pts_to_view u#0
+                  #'a
                   #(norm simplify_typedefs (norm unfold_typedefs (fields.get_field field).view_type))
                   #(norm simplify_typedefs (norm unfold_typedefs (fields.get_field field).view_type))
                   #(norm simplify_typedefs (norm unfold_typedefs (fields.get_field field).carrier))
@@ -153,10 +155,11 @@ let addr_of_union_field
 val unaddr_of_union_field
   (#tag: Type0) (#fields: c_fields)
   (field: field_of fields)
-  (p: ref (union tag fields) (union_pcm tag fields))
-  (q: ref (fields.get_field field).view_type (fields.get_field field).pcm)
+  (p: ref 'a (union tag fields) (union_pcm tag fields))
+  (q: ref 'a (fields.get_field field).view_type (fields.get_field field).pcm)
 : Steel unit
     (pts_to_view u#0
+                 #'a
                  #(norm simplify_typedefs (norm unfold_typedefs (fields.get_field field).view_type))
                  #(norm simplify_typedefs (norm unfold_typedefs (fields.get_field field).view_type))
                  #(norm simplify_typedefs (norm unfold_typedefs (fields.get_field field).carrier))
@@ -173,7 +176,7 @@ val switch_union_field'
   (new_value_ty: Type0) (tag: Type0) (fields: c_fields)
   (field: field_of fields{new_value_ty == (fields.get_field field).view_type})
   (new_value: new_value_ty)
-  (p: ref (union tag fields) (union_pcm tag fields))
+  (p: ref 'a (union tag fields) (union_pcm tag fields))
 : Steel unit
     (p `pts_to_view` union_view tag fields)
     (fun _ -> p `pts_to_view` union_view tag fields)
@@ -193,7 +196,7 @@ noextract inline_for_extraction
 let switch_union_field
   (#tag: Type0) (#fields: c_fields)
   (field: field_of fields) (new_value: (fields.get_field field).view_type)
-  (p: ref (union tag fields) (union_pcm tag fields))
+  (p: ref 'a (union tag fields) (union_pcm tag fields))
   // TODO it would be nice permute the arguments so that their order matches the C code p->field = new_value
 : Steel unit
     (p `pts_to_view` union_view tag fields)

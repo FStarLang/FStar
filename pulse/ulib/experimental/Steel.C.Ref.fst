@@ -3,149 +3,64 @@ module P = FStar.PCM
 module U = Steel.C.Universe
 open FStar.FunctionalExtensionality
 
-module M = Steel.Memory
-module R = Steel.PCMReference
-module GHR = Steel.GhostPCMReference
-module RO = Steel.PCMReadOnly
-
 #push-options "--print_universes"
 
-let is_base_type
-  (r: GHR.ref _ (RO.pcm_readonly #Type0))
-  (i: M.iname)
-  (t0: Type)
-: Tot prop
-= (let open Steel.Effect.Atomic in ( >--> ))
-    i
-    (GHR.pts_to r (Some t0))
-
-let has_base_type
-  (r: GHR.ref _ (RO.pcm_readonly #Type0))
-  (i: M.iname)
-: Tot prop
-= exists (t0: Type) . is_base_type r i t0
-
-let has_base_type_intro
-  (r: GHR.ref _ (RO.pcm_readonly #Type0))
-  (i: M.iname)
-  (t0: Type)
-: Lemma
-  (requires ((let open Steel.Effect.Atomic in ( >--> )) i (GHR.pts_to r (Some t0))))
-  (ensures (has_base_type r i))
-= ()
-
-let get_base_type
-  (r: GHR.ref _ (RO.pcm_readonly #Type0))
-  (i: M.iname)
-: Pure Type
-    (requires (has_base_type r i))
-    (ensures (fun t0 -> is_base_type r i t0))
-= FStar.IndefiniteDescription.indefinite_description_ghost Type (fun t0 -> is_base_type r i t0)
-
-let with_invariant_g_f (#a:Type)
-                     (#fp:A.vprop)
-                     (#fp':a -> A.vprop)
-                     (#opened_invariants:M.inames)
-                     (#p:A.vprop)
-                     (i:A.inv p{not (A.mem_inv opened_invariants i)})
-                     (f:unit -> A.SteelGhostT a (A.add_inv opened_invariants i)
-                                         (p `A.star` fp)
-                                         (fun x -> p `A.star` fp' x))
-  : A.SteelGhostF a opened_invariants fp fp' (fun _ -> True) (fun _ _ _ -> True)
-= A.with_invariant_g i f
-
-let has_base_type_idem
-  (#opened: M.inames)
-  (r: GHR.ref _ (RO.pcm_readonly #Type0))
-  (i: M.iname)
-  (v: Type0)
-  (sq: squash (
-    not (A.mem_inv opened i) /\
-    has_base_type r i
-  ))
-: A.SteelGhostT (squash (v == get_base_type r i)) opened
-    (GHR.pts_to r (Some v))
-    (fun _ -> GHR.pts_to r (Some v))
-= with_invariant_g_f
-    #(squash (v == get_base_type r i))
-    #(GHR.pts_to r (Some v))
-    #(fun _ -> GHR.pts_to r (Some v))
-    #_
-    #(GHR.pts_to r (Some (get_base_type r i)))
-    i
-    (fun _ ->
-      GHR.gather r (Some v) _;
-      GHR.share r _ (Some v) (Some (get_base_type r i))
-    )
-
-noeq type ref0 (b: Type u#b) : Type u#b = {
-  base_type: GHR.ref _ (RO.pcm_readonly #Type0);
-  base_inv: Ghost.erased M.iname;
-  base_has_type: squash (has_base_type base_type base_inv);
-  p: pcm (get_base_type base_type base_inv);
+noeq type ref0 (a: Type u#0) (b: Type u#b) : Type u#b = {
+  p: pcm a;
   q: pcm b;
   pl: connection p q;
-  r: M.ref (U.raise_t (get_base_type base_type base_inv)) (fstar_pcm_of_pcm (U.raise_pcm p));
+  r: Steel.Memory.ref (U.raise_t u#0 u#1 a) (fstar_pcm_of_pcm (U.raise_pcm p));
 }
 
-noeq type ptr' (b: Type u#b) : Type u#b =
-  | NonNull: (v: ref0 b) -> ptr' b
-  | Null: (v: pcm b) -> ptr' b
+noeq type ptr' (a: Type u#0) (b: Type u#b) : Type u#b =
+  | NonNull: (v: ref0 a b) -> ptr' a b
+  | Null: (v: pcm b) -> ptr' a b
 
 let pcm_of_ptr'
+  (#a: Type u#0)
   (#b: Type u#b)
-  (r: ptr' b)
+  (r: ptr' a b)
 : Tot (pcm b)
 = if Null? r then Null?.v r else (NonNull?.v r).q
 
-let ptr #b p = (r: ptr' b { pcm_of_ptr' r == p })
+let ptr a #b p = (r: ptr' a b { pcm_of_ptr' r == p })
 
-let null p = Null p
+let null a p = Null p
 
 let ptr_is_null p = Null? p
 
+let mpts_to (#a: Type u#1) (#p: P.pcm a) (r: Steel.Memory.ref a p) ([@@@smt_fallback] v: a) = Steel.PCMReference.pts_to r v
+
 let raise_p
+  (#a: Type u#0)
   (#b: Type u#b)
-  (r: ptr' b { NonNull? r})
-: Tot (pcm (U.raise_t u#0 u#1 (get_base_type (NonNull?.v r).base_type (NonNull?.v r).base_inv)))
+  (r: ptr' a b { NonNull? r})
+: Tot (pcm (U.raise_t u#0 u#1 a))
 = U.raise_pcm (NonNull?.v r).p
 
-let base_of
-  (#b: Type u#b)
-  (r: ptr' b { NonNull? r })
-: Tot (M.ref _ (fstar_pcm_of_pcm (raise_p r)))
-= (NonNull?.v r).r
-
 let lower_conn
+  (#a: Type u#0)
   (#b: Type u#b)
-  (r: ptr' b { NonNull? r})
+  (r: ptr' a b { NonNull? r})
 : Tot (connection (raise_p r) (NonNull?.v r).p)
 = connection_of_isomorphism (isomorphism_inverse (U.raise_pcm_isomorphism u#0 u#1 (NonNull?.v r).p))
 
 let raise_pl
+  (#a: Type u#0)
   (#b: Type u#b)
-  (r: ptr' b {NonNull? r})
+  (r: ptr' a b {NonNull? r})
 : Tot (connection (raise_p r) (NonNull?.v r).q)
 = lower_conn r `connection_compose` (NonNull?.v r).pl
 
-let mpts_to (#a: Type u#1) (#p: P.pcm a) (r: Steel.Memory.ref a p) ([@@@smt_fallback] v: a) = Steel.PCMReference.pts_to r v
-
-[@@__reduce__]
-let pts_to0
-  (#b: Type u#b) (#p: pcm b)
-  (r: ref p) (v: b)
-: Tot vprop
-= mpts_to (base_of r) ((raise_pl r).conn_small_to_large.morph v) `star`
-  GHR.pts_to (NonNull?.v r).base_type (Some (get_base_type (NonNull?.v r).base_type (NonNull?.v r).base_inv))
-
-let pts_to r v = pts_to0 r v
+let pts_to r v =
+  (NonNull?.v r).r `mpts_to` (raise_pl r).conn_small_to_large.morph v
 
 let t_ref_focus
-  (#b:Type) (#c:Type) (#p: pcm b)
-  (r: ref p) (#q: pcm c) (l: connection p q)
-: Tot (ref q)
+  (#a:Type) (#b:Type) (#c:Type) (#p: pcm b)
+  (r: ref a p) (#q: pcm c) (l: connection p q)
+: Tot (ref a q)
 = let NonNull r = r in
-  NonNull ({r with p = r.p; pl = connection_compose r.pl l; q = q})
+  NonNull ({p = r.p; pl = connection_compose r.pl l; r = r.r; q = q})
 
 let ref_focus r l = t_ref_focus r l
 
@@ -154,48 +69,40 @@ let ref_focus_id r = connection_compose_id_right (NonNull?.v r).pl
 let ref_focus_comp r l m
 = connection_compose_assoc (NonNull?.v r).pl l m
 
+let mk_id_ref
+  (#a: Type0)
+  (p: pcm a)
+  (r0: Steel.Memory.ref (U.raise_t u#0 u#1 a) (fstar_pcm_of_pcm (U.raise_pcm u#0 u#1 p)))
+: Tot (ref a p)
+=
+  let p' : pcm u#1 _ = U.raise_pcm u#0 u#1 p in
+  let fp = fstar_pcm_of_pcm p' in
+  NonNull ({ p = p; q = p; pl = connection_id p; r = r0 })
+
 (* freeable r if and only if r is a "base" reference, i.e. its connection path is empty *)
 
-let freeable #b #p r =
+let freeable #a #b #p r =
   let NonNull r = r in
-  get_base_type r.base_type r.base_inv == b /\
-  r.q == r.p /\
-  r.pl == connection_id _
+  a == b /\
+  r.p == p /\
+  r.pl == connection_id p
 
-#push-options "--z3rlimit 32"
-#restart-solver
+#push-options "--z3rlimit 16"
 
-let ref_alloc #a pcm v =
-  let r : Steel.Memory.ref (U.raise_t a) (fstar_pcm_of_pcm (U.raise_pcm pcm)) = R.alloc (U.raise_val v) in
-  let g: GHR.ref _ (RO.pcm_readonly #Type0) = GHR.alloc (Some a) in
-  GHR.share g (Some a) (Some a) (Some a);
-  let i = A.new_invariant (GHR.pts_to g (Some a)) in
-  has_base_type_intro g i a;
-  has_base_type_idem g i _ ();
-  let p : ref pcm = NonNull ({
-    base_type = g;
-    base_inv = i;
-    base_has_type = ();
-    p = pcm;
-    q = pcm;
-    pl = connection_id _;
-    r = r;
-  })
-  in
-  A.change_equal_slprop
-    (mpts_to r (U.raise_val v))
-    (mpts_to (base_of p) ((raise_pl p).conn_small_to_large.morph v));
-  A.change_equal_slprop
-    (GHR.pts_to g _)
-    (GHR.pts_to (NonNull?.v p).base_type (Some (get_base_type (NonNull?.v p).base_type (NonNull?.v p).base_inv)));
-  A.change_equal_slprop
-    (pts_to0 p v)
-    (pts_to p v);
-  A.return p
+let ref_alloc #a p x =
+  let x' : U.raise_t u#0 u#1 a = U.raise_val u#0 u#1 x in
+  let p' : pcm u#1 _ = U.raise_pcm u#0 u#1 p in
+//  let fp : P.pcm u#1 _ = fstar_pcm_of_pcm p' in // FIXME: I can define this local definition, but WHY WHY WHY can't I USE it?
+  compatible_refl p' x';
+  let r0 : Steel.Memory.ref (U.raise_t u#0 u#1 a) (fstar_pcm_of_pcm (U.raise_pcm u#0 u#1 p)) = Steel.PCMReference.alloc #_ #(fstar_pcm_of_pcm (U.raise_pcm u#0 u#1 p)) x' in
+  let r : ref a p = mk_id_ref p r0 in
+  connection_compose_id_right (lower_conn r);
+  A.change_equal_slprop (r0 `mpts_to` _) (r `pts_to` x);
+  A.return r
 
-let ref_free #b #p #x r =
+let ref_free #a #b #p #x r =
   // TODO: use Steel.PCMReference.free, but we are blocked by (p.refine (one p)), which we explicitly excluded in Steel.C.PCM
-  A.drop (pts_to _ _)
+  Steel.Effect.Atomic.drop ((NonNull?.v r).r `mpts_to` _)
 
 #pop-options
 
@@ -219,39 +126,24 @@ let unfocus r r' l x =
     (r `pts_to` x)
     (r' `pts_to` l.conn_small_to_large.morph x)
 
-let read_only_share
-  (#a: Type)
-  (#opened: _)
-  (#v: a)
-  (r: GHR.ref _ (RO.pcm_readonly #a))
-: A.SteelGhostT unit opened
-    (GHR.pts_to r (Some v))
-    (fun _ -> GHR.pts_to r (Some v) `star` GHR.pts_to r (Some v))
-= GHR.share r _ (Some v) (Some v)
-
-#push-options "--z3rlimit 16"
-#restart-solver
-
 let split r xy x y =
   let c = raise_pl r in
-  let xy2 = (c.conn_small_to_large.morph xy) in
-  let x2 = (c.conn_small_to_large.morph x) in
-  let y2 = (c.conn_small_to_large.morph y) in
-  assert (P.composable (fstar_pcm_of_pcm (raise_p r)) x2 y2);
-  A.change_equal_slprop (r `pts_to` xy) (r `pts_to0` xy);
+  let xy2 = Ghost.hide (c.conn_small_to_large.morph xy) in
+  let x2 = Ghost.hide (c.conn_small_to_large.morph x) in
+  let y2 = Ghost.hide (c.conn_small_to_large.morph y) in
+  assert (composable (raise_p r) x2 y2);
   A.change_equal_slprop
-    (_ `mpts_to` _)
-    (base_of r `mpts_to` xy2);
-  R.split (base_of r)
+    (r `pts_to` xy)
+    ((NonNull?.v r).r `mpts_to` xy2);
+  Steel.PCMReference.split (NonNull?.v r).r
     xy2
     x2
     y2;
-  read_only_share (NonNull?.v r).base_type;
   A.change_equal_slprop
-    (mpts_to (base_of r) x2 `star` GHR.pts_to _ _)
+    ((NonNull?.v r).r `mpts_to` x2)
     (r `pts_to` x);
   A.change_equal_slprop
-    (mpts_to (base_of r) y2 `star` GHR.pts_to _ _)
+    ((NonNull?.v r).r `mpts_to` y2)
     (r `pts_to` y)
 
 let mgather
@@ -262,46 +154,59 @@ let mgather
     (fun _ -> mpts_to r (P.op p v0 v1))
 = Steel.PCMReference.gather r v0 v1
 
-let gather #inames #b #p r x y =
+let gather #inames #a #b #p r x y =
   let c = raise_pl r in
-  let x2 = (c.conn_small_to_large.morph x) in
-  let y2 = (c.conn_small_to_large.morph y) in
-  A.change_equal_slprop (r `pts_to` x) (r `pts_to0` x);
-  A.change_equal_slprop (mpts_to (base_of r) _) (mpts_to (base_of r) x2);
-  A.change_equal_slprop (r `pts_to` y) (r `pts_to0` y);
-  mgather (base_of r) x2 _;
-  GHR.gather (NonNull?.v r).base_type _ _;
+  let x2 = Ghost.hide (c.conn_small_to_large.morph x) in
+  let y2 = Ghost.hide (c.conn_small_to_large.morph y) in
+  A.change_equal_slprop
+    (r `pts_to` x)
+    ((NonNull?.v r).r `mpts_to` x2);
+  A.change_equal_slprop
+    (r `pts_to` y)
+    ((NonNull?.v r).r `mpts_to` y2);
+  mgather (NonNull?.v r).r
+    x2
+    y2;
   assert (composable (raise_p r) x2 y2);
   assert (
     let x' = c.conn_large_to_small.morph x2 in
     let y' = c.conn_large_to_small.morph y2 in
     composable p x' y' /\
-    x == x' /\ y == y'
+    Ghost.reveal x == x' /\ Ghost.reveal y == y'
   );
-  A.change_equal_slprop
-    (mpts_to _ _ `star` GHR.pts_to _ _)
-    (r `pts_to` op p x y)
+  A.change_equal_slprop _ (r `pts_to` op p x y)
 
-let ref_read
-  #_ #p #x r
+let ref_read (#p: pcm 'b) (#x: Ghost.erased 'b) (r: ref 'a p)
+: Steel 'b
+    (r `pts_to` x)
+    (fun _ -> r `pts_to` x)
+    (requires fun _ -> True)
+    (ensures fun _ x' _ -> compatible p x x')
 = let w = Ghost.hide ((raise_pl r).conn_small_to_large.morph x) in
-  A.change_equal_slprop (r `pts_to` x) (r `pts_to0` x);
-  A.change_equal_slprop (mpts_to _ _) (mpts_to (base_of r) (Ghost.reveal w));
-  let w' = R.read (base_of r) w in
-  A.change_equal_slprop (mpts_to _ _ `star` GHR.pts_to _ _) (r `pts_to` x);
+  A.change_equal_slprop (r `pts_to` x) ((NonNull?.v r).r `mpts_to` w);
+  let w' = Steel.PCMReference.read (NonNull?.v r).r w in
+  A.change_equal_slprop ((NonNull?.v r).r `mpts_to` w) (r `pts_to` x);
   let x' = (raise_pl r).conn_large_to_small.morph w' in
   compatible_morphism (raise_pl r).conn_large_to_small w w';
-  assert (compatible p x x');
   A.return x'
 
-let ref_upd #b #p r x y f =
-  let c = raise_pl r in
+let ref_upd_act (r: ref 'a 'p) (x: Ghost.erased 'b { ~ (Ghost.reveal x == one 'p) }) (y: Ghost.erased 'b) (f: frame_preserving_upd 'p x y)
+: Tot (M.action_except unit Set.empty (hp_of (r `pts_to` x)) (fun _ -> hp_of (r `pts_to` y)))
+= let c = raise_pl r in
   let x' = Ghost.hide (c.conn_small_to_large.morph x) in
   let y' = Ghost.hide (c.conn_small_to_large.morph y) in
-  A.change_equal_slprop (r `pts_to` x) (r `pts_to0` x);
-  A.change_equal_slprop (mpts_to _ _) (mpts_to (base_of r) (Ghost.reveal x'));
-  R.upd_gen (base_of r) x' y' (fstar_fpu_of_fpu (raise_p r) x' y' (mk_restricted_frame_preserving_upd (c.conn_lift_frame_preserving_upd ({ fpu_lift_dom_x = x; fpu_lift_dom_y = y; fpu_lift_dom_f = restricted_frame_preserving_upd_intro f; }) )));
-  A.change_equal_slprop (mpts_to _ _ `star` GHR.pts_to _ _) (r `pts_to` y)
+  M.upd_gen Set.empty (NonNull?.v r).r x' y' (fstar_fpu_of_fpu (raise_p r) x' y' (mk_restricted_frame_preserving_upd (c.conn_lift_frame_preserving_upd ({ fpu_lift_dom_x = x; fpu_lift_dom_y = y; fpu_lift_dom_f = restricted_frame_preserving_upd_intro f; }) )))
+
+let as_action (#p:vprop)
+              (#q:vprop)
+              (f:M.action_except unit Set.empty (hp_of p) (fun _ -> hp_of q))
+: SteelT unit p (fun x -> q)
+= A.change_slprop_rel p (to_vprop (hp_of p)) (fun _ _ -> True) (fun m -> ());
+  let x = Steel.Effect.as_action f in
+  A.change_slprop_rel (to_vprop (hp_of q)) q (fun _ _ -> True) (fun m -> ());
+  A.return x
+
+let ref_upd r x y f = as_action (ref_upd_act r x y f)
 
 let base_fpu p x y =
   fun _ ->
@@ -309,8 +214,8 @@ let base_fpu p x y =
   y
 
 let pts_to_view_explicit
-  (#b: Type u#b) (#p: pcm b)
-  (r: ref p)
+  (#a: Type u#0) (#b: Type u#b) (#p: pcm b)
+  (r: ref a p)
   (#c: Type u#c)
   (#can_view_unit: bool)
   (vw: sel_view p c can_view_unit)
@@ -319,8 +224,8 @@ let pts_to_view_explicit
 = hp_of (pts_to r (vw.to_carrier v))
 
 let pts_to_view_explicit_witinv
-  (#b: Type u#b) (#p: pcm b)
-  (r: ref p)
+  (#a: Type u#0) (#b: Type u#b) (#p: pcm b)
+  (r: ref a p)
   (#c: Type u#c)
   (#can_view_unit: bool)
   (vw: sel_view p c can_view_unit)
@@ -336,7 +241,7 @@ let pts_to_view_explicit_witinv
     let y_ = vw.to_carrier y in
     let x' = c.conn_small_to_large.morph x_ in
     let y' = c.conn_small_to_large.morph y_ in
-    M.pts_to_join (base_of r) x' y' m;
+    M.pts_to_join (NonNull?.v r).r x' y' m;
     let z' = FStar.IndefiniteDescription.indefinite_description_ghost _ (fun z' -> compatible (raise_p r) x' z' /\ compatible (raise_p r) y' z') in
     let frame_x' = FStar.IndefiniteDescription.indefinite_description_ghost _ (fun frame_x' -> composable (raise_p r) x' frame_x' /\ op (raise_p r) frame_x' x' == z') in
     let frame_y' = FStar.IndefiniteDescription.indefinite_description_ghost _ (fun frame_y' -> composable (raise_p r) y' frame_y' /\ op (raise_p r) frame_y' y' == z') in
@@ -353,12 +258,18 @@ let pts_to_view_explicit_witinv
   Classical.forall_intro_3 (fun x y -> Classical.move_requires (aux x y))
 
 let pts_to_view_sl
-  r vw
+  (#a: Type u#0) (#b: Type u#b) (#p: pcm b)
+  (r: ref a p)
+  (#c: Type u#c)
+  (#can_view_unit: bool)
+  (vw: sel_view p c can_view_unit)
+: Tot M.slprop
 = M.h_exists (pts_to_view_explicit r vw)
 
+
 let pts_to_view_sel'
-  (#b: Type u#b) (#p: pcm b)
-  (r: ref p)
+  (#a: Type u#0) (#b: Type u#b) (#p: pcm b)
+  (r: ref a p)
   (#c: Type0)
   (#can_view_unit: bool)
   (vw: sel_view p c can_view_unit)
@@ -368,8 +279,8 @@ let pts_to_view_sel'
   Ghost.reveal (Ghost.reveal x)
 
 let pts_to_view_depends_only_on
-  (#b: Type u#b) (#p: pcm b)
-  (r: ref p)
+  (#a: Type u#0) (#b: Type u#b) (#p: pcm b)
+  (r: ref a p)
   (#c: Type0)
   (#can_view_unit: bool)
   (vw: sel_view p c can_view_unit)
@@ -381,8 +292,8 @@ let pts_to_view_depends_only_on
   M.elim_wi (pts_to_view_explicit r vw) x y (M.join m0 m1)
 
 let pts_to_view_depends_only_on_core
-  (#b: Type u#b) (#p: pcm b)
-  (r: ref p)
+  (#a: Type u#0) (#b: Type u#b) (#p: pcm b)
+  (r: ref a p)
   (#c: Type0)
   (#can_view_unit: bool)
   (vw: sel_view p c can_view_unit)
@@ -394,14 +305,19 @@ let pts_to_view_depends_only_on_core
   M.elim_wi (pts_to_view_explicit r vw) x y (M.core_mem m0)
 
 let pts_to_view_sel
-  r vw
+  (#a: Type u#0) (#b: Type u#b) (#p: pcm b)
+  (r: ref a p)
+  (#c: Type0)
+  (#can_view_unit: bool)
+  (vw: sel_view p c can_view_unit)
+: Tot (selector c (pts_to_view_sl r vw))
 = Classical.forall_intro_2 (pts_to_view_depends_only_on r vw);
   Classical.forall_intro (pts_to_view_depends_only_on_core r vw);
   pts_to_view_sel' r vw
 
 let pts_to_view_intro_lemma
-  (#b: Type u#b) (#p: pcm b)
-  (r: ref p)
+  (#a: Type u#0) (#b: Type u#b) (#p: pcm b)
+  (r: ref a p)
   (x: Ghost.erased b)
   (#c: Type0)
   (#can_view_unit: bool)
@@ -419,7 +335,21 @@ let pts_to_view_intro_lemma
   pts_to_view_explicit_witinv r vw
 
 let pts_to_view_intro
-  r x vw y
+  (#invs: _)
+  (#a: Type u#0) (#b: Type u#b) (#p: pcm b)
+  (r: ref a p)
+  (x: Ghost.erased b)
+  (#c: Type0)
+  (#can_view_unit: bool)
+  (vw: sel_view p c can_view_unit)
+  (y: Ghost.erased c) // necessary because to_view may erase information from x
+: A.SteelGhost unit invs
+    (pts_to r x)
+    (fun _ -> pts_to_view r vw)
+    (fun _ -> vw.to_carrier y == Ghost.reveal x)
+    (fun _ _ h' ->
+      h' (pts_to_view r vw) == Ghost.reveal y
+    )
 = A.change_slprop_2
     (pts_to r x)
     (pts_to_view r vw)
@@ -428,9 +358,10 @@ let pts_to_view_intro
       pts_to_view_intro_lemma r x vw y m
     )
 
+
 let pts_to_view_elim_lemma
-  (#b: Type u#b) (#p: pcm b)
-  (r: ref p)
+  (#a: Type u#0) (#b: Type u#b) (#p: pcm b)
+  (r: ref a p)
   (#c: Type0)
   (#can_view_unit: bool)
   (vw: sel_view p c can_view_unit)
@@ -465,8 +396,8 @@ let intro_vdep2 (#opened:_)
 
 let pts_to_view_elim
   (#invs: _)
-  (#b: Type u#b) (#p: pcm b)
-  (r: ref p)
+  (#a: Type u#0) (#b: Type u#b) (#p: pcm b)
+  (r: ref a p)
   (#c: Type0)
   (#can_view_unit: bool)
   (vw: sel_view p c can_view_unit)
@@ -501,6 +432,7 @@ let pts_to_view_elim
     );
   res
 
+
 let compatible_elim'
   (#a: Type u#a)
   (pcm: pcm0 a)
@@ -513,8 +445,8 @@ let compatible_elim'
 = compatible_elim pcm x y
 
 let ref_read_sel
-  (#b: Type u#b) (#p: pcm b)
-  (r: ref p)
+  (#a: Type u#0) (#b: Type u#b) (#p: pcm b)
+  (r: ref a p)
   (#c: Type0)
   (#can_view_unit: bool)
   (vw: sel_view p c can_view_unit)
@@ -536,10 +468,11 @@ let ref_read_sel
   pts_to_view_intro r _v vw res;
   A.return res
 
+
 // [@@__steel_reduce__; __reduce__]
 let pts_to_view_or_null0
-  (#b: Type u#b) (#p: pcm b)
-  (r: ptr p)
+  (#a: Type u#0) (#b: Type u#b) (#p: pcm b)
+  (r: ptr a p)
   (#c: Type0)
   (#can_view_unit: bool)
   (vw: sel_view p c can_view_unit)
@@ -560,8 +493,8 @@ let pts_to_view_or_null_sel
 
 let pts_to_view_or_null_prop_null
   (#inames: _)
-  (#b: Type u#b) (#p: pcm b)
-  (r: ptr p)
+  (#a: Type u#0) (#b: Type u#b) (#p: pcm b)
+  (r: ptr a p)
   (#c: Type0)
   (#can_view_unit: bool)
   (vw: sel_view p c can_view_unit)
@@ -598,8 +531,8 @@ let pts_to_view_or_null_prop_null
 #restart-solver
 let pts_to_view_or_null_prop_not_null
   (#inames: _)
-  (#b: Type u#b) (#p: pcm b)
-  (r: ptr p)
+  (#a: Type u#0) (#b: Type u#b) (#p: pcm b)
+  (r: ptr a p)
   (#c: Type0)
   (#can_view_unit: bool)
   (vw: sel_view p c can_view_unit)
@@ -635,8 +568,8 @@ let pts_to_view_or_null_prop_not_null
 
 let pts_to_view_or_null_prop
   (#inames: _)
-  (#b: Type u#b) (#p: pcm b)
-  (r: ptr p)
+  (#a: Type u#0) (#b: Type u#b) (#p: pcm b)
+  (r: ptr a p)
   (#c: Type0)
   (#can_view_unit: bool)
   (vw: sel_view p c can_view_unit)
@@ -661,28 +594,28 @@ let is_null
   A.return (Null? r)
 
 let intro_pts_to_view_or_null_null
-  #_ #b #p #c vw
+  a #b #p #c vw
 =
   A.intro_vrewrite emp (fun _ -> None <: option c);
   A.change_equal_slprop
     (emp `vrewrite` (fun _ -> None <: option c))
-    (pts_to_view_or_null0 (null p) vw);
+    (pts_to_view_or_null0 (null a p) vw);
   A.change_slprop_rel
-    (pts_to_view_or_null0 (null p) vw)
-    (pts_to_view_or_null (null p) vw)
+    (pts_to_view_or_null0 (null a p) vw)
+    (pts_to_view_or_null (null a p) vw)
     (fun x y -> x == y)
     (fun _ -> ())
 
 let elim_pts_to_view_or_null_null
-  #_ #b #p #c vw
+  a #b #p #c vw
 =
   A.change_slprop_rel
-    (pts_to_view_or_null (null p) vw)
-    (pts_to_view_or_null0 (null p) vw)
+    (pts_to_view_or_null (null a p) vw)
+    (pts_to_view_or_null0 (null a p) vw)
     (fun x y -> x == y)
     (fun _ -> ());
   A.change_equal_slprop
-    (pts_to_view_or_null0 (null p) vw)
+    (pts_to_view_or_null0 (null a p) vw)
     (emp `vrewrite` (fun _ -> None <: option c));
   A.elim_vrewrite emp (fun _ -> None <: option c)
 
