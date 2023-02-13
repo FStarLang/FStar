@@ -868,7 +868,7 @@ let lids_of_sigelt (se: sigelt) = match se.sigel with
   | Sig_let(_, lids)
   | Sig_splice(lids, _)
   | Sig_bundle(_, lids) -> lids
-  | Sig_inductive_typ (lid, _,  _, _, _, _)
+  | Sig_inductive_typ (lid, _, _, _, _, _, _)
   | Sig_effect_abbrev(lid, _, _,  _, _)
   | Sig_datacon (lid, _, _, _, _, _)
   | Sig_declare_typ (lid, _, _)

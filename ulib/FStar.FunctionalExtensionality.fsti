@@ -71,7 +71,7 @@ let feq (#a: Type) (#b: (a -> Type)) (f g: arrow a b) = forall x. {:pattern (f x
         interface boundaries)
 *)
 inline_for_extraction
-val on_domain (a: Type) (#b: (a -> Type)) (f: arrow a b) : Tot (arrow a b)
+val on_domain (a: Type) (#b: (a -> Type)) ([@@@strictly_positive] f: arrow a b) : Tot (arrow a b)
 
 (** feq_on_domain:
      [on_domain a f] is pointwise equal to [f]

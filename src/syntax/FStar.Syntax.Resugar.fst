@@ -1208,7 +1208,7 @@ let resugar_pragma = function
 
 let resugar_typ env datacon_ses se : sigelts * A.tycon =
   match se.sigel with
-  | Sig_inductive_typ (tylid, uvs, bs, t, _, datacons) ->
+  | Sig_inductive_typ (tylid, uvs, bs, _num_uniform, t, _, datacons) ->
       let current_datacons, other_datacons = datacon_ses |> List.partition (fun se -> match se.sigel with
         | Sig_datacon (_, _, _, inductive_lid, _, _) -> lid_equals inductive_lid tylid
         | _ -> failwith "unexpected" )

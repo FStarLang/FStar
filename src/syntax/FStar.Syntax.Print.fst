@@ -727,7 +727,7 @@ let rec sigelt_to_string (x: sigelt) =
    let basic =
       match x.sigel with
       | Sig_pragma p -> pragma_to_string p
-      | Sig_inductive_typ(lid, univs, tps, k, _, _) ->
+      | Sig_inductive_typ(lid, univs, tps, _, k, _, _) ->
         let quals_str = quals_to_string' x.sigquals in
         let binders_str = binders_to_string " " tps in
         let term_str = term_to_string k in
@@ -811,7 +811,7 @@ let rec sigelt_to_string_short (x: sigelt) = match x.sigel with
   | Sig_declare_typ(lid, _, t) ->
     U.format1 "val %s" (string_of_lid lid)
 
-  | Sig_inductive_typ(lid, _, _, _, _, _) ->
+  | Sig_inductive_typ(lid, _, _, _, _, _, _) ->
     U.format1 "type %s" (string_of_lid lid)
 
   | Sig_datacon(lid, _, _, t_lid, _, _) ->

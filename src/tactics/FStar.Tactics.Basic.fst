@@ -1759,7 +1759,7 @@ let t_destruct (s_tm : term) : tac (list (fv * Z.t)) = wrap_err "destruct" <| (
     | None -> fail "type not found in environment"
     | Some se ->
       match se.sigel with
-      | Sig_inductive_typ (_lid, t_us, t_ps, t_ty, mut, c_lids) ->
+      | Sig_inductive_typ (_lid, t_us, t_ps, _num_uniform, t_ty, mut, c_lids) ->
       (* High-level idea of this huge function:
        * For  Gamma |- w : phi  and  | C : ps -> bs -> t,  we generate a new goal
        *   Gamma |- w' : bs -> phi
