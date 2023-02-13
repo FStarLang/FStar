@@ -63,6 +63,10 @@ val next_id             : unit -> int
 val gen'                : string -> range -> ident
 val gen                 : range -> ident
 
+(** Do something without affecting the gensym. Useful e.g. for printing,
+to make sure there's no side effect. *)
+val with_frozen_gensym  : (unit -> 'a) -> 'a
+
 (** Turn a string of shape A.B.C into a path *)
 val path_of_text        : string -> path
 

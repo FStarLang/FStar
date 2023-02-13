@@ -4764,7 +4764,7 @@ let rec __typeof_tot_or_gtot_term_fastpath (env:env) (t:term) (must_tot:bool) : 
 let typeof_tot_or_gtot_term_fastpath (env:env) (t:term) (must_tot:bool) : option typ =
   def_check_closed_in_env t.pos "fastpath" env t;
   Errors.with_ctx
-    (BU.format1 "In a call to typeof_tot_or_gtot_term_fastpath, t=%s" (Print.term_to_string t))
+    "In a call to typeof_tot_or_gtot_term_fastpath"
     (fun () -> __typeof_tot_or_gtot_term_fastpath env t must_tot)
 
 (*
