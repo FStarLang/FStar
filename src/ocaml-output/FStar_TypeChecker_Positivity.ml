@@ -1411,10 +1411,8 @@ let (check_strict_positivity :
                 (fun uu___1 -> FStar_Syntax_Syntax.U_name uu___1) ty_us in
             FStar_Compiler_List.for_all
               (fun d ->
-                 FStar_Compiler_List.for_all
-                   (fun ty_lid1 ->
-                      ty_strictly_positive_in_datacon_decl env1 mutuals2 d
-                        ty_params us unfolded_inductives) mutuals2) datacons
+                 ty_strictly_positive_in_datacon_decl env1 mutuals2 d
+                   ty_params us unfolded_inductives) datacons
 let (check_exn_strict_positivity :
   FStar_TypeChecker_Env.env -> FStar_Ident.lident -> Prims.bool) =
   fun env ->

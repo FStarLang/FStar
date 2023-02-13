@@ -1188,16 +1188,13 @@ let check_strict_positivity (env:env_t)
     let us = List.map U_name ty_us in
     List.for_all 
       (fun d ->
-         List.for_all
-           (fun ty_lid ->
-             ty_strictly_positive_in_datacon_decl
+           ty_strictly_positive_in_datacon_decl
                env
                mutuals
                d
                ty_params
                us
                unfolded_inductives)
-          mutuals)
     datacons
 
 (* Special-casing the check for exceptions, the single open inductive type we handle. *)
