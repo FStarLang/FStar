@@ -832,6 +832,9 @@ let flex_uvar_head t =
  *
  * We also return early if the substitution is empty or if the uvar is
  * totally unaffected by it.
+ *
+ * NB: This function only uses the environment for debugging flags,
+ * so it's safe to pass wl.tcenv.
  *)
 let ensure_no_uvar_subst env (t0:term) (wl:worklist)
   : term * worklist
@@ -906,7 +909,11 @@ let ensure_no_uvar_subst env (t0:term) (wl:worklist)
 let no_free_uvars t = BU.set_is_empty (Free.uvars t) && BU.set_is_empty (Free.univs t)
 
 (* Deciding when it's okay to issue an SMT query for
-   equating a term whose head symbol is `head` with another term *)
+ * equating a term whose head symbol is `head` with another term
+ *
+ * NB: this function only uses env for checking delta_depths,
+ * so it's fine to use wl.tcenv.
+ *)
 let rec may_relate_with_logical_guard env is_eq head =
     match (SS.compress head).n with
     | Tm_name _
@@ -938,6 +945,8 @@ let destruct_flex_t' t : flex_t =
 
 (* Destruct a term into its uvar head and arguments *)
 let destruct_flex_t t wl : flex_t * worklist =
+  (* ensure_no_uvar_subst only uses the environment for debugging
+   * flags, so it's safe to pass wl.tcenv *)
   let t, wl = ensure_no_uvar_subst wl.tcenv t wl in
   (* If there's any substitution on the head of t, it must
    * have been made trivial by the call above, so
