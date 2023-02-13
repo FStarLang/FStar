@@ -44,15 +44,13 @@ let parse_fragment (frag: ParseIt.input_frag) : fragment =
 let parse_file fn =
     match ParseIt.parse (Filename fn) with
     | ASTFragment (Inl ast, comments) ->
-        if Options.print_ast()
-        then Util.print1 "Parsed AST:\n%s\n" (Parser.ParseIt.modul_to_json_string ast);
-        ast, comments
+      ast, comments
     | ASTFragment (Inr _ , _) ->
-        let msg = Util.format1 "%s: expected a module\n" fn in
-        let r = Range.dummyRange in
-        raise_error (Errors.Fatal_ModuleExpected, msg) r
+      let msg = Util.format1 "%s: expected a module\n" fn in
+      let r = Range.dummyRange in
+      raise_error (Errors.Fatal_ModuleExpected, msg) r
     | ParseError (e, msg, r) ->
-        raise_error (e, msg) r
+      raise_error (e, msg) r
     | Term _ ->
-        failwith "Impossible: parsing a Filename always results in an ASTFragment"
+      failwith "Impossible: parsing a Filename always results in an ASTFragment"
 

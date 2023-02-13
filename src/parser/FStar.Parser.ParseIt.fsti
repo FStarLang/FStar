@@ -51,4 +51,4 @@ val find_file: string -> string
 
 val parse_warn_error: string -> list FStar.Errors.error_setting
 val modul_to_json_string : AST.modul -> string
-val modul_of_json_string : string -> either AST.modul string
+val show_modul : AST.modul -> string

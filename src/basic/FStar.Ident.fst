@@ -15,11 +15,17 @@ let pp_ident_t (f:'a -> 'b -> 'c) (fmt:'a) (x:ident_t 'b) = f fmt x.idText
 [@@ PpxDerivingYoJson; PpxDerivingShow ]
 type ident = ident_t string
 
+type lident_t 'a = {ns:ipath; //["FStar"; "Basic"]
+                   ident:ident;    //"lident"
+                   nsstr:string; // Cached version of the namespace
+                   str:'a} // Cached version of string_of_lid
+
+let lident_t_to_yojson (f:'a -> 'b) (x:lident_t 'a) = f x.str
+let lident_t_of_yojson (f:'a -> 'b) (x:'a) = failwith "Parsing from JSON is not yet supported"
+let pp_lident_t (f:'a -> 'b -> 'c) (fmt:'a) (x:lident_t 'b) = f fmt x.str
+
 [@@ PpxDerivingYoJson; PpxDerivingShow ]
-type lident = {ns:ipath; //["FStar"; "Basic"]
-               ident:ident;    //"lident"
-               nsstr:string; // Cached version of the namespace
-               str:string} // Cached version of string_of_lid
+type lident = lident_t string
 
 let mk_ident (text,range) = {idText=text; idRange=range}
 

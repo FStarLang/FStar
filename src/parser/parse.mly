@@ -557,31 +557,19 @@ fieldPattern:
   (* we do *NOT* allow _ in multibinder () since it creates reduce/reduce conflicts when*)
   (* preprocessing to ocamlyacc/fsyacc (which is expected since the macro are expanded) *)
 patternOrMultibinder:
-  | LBRACE_BAR UNDERSCORE COLON t=simpleArrow BAR_RBRACE
-      { let mt = mk_term (Var tcresolve_lid) (rhs parseState 4) Type_level in
-        let w = mk_pattern (PatWild (Some (mk_meta_tac mt), []))
-                                 (rhs2 parseState 1 5) in
+  | LBRACE_BAR id=lidentOrUnderscore COLON t=simpleArrow BAR_RBRACE
+      { let r = rhs2 parseState 1 5 in
+        let w = mk_pattern (PatVar (id, Some TypeClassArg, [])) r in
         let asc = (t, None) in
-        [mk_pattern (PatAscribed(w, asc)) (rhs2 parseState 1 5)]
-      }
-
-  (* GM: I would rather use lidentOrUnderscore and delete the rule above,
-   * but I need to produce a PatWild above, and a PatVar here. However
-   * why does PatWild even exist..? *)
-  | LBRACE_BAR i=lident COLON t=simpleArrow BAR_RBRACE
-      { let mt = mk_term (Var tcresolve_lid) (rhs parseState 4) Type_level in
-        let w = mk_pattern (PatVar (i, Some (mk_meta_tac mt), []))
-                                 (rhs2 parseState 1 5) in
-        let asc = (t, None) in
-        [mk_pattern (PatAscribed(w, asc)) (rhs2 parseState 1 5)]
+        [mk_pattern (PatAscribed(w, asc)) r]
       }
 
   | LBRACE_BAR t=simpleArrow BAR_RBRACE
-      { let mt = mk_term (Var tcresolve_lid) (rhs parseState 2) Type_level in
-        let w = mk_pattern (PatVar (gen (rhs2 parseState 1 3), Some (mk_meta_tac mt), []))
-                                 (rhs2 parseState 1 3) in
+      { let r = rhs2 parseState 1 3 in
+        let id = gen r in
+        let w = mk_pattern (PatVar (id, Some TypeClassArg, [])) r in
         let asc = (t, None) in
-        [mk_pattern (PatAscribed(w, asc)) (rhs2 parseState 1 3)]
+        [mk_pattern (PatAscribed(w, asc)) r]
       }
   | pat=atomicPattern { [pat] }
   | LPAREN qual_id0=aqualifiedWithAttrs(lident) qual_ids=nonempty_list(aqualifiedWithAttrs(lident)) COLON t=simpleArrow r=refineOpt RPAREN
@@ -604,16 +592,14 @@ binder:
 
 multiBinder:
   | LBRACE_BAR id=lidentOrUnderscore COLON t=simpleArrow BAR_RBRACE
-      { let mt = mk_term (Var tcresolve_lid) (rhs parseState 4) Type_level in
-        let r = rhs2 parseState 1 5 in
-        [mk_binder (Annotated (id, t)) r Type_level (Some (mk_meta_tac mt))]
+      { let r = rhs2 parseState 1 5 in
+        [mk_binder (Annotated (id, t)) r Type_level (Some TypeClassArg)]
       }
 
   | LBRACE_BAR t=simpleArrow BAR_RBRACE
-      { let mt = mk_term (Var tcresolve_lid) (rhs parseState 2) Type_level in
-        let r = rhs2 parseState 1 3 in
+      { let r = rhs2 parseState 1 3 in
         let id = gen r in
-        [mk_binder (Annotated (id, t)) r Type_level (Some (mk_meta_tac mt))]
+        [mk_binder (Annotated (id, t)) r Type_level (Some TypeClassArg)]
       }
 
   | LPAREN qual_ids=nonempty_list(aqualifiedWithAttrs(lidentOrUnderscore)) COLON t=simpleArrow r=refineOpt RPAREN
@@ -1028,18 +1014,12 @@ simpleArrow:
   | e=tmEqNoRefinement { e }
 
 simpleArrowDomain:
-  | LBRACE_BAR t=tmEqNoRefinement BAR_RBRACE
-      { let mt = mk_term (Var tcresolve_lid) (rhs parseState 4) Type_level in
-        ((Some (mk_meta_tac mt), []), t)
-      }
+  | LBRACE_BAR t=tmEqNoRefinement BAR_RBRACE { ((Some TypeClassArg, []), t) }
   | aq_opt=ioption(aqual) attrs_opt=ioption(binderAttributes) dom_tm=tmEqNoRefinement { (aq_opt, none_to_empty_list attrs_opt), dom_tm }
 
 (* Tm already account for ( term ), we need to add an explicit case for (#Tm) *)
 %inline tmArrowDomain(Tm):
-  | LBRACE_BAR t=Tm BAR_RBRACE
-      { let mt = mk_term (Var tcresolve_lid) (rhs parseState 4) Type_level in
-        ((Some (mk_meta_tac mt), []), t)
-      }
+  | LBRACE_BAR t=Tm BAR_RBRACE { ((Some TypeClassArg, []), t) }
   | LPAREN q=aqual attrs_opt=ioption(binderAttributes) dom_tm=Tm RPAREN { (Some q, none_to_empty_list attrs_opt), dom_tm }
   | aq_opt=ioption(aqual) attrs_opt=ioption(binderAttributes) dom_tm=Tm { (aq_opt, none_to_empty_list attrs_opt), dom_tm }
 

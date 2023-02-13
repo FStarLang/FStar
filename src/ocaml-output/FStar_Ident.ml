@@ -16,24 +16,30 @@ let pp_ident_t : 'a 'b 'c . ('a -> 'b -> 'c) -> 'a -> 'b ident_t -> 'c =
 type ident = Prims.string ident_t[@@deriving yojson,show,yojson,show]
 type path = Prims.string Prims.list[@@deriving yojson,show]
 type ipath = ident Prims.list[@@deriving yojson,show]
-type lident =
-  {
+type 'a lident_t = {
   ns: ipath ;
   ident: ident ;
   nsstr: Prims.string ;
-  str: Prims.string }[@@deriving yojson,show,yojson,show]
-let (__proj__Mklident__item__ns : lident -> ipath) =
+  str: 'a }
+let __proj__Mklident_t__item__ns : 'a . 'a lident_t -> ipath =
   fun projectee ->
     match projectee with | { ns; ident = ident1; nsstr; str;_} -> ns
-let (__proj__Mklident__item__ident : lident -> ident) =
+let __proj__Mklident_t__item__ident : 'a . 'a lident_t -> ident =
   fun projectee ->
     match projectee with | { ns; ident = ident1; nsstr; str;_} -> ident1
-let (__proj__Mklident__item__nsstr : lident -> Prims.string) =
+let __proj__Mklident_t__item__nsstr : 'a . 'a lident_t -> Prims.string =
   fun projectee ->
     match projectee with | { ns; ident = ident1; nsstr; str;_} -> nsstr
-let (__proj__Mklident__item__str : lident -> Prims.string) =
+let __proj__Mklident_t__item__str : 'a . 'a lident_t -> 'a =
   fun projectee ->
     match projectee with | { ns; ident = ident1; nsstr; str;_} -> str
+let lident_t_to_yojson : 'a 'b . ('a -> 'b) -> 'a lident_t -> 'b =
+  fun f -> fun x -> f x.str
+let lident_t_of_yojson : 'uuuuu 'a 'b . ('a -> 'b) -> 'a -> 'uuuuu =
+  fun f -> fun x -> failwith "Parsing from JSON is not yet supported"
+let pp_lident_t : 'a 'b 'c . ('a -> 'b -> 'c) -> 'a -> 'b lident_t -> 'c =
+  fun f -> fun fmt -> fun x -> f fmt x.str
+type lident = Prims.string lident_t[@@deriving yojson,show,yojson,show]
 let (mk_ident : (Prims.string * FStar_Compiler_Range.range) -> ident) =
   fun uu___ ->
     match uu___ with | (text, range) -> { idText = text; idRange = range }
@@ -106,7 +112,7 @@ let (lid_of_path : path -> FStar_Compiler_Range.range -> lident) =
     fun pos ->
       let ids = FStar_Compiler_List.map (fun s -> mk_ident (s, pos)) path1 in
       lid_of_ids ids
-let (text_of_lid : lident -> Prims.string) = fun lid -> lid.str
+let text_of_lid : 'uuuuu . 'uuuuu lident_t -> 'uuuuu = fun lid -> lid.str
 let (lid_equals : lident -> lident -> Prims.bool) =
   fun l1 -> fun l2 -> l1.str = l2.str
 let (ident_equals : ident -> ident -> Prims.bool) =

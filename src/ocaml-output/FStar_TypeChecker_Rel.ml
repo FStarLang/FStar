@@ -575,7 +575,8 @@ let (uvi_to_string : FStar_TypeChecker_Env.env -> uvi -> Prims.string) =
           FStar_Compiler_Util.format2 "TERM %s <- %s" x uu___1
 let (uvis_to_string :
   FStar_TypeChecker_Env.env -> uvi Prims.list -> Prims.string) =
-  fun env -> fun uvis -> FStar_Common.string_of_list (uvi_to_string env) uvis
+  fun env ->
+    fun uvis -> (FStar_Common.string_of_list ()) (uvi_to_string env) uvis
 let (names_to_string :
   FStar_Syntax_Syntax.bv FStar_Compiler_Util.set -> Prims.string) =
   fun nms ->
@@ -7709,7 +7710,8 @@ and (solve_t' : FStar_TypeChecker_Env.env -> tprob -> worklist -> solution) =
                                                      FStar_Compiler_Util.string_of_bool
                                                        wl3.smt_ok in
                                                    let uu___13 =
-                                                     FStar_Syntax_Print.list_to_string
+                                                     (FStar_Common.string_of_list
+                                                        ())
                                                        (prob_to_string env1)
                                                        subprobs in
                                                    FStar_Compiler_Util.print2
@@ -13052,7 +13054,7 @@ let (solve_and_commit :
          if uu___1
          then
            let uu___2 =
-             FStar_Common.string_of_list
+             (FStar_Common.string_of_list ())
                (fun p -> FStar_Compiler_Util.string_of_int (p_pid p))
                wl.attempting in
            FStar_Compiler_Util.print1 "solving problems %s {\n" uu___2

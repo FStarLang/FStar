@@ -2199,6 +2199,10 @@ and (resugar_bqual :
       | FStar_Pervasives_Native.Some (FStar_Syntax_Syntax.Equality) ->
           FStar_Pervasives_Native.Some
             (FStar_Pervasives_Native.Some FStar_Parser_AST.Equality)
+      | FStar_Pervasives_Native.Some (FStar_Syntax_Syntax.Meta t) when
+          FStar_Syntax_Util.is_fvar FStar_Parser_Const.tcresolve_lid t ->
+          FStar_Pervasives_Native.Some
+            (FStar_Pervasives_Native.Some FStar_Parser_AST.TypeClassArg)
       | FStar_Pervasives_Native.Some (FStar_Syntax_Syntax.Meta t) ->
           let uu___ =
             let uu___1 =

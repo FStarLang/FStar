@@ -1337,6 +1337,9 @@ let (collect_one :
              match uu___2 with
              | FStar_Pervasives_Native.Some (FStar_Parser_AST.Meta t) ->
                  collect_term t
+             | FStar_Pervasives_Native.Some (FStar_Parser_AST.TypeClassArg)
+                 ->
+                 add_to_parsing_data (P_lid FStar_Parser_Const.tcresolve_lid)
              | uu___3 -> ()
            and collect_term t = collect_term' t.FStar_Parser_AST.v
            and collect_constant uu___2 =

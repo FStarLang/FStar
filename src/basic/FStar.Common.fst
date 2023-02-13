@@ -70,8 +70,39 @@ let raise_failed_assertion msg =
 let runtime_assert b msg =
   if not b then raise_failed_assertion msg
 
-let string_of_list (f : 'a -> string) (l : list 'a) : string =
-  "[" ^ String.concat ", " (List.map f l) ^ "]"
+let __string_of_list (delim:string) (f : 'a -> string) (l : list 'a) : string =
+  match l with
+  | [] -> "[]"
+  | x::xs ->
+    let strb = BU.new_string_builder () in
+    BU.string_builder_append strb "[";
+    BU.string_builder_append strb (f x);
+    List.iter (fun x ->
+               BU.string_builder_append strb delim;
+               BU.string_builder_append strb (f x)
+               ) xs ;
+    BU.string_builder_append strb "]";
+    BU.string_of_string_builder strb
+
+(* Why two? This function was added during a refactoring, and
+both variants existed. We cannot simply move to ";" since that is a
+breaking change to anything that parses F* source code (like Vale). *)
+let string_of_list = __string_of_list ", "
+let string_of_list' = __string_of_list "; "
+
+let string_of_set (f : 'a -> string) (l : BU.set 'a) : string =
+  match BU.set_elements l with
+  | [] -> "{}"
+  | x::xs ->
+    let strb = BU.new_string_builder () in
+    BU.string_builder_append strb "{";
+    BU.string_builder_append strb (f x);
+    List.iter (fun x ->
+               BU.string_builder_append strb ", ";
+               BU.string_builder_append strb (f x)
+               ) xs ;
+    BU.string_builder_append strb "}";
+    BU.string_of_string_builder strb
 
 let list_of_option (o:option 'a) : list 'a =
     match o with

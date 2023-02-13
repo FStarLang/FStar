@@ -5748,6 +5748,13 @@ and (trans_bqual :
             let uu___2 = desugar_term env t in
             FStar_Syntax_Syntax.Meta uu___2 in
           FStar_Pervasives_Native.Some uu___1
+      | FStar_Pervasives_Native.Some (FStar_Parser_AST.TypeClassArg) ->
+          let tcresolve =
+            desugar_term env
+              (FStar_Parser_AST.mk_term
+                 (FStar_Parser_AST.Var FStar_Parser_Const.tcresolve_lid)
+                 FStar_Compiler_Range.dummyRange FStar_Parser_AST.Expr) in
+          FStar_Pervasives_Native.Some (FStar_Syntax_Syntax.Meta tcresolve)
       | FStar_Pervasives_Native.None -> FStar_Pervasives_Native.None
 let (typars_of_binders :
   FStar_Syntax_DsEnv.env ->
@@ -6179,6 +6186,8 @@ let rec (desugar_tycon :
                   FStar_Parser_AST.Hash
               | FStar_Pervasives_Native.Some (FStar_Parser_AST.Meta uu___) ->
                   FStar_Parser_AST.Hash
+              | FStar_Pervasives_Native.Some (FStar_Parser_AST.TypeClassArg)
+                  -> FStar_Parser_AST.Hash
               | uu___ -> FStar_Parser_AST.Nothing in
             FStar_Compiler_List.fold_left
               (fun out ->
@@ -8011,11 +8020,11 @@ and (desugar_decl_aux :
                               (let uu___7 =
                                  let uu___8 =
                                    let uu___9 =
-                                     FStar_Common.string_of_list
+                                     (FStar_Common.string_of_list ())
                                        FStar_Compiler_Util.string_of_int
                                        expected_errs in
                                    let uu___10 =
-                                     FStar_Common.string_of_list
+                                     (FStar_Common.string_of_list ())
                                        FStar_Compiler_Util.string_of_int
                                        errnos in
                                    let uu___11 =
@@ -9102,31 +9111,54 @@ let (desugar_modul :
   =
   fun env ->
     fun m ->
-      let uu___ = desugar_modul_common FStar_Pervasives_Native.None env m in
-      match uu___ with
-      | (env1, modul, pop_when_done) ->
-          let uu___1 =
-            FStar_Syntax_DsEnv.finish_module_or_interface env1 modul in
-          (match uu___1 with
-           | (env2, modul1) ->
-               ((let uu___3 =
-                   let uu___4 =
-                     FStar_Ident.string_of_lid
-                       modul1.FStar_Syntax_Syntax.name in
-                   FStar_Options.dump_module uu___4 in
-                 if uu___3
-                 then
-                   let uu___4 = FStar_Syntax_Print.modul_to_string modul1 in
-                   FStar_Compiler_Util.print1
-                     "Module after desugaring:\n%s\n" uu___4
-                 else ());
-                (let uu___3 =
-                   if pop_when_done
-                   then
-                     FStar_Syntax_DsEnv.export_interface
-                       modul1.FStar_Syntax_Syntax.name env2
-                   else env2 in
-                 (uu___3, modul1))))
+      let module_name =
+        FStar_Ident.string_of_lid (FStar_Parser_AST.lid_of_modul m) in
+      (let uu___1 = FStar_Options.should_print_ast module_name in
+       if uu___1
+       then
+         let uu___2 = FStar_Options.print_ast_json () in
+         (if uu___2
+          then
+            let uu___3 = FStar_Parser_ParseIt.modul_to_json_string m in
+            FStar_Compiler_Util.print2 "Parsed AST of module %s:\n%s\n"
+              module_name uu___3
+          else
+            (let uu___4 = FStar_Options.print_ast_show () in
+             if uu___4
+             then
+               let uu___5 = FStar_Parser_ParseIt.show_modul m in
+               FStar_Compiler_Util.print2 "Parsed AST of module %s:\n%s\n"
+                 module_name uu___5
+             else
+               (let uu___6 = FStar_Parser_AST.modul_to_string m in
+                FStar_Compiler_Util.print2 "Parsed AST of module %s:\n%s\n"
+                  module_name uu___6)))
+       else ());
+      (let uu___1 = desugar_modul_common FStar_Pervasives_Native.None env m in
+       match uu___1 with
+       | (env1, modul, pop_when_done) ->
+           let uu___2 =
+             FStar_Syntax_DsEnv.finish_module_or_interface env1 modul in
+           (match uu___2 with
+            | (env2, modul1) ->
+                ((let uu___4 =
+                    let uu___5 =
+                      FStar_Ident.string_of_lid
+                        modul1.FStar_Syntax_Syntax.name in
+                    FStar_Options.dump_module uu___5 in
+                  if uu___4
+                  then
+                    let uu___5 = FStar_Syntax_Print.modul_to_string modul1 in
+                    FStar_Compiler_Util.print1
+                      "Module after desugaring:\n%s\n" uu___5
+                  else ());
+                 (let uu___4 =
+                    if pop_when_done
+                    then
+                      FStar_Syntax_DsEnv.export_interface
+                        modul1.FStar_Syntax_Syntax.name env2
+                    else env2 in
+                  (uu___4, modul1)))))
 let with_options : 'a . (unit -> 'a) -> 'a =
   fun f ->
     FStar_Options.push ();

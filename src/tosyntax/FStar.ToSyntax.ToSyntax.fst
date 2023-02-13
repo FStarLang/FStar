@@ -2603,6 +2603,9 @@ and trans_bqual env = function
   | Some AST.Equality -> Some S.Equality
   | Some (AST.Meta t) ->
     Some (S.Meta (desugar_term env t))
+  | Some (AST.TypeClassArg) ->
+    let tcresolve = desugar_term env (mk_term (Var C.tcresolve_lid) Range.dummyRange Expr) in
+    Some (S.Meta tcresolve)
   | None -> None
 
 let typars_of_binders env bs : _ * binders =
@@ -2770,8 +2773,9 @@ let rec desugar_tycon env (d: AST.decl) quals tcs : (env_t * sigelts) =
   let with_constructor_effect t = mk_term (App(tot, t, Nothing)) t.range t.level in
   let apply_binders t binders =
     let imp_of_aqual (b:AST.binder) = match b.aqual with
-        | Some Implicit -> Hash
-        | Some (Meta _) -> Hash
+        | Some Implicit
+        | Some (Meta _)
+        | Some TypeClassArg -> Hash
         | _ -> Nothing in
     List.fold_left (fun out b -> mk_term (App(out, binder_to_term b, imp_of_aqual b)) out.range out.level)
       t binders in
@@ -3973,6 +3977,21 @@ let desugar_partial_modul curmod (env:env_t) (m:AST.modul) : env_t * Syntax.modu
   else env, modul
 
 let desugar_modul env (m:AST.modul) : env_t * Syntax.modul =
+  let module_name = Ident.string_of_lid (AST.lid_of_modul m) in
+  begin
+  if Options.should_print_ast module_name
+  then if Options.print_ast_json ()
+       then BU.print2 "Parsed AST of module %s:\n%s\n"
+                            module_name
+                            (Parser.ParseIt.modul_to_json_string m)
+       else if Options.print_ast_show ()
+       then BU.print2 "Parsed AST of module %s:\n%s\n"
+                            module_name
+                            (Parser.ParseIt.show_modul m)
+       else BU.print2 "Parsed AST of module %s:\n%s\n"
+                            module_name
+                            (AST.modul_to_string m)
+  end;
   let env, modul, pop_when_done = desugar_modul_common None env m in
   let env, modul = Env.finish_module_or_interface env modul in
   if Options.dump_module (string_of_lid modul.name)
