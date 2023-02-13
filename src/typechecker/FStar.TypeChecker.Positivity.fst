@@ -641,7 +641,7 @@ let already_unfolded (ilid:lident)
 
        Given a head term applied to args, where head is of type
        head_t, this checks that if the mutuals appear in a arg, that
-       it does no strictly positive and the corresponding binder
+       it does so strictly positively and the corresponding binder
        of head_t is marked strictly positive.
 
        The head term is not an inductive type constructor
@@ -942,7 +942,7 @@ and ty_strictly_positive_in_args (env:env)
          when they are re-encountered.
 
       2. f is not an inductive type (or at least not visibly so, e.g., due
-         to an abstraction boundary). In this case, check that for every
+         to an abstraction boundary). In this case, check that every
          ty_lid is strictly_positive in all the args of f, using
          check_ty_strictly_positive_in_args
      
@@ -1029,8 +1029,8 @@ and ty_strictly_positive_in_arguments_to_fvar
    num_ibs is the # of type parameters of ilid
    us are the universes
    
-   Check that ty_lid (defined mutually with mutuals)
-   occurs strictly positively in every field of dlid *)
+   Check that the mutuals
+   occur strictly positively in every field of dlid *)
 and ty_strictly_positive_in_datacon_of_applied_inductive (env:env_t)
                                                          (mutuals:list lident)
                                                          (dlid:lident)

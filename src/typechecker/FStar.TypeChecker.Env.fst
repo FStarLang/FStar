@@ -553,7 +553,7 @@ let try_lookup_lid_aux us_opt env lid =
 //        val try_lookup_val_decl    : env -> lident -> option (tscheme * list qualifier)
 //        val lookup_val_decl        : env -> lident -> universes * typ
 //        val lookup_datacon         : env -> lident -> universes * typ
-//        val datacons_of_typ        : env -> lident -> list lident
+//        val datacons_of_typ        : env -> lident -> bool * list lident
 //        val typ_of_datacon         : env -> lident -> lident
 //        val lookup_definition      : delta_level -> env -> lident -> option (univ_names * term)
 //        val lookup_attrs_of_lid    : env -> lid -> option list attribute
