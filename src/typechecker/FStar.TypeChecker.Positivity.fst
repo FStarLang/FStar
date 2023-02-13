@@ -74,11 +74,17 @@ module C = FStar.Parser.Const
   2. For an inductive type constructor, every non-uniform parameter or index
      may be considered to be an _arity_ or not
 
-     An arity is a Type, or a function t -> arity
+     An arity is a `Type`, or an arrow `t -> arity`
 
-     A term is indexed by an arity if it has type t -> arity
-     where t is itself an arity
+     A term is indexed by an arity if it has type t0 -> ... -> tn -> Type
+     and any of the ti are themselves arities
+
+     Given a well-typed term `t v0 ... vn`, we check that if the type of the prefix `t [v0...vi)` 
+     is `ti -> ... Type`
+     and if `ti` is an arity (and is the type of `vi`)
+     then the type being defined cannot appear free in `vi`
      
+
      E.g., Consider a term  (t :   a:Type -> x:a -> x -> (Type -> Type) -> bool -> Type)
            applied as (t Type nat 0 option true)
            The first index of t is an arity
@@ -113,6 +119,11 @@ module C = FStar.Parser.Const
 
      since although in `f t`, `t` only instantiates a parameter of `f`
      in `t (f t)`, `t` appears free in an arity index of `t` itself
+
+     Note, Agda does allow the type `t` above, although it rejects
+
+     type t : Type -> Type
+       | T : t (t bool)
  *)
  
 ////////////////////////////////////////////////////////////////////////////////
