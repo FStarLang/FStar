@@ -16,6 +16,7 @@ clean: clean-ocaml
 
 clean_boot:
 	rm -rf .cache.boot
+	rm -f ._depend
 	rm -f .depend
 
 # --------------------------------------------------------------------------------

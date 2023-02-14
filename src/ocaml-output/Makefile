@@ -251,3 +251,6 @@ clean:
 	$(call msg, "CLEAN", "src/ocaml-output")
 	$(Q)rm -f $(FStar_Version_ml) parse.mly
 	$(Q)rm -f *.tar.gz *.zip
+	$(Q)rm -f version_platform.txt
+	$(Q)rm -f yac-log
+	$(Q)rm -rf fstar
