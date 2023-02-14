@@ -118,6 +118,15 @@ let rec term_to_string (t:term)
         (term_to_string t)
         (term_to_string e)        
 
+    | Tm_ElimExists t ->
+      sprintf "elim_exists %s"
+        (term_to_string t)
+
+    | Tm_IntroExists t e ->
+      sprintf "intro_exists %s %s"
+        (term_to_string t)
+        (term_to_string e)
+
     | Tm_UVar n -> sprintf "?u_%d" n
 
 and binder_to_string b =

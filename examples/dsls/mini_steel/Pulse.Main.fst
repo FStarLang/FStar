@@ -158,7 +158,12 @@ let rec shift_bvs_in_else (t:term) (n:nat) : Tac term =
            | None -> None
            | Some post -> Some (shift_bvs_in_else post (n + 1)))
   | Tm_Inames
-  | Tm_EmpInames
+  | Tm_EmpInames -> t
+  | Tm_ElimExists t ->
+    Tm_ElimExists (shift_bvs_in_else t n)
+  | Tm_IntroExists t e ->
+    Tm_IntroExists (shift_bvs_in_else t n)
+                   (shift_bvs_in_else e n)
   | Tm_UVar _ -> t
 
 let rec translate_term' (t:R.term)

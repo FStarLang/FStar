@@ -253,3 +253,9 @@ val intro_pure (p:prop) (_:squash p)
   : stt_ghost unit emp_inames
               emp
               (fun _ -> pure p)
+
+val elim_exists (#a:Type) (p:a -> vprop)
+  : stt_ghost a emp_inames (exists_ p) p
+
+val intro_exists (#a:Type) (p:a -> vprop) (e:a)
+  : stt_ghost unit emp_inames (p e) (fun _ -> exists_ p)
