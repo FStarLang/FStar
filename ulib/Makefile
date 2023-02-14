@@ -1,4 +1,4 @@
-.PHONY: all benchmark extra clean_checked clean_ocaml clean fstardoc ulib-in-fsharp
+.PHONY: all benchmark extra clean_checked clean fstardoc ulib-in-fsharp
 
 FSTAR_HOME=..
 
@@ -36,14 +36,10 @@ ulib-in-fsharp-dll: all
 clean_checked:
 	$(Q)rm -f *.checked .cache/*.checked .depend
 
-clean: clean_checked clean_ocaml
+clean: clean_checked
 	$(call msg, "CLEAN", "ulib/")
 	$(Q)rm -f .depend.*
 	$(Q)rm -f *.checked.lax .cache/*.checked.lax
-
-clean_ocaml:
-	$(call msg, "CLEAN", "OCAML LIBS")
-	$(Q)+$(MAKE) -C ulib/ml clean
 
 DOC_FILES=prims.fst FStar.Pervasives.Native.fst FStar.Pervasives.fst \
 	  FStar.Squash.fsti FStar.Classical.fsti FStar.BigOps.fsti \

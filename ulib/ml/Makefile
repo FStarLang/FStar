@@ -26,6 +26,3 @@ $(TARGET_DIR)%.ml: %.ml.prefix FStar_Ints.ml.body
 	@echo '(* !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! *)' >> $@
 	@echo '' >> $@
 	@cat $< FStar_Ints.ml.body >> $@
-
-clean:
-	rm -rf $(INTFILES)
