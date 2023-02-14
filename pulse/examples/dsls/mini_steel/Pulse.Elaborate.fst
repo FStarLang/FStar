@@ -367,15 +367,6 @@ and elab_src_typing
       let e = elab_src_typing e_typing in
       elab_frame c frame e
       
-    // | T_If _ b e1 e2 _c hyp _ e1_typing e2_typing ->
-    //   let b = elab_pure b in
-    //   let e1 = elab_src_typing e1_typing in
-    //   let e2 = elab_src_typing e2_typing in
-    //   let open R in
-    //   pack_ln (Tv_Match b None 
-    //               [(Pat_Constant C_True, e1);
-    //                (Pat_Constant C_False, e2)])
-
     | T_Equiv _ _ c1 c2 e_typing _ ->
       let e = elab_src_typing e_typing in
       elab_sub c1 c2 e
@@ -393,21 +384,16 @@ and elab_src_typing
 #pop-options
 
 #push-options "--ifuel 2"
-let rec elab_pure_equiv (#f:RT.fstar_top_env)
-                        (#g:env)
-                        (#t:pure_term)
-                        (#c:pure_comp { C_Tot? c })
-                        (d:src_typing f g t c)
+let elab_pure_equiv (#f:RT.fstar_top_env)
+                    (#g:env)
+                    (#t:pure_term)
+                    (#c:pure_comp { C_Tot? c })
+                    (d:src_typing f g t c)
   : Lemma (ensures elab_src_typing d == elab_pure t)
-          (decreases d)
-  = match d with
-    | T_Tot _ _ _ d -> ()
-    // | T_If _ _ _ _ _ _ _ d1 d2 -> 
-    //   elab_pure_equiv d1; 
-    //   elab_pure_equiv d2      
+  = ()
 #pop-options
 
-
+#push-options "--fuel 10 --ifuel 6 --z3rlimit_factor 25 --query_stats --z3cliopt 'smt.qi.eager_threshold=100'"
 let rec elab_open_commute' (e:pure_term)
                            (v:pure_term)
                            (n:index)
@@ -415,20 +401,66 @@ let rec elab_open_commute' (e:pure_term)
               RT.open_or_close_term' (elab_pure e) (RT.OpenWith (elab_pure v)) n ==
               elab_pure (open_term' e v n))
           (decreases e)
-  = admit()
+  = match e with
+    | Tm_Var _
+    | Tm_FVar _
+    | Tm_UInst _ _
+    | Tm_Constant _
+    | Tm_Emp 
+    | Tm_Type _
+    | Tm_Inames
+    | Tm_EmpInames
+    | Tm_VProp -> ()
+    | Tm_BVar bv ->
+      let rbv = R.pack_bv (RT.make_bv_with_name bv.bv_ppname bv.bv_index tun) in
+      let re = R.pack_ln (R.Tv_BVar rbv) in
+      assert (elab_pure e == re);
+      if n <> bv.bv_index then ()
+      else (
+        assume (~(Tm_Var? v)); //the Var case is messy because of pp_name; this should go away with hiding names in meta
+        ()
+      )
+    | Tm_Refine b phi ->
+      elab_open_commute' b.binder_ty v n;
+      elab_open_commute' phi v (n + 1)
+    | Tm_PureApp e1 _ e2 ->
+      elab_open_commute' e1 v n;
+      elab_open_commute' e2 v n
+    | Tm_Let t e1 e2 ->
+      elab_open_commute' t v n;    
+      elab_open_commute' e1 v n;
+      elab_open_commute' e2 v (n + 1)
+    | Tm_Pure p ->
+      elab_open_commute' p v n
+    | Tm_Star e1 e2 ->
+      elab_open_commute' e1 v n;
+      elab_open_commute' e2 v n
+    | Tm_ExistsSL t body
+    | Tm_ForallSL t body ->
+      elab_open_commute' t v n;
+      elab_open_commute' body v (n + 1)    
+    | Tm_Arrow b _ body ->
+      elab_open_commute' b.binder_ty v n;
+      elab_comp_open_commute' body v (n + 1)
+
 and elab_comp_open_commute' (c:pure_comp) (v:pure_term) (n:index)
   : Lemma (ensures
               RT.open_or_close_term' (elab_pure_comp c) (RT.OpenWith (elab_pure v)) n ==
               elab_pure_comp (open_comp' c v n))
           (decreases c)
-  = admit()
+  = match c with
+    | C_Tot t -> elab_open_commute' t v n
+    | C_ST s -> 
+      elab_open_commute' s.res v n;
+      elab_open_commute' s.pre v n;
+      elab_open_commute' s.post v (n + 1)
+    | C_STAtomic inames s
+    | C_STGhost inames s ->
+      elab_open_commute' inames v n;
+      elab_open_commute' s.res v n;
+      elab_open_commute' s.pre v n;
+      elab_open_commute' s.post v (n + 1)
 
-let elab_open_commute (t:pure_term) (x:var)
-  : Lemma (elab_pure (open_term t x) == RT.open_term (elab_pure t) x)
-  = RT.open_term_spec (elab_pure t) x;
-    elab_open_commute' t (null_var x) 0
-
-#push-options "--fuel 10 --ifuel 6 --z3rlimit_factor 25"
 let rec elab_close_commute' (e:pure_term)
                             (v:var)
                             (n:index)
@@ -485,12 +517,16 @@ and elab_comp_close_commute' (c:pure_comp) (v:var) (n:index)
       elab_close_commute' s.post v (n + 1)
    | C_STAtomic inames s
    | C_STGhost inames s ->
-      admit ();
       elab_close_commute' inames v n;
       elab_close_commute' s.res v n;
       elab_close_commute' s.pre v n;
       elab_close_commute' s.post v (n + 1)
 #pop-options
+
+let elab_open_commute (t:pure_term) (x:var)
+  : Lemma (elab_pure (open_term t x) == RT.open_term (elab_pure t) x)
+  = RT.open_term_spec (elab_pure t) x;
+    elab_open_commute' t (null_var x) 0
 
 let elab_comp_close_commute (c:pure_comp) (x:var)
   : Lemma (elab_pure_comp (close_pure_comp c x) == RT.close_term (elab_pure_comp c) x)
