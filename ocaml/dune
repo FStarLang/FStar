@@ -1,3 +1,3 @@
 (env
   (release
-    (flags (:standard -warn-error -A))))
+    (flags (:standard -w -A))))
