@@ -24,9 +24,7 @@ open FStar.Order
 let type_of_bv (bv : bv) : typ =
     (inspect_bv bv).bv_sort
 
-let bv_of_binder (b : binder) : bv =
-    let bv, _ = inspect_binder b in
-    bv
+let bv_of_binder (b : binder) : bv = (inspect_binder b).binder_bv
 
 let rec inspect_ln_unascribe (t:term) : tv:term_view{tv << t /\ notAscription tv} =
     match inspect_ln t with
@@ -38,10 +36,18 @@ let rec inspect_ln_unascribe (t:term) : tv:term_view{tv << t /\ notAscription tv
  * AR: add versions that take attributes as arguments?
  *)
 let mk_binder (bv : bv) : binder =
-    pack_binder bv Q_Explicit []
+  pack_binder {
+    binder_bv=bv;
+    binder_qual=Q_Explicit;
+    binder_attrs=[]
+  }
 
 let mk_implicit_binder (bv : bv) : binder =
-    pack_binder bv Q_Implicit []
+  pack_binder {
+    binder_bv=bv;
+    binder_qual=Q_Implicit;
+    binder_attrs=[]
+  }
 
 let type_of_binder (b : binder) : typ =
     type_of_bv (bv_of_binder b)
@@ -206,8 +212,8 @@ let is_uvar (t : term) : bool =
     | _ -> false
 
 let binder_set_qual (q:aqualv) (b:binder) : Tot binder =
-  let bv, (_, attrs) = inspect_binder b in
-  pack_binder bv q attrs
+  let bview = inspect_binder b in
+  pack_binder {bview with binder_qual=q}
 
 (** Set a vconfig for a sigelt *)
 val add_check_with : vconfig -> sigelt -> Tot sigelt

@@ -540,7 +540,9 @@ let rec revert_all (bs:binders) : Tac unit =
 
 (* Some syntax utility functions *)
 let bv_to_term (bv : bv) : Tac term = pack (Tv_Var bv)
-let binder_to_term (b : binder) : Tac term = let bv, _ = inspect_binder b in bv_to_term bv
+let binder_to_term (b : binder) : Tac term =
+  let bview = inspect_binder b in
+  bv_to_term bview.binder_bv
 
 // Cannot define this inside `assumption` due to #1091
 private
