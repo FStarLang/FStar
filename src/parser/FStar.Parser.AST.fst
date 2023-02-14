@@ -154,12 +154,23 @@ type knd = term
 type typ = term
 type expr = term
 
+type tycon_record = list (ident * aqual * attributes_ * term)
+
+(** The different kinds of payload a constructor can carry *)
+type constructor_payload
+  = (** constructor of arity 1 for a type of kind [Type] (e.g. [C of int]) *)
+    | VpOfNotation of typ
+    (** constructor of any arity & kind (e.g. [C:int->ind] or [C:'a->'b->ind 'c]) *)
+    | VpArbitrary of typ
+    (** constructor whose payload is a record (e.g. [C {a: int}] or [C {x: Type} -> ind x]) *)
+    | VpRecord of (tycon_record * opt_kind:option typ)
+
 (* TODO (KM) : it would be useful for the printer to have range information for those *)
 type tycon =
   | TyconAbstract of ident * list binder * option knd
   | TyconAbbrev   of ident * list binder * option knd * term
-  | TyconRecord   of ident * list binder * option knd * attributes_ * list (ident * aqual * attributes_ * term)
-  | TyconVariant  of ident * list binder * option knd * list (ident * option term * bool * attributes_) (* bool is whether it's using 'of' notation *)
+  | TyconRecord   of ident * list binder * option knd * attributes_ * tycon_record
+  | TyconVariant  of ident * list binder * option knd * list (ident * option constructor_payload * attributes_)
 
 type qualifier =
   | Private

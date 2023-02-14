@@ -825,14 +825,21 @@ let collect_one
         | TyconRecord (_, binders, k, _, identterms) ->
             collect_binders binders;
             iter_opt k collect_term;
-            List.iter (fun (_, aq, attrs, t) ->
-                collect_aqual aq;
-                attrs |> List.iter collect_term;
-                collect_term t) identterms
+            collect_tycon_record identterms
         | TyconVariant (_, binders, k, identterms) ->
             collect_binders binders;
             iter_opt k collect_term;
-            List.iter (fun (_, t, _, _) -> iter_opt t collect_term) identterms
+            List.iter ( function
+                      | VpOfNotation t | VpArbitrary t -> collect_term t
+                      | VpRecord (record, t) -> collect_tycon_record record;
+                                               iter_opt t collect_term
+                      ) (List.filter_map Mktuple3?._2 identterms)
+
+      and collect_tycon_record r = 
+        List.iter (fun (_, aq, attrs, t) ->
+                collect_aqual aq;
+                attrs |> List.iter collect_term;
+                collect_term t) r
 
       and collect_effect_decl = function
         | DefineEffect (_, binders, t, decls) ->
