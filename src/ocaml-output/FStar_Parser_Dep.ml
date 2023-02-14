@@ -1197,7 +1197,7 @@ let (collect_one :
                   collect_decl x.FStar_Parser_AST.d;
                   FStar_Compiler_List.iter collect_term
                     x.FStar_Parser_AST.attrs;
-                  (match x.FStar_Parser_AST.d with
+                  (match (x.FStar_Parser_AST.d).FStar_Parser_AST.v with
                    | FStar_Parser_AST.Val uu___4 when
                        FStar_Compiler_List.contains
                          FStar_Parser_AST.Inline_for_extraction
@@ -1205,7 +1205,7 @@ let (collect_one :
                        -> add_to_parsing_data P_inline_for_extraction
                    | uu___4 -> ())) decls
            and collect_decl d =
-             match d with
+             match d.FStar_Parser_AST.v with
              | FStar_Parser_AST.Include lid ->
                  add_to_parsing_data (P_open (false, lid))
              | FStar_Parser_AST.Open lid ->
@@ -1328,25 +1328,10 @@ let (collect_one :
              FStar_Compiler_Effect.op_Bar_Greater
                b.FStar_Parser_AST.battributes
                (FStar_Compiler_List.iter collect_term);
-             (match b with
-              | {
-                  FStar_Parser_AST.b = FStar_Parser_AST.Annotated (uu___4, t);
-                  FStar_Parser_AST.brange = uu___5;
-                  FStar_Parser_AST.blevel = uu___6;
-                  FStar_Parser_AST.aqual = uu___7;
-                  FStar_Parser_AST.battributes = uu___8;_} -> collect_term t
-              | {
-                  FStar_Parser_AST.b = FStar_Parser_AST.TAnnotated
-                    (uu___4, t);
-                  FStar_Parser_AST.brange = uu___5;
-                  FStar_Parser_AST.blevel = uu___6;
-                  FStar_Parser_AST.aqual = uu___7;
-                  FStar_Parser_AST.battributes = uu___8;_} -> collect_term t
-              | { FStar_Parser_AST.b = FStar_Parser_AST.NoName t;
-                  FStar_Parser_AST.brange = uu___4;
-                  FStar_Parser_AST.blevel = uu___5;
-                  FStar_Parser_AST.aqual = uu___6;
-                  FStar_Parser_AST.battributes = uu___7;_} -> collect_term t
+             (match (b.FStar_Parser_AST.b).FStar_Parser_AST.v with
+              | FStar_Parser_AST.Annotated (uu___4, t) -> collect_term t
+              | FStar_Parser_AST.TAnnotated (uu___4, t) -> collect_term t
+              | FStar_Parser_AST.NoName t -> collect_term t
               | uu___4 -> ())
            and collect_aqual uu___2 =
              match uu___2 with
@@ -1356,7 +1341,7 @@ let (collect_one :
                  ->
                  add_to_parsing_data (P_lid FStar_Parser_Const.tcresolve_lid)
              | uu___3 -> ()
-           and collect_term t = collect_term' t.FStar_Parser_AST.tm
+           and collect_term t = collect_term' t.FStar_Parser_AST.v
            and collect_constant uu___2 =
              match uu___2 with
              | FStar_Const.Const_int
@@ -1671,7 +1656,7 @@ let (collect_one :
                   collect_term e')
            and collect_patterns ps =
              FStar_Compiler_List.iter collect_pattern ps
-           and collect_pattern p = collect_pattern' p.FStar_Parser_AST.pat
+           and collect_pattern p = collect_pattern' p.FStar_Parser_AST.v
            and collect_pattern' uu___2 =
              match uu___2 with
              | FStar_Parser_AST.PatVar (uu___3, aqual, attrs) ->

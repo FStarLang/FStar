@@ -255,6 +255,8 @@ let resugar_machine_integer fv (i:string) pos =
   | None -> failwith "Impossible: should be guarded by can_resugar_machine_integer"
   | Some (sw, _) -> A.mk_term (A.Const (Const_int(i, Some sw))) pos A.Un
 
+#push-options "--print_full_names --ugly"
+
 let rec resugar_term' (env: DsEnv.env) (t : S.term) : A.term =
     (* Cannot resugar term back to NamedTyp or Paren *)
     let mk (a:A.term') : A.term =
@@ -322,7 +324,7 @@ let rec resugar_term' (env: DsEnv.env) (t : S.term) : A.term =
       if Options.print_universes() then
         let univs = List.map (fun x -> resugar_universe x t.pos) universes in
         match e with
-        | { tm = A.Construct (hd, args); range = r; level = l } ->
+        | { v = A.Construct (hd, args); range = r; level = l } ->
           let args = args @ (List.map (fun u -> (u, A.UnivApp)) univs) in
           A.mk_term (A.Construct (hd, args)) r l
         | _ ->
@@ -424,7 +426,7 @@ let rec resugar_term' (env: DsEnv.env) (t : S.term) : A.term =
         let args =
           List.map (fun (e, qual) -> (resugar_term' env e, resugar_aqual env qual)) args in
         match resugar_term' env e with
-        | { tm = A.Construct (hd, previous_args); range = r; level = l } ->
+        | { v = A.Construct (hd, previous_args); range = r; level = l } ->
           A.mk_term (A.Construct (hd, previous_args @ args)) r l
         | e ->
           List.fold_left (fun acc (x, qual) -> mk (A.App (acc, x, qual))) e args
@@ -516,7 +518,7 @@ let rec resugar_term' (env: DsEnv.env) (t : S.term) : A.term =
               | _ -> failwith("wrong argument format to try_with: " ^ term_to_string (resugar_term' env term)) in
             let body = resugar_term' env (decomp body) in
             let handler = resugar_term' env (decomp handler) in
-            let rec resugar_body t = match (t.tm) with
+            let rec resugar_body t = match t.v with
               | A.Match(e, None, None, [(_,_,b)]) -> b
               | A.Let(_, _, b) -> b  // One branch Match that is resugared as Let
               | A.Ascribed(t1, t2, t3, use_eq) ->
@@ -524,7 +526,7 @@ let rec resugar_term' (env: DsEnv.env) (t : S.term) : A.term =
                 mk (A.Ascribed(resugar_body t1, t2, t3, use_eq))
               | _ -> failwith("unexpected body format to try_with") in
             let e = resugar_body body in
-            let rec resugar_branches t = match (t.tm) with
+            let rec resugar_branches t = match t.v with
               | A.Match(e, None, None, branches) -> branches
               | A.Ascribed(t1, t2, t3, _) ->
                 (* this case happens when the match is wrapped in Meta_Monadic which is resugared to Ascribe*)
@@ -557,7 +559,7 @@ let rec resugar_term' (env: DsEnv.env) (t : S.term) : A.term =
 
         | Some (op, _) when op = "forall" || op = "exists" ->
           (* desugared from QForall(binders * patterns * body) to Tm_app(forall, Tm_abs(binders, Tm_meta(body, meta_pattern(list args)*)
-          let rec uncurry xs pats (t:A.term) = match t.tm with
+          let rec uncurry xs pats (t:A.term) = match t.v with
             | A.QExists(xs', (_, pats'), body)
             | A.QForall(xs', (_, pats'), body) ->
                 uncurry (xs@xs') (pats@pats') body
@@ -748,7 +750,7 @@ let rec resugar_term' (env: DsEnv.env) (t : S.term) : A.term =
        let resugar_meta_desugared = function
           | Sequence ->
               let term = resugar_term' env e in
-              let rec resugar_seq t = match t.tm with
+              let rec resugar_seq t = match t.v with
                 | A.Let(_, [_, (p, t1)], t2) ->
                    mk (A.Seq(t1, t2))
                 | A.Ascribed(t1, t2, t3, use_eq) ->
@@ -1029,7 +1031,7 @@ and resugar_comp' (env: DsEnv.env) (c:S.comp) : A.term =
 and resugar_binder' env (b:S.binder) r : option A.binder =
   BU.map_opt (resugar_bqual env b.binder_qual) begin fun imp ->
     let e = resugar_term' env b.binder_bv.sort in
-    match (e.tm) with
+    match e.v with
     | A.Wild ->
       A.mk_binder (A.Variable(bv_as_unique_ident b.binder_bv)) r A.Type_level imp
     | _ ->
@@ -1062,11 +1064,11 @@ and resugar_pat' env (p:S.pat) (branch_bv: set bv) : A.pattern =
   let mk a = A.mk_pattern a p.p in
   let to_arg_qual bopt = // FIXME do (Some false) and None mean the same thing?
     BU.bind_opt bopt (fun b -> if b then Some A.Implicit else None) in
-  let may_drop_implicits args =
+  let may_drop_implicits (args:list (S.pat & bool)) =
     not (Options.print_implicits ()) &&
     not (List.existsML (fun (pattern, is_implicit) ->
              let might_be_used =
-               match pattern.v with
+               match pattern.S.v with
                | Pat_var bv -> Util.set_mem bv branch_bv
                | Pat_wild _ -> false
                | _ -> true in
@@ -1074,7 +1076,7 @@ and resugar_pat' env (p:S.pat) (branch_bv: set bv) : A.pattern =
   let resugar_plain_pat_cons' fv args =
     mk (A.PatApp (mk (A.PatName fv.fv_name.v), args)) in
   let rec resugar_plain_pat_cons fv args =
-    let args =
+    let args : list (S.pat & _) =
       if may_drop_implicits args
       then filter_pattern_imp args
       else args in
@@ -1099,7 +1101,7 @@ and resugar_pat' env (p:S.pat) (branch_bv: set bv) : A.pattern =
        | [(hd, false); (tl, false)] ->
          let hd' = aux hd (Some false) in
          (match aux tl (Some false) with
-          | { pat = A.PatList tl'; prange = p } -> A.mk_pattern (A.PatList (hd' :: tl')) p
+          | { v = A.PatList tl'; range = p } -> A.mk_pattern (A.PatList (hd' :: tl')) p
           | tl' -> resugar_plain_pat_cons' fv [hd'; tl'])
        | args' ->
          E.log_issue p.p (E.Warning_ConsAppliedExplicitArgs,
@@ -1261,8 +1263,7 @@ let resugar_typ env datacon_ses se : sigelts * A.tycon =
 
 let mk_decl r q d' =
   {
-    d = d' ;
-    drange = r ;
+    d = A.with_range d' r;
     quals = List.choose resugar_qualifier q ;
     (* TODO : are these stocked up somewhere ? *)
     attrs = [] ;
@@ -1394,7 +1395,7 @@ let resugar_sigelt' env se : option A.decl =
       let dummy = mk Tm_unknown in
       let desugared_let = mk (Tm_let(lbs, dummy)) in
       let t = resugar_term' env desugared_let in
-      begin match t.tm with
+      begin match t.v with
         | A.Let(isrec, lets, _) ->
           Some (decl'_to_decl se (TopLevelLet (isrec, List.map snd lets)))
         | _ -> failwith "Should not happen hopefully"

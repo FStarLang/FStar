@@ -178,6 +178,8 @@ let defaults =
       ("lsp"                          , Bool false);
       ("include"                      , List []);
       ("print"                        , Bool false);
+      ("print_ast"                    , Unset);
+      ("print_ast_format"             , String "Internal");
       ("print_in_place"               , Bool false);
       ("force"                        , Bool false);
       ("fuel"                         , Unset);
@@ -367,6 +369,8 @@ let get_ide_id_info_off         ()      = lookup_opt "ide_id_info_off"          
 let get_lsp                     ()      = lookup_opt "lsp"                      as_bool
 let get_include                 ()      = lookup_opt "include"                  (as_list as_string)
 let get_print                   ()      = lookup_opt "print"                    as_bool
+let get_print_ast               ()      = lookup_opt "print_ast"                (as_option (as_list as_string))
+let get_print_ast_format        ()      = lookup_opt "print_ast_format"         as_string
 let get_print_in_place          ()      = lookup_opt "print_in_place"           as_bool
 let get_initial_fuel            ()      = lookup_opt "initial_fuel"             as_int
 let get_initial_ifuel           ()      = lookup_opt "initial_ifuel"            as_int
@@ -835,6 +839,16 @@ let rec specs_with_types warn_unsafe : list (char * string * opt_type * string) 
         "print",
         Const (Bool true),
         "Parses and prettyprints the files included on the command line");
+
+       ( noshort,
+        "print_ast",
+         Accumulated (SimpleStr "One or more space-separated occurrences of '[+|-]( * | namespace | module)'"),
+        "\n\t\tPrint the parser AST (formatted according to print_ast_format) of modules whose names or namespaces match the provided option");
+
+       ( noshort,
+        "print_ast_format",
+        EnumStr ["JSON"; "Show"; "Internal"],
+        "Format used by the print_ast option (default Internal)" );
 
        ( noshort,
         "print_in_place",
@@ -1756,6 +1770,9 @@ let hint_file_for_src src_filename =
 let ide                          () = get_ide                         ()
 let ide_id_info_off              () = get_ide_id_info_off             ()
 let print                        () = get_print                       ()
+let print_ast                    () = get_print_ast                   ()
+let print_ast_json               () = get_print_ast_format () = "JSON"
+let print_ast_show               () = get_print_ast_format () = "Show"
 let print_in_place               () = get_print_in_place              ()
 let initial_fuel                 () = min (get_initial_fuel ()) (get_max_fuel ())
 let initial_ifuel                () = min (get_initial_ifuel ()) (get_max_ifuel ())
@@ -2066,6 +2083,11 @@ let profile_enabled modul_opt phase =
     || (timing ()
         && phase = "FStar.TypeChecker.Tc.process_one_decl"
         && should_check modul)
+
+let should_print_ast m =
+  match print_ast() with
+  | None -> false
+  | Some setting -> module_matches_namespace_filter m setting
 
 exception File_argument of string
 

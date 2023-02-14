@@ -165,3 +165,13 @@ let parse_warn_error s =
         failwith (U.format1 "Malformed warn-error list: %s" s)
   in
   FStar_Errors.update_flags user_flags
+
+module A = FStar_Parser_AST
+  
+let modul_to_json_string (m:A.modul)
+  : string
+  = Yojson.Safe.to_string (A.modul_to_yojson m)
+
+let show_modul (m:A.modul)
+  : string
+  = A.show_modul m

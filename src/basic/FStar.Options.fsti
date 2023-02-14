@@ -141,6 +141,8 @@ val ide                         : unit    -> bool
 val ide_id_info_off             : unit    -> bool
 val include_path                : unit    -> list string
 val print                       : unit    -> bool
+val print_ast_json              : unit    -> bool
+val print_ast_show              : unit    -> bool
 val print_in_place              : unit    -> bool
 val initial_fuel                : unit    -> int
 val initial_ifuel               : unit    -> int
@@ -198,6 +200,7 @@ val should_check                : string  -> bool (* Should check this module, l
 val should_check_file           : string  -> bool (* Should check this file, lax or not. *)
 val should_verify               : string  -> bool (* Should check this module with verification enabled. *)
 val should_verify_file          : string  -> bool (* Should check this file with verification enabled. *)
+val should_print_ast            : string  -> bool
 val silent                      : unit    -> bool
 val smtencoding_elim_box        : unit    -> bool
 val smtencoding_nl_arith_default: unit    -> bool

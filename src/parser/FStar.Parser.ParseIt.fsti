@@ -50,3 +50,5 @@ val parse: parse_frag -> parse_result // either (AST.inputFragment * list (strin
 val find_file: string -> string
 
 val parse_warn_error: string -> list FStar.Errors.error_setting
+val modul_to_json_string : AST.modul -> string
+val show_modul : AST.modul -> string

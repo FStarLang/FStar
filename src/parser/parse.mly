@@ -325,7 +325,7 @@ letoperatorbinding:
               | Some t -> mk_pattern (PatAscribed(pat, t)) (rhs2 parseState 1 2) )
 	    , tm)
 	in
-	match pat.pat, tm with
+	match pat.v, tm with
         | _               , Some tm -> h tm
         | PatVar (v, _, _), None    ->
           let v = lid_of_ns_and_id [] v in
@@ -378,10 +378,10 @@ layeredEffectDefinition:
                           "Syntax error: unexpected empty binders list in the layered effect definition")
                          (range_of_id lid)
           | _ -> hd bs, last bs in
-        let r = union_ranges first_b.brange last_b.brange in
+        let r = union_ranges first_b.b.range last_b.b.range in
         mk_term (Product (bs, mk_term (Name (lid_of_str "Effect")) r Type_level)) r Type_level in
       let rec decls (r:term) =
-        match r.tm with
+        match r.v with
         | Paren r -> decls r
         | Record (None, flds) ->
            flds |> List.map (fun (lid, t) ->
@@ -749,7 +749,7 @@ noSeqTerm:
        *
        * this is parsed as an app node, so we destruct the app node
        *)
-      { match t.tm with
+      { match t.v with
         | App (t1, t2, _) ->
 	  let ot = mk_term (WFOrder (t1, t2)) (rhs2 parseState 3 3) Type_level in
 	  mk_term (Decreases (ot, None)) (rhs2 parseState 1 4) Type_level
@@ -778,7 +778,7 @@ noSeqTerm:
       }
   | LET OPEN t=term IN e=term
       {
-            match t.tm with
+            match t.v with
             | Ascribed(r, rty, None, _) ->
               mk_term (LetOpenRecord(r, rty, e)) (rhs2 parseState 1 5) Expr
 
@@ -1084,7 +1084,7 @@ tmNoEqWith(X):
             in
             let tail = e2 in
             let dom, res =
-                match tail.tm with
+                match tail.v with
                 | Sum(dom', res) -> dom::dom', res
                 | _ -> [dom], tail
             in

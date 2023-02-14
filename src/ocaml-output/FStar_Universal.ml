@@ -737,17 +737,15 @@ let (tc_one_fragment :
           match modul with
           | FStar_Parser_AST.Module
               (uu___,
-               { FStar_Parser_AST.d = uu___1; FStar_Parser_AST.drange = d;
-                 FStar_Parser_AST.quals = uu___2;
-                 FStar_Parser_AST.attrs = uu___3;_}::uu___4)
-              -> d
+               { FStar_Parser_AST.d = d; FStar_Parser_AST.quals = uu___1;
+                 FStar_Parser_AST.attrs = uu___2;_}::uu___3)
+              -> d.FStar_Parser_AST.range
           | FStar_Parser_AST.Interface
               (uu___,
-               { FStar_Parser_AST.d = uu___1; FStar_Parser_AST.drange = d;
-                 FStar_Parser_AST.quals = uu___2;
-                 FStar_Parser_AST.attrs = uu___3;_}::uu___4,
-               uu___5)
-              -> d
+               { FStar_Parser_AST.d = d; FStar_Parser_AST.quals = uu___1;
+                 FStar_Parser_AST.attrs = uu___2;_}::uu___3,
+               uu___4)
+              -> d.FStar_Parser_AST.range
           | uu___ -> FStar_Compiler_Range.dummyRange in
         let uu___ = FStar_Parser_Driver.parse_fragment frag in
         match uu___ with
@@ -801,13 +799,13 @@ let (tc_one_fragment :
              | FStar_Pervasives_Native.None ->
                  let uu___1 = FStar_Compiler_List.hd ast_decls in
                  (match uu___1 with
-                  | { FStar_Parser_AST.d = uu___2;
-                      FStar_Parser_AST.drange = rng;
-                      FStar_Parser_AST.quals = uu___3;
-                      FStar_Parser_AST.attrs = uu___4;_} ->
+                  | { FStar_Parser_AST.d = d;
+                      FStar_Parser_AST.quals = uu___2;
+                      FStar_Parser_AST.attrs = uu___3;_} ->
                       FStar_Errors.raise_error
                         (FStar_Errors.Fatal_ModuleFirstStatement,
-                          "First statement must be a module declaration") rng)
+                          "First statement must be a module declaration")
+                        d.FStar_Parser_AST.range)
              | FStar_Pervasives_Native.Some modul ->
                  let uu___1 =
                    FStar_Compiler_Util.fold_map

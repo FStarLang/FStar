@@ -29,18 +29,18 @@ open FStar.Parser.AST
 (* Some basic utilities *)
 let id_eq_lid i (l:lident) = (string_of_id i) = (string_of_id (ident_of_lid l))
 
-let is_val x d = match d.d with
+let is_val x d = match d.d.v with
     | Val(y, _) -> (string_of_id x) = (string_of_id y)
     | _ -> false
 
-let is_type x d = match d.d with
+let is_type x d = match d.d.v with
     | Tycon(_, _, tys) ->
         tys |> Util.for_some (fun t -> id_of_tycon t = (string_of_id x))
     | _ -> false
 
 //is d of of the form 'let x = ...' or 'type x = ...'
 let definition_lids d =
-    match d.d with
+    match d.d.v with
     | TopLevelLet(_, defs) ->
         lids_of_let defs
     | Tycon(_, _, tys) ->
@@ -132,8 +132,8 @@ let rec prefix_with_iface_decls
    let qualify_karamel_private impl =
        let karamel_private =
            FStar.Parser.AST.mk_term
-                 (Const (FStar.Const.Const_string ("KrmlPrivate", impl.drange)))
-                 impl.drange
+                 (Const (FStar.Const.Const_string ("KrmlPrivate", impl.d.range)))
+                 impl.d.range
                  FStar.Parser.AST.Expr
        in
        {impl with attrs=karamel_private::impl.attrs}
@@ -141,9 +141,9 @@ let rec prefix_with_iface_decls
    match iface with
    | [] -> [], [qualify_karamel_private impl]
    | iface_hd::iface_tl -> begin
-     match iface_hd.d with
+     match iface_hd.d.v with
      | Tycon(_, _, tys) when (tys |> Util.for_some (function (TyconAbstract _)  -> true | _ -> false)) ->
-        raise_error (Errors.Fatal_AbstractTypeDeclarationInInterface, "Interface contains an abstract 'type' declaration; use 'val' instead") impl.drange
+        raise_error (Errors.Fatal_AbstractTypeDeclarationInInterface, "Interface contains an abstract 'type' declaration; use 'val' instead") impl.d.range
 
      | Val(x, t) ->
        //we have a 'val x' in the interface
@@ -158,7 +158,7 @@ let rec prefix_with_iface_decls
                iface_tl |> Util.for_some (is_val (ident_of_lid y)))
             then raise_error (Errors.Fatal_WrongDefinitionOrder, (Util.format2 "Expected the definition of %s to precede %s"
                                            (string_of_id x)
-                                           (def_ids |> List.map Ident.string_of_lid |> String.concat ", "))) impl.drange
+                                           (def_ids |> List.map Ident.string_of_lid |> String.concat ", "))) impl.d.range
             else iface, [qualify_karamel_private impl]
        else let mutually_defined_with_x = def_ids |> List.filter (fun y -> not (id_eq_lid x y)) in
             let rec aux mutuals iface =
@@ -172,7 +172,7 @@ let rec prefix_with_iface_decls
                   else if Option.isSome <| List.tryFind (is_val (ident_of_lid y)) iface_tl
                   then raise_error (Errors.Fatal_WrongDefinitionOrder, (Util.format2 "%s is out of order with the definition of %s"
                                             (decl_to_string iface_hd)
-                                            (Ident.string_of_lid y))) iface_hd.drange
+                                            (Ident.string_of_lid y))) iface_hd.d.range
                   else aux ys iface //no val given for 'y'; ok
             in
             let take_iface, rest_iface = aux mutually_defined_with_x iface_tl in
@@ -193,22 +193,22 @@ let check_initial_interface (iface:list decl) =
         match iface with
         | [] -> ()
         | hd::tl -> begin
-            match hd.d with
+            match hd.d.v with
             | Tycon(_, _, tys) when (tys |> Util.for_some (function (TyconAbstract _)  -> true | _ -> false)) ->
-              raise_error (Errors.Fatal_AbstractTypeDeclarationInInterface, "Interface contains an abstract 'type' declaration; use 'val' instead") hd.drange
+              raise_error (Errors.Fatal_AbstractTypeDeclarationInInterface, "Interface contains an abstract 'type' declaration; use 'val' instead") hd.d.range
 
             | Val(x, t) ->  //we have a 'val x' in the interface
               if Util.for_some (is_definition_of x) tl
-              then raise_error (Errors.Fatal_BothValAndLetInInterface, (Util.format2 "'val %s' and 'let %s' cannot both be provided in an interface" (string_of_id x) (string_of_id x))) hd.drange
+              then raise_error (Errors.Fatal_BothValAndLetInInterface, (Util.format2 "'val %s' and 'let %s' cannot both be provided in an interface" (string_of_id x) (string_of_id x))) hd.d.range
               else if hd.quals |> List.contains Assumption
-              then raise_error (Errors.Fatal_AssumeValInInterface, "Interfaces cannot use `assume val x : t`; just write `val x : t` instead") hd.drange
+              then raise_error (Errors.Fatal_AssumeValInInterface, "Interfaces cannot use `assume val x : t`; just write `val x : t` instead") hd.d.range
               else ()
 
             | _ -> ()
           end
     in
     aux iface;
-    iface |> List.filter (fun d -> match d.d with TopLevelModule _ -> false | _ -> true)
+    iface |> List.filter (fun d -> match d.d.v with TopLevelModule _ -> false | _ -> true)
 
 //////////////////////////////////////////////////////////////////////
 //A weaker variant, for use only in --MLish mode
@@ -225,19 +225,19 @@ let ml_mode_prefix_with_iface_decls
    * list decl =  //impl prefixed with relevant bits from iface
 
 
-   match impl.d with
+   match impl.d.v with
    | TopLevelModule _
    | Open _
    | Friend _
    | Include _
    | ModuleAbbrev _ ->
      let iface_prefix_opens, iface =
-       List.span (fun d -> match d.d with | Open _ | ModuleAbbrev _ -> true | _ -> false) iface     
+       List.span (fun d -> match d.d.v with | Open _ | ModuleAbbrev _ -> true | _ -> false) iface     
      in
      let iface =
        List.filter 
          (fun d ->
-           match d.d with
+           match d.d.v with
            | Val _
            | Tycon _ -> true //only retain the vals in --MLish mode
            | _ -> false)
@@ -248,7 +248,7 @@ let ml_mode_prefix_with_iface_decls
    | _ ->
 
      let iface_prefix_tycons, iface =
-       List.span (fun d -> match d.d with | Tycon _ -> true | _ -> false) iface
+       List.span (fun d -> match d.d.v with | Tycon _ -> true | _ -> false) iface
      in
 
      let maybe_get_iface_vals lids iface =
@@ -256,7 +256,7 @@ let ml_mode_prefix_with_iface_decls
          (fun d -> lids |> Util.for_some (fun x -> is_val (ident_of_lid x) d))
          iface in
 
-     match impl.d with
+     match impl.d.v with
      | TopLevelLet _
      | Tycon _ ->
        let xs = definition_lids impl in
@@ -267,12 +267,12 @@ let ml_mode_prefix_with_iface_decls
 
 let ml_mode_check_initial_interface mname (iface:list decl) =
   iface |> List.filter (fun d ->
-    match d.d with
+    match d.d.v with
     | Tycon(_, _, tys)
       when (tys |> Util.for_some (function (TyconAbstract _)  -> true | _ -> false)) ->
       raise_error (Errors.Fatal_AbstractTypeDeclarationInInterface,
                    "Interface contains an abstract 'type' declaration; \
-                    use 'val' instead") d.drange
+                    use 'val' instead") d.d.range
     | Tycon _
     | Val _
     | Open _
@@ -319,7 +319,7 @@ let apply_ml_mode_optimizations (mname:lident) : bool =
   (not (List.contains (Ident.string_of_lid mname) ulib_modules))
 
 let prefix_one_decl mname iface impl =
-    match impl.d with
+    match impl.d.v with
     | TopLevelModule _ -> iface, [impl]
     | _ ->
       if apply_ml_mode_optimizations mname
@@ -378,7 +378,7 @@ let interleave_module (a:modul) (expect_complete_modul:bool) : E.withenv modul =
                 impls
         in
         let iface_lets, remaining_iface_vals =
-            match FStar.Compiler.Util.prefix_until (function {d=Val _} -> true | _ -> false) iface with
+            match FStar.Compiler.Util.prefix_until (function {d={v=Val _}} -> true | _ -> false) iface with
             | None -> iface, []
             | Some (lets, one_val, rest) -> lets, one_val::rest
         in

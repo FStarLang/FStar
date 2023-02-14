@@ -4,7 +4,7 @@ type level =
   | Expr 
   | Type_level 
   | Kind 
-  | Formula 
+  | Formula [@@deriving yojson,show]
 let (uu___is_Un : level -> Prims.bool) =
   fun projectee -> match projectee with | Un -> true | uu___ -> false
 let (uu___is_Expr : level -> Prims.bool) =
@@ -17,7 +17,7 @@ let (uu___is_Formula : level -> Prims.bool) =
   fun projectee -> match projectee with | Formula -> true | uu___ -> false
 type let_qualifier =
   | NoLetQualifier 
-  | Rec 
+  | Rec [@@deriving yojson,show]
 let (uu___is_NoLetQualifier : let_qualifier -> Prims.bool) =
   fun projectee ->
     match projectee with | NoLetQualifier -> true | uu___ -> false
@@ -25,126 +25,191 @@ let (uu___is_Rec : let_qualifier -> Prims.bool) =
   fun projectee -> match projectee with | Rec -> true | uu___ -> false
 type quote_kind =
   | Static 
-  | Dynamic 
+  | Dynamic [@@deriving yojson,show]
 let (uu___is_Static : quote_kind -> Prims.bool) =
   fun projectee -> match projectee with | Static -> true | uu___ -> false
 let (uu___is_Dynamic : quote_kind -> Prims.bool) =
   fun projectee -> match projectee with | Dynamic -> true | uu___ -> false
+type 'a with_range_and_level_t =
+  {
+  v: 'a ;
+  range: FStar_Compiler_Range.range ;
+  level: level }
+let __proj__Mkwith_range_and_level_t__item__v :
+  'a . 'a with_range_and_level_t -> 'a =
+  fun projectee -> match projectee with | { v; range; level = level1;_} -> v
+let __proj__Mkwith_range_and_level_t__item__range :
+  'a . 'a with_range_and_level_t -> FStar_Compiler_Range.range =
+  fun projectee ->
+    match projectee with | { v; range; level = level1;_} -> range
+let __proj__Mkwith_range_and_level_t__item__level :
+  'a . 'a with_range_and_level_t -> level =
+  fun projectee ->
+    match projectee with | { v; range; level = level1;_} -> level1
+let with_range :
+  'uuuuu .
+    'uuuuu -> FStar_Compiler_Range.range -> 'uuuuu with_range_and_level_t
+  = fun a -> fun r -> { v = a; range = r; level = Un }
+let with_range_and_level :
+  'uuuuu .
+    'uuuuu ->
+      FStar_Compiler_Range.range -> level -> 'uuuuu with_range_and_level_t
+  = fun a -> fun r -> fun l -> { v = a; range = r; level = l }
+let with_range_and_level_t_to_yojson :
+  'a 'b . ('a -> 'b) -> 'a with_range_and_level_t -> 'b =
+  fun f -> fun x -> f x.v
+let with_range_and_level_t_of_yojson :
+  'uuuuu 'a 'b . ('a -> 'b) -> 'a -> 'uuuuu =
+  fun f -> fun x -> failwith "Parsing from JSON is not yet supported"
+let pp_with_range_and_level_t :
+  'a 'b 'c . ('a -> 'b -> 'c) -> 'a -> 'b with_range_and_level_t -> 'c =
+  fun f -> fun fmt -> fun x -> f fmt x.v
 type term' =
   | Wild 
   | Const of FStar_Const.sconst 
-  | Op of (FStar_Ident.ident * term Prims.list) 
+  | Op of (FStar_Ident.ident * term' with_range_and_level_t Prims.list) 
   | Tvar of FStar_Ident.ident 
   | Uvar of FStar_Ident.ident 
   | Var of FStar_Ident.lid 
   | Name of FStar_Ident.lid 
   | Projector of (FStar_Ident.lid * FStar_Ident.ident) 
-  | Construct of (FStar_Ident.lid * (term * imp) Prims.list) 
-  | Abs of (pattern Prims.list * term) 
-  | App of (term * term * imp) 
-  | Let of (let_qualifier * (term Prims.list FStar_Pervasives_Native.option *
-  (pattern * term)) Prims.list * term) 
-  | LetOperator of ((FStar_Ident.ident * pattern * term) Prims.list * term) 
-  | LetOpen of (FStar_Ident.lid * term) 
-  | LetOpenRecord of (term * term * term) 
-  | Seq of (term * term) 
-  | Bind of (FStar_Ident.ident * term * term) 
-  | If of (term * FStar_Ident.ident FStar_Pervasives_Native.option *
-  (FStar_Ident.ident FStar_Pervasives_Native.option * term * Prims.bool)
-  FStar_Pervasives_Native.option * term * term) 
-  | Match of (term * FStar_Ident.ident FStar_Pervasives_Native.option *
-  (FStar_Ident.ident FStar_Pervasives_Native.option * term * Prims.bool)
-  FStar_Pervasives_Native.option * (pattern * term
-  FStar_Pervasives_Native.option * term) Prims.list) 
-  | TryWith of (term * (pattern * term FStar_Pervasives_Native.option * term)
+  | Construct of (FStar_Ident.lid * (term' with_range_and_level_t * imp)
   Prims.list) 
-  | Ascribed of (term * term * term FStar_Pervasives_Native.option *
-  Prims.bool) 
-  | Record of (term FStar_Pervasives_Native.option * (FStar_Ident.lid * term)
-  Prims.list) 
-  | Project of (term * FStar_Ident.lid) 
-  | Product of (binder Prims.list * term) 
-  | Sum of ((binder, term) FStar_Pervasives.either Prims.list * term) 
-  | QForall of (binder Prims.list * (FStar_Ident.ident Prims.list * term
-  Prims.list Prims.list) * term) 
-  | QExists of (binder Prims.list * (FStar_Ident.ident Prims.list * term
-  Prims.list Prims.list) * term) 
-  | Refine of (binder * term) 
-  | NamedTyp of (FStar_Ident.ident * term) 
-  | Paren of term 
-  | Requires of (term * Prims.string FStar_Pervasives_Native.option) 
-  | Ensures of (term * Prims.string FStar_Pervasives_Native.option) 
-  | LexList of term Prims.list 
-  | WFOrder of (term * term) 
-  | Decreases of (term * Prims.string FStar_Pervasives_Native.option) 
-  | Labeled of (term * Prims.string * Prims.bool) 
+  | Abs of (pattern' with_range_and_level_t Prims.list * term'
+  with_range_and_level_t) 
+  | App of (term' with_range_and_level_t * term' with_range_and_level_t *
+  imp) 
+  | Let of (let_qualifier * (term' with_range_and_level_t Prims.list
+  FStar_Pervasives_Native.option * (pattern' with_range_and_level_t * term'
+  with_range_and_level_t)) Prims.list * term' with_range_and_level_t) 
+  | LetOperator of ((FStar_Ident.ident * pattern' with_range_and_level_t *
+  term' with_range_and_level_t) Prims.list * term' with_range_and_level_t) 
+  | LetOpen of (FStar_Ident.lid * term' with_range_and_level_t) 
+  | LetOpenRecord of (term' with_range_and_level_t * term'
+  with_range_and_level_t * term' with_range_and_level_t) 
+  | Seq of (term' with_range_and_level_t * term' with_range_and_level_t) 
+  | Bind of (FStar_Ident.ident * term' with_range_and_level_t * term'
+  with_range_and_level_t) 
+  | If of (term' with_range_and_level_t * FStar_Ident.ident
+  FStar_Pervasives_Native.option * (FStar_Ident.ident
+  FStar_Pervasives_Native.option * term' with_range_and_level_t * Prims.bool)
+  FStar_Pervasives_Native.option * term' with_range_and_level_t * term'
+  with_range_and_level_t) 
+  | Match of (term' with_range_and_level_t * FStar_Ident.ident
+  FStar_Pervasives_Native.option * (FStar_Ident.ident
+  FStar_Pervasives_Native.option * term' with_range_and_level_t * Prims.bool)
+  FStar_Pervasives_Native.option * (pattern' with_range_and_level_t * term'
+  with_range_and_level_t FStar_Pervasives_Native.option * term'
+  with_range_and_level_t) Prims.list) 
+  | TryWith of (term' with_range_and_level_t * (pattern'
+  with_range_and_level_t * term' with_range_and_level_t
+  FStar_Pervasives_Native.option * term' with_range_and_level_t) Prims.list)
+  
+  | Ascribed of (term' with_range_and_level_t * term' with_range_and_level_t
+  * term' with_range_and_level_t FStar_Pervasives_Native.option * Prims.bool)
+  
+  | Record of (term' with_range_and_level_t FStar_Pervasives_Native.option *
+  (FStar_Ident.lid * term' with_range_and_level_t) Prims.list) 
+  | Project of (term' with_range_and_level_t * FStar_Ident.lid) 
+  | Product of (binder Prims.list * term' with_range_and_level_t) 
+  | Sum of ((binder, term' with_range_and_level_t) FStar_Pervasives.either
+  Prims.list * term' with_range_and_level_t) 
+  | QForall of (binder Prims.list * (FStar_Ident.ident Prims.list * term'
+  with_range_and_level_t Prims.list Prims.list) * term'
+  with_range_and_level_t) 
+  | QExists of (binder Prims.list * (FStar_Ident.ident Prims.list * term'
+  with_range_and_level_t Prims.list Prims.list) * term'
+  with_range_and_level_t) 
+  | Refine of (binder * term' with_range_and_level_t) 
+  | NamedTyp of (FStar_Ident.ident * term' with_range_and_level_t) 
+  | Paren of term' with_range_and_level_t 
+  | Requires of (term' with_range_and_level_t * Prims.string
+  FStar_Pervasives_Native.option) 
+  | Ensures of (term' with_range_and_level_t * Prims.string
+  FStar_Pervasives_Native.option) 
+  | LexList of term' with_range_and_level_t Prims.list 
+  | WFOrder of (term' with_range_and_level_t * term' with_range_and_level_t)
+  
+  | Decreases of (term' with_range_and_level_t * Prims.string
+  FStar_Pervasives_Native.option) 
+  | Labeled of (term' with_range_and_level_t * Prims.string * Prims.bool) 
   | Discrim of FStar_Ident.lid 
-  | Attributes of term Prims.list 
-  | Antiquote of term 
-  | Quote of (term * quote_kind) 
-  | VQuote of term 
-  | CalcProof of (term * term * calc_step Prims.list) 
-  | IntroForall of (binder Prims.list * term * term) 
-  | IntroExists of (binder Prims.list * term * term Prims.list * term) 
-  | IntroImplies of (term * term * binder * term) 
-  | IntroOr of (Prims.bool * term * term * term) 
-  | IntroAnd of (term * term * term * term) 
-  | ElimForall of (binder Prims.list * term * term Prims.list) 
-  | ElimExists of (binder Prims.list * term * term * binder * term) 
-  | ElimImplies of (term * term * term) 
-  | ElimOr of (term * term * term * binder * term * binder * term) 
-  | ElimAnd of (term * term * term * binder * binder * term) 
-and term = {
-  tm: term' ;
-  range: FStar_Compiler_Range.range ;
-  level: level }
+  | Attributes of term' with_range_and_level_t Prims.list 
+  | Antiquote of term' with_range_and_level_t 
+  | Quote of (term' with_range_and_level_t * quote_kind) 
+  | VQuote of term' with_range_and_level_t 
+  | CalcProof of (term' with_range_and_level_t * term' with_range_and_level_t
+  * calc_step Prims.list) 
+  | IntroForall of (binder Prims.list * term' with_range_and_level_t * term'
+  with_range_and_level_t) 
+  | IntroExists of (binder Prims.list * term' with_range_and_level_t * term'
+  with_range_and_level_t Prims.list * term' with_range_and_level_t) 
+  | IntroImplies of (term' with_range_and_level_t * term'
+  with_range_and_level_t * binder * term' with_range_and_level_t) 
+  | IntroOr of (Prims.bool * term' with_range_and_level_t * term'
+  with_range_and_level_t * term' with_range_and_level_t) 
+  | IntroAnd of (term' with_range_and_level_t * term' with_range_and_level_t
+  * term' with_range_and_level_t * term' with_range_and_level_t) 
+  | ElimForall of (binder Prims.list * term' with_range_and_level_t * term'
+  with_range_and_level_t Prims.list) 
+  | ElimExists of (binder Prims.list * term' with_range_and_level_t * term'
+  with_range_and_level_t * binder * term' with_range_and_level_t) 
+  | ElimImplies of (term' with_range_and_level_t * term'
+  with_range_and_level_t * term' with_range_and_level_t) 
+  | ElimOr of (term' with_range_and_level_t * term' with_range_and_level_t *
+  term' with_range_and_level_t * binder * term' with_range_and_level_t *
+  binder * term' with_range_and_level_t) 
+  | ElimAnd of (term' with_range_and_level_t * term' with_range_and_level_t *
+  term' with_range_and_level_t * binder * binder * term'
+  with_range_and_level_t) [@@deriving yojson,show]
 and calc_step =
-  | CalcStep of (term * term * term) 
+  | CalcStep of (term' with_range_and_level_t * term' with_range_and_level_t
+  * term' with_range_and_level_t) [@@deriving yojson,show]
 and binder' =
   | Variable of FStar_Ident.ident 
   | TVariable of FStar_Ident.ident 
-  | Annotated of (FStar_Ident.ident * term) 
-  | TAnnotated of (FStar_Ident.ident * term) 
-  | NoName of term 
+  | Annotated of (FStar_Ident.ident * term' with_range_and_level_t) 
+  | TAnnotated of (FStar_Ident.ident * term' with_range_and_level_t) 
+  | NoName of term' with_range_and_level_t [@@deriving yojson,show]
 and binder =
   {
-  b: binder' ;
-  brange: FStar_Compiler_Range.range ;
-  blevel: level ;
+  b: binder' with_range_and_level_t ;
   aqual: arg_qualifier FStar_Pervasives_Native.option ;
-  battributes: term Prims.list }
+  battributes: term' with_range_and_level_t Prims.list }[@@deriving
+                                                          yojson,show]
 and pattern' =
-  | PatWild of (arg_qualifier FStar_Pervasives_Native.option * term
-  Prims.list) 
+  | PatWild of (arg_qualifier FStar_Pervasives_Native.option * term'
+  with_range_and_level_t Prims.list) 
   | PatConst of FStar_Const.sconst 
-  | PatApp of (pattern * pattern Prims.list) 
+  | PatApp of (pattern' with_range_and_level_t * pattern'
+  with_range_and_level_t Prims.list) 
   | PatVar of (FStar_Ident.ident * arg_qualifier
-  FStar_Pervasives_Native.option * term Prims.list) 
+  FStar_Pervasives_Native.option * term' with_range_and_level_t Prims.list) 
   | PatName of FStar_Ident.lid 
   | PatTvar of (FStar_Ident.ident * arg_qualifier
-  FStar_Pervasives_Native.option * term Prims.list) 
-  | PatList of pattern Prims.list 
-  | PatTuple of (pattern Prims.list * Prims.bool) 
-  | PatRecord of (FStar_Ident.lid * pattern) Prims.list 
-  | PatAscribed of (pattern * (term * term FStar_Pervasives_Native.option)) 
-  | PatOr of pattern Prims.list 
+  FStar_Pervasives_Native.option * term' with_range_and_level_t Prims.list) 
+  | PatList of pattern' with_range_and_level_t Prims.list 
+  | PatTuple of (pattern' with_range_and_level_t Prims.list * Prims.bool) 
+  | PatRecord of (FStar_Ident.lid * pattern' with_range_and_level_t)
+  Prims.list 
+  | PatAscribed of (pattern' with_range_and_level_t * (term'
+  with_range_and_level_t * term' with_range_and_level_t
+  FStar_Pervasives_Native.option)) 
+  | PatOr of pattern' with_range_and_level_t Prims.list 
   | PatOp of FStar_Ident.ident 
-  | PatVQuote of term 
-and pattern = {
-  pat: pattern' ;
-  prange: FStar_Compiler_Range.range }
+  | PatVQuote of term' with_range_and_level_t [@@deriving yojson,show]
 and arg_qualifier =
   | Implicit 
   | Equality 
-  | Meta of term 
-  | TypeClassArg 
+  | Meta of term' with_range_and_level_t 
+  | TypeClassArg [@@deriving yojson,show]
 and imp =
   | FsTypApp 
   | Hash 
   | UnivApp 
-  | HashBrace of term 
+  | HashBrace of term' with_range_and_level_t 
   | Infix 
-  | Nothing 
+  | Nothing [@@deriving yojson,show]
 let (uu___is_Wild : term' -> Prims.bool) =
   fun projectee -> match projectee with | Wild -> true | uu___ -> false
 let (uu___is_Const : term' -> Prims.bool) =
@@ -153,7 +218,8 @@ let (__proj__Const__item___0 : term' -> FStar_Const.sconst) =
   fun projectee -> match projectee with | Const _0 -> _0
 let (uu___is_Op : term' -> Prims.bool) =
   fun projectee -> match projectee with | Op _0 -> true | uu___ -> false
-let (__proj__Op__item___0 : term' -> (FStar_Ident.ident * term Prims.list)) =
+let (__proj__Op__item___0 :
+  term' -> (FStar_Ident.ident * term' with_range_and_level_t Prims.list)) =
   fun projectee -> match projectee with | Op _0 -> _0
 let (uu___is_Tvar : term' -> Prims.bool) =
   fun projectee -> match projectee with | Tvar _0 -> true | uu___ -> false
@@ -181,152 +247,195 @@ let (uu___is_Construct : term' -> Prims.bool) =
   fun projectee ->
     match projectee with | Construct _0 -> true | uu___ -> false
 let (__proj__Construct__item___0 :
-  term' -> (FStar_Ident.lid * (term * imp) Prims.list)) =
-  fun projectee -> match projectee with | Construct _0 -> _0
+  term' ->
+    (FStar_Ident.lid * (term' with_range_and_level_t * imp) Prims.list))
+  = fun projectee -> match projectee with | Construct _0 -> _0
 let (uu___is_Abs : term' -> Prims.bool) =
   fun projectee -> match projectee with | Abs _0 -> true | uu___ -> false
-let (__proj__Abs__item___0 : term' -> (pattern Prims.list * term)) =
-  fun projectee -> match projectee with | Abs _0 -> _0
+let (__proj__Abs__item___0 :
+  term' ->
+    (pattern' with_range_and_level_t Prims.list * term'
+      with_range_and_level_t))
+  = fun projectee -> match projectee with | Abs _0 -> _0
 let (uu___is_App : term' -> Prims.bool) =
   fun projectee -> match projectee with | App _0 -> true | uu___ -> false
-let (__proj__App__item___0 : term' -> (term * term * imp)) =
-  fun projectee -> match projectee with | App _0 -> _0
+let (__proj__App__item___0 :
+  term' ->
+    (term' with_range_and_level_t * term' with_range_and_level_t * imp))
+  = fun projectee -> match projectee with | App _0 -> _0
 let (uu___is_Let : term' -> Prims.bool) =
   fun projectee -> match projectee with | Let _0 -> true | uu___ -> false
 let (__proj__Let__item___0 :
   term' ->
-    (let_qualifier * (term Prims.list FStar_Pervasives_Native.option *
-      (pattern * term)) Prims.list * term))
+    (let_qualifier * (term' with_range_and_level_t Prims.list
+      FStar_Pervasives_Native.option * (pattern' with_range_and_level_t *
+      term' with_range_and_level_t)) Prims.list * term'
+      with_range_and_level_t))
   = fun projectee -> match projectee with | Let _0 -> _0
 let (uu___is_LetOperator : term' -> Prims.bool) =
   fun projectee ->
     match projectee with | LetOperator _0 -> true | uu___ -> false
 let (__proj__LetOperator__item___0 :
-  term' -> ((FStar_Ident.ident * pattern * term) Prims.list * term)) =
-  fun projectee -> match projectee with | LetOperator _0 -> _0
+  term' ->
+    ((FStar_Ident.ident * pattern' with_range_and_level_t * term'
+      with_range_and_level_t) Prims.list * term' with_range_and_level_t))
+  = fun projectee -> match projectee with | LetOperator _0 -> _0
 let (uu___is_LetOpen : term' -> Prims.bool) =
   fun projectee -> match projectee with | LetOpen _0 -> true | uu___ -> false
-let (__proj__LetOpen__item___0 : term' -> (FStar_Ident.lid * term)) =
+let (__proj__LetOpen__item___0 :
+  term' -> (FStar_Ident.lid * term' with_range_and_level_t)) =
   fun projectee -> match projectee with | LetOpen _0 -> _0
 let (uu___is_LetOpenRecord : term' -> Prims.bool) =
   fun projectee ->
     match projectee with | LetOpenRecord _0 -> true | uu___ -> false
-let (__proj__LetOpenRecord__item___0 : term' -> (term * term * term)) =
-  fun projectee -> match projectee with | LetOpenRecord _0 -> _0
+let (__proj__LetOpenRecord__item___0 :
+  term' ->
+    (term' with_range_and_level_t * term' with_range_and_level_t * term'
+      with_range_and_level_t))
+  = fun projectee -> match projectee with | LetOpenRecord _0 -> _0
 let (uu___is_Seq : term' -> Prims.bool) =
   fun projectee -> match projectee with | Seq _0 -> true | uu___ -> false
-let (__proj__Seq__item___0 : term' -> (term * term)) =
+let (__proj__Seq__item___0 :
+  term' -> (term' with_range_and_level_t * term' with_range_and_level_t)) =
   fun projectee -> match projectee with | Seq _0 -> _0
 let (uu___is_Bind : term' -> Prims.bool) =
   fun projectee -> match projectee with | Bind _0 -> true | uu___ -> false
-let (__proj__Bind__item___0 : term' -> (FStar_Ident.ident * term * term)) =
-  fun projectee -> match projectee with | Bind _0 -> _0
+let (__proj__Bind__item___0 :
+  term' ->
+    (FStar_Ident.ident * term' with_range_and_level_t * term'
+      with_range_and_level_t))
+  = fun projectee -> match projectee with | Bind _0 -> _0
 let (uu___is_If : term' -> Prims.bool) =
   fun projectee -> match projectee with | If _0 -> true | uu___ -> false
 let (__proj__If__item___0 :
   term' ->
-    (term * FStar_Ident.ident FStar_Pervasives_Native.option *
-      (FStar_Ident.ident FStar_Pervasives_Native.option * term * Prims.bool)
-      FStar_Pervasives_Native.option * term * term))
+    (term' with_range_and_level_t * FStar_Ident.ident
+      FStar_Pervasives_Native.option * (FStar_Ident.ident
+      FStar_Pervasives_Native.option * term' with_range_and_level_t *
+      Prims.bool) FStar_Pervasives_Native.option * term'
+      with_range_and_level_t * term' with_range_and_level_t))
   = fun projectee -> match projectee with | If _0 -> _0
 let (uu___is_Match : term' -> Prims.bool) =
   fun projectee -> match projectee with | Match _0 -> true | uu___ -> false
 let (__proj__Match__item___0 :
   term' ->
-    (term * FStar_Ident.ident FStar_Pervasives_Native.option *
-      (FStar_Ident.ident FStar_Pervasives_Native.option * term * Prims.bool)
-      FStar_Pervasives_Native.option * (pattern * term
-      FStar_Pervasives_Native.option * term) Prims.list))
+    (term' with_range_and_level_t * FStar_Ident.ident
+      FStar_Pervasives_Native.option * (FStar_Ident.ident
+      FStar_Pervasives_Native.option * term' with_range_and_level_t *
+      Prims.bool) FStar_Pervasives_Native.option * (pattern'
+      with_range_and_level_t * term' with_range_and_level_t
+      FStar_Pervasives_Native.option * term' with_range_and_level_t)
+      Prims.list))
   = fun projectee -> match projectee with | Match _0 -> _0
 let (uu___is_TryWith : term' -> Prims.bool) =
   fun projectee -> match projectee with | TryWith _0 -> true | uu___ -> false
 let (__proj__TryWith__item___0 :
   term' ->
-    (term * (pattern * term FStar_Pervasives_Native.option * term)
-      Prims.list))
+    (term' with_range_and_level_t * (pattern' with_range_and_level_t * term'
+      with_range_and_level_t FStar_Pervasives_Native.option * term'
+      with_range_and_level_t) Prims.list))
   = fun projectee -> match projectee with | TryWith _0 -> _0
 let (uu___is_Ascribed : term' -> Prims.bool) =
   fun projectee ->
     match projectee with | Ascribed _0 -> true | uu___ -> false
 let (__proj__Ascribed__item___0 :
-  term' -> (term * term * term FStar_Pervasives_Native.option * Prims.bool))
+  term' ->
+    (term' with_range_and_level_t * term' with_range_and_level_t * term'
+      with_range_and_level_t FStar_Pervasives_Native.option * Prims.bool))
   = fun projectee -> match projectee with | Ascribed _0 -> _0
 let (uu___is_Record : term' -> Prims.bool) =
   fun projectee -> match projectee with | Record _0 -> true | uu___ -> false
 let (__proj__Record__item___0 :
   term' ->
-    (term FStar_Pervasives_Native.option * (FStar_Ident.lid * term)
-      Prims.list))
+    (term' with_range_and_level_t FStar_Pervasives_Native.option *
+      (FStar_Ident.lid * term' with_range_and_level_t) Prims.list))
   = fun projectee -> match projectee with | Record _0 -> _0
 let (uu___is_Project : term' -> Prims.bool) =
   fun projectee -> match projectee with | Project _0 -> true | uu___ -> false
-let (__proj__Project__item___0 : term' -> (term * FStar_Ident.lid)) =
+let (__proj__Project__item___0 :
+  term' -> (term' with_range_and_level_t * FStar_Ident.lid)) =
   fun projectee -> match projectee with | Project _0 -> _0
 let (uu___is_Product : term' -> Prims.bool) =
   fun projectee -> match projectee with | Product _0 -> true | uu___ -> false
-let (__proj__Product__item___0 : term' -> (binder Prims.list * term)) =
+let (__proj__Product__item___0 :
+  term' -> (binder Prims.list * term' with_range_and_level_t)) =
   fun projectee -> match projectee with | Product _0 -> _0
 let (uu___is_Sum : term' -> Prims.bool) =
   fun projectee -> match projectee with | Sum _0 -> true | uu___ -> false
 let (__proj__Sum__item___0 :
-  term' -> ((binder, term) FStar_Pervasives.either Prims.list * term)) =
-  fun projectee -> match projectee with | Sum _0 -> _0
+  term' ->
+    ((binder, term' with_range_and_level_t) FStar_Pervasives.either
+      Prims.list * term' with_range_and_level_t))
+  = fun projectee -> match projectee with | Sum _0 -> _0
 let (uu___is_QForall : term' -> Prims.bool) =
   fun projectee -> match projectee with | QForall _0 -> true | uu___ -> false
 let (__proj__QForall__item___0 :
   term' ->
-    (binder Prims.list * (FStar_Ident.ident Prims.list * term Prims.list
-      Prims.list) * term))
+    (binder Prims.list * (FStar_Ident.ident Prims.list * term'
+      with_range_and_level_t Prims.list Prims.list) * term'
+      with_range_and_level_t))
   = fun projectee -> match projectee with | QForall _0 -> _0
 let (uu___is_QExists : term' -> Prims.bool) =
   fun projectee -> match projectee with | QExists _0 -> true | uu___ -> false
 let (__proj__QExists__item___0 :
   term' ->
-    (binder Prims.list * (FStar_Ident.ident Prims.list * term Prims.list
-      Prims.list) * term))
+    (binder Prims.list * (FStar_Ident.ident Prims.list * term'
+      with_range_and_level_t Prims.list Prims.list) * term'
+      with_range_and_level_t))
   = fun projectee -> match projectee with | QExists _0 -> _0
 let (uu___is_Refine : term' -> Prims.bool) =
   fun projectee -> match projectee with | Refine _0 -> true | uu___ -> false
-let (__proj__Refine__item___0 : term' -> (binder * term)) =
+let (__proj__Refine__item___0 :
+  term' -> (binder * term' with_range_and_level_t)) =
   fun projectee -> match projectee with | Refine _0 -> _0
 let (uu___is_NamedTyp : term' -> Prims.bool) =
   fun projectee ->
     match projectee with | NamedTyp _0 -> true | uu___ -> false
-let (__proj__NamedTyp__item___0 : term' -> (FStar_Ident.ident * term)) =
+let (__proj__NamedTyp__item___0 :
+  term' -> (FStar_Ident.ident * term' with_range_and_level_t)) =
   fun projectee -> match projectee with | NamedTyp _0 -> _0
 let (uu___is_Paren : term' -> Prims.bool) =
   fun projectee -> match projectee with | Paren _0 -> true | uu___ -> false
-let (__proj__Paren__item___0 : term' -> term) =
+let (__proj__Paren__item___0 : term' -> term' with_range_and_level_t) =
   fun projectee -> match projectee with | Paren _0 -> _0
 let (uu___is_Requires : term' -> Prims.bool) =
   fun projectee ->
     match projectee with | Requires _0 -> true | uu___ -> false
 let (__proj__Requires__item___0 :
-  term' -> (term * Prims.string FStar_Pervasives_Native.option)) =
-  fun projectee -> match projectee with | Requires _0 -> _0
+  term' ->
+    (term' with_range_and_level_t * Prims.string
+      FStar_Pervasives_Native.option))
+  = fun projectee -> match projectee with | Requires _0 -> _0
 let (uu___is_Ensures : term' -> Prims.bool) =
   fun projectee -> match projectee with | Ensures _0 -> true | uu___ -> false
 let (__proj__Ensures__item___0 :
-  term' -> (term * Prims.string FStar_Pervasives_Native.option)) =
-  fun projectee -> match projectee with | Ensures _0 -> _0
+  term' ->
+    (term' with_range_and_level_t * Prims.string
+      FStar_Pervasives_Native.option))
+  = fun projectee -> match projectee with | Ensures _0 -> _0
 let (uu___is_LexList : term' -> Prims.bool) =
   fun projectee -> match projectee with | LexList _0 -> true | uu___ -> false
-let (__proj__LexList__item___0 : term' -> term Prims.list) =
+let (__proj__LexList__item___0 :
+  term' -> term' with_range_and_level_t Prims.list) =
   fun projectee -> match projectee with | LexList _0 -> _0
 let (uu___is_WFOrder : term' -> Prims.bool) =
   fun projectee -> match projectee with | WFOrder _0 -> true | uu___ -> false
-let (__proj__WFOrder__item___0 : term' -> (term * term)) =
+let (__proj__WFOrder__item___0 :
+  term' -> (term' with_range_and_level_t * term' with_range_and_level_t)) =
   fun projectee -> match projectee with | WFOrder _0 -> _0
 let (uu___is_Decreases : term' -> Prims.bool) =
   fun projectee ->
     match projectee with | Decreases _0 -> true | uu___ -> false
 let (__proj__Decreases__item___0 :
-  term' -> (term * Prims.string FStar_Pervasives_Native.option)) =
-  fun projectee -> match projectee with | Decreases _0 -> _0
+  term' ->
+    (term' with_range_and_level_t * Prims.string
+      FStar_Pervasives_Native.option))
+  = fun projectee -> match projectee with | Decreases _0 -> _0
 let (uu___is_Labeled : term' -> Prims.bool) =
   fun projectee -> match projectee with | Labeled _0 -> true | uu___ -> false
-let (__proj__Labeled__item___0 : term' -> (term * Prims.string * Prims.bool))
-  = fun projectee -> match projectee with | Labeled _0 -> _0
+let (__proj__Labeled__item___0 :
+  term' -> (term' with_range_and_level_t * Prims.string * Prims.bool)) =
+  fun projectee -> match projectee with | Labeled _0 -> _0
 let (uu___is_Discrim : term' -> Prims.bool) =
   fun projectee -> match projectee with | Discrim _0 -> true | uu___ -> false
 let (__proj__Discrim__item___0 : term' -> FStar_Ident.lid) =
@@ -334,92 +443,116 @@ let (__proj__Discrim__item___0 : term' -> FStar_Ident.lid) =
 let (uu___is_Attributes : term' -> Prims.bool) =
   fun projectee ->
     match projectee with | Attributes _0 -> true | uu___ -> false
-let (__proj__Attributes__item___0 : term' -> term Prims.list) =
+let (__proj__Attributes__item___0 :
+  term' -> term' with_range_and_level_t Prims.list) =
   fun projectee -> match projectee with | Attributes _0 -> _0
 let (uu___is_Antiquote : term' -> Prims.bool) =
   fun projectee ->
     match projectee with | Antiquote _0 -> true | uu___ -> false
-let (__proj__Antiquote__item___0 : term' -> term) =
+let (__proj__Antiquote__item___0 : term' -> term' with_range_and_level_t) =
   fun projectee -> match projectee with | Antiquote _0 -> _0
 let (uu___is_Quote : term' -> Prims.bool) =
   fun projectee -> match projectee with | Quote _0 -> true | uu___ -> false
-let (__proj__Quote__item___0 : term' -> (term * quote_kind)) =
+let (__proj__Quote__item___0 :
+  term' -> (term' with_range_and_level_t * quote_kind)) =
   fun projectee -> match projectee with | Quote _0 -> _0
 let (uu___is_VQuote : term' -> Prims.bool) =
   fun projectee -> match projectee with | VQuote _0 -> true | uu___ -> false
-let (__proj__VQuote__item___0 : term' -> term) =
+let (__proj__VQuote__item___0 : term' -> term' with_range_and_level_t) =
   fun projectee -> match projectee with | VQuote _0 -> _0
 let (uu___is_CalcProof : term' -> Prims.bool) =
   fun projectee ->
     match projectee with | CalcProof _0 -> true | uu___ -> false
 let (__proj__CalcProof__item___0 :
-  term' -> (term * term * calc_step Prims.list)) =
-  fun projectee -> match projectee with | CalcProof _0 -> _0
+  term' ->
+    (term' with_range_and_level_t * term' with_range_and_level_t * calc_step
+      Prims.list))
+  = fun projectee -> match projectee with | CalcProof _0 -> _0
 let (uu___is_IntroForall : term' -> Prims.bool) =
   fun projectee ->
     match projectee with | IntroForall _0 -> true | uu___ -> false
 let (__proj__IntroForall__item___0 :
-  term' -> (binder Prims.list * term * term)) =
-  fun projectee -> match projectee with | IntroForall _0 -> _0
+  term' ->
+    (binder Prims.list * term' with_range_and_level_t * term'
+      with_range_and_level_t))
+  = fun projectee -> match projectee with | IntroForall _0 -> _0
 let (uu___is_IntroExists : term' -> Prims.bool) =
   fun projectee ->
     match projectee with | IntroExists _0 -> true | uu___ -> false
 let (__proj__IntroExists__item___0 :
-  term' -> (binder Prims.list * term * term Prims.list * term)) =
-  fun projectee -> match projectee with | IntroExists _0 -> _0
+  term' ->
+    (binder Prims.list * term' with_range_and_level_t * term'
+      with_range_and_level_t Prims.list * term' with_range_and_level_t))
+  = fun projectee -> match projectee with | IntroExists _0 -> _0
 let (uu___is_IntroImplies : term' -> Prims.bool) =
   fun projectee ->
     match projectee with | IntroImplies _0 -> true | uu___ -> false
-let (__proj__IntroImplies__item___0 : term' -> (term * term * binder * term))
+let (__proj__IntroImplies__item___0 :
+  term' ->
+    (term' with_range_and_level_t * term' with_range_and_level_t * binder *
+      term' with_range_and_level_t))
   = fun projectee -> match projectee with | IntroImplies _0 -> _0
 let (uu___is_IntroOr : term' -> Prims.bool) =
   fun projectee -> match projectee with | IntroOr _0 -> true | uu___ -> false
-let (__proj__IntroOr__item___0 : term' -> (Prims.bool * term * term * term))
+let (__proj__IntroOr__item___0 :
+  term' ->
+    (Prims.bool * term' with_range_and_level_t * term' with_range_and_level_t
+      * term' with_range_and_level_t))
   = fun projectee -> match projectee with | IntroOr _0 -> _0
 let (uu___is_IntroAnd : term' -> Prims.bool) =
   fun projectee ->
     match projectee with | IntroAnd _0 -> true | uu___ -> false
-let (__proj__IntroAnd__item___0 : term' -> (term * term * term * term)) =
-  fun projectee -> match projectee with | IntroAnd _0 -> _0
+let (__proj__IntroAnd__item___0 :
+  term' ->
+    (term' with_range_and_level_t * term' with_range_and_level_t * term'
+      with_range_and_level_t * term' with_range_and_level_t))
+  = fun projectee -> match projectee with | IntroAnd _0 -> _0
 let (uu___is_ElimForall : term' -> Prims.bool) =
   fun projectee ->
     match projectee with | ElimForall _0 -> true | uu___ -> false
 let (__proj__ElimForall__item___0 :
-  term' -> (binder Prims.list * term * term Prims.list)) =
-  fun projectee -> match projectee with | ElimForall _0 -> _0
+  term' ->
+    (binder Prims.list * term' with_range_and_level_t * term'
+      with_range_and_level_t Prims.list))
+  = fun projectee -> match projectee with | ElimForall _0 -> _0
 let (uu___is_ElimExists : term' -> Prims.bool) =
   fun projectee ->
     match projectee with | ElimExists _0 -> true | uu___ -> false
 let (__proj__ElimExists__item___0 :
-  term' -> (binder Prims.list * term * term * binder * term)) =
-  fun projectee -> match projectee with | ElimExists _0 -> _0
+  term' ->
+    (binder Prims.list * term' with_range_and_level_t * term'
+      with_range_and_level_t * binder * term' with_range_and_level_t))
+  = fun projectee -> match projectee with | ElimExists _0 -> _0
 let (uu___is_ElimImplies : term' -> Prims.bool) =
   fun projectee ->
     match projectee with | ElimImplies _0 -> true | uu___ -> false
-let (__proj__ElimImplies__item___0 : term' -> (term * term * term)) =
-  fun projectee -> match projectee with | ElimImplies _0 -> _0
+let (__proj__ElimImplies__item___0 :
+  term' ->
+    (term' with_range_and_level_t * term' with_range_and_level_t * term'
+      with_range_and_level_t))
+  = fun projectee -> match projectee with | ElimImplies _0 -> _0
 let (uu___is_ElimOr : term' -> Prims.bool) =
   fun projectee -> match projectee with | ElimOr _0 -> true | uu___ -> false
 let (__proj__ElimOr__item___0 :
-  term' -> (term * term * term * binder * term * binder * term)) =
-  fun projectee -> match projectee with | ElimOr _0 -> _0
+  term' ->
+    (term' with_range_and_level_t * term' with_range_and_level_t * term'
+      with_range_and_level_t * binder * term' with_range_and_level_t * binder
+      * term' with_range_and_level_t))
+  = fun projectee -> match projectee with | ElimOr _0 -> _0
 let (uu___is_ElimAnd : term' -> Prims.bool) =
   fun projectee -> match projectee with | ElimAnd _0 -> true | uu___ -> false
 let (__proj__ElimAnd__item___0 :
-  term' -> (term * term * term * binder * binder * term)) =
-  fun projectee -> match projectee with | ElimAnd _0 -> _0
-let (__proj__Mkterm__item__tm : term -> term') =
-  fun projectee ->
-    match projectee with | { tm; range; level = level1;_} -> tm
-let (__proj__Mkterm__item__range : term -> FStar_Compiler_Range.range) =
-  fun projectee ->
-    match projectee with | { tm; range; level = level1;_} -> range
-let (__proj__Mkterm__item__level : term -> level) =
-  fun projectee ->
-    match projectee with | { tm; range; level = level1;_} -> level1
+  term' ->
+    (term' with_range_and_level_t * term' with_range_and_level_t * term'
+      with_range_and_level_t * binder * binder * term'
+      with_range_and_level_t))
+  = fun projectee -> match projectee with | ElimAnd _0 -> _0
 let (uu___is_CalcStep : calc_step -> Prims.bool) = fun projectee -> true
-let (__proj__CalcStep__item___0 : calc_step -> (term * term * term)) =
-  fun projectee -> match projectee with | CalcStep _0 -> _0
+let (__proj__CalcStep__item___0 :
+  calc_step ->
+    (term' with_range_and_level_t * term' with_range_and_level_t * term'
+      with_range_and_level_t))
+  = fun projectee -> match projectee with | CalcStep _0 -> _0
 let (uu___is_Variable : binder' -> Prims.bool) =
   fun projectee ->
     match projectee with | Variable _0 -> true | uu___ -> false
@@ -433,42 +566,34 @@ let (__proj__TVariable__item___0 : binder' -> FStar_Ident.ident) =
 let (uu___is_Annotated : binder' -> Prims.bool) =
   fun projectee ->
     match projectee with | Annotated _0 -> true | uu___ -> false
-let (__proj__Annotated__item___0 : binder' -> (FStar_Ident.ident * term)) =
+let (__proj__Annotated__item___0 :
+  binder' -> (FStar_Ident.ident * term' with_range_and_level_t)) =
   fun projectee -> match projectee with | Annotated _0 -> _0
 let (uu___is_TAnnotated : binder' -> Prims.bool) =
   fun projectee ->
     match projectee with | TAnnotated _0 -> true | uu___ -> false
-let (__proj__TAnnotated__item___0 : binder' -> (FStar_Ident.ident * term)) =
+let (__proj__TAnnotated__item___0 :
+  binder' -> (FStar_Ident.ident * term' with_range_and_level_t)) =
   fun projectee -> match projectee with | TAnnotated _0 -> _0
 let (uu___is_NoName : binder' -> Prims.bool) =
   fun projectee -> match projectee with | NoName _0 -> true | uu___ -> false
-let (__proj__NoName__item___0 : binder' -> term) =
+let (__proj__NoName__item___0 : binder' -> term' with_range_and_level_t) =
   fun projectee -> match projectee with | NoName _0 -> _0
-let (__proj__Mkbinder__item__b : binder -> binder') =
-  fun projectee ->
-    match projectee with | { b; brange; blevel; aqual; battributes;_} -> b
-let (__proj__Mkbinder__item__brange : binder -> FStar_Compiler_Range.range) =
-  fun projectee ->
-    match projectee with
-    | { b; brange; blevel; aqual; battributes;_} -> brange
-let (__proj__Mkbinder__item__blevel : binder -> level) =
-  fun projectee ->
-    match projectee with
-    | { b; brange; blevel; aqual; battributes;_} -> blevel
+let (__proj__Mkbinder__item__b : binder -> binder' with_range_and_level_t) =
+  fun projectee -> match projectee with | { b; aqual; battributes;_} -> b
 let (__proj__Mkbinder__item__aqual :
   binder -> arg_qualifier FStar_Pervasives_Native.option) =
+  fun projectee -> match projectee with | { b; aqual; battributes;_} -> aqual
+let (__proj__Mkbinder__item__battributes :
+  binder -> term' with_range_and_level_t Prims.list) =
   fun projectee ->
-    match projectee with
-    | { b; brange; blevel; aqual; battributes;_} -> aqual
-let (__proj__Mkbinder__item__battributes : binder -> term Prims.list) =
-  fun projectee ->
-    match projectee with
-    | { b; brange; blevel; aqual; battributes;_} -> battributes
+    match projectee with | { b; aqual; battributes;_} -> battributes
 let (uu___is_PatWild : pattern' -> Prims.bool) =
   fun projectee -> match projectee with | PatWild _0 -> true | uu___ -> false
 let (__proj__PatWild__item___0 :
   pattern' ->
-    (arg_qualifier FStar_Pervasives_Native.option * term Prims.list))
+    (arg_qualifier FStar_Pervasives_Native.option * term'
+      with_range_and_level_t Prims.list))
   = fun projectee -> match projectee with | PatWild _0 -> _0
 let (uu___is_PatConst : pattern' -> Prims.bool) =
   fun projectee ->
@@ -477,14 +602,17 @@ let (__proj__PatConst__item___0 : pattern' -> FStar_Const.sconst) =
   fun projectee -> match projectee with | PatConst _0 -> _0
 let (uu___is_PatApp : pattern' -> Prims.bool) =
   fun projectee -> match projectee with | PatApp _0 -> true | uu___ -> false
-let (__proj__PatApp__item___0 : pattern' -> (pattern * pattern Prims.list)) =
-  fun projectee -> match projectee with | PatApp _0 -> _0
+let (__proj__PatApp__item___0 :
+  pattern' ->
+    (pattern' with_range_and_level_t * pattern' with_range_and_level_t
+      Prims.list))
+  = fun projectee -> match projectee with | PatApp _0 -> _0
 let (uu___is_PatVar : pattern' -> Prims.bool) =
   fun projectee -> match projectee with | PatVar _0 -> true | uu___ -> false
 let (__proj__PatVar__item___0 :
   pattern' ->
-    (FStar_Ident.ident * arg_qualifier FStar_Pervasives_Native.option * term
-      Prims.list))
+    (FStar_Ident.ident * arg_qualifier FStar_Pervasives_Native.option * term'
+      with_range_and_level_t Prims.list))
   = fun projectee -> match projectee with | PatVar _0 -> _0
 let (uu___is_PatName : pattern' -> Prims.bool) =
   fun projectee -> match projectee with | PatName _0 -> true | uu___ -> false
@@ -494,34 +622,38 @@ let (uu___is_PatTvar : pattern' -> Prims.bool) =
   fun projectee -> match projectee with | PatTvar _0 -> true | uu___ -> false
 let (__proj__PatTvar__item___0 :
   pattern' ->
-    (FStar_Ident.ident * arg_qualifier FStar_Pervasives_Native.option * term
-      Prims.list))
+    (FStar_Ident.ident * arg_qualifier FStar_Pervasives_Native.option * term'
+      with_range_and_level_t Prims.list))
   = fun projectee -> match projectee with | PatTvar _0 -> _0
 let (uu___is_PatList : pattern' -> Prims.bool) =
   fun projectee -> match projectee with | PatList _0 -> true | uu___ -> false
-let (__proj__PatList__item___0 : pattern' -> pattern Prims.list) =
+let (__proj__PatList__item___0 :
+  pattern' -> pattern' with_range_and_level_t Prims.list) =
   fun projectee -> match projectee with | PatList _0 -> _0
 let (uu___is_PatTuple : pattern' -> Prims.bool) =
   fun projectee ->
     match projectee with | PatTuple _0 -> true | uu___ -> false
 let (__proj__PatTuple__item___0 :
-  pattern' -> (pattern Prims.list * Prims.bool)) =
+  pattern' -> (pattern' with_range_and_level_t Prims.list * Prims.bool)) =
   fun projectee -> match projectee with | PatTuple _0 -> _0
 let (uu___is_PatRecord : pattern' -> Prims.bool) =
   fun projectee ->
     match projectee with | PatRecord _0 -> true | uu___ -> false
 let (__proj__PatRecord__item___0 :
-  pattern' -> (FStar_Ident.lid * pattern) Prims.list) =
-  fun projectee -> match projectee with | PatRecord _0 -> _0
+  pattern' -> (FStar_Ident.lid * pattern' with_range_and_level_t) Prims.list)
+  = fun projectee -> match projectee with | PatRecord _0 -> _0
 let (uu___is_PatAscribed : pattern' -> Prims.bool) =
   fun projectee ->
     match projectee with | PatAscribed _0 -> true | uu___ -> false
 let (__proj__PatAscribed__item___0 :
-  pattern' -> (pattern * (term * term FStar_Pervasives_Native.option))) =
-  fun projectee -> match projectee with | PatAscribed _0 -> _0
+  pattern' ->
+    (pattern' with_range_and_level_t * (term' with_range_and_level_t * term'
+      with_range_and_level_t FStar_Pervasives_Native.option)))
+  = fun projectee -> match projectee with | PatAscribed _0 -> _0
 let (uu___is_PatOr : pattern' -> Prims.bool) =
   fun projectee -> match projectee with | PatOr _0 -> true | uu___ -> false
-let (__proj__PatOr__item___0 : pattern' -> pattern Prims.list) =
+let (__proj__PatOr__item___0 :
+  pattern' -> pattern' with_range_and_level_t Prims.list) =
   fun projectee -> match projectee with | PatOr _0 -> _0
 let (uu___is_PatOp : pattern' -> Prims.bool) =
   fun projectee -> match projectee with | PatOp _0 -> true | uu___ -> false
@@ -530,20 +662,16 @@ let (__proj__PatOp__item___0 : pattern' -> FStar_Ident.ident) =
 let (uu___is_PatVQuote : pattern' -> Prims.bool) =
   fun projectee ->
     match projectee with | PatVQuote _0 -> true | uu___ -> false
-let (__proj__PatVQuote__item___0 : pattern' -> term) =
-  fun projectee -> match projectee with | PatVQuote _0 -> _0
-let (__proj__Mkpattern__item__pat : pattern -> pattern') =
-  fun projectee -> match projectee with | { pat; prange;_} -> pat
-let (__proj__Mkpattern__item__prange : pattern -> FStar_Compiler_Range.range)
-  = fun projectee -> match projectee with | { pat; prange;_} -> prange
+let (__proj__PatVQuote__item___0 : pattern' -> term' with_range_and_level_t)
+  = fun projectee -> match projectee with | PatVQuote _0 -> _0
 let (uu___is_Implicit : arg_qualifier -> Prims.bool) =
   fun projectee -> match projectee with | Implicit -> true | uu___ -> false
 let (uu___is_Equality : arg_qualifier -> Prims.bool) =
   fun projectee -> match projectee with | Equality -> true | uu___ -> false
 let (uu___is_Meta : arg_qualifier -> Prims.bool) =
   fun projectee -> match projectee with | Meta _0 -> true | uu___ -> false
-let (__proj__Meta__item___0 : arg_qualifier -> term) =
-  fun projectee -> match projectee with | Meta _0 -> _0
+let (__proj__Meta__item___0 : arg_qualifier -> term' with_range_and_level_t)
+  = fun projectee -> match projectee with | Meta _0 -> _0
 let (uu___is_TypeClassArg : arg_qualifier -> Prims.bool) =
   fun projectee ->
     match projectee with | TypeClassArg -> true | uu___ -> false
@@ -556,21 +684,31 @@ let (uu___is_UnivApp : imp -> Prims.bool) =
 let (uu___is_HashBrace : imp -> Prims.bool) =
   fun projectee ->
     match projectee with | HashBrace _0 -> true | uu___ -> false
-let (__proj__HashBrace__item___0 : imp -> term) =
+let (__proj__HashBrace__item___0 : imp -> term' with_range_and_level_t) =
   fun projectee -> match projectee with | HashBrace _0 -> _0
 let (uu___is_Infix : imp -> Prims.bool) =
   fun projectee -> match projectee with | Infix -> true | uu___ -> false
 let (uu___is_Nothing : imp -> Prims.bool) =
   fun projectee -> match projectee with | Nothing -> true | uu___ -> false
+type term = term' with_range_and_level_t[@@deriving yojson,show]
 type match_returns_annotation =
-  (FStar_Ident.ident FStar_Pervasives_Native.option * term * Prims.bool)
-type patterns = (FStar_Ident.ident Prims.list * term Prims.list Prims.list)
-type attributes_ = term Prims.list
-type branch = (pattern * term FStar_Pervasives_Native.option * term)
-type aqual = arg_qualifier FStar_Pervasives_Native.option
-type knd = term
-type typ = term
-type expr = term
+  (FStar_Ident.ident FStar_Pervasives_Native.option * term'
+    with_range_and_level_t * Prims.bool)[@@deriving yojson,show]
+type patterns =
+  (FStar_Ident.ident Prims.list * term' with_range_and_level_t Prims.list
+    Prims.list)[@@deriving yojson,show]
+type attributes_ = term' with_range_and_level_t Prims.list[@@deriving
+                                                            yojson,show]
+type pattern = pattern' with_range_and_level_t[@@deriving yojson,show]
+type branch =
+  (pattern' with_range_and_level_t * term' with_range_and_level_t
+    FStar_Pervasives_Native.option * term' with_range_and_level_t)[@@deriving
+                                                                    yojson,show]
+type aqual = arg_qualifier FStar_Pervasives_Native.option[@@deriving
+                                                           yojson,show]
+type knd = term[@@deriving yojson,show]
+type typ = term[@@deriving yojson,show]
+type expr = term[@@deriving yojson,show]
 type tycon =
   | TyconAbstract of (FStar_Ident.ident * binder Prims.list * knd
   FStar_Pervasives_Native.option) 
@@ -582,6 +720,7 @@ type tycon =
   | TyconVariant of (FStar_Ident.ident * binder Prims.list * knd
   FStar_Pervasives_Native.option * (FStar_Ident.ident * term
   FStar_Pervasives_Native.option * Prims.bool * attributes_) Prims.list) 
+[@@deriving yojson,show]
 let (uu___is_TyconAbstract : tycon -> Prims.bool) =
   fun projectee ->
     match projectee with | TyconAbstract _0 -> true | uu___ -> false
@@ -634,7 +773,7 @@ type qualifier =
   | Reifiable 
   | Reflectable 
   | Opaque 
-  | Logic 
+  | Logic [@@deriving yojson,show]
 let (uu___is_Private : qualifier -> Prims.bool) =
   fun projectee -> match projectee with | Private -> true | uu___ -> false
 let (uu___is_Noeq : qualifier -> Prims.bool) =
@@ -680,10 +819,10 @@ let (uu___is_Opaque : qualifier -> Prims.bool) =
   fun projectee -> match projectee with | Opaque -> true | uu___ -> false
 let (uu___is_Logic : qualifier -> Prims.bool) =
   fun projectee -> match projectee with | Logic -> true | uu___ -> false
-type qualifiers = qualifier Prims.list
+type qualifiers = qualifier Prims.list[@@deriving yojson,show]
 type decoration =
   | Qualifier of qualifier 
-  | DeclAttributes of term Prims.list 
+  | DeclAttributes of term Prims.list [@@deriving yojson,show]
 let (uu___is_Qualifier : decoration -> Prims.bool) =
   fun projectee ->
     match projectee with | Qualifier _0 -> true | uu___ -> false
@@ -697,7 +836,7 @@ let (__proj__DeclAttributes__item___0 : decoration -> term Prims.list) =
 type lift_op =
   | NonReifiableLift of term 
   | ReifiableLift of (term * term) 
-  | LiftForFree of term 
+  | LiftForFree of term [@@deriving yojson,show]
 let (uu___is_NonReifiableLift : lift_op -> Prims.bool) =
   fun projectee ->
     match projectee with | NonReifiableLift _0 -> true | uu___ -> false
@@ -717,7 +856,7 @@ type lift =
   {
   msource: FStar_Ident.lid ;
   mdest: FStar_Ident.lid ;
-  lift_op: lift_op }
+  lift_op: lift_op }[@@deriving yojson,show]
 let (__proj__Mklift__item__msource : lift -> FStar_Ident.lid) =
   fun projectee ->
     match projectee with | { msource; mdest; lift_op = lift_op1;_} -> msource
@@ -734,7 +873,7 @@ type pragma =
   | PushOptions of Prims.string FStar_Pervasives_Native.option 
   | PopOptions 
   | RestartSolver 
-  | PrintEffectsGraph 
+  | PrintEffectsGraph [@@deriving yojson,show]
 let (uu___is_SetOptions : pragma -> Prims.bool) =
   fun projectee ->
     match projectee with | SetOptions _0 -> true | uu___ -> false
@@ -778,17 +917,17 @@ type decl' =
   | Polymonadic_subcomp of (FStar_Ident.lid * FStar_Ident.lid * term) 
   | Pragma of pragma 
   | Assume of (FStar_Ident.ident * term) 
-  | Splice of (FStar_Ident.ident Prims.list * term) 
+  | Splice of (FStar_Ident.ident Prims.list * term) [@@deriving yojson,show]
 and decl =
   {
-  d: decl' ;
-  drange: FStar_Compiler_Range.range ;
+  d: decl' with_range_and_level_t ;
   quals: qualifiers ;
-  attrs: attributes_ }
+  attrs: attributes_ }[@@deriving yojson,show]
 and effect_decl =
   | DefineEffect of (FStar_Ident.ident * binder Prims.list * term * decl
   Prims.list) 
   | RedefineEffect of (FStar_Ident.ident * binder Prims.list * term) 
+[@@deriving yojson,show]
 let (uu___is_TopLevelModule : decl' -> Prims.bool) =
   fun projectee ->
     match projectee with | TopLevelModule _0 -> true | uu___ -> false
@@ -873,17 +1012,12 @@ let (uu___is_Splice : decl' -> Prims.bool) =
 let (__proj__Splice__item___0 :
   decl' -> (FStar_Ident.ident Prims.list * term)) =
   fun projectee -> match projectee with | Splice _0 -> _0
-let (__proj__Mkdecl__item__d : decl -> decl') =
-  fun projectee -> match projectee with | { d; drange; quals; attrs;_} -> d
-let (__proj__Mkdecl__item__drange : decl -> FStar_Compiler_Range.range) =
-  fun projectee ->
-    match projectee with | { d; drange; quals; attrs;_} -> drange
+let (__proj__Mkdecl__item__d : decl -> decl' with_range_and_level_t) =
+  fun projectee -> match projectee with | { d; quals; attrs;_} -> d
 let (__proj__Mkdecl__item__quals : decl -> qualifiers) =
-  fun projectee ->
-    match projectee with | { d; drange; quals; attrs;_} -> quals
+  fun projectee -> match projectee with | { d; quals; attrs;_} -> quals
 let (__proj__Mkdecl__item__attrs : decl -> attributes_) =
-  fun projectee ->
-    match projectee with | { d; drange; quals; attrs;_} -> attrs
+  fun projectee -> match projectee with | { d; quals; attrs;_} -> attrs
 let (uu___is_DefineEffect : effect_decl -> Prims.bool) =
   fun projectee ->
     match projectee with | DefineEffect _0 -> true | uu___ -> false
@@ -899,7 +1033,8 @@ let (__proj__RedefineEffect__item___0 :
   fun projectee -> match projectee with | RedefineEffect _0 -> _0
 type modul =
   | Module of (FStar_Ident.lid * decl Prims.list) 
-  | Interface of (FStar_Ident.lid * decl Prims.list * Prims.bool) 
+  | Interface of (FStar_Ident.lid * decl Prims.list * Prims.bool) [@@deriving
+                                                                    yojson,show]
 let (uu___is_Module : modul -> Prims.bool) =
   fun projectee -> match projectee with | Module _0 -> true | uu___ -> false
 let (__proj__Module__item___0 : modul -> (FStar_Ident.lid * decl Prims.list))
@@ -910,10 +1045,15 @@ let (uu___is_Interface : modul -> Prims.bool) =
 let (__proj__Interface__item___0 :
   modul -> (FStar_Ident.lid * decl Prims.list * Prims.bool)) =
   fun projectee -> match projectee with | Interface _0 -> _0
+let (lid_of_modul : modul -> FStar_Ident.lid) =
+  fun m ->
+    match m with
+    | Module (lid, uu___) -> lid
+    | Interface (lid, uu___, uu___1) -> lid
 type file = modul
 type inputFragment = (file, decl Prims.list) FStar_Pervasives.either
 let (decl_drange : decl -> FStar_Compiler_Range.range) =
-  fun decl1 -> decl1.drange
+  fun decl1 -> (decl1.d).range
 let (check_id : FStar_Ident.ident -> unit) =
   fun id ->
     let first_char =
@@ -970,37 +1110,45 @@ let (mk_decl :
                match uu___ with
                | Qualifier q -> FStar_Pervasives_Native.Some q
                | uu___1 -> FStar_Pervasives_Native.None) decorations in
-        { d; drange = r; quals = qualifiers1; attrs = attributes_2 }
+        { d = (with_range d r); quals = qualifiers1; attrs = attributes_2 }
 let (mk_binder_with_attrs :
   binder' ->
     FStar_Compiler_Range.range ->
       level ->
         arg_qualifier FStar_Pervasives_Native.option ->
-          term Prims.list -> binder)
+          term' with_range_and_level_t Prims.list -> binder)
   =
   fun b ->
     fun r ->
       fun l ->
         fun i ->
           fun attrs ->
-            { b; brange = r; blevel = l; aqual = i; battributes = attrs }
+            {
+              b = (with_range_and_level b r l);
+              aqual = i;
+              battributes = attrs
+            }
 let (mk_binder :
   binder' ->
     FStar_Compiler_Range.range ->
       level -> arg_qualifier FStar_Pervasives_Native.option -> binder)
   = fun b -> fun r -> fun l -> fun i -> mk_binder_with_attrs b r l i []
-let (mk_term : term' -> FStar_Compiler_Range.range -> level -> term) =
-  fun t -> fun r -> fun l -> { tm = t; range = r; level = l }
+let mk_term :
+  'uuuuu .
+    'uuuuu ->
+      FStar_Compiler_Range.range -> level -> 'uuuuu with_range_and_level_t
+  = fun t -> fun r -> fun l -> { v = t; range = r; level = l }
 let (mk_uminus :
-  term ->
-    FStar_Compiler_Range.range -> FStar_Compiler_Range.range -> level -> term)
+  term' with_range_and_level_t ->
+    FStar_Compiler_Range.range ->
+      FStar_Compiler_Range.range -> level -> term' with_range_and_level_t)
   =
   fun t ->
     fun rminus ->
       fun r ->
         fun l ->
           let t1 =
-            match t.tm with
+            match t.v with
             | Const (FStar_Const.Const_int
                 (s, FStar_Pervasives_Native.Some (FStar_Const.Signed, width)))
                 ->
@@ -1015,17 +1163,25 @@ let (mk_uminus :
                   (uu___2, [t]) in
                 Op uu___1 in
           mk_term t1 r l
-let (mk_pattern : pattern' -> FStar_Compiler_Range.range -> pattern) =
-  fun p -> fun r -> { pat = p; prange = r }
-let (un_curry_abs : pattern Prims.list -> term -> term') =
+let mk_pattern :
+  'uuuuu .
+    'uuuuu -> FStar_Compiler_Range.range -> 'uuuuu with_range_and_level_t
+  = fun p -> fun r -> with_range p r
+let (un_curry_abs :
+  pattern' with_range_and_level_t Prims.list ->
+    term' with_range_and_level_t -> term')
+  =
   fun ps ->
     fun body ->
-      match body.tm with
+      match body.v with
       | Abs (p', body') -> Abs ((FStar_Compiler_List.op_At ps p'), body')
       | uu___ -> Abs (ps, body)
 let (mk_function :
-  (pattern * term FStar_Pervasives_Native.option * term) Prims.list ->
-    FStar_Compiler_Range.range -> FStar_Compiler_Range.range -> term)
+  (pattern' with_range_and_level_t * term' with_range_and_level_t
+    FStar_Pervasives_Native.option * term' with_range_and_level_t) Prims.list
+    ->
+    FStar_Compiler_Range.range ->
+      FStar_Compiler_Range.range -> term' with_range_and_level_t)
   =
   fun branches ->
     fun r1 ->
@@ -1049,13 +1205,17 @@ let (mk_function :
           Abs uu___1 in
         mk_term uu___ r2 Expr
 let (un_function :
-  pattern -> term -> (pattern * term) FStar_Pervasives_Native.option) =
+  pattern' with_range_and_level_t ->
+    term' with_range_and_level_t ->
+      (pattern' with_range_and_level_t * term' with_range_and_level_t)
+        FStar_Pervasives_Native.option)
+  =
   fun p ->
     fun tm ->
-      match ((p.pat), (tm.tm)) with
+      match ((p.v), (tm.v)) with
       | (PatVar uu___, Abs (pats, body)) ->
           FStar_Pervasives_Native.Some
-            ((mk_pattern (PatApp (p, pats)) p.prange), body)
+            ((mk_pattern (PatApp (p, pats)) p.range), body)
       | uu___ -> FStar_Pervasives_Native.None
 let (lid_with_range :
   FStar_Ident.lident -> FStar_Compiler_Range.range -> FStar_Ident.lident) =
@@ -1063,14 +1223,21 @@ let (lid_with_range :
     fun r ->
       let uu___ = FStar_Ident.path_of_lid lid in
       FStar_Ident.lid_of_path uu___ r
-let (consPat : FStar_Compiler_Range.range -> pattern -> pattern -> pattern')
+let (consPat :
+  FStar_Compiler_Range.range ->
+    pattern' with_range_and_level_t ->
+      pattern' with_range_and_level_t -> pattern')
   =
   fun r ->
     fun hd ->
       fun tl ->
         PatApp
           ((mk_pattern (PatName FStar_Parser_Const.cons_lid) r), [hd; tl])
-let (consTerm : FStar_Compiler_Range.range -> term -> term -> term) =
+let (consTerm :
+  FStar_Compiler_Range.range ->
+    term' with_range_and_level_t ->
+      term' with_range_and_level_t -> term' with_range_and_level_t)
+  =
   fun r ->
     fun hd ->
       fun tl ->
@@ -1078,32 +1245,40 @@ let (consTerm : FStar_Compiler_Range.range -> term -> term -> term) =
           (Construct
              (FStar_Parser_Const.cons_lid, [(hd, Nothing); (tl, Nothing)])) r
           Expr
-let (mkConsList : FStar_Compiler_Range.range -> term Prims.list -> term) =
+let (mkConsList :
+  FStar_Compiler_Range.range ->
+    term' with_range_and_level_t Prims.list -> term' with_range_and_level_t)
+  =
   fun r ->
     fun elts ->
       let nil = mk_term (Construct (FStar_Parser_Const.nil_lid, [])) r Expr in
       FStar_Compiler_List.fold_right (fun e -> fun tl -> consTerm r e tl)
         elts nil
-let (unit_const : FStar_Compiler_Range.range -> term) =
-  fun r -> mk_term (Const FStar_Const.Const_unit) r Expr
-let (ml_comp : term -> term) =
+let (unit_const : FStar_Compiler_Range.range -> term' with_range_and_level_t)
+  = fun r -> mk_term (Const FStar_Const.Const_unit) r Expr
+let (ml_comp : term' with_range_and_level_t -> term' with_range_and_level_t)
+  =
   fun t ->
     let lid = FStar_Parser_Const.effect_ML_lid () in
     let ml = mk_term (Name lid) t.range Expr in
     let t1 = mk_term (App (ml, t, Nothing)) t.range Expr in t1
-let (tot_comp : term -> term) =
+let (tot_comp : term' with_range_and_level_t -> term' with_range_and_level_t)
+  =
   fun t ->
     let ml = mk_term (Name FStar_Parser_Const.effect_Tot_lid) t.range Expr in
     let t1 = mk_term (App (ml, t, Nothing)) t.range Expr in t1
 let (mkApp :
-  term -> (term * imp) Prims.list -> FStar_Compiler_Range.range -> term) =
+  term' with_range_and_level_t ->
+    (term' with_range_and_level_t * imp) Prims.list ->
+      FStar_Compiler_Range.range -> term' with_range_and_level_t)
+  =
   fun t ->
     fun args ->
       fun r ->
         match args with
         | [] -> t
         | uu___ ->
-            (match t.tm with
+            (match t.v with
              | Name s -> mk_term (Construct (s, args)) r Un
              | uu___1 ->
                  FStar_Compiler_List.fold_left
@@ -1112,7 +1287,10 @@ let (mkApp :
                         match uu___2 with
                         | (a, imp1) -> mk_term (App (t1, a, imp1)) r Un) t
                    args)
-let (mkRefSet : FStar_Compiler_Range.range -> term Prims.list -> term) =
+let (mkRefSet :
+  FStar_Compiler_Range.range ->
+    term' with_range_and_level_t Prims.list -> term' with_range_and_level_t)
+  =
   fun r ->
     fun elts ->
       let uu___ =
@@ -1148,14 +1326,17 @@ let (mkRefSet : FStar_Compiler_Range.range -> term Prims.list -> term) =
                  mkApp union [(single_e, Nothing); (tl, Nothing)] r) elts
             empty
 let (mkExplicitApp :
-  term -> term Prims.list -> FStar_Compiler_Range.range -> term) =
+  term' with_range_and_level_t ->
+    term' with_range_and_level_t Prims.list ->
+      FStar_Compiler_Range.range -> term' with_range_and_level_t)
+  =
   fun t ->
     fun args ->
       fun r ->
         match args with
         | [] -> t
         | uu___ ->
-            (match t.tm with
+            (match t.v with
              | Name s ->
                  let uu___1 =
                    let uu___2 =
@@ -1168,7 +1349,8 @@ let (mkExplicitApp :
                  FStar_Compiler_List.fold_left
                    (fun t1 -> fun a -> mk_term (App (t1, a, Nothing)) r Un) t
                    args)
-let (mkAdmitMagic : FStar_Compiler_Range.range -> term) =
+let (mkAdmitMagic :
+  FStar_Compiler_Range.range -> term' with_range_and_level_t) =
   fun r ->
     let admit =
       let admit_name =
@@ -1190,7 +1372,8 @@ let (mkAdmitMagic : FStar_Compiler_Range.range -> term) =
 let mkWildAdmitMagic :
   'uuuuu .
     FStar_Compiler_Range.range ->
-      (pattern * 'uuuuu FStar_Pervasives_Native.option * term)
+      (pattern' with_range_and_level_t * 'uuuuu
+        FStar_Pervasives_Native.option * term' with_range_and_level_t)
   =
   fun r ->
     let uu___ = mkAdmitMagic r in
@@ -1198,10 +1381,13 @@ let mkWildAdmitMagic :
       FStar_Pervasives_Native.None, uu___)
 let focusBranches :
   'uuuuu .
-    (Prims.bool * (pattern * 'uuuuu FStar_Pervasives_Native.option * term))
+    (Prims.bool * (pattern' with_range_and_level_t * 'uuuuu
+      FStar_Pervasives_Native.option * term' with_range_and_level_t))
       Prims.list ->
       FStar_Compiler_Range.range ->
-        (pattern * 'uuuuu FStar_Pervasives_Native.option * term) Prims.list
+        (pattern' with_range_and_level_t * 'uuuuu
+          FStar_Pervasives_Native.option * term' with_range_and_level_t)
+          Prims.list
   =
   fun branches ->
     fun r ->
@@ -1223,8 +1409,9 @@ let focusBranches :
           (FStar_Compiler_List.map FStar_Pervasives_Native.snd)
 let focusLetBindings :
   'uuuuu .
-    (Prims.bool * ('uuuuu * term)) Prims.list ->
-      FStar_Compiler_Range.range -> ('uuuuu * term) Prims.list
+    (Prims.bool * ('uuuuu * term' with_range_and_level_t)) Prims.list ->
+      FStar_Compiler_Range.range ->
+        ('uuuuu * term' with_range_and_level_t) Prims.list
   =
   fun lbs ->
     fun r ->
@@ -1249,8 +1436,10 @@ let focusLetBindings :
           (FStar_Compiler_List.map FStar_Pervasives_Native.snd)
 let focusAttrLetBindings :
   'uuuuu 'uuuuu1 .
-    ('uuuuu * (Prims.bool * ('uuuuu1 * term))) Prims.list ->
-      FStar_Compiler_Range.range -> ('uuuuu * ('uuuuu1 * term)) Prims.list
+    ('uuuuu * (Prims.bool * ('uuuuu1 * term' with_range_and_level_t)))
+      Prims.list ->
+      FStar_Compiler_Range.range ->
+        ('uuuuu * ('uuuuu1 * term' with_range_and_level_t)) Prims.list
   =
   fun lbs ->
     fun r ->
@@ -1280,13 +1469,19 @@ let focusAttrLetBindings :
              (fun uu___1 ->
                 match uu___1 with | (attr, (uu___2, lb)) -> (attr, lb)))
 let (mkFsTypApp :
-  term -> term Prims.list -> FStar_Compiler_Range.range -> term) =
+  term' with_range_and_level_t ->
+    term' with_range_and_level_t Prims.list ->
+      FStar_Compiler_Range.range -> term' with_range_and_level_t)
+  =
   fun t ->
     fun args ->
       fun r ->
         let uu___ = FStar_Compiler_List.map (fun a -> (a, FsTypApp)) args in
         mkApp t uu___ r
-let (mkTuple : term Prims.list -> FStar_Compiler_Range.range -> term) =
+let (mkTuple :
+  term' with_range_and_level_t Prims.list ->
+    FStar_Compiler_Range.range -> term' with_range_and_level_t)
+  =
   fun args ->
     fun r ->
       let cons =
@@ -1294,7 +1489,10 @@ let (mkTuple : term Prims.list -> FStar_Compiler_Range.range -> term) =
           (FStar_Compiler_List.length args) r in
       let uu___ = FStar_Compiler_List.map (fun x -> (x, Nothing)) args in
       mkApp (mk_term (Name cons) r Expr) uu___ r
-let (mkDTuple : term Prims.list -> FStar_Compiler_Range.range -> term) =
+let (mkDTuple :
+  term' with_range_and_level_t Prims.list ->
+    FStar_Compiler_Range.range -> term' with_range_and_level_t)
+  =
   fun args ->
     fun r ->
       let cons =
@@ -1304,12 +1502,12 @@ let (mkDTuple : term Prims.list -> FStar_Compiler_Range.range -> term) =
       mkApp (mk_term (Name cons) r Expr) uu___ r
 let (mkRefinedBinder :
   FStar_Ident.ident ->
-    term ->
+    term' with_range_and_level_t ->
       Prims.bool ->
-        term FStar_Pervasives_Native.option ->
+        term' with_range_and_level_t FStar_Pervasives_Native.option ->
           FStar_Compiler_Range.range ->
             arg_qualifier FStar_Pervasives_Native.option ->
-              term Prims.list -> binder)
+              term' with_range_and_level_t Prims.list -> binder)
   =
   fun id ->
     fun t ->
@@ -1340,11 +1538,12 @@ let (mkRefinedBinder :
                             (id, (mk_term (Refine (b1, phi)) m Type_level)))
                          m Type_level implicit attrs)
 let (mkRefinedPattern :
-  pattern ->
-    term ->
+  pattern' with_range_and_level_t ->
+    term' with_range_and_level_t ->
       Prims.bool ->
-        term FStar_Pervasives_Native.option ->
-          FStar_Compiler_Range.range -> FStar_Compiler_Range.range -> pattern)
+        term' with_range_and_level_t FStar_Pervasives_Native.option ->
+          FStar_Compiler_Range.range ->
+            FStar_Compiler_Range.range -> pattern' with_range_and_level_t)
   =
   fun pat ->
     fun t ->
@@ -1358,7 +1557,7 @@ let (mkRefinedPattern :
                 | FStar_Pervasives_Native.Some phi ->
                     if should_bind_pat
                     then
-                      (match pat.pat with
+                      (match pat.v with
                        | PatVar (x, uu___, attrs) ->
                            mk_term
                              (Refine
@@ -1410,16 +1609,17 @@ let (mkRefinedPattern :
               mk_pattern
                 (PatAscribed (pat, (t1, FStar_Pervasives_Native.None))) range
 let rec (extract_named_refinement :
-  term ->
-    (FStar_Ident.ident * term * term FStar_Pervasives_Native.option)
+  term' with_range_and_level_t ->
+    (FStar_Ident.ident * term' with_range_and_level_t * term'
+      with_range_and_level_t FStar_Pervasives_Native.option)
       FStar_Pervasives_Native.option)
   =
   fun t1 ->
-    match t1.tm with
+    match t1.v with
     | NamedTyp (x, t) ->
         FStar_Pervasives_Native.Some (x, t, FStar_Pervasives_Native.None)
     | Refine
-        ({ b = Annotated (x, t); brange = uu___; blevel = uu___1;
+        ({ b = { v = Annotated (x, t); range = uu___; level = uu___1;_};
            aqual = uu___2; battributes = uu___3;_},
          t')
         ->
@@ -1438,11 +1638,11 @@ let rec (as_mlist :
            | [] ->
                Module (m_name, (m_decl :: (FStar_Compiler_List.rev cur1)))
            | d::ds1 ->
-               (match d.d with
+               (match (d.d).v with
                 | TopLevelModule m' ->
                     FStar_Errors.raise_error
                       (FStar_Errors.Fatal_UnexpectedModuleDeclaration,
-                        "Unexpected module declaration") d.drange
+                        "Unexpected module declaration") (d.d).range
                 | uu___1 -> as_mlist ((m_name, m_decl), (d :: cur1)) ds1))
 let (as_frag : decl Prims.list -> inputFragment) =
   fun ds ->
@@ -1452,7 +1652,7 @@ let (as_frag : decl Prims.list -> inputFragment) =
       | [] -> FStar_Compiler_Effect.raise FStar_Errors.Empty_frag in
     match uu___ with
     | (d, ds1) ->
-        (match d.d with
+        (match (d.d).v with
          | TopLevelModule m ->
              let m1 = as_mlist ((m, d), []) ds1 in FStar_Pervasives.Inl m1
          | uu___1 ->
@@ -1460,8 +1660,11 @@ let (as_frag : decl Prims.list -> inputFragment) =
              (FStar_Compiler_List.iter
                 (fun uu___3 ->
                    match uu___3 with
-                   | { d = TopLevelModule uu___4; drange = r; quals = uu___5;
-                       attrs = uu___6;_} ->
+                   | {
+                       d =
+                         { v = TopLevelModule uu___4; range = r;
+                           level = uu___5;_};
+                       quals = uu___6; attrs = uu___7;_} ->
                        FStar_Errors.raise_error
                          (FStar_Errors.Fatal_UnexpectedModuleDeclaration,
                            "Unexpected module declaration") r
@@ -1694,7 +1897,7 @@ let (imp_to_string : imp -> Prims.string) =
   fun uu___ -> match uu___ with | Hash -> "#" | uu___1 -> ""
 let rec (term_to_string : term -> Prims.string) =
   fun x ->
-    match x.tm with
+    match x.v with
     | Wild -> "_"
     | LexList l ->
         let uu___ =
@@ -2068,11 +2271,14 @@ and (binders_to_string : Prims.string -> binder Prims.list -> Prims.string) =
       FStar_Compiler_Effect.op_Bar_Greater uu___ (FStar_String.concat sep)
 and (try_or_match_to_string :
   term ->
-    term ->
-      (pattern * term FStar_Pervasives_Native.option * term) Prims.list ->
+    term' with_range_and_level_t ->
+      (pattern' with_range_and_level_t * term' with_range_and_level_t
+        FStar_Pervasives_Native.option * term' with_range_and_level_t)
+        Prims.list ->
         FStar_Ident.ident FStar_Pervasives_Native.option ->
-          (FStar_Ident.ident FStar_Pervasives_Native.option * term *
-            Prims.bool) FStar_Pervasives_Native.option -> Prims.string)
+          (FStar_Ident.ident FStar_Pervasives_Native.option * term'
+            with_range_and_level_t * Prims.bool)
+            FStar_Pervasives_Native.option -> Prims.string)
   =
   fun x ->
     fun scrutinee ->
@@ -2080,7 +2286,7 @@ and (try_or_match_to_string :
         fun op_opt ->
           fun ret_opt ->
             let s =
-              match x.tm with
+              match x.v with
               | Match uu___ -> "match"
               | TryWith uu___ -> "try"
               | uu___ -> failwith "impossible" in
@@ -2136,7 +2342,7 @@ and (binder_to_string : binder -> Prims.string) =
   fun x ->
     let pr x1 =
       let s =
-        match x1.b with
+        match (x1.b).v with
         | Variable i -> FStar_Ident.string_of_id i
         | TVariable i ->
             let uu___ = FStar_Ident.string_of_id i in
@@ -2171,14 +2377,15 @@ and (aqual_to_string :
         failwith "aqual_to_strings: meta arg qualifier?"
     | FStar_Pervasives_Native.Some (TypeClassArg) ->
         failwith "aqual_to_strings: meta arg qualifier?"
-and (attr_list_to_string : term Prims.list -> Prims.string) =
+and (attr_list_to_string :
+  term' with_range_and_level_t Prims.list -> Prims.string) =
   fun uu___ ->
     match uu___ with
     | [] -> ""
     | l -> attrs_opt_to_string (FStar_Pervasives_Native.Some l)
-and (pat_to_string : pattern -> Prims.string) =
+and (pat_to_string : pattern' with_range_and_level_t -> Prims.string) =
   fun x ->
-    match x.pat with
+    match x.v with
     | PatWild (FStar_Pervasives_Native.None, attrs) ->
         let uu___ = attr_list_to_string attrs in Prims.op_Hat uu___ "_"
     | PatWild (uu___, attrs) ->
@@ -2238,7 +2445,9 @@ and (pat_to_string : pattern -> Prims.string) =
         let uu___2 = FStar_Compiler_Effect.op_Bar_Greater tac term_to_string in
         FStar_Compiler_Util.format3 "(%s:%s by %s)" uu___ uu___1 uu___2
 and (attrs_opt_to_string :
-  term Prims.list FStar_Pervasives_Native.option -> Prims.string) =
+  term' with_range_and_level_t Prims.list FStar_Pervasives_Native.option ->
+    Prims.string)
+  =
   fun uu___ ->
     match uu___ with
     | FStar_Pervasives_Native.None -> ""
@@ -2248,9 +2457,10 @@ and (attrs_opt_to_string :
           FStar_Compiler_Effect.op_Bar_Greater uu___2
             (FStar_String.concat "; ") in
         FStar_Compiler_Util.format1 "[@ %s]" uu___1
-let rec (head_id_of_pat : pattern -> FStar_Ident.lident Prims.list) =
+let rec (head_id_of_pat :
+  pattern' with_range_and_level_t -> FStar_Ident.lident Prims.list) =
   fun p ->
-    match p.pat with
+    match p.v with
     | PatName l -> [l]
     | PatVar (i, uu___, uu___1) ->
         let uu___2 = FStar_Ident.lid_of_ids [i] in [uu___2]
@@ -2258,7 +2468,10 @@ let rec (head_id_of_pat : pattern -> FStar_Ident.lident Prims.list) =
     | PatAscribed (p1, uu___) -> head_id_of_pat p1
     | uu___ -> []
 let lids_of_let :
-  'uuuuu . (pattern * 'uuuuu) Prims.list -> FStar_Ident.lident Prims.list =
+  'uuuuu .
+    (pattern' with_range_and_level_t * 'uuuuu) Prims.list ->
+      FStar_Ident.lident Prims.list
+  =
   fun defs ->
     FStar_Compiler_Effect.op_Bar_Greater defs
       (FStar_Compiler_List.collect
@@ -2273,7 +2486,7 @@ let (id_of_tycon : tycon -> Prims.string) =
     | TyconVariant (i, uu___1, uu___2, uu___3) -> FStar_Ident.string_of_id i
 let (decl_to_string : decl -> Prims.string) =
   fun d ->
-    match d.d with
+    match (d.d).v with
     | TopLevelModule l ->
         let uu___ = FStar_Ident.string_of_lid l in
         Prims.op_Hat "module " uu___
@@ -2289,15 +2502,22 @@ let (decl_to_string : decl -> Prims.string) =
         let uu___ = FStar_Ident.string_of_id i in
         let uu___1 = FStar_Ident.string_of_lid l in
         FStar_Compiler_Util.format2 "module %s = %s" uu___ uu___1
-    | TopLevelLet (uu___, pats) ->
-        let uu___1 =
-          let uu___2 =
-            let uu___3 = lids_of_let pats in
-            FStar_Compiler_Effect.op_Bar_Greater uu___3
-              (FStar_Compiler_List.map (fun l -> FStar_Ident.string_of_lid l)) in
-          FStar_Compiler_Effect.op_Bar_Greater uu___2
-            (FStar_String.concat ", ") in
-        Prims.op_Hat "let " uu___1
+    | TopLevelLet (q, pats) ->
+        let uu___ =
+          let uu___1 =
+            FStar_Compiler_List.map
+              (fun uu___2 ->
+                 match uu___2 with
+                 | (p, t) ->
+                     let uu___3 = pat_to_string p in
+                     let uu___4 =
+                       let uu___5 = term_to_string t in
+                       Prims.op_Hat " = " uu___5 in
+                     Prims.op_Hat uu___3 uu___4) pats in
+          FStar_Compiler_Effect.op_Bar_Greater uu___1
+            (FStar_String.concat "\n and") in
+        FStar_Compiler_Util.format2 "let %s %s" (string_of_let_qualifier q)
+          uu___
     | Assume (i, uu___) ->
         let uu___1 = FStar_Ident.string_of_id i in
         Prims.op_Hat "assume " uu___1
@@ -2371,7 +2591,7 @@ let (modul_to_string : modul -> Prims.string) =
 let (decl_is_val : FStar_Ident.ident -> decl -> Prims.bool) =
   fun id ->
     fun decl1 ->
-      match decl1.d with
+      match (decl1.d).v with
       | Val (id', uu___) -> FStar_Ident.ident_equals id id'
       | uu___ -> false
 let (thunk : term -> term) =
@@ -2383,7 +2603,7 @@ let (ident_of_binder :
   FStar_Compiler_Range.range -> binder -> FStar_Ident.ident) =
   fun r ->
     fun b ->
-      match b.b with
+      match (b.b).v with
       | Variable i -> i
       | TVariable i -> i
       | Annotated (i, uu___) -> i

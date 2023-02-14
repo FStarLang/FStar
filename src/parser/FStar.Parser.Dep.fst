@@ -766,14 +766,14 @@ let collect_one
       and collect_decls decls =
         List.iter (fun x -> collect_decl x.d;
                             List.iter collect_term x.attrs;
-                            match x.d with
+                            match x.d.v with
                             | Val _ when List.contains Inline_for_extraction x.quals ->
                                 add_to_parsing_data P_inline_for_extraction
                             | _ -> ()
                             ) decls
 
       and collect_decl d =
-        match d with
+        match d.v with
         | Include lid
         | Open lid ->
             add_to_parsing_data (P_open (false, lid))
@@ -849,10 +849,10 @@ let collect_one
       and collect_binder b =
         collect_aqual b.aqual;
         b.battributes |> List.iter collect_term;
-        match b with
-        | { b = Annotated (_, t) }
-        | { b = TAnnotated (_, t) }
-        | { b = NoName t } -> collect_term t
+        match b.b.v with
+        | Annotated (_, t)
+        | TAnnotated (_, t)
+        | NoName t -> collect_term t
         | _ -> ()
 
       and collect_aqual = function
@@ -861,7 +861,7 @@ let collect_one
         | _ -> ()
 
       and collect_term t =
-        collect_term' t.tm
+        collect_term' t.v
 
       and collect_constant = function
         | Const_int (_, Some (Unsigned, Sizet)) ->
@@ -1083,7 +1083,7 @@ let collect_one
         List.iter collect_pattern ps
 
       and collect_pattern p =
-        collect_pattern' p.pat
+        collect_pattern' p.v
 
       and collect_pattern' = function
         | PatVar (_, aqual, attrs)

@@ -30,16 +30,28 @@ open FStar.Const
    It is not stratified: a single type called "term" containing
    expressions, formulas, types, and so on
  *)
+[@@ PpxDerivingYoJson; PpxDerivingShow ]
 type level = | Un | Expr | Type_level | Kind | Formula
 
+[@@ PpxDerivingYoJson; PpxDerivingShow ]
 type let_qualifier =
   | NoLetQualifier
   | Rec
 
+[@@ PpxDerivingYoJson; PpxDerivingShow ]
 type quote_kind =
   | Static
   | Dynamic
 
+type with_range_and_level_t 'a =
+     {v:'a; range:range; level:level}
+let with_range a r = {v=a; range=r; level=Un}
+let with_range_and_level a r l = {v=a; range=r; level=l}
+let with_range_and_level_t_to_yojson (f:'a -> 'b) (x:with_range_and_level_t 'a) = f x.v
+let with_range_and_level_t_of_yojson (f:'a -> 'b) (x:'a) = failwith "Parsing from JSON is not yet supported"
+let pp_with_range_and_level_t (f:'a -> 'b -> 'c) (fmt:'a) (x:with_range_and_level_t 'b) = f fmt x.v
+
+[@@ PpxDerivingYoJson; PpxDerivingShow ]
 type term' =
   | Wild
   | Const     of sconst
@@ -98,7 +110,8 @@ type term' =
   | ElimImplies of term * term * term                             (* elim_implies P Q with e *)
   | ElimOr of term * term * term * binder * term * binder * term  (* elim_or P Q to R with x.e1 and y.e2 *)
   | ElimAnd of term * term * term * binder * binder * term        (* elim_and P Q to R with x y. e *)
-and term = {tm:term'; range:range; level:level}
+
+and term = with_range_and_level_t term'
 
 (* (as y)? returns t *)
 and match_returns_annotation = option ident * term * bool
@@ -117,7 +130,7 @@ and binder' =
   | TAnnotated of ident * term
   | NoName of term
 
-and binder = {b:binder'; brange:range; blevel:level; aqual:aqual; battributes:attributes_}
+and binder = {b:with_range_and_level_t binder'; aqual:aqual; battributes:attributes_}
 
 and pattern' =
   | PatWild     of aqual * attributes_
@@ -133,7 +146,7 @@ and pattern' =
   | PatOr       of list pattern
   | PatOp       of ident
   | PatVQuote   of term (* [`%foo], transformed into "X.Y.Z.foo" by the desugarer *)
-and pattern = {pat:pattern'; prange:range}
+and pattern = with_range_and_level_t pattern'
 
 and branch = (pattern * option term * term)
 and arg_qualifier =
@@ -150,17 +163,22 @@ and imp =
     | Infix
     | Nothing
 
+[@@ PpxDerivingYoJson; PpxDerivingShow ]
 type knd = term
+[@@ PpxDerivingYoJson; PpxDerivingShow ]
 type typ = term
+[@@ PpxDerivingYoJson; PpxDerivingShow ]
 type expr = term
 
 (* TODO (KM) : it would be useful for the printer to have range information for those *)
+[@@ PpxDerivingYoJson; PpxDerivingShow ]
 type tycon =
   | TyconAbstract of ident * list binder * option knd
   | TyconAbbrev   of ident * list binder * option knd * term
   | TyconRecord   of ident * list binder * option knd * attributes_ * list (ident * aqual * attributes_ * term)
   | TyconVariant  of ident * list binder * option knd * list (ident * option term * bool * attributes_) (* bool is whether it's using 'of' notation *)
 
+[@@ PpxDerivingYoJson; PpxDerivingShow ]
 type qualifier =
   | Private
   | Noeq
@@ -182,23 +200,28 @@ type qualifier =
   | Opaque
   | Logic
 
+[@@ PpxDerivingYoJson; PpxDerivingShow ]
 type qualifiers = list qualifier
 
+[@@ PpxDerivingYoJson; PpxDerivingShow ]
 type decoration =
   | Qualifier of qualifier
   | DeclAttributes of list term
 
+[@@ PpxDerivingYoJson; PpxDerivingShow ]
 type lift_op =
   | NonReifiableLift of term
   | ReifiableLift    of term * term //lift_wp, lift
   | LiftForFree      of term
 
+[@@ PpxDerivingYoJson; PpxDerivingShow ]
 type lift = {
   msource: lid;
   mdest:   lid;
   lift_op: lift_op;
 }
 
+[@@ PpxDerivingYoJson; PpxDerivingShow ]
 type pragma =
   | SetOptions of string
   | ResetOptions of option string
@@ -207,6 +230,7 @@ type pragma =
   | RestartSolver
   | PrintEffectsGraph
 
+[@@ PpxDerivingYoJson; PpxDerivingShow ]
 type decl' =
   | TopLevelModule of lid
   | Open of lid
@@ -229,8 +253,7 @@ type decl' =
   | Splice of list ident * term
 
 and decl = {
-  d:decl';
-  drange:range;
+  d:with_range_and_level_t decl';
   quals: qualifiers;
   attrs: attributes_
 }
@@ -239,13 +262,20 @@ and effect_decl =
   | DefineEffect   of ident * list binder * term * list decl
   | RedefineEffect of ident * list binder * term
 
+[@@ PpxDerivingYoJson; PpxDerivingShow  ]
 type modul =
   | Module of lid * list decl
   | Interface of lid * list decl * bool (* flag to mark admitted interfaces *)
+
+let lid_of_modul (m:modul) =
+    match m with
+    | Module (lid, _)
+    | Interface (lid, _, _) -> lid
+    
 type file = modul
 type inputFragment = either file (list decl)
 
-let decl_drange decl = decl.drange
+let decl_drange decl = decl.d.range
 
 (********************************************************************************)
 let check_id id =
@@ -265,14 +295,14 @@ let mk_decl d r decorations =
   ) in
   let attributes_ = Util.dflt [] attributes_ in
   let qualifiers = List.choose (function Qualifier q -> Some q | _ -> None) decorations in
-  { d=d; drange=r; quals=qualifiers; attrs=attributes_ }
+  { d=with_range d r; quals=qualifiers; attrs=attributes_ }
 
-let mk_binder_with_attrs b r l i attrs = {b=b; brange=r; blevel=l; aqual=i; battributes=attrs}
+let mk_binder_with_attrs b r l i attrs = {b=with_range_and_level b r l; aqual=i; battributes=attrs}
 let mk_binder b r l i = mk_binder_with_attrs b r l i []
-let mk_term t r l = {tm=t; range=r; level=l}
+let mk_term t r l = {v=t; range=r; level=l}
 let mk_uminus t rminus r l =
   let t =
-    match t.tm with
+    match t.v with
     | Const (Const_int (s, Some (Signed, width))) ->
         Const (Const_int ("-" ^ s, Some (Signed, width)))
     | _ ->
@@ -280,8 +310,8 @@ let mk_uminus t rminus r l =
   in
   mk_term t r l
 
-let mk_pattern p r = {pat=p; prange=r}
-let un_curry_abs ps body = match body.tm with
+let mk_pattern p r = with_range p r
+let un_curry_abs ps body = match body.v with
     | Abs(p', body') -> Abs(ps@p', body')
     | _ -> Abs(ps, body)
 let mk_function branches r1 r2 =
@@ -289,8 +319,8 @@ let mk_function branches r1 r2 =
   mk_term (Abs([mk_pattern (PatVar(x,None,[])) r1],
                mk_term (Match(mk_term (Var(lid_of_ids [x])) r1 Expr, None, None, branches)) r2 Expr))
     r2 Expr
-let un_function p tm = match p.pat, tm.tm with
-    | PatVar _, Abs(pats, body) -> Some (mk_pattern (PatApp(p, pats)) p.prange, body)
+let un_function p tm = match p.v, tm.v with
+    | PatVar _, Abs(pats, body) -> Some (mk_pattern (PatApp(p, pats)) p.range, body)
     | _ -> None
 
 let lid_with_range lid r = lid_of_path (path_of_lid lid) r
@@ -317,7 +347,7 @@ let tot_comp t =
 
 let mkApp t args r = match args with
   | [] -> t
-  | _ -> match t.tm with
+  | _ -> match t.v with
       | Name s -> mk_term (Construct(s, args)) r Un
       | _ -> List.fold_left (fun t (a,imp) -> mk_term (App(t, a, imp)) r Un) t args
 
@@ -335,7 +365,7 @@ let mkRefSet r elts =
 
 let mkExplicitApp t args r = match args with
   | [] -> t
-  | _ -> match t.tm with
+  | _ -> match t.v with
       | Name s -> mk_term (Construct(s, (List.map (fun a -> (a, Nothing)) args))) r Un
       | _ -> List.fold_left (fun t a -> mk_term (App(t, a, Nothing)) r Un) t args
 
@@ -407,7 +437,7 @@ let mkRefinedPattern pat t should_bind_pat phi_opt t_range range =
         | Some phi ->
             if should_bind_pat
             then
-                begin match pat.pat with
+                begin match pat.v with
                 | PatVar (x,_,attrs) ->
                     mk_term (Refine(mk_binder_with_attrs (Annotated(x, t)) t_range Type_level None attrs, phi)) range Type_level
                 | _ ->
@@ -431,9 +461,9 @@ let mkRefinedPattern pat t should_bind_pat phi_opt t_range range =
      mk_pattern (PatAscribed(pat, (t, None))) range
 
 let rec extract_named_refinement t1  =
-    match t1.tm with
+    match t1.v with
         | NamedTyp(x, t) -> Some (x, t, None)
-        | Refine({b=Annotated(x, t)}, t') ->  Some (x, t, Some t')
+        | Refine({b={v=Annotated(x, t)}}, t') ->  Some (x, t, Some t')
     | Paren t -> extract_named_refinement t
         | _ -> None
 
@@ -458,9 +488,9 @@ let rec as_mlist (cur: (lid * decl) * list decl) (ds:list decl) : modul =
     match ds with
     | [] -> Module(m_name, m_decl :: List.rev cur)
     | d :: ds ->
-        begin match d.d with
+        begin match d.d.v with
         | TopLevelModule m' ->
-            raise_error (Fatal_UnexpectedModuleDeclaration, "Unexpected module declaration") d.drange
+            raise_error (Fatal_UnexpectedModuleDeclaration, "Unexpected module declaration") d.d.range
         | _ ->
             as_mlist ((m_name, m_decl), d::cur) ds
         end
@@ -470,14 +500,14 @@ let as_frag (ds:list decl) : inputFragment =
     | d :: ds -> d, ds
     | [] -> raise Empty_frag
   in
-  match d.d with
+  match d.d.v with
   | TopLevelModule m ->
       let m = as_mlist ((m,d), []) ds in
       Inl m
   | _ ->
       let ds = d::ds in
       List.iter (function
-        | {d=TopLevelModule _; drange=r} -> raise_error (Fatal_UnexpectedModuleDeclaration, "Unexpected module declaration") r
+        | {d={v=TopLevelModule _; range=r}} -> raise_error (Fatal_UnexpectedModuleDeclaration, "Unexpected module declaration") r
         | _ -> ()
       ) ds;
       Inr ds
@@ -605,7 +635,7 @@ let to_string_l sep f l =
 let imp_to_string = function
     | Hash -> "#"
     | _ -> ""
-let rec term_to_string (x:term) = match x.tm with
+let rec term_to_string (x:term) = match x.v with
   | Wild -> "_"
   | LexList l -> Util.format1 "%[%s]"
     (match l with
@@ -829,7 +859,7 @@ and binders_to_string sep bs =
 
 and try_or_match_to_string (x:term) scrutinee branches op_opt ret_opt =
   let s =
-    match x.tm with
+    match x.v with
     | Match _ -> "match"
     | TryWith _ -> "try"
     | _ -> failwith "impossible" in
@@ -856,7 +886,7 @@ and calc_step_to_string (CalcStep (rel, just, next)) =
 
 and binder_to_string x =
   let pr x =
-    let s = match x.b with
+    let s = match x.b.v with
     | Variable i -> (string_of_id i)
     | TVariable i -> Util.format1 "%s:_" ((string_of_id i))
     | TAnnotated(i,t)
@@ -884,7 +914,7 @@ and attr_list_to_string = function
   | [] -> ""
   | l -> attrs_opt_to_string (Some l)
 
-and pat_to_string x = match x.pat with
+and pat_to_string x = match x.v with
   | PatWild (None, attrs) -> attr_list_to_string attrs ^ "_"
   | PatWild (_, attrs) -> "#" ^ (attr_list_to_string attrs) ^ "_" 
   | PatConst c -> C.const_to_string c
@@ -909,7 +939,7 @@ and attrs_opt_to_string = function
   | None -> ""
   | Some attrs -> Util.format1 "[@ %s]" (List.map term_to_string attrs |> String.concat "; ")
 
-let rec head_id_of_pat p = match p.pat with
+let rec head_id_of_pat p = match p.v with
   | PatName l -> [l]
   | PatVar (i, _, _) -> [FStar.Ident.lid_of_ids [i]]
   | PatApp(p, _) -> head_id_of_pat p
@@ -924,13 +954,15 @@ let id_of_tycon = function
   | TyconRecord(i, _, _, _, _)
   | TyconVariant(i, _, _, _) -> (string_of_id i)
 
-let decl_to_string (d:decl) = match d.d with
+let decl_to_string (d:decl) = match d.d.v with
   | TopLevelModule l -> "module " ^ (string_of_lid l)
   | Open l -> "open " ^ (string_of_lid l)
   | Friend l -> "friend " ^ (string_of_lid l)
   | Include l -> "include " ^ (string_of_lid l)
   | ModuleAbbrev (i, l) -> Util.format2 "module %s = %s" (string_of_id i) (string_of_lid l)
-  | TopLevelLet(_, pats) -> "let " ^ (lids_of_let pats |> List.map (fun l -> (string_of_lid l)) |> String.concat ", ")
+  | TopLevelLet(q, pats) -> Util.format2 "let %s %s"
+                                        (string_of_let_qualifier q)
+                                        (List.map (fun (p,t) -> pat_to_string p ^ " = " ^ term_to_string t) pats |> String.concat "\n and")
   | Assume(i, _) -> "assume " ^ (string_of_id i)
   | Tycon(_, _, tys) -> "type " ^ (tys |> List.map id_of_tycon |> String.concat ", ")
   | Val(i, _) -> "val " ^ (string_of_id i)
@@ -955,7 +987,7 @@ let modul_to_string (m:modul) = match m with
       decls |> List.map decl_to_string |> String.concat "\n"
 
 let decl_is_val id decl =
-    match decl.d with
+    match decl.d.v with
     | Val (id', _) ->
       Ident.ident_equals id id'
     | _ -> false
@@ -965,7 +997,7 @@ let thunk (ens : term) : term =
     mk_term (Abs ([wildpat], ens)) ens.range Expr
 
 let ident_of_binder r b =
-  match b.b with
+  match b.b.v with
   | Variable i
   | TVariable i
   | Annotated (i, _)
