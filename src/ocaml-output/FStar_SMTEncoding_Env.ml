@@ -568,11 +568,12 @@ let (gen_term_var :
           uu___ in
       let uu___ =
         let uu___1 = add_bvar_binding (x, y) env.bvar_bindings in
+        let uu___2 = FStar_TypeChecker_Env.push_bv env.tcenv x in
         {
           bvar_bindings = uu___1;
           fvar_bindings = (env.fvar_bindings);
           depth = (env.depth + Prims.int_one);
-          tcenv = (env.tcenv);
+          tcenv = uu___2;
           warn = (env.warn);
           nolabels = (env.nolabels);
           use_zfuel_name = (env.use_zfuel_name);
@@ -595,11 +596,12 @@ let (new_term_constant :
       let y = FStar_SMTEncoding_Util.mkApp (ysym, []) in
       let uu___ =
         let uu___1 = add_bvar_binding (x, y) env.bvar_bindings in
+        let uu___2 = FStar_TypeChecker_Env.push_bv env.tcenv x in
         {
           bvar_bindings = uu___1;
           fvar_bindings = (env.fvar_bindings);
           depth = (env.depth);
-          tcenv = (env.tcenv);
+          tcenv = uu___2;
           warn = (env.warn);
           nolabels = (env.nolabels);
           use_zfuel_name = (env.use_zfuel_name);
@@ -621,11 +623,12 @@ let (new_term_constant_from_string :
         let y = FStar_SMTEncoding_Util.mkApp (ysym, []) in
         let uu___ =
           let uu___1 = add_bvar_binding (x, y) env.bvar_bindings in
+          let uu___2 = FStar_TypeChecker_Env.push_bv env.tcenv x in
           {
             bvar_bindings = uu___1;
             fvar_bindings = (env.fvar_bindings);
             depth = (env.depth);
-            tcenv = (env.tcenv);
+            tcenv = uu___2;
             warn = (env.warn);
             nolabels = (env.nolabels);
             use_zfuel_name = (env.use_zfuel_name);
@@ -642,11 +645,12 @@ let (push_term_var :
     fun x ->
       fun t ->
         let uu___ = add_bvar_binding (x, t) env.bvar_bindings in
+        let uu___1 = FStar_TypeChecker_Env.push_bv env.tcenv x in
         {
           bvar_bindings = uu___;
           fvar_bindings = (env.fvar_bindings);
           depth = (env.depth);
-          tcenv = (env.tcenv);
+          tcenv = uu___1;
           warn = (env.warn);
           nolabels = (env.nolabels);
           use_zfuel_name = (env.use_zfuel_name);

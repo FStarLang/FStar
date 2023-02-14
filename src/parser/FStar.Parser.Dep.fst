@@ -684,7 +684,7 @@ let collect_one
            true
          | None ->
            FStar.Errors.log_issue (range_of_lid lid)
-             (Errors.Warning_ModuleOrFileNotFoundWarning,  (Util.format1 "module not found in search path: %s\n" alias));
+             (Errors.Warning_ModuleOrFileNotFoundWarning,  (Util.format1 "module not found in search path: %s" alias));
            false
        in
 

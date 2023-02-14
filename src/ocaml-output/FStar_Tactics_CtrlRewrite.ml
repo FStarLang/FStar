@@ -109,8 +109,6 @@ let (__do_rewrite :
                                    FStar_TypeChecker_Env.subtype_nosmt_force
                                      =
                                      (env.FStar_TypeChecker_Env.subtype_nosmt_force);
-                                   FStar_TypeChecker_Env.use_bv_sorts =
-                                     (env.FStar_TypeChecker_Env.use_bv_sorts);
                                    FStar_TypeChecker_Env.qtbl_name_and_index
                                      =
                                      (env.FStar_TypeChecker_Env.qtbl_name_and_index);

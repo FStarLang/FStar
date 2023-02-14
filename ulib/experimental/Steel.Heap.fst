@@ -87,9 +87,9 @@ type core_ref : Type u#0 =
   | Null
   | Addr of addr
 
-let null (#a:Type u#a) (#pcm:pcm a) : ref a pcm = Null
+let core_ref_null = Null
 
-let is_null (#a:Type u#a) (#pcm:pcm a) (r:ref a pcm) : (b:bool{b <==> r == null}) = Null? r
+let core_ref_is_null (r:core_ref) = Null? r
 
 let disjoint (m0 m1:heap u#h)
   : prop
@@ -343,10 +343,14 @@ let wand (p1 p2: slprop u#a) : slprop u#a =
         interp p1 h1 ==>
         interp p2 (join h h1))
 
-let h_exists_body (#a:Type u#b) (f: (a -> slprop u#a)) (h:heap) (x:a) : prop =
+let h_exists_body (#[@@@strictly_positive] a:Type u#b)
+                  ([@@@strictly_positive] f: (a -> slprop u#a))
+                  (h:heap)
+                  (x:a) : prop =
   interp (f x) h
 
-let h_exists  (#a:Type u#b) (f: (a -> slprop u#a)) : slprop u#a =
+let h_exists  (#[@@@strictly_positive] a:Type u#b)
+              ([@@@strictly_positive] f: (a -> slprop u#a)) : slprop u#a =
   as_slprop (fun (h: heap) -> exists x. h_exists_body f h x)
 
 let h_forall_body (#a:Type u#b) (f: (a -> slprop u#a)) (h:heap) (x:a) : prop =

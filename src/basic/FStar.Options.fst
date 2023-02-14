@@ -793,7 +793,7 @@ let rec specs_with_types warn_unsafe : list (char * string * opt_type * string) 
 
        ( noshort,
          "hint_dir",
-         PathStr "path",
+         PostProcessed (pp_validate_dir, PathStr "dir"),
         "Read/write hints to  dir/module_name.hints (instead of placing hint-file alongside source file)");
 
        ( noshort,
