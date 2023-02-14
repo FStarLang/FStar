@@ -98,18 +98,22 @@ let nbe_int3 (m:lid) (f:'a -> 'b -> 'c -> 'r) (ea:NBET.embedding 'a) (eb:NBET.em
 
 let mklid (nm : string) : lid = fstar_refl_builtins_lid nm
 
-let mk (l : lid) (arity : int) (fn     : Cfg.psc -> EMB.norm_cb -> args -> option term)
-                               (nbe_fn : NBET.nbe_cbs -> NBET.args -> option NBET.t) : Cfg.primitive_step
+let mk_us (l : lid) (u_arity:int) (arity : int)
+            (fn     : Cfg.psc -> EMB.norm_cb -> args -> option term)
+            (nbe_fn : NBET.nbe_cbs -> NBET.args -> option NBET.t) : Cfg.primitive_step
   =
   { Cfg.name                         = l
   ; Cfg.arity                        = arity
-  ; Cfg.univ_arity                   = 0 (* There are currently no universe-polymorphic reflection primitives *)
+  ; Cfg.univ_arity                   = u_arity
   ; Cfg.auto_reflect                 = None
   ; Cfg.strong_reduction_ok          = true
   ; Cfg.requires_binder_substitution = false
   ; Cfg.interpretation               = (fun psc cbs _us args -> fn psc cbs args)
   ; Cfg.interpretation_nbe           = (fun cbs _us args -> nbe_fn cbs args)
   }
+
+(* Most primitives are not universe polymorphic. *)
+let mk l arity fn nbe_fn = mk_us l 0 arity fn nbe_fn
 
 (*
  ** Packing both regular and NBE embedding in a single type, for brevity
@@ -157,6 +161,12 @@ let e_option (e : dualemb 'a) : dualemb (option 'a) =
 let e_string_list = e_list e_string
 
 (** Helpers to create a (total) primitive step from a function and embeddings. *)
+let mk1' nm (f  : 'a  -> 'r) (ea  : dualemb 'a)
+        (er  : dualemb 'r): Cfg.primitive_step =
+    let l = mklid nm in
+    mk_us l 1 1 (int1     l f (fst ea) (fst er))
+           (nbe_int1 l f (snd ea) (snd er))
+
 let mk1 nm (f  : 'a  -> 'r) (ea  : dualemb 'a)
         (er  : dualemb 'r): Cfg.primitive_step =
     let l = mklid nm in
@@ -191,7 +201,6 @@ let mk3 nm (f  : 'a  -> 'b -> 'c -> 'r) (ea  : dualemb 'a) (eb : dualemb 'b) (ec
  * Exceptions to the "way to go" above should be well justified.
  *)
 let reflection_primops : list Cfg.primitive_step = [
-
   (****** Inspecting/packing various kinds of syntax ******)
   mk1 "inspect_ln"
     RB.inspect_ln

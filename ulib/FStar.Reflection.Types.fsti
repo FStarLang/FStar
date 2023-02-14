@@ -16,6 +16,7 @@
 module FStar.Reflection.Types
 
 include FStar.VConfig
+include FStar.Sealed
 
 assume new type binder
 assume new type bv
