@@ -43,7 +43,7 @@ open FStar.FiniteSet.Ambient
 module T = FStar.Tactics
 
 // Finite maps
-type map (a: eqtype) (b: Type u#b) = (keys: FSet.set a) & (setfun_t a b keys)
+type map (a: eqtype) (b: Type u#b) = (keys: FSet.set a & setfun_t a b keys)
 
 let domain (#a: eqtype) (#b: Type u#b) (m: map a b) : FSet.set a =
   let (| keys, _ |) = m in 

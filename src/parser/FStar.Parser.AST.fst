@@ -430,11 +430,11 @@ let mkRefinedPattern pat t should_bind_pat phi_opt t_range range =
      in
      mk_pattern (PatAscribed(pat, (t, None))) range
 
-let rec extract_named_refinement t1  =
+let rec extract_named_refinement remove_parens t1  =
     match t1.tm with
         | NamedTyp(x, t) -> Some (x, t, None)
         | Refine({b=Annotated(x, t)}, t') ->  Some (x, t, Some t')
-    | Paren t -> extract_named_refinement t
+        | Paren t when remove_parens -> extract_named_refinement remove_parens t
         | _ -> None
 
 (* Some helpers that parse.mly and parse.fsy will want too *)
