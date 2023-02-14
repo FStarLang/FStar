@@ -20,7 +20,7 @@ endif
 
 .PHONY: dune dune-fstar verify-ulib
 dune-fstar:
-	cp version.txt $(DUNE_SNAPSHOT)/
+	$(Q)cp version.txt $(DUNE_SNAPSHOT)/
 	@# Call Dune to build the snapshot.
 	@echo "  DUNE BUILD"
 	$(Q)cd $(DUNE_SNAPSHOT) && dune build --profile release
