@@ -1070,7 +1070,7 @@ let (collect_one :
                   let uu___3 =
                     let uu___4 =
                       FStar_Compiler_Util.format1
-                        "module not found in search path: %s\n" alias in
+                        "module not found in search path: %s" alias in
                     (FStar_Errors.Warning_ModuleOrFileNotFoundWarning,
                       uu___4) in
                   FStar_Errors.log_issue uu___2 uu___3);

@@ -2282,7 +2282,7 @@ let (resugar_typ :
       fun se ->
         match se.FStar_Syntax_Syntax.sigel with
         | FStar_Syntax_Syntax.Sig_inductive_typ
-            (tylid, uvs, bs, t, uu___, datacons) ->
+            (tylid, uvs, bs, _num_uniform, t, uu___, datacons) ->
             let uu___1 =
               FStar_Compiler_Effect.op_Bar_Greater datacon_ses
                 (FStar_Compiler_List.partition

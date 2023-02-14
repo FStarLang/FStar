@@ -1478,8 +1478,9 @@ let (__proj__Mksig_metadata__item__sigmeta_admit :
     | { sigmeta_active; sigmeta_fact_db_ids; sigmeta_admit;_} ->
         sigmeta_admit
 type sigelt' =
-  | Sig_inductive_typ of (FStar_Ident.lident * univ_names * binders * typ *
-  FStar_Ident.lident Prims.list * FStar_Ident.lident Prims.list) 
+  | Sig_inductive_typ of (FStar_Ident.lident * univ_names * binders *
+  Prims.int FStar_Pervasives_Native.option * typ * FStar_Ident.lident
+  Prims.list * FStar_Ident.lident Prims.list) 
   | Sig_bundle of (sigelt Prims.list * FStar_Ident.lident Prims.list) 
   | Sig_datacon of (FStar_Ident.lident * univ_names * typ *
   FStar_Ident.lident * Prims.int * FStar_Ident.lident Prims.list) 
@@ -1512,8 +1513,9 @@ let (uu___is_Sig_inductive_typ : sigelt' -> Prims.bool) =
     match projectee with | Sig_inductive_typ _0 -> true | uu___ -> false
 let (__proj__Sig_inductive_typ__item___0 :
   sigelt' ->
-    (FStar_Ident.lident * univ_names * binders * typ * FStar_Ident.lident
-      Prims.list * FStar_Ident.lident Prims.list))
+    (FStar_Ident.lident * univ_names * binders * Prims.int
+      FStar_Pervasives_Native.option * typ * FStar_Ident.lident Prims.list *
+      FStar_Ident.lident Prims.list))
   = fun projectee -> match projectee with | Sig_inductive_typ _0 -> _0
 let (uu___is_Sig_bundle : sigelt' -> Prims.bool) =
   fun projectee ->

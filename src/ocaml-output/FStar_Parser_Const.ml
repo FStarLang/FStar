@@ -600,3 +600,11 @@ let (steel_with_invariant_lid : FStar_Ident.lident) =
 let (steel_st_with_invariant_lid : FStar_Ident.lident) =
   FStar_Ident.lid_of_path ["Steel"; "ST"; "Util"; "with_invariant"]
     FStar_Compiler_Range.dummyRange
+let (fext_lid : Prims.string -> FStar_Ident.lident) =
+  fun s ->
+    FStar_Ident.lid_of_path ["FStar"; "FunctionalExtensionality"; s]
+      FStar_Compiler_Range.dummyRange
+let (fext_on_domain_lid : FStar_Ident.lident) = fext_lid "on_domain"
+let (fext_on_dom_lid : FStar_Ident.lident) = fext_lid "on_dom"
+let (fext_on_domain_g_lid : FStar_Ident.lident) = fext_lid "on_domain_g"
+let (fext_on_dom_g_lid : FStar_Ident.lident) = fext_lid "on_dom_g"
