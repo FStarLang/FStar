@@ -217,7 +217,7 @@ let rec check' : bool -> check_t =
   //       | _ -> true)
   //   then snd (maybe_add_elim_pure pre t)
   //   else t in
-  match t with
+  match t with  
   | Tm_BVar _ -> T.fail "not locally nameless"
   | Tm_Var _
   | Tm_FVar _ 
@@ -334,6 +334,27 @@ let rec check' : bool -> check_t =
     (| Tm_If b e1 e2 post_if,
        c,
        T_If g b e1 e2 post_if c hyp (E b_typing) e1_typing e2_typing |)
+
+  | Tm_ElimExists t ->
+    let (| t, t_typing |) = check_tot_with_expected_typ f g t Tm_VProp in
+    (match t with
+     | Tm_ExistsSL ty p ->
+       // Could this come from inversion of t_typing?
+       let (| u, ty_typing |) = check_universe f g ty in
+       let d = T_ElimExists g u ty p ty_typing (E t_typing) in
+       repack (try_frame_pre pre_typing d) true
+     | _ -> T.fail "elim_exists argument not a Tm_ExistsSL")
+
+  | Tm_IntroExists t e ->
+    let (| t, t_typing |) = check_tot_with_expected_typ f g t Tm_VProp in
+    (match t with
+     | Tm_ExistsSL ty p ->
+       // Could this come from inversion of t_typing?
+       let (| u, ty_typing |) = check_universe f g ty in
+       let (| e, e_typing |) = check_tot_with_expected_typ f g e ty in
+       let d = T_IntroExists g u ty p e ty_typing (E t_typing) (E e_typing) in
+       repack (try_frame_pre pre_typing d) true
+     | _ -> T.fail "elim_exists argument not a Tm_ExistsSL")
 
   | Tm_UVar _ ->
     T.fail "Unexpected Tm_Uvar in check"

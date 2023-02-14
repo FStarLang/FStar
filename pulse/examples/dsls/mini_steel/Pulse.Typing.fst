@@ -16,6 +16,7 @@ module FTB = FStar.Tactics
 //     ///\ star etc
 //   }
 
+let tm_unit : pure_term = Tm_FVar unit_lid
 let tm_bool : pure_term = Tm_FVar bool_lid
 let tm_true : pure_term = Tm_Constant (Bool true)
 let tm_false : pure_term = Tm_Constant (Bool false)
@@ -296,6 +297,27 @@ let non_informative_witness_t (u:universe) (t:pure_term) : pure_term =
              None
              t
 
+let comp_elim_exists (u:universe) (t:pure_term) (p:pure_term)
+  : pure_comp =
+
+  C_STGhost Tm_EmpInames {
+    u=u;
+    res=t;
+    pre=Tm_ExistsSL t p;
+    post=p
+  }
+
+let comp_intro_exists (t:pure_term) (p:pure_term) (e:pure_term)
+  : pure_comp =
+
+  assert (is_pure_term (open_term' p e 0));
+  C_STGhost Tm_EmpInames {
+    u=U_zero;
+    res=tm_unit;
+    pre=open_term' p e 0;
+    post=Tm_ExistsSL t p
+  }
+
 [@@erasable]
 noeq
 type my_erased (a:Type) = | E of a
@@ -409,7 +431,29 @@ type src_typing (f:RT.fstar_top_env) : env -> term -> pure_comp -> Type =
       c':pure_comp ->      
       src_typing f g e c ->
       st_equiv f g c c' ->
-      src_typing f g e c' 
+      src_typing f g e c'
+
+  | T_ElimExists:
+      g:env ->
+      u:universe ->
+      t:pure_term ->
+      p:pure_term ->
+      tot_typing f g t (Tm_Type u) ->
+      tot_typing f g (Tm_ExistsSL t p) Tm_VProp ->
+      src_typing f g (Tm_ElimExists (Tm_ExistsSL t p))
+                     (comp_elim_exists u t p)
+
+  | T_IntroExists:
+      g:env ->
+      u:universe ->
+      t:pure_term ->
+      p:pure_term ->
+      e:pure_term ->
+      tot_typing f g t (Tm_Type u) ->
+      tot_typing f g (Tm_ExistsSL t p) Tm_VProp ->
+      tot_typing f g e t ->
+      src_typing f g (Tm_IntroExists e (Tm_ExistsSL t p))
+                     (comp_intro_exists t p e)
 
 and tot_typing (f:RT.fstar_top_env) (g:env) (e:term) (t:pure_term) =
   my_erased (src_typing f g e (C_Tot t))
