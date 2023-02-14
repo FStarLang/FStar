@@ -781,7 +781,7 @@ let (inspect_sigelt :
           (r, uu___2) in
         FStar_Reflection_Data.Sg_Let uu___1
     | FStar_Syntax_Syntax.Sig_inductive_typ
-        (lid, us, param_bs, ty, _mutual, c_lids) ->
+        (lid, us, param_bs, _num_uniform, ty, _mutual, c_lids) ->
         let nm = FStar_Ident.path_of_lid lid in
         let uu___ = FStar_Syntax_Subst.univ_var_opening us in
         (match uu___ with
@@ -943,7 +943,8 @@ let (pack_sigelt :
             let ty2 = FStar_Syntax_Subst.subst s ty1 in
             FStar_Compiler_Effect.op_Less_Bar FStar_Syntax_Syntax.mk_sigelt
               (FStar_Syntax_Syntax.Sig_inductive_typ
-                 (ind_lid, us_names, param_bs2, ty2, [], c_lids)) in
+                 (ind_lid, us_names, param_bs2, FStar_Pervasives_Native.None,
+                   ty2, [], c_lids)) in
           let se =
             FStar_Compiler_Effect.op_Less_Bar FStar_Syntax_Syntax.mk_sigelt
               (FStar_Syntax_Syntax.Sig_bundle

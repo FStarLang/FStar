@@ -339,7 +339,7 @@ let (bundle_as_inductive_families :
                fun se ->
                  match se.FStar_Syntax_Syntax.sigel with
                  | FStar_Syntax_Syntax.Sig_inductive_typ
-                     (l, us, bs, t, _mut_i, datas) ->
+                     (l, us, bs, _num_uniform, t, _mut_i, datas) ->
                      let uu___1 = FStar_Syntax_Subst.open_univ_vars us t in
                      (match uu___1 with
                       | (_us, t1) ->
