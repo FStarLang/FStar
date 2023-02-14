@@ -6,7 +6,9 @@ let dom (t:term{exists b c. inspect_ln t == Tv_Arrow b c}) =
   match inspect_ln t with
   | Tv_Arrow b _ -> bv_of_binder b
 
-let name (t:term{Tv_Arrow? (inspect_ln t)}) : string =
+(* This now has to be a sealed string, so the falso() below will just
+fail to typecheck the assert. *)
+let name (t:term{Tv_Arrow? (inspect_ln t)}) : sealed string =
   assert (Tv_Arrow? (inspect_ln t));
   let b : bv = dom t in
   let bv : bv_view = inspect_bv b in

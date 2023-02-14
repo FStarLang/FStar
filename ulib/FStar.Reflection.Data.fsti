@@ -55,7 +55,7 @@ type argv = term * aqualv
 
 noeq
 type bv_view = {
-    bv_ppname : string;
+    bv_ppname : sealed string;
     bv_index : int;
     bv_sort : typ;
 }

@@ -28,6 +28,19 @@ open FStar.Tactics.SyntaxHelpers
 module L = FStar.List.Tot
 module V = FStar.Tactics.Visit
 
+let name_of_bv (bv : bv) : Tac string =
+    unseal ((inspect_bv bv).bv_ppname)
+
+let bv_to_string (bv : bv) : Tac string =
+    (* Could also print type...? *)
+    name_of_bv bv
+
+let name_of_binder (b : binder) : Tac string =
+    name_of_bv (bv_of_binder b)
+
+let binder_to_string (b : binder) : Tac string =
+    bv_to_string (bv_of_binder b) //TODO: print aqual, attributes
+
 exception Goal_not_trivial
 
 let rec inspect_unascribe (t:term) : Tac (tv:term_view{notAscription tv}) =

@@ -21,15 +21,8 @@ open FStar.Reflection.Data
 open FStar.Reflection.Const
 open FStar.Order
 
-let name_of_bv (bv : bv) : string =
-    (inspect_bv bv).bv_ppname
-
 let type_of_bv (bv : bv) : typ =
     (inspect_bv bv).bv_sort
-
-let bv_to_string (bv : bv) : string =
-    let bvv = inspect_bv bv in
-    bvv.bv_ppname
 
 let bv_of_binder (b : binder) : bv =
     let bv, _ = inspect_binder b in
@@ -50,14 +43,8 @@ let mk_binder (bv : bv) : binder =
 let mk_implicit_binder (bv : bv) : binder =
     pack_binder bv Q_Implicit []
 
-let name_of_binder (b : binder) : string =
-    name_of_bv (bv_of_binder b)
-
 let type_of_binder (b : binder) : typ =
     type_of_bv (bv_of_binder b)
-
-let binder_to_string (b : binder) : string =
-    bv_to_string (bv_of_binder b) //TODO: print aqual, attributes
 
 val flatten_name : name -> Tot string
 let rec flatten_name ns =
