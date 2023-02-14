@@ -212,3 +212,7 @@ let write_atomic r x #n = fun _ ->
 let elim_pure p = fun _ -> elim_pure p
 
 let intro_pure p _ = fun _ -> intro_pure p
+
+let elim_exists #a p = fun _ -> let r = elim_exists () in reveal r
+
+let intro_exists #a p e = fun _ -> intro_exists e p

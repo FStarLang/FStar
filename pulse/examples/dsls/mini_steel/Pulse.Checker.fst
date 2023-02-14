@@ -206,18 +206,18 @@ let rec check' : bool -> check_t =
     else (| t, c, d_c |)
   in
   //
-  // Turing off the heuristic to add elim_pure if there is a
-  //   pure vprop in the context
+  // Should revisit this heuristic to add elim_pure
+  //   whenever there is a pure vprop in the context
   // This doesn't work well when we have intro_pure in the program
   //
-  // let t =
-  //   if has_pure_vprops pre &&
-  //      (match t with
-  //       | Tm_STApp (Tm_FVar l) _ _ -> l <> elim_pure_lid
-  //       | _ -> true)
-  //   then snd (maybe_add_elim_pure pre t)
-  //   else t in
-  match t with
+  let t =
+    if has_pure_vprops pre &&
+       (match t with
+        | Tm_STApp (Tm_FVar l) _ _ -> l <> elim_pure_lid
+        | _ -> true)
+    then snd (maybe_add_elim_pure pre t)
+    else t in
+  match t with  
   | Tm_BVar _ -> T.fail "not locally nameless"
   | Tm_Var _
   | Tm_FVar _ 
@@ -334,6 +334,27 @@ let rec check' : bool -> check_t =
     (| Tm_If b e1 e2 post_if,
        c,
        T_If g b e1 e2 post_if c hyp (E b_typing) e1_typing e2_typing |)
+
+  | Tm_ElimExists t ->
+    let (| t, t_typing |) = check_tot_with_expected_typ f g t Tm_VProp in
+    (match t with
+     | Tm_ExistsSL ty p ->
+       // Could this come from inversion of t_typing?
+       let (| u, ty_typing |) = check_universe f g ty in
+       let d = T_ElimExists g u ty p ty_typing (E t_typing) in
+       repack (try_frame_pre pre_typing d) true
+     | _ -> T.fail "elim_exists argument not a Tm_ExistsSL")
+
+  | Tm_IntroExists t e ->
+    let (| t, t_typing |) = check_tot_with_expected_typ f g t Tm_VProp in
+    (match t with
+     | Tm_ExistsSL ty p ->
+       // Could this come from inversion of t_typing?
+       let (| u, ty_typing |) = check_universe f g ty in
+       let (| e, e_typing |) = check_tot_with_expected_typ f g e ty in
+       let d = T_IntroExists g u ty p e ty_typing (E t_typing) (E e_typing) in
+       repack (try_frame_pre pre_typing d) true
+     | _ -> T.fail "elim_exists argument not a Tm_ExistsSL")
 
   | Tm_UVar _ ->
     T.fail "Unexpected Tm_Uvar in check"
