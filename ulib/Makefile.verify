@@ -64,7 +64,7 @@ verify-core: $(filter-out $(addprefix %, $(addsuffix .checked, $(notdir $(EXTRA)
 verify-extra: $(filter $(addprefix %, $(addsuffix .checked, $(notdir $(EXTRA)))), $(ALL_CHECKED_FILES))
 
 %.checked:
-	@echo "[CHECK     $(basename $(notdir $@))]"
+	$(call msg, "CHECK", $(basename $(notdir $@)))
 	@# MY_FSTAR is imported from ulib/gmake.Makefile.tmpl, so it does not
 	@# contain the $(SIL) flag nor the $(RUNLIM) for monitoring resources.
 	@# You can debug with --debug $(basename $(notdir $<))

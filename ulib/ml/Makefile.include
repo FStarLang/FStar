@@ -9,7 +9,7 @@ else
 endif
 FSTARLIB=$(FSTARLIB_DIR)/fstar_lib.cmxa
 
-# Left as an example if we were to add multiple versions of fstarlib
+# Left as an example if we were to add multiple versions of fstar ulib
 # ifeq ($(MEM),HST)
 #	OCAML_DEFAULT_FLAGS=-predicates hyperstack
 # endif

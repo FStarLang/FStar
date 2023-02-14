@@ -6,20 +6,18 @@ homepage: "http://fstar-lang.org"
 license: "Apache-2.0"
 depends: [
   "ocaml" {>= "4.08.0"}
-  "ocamlfind"
   "batteries"
   "zarith"
   "stdint"
   "yojson"
-  "ocamlbuild" {build}
-  "fileutils"
-  "menhir" {>= "20161115" build}
-  "pprint" {build}
-  "sedlex" {build}
+  "dune" {build}
+  "menhirLib"
+  "pprint"
+  "sedlex"
   "ppxlib" {>= "0.27.0"}
-  "ppx_deriving"
-  "ppx_deriving_yojson"
   "process"
+  "ppx_deriving" {build}
+  "ppx_deriving_yojson" {build}
   "z3" {= "4.8.5"}
 ]
 depexts: ["coreutils"] {os = "macos" & os-distribution = "homebrew"}
@@ -28,9 +26,6 @@ build: [
 ]
 install: [
   [make "PREFIX=%{prefix}%" "install"]
-]
-remove: [
-  [make "PREFIX=%{prefix}%" "uninstall"]
 ]
 dev-repo: "git://github.com/FStarLang/FStar"
 bug-reports: "https://github.com/FStarLang/FStar/issues"

@@ -36,11 +36,7 @@
       in rec {
         packages = {
           inherit z3 ocamlPackages;
-          fstar-bootstrap = lib.binary-of-fstar {
-            inherit src pname;
-            version = "master";
-          };
-          fstar = lib.binary-of-ml-snapshot {
+          fstar = lib.binary-of-fstar {
             inherit src pname;
             version = "master-snap";
           };

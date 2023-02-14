@@ -34,7 +34,7 @@ HyE.CCA2.fst \
 HyE.HCCA2.fst \
 
 ifdef FSTAR_HOME
-FSTAR_UCONTRIB = $(FSTAR_HOME)/ucontrib
+FSTAR_UCONTRIB = $(shell if test -d $(FSTAR_HOME)/ucontrib ; then echo $(FSTAR_HOME)/ucontrib ; else echo $(FSTAR_HOME)/share/fstar/contrib ; fi)
 else
    # FSTAR_HOME not defined, assume fstar.exe installed through opam
    # or binary package, and reachable from PATH
@@ -88,9 +88,6 @@ OCAML_INCLUDE_PATHS=$(addprefix -I , $(FSTAR_UCONTRIB)/Platform/ml $(FSTAR_UCONT
 CONTRIB_LIBS=$(FSTAR_UCONTRIB)/CoreCrypto/ml/CoreCrypto.cmxa
 
 include $(FSTAR_ULIB)/ml/Makefile.include
-
-#OCAMLOPT automatically contains fstarlib
-SUPPORT_LIBS=$(FSTARLIB_DIR)/fstarlib.cmxa
 
 $(CONTRIB_LIBS):
 	+$(MAKE) -C $(FSTAR_UCONTRIB)

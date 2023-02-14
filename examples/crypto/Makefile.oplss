@@ -2,7 +2,7 @@ VALIDITY_AXIOMS=
 FSTAR_FILES=OPLSS.AE.fst
 
 ifdef FSTAR_HOME
-  FSTAR_ULIB=$(FSTAR_HOME)/ulib
+  FSTAR_ULIB=$(shell if test -d $(FSTAR_HOME)/ulib ; then echo $(FSTAR_HOME)/ulib ; else echo $(FSTAR_HOME)/lib/fstar ; fi)
 else
   FSTAR_ULIB=$(dir $(shell which fstar.exe))/../lib/fstar
 endif
