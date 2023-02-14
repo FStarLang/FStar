@@ -25,7 +25,11 @@ dune: dune-fstar
 
 .PHONY: clean-dune-snapshot
 
-clean-dune-snapshot:
+# Removes all generated files (including the whole generated snapshot,
+# and .checked files), except the object files, so that the snapshot
+# can be rebuilt with an existing fstar.exe
+clean-dune-snapshot: clean-intermediate
+	cd $(DUNE_SNAPSHOT) && { dune clean || true ; }
 	rm -rf $(DUNE_SNAPSHOT)/fstar-lib/generated/*
 	rm -rf $(DUNE_SNAPSHOT)/fstar-lib/dynamic/*
 
@@ -34,14 +38,11 @@ clean-dune-snapshot:
 dune-extract-all:
 	+$(MAKE) -C src/ocaml-output dune-snapshot
 
+# This rule is not incremental, by design.
 dune-full-bootstrap:
-	+$(MAKE) dune
+	+$(MAKE) dune-fstar
 	+$(MAKE) clean-dune-snapshot
-	rm -rf ulib/.depend*
-	+$(MAKE) -C src/ocaml-output clean
-	+$(MAKE) dune-extract-all
-	rm -rf ulib/.depend*
-	+$(MAKE) dune
+	+$(MAKE) dune-bootstrap
 
 .PHONY: dune-bootstrap
 dune-bootstrap:
@@ -75,9 +76,19 @@ package: all
 package_unknown_platform: all
 	$(Q)+$(MAKE) -C src/ocaml-output package_unknown_platform
 
-clean:
+.PHONY: clean-intermediate
+
+# Removes everything created by `make all`. MUST NOT be used when
+# bootstrapping.
+clean: clean-intermediate
+	cd $(DUNE_SNAPSHOT) && { dune uninstall --prefix=$(CURDIR) || true ; } && { dune clean || true ; }
+
+# Removes all .checked files and other intermediate files
+# Does not remove the object files from the dune snapshot,
+# because otherwise dune can't uninstall properly
+clean-intermediate:
 	$(Q)+$(MAKE) -C ulib clean
-	$(Q)+$(MAKE) -C src/ocaml-output clean
+	$(Q)+$(MAKE) -C src clean
 
 # Regenerate all hints for the standard library and regression test suite
 hints:
