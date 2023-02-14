@@ -1,4 +1,4 @@
-.PHONY: all package clean boot 0 1 2 3 hints bench libs output install uninstall package_unknown_platform no-ulib-checked
+.PHONY: all package clean boot 1 2 3 hints bench output install uninstall package_unknown_platform
 
 include .common.mk
 
@@ -122,3 +122,16 @@ ci-uregressions:
 
 ci-uregressions-ulong:
 	$(Q)+$(MAKE) -C src uregressions-ulong
+
+# Shortcuts:
+
+1: dune-fstar
+
+2:
+	+$(MAKE) -C src ocaml
+	+$(MAKE) dune-fstar
+
+3:
+	+$(MAKE) dune-fstar
+	+$(MAKE) -C src ocaml
+	+$(MAKE) dune-fstar
