@@ -15,7 +15,7 @@ module Frame = Pulse.Soundness.Frame
 module STEquiv = Pulse.Soundness.STEquiv
 module Return = Pulse.Soundness.Return
 
-let lift_soundess
+let lift_soundness
   (f:stt_env)
   (g:env)
   (t:term)
@@ -41,7 +41,7 @@ let lift_soundess
       c1 c2 _ (soundness _ _ _ _ e_typing) lc
       _ (soundness _ _ _ _ reveal_a_typing)
 
-let frame_soundess
+let frame_soundness
   (f:stt_env)
   (g:env)
   (t:term)
@@ -59,7 +59,7 @@ let frame_soundess
   assume (ln_c c);
   Frame.elab_frame_typing f g _ _ frame frame_typing r_e_typing
 
-let stapp_soundess
+let stapp_soundness
   (f:stt_env)
   (g:env)
   (t:term)
@@ -88,7 +88,7 @@ let stapp_soundess
                  r_head_typing
                  r_arg_typing
 
-let stequiv_soundess
+let stequiv_soundness
   (f:stt_env)
   (g:env)
   (t:term)
@@ -179,9 +179,9 @@ let rec soundness (f:stt_env)
     in
     match d with
     | T_Lift _ _ _ _ _ _ ->
-      lift_soundess _ _ _ _ d soundness
+      lift_soundness _ _ _ _ d soundness
     | T_Frame _ _ _ _ _ _ ->
-      frame_soundess _ _ _ _ d soundness
+      frame_soundness _ _ _ _ d soundness
 
     | T_Tot _ _ _ d -> d
 
@@ -189,7 +189,7 @@ let rec soundness (f:stt_env)
       mk_t_abs q ppname t_typing body_typing    
 
     | T_STApp _ _ _ _ _ _ _ _ _ ->
-      stapp_soundess _ _ _ _ d soundness
+      stapp_soundness _ _ _ _ d soundness
 
     | T_Bind _ e1 e2 c1 c2 x c e1_typing t_typing e2_typing bc ->
       (match bc with
@@ -243,7 +243,7 @@ let rec soundness (f:stt_env)
            (soundness _ _ _ _ reveal_b_typing))
 
     | T_Equiv _ _ _ _ _ _ ->
-      stequiv_soundess _ _ _ _ d soundness
+      stequiv_soundness _ _ _ _ d soundness
 
     | T_Return _ e t u e_typing t_typing ->
       Return.elab_return_typing t_typing e_typing

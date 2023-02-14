@@ -112,7 +112,8 @@ let rec freevars (t:term)
     | Tm_Var nm -> Set.singleton nm.nm_index
     | Tm_Refine b body
     | Tm_Abs b _ _ body _ ->
-      // Why is this not taking freevars of pre (and post)?
+      // Q: Why is this not taking freevars of pre (and post)?
+      // A: I would like to mark pre and post as unobservable
       Set.union (freevars b.binder_ty) (freevars body)
     | Tm_PureApp t1 _ t2
     | Tm_STApp t1 _ t2
@@ -178,10 +179,13 @@ let rec ln' (t:term) (i:int) =
 
   | Tm_STApp t1 _ t2
   | Tm_PureApp t1 _ t2
-  | Tm_Star t1 t2
-  | Tm_Bind t1 t2 ->
+  | Tm_Star t1 t2 ->
     ln' t1 i &&
     ln' t2 i
+
+  | Tm_Bind t1 t2 ->
+    ln' t1 i &&
+    ln' t2 (i + 1)
 
   | Tm_Let t e1 e2 ->
     ln' t i &&
@@ -194,7 +198,7 @@ let rec ln' (t:term) (i:int) =
   | Tm_ExistsSL t body
   | Tm_ForallSL t body ->
     ln' t i &&
-    ln' t (i + 1)
+    ln' body (i + 1)
     
   | Tm_Arrow b _ c ->
     ln' b.binder_ty i &&
@@ -482,10 +486,89 @@ let comp_inames (c:comp { C_STAtomic? c \/ C_STGhost? c }) : term =
   | C_STAtomic inames _
   | C_STGhost inames _ -> inames
 
-let rec close_open_inverse (t:term) (x:var { ~(x `Set.mem` freevars t) } )
-  : Lemma (ensures close_term (open_term t x) x== t)
+let term_of_var (x:var) = Tm_Var { nm_ppname="_"; nm_index=x}
+let rec close_open_inverse' (t:term) (x:var { ~(x `Set.mem` freevars t) } ) (i:index)
+  : Lemma (ensures close_term' (open_term' t (term_of_var x) i) x i == t)
           (decreases t)
-  = admit()
+  = match t with
+    | Tm_BVar _
+    | Tm_Var _
+    | Tm_FVar _
+    | Tm_UInst  _ _
+    | Tm_Constant _
+    | Tm_Emp
+    | Tm_VProp
+    | Tm_Type _
+    | Tm_Inames 
+    | Tm_EmpInames
+    | Tm_UVar _ -> ()
+    
+    | Tm_Pure p ->
+      close_open_inverse' p x i
+
+    | Tm_Refine b t ->
+      close_open_inverse' b.binder_ty x i;
+      close_open_inverse' t x (i + 1)
+    | Tm_Abs b _q pre body post ->
+      close_open_inverse' b.binder_ty x i;
+      assume (close_term' (open_term' pre (term_of_var x) (i + 1)) x (i + 1) == pre);
+      close_open_inverse' body x (i + 1);
+      if Some? post
+      then assume (close_term' (open_term' (Some?.v post) (term_of_var x) (i + 2)) x (i + 2) == Some?.v post)
+
+    | Tm_PureApp l _ r
+    | Tm_STApp l _ r
+    | Tm_Star l r ->
+      close_open_inverse' l x i;
+      close_open_inverse' r x i
+
+    | Tm_Bind e1 e2 ->
+      close_open_inverse' e1 x i;
+      close_open_inverse' e2 x (i + 1)
+
+    | Tm_Let t e1 e2 ->
+      close_open_inverse' t x i;    
+      close_open_inverse' e1 x i;
+      close_open_inverse' e2 x (i + 1)
+
+    | Tm_ExistsSL t b
+    | Tm_ForallSL t b ->
+      close_open_inverse' t x i;    
+      close_open_inverse' b x (i + 1)
+      
+    | Tm_If t0 t1 t2 post ->
+      close_open_inverse' t0 x i;    
+      close_open_inverse' t1 x i;    
+      close_open_inverse' t2 x i;          
+      (if Some? post then close_open_inverse' (Some?.v post) x (i + 1))
+      
+    | Tm_Arrow b _ body ->
+      close_open_inverse' b.binder_ty x i;
+      close_open_inverse'_comp body x (i + 1)
+      
+and close_open_inverse'_comp (c:comp) (x:var { ~(x `Set.mem` freevars_comp c) } ) (i:index)
+  : Lemma (ensures close_comp' (open_comp' c (term_of_var x) i) x i == c)
+          (decreases c)
+  = match c with
+    | C_Tot t ->
+      close_open_inverse' t x i
+
+    | C_ST s ->
+      close_open_inverse' s.res x i;
+      close_open_inverse' s.pre x i;      
+      close_open_inverse' s.post x (i + 1)
+
+    | C_STAtomic n s
+    | C_STGhost n s ->    
+      close_open_inverse' n x i;    
+      close_open_inverse' s.res x i;
+      close_open_inverse' s.pre x i;      
+      close_open_inverse' s.post x (i + 1)
+  
+let close_open_inverse (t:term) (x:var { ~(x `Set.mem` freevars t) } )
+  : Lemma (ensures close_term (open_term t x) x == t)
+          (decreases t)
+  = close_open_inverse' t x 0
 
 let null_binder (t:term) : binder =
   {binder_ty=t;binder_ppname="_"}
