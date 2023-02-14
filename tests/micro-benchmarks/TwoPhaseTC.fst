@@ -145,7 +145,7 @@ let rec nth_tot_1124 l n =
   | Some x -> x
 
 #set-options "--max_fuel 1 --max_ifuel 1 --initial_fuel 1 --initial_ifuel 1"
-assume val calc_1124: #a:Type -> es:list ((e:(a*a)) & (solve_1124 (fst e) (snd e))){Cons? es} -> 
+assume val calc_1124: #a:Type -> es:list (e:(a*a) & (solve_1124 (fst e) (snd e))){Cons? es} ->
   Lemma (normalize(fst (dfst (hd es)) == snd (dfst (nth_tot_1124 es ((length es) - 1)))))
 
 (*

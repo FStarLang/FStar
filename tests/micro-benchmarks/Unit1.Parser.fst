@@ -20,8 +20,8 @@ type t1 = x:int{x >= 0} -> tint x
 type t2 = x:int -> tint x
 type t3 = (a:eqtype) -> (x:int) -> result:list a{result=[] /\ x=18}
 type t4 = x:nat & y:nat{y > x}
-type t4' = (x:nat) & y:nat{y > x}
-type t4'' = (x:nat) & (y:nat{y > x}) //parentheses are not significant
+type t4' = (x:nat & y:nat{y > x})
+type t4'' = (x:nat & (y:nat{y > x})) //parentheses are not significant
 type t5 = x:int{x=0} * int
 //type t5' = x:int{x=0} * y:int // not allowed after #1905
 //type t5' = x:int{x=0} * tint x
