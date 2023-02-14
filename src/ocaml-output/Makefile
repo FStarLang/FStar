@@ -17,7 +17,6 @@ DUNE_SNAPSHOT ?= $(realpath $(FSTAR_HOME)/ocaml)
 export DUNE_SNAPSHOT
 
 FStar_Parser_Parse_ml=$(DUNE_SNAPSHOT)/fstar-lib/generated/FStar_Parser_Parse.ml
-FStar_Version_ml=$(DUNE_SNAPSHOT)/fstar-lib/dynamic/FStar_Version.ml
 
 # The string "Madoko" if madoko is installed, something else otherwise.
 MADOKO = $(shell madoko --version 2>/dev/null | cut -c -6)
@@ -106,40 +105,6 @@ $(FStar_Parser_Parse_ml): parse.mly
 	$(Q)cat parse.ml >> $@
 	$(Q)rm parse.ml parse.mli
 
-# always bump version for a release; always bump it when recompiling so that one
-# can easily help debugging
-VERSION=$(shell head -n 1 ../../version.txt)
-ifeq ($(OS),Windows_NT)
-  ifeq ($(PROCESSOR_ARCHITECTURE),AMD64)
-     PLATFORM=Windows_x64
-  else
-     PLATFORM=Windows_x86
-  endif
-else
-     PLATFORM=$(shell echo `uname`_`uname -m`)
-endif
-COMPILER = OCaml $(shell ocamlc -version)
-DATE = $(shell date '+%Y-%m-%dT%H:%M:%S%z')
-COMMIT = $(shell ../tools/get_commit)
-COMMITDATE = $(shell git log --pretty=format:%ci -n 1 2>/dev/null || echo unset) # If a system does not have git, or we are not in a git repo, fallback with "unset"
-
-.PHONY: $(FStar_Version_ml)
-$(FStar_Version_ml):
-	$(call msg, "MAKE", "FStar_Version.ml")
-	$(Q)rm -f $@
-	$(Q)mkdir -p $(dir $@)
-	$(Q)echo 'let dummy () = ();;' >> $@
-	$(Q)echo 'FStar_Options._version := "$(VERSION)";;' >> $@
-	$(Q)echo 'FStar_Options._platform := "$(PLATFORM)";;' >> $@
-	$(Q)echo 'FStar_Options._compiler := "$(COMPILER)";;' >> $@
-	@# We deliberately use commitdate instead of date, so that rebuilds are no-ops
-	$(Q)echo 'FStar_Options._date := "$(COMMITDATE)";;' >> $@
-	$(Q)echo 'FStar_Options._commit:= "$(COMMIT)";;' >> $@
-
-# Rule to generate the version file from an external makefile.
-fstar-version-ml-install: $(FStar_Version_ml)
-.PHONY: fstar-version-ml-install
-
 # ------------------------------------------------------------------------------
 # Preparing a release... these targets are not optimized and the Makefile is
 # actually used for scripting a bunch of stuff.
@@ -167,6 +132,8 @@ install:
 	+$(MAKE) -C $(FSTAR_HOME)
 	@# Install the binary and the binary library
 	cd $(DUNE_SNAPSHOT) && dune install --prefix=$(FSTAR_PREFIX)
+	@# Then the standard library sources and checked files
+	+$(MAKE) -C $(FSTAR_HOME)/ulib install
 	@# Then the rest
 	+$(MAKE) install-sides
 
@@ -176,8 +143,6 @@ install:
 
 .PHONY: install-sides
 install-sides:
-	@# Then the standard library sources and checked files
-	+$(MAKE) -C $(FSTAR_HOME)/ulib install
 	@# Then the examples (those now work from any F* installation flavor, sources, binary package or opam)
 	@# ucontrib is needed by examples/crypto
 	$(call install_dir,examples,share/fstar/examples)

@@ -20,8 +20,7 @@ endif
 
 .PHONY: dune dune-fstar verify-ulib
 dune-fstar:
-	@# Create the FStar_Version.ml file
-	$(Q)+$(MAKE) -C src/ocaml-output fstar-version-ml-install
+	cp version.txt $(DUNE_SNAPSHOT)/
 	@# Call Dune to build the snapshot.
 	@echo "  DUNE BUILD"
 	$(Q)cd $(DUNE_SNAPSHOT) && dune build --profile release

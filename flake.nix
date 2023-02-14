@@ -12,57 +12,44 @@
         pkgs = import nixpkgs { inherit system; };
         ocamlPackages = pkgs.ocaml-ng.ocamlPackages_4_14;
         z3 = pkgs.callPackage (import ./.nix/z3.nix) { };
-        lib = pkgs.callPackage (import ./.nix/lib.nix) { inherit z3; };
-        pname = "fstar";
-        sourceByDenyRegex = src: regexes:
-          let
-            isFiltered = src ? _isLibCleanSourceWith;
-            origSrc = if isFiltered then src.origSrc else src;
-          in pkgs.lib.cleanSourceWith {
-            filter = (path: type:
-              let
-                relPath = pkgs.lib.removePrefix (toString origSrc + "/")
-                  (toString path);
-              in pkgs.lib.all (re: builtins.match re relPath == null) regexes);
-            inherit src;
-          };
-        src = sourceByDenyRegex ./. [
-          # Markdown files at the root
-          "^[a-zA-Z]+\\.md$"
-          # Nix files
-          "^flake\\.lock$"
-          ".*\\.nix$"
-        ];
+        version = self.rev or "dirty";
+        fstar-dune = ocamlPackages.callPackage ./ocaml { inherit version; };
+        fstar-ulib = pkgs.callPackage ./ulib { inherit fstar-dune version z3; };
+        fstar = pkgs.callPackage ./.nix/fstar.nix {
+          inherit fstar-dune fstar-ulib version z3;
+        };
+        fstar-ocaml-snapshot =
+          pkgs.callPackage ./src { inherit fstar ocamlPackages version; };
+        fstar-bootstrap = pkgs.callPackage ./.nix/bootstrap.nix {
+          inherit fstar fstar-dune fstar-ocaml-snapshot fstar-ulib;
+        };
+        emacs = pkgs.writeScriptBin "emacs-fstar" ''
+          #!${pkgs.stdenv.shell}
+          export PATH="${fstar}/bin:$PATH"
+          export EMACSLOADPATH=
+          ${
+            (pkgs.emacsPackagesFor pkgs.emacs).emacsWithPackages
+            (epkgs: with epkgs.melpaPackages; [ fstar-mode ])
+          }/bin/emacs -q "$@"
+        '';
       in rec {
         packages = {
           inherit z3 ocamlPackages;
-          fstar = lib.binary-of-fstar {
-            inherit src pname;
-            version = "master-snap";
-          };
-          default = packages.fstar;
-          emacs = pkgs.writeScriptBin "emacs-fstar" ''
-            #!${pkgs.stdenv.shell}
-            export PATH="${packages.fstar}/bin:$PATH"
-            export EMACSLOADPATH=
-            ${
-              (pkgs.emacsPackagesFor pkgs.emacs).emacsWithPackages
-              (epkgs: with epkgs.melpaPackages; [ fstar-mode ])
-            }/bin/emacs -q "$@"
-          '';
+          inherit fstar fstar-dune fstar-ocaml-snapshot fstar-bootstrap;
+          inherit emacs;
+          default = fstar;
         };
         apps.emacs = {
           type = "app";
-          program = "${packages.emacs}/bin/emacs-fstar";
+          program = "${emacs}/bin/emacs-fstar";
         };
         devShells.default = pkgs.mkShell {
-          name = "${packages.fstar.name}-dev";
-          inputsFrom = [ packages.fstar ];
+          name = "${fstar.name}-dev";
+          inputsFrom = [ fstar fstar-dune ];
           shellHook = ''
             export FSTAR_SOURCES_ROOT="$(pwd)"
             export PATH="$FSTAR_SOURCES_ROOT/bin/:$PATH"
           '';
         };
-        inherit lib;
       });
 }
