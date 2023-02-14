@@ -1077,7 +1077,8 @@ let rec (specs_with_types :
       "Explicitly break the abstraction imposed by the interface of any implementation file that appears on the command line (use with care!)");
     (FStar_Getopt.noshort, "hide_uvar_nums", (Const (Bool true)),
       "Don't print unification variable numbers");
-    (FStar_Getopt.noshort, "hint_dir", (PathStr "path"),
+    (FStar_Getopt.noshort, "hint_dir",
+      (PostProcessed (pp_validate_dir, (PathStr "dir"))),
       "Read/write hints to  dir/module_name.hints (instead of placing hint-file alongside source file)");
     (FStar_Getopt.noshort, "hint_file", (PathStr "path"),
       "Read/write hints to  path (instead of module-specific hints files; overrides hint_dir)");
