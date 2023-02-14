@@ -15,7 +15,10 @@ dune-fstar:
 	@# Create the FStar_Version.ml file
 	$(Q)+$(MAKE) -C src/ocaml-output fstar-version-ml-install
 	@# Call Dune to build the snapshot.
-	cd $(DUNE_SNAPSHOT) && dune build --profile release && dune install --prefix=$(CURDIR)
+	@echo "  DUNE BUILD"
+	$(Q)cd $(DUNE_SNAPSHOT) && dune build --profile release
+	@echo "  DUNE INSTALL"
+	$(Q)cd $(DUNE_SNAPSHOT) && dune install --prefix=$(CURDIR)
 
 verify-ulib:
 	+$(MAKE) -C ulib

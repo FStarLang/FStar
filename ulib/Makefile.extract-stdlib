@@ -38,7 +38,9 @@ include .depend.extract-stdlib
 
 .PHONY: all-ml dune-snapshot intfiles
 
-all-ml: $(ALL_ML_FILES)
+# Prims is the only .fst (not fsti) with an Ocaml implementation
+# so we do not need to extract it.
+all-ml: $(filter-out %/prims.ml, $(ALL_ML_FILES))
 
 intfiles:
 	+$(MAKE) -C ml intfiles

@@ -138,6 +138,7 @@ $(FStar_Version_ml):
 
 # Rule to generate the version file from an external makefile.
 fstar-version-ml-install: $(FStar_Version_ml)
+.PHONY: fstar-version-ml-install
 
 # ------------------------------------------------------------------------------
 # Preparing a release... these targets are not optimized and the Makefile is
