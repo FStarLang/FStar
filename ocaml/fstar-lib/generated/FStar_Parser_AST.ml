@@ -1410,23 +1410,26 @@ let (mkRefinedPattern :
               mk_pattern
                 (PatAscribed (pat, (t1, FStar_Pervasives_Native.None))) range
 let rec (extract_named_refinement :
-  term ->
-    (FStar_Ident.ident * term * term FStar_Pervasives_Native.option)
-      FStar_Pervasives_Native.option)
+  Prims.bool ->
+    term ->
+      (FStar_Ident.ident * term * term FStar_Pervasives_Native.option)
+        FStar_Pervasives_Native.option)
   =
-  fun t1 ->
-    match t1.tm with
-    | NamedTyp (x, t) ->
-        FStar_Pervasives_Native.Some (x, t, FStar_Pervasives_Native.None)
-    | Refine
-        ({ b = Annotated (x, t); brange = uu___; blevel = uu___1;
-           aqual = uu___2; battributes = uu___3;_},
-         t')
-        ->
-        FStar_Pervasives_Native.Some
-          (x, t, (FStar_Pervasives_Native.Some t'))
-    | Paren t -> extract_named_refinement t
-    | uu___ -> FStar_Pervasives_Native.None
+  fun remove_parens ->
+    fun t1 ->
+      match t1.tm with
+      | NamedTyp (x, t) ->
+          FStar_Pervasives_Native.Some (x, t, FStar_Pervasives_Native.None)
+      | Refine
+          ({ b = Annotated (x, t); brange = uu___; blevel = uu___1;
+             aqual = uu___2; battributes = uu___3;_},
+           t')
+          ->
+          FStar_Pervasives_Native.Some
+            (x, t, (FStar_Pervasives_Native.Some t'))
+      | Paren t when remove_parens ->
+          extract_named_refinement remove_parens t
+      | uu___ -> FStar_Pervasives_Native.None
 let rec (as_mlist :
   ((FStar_Ident.lid * decl) * decl Prims.list) -> decl Prims.list -> modul) =
   fun cur ->

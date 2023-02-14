@@ -10463,7 +10463,7 @@ in
 let dom =                                ( ((Some TypeClassArg, []), t) ) in
      (
        let ((aq_opt, attrs), dom_tm) = dom in
-       let b = match extract_named_refinement dom_tm with
+       let b = match extract_named_refinement true dom_tm with
          | None -> mk_binder_with_attrs (NoName dom_tm) (rhs parseState 1) Un aq_opt attrs
          | Some (x, t, f) -> mkRefinedBinder x t true f (rhs2 parseState 1 1) aq_opt attrs
        in
@@ -10484,7 +10484,7 @@ let dom =
 in
      (
        let ((aq_opt, attrs), dom_tm) = dom in
-       let b = match extract_named_refinement dom_tm with
+       let b = match extract_named_refinement true dom_tm with
          | None -> mk_binder_with_attrs (NoName dom_tm) (rhs parseState 1) Un aq_opt attrs
          | Some (x, t, f) -> mkRefinedBinder x t true f (rhs2 parseState 1 1) aq_opt attrs
        in
@@ -10506,7 +10506,7 @@ let dom =
 in
      (
        let ((aq_opt, attrs), dom_tm) = dom in
-       let b = match extract_named_refinement dom_tm with
+       let b = match extract_named_refinement true dom_tm with
          | None -> mk_binder_with_attrs (NoName dom_tm) (rhs parseState 1) Un aq_opt attrs
          | Some (x, t, f) -> mkRefinedBinder x t true f (rhs2 parseState 1 1) aq_opt attrs
        in
@@ -10527,7 +10527,7 @@ let dom =
 in
      (
        let ((aq_opt, attrs), dom_tm) = dom in
-       let b = match extract_named_refinement dom_tm with
+       let b = match extract_named_refinement true dom_tm with
          | None -> mk_binder_with_attrs (NoName dom_tm) (rhs parseState 1) Un aq_opt attrs
          | Some (x, t, f) -> mkRefinedBinder x t true f (rhs2 parseState 1 1) aq_opt attrs
        in
@@ -10549,7 +10549,7 @@ let dom =
 in
      (
        let ((aq_opt, attrs), dom_tm) = dom in
-       let b = match extract_named_refinement dom_tm with
+       let b = match extract_named_refinement true dom_tm with
          | None -> mk_binder_with_attrs (NoName dom_tm) (rhs parseState 1) Un aq_opt attrs
          | Some (x, t, f) -> mkRefinedBinder x t true f (rhs2 parseState 1 1) aq_opt attrs
        in
@@ -10571,7 +10571,7 @@ let dom =
 in
      (
        let ((aq_opt, attrs), dom_tm) = dom in
-       let b = match extract_named_refinement dom_tm with
+       let b = match extract_named_refinement true dom_tm with
          | None -> mk_binder_with_attrs (NoName dom_tm) (rhs parseState 1) Un aq_opt attrs
          | Some (x, t, f) -> mkRefinedBinder x t true f (rhs2 parseState 1 1) aq_opt attrs
        in
@@ -10597,7 +10597,7 @@ let dom =
 in
      (
        let ((aq_opt, attrs), dom_tm) = dom in
-       let b = match extract_named_refinement dom_tm with
+       let b = match extract_named_refinement true dom_tm with
          | None -> mk_binder_with_attrs (NoName dom_tm) (rhs parseState 1) Un aq_opt attrs
          | Some (x, t, f) -> mkRefinedBinder x t true f (rhs2 parseState 1 1) aq_opt attrs
        in
@@ -10622,7 +10622,7 @@ in
 let dom =                                ( ((Some TypeClassArg, []), t) ) in
      (
        let ((aq_opt, attrs), dom_tm) = dom in
-       let b = match extract_named_refinement dom_tm with
+       let b = match extract_named_refinement true dom_tm with
          | None -> mk_binder_with_attrs (NoName dom_tm) (rhs parseState 1) Un aq_opt attrs
          | Some (x, t, f) -> mkRefinedBinder x t true f (rhs2 parseState 1 1) aq_opt attrs
        in
@@ -10643,7 +10643,7 @@ let dom =
 in
      (
        let ((aq_opt, attrs), dom_tm) = dom in
-       let b = match extract_named_refinement dom_tm with
+       let b = match extract_named_refinement true dom_tm with
          | None -> mk_binder_with_attrs (NoName dom_tm) (rhs parseState 1) Un aq_opt attrs
          | Some (x, t, f) -> mkRefinedBinder x t true f (rhs2 parseState 1 1) aq_opt attrs
        in
@@ -10665,7 +10665,7 @@ let dom =
 in
      (
        let ((aq_opt, attrs), dom_tm) = dom in
-       let b = match extract_named_refinement dom_tm with
+       let b = match extract_named_refinement true dom_tm with
          | None -> mk_binder_with_attrs (NoName dom_tm) (rhs parseState 1) Un aq_opt attrs
          | Some (x, t, f) -> mkRefinedBinder x t true f (rhs2 parseState 1 1) aq_opt attrs
        in
@@ -10686,7 +10686,7 @@ let dom =
 in
      (
        let ((aq_opt, attrs), dom_tm) = dom in
-       let b = match extract_named_refinement dom_tm with
+       let b = match extract_named_refinement true dom_tm with
          | None -> mk_binder_with_attrs (NoName dom_tm) (rhs parseState 1) Un aq_opt attrs
          | Some (x, t, f) -> mkRefinedBinder x t true f (rhs2 parseState 1 1) aq_opt attrs
        in
@@ -10708,7 +10708,7 @@ let dom =
 in
      (
        let ((aq_opt, attrs), dom_tm) = dom in
-       let b = match extract_named_refinement dom_tm with
+       let b = match extract_named_refinement true dom_tm with
          | None -> mk_binder_with_attrs (NoName dom_tm) (rhs parseState 1) Un aq_opt attrs
          | Some (x, t, f) -> mkRefinedBinder x t true f (rhs2 parseState 1 1) aq_opt attrs
        in
@@ -10730,7 +10730,7 @@ let dom =
 in
      (
        let ((aq_opt, attrs), dom_tm) = dom in
-       let b = match extract_named_refinement dom_tm with
+       let b = match extract_named_refinement true dom_tm with
          | None -> mk_binder_with_attrs (NoName dom_tm) (rhs parseState 1) Un aq_opt attrs
          | Some (x, t, f) -> mkRefinedBinder x t true f (rhs2 parseState 1 1) aq_opt attrs
        in
@@ -10756,7 +10756,7 @@ let dom =
 in
      (
        let ((aq_opt, attrs), dom_tm) = dom in
-       let b = match extract_named_refinement dom_tm with
+       let b = match extract_named_refinement true dom_tm with
          | None -> mk_binder_with_attrs (NoName dom_tm) (rhs parseState 1) Un aq_opt attrs
          | Some (x, t, f) -> mkRefinedBinder x t true f (rhs2 parseState 1 1) aq_opt attrs
        in
@@ -10780,7 +10780,7 @@ in
     (let (dom, _2, tgt) = (_1, (), _3) in
      (
        let ((aq_opt, attrs), dom_tm) = dom in
-       let b = match extract_named_refinement dom_tm with
+       let b = match extract_named_refinement true dom_tm with
          | None -> mk_binder_with_attrs (NoName dom_tm) (rhs parseState 1) Un aq_opt attrs
          | Some (x, t, f) -> mkRefinedBinder x t true f (rhs2 parseState 1 1) aq_opt attrs
        in
@@ -11216,7 +11216,7 @@ let op =      ( mk_ident (op, rhs parseState 1) ) in
     (let (e1, _2, e2) = (_1, (), _3) in
       (
             let dom =
-               match extract_named_refinement e1 with
+               match extract_named_refinement false e1 with
                | Some (x, t, f) ->
                  let dom = mkRefinedBinder x t true f (rhs parseState 1) None [] in
                  Inl dom
@@ -11313,7 +11313,7 @@ let op =      ( mk_ident (op, rhs parseState 1) ) in
     (let (e1, _2, e2) = (_1, (), _3) in
       (
             let dom =
-               match extract_named_refinement e1 with
+               match extract_named_refinement false e1 with
                | Some (x, t, f) ->
                  let dom = mkRefinedBinder x t true f (rhs parseState 1) None [] in
                  Inl dom
