@@ -610,9 +610,11 @@ let (gen_wps_for_free :
                       FStar_Syntax_Util.ascribe uu___5
                         ((FStar_Pervasives.Inr result_comp),
                           FStar_Pervasives_Native.None, false) in
-                    FStar_Syntax_Util.abs uu___3 uu___4
-                      (FStar_Pervasives_Native.Some
-                         (FStar_Syntax_Util.residual_comp_of_comp result_comp)) in
+                    let uu___5 =
+                      let uu___6 =
+                        FStar_Syntax_Util.residual_comp_of_comp result_comp in
+                      FStar_Pervasives_Native.Some uu___6 in
+                    FStar_Syntax_Util.abs uu___3 uu___4 uu___5 in
                   let wp_if_then_else1 =
                     let uu___3 = mk_lid "wp_if_then_else" in
                     register env2 uu___3 wp_if_then_else in
@@ -2320,9 +2322,11 @@ and (infer :
                         FStar_Syntax_Util.ascribe u_body
                           ((FStar_Pervasives.Inr comp1),
                             FStar_Pervasives_Native.None, false) in
-                      (uu___4,
-                        (FStar_Pervasives_Native.Some
-                           (FStar_Syntax_Util.residual_comp_of_comp comp1))) in
+                      let uu___5 =
+                        let uu___6 =
+                          FStar_Syntax_Util.residual_comp_of_comp comp1 in
+                        FStar_Pervasives_Native.Some uu___6 in
+                      (uu___4, uu___5) in
                     (match uu___3 with
                      | (u_body1, u_rc_opt) ->
                          let s_body1 =

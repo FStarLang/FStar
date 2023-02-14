@@ -1681,10 +1681,7 @@ and tc_value env (e:term) : term
     e, S.mk_Total t |> TcComm.lcomp_of_comp, (Env.conj_guard g0 g1)
 
   | Tm_name x ->
-    let t, rng =
-        if env.use_bv_sorts
-        then x.sort, S.range_of_bv x
-        else Env.lookup_bv env x in
+    let t, rng = Env.lookup_bv env x in
     let x = S.set_range_of_bv ({x with sort=t}) rng in
     Env.insert_bv_info env x t;
     let e = S.bv_to_name x in
@@ -1939,7 +1936,7 @@ and tc_universe env u : universe =
         | U_succ u  -> U_succ (aux u)
         | U_max us  -> U_max (List.map aux us)
         | U_name x  ->
-          if env.use_bv_sorts || Env.lookup_univ env x
+          if Env.lookup_univ env x
           then u
           else failwith ("Universe variable " ^ (Print.univ_to_string u) ^ " not found")
    in if env.lax_universes then U_zero
@@ -2301,7 +2298,7 @@ and tc_abs env (top:term) (bs:binders) (body:term) : term * lcomp * guard_t =
                     Rel.force_trivial_guard envbody guard_body_logical;
                     Env.trivial_guard
                 end
-                else let guard = Env.conj_guard g_env (Env.close_guard env (bs@letrec_binders) guard_body) in
+                else let guard = Env.conj_guard g_env (Env.close_guard envbody (bs@letrec_binders) guard_body) in
                      guard in
 
     let guard = TcUtil.close_guard_implicits env false bs guard in //TODO: this is a noop w.r.t scoping; remove it and the eager_subtyping flag
@@ -2314,15 +2311,20 @@ and tc_abs env (top:term) (bs:binders) (body:term) : term * lcomp * guard_t =
      *     To do so, we use the same routine as used for inductive types,
      *       after substituting the bv name with a fresh lid fv in the function body
      *)
-    List.iter (fun b ->
-      if U.has_attribute b.binder_attrs Const.binder_strictly_positive_attr
-      then let r = TcUtil.name_strictly_positive_in_type env b.binder_bv body in
-           if not r
-           then raise_error (Error_InductiveTypeNotSatisfyPositivityCondition,
-                  BU.format1 "Binder %s is marked strictly positive, but its use in the definition is not"
-                               (Print.binder_to_string b)) (S.range_of_bv b.binder_bv)
-           else ()
-      else ()) bs;
+    let _ =
+      let env = Env.push_binders env bs in
+      List.iter
+        (fun b ->
+           if U.has_attribute b.binder_attrs Const.binder_strictly_positive_attr
+           && not (Options.no_positivity())
+           then let r = Positivity.name_strictly_positive_in_type env b.binder_bv body in
+                if not r
+                then raise_error (Error_InductiveTypeNotSatisfyPositivityCondition,
+                                  BU.format1 "Binder %s is marked strictly positive, but its use in the definition is not"
+                                             (Print.binder_to_string b))
+                                  (S.range_of_bv b.binder_bv))
+        bs 
+    in
 
     (*
      * AR: there are three types in the code above now:
@@ -3405,7 +3407,7 @@ and tc_eqn (scrutinee:bv) (env:Env.env) (ret_opt : option match_returns_ascripti
   (*    pat_bvs are the pattern variables, and pat_bv_tms are syntax for a single argument functions that *)
   (*    when applied to the scrutinee return an expression for the bv in terms of projectors *)
   let pattern, pat_bvs, pat_bv_tms, pat_env, pat_exp, norm_pat_exp, guard_pat, erasable =
-    tc_pat env pat_t pattern
+    tc_pat (Env.push_bv env scrutinee) pat_t pattern
   in
 
   if Env.debug env <| Options.Extreme then
@@ -3611,6 +3613,7 @@ and tc_eqn (scrutinee:bv) (env:Env.env) (ret_opt : option match_returns_ascripti
   let effect_label, cflags, maybe_return_c, g_when, g_branch =
     (* (a) eqs are equalities between the scrutinee and the pattern *)
     let eqs =
+      let env = pat_env in
       if not (Env.should_verify env)
       then None
       else let e = SS.compress pat_exp in
@@ -3634,15 +3637,14 @@ and tc_eqn (scrutinee:bv) (env:Env.env) (ret_opt : option match_returns_ascripti
 
      (* (b) *)
      let c_weak, g_when_weak =
-       let env = Env.push_binders scrutinee_env (pat_bvs |> List.map S.mk_binder) in
        if branch_has_layered_effect
        then
          //branch_guard is a boolean, so b2t it
-         let c = TcUtil.weaken_precondition env c (NonTrivial (U.b2t branch_guard)) in
+         let c = TcUtil.weaken_precondition pat_env c (NonTrivial (U.b2t branch_guard)) in
          c, Env.trivial_guard  //use branch guard for weakening
        else
          match eqs, when_condition with
-         | _ when not (Env.should_verify env) ->
+         | _ when not (Env.should_verify pat_env) ->
            c, g_when
 
          | None, None ->
@@ -3651,19 +3653,19 @@ and tc_eqn (scrutinee:bv) (env:Env.env) (ret_opt : option match_returns_ascripti
          | Some f, None ->
            let gf = NonTrivial f in
            let g = Env.guard_of_guard_formula gf in
-           TcUtil.weaken_precondition env c gf,
+           TcUtil.weaken_precondition pat_env c gf,
            Env.imp_guard g g_when
 
          | Some f, Some w ->
            let g_f = NonTrivial f in
            let g_fw = NonTrivial (U.mk_conj f w) in
-           TcUtil.weaken_precondition env c g_fw,
+           TcUtil.weaken_precondition pat_env c g_fw,
            Env.imp_guard (Env.guard_of_guard_formula g_f) g_when
 
          | None, Some w ->
            let g_w = NonTrivial w in
            let g = Env.guard_of_guard_formula g_w in
-           TcUtil.weaken_precondition env c g_w,
+           TcUtil.weaken_precondition pat_env c g_w,
            g_when in
 
      (* (c) *)
@@ -3730,8 +3732,7 @@ and tc_eqn (scrutinee:bv) (env:Env.env) (ret_opt : option match_returns_ascripti
                                                | None -> g
                                                | Some eqs -> TcComm.weaken_guard_formula g eqs)
          |> TcUtil.close_layered_lcomp (Env.push_bv env scrutinee) pat_bvs pat_bv_tms
-
-       else TcUtil.close_wp_lcomp env pat_bvs c_weak in
+       else TcUtil.close_wp_lcomp (Env.push_bv env scrutinee) pat_bvs c_weak in
 
     c_weak.eff_name,
     Some c_weak.cflags,
@@ -3770,6 +3771,7 @@ and check_top_level_let env e =
                  let comp1, g_comp1 = lcomp_comp c1 in
                  let g1 = Env.conj_guard g1 g_comp1 in
                  let _, univs, e1, c1, gvs = List.hd (Gen.generalize env false [lb.lbname, e1, comp1]) in
+                 let g1 = Rel.resolve_generalization_implicits env g1 in
                  let g1 = map_guard g1 <| N.normalize [Env.Beta; Env.DoNotUnfoldPureLets; Env.CompressUvars; Env.NoFullNorm; Env.Exclude Env.Zeta] env in
                  let g1 = abstract_guard_n gvs g1 in
                  g1, e1, univs, TcComm.lcomp_of_comp c1
@@ -3959,19 +3961,25 @@ and check_top_level_let_rec env top =
 
            let all_lb_names = lbs |> List.map (fun lb -> right lb.lbname) |> Some in
 
-           let lbs =
+           let lbs, g_lbs =
               if not env.generalize
-              then lbs |> List.map (fun lb ->
+              then
+                let lbs =
+                  lbs |> List.map (fun lb ->
             (* TODO : Should we gather the fre univnames ? e.g. (TcUtil.gather_free_univnames env e1)@lb.lbunivs *)
                     let lbdef = N.reduce_uvar_solutions env lb.lbdef in
                     if lb.lbunivs = []
                     then lb
                     else U.close_univs_and_mk_letbinding all_lb_names lb.lbname lb.lbunivs lb.lbtyp lb.lbeff lbdef lb.lbattrs lb.lbpos)
-              else let ecs = Gen.generalize env true (lbs |> List.map (fun lb ->
+                in
+                lbs, g_lbs (* g_lbs untouched *)
+              else
+                let ecs = Gen.generalize env true (lbs |> List.map (fun lb ->
                                 lb.lbname,
                                 lb.lbdef,
-                                S.mk_Total lb.lbtyp)) in
-                   List.map2 (fun (x, uvs, e, c, gvs) lb ->
+                                S.mk_Total lb.lbtyp))
+                in
+                let lbs = List.map2 (fun (x, uvs, e, c, gvs) lb ->
                                   U.close_univs_and_mk_letbinding
                                         all_lb_names
                                         x
@@ -3983,6 +3991,10 @@ and check_top_level_let_rec env top =
                                         lb.lbpos)
                               ecs
                               lbs
+                in
+                (* discharge generalization uvars *)
+                let g_lbs = Rel.resolve_generalization_implicits env g_lbs in
+                lbs, g_lbs
            in
 
           let cres = TcComm.lcomp_of_comp <| S.mk_Total t_unit in
@@ -4508,13 +4520,8 @@ let rec universe_of_aux env e : term =
    | Tm_uvar (u, s) -> SS.subst' s (U.ctx_uvar_typ u)
    | Tm_meta(t, _) -> universe_of_aux env t
    | Tm_name n ->
-     //
-     // AR: This is unsatisfactory,
-     //     We should always be able to find n in the env
-     //
-     (match Env.try_lookup_bv env n with
-      | Some (t, _) -> t
-      | None -> n.sort)
+     let (t, _rng) = Env.lookup_bv env n in
+     t
    | Tm_fvar fv ->
      let (_, t), _ = Env.lookup_lid env fv.fv_name.v in
      t
@@ -4553,6 +4560,7 @@ let rec universe_of_aux env e : term =
    //U_max(univ_of bs, univ_of c)
    | Tm_arrow(bs, c) ->
      let bs, c = SS.open_comp bs c in
+     let env = Env.push_binders env bs in
      let us = List.map (fun ({binder_bv=b}) -> level_of_type env b.sort (universe_of_aux env b.sort)) bs in
      let u_res =
         let res = U.comp_result c in
@@ -4562,7 +4570,7 @@ let rec universe_of_aux env e : term =
      S.mk (Tm_type u) e.pos
    //See the comment at the top of this function; we just compute the universe of hd's result type
    | Tm_app(hd, args) ->
-     let rec type_of_head retry hd args =
+     let rec type_of_head retry env hd args =
         let hd = SS.compress hd in
         match hd.n with
         | Tm_unknown
@@ -4580,10 +4588,11 @@ let rec universe_of_aux env e : term =
         | Tm_meta _
         | Tm_type _ ->
           universe_of_aux env hd, args
-        | Tm_match(_, _, hd::_, _) ->  //AR: TODO: use return annotation? Or the residual_comp?
-          let (_, _, hd) = SS.open_branch hd in
-          let hd, args' = U.head_and_args hd in
-          type_of_head retry hd (args'@args)
+        | Tm_match(_, _, b::_, _) ->  //AR: TODO: use return annotation? Or the residual_comp?
+          let (pat, _, tm) = SS.open_branch b in
+          let bvs = Syntax.pat_bvs pat in
+          let hd, args' = U.head_and_args tm in
+          type_of_head retry (Env.push_bvs env bvs) hd (args'@args)
         | _ when retry ->
           //head is either an abs, so we have a beta-redex
           //      or a let,
@@ -4592,10 +4601,10 @@ let rec universe_of_aux env e : term =
           //     universe_of_aux and splitting it again.
           let e = N.normalize [Env.Beta; Env.DoNotUnfoldPureLets] env e in
           let hd, args = U.head_and_args e in
-          type_of_head false hd args
+          type_of_head false env hd args
         | _ ->
           let env, _ = Env.clear_expected_typ env in
-          let env = {env with lax=true; use_bv_sorts=true; top_level=false} in
+          let env = {env with lax=true; top_level=false} in
           if Env.debug env <| Options.Other "UniverseOf"
           then BU.print2 "%s: About to type-check %s\n"
                         (Range.string_of_range (Env.get_range env))
@@ -4604,13 +4613,15 @@ let rec universe_of_aux env e : term =
           Rel.solve_deferred_constraints env g |> ignore;
           t, args
      in
-     let t, args = type_of_head true hd args in
+     let t, args = type_of_head true env hd args in
      (match apply_well_typed env t args with
       | Some t -> t
       | None -> level_of_type_fail env e (Print.term_to_string t))
-   | Tm_match(_, _, hd::_, _) ->  //AR: TODO: use return annotation?
-     let (_, _, hd) = SS.open_branch hd in
-     universe_of_aux env hd
+   | Tm_match(_, _, b::_, _) ->  //AR: TODO: use return annotation?
+     let (pat, _, tm) = SS.open_branch b in
+     let bvs = Syntax.pat_bvs pat in
+     universe_of_aux (Env.push_bvs env bvs) tm
+
    | Tm_match(_, _, [], _) ->  //AR: TODO: use return annotation?
      level_of_type_fail env e "empty match cases"
 
@@ -4758,7 +4769,7 @@ let rec __typeof_tot_or_gtot_term_fastpath (env:env) (t:term) (must_tot:bool) : 
 let typeof_tot_or_gtot_term_fastpath (env:env) (t:term) (must_tot:bool) : option typ =
   def_check_closed_in_env t.pos "fastpath" env t;
   Errors.with_ctx
-    (BU.format1 "In a call to typeof_tot_or_gtot_term_fastpath, t=%s" (Print.term_to_string t))
+    "In a call to typeof_tot_or_gtot_term_fastpath"
     (fun () -> __typeof_tot_or_gtot_term_fastpath env t must_tot)
 
 (*

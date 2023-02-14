@@ -54,6 +54,7 @@ val discharge_guard_no_smt    : env -> guard_t -> guard_t
 val discharge_guard           : env -> guard_t -> guard_t
 val force_trivial_guard       : env -> guard_t -> unit
 val resolve_implicits         : env -> guard_t -> guard_t
+val resolve_generalization_implicits : env -> guard_t -> guard_t
 val resolve_implicits_tac     : env -> guard_t -> tagged_implicits
 val base_and_refinement_maybe_delta : bool -> env -> term -> term * option (bv * term)
 val base_and_refinement       : env -> term -> term * option (bv * term)

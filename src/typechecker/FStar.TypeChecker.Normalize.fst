@@ -1072,9 +1072,7 @@ let decide_unfolding cfg stack rng fv qninfo (* : option (cfg * stack) *) =
         Some (cfg, stack)
 
 (* on_domain_lids are constant, so compute them once *)
-let on_domain_lids =
-  let fext_lid (s:string) = Ident.lid_of_path ["FStar"; "FunctionalExtensionality"; s] Range.dummyRange in
-  ["on_domain"; "on_dom"; "on_domain_g"; "on_dom_g"] |> List.map fext_lid
+let on_domain_lids = [ PC.fext_on_domain_lid; PC.fext_on_dom_lid; PC.fext_on_domain_g_lid; PC.fext_on_dom_g_lid ]
 
 let is_fext_on_domain (t:term) :option term =
   let is_on_dom fv = on_domain_lids |> List.existsb (fun l -> S.fv_eq_lid fv l) in
@@ -3194,10 +3192,10 @@ let eta_expand (env:Env.env) (t:term) : term =
         let formals, _tres = U.arrow_formals (SS.subst' s (U.ctx_uvar_typ u)) in
         if List.length formals = List.length args
         then t
-        else let _, ty, _ = env.typeof_tot_or_gtot_term ({env with lax=true; use_bv_sorts=true; expected_typ=None}) t true in
+        else let _, ty, _ = env.typeof_tot_or_gtot_term ({env with lax=true; expected_typ=None}) t true in
              eta_expand_with_type env t ty
       | _ ->
-        let _, ty, _ = env.typeof_tot_or_gtot_term ({env with lax=true; use_bv_sorts=true; expected_typ=None}) t true in
+        let _, ty, _ = env.typeof_tot_or_gtot_term ({env with lax=true; expected_typ=None}) t true in
         eta_expand_with_type env t ty
       end
 
@@ -3238,9 +3236,9 @@ let rec elim_uvars (env:Env.env) (s:sigelt) =
     let sigattrs = List.map Mktuple3?._3 <| List.map (elim_uvars_aux_t env [] []) s.sigattrs in
     let s = { s with sigattrs } in
     match s.sigel with
-    | Sig_inductive_typ (lid, univ_names, binders, typ, lids, lids') ->
+    | Sig_inductive_typ (lid, univ_names, binders, num_uniform, typ, lids, lids') ->
       let univ_names, binders, typ = elim_uvars_aux_t env univ_names binders typ in
-      {s with sigel = Sig_inductive_typ(lid, univ_names, binders, typ, lids, lids')}
+      {s with sigel = Sig_inductive_typ(lid, univ_names, binders, num_uniform, typ, lids, lids')}
 
     | Sig_bundle (sigs, lids) ->
       {s with sigel = Sig_bundle(List.map (elim_uvars env) sigs, lids)}

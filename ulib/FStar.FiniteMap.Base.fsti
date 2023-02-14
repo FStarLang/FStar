@@ -40,7 +40,10 @@ open FStar.FunctionalExtensionality
 module FLT = FStar.List.Tot
 module FSet = FStar.FiniteSet.Base
 
-type setfun_t (a: eqtype) (b: Type u#b) (s: FSet.set a) = f: (a ^-> option b){forall (key: a). FSet.mem key s <==> Some? (f key)}
+type setfun_t (a: eqtype)
+              (b: Type u#b)
+              (s: FSet.set a) =
+   f: (a ^-> option b){forall (key: a). FSet.mem key s == Some? (f key)}
 
 val map (a: eqtype) ([@@@ strictly_positive] b: Type u#b)
   : Type u#b

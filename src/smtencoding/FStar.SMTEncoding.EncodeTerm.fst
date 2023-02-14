@@ -579,6 +579,7 @@ and encode_deeply_embedded_quantifier (t:S.term) (env:env_t) : term * decls_t =
 and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t to be in normal form already *)
                                      * decls_t)     (* top-level declarations to be emitted (for shared representations of existentially bound terms *) =
 
+    Env.def_check_closed_in_env t.pos "encode_term" env.tcenv t;
     let t = SS.compress t in
     let t0 = t in
     if Env.debug env.tcenv <| Options.Other "SMTEncoding"
@@ -677,7 +678,8 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
              let fsym = mk_fv (varops.fresh module_name "f", Term_sort) in
              let f = mkFreeV  fsym in
              let app = mk_Apply f vars in
-             let pre_opt, res_t = TcUtil.pure_or_ghost_pre_and_post ({env.tcenv with lax=true}) res in
+             let tcenv_bs = { Env.push_binders env.tcenv binders with lax=true } in
+             let pre_opt, res_t = TcUtil.pure_or_ghost_pre_and_post tcenv_bs res in
              let res_pred, decls' = encode_term_pred None res_t env' app in
              let guards, guard_decls = match pre_opt with
                 | None -> mk_and_l guards_l, []
@@ -781,7 +783,7 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
                 *     we encode terms in this let-scope just to compute a hash
                 *)
                let vars, guards_l, env_bs, _, _ = encode_binders None binders env in
-               let c = Env.unfold_effect_abbrev env.tcenv res |> S.mk_Comp in
+               let c = Env.unfold_effect_abbrev (Env.push_binders env.tcenv binders) res |> S.mk_Comp in
                let ct, _ = encode_term (c |> U.comp_result) env_bs in
                let effect_args, _ = encode_args (c |> U.comp_effect_args) env_bs in
                let tkey = mkForall t.pos

@@ -205,17 +205,26 @@ let fresh_fvar mname x s = let xsym = varops.fresh mname x in xsym, mkFreeV <| m
 let gen_term_var (env:env_t) (x:bv) =
     let ysym = "@x"^(string_of_int env.depth) in
     let y = mkFreeV <| mk_fv (ysym, Term_sort) in
-    ysym, y, {env with bvar_bindings=add_bvar_binding (x, y) env.bvar_bindings; depth=env.depth + 1}
+    ysym, y, {env with bvar_bindings=add_bvar_binding (x, y) env.bvar_bindings
+                     ; tcenv = Env.push_bv env.tcenv x
+                     ; depth = env.depth + 1 }
+
 let new_term_constant (env:env_t) (x:bv) =
     let ysym = varops.new_var x.ppname x.index in
     let y = mkApp(ysym, []) in
-    ysym, y, {env with bvar_bindings=add_bvar_binding (x, y) env.bvar_bindings}
+    ysym, y, {env with bvar_bindings=add_bvar_binding (x, y) env.bvar_bindings
+                     ; tcenv = Env.push_bv env.tcenv x}
+
 let new_term_constant_from_string (env:env_t) (x:bv) str =
     let ysym = varops.mk_unique str in
     let y = mkApp(ysym, []) in
-    ysym, y, {env with bvar_bindings=add_bvar_binding (x, y) env.bvar_bindings}
+    ysym, y, {env with bvar_bindings=add_bvar_binding (x, y) env.bvar_bindings
+                     ; tcenv = Env.push_bv env.tcenv x}
+
 let push_term_var (env:env_t) (x:bv) (t:term) =
-    {env with bvar_bindings=add_bvar_binding (x,t) env.bvar_bindings}
+    {env with bvar_bindings=add_bvar_binding (x,t) env.bvar_bindings
+            ; tcenv = Env.push_bv env.tcenv x}
+
 let lookup_term_var env a =
     match lookup_bvar_binding env a with
     | None ->

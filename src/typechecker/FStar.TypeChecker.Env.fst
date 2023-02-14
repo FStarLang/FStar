@@ -161,7 +161,6 @@ let initial_env deps
     universe_of=universe_of;
     teq_nosmt_force=teq_nosmt_force;
     subtype_nosmt_force=subtype_nosmt_force;
-    use_bv_sorts=false;
     qtbl_name_and_index=BU.smap_create 10, None;  //10?
     normalized_eff_names=BU.smap_create 20;  //20?
     fv_delta_depths = BU.smap_create 50;
@@ -518,13 +517,13 @@ let try_lookup_lid_aux us_opt env lid =
            else None
       else Some (inst_tscheme (uvs, t), rng)
 
-    | Inr ({sigel = Sig_inductive_typ (lid, uvs, tps, k, _, _) }, None) ->
+    | Inr ({sigel = Sig_inductive_typ (lid, uvs, tps, _, k, _, _) }, None) ->
       begin match tps with
         | [] -> Some (inst_tscheme (uvs, k), rng)
         | _ ->  Some (inst_tscheme (uvs, U.flat_arrow tps (mk_Total k)), rng)
       end
 
-    | Inr ({sigel = Sig_inductive_typ (lid, uvs, tps, k, _, _) }, Some us) ->
+    | Inr ({sigel = Sig_inductive_typ (lid, uvs, tps, _, k, _, _) }, Some us) ->
       begin match tps with
         | [] -> Some (inst_tscheme_with (uvs, k) us, rng)
         | _ ->  Some (inst_tscheme_with (uvs, U.flat_arrow tps (mk_Total k)) us, rng)
@@ -554,7 +553,7 @@ let try_lookup_lid_aux us_opt env lid =
 //        val try_lookup_val_decl    : env -> lident -> option (tscheme * list qualifier)
 //        val lookup_val_decl        : env -> lident -> universes * typ
 //        val lookup_datacon         : env -> lident -> universes * typ
-//        val datacons_of_typ        : env -> lident -> list lident
+//        val datacons_of_typ        : env -> lident -> bool * list lident
 //        val typ_of_datacon         : env -> lident -> lident
 //        val lookup_definition      : delta_level -> env -> lident -> option (univ_names * term)
 //        val lookup_attrs_of_lid    : env -> lid -> option list attribute
@@ -641,7 +640,7 @@ let lookup_and_inst_datacon env us lid =
 
 let datacons_of_typ env lid =
   match lookup_qname env lid with
-    | Some (Inr ({ sigel = Sig_inductive_typ(_, _, _, _, _, dcs) }, _), _) -> true, dcs
+    | Some (Inr ({ sigel = Sig_inductive_typ(_, _, _, _, _, _, dcs) }, _), _) -> true, dcs
     | _ -> false, []
 
 let typ_of_datacon env lid =
@@ -925,7 +924,7 @@ let is_datacon env lid =
 
 let is_record env lid =
   match lookup_qname env lid with
-    | Some (Inr ({ sigel = Sig_inductive_typ(_, _, _, _, _, _); sigquals=quals }, _), _) ->
+    | Some (Inr ({ sigel = Sig_inductive_typ _; sigquals=quals }, _), _) ->
         BU.for_some (function RecordType _ | RecordConstructor _ -> true | _ -> false) quals
     | _ -> false
 
@@ -938,6 +937,7 @@ let qninfo_is_action (qninfo : qninfo) =
 let is_action env lid =
     qninfo_is_action <| lookup_qname env lid
 
+// FIXME? Does not use environment.
 let is_interpreted =
     let interpreted_symbols =
        [Const.op_Eq;
@@ -988,8 +988,23 @@ let is_type_constructor env lid =
 
 let num_inductive_ty_params env lid =
   match lookup_qname env lid with
-  | Some (Inr ({ sigel = Sig_inductive_typ (_, _, tps, _, _, _) }, _), _) ->
+  | Some (Inr ({ sigel = Sig_inductive_typ (_, _, tps, _, _, _, _) }, _), _) ->
     Some (List.length tps)
+  | _ ->
+    None
+
+let num_inductive_uniform_ty_params env lid =
+  match lookup_qname env lid with
+  | Some (Inr ({ sigel = Sig_inductive_typ (_, _, _, num_uniform, _, _, _) }, _), _) ->
+    (
+      match num_uniform with
+      | None ->
+        raise_error (Errors.Fatal_UnexpectedInductivetype,
+                     BU.format1 "Internal error: Inductive %s is not decorated with its uniform type parameters"
+                                (string_of_lid lid))
+                    (range_of_lid lid)
+      | Some n -> Some n
+    )
   | _ ->
     None
 
@@ -1801,12 +1816,28 @@ let close_guard_univs us bs g =
         us bs f in
     {g with guard_f=NonTrivial f}
 
-let close_forall env bs f =
-    List.fold_right (fun b f ->
-            if Syntax.is_null_binder b then f
-            else let u = env.universe_of env b.binder_bv.sort in
-                 U.mk_forall u b.binder_bv f)
-    bs f
+let close_forall (env:env) (bs:binders) (f:formula) : formula =
+  Errors.with_ctx "While closing a formula" (fun () ->
+    def_check_closed_in_env f.pos "close_forall" env (U.arrow bs (S.mk_Total f));
+    let bvs = List.map (fun b -> b.binder_bv) bs in
+    (* We start with env_full and pop bvs one-by-one. This way each
+     * bv sort is always well scoped in the call to universe_of below. *)
+    let env_full = push_bvs env bvs in
+
+    let (f', e) =
+      List.fold_right (fun bv (f, e) ->
+        let e' = pop_bv e |> must |> snd in
+        def_check_closed_in_env Range.dummyRange "close_forall.sort" e' bv.sort;
+        let f' =
+              if Syntax.is_null_bv bv then f
+              else let u = e'.universe_of e' bv.sort in
+                   U.mk_forall u bv f
+        in
+        (f', e')
+      ) bvs (f, env_full)
+    in
+    f'
+  )
 
 let close_guard env binders g =
     match g.guard_f with

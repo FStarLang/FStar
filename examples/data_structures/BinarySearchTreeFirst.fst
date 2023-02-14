@@ -33,8 +33,8 @@ type tree (r:int) =
         -> n    :int
         -> right:option (tree r){l <= n
                                  /\ n <= r
-                                 /\ (None? right <==> n=r)
-                                 /\ (None? left <==> n=l)}
+                                 /\ (None? right == (n=r))
+                                 /\ (None? left == (n=l))}
         -> tree r
 
 (* Need to supply #i for the empty sub-trees, since it can't be inferred by unification *)
