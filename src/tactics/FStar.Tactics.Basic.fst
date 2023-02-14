@@ -1535,9 +1535,7 @@ let join_goals g1 g2 : tac goal =
     set_solution g2 U.exp_unit ;!
 
     let ng = U.mk_conj t1 t2 in
-    let nenv = { goal_env g1 with gamma = List.rev gamma
-                                ; gamma_cache = BU.smap_create 100 (* Paranoid? *)
-                                } in
+    let nenv = { goal_env g1 with gamma = List.rev gamma } in
     let! goal = mk_irrelevant_goal "joined" nenv ng goal_sc (rangeof g1) g1.opts g1.label in
     if_verbose (fun () -> BU.print3 "join_goals of\n(%s)\nand\n(%s)\n= (%s)\n"
                          (goal_to_string_verbose g1)
