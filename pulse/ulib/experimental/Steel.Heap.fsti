@@ -46,13 +46,19 @@ val core_ref : Type u#0
     and a [pcm] governing it, for ease of type inference *)
 let ref (a:Type u#a) (pcm:pcm a) : Type u#0 = core_ref
 
+val core_ref_null : core_ref
+
 (** [null] is a specific reference, that is not associated to any value
 *)
-val null (#a:Type u#a) (#pcm:pcm a) : ref a pcm
+let null (#a:Type u#a) (#pcm:pcm a) : ref a pcm = core_ref_null
 
 (** Checking whether [r] is the null pointer is decidable through [is_null]
 *)
-val is_null (#a:Type u#a) (#pcm:pcm a) (r:ref a pcm) : (b:bool{b <==> r == null})
+val core_ref_is_null (r:core_ref) : b:bool { b <==> r == core_ref_null }
+
+(** Checking whether [r] is the null pointer is decidable through [is_null]
+*)
+let is_null (#a:Type u#a) (#pcm:pcm a) (r:ref a pcm) : (b:bool{b <==> r == null}) = core_ref_is_null r
 
 (** The predicate describing non-overlapping heaps *)
 val disjoint (h0 h1:heap u#h) : prop
@@ -169,7 +175,9 @@ val h_and (p1 p2:slprop u#a) : slprop u#a
 val h_or  (p1 p2:slprop u#a) : slprop u#a
 val star  (p1 p2:slprop u#a) : slprop u#a
 val wand  (p1 p2:slprop u#a) : slprop u#a
-val h_exists (#a:Type u#b) (f: (a -> slprop u#a)) : slprop u#a
+val h_exists (#[@@@strictly_positive] a:Type u#b)
+             ([@@@strictly_positive]  f: (a -> slprop u#a))
+  : slprop u#a
 val h_forall (#a:Type u#b) (f: (a -> slprop u#a)) : slprop u#a
 (**
   [h_refine] consists of refining a separation logic proposition [p] with an affine heap predicate
