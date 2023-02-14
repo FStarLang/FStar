@@ -28,4 +28,4 @@
       (copy %{version} version.txt)
       (with-stdout-to
         FStar_Version.ml
-        (run %{script})))))
+        (run bash %{script})))))
