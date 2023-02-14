@@ -441,7 +441,7 @@ let (load_module_from_cache :
              let cache_file = FStar_Parser_Dep.cache_file_name fn1 in
              let fail msg cache_file1 =
                let suppress_warning =
-                 (FStar_Options.should_verify_file fn1) ||
+                 (FStar_Options.should_check_file fn1) ||
                    (FStar_Compiler_Effect.op_Bang already_failed) in
                if Prims.op_Negation suppress_warning
                then
