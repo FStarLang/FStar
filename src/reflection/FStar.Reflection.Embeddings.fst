@@ -628,6 +628,35 @@ let e_bv_view =
     in
     mk_emb embed_bv_view unembed_bv_view fstar_refl_bv_view
 
+
+let e_attribute  = e_term
+let e_attributes = e_list e_attribute
+
+let e_binder_view =
+  let embed_binder_view (rng:Range.range) (bview:binder_view) : term =
+    S.mk_Tm_app ref_Mk_binder.t [S.as_arg (embed e_bv rng bview.binder_bv);
+                                 S.as_arg (embed e_aqualv rng bview.binder_qual);
+                                 S.as_arg (embed e_attributes rng bview.binder_attrs)]
+                rng in
+
+  let unembed_binder_view w (t:term) : option binder_view =
+    let t = U.unascribe t in
+    let hd, args = U.head_and_args t in
+    match (U.un_uinst hd).n, args with
+    | Tm_fvar fv, [(bv, _); (q, _); (attrs, _)]
+      when S.fv_eq_lid fv ref_Mk_binder.lid ->
+      BU.bind_opt (unembed' w e_bv bv) (fun bv ->
+      BU.bind_opt (unembed' w e_aqualv q) (fun q ->
+      BU.bind_opt (unembed' w e_attributes attrs) (fun attrs ->
+      Some <| RD.({ binder_bv=bv;binder_qual=q;binder_attrs=attrs}))))
+
+    | _ ->
+      if w then
+      Err.log_issue t.pos (Err.Warning_NotEmbedded, (BU.format1 "Not an embedded binder_view: %s" (Print.term_to_string t)));
+      None in
+
+  mk_emb embed_binder_view unembed_binder_view fstar_refl_binder_view
+
 let e_comp_view =
     let embed_comp_view (rng:Range.range) (cv : comp_view) : term =
         match cv with
@@ -764,9 +793,6 @@ let e_lb_view =
     in
     mk_emb embed_lb_view unembed_lb_view fstar_refl_lb_view
 
-let e_attribute  = e_term
-let e_attributes = e_list e_attribute
-
 let e_letbinding =
     let embed_letbinding (rng:Range.range) (lb:letbinding) : term =
         U.mk_lazy lb fstar_refl_letbinding Lazy_letbinding (Some rng)
@@ -878,8 +904,6 @@ let e_exp =
     in
     mk_emb embed_exp unembed_exp fstar_refl_exp
 
-
-let e_binder_view = e_tuple2 e_bv (e_tuple2 e_aqualv e_attributes)
 
 let e_qualifier =
     let embed (rng:Range.range) (q:RD.qualifier) : term =
@@ -1036,13 +1060,9 @@ let unfold_lazy_bv  (i : lazyinfo) : term =
     S.mk_Tm_app fstar_refl_pack_bv.t [S.as_arg (embed e_bv_view i.rng (inspect_bv bv))]
                 i.rng
 
-(* TODO: non-uniform *)
 let unfold_lazy_binder (i : lazyinfo) : term =
     let binder : binder = undyn i.blob in
-    let bv, (aq, attrs) = inspect_binder binder in
-    S.mk_Tm_app fstar_refl_pack_binder.t [S.as_arg (embed e_bv i.rng bv);
-                                          S.as_arg (embed e_aqualv i.rng aq);
-                                          S.as_arg (embed e_attributes i.rng attrs)]
+    S.mk_Tm_app fstar_refl_pack_binder.t [S.as_arg (embed e_binder_view i.rng (inspect_binder binder))]
                 i.rng
 
 let unfold_lazy_letbinding (i : lazyinfo) : term =

@@ -121,6 +121,8 @@ let fstar_refl_branch           = mk_refl_data_lid_as_term "branch"
 let fstar_refl_branch_fv        = mk_refl_data_lid_as_fv   "branch"
 let fstar_refl_bv_view          = mk_refl_data_lid_as_term "bv_view"
 let fstar_refl_bv_view_fv       = mk_refl_data_lid_as_fv   "bv_view"
+let fstar_refl_binder_view      = mk_refl_data_lid_as_term "binder_view"
+let fstar_refl_binder_view_fv   = mk_refl_data_lid_as_fv   "binder_view"
 let fstar_refl_vconst           = mk_refl_data_lid_as_term "vconst"
 let fstar_refl_vconst_fv        = mk_refl_data_lid_as_fv   "vconst"
 let fstar_refl_lb_view          = mk_refl_data_lid_as_term "lb_view"
@@ -147,6 +149,17 @@ let ref_Mk_bv =
     ; fv  = fv
     ; t   = fv_to_tm fv
     }
+
+let ref_Mk_binder =
+  let lid = fstar_refl_data_lid "Mkbinder_view" in
+  let attr = Record_ctor (fstar_refl_data_lid "binder_view", [
+                            Ident.mk_ident ("binder_bv", Range.dummyRange);
+                            Ident.mk_ident ("binder_qual", Range.dummyRange);
+                            Ident.mk_ident ("binder_attrs", Range.dummyRange)]) in
+  let fv = lid_as_fv lid delta_constant (Some attr) in
+  { lid = lid;
+    fv = fv;
+    t = fv_to_tm fv }
 
 let ref_Mk_lb =
     let lid = fstar_refl_data_lid "Mklb_view" in

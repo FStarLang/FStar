@@ -20,7 +20,6 @@ open FStar.Compiler
 open FStar.Pervasives
 open FStar.Compiler.Effect
 open FStar.Compiler.List
-open FStar.Syntax.Syntax
 open FStar.Compiler.Util
 open FStar.Ident
 open FStar.TypeChecker.Env
@@ -31,6 +30,7 @@ open FStar.Tactics.Result
 open FStar.Tactics.Types
 open FStar.Tactics.Monad
 open FStar.Tactics.Printing
+open FStar.Syntax.Syntax
 
 module BU     = FStar.Compiler.Util
 module Cfg    = FStar.TypeChecker.Cfg
