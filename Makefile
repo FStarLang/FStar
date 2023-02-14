@@ -10,6 +10,14 @@ DUNE_SNAPSHOT ?= $(CURDIR)/ocaml
 # Overridden via the command-line by the OPAM invocation.
 PREFIX ?= /usr/local
 
+ifeq ($(OS),Windows_NT)
+  # On Cygwin, the `--prefix` option to dune only
+  # supports Windows paths.
+  FSTAR_CURDIR=$(shell cygpath -m $(CURDIR))
+else
+  FSTAR_CURDIR=$(CURDIR)
+endif
+
 .PHONY: dune dune-fstar verify-ulib
 dune-fstar:
 	@# Create the FStar_Version.ml file
@@ -18,7 +26,7 @@ dune-fstar:
 	@echo "  DUNE BUILD"
 	$(Q)cd $(DUNE_SNAPSHOT) && dune build --profile release
 	@echo "  DUNE INSTALL"
-	$(Q)cd $(DUNE_SNAPSHOT) && dune install --prefix=$(CURDIR)
+	$(Q)cd $(DUNE_SNAPSHOT) && dune install --prefix=$(FSTAR_CURDIR)
 
 verify-ulib:
 	+$(MAKE) -C ulib
@@ -84,7 +92,7 @@ package_unknown_platform: all
 # Removes everything created by `make all`. MUST NOT be used when
 # bootstrapping.
 clean: clean-intermediate
-	cd $(DUNE_SNAPSHOT) && { dune uninstall --prefix=$(CURDIR) || true ; } && { dune clean || true ; }
+	cd $(DUNE_SNAPSHOT) && { dune uninstall --prefix=$(FSTAR_CURDIR) || true ; } && { dune clean || true ; }
 
 # Removes all .checked files and other intermediate files
 # Does not remove the object files from the dune snapshot,

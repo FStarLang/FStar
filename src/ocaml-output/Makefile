@@ -154,11 +154,19 @@ install_dir = cd ../../$(1) && find . -type f -exec $(INSTALL_EXEC) -m 644 -D {}
 # Install FStar into $(PREFIX) using the standard Unix directory
 # structure.
 
+ifeq ($(OS),Windows_NT)
+  # On Cygwin, the `--prefix` option to dune only
+  # supports Windows paths.
+  FSTAR_PREFIX=$(shell cygpath -m $(PREFIX))
+else
+  FSTAR_PREFIX=$(PREFIX)
+endif
+
 install:
 	@# Rebuild everything
 	+$(MAKE) -C $(FSTAR_HOME)
 	@# Install the binary and the binary library
-	cd $(DUNE_SNAPSHOT) && dune install --prefix=$(PREFIX)
+	cd $(DUNE_SNAPSHOT) && dune install --prefix=$(FSTAR_PREFIX)
 	@# Then the rest
 	+$(MAKE) install-sides
 
@@ -199,7 +207,14 @@ endif
 # Create a zip / tar.gz package of FStar that contains a Z3 binary and
 # proper license files.
 
-package_prefix=$(shell pwd)/fstar
+ifeq ($(OS),Windows_NT)
+  # On Cygwin, the `--prefix` option to dune only
+  # supports Windows paths.
+  package_prefix=$(shell cygpath -m $(CURDIR))/fstar
+else
+  package_prefix=$(CURDIR)/fstar
+endif
+
 package_dir = cd ../../$(1) && find . -type f -exec $(INSTALL_EXEC) -m 644 -D {} $(package_prefix)/$(2)/{} \;
 
 package:
