@@ -868,7 +868,7 @@ let lids_of_sigelt (se: sigelt) = match se.sigel with
   | Sig_let(_, lids)
   | Sig_splice(_, lids, _)
   | Sig_bundle(_, lids) -> lids
-  | Sig_inductive_typ (lid, _,  _, _, _, _)
+  | Sig_inductive_typ (lid, _, _, _, _, _, _)
   | Sig_effect_abbrev(lid, _, _,  _, _)
   | Sig_datacon (lid, _, _, _, _, _)
   | Sig_declare_typ (lid, _, _)
@@ -1402,7 +1402,7 @@ let residual_gtot t = {
 let residual_comp_of_comp (c:comp) = {
     residual_effect=comp_effect_name c;
     residual_typ=Some (comp_result c);
-    residual_flags=comp_flags c;
+    residual_flags=List.filter (function DECREASES _ -> false | _ -> true) <| comp_flags c;
   }
 
 let mk_forall_aux fa x body =

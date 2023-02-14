@@ -53,7 +53,7 @@ let tc_tycon (env:env_t)     (* environment that contains all mutually defined t
        * universe       (* universe of the constructed type *)
        * guard_t        (* constraints on implicit variables *)
  = match s.sigel with
-   | Sig_inductive_typ (tc, uvs, tps, k, mutuals, data) -> //the only valid qual is Private
+   | Sig_inductive_typ (tc, uvs, tps, n_uniform, k, mutuals, data) -> //the only valid qual is Private
          //assert (uvs = []); AR: not necessarily true in two phase
          let env0 = env in
  (*open*)let usubst, uvs = SS.univ_var_opening uvs in
@@ -94,7 +94,7 @@ let tc_tycon (env:env_t)     (* environment that contains all mutually defined t
          let fv_tc = S.lid_as_fv tc delta_constant None in
          let (uvs, t_tc) = SS.open_univ_vars uvs t_tc in
          Env.push_let_binding env0 (Inr fv_tc) (uvs, t_tc),
-         { s with sigel = Sig_inductive_typ(tc, uvs, tps, k, mutuals, data) },
+         { s with sigel = Sig_inductive_typ(tc, uvs, tps, n_uniform, k, mutuals, data) },
          u,
          guard
 
@@ -113,7 +113,7 @@ let tc_data (env:env_t) (tcs : list (sigelt * universe))
             let tps_u_opt = BU.find_map tcs (fun (se, u_tc) ->
                 if lid_equals tc_lid (must (U.lid_of_sigelt se))
                 then match se.sigel with
-                     | Sig_inductive_typ(_, _, tps, _, _, _) ->
+                     | Sig_inductive_typ(_, _, tps, _, _, _, _) ->
                         let tps = tps |> SS.subst_binders usubst |> List.map (fun x -> {x with binder_qual=Some S.imp_tag}) in
                         let tps = Subst.open_binders tps in
                         Some (Env.push_binders env tps, tps, u_tc)
@@ -229,7 +229,7 @@ let generalize_and_inst_within (env:env_t) (tcs:list (sigelt * universe)) (datas
         //and generalize their universes together
         let binders = tcs |> List.map (fun (se, _) ->
             match se.sigel with
-            | Sig_inductive_typ(_, _, tps, k, _, _) -> S.null_binder (U.arrow tps <| mk_Total k)
+            | Sig_inductive_typ(_, _, tps, _, k, _, _) -> S.null_binder (U.arrow tps <| mk_Total k)
             | _ -> failwith "Impossible")  in
         let binders' = datas |> List.map (fun se -> match se.sigel with
             | Sig_datacon(_, _, t, _, _, _) -> S.null_binder t
@@ -250,7 +250,7 @@ let generalize_and_inst_within (env:env_t) (tcs:list (sigelt * universe)) (datas
         let args, _ = U.arrow_formals t in
         let tc_types, data_types = BU.first_N (List.length binders) args in
         let tcs = List.map2 (fun ({binder_bv=x}) (se, _) -> match se.sigel with
-            | Sig_inductive_typ(tc, _, tps, _, mutuals, datas) ->
+            | Sig_inductive_typ(tc, _, tps, num_uniform, _, mutuals, datas) ->
               let ty = SS.close_univ_vars uvs x.sort in
               let tps, t = match (SS.compress ty).n with
                 | Tm_arrow(binders, c) ->
@@ -262,7 +262,7 @@ let generalize_and_inst_within (env:env_t) (tcs:list (sigelt * universe)) (datas
                   tps, t
                 | _ -> [], ty
               in
-              { se with sigel = Sig_inductive_typ(tc, uvs, tps, t, mutuals, datas) }
+              { se with sigel = Sig_inductive_typ(tc, uvs, tps, num_uniform, t, mutuals, datas) }
             | _ -> failwith "Impossible")
             tc_types tcs
         in
@@ -272,7 +272,7 @@ let generalize_and_inst_within (env:env_t) (tcs:list (sigelt * universe)) (datas
             | [] -> datas
             | _ ->
              let uvs_universes = uvs |> List.map U_name in
-             let tc_insts = tcs |> List.map (function { sigel = Sig_inductive_typ(tc, _, _, _, _, _) } -> (tc, uvs_universes) | _ -> failwith "Impossible") in
+             let tc_insts = tcs |> List.map (function { sigel = Sig_inductive_typ(tc, _, _, _, _, _, _) } -> (tc, uvs_universes) | _ -> failwith "Impossible") in
              List.map2 (fun ({binder_bv=t}) d ->
                 match d.sigel with
                     | Sig_datacon(l, _, _, tc, ntps, mutuals) ->
@@ -312,7 +312,7 @@ let get_haseq_axiom_lid lid =
 let get_optimized_haseq_axiom (en:env) (ty:sigelt) (usubst:list subst_elt) (us:univ_names) :(lident * term * binders * binders * term) =
   let lid, bs, t =
     match ty.sigel with
-    | Sig_inductive_typ (lid, _, bs, t, _, _) -> lid, bs, t
+    | Sig_inductive_typ (lid, _, bs, _, t, _, _) -> lid, bs, t
     | _                                       -> failwith "Impossible!"
   in
 
@@ -403,7 +403,7 @@ let optimized_haseq_soundness_for_data (ty_lid:lident) (data:sigelt) (usubst:lis
 let optimized_haseq_ty (all_datas_in_the_bundle:sigelts) (usubst:list subst_elt) (us:list univ_name) acc ty =
   let lid =
     match ty.sigel with
-    | Sig_inductive_typ (lid, _, _, _, _, _) -> lid
+    | Sig_inductive_typ (lid, _, _, _, _, _, _) -> lid
     | _                                      -> failwith "Impossible!"
   in
 
@@ -444,7 +444,7 @@ let optimized_haseq_scheme (sig_bndle:sigelt) (tcs:list sigelt) (datas:list sige
   let us, t =
     let ty = List.hd tcs in
     match ty.sigel with
-    | Sig_inductive_typ (_, us, _, t, _, _) -> us, t
+    | Sig_inductive_typ (_, us, _, _, t, _, _) -> us, t
     | _                                     -> failwith "Impossible!"
   in
   let usubst, us = SS.univ_var_opening us in
@@ -540,7 +540,7 @@ let unoptimized_haseq_data (usubst:list subst_elt) (bs:binders) (haseq_ind:term)
 let unoptimized_haseq_ty (all_datas_in_the_bundle:list sigelt) (mutuals:list lident) (usubst:list subst_elt) (us:list univ_name) (acc:term) (ty:sigelt) =
   let lid, bs, t, d_lids =
     match ty.sigel with
-    | Sig_inductive_typ (lid, _, bs, t, _, d_lids) -> lid, bs, t, d_lids
+    | Sig_inductive_typ (lid, _, bs, _, t, _, d_lids) -> lid, bs, t, d_lids
     | _                                            -> failwith "Impossible!"
   in
 
@@ -598,7 +598,7 @@ let unoptimized_haseq_scheme (sig_bndle:sigelt) (tcs:list sigelt) (datas:list si
   //TODO: perhaps make it a map ?
   let mutuals = List.map (fun ty ->
     match ty.sigel with
-    | Sig_inductive_typ (lid, _, _, _, _, _) -> lid
+    | Sig_inductive_typ (lid, _, _, _, _, _, _) -> lid
     | _                                      -> failwith "Impossible!") tcs
   in
 
@@ -606,7 +606,7 @@ let unoptimized_haseq_scheme (sig_bndle:sigelt) (tcs:list sigelt) (datas:list si
   let lid, us =
     let ty = List.hd tcs in
     match ty.sigel with
-    | Sig_inductive_typ (lid, us, _, _, _, _) -> lid, us
+    | Sig_inductive_typ (lid, us, _, _, _, _, _) -> lid, us
     | _                                       -> failwith "Impossible!"
   in
   let usubst, us = SS.univ_var_opening us in
@@ -701,7 +701,7 @@ let check_inductive_well_typedness (env:env_t) (ses:list sigelt) (quals:list qua
     if List.length tys = 0 then []
     else
       match (List.hd tys).sigel with
-      | Sig_inductive_typ (_, uvs, _, _, _, _) -> uvs
+      | Sig_inductive_typ (_, uvs, _, _, _, _, _) -> uvs
       | _ -> failwith "Impossible, can't happen!"
   in
 
@@ -744,7 +744,7 @@ let check_inductive_well_typedness (env:env_t) (ses:list sigelt) (quals:list qua
   
   let tcs = tcs |> List.map (fun se ->
     match se.sigel with
-    | Sig_inductive_typ(l, univs, binders, typ, ts, ds) ->
+    | Sig_inductive_typ(l, univs, binders, num_uniform, typ, ts, ds) ->
       let fail expected inferred =
           raise_error (Errors.Fatal_UnexpectedInductivetype,
                        (BU.format2 "Expected an inductive with type %s; got %s"
@@ -800,7 +800,7 @@ let check_inductive_well_typedness (env:env_t) (ses:list sigelt) (quals:list qua
                    if Rel.teq_nosmt_force env0 inferred expected
                    then begin
                      let binders = copy_binder_attrs_from_val binders expected in
-                     {se with sigel=Sig_inductive_typ (l, univs, binders, typ, ts, ds)}
+                     {se with sigel=Sig_inductive_typ (l, univs, binders, num_uniform, typ, ts, ds)}
                    end
                    else fail expected_typ inferred_typ
               else fail expected_typ inferred_typ
@@ -1065,7 +1065,7 @@ let mk_data_operations iquals attrs env tcs se =
         let tps_opt = BU.find_map tcs (fun se ->
             if lid_equals typ_lid (must (U.lid_of_sigelt se))
             then match se.sigel with
-                  | Sig_inductive_typ(_, uvs', tps, typ0, _, constrs) ->
+                  | Sig_inductive_typ(_, uvs', tps, _, typ0, _, constrs) ->
                       assert (List.length uvs = List.length uvs') ;
                       Some (tps, typ0, List.length constrs > 1)
                   | _ -> failwith "Impossible"

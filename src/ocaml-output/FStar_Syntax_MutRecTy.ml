@@ -316,7 +316,7 @@ let (disentangle_abbrevs_from_bundle :
                 let unfold_in_sig x =
                   match x.FStar_Syntax_Syntax.sigel with
                   | FStar_Syntax_Syntax.Sig_inductive_typ
-                      (lid, univs, bnd, ty, mut, dc) ->
+                      (lid, univs, bnd, num_uniform, ty, mut, dc) ->
                       let bnd' =
                         FStar_Syntax_InstFV.inst_binders unfold_fv bnd in
                       let ty' = FStar_Syntax_InstFV.inst unfold_fv ty in
@@ -324,7 +324,7 @@ let (disentangle_abbrevs_from_bundle :
                       [{
                          FStar_Syntax_Syntax.sigel =
                            (FStar_Syntax_Syntax.Sig_inductive_typ
-                              (lid, univs, bnd', ty', mut', dc));
+                              (lid, univs, bnd', num_uniform, ty', mut', dc));
                          FStar_Syntax_Syntax.sigrng =
                            (x.FStar_Syntax_Syntax.sigrng);
                          FStar_Syntax_Syntax.sigquals =

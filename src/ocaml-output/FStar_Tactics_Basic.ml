@@ -662,8 +662,6 @@ let (tc_unifier_solved_implicits :
                            (env1.FStar_TypeChecker_Env.teq_nosmt_force);
                          FStar_TypeChecker_Env.subtype_nosmt_force =
                            (env1.FStar_TypeChecker_Env.subtype_nosmt_force);
-                         FStar_TypeChecker_Env.use_bv_sorts =
-                           (env1.FStar_TypeChecker_Env.use_bv_sorts);
                          FStar_TypeChecker_Env.qtbl_name_and_index =
                            (env1.FStar_TypeChecker_Env.qtbl_name_and_index);
                          FStar_TypeChecker_Env.normalized_eff_names =
@@ -1317,8 +1315,6 @@ let (__tc :
                       (e.FStar_TypeChecker_Env.teq_nosmt_force);
                     FStar_TypeChecker_Env.subtype_nosmt_force =
                       (e.FStar_TypeChecker_Env.subtype_nosmt_force);
-                    FStar_TypeChecker_Env.use_bv_sorts =
-                      (e.FStar_TypeChecker_Env.use_bv_sorts);
                     FStar_TypeChecker_Env.qtbl_name_and_index =
                       (e.FStar_TypeChecker_Env.qtbl_name_and_index);
                     FStar_TypeChecker_Env.normalized_eff_names =
@@ -1460,8 +1456,6 @@ let (__tc_ghost :
                       (e.FStar_TypeChecker_Env.teq_nosmt_force);
                     FStar_TypeChecker_Env.subtype_nosmt_force =
                       (e.FStar_TypeChecker_Env.subtype_nosmt_force);
-                    FStar_TypeChecker_Env.use_bv_sorts =
-                      (e.FStar_TypeChecker_Env.use_bv_sorts);
                     FStar_TypeChecker_Env.qtbl_name_and_index =
                       (e.FStar_TypeChecker_Env.qtbl_name_and_index);
                     FStar_TypeChecker_Env.normalized_eff_names =
@@ -1564,8 +1558,6 @@ let (__tc_ghost :
                       (e1.FStar_TypeChecker_Env.teq_nosmt_force);
                     FStar_TypeChecker_Env.subtype_nosmt_force =
                       (e1.FStar_TypeChecker_Env.subtype_nosmt_force);
-                    FStar_TypeChecker_Env.use_bv_sorts =
-                      (e1.FStar_TypeChecker_Env.use_bv_sorts);
                     FStar_TypeChecker_Env.qtbl_name_and_index =
                       (e1.FStar_TypeChecker_Env.qtbl_name_and_index);
                     FStar_TypeChecker_Env.normalized_eff_names =
@@ -1716,8 +1708,6 @@ let (__tc_lax :
                       (e.FStar_TypeChecker_Env.teq_nosmt_force);
                     FStar_TypeChecker_Env.subtype_nosmt_force =
                       (e.FStar_TypeChecker_Env.subtype_nosmt_force);
-                    FStar_TypeChecker_Env.use_bv_sorts =
-                      (e.FStar_TypeChecker_Env.use_bv_sorts);
                     FStar_TypeChecker_Env.qtbl_name_and_index =
                       (e.FStar_TypeChecker_Env.qtbl_name_and_index);
                     FStar_TypeChecker_Env.normalized_eff_names =
@@ -1820,8 +1810,6 @@ let (__tc_lax :
                       (e1.FStar_TypeChecker_Env.teq_nosmt_force);
                     FStar_TypeChecker_Env.subtype_nosmt_force =
                       (e1.FStar_TypeChecker_Env.subtype_nosmt_force);
-                    FStar_TypeChecker_Env.use_bv_sorts =
-                      (e1.FStar_TypeChecker_Env.use_bv_sorts);
                     FStar_TypeChecker_Env.qtbl_name_and_index =
                       (e1.FStar_TypeChecker_Env.qtbl_name_and_index);
                     FStar_TypeChecker_Env.normalized_eff_names =
@@ -1925,8 +1913,6 @@ let (__tc_lax :
                       (e2.FStar_TypeChecker_Env.teq_nosmt_force);
                     FStar_TypeChecker_Env.subtype_nosmt_force =
                       (e2.FStar_TypeChecker_Env.subtype_nosmt_force);
-                    FStar_TypeChecker_Env.use_bv_sorts =
-                      (e2.FStar_TypeChecker_Env.use_bv_sorts);
                     FStar_TypeChecker_Env.qtbl_name_and_index =
                       (e2.FStar_TypeChecker_Env.qtbl_name_and_index);
                     FStar_TypeChecker_Env.normalized_eff_names =
@@ -2274,9 +2260,11 @@ let (intro : unit -> FStar_Syntax_Syntax.binder FStar_Tactics_Monad.tac) =
                        match uu___6 with
                        | (body, ctx_uvar) ->
                            let sol =
-                             FStar_Syntax_Util.abs [b] body
-                               (FStar_Pervasives_Native.Some
-                                  (FStar_Syntax_Util.residual_comp_of_comp c)) in
+                             let uu___7 =
+                               let uu___8 =
+                                 FStar_Syntax_Util.residual_comp_of_comp c in
+                               FStar_Pervasives_Native.Some uu___8 in
+                             FStar_Syntax_Util.abs [b] body uu___7 in
                            let uu___7 = set_solution goal sol in
                            FStar_Tactics_Monad.op_let_Bang uu___7
                              (fun uu___8 ->
@@ -4230,8 +4218,6 @@ let (_t_trefl :
                                     FStar_TypeChecker_Env.subtype_nosmt_force
                                       =
                                       (uu___12.FStar_TypeChecker_Env.subtype_nosmt_force);
-                                    FStar_TypeChecker_Env.use_bv_sorts =
-                                      (uu___12.FStar_TypeChecker_Env.use_bv_sorts);
                                     FStar_TypeChecker_Env.qtbl_name_and_index
                                       =
                                       (uu___12.FStar_TypeChecker_Env.qtbl_name_and_index);
@@ -4616,8 +4602,6 @@ let (join_goals :
                                     (uu___7.FStar_TypeChecker_Env.teq_nosmt_force);
                                   FStar_TypeChecker_Env.subtype_nosmt_force =
                                     (uu___7.FStar_TypeChecker_Env.subtype_nosmt_force);
-                                  FStar_TypeChecker_Env.use_bv_sorts =
-                                    (uu___7.FStar_TypeChecker_Env.use_bv_sorts);
                                   FStar_TypeChecker_Env.qtbl_name_and_index =
                                     (uu___7.FStar_TypeChecker_Env.qtbl_name_and_index);
                                   FStar_TypeChecker_Env.normalized_eff_names
@@ -5006,8 +4990,6 @@ let (unshelve : FStar_Syntax_Syntax.term -> unit FStar_Tactics_Monad.tac) =
                      (env1.FStar_TypeChecker_Env.teq_nosmt_force);
                    FStar_TypeChecker_Env.subtype_nosmt_force =
                      (env1.FStar_TypeChecker_Env.subtype_nosmt_force);
-                   FStar_TypeChecker_Env.use_bv_sorts =
-                     (env1.FStar_TypeChecker_Env.use_bv_sorts);
                    FStar_TypeChecker_Env.qtbl_name_and_index =
                      (env1.FStar_TypeChecker_Env.qtbl_name_and_index);
                    FStar_TypeChecker_Env.normalized_eff_names =
@@ -5406,15 +5388,17 @@ let (t_destruct :
                                match uu___7 with
                                | FStar_Syntax_Syntax.Tm_fvar fv ->
                                    FStar_Tactics_Monad.ret (fv, [])
-                               | FStar_Syntax_Syntax.Tm_uinst
-                                   ({
-                                      FStar_Syntax_Syntax.n =
-                                        FStar_Syntax_Syntax.Tm_fvar fv;
-                                      FStar_Syntax_Syntax.pos = uu___8;
-                                      FStar_Syntax_Syntax.vars = uu___9;
-                                      FStar_Syntax_Syntax.hash_code = uu___10;_},
-                                    us)
-                                   -> FStar_Tactics_Monad.ret (fv, us)
+                               | FStar_Syntax_Syntax.Tm_uinst (h', us) ->
+                                   let uu___8 =
+                                     let uu___9 =
+                                       FStar_Syntax_Subst.compress h' in
+                                     uu___9.FStar_Syntax_Syntax.n in
+                                   (match uu___8 with
+                                    | FStar_Syntax_Syntax.Tm_fvar fv ->
+                                        FStar_Tactics_Monad.ret (fv, us)
+                                    | uu___9 ->
+                                        failwith
+                                          "impossible: uinst over something that's not an fvar")
                                | uu___8 ->
                                    FStar_Tactics_Monad.fail
                                      "type is not an fv" in
@@ -5437,7 +5421,8 @@ let (t_destruct :
                                            (match se.FStar_Syntax_Syntax.sigel
                                             with
                                             | FStar_Syntax_Syntax.Sig_inductive_typ
-                                                (_lid, t_us, t_ps, t_ty, mut,
+                                                (_lid, t_us, t_ps,
+                                                 _num_uniform, t_ty, mut,
                                                  c_lids)
                                                 ->
                                                 let erasable =
@@ -5931,9 +5916,6 @@ let (t_destruct :
                                                                     FStar_TypeChecker_Env.subtype_nosmt_force
                                                                     =
                                                                     (env1.FStar_TypeChecker_Env.subtype_nosmt_force);
-                                                                    FStar_TypeChecker_Env.use_bv_sorts
-                                                                    =
-                                                                    (env1.FStar_TypeChecker_Env.use_bv_sorts);
                                                                     FStar_TypeChecker_Env.qtbl_name_and_index
                                                                     =
                                                                     (env1.FStar_TypeChecker_Env.qtbl_name_and_index);
@@ -6885,8 +6867,6 @@ let (push_bv_dsenv :
                  (e.FStar_TypeChecker_Env.teq_nosmt_force);
                FStar_TypeChecker_Env.subtype_nosmt_force =
                  (e.FStar_TypeChecker_Env.subtype_nosmt_force);
-               FStar_TypeChecker_Env.use_bv_sorts =
-                 (e.FStar_TypeChecker_Env.use_bv_sorts);
                FStar_TypeChecker_Env.qtbl_name_and_index =
                  (e.FStar_TypeChecker_Env.qtbl_name_and_index);
                FStar_TypeChecker_Env.normalized_eff_names =
@@ -7220,8 +7200,6 @@ let (refl_tc_term :
                       (g.FStar_TypeChecker_Env.teq_nosmt_force);
                     FStar_TypeChecker_Env.subtype_nosmt_force =
                       (g.FStar_TypeChecker_Env.subtype_nosmt_force);
-                    FStar_TypeChecker_Env.use_bv_sorts =
-                      (g.FStar_TypeChecker_Env.use_bv_sorts);
                     FStar_TypeChecker_Env.qtbl_name_and_index =
                       (g.FStar_TypeChecker_Env.qtbl_name_and_index);
                     FStar_TypeChecker_Env.normalized_eff_names =
@@ -7519,8 +7497,6 @@ let (tac_env : FStar_TypeChecker_Env.env -> FStar_TypeChecker_Env.env) =
               (env2.FStar_TypeChecker_Env.teq_nosmt_force);
             FStar_TypeChecker_Env.subtype_nosmt_force =
               (env2.FStar_TypeChecker_Env.subtype_nosmt_force);
-            FStar_TypeChecker_Env.use_bv_sorts =
-              (env2.FStar_TypeChecker_Env.use_bv_sorts);
             FStar_TypeChecker_Env.qtbl_name_and_index =
               (env2.FStar_TypeChecker_Env.qtbl_name_and_index);
             FStar_TypeChecker_Env.normalized_eff_names =
@@ -7617,8 +7593,6 @@ let (tac_env : FStar_TypeChecker_Env.env -> FStar_TypeChecker_Env.env) =
               (env3.FStar_TypeChecker_Env.teq_nosmt_force);
             FStar_TypeChecker_Env.subtype_nosmt_force =
               (env3.FStar_TypeChecker_Env.subtype_nosmt_force);
-            FStar_TypeChecker_Env.use_bv_sorts =
-              (env3.FStar_TypeChecker_Env.use_bv_sorts);
             FStar_TypeChecker_Env.qtbl_name_and_index =
               (env3.FStar_TypeChecker_Env.qtbl_name_and_index);
             FStar_TypeChecker_Env.normalized_eff_names =
@@ -7716,8 +7690,6 @@ let (tac_env : FStar_TypeChecker_Env.env -> FStar_TypeChecker_Env.env) =
               (env4.FStar_TypeChecker_Env.teq_nosmt_force);
             FStar_TypeChecker_Env.subtype_nosmt_force =
               (env4.FStar_TypeChecker_Env.subtype_nosmt_force);
-            FStar_TypeChecker_Env.use_bv_sorts =
-              (env4.FStar_TypeChecker_Env.use_bv_sorts);
             FStar_TypeChecker_Env.qtbl_name_and_index =
               (env4.FStar_TypeChecker_Env.qtbl_name_and_index);
             FStar_TypeChecker_Env.normalized_eff_names =

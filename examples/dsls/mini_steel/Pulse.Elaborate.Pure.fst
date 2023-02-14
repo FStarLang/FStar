@@ -6,6 +6,7 @@ open FStar.List.Tot
 open Pulse.Syntax
 
 let tun = R.pack_ln R.Tv_Unknown
+let unit_lid = ["Prims"; "unit"]
 let bool_lid = ["Prims"; "bool"]
 let erased_lid = ["FStar"; "Ghost"; "erased"]
 let vprop_lid = ["Steel"; "Effect"; "Common"; "vprop"]
@@ -197,14 +198,6 @@ let rec elab_term (top:term)
         pack_ln (Tv_FVar (pack_fv head_lid)) in
       Some (R.mk_app head ([(t, Q_Implicit); (body, Q_Explicit)]))
 
-    // | Tm_If b then_ else_ -> (* this should be stateful *)
-    //   let? b = elab_term b in
-    //   let? then_ = elab_term then_ in
-    //   let? else_ = elab_term else_ in
-    //   let then_branch = R.Pat_Constant R.C_True, then_ in
-    //   let else_branch = R.Pat_Constant R.C_False, else_ in
-    //   Some (R.pack_ln (Tv_Match b None [then_branch; else_branch]))
-
     | Tm_Inames ->
       Some (pack_ln (Tv_FVar (pack_fv inames_lid)))
 
@@ -214,6 +207,8 @@ let rec elab_term (top:term)
     | Tm_Abs _ _ _ _ _
     | Tm_STApp _ _ _
     | Tm_Bind _ _
+    | Tm_ElimExists _
+    | Tm_IntroExists _ _
     | Tm_UVar _ -> None
       //effectful constructs, explicitly not handled here
     

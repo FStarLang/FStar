@@ -1438,20 +1438,20 @@ let rec (sigelt_to_string : FStar_Syntax_Syntax.sigelt -> Prims.string) =
       match x.FStar_Syntax_Syntax.sigel with
       | FStar_Syntax_Syntax.Sig_pragma p -> pragma_to_string p
       | FStar_Syntax_Syntax.Sig_inductive_typ
-          (lid, univs, tps, k, uu___, uu___1) ->
+          (lid, univs, tps, uu___, k, uu___1, uu___2) ->
           let quals_str = quals_to_string' x.FStar_Syntax_Syntax.sigquals in
           let binders_str = binders_to_string " " tps in
           let term_str = term_to_string k in
-          let uu___2 = FStar_Options.print_universes () in
-          if uu___2
+          let uu___3 = FStar_Options.print_universes () in
+          if uu___3
           then
-            let uu___3 = FStar_Ident.string_of_lid lid in
-            let uu___4 = univ_names_to_string univs in
+            let uu___4 = FStar_Ident.string_of_lid lid in
+            let uu___5 = univ_names_to_string univs in
             FStar_Compiler_Util.format5 "%stype %s<%s> %s : %s" quals_str
-              uu___3 uu___4 binders_str term_str
+              uu___4 uu___5 binders_str term_str
           else
-            (let uu___4 = FStar_Ident.string_of_lid lid in
-             FStar_Compiler_Util.format4 "%stype %s %s : %s" quals_str uu___4
+            (let uu___5 = FStar_Ident.string_of_lid lid in
+             FStar_Compiler_Util.format4 "%stype %s %s : %s" quals_str uu___5
                binders_str term_str)
       | FStar_Syntax_Syntax.Sig_datacon
           (lid, univs, t, uu___, uu___1, uu___2) ->
@@ -1633,18 +1633,17 @@ let rec (sigelt_to_string_short : FStar_Syntax_Syntax.sigelt -> Prims.string)
         let uu___1 = FStar_Ident.string_of_lid lid in
         FStar_Compiler_Util.format1 "val %s" uu___1
     | FStar_Syntax_Syntax.Sig_inductive_typ
-        (lid, uu___, uu___1, uu___2, uu___3, uu___4) ->
-        let uu___5 = FStar_Ident.string_of_lid lid in
-        FStar_Compiler_Util.format1 "type %s" uu___5
-    | FStar_Syntax_Syntax.Sig_datacon (lid, uu___, t, uu___1, uu___2, uu___3)
-        ->
+        (lid, uu___, uu___1, uu___2, uu___3, uu___4, uu___5) ->
+        let uu___6 = FStar_Ident.string_of_lid lid in
+        FStar_Compiler_Util.format1 "type %s" uu___6
+    | FStar_Syntax_Syntax.Sig_datacon
+        (lid, uu___, uu___1, t_lid, uu___2, uu___3) ->
         let uu___4 = FStar_Ident.string_of_lid lid in
-        let uu___5 = term_to_string t in
-        FStar_Compiler_Util.format2 "datacon %s : %s" uu___4 uu___5
-    | FStar_Syntax_Syntax.Sig_assume (lid, us, f) ->
-        let uu___ = FStar_Ident.string_of_lid lid in
-        let uu___1 = term_to_string f in
-        FStar_Compiler_Util.format2 "assume %s : %s" uu___ uu___1
+        let uu___5 = FStar_Ident.string_of_lid t_lid in
+        FStar_Compiler_Util.format2 "datacon %s for type %s" uu___4 uu___5
+    | FStar_Syntax_Syntax.Sig_assume (lid, us, uu___) ->
+        let uu___1 = FStar_Ident.string_of_lid lid in
+        FStar_Compiler_Util.format1 "assume %s" uu___1
     | FStar_Syntax_Syntax.Sig_bundle (ses, uu___) ->
         let uu___1 = FStar_Compiler_List.hd ses in
         FStar_Compiler_Effect.op_Bar_Greater uu___1 sigelt_to_string_short
@@ -1677,9 +1676,8 @@ let rec (sigelt_to_string_short : FStar_Syntax_Syntax.sigelt -> Prims.string)
         let uu___ =
           let uu___1 = FStar_Compiler_List.map FStar_Ident.string_of_lid lids in
           FStar_Compiler_Effect.op_Less_Bar (FStar_String.concat "; ") uu___1 in
-        let uu___1 = term_to_string t in
-        FStar_Compiler_Util.format4 "%splice%s[%s] (%s)"
-          (if is_typed then "_t" else "") "%s" uu___ uu___1
+        FStar_Compiler_Util.format3 "%splice%s[%s] (...)" "%s"
+          (if is_typed then "_t" else "") uu___
     | FStar_Syntax_Syntax.Sig_polymonadic_bind (m, n, p, t, ty, uu___) ->
         let uu___1 = FStar_Ident.string_of_lid m in
         let uu___2 = FStar_Ident.string_of_lid n in

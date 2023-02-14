@@ -48,33 +48,34 @@ type qualifier =
 [@@ no_auto_projectors]
 type term =
   // | Tm_Embed    : R.term -> term // a host term included as is in Pulse
-  | Tm_BVar     : bv -> term
-  | Tm_Var      : nm -> term
-  | Tm_FVar     : l:R.name -> term
-  | Tm_UInst    : l:R.name -> us:list universe -> term
-  | Tm_Constant : c:constant -> term
-  | Tm_Refine   : b:binder -> term -> term
-  | Tm_Abs      : b:binder -> q:option qualifier -> pre:vprop -> body:term -> post:option vprop -> term
-  | Tm_PureApp  : head:term -> arg_qual:option qualifier -> arg:term -> term
-  | Tm_Let      : t:term -> e1:term -> e2:term -> term  
-  | Tm_STApp    : head:term -> arg_qual:option qualifier -> arg:term -> term  
-  | Tm_Bind     : e1:term -> e2:term -> term
-  | Tm_Emp      : term
-  | Tm_Pure     : p:term -> term
-  | Tm_Star     : l:vprop -> r:vprop -> term
-  | Tm_ExistsSL : t:term -> body:vprop -> term
-  | Tm_ForallSL : t:term -> body:vprop -> term
-  | Tm_Arrow    : b:binder -> q:option qualifier -> body:comp -> term 
-  | Tm_Type     : universe -> term
-  | Tm_VProp    : term
-  | Tm_If       : term -> term -> term -> post:option vprop -> term
+  | Tm_BVar       : bv -> term
+  | Tm_Var        : nm -> term
+  | Tm_FVar       : l:R.name -> term
+  | Tm_UInst      : l:R.name -> us:list universe -> term
+  | Tm_Constant   : c:constant -> term
+  | Tm_Refine     : b:binder -> term -> term
+  | Tm_Abs        : b:binder -> q:option qualifier -> pre:vprop -> body:term -> post:option vprop -> term
+  | Tm_PureApp    : head:term -> arg_qual:option qualifier -> arg:term -> term
+  | Tm_Let        : t:term -> e1:term -> e2:term -> term  
+  | Tm_STApp      : head:term -> arg_qual:option qualifier -> arg:term -> term  
+  | Tm_Bind       : e1:term -> e2:term -> term
+  | Tm_Emp        : term
+  | Tm_Pure       : p:term -> term
+  | Tm_Star       : l:vprop -> r:vprop -> term
+  | Tm_ExistsSL   : t:term -> body:vprop -> term
+  | Tm_ForallSL   : t:term -> body:vprop -> term
+  | Tm_Arrow      : b:binder -> q:option qualifier -> body:comp -> term 
+  | Tm_Type       : universe -> term
+  | Tm_VProp      : term
+  | Tm_If         : term -> term -> term -> post:option vprop -> term
 
-  | Tm_Inames   : term  // type inames
-  | Tm_EmpInames: term
-  // | Tm_Inv      : term -> term
-  // | Tm_AddInv   : term -> term -> term
+  | Tm_Inames     : term  // type inames
+  | Tm_EmpInames  : term
 
-  | Tm_UVar     : int -> term
+  | Tm_ElimExists : term -> term
+  | Tm_IntroExists: term -> term -> term
+
+  | Tm_UVar       : int -> term
 
 and binder = {
   binder_ty     : term;
@@ -131,6 +132,8 @@ let rec freevars (t:term)
     | Tm_Pure p -> freevars p
 
     | Tm_Arrow b _ body -> Set.union (freevars b.binder_ty) (freevars_comp body)
+    | Tm_ElimExists p -> freevars p
+    | Tm_IntroExists e p -> Set.union (freevars e) (freevars p)
 
 and freevars_comp (c:comp) : Set.set var =
   match c with
@@ -212,6 +215,9 @@ let rec ln' (t:term) (i:int) =
      | None -> true
      | Some post -> ln' post (i+1))
 
+  | Tm_ElimExists p -> ln' p i
+  | Tm_IntroExists e p -> ln' e i && ln' p i
+
 and ln'_comp (c:comp) (i:int)
   : Tot bool
   = match c with
@@ -233,8 +239,6 @@ let ln_c (c:comp) = ln'_comp c (-1)
 let rec open_term' (t:term) (v:term) (i:index)
   : Tot term (decreases t)
   = match t with
-    // | Tm_Embed t -> 
-    //   Tm_Embed (RT.open_or_close_term' t ??? *)
     | Tm_BVar bv ->
       if i = bv.bv_index
       then match v with
@@ -312,6 +316,9 @@ let rec open_term' (t:term) (v:term) (i:index)
              | None -> None
              | Some post -> Some (open_term' post v (i + 1)))
 
+    | Tm_ElimExists p -> Tm_ElimExists (open_term' p v i)
+    | Tm_IntroExists e p -> Tm_IntroExists (open_term' e v i)
+                                           (open_term' p v i)
 
 and open_comp' (c:comp) (v:term) (i:index)
   : Tot comp (decreases c)
@@ -414,6 +421,10 @@ let rec close_term' (t:term) (v:var) (i:index)
             (match post with
              | None -> None
              | Some post -> Some (close_term' post v (i + 1)))
+
+    | Tm_ElimExists p -> Tm_ElimExists (close_term' p v i)
+    | Tm_IntroExists e p -> Tm_IntroExists (close_term' e v i)
+                                           (close_term' p v i)
 
 and close_comp' (c:comp) (v:var) (i:index)
   : Tot comp (decreases c)
@@ -616,7 +627,9 @@ let rec term_no_pp (t:term) : term =
     Tm_If (term_no_pp e1) (term_no_pp e2) (term_no_pp e3)
           (term_opt_no_pp post)
   | Tm_Inames
-  | Tm_EmpInames
+  | Tm_EmpInames -> t
+  | Tm_ElimExists p -> Tm_ElimExists (term_no_pp p)
+  | Tm_IntroExists e p -> Tm_IntroExists (term_no_pp e) (term_no_pp p)
   | Tm_UVar _ -> t
 
 and binder_no_pp (b:binder) : binder =

@@ -709,7 +709,7 @@ let try_lookup_datacon env (lid:lident) =
 
 let find_all_datacons env (lid:lident) =
   let k_global_def lid = function
-      | ({ sigel = Sig_inductive_typ(_, _, _, _, datas, _) }, _) -> Some datas
+      | ({ sigel = Sig_inductive_typ(_, _, _, _, _, datas, _) }, _) -> Some datas
       | _ -> None in
   resolve_in_open_namespaces' env lid (fun _ -> None) (fun _ -> None) k_global_def
 
@@ -756,7 +756,7 @@ let extract_record (e:env) (new_globs: ref (list scope_mod)) = fun se -> match s
         | _ -> false) in
 
     sigs |> List.iter (function
-      | { sigel = Sig_inductive_typ(typename, univs, parms, _, _, [dc]); sigquals = typename_quals } ->
+      | { sigel = Sig_inductive_typ(typename, univs, parms, _, _, _, [dc]); sigquals = typename_quals } ->
         begin match must <| find_dc dc with
             | { sigel = Sig_datacon(constrname, _, t, _, n, _) } ->
                 let all_formals, _ = U.arrow_formals t in
@@ -1059,7 +1059,7 @@ let finish env modul =
       then ses |> List.iter (fun se -> match se.sigel with
                 | Sig_datacon(lid, _, _, _, _, _) ->
                   BU.smap_remove (sigmap env) (string_of_lid lid)
-                | Sig_inductive_typ(lid, univ_names, binders, typ, _, _) ->
+                | Sig_inductive_typ(lid, univ_names, binders, _, typ, _, _) ->
                   BU.smap_remove (sigmap env) (string_of_lid lid);
                   if not (List.contains Private quals)
                   then //it's only abstract; add it back to the environment as an abstract type

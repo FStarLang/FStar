@@ -528,6 +528,7 @@ type sigelt' =
   | Sig_inductive_typ       of lident                   //type l forall u1..un. (x1:t1) ... (xn:tn) : t
                             * univ_names                //u1..un
                             * binders                   //(x1:t1) ... (xn:tn)
+                            * option int                  //number of recursively uniform type parameters
                             * typ                       //t
                             * list lident              //mutually defined types
                             * list lident              //data constructors for this type

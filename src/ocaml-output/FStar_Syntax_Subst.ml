@@ -668,18 +668,18 @@ let (push_subst_lcomp :
       match lopt with
       | FStar_Pervasives_Native.None -> FStar_Pervasives_Native.None
       | FStar_Pervasives_Native.Some rc ->
-          let uu___ =
-            let uu___1 =
-              FStar_Compiler_Util.map_opt rc.FStar_Syntax_Syntax.residual_typ
-                (subst' s) in
+          let residual_typ =
+            FStar_Compiler_Util.map_opt rc.FStar_Syntax_Syntax.residual_typ
+              (subst' s) in
+          let rc1 =
             {
               FStar_Syntax_Syntax.residual_effect =
                 (rc.FStar_Syntax_Syntax.residual_effect);
-              FStar_Syntax_Syntax.residual_typ = uu___1;
+              FStar_Syntax_Syntax.residual_typ = residual_typ;
               FStar_Syntax_Syntax.residual_flags =
                 (rc.FStar_Syntax_Syntax.residual_flags)
             } in
-          FStar_Pervasives_Native.Some uu___
+          FStar_Pervasives_Native.Some rc1
 let (compose_uvar_subst :
   FStar_Syntax_Syntax.ctx_uvar ->
     FStar_Syntax_Syntax.subst_ts ->
@@ -1914,7 +1914,13 @@ let rec (deep_compress :
               let uu___3 = deep_compress allow_uvars t2 in (uu___2, uu___3) in
             FStar_Syntax_Syntax.Tm_let uu___1 in
           mk uu___
-      | FStar_Syntax_Syntax.Tm_uvar uu___ -> t1
+      | FStar_Syntax_Syntax.Tm_uvar uu___ ->
+          if allow_uvars
+          then t1
+          else
+            FStar_Errors.raise_err
+              (FStar_Errors.Error_UnexpectedUnresolvedUvar,
+                "Internal error: unexpected unresolved uvar in deep_compress")
       | FStar_Syntax_Syntax.Tm_quoted (tm, qi) ->
           let qi1 =
             FStar_Syntax_Syntax.on_antiquoted (deep_compress allow_uvars) qi in

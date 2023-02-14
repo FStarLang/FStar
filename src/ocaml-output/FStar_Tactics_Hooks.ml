@@ -858,8 +858,6 @@ let rec (traverse_for_spinoff :
                                (env2.FStar_TypeChecker_Env.teq_nosmt_force);
                              FStar_TypeChecker_Env.subtype_nosmt_force =
                                (env2.FStar_TypeChecker_Env.subtype_nosmt_force);
-                             FStar_TypeChecker_Env.use_bv_sorts =
-                               (env2.FStar_TypeChecker_Env.use_bv_sorts);
                              FStar_TypeChecker_Env.qtbl_name_and_index =
                                (env2.FStar_TypeChecker_Env.qtbl_name_and_index);
                              FStar_TypeChecker_Env.normalized_eff_names =
@@ -1766,8 +1764,6 @@ let (splice :
                                      FStar_TypeChecker_Env.subtype_nosmt_force
                                        =
                                        (env.FStar_TypeChecker_Env.subtype_nosmt_force);
-                                     FStar_TypeChecker_Env.use_bv_sorts =
-                                       (env.FStar_TypeChecker_Env.use_bv_sorts);
                                      FStar_TypeChecker_Env.qtbl_name_and_index
                                        =
                                        (env.FStar_TypeChecker_Env.qtbl_name_and_index);
