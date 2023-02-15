@@ -556,6 +556,9 @@ let rec close_open_inverse' (t:term) (x:var { ~(x `Set.mem` freevars t) } ) (i:i
     | Tm_Arrow b _ body ->
       close_open_inverse' b.binder_ty x i;
       close_open_inverse'_comp body x (i + 1)
+
+    | Tm_ElimExists t -> close_open_inverse' t x i
+    | Tm_IntroExists t e -> close_open_inverse' t x i; close_open_inverse' e x i
       
 and close_open_inverse'_comp (c:comp) (x:var { ~(x `Set.mem` freevars_comp c) } ) (i:index)
   : Lemma (ensures close_comp' (open_comp' c (term_of_var x) i) x i == c)

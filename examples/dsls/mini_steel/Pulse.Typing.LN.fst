@@ -82,6 +82,11 @@ let rec open_term_ln' (e:term)
       open_term_ln' b.binder_ty x i;
       open_term_ln'_comp body x (i + 1)
 
+    | Tm_ElimExists t -> open_term_ln' t x i
+    | Tm_IntroExists t e ->
+      open_term_ln' t x i;
+      open_term_ln' e x i
+
 and open_term_ln'_comp (c:comp)
                        (x:term)
                        (i:index)
