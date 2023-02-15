@@ -796,21 +796,18 @@ and p_typeDecl pre = function
     let comm, doc = p_typ_sep false false t in
     comm, p_typeDeclPrefix pre true lid bs typ_opt, doc, jump2
   | TyconRecord (lid, bs, typ_opt, attrs, record_field_decls) ->
-    let p_recordField (ps: bool) (lid, aq, attrs, t) =
-      let comm, field =
-        with_comment_sep (p_recordFieldDecl ps) (lid, aq, attrs, t)
-                         (extend_to_end_of_line t.range) in
-      let sep = if ps then semi else empty in
-      inline_comment_or_above comm field sep
-    in
-    let p_fields = p_attributes false attrs ^^ braces_with_nesting (
-        separate_map_last hardline p_recordField record_field_decls)
-    in
-    empty, p_typeDeclPrefix pre true lid bs typ_opt, p_fields, (fun d -> space ^^ d)
+      empty
+    , p_typeDeclPrefix pre true lid bs typ_opt
+    , p_attributes false attrs ^^ p_typeDeclRecord record_field_decls
+    , (fun d -> space ^^ d)
   | TyconVariant (lid, bs, typ_opt, ct_decls) ->
-    let p_constructorBranchAndComments (uid, t_opt, use_of, attrs) =
-        let range = extend_to_end_of_line (dflt (range_of_id uid) (map_opt t_opt (fun t -> t.range))) in
-        let comm, ctor = with_comment_sep p_constructorBranch (uid, t_opt, use_of, attrs) range in
+    let p_constructorBranchAndComments (uid, payload, attrs) =
+        let range = extend_to_end_of_line (
+          dflt (range_of_id uid) 
+               (bind_opt payload 
+                   (function | VpOfNotation t | VpArbitrary t -> Some t.range
+                             | VpRecord (record, _)           -> None))) in
+        let comm, ctor = with_comment_sep p_constructorBranch (uid, payload, attrs) range in
         inline_comment_or_above comm ctor empty
     in
     (* Beware of side effects with comments printing *)
@@ -818,6 +815,15 @@ and p_typeDecl pre = function
         separate_map hardline p_constructorBranchAndComments ct_decls
     in
     empty, p_typeDeclPrefix pre true lid bs typ_opt, datacon_doc, jump2
+and p_typeDeclRecord (fields: tycon_record): document =
+    let p_recordField (ps: bool) (lid, aq, attrs, t) =
+      let comm, field =
+        with_comment_sep (p_recordFieldDecl ps) (lid, aq, attrs, t)
+                         (extend_to_end_of_line t.range) in
+      let sep = if ps then semi else empty in
+      inline_comment_or_above comm field sep
+    in
+    separate_map_last hardline p_recordField fields |> braces_with_nesting
 
 and p_typeDeclPrefix kw eq lid bs typ_opt =
   let with_kw cont =
@@ -841,11 +847,15 @@ and p_typeDeclPrefix kw eq lid bs typ_opt =
 and p_recordFieldDecl ps (lid, aq, attrs, t) =
   group (optional p_aqual aq ^^ p_attributes false attrs ^^ p_lident lid ^^ colon ^^ p_typ ps false t)
 
-and p_constructorBranch (uid, t_opt, use_of, attrs) =
-  let sep = if use_of then str "of" else colon in
-  let uid_doc = group (bar ^^ space ^^ p_attributes false attrs ^^ p_uident uid) in
-  default_or_map uid_doc (fun t -> (group (uid_doc ^^ space ^^ sep ^^ space ^^ p_typ false false t))) t_opt
-
+and p_constructorBranch (uid, variant, attrs) =
+  let h isOf t = (if isOf then str "of" else colon) ^^ space ^^ p_typ false false t
+  in group (bar ^^ space ^^ p_attributes false attrs ^^ p_uident uid)
+  ^^ default_or_map empty
+        (fun payload -> space ^^ group
+           ( match payload with
+           | VpOfNotation t -> h true t | VpArbitrary t -> h false t
+           | VpRecord (r, t) -> p_typeDeclRecord r ^^ default_or_map empty (h false) t
+           )) variant
 and p_letlhs kw (pat, _) inner_let =
   (* TODO : this should be refined when head is an applicative pattern (function definition) *)
   let pat, ascr =

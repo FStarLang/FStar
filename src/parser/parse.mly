@@ -290,14 +290,16 @@ tvarinsts:
   | TYP_APP_LESS tvs=separated_nonempty_list(COMMA, tvar) TYP_APP_GREATER
       { map (fun tv -> mk_binder (TVariable(tv)) (range_of_id tv) Kind None) tvs }
 
+%inline recordDefinition:
+  | LBRACE record_field_decls=right_flexible_nonempty_list(SEMICOLON, recordFieldDecl) RBRACE
+    { record_field_decls }
+
 typeDefinition:
   |   { (fun id binders kopt -> check_id id; TyconAbstract(id, binders, kopt)) }
   | EQUALS t=typ
       { (fun id binders kopt ->  check_id id; TyconAbbrev(id, binders, kopt, t)) }
   /* A documentation on the first branch creates a conflict with { x with a = ... }/{ a = ... } */
-  | EQUALS attrs_opt=ioption(binderAttributes) LBRACE
-      record_field_decls=right_flexible_nonempty_list(SEMICOLON, recordFieldDecl)
-   RBRACE
+  | EQUALS attrs_opt=ioption(binderAttributes) record_field_decls=recordDefinition
       { (fun id binders kopt -> check_id id; TyconRecord(id, binders, kopt, none_to_empty_list attrs_opt, record_field_decls)) }
   (* having the first BAR optional using left-flexible list creates a s/r on FSDOC since any decl can be preceded by a FSDOC *)
   | EQUALS ct_decls=list(constructorDecl)
@@ -310,9 +312,16 @@ recordFieldDecl:
         (lid, qual, attrs, t)
       }
 
+constructorPayload:
+  | COLON t=typ                                         {VpArbitrary  t}
+  |    OF t=typ                                         {VpOfNotation t}
+  | fields=recordDefinition opt=option(COLON t=typ {t}) {VpRecord(fields, opt)}
+
 constructorDecl:
-  | BAR attrs_opt=ioption(binderAttributes) uid=uident COLON t=typ                { (uid, Some t, false, none_to_empty_list attrs_opt) }
-  | BAR attrs_opt=ioption(binderAttributes) uid=uident t_opt=option(OF t=typ {t}) { (uid, t_opt, true, none_to_empty_list attrs_opt) }
+  | BAR attrs_opt=ioption(binderAttributes)
+        uid=uident
+        payload=option(constructorPayload)
+    { uid, payload, none_to_empty_list attrs_opt }
 
 attr_letbinding:
   | attr=ioption(attribute) AND lb=letbinding
