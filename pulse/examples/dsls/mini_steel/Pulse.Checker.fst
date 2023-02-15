@@ -336,23 +336,23 @@ let rec check' : bool -> check_t =
        T_If g b e1 e2 post_if c hyp (E b_typing) e1_typing e2_typing |)
 
   | Tm_ElimExists t ->
-    let (| t, t_typing |) = check_tot_with_expected_typ f g t Tm_VProp in
+    let (| t, t_typing |) = check_vprop f g t in
     (match t with
      | Tm_ExistsSL ty p ->
        // Could this come from inversion of t_typing?
        let (| u, ty_typing |) = check_universe f g ty in
-       let d = T_ElimExists g u ty p ty_typing (E t_typing) in
+       let d = T_ElimExists g u ty p ty_typing t_typing in
        repack (try_frame_pre pre_typing d) true
      | _ -> T.fail "elim_exists argument not a Tm_ExistsSL")
 
   | Tm_IntroExists t e ->
-    let (| t, t_typing |) = check_tot_with_expected_typ f g t Tm_VProp in
+    let (| t, t_typing |) = check_vprop f g t in
     (match t with
      | Tm_ExistsSL ty p ->
        // Could this come from inversion of t_typing?
        let (| u, ty_typing |) = check_universe f g ty in
        let (| e, e_typing |) = check_tot_with_expected_typ f g e ty in
-       let d = T_IntroExists g u ty p e ty_typing (E t_typing) (E e_typing) in
+       let d = T_IntroExists g u ty p e ty_typing t_typing (E e_typing) in
        repack (try_frame_pre pre_typing d) true
      | _ -> T.fail "elim_exists argument not a Tm_ExistsSL")
 

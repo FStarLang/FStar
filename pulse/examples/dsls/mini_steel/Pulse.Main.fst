@@ -49,6 +49,46 @@ let unexpected_term msg t =
                             msg
                             (T.term_to_string t))
 
+let is_elim_exists (t:R.term) : T.Tac (option (R.term & R.term)) =
+  let open R in
+  match inspect_ln t with
+  | Tv_App hd (arg2, _) ->
+    (match inspect_ln hd with
+     | Tv_App hd (arg1, _) ->
+       (match inspect_ln hd with
+        | Tv_UInst v _
+        | Tv_FVar v ->
+          if inspect_fv v = elim_exists_lid
+          then match inspect_ln arg2 with
+               | Tv_Abs _ body -> Some (arg1, body)
+               | _ -> None
+          else None
+        | _ -> None)
+     | _ -> None)
+  | _ -> None
+
+let is_intro_exists (t:R.term) : T.Tac (option (R.term & R.term & R.term)) =
+  let open R in
+  match inspect_ln t with
+  | Tv_App hd (arg3, _) ->
+    (match inspect_ln hd with
+     | Tv_App hd (arg2, _) ->
+       (match inspect_ln hd with
+        | Tv_App hd (arg1, _) ->
+          (match inspect_ln arg2 with
+           | Tv_Abs _ body ->
+             (match inspect_ln hd with
+              | Tv_UInst fv _
+              | Tv_FVar fv ->
+                if inspect_fv fv = intro_exists_lid
+                then Some (arg1, body, arg3)
+                else None
+              | _ -> None)
+           | _ -> None)
+        | _ -> None)
+     | _ -> None)
+  | _ -> None
+
 let readback_ty (t:R.term)
   : T.Tac (err term)
   = try match Readback.readback_ty t with
@@ -228,10 +268,25 @@ and translate_st_term (t:R.term)
   : T.Tac (err term)
   = match R.inspect_ln t with 
     | R.Tv_App _ _ -> (
-      let? t = readback_ty t in
-      match t with
-      | Tm_PureApp head q arg -> Inl (Tm_STApp head q arg)
-      | _ -> Inl t
+      let ropt = is_elim_exists t in
+      (match ropt with
+       | None ->
+         let ropt = is_intro_exists t in
+         (match ropt with
+          | None ->
+            let? t = readback_ty t in
+            (match t with
+             | Tm_PureApp head q arg -> Inl (Tm_STApp head q arg)
+             | _ -> Inl t)
+          | Some (t, p, e) ->
+            let? t = readback_ty t in
+            let? p = readback_ty p in
+            let? e = readback_ty e in
+            Inl (Tm_IntroExists (Tm_ExistsSL t p) e))
+       | Some (t, p) ->
+         let? t = readback_ty t in
+         let? p = readback_ty p in
+         Inl (Tm_ElimExists (Tm_ExistsSL t p)))
     )
 
     | R.Tv_Let false [] bv def body ->
