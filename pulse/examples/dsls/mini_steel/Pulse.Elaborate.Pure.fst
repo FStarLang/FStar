@@ -187,8 +187,8 @@ let rec elab_term (top:term)
       let head = pack_ln (Tv_FVar (pack_fv star_lid)) in      
       Some (R.mk_app head [(l, Q_Explicit); (r, Q_Explicit)])
       
-    | Tm_ExistsSL t body
-    | Tm_ForallSL t body ->    
+    | Tm_ExistsSL u t body
+    | Tm_ForallSL u t body ->    
       let? t = elab_term t in
       let? b = elab_term body in
       let body = R.pack_ln (R.Tv_Abs (binder_of_t_q t R.Q_Explicit) b) in
@@ -198,7 +198,7 @@ let rec elab_term (top:term)
           then exists_lid
           else forall_lid 
         in
-        pack_ln (Tv_FVar (pack_fv head_lid)) in
+        pack_ln (Tv_UInst (pack_fv head_lid) [elab_universe u]) in
       Some (R.mk_app head ([(t, Q_Implicit); (body, Q_Explicit)]))
 
     | Tm_Inames ->
@@ -291,8 +291,8 @@ let rec opening_pure_term_with_pure_term (x:pure_term) (v:pure_term) (i:index)
     | Tm_Pure p ->
       aux p i
               
-    | Tm_ExistsSL t body
-    | Tm_ForallSL t body ->
+    | Tm_ExistsSL _ t body
+    | Tm_ForallSL _ t body ->
       aux t i; aux body (i + 1)
     
     | Tm_Arrow b _ c ->
@@ -357,8 +357,8 @@ let rec closing_pure_term (x:pure_term) (v:var) (i:index)
     | Tm_Pure p ->
       aux p i
               
-    | Tm_ExistsSL t body
-    | Tm_ForallSL t body ->
+    | Tm_ExistsSL _ t body
+    | Tm_ForallSL _ t body ->
       aux t i; aux body (i + 1)
     
     | Tm_Arrow b _ c ->
@@ -416,8 +416,8 @@ let rec elab_pure_eq_tm (t1 t2:pure_term)
   | Tm_Star l1 r1, Tm_Star l2 r2 ->
     elab_pure_eq_tm l1 l2;
     elab_pure_eq_tm r1 r2
-  | Tm_ExistsSL t1 body1, Tm_ExistsSL t2 body2
-  | Tm_ForallSL t1 body1, Tm_ForallSL t2 body2 ->
+  | Tm_ExistsSL _ t1 body1, Tm_ExistsSL _ t2 body2
+  | Tm_ForallSL _ t1 body1, Tm_ForallSL _ t2 body2 ->
     elab_pure_eq_tm t1 t2;
     elab_pure_eq_tm body1 body2
   | Tm_Inames, _ -> ()

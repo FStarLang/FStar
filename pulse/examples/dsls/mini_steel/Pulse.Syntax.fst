@@ -62,8 +62,8 @@ type term =
   | Tm_Emp        : term
   | Tm_Pure       : p:term -> term
   | Tm_Star       : l:vprop -> r:vprop -> term
-  | Tm_ExistsSL   : t:term -> body:vprop -> term
-  | Tm_ForallSL   : t:term -> body:vprop -> term
+  | Tm_ExistsSL   : u:universe -> t:term -> body:vprop -> term
+  | Tm_ForallSL   : u:universe -> t:term -> body:vprop -> term
   | Tm_Arrow      : b:binder -> q:option qualifier -> body:comp -> term 
   | Tm_Type       : universe -> term
   | Tm_VProp      : term
@@ -119,8 +119,8 @@ let rec freevars (t:term)
     | Tm_PureApp t1 _ t2
     | Tm_STApp t1 _ t2
     | Tm_Star  t1 t2
-    | Tm_ExistsSL t1 t2
-    | Tm_ForallSL t1 t2 
+    | Tm_ExistsSL _ t1 t2
+    | Tm_ForallSL _ t1 t2 
     | Tm_Bind t1 t2 -> Set.union (freevars t1) (freevars t2)
 
     | Tm_Let t e1 e2 ->
@@ -198,8 +198,8 @@ let rec ln' (t:term) (i:int) =
   | Tm_Pure p ->
     ln' p i
 
-  | Tm_ExistsSL t body
-  | Tm_ForallSL t body ->
+  | Tm_ExistsSL _ t body
+  | Tm_ForallSL _ t body ->
     ln' t i &&
     ln' body (i + 1)
     
@@ -296,13 +296,13 @@ let rec open_term' (t:term) (v:term) (i:index)
       Tm_Star (open_term' l v i)
               (open_term' r v i)
               
-    | Tm_ExistsSL t body ->
-      Tm_ExistsSL (open_term' t v i)
-                  (open_term' body v (i + 1))
+    | Tm_ExistsSL u t body ->
+      Tm_ExistsSL u (open_term' t v i)
+                    (open_term' body v (i + 1))
                   
-    | Tm_ForallSL t body ->
-      Tm_ForallSL (open_term' t v i)
-                  (open_term' body v (i + 1))
+    | Tm_ForallSL u t body ->
+      Tm_ForallSL u (open_term' t v i)
+                    (open_term' body v (i + 1))
     
     | Tm_Arrow b q c ->
       Tm_Arrow {b with binder_ty=open_term' b.binder_ty v i} q
@@ -402,13 +402,13 @@ let rec close_term' (t:term) (v:var) (i:index)
       Tm_Star (close_term' l v i)
               (close_term' r v i)
               
-    | Tm_ExistsSL t body ->
-      Tm_ExistsSL (close_term' t v i)
-                  (close_term' body v (i + 1))
+    | Tm_ExistsSL u t body ->
+      Tm_ExistsSL u (close_term' t v i)
+                    (close_term' body v (i + 1))
                   
-    | Tm_ForallSL t body ->
-      Tm_ForallSL (close_term' t v i)
-                  (close_term' body v (i + 1))
+    | Tm_ForallSL u t body ->
+      Tm_ForallSL u (close_term' t v i)
+                    (close_term' body v (i + 1))
     
     | Tm_Arrow b q c ->
       Tm_Arrow {b with binder_ty=close_term' b.binder_ty v i} q
@@ -542,8 +542,8 @@ let rec close_open_inverse' (t:term) (x:var { ~(x `Set.mem` freevars t) } ) (i:i
       close_open_inverse' e1 x i;
       close_open_inverse' e2 x (i + 1)
 
-    | Tm_ExistsSL t b
-    | Tm_ForallSL t b ->
+    | Tm_ExistsSL _ t b
+    | Tm_ForallSL _ t b ->
       close_open_inverse' t x i;    
       close_open_inverse' b x (i + 1)
       
@@ -620,8 +620,8 @@ let rec term_no_pp (t:term) : term =
   | Tm_Emp -> t
   | Tm_Pure p -> Tm_Pure (term_no_pp p)
   | Tm_Star l r -> Tm_Star (term_no_pp l) (term_no_pp r)
-  | Tm_ExistsSL t body -> Tm_ExistsSL (term_no_pp t) (term_no_pp body)
-  | Tm_ForallSL t body -> Tm_ForallSL (term_no_pp t) (term_no_pp body)
+  | Tm_ExistsSL u t body -> Tm_ExistsSL u (term_no_pp t) (term_no_pp body)
+  | Tm_ForallSL u t body -> Tm_ForallSL u (term_no_pp t) (term_no_pp body)
   | Tm_Arrow b q c ->
     Tm_Arrow (binder_no_pp b) q (comp_no_pp c)
   | Tm_Type _ -> t

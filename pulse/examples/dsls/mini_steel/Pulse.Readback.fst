@@ -188,7 +188,6 @@ let rec readback_ty (t:R.term)
     let head, args = R.collect_app t in
     begin
     match inspect_ln head, args with
-    | Tv_UInst fv _, [(a1, _); (a2, _)]
     | Tv_FVar fv, [(a1,_); (a2,_)] -> 
       if inspect_fv fv = star_lid
       then (
@@ -197,9 +196,12 @@ let rec readback_ty (t:R.term)
         assume (elab_term (Tm_Star t1 t2) == Some t);
         Some #(t':Pulse.Syntax.term {elab_term t' == Some t}) (Tm_Star t1 t2)
       )
-      else if inspect_fv fv = exists_lid ||
-              inspect_fv fv = forall_lid
+      else aux ()
+    | Tv_UInst fv [u], [(a1, _); (a2, _)] ->
+      if inspect_fv fv = exists_lid ||
+         inspect_fv fv = forall_lid
       then (
+        let? u = readback_universe u in
         let? ty = readback_ty a1 in
         let? p =
           match inspect_ln a2 with
@@ -212,12 +214,12 @@ let rec readback_ty (t:R.term)
         let pulse_t : (t':Pulse.Syntax.term{elab_term t' == Some t}) =
           if inspect_fv fv = exists_lid
           then begin
-            assume (elab_term (Tm_ExistsSL ty p) == Some t);
-            Tm_ExistsSL ty p
+            assume (elab_term (Tm_ExistsSL u ty p) == Some t);
+            Tm_ExistsSL u ty p
           end
           else begin
-            assume (elab_term (Tm_ForallSL ty p) == Some t);
-            Tm_ForallSL ty p
+            assume (elab_term (Tm_ForallSL u ty p) == Some t);
+            Tm_ForallSL u ty p
           end in
           
         Some pulse_t

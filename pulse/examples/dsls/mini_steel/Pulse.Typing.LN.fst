@@ -67,8 +67,8 @@ let rec open_term_ln' (e:term)
       open_term_ln' e1 x i;
       open_term_ln' e2 x (i + 1)
 
-    | Tm_ExistsSL t b
-    | Tm_ForallSL t b ->
+    | Tm_ExistsSL _ t b
+    | Tm_ForallSL _ t b ->
       open_term_ln' t x i;    
       open_term_ln' b x (i + 1)
       
@@ -136,4 +136,4 @@ let rec src_typing_ln (#f:_) (#g:_) (#t:_) (#c:_)
       admit()
       
     | _ -> admit()
-  
+

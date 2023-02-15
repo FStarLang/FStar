@@ -102,7 +102,7 @@ let rec vprop_list_equiv (f:RT.fstar_top_env)
 
 module L = FStar.List.Tot.Base
 
-#push-options "--z3rlimit_factor 2"
+#push-options "--z3rlimit_factor 4"
 let check_one_vprop f g (p q:pure_term) : T.Tac (option (vprop_equiv f g p q)) =
   if eq_tm p q
   then Some (VE_Refl _ _ _)
