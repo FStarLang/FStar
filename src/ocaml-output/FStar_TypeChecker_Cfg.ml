@@ -3636,6 +3636,40 @@ let (built_in_primitive_steps : primitive_step FStar_Compiler_Util.psmap) =
                  | uu___3 -> FStar_Pervasives_Native.None))
          (fun body -> body)
          (fun _us -> fun _t -> fun body -> FStar_Pervasives_Native.Some body))) in
+  let seal =
+    (FStar_Parser_Const.seal, (Prims.of_int (2)), Prims.int_one,
+      (fun _psc ->
+         fun _norm_cb ->
+           fun _us ->
+             fun uu___ ->
+               match uu___ with
+               | uu___1::(x, uu___2)::[] -> FStar_Pervasives_Native.Some x),
+      (fun _us ->
+         fun uu___ ->
+           match uu___ with
+           | uu___1::(x, uu___2)::[] -> FStar_Pervasives_Native.Some x)) in
+  let sealed_bind =
+    (FStar_Parser_Const.seal, (Prims.of_int (4)), (Prims.of_int (2)),
+      (fun _psc ->
+         fun _norm_cb ->
+           fun _us ->
+             fun uu___ ->
+               match uu___ with
+               | uu___1::uu___2::(x, uu___3)::(f, uu___4)::[] ->
+                   let uu___5 =
+                     let uu___6 =
+                       let uu___7 = FStar_Syntax_Syntax.as_arg x in [uu___7] in
+                     FStar_Syntax_Util.mk_app f uu___6 in
+                   FStar_Pervasives_Native.Some uu___5),
+      (fun _us ->
+         fun uu___ ->
+           match uu___ with
+           | uu___1::uu___2::(x, uu___3)::(f, uu___4)::[] ->
+               let uu___5 =
+                 FStar_TypeChecker_NBETerm.iapp_cb bogus_cbs f
+                   [(x, FStar_Pervasives_Native.None)] in
+               FStar_Pervasives_Native.Some uu___5)) in
+  let sealed_ops = [seal; sealed_bind] in
   let array_ops =
     let of_list_op =
       let emb_typ t =
@@ -3869,7 +3903,8 @@ let (built_in_primitive_steps : primitive_step FStar_Compiler_Util.psmap) =
     FStar_Compiler_List.map (as_primitive_step true)
       (FStar_Compiler_List.op_At basic_ops
          (FStar_Compiler_List.op_At bounded_arith_ops
-            (FStar_Compiler_List.op_At [reveal_hide] array_ops))) in
+            (FStar_Compiler_List.op_At [reveal_hide]
+               (FStar_Compiler_List.op_At array_ops sealed_ops)))) in
   let weak_steps = FStar_Compiler_List.map (as_primitive_step false) weak_ops in
   FStar_Compiler_Effect.op_Less_Bar prim_from_list
     (FStar_Compiler_List.op_At strong_steps weak_steps)

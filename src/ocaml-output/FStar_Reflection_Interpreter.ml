@@ -239,6 +239,38 @@ let nbe_int3 :
                   | uu___ -> FStar_Pervasives_Native.None
 let (mklid : Prims.string -> FStar_Ident.lid) =
   fun nm -> FStar_Reflection_Constants.fstar_refl_builtins_lid nm
+let (mk_us :
+  FStar_Ident.lid ->
+    Prims.int ->
+      Prims.int ->
+        (FStar_TypeChecker_Cfg.psc ->
+           FStar_Syntax_Embeddings.norm_cb ->
+             FStar_Syntax_Syntax.args ->
+               FStar_Syntax_Syntax.term FStar_Pervasives_Native.option)
+          ->
+          (FStar_TypeChecker_NBETerm.nbe_cbs ->
+             FStar_TypeChecker_NBETerm.args ->
+               FStar_TypeChecker_NBETerm.t FStar_Pervasives_Native.option)
+            -> FStar_TypeChecker_Cfg.primitive_step)
+  =
+  fun l ->
+    fun u_arity ->
+      fun arity ->
+        fun fn ->
+          fun nbe_fn ->
+            {
+              FStar_TypeChecker_Cfg.name = l;
+              FStar_TypeChecker_Cfg.arity = arity;
+              FStar_TypeChecker_Cfg.univ_arity = u_arity;
+              FStar_TypeChecker_Cfg.auto_reflect =
+                FStar_Pervasives_Native.None;
+              FStar_TypeChecker_Cfg.strong_reduction_ok = true;
+              FStar_TypeChecker_Cfg.requires_binder_substitution = false;
+              FStar_TypeChecker_Cfg.interpretation =
+                (fun psc -> fun cbs -> fun _us -> fun args -> fn psc cbs args);
+              FStar_TypeChecker_Cfg.interpretation_nbe =
+                (fun cbs -> fun _us -> fun args -> nbe_fn cbs args)
+            }
 let (mk :
   FStar_Ident.lid ->
     Prims.int ->
@@ -254,20 +286,7 @@ let (mk :
   =
   fun l ->
     fun arity ->
-      fun fn ->
-        fun nbe_fn ->
-          {
-            FStar_TypeChecker_Cfg.name = l;
-            FStar_TypeChecker_Cfg.arity = arity;
-            FStar_TypeChecker_Cfg.univ_arity = Prims.int_zero;
-            FStar_TypeChecker_Cfg.auto_reflect = FStar_Pervasives_Native.None;
-            FStar_TypeChecker_Cfg.strong_reduction_ok = true;
-            FStar_TypeChecker_Cfg.requires_binder_substitution = false;
-            FStar_TypeChecker_Cfg.interpretation =
-              (fun psc -> fun cbs -> fun _us -> fun args -> fn psc cbs args);
-            FStar_TypeChecker_Cfg.interpretation_nbe =
-              (fun cbs -> fun _us -> fun args -> nbe_fn cbs args)
-          }
+      fun fn -> fun nbe_fn -> mk_us l Prims.int_zero arity fn nbe_fn
 type 'a dualemb =
   ('a FStar_Syntax_Embeddings.embedding * 'a
     FStar_TypeChecker_NBETerm.embedding)
@@ -352,6 +371,22 @@ let e_option : 'a . 'a dualemb -> 'a FStar_Pervasives_Native.option dualemb =
       FStar_TypeChecker_NBETerm.e_option (FStar_Pervasives_Native.snd e) in
     (uu___, uu___1)
 let (e_string_list : Prims.string Prims.list dualemb) = e_list e_string
+let mk1' :
+  'a 'r .
+    Prims.string ->
+      ('a -> 'r) ->
+        'a dualemb -> 'r dualemb -> FStar_TypeChecker_Cfg.primitive_step
+  =
+  fun nm ->
+    fun f ->
+      fun ea ->
+        fun er ->
+          let l = mklid nm in
+          mk_us l Prims.int_one Prims.int_one
+            (int1 l f (FStar_Pervasives_Native.fst ea)
+               (FStar_Pervasives_Native.fst er))
+            (nbe_int1 l f (FStar_Pervasives_Native.snd ea)
+               (FStar_Pervasives_Native.snd er))
 let mk1 :
   'a 'r .
     Prims.string ->
@@ -474,10 +509,9 @@ let (reflection_primops : FStar_TypeChecker_Cfg.primitive_step Prims.list) =
                                   e_binder e_binder_view in
                               let uu___29 =
                                 let uu___30 =
-                                  let uu___31 = e_list e_term in
-                                  mk3 "pack_binder"
-                                    FStar_Reflection_Basic.pack_binder e_bv
-                                    e_aqualv uu___31 e_binder in
+                                  mk1 "pack_binder"
+                                    FStar_Reflection_Basic.pack_binder
+                                    e_binder_view e_binder in
                                 let uu___31 =
                                   let uu___32 =
                                     let uu___33 = e_option e_vconfig in
@@ -716,6 +750,6 @@ let (reflection_primops : FStar_TypeChecker_Cfg.primitive_step Prims.list) =
       uu___4 :: uu___5 in
     uu___2 :: uu___3 in
   uu___ :: uu___1
-let (uu___200 : unit) =
+let (uu___213 : unit) =
   FStar_Compiler_List.iter FStar_TypeChecker_Cfg.register_extra_step
     reflection_primops
