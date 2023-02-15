@@ -303,11 +303,11 @@ let comp_elim_exists (u:universe) (t:pure_term) (p:pure_term)
   C_STGhost Tm_EmpInames {
     u=u;
     res=t;
-    pre=Tm_ExistsSL t p;
+    pre=Tm_ExistsSL u t p;
     post=p
   }
 
-let comp_intro_exists (t:pure_term) (p:pure_term) (e:pure_term)
+let comp_intro_exists (u:universe) (t:pure_term) (p:pure_term) (e:pure_term)
   : pure_comp =
 
   assert (is_pure_term (open_term' p e 0));
@@ -315,7 +315,7 @@ let comp_intro_exists (t:pure_term) (p:pure_term) (e:pure_term)
     u=U_zero;
     res=tm_unit;
     pre=open_term' p e 0;
-    post=Tm_ExistsSL t p
+    post=Tm_ExistsSL u t p
   }
 
 [@@erasable]
@@ -439,8 +439,8 @@ type src_typing (f:RT.fstar_top_env) : env -> term -> pure_comp -> Type =
       t:pure_term ->
       p:pure_term ->
       tot_typing f g t (Tm_Type u) ->
-      tot_typing f g (Tm_ExistsSL t p) Tm_VProp ->
-      src_typing f g (Tm_ElimExists (Tm_ExistsSL t p))
+      tot_typing f g (Tm_ExistsSL u t p) Tm_VProp ->
+      src_typing f g (Tm_ElimExists (Tm_ExistsSL u t p))
                      (comp_elim_exists u t p)
 
   | T_IntroExists:
@@ -450,10 +450,10 @@ type src_typing (f:RT.fstar_top_env) : env -> term -> pure_comp -> Type =
       p:pure_term ->
       e:pure_term ->
       tot_typing f g t (Tm_Type u) ->
-      tot_typing f g (Tm_ExistsSL t p) Tm_VProp ->
+      tot_typing f g (Tm_ExistsSL u t p) Tm_VProp ->
       tot_typing f g e t ->
-      src_typing f g (Tm_IntroExists e (Tm_ExistsSL t p))
-                     (comp_intro_exists t p e)
+      src_typing f g (Tm_IntroExists e (Tm_ExistsSL u t p))
+                     (comp_intro_exists u t p e)
 
 and tot_typing (f:RT.fstar_top_env) (g:env) (e:term) (t:pure_term) =
   my_erased (src_typing f g e (C_Tot t))

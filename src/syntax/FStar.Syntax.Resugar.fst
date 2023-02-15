@@ -1249,7 +1249,7 @@ let resugar_typ env datacon_ses se : sigelts * A.tycon =
           let resugar_datacon constructors se = match se.sigel with
             | Sig_datacon (l, univs, term, _, num, _) ->
               (* Todo: resugar univs *)
-              let c = (ident_of_lid l, Some (resugar_term' env term), false, map (resugar_term' env) se.sigattrs)  in
+              let c = (ident_of_lid l, Some (VpArbitrary (resugar_term' env term)), map (resugar_term' env) se.sigattrs)  in
               c::constructors
             | _ -> failwith "unexpected"
           in

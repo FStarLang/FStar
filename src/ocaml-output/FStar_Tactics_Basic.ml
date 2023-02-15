@@ -4535,9 +4535,6 @@ let (join_goals :
                               let ng = FStar_Syntax_Util.mk_conj t1 t2 in
                               let nenv =
                                 let uu___7 = FStar_Tactics_Types.goal_env g1 in
-                                let uu___8 =
-                                  FStar_Compiler_Util.smap_create
-                                    (Prims.of_int (100)) in
                                 {
                                   FStar_TypeChecker_Env.solver =
                                     (uu___7.FStar_TypeChecker_Env.solver);
@@ -4549,7 +4546,8 @@ let (join_goals :
                                     (FStar_Compiler_List.rev gamma);
                                   FStar_TypeChecker_Env.gamma_sig =
                                     (uu___7.FStar_TypeChecker_Env.gamma_sig);
-                                  FStar_TypeChecker_Env.gamma_cache = uu___8;
+                                  FStar_TypeChecker_Env.gamma_cache =
+                                    (uu___7.FStar_TypeChecker_Env.gamma_cache);
                                   FStar_TypeChecker_Env.modules =
                                     (uu___7.FStar_TypeChecker_Env.modules);
                                   FStar_TypeChecker_Env.expected_typ =

@@ -144,3 +144,13 @@ let warmup (x:int) = assert (x + 1 > x)
       else write_atomic r 3ul
     )
 )))
+
+%splice_t[elim_intro_exists] (check (`(
+  fun (r:ref u32) ->
+    (expects (exists_ u#0 #u32 (fun n -> pts_to r full_perm n)))
+    (provides (fun _ -> exists_ u#0 #u32 (fun n -> pts_to r full_perm n)))
+    (
+      let n = elim_exists u32 (fun n -> pts_to r full_perm n) in
+      intro_exists u32 (fun n -> pts_to r full_perm n) n
+    )
+)))

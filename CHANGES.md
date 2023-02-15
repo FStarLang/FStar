@@ -264,6 +264,14 @@ Guidelines for the changelog:
      provided (using UInt128).
 
 ## Syntax
+   * PR #2812 allows defining variants whose constructors carry
+     records, for example:
+     ```fstar
+     type foo = | A
+                | B { x: int; y: int }
+     ```
+
+     See `examples/misc/VariantsWithRecords.fst` for more examples.
 
    * PR #2727 allows for custom unicode operators. As long as a
      character belongs to the ["Math Symbol" unicode

@@ -1368,46 +1368,37 @@ and (p_typeDecl :
                (comm, uu___2, doc, jump2))
       | FStar_Parser_AST.TyconRecord
           (lid, bs, typ_opt, attrs, record_field_decls) ->
-          let p_recordField ps uu___1 =
-            match uu___1 with
-            | (lid1, aq, attrs1, t) ->
-                let uu___2 =
-                  let uu___3 =
-                    FStar_Compiler_Range.extend_to_end_of_line
-                      t.FStar_Parser_AST.range in
-                  with_comment_sep (p_recordFieldDecl ps)
-                    (lid1, aq, attrs1, t) uu___3 in
-                (match uu___2 with
-                 | (comm, field) ->
-                     let sep =
-                       if ps then FStar_Pprint.semi else FStar_Pprint.empty in
-                     inline_comment_or_above comm field sep) in
-          let p_fields =
-            let uu___1 = p_attributes false attrs in
-            let uu___2 =
-              let uu___3 =
-                separate_map_last FStar_Pprint.hardline p_recordField
-                  record_field_decls in
-              braces_with_nesting uu___3 in
-            FStar_Pprint.op_Hat_Hat uu___1 uu___2 in
           let uu___1 = p_typeDeclPrefix pre true lid bs typ_opt in
-          (FStar_Pprint.empty, uu___1, p_fields,
+          let uu___2 =
+            let uu___3 = p_attributes false attrs in
+            let uu___4 = p_typeDeclRecord record_field_decls in
+            FStar_Pprint.op_Hat_Hat uu___3 uu___4 in
+          (FStar_Pprint.empty, uu___1, uu___2,
             ((fun d -> FStar_Pprint.op_Hat_Hat FStar_Pprint.space d)))
       | FStar_Parser_AST.TyconVariant (lid, bs, typ_opt, ct_decls) ->
           let p_constructorBranchAndComments uu___1 =
             match uu___1 with
-            | (uid, t_opt, use_of, attrs) ->
+            | (uid, payload, attrs) ->
                 let range =
                   let uu___2 =
                     let uu___3 = FStar_Ident.range_of_id uid in
                     let uu___4 =
-                      FStar_Compiler_Util.map_opt t_opt
-                        (fun t -> t.FStar_Parser_AST.range) in
+                      FStar_Compiler_Util.bind_opt payload
+                        (fun uu___5 ->
+                           match uu___5 with
+                           | FStar_Parser_AST.VpOfNotation t ->
+                               FStar_Pervasives_Native.Some
+                                 (t.FStar_Parser_AST.range)
+                           | FStar_Parser_AST.VpArbitrary t ->
+                               FStar_Pervasives_Native.Some
+                                 (t.FStar_Parser_AST.range)
+                           | FStar_Parser_AST.VpRecord (record, uu___6) ->
+                               FStar_Pervasives_Native.None) in
                     FStar_Compiler_Util.dflt uu___3 uu___4 in
                   FStar_Compiler_Range.extend_to_end_of_line uu___2 in
                 let uu___2 =
-                  with_comment_sep p_constructorBranch
-                    (uid, t_opt, use_of, attrs) range in
+                  with_comment_sep p_constructorBranch (uid, payload, attrs)
+                    range in
                 (match uu___2 with
                  | (comm, ctor) ->
                      inline_comment_or_above comm ctor FStar_Pprint.empty) in
@@ -1416,6 +1407,24 @@ and (p_typeDecl :
               p_constructorBranchAndComments ct_decls in
           let uu___1 = p_typeDeclPrefix pre true lid bs typ_opt in
           (FStar_Pprint.empty, uu___1, datacon_doc, jump2)
+and (p_typeDeclRecord :
+  FStar_Parser_AST.tycon_record -> FStar_Pprint.document) =
+  fun fields ->
+    let p_recordField ps uu___ =
+      match uu___ with
+      | (lid, aq, attrs, t) ->
+          let uu___1 =
+            let uu___2 =
+              FStar_Compiler_Range.extend_to_end_of_line
+                t.FStar_Parser_AST.range in
+            with_comment_sep (p_recordFieldDecl ps) (lid, aq, attrs, t)
+              uu___2 in
+          (match uu___1 with
+           | (comm, field) ->
+               let sep = if ps then FStar_Pprint.semi else FStar_Pprint.empty in
+               inline_comment_or_above comm field sep) in
+    let uu___ = separate_map_last FStar_Pprint.hardline p_recordField fields in
+    FStar_Compiler_Effect.op_Bar_Greater uu___ braces_with_nesting
 and (p_typeDeclPrefix :
   FStar_Pprint.document ->
     Prims.bool ->
@@ -1481,35 +1490,45 @@ and (p_recordFieldDecl :
             FStar_Pprint.op_Hat_Hat uu___2 uu___3 in
           FStar_Pprint.group uu___1
 and (p_constructorBranch :
-  (FStar_Ident.ident * FStar_Parser_AST.term FStar_Pervasives_Native.option *
-    Prims.bool * FStar_Parser_AST.attributes_) -> FStar_Pprint.document)
+  (FStar_Ident.ident * FStar_Parser_AST.constructor_payload
+    FStar_Pervasives_Native.option * FStar_Parser_AST.attributes_) ->
+    FStar_Pprint.document)
   =
   fun uu___ ->
     match uu___ with
-    | (uid, t_opt, use_of, attrs) ->
-        let sep = if use_of then str "of" else FStar_Pprint.colon in
-        let uid_doc =
-          let uu___1 =
-            let uu___2 =
-              let uu___3 =
-                let uu___4 = p_attributes false attrs in
-                let uu___5 = p_uident uid in
-                FStar_Pprint.op_Hat_Hat uu___4 uu___5 in
-              FStar_Pprint.op_Hat_Hat FStar_Pprint.space uu___3 in
-            FStar_Pprint.op_Hat_Hat FStar_Pprint.bar uu___2 in
-          FStar_Pprint.group uu___1 in
-        default_or_map uid_doc
-          (fun t ->
-             let uu___1 =
-               let uu___2 =
-                 let uu___3 =
-                   let uu___4 =
-                     let uu___5 = p_typ false false t in
-                     FStar_Pprint.op_Hat_Hat FStar_Pprint.space uu___5 in
-                   FStar_Pprint.op_Hat_Hat sep uu___4 in
-                 FStar_Pprint.op_Hat_Hat FStar_Pprint.space uu___3 in
-               FStar_Pprint.op_Hat_Hat uid_doc uu___2 in
-             FStar_Pprint.group uu___1) t_opt
+    | (uid, variant, attrs) ->
+        let h isOf t =
+          let uu___1 = if isOf then str "of" else FStar_Pprint.colon in
+          let uu___2 =
+            let uu___3 = p_typ false false t in
+            FStar_Pprint.op_Hat_Hat FStar_Pprint.space uu___3 in
+          FStar_Pprint.op_Hat_Hat uu___1 uu___2 in
+        let uu___1 =
+          let uu___2 =
+            let uu___3 =
+              let uu___4 =
+                let uu___5 = p_attributes false attrs in
+                let uu___6 = p_uident uid in
+                FStar_Pprint.op_Hat_Hat uu___5 uu___6 in
+              FStar_Pprint.op_Hat_Hat FStar_Pprint.space uu___4 in
+            FStar_Pprint.op_Hat_Hat FStar_Pprint.bar uu___3 in
+          FStar_Pprint.group uu___2 in
+        let uu___2 =
+          default_or_map FStar_Pprint.empty
+            (fun payload ->
+               let uu___3 =
+                 let uu___4 =
+                   match payload with
+                   | FStar_Parser_AST.VpOfNotation t -> h true t
+                   | FStar_Parser_AST.VpArbitrary t -> h false t
+                   | FStar_Parser_AST.VpRecord (r, t) ->
+                       let uu___5 = p_typeDeclRecord r in
+                       let uu___6 =
+                         default_or_map FStar_Pprint.empty (h false) t in
+                       FStar_Pprint.op_Hat_Hat uu___5 uu___6 in
+                 FStar_Pprint.group uu___4 in
+               FStar_Pprint.op_Hat_Hat FStar_Pprint.space uu___3) variant in
+        FStar_Pprint.op_Hat_Hat uu___1 uu___2
 and (p_letlhs :
   FStar_Pprint.document ->
     (FStar_Parser_AST.pattern * FStar_Parser_AST.term) ->
