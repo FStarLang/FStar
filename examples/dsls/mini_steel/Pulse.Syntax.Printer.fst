@@ -1,6 +1,8 @@
 module Pulse.Syntax.Printer
 open FStar.Printf
 open Pulse.Syntax
+module T = FStar.Tactics
+module Un = Pulse.Unobservable
 module R = FStar.Reflection
 let name_to_string (f:R.name) = String.concat "." f
 
@@ -28,22 +30,22 @@ let qual_to_string = function
   | Some Implicit -> "#"
   
 let rec term_to_string (t:term)
-  : string
+  : T.Tac string
   = match t with
     | Tm_BVar x ->
       if dbg_printing
-      then sprintf "%s@%d" x.bv_ppname x.bv_index
-      else x.bv_ppname
+      then sprintf "%s@%d" (Un.observe x.bv_ppname) x.bv_index
+      else Un.observe x.bv_ppname
     | Tm_Var x ->
       if dbg_printing
-      then sprintf "%s#%d" x.nm_ppname x.nm_index
-      else x.nm_ppname
+      then sprintf "%s#%d" (Un.observe x.nm_ppname) x.nm_index
+      else Un.observe x.nm_ppname
     | Tm_FVar f -> name_to_string f
     | Tm_UInst f us -> sprintf "%s %s" (name_to_string f) (String.concat " " (List.Tot.map univ_to_string us))
     | Tm_Constant c -> constant_to_string c
     | Tm_Refine b phi ->
       sprintf "%s:%s{%s}"
-              b.binder_ppname
+              (Un.observe b.binder_ppname)
               (term_to_string b.binder_ty)
               (term_to_string phi)
     | Tm_Abs b q pre_hint body post ->
@@ -131,32 +133,34 @@ let rec term_to_string (t:term)
 
     | Tm_UVar n -> sprintf "?u_%d" n
 
-and binder_to_string b =
-  sprintf "%s:%s" 
-    b.binder_ppname
-    (term_to_string b.binder_ty)
+and binder_to_string (b:binder)
+  : T.Tac string
+  = sprintf "%s:%s" 
+            (Un.observe b.binder_ppname)
+            (term_to_string b.binder_ty)
 
-and comp_to_string c =
-  match c with
-  | C_Tot t -> 
-    sprintf "Tot %s" (term_to_string t)
-    
-  | C_ST s ->
-    sprintf "ST %s %s %s"
-      (term_to_string s.res)
-      (term_to_string s.pre)
-      (term_to_string s.post)
+and comp_to_string (c:comp)
+  : T.Tac string
+  = match c with
+    | C_Tot t -> 
+      sprintf "Tot %s" (term_to_string t)
+      
+    | C_ST s ->
+      sprintf "ST %s %s %s"
+              (term_to_string s.res)
+              (term_to_string s.pre)
+              (term_to_string s.post)
 
-  | C_STAtomic inames s ->
-    sprintf "STAtomic %s %s %s %s"
-      (term_to_string inames)
-      (term_to_string s.res)
-      (term_to_string s.pre)
-      (term_to_string s.post)
+    | C_STAtomic inames s ->
+      sprintf "STAtomic %s %s %s %s"
+              (term_to_string inames)
+              (term_to_string s.res)
+              (term_to_string s.pre)
+              (term_to_string s.post)
 
-  | C_STGhost inames s ->
-    sprintf "STGhost %s %s %s %s"
-      (term_to_string inames)
-      (term_to_string s.res)
-      (term_to_string s.pre)
-      (term_to_string s.post)
+    | C_STGhost inames s ->
+      sprintf "STGhost %s %s %s %s"
+              (term_to_string inames)
+              (term_to_string s.res)
+              (term_to_string s.pre)
+              (term_to_string s.post)

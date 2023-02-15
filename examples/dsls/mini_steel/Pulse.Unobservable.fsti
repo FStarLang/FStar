@@ -1,7 +1,7 @@
 module Pulse.Unobservable
 open FStar.Tactics
 
-val sealed_ ([@@@strictly_positive] a:Type u#a) : t:Type u#a { hasEq t }
+val sealed_ ([@@@strictly_positive] a:Type u#a) : t:Type u#a
 
 val is_sealed (#[@@@strictly_positive] a:Type u#a) (x:sealed_ a) : prop
 
