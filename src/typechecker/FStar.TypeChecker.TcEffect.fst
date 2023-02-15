@@ -2162,7 +2162,7 @@ Errors.with_ctx (BU.format1 "While checking effect definition `%s`" (string_of_l
                 let bs, c = SS.open_comp bs c in
                 let a, wp = destruct_repr (U.comp_result c) in
                 let c = {
-                  comp_univs=[env.universe_of env a];
+                  comp_univs=[env.universe_of (Env.push_binders env bs) a];
                   effect_name = ed.mname;
                   result_typ = a;
                   effect_args = [as_arg wp];

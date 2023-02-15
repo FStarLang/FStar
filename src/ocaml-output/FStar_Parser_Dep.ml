@@ -1070,7 +1070,7 @@ let (collect_one :
                   let uu___3 =
                     let uu___4 =
                       FStar_Compiler_Util.format1
-                        "module not found in search path: %s\n" alias in
+                        "module not found in search path: %s" alias in
                     (FStar_Errors.Warning_ModuleOrFileNotFoundWarning,
                       uu___4) in
                   FStar_Errors.log_issue uu___2 uu___3);
@@ -1295,24 +1295,33 @@ let (collect_one :
                  (uu___3, binders, k, uu___4, identterms) ->
                  (collect_binders binders;
                   FStar_Compiler_Util.iter_opt k collect_term;
-                  FStar_Compiler_List.iter
-                    (fun uu___7 ->
-                       match uu___7 with
-                       | (uu___8, aq, attrs, t) ->
-                           (collect_aqual aq;
-                            FStar_Compiler_Effect.op_Bar_Greater attrs
-                              (FStar_Compiler_List.iter collect_term);
-                            collect_term t)) identterms)
+                  collect_tycon_record identterms)
              | FStar_Parser_AST.TyconVariant (uu___3, binders, k, identterms)
                  ->
                  (collect_binders binders;
                   FStar_Compiler_Util.iter_opt k collect_term;
-                  FStar_Compiler_List.iter
-                    (fun uu___6 ->
-                       match uu___6 with
-                       | (uu___7, t, uu___8, uu___9) ->
-                           FStar_Compiler_Util.iter_opt t collect_term)
-                    identterms)
+                  (let uu___6 =
+                     FStar_Compiler_List.filter_map
+                       FStar_Pervasives_Native.__proj__Mktuple3__item___2
+                       identterms in
+                   FStar_Compiler_List.iter
+                     (fun uu___7 ->
+                        match uu___7 with
+                        | FStar_Parser_AST.VpOfNotation t -> collect_term t
+                        | FStar_Parser_AST.VpArbitrary t -> collect_term t
+                        | FStar_Parser_AST.VpRecord (record, t) ->
+                            (collect_tycon_record record;
+                             FStar_Compiler_Util.iter_opt t collect_term))
+                     uu___6))
+           and collect_tycon_record r =
+             FStar_Compiler_List.iter
+               (fun uu___2 ->
+                  match uu___2 with
+                  | (uu___3, aq, attrs, t) ->
+                      (collect_aqual aq;
+                       FStar_Compiler_Effect.op_Bar_Greater attrs
+                         (FStar_Compiler_List.iter collect_term);
+                       collect_term t)) r
            and collect_effect_decl uu___2 =
              match uu___2 with
              | FStar_Parser_AST.DefineEffect (uu___3, binders, t, decls) ->

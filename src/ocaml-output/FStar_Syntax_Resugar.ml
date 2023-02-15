@@ -2282,7 +2282,7 @@ let (resugar_typ :
       fun se ->
         match se.FStar_Syntax_Syntax.sigel with
         | FStar_Syntax_Syntax.Sig_inductive_typ
-            (tylid, uvs, bs, t, uu___, datacons) ->
+            (tylid, uvs, bs, _num_uniform, t, uu___, datacons) ->
             let uu___1 =
               FStar_Compiler_Effect.op_Bar_Greater datacon_ses
                 (FStar_Compiler_List.partition
@@ -2371,12 +2371,14 @@ let (resugar_typ :
                             let c =
                               let uu___7 = FStar_Ident.ident_of_lid l in
                               let uu___8 =
-                                let uu___9 = resugar_term' env term in
+                                let uu___9 =
+                                  let uu___10 = resugar_term' env term in
+                                  FStar_Parser_AST.VpArbitrary uu___10 in
                                 FStar_Pervasives_Native.Some uu___9 in
                               let uu___9 =
                                 FStar_Compiler_List.map (resugar_term' env)
                                   se1.FStar_Syntax_Syntax.sigattrs in
-                              (uu___7, uu___8, false, uu___9) in
+                              (uu___7, uu___8, uu___9) in
                             c :: constructors
                         | uu___5 -> failwith "unexpected" in
                       let constructors =

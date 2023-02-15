@@ -15,7 +15,7 @@ let (tc_tycon :
     fun s ->
       match s.FStar_Syntax_Syntax.sigel with
       | FStar_Syntax_Syntax.Sig_inductive_typ
-          (tc, uvs, tps, k, mutuals, data) ->
+          (tc, uvs, tps, n_uniform, k, mutuals, data) ->
           let env0 = env in
           let uu___ = FStar_Syntax_Subst.univ_var_opening uvs in
           (match uu___ with
@@ -188,8 +188,8 @@ let (tc_tycon :
                                                          =
                                                          (FStar_Syntax_Syntax.Sig_inductive_typ
                                                             (tc, uvs2, tps5,
-                                                              k5, mutuals,
-                                                              data));
+                                                              n_uniform, k5,
+                                                              mutuals, data));
                                                        FStar_Syntax_Syntax.sigrng
                                                          =
                                                          (s.FStar_Syntax_Syntax.sigrng);
@@ -247,16 +247,16 @@ let (tc_data :
                                       with
                                       | FStar_Syntax_Syntax.Sig_inductive_typ
                                           (uu___5, uu___6, tps, uu___7,
-                                           uu___8, uu___9)
+                                           uu___8, uu___9, uu___10)
                                           ->
                                           let tps1 =
-                                            let uu___10 =
+                                            let uu___11 =
                                               FStar_Compiler_Effect.op_Bar_Greater
                                                 tps
                                                 (FStar_Syntax_Subst.subst_binders
                                                    usubst) in
                                             FStar_Compiler_Effect.op_Bar_Greater
-                                              uu___10
+                                              uu___11
                                               (FStar_Compiler_List.map
                                                  (fun x ->
                                                     {
@@ -274,13 +274,13 @@ let (tc_data :
                                           let tps2 =
                                             FStar_Syntax_Subst.open_binders
                                               tps1 in
-                                          let uu___10 =
-                                            let uu___11 =
+                                          let uu___11 =
+                                            let uu___12 =
                                               FStar_TypeChecker_Env.push_binders
                                                 env1 tps2 in
-                                            (uu___11, tps2, u_tc) in
+                                            (uu___12, tps2, u_tc) in
                                           FStar_Pervasives_Native.Some
-                                            uu___10
+                                            uu___11
                                       | uu___5 -> failwith "Impossible")
                                    else FStar_Pervasives_Native.None) in
                         match tps_u_opt with
@@ -672,12 +672,13 @@ let (generalize_and_inst_within :
                   | (se, uu___1) ->
                       (match se.FStar_Syntax_Syntax.sigel with
                        | FStar_Syntax_Syntax.Sig_inductive_typ
-                           (uu___2, uu___3, tps, k, uu___4, uu___5) ->
-                           let uu___6 =
-                             let uu___7 = FStar_Syntax_Syntax.mk_Total k in
+                           (uu___2, uu___3, tps, uu___4, k, uu___5, uu___6)
+                           ->
+                           let uu___7 =
+                             let uu___8 = FStar_Syntax_Syntax.mk_Total k in
                              FStar_Compiler_Effect.op_Less_Bar
-                               (FStar_Syntax_Util.arrow tps) uu___7 in
-                           FStar_Syntax_Syntax.null_binder uu___6
+                               (FStar_Syntax_Util.arrow tps) uu___8 in
+                           FStar_Syntax_Syntax.null_binder uu___7
                        | uu___2 -> failwith "Impossible"))) in
         let binders' =
           FStar_Compiler_Effect.op_Bar_Greater datas
@@ -747,7 +748,8 @@ let (generalize_and_inst_within :
                                           (match se.FStar_Syntax_Syntax.sigel
                                            with
                                            | FStar_Syntax_Syntax.Sig_inductive_typ
-                                               (tc, uu___12, tps, uu___13,
+                                               (tc, uu___12, tps,
+                                                num_uniform, uu___13,
                                                 mutuals, datas1)
                                                ->
                                                let ty =
@@ -788,8 +790,8 @@ let (generalize_and_inst_within :
                                                         =
                                                         (FStar_Syntax_Syntax.Sig_inductive_typ
                                                            (tc, uvs1, tps1,
-                                                             t3, mutuals,
-                                                             datas1));
+                                                             num_uniform, t3,
+                                                             mutuals, datas1));
                                                       FStar_Syntax_Syntax.sigrng
                                                         =
                                                         (se.FStar_Syntax_Syntax.sigrng);
@@ -830,17 +832,17 @@ let (generalize_and_inst_within :
                                                    FStar_Syntax_Syntax.Sig_inductive_typ
                                                    (tc, uu___9, uu___10,
                                                     uu___11, uu___12,
-                                                    uu___13);
+                                                    uu___13, uu___14);
                                                  FStar_Syntax_Syntax.sigrng =
-                                                   uu___14;
+                                                   uu___15;
                                                  FStar_Syntax_Syntax.sigquals
-                                                   = uu___15;
-                                                 FStar_Syntax_Syntax.sigmeta
                                                    = uu___16;
-                                                 FStar_Syntax_Syntax.sigattrs
+                                                 FStar_Syntax_Syntax.sigmeta
                                                    = uu___17;
+                                                 FStar_Syntax_Syntax.sigattrs
+                                                   = uu___18;
                                                  FStar_Syntax_Syntax.sigopts
-                                                   = uu___18;_}
+                                                   = uu___19;_}
                                                  -> (tc, uvs_universes)
                                              | uu___9 ->
                                                  failwith "Impossible")) in
@@ -947,7 +949,7 @@ let (get_optimized_haseq_axiom :
           let uu___ =
             match ty.FStar_Syntax_Syntax.sigel with
             | FStar_Syntax_Syntax.Sig_inductive_typ
-                (lid, uu___1, bs, t, uu___2, uu___3) -> (lid, bs, t)
+                (lid, uu___1, bs, uu___2, t, uu___3, uu___4) -> (lid, bs, t)
             | uu___1 -> failwith "Impossible!" in
           match uu___ with
           | (lid, bs, t) ->
@@ -1189,7 +1191,8 @@ let (optimized_haseq_ty :
             let lid =
               match ty.FStar_Syntax_Syntax.sigel with
               | FStar_Syntax_Syntax.Sig_inductive_typ
-                  (lid1, uu___, uu___1, uu___2, uu___3, uu___4) -> lid1
+                  (lid1, uu___, uu___1, uu___2, uu___3, uu___4, uu___5) ->
+                  lid1
               | uu___ -> failwith "Impossible!" in
             let uu___ = acc in
             match uu___ with
@@ -1242,7 +1245,7 @@ let (optimized_haseq_scheme :
             let ty = FStar_Compiler_List.hd tcs in
             match ty.FStar_Syntax_Syntax.sigel with
             | FStar_Syntax_Syntax.Sig_inductive_typ
-                (uu___1, us, uu___2, t, uu___3, uu___4) -> (us, t)
+                (uu___1, us, uu___2, uu___3, t, uu___4, uu___5) -> (us, t)
             | uu___1 -> failwith "Impossible!" in
           match uu___ with
           | (us, t) ->
@@ -1441,7 +1444,7 @@ let (unoptimized_haseq_ty :
               let uu___ =
                 match ty.FStar_Syntax_Syntax.sigel with
                 | FStar_Syntax_Syntax.Sig_inductive_typ
-                    (lid, uu___1, bs, t, uu___2, d_lids) ->
+                    (lid, uu___1, bs, uu___2, t, uu___3, d_lids) ->
                     (lid, bs, t, d_lids)
                 | uu___1 -> failwith "Impossible!" in
               match uu___ with
@@ -1591,13 +1594,15 @@ let (unoptimized_haseq_scheme :
               (fun ty ->
                  match ty.FStar_Syntax_Syntax.sigel with
                  | FStar_Syntax_Syntax.Sig_inductive_typ
-                     (lid, uu___, uu___1, uu___2, uu___3, uu___4) -> lid
+                     (lid, uu___, uu___1, uu___2, uu___3, uu___4, uu___5) ->
+                     lid
                  | uu___ -> failwith "Impossible!") tcs in
           let uu___ =
             let ty = FStar_Compiler_List.hd tcs in
             match ty.FStar_Syntax_Syntax.sigel with
             | FStar_Syntax_Syntax.Sig_inductive_typ
-                (lid, us, uu___1, uu___2, uu___3, uu___4) -> (lid, us)
+                (lid, us, uu___1, uu___2, uu___3, uu___4, uu___5) ->
+                (lid, us)
             | uu___1 -> failwith "Impossible!" in
           match uu___ with
           | (lid, us) ->
@@ -1687,7 +1692,9 @@ let (check_inductive_well_typedness :
                        uu___4.FStar_Syntax_Syntax.sigel in
                      match uu___3 with
                      | FStar_Syntax_Syntax.Sig_inductive_typ
-                         (uu___4, uvs, uu___5, uu___6, uu___7, uu___8) -> uvs
+                         (uu___4, uvs, uu___5, uu___6, uu___7, uu___8,
+                          uu___9)
+                         -> uvs
                      | uu___4 -> failwith "Impossible, can't happen!") in
                 let env0 = env in
                 let uu___2 =
@@ -1790,7 +1797,8 @@ let (check_inductive_well_typedness :
                                         match se.FStar_Syntax_Syntax.sigel
                                         with
                                         | FStar_Syntax_Syntax.Sig_inductive_typ
-                                            (l, univs1, binders, typ, ts, ds)
+                                            (l, univs1, binders, num_uniform,
+                                             typ, ts, ds)
                                             ->
                                             let fail expected inferred =
                                               let uu___5 =
@@ -1946,6 +1954,7 @@ let (check_inductive_well_typedness :
                                                                     (l,
                                                                     univs1,
                                                                     binders1,
+                                                                    num_uniform,
                                                                     typ, ts,
                                                                     ds));
                                                                  FStar_Syntax_Syntax.sigrng
@@ -2825,8 +2834,8 @@ let (mk_data_operations :
                                    then
                                      match se1.FStar_Syntax_Syntax.sigel with
                                      | FStar_Syntax_Syntax.Sig_inductive_typ
-                                         (uu___6, uvs', tps, typ0, uu___7,
-                                          constrs)
+                                         (uu___6, uvs', tps, uu___7, typ0,
+                                          uu___8, constrs)
                                          ->
                                          FStar_Pervasives_Native.Some
                                            (tps, typ0,
