@@ -233,8 +233,8 @@ let rec check' : bool -> check_t =
   | Tm_Emp
   | Tm_Pure _
   | Tm_Star _ _ 
-  | Tm_ExistsSL _ _
-  | Tm_ForallSL _ _
+  | Tm_ExistsSL _ _ _
+  | Tm_ForallSL _ _ _
   | Tm_Arrow _ _ _
   | Tm_Type _
   | Tm_VProp
@@ -338,22 +338,26 @@ let rec check' : bool -> check_t =
   | Tm_ElimExists t ->
     let (| t, t_typing |) = check_vprop f g t in
     (match t with
-     | Tm_ExistsSL ty p ->
+     | Tm_ExistsSL u ty p ->
        // Could this come from inversion of t_typing?
-       let (| u, ty_typing |) = check_universe f g ty in
-       let d = T_ElimExists g u ty p ty_typing t_typing in
-       repack (try_frame_pre pre_typing d) true
+       let (| u', ty_typing |) = check_universe f g ty in
+       if u = u'
+       then let d = T_ElimExists g u ty p ty_typing t_typing in
+            repack (try_frame_pre pre_typing d) true
+       else T.fail "Universe checking failed in elim_exists"
      | _ -> T.fail "elim_exists argument not a Tm_ExistsSL")
 
   | Tm_IntroExists t e ->
     let (| t, t_typing |) = check_vprop f g t in
     (match t with
-     | Tm_ExistsSL ty p ->
+     | Tm_ExistsSL u ty p ->
        // Could this come from inversion of t_typing?
-       let (| u, ty_typing |) = check_universe f g ty in
-       let (| e, e_typing |) = check_tot_with_expected_typ f g e ty in
-       let d = T_IntroExists g u ty p e ty_typing t_typing (E e_typing) in
-       repack (try_frame_pre pre_typing d) true
+       let (| u', ty_typing |) = check_universe f g ty in
+       if u = u'
+       then let (| e, e_typing |) = check_tot_with_expected_typ f g e ty in
+            let d = T_IntroExists g u ty p e ty_typing t_typing (E e_typing) in
+            repack (try_frame_pre pre_typing d) true
+       else T.fail "Universe checking failed in intro_exists"
      | _ -> T.fail "elim_exists argument not a Tm_ExistsSL")
 
   | Tm_UVar _ ->

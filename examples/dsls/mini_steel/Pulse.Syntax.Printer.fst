@@ -86,13 +86,15 @@ let rec term_to_string (t:term)
       sprintf "(%s * %s)" (term_to_string p1)
                           (term_to_string p2)
                           
-    | Tm_ExistsSL t body ->
-      sprintf "(exists (_:%s). %s)"
+    | Tm_ExistsSL u t body ->
+      sprintf "(exists<%s> (_:%s). %s)"
+              (universe_to_string 0 u)
               (term_to_string t)
               (term_to_string body)
 
-    | Tm_ForallSL t body ->
-      sprintf "(forall (_:%s). %s)"
+    | Tm_ForallSL u t body ->
+      sprintf "(forall<%s> (_:%s). %s)"
+              (universe_to_string 0 u)
               (term_to_string t)
               (term_to_string body)
                           
