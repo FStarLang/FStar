@@ -35,11 +35,13 @@ type universe =
 
 let ppname = Un.sealed string
 
+noeq
 type bv = {
   bv_index  : index;
   bv_ppname : ppname;
 }
 
+noeq
 type nm = {
   nm_index  : var;
   nm_ppname : ppname;
@@ -49,6 +51,7 @@ type qualifier =
   | Implicit
 
 [@@ no_auto_projectors]
+noeq
 type term =
   // | Tm_Embed    : R.term -> term // a host term included as is in Pulse
   | Tm_BVar       : bv -> term
@@ -620,74 +623,153 @@ let null_bvar (i:index) : term = Tm_BVar {bv_index=i;bv_ppname=Un.return "_"}
 let gen_uvar (t:term) : T.Tac term =
   Tm_UVar (T.fresh ())
 
-(* We should no longer need this *)
-let rec term_no_pp (t:term) : term =
-  match t with
-  | Tm_BVar bv -> Tm_BVar (bv_no_pp bv)
-  | Tm_Var nm -> Tm_Var (nm_no_pp nm)
-  | Tm_FVar l -> t
-  | Tm_UInst _ _ -> t
-  | Tm_Constant _ -> t
-  | Tm_Refine b t -> Tm_Refine (binder_no_pp b) (term_no_pp t)
-  | Tm_Abs b q pre body postopt ->
-    Tm_Abs (binder_no_pp b) q (term_no_pp pre) (term_no_pp body) (term_opt_no_pp postopt)
-  | Tm_PureApp head q arg ->
-    Tm_PureApp (term_no_pp head) q (term_no_pp arg)
-  | Tm_Let t e1 e2 ->
-    Tm_Let (term_no_pp t) (term_no_pp e1) (term_no_pp e2)
-  | Tm_STApp head q arg ->
-    Tm_STApp (term_no_pp head) q (term_no_pp arg)
-  | Tm_Bind e1 e2 -> Tm_Bind (term_no_pp e1) (term_no_pp e2)
-  | Tm_Emp -> t
-  | Tm_Pure p -> Tm_Pure (term_no_pp p)
-  | Tm_Star l r -> Tm_Star (term_no_pp l) (term_no_pp r)
-  | Tm_ExistsSL u t body -> Tm_ExistsSL u (term_no_pp t) (term_no_pp body)
-  | Tm_ForallSL u t body -> Tm_ForallSL u (term_no_pp t) (term_no_pp body)
-  | Tm_Arrow b q c ->
-    Tm_Arrow (binder_no_pp b) q (comp_no_pp c)
-  | Tm_Type _ -> t
-  | Tm_VProp -> t
-  | Tm_If e1 e2 e3 post ->
-    Tm_If (term_no_pp e1) (term_no_pp e2) (term_no_pp e3)
-          (term_opt_no_pp post)
-  | Tm_Inames
-  | Tm_EmpInames -> t
-  | Tm_ElimExists p -> Tm_ElimExists (term_no_pp p)
-  | Tm_IntroExists e p -> Tm_IntroExists (term_no_pp e) (term_no_pp p)
-  | Tm_UVar _ -> t
+// (* We should no longer need this *)
+// let rec term_no_pp (t:term) : term =
+//   match t with
+//   | Tm_BVar bv -> Tm_BVar (bv_no_pp bv)
+//   | Tm_Var nm -> Tm_Var (nm_no_pp nm)
+//   | Tm_FVar l -> t
+//   | Tm_UInst _ _ -> t
+//   | Tm_Constant _ -> t
+//   | Tm_Refine b t -> Tm_Refine (binder_no_pp b) (term_no_pp t)
+//   | Tm_Abs b q pre body postopt ->
+//     Tm_Abs (binder_no_pp b) q (term_no_pp pre) (term_no_pp body) (term_opt_no_pp postopt)
+//   | Tm_PureApp head q arg ->
+//     Tm_PureApp (term_no_pp head) q (term_no_pp arg)
+//   | Tm_Let t e1 e2 ->
+//     Tm_Let (term_no_pp t) (term_no_pp e1) (term_no_pp e2)
+//   | Tm_STApp head q arg ->
+//     Tm_STApp (term_no_pp head) q (term_no_pp arg)
+//   | Tm_Bind e1 e2 -> Tm_Bind (term_no_pp e1) (term_no_pp e2)
+//   | Tm_Emp -> t
+//   | Tm_Pure p -> Tm_Pure (term_no_pp p)
+//   | Tm_Star l r -> Tm_Star (term_no_pp l) (term_no_pp r)
+//   | Tm_ExistsSL u t body -> Tm_ExistsSL u (term_no_pp t) (term_no_pp body)
+//   | Tm_ForallSL u t body -> Tm_ForallSL u (term_no_pp t) (term_no_pp body)
+//   | Tm_Arrow b q c ->
+//     Tm_Arrow (binder_no_pp b) q (comp_no_pp c)
+//   | Tm_Type _ -> t
+//   | Tm_VProp -> t
+//   | Tm_If e1 e2 e3 post ->
+//     Tm_If (term_no_pp e1) (term_no_pp e2) (term_no_pp e3)
+//           (term_opt_no_pp post)
+//   | Tm_Inames
+//   | Tm_EmpInames -> t
+//   | Tm_ElimExists p -> Tm_ElimExists (term_no_pp p)
+//   | Tm_IntroExists e p -> Tm_IntroExists (term_no_pp e) (term_no_pp p)
+//   | Tm_UVar _ -> t
 
-and binder_no_pp (b:binder) : binder =
-  {binder_ty = term_no_pp b.binder_ty;
-   binder_ppname = Un.return "_"}
+// and binder_no_pp (b:binder) : binder =
+//   {binder_ty = term_no_pp b.binder_ty;
+//    binder_ppname = Un.return "_"}
 
-and bv_no_pp (b:bv) : bv =
-  {b with bv_ppname=Un.return "_"}
+// and bv_no_pp (b:bv) : bv =
+//   {b with bv_ppname=Un.return "_"}
 
-and nm_no_pp (x:nm) : nm =
-  {x with nm_ppname=Un.return "_"}
+// and nm_no_pp (x:nm) : nm =
+//   {x with nm_ppname=Un.return "_"}
 
-and term_opt_no_pp (t:option term) : option term =
-  match t with
-  | None -> None
-  | Some t -> Some (term_no_pp t)
+// and term_opt_no_pp (t:option term) : option term =
+//   match t with
+//   | None -> None
+//   | Some t -> Some (term_no_pp t)
 
-and comp_no_pp (c:comp) : comp =
-  match c with
-  | C_Tot t -> C_Tot (term_no_pp t)
-  | C_ST s -> C_ST (st_comp_no_pp s)
-  | C_STAtomic inames s ->
-    C_STAtomic (term_no_pp inames) (st_comp_no_pp s)
-  | C_STGhost inames s ->
-    C_STGhost (term_no_pp inames) (st_comp_no_pp s)
+// and comp_no_pp (c:comp) : comp =
+//   match c with
+//   | C_Tot t -> C_Tot (term_no_pp t)
+//   | C_ST s -> C_ST (st_comp_no_pp s)
+//   | C_STAtomic inames s ->
+//     C_STAtomic (term_no_pp inames) (st_comp_no_pp s)
+//   | C_STGhost inames s ->
+//     C_STGhost (term_no_pp inames) (st_comp_no_pp s)
 
-and st_comp_no_pp (s:st_comp) : st_comp =
-  {u=s.u;
-   res=term_no_pp s.res;
-   pre=term_no_pp s.pre;
-   post=term_no_pp s.post}
+// and st_comp_no_pp (s:st_comp) : st_comp =
+//   {u=s.u;
+//    res=term_no_pp s.res;
+//    pre=term_no_pp s.pre;
+//    post=term_no_pp s.post}
 
-let eq_tm (t1 t2:term) : bool =
-  term_no_pp t1 = term_no_pp t2
+let rec eq_tm (t1 t2:term) 
+  : b:bool { b <==> (t1 == t2) }
+  = match t1, t2 with
+    | Tm_VProp, Tm_VProp
+    | Tm_Emp, Tm_Emp
+    | Tm_Inames, Tm_Inames
+    | Tm_EmpInames, Tm_EmpInames -> true
+    | Tm_BVar x1, Tm_BVar x2 -> x1.bv_index = x2.bv_index
+    | Tm_Var x1,  Tm_Var x2 -> x1.nm_index = x2.nm_index
+    | Tm_FVar x1, Tm_FVar x2 -> x1 = x2
+    | Tm_UInst x1 us1, Tm_UInst x2 us2 -> x1=x2 && us1=us2
+    | Tm_Constant c1, Tm_Constant c2 -> c1=c2
+    | Tm_Refine b1 t1, Tm_Refine b2 t2 -> 
+      eq_tm b1.binder_ty b2.binder_ty &&
+      eq_tm t1 t2
+    | Tm_Abs b1 o1 p1 t1 q1, Tm_Abs b2 o2 p2 t2 q2 ->
+      eq_tm b1.binder_ty b2.binder_ty &&
+      o1=o2 &&
+      eq_tm p1 p2 &&
+      eq_tm t1 t2 &&
+      eq_tm_opt q1 q2
+    | Tm_PureApp h1 o1 t1, Tm_PureApp h2 o2 t2
+    | Tm_STApp h1 o1 t1, Tm_STApp h2 o2 t2 ->
+      eq_tm h1 h2 &&
+      o1=o2 &&
+      eq_tm t1 t2
+    | Tm_Star l1 r1, Tm_Star l2 r2
+    | Tm_Bind l1 r1, Tm_Bind l2 r2
+    | Tm_IntroExists l1 r1, Tm_IntroExists l2 r2 ->
+      eq_tm l1 l2 &&
+      eq_tm r1 r2
+    | Tm_ElimExists p1, Tm_ElimExists p2
+    | Tm_Pure p1, Tm_Pure p2 ->
+      eq_tm p1 p2
+    | Tm_Type u1, Tm_Type u2 ->
+      u1=u2
+    | Tm_Let t1 e1 e1', Tm_Let t2 e2 e2' ->
+      eq_tm t1 t2 &&
+      eq_tm e1 e2 &&
+      eq_tm e1' e2'
+    | Tm_If g1 ethen1 eelse1 p1, Tm_If g2 ethen2 eelse2 p2 ->
+      eq_tm g1 g2 &&
+      eq_tm ethen1 ethen2 &&
+      eq_tm eelse1 eelse2 &&
+      eq_tm_opt p1 p2
+    | Tm_ExistsSL u1 t1 b1, Tm_ExistsSL u2 t2 b2
+    | Tm_ForallSL u1 t1 b1, Tm_ForallSL u2 t2 b2 ->
+      u1=u2 &&
+      eq_tm t1 t2 &&
+      eq_tm b1 b2
+    | Tm_Arrow b1 q1 c1, Tm_Arrow b2 q2 c2 ->
+      eq_tm b1.binder_ty b2.binder_ty &&
+      q1=q2 &&
+      eq_comp c1 c2
+    | Tm_UVar z1, Tm_UVar z2 ->
+      z1=z2
+    | _ -> false
+    
+and eq_tm_opt (t1 t2:option term)
+  : b:bool { b <==> (t1 == t2) }
+  = match t1, t2 with
+    | None, None -> true
+    | Some t1, Some t2 -> eq_tm t1 t2
+    | _ -> false
 
-let eq_comp (c1 c2:comp) : bool =
-  comp_no_pp c1 = comp_no_pp c2
+and eq_comp (c1 c2:comp) 
+  : b:bool { b <==> (c1 == c2) }
+  = match c1, c2 with
+    | C_Tot t1, C_Tot t2 ->
+      eq_tm t1 t2
+    | C_ST s1, C_ST s2 ->
+      eq_st_comp s1 s2
+    | C_STAtomic i1 s1, C_STAtomic i2 s2
+    | C_STGhost i1 s1, C_STGhost i2 s2 ->
+      eq_tm i1 i2 &&
+      eq_st_comp s1 s2
+    | _ -> false
+
+and eq_st_comp (s1 s2:st_comp)  
+  : b:bool { b <==> (s1 == s2) }
+  = s1.u=s2.u && 
+    eq_tm s1.res s2.res &&
+    eq_tm s1.pre s2.pre &&
+    eq_tm s1.post s2.post
