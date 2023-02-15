@@ -1492,7 +1492,7 @@ type sigelt' =
   | Sig_effect_abbrev of (FStar_Ident.lident * univ_names * binders * comp *
   cflag Prims.list) 
   | Sig_pragma of pragma 
-  | Sig_splice of (Prims.bool * FStar_Ident.lident Prims.list * term) 
+  | Sig_splice of (FStar_Ident.lident Prims.list * term) 
   | Sig_polymonadic_bind of (FStar_Ident.lident * FStar_Ident.lident *
   FStar_Ident.lident * tscheme * tscheme * indexed_effect_combinator_kind
   FStar_Pervasives_Native.option) 
@@ -1574,7 +1574,7 @@ let (uu___is_Sig_splice : sigelt' -> Prims.bool) =
   fun projectee ->
     match projectee with | Sig_splice _0 -> true | uu___ -> false
 let (__proj__Sig_splice__item___0 :
-  sigelt' -> (Prims.bool * FStar_Ident.lident Prims.list * term)) =
+  sigelt' -> (FStar_Ident.lident Prims.list * term)) =
   fun projectee -> match projectee with | Sig_splice _0 -> _0
 let (uu___is_Sig_polymonadic_bind : sigelt' -> Prims.bool) =
   fun projectee ->
@@ -1657,16 +1657,9 @@ let withinfo : 'a . 'a -> FStar_Compiler_Range.range -> 'a withinfo_t =
   fun v -> fun r -> { v; p = r }
 let withsort : 'a . 'a -> 'a withinfo_t =
   fun v -> withinfo v FStar_Compiler_Range.dummyRange
+let (order_bv : bv -> bv -> Prims.int) = fun x -> fun y -> x.index - y.index
 let (bv_eq : bv -> bv -> Prims.bool) =
-  fun bv1 -> fun bv2 -> bv1.index = bv2.index
-let (order_bv : bv -> bv -> Prims.int) =
-  fun x ->
-    fun y ->
-      let i =
-        let uu___ = FStar_Ident.string_of_id x.ppname in
-        let uu___1 = FStar_Ident.string_of_id y.ppname in
-        FStar_String.compare uu___ uu___1 in
-      if i = Prims.int_zero then x.index - y.index else i
+  fun x -> fun y -> let uu___ = order_bv x y in uu___ = Prims.int_zero
 let (order_ident : FStar_Ident.ident -> FStar_Ident.ident -> Prims.int) =
   fun x ->
     fun y ->

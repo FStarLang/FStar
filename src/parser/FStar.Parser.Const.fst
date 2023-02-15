@@ -553,3 +553,7 @@ let fext_on_domain_lid = fext_lid "on_domain"
 let fext_on_dom_lid = fext_lid "on_dom"
 let fext_on_domain_g_lid = fext_lid "on_domain_g"
 let fext_on_dom_g_lid = fext_lid "on_dom_g"
+
+let sealed      = p2l ["FStar"; "Sealed"; "sealed"]
+let seal        = p2l ["FStar"; "Sealed"; "seal"]
+let sealed_bind = p2l ["FStar"; "Sealed"; "op_let_Question"]

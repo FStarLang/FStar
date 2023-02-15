@@ -27,6 +27,9 @@ open FStar.Reflection.Const
 open FStar.Tactics.Types
 open FStar.Tactics.Result
 
+(** Observe a sealed value. See Sealed.seal too. *)
+val unseal : #a:Type -> sealed a -> Tac a
+
 (** [top_env] returns the environment where the tactic started running.
  * This works even if no goals are present. *)
 val top_env : unit -> Tac env
