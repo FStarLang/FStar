@@ -60,8 +60,8 @@ let rec elab_open_commute' (e:pure_term)
     | Tm_Star e1 e2 ->
       elab_open_commute' e1 v n;
       elab_open_commute' e2 v n
-    | Tm_ExistsSL t body
-    | Tm_ForallSL t body ->
+    | Tm_ExistsSL _ t body
+    | Tm_ForallSL _ t body ->
       elab_open_commute' t v n;
       elab_open_commute' body v (n + 1)    
     | Tm_Arrow b _ body ->
@@ -121,8 +121,8 @@ let rec elab_close_commute' (e:pure_term)
     | Tm_Star e1 e2 ->
       elab_close_commute' e1 v n;
       elab_close_commute' e2 v n
-    | Tm_ExistsSL t body
-    | Tm_ForallSL t body ->
+    | Tm_ExistsSL _ t body
+    | Tm_ForallSL _ t body ->
       elab_close_commute' t v n;
       elab_close_commute' body v (n + 1)    
     | Tm_Arrow b _ body ->

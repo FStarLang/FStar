@@ -67,8 +67,8 @@ let rec open_term_ln' (e:term)
       open_term_ln' e1 x i;
       open_term_ln' e2 x (i + 1)
 
-    | Tm_ExistsSL t b
-    | Tm_ForallSL t b ->
+    | Tm_ExistsSL _ t b
+    | Tm_ForallSL _ t b ->
       open_term_ln' t x i;    
       open_term_ln' b x (i + 1)
       
@@ -81,6 +81,11 @@ let rec open_term_ln' (e:term)
     | Tm_Arrow b _ body ->
       open_term_ln' b.binder_ty x i;
       open_term_ln'_comp body x (i + 1)
+
+    | Tm_ElimExists t -> open_term_ln' t x i
+    | Tm_IntroExists t e ->
+      open_term_ln' t x i;
+      open_term_ln' e x i
 
 and open_term_ln'_comp (c:comp)
                        (x:term)
@@ -131,4 +136,4 @@ let rec src_typing_ln (#f:_) (#g:_) (#t:_) (#c:_)
       admit()
       
     | _ -> admit()
-  
+

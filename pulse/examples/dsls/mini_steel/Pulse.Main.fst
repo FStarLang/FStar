@@ -49,6 +49,70 @@ let unexpected_term msg t =
                             msg
                             (T.term_to_string t))
 
+let is_elim_exists (g:RT.fstar_top_env) (t:R.term)
+  : T.Tac (option (R.universe & R.term & R.term)) =
+  let open R in
+  match inspect_ln t with
+  | Tv_App hd (arg2, _) ->
+    (match inspect_ln hd with
+     | Tv_App hd (arg1, _) ->
+       (match inspect_ln hd with
+        | Tv_UInst v _
+        | Tv_FVar v ->
+          if inspect_fv v = elim_exists_lid
+          then match inspect_ln arg2 with
+               | Tv_Abs _ body ->
+                 let uopt = T.universe_of g arg1 in
+                 (match uopt with
+                  | None -> None
+                  | Some u -> Some (u, arg1, body))
+               | _ -> None
+          else None
+        | _ -> None)
+     | _ -> None)
+  | _ -> None
+
+let is_intro_exists (g:RT.fstar_top_env) (t:R.term)
+  : T.Tac (option (R.universe & R.term & R.term & R.term)) =
+  let open R in
+  match inspect_ln t with
+  | Tv_App hd (arg3, _) ->
+    (match inspect_ln hd with
+     | Tv_App hd (arg2, _) ->
+       (match inspect_ln hd with
+        | Tv_App hd (arg1, _) ->
+          (match inspect_ln arg2 with
+           | Tv_Abs _ body ->
+             (match inspect_ln hd with
+              | Tv_UInst fv _
+              | Tv_FVar fv ->
+                if inspect_fv fv = intro_exists_lid
+                then let uopt = T.universe_of g arg1 in
+                     match uopt with
+                     | None -> None
+                     | Some u -> Some (u, arg1, body, arg3)
+                else None
+              | _ -> None)
+           | _ -> None)
+        | _ -> None)
+     | _ -> None)
+  | _ -> None
+
+let readback_universe (u:R.universe) : T.Tac (err universe) =
+  try match Readback.readback_universe u with
+      | None -> 
+        error (Printf.sprintf "Unexpected universe : %s"
+                              (T.universe_to_ast_string u))
+      | Some u -> Inl u
+  with
+      | TacticFailure msg ->
+        error (Printf.sprintf "Unexpected universe (%s) : %s"
+                              msg
+                              (T.universe_to_ast_string u))
+      | _ ->
+        error (Printf.sprintf "Unexpected universe : %s"
+                              (T.universe_to_ast_string u))
+
 let readback_ty (t:R.term)
   : T.Tac (err term)
   = try match Readback.readback_ty t with
@@ -140,12 +204,12 @@ let rec shift_bvs_in_else (t:term) (n:nat) : Tac term =
   | Tm_Star l r ->
     Tm_Star (shift_bvs_in_else l n)
             (shift_bvs_in_else r n)
-  | Tm_ExistsSL t body ->
-    Tm_ExistsSL (shift_bvs_in_else t n)
-                (shift_bvs_in_else body (n + 1))
-  | Tm_ForallSL t body ->
-    Tm_ForallSL (shift_bvs_in_else t n)
-                (shift_bvs_in_else body (n + 1))
+  | Tm_ExistsSL u t body ->
+    Tm_ExistsSL u (shift_bvs_in_else t n)
+                  (shift_bvs_in_else body (n + 1))
+  | Tm_ForallSL u t body ->
+    Tm_ForallSL u (shift_bvs_in_else t n)
+                  (shift_bvs_in_else body (n + 1))
   | Tm_Arrow _ _ _ ->
     T.fail "Unexpected Tm_Arrow in shift_bvs_in_else"
   | Tm_Type _
@@ -166,20 +230,20 @@ let rec shift_bvs_in_else (t:term) (n:nat) : Tac term =
                    (shift_bvs_in_else e n)
   | Tm_UVar _ -> t
 
-let rec translate_term' (t:R.term)
+let rec translate_term' (g:RT.fstar_top_env) (t:R.term)
   : T.Tac (err term)
   = match R.inspect_ln t with
     | R.Tv_Abs x body -> (
       let? b, q = transate_binder x in
       let aux () = 
-        let? body = translate_term body in
+        let? body = translate_term g body in
         Inl (Tm_Abs b q Tm_Emp body None)
       in
       match R.inspect_ln body with
       | R.Tv_AscribedT body t None false -> (
         match? readback_comp t with
         | C_ST st ->
-          let? body = translate_st_term body in
+          let? body = translate_st_term g body in
           Inl (Tm_Abs b q st.pre body (Some st.post))
         | _ -> 
           aux ()
@@ -201,7 +265,7 @@ let rec translate_term' (t:R.term)
                 | _ -> 
                   unexpected_term "'provides' should be an abstraction" provides_arg
               in
-              let? body = translate_st_term body in
+              let? body = translate_st_term g body in
               Inl (Tm_Abs b q pre body (Some post))
             
             | _ -> aux ()
@@ -209,7 +273,7 @@ let rec translate_term' (t:R.term)
 
           | [(expects_arg, _); (body, _)] -> (  
             let? pre = readback_ty expects_arg in
-            let? body = translate_st_term body in
+            let? body = translate_st_term g body in
             Inl (Tm_Abs b q pre body None)
           )
 
@@ -224,41 +288,58 @@ let rec translate_term' (t:R.term)
     | _ -> 
       unexpected_term "translate_term'" t
 
-and translate_st_term (t:R.term)
+and translate_st_term (g:RT.fstar_top_env) (t:R.term)
   : T.Tac (err term)
   = match R.inspect_ln t with 
     | R.Tv_App _ _ -> (
-      let? t = readback_ty t in
-      match t with
-      | Tm_PureApp head q arg -> Inl (Tm_STApp head q arg)
-      | _ -> Inl t
+      let ropt = is_elim_exists g t in
+      (match ropt with
+       | None ->
+         let ropt = is_intro_exists g t in
+         (match ropt with
+          | None ->
+            let? t = readback_ty t in
+            (match t with
+             | Tm_PureApp head q arg -> Inl (Tm_STApp head q arg)
+             | _ -> Inl t)
+          | Some (u, t, p, e) ->
+            let? u = readback_universe u in
+            let? t = readback_ty t in
+            let? p = readback_ty p in
+            let? e = readback_ty e in
+            Inl (Tm_IntroExists (Tm_ExistsSL u t p) e))
+       | Some (u, t, p) ->
+         let? u = readback_universe u in
+         let? t = readback_ty t in
+         let? p = readback_ty p in
+         Inl (Tm_ElimExists (Tm_ExistsSL u t p)))
     )
 
     | R.Tv_Let false [] bv def body ->
-      let? def = translate_st_term def in 
-      let? body = translate_st_term body in 
+      let? def = translate_st_term g def in 
+      let? body = translate_st_term g body in 
       Inl (Tm_Bind def body)
 
     | R.Tv_Match b _ [(Pat_Constant C_True, then_);
                       (Pat_Wild _, else_)] ->
       let? b = readback_ty (pack_ln (inspect_ln_unascribe b)) in
-      let? then_ = translate_st_term then_ in
-      let? else_ = translate_st_term else_ in
+      let? then_ = translate_st_term g then_ in
+      let? else_ = translate_st_term g else_ in
       let else_ = shift_bvs_in_else else_ 0 in
       Inl (Tm_If b then_ else_ None)
 
     | _ ->
       unexpected_term "st_term" t
   
-and translate_term (t:R.term)
+and translate_term (g:RT.fstar_top_env) (t:R.term)
   : T.Tac (err term)
   = match readback_ty t with
     | Inl t -> Inl t
-    | _ -> translate_term' t
+    | _ -> translate_term' g t
 
 let check' (t:R.term) (g:RT.fstar_top_env)
   : T.Tac (r:(R.term & R.typ){RT.typing g (fst r) (snd r)})
-  = match translate_term t with
+  = match translate_term g t with
     | Inr msg -> T.fail (Printf.sprintf "Failed to translate term: %s" msg)
     | Inl t -> 
       T.print (Printf.sprintf "Translated term is\n%s\n" (P.term_to_string t));
