@@ -251,15 +251,13 @@ let elab_sub (c1 c2:pure_comp_st) (e:R.term) =
             mk_sub_stt_ghost u ty opened pre1 pre2 post1 post2 e
 
 let mk_elim_exists (u:R.universe) (a p:R.term) : R.term =
-  let lid = mk_steel_wrapper_lid "elim_exists" in
-  let t = R.pack_ln (R.Tv_UInst (R.pack_fv lid) [u]) in
+  let t = R.pack_ln (R.Tv_UInst (R.pack_fv elim_exists_lid) [u]) in
   let t = R.pack_ln (R.Tv_App t (a, R.Q_Implicit)) in
   let p = R.pack_ln (T.Tv_Abs (binder_of_t_q t R.Q_Explicit) p) in
   R.pack_ln (R.Tv_App t (p, R.Q_Explicit))
 
 let mk_intro_exists (u:R.universe) (a p:R.term) (e:R.term) : R.term =
-  let lid = mk_steel_wrapper_lid "intro_exists" in
-  let t = R.pack_ln (R.Tv_UInst (R.pack_fv lid) [u]) in
+  let t = R.pack_ln (R.Tv_UInst (R.pack_fv intro_exists_lid) [u]) in
   let t = R.pack_ln (R.Tv_App t (a, R.Q_Implicit)) in
   let p = R.pack_ln (T.Tv_Abs (binder_of_t_q t R.Q_Explicit) p) in
   let t = R.pack_ln (R.Tv_App t (p, R.Q_Explicit)) in

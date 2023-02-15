@@ -48,6 +48,9 @@ let mk_stt_ghost_app (u:R.universe) (args:list R.term)
   : Tot R.term = 
   R.mk_app (R.pack_ln (R.Tv_UInst stt_ghost_fv [u])) (args_of args)
 
+let elim_exists_lid = mk_steel_wrapper_lid "elim_exists"
+let intro_exists_lid = mk_steel_wrapper_lid "intro_exists"
+
 let mk_total t = R.C_Total t
 let binder_of_t_q t q = RT.mk_binder "_" 0 t q
 let binder_of_t_q_s t q s = RT.mk_binder s 0 t q
