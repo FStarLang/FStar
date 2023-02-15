@@ -10,7 +10,7 @@ depends: [
   "zarith"
   "stdint"
   "yojson"
-  "dune" {build}
+  "dune" {build & >= "3.2.0"}
   "menhirLib"
   "pprint"
   "sedlex"
