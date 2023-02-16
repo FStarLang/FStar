@@ -393,6 +393,7 @@ type raw_error =
   | Warning_DeprecatedLightDoNotation
   | Warning_FailedToCheckInitialTacticGoal
   | Warning_Adhoc_IndexedEffect_Combinator
+  | Error_PluginDynlink
   
 type flag = error_flag
 type error_setting = raw_error * error_flag * int
@@ -749,6 +750,7 @@ let default_settings : list error_setting =
     Warning_DeprecatedLightDoNotation                 , CWarning, 350;
     Warning_FailedToCheckInitialTacticGoal            , CSilent,  351;
     Warning_Adhoc_IndexedEffect_Combinator            , CWarning, 352;
+    Error_PluginDynlink                               , CError, 353;
     ]
 
 let lookup_error settings e =
@@ -770,10 +772,12 @@ let lookup_error_range settings (l, h) =
   matches
 
 let error_number (_, _, i) = i
+let errno (e:raw_error) : int = error_number (lookup_error default_settings e)
 
-let warn_on_use_errno = error_number (lookup_error default_settings Warning_WarnOnUse)
-let defensive_errno   = error_number (lookup_error default_settings Warning_Defensive)
-let call_to_erased_errno = error_number (lookup_error default_settings Error_CallToErased)
+(* Exported *)
+let warn_on_use_errno    = errno Warning_WarnOnUse
+let defensive_errno      = errno Warning_Defensive
+let call_to_erased_errno = errno Error_CallToErased
 
 let update_flags (l:list (error_flag * string))
   : list error_setting

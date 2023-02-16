@@ -7,14 +7,19 @@ module O = FStar_Options
 let perr  s   = if O.debug_any () then U.print_error s
 let perr1 s x = if O.debug_any () then U.print1_error s x
 
-let dynlink fname =
+let dynlink (fname:string) : unit =
   try
     perr ("Attempting to load " ^ fname ^ "\n");
     Dynlink.loadfile fname
   with Dynlink.Error e ->
     let msg = U.format2 "Dynlinking %s failed: %s" fname (Dynlink.error_message e) in
-    perr msg;
-    failwith msg
+    perr (msg ^ "\n");
+    E.log_issue FStar_Compiler_Range.dummyRange
+        (E.Error_PluginDynlink,
+         (U.format3 "Failed to load plugin file %s\n  Reason: `%s`.\n  Remove the `--load` option or use `--warn_error -%s` to ignore and continue."
+                    fname
+                    (Dynlink.error_message e)
+                    (string_of_int (Z.to_int (E.errno E.Error_PluginDynlink)))))
 
 let load_tactic tac =
   dynlink tac;
@@ -29,7 +34,7 @@ let load_tactics_dir dir =
     |> Array.to_list
     |> List.filter (fun s -> String.length s >= 5 && String.sub s (String.length s - 5) 5 = ".cmxs")
     |> List.map (fun s -> dir ^ "/" ^ s)
-    |> List.iter load_tactic
+    |> load_tactics
 
 let compile_modules dir ms =
    let compile m =
@@ -37,6 +42,7 @@ let compile_modules dir ms =
      let pkg pname = "-package " ^ pname in
      let args = ["ocamlopt"; "-shared"] (* FIXME shell injection *)
                 @ ["-I"; dir]
+                @ ["-w"; "-8-11-20-21-26-28" ]
                 @ (List.map pkg packages)
                 @ ["-o"; m ^ ".cmxs"; m ^ ".ml"] in
      (* Note: not useful when in an OPAM setting *)
