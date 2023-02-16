@@ -30,7 +30,120 @@ let rec is_ith_tail (i:pos) (l:list tree)
   | hd::tl ->
     (Leaf? hd \/ is_pow2heap i hd) /\ is_ith_tail (i + 1) tl
 
-type priq = l:list tree{is_ith_tail 1 l}
+let rec all_leaf (l:list tree{Cons? l}) : bool =
+  match l with
+  | [Leaf] -> true
+  | Leaf::tl -> all_leaf tl
+  | _ -> false
+
+let rec mk_compact (l:list tree) : list tree =
+  match l with
+  | [] -> []
+  | _ ->
+    if all_leaf l then []
+    else let hd::tl = l in
+         hd::(mk_compact tl)
+
+let mk_compact_length (l:list tree{Cons? l})
+  : Lemma (requires not (all_leaf l))
+          (ensures L.length (mk_compact l) > 0)
+  = ()
+
+let rec last_cons (#a:Type) (x:a) (l:list a)
+  : Lemma
+      (requires Cons? l)
+      (ensures L.last (x::l) == L.last l)
+      [SMTPat (L.last (x::l))] =
+
+  match l with
+  | [_] -> ()
+  | _::tl -> last_cons x tl
+    
+let is_compact (l:list tree) = l == [] \/ Internal? (L.last l)
+
+let rec mk_compact_correctness (l:list tree)
+  : Lemma (is_compact (mk_compact l))
+          [SMTPat (is_compact (mk_compact l))] =
+
+  match l with
+  | [] -> ()
+  | _ ->
+    if all_leaf l then ()
+    else mk_compact_correctness (L.tl l)
+
+let rec mk_compact_preserves_ith_tail (i:pos) (l:list tree)
+  : Lemma
+      (requires is_ith_tail i l)
+      (ensures is_ith_tail i (mk_compact l))
+      (decreases l)
+      [SMTPat (is_ith_tail i (mk_compact l))] =
+  match l with
+  | [] -> ()
+  | _ ->
+    if all_leaf l then ()
+    else mk_compact_preserves_ith_tail (i + 1) (L.tl l)
+
+module S = FStar.Set
+
+noeq
+type ms = {
+  ms_count : key_t -> nat;
+  ms_elems : S.set key_t;
+}
+
+let ms_empty : ms = {
+  ms_count = (fun _ -> 0);
+  ms_elems = S.empty;
+}
+
+let ms_singleton (x:key_t) : ms = {
+  ms_count = (fun x' -> if x' = x then 1 else 0);
+  ms_elems = S.singleton x;
+}
+
+let ms_append (ms1 ms2:ms) : ms = {
+  ms_count = (fun x -> ms1.ms_count x + ms2.ms_count x);
+  ms_elems = S.union ms1.ms_elems ms2.ms_elems;
+}
+
+let permutation (ms1 ms2:ms) =
+  S.equal ms1.ms_elems ms2.ms_elems /\
+  (forall (x:key_t).{:pattern ms1.ms_count x \/ ms2.ms_count x} ms1.ms_count x == ms2.ms_count x)
+              
+let rec keys_of_tree (t:tree) : ms =
+  match t with
+  | Leaf -> ms_empty
+  | Internal left k right ->
+    ms_append (keys_of_tree left)
+              (ms_append (ms_singleton k) (keys_of_tree right))
+
+let rec keys (q:list tree) : ms =
+  match q with
+  | [] -> ms_empty
+  | hd::tl -> ms_append (keys_of_tree hd) (keys tl)
+
+let rec all_leaf_keys (l:list tree{Cons? l})
+  : Lemma
+      (requires Cons? l /\ all_leaf l)
+      (ensures permutation (keys l) ms_empty) =
+  match l with
+  | [Leaf] -> ()
+  | Leaf::tl -> all_leaf_keys tl
+
+let rec compact_preserves_keys (q:list tree)
+  : Lemma (permutation (keys q) (keys (mk_compact q)))
+          [SMTPat (keys (mk_compact q))] =
+
+  match q with
+  | [] -> ()
+  | _ ->
+    if all_leaf q
+    then all_leaf_keys q
+    else compact_preserves_keys (L.tl q)
+    
+let is_priq (l:list tree) = is_ith_tail 1 l /\ is_compact l
+
+type priq = l:list tree{is_priq l}
 
 let empty : priq = []
 
@@ -105,6 +218,7 @@ let rec unzip (depth:nat) (upper_bound:key_t) (t:tree)
     let q = unzip (depth - 1) upper_bound right in
     priq_append q (Internal left k Leaf);
     L.append_length q [Internal left k Leaf];
+    assume (is_priq (L.append q [Internal left k Leaf]));
     L.append q [Internal left k Leaf]
 
 let heap_delete_max (depth:pos) (t:tree)
@@ -148,10 +262,12 @@ let delete_max (q:priq) : option (key_t & priq) =
   | Some m ->
     let q, new_q = delete_max_aux m 1 q in
     let r = join 1 q new_q Leaf in
-    Some (m, r)
+    mk_compact_correctness r;
+    Some (m, mk_compact r)
 
 let insert (x:key_t) (q:priq) : priq =
-  carry 1 q (Internal Leaf x Leaf)
+  let l = carry 1 q (Internal Leaf x Leaf) in
+  mk_compact l
 
 let count_elt (x:key_t) (hd:key_t) : nat =
   if x = hd then 1 else 0
@@ -170,91 +286,55 @@ let rec count_append (l1 l2:list key_t) (x:key_t)
   | [] -> ()
   | hd::tl -> count_append tl l2 x
 
-let permutation (l1 l2:list key_t) =
-  forall (x:key_t). count x l1 == count x l2
+// let permutation (l1 l2:list key_t) =
+//   forall (x:key_t). count x l1 == count x l2
 
-let permutation_append (l1 l2 l3 l4:list key_t)
-  : Lemma
-      (requires permutation l1 l3 /\ permutation l2 l4)
-      (ensures permutation (l1@l2) (l3@l4)) =
-  ()
+// let permutation_append (l1 l2 l3 l4:list key_t)
+//   : Lemma
+//       (requires permutation l1 l3 /\ permutation l2 l4)
+//       (ensures permutation (l1@l2) (l3@l4)) =
+//   ()
 
-let rec keys_of_tree (t:tree) : list key_t =
-  match t with
-  | Leaf -> []
-  | Internal left k right ->
-    L.append (keys_of_tree left)
-             (L.append [k] (keys_of_tree right))
-
-let rec keys_of_priq (q:list tree) : list key_t =
-  match q with
-  | [] -> []
-  | hd::tl -> L.append (keys_of_tree hd) (keys_of_priq tl)
-
-let represents_t (t:tree) (l:list key_t) : prop =
+let repr_t (t:tree) (l:ms) : Type0 =
   permutation (keys_of_tree t) l
 
-let represents (q:list tree) (l:list key_t) : prop =
-  permutation (keys_of_priq q) l
+let repr (q:list tree) (l:ms) : Type0 =
+  permutation (keys q) l
 
-let permutation_represents (l1 l2:list key_t) (q:priq)
-  : Lemma
-      (requires
-         permutation l1 l2 /\
-         q `represents` l1)
-      (ensures q `represents` l2)
+let ms_append_assoc (ms1 ms2 ms3:ms)
+  : Lemma (permutation (ms_append ms1 (ms_append ms2 ms3))
+                       (ms_append (ms_append ms1 ms2) ms3))
   = ()
 
-let represents_permutation (l1 l2:list key_t) (q:priq)
-  : Lemma
-      (requires
-         q `represents` l1 /\
-         q `represents` l2)
-      (ensures permutation l1 l2)
+let ms_permutation_trans (ms1 ms2 ms3:ms)
+  : Lemma (requires permutation ms1 ms2 /\ permutation ms2 ms3)
+          (ensures permutation ms1 ms3)
   = ()
 
-let empty_relate (l:list key_t)
-  : Lemma (requires [] `represents` l)
-          (ensures l == [])
-          [SMTPat ([] `represents` l)] =
-  admit ()
+let ms_permutation_sym (ms1 ms2:ms)
+  : Lemma (requires permutation ms1 ms2)
+          (ensures permutation ms2 ms1)
+  = ()
 
-let leaf_relate (l:list key_t)
-  : Lemma (requires Leaf `represents_t` l)
-          (ensures l == [])
-          [SMTPat (Leaf `represents_t` l)] =
-  admit ()
-
-let smash_represents (depth:nat) (t1 t2:tree) (l1 l2:list key_t)
+let smash_represents (depth:nat) (t1 t2:tree) (l1 l2:ms)
   : Lemma
       (requires
          0 < depth /\
          is_pow2heap depth t1 /\
          is_pow2heap depth t2 /\
-         t1 `represents_t` l1 /\
-         t2 `represents_t` l2)
-      (ensures smash depth t1 t2 `represents_t` (L.append l1 l2)) =
-  match t1, t2 with
-  | Internal left1 k1 Leaf, Internal left2 k2 Leaf ->
-    if k1 <= k2
-    then begin
-      L.append_assoc (keys_of_tree left1) [k1] (keys_of_tree left2);
-      L.append_assoc (keys_of_tree t1) (keys_of_tree left2) [k2]
-    end
-    else begin
-      L.append_assoc (keys_of_tree left2) [k2] (keys_of_tree left1);
-      L.append_assoc (keys_of_tree t2) (keys_of_tree left1) [k1]
-    end
+         t1 `repr_t` l1 /\
+         t2 `repr_t` l2)
+      (ensures smash depth t1 t2 `repr_t` (ms_append l1 l2)) = ()
 
-let rec carry_represents (depth:nat) (q:list tree) (t:tree) (lq lt:list key_t)
+let rec carry_represents (depth:nat) (q:list tree) (t:tree) (lq lt:ms)
   : Lemma
       (requires
          0 < depth /\
          is_ith_tail depth q /\
          is_pow2heap depth t /\
-         q `represents` lq /\
-         t `represents_t` lt)
-      (ensures carry depth q t `represents` L.append lq lt)
+         q `repr` lq /\
+         t `repr_t` lt)
+      (ensures carry depth q t `repr` ms_append lq lt)
       (decreases q) =
 
   match q with
@@ -263,38 +343,30 @@ let rec carry_represents (depth:nat) (q:list tree) (t:tree) (lq lt:list key_t)
   | hd::tl ->
     smash_represents depth hd t (keys_of_tree hd) (keys_of_tree t);
     carry_represents (depth + 1) tl (smash depth hd t)
-      (keys_of_priq tl)
-      (L.append (keys_of_tree hd) (keys_of_tree t));
+      (keys tl)
+      (ms_append (keys_of_tree hd) (keys_of_tree t))
 
-    L.append_assoc (keys_of_priq tl) (keys_of_tree hd) (keys_of_tree t)
-
-let permutation_cons_snoc (x:key_t) (l:list key_t)
-  : Lemma (permutation (x::l) (l @ [x])) = admit ()
-
-let insert_represents (x:key_t) (q:priq) (l:list key_t)
+let insert_represents (x:key_t) (q:priq) (l:ms)
   : Lemma
-      (requires q `represents` l)
-      (ensures insert x q `represents` (x::l)) =
+      (requires q `repr` l)
+      (ensures insert x q `repr` (ms_append (ms_singleton x) l)) =
+  carry_represents 1 q (Internal Leaf x Leaf) l (ms_singleton x)
 
-  carry_represents 1 q (Internal Leaf x Leaf) l [x];
-  permutation_cons_snoc x l
-
-#push-options "--z3rlimit 40 --fuel 1 --ifuel 1"
+#push-options "--z3rlimit 50 --fuel 1 --ifuel 1"
 let rec join_represents (depth:nat) (p q:list tree) (c:tree)
-  (lp lq lc:list key_t)
+  (lp lq lc:ms)
   : Lemma
       (requires
          0 < depth /\
          is_ith_tail depth p /\
          is_ith_tail depth q /\
          (Leaf? c \/ is_pow2heap depth c) /\
-         p `represents` lp /\
-         q `represents` lq /\
-         c `represents_t` lc)
-      (ensures join depth p q c `represents` L.append lp (L.append lq lc))
+         p `repr` lp /\
+         q `repr` lq /\
+         c `repr_t` lc)
+      (ensures join depth p q c `repr` ms_append lp (ms_append lq lc))
       (decreases p) =
 
-  let r = join depth p q c in
   match p, q, c with
   | [], _, Leaf
   | _, [], Leaf -> ()
@@ -303,137 +375,52 @@ let rec join_represents (depth:nat) (p q:list tree) (c:tree)
 
   | Leaf::tl_p, Leaf::tl_q, _ ->
     join_represents (depth + 1) tl_p tl_q Leaf
-      (keys_of_priq tl_p) (keys_of_priq tl_q) [];
-    L.append_l_nil (keys_of_priq tl_q);
-    assert (permutation
-              (keys_of_tree c @
-               (keys_of_priq tl_p @ keys_of_priq tl_q))
-              ((keys_of_priq tl_p @ keys_of_priq tl_q) @
-               keys_of_tree c));
-    L.append_assoc (keys_of_priq tl_p)
-                   (keys_of_priq tl_q)
-                   (keys_of_tree c)
+      (keys tl_p) (keys tl_q) ms_empty
 
   | hd_p::tl_p, Leaf::tl_q, Leaf ->
     join_represents (depth + 1) tl_p tl_q Leaf
-      (keys_of_priq tl_p) (keys_of_priq tl_q) [];
-
-    L.append_assoc (keys_of_tree hd_p) (keys_of_priq tl_p) 
-                   (keys_of_priq tl_q @ []);
-    
-    permutation_append (keys_of_priq q)
-                       []
-                       lq
-                       lc;
-    permutation_append (keys_of_priq p)
-                       ((keys_of_priq q) @ [])
-                       lp
-                       (lq @ lc)
+      (keys tl_p) (keys tl_q) ms_empty
   | Leaf::tl_p, hd_q::tl_q, Leaf ->
     join_represents (depth + 1) tl_p tl_q Leaf
-      (keys_of_priq tl_p) (keys_of_priq tl_q) [];
-    L.append_l_nil (keys_of_priq tl_q);
-
-    assert (r `represents`
-            (keys_of_tree hd_q @
-             (keys_of_priq tl_p @ keys_of_priq tl_q)));
-
-    assume (permutation
-              (keys_of_tree hd_q @
-               (keys_of_priq tl_p @ keys_of_priq tl_q))
-              (keys_of_priq tl_p @ (keys_of_tree hd_q @ keys_of_priq tl_q)));
-
-    permutation_append (keys_of_priq q)
-                       []
-                       lq
-                       lc;
-    permutation_append (keys_of_priq p)
-                       ((keys_of_priq q) @ [])
-                       lp
-                       (lq @ lc)
+      (keys tl_p) (keys tl_q) ms_empty
   | Leaf::tl_p, hd_q::tl_q, _ ->
     smash_represents depth hd_q c (keys_of_tree hd_q) (keys_of_tree c);
     join_represents (depth + 1) tl_p tl_q (smash depth hd_q c)
-      (keys_of_priq tl_p) (keys_of_priq tl_q)
-      (L.append (keys_of_tree hd_q) (keys_of_tree c));
-
-    assert (r `represents`
-            (keys_of_priq tl_p @
-             (keys_of_priq tl_q @ (keys_of_tree hd_q @ keys_of_tree c))));
-
-    assume (permutation
-              (keys_of_priq tl_p @
-               (keys_of_priq tl_q @ (keys_of_tree hd_q @ keys_of_tree c)))
-              (keys_of_priq tl_p @ ((keys_of_tree hd_q @ keys_of_priq tl_q) @ keys_of_tree c)));
-
-    permutation_append (keys_of_priq q)
-                       (keys_of_tree c)
-                       lq
-                       lc;
-    permutation_append (keys_of_priq p)
-                       ((keys_of_priq q) @ keys_of_tree c)
-                       lp
-                       (lq @ lc)
+      (keys tl_p) (keys tl_q)
+      (ms_append (keys_of_tree hd_q) (keys_of_tree c))
 
   | hd_p::tl_p, Leaf::tl_q, _ ->
     smash_represents depth hd_p c (keys_of_tree hd_p) (keys_of_tree c);
     join_represents (depth + 1) tl_p tl_q (smash depth hd_p c)
-      (keys_of_priq tl_p) (keys_of_priq tl_q)
-      (L.append (keys_of_tree hd_p) (keys_of_tree c));
-
-    assert (r `represents`
-            (keys_of_priq tl_p @
-             (keys_of_priq tl_q @ (keys_of_tree hd_p @ keys_of_tree c))));
-
-    assume (permutation
-              (keys_of_priq tl_p @
-               (keys_of_priq tl_q @ (keys_of_tree hd_p @ keys_of_tree c)))
-              ((keys_of_tree hd_p @ keys_of_priq tl_p) @
-               (keys_of_priq tl_q @ keys_of_tree c)));
-
-    permutation_append (keys_of_priq q)
-                       (keys_of_tree c)
-                       lq
-                       lc;
-    permutation_append (keys_of_priq p)
-                       ((keys_of_priq q) @ keys_of_tree c)
-                       lp
-                       (lq @ lc)
+      (keys tl_p) (keys tl_q)
+      (ms_append (keys_of_tree hd_p) (keys_of_tree c))
 
   | hd_p::tl_p, hd_q::tl_q, c ->
     smash_represents depth hd_p hd_q (keys_of_tree hd_p) (keys_of_tree hd_q);
     join_represents (depth + 1) tl_p tl_q (smash depth hd_p hd_q)
-      (keys_of_priq tl_p) (keys_of_priq tl_q)
-      (L.append (keys_of_tree hd_p) (keys_of_tree hd_q));
-    
-    assert (r `represents`
-            (keys_of_tree c @
-             (keys_of_priq tl_p @
-              (keys_of_priq tl_q @ (keys_of_tree hd_p @ keys_of_tree hd_q)))));
+      (keys tl_p) (keys tl_q)
+      (ms_append (keys_of_tree hd_p) (keys_of_tree hd_q))
+#pop-options
 
-    assume (permutation
-              (keys_of_tree c @
-               (keys_of_priq tl_p @
-                (keys_of_priq tl_q @ (keys_of_tree hd_p @ keys_of_tree hd_q))))
-              ((keys_of_tree hd_p @ keys_of_priq tl_p) @
-               ((keys_of_tree hd_q @ keys_of_priq tl_q) @
-                (keys_of_tree c))));
-    admit ();
-    permutation_append (keys_of_priq q)
-                       (keys_of_tree c)
-                       lq
-                       lc;
-    permutation_append (keys_of_priq p)
-                       ((keys_of_priq q) @ keys_of_tree c)
-                       lp
-                       (lq @ lc)
+let merge (p q:priq) : priq =
+  let l = join 1 p q Leaf in
+  mk_compact l
 
-let merge (p q:priq) : priq = join 1 p q Leaf
-
-let merge_representation (p q:priq) (lp lq:list key_t)
+let merge_representation (p q:priq) (lp lq:ms)
   : Lemma
-      (requires p `represents` lp /\ q `represents` lq)
-      (ensures merge p q `represents` (lp @ lq)) =
+      (requires p `repr` lp /\ q `repr` lq)
+      (ensures merge p q `repr` (ms_append lp lq)) =
 
-  join_represents 1 p q Leaf lp lq []
+  join_represents 1 p q Leaf lp lq ms_empty
 
+let find_max_emp (p:priq)
+  : Lemma (requires p `repr` ms_empty)
+          (ensures find_max None p == None) =
+  match p with
+  | [] -> ()
+  | _ -> 
+
+let delete_none_l (p:priq)
+  : Lemma (requires p `repr` ms_empty)
+          (ensures delete_max p == None) =
+  
