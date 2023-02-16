@@ -200,11 +200,14 @@ let rec join (depth:nat) (p q:list tree) (c:tree)
   | hd_p::tl_p, hd_q::tl_q, c ->
     c::(join (depth + 1) tl_p tl_q (smash depth hd_p hd_q))
 
-let priq_append (q:priq) (t:tree)
+let rec priq_append (depth:pos) (q:list tree) (t:tree)
   : Lemma (requires
-             is_ith_tail 1 q /\ is_pow2heap (L.length q + 1) t)
-          (ensures is_ith_tail 1 (L.append q [t]))
-  = admit ()
+             is_ith_tail depth q /\ is_pow2heap (L.length q + depth) t)
+          (ensures is_ith_tail depth (L.append q [t]))
+          (decreases q) =
+  match q with
+  | [] -> ()
+  | _::q -> priq_append (depth + 1) q t
 
 let rec unzip (depth:nat) (upper_bound:key_t) (t:tree)
   : Pure priq
@@ -216,9 +219,9 @@ let rec unzip (depth:nat) (upper_bound:key_t) (t:tree)
   | Leaf -> []
   | Internal left k right ->
     let q = unzip (depth - 1) upper_bound right in
-    priq_append q (Internal left k Leaf);
+    priq_append 1 q (Internal left k Leaf);
     L.append_length q [Internal left k Leaf];
-    assume (is_priq (L.append q [Internal left k Leaf]));
+    L.lemma_append_last q [Internal left k Leaf];
     L.append q [Internal left k Leaf]
 
 let heap_delete_max (depth:pos) (t:tree)
@@ -260,10 +263,10 @@ let delete_max (q:priq) : option (key_t & priq) =
   match find_max None q with
   | None -> None
   | Some m ->
-    let _, q, new_q = delete_max_aux m 1 q in
+    let x, q, new_q = delete_max_aux m 1 q in
     let r = join 1 q new_q Leaf in
     mk_compact_correctness r;
-    Some (m, mk_compact r)
+    Some (x, mk_compact r)
 
 let insert (x:key_t) (q:priq) : priq =
   let l = carry 1 q (Internal Leaf x Leaf) in
@@ -425,7 +428,8 @@ let rec last_key_in_keys (l:list tree)
   | _::tl -> last_key_in_keys tl
 
 let rec find_max_some_is_some (k:key_t) (l:list tree)
-  : Lemma (ensures Some? (find_max (Some k) l))
+  : Lemma (ensures Some? (find_max (Some k) l) /\
+                   k <= Some?.v (find_max (Some k) l))
           (decreases l) =
   match l with
   | [] -> ()
@@ -469,20 +473,28 @@ let keys_non_emp (x:key_t) (l:list tree)
 
 let rec keys_append (l1 l2:list tree) (ms1 ms2:ms)
   : Lemma (requires l1 `repr` ms1 /\ l2 `repr` ms2)
-          (ensures (L.append l1 l2) `repr` (ms_append ms1 ms2))
-          [SMTPat (L.append l1 l2); SMTPat (l1 `repr` ms1); SMTPat (l2 `repr` ms2)] =
+          (ensures (L.append l1 l2) `repr` (ms_append ms1 ms2)) =
 
   match l1 with
   | [] -> ()
   | _::tl -> keys_append tl l2 (keys tl) ms2
 
-let unzip_repr (depth:nat) (upper_bound:key_t) (t:tree) (lt:ms)
+let rec unzip_repr (depth:nat) (upper_bound:key_t) (t:tree) (lt:ms)
   : Lemma
-      (requires pow2heap_pred depth upper_bound t)
+      (requires
+         pow2heap_pred depth upper_bound t /\
+         permutation (keys_of_tree t) lt)
       (ensures permutation lt (keys (unzip depth upper_bound t)))
-      (decreases t) = ()
-
-  
+      (decreases t) =
+  match t with
+  | Leaf -> ()
+  | Internal left k right ->
+    let q = unzip (depth - 1) upper_bound right in
+    unzip_repr (depth - 1) upper_bound right (keys_of_tree right);
+    keys_append q [Internal left k Leaf]
+      (keys_of_tree right) (ms_append (keys_of_tree left)
+                                      (ms_append (ms_singleton k)
+                                                 ms_empty))
 
 let heap_delete_max_repr (depth:pos) (t:tree) (lt:ms)
   : Lemma
@@ -493,8 +505,34 @@ let heap_delete_max_repr (depth:pos) (t:tree) (lt:ms)
          let Internal left k Leaf = t in
          permutation lt (ms_append (ms_singleton k) (keys (heap_delete_max depth t))))) =
 
-  admit ()
-    
+  let Internal left k Leaf = t in
+  unzip_repr (depth - 1) k left (keys_of_tree left)
+
+let max (k:key_t) (s:S.set key_t) =
+  forall (x:key_t). Set.mem x s ==> x <= k
+
+let rec tree_root_is_max_aux (depth:nat) (upper_bound:key_t) (t:tree)
+  : Lemma
+      (requires pow2heap_pred depth upper_bound t)
+      (ensures max upper_bound (keys_of_tree t).ms_elems)
+      (decreases t) =
+
+  match t with
+  | Leaf -> ()
+  | Internal left k right ->
+    tree_root_is_max_aux (depth - 1) k left;
+    tree_root_is_max_aux (depth - 1) upper_bound right
+
+let tree_root_is_max (depth:pos) (t:tree)
+  : Lemma
+      (requires is_pow2heap depth t)
+      (ensures
+         (let Internal left k Leaf = t in
+          max k (keys_of_tree left).ms_elems)) =
+  let Internal left k Leaf = t in
+  tree_root_is_max_aux (depth - 1) k left
+
+#push-options "--z3rlimit 40"
 let rec delete_max_aux_repr (m:key_t) (depth:pos) (q:list tree)
   (x:key_t) (r:list tree) (p:priq)
   (lq lr lp:ms)
@@ -515,15 +553,63 @@ let rec delete_max_aux_repr (m:key_t) (depth:pos) (q:list tree)
   | [] -> ()
   | Leaf::q ->
     delete_max_aux_repr m (depth + 1) q x (L.tl r) p lq lr lp
-  | (Internal left x right)::q ->
+  | (Internal left x Leaf)::q ->
     if x < m
     then begin
-      assume (~ (S.mem m (keys_of_tree left).ms_elems));
-      assume (~ (S.mem m (keys_of_tree right).ms_elems));
+      tree_root_is_max depth (Internal left x Leaf);
+      assert (~ (S.mem m (keys_of_tree left).ms_elems));
       let y, _, _ = delete_max_aux m (depth + 1) q in
       delete_max_aux_repr m (depth + 1) q y (L.tl r) p (keys q) (keys (L.tl r)) lp
     end
-    else heap_delete_max_repr depth (Internal left x right) (keys_of_tree (Internal left x right))
+    else heap_delete_max_repr depth (Internal left x Leaf) (keys_of_tree (Internal left x Leaf))
+
+let rec find_max_mem_keys (kopt:option key_t) (q:list tree)
+  : Lemma
+      (ensures
+         find_max kopt q == kopt \/
+         (let kopt = find_max kopt q in
+          Some? kopt /\ S.mem (Some?.v kopt) (keys q).ms_elems))
+      (decreases q) =
+  match q with
+  | [] -> ()
+  | Leaf::q -> find_max_mem_keys kopt q
+  | (Internal _ k _)::q ->
+    match kopt with
+    | None ->
+      find_max_mem_keys (Some k) q
+    | Some k' ->
+      let k = if k' < k then k else k' in
+      find_max_mem_keys (Some k) q
+
+let rec find_max_is_max (depth:pos) (kopt:option key_t) (q:list tree)
+  : Lemma
+      (requires
+         is_ith_tail depth q /\
+         Some? (find_max kopt q))
+      (ensures
+         (let Some k = find_max kopt q in
+          max k (keys q).ms_elems))
+      (decreases q) =
+  match q with
+  | [] -> ()
+  | Leaf::q ->
+    find_max_is_max (depth + 1) kopt q
+  | (Internal left k Leaf)::tl ->
+    tree_root_is_max depth (Internal left k Leaf);
+    match kopt with
+    | None ->
+      find_max_is_max (depth + 1) (Some k) tl;
+      find_max_some_is_some k tl
+    | Some k' ->
+      if k' < k
+      then begin
+        find_max_is_max (depth + 1) (Some k) tl;
+        find_max_some_is_some k tl
+      end
+      else begin
+        find_max_is_max (depth + 1) (Some k') tl;
+        find_max_some_is_some k' tl
+      end
 
 let delete_max_some_repr (p q:priq) (k:key_t) (pl ql:ms)
   : Lemma
@@ -533,5 +619,18 @@ let delete_max_some_repr (p q:priq) (k:key_t) (pl ql:ms)
          q `repr` ql)
       (ensures
          permutation pl (ms_append (ms_singleton k) ql) /\
-         (forall (x:key_t). Set.mem x ql.ms_elems ==> x <= k)) = admit ()
+         (forall (x:key_t). Set.mem x ql.ms_elems ==> x <= k)) =
 
+  match find_max None p with
+  | None -> ()
+  | Some m ->
+    find_max_mem_keys None p;
+    assert (S.mem m (keys p).ms_elems);
+    let x, q, new_q = delete_max_aux m 1 p in
+    delete_max_aux_repr m 1 p x q new_q
+      pl (keys q) (keys new_q);
+    let r = join 1 q new_q Leaf in
+    join_represents 1 q new_q Leaf (keys q) (keys new_q) ms_empty;
+    compact_preserves_keys r;
+    assert (permutation pl (ms_append (ms_singleton k) ql));
+    find_max_is_max 1 None p
