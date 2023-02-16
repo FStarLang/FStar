@@ -6,6 +6,9 @@ yac-log
 fstar/
 *.tar.gz
 
+# A touch file
+install-compiler-lib
+
 prims.ml
 FStar_All.ml
 FStar_Bytes.ml
@@ -28,5 +31,4 @@ main.ml
 parse.ml
 parse.mli
 parse.mly
-6
 yac-log

@@ -1570,7 +1570,7 @@ Errors.with_ctx (BU.format1 "While checking layered effect definition `%s`" (str
         match attr_opt with
         | None -> fml  |> NonTrivial |> Env.guard_of_guard_formula
         | Some attr ->
-          let _, _, g = Env.new_implicit_var_aux "" r env
+          let _, _, g = Env.new_implicit_var_aux "tc_layered_effect_decl.g_precondition" r env
             (U.mk_squash S.U_zero fml)
             Strict
             (Ctx_uvar_meta_attr attr |> Some) in
@@ -2162,7 +2162,7 @@ Errors.with_ctx (BU.format1 "While checking effect definition `%s`" (string_of_l
                 let bs, c = SS.open_comp bs c in
                 let a, wp = destruct_repr (U.comp_result c) in
                 let c = {
-                  comp_univs=[env.universe_of env a];
+                  comp_univs=[env.universe_of (Env.push_binders env bs) a];
                   effect_name = ed.mname;
                   result_typ = a;
                   effect_args = [as_arg wp];

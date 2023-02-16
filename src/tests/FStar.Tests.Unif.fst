@@ -64,11 +64,13 @@ let guard_eq i g g' =
                         Got guard      %s\n" (BU.string_of_int i) (guard_to_string g') (guard_to_string g);
     success := !success && b
 
-let unify i x y g' check =
+let unify i bvs x y g' check =
     BU.print1 "%s ..." (BU.string_of_int i);
     FStar.Main.process_args () |> ignore; //set options
     BU.print2 "Unify %s\nand %s\n" (FStar.Syntax.Print.term_to_string x) (FStar.Syntax.Print.term_to_string y);
-    let g = Rel.teq (tcenv()) x y |> Rel.solve_deferred_constraints (tcenv()) |> Rel.simplify_guard (tcenv()) in
+    let tcenv = tcenv() in
+    let tcenv = Env.push_bvs tcenv bvs in
+    let g = Rel.teq tcenv x y |> Rel.solve_deferred_constraints tcenv |> Rel.simplify_guard tcenv in
     guard_eq i g.guard_f g';
     check();
     Options.init()    //reset them; exceptions are fatal, so don't worry about resetting them in case guard_eq fails
@@ -140,48 +142,54 @@ let run_all () =
     BU.print_string "Testing the unifier\n";
 
     Options.__set_unit_tests();
-    let unify_check n x y g f = unify n x y g f in
-    let unify n x y g = unify n x y g (fun () -> ()) in
+    let unify_check n bvs x y g f = unify n bvs x y g f in
+    let unify n bvs x y g = unify n bvs x y g (fun () -> ()) in
     let int_t = tc "Prims.int" in
-    let x = S.gen_bv "x" None int_t |> S.bv_to_name in
-    let y = S.gen_bv "y" None int_t |> S.bv_to_name in
+    let x_bv = S.gen_bv "x" None int_t in
+    let y_bv = S.gen_bv "y" None int_t in
+    let x = S.bv_to_name x_bv in
+    let y = S.bv_to_name y_bv in
 
     //syntactic equality of names
-    unify 0 x x Trivial;
+    unify 0 [x_bv] x x Trivial;
 
     //different names, equal with a guard
-    unify 1 x y (NonTrivial (U.mk_eq2 U_zero U.t_bool x y));
+    unify 1 [x_bv;y_bv] x y (NonTrivial (U.mk_eq2 U_zero U.t_bool x y));
 
     //equal after some reduction
     let id = tc "fun (x:bool) -> x" in
-    unify 2 x (app id [x]) Trivial;
+    unify 2 [x_bv] x (app id [x]) Trivial;
 
     //physical equality of terms
     let id = tc "fun (x:bool) -> x" in
-    unify 3 id id Trivial;
+    unify 3 [] id id Trivial;
 
     //alpha equivalence
     let id = tc "fun (x:bool) -> x" in
     let id' = tc "fun (y:bool) -> y" in
-    unify 4 id id' Trivial; //(NonTrivial (pars "True /\ (forall x. True)"));
+    unify 4 [] id id' Trivial; //(NonTrivial (pars "True /\ (forall x. True)"));
 
     //alpha equivalence 2
-    unify 5 (tc "fun (x y:bool) -> x")
+    unify 5 []
+            (tc "fun (x y:bool) -> x")
             (tc "fun (a b:bool) -> a")
             Trivial;
 
     //alpha equivalence 3
-    unify 6 (tc "fun (x y z:bool) -> y")
+    unify 6 []
+            (tc "fun (x y z:bool) -> y")
             (tc "fun (a b c:bool) -> b")
             Trivial;
 
     //logical equality of distinct lambdas (questionable ... would only work for unit, or inconsistent context)
-    unify 7 (tc "fun (x:int) (y:int) -> y")
+    unify 7 []
+            (tc "fun (x:int) (y:int) -> y")
             (tc "fun (x:int) (y:int) -> x")
             (NonTrivial (tc "(forall (x:int). (forall (y:int). y==x))"));
 
     //logical equality of distinct lambdas (questionable ... would only work for unit, or inconsistent context)
-    unify 8 (tc "fun (x:int) (y:int) (z:int) -> y")
+    unify 8 []
+            (tc "fun (x:int) (y:int) (z:int) -> y")
             (tc "fun (x:int) (y:int) (z:int) -> z")
             (NonTrivial (tc "(forall (x:int). (forall (y:int). (forall (z:int). y==z)))"));
 
@@ -190,7 +198,7 @@ let run_all () =
     let tm, us = inst 1 (tc "fun (u:Type0 -> Type0) (x:Type0) -> u x") in
     let sol = tc "fun (x:Type0) -> Prims.pair x x" in
     BU.print1 "Processed args: debug_at_level Core? %s\n" (BU.string_of_bool (Options.debug_at_level_no_module (Options.Other "Core")));
-    unify_check 9 tm
+    unify_check 9 [] tm
             sol
             Trivial
             (fun () ->
@@ -200,7 +208,7 @@ let run_all () =
     //imitation: unifies u to a lambda
     let tm, us = inst 1 (tc "fun (u: int -> int -> int) (x:int) -> u x") in
     let sol = tc "fun (x y:int) -> x + y" in
-    unify_check 10 tm
+    unify_check 10 [] tm
             sol
             Trivial
             (fun () ->always 10 (term_eq (norm (List.hd us))
@@ -208,15 +216,15 @@ let run_all () =
 
     let tm1 = tc ("x:int -> y:int{eq2 y x} -> bool") in
     let tm2 = tc ("x:int -> y:int -> bool") in
-    unify 11 tm1 tm2
+    unify 11 [] tm1 tm2
             (NonTrivial (tc "forall (x:int). (forall (y:int). y==x)"));
 
     let tm1 = tc ("a:Type0 -> b:(a -> Type0) -> x:a -> y:b x -> Tot Type0") in
     let tm2 = tc ("a:Type0 -> b:(a -> Type0) -> x:a -> y:b x -> Tot Type0") in
-    unify 12 tm1 tm2
+    unify 12 [] tm1 tm2
             Trivial;
 
-    let tm1, tm2 =
+    let tm1, tm2, bvs_13 =
         let int_typ = tc "int" in
         let x = FStar.Syntax.Syntax.new_bv None int_typ in
 
@@ -230,12 +238,12 @@ let run_all () =
         let env = Env.push_binders (init()) [S.mk_binder x; S.mk_binder q] in
         let u_p, _, _ = FStar.TypeChecker.Util.new_implicit_var "" dummyRange env typ in
         let tm2 = app (norm (app l [u_p])) [unit] in
-        tm1, tm2
+        tm1, tm2, [x;q]
     in
 
-    unify 13 tm1 tm2 Trivial;
+    unify 13 bvs_13 tm1 tm2 Trivial;
 
-    let tm1, tm2 =
+    let tm1, tm2, bvs_14 =
         let int_typ = tc "int" in
         let x = FStar.Syntax.Syntax.new_bv None int_typ in
 
@@ -249,10 +257,10 @@ let run_all () =
         let env = Env.push_binders (init()) [S.mk_binder x; S.mk_binder q] in
         let u_p, _, _ = FStar.TypeChecker.Util.new_implicit_var "" dummyRange env typ in
         let tm2 = app (norm (app l [u_p])) [unit] in
-        tm1, tm2
+        tm1, tm2, [x;q]
     in
 
-    unify 14 tm1 tm2 Trivial;
+    unify 14 bvs_14 tm1 tm2 Trivial;
 
     let tm1, tm2 =
       let _ = Pars.pars_and_tc_fragment 

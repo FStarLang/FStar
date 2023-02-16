@@ -162,6 +162,22 @@ let soft_brackets_with_nesting contents =
 let soft_begin_end_with_nesting contents =
   soft_surround 2 1 (str "begin") contents (str "end")
 
+let tc_arg contents =
+  soft_surround 2 1 (str "{|") contents (str "|}")
+
+let is_tc_binder (b:binder) : bool =
+  match b.aqual with
+  | Some TypeClassArg -> true
+  | _ -> false
+
+let is_meta_qualifier aq =
+  match aq with
+  | Some (Meta _) -> true
+  | _ -> false
+
+let is_joinable_binder (b:binder) : bool =
+  not (is_tc_binder b) && not (is_meta_qualifier b.aqual)
+
 let separate_map_last sep f es =
   let l = List.length es in
   let es = List.mapi (fun i e -> f (i <> l - 1) e) es in
@@ -778,21 +794,18 @@ and p_typeDecl pre = function
     let comm, doc = p_typ_sep false false t in
     comm, p_typeDeclPrefix pre true lid bs typ_opt, doc, jump2
   | TyconRecord (lid, bs, typ_opt, attrs, record_field_decls) ->
-    let p_recordField (ps: bool) (lid, aq, attrs, t) =
-      let comm, field =
-        with_comment_sep (p_recordFieldDecl ps) (lid, aq, attrs, t)
-                         (extend_to_end_of_line t.range) in
-      let sep = if ps then semi else empty in
-      inline_comment_or_above comm field sep
-    in
-    let p_fields = p_attributes false attrs ^^ braces_with_nesting (
-        separate_map_last hardline p_recordField record_field_decls)
-    in
-    empty, p_typeDeclPrefix pre true lid bs typ_opt, p_fields, (fun d -> space ^^ d)
+      empty
+    , p_typeDeclPrefix pre true lid bs typ_opt
+    , p_attributes false attrs ^^ p_typeDeclRecord record_field_decls
+    , (fun d -> space ^^ d)
   | TyconVariant (lid, bs, typ_opt, ct_decls) ->
-    let p_constructorBranchAndComments (uid, t_opt, use_of, attrs) =
-        let range = extend_to_end_of_line (dflt (range_of_id uid) (map_opt t_opt (fun t -> t.range))) in
-        let comm, ctor = with_comment_sep p_constructorBranch (uid, t_opt, use_of, attrs) range in
+    let p_constructorBranchAndComments (uid, payload, attrs) =
+        let range = extend_to_end_of_line (
+          dflt (range_of_id uid) 
+               (bind_opt payload 
+                   (function | VpOfNotation t | VpArbitrary t -> Some t.range
+                             | VpRecord (record, _)           -> None))) in
+        let comm, ctor = with_comment_sep p_constructorBranch (uid, payload, attrs) range in
         inline_comment_or_above comm ctor empty
     in
     (* Beware of side effects with comments printing *)
@@ -800,6 +813,15 @@ and p_typeDecl pre = function
         separate_map hardline p_constructorBranchAndComments ct_decls
     in
     empty, p_typeDeclPrefix pre true lid bs typ_opt, datacon_doc, jump2
+and p_typeDeclRecord (fields: tycon_record): document =
+    let p_recordField (ps: bool) (lid, aq, attrs, t) =
+      let comm, field =
+        with_comment_sep (p_recordFieldDecl ps) (lid, aq, attrs, t)
+                         (extend_to_end_of_line t.range) in
+      let sep = if ps then semi else empty in
+      inline_comment_or_above comm field sep
+    in
+    separate_map_last hardline p_recordField fields |> braces_with_nesting
 
 and p_typeDeclPrefix kw eq lid bs typ_opt =
   let with_kw cont =
@@ -823,11 +845,15 @@ and p_typeDeclPrefix kw eq lid bs typ_opt =
 and p_recordFieldDecl ps (lid, aq, attrs, t) =
   group (optional p_aqual aq ^^ p_attributes false attrs ^^ p_lident lid ^^ colon ^^ p_typ ps false t)
 
-and p_constructorBranch (uid, t_opt, use_of, attrs) =
-  let sep = if use_of then str "of" else colon in
-  let uid_doc = group (bar ^^ space ^^ p_attributes false attrs ^^ p_uident uid) in
-  default_or_map uid_doc (fun t -> (group (uid_doc ^^ space ^^ sep ^^ space ^^ p_typ false false t))) t_opt
-
+and p_constructorBranch (uid, variant, attrs) =
+  let h isOf t = (if isOf then str "of" else colon) ^^ space ^^ p_typ false false t
+  in group (bar ^^ space ^^ p_attributes false attrs ^^ p_uident uid)
+  ^^ default_or_map empty
+        (fun payload -> space ^^ group
+           ( match payload with
+           | VpOfNotation t -> h true t | VpArbitrary t -> h false t
+           | VpRecord (r, t) -> p_typeDeclRecord r ^^ default_or_map empty (h false) t
+           )) variant
 and p_letlhs kw (pat, _) inner_let =
   (* TODO : this should be refined when head is an applicative pattern (function definition) *)
   let pat, ascr =
@@ -850,12 +876,12 @@ and p_letlhs kw (pat, _) inner_let =
         // VD: should we indent inner lets less?
         if inner_let then
           let bs, style = pats_as_binders_if_possible pats in
-          bs @ [ascr_doc], style
+          bs, style
         else
           let bs, style = pats_as_binders_if_possible pats in
-          bs @ [ascr_doc], style
+          bs, style
       in
-      group <| kw ^^ space ^^ p_lident lid ^^ (format_sig style terms true true)
+      group <| kw ^^ space ^^ p_lident lid ^^ (format_sig style terms ascr_doc true true)
   | _ ->
       (* doesn't have binders *)
       let ascr_doc =
@@ -961,6 +987,8 @@ and p_letqualifier = function
   | Rec -> space ^^ str "rec"
   | NoLetQualifier -> empty
 
+(* This prints both arg qualifiers and binder qualifiers. Note that Meta and
+Typeclass do not make sense for arg qualifiers. *)
 and p_aqual = function
   | Implicit -> str "#"
   | Equality -> str "$"
@@ -971,6 +999,7 @@ and p_aqual = function
       | _ -> mk_term (App (t, unit_const t.range, Nothing)) t.range Expr
     in
     str "#[" ^^ p_term false false t ^^ str "]" ^^ break1
+  | TypeClassArg -> empty (* This is handled externally *)
 
 (* ****************************************************************************)
 (*                                                                            *)
@@ -1012,6 +1041,14 @@ and p_atomicPattern p = match p.pat with
       soft_parens_with_nesting (p_refinement aqual attrs (p_ident lid) t phi)
     | PatWild (aqual, attrs), Refine({b = NoName t}, phi) ->
       soft_parens_with_nesting (p_refinement aqual attrs underscore t phi)
+    | PatVar (_, aqual, _), _
+    | PatWild (aqual, _), _ ->
+        let wrap =
+          if aqual = Some TypeClassArg
+          then tc_arg
+          else soft_parens_with_nesting
+        in
+        wrap (p_tuplePattern pat ^^ colon ^/^ p_tmEqNoRefinement t)
     | _ ->
         (* TODO implement p_simpleArrow *)
         soft_parens_with_nesting (p_tuplePattern pat ^^ colon ^/^ p_tmEqNoRefinement t)
@@ -1050,22 +1087,28 @@ and is_typ_tuple e = match e.tm with
   | Op(id, _) when string_of_id id = "*" -> true
   | _ -> false
 
-and is_meta_qualifier aq =
-  match aq with
-  | Some (Meta _) -> true
-  | _ -> false
-
 and p_binder is_atomic b =
-  let b', t', catf = p_binder' false is_atomic b in
-  match t' with
-  | Some typ -> catf b' typ
-  | None -> b'
+  let is_tc = is_tc_binder b in
+  let b', t' = p_binder' false (is_atomic && not is_tc) b in
+  let d =
+    match t' with
+    | Some (typ, catf) -> catf b' typ
+    | None -> b'
+  in
+  if is_tc
+  then tc_arg d
+  else d
 
 (* is_atomic is true if the binder must be parsed atomically *)
-and p_binder' (no_pars: bool) (is_atomic: bool) (b: binder): document * option document * catf =
+// Returns:
+//  1- a doc for binder
+//  2- optionally: a doc for the type annotation (if any), and a function to concat it to the binder
+// When the binder is nameless, the at
+// This does NOT handle typeclass arguments. The wrapping is done from the outside.
+and p_binder' (no_pars: bool) (is_atomic: bool) (b: binder): document * option (document * catf) =
   match b.b with
-  | Variable lid -> optional p_aqual b.aqual ^^ p_attributes false b.battributes ^^ p_lident lid, None, cat_with_colon
-  | TVariable lid -> p_attributes false b.battributes ^^ p_lident lid, None, cat_with_colon
+  | Variable lid -> optional p_aqual b.aqual ^^ p_attributes false b.battributes ^^ p_lident lid, None
+  | TVariable lid -> p_attributes false b.battributes ^^ p_lident lid, None
   | Annotated (lid, t) ->
       let b', t' =
         match t.tm with
@@ -1085,17 +1128,17 @@ and p_binder' (no_pars: bool) (is_atomic: bool) (b: binder): document * option d
           else
             (fun x y -> group (cat_with_colon x y))
         in
-        b', Some t', catf
+        b', Some (t', catf)
   | TAnnotated _ -> failwith "Is this still used ?"
   | NoName t ->
     begin match t.tm with
       | Refine ({b = NoName t}, phi) ->
         let b', t' = p_refinement' b.aqual b.battributes underscore t phi in
-        b', Some t', cat_with_colon
+        b', Some (t', cat_with_colon)
       | _ ->
-        if is_atomic
-        then p_attributes false b.battributes ^^ p_atomicTerm t, None, cat_with_colon (* t is a type but it might need some parenthesis *)
-        else p_attributes false b.battributes ^^ p_appTerm t, None, cat_with_colon (* This choice seems valid (used in p_tmNoEq') *)
+        let pref = optional p_aqual b.aqual ^^ p_attributes false b.battributes in
+        let p_Tm = if is_atomic then p_atomicTerm else p_appTerm in
+        pref ^^ p_Tm t, None
     end 
 
 and p_refinement aqual_opt attrs binder t phi =
@@ -1546,43 +1589,49 @@ and sig_as_binders_if_possible t extra_space =
   else
     group (colon ^^ s ^^ p_typ_top (Arrows (2, 2)) false false t)
 
-and collapse_pats (pats: list (document * document)): list document =
-  let fold_fun (bs: list (list document * document)) (x: document * document) =
-    let b1, t1 = x in
+// Typeclass arguments are not collapsed.
+and collapse_pats (pats: list (document * document * bool * bool)): list document =
+  let fold_fun (bs: list (list document * document * bool * bool)) (x: document * document * bool * bool) =
+    let b1, t1, tc1, j1 = x in
     match bs with
-    | [] -> [([b1], t1)]
+    | [] -> [([b1], t1, tc1, j1)]
     | hd::tl ->
-      let b2s, t2 = hd in
-      if t1 = t2 then
-        (b2s @ [b1], t1) :: tl
+      let b2s, t2, tc2, j2 = hd in
+      if t1 = t2 && j1 && j2 then
+        (b2s @ [b1], t1, false, true) :: tl
       else
-        ([b1], t1) :: hd :: tl
+        ([b1], t1, tc1, j1) :: hd :: tl
   in
-  let p_collapsed_binder (cb: list document * document): document =
-    let bs, typ = cb in
-    match bs with
-    | [] -> failwith "Impossible" // can't have dangling type
-    | [b] -> cat_with_colon b typ
-    | hd::tl -> cat_with_colon (List.fold_left (fun x y -> x ^^ space ^^ y) hd tl) typ
+  let p_collapsed_binder (cb: list document * document * bool * bool): document =
+    let bs, typ, istcarg, _ = cb in
+    let body =
+      match bs with
+      | [] -> failwith "Impossible" // can't have dangling type
+      | hd::tl -> cat_with_colon (List.fold_left (fun x y -> x ^^ space ^^ y) hd tl) typ
+    in
+    if istcarg
+    then tc_arg body
+    else soft_parens_with_nesting body
   in
   let binders = List.fold_left fold_fun [] (List.rev pats) in
   map_rev p_collapsed_binder binders
 
-and pats_as_binders_if_possible pats =
-  let all_binders p = match p.pat with
+and pats_as_binders_if_possible pats : list document & annotation_style =
+  // returns: doc for name, doc for type, boolean if typeclass arg
+  let all_binders (p:pattern) : option (document & document & bool & bool) =
+  match p.pat with
   | PatAscribed(pat, (t, None)) ->
-    (match pat.pat, t.tm  with
+    (match pat.pat, t.tm with
      | PatVar (lid, aqual, attrs), Refine({b = Annotated(lid', t)}, phi)
        when (string_of_id lid) = (string_of_id lid') ->
-         Some (p_refinement' aqual attrs (p_ident lid) t phi)
+         let (x, y) = p_refinement' aqual attrs (p_ident lid) t phi in
+         Some (x, y, false, false)
      | PatVar (lid, aqual, attrs), _ ->
-       Some (optional p_aqual aqual ^^ p_attributes false attrs ^^  p_ident lid, p_tmEqNoRefinement t)
+       let is_tc = aqual = Some TypeClassArg in
+       let is_meta = match aqual with | Some (Meta _) -> true | _ -> false in
+       Some (optional p_aqual aqual ^^ p_attributes false attrs ^^  p_ident lid, p_tmEqNoRefinement t, is_tc, not is_tc && not is_meta)
      | _ -> None)
   | _ -> None
-  in
-  let all_unbound p = match p.pat with
-  | PatAscribed _ -> false
-  | _ -> true
   in
   match map_if_all all_binders pats with
   | Some bs ->
@@ -1686,41 +1735,41 @@ and p_tmImplies e = match e.tm with
 // It also needs to make adjustments depending on which style a signature
 // is to be printed in. For more details see the `annotation_style` type
 // definition.
-and format_sig style terms no_last_op flat_space =
-  let terms', last = List.splitAt (List.length terms - 1) terms in
-  let n, last_n, terms', sep, last_op =
+and format_sig style terms ret_d no_last_op flat_space =
+  let n, last_n, sep, last_op =
     match style with
     | Arrows (n, ln)->
-        n, ln, terms', space ^^ rarrow ^^ break1, rarrow ^^ space
+        n, ln, space ^^ rarrow ^^ break1, rarrow ^^ space
     | Binders (n, ln, parens) ->
-        n, ln,
-        (if parens then List.map soft_parens_with_nesting terms' else terms'),
-        break1, colon ^^ space
+        n, ln, break1, colon ^^ space
   in
-  let last = List.hd last in
-  let last_op = if List.length terms > 1 && (not no_last_op) then last_op else empty in
-  let one_line_space = if not (last = empty) || not no_last_op then space else empty in
+  let last_op = if List.length terms > 0 && (not no_last_op) then last_op else empty in
+  let one_line_space = if not (ret_d = empty) || not no_last_op then space else empty in
   let single_line_arg_indent = repeat n space in
   let fs = if flat_space then space else empty in
   match List.length terms with
-  | 1 -> List.hd terms
-  | _ -> group (ifflat (fs ^^ (separate sep terms') ^^ one_line_space ^^ last_op ^^ last)
-           (prefix n 1 (group ((ifflat (fs ^^ separate sep terms')
-             (jump2 ((single_line_arg_indent ^^ separate (sep ^^ single_line_arg_indent) (List.map (fun x -> align (hang 2 x)) terms')))))))
-               (align (hang last_n (last_op ^^ last)))))
+  | 0 -> ret_d
+  | _ -> group (ifflat (fs ^^ (separate sep terms) ^^ one_line_space ^^ last_op ^^ ret_d)
+           (prefix n 1 (group ((ifflat (fs ^^ separate sep terms)
+             (jump2 ((single_line_arg_indent ^^ separate (sep ^^ single_line_arg_indent) (List.map (fun x -> align (hang 2 x)) terms)))))))
+               (align (hang last_n (last_op ^^ ret_d)))))
 
 and p_tmArrow style flat_space p_Tm e =
-  let terms =
+  let terms, ret_d =
     match style with
     | Arrows _ -> p_tmArrow' p_Tm e
-    | Binders _ -> collapse_binders p_Tm e
+    | Binders _ -> collapse_binders style p_Tm e
   in
-  format_sig style terms false flat_space
+  format_sig style terms ret_d false flat_space
 
-and p_tmArrow' p_Tm e =
+and p_tmArrow' p_Tm e : list document & document =
   match e.tm with
-  | Product(bs, tgt) -> (List.map (fun b -> p_binder false b) bs) @ (p_tmArrow' p_Tm tgt)
-  | _ -> [p_Tm e]
+  | Product(bs, tgt) ->
+    let bs_ds = List.map (fun b -> p_binder false b) bs in
+    let bs_ds', ret = p_tmArrow' p_Tm tgt in
+    bs_ds@bs_ds', ret
+  | _ ->
+    ([], p_Tm e)
 
 // When printing in `Binders` style, collapse binders which have the same
 // type, so instead of printing
@@ -1728,45 +1777,66 @@ and p_tmArrow' p_Tm e =
 // print
 //    val f (a b c: t) : Tot nat
 // For this, we use the generalised version of p_binder, which returns
-// the binder, its type (as an optional) and a function which
+// the binder, and optionally its type and a function which
 // concatenates them.
-and collapse_binders (p_Tm: term -> document) (e: term): list document =
-  let rec accumulate_binders p_Tm e: list (document * option document * catf) =
+and collapse_binders (style : annotation_style) (p_Tm: term -> document) (e: term): list document & document =
+  let atomize = match style with
+   | Binders (_, _, a) -> a
+   | _ -> false
+  in
+  let wrap is_tc doc =
+    if is_tc then tc_arg doc
+    else if atomize then soft_parens_with_nesting doc
+    else doc
+  in
+  // For each binder, return:
+  // - document for binder
+  // - optional annotation doc + cat function
+  // - whether it was a typeclass arg
+  // - whether it is joinable (tc args and meta args are not)
+  let rec accumulate_binders p_Tm e: list ((document * option (document * catf)) * bool * bool) & document =
     match e.tm with
-    | Product(bs, tgt) -> (List.map (fun b -> p_binder' true false b) bs) @ (accumulate_binders p_Tm tgt)
-    | _ -> [(p_Tm e, None, cat_with_colon)]
+    | Product(bs, tgt) ->
+        let bs_ds = List.map (fun b -> p_binder' true false b, is_tc_binder b, is_joinable_binder b) bs in
+        let bs_ds', ret = accumulate_binders p_Tm tgt in
+        bs_ds@bs_ds', ret
+    | _ -> ([], p_Tm e)
   in
-  let fold_fun (bs: list (list document * option document * catf)) (x: document * option document * catf) =
-    let b1, t1, f1 = x in
+  let fold_fun (bs: list (list document * option (document * catf) * bool * bool)) (x: (document * option (document * catf)) * bool * bool) =
+    let (b1, t1), tc1, j1 = x in
     match bs with
-    | [] -> [([b1], t1, f1)]
+    | [] -> [([b1], t1, tc1, j1)]
     | hd::tl ->
-      let b2s, t2, _ = hd in
+      let b2s, t2, tc2, j2 = hd in
       match (t1, t2) with
-      | (Some typ1, Some typ2) ->
-        if typ1 = typ2 then
-          (b2s @ [b1], t1, f1) :: tl
-        else
-          ([b1], t1, f1) :: hd :: tl
-      | _ -> ([b1], t1, f1) :: bs
+      | Some (typ1, catf1), Some (typ2, _)
+        when typ1 = typ2 && j1 && j2 ->
+        (* If the `x` binder has the same type as the group that follows,
+         * and both are joinable (the group and the new binder), then join
+         * them. Take the cat function from x. NOTE: if they were joinable,
+         * then they are not tc-args, hence the false. *)
+          (b2s @ [b1], t1, false, true) :: tl
+      | _ ->
+        (* Otherwise just make a new group *)
+        ([b1], t1, tc1, j1) :: bs
   in
-  let p_collapsed_binder (cb: list document * option document * catf): document =
-    let bs, t, f = cb in
+  let p_collapsed_binder (cb: list document * option (document * catf) * bool * bool): document =
+    let bs, t, is_tc, _ = cb in
     match t with
     | None -> begin
       match bs with
-      | [b] -> b
+      | [b] -> wrap is_tc b
       | _ -> failwith "Impossible" // can't have dangling type or collapse unannotated binders
     end
-    | Some typ -> begin
+    | Some (typ, f) -> begin
       match bs with
       | [] -> failwith "Impossible" // can't have dangling type
-      | [b] -> f b typ
-      | hd::tl -> f (List.fold_left (fun x y -> x ^^ space ^^ y) hd tl) typ
+      | hd::tl -> wrap is_tc <| f (List.fold_left (fun x y -> x ^^ space ^^ y) hd tl) typ
     end
   in
-  let binders = List.fold_left fold_fun [] (accumulate_binders p_Tm e) in
-  map_rev p_collapsed_binder binders
+  let bs_ds, ret_d = accumulate_binders p_Tm e in
+  let binders = List.fold_left fold_fun [] bs_ds in
+  map_rev p_collapsed_binder binders, ret_d
 
 and p_tmFormula e =
     let conj = space ^^ (str "/\\") ^^ break1 in
@@ -1882,10 +1952,11 @@ and p_with_clause e = p_appTerm e ^^ space ^^ str "with" ^^ break1
 and p_refinedBinder b phi =
     match b.b with
     | Annotated (lid, t) -> p_refinement b.aqual b.battributes (p_lident lid) t phi
+    | Variable lid ->       p_refinement b.aqual b.battributes (p_lident lid) (mk_term Wild (range_of_id lid) Type_level) phi
     | TAnnotated _ -> failwith "Is this still used ?"
-    | Variable _
     | TVariable _
-    | NoName _ -> failwith (Util.format1 "Imposible : a refined binder ought to be annotated %s" (binder_to_string b))
+    | NoName _ ->
+      failwith (Util.format1 "Impossible: a refined binder ought to be annotated (%s)" (binder_to_string b))
 
 (* A simple def can be followed by a ';'. Protect except for the last one. *)
 and p_simpleDef ps (lid, e) =
@@ -2086,7 +2157,14 @@ and p_constant = function
           | Int32 -> str "l"
           | Int64 -> str "L"
       in
-      let ending = default_or_map empty (fun (s, w) -> signedness s ^^ width w) sign_width_opt in
+      let suffix (s, w) =
+        (* This handles the Sizet case, which is unsigned but
+         * does not have a "u" suffix. *)
+        match (s, w) with
+        | _, Sizet -> str "sz"
+        | _ -> signedness s ^^ width w
+      in
+      let ending = default_or_map empty suffix sign_width_opt in
       str repr ^^ ending
   | Const_range_of -> str "range_of"
   | Const_set_range_of -> str "set_range_of"

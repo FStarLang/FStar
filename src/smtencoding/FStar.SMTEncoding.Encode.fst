@@ -405,13 +405,14 @@ let encode_free_var uninterpreted env fv tt t_norm quals :decls_t * env_t =
          else let encode_non_total_function_typ = nsstr lid <> "Prims" in
               let formals, (pre_opt, res_t) =
                 let args, comp = curried_arrow_formals_comp t_norm in
+                let tcenv_comp = Env.push_binders env.tcenv args in
                 let comp =
                   if is_smt_reifiable_comp env.tcenv comp
-                  then S.mk_Total (reify_comp ({env.tcenv with lax=true}) comp U_unknown)
+                  then S.mk_Total (reify_comp ({tcenv_comp with lax=true}) comp U_unknown)
                   else comp
                 in
                 if encode_non_total_function_typ
-                then args, TypeChecker.Util.pure_or_ghost_pre_and_post env.tcenv comp
+                then args, TypeChecker.Util.pure_or_ghost_pre_and_post tcenv_comp comp
                 else args, (None, U.comp_result comp)
               in
               let mk_disc_proj_axioms guard encoded_res_t vapp (vars:fvs) = quals |> List.collect (function
@@ -689,6 +690,7 @@ let encode_top_level_let :
       in
       let binders, body, comp = aux t e in
       let binders, body, comp =
+          let tcenv = Env.push_binders tcenv binders in
           if is_smt_reifiable_comp tcenv comp
           then let comp = reify_comp tcenv comp U_unknown in
                let body = TcUtil.reify_body tcenv [] body in
@@ -1232,7 +1234,7 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
        ) ([], [], []) g' in
        (decls |> mk_decls_trivial) @ elts @ rest @ (inversions |> mk_decls_trivial), env
 
-     | Sig_inductive_typ(t, universe_names, tps, k, _, datas) ->
+     | Sig_inductive_typ(t, universe_names, tps, _num_uniform, k, _, datas) ->
          let tcenv = env.tcenv in
          let is_injective  =
              let usubst, uvs = SS.univ_var_opening universe_names in
@@ -1296,7 +1298,7 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
             then let name, args, _, _, _ = c in
                  [Term.DeclFun(name, args |> List.map (fun (_, sort, _) -> sort), Term_sort, None)]
             else constructor_to_decl (Ident.range_of_lid t) c in
-        let inversion_axioms tapp vars =
+        let inversion_axioms env tapp vars =
             if datas |> BU.for_some (fun l -> Env.try_lookup_lid env.tcenv l |> Option.isNone) //Q: Why would this happen?
             then []
             else
@@ -1388,7 +1390,7 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
                    |> mk_decls_trivial) in
         let aux =
             kindingAx
-            @(inversion_axioms tapp vars)
+            @(inversion_axioms env tapp vars)
             @([pretype_axiom (Ident.range_of_lid t) env tapp vars] |> mk_decls_trivial) in
 
         let g = (decls |> mk_decls_trivial)

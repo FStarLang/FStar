@@ -48,8 +48,11 @@ let lockinv_predicate (p:vprop) (r:ref U32.t)
 let lockinv (p:vprop) (r:ref U32.t) : vprop =
   exists_ (lockinv_predicate p r)
 
-let lock_t = ref U32.t & erased iname
-let protects l p = snd l >--> lockinv p (fst l)
+noeq
+type lock (p:vprop) = {
+  r:ref U32.t;
+  i:inv (lockinv p r)
+}
 
 let new_lock p =
   let r = alloc unlocked in
@@ -57,7 +60,7 @@ let new_lock p =
   rewrite p (if is_locked unlocked then emp else p);
   intro_exists unlocked (lockinv_predicate p r);
   let i = new_invariant (lockinv p r) in
-  return (r, i)
+  return { r; i }
 
 [@@ __reduce__]
 let acquire_loop_inv (p:vprop) : bool -> vprop =
@@ -114,8 +117,8 @@ let acquire #p l =
   intro_exists true (acquire_loop_inv p);
   while_loop
     (acquire_loop_inv p)
-    (acquire_loop_cond p (fst l) (snd l))
-    (acquire_loop_body p (fst l));
+    (acquire_loop_cond p l.r l.i)
+    (acquire_loop_body p l.r);
   rewrite (acquire_loop_inv p false) p
 
 inline_for_extraction
@@ -133,4 +136,4 @@ let release_core (#opened:_) (p:vprop) (r:ref U32.t) ()
     intro_pure (unlocked == locked \/ unlocked == unlocked);
     intro_exists unlocked (lockinv_predicate p r)
 
-let release #p l = with_invariant (snd l) (release_core p (fst l))
+let release #p l = with_invariant l.i (release_core p l.r)

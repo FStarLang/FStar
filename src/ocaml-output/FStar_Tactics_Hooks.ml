@@ -854,8 +854,6 @@ let rec (traverse_for_spinoff :
                                (env2.FStar_TypeChecker_Env.teq_nosmt_force);
                              FStar_TypeChecker_Env.subtype_nosmt_force =
                                (env2.FStar_TypeChecker_Env.subtype_nosmt_force);
-                             FStar_TypeChecker_Env.use_bv_sorts =
-                               (env2.FStar_TypeChecker_Env.use_bv_sorts);
                              FStar_TypeChecker_Env.qtbl_name_and_index =
                                (env2.FStar_TypeChecker_Env.qtbl_name_and_index);
                              FStar_TypeChecker_Env.normalized_eff_names =
@@ -1702,7 +1700,7 @@ let (splice :
                        if uu___6
                        then
                          let uu___7 =
-                           FStar_Common.string_of_list
+                           (FStar_Common.string_of_list ())
                              FStar_Syntax_Print.sigelt_to_string sigelts in
                          FStar_Compiler_Util.print1
                            "splice: got decls = {\n\n%s\n\n}\n" uu___7

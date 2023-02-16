@@ -264,7 +264,15 @@ let rec (free_names_and_uvs' :
             (FStar_Pervasives_Native.snd lbs) uu___
       | FStar_Syntax_Syntax.Tm_quoted (tm1, qi) ->
           (match qi.FStar_Syntax_Syntax.qkind with
-           | FStar_Syntax_Syntax.Quote_static -> no_free_vars
+           | FStar_Syntax_Syntax.Quote_static ->
+               FStar_Compiler_List.fold_left
+                 (fun n ->
+                    fun uu___ ->
+                      match uu___ with
+                      | (uu___1, t1) ->
+                          let uu___2 = free_names_and_uvars t1 use_cache in
+                          union n uu___2) no_free_vars
+                 qi.FStar_Syntax_Syntax.antiquotes
            | FStar_Syntax_Syntax.Quote_dynamic ->
                free_names_and_uvars tm1 use_cache)
       | FStar_Syntax_Syntax.Tm_meta (t1, m) ->

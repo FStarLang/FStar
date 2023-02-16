@@ -1956,7 +1956,7 @@ let (should_unfold :
                    FStar_Syntax_Print.delta_depth_to_string
                      fv.FStar_Syntax_Syntax.fv_delta in
                  let uu___5 =
-                   FStar_Common.string_of_list
+                   (FStar_Common.string_of_list ())
                      FStar_TypeChecker_Env.string_of_delta_level
                      cfg.FStar_TypeChecker_Cfg.delta_level in
                  FStar_Compiler_Util.print3
@@ -2790,12 +2790,10 @@ let decide_unfolding :
                          FStar_Compiler_Range.dummyRange)) stack1 in
                 FStar_Pervasives_Native.Some (cfg, stack2)
 let (on_domain_lids : FStar_Ident.lident Prims.list) =
-  let fext_lid s =
-    FStar_Ident.lid_of_path ["FStar"; "FunctionalExtensionality"; s]
-      FStar_Compiler_Range.dummyRange in
-  FStar_Compiler_Effect.op_Bar_Greater
-    ["on_domain"; "on_dom"; "on_domain_g"; "on_dom_g"]
-    (FStar_Compiler_List.map fext_lid)
+  [FStar_Parser_Const.fext_on_domain_lid;
+  FStar_Parser_Const.fext_on_dom_lid;
+  FStar_Parser_Const.fext_on_domain_g_lid;
+  FStar_Parser_Const.fext_on_dom_g_lid]
 let (is_fext_on_domain :
   FStar_Syntax_Syntax.term ->
     FStar_Syntax_Syntax.term FStar_Pervasives_Native.option)
@@ -8337,9 +8335,11 @@ let (eta_expand_with_type :
                              let uu___7 =
                                FStar_Syntax_Syntax.mk_Tm_app e args
                                  e.FStar_Syntax_Syntax.pos in
-                             FStar_Syntax_Util.abs binders uu___7
-                               (FStar_Pervasives_Native.Some
-                                  (FStar_Syntax_Util.residual_comp_of_comp c)))))
+                             let uu___8 =
+                               let uu___9 =
+                                 FStar_Syntax_Util.residual_comp_of_comp c in
+                               FStar_Pervasives_Native.Some uu___9 in
+                             FStar_Syntax_Util.abs binders uu___7 uu___8)))
 let (eta_expand :
   FStar_TypeChecker_Env.env ->
     FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.term)
@@ -8436,7 +8436,6 @@ let (eta_expand :
                                     (env1.FStar_TypeChecker_Env.teq_nosmt_force);
                                   FStar_TypeChecker_Env.subtype_nosmt_force =
                                     (env1.FStar_TypeChecker_Env.subtype_nosmt_force);
-                                  FStar_TypeChecker_Env.use_bv_sorts = true;
                                   FStar_TypeChecker_Env.qtbl_name_and_index =
                                     (env1.FStar_TypeChecker_Env.qtbl_name_and_index);
                                   FStar_TypeChecker_Env.normalized_eff_names
@@ -8548,7 +8547,6 @@ let (eta_expand :
                             (env1.FStar_TypeChecker_Env.teq_nosmt_force);
                           FStar_TypeChecker_Env.subtype_nosmt_force =
                             (env1.FStar_TypeChecker_Env.subtype_nosmt_force);
-                          FStar_TypeChecker_Env.use_bv_sorts = true;
                           FStar_TypeChecker_Env.qtbl_name_and_index =
                             (env1.FStar_TypeChecker_Env.qtbl_name_and_index);
                           FStar_TypeChecker_Env.normalized_eff_names =
@@ -8715,14 +8713,15 @@ let rec (elim_uvars :
         } in
       match s1.FStar_Syntax_Syntax.sigel with
       | FStar_Syntax_Syntax.Sig_inductive_typ
-          (lid, univ_names, binders, typ, lids, lids') ->
+          (lid, univ_names, binders, num_uniform, typ, lids, lids') ->
           let uu___ = elim_uvars_aux_t env1 univ_names binders typ in
           (match uu___ with
            | (univ_names1, binders1, typ1) ->
                {
                  FStar_Syntax_Syntax.sigel =
                    (FStar_Syntax_Syntax.Sig_inductive_typ
-                      (lid, univ_names1, binders1, typ1, lids, lids'));
+                      (lid, univ_names1, binders1, num_uniform, typ1, lids,
+                        lids'));
                  FStar_Syntax_Syntax.sigrng = (s1.FStar_Syntax_Syntax.sigrng);
                  FStar_Syntax_Syntax.sigquals =
                    (s1.FStar_Syntax_Syntax.sigquals);

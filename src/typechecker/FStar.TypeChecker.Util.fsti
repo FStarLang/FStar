@@ -193,7 +193,3 @@ val make_record_fields_in_order : env -> unresolved_constructor -> option (eithe
                                 Range.range ->
                                 list 'a
 
-
-val check_positivity: env -> list lident -> sigelt -> bool
-val name_strictly_positive_in_type: env -> bv -> term -> bool
-val check_exn_positivity: env -> lident -> bool

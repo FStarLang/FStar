@@ -1535,9 +1535,7 @@ let join_goals g1 g2 : tac goal =
     set_solution g2 U.exp_unit ;!
 
     let ng = U.mk_conj t1 t2 in
-    let nenv = { goal_env g1 with gamma = List.rev gamma
-                                ; gamma_cache = BU.smap_create 100 (* Paranoid? *)
-                                } in
+    let nenv = { goal_env g1 with gamma = List.rev gamma } in
     let! goal = mk_irrelevant_goal "joined" nenv ng goal_sc (rangeof g1) g1.opts g1.label in
     if_verbose (fun () -> BU.print3 "join_goals of\n(%s)\nand\n(%s)\n= (%s)\n"
                          (goal_to_string_verbose g1)
@@ -1747,7 +1745,11 @@ let t_destruct (s_tm : term) : tac (list (fv * Z.t)) = wrap_err "destruct" <| (
     let! fv, a_us = 
          match (SS.compress h).n with
          | Tm_fvar fv -> ret (fv, [])
-         | Tm_uinst ({ n = Tm_fvar fv }, us) -> ret (fv, us)
+         | Tm_uinst (h', us) ->
+           begin match (SS.compress h').n with
+           | Tm_fvar fv -> ret (fv, us)
+           | _ -> failwith "impossible: uinst over something that's not an fvar"
+           end
          | _ -> fail "type is not an fv"
     in
     let t_lid = lid_of_fv fv in
@@ -1755,7 +1757,7 @@ let t_destruct (s_tm : term) : tac (list (fv * Z.t)) = wrap_err "destruct" <| (
     | None -> fail "type not found in environment"
     | Some se ->
       match se.sigel with
-      | Sig_inductive_typ (_lid, t_us, t_ps, t_ty, mut, c_lids) ->
+      | Sig_inductive_typ (_lid, t_us, t_ps, _num_uniform, t_ty, mut, c_lids) ->
       (* High-level idea of this huge function:
        * For  Gamma |- w : phi  and  | C : ps -> bs -> t,  we generate a new goal
        *   Gamma |- w' : bs -> phi

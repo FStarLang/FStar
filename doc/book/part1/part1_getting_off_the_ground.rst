@@ -392,7 +392,7 @@ languages.
 * F*'s arrows are dependent---the type of the result depends on the
   argument. For example, we can write a function that returns a
   ``bool`` when applied to an even number and returns a ``string``
-  when applied to an odd number. Or, more commonly, a function that
+  when applied to an odd number. Or, more commonly, a function
   whose result is one greater than its argument.
 
 * In F*'s core language, all functions are total, i.e., a function
