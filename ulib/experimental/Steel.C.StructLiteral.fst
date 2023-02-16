@@ -243,6 +243,7 @@ let extract_field_unextracted'
   in
   Classical.forall_intro aux
 
+(*
 val addr_of_struct_field_ref'
   (#tag: Type0) (#fields: c_fields) (#excluded: excluded_fields)
   (field: field_of fields)

@@ -425,7 +425,8 @@ val struct_get_field_uninitialized
   (struct_get_field (uninitialized (struct0 tn n fields)) field == uninitialized (fields.fd_typedef field))
   [SMTPat (struct_get_field (uninitialized (struct0 tn n fields)) field)]
 
-val _inv: Ghost.erased Steel.Memory.iname
+val _inv_vprop: vprop
+val _inv: inv _inv_vprop
 
 val has_struct_field
   (#tn: Type0)
