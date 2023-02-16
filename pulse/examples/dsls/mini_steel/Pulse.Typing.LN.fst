@@ -47,10 +47,9 @@ let rec open_term_ln' (e:term)
 
     | Tm_Abs b _q pre body post ->
       open_term_ln' b.binder_ty x i;
-      assume (ln' pre (i + 1));
+      open_term_ln' pre x (i + 1);
       open_term_ln' body x (i + 1);
-      if Some? post
-      then assume (ln' (Some?.v post) (i + 2))
+      open_term_ln'_opt post x (i + 2)
 
     | Tm_PureApp l _ r
     | Tm_STApp l _ r
@@ -76,7 +75,7 @@ let rec open_term_ln' (e:term)
       open_term_ln' t0 x i;    
       open_term_ln' t1 x i;    
       open_term_ln' t2 x i;          
-      (if Some? post then open_term_ln' (Some?.v post) x (i + 1))
+      open_term_ln'_opt post x (i + 1)      
 
     | Tm_Arrow b _ body ->
       open_term_ln' b.binder_ty x i;
@@ -110,6 +109,15 @@ and open_term_ln'_comp (c:comp)
       open_term_ln' s.pre x i;      
       open_term_ln' s.post x (i + 1)
 
+and open_term_ln'_opt (t:option term) (x:term) (i:index)
+  : Lemma
+    (requires ln'_opt (open_term_opt' t x i) (i - 1))
+    (ensures ln'_opt t i)
+    (decreases t)
+  = match t with
+    | None -> ()
+    | Some t -> open_term_ln' t x i
+    
 let open_term_ln (e:term) (v:var)
   : Lemma 
     (requires ln (open_term e v))

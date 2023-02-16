@@ -52,7 +52,7 @@ let elim_exists_lid = mk_steel_wrapper_lid "elim_exists"
 let intro_exists_lid = mk_steel_wrapper_lid "intro_exists"
 
 let mk_total t = R.C_Total t
-let binder_of_t_q t q = RT.mk_binder "_" 0 t q
+let binder_of_t_q t q = RT.mk_binder (Sealed.seal "_") 0 t q
 let binder_of_t_q_s t q s = RT.mk_binder s 0 t q
 let bound_var i : R.term = R.pack_ln (R.Tv_BVar (R.pack_bv (RT.make_bv i tun)))
 let mk_name i : R.term = R.pack_ln (R.Tv_Var (R.pack_bv (RT.make_bv i tun))) 
@@ -60,7 +60,7 @@ let arrow_dom = (R.term & R.aqualv)
 let mk_tot_arrow1 (f:arrow_dom) (out:R.term) : R.term =
   let ty, q = f in
   R.pack_ln (R.Tv_Arrow (binder_of_t_q ty q) (R.pack_comp (mk_total out)))
-let mk_tot_arrow_with_name1 (s:string) (f:arrow_dom) (out:R.term) : R.term =
+let mk_tot_arrow_with_name1 (s:Sealed.sealed string) (f:arrow_dom) (out:R.term) : R.term =
   let ty, q = f in
   R.pack_ln (R.Tv_Arrow (binder_of_t_q_s ty q s) (R.pack_comp (mk_total out)))
 
@@ -106,7 +106,7 @@ let mk_st_ghost (u:universe) (res inames pre post:R.term)
   : Tot R.term =
   mk_stt_ghost_app (elab_universe u) [res; inames; pre; mk_abs res R.Q_Explicit post]
 
-let (let?) (f:option 'a) (g: 'a -> option 'b) : option 'b = 
+let (let!) (f:option 'a) (g: 'a -> option 'b) : option 'b = 
   match f with
   | None -> None
   | Some x -> g x
@@ -146,24 +146,24 @@ let rec elab_term (top:term)
       Some (pack_ln (Tv_Const (elab_const c)))
 
     | Tm_Refine b phi ->
-      let? ty = elab_term b.binder_ty in
-      let? phi = elab_term phi in
+      let! ty = elab_term b.binder_ty in
+      let! phi = elab_term phi in
       Some (pack_ln (Tv_Refine (pack_bv (RT.make_bv_with_name b.binder_ppname 0 ty)) phi))
 
     | Tm_PureApp e1 q e2 ->
-      let? e1 = elab_term e1 in
-      let? e2 = elab_term e2 in
+      let! e1 = elab_term e1 in
+      let! e2 = elab_term e2 in
       Some (R.mk_app e1 [(e2, elab_qual q)])
 
     | Tm_Arrow b q c ->
-      let? ty = elab_term b.binder_ty in
-      let? c = elab_comp c in
+      let! ty = elab_term b.binder_ty in
+      let! c = elab_comp c in
       Some (mk_tot_arrow_with_name1 b.binder_ppname (ty, elab_qual q) c)
 
     | Tm_Let t e1 e2 ->
-      let? t = elab_term t in
-      let? e1 = elab_term e1 in
-      let? e2 = elab_term e2 in
+      let! t = elab_term t in
+      let! e1 = elab_term e1 in
+      let! e2 = elab_term e2 in
       let bv = pack_bv (RT.make_bv 0 t) in
       Some (R.pack_ln (R.Tv_Let false [] bv e1 e2))
 
@@ -177,20 +177,20 @@ let rec elab_term (top:term)
       Some (pack_ln (Tv_FVar (pack_fv emp_lid)))
       
     | Tm_Pure p ->
-      let? p = elab_term p in
+      let! p = elab_term p in
       let head = pack_ln (Tv_FVar (pack_fv pure_lid)) in
       Some (pack_ln (Tv_App head (p, Q_Explicit)))
 
     | Tm_Star l r ->
-      let? l = elab_term l in
-      let? r = elab_term r in      
+      let! l = elab_term l in
+      let! r = elab_term r in      
       let head = pack_ln (Tv_FVar (pack_fv star_lid)) in      
       Some (R.mk_app head [(l, Q_Explicit); (r, Q_Explicit)])
       
     | Tm_ExistsSL u t body
     | Tm_ForallSL u t body ->    
-      let? t = elab_term t in
-      let? b = elab_term body in
+      let! t = elab_term t in
+      let! b = elab_term body in
       let body = R.pack_ln (R.Tv_Abs (binder_of_t_q t R.Q_Explicit) b) in
       let head = 
         let head_lid = 
@@ -222,23 +222,23 @@ and elab_comp (c:comp)
       elab_term t
 
     | C_ST c ->
-      let? res = elab_term c.res in
-      let? pre = elab_term c.pre in
-      let? post = elab_term c.post in
+      let! res = elab_term c.res in
+      let! pre = elab_term c.pre in
+      let! post = elab_term c.post in
       Some (mk_st c.u res pre post)
 
     | C_STAtomic inames c ->
-      let? inames = elab_term inames in
-      let? res = elab_term c.res in
-      let? pre = elab_term c.pre in
-      let? post = elab_term c.post in
+      let! inames = elab_term inames in
+      let! res = elab_term c.res in
+      let! pre = elab_term c.pre in
+      let! post = elab_term c.post in
       Some (mk_st_atomic c.u res inames pre post)
 
     | C_STGhost inames c ->
-      let? inames = elab_term inames in
-      let? res = elab_term c.res in
-      let? pre = elab_term c.pre in
-      let? post = elab_term c.post in
+      let! inames = elab_term inames in
+      let! res = elab_term c.res in
+      let! pre = elab_term c.pre in
+      let! post = elab_term c.post in
       Some (mk_st_ghost c.u res inames pre post)
 
 let is_pure_term (e:term) = Some? (elab_term e)
@@ -254,6 +254,7 @@ let ln_comp = c:pure_comp_st{ ln_c c }
 #push-options "--z3rlimit_factor 4"
 let rec opening_pure_term_with_pure_term (x:pure_term) (v:pure_term) (i:index)
   : Lemma (ensures is_pure_term (open_term' x v i))
+          (decreases x)
           [SMTPat (is_pure_term (open_term' x v i))]
   = let aux (y:pure_term {y << x}) (j:index)
       : Lemma (ensures (is_pure_term (open_term' y v j)))
@@ -301,6 +302,7 @@ let rec opening_pure_term_with_pure_term (x:pure_term) (v:pure_term) (i:index)
 
 and opening_pure_comp_with_pure_term (x:pure_comp) (v:pure_term) (i:index)
   : Lemma (ensures is_pure_comp (open_comp' x v i))
+          (decreases x)
           [SMTPat (is_pure_comp (open_comp' x v i))]
   = match x with
     | C_Tot t ->
@@ -320,6 +322,7 @@ and opening_pure_comp_with_pure_term (x:pure_comp) (v:pure_term) (i:index)
 
 let rec closing_pure_term (x:pure_term) (v:var) (i:index)
   : Lemma (ensures is_pure_term (close_term' x v i))
+          (decreases x)
           [SMTPat (is_pure_term (close_term' x v i))]
   = let aux (y:pure_term {y << x}) (j:index)
       : Lemma (ensures (is_pure_term (close_term' y v j)))
@@ -367,6 +370,7 @@ let rec closing_pure_term (x:pure_term) (v:var) (i:index)
 
 and closing_pure_comp (x:pure_comp) (v:var) (i:index)
   : Lemma (ensures is_pure_comp (close_comp' x v i))
+          (decreases x)
           [SMTPat (is_pure_comp (close_comp' x v i))]
   = match x with
     | C_Tot t ->
@@ -385,63 +389,3 @@ and closing_pure_comp (x:pure_comp) (v:var) (i:index)
       closing_pure_term post v (i + 1)
 #pop-options
 
-#push-options "--z3rlimit_factor 30 --fuel 8 --ifuel 1"
-let rec elab_pure_eq_tm (t1 t2:pure_term)
-  : Lemma (requires eq_tm t1 t2)
-          (ensures RT.alpha_equivalent_terms (elab_pure t1) (elab_pure t2)) =
-
-  match t1, t2 with
-  | Tm_BVar _, _ -> ()
-  | Tm_Var _, _ -> ()
-  | Tm_FVar _, _ -> ()
-  | Tm_UInst _ _, _ -> ()
-  | Tm_Constant _, _ -> ()
-  | Tm_Refine b1 phi1, Tm_Refine b2 phi2 ->
-    elab_pure_eq_tm b1.binder_ty b2.binder_ty;
-    elab_pure_eq_tm phi1 phi2
-  | Tm_PureApp head1 _ arg1, Tm_PureApp head2 _ arg2 ->
-    elab_pure_eq_tm head1 head2;
-    elab_pure_eq_tm arg1 arg2
-  | Tm_Arrow b1 _ c1, Tm_Arrow b2 _ c2 ->
-    elab_pure_eq_tm b1.binder_ty b2.binder_ty;
-    elab_pure_eq_comp c1 c2
-  | Tm_Let t1 e11 e12, Tm_Let t2 e21 e22 ->
-    elab_pure_eq_tm t1 t2;
-    elab_pure_eq_tm e11 e21;
-    elab_pure_eq_tm e12 e22
-  | Tm_Type _, _ -> ()
-  | Tm_VProp, _ -> ()
-  | Tm_Emp, _ -> ()
-  | Tm_Pure p1, Tm_Pure p2 -> elab_pure_eq_tm p1 p2
-  | Tm_Star l1 r1, Tm_Star l2 r2 ->
-    elab_pure_eq_tm l1 l2;
-    elab_pure_eq_tm r1 r2
-  | Tm_ExistsSL _ t1 body1, Tm_ExistsSL _ t2 body2
-  | Tm_ForallSL _ t1 body1, Tm_ForallSL _ t2 body2 ->
-    elab_pure_eq_tm t1 t2;
-    elab_pure_eq_tm body1 body2
-  | Tm_Inames, _ -> ()
-  | Tm_EmpInames, _ -> ()
-  | _, _ -> ()
-
-and elab_pure_eq_comp (c1 c2:pure_comp)
-  : Lemma (requires eq_comp c1 c2)
-          (ensures RT.alpha_equivalent_terms (elab_pure_comp c1) (elab_pure_comp c2)) =
-  match c1, c2 with
-  | C_Tot t1, C_Tot t2 -> elab_pure_eq_tm t1 t2
-  | C_ST s1, C_ST s2 ->
-    elab_pure_eq_tm s1.res s2.res;
-    elab_pure_eq_tm s1.pre s2.pre;
-    elab_pure_eq_tm s1.post s2.post;
-    admit ()  // This should be easy, I think we should write mk_stt_app etc. inlined
-              //   else they are using R.mk_app, which is recursive
-  | C_STAtomic inames1 s1, C_STAtomic inames2 s2
-  | C_STGhost inames1 s1, C_STGhost inames2 s2 ->
-    elab_pure_eq_tm inames1 inames2;
-    elab_pure_eq_tm s1.res s2.res;
-    elab_pure_eq_tm s1.pre s2.pre;
-    elab_pure_eq_tm s1.post s2.post;
-    admit ()  // This should be easy, I think we should write mk_stt_app etc. inlined
-              //   else they are using R.mk_app, which is recursive
-  | _, _ -> ()
-#pop-options
