@@ -606,7 +606,7 @@ let e_lid : embedding I.lid =
 
 let e_bv_view =
     let embed_bv_view (rng:Range.range) (bvv:bv_view) : term =
-        S.mk_Tm_app ref_Mk_bv.t [S.as_arg (embed e_string rng bvv.bv_ppname);
+        S.mk_Tm_app ref_Mk_bv.t [S.as_arg (embed (e_sealed e_string) rng bvv.bv_ppname);
                                  S.as_arg (embed e_int    rng bvv.bv_index);
                                  S.as_arg (embed e_term   rng bvv.bv_sort)]
                     rng
@@ -616,7 +616,7 @@ let e_bv_view =
         let hd, args = U.head_and_args t in
         match (U.un_uinst hd).n, args with
         | Tm_fvar fv, [(nm, _); (idx, _); (s, _)] when S.fv_eq_lid fv ref_Mk_bv.lid ->
-            BU.bind_opt (unembed' w e_string nm) (fun nm ->
+            BU.bind_opt (unembed' w (e_sealed e_string) nm) (fun nm ->
             BU.bind_opt (unembed' w e_int idx) (fun idx ->
             BU.bind_opt (unembed' w e_term s) (fun s ->
             Some <| { bv_ppname = nm ; bv_index = idx ; bv_sort = s })))

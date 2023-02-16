@@ -20,6 +20,3 @@ val sealed_singl (#a:Type) (x y : _sealed a)
   : Lemma (x == y) [SMTPat (isSealed x); SMTPat (isSealed y)]
 
 val seal (#a : Type u#aa) (x:a) : sealed a
-val (let?) (#a : Type u#aa) (#b : Type u#bb) (x : sealed a) (f : a -> sealed b) : sealed b
-
-let return = seal

@@ -596,6 +596,25 @@ let e_norm_step =
     in
     mk_emb em un (mkFV (lid_as_fv PC.norm_step_lid delta_constant None) [] []) (SE.emb_typ_of SE.e_norm_step)
 
+// Embedding at option type
+let e_sealed (ea : embedding 'a) =
+    let etyp =
+        ET_app(PC.sealed |> Ident.string_of_lid, [ea.emb_typ])
+    in
+    let em cb (x:'a) : t =
+        lazy_embed etyp x (fun () ->
+          lid_as_constr PC.seal [U_zero] [as_arg (embed ea cb x);
+                                          as_iarg (type_of ea)])
+    in
+    let un cb (trm:t) : option 'a =
+        lazy_unembed cb etyp trm (fun trm ->
+        match trm.nbe_t with
+        | Construct (fvar, us, [(a, _); _]) when S.fv_eq_lid fvar PC.seal ->
+          unembed ea cb a
+        | _ -> None)
+    in
+    mk_emb em un (lid_as_typ PC.sealed [U_zero] [as_arg (type_of ea)]) etyp
+
 (* Interface for building primitive steps *)
 
 let bogus_cbs = {

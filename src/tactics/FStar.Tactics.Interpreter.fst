@@ -196,7 +196,7 @@ let e_tactic_nbe_1 (ea : NBET.embedding 'a) (er : NBET.embedding 'r) : NBET.embe
            (NBET.mk_t (NBET.Constant NBET.Unit))
            (emb_typ_of e_unit)
 
-(* Takes an `sealed a`, but that's just a userspace abstraction. *)
+(* Takes a `sealed a`, but that's just a userspace abstraction. *)
 let unseal (_typ:_) (x:'a) : tac 'a = ret x
 
 (* Set the primitive steps ref *)
@@ -210,8 +210,8 @@ let () =
      * like which embeddings are needed for the arguments, but more annoyingly the underlying
      * implementation. Would be nice to have something better in the not-so-long run. *)
     [ mk_tac_step_2 1 "unseal"
-        unseal e_any      e_any      e_any
-        unseal NBET.e_any NBET.e_any NBET.e_any;
+        unseal e_any      (e_sealed      e_any)      e_any
+        unseal NBET.e_any (NBET.e_sealed NBET.e_any) NBET.e_any;
 
       mk_total_step_1'_psc 0 "tracepoint"
         tracepoint_with_psc E.e_proofstate e_bool

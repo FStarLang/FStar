@@ -1050,6 +1050,60 @@ let e_arrow (ea:embedding 'a) (eb:embedding 'b) : embedding ('a -> 'b) =
         printer
         emb_t_arr_a_b
 
+let e_sealed (ea : embedding 'a) : embedding 'a =
+    let ty_a =
+        let tc = U.fvar_const PC.sealed in
+        S.mk_Tm_app tc [S.as_arg ea.typ] Range.dummyRange
+    in
+    let emb_ty_a =
+        ET_app(PC.sealed |> Ident.string_of_lid, [ea.emb_typ])
+    in
+    let printer x = "(seal " ^ ea.print x ^ ")" in
+    let em (a:'a) (rng:range) topt norm : term =
+        lazy_embed
+            printer
+            emb_ty_a
+            rng
+            ty_a
+            a
+            (fun () ->
+                  let shadow_a =
+                    (* TODO: this application below is in TAC.. OK? *)
+                    map_shadow topt (fun t ->
+                      let unseal = U.fvar_const PC.unseal in
+                      S.mk_Tm_app (S.mk_Tm_uinst unseal [U_zero])
+                                  [S.iarg (type_of ea); S.as_arg t]
+                                  rng)
+                  in
+                  S.mk_Tm_app (S.mk_Tm_uinst (S.tdataconstr PC.seal) [U_zero])
+                              [S.iarg (type_of ea); S.as_arg (embed ea a rng shadow_a norm)]
+                              rng)
+    in
+    let un (t0:term) (w:bool) norm : option (option 'a) =
+        let t = unmeta_div_results t0 in
+        lazy_unembed
+            printer
+            emb_ty_a
+            t
+            ty_a
+            (fun t ->
+                let hd, args = U.head_and_args_full t in
+                match (U.un_uinst hd).n, args with
+                | Tm_fvar fv, [_; (a, _)] when S.fv_eq_lid fv PC.seal ->
+                     // Just relay it
+                     unembed ea a w norm
+                | _ ->
+                     if w then
+                     Err.log_issue t0.pos (Err.Warning_NotEmbedded, (BU.format1 "Not an embedded seal %s" (Print.term_to_string t0)));
+                     None)
+    in
+    mk_emb_full
+        em
+        un
+        ty_a // hmmm? // (S.t_option_of (type_of ea))
+        printer
+        emb_ty_a
+
  /////////////////////////////////////////////////////////////////////
  //Registering top-level functions
  /////////////////////////////////////////////////////////////////////
