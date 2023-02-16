@@ -67,7 +67,7 @@ let property (a:Type)
 /// A wrapper around a property [fact] that has been witnessed to be true and stable
 /// with respect to preorder [p]
 val witnessed (#a:Type u#0) (#p:Preorder.preorder a) (r:ref a p) (fact:property a)
-  : prop
+  : Type0
 
 /// The type of properties depending on values of type [a], and that
 /// are stable with respect to the preorder [p]
@@ -86,13 +86,12 @@ val witness (#inames: _)
             (#p:Preorder.preorder a)
             (r:ref a p)
             (fact:stable_property p)
-            (v:a)
+            (v:erased a)
             (_:squash (fact v))
-  : STGhost unit inames
+  : STAtomicUT (witnessed r fact) inames
       (pts_to r q v)
       (fun _ -> pts_to r q v)
-      (requires True)
-      (ensures fun _ -> witnessed r fact)
+
 
 /// If we previously witnessed the validity of [fact], we can recall its validity
 val recall (#inames: _)
@@ -101,11 +100,12 @@ val recall (#inames: _)
            (#p:Preorder.preorder a)
            (fact:property a)
            (r:ref a p)
-           (v:a)
-  : STGhost unit inames
+           (v:erased a)
+           (w:witnessed r fact)
+  : STAtomicU unit inames
       (pts_to r q v)
       (fun _ -> pts_to r q v)
-      (requires witnessed r fact)
+      (requires True)
       (ensures fun _ -> fact v)
 
 /// Monotonic references are also equipped with the usual fractional
