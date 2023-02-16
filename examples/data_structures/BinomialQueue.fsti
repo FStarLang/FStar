@@ -110,4 +110,4 @@ val delete_max_some_repr (p:priq) (sp:ms)
              q `repr` sq)
           (ensures
              permutation sp (ms_cons k sq) /\
-             (forall (x:key_t). S.mem x sq.ms_elems ==> x <= k))
+             (forall (x:key_t). S.mem x sp.ms_elems ==> x <= k))
