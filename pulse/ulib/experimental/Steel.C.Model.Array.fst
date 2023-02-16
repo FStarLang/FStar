@@ -65,27 +65,30 @@ let array_pcm
 
 noeq
 type array
+  (base_t: Type)
   (#t: Type)
   (p: pcm t)
 = {
     base_len: Ghost.erased size_t;
-    base: R.ref (array_pcm p base_len);
+    base: R.ref base_t (array_pcm p base_len);
     offset: size_t;
     len: Ghost.erased size_t;
     prf: squash (size_v offset + size_v len <= size_v base_len);
   }
 
 let length
+  (#base_t: Type)
   (#t: Type)
   (#p: pcm t)
-  (a: array p)
+  (a: array base_t p)
 : GTot nat
 = size_v a.len
 
 let adjacent
+  (#base_t: Type)
   (#t: Type)
   (#p: pcm t)
-  (a1 a2: array p)
+  (a1 a2: array base_t p)
 : Tot prop
 = a1.base_len == a2.base_len /\
   a1.base == a2.base /\
@@ -94,10 +97,11 @@ let adjacent
 let size_add = SZ.add
 
 let merge
+  (#base_t: Type)
   (#t: Type)
   (#p: pcm t)
-  (a1 a2: array p)
-: Pure (array p)
+  (a1 a2: array base_t p)
+: Pure (array base_t p)
     (requires (adjacent a1 a2))
     (ensures (fun y -> length y == length a1 + length a2))
 = {
@@ -133,23 +137,26 @@ let small_to_large_index
 = offset `size_add` x
 
 let ref_of_array_conn
+  (#base_t: Type)
   (#t: Type)
   (#p: pcm t)
-  (r: array p)
+  (r: array base_t p)
 : GTot (connection (array_pcm p r.base_len) (array_pcm p r.len))
 = substruct (array_elements_pcm p r.base_len) (array_elements_pcm p r.len) (small_to_large_index r.base_len r.offset r.len ()) (large_to_small_index r.base_len r.offset r.len ()) ()
 
 let ref_of_array
+  (#base_t: Type)
   (#t: Type)
   (#p: pcm t)
-  (r: array p)
-: GTot (R.ref (array_pcm p r.len))
+  (r: array base_t p)
+: GTot (R.ref base_t (array_pcm p r.len))
 = R.ref_focus r.base (ref_of_array_conn r)
 
 let ref_of_array_id
+  (#base_t: Type)
   (#t: Type)
   (#p: pcm t)
-  (r: array p)
+  (r: array base_t p)
 : Lemma
   (requires (
     size_v r.offset == 0 /\
@@ -204,9 +211,10 @@ let seq_of_array_pcm_carrier_of_seq
 = ()
 
 let pts_to0
+  (#base_t: Type)
   (#t: Type)
   (#p: pcm t)
-  (r: array p)
+  (r: array base_t p)
   (x: Seq.seq t)
 : Tot vprop
 = if Seq.length x = size_v r.len
@@ -220,9 +228,10 @@ let trivial_selector
 
 [@@__steel_reduce__]
 let pts_to
+  (#base_t: Type)
   (#t: Type)
   (#p: pcm t)
-  (r: array p)
+  (r: array base_t p)
   (x: Seq.seq t)
 : Tot vprop
 = VUnit ({
@@ -233,9 +242,10 @@ let pts_to
 
 let intro_pts_to'
   (#opened: _)
+  (#base_t: Type)
   (#t: Type)
   (#p: pcm t)
-  (r: array p)
+  (r: array base_t p)
   (x: Seq.lseq t (size_v r.len))
 : A.SteelGhostT unit opened
    (R.pts_to (ref_of_array r) (array_pcm_carrier_of_seq r.len x))
@@ -247,9 +257,10 @@ let intro_pts_to'
 
 let intro_pts_to
   (#opened: _)
+  (#base_t: Type)
   (#t: Type)
   (#p: pcm t)
-  (r: array p)
+  (r: array base_t p)
   (s: array_pcm_carrier t r.len)
 : A.SteelGhostT unit opened
    (R.pts_to (ref_of_array r) s)
@@ -260,9 +271,10 @@ let intro_pts_to
 
 let intro_pts_to0
   (#opened: _)
+  (#base_t: Type)
   (#t: Type)
   (#p: pcm t)
-  (r: array p)
+  (r: array base_t p)
   (s: array_pcm_carrier t r.len)
   (s': Seq.seq t)
 : A.SteelGhost unit opened
@@ -275,10 +287,11 @@ let intro_pts_to0
 
 let intro_pts_to1
   (#opened: _)
+  (#base_t: Type)
   (#t: Type)
   (#p: pcm t)
-  (r: array p)
-  (r0: R.ref (array_pcm p r.len))
+  (r: array base_t p)
+  (r0: R.ref base_t (array_pcm p r.len))
   (s: array_pcm_carrier t r.len)
   (s': Seq.seq t)
 : A.SteelGhost unit opened
@@ -294,18 +307,21 @@ let intro_pts_to1
 
 let intro_pts_to2
   (#opened: _)
+  (#base_t: Type)
   (#t: Type)
   (#p: pcm t)
-  (r: array p)
+  (r: array base_t p)
+  (#base_t0: Type)
   (#t0: Type)
   (#p0: pcm t0)
-  (r0: R.ref p0)
+  (r0: R.ref base_t0 p0)
   (s: t0)
   (s': Seq.seq t)
 : A.SteelGhost unit opened
    (R.pts_to r0 s)
    (fun _ -> pts_to r s')
    (fun _ ->
+     base_t0 == base_t /\
      t0 == array_pcm_carrier t r.len /\
      p0 == array_pcm p r.len /\
      r0 == ref_of_array r /\
@@ -314,24 +330,29 @@ let intro_pts_to2
    (fun _ _ _ -> True)
 = A.change_equal_slprop
     (R.pts_to r0 s)
-    (R.pts_to (r0 <: R.ref (array_pcm p r.len)) s);
+    (R.pts_to (r0 <: R.ref base_t (array_pcm p r.len)) s);
   intro_pts_to1 r r0 s s'
 
 let elim_pts_to
   (#opened: _)
+  (#base_t: Type)
   (#t: Type)
   (#p: pcm t)
-  (r: array p)
+  (r: array base_t p)
   (x: Seq.seq t)
 : A.SteelGhostT (squash (Seq.length x == size_v r.len)) opened
    (pts_to r x)
-   (fun _ -> R.pts_to (ref_of_array r) (array_pcm_carrier_of_seq r.len x))
+   (fun _ -> R.pts_to (ref_of_array r) (array_pcm_carrier_of_seq r.len (x <: Seq.lseq t (size_v r.len))))
 = if Seq.length x = size_v r.len
   then begin
+    let sq : squash (Seq.length x == size_v r.len) = () in
     A.rewrite_slprop
       (pts_to r x)
-      (R.pts_to (ref_of_array r) (array_pcm_carrier_of_seq r.len x))
-      (fun _ -> ())
+      (R.pts_to (ref_of_array r) (array_pcm_carrier_of_seq r.len (x <: Seq.lseq t (size_v r.len))))
+      (fun _ -> ());
+    let sq : squash (Seq.length x == size_v r.len) = () in
+    A.noop ();
+    sq
   end else begin
     A.change_slprop_rel
       (pts_to r x)
@@ -341,23 +362,28 @@ let elim_pts_to
         assert (Steel.Memory.interp (hp_of (pure False)) m);
         Steel.Memory.pure_interp False m 
       );
+    assert False;
     A.rewrite_slprop
       (pure False)
       (R.pts_to (ref_of_array r) (array_pcm_carrier_of_seq r.len x))
-      (fun _ -> ())
+      (fun _ -> ());
+    let sq : squash (Seq.length x == size_v r.len) = () in
+    A.noop ();
+    sq
   end
 
 let pts_to_length
   (#opened: _)
+  (#base_t: Type)
   (#t: Type)
   (#p: pcm t)
-  (r: array p)
+  (r: array base_t p)
   (x: Seq.seq t)
 : A.SteelGhostT (squash (Seq.length x == size_v r.len)) opened
     (pts_to r x)
     (fun _ -> pts_to r x)
 =
-  elim_pts_to r _;
+  let _ = elim_pts_to r _ in
   intro_pts_to0 r _ x
 
 let cell
@@ -372,16 +398,17 @@ let cell
 
 let g_focus_cell
   (#opened: _)
+  (#base_t: Type)
   (#t: Type)
   (#p: pcm t)
-  (r: array p)
+  (r: array base_t p)
   (s: Seq.seq t)
   (i: size_t)
   (sq: squash (size_v i < size_v r.len \/ size_v i < Seq.length s))
 : A.SteelGhostT (squash (size_v i < size_v r.len /\ size_v r.len == Seq.length s)) opened
     (pts_to r s)
     (fun _ -> pts_to r (Seq.upd s (size_v i) (one p)) `star` R.pts_to (ref_focus (ref_of_array r) (cell p r.len i)) (Seq.index s (size_v i)))
-= elim_pts_to r _;
+= let _ = elim_pts_to r _ in
   g_addr_of_struct_field (ref_of_array r) i _;
   intro_pts_to0 r _ (Seq.upd s (size_v i) (one p));
   A.change_equal_slprop (R.pts_to (ref_focus _ _) _) (R.pts_to (ref_focus _ _) _)
@@ -390,9 +417,10 @@ let g_focus_cell
 
 let pts_to_elim_to_base
   (#opened: _)
+  (#base_t: Type)
   (#t: Type)
   (#p: pcm t)
-  (r: array p)
+  (r: array base_t p)
   (x: Seq.seq t)
 : A.SteelGhost (Ghost.erased (array_pcm_carrier t r.base_len)) opened
     (pts_to r x)
@@ -403,7 +431,7 @@ let pts_to_elim_to_base
       Ghost.reveal y == (ref_of_array_conn r).conn_small_to_large.morph (array_pcm_carrier_of_seq r.len x) /\
       Ghost.reveal y == substruct_to_struct_f (array_elements_pcm p r.base_len) (array_elements_pcm p r.len) (small_to_large_index r.base_len r.offset r.len ()) (large_to_small_index r.base_len r.offset r.len ()) () (array_pcm_carrier_of_seq r.len x)
     )
-= elim_pts_to r _;
+= let _ = elim_pts_to r _ in
   unfocus (ref_of_array r) r.base (ref_of_array_conn r) _;
   let y = Ghost.hide ((ref_of_array_conn r).conn_small_to_large.morph (array_pcm_carrier_of_seq r.len x)) in
   A.change_equal_slprop (R.pts_to _ _) (R.pts_to _ _);
@@ -413,9 +441,10 @@ let pts_to_elim_to_base
 
 let pts_to_intro_from_base
   (#opened: _)
+  (#base_t: Type)
   (#t: Type)
   (#p: pcm t)
-  (r: array p)
+  (r: array base_t p)
   (y: array_pcm_carrier t r.base_len)
   (x: Seq.seq t)
 : A.SteelGhost unit opened
@@ -434,14 +463,15 @@ let pts_to_intro_from_base
 
 #restart-solver
 let focus_cell
+  (#base_t: Type)
   (#t: Type)
   (#opened: _)
   (#p: pcm t)
-  (r: array p)
+  (r: array base_t p)
   (s: Ghost.erased (Seq.seq t))
   (i: size_t)
   (sq: squash (size_v i < size_v r.len \/ size_v i < Seq.length s))
-: A.SteelAtomicBase (_: ref p { (size_v i < size_v r.len /\ size_v r.len == Seq.length s) }) false opened Unobservable
+: A.SteelAtomicBase (_: ref base_t p { (size_v i < size_v r.len /\ size_v r.len == Seq.length s) }) false opened Unobservable
     (pts_to r s)
     (fun r' -> pts_to r (Seq.upd s (size_v i) (one p)) `star` R.pts_to r' (Seq.index s (size_v i)))
     (fun _ -> True)
@@ -460,12 +490,13 @@ let focus_cell
 
 let unfocus_cell
   (#opened: _)
+  (#base_t: Type)
   (#t: Type)
   (#p: pcm t)
-  (r: array p)
+  (r: array base_t p)
   (s: Seq.seq t)
   (i: size_t)
-  (r': R.ref p)
+  (r': R.ref base_t p)
   (v: t)
   (sq: squash (size_v i < size_v r.len /\ size_v i < Seq.length s))
 : A.SteelGhost unit opened
@@ -476,15 +507,16 @@ let unfocus_cell
       Seq.index s (size_v i) == one p
     )
     (fun _ _ _ -> True)
-= elim_pts_to r _;
-  unaddr_of_struct_field #_ #_ #_ #(array_elements_pcm p r.len) i r' (ref_of_array r) _ _;
+= let _ = elim_pts_to r _ in
+  unaddr_of_struct_field #_ #_ #_ #_ #(array_elements_pcm p r.len) i r' (ref_of_array r) _ _;
   intro_pts_to0 r _ (Seq.upd s (size_v i) v)
 
 let share
   (#opened: _)
+  (#base_t: Type)
   (#t: Type)
   (#p: pcm t)
-  (r: array p)
+  (r: array base_t p)
   (s s1 s2: Seq.seq t)
 : A.SteelGhost unit opened
     (pts_to r s)
@@ -499,7 +531,7 @@ let share
       ))
     )
     (fun _ _ _ -> True)
-= elim_pts_to r _;
+= let _ = elim_pts_to r _ in
   let a1 = array_pcm_carrier_of_seq r.len s1 in
   let a2 = array_pcm_carrier_of_seq r.len s2 in
   assert (
@@ -512,9 +544,10 @@ let share
 
 let gather
   (#opened: _)
+  (#base_t: Type)
   (#t: Type)
   (#p: pcm t)
-  (r: array p)
+  (r: array base_t p)
   (s s1 s2: Seq.seq t)
 : A.SteelGhost unit opened
     (pts_to r s1 `star` pts_to r s2)
@@ -529,24 +562,25 @@ let gather
       ))
     )
     (fun _ _ _ -> True)
-= elim_pts_to r s1;
-  elim_pts_to r s2;
+= let _ = elim_pts_to r s1 in
+  let _ = elim_pts_to r s2 in
   let a1 = array_pcm_carrier_of_seq r.len s1 in
   let a2 = array_pcm_carrier_of_seq r.len s2 in
   assert (
     composable (array_pcm p r.len) a1 a2 /\
     op (array_pcm p r.len) a1 a2 `feq` array_pcm_carrier_of_seq r.len s
   );
-  R.gather _ (array_pcm_carrier_of_seq r.len s1) _;
+  let _ = R.gather _ (array_pcm_carrier_of_seq r.len s1) _ in
   intro_pts_to0 r _ s
 
 let sub
+  (#base_t: Type)
   (#t: Type)
   (#p: pcm t)
-  (a: array p)
+  (a: array base_t p)
   (offset: size_t)
   (len: Ghost.erased size_t)
-: Pure (array p)
+: Pure (array base_t p)
     (requires (size_v offset + size_v len <= size_v a.len))
     (ensures (fun _ -> True))
 = {
@@ -556,21 +590,23 @@ let sub
   }
 
 let split_l
+  (#base_t: Type)
   (#t: Type)
   (#p: pcm t)
-  (a: array p)
+  (a: array base_t p)
   (i: Ghost.erased size_t)
-: Pure (array p)
+: Pure (array base_t p)
     (requires (size_v i <= size_v a.len))
     (ensures (fun _ -> True))
 = sub a 0sz i
 
 let split_r
+  (#base_t: Type)
   (#t: Type)
   (#p: pcm t)
-  (a: array p)
+  (a: array base_t p)
   (i: size_t)
-: Pure (array p)
+: Pure (array base_t p)
     (requires (size_v i <= size_v a.len))
     (ensures (fun _ -> True))
 = sub a i (a.len `size_sub` i)
@@ -580,15 +616,16 @@ let split_r
 #restart-solver
 let g_focus_sub
   (#opened: _)
+  (#base_t: Type)
   (#t: Type)
   (#p: pcm t)
-  (a: array p)
+  (a: array base_t p)
   (s: Seq.seq t)
   (offset: size_t)
   (len: size_t)
   (sq: squash (size_v offset + size_v len <= size_v a.len /\ Seq.length s == size_v a.len))
   (sl: Seq.lseq t (size_v a.len))
-  (al: array p)
+  (al: array base_t p)
   (sl0: Seq.lseq t (size_v len))
 : A.SteelGhost unit opened
     (pts_to a sl)
@@ -648,16 +685,17 @@ let g_focus_sub
 #restart-solver
 let g_split
   (#opened: _)
+  (#base_t: Type)
   (#t: Type)
   (#p: pcm t)
-  (a: array p)
+  (a: array base_t p)
   (s: Seq.seq t)
   (i: size_t)
   (sq: squash (size_v i <= size_v a.len))
 : A.SteelGhostT (squash (Seq.length s == size_v a.len)) opened
     (pts_to a s)
     (fun _ -> pts_to (split_l a i) (Seq.slice s 0 (size_v i)) `star` pts_to (split_r a i) (Seq.slice s (size_v i) (size_v a.len)))
-= pts_to_length a _;
+= let _ = pts_to_length a _ in
   Classical.forall_intro (is_unit p);
   let sl0 = Seq.slice s 0 (size_v i) in
   let sl : Seq.lseq t (size_v a.len) = sl0 `Seq.append` Seq.create (size_v a.len - size_v i) (one p) in
@@ -674,15 +712,16 @@ let g_split
 #restart-solver
 let unfocus_sub
   (#opened: _)
+  (#base_t: Type)
   (#t: Type)
   (#p: pcm t)
-  (a: array p)
+  (a: array base_t p)
   (s: Seq.seq t)
   (offset: size_t)
   (len: size_t)
   (sq: squash (size_v offset + size_v len <= size_v a.len /\ Seq.length s == size_v a.len))
   (sl: Seq.lseq t (size_v a.len))
-  (al: array p)
+  (al: array base_t p)
   (sl0: Seq.lseq t (size_v len))
 : A.SteelGhost unit opened
     (pts_to al sl0)
@@ -716,7 +755,7 @@ let unfocus_sub
       ()
   in
   let xl = array_pcm_carrier_of_seq a.len sl in
-  elim_pts_to al sl0;
+  let _ = elim_pts_to al sl0 in
   ref_focus_comp
     a.base
     (ref_of_array_conn a)
@@ -737,16 +776,25 @@ let unfocus_sub
 
 #pop-options
 
+let mk_lseq
+  (#t: Type)
+  (s: Seq.seq t)
+  (l: nat)
+  (sq: squash (Seq.length s == l))
+: Tot (Seq.lseq t l)
+= s
+
 #push-options "--z3rlimit 256 --fuel 0 --ifuel 1 --z3cliopt smt.arith.nl=false"
 
 #restart-solver
 let join
   (#opened: _)
+  (#base_t: Type)
   (#t: Type)
   (#p: pcm t)
-  (a: array p)
+  (a: array base_t p)
   (i: size_t)
-  (al ar: array p)
+  (al ar: array base_t p)
   (sl0 sr0: Seq.seq t)
 : A.SteelGhost unit opened
     (pts_to al sl0 `star` pts_to ar sr0)
@@ -758,12 +806,12 @@ let join
     )
     (fun _ _ _ -> True)
 =
-  pts_to_length al _;
-  pts_to_length ar _;
+  let _ = pts_to_length al _ in
+  let _ = pts_to_length ar _ in
   Classical.forall_intro (is_unit p);
-  let sl : Seq.lseq t (size_v a.len) = sl0 `Seq.append` Seq.create (size_v a.len - size_v i) (one p) in
-  let sr : Seq.lseq t (size_v a.len) = Seq.create (size_v i) (one p) `Seq.append` sr0 in
-  let s : Seq.lseq t (size_v a.len) = Seq.append sl0 sr0 in
+  let sl : Seq.lseq t (size_v a.len) = mk_lseq (sl0 `Seq.append` Seq.create (size_v a.len - size_v i) (one p)) (size_v a.len) () in
+  let sr : Seq.lseq t (size_v a.len) = mk_lseq (Seq.create (size_v i) (one p) `Seq.append` sr0) (size_v a.len) () in
+  let s : Seq.lseq t (size_v a.len) = mk_lseq (Seq.append sl0 sr0) (size_v a.len) () in
   assert (i == Ghost.reveal al.len);
   unfocus_sub a s 0sz i () sl al sl0;
   unfocus_sub a s i (a.len `size_sub` i) () sr ar sr0;
@@ -830,10 +878,11 @@ let array_of_ref_conn
 = connection_of_isomorphism (isomorphism_inverse (array_as_one_ref_iso p))
 
 let g_array_of_ref
+  (#base_t: Type)
   (#t: Type)
   (#p: pcm t)
-  (r: ref p)
-: Ghost (array p)
+  (r: ref base_t p)
+: Ghost (array base_t p)
     (requires True)
     (ensures (fun a ->
       size_v a.base_len == 1 /\
@@ -849,9 +898,10 @@ let g_array_of_ref
   }
 
 let ref_of_array_of_ref_base
+  (#base_t: Type)
   (#t: Type)
   (#p: pcm t)
-  (r: ref p)
+  (r: ref base_t p)
 : Lemma
   (ref_of_array (g_array_of_ref r) == ref_focus r (array_of_ref_conn p))
 = ref_of_array_id (g_array_of_ref r)
@@ -860,9 +910,10 @@ let ref_of_array_of_ref_base
 
 #restart-solver
 let ref_of_array_of_ref
+  (#base_t: Type)
   (#t: Type)
   (#p: pcm t)
-  (r: ref p)
+  (r: ref base_t p)
 : Lemma
   (ref_focus (ref_of_array (g_array_of_ref r)) (cell p 1sz 0sz) == r)
 = ref_of_array_of_ref_base r;
@@ -876,10 +927,11 @@ let ref_of_array_of_ref
 #restart-solver
 let ghost_array_of_ref
   (#opened: _)
+  (#base_t: Type)
   (#t: Type)
   (#p: pcm t)
   (#v: t)
-  (r: ref p)
+  (r: ref base_t p)
 : A.SteelGhostT unit opened
     (R.pts_to r v)
     (fun _ -> pts_to (g_array_of_ref r) (Seq.create 1 v))
@@ -893,12 +945,13 @@ let ghost_array_of_ref
 
 #restart-solver
 let array_of_ref
+  (#base_t: Type)
   (#t: Type)
   (#opened: _)
   (#p: pcm t)
   (#v: Ghost.erased t)
-  (r: ref p)
-: A.SteelAtomicBase (array p) false opened Unobservable
+  (r: ref base_t p)
+: A.SteelAtomicBase (array base_t p) false opened Unobservable
     (R.pts_to r v)
     (fun a -> pts_to a (Seq.create 1 (Ghost.reveal v)))
     (fun _ -> True)
@@ -908,7 +961,7 @@ let array_of_ref
   let v' : Ghost.erased (array_pcm_carrier t 1sz) = Ghost.hide (field_to_struct_f (array_elements_pcm p 1sz) 0sz v) in
   assert (seq_of_array_pcm_carrier v' `Seq.equal` Seq.create 1 (Ghost.reveal v));
   let r' = R.focus r (array_of_ref_conn p) _ v' in
-  let a : array p = {
+  let a : array base_t p = {
     base_len = 1sz;
     base = r';
     offset = 0sz;
@@ -925,11 +978,12 @@ let array_of_ref
 #restart-solver
 let unarray_of_ref
   (#opened: _)
+  (#base_t: Type)
   (#t: Type)
   (#p: pcm t)
   (#v: Seq.seq t)
-  (r: ref p)
-  (a: array p)
+  (r: ref base_t p)
+  (a: array base_t p)
 : A.SteelGhost (squash (Seq.length v == 1)) opened
     (pts_to a v)
     (fun _ -> R.pts_to r (Seq.index v 0))
@@ -937,7 +991,7 @@ let unarray_of_ref
     (fun _ _ _ -> True)
 = assert_norm (size_v 0sz == 0);
   assert_norm (size_v 1sz == 1);
-  elim_pts_to _ _;
+  let _ = elim_pts_to _ _ in
   ref_of_array_of_ref_base r;
   R.unfocus (ref_of_array a) r (array_of_ref_conn p) _;
   let x = (array_pcm_carrier_of_seq a.len v) in

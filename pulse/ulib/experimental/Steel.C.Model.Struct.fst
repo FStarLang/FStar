@@ -824,10 +824,11 @@ let g_addr_of_struct_field
   gfocus r (struct_field p k) (field_to_struct_f p k (Ghost.reveal xs k)) (Ghost.reveal xs k)
 
 let addr_of_struct_field
+  (#opened: _)
   (#base:Type) (#a:eqtype) (#b: a -> Type u#b) (#p:(k:a -> pcm (b k)))
   (r: ref base (prod_pcm p)) (k:a)
   (xs: Ghost.erased (restricted_t a b))
-: Steel (ref base (p k))
+: A.SteelAtomicBase (ref base (p k)) false opened A.Unobservable
     (r `pts_to` xs)
     (fun s ->
       (r `pts_to` struct_without_field p k xs) `star` 
