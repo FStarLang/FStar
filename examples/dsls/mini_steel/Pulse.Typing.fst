@@ -139,9 +139,8 @@ noeq
 type vprop_equiv (f:RT.fstar_top_env) : env -> pure_term -> pure_term -> Type =
   | VE_Refl:
      g:env ->
-     t0:pure_term ->
-     t1:pure_term{eq_tm t0 t1} ->
-     vprop_equiv f g t0 t1
+     t:pure_term ->
+     vprop_equiv f g t t
 
   | VE_Sym:
      g:env ->
@@ -335,7 +334,7 @@ type src_typing (f:RT.fstar_top_env) : env -> term -> pure_comp -> Type =
 
   | T_Abs: 
       g:env ->
-      ppname:string ->
+      ppname:ppname ->
       x:var { None? (lookup g x) } ->
       q:option qualifier ->
       ty:pure_term ->
@@ -352,7 +351,7 @@ type src_typing (f:RT.fstar_top_env) : env -> term -> pure_comp -> Type =
   | T_STApp :
       g:env ->
       head:term ->
-      ppname:string ->
+      ppname:ppname ->
       formal:pure_term ->
       q:option qualifier ->
       res:pure_comp {stateful_comp res} ->
@@ -565,29 +564,12 @@ let emp_typing (#f:_) (#g:_)
   : tot_typing f g Tm_Emp Tm_VProp
   = admit()
 
-let tot_typing_eq_tm (f:_) (g:_) (e t:pure_term) (d:tot_typing f g e t)
-  (e':pure_term{eq_tm e e'})
-  : tot_typing f g e' t =
-
-  let E d = d in
-  match d with
-  | T_Tot _ _ _ rtd ->
-    elab_pure_eq_tm e e';
-    assert (RT.alpha_equivalent_terms (elab_pure e) (elab_pure e'));
-    let rtd : RT.typing (extend_env_l f g)
-                        (elab_pure e')
-                        (elab_pure t) =
-      RT.T_AlphaRenaming _ _ _ rtd _ _ _ in
-    E (T_Tot _ _ _ rtd)
-
 let rec vprop_equiv_typing (f:_) (g:_) (t0 t1:pure_term) (v:vprop_equiv f g t0 t1)
   : GTot ((tot_typing f g t0 Tm_VProp -> tot_typing f g t1 Tm_VProp) &
           (tot_typing f g t1 Tm_VProp -> tot_typing f g t0 Tm_VProp))
         (decreases v)
   = match v with
-    | VE_Refl _ t0 t1 ->
-      (fun x -> tot_typing_eq_tm _ _ _ _ x _),
-      (fun x -> tot_typing_eq_tm _ _ _ _ x _)
+    | VE_Refl _ _ -> (fun x -> x), (fun x -> x)
 
     | VE_Sym _ _ _ v' -> 
       let f, g = vprop_equiv_typing f g t1 t0 v' in

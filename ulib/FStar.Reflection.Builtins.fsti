@@ -70,7 +70,7 @@ val pack_bv        : bv_view -> bv
 val inspect_lb     : lb:letbinding -> lbv:lb_view {lbv << lb}
 val pack_lb        : lb_view -> letbinding
 
-val inspect_binder : b:binder -> bv:binder_view {b << bv}
+val inspect_binder : b:binder -> bv:binder_view {bv << b}
 val pack_binder    : binder_view -> binder
 
 val inspect_universe : u:universe -> uv:universe_view{uv << u}

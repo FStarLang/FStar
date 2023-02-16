@@ -15,7 +15,7 @@ let inspect_pack_bv t = admit ()
   
 let pack_inspect_bv t = admit ()
 
-let inspect_pack_binder (b:_) (q:_) (a:_) = admit ()
+let inspect_pack_binder (bv:_) = admit ()
   
 let pack_inspect_binder (t:R.binder) = admit ()
   

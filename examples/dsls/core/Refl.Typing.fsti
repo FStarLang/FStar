@@ -22,13 +22,13 @@ val pack_inspect_bv (t:R.bv)
   : Lemma (ensures R.(pack_bv (inspect_bv t) == t))
           [SMTPat R.(pack_bv (inspect_bv t))]
   
-val inspect_pack_binder (b:_) (q:_) (a:_)
-  : Lemma (ensures R.(R.inspect_binder (R.pack_binder b q a) == (b, (q, a))))
-          [SMTPat R.(inspect_binder (pack_binder b q a))]
+val inspect_pack_binder (bview:R.binder_view)
+  : Lemma (ensures R.(R.inspect_binder (R.pack_binder bview) == bview))
+          [SMTPat R.(inspect_binder (pack_binder bview))]
   
 val pack_inspect_binder (t:R.binder)
-  : Lemma (ensures (let b, (q, a) = R.inspect_binder t in
-                    R.(pack_binder b q a == t)))
+   : Lemma (ensures (R.pack_binder (R.inspect_binder t) == t))
+           [SMTPat (R.pack_binder (R.inspect_binder t))]
   
 val pack_inspect_comp (t:R.comp)
   : Lemma (ensures (R.pack_comp (R.inspect_comp t) == t))
@@ -60,16 +60,16 @@ val lookup_fvar_uinst (e:R.env) (x:R.fv) (us:list R.universe) : option R.term
 
 let lookup_fvar (e:env) (x:fv) : option term = lookup_fvar_uinst e x []
 
-let mk_binder (pp_name:string) (x:var) (ty:term) (q:aqualv)
+let mk_binder (pp_name:Sealed.sealed string) (x:var) (ty:term) (q:aqualv)
   = pack_binder
-      (pack_bv ({bv_ppname=pp_name;
-                 bv_index=x;
-                 bv_sort=ty}))
-      q
-      []
+      { binder_bv=pack_bv ({bv_ppname=pp_name;
+                            bv_index=x;
+                            bv_sort=ty});
+        binder_qual=q;
+        binder_attrs=[] }
 
 let extend_env (e:env) (x:var) (ty:term) : env =
-  R.push_binder e (mk_binder "x" x ty Q_Explicit)
+  R.push_binder e (mk_binder (Sealed.seal "x") x ty Q_Explicit)
   
 val lookup_bvar_extend_env (g:env) (x y:var) (ty:term)
   : Lemma 
@@ -85,7 +85,7 @@ val lookup_fvar_extend_env (g:env) (x:fv) (us:universes) (y:var) (ty:term)
     [SMTPat (lookup_fvar_uinst (extend_env g y ty) x us)]
 
 let as_binder (x:var) (ty:term) =
-  mk_binder "x" x ty Q_Explicit
+  mk_binder (Sealed.seal "x") x ty Q_Explicit
 
 let bv_index (x:bv)
   : var
@@ -94,11 +94,11 @@ let bv_index (x:bv)
     n
 
 let binder_sort (b:binder) =
-  let bv, _ = inspect_binder b in 
+  let { binder_bv = bv } = inspect_binder b in 
   (inspect_bv bv).bv_sort
 
 let binder_qual (b:binder) =
-  let _, (q, _) = inspect_binder b in q
+  let { binder_qual = q } = inspect_binder b in q
 
 noeq
 type open_or_close =
@@ -108,9 +108,16 @@ type open_or_close =
 
 let tun = pack_ln Tv_Unknown
 
-let make_bv (n:int) (t:term) = { bv_ppname = "_"; bv_index = n; bv_sort = t}
-let make_bv_with_name (s:string) (n:int) (t:term) =
-  { bv_ppname = s; bv_index = n; bv_sort = t}
+let make_bv (n:int) (t:term) = { 
+  bv_ppname = Sealed.seal "_";
+  bv_index = n;
+  bv_sort = t
+}
+let make_bv_with_name (s:Sealed.sealed string) (n:int) (t:term) = {
+  bv_ppname = s;
+  bv_index = n;
+  bv_sort = t
+}
 let var_as_bv (v:int) = pack_bv (make_bv v tun)
 let var_as_term (v:var) = pack_ln (Tv_Var (var_as_bv v))
             
@@ -240,10 +247,9 @@ and open_or_close_bv' (b:bv) (v:open_or_close) (i:nat)
 and open_or_close_binder' (b:binder) (v:open_or_close) (i:nat)
   : Tot binder (decreases b)
   = let bndr  = inspect_binder b in
-    let bv, (q, attrs) = bndr in
-    pack_binder (open_or_close_bv' bv v i) 
-                q
-                (open_or_close_terms' attrs v i)
+    pack_binder {binder_bv=open_or_close_bv' bndr.binder_bv v i;
+                 binder_qual=bndr.binder_qual;
+                 binder_attrs=open_or_close_terms' bndr.binder_attrs v i}
 
 and open_or_close_comp' (c:comp) (v:open_or_close) (i:nat)
   : Tot comp (decreases c)
@@ -340,6 +346,68 @@ and open_or_close_match_returns' (m:match_returns_ascription) (v:open_or_close) 
     in
     b, (ret, as_, eq)
 
+let binder_of_t_q t q = mk_binder (Sealed.seal "_") 0 t q
+let mk_abs ty qual t : R.term =  R.pack_ln (R.Tv_Abs (binder_of_t_q ty qual) t)
+val ins_binder : b:binder -> bv:binder_view
+val pk_binder : b:binder_view -> binder
+
+val ins_pk_binder (bview:R.binder_view)
+  : Lemma (ensures ins_binder (pk_binder bview) == bview)
+          [SMTPat (ins_binder (pk_binder bview))]
+
+let test0 (bview:R.binder_view) =
+  assert (ins_binder (pk_binder bview) == bview)
+
+let test1 (bv:R.bv) (q:R.aqualv) (attrs:list R.term) =
+  assert (ins_binder (pk_binder { binder_bv = bv; binder_qual = q; binder_attrs = attrs }) == 
+                                { binder_bv = bv; binder_qual = q; binder_attrs = attrs })
+
+#push-options "--fuel 0 --ifuel 0"
+let test2 (bv_ppname: Sealed.sealed string) (bv_index:R.var) (bv_sort:R.term) =
+  assert (inspect_bv (pack_bv { bv_ppname; bv_index; bv_sort }) == { bv_ppname; bv_index; bv_sort })
+
+let test () = 
+  assert_norm (Sealed.seal "a" =!= Sealed.seal "b"); admit();
+  assert false
+  
+let test3 (bv_index:R.var) (bv_sort:R.term) =
+  let bv_ppname : Sealed.sealed string = Sealed.seal "_" in
+  assert (inspect_bv (pack_bv { bv_ppname; bv_index; bv_sort }) == { bv_ppname; bv_index; bv_sort })
+  
+  assert (ins_binder (pk_binder { binder_bv = pack_bv { bv_ppname; bv_index; bv_sort }; binder_qual = q; binder_attrs = attrs }) == 
+                                { binder_bv = pack_bv { bv_ppname; bv_index; bv_sort }; binder_qual = q; binder_attrs = attrs })
+
+
+let open_or_close_abs (t0 t1:R.term) (oc:open_or_close) (n:nat)
+  :  Lemma (open_or_close_term' (mk_abs t0 R.Q_Explicit t1) oc n ==
+            mk_abs (open_or_close_term' t0 oc n)
+                   R.Q_Explicit
+                   (open_or_close_term' t1 oc (n + 1)))
+  = let b = binder_of_t_q t0 R.Q_Explicit in
+    calc (==) {
+      ins_binder (pk_binder { binder_bv=pack_bv ({ bv_ppname = Sealed.seal "_"; bv_index=0; bv_sort=t0});
+                              binder_qual = R.Q_Explicit;
+                              binder_attrs = [] });
+     (==) { ins_pk_binder { binder_bv=pack_bv ({ bv_ppname = Sealed.seal "_"; bv_index=0; bv_sort=t0});
+                            binder_qual = R.Q_Explicit;
+                            binder_attrs = [] }
+          }
+     { binder_bv=pack_bv ({ bv_ppname = Sealed.seal "_"; bv_index=0; bv_sort=t0});
+       binder_qual = R.Q_Explicit;
+       binder_attrs = [] };     
+    };
+    admit()
+    let b' = inspect_binder b in
+    assert (b'.binder_bv.bv_sort ==  t0);
+    admit()
+    calc (==) {
+         open_or_close_binder' b oc n;
+    (==) {}
+         pack_binder { binder_bv = open_or_close_binder' b oc n;
+    };
+    admit()
+            binder_of_t_q (open_or_close_term' t0 oc n) R.Q_Explicit);
+    admit()
 
 val open_with (t:term) (v:term) : term
   
@@ -361,7 +429,7 @@ val rename (t:term) (x y:var) : term
 val rename_spec (t:term) (x y:var)
   : Lemma (rename t x y == open_or_close_term' t (Rename x y) 0)
   
-let bv_as_binder bv = pack_binder bv Q_Explicit []
+let bv_as_binder bv = pack_binder {binder_bv=bv; binder_qual=Q_Explicit; binder_attrs=[]}
 
 val bv_index_of_make_bv (n:nat) (t:term)
   : Lemma (ensures bv_index (pack_bv (make_bv n t)) == n)
@@ -398,136 +466,6 @@ let eq2 (u:universe) (t v0 v1:term)
 let b2t_lid : R.name = ["Prims"; "b2t"]
 let b2t_fv : R.fv = R.pack_fv b2t_lid
 let b2t_ty : R.term = R.(pack_ln (Tv_Arrow (as_binder 0 bool_ty) (mk_total (tm_type u_zero))))
-
-#push-options "--z3rlimit_factor 4"
-let rec term_view_no_pp (e:R.term_view) : R.term_view =
-  match e with
-  | Tv_Var bv -> Tv_Var (bv_no_pp bv)
-  | Tv_BVar bv -> Tv_BVar (bv_no_pp bv)
-  | Tv_FVar _ -> e
-  | Tv_UInst _ _ -> e
-  | Tv_App head arg -> Tv_App (term_no_pp head) (arg_no_pp arg)
-  | Tv_Abs b body -> Tv_Abs (binder_no_pp b) (term_no_pp body)
-  | Tv_Arrow b c -> Tv_Arrow (binder_no_pp b) (comp_no_pp c)
-  | Tv_Type _ -> e
-  | Tv_Refine bv phi -> Tv_Refine (bv_no_pp bv) (term_no_pp phi)
-  | Tv_Const _ -> e
-  | Tv_Uvar _ _ -> e
-  | Tv_Let is_rec attrs x def body ->
-    Tv_Let is_rec (attrs_no_pp attrs) (bv_no_pp x) (term_no_pp def) (term_no_pp body)
-  | Tv_Match scrutinee asc brs ->
-    Tv_Match (term_no_pp scrutinee) (match_asc_no_pp asc) (branches_no_pp brs)
-  | Tv_AscribedT e t tac use_eq ->
-    Tv_AscribedT (term_no_pp e) (term_no_pp t) (term_opt_no_pp tac) use_eq
-  | Tv_AscribedC e c tac use_eq ->
-    Tv_AscribedC (term_no_pp e) (comp_no_pp c) (term_opt_no_pp tac) use_eq
-
-  | Tv_Unknown -> e
-
-and bv_no_pp (bv:R.bv) : R.bv =
-  pack_bv (bv_view_no_pp (inspect_bv bv))
-
-and term_no_pp (e:R.term) : R.term =
-  pack_ln (term_view_no_pp (inspect_ln e))
-
-and arg_no_pp (a:R.argv) : R.argv =
-  let t, q = a in
-  term_no_pp t, q
-
-and binder_no_pp (b:R.binder) : R.binder =
-  let bv, (q, attrs) = inspect_binder b in
-  pack_binder (bv_no_pp bv) q (attrs_no_pp attrs)
-
-and comp_no_pp (c:comp) : R.comp =
-  pack_comp (comp_view_no_pp (inspect_comp c))
-
-and attrs_no_pp (attrs:list R.term) : list R.term =
-  match attrs with
-  | [] -> []
-  | hd::tl -> (term_no_pp hd)::(attrs_no_pp tl)
-
-and match_asc_no_pp (asc:option match_returns_ascription)
-  : option match_returns_ascription =
-
-  match asc with
-  | None -> None
-  | Some (b, (term_or_comp, topt, use_eq)) ->
-    assume (term_or_comp << asc);
-    assume (topt << asc);
-    Some
-      (binder_no_pp b,
-       (term_or_comp_no_pp term_or_comp,
-        term_opt_no_pp topt,
-        use_eq))
-
-and branches_no_pp (brs:list branch) : list branch =
-  match brs with
-  | [] -> []
-  | hd::tl -> (branch_no_pp hd)::(branches_no_pp tl)
-
-and term_opt_no_pp (topt:option term) : option term =
-  match topt with
-  | None -> None
-  | Some t -> Some (term_no_pp t)
-
-and bv_view_no_pp (bv:bv_view) : bv_view =
-  {bv with bv_ppname="_";
-           bv_sort=term_no_pp bv.bv_sort}
-
-and comp_view_no_pp (c:comp_view) : comp_view =
-  match c with
-  | C_Total ret -> C_Total (term_no_pp ret)
-  | C_GTotal ret -> C_GTotal (term_no_pp ret)
-  | C_Lemma pre post pat -> C_Lemma (term_no_pp pre) (term_no_pp post) (term_no_pp pat)
-  | C_Eff us eff_name res args decrs ->
-    C_Eff us eff_name (term_no_pp res) (args_no_pp args) (attrs_no_pp decrs)
-
-and term_or_comp_no_pp (x:either term comp) : either term comp =
-  match x with
-  | Inl t -> Inl (term_no_pp t)
-  | Inr c -> Inr (comp_no_pp c)
-
-and branch_no_pp (br:branch) : branch =
-  let p, t = br in
-  pat_no_pp p, term_no_pp t
-
-and args_no_pp (args:list argv) : list argv =
-  match args with
-  | [] -> []
-  | hd::tl -> (arg_no_pp hd)::(args_no_pp tl)
-
-and pat_no_pp (p:pattern) : pattern =
-  match p with
-  | Pat_Constant _ -> p
-  | Pat_Cons fv us l ->
-    Pat_Cons fv us (pat_and_bool_no_pp l)
-  | Pat_Var bv -> Pat_Var (bv_no_pp bv)
-  | Pat_Wild bv -> Pat_Wild (bv_no_pp bv)
-  | Pat_Dot_Term topt -> Pat_Dot_Term (term_opt_no_pp topt)
-
-and pat_and_bool_no_pp (l:list (pattern & bool)) : list (pattern & bool) =
-  match l with
-  | [] -> []
-  | (p, b)::tl -> (pat_no_pp p, b)::(pat_and_bool_no_pp tl)
-#pop-options
-
-let alpha_equivalent_terms (e1 e2:term) : prop =
-  term_no_pp e1 == term_no_pp e2
-
-let alpha_equivalent_envs (g1 g2:env) : prop =
-  (forall (x:int).
-     (match lookup_bvar g1 x, lookup_bvar g2 x with
-      | None, None -> True
-      | Some t1, Some t2 -> alpha_equivalent_terms t1 t2
-      | _, _ -> False))
-
-  /\
-
-  (forall (x:fv) (us:list universe).
-     (match lookup_fvar_uinst g1 x us, lookup_fvar_uinst g2 x us with
-      | None, None -> True
-      | Some t1, Some t2 -> alpha_equivalent_terms t1 t2
-      | _, _ -> False))
 
 noeq
 type constant_typing: vconst -> term -> Type0 = 
@@ -627,7 +565,7 @@ type typing : env -> term -> term -> Type0 =
      body:term ->
      body_ty:term ->
      u:universe ->
-     pp_name:string ->
+     pp_name:sealed string ->
      q:aqualv ->
      typing g ty (tm_type u) ->
      typing (extend_env g x ty) (open_term body x) body_ty ->
@@ -653,7 +591,7 @@ type typing : env -> term -> term -> Type0 =
      t2:term ->
      u1:universe ->
      u2:universe ->
-     pp_name:string ->
+     pp_name:sealed string ->
      q:aqualv ->
      typing g t1 (tm_type u1) ->
      typing (extend_env g x t1) (open_term t2 x) (tm_type u2) ->
@@ -709,16 +647,6 @@ type typing : env -> term -> term -> Type0 =
      typing g scrutinee i_ty ->
      branches_typing g scrutinee i_ty branches ty ->
      typing g (pack_ln (Tv_Match scrutinee None branches)) ty
-
-  | T_AlphaRenaming:
-     g:env ->
-     e:term ->
-     t:term ->
-     typing g e t ->
-     g':env{alpha_equivalent_envs g g'} ->
-     e':term{alpha_equivalent_terms e e'} ->
-     t':term{alpha_equivalent_terms t t'} ->
-     typing g' e' t'
 
 and sub_typing : env -> term -> term -> Type0 =
   | ST_Equiv:
@@ -899,9 +827,8 @@ and ln'_bv (b:bv) (n:int)
 and ln'_binder (b:binder) (n:int)
   : Tot bool (decreases b)
   = let bndr  = inspect_binder b in
-    let bv, (q, attrs) = bndr in
-    ln'_bv bv n &&
-    ln'_terms attrs n
+    ln'_bv bndr.binder_bv n &&
+    ln'_terms bndr.binder_attrs n
 
 and ln'_terms (ts:list term) (n:int)
   : Tot bool (decreases ts)
@@ -1074,14 +1001,13 @@ and open_close_inverse'_binder (i:nat) (b:binder { ln'_binder b (i - 1) }) (x:va
                    == b)
           (decreases b)                   
   = let bndr  = inspect_binder b in
-    assert (bndr << b);
-    let bv, (q, attrs) = bndr in
+    let {binder_bv=bv; binder_qual=q; binder_attrs=attrs} = bndr in
     open_close_inverse'_bv i bv x;
     open_close_inverse'_terms i attrs x;
     assert (open_or_close_bv' (open_or_close_bv' bv (CloseVar x) i) (open_with_var x) i == bv);
     assert (open_or_close_terms' (open_or_close_terms' attrs (CloseVar x) i) (open_with_var x) i == attrs);    
     pack_inspect_binder b;    
-    assert (pack_binder bv q attrs == b)
+    assert (pack_binder {binder_bv=bv; binder_qual=q; binder_attrs=attrs} == b)
 
 and open_close_inverse'_terms (i:nat) (ts:list term { ln'_terms ts (i - 1) }) (x:var)
   : Lemma (ensures open_or_close_terms' (open_or_close_terms' ts (CloseVar x) i)
@@ -1335,9 +1261,8 @@ and freevars_bv (b:bv)
 and freevars_binder (b:binder)
   : Tot (Set.set var) (decreases b)
   = let bndr  = inspect_binder b in
-    let bv, (q, attrs) = bndr in
-    freevars_bv bv `Set.union`
-    freevars_terms attrs 
+    freevars_bv bndr.binder_bv `Set.union`
+    freevars_terms bndr.binder_attrs 
     
 
 and freevars_pattern (p:pattern) 
@@ -1499,9 +1424,8 @@ and close_open_inverse'_binder (i:nat) (b:binder) (x:var{ ~(x `Set.mem` freevars
                 == b)
        (decreases b)
   = let bndr  = inspect_binder b in
-    let bv, (q, attrs) = bndr in
-    close_open_inverse'_bv i bv x;
-    close_open_inverse'_terms i attrs x;
+    close_open_inverse'_bv i bndr.binder_bv x;
+    close_open_inverse'_terms i bndr.binder_attrs x;
     pack_inspect_binder b
 
 and close_open_inverse'_bv (i:nat) (bv:bv) (x:var{ ~(x `Set.mem` freevars_bv bv) })

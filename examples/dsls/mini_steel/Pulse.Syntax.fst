@@ -1,7 +1,7 @@
 module Pulse.Syntax
 module RT = Refl.Typing
 module R = FStar.Reflection
-module Un = Pulse.Unobservable
+module Un = FStar.Sealed
 open FStar.List.Tot
 
 module T = FStar.Tactics

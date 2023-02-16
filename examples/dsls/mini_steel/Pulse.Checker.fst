@@ -44,8 +44,8 @@ let replace_equiv_post
     (| c,
        ST_VPropEquiv
          g c c x pre_c_typing res_c_typing post_c_typing
-         (VE_Refl _ _ _)
-         (VE_Refl _ _ _) |)
+         (VE_Refl _ _)
+         (VE_Refl _ _) |)
   | Some post ->
     let post_opened = open_term post x in
     let (| post_opened, post_typing |) = check_vprop f g_post post_opened in
@@ -64,7 +64,7 @@ let replace_equiv_post
     (| c_with_post,
        ST_VPropEquiv
          g c c_with_post x pre_c_typing res_c_typing post_c_typing
-         (VE_Refl _ _ _)
+         (VE_Refl _ _)
          post_c_post_eq |)
 #pop-options
 
@@ -93,7 +93,7 @@ let check_abs
         match post_hint with
         | None -> None
         | Some post ->
-          let post = open_term' post (Tm_Var {nm_ppname="_";nm_index=x}) 1 in
+          let post = open_term' post (Tm_Var {nm_ppname=Sealed.seal "_";nm_index=x}) 1 in
           Some post
       in
       let (| body', c_body, body_typing |) = check f g' (open_term body x) pre_opened (E pre_typing) post in
@@ -142,17 +142,17 @@ let rec combine_if_branches (f:RT.fstar_top_env)
               comp_pre c_then == comp_pre c_else)
            (ensures fun _ _ -> True) =
 
-  if st_comp_of_comp c_then = st_comp_of_comp c_else
+  if eq_st_comp (st_comp_of_comp c_then) (st_comp_of_comp c_else)
   then begin
     match c_then, c_else with
     | C_ST _, C_ST _ -> (| c_then, e_then_typing, e_else_typing |)
     | C_STAtomic inames1 _, C_STAtomic inames2 _
     | C_STGhost inames1 _, C_STGhost inames2 _ ->
-      if inames1 = inames2
+      if eq_tm inames1 inames2
       then (| c_then, e_then_typing, e_else_typing |)
       else T.fail "Cannot combine then and else branches (different inames)"
     | C_ST _, C_STAtomic inames _ ->
-      if inames = Tm_EmpInames
+      if eq_tm inames Tm_EmpInames
       then begin
         let e_else_typing =
           T_Lift g_else e_else c_else c_then e_else_typing
@@ -161,7 +161,7 @@ let rec combine_if_branches (f:RT.fstar_top_env)
       end
       else T.fail "Cannot lift STAtomic else branch to match then"
     | C_STAtomic inames _, C_ST _ ->
-      if inames = Tm_EmpInames
+      if eq_tm inames Tm_EmpInames
       then begin
         let e_then_typing =
           T_Lift g_then e_then c_then c_else e_then_typing
@@ -187,6 +187,57 @@ let rec combine_if_branches (f:RT.fstar_top_env)
 #pop-options
 
 #push-options "--query_stats --fuel 2 --ifuel 1 --z3rlimit_factor 10"
+let check_if (f:RT.fstar_top_env)
+             (g:env)
+             (b:term)
+             (e1 e2:term)
+             (pre:pure_term)
+             (pre_typing: tot_typing f g pre Tm_VProp)
+             (post:term) 
+             (check:check_t)
+  : T.Tac (t:term &
+           c:pure_comp { stateful_comp c ==> comp_pre c == pre } &
+           src_typing f g t c)
+  = let (| b, b_typing |) =
+      check_tot_with_expected_typ f g b tm_bool in
+    let hyp = fresh g in
+    let g_then =
+      (hyp, Inl (mk_eq2 U_zero tm_bool b tm_true))::g in
+    let (| e1, c1, e1_typing |) =
+      //
+      // TODO: this is unnecessary
+      //       we have typing of pre in g
+      //       weakening should give typing of pre in g_then
+      //
+      let pre_typing : tot_typing f g_then pre Tm_VProp =
+        check_vprop_no_inst f g_then pre in
+      let (| e1, c1, e1_typing |) =
+        check f g_then e1 pre pre_typing (Some post) in
+      let (| c1, e1_typing |) =
+        force_st pre_typing (| c1, e1_typing |) in
+      (| e1, c1, e1_typing |) in
+
+    let g_else =
+      (hyp, Inl (mk_eq2 U_zero tm_bool b tm_false))::g in
+    let (| e2, c2, e2_typing |) =
+      //
+      // TODO: this is unnecessary
+      //       we have typing of pre in g
+      //       weakening should give typing of pre in g_then
+      //
+      let pre_typing : tot_typing f g_else pre Tm_VProp =
+        check_vprop_no_inst f g_else pre in
+      let (| e2, c2, e2_typing |) =
+        check f g_else e2 pre pre_typing (Some post) in
+      let (| c2, e2_typing |) =
+        force_st pre_typing (| c2, e2_typing |) in
+      (| e2, c2, e2_typing |) in
+    let (| c, e1_typing, e2_typing |) =
+      combine_if_branches _ _ _ _ e1_typing _ _ _ e2_typing in
+    (| Tm_If b e1 e2 (Some post),
+       c,
+       T_If g b e1 e2 (Some post) c hyp (E b_typing) e1_typing e2_typing |)
+
 #push-options "--print_implicits --print_universes --print_full_names"
 let rec check' : bool -> check_t =
   fun (allow_inst:bool)
@@ -246,7 +297,7 @@ let rec check' : bool -> check_t =
 
   | Tm_Abs _ _ _ _ _ ->
     check_abs f g t pre pre_typing post_hint (check' true)
-  
+
   | Tm_STApp head qual arg ->
     let (| head, ty_head, dhead |) = check_tot allow_inst f g head in
     begin
@@ -286,54 +337,16 @@ let rec check' : bool -> check_t =
 
   | Tm_Bind _ _ ->
     check_bind f g t pre pre_typing post_hint (check' true)
-    
-  | Tm_If b e1 e2 post_if ->
-    let (| b, b_typing |) =
-      check_tot_with_expected_typ f g b tm_bool in
 
+
+  | Tm_If b e1 e2 post_if ->
     let post =
       match post_if, post_hint with
-      | None, Some _ -> post_hint
-      | Some _, None -> post_if
-      | _, _ -> T.fail "Either two annotations for if post or none" in
-
-    let hyp = fresh g in
-    let g_then =
-      (hyp, Inl (mk_eq2 U_zero tm_bool b tm_true))::g in
-    let (| e1, c1, e1_typing |) =
-      //
-      // TODO: this is unnecessary
-      //       we have typing of pre in g
-      //       weakening should give typing of pre in g_then
-      //
-      let pre_typing : tot_typing f g_then pre Tm_VProp =
-        check_vprop_no_inst f g_then pre in
-      let (| e1, c1, e1_typing |) =
-        check' allow_inst f g_then e1 pre pre_typing post in
-      let (| c1, e1_typing |) =
-        force_st pre_typing (| c1, e1_typing |) in
-      (| e1, c1, e1_typing |) in
-
-    let g_else =
-      (hyp, Inl (mk_eq2 U_zero tm_bool b tm_false))::g in
-    let (| e2, c2, e2_typing |) =
-      //
-      // TODO: this is unnecessary
-      //       we have typing of pre in g
-      //       weakening should give typing of pre in g_then
-      //
-      let pre_typing : tot_typing f g_else pre Tm_VProp =
-        check_vprop_no_inst f g_else pre in
-      let (| e2, c2, e2_typing |) =
-        check' allow_inst f g_else e2 pre pre_typing post in
-      let (| c2, e2_typing |) =
-        force_st pre_typing (| c2, e2_typing |) in
-      (| e2, c2, e2_typing |) in
-    let (| c, e1_typing, e2_typing |) =
-      combine_if_branches _ _ _ _ e1_typing _ _ _ e2_typing in
-    (| Tm_If b e1 e2 post_if,
-       c,
-       T_If g b e1 e2 post_if c hyp (E b_typing) e1_typing e2_typing |)
+      | None, Some p -> p
+      | Some p, None -> p
+      | _, _ -> T.fail "Either two annotations for if post or none"
+    in
+    check_if f g b e1 e2 pre pre_typing post (check' true)
 
   | Tm_ElimExists t ->
     let (| t, t_typing |) = check_vprop f g t in
