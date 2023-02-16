@@ -66,7 +66,9 @@ let is_pow2heap (d:pos) (t:tree) : prop =
 
 /// A list of trees is a binomial queue starting with depth d if:
 
-let rec is_binomial_queue (d:pos) (l:list tree)
+type forest = list tree
+
+let rec is_binomial_queue (d:pos) (l:forest)
   : Tot prop (decreases l) =
   
   match l with
@@ -77,25 +79,25 @@ let rec is_binomial_queue (d:pos) (l:list tree)
 /// We will also keep the binomial queue in a compact form,
 ///   truncating unnecessary empty trees from the forest
 
-let is_compact (l:list tree) = l == [] \/ Internal? (L.last l)
+let is_compact (l:forest) = l == [] \/ Internal? (L.last l)
 
-let is_priq (l:list tree) = is_binomial_queue 1 l /\ is_compact l
+let is_priq (l:forest) = is_binomial_queue 1 l /\ is_compact l
 
 /// The main priq type
 
-let priq = l:list tree{is_priq l}
+let priq = l:forest{is_priq l}
 
 let empty = []
 
 /// We define a function to compact a forest
 
-let rec all_leaf (l:list tree{Cons? l}) : bool =
+let rec all_leaf (l:forest{Cons? l}) : bool =
   match l with
   | [Leaf] -> true
   | Leaf::tl -> all_leaf tl
   | _ -> false
 
-let rec mk_compact (l:list tree) : list tree =
+let rec mk_compact (l:forest) : forest =
   match l with
   | [] -> []
   | _ ->
@@ -105,7 +107,7 @@ let rec mk_compact (l:list tree) : list tree =
 
 /// Correctness of mk_compact
 
-let rec mk_compact_correctness (l:list tree)
+let rec mk_compact_correctness (l:forest)
   : Lemma (is_compact (mk_compact l))
           [SMTPat (is_compact (mk_compact l))] =
 
@@ -115,7 +117,7 @@ let rec mk_compact_correctness (l:list tree)
     if all_leaf l then ()
     else mk_compact_correctness (L.tl l)
 
-let rec mk_compact_preserves_binomial_queue (d:pos) (l:list tree)
+let rec mk_compact_preserves_binomial_queue (d:pos) (l:forest)
   : Lemma
       (requires is_binomial_queue d l)
       (ensures is_binomial_queue d (mk_compact l))
@@ -145,8 +147,8 @@ let smash (d:pos) (t1:tree) (t2:tree)
 ///
 /// It has a nice symmetery to carry in binary arithmetic
 
-let rec carry (d:pos) (q:list tree) (t:tree)
-  : Pure (list tree)
+let rec carry (d:pos) (q:forest) (t:tree)
+  : Pure forest
          (requires is_binomial_queue d q /\ is_pow2heap d t)
          (ensures fun q -> is_binomial_queue d q)
          (decreases q) =
@@ -162,8 +164,8 @@ let rec carry (d:pos) (q:list tree) (t:tree)
 ///
 /// It has a nice symmetry to binary addition
 
-let rec join (d:pos) (p q:list tree) (c:tree)
-  : Pure (list tree)
+let rec join (d:pos) (p q:forest) (c:tree)
+  : Pure forest
          (requires
             is_binomial_queue d p /\
             is_binomial_queue d q /\
@@ -201,7 +203,7 @@ let insert x q =
 
 /// find_max with the current max as max
 
-let rec find_max (max:option key_t) (q:list tree)
+let rec find_max (max:option key_t) (q:forest)
   : Tot (option key_t) (decreases q) =
   match q with
   | [] -> max
@@ -217,7 +219,7 @@ let rec find_max (max:option key_t) (q:list tree)
 ///
 /// Then appending t to q is also a binomial queue
 
-let rec binomial_queue_append (d:pos) (q:list tree) (t:tree)
+let rec binomial_queue_append (d:pos) (q:forest) (t:tree)
   : Lemma
       (requires
          is_binomial_queue d q /\ is_pow2heap (L.length q + d) t)
@@ -264,8 +266,8 @@ let heap_delete_max (d:pos) (t:tree)
 ///   return (the deleted root, q with that tree replaces with Leaf, unzipped forest)
 /// 
 
-let rec delete_max_aux (m:key_t) (d:pos) (q:list tree)
-  : Pure (key_t & list tree & priq)
+let rec delete_max_aux (m:key_t) (d:pos) (q:forest)
+  : Pure (key_t & forest & priq)
          (requires is_binomial_queue d q)
          (ensures fun (x, q, _) -> m <= x /\ is_binomial_queue d q)
          (decreases q) =
@@ -309,7 +311,7 @@ let rec keys_of_tree (t:tree) : ms =
     ms_append (keys_of_tree left)
               (ms_cons k (keys_of_tree right))
 
-let rec keys (q:list tree) : ms =
+let rec keys (q:forest) : ms =
   match q with
   | [] -> ms_empty
   | hd::tl -> ms_append (keys_of_tree hd) (keys tl)
@@ -317,7 +319,7 @@ let rec keys (q:list tree) : ms =
 let repr_t (t:tree) (l:ms) : prop =
   permutation (keys_of_tree t) l
 
-let repr_l (q:list tree) (s:ms) : prop =
+let repr_l (q:forest) (s:ms) : prop =
   permutation (keys q) s
 
 /// The main repr predicate saying s is a permutation of (keys q)
@@ -337,7 +339,7 @@ let smash_repr (d:pos) (t1 t2:tree) (l1 l2:ms)
          t2 `repr_t` l2)
       (ensures smash d t1 t2 `repr_t` (ms_append l1 l2)) = ()
 
-let rec carry_repr (d:pos) (q:list tree) (t:tree) (lq lt:ms)
+let rec carry_repr (d:pos) (q:forest) (t:tree) (lq lt:ms)
   : Lemma
       (requires
          is_binomial_queue d q /\
@@ -357,7 +359,7 @@ let rec carry_repr (d:pos) (q:list tree) (t:tree) (lq lt:ms)
       (ms_append (keys_of_tree hd) (keys_of_tree t))
 
 #push-options "--z3rlimit 50 --fuel 1 --ifuel 1"
-let rec join_repr (d:pos) (p q:list tree) (c:tree)
+let rec join_repr (d:pos) (p q:forest) (c:tree)
   (lp lq lc:ms)
   : Lemma
       (requires
@@ -407,7 +409,7 @@ let rec join_repr (d:pos) (p q:list tree) (c:tree)
 
 /// mk_compact preserves keys
 
-let rec all_leaf_keys (l:list tree{Cons? l})
+let rec all_leaf_keys (l:forest{Cons? l})
   : Lemma
       (requires Cons? l /\ all_leaf l)
       (ensures permutation (keys l) ms_empty) =
@@ -415,7 +417,7 @@ let rec all_leaf_keys (l:list tree{Cons? l})
   | [Leaf] -> ()
   | Leaf::tl -> all_leaf_keys tl
 
-let rec compact_preserves_keys (q:list tree)
+let rec compact_preserves_keys (q:forest)
   : Lemma (permutation (keys q) (keys (mk_compact q)))
           [SMTPat (keys (mk_compact q))] =
 
@@ -436,7 +438,7 @@ let merge_repr p q sp sq =
 
 /// Towards proof of delete correctness
 
-let rec last_key_in_keys (l:list tree)
+let rec last_key_in_keys (l:forest)
   : Lemma
       (requires
          Cons? l /\
@@ -447,7 +449,7 @@ let rec last_key_in_keys (l:list tree)
   | [Internal _ _ _] -> ()
   | _::tl -> last_key_in_keys tl
 
-let rec find_max_some_is_some (k:key_t) (l:list tree)
+let rec find_max_some_is_some (k:key_t) (l:forest)
   : Lemma (ensures Some? (find_max (Some k) l) /\
                    k <= Some?.v (find_max (Some k) l))
           (decreases l) =
@@ -466,7 +468,7 @@ let find_max_emp_repr_l (l:priq)
   | [] -> ()
   | _ -> last_key_in_keys l
 
-let rec find_max_emp_repr_r (l:list tree)
+let rec find_max_emp_repr_r (l:forest)
   : Lemma
       (requires find_max None l == None)
       (ensures permutation (keys l) ms_empty) =
@@ -492,7 +494,7 @@ let delete_max_none_repr p =
   ()
 #pop-options
   
-let rec keys_append (l1 l2:list tree) (ms1 ms2:ms)
+let rec keys_append (l1 l2:forest) (ms1 ms2:ms)
   : Lemma (requires l1 `repr_l` ms1 /\ l2 `repr_l` ms2)
           (ensures (L.append l1 l2) `repr_l` (ms_append ms1 ms2)) =
 
@@ -553,8 +555,8 @@ let tree_root_is_max (d:pos) (t:tree)
   tree_root_is_max_aux (d - 1) k left
 
 #push-options "--z3rlimit 40"
-let rec delete_max_aux_repr (m:key_t) (d:pos) (q:list tree)
-  (x:key_t) (r:list tree) (p:priq)
+let rec delete_max_aux_repr (m:key_t) (d:pos) (q:forest)
+  (x:key_t) (r:forest) (p:priq)
   (lq lr lp:ms)
   : Lemma
       (requires
@@ -584,7 +586,7 @@ let rec delete_max_aux_repr (m:key_t) (d:pos) (q:list tree)
     else heap_delete_max_repr d (Internal left x Leaf) (keys_of_tree (Internal left x Leaf))
 #pop-options
 
-let rec find_max_mem_keys (kopt:option key_t) (q:list tree)
+let rec find_max_mem_keys (kopt:option key_t) (q:forest)
   : Lemma
       (ensures
          find_max kopt q == kopt \/
@@ -602,7 +604,7 @@ let rec find_max_mem_keys (kopt:option key_t) (q:list tree)
       let k = if k' < k then k else k' in
       find_max_mem_keys (Some k) q
 
-let rec find_max_is_max (d:pos) (kopt:option key_t) (q:list tree)
+let rec find_max_is_max (d:pos) (kopt:option key_t) (q:forest)
   : Lemma
       (requires
          is_binomial_queue d q /\
