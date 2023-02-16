@@ -18,8 +18,8 @@
 
 module BinomialQueue
 
-/// This module provides an implementation for mergable priority queues
-///   using binomial queues.
+/// This module provides an implementation for priority queues
+///   using binomial queues that maintain a forest of power-of-2 heaps.
 ///
 /// See https://www.cs.princeton.edu/~appel/BQ.pdf
 ///   for background on binomial queues.
