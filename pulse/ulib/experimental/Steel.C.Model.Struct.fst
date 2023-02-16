@@ -689,6 +689,7 @@ let substruct_composable
 
 let substruct_pts_to_intro
   (#opened: _)
+  (#base: Type)
   (#a: eqtype)
   (#b: a -> Type)
   (p:(k: a -> pcm (b k)))
@@ -698,7 +699,7 @@ let substruct_pts_to_intro
   (inj: (a' -> a))
   (surj: (a -> option a'))
   (sq: squash (is_substruct p p' inj surj))
-  (r: ref (prod_pcm p))
+  (r: ref base (prod_pcm p))
   (f: restricted_t a b)
 : A.SteelGhostT unit opened
     (pts_to r f)
@@ -712,6 +713,7 @@ let substruct_pts_to_intro
 
 let substruct_pts_to_elim
   (#opened: _)
+  (#base: Type)
   (#a: eqtype)
   (#b: a -> Type)
   (p:(k: a -> pcm (b k)))
@@ -721,7 +723,7 @@ let substruct_pts_to_elim
   (inj: (a' -> a))
   (surj: (a -> option a'))
   (sq: squash (is_substruct p p' inj surj))
-  (r: ref (prod_pcm p))
+  (r: ref base (prod_pcm p))
   (f: restricted_t a b)
   (g': restricted_t a' b')
 : A.SteelGhost (Ghost.erased (restricted_t a b)) opened
@@ -740,7 +742,7 @@ let substruct_pts_to_elim
   let g = substruct_to_struct_f p p' inj surj sq g' in
   let res = Ghost.hide (op (prod_pcm p) f g) in
   unfocus (r `ref_focus` _) r (substruct p p' inj surj sq) _;
-  gather r f _;
+  let _ = gather r f _ in
   A.change_equal_slprop
     (pts_to r _)
     (pts_to r res);
@@ -809,7 +811,7 @@ let struct_peel (#a:eqtype) (#b: a -> Type u#b) (p:(k:a -> pcm (b k))) (k:a)
 let g_addr_of_struct_field
   (#opened: _)
   (#base:Type) (#a:eqtype) (#b: a -> Type u#b) (#p:(k:a -> pcm (b k)))
-  (r: ref (prod_pcm p)) (k:a)
+  (r: ref base (prod_pcm p)) (k:a)
   (xs: Ghost.erased (restricted_t a b))
 : A.SteelGhostT unit opened
     (r `pts_to` xs)
@@ -877,13 +879,13 @@ let unaddr_of_struct_field
   (#base:Type) (#a:eqtype) (#b: a -> Type u#b) (#p:(k:a -> pcm (b k))) (k:a)
   (r': ref base (p k)) (r: ref base (prod_pcm p))
   (xs: Ghost.erased (restricted_t a b)) (x: Ghost.erased (b k))
-: Steel unit
+: A.SteelGhost unit opened
     ((r `pts_to` xs) `star` (r' `pts_to` x))
     (fun s -> r `pts_to` struct_with_field p k x xs)
-    (requires fun _ -> r' == ref_focus r (struct_field p k) /\ xs k == one (p k))
+    (requires fun _ -> r' == ref_focus r (struct_field p k) /\ Ghost.reveal xs k == one (p k))
     (ensures fun _ _ _ -> True)
 = unfocus r' r (struct_field p k) x;
-  gather r xs (field_to_struct_f p k x);
+  let _ = gather r xs (field_to_struct_f p k x) in
   struct_unpeel p k x xs;
   A.change_equal_slprop (r `pts_to` _) (r `pts_to` _)
 

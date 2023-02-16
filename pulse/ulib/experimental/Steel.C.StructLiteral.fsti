@@ -1,6 +1,6 @@
 module Steel.C.StructLiteral
 
-#set-options "--z3rlimit 50"
+#set-options "--z3rlimit 50 --ide_id_info_off"
 
 open Steel.Memory
 open Steel.Effect
@@ -265,6 +265,7 @@ val extract_field_unextracted'
     (fst (extract_field tag fields excluded field v) `struct_get` field' == v `struct_get` field'))
     [SMTPat (extract_field tag fields excluded field v)]
 
+(*
 val addr_of_struct_field_ref
   (#tag: Type0) (#fields: c_fields) (#excluded: excluded_fields)
   (field: field_of fields)
@@ -468,3 +469,4 @@ let unaddr_of_struct_field
 =
 //let unaddr_of_struct_field #a #tag #fields #excluded field p q =
   unaddr_of_struct_field_ref' field p q
+

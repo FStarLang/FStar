@@ -1327,6 +1327,8 @@ let array_as_ref_split_right
   array_conn_compose t (array__base_len x) (array__from x) (array__to x) i (len x);
   Steel.C.Model.Ref.ref_focus_comp (array__base_ref x) (array_as_ref_conn x) (array_conn t (len x) i (len x) ())
 
+#restart-solver
+assume
 val split_ (#opened: _) (#base: Type) (#t:Type) (a:array base t) (i:size_t)
   : SteelGhost (array base t `gpair` array base t) opened
           (varray a)
@@ -1343,8 +1345,10 @@ val split_ (#opened: _) (#base: Type) (#t:Type) (a:array base t) (i:size_t)
           )
 
 #pop-options
+
 #push-options "--z3rlimit 128"
 
+(*
 #restart-solver
 let split_
   #j #base #t x i
@@ -1459,6 +1463,7 @@ let split_
     (varray xr)
     (varray (GPair?.snd res));
   res
+*)
 
 let split'
   #_ #_ #t a i
@@ -1545,7 +1550,7 @@ let g_ref_of_array'_correct
 
 let get_pts_to
   (#inames: _)
-  (#a: Type u#0) (#b: Type u#b) (#p: Steel.C.PCM.pcm b)
+  (#a: Type u#0) (#b: Type u#b) (#p: Steel.C.Model.PCM.pcm b)
   (r: Steel.C.Model.Ref.ref a p) (v: Ghost.erased b)
 : SteelGhost (Ghost.erased b) inames
     (Steel.C.Model.Ref.pts_to r v)
@@ -1585,7 +1590,7 @@ let ref_of_array_ghost #inames #base #t x sq =
   in
   assert (len x == one_size);
   let z : array_domain t one_size = zero_size in
-  assert (Ghost.reveal v `feq` (array_as_one_ref_conn base t).Steel.C.Model.Connection.conn_small_to_large.Steel.C.Connection.morph (Ghost.reveal v z));
+  assert (Ghost.reveal v `feq` (array_as_one_ref_conn base t).Steel.C.Model.Connection.conn_small_to_large.Steel.C.Model.Connection.morph (Ghost.reveal v z));
   Steel.C.Model.Ref.gfocus
     #base
     #(array_pcm_carrier t (len x))
