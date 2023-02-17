@@ -1097,23 +1097,6 @@ let built_in_primitive_steps : prim_step_set =
             (fun body -> body)
             (fun _us _t body -> Some body)
     in
-    (* `seal x` is really `x` *)
-    let seal =
-      PC.seal,
-      2,
-      1,
-      (fun _psc _norm_cb _us [_; (x, _)] -> Some x),
-      (fun _us [_; (x, _)] -> Some x)
-    in
-    (* FStar.Sealed.bind is just function application. *)
-    let sealed_bind =
-      PC.seal,
-      4,
-      2,
-      (fun _psc _norm_cb _us [_; _; (x, _); (f, _)] -> Some (U.mk_app f [S.as_arg x])),
-      (fun _us [_; _; (x, _); (f, _)] -> Some (NBE.iapp_cb bogus_cbs f [(x, None)]))
-    in
-    let sealed_ops = [seal; sealed_bind] in
     let array_ops =
       let of_list_op =
         let emb_typ t = ET_app(PC.immutable_array_t_lid |> Ident.string_of_lid, [t]) in
@@ -1218,7 +1201,7 @@ let built_in_primitive_steps : prim_step_set =
     in
     let strong_steps =
       List.map (as_primitive_step true)
-               (basic_ops@bounded_arith_ops@[reveal_hide]@array_ops@sealed_ops)
+               (basic_ops@bounded_arith_ops@[reveal_hide]@array_ops)
     in
     let weak_steps   = List.map (as_primitive_step false) weak_ops in
     prim_from_list <| (strong_steps @ weak_steps)

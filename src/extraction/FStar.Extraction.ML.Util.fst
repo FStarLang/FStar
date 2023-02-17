@@ -491,7 +491,7 @@ let interpret_plugin_as_term_fun (env:UEnv.uenv) (fv:fv) (t:typ) (arity_opt:opti
               (PC.norm_step_lid, 0, "norm_step"), Syntax_term;
               (PC.list_lid, 1, "list"), Syntax_term;
               (PC.option_lid, 1, "option"), Syntax_term;
-              (PC.sealed_, 1, "sealed"), Syntax_term;              
+              (PC._sealed_lid, 1, "sealed"), Syntax_term;
               (PC.mk_tuple_lid 2 Range.dummyRange, 2, "tuple2"), Syntax_term;
               (RC.fstar_refl_types_lid "term", 0, "term"), Refl_emb;
               (RC.fstar_refl_types_lid "sigelt", 0, "sigelt"), Refl_emb;

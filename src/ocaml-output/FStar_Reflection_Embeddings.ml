@@ -1439,8 +1439,9 @@ let (e_bv_view :
     let uu___ =
       let uu___1 =
         let uu___2 =
-          embed FStar_Syntax_Embeddings.e_string rng
-            bvv.FStar_Reflection_Data.bv_ppname in
+          let uu___3 =
+            FStar_Syntax_Embeddings.e_sealed FStar_Syntax_Embeddings.e_string in
+          embed uu___3 rng bvv.FStar_Reflection_Data.bv_ppname in
         FStar_Syntax_Syntax.as_arg uu___2 in
       let uu___2 =
         let uu___3 =
@@ -1474,7 +1475,11 @@ let (e_bv_view :
              FStar_Syntax_Syntax.fv_eq_lid fv
                FStar_Reflection_Constants.ref_Mk_bv.FStar_Reflection_Constants.lid
              ->
-             let uu___5 = unembed' w FStar_Syntax_Embeddings.e_string nm in
+             let uu___5 =
+               let uu___6 =
+                 FStar_Syntax_Embeddings.e_sealed
+                   FStar_Syntax_Embeddings.e_string in
+               unembed' w uu___6 nm in
              FStar_Compiler_Util.bind_opt uu___5
                (fun nm1 ->
                   let uu___6 = unembed' w FStar_Syntax_Embeddings.e_int idx in
