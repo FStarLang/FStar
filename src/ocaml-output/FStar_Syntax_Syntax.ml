@@ -2189,6 +2189,13 @@ let (t_either_of : term -> term -> term) =
         let uu___2 = as_arg t1 in
         let uu___3 = let uu___4 = as_arg t2 in [uu___4] in uu___2 :: uu___3 in
       mk_Tm_app uu___ uu___1 FStar_Compiler_Range.dummyRange
+let (t_sealed_of : term -> term) =
+  fun t ->
+    let uu___ =
+      let uu___1 = tabbrev FStar_Parser_Const.sealed in
+      mk_Tm_uinst uu___1 [U_zero] in
+    let uu___1 = let uu___2 = as_arg t in [uu___2] in
+    mk_Tm_app uu___ uu___1 FStar_Compiler_Range.dummyRange
 let (unit_const_with_range : FStar_Compiler_Range.range -> term) =
   fun r -> mk (Tm_constant FStar_Const.Const_unit) r
 let (unit_const : term) =
