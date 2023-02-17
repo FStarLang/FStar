@@ -71,13 +71,14 @@ let try_readback_st_comp
          | [res; pre; post] ->
            (match inspect_ln (fst post) with
             | Tv_Abs b body ->
-              let bv, (aq, attrs) = inspect_binder b in    
-              RT.pack_inspect_binder b;  // This does not have SMTPat
+              let { binder_bv=bv; binder_qual=aq; binder_attrs=attrs } =
+                  inspect_binder b
+              in    
               let bv_view = inspect_bv bv in
               assume (fv == stt_fv);
               assume (aq == Q_Explicit           /\
                       attrs == []                /\
-                      bv_view.bv_ppname == "_"   /\
+                      // bv_view.bv_ppname == "_"   /\
                       bv_view.bv_index == 0      /\
                       bv_view.bv_sort == fst res /\
                       snd res == Q_Explicit      /\
@@ -100,8 +101,9 @@ let try_readback_st_comp
          | [res; opened; pre; post] ->
            (match inspect_ln (fst post) with
             | Tv_Abs b body ->
-              let bv, (aq, attrs) = inspect_binder b in    
-              RT.pack_inspect_binder b;  // This does not have SMTPat
+              let { binder_bv=bv; binder_qual=aq; binder_attrs=attrs }
+                  = inspect_binder b
+              in    
               let bv_view = inspect_bv bv in
               let l = [fst res; fst opened; fst pre; mk_abs (fst res) R.Q_Explicit body] in
               let? u'' = readback_universe u in
@@ -247,7 +249,9 @@ let rec readback_ty (t:R.term)
   | Tv_Abs _ _ -> T.fail "readback_ty: unexpected Tv_Abs"
 
   | Tv_Arrow b c -> (
-    let bv, (aq, attrs) = inspect_binder b in
+    let { binder_bv=bv; binder_qual=aq; binder_attrs=attrs } =
+        inspect_binder b
+    in
     assume (attrs == []);
     match aq with
     | R.Q_Meta _ -> None
@@ -255,7 +259,7 @@ let rec readback_ty (t:R.term)
       let q = readback_qual aq in
       RT.pack_inspect_binder b;  // This does not have SMTPat
       let bv_view = inspect_bv bv in
-      assume (bv_view.bv_ppname == "_" /\ bv_view.bv_index == 0);
+      assume (bv_view.bv_index == 0);
       let c_view = inspect_comp c in
       (match c_view with
        | C_Total c_t ->
@@ -287,7 +291,7 @@ let rec readback_ty (t:R.term)
     else begin
       assume (attrs == []);
       let bv_view = inspect_bv bv in
-      assume (bv_view.bv_ppname == "_" /\ bv_view.bv_index == 0);
+      assume (bv_view.bv_index == 0);
       let? bv_t' = readback_ty bv_view.bv_sort in
       let? def' = readback_ty def in
       let? body' = readback_ty body in
