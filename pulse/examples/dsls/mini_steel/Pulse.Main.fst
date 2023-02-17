@@ -238,14 +238,14 @@ let rec translate_term' (g:RT.fstar_top_env) (t:R.term)
       let? b, q = transate_binder x in
       let aux () = 
         let? body = translate_term g body in
-        Inl (Tm_Abs b q Tm_Emp body None)
+        Inl (Tm_Abs b q (Some Tm_Emp) body None)
       in
       match R.inspect_ln body with
       | R.Tv_AscribedT body t None false -> (
         match? readback_comp t with
         | C_ST st ->
           let? body = translate_st_term g body in
-          Inl (Tm_Abs b q st.pre body (Some st.post))
+          Inl (Tm_Abs b q (Some st.pre) body (Some st.post))
         | _ -> 
           aux ()
       )
@@ -267,7 +267,7 @@ let rec translate_term' (g:RT.fstar_top_env) (t:R.term)
                   unexpected_term "'provides' should be an abstraction" provides_arg
               in
               let? body = translate_st_term g body in
-              Inl (Tm_Abs b q pre body (Some post))
+              Inl (Tm_Abs b q (Some pre) body (Some post))
             
             | _ -> aux ()
           )
@@ -275,7 +275,7 @@ let rec translate_term' (g:RT.fstar_top_env) (t:R.term)
           | [(expects_arg, _); (body, _)] -> (  
             let? pre = readback_ty expects_arg in
             let? body = translate_st_term g body in
-            Inl (Tm_Abs b q pre body None)
+            Inl (Tm_Abs b q (Some pre) body None)
           )
 
           | _ -> aux ()

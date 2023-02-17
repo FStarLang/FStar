@@ -354,7 +354,7 @@ and elab_src_typing
   = match d with
     | T_Tot _ _ _ _ -> elab_pure t
 
-    | T_Abs _ ppname x qual ty _u body _ _ _ ty_typing body_typing ->
+    | T_Abs _ ppname x qual ty _u body _c ty_typing body_typing ->
       let ty = elab_pure ty in
       let body = elab_src_typing body_typing in
       mk_abs_with_name ppname ty (elab_qual qual) (RT.close_term body x) //this closure should be provably redundant by strengthening the conditions on x
@@ -388,7 +388,7 @@ and elab_src_typing
       let e = elab_src_typing e_typing in
       elab_lift lc e
 
-    | T_If _ b _ _ _ _ _ _ e1_typing e2_typing ->
+    | T_If _ b _ _ _ _ _ e1_typing e2_typing ->
       let rb = elab_pure b in
       let re1 = elab_src_typing e1_typing in
       let re2 = elab_src_typing e2_typing in

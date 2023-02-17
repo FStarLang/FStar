@@ -122,7 +122,7 @@ let if_soundness
                     (elab_src_typing d)
                     (elab_pure_comp c)) =
 
-  let T_If _ b e1 e2 _ _ hyp b_typing e1_typing e2_typing = d in
+  let T_If _ b e1 e2  _ hyp b_typing e1_typing e2_typing = d in
   let rb_typing : RT.typing (extend_env_l f g)
                             (elab_pure b)
                             RT.bool_ty =
@@ -185,7 +185,7 @@ let rec soundness (f:stt_env)
 
     | T_Tot _ _ _ d -> d
 
-    | T_Abs _ ppname x q ty u body c hint _ t_typing body_typing ->
+    | T_Abs _ ppname x q ty u body c t_typing body_typing ->
       mk_t_abs q ppname t_typing body_typing    
 
     | T_STApp _ _ _ _ _ _ _ _ _ ->
@@ -252,7 +252,7 @@ let rec soundness (f:stt_env)
       let e_typing = soundness _ _ _ _ e_typing in
       Return.elab_return_noeq_typing t_typing e_typing
 
-    | T_If _ _ _ _ _ _ _ _ _ _ ->
+    | T_If _ _ _ _ _ _ _ _ _ ->
       if_soundness _ _ _ _ d soundness
 
     | T_ElimExists _ _ _ _ _ _

@@ -52,10 +52,8 @@ let rec term_to_string (t:term)
       sprintf "(fun (%s%s) {%s} {_.%s} -> %s)"
               (qual_to_string q)
               (binder_to_string b)
-              (term_to_string pre_hint)
-              (match post with
-               | None -> "<none>"
-               | Some post -> sprintf "%s" (term_to_string post))
+              (term_opt_to_string pre_hint)
+              (term_opt_to_string post)
               (term_to_string body)
 
     | Tm_PureApp head q arg ->
@@ -164,3 +162,9 @@ and comp_to_string (c:comp)
               (term_to_string s.res)
               (term_to_string s.pre)
               (term_to_string s.post)
+
+and term_opt_to_string (t:option term)
+  : T.Tac string
+  = match t with
+    | None -> ""
+    | Some t -> term_to_string t

@@ -341,11 +341,9 @@ type src_typing (f:RT.fstar_top_env) : env -> term -> pure_comp -> Type =
       u:universe ->
       body:term ->
       c:pure_comp ->
-      pre_hint:vprop ->
-      post_hint:option vprop ->
       tot_typing f g ty (Tm_Type u) ->
       src_typing f ((x, Inl ty)::g) (open_term body x) c ->
-      src_typing f g (Tm_Abs {binder_ty=ty;binder_ppname=ppname} q pre_hint body post_hint)
+      src_typing f g (Tm_Abs {binder_ty=ty;binder_ppname=ppname} q None body None)
                      (C_Tot (Tm_Arrow {binder_ty=ty;binder_ppname=ppname} q (close_pure_comp c x)))
   
   | T_STApp :
@@ -406,13 +404,12 @@ type src_typing (f:RT.fstar_top_env) : env -> term -> pure_comp -> Type =
       b:pure_term -> 
       e1:term ->
       e2:term ->
-      post:option vprop ->
       c:pure_comp_st ->
       hyp:var { None? (lookup g hyp) } ->
       tot_typing f g b tm_bool ->
       src_typing f ((hyp, Inl (mk_eq2 U_zero tm_bool b tm_true)) :: g) e1 c ->
       src_typing f ((hyp, Inl (mk_eq2 U_zero tm_bool b tm_false)) :: g) e2 c ->
-      src_typing f g (Tm_If b e1 e2 post) c
+      src_typing f g (Tm_If b e1 e2 None) c
 
   | T_Frame:
       g:env ->

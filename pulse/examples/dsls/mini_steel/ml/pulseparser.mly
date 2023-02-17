@@ -73,7 +73,7 @@
       let t = Tm_Abs
                 (b,
                  q,
-                 close_term pre b_index,
+                 (Some (close_term pre b_index)),
                  close_term body b_index,
                  (match post_opt with
                   | None -> None
@@ -81,7 +81,7 @@
                     Some (close_term' post b_index (Z.of_int 1)))) in
       List.fold_right (fun (q, b) t ->
                         let t = close_term t (lookup_var_index b.binder_ppname) in
-                        Tm_Abs (b, q, Tm_Emp, t, None)) bs t
+                        Tm_Abs (b, q, Some Tm_Emp, t, None)) bs t
 
     let mk_pure_app (head:term) (l:(qualifier option * term) list) : term =
       match l with
@@ -177,7 +177,7 @@ lambda:
     {
       let q, b = b in
       let e = close_term e (lookup_var_index b.binder_ppname) in
-      Tm_Abs (b, q, Tm_Emp, e, None)
+      Tm_Abs (b, q, Some Tm_Emp, e, None)
     }
 
   | FUN bs=binders pre=requires RARROW e=expr

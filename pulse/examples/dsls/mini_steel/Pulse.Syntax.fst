@@ -60,7 +60,7 @@ type term =
   | Tm_UInst      : l:R.name -> us:list universe -> term
   | Tm_Constant   : c:constant -> term
   | Tm_Refine     : b:binder -> term -> term
-  | Tm_Abs        : b:binder -> q:option qualifier -> pre:vprop -> body:term -> post:option vprop -> term
+  | Tm_Abs        : b:binder -> q:option qualifier -> pre:option vprop -> body:term -> post:option vprop -> term
   | Tm_PureApp    : head:term -> arg_qual:option qualifier -> arg:term -> term
   | Tm_Let        : t:term -> e1:term -> e2:term -> term  
   | Tm_STApp      : head:term -> arg_qual:option qualifier -> arg:term -> term  
@@ -122,7 +122,7 @@ let rec freevars (t:term)
     | Tm_Abs b _ pre_hint body post_hint ->
       Set.union (freevars b.binder_ty) 
                 (Set.union (freevars body)
-                           (Set.union (freevars pre_hint)
+                           (Set.union (freevars_opt pre_hint)
                                       (freevars_opt post_hint)))
     | Tm_PureApp t1 _ t2
     | Tm_STApp t1 _ t2
@@ -182,7 +182,7 @@ let rec ln' (t:term) (i:int) =
   | Tm_Abs b _ pre_hint body post ->
     ln' b.binder_ty i &&
     ln' body (i + 1) &&
-    ln' pre_hint (i + 1) &&
+    ln'_opt pre_hint (i + 1) &&
     ln'_opt post (i + 2)
 
   | Tm_STApp t1 _ t2
@@ -268,7 +268,7 @@ let rec open_term' (t:term) (v:term) (i:index)
 
     | Tm_Abs b q pre_hint body post ->
       Tm_Abs {b with binder_ty=open_term' b.binder_ty v i} q
-             (open_term' pre_hint v (i + 1))
+             (open_term_opt' pre_hint v (i + 1))
              (open_term' body v (i + 1))
              (open_term_opt' post v (i + 2))
 
@@ -376,7 +376,7 @@ let rec close_term' (t:term) (v:var) (i:index)
 
     | Tm_Abs b q pre_hint body post ->
       Tm_Abs {b with binder_ty=close_term' b.binder_ty v i} q
-             (close_term' pre_hint v (i + 1))
+             (close_term_opt' pre_hint v (i + 1))
              (close_term' body v (i + 1))
              (close_term_opt' post v (i + 2))
 
@@ -534,7 +534,7 @@ let rec close_open_inverse' (t:term)
     | Tm_Abs b _q pre body post ->
       close_open_inverse' b.binder_ty x i;
       close_open_inverse' body x (i + 1);
-      close_open_inverse' pre x (i + 1);
+      close_open_inverse_opt' pre x (i + 1);
       close_open_inverse_opt' post x (i + 2)
     
     | Tm_PureApp l _ r
@@ -707,7 +707,7 @@ let rec eq_tm (t1 t2:term)
     | Tm_Abs b1 o1 p1 t1 q1, Tm_Abs b2 o2 p2 t2 q2 ->
       eq_tm b1.binder_ty b2.binder_ty &&
       o1=o2 &&
-      eq_tm p1 p2 &&
+      eq_tm_opt p1 p2 &&
       eq_tm t1 t2 &&
       eq_tm_opt q1 q2
     | Tm_PureApp h1 o1 t1, Tm_PureApp h2 o2 t2

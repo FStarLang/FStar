@@ -85,7 +85,10 @@ let check_abs
     let (| u, t_typing |) = check_universe f g t in //then check that its universe ... We could collapse the two calls
     let x = fresh g in
     let g' = (x, Inl t) :: g in
-    let pre_opened = open_term pre_hint x in
+    let pre_opened = 
+      match pre_hint with
+      | None -> T.fail "Cannot typecheck an function without a precondition"
+      | Some pre_hint -> open_term pre_hint x in
     match check_tot true f g' pre_opened with
     | (| pre_opened, Tm_VProp, pre_typing |) ->
       let pre = close_term pre_opened x in
@@ -101,9 +104,9 @@ let check_abs
       let body_closed = close_term body' x in
       assume (open_term body_closed x == body');
 
-      let tt = T_Abs g ppname x qual t u body_closed c_body pre_hint post_hint t_typing body_typing in
+      let tt = T_Abs g ppname x qual t u body_closed c_body t_typing body_typing in
       let tres = Tm_Arrow {binder_ty=t;binder_ppname=ppname} qual (close_comp c_body x) in
-      (| Tm_Abs {binder_ty=t;binder_ppname=ppname} qual pre_hint body_closed post_hint, 
+      (| Tm_Abs {binder_ty=t;binder_ppname=ppname} qual None body_closed None, 
          C_Tot tres,
          tt |)
     | _ -> T.fail "bad hint"
@@ -234,9 +237,9 @@ let check_if (f:RT.fstar_top_env)
       (| e2, c2, e2_typing |) in
     let (| c, e1_typing, e2_typing |) =
       combine_if_branches _ _ _ _ e1_typing _ _ _ e2_typing in
-    (| Tm_If b e1 e2 (Some post),
+    (| Tm_If b e1 e2 None,
        c,
-       T_If g b e1 e2 (Some post) c hyp (E b_typing) e1_typing e2_typing |)
+       T_If g b e1 e2 c hyp (E b_typing) e1_typing e2_typing |)
 
 #push-options "--print_implicits --print_universes --print_full_names"
 let rec check' : bool -> check_t =
