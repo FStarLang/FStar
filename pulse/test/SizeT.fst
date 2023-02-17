@@ -28,6 +28,7 @@ open Steel.Array
 let main () : SteelT Int32.t emp (fun _ -> emp) =
   let x = f () in
   let _:squash (fits_u32) = intro_fits_u32 () in
+  let _ = intro_fits_ptrdiff32 () in
   let y = of_u32 500000ul in
   let r = 4000ul in
   let r = uint32_to_sizet r in
