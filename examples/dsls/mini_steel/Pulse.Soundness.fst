@@ -183,6 +183,7 @@ let bind_soundness
   = let T_Bind _ e1 e2 c1 c2 x c e1_typing t_typing e2_typing bc = d in
     LN.src_typing_ln e1_typing;
     LN.src_typing_ln e2_typing;      
+    LN.src_typing_freevars_inv e1_typing x;
     let r1_typing
       : RT.typing _ _ (elab_pure_comp c1)
       = soundness _ _ _ _ e1_typing
@@ -191,7 +192,6 @@ let bind_soundness
       : RT.typing _ _ (elab_pure (Tm_Arrow (null_binder (comp_res c1)) None (close_pure_comp c2 x)))
       = mk_t_abs None _ t_typing e2_typing
     in
-    assume (~ (x `Set.mem` freevars_comp c1));
     match bc with
     | Bind_comp _ _ _ _ t2_typing y post2_typing ->
          Bind.elab_bind_typing f g _ _ _ x _ r1_typing _ r2_typing bc 
