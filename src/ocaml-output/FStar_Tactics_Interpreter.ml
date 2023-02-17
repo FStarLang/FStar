@@ -432,10 +432,13 @@ let (uu___156 : unit) =
   let uu___ =
     let uu___1 =
       let uu___2 =
+        let uu___3 =
+          FStar_Syntax_Embeddings.e_sealed FStar_Syntax_Embeddings.e_any in
+        let uu___4 =
+          FStar_TypeChecker_NBETerm.e_sealed FStar_TypeChecker_NBETerm.e_any in
         FStar_Tactics_InterpFuns.mk_tac_step_2 Prims.int_one "unseal" unseal
-          FStar_Syntax_Embeddings.e_any FStar_Syntax_Embeddings.e_any
-          FStar_Syntax_Embeddings.e_any unseal
-          FStar_TypeChecker_NBETerm.e_any FStar_TypeChecker_NBETerm.e_any
+          FStar_Syntax_Embeddings.e_any uu___3 FStar_Syntax_Embeddings.e_any
+          unseal FStar_TypeChecker_NBETerm.e_any uu___4
           FStar_TypeChecker_NBETerm.e_any in
       let uu___3 =
         let uu___4 =

@@ -346,69 +346,6 @@ and open_or_close_match_returns' (m:match_returns_ascription) (v:open_or_close) 
     in
     b, (ret, as_, eq)
 
-let binder_of_t_q t q = mk_binder (Sealed.seal "_") 0 t q
-let mk_abs ty qual t : R.term =  R.pack_ln (R.Tv_Abs (binder_of_t_q ty qual) t)
-val ins_binder : b:binder -> bv:binder_view
-val pk_binder : b:binder_view -> binder
-
-val ins_pk_binder (bview:R.binder_view)
-  : Lemma (ensures ins_binder (pk_binder bview) == bview)
-          [SMTPat (ins_binder (pk_binder bview))]
-
-let test0 (bview:R.binder_view) =
-  assert (ins_binder (pk_binder bview) == bview)
-
-let test1 (bv:R.bv) (q:R.aqualv) (attrs:list R.term) =
-  assert (ins_binder (pk_binder { binder_bv = bv; binder_qual = q; binder_attrs = attrs }) == 
-                                { binder_bv = bv; binder_qual = q; binder_attrs = attrs })
-
-#push-options "--fuel 0 --ifuel 0"
-let test2 (bv_ppname: Sealed.sealed string) (bv_index:R.var) (bv_sort:R.term) =
-  assert (inspect_bv (pack_bv { bv_ppname; bv_index; bv_sort }) == { bv_ppname; bv_index; bv_sort })
-
-let test () = 
-  assert_norm (Sealed.seal "a" =!= Sealed.seal "b"); admit();
-  assert false
-  
-let test3 (bv_index:R.var) (bv_sort:R.term) =
-  let bv_ppname : Sealed.sealed string = Sealed.seal "_" in
-  assert (inspect_bv (pack_bv { bv_ppname; bv_index; bv_sort }) == { bv_ppname; bv_index; bv_sort })
-  
-  assert (ins_binder (pk_binder { binder_bv = pack_bv { bv_ppname; bv_index; bv_sort }; binder_qual = q; binder_attrs = attrs }) == 
-                                { binder_bv = pack_bv { bv_ppname; bv_index; bv_sort }; binder_qual = q; binder_attrs = attrs })
-
-
-let open_or_close_abs (t0 t1:R.term) (oc:open_or_close) (n:nat)
-  :  Lemma (open_or_close_term' (mk_abs t0 R.Q_Explicit t1) oc n ==
-            mk_abs (open_or_close_term' t0 oc n)
-                   R.Q_Explicit
-                   (open_or_close_term' t1 oc (n + 1)))
-  = let b = binder_of_t_q t0 R.Q_Explicit in
-    calc (==) {
-      ins_binder (pk_binder { binder_bv=pack_bv ({ bv_ppname = Sealed.seal "_"; bv_index=0; bv_sort=t0});
-                              binder_qual = R.Q_Explicit;
-                              binder_attrs = [] });
-     (==) { ins_pk_binder { binder_bv=pack_bv ({ bv_ppname = Sealed.seal "_"; bv_index=0; bv_sort=t0});
-                            binder_qual = R.Q_Explicit;
-                            binder_attrs = [] }
-          }
-     { binder_bv=pack_bv ({ bv_ppname = Sealed.seal "_"; bv_index=0; bv_sort=t0});
-       binder_qual = R.Q_Explicit;
-       binder_attrs = [] };     
-    };
-    admit()
-    let b' = inspect_binder b in
-    assert (b'.binder_bv.bv_sort ==  t0);
-    admit()
-    calc (==) {
-         open_or_close_binder' b oc n;
-    (==) {}
-         pack_binder { binder_bv = open_or_close_binder' b oc n;
-    };
-    admit()
-            binder_of_t_q (open_or_close_term' t0 oc n) R.Q_Explicit);
-    admit()
-
 val open_with (t:term) (v:term) : term
   
 val open_with_spec (t v:term)

@@ -348,7 +348,7 @@ and open_term_opt' (t:option term) (v:term) (i:index)
     | Some t -> Some (open_term' t v i)
     
 let open_term t v =
-  open_term' t (Tm_Var {nm_ppname=Un.return "_";nm_index=v}) 0
+  open_term' t (Tm_Var {nm_ppname=Sealed.seal "_";nm_index=v}) 0
 let open_comp_with (c:comp) (x:term) = open_comp' c x 0
 
 let rec close_term' (t:term) (v:var) (i:index)
@@ -503,7 +503,7 @@ let comp_inames (c:comp { C_STAtomic? c \/ C_STGhost? c }) : term =
   | C_STAtomic inames _
   | C_STGhost inames _ -> inames
 
-let term_of_var (x:var) = Tm_Var { nm_ppname=Un.return "_"; nm_index=x}
+let term_of_var (x:var) = Tm_Var { nm_ppname=Sealed.seal "_"; nm_index=x}
 
 let rec close_open_inverse' (t:term) 
                             (x:var { ~(x `Set.mem` freevars t) } )
@@ -608,17 +608,17 @@ let close_open_inverse (t:term) (x:var { ~(x `Set.mem` freevars t) } )
   = close_open_inverse' t x 0
 
 let null_binder (t:term) : binder =
-    {binder_ty=t;binder_ppname=Un.return "_"}
+    {binder_ty=t;binder_ppname=Sealed.seal "_"}
 
 let mk_binder (s:string) (t:term) : binder =
-  {binder_ty=t;binder_ppname=Un.return s}
+  {binder_ty=t;binder_ppname=Sealed.seal s}
 
 let mk_bvar (s:string) (i:index) : term =
-  Tm_BVar {bv_index=i;bv_ppname=Un.return s}
+  Tm_BVar {bv_index=i;bv_ppname=Sealed.seal s}
 
-let null_var (v:var) : term = Tm_Var {nm_index=v;nm_ppname=Un.return "_"}
+let null_var (v:var) : term = Tm_Var {nm_index=v;nm_ppname=Sealed.seal "_"}
 
-let null_bvar (i:index) : term = Tm_BVar {bv_index=i;bv_ppname=Un.return "_"}
+let null_bvar (i:index) : term = Tm_BVar {bv_index=i;bv_ppname=Sealed.seal "_"}
 
 let gen_uvar (t:term) : T.Tac term =
   Tm_UVar (T.fresh ())

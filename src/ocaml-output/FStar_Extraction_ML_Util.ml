@@ -1006,8 +1006,8 @@ let (interpret_plugin_as_term_fun :
                                     uu___12 :: uu___13 in
                                   uu___10 :: uu___11 in
                                 uu___8 :: uu___9 in
-                              ((FStar_Parser_Const.sealed_, Prims.int_one,
-                                 "sealed"), Syntax_term)
+                              ((FStar_Parser_Const._sealed_lid,
+                                 Prims.int_one, "sealed"), Syntax_term)
                                 :: uu___7 in
                             ((FStar_Parser_Const.option_lid, Prims.int_one,
                                "option"), Syntax_term)
