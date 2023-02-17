@@ -903,30 +903,31 @@ let compare_issues i1 i2 =
 
 let mk_default_handler print =
     let issues : ref (list issue) = BU.mk_ref [] in
+    (* This number may be greater than the amount of 'EErrors'
+     * in the list above due to errors that were immediately
+     * printed (if debug_any()) *)
+    let err_count : ref int = BU.mk_ref 0 in
+
     let add_one (e: issue) =
+        (if e.issue_level = EError then
+           err_count := 1 + !err_count);
         begin match e.issue_level with
           | EInfo -> print_issue e
+          | _ when print && Options.debug_any () -> print_issue e
           | _ -> issues := e :: !issues
         end;
         if Options.defensive_abort () && e.issue_number = Some defensive_errno then
           failwith "Aborting due to --defensive abort";
         ()
     in
-    let count_errors () =
-        List.fold_left (fun n i ->
-          match i.issue_level with
-          | EError -> n + 1
-          | _ -> n)
-          0
-          (!issues)
-    in
+    let count_errors () = !err_count in
     let report () =
         let unique_issues = BU.remove_dups (fun i0 i1 -> i0=i1) !issues in
         let sorted_unique_issues = List.sortWith compare_issues unique_issues in
         if print then List.iter print_issue sorted_unique_issues;
         sorted_unique_issues
     in
-    let clear () = issues := [] in
+    let clear () = issues := []; err_count := 0 in
     { eh_add_one = add_one;
       eh_count_errors = count_errors;
       eh_report = report;
