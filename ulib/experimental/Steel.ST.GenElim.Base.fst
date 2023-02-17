@@ -6,7 +6,7 @@ irreducible let gen_elim_reduce = ()
 let gen_elim_pred
   (enable_nondep_opt: bool)
   (p: vprop)
-  (a: Type0)
+  (a: Type u#1)
   (q: Ghost.erased a -> Tot vprop)
   (post: Ghost.erased a -> Tot prop)
   (ij: (gen_elim_i & gen_elim_nondep_t))

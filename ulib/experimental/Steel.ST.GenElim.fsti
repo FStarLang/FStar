@@ -7,7 +7,7 @@ val gen_elim'
   (#opened: _)
   (enable_nondep_opt: bool)
   (p: vprop)
-  (a: Type0)
+  (a: Type)
   (q: Ghost.erased a -> Tot vprop)
   (post: Ghost.erased a -> Tot prop)
   (sq: squash (gen_elim_prop_placeholder enable_nondep_opt p a q post))
@@ -17,7 +17,7 @@ val gen_elim'
 val gen_elim
   (#opened: _)
   (#[@@@ framing_implicit] p: vprop)
-  (#[@@@ framing_implicit] a: Type0)
+  (#[@@@ framing_implicit] a: Type)
   (#[@@@ framing_implicit] q: Ghost.erased a -> Tot vprop)
   (#[@@@ framing_implicit] post: Ghost.erased a -> Tot prop)
   (#[@@@ framing_implicit] sq: squash (gen_elim_prop_placeholder true p a q post))
@@ -27,7 +27,7 @@ val gen_elim
 val gen_elim_dep
   (#opened: _)
   (#[@@@ framing_implicit] p: vprop)
-  (#[@@@ framing_implicit] a: Type0)
+  (#[@@@ framing_implicit] a: Type)
   (#[@@@ framing_implicit] q: Ghost.erased a -> Tot vprop)
   (#[@@@ framing_implicit] post: Ghost.erased a -> Tot prop)
   (#[@@@ framing_implicit] sq: squash (gen_elim_prop_placeholder false p a q post))
