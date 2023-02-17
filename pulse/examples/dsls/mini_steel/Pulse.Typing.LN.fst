@@ -465,7 +465,23 @@ let rec vprop_equiv_ln (#f:_) (#g:_) (#t0 #t1:_) (v:vprop_equiv f g t0 t1)
       well_typed_terms_are_ln _ _ _ t;
       elab_ln_inverse (mk_vprop_eq t0 t1)
 
-#push-options "--query_stats --fuel 8 --ifuel 8 --z3rlimit_factor 10"
+let st_equiv_ln #f #g #c1 #c2 (d:st_equiv f g c1 c2)
+  : Lemma 
+    (requires ln_c c1)
+    (ensures ln_c c2)
+  = let ST_VPropEquiv _ _ _ x (E dpre) _dres _dpost eq_pre eq_post = d in
+    vprop_equiv_ln eq_pre;
+    open_term_ln'_inv (comp_post c1) (term_of_var x) 0;
+    vprop_equiv_ln eq_post;
+    open_term_ln' (comp_post c2) (term_of_var x) 0
+
+let bind_comp_ln #f #g #x #c1 #c2 #c (d:bind_comp f g x c1 c2 c)
+  : Lemma 
+    (requires ln_c c1 /\ ln_c c2)
+    (ensures ln_c c)
+  = ()
+  
+#push-options "--query_stats --fuel 8 --ifuel 8 --z3rlimit_factor 20"
 let rec src_typing_ln (#f:_) (#g:_) (#t:_) (#c:_)
                       (d:src_typing f g t c)
   : Lemma 
@@ -496,11 +512,12 @@ let rec src_typing_ln (#f:_) (#g:_) (#t:_) (#c:_)
       src_typing_ln d1;
       lift_comp_ln l
 
-    | T_Bind _ _ _ _ _ _ _ d1 (E dc1) d2 bc ->
+    | T_Bind _ _ e2 _ _ x _ d1 (E dc1) d2 bc ->
       src_typing_ln d1;
       src_typing_ln dc1;
       src_typing_ln d2;
-      admit()
+      open_term_ln e2 x;
+      bind_comp_ln bc
 
     | T_If _ _ _ _ _ _ (E tb) d1 d2 ->
       src_typing_ln tb;
@@ -524,15 +541,5 @@ let rec src_typing_ln (#f:_) (#g:_) (#t:_) (#c:_)
     | T_Equiv _ _ _ _ d2 deq ->
       src_typing_ln d2;
       st_equiv_ln deq
-
-and st_equiv_ln #f #g #c1 #c2 (d:st_equiv f g c1 c2)
-  : Lemma 
-    (requires ln_c c1)
-    (ensures ln_c c2)
-    (decreases d)
-  = let ST_VPropEquiv _ _ _ x (E dpre) _dres _dpost eq_pre eq_post = d in
-    vprop_equiv_ln eq_pre;
-    open_term_ln'_inv (comp_post c1) (term_of_var x) 0;
-    vprop_equiv_ln eq_post;
-    open_term_ln' (comp_post c2) (term_of_var x) 0
+#pop-options
     

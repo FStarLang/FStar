@@ -14,6 +14,7 @@ module Lift = Pulse.Soundness.Lift
 module Frame = Pulse.Soundness.Frame
 module STEquiv = Pulse.Soundness.STEquiv
 module Return = Pulse.Soundness.Return
+module LN = Pulse.Typing.LN
 
 let lift_soundness
   (f:stt_env)
@@ -27,15 +28,14 @@ let lift_soundness
                               (elab_src_typing d')
                               (elab_pure_comp c))))            
   : GTot (RT.typing (extend_env_l f g) (elab_src_typing d) (elab_pure_comp c)) =
-
+  LN.src_typing_ln d;
   let T_Lift _ e c1 c2 e_typing lc = d in
+  LN.src_typing_ln e_typing;
   match lc with
   | Lift_STAtomic_ST _ _ ->
-    assume (ln_c c1 /\ ln_c c2);
     Lift.elab_lift_stt_atomic_typing f g
       c1 c2 _ (soundness _ _ _ _ e_typing) lc
   | Lift_STGhost_STAtomic _ _ w ->
-    assume (ln_c c1 /\ ln_c c2);
     let (| reveal_a, reveal_a_typing |) = w in
     Lift.elab_lift_stt_ghost_typing f g
       c1 c2 _ (soundness _ _ _ _ e_typing) lc
@@ -56,7 +56,7 @@ let frame_soundness
 
   let T_Frame _ e c frame frame_typing e_typing = d in
   let r_e_typing = soundness _ _ _ _ e_typing in
-  assume (ln_c c);
+  LN.src_typing_ln e_typing;
   Frame.elab_frame_typing f g _ _ frame frame_typing r_e_typing
 
 let stapp_soundness
@@ -102,7 +102,8 @@ let stequiv_soundness
   : GTot (RT.typing (extend_env_l f g) (elab_src_typing d) (elab_pure_comp c)) =
 
   let T_Equiv _ e c c' e_typing equiv = d in
-  assume (ln_c c /\ ln_c c');
+  LN.src_typing_ln d;
+  LN.src_typing_ln e_typing;
   let r_e_typing = soundness _ _ _ _ e_typing in 
   STEquiv.st_equiv_soundness _ _ _ _ equiv _ r_e_typing
 
@@ -177,6 +178,7 @@ let rec soundness (f:stt_env)
         let r_body_typing = soundness _ _ _ _ body_typing in
         mk_t_abs f g ppname r_t_typing r_body_typing
     in
+    LN.src_typing_ln d;
     match d with
     | T_Lift _ _ _ _ _ _ ->
       lift_soundness _ _ _ _ d soundness
@@ -192,6 +194,8 @@ let rec soundness (f:stt_env)
       stapp_soundness _ _ _ _ d soundness
 
     | T_Bind _ e1 e2 c1 c2 x c e1_typing t_typing e2_typing bc ->
+      LN.src_typing_ln e1_typing;
+      LN.src_typing_ln e2_typing;      
       (match bc with
        | Bind_comp _ _ _ _ t2_typing y post2_typing ->
          let r1_typing
@@ -203,7 +207,6 @@ let rec soundness (f:stt_env)
            = mk_t_abs None _ t_typing e2_typing
          in
          assume (~ (x `Set.mem` freevars_comp c1));
-         assume (ln_c c1 /\ ln_c c2 /\ ln_c c);
          Bind.elab_bind_typing f g _ _ _ x _ r1_typing _ r2_typing bc 
                                (tot_typing_soundness t2_typing)
                                (mk_t_abs_tot _ _ _ t2_typing post2_typing)
@@ -217,7 +220,6 @@ let rec soundness (f:stt_env)
            = mk_t_abs None _ t_typing e2_typing
          in
          assume (~ (x `Set.mem` freevars_comp c1));
-         assume (ln_c c1 /\ ln_c c2 /\ ln_c c);
          Bind.elab_bind_ghost_l_typing f g _ _ _ x _ r1_typing
            _ r2_typing bc
            (tot_typing_soundness t2_typing)
@@ -234,7 +236,6 @@ let rec soundness (f:stt_env)
            = mk_t_abs None _ t_typing e2_typing
          in
          assume (~ (x `Set.mem` freevars_comp c1));
-         assume (ln_c c1 /\ ln_c c2 /\ ln_c c);
          Bind.elab_bind_ghost_r_typing f g _ _ _ x _ r1_typing
            _ r2_typing bc
            (tot_typing_soundness t2_typing)
