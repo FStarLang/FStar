@@ -154,6 +154,67 @@ let if_soundness
 #pop-options
 
 #push-options "--query_stats --fuel 2 --ifuel 2 --z3rlimit_factor 30"
+let bind_soundness
+  (#f:stt_env)
+  (#g:env)
+  (#t:term)
+  (#c:pure_comp)
+  (d:src_typing f g t c{T_Bind? d})
+  (soundness:(f:stt_env -> g:env -> t:term -> c:pure_comp ->
+              d':src_typing f g t c{d' << d} ->
+              GTot (RT.typing (extend_env_l f g)
+                              (elab_src_typing d')
+                              (elab_pure_comp c))))
+  (mk_t_abs: (#u:universe ->
+              #ty:pure_term ->
+              q:option qualifier ->
+              ppname:ppname ->
+              t_typing:tot_typing f g ty (Tm_Type u) { t_typing << d } ->
+              #body:term ->
+              #x:var { None? (lookup g x) } ->
+              #c:pure_comp ->
+              body_typing:src_typing f ((x, Inl ty)::g) (open_term body x) c { body_typing << d } ->
+        GTot (RT.typing (extend_env_l f g)
+                        (mk_abs_with_name ppname (elab_pure ty) (elab_qual q) (RT.close_term (elab_src_typing body_typing) x))
+                        (elab_pure (Tm_Arrow {binder_ty=ty;binder_ppname=ppname} q (close_pure_comp c x))))))
+  : GTot (RT.typing (extend_env_l f g)
+                    (elab_src_typing d)
+                    (elab_pure_comp c))
+  = let T_Bind _ e1 e2 c1 c2 x c e1_typing t_typing e2_typing bc = d in
+    LN.src_typing_ln e1_typing;
+    LN.src_typing_ln e2_typing;      
+    let r1_typing
+      : RT.typing _ _ (elab_pure_comp c1)
+      = soundness _ _ _ _ e1_typing
+    in
+    let r2_typing
+      : RT.typing _ _ (elab_pure (Tm_Arrow (null_binder (comp_res c1)) None (close_pure_comp c2 x)))
+      = mk_t_abs None _ t_typing e2_typing
+    in
+    assume (~ (x `Set.mem` freevars_comp c1));
+    match bc with
+    | Bind_comp _ _ _ _ t2_typing y post2_typing ->
+         Bind.elab_bind_typing f g _ _ _ x _ r1_typing _ r2_typing bc 
+                               (tot_typing_soundness t2_typing)
+                               (mk_t_abs_tot _ _ _ t2_typing post2_typing)
+                               
+    | Bind_comp_ghost_l _ _ _ _ (| reveal_a, reveal_a_typing |) t2_typing y post2_typing ->
+         Bind.elab_bind_ghost_l_typing f g _ _ _ x _ r1_typing
+           _ r2_typing bc
+           (tot_typing_soundness t2_typing)
+           (mk_t_abs_tot _ _ _ t2_typing post2_typing)
+           (elab_pure reveal_a)
+           (soundness _ _ _ _ reveal_a_typing)
+    | Bind_comp_ghost_r _ _ _ _ (| reveal_b, reveal_b_typing |) t2_typing y post2_typing ->
+         Bind.elab_bind_ghost_r_typing f g _ _ _ x _ r1_typing
+           _ r2_typing bc
+           (tot_typing_soundness t2_typing)
+           (mk_t_abs_tot _ _ _ t2_typing post2_typing)
+           (elab_pure reveal_b)
+           (soundness _ _ _ _ reveal_b_typing)
+
+
+#push-options "--query_stats --fuel 2 --ifuel 2"
 let rec soundness (f:stt_env)
                   (g:env)
                   (t:term)
@@ -193,55 +254,8 @@ let rec soundness (f:stt_env)
     | T_STApp _ _ _ _ _ _ _ _ _ ->
       stapp_soundness _ _ _ _ d soundness
 
-    | T_Bind _ e1 e2 c1 c2 x c e1_typing t_typing e2_typing bc ->
-      LN.src_typing_ln e1_typing;
-      LN.src_typing_ln e2_typing;      
-      (match bc with
-       | Bind_comp _ _ _ _ t2_typing y post2_typing ->
-         let r1_typing
-           : RT.typing _ _ (elab_pure_comp c1)
-           = soundness _ _ _ _ e1_typing
-         in
-         let r2_typing
-           : RT.typing _ _ (elab_pure (Tm_Arrow (null_binder (comp_res c1)) None (close_pure_comp c2 x)))
-           = mk_t_abs None _ t_typing e2_typing
-         in
-         assume (~ (x `Set.mem` freevars_comp c1));
-         Bind.elab_bind_typing f g _ _ _ x _ r1_typing _ r2_typing bc 
-                               (tot_typing_soundness t2_typing)
-                               (mk_t_abs_tot _ _ _ t2_typing post2_typing)
-       | Bind_comp_ghost_l _ _ _ _ (| reveal_a, reveal_a_typing |) t2_typing y post2_typing ->
-         let r1_typing
-           : RT.typing _ _ (elab_pure_comp c1)
-           = soundness _ _ _ _ e1_typing
-         in
-         let r2_typing
-           : RT.typing _ _ (elab_pure (Tm_Arrow (null_binder (comp_res c1)) None (close_pure_comp c2 x)))
-           = mk_t_abs None _ t_typing e2_typing
-         in
-         assume (~ (x `Set.mem` freevars_comp c1));
-         Bind.elab_bind_ghost_l_typing f g _ _ _ x _ r1_typing
-           _ r2_typing bc
-           (tot_typing_soundness t2_typing)
-           (mk_t_abs_tot _ _ _ t2_typing post2_typing)
-           (elab_pure reveal_a)
-           (soundness _ _ _ _ reveal_a_typing)
-       | Bind_comp_ghost_r _ _ _ _ (| reveal_b, reveal_b_typing |) t2_typing y post2_typing ->
-         let r1_typing
-           : RT.typing _ _ (elab_pure_comp c1)
-           = soundness _ _ _ _ e1_typing
-         in
-         let r2_typing
-           : RT.typing _ _ (elab_pure (Tm_Arrow (null_binder (comp_res c1)) None (close_pure_comp c2 x)))
-           = mk_t_abs None _ t_typing e2_typing
-         in
-         assume (~ (x `Set.mem` freevars_comp c1));
-         Bind.elab_bind_ghost_r_typing f g _ _ _ x _ r1_typing
-           _ r2_typing bc
-           (tot_typing_soundness t2_typing)
-           (mk_t_abs_tot _ _ _ t2_typing post2_typing)
-           (elab_pure reveal_b)
-           (soundness _ _ _ _ reveal_b_typing))
+    | T_Bind _ _e1 _e2 _c1 _c2 _x _c _e1_typing _t_typing _e2_typing _bc ->
+      bind_soundness d soundness mk_t_abs
 
     | T_Equiv _ _ _ _ _ _ ->
       stequiv_soundness _ _ _ _ d soundness
