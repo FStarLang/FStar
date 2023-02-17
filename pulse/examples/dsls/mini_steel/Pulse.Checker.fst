@@ -13,6 +13,7 @@ open Pulse.Checker.Framing
 open Pulse.Checker.Bind
 module P = Pulse.Syntax.Printer
 module RTB = FStar.Tactics.Builtins
+module FV = Pulse.Typing.FV
 
 #push-options "--z3rlimit_factor 2"
 let replace_equiv_post
@@ -68,6 +69,7 @@ let replace_equiv_post
          post_c_post_eq |)
 #pop-options
 
+#push-options "--query_stats"
 let check_abs
   (f:RT.fstar_top_env)
   (g:env)
@@ -100,7 +102,7 @@ let check_abs
           Some post
       in
       let (| body', c_body, body_typing |) = check f g' (open_term body x) pre_opened (E pre_typing) post in
-
+      FV.src_typing_freevars body_typing;
       let body_closed = close_term body' x in
       assume (open_term body_closed x == body');
 
