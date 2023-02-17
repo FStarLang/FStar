@@ -15,6 +15,7 @@ module Frame = Pulse.Soundness.Frame
 module STEquiv = Pulse.Soundness.STEquiv
 module Return = Pulse.Soundness.Return
 module LN = Pulse.Typing.LN
+module FV = Pulse.Typing.FV
 
 let lift_soundness
   (f:stt_env)
@@ -183,7 +184,7 @@ let bind_soundness
   = let T_Bind _ e1 e2 c1 c2 x c e1_typing t_typing e2_typing bc = d in
     LN.src_typing_ln e1_typing;
     LN.src_typing_ln e2_typing;      
-    LN.src_typing_freevars_inv e1_typing x;
+    FV.src_typing_freevars_inv e1_typing x;
     let r1_typing
       : RT.typing _ _ (elab_pure_comp c1)
       = soundness _ _ _ _ e1_typing

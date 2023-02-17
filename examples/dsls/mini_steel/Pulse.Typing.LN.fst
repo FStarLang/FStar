@@ -542,4 +542,3 @@ let rec src_typing_ln (#f:_) (#g:_) (#t:_) (#c:_)
       src_typing_ln d2;
       st_equiv_ln deq
 #pop-options
-    

@@ -339,7 +339,7 @@ type src_typing (f:RT.fstar_top_env) : env -> term -> pure_comp -> Type =
       q:option qualifier ->
       ty:pure_term ->
       u:universe ->
-      body:term ->
+      body:term {~ (x `Set.mem` freevars body) } ->
       c:pure_comp ->
       tot_typing f g ty (Tm_Type u) ->
       src_typing f ((x, Inl ty)::g) (open_term body x) c ->
@@ -391,7 +391,7 @@ type src_typing (f:RT.fstar_top_env) : env -> term -> pure_comp -> Type =
       e2:term ->
       c1:pure_comp_st ->
       c2:pure_comp_st ->
-      x:var { None? (lookup g x) (*  /\ ~(x `Set.mem` freevars e2) *) } ->
+      x:var { None? (lookup g x)  /\ ~(x `Set.mem` freevars e2) } ->
       c:pure_comp ->
       src_typing f g e1 c1 ->
       tot_typing f g (comp_res c1) (Tm_Type (comp_u c1)) -> //type-correctness; would be nice to derive it instead      
@@ -465,7 +465,7 @@ and bind_comp (f:RT.fstar_top_env) : env -> var -> pure_comp -> pure_comp -> pur
     c2:pure_comp_st {bind_comp_pre x c1 c2} ->
     universe_of f g (comp_res c2) (comp_u c2) ->
     //or in the result post; free var check isn't enough; we need typability
-    y:var { None? (lookup g y) } ->      
+    y:var { None? (lookup g y) /\ ~(y `Set.mem` freevars (comp_post c2)) } ->      
     tot_typing f ((y, Inl (comp_res c2)) :: g) (open_term (comp_post c2) y) Tm_VProp ->
     bind_comp f g x c1 c2 (bind_comp_out c1 c2)
 
@@ -477,7 +477,7 @@ and bind_comp (f:RT.fstar_top_env) : env -> var -> pure_comp -> pure_comp -> pur
     non_informative_c1:(w:pure_term & src_typing f g w (C_Tot (non_informative_witness_t (comp_u c1) (comp_res c1)))) ->
     universe_of f g (comp_res c2) (comp_u c2) ->
     //or in the result post; free var check isn't enough; we need typability
-    y:var { None? (lookup g y) } ->      
+    y:var { None? (lookup g y) /\ ~(y `Set.mem` freevars (comp_post c2)) } ->
     tot_typing f ((y, Inl (comp_res c2)) :: g) (open_term (comp_post c2) y) Tm_VProp ->
     bind_comp f g x c1 c2 (bind_comp_ghost_l_out c1 c2)
 
@@ -489,7 +489,7 @@ and bind_comp (f:RT.fstar_top_env) : env -> var -> pure_comp -> pure_comp -> pur
     non_informative_c2:(w:pure_term & src_typing f g w (C_Tot (non_informative_witness_t (comp_u c2) (comp_res c2)))) ->
     universe_of f g (comp_res c2) (comp_u c2) ->
     //or in the result post; free var check isn't enough; we need typability
-    y:var { None? (lookup g y) } ->      
+    y:var { None? (lookup g y) /\ ~(y `Set.mem` freevars (comp_post c2)) } ->
     tot_typing f ((y, Inl (comp_res c2)) :: g) (open_term (comp_post c2) y) Tm_VProp ->
     bind_comp f g x c1 c2 (bind_comp_ghost_r_out c1 c2)
 

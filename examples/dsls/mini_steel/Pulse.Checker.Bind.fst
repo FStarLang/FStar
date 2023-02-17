@@ -10,6 +10,7 @@ open Pulse.Elaborate.Pure
 open Pulse.Typing
 open Pulse.Checker.Common
 open Pulse.Checker.Pure
+module FV = Pulse.Typing.FV
 
 #push-options "--z3rlimit_factor 8 --ifuel 1 --fuel 1"
 let rec mk_bind (f:RT.fstar_top_env) (g:env)
@@ -30,6 +31,7 @@ let rec mk_bind (f:RT.fstar_top_env) (g:env)
            (requires fun _ ->
               comp_pre c1 == pre /\
               None? (lookup g x) /\
+              (~(x `Set.mem` freevars e2)) /\
               open_term (comp_post c1) x == comp_pre c2 /\
               (~ (x `Set.mem` freevars (comp_post c2))))
            (ensures fun _ _ -> True) =
@@ -157,6 +159,7 @@ let check_bind
         = check_vprop_no_inst f g' next_pre
       in
       let (| e2', c2, d2 |) = check f g' (open_term e2 x) next_pre next_pre_typing post_hint in
+      FV.src_typing_freevars d2;
       let (| c2, d2 |) = force_st #_ #_ #e2' next_pre_typing (| c2, d2 |) in
       let e2_closed = close_term e2' x in
       assume (open_term e2_closed x == e2');
