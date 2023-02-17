@@ -1053,7 +1053,7 @@ let e_arrow (ea:embedding 'a) (eb:embedding 'b) : embedding ('a -> 'b) =
 let e_sealed (ea : embedding 'a) : embedding 'a =
     let ty_a =
         let tc = U.fvar_const PC.sealed in
-        S.mk_Tm_app tc [S.as_arg ea.typ] Range.dummyRange
+        S.mk_Tm_app (S.mk_Tm_uinst tc [U_zero]) [S.as_arg ea.typ] Range.dummyRange
     in
     let emb_ty_a =
         ET_app(PC.sealed |> Ident.string_of_lid, [ea.emb_typ])

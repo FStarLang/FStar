@@ -932,68 +932,73 @@ let (interpret_plugin_as_term_fun :
                               let uu___7 =
                                 let uu___8 =
                                   let uu___9 =
-                                    FStar_Parser_Const.mk_tuple_lid
-                                      (Prims.of_int (2))
-                                      FStar_Compiler_Range.dummyRange in
-                                  (uu___9, (Prims.of_int (2)), "tuple2") in
-                                (uu___8, Syntax_term) in
-                              let uu___8 =
+                                    let uu___10 =
+                                      FStar_Parser_Const.mk_tuple_lid
+                                        (Prims.of_int (2))
+                                        FStar_Compiler_Range.dummyRange in
+                                    (uu___10, (Prims.of_int (2)), "tuple2") in
+                                  (uu___9, Syntax_term) in
                                 let uu___9 =
                                   let uu___10 =
                                     let uu___11 =
-                                      FStar_Reflection_Constants.fstar_refl_types_lid
-                                        "term" in
-                                    (uu___11, Prims.int_zero, "term") in
-                                  (uu___10, Refl_emb) in
-                                let uu___10 =
+                                      let uu___12 =
+                                        FStar_Reflection_Constants.fstar_refl_types_lid
+                                          "term" in
+                                      (uu___12, Prims.int_zero, "term") in
+                                    (uu___11, Refl_emb) in
                                   let uu___11 =
                                     let uu___12 =
                                       let uu___13 =
-                                        FStar_Reflection_Constants.fstar_refl_types_lid
-                                          "sigelt" in
-                                      (uu___13, Prims.int_zero, "sigelt") in
-                                    (uu___12, Refl_emb) in
-                                  let uu___12 =
+                                        let uu___14 =
+                                          FStar_Reflection_Constants.fstar_refl_types_lid
+                                            "sigelt" in
+                                        (uu___14, Prims.int_zero, "sigelt") in
+                                      (uu___13, Refl_emb) in
                                     let uu___13 =
                                       let uu___14 =
                                         let uu___15 =
-                                          FStar_Reflection_Constants.fstar_refl_types_lid
-                                            "fv" in
-                                        (uu___15, Prims.int_zero, "fv") in
-                                      (uu___14, Refl_emb) in
-                                    let uu___14 =
+                                          let uu___16 =
+                                            FStar_Reflection_Constants.fstar_refl_types_lid
+                                              "fv" in
+                                          (uu___16, Prims.int_zero, "fv") in
+                                        (uu___15, Refl_emb) in
                                       let uu___15 =
                                         let uu___16 =
                                           let uu___17 =
-                                            FStar_Reflection_Constants.fstar_refl_types_lid
-                                              "binder" in
-                                          (uu___17, Prims.int_zero, "binder") in
-                                        (uu___16, Refl_emb) in
-                                      let uu___16 =
+                                            let uu___18 =
+                                              FStar_Reflection_Constants.fstar_refl_types_lid
+                                                "binder" in
+                                            (uu___18, Prims.int_zero,
+                                              "binder") in
+                                          (uu___17, Refl_emb) in
                                         let uu___17 =
                                           let uu___18 =
                                             let uu___19 =
-                                              FStar_Reflection_Constants.fstar_refl_syntax_lid
-                                                "binders" in
-                                            (uu___19, Prims.int_zero,
-                                              "binders") in
-                                          (uu___18, Refl_emb) in
-                                        let uu___18 =
+                                              let uu___20 =
+                                                FStar_Reflection_Constants.fstar_refl_syntax_lid
+                                                  "binders" in
+                                              (uu___20, Prims.int_zero,
+                                                "binders") in
+                                            (uu___19, Refl_emb) in
                                           let uu___19 =
                                             let uu___20 =
                                               let uu___21 =
-                                                FStar_Reflection_Constants.fstar_refl_data_lid
-                                                  "exp" in
-                                              (uu___21, Prims.int_zero,
-                                                "exp") in
-                                            (uu___20, Refl_emb) in
-                                          [uu___19] in
-                                        uu___17 :: uu___18 in
-                                      uu___15 :: uu___16 in
-                                    uu___13 :: uu___14 in
-                                  uu___11 :: uu___12 in
-                                uu___9 :: uu___10 in
-                              uu___7 :: uu___8 in
+                                                let uu___22 =
+                                                  FStar_Reflection_Constants.fstar_refl_data_lid
+                                                    "exp" in
+                                                (uu___22, Prims.int_zero,
+                                                  "exp") in
+                                              (uu___21, Refl_emb) in
+                                            [uu___20] in
+                                          uu___18 :: uu___19 in
+                                        uu___16 :: uu___17 in
+                                      uu___14 :: uu___15 in
+                                    uu___12 :: uu___13 in
+                                  uu___10 :: uu___11 in
+                                uu___8 :: uu___9 in
+                              ((FStar_Parser_Const._sealed_lid,
+                                 Prims.int_one, "sealed"), Syntax_term)
+                                :: uu___7 in
                             ((FStar_Parser_Const.option_lid, Prims.int_one,
                                "option"), Syntax_term)
                               :: uu___6 in
@@ -1101,11 +1106,6 @@ let (interpret_plugin_as_term_fun :
                                       match uu___4 with
                                       | (t4, uu___5) ->
                                           mk_embedding l env1 t4)) in
-                            let nm =
-                              let uu___4 =
-                                FStar_Ident.ident_of_lid
-                                  (fv1.FStar_Syntax_Syntax.fv_name).FStar_Syntax_Syntax.v in
-                              FStar_Ident.string_of_id uu___4 in
                             let uu___4 =
                               let uu___5 =
                                 FStar_Compiler_Util.find_opt
@@ -1117,8 +1117,7 @@ let (interpret_plugin_as_term_fun :
                               FStar_Compiler_Effect.op_Bar_Greater uu___5
                                 FStar_Compiler_Util.must in
                             (match uu___4 with
-                             | ((uu___5, t_arity, _trepr_head),
-                                loc_embedding) ->
+                             | ((uu___5, t_arity, nm), loc_embedding) ->
                                  let head1 =
                                    mk_basic_embedding loc_embedding nm in
                                  (match t_arity with
@@ -1155,11 +1154,6 @@ let (interpret_plugin_as_term_fun :
                                       match uu___4 with
                                       | (t4, uu___5) ->
                                           mk_embedding l env1 t4)) in
-                            let nm =
-                              let uu___4 =
-                                FStar_Ident.ident_of_lid
-                                  (fv1.FStar_Syntax_Syntax.fv_name).FStar_Syntax_Syntax.v in
-                              FStar_Ident.string_of_id uu___4 in
                             let uu___4 =
                               let uu___5 =
                                 FStar_Compiler_Util.find_opt
@@ -1171,8 +1165,7 @@ let (interpret_plugin_as_term_fun :
                               FStar_Compiler_Effect.op_Bar_Greater uu___5
                                 FStar_Compiler_Util.must in
                             (match uu___4 with
-                             | ((uu___5, t_arity, _trepr_head),
-                                loc_embedding) ->
+                             | ((uu___5, t_arity, nm), loc_embedding) ->
                                  let head1 =
                                    mk_basic_embedding loc_embedding nm in
                                  (match t_arity with
@@ -1209,11 +1202,6 @@ let (interpret_plugin_as_term_fun :
                                       match uu___4 with
                                       | (t4, uu___5) ->
                                           mk_embedding l env1 t4)) in
-                            let nm =
-                              let uu___4 =
-                                FStar_Ident.ident_of_lid
-                                  (fv1.FStar_Syntax_Syntax.fv_name).FStar_Syntax_Syntax.v in
-                              FStar_Ident.string_of_id uu___4 in
                             let uu___4 =
                               let uu___5 =
                                 FStar_Compiler_Util.find_opt
@@ -1225,8 +1213,7 @@ let (interpret_plugin_as_term_fun :
                               FStar_Compiler_Effect.op_Bar_Greater uu___5
                                 FStar_Compiler_Util.must in
                             (match uu___4 with
-                             | ((uu___5, t_arity, _trepr_head),
-                                loc_embedding) ->
+                             | ((uu___5, t_arity, nm), loc_embedding) ->
                                  let head1 =
                                    mk_basic_embedding loc_embedding nm in
                                  (match t_arity with

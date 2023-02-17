@@ -2484,8 +2484,10 @@ let e_sealed : 'a . 'a embedding -> 'a embedding =
        let ty_a =
          let tc = FStar_Syntax_Util.fvar_const FStar_Parser_Const.sealed in
          let uu___ =
-           let uu___1 = FStar_Syntax_Syntax.as_arg ea.typ in [uu___1] in
-         FStar_Syntax_Syntax.mk_Tm_app tc uu___
+           FStar_Syntax_Syntax.mk_Tm_uinst tc [FStar_Syntax_Syntax.U_zero] in
+         let uu___1 =
+           let uu___2 = FStar_Syntax_Syntax.as_arg ea.typ in [uu___2] in
+         FStar_Syntax_Syntax.mk_Tm_app uu___ uu___1
            FStar_Compiler_Range.dummyRange in
        let emb_ty_a =
          let uu___ =
