@@ -47,7 +47,7 @@ let rec open_term_ln' (e:term)
 
     | Tm_Abs b _q pre body post ->
       open_term_ln' b.binder_ty x i;
-      open_term_ln' pre x (i + 1);
+      open_term_ln'_opt pre x (i + 1);
       open_term_ln' body x (i + 1);
       open_term_ln'_opt post x (i + 2)
 
@@ -153,7 +153,7 @@ let rec close_term_ln' (e:term)
 
     | Tm_Abs b _q pre body post ->
       close_term_ln' b.binder_ty x i;
-      close_term_ln' pre x (i + 1);
+      close_term_ln'_opt pre x (i + 1);
       close_term_ln' body x (i + 1);
       close_term_ln'_opt post x (i + 2)
 
@@ -239,17 +239,11 @@ let rec src_typing_ln (#f:_) (#g:_) (#t:_) (#c:_)
     | T_Tot _g _e _t dt ->
       well_typed_terms_are_ln _ _ _ dt
 
-    | T_Abs _g _pp x _q ty _u body c _pre_hint _post_hint (E dt) db ->
+    | T_Abs _g _pp x _q ty _u body c (E dt) db ->
       src_typing_ln dt;
       src_typing_ln db;
-      assert (ln ty);
-      assert (ln_c c);
-      assert (ln (open_term body x));
       open_term_ln body x;
-      close_comp_ln c x;
-      assume (_pre_hint == Tm_Emp /\ None? _post_hint);
-      assert (ln t)
-
+      close_comp_ln c x
       
     | _ -> admit()
 
