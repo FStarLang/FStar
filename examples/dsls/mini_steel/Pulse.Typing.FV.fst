@@ -196,12 +196,7 @@ let st_equiv_freevars #f #g (#c1 #c2:_)
     (ensures freevars_comp c2 `Set.subset` vars_of_env g)    
   = let ST_VPropEquiv _ _ _ x _ _ _ eq_pre eq_post = d in
     vprop_equiv_freevars eq_pre;
-    assert (freevars (comp_pre c2) `Set.subset` vars_of_env g);
-    assert (freevars (comp_pre c2) `Set.subset` vars_of_env g);    
-    assert (freevars (open_term (comp_post c1) x) `Set.subset` (freevars (comp_post c1) `Set.union` Set.singleton x));
-    vprop_equiv_freevars eq_post;
-    assert (freevars (open_term (comp_post c2) x) `Set.subset` (vars_of_env g `Set.union`  Set.singleton x));
-    admit()
+    vprop_equiv_freevars eq_post
 #pop-options
 
 let rec src_typing_freevars (#f:_) (#g:_) (#t:_) (#c:_)
