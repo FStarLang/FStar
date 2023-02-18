@@ -382,6 +382,7 @@ type raw_error =
   | Warning_Adhoc_IndexedEffect_Combinator
   | Error_PluginDynlink
   | Error_InternalQualifier
+  | Warning_NameEscape
 
 type error_setting = raw_error * error_flag * int
 

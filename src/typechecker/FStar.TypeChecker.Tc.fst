@@ -1101,14 +1101,23 @@ let finish_partial_modul (loading_from_cache:bool) (iface_exists:bool) (en:env) 
 
   m, env
 
+let deep_compress_modul (m:modul) : modul =
+  { m with declarations = List.map (Compress.deep_compress_se false) m.declarations }
+
 let tc_modul (env0:env) (m:modul) (iface_exists:bool) :(modul * env) =
   let msg = "Internals for " ^ string_of_lid m.name in
   //AR: push env, this will also push solver, and then finish_partial_modul will do the pop
   let env0 = push_context env0 msg in
   let modul, env = tc_partial_modul env0 m in
+  // Compress all sigelts so we write a good checked file, plus we make
+  // sure that we are not leaking uvars, names, etc.
+  let modul = deep_compress_modul modul in
   finish_partial_modul false iface_exists env modul
 
 let load_checked_module (en:env) (m:modul) :env =
+  (* Another compression pass to make sure we are not loading a corrupt
+  module. *)
+  let m = deep_compress_modul m in
   //This function tries to very carefully mimic the effect of the environment
   //of having checked the module from scratch, i.e., using tc_module below
   let env = Env.set_current_module en m.name in

@@ -1873,7 +1873,7 @@ let check_term g e t must_tot =
   | Inr err -> Inr err
 
 let compute_term_type_handle_guards g e must_tot gh =
-  let e = FStar.Syntax.Subst.deep_compress true e in
+  let e = FStar.Syntax.Compress.deep_compress true e in
   match check_term_top_gh g e None must_tot (Some gh) with
   | Inl (Some (_, t), None) -> Inl t
   | Inl (None, _) -> failwith "Impossible: Success must return some effect and type"
