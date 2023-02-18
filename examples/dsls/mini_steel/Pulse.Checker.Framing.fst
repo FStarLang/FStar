@@ -10,6 +10,7 @@ open Pulse.Typing
 open Pulse.Checker.Pure
 module P = Pulse.Syntax.Printer
 module RTB = FStar.Tactics.Builtins
+module FV = Pulse.Typing.FV
 
 let rec vprop_as_list (vp:pure_term)
   : list pure_term
@@ -323,6 +324,10 @@ let check_vprop_equiv
                  (P.term_to_string frame))
 #pop-options
 
+let freevars_comp_post (c:comp { stateful_comp c })
+  : Lemma (freevars (comp_post c) `Set.subset` freevars_comp c)
+  = ()
+  
 #push-options "--query_stats --fuel 1 --ifuel 2 --z3rlimit_factor 10"
 let try_frame_pre (#f:RT.fstar_top_env)
                   (#g:env)
@@ -340,6 +345,11 @@ let try_frame_pre (#f:RT.fstar_top_env)
       = T_Frame g t c frame frame_typing t_typing in
     let x = fresh g in
     let c' = add_frame c frame in
+    assert (None? (lookup g x));
+    FV.src_typing_freevars_inv t_typing x;
+    assert (~ (x `Set.mem` freevars_comp c'));
+    freevars_comp_post c';
+    assert (~ (x `Set.mem` freevars (comp_post c')));
     let s' = st_comp_of_comp c' in
     let ve: vprop_equiv f g s'.pre pre = ve in
     let s'' = { s' with pre = pre } in
@@ -376,7 +386,7 @@ let try_frame_pre (#f:RT.fstar_top_env)
     )
 #pop-options
 
-#push-options "--z3rlimit_factor 2"
+#push-options "--z3rlimit_factor 10 --query_stats --fuel 2 --ifuel 2 --z3cliopt 'smt.qi.eager_threshold=100'"
 let frame_empty (#f:RT.fstar_top_env)
                 (#g:env)
                 (#pre:pure_term)
@@ -395,14 +405,29 @@ let frame_empty (#f:RT.fstar_top_env)
     let d : src_typing f g t c = d in
     let s' = { s with pre = pre } in
     let c' = c `with_st_comp` s' in
+    assert (stateful_comp c');
     let x = fresh g in
-    let pre_typing = check_vprop_no_inst f g (comp_pre c) in
+    let pre_typing 
+      : tot_typing f g (comp_pre c) Tm_VProp
+      = check_vprop_no_inst f g (comp_pre c)
+    in
     let (| u, res_typing |) = check_universe f g (comp_res c) in
     if u <> comp_u c
     then T.fail "Unexpected universe"
     else (
-      let post_typing = check_vprop_no_inst f ((x, Inl (comp_res c))::g) 
-                                            (open_term (comp_post c) x) in
+      let res_typing 
+        : tot_typing f g (comp_res c) (Tm_Type (comp_u c))
+        = res_typing 
+      in
+      let post_typing
+        : tot_typing f ((x, Inl (comp_res c))::g)
+                       (open_term (comp_post c) x)
+                       Tm_VProp
+        = check_vprop_no_inst f ((x, Inl (comp_res c))::g) 
+                                (open_term (comp_post c) x)
+      in
+      FV.src_typing_freevars_inv d x;
+      freevars_comp_post c;
       let eq
         : st_equiv f g c c'
         = ST_VPropEquiv g c c' x
