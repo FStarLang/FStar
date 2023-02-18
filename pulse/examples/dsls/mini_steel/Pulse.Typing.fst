@@ -510,7 +510,7 @@ and st_equiv (f:RT.fstar_top_env) : env -> pure_comp -> pure_comp -> Type =
       g:env ->
       c1:pure_comp_st ->
       c2:pure_comp_st { st_equiv_pre c1 c2 } -> 
-      x:var { None? (lookup g x) } ->
+      x:var { None? (lookup g x) /\ ~(x `Set.mem` freevars (comp_post c1)) /\ ~(x `Set.mem` freevars (comp_post c2)) } ->
       tot_typing f g (comp_pre c1) Tm_VProp ->
       tot_typing f g (comp_res c1) (Tm_Type (comp_u c1)) ->
       tot_typing f ((x, Inl (comp_res c1))::g) (open_term (comp_post c1) x) Tm_VProp ->

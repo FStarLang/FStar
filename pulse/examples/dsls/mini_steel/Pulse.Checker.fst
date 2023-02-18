@@ -19,13 +19,13 @@ module FV = Pulse.Typing.FV
 let replace_equiv_post
   (f:RT.fstar_top_env)
   (g:env)
-  (c:pure_comp{stateful_comp c})
+  (c:pure_comp{stateful_comp c /\ freevars_comp c `Set.subset` FV.vars_of_env g})
   (post_hint:option term)
 
   : T.Tac (c1:pure_comp { stateful_comp c1 /\ comp_pre c1 == comp_pre c } & st_equiv f g c c1) =
 
   let {u=u_c;res=res_c;pre=pre_c;post=post_c} = st_comp_of_comp c in
-  let x = fresh g in
+  let x = fresh g in //We could pick x here fresh with respect to both g and post_hint, rather than failing
   let g_post = (x, Inl res_c)::g in
 
   let pre_c_typing : tot_typing f g pre_c Tm_VProp =
@@ -48,25 +48,29 @@ let replace_equiv_post
          (VE_Refl _ _)
          (VE_Refl _ _) |)
   | Some post ->
-    let post_opened = open_term post x in
-    let (| post_opened, post_typing |) = check_vprop f g_post post_opened in
-    let post_c_post_eq : vprop_equiv f g_post post_c_opened post_opened =
-      check_vprop_equiv f g_post post_c_opened post_opened post_c_typing in
-
-    let st_comp_with_post = {
-        u=u_c;
-        res=res_c;
-        pre=pre_c;
-        post=close_term post_opened x
-    } in
-    let c_with_post = c `with_st_comp` st_comp_with_post in
-    assume (open_term (close_term post_opened x) x == post_opened);
-    assert (is_pure_term (close_term post_opened x));
-    (| c_with_post,
-       ST_VPropEquiv
-         g c c_with_post x pre_c_typing res_c_typing post_c_typing
-         (VE_Refl _ _)
-         post_c_post_eq |)
+    if (x `Set.mem` freevars post)
+    then T.fail "Unexpected variable clash with annotated postcondition"
+    else (
+      let post_opened = open_term post x in
+      let (| post_opened, post_typing |) = check_vprop f g_post post_opened in
+      let post_c_post_eq : vprop_equiv f g_post post_c_opened post_opened =
+        check_vprop_equiv f g_post post_c_opened post_opened post_c_typing in
+  
+      let st_comp_with_post = {
+          u=u_c;
+          res=res_c;
+          pre=pre_c;
+          post=close_term post_opened x
+      } in
+      let c_with_post = c `with_st_comp` st_comp_with_post in
+      assume (open_term (close_term post_opened x) x == post_opened);
+      assert (is_pure_term (close_term post_opened x));
+      (| c_with_post,
+        ST_VPropEquiv
+          g c c_with_post x pre_c_typing res_c_typing post_c_typing
+          (VE_Refl _ _)
+          post_c_post_eq |)
+    )
 #pop-options
 
 #push-options "--query_stats"
@@ -256,9 +260,11 @@ let rec check' : bool -> check_t =
     : T.Tac (t:term & c:pure_comp { stateful_comp c ==> comp_pre c == pre } & src_typing f g t c) =
     let (| c, d_c |) = x in
     if apply_post_hint && stateful_comp c
-    then
+    then (
+      FV.src_typing_freevars d_c;
       let (| c1, c_c1_eq |) = replace_equiv_post f g c post_hint in
       (| t, c1, T_Equiv _ _ _ _ d_c c_c1_eq |)
+    )
     else (| t, c, d_c |)
   in
   //
