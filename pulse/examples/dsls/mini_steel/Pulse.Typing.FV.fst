@@ -9,84 +9,243 @@ open Pulse.Elaborate.Pure
 open Pulse.Soundness.Common
 
 let vars_of_rt_env (g:R.env) = Set.intension (fun x -> Some? (RT.lookup_bvar g x))
-  
+
+#push-options "--query_stats --z3rlimit_factor 4"
+let rec freevars_close_term' (e:term) (x:var) (i:index)
+  : Lemma 
+    (ensures freevars (close_term' e x i) `Set.equal`
+             (freevars e `set_minus` x))
+  = match e with
+    | Tm_BVar _
+    | Tm_Var _
+    | Tm_FVar _
+    | Tm_UInst _ _
+    | Tm_Constant _  
+    | Tm_Emp
+    | Tm_Type _
+    | Tm_VProp
+    | Tm_Inames
+    | Tm_EmpInames
+    | Tm_UVar _ -> ()
+
+    | Tm_Pure p ->
+      freevars_close_term' p x i
+
+    | Tm_Refine b t ->
+      freevars_close_term' b.binder_ty x i;
+      freevars_close_term' t x (i + 1)
+
+    | Tm_Abs b _q pre body post ->
+      freevars_close_term' b.binder_ty x i;
+      freevars_close_term'_opt pre x (i + 1);
+      freevars_close_term' body x (i + 1);
+      freevars_close_term'_opt post x (i + 2)
+
+    | Tm_PureApp l _ r
+    | Tm_STApp l _ r
+    | Tm_Star l r ->
+      freevars_close_term' l x i;
+      freevars_close_term' r x i
+
+    | Tm_Bind e1 e2 ->
+      freevars_close_term' e1 x i;
+      freevars_close_term' e2 x (i + 1)
+
+    | Tm_Let t e1 e2 ->
+      freevars_close_term' t x i;    
+      freevars_close_term' e1 x i;
+      freevars_close_term' e2 x (i + 1)
+
+    | Tm_ExistsSL _ t b
+    | Tm_ForallSL _ t b ->
+      freevars_close_term' t x i;    
+      freevars_close_term' b x (i + 1)
+      
+    | Tm_If t0 t1 t2 post ->
+      freevars_close_term' t0 x i;    
+      freevars_close_term' t1 x i;    
+      freevars_close_term' t2 x i;          
+      freevars_close_term'_opt post x (i + 1)      
+
+    | Tm_Arrow b _ body ->
+      freevars_close_term' b.binder_ty x i;
+      freevars_close_comp body x (i + 1)
+
+    | Tm_ElimExists t -> freevars_close_term' t x i
+    | Tm_IntroExists t e ->
+      freevars_close_term' t x i;
+      freevars_close_term' e x i
+
+and freevars_close_comp (c:comp)
+                        (x:var)
+                        (i:index)
+  : Lemma 
+    (ensures freevars_comp (close_comp' c x i) `Set.equal`
+             (freevars_comp c `set_minus` x))
+    (decreases c)
+    [SMTPat (freevars_comp (close_comp' c x i))]
+  = match c with
+    | C_Tot t ->
+      freevars_close_term' t x i
+
+    | C_ST s ->
+      freevars_close_term' s.res x i;
+      freevars_close_term' s.pre x i;      
+      freevars_close_term' s.post x (i + 1)
+
+    | C_STAtomic n s
+    | C_STGhost n s ->    
+      freevars_close_term' n x i;    
+      freevars_close_term' s.res x i;
+      freevars_close_term' s.pre x i;      
+      freevars_close_term' s.post x (i + 1)
+
+and freevars_close_term'_opt (t:option term) (x:var) (i:index)
+  : Lemma
+    (ensures (freevars_opt (close_term_opt' t x i) `Set.equal`
+             (freevars_opt t `set_minus` x)))
+    (decreases t)
+  = match t with
+    | None -> ()
+    | Some t -> freevars_close_term' t x i
+
+let freevars_close_term (e:term) (x:var) (i:index)
+  : Lemma 
+    (ensures freevars (close_term' e x i) `Set.equal`
+             (freevars e `set_minus` x))
+  = freevars_close_term' e x i
+
+let contains_r (g:R.env) (x:var) = Some? (RT.lookup_bvar g x)
+let vars_of_env_r (g:R.env) = Set.intension (contains_r g)
 
 assume
 val refl_typing_freevars (#g:R.env) (#e:R.term) (#t:R.term) 
                          (_:RT.typing g e t)
-                         (x:R.var)
   : Lemma 
-    (requires x `Set.mem` RT.freevars t \/
-              x `Set.mem` RT.freevars e)
-    (ensures Some? (RT.lookup_bvar g x))
+    (ensures RT.freevars e `Set.subset` (vars_of_env_r g) /\
+             RT.freevars t `Set.subset` (vars_of_env_r g))
 
 assume
 val elab_freevars_inverse (e:pure_term)
   : Lemma 
     (ensures RT.freevars (elab_pure e) == freevars e)
 
+let freevars_open_term_inv (e:term) 
+                           (x:var {~ (x `Set.mem` freevars e) })
+  : Lemma 
+    (ensures freevars e `Set.equal` (freevars (open_term e x) `set_minus` x))
+    [SMTPat (freevars (open_term e x))]
+  = close_open_inverse e x
+
+assume
+val freevars_open_term (e:term) (x:term) (i:index)
+  : Lemma (freevars (open_term' e x i) `Set.subset` 
+           (freevars e `Set.union` freevars x))
+    [SMTPat (freevars (open_term' e x i))]
+
+assume
+val freevars_open_comp (c:comp) (x:term) (i:index)
+  : Lemma 
+    (ensures
+      freevars_comp (open_comp' c x i) `Set.subset` 
+      (freevars_comp c `Set.union` freevars x))
+    [SMTPat (freevars_comp (open_comp' c x i))]
+           
+#push-options "--ifuel 10 --fuel 10 --z3rlimit_factor 10"
+
+let bind_comp_freevars (#f:_) (#g:_) (#x:_) (#c1 #c2 #c:_)
+                       (d:bind_comp f g x c1 c2 c)
+                       (fv_lem: (#f:_ -> #g:_ -> #t:_ -> #c:_ -> d':src_typing f g t c { d' << d } -> Lemma (ensures (freevars t `Set.subset` vars_of_env g /\ freevars_comp c `Set.subset` vars_of_env g))))
+  : Lemma 
+    (requires freevars_comp c1 `Set.subset` vars_of_env g /\
+              // freevars (comp_res c2) `Set.subset` vars_of_env g /\
+              freevars_comp c2 `Set.subset` (Set.union (vars_of_env g) (Set.singleton x)))
+    (ensures freevars_comp c `Set.subset` vars_of_env g)
+  = match d with
+    | Bind_comp _ _ _ _ (E dt) _ _ 
+    | Bind_comp_ghost_l _ _ _ _ _ (E dt) _ _ 
+    | Bind_comp_ghost_r _ _ _ _ _ (E dt) _ _  -> fv_lem dt
+  
 let rec src_typing_freevars (#f:_) (#g:_) (#t:_) (#c:_)
                             (d:src_typing f g t c)
-                            (x:var)
   : Lemma 
-    (requires x `Set.mem` freevars t \/
-              x `Set.mem` freevars_comp c)
-    (ensures Some? (lookup g x))
-  = admit()
-//   = match d with
-//     | T_Tot _g e t dt ->
-//       elab_freevars_inverse e;
-//       elab_freevars_inverse t;      
-//       refl_typing_freevars dt x
-
-//     | T_Abs _g _pp x _q ty _u body c (E dt) db ->
-//       src_typing_freevars dt;
-//       src_typing_freevars db;      
-    
-
-//     | T_STApp _ _ _ _ _ res arg st (E at) ->
-//       src_typing_ln st;
-//       src_typing_ln at;
-//       open_comp_ln'_inv res arg 0
-
-//     | T_Return _ _ _ _ (E tt) _
-//     | T_ReturnNoEq _ _ _ _ tt _ ->
-//       src_typing_ln tt
-
-//     | T_Lift _ _ _ _ d1 l ->
-//       src_typing_ln d1;
-//       lift_comp_ln l
-
-//     | T_Bind _ _ e2 _ _ x _ d1 (E dc1) d2 bc ->
-//       src_typing_ln d1;
-//       src_typing_ln dc1;
-//       src_typing_ln d2;
-//       open_term_ln e2 x;
-//       bind_comp_ln bc
-
-//     | T_If _ _ _ _ _ _ (E tb) d1 d2 ->
-//       src_typing_ln tb;
-//       src_typing_ln d1;
-//       src_typing_ln d2
-
-//     | T_Frame _ _ _ _ (E df) dc ->
-//       src_typing_ln df;
-//       src_typing_ln dc
-
-//     | T_ElimExists _ _ _ _ (E dt) (E dv) ->
-//       src_typing_ln dt;
-//       src_typing_ln dv
-
-//     | T_IntroExists _ u t p e (E dt) (E dv) (E dw) ->
-//       src_typing_ln dt;
-//       src_typing_ln dv;
-//       src_typing_ln dw;
-//       open_term_ln'_inv p e 0
+    (ensures freevars t `Set.subset` vars_of_env g /\
+             freevars_comp c `Set.subset` vars_of_env g)
+    (decreases d)
+ = match d with
+   | T_Tot _g e t dt ->
+      elab_freevars_inverse e;
+      elab_freevars_inverse t;      
+      refl_typing_freevars dt;
+      assert (vars_of_env_r (extend_env_l f g) `Set.equal` (vars_of_env g))
       
-//     | T_Equiv _ _ _ _ d2 deq ->
-//       src_typing_ln d2;
-//       st_equiv_ln deq
-// #pop-options
+   | T_Abs _g _pp x _q ty _u body cres (E dt) db ->
+      src_typing_freevars dt;
+      src_typing_freevars db;
+      freevars_close_comp cres x 0
+
+   | T_STApp _ _ _ _ _ res arg st (E at) ->
+     src_typing_freevars st;
+     src_typing_freevars at
+
+   | T_Return _ _ _ _ (E tt) _
+   | T_ReturnNoEq _ _ _ _ tt _ ->
+     src_typing_freevars tt
+
+   | T_Lift _ _ _ _ d1 l ->
+     src_typing_freevars d1
+
+   | T_Bind _ _ e2 _ _ x _ d1 (E dc1) d2 bc ->
+     src_typing_freevars d1;
+     src_typing_freevars dc1;
+     src_typing_freevars d2;
+     bind_comp_freevars bc src_typing_freevars
+
+   | T_If _ _b e1 e2 _c hyp (E tb) d1 d2 ->
+     admit();
+     src_typing_freevars tb;
+     src_typing_freevars d1;
+     src_typing_freevars d2;
+     assume (~(hyp `Set.mem` freevars e1));
+     assume (~(hyp `Set.mem` freevars e2))
+      
+   | T_Frame _ _ _ _ (E df) dc ->
+     src_typing_freevars df;
+     src_typing_freevars dc
+
+   | T_ElimExists _ _ _ _ (E dt) (E dv) ->
+     src_typing_freevars dt;
+     src_typing_freevars dv
+
+   | T_IntroExists _ u tt p w (E dt) (E dv) (E dw) ->
+     src_typing_freevars dt;
+     src_typing_freevars dv;
+     src_typing_freevars dw;
+     assert (freevars t `Set.subset` vars_of_env g);
+     calc (Set.subset) {
+        freevars_comp c;
+      (Set.equal) {}
+        freevars_comp (comp_intro_exists u tt p w);
+      (Set.equal) {}
+        freevars Tm_EmpInames `Set.union`
+        (freevars tm_unit `Set.union`
+        (freevars (open_term' p w 0) `Set.union`
+         freevars (Tm_ExistsSL u tt p)));
+      (Set.equal) {} 
+        (freevars (open_term' p w 0) `Set.union`
+         freevars (Tm_ExistsSL u tt p));
+      (Set.subset) { freevars_open_term p w 0 }
+        (freevars p `Set.union` 
+         freevars w `Set.union`
+         freevars t `Set.union`
+         freevars p);
+     }
+
+   | T_Equiv _ _ _ _ d2 deq ->
+     src_typing_freevars d2;
+     admit()
+       
+#pop-options
 
 
 // assume
