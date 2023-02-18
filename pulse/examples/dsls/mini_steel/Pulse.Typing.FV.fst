@@ -165,7 +165,45 @@ let bind_comp_freevars (#f:_) (#g:_) (#x:_) (#c1 #c2 #c:_)
     | Bind_comp _ _ _ _ (E dt) _ _ 
     | Bind_comp_ghost_l _ _ _ _ _ (E dt) _ _ 
     | Bind_comp_ghost_r _ _ _ _ _ (E dt) _ _  -> fv_lem dt
-  
+
+let rec vprop_equiv_freevars (#f:_) (#g:_) (#t0 #t1:_) (v:vprop_equiv f g t0 t1)
+  : Lemma (ensures (freevars t0 `Set.subset` vars_of_env g) <==>
+                   (freevars t1 `Set.subset` vars_of_env g))
+          (decreases v)
+  = match v with
+    | VE_Refl _ _ -> ()
+    | VE_Sym _ _ _ v' -> 
+      vprop_equiv_freevars v'
+    | VE_Trans g t0 t2 t1 v02 v21 ->
+      vprop_equiv_freevars v02;
+      vprop_equiv_freevars v21
+    | VE_Ctxt g s0 s1 s0' s1' v0 v1 ->
+      vprop_equiv_freevars v0;
+      vprop_equiv_freevars v1
+    | VE_Unit g t -> ()
+    | VE_Comm g t0 t1 -> ()
+    | VE_Assoc g t0 t1 t2 -> ()
+    | VE_Ext g t0 t1 token ->
+      let t : RT.typing (extend_env_l f g) token (elab_pure (mk_vprop_eq t0 t1)) = RT.T_Token _ _ _ () in
+      refl_typing_freevars t;
+      elab_freevars_inverse (mk_vprop_eq t0 t1)
+
+#push-options "--fuel 2 --ifuel 2 --query_stats"
+let st_equiv_freevars #f #g (#c1 #c2:_)
+                      (d:st_equiv f g c1 c2)
+  : Lemma
+    (requires freevars_comp c1 `Set.subset` vars_of_env g)
+    (ensures freevars_comp c2 `Set.subset` vars_of_env g)    
+  = let ST_VPropEquiv _ _ _ x _ _ _ eq_pre eq_post = d in
+    vprop_equiv_freevars eq_pre;
+    assert (freevars (comp_pre c2) `Set.subset` vars_of_env g);
+    assert (freevars (comp_pre c2) `Set.subset` vars_of_env g);    
+    assert (freevars (open_term (comp_post c1) x) `Set.subset` (freevars (comp_post c1) `Set.union` Set.singleton x));
+    vprop_equiv_freevars eq_post;
+    assert (freevars (open_term (comp_post c2) x) `Set.subset` (vars_of_env g `Set.union`  Set.singleton x));
+    admit()
+#pop-options
+
 let rec src_typing_freevars (#f:_) (#g:_) (#t:_) (#c:_)
                             (d:src_typing f g t c)
   : Lemma 
@@ -243,8 +281,7 @@ let rec src_typing_freevars (#f:_) (#g:_) (#t:_) (#c:_)
 
    | T_Equiv _ _ _ _ d2 deq ->
      src_typing_freevars d2;
-     admit()
-       
+     st_equiv_freevars deq
 #pop-options
 
 
