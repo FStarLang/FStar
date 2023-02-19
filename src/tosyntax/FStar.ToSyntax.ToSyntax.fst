@@ -504,9 +504,12 @@ let rec gather_pattern_bound_vars_maybe_top acc p =
   | PatView     (pat, _)
   | PatAscribed (pat, _) -> gather_pattern_bound_vars_maybe_top acc pat
 
-let gather_pattern_bound_vars : pattern -> set Ident.ident =
+let gather_pattern_bound_vars_from_list : list pattern -> set Ident.ident =
   let acc = new_set (fun id1 id2 -> if (string_of_id id1) = (string_of_id id2) then 0 else 1) in
-  fun p -> gather_pattern_bound_vars_maybe_top acc p
+  List.fold_left gather_pattern_bound_vars_maybe_top acc
+
+let gather_pattern_bound_vars (p: pattern): set Ident.ident =
+  gather_pattern_bound_vars_from_list [p]
 
 type bnd =
   | LocalBinder of bv     * S.bqual * list S.term  //binder attributes
@@ -786,6 +789,35 @@ let hoist_pat_ascription (pat: pattern): pattern
   | Some typ -> { pat with pat = PatAscribed (pat, (typ, None)) }
   | None     -> pat
 
+let desugar_nested_disjunctive_pattern (rng: Range.range) (pats: list pattern): pattern
+  = let idents = gather_pattern_bound_vars_from_list pats |> set_elements in
+    let term_of_ident id = mk_term (Var <| lid_of_ids [id]) rng Un in
+    let pat_of_ident id: pattern = mk_pattern (PatVar (id, None, [])) rng in
+    let mk_tuple_pat pats: pattern = mk_pattern (PatTuple (pats, false)) rng in
+    let pat_wild = mk_pattern (PatWild (None, [])) rng in
+    let expr, pat = match idents with
+      | [] -> unit_const rng, pat_wild
+      | [id] -> term_of_ident id, pat_of_ident id
+      | _ -> mkTuple (List.map term_of_ident idents) rng
+          , mk_tuple_pat (List.map pat_of_ident idents)
+    in
+    let expr = mk_term (App (
+        mk_term (Name C.some_lid) rng Un,
+        expr,
+        Nothing
+      )) rng Un in
+    let pat = mk_pattern (PatApp (
+      mk_pattern (PatName C.some_lid) rng,
+      [pat]
+    )) rng in
+    let pattern_view = 
+      mk_function [
+        mk_pattern (PatOr pats) rng, None, expr;
+        pat_wild, None, mk_term (Name C.none_lid) rng Un
+      ] rng rng
+    in
+    mk_pattern (PatView (pat, pattern_view)) rng
+
 (* TODO : Patterns should be checked that there are no incompatible type ascriptions *)
 (* and these type ascriptions should not be dropped !!!                              *)
 let rec desugar_data_pat
@@ -816,7 +848,9 @@ let rec desugar_data_pat
     let pos_r r q = Syntax.withinfo q r in
     let orig = p in
     match p.pat with
-      | PatOr _ -> failwith "impossible: PatOr handled below"
+      | PatOr [] -> failwith "impossible: empty pattern disjunction"
+      | PatOr [pat] -> aux loc env pat
+      | PatOr pats -> desugar_nested_disjunctive_pattern p.prange pats |> aux loc env
 
       | PatOp op ->
         (* Turn into a PatVar and recurse *)

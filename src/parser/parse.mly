@@ -566,7 +566,8 @@ atomicPattern:
       { mk_pattern (PatRecord record_pat) (rhs2 parseState 1 3) }
   | LENS_PAREN_LEFT pat0=constructorPattern COMMA pats=separated_nonempty_list(COMMA, constructorPattern) LENS_PAREN_RIGHT
       { mk_pattern (PatTuple(pat0::pats, true)) (rhs2 parseState 1 5) }
-  | LPAREN pat=tuplePattern RPAREN   { pat }
+  | LPAREN pats=disjunctivePattern RPAREN
+    { mk_pattern (PatOr pats) (rhs2 parseState 1 3) }
   | tv=tvar                   { mk_pattern (PatTvar (tv, None, [])) (rhs parseState 1) }
   | LPAREN op=operator RPAREN
       { mk_pattern (PatOp op) (rhs2 parseState 1 3) }
