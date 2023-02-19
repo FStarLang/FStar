@@ -37,6 +37,9 @@ let _ = assert_norm (plus1 12 == 1)
 (*** [as] patterns *)
 open FStar.List.Tot
 let y = match [[1;2];[3]] with
-  | ((1::_) as hello) :: _ -> 0::hello
+  | ((1::_) as hello) :: _ -> 
+    assert (List.Tot.length hello > 0);
+    assert (List.Tot.hd hello == 1);
+    0::hello
   | ((2::_) as hello) :: _ -> 1::hello
   | _ -> []
