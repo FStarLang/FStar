@@ -393,4 +393,10 @@ and elab_src_typing
       let rp = elab_pure p in
       let re = elab_pure e in
       mk_intro_exists ru rt (mk_abs rt R.Q_Explicit rp) re
+
+    | T_While _ inv _ _ _ cond_typing body_typing ->
+      let inv = elab_pure inv in
+      let cond = elab_src_typing cond_typing in
+      let body = elab_src_typing body_typing in
+      mk_while inv cond body
 #pop-options

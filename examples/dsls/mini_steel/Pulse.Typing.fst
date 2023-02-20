@@ -317,6 +317,31 @@ let comp_intro_exists (u:universe) (t:pure_term) (p:pure_term) (e:pure_term)
     post=Tm_ExistsSL u t p
   }
 
+let comp_while_cond (inv:pure_term) : pure_comp = C_ST {
+  u=U_zero;
+  res=tm_bool;
+  pre=Tm_ExistsSL U_zero tm_bool inv;
+  post=inv
+}
+
+let comp_while_body (inv:pure_term) : pure_comp =
+  assert (is_pure_term (open_term' inv tm_true 0));
+  C_ST {
+    u=U_zero;
+    res=tm_unit;
+    pre=open_term' inv tm_true 0;
+    post=Tm_ExistsSL U_zero tm_bool inv
+}
+
+let comp_while (inv:pure_term) : pure_comp =
+  assert (is_pure_term (open_term' inv tm_false 0));
+  C_ST {
+    u=U_zero;
+    res=tm_unit;
+    pre=Tm_ExistsSL U_zero tm_bool inv;
+    post=open_term' inv tm_false 0
+}
+
 [@@erasable]
 noeq
 type my_erased (a:Type) = | E of a
@@ -450,6 +475,17 @@ type src_typing (f:RT.fstar_top_env) : env -> term -> pure_comp -> Type =
       tot_typing f g e t ->
       src_typing f g (Tm_IntroExists e (Tm_ExistsSL u t p))
                      (comp_intro_exists u t p e)
+
+  | T_While:
+      g:env ->
+      inv:pure_term ->
+      cond:term ->
+      body:term ->
+      tot_typing f g (Tm_ExistsSL U_zero tm_bool inv) Tm_VProp ->
+      src_typing f g cond (comp_while_cond inv) ->
+      src_typing f g body (comp_while_body inv) ->
+      src_typing f g (Tm_While inv cond body) (comp_while inv)
+      
 
 and tot_typing (f:RT.fstar_top_env) (g:env) (e:term) (t:pure_term) =
   my_erased (src_typing f g e (C_Tot t))

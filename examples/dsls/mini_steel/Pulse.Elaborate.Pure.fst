@@ -99,6 +99,14 @@ let mk_intro_exists (u:R.universe) (a p:R.term) (e:R.term) : R.term =
   let t = R.pack_ln (R.Tv_App t (p, R.Q_Explicit)) in
   R.pack_ln (R.Tv_App t (e, R.Q_Explicit))
 
+let while_lid = mk_steel_wrapper_lid "while_loop"
+
+let mk_while (inv cond body:R.term) : R.term =
+  let t = R.pack_ln (R.Tv_FVar (R.pack_fv while_lid)) in
+  let t = R.pack_ln (R.Tv_App t (inv, R.Q_Explicit)) in
+  let t = R.pack_ln (R.Tv_App t (cond, R.Q_Explicit)) in
+  R.pack_ln (R.Tv_App t (body, R.Q_Explicit))
+
 let vprop_eq_tm t1 t2 =
   let open R in
   let u2 =
@@ -240,6 +248,7 @@ let rec elab_term (top:term)
     | Tm_Bind _ _
     | Tm_ElimExists _
     | Tm_IntroExists _ _
+    | Tm_While _ _ _
     | Tm_UVar _ -> None
       //effectful constructs, explicitly not handled here
     
