@@ -140,52 +140,52 @@ let bind_res (u2:R.universe) (t2 pre post2:R.term) =
   mk_stt_app u2 [t2; pre; post2]
 
 let g_type_bind (u2:R.universe) (t1 t2 post1 post2:R.term) =
-    mk_tot_arrow1 (t1, R.Q_Explicit)
-                  (bind_res u2 t2 (R.mk_app post1 [bound_var 0 (* x *), R.Q_Explicit]) post2)
+    mk_arrow (t1, R.Q_Explicit)
+             (bind_res u2 t2 (R.mk_app post1 [bound_var 0 (* x *), R.Q_Explicit]) post2)
 
 let bind_type_t1_t2_pre_post1_post2_f (u1 u2:R.universe) (t1 t2 pre post1 post2:R.term) =
-  mk_tot_arrow1 (g_type_bind u2 t1 t2 post1 post2, R.Q_Explicit)
-                (bind_res u2 t2 pre post2)
+  mk_arrow (g_type_bind u2 t1 t2 post1 post2, R.Q_Explicit)
+           (bind_res u2 t2 pre post2)
 
 let bind_type_t1_t2_pre_post1_post2 (u1 u2:R.universe) (t1 t2 pre post1 post2:R.term) =
   let f_type = mk_stt_app u1 [t1; pre; post1] in
-  mk_tot_arrow1 (f_type, R.Q_Explicit)
-                (bind_type_t1_t2_pre_post1_post2_f u1 u2 t1 t2 pre post1 post2)
+  mk_arrow (f_type, R.Q_Explicit)
+           (bind_type_t1_t2_pre_post1_post2_f u1 u2 t1 t2 pre post1 post2)
 
-let post2_type_bind t2 = mk_tot_arrow1 (t2, R.Q_Explicit) vprop_tm
+let post2_type_bind t2 = mk_arrow (t2, R.Q_Explicit) vprop_tm
 let bind_type_t1_t2_pre_post1 (u1 u2:R.universe) (t1 t2 pre post1:R.term) =
   let var = 0 in
   let post2 = mk_name var in
-  mk_tot_arrow1 (post2_type_bind t2, R.Q_Implicit)
-                (RT.open_or_close_term' (bind_type_t1_t2_pre_post1_post2 u1 u2 t1 t2 pre post1 post2) (RT.CloseVar var) 0)
+  mk_arrow (post2_type_bind t2, R.Q_Implicit)
+           (RT.open_or_close_term' (bind_type_t1_t2_pre_post1_post2 u1 u2 t1 t2 pre post1 post2) (RT.CloseVar var) 0)
 
-let post1_type_bind t1 = mk_tot_arrow1 (t1, R.Q_Explicit) vprop_tm
+let post1_type_bind t1 = mk_arrow (t1, R.Q_Explicit) vprop_tm
 let bind_type_t1_t2_pre (u1 u2:R.universe) (t1 t2 pre:R.term) =
   let var = 1 in
   let post1 = mk_name var in
-  mk_tot_arrow1 (post1_type_bind t1, R.Q_Implicit)
-                (RT.open_or_close_term' (bind_type_t1_t2_pre_post1 u1 u2 t1 t2 pre post1) (RT.CloseVar var) 0)
+  mk_arrow (post1_type_bind t1, R.Q_Implicit)
+           (RT.open_or_close_term' (bind_type_t1_t2_pre_post1 u1 u2 t1 t2 pre post1) (RT.CloseVar var) 0)
 
 let bind_type_t1_t2 (u1 u2:R.universe) (t1 t2:R.term) =
   let var = 2 in
   let pre = mk_name var in
   let pre_type = vprop_tm in
-  mk_tot_arrow1 (pre_type, R.Q_Implicit)
-                (RT.open_or_close_term' (bind_type_t1_t2_pre u1 u2 t1 t2 pre) (RT.CloseVar var) 0)
+  mk_arrow (pre_type, R.Q_Implicit)
+           (RT.open_or_close_term' (bind_type_t1_t2_pre u1 u2 t1 t2 pre) (RT.CloseVar var) 0)
 
 let bind_type_t1 (u1 u2:R.universe) (t1:R.term) =
   let var = 3 in
   let t2 = mk_name var in
   let t2_type = RT.tm_type u2 in
-  mk_tot_arrow1 (t2_type, R.Q_Implicit)
-                (RT.open_or_close_term' (bind_type_t1_t2 u1 u2 t1 t2) (RT.CloseVar var) 0)
+  mk_arrow (t2_type, R.Q_Implicit)
+           (RT.open_or_close_term' (bind_type_t1_t2 u1 u2 t1 t2) (RT.CloseVar var) 0)
 
 let bind_type (u1 u2:R.universe) =
   let var = 4 in
   let t1 = mk_name var in
   let t1_type = RT.tm_type u1 in
-  mk_tot_arrow1 (t1_type, R.Q_Implicit)
-                (RT.open_or_close_term' (bind_type_t1 u1 u2 t1) (RT.CloseVar var) 0)
+  mk_arrow (t1_type, R.Q_Implicit)
+           (RT.open_or_close_term' (bind_type_t1 u1 u2 t1) (RT.CloseVar var) 0)
 
 (** Type of frame **)
 
@@ -202,35 +202,35 @@ let frame_res (u:R.universe) (t pre post frame:R.term) =
 let frame_type_t_pre_post_frame (u:R.universe) (t pre post frame:R.term) =
   let open R in
   let f_type = mk_stt_app u [t; pre; post] in
-  mk_tot_arrow1 (f_type, Q_Explicit)
-                (frame_res u t pre post frame)
+  mk_arrow (f_type, Q_Explicit)
+           (frame_res u t pre post frame)
 
 let frame_type_t_pre_post (u:R.universe) (t pre post:R.term) =
   let var = 0 in
   let frame = mk_name var in
-  mk_tot_arrow1 (vprop_tm, R.Q_Explicit)
-                (RT.close_term (frame_res u t pre post frame) var)
+  mk_arrow (vprop_tm, R.Q_Explicit)
+           (RT.close_term (frame_res u t pre post frame) var)
 
 let frame_type_t_pre (u:R.universe) (t pre:R.term) =
   let var = 1 in
   let post = mk_name var in
-  let post_type = mk_tot_arrow1 (t, R.Q_Explicit) vprop_tm in
-  mk_tot_arrow1 (post_type, R.Q_Implicit)
-                (RT.close_term (frame_type_t_pre_post u t pre post) var)
+  let post_type = mk_arrow (t, R.Q_Explicit) vprop_tm in
+  mk_arrow (post_type, R.Q_Implicit)
+           (RT.close_term (frame_type_t_pre_post u t pre post) var)
 
 let frame_type_t (u:R.universe) (t:R.term) =
   let var = 2 in
   let pre = mk_name var in
   let pre_type = vprop_tm in
-  mk_tot_arrow1 (pre_type, R.Q_Implicit)
-                (RT.close_term (frame_type_t_pre u t pre) var)
+  mk_arrow (pre_type, R.Q_Implicit)
+           (RT.close_term (frame_type_t_pre u t pre) var)
 
 let frame_type (u:R.universe) =
   let var = 3 in
   let t = mk_name var in
   let t_type = RT.tm_type u in
-  mk_tot_arrow1 (t_type, R.Q_Implicit)
-                (RT.close_term (frame_type_t u t) var)
+  mk_arrow (t_type, R.Q_Implicit)
+           (RT.close_term (frame_type_t u t) var)
 
 
 (** Type of sub_stt **)
@@ -248,47 +248,47 @@ let stt_vprop_post_equiv (u:R.universe) (t t1 t2:R.term) =
 let sub_stt_res u t pre post = mk_stt_app u [t; pre; post]
 
 let sub_stt_equiv_post u t pre1 post1 pre2 post2 = 
-  mk_tot_arrow1 (stt_vprop_post_equiv u t post1 post2, R.Q_Explicit)
-                (sub_stt_res u t pre2 post2)
+  mk_arrow (stt_vprop_post_equiv u t post1 post2, R.Q_Explicit)
+           (sub_stt_res u t pre2 post2)
 
 let sub_stt_equiv_pre u t pre1 post1 pre2 post2 = 
-  mk_tot_arrow1 (stt_vprop_equiv pre1 pre2, R.Q_Explicit)
-                (sub_stt_equiv_post u t pre1 pre2 post1 post2)
+  mk_arrow (stt_vprop_equiv pre1 pre2, R.Q_Explicit)
+           (sub_stt_equiv_post u t pre1 pre2 post1 post2)
 
 let sub_stt_post2 u t pre1 post1 pre2 = 
   let var = 0 in
   let post2 = mk_name var in
-  let post2_type = mk_tot_arrow1 (t, R.Q_Explicit) vprop_tm in
-  mk_tot_arrow1 (post2_type, R.Q_Explicit)
-                (RT.close_term (sub_stt_equiv_pre u t pre1 pre2 post1 post2) var)
+  let post2_type = mk_arrow (t, R.Q_Explicit) vprop_tm in
+  mk_arrow (post2_type, R.Q_Explicit)
+           (RT.close_term (sub_stt_equiv_pre u t pre1 pre2 post1 post2) var)
 
 let sub_stt_pre2 u t pre1 post1 = 
   let var = 1 in
   let pre2 = mk_name var in
   let pre2_type = vprop_tm in
-  mk_tot_arrow1 (pre2_type, R.Q_Explicit)
-                (RT.close_term (sub_stt_post2 u t pre1 post1 pre2) var)
+  mk_arrow (pre2_type, R.Q_Explicit)
+           (RT.close_term (sub_stt_post2 u t pre1 post1 pre2) var)
 
 let sub_stt_post1 u t pre1 = 
   let var = 2 in
   let post1 = mk_name var in
-  let post1_type = mk_tot_arrow1 (t, R.Q_Explicit) vprop_tm in
-  mk_tot_arrow1 (post1_type, R.Q_Explicit)
-                (RT.close_term (sub_stt_pre2 u t pre1 post1) var)
+  let post1_type = mk_arrow (t, R.Q_Explicit) vprop_tm in
+  mk_arrow (post1_type, R.Q_Explicit)
+           (RT.close_term (sub_stt_pre2 u t pre1 post1) var)
 
 let sub_stt_pre1 u t = 
   let var = 3 in
   let pre1 = mk_name var in
   let pre1_type = vprop_tm in
-  mk_tot_arrow1 (pre1_type, R.Q_Explicit)
-                (RT.close_term (sub_stt_post1 u t pre1) var)
+  mk_arrow (pre1_type, R.Q_Explicit)
+           (RT.close_term (sub_stt_post1 u t pre1) var)
 
 let sub_stt_type u = 
   let var = 4 in
   let t = mk_name var in
   let ty_typ = RT.tm_type u in
-  mk_tot_arrow1 (ty_typ, R.Q_Explicit)
-                (RT.close_term (sub_stt_pre1 u t) var)
+  mk_arrow (ty_typ, R.Q_Explicit)
+           (RT.close_term (sub_stt_pre1 u t) var)
 
 (** Properties of environments suitable for elaboration **)
 
@@ -312,7 +312,7 @@ let elab_comp_post (c:pure_comp_st) : R.term =
 
 let comp_post_type (c:pure_comp_st) : R.term = 
   let t = elab_pure (comp_res c) in
-  mk_tot_arrow1 (t, R.Q_Explicit) vprop_tm
+  mk_arrow (t, R.Q_Explicit) vprop_tm
 
 assume
 val inversion_of_stt_typing (f:RT.fstar_top_env) (g:env) (c:pure_comp_st)
