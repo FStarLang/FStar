@@ -210,42 +210,41 @@ let check_if (f:RT.fstar_top_env)
   = let (| b, b_typing |) =
       check_tot_with_expected_typ f g b tm_bool in
     let hyp = fresh g in
-    let g_then =
-      (hyp, Inl (mk_eq2 U_zero tm_bool b tm_true))::g in
-    let (| e1, c1, e1_typing |) =
-      //
-      // TODO: this is unnecessary
-      //       we have typing of pre in g
-      //       weakening should give typing of pre in g_then
-      //
-      let pre_typing : tot_typing f g_then pre Tm_VProp =
-        check_vprop_no_inst f g_then pre in
-      let (| e1, c1, e1_typing |) =
-        check f g_then e1 pre pre_typing (Some post) in
-      let (| c1, e1_typing |) =
-        force_st pre_typing (| c1, e1_typing |) in
-      (| e1, c1, e1_typing |) in
-
-    let g_else =
-      (hyp, Inl (mk_eq2 U_zero tm_bool b tm_false))::g in
-    let (| e2, c2, e2_typing |) =
-      //
-      // TODO: this is unnecessary
-      //       we have typing of pre in g
-      //       weakening should give typing of pre in g_then
-      //
-      let pre_typing : tot_typing f g_else pre Tm_VProp =
-        check_vprop_no_inst f g_else pre in
-      let (| e2, c2, e2_typing |) =
-        check f g_else e2 pre pre_typing (Some post) in
-      let (| c2, e2_typing |) =
-        force_st pre_typing (| c2, e2_typing |) in
-      (| e2, c2, e2_typing |) in
+    let g_with_eq (eq_v:pure_term) =
+      (hyp, Inl (mk_eq2 U_zero tm_bool b eq_v))::g
+    in
+    let check_branch (eq_v:pure_term) (br:term)
+      : T.Tac (br:term { ~(hyp `Set.mem` freevars br) } &
+               c:pure_comp { stateful_comp c /\ comp_pre c == pre } &
+               src_typing f (g_with_eq eq_v) br c)
+      = let g_with_eq = g_with_eq eq_v in
+        //
+        // TODO: pre_typing is unnecessary
+        //       we have typing of pre in g
+        //       weakening should give typing of pre in g_then
+        //
+        let pre_typing = check_vprop_no_inst f g_with_eq pre in
+        let (| br, c, br_typing |) =
+            check f g_with_eq br pre pre_typing (Some post)
+        in
+        if hyp `Set.mem` freevars br
+        then T.fail "Illegal use of control-flow hypothesis in branch"
+        else (
+          let (| c, br_typing |) = force_st pre_typing (| c, br_typing |) in
+          (| br, c, br_typing |)
+        )
+    in
+    let (| e1, c1, e1_typing |) = check_branch tm_true e1 in
+    let (| e2, c2, e2_typing |) = check_branch tm_false e2 in    
     let (| c, e1_typing, e2_typing |) =
       combine_if_branches _ _ _ _ e1_typing _ _ _ e2_typing in
+    let c_typing
+      : comp_typing f g c U_zero 
+      = magic ()
+    in
     (| Tm_If b e1 e2 None,
        c,
-       T_If g b e1 e2 c hyp (E b_typing) e1_typing e2_typing |)
+       T_If g b e1 e2 c _ hyp (E b_typing) e1_typing e2_typing (E c_typing) |)
 
 #push-options "--print_implicits --print_universes --print_full_names"
 let rec check' : bool -> check_t =

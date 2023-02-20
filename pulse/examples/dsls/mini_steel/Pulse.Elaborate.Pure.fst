@@ -255,31 +255,33 @@ and elab_comp (c:comp)
       elab_term t
 
     | C_ST c ->
-      let! res = elab_term c.res in
-      let! pre = elab_term c.pre in
-      let! post = elab_term c.post in
-      Some (mk_stt_comp (elab_universe c.u) res pre (mk_abs res R.Q_Explicit post))
+      let! u, res, pre, post = elab_st_comp c in
+      Some (mk_stt_comp u res pre (mk_abs res R.Q_Explicit post))
 
     | C_STAtomic inames c ->
       let! inames = elab_term inames in
-      let! res = elab_term c.res in
-      let! pre = elab_term c.pre in
-      let! post = elab_term c.post in
-      Some (mk_stt_atomic_comp (elab_universe c.u) res inames pre
+      let! u, res, pre, post = elab_st_comp c in
+      Some (mk_stt_atomic_comp u res inames pre
               (mk_abs res R.Q_Explicit post))
 
     | C_STGhost inames c ->
       let! inames = elab_term inames in
-      let! res = elab_term c.res in
-      let! pre = elab_term c.pre in
-      let! post = elab_term c.post in
-      Some (mk_stt_ghost_comp (elab_universe c.u) res inames pre
+      let! u, res, pre, post = elab_st_comp c in
+      Some (mk_stt_ghost_comp u res inames pre
               (mk_abs res R.Q_Explicit post))
 
+and elab_st_comp (c:st_comp)
+  : option (R.universe & R.term & R.term & R.term)
+  = let! res = elab_term c.res in
+    let! pre = elab_term c.pre in
+    let! post = elab_term c.post in
+    Some (elab_universe c.u, res, pre, post)
+    
 let is_pure_term (e:term) = Some? (elab_term e)
 let pure_term = e:term { is_pure_term e }
 let elab_pure (e:pure_term) : R.term = Some?.v (elab_term e)
 let is_pure_comp (c:comp) = Some? (elab_comp c)
+let is_pure_st_comp (c:st_comp) = Some? (elab_st_comp c)
 let pure_comp = c:comp { is_pure_comp c }
 let elab_pure_comp (c:pure_comp) = Some?.v (elab_comp c)
 let pure_comp_st = c:pure_comp { stateful_comp c }
@@ -423,3 +425,9 @@ and closing_pure_comp (x:pure_comp) (v:var) (i:index)
       closing_pure_term pre v i;
       closing_pure_term post v (i + 1)
 #pop-options
+
+
+assume
+val elab_freevars_inverse (e:pure_term)
+  : Lemma 
+    (ensures RT.freevars (elab_pure e) == freevars e)

@@ -122,11 +122,16 @@ let if_soundness
               GTot (RT.typing (extend_env_l f g)
                               (elab_src_typing d')
                               (elab_pure_comp c))))
+  (ct_soundness: (f:stt_env -> g:env -> c:pure_comp -> uc:universe ->
+                  d':comp_typing f g c uc{d' << d} ->
+              GTot (RT.typing (extend_env_l f g)
+                              (elab_pure_comp c)
+                              (RT.tm_type (elab_universe uc)))))
   : GTot (RT.typing (extend_env_l f g)
                     (elab_src_typing d)
                     (elab_pure_comp c)) =
 
-  let T_If _ b e1 e2  _ hyp b_typing e1_typing e2_typing = d in
+  let T_If _ b e1 e2  _ u_c hyp b_typing e1_typing e2_typing (E c_typing) = d in
   let rb_typing : RT.typing (extend_env_l f g)
                             (elab_pure b)
                             RT.bool_ty =
@@ -153,7 +158,12 @@ let if_soundness
                 (elab_src_typing e2_typing)
                 (elab_pure_comp c) =
     soundness f g_else e2 c e2_typing in
-  RT.T_If _ _ _ _ _ _ rb_typing re1_typing re2_typing
+  let c_typing = 
+    ct_soundness _ _ _ _ c_typing
+  in
+  assume (~(hyp `Set.mem` RT.freevars (elab_src_typing e1_typing)));
+  assume (~(hyp `Set.mem` RT.freevars (elab_src_typing e2_typing)));  
+  RT.T_If _ _ _ _ _ _ _ rb_typing re1_typing re2_typing c_typing
 #pop-options
 
 #push-options "--query_stats --fuel 2 --ifuel 2 --z3rlimit_factor 30"
@@ -174,7 +184,7 @@ let bind_soundness
               ppname:ppname ->
               t_typing:tot_typing f g ty (Tm_Type u) { t_typing << d } ->
               #body:term ->
-              #x:var { None? (lookup g x) } ->
+              #x:var { None? (lookup g x) /\ ~(x `Set.mem` freevars body) } ->
               #c:pure_comp ->
               body_typing:src_typing f ((x, Inl ty)::g) (open_term body x) c { body_typing << d } ->
         GTot (RT.typing (extend_env_l f g)
@@ -281,7 +291,7 @@ let elim_exists_soundness
   let rp_typing = Exists.exists_inversion rp_typing in
   Exists.elim_exists_soundness rt_typing rp_typing
 
-#push-options "--z3rlimit_factor 2"
+#push-options "--z3rlimit_factor 4 --query_stats"
 let while_soundness
   (#f:stt_env)
   (#g:env)
@@ -332,7 +342,7 @@ let while_soundness
 
   While.while_soundness rinv_typing rcond_typing rbody_typing
 
-#push-options "--query_stats --fuel 1 --ifuel 1"
+#push-options "--query_stats --fuel 2 --ifuel 2"
 let rec soundness (f:stt_env)
                   (g:env)
                   (t:term)
@@ -346,7 +356,7 @@ let rec soundness (f:stt_env)
                  (ppname:ppname)
                  (t_typing:tot_typing f g ty (Tm_Type u) { t_typing << d })
                  (#body:term)
-                 (#x:var { None? (lookup g x) })
+                 (#x:var { None? (lookup g x) /\ ~(x `Set.mem` freevars body) })
                  (#c:pure_comp)
                  (body_typing:src_typing f ((x, Inl ty)::g) (open_term body x) c { body_typing << d })
       : GTot (RT.typing (extend_env_l f g)
@@ -385,8 +395,8 @@ let rec soundness (f:stt_env)
       let e_typing = soundness _ _ _ _ e_typing in
       Return.elab_return_noeq_typing t_typing e_typing
 
-    | T_If _ _ _ _ _ _ _ _ _ ->
-      if_soundness _ _ _ _ d soundness
+    | T_If _ _ _ _ _ _ _ _ _ _ _->
+      if_soundness _ _ _ _ d soundness comp_typing_soundness
 
     | T_ElimExists _ _ _ _ _ _ ->
       elim_exists_soundness d
@@ -395,6 +405,15 @@ let rec soundness (f:stt_env)
 
     | T_While _ _ _ _ _ _ _ ->
       while_soundness d soundness
+
+and comp_typing_soundness (f:stt_env)
+                          (g:env)
+                          (c:pure_comp)
+                          (uc:universe)
+                          (d:comp_typing f g c uc)
+  : GTot (RT.typing (extend_env_l f g) (elab_pure_comp c) (RT.tm_type (elab_universe uc)))
+         (decreases d)
+  = admit()
 
 #pop-options
 

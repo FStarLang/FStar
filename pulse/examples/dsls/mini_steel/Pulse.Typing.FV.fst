@@ -130,11 +130,6 @@ val refl_typing_freevars (#g:R.env) (#e:R.term) (#t:R.term)
     (ensures RT.freevars e `Set.subset` (vars_of_env_r g) /\
              RT.freevars t `Set.subset` (vars_of_env_r g))
 
-assume
-val elab_freevars_inverse (e:pure_term)
-  : Lemma 
-    (ensures RT.freevars (elab_pure e) == freevars e)
-
 let freevars_open_term_inv (e:term) 
                            (x:var {~ (x `Set.mem` freevars e) })
   : Lemma 
@@ -239,7 +234,7 @@ let rec src_typing_freevars (#f:_) (#g:_) (#t:_) (#c:_)
      src_typing_freevars d2;
      bind_comp_freevars bc src_typing_freevars
 
-   | T_If _ _b e1 e2 _c hyp (E tb) d1 d2 ->
+   | T_If _ _b e1 e2 _c _u hyp (E tb) d1 d2 _ct ->
      admit();
      src_typing_freevars tb;
      src_typing_freevars d1;
