@@ -43,7 +43,7 @@ let inst_frame_frame #u #g #head #t #pre #post
 let inst_frame_comp #u #g #head #t #pre #post #frame
                     (head_typing: RT.typing g head (frame_type_t_pre_post_frame u t pre post frame))
                     (#f:_)
-                    (f_typing:RT.typing g f (mk_stt_app u [t; pre; post]))
+                    (f_typing:RT.typing g f (mk_stt_comp u t pre post))
   : GTot (RT.typing g (R.mk_app head [(f, R.Q_Explicit)]) (frame_res u t pre post frame))
   = admit()
 
@@ -55,9 +55,9 @@ let equiv_frame_post (g:R.env)
                      (pre:R.term) 
                      (post:pure_term) // ln 1
                      (frame:R.term) //ln 0
-  : GTot (RT.equiv g (mk_stt_app u [t; pre; mk_abs t R.Q_Explicit (mk_star (R.mk_app (mk_abs t R.Q_Explicit (elab_pure post))
-                                                                           [bound_var 0, R.Q_Explicit]) frame)])
-                     (mk_stt_app u [t; pre; mk_abs t R.Q_Explicit (mk_star (elab_pure post) frame)]))
+  : GTot (RT.equiv g (mk_stt_comp u t pre (mk_abs t R.Q_Explicit (mk_star (R.mk_app (mk_abs t R.Q_Explicit (elab_pure post))
+                                                                           [bound_var 0, R.Q_Explicit]) frame)))
+                     (mk_stt_comp u t pre (mk_abs t R.Q_Explicit (mk_star (elab_pure post) frame))))
   = admit()
 
 #push-options "--z3rlimit_factor 2"

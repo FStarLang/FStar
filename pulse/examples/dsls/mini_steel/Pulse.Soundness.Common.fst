@@ -137,7 +137,7 @@ let mk_t_abs (f:RT.fstar_top_env) (g:env)
 (** Type of bind **)
 
 let bind_res (u2:R.universe) (t2 pre post2:R.term) =
-  mk_stt_app u2 [t2; pre; post2]
+  mk_stt_comp u2 t2 pre post2
 
 let g_type_bind (u2:R.universe) (t1 t2 post1 post2:R.term) =
     mk_arrow (t1, R.Q_Explicit)
@@ -148,7 +148,7 @@ let bind_type_t1_t2_pre_post1_post2_f (u1 u2:R.universe) (t1 t2 pre post1 post2:
            (bind_res u2 t2 pre post2)
 
 let bind_type_t1_t2_pre_post1_post2 (u1 u2:R.universe) (t1 t2 pre post1 post2:R.term) =
-  let f_type = mk_stt_app u1 [t1; pre; post1] in
+  let f_type = mk_stt_comp u1 t1 pre post1 in
   mk_arrow (f_type, R.Q_Explicit)
            (bind_type_t1_t2_pre_post1_post2_f u1 u2 t1 t2 pre post1 post2)
 
@@ -195,13 +195,13 @@ let mk_star (l r:R.term) =
   R.mk_app head [(l, Q_Explicit); (r, Q_Explicit)]
 
 let frame_res (u:R.universe) (t pre post frame:R.term) =
-    mk_stt_app u [t; 
-                  mk_star pre frame;
-                  mk_abs t R.Q_Explicit (mk_star (R.mk_app post [bound_var 0, R.Q_Explicit]) frame)]
+    mk_stt_comp u t
+                  (mk_star pre frame)
+                  (mk_abs t R.Q_Explicit (mk_star (R.mk_app post [bound_var 0, R.Q_Explicit]) frame))
 
 let frame_type_t_pre_post_frame (u:R.universe) (t pre post frame:R.term) =
   let open R in
-  let f_type = mk_stt_app u [t; pre; post] in
+  let f_type = mk_stt_comp u t pre post in
   mk_arrow (f_type, Q_Explicit)
            (frame_res u t pre post frame)
 
@@ -245,7 +245,7 @@ let stt_vprop_post_equiv (u:R.universe) (t t1 t2:R.term) =
   R.mk_app (stt_vprop_post_equiv_univ_inst u) 
            [(t, R.Q_Implicit); (t1, R.Q_Explicit); (t2, R.Q_Explicit)]
 
-let sub_stt_res u t pre post = mk_stt_app u [t; pre; post]
+let sub_stt_res u t pre post = mk_stt_comp u t pre post
 
 let sub_stt_equiv_post u t pre1 post1 pre2 post2 = 
   mk_arrow (stt_vprop_post_equiv u t post1 post2, R.Q_Explicit)
