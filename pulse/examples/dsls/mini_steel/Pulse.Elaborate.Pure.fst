@@ -16,8 +16,10 @@ let unit_fv = R.pack_fv unit_lid
 let unit_tm = R.pack_ln (R.Tv_FVar unit_fv)
 let bool_fv = R.pack_fv bool_lid
 let bool_tm = R.pack_ln (R.Tv_FVar bool_fv)
-let true_tm = R.pack_ln (R.Tv_FVar (R.pack_fv R.bool_true_qn))
-let false_tm = R.pack_ln (R.Tv_FVar (R.pack_fv R.bool_false_qn))
+
+let true_tm = R.pack_ln (R.Tv_Const (R.C_True))
+let false_tm = R.pack_ln (R.Tv_Const (R.C_False))
+
 let emp_lid = ["Steel"; "Effect"; "Common"; "emp"]
 let inames_lid = ["Steel"; "Memory"; "inames"]
 let star_lid = ["Steel"; "Effect"; "Common"; "star"]

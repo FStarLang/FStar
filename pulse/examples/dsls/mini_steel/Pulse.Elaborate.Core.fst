@@ -398,5 +398,5 @@ and elab_src_typing
       let inv = elab_pure inv in
       let cond = elab_src_typing cond_typing in
       let body = elab_src_typing body_typing in
-      mk_while inv cond body
+      mk_while (mk_abs bool_tm R.Q_Explicit inv) cond body
 #pop-options

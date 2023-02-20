@@ -15,6 +15,7 @@ module Frame = Pulse.Soundness.Frame
 module STEquiv = Pulse.Soundness.STEquiv
 module Return = Pulse.Soundness.Return
 module Exists = Pulse.Soundness.Exists
+module While = Pulse.Soundness.While
 module LN = Pulse.Typing.LN
 module FV = Pulse.Typing.FV
 
@@ -280,6 +281,7 @@ let elim_exists_soundness
   let rp_typing = Exists.exists_inversion rp_typing in
   Exists.elim_exists_soundness rt_typing rp_typing
 
+#push-options "--z3rlimit_factor 2"
 let while_soundness
   (#f:stt_env)
   (#g:env)
@@ -296,7 +298,39 @@ let while_soundness
                     (elab_src_typing d)
                     (elab_pure_comp c)) =
 
-  admit ()
+  let T_While _ inv cond body inv_typing cond_typing body_typing = d in
+  let rinv = mk_abs bool_tm R.Q_Explicit (elab_pure inv) in
+  let rinv_typing
+    : RT.typing _
+        (mk_exists uzero bool_tm rinv)
+        vprop_tm =
+    tot_typing_soundness inv_typing in
+  let rinv_typing
+    : RT.typing _
+        rinv
+        (mk_arrow (bool_tm, R.Q_Explicit) vprop_tm) =
+    Exists.exists_inversion rinv_typing in
+  let rcond_typing
+    : RT.typing _ (elab_src_typing cond_typing)
+        (mk_stt_comp uzero bool_tm (mk_exists uzero bool_tm rinv) rinv) =
+    soundness f g cond (comp_while_cond inv) cond_typing in
+
+  elab_open_commute' inv tm_true 0;
+  assume (R.pack_ln (R.Tv_App (mk_abs bool_tm R.Q_Explicit (elab_pure inv)) (true_tm, R.Q_Explicit)) ==
+          RT.open_or_close_term' (elab_pure inv) (RT.OpenWith true_tm) 0);
+
+  let rbody_typing
+    : RT.typing _ (elab_src_typing body_typing)
+        (mk_stt_comp uzero unit_tm
+           (R.pack_ln (R.Tv_App rinv (true_tm, R.Q_Explicit)))
+           (mk_abs unit_tm R.Q_Explicit (mk_exists uzero bool_tm rinv))) =
+    soundness f g body (comp_while_body inv) body_typing in
+
+  elab_open_commute' inv tm_false 0;
+  assume (R.pack_ln (R.Tv_App (mk_abs bool_tm R.Q_Explicit (elab_pure inv)) (false_tm, R.Q_Explicit)) ==
+          RT.open_or_close_term' (elab_pure inv) (RT.OpenWith false_tm) 0);
+
+  While.while_soundness rinv_typing rcond_typing rbody_typing
 
 #push-options "--query_stats --fuel 1 --ifuel 1"
 let rec soundness (f:stt_env)
