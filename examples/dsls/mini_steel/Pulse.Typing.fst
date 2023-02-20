@@ -580,19 +580,19 @@ and comp_typing (f:RT.fstar_top_env) : env -> comp -> universe -> Type =
 
   | CT_STAtomic :
       g:env -> 
-      inames:term ->
+      inames:pure_term ->
       st:st_comp -> 
       tot_typing f g inames Tm_Inames ->
       st_comp_typing f g st ->
-      comp_typing f g (C_ST st) st.u
+      comp_typing f g (C_STAtomic inames st) st.u
 
   | CT_STGhost :
       g:env -> 
-      inames:term ->
+      inames:pure_term ->
       st:st_comp -> 
       tot_typing f g inames Tm_Inames ->      
       st_comp_typing f g st ->
-      comp_typing f g (C_ST st) st.u
+      comp_typing f g (C_STGhost inames st) st.u
 
 and st_comp_typing (f:RT.fstar_top_env) : env -> st_comp -> Type =
   | STC:
