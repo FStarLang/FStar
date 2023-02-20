@@ -39,6 +39,7 @@ module NBETerm = FStar.TypeChecker.NBETerm
 module PC = FStar.Parser.Const
 module O = FStar.Options
 module RD = FStar.Reflection.Data
+module List = FStar.Compiler.List
 
 open FStar.Compiler.Dyn
 
@@ -48,6 +49,8 @@ open FStar.Reflection.Constants
  * embed   : from compiler to user
  * unembed : from user to compiler
  *)
+
+let noaqs : antiquotations = (0, [])
 
 (* -------------------------------------------------------------------------------------- *)
 (* ------------------------------------- EMBEDDINGS ------------------------------------- *)
@@ -99,19 +102,37 @@ let rec mapM_opt (f : ('a -> option 'b)) (l : list 'a) : option (list 'b) =
 
 let e_term_aq aq =
     let embed_term (rng:Range.range) (t:term) : term =
-        let qi = { qkind = Quote_static; antiquotes = aq } in
+        let qi = { qkind = Quote_static; antiquotations = aq } in
         S.mk (Tm_quoted (t, qi)) rng
     in
     let rec unembed_term w (t:term) : option term =
-        let apply_antiquotes (t:term) (aq:antiquotations) : option term =
-            BU.bind_opt (mapM_opt (fun (bv, e) -> BU.bind_opt (unembed_term w e) (fun e -> Some (NT (bv, e))))
-                                   aq) (fun s ->
-            Some (SS.subst s t))
+        let apply_antiquotations (t:term) (aq:antiquotations) : option term =
+            let shift, aqs = aq in
+            let aqs = List.rev aqs in
+            // Try to unembed all antiquotations
+            BU.bind_opt (mapM_opt (unembed_term w) aqs) (fun aq_ts ->
+            // Create a substitution of the DB indices of t for the antiquotations
+            (* let n = List.length aq_ts - 1 in *)
+            let subst_open, subst =
+               aq_ts
+               |> List.mapi (fun i at ->
+                    let x = S.new_bv None S.t_term in
+                    DB(shift+i, x), NT (x, at))
+               |> List.unzip
+            in
+
+            // Substitute and return
+            Some (SS.subst subst <| SS.subst subst_open t))
         in
         let t = U.unmeta t in
         match (SS.compress t).n with
         | Tm_quoted (tm, qi) ->
-            apply_antiquotes tm qi.antiquotes
+            let r = apply_antiquotations tm qi.antiquotations in
+            (match r with
+             | None when w ->
+                 Err.log_issue t.pos (Err.Warning_NotEmbedded, (BU.format1 "Failed to unembed antiquotations for: %s" (Print.term_to_string t)))
+             | _ -> ());
+            r
         | _ ->
             if w then
                 Err.log_issue t.pos (Err.Warning_NotEmbedded, (BU.format1 "Not an embedded term: %s" (Print.term_to_string t)));
@@ -119,7 +140,7 @@ let e_term_aq aq =
     in
     mk_emb embed_term unembed_term S.t_term
 
-let e_term = e_term_aq []
+let e_term = e_term_aq noaqs
 
 let e_aqualv =
     let embed_aqualv (rng:Range.range) (q : aqualv) : term =
@@ -343,7 +364,7 @@ let e_const =
     in
     mk_emb embed_const unembed_const fstar_refl_vconst
 
-let rec e_pattern' () =
+let rec e_pattern_aq aq =
     let rec embed_pattern (rng:Range.range) (p : pattern) : term =
         match p with
         | Pat_Constant c ->
@@ -352,7 +373,7 @@ let rec e_pattern' () =
             S.mk_Tm_app ref_Pat_Cons.t 
               [S.as_arg (embed e_fv rng fv);
                S.as_arg (embed (e_option (e_list e_universe)) rng us_opt);
-               S.as_arg (embed (e_list (e_tuple2 (e_pattern' ()) e_bool)) rng ps)] rng
+               S.as_arg (embed (e_list (e_tuple2 (e_pattern_aq aq) e_bool)) rng ps)] rng
         | Pat_Var bv ->
             S.mk_Tm_app ref_Pat_Var.t [S.as_arg (embed e_bv rng bv)] rng
         | Pat_Wild bv ->
@@ -372,7 +393,7 @@ let rec e_pattern' () =
         | Tm_fvar fv, [(f, _); (us_opt, _); (ps, _)] when S.fv_eq_lid fv ref_Pat_Cons.lid ->
             BU.bind_opt (unembed' w e_fv f) (fun f ->
             BU.bind_opt (unembed' w (e_option (e_list e_universe)) us_opt) (fun us_opt ->
-            BU.bind_opt (unembed' w (e_list (e_tuple2 (e_pattern' ()) e_bool)) ps) (fun ps ->
+            BU.bind_opt (unembed' w (e_list (e_tuple2 (e_pattern_aq aq) e_bool)) ps) (fun ps ->
             Some <| Pat_Cons (f, us_opt, ps))))
 
         | Tm_fvar fv, [(bv, _)] when S.fv_eq_lid fv ref_Pat_Var.lid ->
@@ -394,14 +415,14 @@ let rec e_pattern' () =
     in
     mk_emb embed_pattern unembed_pattern fstar_refl_pattern
 
-let e_pattern = e_pattern' ()
+let e_pattern = e_pattern_aq noaqs
 
 let e_branch = e_tuple2 e_pattern e_term
 let e_argv   = e_tuple2 e_term    e_aqualv
 
 let e_args   = e_list e_argv
 
-let e_branch_aq aq = e_tuple2 e_pattern      (e_term_aq aq)
+let e_branch_aq aq = e_tuple2 (e_pattern_aq aq) (e_term_aq aq)
 let e_argv_aq   aq = e_tuple2 (e_term_aq aq) e_aqualv
 
 let e_match_returns_annotation =
@@ -409,6 +430,7 @@ let e_match_returns_annotation =
                      (e_tuple3 (e_either e_term e_comp) (e_option e_term) e_bool))
 
 let e_term_view_aq aq =
+    let push (s, aq) = (s+1, aq) in
     let embed_term_view (rng:Range.range) (t:term_view) : term =
         match t with
         | Tv_FVar fv ->
@@ -435,7 +457,7 @@ let e_term_view_aq aq =
                         rng
 
         | Tv_Abs (b, t) ->
-            S.mk_Tm_app ref_Tv_Abs.t [S.as_arg (embed e_binder rng b); S.as_arg (embed (e_term_aq aq) rng t)]
+            S.mk_Tm_app ref_Tv_Abs.t [S.as_arg (embed e_binder rng b); S.as_arg (embed (e_term_aq (push aq)) rng t)]
                         rng
 
         | Tv_Arrow (b, c) ->
@@ -447,7 +469,7 @@ let e_term_view_aq aq =
                         rng
 
         | Tv_Refine (bv, t) ->
-            S.mk_Tm_app ref_Tv_Refine.t [S.as_arg (embed e_bv rng bv); S.as_arg (embed (e_term_aq aq) rng t)]
+            S.mk_Tm_app ref_Tv_Refine.t [S.as_arg (embed e_bv rng bv); S.as_arg (embed (e_term_aq (push aq)) rng t)]
                         rng
 
         | Tv_Const c ->
@@ -465,7 +487,7 @@ let e_term_view_aq aq =
                                       S.as_arg (embed (e_list e_term) rng attrs);
                                       S.as_arg (embed e_bv rng b);
                                       S.as_arg (embed (e_term_aq aq) rng t1);
-                                      S.as_arg (embed (e_term_aq aq) rng t2)]
+                                      S.as_arg (embed (e_term_aq (push aq)) rng t2)]
                         rng
 
         | Tv_Match (t, ret_opt, brs) ->
@@ -585,9 +607,7 @@ let e_term_view_aq aq =
     in
     mk_emb embed_term_view unembed_term_view fstar_refl_term_view
 
-
-let e_term_view = e_term_view_aq []
-
+let e_term_view = e_term_view_aq noaqs
 
 (* embeds as a string list *)
 let e_lid : embedding I.lid =
