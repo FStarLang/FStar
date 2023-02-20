@@ -385,12 +385,12 @@ and elab_src_typing
       let ru = elab_universe u in
       let rt = elab_pure t in
       let rp = elab_pure p in
-      mk_elim_exists ru rt rp
+      mk_elim_exists ru rt (mk_abs rt R.Q_Explicit rp)
 
     | T_IntroExists _ u t p e _ _ _ ->
       let ru = elab_universe u in
       let rt = elab_pure t in
       let rp = elab_pure p in
       let re = elab_pure e in
-      mk_intro_exists ru rt rp re
+      mk_intro_exists ru rt (mk_abs rt R.Q_Explicit rp) re
 #pop-options
