@@ -216,6 +216,48 @@ let bind_soundness
            (soundness _ _ _ _ reveal_b_typing)
 #pop-options
 
+let intro_exists_soundness
+  (#f:stt_env)
+  (#g:env)
+  (#t:term)
+  (#c:pure_comp)
+  (d:src_typing f g t c{T_IntroExists? d})
+  : GTot (RT.typing (extend_env_l f g)
+                    (elab_src_typing d)
+                    (elab_pure_comp c)) =
+
+  let t0 = t in
+  let T_IntroExists _ u t p e t_typing p_typing e_typing = d in
+  let ru = elab_universe u in
+  let rt = elab_pure t in
+  let rp = elab_pure p in
+  let re = elab_pure e in
+
+  let rt_typing : RT.typing _ rt (R.pack_ln (R.Tv_Type ru)) =
+    tot_typing_soundness t_typing in
+
+  let rp_typing
+    : RT.typing _
+        (mk_exists ru rt (mk_abs rt R.Q_Explicit rp)) vprop_tm =
+    tot_typing_soundness p_typing in
+  let rp_typing
+    : RT.typing _
+        (mk_abs rt R.Q_Explicit rp)
+        (mk_arrow (rt, R.Q_Explicit) vprop_tm) =
+    Exists.exists_inversion rp_typing in
+
+  let re_typing : RT.typing _ re rt =
+    tot_typing_soundness e_typing in
+
+  assume (R.pack_ln (R.Tv_App (mk_abs rt R.Q_Explicit rp) (re, R.Q_Explicit)) ==
+          RT.open_or_close_term' rp (RT.OpenWith re) 0);
+
+  elab_open_commute' p e 0;
+  assert (elab_pure (open_term' p e 0) ==
+          R.pack_ln (R.Tv_App (mk_abs rt R.Q_Explicit rp) (re, R.Q_Explicit)));
+
+  Exists.intro_exists_soundness rt_typing rp_typing re_typing
+
 let elim_exists_soundness
   (#f:stt_env)
   (#g:env)
@@ -238,7 +280,7 @@ let elim_exists_soundness
   let rp_typing = Exists.exists_inversion rp_typing in
   Exists.elim_exists_soundness rt_typing rp_typing
   
-#push-options "--query_stats --fuel 4 --ifuel 4 --z3rlimit_factor 10"
+#push-options "--query_stats --fuel 1 --ifuel 1"
 let rec soundness (f:stt_env)
                   (g:env)
                   (t:term)
@@ -296,7 +338,8 @@ let rec soundness (f:stt_env)
 
     | T_ElimExists _ _ _ _ _ _ ->
       elim_exists_soundness d
-    | T_IntroExists _ _ _ _ _ _ _ _ -> admit ()
+    | T_IntroExists _ _ _ _ _ _ _ _ ->
+      intro_exists_soundness d
 
 #pop-options
 
