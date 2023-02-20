@@ -86,6 +86,11 @@ let rec open_term_ln' (e:term)
       open_term_ln' t x i;
       open_term_ln' e x i
 
+    | Tm_While inv cond body ->
+      open_term_ln' inv x (i + 1);
+      open_term_ln' cond x i;
+      open_term_ln' body x i
+
 and open_comp_ln' (c:comp)
                        (x:term)
                        (i:index)
@@ -193,6 +198,11 @@ let rec ln_weakening (e:term) (i j:int)
       ln_weakening t i j;
       ln_weakening e i j
 
+    | Tm_While inv cond body ->
+      ln_weakening inv (i + 1) (j + 1);
+      ln_weakening cond i j;
+      ln_weakening body i j
+
 and ln_weakening_comp (c:comp) (i j:int)
   : Lemma 
     (requires ln'_comp c i /\ i <= j)
@@ -292,6 +302,11 @@ let rec open_term_ln'_inv (e:term)
     | Tm_IntroExists t e ->
       open_term_ln'_inv t x i;
       open_term_ln'_inv e x i
+
+    | Tm_While inv cond body ->
+      open_term_ln'_inv inv x (i + 1);
+      open_term_ln'_inv cond x i;
+      open_term_ln'_inv body x i
 
 and open_comp_ln'_inv (c:comp)
                       (x:term { ln x })
@@ -394,6 +409,11 @@ let rec close_term_ln' (e:term)
     | Tm_IntroExists t e ->
       close_term_ln' t x i;
       close_term_ln' e x i
+
+    | Tm_While inv cond body ->
+      close_term_ln' inv x (i + 1);
+      close_term_ln' cond x i;
+      close_term_ln' body x i
 
 and close_comp_ln' (c:comp)
                    (x:var)
@@ -541,4 +561,11 @@ let rec src_typing_ln (#f:_) (#g:_) (#t:_) (#c:_)
     | T_Equiv _ _ _ _ d2 deq ->
       src_typing_ln d2;
       st_equiv_ln deq
+
+    | T_While _ inv _ _ (E inv_typing) cond_typing body_typing ->
+      src_typing_ln inv_typing;
+      src_typing_ln cond_typing;
+      src_typing_ln body_typing;
+      open_term_ln'_inv inv tm_false 0
+
 #pop-options

@@ -76,6 +76,11 @@ let rec freevars_close_term' (e:term) (x:var) (i:index)
       freevars_close_term' t x i;
       freevars_close_term' e x i
 
+    | Tm_While inv cond body ->
+      freevars_close_term' inv x (i + 1);
+      freevars_close_term' cond x i;
+      freevars_close_term' body x i
+
 and freevars_close_comp (c:comp)
                         (x:var)
                         (i:index)
@@ -277,4 +282,11 @@ let rec src_typing_freevars (#f:_) (#g:_) (#t:_) (#c:_)
    | T_Equiv _ _ _ _ d2 deq ->
      src_typing_freevars d2;
      st_equiv_freevars deq
-#pop-options
+
+   | T_While _ inv _ _ (E inv_typing) cond_typing body_typing ->
+     src_typing_freevars inv_typing;
+     src_typing_freevars cond_typing;
+     src_typing_freevars body_typing;
+     assert (freevars tm_false `Set.equal` Set.empty);
+     freevars_open_term inv tm_false 0;
+     assert (freevars (open_term' inv tm_false 0) `Set.subset` freevars inv)

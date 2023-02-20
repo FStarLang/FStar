@@ -29,9 +29,9 @@ let inst_stt_return (#g:R.env) (#u:R.universe) (#ty #v:R.term)
                     (d_ty:RT.typing g ty (RT.tm_type u))
                     (d_v:RT.typing g v ty)
   : GTot (RT.typing g (mk_return u ty v)
-                      (mk_stt_app u [ty;
-                                     emp_tm; 
-                                     mk_abs ty R.Q_Explicit (mk_pure (mk_eq u ty (var_as_bvar_term 0) v))]))
+                      (mk_stt_comp u ty
+                                     emp_tm
+                                     (mk_abs ty R.Q_Explicit (mk_pure (mk_eq u ty (var_as_bvar_term 0) v)))))
    = admit()
                     
 #push-options "--query_stats --fuel 4 --ifuel 1"
@@ -49,15 +49,15 @@ let elab_return_typing  (#f:stt_env)
     let v_typing = tot_typing_soundness v_typing in
     let d = inst_stt_return ty_typing v_typing in
     d
-#pop-options    
+#pop-options
 
 let inst_stt_return_noeq (#g:R.env) (#u:R.universe) (#ty #v:R.term)
                           (d_ty:RT.typing g ty (RT.tm_type u))
                           (d_v:RT.typing g v ty)
   : GTot (RT.typing g (mk_return_noeq u ty v)
-                      (mk_stt_app u [ty;
-                                     emp_tm; 
-                                     mk_abs ty R.Q_Explicit emp_tm]))
+                      (mk_stt_comp u ty
+                                     emp_tm
+                                     (mk_abs ty R.Q_Explicit emp_tm)))
    = admit()
 
 #push-options "--query_stats --fuel 4 --ifuel 1"
@@ -74,4 +74,4 @@ let elab_return_noeq_typing  (#f:stt_env)
   = let ty_typing = tot_typing_soundness ty_typing in
     let d = inst_stt_return_noeq ty_typing v_typing in
     d
-#pop-options    
+#pop-options

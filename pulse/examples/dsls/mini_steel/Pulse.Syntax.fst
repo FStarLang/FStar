@@ -81,6 +81,8 @@ type term =
   | Tm_ElimExists : term -> term
   | Tm_IntroExists: term -> term -> term
 
+  | Tm_While      : term -> term -> term -> term  // inv, cond, body
+
   | Tm_UVar       : int -> term
 
 and binder = {
@@ -142,6 +144,9 @@ let rec freevars (t:term)
     | Tm_Arrow b _ body -> Set.union (freevars b.binder_ty) (freevars_comp body)
     | Tm_ElimExists p -> freevars p
     | Tm_IntroExists e p -> Set.union (freevars e) (freevars p)
+    | Tm_While inv cond body ->
+      Set.union (freevars inv)
+                (Set.union (freevars cond) (freevars body))
 
 and freevars_comp (c:comp) : Set.set var =
   match c with
@@ -220,6 +225,11 @@ let rec ln' (t:term) (i:int) =
 
   | Tm_ElimExists p -> ln' p i
   | Tm_IntroExists e p -> ln' e i && ln' p i
+
+  | Tm_While inv cond body ->
+    ln' inv (i + 1) &&
+    ln' cond i &&
+    ln' body i
 
 and ln'_comp (c:comp) (i:int)
   : Tot bool
@@ -317,6 +327,11 @@ let rec open_term' (t:term) (v:term) (i:index)
     | Tm_ElimExists p -> Tm_ElimExists (open_term' p v i)
     | Tm_IntroExists e p -> Tm_IntroExists (open_term' e v i)
                                            (open_term' p v i)
+
+    | Tm_While inv cond body ->
+      Tm_While (open_term' inv v (i + 1))
+               (open_term' cond v i)
+               (open_term' body v i)
 
 and open_comp' (c:comp) (v:term) (i:index)
   : Tot comp (decreases c)
@@ -424,7 +439,12 @@ let rec close_term' (t:term) (v:var) (i:index)
 
     | Tm_ElimExists p -> Tm_ElimExists (close_term' p v i)
     | Tm_IntroExists e p -> Tm_IntroExists (close_term' e v i)
-                                           (close_term' p v i)
+                                          (close_term' p v i)
+
+    | Tm_While inv cond body ->
+      Tm_While (close_term' inv v (i + 1))
+               (close_term' cond v i)
+               (close_term' body v i)
 
 and close_comp' (c:comp) (v:var) (i:index)
   : Tot comp (decreases c)
@@ -571,6 +591,11 @@ let rec close_open_inverse' (t:term)
 
     | Tm_ElimExists t -> close_open_inverse' t x i
     | Tm_IntroExists t e -> close_open_inverse' t x i; close_open_inverse' e x i
+
+    | Tm_While inv cond body ->
+      close_open_inverse' inv x (i + 1);
+      close_open_inverse' cond x i;
+      close_open_inverse' body x i
 
 and close_open_inverse'_comp (c:comp)
                              (x:var { ~(x `Set.mem` freevars_comp c) } )
@@ -743,6 +768,10 @@ let rec eq_tm (t1 t2:term)
       eq_tm b1.binder_ty b2.binder_ty &&
       q1=q2 &&
       eq_comp c1 c2
+    | Tm_While inv1 cond1 body1, Tm_While inv2 cond2 body2 ->
+      eq_tm inv1 inv2 &&
+      eq_tm cond1 cond2 &&
+      eq_tm body1 body2
     | Tm_UVar z1, Tm_UVar z2 ->
       z1=z2
     | _ -> false

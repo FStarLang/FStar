@@ -250,19 +250,6 @@ let elab_sub (c1 c2:pure_comp_st) (e:R.term) =
        else let _ = assert (C_STGhost? c1) in
             mk_sub_stt_ghost u ty opened pre1 pre2 post1 post2 e
 
-let mk_elim_exists (u:R.universe) (a p:R.term) : R.term =
-  let t = R.pack_ln (R.Tv_UInst (R.pack_fv elim_exists_lid) [u]) in
-  let t = R.pack_ln (R.Tv_App t (a, R.Q_Implicit)) in
-  let p = R.pack_ln (T.Tv_Abs (binder_of_t_q t R.Q_Explicit) p) in
-  R.pack_ln (R.Tv_App t (p, R.Q_Explicit))
-
-let mk_intro_exists (u:R.universe) (a p:R.term) (e:R.term) : R.term =
-  let t = R.pack_ln (R.Tv_UInst (R.pack_fv intro_exists_lid) [u]) in
-  let t = R.pack_ln (R.Tv_App t (a, R.Q_Implicit)) in
-  let p = R.pack_ln (T.Tv_Abs (binder_of_t_q t R.Q_Explicit) p) in
-  let t = R.pack_ln (R.Tv_App t (p, R.Q_Explicit)) in
-  R.pack_ln (R.Tv_App t (e, R.Q_Explicit))
-  
 #push-options "--z3rlimit_factor 4"
 let rec elab_bind #f #g #x #c1 #c2 #c
   (bc:bind_comp f g x c1 c2 c)
@@ -398,12 +385,18 @@ and elab_src_typing
       let ru = elab_universe u in
       let rt = elab_pure t in
       let rp = elab_pure p in
-      mk_elim_exists ru rt rp
+      mk_elim_exists ru rt (mk_abs rt R.Q_Explicit rp)
 
     | T_IntroExists _ u t p e _ _ _ ->
       let ru = elab_universe u in
       let rt = elab_pure t in
       let rp = elab_pure p in
       let re = elab_pure e in
-      mk_intro_exists ru rt rp re
+      mk_intro_exists ru rt (mk_abs rt R.Q_Explicit rp) re
+
+    | T_While _ inv _ _ _ cond_typing body_typing ->
+      let inv = elab_pure inv in
+      let cond = elab_src_typing cond_typing in
+      let body = elab_src_typing body_typing in
+      mk_while (mk_abs bool_tm R.Q_Explicit inv) cond body
 #pop-options
