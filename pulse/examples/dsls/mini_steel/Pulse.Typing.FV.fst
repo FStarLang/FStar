@@ -278,24 +278,3 @@ let rec src_typing_freevars (#f:_) (#g:_) (#t:_) (#c:_)
      src_typing_freevars d2;
      st_equiv_freevars deq
 #pop-options
-
-
-// assume
-// val well_typed_terms_are_ln (g:R.env) (e:R.term) (t:R.term) (_:RT.typing g e t)
-//   : Lemma (ensures RT.ln e /\ RT.ln t)
-
-// assume
-// val elab_ln_inverse (e:pure_term)
-//   : Lemma 
-//     (requires RT.ln (elab_pure e))
-//     (ensures ln e)
-
-// let rec src_typing_freevars (#f:_) (#g:_) (#t:_) (#c:_)
-//                             (d:src_typing f g t c)
-//                             (x:var)
-//   : Lemma 
-//     (requires x `Set.mem` freevars t \/
-//               x `Set.mem` freevars_comp c)
-//     (ensures Some? (lookup g x))
-//   = match d with
-
