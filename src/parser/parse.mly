@@ -505,7 +505,17 @@ tuplePattern:
       { match pats with | [x] -> x | l -> mk_pattern (PatTuple (l, false)) (rhs parseState 1) }
 
 constructorPattern:
-  | pat=constructorPattern COLON_COLON pats=constructorPattern
+  | p=constructorPatternNoPatView { p }
+  | p=constructorPatternNoPatView LARROW view=appTerm?
+    {
+      let r = rhs parseState 3 in
+      let view = bind_opt view (function | {tm = Wild} -> None | v -> Some v) in
+      let view = dflt (mk_term (Var (lid_of_ids [mk_ident ("view", r)])) r Un) view in
+      mk_pattern (PatView (p, view)) (rhs2 parseState 1 3)
+    }
+
+constructorPatternNoPatView:
+  | pat=constructorPatternNoPatView COLON_COLON pats=constructorPatternNoPatView
       { mk_pattern (consPat (rhs parseState 3) pat pats) (rhs2 parseState 1 3) }
   | uid=quident args=nonempty_list(atomicPattern)
       {
@@ -553,7 +563,6 @@ atomicPattern:
       let pat = mk_pattern (PatView (tup_pat, mk_pair_abs)) r in
       pat
     }
-  | pat=atomicPattern LARROW t=atomicTerm { mk_pattern (PatView (pat, t)) (rhs2 parseState 1 3) }
   | LPAREN pat=tuplePattern COLON t=simpleArrow phi_opt=refineOpt RPAREN
       {
         let pos_t = rhs2 parseState 2 4 in

@@ -18,13 +18,12 @@ let foo (x: int) = x
 let extract_foo_int_payload t 
   = match inspect_ln t with
   | Tv_App ((T (Tv_FVar (`%foo <- string_of_fv))) <- inspect_ln')
-           ((T (Tv_Const (C_Int n))) <- inspect_ln', _)
+           (T (Tv_Const (C_Int n)) <- inspect_ln', _)
       -> Some n
   | _ -> None
 
 /// Works as expected
 let _ = assert_norm (extract_foo_int_payload (`(foo 123)) == Some 123)
-
 
 (*** matching integers, modulo *)
 let mod6 (n:int) = n % 4
