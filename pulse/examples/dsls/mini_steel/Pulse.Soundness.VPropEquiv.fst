@@ -17,8 +17,8 @@ let vprop_equiv_refl_type =
   let var = 0 in
   let v = mk_name var in
   let v_typ = elab_pure Tm_VProp in
-  mk_tot_arrow1 (v_typ, R.Q_Explicit)
-                (RT.close_term (stt_vprop_equiv v v) var)
+  mk_arrow (v_typ, R.Q_Explicit)
+           (RT.close_term (stt_vprop_equiv v v) var)
 
 let inst_vprop_equiv_refl #g #v
                           (d:RT.typing g v (elab_pure Tm_VProp))
@@ -32,13 +32,13 @@ let vprop_equiv_sym_type =
   let var1 = 1 in
   let v1 = mk_name var1 in
   let v_typ = elab_pure Tm_VProp in
-  mk_tot_arrow1 
+  mk_arrow 
     (v_typ, R.Q_Implicit)
     (RT.close_term
-      (mk_tot_arrow1 
+      (mk_arrow
         (v_typ, R.Q_Implicit)
         (RT.close_term 
-          (mk_tot_arrow1 
+          (mk_arrow
              (stt_vprop_equiv v0 v1, R.Q_Explicit)
              (stt_vprop_equiv v0 v1)) var1))
         var0)
@@ -114,13 +114,13 @@ let vprop_equiv_ext_type : R.term =
     bv_sort = vprop_tm;
   })) in
 
-  mk_tot_arrow1
+  mk_arrow
     (vprop_tm, Q_Explicit)
     (
-     mk_tot_arrow1
+     mk_arrow
        (vprop_tm, Q_Explicit)
        (
-        mk_tot_arrow1
+        mk_arrow
           (vprop_eq_tm (mk_bv 1) (mk_bv 0), Q_Explicit)
           (
            stt_vprop_equiv (mk_bv 2) (mk_bv 1)

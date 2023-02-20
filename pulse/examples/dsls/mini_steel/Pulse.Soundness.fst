@@ -213,7 +213,7 @@ let bind_soundness
            (mk_t_abs_tot _ _ _ t2_typing post2_typing)
            (elab_pure reveal_b)
            (soundness _ _ _ _ reveal_b_typing)
-
+#pop-options
 
 #push-options "--query_stats --fuel 2 --ifuel 2"
 let rec soundness (f:stt_env)

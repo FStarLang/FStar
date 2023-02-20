@@ -29,7 +29,7 @@ let inst_frame_pre #u #g #head #t
 let inst_frame_post #u #g #head #t #pre
                     (head_typing: RT.typing g head (frame_type_t_pre u t pre))
                     (#post:_)
-                    (post_typing: RT.typing g post (mk_tot_arrow1 (t, R.Q_Explicit) vprop_tm))
+                    (post_typing: RT.typing g post (mk_arrow (t, R.Q_Explicit) vprop_tm))
   : GTot (RT.typing g (R.mk_app head [(post, R.Q_Implicit)]) (frame_type_t_pre_post u t pre post))
   = admit()
 

@@ -16,10 +16,10 @@ open Pulse.Soundness.Common
 
 (* x:t1 -> stt t2 pre post   ~    x:t1 -> stt t2 ((fun x -> pre) x) post *)
 let equiv_arrow (g:R.env) (t1:R.term) (u2:R.universe) (t2:R.term) (pre:R.term) (post:R.term) //need some ln preconditions
-  : GTot (RT.equiv g (mk_tot_arrow1 (t1, R.Q_Explicit)
-                                    (mk_stt_app u2 [t2; pre; post]))
-                     (mk_tot_arrow1 (t1, R.Q_Explicit)
-                                    (mk_stt_app u2 [t2; R.mk_app (mk_abs t1 R.Q_Explicit pre) [bound_var 0, R.Q_Explicit]; post])))
+  : GTot (RT.equiv g (mk_arrow (t1, R.Q_Explicit)
+                               (mk_stt_app u2 [t2; pre; post]))
+                     (mk_arrow (t1, R.Q_Explicit)
+                               (mk_stt_app u2 [t2; R.mk_app (mk_abs t1 R.Q_Explicit pre) [bound_var 0, R.Q_Explicit]; post])))
   = admit()
 
 
@@ -140,15 +140,15 @@ let elab_bind_typing (f:stt_env)
     //ln (comp_post c1) 0
     let g_typing
       : RT.typing _ _ 
-                  (mk_tot_arrow1 (t1, R.Q_Explicit)
-                                 (mk_stt_app u2 [t2; elab_pure (comp_post c1); elab_comp_post c2]))
+                  (mk_arrow (t1, R.Q_Explicit)
+                            (mk_stt_app u2 [t2; elab_pure (comp_post c1); elab_comp_post c2]))
       = r2_typing in
     let g_typing 
       : RT.typing _ _ 
-                  (mk_tot_arrow1 (t1, R.Q_Explicit)
-                                 (mk_stt_app u2 [t2;
-                                                 R.mk_app (mk_abs t1 R.Q_Explicit (elab_pure (comp_post c1)))
-                                                          [bound_var 0, R.Q_Explicit];
+                  (mk_arrow (t1, R.Q_Explicit)
+                            (mk_stt_app u2 [t2;
+                                            R.mk_app (mk_abs t1 R.Q_Explicit (elab_pure (comp_post c1)))
+                                                     [bound_var 0, R.Q_Explicit];
                                                 elab_comp_post c2]))
       = RT.(T_Sub _ _ _ _ r2_typing (ST_Equiv _ _ _ (equiv_arrow _ _ _ _ _ _))) in
     let d : RT.typing _ (elab_bind bc r1 r2) _ = 
