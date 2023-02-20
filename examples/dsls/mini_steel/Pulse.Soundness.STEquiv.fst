@@ -28,24 +28,24 @@ let abs_and_app0 (ty:R.term) (b:R.term) =
 // x:ty -> vprop_equiv p q ~ x:ty -> vprop_equiv ((fun y -> p) x) ((fun y -> q) x)
 let stt_vprop_equiv_abstract (#f:stt_env) (#g:env) (#post0 #post1:pure_term) (#pf:_) (#ty:_)
                              (d:RT.typing (extend_env_l f g) pf 
-                                          (mk_tot_arrow1 (ty, R.Q_Explicit)
-                                                         (stt_vprop_equiv (elab_pure post0) (elab_pure post1))))
+                                          (mk_arrow (ty, R.Q_Explicit)
+                                                    (stt_vprop_equiv (elab_pure post0) (elab_pure post1))))
   : GTot (RT.typing (extend_env_l f g) pf
-                    (mk_tot_arrow1 (ty, R.Q_Explicit)
-                                   (stt_vprop_equiv (abs_and_app0 ty (elab_pure post0))
-                                                    (abs_and_app0 ty (elab_pure post1)))))
+                    (mk_arrow (ty, R.Q_Explicit)
+                              (stt_vprop_equiv (abs_and_app0 ty (elab_pure post0))
+                                               (abs_and_app0 ty (elab_pure post1)))))
   = admit()
 
 let inst_intro_vprop_post_equiv (#g:R.env) (#ty:R.term) (#u:_)
                                 (d_ty:RT.typing g ty (RT.tm_type u))
                                 (#post0 #post1:R.term)
                                 (d_0:RT.typing g post0 
-                                                (mk_tot_arrow1 (ty, R.Q_Explicit) (elab_pure Tm_VProp)))
+                                                (mk_arrow (ty, R.Q_Explicit) (elab_pure Tm_VProp)))
                                 (d_1:RT.typing g post1 
-                                                (mk_tot_arrow1 (ty, R.Q_Explicit) (elab_pure Tm_VProp)))
+                                                (mk_arrow (ty, R.Q_Explicit) (elab_pure Tm_VProp)))
                                 (#pf:_)
-                                (eq:RT.typing g pf (mk_tot_arrow1 (ty, R.Q_Explicit) 
-                                                                 (stt_vprop_equiv (app0 post0) (app0 post1))))
+                                (eq:RT.typing g pf (mk_arrow (ty, R.Q_Explicit) 
+                                                             (stt_vprop_equiv (app0 post0) (app0 post1))))
   : GTot ( pf: R.term &
            RT.typing g pf (stt_vprop_post_equiv u ty post0 post1) )
   = admit()
@@ -55,9 +55,9 @@ let stt_vprop_post_equiv_is_prop (#g:R.env) (#ty:R.term) (#u:_)
                                  (d_ty:RT.typing g ty (RT.tm_type u))
                                  (#post0 #post1:R.term)
                                  (d_0:RT.typing g post0 
-                                                (mk_tot_arrow1 (ty, R.Q_Explicit) (elab_pure Tm_VProp)))
+                                                (mk_arrow (ty, R.Q_Explicit) (elab_pure Tm_VProp)))
                                  (d_1:RT.typing g post1 
-                                                (mk_tot_arrow1 (ty, R.Q_Explicit) (elab_pure Tm_VProp)))
+                                                (mk_arrow (ty, R.Q_Explicit) (elab_pure Tm_VProp)))
   : GTot (RT.typing g (stt_vprop_post_equiv u ty post0 post1) RT.tm_prop)
   = admit()
 
@@ -65,12 +65,12 @@ let inst_sub_stt (#g:R.env) (#u:_) (#a #pre1 #pre2 #post1 #post2 #r:R.term)
                  (d_a: RT.typing g a (RT.tm_type u))
                  (d_pre1: RT.typing g pre1 (elab_pure Tm_VProp))
                  (d_pre2: RT.typing g pre2 (elab_pure Tm_VProp))
-                 (d_post1:RT.typing g post1 (mk_tot_arrow1 (a, R.Q_Explicit) (elab_pure Tm_VProp)))
-                 (d_post2:RT.typing g post2 (mk_tot_arrow1 (a, R.Q_Explicit) (elab_pure Tm_VProp)))
+                 (d_post1:RT.typing g post1 (mk_arrow (a, R.Q_Explicit) (elab_pure Tm_VProp)))
+                 (d_post2:RT.typing g post2 (mk_arrow (a, R.Q_Explicit) (elab_pure Tm_VProp)))
                  (pre_equiv:RT.typing g (`()) (stt_vprop_equiv pre1 pre2))
                  (post_equiv:RT.typing g (`()) (stt_vprop_post_equiv u a post1 post2))
-                 (d_r:RT.typing g r (mk_stt_app u [a;pre1;post1]))
-  : GTot (RT.typing g (mk_sub_stt u a pre1 pre2 post1 post2 r) (mk_stt_app u [a;pre2;post2]))
+                 (d_r:RT.typing g r (mk_stt_comp u a pre1 post1))
+  : GTot (RT.typing g (mk_sub_stt u a pre1 pre2 post1 post2 r) (mk_stt_comp u a pre2 post2))
   = admit()
 
 let vprop_arrow (t:pure_term) : pure_term = Tm_Arrow (null_binder t) None (C_Tot Tm_VProp)
@@ -113,9 +113,9 @@ let st_equiv_soundness (f:stt_env)
     RT.close_open_inverse (elab_pure (comp_post c1)) x;      
     let d 
       : RT.typing (extend_env_l f g) _ 
-                  (mk_tot_arrow1 (t0, R.Q_Explicit)
-                                 (stt_vprop_equiv (elab_pure (comp_post c0))
-                                                  (elab_pure (comp_post c1))))
+                  (mk_arrow (t0, R.Q_Explicit)
+                            (stt_vprop_equiv (elab_pure (comp_post c0))
+                                             (elab_pure (comp_post c1))))
         = RT.T_Abs _ _ _ (`()) _ _ _ R.Q_Explicit
                  r_res_typing
                  post_equiv

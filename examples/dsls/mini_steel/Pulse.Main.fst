@@ -229,6 +229,10 @@ let rec shift_bvs_in_else (t:term) (n:nat) : Tac term =
   | Tm_IntroExists t e ->
     Tm_IntroExists (shift_bvs_in_else t n)
                    (shift_bvs_in_else e n)
+  | Tm_While inv cond body ->
+    Tm_While (shift_bvs_in_else inv (n + 1))
+             (shift_bvs_in_else cond n)
+             (shift_bvs_in_else body n)
   | Tm_UVar _ -> t
 
 let rec translate_term' (g:RT.fstar_top_env) (t:R.term)

@@ -14,6 +14,8 @@ module Lift = Pulse.Soundness.Lift
 module Frame = Pulse.Soundness.Frame
 module STEquiv = Pulse.Soundness.STEquiv
 module Return = Pulse.Soundness.Return
+module Exists = Pulse.Soundness.Exists
+module While = Pulse.Soundness.While
 module LN = Pulse.Typing.LN
 module FV = Pulse.Typing.FV
 
@@ -213,9 +215,124 @@ let bind_soundness
            (mk_t_abs_tot _ _ _ t2_typing post2_typing)
            (elab_pure reveal_b)
            (soundness _ _ _ _ reveal_b_typing)
+#pop-options
 
+let intro_exists_soundness
+  (#f:stt_env)
+  (#g:env)
+  (#t:term)
+  (#c:pure_comp)
+  (d:src_typing f g t c{T_IntroExists? d})
+  : GTot (RT.typing (extend_env_l f g)
+                    (elab_src_typing d)
+                    (elab_pure_comp c)) =
 
-#push-options "--query_stats --fuel 2 --ifuel 2"
+  let t0 = t in
+  let T_IntroExists _ u t p e t_typing p_typing e_typing = d in
+  let ru = elab_universe u in
+  let rt = elab_pure t in
+  let rp = elab_pure p in
+  let re = elab_pure e in
+
+  let rt_typing : RT.typing _ rt (R.pack_ln (R.Tv_Type ru)) =
+    tot_typing_soundness t_typing in
+
+  let rp_typing
+    : RT.typing _
+        (mk_exists ru rt (mk_abs rt R.Q_Explicit rp)) vprop_tm =
+    tot_typing_soundness p_typing in
+  let rp_typing
+    : RT.typing _
+        (mk_abs rt R.Q_Explicit rp)
+        (mk_arrow (rt, R.Q_Explicit) vprop_tm) =
+    Exists.exists_inversion rp_typing in
+
+  let re_typing : RT.typing _ re rt =
+    tot_typing_soundness e_typing in
+
+  assume (R.pack_ln (R.Tv_App (mk_abs rt R.Q_Explicit rp) (re, R.Q_Explicit)) ==
+          RT.open_or_close_term' rp (RT.OpenWith re) 0);
+
+  elab_open_commute' p e 0;
+  assert (elab_pure (open_term' p e 0) ==
+          R.pack_ln (R.Tv_App (mk_abs rt R.Q_Explicit rp) (re, R.Q_Explicit)));
+
+  Exists.intro_exists_soundness rt_typing rp_typing re_typing
+
+let elim_exists_soundness
+  (#f:stt_env)
+  (#g:env)
+  (#t:term)
+  (#c:pure_comp)
+  (d:src_typing f g t c{T_ElimExists? d})
+  : GTot (RT.typing (extend_env_l f g)
+                    (elab_src_typing d)
+                    (elab_pure_comp c)) =
+
+  let T_ElimExists _ u t p t_typing p_typing = d in
+  let ru = elab_universe u in
+  let rt_typing = tot_typing_soundness t_typing in
+  let rp_typing
+    : RT.typing (extend_env_l f g)
+                (mk_exists ru (elab_pure t)
+                   (mk_abs (elab_pure t) R.Q_Explicit (elab_pure p)))
+                vprop_tm
+    = tot_typing_soundness p_typing in
+  let rp_typing = Exists.exists_inversion rp_typing in
+  Exists.elim_exists_soundness rt_typing rp_typing
+
+#push-options "--z3rlimit_factor 2"
+let while_soundness
+  (#f:stt_env)
+  (#g:env)
+  (#t:term)
+  (#c:pure_comp)
+  (d:src_typing f g t c{T_While? d})
+  (soundness:(f:stt_env -> g:env -> t:term -> c:pure_comp ->
+              d':src_typing f g t c{d' << d} ->
+              GTot (RT.typing (extend_env_l f g)
+                              (elab_src_typing d')
+                              (elab_pure_comp c))))
+
+  : GTot (RT.typing (extend_env_l f g)
+                    (elab_src_typing d)
+                    (elab_pure_comp c)) =
+
+  let T_While _ inv cond body inv_typing cond_typing body_typing = d in
+  let rinv = mk_abs bool_tm R.Q_Explicit (elab_pure inv) in
+  let rinv_typing
+    : RT.typing _
+        (mk_exists uzero bool_tm rinv)
+        vprop_tm =
+    tot_typing_soundness inv_typing in
+  let rinv_typing
+    : RT.typing _
+        rinv
+        (mk_arrow (bool_tm, R.Q_Explicit) vprop_tm) =
+    Exists.exists_inversion rinv_typing in
+  let rcond_typing
+    : RT.typing _ (elab_src_typing cond_typing)
+        (mk_stt_comp uzero bool_tm (mk_exists uzero bool_tm rinv) rinv) =
+    soundness f g cond (comp_while_cond inv) cond_typing in
+
+  elab_open_commute' inv tm_true 0;
+  assume (R.pack_ln (R.Tv_App (mk_abs bool_tm R.Q_Explicit (elab_pure inv)) (true_tm, R.Q_Explicit)) ==
+          RT.open_or_close_term' (elab_pure inv) (RT.OpenWith true_tm) 0);
+
+  let rbody_typing
+    : RT.typing _ (elab_src_typing body_typing)
+        (mk_stt_comp uzero unit_tm
+           (R.pack_ln (R.Tv_App rinv (true_tm, R.Q_Explicit)))
+           (mk_abs unit_tm R.Q_Explicit (mk_exists uzero bool_tm rinv))) =
+    soundness f g body (comp_while_body inv) body_typing in
+
+  elab_open_commute' inv tm_false 0;
+  assume (R.pack_ln (R.Tv_App (mk_abs bool_tm R.Q_Explicit (elab_pure inv)) (false_tm, R.Q_Explicit)) ==
+          RT.open_or_close_term' (elab_pure inv) (RT.OpenWith false_tm) 0);
+
+  While.while_soundness rinv_typing rcond_typing rbody_typing
+
+#push-options "--query_stats --fuel 1 --ifuel 1"
 let rec soundness (f:stt_env)
                   (g:env)
                   (t:term)
@@ -271,8 +388,13 @@ let rec soundness (f:stt_env)
     | T_If _ _ _ _ _ _ _ _ _ ->
       if_soundness _ _ _ _ d soundness
 
-    | T_ElimExists _ _ _ _ _ _
-    | T_IntroExists _ _ _ _ _ _ _ _ -> admit ()
+    | T_ElimExists _ _ _ _ _ _ ->
+      elim_exists_soundness d
+    | T_IntroExists _ _ _ _ _ _ _ _ ->
+      intro_exists_soundness d
+
+    | T_While _ _ _ _ _ _ _ ->
+      while_soundness d soundness
 
 #pop-options
 

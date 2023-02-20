@@ -85,8 +85,7 @@ let try_readback_st_comp
                       snd pre == Q_Explicit      /\
                       snd post == Q_Explicit);
 
-              let l = [fst res; fst pre; mk_abs (fst res) R.Q_Explicit body] in
-              assume (t == mk_stt_app u l);
+              assume (t == mk_stt_comp u (fst res) (fst pre) (mk_abs (fst res) R.Q_Explicit body));
               let? u'' = readback_universe u in
               let? res' = readback_ty (fst res) in
               let? pre' = readback_ty (fst pre) in
@@ -105,7 +104,6 @@ let try_readback_st_comp
                   = inspect_binder b
               in    
               let bv_view = inspect_bv bv in
-              let l = [fst res; fst opened; fst pre; mk_abs (fst res) R.Q_Explicit body] in
               let? u'' = readback_universe u in
               let? res' = readback_ty (fst res) in
               let? opened' = readback_ty (fst opened) in
@@ -113,13 +111,13 @@ let try_readback_st_comp
               let? post' = readback_ty body in
               if fv_lid = stt_atomic_lid
               then begin
-                assume (t == mk_stt_atomic_app u l);
+                assume (t == mk_stt_atomic_comp u (fst res) (fst opened) (fst pre) (mk_abs (fst res) R.Q_Explicit body));
                 let c = C_STAtomic opened' ({u=u''; res=res'; pre=pre';post=post'}) in
                 assume (elab_universe u'' == u);
                 Some (c <: c:Pulse.Syntax.comp{ elab_comp c == Some t })
               end
               else begin
-                assume (t == mk_stt_ghost_app u l);
+                assume (t == mk_stt_ghost_comp u (fst res) (fst opened) (fst pre) (mk_abs (fst res) R.Q_Explicit body));
                 let c = C_STGhost opened' ({u=u''; res=res'; pre=pre';post=post'}) in
                 assume (elab_universe u'' == u);
                 Some (c <: c:Pulse.Syntax.comp{ elab_comp c == Some t })

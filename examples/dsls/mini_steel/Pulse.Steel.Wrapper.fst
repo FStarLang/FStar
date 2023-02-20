@@ -5,6 +5,7 @@ open Steel.ST.Effect.Atomic
 open Steel.ST.Effect.Ghost
 open Steel.Memory
 open Steel.ST.Util
+open Steel.ST.Loops
 
 let vprop_equiv (p q:vprop) = squash (equiv p q)
 let vprop_post_equiv (#t:Type u#a) (p q: t -> vprop) = forall x. vprop_equiv (p x) (q x)
@@ -216,3 +217,5 @@ let intro_pure p _ = fun _ -> intro_pure p
 let elim_exists #a p = fun _ -> let r = elim_exists () in reveal r
 
 let intro_exists #a p e = fun _ -> intro_exists e p
+
+let while_loop inv cond body = fun _ -> while_loop inv cond body
