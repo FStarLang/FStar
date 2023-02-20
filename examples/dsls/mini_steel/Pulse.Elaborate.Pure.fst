@@ -12,6 +12,8 @@ let erased_lid = ["FStar"; "Ghost"; "erased"]
 let vprop_lid = ["Steel"; "Effect"; "Common"; "vprop"]
 let vprop_fv = R.pack_fv vprop_lid
 let vprop_tm = R.pack_ln (R.Tv_FVar vprop_fv)
+let unit_fv = R.pack_fv unit_lid
+let unit_tm = R.pack_ln (R.Tv_FVar unit_fv)
 let emp_lid = ["Steel"; "Effect"; "Common"; "emp"]
 let inames_lid = ["Steel"; "Memory"; "inames"]
 let star_lid = ["Steel"; "Effect"; "Common"; "star"]
@@ -20,6 +22,8 @@ let exists_lid = ["Steel"; "ST"; "Util"; "exists_"]
 let forall_lid = ["Steel"; "ST"; "Util"; "forall_"]
 let args_of (tms:list R.term) =
   List.Tot.map (fun x -> x, R.Q_Explicit) tms
+
+let uzero = R.pack_universe (R.Uv_Zero)
 
 let steel_wrapper = ["Pulse"; "Steel"; "Wrapper"]
 let mk_steel_wrapper_lid s = steel_wrapper@[s]
