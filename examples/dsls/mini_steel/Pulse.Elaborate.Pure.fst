@@ -75,27 +75,23 @@ let elim_exists_lid = mk_steel_wrapper_lid "elim_exists"
 let intro_exists_lid = mk_steel_wrapper_lid "intro_exists"
 
 let mk_exists (u:R.universe) (a p:R.term) =
-  let body = mk_abs a R.Q_Explicit p in
   let t = R.pack_ln (R.Tv_UInst (R.pack_fv exists_lid) [u]) in
   let t = R.pack_ln (R.Tv_App t (a, R.Q_Implicit)) in
-  R.pack_ln (R.Tv_App t (body, R.Q_Explicit))
+  R.pack_ln (R.Tv_App t (p, R.Q_Explicit))
 
 let mk_forall (u:R.universe) (a p:R.term) =
-  let body = mk_abs a R.Q_Explicit p in
   let t = R.pack_ln (R.Tv_UInst (R.pack_fv forall_lid) [u]) in
   let t = R.pack_ln (R.Tv_App t (a, R.Q_Implicit)) in
-  R.pack_ln (R.Tv_App t (body, R.Q_Explicit))
+  R.pack_ln (R.Tv_App t (p, R.Q_Explicit))
 
 let mk_elim_exists (u:R.universe) (a p:R.term) : R.term =
   let t = R.pack_ln (R.Tv_UInst (R.pack_fv elim_exists_lid) [u]) in
   let t = R.pack_ln (R.Tv_App t (a, R.Q_Implicit)) in
-  let p = mk_abs t R.Q_Explicit p in
   R.pack_ln (R.Tv_App t (p, R.Q_Explicit))
 
 let mk_intro_exists (u:R.universe) (a p:R.term) (e:R.term) : R.term =
   let t = R.pack_ln (R.Tv_UInst (R.pack_fv intro_exists_lid) [u]) in
   let t = R.pack_ln (R.Tv_App t (a, R.Q_Implicit)) in
-  let p = mk_abs t R.Q_Explicit p in
   let t = R.pack_ln (R.Tv_App t (p, R.Q_Explicit)) in
   R.pack_ln (R.Tv_App t (e, R.Q_Explicit))
 
@@ -136,7 +132,8 @@ let mk_st_atomic (u:universe) (res inames pre post:R.term)
 
 let mk_st_ghost (u:universe) (res inames pre post:R.term)
   : Tot R.term =
-  mk_stt_ghost_app (elab_universe u) [res; inames; pre; mk_abs res R.Q_Explicit post]
+  mk_stt_ghost_comp
+    (elab_universe u) res inames pre (mk_abs res R.Q_Explicit post)
 
 let (let!) (f:option 'a) (g: 'a -> option 'b) : option 'b = 
   match f with
@@ -225,8 +222,8 @@ let rec elab_term (top:term)
       let! t = elab_term t in
       let! b = elab_term body in
       if Tm_ExistsSL? top
-      then Some (mk_exists u t b)
-      else Some (mk_forall u t b)
+      then Some (mk_exists u t (mk_abs t R.Q_Explicit b))
+      else Some (mk_forall u t (mk_abs t R.Q_Explicit b))
 
     | Tm_Inames ->
       Some (pack_ln (Tv_FVar (pack_fv inames_lid)))

@@ -14,6 +14,7 @@ module Lift = Pulse.Soundness.Lift
 module Frame = Pulse.Soundness.Frame
 module STEquiv = Pulse.Soundness.STEquiv
 module Return = Pulse.Soundness.Return
+module Exists = Pulse.Soundness.Exists
 module LN = Pulse.Typing.LN
 module FV = Pulse.Typing.FV
 
@@ -215,7 +216,29 @@ let bind_soundness
            (soundness _ _ _ _ reveal_b_typing)
 #pop-options
 
-#push-options "--query_stats --fuel 2 --ifuel 2"
+let elim_exists_soundness
+  (#f:stt_env)
+  (#g:env)
+  (#t:term)
+  (#c:pure_comp)
+  (d:src_typing f g t c{T_ElimExists? d})
+  : GTot (RT.typing (extend_env_l f g)
+                    (elab_src_typing d)
+                    (elab_pure_comp c)) =
+
+  let T_ElimExists _ u t p t_typing p_typing = d in
+  let ru = elab_universe u in
+  let rt_typing = tot_typing_soundness t_typing in
+  let rp_typing
+    : RT.typing (extend_env_l f g)
+                (mk_exists ru (elab_pure t)
+                   (mk_abs (elab_pure t) R.Q_Explicit (elab_pure p)))
+                vprop_tm
+    = tot_typing_soundness p_typing in
+  let rp_typing = Exists.exists_inversion rp_typing in
+  Exists.elim_exists_soundness rt_typing rp_typing
+  
+#push-options "--query_stats --fuel 4 --ifuel 4 --z3rlimit_factor 10"
 let rec soundness (f:stt_env)
                   (g:env)
                   (t:term)
@@ -271,7 +294,8 @@ let rec soundness (f:stt_env)
     | T_If _ _ _ _ _ _ _ _ _ ->
       if_soundness _ _ _ _ d soundness
 
-    | T_ElimExists _ _ _ _ _ _
+    | T_ElimExists _ _ _ _ _ _ ->
+      elim_exists_soundness d
     | T_IntroExists _ _ _ _ _ _ _ _ -> admit ()
 
 #pop-options
