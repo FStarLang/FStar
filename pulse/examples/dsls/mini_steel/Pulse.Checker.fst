@@ -196,6 +196,51 @@ let rec combine_if_branches (f:RT.fstar_top_env)
 #pop-options
 
 #push-options "--query_stats --fuel 2 --ifuel 1 --z3rlimit_factor 10"
+let check_comp (f:RT.fstar_top_env)
+               (g:env) 
+               (c:pure_comp_st)
+               (pre_typing:tot_typing f g (comp_pre c) Tm_VProp)
+  : T.Tac (comp_typing f g c (comp_u c))
+  = let check_st_comp (st:st_comp { is_pure_st_comp st /\
+                                    comp_u c == st.u /\
+                                    comp_pre c == st.pre /\
+                                    comp_res c == st.res /\
+                                    comp_post c == st.post } )
+      : T.Tac (st_comp_typing f g st)
+      = let (| u, t_u |) = check_universe f g st.res in 
+        if u <> comp_u c
+        then T.fail "Unexpected universe"
+        else (
+          let x = fresh g in
+          assume (~(x `Set.mem` freevars (comp_post c)));
+          let gx = (x, Inl st.res)::g in
+          let (| ty, post_typing |) = check_tot_no_inst f gx (open_term (comp_post c) x) in
+          if not (eq_tm ty Tm_VProp)
+          then T.fail "Ill-typed postcondition"
+          else (
+            assert (ty == Tm_VProp);
+            STC g st x t_u pre_typing (E post_typing)
+          )
+        )
+    in
+    match c with
+    | C_ST st -> 
+      let stc = check_st_comp st in
+      CT_ST _ _ stc
+    | C_STAtomic i st -> 
+      let stc = check_st_comp st in
+      let (| ty, i_typing |) = check_tot_no_inst f g i in
+      if not (eq_tm ty Tm_Inames)
+      then T.fail "Ill-typed inames"
+      else CT_STAtomic _ _ _ (E i_typing) stc
+    | C_STGhost i st -> 
+      let stc = check_st_comp st in
+      let (| ty, i_typing |) = check_tot_no_inst f g i in
+      if not (eq_tm ty Tm_Inames)
+      then T.fail "Ill-typed inames"
+      else CT_STGhost _ _ _ (E i_typing) stc
+
+               
 let check_if (f:RT.fstar_top_env)
              (g:env)
              (b:term)
@@ -238,10 +283,7 @@ let check_if (f:RT.fstar_top_env)
     let (| e2, c2, e2_typing |) = check_branch tm_false e2 in    
     let (| c, e1_typing, e2_typing |) =
       combine_if_branches _ _ _ _ e1_typing _ _ _ e2_typing in
-    let c_typing
-      : comp_typing f g c U_zero 
-      = magic ()
-    in
+    let c_typing = check_comp _ _ c pre_typing in //Would be better to have post_typing already, rather than re-check here
     (| Tm_If b e1 e2 None,
        c,
        T_If g b e1 e2 c _ hyp (E b_typing) e1_typing e2_typing (E c_typing) |)
