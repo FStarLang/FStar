@@ -327,8 +327,9 @@ let check_vprop_equiv
 let freevars_comp_post (c:comp { stateful_comp c })
   : Lemma (freevars (comp_post c) `Set.subset` freevars_comp c)
   = ()
-  
-#push-options "--query_stats --fuel 1 --ifuel 2 --z3rlimit_factor 10"
+
+#push-options "--z3rlimit_factor 20 --query_stats --fuel 4 --ifuel 2 --query_stats"
+
 let try_frame_pre (#f:RT.fstar_top_env)
                   (#g:env)
                   (#t:term)
@@ -355,6 +356,7 @@ let try_frame_pre (#f:RT.fstar_top_env)
     let s'' = { s' with pre = pre } in
     let c'' = c' `with_st_comp` s'' in
     assert (is_pure_comp (c `with_st_comp` s'));
+    assert (is_pure_st_comp s');
     assert (is_pure_comp c'');
     assert (comp_post c' == comp_post c'');
     opening_pure_term_with_pure_term
@@ -384,9 +386,7 @@ let try_frame_pre (#f:RT.fstar_top_env)
       let t_typing = T_Equiv _ _ _ _ t_typing st_equiv in
       (| c'', t_typing |)
     )
-#pop-options
 
-#push-options "--z3rlimit_factor 10 --query_stats --fuel 2 --ifuel 2 --z3cliopt 'smt.qi.eager_threshold=100'"
 let frame_empty (#f:RT.fstar_top_env)
                 (#g:env)
                 (#pre:pure_term)
