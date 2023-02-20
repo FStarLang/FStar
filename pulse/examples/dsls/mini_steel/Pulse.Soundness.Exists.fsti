@@ -4,6 +4,15 @@ open FStar.Reflection
 open Refl.Typing
 open Pulse.Elaborate.Pure
 
+(*
+
+ g |- a : Type u
+ g |- fun _ -> p : a -> vprop
+ --------------------------------------------------------------------------------------------------
+ g |- elim_exists<u> a (fun _ -> p) : stt_ghost<u> a emp (exists_<u> (fun _ -> p)) (fun _ -> p)
+
+*)
+
 val elim_exists_soundness
   (#g:fstar_top_env)
   (#u:universe)
