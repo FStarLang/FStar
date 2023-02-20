@@ -107,3 +107,49 @@ let x y = match [y] with
   // | [(0..4 | 6..10) as n] -> n + 100
   | _ -> 1
 
+
+(*** Pattern match on abstract types *)
+assume type json
+assume val json_null: json -> option unit
+assume val json_bool: json -> option bool
+assume val json_int: json -> option int
+assume val json_string: json -> option string
+assume val json_assoc: json -> option (list (string * json))
+assume val json_list: json -> option (list json)
+assume val exhaustiveness: x:json -> Lemma ( Some? (json_null  x) || Some? (json_bool   x)
+                                          || Some? (json_int   x) || Some? (json_string x)
+                                          || Some? (json_assoc x) || Some? (json_list   x) )
+
+// Example without a view: building a view
+noeq type json_view = | Null | String of string | Int of int | Bool of bool
+                      | Assoc of list (string * json) | List of list json
+
+let open_json (x: json): json_view = 
+  match x with
+  | (Some _) <- json_null   -> Null
+  | (Some x) <- json_bool   -> Bool x
+  | (Some x) <- json_int    -> Int x
+  | (Some x) <- json_string -> String x
+  | (Some x) <- json_assoc  -> Assoc x
+  | (Some x) <- json_list   -> List x
+  | _ -> exhaustiveness x;
+        // that doesn't work for some reason
+        magic ()
+
+type vector2 = {x: int; y: int}
+
+class has_view (a: Type) (b: Type) = {
+  view: a -> b
+}
+
+instance view_json: has_view json json_view = {
+  view = open_json
+}
+
+let parse_vector2 (x: json): vector2 =
+  match x with
+  | Assoc [ "x", Int x <-
+          ; "y", Int y <-] <-
+    -> {x; y}
+  | _ -> {x = 0; y = 0}
+
