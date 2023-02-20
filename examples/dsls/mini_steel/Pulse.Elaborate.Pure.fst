@@ -6,14 +6,18 @@ open FStar.List.Tot
 open Pulse.Syntax
 
 let tun = R.pack_ln R.Tv_Unknown
-let unit_lid = ["Prims"; "unit"]
-let bool_lid = ["Prims"; "bool"]
+let unit_lid = R.unit_lid
+let bool_lid = R.bool_lid
 let erased_lid = ["FStar"; "Ghost"; "erased"]
 let vprop_lid = ["Steel"; "Effect"; "Common"; "vprop"]
 let vprop_fv = R.pack_fv vprop_lid
 let vprop_tm = R.pack_ln (R.Tv_FVar vprop_fv)
 let unit_fv = R.pack_fv unit_lid
 let unit_tm = R.pack_ln (R.Tv_FVar unit_fv)
+let bool_fv = R.pack_fv bool_lid
+let bool_tm = R.pack_ln (R.Tv_FVar bool_fv)
+let true_tm = R.pack_ln (R.Tv_FVar (R.pack_fv R.bool_true_qn))
+let false_tm = R.pack_ln (R.Tv_FVar (R.pack_fv R.bool_false_qn))
 let emp_lid = ["Steel"; "Effect"; "Common"; "emp"]
 let inames_lid = ["Steel"; "Memory"; "inames"]
 let star_lid = ["Steel"; "Effect"; "Common"; "star"]
@@ -35,22 +39,25 @@ let elim_pure_lid = mk_steel_wrapper_lid "elim_pure"
 let stt_lid = mk_steel_wrapper_lid "stt"
 let stt_fv = R.pack_fv stt_lid
 let stt_tm = R.pack_ln (R.Tv_FVar stt_fv)
-let mk_stt_app (u:R.universe) (args:list R.term) : Tot R.term = 
-  R.mk_app (R.pack_ln (R.Tv_UInst stt_fv [u])) (args_of args)
+let mk_stt_comp (u:R.universe) (res pre post:R.term) : Tot R.term =
+  let t = R.pack_ln (R.Tv_UInst stt_fv [u]) in
+  let t = R.pack_ln (R.Tv_App t (res, R.Q_Explicit)) in
+  let t = R.pack_ln (R.Tv_App t (pre, R.Q_Explicit)) in
+  R.pack_ln (R.Tv_App t (post, R.Q_Explicit))
 
 let stt_atomic_lid = mk_steel_wrapper_lid "stt_atomic"
 let stt_atomic_fv = R.pack_fv stt_atomic_lid
 let stt_atomic_tm = R.pack_ln (R.Tv_FVar stt_atomic_fv)
-let mk_stt_atomic_app (u:R.universe) (args:list R.term)
-  : Tot R.term = 
-  R.mk_app (R.pack_ln (R.Tv_UInst stt_atomic_fv [u])) (args_of args)
+let mk_stt_atomic_comp (u:R.universe) (a inames pre post:R.term) =
+  let t = R.pack_ln (R.Tv_UInst stt_atomic_fv [u]) in
+  let t = R.pack_ln (R.Tv_App t (a, R.Q_Explicit)) in
+  let t = R.pack_ln (R.Tv_App t (inames, R.Q_Explicit)) in
+  let t = R.pack_ln (R.Tv_App t (pre, R.Q_Explicit)) in
+  R.pack_ln (R.Tv_App t (post, R.Q_Explicit))
 
 let stt_ghost_lid = mk_steel_wrapper_lid "stt_ghost"
 let stt_ghost_fv = R.pack_fv stt_ghost_lid
 let stt_ghost_tm = R.pack_ln (R.Tv_FVar stt_ghost_fv)
-let mk_stt_ghost_app (u:R.universe) (args:list R.term)
-  : Tot R.term = 
-  R.mk_app (R.pack_ln (R.Tv_UInst stt_ghost_fv [u])) (args_of args)
 let mk_stt_ghost_comp (u:R.universe) (a inames pre post:R.term) =
   let t = R.pack_ln (R.Tv_UInst stt_ghost_fv [u]) in
   let t = R.pack_ln (R.Tv_App t (a, R.Q_Explicit)) in
@@ -133,19 +140,6 @@ let rec elab_universe (u:universe)
     | U_succ u -> R.pack_universe (R.Uv_Succ (elab_universe u))
     | U_var x -> R.pack_universe (R.Uv_Name (x, Refl.Typing.Builtins.dummy_range))
     | U_max u1 u2 -> R.pack_universe (R.Uv_Max [elab_universe u1; elab_universe u2])
-
-let mk_st (u:universe) (res pre post:R.term)
-  : Tot R.term =
-  mk_stt_app (elab_universe u) [res; pre; mk_abs res R.Q_Explicit post]
-
-let mk_st_atomic (u:universe) (res inames pre post:R.term)
-  : Tot R.term =
-  mk_stt_atomic_app (elab_universe u) [res; inames; pre; mk_abs res R.Q_Explicit post]
-
-let mk_st_ghost (u:universe) (res inames pre post:R.term)
-  : Tot R.term =
-  mk_stt_ghost_comp
-    (elab_universe u) res inames pre (mk_abs res R.Q_Explicit post)
 
 let (let!) (f:option 'a) (g: 'a -> option 'b) : option 'b = 
   match f with
@@ -262,21 +256,23 @@ and elab_comp (c:comp)
       let! res = elab_term c.res in
       let! pre = elab_term c.pre in
       let! post = elab_term c.post in
-      Some (mk_st c.u res pre post)
+      Some (mk_stt_comp (elab_universe c.u) res pre (mk_abs res R.Q_Explicit post))
 
     | C_STAtomic inames c ->
       let! inames = elab_term inames in
       let! res = elab_term c.res in
       let! pre = elab_term c.pre in
       let! post = elab_term c.post in
-      Some (mk_st_atomic c.u res inames pre post)
+      Some (mk_stt_atomic_comp (elab_universe c.u) res inames pre
+              (mk_abs res R.Q_Explicit post))
 
     | C_STGhost inames c ->
       let! inames = elab_term inames in
       let! res = elab_term c.res in
       let! pre = elab_term c.pre in
       let! post = elab_term c.post in
-      Some (mk_st_ghost c.u res inames pre post)
+      Some (mk_stt_ghost_comp (elab_universe c.u) res inames pre
+              (mk_abs res R.Q_Explicit post))
 
 let is_pure_term (e:term) = Some? (elab_term e)
 let pure_term = e:term { is_pure_term e }

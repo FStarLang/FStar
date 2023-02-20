@@ -279,7 +279,25 @@ let elim_exists_soundness
     = tot_typing_soundness p_typing in
   let rp_typing = Exists.exists_inversion rp_typing in
   Exists.elim_exists_soundness rt_typing rp_typing
-  
+
+let while_soundness
+  (#f:stt_env)
+  (#g:env)
+  (#t:term)
+  (#c:pure_comp)
+  (d:src_typing f g t c{T_While? d})
+  (soundness:(f:stt_env -> g:env -> t:term -> c:pure_comp ->
+              d':src_typing f g t c{d' << d} ->
+              GTot (RT.typing (extend_env_l f g)
+                              (elab_src_typing d')
+                              (elab_pure_comp c))))
+
+  : GTot (RT.typing (extend_env_l f g)
+                    (elab_src_typing d)
+                    (elab_pure_comp c)) =
+
+  admit ()
+
 #push-options "--query_stats --fuel 1 --ifuel 1"
 let rec soundness (f:stt_env)
                   (g:env)
@@ -341,7 +359,8 @@ let rec soundness (f:stt_env)
     | T_IntroExists _ _ _ _ _ _ _ _ ->
       intro_exists_soundness d
 
-    | T_While _ _ _ _ _ _ _ -> admit ()
+    | T_While _ _ _ _ _ _ _ ->
+      while_soundness d soundness
 
 #pop-options
 
