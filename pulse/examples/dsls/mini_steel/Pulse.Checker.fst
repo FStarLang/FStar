@@ -134,7 +134,7 @@ let maybe_add_elim_pure (pre:pure_term) (t:term) : T.Tac (bool & term) =
       let elim_pure_tm = Tm_STApp (Tm_FVar (mk_steel_wrapper_lid "elim_pure")) None p in
       Tm_Bind elim_pure_tm t) t pure_props
 
-#push-options "--z3rlimit_factor 10"
+#push-options "--z3rlimit_factor 20"
 let rec combine_if_branches (f:RT.fstar_top_env)
   (g_then:env)
   (e_then:term)
@@ -279,7 +279,8 @@ let rec check' : bool -> check_t =
         | _ -> true)
     then snd (maybe_add_elim_pure pre t)
     else t in
-  match t with  
+
+  match t with
   | Tm_BVar _ -> T.fail "not locally nameless"
   | Tm_Var _
   | Tm_FVar _ 
@@ -383,6 +384,32 @@ let rec check' : bool -> check_t =
             repack (try_frame_pre pre_typing d) true
        else T.fail "Universe checking failed in intro_exists"
      | _ -> T.fail "elim_exists argument not a Tm_ExistsSL")
+
+  | Tm_While inv cond body ->
+    let (| inv, inv_typing |) =
+      check_vprop f g (Tm_ExistsSL U_zero tm_bool inv) in
+    (match inv with
+     | Tm_ExistsSL U_zero (Tm_FVar ["Prims"; "bool"]) inv ->
+       // Should get from inv_typing
+       let cond_pre_typing =
+         check_vprop_no_inst f g (comp_pre (comp_while_cond inv)) in
+       let (| cond, cond_comp, cond_typing |) =
+         check' allow_inst f g cond (comp_pre (comp_while_cond inv))
+           cond_pre_typing (Some (comp_post (comp_while_cond inv))) in
+       if eq_comp cond_comp (comp_while_cond inv)
+       then begin
+         let body_pre_typing =
+           check_vprop_no_inst f g (comp_pre (comp_while_body inv)) in
+         let (| body, body_comp, body_typing |) =
+           check' allow_inst f g body (comp_pre (comp_while_body inv))
+             body_pre_typing (Some (comp_post (comp_while_body inv))) in
+         if eq_comp body_comp (comp_while_body inv)
+         then let d = T_While g inv cond body inv_typing cond_typing   body_typing in
+              repack (try_frame_pre pre_typing d) true
+         else T.fail "Cannot typecheck while loop body"
+       end
+       else T.fail "Cannot typecheck while loop condition"
+     | _ -> T.fail "Typechecked invariant is not an exists")
 
   | Tm_UVar _ ->
     T.fail "Unexpected Tm_Uvar in check"

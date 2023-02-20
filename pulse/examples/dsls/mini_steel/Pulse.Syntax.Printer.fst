@@ -129,6 +129,12 @@ let rec term_to_string (t:term)
         (term_to_string t)
         (term_to_string e)
 
+    | Tm_While inv cond body ->
+      sprintf "while<%s> (%s) {%s}"
+        (term_to_string inv)
+        (term_to_string cond)
+        (term_to_string body)
+
     | Tm_UVar n -> sprintf "?u_%d" n
 
 and binder_to_string (b:binder)

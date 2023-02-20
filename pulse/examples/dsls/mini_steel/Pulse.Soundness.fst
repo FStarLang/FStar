@@ -341,6 +341,8 @@ let rec soundness (f:stt_env)
     | T_IntroExists _ _ _ _ _ _ _ _ ->
       intro_exists_soundness d
 
+    | T_While _ _ _ _ _ _ _ -> admit ()
+
 #pop-options
 
 let soundness_lemma
