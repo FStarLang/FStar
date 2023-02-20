@@ -76,6 +76,15 @@ let disj2 (x: list (either int int)) = match x with
 let disj_test = map (fun f -> f [Inl 10; Inr 30; Inr 2]) [disj0; disj1; disj2]
 let _ = assert_norm (disj_test == [42; 42; 42])
 
+(*** disj. pats. & nested ifs *)
+/// Sum up two eithers, but if the rhs one is [Inr], only when it's lower than 10
+let disj3 (x: list (either int int)) = match x with
+    | [(Inl a | Inr a); (Inl b | Inr b if (b < 10))] -> a + b
+    | _ -> 0
+
+let _ = assert_norm (disj3 [Inl 5; Inl 20] == 25)
+let _ = assert_norm (disj3 [Inl 5; Inr 20] == 0)
+
 (*** Match ends of lists *)
 
 let splitAt_rev (#a:Type) (n:nat) (l:list a): list a * list a 
@@ -149,7 +158,7 @@ instance view_json: has_view json json_view = {
 let parse_vector2 (x: json): vector2 =
   match x with
   | Assoc [ "x", Int x <-
-          ; "y", Int y <-] <-
+          ; "y", Int y <-] <- _
     -> {x; y}
   | _ -> {x = 0; y = 0}
 
