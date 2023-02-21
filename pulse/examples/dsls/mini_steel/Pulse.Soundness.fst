@@ -20,6 +20,9 @@ module LN = Pulse.Typing.LN
 module FV = Pulse.Typing.FV
 module STT = Pulse.Soundness.STT
 
+module Typing = Pulse.Typing
+module EPure = Pulse.Elaborate.Pure
+
 let soundness_t (d:'a) = 
     f:stt_env ->
     g:env ->
@@ -211,6 +214,12 @@ let intro_exists_soundness
 
   Exists.intro_exists_soundness rt_typing rp_typing re_typing
 
+assume val freevars_not_mem_close (t:R.term) (x:var) (i:nat)
+  : Lemma
+      (requires ~ (Set.mem x (RT.freevars t)))
+      (ensures RT.open_or_close_term' t (RT.CloseVar x) i == t)
+
+#push-options "--z3rlimit_factor 4"
 let elim_exists_soundness
   (#f:stt_env)
   (#g:env)
@@ -221,8 +230,10 @@ let elim_exists_soundness
                     (elab_src_typing d)
                     (elab_pure_comp c)) =
 
-  let T_ElimExists _ u t p t_typing p_typing = d in
+  let T_ElimExists _ u t p x t_typing p_typing = d in
   let ru = elab_universe u in
+  let rt = elab_pure t in
+  let rp = elab_pure p in
   let rt_typing = tot_typing_soundness t_typing in
   let rp_typing
     : RT.typing (extend_env_l f g)
@@ -231,7 +242,46 @@ let elim_exists_soundness
                 vprop_tm
     = tot_typing_soundness p_typing in
   let rp_typing = Exists.exists_inversion rp_typing in
+
+  FV.src_typing_freevars_inv d x;
+  assert (~ (Set.mem x (freevars t)));
+  assert (~ (Set.mem x (freevars p)));
+
+  let x_tm = Tm_Var {nm_index=x;nm_ppname=Sealed.seal "_"} in
+  let rx_tm = R.pack_ln (R.Tv_Var (R.pack_bv (RT.make_bv x tun))) in
+  let rx_bv = R.pack_ln (R.Tv_BVar (R.pack_bv (RT.make_bv 0 tun))) in
+  assert (elab_pure (mk_reveal u t x_tm) ==
+          EPure.mk_reveal ru rt rx_tm);
+  calc (==) {
+    elab_pure (close_term' (open_term' p (mk_reveal u t x_tm) 0) x 0);
+       (==) { elab_close_commute'
+                (open_term' p (mk_reveal u t x_tm) 0)
+                x
+                0 }
+    RT.open_or_close_term' (elab_pure (open_term' p (mk_reveal u t x_tm) 0)) (RT.CloseVar x) 0;
+       (==) { elab_open_commute'
+                p
+                (mk_reveal u t x_tm)
+                0 }
+    RT.open_or_close_term' (RT.open_or_close_term' rp (RT.OpenWith (EPure.mk_reveal ru rt rx_tm)) 0) (RT.CloseVar x) 0;
+       (==) {
+               assume (R.pack_ln (R.Tv_App (mk_abs rt R.Q_Explicit rp) (EPure.mk_reveal ru rt rx_tm, R.Q_Explicit)) ==
+                       RT.open_or_close_term' rp (RT.OpenWith (EPure.mk_reveal ru rt rx_tm)) 0)
+            }
+    RT.open_or_close_term' (R.pack_ln (R.Tv_App (mk_abs rt R.Q_Explicit rp) (EPure.mk_reveal ru rt rx_tm, R.Q_Explicit))) (RT.CloseVar x) 0;
+       (==) { 
+              EPure.elab_freevars_inverse t;
+              EPure.elab_freevars_inverse p;
+              freevars_not_mem_close rt x 0;
+              freevars_not_mem_close rp x 1
+            }
+    R.pack_ln (R.Tv_App (mk_abs rt R.Q_Explicit rp)
+                        (EPure.mk_reveal ru rt rx_bv, R.Q_Explicit));
+       (==) { }
+    Exists.elim_exists_post_body ru rt (mk_abs rt R.Q_Explicit rp);
+  };
   Exists.elim_exists_soundness rt_typing rp_typing
+#pop-options
 
 #push-options "--z3rlimit_factor 4 --query_stats"
 let while_soundness
@@ -446,7 +496,7 @@ let rec soundness (f:stt_env)
       in
       if_soundness _ _ _ _ d soundness ct_soundness
 
-    | T_ElimExists _ _ _ _ _ _ ->
+    | T_ElimExists _ _ _ _ _ _ _ ->
       elim_exists_soundness d
     | T_IntroExists _ _ _ _ _ _ _ _ ->
       intro_exists_soundness d

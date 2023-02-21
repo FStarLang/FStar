@@ -9,6 +9,8 @@ let tun = R.pack_ln R.Tv_Unknown
 let unit_lid = R.unit_lid
 let bool_lid = R.bool_lid
 let erased_lid = ["FStar"; "Ghost"; "erased"]
+let hide_lid = ["FStar"; "Ghost"; "hide"]
+let reveal_lid = ["FStar"; "Ghost"; "reveal"]
 let vprop_lid = ["Steel"; "Effect"; "Common"; "vprop"]
 let vprop_fv = R.pack_fv vprop_lid
 let vprop_tm = R.pack_ln (R.Tv_FVar vprop_fv)
@@ -83,6 +85,14 @@ let mk_arrow_with_name (s:Sealed.sealed string) (f:arrow_dom) (out:R.term) : R.t
 let mk_abs ty qual t : R.term =  R.pack_ln (R.Tv_Abs (binder_of_t_q ty qual) t)
 let mk_abs_with_name s ty qual t : R.term =  R.pack_ln (R.Tv_Abs (binder_of_t_q_s ty qual s) t)
 
+let mk_erased (u:R.universe) (t:R.term) : R.term =
+  let hd = R.pack_ln (R.Tv_UInst (R.pack_fv erased_lid) [u]) in
+  R.pack_ln (R.Tv_App hd (t, R.Q_Explicit))
+
+let mk_reveal (u:R.universe) (t:R.term) (e:R.term) : R.term =
+  let hd = R.pack_ln (R.Tv_UInst (R.pack_fv reveal_lid) [u]) in
+  let hd = R.pack_ln (R.Tv_App hd (t, R.Q_Implicit)) in
+  R.pack_ln (R.Tv_App hd (e, R.Q_Explicit))
 
 let elim_exists_lid = mk_steel_wrapper_lid "elim_exists"
 let intro_exists_lid = mk_steel_wrapper_lid "intro_exists"

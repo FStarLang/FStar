@@ -208,6 +208,8 @@ let get_non_informative_witness f g u t =
     | Tm_PureApp (Tm_UInst l [u']) None arg ->
       if l = R.squash_qn
       then Some (Tm_PureApp (Tm_UInst (mk_steel_wrapper_lid "squash_non_informative") [u']) None arg)
+      else if l = erased_lid
+      then Some (Tm_PureApp (Tm_UInst (mk_steel_wrapper_lid "erased_non_informative") [u']) None arg)
       else None
     | _ -> None in
 

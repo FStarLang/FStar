@@ -24,6 +24,13 @@ val elab_open_commute' (e:pure_term)
               RT.open_or_close_term' (elab_pure e) (RT.OpenWith (elab_pure v)) n ==
               elab_pure (open_term' e v n))
 
+val elab_close_commute' (e:pure_term)
+                        (v:var)
+                        (n:index)
+  : Lemma (closing_pure_term e v n;
+           RT.open_or_close_term' (elab_pure e) (RT.CloseVar v) n ==
+           elab_pure (close_term' e v n))
+
 val elab_open_commute (t:pure_term) (x:var)
   : Lemma (elab_pure (open_term t x) == RT.open_term (elab_pure t) x)
 
@@ -32,4 +39,3 @@ val elab_comp_close_commute (c:pure_comp) (x:var)
 
 val elab_comp_open_commute (c:pure_comp) (x:pure_term)
   : Lemma (elab_pure_comp (open_comp_with c x) == RT.open_with (elab_pure_comp c) (elab_pure x))
-

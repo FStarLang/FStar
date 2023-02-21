@@ -21,6 +21,15 @@ let tm_bool : pure_term = Tm_FVar bool_lid
 let tm_true : pure_term = Tm_Constant (Bool true)
 let tm_false : pure_term = Tm_Constant (Bool false)
 
+let mk_erased (u:universe) (t:pure_term) : pure_term =
+  let hd = Tm_UInst erased_lid [u] in
+  Tm_PureApp hd None t
+
+let mk_reveal (u:universe) (t:pure_term) (e:pure_term) : pure_term =
+  let hd = Tm_UInst reveal_lid [u] in
+  let hd = Tm_PureApp hd (Some Implicit) t in
+  Tm_PureApp hd None e
+
 let mk_eq2 (u:universe)
            (t:pure_term)
            (e0 e1:pure_term) 
@@ -295,14 +304,21 @@ let non_informative_witness_t (u:universe) (t:pure_term) : pure_term =
              None
              t
 
-let comp_elim_exists (u:universe) (t:pure_term) (p:pure_term)
+let elim_exists_post (u:universe) (t:pure_term) (p:pure_term)
+  (x:var) : pure_term =
+  
+  let x_tm = Tm_Var {nm_index=x;nm_ppname=Sealed.seal "_"} in
+  let p = open_term' p (mk_reveal u t x_tm) 0 in
+  close_term p x
+
+let comp_elim_exists (u:universe) (t:pure_term) (p:pure_term) (x:var)
   : pure_comp =
 
   C_STGhost Tm_EmpInames {
     u=u;
-    res=t;
+    res=mk_erased u t;
     pre=Tm_ExistsSL u t p;
-    post=p
+    post=elim_exists_post u t p x
   }
 
 let comp_intro_exists (u:universe) (t:pure_term) (p:pure_term) (e:pure_term)
@@ -467,10 +483,11 @@ type src_typing (f:RT.fstar_top_env) : env -> term -> pure_comp -> Type =
       u:universe ->
       t:pure_term ->
       p:pure_term ->
+      x:var { None? (lookup g x) } ->
       tot_typing f g t (Tm_Type u) ->
       tot_typing f g (Tm_ExistsSL u t p) Tm_VProp ->
       src_typing f g (Tm_ElimExists (Tm_ExistsSL u t p))
-                     (comp_elim_exists u t p)
+                     (comp_elim_exists u t p x)
 
   | T_IntroExists:
       g:env ->

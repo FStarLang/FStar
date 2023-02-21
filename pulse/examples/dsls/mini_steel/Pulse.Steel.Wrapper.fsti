@@ -199,7 +199,7 @@ let prop_non_informative : non_informative_witness prop =
   fun p -> p
 
 inline_for_extraction
-let erased_non_informative (a:Type u#a) : non_informative_witness (Ghost.erased a) =
+let erased_non_informative (a:Type u#a) : non_informative_witness (Ghost.erased u#a a) =
   fun x -> Ghost.reveal x
 
 inline_for_extraction
@@ -255,7 +255,7 @@ val intro_pure (p:prop) (_:squash p)
               (fun _ -> pure p)
 
 val elim_exists (#a:Type) (p:a -> vprop)
-  : stt_ghost a emp_inames (exists_ p) p
+  : stt_ghost (erased a) emp_inames (exists_ p) (fun x -> p (reveal x))
 
 val intro_exists (#a:Type) (p:a -> vprop) (e:a)
   : stt_ghost unit emp_inames (p e) (fun _ -> exists_ p)
@@ -265,3 +265,6 @@ val while_loop
   (cond:stt bool (exists_ inv) inv)
   (body:stt unit (inv true) (fun _ -> exists_ inv))
   : stt unit (exists_ inv) (fun _ -> inv false)
+
+val stt_ghost_reveal (a:Type) (x:erased a)
+  : stt_ghost a emp_inames emp (fun y -> pure (eq2_prop (reveal x) y))
