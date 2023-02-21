@@ -18,7 +18,7 @@
         "subterm_ordering_Prims.Cons"
       ],
       0,
-      "c4055ac625dae8196e9deb78e384d2b4"
+      "f09844da8fd6377c816258817d08e67c"
     ],
     [
       "Queue.emp_equiv_pure",
@@ -43,7 +43,7 @@
         "typing_Steel.Memory.pure"
       ],
       0,
-      "01ef5cce3b284c7dfe32528c13c6de68"
+      "784e5a149eed6786100d123743999c82"
     ],
     [
       "Queue.next_last",
@@ -58,7 +58,7 @@
         "projection_inverse_BoxBool_proj_0", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "9fdcf82fceaa8accd1df20465066fbb1"
+      "9523698d86a8c3849a9a85773f949923"
     ],
     [
       "Queue.next_last_correct",
@@ -70,7 +70,7 @@
         "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
       ],
       0,
-      "a13570f7d035b9dbb06a77ea74b1b27b"
+      "485c151ec7df7d8c0bb17e0ba3037c5d"
     ],
     [
       "Queue.next_last_correct",
@@ -112,7 +112,7 @@
         "typing_Steel.Reference.ref"
       ],
       0,
-      "8e0ba4a92d47a6f59dfd4c001dc06cf0"
+      "f4e5219e701ec490057e1397244e0797"
     ],
     [
       "Queue.fragment_append",
@@ -159,7 +159,7 @@
         "typing_Steel.Effect.Common.star", "typing_Steel.Reference.ref"
       ],
       0,
-      "d96036e8bb904a9776ee7849e744cf83"
+      "aaa4c990a2df140f86ee43df88dcc5ed"
     ],
     [
       "Queue.intro_fragment_nil",
@@ -181,7 +181,7 @@
         "typing_Steel.Reference.ref"
       ],
       0,
-      "070489e48849fcb09c7dda4e51ba2c2a"
+      "7850cbf254ca95b46fd8505f1f847b32"
     ],
     [
       "Queue.intro_fragment_cons",
@@ -198,7 +198,7 @@
         "typing_tok_Prims.T@tok"
       ],
       0,
-      "96c7982a4bb0c25bff111247fdc425c1"
+      "67413f3f21c18f2d38e9cb27a49a3fe8"
     ],
     [
       "Queue.fragment_append_singleton",
@@ -250,7 +250,7 @@
         "typing_Steel.Reference.ref"
       ],
       0,
-      "8bf3e5cd17a9d31c7a9a0d55772ad834"
+      "c1323a993db4c93615b4b3e640c99c3d"
     ],
     [
       "Queue.queue_lc_prop",
@@ -277,7 +277,7 @@
         "typing_Steel.Reference.ref"
       ],
       0,
-      "87045a536054325479456109e563c0d9"
+      "e26a6c01fb655148c7f9693742043479"
     ],
     [
       "Queue.new_queue",
@@ -347,7 +347,7 @@
         "typing_Steel.Reference.is_null", "typing_Steel.Reference.null"
       ],
       0,
-      "2aff1dbc3661835513fc40f8f1fe867c"
+      "45ae98a454ee7096c73533daa7d15094"
     ],
     [
       "Queue.snoc_inj",
@@ -360,7 +360,7 @@
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__2"
       ],
       0,
-      "cc6c6e2ca14ab951cfdfd1d9895d1f7a"
+      "bbd610e6e671de24385e670417862a1a"
     ],
     [
       "Queue.unsnoc",
@@ -381,7 +381,7 @@
         "token_correspondence_FStar.List.Tot.Base.length.fuel_instrumented"
       ],
       0,
-      "696aac2a48b93e7fd5642a1e760ef3ae"
+      "0bbe35d62ffa3cafb71a5fbf1173866c"
     ],
     [
       "Queue.unsnoc_hd",
@@ -390,7 +390,7 @@
       1,
       [ "@query" ],
       0,
-      "7680a61e32d7d53f11e4978391b1f7aa"
+      "83b7daf772c9edd2c9345e082fd3d61e"
     ],
     [
       "Queue.unsnoc_tl",
@@ -399,7 +399,7 @@
       1,
       [ "@query" ],
       0,
-      "7662b6ac6e5062853d677c46ebedff6e"
+      "78687865476808182a422628cf487c05"
     ],
     [
       "Queue.enqueue",
@@ -508,7 +508,7 @@
         "typing_Steel.Reference.pts_to_sl", "typing_Steel.Reference.ref"
       ],
       0,
-      "496fdf876e04b002797a2ea4e45021ec"
+      "475c75aea9fd17c8f379f9950f066361"
     ],
     [
       "Queue.dequeue_post_success",
@@ -525,7 +525,7 @@
         "typing_Queue.Def.t"
       ],
       0,
-      "a9872861e8896275c28e4b23fc2ca1ac"
+      "12129b43977071032f8c78aa1d474154"
     ],
     [
       "Queue.dequeue_post",
@@ -536,7 +536,7 @@
         "@query", "lemma_FStar.Pervasives.invertOption", "typing_Queue.Def.t"
       ],
       0,
-      "8be8bd2d49a63edd21b19aaef3237901"
+      "f18239869c00a0c3f1c618475c5e0a85"
     ],
     [
       "Queue.dequeue",
@@ -609,7 +609,7 @@
         "typing_Steel.Reference.ref"
       ],
       0,
-      "1c89cace25a1fc691e32f7dfc728a81b"
+      "bf49384128c3dd954f19f21ed7b7e2e5"
     ]
   ]
 ]
