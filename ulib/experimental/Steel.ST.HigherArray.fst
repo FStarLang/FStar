@@ -684,9 +684,11 @@ let blit_ptr
   src len_src idx_src dst len_dst idx_dst len
 = blit0 _ idx_src _ idx_dst len
 
-/// These two functions will be natively extracted, we can simply admit them
+/// These functions will be natively extracted, we can simply admit them
 let intro_fits_u32 () = admit_ ()
 let intro_fits_u64 () = admit_ ()
+let intro_fits_ptrdiff32 () = admit_ ()
+let intro_fits_ptrdiff64 () = admit_ ()
 
 let ptrdiff_ptr a0 len0 a1 len1 =
   let res = a0.offset - a1.offset in
