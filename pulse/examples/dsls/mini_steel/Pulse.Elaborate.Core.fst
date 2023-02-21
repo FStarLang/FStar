@@ -375,7 +375,7 @@ and elab_src_typing
       let e = elab_src_typing e_typing in
       elab_lift lc e
 
-    | T_If _ b _ _ _ _ _ e1_typing e2_typing ->
+    | T_If _ b _ _ _ _ _ _ e1_typing e2_typing _c_typing ->
       let rb = elab_pure b in
       let re1 = elab_src_typing e1_typing in
       let re2 = elab_src_typing e2_typing in

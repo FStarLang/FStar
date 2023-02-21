@@ -12,7 +12,7 @@ open Pulse.Checker.Common
 open Pulse.Checker.Pure
 module FV = Pulse.Typing.FV
 
-#push-options "--z3rlimit_factor 8 --ifuel 1 --fuel 1"
+#push-options "--z3rlimit_factor 8 --ifuel 1 --fuel 2"
 let rec mk_bind (f:RT.fstar_top_env) (g:env)
   (pre:pure_term)
   (e1:term)

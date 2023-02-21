@@ -51,9 +51,9 @@ let mk_t_abs_tot (f:RT.fstar_top_env) (g:env)
                  (#ty:pure_term)
                  (ppname:ppname)
                  (t_typing:tot_typing f g ty (Tm_Type u))
-                 (#x:var { None? (lookup g x) })
-                 (#body:pure_term)
+                 (#body:pure_term )
                  (#body_ty:pure_term)
+                 (#x:var { None? (lookup g x) /\ ~(x `Set.mem` freevars body) })
                  (body_typing:tot_typing f ((x, Inl ty)::g) (open_term body x) body_ty)
   : GTot (RT.typing (extend_env_l f g)
                     (mk_abs_with_name ppname (elab_pure ty) (elab_qual q) (elab_pure body))
@@ -67,6 +67,9 @@ let mk_t_abs_tot (f:RT.fstar_top_env) (g:env)
     RT.well_typed_terms_are_ln _ _ _ r_body_typing;
     RT.open_close_inverse r_body x;
     elab_comp_close_commute c x;      
+    elab_freevars_inverse body;
+    assert (~ (x `Set.mem` RT.freevars (elab_pure body)));
+    assume (~ (x `Set.mem` RT.freevars (RT.close_term r_body x)));
     let d : RT.typing (extend_env_l f g)
                       (mk_abs_with_name ppname (elab_pure ty) (elab_qual q)
                               (RT.close_term (elab_pure (open_term body x)) x))
@@ -91,7 +94,6 @@ let mk_t_abs_tot (f:RT.fstar_top_env) (g:env)
                       _
           = d 
     in
-    assume (~ (x `Set.mem` RT.freevars (elab_pure body)));
     RT.close_open_inverse (elab_pure body) x;
     d
 
@@ -105,7 +107,7 @@ let mk_t_abs (f:RT.fstar_top_env) (g:env)
                                    (elab_src_typing t_typing)
                                    (elab_pure_comp (C_Tot (Tm_Type u))))
              (#body:term)
-             (#x:var { None? (lookup g x) })
+             (#x:var { None? (lookup g x) /\ ~(x `Set.mem` freevars body) })
              (#c:pure_comp)
              (#body_typing:src_typing f ((x, Inl ty)::g) (open_term body x) c)
              (r_body_typing:RT.typing (extend_env_l f ((x, Inl ty)::g))
@@ -121,14 +123,15 @@ let mk_t_abs (f:RT.fstar_top_env) (g:env)
     RT.well_typed_terms_are_ln _ _ _ r_body_typing;
     RT.open_close_inverse r_body x;
     elab_comp_close_commute c x;      
-        RT.T_Abs (extend_env_l f g)
-                   x
-                   r_ty
-                   (RT.close_term r_body x)
-                   r_c
-                   (elab_universe u) ppname (elab_qual q)
-                   r_t_typing
-                   r_body_typing
+    assume (~ (x `Set.mem` RT.freevars (RT.close_term r_body x)));
+    RT.T_Abs (extend_env_l f g)
+             x
+             r_ty
+             (RT.close_term r_body x)
+             r_c
+             (elab_universe u) ppname (elab_qual q)
+             r_t_typing
+             r_body_typing
 
 (*** Typing of combinators used
      in the elaboration **)

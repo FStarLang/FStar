@@ -539,7 +539,7 @@ let rec src_typing_ln (#f:_) (#g:_) (#t:_) (#c:_)
       open_term_ln e2 x;
       bind_comp_ln bc
 
-    | T_If _ _ _ _ _ _ (E tb) d1 d2 ->
+    | T_If _ _ _ _ _ _ _ (E tb) d1 d2 _ ->
       src_typing_ln tb;
       src_typing_ln d1;
       src_typing_ln d2
