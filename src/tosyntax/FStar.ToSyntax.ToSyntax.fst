@@ -2781,10 +2781,10 @@ let rec desugar_tycon env (d: AST.decl) quals tcs : (env_t * sigelts) =
     // declaration
     | TyconVariant (id, bds, k, variants) -> 
         let additional_records, variants = map (fun (cid, payload, attrs) ->
-                match payload with
+              match payload with
               | Some (VpRecord (r, k)) -> 
-                  let record_id = mk_ident (string_of_id id ^ "__" ^ string_of_id cid ^ "__payload", cid.range) in
-                  let record_id_t = {tm = lid_of_ns_and_id [] record_id |> Var; range = cid.range; level = Type_level} in
+                  let record_id = mk_ident (string_of_id id ^ "__" ^ string_of_id cid ^ "__payload", range_of_id cid) in
+                  let record_id_t = {tm = lid_of_ns_and_id [] record_id |> Var; range = range_of_id cid; level = Type_level} in
                   let payload_typ = mkApp record_id_t (List.map (fun bd -> binder_to_term bd, Nothing) bds) (range_of_id record_id) in
                   TyconRecord (record_id, bds, None, attrs, r) |> Some
                 , (cid, Some ( match k with
