@@ -404,6 +404,159 @@ let b2t_lid : R.name = ["Prims"; "b2t"]
 let b2t_fv : R.fv = R.pack_fv b2t_lid
 let b2t_ty : R.term = R.(pack_ln (Tv_Arrow (as_binder 0 bool_ty) (mk_total (tm_type u_zero))))
 
+
+////////////////////////////////////////////////////////////////////////////////
+// freevars
+////////////////////////////////////////////////////////////////////////////////
+
+
+let rec freevars (e:term)
+  : FStar.Set.set var
+  = match inspect_ln e with
+    | Tv_Uvar _ _ -> Set.complement Set.empty
+    
+    | Tv_UInst _ _
+    | Tv_FVar _
+    | Tv_Type _
+    | Tv_Const _
+    | Tv_Unknown 
+    | Tv_BVar _ -> Set.empty
+
+    | Tv_Var x -> Set.singleton (bv_index x)
+       
+    | Tv_App e1 (e2, _) ->
+      Set.union (freevars e1) (freevars e2)
+
+    | Tv_Abs b body -> 
+      Set.union (freevars_binder b) (freevars body)
+
+    | Tv_Arrow b c ->
+      Set.union (freevars_binder b) (freevars_comp c)
+
+    | Tv_Refine bv f ->
+      Set.union (freevars_bv bv) (freevars f)
+      
+    | Tv_Let recf attrs bv def body ->
+      freevars_terms attrs `Set.union`
+      freevars_bv bv `Set.union`
+      freevars def `Set.union`
+      freevars body
+
+    | Tv_Match scr ret brs ->
+      freevars scr `Set.union`
+      freevars_opt ret freevars_match_returns  `Set.union`
+      freevars_branches brs
+
+    | Tv_AscribedT e t tac b ->
+      freevars e `Set.union`
+      freevars t `Set.union`
+      freevars_opt tac freevars
+                            
+    | Tv_AscribedC e c tac b ->
+      freevars e `Set.union`
+      freevars_comp c `Set.union`
+      freevars_opt tac freevars
+
+and freevars_opt (#a:Type0) (o:option a) (f: (x:a { x << o } -> FStar.Set.set var))
+  : FStar.Set.set var
+  = match o with
+    | None -> Set.empty
+    | Some x -> f x
+
+and freevars_comp (c:comp)
+  : FStar.Set.set var
+  = match inspect_comp c with
+    | C_Total t
+    | C_GTotal t ->
+      freevars t
+
+    | C_Lemma pre post pats ->
+      freevars pre `Set.union`
+      freevars post `Set.union`
+      freevars pats
+
+    | C_Eff us eff_name res args decrs ->
+      freevars res `Set.union`
+      freevars_args args `Set.union`
+      freevars_terms decrs
+
+and freevars_args (ts:list argv)
+  : FStar.Set.set var
+  = match ts with
+    | [] -> Set.empty
+    | (t,q)::ts ->
+      freevars t `Set.union`
+      freevars_args ts
+
+and freevars_terms (ts:list term)
+  : FStar.Set.set var
+  = match ts with
+    | [] -> Set.empty
+    | t::ts ->
+      freevars t `Set.union`
+      freevars_terms ts
+
+and freevars_bv (b:bv)
+  : Tot (Set.set var) (decreases b)
+  = let bv = inspect_bv b in
+    freevars bv.bv_sort
+    
+and freevars_binder (b:binder)
+  : Tot (Set.set var) (decreases b)
+  = let bndr  = inspect_binder b in
+    freevars_bv bndr.binder_bv `Set.union`
+    freevars_terms bndr.binder_attrs 
+    
+
+and freevars_pattern (p:pattern) 
+  : Tot (Set.set var) (decreases p)
+  = match p with
+    | Pat_Constant _ ->
+      Set.empty
+
+    | Pat_Cons fv us pats -> 
+      freevars_patterns pats
+      
+    | Pat_Var bv 
+    | Pat_Wild bv ->
+      freevars_bv bv
+
+    | Pat_Dot_Term topt ->
+      freevars_opt topt freevars
+
+and freevars_patterns (ps:list (pattern & bool))
+  : Tot (Set.set var) (decreases ps)
+  = match ps with
+    | [] -> Set.empty
+    | (p, b)::ps ->
+      freevars_pattern p `Set.union`
+      freevars_patterns ps
+
+and freevars_branch (br:branch)
+  : Tot (Set.set var) (decreases br)
+  = let p, t = br in
+    freevars_pattern p `Set.union`
+    freevars t
+
+and freevars_branches (brs:list branch)
+  : Tot (Set.set var) (decreases brs)
+  = match brs with
+    | [] -> Set.empty
+    | hd::tl -> freevars_branch hd `Set.union` freevars_branches tl
+  
+and freevars_match_returns (m:match_returns_ascription)
+  : Tot (Set.set var) (decreases m)
+  = let b, (ret, as_, eq) = m in
+    let b = freevars_binder b in
+    let ret =
+      match ret with
+      | Inl t -> freevars t
+      | Inr c -> freevars_comp c
+    in
+    let as_ = freevars_opt as_ freevars in
+    b `Set.union` ret `Set.union` as_
+
+
 noeq
 type constant_typing: vconst -> term -> Type0 = 
   | CT_Unit: constant_typing C_Unit unit_ty
@@ -499,7 +652,7 @@ type typing : env -> term -> term -> Type0 =
      g:env ->
      x:var { None? (lookup_bvar g x) } ->
      ty:term ->
-     body:term ->
+     body:term { ~(x `Set.mem` freevars body) } ->
      body_ty:term ->
      u:universe ->
      pp_name:sealed string ->
@@ -525,7 +678,7 @@ type typing : env -> term -> term -> Type0 =
      g:env ->
      x:var { None? (lookup_bvar g x) } ->
      t1:term ->
-     t2:term ->
+     t2:term { ~(x `Set.mem` freevars t2) } ->
      u1:universe ->
      u2:universe ->
      pp_name:sealed string ->
@@ -539,7 +692,7 @@ type typing : env -> term -> term -> Type0 =
      g:env ->
      x:var { None? (lookup_bvar g x) } ->     
      t:term ->
-     e:term ->
+     e:term { ~(x `Set.mem` freevars e) } ->
      u1:universe ->
      u2:universe ->     
      typing g t (tm_type u1) ->
@@ -569,10 +722,12 @@ type typing : env -> term -> term -> Type0 =
      then_:term ->
      else_:term ->
      ty:term ->
-     hyp:var { None? (lookup_bvar g hyp) } ->
+     u_ty:universe ->
+     hyp:var { None? (lookup_bvar g hyp) /\ ~(hyp `Set.mem` (freevars then_ `Set.union` freevars else_)) } ->
      typing g scrutinee bool_ty ->
      typing (extend_env g hyp (eq2 (pack_universe Uv_Zero) bool_ty scrutinee true_bool)) then_ ty ->
-     typing (extend_env g hyp (eq2 (pack_universe Uv_Zero) bool_ty scrutinee false_bool)) else_ ty ->     
+     typing (extend_env g hyp (eq2 (pack_universe Uv_Zero) bool_ty scrutinee false_bool)) else_ ty ->
+     typing g ty (tm_type u_ty) -> //typedness of ty cannot rely on hyp
      typing g (mk_if scrutinee then_ else_) ty
 
   | T_Match: 
@@ -1097,158 +1252,6 @@ let open_close_inverse (e:R.term { ln e }) (x:var)
    = close_term_spec e x;
      open_term_spec (close_term e x) x;
      open_close_inverse' 0 e x
-
-
-////////////////////////////////////////////////////////////////////////////////
-// freevars
-////////////////////////////////////////////////////////////////////////////////
-
-
-let rec freevars (e:term)
-  : FStar.Set.set var
-  = match inspect_ln e with
-    | Tv_Uvar _ _ -> Set.complement Set.empty
-    
-    | Tv_UInst _ _
-    | Tv_FVar _
-    | Tv_Type _
-    | Tv_Const _
-    | Tv_Unknown 
-    | Tv_BVar _ -> Set.empty
-
-    | Tv_Var x -> Set.singleton (bv_index x)
-       
-    | Tv_App e1 (e2, _) ->
-      Set.union (freevars e1) (freevars e2)
-
-    | Tv_Abs b body -> 
-      Set.union (freevars_binder b) (freevars body)
-
-    | Tv_Arrow b c ->
-      Set.union (freevars_binder b) (freevars_comp c)
-
-    | Tv_Refine bv f ->
-      Set.union (freevars_bv bv) (freevars f)
-      
-    | Tv_Let recf attrs bv def body ->
-      freevars_terms attrs `Set.union`
-      freevars_bv bv `Set.union`
-      freevars def `Set.union`
-      freevars body
-
-    | Tv_Match scr ret brs ->
-      freevars scr `Set.union`
-      freevars_opt ret freevars_match_returns  `Set.union`
-      freevars_branches brs
-
-    | Tv_AscribedT e t tac b ->
-      freevars e `Set.union`
-      freevars t `Set.union`
-      freevars_opt tac freevars
-                            
-    | Tv_AscribedC e c tac b ->
-      freevars e `Set.union`
-      freevars_comp c `Set.union`
-      freevars_opt tac freevars
-
-and freevars_opt (#a:Type0) (o:option a) (f: (x:a { x << o } -> FStar.Set.set var))
-  : FStar.Set.set var
-  = match o with
-    | None -> Set.empty
-    | Some x -> f x
-
-and freevars_comp (c:comp)
-  : FStar.Set.set var
-  = match inspect_comp c with
-    | C_Total t
-    | C_GTotal t ->
-      freevars t
-
-    | C_Lemma pre post pats ->
-      freevars pre `Set.union`
-      freevars post `Set.union`
-      freevars pats
-
-    | C_Eff us eff_name res args decrs ->
-      freevars res `Set.union`
-      freevars_args args `Set.union`
-      freevars_terms decrs
-
-and freevars_args (ts:list argv)
-  : FStar.Set.set var
-  = match ts with
-    | [] -> Set.empty
-    | (t,q)::ts ->
-      freevars t `Set.union`
-      freevars_args ts
-
-and freevars_terms (ts:list term)
-  : FStar.Set.set var
-  = match ts with
-    | [] -> Set.empty
-    | t::ts ->
-      freevars t `Set.union`
-      freevars_terms ts
-
-and freevars_bv (b:bv)
-  : Tot (Set.set var) (decreases b)
-  = let bv = inspect_bv b in
-    freevars bv.bv_sort
-    
-and freevars_binder (b:binder)
-  : Tot (Set.set var) (decreases b)
-  = let bndr  = inspect_binder b in
-    freevars_bv bndr.binder_bv `Set.union`
-    freevars_terms bndr.binder_attrs 
-    
-
-and freevars_pattern (p:pattern) 
-  : Tot (Set.set var) (decreases p)
-  = match p with
-    | Pat_Constant _ ->
-      Set.empty
-
-    | Pat_Cons fv us pats -> 
-      freevars_patterns pats
-      
-    | Pat_Var bv 
-    | Pat_Wild bv ->
-      freevars_bv bv
-
-    | Pat_Dot_Term topt ->
-      freevars_opt topt freevars
-
-and freevars_patterns (ps:list (pattern & bool))
-  : Tot (Set.set var) (decreases ps)
-  = match ps with
-    | [] -> Set.empty
-    | (p, b)::ps ->
-      freevars_pattern p `Set.union`
-      freevars_patterns ps
-
-and freevars_branch (br:branch)
-  : Tot (Set.set var) (decreases br)
-  = let p, t = br in
-    freevars_pattern p `Set.union`
-    freevars t
-
-and freevars_branches (brs:list branch)
-  : Tot (Set.set var) (decreases brs)
-  = match brs with
-    | [] -> Set.empty
-    | hd::tl -> freevars_branch hd `Set.union` freevars_branches tl
-  
-and freevars_match_returns (m:match_returns_ascription)
-  : Tot (Set.set var) (decreases m)
-  = let b, (ret, as_, eq) = m in
-    let b = freevars_binder b in
-    let ret =
-      match ret with
-      | Inl t -> freevars t
-      | Inr c -> freevars_comp c
-    in
-    let as_ = freevars_opt as_ freevars in
-    b `Set.union` ret `Set.union` as_
 
 
 let rec close_open_inverse' (i:nat)

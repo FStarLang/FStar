@@ -196,6 +196,51 @@ let rec combine_if_branches (f:RT.fstar_top_env)
 #pop-options
 
 #push-options "--query_stats --fuel 2 --ifuel 1 --z3rlimit_factor 10"
+let check_comp (f:RT.fstar_top_env)
+               (g:env) 
+               (c:pure_comp_st)
+               (pre_typing:tot_typing f g (comp_pre c) Tm_VProp)
+  : T.Tac (comp_typing f g c (comp_u c))
+  = let check_st_comp (st:st_comp { is_pure_st_comp st /\
+                                    comp_u c == st.u /\
+                                    comp_pre c == st.pre /\
+                                    comp_res c == st.res /\
+                                    comp_post c == st.post } )
+      : T.Tac (st_comp_typing f g st)
+      = let (| u, t_u |) = check_universe f g st.res in 
+        if u <> comp_u c
+        then T.fail "Unexpected universe"
+        else (
+          let x = fresh g in
+          assume (~(x `Set.mem` freevars (comp_post c)));
+          let gx = (x, Inl st.res)::g in
+          let (| ty, post_typing |) = check_tot_no_inst f gx (open_term (comp_post c) x) in
+          if not (eq_tm ty Tm_VProp)
+          then T.fail "Ill-typed postcondition"
+          else (
+            assert (ty == Tm_VProp);
+            STC g st x t_u pre_typing (E post_typing)
+          )
+        )
+    in
+    match c with
+    | C_ST st -> 
+      let stc = check_st_comp st in
+      CT_ST _ _ stc
+    | C_STAtomic i st -> 
+      let stc = check_st_comp st in
+      let (| ty, i_typing |) = check_tot_no_inst f g i in
+      if not (eq_tm ty Tm_Inames)
+      then T.fail "Ill-typed inames"
+      else CT_STAtomic _ _ _ (E i_typing) stc
+    | C_STGhost i st -> 
+      let stc = check_st_comp st in
+      let (| ty, i_typing |) = check_tot_no_inst f g i in
+      if not (eq_tm ty Tm_Inames)
+      then T.fail "Ill-typed inames"
+      else CT_STGhost _ _ _ (E i_typing) stc
+
+               
 let check_if (f:RT.fstar_top_env)
              (g:env)
              (b:term)
@@ -210,42 +255,38 @@ let check_if (f:RT.fstar_top_env)
   = let (| b, b_typing |) =
       check_tot_with_expected_typ f g b tm_bool in
     let hyp = fresh g in
-    let g_then =
-      (hyp, Inl (mk_eq2 U_zero tm_bool b tm_true))::g in
-    let (| e1, c1, e1_typing |) =
-      //
-      // TODO: this is unnecessary
-      //       we have typing of pre in g
-      //       weakening should give typing of pre in g_then
-      //
-      let pre_typing : tot_typing f g_then pre Tm_VProp =
-        check_vprop_no_inst f g_then pre in
-      let (| e1, c1, e1_typing |) =
-        check f g_then e1 pre pre_typing (Some post) in
-      let (| c1, e1_typing |) =
-        force_st pre_typing (| c1, e1_typing |) in
-      (| e1, c1, e1_typing |) in
-
-    let g_else =
-      (hyp, Inl (mk_eq2 U_zero tm_bool b tm_false))::g in
-    let (| e2, c2, e2_typing |) =
-      //
-      // TODO: this is unnecessary
-      //       we have typing of pre in g
-      //       weakening should give typing of pre in g_then
-      //
-      let pre_typing : tot_typing f g_else pre Tm_VProp =
-        check_vprop_no_inst f g_else pre in
-      let (| e2, c2, e2_typing |) =
-        check f g_else e2 pre pre_typing (Some post) in
-      let (| c2, e2_typing |) =
-        force_st pre_typing (| c2, e2_typing |) in
-      (| e2, c2, e2_typing |) in
+    let g_with_eq (eq_v:pure_term) =
+      (hyp, Inl (mk_eq2 U_zero tm_bool b eq_v))::g
+    in
+    let check_branch (eq_v:pure_term) (br:term)
+      : T.Tac (br:term { ~(hyp `Set.mem` freevars br) } &
+               c:pure_comp { stateful_comp c /\ comp_pre c == pre } &
+               src_typing f (g_with_eq eq_v) br c)
+      = let g_with_eq = g_with_eq eq_v in
+        //
+        // TODO: pre_typing is unnecessary
+        //       we have typing of pre in g
+        //       weakening should give typing of pre in g_then
+        //
+        let pre_typing = check_vprop_no_inst f g_with_eq pre in
+        let (| br, c, br_typing |) =
+            check f g_with_eq br pre pre_typing (Some post)
+        in
+        if hyp `Set.mem` freevars br
+        then T.fail "Illegal use of control-flow hypothesis in branch"
+        else (
+          let (| c, br_typing |) = force_st pre_typing (| c, br_typing |) in
+          (| br, c, br_typing |)
+        )
+    in
+    let (| e1, c1, e1_typing |) = check_branch tm_true e1 in
+    let (| e2, c2, e2_typing |) = check_branch tm_false e2 in    
     let (| c, e1_typing, e2_typing |) =
       combine_if_branches _ _ _ _ e1_typing _ _ _ e2_typing in
+    let c_typing = check_comp _ _ c pre_typing in //Would be better to have post_typing already, rather than re-check here
     (| Tm_If b e1 e2 None,
        c,
-       T_If g b e1 e2 c hyp (E b_typing) e1_typing e2_typing |)
+       T_If g b e1 e2 c _ hyp (E b_typing) e1_typing e2_typing (E c_typing) |)
 
 #push-options "--print_implicits --print_universes --print_full_names"
 let rec check' : bool -> check_t =

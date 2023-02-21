@@ -60,7 +60,7 @@ let equiv_frame_post (g:R.env)
                      (mk_stt_comp u t pre (mk_abs t R.Q_Explicit (mk_star (elab_pure post) frame))))
   = admit()
 
-#push-options "--z3rlimit_factor 2"
+#push-options "--z3rlimit_factor 4 --ifuel 1 --fuel 4"
 let elab_frame_typing (f:stt_env)
                       (g:env)
                       (e:R.term)
