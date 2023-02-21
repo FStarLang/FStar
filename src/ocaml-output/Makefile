@@ -106,8 +106,7 @@ dune-fstar-snapshot: generated-files
 	mkdir -p $(DUNE_SNAPSHOT)/fstar-tests/generated
 	cp ../../src/tests/ml/*.ml $(DUNE_SNAPSHOT)/fstar-tests
 	mv $(DUNE_SNAPSHOT)/fstar-lib/generated/FStar_Tests_* $(DUNE_SNAPSHOT)/fstar-tests/generated/
-	mkdir -p $(DUNE_SNAPSHOT)/fstar-lib/dynamic
-	mv $(DUNE_SNAPSHOT)/fstar-lib/generated/FStar_Version.ml $(DUNE_SNAPSHOT)/fstar-lib/dynamic/
+	rm -f $(DUNE_SNAPSHOT)/fstar-lib/generated/FStar_Version.ml
 
 dune-verify-ulib: dune-fstar-snapshot
 	+if test -x $(FSTAR_HOME)/bin/fstar.exe ; then \
