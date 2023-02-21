@@ -1,0 +1,9 @@
+(include_subdirs unqualified)
+(executable
+ (name FStar_Tests_Main)
+ (public_name fstar_tests.exe)
+ (libraries
+    fstar_lib
+ )
+ (modes (native exe))
+)

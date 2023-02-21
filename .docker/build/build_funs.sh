@@ -103,9 +103,15 @@ function update_version_number () {
     git commit -m "[CI] bump version number to $version_number"
 }
 
+function git_add_fstar_snapshot () {
+    if ! git diff-index --quiet --cached HEAD -- ocaml/*/generated ; then
+        git ls-files ocaml/*/generated | xargs git add
+    fi
+}
+
 function refresh_fstar_hints() {
     [[ -n "$DZOMO_GITHUB_TOKEN" ]] &&
-    refresh_hints "https://$DZOMO_GITHUB_TOKEN@github.com/FStarLang/FStar.git" "git ls-files src/ocaml-output/ | xargs git add" "regenerate hints + ocaml snapshot" "."
+    refresh_hints "https://$DZOMO_GITHUB_TOKEN@github.com/FStarLang/FStar.git" "git_add_fstar_snapshot" "regenerate hints + ocaml snapshot" "."
 }
 
 # Note: this performs an _approximate_ refresh of the hints, in the sense that
@@ -194,8 +200,7 @@ function fstar_binary_build () {
 function fstar_docs_build () {
     # First - get fstar built
     # Second - run fstar with the --doc flag
-    make -C src/ocaml-output clean && \
-        make -C src/ocaml-output -j $threads && \
+    OTHERFLAGS='--admit_smt_queries true' make -j $threads && \
         .ci/fsdoc.sh && \
         echo true >$status_file
 }
@@ -213,7 +218,7 @@ function fstar_default_build () {
     fi &
 
     # Build F*, along with fstarlib
-    if ! make -C src -j $threads utest-prelude; then
+    if ! make -j $threads ci-utest-prelude; then
         echo Warm-up failed
         echo Failure >$result_file
         return 1
@@ -232,13 +237,13 @@ function fstar_default_build () {
     fi
 
     # Once F* is built, run its main regression suite.
-    $gnutime make -C src -j $threads -k $localTarget && echo true >$status_file
+    $gnutime make -j $threads -k ci-$localTarget && echo true >$status_file
     echo Done building FStar
 
     # Make it a hard failure if there's a git diff. Note: FStar_Version.ml is in the
     # .gitignore.
-    echo "Searching for a diff in src/ocaml-output"
-    if ! git diff --exit-code src/ocaml-output; then
+    echo "Searching for a diff in ocaml/*/generated"
+    if ! git diff --exit-code ocaml/*/generated ; then
         echo "GIT DIFF: the files in the list above have a git diff"
         echo false >$status_file
     fi

@@ -20,6 +20,8 @@ set -o pipefail
 # informative stats. This script automates the process of running with
 # orun and summarizing the results.
 
+# FIXME: recast those benchmarks
+
 help () {
 cat <<EOF
 $0: Benchmark F*

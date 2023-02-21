@@ -4,6 +4,7 @@
 *.fsti linguist-language=FStar
 *.fsti linguist-documentation=false
 /src/ocaml-output/FStar_*.ml linguist-vendored
+/ocaml/fstar-lib/generated/FStar_*.ml linguist-vendored
 
 # Line endings
 *.fs* eol=lf
@@ -24,6 +25,8 @@ karamel_ref eol=lf
 # does not show diffs in the CLI nor GitHub.
 /src/ocaml-output/FStar_*.ml -diff -merge
 /src/ocaml-output/FStar_*.ml linguist-generated=true
+/ocaml/fstar-lib/generated/FStar_*.ml -diff -merge
+/ocaml/fstar-lib/generated/FStar_*.ml linguist-generated=true
 *.hints -diff -merge
 *.hints linguist-generated=true
 

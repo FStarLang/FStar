@@ -31,6 +31,8 @@ cache/
 /bin/z3-x64.exe
 /src/*/obj
 
+/lib
+
 examples/*/*.ml
 examples/crypto/CntProtocol.exe
 examples/wysteria/ocaml-output/*
@@ -42,6 +44,8 @@ _build/
 /ulib/ml/_taclib_build/
 /ulib/fs/obj
 /ulib/fs/bin
+
+/release
 
 *.native
 *.byte
@@ -60,6 +64,7 @@ dump
 *.cmxs
 *.cmxa
 *.o
+fstar.install
 
 .depend
 .depend.rsp

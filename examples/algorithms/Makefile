@@ -9,6 +9,8 @@ uall: BinarySearch.uver IntSort.uver InsertionSort.uver MergeSort.uver QuickSort
 downgrade: QuickSort.Array.fst downgrade.fst
 	$(FSTAR) --include $(FSTAR_ULIB)/reclaimable downgrade.fst
 
+# TODO: restore this OCaml extraction
+
 include $(FSTAR_ULIB)/ml/Makefile.include
 
 huffman-ocaml: out Huffman.fst

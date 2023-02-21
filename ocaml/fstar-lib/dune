@@ -1,0 +1,31 @@
+(include_subdirs unqualified)
+(library
+ (name fstar_lib)
+ (public_name fstar.lib)
+ (libraries
+    batteries
+    zarith
+    stdint
+    yojson
+    ppxlib
+    dynlink
+    menhirLib
+    pprint
+    process
+    sedlex
+ )
+ (modes native)
+ (wrapped false)
+ (preprocess (pps ppx_deriving.show ppx_deriving_yojson sedlex.ppx))
+)
+
+(rule
+  (target FStar_Version.ml)
+  (deps (:script make_fstar_version.sh)
+        (:version ../../version.txt))
+  (action
+    (progn
+      (copy %{version} version.txt)
+      (with-stdout-to
+        FStar_Version.ml
+        (run bash %{script})))))
