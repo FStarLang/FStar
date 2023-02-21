@@ -13,6 +13,7 @@ module U32 = FStar.UInt32
 #push-options "--print_universes --print_implicits"
 let expects = ()
 let provides = ()
+let while = ()
 
 (* Start up the solver and feed it the initial context *)
 let warmup (x:int) = assert (x + 1 > x)
@@ -152,5 +153,23 @@ let warmup (x:int) = assert (x + 1 > x)
       let n = elim_exists u32 (fun n -> pts_to r full_perm n) in
       let n = stt_ghost_reveal u32 n in
       intro_exists u32 (fun n -> pts_to r full_perm n) n
+    )
+)))
+
+%splice_t[while_test] (check (`(
+  fun (r:ref u32) ->
+    (expects (exists_ u#0 bool (fun b -> exists_ u#0 u32 (fun n -> pts_to r full_perm n))))
+    (provides (fun _ -> exists_ u#0 u32 (fun n -> pts_to r full_perm n)))
+    (
+      while
+        (fun b -> exists_ u#0 u32 (fun n -> pts_to r full_perm n))
+        (
+          let b = elim_exists bool (fun b -> exists_ u#0 u32 (fun n -> pts_to r full_perm n)) in
+          return_stt_noeq #bool true
+        )
+        (
+          intro_exists bool (fun b -> exists_ u#0 u32 (fun n -> pts_to r full_perm n)) true;
+          return_stt_noeq #unit ()
+        )
     )
 )))
