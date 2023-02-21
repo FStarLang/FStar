@@ -535,6 +535,8 @@ let compare
 
 let intro_fits_u32 () = H.intro_fits_u32 ()
 let intro_fits_u64 () = H.intro_fits_u64 ()
+let intro_fits_ptrdiff32 () = H.intro_fits_ptrdiff32 ()
+let intro_fits_ptrdiff64 () = H.intro_fits_ptrdiff64 ()
 
 let ptrdiff #_ #p0 #p1 #s0 #s1 a0 a1 =
   rewrite

@@ -404,6 +404,24 @@ let intro_fits_u64 (_:unit)
            emp (fun _ -> emp)
   = A.intro_fits_u64 ()
 
+/// Determining whether int32 values fit in a ptrdiff
+/// It will be natively extracted to static_assert (INT32_MAX <= PTRDIFF_MAX) by krml
+inline_for_extraction
+[@@noextract_to "krml"]
+let intro_fits_ptrdiff32 (_:unit)
+  : SteelT (squash (UP.fits (FStar.Int.max_int 32)))
+        emp (fun _ -> emp)
+  = A.intro_fits_ptrdiff32 ()
+
+/// Determining whether int64 values fit in a ptrdiff
+/// It will be natively extracted to static_assert (INT64_MAX <= PTRDIFF_MAX) by krml
+inline_for_extraction
+[@@noextract_to "krml"]
+let intro_fits_ptrdiff64 (_:unit)
+  : SteelT (squash (UP.fits (FStar.Int.max_int 64)))
+        emp (fun _ -> emp)
+  = A.intro_fits_ptrdiff64 ()
+
 inline_for_extraction
 [@@noextract_to "krml"]
 let ptrdiff (#a: Type) (#p1 #p2:P.perm) (arr1 arr2: array a)
