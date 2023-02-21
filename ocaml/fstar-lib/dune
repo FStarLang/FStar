@@ -1,0 +1,20 @@
+(include_subdirs unqualified)
+(library
+ (name fstar_lib)
+ (public_name fstar.lib)
+ (libraries
+    batteries
+    zarith
+    stdint
+    yojson
+    ppxlib
+    dynlink
+    menhirLib
+    pprint
+    process
+    sedlex
+ )
+ (modes native)
+ (wrapped false)
+ (preprocess (pps ppx_deriving.show ppx_deriving_yojson sedlex.ppx))
+)

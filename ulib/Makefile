@@ -18,6 +18,9 @@ extra: .cache
 .cache:
 	mkdir -p .cache
 
+
+
+include $(FSTAR_HOME)/ulib/ml/Makefile.realized
 include $(FSTAR_HOME)/ulib/ml/Makefile.include
 include $(FSTAR_HOME)/.common.mk
 

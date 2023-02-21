@@ -213,7 +213,7 @@ function fstar_default_build () {
     fi &
 
     # Build F*, along with fstarlib
-    if ! make -C src -j $threads utest-prelude; then
+    if ! make -j $threads ci-utest-prelude; then
         echo Warm-up failed
         echo Failure >$result_file
         return 1
@@ -232,7 +232,7 @@ function fstar_default_build () {
     fi
 
     # Once F* is built, run its main regression suite.
-    $gnutime make -C src -j $threads -k $localTarget && echo true >$status_file
+    $gnutime make -j $threads -k ci-$localTarget && echo true >$status_file
     echo Done building FStar
 
     # Make it a hard failure if there's a git diff. Note: FStar_Version.ml is in the

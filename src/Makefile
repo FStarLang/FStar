@@ -73,11 +73,17 @@ ulib-in-fsharp: $(BIN)/fstar.exe
 # Getting parallelism from this target
 uregressions: ulib-extra tutorial utests uexamples
 
+.PHONY: uregressions-raw
+uregressions-raw: ulib-extra tutorial-raw utests-raw uexamples-raw
+
 # Getting parallelism from this target as well
 # This is a hook for nightly builds (on Linux)
 # But, at the moment, it tests the same files as get tested on every push
 # We may add more nightly tests here in the future
 uregressions-ulong: uregressions
+
+.PHONY: uregressions-ulong-raw
+uregressions-ulong-raw: uregressions-raw
 
 # This is not optimal, since if some dependencies
 # of fstarlib change we will not rebuild. However
@@ -96,13 +102,25 @@ ulib-extra:
 	+$(MAKE) -C ../ulib extra
 
 tutorial: .fstarlib
+	+$(MAKE) $@-raw
+
+.PHONY: tutorial-raw
+tutorial-raw:
 	+$(MAKE) -C ../doc/tutorial regressions
 	+$(MAKE) -C ../doc/book/code
 
 utests: .fstarlib
+	+$(MAKE) $@-raw
+
+.PHONY: utests-raw
+utests-raw:
 	+$(MAKE) -C ../tests all
 
 uexamples: .fstarlib
+	+$(MAKE) $@-raw
+
+.PHONY: uexamples-raw
+uexamples-raw:
 	+$(MAKE) -C ../examples all
 	+$(MAKE) -C ../examples native_tactics.all
 	+$(MAKE) -C ../examples semiring.all
