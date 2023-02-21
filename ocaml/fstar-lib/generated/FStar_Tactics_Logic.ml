@@ -317,10 +317,15 @@ let (pose_lemma :
                                                                     ((FStar_Reflection_Builtins.pack_ln
                                                                     (FStar_Reflection_Data.Tv_Abs
                                                                     ((FStar_Reflection_Builtins.pack_binder
+                                                                    {
+                                                                    FStar_Reflection_Data.binder_bv
+                                                                    =
                                                                     (FStar_Reflection_Builtins.pack_bv
                                                                     {
                                                                     FStar_Reflection_Data.bv_ppname
-                                                                    = "uu___";
+                                                                    =
+                                                                    (FStar_Sealed.seal
+                                                                    "uu___");
                                                                     FStar_Reflection_Data.bv_index
                                                                     =
                                                                     (Prims.of_int (100));
@@ -331,9 +336,13 @@ let (pose_lemma :
                                                                     (FStar_Reflection_Builtins.pack_fv
                                                                     ["Prims";
                                                                     "unit"])))
-                                                                    })
-                                                                    FStar_Reflection_Data.Q_Explicit
-                                                                    []), t))),
+                                                                    });
+                                                                    FStar_Reflection_Data.binder_qual
+                                                                    =
+                                                                    FStar_Reflection_Data.Q_Explicit;
+                                                                    FStar_Reflection_Data.binder_attrs
+                                                                    = []
+                                                                    }), t))),
                                                                     FStar_Reflection_Data.Q_Explicit)))))
                                                             | uu___2 ->
                                                                 Obj.magic
@@ -461,10 +470,15 @@ let (pose_lemma :
                                                                     ((FStar_Reflection_Builtins.pack_ln
                                                                     (FStar_Reflection_Data.Tv_Abs
                                                                     ((FStar_Reflection_Builtins.pack_binder
+                                                                    {
+                                                                    FStar_Reflection_Data.binder_bv
+                                                                    =
                                                                     (FStar_Reflection_Builtins.pack_bv
                                                                     {
                                                                     FStar_Reflection_Data.bv_ppname
-                                                                    = "uu___";
+                                                                    =
+                                                                    (FStar_Sealed.seal
+                                                                    "uu___");
                                                                     FStar_Reflection_Data.bv_index
                                                                     =
                                                                     (Prims.of_int (107));
@@ -475,9 +489,13 @@ let (pose_lemma :
                                                                     (FStar_Reflection_Builtins.pack_fv
                                                                     ["Prims";
                                                                     "unit"])))
-                                                                    })
-                                                                    FStar_Reflection_Data.Q_Explicit
-                                                                    []),
+                                                                    });
+                                                                    FStar_Reflection_Data.binder_qual
+                                                                    =
+                                                                    FStar_Reflection_Data.Q_Explicit;
+                                                                    FStar_Reflection_Data.binder_attrs
+                                                                    = []
+                                                                    }),
                                                                     uu___3))),
                                                                     FStar_Reflection_Data.Q_Explicit)))))))
                                                                     uu___3)))

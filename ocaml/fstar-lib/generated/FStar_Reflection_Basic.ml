@@ -1025,29 +1025,25 @@ let (pack_bv : FStar_Reflection_Data.bv_view -> FStar_Syntax_Syntax.bv) =
       FStar_Syntax_Syntax.sort = (bvv.FStar_Reflection_Data.bv_sort)
     }
 let (inspect_binder :
-  FStar_Syntax_Syntax.binder ->
-    (FStar_Syntax_Syntax.bv * (FStar_Reflection_Data.aqualv *
-      FStar_Syntax_Syntax.term Prims.list)))
-  =
+  FStar_Syntax_Syntax.binder -> FStar_Reflection_Data.binder_view) =
   fun b ->
-    let uu___ =
-      let uu___1 = inspect_bqual b.FStar_Syntax_Syntax.binder_qual in
-      (uu___1, (b.FStar_Syntax_Syntax.binder_attrs)) in
-    ((b.FStar_Syntax_Syntax.binder_bv), uu___)
+    let uu___ = inspect_bqual b.FStar_Syntax_Syntax.binder_qual in
+    {
+      FStar_Reflection_Data.binder_bv = (b.FStar_Syntax_Syntax.binder_bv);
+      FStar_Reflection_Data.binder_qual = uu___;
+      FStar_Reflection_Data.binder_attrs =
+        (b.FStar_Syntax_Syntax.binder_attrs)
+    }
 let (pack_binder :
-  FStar_Syntax_Syntax.bv ->
-    FStar_Reflection_Data.aqualv ->
-      FStar_Syntax_Syntax.term Prims.list -> FStar_Syntax_Syntax.binder)
-  =
-  fun bv ->
-    fun aqv ->
-      fun attrs ->
-        let uu___ = pack_bqual aqv in
-        {
-          FStar_Syntax_Syntax.binder_bv = bv;
-          FStar_Syntax_Syntax.binder_qual = uu___;
-          FStar_Syntax_Syntax.binder_attrs = attrs
-        }
+  FStar_Reflection_Data.binder_view -> FStar_Syntax_Syntax.binder) =
+  fun bview ->
+    let uu___ = pack_bqual bview.FStar_Reflection_Data.binder_qual in
+    {
+      FStar_Syntax_Syntax.binder_bv = (bview.FStar_Reflection_Data.binder_bv);
+      FStar_Syntax_Syntax.binder_qual = uu___;
+      FStar_Syntax_Syntax.binder_attrs =
+        (bview.FStar_Reflection_Data.binder_attrs)
+    }
 let (moduleof : FStar_TypeChecker_Env.env -> Prims.string Prims.list) =
   fun e -> FStar_Ident.path_of_lid e.FStar_TypeChecker_Env.curmodule
 let (env_open_modules :
@@ -1169,14 +1165,16 @@ and (binder_eq :
   FStar_Syntax_Syntax.binder -> FStar_Syntax_Syntax.binder -> Prims.bool) =
   fun b1 ->
     fun b2 ->
-      let uu___ = inspect_binder b1 in
-      match uu___ with
-      | (bv1, (bq1, bats1)) ->
-          let uu___1 = inspect_binder b2 in
-          (match uu___1 with
-           | (bv2, (bq2, bats2)) ->
-               ((binding_bv_eq bv1 bv2) && (aqual_eq bq1 bq2)) &&
-                 ((eqlist ()) term_eq bats1 bats2))
+      let bview1 = inspect_binder b1 in
+      let bview2 = inspect_binder b2 in
+      ((binding_bv_eq bview1.FStar_Reflection_Data.binder_bv
+          bview2.FStar_Reflection_Data.binder_bv)
+         &&
+         (aqual_eq bview1.FStar_Reflection_Data.binder_qual
+            bview2.FStar_Reflection_Data.binder_qual))
+        &&
+        ((eqlist ()) term_eq bview1.FStar_Reflection_Data.binder_attrs
+           bview2.FStar_Reflection_Data.binder_attrs)
 and (binding_bv_eq :
   FStar_Syntax_Syntax.bv -> FStar_Syntax_Syntax.bv -> Prims.bool) =
   fun bv1 ->

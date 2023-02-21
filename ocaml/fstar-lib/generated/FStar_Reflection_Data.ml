@@ -351,7 +351,24 @@ let (__proj__Mkbv_view__item__bv_sort : bv_view -> typ) =
   fun projectee ->
     match projectee with | { bv_ppname; bv_index; bv_sort;_} -> bv_sort
 type binder_view =
-  (FStar_Syntax_Syntax.bv * (aqualv * FStar_Syntax_Syntax.term Prims.list))
+  {
+  binder_bv: FStar_Syntax_Syntax.bv ;
+  binder_qual: aqualv ;
+  binder_attrs: FStar_Syntax_Syntax.term Prims.list }
+let (__proj__Mkbinder_view__item__binder_bv :
+  binder_view -> FStar_Syntax_Syntax.bv) =
+  fun projectee ->
+    match projectee with
+    | { binder_bv; binder_qual; binder_attrs;_} -> binder_bv
+let (__proj__Mkbinder_view__item__binder_qual : binder_view -> aqualv) =
+  fun projectee ->
+    match projectee with
+    | { binder_bv; binder_qual; binder_attrs;_} -> binder_qual
+let (__proj__Mkbinder_view__item__binder_attrs :
+  binder_view -> FStar_Syntax_Syntax.term Prims.list) =
+  fun projectee ->
+    match projectee with
+    | { binder_bv; binder_qual; binder_attrs;_} -> binder_attrs
 type comp_view =
   | C_Total of typ 
   | C_GTotal of typ 
