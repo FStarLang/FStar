@@ -20,11 +20,11 @@ printed:
 	$(Q)mkdir -p $@
 
 printed/%.fst: %.fst | printed
-	@echo "[PPRINT    $(basename $(notdir $@))]"
+	$(call msg, "PPRINT", $(basename $(notdir $@)))
 	$(Q)$(FSTAR) $(SIL) --print $< > $@
 
 inplace/%.fst: %.fst | inplace
-	@echo "[PPRINT    $(basename $(notdir $@))]"
+	$(call msg, "PPRINT", $(basename $(notdir $@)))
 	$(Q)cp $< $@
 	$(Q)$(FSTAR) $(SIL) --print_in_place $@
 
@@ -45,7 +45,7 @@ inplace/%.fst: %.fst | inplace
 accept: $(patsubst %, %.accept, $(BASES))
 
 clean:
-	@echo "[CLEAN]"
+	$(call msg, "CLEAN")
 	$(Q)rm -rf printed inplace
 	$(Q)rm -f .*.test.print
 	$(Q)rm -f .*.test.inplace

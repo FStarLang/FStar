@@ -136,7 +136,7 @@ CAPPED=$(subst Bug,Bug,$*)
 
 
 %.verify: %.fst
-	@echo '[CHECK     $<]'
+	$(call msg, "CHECK", $<)
 	$(Q)$(FSTAR) $(SIL) $^
 	@touch $@
 
@@ -161,7 +161,7 @@ iverify: $(subst .fsti,.iverify,$(SHOULD_VERIFY_INTERFACE_CLOSED))
 verify-maybe-close: $(subst .fst,.verify,$(SHOULD_VERIFY_MAYBE_CLOSE))
 
 %.not-verify: %.fst
-	@echo '[CHECKFAIL $<]'
+	$(call msg, "CHECKFAIL", $<)
 	$(Q)(! $(FSTAR) $(SIL) $^ >/dev/null 2>&1) || (echo "Negative test failed ($@)!" ; false)
 	@touch $@
 

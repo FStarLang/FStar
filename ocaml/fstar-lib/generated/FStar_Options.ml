@@ -318,7 +318,6 @@ let (defaults : (Prims.string * option_val) Prims.list) =
   ("MLish", (Bool false));
   ("no_default_includes", (Bool false));
   ("no_extract", (List []));
-  ("no_load_fstartaclib", (Bool false));
   ("no_location_info", (Bool false));
   ("no_smt", (Bool false));
   ("no_plugins", (Bool false));
@@ -549,8 +548,6 @@ let (get_no_default_includes : unit -> Prims.bool) =
   fun uu___ -> lookup_opt "no_default_includes" as_bool
 let (get_no_extract : unit -> Prims.string Prims.list) =
   fun uu___ -> lookup_opt "no_extract" (as_list as_string)
-let (get_no_load_fstartaclib : unit -> Prims.bool) =
-  fun uu___ -> lookup_opt "no_load_fstartaclib" as_bool
 let (get_no_location_info : unit -> Prims.bool) =
   fun uu___ -> lookup_opt "no_location_info" as_bool
 let (get_no_plugins : unit -> Prims.bool) =
@@ -962,7 +959,7 @@ let (interp_quake_arg : Prims.string -> (Prims.int * Prims.int * Prims.bool))
           let uu___ = ios f1 in let uu___1 = ios f2 in (uu___, uu___1, true)
         else failwith "unexpected value for --quake"
     | uu___ -> failwith "unexpected value for --quake"
-let (uu___449 : (((Prims.string -> unit) -> unit) * (Prims.string -> unit)))
+let (uu___448 : (((Prims.string -> unit) -> unit) * (Prims.string -> unit)))
   =
   let cb = FStar_Compiler_Util.mk_ref FStar_Pervasives_Native.None in
   let set1 f =
@@ -974,11 +971,11 @@ let (uu___449 : (((Prims.string -> unit) -> unit) * (Prims.string -> unit)))
     | FStar_Pervasives_Native.Some f -> f msg in
   (set1, call)
 let (set_option_warning_callback_aux : (Prims.string -> unit) -> unit) =
-  match uu___449 with
+  match uu___448 with
   | (set_option_warning_callback_aux1, option_warning_callback) ->
       set_option_warning_callback_aux1
 let (option_warning_callback : Prims.string -> unit) =
-  match uu___449 with
+  match uu___448 with
   | (set_option_warning_callback_aux1, option_warning_callback1) ->
       option_warning_callback1
 let (set_option_warning_callback : (Prims.string -> unit) -> unit) =
@@ -1176,8 +1173,6 @@ let rec (specs_with_types :
     (FStar_Getopt.noshort, "no_extract",
       (Accumulated (PathStr "module name")),
       "Deprecated: use --extract instead; Do not extract code from this module");
-    (FStar_Getopt.noshort, "no_load_fstartaclib", (Const (Bool true)),
-      "Do not attempt to load fstartaclib by default");
     (FStar_Getopt.noshort, "no_location_info", (Const (Bool true)),
       "Suppress location information in the generated OCaml output (only relevant with --codegen OCaml)");
     (FStar_Getopt.noshort, "no_smt", (Const (Bool true)),
@@ -1484,7 +1479,7 @@ let (settable_specs :
     (FStar_Compiler_List.filter
        (fun uu___ ->
           match uu___ with | (uu___1, x, uu___2, uu___3) -> settable x))
-let (uu___641 :
+let (uu___640 :
   (((unit -> FStar_Getopt.parse_cmdline_res) -> unit) *
     (unit -> FStar_Getopt.parse_cmdline_res)))
   =
@@ -1501,11 +1496,11 @@ let (uu___641 :
   (set1, call)
 let (set_error_flags_callback_aux :
   (unit -> FStar_Getopt.parse_cmdline_res) -> unit) =
-  match uu___641 with
+  match uu___640 with
   | (set_error_flags_callback_aux1, set_error_flags) ->
       set_error_flags_callback_aux1
 let (set_error_flags : unit -> FStar_Getopt.parse_cmdline_res) =
-  match uu___641 with
+  match uu___640 with
   | (set_error_flags_callback_aux1, set_error_flags1) -> set_error_flags1
 let (set_error_flags_callback :
   (unit -> FStar_Getopt.parse_cmdline_res) -> unit) =
@@ -1963,8 +1958,6 @@ let (no_extract : Prims.string -> Prims.bool) =
       (FStar_Compiler_List.existsb (module_name_eq s))
 let (normalize_pure_terms_for_extraction : unit -> Prims.bool) =
   fun uu___ -> get_normalize_pure_terms_for_extraction ()
-let (no_load_fstartaclib : unit -> Prims.bool) =
-  fun uu___ -> get_no_load_fstartaclib ()
 let (no_location_info : unit -> Prims.bool) =
   fun uu___ -> get_no_location_info ()
 let (no_plugins : unit -> Prims.bool) = fun uu___ -> get_no_plugins ()

@@ -125,7 +125,7 @@ native code library (a cmxa file) with ``ocamlbuild``, as shown below
 
 .. code-block::
 
-   OCAMLPATH=$FSTAR_HOME/bin ocamlbuild -use-ocamlfind -pkg batteries -pkg fstarlib Part1_Quicksort_Generic.cmxa
+   OCAMLPATH=$FSTAR_HOME/lib ocamlbuild -use-ocamlfind -pkg batteries -pkg fstar.lib Part1_Quicksort_Generic.cmxa
 
 Some points to note:
 
@@ -136,7 +136,7 @@ Some points to note:
   * The ``-use-ocamlfind`` option enables a utility to find OCaml libraries.
 
   * Extracted F* programs rely on two libraries: ``batteries`` and
-    ``fstarlib``, which is what the ``-pkg`` options say.
+    ``fstar.lib``, which is what the ``-pkg`` options say.
 
   * Finally, ``Part1_Quicksort_Generic.cmxa`` references the name of
     the corresponding ``.ml`` file, but with the ``.cmxa`` extension
@@ -200,7 +200,7 @@ You can compile this code in OCaml to a native executable by doing:
 
 .. code-block::
 
-   OCAMLPATH=$FSTAR_HOME/bin ocamlbuild -use-ocamlfind -pkg batteries -pkg fstarlib Part1_Quicksort_Main.native
+   OCAMLPATH=$FSTAR_HOME/lib ocamlbuild -use-ocamlfind -pkg batteries -pkg fstar.lib Part1_Quicksort_Main.native
 
 And, finally, you can execute Part1_Quicksort_Main.native to see the
 following output:

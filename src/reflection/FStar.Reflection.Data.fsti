@@ -159,5 +159,5 @@ type exp =
     | Var of var
     | Mult of exp * exp
 
-(* Needed so this appears in the ocaml output for fstar-tactics-lib *)
+(* Needed so this appears in the ocaml output for the fstar tactics library *)
 type decls = list sigelt

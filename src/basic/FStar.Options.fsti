@@ -159,7 +159,6 @@ val ml_ish                      : unit    -> bool
 val set_ml_ish                  : unit    -> unit
 val no_default_includes         : unit    -> bool
 val no_extract                  : string  -> bool
-val no_load_fstartaclib         : unit    -> bool
 val no_location_info            : unit    -> bool
 val no_plugins                  : unit    -> bool
 val no_smt                      : unit    -> bool

@@ -565,17 +565,31 @@ let memcpy (#t:_) (#p0:perm)
 
 
 /// An introduction function for the fits_u32 predicate.
-/// It will be natively extracted to static_assert (UINT32_MAX <= SIZE_T_MAX) by krml
+/// It will be natively extracted to static_assert (UINT32_MAX <= SIZE_MAX) by krml
 [@@noextract_to "krml"]
 val intro_fits_u32 (_:unit)
   : STT (squash (US.fits_u32))
         emp (fun _ -> emp)
 
 /// An introduction function for the fits_u64 predicate.
-/// It will be natively extracted to static_assert (UINT64_MAX <= SIZE_T_MAX) by krml
+/// It will be natively extracted to static_assert (UINT64_MAX <= SIZE_MAX) by krml
 [@@noextract_to "krml"]
 val intro_fits_u64 (_:unit)
   : STT (squash (US.fits_u64))
+        emp (fun _ -> emp)
+
+/// Determining whether int32 values fit in a ptrdiff
+/// It will be natively extracted to static_assert (INT32_MAX <= PTRDIFF_MAX) by krml
+[@@noextract_to "krml"]
+val intro_fits_ptrdiff32 (_:unit)
+  : STT (squash (UP.fits (FStar.Int.max_int 32)))
+        emp (fun _ -> emp)
+
+/// Determining whether int32 values fit in a ptrdiff
+/// It will be natively extracted to static_assert (INT64_MAX <= PTRDIFF_MAX) by krml
+[@@noextract_to "krml"]
+val intro_fits_ptrdiff64 (_:unit)
+  : STT (squash (UP.fits (FStar.Int.max_int 64)))
         emp (fun _ -> emp)
 
 /// The pointer substraction, returning a ptrdiff_t.

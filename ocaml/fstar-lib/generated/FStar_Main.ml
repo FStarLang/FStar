@@ -125,13 +125,9 @@ let (load_native_tactics : unit -> unit) =
        FStar_Compiler_Util.print1 "Will try to load cmxs files: %s\n"
          (FStar_String.concat ", " cmxs_files)
      else ());
-    (let uu___3 =
-       let uu___4 = FStar_Options.no_load_fstartaclib () in
-       Prims.op_Negation uu___4 in
-     if uu___3 then FStar_Tactics_Load.try_load_lib () else ());
     FStar_Tactics_Load.load_tactics cmxs_files;
-    (let uu___5 = FStar_Options.use_native_tactics () in
-     FStar_Compiler_Util.iter_opt uu___5 FStar_Tactics_Load.load_tactics_dir)
+    (let uu___4 = FStar_Options.use_native_tactics () in
+     FStar_Compiler_Util.iter_opt uu___4 FStar_Tactics_Load.load_tactics_dir)
 let (fstar_files :
   Prims.string Prims.list FStar_Pervasives_Native.option
     FStar_Compiler_Effect.ref)

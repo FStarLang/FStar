@@ -1,6 +1,7 @@
 .PHONY: indent extra
 
 FSTAR_HOME=..
+DUNE_SNAPSHOT ?= $(realpath $(FSTAR_HOME)/ocaml)
 
 include ml/Makefile.realized
 NOEXTRACT_MODULES += +FStar.Pervasives -FStar.Pervasives.Native -FStar.Reflection -FStar.Tactics -Steel
@@ -22,29 +23,26 @@ EXTRACT_MODULES=--extract '* $(NOEXTRACT_MODULES)'
 # And then, in a separate invocation, from each .checked we
 # extract an .ml file
 $(OUTPUT_DIRECTORY)/%.ml:
-	@echo "[EXTRACT   $(basename $(notdir $@))]"
+	$(call msg, "EXTRACT", $(basename $(notdir $@)))
 	$(Q)$(MY_FSTAR) $(subst .checked,,$(notdir $<)) --codegen $(CODEGEN) --extract_module $(basename $(notdir $(subst .checked,,$<)))
 
 .depend.extract-stdlib:
+	$(call msg, "DEPEND")
 	$(Q)mkdir -p .cache
-	true $(shell rm -f .depend.extract-stdlib.rsp) $(foreach f,$(FSTAR_FILES),$(shell echo $(f) >> .depend.extract-stdlib.rsp))
+	$(Q)true $(shell rm -f .depend.extract-stdlib.rsp) $(foreach f,$(FSTAR_FILES),$(shell echo $(f) >> .depend.extract-stdlib.rsp))
 	$(Q)$(MY_FSTAR) --dep full $(EXTRACT_MODULES) $(addprefix --include , $(INCLUDE_PATHS)) @.depend.extract-stdlib.rsp > .depend.extract-stdlib
-	@echo "[DEPEND]"
 
 depend.extract-stdlib: .depend.extract-stdlib
 
 include .depend.extract-stdlib
 
-.PHONY: handwritten handwritten-ml handwritten-ml-experimental all-ml dune-snapshot
+.PHONY: all-ml dune-snapshot intfiles
 
-handwritten-ml:
-	+$(MAKE) -C ml dune-handwritten-snapshot
+# Prims is the only .fst (not fsti) with an Ocaml implementation
+# so we do not need to extract it.
+all-ml: $(filter-out %/prims.ml, $(ALL_ML_FILES))
 
-handwritten-ml-experimental:
-	+$(MAKE) -C experimental/ml dune-handwritten-snapshot
+intfiles:
+	+$(MAKE) -C ml intfiles
 
-handwritten: handwritten-ml handwritten-ml-experimental
-
-all-ml: $(ALL_ML_FILES)
-
-dune-snapshot: all-ml handwritten
+dune-snapshot: all-ml intfiles
