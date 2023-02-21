@@ -588,6 +588,9 @@ let extract_reifiable_effect g ed
     iface_union_l (return_iface::bind_iface::actions_iface),
     return_decl::bind_decl::actions
 
+(* Returns false iff the letbinding are not homogeneous. The letbindings
+are homogeneous when they all have the same "kind" (defining and arity
+or a non-arity). *)
 let should_split_let_rec_types_and_terms (env:uenv) (lbs:list letbinding)
   : bool
   = let rec is_homogeneous out lbs =
@@ -628,7 +631,7 @@ let split_let_rec_types_and_terms se (env:uenv) (lbs:list letbinding)
           )
     in
     let sigs, lbs = aux [] [] lbs in
-    let lb = {se with sigel = Sig_let ((true, lbs), List.map (fun lb -> lb.lbname) lbs) } in
+    let lb = {se with sigel = Sig_let ((true, lbs), List.map (fun lb -> lb.lbname |> BU.right |> lid_of_fv) lbs) } in
     let sigs = sigs@[lb] in
     // BU.print1 "Split let recs into %s\n"
     //   (List.map Print.sigelt_to_string sigs |> String.concat ";;\n");
@@ -947,7 +950,7 @@ let maybe_register_plugin (g:env_t) (se:sigelt) : list mlmodule1 =
            //          (match arity_opt with None -> "None" | Some x -> "Some " ^ string_of_int x);
            begin
            match se.sigel with
-           | Sig_let(lbs, lids) ->
+           | Sig_let(lbs, _) ->
                let mk_registration lb : list mlmodule1 =
                   let fv = right lb.lbname in
                   let fv_lid = fv.fv_name.v in
