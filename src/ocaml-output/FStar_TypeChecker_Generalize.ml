@@ -561,10 +561,14 @@ let (gen :
                                               FStar_Syntax_Util.arrow
                                                 tvars_bs c1 in
                                         let e' =
+                                          let uu___7 =
+                                            let uu___8 =
+                                              FStar_Syntax_Util.residual_comp_of_comp
+                                                c1 in
+                                            FStar_Pervasives_Native.Some
+                                              uu___8 in
                                           FStar_Syntax_Util.abs tvars_bs e2
-                                            (FStar_Pervasives_Native.Some
-                                               (FStar_Syntax_Util.residual_comp_of_comp
-                                                  c1)) in
+                                            uu___7 in
                                         let uu___7 =
                                           FStar_Syntax_Syntax.mk_Total t in
                                         (e', uu___7, tvars_bs)) in

@@ -30,9 +30,19 @@ ifneq ($(V),)
 	SIL=
 endif
 
+define NO_RUNLIM_ERR
+runlim not found:
+  To use RESOURCEMONITOR=1, the `runlim` tool must be installed and in your $$PATH.
+  It must also be a recent version supporting the `-p` option.
+  You can get it from: [https://github.com/arminbiere/runlim]
+endef
+
 # Passing RESOURCEMONITOR=1 will create .runlim files through the source tree with
 # information about the time and space taken by each F* invocation.
 ifneq ($(RESOURCEMONITOR),)
+	ifeq ($(shell which runlim),)
+		_ := $(error $(NO_RUNLIM_ERR)))
+	endif
 	ifneq ($(MONID),)
 		MONPREFIX=$(MONID).
 	endif

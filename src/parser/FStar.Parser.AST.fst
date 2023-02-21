@@ -140,6 +140,7 @@ and arg_qualifier =
     | Implicit
     | Equality
     | Meta of term
+    | TypeClassArg
 and aqual = option arg_qualifier
 and imp =
     | FsTypApp
@@ -153,12 +154,23 @@ type knd = term
 type typ = term
 type expr = term
 
+type tycon_record = list (ident * aqual * attributes_ * term)
+
+(** The different kinds of payload a constructor can carry *)
+type constructor_payload
+  = (** constructor of arity 1 for a type of kind [Type] (e.g. [C of int]) *)
+    | VpOfNotation of typ
+    (** constructor of any arity & kind (e.g. [C:int->ind] or [C:'a->'b->ind 'c]) *)
+    | VpArbitrary of typ
+    (** constructor whose payload is a record (e.g. [C {a: int}] or [C {x: Type} -> ind x]) *)
+    | VpRecord of (tycon_record * opt_kind:option typ)
+
 (* TODO (KM) : it would be useful for the printer to have range information for those *)
 type tycon =
   | TyconAbstract of ident * list binder * option knd
   | TyconAbbrev   of ident * list binder * option knd * term
-  | TyconRecord   of ident * list binder * option knd * attributes_ * list (ident * aqual * attributes_ * term)
-  | TyconVariant  of ident * list binder * option knd * list (ident * option term * bool * attributes_) (* bool is whether it's using 'of' notation *)
+  | TyconRecord   of ident * list binder * option knd * attributes_ * tycon_record
+  | TyconVariant  of ident * list binder * option knd * list (ident * option constructor_payload * attributes_)
 
 type qualifier =
   | Private
@@ -854,22 +866,30 @@ and calc_step_to_string (CalcStep (rel, just, next)) =
     Util.format3 "%s{ %s } %s" (term_to_string rel) (term_to_string just) (term_to_string next)
 
 and binder_to_string x =
-  let s = match x.b with
-  | Variable i -> (string_of_id i)
-  | TVariable i -> Util.format1 "%s:_" ((string_of_id i))
-  | TAnnotated(i,t)
-  | Annotated(i,t) -> Util.format2 "%s:%s" ((string_of_id i)) (t |> term_to_string)
-  | NoName t -> t |> term_to_string in
-  Util.format3 "%s%s%s"
-    (aqual_to_string x.aqual)
-    (attr_list_to_string x.battributes)
-    s
+  let pr x =
+    let s = match x.b with
+    | Variable i -> (string_of_id i)
+    | TVariable i -> Util.format1 "%s:_" ((string_of_id i))
+    | TAnnotated(i,t)
+    | Annotated(i,t) -> Util.format2 "%s:%s" ((string_of_id i)) (t |> term_to_string)
+    | NoName t -> t |> term_to_string in
+    Util.format3 "%s%s%s"
+      (aqual_to_string x.aqual)
+      (attr_list_to_string x.battributes)
+      s
+  in
+  (* Handle typeclass qualifier here *)
+  match x.aqual with
+  | Some TypeClassArg -> "{| " ^ pr x ^ " |}"
+  | _ -> pr x
 
 and aqual_to_string = function
   | Some Equality -> "$"
   | Some Implicit -> "#"
-  | Some (Meta t) -> "#[" ^ term_to_string t ^ "]"
   | None -> ""
+  | Some (Meta _)
+  | Some TypeClassArg ->
+    failwith "aqual_to_strings: meta arg qualifier?"
 
 and attr_list_to_string = function
   | [] -> ""

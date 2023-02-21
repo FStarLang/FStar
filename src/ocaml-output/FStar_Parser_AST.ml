@@ -137,6 +137,7 @@ and arg_qualifier =
   | Implicit 
   | Equality 
   | Meta of term 
+  | TypeClassArg 
 and imp =
   | FsTypApp 
   | Hash 
@@ -543,6 +544,9 @@ let (uu___is_Meta : arg_qualifier -> Prims.bool) =
   fun projectee -> match projectee with | Meta _0 -> true | uu___ -> false
 let (__proj__Meta__item___0 : arg_qualifier -> term) =
   fun projectee -> match projectee with | Meta _0 -> _0
+let (uu___is_TypeClassArg : arg_qualifier -> Prims.bool) =
+  fun projectee ->
+    match projectee with | TypeClassArg -> true | uu___ -> false
 let (uu___is_FsTypApp : imp -> Prims.bool) =
   fun projectee -> match projectee with | FsTypApp -> true | uu___ -> false
 let (uu___is_Hash : imp -> Prims.bool) =
@@ -567,17 +571,38 @@ type aqual = arg_qualifier FStar_Pervasives_Native.option
 type knd = term
 type typ = term
 type expr = term
+type tycon_record =
+  (FStar_Ident.ident * aqual * attributes_ * term) Prims.list
+type constructor_payload =
+  | VpOfNotation of typ 
+  | VpArbitrary of typ 
+  | VpRecord of (tycon_record * typ FStar_Pervasives_Native.option) 
+let (uu___is_VpOfNotation : constructor_payload -> Prims.bool) =
+  fun projectee ->
+    match projectee with | VpOfNotation _0 -> true | uu___ -> false
+let (__proj__VpOfNotation__item___0 : constructor_payload -> typ) =
+  fun projectee -> match projectee with | VpOfNotation _0 -> _0
+let (uu___is_VpArbitrary : constructor_payload -> Prims.bool) =
+  fun projectee ->
+    match projectee with | VpArbitrary _0 -> true | uu___ -> false
+let (__proj__VpArbitrary__item___0 : constructor_payload -> typ) =
+  fun projectee -> match projectee with | VpArbitrary _0 -> _0
+let (uu___is_VpRecord : constructor_payload -> Prims.bool) =
+  fun projectee ->
+    match projectee with | VpRecord _0 -> true | uu___ -> false
+let (__proj__VpRecord__item___0 :
+  constructor_payload -> (tycon_record * typ FStar_Pervasives_Native.option))
+  = fun projectee -> match projectee with | VpRecord _0 -> _0
 type tycon =
   | TyconAbstract of (FStar_Ident.ident * binder Prims.list * knd
   FStar_Pervasives_Native.option) 
   | TyconAbbrev of (FStar_Ident.ident * binder Prims.list * knd
   FStar_Pervasives_Native.option * term) 
   | TyconRecord of (FStar_Ident.ident * binder Prims.list * knd
-  FStar_Pervasives_Native.option * attributes_ * (FStar_Ident.ident * aqual *
-  attributes_ * term) Prims.list) 
+  FStar_Pervasives_Native.option * attributes_ * tycon_record) 
   | TyconVariant of (FStar_Ident.ident * binder Prims.list * knd
-  FStar_Pervasives_Native.option * (FStar_Ident.ident * term
-  FStar_Pervasives_Native.option * Prims.bool * attributes_) Prims.list) 
+  FStar_Pervasives_Native.option * (FStar_Ident.ident * constructor_payload
+  FStar_Pervasives_Native.option * attributes_) Prims.list) 
 let (uu___is_TyconAbstract : tycon -> Prims.bool) =
   fun projectee ->
     match projectee with | TyconAbstract _0 -> true | uu___ -> false
@@ -600,8 +625,7 @@ let (uu___is_TyconRecord : tycon -> Prims.bool) =
 let (__proj__TyconRecord__item___0 :
   tycon ->
     (FStar_Ident.ident * binder Prims.list * knd
-      FStar_Pervasives_Native.option * attributes_ * (FStar_Ident.ident *
-      aqual * attributes_ * term) Prims.list))
+      FStar_Pervasives_Native.option * attributes_ * tycon_record))
   = fun projectee -> match projectee with | TyconRecord _0 -> _0
 let (uu___is_TyconVariant : tycon -> Prims.bool) =
   fun projectee ->
@@ -609,8 +633,9 @@ let (uu___is_TyconVariant : tycon -> Prims.bool) =
 let (__proj__TyconVariant__item___0 :
   tycon ->
     (FStar_Ident.ident * binder Prims.list * knd
-      FStar_Pervasives_Native.option * (FStar_Ident.ident * term
-      FStar_Pervasives_Native.option * Prims.bool * attributes_) Prims.list))
+      FStar_Pervasives_Native.option * (FStar_Ident.ident *
+      constructor_payload FStar_Pervasives_Native.option * attributes_)
+      Prims.list))
   = fun projectee -> match projectee with | TyconVariant _0 -> _0
 type qualifier =
   | Private 
@@ -2130,34 +2155,43 @@ and (calc_step_to_string : calc_step -> Prims.string) =
         FStar_Compiler_Util.format3 "%s{ %s } %s" uu___1 uu___2 uu___3
 and (binder_to_string : binder -> Prims.string) =
   fun x ->
-    let s =
-      match x.b with
-      | Variable i -> FStar_Ident.string_of_id i
-      | TVariable i ->
-          let uu___ = FStar_Ident.string_of_id i in
-          FStar_Compiler_Util.format1 "%s:_" uu___
-      | TAnnotated (i, t) ->
-          let uu___ = FStar_Ident.string_of_id i in
-          let uu___1 = FStar_Compiler_Effect.op_Bar_Greater t term_to_string in
-          FStar_Compiler_Util.format2 "%s:%s" uu___ uu___1
-      | Annotated (i, t) ->
-          let uu___ = FStar_Ident.string_of_id i in
-          let uu___1 = FStar_Compiler_Effect.op_Bar_Greater t term_to_string in
-          FStar_Compiler_Util.format2 "%s:%s" uu___ uu___1
-      | NoName t -> FStar_Compiler_Effect.op_Bar_Greater t term_to_string in
-    let uu___ = aqual_to_string x.aqual in
-    let uu___1 = attr_list_to_string x.battributes in
-    FStar_Compiler_Util.format3 "%s%s%s" uu___ uu___1 s
+    let pr x1 =
+      let s =
+        match x1.b with
+        | Variable i -> FStar_Ident.string_of_id i
+        | TVariable i ->
+            let uu___ = FStar_Ident.string_of_id i in
+            FStar_Compiler_Util.format1 "%s:_" uu___
+        | TAnnotated (i, t) ->
+            let uu___ = FStar_Ident.string_of_id i in
+            let uu___1 =
+              FStar_Compiler_Effect.op_Bar_Greater t term_to_string in
+            FStar_Compiler_Util.format2 "%s:%s" uu___ uu___1
+        | Annotated (i, t) ->
+            let uu___ = FStar_Ident.string_of_id i in
+            let uu___1 =
+              FStar_Compiler_Effect.op_Bar_Greater t term_to_string in
+            FStar_Compiler_Util.format2 "%s:%s" uu___ uu___1
+        | NoName t -> FStar_Compiler_Effect.op_Bar_Greater t term_to_string in
+      let uu___ = aqual_to_string x1.aqual in
+      let uu___1 = attr_list_to_string x1.battributes in
+      FStar_Compiler_Util.format3 "%s%s%s" uu___ uu___1 s in
+    match x.aqual with
+    | FStar_Pervasives_Native.Some (TypeClassArg) ->
+        let uu___ = let uu___1 = pr x in Prims.op_Hat uu___1 " |}" in
+        Prims.op_Hat "{| " uu___
+    | uu___ -> pr x
 and (aqual_to_string :
   arg_qualifier FStar_Pervasives_Native.option -> Prims.string) =
   fun uu___ ->
     match uu___ with
     | FStar_Pervasives_Native.Some (Equality) -> "$"
     | FStar_Pervasives_Native.Some (Implicit) -> "#"
-    | FStar_Pervasives_Native.Some (Meta t) ->
-        let uu___1 = let uu___2 = term_to_string t in Prims.op_Hat uu___2 "]" in
-        Prims.op_Hat "#[" uu___1
     | FStar_Pervasives_Native.None -> ""
+    | FStar_Pervasives_Native.Some (Meta uu___1) ->
+        failwith "aqual_to_strings: meta arg qualifier?"
+    | FStar_Pervasives_Native.Some (TypeClassArg) ->
+        failwith "aqual_to_strings: meta arg qualifier?"
 and (attr_list_to_string : term Prims.list -> Prims.string) =
   fun uu___ ->
     match uu___ with

@@ -544,3 +544,9 @@ let steel_with_invariant_lid = FStar.Ident.lid_of_path ["Steel"; "Effect"; "Atom
 let steel_st_with_invariant_lid = FStar.Ident.lid_of_path ["Steel"; "ST"; "Util"; "with_invariant"] FStar.Compiler.Range.dummyRange
 
 
+(* on_domain_lids are constant, so compute them once *)
+let fext_lid s = Ident.lid_of_path ["FStar"; "FunctionalExtensionality"; s] FStar.Compiler.Range.dummyRange
+let fext_on_domain_lid = fext_lid "on_domain"
+let fext_on_dom_lid = fext_lid "on_dom"
+let fext_on_domain_g_lid = fext_lid "on_domain_g"
+let fext_on_dom_g_lid = fext_lid "on_dom_g"

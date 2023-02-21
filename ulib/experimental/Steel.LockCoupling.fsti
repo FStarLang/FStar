@@ -15,11 +15,8 @@
 *)
 
 module Steel.LockCoupling
-open Steel.Memory
-open Steel.Effect.Atomic
-open Steel.Effect
-open Steel.SpinLock
-open Steel.Reference
+open Steel.ST.Util
+open Steel.ST.Reference
 open Steel.FractionalPermission
 
 (*
@@ -71,4 +68,4 @@ let rec list_inv (#a:Type) (p:ref (llist_cell a)) (repr:list a)
         pts_to p half cell `star`
         pure (cell.v == hd) `star`
         list_inv cell.next tl)
-  
+

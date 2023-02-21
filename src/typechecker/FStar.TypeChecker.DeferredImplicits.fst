@@ -242,7 +242,7 @@ let solve_deferred_to_tactic_goals env g =
       | TProb tp when tp.relation=EQ ->
         let env, _ = Env.clear_expected_typ env in
         let env = {env with gamma=tp.logical_guard_uvar.ctx_uvar_gamma} in
-        let env_lax = {env with lax=true; use_bv_sorts=true; enable_defer_to_tac=false} in
+        let env_lax = {env with lax=true; enable_defer_to_tac=false} in
         let _, t_eq, _ =
           //Prefer to use the type of the flex term to compute the
           //type instantiation of the equality, since it is more efficient

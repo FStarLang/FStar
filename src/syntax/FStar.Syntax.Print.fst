@@ -727,7 +727,7 @@ let rec sigelt_to_string (x: sigelt) =
    let basic =
       match x.sigel with
       | Sig_pragma p -> pragma_to_string p
-      | Sig_inductive_typ(lid, univs, tps, k, _, _) ->
+      | Sig_inductive_typ(lid, univs, tps, _, k, _, _) ->
         let quals_str = quals_to_string' x.sigquals in
         let binders_str = binders_to_string " " tps in
         let term_str = term_to_string k in
@@ -811,14 +811,14 @@ let rec sigelt_to_string_short (x: sigelt) = match x.sigel with
   | Sig_declare_typ(lid, _, t) ->
     U.format1 "val %s" (string_of_lid lid)
 
-  | Sig_inductive_typ(lid, _, _, _, _, _) ->
+  | Sig_inductive_typ(lid, _, _, _, _, _, _) ->
     U.format1 "type %s" (string_of_lid lid)
 
-  | Sig_datacon(lid, _, t, _, _, _) ->
-    U.format2 "datacon %s : %s" (string_of_lid lid) (term_to_string t)
+  | Sig_datacon(lid, _, _, t_lid, _, _) ->
+    U.format2 "datacon %s for type %s" (string_of_lid lid) (string_of_lid t_lid)
 
-  | Sig_assume(lid, us, f) ->
-    U.format2 "assume %s : %s" (string_of_lid lid) (term_to_string f)
+  | Sig_assume(lid, us, _) ->
+    U.format1 "assume %s" (string_of_lid lid)
 
   | Sig_bundle(ses, _) -> List.hd ses |> sigelt_to_string_short
 
@@ -840,10 +840,9 @@ let rec sigelt_to_string_short (x: sigelt) = match x.sigel with
     U.format3 "effect %s %s = %s" (sli l) (binders_to_string " " tps) (comp_to_string c)
 
   | Sig_splice (lids, t) ->
-    U.format3 "%splice[%s] (%s)"
+    U.format2 "%splice[%s] (...)"
               "%s" // sigh, no escape for format
               (String.concat "; " <| List.map Ident.string_of_lid lids)
-              (term_to_string t)
 
   | Sig_polymonadic_bind (m, n, p, t, ty, _) ->
     U.format3 "polymonadic_bind (%s, %s) |> %s"

@@ -1380,7 +1380,7 @@ let (lids_of_sigelt :
     | FStar_Syntax_Syntax.Sig_splice (lids, uu___) -> lids
     | FStar_Syntax_Syntax.Sig_bundle (uu___, lids) -> lids
     | FStar_Syntax_Syntax.Sig_inductive_typ
-        (lid, uu___, uu___1, uu___2, uu___3, uu___4) -> [lid]
+        (lid, uu___, uu___1, uu___2, uu___3, uu___4, uu___5) -> [lid]
     | FStar_Syntax_Syntax.Sig_effect_abbrev
         (lid, uu___, uu___1, uu___2, uu___3) -> [lid]
     | FStar_Syntax_Syntax.Sig_datacon
@@ -2659,11 +2659,18 @@ let (residual_gtot :
 let (residual_comp_of_comp :
   FStar_Syntax_Syntax.comp -> FStar_Syntax_Syntax.residual_comp) =
   fun c ->
+    let uu___ =
+      FStar_Compiler_Effect.op_Less_Bar
+        (FStar_Compiler_List.filter
+           (fun uu___1 ->
+              match uu___1 with
+              | FStar_Syntax_Syntax.DECREASES uu___2 -> false
+              | uu___2 -> true)) (comp_flags c) in
     {
       FStar_Syntax_Syntax.residual_effect = (comp_effect_name c);
       FStar_Syntax_Syntax.residual_typ =
         (FStar_Pervasives_Native.Some (comp_result c));
-      FStar_Syntax_Syntax.residual_flags = (comp_flags c)
+      FStar_Syntax_Syntax.residual_flags = uu___
     }
 let (mk_forall_aux :
   FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax ->
