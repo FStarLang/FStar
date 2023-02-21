@@ -49,6 +49,29 @@ let unexpected_term msg t =
                             msg
                             (T.term_to_string t))
 
+let is_while (_g:RT.fstar_top_env) (t:R.term)
+  : T.Tac (option (R.term & R.term & R.term)) =
+
+  let open R in
+  match inspect_ln t with
+  | Tv_App hd (arg3, _) ->
+    (match inspect_ln hd with
+     | Tv_App hd (arg2, _) ->
+       (match inspect_ln hd with
+        | Tv_App hd (arg1, _) ->
+          (match inspect_ln hd with
+           | Tv_FVar v ->
+             if inspect_fv v = ["Pulse"; "Tests"; "while"]
+             then match inspect_ln arg1 with
+                  | Tv_Abs _ body ->
+                    Some (body, arg2, arg3)
+                  | _ -> None
+             else None
+           | _ -> None)
+        | _ -> None)
+     | _ -> None)
+  | _ -> None
+
 let is_elim_exists (g:RT.fstar_top_env) (t:R.term)
   : T.Tac (option (R.universe & R.term & R.term)) =
   let open R in
@@ -303,10 +326,18 @@ and translate_st_term (g:RT.fstar_top_env) (t:R.term)
          let ropt = is_intro_exists g t in
          (match ropt with
           | None ->
-            let? t = readback_ty t in
-            (match t with
-             | Tm_PureApp head q arg -> Inl (Tm_STApp head q arg)
-             | _ -> Inl t)
+            let ropt = is_while g t in
+            (match ropt with
+             | Some (inv, cond, body) ->
+               let? inv = readback_ty inv in
+               let? cond = translate_st_term g cond in
+               let? body = translate_st_term g body in
+               Inl (Tm_While inv cond body)
+             | None ->
+               let? t = readback_ty t in
+               (match t with
+                | Tm_PureApp head q arg -> Inl (Tm_STApp head q arg)
+                | _ -> Inl t))
           | Some (u, t, p, e) ->
             let? u = readback_universe u in
             let? t = readback_ty t in
