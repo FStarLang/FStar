@@ -150,7 +150,7 @@ let warmup (x:int) = assert (x + 1 > x)
     (expects (exists_ (fun (n:u32) -> pts_to r full_perm n)))
     (provides (fun _ -> exists_ (fun (n:u32) -> pts_to r full_perm n)))
     (
-      let n = elim_exists u32 (fun n -> pts_to r full_perm n) in
+      let n = elim_exists (fun (n:u32) -> pts_to r full_perm n) in
       let n = stt_ghost_reveal u32 n in
       intro_exists u32 (fun n -> pts_to r full_perm n) n
     )
@@ -164,7 +164,7 @@ let warmup (x:int) = assert (x + 1 > x)
       while
         (fun b -> exists_ (fun (n:u32) -> pts_to r full_perm n))
         (
-          let b = elim_exists bool (fun b -> exists_ (fun (n:u32) -> pts_to r full_perm n)) in
+          let b = elim_exists (fun (b:bool) -> exists_ (fun (n:u32) -> pts_to r full_perm n)) in
           return_stt_noeq #bool true
         )
         (

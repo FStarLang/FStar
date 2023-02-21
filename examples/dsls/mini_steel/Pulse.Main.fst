@@ -76,22 +76,21 @@ let is_elim_exists (g:RT.fstar_top_env) (t:R.term)
   : T.Tac (option (R.universe & R.term & R.term)) =
   let open R in
   match inspect_ln t with
-  | Tv_App hd (arg2, _) ->
+  | Tv_App hd (arg, _) ->
     (match inspect_ln hd with
-     | Tv_App hd (arg1, _) ->
-       (match inspect_ln hd with
-        | Tv_UInst v _
-        | Tv_FVar v ->
-          if inspect_fv v = elim_exists_lid
-          then match inspect_ln arg2 with
-               | Tv_Abs _ body ->
-                 let uopt = T.universe_of g arg1 in
-                 (match uopt with
-                  | None -> None
-                  | Some u -> Some (u, arg1, body))
-               | _ -> None
-          else None
-        | _ -> None)
+     | Tv_UInst v _
+     | Tv_FVar v ->
+       if inspect_fv v = elim_exists_lid
+       then match inspect_ln arg with
+            | Tv_Abs b body ->
+              let bv = (inspect_binder b).binder_bv in
+              let bvv = inspect_bv bv in
+              let uopt = T.universe_of g bvv.bv_sort in
+              (match uopt with
+               | None -> None
+               | Some u -> Some (u, bvv.bv_sort, body))
+            | _ -> None
+       else None
      | _ -> None)
   | _ -> None
 
