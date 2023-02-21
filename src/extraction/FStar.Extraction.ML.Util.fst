@@ -83,9 +83,20 @@ let mlexpr_of_range (r:Range.range) : mlexpr' =
     let cstr (s : string) : mlexpr =
         MLC_String s |> MLE_Const |> with_ty ml_string_ty
     in
+    let drop_path (s : string) : string =
+       match String.split ['/'] s with
+       | [] -> s
+       | l -> List.last l
+    in
     // This is not being fully faithful since it disregards
     // the use_range, but I assume that's not too bad.
-    MLE_App (mk_range_mle, [Range.file_of_range r |> cstr;
+    //
+    // We drop the path of the file to be independent of the machine
+    // where this was extracted. Otherwise we run into some headaches
+    // with CI, stability, and moving ml files between hosts. The idea
+    // is that the pathless filename is enough to locate the actual file,
+    // since it must have been loaded as a dependency by F*.
+    MLE_App (mk_range_mle, [Range.file_of_range r |> drop_path |> cstr;
                             Range.start_of_range r |> Range.line_of_pos |> cint;
                             Range.start_of_range r |> Range.col_of_pos  |> cint;
                             Range.end_of_range r   |> Range.line_of_pos |> cint;

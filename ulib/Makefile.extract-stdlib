@@ -1,0 +1,48 @@
+.PHONY: indent extra
+
+FSTAR_HOME=..
+DUNE_SNAPSHOT ?= $(realpath $(FSTAR_HOME)/ocaml)
+
+include ml/Makefile.realized
+NOEXTRACT_MODULES += +FStar.Pervasives -FStar.Pervasives.Native -FStar.Reflection -FStar.Tactics -Steel
+
+#The steel files are included below for native compilation of the framing tactic
+
+OUTPUT_DIRECTORY=$(DUNE_SNAPSHOT)/fstar-lib/generated
+
+include $(FSTAR_HOME)/.common.mk
+include gmake/z3.mk
+include gmake/fstar.mk
+
+FSTAR_FILES:=$(filter-out $(NOEXTRACT_FILES),$(wildcard *.fst *.fsti))
+
+CODEGEN = OCaml
+MY_FSTAR=$(RUNLIM) $(FSTAR) $(SIL) $(OTHERFLAGS) --cache_checked_modules --odir $(OUTPUT_DIRECTORY) --cache_dir .cache --warn_error @241
+EXTRACT_MODULES=--extract '* $(NOEXTRACT_MODULES)'
+
+# And then, in a separate invocation, from each .checked we
+# extract an .ml file
+$(OUTPUT_DIRECTORY)/%.ml:
+	$(call msg, "EXTRACT", $(basename $(notdir $@)))
+	$(Q)$(MY_FSTAR) $(subst .checked,,$(notdir $<)) --codegen $(CODEGEN) --extract_module $(basename $(notdir $(subst .checked,,$<)))
+
+.depend.extract-stdlib:
+	$(call msg, "DEPEND")
+	$(Q)mkdir -p .cache
+	$(Q)true $(shell rm -f .depend.extract-stdlib.rsp) $(foreach f,$(FSTAR_FILES),$(shell echo $(f) >> .depend.extract-stdlib.rsp))
+	$(Q)$(MY_FSTAR) --dep full $(EXTRACT_MODULES) $(addprefix --include , $(INCLUDE_PATHS)) @.depend.extract-stdlib.rsp > .depend.extract-stdlib
+
+depend.extract-stdlib: .depend.extract-stdlib
+
+include .depend.extract-stdlib
+
+.PHONY: all-ml dune-snapshot intfiles
+
+# Prims is the only .fst (not fsti) with an Ocaml implementation
+# so we do not need to extract it.
+all-ml: $(filter-out %/prims.ml, $(ALL_ML_FILES))
+
+intfiles:
+	+$(MAKE) -C ml intfiles
+
+dune-snapshot: all-ml intfiles

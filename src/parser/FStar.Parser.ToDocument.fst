@@ -35,8 +35,9 @@ module BU = FStar.Compiler.Util
 
 
 (* !!! SIDE EFFECT WARNING !!! *)
-(* There is 1 uses of global side-effect in the printer for : *)
+(* There are 2 uses of global side-effect in the printer for : *)
 (* - Printing the comments [comment_stack] *)
+(* - Printing tuples [unfold_tuples] *)
 
 let maybe_unthunk t =
     match t.tm with
@@ -2201,8 +2202,11 @@ and p_atomicUniverse u = match u.tm with
   | _ -> failwith (Util.format1 "Invalid term in universe context %s" (term_to_string u))
 
 let term_to_document e =
+  let old_unfold_tuples = !unfold_tuples in
   unfold_tuples := false;
-  p_term false false e
+  let res = p_term false false e in
+  unfold_tuples := old_unfold_tuples;
+  res
 
 let signature_to_document e = p_justSig e
 

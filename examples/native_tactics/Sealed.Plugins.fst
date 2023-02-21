@@ -10,6 +10,3 @@ let get_seal (i:int) : sealed int = seal (i + 1)
 
 [@@plugin]
 let get_seal_tac (i:int) : Tac (sealed int) = seal (i + 1)
-
-
-

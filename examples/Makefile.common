@@ -1,5 +1,5 @@
 ifdef FSTAR_HOME
-  FSTAR_ULIB=$(FSTAR_HOME)/ulib
+  FSTAR_ULIB=$(shell if test -d $(FSTAR_HOME)/ulib ; then echo $(FSTAR_HOME)/ulib ; else echo $(FSTAR_HOME)/lib/fstar ; fi)
 else
   # FSTAR_HOME not defined, assume fstar.exe installed through opam
   # or binary package, and reachable from PATH
@@ -12,7 +12,7 @@ include $(FSTAR_ULIB)/gmake/fstar.mk
 include $(FSTAR_ULIB)/ml/Makefile.include
 
 ifdef FSTAR_HOME
-  include $(FSTAR_HOME)/.common.mk
+  -include $(FSTAR_HOME)/.common.mk
   FSTAR=$(FSTAR_HOME)/bin/fstar.exe
 else
   FSTAR=fstar.exe
@@ -81,22 +81,22 @@ include .depend
 
 # a.fst.checked is the binary, checked version of a.fst
 %.fst.checked:
-	@echo "[CHECK     $(basename $(notdir $@))]"
+	$(call msg, "CHECK", $(basename $(notdir $@)))
 	$(Q)$(MY_FSTAR) $<
 	@touch -c $@
 
 # a.fsti.checked is the binary, checked version of a.fsti
 %.fsti.checked:
-	@echo "[CHECK     $(basename $(notdir $@))]"
+	$(call msg, "CHECK", $(basename $(notdir $@)))
 	$(Q)$(MY_FSTAR) $<
 	@touch -c $@
 
 %.fst.output: %.fst
-	@echo "[OUTPUT    $(basename $(notdir $@))]"
+	$(call msg, "OUTPUT", $(basename $(notdir $@)))
 	$(Q)$(VERBOSE_FSTAR) -f --print_expected_failures $< >$@ 2>&1
 
 %.fsti.output: %.fsti
-	@echo "[OUTPUT    $(basename $(notdir $@))]"
+	$(call msg, "OUTPUT", $(basename $(notdir $@)))
 	$(Q)$(VERBOSE_FSTAR) -f --print_expected_failures $< >$@ 2>&1
 
 clean:
@@ -106,5 +106,5 @@ clean:
 
 #extract F* files to OCaml
 $(OUTPUT_DIRECTORY)/%.ml:
-	@echo "[EXTRACT   $(basename $(notdir $@))]"
+	$(call msg, "EXTRACT", $(basename $(notdir $@)))
 	$(Q)$(MY_FSTAR) $(subst .checked,,$(notdir $<)) --codegen OCaml --extract_module $(subst .fst.checked,,$(notdir $<))

@@ -1,6 +1,21 @@
 .PHONY: indent extra
 
-include ../src/Makefile.config
+all: nuget
+
+ifndef FSTAR_HOME
+  FSTAR_EXE := $(shell which fstar.exe)
+  ifeq ($(FSTAR_EXE),)
+    # assuming F* source directory
+    FSTAR_HOME=..
+    FSTAR_EXE := $(FSTAR_HOME)/bin/fstar.exe
+  else
+    FSTAR_HOME=$(dir $(FSTAR_EXE))/..
+  endif
+  export FSTAR_HOME
+endif
+FSTAR_ULIB=$(shell if test -d $(FSTAR_HOME)/ulib ; then echo $(FSTAR_HOME)/ulib ; else echo $(FSTAR_HOME)/lib/fstar ; fi)
+include $(FSTAR_ULIB)/gmake/z3.mk
+include $(FSTAR_ULIB)/gmake/fstar.mk
 
 FSTAR_FILES:=$(wildcard *.fst *.fsti) \
 	     $(wildcard experimental/*fst experimental/*fsti)
@@ -9,21 +24,17 @@ OUTPUT_DIRECTORY=fs/extracted
 
 CODEGEN ?= FSharp
 
-MY_FSTAR=$(FSTAR) $(OTHERFLAGS) --lax --cache_checked_modules --odir $(OUTPUT_DIRECTORY) --cache_dir .cache.lax
+MY_FSTAR=$(FSTAR) $(OTHERFLAGS) --already_cached '*' --warn_error @241 --cache_checked_modules --odir $(OUTPUT_DIRECTORY) --cache_dir .cache
 
-%.checked.lax:
-	$(MY_FSTAR) $< --already_cached '*,'-$(basename $(notdir $<))
-	touch -c $@
-
-# And then, in a separate invocation, from each .checked.lax we
+# And then, in a separate invocation, from each .checked file we
 # extract an .fs file
 $(OUTPUT_DIRECTORY)/%.fs:
-	$(MY_FSTAR) $(subst .checked.lax,,$(notdir $<)) --codegen $(CODEGEN) --extract_module $(basename $(notdir $(subst .checked.lax,,$<)))
+	$(MY_FSTAR) $(subst .checked,,$(notdir $<)) --codegen $(CODEGEN) --extract_module $(basename $(notdir $(subst .checked,,$<)))
 
 .depend.extract.fsharp:
-	$(Q)mkdir -p .cache.lax
-	$(Q)$(MY_FSTAR) --extract 'FSharp:*;OCaml:None;krml:None' --dep full $(EXTRACT_MODULES) $(addprefix --include , $(INCLUDE_PATHS)) $(FSTAR_FILES) > .depend.extract.fsharp
-	@echo "[DEPEND]"
+	$(call msg, "DEPEND")
+	true $(shell rm -f .depend.extract.fsharp.rsp) $(foreach f,$(FSTAR_FILES),$(shell echo $(f) >> .depend.extract.fsharp.rsp))
+	$(Q)$(MY_FSTAR) --extract 'FSharp:*;OCaml:None;krml:None' --dep full $(EXTRACT_MODULES) $(addprefix --include , $(INCLUDE_PATHS)) @.depend.extract.fsharp.rsp > .depend.extract.fsharp
 
 depend.extract.fsharp: .depend.extract.fsharp
 
@@ -62,4 +73,10 @@ FS_FILES= \
 
 all-fs: $(addprefix $(OUTPUT_DIRECTORY)/, $(FS_FILES))
 
-lax-all: $(addsuffix .checked.lax, $(FSTAR_FILES))
+.PHONY: all-fs nuget dll
+
+dll: all-fs
+	+$(MAKE) -C fs/VS build
+
+nuget: dll
+	+$(MAKE) -C fs/VS all

@@ -1722,7 +1722,7 @@ let print_full (deps:deps) : unit =
             in
 
             //And, if this is not an interface, we also print out the dependences among the .ml files
-            // excluding files in ulib, since these are packaged in fstarlib.cmxa
+            // excluding files in ulib, since these are packaged in fstar_lib.cmxa
           let all_fst_files_dep, widened =
               if Options.cmi()
               then profile

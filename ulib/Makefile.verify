@@ -11,10 +11,23 @@ FLAKY=legacy/FStar.Relational.State.fst
 FSTAR_FILES := $(filter-out $(FLAKY), \
 	$(wildcard FStar.*.fst FStar.*.fsti) \
 	$(wildcard LowStar.*.fst LowStar.*.fsti) \
-	$(wildcard Steel.*.fst Steel.*.fsti) \
 	$(wildcard legacy/*fst legacy/*fsti) \
-	$(wildcard experimental/*fst experimental/*fsti))
+	)
 
+ifneq ($(STAGE_EXPERIMENTAL),0)
+FSTAR_FILES += $(filter-out $(FLAKY), \
+	$(wildcard experimental/FStar.InteractiveHelpers.*fst experimental/FStar.InteractiveHelpers.*fsti) \
+	experimental/Steel.Effect.Common.fst \
+)
+ifneq ($(STAGE_EXPERIMENTAL),1)
+FSTAR_FILES += experimental/Steel.ST.GenElim.Base.fst
+ifneq ($(STAGE_EXPERIMENTAL),2)
+FSTAR_FILES += $(filter-out $(FLAKY), \
+	$(wildcard experimental/*fst experimental/*fsti) \
+)
+endif
+endif
+endif
 
 WITH_CACHE_DIR=--cache_dir .cache --hint_dir .cache
 
@@ -51,9 +64,10 @@ verify-core: $(filter-out $(addprefix %, $(addsuffix .checked, $(notdir $(EXTRA)
 verify-extra: $(filter $(addprefix %, $(addsuffix .checked, $(notdir $(EXTRA)))), $(ALL_CHECKED_FILES))
 
 %.checked:
-	@echo "[CHECK     $(basename $(notdir $@))]"
+	$(call msg, "CHECK", $(basename $(notdir $@)))
 	@# MY_FSTAR is imported from ulib/gmake.Makefile.tmpl, so it does not
 	@# contain the $(SIL) flag nor the $(RUNLIM) for monitoring resources.
+	@# You can debug with --debug $(basename $(notdir $<))
 	$(Q)$(RUNLIM) $(MY_FSTAR) $(SIL) $(COMPAT_INDEXED_EFFECTS) $<
 
 # Benchmarking rules

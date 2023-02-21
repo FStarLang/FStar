@@ -473,6 +473,22 @@ val intro_fits_u64 (_:unit)
   : STT (squash (US.fits_u64))
         emp (fun _ -> emp)
 
+/// Determining whether int32 values fit in a ptrdiff
+/// It will be natively extracted to static_assert (INT32_MAX <= PTRDIFF_MAX) by krml
+inline_for_extraction
+[@@noextract_to "krml"]
+val intro_fits_ptrdiff32 (_:unit)
+  : STT (squash (UP.fits (FStar.Int.max_int 32)))
+        emp (fun _ -> emp)
+
+/// Determining whether int64 values fit in a ptrdiff
+/// It will be natively extracted to static_assert (INT64_MAX <= PTRDIFF_MAX) by krml
+inline_for_extraction
+[@@noextract_to "krml"]
+val intro_fits_ptrdiff64 (_:unit)
+  : STT (squash (UP.fits (FStar.Int.max_int 64)))
+        emp (fun _ -> emp)
+
 inline_for_extraction
 [@@noextract_to "krml"]
 val ptrdiff (#t:_) (#p0 #p1:perm) (#s0 #s1:Ghost.erased (Seq.seq t))
