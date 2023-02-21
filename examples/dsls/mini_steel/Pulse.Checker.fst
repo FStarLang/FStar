@@ -408,7 +408,8 @@ let rec check' : bool -> check_t =
        // Could this come from inversion of t_typing?
        let (| u', ty_typing |) = check_universe f g ty in
        if u = u'
-       then let d = T_ElimExists g u ty p ty_typing t_typing in
+       then let x = fresh g in
+            let d = T_ElimExists g u ty p x ty_typing t_typing in
             repack (try_frame_pre pre_typing d) true
        else T.fail "Universe checking failed in elim_exists"
      | _ -> T.fail "elim_exists argument not a Tm_ExistsSL")

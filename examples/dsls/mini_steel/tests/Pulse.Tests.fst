@@ -14,7 +14,6 @@ module U32 = FStar.UInt32
 let expects = ()
 let provides = ()
 
-
 (* Start up the solver and feed it the initial context *)
 let warmup (x:int) = assert (x + 1 > x)
 
@@ -151,6 +150,7 @@ let warmup (x:int) = assert (x + 1 > x)
     (provides (fun _ -> exists_ u#0 #u32 (fun n -> pts_to r full_perm n)))
     (
       let n = elim_exists u32 (fun n -> pts_to r full_perm n) in
+      let n = stt_ghost_reveal u32 n in
       intro_exists u32 (fun n -> pts_to r full_perm n) n
     )
 )))

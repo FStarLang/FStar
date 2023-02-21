@@ -248,6 +248,7 @@ let rec src_typing_freevars (#f:_) (#g:_) (#t:_) (#c:_)
     (ensures freevars t `Set.subset` vars_of_env g /\
              freevars_comp c `Set.subset` vars_of_env g)
     (decreases d)
+
  = match d with
    | T_Tot _g e t dt ->
       elab_freevars_inverse e;
@@ -290,9 +291,25 @@ let rec src_typing_freevars (#f:_) (#g:_) (#t:_) (#c:_)
      src_typing_freevars df;
      src_typing_freevars dc
 
-   | T_ElimExists _ _ _ _ (E dt) (E dv) ->
+   | T_ElimExists _ u t p x (E dt) (E dv) ->
+     let x_tm = Tm_Var {nm_index=x;nm_ppname=Sealed.seal "_"} in
      src_typing_freevars dt;
-     src_typing_freevars dv
+     src_typing_freevars dv;
+     assert (Set.equal (freevars (Pulse.Typing.mk_reveal u t x_tm))
+                       (Set.union (freevars t) (Set.singleton x)));
+     freevars_open_term p (Pulse.Typing.mk_reveal u t x_tm) 0;
+     assert (Set.subset (freevars (open_term' p (Pulse.Typing.mk_reveal u t x_tm) 0))
+                       (Set.union (freevars p)
+                                  (Set.union (freevars t)
+                                             (Set.singleton x))));
+     assert (~ (Set.mem x (freevars t)));
+     assert (~ (Set.mem x (freevars p)));
+     assert (Set.subset (set_minus (freevars (open_term' p (Pulse.Typing.mk_reveal u t x_tm) 0)) x)
+                       (Set.union (freevars p)
+                                  (freevars t)));
+     assert (Set.subset
+               (set_minus (freevars (open_term' p (Pulse.Typing.mk_reveal u t x_tm) 0)) x)
+               (vars_of_env g))
 
    | T_IntroExists _ u tt p w (E dt) (E dv) (E dw) ->
      src_typing_freevars dt;

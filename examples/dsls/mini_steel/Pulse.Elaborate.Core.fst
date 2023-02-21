@@ -381,7 +381,7 @@ and elab_src_typing
       let re2 = elab_src_typing e2_typing in
       RT.mk_if rb re1 re2
 
-    | T_ElimExists _ u t p d_t d_exists ->
+    | T_ElimExists _ u t p _ d_t d_exists ->
       let ru = elab_universe u in
       let rt = elab_pure t in
       let rp = elab_pure p in
