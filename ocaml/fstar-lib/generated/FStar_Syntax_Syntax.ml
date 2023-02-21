@@ -2192,7 +2192,7 @@ let (t_either_of : term -> term -> term) =
 let (t_sealed_of : term -> term) =
   fun t ->
     let uu___ =
-      let uu___1 = tabbrev FStar_Parser_Const.sealed in
+      let uu___1 = tabbrev FStar_Parser_Const.sealed_lid in
       mk_Tm_uinst uu___1 [U_zero] in
     let uu___1 = let uu___2 = as_arg t in [uu___2] in
     mk_Tm_app uu___ uu___1 FStar_Compiler_Range.dummyRange

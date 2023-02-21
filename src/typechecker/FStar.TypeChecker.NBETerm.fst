@@ -599,21 +599,21 @@ let e_norm_step =
 // Embedding at option type
 let e_sealed (ea : embedding 'a) =
     let etyp =
-        ET_app(PC.sealed |> Ident.string_of_lid, [ea.emb_typ])
+        ET_app(PC.sealed_lid |> Ident.string_of_lid, [ea.emb_typ])
     in
     let em cb (x:'a) : t =
         lazy_embed etyp x (fun () ->
-          lid_as_constr PC.seal [U_zero] [as_arg (embed ea cb x);
+          lid_as_constr PC.seal_lid [U_zero] [as_arg (embed ea cb x);
                                           as_iarg (type_of ea)])
     in
     let un cb (trm:t) : option 'a =
         lazy_unembed cb etyp trm (fun trm ->
         match trm.nbe_t with
-        | Construct (fvar, us, [(a, _); _]) when S.fv_eq_lid fvar PC.seal ->
+        | Construct (fvar, us, [(a, _); _]) when S.fv_eq_lid fvar PC.seal_lid ->
           unembed ea cb a
         | _ -> None)
     in
-    mk_emb em un (lid_as_typ PC.sealed [U_zero] [as_arg (type_of ea)]) etyp
+    mk_emb em un (lid_as_typ PC.sealed_lid [U_zero] [as_arg (type_of ea)]) etyp
 
 (* Interface for building primitive steps *)
 
