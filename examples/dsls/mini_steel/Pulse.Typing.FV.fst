@@ -196,8 +196,51 @@ let st_equiv_freevars #f #g (#c1 #c2:_)
     (ensures freevars_comp c2 `Set.subset` vars_of_env g)    
   = let ST_VPropEquiv _ _ _ x _ _ _ eq_pre eq_post = d in
     vprop_equiv_freevars eq_pre;
-    vprop_equiv_freevars eq_post
+    vprop_equiv_freevars eq_post;
+    freevars_open_term_inv (comp_post c1) x;     
+    freevars_open_term_inv (comp_post c2) x
 #pop-options
+
+
+#push-options "--z3rlimit_factor 20 --fuel 10 --ifuel 10"
+
+let src_typing_freevars_t (d':'a) = 
+    (#f:_) -> (#g:_) -> (#t:_) -> (#c:_) -> (d:src_typing f g t c { d << d' }) ->
+    Lemma 
+    (ensures freevars t `Set.subset` vars_of_env g /\
+             freevars_comp c `Set.subset` vars_of_env g)
+
+let st_comp_typing_freevars #f #g #st (d:st_comp_typing f g st)
+                          (src_typing_freevars:src_typing_freevars_t d)
+  : Lemma
+    (ensures freevars_st st `Set.subset` vars_of_env g)
+    (decreases d)
+  = let STC _ _ x (E dt) (E pre) (E post) = d in
+    src_typing_freevars dt;
+    src_typing_freevars pre;
+    src_typing_freevars post    
+
+let comp_typing_freevars  (#f:_) (#g:_) (#c:_) (#u:_)
+                          (d:comp_typing f g c u)
+                          (src_typing_freevars:src_typing_freevars_t d)
+  : Lemma 
+    (ensures freevars_comp c `Set.subset` vars_of_env g)
+    (decreases d)
+  = match d with
+    | CT_Tot _ _ _ (E dt) ->
+      src_typing_freevars dt
+
+    | CT_ST _ _ dst -> 
+      st_comp_typing_freevars dst src_typing_freevars
+
+    | CT_STAtomic _ _ _ (E it) dst -> 
+      src_typing_freevars it;
+      st_comp_typing_freevars dst src_typing_freevars
+
+    | CT_STGhost _ _ _ (E it) dst -> 
+      src_typing_freevars it;
+      st_comp_typing_freevars dst src_typing_freevars
+
 
 let rec src_typing_freevars (#f:_) (#g:_) (#t:_) (#c:_)
                             (d:src_typing f g t c)
@@ -215,12 +258,14 @@ let rec src_typing_freevars (#f:_) (#g:_) (#t:_) (#c:_)
    | T_Abs _g _pp x _q ty _u body cres (E dt) db ->
       src_typing_freevars dt;
       src_typing_freevars db;
-      freevars_close_comp cres x 0
-
+      freevars_close_comp cres x 0;
+      freevars_open_term_inv body x
+      
    | T_STApp _ _ _ _ _ res arg st (E at) ->
      src_typing_freevars st;
-     src_typing_freevars at
-
+     src_typing_freevars at;
+     freevars_open_comp res arg 0
+     
    | T_Return _ _ _ _ (E tt) _
    | T_ReturnNoEq _ _ _ _ tt _ ->
      src_typing_freevars tt
@@ -228,20 +273,19 @@ let rec src_typing_freevars (#f:_) (#g:_) (#t:_) (#c:_)
    | T_Lift _ _ _ _ d1 l ->
      src_typing_freevars d1
 
-   | T_Bind _ _ e2 _ _ x _ d1 (E dc1) d2 bc ->
+   | T_Bind _ e1 e2 _ _ x _ d1 (E dc1) d2 bc ->
      src_typing_freevars d1;
      src_typing_freevars dc1;
      src_typing_freevars d2;
-     bind_comp_freevars bc src_typing_freevars
+     bind_comp_freevars bc src_typing_freevars;
+     freevars_open_term_inv e2 x
 
-   | T_If _ _b e1 e2 _c _u hyp (E tb) d1 d2 _ct ->
-     admit();
+   | T_If _ _b e1 e2 _c _u hyp (E tb) d1 d2 (E ct) ->
      src_typing_freevars tb;
+     comp_typing_freevars ct src_typing_freevars;
      src_typing_freevars d1;
-     src_typing_freevars d2;
-     assume (~(hyp `Set.mem` freevars e1));
-     assume (~(hyp `Set.mem` freevars e2))
-      
+     src_typing_freevars d2
+
    | T_Frame _ _ _ _ (E df) dc ->
      src_typing_freevars df;
      src_typing_freevars dc
@@ -285,3 +329,4 @@ let rec src_typing_freevars (#f:_) (#g:_) (#t:_) (#c:_)
      assert (freevars tm_false `Set.equal` Set.empty);
      freevars_open_term inv tm_false 0;
      assert (freevars (open_term' inv tm_false 0) `Set.subset` freevars inv)
+
