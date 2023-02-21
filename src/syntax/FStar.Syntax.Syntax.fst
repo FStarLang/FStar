@@ -328,7 +328,7 @@ let t_either_of t1 t2 = mk_Tm_app
   [as_arg t1; as_arg t2]
   Range.dummyRange
 let t_sealed_of t = mk_Tm_app
-  (mk_Tm_uinst (tabbrev PC.sealed) [U_zero])
+  (mk_Tm_uinst (tabbrev PC.sealed_lid) [U_zero])
   [as_arg t]
   Range.dummyRange
 

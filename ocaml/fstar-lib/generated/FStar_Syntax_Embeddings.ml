@@ -2432,8 +2432,8 @@ let e_sealed : 'a . 'a embedding -> 'a embedding =
        let emb_ty_a =
          let uu___ =
            let uu___1 =
-             FStar_Compiler_Effect.op_Bar_Greater FStar_Parser_Const.sealed
-               FStar_Ident.string_of_lid in
+             FStar_Compiler_Effect.op_Bar_Greater
+               FStar_Parser_Const.sealed_lid FStar_Ident.string_of_lid in
            (uu___1, [ea.emb_typ]) in
          FStar_Syntax_Syntax.ET_app uu___ in
        let printer1 x =
@@ -2446,7 +2446,8 @@ let e_sealed : 'a . 'a embedding -> 'a embedding =
                 map_shadow shadow
                   (fun t ->
                      let unseal =
-                       FStar_Syntax_Util.fvar_const FStar_Parser_Const.unseal in
+                       FStar_Syntax_Util.fvar_const
+                         FStar_Parser_Const.unseal_lid in
                      let uu___1 =
                        FStar_Syntax_Syntax.mk_Tm_uinst unseal
                          [FStar_Syntax_Syntax.U_zero] in
@@ -2461,7 +2462,7 @@ let e_sealed : 'a . 'a embedding -> 'a embedding =
                      FStar_Syntax_Syntax.mk_Tm_app uu___1 uu___2 rng) in
               let uu___1 =
                 let uu___2 =
-                  FStar_Syntax_Syntax.tdataconstr FStar_Parser_Const.seal in
+                  FStar_Syntax_Syntax.tdataconstr FStar_Parser_Const.seal_lid in
                 FStar_Syntax_Syntax.mk_Tm_uinst uu___2
                   [FStar_Syntax_Syntax.U_zero] in
               let uu___2 =
@@ -2492,7 +2493,7 @@ let e_sealed : 'a . 'a embedding -> 'a embedding =
                       | (FStar_Syntax_Syntax.Tm_fvar fv,
                          uu___2::(a1, uu___3)::[]) when
                           FStar_Syntax_Syntax.fv_eq_lid fv
-                            FStar_Parser_Const.seal
+                            FStar_Parser_Const.seal_lid
                           -> let uu___4 = unembed ea a1 in uu___4 w norm
                       | uu___2 ->
                           (if w

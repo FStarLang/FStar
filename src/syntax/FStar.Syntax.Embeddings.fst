@@ -1106,7 +1106,7 @@ let e_arrow (ea:embedding 'a) (eb:embedding 'b) : embedding ('a -> 'b) =
 let e_sealed (ea : embedding 'a) : embedding 'a =
     let typ = S.t_sealed_of (type_of ea) in
     let emb_ty_a =
-        ET_app(PC.sealed |> Ident.string_of_lid, [ea.emb_typ])
+        ET_app(PC.sealed_lid |> Ident.string_of_lid, [ea.emb_typ])
     in
     let printer x = "(seal " ^ ea.print x ^ ")" in
     let em (a:'a) (rng:range) shadow norm : term =
@@ -1120,12 +1120,12 @@ let e_sealed (ea : embedding 'a) : embedding 'a =
                   let shadow_a =
                     (* TODO: this application below is in TAC.. OK? *)
                     map_shadow shadow (fun t ->
-                      let unseal = U.fvar_const PC.unseal in
+                      let unseal = U.fvar_const PC.unseal_lid in
                       S.mk_Tm_app (S.mk_Tm_uinst unseal [U_zero])
                                   [S.iarg (type_of ea); S.as_arg t]
                                   rng)
                   in
-                  S.mk_Tm_app (S.mk_Tm_uinst (S.tdataconstr PC.seal) [U_zero])
+                  S.mk_Tm_app (S.mk_Tm_uinst (S.tdataconstr PC.seal_lid) [U_zero])
                               [S.iarg (type_of ea); S.as_arg (embed ea a rng shadow_a norm)]
                               rng)
     in
@@ -1139,7 +1139,7 @@ let e_sealed (ea : embedding 'a) : embedding 'a =
             (fun t ->
                 let hd, args = U.head_and_args_full t in
                 match (U.un_uinst hd).n, args with
-                | Tm_fvar fv, [_; (a, _)] when S.fv_eq_lid fv PC.seal ->
+                | Tm_fvar fv, [_; (a, _)] when S.fv_eq_lid fv PC.seal_lid ->
                      // Just relay it
                      unembed ea a w norm
                 | _ ->
