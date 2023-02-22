@@ -316,7 +316,7 @@ let rec elab_exp (e:src_exp)
     | ELam t e ->
       let t = elab_ty t in
       let e = elab_exp e in
-      R.pack_ln (Tv_Abs (RT.mk_binder "x" 0 t R.Q_Explicit) e)
+      R.pack_ln (Tv_Abs (RT.mk_binder RT.pp_name_default 0 t R.Q_Explicit) e)
              
     | EApp e1 e2 ->
       let e1 = elab_exp e1 in
@@ -341,7 +341,7 @@ and elab_ty (t:src_ty)
       let t2 = elab_ty t2 in
       R.pack_ln 
         (R.Tv_Arrow 
-          (RT.mk_binder "x" 0 t1 R.Q_Explicit)
+          (RT.mk_binder RT.pp_name_default 0 t1 R.Q_Explicit)
           (RT.mk_total t2)) //.pack_comp (C_Total t2 u_unk [])))
           
     | TRefineBool e ->
@@ -352,7 +352,7 @@ and elab_ty (t:src_ty)
 
 let elab_eqn (e1 e2:src_exp)
   : R.term
-  = RT.eq2 RT.bool_ty (elab_exp e1) (elab_exp e2)
+  = RT.eq2 RT.u_zero RT.bool_ty (elab_exp e1) (elab_exp e2)
 
 let binding = either s_ty src_eqn
 let elab_binding (b:binding)
@@ -965,9 +965,9 @@ let rename_elab_commute (e:s_exp) (x y:var)
     RT.rename_spec (elab_exp e) x y
 
 let rename_eq2 (t e0 e1: R.term) (x y:var)
-  : Lemma (RT.rename (RT.eq2 t e0 e1) x y ==
-           RT.eq2 (RT.rename t x y) (RT.rename e0 x y) (RT.rename e1 x y))
-  = RT.rename_spec (RT.eq2 t e0 e1) x y;
+  : Lemma (RT.rename (RT.eq2 RT.u_zero t e0 e1) x y ==
+           RT.eq2 RT.u_zero (RT.rename t x y) (RT.rename e0 x y) (RT.rename e1 x y))
+  = RT.rename_spec (RT.eq2 RT.u_zero t e0 e1) x y;
     RT.rename_spec t x y;
     RT.rename_spec e0 x y;
     RT.rename_spec e1 x y
@@ -986,21 +986,21 @@ let rename_as_bindings_commute_1 (b:either s_ty src_eqn) (x y:var)
       calc (==) {
         elab_binding (rename_binding b x y);
       (==) {}
-       RT.eq2 RT.bool_ty 
+       RT.eq2 RT.u_zero RT.bool_ty 
               (elab_exp (rename e0 x y))
               (elab_exp (rename e1 x y));
       (==) {
               rename_elab_commute e0 x y;
               rename_elab_commute e1 x y
            }
-      RT.eq2 RT.bool_ty 
+      RT.eq2 RT.u_zero RT.bool_ty 
               (RT.rename (elab_exp e0) x y)
               (RT.rename (elab_exp e1) x y);
       (==) { 
              rename_eq2 RT.bool_ty (elab_exp e0) (elab_exp e1) x y;
              RT.rename_spec RT.bool_ty x y
            }
-      RT.rename (RT.eq2 RT.bool_ty (elab_exp e0) (elab_exp e1)) x y;
+      RT.rename (RT.eq2 RT.u_zero RT.bool_ty (elab_exp e0) (elab_exp e1)) x y;
       }
 
 let rec rename_as_bindings_commute (sg:src_env) (x y:var)
@@ -1461,6 +1461,46 @@ let apply_refinement_closed (e:src_exp { ln e && closed e })
      }
 #pop-options
 
+#push-options "--fuel 10 --ifuel 10"
+let rec freevars_elab_exp (e:src_exp)
+  : Lemma ( RT.freevars (elab_exp e) `Set.equal` freevars e )
+  = match e with
+    | EBool _
+    | EBVar _ 
+    | EVar _ -> ()
+
+    | ELam t e ->
+      freevars_elab_ty t;
+      freevars_elab_exp e
+
+             
+    | EApp e1 e2 ->
+      freevars_elab_exp e1;
+      freevars_elab_exp e2
+
+    | EIf b e1 e2 ->
+      freevars_elab_exp b;    
+      freevars_elab_exp e1;
+      freevars_elab_exp e2
+  
+and freevars_elab_ty (t:src_ty)
+  : Lemma (RT.freevars (elab_ty t) `Set.equal` freevars_ty t)
+  = match t with
+    | TBool -> ()
+      
+    | TArrow t1 t2 ->
+      freevars_elab_ty t1;
+      freevars_elab_ty t2      
+          
+    | TRefineBool e ->
+      freevars_elab_exp e
+
+let freevars_refinement (e:R.term) (bv0:_)
+  : Lemma (RT.freevars (r_b2t (apply e (bv_as_arg bv0))) `Set.equal`
+           RT.freevars e)
+  = ()
+#pop-options
+    
 let rec soundness (#f:RT.fstar_top_env)
                   (#sg:src_env { src_env_ok sg } ) 
                   (#se:src_exp { ln se })
@@ -1495,9 +1535,10 @@ let rec soundness (#f:RT.fstar_top_env)
       let dt : RT.typing (extend_env_l f sg) (elab_ty t) (RT.tm_type RT.u_zero) =
         src_ty_ok_soundness sg t dt
       in
+      freevars_elab_exp e;
       let dd
         : RT.typing (extend_env_l f sg)
-                    (R.pack_ln (R.Tv_Abs (RT.mk_binder "x" 0 (elab_ty t) R.Q_Explicit) (elab_exp e)))
+                    _ //(R.pack_ln (R.Tv_Abs (RT.mk_binder RT.pp_name_default 0 (elab_ty t) R.Q_Explicit) (elab_exp e)))
                     (elab_ty (TArrow t t'))
         = RT.T_Abs (extend_env_l f sg)
                    x
@@ -1505,7 +1546,7 @@ let rec soundness (#f:RT.fstar_top_env)
                    (elab_exp e)
                    (elab_ty t')
                    _
-                   "x"
+                   RT.pp_name_default
                    R.Q_Explicit
                    dt
                    de
@@ -1545,7 +1586,8 @@ let rec soundness (#f:RT.fstar_top_env)
       let s2 = subtyping_soundness s2 in
       let d1 = RT.T_Sub _ _ _ _ d1 s1 in
       let d2 = RT.T_Sub _ _ _ _ d2 s2 in      
-      RT.T_If (extend_env_l f sg) (elab_exp b) (elab_exp e1) (elab_exp e2) _ hyp db d1 d2
+      admit()
+//      RT.T_If (extend_env_l f sg) (elab_exp b) (elab_exp e1) (elab_exp e2) _ hyp db d1 d2
 
 
 and src_ty_ok_soundness (#f:RT.fstar_top_env)
@@ -1562,13 +1604,15 @@ and src_ty_ok_soundness (#f:RT.fstar_top_env)
      let t1_ok = src_ty_ok_soundness sg _ ok_t1 in
      let x = fresh sg in
      fresh_is_fresh sg;
+     freevars_elab_ty t2;     
      let t2_ok = src_ty_ok_soundness ((x, Inl t1)::sg) _ (src_ty_ok_weakening _ [] _ _ _ ok_t2) in
-     let arr_max = RT.T_Arrow _ x (elab_ty t1) (elab_ty t2) _ _ "x" R.Q_Explicit t1_ok t2_ok in
+     let arr_max = RT.T_Arrow _ x (elab_ty t1) (elab_ty t2) _ _ RT.pp_name_default R.Q_Explicit t1_ok t2_ok in
      RT.simplify_umax arr_max
      
    | OK_TRefine _ e de ->
      let x = fresh sg in
      fresh_is_fresh sg;
+     freevars_elab_exp e;     
      let sg' = ((fresh sg, Inl TBool)::sg) in
      let de = src_typing_weakening_l [] sg' _ _ de in
      let de : RT.typing (RT.extend_env (extend_env_l f sg) x RT.bool_ty)
@@ -1605,6 +1649,7 @@ and src_ty_ok_soundness (#f:RT.fstar_top_env)
        : RT.typing (extend_env_l f sg) RT.bool_ty (RT.tm_type RT.u_zero)
        = RT.T_FVar _ RT.bool_fv
      in
+     freevars_refinement (elab_exp e) bv0;
      RT.T_Refine (extend_env_l f sg) x RT.bool_ty refinement' _ _ bool_typing dr
 
 let soundness_lemma (f:RT.fstar_top_env)
