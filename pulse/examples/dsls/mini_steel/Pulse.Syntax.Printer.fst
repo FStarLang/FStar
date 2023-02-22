@@ -48,13 +48,6 @@ let rec term_to_string (t:term)
               (T.unseal b.binder_ppname)
               (term_to_string b.binder_ty)
               (term_to_string phi)
-    | Tm_Abs b q pre_hint body post ->
-      sprintf "(fun (%s%s) {%s} {_.%s} -> %s)"
-              (qual_to_string q)
-              (binder_to_string b)
-              (term_opt_to_string pre_hint)
-              (term_opt_to_string post)
-              (term_to_string body)
 
     | Tm_PureApp head q arg ->
       sprintf "(%s %s%s)" 
@@ -68,18 +61,6 @@ let rec term_to_string (t:term)
         (term_to_string e1)
         (term_to_string e2)        
       
-    | Tm_STApp head q arg ->
-      sprintf "(%s%s %s%s)"
-        (if dbg_printing then "<stapp>" else "")
-        (term_to_string head)
-        (qual_to_string q)
-        (term_to_string arg)
-        
-    | Tm_Bind e1 e2 ->
-      sprintf "bind _ = %s in %s"
-        (term_to_string e1)
-        (term_to_string e2)        
-
     | Tm_Emp -> "emp"
     | Tm_Pure p -> sprintf "pure %s" (term_to_string p)
     | Tm_Star p1 p2 ->
@@ -114,29 +95,8 @@ let rec term_to_string (t:term)
 
     | Tm_EmpInames -> "emp_inames"
       
-    | Tm_If b t e _ ->
-      sprintf "(if %s then %s else %s)"
-        (term_to_string b)
-        (term_to_string t)
-        (term_to_string e)        
-
-    | Tm_ElimExists t ->
-      sprintf "elim_exists %s"
-        (term_to_string t)
-
-    | Tm_IntroExists t e ->
-      sprintf "intro_exists %s %s"
-        (term_to_string t)
-        (term_to_string e)
-
-    | Tm_While inv cond body ->
-      sprintf "while<%s> (%s) {%s}"
-        (term_to_string inv)
-        (term_to_string cond)
-        (term_to_string body)
 
     | Tm_UVar n -> sprintf "?u_%d" n
-
 and binder_to_string (b:binder)
   : T.Tac string
   = sprintf "%s:%s" 
@@ -169,8 +129,57 @@ and comp_to_string (c:comp)
               (term_to_string s.pre)
               (term_to_string s.post)
 
-and term_opt_to_string (t:option term)
+let term_opt_to_string (t:option term)
   : T.Tac string
   = match t with
     | None -> ""
     | Some t -> term_to_string t
+
+
+let rec st_term_to_string (t:st_term)
+  : T.Tac string
+  = match t with
+    | Tm_Return t ->
+      term_to_string t
+      
+    | Tm_STApp head q arg ->
+      sprintf "(%s%s %s%s)"
+        (if dbg_printing then "<stapp>" else "")
+        (st_term_to_string head)
+        (qual_to_string q)
+        (term_to_string arg)
+        
+    | Tm_Bind e1 e2 ->
+      sprintf "bind _ = %s in %s"
+        (st_term_to_string e1)
+        (st_term_to_string e2)        
+  
+    | Tm_Abs b q pre_hint body post ->
+      sprintf "(fun (%s%s) {%s} {_.%s} -> %s)"
+              (qual_to_string q)
+              (binder_to_string b)
+              (term_opt_to_string pre_hint)
+              (term_opt_to_string post)
+              (st_term_to_string body)
+
+    | Tm_If b t e _ ->
+      sprintf "(if %s then %s else %s)"
+        (term_to_string b)
+        (st_term_to_string t)
+        (st_term_to_string e)        
+
+    | Tm_ElimExists t ->
+      sprintf "elim_exists %s"
+        (term_to_string t)
+
+    | Tm_IntroExists t e ->
+      sprintf "intro_exists %s %s"
+        (term_to_string t)
+        (term_to_string e)
+
+    | Tm_While inv cond body ->
+      sprintf "while<%s> (%s) {%s}"
+        (term_to_string inv)
+        (st_term_to_string cond)
+        (st_term_to_string body)
+  
