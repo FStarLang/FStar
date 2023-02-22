@@ -52,13 +52,13 @@ noeq type formula =
   | F_Unknown : formula // Also a baked-in "None"
 
 let mk_Forall (typ : term) (pred : term) : Tac formula =
-    let b = pack_bv ({ bv_ppname = seal "x";
+    let b = pack_bv ({ bv_ppname = as_ppname "x";
                        bv_sort = typ;
                        bv_index = 0; }) in
     Forall b (pack_ln (Tv_App pred (pack_ln (Tv_BVar b), Q_Explicit)))
 
 let mk_Exists (typ : term) (pred : term) : Tac formula =
-    let b = pack_bv ({ bv_ppname = seal "x";
+    let b = pack_bv ({ bv_ppname = as_ppname "x";
                        bv_sort = typ;
                        bv_index = 0; }) in
     Exists b (pack_ln (Tv_App pred (pack_ln (Tv_BVar b), Q_Explicit)))
