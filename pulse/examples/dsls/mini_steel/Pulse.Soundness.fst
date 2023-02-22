@@ -247,7 +247,7 @@ let elim_exists_soundness
   assert (~ (Set.mem x (freevars t)));
   assert (~ (Set.mem x (freevars p)));
 
-  let x_tm = Tm_Var {nm_index=x;nm_ppname=Sealed.seal "_"} in
+  let x_tm = Tm_Var {nm_index=x;nm_ppname=RT.pp_name_default} in
   let rx_tm = R.pack_ln (R.Tv_Var (R.pack_bv (RT.make_bv x tun))) in
   let rx_bv = R.pack_ln (R.Tv_BVar (R.pack_bv (RT.make_bv 0 tun))) in
   assert (elab_pure (mk_reveal u t x_tm) ==
@@ -414,7 +414,7 @@ let comp_typing_soundness (f:stt_env)
              }
           elab_pure st.post;
         };
-        let post_typing  = tabs None (Sealed.seal "_") (E dres) dpost in
+        let post_typing  = tabs None RT.pp_name_default (E dres) dpost in
         (), res_typing, pre_typing, post_typing
     in
     match d with

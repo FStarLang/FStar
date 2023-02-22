@@ -293,6 +293,7 @@ let rec readback_ty (t:R.term)
       let? bv_t' = readback_ty bv_view.bv_sort in
       let? def' = readback_ty def in
       let? body' = readback_ty body in
+      FStar.Sealed.sealed_singl bv_view.bv_ppname RT.pp_name_default;
       Some (Tm_Let bv_t' def' body' <: ty:pure_term { elab_term ty == Some t })
     end
 

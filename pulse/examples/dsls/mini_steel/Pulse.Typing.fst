@@ -307,7 +307,7 @@ let non_informative_witness_t (u:universe) (t:pure_term) : pure_term =
 let elim_exists_post (u:universe) (t:pure_term) (p:pure_term)
   (x:var) : pure_term =
   
-  let x_tm = Tm_Var {nm_index=x;nm_ppname=Sealed.seal "_"} in
+  let x_tm = Tm_Var {nm_index=x;nm_ppname=RT.pp_name_default} in
   let p = open_term' p (mk_reveal u t x_tm) 0 in
   close_term p x
 

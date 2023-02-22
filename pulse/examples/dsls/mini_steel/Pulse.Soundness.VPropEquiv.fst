@@ -109,7 +109,7 @@ let vprop_equiv_ext_type : R.term =
   let open R in
   let v_typ = pack_ln (Tv_FVar  (pack_fv vprop_lid)) in
   let mk_bv index = pack_ln (Tv_BVar (pack_bv {
-    bv_ppname = Sealed.seal "_";
+    bv_ppname = RT.pp_name_default;
     bv_index = index;
     bv_sort = vprop_tm;
   })) in
