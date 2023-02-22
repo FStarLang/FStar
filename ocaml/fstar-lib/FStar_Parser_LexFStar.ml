@@ -439,6 +439,7 @@ let ensure_no_comment lexbuf (next: string -> token): token =
 let rec token lexbuf =
 match%sedlex lexbuf with
  | "%splice" -> SPLICE
+ | "%splice_t" -> SPLICET
  | "`%" -> BACKTICK_PERC
  | "`#" -> BACKTICK_HASH
  | "`@" -> BACKTICK_AT
