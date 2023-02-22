@@ -60,6 +60,20 @@ type aqualv =
 
 type argv = term * aqualv
 
+val as_ppname (s:string) : Tot string
+
+type bv_view = {
+    bv_ppname : string;
+    bv_index : Z.t;
+    bv_sort : typ;
+}
+
+type binder_view = {
+  binder_bv : bv;
+  binder_qual : aqualv;
+  binder_attrs : list term
+}
+
 
 type universe_view =
   | Uv_Zero : universe_view
@@ -89,6 +103,32 @@ type term_view =
     | Tv_AscribedC of term * comp * option term * bool  //bool is similar to Tv_AscribedT
     | Tv_Unknown
 
+val notAscription (t:term_view) : Tot bool
+
+type comp_view =
+    | C_Total of typ
+    | C_GTotal of typ
+    | C_Lemma of term * term * term
+    | C_Eff of universes * name * term * list argv * list term  // list term is the decreases clause
+
+type ctor = name * typ
+
+type lb_view = {
+    lb_fv : fv;
+    lb_us : list univ_name;
+    lb_typ : typ;
+    lb_def : term
+}
+
+type sigelt_view =
+    | Sg_Let of bool * list letbinding
+        // The bool indicates if it's a let rec
+        // Non-empty list of (possibly) mutually recursive let-bindings
+    | Sg_Inductive of name * list univ_name * list binder * typ * list ctor // name, params, type, constructors
+    | Sg_Val of name * list univ_name * typ
+    | Unk
+
+
 (* This is a mirror of FStar.Syntax.Syntax.qualifier *)
 type qualifier =
   | Assumption
@@ -116,41 +156,6 @@ type qualifier =
   | OnlyName
 
 type qualifiers = list qualifier
-
-type bv_view = {
-    bv_ppname : string;
-    bv_index : Z.t;
-    bv_sort : typ;
-}
-
-type binder_view = {
-  binder_bv : bv;
-  binder_qual : aqualv;
-  binder_attrs : list term
-}
-
-type comp_view =
-    | C_Total of typ
-    | C_GTotal of typ
-    | C_Lemma of term * term * term
-    | C_Eff of universes * name * term * list argv * list term  // list term is the decreases clause
-
-type ctor = name * typ
-
-type lb_view = {
-    lb_fv : fv;
-    lb_us : list univ_name;
-    lb_typ : typ;
-    lb_def : term;
-}
-
-type sigelt_view =
-    | Sg_Let of bool * list letbinding
-        // The bool indicates if it's a let rec
-        // Non-empty list of (possibly) mutually recursive let-bindings
-    | Sg_Inductive of name * list univ_name * list binder * typ * list ctor // name, params, type, constructors
-    | Sg_Val of name * list univ_name * typ
-    | Unk
 
 type var = Z.t
 
