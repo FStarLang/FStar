@@ -51,18 +51,14 @@ type qualifier =
 [@@ no_auto_projectors]
 noeq
 type term =
-  // | Tm_Embed    : R.term -> term // a host term included as is in Pulse
   | Tm_BVar       : bv -> term
   | Tm_Var        : nm -> term
   | Tm_FVar       : l:R.name -> term
   | Tm_UInst      : l:R.name -> us:list universe -> term
   | Tm_Constant   : c:constant -> term
   | Tm_Refine     : b:binder -> term -> term
-  | Tm_Abs        : b:binder -> q:option qualifier -> pre:option vprop -> body:term -> post:option vprop -> term
   | Tm_PureApp    : head:term -> arg_qual:option qualifier -> arg:term -> term
   | Tm_Let        : t:term -> e1:term -> e2:term -> term  
-  | Tm_STApp      : head:term -> arg_qual:option qualifier -> arg:term -> term  
-  | Tm_Bind       : e1:term -> e2:term -> term
   | Tm_Emp        : term
   | Tm_Pure       : p:term -> term
   | Tm_Star       : l:vprop -> r:vprop -> term
@@ -71,16 +67,8 @@ type term =
   | Tm_Arrow      : b:binder -> q:option qualifier -> body:comp -> term 
   | Tm_Type       : universe -> term
   | Tm_VProp      : term
-  | Tm_If         : term -> term -> term -> post:option vprop -> term
-
   | Tm_Inames     : term  // type inames
   | Tm_EmpInames  : term
-
-  | Tm_ElimExists : term -> term
-  | Tm_IntroExists: term -> term -> term
-
-  | Tm_While      : term -> term -> term -> term  // inv, cond, body
-
   | Tm_UVar       : int -> term
 
 and binder = {
@@ -103,6 +91,21 @@ and st_comp = { (* ST pre (x:res) post ... x is free in post *)
 
 and vprop = term
 
+let comp_st = c:comp {not (C_Tot? c) }
+
+(* terms with STT types *)
+[@@ no_auto_projectors]
+noeq
+type st_term =
+  | Tm_Return     : term -> st_term
+  | Tm_Abs        : b:binder -> q:option qualifier -> pre:option vprop -> body:st_term -> post:option vprop -> st_term
+  | Tm_STApp      : head:st_term -> arg_qual:option qualifier -> arg:term -> st_term  
+  | Tm_Bind       : e1:st_term -> e2:st_term -> st_term
+  | Tm_If         : b:term -> then_:st_term -> else_:st_term -> post:option vprop -> st_term
+  | Tm_ElimExists : vprop -> st_term
+  | Tm_IntroExists: term -> vprop -> st_term
+  | Tm_While      : term -> st_term -> st_term -> st_term  // inv, cond, body
+
 let rec freevars (t:term) 
   : Set.set var
   = match t with
@@ -119,51 +122,60 @@ let rec freevars (t:term)
     | Tm_Var nm -> Set.singleton nm.nm_index
     | Tm_Refine b body ->
       Set.union (freevars b.binder_ty) (freevars body)
-    | Tm_Abs b _ pre_hint body post_hint ->
-      Set.union (freevars b.binder_ty) 
-                (Set.union (freevars body)
-                           (Set.union (freevars_opt pre_hint)
-                                      (freevars_opt post_hint)))
     | Tm_PureApp t1 _ t2
-    | Tm_STApp t1 _ t2
     | Tm_Star  t1 t2
     | Tm_ExistsSL _ t1 t2
-    | Tm_ForallSL _ t1 t2 
-    | Tm_Bind t1 t2 -> Set.union (freevars t1) (freevars t2)
-
+    | Tm_ForallSL _ t1 t2 ->
+      Set.union (freevars t1) (freevars t2)
     | Tm_Let t e1 e2 ->
       Set.union (Set.union (freevars t) (freevars e1)) (freevars e2)
-    | Tm_If t e1 e2 post ->
-      Set.union (Set.union (freevars t) (freevars e1))
-                (Set.union (freevars e2) (freevars_opt post))
-
     | Tm_Pure p -> freevars p
 
     | Tm_Arrow b _ body -> Set.union (freevars b.binder_ty) (freevars_comp body)
-    | Tm_ElimExists p -> freevars p
-    | Tm_IntroExists e p -> Set.union (freevars e) (freevars p)
-    | Tm_While inv cond body ->
-      Set.union (freevars inv)
-                (Set.union (freevars cond) (freevars body))
-
+  
 and freevars_comp (c:comp) : Set.set var =
   match c with
   | C_Tot t -> freevars t
-  | C_ST s -> freevars_st s
+  | C_ST s -> freevars_st_comp s
   | C_STAtomic inames s
   | C_STGhost inames s ->
-    freevars inames `Set.union` freevars_st s
+    freevars inames `Set.union` freevars_st_comp s
 
-and freevars_st (s:st_comp) : Set.set var =
+and freevars_st_comp (s:st_comp) : Set.set var =
   freevars s.res `Set.union`
   freevars s.pre `Set.union`
   freevars s.post
 
-and freevars_opt (t:option term) : Set.set var =
+let freevars_opt (t:option term) : Set.set var =
   match t with
   | None -> Set.empty
   | Some t -> freevars t
-  
+
+let rec freevars_st (t:st_term)
+  : Set.set var
+  = match t with
+    | Tm_Return t ->
+      freevars t
+    | Tm_Abs b _ pre_hint body post_hint ->
+      Set.union (freevars b.binder_ty) 
+                (Set.union (freevars_st body)
+                           (Set.union (freevars_opt pre_hint)
+                                      (freevars_opt post_hint)))
+    | Tm_STApp t1 _ t2 ->
+      Set.union (freevars_st t1) (freevars t2)
+    | Tm_Bind t1 t2 ->
+      Set.union (freevars_st t1) (freevars_st t2)
+    | Tm_If t e1 e2 post ->
+      Set.union (Set.union (freevars t) (freevars_st e1))
+                (Set.union (freevars_st e2) (freevars_opt post))
+    | Tm_ElimExists p ->
+      freevars p
+    | Tm_IntroExists e p ->
+      Set.union (freevars e) (freevars p)
+    | Tm_While inv cond body ->
+      Set.union (freevars inv)
+                (Set.union (freevars_st cond) (freevars_st body))
+
 let rec ln' (t:term) (i:int) =
   match t with
   | Tm_BVar {bv_index=j} -> j <= i
@@ -182,21 +194,11 @@ let rec ln' (t:term) (i:int) =
     ln' b.binder_ty i &&
     ln' phi (i + 1)
 
-  | Tm_Abs b _ pre_hint body post ->
-    ln' b.binder_ty i &&
-    ln' body (i + 1) &&
-    ln'_opt pre_hint (i + 1) &&
-    ln'_opt post (i + 2)
-
-  | Tm_STApp t1 _ t2
   | Tm_PureApp t1 _ t2
   | Tm_Star t1 t2 ->
     ln' t1 i &&
     ln' t2 i
 
-  | Tm_Bind t1 t2 ->
-    ln' t1 i &&
-    ln' t2 (i + 1)
 
   | Tm_Let t e1 e2 ->
     ln' t i &&
@@ -215,20 +217,6 @@ let rec ln' (t:term) (i:int) =
     ln' b.binder_ty i &&
     ln'_comp c (i + 1)
     
-  | Tm_If b then_ else_ post ->
-    ln' b i &&
-    ln' then_ i &&
-    ln' else_ i &&
-    ln'_opt post (i + 1)
-
-  | Tm_ElimExists p -> ln' p i
-  | Tm_IntroExists e p -> ln' e i && ln' p i
-
-  | Tm_While inv cond body ->
-    ln' inv (i + 1) &&
-    ln' cond i &&
-    ln' body i
-
 and ln'_comp (c:comp) (i:int)
   : Tot bool
   = match c with
@@ -244,11 +232,45 @@ and ln'_st_comp (s:st_comp) (i:int) : bool =
   ln' s.pre i &&
   ln' s.post (i + 1) (* post has 1 impliict abstraction *)
 
-and ln'_opt (t:option term) (i:int) : bool =
+let ln'_opt (t:option term) (i:int) : bool =
   match t with
   | None -> true
   | Some t -> ln' t i
+
+let rec ln'_st (t:st_term) (i:int)
+  : Tot bool
+  = match t with
+    | Tm_Return t ->
+      ln' t i
+      
+    | Tm_Abs b _ pre_hint body post ->
+      ln' b.binder_ty i &&
+      ln'_st body (i + 1) &&
+      ln'_opt pre_hint (i + 1) &&
+      ln'_opt post (i + 2)
   
+    | Tm_STApp t1 _ t2 ->
+      ln'_st t1 i &&
+      ln' t2 i
+
+    | Tm_Bind t1 t2 ->
+      ln'_st t1 i &&
+      ln'_st t2 (i + 1)
+
+    | Tm_If b then_ else_ post ->
+      ln' b i &&
+      ln'_st then_ i &&
+      ln'_st else_ i &&
+      ln'_opt post (i + 1)
+  
+    | Tm_ElimExists p -> ln' p i
+    | Tm_IntroExists e p -> ln' e i && ln' p i
+  
+    | Tm_While inv cond body ->
+      ln' inv (i + 1) &&
+      ln'_st cond i &&
+      ln'_st body i
+
 let ln (t:term) = ln' t (-1)
 let ln_c (c:comp) = ln'_comp c (-1)
 
@@ -274,11 +296,6 @@ let rec open_term' (t:term) (v:term) (i:index)
       Tm_Refine {b with binder_ty=open_term' b.binder_ty v i}
                 (open_term' phi v (i + 1))
 
-    | Tm_Abs b q pre_hint body post ->
-      Tm_Abs {b with binder_ty=open_term' b.binder_ty v i} q
-             (open_term_opt' pre_hint v (i + 1))
-             (open_term' body v (i + 1))
-             (open_term_opt' post v (i + 2))
 
     | Tm_PureApp head q arg ->
       Tm_PureApp (open_term' head v i) q
@@ -289,13 +306,6 @@ let rec open_term' (t:term) (v:term) (i:index)
              (open_term' e1 v i)
              (open_term' e2 v (i + 1))
              
-    | Tm_STApp head q arg ->
-      Tm_STApp (open_term' head v i) q
-               (open_term' arg v i)
-
-    | Tm_Bind e1 e2 ->
-      Tm_Bind (open_term' e1 v i)
-              (open_term' e2 v (i + 1))
 
     | Tm_Pure p ->
       Tm_Pure (open_term' p v i)
@@ -315,22 +325,7 @@ let rec open_term' (t:term) (v:term) (i:index)
     | Tm_Arrow b q c ->
       Tm_Arrow {b with binder_ty=open_term' b.binder_ty v i} q
                (open_comp' c v (i + 1))
-
-    | Tm_If b then_ else_ post ->
-      Tm_If (open_term' b v i)
-            (open_term' then_ v i)
-            (open_term' else_ v i)
-            (open_term_opt' post v (i + 1))
-
-    | Tm_ElimExists p -> Tm_ElimExists (open_term' p v i)
-    | Tm_IntroExists e p -> Tm_IntroExists (open_term' e v i)
-                                           (open_term' p v i)
-
-    | Tm_While inv cond body ->
-      Tm_While (open_term' inv v (i + 1))
-               (open_term' cond v i)
-               (open_term' body v i)
-
+  
 and open_comp' (c:comp) (v:term) (i:index)
   : Tot comp (decreases c)
   = match c with
@@ -354,14 +349,57 @@ and open_st_comp' (s:st_comp) (v:term) (i:index)
            pre = open_term' s.pre v i;
            post = open_term' s.post v (i + 1) }
 
-and open_term_opt' (t:option term) (v:term) (i:index)
+let open_term_opt' (t:option term) (v:term) (i:index)
   : Tot (option term)
   = match t with
     | None -> None
     | Some t -> Some (open_term' t v i)
-    
+
+let rec open_term'_st (t:st_term) (v:term) (i:index)
+  : Tot st_term (decreases t)
+  = match t with
+    | Tm_Return t ->
+      Tm_Return (open_term' t v i)
+
+    | Tm_Abs b q pre_hint body post ->
+      Tm_Abs {b with binder_ty=open_term' b.binder_ty v i} q
+             (open_term_opt' pre_hint v (i + 1))
+             (open_term'_st body v (i + 1))
+             (open_term_opt' post v (i + 2))
+
+    | Tm_STApp head q arg ->
+      Tm_STApp (open_term'_st head v i) q
+               (open_term' arg v i)
+
+    | Tm_Bind e1 e2 ->
+      Tm_Bind (open_term'_st e1 v i)
+              (open_term'_st e2 v (i + 1))
+
+    | Tm_If b then_ else_ post ->
+      Tm_If (open_term' b v i)
+            (open_term'_st then_ v i)
+            (open_term'_st else_ v i)
+            (open_term_opt' post v (i + 1))
+
+    | Tm_ElimExists p ->
+      Tm_ElimExists (open_term' p v i)
+      
+    | Tm_IntroExists e p ->
+      Tm_IntroExists (open_term' e v i)
+                     (open_term' p v i)
+
+    | Tm_While inv cond body ->
+      Tm_While (open_term' inv v (i + 1))
+               (open_term'_st cond v i)
+               (open_term'_st body v i)
+
+
 let open_term t v =
-  open_term' t (Tm_Var {nm_ppname=RT.pp_name_default;nm_index=v}) 0
+    open_term' t (Tm_Var {nm_ppname=RT.pp_name_default;nm_index=v}) 0
+
+let open_term_st t v =
+    open_term'_st t (Tm_Var {nm_ppname=RT.pp_name_default;nm_index=v}) 0
+
 let open_comp_with (c:comp) (x:term) = open_comp' c x 0
 
 let rec close_term' (t:term) (v:var) (i:index)
@@ -387,12 +425,6 @@ let rec close_term' (t:term) (v:var) (i:index)
       Tm_Refine {b with binder_ty=close_term' b.binder_ty v i}
                 (close_term' phi v (i + 1))
 
-    | Tm_Abs b q pre_hint body post ->
-      Tm_Abs {b with binder_ty=close_term' b.binder_ty v i} q
-             (close_term_opt' pre_hint v (i + 1))
-             (close_term' body v (i + 1))
-             (close_term_opt' post v (i + 2))
-
     | Tm_PureApp head q arg ->
       Tm_PureApp (close_term' head v i) q
                  (close_term' arg v i)
@@ -401,14 +433,6 @@ let rec close_term' (t:term) (v:var) (i:index)
       Tm_Let (close_term' t v i)
              (close_term' e1 v i)
              (close_term' e2 v (i + 1))
-             
-    | Tm_STApp head q arg ->
-      Tm_STApp (close_term' head v i) q
-               (close_term' arg v i)
-
-    | Tm_Bind e1 e2 ->
-      Tm_Bind (close_term' e1 v i)
-              (close_term' e2 v (i + 1))
 
     | Tm_Pure p ->
       Tm_Pure (close_term' p v i)
@@ -428,21 +452,6 @@ let rec close_term' (t:term) (v:var) (i:index)
     | Tm_Arrow b q c ->
       Tm_Arrow {b with binder_ty=close_term' b.binder_ty v i} q
                (close_comp' c v (i + 1))
-
-    | Tm_If b then_ else_ post ->
-      Tm_If (close_term' b v i)
-            (close_term' then_ v i)
-            (close_term' else_ v i)
-            (close_term_opt' post v (i + 1))
-
-    | Tm_ElimExists p -> Tm_ElimExists (close_term' p v i)
-    | Tm_IntroExists e p -> Tm_IntroExists (close_term' e v i)
-                                          (close_term' p v i)
-
-    | Tm_While inv cond body ->
-      Tm_While (close_term' inv v (i + 1))
-               (close_term' cond v i)
-               (close_term' body v i)
 
 and close_comp' (c:comp) (v:var) (i:index)
   : Tot comp (decreases c)
@@ -467,13 +476,53 @@ and close_st_comp' (s:st_comp) (v:var) (i:index)
            pre = close_term' s.pre v i;
            post = close_term' s.post v (i + 1) }
 
-and close_term_opt' (t:option term) (v:var) (i:index)
-  : Tot (option term) (decreases t)
+let close_term_opt' (t:option term) (v:var) (i:index)
+  : Tot (option term)
   = match t with
     | None -> None
     | Some t -> Some (close_term' t v i)
-    
+
+
+let rec close_term'_st (t:st_term) (v:var) (i:index)
+  : Tot st_term (decreases t)
+  = match t with
+    | Tm_Return t ->
+      Tm_Return (close_term' t v i)
+
+    | Tm_Abs b q pre_hint body post ->
+      Tm_Abs {b with binder_ty=close_term' b.binder_ty v i} q
+             (close_term_opt' pre_hint v (i + 1))
+             (close_term'_st body v (i + 1))
+             (close_term_opt' post v (i + 2))
+
+    | Tm_STApp head q arg ->
+      Tm_STApp (close_term'_st head v i) q
+               (close_term' arg v i)
+
+    | Tm_Bind e1 e2 ->
+      Tm_Bind (close_term'_st e1 v i)
+              (close_term'_st e2 v (i + 1))
+
+    | Tm_If b then_ else_ post ->
+      Tm_If (close_term' b v i)
+            (close_term'_st then_ v i)
+            (close_term'_st else_ v i)
+            (close_term_opt' post v (i + 1))
+
+    | Tm_ElimExists p ->
+      Tm_ElimExists (close_term' p v i)
+      
+    | Tm_IntroExists e p ->
+      Tm_IntroExists (close_term' e v i)
+                     (close_term' p v i)
+
+    | Tm_While inv cond body ->
+      Tm_While (close_term' inv v (i + 1))
+               (close_term'_st cond v i)
+               (close_term'_st body v i)
+
 let close_term t v = close_term' t v 0
+let close_term_st t v = close_term'_st t v 0
 let close_comp t v = close_comp' t v 0
 
 let comp_res (c:comp) : term =
@@ -541,30 +590,17 @@ let rec close_open_inverse' (t:term)
     | Tm_EmpInames
     | Tm_UVar _ -> ()
     
-    | Tm_Pure p
-    | Tm_ElimExists p ->
+    | Tm_Pure p ->
       close_open_inverse' p x i
 
     | Tm_Refine b t ->
       close_open_inverse' b.binder_ty x i;
       close_open_inverse' t x (i + 1)
-      
-    | Tm_Abs b _q pre body post ->
-      close_open_inverse' b.binder_ty x i;
-      close_open_inverse' body x (i + 1);
-      close_open_inverse_opt' pre x (i + 1);
-      close_open_inverse_opt' post x (i + 2)
-    
+          
     | Tm_PureApp l _ r
-    | Tm_STApp l _ r
-    | Tm_Star l r
-    | Tm_IntroExists l r ->
+    | Tm_Star l r ->
       close_open_inverse' l x i;
       close_open_inverse' r x i
-
-    | Tm_Bind e1 e2 ->
-      close_open_inverse' e1 x i;
-      close_open_inverse' e2 x (i + 1)
 
     | Tm_Let t e1 e2 ->
       close_open_inverse' t x i;    
@@ -575,25 +611,10 @@ let rec close_open_inverse' (t:term)
     | Tm_ForallSL _ t b ->
       close_open_inverse' t x i;    
       close_open_inverse' b x (i + 1)
-      
-    | Tm_If t0 t1 t2 post ->
-      close_open_inverse' t0 x i;    
-      close_open_inverse' t1 x i;    
-      close_open_inverse' t2 x i;
-      close_open_inverse_opt' post x (i + 1)
-      
 
     | Tm_Arrow b _ body ->
       close_open_inverse' b.binder_ty x i;
       close_open_inverse'_comp body x (i + 1)
-
-    | Tm_ElimExists t -> close_open_inverse' t x i
-    | Tm_IntroExists t e -> close_open_inverse' t x i; close_open_inverse' e x i
-
-    | Tm_While inv cond body ->
-      close_open_inverse' inv x (i + 1);
-      close_open_inverse' cond x i;
-      close_open_inverse' body x i
 
 and close_open_inverse'_comp (c:comp)
                              (x:var { ~(x `Set.mem` freevars_comp c) } )
@@ -616,19 +637,72 @@ and close_open_inverse'_comp (c:comp)
       close_open_inverse' s.pre x i;      
       close_open_inverse' s.post x (i + 1)
 
-and close_open_inverse_opt' (t:option term)
+let close_open_inverse_opt' (t:option term)
                             (x:var { ~(x `Set.mem` freevars_opt t) })
                             (i:index)
   : Lemma (ensures close_term_opt' (open_term_opt' t (term_of_var x) i) x i == t)
-          (decreases t)
   = match t with
     | None -> ()
     | Some t -> close_open_inverse' t x i
+
+
+let rec close_open_inverse'_st  (t:st_term) 
+                                (x:var { ~(x `Set.mem` freevars_st t) } )
+                                (i:index)
+  : Lemma (ensures close_term'_st (open_term'_st t (term_of_var x) i) x i == t)
+          (decreases t)
+  = match t with
+    | Tm_Return t ->
+      close_open_inverse' t x i
+
+    | Tm_ElimExists p ->
+      close_open_inverse' p x i    
+
+    | Tm_Abs b _q pre body post ->
+      close_open_inverse' b.binder_ty x i;
+      close_open_inverse'_st body x (i + 1);
+      close_open_inverse_opt' pre x (i + 1);
+      close_open_inverse_opt' post x (i + 2)
+
+    | Tm_Bind e1 e2 ->
+      close_open_inverse'_st e1 x i;
+      close_open_inverse'_st e2 x (i + 1)
+
+    | Tm_STApp l _ r ->
+      close_open_inverse'_st l x i;
+      close_open_inverse' r x i
+    
+    | Tm_IntroExists l r ->
+      close_open_inverse' l x i;
+      close_open_inverse' r x i    
+    
+    | Tm_ElimExists t ->
+      close_open_inverse' t x i
+      
+    | Tm_IntroExists t e ->
+      close_open_inverse' t x i;
+      close_open_inverse' e x i
+
+    | Tm_While inv cond body ->
+      close_open_inverse' inv x (i + 1);
+      close_open_inverse'_st cond x i;
+      close_open_inverse'_st body x i
+
+    | Tm_If t0 t1 t2 post ->
+      close_open_inverse' t0 x i;    
+      close_open_inverse'_st t1 x i;    
+      close_open_inverse'_st t2 x i;
+      close_open_inverse_opt' post x (i + 1)
 
 let close_open_inverse (t:term) (x:var { ~(x `Set.mem` freevars t) } )
   : Lemma (ensures close_term (open_term t x) x == t)
           (decreases t)
   = close_open_inverse' t x 0
+
+let close_open_inverse_st (t:st_term) (x:var { ~(x `Set.mem` freevars_st t) } )
+  : Lemma (ensures close_term_st (open_term_st t x) x == t)
+          (decreases t)
+  = close_open_inverse'_st t x 0
 
 let null_binder (t:term) : binder =
     {binder_ty=t;binder_ppname=RT.pp_name_default}
@@ -661,23 +735,13 @@ let rec eq_tm (t1 t2:term)
     | Tm_Refine b1 t1, Tm_Refine b2 t2 -> 
       eq_tm b1.binder_ty b2.binder_ty &&
       eq_tm t1 t2
-    | Tm_Abs b1 o1 p1 t1 q1, Tm_Abs b2 o2 p2 t2 q2 ->
-      eq_tm b1.binder_ty b2.binder_ty &&
-      o1=o2 &&
-      eq_tm_opt p1 p2 &&
-      eq_tm t1 t2 &&
-      eq_tm_opt q1 q2
-    | Tm_PureApp h1 o1 t1, Tm_PureApp h2 o2 t2
-    | Tm_STApp h1 o1 t1, Tm_STApp h2 o2 t2 ->
+    | Tm_PureApp h1 o1 t1, Tm_PureApp h2 o2 t2 ->
       eq_tm h1 h2 &&
       o1=o2 &&
       eq_tm t1 t2
-    | Tm_Star l1 r1, Tm_Star l2 r2
-    | Tm_Bind l1 r1, Tm_Bind l2 r2
-    | Tm_IntroExists l1 r1, Tm_IntroExists l2 r2 ->
+    | Tm_Star l1 r1, Tm_Star l2 r2 ->
       eq_tm l1 l2 &&
       eq_tm r1 r2
-    | Tm_ElimExists p1, Tm_ElimExists p2
     | Tm_Pure p1, Tm_Pure p2 ->
       eq_tm p1 p2
     | Tm_Type u1, Tm_Type u2 ->
@@ -686,11 +750,6 @@ let rec eq_tm (t1 t2:term)
       eq_tm t1 t2 &&
       eq_tm e1 e2 &&
       eq_tm e1' e2'
-    | Tm_If g1 ethen1 eelse1 p1, Tm_If g2 ethen2 eelse2 p2 ->
-      eq_tm g1 g2 &&
-      eq_tm ethen1 ethen2 &&
-      eq_tm eelse1 eelse2 &&
-      eq_tm_opt p1 p2
     | Tm_ExistsSL u1 t1 b1, Tm_ExistsSL u2 t2 b2
     | Tm_ForallSL u1 t1 b1, Tm_ForallSL u2 t2 b2 ->
       u1=u2 &&
@@ -700,21 +759,10 @@ let rec eq_tm (t1 t2:term)
       eq_tm b1.binder_ty b2.binder_ty &&
       q1=q2 &&
       eq_comp c1 c2
-    | Tm_While inv1 cond1 body1, Tm_While inv2 cond2 body2 ->
-      eq_tm inv1 inv2 &&
-      eq_tm cond1 cond2 &&
-      eq_tm body1 body2
     | Tm_UVar z1, Tm_UVar z2 ->
       z1=z2
     | _ -> false
     
-and eq_tm_opt (t1 t2:option term)
-  : b:bool { b <==> (t1 == t2) }
-  = match t1, t2 with
-    | None, None -> true
-    | Some t1, Some t2 -> eq_tm t1 t2
-    | _ -> false
-
 and eq_comp (c1 c2:comp) 
   : b:bool { b <==> (c1 == c2) }
   = match c1, c2 with
@@ -734,3 +782,52 @@ and eq_st_comp (s1 s2:st_comp)
     eq_tm s1.res s2.res &&
     eq_tm s1.pre s2.pre &&
     eq_tm s1.post s2.post
+
+let eq_tm_opt (t1 t2:option term)
+  : b:bool { b <==> (t1 == t2) }
+  = match t1, t2 with
+    | None, None -> true
+    | Some t1, Some t2 -> eq_tm t1 t2
+    | _ -> false
+
+let rec eq_tm_st (t1 t2:st_term) 
+  : b:bool { b <==> (t1 == t2) }
+  = match t1, t2 with
+    | Tm_Return t1, Tm_Return t2 ->
+      eq_tm t1 t2
+      
+    | Tm_Abs b1 o1 p1 t1 q1, Tm_Abs b2 o2 p2 t2 q2 ->
+      eq_tm b1.binder_ty b2.binder_ty &&
+      o1=o2 &&
+      eq_tm_opt p1 p2 &&
+      eq_tm_st t1 t2 &&
+      eq_tm_opt q1 q2
+  
+    | Tm_STApp h1 o1 t1, Tm_STApp h2 o2 t2 ->
+      eq_tm_st h1 h2 &&
+      o1=o2 &&
+      eq_tm t1 t2
+
+    | Tm_Bind t1 k1, Tm_Bind t2 k2 ->
+      eq_tm_st t1 t2 &&
+      eq_tm_st k1 k2
+      
+    | Tm_IntroExists l1 r1, Tm_IntroExists l2 r2 ->
+      eq_tm l1 l2 &&
+      eq_tm r1 r2
+
+    | Tm_ElimExists p1, Tm_ElimExists p2 ->
+      eq_tm p1 p2
+
+    | Tm_If g1 ethen1 eelse1 p1, Tm_If g2 ethen2 eelse2 p2 ->
+      eq_tm g1 g2 &&
+      eq_tm_st ethen1 ethen2 &&
+      eq_tm_st eelse1 eelse2 &&
+      eq_tm_opt p1 p2
+    
+    | Tm_While inv1 cond1 body1, Tm_While inv2 cond2 body2 ->
+      eq_tm inv1 inv2 &&
+      eq_tm_st cond1 cond2 &&
+      eq_tm_st body1 body2
+
+    | _ -> false

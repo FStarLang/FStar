@@ -171,273 +171,116 @@ let elab_qual = function
   | Some Implicit -> R.Q_Implicit
   
 let rec elab_term (top:term)
-  : option R.term
+  : R.term
   = let open R in
     match top with
     | Tm_BVar bv ->
       let bv = pack_bv (RT.make_bv_with_name bv.bv_ppname bv.bv_index tun) in
-      Some (pack_ln (Tv_BVar bv))
+      pack_ln (Tv_BVar bv)
       
     | Tm_Var nm ->
       // tun because type does not matter at a use site
       let bv = pack_bv (RT.make_bv_with_name nm.nm_ppname nm.nm_index tun) in
-      Some (pack_ln (Tv_Var bv))
+      pack_ln (Tv_Var bv)
 
     | Tm_FVar l ->
-      Some (pack_ln (Tv_FVar (pack_fv l)))
+      pack_ln (Tv_FVar (pack_fv l))
 
     | Tm_UInst l us ->
-      Some (pack_ln (Tv_UInst (pack_fv l) (List.Tot.map elab_universe us)))
+      pack_ln (Tv_UInst (pack_fv l) (List.Tot.map elab_universe us))
 
     | Tm_Constant c ->
-      Some (pack_ln (Tv_Const (elab_const c)))
+      pack_ln (Tv_Const (elab_const c))
 
     | Tm_Refine b phi ->
-      let! ty = elab_term b.binder_ty in
-      let! phi = elab_term phi in
-      Some (pack_ln (Tv_Refine (pack_bv (RT.make_bv_with_name b.binder_ppname 0 ty)) phi))
+      let ty = elab_term b.binder_ty in
+      let phi = elab_term phi in
+      pack_ln (Tv_Refine (pack_bv (RT.make_bv_with_name b.binder_ppname 0 ty)) phi)
 
     | Tm_PureApp e1 q e2 ->
-      let! e1 = elab_term e1 in
-      let! e2 = elab_term e2 in
-      Some (R.mk_app e1 [(e2, elab_qual q)])
+      let e1 = elab_term e1 in
+      let e2 = elab_term e2 in
+      R.mk_app e1 [(e2, elab_qual q)]
 
     | Tm_Arrow b q c ->
-      let! ty = elab_term b.binder_ty in
-      let! c = elab_comp c in
-      Some (mk_arrow_with_name b.binder_ppname (ty, elab_qual q) c)
+      let ty = elab_term b.binder_ty in
+      let c = elab_comp c in
+      mk_arrow_with_name b.binder_ppname (ty, elab_qual q) c
 
     | Tm_Let t e1 e2 ->
-      let! t = elab_term t in
-      let! e1 = elab_term e1 in
-      let! e2 = elab_term e2 in
+      let t = elab_term t in
+      let e1 = elab_term e1 in
+      let e2 = elab_term e2 in
       let bv = pack_bv (RT.make_bv 0 t) in
-      Some (R.pack_ln (R.Tv_Let false [] bv e1 e2))
+      R.pack_ln (R.Tv_Let false [] bv e1 e2)
 
     | Tm_Type u ->
-      Some (R.pack_ln (R.Tv_Type (elab_universe u)))
+      R.pack_ln (R.Tv_Type (elab_universe u))
       
     | Tm_VProp ->
-      Some (pack_ln (Tv_FVar (pack_fv vprop_lid)))
+      pack_ln (Tv_FVar (pack_fv vprop_lid))
 
     | Tm_Emp ->
-      Some (pack_ln (Tv_FVar (pack_fv emp_lid)))
+      pack_ln (Tv_FVar (pack_fv emp_lid))
       
     | Tm_Pure p ->
-      let! p = elab_term p in
+      let p = elab_term p in
       let head = pack_ln (Tv_FVar (pack_fv pure_lid)) in
-      Some (pack_ln (Tv_App head (p, Q_Explicit)))
+      pack_ln (Tv_App head (p, Q_Explicit))
 
     | Tm_Star l r ->
-      let! l = elab_term l in
-      let! r = elab_term r in      
+      let l = elab_term l in
+      let r = elab_term r in      
       let head = pack_ln (Tv_FVar (pack_fv star_lid)) in      
-      Some (R.mk_app head [(l, Q_Explicit); (r, Q_Explicit)])
+      R.mk_app head [(l, Q_Explicit); (r, Q_Explicit)]
       
     | Tm_ExistsSL u t body
     | Tm_ForallSL u t body ->
       let u = elab_universe u in
-      let! t = elab_term t in
-      let! b = elab_term body in
+      let t = elab_term t in
+      let b = elab_term body in
       if Tm_ExistsSL? top
-      then Some (mk_exists u t (mk_abs t R.Q_Explicit b))
-      else Some (mk_forall u t (mk_abs t R.Q_Explicit b))
+      then mk_exists u t (mk_abs t R.Q_Explicit b)
+      else mk_forall u t (mk_abs t R.Q_Explicit b)
 
     | Tm_Inames ->
-      Some (pack_ln (Tv_FVar (pack_fv inames_lid)))
+      pack_ln (Tv_FVar (pack_fv inames_lid))
 
-    | Tm_EmpInames -> Some emp_inames_tm
+    | Tm_EmpInames ->
+      emp_inames_tm
 
-    | Tm_If _ _ _ _
-    | Tm_Abs _ _ _ _ _
-    | Tm_STApp _ _ _
-    | Tm_Bind _ _
-    | Tm_ElimExists _
-    | Tm_IntroExists _ _
-    | Tm_While _ _ _
-    | Tm_UVar _ -> None
-      //effectful constructs, explicitly not handled here
+    | Tm_UVar _ ->
+      pack_ln R.Tv_Unknown
     
 and elab_comp (c:comp) 
-  : option R.term
+  : R.term
   = match c with
     | C_Tot t ->
       elab_term t
 
     | C_ST c ->
-      let! u, res, pre, post = elab_st_comp c in
-      Some (mk_stt_comp u res pre (mk_abs res R.Q_Explicit post))
+      let u, res, pre, post = elab_st_comp c in
+      mk_stt_comp u res pre (mk_abs res R.Q_Explicit post)
 
     | C_STAtomic inames c ->
-      let! inames = elab_term inames in
-      let! u, res, pre, post = elab_st_comp c in
-      Some (mk_stt_atomic_comp u res inames pre
-              (mk_abs res R.Q_Explicit post))
+      let inames = elab_term inames in
+      let u, res, pre, post = elab_st_comp c in
+      mk_stt_atomic_comp u res inames pre (mk_abs res R.Q_Explicit post)
 
     | C_STGhost inames c ->
-      let! inames = elab_term inames in
-      let! u, res, pre, post = elab_st_comp c in
-      Some (mk_stt_ghost_comp u res inames pre
-              (mk_abs res R.Q_Explicit post))
+      let inames = elab_term inames in
+      let u, res, pre, post = elab_st_comp c in
+      mk_stt_ghost_comp u res inames pre (mk_abs res R.Q_Explicit post)
 
 and elab_st_comp (c:st_comp)
-  : option (R.universe & R.term & R.term & R.term)
-  = let! res = elab_term c.res in
-    let! pre = elab_term c.pre in
-    let! post = elab_term c.post in
-    Some (elab_universe c.u, res, pre, post)
-    
-let is_pure_term (e:term) = Some? (elab_term e)
-let pure_term = e:term { is_pure_term e }
-let elab_pure (e:pure_term) : R.term = Some?.v (elab_term e)
-let is_pure_comp (c:comp) = Some? (elab_comp c)
-let is_pure_st_comp (c:st_comp) = Some? (elab_st_comp c)
-let pure_comp = c:comp { is_pure_comp c }
-let elab_pure_comp (c:pure_comp) = Some?.v (elab_comp c)
-let pure_comp_st = c:pure_comp { stateful_comp c }
-  
-let ln_comp = c:pure_comp_st{ ln_c c }
-
-#push-options "--z3rlimit_factor 4"
-let rec opening_pure_term_with_pure_term (x:pure_term) (v:pure_term) (i:index)
-  : Lemma (ensures is_pure_term (open_term' x v i))
-          (decreases x)
-          [SMTPat (is_pure_term (open_term' x v i))]
-  = let aux (y:pure_term {y << x}) (j:index)
-      : Lemma (ensures (is_pure_term (open_term' y v j)))
-      = opening_pure_term_with_pure_term y v j
-    in
-    match x with
-    | Tm_BVar _
-    | Tm_Var _
-    | Tm_FVar _
-    | Tm_UInst _ _
-    | Tm_Constant _
-    | Tm_Type _
-    | Tm_VProp
-    | Tm_Inames
-    | Tm_EmpInames
-    | Tm_Emp -> ()
-
-    // | Tm_Abs t pre_hint body ->
-    //   aux t i;
-    //   aux body (i + 1)
-
-    | Tm_Refine b phi ->
-      aux b.binder_ty i;
-      aux phi (i + 1)        
-
-    | Tm_PureApp l _ r
-    // | Tm_STApp l r
-    | Tm_Star l r ->    
-      aux l i; aux r i
-                 
-    | Tm_Let t e1 e2  ->
-    // | Tm_Bind t e1 e2 ->    
-      aux t i; aux e1 i; aux e2 (i + 1)
-      
-    | Tm_Pure p ->
-      aux p i
-              
-    | Tm_ExistsSL _ t body
-    | Tm_ForallSL _ t body ->
-      aux t i; aux body (i + 1)
-    
-    | Tm_Arrow b _ c ->
-      aux b.binder_ty i;
-      opening_pure_comp_with_pure_term c v (i + 1)
-
-and opening_pure_comp_with_pure_term (x:pure_comp) (v:pure_term) (i:index)
-  : Lemma (ensures is_pure_comp (open_comp' x v i))
-          (decreases x)
-          [SMTPat (is_pure_comp (open_comp' x v i))]
-  = match x with
-    | C_Tot t ->
-      opening_pure_term_with_pure_term t v i
-      
-    | C_ST { res; pre; post } ->
-      opening_pure_term_with_pure_term res v i;
-      opening_pure_term_with_pure_term pre v i;
-      opening_pure_term_with_pure_term post v (i + 1)
-
-    | C_STAtomic inames { res; pre; post }
-    | C_STGhost inames { res; pre; post } ->
-      opening_pure_term_with_pure_term inames v i;
-      opening_pure_term_with_pure_term res v i;
-      opening_pure_term_with_pure_term pre v i;
-      opening_pure_term_with_pure_term post v (i + 1)
-
-let rec closing_pure_term (x:pure_term) (v:var) (i:index)
-  : Lemma (ensures is_pure_term (close_term' x v i))
-          (decreases x)
-          [SMTPat (is_pure_term (close_term' x v i))]
-  = let aux (y:pure_term {y << x}) (j:index)
-      : Lemma (ensures (is_pure_term (close_term' y v j)))
-      = closing_pure_term y v j
-    in
-    match x with
-    | Tm_BVar _
-    | Tm_Var _
-    | Tm_FVar _
-    | Tm_UInst _ _
-    | Tm_Constant _
-    | Tm_Type _
-    | Tm_VProp
-    | Tm_Inames
-    | Tm_EmpInames
-    | Tm_Emp -> ()
-
-    // | Tm_Abs t pre_hint body ->
-    //   aux t i;
-    //   aux body (i + 1)
-
-    | Tm_Refine b phi ->
-      aux b.binder_ty i;
-      aux phi (i + 1)
-
-    | Tm_PureApp l _ r
-    // | Tm_STApp l r
-    | Tm_Star l r ->    
-      aux l i; aux r i
-                 
-    | Tm_Let t e1 e2  ->
-    // | Tm_Bind t e1 e2 ->    
-      aux t i; aux e1 i; aux e2 (i + 1)
-      
-    | Tm_Pure p ->
-      aux p i
-              
-    | Tm_ExistsSL _ t body
-    | Tm_ForallSL _ t body ->
-      aux t i; aux body (i + 1)
-    
-    | Tm_Arrow b _ c ->
-      aux b.binder_ty i;
-      closing_pure_comp c v (i + 1)
-
-and closing_pure_comp (x:pure_comp) (v:var) (i:index)
-  : Lemma (ensures is_pure_comp (close_comp' x v i))
-          (decreases x)
-          [SMTPat (is_pure_comp (close_comp' x v i))]
-  = match x with
-    | C_Tot t ->
-      closing_pure_term t v i
-      
-    | C_ST { res; pre; post } -> 
-      closing_pure_term res v i;
-      closing_pure_term pre v i;
-      closing_pure_term post v (i + 1)
-
-    | C_STAtomic inames { res; pre; post }
-    | C_STGhost inames { res; pre; post } ->
-      closing_pure_term inames v i;
-      closing_pure_term res v i;
-      closing_pure_term pre v i;
-      closing_pure_term post v (i + 1)
-#pop-options
-
+  : R.universe & R.term & R.term & R.term
+  = let res = elab_term c.res in
+    let pre = elab_term c.pre in
+    let post = elab_term c.post in
+    elab_universe c.u, res, pre, post
+   
 
 assume
-val elab_freevars_inverse (e:pure_term)
+val elab_freevars_inverse (e:term)
   : Lemma 
-    (ensures RT.freevars (elab_pure e) == freevars e)
+    (ensures RT.freevars (elab_term e) == freevars e)
