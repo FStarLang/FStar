@@ -271,9 +271,42 @@ and elab_ty (t:src_ty)
       let refinement = r_b2t e in
       R.pack_ln (Tv_Refine bv refinement)
 
+let rec freevars_elab_exp (e:src_exp)
+  : Lemma (freevars e `Set.equal` RT.freevars (elab_exp e))
+  = match e with
+    | EBool _
+    | EBVar _ 
+    | EVar _ -> ()
+
+    | ELam t e ->
+      freevars_elab_ty t;
+      freevars_elab_exp e
+             
+    | EApp e1 e2 ->
+      freevars_elab_exp e1;
+      freevars_elab_exp e2
+
+    | EIf b e1 e2 ->
+      freevars_elab_exp b;    
+      freevars_elab_exp e1;
+      freevars_elab_exp e2
+  
+and freevars_elab_ty (t:src_ty)
+  : Lemma (freevars_ty t `Set.equal` RT.freevars (elab_ty t))
+  = match t with
+    | TBool -> ()
+      
+    | TArrow t1 t2 ->
+      freevars_elab_ty t1;
+      freevars_elab_ty t2      
+          
+    | TRefineBool e ->
+      freevars_elab_exp e
+
+  
 let elab_eqn (e1 e2:src_exp)
   : R.term
-  = RT.eq2 RT.bool_ty (elab_exp e1) (elab_exp e2)
+  = RT.eq2 RT.u_zero RT.bool_ty (elab_exp e1) (elab_exp e2)
 
 let elab_binding (b:binding)
   : R.term 
@@ -678,6 +711,7 @@ let rec soundness (#f:fstar_top_env)
              = de
       in
       fresh_is_fresh sg;
+      freevars_elab_exp e;
       let dt : RT.typing (extend_env_l f sg) (elab_ty t) (RT.tm_type RT.u_zero) =
         src_ty_ok_soundness sg t dt
       in
@@ -705,8 +739,9 @@ let rec soundness (#f:fstar_top_env)
       let s1 = subtyping_soundness s1 in
       let s2 = subtyping_soundness s2 in
       let d1 = RT.T_Sub _ _ _ _ d1 s1 in
-      let d2 = RT.T_Sub _ _ _ _ d2 s2 in      
-      RT.T_If (extend_env_l f sg) (elab_exp b) (elab_exp e1) (elab_exp e2) _ hyp db d1 d2
+      let d2 = RT.T_Sub _ _ _ _ d2 s2 in
+      admit()// ;
+      // RT.T_If (extend_env_l f sg) (elab_exp b) (elab_exp e1) (elab_exp e2) _ hyp db d1 d2
 
     | T_App _ e1 e2 t t' t0 d1 d2 st ->
       let dt1 
@@ -746,7 +781,8 @@ and src_ty_ok_soundness (#f:fstar_top_env)
    | OK_TArrow _ t1 t2 x ok_t1 ok_t2 ->
      let t1_ok = src_ty_ok_soundness sg _ ok_t1 in
      let t2_ok = src_ty_ok_soundness ((x, Inl t1)::sg) _ ok_t2 in
-     let arr_max = RT.T_Arrow _ x (elab_ty t1) (elab_ty t2) _ _ "x" R.Q_Explicit t1_ok t2_ok in
+     freevars_elab_ty t2;
+     let arr_max = RT.T_Arrow _ x (elab_ty t1) (elab_ty t2) _ _ RT.pp_name_default R.Q_Explicit t1_ok t2_ok in
      RT.simplify_umax arr_max
 
    | OK_TRefine _ e x de ->
@@ -767,6 +803,7 @@ and src_ty_ok_soundness (#f:fstar_top_env)
        = RT.T_FVar _ RT.bool_fv
      in
      elab_open_b2t e x;
+     freevars_elab_exp e;
      RT.T_Refine (extend_env_l f sg)
                  x
                  RT.bool_ty
