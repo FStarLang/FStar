@@ -23,8 +23,11 @@ module FStar.Sealed.Inhabited
 
    The main type `sealed w` is the singleton type of a sealed values
    that is provably equal to `seal w`.
+
+   This type `sealed_` is not intended for use by clients, it is exposed
+   only to enable writing an SMT pattern.
 *)
-let sealed (#[@@@strictly_positive] a:Type u#a)
+let sealed_ (#a:Type u#a)
             (witness:a)
   : Type u#0
   = FStar.Sealed.sealed a
@@ -32,18 +35,23 @@ let sealed (#[@@@strictly_positive] a:Type u#a)
 (* A trivial predicate, just for writing an SMT pattern on sealed_singleton *)
 let is_sealed (#a:Type u#a)
               (#witness:a)
-              (x:sealed witness)
+              (x:sealed_ witness)
   : prop
   = True
 
+let sealed (#a:Type u#a)
+           (witness:a)
+  : Type u#0
+  = s:sealed_ witness { is_sealed s }
+
 (* Sealing a value `x:a` at the type `sealed w` *)
 let seal (#a:Type u#a) (#w:a) (x:a)
-  : s:sealed w { is_sealed s }
+  : sealed w
   = FStar.Sealed.seal x
 
-(* A lemma with an SMT pattern for automatically proving that a 
+(* A lemma with an SMT pattern for automatically proving that a
    `seal x == seal w`*)
-let sealed_singleton (a:Type u#a) (w:a) (x:a)
-  : Lemma (seal #a #w x == seal #a #w w)
-          [SMTPat (seal #a #w x)]
-  = FStar.Sealed.sealed_singl (seal #a #w x) (seal #a #w w)
+let sealed_singleton (a:Type u#a) (w:a) (x:sealed w)
+  : Lemma (x == seal #a #w w)
+          [SMTPat (is_sealed #a #w x)]
+  = FStar.Sealed.sealed_singl x (seal #a #w w)
