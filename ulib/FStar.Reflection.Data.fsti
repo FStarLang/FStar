@@ -53,7 +53,7 @@ type aqualv =
 
 type argv = term * aqualv
 
-(* The type of a string obervable only with a tactic.
+(* The type of a string observable only with a tactic.
    All values of type ppname_t are provably equal *)
 let ppname_t = FStar.Sealed.Inhabited.sealed ""
 let as_ppname (x:string) : ppname_t = FStar.Sealed.Inhabited.seal x
