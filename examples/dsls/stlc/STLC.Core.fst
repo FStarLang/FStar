@@ -38,7 +38,7 @@ let rec ln' (e:stlc_exp) (n:int)
     | EApp e1 e2 -> ln' e1 n && ln' e2 n
 
 let ln e = ln' e (-1)
-
+    
 let rec open_exp' (e:stlc_exp) (v:var) (n:index)
   : e':stlc_exp { size e == size e'}
   = match e with
@@ -103,7 +103,39 @@ let rec close_exp_ln (e:stlc_exp) (v:var) (n:nat)
     | EBVar m -> ()
     | ELam _ e -> close_exp_ln e v (n + 1)
     | EApp e1 e2 -> close_exp_ln e1 v n; close_exp_ln e2 v n
+
+let rec freevars (e:stlc_exp)
+  : Set.set var
+  = match e with
+    | EUnit 
+    | EBVar _ -> Set.empty
+    | EVar x -> Set.singleton x
+    | ELam _ e -> freevars e
+    | EApp e1 e2 -> freevars e1 `Set.union` freevars e2
     
+let rec closed (e:stlc_exp) 
+  : b:bool { b <==>  (freevars e `Set.equal` Set.empty) }
+  = match e with
+    | EUnit 
+    | EBVar _ -> true
+    | EVar x -> 
+      assert (x `Set.mem` freevars e);
+      false
+    | ELam _ e -> closed e
+    | EApp e1 e2 -> closed e1 && closed e2
+  
+let rec freevars_open (e:stlc_exp) (x:var) (n:nat)
+  : Lemma (freevars (open_exp' e x n) `Set.subset`
+          (freevars e `Set.union` Set.singleton x))
+  = match e with
+    | EUnit 
+    | EBVar _
+    | EVar _ -> ()
+    | ELam _ e -> freevars_open e x (n + 1)
+    | EApp e1 e2 ->
+      freevars_open e1 x n;
+      freevars_open e2 x n
+
 let stlc_env = list (var & stlc_ty)
 
 let lookup (e:list (var & 'a)) (x:var)
@@ -169,7 +201,7 @@ type stlc_typing : stlc_env -> stlc_exp -> stlc_ty -> Type =
       t:stlc_ty ->
       e:stlc_exp ->
       t':stlc_ty ->
-      x:var { None? (lookup g x) } ->
+      x:var { None? (lookup g x) /\ ~ (Set.mem x (freevars e)) } ->
       stlc_typing ((x,t)::g) (open_exp e x) t' ->
       stlc_typing g (ELam t e) (TArrow t t')
 
@@ -200,9 +232,22 @@ let rec ty_to_string' should_paren (t:stlc_ty)
       
 let ty_to_string = ty_to_string' false
 
+let mem_intension_pat (#a:eqtype) (x:a) (f:(a -> Tot bool))
+  : Lemma
+    (ensures FStar.Set.(mem x (intension f) = f x))
+    [SMTPat FStar.Set.(mem x (intension f))]
+  = Set.mem_intension x f
+
+let contains (sg:list (var & stlc_ty)) (x:var) = 
+  Some? (lookup sg x)
+  
+let vars_of_env (sg:list (var & stlc_ty))
+  : GTot (Set.set var)
+  = Set.intension (contains sg)
+
 let rec check (g:R.env)
               (sg:list (var & stlc_ty))
-              (e:stlc_exp { ln e })
+              (e:stlc_exp { ln e /\ (freevars e `Set.subset` vars_of_env sg)})
   : T.Tac (t:stlc_ty &
            stlc_typing sg e t)
   = match e with
@@ -222,6 +267,7 @@ let rec check (g:R.env)
     | ELam t e ->
       let x = fresh sg in
       fresh_is_fresh sg;
+      freevars_open e x 0;
       let (| tbody, dbody |) = check g ((x,t)::sg) (open_exp e x) in
       (| TArrow t tbody, 
          T_Lam sg t e tbody x dbody |)
@@ -255,7 +301,7 @@ let rec elab_ty (t:stlc_ty)
 
       R.pack_ln 
         (R.Tv_Arrow
-          (RT.mk_binder "x" 0 t1 R.Q_Explicit)
+          (RT.mk_binder RT.pp_name_default 0 t1 R.Q_Explicit)
           (R.pack_comp (C_Total t2)))
   
 let rec elab_exp (e:stlc_exp)
@@ -277,7 +323,7 @@ let rec elab_exp (e:stlc_exp)
     | ELam t e ->
       let t = elab_ty t in
       let e = elab_exp e in
-      R.pack_ln (Tv_Abs (RT.mk_binder "x" 0 t R.Q_Explicit) e)
+      R.pack_ln (Tv_Abs (RT.mk_binder RT.pp_name_default 0 t R.Q_Explicit) e)
              
     | EApp e1 e2 ->
       let e1 = elab_exp e1 in
@@ -333,6 +379,14 @@ let stlc_types_are_closed3 (ty:stlc_ty) (x:R.var)
   = stlc_types_are_closed_core ty (RT.OpenWith (RT.var_as_term x)) 0;
     RT.open_term_spec (elab_ty ty) x
 
+let rec elab_ty_freevars (ty:stlc_ty)
+  : Lemma (RT.freevars (elab_ty ty) `Set.equal` Set.empty)
+  = match ty with
+    | TUnit -> ()
+    | TArrow t1 t2 ->
+      elab_ty_freevars t1;
+      elab_ty_freevars t2
+      
 let rec elab_open_commute' (e:stlc_exp) (x:var) (n:nat)
   : Lemma (ensures
               RT.open_or_close_term' (elab_exp e) (RT.open_with_var x) n ==
@@ -391,6 +445,7 @@ let rec elab_ty_soundness (g:RT.fstar_top_env)
       let t1_ok = elab_ty_soundness g sg t1 in
       let x = fresh sg in
       fresh_is_fresh sg;
+      elab_ty_freevars t2;
       let t2_ok = elab_ty_soundness g ((x, t1)::sg) t2 in
       let arr_max 
         : RT.typing 
@@ -398,10 +453,23 @@ let rec elab_ty_soundness (g:RT.fstar_top_env)
                (elab_ty t)
                (RT.tm_type RT.(u_max u_zero u_zero))
             =  RT.T_Arrow _ x (elab_ty t1) (elab_ty t2) 
-                          _ _ "x" R.Q_Explicit t1_ok t2_ok
+                          _ _ RT.pp_name_default R.Q_Explicit t1_ok t2_ok
       in
       RT.simplify_umax arr_max
-  
+
+let rec elab_exp_freevars (e:stlc_exp)
+  : Lemma (freevars e `Set.equal` RT.freevars (elab_exp e))
+  = match e with
+    | EUnit
+    | EBVar _
+    | EVar _ -> ()
+    | ELam t e ->
+      elab_ty_freevars t;
+      elab_exp_freevars e
+    | EApp e1 e2 ->
+      elab_exp_freevars e1;
+      elab_exp_freevars e2
+    
 let rec soundness (#sg:stlc_env) 
                   (#se:stlc_exp)
                   (#st:stlc_ty)
@@ -430,23 +498,20 @@ let rec soundness (#sg:stlc_env)
              = de
       in
       fresh_is_fresh sg;
+      elab_exp_freevars e;
       let dd
-        : RT.typing (extend_env_l g sg)
-                    (R.pack_ln (R.Tv_Abs (RT.as_binder 0 (elab_ty t)) (elab_exp e)))
-                    (elab_ty (TArrow t t'))
         = RT.T_Abs (extend_env_l g sg)
                    x
                    (elab_ty t) 
                    (elab_exp e)
                    (elab_ty t')
                    _
-                   "x"
+                   RT.pp_name_default
                    R.Q_Explicit
                    (elab_ty_soundness g sg t)
                    de
       in
       dd
-
     | T_App _ e1 e2 t t' d1 d2 ->
       let dt1 
         : RT.typing (extend_env_l g sg)
@@ -484,7 +549,7 @@ let soundness_lemma (sg:stlc_env)
 
 let main (src:stlc_exp) : RT.dsl_tac_t =
   fun g ->
-  if ln src
+  if ln src && closed src
   then
     let (| src_ty, d |) = check g [] src in
     soundness_lemma [] src src_ty g;
