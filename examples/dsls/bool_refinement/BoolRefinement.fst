@@ -450,6 +450,7 @@ type src_typing (f:RT.fstar_top_env) : src_env -> src_exp -> s_ty -> Type =
        src_typing f ((hyp, Inr (b, EBool false)) :: g) e2 t2 ->
        sub_typing f ((hyp, Inr (b, EBool true)) :: g) t1 t ->
        sub_typing f ((hyp, Inr (b, EBool false)) :: g) t2 t ->
+       src_ty_ok f g t ->
        src_typing f g (EIf b e1 e2) t
        
 and src_ty_ok (f:RT.fstar_top_env) : src_env -> s_ty -> Type =
@@ -474,10 +475,10 @@ let rec height #f #g #e #t (d:src_typing f g e t)
     | T_Var _ _ -> 1
     | T_Lam _ _ _ _ _ ty_ok body -> max (height body) (t_height ty_ok) + 1
     | T_App _ _ _ _ _ _  tl tr ts -> max (max (height tl) (height tr)) (s_height ts) + 1
-    | T_If _ _ _ _ _ _ _ _ tb tl tr sl sr ->
+    | T_If _ _ _ _ _ _ _ _ tb tl tr sl sr st ->
       max (height tb) 
           (max (max (height tl) (height tr))
-               (max (s_height sl) (s_height sr))) + 1
+               (max (s_height sl) (max (s_height sr) (t_height st)))) + 1
     
 and t_height #f (#g:src_env) (#t:s_ty) (d:src_ty_ok f g t)    
   : GTot nat (decreases d)
@@ -563,7 +564,8 @@ let rec check (f:RT.fstar_top_env)
         let (| t1, ok_1 |) = check f ((hyp, Inr(b, EBool true))::sg) e1 in
         let (| t2, ok_2 |) = check f ((hyp, Inr(b, EBool false))::sg) e2 in      
         let (| t, w1, w2 |) = weaken f sg hyp b t1 t2 in
-        (| t, T_If _ _ _ _ _ _ _ hyp ok_b ok_1 ok_2 w1 w2 |)
+        let t_ok = check_ty f sg t in
+        (| t, T_If _ _ _ _ _ _ _ hyp ok_b ok_1 ok_2 w1 w2 t_ok |)
       )
       else T.fail "Branching on a non-boolean"
 
@@ -1125,7 +1127,7 @@ let rec src_typing_freevars #f (sg:src_env) (e:src_exp) (t:s_ty) (d:src_typing f
     | T_App _ _ _ _ _ _ d1 d2 s ->
       src_typing_freevars _ _ _ d1;
       src_typing_freevars _ _ _ d2      
-    | T_If _ _ _ _ _ _ _ hyp db d1 d2 s1 s2 ->
+    | T_If _ _ _ _ _ _ _ hyp db d1 d2 s1 s2 _ ->
       src_typing_freevars _ _ _ db;
       src_typing_freevars _ _ _ d1;
       src_typing_freevars _ _ _ d2      
@@ -1217,7 +1219,7 @@ let rec src_typing_renaming (#f:RT.fstar_top_env)
       rename_freevars body x y;
       T_Lam _ t _ _ zz dt dbody
 
-    | T_If g eb e1 e2 t1 t2 t hyp db dt1 dt2 st1 st2 ->
+    | T_If g eb e1 e2 t1 t2 t hyp db dt1 dt2 st1 st2 dt ->
       let db = src_typing_renaming sg sg' x y b _ _ db in
       let (| hyp', dt1 |) = aux hyp (Inr (eb , EBool true)) _ _ dt1 in
       let (| hyp'', dt2 |) = aux hyp (Inr (eb, EBool false)) _ _ dt2 in      
@@ -1242,8 +1244,9 @@ let rec src_typing_renaming (#f:RT.fstar_top_env)
       let st2
         : sub_typing f ((hyp', Inr (rename eb x y, EBool false))::(rename_env sg' x y)@(y,b)::sg) t2 t
         = sub_typing_renaming sg ((hyp', Inr (eb, EBool false))::sg') x y b _ _ st2
-      in 
-      T_If _ _ _ _ _ _ _ _ db dt1 dt2 st1 st2
+      in
+      let dt = src_ty_ok_renaming _ _ _ _ _ _ dt in
+      T_If _ _ _ _ _ _ _ _ db dt1 dt2 st1 st2 dt
 
 let sub_typing_weakening #f (sg sg':src_env) 
                          (x:var { None? (lookup sg x) && None? (lookup sg' x) })
@@ -1349,7 +1352,7 @@ let rec src_typing_weakening #f (sg sg':src_env)
       in
       T_Lam _ _ _ _ _ dt de
 
-    | T_If g eb e1 e2 t1 t2 t hyp db d1 d2 s1 s2 ->
+    | T_If g eb e1 e2 t1 t2 t hyp db d1 d2 s1 s2 dt ->
       src_typing_freevars _ _ _ d;
       let db = src_typing_weakening _ _ _ _ _ _ db in
       lookup_append_inverse sg sg' hyp;
@@ -1382,8 +1385,9 @@ let rec src_typing_weakening #f (sg sg':src_env)
       let s2 : sub_typing f ((hyp', Inr (eb, EBool false))::sg'@(x,b)::sg) t2 t
          = sub_typing_weakening sg ((hyp', Inr (eb, EBool false))::sg') x b _ _
                                    (sub_typing_renaming g [] hyp hyp' _ _ _ s2)
-      in      
-      T_If _ _ _ _ _ _ _ hyp' db d1 d2 s1 s2
+      in
+      let dt = src_ty_ok_weakening _ _ _ _ _ dt in
+      T_If _ _ _ _ _ _ _ hyp' db d1 d2 s1 s2 dt
                          
 let rec src_typing_weakening_l #f (sg:src_env) 
                                (sg':src_env { 
@@ -1578,7 +1582,7 @@ let rec soundness (#f:RT.fstar_top_env)
       in
       RT.T_App _ _ _ _ _ dt1 dt2
 
-    | T_If _ b e1 e2 t1 t2 t hyp db d1 d2 s1 s2 ->
+    | T_If _ b e1 e2 t1 t2 t hyp db d1 d2 s1 s2 dt ->
       let db = soundness db in
       let d1 = soundness d1 in
       let d2 = soundness d2 in
@@ -1586,8 +1590,10 @@ let rec soundness (#f:RT.fstar_top_env)
       let s2 = subtyping_soundness s2 in
       let d1 = RT.T_Sub _ _ _ _ d1 s1 in
       let d2 = RT.T_Sub _ _ _ _ d2 s2 in      
-      admit()
-//      RT.T_If (extend_env_l f sg) (elab_exp b) (elab_exp e1) (elab_exp e2) _ hyp db d1 d2
+      let dt = src_ty_ok_soundness _ _ dt in
+      freevars_elab_exp e1;
+      freevars_elab_exp e2;
+      RT.T_If (extend_env_l f sg) (elab_exp b) (elab_exp e1) (elab_exp e2) _ _ hyp db d1 d2 dt
 
 
 and src_ty_ok_soundness (#f:RT.fstar_top_env)
