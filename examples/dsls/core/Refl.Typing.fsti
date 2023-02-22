@@ -60,7 +60,11 @@ val lookup_fvar_uinst (e:R.env) (x:R.fv) (us:list R.universe) : option R.term
 
 let lookup_fvar (e:env) (x:fv) : option term = lookup_fvar_uinst e x []
 
-let mk_binder (pp_name:Sealed.sealed string) (x:var) (ty:term) (q:aqualv)
+let pp_name_t = FStar.Sealed.Inhabited.sealed ""
+let pp_name_default : pp_name_t = FStar.Sealed.Inhabited.seal""
+let seal_pp_name x : pp_name_t = FStar.Sealed.Inhabited.seal x
+
+let mk_binder (pp_name:pp_name_t) (x:var) (ty:term) (q:aqualv)
   = pack_binder
       { binder_bv=pack_bv ({bv_ppname=pp_name;
                             bv_index=x;
@@ -69,7 +73,7 @@ let mk_binder (pp_name:Sealed.sealed string) (x:var) (ty:term) (q:aqualv)
         binder_attrs=[] }
 
 let extend_env (e:env) (x:var) (ty:term) : env =
-  R.push_binder e (mk_binder (Sealed.seal "x") x ty Q_Explicit)
+  R.push_binder e (mk_binder (seal_pp_name "x") x ty Q_Explicit)
   
 val lookup_bvar_extend_env (g:env) (x y:var) (ty:term)
   : Lemma 
@@ -85,7 +89,7 @@ val lookup_fvar_extend_env (g:env) (x:fv) (us:universes) (y:var) (ty:term)
     [SMTPat (lookup_fvar_uinst (extend_env g y ty) x us)]
 
 let as_binder (x:var) (ty:term) =
-  mk_binder (Sealed.seal "x") x ty Q_Explicit
+  mk_binder (seal_pp_name "x") x ty Q_Explicit
 
 let bv_index (x:bv)
   : var
@@ -109,11 +113,11 @@ type open_or_close =
 let tun = pack_ln Tv_Unknown
 
 let make_bv (n:int) (t:term) = { 
-  bv_ppname = Sealed.seal "_";
+  bv_ppname = seal_pp_name "_";
   bv_index = n;
   bv_sort = t
 }
-let make_bv_with_name (s:Sealed.sealed string) (n:int) (t:term) = {
+let make_bv_with_name (s:pp_name_t) (n:int) (t:term) = {
   bv_ppname = s;
   bv_index = n;
   bv_sort = t
@@ -655,7 +659,7 @@ type typing : env -> term -> term -> Type0 =
      body:term { ~(x `Set.mem` freevars body) } ->
      body_ty:term ->
      u:universe ->
-     pp_name:sealed string ->
+     pp_name:pp_name_t ->
      q:aqualv ->
      typing g ty (tm_type u) ->
      typing (extend_env g x ty) (open_term body x) body_ty ->
@@ -681,7 +685,7 @@ type typing : env -> term -> term -> Type0 =
      t2:term { ~(x `Set.mem` freevars t2) } ->
      u1:universe ->
      u2:universe ->
-     pp_name:sealed string ->
+     pp_name:pp_name_t ->
      q:aqualv ->
      typing g t1 (tm_type u1) ->
      typing (extend_env g x t1) (open_term t2 x) (tm_type u2) ->

@@ -1,9 +1,7 @@
 module Pulse.Syntax
 module RT = Refl.Typing
 module R = FStar.Reflection
-module Un = FStar.Sealed
 open FStar.List.Tot
-
 module T = FStar.Tactics
 
 type constant =
@@ -33,7 +31,7 @@ type universe =
            recursive with elaboration
 *)
 
-let ppname = Un.sealed string
+let ppname = RT.pp_name_t
 
 noeq
 type bv = {
@@ -363,7 +361,7 @@ and open_term_opt' (t:option term) (v:term) (i:index)
     | Some t -> Some (open_term' t v i)
     
 let open_term t v =
-  open_term' t (Tm_Var {nm_ppname=Sealed.seal "_";nm_index=v}) 0
+  open_term' t (Tm_Var {nm_ppname=RT.pp_name_default;nm_index=v}) 0
 let open_comp_with (c:comp) (x:term) = open_comp' c x 0
 
 let rec close_term' (t:term) (v:var) (i:index)
@@ -523,7 +521,7 @@ let comp_inames (c:comp { C_STAtomic? c \/ C_STGhost? c }) : term =
   | C_STAtomic inames _
   | C_STGhost inames _ -> inames
 
-let term_of_var (x:var) = Tm_Var { nm_ppname=Sealed.seal "_"; nm_index=x}
+let term_of_var (x:var) = Tm_Var { nm_ppname=RT.pp_name_default; nm_index=x}
 
 let rec close_open_inverse' (t:term) 
                             (x:var { ~(x `Set.mem` freevars t) } )
@@ -633,86 +631,20 @@ let close_open_inverse (t:term) (x:var { ~(x `Set.mem` freevars t) } )
   = close_open_inverse' t x 0
 
 let null_binder (t:term) : binder =
-    {binder_ty=t;binder_ppname=Sealed.seal "_"}
+    {binder_ty=t;binder_ppname=RT.pp_name_default}
 
 let mk_binder (s:string) (t:term) : binder =
-  {binder_ty=t;binder_ppname=Sealed.seal s}
+  {binder_ty=t;binder_ppname=RT.seal_pp_name s}
 
 let mk_bvar (s:string) (i:index) : term =
-  Tm_BVar {bv_index=i;bv_ppname=Sealed.seal s}
+  Tm_BVar {bv_index=i;bv_ppname=RT.seal_pp_name s}
 
-let null_var (v:var) : term = Tm_Var {nm_index=v;nm_ppname=Sealed.seal "_"}
+let null_var (v:var) : term = Tm_Var {nm_index=v;nm_ppname=RT.pp_name_default}
 
-let null_bvar (i:index) : term = Tm_BVar {bv_index=i;bv_ppname=Sealed.seal "_"}
+let null_bvar (i:index) : term = Tm_BVar {bv_index=i;bv_ppname=RT.pp_name_default}
 
 let gen_uvar (t:term) : T.Tac term =
   Tm_UVar (T.fresh ())
-
-// (* We should no longer need this *)
-// let rec term_no_pp (t:term) : term =
-//   match t with
-//   | Tm_BVar bv -> Tm_BVar (bv_no_pp bv)
-//   | Tm_Var nm -> Tm_Var (nm_no_pp nm)
-//   | Tm_FVar l -> t
-//   | Tm_UInst _ _ -> t
-//   | Tm_Constant _ -> t
-//   | Tm_Refine b t -> Tm_Refine (binder_no_pp b) (term_no_pp t)
-//   | Tm_Abs b q pre body postopt ->
-//     Tm_Abs (binder_no_pp b) q (term_no_pp pre) (term_no_pp body) (term_opt_no_pp postopt)
-//   | Tm_PureApp head q arg ->
-//     Tm_PureApp (term_no_pp head) q (term_no_pp arg)
-//   | Tm_Let t e1 e2 ->
-//     Tm_Let (term_no_pp t) (term_no_pp e1) (term_no_pp e2)
-//   | Tm_STApp head q arg ->
-//     Tm_STApp (term_no_pp head) q (term_no_pp arg)
-//   | Tm_Bind e1 e2 -> Tm_Bind (term_no_pp e1) (term_no_pp e2)
-//   | Tm_Emp -> t
-//   | Tm_Pure p -> Tm_Pure (term_no_pp p)
-//   | Tm_Star l r -> Tm_Star (term_no_pp l) (term_no_pp r)
-//   | Tm_ExistsSL u t body -> Tm_ExistsSL u (term_no_pp t) (term_no_pp body)
-//   | Tm_ForallSL u t body -> Tm_ForallSL u (term_no_pp t) (term_no_pp body)
-//   | Tm_Arrow b q c ->
-//     Tm_Arrow (binder_no_pp b) q (comp_no_pp c)
-//   | Tm_Type _ -> t
-//   | Tm_VProp -> t
-//   | Tm_If e1 e2 e3 post ->
-//     Tm_If (term_no_pp e1) (term_no_pp e2) (term_no_pp e3)
-//           (term_opt_no_pp post)
-//   | Tm_Inames
-//   | Tm_EmpInames -> t
-//   | Tm_ElimExists p -> Tm_ElimExists (term_no_pp p)
-//   | Tm_IntroExists e p -> Tm_IntroExists (term_no_pp e) (term_no_pp p)
-//   | Tm_UVar _ -> t
-
-// and binder_no_pp (b:binder) : binder =
-//   {binder_ty = term_no_pp b.binder_ty;
-//    binder_ppname = Un.return "_"}
-
-// and bv_no_pp (b:bv) : bv =
-//   {b with bv_ppname=Un.return "_"}
-
-// and nm_no_pp (x:nm) : nm =
-//   {x with nm_ppname=Un.return "_"}
-
-// and term_opt_no_pp (t:option term) : option term =
-//   match t with
-//   | None -> None
-//   | Some t -> Some (term_no_pp t)
-
-// and comp_no_pp (c:comp) : comp =
-//   match c with
-//   | C_Tot t -> C_Tot (term_no_pp t)
-//   | C_ST s -> C_ST (st_comp_no_pp s)
-//   | C_STAtomic inames s ->
-//     C_STAtomic (term_no_pp inames) (st_comp_no_pp s)
-//   | C_STGhost inames s ->
-//     C_STGhost (term_no_pp inames) (st_comp_no_pp s)
-
-// and st_comp_no_pp (s:st_comp) : st_comp =
-//   {u=s.u;
-//    res=term_no_pp s.res;
-//    pre=term_no_pp s.pre;
-//    post=term_no_pp s.post}
 
 let rec eq_tm (t1 t2:term) 
   : b:bool { b <==> (t1 == t2) }

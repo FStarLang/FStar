@@ -292,7 +292,7 @@ let rec src_typing_freevars (#f:_) (#g:_) (#t:_) (#c:_)
      src_typing_freevars dc
 
    | T_ElimExists _ u t p x (E dt) (E dv) ->
-     let x_tm = Tm_Var {nm_index=x;nm_ppname=Sealed.seal "_"} in
+     let x_tm = Tm_Var {nm_index=x;nm_ppname=RT.pp_name_default} in
      src_typing_freevars dt;
      src_typing_freevars dv;
      assert (Set.equal (freevars (Pulse.Typing.mk_reveal u t x_tm))
