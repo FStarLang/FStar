@@ -389,6 +389,7 @@ type src_typing (f:fstar_top_env) : src_env -> src_exp -> src_ty -> Type =
        src_typing f ((hyp, Inr (b, EBool false)) :: g) e2 t2 ->
        sub_typing f ((hyp, Inr (b, EBool true)) :: g) t1 t ->
        sub_typing f ((hyp, Inr (b, EBool false)) :: g) t2 t ->
+       src_ty_ok f g t -> //hyp cannot escape
        src_typing f g (EIf b e1 e2) t
        
 and src_ty_ok (f:fstar_top_env) : src_env -> src_ty -> Type =
@@ -420,10 +421,10 @@ let rec height #f #g #e #t (d:src_typing f g e t)
     | T_Var _ _ -> 1
     | T_Lam _ _ _ _ _ ty_ok body -> max (height body) (t_height ty_ok) + 1
     | T_App _ _ _ _ _ _  tl tr ts -> max (max (height tl) (height tr)) (s_height ts) + 1
-    | T_If _ _ _ _ _ _ _ _ tb tl tr sl sr ->
+    | T_If _ _ _ _ _ _ _ _ tb tl tr sl sr st ->
       max (height tb) 
           (max (max (height tl) (height tr))
-               (max (s_height sl) (s_height sr))) + 1
+               (max (s_height sl) (max (s_height sr) (t_height st)))) + 1
     
 and t_height #f (#g:src_env) (#t:src_ty) (d:src_ty_ok f g t)    
   : GTot nat (decreases d)
@@ -449,6 +450,26 @@ let weaken (f:fstar_top_env) (sg:src_env) (hyp:var { None? (lookup sg hyp) } ) (
 
 let ok (sg:src_env) (e:src_exp) = (forall x. x `Set.mem` freevars e ==> Some? (lookup sg x))
 let ok_ty (sg:src_env) (e:src_ty) = (forall x. x `Set.mem` freevars_ty e ==> Some? (lookup sg x))
+
+let rec check_ok_ty (t:src_ty) (sg:src_env)
+  : b:bool { b <==>  (ok_ty sg t) }
+  = match t with
+    | TBool -> true
+    | TArrow t1 t2 ->
+      check_ok_ty t1 sg &&
+      check_ok_ty t2 sg
+    | TRefineBool e -> 
+      check_ok e sg
+and check_ok (e:src_exp) (sg:src_env)
+  : b:bool { b <==>  ok sg e }
+  = match e with
+    | EBVar _ -> true
+    | EVar x -> Some? (lookup sg x)
+    | EBool _ -> true
+    | EIf b e1 e2 -> check_ok b sg && check_ok e1 sg && check_ok e2 sg
+    | ELam t e -> check_ok_ty t sg && check_ok e sg
+    | EApp e1 e2 -> check_ok e1 sg && check_ok e2 sg
+  
 
 #push-options "--fuel 2 --ifuel 2 --z3rlimit_factor 6 --query_stats"
 
@@ -508,7 +529,12 @@ let rec check (f:fstar_top_env)
         let (| t1, ok_1 |) = check f ((hyp, Inr(b, EBool true))::sg) e1 in
         let (| t2, ok_2 |) = check f ((hyp, Inr(b, EBool false))::sg) e2 in      
         let (| t, w1, w2 |) = weaken f sg hyp b t1 t2 in
-        (| t, T_If _ _ _ _ _ _ _ hyp ok_b ok_1 ok_2 w1 w2 |)
+        if not (check_ok_ty t sg)
+        then T.fail "Free variable escapes scope"
+        else (
+          let t_ok = check_ty f sg t in
+          (| t, T_If _ _ _ _ _ _ _ hyp ok_b ok_1 ok_2 w1 w2 t_ok |)
+        )
       )
       else T.fail "Branching on a non-boolean"
 
@@ -732,16 +758,18 @@ let rec soundness (#f:fstar_top_env)
       in
       dd
 
-    | T_If _ b e1 e2 t1 t2 t hyp db d1 d2 s1 s2 ->
+    | T_If _ b e1 e2 t1 t2 t hyp db d1 d2 s1 s2 tok ->
       let db = soundness db in
       let d1 = soundness d1 in
       let d2 = soundness d2 in
       let s1 = subtyping_soundness s1 in
       let s2 = subtyping_soundness s2 in
+      let t_ok = src_ty_ok_soundness sg t tok in
       let d1 = RT.T_Sub _ _ _ _ d1 s1 in
       let d2 = RT.T_Sub _ _ _ _ d2 s2 in
-      admit()// ;
-      // RT.T_If (extend_env_l f sg) (elab_exp b) (elab_exp e1) (elab_exp e2) _ hyp db d1 d2
+      freevars_elab_exp e1;
+      freevars_elab_exp e2;
+      RT.T_If (extend_env_l f sg) (elab_exp b) (elab_exp e1) (elab_exp e2) _ _ hyp db d1 d2 t_ok
 
     | T_App _ e1 e2 t t' t0 d1 d2 st ->
       let dt1 
