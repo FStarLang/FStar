@@ -11,11 +11,11 @@ open Pulse.Checker.Common
 
 val check_bind (f:RT.fstar_top_env)
                (g:env)
-               (t:term{Tm_Bind? t})
-               (pre:pure_term)
+               (t:st_term{Tm_Bind? t})
+               (pre:term)
                (pre_typing:tot_typing f g pre Tm_VProp)
                (post_hint:option term)
                (check:check_t)
-  : T.Tac (t:term &
-           c:pure_comp { stateful_comp c ==> comp_pre c == pre } &
-           src_typing f g t c)
+  : T.Tac (t:st_term &
+           c:comp { stateful_comp c ==> comp_pre c == pre } &
+           st_typing f g t c)
