@@ -7,19 +7,18 @@ open Pulse.Typing
 open Pulse.Soundness.Common
 
 module EPure = Pulse.Elaborate.Pure
-
+module RT = Refl.Typing
 val exists_inversion
   (#f:stt_env)
   (#g:env)
   (#u:universe)
   (#a:term)
   (#p:term)
-  (e_typing:typing (extend_env_l f g)
-                   (mk_exists u a p)
-                   vprop_tm)
-
-  : GTot (typing (extend_env_l f g) p
-                 (mk_arrow (a, Q_Explicit) vprop_tm))
+  (e_typing:RT.typing (extend_env_l f g)
+                      (mk_exists u a p)
+                      vprop_tm)
+  : GTot (RT.typing (extend_env_l f g) p
+                   (mk_arrow (a, Q_Explicit) vprop_tm))
 
 (*
 
@@ -46,10 +45,9 @@ val elim_exists_soundness
   (#u:universe)
   (#a:term)
   (#p:term)
-  (a_typing:typing (extend_env_l f g) a (pack_ln (Tv_Type u)))
-  (p_typing:typing (extend_env_l f g) p (mk_arrow (a, Q_Explicit) vprop_tm))
-
-  : GTot (typing (extend_env_l f g)
+  (a_typing:RT.typing (extend_env_l f g) a (pack_ln (Tv_Type u)))
+  (p_typing:RT.typing (extend_env_l f g) p (mk_arrow (a, Q_Explicit) vprop_tm))
+  : GTot (RT.typing (extend_env_l f g)
                  (mk_elim_exists u a p)
                  (mk_stt_ghost_comp
                     u
@@ -74,11 +72,10 @@ val intro_exists_soundness
   (#a:term)
   (#p:term)
   (#e:term)
-  (a_typing:typing (extend_env_l f g) a (pack_ln (Tv_Type u)))
-  (p_typing:typing (extend_env_l f g) p (mk_arrow (a, Q_Explicit) vprop_tm))
-  (e_typing:typing (extend_env_l f g) e a)
-
-  : GTot (typing (extend_env_l f g)
+  (a_typing:RT.typing (extend_env_l f g) a (pack_ln (Tv_Type u)))
+  (p_typing:RT.typing (extend_env_l f g) p (mk_arrow (a, Q_Explicit) vprop_tm))
+  (e_typing:RT.typing (extend_env_l f g) e a)
+  : GTot (RT.typing (extend_env_l f g)
                  (mk_intro_exists u a p e)
                  (mk_stt_ghost_comp uzero unit_tm emp_inames_tm
                     (pack_ln (Tv_App p (e, Q_Explicit)))

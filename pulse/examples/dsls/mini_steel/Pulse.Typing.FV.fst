@@ -150,7 +150,13 @@ let freevars_open_term_inv (e:term)
   : Lemma 
     (ensures freevars e `Set.equal` (freevars (open_term e x) `set_minus` x))
     [SMTPat (freevars (open_term e x))]
-  = close_open_inverse e x
+  = calc (==) {
+     freevars e;
+     (==) {  close_open_inverse e x }
+     freevars (close_term (open_term e x) x);
+     (==) {  freevars_close_term (open_term e x) x 0 }
+     freevars (open_term e x) `set_minus` x;
+    }
 
 assume
 val freevars_open_term (e:term) (x:term) (i:index)
@@ -258,15 +264,29 @@ let comp_typing_freevars  (#f:_) (#g:_) (#c:_) (#u:_)
       tot_typing_freevars it;
       st_comp_typing_freevars dst
 
+let freevars_close_st_term (e:st_term) (x:var) (i:index)
+  : Lemma 
+    (ensures freevars_st (close_st_term' e x i) ==
+             freevars_st e `set_minus` x)
+    [SMTPat (freevars_st (close_st_term' e x i))]
+  = freevars_close_st_term' e x i
 
 let freevars_open_st_term_inv (e:st_term) 
                               (x:var {~ (x `Set.mem` freevars_st e) })
   : Lemma 
     (ensures freevars_st e `Set.equal` (freevars_st (open_st_term e x) `set_minus` x))
     [SMTPat (freevars_st (open_st_term e x))]
-  = admit()
+  = calc (==) {
+     freevars_st e;
+     (==) {  close_open_inverse_st e x }
+     freevars_st (close_st_term (open_st_term e x) x);
+     (==) {  freevars_close_st_term' (open_st_term e x) x 0 }
+     freevars_st (open_st_term e x) `set_minus` x;
+    }
+#pop-options
+#pop-options
 
-#push-options "--fuel 10 --ifuel 10"
+#push-options "--fuel 10 --ifuel 10 --z3rlimit_factor 10 --z3cliopt 'smt.qi.eager_threshold=100' --query_stats"
 let rec st_typing_freevars (#f:_) (#g:_) (#t:_) (#c:_)
                             (d:st_typing f g t c)
   : Lemma 
@@ -301,31 +321,27 @@ let rec st_typing_freevars (#f:_) (#g:_) (#t:_) (#c:_)
      st_typing_freevars d1
 
 
-   | T_Bind _ e1 e2 _ _ x _ d1 dc1 d2 bc ->
+   | T_Bind _ e1 e2 _ _ x c d1 dc1 d2 bc ->
      st_typing_freevars d1;
      tot_typing_freevars dc1;
      st_typing_freevars d2;
      bind_comp_freevars bc;
      freevars_open_st_term_inv e2 x
 
-   | _ -> admit()
+   | T_If _ _b e1 e2 _c _u hyp tb d1 d2 (E ct) ->
+     tot_typing_freevars tb;
+     comp_typing_freevars ct;
+     st_typing_freevars d1;
+     st_typing_freevars d2
 
- src_typing_freevars;
+   | T_Frame _ _ _ _ df dc ->
+     tot_typing_freevars df;
+     st_typing_freevars dc
 
-   | T_If _ _b e1 e2 _c _u hyp (E tb) d1 d2 (E ct) ->
-     src_typing_freevars tb;
-     comp_typing_freevars ct src_typing_freevars;
-     src_typing_freevars d1;
-     src_typing_freevars d2
-
-   | T_Frame _ _ _ _ (E df) dc ->
-     src_typing_freevars df;
-     src_typing_freevars dc
-
-   | T_ElimExists _ u t p x (E dt) (E dv) ->
+   | T_ElimExists _ u t p x dt dv ->
      let x_tm = Tm_Var {nm_index=x;nm_ppname=RT.pp_name_default} in
-     src_typing_freevars dt;
-     src_typing_freevars dv;
+     tot_typing_freevars dt;
+     tot_typing_freevars dv;
      assert (Set.equal (freevars (Pulse.Typing.mk_reveal u t x_tm))
                        (Set.union (freevars t) (Set.singleton x)));
      freevars_open_term p (Pulse.Typing.mk_reveal u t x_tm) 0;
@@ -342,11 +358,11 @@ let rec st_typing_freevars (#f:_) (#g:_) (#t:_) (#c:_)
                (set_minus (freevars (open_term' p (Pulse.Typing.mk_reveal u t x_tm) 0)) x)
                (vars_of_env g))
 
-   | T_IntroExists _ u tt p w (E dt) (E dv) (E dw) ->
-     src_typing_freevars dt;
-     src_typing_freevars dv;
-     src_typing_freevars dw;
-     assert (freevars t `Set.subset` vars_of_env g);
+   | T_IntroExists _ u tt p w dt dv dw ->
+     tot_typing_freevars dt;
+     tot_typing_freevars dv;
+     tot_typing_freevars dw;
+     assert (freevars_st t `Set.subset` vars_of_env g);
      calc (Set.subset) {
         freevars_comp c;
       (Set.equal) {}
@@ -362,19 +378,19 @@ let rec st_typing_freevars (#f:_) (#g:_) (#t:_) (#c:_)
       (Set.subset) { freevars_open_term p w 0 }
         (freevars p `Set.union` 
          freevars w `Set.union`
-         freevars t `Set.union`
+         freevars_st t `Set.union`
          freevars p);
      }
 
    | T_Equiv _ _ _ _ d2 deq ->
-     src_typing_freevars d2;
+     st_typing_freevars d2;
      st_equiv_freevars deq
 
-   | T_While _ inv _ _ (E inv_typing) cond_typing body_typing ->
-     src_typing_freevars inv_typing;
-     src_typing_freevars cond_typing;
-     src_typing_freevars body_typing;
+   | T_While _ inv _ _ inv_typing cond_typing body_typing ->
+     tot_typing_freevars inv_typing;
+     st_typing_freevars cond_typing;
+     st_typing_freevars body_typing;
      assert (freevars tm_false `Set.equal` Set.empty);
      freevars_open_term inv tm_false 0;
      assert (freevars (open_term' inv tm_false 0) `Set.subset` freevars inv)
-
+#pop-options //takes about 23s
