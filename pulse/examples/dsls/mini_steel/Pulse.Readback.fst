@@ -57,9 +57,9 @@ let rec readback_universes (us:list R.universe)
 #push-options "--z3rlimit_factor 20"
 let try_readback_st_comp
   (t:R.term)
-  (readback_ty:(t':R.term -> T.Tac (option (ty:pure_term { elab_term ty == Some t' }))))
+  (readback_ty:(t':R.term -> T.Tac (option (ty:term { elab_term ty == t' }))))
 
-  : T.Tac (option (c:comp{elab_comp c == Some t})) =
+  : T.Tac (option (c:comp{elab_comp c == t})) =
 
   let open R in
   let hd, args = collect_app t in
@@ -92,7 +92,7 @@ let try_readback_st_comp
               let? post' = readback_ty body in
               let c = C_ST {u=u''; res=res'; pre=pre';post=post'} in
               assume (elab_universe u'' == u);
-              Some (c <: c:Pulse.Syntax.comp{ elab_comp c == Some t })
+              Some (c <: c:Pulse.Syntax.comp{ elab_comp c == t })
             | _ -> None)
          | _ -> None
     else if fv_lid = stt_atomic_lid || fv_lid = stt_ghost_lid
@@ -114,13 +114,13 @@ let try_readback_st_comp
                 assume (t == mk_stt_atomic_comp u (fst res) (fst opened) (fst pre) (mk_abs (fst res) R.Q_Explicit body));
                 let c = C_STAtomic opened' ({u=u''; res=res'; pre=pre';post=post'}) in
                 assume (elab_universe u'' == u);
-                Some (c <: c:Pulse.Syntax.comp{ elab_comp c == Some t })
+                Some (c <: c:Pulse.Syntax.comp{ elab_comp c == t })
               end
               else begin
                 assume (t == mk_stt_ghost_comp u (fst res) (fst opened) (fst pre) (mk_abs (fst res) R.Q_Explicit body));
                 let c = C_STGhost opened' ({u=u''; res=res'; pre=pre';post=post'}) in
                 assume (elab_universe u'' == u);
-                Some (c <: c:Pulse.Syntax.comp{ elab_comp c == Some t })
+                Some (c <: c:Pulse.Syntax.comp{ elab_comp c == t })
               end
             | _ -> None)
          | _ -> None
@@ -133,11 +133,12 @@ let readback_qual = function
   | _ -> None
 
 let rec readback_ty (t:R.term)
-  : T.Tac (option (ty:pure_term { elab_term ty == Some t })) =
+  : T.Tac (option (ty:term { elab_term ty == t })) =
 
   let open T in
   let open R in
-
+  let open Pulse.Syntax in
+  
   match inspect_ln t with
   | Tv_Var bv ->
     let bv_view = inspect_bv bv in
@@ -145,7 +146,7 @@ let rec readback_ty (t:R.term)
     let r = Tm_Var {nm_index=bv_view.bv_index;nm_ppname=bv_view.bv_ppname} in
     // Needs some tweaks to how names are designed in the DSL,
     //   e.g. may need to expose ppname, what happens to tun bv sort?
-    assume (elab_term r == Some t);
+    assume (elab_term r == t);
     Some r
 
   | Tv_BVar bv ->
@@ -153,7 +154,7 @@ let rec readback_ty (t:R.term)
     assume (bv_view.bv_index >= 0);
     let r = Tm_BVar {bv_index=bv_view.bv_index;bv_ppname=bv_view.bv_ppname} in
     // Similar to the name case
-    assume (elab_term r == Some t);
+    assume (elab_term r == t);
     Some r
 
   | Tv_FVar fv ->
@@ -183,7 +184,7 @@ let rec readback_ty (t:R.term)
       | R.Q_Meta _ -> None
       | _ -> 
         let? arg' = readback_ty a in
-        Some (Tm_PureApp hd' (readback_qual q) arg' <: ty:pure_term {elab_term ty == Some t})
+        Some (Tm_PureApp hd' (readback_qual q) arg' <: ty:term {elab_term ty == t})
     in
     let head, args = R.collect_app t in
     begin
@@ -193,8 +194,8 @@ let rec readback_ty (t:R.term)
       then (
         let? t1 = readback_ty a1 in
         let? t2 = readback_ty a2 in
-        assume (elab_term (Tm_Star t1 t2) == Some t);
-        Some #(t':Pulse.Syntax.term {elab_term t' == Some t}) (Tm_Star t1 t2)
+        assume (elab_term (Tm_Star t1 t2) == t);
+        Some #(t':Pulse.Syntax.term {elab_term t' == t}) (Tm_Star t1 t2)
       )
       else aux ()
     | Tv_UInst fv [u], [(a1, _); (a2, _)] ->
@@ -207,18 +208,18 @@ let rec readback_ty (t:R.term)
           match inspect_ln a2 with
           | Tv_Abs _ body ->
             let? p = readback_ty body in
-            Some p <: option pure_term
+            Some p <: option term
           | _ ->
             T.fail "readback_ty: only lambda expressions allowed when reading back exists/forall" in
 
-        let pulse_t : (t':Pulse.Syntax.term{elab_term t' == Some t}) =
+        let pulse_t : (t':Pulse.Syntax.term{elab_term t' == t}) =
           if inspect_fv fv = exists_lid
           then begin
-            assume (elab_term (Tm_ExistsSL u ty p) == Some t);
+            assume (elab_term (Tm_ExistsSL u ty p) == t);
             Tm_ExistsSL u ty p
           end
           else begin
-            assume (elab_term (Tm_ForallSL u ty p) == Some t);
+            assume (elab_term (Tm_ForallSL u ty p) == t);
             Tm_ForallSL u ty p
           end in
           
@@ -229,8 +230,8 @@ let rec readback_ty (t:R.term)
       if inspect_fv fv = pure_lid
       then (
         let? t1 = readback_ty a in
-        assume (elab_term (Tm_Pure t1) == Some t);
-        Some #(t':Pulse.Syntax.term {elab_term t' == Some t}) (Tm_Pure t1)
+        assume (elab_term (Tm_Pure t1) == t);
+        Some #(t':Pulse.Syntax.term {elab_term t' == t}) (Tm_Pure t1)
       )
       else aux ()
     | _ -> aux ()
@@ -241,8 +242,8 @@ let rec readback_ty (t:R.term)
     let? ty = readback_ty bv_view.bv_sort in
     let? phi = readback_ty phi in
     let r = Tm_Refine {binder_ty=ty;binder_ppname=bv_view.bv_ppname} phi in
-    assume (elab_term r == Some t);
-    Some (r <: ty:pure_term {elab_term ty == Some t})
+    assume (elab_term r == t);
+    Some (r <: ty:term {elab_term ty == t})
 
   | Tv_Abs _ _ -> T.fail "readback_ty: unexpected Tv_Abs"
 
@@ -263,14 +264,14 @@ let rec readback_ty (t:R.term)
        | C_Total c_t ->
          let? b_ty' = readback_ty bv_view.bv_sort in
          let? c' = readback_comp c_t in
-         Some (Tm_Arrow {binder_ty=b_ty';binder_ppname=bv_view.bv_ppname} q c' <: ty:pure_term{ elab_term ty == Some t})
+         Some (Tm_Arrow {binder_ty=b_ty';binder_ppname=bv_view.bv_ppname} q c' <: ty:term{ elab_term ty == t})
       | _ -> None)
     )
 
   | Tv_Type u -> (
     match readback_universe u with
     | None -> None
-    | Some u' -> Some (Tm_Type u' <: ty:pure_term{ elab_term ty == Some t })
+    | Some u' -> Some (Tm_Type u' <: ty:term{ elab_term ty == t })
     )
 
   | Tv_Const c ->
@@ -294,7 +295,7 @@ let rec readback_ty (t:R.term)
       let? def' = readback_ty def in
       let? body' = readback_ty body in
       FStar.Sealed.sealed_singl bv_view.bv_ppname RT.pp_name_default;
-      Some (Tm_Let bv_t' def' body' <: ty:pure_term { elab_term ty == Some t })
+      Some (Tm_Let bv_t' def' body' <: ty:term { elab_term ty == t })
     end
 
   | Tv_Match _ _ _ -> T.fail "readbackty: Tv_Match not yet implemented"
@@ -306,11 +307,11 @@ let rec readback_ty (t:R.term)
   
   
 and readback_comp (t:R.term)
-  : T.Tac (option (c:comp{ elab_comp c == Some t})) =
+  : T.Tac (option (c:comp{ elab_comp c == t})) =
 
   let ropt = try_readback_st_comp t readback_ty in
   match ropt with
   | Some _ -> ropt
   | _ ->
     let? t' = readback_ty t in
-    Some (C_Tot t' <: c:comp{ elab_comp c == Some t })
+    Some (C_Tot t' <: c:comp{ elab_comp c == t })

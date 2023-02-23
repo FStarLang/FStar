@@ -9,6 +9,8 @@ open Pulse.Elaborate.Pure
 open Pulse.Typing
 open Pulse.Elaborate
 
+let ln_comp = c:comp_st { ln_c c }
+
 let rec extend_env_l_lookup_fvar (g:R.env) (sg:env) (fv:R.fv) (us:R.universes)
   : Lemma 
     (ensures
@@ -35,45 +37,43 @@ let rec extend_env_l_lookup_bvar (g:R.env) (sg:env) (x:var)
 
 let tot_typing_soundness (#f:RT.fstar_top_env)
                          (#g:env)
-                         (#e:pure_term)
-                         (#t:pure_term)
+                         (#e:term)
+                         (#t:term)
                          (d:tot_typing f g e t)
-  : GTot (RT.typing (extend_env_l f g) (elab_pure e) (elab_pure t))
+  : GTot (RT.typing (extend_env_l f g) (elab_term e) (elab_term t))
          (decreases d)
   = let E d = d in
-    match d with
-    | T_Tot _ _ _ d -> d
-    // | T_If _ _ _ _ _ _ _ _ _ -> admit() //make T_If stateful
+    d
 
 let mk_t_abs_tot (f:RT.fstar_top_env) (g:env)
                  (#u:universe)
                  (#q:option qualifier)
-                 (#ty:pure_term)
+                 (#ty:term)
                  (ppname:ppname)
                  (t_typing:tot_typing f g ty (Tm_Type u))
-                 (#body:pure_term )
-                 (#body_ty:pure_term)
+                 (#body:term)
+                 (#body_ty:term)
                  (#x:var { None? (lookup g x) /\ ~(x `Set.mem` freevars body) })
                  (body_typing:tot_typing f ((x, Inl ty)::g) (open_term body x) body_ty)
   : GTot (RT.typing (extend_env_l f g)
-                    (mk_abs_with_name ppname (elab_pure ty) (elab_qual q) (elab_pure body))
-                    (elab_pure (Tm_Arrow {binder_ty=ty; binder_ppname=ppname} q (close_pure_comp (C_Tot body_ty) x))))
+                    (mk_abs_with_name ppname (elab_term ty) (elab_qual q) (elab_term body))
+                    (elab_term (Tm_Arrow {binder_ty=ty; binder_ppname=ppname} q (close_comp (C_Tot body_ty) x))))
   = let c = C_Tot body_ty in
-    let r_ty = elab_pure ty in
-    let r_body = elab_pure (open_term body x) in
-    let r_c = elab_pure_comp c in
+    let r_ty = elab_term ty in
+    let r_body = elab_term (open_term body x) in
+    let r_c = elab_comp c in
     let r_t_typing = tot_typing_soundness t_typing in
     let r_body_typing = tot_typing_soundness body_typing in
     RT.well_typed_terms_are_ln _ _ _ r_body_typing;
     RT.open_close_inverse r_body x;
     elab_comp_close_commute c x;      
     elab_freevars_inverse body;
-    assert (~ (x `Set.mem` RT.freevars (elab_pure body)));
+    assert (~ (x `Set.mem` RT.freevars (elab_term body)));
     assume (~ (x `Set.mem` RT.freevars (RT.close_term r_body x)));
     let d : RT.typing (extend_env_l f g)
-                      (mk_abs_with_name ppname (elab_pure ty) (elab_qual q)
-                              (RT.close_term (elab_pure (open_term body x)) x))
-                      (elab_pure (Tm_Arrow {binder_ty=ty;binder_ppname=ppname} q (close_pure_comp (C_Tot body_ty) x)))
+                      (mk_abs_with_name ppname (elab_term ty) (elab_qual q)
+                              (RT.close_term (elab_term (open_term body x)) x))
+                      (elab_term (Tm_Arrow {binder_ty=ty;binder_ppname=ppname} q (close_comp (C_Tot body_ty) x)))
           = 
     RT.T_Abs (extend_env_l f g)
              x
@@ -85,41 +85,40 @@ let mk_t_abs_tot (f:RT.fstar_top_env) (g:env)
              r_body_typing
     in
     elab_open_commute' body (null_var x) 0;
-    RT.open_term_spec (elab_pure body) x;
-    assert (elab_pure (open_term body x) ==
-            RT.open_term (elab_pure body) x);
+    RT.open_term_spec (elab_term body) x;
+    assert (elab_term (open_term body x) ==
+            RT.open_term (elab_term body) x);
     let d : RT.typing _
-                      (mk_abs_with_name ppname (elab_pure ty) (elab_qual q)
-                              (RT.close_term (RT.open_term (elab_pure body) x) x))
+                      (mk_abs_with_name ppname (elab_term ty) (elab_qual q)
+                              (RT.close_term (RT.open_term (elab_term body) x) x))
                       _
           = d 
     in
-    RT.close_open_inverse (elab_pure body) x;
+    RT.close_open_inverse (elab_term body) x;
     d
 
 let mk_t_abs (f:RT.fstar_top_env) (g:env)
              (#u:universe)
-             (#ty:pure_term)
+             (#ty:term)
              (#q:option qualifier)
-             (#t_typing:src_typing f g ty (C_Tot (Tm_Type u)))
+             (#t_typing:typing f g ty (Tm_Type u))
              (ppname:ppname)
              (r_t_typing:RT.typing (extend_env_l f g)
-                                   (elab_src_typing t_typing)
-                                   (elab_pure_comp (C_Tot (Tm_Type u))))
-             (#body:term)
-             (#x:var { None? (lookup g x) /\ ~(x `Set.mem` freevars body) })
-             (#c:pure_comp)
-             (#body_typing:src_typing f ((x, Inl ty)::g) (open_term body x) c)
+                                   (elab_term ty)
+                                   (elab_comp (C_Tot (Tm_Type u))))
+             (#body:st_term)
+             (#x:var { None? (lookup g x) /\ ~(x `Set.mem` freevars_st body) })
+             (#c:comp)
+             (#body_typing:st_typing f ((x, Inl ty)::g) (open_st_term body x) c)
              (r_body_typing:RT.typing (extend_env_l f ((x, Inl ty)::g))
-                                     (elab_src_typing body_typing)
-                                     (elab_pure_comp c))
+                                      (elab_st_typing body_typing)
+                                      (elab_comp c))
   : GTot (RT.typing (extend_env_l f g)
-                    (mk_abs_with_name ppname (elab_pure ty) (elab_qual q) (RT.close_term (elab_src_typing body_typing) x))
-                    (elab_pure (Tm_Arrow {binder_ty=ty;binder_ppname=ppname} q (close_pure_comp c x))))
-  = let r_ty = elab_pure ty in
-    let r_body = elab_src_typing body_typing in
-    let r_c = elab_pure_comp c in
-    Pulse.Elaborate.elab_pure_equiv t_typing;
+                    (mk_abs_with_name ppname (elab_term ty) (elab_qual q) (RT.close_term (elab_st_typing body_typing) x))
+                    (elab_term (Tm_Arrow {binder_ty=ty;binder_ppname=ppname} q (close_comp c x))))
+  = let r_ty = elab_term ty in
+    let r_body = elab_st_typing body_typing in
+    let r_c = elab_comp c in
     RT.well_typed_terms_are_ln _ _ _ r_body_typing;
     RT.open_close_inverse r_body x;
     elab_comp_close_commute c x;      
@@ -308,24 +307,24 @@ let check_top_level_environment (f:RT.fstar_top_env)
   : option stt_env
   = admit(); Some f //we should implement this as a runtime check
 
-let elab_comp_post (c:pure_comp_st) : R.term =
-  let t = elab_pure (comp_res c) in
-  let post = elab_pure (comp_post c) in
+let elab_comp_post (c:comp_st) : R.term =
+  let t = elab_term (comp_res c) in
+  let post = elab_term (comp_post c) in
   mk_abs t R.Q_Explicit post
 
-let comp_post_type (c:pure_comp_st) : R.term = 
-  let t = elab_pure (comp_res c) in
+let comp_post_type (c:comp_st) : R.term = 
+  let t = elab_term (comp_res c) in
   mk_arrow (t, R.Q_Explicit) vprop_tm
 
 assume
-val inversion_of_stt_typing (f:RT.fstar_top_env) (g:env) (c:pure_comp_st)
+val inversion_of_stt_typing (f:RT.fstar_top_env) (g:env) (c:comp_st)
                             (u:R.universe)
                             // _ |- stt u#u t pre (fun (x:t) -> post) : Type _ 
-                            (_:RT.typing (extend_env_l f g) (elab_pure_comp c) (RT.tm_type u))
+                            (_:RT.typing (extend_env_l f g) (elab_comp c) (RT.tm_type u))
   : GTot ( // _ |- t : Type u#u
-          RT.typing (extend_env_l f g) (elab_pure (comp_res c)) (RT.tm_type (elab_universe (comp_u c))) &
+          RT.typing (extend_env_l f g) (elab_term (comp_res c)) (RT.tm_type (elab_universe (comp_u c))) &
           // _ |- pre : vprop
-          RT.typing (extend_env_l f g) (elab_pure (comp_pre c)) (elab_pure (Tm_VProp)) &
+          RT.typing (extend_env_l f g) (elab_term (comp_pre c)) (elab_term (Tm_VProp)) &
           // _ |- (fun (x:t) -> post) : t -> vprop
           RT.typing (extend_env_l f g) (elab_comp_post c)
-                                       (elab_pure (Tm_Arrow (null_binder (comp_res c)) None (C_Tot Tm_VProp))))
+                                       (elab_term (Tm_Arrow (null_binder (comp_res c)) None (C_Tot Tm_VProp))))
