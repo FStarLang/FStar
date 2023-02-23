@@ -438,8 +438,11 @@ type comp_typing (f:RT.fstar_top_env) : env -> comp -> universe -> Type =
       st_comp_typing f g st ->
       comp_typing f g (C_STGhost inames st) st.u
 
-let non_informative (f:RT.fstar_top_env) (g:env) (c:comp_st) =
-    w:term & tot_typing f g w (non_informative_witness_t (comp_u c) (comp_res c))
+let non_informative_t (f:RT.fstar_top_env) (g:env) (u:universe) (t:term) =
+    w:term & tot_typing f g w (non_informative_witness_t u t)
+
+let non_informative_c (f:RT.fstar_top_env) (g:env) (c:comp_st) =
+    non_informative_t f g (comp_u c) (comp_res c)
      
 [@@ no_auto_projectors]
 noeq
@@ -460,7 +463,7 @@ type bind_comp (f:RT.fstar_top_env) : env -> var -> comp -> comp -> comp -> Type
       x:var { None? (lookup g x) } ->
       c1:comp_st ->
       c2:comp_st {bind_comp_ghost_l_pre x c1 c2} ->
-      non_informative_c1:non_informative f g c1 ->
+      non_informative_c1:non_informative_c f g c1 ->
       universe_of f g (comp_res c2) (comp_u c2) ->
       //or in the result post; free var check isn't enough; we need typability
       y:var { None? (lookup g y) /\ ~(y `Set.mem` freevars (comp_post c2)) } ->
@@ -472,7 +475,7 @@ type bind_comp (f:RT.fstar_top_env) : env -> var -> comp -> comp -> comp -> Type
       x:var { None? (lookup g x) } ->
       c1:comp_st ->
       c2:comp_st {bind_comp_ghost_r_pre x c1 c2} ->
-      non_informative_c2:non_informative f g c2 ->
+      non_informative_c2:non_informative_c f g c2 ->
       universe_of f g (comp_res c2) (comp_u c2) ->
       //or in the result post; free var check isn't enough; we need typability
       y:var { None? (lookup g y) /\ ~(y `Set.mem` freevars (comp_post c2)) } ->
@@ -490,7 +493,7 @@ type lift_comp (f:RT.fstar_top_env) : env -> comp -> comp -> Type =
   | Lift_STGhost_STAtomic :
       g:env ->
       c:comp_st{C_STGhost? c} ->
-      non_informative_c:non_informative f g c ->
+      non_informative_c:non_informative_c f g c ->
       lift_comp f g c (C_STAtomic (comp_inames c) (st_comp_of_comp c))
 
 let as_binder t = { binder_ty = t; binder_ppname = RT.pp_name_default }
@@ -514,7 +517,7 @@ type st_typing (f:RT.fstar_top_env) : env -> st_term -> comp -> Type =
       body:st_term {~ (x `Set.mem` freevars_st body) } ->
       c:comp ->
       tot_typing f g ty (Tm_Type u) ->
-      st_typing f ((x, Inl ty)::g) (open_term_st body x) c ->
+      st_typing f ((x, Inl ty)::g) (open_st_term body x) c ->
       st_typing f g (Tm_Abs (as_binder ty) q None body None)
                     (C_Tot (Tm_Arrow (as_binder ty) q (close_comp c x)))
   
@@ -566,7 +569,7 @@ type st_typing (f:RT.fstar_top_env) : env -> st_term -> comp -> Type =
       c:comp ->
       st_typing f g e1 c1 ->
       tot_typing f g (comp_res c1) (Tm_Type (comp_u c1)) -> //type-correctness; would be nice to derive it instead      
-      st_typing f ((x, Inl (comp_res c1))::g) (open_term_st e2 x) c2 ->
+      st_typing f ((x, Inl (comp_res c1))::g) (open_st_term e2 x) c2 ->
       bind_comp f g x c1 c2 c ->
       st_typing f g (Tm_Bind e1 e2) c
 

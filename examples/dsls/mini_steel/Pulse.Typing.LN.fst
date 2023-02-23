@@ -12,9 +12,9 @@ val well_typed_terms_are_ln (g:R.env) (e:R.term) (t:R.term) (_:RT.typing g e t)
   : Lemma (ensures RT.ln e /\ RT.ln t)
 
 assume
-val elab_ln_inverse (e:pure_term)
+val elab_ln_inverse (e:term)
   : Lemma 
-    (requires RT.ln (elab_pure e))
+    (requires RT.ln (elab_term e))
     (ensures ln e)
 
 
@@ -45,21 +45,11 @@ let rec open_term_ln' (e:term)
       open_term_ln' b.binder_ty x i;
       open_term_ln' t x (i + 1)
 
-    | Tm_Abs b _q pre body post ->
-      open_term_ln' b.binder_ty x i;
-      open_term_ln'_opt pre x (i + 1);
-      open_term_ln' body x (i + 1);
-      open_term_ln'_opt post x (i + 2)
 
     | Tm_PureApp l _ r
-    | Tm_STApp l _ r
     | Tm_Star l r ->
       open_term_ln' l x i;
       open_term_ln' r x i
-
-    | Tm_Bind e1 e2 ->
-      open_term_ln' e1 x i;
-      open_term_ln' e2 x (i + 1)
 
     | Tm_Let t e1 e2 ->
       open_term_ln' t x i;    
@@ -70,26 +60,10 @@ let rec open_term_ln' (e:term)
     | Tm_ForallSL _ t b ->
       open_term_ln' t x i;    
       open_term_ln' b x (i + 1)
-      
-    | Tm_If t0 t1 t2 post ->
-      open_term_ln' t0 x i;    
-      open_term_ln' t1 x i;    
-      open_term_ln' t2 x i;          
-      open_term_ln'_opt post x (i + 1)      
 
     | Tm_Arrow b _ body ->
       open_term_ln' b.binder_ty x i;
       open_comp_ln' body x (i + 1)
-
-    | Tm_ElimExists t -> open_term_ln' t x i
-    | Tm_IntroExists t e ->
-      open_term_ln' t x i;
-      open_term_ln' e x i
-
-    | Tm_While inv cond body ->
-      open_term_ln' inv x (i + 1);
-      open_term_ln' cond x i;
-      open_term_ln' body x i
 
 and open_comp_ln' (c:comp)
                        (x:term)
@@ -114,7 +88,7 @@ and open_comp_ln' (c:comp)
       open_term_ln' s.pre x i;      
       open_term_ln' s.post x (i + 1)
 
-and open_term_ln'_opt (t:option term) (x:term) (i:index)
+let open_term_ln'_opt (t:option term) (x:term) (i:index)
   : Lemma
     (requires ln'_opt (open_term_opt' t x i) (i - 1))
     (ensures ln'_opt t i)
@@ -122,11 +96,60 @@ and open_term_ln'_opt (t:option term) (x:term) (i:index)
   = match t with
     | None -> ()
     | Some t -> open_term_ln' t x i
-    
+
+let rec open_st_term_ln' (e:st_term)
+                         (x:term)
+                         (i:index)
+  : Lemma 
+    (requires ln'_st (open_st_term' e x i) (i - 1))
+    (ensures ln'_st e i)
+    (decreases e)
+  = match e with
+    | Tm_Return e ->
+      open_term_ln' e x i
+      
+    | Tm_STApp l _ r ->
+      open_st_term_ln' l x i;
+      open_term_ln' r x i
+
+    | Tm_Abs b _q pre body post ->
+      open_term_ln' b.binder_ty x i;
+      open_term_ln'_opt pre x (i + 1);
+      open_st_term_ln' body x (i + 1);
+      open_term_ln'_opt post x (i + 2)
+      
+    | Tm_Bind e1 e2 ->
+      open_st_term_ln' e1 x i;
+      open_st_term_ln' e2 x (i + 1)
+
+      
+    | Tm_If t0 t1 t2 post ->
+      open_term_ln' t0 x i;    
+      open_st_term_ln' t1 x i;    
+      open_st_term_ln' t2 x i;          
+      open_term_ln'_opt post x (i + 1)      
+
+    | Tm_ElimExists t -> open_term_ln' t x i
+    | Tm_IntroExists t e ->
+      open_term_ln' t x i;
+      open_term_ln' e x i
+
+    | Tm_While inv cond body ->
+      open_term_ln' inv x (i + 1);
+      open_st_term_ln' cond x i;
+      open_st_term_ln' body x i
+
 let open_term_ln (e:term) (v:var)
   : Lemma 
     (requires ln (open_term e v))
     (ensures ln' e 0)
+  = open_term_ln' e (term_of_var v) 0
+
+
+let open_st_term_ln (e:st_term) (v:var)
+  : Lemma 
+    (requires ln_st (open_st_term e v))
+    (ensures ln'_st e 0)
   = open_term_ln' e (term_of_var v) 0
 
 let rec ln_weakening (e:term) (i j:int)

@@ -8,26 +8,28 @@ open Pulse.Syntax
 open Pulse.Elaborate.Pure
 open Pulse.Typing
 open Pulse.Elaborate.Core
+
 #push-options "--ifuel 2"
 let elab_pure_equiv (#f:RT.fstar_top_env)
                     (#g:env)
-                    (#t:pure_term)
-                    (#c:pure_comp { C_Tot? c })
-                    (d:src_typing f g t c)
-  : Lemma (ensures elab_src_typing d == elab_pure t)
+                    (#t:term)
+                    (#c:comp { C_Tot? c })
+                    (d:st_typing f g (Tm_Return t) c)
+  : Lemma (ensures elab_st_typing d == elab_term t)
   = ()
 #pop-options
 
-#push-options "--fuel 10 --ifuel 6 --z3rlimit_factor 25 --query_stats --z3cliopt 'smt.qi.eager_threshold=100'"
+#push-options "--fuel 10 --ifuel 10 --z3rlimit_factor 5 --query_stats --z3cliopt 'smt.qi.eager_threshold=100'"
 
-let rec elab_open_commute' (e:pure_term)
-                           (v:pure_term)
+let rec elab_open_commute' (e:term)
+                           (v:term)
                            (n:index)
   : Lemma (ensures
-              RT.open_or_close_term' (elab_pure e) (RT.OpenWith (elab_pure v)) n ==
-              elab_pure (open_term' e v n))
+              RT.open_or_close_term' (elab_term e) (RT.OpenWith (elab_term v)) n ==
+              elab_term (open_term' e v n))
           (decreases e)
   = match e with
+    | Tm_UVar _
     | Tm_Var _
     | Tm_FVar _
     | Tm_UInst _ _
@@ -61,10 +63,10 @@ let rec elab_open_commute' (e:pure_term)
       elab_open_commute' b.binder_ty v n;
       elab_comp_open_commute' body v (n + 1)
 
-and elab_comp_open_commute' (c:pure_comp) (v:pure_term) (n:index)
+and elab_comp_open_commute' (c:comp) (v:term) (n:index)
   : Lemma (ensures
-              RT.open_or_close_term' (elab_pure_comp c) (RT.OpenWith (elab_pure v)) n ==
-              elab_pure_comp (open_comp' c v n))
+              RT.open_or_close_term' (elab_comp c) (RT.OpenWith (elab_term v)) n ==
+              elab_comp (open_comp' c v n))
           (decreases c)
   = match c with
     | C_Tot t -> elab_open_commute' t v n
@@ -79,16 +81,15 @@ and elab_comp_open_commute' (c:pure_comp) (v:pure_term) (n:index)
       elab_open_commute' s.pre v n;
       elab_open_commute' s.post v (n + 1)
 
-let rec elab_close_commute' (e:pure_term)
+let rec elab_close_commute' (e:term)
                             (v:var)
                             (n:index)
   : Lemma (ensures (
-              closing_pure_term e v n;
-              RT.open_or_close_term' (elab_pure e) (RT.CloseVar v) n ==
-              elab_pure (close_term' e v n)))
+              RT.open_or_close_term' (elab_term e) (RT.CloseVar v) n ==
+              elab_term (close_term' e v n)))
           (decreases e)
-  = closing_pure_term e v n;
-    match e with
+  = match e with
+    | Tm_UVar _
     | Tm_Var _
     | Tm_BVar _
     | Tm_FVar _
@@ -122,10 +123,10 @@ let rec elab_close_commute' (e:pure_term)
       elab_close_commute' b.binder_ty v n;
       elab_comp_close_commute' body v (n + 1)
 
-and elab_comp_close_commute' (c:pure_comp) (v:var) (n:index)
+and elab_comp_close_commute' (c:comp) (v:var) (n:index)
   : Lemma (ensures
-              RT.open_or_close_term' (elab_pure_comp c) (RT.CloseVar v) n ==
-              elab_pure_comp (close_comp' c v n))
+              RT.open_or_close_term' (elab_comp c) (RT.CloseVar v) n ==
+              elab_comp (close_comp' c v n))
           (decreases c)
   = match c with
     | C_Tot t -> elab_close_commute' t v n
@@ -141,17 +142,17 @@ and elab_comp_close_commute' (c:pure_comp) (v:var) (n:index)
       elab_close_commute' s.post v (n + 1)
 #pop-options
 
-let elab_open_commute (t:pure_term) (x:var)
-  : Lemma (elab_pure (open_term t x) == RT.open_term (elab_pure t) x)
-  = RT.open_term_spec (elab_pure t) x;
+let elab_open_commute (t:term) (x:var)
+  : Lemma (elab_term (open_term t x) == RT.open_term (elab_term t) x)
+  = RT.open_term_spec (elab_term t) x;
     elab_open_commute' t (null_var x) 0
 
-let elab_comp_close_commute (c:pure_comp) (x:var)
-  : Lemma (elab_pure_comp (close_pure_comp c x) == RT.close_term (elab_pure_comp c) x)
-  = RT.close_term_spec (elab_pure_comp c) x;
+let elab_comp_close_commute (c:comp) (x:var)
+  : Lemma (elab_comp (close_comp c x) == RT.close_term (elab_comp c) x)
+  = RT.close_term_spec (elab_comp c) x;
     elab_comp_close_commute' c x 0
 
-let elab_comp_open_commute (c:pure_comp) (x:pure_term)
-  : Lemma (elab_pure_comp (open_comp_with c x) == RT.open_with (elab_pure_comp c) (elab_pure x))
-  = RT.open_with_spec (elab_pure_comp c) (elab_pure x);
+let elab_comp_open_commute (c:comp) (x:term)
+  : Lemma (elab_comp (open_comp_with c x) == RT.open_with (elab_comp c) (elab_term x))
+  = RT.open_with_spec (elab_comp c) (elab_term x);
     elab_comp_open_commute' c x 0

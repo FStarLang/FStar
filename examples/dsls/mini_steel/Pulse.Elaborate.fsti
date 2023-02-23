@@ -12,30 +12,29 @@ open Pulse.Elaborate.Core
 
 val elab_pure_equiv (#f:RT.fstar_top_env)
                     (#g:env)
-                    (#t:pure_term)
-                    (#c:pure_comp { C_Tot? c })
-                    (d:src_typing f g t c)
-  : Lemma (ensures elab_src_typing d == elab_pure t)
+                    (#t:term)
+                    (#c:comp { C_Tot? c })
+                    (d:st_typing f g (Tm_Return t) c)
+  : Lemma (ensures elab_st_typing d == elab_term t)
 
-val elab_open_commute' (e:pure_term)
-                           (v:pure_term)
-                           (n:index)
+val elab_open_commute' (e:term)
+                       (v:term)
+                         (n:index)
   : Lemma (ensures
-              RT.open_or_close_term' (elab_pure e) (RT.OpenWith (elab_pure v)) n ==
-              elab_pure (open_term' e v n))
+              RT.open_or_close_term' (elab_term e) (RT.OpenWith (elab_term v)) n ==
+              elab_term (open_term' e v n))
 
-val elab_close_commute' (e:pure_term)
+val elab_close_commute' (e:term)
                         (v:var)
                         (n:index)
-  : Lemma (closing_pure_term e v n;
-           RT.open_or_close_term' (elab_pure e) (RT.CloseVar v) n ==
-           elab_pure (close_term' e v n))
+  : Lemma (RT.open_or_close_term' (elab_term e) (RT.CloseVar v) n ==
+           elab_term (close_term' e v n))
 
-val elab_open_commute (t:pure_term) (x:var)
-  : Lemma (elab_pure (open_term t x) == RT.open_term (elab_pure t) x)
+val elab_open_commute (t:term) (x:var)
+  : Lemma (elab_term (open_term t x) == RT.open_term (elab_term t) x)
 
-val elab_comp_close_commute (c:pure_comp) (x:var)
-  : Lemma (elab_pure_comp (close_pure_comp c x) == RT.close_term (elab_pure_comp c) x)
+val elab_comp_close_commute (c:comp) (x:var)
+  : Lemma (elab_comp (close_comp c x) == RT.close_term (elab_comp c) x)
 
-val elab_comp_open_commute (c:pure_comp) (x:pure_term)
-  : Lemma (elab_pure_comp (open_comp_with c x) == RT.open_with (elab_pure_comp c) (elab_pure x))
+val elab_comp_open_commute (c:comp) (x:term)
+  : Lemma (elab_comp (open_comp_with c x) == RT.open_with (elab_comp c) (elab_term x))
