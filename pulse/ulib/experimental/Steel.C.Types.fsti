@@ -55,6 +55,7 @@ val mk_fraction_eq_unknown (#t: Type0) (td: typedef t) (v: t) (p: P.perm) : Lemm
   (ensures (v == unknown td))
 
 
+(*
 // To be extracted as: void*
 
 // FIXME: Currently, Karamel does not directly support
@@ -78,6 +79,11 @@ val typedef_of_ptr (p: void_ptr { ~ (p == void_null) }) : GTot (typedef (type_of
 let ptr (#t: Type) (td: typedef t) : Tot Type0 = (p: void_ptr { (~ (p == void_null)) ==> (type_of_ptr p == t /\ typedef_of_ptr p == td) })
 [@@noextract_to "krml"] // primitive
 let null (#t: Type) (td: typedef t) : Tot (ptr td) = void_null
+*)
+
+val ptr (#t: Type) (td: typedef t) : Tot Type0
+val null (#t: Type) (td: typedef t) : Tot (ptr td)
+
 inline_for_extraction [@@noextract_to "krml"]
 let ref (#t: Type) (td: typedef t) : Tot Type0 = (p: ptr td { ~ (p == null td) })
 
@@ -142,21 +148,83 @@ let assert_not_null
     (fun _ _ _ -> True)
 = change_equal_slprop (pts_to_or_null p v) (pts_to p v)
 
+val ref_equiv
+  (#t: Type)
+  (#td: typedef t)
+  (r1 r2: ref td)
+: Tot vprop
+
+val pts_to_equiv
+  (#opened: _)
+  (#t: Type)
+  (#td: typedef t)
+  (r1 r2: ref td)
+  (v: t)
+: SteelGhostT unit opened
+    (ref_equiv r1 r2 `star` pts_to r1 v)
+    (fun _ -> ref_equiv r1 r2 `star` pts_to r2 v)
+
 val freeable
   (#t: Type)
   (#td: typedef t)
   (r: ref td)
-: GTot prop
+: Tot vprop
+
+val freeable_dup
+  (#opened: _)
+  (#t: Type)
+  (#td: typedef t)
+  (r: ref td)
+: SteelGhostT unit opened
+    (freeable r)
+    (fun _ -> freeable r `star` freeable r)
+
+val freeable_equiv
+  (#opened: _)
+  (#t: Type)
+  (#td: typedef t)
+  (r1 r2: ref td)
+: SteelGhostT unit opened
+    (ref_equiv r1 r2 `star` freeable r1)
+    (fun _ -> ref_equiv r1 r2 `star` freeable r2)
+
+let freeable_or_null'
+  (#t: Type)
+  (#td: typedef t)
+  (r: ptr td)
+: Tot vprop
+= if FStar.StrongExcludedMiddle.strong_excluded_middle (r == null _)
+  then emp
+  else freeable r
+
+[@@__steel_reduce__]
+let freeable_or_null (#t: Type) (#td: typedef t) (p: ptr td) : vprop = VUnit ({
+  hp = hp_of (freeable_or_null' p);
+  t = _;
+  sel = trivial_selector _;
+})
+
+(*
+let freeable_or_null_dup
+  (#opened: _)
+  (#t: Type)
+  (#td: typedef t)
+  (r: ptr td)
+: SteelGhostT vprop opened
+    (freeable_or_null r)
+    (fun _ -> freeable_or_null r `star` freeable_or_null r)
+= if FStar.StrongExcludedMiddle.strong_excluded_middle (r == null _)
+  then ()
+  else freeable r
+*)
 
 [@@noextract_to "krml"] // primitive
 val alloc
   (#t: Type)
   (td: typedef t)
-: Steel (ptr td)
+: SteelT (ptr td)
     emp
-    (fun p -> pts_to_or_null p (uninitialized td))
-    (fun _ -> True)
-    (fun _ p _ -> (~ (p == null _)) ==> freeable p)
+    (fun p -> pts_to_or_null p (uninitialized td) `star` freeable_or_null p)
 
 [@@noextract_to "krml"] // primitive
 val free
@@ -165,10 +233,9 @@ val free
   (#v: Ghost.erased t)
   (r: ref td)
 : Steel unit
-    (pts_to r v)
+    (pts_to r v `star` freeable r)
     (fun _ -> emp)
     (fun _ ->
-      freeable r /\
       full td v
     )
     (fun _ _ _ -> True)
@@ -425,9 +492,6 @@ val struct_get_field_uninitialized
   (struct_get_field (uninitialized (struct0 tn n fields)) field == uninitialized (fields.fd_typedef field))
   [SMTPat (struct_get_field (uninitialized (struct0 tn n fields)) field)]
 
-val _inv_vprop: vprop
-val _inv: inv _inv_vprop
-
 val has_struct_field
   (#tn: Type0)
   (#tf: Type0)
@@ -436,7 +500,20 @@ val has_struct_field
   (r: ref (struct0 tn n fields))
   (field: field_t fields)
   (r': ref (fields.fd_typedef field))
-: GTot prop
+: Tot vprop
+
+val has_struct_field_dup
+  (#opened: _)
+  (#tn: Type0)
+  (#tf: Type0)
+  (#n: string)
+  (#fields: nonempty_field_description_t tf)
+  (r: ref (struct0 tn n fields))
+  (field: field_t fields)
+  (r': ref (fields.fd_typedef field))
+: SteelGhostT unit opened
+    (has_struct_field r field r')
+    (fun _ -> has_struct_field r field r' `star` has_struct_field r field r')
 
 val has_struct_field_inj
   (#opened: _)
@@ -447,15 +524,37 @@ val has_struct_field_inj
   (r: ref (struct0 tn n fields))
   (field: field_t fields)
   (r1 r2: ref (fields.fd_typedef field))
-: SteelGhost unit opened
-    emp
-    (fun _ -> emp)
-    (fun _ ->
-      Ghost.reveal (mem_inv opened _inv) == false /\
-      has_struct_field r field r1 /\
-      has_struct_field r field r2
-    )
-    (fun _ _ _ -> r1 == r2)
+: SteelGhostT unit opened
+    (has_struct_field r field r1 `star` has_struct_field r field r2)
+    (fun _ -> has_struct_field r field r1 `star` has_struct_field r field r2 `star` ref_equiv r1 r2)
+
+val has_struct_field_equiv_from
+  (#opened: _)
+  (#tn: Type0)
+  (#tf: Type0)
+  (#n: string)
+  (#fields: nonempty_field_description_t tf)
+  (r1: ref (struct0 tn n fields))
+  (field: field_t fields)
+  (r': ref (fields.fd_typedef field))
+  (r2: ref (struct0 tn n fields))
+: SteelGhostT unit opened
+    (ref_equiv r1 r2 `star` has_struct_field r1 field r')
+    (fun _ -> ref_equiv r1 r2 `star` has_struct_field r2 field r')
+
+val has_struct_field_equiv_to
+  (#opened: _)
+  (#tn: Type0)
+  (#tf: Type0)
+  (#n: string)
+  (#fields: nonempty_field_description_t tf)
+  (r: ref (struct0 tn n fields))
+  (field: field_t fields)
+  (r1': ref (fields.fd_typedef field))
+  (r2': ref (fields.fd_typedef field))
+: SteelGhostT unit opened
+    (ref_equiv r1' r2' `star` has_struct_field r field r1')
+    (fun _ -> ref_equiv r1' r2' `star` has_struct_field r field r2')
 
 val ghost_struct_field_focus
   (#opened: _)
@@ -467,11 +566,9 @@ val ghost_struct_field_focus
   (r: ref (struct0 tn n fields))
   (field: field_t fields)
   (r': ref (fields.fd_typedef field))
-: SteelGhost unit opened
-    (pts_to r v)
-    (fun _ -> pts_to r (struct_set_field field (unknown (fields.fd_typedef field)) v) `star` pts_to r' (struct_get_field v field))
-    (fun _ -> has_struct_field r field r')
-    (fun _ _ _ -> True)
+: SteelGhostT unit opened
+    (has_struct_field r field r' `star` pts_to r v)
+    (fun _ -> has_struct_field r field r' `star` pts_to r (struct_set_field field (unknown (fields.fd_typedef field)) v) `star` pts_to r' (struct_get_field v field))
 
 val ghost_struct_field
   (#opened: _)
@@ -482,11 +579,9 @@ val ghost_struct_field
   (#v: Ghost.erased (struct_t0 tn n fields))
   (r: ref (struct0 tn n fields))
   (field: field_t fields)
-: SteelGhost (Ghost.erased (ref (fields.fd_typedef field))) opened
+: SteelGhostT (Ghost.erased (ref (fields.fd_typedef field))) opened
     (pts_to r v)
-    (fun r' -> pts_to r (struct_set_field field (unknown (fields.fd_typedef field)) v) `star` pts_to r' (struct_get_field v field))
-    (fun _ -> Ghost.reveal (mem_inv opened _inv) == false)
-    (fun _ r' _ -> has_struct_field r field r')
+    (fun r' -> pts_to r (struct_set_field field (unknown (fields.fd_typedef field)) v) `star` pts_to r' (struct_get_field v field) `star` has_struct_field r field r')
 
 [@@noextract_to "krml"] // primitive
 val struct_field0
@@ -505,11 +600,9 @@ val struct_field0
   })
 : SteelAtomicBase (ref td') false opened Unobservable
     (pts_to r v)
-    (fun r' -> pts_to r (struct_set_field field (unknown (fields.fd_typedef field)) v) `star` pts_to r' (struct_get_field v field))
-    (fun _ -> Ghost.reveal (mem_inv opened _inv) == false)
-    (fun _ r' _ ->
-      has_struct_field r field r'
-    )
+    (fun r' -> pts_to r (struct_set_field field (unknown (fields.fd_typedef field)) v) `star` pts_to r' (struct_get_field v field) `star` has_struct_field r field r')
+    (fun _ -> True)
+    (fun _ _ _ -> True)
 
 inline_for_extraction [@@noextract_to "krml"] // primitive
 let struct_field
@@ -523,11 +616,9 @@ let struct_field
   (field: field_t fields)
 : SteelAtomicBase (ref #(norm norm_field_steps (fields.fd_type field)) (fields.fd_typedef field)) false opened Unobservable
     (pts_to r v)
-    (fun r' -> pts_to r (struct_set_field field (unknown (fields.fd_typedef field)) v) `star` pts_to #(norm norm_field_steps (fields.fd_type field)) r' (struct_get_field v field))
-    (fun _ -> Ghost.reveal (mem_inv opened _inv) == false)
-    (fun _ r' _ ->
-      has_struct_field r field r'
-    )
+    (fun r' -> pts_to r (struct_set_field field (unknown (fields.fd_typedef field)) v) `star` pts_to #(norm norm_field_steps (fields.fd_type field)) r' (struct_get_field v field) `star` has_struct_field r field r')
+    (fun _ -> True)
+    (fun _ _ _ -> True)
 = struct_field0
     (norm norm_field_steps (fields.fd_type field))
     r
@@ -546,10 +637,9 @@ val unstruct_field
   (#v': Ghost.erased (fields.fd_type field))
   (r': ref (fields.fd_typedef field))
 : SteelGhost unit opened
-    (pts_to r v `star` pts_to r' v')
-    (fun _ -> pts_to r (struct_set_field field v' v))
+    (has_struct_field r field r' `star` pts_to r v `star` pts_to r' v')
+    (fun _ -> has_struct_field r field r' `star` pts_to r (struct_set_field field v' v))
     (fun _ ->
-      has_struct_field r field r' /\
       struct_get_field v field == unknown (fields.fd_typedef field)
     )
     (fun _ _ _ -> True)
@@ -785,7 +875,20 @@ val has_union_field
   (r: ref (union0 tn n fields))
   (field: field_t fields)
   (r': ref (fields.fd_typedef field))
-: GTot prop
+: Tot vprop
+
+val has_union_field_dup
+  (#opened: _)
+  (#tn: Type0)
+  (#tf: Type0)
+  (#n: string)
+  (#fields: nonempty_field_description_t tf)
+  (r: ref (union0 tn n fields))
+  (field: field_t fields)
+  (r': ref (fields.fd_typedef field))
+: SteelGhostT unit opened
+    (has_union_field r field r')
+    (fun _ -> has_union_field r field r' `star` has_union_field r field r')
 
 val has_union_field_inj
   (#opened: _)
@@ -796,15 +899,35 @@ val has_union_field_inj
   (r: ref (union0 tn n fields))
   (field: field_t fields)
   (r1 r2: ref (fields.fd_typedef field))
-: SteelGhost unit opened
-    emp
-    (fun _ -> emp)
-    (fun _ ->
-      Ghost.reveal (mem_inv opened _inv) == false /\
-      has_union_field r field r1 /\
-      has_union_field r field r2
-    )
-    (fun _ _ _ -> r1 == r2)
+: SteelGhostT unit opened
+    (has_union_field r field r1 `star` has_union_field r field r2)
+    (fun _ -> has_union_field r field r1 `star` has_union_field r field r2 `star` ref_equiv r1 r2)
+
+val has_union_field_equiv_from
+  (#opened: _)
+  (#tn: Type0)
+  (#tf: Type0)
+  (#n: string)
+  (#fields: nonempty_field_description_t tf)
+  (r1 r2: ref (union0 tn n fields))
+  (field: field_t fields)
+  (r': ref (fields.fd_typedef field))
+: SteelGhostT unit opened
+    (has_union_field r1 field r' `star` ref_equiv r1 r2)
+    (fun _ -> has_union_field r2 field r' `star` ref_equiv r1 r2)
+
+val has_union_field_equiv_to
+  (#opened: _)
+  (#tn: Type0)
+  (#tf: Type0)
+  (#n: string)
+  (#fields: nonempty_field_description_t tf)
+  (r: ref (union0 tn n fields))
+  (field: field_t fields)
+  (r1 r2: ref (fields.fd_typedef field))
+: SteelGhostT unit opened
+    (has_union_field r field r1 `star` ref_equiv r1 r2)
+    (fun _ -> has_union_field r field r2 `star` ref_equiv r1 r2)
 
 val ghost_union_field_focus
   (#opened: _)
@@ -816,11 +939,9 @@ val ghost_union_field_focus
   (r: ref (union0 tn n fields))
   (field: field_t fields {union_get_case v == Some field})
   (r': ref (fields.fd_typedef field))
-: SteelGhost unit opened
-    (pts_to r v)
-    (fun _ -> pts_to r' (union_get_field v field))
-    (fun _ -> has_union_field r field r')
-    (fun _ _ _ -> True)
+: SteelGhostT unit opened
+    (has_union_field r field r' `star` pts_to r v)
+    (fun _ -> has_union_field r field r' `star` pts_to r' (union_get_field v field))
 
 val ghost_union_field
   (#opened: _)
@@ -831,11 +952,9 @@ val ghost_union_field
   (#v: Ghost.erased (union_t0 tn n fields))
   (r: ref (union0 tn n fields))
   (field: field_t fields {union_get_case v == Some field})
-: SteelGhost (Ghost.erased (ref (fields.fd_typedef field))) opened
+: SteelGhostT (Ghost.erased (ref (fields.fd_typedef field))) opened
     (pts_to r v)
-    (fun r' -> pts_to r' (union_get_field v field))
-    (fun _ -> Ghost.reveal (mem_inv opened _inv) == false)
-    (fun _ r' _ -> has_union_field r field r')
+    (fun r' -> has_union_field r field r' `star` pts_to r' (union_get_field v field))
 
 [@@noextract_to "krml"] // primitive
 val union_field0
@@ -854,9 +973,9 @@ val union_field0
   })
 : SteelAtomicBase (ref td') false opened Unobservable
     (pts_to r v)
-    (fun r' -> pts_to r' (union_get_field v field))
-    (fun _ -> Ghost.reveal (mem_inv opened _inv) == false)
-    (fun _ r' _ -> has_union_field r field r')
+    (fun r' -> has_union_field r field r' `star` pts_to r' (union_get_field v field))
+    (fun _ -> True)
+    (fun _ r' _ -> True)
 
 inline_for_extraction [@@noextract_to "krml"] // primitive
 let union_field
@@ -870,9 +989,9 @@ let union_field
   (field: field_t fields {union_get_case v == Some field})
 : SteelAtomicBase (ref #(norm norm_field_steps (fields.fd_type field)) (fields.fd_typedef field)) false opened Unobservable
     (pts_to r v)
-    (fun r' -> pts_to #(norm norm_field_steps (fields.fd_type field)) r' (union_get_field v field))
-    (fun _ -> Ghost.reveal (mem_inv opened _inv) == false)
-    (fun _ r' _ -> has_union_field r field r')
+    (fun r' -> has_union_field r field r' `star` pts_to #(norm norm_field_steps (fields.fd_type field)) r' (union_get_field v field))
+    (fun _ -> True)
+    (fun _ r' _ -> True) 
 = union_field0
     (norm norm_field_steps (fields.fd_type field))
     r
@@ -889,13 +1008,9 @@ val ununion_field
   (field: field_t fields)
   (#v': Ghost.erased (fields.fd_type field))
   (r': ref (fields.fd_typedef field))
-: SteelGhost unit opened
-    (pts_to r' v')
-    (fun _ -> pts_to r (union_set_field tn n fields field v'))
-    (fun _ ->
-      has_union_field r field r'
-    )
-    (fun _ _ _ -> True)
+: SteelGhostT unit opened
+    (has_union_field r field r' `star` pts_to r' v')
+    (fun _ -> has_union_field r field r' `star` pts_to r (union_set_field tn n fields field v'))
 
 // NOTE: we DO NOT support preservation of struct prefixes
 
@@ -915,9 +1030,9 @@ val union_switch_field0
   })
 : Steel (ref td') // need to write the pcm carrier value, so this cannot be Ghost or Atomic
     (pts_to r v)
-    (fun r' -> pts_to r' (uninitialized (fields.fd_typedef field)))
+    (fun r' -> has_union_field r field r' `star` pts_to r' (uninitialized (fields.fd_typedef field)))
     (fun _ -> full (union0 tn n fields) v)
-    (fun _ r' _ -> has_union_field r field r')
+    (fun _ r' _ -> True)
 
 inline_for_extraction [@@noextract_to "krml"]
 let union_switch_field
@@ -930,9 +1045,9 @@ let union_switch_field
   (field: field_t fields)
 : Steel (ref #(norm norm_field_steps (fields.fd_type field)) (fields.fd_typedef field)) // need to write the pcm carrier value, so this cannot be Ghost or Atomic
     (pts_to r v)
-    (fun r' -> pts_to #(norm norm_field_steps (fields.fd_type field)) r' (uninitialized (fields.fd_typedef field)))
+    (fun r' -> has_union_field r field r' `star` pts_to #(norm norm_field_steps (fields.fd_type field)) r' (uninitialized (fields.fd_typedef field)))
     (fun _ -> full (union0 tn n fields) v)
-    (fun _ r' _ -> has_union_field r field r')
+    (fun _ r' _ -> True)
 = union_switch_field0
     (norm norm_field_steps (fields.fd_type field))
     r
@@ -1016,7 +1131,20 @@ val has_base_array_cell
   (r: ref (base_array0 tn td n))
   (i: SZ.t)
   (r': ref td)
-: GTot prop
+: Tot vprop
+
+val has_base_array_cell_dup
+  (#opened: _)
+  (#t: Type)
+  (#tn: Type0)
+  (#n: array_size_t)
+  (#td: typedef t)
+  (r: ref (base_array0 tn td n))
+  (i: SZ.t)
+  (r': ref td)
+: SteelGhostT unit opened
+    (has_base_array_cell r i r')
+    (fun _ -> has_base_array_cell r i r' `star` has_base_array_cell r i r')
 
 val has_base_array_cell_inj
   (#opened: _)
@@ -1027,15 +1155,35 @@ val has_base_array_cell_inj
   (r: ref (base_array0 tn td n))
   (i: SZ.t)
   (r1 r2: ref td)
-: SteelGhost unit opened
-    emp
-    (fun _ -> emp)
-    (fun _ ->
-      Ghost.reveal (mem_inv opened _inv) == false /\
-      has_base_array_cell r i r1 /\
-      has_base_array_cell r i r2
-    )
-    (fun _ _ _ -> r1 == r2)
+: SteelGhostT unit opened
+    (has_base_array_cell r i r1 `star` has_base_array_cell r i r2)
+    (fun _ -> has_base_array_cell r i r1 `star` has_base_array_cell r i r2 `star` ref_equiv r1 r2)
+
+val has_base_array_cell_equiv_from
+  (#opened: _)
+  (#t: Type)
+  (#tn: Type0)
+  (#n: array_size_t)
+  (#td: typedef t)
+  (r1 r2: ref (base_array0 tn td n))
+  (i: SZ.t)
+  (r': ref td)
+: SteelGhostT unit opened
+    (has_base_array_cell r1 i r' `star` ref_equiv r1 r2)
+    (fun _ -> has_base_array_cell r2 i r' `star` ref_equiv r1 r2)
+
+val has_base_array_cell_equiv_to
+  (#opened: _)
+  (#t: Type)
+  (#tn: Type0)
+  (#n: array_size_t)
+  (#td: typedef t)
+  (r: ref (base_array0 tn td n))
+  (i: SZ.t)
+  (r1 r2: ref td)
+: SteelGhostT unit opened
+    (has_base_array_cell r i r1 `star` ref_equiv r1 r2)
+    (fun _ -> has_base_array_cell r i r2 `star` ref_equiv r1 r2)
 
 // contrary to array fields, one is not supposed to take an array cell directly from a base array. one should use arrays instead
 
@@ -1049,22 +1197,26 @@ val has_base_array_cell_inj
 
 [@@noextract_to "krml"] // primitive
 val array_ref (#t: Type) (td: typedef t) : Tot Type0
+(*
 val array_ref_base_size_type (#t: Type) (#td: typedef t) (a: array_ref td) : GTot Type0
+*)
 val array_ref_base_size (#t: Type) (#td: typedef t) (a: array_ref td) : GTot array_size_t
-val array_ref_base (#t: Type) (#td: typedef t) (a: array_ref td) : GTot (ref (base_array0 (array_ref_base_size_type a) td (array_ref_base_size a)))
+val has_array_ref_base (#t: Type) (#td: typedef t) (a: array_ref td) (#ty: Type) (r: ref (base_array0 ty td (array_ref_base_size a))) : GTot prop
+val has_array_ref_base_inj (#t: Type) (#td: typedef t) (a: array_ref td) (#ty: Type) (r1 r2: ref (base_array0 ty td (array_ref_base_size a))) : Lemma
+  (requires (has_array_ref_base a r1 /\ has_array_ref_base a r2))
+  (ensures (r1 == r2))
 val array_ref_offset (#t: Type) (#td: typedef t) (a: array_ref td) : Ghost SZ.t
   (requires True)
   (ensures (fun y -> SZ.v y < SZ.v (array_ref_base_size a)))
-val array_ref_base_offset_inj (#opened: _) (#t: Type) (#td: typedef t) (a1 a2: array_ref td) : SteelGhost unit opened
-  emp (fun _ -> emp)
-  (requires (fun _ ->
-    Ghost.reveal (mem_inv opened _inv) == false /\
-    array_ref_base_size_type a1 == array_ref_base_size_type a2 /\
+val array_ref_base_offset_inj (#t: Type) (#td: typedef t) (#ty: Type) (a1: array_ref td) (r1: ref (base_array0 ty td (array_ref_base_size a1))) (a2: array_ref td) (r2: ref (base_array0 ty td (array_ref_base_size a2))) : Lemma
+  (requires (
     array_ref_base_size a1 == array_ref_base_size a2 /\
-    array_ref_base a1 == array_ref_base a2 /\
+    has_array_ref_base a1 r1 /\
+    has_array_ref_base a2 r2 /\
+    r1 == coerce_eq () r2 /\
     array_ref_offset a1 == array_ref_offset a2
   ))
-  (ensures (fun _ _ _ -> a1 == a2))
+  (ensures (a1 == a2))
 
 inline_for_extraction [@@noextract_to "krml"]
 let array_len_t (#t: Type) (#td: typedef t) (r: array_ref td) : Tot Type0 =
@@ -1113,30 +1265,28 @@ let has_array_of_base
   (r: ref (base_array0 tn td n))
   (a: array td)
 : GTot prop
-= let (| al, len |) = a in
-  array_ref_base_size_type al == tn /\
-  array_ref_base_size al == n /\
-  array_ref_base al == r /\
-  array_ref_offset al == 0sz /\
-  Ghost.reveal len == n
+=   let (| al, len |) = a in
+    array_ref_base_size al == n /\
+    has_array_ref_base al r /\
+    array_ref_offset al == 0sz /\
+    Ghost.reveal len == n
 
 let has_array_of_base_inj
-  (#opened: _)
   (#t: Type)
   (#tn: Type0)
   (#n: array_size_t)
   (#td: typedef t)
   (r: ref (base_array0 tn td n))
   (a1 a2: array td)
-: SteelGhost unit opened
-    emp (fun _ -> emp)
-    (fun _ ->
-      Ghost.reveal (mem_inv opened _inv) == false /\
+: Lemma
+  (requires (
       has_array_of_base r a1 /\
       has_array_of_base r a2
-    )
-    (fun _ _ _ -> a1 == a2)
-= array_ref_base_offset_inj (dfst a1) (dfst a2)
+  ))
+  (ensures (a1 == a2))
+= let (| ar1, _ |) = a1 in
+  let (| ar2, _ |) = a2 in
+  array_ref_base_offset_inj ar1 r ar2 r
 
 let seq_of_base_array
   (#t: Type)
@@ -1169,11 +1319,9 @@ val ghost_array_of_base
   (#td: typedef t)
   (#v: Ghost.erased (base_array_t t tn n))
   (r: ref (base_array0 tn td n))
-: SteelGhost (a: Ghost.erased (array td) { has_array_of_base r a }) opened
+: SteelGhostT (a: Ghost.erased (array td) { has_array_of_base r a }) opened
     (pts_to r v)
     (fun a -> array_pts_to a (seq_of_base_array v))
-    (fun _ -> Ghost.reveal (mem_inv opened _inv) == false)
-    (fun _ _ _ -> True)
 
 // to be extracted to just r
 [@@noextract_to "krml"] // primitive
@@ -1188,7 +1336,7 @@ val array_ref_of_base
 : SteelAtomicBase (a: array_ref td { array_ref_base_size a == n /\ array_ref_offset a == 0sz /\ has_array_of_base r (| a, Ghost.hide n |) }) false opened Unobservable
     (pts_to r v)
     (fun a -> array_pts_to (| a, Ghost.hide (n <: SZ.t) |) (seq_of_base_array v))
-    (fun _ -> Ghost.reveal (mem_inv opened _inv) == false)
+    (fun _ -> True)
     (fun _ _ _ -> True)
 
 inline_for_extraction [@@noextract_to "krml"]
@@ -1203,7 +1351,7 @@ let array_of_base
 : SteelAtomicBase (a: array td { has_array_of_base r a }) false opened Unobservable
     (pts_to r v)
     (fun a -> array_pts_to a (seq_of_base_array v))
-    (fun _ -> Ghost.reveal (mem_inv opened _inv) == false)
+    (fun _ -> True)
     (fun _ _ _ -> True)
 = let al = array_ref_of_base r in
   let a = (| al, Ghost.hide (n <: SZ.t) |) in
@@ -1223,7 +1371,6 @@ val unarray_of_base
     (array_pts_to a v)
     (fun v' -> pts_to r v')
     (fun _ ->
-      Ghost.reveal (mem_inv opened _inv) == false /\
       has_array_of_base r a
     )
     (fun _ v' _ -> Ghost.reveal v `Seq.equal` seq_of_base_array v')
@@ -1233,30 +1380,38 @@ val has_array_of_ref
   (#td: typedef t)
   (r: ref td)
   (a: array td)
-: Ghost prop
-  (requires True)
-  (ensures (fun p ->
-    let (| al, len |) = a in
-    p ==> (
-      array_ref_base_size al == 1sz /\
-      array_ref_offset al == 0sz /\
-      Ghost.reveal len == 1sz
-  )))
+: Tot vprop
 
-val has_array_of_ref_inj
+val has_array_of_ref_post
   (#opened: _)
   (#t: Type)
   (#td: typedef t)
   (r: ref td)
-  (a1 a2: array td)
+  (a: array td)
 : SteelGhost unit opened
-    emp (fun _ -> emp)
-    (fun _ ->
-      Ghost.reveal (mem_inv opened _inv) == false /\
+    (has_array_of_ref r a)
+    (fun _ -> has_array_of_ref r a)
+    (fun _ -> True)
+    (fun _ _ _ ->
+      let (| al, len |) = a in
+      array_ref_base_size al == 1sz /\
+      array_ref_offset al == 0sz /\
+      Ghost.reveal len == 1sz
+    )
+
+(*
+val has_array_of_ref_inj
+  (#t: Type)
+  (#td: typedef t)
+  (r: ref td)
+  (a1 a2: array td)
+: Lemma
+    (requires (
       has_array_of_ref r a1 /\
       has_array_of_ref r a2
-    )
-    (fun _ _ _ -> a1 == a2)
+    ))
+    (ensures a1 == a2)
+*)
 
 val ghost_array_of_ref_focus
   (#t: Type)
@@ -1265,13 +1420,9 @@ val ghost_array_of_ref_focus
   (#v: Ghost.erased t)
   (r: ref td)
   (a: array td)
-: SteelGhost unit opened
-    (pts_to r v)
-    (fun _ -> array_pts_to a (Seq.create 1 (Ghost.reveal v)))
-    (fun _ ->
-      has_array_of_ref r a
-    )
-    (fun _ _ _ -> True)
+: SteelGhostT unit opened
+    (pts_to r v `star` has_array_of_ref r a)
+    (fun _ -> has_array_of_ref r a `star` array_pts_to a (Seq.create 1 (Ghost.reveal v)))
 
 val ghost_array_of_ref
   (#t: Type)
@@ -1279,11 +1430,9 @@ val ghost_array_of_ref
   (#td: typedef t)
   (#v: Ghost.erased t)
   (r: ref td)
-: SteelGhost (a: Ghost.erased (array td) { has_array_of_ref r a }) opened
+: SteelGhostT (Ghost.erased (array td)) opened
     (pts_to r v)
-    (fun a -> array_pts_to a (Seq.create 1 (Ghost.reveal v)))
-    (fun _ -> Ghost.reveal (mem_inv opened _inv) == false)
-    (fun _ _ _ -> True)
+    (fun a -> array_pts_to a (Seq.create 1 (Ghost.reveal v)) `star` has_array_of_ref r a)
 
 // to be extracted to just r
 [@@noextract_to "krml"] // primitive
@@ -1293,10 +1442,10 @@ val array_ref_of_ref
   (#td: typedef t)
   (#v: Ghost.erased t)
   (r: ref td)
-: SteelAtomicBase (a: array_ref td { array_ref_base_size a == 1sz /\ array_ref_offset a == 0sz /\ has_array_of_ref r (| a, Ghost.hide 1sz |) }) false opened Unobservable
+: SteelAtomicBase (a: array_ref td { array_ref_base_size a == 1sz /\ array_ref_offset a == 0sz }) false opened Unobservable
     (pts_to r v)
-    (fun a -> array_pts_to (| a, Ghost.hide 1sz |) (Seq.create 1 (Ghost.reveal v)))
-    (fun _ -> Ghost.reveal (mem_inv opened _inv) == false)
+    (fun a -> array_pts_to (| a, Ghost.hide 1sz |) (Seq.create 1 (Ghost.reveal v)) `star` has_array_of_ref r (| a, Ghost.hide 1sz |))
+    (fun _ -> True)
     (fun _ _ _ -> True)
 
 inline_for_extraction [@@noextract_to "krml"]
@@ -1306,14 +1455,15 @@ let array_of_ref
   (#td: typedef t)
   (#v: Ghost.erased t)
   (r: ref td)
-: SteelAtomicBase (a: array td { has_array_of_ref r a }) false opened Unobservable
+: SteelAtomicBase (array td) false opened Unobservable
     (pts_to r v)
-    (fun a -> array_pts_to a (Seq.create 1 (Ghost.reveal v)))
-    (fun _ -> Ghost.reveal (mem_inv opened _inv) == false)
+    (fun a -> array_pts_to a (Seq.create 1 (Ghost.reveal v)) `star` has_array_of_ref r a)
+    (fun _ -> True)
     (fun _ _ _ -> True)
 = let al = array_ref_of_ref r in
-  let a = (| al, Ghost.hide 1sz |) in
+  let a : array td = (| al, Ghost.hide 1sz |) in
   change_equal_slprop (array_pts_to _ _) (array_pts_to _ _);
+  change_equal_slprop (has_array_of_ref _ _) (has_array_of_ref r a);
   return a
 
 val unarray_of_ref
@@ -1323,50 +1473,80 @@ val unarray_of_ref
   (#s: Ghost.erased (Seq.seq t))
   (r: ref td)
   (a: array td)
-: SteelGhost (squash (Seq.length s == 1)) opened
-    (array_pts_to a s)
-    (fun _ -> pts_to r (Seq.index s 0))
-    (fun _ ->
-      has_array_of_ref r a
-    )
-    (fun _ _ _ -> True)
+: SteelGhostT (squash (Seq.length s == 1)) opened
+    (array_pts_to a s `star` has_array_of_ref r a)
+    (fun _ -> pts_to r (Seq.index s 0) `star` has_array_of_ref r a)
 
-let has_array_cell
+val has_array_cell
   (#t: Type)
   (#td: typedef t)
   (a: array td)
   (i: SZ.t)
   (r: ref td)
-: GTot prop
+: Tot vprop
+(*
 = SZ.v i < SZ.v (dsnd a) /\
   has_base_array_cell (array_ref_base (dfst a)) (array_ref_offset (dfst a) `SZ.add` i) r
+*)
 
-let has_array_cell_inj
+val has_array_cell_has_base_array_cell
+  (#opened: _)
+  (#t: Type)
+  (#td: typedef t)
+  (a: array td)
+  (i: SZ.t)
+  (r: ref td)
+  (#ty: Type)
+  (br: ref (base_array0 ty td (array_ref_base_size (dfst a))))
+: SteelGhost unit opened
+    (has_array_cell a i r)
+    (fun _ -> has_base_array_cell br i r)
+    (fun _ -> has_array_ref_base (dfst a) br)
+    (fun _ _ _ -> True)
+
+val has_base_array_cell_has_array_cell
+  (#opened: _)
+  (#t: Type)
+  (#td: typedef t)
+  (a: array td)
+  (i: SZ.t)
+  (r: ref td)
+  (#ty: Type)
+  (br: ref (base_array0 ty td (array_ref_base_size (dfst a))))
+: SteelGhost unit opened
+    (has_base_array_cell br i r)
+    (fun _ -> has_array_cell a i r)
+    (fun _ -> has_array_ref_base (dfst a) br)
+    (fun _ _ _ -> True)
+
+val has_array_cell_inj
   (#opened: _)
   (#t: Type)
   (#td: typedef t)
   (a: array td)
   (i: SZ.t)
   (r1 r2: ref td)
-: SteelGhost unit opened
-    emp
-    (fun _ -> emp)
-    (fun _ ->
-      Ghost.reveal (mem_inv opened _inv) == false /\
-      has_array_cell a i r1 /\
+: SteelGhostT unit opened
+    (
+      has_array_cell a i r1 `star`
       has_array_cell a i r2
     )
-    (fun _ _ _ -> r1 == r2)
-= has_base_array_cell_inj (array_ref_base (dfst a)) (array_ref_offset (dfst a) `SZ.add` i) r1 r2
+    (fun _ ->
+      has_array_cell a i r1 `star`
+      has_array_cell a i r2 `star`
+      ref_equiv r1 r2
+    )
+// = has_base_array_cell_inj (array_ref_base (dfst a)) (array_ref_offset (dfst a) `SZ.add` i) r1 r2
 
 val has_array_cell_array_of_ref
+  (#opened: _)
   (#t: Type)
   (#td: typedef t)
   (r: ref td)
   (a: array td)
-: Lemma
-    (requires has_array_of_ref r a)
-    (ensures has_array_cell a 0sz r)
+: SteelGhostT unit opened
+    (has_array_of_ref r a)
+    (fun _ -> has_array_of_ref r a `star` has_array_cell a 0sz r)
 
 val ghost_array_cell_focus
   (#opened: _)
@@ -1376,13 +1556,9 @@ val ghost_array_cell_focus
   (a: array td)
   (i: SZ.t)
   (r: ref td)
-: SteelGhost (squash (has_array_cell a i r /\ Seq.length s == SZ.v (dsnd a))) opened
-    (array_pts_to a s)
-    (fun _ -> array_pts_to a (Seq.upd s (SZ.v i) (unknown td)) `star` pts_to r (Seq.index s (SZ.v i)))
-    (fun _ ->
-      has_array_cell a i r
-    )
-    (fun _ _ _ -> True)
+: SteelGhostT (squash (SZ.v i < Seq.length s /\ Seq.length s == SZ.v (dsnd a))) opened
+    (array_pts_to a s `star` has_array_cell a i r)
+    (fun _ -> array_pts_to a (Seq.upd s (SZ.v i) (unknown td)) `star` pts_to r (Seq.index s (SZ.v i)) `star` has_array_cell a i r)
 
 val ghost_array_cell
   (#opened: _)
@@ -1391,11 +1567,10 @@ val ghost_array_cell
   (#s: Ghost.erased (Seq.seq t))
   (a: array td)
   (i: SZ.t)
-: SteelGhost (r: Ghost.erased (ref td) { has_array_cell a i r /\ Seq.length s == SZ.v (dsnd a) }) opened
+: SteelGhost (r: Ghost.erased (ref td) { SZ.v i < Seq.length s /\ Seq.length s == SZ.v (dsnd a) }) opened
     (array_pts_to a s)
-    (fun r -> array_pts_to a (Seq.upd s (SZ.v i) (unknown td)) `star` pts_to r (Seq.index s (SZ.v i)))
+    (fun r -> array_pts_to a (Seq.upd s (SZ.v i) (unknown td)) `star` pts_to r (Seq.index s (SZ.v i)) `star` has_array_cell a i r)
     (fun _ ->
-      Ghost.reveal (mem_inv opened _inv) == false /\
       (SZ.v i < Seq.length s \/ SZ.v i < SZ.v (dsnd a))
     )
     (fun _ _ _ -> True)
@@ -1409,11 +1584,10 @@ val array_ref_cell
   (a: array_ref td)
   (len: array_len_t a)
   (i: SZ.t)
-: SteelAtomicBase (r: ref td { has_array_cell (| a, len |) i r /\ Seq.length s == SZ.v len }) false opened Unobservable
+: SteelAtomicBase (r: ref td { SZ.v i < Seq.length s /\ Seq.length s == SZ.v len }) false opened Unobservable
     (array_pts_to (| a, len |) s)
-    (fun r -> array_pts_to (| a, len |) (Seq.upd s (SZ.v i) (unknown td)) `star` pts_to r (Seq.index s (SZ.v i)))
+    (fun r -> array_pts_to (| a, len |) (Seq.upd s (SZ.v i) (unknown td)) `star` pts_to r (Seq.index s (SZ.v i)) `star` has_array_cell (| a, len |) i r)
     (fun _ ->
-      Ghost.reveal (mem_inv opened _inv) == false /\
       (SZ.v i < Seq.length s \/ SZ.v i < SZ.v len)
     )
     (fun _ _ _ -> True)
@@ -1426,11 +1600,10 @@ let array_cell
   (#s: Ghost.erased (Seq.seq t))
   (a: array td)
   (i: SZ.t)
-: SteelAtomicBase (r: ref td { has_array_cell a i r /\ Seq.length s == SZ.v (dsnd a) }) false opened Unobservable
+: SteelAtomicBase (r: ref td { SZ.v i < Seq.length s /\ Seq.length s == SZ.v (dsnd a) }) false opened Unobservable
     (array_pts_to a s)
-    (fun r -> array_pts_to a (Seq.upd s (SZ.v i) (unknown td)) `star` pts_to r (Seq.index s (SZ.v i)))
+    (fun r -> array_pts_to a (Seq.upd s (SZ.v i) (unknown td)) `star` pts_to r (Seq.index s (SZ.v i)) `star` has_array_cell a i r)
     (fun _ ->
-      Ghost.reveal (mem_inv opened _inv) == false /\
       (SZ.v i < Seq.length s \/ SZ.v i < SZ.v (dsnd a))
     )
     (fun _ _ _ -> True)
@@ -1438,6 +1611,7 @@ let array_cell
   change_equal_slprop (array_pts_to _ _) (array_pts_to _ s);
   let r = array_ref_cell al len i in
   change_equal_slprop (array_pts_to _ _) (array_pts_to _ _);
+  change_equal_slprop (has_array_cell _ _ _) (has_array_cell a i r);
   return r
 
 val unarray_cell
@@ -1449,11 +1623,10 @@ val unarray_cell
   (a: array td)
   (i: SZ.t)
   (r: ref td)
-: SteelGhost (squash (has_array_cell a i r /\ Seq.length s == SZ.v (dsnd a))) opened
-    (array_pts_to a s `star` pts_to r v)
-    (fun _ -> array_pts_to a (Seq.upd s (SZ.v i) v))
+: SteelGhost (squash (SZ.v i < Seq.length s /\ Seq.length s == SZ.v (dsnd a))) opened
+    (array_pts_to a s `star` pts_to r v `star` has_array_cell a i r)
+    (fun _ -> array_pts_to a (Seq.upd s (SZ.v i) v) `star` has_array_cell a i r)
     (fun _ ->
-      has_array_cell a i r /\
       (SZ.v i < Seq.length s ==> Seq.index s (SZ.v i) == unknown td)
     )
     (fun _ _ _ -> True)
@@ -1466,9 +1639,8 @@ val array_ref_shift
 : Ghost (array_ref td)
     (requires (SZ.v (array_ref_offset a) + SZ.v i <= SZ.v (array_ref_base_size a)))
     (ensures (fun y -> 
-      array_ref_base_size_type y == array_ref_base_size_type a /\
       array_ref_base_size y == array_ref_base_size a /\
-      array_ref_base y == array_ref_base a /\
+      (forall ty r . has_array_ref_base a #ty r ==> has_array_ref_base y #ty (coerce_eq () r)) /\
       array_ref_offset y == array_ref_offset a `SZ.add` i
     ))
 
