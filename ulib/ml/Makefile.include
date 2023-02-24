@@ -1,34 +1,13 @@
-# You should include this Makefile in your Makefile to make sure you remain
-# future-proof w.r.t. realized modules!
-
-FSTAR_REALIZED_MODULES=All BaseTypes Buffer Bytes Char CommonST Constructive Dyn Float Ghost Heap Monotonic.Heap \
-	HyperStack.All HyperStack.ST HyperStack.IO Int16 Int32 Int64 Int8 IO \
-	List List.Tot.Base Mul Option Pervasives.Native ST Exn String \
-	UInt16 UInt32 UInt64 UInt8 \
-	Pointer.Derived1 Pointer.Derived2 \
-	Pointer.Derived3 \
-	BufferNG \
-	TaggedUnion \
-	Bytes Util \
-	Pervasives Order Range \
-	Vector.Base Vector.Properties Vector TSet
-	# prims is realized by default hence not included in this list
-
-NOEXTRACT_STEEL_MODULES = -Steel -FStar.MSTTotal -FStar.MST -FStar.NMSTTotal -FStar.NMST
-
-NOEXTRACT_MODULES=$(addprefix -FStar., $(FSTAR_REALIZED_MODULES) Printf) \
-  -LowStar.Printf +FStar.List.Tot.Properties +FStar.Int.Cast.Full $(NOEXTRACT_STEEL_MODULES)
-
 FSTAR_DEFAULT_ARGS=
 ifdef FSTAR_HOME
   ULIB_ML=$(FSTAR_HOME)/ulib/ml
-  FSTARLIB_DIR=$(FSTAR_HOME)/bin/fstarlib
+  FSTARLIB_DIR=$(FSTAR_HOME)/lib/fstar/lib
 else
   FSTAR_PREFIX=$(dir $(shell which fstar.exe))/..
   ULIB_ML=$(FSTAR_PREFIX)/lib/fstar/ml
-  FSTARLIB_DIR=$(FSTAR_PREFIX)/lib/fstar-compiler-lib
+  FSTARLIB_DIR=$(FSTAR_PREFIX)/lib/fstar/lib
 endif
-FSTARLIB=$(FSTARLIB_DIR)/fstarlib.cmxa
+FSTARLIB=$(FSTARLIB_DIR)/fstar_lib.cmxa
 
 # Left as an example if we were to add multiple versions of fstarlib
 # ifeq ($(MEM),HST)
@@ -36,12 +15,12 @@ FSTARLIB=$(FSTARLIB_DIR)/fstarlib.cmxa
 # endif
 
 ifdef FSTAR_HOME
-  WITH_OCAMLPATH=OCAMLPATH=$(FSTAR_HOME)/bin
+  WITH_OCAMLPATH=OCAMLPATH=$(FSTAR_HOME)/lib
 else
   WITH_OCAMLPATH=
 endif
 OCAMLOPT_BARE=$(WITH_OCAMLPATH) ocamlfind opt
-OCAMLOPT_=$(OCAMLOPT_BARE) -package fstarlib -linkpkg -g
+OCAMLOPT_=$(OCAMLOPT_BARE) -package fstar.lib -linkpkg -g
 OCAMLOPT=$(OCAMLOPT_) $(OCAML_DEFAULT_FLAGS)
-OCAMLC_=$(WITH_OCAMLPATH) ocamlfind c -package fstarlib -linkpkg -g
+OCAMLC_=$(WITH_OCAMLPATH) ocamlfind c -package fstar.lib -linkpkg -g
 OCAMLC=$(OCAMLC_) $(OCAML_DEFAULT_FLAGS)

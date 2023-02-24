@@ -2,10 +2,70 @@
 
 include .common.mk
 
-all:
+FSTAR_USE_DUNE=1
+
+ifdef FSTAR_USE_DUNE
+all: dune
+else # FSTAR_USE_DUNE
+all: ocamlbuild
+endif # FSTAR_USE_DUNE
+
+.PHONY: ocamlbuild
+ocamlbuild:
 	$(Q)+$(MAKE) -C src/ocaml-output
 	$(Q)+$(MAKE) -C ulib/ml
 	$(Q)+$(MAKE) -C ulib
+
+.PHONY: dune dune-fstar
+dune-fstar:
+	cd ocaml && dune build --profile release && dune install --prefix=$(PWD)
+
+dune: dune-fstar
+	+$(MAKE) -C ulib
+
+.PHONY: dune-staged-bootstrap dune-bootstrap-stage
+dune-bootstrap-stage:
+	rm -rf ulib/.depend*
+	+$(MAKE) -C src/ocaml-output dune-snapshot
+	+$(MAKE) dune-fstar
+
+dune-staged-bootstrap:
+	+$(MAKE) STAGE_EXPERIMENTAL=0 dune-bootstrap-stage
+	+$(MAKE) -C src ocaml # extract a F* snapshot before verifying ulib (this is so that the checked files have the right version number)
+	+$(MAKE) dune-fstar
+	+$(MAKE) STAGE_EXPERIMENTAL=0 dune-bootstrap-stage # need to do stage 0 twice if fstar.exe was not present for the first time
+	+$(MAKE) STAGE_EXPERIMENTAL=1 dune-bootstrap-stage # generates Steel.Effect.Common
+	+$(MAKE) STAGE_EXPERIMENTAL=2 dune-bootstrap-stage # generates Steel.ST.GenElim.Base
+	+$(MAKE) dune-bootstrap-stage # verifies the rest of ulib/experimental
+
+.PHONY: clean-full-dune-snapshot clean-dune-snapshot
+
+clean-dune-snapshot:
+	rm -rf ocaml/*/generated ocaml/*/dynamic
+
+clean-full-dune-snapshot: clean-dune-snapshot
+	find ocaml -name *.ml | xargs rm -rf
+
+.PHONY: dune-extract-all
+
+dune-extract-all:
+	+$(MAKE) -C src ocaml
+	+$(MAKE) -C src/ocaml-output dune-snapshot
+
+dune-full-bootstrap:
+	+$(MAKE) dune
+	+$(MAKE) clean-full-dune-snapshot
+	rm -rf ulib/.depend*
+	rm -rf src/ocaml-output/FStar_*.ml* src/ocaml-output/parse.mly
+	+$(MAKE) dune-extract-all
+	rm -rf ulib/.depend*
+	+$(MAKE) dune
+
+.PHONY: dune-bootstrap
+dune-bootstrap:
+	+$(MAKE) dune-extract-all
+	+$(MAKE) dune
+
 
 install:
 	$(Q)+$(MAKE) -C src/ocaml-output install
@@ -91,3 +151,37 @@ output:
 	$(Q)+$(MAKE) -C tests/error-messages accept
 	$(Q)+$(MAKE) -C tests/interactive accept
 	$(Q)+$(MAKE) -C tests/bug-reports output-accept
+
+.PHONY: ci-utest-prelude
+
+ifdef FSTAR_USE_DUNE
+
+ci-utest-prelude: dune
+	$(Q)+$(MAKE) dune-bootstrap
+
+else # FSTAR_USE_DUNE
+
+ci-utest-prelude:
+	$(Q)+$(MAKE) -C src utest-prelude
+
+endif # FSTAR_USE_DUNE
+
+.PHONY: ci-uregressions ci-uregressions-ulong
+
+ifdef FSTAR_USE_DUNE
+
+ci-uregressions:
+	$(Q)+$(MAKE) -C src uregressions-raw
+
+ci-uregressions-ulong:
+	$(Q)+$(MAKE) -C src uregressions-ulong-raw
+
+else # FSTAR_USE_DUNE
+
+ci-uregressions:
+	$(Q)+$(MAKE) -C src uregressions
+
+ci-uregressions-ulong:
+	$(Q)+$(MAKE) -C src uregressions-ulong
+
+endif # FSTAR_USE_DUNE

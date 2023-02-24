@@ -13,15 +13,23 @@ OCAMLLEX=ocamllex
 FSTAR_OCAMLBUILD_EXTRAS ?= -cflag -g
 
 # From the root
-OCAMLBUILD_INCLUDES := \
-	src/ocaml-output \
+SRC_INCLUDES= \
 	src/basic/ml \
 	src/parser/ml \
-	src/fstar/ml \
 	src/extraction/ml \
 	src/prettyprint/ml \
 	src/tactics/ml \
+
+
+ALL_SRC_INCLUDES= \
+	$(SRC_INCLUDES) \
+	src/fstar/ml \
 	src/tests/ml \
+
+
+OCAMLBUILD_INCLUDES := \
+	src/ocaml-output \
+	$(ALL_SRC_INCLUDES) \
 	ulib/ml
 
 OCAMLBUILD_INCLUDE_FLAGS := $(addprefix -I , $(OCAMLBUILD_INCLUDES))
@@ -37,7 +45,8 @@ COMPILER_ML_LIB=FStar_Util.cmx FStar_Compiler_Bytes.cmx			\
 		FStar_Unionfind.cmx
 PARSER_ML_LIB=FStar_Parser_Util.cmx
 PRETTYPRINT_ML_LIB=FStar_Pprint.cmx
-GENERATED_FILES=parse.mly FStar_Parser_Parse.ml FStar_Version.ml intfiles
+GENERATED_FILES=FStar_Parser_Parse.ml FStar_Version.ml parse.mly
+FSTAR_HOME = ../..
 
 # The directory where we install files when doing "make install".
 # Overridden via the command-line by the OPAM invocation.
@@ -78,10 +87,48 @@ else
 	$(error Correct version of menhir not found (needs a version newer than $(MENHIR_MIN_VERSION)))
 endif
 
+.PHONY: generated-files intfiles
+generated-files: $(GENERATED_FILES) intfiles
+
+# EXPERIMENTAL: copy some snapshot to build with Dune
+DUNE_SNAPSHOT ?= $(realpath ../../ocaml)
+export DUNE_SNAPSHOT
+
+.PHONY: dune-stdlib-snapshot dune-taclib-snapshot dune-snapshot dune-fstar-snapshot dune-verify-ulib
+dune-fstar-snapshot: generated-files
+	mkdir -p $(DUNE_SNAPSHOT)/fstar
+	cp ../../src/fstar/ml/*.ml $(DUNE_SNAPSHOT)/fstar
+	+$(MAKE) -C ../../ulib/ml dune-base-snapshot
+	mkdir -p $(DUNE_SNAPSHOT)/fstar-lib/generated
+	for f in $(SRC_INCLUDES) ; do cp ../../$$f/*.ml $(DUNE_SNAPSHOT)/fstar-lib ; done
+	cp *.ml $(DUNE_SNAPSHOT)/fstar-lib/generated
+	rm -rf $(DUNE_SNAPSHOT)/fstar-lib/generated/get_branch.ml
+	mkdir -p $(DUNE_SNAPSHOT)/fstar-tests/generated
+	cp ../../src/tests/ml/*.ml $(DUNE_SNAPSHOT)/fstar-tests
+	mv $(DUNE_SNAPSHOT)/fstar-lib/generated/FStar_Tests_* $(DUNE_SNAPSHOT)/fstar-tests/generated/
+	rm -f $(DUNE_SNAPSHOT)/fstar-lib/generated/FStar_Version.ml
+
+dune-verify-ulib: dune-fstar-snapshot
+	+if test -x $(FSTAR_HOME)/bin/fstar.exe ; then \
+	  $(MAKE) -C ../../ulib ; \
+	fi
+
+dune-stdlib-snapshot: dune-verify-ulib
+	+if test -x $(FSTAR_HOME)/bin/fstar.exe ; then \
+	  $(MAKE) -C ../../ulib -f Makefile.extract-stdlib dune-snapshot ; \
+	fi
+
+dune-taclib-snapshot: dune-verify-ulib
+	+if test -x $(FSTAR_HOME)/bin/fstar.exe ; then \
+	  $(MAKE) -C ../../ulib -f Makefile.extract-taclib dune-snapshot ; \
+	fi
+
+dune-snapshot: dune-stdlib-snapshot dune-taclib-snapshot
+
 # https://stackoverflow.com/questions/38294095/ocaml-how-to-solve-findlib-warnings-of-multiple-cmis
 FSTAR_MAIN_NATIVE=_build/src/fstar/ml/main.native
 $(FSTAR_MAIN_NATIVE): export OCAMLFIND_IGNORE_DUPS_IN = $(shell ocamlfind query compiler-libs)
-$(FSTAR_MAIN_NATIVE): $(GENERATED_FILES)
+$(FSTAR_MAIN_NATIVE): generated-files
 	@echo "[OCAMLBUILD]"
 	$(Q)$(OCAMLBUILD) $(notdir $(FSTAR_MAIN_NATIVE)) FStar_Syntax_Syntax.inferred.mli
 
@@ -160,6 +207,7 @@ COMMITDATE = $(shell git log --pretty=format:%ci -n 1 2>/dev/null || echo unset)
 .PHONY: FStar_Version.ml
 FStar_Version.ml:
 	@echo '[MAKE      FStar_Version.ml]'
+	$(Q)rm -rf $@
 	$(Q)echo 'let dummy () = ();;' >> $@
 	$(Q)echo 'FStar_Options._version := "$(VERSION)";;' >> $@
 	$(Q)echo 'FStar_Options._platform := "$(PLATFORM)";;' >> $@
@@ -280,6 +328,7 @@ clean:
 	@echo "[CLEAN     src/ocaml-output]"
 	$(Q)rm -rf _build
 	$(Q)rm -f $(GENERATED_FILES)
+	$(Q)make -C ../../ulib/ml/ clean-intfiles
 	$(Q)rm -f *.tar.gz *.zip
 	$(Q)rm -f ../../bin/fstar-compiler-lib/*.cm[aiox]
 	$(Q)rm -f ../../bin/fstar-compiler-lib/*.cmx[as]
