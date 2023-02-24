@@ -20,7 +20,7 @@ ifdef HAS_OCAML
 
 OCAML_DEFAULT_FLAGS += -I $(OUTPUT_DIRECTORY) -w -31
 counter: _output/OWGCounter.ml OWGCounterTest.ml | verify-all
-	$(OCAMLC) -thread -o counter.exe $^
+	$(OCAMLOPT) -thread -o counter.exe $^
 
 else
 
