@@ -12,45 +12,12 @@ MENHIR=menhir #--explain --infer -la 1 --table
 OCAMLLEX=ocamllex
 FSTAR_OCAMLBUILD_EXTRAS ?= -cflag -g
 
-# From the root
-SRC_INCLUDES= \
-	src/basic/ml \
-	src/parser/ml \
-	src/extraction/ml \
-	src/prettyprint/ml \
-	src/tactics/ml \
-
-
-ALL_SRC_INCLUDES= \
-	$(SRC_INCLUDES) \
-	src/fstar/ml \
-	src/tests/ml \
-
-
-OCAMLBUILD_INCLUDES := \
-	src/ocaml-output \
-	$(ALL_SRC_INCLUDES) \
-	ulib/ml
-
-OCAMLBUILD_INCLUDE_FLAGS := $(addprefix -I , $(OCAMLBUILD_INCLUDES))
-
-OCAMLBUILD=cd ../../ &&                                                 \
-             ocamlbuild $(FSTAR_OCAMLBUILD_EXTRAS)                      \
-                      $(OCAMLBUILD_INCLUDE_FLAGS)                       \
-                      -j 4 -build-dir src/ocaml-output/_build           \
-                      -use-ocamlfind
-
-COMPILER_ML_LIB=FStar_Util.cmx FStar_Compiler_Bytes.cmx			\
-		FStar_Getopt.cmx FStar_Range.cmx FStar_Platform.cmx	\
-		FStar_Unionfind.cmx
-PARSER_ML_LIB=FStar_Parser_Util.cmx
-PRETTYPRINT_ML_LIB=FStar_Pprint.cmx
-GENERATED_FILES=FStar_Parser_Parse.ml FStar_Version.ml parse.mly
 FSTAR_HOME = ../..
+DUNE_SNAPSHOT ?= $(realpath $(FSTAR_HOME)/ocaml)
+export DUNE_SNAPSHOT
 
-# The directory where we install files when doing "make install".
-# Overridden via the command-line by the OPAM invocation.
-PREFIX=$(shell pwd)/fstar
+FStar_Parser_Parse_ml=$(DUNE_SNAPSHOT)/fstar-lib/generated/FStar_Parser_Parse.ml
+
 # The string "Madoko" if madoko is installed, something else otherwise.
 MADOKO = $(shell madoko --version 2>/dev/null | cut -c -6)
 DOS2UNIX=$(shell which dos2unix >/dev/null 2>&1 && echo dos2unix || echo true)
@@ -63,14 +30,12 @@ ifdef INSTALL_EXEC
 else
    INSTALL_EXEC := install
 endif
+export INSTALL_EXEC
 
 # Final sanity check for the OCaml version
 OCAML_BRANCH=$(shell ocaml get_branch.ml)
 
-# Complete build: generate fstar.exe and derive a fresh F#-compatible parser
-# from our reference parser (i.e. ../parser/parse.mly) using Menhir (if
-# possible).
-all:  ../../bin/fstar.exe ../../bin/fstar.ocaml ../../bin/tests.exe install-compiler-lib
+all: dune-snapshot
 
 # We derive parse.mly in two ways:
 # - if we have menhir, we generate it from from the Menhir parser
@@ -81,76 +46,34 @@ parse.mly: ../parser/parse.mly
 ifeq ($(HAS_VALID_MENHIR), 1)
 	@# TODO : call menhir directly when positions are fixed instead of
 	@# letting OCamlbuild go through ocamlyacc
-	@echo "[MENHIR PREPROCESS]"
+	$(call msg, "MENHIR PREPROCESS")
 	$(Q)$(MENHIR) --only-preprocess-for-ocamlyacc $< > $@
 else
 	$(error Correct version of menhir not found (needs a version newer than $(MENHIR_MIN_VERSION)))
 endif
 
-.PHONY: generated-files intfiles
-generated-files: $(GENERATED_FILES) intfiles
+.PHONY: generated-files
+generated-files: $(FStar_Parser_Parse_ml) $(FStar_Version_ml)
 
-# EXPERIMENTAL: copy some snapshot to build with Dune
-DUNE_SNAPSHOT ?= $(realpath ../../ocaml)
-export DUNE_SNAPSHOT
+.PHONY: dune-stdlib-snapshot dune-taclib-snapshot dune-snapshot dune-fstar-snapshot dune-verify-ulib source-files
 
-.PHONY: dune-stdlib-snapshot dune-taclib-snapshot dune-snapshot dune-fstar-snapshot dune-verify-ulib
-dune-fstar-snapshot: generated-files
-	mkdir -p $(DUNE_SNAPSHOT)/fstar
-	cp ../../src/fstar/ml/*.ml $(DUNE_SNAPSHOT)/fstar
-	+$(MAKE) -C ../../ulib/ml dune-base-snapshot
-	mkdir -p $(DUNE_SNAPSHOT)/fstar-lib/generated
-	for f in $(SRC_INCLUDES) ; do cp ../../$$f/*.ml $(DUNE_SNAPSHOT)/fstar-lib ; done
-	cp *.ml $(DUNE_SNAPSHOT)/fstar-lib/generated
-	rm -rf $(DUNE_SNAPSHOT)/fstar-lib/generated/get_branch.ml
-	mkdir -p $(DUNE_SNAPSHOT)/fstar-tests/generated
-	cp ../../src/tests/ml/*.ml $(DUNE_SNAPSHOT)/fstar-tests
-	mv $(DUNE_SNAPSHOT)/fstar-lib/generated/FStar_Tests_* $(DUNE_SNAPSHOT)/fstar-tests/generated/
-	rm -f $(DUNE_SNAPSHOT)/fstar-lib/generated/FStar_Version.ml
+# FIXME: dune-fstar-snapshot should also depend on dune-verify-ulib,
+# once we no longer lax-typecheck
+dune-fstar-snapshot:
+	+$(MAKE) -C .. ocaml
 
-dune-verify-ulib: dune-fstar-snapshot
-	+if test -x $(FSTAR_HOME)/bin/fstar.exe ; then \
-	  $(MAKE) -C ../../ulib ; \
-	fi
+dune-verify-ulib:
+	+$(MAKE) -C ../../ulib
 
 dune-stdlib-snapshot: dune-verify-ulib
-	+if test -x $(FSTAR_HOME)/bin/fstar.exe ; then \
-	  $(MAKE) -C ../../ulib -f Makefile.extract-stdlib dune-snapshot ; \
-	fi
+	$(MAKE) -C ../../ulib -f Makefile.extract-stdlib dune-snapshot
 
 dune-taclib-snapshot: dune-verify-ulib
-	+if test -x $(FSTAR_HOME)/bin/fstar.exe ; then \
-	  $(MAKE) -C ../../ulib -f Makefile.extract-taclib dune-snapshot ; \
-	fi
+	$(MAKE) -C ../../ulib -f Makefile.extract-taclib dune-snapshot
 
-dune-snapshot: dune-stdlib-snapshot dune-taclib-snapshot
+dune-snapshot: generated-files dune-fstar-snapshot dune-stdlib-snapshot dune-taclib-snapshot
 
-# https://stackoverflow.com/questions/38294095/ocaml-how-to-solve-findlib-warnings-of-multiple-cmis
-FSTAR_MAIN_NATIVE=_build/src/fstar/ml/main.native
-$(FSTAR_MAIN_NATIVE): export OCAMLFIND_IGNORE_DUPS_IN = $(shell ocamlfind query compiler-libs)
-$(FSTAR_MAIN_NATIVE): generated-files
-	@echo "[OCAMLBUILD]"
-	$(Q)$(OCAMLBUILD) $(notdir $(FSTAR_MAIN_NATIVE)) FStar_Syntax_Syntax.inferred.mli
-
-../../bin/fstar.exe: $(FSTAR_MAIN_NATIVE)
-	$(Q)rm -f $@
-	$(Q)cp $^ $@
-
-../../bin/fstar.ocaml: $(FSTAR_MAIN_NATIVE)
-	$(Q)rm -f $@
-	$(Q)cp $^ $@
-
-install-compiler-lib: $(FSTAR_MAIN_NATIVE)
-	@echo "[INSTALL   fstar-compiler-lib]"
-	$(Q)mkdir -p ../../bin/fstar-compiler-lib/
-	@# VD: forcing the recompilation of modules in ulib/tactics_ml whenever the compiler is rebuilt
-	@# in order to avoid inconsistent assumption errors between fstartaclib and compiler-lib
-	$(Q)$(FIND) ../../ulib/tactics_ml \( -name '*.cmi' -or -name '*.cmx' \) -exec rm {} \;
-	$(Q)$(FIND) . \( -name '*.cmi' -or -name '*.cmx' \) -exec cp {} ../../bin/fstar-compiler-lib/ \;
-	$(Q)sed "s/__FSTAR_VERSION__/$$(cat ../../version.txt)/" <../../ulib/ml/fstar-compiler-lib-META >../../bin/fstar-compiler-lib/META
-	$(Q)touch $@
-
-FStar_Parser_Parse.ml: parse.mly
+$(FStar_Parser_Parse_ml): parse.mly
 	@# We are opening the same module twice but we need these modules
 	@# open for the definition of tokens
 	$(Q)echo "open Prims" > $@
@@ -170,7 +93,7 @@ FStar_Parser_Parse.ml: parse.mly
 	@# TODO: create a proper OCamlbuild rule for this production so that
 	@# OCamlbuild knows how to generate parse.mly first (possibly using
 	@# menhir) and removes the production as needed.
-	@echo "[OCAMLYACC]"
+	$(call msg, "OCAMLYACC")
 	$(Q)ocamlyacc parse.mly 2> yac-log
 	$(Q)cat yac-log
 	@if [ "0$$(grep "shift/reduce" yac-log | sed 's/^\([0-9]\+\).*/\1/')" -gt 6 ]; then \
@@ -181,41 +104,6 @@ FStar_Parser_Parse.ml: parse.mly
 	fi
 	$(Q)cat parse.ml >> $@
 	$(Q)rm parse.ml parse.mli
-
-../../bin/tests.exe: export OCAMLFIND_IGNORE_DUPS_IN = $(shell ocamlfind query compiler-libs)
-../../bin/tests.exe: ../../bin/fstar.exe
-	$(Q)$(OCAMLBUILD) FStar_Tests_Main.native
-	$(Q)cp -f _build/src/tests/ml/FStar_Tests_Main.native $@
-
-# always bump version for a release; always bump it when recompiling so that one
-# can easily help debugging
-VERSION=$(shell head -n 1 ../../version.txt)
-ifeq ($(OS),Windows_NT)
-  ifeq ($(PROCESSOR_ARCHITECTURE),AMD64)
-     PLATFORM=Windows_x64
-  else
-     PLATFORM=Windows_x86
-  endif
-else
-     PLATFORM=$(shell echo `uname`_`uname -m`)
-endif
-COMPILER = OCaml $(shell ocamlc -version)
-DATE = $(shell date '+%Y-%m-%dT%H:%M:%S%z')
-COMMIT = $(shell ../tools/get_commit)
-COMMITDATE = $(shell git log --pretty=format:%ci -n 1 2>/dev/null || echo unset) # If a system does not have git, or we are not in a git repo, fallback with "unset"
-
-.PHONY: FStar_Version.ml
-FStar_Version.ml:
-	@echo '[MAKE      FStar_Version.ml]'
-	$(Q)rm -rf $@
-	$(Q)echo 'let dummy () = ();;' >> $@
-	$(Q)echo 'FStar_Options._version := "$(VERSION)";;' >> $@
-	$(Q)echo 'FStar_Options._platform := "$(PLATFORM)";;' >> $@
-	$(Q)echo 'FStar_Options._compiler := "$(COMPILER)";;' >> $@
-	@# We deliberately use commitdate instead of date, so that rebuilds are no-ops
-	$(Q)echo 'FStar_Options._date := "$(COMMITDATE)";;' >> $@
-	$(Q)echo 'FStar_Options._commit:= "$(COMMIT)";;' >> $@
-
 
 # ------------------------------------------------------------------------------
 # Preparing a release... these targets are not optimized and the Makefile is
@@ -228,83 +116,94 @@ FStar_Version.ml:
 #  installs we cannot assume the user has git installed.)
 install_dir = cd ../../$(1) && find . -type f -exec $(INSTALL_EXEC) -m 644 -D {} $(PREFIX)/$(2)/{} \;
 
-# install the standard library binary files
-install_fstarlib = $(INSTALL_EXEC) -m 755 -D ../../$(1)/$(2) $(PREFIX)/lib/fstar/$(2)
-
 # Install FStar into $(PREFIX) using the standard Unix directory
-# structure.  NOTE: this rule needs ocamlfind to install the fstarlib,
-# fstar-tactics-lib and fstar-compiler-lib packages. It works with the
-# opam package, but it has not been tested in any other settings.
-install: all
-	@# Install the binary
-	$(INSTALL_EXEC) -m 755 -D $(FSTAR_MAIN_NATIVE) $(PREFIX)/bin/fstar.exe
-	@# Then the standard library
-	$(call install_dir,ulib,lib/fstar)
-	@# Then the binary library
-	cd ../../bin/fstarlib && ocamlfind install fstarlib *
-	cd ../../bin/fstar-compiler-lib && ocamlfind install fstar-compiler-lib *
-	cd ../../bin/fstar-tactics-lib && ocamlfind install fstar-tactics-lib *
-	@# Then the rest of the static files.
-	@# (those are not used in the opam package, not sure if their Makefiles work)
+# structure.
+
+ifeq ($(OS),Windows_NT)
+  # On Cygwin, the `--prefix` option to dune only
+  # supports Windows paths.
+  FSTAR_PREFIX=$(shell cygpath -m $(PREFIX))
+else
+  FSTAR_PREFIX=$(PREFIX)
+endif
+
+install:
+	@# Rebuild everything
+	+$(MAKE) -C $(FSTAR_HOME)
+	@# Install the binary and the binary library
+	cd $(DUNE_SNAPSHOT) && dune install --prefix=$(FSTAR_PREFIX)
+	@# Then the standard library sources and checked files
+	+$(MAKE) -C $(FSTAR_HOME)/ulib install
+	@# Then the rest
+	+$(MAKE) install-sides
+
+# The `install-sides` rule is intended to be run only by the nix flake.
+# Indeed, nix needs to patch binaries created by OCaml (here fstar.exe),
+# thus nix cannot use `dune install`
+
+.PHONY: install-sides
+install-sides:
+	@# Then the examples (those now work from any F* installation flavor, sources, binary package or opam)
+	@# ucontrib is needed by examples/crypto
 	$(call install_dir,examples,share/fstar/examples)
-	$(call install_dir,tests,share/fstar/tests)
 	$(call install_dir,ucontrib,share/fstar/contrib)
 	@# Then the tutorial
 ifeq ($(MADOKO),Madoko)
 	@# Build the tutorial first
 	+$(MAKE) -C ../../doc/tutorial
 endif
-	$(call install_dir,doc/tutorial,share/fstar/tutorial)
+	$(INSTALL_EXEC) -m 644 -D ../../doc/Makefile.include $(PREFIX)/share/fstar/doc/Makefile.include
+	$(call install_dir,doc/tutorial,share/fstar/doc/tutorial)
 
 NAME=fstar_$(VERSION)_$(PLATFORM)
-
-# the `fexport` function takes a path relative to the top of the F* repo
-# and exports the contents of that directory to the $(PREFIX) dir
-fexport = cd ../.. && git archive "--format=tar" "--prefix=$(1)/" HEAD:$(1)/ |\
-          tar -x -C $(PREFIX)
-
-# Similar, but exports every file instead of only those in version control.
-fexport-all = cp -a ../../$(1) $(PREFIX)/$(1)
 
 ifeq ($(OS),Windows_NT)
   Z3_NAME=z3.exe
 else
   Z3_NAME=z3
 endif
-Z3_DIR=$(shell dirname $$(which $(Z3_NAME)))
+Z3_DIR=$(dir $(shell which $(Z3_NAME)))
 # Z3_LICENSE MUST be explicitly overridden if z3 is installed from an opam package.
 # See for instance $(FSTAR_HOME)/.docker/package.Dockerfile
-Z3_LICENSE?=$(shell dirname $(Z3_DIR))/LICENSE.txt
+ifndef Z3_LICENSE
+  Z3_LICENSE?=$(shell if test -f $(Z3_DIR)/LICENSE.txt ; then echo $(Z3_DIR)/LICENSE.txt ; elif test -f $(Z3_DIR)/../LICENSE.txt ; then echo $(Z3_DIR)/../LICENSE.txt ; fi)
+endif
 
 # Create a zip / tar.gz package of FStar that contains a Z3 binary and
 # proper license files.
+
+ifeq ($(OS),Windows_NT)
+  # On Cygwin, the `--prefix` option to dune only
+  # supports Windows paths.
+  package_prefix=$(shell cygpath -m $(CURDIR))/fstar
+else
+  package_prefix=$(CURDIR)/fstar
+endif
+
+package_dir = cd ../../$(1) && find . -type f -exec $(INSTALL_EXEC) -m 644 -D {} $(package_prefix)/$(2)/{} \;
+
 package:
+	if test -z "$(Z3_LICENSE)" ; then echo Please set Z3_LICENSE to the location of the license file for Z3 ; false ; fi
 	@# Clean previous packages.
-	! [ -d "$(PREFIX)" ]
+	! [ -d "$(package_prefix)" ]
 	rm -f $(NAME).zip $(NAME).tar.gz
-	mkdir -p $(PREFIX)
-	@# Install the F* binary
-	$(call fexport-all,bin)
-	@# Then the standard library.
-	$(call fexport-all,ulib)
-	mkdir -p $(PREFIX)/src/ocaml-output/
-	cp ../../src/ocaml-output/FStar_Pervasives.ml $(PREFIX)/src/ocaml-output/
-	cp ../../version.txt $(PREFIX)/
-	cp ../../_tags $(PREFIX)/
-	cp ../../.common.mk $(PREFIX)/
-	@# Then the rest of the static files.
-	$(call fexport,ucontrib)
+	@# Install F* into the package
+	+PREFIX=$(package_prefix) $(MAKE) install
+	@# Make the F* ulib F# DLL (NOT the nuget package)
+	+PREFIX=$(package_prefix) $(MAKE) -C $(FSTAR_HOME)/ulib ulib-in-fsharp-dll
+	@# Then the version file.
+	cp ../../version.txt $(package_prefix)/
 	@# Documentation and licenses
-	cp ../../README.md ../../INSTALL.md ../../LICENSE ../../LICENSE-fsharp.txt $(PREFIX)
-	cp $(Z3_LICENSE) $(PREFIX)/LICENSE-z3.txt
+	cp ../../README.md ../../INSTALL.md ../../LICENSE ../../LICENSE-fsharp.txt $(package_prefix)
+	cp $(Z3_LICENSE) $(package_prefix)/LICENSE-z3.txt
 	@# Z3
 ifeq ($(OS),Windows_NT)
-	cp $(shell which libgmp-10.dll) $(PREFIX)/bin
-	cp $(Z3_DIR)/*.exe $(Z3_DIR)/*.dll $(Z3_DIR)/*.lib $(PREFIX)/bin
-	chmod a+x $(PREFIX)/bin/z3.exe $(PREFIX)/bin/*.dll
+	cp $(shell which libgmp-10.dll) $(package_prefix)/bin
+	cp $(Z3_DIR)/*.exe $(Z3_DIR)/*.dll $(Z3_DIR)/*.lib $(package_prefix)/bin
+	chmod a+x $(package_prefix)/bin/z3.exe $(package_prefix)/bin/*.dll
 	zip -r -9 $(NAME).zip fstar
 else
-	cp $(Z3_DIR)/z3 $(PREFIX)/bin
+	cp $(Z3_DIR)/z3 $(package_prefix)/bin
 	tar czf $(NAME).tar.gz fstar
 endif
 
@@ -324,21 +223,15 @@ endif
 
 .PHONY: clean
 # Clean up all files generated by targets in _this_ Makefile
+# We only remove the dynamic/ part of the OCaml snapshot. The rest
+# should be removed only through the `clean-dune-snapshot` rule in the
+# root Makefile. This is because `make all` no longer performs any
+# bootstrapping, so `make clean` shouldn't clean up the whole
+# snapshot.
 clean:
-	@echo "[CLEAN     src/ocaml-output]"
-	$(Q)rm -rf _build
-	$(Q)rm -f $(GENERATED_FILES)
-	$(Q)make -C ../../ulib/ml/ clean-intfiles
+	$(call msg, "CLEAN", "src/ocaml-output")
+	$(Q)rm -f $(FStar_Version_ml) parse.mly
 	$(Q)rm -f *.tar.gz *.zip
-	$(Q)rm -f ../../bin/fstar-compiler-lib/*.cm[aiox]
-	$(Q)rm -f ../../bin/fstar-compiler-lib/*.cmx[as]
-
-# Purge (clean + delete *all* automatically generated files)
-# if you do this you'll need to run `make ocaml` in `src` to get them back
-purge: clean
-	rm -f *.ml || true
-
--include .depend
-
-intfiles:
-	+$(MAKE) -C ../../ulib/ml/ intfiles
+	$(Q)rm -f version_platform.txt
+	$(Q)rm -f yac-log
+	$(Q)rm -rf fstar

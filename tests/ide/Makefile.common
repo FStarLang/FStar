@@ -51,11 +51,11 @@ JSON_CLEANUP:=python ../cleanup.py
 # ‘fstar-write-transcript’, or possibly by ‘make build’) and save it as
 # ‘.out.expected’.
 %.out.accept: %.out
-	@echo '[ACCEPT    $<]'
+	$(call msg, "ACCEPT", $<)
 	$(Q)$(JSON_CLEANUP) "$<.expected" < "$<"
 
 # Verify that a given output matches the corresponding input
 %.out.check: %.out %.out.expected
-	@echo '[DIFF      $<]'
+	$(call msg, "DIFF", $<)
 	$(Q)diff -u --strip-trailing-cr "$<.expected" "$<"
 	$(Q)touch $@

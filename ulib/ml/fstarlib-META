@@ -1,7 +1,0 @@
-name="fstarlib"
-version="__FSTAR_VERSION__"
-description="FStar standard library"
-requires="batteries,stdint,zarith,ppx_deriving.std,ppx_deriving_yojson,ppx_deriving_yojson.runtime"
-archive(toploop)="fstarlib.cma"
-archive(byte)="fstarlib.cma"
-archive(native)="fstarlib.cmxa"

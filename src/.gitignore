@@ -4,7 +4,6 @@ fsharp-output
 /backend/
 u_boot_fsts
 u_ocaml-output
-.fstarlib
 
 dep.graph
 

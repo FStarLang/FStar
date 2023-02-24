@@ -18,11 +18,11 @@ all: uall
 uall: $(POSTARGETS) $(NEGTARGETS)
 
 $(POSTARGETS): %.pver: %
-	@echo "[CHECK     $(basename $(notdir $@))]"
+	$(call msg, "CHECK", $(basename $(notdir $@)))
 	$(Q)$(FSTAR) $(SIL) --include $^ --odir $^ Test.fst
 
 $(NEGTARGETS): %.nver: %
-	@echo "[CHECKFAIL $(basename $(notdir $@))]"
+	$(call msg, "CHECKFAIL", $(basename $(notdir $@)))
 	$(Q)! $(FSTAR) $(SIL) --include $^ --odir $^ Test.fst > $^/error.log 2>&1
 	@echo $^ failed as expected
 

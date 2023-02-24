@@ -381,7 +381,7 @@ let load_module_from_cache =
       let fail msg cache_file =
         //Don't feel too bad if fn is the file on the command line
         //Also suppress the warning if already given to avoid a deluge
-        let suppress_warning = Options.should_verify_file fn || !already_failed in
+        let suppress_warning = Options.should_check_file fn || !already_failed in
         if not suppress_warning then begin
           already_failed := true;
           FStar.Errors.log_issue
