@@ -28,6 +28,7 @@ let __proj__Mkpcm__item__p : 'a . 'a pcm -> 'a pcm' =
 
 
 type ('a, 'p, 'x, 'y) composable = Obj.t
+let one : 'a . 'a pcm -> 'a = fun p -> (p.p).one
 let op : 'a . 'a pcm -> 'a -> 'a -> 'a =
   fun p -> fun x -> fun y -> (p.p).op x y
 type ('a, 'pcm1, 'x, 'y) compatible = unit
