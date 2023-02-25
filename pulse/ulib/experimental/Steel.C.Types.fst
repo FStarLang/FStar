@@ -824,9 +824,6 @@ let has_struct_field
   r field r'
 = has_struct_field1 r field r'
 
-#push-options "--z3rlimit 16"
-#restart-solver
-
 let has_struct_field_dup'
   (#opened: _)
   (#field_t: eqtype)
@@ -839,7 +836,7 @@ let has_struct_field_dup'
     (fun _ -> has_struct_field1 r field r' `star` has_struct_field1 r field r')
 =
   ST.rewrite (has_struct_field1 r field r') (has_struct_field0 r field r');
-  let _ = ST.gen_elim_dep () in
+  let _ = ST.gen_elim () in
   HR.share r;
   HR.share r';
   ST.noop ();
@@ -847,8 +844,7 @@ let has_struct_field_dup'
   ST.noop ();
   ST.rewrite (has_struct_field0 r field r') (has_struct_field1 r field r')
 
-#pop-options
-
+(*
 let has_struct_field_gen_inj
   (#opened: _)
   (#field_t: eqtype)
