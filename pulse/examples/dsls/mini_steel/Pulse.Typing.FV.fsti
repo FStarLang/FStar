@@ -24,6 +24,12 @@ val freevars_close_term (e:term) (x:var) (i:index)
              freevars e `set_minus` x)
     [SMTPat (freevars (close_term' e x i))]
 
+val freevars_close_st_term (e:st_term) (x:var) (i:index)
+  : Lemma 
+    (ensures freevars_st (close_st_term' e x i) ==
+             freevars_st e `set_minus` x)
+    [SMTPat (freevars_st (close_st_term' e x i))]
+
 
 val st_typing_freevars (#f:_) (#g:_) (#t:_) (#c:_)
                        (d:st_typing f g t c)

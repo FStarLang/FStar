@@ -16,12 +16,12 @@ open Pulse.Soundness.Common
 let vprop_equiv_refl_type = 
   let var = 0 in
   let v = mk_name var in
-  let v_typ = elab_pure Tm_VProp in
+  let v_typ = elab_term Tm_VProp in
   mk_arrow (v_typ, R.Q_Explicit)
            (RT.close_term (stt_vprop_equiv v v) var)
 
 let inst_vprop_equiv_refl #g #v
-                          (d:RT.typing g v (elab_pure Tm_VProp))
+                          (d:RT.typing g v (elab_term Tm_VProp))
   : GTot (pf:R.term &
           RT.typing g pf (stt_vprop_equiv v v))
   = admit()
@@ -31,7 +31,7 @@ let vprop_equiv_sym_type =
   let v0 = mk_name var0 in
   let var1 = 1 in
   let v1 = mk_name var1 in
-  let v_typ = elab_pure Tm_VProp in
+  let v_typ = elab_term Tm_VProp in
   mk_arrow 
     (v_typ, R.Q_Implicit)
     (RT.close_term
@@ -44,8 +44,8 @@ let vprop_equiv_sym_type =
         var0)
             
 let inst_vprop_equiv_sym #g #v0 #v1
-                         (d0:RT.typing g v0 (elab_pure Tm_VProp))
-                         (d1:RT.typing g v1 (elab_pure Tm_VProp))
+                         (d0:RT.typing g v0 (elab_term Tm_VProp))
+                         (d1:RT.typing g v1 (elab_term Tm_VProp))
                          (#pf:_)
                          (deq:RT.typing g pf (stt_vprop_equiv v0 v1))
   : GTot (pf:R.term &
@@ -53,9 +53,9 @@ let inst_vprop_equiv_sym #g #v0 #v1
   = admit()
 
 let inst_vprop_equiv_trans #g #v0 #v1 #v2
-                         (d0:RT.typing g v0 (elab_pure Tm_VProp))
-                         (d1:RT.typing g v1 (elab_pure Tm_VProp))
-                         (d2:RT.typing g v2 (elab_pure Tm_VProp))
+                         (d0:RT.typing g v0 (elab_term Tm_VProp))
+                         (d1:RT.typing g v1 (elab_term Tm_VProp))
+                         (d2:RT.typing g v2 (elab_term Tm_VProp))
                          (#pf01:_)
                          (d01:RT.typing g pf01 (stt_vprop_equiv v0 v1))
                          (#pf12:_)                         
@@ -66,10 +66,10 @@ let inst_vprop_equiv_trans #g #v0 #v1 #v2
 
 
 let inst_vprop_equiv_cong #g #v0 #v1 #v0' #v1'
-                         (d0:RT.typing g v0 (elab_pure Tm_VProp))
-                         (d1:RT.typing g v1 (elab_pure Tm_VProp))
-                         (d0':RT.typing g v0' (elab_pure Tm_VProp))
-                         (d1':RT.typing g v1' (elab_pure Tm_VProp))                         
+                         (d0:RT.typing g v0 (elab_term Tm_VProp))
+                         (d1:RT.typing g v1 (elab_term Tm_VProp))
+                         (d0':RT.typing g v0' (elab_term Tm_VProp))
+                         (d1':RT.typing g v1' (elab_term Tm_VProp))                         
                          (#pf0:_)
                          (eq0:RT.typing g pf0 (stt_vprop_equiv v0 v0'))
                          (#pf1:_)                         
@@ -80,24 +80,24 @@ let inst_vprop_equiv_cong #g #v0 #v1 #v0' #v1'
 
 
 let inst_vprop_equiv_unit #g #v
-                         (d:RT.typing g v (elab_pure Tm_VProp))
+                         (d:RT.typing g v (elab_term Tm_VProp))
   : GTot (pf:R.term &
-          RT.typing g pf (stt_vprop_equiv (mk_star (elab_pure Tm_Emp) v) v))
+          RT.typing g pf (stt_vprop_equiv (mk_star (elab_term Tm_Emp) v) v))
   = admit()
 
 
 let inst_vprop_equiv_comm #g #v0 #v1
-                         (d0:RT.typing g v0 (elab_pure Tm_VProp))
-                         (d1:RT.typing g v1 (elab_pure Tm_VProp))                         
+                         (d0:RT.typing g v0 (elab_term Tm_VProp))
+                         (d1:RT.typing g v1 (elab_term Tm_VProp))                         
   : GTot (pf:R.term &
           RT.typing g pf (stt_vprop_equiv (mk_star v0 v1) (mk_star v1 v0)))
   = admit()
 
 
 let inst_vprop_equiv_assoc #g #v0 #v1 #v2
-                         (d0:RT.typing g v0 (elab_pure Tm_VProp))
-                         (d1:RT.typing g v1 (elab_pure Tm_VProp))                         
-                         (d2:RT.typing g v2 (elab_pure Tm_VProp))                                                  
+                         (d0:RT.typing g v0 (elab_term Tm_VProp))
+                         (d1:RT.typing g v1 (elab_term Tm_VProp))                         
+                         (d2:RT.typing g v2 (elab_term Tm_VProp))                                                  
   : GTot (pf:R.term &
           RT.typing g pf (stt_vprop_equiv (mk_star v0 (mk_star v1 v2)) (mk_star (mk_star v0 v1) v2)))
   = admit()
@@ -137,11 +137,11 @@ let inst_vprop_equiv_ext #g #v0 #v1
   = admit ()
 
 #push-options "--z3rlimit_factor 4"
-let rec vprop_equiv_soundness (#f:stt_env) (#g:env) (#v0 #v1:pure_term) 
+let rec vprop_equiv_soundness (#f:stt_env) (#g:env) (#v0 #v1:term) 
                               (d:tot_typing f g v0 Tm_VProp)
                               (eq:vprop_equiv f g v0 v1)
   : GTot (pf:R.term &
-          RT.typing (extend_env_l f g) pf (stt_vprop_equiv (elab_pure v0) (elab_pure v1)))
+          RT.typing (extend_env_l f g) pf (stt_vprop_equiv (elab_term v0) (elab_term v1)))
          (decreases eq)
   = match eq with
     | VE_Refl _ _ ->
@@ -204,15 +204,15 @@ let rec vprop_equiv_soundness (#f:stt_env) (#g:env) (#v0 #v1:pure_term)
 #pop-options
 
 let stt_vprop_equiv_is_prop (#g:R.env) (#v0 #v1:R.term)
-                            (d0: RT.typing g v0 (elab_pure Tm_VProp))
-                            (d1: RT.typing g v1 (elab_pure Tm_VProp))
+                            (d0: RT.typing g v0 (elab_term Tm_VProp))
+                            (d1: RT.typing g v1 (elab_term Tm_VProp))
    : GTot (RT.typing g (stt_vprop_equiv v0 v1) RT.tm_prop)
    = admit()
    
-let vprop_equiv_unit_soundness (#f:stt_env) (#g:env) (#v0 #v1:pure_term) 
+let vprop_equiv_unit_soundness (#f:stt_env) (#g:env) (#v0 #v1:term) 
                                (d0:tot_typing f g v0 Tm_VProp)
                                (eq:vprop_equiv f g v0 v1)
-  : GTot (RT.typing (extend_env_l f g) (`()) (stt_vprop_equiv (elab_pure v0) (elab_pure v1)))
+  : GTot (RT.typing (extend_env_l f g) (`()) (stt_vprop_equiv (elab_term v0) (elab_term v1)))
   = let (| pf, s |) = vprop_equiv_soundness d0 eq in
     let d1 = fst (vprop_equiv_typing _ _ _ _ eq) d0 in
     let s_prop = stt_vprop_equiv_is_prop (tot_typing_soundness d0) (tot_typing_soundness d1) in

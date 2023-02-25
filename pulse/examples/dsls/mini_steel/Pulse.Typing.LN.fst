@@ -109,7 +109,7 @@ let rec open_st_term_ln' (e:st_term)
       open_term_ln' e x i
       
     | Tm_STApp l _ r ->
-      open_st_term_ln' l x i;
+      open_term_ln' l x i;
       open_term_ln' r x i
 
     | Tm_Abs b _q pre body post ->
@@ -256,7 +256,7 @@ let rec ln_weakening_st (t:st_term) (i j:int)
       ln_weakening_opt post (i + 1) (j + 1)
 
     | Tm_STApp l _ r ->
-      ln_weakening_st l i j;
+      ln_weakening l i j;
       ln_weakening r i j      
 
     | Tm_Bind e1 e2 ->
@@ -385,7 +385,7 @@ let rec open_term_ln_inv_st' (t:st_term)
       open_term_ln_inv_st' e2 x (i + 1)
 
     | Tm_STApp l _ r ->
-      open_term_ln_inv_st' l x i;
+      open_term_ln_inv' l x i;
       open_term_ln_inv' r x i
 
     | Tm_Abs b _q pre body post ->
@@ -504,7 +504,7 @@ let rec close_st_term_ln' (t:st_term) (x:var) (i:index)
       close_st_term_ln' e2 x (i + 1)
 
     | Tm_STApp l _ r ->
-      close_st_term_ln' l x i;
+      close_term_ln' l x i;
       close_term_ln' r x i
 
     | Tm_Abs b _q pre body post ->
@@ -595,7 +595,7 @@ let rec st_typing_ln (#f:_) (#g:_) (#t:_) (#c:_)
       close_comp_ln c x
 
     | T_STApp _ _ _ _ res arg st at ->
-      st_typing_ln st;
+      tot_typing_ln st;
       tot_typing_ln at;
       open_comp_ln_inv' res arg 0
 

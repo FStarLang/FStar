@@ -97,7 +97,7 @@ let rec freevars_close_st_term' (t:st_term) (x:var) (i:index)
       freevars_close_term' t x i
 
     | Tm_STApp l _ r ->
-      freevars_close_st_term' l x i;
+      freevars_close_term' l x i;
       freevars_close_term' r x i
     
     | Tm_Abs b _q pre body post ->
@@ -134,6 +134,8 @@ let freevars_close_term (e:term) (x:var) (i:index)
     (ensures freevars (close_term' e x i) `Set.equal`
              (freevars e `set_minus` x))
   = freevars_close_term' e x i
+
+let freevars_close_st_term e x i = freevars_close_st_term' e x i
 
 let contains_r (g:R.env) (x:var) = Some? (RT.lookup_bvar g x)
 let vars_of_env_r (g:R.env) = Set.intension (contains_r g)
@@ -264,13 +266,6 @@ let comp_typing_freevars  (#f:_) (#g:_) (#c:_) (#u:_)
       tot_typing_freevars it;
       st_comp_typing_freevars dst
 
-let freevars_close_st_term (e:st_term) (x:var) (i:index)
-  : Lemma 
-    (ensures freevars_st (close_st_term' e x i) ==
-             freevars_st e `set_minus` x)
-    [SMTPat (freevars_st (close_st_term' e x i))]
-  = freevars_close_st_term' e x i
-
 let freevars_open_st_term_inv (e:st_term) 
                               (x:var {~ (x `Set.mem` freevars_st e) })
   : Lemma 
@@ -305,7 +300,7 @@ let rec st_typing_freevars (#f:_) (#g:_) (#t:_) (#c:_)
       freevars_open_st_term_inv body x
 
    | T_STApp _ _ _ _ res arg st at ->
-     st_typing_freevars st;
+     tot_typing_freevars st;
      tot_typing_freevars at;
      freevars_open_comp res arg 0
 

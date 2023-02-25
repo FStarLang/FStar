@@ -19,10 +19,10 @@ module FV = Pulse.Typing.FV
 let replace_equiv_post
   (f:RT.fstar_top_env)
   (g:env)
-  (c:pure_comp{stateful_comp c /\ freevars_comp c `Set.subset` FV.vars_of_env g})
+  (c:comp{stateful_comp c /\ freevars_comp c `Set.subset` FV.vars_of_env g})
   (post_hint:option term)
 
-  : T.Tac (c1:pure_comp { stateful_comp c1 /\ comp_pre c1 == comp_pre c } & st_equiv f g c c1) =
+  : T.Tac (c1:comp { stateful_comp c1 /\ comp_pre c1 == comp_pre c } & st_equiv f g c c1) =
 
   let {u=u_c;res=res_c;pre=pre_c;post=post_c} = st_comp_of_comp c in
   let x = fresh g in //We could pick x here fresh with respect to both g and post_hint, rather than failing
@@ -64,7 +64,6 @@ let replace_equiv_post
       } in
       let c_with_post = c `with_st_comp` st_comp_with_post in
       assume (open_term (close_term post_opened x) x == post_opened);
-      assert (is_pure_term (close_term post_opened x));
       (| c_with_post,
         ST_VPropEquiv
           g c c_with_post x pre_c_typing res_c_typing post_c_typing
@@ -77,14 +76,14 @@ let replace_equiv_post
 let check_abs
   (f:RT.fstar_top_env)
   (g:env)
-  (t:term{Tm_Abs? t})
-  (pre:pure_term)
+  (t:st_term{Tm_Abs? t})
+  (pre:term)
   (pre_typing:tot_typing f g pre Tm_VProp)
   (post_hint:option term)
   (check:check_t)
-  : T.Tac (t:term &
-           c:pure_comp { stateful_comp c ==> comp_pre c == pre } &
-           src_typing f g t c) =
+  : T.Tac (t:st_term &
+           c:comp { stateful_comp c ==> comp_pre c == pre } &
+           st_typing f g t c) =
   match t with  
   | Tm_Abs {binder_ty=t;binder_ppname=ppname} qual pre_hint body post_hint ->  (* {pre}  (fun (x:t) -> body) : ? { pre } *)
     let (| t, _, _ |) = check_tot true f g t in //elaborate it first
@@ -105,23 +104,23 @@ let check_abs
           let post = open_term' post (Tm_Var {nm_ppname=RT.pp_name_default;nm_index=x}) 1 in
           Some post
       in
-      let (| body', c_body, body_typing |) = check f g' (open_term body x) pre_opened (E pre_typing) post in
-      FV.src_typing_freevars body_typing;
-      let body_closed = close_term body' x in
-      assume (open_term body_closed x == body');
+      let (| body', c_body, body_typing |) = check f g' (open_st_term body x) pre_opened (E pre_typing) post in
+      FV.st_typing_freevars body_typing;
+      let body_closed = close_st_term body' x in
+      assume (open_st_term body_closed x == body');
 
-      let tt = T_Abs g ppname x qual t u body_closed c_body t_typing body_typing in
+      let tt = T_Abs g x qual t u body_closed c_body t_typing body_typing in
       let tres = Tm_Arrow {binder_ty=t;binder_ppname=ppname} qual (close_comp c_body x) in
       (| Tm_Abs {binder_ty=t;binder_ppname=ppname} qual None body_closed None, 
          C_Tot tres,
          tt |)
     | _ -> T.fail "bad hint"
 
-let has_pure_vprops (pre:pure_term) = L.existsb Tm_Pure? (vprop_as_list pre)
+let has_pure_vprops (pre:term) = L.existsb Tm_Pure? (vprop_as_list pre)
 
-let maybe_add_elim_pure (pre:pure_term) (t:term) : T.Tac (bool & term) =
+let maybe_add_elim_pure (pre:term) (t:st_term) : T.Tac (bool & st_term) =
   let pure_props =
-    L.flatten (L.map (fun (t:pure_term) ->
+    L.flatten (L.map (fun (t:term) ->
                       match t with
                       | Tm_Pure p -> [p]
                       | _ -> []) (vprop_as_list pre)) in
@@ -137,16 +136,16 @@ let maybe_add_elim_pure (pre:pure_term) (t:term) : T.Tac (bool & term) =
 #push-options "--z3rlimit_factor 20"
 let rec combine_if_branches (f:RT.fstar_top_env)
   (g_then:env)
-  (e_then:term)
-  (c_then:pure_comp_st)
-  (e_then_typing:src_typing f g_then e_then c_then)
+  (e_then:st_term)
+  (c_then:comp_st)
+  (e_then_typing:st_typing f g_then e_then c_then)
   (g_else:env)
-  (e_else:term)
-  (c_else:pure_comp_st)
-  (e_else_typing:src_typing f g_else e_else c_else)
-  : T.TacH (c:pure_comp_st{comp_pre c == comp_pre c_then} &
-            src_typing f g_then e_then c &
-            src_typing f g_else e_else c)
+  (e_else:st_term)
+  (c_else:comp_st)
+  (e_else_typing:st_typing f g_else e_else c_else)
+  : T.TacH (c:comp_st{comp_pre c == comp_pre c_then} &
+            st_typing f g_then e_then c &
+            st_typing f g_else e_else c)
            (requires fun _ ->
               comp_pre c_then == comp_pre c_else)
            (ensures fun _ _ -> True) =
@@ -198,11 +197,10 @@ let rec combine_if_branches (f:RT.fstar_top_env)
 #push-options "--query_stats --fuel 2 --ifuel 1 --z3rlimit_factor 10"
 let check_comp (f:RT.fstar_top_env)
                (g:env) 
-               (c:pure_comp_st)
+               (c:comp_st)
                (pre_typing:tot_typing f g (comp_pre c) Tm_VProp)
   : T.Tac (comp_typing f g c (comp_u c))
-  = let check_st_comp (st:st_comp { is_pure_st_comp st /\
-                                    comp_u c == st.u /\
+  = let check_st_comp (st:st_comp { comp_u c == st.u /\
                                     comp_pre c == st.pre /\
                                     comp_res c == st.res /\
                                     comp_post c == st.post } )
@@ -240,28 +238,27 @@ let check_comp (f:RT.fstar_top_env)
       then T.fail "Ill-typed inames"
       else CT_STGhost _ _ _ (E i_typing) stc
 
-               
 let check_if (f:RT.fstar_top_env)
              (g:env)
              (b:term)
-             (e1 e2:term)
-             (pre:pure_term)
+             (e1 e2:st_term)
+             (pre:term)
              (pre_typing: tot_typing f g pre Tm_VProp)
              (post:term) 
              (check:check_t)
-  : T.Tac (t:term &
-           c:pure_comp { stateful_comp c ==> comp_pre c == pre } &
-           src_typing f g t c)
+  : T.Tac (t:st_term &
+           c:comp { stateful_comp c ==> comp_pre c == pre } &
+           st_typing f g t c)
   = let (| b, b_typing |) =
       check_tot_with_expected_typ f g b tm_bool in
     let hyp = fresh g in
-    let g_with_eq (eq_v:pure_term) =
+    let g_with_eq (eq_v:term) =
       (hyp, Inl (mk_eq2 U_zero tm_bool b eq_v))::g
     in
-    let check_branch (eq_v:pure_term) (br:term)
-      : T.Tac (br:term { ~(hyp `Set.mem` freevars br) } &
-               c:pure_comp { stateful_comp c /\ comp_pre c == pre } &
-               src_typing f (g_with_eq eq_v) br c)
+    let check_branch (eq_v:term) (br:st_term)
+      : T.Tac (br:st_term { ~(hyp `Set.mem` freevars_st br) } &
+               c:comp { stateful_comp c /\ comp_pre c == pre } &
+               st_typing f (g_with_eq eq_v) br c)
       = let g_with_eq = g_with_eq eq_v in
         //
         // TODO: pre_typing is unnecessary
@@ -272,7 +269,7 @@ let check_if (f:RT.fstar_top_env)
         let (| br, c, br_typing |) =
             check f g_with_eq br pre pre_typing (Some post)
         in
-        if hyp `Set.mem` freevars br
+        if hyp `Set.mem` freevars_st br
         then T.fail "Illegal use of control-flow hypothesis in branch"
         else (
           let (| c, br_typing |) = force_st pre_typing (| c, br_typing |) in
@@ -293,16 +290,16 @@ let rec check' : bool -> check_t =
   fun (allow_inst:bool)
     (f:RT.fstar_top_env)
     (g:env)
-    (t:term)
-    (pre:pure_term)
+    (t:st_term)
+    (pre:term)
     (pre_typing: tot_typing f g pre Tm_VProp)
     (post_hint:option term) ->
-  let repack #g #pre #t (x:(c:pure_comp_st { comp_pre c == pre } & src_typing f g t c)) (apply_post_hint:bool)
-    : T.Tac (t:term & c:pure_comp { stateful_comp c ==> comp_pre c == pre } & src_typing f g t c) =
+  let repack #g #pre #t (x:(c:comp_st { comp_pre c == pre } & st_typing f g t c)) (apply_post_hint:bool)
+    : T.Tac (t:st_term & c:comp { stateful_comp c ==> comp_pre c == pre } & st_typing f g t c) =
     let (| c, d_c |) = x in
     if apply_post_hint && stateful_comp c
     then (
-      FV.src_typing_freevars d_c;
+      FV.st_typing_freevars d_c;
       let (| c1, c_c1_eq |) = replace_equiv_post f g c post_hint in
       (| t, c1, T_Equiv _ _ _ _ d_c c_c1_eq |)
     )
@@ -322,31 +319,34 @@ let rec check' : bool -> check_t =
     else t in
 
   match t with
-  | Tm_BVar _ -> T.fail "not locally nameless"
-  | Tm_Var _
-  | Tm_FVar _ 
-  | Tm_UInst _ _
-  | Tm_Constant _
-  | Tm_PureApp _ _ _
-  | Tm_Let _ _ _ ->
+  | Tm_Return (Tm_BVar _) -> T.fail "not locally nameless"
+  | Tm_Return (Tm_Var _)
+  | Tm_Return (Tm_FVar _)
+  | Tm_Return (Tm_UInst _ _)
+  | Tm_Return (Tm_Constant _)
+  | Tm_Return (Tm_PureApp _ _ _)
+  | Tm_Return (Tm_Let _ _ _) ->
+    let Tm_Return t = t in
     let (| t, u, ty, uty, d |) = check_tot_univ allow_inst f g t in
     let c = return_comp u ty t in
     let d = T_Return _ _ _ _ (E d) uty in
-    repack (frame_empty pre_typing uty t c d) false
+    repack (frame_empty pre_typing uty (Tm_Return t) c d) false
 
-  | Tm_Emp
-  | Tm_Pure _
-  | Tm_Star _ _ 
-  | Tm_ExistsSL _ _ _
-  | Tm_ForallSL _ _ _
-  | Tm_Arrow _ _ _
-  | Tm_Type _
-  | Tm_VProp
-  | Tm_Refine _ _
-  | Tm_Inames
-  | Tm_EmpInames ->
-    let (| t, ty, d_ty |) = check_tot allow_inst f g t in
-    (| t, C_Tot ty, d_ty |)
+  | Tm_Return _ -> T.fail "Unexpected Tm_Return st term"
+
+  // | Tm_Emp
+  // | Tm_Pure _
+  // | Tm_Star _ _ 
+  // | Tm_ExistsSL _ _ _
+  // | Tm_ForallSL _ _ _
+  // | Tm_Arrow _ _ _
+  // | Tm_Type _
+  // | Tm_VProp
+  // | Tm_Refine _ _
+  // | Tm_Inames
+  // | Tm_EmpInames ->
+  //   let (| t, ty, d_ty |) = check_tot allow_inst f g t in
+  //   (| t, C_Tot ty, d_ty |)
 
   | Tm_Abs _ _ _ _ _ ->
     check_abs f g t pre pre_typing post_hint (check' true)
@@ -364,8 +364,8 @@ let rec check' : bool -> check_t =
         | C_STAtomic _ res
         | C_STGhost _ res ->
           // This is a real ST application
-          let d = T_STApp g head ppname formal qual comp_typ arg dhead (E darg) in
-          opening_pure_comp_with_pure_term comp_typ arg 0;
+          let d = T_STApp g head formal qual comp_typ arg (E dhead) (E darg) in
+          // opening_pure_comp_with_pure_term comp_typ arg 0;
           repack (try_frame_pre pre_typing d) true
         | C_Tot (Tm_Arrow _  (Some implicit) _) -> 
           let head = Tm_PureApp head qual arg in
@@ -452,9 +452,6 @@ let rec check' : bool -> check_t =
        end
        else T.fail "Cannot typecheck while loop condition"
      | _ -> T.fail "Typechecked invariant is not an exists")
-
-  | Tm_UVar _ ->
-    T.fail "Unexpected Tm_Uvar in check"
 #pop-options
 
 let check = check' true

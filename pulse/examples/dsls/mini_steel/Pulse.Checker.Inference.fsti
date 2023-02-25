@@ -5,4 +5,4 @@ open Pulse.Syntax
 module T = FStar.Tactics
 
 val infer (head:term) (t_head:term) (ctxt_pre:term)
-  : T.Tac term
+  : T.Tac st_term

@@ -99,7 +99,7 @@ noeq
 type st_term =
   | Tm_Return     : term -> st_term
   | Tm_Abs        : b:binder -> q:option qualifier -> pre:option vprop -> body:st_term -> post:option vprop -> st_term
-  | Tm_STApp      : head:st_term -> arg_qual:option qualifier -> arg:term -> st_term  
+  | Tm_STApp      : head:term -> arg_qual:option qualifier -> arg:term -> st_term  
   | Tm_Bind       : e1:st_term -> e2:st_term -> st_term
   | Tm_If         : b:term -> then_:st_term -> else_:st_term -> post:option vprop -> st_term
   | Tm_ElimExists : vprop -> st_term
@@ -162,7 +162,7 @@ let rec freevars_st (t:st_term)
                            (Set.union (freevars_opt pre_hint)
                                       (freevars_opt post_hint)))
     | Tm_STApp t1 _ t2 ->
-      Set.union (freevars_st t1) (freevars t2)
+      Set.union (freevars t1) (freevars t2)
     | Tm_Bind t1 t2 ->
       Set.union (freevars_st t1) (freevars_st t2)
     | Tm_If t e1 e2 post ->
@@ -250,7 +250,7 @@ let rec ln_st' (t:st_term) (i:int)
       ln_opt' post (i + 2)
   
     | Tm_STApp t1 _ t2 ->
-      ln_st' t1 i &&
+      ln' t1 i &&
       ln' t2 i
 
     | Tm_Bind t1 t2 ->
@@ -369,7 +369,7 @@ let rec open_st_term' (t:st_term) (v:term) (i:index)
              (open_term_opt' post v (i + 2))
 
     | Tm_STApp head q arg ->
-      Tm_STApp (open_st_term' head v i) q
+      Tm_STApp (open_term' head v i) q
                (open_term' arg v i)
 
     | Tm_Bind e1 e2 ->
@@ -497,7 +497,7 @@ let rec close_st_term' (t:st_term) (v:var) (i:index)
              (close_term_opt' post v (i + 2))
 
     | Tm_STApp head q arg ->
-      Tm_STApp (close_st_term' head v i) q
+      Tm_STApp (close_term' head v i) q
                (close_term' arg v i)
 
     | Tm_Bind e1 e2 ->
@@ -670,7 +670,7 @@ let rec close_open_inverse_st'  (t:st_term)
       close_open_inverse_st' e2 x (i + 1)
 
     | Tm_STApp l _ r ->
-      close_open_inverse_st' l x i;
+      close_open_inverse' l x i;
       close_open_inverse' r x i
     
     | Tm_IntroExists l r ->
@@ -805,7 +805,7 @@ let rec eq_st_term (t1 t2:st_term)
       eq_tm_opt q1 q2
   
     | Tm_STApp h1 o1 t1, Tm_STApp h2 o2 t2 ->
-      eq_st_term h1 h2 &&
+      eq_tm h1 h2 &&
       o1=o2 &&
       eq_tm t1 t2
 

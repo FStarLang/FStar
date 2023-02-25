@@ -64,7 +64,7 @@ let rec atomic_vprop_has_uvar (t:term) : bool =
   | Tm_Emp -> false
   | _ -> false
 
-let rec atomic_vprops_may_match (t1:term) (t2:pure_term) : bool =
+let rec atomic_vprops_may_match (t1:term) (t2:term) : bool =
   match t1, t2 with
   | Tm_UVar _, _ -> true
   | Tm_PureApp head1 q1 arg1, Tm_PureApp head2 q2 arg2 ->
@@ -73,7 +73,7 @@ let rec atomic_vprops_may_match (t1:term) (t2:pure_term) : bool =
     atomic_vprops_may_match arg1 arg2
   | _, _ -> eq_tm t1 t2
 
-let infer_one_atomic_vprop (t:pure_term) (ctxt:list pure_term) (uv_sols:list (term & term))
+let infer_one_atomic_vprop (t:term) (ctxt:list term) (uv_sols:list (term & term))
   : T.Tac (list (term & term)) =
 
   if atomic_vprop_has_uvar t
@@ -96,26 +96,25 @@ let infer_one_atomic_vprop (t:pure_term) (ctxt:list pure_term) (uv_sols:list (te
   else uv_sols
 
 let rec rebuild_head (head:term) (uvs:list term) (uv_sols:list (term & term))
-  : T.Tac term
-  = match uvs with
-    | [] -> head
-    | hd::tl ->
-      let ropt = List.Tot.find (fun (t1, _) -> eq_tm t1 hd) uv_sols in
-      match ropt with
-      | None -> T.fail "inference failed in building head"
-      | Some (_, t2) ->
-        match tl with
-        | [] -> Tm_STApp head (Some Implicit) t2
-        | _ ->
-          let app_node = Tm_PureApp head (Some Implicit) t2 in
-          rebuild_head app_node tl uv_sols
+  : T.TacH st_term (requires fun _ -> List.Tot.length uvs > 0)
+                   (ensures fun _ _ -> True) =
+  let hd::tl = uvs in
+  let ropt = List.Tot.find (fun (t1, _) -> eq_tm t1 hd) uv_sols in
+  match ropt with
+  | None -> T.fail "inference failed in building head"
+  | Some (_, t2) ->
+    match tl with
+    | [] -> Tm_STApp head (Some Implicit) t2
+    | _ ->
+      let app_node = Tm_PureApp head (Some Implicit) t2 in
+      rebuild_head app_node tl uv_sols
 
 let infer
   (head:term)
   (t_head:term)
   (ctxt_pre:term)
   
-  : T.Tac term =
+  : T.Tac st_term =
 
   let uvs, pre =
     let uvs, comp = gen_uvars t_head in
@@ -127,7 +126,7 @@ let infer
   in
 
   if List.Tot.length uvs = 0
-  then head
+  then T.fail "Inference did not find anything to infer"
   else begin
     // T.print (FStar.Printf.sprintf "infer: generated %d uvars, ctx: %s, st_comp.pre: %s\n"
     //            (List.Tot.length uvs)
@@ -136,10 +135,8 @@ let infer
 
     let uv_sols = [] in
     
-    assume (is_pure_term pre);
     let pre_list = vprop_as_list pre in
 
-    assume (is_pure_term ctxt_pre);
     let ctxt_pre_list = vprop_as_list ctxt_pre in
 
     let uv_sols = T.fold_left (fun uv_sols st_pre_vprop ->
