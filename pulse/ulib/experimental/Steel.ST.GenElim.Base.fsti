@@ -619,6 +619,12 @@ let solve_gen_elim_nondep (enable_nondep_opt: bool) (t: T.term) : T.Tac T.term =
           p', T.Q_Explicit;
         ]
 
+let trefl_or_smt () : T.Tac unit =
+  let ty = T.cur_goal () in
+  match T.term_as_formula ty with
+  | T.Comp _ _ _ -> T.trefl ()
+  | _ -> T.smt (); T.qed ()
+
 let solve_gen_elim_prop
   ()
 : T.Tac unit
@@ -655,7 +661,7 @@ let solve_gen_elim_prop
         T.focus (fun _ -> norm (); T.trefl ()) // tprop
       end;
       T.focus (fun _ -> norm (); T.trefl ()); // p
-      T.focus (fun _ -> norm (); T.trivial (); T.qed ()); // j
+      T.focus (fun _ -> norm (); trefl_or_smt ()); // j
       T.focus (fun _ -> norm (); T.trefl ()); // a
       T.focus (fun _ -> norm (); T.trefl ()); // q
       T.focus (fun _ -> norm (); T.trefl ()) // post
