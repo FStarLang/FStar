@@ -104,15 +104,15 @@ let elab_bind_typing (f:stt_env)
                      (c1 c2 c:ln_comp)
                      (x:var { ~ (x `Set.mem` freevars_comp c1) })
                      (r1:R.term)
-                     (r1_typing: RT.typing (extend_env_l f g) r1 (elab_pure_comp c1))
+                     (r1_typing: RT.typing (extend_env_l f g) r1 (elab_comp c1))
                      (r2:R.term)
                      (r2_typing: RT.typing (extend_env_l f g) r2 
-                                           (elab_pure (Tm_Arrow (null_binder (comp_res c1)) None (close_pure_comp c2 x))))
+                                           (elab_term (Tm_Arrow (null_binder (comp_res c1)) None (close_comp c2 x))))
                      (bc:bind_comp f g x c1 c2 c)
-                     (t2_typing : RT.typing (extend_env_l f g) (elab_pure (comp_res c2)) (RT.tm_type (elab_universe (comp_u c2))))
+                     (t2_typing : RT.typing (extend_env_l f g) (elab_term (comp_res c2)) (RT.tm_type (elab_universe (comp_u c2))))
                      (post2_typing: RT.typing (extend_env_l f g) 
                                               (elab_comp_post c2)
-                                              (post2_type_bind (elab_pure (comp_res c2))))
+                                              (post2_type_bind (elab_term (comp_res c2))))
   = assume (C_ST? c1 /\ C_ST? c2);
     let rg = extend_env_l f g in
     let u1 = elab_universe (comp_u c1) in
@@ -124,30 +124,30 @@ let elab_bind_typing (f:stt_env)
     let head_typing : RT.typing _ _ (bind_type u1 u2) = RT.T_UInst rg bind_fv [u1;u2] in
     let (| _, c1_typing |) = RT.type_correctness _ _ _ r1_typing in
     let t1_typing, pre_typing, post_typing = inversion_of_stt_typing _ _ _ _ c1_typing in
-    let t1 = (elab_pure (comp_res c1)) in
-    let t2 = (elab_pure (comp_res c2)) in
+    let t1 = (elab_term (comp_res c1)) in
+    let t2 = (elab_term (comp_res c2)) in
     let t1_typing : RT.typing rg t1 (RT.tm_type u1) = t1_typing in
     let post1 = elab_comp_post c1 in
-    let c2_x = close_pure_comp c2 x in
+    let c2_x = close_comp c2 x in
     assume (comp_res c2_x == comp_res c2);
     assume (comp_post c2_x == comp_post c2);    
     assert (open_term (comp_post c1) x == comp_pre c2);
     assert (~ (x `Set.mem` freevars (comp_post c1)));
     close_open_inverse (comp_post c1) x;
     assert (comp_post c1 == close_term (comp_pre c2) x);
-    assert (post1 == mk_abs t1 R.Q_Explicit (elab_pure (comp_post c1)));
-    assert (elab_pure (comp_post c1) == elab_pure (comp_pre (close_pure_comp c2 x)));
+    assert (post1 == mk_abs t1 R.Q_Explicit (elab_term (comp_post c1)));
+    assert (elab_term (comp_post c1) == elab_term (comp_pre (close_comp c2 x)));
     //ln (comp_post c1) 0
     let g_typing
       : RT.typing _ _ 
                   (mk_arrow (t1, R.Q_Explicit)
-                            (mk_stt_comp u2 t2 (elab_pure (comp_post c1)) (elab_comp_post c2)))
+                            (mk_stt_comp u2 t2 (elab_term (comp_post c1)) (elab_comp_post c2)))
       = r2_typing in
     let g_typing 
       : RT.typing _ _ 
                   (mk_arrow (t1, R.Q_Explicit)
                             (mk_stt_comp u2 t2
-                                            (R.mk_app (mk_abs t1 R.Q_Explicit (elab_pure (comp_post c1)))
+                                            (R.mk_app (mk_abs t1 R.Q_Explicit (elab_term (comp_post c1)))
                                                      [bound_var 0, R.Q_Explicit])
                                                 (elab_comp_post c2)))
       = RT.(T_Sub _ _ _ _ r2_typing (ST_Equiv _ _ _ (equiv_arrow _ _ _ _ _ _))) in

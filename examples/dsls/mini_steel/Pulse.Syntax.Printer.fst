@@ -145,7 +145,7 @@ let rec st_term_to_string (t:st_term)
     | Tm_STApp head q arg ->
       sprintf "(%s%s %s%s)"
         (if dbg_printing then "<stapp>" else "")
-        (st_term_to_string head)
+        (term_to_string head)
         (qual_to_string q)
         (term_to_string arg)
         
@@ -182,4 +182,3 @@ let rec st_term_to_string (t:st_term)
         (term_to_string inv)
         (st_term_to_string cond)
         (st_term_to_string body)
-  

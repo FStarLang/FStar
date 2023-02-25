@@ -34,17 +34,17 @@ let inst_stt_return (#g:R.env) (#u:R.universe) (#ty #v:R.term)
                                      (mk_abs ty R.Q_Explicit (mk_pure (mk_eq u ty (var_as_bvar_term 0) v)))))
    = admit()
                     
-#push-options "--query_stats --fuel 4 --ifuel 1"
+#push-options "--fuel 8 --ifuel 0"
 let elab_return_typing  (#f:stt_env)
                         (#g:env)
                         (#u:universe)
-                        (#ty:pure_term)
-                        (#v:pure_term)
+                        (#ty:term)
+                        (#v:term)
                         (ty_typing: universe_of f g ty u)
                         (v_typing: tot_typing f g v ty)
   : GTot (RT.typing (extend_env_l f g)
-                    (mk_return (elab_universe u) (elab_pure ty) (elab_pure v))
-                    (elab_pure_comp (return_comp u ty v)))
+                    (mk_return (elab_universe u) (elab_term ty) (elab_term v))
+                    (elab_comp (return_comp u ty v)))
   = let ty_typing = tot_typing_soundness ty_typing in
     let v_typing = tot_typing_soundness v_typing in
     let d = inst_stt_return ty_typing v_typing in
@@ -64,13 +64,13 @@ let inst_stt_return_noeq (#g:R.env) (#u:R.universe) (#ty #v:R.term)
 let elab_return_noeq_typing  (#f:stt_env)
                              (#g:env)
                              (#u:universe)
-                             (#ty:pure_term)
+                             (#ty:term)
                              (#v:R.term)
                              (ty_typing: universe_of f g ty u)
-                             (v_typing: RT.typing (extend_env_l f g) v (elab_pure ty))
+                             (v_typing: RT.typing (extend_env_l f g) v (elab_term ty))
   : GTot (RT.typing (extend_env_l f g)
-                    (mk_return_noeq (elab_universe u) (elab_pure ty) v)
-                    (elab_pure_comp (return_comp_noeq u ty)))
+                    (mk_return_noeq (elab_universe u) (elab_term ty) v)
+                    (elab_comp (return_comp_noeq u ty)))
   = let ty_typing = tot_typing_soundness ty_typing in
     let d = inst_stt_return_noeq ty_typing v_typing in
     d

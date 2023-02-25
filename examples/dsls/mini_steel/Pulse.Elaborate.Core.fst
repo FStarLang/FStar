@@ -343,7 +343,7 @@ let rec elab_st_typing (#f:RT.fstar_top_env)
       mk_abs_with_name ppname ty (elab_qual qual) (RT.close_term body x) //this closure should be provably redundant by strengthening the conditions on x
 
     | T_STApp _ head  _formal qual _res arg head_typing arg_typing ->
-      let head = elab_st_typing head_typing in
+      let head = elab_term head in
       let arg = elab_term arg in
       R.mk_app head [(arg, elab_qual qual)]
 

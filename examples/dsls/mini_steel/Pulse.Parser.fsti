@@ -2,4 +2,4 @@ module Pulse.Parser
 
 open Pulse.Syntax
 
-val parse (s:string) : term
+val parse (s:string) : st_term

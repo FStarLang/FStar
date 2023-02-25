@@ -523,12 +523,12 @@ type st_typing (f:RT.fstar_top_env) : env -> st_term -> comp -> Type =
   
   | T_STApp :
       g:env ->
-      head:st_term ->
+      head:term ->
       ty:term ->
       q:option qualifier ->
       res:comp_st ->
       arg:term ->
-      st_typing f g head (C_Tot (Tm_Arrow (as_binder ty) q res)) ->
+      tot_typing f g head (Tm_Arrow (as_binder ty) q res) ->
       tot_typing f g arg ty ->
       st_typing f g (Tm_STApp head q arg) (open_comp_with res arg)
 

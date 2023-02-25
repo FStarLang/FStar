@@ -53,11 +53,11 @@ let equiv_frame_post (g:R.env)
                      (u:R.universe)
                      (t:R.term)
                      (pre:R.term) 
-                     (post:pure_term) // ln 1
+                     (post:term) // ln 1
                      (frame:R.term) //ln 0
-  : GTot (RT.equiv g (mk_stt_comp u t pre (mk_abs t R.Q_Explicit (mk_star (R.mk_app (mk_abs t R.Q_Explicit (elab_pure post))
+  : GTot (RT.equiv g (mk_stt_comp u t pre (mk_abs t R.Q_Explicit (mk_star (R.mk_app (mk_abs t R.Q_Explicit (elab_term post))
                                                                            [bound_var 0, R.Q_Explicit]) frame)))
-                     (mk_stt_comp u t pre (mk_abs t R.Q_Explicit (mk_star (elab_pure post) frame))))
+                     (mk_stt_comp u t pre (mk_abs t R.Q_Explicit (mk_star (elab_term post) frame))))
   = admit()
 
 #push-options "--z3rlimit_factor 4 --ifuel 1 --fuel 4"
@@ -65,10 +65,10 @@ let elab_frame_typing (f:stt_env)
                       (g:env)
                       (e:R.term)
                       (c:ln_comp)
-                      (frame:pure_term)
+                      (frame:term)
                       (frame_typing: tot_typing f g frame Tm_VProp)
-                      (e_typing: RT.typing (extend_env_l f g) e (elab_pure_comp c))
-  : GTot (RT.typing (extend_env_l f g) (elab_frame c frame e) (elab_pure_comp (add_frame c frame)))
+                      (e_typing: RT.typing (extend_env_l f g) e (elab_comp c))
+  : GTot (RT.typing (extend_env_l f g) (elab_frame c frame e) (elab_comp (add_frame c frame)))
   = if C_ST? c then
     let frame_typing = tot_typing_soundness frame_typing in
     let rg = extend_env_l f g in
@@ -79,13 +79,13 @@ let elab_frame_typing (f:stt_env)
     let head_typing : RT.typing _ _ (frame_type u) = RT.T_UInst rg frame_fv [u] in
     let (| _, c_typing |) = RT.type_correctness _ _ _ e_typing in
     let t_typing, pre_typing, post_typing = inversion_of_stt_typing _ _ _ _ c_typing in
-    let t = elab_pure (comp_res c) in
+    let t = elab_term (comp_res c) in
     let t_typing : RT.typing rg t (RT.tm_type u) = t_typing in
     let d : RT.typing (extend_env_l f g)
                       (elab_frame c frame e)
-                      (frame_res u t (elab_pure (comp_pre c))
+                      (frame_res u t (elab_term (comp_pre c))
                                      (elab_comp_post c)
-                                     (elab_pure frame)) =
+                                     (elab_term frame)) =
         inst_frame_comp
           (inst_frame_frame
             (inst_frame_post
@@ -97,9 +97,9 @@ let elab_frame_typing (f:stt_env)
           e_typing
     in
     RT.T_Sub _ _ _ _ d RT.(ST_Equiv _ _ _ (equiv_frame_post rg u t 
-                                                         (elab_pure (Tm_Star (comp_pre c) frame))
+                                                         (elab_term (Tm_Star (comp_pre c) frame))
                                                          (comp_post c)
-                                                         (elab_pure frame)))
+                                                         (elab_term frame)))
     else admit ()
 #pop-options
 

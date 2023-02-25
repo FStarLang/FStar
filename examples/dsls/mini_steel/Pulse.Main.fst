@@ -14,7 +14,7 @@ open Pulse.Soundness
 open Pulse.Parser
 module P = Pulse.Syntax.Printer
 
-let main' (t:term) (pre:term) (g:RT.fstar_top_env)
+let main' (t:st_term) (pre:term) (g:RT.fstar_top_env)
   : T.Tac (r:(R.term & R.typ){RT.typing g (fst r) (snd r)})
   = match Pulse.Soundness.Common.check_top_level_environment g with
     | None -> T.fail "pulse main: top-level environment does not include stt at the expected types"
@@ -23,8 +23,8 @@ let main' (t:term) (pre:term) (g:RT.fstar_top_env)
       if eq_tm ty Tm_VProp
       then let pre_typing : tot_typing g [] pre Tm_VProp = E pre_typing in
            let (| t, c, t_typing |) = check g [] t pre pre_typing None in
-           let refl_e = elab_src_typing t_typing in
-           let refl_t = elab_pure_comp c in
+           let refl_e = elab_st_typing t_typing in
+           let refl_t = elab_comp c in
            soundness_lemma g [] t c t_typing;
            (refl_e, refl_t)
       else T.fail "pulse main: cannot typecheck pre at type vprop"
@@ -236,8 +236,6 @@ let rec shift_bvs_in_else (t:term) (n:nat) : Tac term =
   | Tm_Refine b t ->
     Tm_Refine {b with binder_ty=shift_bvs_in_else b.binder_ty n}
               (shift_bvs_in_else t (n + 1))
-  | Tm_Abs _ _ _ _ _ ->
-    T.fail "Did not expect an Tm_Abs in shift_bvs_in_else"
   | Tm_PureApp head q arg ->
     Tm_PureApp (shift_bvs_in_else head n)
                q
@@ -246,13 +244,6 @@ let rec shift_bvs_in_else (t:term) (n:nat) : Tac term =
     Tm_Let (shift_bvs_in_else t n)
            (shift_bvs_in_else e1 n)
            (shift_bvs_in_else e2 (n + 1))
-  | Tm_STApp head q arg ->
-    Tm_STApp (shift_bvs_in_else head n)
-             q
-             (shift_bvs_in_else arg n)
-  | Tm_Bind e1 e2 ->
-    Tm_Bind (shift_bvs_in_else e1 n)
-            (shift_bvs_in_else e2 (n + 1))
   | Tm_Emp -> t
   | Tm_Pure p -> Tm_Pure (shift_bvs_in_else p n)
   | Tm_Star l r ->
@@ -267,16 +258,30 @@ let rec shift_bvs_in_else (t:term) (n:nat) : Tac term =
   | Tm_Arrow _ _ _ ->
     T.fail "Unexpected Tm_Arrow in shift_bvs_in_else"
   | Tm_Type _
-  | Tm_VProp -> t
+  | Tm_VProp
+  | Tm_Inames
+  | Tm_EmpInames
+  | Tm_UVar _ -> t
+
+let rec shift_bvs_in_else_st (t:st_term) (n:nat) : Tac st_term =
+  match t with
+  | Tm_Return t -> Tm_Return (shift_bvs_in_else t n)
+  | Tm_Abs _ _ _ _ _ ->
+    T.fail "Did not expect an Tm_Abs in shift_bvs_in_else_st"
+  | Tm_STApp head q arg ->
+    Tm_STApp (shift_bvs_in_else head n)
+             q
+             (shift_bvs_in_else arg n)
+  | Tm_Bind e1 e2 ->
+    Tm_Bind (shift_bvs_in_else_st e1 n)
+            (shift_bvs_in_else_st e2 (n + 1))
   | Tm_If b e1 e2 post ->
     Tm_If (shift_bvs_in_else b n)
-          (shift_bvs_in_else e1 n)
-          (shift_bvs_in_else e2 n)
+          (shift_bvs_in_else_st e1 n)
+          (shift_bvs_in_else_st e2 n)
           (match post with
            | None -> None
            | Some post -> Some (shift_bvs_in_else post (n + 1)))
-  | Tm_Inames
-  | Tm_EmpInames -> t
   | Tm_ElimExists t ->
     Tm_ElimExists (shift_bvs_in_else t n)
   | Tm_IntroExists t e ->
@@ -284,9 +289,8 @@ let rec shift_bvs_in_else (t:term) (n:nat) : Tac term =
                    (shift_bvs_in_else e n)
   | Tm_While inv cond body ->
     Tm_While (shift_bvs_in_else inv (n + 1))
-             (shift_bvs_in_else cond n)
-             (shift_bvs_in_else body n)
-  | Tm_UVar _ -> t
+             (shift_bvs_in_else_st cond n)
+             (shift_bvs_in_else_st body n)
 
 let rec translate_term' (g:RT.fstar_top_env) (t:R.term)
   : T.Tac (err term)
