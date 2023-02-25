@@ -11,7 +11,7 @@ open Pulse.Elaborate.Pure
 open Pulse.Elaborate
 open Pulse.Soundness
 
-open Pulse.Parser
+// open Pulse.Parser
 module P = Pulse.Syntax.Printer
 
 let main' (t:st_term) (pre:term) (g:RT.fstar_top_env)
@@ -31,8 +31,8 @@ let main' (t:st_term) (pre:term) (g:RT.fstar_top_env)
 
 let main t pre : RT.dsl_tac_t = main' t pre
 
-[@@plugin]
-let parse_and_check (s:string) : RT.dsl_tac_t = main (parse s) Tm_Emp
+// [@@plugin]
+// let parse_and_check (s:string) : RT.dsl_tac_t = main (parse s) Tm_Emp
 
 let err a = either a string
 
@@ -293,7 +293,7 @@ let rec shift_bvs_in_else_st (t:st_term) (n:nat) : Tac st_term =
              (shift_bvs_in_else_st body n)
 
 let rec translate_term' (g:RT.fstar_top_env) (t:R.term)
-  : T.Tac (err term)
+  : T.Tac (err st_term)
   = match R.inspect_ln t with
     | R.Tv_Abs x body -> (
       let? b, q = transate_binder g x in
@@ -351,7 +351,7 @@ let rec translate_term' (g:RT.fstar_top_env) (t:R.term)
       unexpected_term "translate_term'" t
 
 and translate_st_term (g:RT.fstar_top_env) (t:R.term)
-  : T.Tac (err term)
+  : T.Tac (err st_term)
   = match R.inspect_ln t with 
     | R.Tv_App _ _ -> (
       let ropt = is_elim_exists g t in
@@ -371,7 +371,7 @@ and translate_st_term (g:RT.fstar_top_env) (t:R.term)
                let? t = readback_ty g t in
                (match t with
                 | Tm_PureApp head q arg -> Inl (Tm_STApp head q arg)
-                | _ -> Inl t))
+                | _ -> Inl (Tm_Return t)))
           | Some (u, t, p, e) ->
             let? u = readback_universe u in
             let? t = readback_ty g t in
@@ -395,16 +395,16 @@ and translate_st_term (g:RT.fstar_top_env) (t:R.term)
       let? b = readback_ty g (pack_ln (inspect_ln_unascribe b)) in
       let? then_ = translate_st_term g then_ in
       let? else_ = translate_st_term g else_ in
-      let else_ = shift_bvs_in_else else_ 0 in
+      let else_ = shift_bvs_in_else_st else_ 0 in
       Inl (Tm_If b then_ else_ None)
 
     | _ ->
       unexpected_term "st_term" t
   
 and translate_term (g:RT.fstar_top_env) (t:R.term)
-  : T.Tac (err term)
+  : T.Tac (err st_term)
   = match readback_ty g t with
-    | Inl t -> Inl t
+    | Inl t -> Inl (Tm_Return t)
     | _ -> translate_term' g t
 
 let check' (t:R.term) (g:RT.fstar_top_env)
@@ -412,7 +412,7 @@ let check' (t:R.term) (g:RT.fstar_top_env)
   = match translate_term g t with
     | Inr msg -> T.fail (Printf.sprintf "Failed to translate term: %s" msg)
     | Inl t -> 
-      T.print (Printf.sprintf "Translated term is\n%s\n" (P.term_to_string t));
+      T.print (Printf.sprintf "Translated term is\n%s\n" (P.st_term_to_string t));
       main t Tm_Emp g
 
 [@@plugin]
