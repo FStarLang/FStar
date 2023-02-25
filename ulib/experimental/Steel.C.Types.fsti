@@ -502,6 +502,7 @@ val has_struct_field
   (r': ref (fields.fd_typedef field))
 : Tot vprop
 
+(*
 val has_struct_field_dup
   (#opened: _)
   (#tn: Type0)
