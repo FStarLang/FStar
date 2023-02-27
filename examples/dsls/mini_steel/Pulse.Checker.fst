@@ -313,8 +313,22 @@ let check_elim_exists
   : T.Tac (t:st_term &
            c:comp{stateful_comp c ==> comp_pre c == pre} &
            st_typing f g t c) =
-
   let Tm_ElimExists t = t in
+  let t = 
+      match t with
+      | Tm_Unknown -> (
+        //There should be exactly one exists_ vprop in the context and we eliminate it      
+        let ts = vprop_as_list pre in
+        let exist_tms = List.Tot.Base.filter (function | Tm_ExistsSL _ _ _ -> true | _ -> false) ts in
+        match exist_tms with
+        | [one] -> one //shouldn't need to check this again
+        | _ -> 
+          T.fail 
+            (Printf.sprintf "Could not decide which exists term to eliminate: choices are\n%s"
+               (String.concat "\n" (T.map Pulse.Syntax.Printer.term_to_string exist_tms)))
+        )
+      | _ -> t
+  in
   let (| t, t_typing |) = check_vprop f g t in
   match t with
   | Tm_ExistsSL u ty p ->
