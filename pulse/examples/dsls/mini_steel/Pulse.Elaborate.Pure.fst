@@ -36,6 +36,10 @@ let uzero = R.pack_universe (R.Uv_Zero)
 let steel_wrapper = ["Pulse"; "Steel"; "Wrapper"]
 let mk_steel_wrapper_lid s = steel_wrapper@[s]
 
+let stt_admit_lid = mk_steel_wrapper_lid "stt_admit"
+let stt_atomic_admit_lid = mk_steel_wrapper_lid "stt_atomic_admit"
+let stt_ghost_admit_lid = mk_steel_wrapper_lid "stt_ghost_admit"
+
 let emp_inames_lid = mk_steel_wrapper_lid "emp_inames"
 let elim_pure_lid = mk_steel_wrapper_lid "elim_pure"
 

@@ -285,6 +285,157 @@ let check_if (f:RT.fstar_top_env)
        c,
        T_If g b e1 e2 c _ hyp (E b_typing) e1_typing e2_typing (E c_typing) |)
 
+let repack (#f:RT.fstar_top_env) (#g:env)
+  (#pre:term) (#t:st_term)
+  (x:(c:comp_st { comp_pre c == pre } & st_typing f g t c))
+  (post_hint:option term)
+  (apply_post_hint:bool)
+  : T.Tac (t:st_term &
+           c:comp {stateful_comp c ==> comp_pre c == pre} &
+           st_typing f g t c) =
+
+  let (| c, d_c |) = x in
+  if apply_post_hint && stateful_comp c
+  then (
+    FV.st_typing_freevars d_c;
+    let (| c1, c_c1_eq |) = replace_equiv_post f g c post_hint in
+    (| t, c1, T_Equiv _ _ _ _ d_c c_c1_eq |)
+  )
+  else (| t, c, d_c |)
+
+let check_elim_exists
+  (f:RT.fstar_top_env)
+  (g:env)
+  (t:st_term{Tm_ElimExists? t})
+  (pre:term)
+  (pre_typing:tot_typing f g pre Tm_VProp)
+  (post_hint:option term)
+  : T.Tac (t:st_term &
+           c:comp{stateful_comp c ==> comp_pre c == pre} &
+           st_typing f g t c) =
+
+  let Tm_ElimExists t = t in
+  let (| t, t_typing |) = check_vprop f g t in
+  match t with
+  | Tm_ExistsSL u ty p ->
+    // Could this come from inversion of t_typing?
+    let (| u', ty_typing |) = check_universe f g ty in
+    if u = u'
+    then let x = fresh g in
+         let d = T_ElimExists g u ty p x ty_typing t_typing in
+         repack (try_frame_pre pre_typing d) post_hint true
+    else T.fail "Universe checking failed in elim_exists"
+  | _ -> T.fail "elim_exists argument not a Tm_ExistsSL"
+
+let check_intro_exists
+  (f:RT.fstar_top_env)
+  (g:env)
+  (t:st_term{Tm_IntroExists? t})
+  (pre:term)
+  (pre_typing:tot_typing f g pre Tm_VProp)
+  (post_hint:option term)
+  : T.Tac (t:st_term &
+           c:comp{stateful_comp c ==> comp_pre c == pre} &
+           st_typing f g t c) =
+
+  let Tm_IntroExists t e = t in
+  let (| t, t_typing |) = check_vprop f g t in
+  match t with
+  | Tm_ExistsSL u ty p ->
+    // Could this come from inversion of t_typing?
+    let (| u', ty_typing |) = check_universe f g ty in
+    if u = u'
+    then let (| e, e_typing |) = check_tot_with_expected_typ f g e ty in
+         let d = T_IntroExists g u ty p e ty_typing t_typing (E e_typing) in
+         repack (try_frame_pre pre_typing d) post_hint true
+    else T.fail "Universe checking failed in intro_exists"
+  | _ -> T.fail "elim_exists argument not a Tm_ExistsSL"
+
+let check_while
+  (allow_inst:bool)
+  (f:RT.fstar_top_env)
+  (g:env)
+  (t:st_term{Tm_While? t})
+  (pre:term)
+  (pre_typing:tot_typing f g pre Tm_VProp)
+  (post_hint:option term)
+  (check':bool -> check_t)
+  : T.Tac (t:st_term &
+           c:comp{stateful_comp c ==> comp_pre c == pre} &
+           st_typing f g t c) =
+
+  let Tm_While inv cond body = t in
+  let (| inv, inv_typing |) =
+    check_vprop f g (Tm_ExistsSL U_zero tm_bool inv) in
+  match inv with
+  | Tm_ExistsSL U_zero (Tm_FVar ["Prims"; "bool"]) inv ->
+    // Should get from inv_typing
+    let cond_pre_typing =
+      check_vprop_no_inst f g (comp_pre (comp_while_cond inv)) in
+    let (| cond, cond_comp, cond_typing |) =
+      check' allow_inst f g cond (comp_pre (comp_while_cond inv))
+        cond_pre_typing (Some (comp_post (comp_while_cond inv))) in
+    if eq_comp cond_comp (comp_while_cond inv)
+    then begin
+      let body_pre_typing =
+        check_vprop_no_inst f g (comp_pre (comp_while_body inv)) in
+      let (| body, body_comp, body_typing |) =
+        check' allow_inst f g body (comp_pre (comp_while_body inv))
+          body_pre_typing (Some (comp_post (comp_while_body inv))) in
+      if eq_comp body_comp (comp_while_body inv)
+      then let d = T_While g inv cond body inv_typing cond_typing   body_typing in
+           repack (try_frame_pre pre_typing d) post_hint true
+      else T.fail "Cannot typecheck while loop body"
+    end
+    else T.fail "Cannot typecheck while loop condition"
+  | _ -> T.fail "Typechecked invariant is not an exists"
+
+let check_stapp
+  (allow_inst:bool)
+  (f:RT.fstar_top_env)
+  (g:env)
+  (t:st_term{Tm_STApp? t})
+  (pre:term)
+  (pre_typing:tot_typing f g pre Tm_VProp)
+  (post_hint:option term)
+  (check':bool -> check_t)
+  : T.Tac (t:st_term &
+           c:comp{stateful_comp c ==> comp_pre c == pre} &
+           st_typing f g t c) =
+
+  let Tm_STApp head qual arg = t in
+  let (| head, ty_head, dhead |) = check_tot allow_inst f g head in
+  match ty_head with
+  | Tm_Arrow {binder_ty=formal;binder_ppname=ppname} bqual comp_typ ->
+    if qual = bqual
+    then
+      let (| arg, darg |) = check_tot_with_expected_typ f g arg formal in
+      match comp_typ with
+      | C_ST res
+      | C_STAtomic _ res
+      | C_STGhost _ res ->
+        // This is a real ST application
+        let d = T_STApp g head formal qual comp_typ arg (E dhead) (E darg) in
+        // opening_pure_comp_with_pure_term comp_typ arg 0;
+        repack (try_frame_pre pre_typing d) post_hint true
+      | C_Tot (Tm_Arrow _  (Some implicit) _) -> 
+        let head = Tm_PureApp head qual arg in
+        let C_Tot ty_head = open_comp_with comp_typ arg in
+        //Some implicits to follow
+        let t = Pulse.Checker.Inference.infer head ty_head pre in
+        check' false f g t pre pre_typing post_hint
+
+      | _ ->
+        T.fail
+          (Printf.sprintf
+             "Unexpected head type in stateful application (head: %s, comp_typ: %s, and arg: %s"
+             (P.term_to_string head)
+             (P.comp_to_string comp_typ)
+             (P.term_to_string arg))
+    else T.fail "Unexpected qualifier"
+    
+  | _ -> T.fail (Printf.sprintf "Unexpected head type in impure application: %s" (P.term_to_string ty_head))
+
 #push-options "--print_implicits --print_universes --print_full_names"
 let rec check' : bool -> check_t =
   fun (allow_inst:bool)
@@ -294,17 +445,7 @@ let rec check' : bool -> check_t =
     (pre:term)
     (pre_typing: tot_typing f g pre Tm_VProp)
     (post_hint:option term) ->
-  let repack #g #pre #t (x:(c:comp_st { comp_pre c == pre } & st_typing f g t c)) (apply_post_hint:bool)
-    : T.Tac (t:st_term & c:comp { stateful_comp c ==> comp_pre c == pre } & st_typing f g t c) =
-    let (| c, d_c |) = x in
-    if apply_post_hint && stateful_comp c
-    then (
-      FV.st_typing_freevars d_c;
-      let (| c1, c_c1_eq |) = replace_equiv_post f g c post_hint in
-      (| t, c1, T_Equiv _ _ _ _ d_c c_c1_eq |)
-    )
-    else (| t, c, d_c |)
-  in
+
   //
   // Should revisit this heuristic to add elim_pure
   //   whenever there is a pure vprop in the context
@@ -330,7 +471,7 @@ let rec check' : bool -> check_t =
     let (| t, u, ty, uty, d |) = check_tot_univ allow_inst f g t in
     let c = return_comp u ty t in
     let d = T_Return _ _ _ _ (E d) uty in
-    repack (frame_empty pre_typing uty (Tm_Return t) c d) false
+    repack (frame_empty pre_typing uty (Tm_Return t) c d) post_hint false
 
   | Tm_Return _ -> T.fail "Unexpected Tm_Return st term"
 
@@ -351,42 +492,8 @@ let rec check' : bool -> check_t =
   | Tm_Abs _ _ _ _ _ ->
     check_abs f g t pre pre_typing post_hint (check' true)
 
-  | Tm_STApp head qual arg ->
-    let (| head, ty_head, dhead |) = check_tot allow_inst f g head in
-    begin
-    match ty_head with
-    | Tm_Arrow {binder_ty=formal;binder_ppname=ppname} bqual comp_typ -> (
-      if qual = bqual
-      then (
-        let (| arg, darg |) = check_tot_with_expected_typ f g arg formal in
-        match comp_typ with
-        | C_ST res
-        | C_STAtomic _ res
-        | C_STGhost _ res ->
-          // This is a real ST application
-          let d = T_STApp g head formal qual comp_typ arg (E dhead) (E darg) in
-          // opening_pure_comp_with_pure_term comp_typ arg 0;
-          repack (try_frame_pre pre_typing d) true
-        | C_Tot (Tm_Arrow _  (Some implicit) _) -> 
-          let head = Tm_PureApp head qual arg in
-          let C_Tot ty_head = open_comp_with comp_typ arg in
-          //Some implicits to follow
-          let t = Pulse.Checker.Inference.infer head ty_head pre in
-          check' false f g t pre pre_typing post_hint
-
-        | _ ->
-          T.fail
-            (Printf.sprintf
-               "Unexpected head type in stateful application (head: %s, comp_typ: %s, and arg: %s"
-               (P.term_to_string head)
-               (P.comp_to_string comp_typ)
-               (P.term_to_string arg))
-      )
-      else T.fail "Unexpected qualifier"
-    )
-    
-    | _ -> T.fail (Printf.sprintf "Unexpected head type in impure application: %s" (P.term_to_string ty_head))
-    end
+  | Tm_STApp _ _ _ ->
+    check_stapp allow_inst f g t pre pre_typing post_hint check'
 
   | Tm_Bind _ _ ->
     check_bind f g t pre pre_typing post_hint (check' true)
@@ -401,57 +508,14 @@ let rec check' : bool -> check_t =
     in
     check_if f g b e1 e2 pre pre_typing post (check' true)
 
-  | Tm_ElimExists t ->
-    let (| t, t_typing |) = check_vprop f g t in
-    (match t with
-     | Tm_ExistsSL u ty p ->
-       // Could this come from inversion of t_typing?
-       let (| u', ty_typing |) = check_universe f g ty in
-       if u = u'
-       then let x = fresh g in
-            let d = T_ElimExists g u ty p x ty_typing t_typing in
-            repack (try_frame_pre pre_typing d) true
-       else T.fail "Universe checking failed in elim_exists"
-     | _ -> T.fail "elim_exists argument not a Tm_ExistsSL")
+  | Tm_ElimExists _ ->
+    check_elim_exists f g t pre pre_typing post_hint
 
-  | Tm_IntroExists t e ->
-    let (| t, t_typing |) = check_vprop f g t in
-    (match t with
-     | Tm_ExistsSL u ty p ->
-       // Could this come from inversion of t_typing?
-       let (| u', ty_typing |) = check_universe f g ty in
-       if u = u'
-       then let (| e, e_typing |) = check_tot_with_expected_typ f g e ty in
-            let d = T_IntroExists g u ty p e ty_typing t_typing (E e_typing) in
-            repack (try_frame_pre pre_typing d) true
-       else T.fail "Universe checking failed in intro_exists"
-     | _ -> T.fail "elim_exists argument not a Tm_ExistsSL")
+  | Tm_IntroExists _ _ ->
+    check_intro_exists f g t pre pre_typing post_hint
 
-  | Tm_While inv cond body ->
-    let (| inv, inv_typing |) =
-      check_vprop f g (Tm_ExistsSL U_zero tm_bool inv) in
-    (match inv with
-     | Tm_ExistsSL U_zero (Tm_FVar ["Prims"; "bool"]) inv ->
-       // Should get from inv_typing
-       let cond_pre_typing =
-         check_vprop_no_inst f g (comp_pre (comp_while_cond inv)) in
-       let (| cond, cond_comp, cond_typing |) =
-         check' allow_inst f g cond (comp_pre (comp_while_cond inv))
-           cond_pre_typing (Some (comp_post (comp_while_cond inv))) in
-       if eq_comp cond_comp (comp_while_cond inv)
-       then begin
-         let body_pre_typing =
-           check_vprop_no_inst f g (comp_pre (comp_while_body inv)) in
-         let (| body, body_comp, body_typing |) =
-           check' allow_inst f g body (comp_pre (comp_while_body inv))
-             body_pre_typing (Some (comp_post (comp_while_body inv))) in
-         if eq_comp body_comp (comp_while_body inv)
-         then let d = T_While g inv cond body inv_typing cond_typing   body_typing in
-              repack (try_frame_pre pre_typing d) true
-         else T.fail "Cannot typecheck while loop body"
-       end
-       else T.fail "Cannot typecheck while loop condition"
-     | _ -> T.fail "Typechecked invariant is not an exists")
+  | Tm_While _ _ _ ->
+    check_while allow_inst f g t pre pre_typing post_hint check'
 #pop-options
 
 let check = check' true
