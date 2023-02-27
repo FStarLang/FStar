@@ -366,6 +366,10 @@ let ghost_ref a = erased (ref a)
 [@@__reduce__]
 let ghost_pts_to_sl #a (r:ghost_ref a) (p:perm) (x:a) = pts_to_sl (reveal r) p x
 
+let reveal_ghost_ref _ = ()
+
+let reveal_ghost_pts_to_sl _ _ _ = ()
+
 let ghost_pts_to_witinv (#a:Type) (r:ghost_ref a) (p:perm) : Lemma (is_witness_invariant (ghost_pts_to_sl r p)) =
   let aux (x y : erased a) (m:mem)
     : Lemma (requires (interp (ghost_pts_to_sl r p x) m /\ interp (ghost_pts_to_sl r p y) m))
