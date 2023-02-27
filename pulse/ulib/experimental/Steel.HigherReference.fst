@@ -258,7 +258,7 @@ let gather_atomic_raw (#a:Type) (#uses:_) (#p0 #p1:perm) (r:ref a) (v0:erased a)
       (pts_to_raw r p1 v1)
       (RP.pts_to r (Ghost.reveal (Some (Ghost.reveal v1, p1))))
       (fun _ -> ());
-    RP.gather r (Some (Ghost.reveal v0, p0)) (Some (Ghost.reveal v1, p1));
+    let _ = RP.gather r (Some (Ghost.reveal v0, p0)) (Some (Ghost.reveal v1, p1)) in
     rewrite_slprop
       (RP.pts_to r _)
       (pts_to_raw r (sum_perm p0 p1) v0)
