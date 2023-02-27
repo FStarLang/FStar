@@ -268,3 +268,7 @@ val while_loop
 
 val stt_ghost_reveal (a:Type) (x:erased a)
   : stt_ghost a emp_inames emp (fun y -> pure (eq2_prop (reveal x) y))
+
+val stt_admit (#a:Type) (p:vprop) (q:a -> vprop) : stt a p q
+val stt_atomic_admit (#a:Type) (p:vprop) (q:a -> vprop) : stt_atomic a emp_inames p q
+val stt_ghost_admit (#a:Type) (p:vprop) (q:a -> vprop) : stt_ghost a emp_inames p q
