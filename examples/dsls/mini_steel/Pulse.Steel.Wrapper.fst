@@ -216,7 +216,7 @@ let intro_pure p _ = fun _ -> intro_pure p
 
 let elim_exists #a p = fun _ -> elim_exists ()
 
-let intro_exists #a p e = fun _ -> intro_exists e p
+let intro_exists #a p e = fun _ -> intro_exists (reveal e) p
 
 let while_loop inv cond body = fun _ -> while_loop inv cond body
 
