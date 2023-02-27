@@ -275,7 +275,7 @@ let pts_to_equiv'
   (#t: Type)
   (#td: typedef t)
   (r1 r2: ref td)
-  (v: t)
+  (v: Ghost.erased t)
 : ST.STGhostT unit opened
     (ref_equiv r1 r2 `star` pts_to r1 v)
     (fun _ -> ref_equiv r1 r2 `star` pts_to r2 v)
@@ -678,9 +678,15 @@ let struct_set_field
   f v s
 = t_struct_set_field f v s
 
+[@@noextract_to "krml"] // proof-only
+let t_struct_get_field
+  (#field_t: eqtype) (#fields: field_description_gen_t field_t) (s: struct_t1 fields) (f: field_t)
+: Tot (fields.fd_type f)
+= s f
+
 let struct_get_field
   s field
-= s field
+= t_struct_get_field s field
 
 let struct_eq
   s1 s2
@@ -844,42 +850,111 @@ let has_struct_field_dup'
   ST.noop ();
   ST.rewrite (has_struct_field0 r field r') (has_struct_field1 r field r')
 
-(*
-let has_struct_field_gen_inj
+let has_struct_field_dup
+  r field r'
+= has_struct_field_dup' r field r'
+
+let has_struct_field_inj'
   (#opened: _)
   (#field_t: eqtype)
-  (fields: field_description_gen_t field_t)
+  (#fields: field_description_gen_t field_t)
   (r: ref (struct1 fields))
   (field: field_t)
   (r1 r2: ref (fields.fd_typedef field))
-: SteelGhost unit opened
-    emp
-    (fun _ -> emp)
-    (fun _ ->
-      Ghost.reveal (mem_inv opened _inv) == false /\
-      has_struct_field_gen fields r field r1 /\
-      has_struct_field_gen fields r field r2
-    )
-    (fun _ _ _ -> r1 == r2)
-= TD.type_of_token_inj (Some?.v r1).dest (Some?.v r2).dest
+: ST.STGhostT unit opened
+    (has_struct_field1 r field r1 `star` has_struct_field1 r field r2)
+    (fun _ -> has_struct_field1 r field r1 `star` has_struct_field1 r field r2 `star` ref_equiv r1 r2)
+=
+  ST.rewrite (has_struct_field1 r field r1) (has_struct_field0 r field r1);
+  let _ = ST.gen_elim () in
+  let w = ST.vpattern_replace (HR.pts_to r _) in
+  let w1 = ST.vpattern_replace (HR.pts_to r1 _) in
+  ST.rewrite (has_struct_field1 r field r2) (has_struct_field0 r field r2);
+  let _ = ST.gen_elim () in
+  hr_gather w r;
+  ST.vpattern_rewrite (HR.pts_to r2 _) w1;
+  hr_share r;
+  hr_share r1;
+  ST.rewrite (has_struct_field0 r field r1) (has_struct_field1 r field r1);
+  hr_share r2;
+  ST.rewrite (has_struct_field0 r field r2) (has_struct_field1 r field r2);
+  ST.rewrite (ref_equiv0 r1 r2) (ref_equiv r1 r2)
 
 let has_struct_field_inj
   r field r1 r2
-= has_struct_field_gen_inj _ r field r1 r2
+= has_struct_field_inj' r field r1 r2
 
-#push-options "--z3rlimit 32"
+let has_struct_field_equiv_from'
+  (#opened: _)
+  (#field_t: eqtype)
+  (#fields: field_description_gen_t field_t)
+  (r1: ref (struct1 fields))
+  (field: field_t)
+  (r': ref (fields.fd_typedef field))
+  (r2: ref (struct1 fields))
+: ST.STGhostT unit opened
+    (ref_equiv r1 r2 `star` has_struct_field1 r1 field r')
+    (fun _ -> ref_equiv r1 r2 `star` has_struct_field1 r2 field r')
+= ST.rewrite (ref_equiv r1 r2) (ref_equiv0 r1 r2);
+  let _ = ST.gen_elim () in
+  let w = ST.vpattern_replace (fun w -> HR.pts_to r1 _ w `star` HR.pts_to r2 _ w) in
+  ST.rewrite (has_struct_field1 r1 field r') (has_struct_field0 r1 field r');
+  let _ = ST.gen_elim () in
+  hr_gather w r1;
+  hr_share r2;
+  ST.rewrite (has_struct_field0 r2 field r') (has_struct_field1 r2 field r');
+  ST.rewrite (ref_equiv0 r1 r2) (ref_equiv r1 r2)
 
-#restart-solver
+let has_struct_field_equiv_from
+  r1 field r' r2
+= has_struct_field_equiv_from' r1 field r' r2
 
-let ghost_struct_field_focus
-  #_ #tn #_ #n #fields #v r0 field r'0
-= let r : R.ref (struct_pcm _) = (Some?.v r0).ref in
-  rewrite_slprop
-    (pts_to r0 v)
-    (R.pts_to r v)
-    (fun _ -> ());
+let has_struct_field_equiv_to'
+  (#opened: _)
+  (#field_t: eqtype)
+  (#fields: field_description_gen_t field_t)
+  (r: ref (struct1 fields))
+  (field: field_t)
+  (r1': ref (fields.fd_typedef field))
+  (r2': ref (fields.fd_typedef field))
+: ST.STGhostT unit opened
+    (ref_equiv r1' r2' `star` has_struct_field1 r field r1')
+    (fun _ -> ref_equiv r1' r2' `star` has_struct_field1 r field r2')
+= ST.rewrite (ref_equiv r1' r2') (ref_equiv0 r1' r2');
+  let _ = ST.gen_elim () in
+  let w = ST.vpattern_replace (fun w -> HR.pts_to r1' _ w `star` HR.pts_to r2' _ w) in
+  ST.rewrite (has_struct_field1 r field r1') (has_struct_field0 r field r1');
+  let _ = ST.gen_elim () in
+  hr_gather w r1';
+  hr_share r2';
+  ST.rewrite (has_struct_field0 r field r2') (has_struct_field1 r field r2');
+  ST.rewrite (ref_equiv0 r1' r2') (ref_equiv r1' r2')
+
+let has_struct_field_equiv_to
+  r field r1 r2
+= has_struct_field_equiv_to' r field r1 r2
+
+let ghost_struct_field_focus'
+  (#opened: _)
+  (#field_t: eqtype)
+  (#fields: field_description_gen_t field_t)
+  (#v: Ghost.erased (struct_t1 fields))
+  (r: ref (struct1 fields))
+  (field: field_t)
+  (r': ref (fields.fd_typedef field))
+: ST.STGhostT unit opened
+    (has_struct_field1 r field r' `star` pts_to r v)
+    (fun _ -> has_struct_field1 r field r' `star` pts_to r (t_struct_set_field field (unknown (fields.fd_typedef field)) v) `star` pts_to r' (t_struct_get_field v field))
+= ST.rewrite (has_struct_field1 r field r') (has_struct_field0 r field r');
+  let _ = ST.gen_elim () in
+  let w = ST.vpattern_replace (HR.pts_to r _) in
+  let w' = ST.vpattern_replace (HR.pts_to r' _) in
+  ST.weaken (pts_to r v) (pts_to0 r v) (fun _ -> ());
+  let _ = ST.gen_elim () in
+  hr_gather w r;
+  ST.rewrite (r_pts_to _ _) (R.pts_to w.ref (Ghost.reveal v));
   let prf
-    (f': field_t fields)
+    (f': field_t)
     (x: (fields.fd_type f'))
   : Lemma
     (let p = (fields.fd_typedef f').pcm in
@@ -889,20 +964,25 @@ let ghost_struct_field_focus
   = is_unit (fields.fd_typedef f').pcm x
   in
   Classical.forall_intro_2 prf;
-  let v' = struct_set_field field (unknown (fields.fd_typedef field)) v in
-  let vf = S.field_to_struct_f (struct_field_pcm _) field (struct_get_field v field) in
+  let v' = t_struct_set_field field (unknown (fields.fd_typedef field)) v in
+  let vf = S.field_to_struct_f (struct_field_pcm _) field (t_struct_get_field v field) in
   assert (composable (struct_pcm _) v' vf);
   assert (op (struct_pcm _) v' vf `FX.feq` v);
-  R.split r _ v' vf;
-  R.gfocus r (S.struct_field (struct_field_pcm _) field) vf (struct_get_field v field);
-  rewrite_slprop
-    (R.pts_to r _)
-    (pts_to r0 _)
-    (fun _ -> ());
-  rewrite_slprop
-    (R.pts_to _ _)
-    (pts_to r'0 _)
-    (fun _ -> ())
+  RST.split w.ref _ v' vf;
+  RST.gfocus w.ref (S.struct_field (struct_field_pcm _) field) vf (t_struct_get_field v field);
+  hr_share r;
+  hr_share r';
+  ST.rewrite (has_struct_field0 r field r') (has_struct_field1 r field r');
+  ST.weaken (pts_to0 r v') (pts_to r (t_struct_set_field field (unknown (fields.fd_typedef field)) v)) (fun _ -> ());
+  ST.rewrite (R.pts_to _ _) (r_pts_to w'.ref (t_struct_get_field v field));
+  ST.weaken (pts_to0 r' (t_struct_get_field v field)) (pts_to r' (t_struct_get_field v field)) (fun _ -> ())
+  
+let ghost_struct_field_focus
+  r field r'
+= noop (); // FIXME: WHY WHY WHY? without this noop, z3 fails to prove precondition of field_description_t.fd_typedef . But also works if I put noop () after the function call
+  ghost_struct_field_focus' r field r'
+
+(*
 
 let ghost_struct_field
   #_ #tn #_ #n #fields #v r field
