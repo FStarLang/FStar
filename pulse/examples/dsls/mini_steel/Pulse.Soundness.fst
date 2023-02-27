@@ -16,6 +16,7 @@ module STEquiv = Pulse.Soundness.STEquiv
 module Return = Pulse.Soundness.Return
 module Exists = Pulse.Soundness.Exists
 module While = Pulse.Soundness.While
+module Admit = Pulse.Soundness.Admit
 module LN = Pulse.Typing.LN
 module FV = Pulse.Typing.FV
 module STT = Pulse.Soundness.STT
@@ -441,6 +442,27 @@ let comp_typing_soundness (f:stt_env)
       STT.stt_ghost_typing res_typing i_typing pre_typing post_typing
 #pop-options
 
+let admit_soundess
+  (#f:stt_env)
+  (#g:env)
+  (#t:st_term)
+  (#c:comp)
+  (d:st_typing f g t c{T_Admit? d})
+  : GTot (RT.typing (extend_env_l f g)
+                    (elab_st_typing d)
+                    (elab_comp c)) =
+
+  let T_Admit _ s c st_typing = d in
+
+  let rt_typing, rpre_typing, rpost_typing = stc_soundness st_typing in
+  match c with
+  | STT ->
+    Admit.stt_admit_soundness rt_typing rpre_typing rpost_typing
+  | STT_Atomic ->
+    Admit.stt_atomic_admit_soundness rt_typing rpre_typing rpost_typing
+  | STT_Ghost ->
+    Admit.stt_ghost_admit_soundness rt_typing rpre_typing rpost_typing
+
 #push-options "--query_stats --fuel 2 --ifuel 2"
 let rec soundness (f:stt_env)
                   (g:env)
@@ -510,7 +532,7 @@ let rec soundness (f:stt_env)
     | T_While _ _ _ _ _ _ _ ->
       while_soundness d soundness
 
-    | T_Admit _ _ _ _ -> admit ()
+    | T_Admit _ _ _ _ -> admit_soundess d
 #pop-options
 
 let soundness_lemma

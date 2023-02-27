@@ -8,6 +8,7 @@ open Pulse.Soundness.Common
 
 module EPure = Pulse.Elaborate.Pure
 module RT = Refl.Typing
+
 val exists_inversion
   (#f:stt_env)
   (#g:env)
