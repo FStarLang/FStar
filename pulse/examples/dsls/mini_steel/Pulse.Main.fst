@@ -258,7 +258,11 @@ let translate_elim_exists (g:RT.fstar_top_env) (t:R.term)
       | Tv_UInst v _
       | Tv_FVar v ->
         if inspect_fv v = elim_exists_lid
-        then let? ex = readback_exists_sl_body g arg in
+        then let ex =
+                 match readback_exists_sl_body g arg with
+                 | Inl ex -> ex
+                 | Inr _ -> Tm_Unknown
+             in
              Inl (Tm_ElimExists ex)
         else Inr "ELIM_EXISTS: Not elim_exists"
       | _ -> Inr "ELIM_EXISTS: Not a fv application")
