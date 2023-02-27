@@ -447,10 +447,8 @@ let check_admit
            c:comp{stateful_comp c ==> comp_pre c == pre} &
            st_typing f g t c) =
 
-  let Tm_Admit c u t post = t in
-  let (| t, t_typing |) =
-    check_tot_with_expected_typ f g t (Tm_Type u) in
-
+  let Tm_Admit c _ t post = t in
+  let (| u, t_typing |) = check_universe f g t in
   let x = fresh g in
   let post =
     match post, post_hint with
@@ -470,7 +468,7 @@ let check_admit
   (|
      Tm_Admit c u t None,
      comp_admit c s,
-     T_Admit _ _ c (STC _ s x (E t_typing) pre_typing (E post_typing))
+     T_Admit _ _ c (STC _ s x t_typing pre_typing (E post_typing))
   |)
 
 #push-options "--print_implicits --print_universes --print_full_names"

@@ -12,6 +12,29 @@ open Pulse.Readback
 module P = Pulse.Syntax.Printer
 module RTB = FStar.Tactics.Builtins
 
+let debug (msg: unit -> T.Tac string) =
+  if T.debugging()
+  then T.print (msg())
+  
+let rtb_core_check_term f e =
+  debug (fun _ -> Printf.sprintf "Calling core_check_term on %s" (T.term_to_string e));
+  let res = RTB.core_check_term f e in
+  debug (fun _ -> "Returned");
+  res
+
+let rtb_tc_term f e =
+  debug (fun _ -> Printf.sprintf "Calling tc_term on %s" (T.term_to_string e));
+  let res = RTB.tc_term f e in
+  debug (fun _ -> "Returned");
+  res
+
+let rtb_universe_of f e =
+  debug (fun _ -> Printf.sprintf "Calling universe_of on %s" (T.term_to_string e));
+  let res = RTB.universe_of f e in
+  debug (fun _ -> "Returned");
+  res
+  
+  
 let catch_all (f:unit -> Tac (option 'a))
   : Tac (option 'a)
   = match T.catch f with
@@ -20,7 +43,7 @@ let catch_all (f:unit -> Tac (option 'a))
     
 let tc_no_inst (f:R.env) (e:R.term) 
   : T.Tac (option (t:R.term & RT.typing f e t))
-  = let ropt = catch_all (fun _ -> RTB.core_check_term f e) in
+  = let ropt = catch_all (fun _ -> rtb_core_check_term f e) in
     match ropt with
     | None -> None
     | Some (t) ->
@@ -28,14 +51,12 @@ let tc_no_inst (f:R.env) (e:R.term)
 
 let tc_meta_callback (f:R.env) (e:R.term) 
   : T.Tac (option (e:R.term & t:R.term & RT.typing f e t))
-  = // T.print (Printf.sprintf "Calling tc_term on %s\n" (T.term_to_string e));
-    let res =
-      match catch_all (fun _ -> RTB.tc_term f e) with
+  = let res =
+      match catch_all (fun _ -> rtb_tc_term f e) with
       | None -> None
       | Some (e, t) ->
         Some (| e, t, RT.T_Token _ _ _ (FStar.Squash.get_proof _) |)
     in
-    // T.print "Returned\n";
     res
 
 let tc_maybe_inst (allow_inst:bool) (f:R.env) (e:R.term)
@@ -48,7 +69,7 @@ let tc_maybe_inst (allow_inst:bool) (f:R.env) (e:R.term)
   
 let tc_expected_meta_callback (f:R.env) (e:R.term) (t:R.term)
   : T.Tac (option (e:R.term & RT.typing f e t))
-  = let ropt = catch_all (fun _ -> RTB.tc_term f e) in
+  = let ropt = catch_all (fun _ -> rtb_tc_term f e) in
     match ropt with
     | None -> None
     | Some (e, te) ->
@@ -65,7 +86,7 @@ let check_universe (f0:RT.fstar_top_env) (g:env) (t:term)
   : T.Tac (u:universe & universe_of f0 g t u)
   = let f = extend_env_l f0 g in
     let rt = elab_term t in
-    let ru_opt = catch_all (fun _ -> RTB.universe_of f rt) in
+    let ru_opt = catch_all (fun _ -> rtb_universe_of f rt) in
     match ru_opt with
     | None -> T.fail (Printf.sprintf "%s elaborated to %s; Not typable as a universe"
                          (P.term_to_string t)
