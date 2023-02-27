@@ -37,8 +37,28 @@ let steel_wrapper = ["Pulse"; "Steel"; "Wrapper"]
 let mk_steel_wrapper_lid s = steel_wrapper@[s]
 
 let stt_admit_lid = mk_steel_wrapper_lid "stt_admit"
+let mk_stt_admit (u:R.universe) (t pre post:R.term) : R.term =
+  let open R in
+  let t = pack_ln (Tv_UInst (pack_fv stt_admit_lid) [u]) in
+  let t = pack_ln (Tv_App t (t, Q_Explicit)) in
+  let t = pack_ln (Tv_App t (pre, Q_Explicit)) in
+  pack_ln (Tv_App t (post, Q_Explicit))
+
 let stt_atomic_admit_lid = mk_steel_wrapper_lid "stt_atomic_admit"
+let mk_stt_atomic_admit (u:R.universe) (t pre post:R.term) : R.term =
+  let open R in
+  let t = pack_ln (Tv_UInst (pack_fv stt_atomic_admit_lid) [u]) in
+  let t = pack_ln (Tv_App t (t, Q_Explicit)) in
+  let t = pack_ln (Tv_App t (pre, Q_Explicit)) in
+  pack_ln (Tv_App t (post, Q_Explicit))
+
 let stt_ghost_admit_lid = mk_steel_wrapper_lid "stt_ghost_admit"
+let mk_stt_ghost_admit (u:R.universe) (t pre post:R.term) : R.term =
+  let open R in
+  let t = pack_ln (Tv_UInst (pack_fv stt_ghost_admit_lid) [u]) in
+  let t = pack_ln (Tv_App t (t, Q_Explicit)) in
+  let t = pack_ln (Tv_App t (pre, Q_Explicit)) in
+  pack_ln (Tv_App t (post, Q_Explicit))
 
 let emp_inames_lid = mk_steel_wrapper_lid "emp_inames"
 let elim_pure_lid = mk_steel_wrapper_lid "elim_pure"

@@ -395,3 +395,14 @@ let rec elab_st_typing (#f:RT.fstar_top_env)
       let cond = elab_st_typing cond_typing in
       let body = elab_st_typing body_typing in
       mk_while (mk_abs bool_tm R.Q_Explicit inv) cond body
+
+    | T_Admit _ {u;res;pre;post} c _ ->
+      let ru = elab_universe u in
+      let rres = elab_term res in
+      let rpre = elab_term pre in
+      let rpost = elab_term post in
+      let rpost = mk_abs rres R.Q_Explicit rpost in
+      (match c with
+       | STT -> mk_stt_admit ru rres rpre rpost
+       | STT_Atomic -> mk_stt_atomic_admit ru rres rpre rpost
+       | STT_Ghost -> mk_stt_ghost_admit ru rres rpre rpost)

@@ -93,6 +93,11 @@ and vprop = term
 
 let comp_st = c:comp {not (C_Tot? c) }
 
+type admit_c =
+  | STT
+  | STT_Atomic
+  | STT_Ghost
+
 (* terms with STT types *)
 [@@ no_auto_projectors]
 noeq
@@ -105,6 +110,8 @@ type st_term =
   | Tm_ElimExists : vprop -> st_term
   | Tm_IntroExists: term -> vprop -> st_term
   | Tm_While      : term -> st_term -> st_term -> st_term  // inv, cond, body
+
+  | Tm_Admit      : admit_c -> universe -> term -> option term -> st_term  // u, a:type_u, optional post
 
 let rec freevars (t:term) 
   : Set.set var
@@ -175,6 +182,8 @@ let rec freevars_st (t:st_term)
     | Tm_While inv cond body ->
       Set.union (freevars inv)
                 (Set.union (freevars_st cond) (freevars_st body))
+    | Tm_Admit _ _ t post ->
+      Set.union (freevars t) (freevars_opt post)
 
 let rec ln' (t:term) (i:int) =
   match t with
@@ -270,6 +279,10 @@ let rec ln_st' (t:st_term) (i:int)
       ln' inv (i + 1) &&
       ln_st' cond i &&
       ln_st' body i
+
+    | Tm_Admit _ _ t post ->
+      ln' t i &&
+      ln_opt' post (i + 1)
 
 let ln (t:term) = ln' t (-1)
 let ln_st (t:st_term) = ln_st' t (-1)
@@ -394,6 +407,9 @@ let rec open_st_term' (t:st_term) (v:term) (i:index)
                (open_st_term' cond v i)
                (open_st_term' body v i)
 
+    | Tm_Admit c u t post ->
+      Tm_Admit c u (open_term' t v i)
+                   (open_term_opt' post v (i + 1))
 
 let open_term t v =
     open_term' t (Tm_Var {nm_ppname=RT.pp_name_default;nm_index=v}) 0
@@ -521,6 +537,10 @@ let rec close_st_term' (t:st_term) (v:var) (i:index)
       Tm_While (close_term' inv v (i + 1))
                (close_st_term' cond v i)
                (close_st_term' body v i)
+
+    | Tm_Admit c u t post ->
+      Tm_Admit c u (close_term' t v i)
+                   (close_term_opt' post v (i + 1))
 
 let close_term t v = close_term' t v 0
 let close_st_term t v = close_st_term' t v 0
@@ -695,6 +715,10 @@ let rec close_open_inverse_st'  (t:st_term)
       close_open_inverse_st' t2 x i;
       close_open_inverse_opt' post x (i + 1)
 
+    | Tm_Admit _ _ t post ->
+      close_open_inverse' t x i;
+      close_open_inverse_opt' post x (i + 1)
+
 let close_open_inverse (t:term) (x:var { ~(x `Set.mem` freevars t) } )
   : Lemma (ensures close_term (open_term t x) x == t)
           (decreases t)
@@ -830,5 +854,11 @@ let rec eq_st_term (t1 t2:st_term)
       eq_tm inv1 inv2 &&
       eq_st_term cond1 cond2 &&
       eq_st_term body1 body2
+
+    | Tm_Admit c1 u1 t1 post1, Tm_Admit c2 u2 t2 post2 ->
+      c1 = c2 &&
+      u1 = u2 &&
+      eq_tm t1 t2 &&
+      eq_tm_opt post1 post2
 
     | _ -> false

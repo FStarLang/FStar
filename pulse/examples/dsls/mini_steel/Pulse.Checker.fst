@@ -436,6 +436,43 @@ let check_stapp
     
   | _ -> T.fail (Printf.sprintf "Unexpected head type in impure application: %s" (P.term_to_string ty_head))
 
+let check_admit
+  (f:RT.fstar_top_env)
+  (g:env)
+  (t:st_term{Tm_Admit? t})
+  (pre:term)
+  (pre_typing:tot_typing f g pre Tm_VProp)
+  (post_hint:option term)
+  : T.Tac (t:st_term &
+           c:comp{stateful_comp c ==> comp_pre c == pre} &
+           st_typing f g t c) =
+
+  let Tm_Admit c u t post = t in
+  let (| t, t_typing |) =
+    check_tot_with_expected_typ f g t (Tm_Type u) in
+
+  let x = fresh g in
+  let post =
+    match post, post_hint with
+    | None, None
+    | Some _, Some _ ->
+      T.fail "T_Admit: either no post or two posts"
+    | Some post, _
+    | _, Some post -> post in
+
+  let post_opened = open_term post x in
+  let (| post_opened, post_typing |) =
+    check_tot_with_expected_typ f ((x, Inl t)::g) post_opened Tm_VProp in
+
+  let post = close_term post_opened x in
+  let s = {u;res=t;pre;post} in
+  assume (open_term (close_term post_opened x) x == post_opened);
+  (|
+     Tm_Admit c u t None,
+     comp_admit c s,
+     T_Admit _ _ c (STC _ s x (E t_typing) pre_typing (E post_typing))
+  |)
+
 #push-options "--print_implicits --print_universes --print_full_names"
 let rec check' : bool -> check_t =
   fun (allow_inst:bool)
@@ -516,6 +553,9 @@ let rec check' : bool -> check_t =
 
   | Tm_While _ _ _ ->
     check_while allow_inst f g t pre pre_typing post_hint check'
+
+  | Tm_Admit _ _ _ _ ->
+    check_admit f g t pre pre_typing post_hint
 #pop-options
 
 let check = check' true

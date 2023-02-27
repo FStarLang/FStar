@@ -363,6 +363,12 @@ let comp_while (inv:term)
            post=open_term' inv tm_false 0
          }
 
+let comp_admit (c:admit_c) (s:st_comp) : comp =
+  match c with
+  | STT -> C_ST s
+  | STT_Atomic -> C_STAtomic Tm_EmpInames s
+  | STT_Ghost -> C_STGhost Tm_EmpInames s
+
 [@@erasable]
 noeq
 type my_erased (a:Type) = | E of a
@@ -376,6 +382,14 @@ let tot_typing (f:RT.fstar_top_env) (g:env) (e:term) (t:term) =
 
 let universe_of (f:RT.fstar_top_env) (g:env) (t:term) (u:universe) =
     tot_typing f g t (Tm_Type u)
+
+let non_informative_t (f:RT.fstar_top_env) (g:env) (u:universe) (t:term) =
+    w:term & tot_typing f g w (non_informative_witness_t u t)
+
+let non_informative_c (f:RT.fstar_top_env) (g:env) (c:comp_st) =
+    non_informative_t f g (comp_u c) (comp_res c)
+     
+let as_binder t = { binder_ty = t; binder_ppname = RT.pp_name_default }
 
 [@@ no_auto_projectors]
 noeq
@@ -394,56 +408,6 @@ type st_equiv (f:RT.fstar_top_env) : env -> comp -> comp -> Type =
                     (open_term (comp_post c2) x) ->      
       st_equiv f g c1 c2
 
-[@@ no_auto_projectors]
-noeq
-type st_comp_typing (f:RT.fstar_top_env) : env -> st_comp -> Type =
-  | STC:
-      g:env -> 
-      st:st_comp ->
-      x:var { None? (lookup g x) /\ ~(x `Set.mem` freevars st.post) } ->
-      universe_of f g st.res st.u ->
-      tot_typing f g st.pre Tm_VProp ->
-      tot_typing f ((x, Inl st.res)::g) (open_term st.post x) Tm_VProp ->
-      st_comp_typing f g st
-
-[@@ no_auto_projectors]
-noeq
-type comp_typing (f:RT.fstar_top_env) : env -> comp -> universe -> Type =
-  | CT_Tot :
-      g:env ->
-      t:term ->
-      u:universe ->
-      universe_of f g t u ->
-      comp_typing f g (C_Tot t) u
-
-  | CT_ST :
-      g:env -> 
-      st:st_comp -> 
-      st_comp_typing f g st ->
-      comp_typing f g (C_ST st) st.u
-
-  | CT_STAtomic :
-      g:env -> 
-      inames:term ->
-      st:st_comp -> 
-      tot_typing f g inames Tm_Inames ->
-      st_comp_typing f g st ->
-      comp_typing f g (C_STAtomic inames st) st.u
-
-  | CT_STGhost :
-      g:env -> 
-      inames:term ->
-      st:st_comp -> 
-      tot_typing f g inames Tm_Inames ->      
-      st_comp_typing f g st ->
-      comp_typing f g (C_STGhost inames st) st.u
-
-let non_informative_t (f:RT.fstar_top_env) (g:env) (u:universe) (t:term) =
-    w:term & tot_typing f g w (non_informative_witness_t u t)
-
-let non_informative_c (f:RT.fstar_top_env) (g:env) (c:comp_st) =
-    non_informative_t f g (comp_u c) (comp_res c)
-     
 [@@ no_auto_projectors]
 noeq
 type bind_comp (f:RT.fstar_top_env) : env -> var -> comp -> comp -> comp -> Type =
@@ -496,11 +460,49 @@ type lift_comp (f:RT.fstar_top_env) : env -> comp -> comp -> Type =
       non_informative_c:non_informative_c f g c ->
       lift_comp f g c (C_STAtomic (comp_inames c) (st_comp_of_comp c))
 
-let as_binder t = { binder_ty = t; binder_ppname = RT.pp_name_default }
-
 [@@ no_auto_projectors]
 noeq
-type st_typing (f:RT.fstar_top_env) : env -> st_term -> comp -> Type =
+type st_comp_typing (f:RT.fstar_top_env) : env -> st_comp -> Type =
+  | STC:
+      g:env -> 
+      st:st_comp ->
+      x:var { None? (lookup g x) /\ ~(x `Set.mem` freevars st.post) } ->
+      universe_of f g st.res st.u ->
+      tot_typing f g st.pre Tm_VProp ->
+      tot_typing f ((x, Inl st.res)::g) (open_term st.post x) Tm_VProp ->
+      st_comp_typing f g st
+
+and comp_typing (f:RT.fstar_top_env) : env -> comp -> universe -> Type =
+  | CT_Tot :
+      g:env ->
+      t:term ->
+      u:universe ->
+      universe_of f g t u ->
+      comp_typing f g (C_Tot t) u
+
+  | CT_ST :
+      g:env -> 
+      st:st_comp -> 
+      st_comp_typing f g st ->
+      comp_typing f g (C_ST st) st.u
+
+  | CT_STAtomic :
+      g:env -> 
+      inames:term ->
+      st:st_comp -> 
+      tot_typing f g inames Tm_Inames ->
+      st_comp_typing f g st ->
+      comp_typing f g (C_STAtomic inames st) st.u
+
+  | CT_STGhost :
+      g:env -> 
+      inames:term ->
+      st:st_comp -> 
+      tot_typing f g inames Tm_Inames ->      
+      st_comp_typing f g st ->
+      comp_typing f g (C_STGhost inames st) st.u
+
+and st_typing (f:RT.fstar_top_env) : env -> st_term -> comp -> Type =
   | T_Tot:
       g:env ->
       e:term ->
@@ -644,6 +646,13 @@ type st_typing (f:RT.fstar_top_env) : env -> st_term -> comp -> Type =
       st_typing f g cond (comp_while_cond inv) ->
       st_typing f g body (comp_while_body inv) ->
       st_typing f g (Tm_While inv cond body) (comp_while inv)
+
+  | T_Admit:
+      g:env ->
+      s:st_comp ->
+      c:admit_c ->
+      st_comp_typing f g s ->
+      st_typing f g (Tm_Admit c s.u s.res None) (comp_admit c s)
 
 
 (* this requires some metatheory on Refl.Typing

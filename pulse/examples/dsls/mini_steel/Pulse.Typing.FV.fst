@@ -128,6 +128,9 @@ let rec freevars_close_st_term' (t:st_term) (x:var) (i:index)
       freevars_close_st_term' cond x i;
       freevars_close_st_term' body x i
 
+    | Tm_Admit _ _ t post ->
+      freevars_close_term' t x i;
+      freevars_close_term_opt' post x (i + 1)
 
 let freevars_close_term (e:term) (x:var) (i:index)
   : Lemma 
@@ -244,7 +247,7 @@ let st_comp_typing_freevars #f #g #st (d:st_comp_typing f g st)
   = let STC _ _ x dt pre post = d in
     tot_typing_freevars dt;
     tot_typing_freevars pre;
-    tot_typing_freevars post    
+    tot_typing_freevars post
 
 let comp_typing_freevars  (#f:_) (#g:_) (#c:_) (#u:_)
                           (d:comp_typing f g c u)
@@ -281,7 +284,7 @@ let freevars_open_st_term_inv (e:st_term)
 #pop-options
 #pop-options
 
-#push-options "--fuel 10 --ifuel 10 --z3rlimit_factor 10 --z3cliopt 'smt.qi.eager_threshold=100' --query_stats"
+#push-options "--fuel 10 --ifuel 10 --z3rlimit_factor 20 --z3cliopt 'smt.qi.eager_threshold=100' --query_stats"
 let rec st_typing_freevars (#f:_) (#g:_) (#t:_) (#c:_)
                             (d:st_typing f g t c)
   : Lemma 
@@ -388,4 +391,10 @@ let rec st_typing_freevars (#f:_) (#g:_) (#t:_) (#c:_)
      assert (freevars tm_false `Set.equal` Set.empty);
      freevars_open_term inv tm_false 0;
      assert (freevars (open_term' inv tm_false 0) `Set.subset` freevars inv)
+
+   | T_Admit _ s _ (STC _ _ x t_typing pre_typing post_typing) ->
+     tot_typing_freevars t_typing;
+     tot_typing_freevars pre_typing;
+     tot_typing_freevars post_typing;
+     freevars_open_term s.post (term_of_var x) 0
 #pop-options //takes about 23s
