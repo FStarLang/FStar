@@ -159,7 +159,7 @@ val pts_to_equiv
   (#t: Type)
   (#td: typedef t)
   (r1 r2: ref td)
-  (v: t)
+  (v: Ghost.erased t)
 : SteelGhostT unit opened
     (ref_equiv r1 r2 `star` pts_to r1 v)
     (fun _ -> ref_equiv r1 r2 `star` pts_to r2 v)
@@ -502,7 +502,6 @@ val has_struct_field
   (r': ref (fields.fd_typedef field))
 : Tot vprop
 
-(*
 val has_struct_field_dup
   (#opened: _)
   (#tn: Type0)
@@ -570,6 +569,8 @@ val ghost_struct_field_focus
 : SteelGhostT unit opened
     (has_struct_field r field r' `star` pts_to r v)
     (fun _ -> has_struct_field r field r' `star` pts_to r (struct_set_field field (unknown (fields.fd_typedef field)) v) `star` pts_to r' (struct_get_field v field))
+
+(*
 
 val ghost_struct_field
   (#opened: _)
