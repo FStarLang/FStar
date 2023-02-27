@@ -204,19 +204,13 @@ let intro_exists_soundness
   let re_typing : RT.typing _ re rt =
     tot_typing_soundness e_typing in
 
-  assume (R.pack_ln (R.Tv_App (mk_abs rt R.Q_Explicit rp) (re, R.Q_Explicit)) ==
-          RT.open_or_close_term' rp (RT.OpenWith re) 0);
+  RT.beta_reduction rt R.Q_Explicit rp re;
 
   elab_open_commute' p e 0;
   assert (elab_term (open_term' p e 0) ==
           R.pack_ln (R.Tv_App (mk_abs rt R.Q_Explicit rp) (re, R.Q_Explicit)));
 
   Exists.intro_exists_soundness rt_typing rp_typing re_typing
-
-assume val freevars_not_mem_close (t:R.term) (x:var) (i:nat)
-  : Lemma
-      (requires ~ (Set.mem x (RT.freevars t)))
-      (ensures RT.open_or_close_term' t (RT.CloseVar x) i == t)
 
 #push-options "--z3rlimit_factor 4"
 let elim_exists_soundness
@@ -264,8 +258,7 @@ let elim_exists_soundness
                 0 }
     RT.open_or_close_term' (RT.open_or_close_term' rp (RT.OpenWith (EPure.mk_reveal ru rt rx_tm)) 0) (RT.CloseVar x) 0;
        (==) {
-               assume (R.pack_ln (R.Tv_App (mk_abs rt R.Q_Explicit rp) (EPure.mk_reveal ru rt rx_tm, R.Q_Explicit)) ==
-                       RT.open_or_close_term' rp (RT.OpenWith (EPure.mk_reveal ru rt rx_tm)) 0)
+               RT.beta_reduction rt R.Q_Explicit rp (EPure.mk_reveal ru rt rx_tm)
             }
     RT.open_or_close_term' (R.pack_ln (R.Tv_App (mk_abs rt R.Q_Explicit rp) (EPure.mk_reveal ru rt rx_tm, R.Q_Explicit))) (RT.CloseVar x) 0;
        (==) { 
@@ -312,8 +305,7 @@ let while_soundness
     soundness f g cond (comp_while_cond inv) cond_typing in
 
   elab_open_commute' inv tm_true 0;
-  assume (R.pack_ln (R.Tv_App (mk_abs bool_tm R.Q_Explicit (elab_term inv)) (true_tm, R.Q_Explicit)) ==
-          RT.open_or_close_term' (elab_term inv) (RT.OpenWith true_tm) 0);
+  RT.beta_reduction bool_tm R.Q_Explicit (elab_term inv) true_tm;
 
   let rbody_typing
     : RT.typing _ (elab_st_typing body_typing)
@@ -323,8 +315,7 @@ let while_soundness
     soundness f g body (comp_while_body inv) body_typing in
 
   elab_open_commute' inv tm_false 0;
-  assume (R.pack_ln (R.Tv_App (mk_abs bool_tm R.Q_Explicit (elab_term inv)) (false_tm, R.Q_Explicit)) ==
-          RT.open_or_close_term' (elab_term inv) (RT.OpenWith false_tm) 0);
+  RT.beta_reduction bool_tm R.Q_Explicit (elab_term inv) false_tm;
 
   While.while_soundness rinv_typing rcond_typing rbody_typing
 

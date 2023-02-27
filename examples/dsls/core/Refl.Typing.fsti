@@ -1209,6 +1209,13 @@ val close_with_not_free_var (t:R.term) (x:var) (i:nat)
       (requires ~ (Set.mem x (freevars t)))
       (ensures open_or_close_term' t (CloseVar x) i == t)
 
+let binder_of_t_q t q = mk_binder pp_name_default 0 t q
+let mk_abs ty qual t : R.term =  R.pack_ln (R.Tv_Abs (binder_of_t_q ty qual) t)
+
+val beta_reduction (t:R.typ) (q:R.aqualv) (e:R.term) (arg:R.term)
+  : Lemma (open_or_close_term' e (OpenWith arg) 0 ==
+           R.pack_ln (R.Tv_App (mk_abs t q e) (arg, q)))
+
 //
 // Type of the top-level tactic that would splice-in the definitions
 //

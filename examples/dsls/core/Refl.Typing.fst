@@ -748,3 +748,5 @@ and close_args_with_not_free_var (l:list R.argv) (x:var) (i:nat)
   | (t, _)::tl ->
     close_with_not_free_var t x i;
     close_args_with_not_free_var tl x i
+
+let beta_reduction _ _ _ _ = admit ()
