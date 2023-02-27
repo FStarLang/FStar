@@ -94,7 +94,7 @@ let mk_stt_ghost_comp (u:R.universe) (a inames pre post:R.term) =
   R.pack_ln (R.Tv_App t (post, R.Q_Explicit))
 
 let mk_total t = R.C_Total t
-let binder_of_t_q t q = RT.mk_binder RT.pp_name_default 0 t q
+let binder_of_t_q t q = RT.binder_of_t_q t q
 let binder_of_t_q_s t q s = RT.mk_binder s 0 t q
 let bound_var i : R.term = R.pack_ln (R.Tv_BVar (R.pack_bv (RT.make_bv i tun)))
 let mk_name i : R.term = R.pack_ln (R.Tv_Var (R.pack_bv (RT.make_bv i tun))) 
@@ -106,7 +106,7 @@ let mk_arrow (f:arrow_dom) (out:R.term) : R.term =
 let mk_arrow_with_name (s:RT.pp_name_t) (f:arrow_dom) (out:R.term) : R.term =
   let ty, q = f in
   R.pack_ln (R.Tv_Arrow (binder_of_t_q_s ty q s) (R.pack_comp (mk_total out)))
-let mk_abs ty qual t : R.term =  R.pack_ln (R.Tv_Abs (binder_of_t_q ty qual) t)
+let mk_abs ty qual t : R.term = RT.mk_abs ty qual t
 let mk_abs_with_name s ty qual t : R.term =  R.pack_ln (R.Tv_Abs (binder_of_t_q_s ty qual s) t)
 
 let mk_erased (u:R.universe) (t:R.term) : R.term =
