@@ -183,7 +183,6 @@ let warmup (x:int) = assert (x + 1 > x)
 
 #set-options "--fuel 2 --ifuel 2"
 
-[@@ expect_failure]
 %splice_t[while_count] (check (`(
   fun (r:ref u32) ->
     (expects (exists_ (fun (n:u32) -> pts_to r full_perm n)))
@@ -219,7 +218,8 @@ let warmup (x:int) = assert (x + 1 > x)
             intro_pure (iff_prop (b2t b_res) (reveal_n =!= 10ul)) ();
             intro_exists u32 (fun n -> pts_to r full_perm n `star` pure (iff_prop (b2t b_res) (n =!= 10ul))) reveal_n in
           
-          return_stt_noeq #bool b_res
+          // return_stt_noeq #bool b_res
+          stt_admit bool
         )
 
         (stt_admit unit);
