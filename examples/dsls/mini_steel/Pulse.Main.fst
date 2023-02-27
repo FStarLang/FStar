@@ -49,106 +49,6 @@ let unexpected_term msg t =
                             msg
                             (T.term_to_string t))
 
-let is_while (_g:RT.fstar_top_env) (t:R.term)
-  : T.Tac (option (R.term & R.term & R.term)) =
-
-  let open R in
-  match inspect_ln t with
-  | Tv_App hd (arg3, _) ->
-    (match inspect_ln hd with
-     | Tv_App hd (arg2, _) ->
-       (match inspect_ln hd with
-        | Tv_App hd (arg1, _) ->
-          (match inspect_ln hd with
-           | Tv_FVar v ->
-             if inspect_fv v = ["Pulse"; "Tests"; "while"]
-             then match inspect_ln arg1 with
-                  | Tv_Abs _ body ->
-                    Some (body, arg2, arg3)
-                  | _ -> None
-             else None
-           | _ -> None)
-        | _ -> None)
-     | _ -> None)
-  | _ -> None
-
-
-//
-// The last option term is post,
-//   if we want admit in the middle of the code
-// TODO: add code to parse it
-//
-let is_admit (g:RT.fstar_top_env) (t:R.term)
-  : T.Tac (option (R.name & R.universe & R.term & option R.term)) =
-
-  let open R in
-  match inspect_ln t with
-  | Tv_App hd (arg, _) ->
-    (match inspect_ln hd with
-     | Tv_UInst v _
-     | Tv_FVar v ->
-       let l = inspect_fv v in
-       if l = stt_admit_lid ||
-          l = stt_atomic_admit_lid ||
-          l = stt_ghost_admit_lid
-       then begin
-         let uopt = T.universe_of g arg in
-         match uopt with
-         | None -> None
-         | Some u -> Some (l, u, arg, None)
-       end
-       else None
-     | _ -> None)
-  | _ -> None
-
-let is_elim_exists (g:RT.fstar_top_env) (t:R.term)
-  : T.Tac (option (R.universe & R.term & R.term)) =
-  let open R in
-  match inspect_ln t with
-  | Tv_App hd (arg, _) ->
-    (match inspect_ln hd with
-     | Tv_UInst v _
-     | Tv_FVar v ->
-       if inspect_fv v = elim_exists_lid
-       then match inspect_ln arg with
-            | Tv_Abs b body ->
-              let bv = (inspect_binder b).binder_bv in
-              let bvv = inspect_bv bv in
-              let uopt = T.universe_of g bvv.bv_sort in
-              (match uopt with
-               | None -> None
-               | Some u -> Some (u, bvv.bv_sort, body))
-            | _ -> None
-       else None
-     | _ -> None)
-  | _ -> None
-
-let is_intro_exists (g:RT.fstar_top_env) (t:R.term)
-  : T.Tac (option (R.universe & R.term & R.term & R.term)) =
-  let open R in
-  match inspect_ln t with
-  | Tv_App hd (arg3, _) ->
-    (match inspect_ln hd with
-     | Tv_App hd (arg2, _) ->
-       (match inspect_ln hd with
-        | Tv_App hd (arg1, _) ->
-          (match inspect_ln arg2 with
-           | Tv_Abs _ body ->
-             (match inspect_ln hd with
-              | Tv_UInst fv _
-              | Tv_FVar fv ->
-                if inspect_fv fv = intro_exists_lid
-                then let uopt = T.universe_of g arg1 in
-                     match uopt with
-                     | None -> None
-                     | Some u -> Some (u, arg1, body, arg3)
-                else None
-              | _ -> None)
-           | _ -> None)
-        | _ -> None)
-     | _ -> None)
-  | _ -> None
-
 let readback_universe (u:R.universe) : T.Tac (err universe) =
   try match Readback.readback_universe u with
       | None -> 
@@ -164,6 +64,12 @@ let readback_universe (u:R.universe) : T.Tac (err universe) =
         error (Printf.sprintf "Unexpected universe : %s"
                               (T.universe_to_ast_string u))
 
+let readback_maybe_unknown_ty t =
+  match Readback.readback_ty t with
+  | Some t -> t
+  | None -> Tm_Unknown
+
+
 let rec try_readback_exists (g:R.env) (t:R.term)
   : T.Tac (err term) =
 
@@ -172,23 +78,23 @@ let rec try_readback_exists (g:R.env) (t:R.term)
     (match inspect_ln hd with
      | Tv_FVar fv ->
        if inspect_fv fv = exists_lid
-       then match inspect_ln arg with
-            | Tv_Abs b body ->
-              let bv = (inspect_binder b).binder_bv in
-              let bvv = inspect_bv bv in
-              let uopt = T.universe_of g bvv.bv_sort in
-              (match uopt with
-               | Some u ->
-                 let? t = readback_ty g bvv.bv_sort in
-                 let? u = readback_universe u in
-                 let? body = readback_ty g body in
-                 Inl (Tm_ExistsSL u t body)
-               | None -> Inr "in readback exists: cannot compute universe")
-            | _ -> Inr "in readback exists: the arg not a lambda"
+       then readback_exists_sl_body g arg
        else Inr "try readback exists: not an exists lid"
      | _ -> Inr "try readback exists: head not an fvar")
   | _ -> Inr "try readback exists: not an app"
 
+and readback_exists_sl_body (g:R.env) (t:R.term) 
+  : T.Tac (err term)
+  = match inspect_ln t with
+    | Tv_Abs b body ->
+      let bv = (inspect_binder b).binder_bv in
+      let bvv = inspect_bv bv in
+      let u = U_unknown in
+      let t = readback_maybe_unknown_ty bvv.bv_sort in
+      let? body = readback_ty g body in
+      Inl (Tm_ExistsSL u t body)
+    | _ -> Inr "in readback exists: the arg not a lambda"
+  
 and readback_ty (g:R.env) (t:R.term)
   : T.Tac (err term)
   = try match Readback.readback_ty t with
@@ -229,7 +135,7 @@ let transate_binder (g:R.env) (b:R.binder)
       let q = Readback.readback_qual aq in
       let bv_view = R.inspect_bv bv in
       assume (bv_view.bv_index == 0);
-      let? b_ty' = readback_ty g bv_view.bv_sort in      
+      let b_ty' = readback_maybe_unknown_ty bv_view.bv_sort in      
       Inl ({binder_ty=b_ty';binder_ppname=bv_view.bv_ppname}, q)
 
 let is_head_fv (t:R.term) (fv:list string) : option (list R.argv) = 
@@ -290,7 +196,8 @@ let rec shift_bvs_in_else (t:term) (n:nat) : Tac term =
   | Tm_VProp
   | Tm_Inames
   | Tm_EmpInames
-  | Tm_UVar _ -> t
+  | Tm_UVar _
+  | Tm_Unknown -> t
 
 let rec shift_bvs_in_else_st (t:st_term) (n:nat) : Tac st_term =
   match t with
@@ -326,6 +233,84 @@ let rec shift_bvs_in_else_st (t:st_term) (n:nat) : Tac st_term =
                  (match post with
                   | None -> None
                   | Some post -> Some (shift_bvs_in_else post (n + 1)))
+
+
+let try_seq (fs: list (R.term -> T.Tac (err 'b))) (x:R.term)
+  : T.Tac (err 'b)
+  = let rec aux msgs (fs:list (R.term -> T.Tac (err 'b)))
+      : T.Tac (err 'b)
+      = match fs with
+        | [] -> 
+          Inr (Printf.sprintf "Failed to parse term %s\n%s" (T.term_to_string x) msgs)
+        | f::fs -> 
+           match f x with
+           | Inl r -> Inl r
+           | Inr msg -> aux (msg ^ " \n " ^ msgs) fs
+    in
+    aux "" fs
+
+let translate_elim_exists (g:RT.fstar_top_env) (t:R.term)
+  : T.Tac (err st_term)
+  = let open R in
+    match inspect_ln t with
+    | Tv_App hd (arg, _) ->
+      (match inspect_ln hd with
+      | Tv_UInst v _
+      | Tv_FVar v ->
+        if inspect_fv v = elim_exists_lid
+        then let? ex = readback_exists_sl_body g arg in
+             Inl (Tm_ElimExists ex)
+        else Inr "ELIM_EXISTS: Not elim_exists"
+      | _ -> Inr "ELIM_EXISTS: Not a fv application")
+    | _ -> Inr "ELIM_EXISTS: Not an application"
+  
+let translate_intro_exists (g:RT.fstar_top_env) (t:R.term)
+  : T.Tac (err st_term)
+  = let open R in
+    let head, args = R.collect_app t in
+    match inspect_ln head with
+    | Tv_UInst fv _
+    | Tv_FVar fv ->
+      if inspect_fv fv = intro_exists_lid
+      then match args with
+           | [(exists_body, _); (witness, _)] ->
+             let? ex = readback_exists_sl_body g exists_body in
+             let? w = readback_ty g witness in
+             Inl (Tm_IntroExists ex w)
+           | _ -> Inr "INTRO_EXISTS: Wrong number of arguments to intro_exists"
+      else Inr "INTRO_EXISTS: Not an intro_exists"
+    | _ -> Inr "INTRO_EXISTS: Not an application"
+
+//
+// The last option term is post,
+//   if we want admit in the middle of the code
+// TODO: add code to parse it
+//
+let translate_admit (g:RT.fstar_top_env) (t:R.term)
+  : T.Tac (err st_term)
+  = let open R in
+    let head, args = R.collect_app t in
+    match inspect_ln head, args with
+    | Tv_UInst v _, [(t, _)]
+    | Tv_FVar v, [(t, _)] ->  
+      let? t = readback_ty g t in
+      let u = U_unknown in
+      let l = inspect_fv v in
+      if l = stt_admit_lid
+      then Inl (Tm_Admit STT u t None)
+      else if l = stt_atomic_admit_lid
+      then Inl (Tm_Admit STT_Atomic u t None)
+      else if l = stt_ghost_admit_lid
+      then Inl (Tm_Admit STT_Ghost u t None)
+      else Inr "ADMIT: Unknown admit flavor"
+    | _ -> Inr "ADMIT: Unrecognized application"
+
+let translate_st_app_or_return (g:R.env) (t:R.term)
+  : T.Tac (err st_term)
+  = let? t = readback_ty g t in
+    match t with
+    | Tm_PureApp head q arg -> Inl (Tm_STApp head q arg)
+    | _ -> Inl (Tm_Return t)
 
 let rec translate_term' (g:RT.fstar_top_env) (t:R.term)
   : T.Tac (err st_term)
@@ -388,49 +373,17 @@ let rec translate_term' (g:RT.fstar_top_env) (t:R.term)
 and translate_st_term (g:RT.fstar_top_env) (t:R.term)
   : T.Tac (err st_term)
   = match R.inspect_ln t with 
-    | R.Tv_App _ _ -> (
-      let ropt = is_elim_exists g t in
-      (match ropt with
-       | None ->
-         let ropt = is_intro_exists g t in
-         (match ropt with
-          | None ->
-            let ropt = is_while g t in
-            (match ropt with
-             | Some (inv, cond, body) ->
-               let? inv = readback_ty g inv in
-               let? cond = translate_st_term g cond in
-               let? body = translate_st_term g body in
-               Inl (Tm_While inv cond body)
-             | None ->
-               let ropt = is_admit g t in
-               (match ropt with
-                | Some (l, u, t, _) ->
-                  let c =
-                    if l = stt_admit_lid then STT
-                    else if l = stt_atomic_admit_lid then STT_Atomic
-                    else STT_Ghost in
-                  let? u = readback_universe u in
-                  let? t = readback_ty g t in
-                  Inl (Tm_Admit c u t None)
-                | None ->
-                  let? t = readback_ty g t in
-                  (match t with
-                   | Tm_PureApp head q arg -> Inl (Tm_STApp head q arg)
-                   | _ -> Inl (Tm_Return t))))
-          | Some (u, t, p, e) ->
-            let? u = readback_universe u in
-            let? t = readback_ty g t in
-            let? p = readback_ty g p in
-            let? e = readback_ty g e in
-            Inl (Tm_IntroExists (Tm_ExistsSL u t p) e))
-       | Some (u, t, p) ->
-         let? u = readback_universe u in
-         let? t = readback_ty g t in
-         let? p = readback_ty g p in
-         Inl (Tm_ElimExists (Tm_ExistsSL u t p)))
-    )
-
+    | R.Tv_Const _ ->
+      translate_st_app_or_return g t
+      
+    | R.Tv_App _ _ ->
+      try_seq [translate_elim_exists g;
+               translate_intro_exists g;
+               translate_while g;
+               translate_admit g;
+               translate_st_app_or_return g]
+              t
+               
     | R.Tv_Let false [] bv def body ->
       let? def = translate_st_term g def in 
       let? body = translate_st_term g body in 
@@ -452,6 +405,28 @@ and translate_term (g:RT.fstar_top_env) (t:R.term)
   = match readback_ty g t with
     | Inl t -> Inl (Tm_Return t)
     | _ -> translate_term' g t
+
+and translate_while (g:RT.fstar_top_env) (t:R.term)
+  : T.Tac (err st_term)
+  = let open R in
+    let head, args = R.collect_app t in
+    match inspect_ln head with
+    | Tv_FVar v ->
+      if inspect_fv v = ["Pulse"; "Tests"; "while"]
+      then match args with
+           | [(inv, _); (cond, _); (body, _)] -> 
+             let? inv = 
+               match inspect_ln inv with
+               | Tv_Abs _ body -> readback_ty g body
+               | _ ->
+                 Inr "WHILE: Expected inv to be an abstraction"
+             in
+             let? cond = translate_st_term g cond in
+             let? body = translate_st_term g body in
+             Inl (Tm_While inv cond body)
+           | _ -> Inr "WHILE: Wrong number of arguments to while"
+      else Inr "WHILE: Not while"
+    | _ -> Inr "WHILE: Not a variable at the head"
 
 let check' (t:R.term) (g:RT.fstar_top_env)
   : T.Tac (r:(R.term & R.typ){RT.typing g (fst r) (snd r)})

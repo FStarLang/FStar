@@ -303,7 +303,7 @@ let rec readback_ty (t:R.term)
   | Tv_AscribedT _ _ _ _
   | Tv_AscribedC _ _ _ _ -> T.fail "readbackty: ascription nodes not supported"
 
-  | Tv_Unknown -> T.fail "readbackty: unexpected Tv_Unknown"
+  | Tv_Unknown -> Some (Tm_Unknown)
   
   
 and readback_comp (t:R.term)

@@ -22,4 +22,4 @@ prep:
 .PHONY: all prep
 
 %.fst-in:
-	@echo --include .. --include ../../core --include ../_output
+	@echo $(addprefix --include , $(INCLUDE_PATHS)) --load_cmxs Pulse.Main --warn_error -249

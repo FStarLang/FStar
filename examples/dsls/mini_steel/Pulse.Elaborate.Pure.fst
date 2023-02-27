@@ -172,6 +172,7 @@ let non_informative_witness_rt (u:R.universe) (a:R.term) : R.term =
 let rec elab_universe (u:universe)
   : Tot R.universe
   = match u with
+    | U_unknown -> R.pack_universe (R.Uv_Unk)
     | U_zero -> R.pack_universe (R.Uv_Zero)
     | U_succ u -> R.pack_universe (R.Uv_Succ (elab_universe u))
     | U_var x -> R.pack_universe (R.Uv_Name (x, Refl.Typing.Builtins.dummy_range))
@@ -273,7 +274,8 @@ let rec elab_term (top:term)
     | Tm_EmpInames ->
       emp_inames_tm
 
-    | Tm_UVar _ ->
+    | Tm_UVar _
+    | Tm_Unknown ->
       pack_ln R.Tv_Unknown
     
 and elab_comp (c:comp) 

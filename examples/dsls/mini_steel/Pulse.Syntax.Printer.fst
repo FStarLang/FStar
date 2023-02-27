@@ -17,6 +17,7 @@ let constant_to_string = function
 let rec universe_to_string (n:nat) (u:universe) 
   : Tot string (decreases u) = 
   match u with
+  | U_unknown -> "_"
   | U_zero -> sprintf "%d" n
   | U_succ u -> universe_to_string (n + 1) u
   | U_var x -> if n = 0 then x else sprintf "(%s + %d)" x n
@@ -95,8 +96,10 @@ let rec term_to_string (t:term)
 
     | Tm_EmpInames -> "emp_inames"
       
-
     | Tm_UVar n -> sprintf "?u_%d" n
+
+    | Tm_Unknown -> "_"
+    
 and binder_to_string (b:binder)
   : T.Tac string
   = sprintf "%s:%s" 

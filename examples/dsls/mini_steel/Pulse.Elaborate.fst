@@ -39,7 +39,8 @@ let rec elab_open_commute' (e:term)
     | Tm_Inames
     | Tm_EmpInames
     | Tm_VProp
-    | Tm_BVar _ -> ()
+    | Tm_BVar _
+    | Tm_Unknown -> ()
     | Tm_Refine b phi ->
       elab_open_commute' b.binder_ty v n;
       elab_open_commute' phi v (n + 1)
@@ -99,7 +100,8 @@ let rec elab_close_commute' (e:term)
     | Tm_Type _
     | Tm_Inames
     | Tm_EmpInames
-    | Tm_VProp -> ()
+    | Tm_VProp
+    | Tm_Unknown -> ()
     | Tm_Refine b phi ->
       elab_close_commute' b.binder_ty v n;
       elab_close_commute' phi v (n + 1)

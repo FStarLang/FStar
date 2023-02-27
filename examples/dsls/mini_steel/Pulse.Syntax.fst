@@ -17,6 +17,7 @@ type universe =
   | U_succ of universe
   | U_var of string
   | U_max : universe -> universe -> universe
+  | U_unknown
 
 (* locally nameless.
    term is currently an eqtype. That makes some experiments a bit easier.
@@ -70,7 +71,8 @@ type term =
   | Tm_Inames     : term  // type inames
   | Tm_EmpInames  : term
   | Tm_UVar       : int -> term
-
+  | Tm_Unknown    : term
+  
 and binder = {
   binder_ty     : term;
   binder_ppname : ppname;
@@ -125,7 +127,8 @@ let rec freevars (t:term)
     | Tm_VProp
     | Tm_Inames
     | Tm_EmpInames
-    | Tm_UVar _ -> Set.empty
+    | Tm_UVar _
+    | Tm_Unknown -> Set.empty
     | Tm_Var nm -> Set.singleton nm.nm_index
     | Tm_Refine b body ->
       Set.union (freevars b.binder_ty) (freevars body)
@@ -197,7 +200,8 @@ let rec ln' (t:term) (i:int) =
   | Tm_VProp
   | Tm_Inames
   | Tm_EmpInames
-  | Tm_UVar _ -> true
+  | Tm_UVar _
+  | Tm_Unknown -> true
 
   | Tm_Refine b phi ->
     ln' b.binder_ty i &&
@@ -304,7 +308,8 @@ let rec open_term' (t:term) (v:term) (i:index)
     | Tm_Emp
     | Tm_Inames
     | Tm_EmpInames
-    | Tm_UVar _ -> t
+    | Tm_UVar _
+    | Tm_Unknown -> t
 
     | Tm_Refine b phi ->
       Tm_Refine {b with binder_ty=open_term' b.binder_ty v i}
@@ -436,7 +441,8 @@ let rec close_term' (t:term) (v:var) (i:index)
     | Tm_Emp
     | Tm_Inames
     | Tm_EmpInames
-    | Tm_UVar _ -> t
+    | Tm_UVar _
+    | Tm_Unknown -> t
 
     | Tm_Refine b phi ->
       Tm_Refine {b with binder_ty=close_term' b.binder_ty v i}
@@ -609,7 +615,8 @@ let rec close_open_inverse' (t:term)
     | Tm_Type _
     | Tm_Inames 
     | Tm_EmpInames
-    | Tm_UVar _ -> ()
+    | Tm_UVar _
+    | Tm_Unknown -> ()
     
     | Tm_Pure p ->
       close_open_inverse' p x i
@@ -751,7 +758,8 @@ let rec eq_tm (t1 t2:term)
     | Tm_VProp, Tm_VProp
     | Tm_Emp, Tm_Emp
     | Tm_Inames, Tm_Inames
-    | Tm_EmpInames, Tm_EmpInames -> true
+    | Tm_EmpInames, Tm_EmpInames
+    | Tm_Unknown, Tm_Unknown -> true
     | Tm_BVar x1, Tm_BVar x2 -> x1.bv_index = x2.bv_index
     | Tm_Var x1,  Tm_Var x2 -> x1.nm_index = x2.nm_index
     | Tm_FVar x1, Tm_FVar x2 -> x1 = x2
