@@ -106,6 +106,8 @@ let warmup (x:int) = assert (x + 1 > x)
     (
       let x = read_pure r1 in
       let y = read_pure r2 in
+      elim_pure (eq2_prop (reveal n1) x);
+      elim_pure (eq2_prop (reveal n2) y);
       write r1 y;
       write r2 x
     )
@@ -119,6 +121,8 @@ let warmup (x:int) = assert (x + 1 > x)
     (
       let x = read_atomic r1 in
       let y = read_atomic r2 in
+      elim_pure (eq2_prop (reveal n1) x);
+      elim_pure (eq2_prop (reveal n2) y);
       write_atomic r1 y;
       write_atomic r2 x
     )
@@ -129,6 +133,7 @@ let warmup (x:int) = assert (x + 1 > x)
     (expects (pts_to r full_perm n1 `star` pure (eq2_prop (reveal n1) (reveal n2))))
     (provides (fun x -> pts_to r full_perm n2 `star` pure (eq2_prop (reveal n2) (reveal n1))))
     (
+      elim_pure (eq2_prop (reveal n1) (reveal n2));
       intro_pure (eq2_prop (reveal n2) (reveal n1)) ()
     )
 )))
@@ -139,6 +144,7 @@ let warmup (x:int) = assert (x + 1 > x)
     (provides (fun _ -> pts_to r full_perm (U32.add (reveal n) 2ul)))
     (
       let x = read_atomic r in
+      elim_pure (eq2_prop (reveal n) x);
       if b
       then write r (U32.add x 2ul)
       else write_atomic r 3ul
@@ -151,8 +157,9 @@ let warmup (x:int) = assert (x + 1 > x)
     (provides (fun _ -> exists_ (fun (n:u32) -> pts_to r full_perm n)))
     (
       let n = elim_exists (fun (n:u32) -> pts_to r full_perm n) in
-      let n = stt_ghost_reveal u32 n in
-      intro_exists u32 (fun n -> pts_to r full_perm n) n
+      let reveal_n = stt_ghost_reveal u32 n in
+      elim_pure (eq2_prop (reveal n) reveal_n);
+      intro_exists u32 (fun n -> pts_to r full_perm n) reveal_n
     )
 )))
 
@@ -174,11 +181,49 @@ let warmup (x:int) = assert (x + 1 > x)
     )
 )))
 
+#set-options "--fuel 2 --ifuel 2"
+
+[@@ expect_failure]
 %splice_t[while_count] (check (`(
   fun (r:ref u32) ->
     (expects (exists_ (fun (n:u32) -> pts_to r full_perm n)))
     (provides (fun _ -> pts_to r full_perm 10ul))
     (
+      let n = elim_exists (fun (n:u32) -> pts_to r full_perm n) in
+      let x = read_pure r in
+      elim_pure (eq2_prop (reveal n) x);
+      let b = return_stt #bool (x <> 10ul) in
+      elim_pure (eq2_prop b (x <> 10ul));
+      let _ =
+        let reveal_n = stt_ghost_reveal u32 n in
+        elim_pure (eq2_prop (reveal n) reveal_n);
+        intro_pure (iff_prop (b2t b) (reveal_n =!= 10ul)) ();
+        intro_exists u32 (fun n -> pts_to r full_perm n `star` pure (iff_prop (b2t b) (n =!= 10ul))) reveal_n;
+        intro_exists bool (fun b -> exists_ u#0 u32 (fun n -> pts_to r full_perm n `star` pure (iff_prop (b2t b) (n =!= 10ul)))) b in
+
+      while
+        (fun b -> exists_ (fun (n:u32) -> pts_to r full_perm n `star` pure (iff_prop (b2t b) (n =!= 10ul))))
+     
+        (
+          let b = elim_exists (fun (b:bool) -> exists_ u#0 u32 (fun n -> pts_to r full_perm n `star` pure (iff_prop (b2t b) (n =!= 10ul)))) in
+          let n = elim_exists (fun (n:u32) -> pts_to r full_perm n `star` pure (iff_prop (b2t (reveal b)) (n =!= 10ul))) in
+          elim_pure (iff_prop (b2t (reveal b)) (reveal n =!= 10ul));
+          let x = read_pure r in
+          elim_pure (eq2_prop (reveal n) x);
+          let b_res = return_stt #bool (x <> 10ul) in
+          elim_pure (eq2_prop b_res (x <> 10ul));
+
+          let _ =
+            let reveal_n = stt_ghost_reveal u32 n in
+            elim_pure (eq2_prop (reveal n) reveal_n);
+            intro_pure (iff_prop (b2t b_res) (reveal_n =!= 10ul)) ();
+            intro_exists u32 (fun n -> pts_to r full_perm n `star` pure (iff_prop (b2t b_res) (n =!= 10ul))) reveal_n in
+          
+          return_stt_noeq #bool b_res
+        )
+
+        (stt_admit unit);
+
       stt_admit unit
     )
 )))

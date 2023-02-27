@@ -68,8 +68,11 @@ val stt_ghost (a:Type u#a) (opened:inames) (pre:vprop) (post:a -> vprop) : Type 
 //   once we have support for bind etc.
 //
 
+let eq2_prop (#a:Type) (x y:a) : prop = x == y
+let iff_prop (p q:Type0) : prop = p <==> q
+
 inline_for_extraction
-val return_stt (#a:Type u#a) (x:a) : stt a emp (fun r -> pure (r == x))
+val return_stt (#a:Type u#a) (x:a) : stt a emp (fun r -> pure (eq2_prop r x))
 
 inline_for_extraction
 val return_stt_noeq (#a:Type u#a) (x:a) : stt a emp (fun _ -> emp)
@@ -216,8 +219,6 @@ module R = Steel.ST.Reference
 type u32 : Type0 = U32.t
 
 open FStar.Ghost
-
-let eq2_prop (#a:Type) (x y:a) : prop = x == y
 
 val read (r:R.ref u32) (#n:erased u32) (#p:perm)
   : stt (x:u32{reveal n == x})

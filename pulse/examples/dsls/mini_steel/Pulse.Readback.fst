@@ -245,7 +245,7 @@ let rec readback_ty (t:R.term)
     assume (elab_term r == t);
     Some (r <: ty:term {elab_term ty == t})
 
-  | Tv_Abs _ _ -> T.fail "readback_ty: unexpected Tv_Abs"
+  | Tv_Abs _ _ -> None  //T.fail "readback_ty: unexpected Tv_Abs"
 
   | Tv_Arrow b c -> (
     let { binder_bv=bv; binder_qual=aq; binder_attrs=attrs } =
