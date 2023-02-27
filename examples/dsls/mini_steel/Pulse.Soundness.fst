@@ -271,8 +271,8 @@ let elim_exists_soundness
        (==) { 
               EPure.elab_freevars_inverse t;
               EPure.elab_freevars_inverse p;
-              freevars_not_mem_close rt x 0;
-              freevars_not_mem_close rp x 1
+              RT.close_with_not_free_var rt x 0;
+              RT.close_with_not_free_var rp x 1
             }
     R.pack_ln (R.Tv_App (mk_abs rt R.Q_Explicit rp)
                         (EPure.mk_reveal ru rt rx_bv, R.Q_Explicit));

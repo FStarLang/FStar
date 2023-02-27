@@ -571,3 +571,180 @@ let close_open_inverse (e:R.term) (x:var {~ (x `Set.mem` freevars e) })
    = open_term_spec e x;
      close_term_spec (open_term e x) x;
      close_open_inverse' 0 e x
+
+let rec close_with_not_free_var (t:R.term) (x:var) (i:nat)
+  : Lemma
+      (requires ~ (Set.mem x (freevars t)))
+      (ensures open_or_close_term' t (CloseVar x) i == t) =
+
+  match inspect_ln t with
+  | Tv_Var _
+  | Tv_BVar _
+  | Tv_FVar _
+  | Tv_UInst _ _ -> ()
+  | Tv_App hd (arg, _) ->
+    close_with_not_free_var hd x i;
+    close_with_not_free_var arg x i
+  | Tv_Abs b body ->
+    close_binder_with_not_free_var b x i;
+    close_with_not_free_var body x (i + 1)
+  | Tv_Arrow b c ->
+    close_binder_with_not_free_var b x i;
+    close_comp_with_not_free_var c x (i + 1)
+  | Tv_Type _ -> ()
+  | Tv_Refine bv t ->
+    close_bv_with_not_free_var bv x i;
+    close_with_not_free_var t x (i + 1)
+  | Tv_Const _ -> ()
+  | Tv_Uvar _ _ -> assert False
+  | Tv_Let recf attrs bv e1 e2 ->
+    close_terms_with_not_free_var attrs x i;
+    close_bv_with_not_free_var bv x i;
+    (if recf then close_with_not_free_var e1 x (i + 1)
+     else close_with_not_free_var e1 x i);
+    close_with_not_free_var e2 x (i + 1)
+  | Tv_Match scrutinee ret_opt brs ->
+    close_with_not_free_var scrutinee x i;
+    (match ret_opt with
+     | None -> ()
+     | Some ret -> close_match_returns_with_not_free_var ret x i);
+    close_branches_with_not_free_var brs x i
+
+  | Tv_AscribedT e t tacopt _ ->
+    close_with_not_free_var e x i;
+    close_with_not_free_var t x i;
+    (match tacopt with
+     | None -> ()
+     | Some tac -> close_with_not_free_var tac x i)
+
+  | Tv_AscribedC e c tacopt _ ->
+    close_with_not_free_var e x i;
+    close_comp_with_not_free_var c x i;
+    (match tacopt with
+     | None -> ()
+     | Some tac -> close_with_not_free_var tac x i)
+
+  | Tv_Unknown -> ()
+
+and close_match_returns_with_not_free_var
+  (r:match_returns_ascription)
+  (x:var) (i:nat)
+  : Lemma
+      (requires ~ (Set.mem x (freevars_match_returns r)))
+      (ensures open_or_close_match_returns' r (CloseVar x) i == r) =
+
+  let b, (ret, as_opt, _) = r in
+  close_binder_with_not_free_var b x i;
+  (match ret with
+   | Inl t -> close_with_not_free_var t x (i + 1)
+   | Inr c -> close_comp_with_not_free_var c x (i + 1));
+  (match as_opt with
+   | None -> ()
+   | Some t -> close_with_not_free_var t x (i + 1))
+
+and close_branches_with_not_free_var
+  (brs:list R.branch)
+  (x:var) (i:nat)
+  : Lemma
+      (requires ~ (Set.mem x (freevars_branches brs)))
+      (ensures open_or_close_branches' brs (CloseVar x) i == brs) =
+
+  match brs with
+  | [] -> ()
+  | hd::tl ->
+    close_branch_with_not_free_var hd x i;
+    close_branches_with_not_free_var tl x i
+
+and close_branch_with_not_free_var
+  (br:R.branch)
+  (x:var) (i:nat)
+  : Lemma
+      (requires ~ (Set.mem x (freevars_branch br)))
+      (ensures open_or_close_branch' br (CloseVar x) i == br) =
+
+  let p, t = br in
+  close_pattern_with_not_free_var p x i;
+  close_with_not_free_var t x (binder_offset_pattern p + i)
+  
+and close_pattern_with_not_free_var (p:R.pattern) (x:var) (i:nat)
+  : Lemma
+      (requires ~ (Set.mem x (freevars_pattern p)))
+      (ensures open_or_close_pattern' p (CloseVar x) i == p) =
+
+  match p with
+  | Pat_Constant _ -> ()
+  | Pat_Cons _ _ pats ->
+    close_patterns_with_not_free_var pats x i
+  | Pat_Var bv
+  | Pat_Wild bv -> close_bv_with_not_free_var bv x i
+  | Pat_Dot_Term topt ->
+    (match topt with
+     | None -> ()
+     | Some t -> close_with_not_free_var t x i)
+
+and close_patterns_with_not_free_var (l:list (R.pattern & bool)) (x:var) (i:nat)
+  : Lemma
+      (requires ~ (Set.mem x (freevars_patterns l)))
+      (ensures open_or_close_patterns' l (CloseVar x) i == l) =
+
+  match l with
+  | [] -> ()
+  | (p, _)::tl ->
+    close_pattern_with_not_free_var p x i;
+    close_patterns_with_not_free_var tl x (binder_offset_pattern p + i)
+
+and close_terms_with_not_free_var (l:list R.term) (x:var) (i:nat)
+  : Lemma
+      (requires ~ (Set.mem x (freevars_terms l)))
+      (ensures open_or_close_terms' l (CloseVar x) i == l) =
+
+  match l with
+  | [] -> ()
+  | hd::tl ->
+    close_with_not_free_var hd x i;
+    close_terms_with_not_free_var tl x i
+
+and close_binder_with_not_free_var (b:R.binder) (x:var) (i:nat)
+  : Lemma
+      (requires ~ (Set.mem x (freevars_binder b)))
+      (ensures open_or_close_binder' b (CloseVar x) i == b) =
+
+  let {binder_bv; binder_attrs} = inspect_binder b in
+  close_bv_with_not_free_var binder_bv x i;
+  close_terms_with_not_free_var binder_attrs x i
+
+and close_bv_with_not_free_var (b:R.bv) (x:var) (i:nat)
+  : Lemma
+      (requires ~ (Set.mem x (freevars_bv b)))
+      (ensures open_or_close_bv' b (CloseVar x) i == b) =
+
+  let {bv_sort} = inspect_bv b in
+  close_with_not_free_var bv_sort x i
+
+and close_comp_with_not_free_var (c:R.comp) (x:var) (i:nat)
+  : Lemma
+      (requires ~ (Set.mem x (freevars_comp c)))
+      (ensures open_or_close_comp' c (CloseVar x) i == c) =
+
+  match inspect_comp c with
+  | C_Total t
+  | C_GTotal t -> close_with_not_free_var t x i
+  | C_Lemma pre post pats ->
+    close_with_not_free_var pre x i;
+    close_with_not_free_var post x i;
+    close_with_not_free_var pats x i
+  | C_Eff _ _ t args decrs ->
+    close_with_not_free_var t x i;
+    close_args_with_not_free_var args x i;
+    close_terms_with_not_free_var decrs x i
+
+and close_args_with_not_free_var (l:list R.argv) (x:var) (i:nat)
+  : Lemma
+      (requires ~ (Set.mem x (freevars_args l)))
+      (ensures open_or_close_args' l (CloseVar x) i == l) =
+
+  match l with
+  | [] -> ()
+  | (t, _)::tl ->
+    close_with_not_free_var t x i;
+    close_args_with_not_free_var tl x i

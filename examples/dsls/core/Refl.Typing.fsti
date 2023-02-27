@@ -1202,6 +1202,14 @@ val close_open_inverse (e:R.term) (x:var {~ (x `Set.mem` freevars e) })
   : Lemma (close_term (open_term e x) x == e)
 
 //
+// fst has corresponding lemmas for other syntax classes
+//
+val close_with_not_free_var (t:R.term) (x:var) (i:nat)
+  : Lemma
+      (requires ~ (Set.mem x (freevars t)))
+      (ensures open_or_close_term' t (CloseVar x) i == t)
+
+//
 // Type of the top-level tactic that would splice-in the definitions
 //
 
