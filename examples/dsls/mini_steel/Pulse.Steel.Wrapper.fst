@@ -222,6 +222,6 @@ let while_loop inv cond body = fun _ -> while_loop inv cond body
 
 let stt_ghost_reveal a x = fun _ -> noop (); reveal x
 
-let stt_admit _ _ = admit ()
-let stt_atomic_admit _ _ = admit ()
-let stt_ghost_admit _ _ = admit ()
+let stt_admit _ _ _ = admit ()
+let stt_atomic_admit _ _ _ = admit ()
+let stt_ghost_admit _ _ _ = admit ()
