@@ -174,12 +174,11 @@ let warmup (x:int) = assert (x + 1 > x)
     )
 )))
 
-// %splice_t[while_test] (check ('(
-//   fun (r:ref u32) ->
-//     (expects (exists_ (fun (n:u32) -> pts_to r full_perm n)))
-//     (provides (fun _ -> pts_to r full_perm 10ul))
-//     (
-//       stt_admit (exists_ (fun (n:u32) -> pts_to r full_perm n))
-//                 fun _ -> pts_to r full_perm 10ul)
-//     )
-// )))
+%splice_t[while_count] (check (`(
+  fun (r:ref u32) ->
+    (expects (exists_ (fun (n:u32) -> pts_to r full_perm n)))
+    (provides (fun _ -> pts_to r full_perm 10ul))
+    (
+      stt_admit unit
+    )
+)))

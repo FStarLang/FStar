@@ -182,3 +182,15 @@ let rec st_term_to_string (t:st_term)
         (term_to_string inv)
         (st_term_to_string cond)
         (st_term_to_string body)
+
+    | Tm_Admit c u t post ->
+      sprintf "%s<%s> %s%s"
+        (match c with
+         | STT -> "stt_admit"
+         | STT_Atomic -> "stt_atomic_admit"
+         | STT_Ghost -> "stt_ghost_admit")
+        (universe_to_string 0 u)
+        (term_to_string t)
+        (match post with
+         | None -> ""
+         | Some post -> sprintf " %s" (term_to_string post))

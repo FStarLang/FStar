@@ -72,6 +72,35 @@ let is_while (_g:RT.fstar_top_env) (t:R.term)
      | _ -> None)
   | _ -> None
 
+
+//
+// The last option term is post,
+//   if we want admit in the middle of the code
+// TODO: add code to parse it
+//
+let is_admit (g:RT.fstar_top_env) (t:R.term)
+  : T.Tac (option (R.name & R.universe & R.term & option R.term)) =
+
+  let open R in
+  match inspect_ln t with
+  | Tv_App hd (arg, _) ->
+    (match inspect_ln hd with
+     | Tv_UInst v _
+     | Tv_FVar v ->
+       let l = inspect_fv v in
+       if l = stt_admit_lid ||
+          l = stt_atomic_admit_lid ||
+          l = stt_ghost_admit_lid
+       then begin
+         let uopt = T.universe_of g arg in
+         match uopt with
+         | None -> None
+         | Some u -> Some (l, u, arg, None)
+       end
+       else None
+     | _ -> None)
+  | _ -> None
+
 let is_elim_exists (g:RT.fstar_top_env) (t:R.term)
   : T.Tac (option (R.universe & R.term & R.term)) =
   let open R in
@@ -292,6 +321,12 @@ let rec shift_bvs_in_else_st (t:st_term) (n:nat) : Tac st_term =
              (shift_bvs_in_else_st cond n)
              (shift_bvs_in_else_st body n)
 
+  | Tm_Admit c u t post ->
+    Tm_Admit c u (shift_bvs_in_else t n)
+                 (match post with
+                  | None -> None
+                  | Some post -> Some (shift_bvs_in_else post (n + 1)))
+
 let rec translate_term' (g:RT.fstar_top_env) (t:R.term)
   : T.Tac (err st_term)
   = match R.inspect_ln t with
@@ -368,10 +403,21 @@ and translate_st_term (g:RT.fstar_top_env) (t:R.term)
                let? body = translate_st_term g body in
                Inl (Tm_While inv cond body)
              | None ->
-               let? t = readback_ty g t in
-               (match t with
-                | Tm_PureApp head q arg -> Inl (Tm_STApp head q arg)
-                | _ -> Inl (Tm_Return t)))
+               let ropt = is_admit g t in
+               (match ropt with
+                | Some (l, u, t, _) ->
+                  let c =
+                    if l = stt_admit_lid then STT
+                    else if l = stt_atomic_admit_lid then STT_Atomic
+                    else STT_Ghost in
+                  let? u = readback_universe u in
+                  let? t = readback_ty g t in
+                  Inl (Tm_Admit c u t None)
+                | None ->
+                  let? t = readback_ty g t in
+                  (match t with
+                   | Tm_PureApp head q arg -> Inl (Tm_STApp head q arg)
+                   | _ -> Inl (Tm_Return t))))
           | Some (u, t, p, e) ->
             let? u = readback_universe u in
             let? t = readback_ty g t in

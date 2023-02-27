@@ -139,6 +139,10 @@ let rec open_st_term_ln' (e:st_term)
       open_st_term_ln' cond x i;
       open_st_term_ln' body x i
 
+    | Tm_Admit _ _ t post ->
+      open_term_ln' t x i;
+      open_term_ln_opt' post x (i + 1)
+
 let open_term_ln (e:term) (v:var)
   : Lemma 
     (requires ln (open_term e v))
@@ -269,7 +273,10 @@ let rec ln_weakening_st (t:st_term) (i j:int)
       ln_weakening_st body (i + 1) (j + 1);
       ln_weakening_opt post (i + 2) (j + 2)
 
-    
+    | Tm_Admit _ _ t post ->
+      ln_weakening t i j;
+      ln_weakening_opt post (i + 1) (j + 1)
+
 let rec open_term_ln_inv' (e:term)
                           (x:term { ln x })
                           (i:index)
@@ -394,6 +401,10 @@ let rec open_term_ln_inv_st' (t:st_term)
       open_term_ln_inv_st' body x (i + 1);
       open_term_ln_inv_opt' post x (i + 2)
 
+    | Tm_Admit _ _ t post ->
+      open_term_ln_inv' t x i;
+      open_term_ln_inv_opt' post x (i + 1)
+
 let rec close_term_ln' (e:term)
                        (x:var)
                        (i:index)
@@ -512,6 +523,10 @@ let rec close_st_term_ln' (t:st_term) (x:var) (i:index)
       close_term_ln_opt' pre x (i + 1);
       close_st_term_ln' body x (i + 1);
       close_term_ln_opt' post x (i + 2)
+
+    | Tm_Admit _ _ t post ->
+      close_term_ln' t x i;
+      close_term_ln_opt' post x (i + 1)
 
 let close_comp_ln (c:comp) (v:var)
   : Lemma 
@@ -647,4 +662,10 @@ let rec st_typing_ln (#f:_) (#g:_) (#t:_) (#c:_)
       st_typing_ln cond_typing;
       st_typing_ln body_typing;
       open_term_ln_inv' inv tm_false 0
+
+    | T_Admit _ s _ (STC _ _ x t_typing pre_typing post_typing) ->
+      tot_typing_ln t_typing;
+      tot_typing_ln pre_typing;
+      tot_typing_ln post_typing;
+      open_term_ln' s.post (term_of_var x) 0
 #pop-options

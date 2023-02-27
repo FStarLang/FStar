@@ -499,6 +499,8 @@ let rec soundness (f:stt_env)
 
     | T_While _ _ _ _ _ _ _ ->
       while_soundness d soundness
+
+    | T_Admit _ _ _ _ -> admit ()
 #pop-options
 
 let soundness_lemma
