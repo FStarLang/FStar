@@ -131,7 +131,7 @@ let rec open_st_term_ln' (e:st_term)
       open_term_ln_opt' post x (i + 1)      
 
     | Tm_ElimExists t -> open_term_ln' t x i
-    | Tm_IntroExists t e ->
+    | Tm_IntroExists _ t e ->
       open_term_ln' t x i;
       open_term_ln' e x i
 
@@ -248,7 +248,7 @@ let rec ln_weakening_st (t:st_term) (i j:int)
     | Tm_ElimExists t ->
       ln_weakening t i j
       
-    | Tm_IntroExists t e ->
+    | Tm_IntroExists _ t e ->
       ln_weakening t i j;
       ln_weakening e i j
 
@@ -381,7 +381,7 @@ let rec open_term_ln_inv_st' (t:st_term)
     | Tm_ElimExists t ->
       open_term_ln_inv' t x i
       
-    | Tm_IntroExists t e ->
+    | Tm_IntroExists _ t e ->
       open_term_ln_inv' t x i;
       open_term_ln_inv' e x i
 
@@ -508,7 +508,7 @@ let rec close_st_term_ln' (t:st_term) (x:var) (i:index)
     | Tm_ElimExists t ->
       close_term_ln' t x i
       
-    | Tm_IntroExists t e ->
+    | Tm_IntroExists _ t e ->
       close_term_ln' t x i;
       close_term_ln' e x i
 
@@ -673,7 +673,13 @@ let rec st_typing_ln (#f:_) (#g:_) (#t:_) (#c:_)
       tot_typing_ln dv;
       tot_typing_ln dw;
       open_term_ln_inv' p e 0
-      
+
+    | T_IntroExistsErased _ u t p e dt dv dw ->
+      tot_typing_ln dt;
+      tot_typing_ln dv;
+      tot_typing_ln dw;
+      open_term_ln_inv' p (Pulse.Typing.mk_reveal u t e) 0
+
     | T_Equiv _ _ _ _ d2 deq ->
       st_typing_ln d2;
       st_equiv_ln deq

@@ -181,8 +181,13 @@ let rec st_term_to_string (t:st_term)
       sprintf "elim_exists %s"
         (term_to_string t)
 
-    | Tm_IntroExists t e ->
+    | Tm_IntroExists false t e ->
       sprintf "intro_exists %s %s"
+        (term_to_string t)
+        (term_to_string e)
+
+    | Tm_IntroExists true t e ->
+      sprintf "intro_exists_erased %s %s"
         (term_to_string t)
         (term_to_string e)
 

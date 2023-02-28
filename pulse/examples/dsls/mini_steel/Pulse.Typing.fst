@@ -344,6 +344,16 @@ let comp_intro_exists (u:universe) (t:term) (p:term) (e:term)
                 post=Tm_ExistsSL u t p should_elim_false
               }
 
+let comp_intro_exists_erased (u:universe) (t:term) (p:term) (e:term)
+  : comp
+  = C_STGhost Tm_EmpInames
+              {
+                u=U_zero;
+                res=tm_unit;
+                pre=open_term' p (mk_reveal u t e) 0;
+                post=Tm_ExistsSL u t p should_elim_false
+              }
+
 let comp_while_cond (inv:term)
   : comp
   = C_ST {
@@ -638,8 +648,20 @@ and st_typing (f:RT.fstar_top_env) : env -> st_term -> comp -> Type =
       tot_typing f g t (Tm_Type u) ->
       tot_typing f g (Tm_ExistsSL u t p should_elim_false) Tm_VProp ->
       tot_typing f g e t ->
-      st_typing f g (Tm_IntroExists e (Tm_ExistsSL u t p should_elim_false))
+      st_typing f g (Tm_IntroExists false e (Tm_ExistsSL u t p should_elim_false))
                     (comp_intro_exists u t p e)
+
+  | T_IntroExistsErased:
+      g:env ->
+      u:universe ->
+      t:term ->
+      p:term ->
+      e:term ->
+      tot_typing f g t (Tm_Type u) ->
+      tot_typing f g (Tm_ExistsSL u t p should_elim_false) Tm_VProp ->
+      tot_typing f g e (mk_erased u t)  ->
+      st_typing f g (Tm_IntroExists true e (Tm_ExistsSL u t p should_elim_false))
+                    (comp_intro_exists_erased u t p e)
 
   | T_While:
       g:env ->

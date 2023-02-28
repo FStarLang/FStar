@@ -120,6 +120,7 @@ let mk_reveal (u:R.universe) (t:R.term) (e:R.term) : R.term =
 
 let elim_exists_lid = mk_steel_wrapper_lid "elim_exists"
 let intro_exists_lid = mk_steel_wrapper_lid "intro_exists"
+let intro_exists_erased_lid = mk_steel_wrapper_lid "intro_exists_erased"
 
 let mk_exists (u:R.universe) (a p:R.term) =
   let t = R.pack_ln (R.Tv_UInst (R.pack_fv exists_lid) [u]) in
@@ -138,6 +139,12 @@ let mk_elim_exists (u:R.universe) (a p:R.term) : R.term =
 
 let mk_intro_exists (u:R.universe) (a p:R.term) (e:R.term) : R.term =
   let t = R.pack_ln (R.Tv_UInst (R.pack_fv intro_exists_lid) [u]) in
+  let t = R.pack_ln (R.Tv_App t (a, R.Q_Implicit)) in
+  let t = R.pack_ln (R.Tv_App t (p, R.Q_Explicit)) in
+  R.pack_ln (R.Tv_App t (e, R.Q_Explicit))
+
+let mk_intro_exists_erased (u:R.universe) (a p:R.term) (e:R.term) : R.term =
+  let t = R.pack_ln (R.Tv_UInst (R.pack_fv intro_exists_erased_lid) [u]) in
   let t = R.pack_ln (R.Tv_App t (a, R.Q_Implicit)) in
   let t = R.pack_ln (R.Tv_App t (p, R.Q_Explicit)) in
   R.pack_ln (R.Tv_App t (e, R.Q_Explicit))

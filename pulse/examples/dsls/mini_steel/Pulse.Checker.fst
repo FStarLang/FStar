@@ -380,7 +380,7 @@ let check_intro_exists
            c:comp{stateful_comp c ==> comp_pre c == pre} &
            st_typing f g t c) =
 
-  let Tm_IntroExists t e = st in
+  let Tm_IntroExists _erased t e = st in
   let (| t, t_typing |) = check_vprop f g t in
   match t with
   | Tm_ExistsSL u ty p _ ->
@@ -704,7 +704,7 @@ let rec check' : bool -> check_t =
     | Tm_ElimExists _ ->
       check_elim_exists f g t pre pre_typing post_hint
 
-    | Tm_IntroExists _ _ ->
+    | Tm_IntroExists _ _ _ ->
       check_intro_exists f g t pre pre_typing post_hint
 
     | Tm_While _ _ _ ->

@@ -265,6 +265,9 @@ val elim_exists (#a:Type) (p:a -> vprop)
 val intro_exists (#a:Type) (p:a -> vprop) (e:a)
   : stt_ghost unit emp_inames (p e) (fun _ -> exists_ p)
 
+val intro_exists_erased (#a:Type) (p:a -> vprop) (e:erased a)
+  : stt_ghost unit emp_inames (p (reveal e)) (fun _ -> exists_ p)
+
 val while_loop
   (inv:bool -> vprop)
   (cond:stt bool (exists_ inv) inv)
