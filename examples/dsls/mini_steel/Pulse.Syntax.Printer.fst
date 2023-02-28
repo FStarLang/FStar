@@ -11,7 +11,7 @@ let dbg_printing : bool = true
 let constant_to_string = function
   | Unit -> "()"
   | Bool true -> "true"
-  | Bool false -> "true"  
+  | Bool false -> "false"
   | Int i -> sprintf "%d" i
 
 let rec universe_to_string (n:nat) (u:universe) 

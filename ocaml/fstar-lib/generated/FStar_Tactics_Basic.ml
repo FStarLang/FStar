@@ -7374,13 +7374,19 @@ let (refl_universe_of :
                          };
                        check_univ_var_resolved u)
                   | FStar_Pervasives.Inr err ->
-                      let uu___4 =
-                        let uu___5 =
-                          let uu___6 = FStar_TypeChecker_Core.print_error err in
-                          Prims.op_Hat "universe_of failed: " uu___6 in
-                        (FStar_Errors.Fatal_IllTyped, uu___5) in
-                      FStar_Errors.raise_error uu___4
-                        FStar_Compiler_Range.dummyRange))
+                      let msg =
+                        let uu___4 = FStar_TypeChecker_Core.print_error err in
+                        FStar_Compiler_Util.format1
+                          "refl_universe_of failed: %s\n" uu___4 in
+                      (dbg_refl g (fun uu___5 -> msg);
+                       (let uu___5 =
+                          let uu___6 =
+                            let uu___7 =
+                              FStar_TypeChecker_Core.print_error err in
+                            Prims.op_Hat "universe_of failed: " uu___7 in
+                          (FStar_Errors.Fatal_IllTyped, uu___6) in
+                        FStar_Errors.raise_error uu___5
+                          FStar_Compiler_Range.dummyRange))))
       else FStar_Tactics_Monad.ret FStar_Pervasives_Native.None
 let (refl_check_prop_validity :
   env ->
