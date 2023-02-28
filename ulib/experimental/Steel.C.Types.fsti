@@ -583,14 +583,11 @@ val ghost_struct_field
     (pts_to r v)
     (fun r' -> pts_to r (struct_set_field field (unknown (fields.fd_typedef field)) v) `star` pts_to r' (struct_get_field v field) `star` has_struct_field r field r')
 
-(*
-
 [@@noextract_to "krml"] // primitive
 val struct_field0
   (#tn: Type0)
   (#tf: Type0)
   (t': Type0)
-  (#opened: _)
   (#n: string)
   (#fields: nonempty_field_description_t tf)
   (#v: Ghost.erased (struct_t0 tn n fields))
@@ -600,7 +597,7 @@ val struct_field0
     t' ==  fields.fd_type field /\
     td' == fields.fd_typedef field
   })
-: SteelAtomicBase (ref td') false opened Unobservable
+: Steel (ref td')
     (pts_to r v)
     (fun r' -> pts_to r (struct_set_field field (unknown (fields.fd_typedef field)) v) `star` pts_to r' (struct_get_field v field) `star` has_struct_field r field r')
     (fun _ -> True)
@@ -610,13 +607,12 @@ inline_for_extraction [@@noextract_to "krml"] // primitive
 let struct_field
   (#tn: Type0)
   (#tf: Type0)
-  (#opened: _)
   (#n: string)
   (#fields: nonempty_field_description_t tf)
   (#v: Ghost.erased (struct_t0 tn n fields))
   (r: ref (struct0 tn n fields))
   (field: field_t fields)
-: SteelAtomicBase (ref #(norm norm_field_steps (fields.fd_type field)) (fields.fd_typedef field)) false opened Unobservable
+: Steel (ref #(norm norm_field_steps (fields.fd_type field)) (fields.fd_typedef field))
     (pts_to r v)
     (fun r' -> pts_to r (struct_set_field field (unknown (fields.fd_typedef field)) v) `star` pts_to #(norm norm_field_steps (fields.fd_type field)) r' (struct_get_field v field) `star` has_struct_field r field r')
     (fun _ -> True)
@@ -963,7 +959,6 @@ val union_field0
   (#tn: Type0)
   (#tf: Type0)
   (t': Type0)
-  (#opened: _)
   (#n: string)
   (#fields: field_description_t tf)
   (#v: Ghost.erased (union_t0 tn n fields))
@@ -973,7 +968,7 @@ val union_field0
     t' ==  fields.fd_type field /\
     td' == fields.fd_typedef field
   })
-: SteelAtomicBase (ref td') false opened Unobservable
+: Steel (ref td')
     (pts_to r v)
     (fun r' -> has_union_field r field r' `star` pts_to r' (union_get_field v field))
     (fun _ -> True)
@@ -983,13 +978,12 @@ inline_for_extraction [@@noextract_to "krml"] // primitive
 let union_field
   (#tn: Type0)
   (#tf: Type0)
-  (#opened: _)
   (#n: string)
   (#fields: field_description_t tf)
   (#v: Ghost.erased (union_t0 tn n fields))
   (r: ref (union0 tn n fields))
   (field: field_t fields {union_get_case v == Some field})
-: SteelAtomicBase (ref #(norm norm_field_steps (fields.fd_type field)) (fields.fd_typedef field)) false opened Unobservable
+: Steel (ref #(norm norm_field_steps (fields.fd_type field)) (fields.fd_typedef field))
     (pts_to r v)
     (fun r' -> has_union_field r field r' `star` pts_to #(norm norm_field_steps (fields.fd_type field)) r' (union_get_field v field))
     (fun _ -> True)
@@ -1058,6 +1052,7 @@ let union_switch_field
 
 module SZ = FStar.SizeT
 
+(*
 // To be extracted as: t[tn]
 // Per the C standard, base array types must be of nonzero size
 inline_for_extraction [@@noextract_to "krml"]
@@ -1579,14 +1574,13 @@ val ghost_array_cell
 
 [@@noextract_to "krml"] // primitive
 val array_ref_cell
-  (#opened: _)
   (#t: Type)
   (#td: typedef t)
   (#s: Ghost.erased (Seq.seq t))
   (a: array_ref td)
   (len: array_len_t a)
   (i: SZ.t)
-: SteelAtomicBase (r: ref td { SZ.v i < Seq.length s /\ Seq.length s == SZ.v len }) false opened Unobservable
+: Steel (r: ref td { SZ.v i < Seq.length s /\ Seq.length s == SZ.v len })
     (array_pts_to (| a, len |) s)
     (fun r -> array_pts_to (| a, len |) (Seq.upd s (SZ.v i) (unknown td)) `star` pts_to r (Seq.index s (SZ.v i)) `star` has_array_cell (| a, len |) i r)
     (fun _ ->
@@ -1596,13 +1590,12 @@ val array_ref_cell
 
 inline_for_extraction [@@noextract_to "krml"]
 let array_cell
-  (#opened: _)
   (#t: Type)
   (#td: typedef t)
   (#s: Ghost.erased (Seq.seq t))
   (a: array td)
   (i: SZ.t)
-: SteelAtomicBase (r: ref td { SZ.v i < Seq.length s /\ Seq.length s == SZ.v (dsnd a) }) false opened Unobservable
+: Steel (r: ref td { SZ.v i < Seq.length s /\ Seq.length s == SZ.v (dsnd a) })
     (array_pts_to a s)
     (fun r -> array_pts_to a (Seq.upd s (SZ.v i) (unknown td)) `star` pts_to r (Seq.index s (SZ.v i)) `star` has_array_cell a i r)
     (fun _ ->
