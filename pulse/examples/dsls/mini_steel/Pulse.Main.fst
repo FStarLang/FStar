@@ -201,7 +201,7 @@ let rec shift_bvs_in_else (t:term) (n:nat) : Tac term =
 
 let rec shift_bvs_in_else_st (t:st_term) (n:nat) : Tac st_term =
   match t with
-  | Tm_Return t -> Tm_Return (shift_bvs_in_else t n)
+  | Tm_Return c use_eq t -> Tm_Return c use_eq (shift_bvs_in_else t n)
   | Tm_Abs _ _ _ _ _ ->
     T.fail "Did not expect an Tm_Abs in shift_bvs_in_else_st"
   | Tm_STApp head q arg ->
@@ -313,8 +313,24 @@ let translate_st_app_or_return (g:R.env) (t:R.term)
   : T.Tac (err st_term)
   = let? t = readback_ty g t in
     match t with
-    | Tm_PureApp head q arg -> Inl (Tm_STApp head q arg)
-    | _ -> Inl (Tm_Return t)
+    | Tm_PureApp head q arg ->
+      (match head with
+       | Tm_FVar l ->
+         if l = return_stt_lid
+         then Inl (Tm_Return STT true arg)
+         else if l = return_stt_noeq_lid
+         then Inl (Tm_Return STT false arg)
+         else if l = return_stt_atomic_lid
+         then Inl (Tm_Return STT_Atomic true arg)
+         else if l = return_stt_atomic_noeq_lid
+         then Inl (Tm_Return STT_Atomic false arg)
+         else if l = return_stt_ghost_lid
+         then Inl (Tm_Return STT_Ghost true arg)
+         else if l = return_stt_ghost_noeq_lid
+         then Inl (Tm_Return STT_Ghost false arg)
+         else Inl (Tm_STApp head q arg)
+      | _ -> Inl (Tm_STApp head q arg))
+    | _ -> Inl (Tm_Return STT false t)
 
 let rec translate_term' (g:RT.fstar_top_env) (t:R.term)
   : T.Tac (err st_term)
@@ -407,7 +423,7 @@ and translate_st_term (g:RT.fstar_top_env) (t:R.term)
 and translate_term (g:RT.fstar_top_env) (t:R.term)
   : T.Tac (err st_term)
   = match readback_ty g t with
-    | Inl t -> Inl (Tm_Return t)
+    | Inl t -> Inl (Tm_Return STT false t)
     | _ -> translate_term' g t
 
 and translate_while (g:RT.fstar_top_env) (t:R.term)

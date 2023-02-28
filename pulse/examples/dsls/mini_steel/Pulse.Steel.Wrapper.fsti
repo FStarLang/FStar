@@ -72,10 +72,12 @@ let eq2_prop (#a:Type) (x y:a) : prop = x == y
 let iff_prop (p q:Type0) : prop = p <==> q
 
 inline_for_extraction
-val return_stt (#a:Type u#a) (x:a) : stt a emp (fun r -> pure (eq2_prop r x))
+val return_stt (#a:Type u#a) (x:a) (p:a -> vprop)
+  : stt a (p x) (fun r -> p r `star` pure (eq2_prop r x))
 
 inline_for_extraction
-val return_stt_noeq (#a:Type u#a) (x:a) : stt a emp (fun _ -> emp)
+val return_stt_noeq (#a:Type u#a) (x:a) (p:a -> vprop)
+  : stt a (p x) p
 
 // Return in ghost?
 
@@ -213,34 +215,31 @@ let squash_non_informative (a:Type u#a) : non_informative_witness (squash  u#a a
 
 
 module G = FStar.Ghost
-module U32 = FStar.UInt32
 module R = Steel.ST.Reference
-
-type u32 : Type0 = U32.t
 
 open FStar.Ghost
 
-val read (r:R.ref u32) (#n:erased u32) (#p:perm)
-  : stt (x:u32{reveal n == x})
+val read (r:R.ref UInt32.t) (#n:erased UInt32.t) (#p:perm)
+  : stt (x:UInt32.t{reveal n == x})
         (R.pts_to r p n)
         (fun x -> R.pts_to r p n)
 
-val write (r:R.ref u32) (x:u32) (#n:erased u32)
+val write (r:R.ref UInt32.t) (x:UInt32.t) (#n:erased UInt32.t)
   : stt unit
         (R.pts_to r full_perm n) 
         (fun _ -> R.pts_to r full_perm (hide x))
 
-val read_pure (r:R.ref u32) (#n:erased u32) (#p:perm)
-  : stt u32
+val read_pure (r:R.ref UInt32.t) (#n:erased UInt32.t) (#p:perm)
+  : stt UInt32.t
         (R.pts_to r p n)
         (fun x -> R.pts_to r p n `star` pure (eq2_prop (reveal n) x))
 
-val read_atomic (r:R.ref u32) (#n:erased u32) (#p:perm)
-  : stt_atomic u32 emp_inames
+val read_atomic (r:R.ref UInt32.t) (#n:erased UInt32.t) (#p:perm)
+  : stt_atomic UInt32.t emp_inames
                (R.pts_to r p n)
                (fun x -> R.pts_to r p n `star` pure (eq2_prop (reveal n) x))
 
-val write_atomic (r:R.ref u32) (x:u32) (#n:erased u32)
+val write_atomic (r:R.ref UInt32.t) (x:UInt32.t) (#n:erased UInt32.t)
   : stt_atomic unit emp_inames
         (R.pts_to r full_perm n) 
         (fun _ -> R.pts_to r full_perm (hide x))

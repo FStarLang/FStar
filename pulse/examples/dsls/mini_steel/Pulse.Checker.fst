@@ -271,10 +271,12 @@ let check_if (f:RT.fstar_top_env)
         in
         if hyp `Set.mem` freevars_st br
         then T.fail "Illegal use of control-flow hypothesis in branch"
-        else (
-          let (| c, br_typing |) = force_st pre_typing (| c, br_typing |) in
-          (| br, c, br_typing |)
-        )
+        else if C_Tot? c
+        then T.fail "Branch computation type not st"
+        else (| br, c, br_typing |)
+        //   let (| c, br_typing |) = force_st pre_typing (| c, br_typing |) in
+        //   (| br, c, br_typing |)
+        // )
     in
     let (| e1, c1, e1_typing |) = check_branch tm_true e1 in
     let (| e2, c2, e2_typing |) = check_branch tm_false e2 in    
@@ -485,6 +487,37 @@ let check_admit
      T_Admit _ _ c (STC _ s x t_typing pre_typing (E post_typing))
   |)
 
+let check_return
+  (allow_inst:bool)
+  (f:RT.fstar_top_env)
+  (g:env)
+  (t:st_term{Tm_Return? t})
+  (pre:term)
+  (pre_typing:tot_typing f g pre Tm_VProp)
+  (post_hint:option term)
+  : T.Tac (t:st_term &
+           c:comp{stateful_comp c ==> comp_pre c == pre} &
+           st_typing f g t c) =
+
+  let Tm_Return c use_eq t = t in
+  let (| t, u, ty, uty, d |) = check_tot_univ allow_inst f g t in
+  let x = fresh g in
+  let (| post, post_typing |) =
+    let post =
+      match post_hint with
+      | None -> Tm_Emp
+      | Some post -> post in
+    let post_opened = open_term post x in
+    let (| post_opened, post_typing |) =
+      check_tot_with_expected_typ f ((x, Inl ty)::g) post_opened Tm_VProp in
+    assume (open_term (close_term post_opened x) x == post_opened);
+    let post = close_term post_opened x in
+    let post_typing : tot_typing f ((x, Inl ty)::g) (open_term post x) Tm_VProp = (E post_typing) in
+    (| post, post_typing |) in
+
+  let d = T_Return g c use_eq u ty t post x uty (E d) post_typing in
+  repack (try_frame_pre pre_typing d) post_hint true
+
 #push-options "--print_implicits --print_universes --print_full_names"
 let rec check' : bool -> check_t =
   fun (allow_inst:bool)
@@ -507,36 +540,12 @@ let rec check' : bool -> check_t =
   //       | _ -> true)
   //   then snd (maybe_add_elim_pure pre t)
   //   else t in
+         // repack (try_frame_pre pre_typing d) post_hint true
 
   match t with
-  | Tm_Return (Tm_BVar _) -> T.fail "not locally nameless"
-  | Tm_Return (Tm_Var _)
-  | Tm_Return (Tm_FVar _)
-  | Tm_Return (Tm_UInst _ _)
-  | Tm_Return (Tm_Constant _)
-  | Tm_Return (Tm_PureApp _ _ _)
-  | Tm_Return (Tm_Let _ _ _) ->
-    let Tm_Return t = t in
-    let (| t, u, ty, uty, d |) = check_tot_univ allow_inst f g t in
-    let c = return_comp u ty t in
-    let d = T_Return _ _ _ _ (E d) uty in
-    repack (frame_empty pre_typing uty (Tm_Return t) c d) post_hint false
-
-  | Tm_Return _ -> T.fail "Unexpected Tm_Return st term"
-
-  // | Tm_Emp
-  // | Tm_Pure _
-  // | Tm_Star _ _ 
-  // | Tm_ExistsSL _ _ _
-  // | Tm_ForallSL _ _ _
-  // | Tm_Arrow _ _ _
-  // | Tm_Type _
-  // | Tm_VProp
-  // | Tm_Refine _ _
-  // | Tm_Inames
-  // | Tm_EmpInames ->
-  //   let (| t, ty, d_ty |) = check_tot allow_inst f g t in
-  //   (| t, C_Tot ty, d_ty |)
+  | Tm_Return _ _ (Tm_BVar _) -> T.fail "not locally nameless"
+  | Tm_Return _ _ _ ->
+    check_return allow_inst f g t pre pre_typing post_hint
 
   | Tm_Abs _ _ _ _ _ ->
     check_abs f g t pre pre_typing post_hint (check' true)
