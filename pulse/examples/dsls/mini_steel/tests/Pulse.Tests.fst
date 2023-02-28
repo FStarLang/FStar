@@ -151,11 +151,24 @@ let warmup (x:int) = assert (x + 1 > x)
     (expects (exists_ (fun n -> pts_to r full_perm n)))
     (provides (fun _ -> exists_ (fun n -> pts_to r full_perm n)))
     (
-      let n = elim_exists _ in
-      let reveal_n = stt_ghost_reveal UInt32.t n in
-      intro_exists (fun n -> pts_to r full_perm n) reveal_n
+      intro_exists (fun n -> pts_to r full_perm n) _
     )
 )))
+
+// type dummy = | PatVars
+// assume val fresh : dummy
+// let tm = (`(
+//   fun (r:ref UInt32.t) ->
+//     (expects (exists_ (fun n -> pts_to r full_perm n)))
+//     (provides (fun _ -> exists_ (fun n -> pts_to r full_perm n)))
+//     (
+//       let n = elim_exists _ in
+//       let PatVars p n = fresh in
+//       assert (pts_to r p n);
+//       let reveal_n = stt_ghost_reveal UInt32.t n in
+//       intro_exists (fun n -> pts_to r full_perm n) reveal_n
+//     )
+// ))
 
 %splice_t[while_test] (check (`(
   fun (r:ref UInt32.t) ->

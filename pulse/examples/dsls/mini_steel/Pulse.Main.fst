@@ -410,7 +410,13 @@ and translate_st_term (g:RT.fstar_top_env) (t:R.term)
     | R.Tv_Let false [] bv def body ->
       let? def = translate_st_term g def in 
       let? body = translate_st_term g body in 
-      Inl (Tm_Bind def body)
+      begin
+      match def with
+      | Tm_IntroExists _ _ -> 
+        Inl (Tm_Protect (Tm_Bind (Tm_Protect def) (Tm_Protect body)))
+      | _ ->
+        Inl (Tm_Bind def body)
+      end
 
     | R.Tv_Match b _ [(Pat_Constant C_True, then_);
                       (Pat_Wild _, else_)] ->
