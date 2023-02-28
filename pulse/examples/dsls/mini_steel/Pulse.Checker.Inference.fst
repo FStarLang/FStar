@@ -54,6 +54,9 @@ let rec match_typ (t1 t2:term) (uv_sols:list (term & term))
          match_typ arg1 arg2 uv_sols
     else uv_sols
 
+  | Tm_Pure t1, Tm_Pure t2 ->
+    match_typ t1 t2 uv_sols
+    
   | _, _ -> uv_sols
 
 let rec atomic_vprop_has_uvar (t:term) : bool =
@@ -61,6 +64,7 @@ let rec atomic_vprop_has_uvar (t:term) : bool =
   | Tm_UVar _ -> true
   | Tm_PureApp head _ arg ->
     atomic_vprop_has_uvar head || atomic_vprop_has_uvar arg
+  | Tm_Pure arg -> atomic_vprop_has_uvar arg
   | Tm_Emp -> false
   | _ -> false
 
@@ -71,6 +75,8 @@ let rec atomic_vprops_may_match (t1:term) (t2:term) : bool =
     atomic_vprops_may_match head1 head2 &&
     q1 = q2 &&
     atomic_vprops_may_match arg1 arg2
+  | Tm_Pure x, Tm_Pure y ->
+    atomic_vprops_may_match x y
   | _, _ -> eq_tm t1 t2
 
 let infer_one_atomic_vprop (t:term) (ctxt:list term) (uv_sols:list (term & term))
@@ -128,10 +134,10 @@ let infer
   if List.Tot.length uvs = 0
   then T.fail "Inference did not find anything to infer"
   else begin
-    // T.print (FStar.Printf.sprintf "infer: generated %d uvars, ctx: %s, st_comp.pre: %s\n"
-    //            (List.Tot.length uvs)
-    //            (P.term_to_string ctxt_pre)
-    //            (P.term_to_string pre));
+    T.print (FStar.Printf.sprintf "infer: generated %d uvars, ctx: %s, st_comp.pre: %s\n"
+               (List.Tot.length uvs)
+               (P.term_to_string ctxt_pre)
+               (P.term_to_string pre));
 
     let uv_sols = [] in
     
