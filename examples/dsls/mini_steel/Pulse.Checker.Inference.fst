@@ -115,6 +115,14 @@ let rec rebuild_head (head:term) (uvs:list term) (uv_sols:list (term & term))
       let app_node = Tm_PureApp head (Some Implicit) t2 in
       rebuild_head app_node tl uv_sols
 
+let try_inst_uvs_in_goal (uvs:list term)
+                         (ctxt:term)
+                         (goal:vprop)
+  : T.Tac (list (term & term))
+  = let ctxt = vprop_as_list ctxt in
+    infer_one_atomic_vprop goal ctxt []
+                             
+
 let infer
   (head:term)
   (t_head:term)
