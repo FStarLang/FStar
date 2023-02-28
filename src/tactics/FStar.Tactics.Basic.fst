@@ -2362,7 +2362,10 @@ let refl_universe_of (g:env) (e:term) : tac (option universe) =
            Rel.force_trivial_guard g
              {Env.trivial_guard with guard_f=NonTrivial guard};
            check_univ_var_resolved u
-         | Inr err -> Errors.raise_error (Errors.Fatal_IllTyped, "universe_of failed: " ^ Core.print_error err) Range.dummyRange)
+         | Inr err ->
+           let msg = BU.format1 "refl_universe_of failed: %s\n" (Core.print_error err) in
+           dbg_refl g (fun _ -> msg);
+           Errors.raise_error (Errors.Fatal_IllTyped, "universe_of failed: " ^ Core.print_error err) Range.dummyRange)
   else ret None
 
 let refl_check_prop_validity (g:env) (e:term) : tac (option unit) =

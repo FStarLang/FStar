@@ -95,7 +95,7 @@ and vprop = term
 
 let comp_st = c:comp {not (C_Tot? c) }
 
-type admit_c =
+type ctag =
   | STT
   | STT_Atomic
   | STT_Ghost
@@ -104,7 +104,7 @@ type admit_c =
 [@@ no_auto_projectors]
 noeq
 type st_term =
-  | Tm_Return     : term -> st_term
+  | Tm_Return     : ctag -> bool -> term -> st_term  // bool is whether insert equality in the post
   | Tm_Abs        : b:binder -> q:option qualifier -> pre:option vprop -> body:st_term -> post:option vprop -> st_term
   | Tm_STApp      : head:term -> arg_qual:option qualifier -> arg:term -> st_term  
   | Tm_Bind       : e1:st_term -> e2:st_term -> st_term
@@ -113,7 +113,7 @@ type st_term =
   | Tm_IntroExists: term -> vprop -> st_term
   | Tm_While      : term -> st_term -> st_term -> st_term  // inv, cond, body
 
-  | Tm_Admit      : admit_c -> universe -> term -> option term -> st_term  // u, a:type_u, optional post
+  | Tm_Admit      : ctag -> universe -> term -> option term -> st_term  // u, a:type_u, optional post
 
 let rec freevars (t:term) 
   : Set.set var
@@ -164,7 +164,7 @@ let freevars_opt (t:option term) : Set.set var =
 let rec freevars_st (t:st_term)
   : Set.set var
   = match t with
-    | Tm_Return t ->
+    | Tm_Return _ _ t ->
       freevars t
     | Tm_Abs b _ pre_hint body post_hint ->
       Set.union (freevars b.binder_ty) 
@@ -253,7 +253,7 @@ let ln_opt' (t:option term) (i:int) : bool =
 let rec ln_st' (t:st_term) (i:int)
   : Tot bool
   = match t with
-    | Tm_Return t ->
+    | Tm_Return _ _ t ->
       ln' t i
       
     | Tm_Abs b _ pre_hint body post ->
@@ -377,8 +377,8 @@ let open_term_opt' (t:option term) (v:term) (i:index)
 let rec open_st_term' (t:st_term) (v:term) (i:index)
   : Tot st_term (decreases t)
   = match t with
-    | Tm_Return t ->
-      Tm_Return (open_term' t v i)
+    | Tm_Return c use_eq t ->
+      Tm_Return c use_eq (open_term' t v i)
 
     | Tm_Abs b q pre_hint body post ->
       Tm_Abs {b with binder_ty=open_term' b.binder_ty v i} q
@@ -509,8 +509,8 @@ let close_term_opt' (t:option term) (v:var) (i:index)
 let rec close_st_term' (t:st_term) (v:var) (i:index)
   : Tot st_term (decreases t)
   = match t with
-    | Tm_Return t ->
-      Tm_Return (close_term' t v i)
+    | Tm_Return c use_eq t ->
+      Tm_Return c use_eq (close_term' t v i)
 
     | Tm_Abs b q pre_hint body post ->
       Tm_Abs {b with binder_ty=close_term' b.binder_ty v i} q
@@ -680,7 +680,7 @@ let rec close_open_inverse_st'  (t:st_term)
   : Lemma (ensures close_st_term' (open_st_term' t (term_of_var x) i) x i == t)
           (decreases t)
   = match t with
-    | Tm_Return t ->
+    | Tm_Return _ _ t ->
       close_open_inverse' t x i
 
     | Tm_ElimExists p ->
@@ -826,7 +826,9 @@ let eq_tm_opt (t1 t2:option term)
 let rec eq_st_term (t1 t2:st_term) 
   : b:bool { b <==> (t1 == t2) }
   = match t1, t2 with
-    | Tm_Return t1, Tm_Return t2 ->
+    | Tm_Return c1 use_eq1 t1, Tm_Return c2 use_eq2 t2 ->
+      c1 = c2 &&
+      use_eq1 = use_eq2 &&
       eq_tm t1 t2
       
     | Tm_Abs b1 o1 p1 t1 q1, Tm_Abs b2 o2 p2 t2 q2 ->

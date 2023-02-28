@@ -77,13 +77,11 @@ type stt_ghost (a:Type u#a) (opened:inames) (pre:vprop) (post:a -> vprop) =
   unit -> STGhostT a opened pre post
 
 inline_for_extraction
-let return_stt (#a:Type u#a) (x:a)
-  : stt a emp (fun r -> pure (r == x)) =
+let return_stt (#a:Type u#a) (x:a) (p:a -> vprop) =
   fun _ -> return x
 
 inline_for_extraction
-let return_stt_noeq (#a:Type u#a) (x:a)
-  : stt a emp (fun _ -> emp) =
+let return_stt_noeq (#a:Type u#a) (x:a) (p:a -> vprop) =
   fun _ -> return x
 
 inline_for_extraction
