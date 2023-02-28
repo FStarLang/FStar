@@ -10,12 +10,12 @@ open Pulse.Elaborate.Pure
 open Pulse.Typing
 open Pulse.Elaborate.Core
 
-val elab_pure_equiv (#f:RT.fstar_top_env)
-                    (#g:env)
-                    (#t:term)
-                    (#c:comp { C_Tot? c })
-                    (d:st_typing f g (Tm_Return t) c)
-  : Lemma (ensures elab_st_typing d == elab_term t)
+// val elab_pure_equiv (#f:RT.fstar_top_env)
+//                     (#g:env)
+//                     (#t:term)
+//                     (#c:comp { C_Tot? c })
+//                     (d:st_typing f g (Tm_Return t) c)
+//   : Lemma (ensures elab_st_typing d == elab_term t)
 
 val elab_open_commute' (e:term)
                        (v:term)

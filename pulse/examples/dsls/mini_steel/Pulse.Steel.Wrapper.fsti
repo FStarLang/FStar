@@ -72,10 +72,12 @@ let eq2_prop (#a:Type) (x y:a) : prop = x == y
 let iff_prop (p q:Type0) : prop = p <==> q
 
 inline_for_extraction
-val return_stt (#a:Type u#a) (x:a) : stt a emp (fun r -> pure (eq2_prop r x))
+val return_stt (#a:Type u#a) (x:a) (p:a -> vprop)
+  : stt a (p x) (fun r -> p r `star` pure (eq2_prop r x))
 
 inline_for_extraction
-val return_stt_noeq (#a:Type u#a) (x:a) : stt a emp (fun _ -> emp)
+val return_stt_noeq (#a:Type u#a) (x:a) (p:a -> vprop)
+  : stt a (p x) p
 
 // Return in ghost?
 

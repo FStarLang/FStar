@@ -106,7 +106,7 @@ let rec open_st_term_ln' (e:st_term)
     (ensures ln_st' e i)
     (decreases e)
   = match e with
-    | Tm_Return e ->
+    | Tm_Return _ _ e ->
       open_term_ln' e x i
       
     | Tm_STApp l _ r ->
@@ -239,7 +239,7 @@ let rec ln_weakening_st (t:st_term) (i j:int)
     (ensures ln_st' t j)
     (decreases t)
   = match t with
-    | Tm_Return t ->
+    | Tm_Return _ _ t ->
       ln_weakening t i j
 
     | Tm_ElimExists t ->
@@ -369,7 +369,7 @@ let rec open_term_ln_inv_st' (t:st_term)
     (ensures ln_st' (open_st_term' t x i) (i - 1))
     (decreases t)
   = match t with
-    | Tm_Return t ->
+    | Tm_Return _ _ t ->
       open_term_ln_inv' t x i
 
     | Tm_ElimExists t ->
@@ -493,7 +493,7 @@ let rec close_st_term_ln' (t:st_term) (x:var) (i:index)
     (ensures ln_st' (close_st_term' t x i) i)
     (decreases t)
   = match t with
-    | Tm_Return t ->
+    | Tm_Return _ _ t ->
       close_term_ln' t x i
 
     | Tm_ElimExists t ->
@@ -604,8 +604,8 @@ let rec st_typing_ln (#f:_) (#g:_) (#t:_) (#c:_)
     (ensures ln_st t /\ ln_c c)
     (decreases d)
   = match d with
-    | T_Tot _g e t dt ->
-      tot_typing_ln dt
+    // | T_Tot _g e t dt ->
+    //   tot_typing_ln dt
 
     | T_Abs _g x _q ty _u body c dt db ->
       tot_typing_ln dt;
@@ -618,12 +618,17 @@ let rec st_typing_ln (#f:_) (#g:_) (#t:_) (#c:_)
       tot_typing_ln at;
       open_comp_ln_inv' res arg 0
 
-    | T_Return _ _ _ _ tt _ ->
-      tot_typing_ln tt
-      
-    | T_ReturnNoEq _ _ _ _ tt _ ->
-      st_typing_ln tt
 
+    | T_Return _ c use_eq u t e post x t_typing e_typing post_typing ->
+      tot_typing_ln t_typing;
+      tot_typing_ln e_typing;
+      tot_typing_ln post_typing;
+      open_term_ln' post (term_of_var x) 0;
+      let post =
+        if use_eq then Tm_Star post (Tm_Pure (mk_eq2 u t (null_bvar 0) e))
+        else post in
+      open_term_ln_inv' post e 0
+      
     | T_Lift _ _ _ _ d1 l ->
       st_typing_ln d1;
       lift_comp_ln l

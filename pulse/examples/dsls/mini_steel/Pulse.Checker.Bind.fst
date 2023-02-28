@@ -43,7 +43,6 @@ let rec mk_bind (f:RT.fstar_top_env) (g:env)
   | C_STGhost inames1 _, C_STGhost inames2 _ ->
     if eq_tm inames1 inames2
     then begin
-      assume (inames1 == inames2);   
       let bc = Bind_comp g x c1 c2 res_typing x post_typing in
       (| Tm_Bind e1 e2, _, T_Bind _ e1 e2 _ _ _ _ d_e1 d_c1res d_e2 bc |)
     end
@@ -51,7 +50,6 @@ let rec mk_bind (f:RT.fstar_top_env) (g:env)
   | C_STAtomic inames _, C_ST _ ->
     if eq_tm inames Tm_EmpInames
     then begin
-      assume (inames == Tm_EmpInames);
       let c1lifted = C_ST (st_comp_of_comp c1) in
       let d_e1 : st_typing f g e1 c1lifted =
         T_Lift _ _ _ c1lifted d_e1 (Lift_STAtomic_ST _ c1) in
@@ -62,7 +60,6 @@ let rec mk_bind (f:RT.fstar_top_env) (g:env)
   | C_STGhost inames1 _, C_STAtomic inames2 _ ->
     if eq_tm inames1 inames2
     then begin
-      assume (inames1 == inames2);
       let w = get_non_informative_witness f g (comp_u c1) (comp_res c1) in
       let bc = Bind_comp_ghost_l g x c1 c2 w res_typing x post_typing in
       (| Tm_Bind e1 e2, _, T_Bind _ e1 e2 _ _ _ _ d_e1 d_c1res d_e2 bc |)
@@ -71,7 +68,6 @@ let rec mk_bind (f:RT.fstar_top_env) (g:env)
   | C_STAtomic inames1 _, C_STGhost inames2 _ ->
     if eq_tm inames1 inames2
     then begin
-      assume (inames1 == inames2);
       let w = get_non_informative_witness f g (comp_u c2) (comp_res c2) in
       let bc = Bind_comp_ghost_r g x c1 c2 w res_typing x post_typing in
       (| Tm_Bind e1 e2, _, T_Bind _ e1 e2 _ _ _ _ d_e1 d_c1res d_e2 bc |)
@@ -80,7 +76,6 @@ let rec mk_bind (f:RT.fstar_top_env) (g:env)
   | C_ST _, C_STAtomic inames _ ->
     if eq_tm inames Tm_EmpInames
     then begin
-      assume (inames == Tm_EmpInames);
       let c2lifted = C_ST (st_comp_of_comp c2) in
       let g' = (x, Inl (comp_res c1))::g in
       let d_e2 : st_typing f g' (open_st_term e2 x) c2lifted =
@@ -92,7 +87,6 @@ let rec mk_bind (f:RT.fstar_top_env) (g:env)
   | C_STGhost inames _, C_ST _ ->
     if eq_tm inames Tm_EmpInames
     then begin
-      assume (inames == Tm_EmpInames);
       let w = get_non_informative_witness f g (comp_u c1) (comp_res c1) in
       let c1lifted = C_STAtomic inames (st_comp_of_comp c1) in
       let d_e1 : st_typing f g e1 c1lifted =
@@ -103,7 +97,6 @@ let rec mk_bind (f:RT.fstar_top_env) (g:env)
   | C_ST _, C_STGhost inames _ ->
     if eq_tm inames Tm_EmpInames
     then begin
-      assume (inames == Tm_EmpInames);
       let g' = (x, Inl (comp_res c1))::g in
       let w = get_non_informative_witness f g' (comp_u c2) (comp_res c2) in
       let c2lifted = C_STAtomic inames (st_comp_of_comp c2) in
@@ -115,7 +108,6 @@ let rec mk_bind (f:RT.fstar_top_env) (g:env)
   | C_STAtomic inames _, C_STAtomic _ _ ->
     if eq_tm inames Tm_EmpInames
     then begin
-      assume (inames == Tm_EmpInames);
       let c1lifted = C_ST (st_comp_of_comp c1) in
       let d_e1 : st_typing f g e1 c1lifted =
         T_Lift _ _ _ c1lifted d_e1 (Lift_STAtomic_ST _ c1) in
@@ -139,43 +131,47 @@ let check_bind
            st_typing f g t c) =
   let Tm_Bind e1 e2 = t  in
   let (| e1, c1, d1 |) = check f g e1 pre pre_typing None in
-  let (| c1, d1 |) = force_st pre_typing (| c1, d1 |) in
-  let s1 = st_comp_of_comp c1 in
-  let t = s1.res in
-  let (| u, t_typing |) = check_universe f g t in
-  if u <> s1.u then T.fail "incorrect universe"
-  else (
-      let x = fresh g in
-      let next_pre = open_term s1.post x in
-      // T.print (Printf.sprintf "Bind::e1 %s \n\nx %s\n\ne2 %s\n\nnext_pre %s\n\n"
-      //            (P.term_to_string e1)
-      //            (string_of_int x)
-      //            (P.term_to_string (open_term e2 x))
-      //            (P.term_to_string next_pre));
-      let g' = (x, Inl s1.res)::g in
-      //would be nice to prove that this is typable as a lemma,
-      //without having to re-check it
-      let next_pre_typing : tot_typing f g' next_pre Tm_VProp
-        = check_vprop_no_inst f g' next_pre
-      in
-      let (| e2', c2, d2 |) = check f g' (open_st_term e2 x) next_pre next_pre_typing post_hint in
-      FV.st_typing_freevars d2;
-      let (| c2, d2 |) = force_st #_ #_ #e2' next_pre_typing (| c2, d2 |) in
-      let e2_closed = close_st_term e2' x in
-      assume (open_st_term e2_closed x == e2');
-      let d2 : st_typing f g' e2' c2 = d2 in
-      let d2 : st_typing f g' (open_st_term e2_closed x) c2 = d2 in
-      let s2 = st_comp_of_comp c2 in
-      let (| u, res_typing |) = check_universe f g s2.res in
-      if u <> s2.u
-      then T.fail "Unexpected universe for result type"
-      else if x `Set.mem` freevars s2.post
-      then T.fail (Printf.sprintf "Bound variable %d escapes scope in postcondition %s" x (P.term_to_string s2.post))
-      else (
-        let s2_post_opened = open_term s2.post x in
-        let post_typing = check_vprop_no_inst f ((x, Inl s2.res)::g) s2_post_opened in
-        //assume (~ (x `Set.mem` freevars_st e2_closed));
-        mk_bind f g pre e1 e2_closed c1 c2 x d1 t_typing d2 res_typing post_typing
-      )
-  )
+  if C_Tot? c1
+  then T.fail "Bind: c1 is not st"
+  else
+    let s1 = st_comp_of_comp c1 in
+    let t = s1.res in
+    let (| u, t_typing |) = check_universe f g t in
+    if u <> s1.u then T.fail "incorrect universe"
+    else (
+        let x = fresh g in
+        let next_pre = open_term s1.post x in
+        // T.print (Printf.sprintf "Bind::e1 %s \n\nx %s\n\ne2 %s\n\nnext_pre %s\n\n"
+        //            (P.term_to_string e1)
+        //            (string_of_int x)
+        //            (P.term_to_string (open_term e2 x))
+        //            (P.term_to_string next_pre));
+        let g' = (x, Inl s1.res)::g in
+        //would be nice to prove that this is typable as a lemma,
+        //without having to re-check it
+        let next_pre_typing : tot_typing f g' next_pre Tm_VProp
+          = check_vprop_no_inst f g' next_pre
+        in
+        let (| e2', c2, d2 |) = check f g' (open_st_term e2 x) next_pre next_pre_typing post_hint in
+        FV.st_typing_freevars d2;
+        if C_Tot? c2
+        then T.fail "Bind: c2 is not st"
+        else
+          let e2_closed = close_st_term e2' x in
+          assume (open_st_term e2_closed x == e2');
+          let d2 : st_typing f g' e2' c2 = d2 in
+          let d2 : st_typing f g' (open_st_term e2_closed x) c2 = d2 in
+          let s2 = st_comp_of_comp c2 in
+          let (| u, res_typing |) = check_universe f g s2.res in
+          if u <> s2.u
+          then T.fail "Unexpected universe for result type"
+          else if x `Set.mem` freevars s2.post
+          then T.fail (Printf.sprintf "Bound variable %d escapes scope in postcondition %s" x (P.term_to_string s2.post))
+          else (
+            let s2_post_opened = open_term s2.post x in
+            let post_typing = check_vprop_no_inst f ((x, Inl s2.res)::g) s2_post_opened in
+            //assume (~ (x `Set.mem` freevars_st e2_closed));
+            mk_bind f g pre e1 e2_closed c1 c2 x d1 t_typing d2 res_typing post_typing
+          )
+    )
 #pop-options

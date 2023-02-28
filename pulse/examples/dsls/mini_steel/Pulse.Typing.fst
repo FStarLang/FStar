@@ -35,25 +35,24 @@ let mk_eq2 (u:universe)
            (e0 e1:term) 
   : term
   = Tm_PureApp
-         (Tm_PureApp (Tm_PureApp (Tm_UInst R.eq2_qn [u]) (Some Implicit) t)
+         (Tm_PureApp (Tm_PureApp (Tm_UInst (mk_steel_wrapper_lid "eq2_prop") [u]) (Some Implicit) t)
                      None e0) None e1
 
 let mk_vprop_eq (e0 e1:term) : term =
   mk_eq2 (U_succ (U_succ U_zero)) Tm_VProp e0 e1
 
-let return_comp (u:universe) (t:term) (e:term)
-  : comp 
-  = C_ST { u;
-           res = t;
-           pre = Tm_Emp;
-           post = Tm_Pure (mk_eq2 u t (null_bvar 0) e) }
+let return_comp (c:ctag) (use_eq:bool) (u:universe) (t:term) (e:term) (post:term)
+  : comp =
 
-let return_comp_noeq (u:universe) (t:term)
-  : comp 
-  = C_ST { u;
-           res = t;
-           pre = Tm_Emp;
-           post = Tm_Emp }
+  let post_maybe_eq =
+    if use_eq
+    then Tm_Star post (Tm_Pure (mk_eq2 u t (null_bvar 0) e))
+    else post in
+
+  C_ST { u;
+         res = t;
+         pre = open_term' post e 0;
+         post = post_maybe_eq }
 
 let eqn = term & term & term
 let binding = either term eqn
@@ -363,7 +362,7 @@ let comp_while (inv:term)
            post=open_term' inv tm_false 0
          }
 
-let comp_admit (c:admit_c) (s:st_comp) : comp =
+let comp_admit (c:ctag) (s:st_comp) : comp =
   match c with
   | STT -> C_ST s
   | STT_Atomic -> C_STAtomic Tm_EmpInames s
@@ -503,12 +502,12 @@ and comp_typing (f:RT.fstar_top_env) : env -> comp -> universe -> Type =
       comp_typing f g (C_STGhost inames st) st.u
 
 and st_typing (f:RT.fstar_top_env) : env -> st_term -> comp -> Type =
-  | T_Tot:
-      g:env ->
-      e:term ->
-      ty:term ->
-      tot_typing f g e ty ->
-      st_typing f g (Tm_Return e) (C_Tot ty)
+  // | T_Tot:
+  //     g:env ->
+  //     e:term ->
+  //     ty:term ->
+  //     tot_typing f g e ty ->
+  //     st_typing f g (Tm_Return e) (C_Tot ty)
 
   | T_Abs: 
       g:env ->
@@ -536,21 +535,17 @@ and st_typing (f:RT.fstar_top_env) : env -> st_term -> comp -> Type =
 
   | T_Return:
       g:env ->
-      e:term -> 
-      t:term -> 
+      c:ctag ->
+      use_eq:bool ->
       u:universe ->
+      t:term ->
+      e:term ->
+      post:term ->
+      x:var { None? (lookup g x) /\ ~ (x `Set.mem` freevars post) } ->
+      universe_of f g t u ->
       tot_typing f g e t ->
-      universe_of f g t u ->
-      st_typing f g (Tm_Return e) (return_comp u t e)
-
-  | T_ReturnNoEq:
-      g:env ->
-      e:st_term -> 
-      t:term -> 
-      u:universe ->
-      st_typing f g e (C_Tot t) ->
-      universe_of f g t u ->
-      st_typing f g e (return_comp_noeq u t)
+      tot_typing f ((x, Inl t)::g) (open_term post x) Tm_VProp ->
+      st_typing f g (Tm_Return c use_eq e) (return_comp c use_eq u t e post)
 
   | T_Lift:
       g:env ->
@@ -650,7 +645,7 @@ and st_typing (f:RT.fstar_top_env) : env -> st_term -> comp -> Type =
   | T_Admit:
       g:env ->
       s:st_comp ->
-      c:admit_c ->
+      c:ctag ->
       st_comp_typing f g s ->
       st_typing f g (Tm_Admit c s.u s.res None) (comp_admit c s)
 
