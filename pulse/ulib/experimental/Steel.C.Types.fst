@@ -982,6 +982,45 @@ let ghost_struct_field_focus
 = noop (); // FIXME: WHY WHY WHY? without this noop, z3 fails to prove precondition of field_description_t.fd_typedef . But also works if I put noop () after the function call
   ghost_struct_field_focus' r field r'
 
+module GHR = Steel.ST.GhostHigherReference
+
+let ghost_struct_field'
+  (#opened: _)
+  (#field_t: eqtype)
+  (#fields: field_description_gen_t field_t)
+  (#v: Ghost.erased (struct_t1 fields))
+  (r: ref (struct1 fields))
+  (field: field_t)
+: SteelGhostT (Ghost.erased (ref (fields.fd_typedef field))) opened
+    (pts_to r v)
+    (fun r' -> pts_to r (t_struct_set_field field (unknown (fields.fd_typedef field)) v) `star` pts_to r' (t_struct_get_field v field) `star` has_struct_field1 r field r')
+= ST.weaken (pts_to r v) (pts_to0 r v) (fun _ -> ());
+  let _ = ST.gen_elim () in
+  let w = ST.vpattern_replace (HR.pts_to r _) in
+  ST.rewrite (r_pts_to _ _) (r_pts_to w.ref (Ghost.reveal v));
+  let w' = {
+    base = w.base;
+    ref = R.ref_focus w.ref (S.struct_field (struct_field_pcm (fields)) field);
+  }
+  in
+  let gr' = GHR.alloc w' in
+  let r1' = GHR.reveal_ref gr' in
+  GHR.reveal_pts_to gr' P.full_perm w';
+  ST.rewrite_equiv (GHR.pts_to _ _ _) (HR.pts_to r1' P.full_perm w');
+  HR.pts_to_not_null r1';
+  let r' = Ghost.hide r1' in
+  ST.rewrite (HR.pts_to r1' P.full_perm w') (HR.pts_to r' P.full_perm w');
+  hr_share r;
+  ST.rewrite (has_struct_field0 r field r') (has_struct_field1 r field r');
+  ST.weaken (pts_to0 r (Ghost.reveal v)) (pts_to r v) (fun _ -> ());
+  ghost_struct_field_focus' r field r';
+  r'
+
+let ghost_struct_field
+  r field
+= noop (); // FIXME: WHY WHY WHY? (same as ghost_struct_field_focus above)
+  ghost_struct_field' r field
+
 (*
 
 let ghost_struct_field

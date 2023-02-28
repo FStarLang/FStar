@@ -570,8 +570,6 @@ val ghost_struct_field_focus
     (has_struct_field r field r' `star` pts_to r v)
     (fun _ -> has_struct_field r field r' `star` pts_to r (struct_set_field field (unknown (fields.fd_typedef field)) v) `star` pts_to r' (struct_get_field v field))
 
-(*
-
 val ghost_struct_field
   (#opened: _)
   (#tn: Type0)
@@ -584,6 +582,8 @@ val ghost_struct_field
 : SteelGhostT (Ghost.erased (ref (fields.fd_typedef field))) opened
     (pts_to r v)
     (fun r' -> pts_to r (struct_set_field field (unknown (fields.fd_typedef field)) v) `star` pts_to r' (struct_get_field v field) `star` has_struct_field r field r')
+
+(*
 
 [@@noextract_to "krml"] // primitive
 val struct_field0
