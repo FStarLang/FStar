@@ -25,11 +25,13 @@ let ref (a: Type u#0) (#b: Type u#b) (q: pcm b) : Type u#b =
 
 (** Given a reference to an element of PCM p and a connection l from p to q,
     [ref_focus r l] is a reference to an element of q. The intuition is that
-    q represents a "part of" p (e.g. a struct field, union case, or array slice). *)
+    q represents a "part of" p (e.g. a struct field, union case, or array slice).
+    This is a model, so we do not need to worry about ghost vs. pure
+ *)
 val ref_focus
   (#a:Type) (#b:Type) (#c:Type) (#p: pcm b)
   (r: ref a p) (#q: pcm c) (l: connection p q)
-: GTot (ref a q)
+: Tot (ref a q)
 
 val ref_focus_id
   (#a:Type) (#b:Type) (#p: pcm b)
