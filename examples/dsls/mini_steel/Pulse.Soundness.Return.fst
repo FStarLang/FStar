@@ -1,14 +1,17 @@
 module Pulse.Soundness.Return
-module RT = Refl.Typing
-module R = FStar.Reflection
-module L = FStar.List.Tot
-module T = FStar.Tactics
-open FStar.List.Tot
-open Pulse.Syntax
+
+open FStar.Reflection
+open Refl.Typing
 open Pulse.Elaborate.Pure
+open Pulse.Elaborate.Core
 open Pulse.Typing
-open Pulse.Elaborate
 open Pulse.Soundness.Common
+
+module EPure = Pulse.Elaborate.Pure
+module RT = Refl.Typing
+
+let return_stt_typing _ _ _ = admit ()
+let return_stt_noeq_typing _ _ _ = admit ()
 
 // let var_as_bvar_term (v:var) = R.(pack_ln (Tv_BVar (RT.var_as_bv v)))
 

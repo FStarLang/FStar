@@ -35,8 +35,17 @@ let mk_eq2 (u:universe)
            (e0 e1:term) 
   : term
   = Tm_PureApp
+         (Tm_PureApp (Tm_PureApp (Tm_UInst R.eq2_qn [u]) (Some Implicit) t)
+                     None e0) None e1
+
+let mk_eq2_prop (u:universe)
+           (t:term)
+           (e0 e1:term) 
+  : term
+  = Tm_PureApp
          (Tm_PureApp (Tm_PureApp (Tm_UInst (mk_steel_wrapper_lid "eq2_prop") [u]) (Some Implicit) t)
                      None e0) None e1
+
 
 let mk_vprop_eq (e0 e1:term) : term =
   mk_eq2 (U_succ (U_succ U_zero)) Tm_VProp e0 e1
@@ -46,7 +55,7 @@ let return_comp (c:ctag) (use_eq:bool) (u:universe) (t:term) (e:term) (post:term
 
   let post_maybe_eq =
     if use_eq
-    then Tm_Star post (Tm_Pure (mk_eq2 u t (null_bvar 0) e))
+    then Tm_Star post (Tm_Pure (mk_eq2_prop u t (null_bvar 0) e))
     else post in
 
   C_ST { u;
