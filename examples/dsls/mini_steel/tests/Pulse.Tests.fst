@@ -106,9 +106,9 @@ let warmup (x:int) = assert (x + 1 > x)
                pts_to r1 full_perm n2 `star` pts_to r2 full_perm n1))
     (
       let x = read_pure r1 in
+      elim_pure ();
       let y = read_pure r2 in
-      elim_pure (eq2_prop (reveal n1) x);
-      elim_pure (eq2_prop (reveal n2) y);
+      elim_pure ();
       write r1 y;
       write r2 x
     )
@@ -122,8 +122,8 @@ let warmup (x:int) = assert (x + 1 > x)
     (
       let x = read_atomic r1 in
       let y = read_atomic r2 in
-      elim_pure (eq2_prop (reveal n1) x);
-      elim_pure (eq2_prop (reveal n2) y);
+      elim_pure () #(eq2_prop (reveal n1) x);
+      elim_pure () #(eq2_prop (reveal n2) y);
       write_atomic r1 y;
       write_atomic r2 x
     )
@@ -159,7 +159,7 @@ let warmup (x:int) = assert (x + 1 > x)
     (
       let n = elim_exists _ in
       let reveal_n = stt_ghost_reveal u32 n in
-      elim_pure (eq2_prop (reveal n) reveal_n);
+      elim_pure ();
       intro_exists (fun n -> pts_to r full_perm n) reveal_n
     )
 )))
@@ -191,12 +191,12 @@ let warmup (x:int) = assert (x + 1 > x)
     (
       let n = elim_exists _ in
       let x = read_pure r in
-      elim_pure (eq2_prop (reveal n) x);
+      elim_pure ();
       let b = return_stt #bool (x <> 10ul) in
-      elim_pure (eq2_prop b (x <> 10ul));
+      elim_pure ();
       let _ =
         let reveal_n = stt_ghost_reveal u32 n in
-        elim_pure (eq2_prop (reveal n) reveal_n);
+        elim_pure ();
         intro_pure (iff_prop (b2t b) (reveal_n =!= 10ul)) ();
         intro_exists (fun n -> pts_to r full_perm n `star` pure (iff_prop (b2t b) (n =!= 10ul))) reveal_n;
         intro_exists (fun b -> exists_ (fun n -> pts_to r full_perm n `star` pure (iff_prop (b2t b) (n =!= 10ul)))) b in
@@ -207,15 +207,15 @@ let warmup (x:int) = assert (x + 1 > x)
         (
           let b = elim_exists _ in
           let n = elim_exists _ in
-          elim_pure (iff_prop (b2t (reveal b)) (reveal n =!= 10ul));
+          elim_pure ();
           let x = read_pure r in
-          elim_pure (eq2_prop (reveal n) x);
+          elim_pure ();
           let b_res = return_stt #bool (x <> 10ul) in
-          elim_pure (eq2_prop b_res (x <> 10ul));
+          elim_pure ();
 
           let _ =
             let reveal_n = stt_ghost_reveal u32 n in
-            elim_pure (eq2_prop (reveal n) reveal_n);
+            elim_pure ();
             intro_pure (iff_prop (b2t b_res) (reveal_n =!= 10ul)) ();
             intro_exists (fun n -> pts_to r full_perm n `star` pure (iff_prop (b2t b_res) (n =!= 10ul))) reveal_n in
           
