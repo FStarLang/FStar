@@ -215,8 +215,8 @@ let rec readback_ty (t:R.term)
         let pulse_t : (t':Pulse.Syntax.term{elab_term t' == t}) =
           if inspect_fv fv = exists_lid
           then begin
-            assume (elab_term (Tm_ExistsSL u ty p) == t);
-            Tm_ExistsSL u ty p
+            assume (elab_term (Tm_ExistsSL u ty p should_elim_true) == t);
+            Tm_ExistsSL u ty p should_elim_true
           end
           else begin
             assume (elab_term (Tm_ForallSL u ty p) == t);

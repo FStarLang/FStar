@@ -244,6 +244,11 @@ val write_atomic (r:R.ref UInt32.t) (x:UInt32.t) (#n:erased UInt32.t)
         (R.pts_to r full_perm n) 
         (fun _ -> R.pts_to r full_perm (hide x))
 
+val elim_pure_explicit (p:prop)
+  : stt_ghost (squash p) emp_inames
+              (pure p)
+              (fun _ -> emp)
+
 val elim_pure (_:unit) (#p:prop)
   : stt_ghost (squash p) emp_inames
               (pure p)

@@ -14,12 +14,19 @@ val vprop_as_list (vp:term)
 
 val list_as_vprop (vps:list term) : term
 
+noeq
+type framing_failure = {
+  unmatched_preconditions : list term;
+  remaining_context : list term;
+}
+
 val check_vprop_equiv
   (f:RT.fstar_top_env)
   (g:env)
   (vp1 vp2:term)
   (vp1_typing:tot_typing f g vp1 Tm_VProp)
   : T.Tac (vprop_equiv f g vp1 vp2)
+
 
 val try_frame_pre (#f:RT.fstar_top_env)
                   (#g:env)
@@ -28,8 +35,9 @@ val try_frame_pre (#f:RT.fstar_top_env)
                   (pre_typing: tot_typing f g pre Tm_VProp)
                   (#c:comp_st)
                   (t_typing: st_typing f g t c)
-  : T.Tac (c':comp_st { comp_pre c' == pre } &
-           st_typing f g t c')
+  : T.Tac (either (c':comp_st { comp_pre c' == pre } &
+                   st_typing f g t c')
+                  framing_failure)
 
 val frame_empty (#f:RT.fstar_top_env)
                 (#g:env)

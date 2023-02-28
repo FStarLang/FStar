@@ -330,7 +330,7 @@ let comp_elim_exists (u:universe) (t:term) (p:term) (x:var)
               {
                 u=u;
                 res=mk_erased u t;
-                pre=Tm_ExistsSL u t p;
+                pre=Tm_ExistsSL u t p should_elim_true;
                 post=elim_exists_post u t p x
               }
 
@@ -341,7 +341,7 @@ let comp_intro_exists (u:universe) (t:term) (p:term) (e:term)
                 u=U_zero;
                 res=tm_unit;
                 pre=open_term' p e 0;
-                post=Tm_ExistsSL u t p
+                post=Tm_ExistsSL u t p should_elim_false
               }
 
 let comp_while_cond (inv:term)
@@ -349,7 +349,7 @@ let comp_while_cond (inv:term)
   = C_ST {
            u=U_zero;
            res=tm_bool;
-           pre=Tm_ExistsSL U_zero tm_bool inv;
+           pre=Tm_ExistsSL U_zero tm_bool inv should_elim_false;
            post=inv
          }
 
@@ -359,7 +359,7 @@ let comp_while_body (inv:term)
            u=U_zero;
            res=tm_unit;
            pre=open_term' inv tm_true 0;
-           post=Tm_ExistsSL U_zero tm_bool inv
+           post=Tm_ExistsSL U_zero tm_bool inv should_elim_true
          }
 
 let comp_while (inv:term)
@@ -367,7 +367,7 @@ let comp_while (inv:term)
   = C_ST {
            u=U_zero;
            res=tm_unit;
-           pre=Tm_ExistsSL U_zero tm_bool inv;
+           pre=Tm_ExistsSL U_zero tm_bool inv should_elim_true;
            post=open_term' inv tm_false 0
          }
 
@@ -625,8 +625,8 @@ and st_typing (f:RT.fstar_top_env) : env -> st_term -> comp -> Type =
       p:term ->
       x:var { None? (lookup g x) } ->
       tot_typing f g t (Tm_Type u) ->
-      tot_typing f g (Tm_ExistsSL u t p) Tm_VProp ->
-      st_typing f g (Tm_ElimExists (Tm_ExistsSL u t p))
+      tot_typing f g (Tm_ExistsSL u t p should_elim_false) Tm_VProp ->
+      st_typing f g (Tm_ElimExists (Tm_ExistsSL u t p should_elim_false))
                     (comp_elim_exists u t p x)
 
   | T_IntroExists:
@@ -636,9 +636,9 @@ and st_typing (f:RT.fstar_top_env) : env -> st_term -> comp -> Type =
       p:term ->
       e:term ->
       tot_typing f g t (Tm_Type u) ->
-      tot_typing f g (Tm_ExistsSL u t p) Tm_VProp ->
+      tot_typing f g (Tm_ExistsSL u t p should_elim_false) Tm_VProp ->
       tot_typing f g e t ->
-      st_typing f g (Tm_IntroExists e (Tm_ExistsSL u t p))
+      st_typing f g (Tm_IntroExists e (Tm_ExistsSL u t p should_elim_false))
                     (comp_intro_exists u t p e)
 
   | T_While:
@@ -646,7 +646,7 @@ and st_typing (f:RT.fstar_top_env) : env -> st_term -> comp -> Type =
       inv:term ->
       cond:st_term ->
       body:st_term ->
-      tot_typing f g (Tm_ExistsSL U_zero tm_bool inv) Tm_VProp ->
+      tot_typing f g (Tm_ExistsSL U_zero tm_bool inv should_elim_false) Tm_VProp ->
       st_typing f g cond (comp_while_cond inv) ->
       st_typing f g body (comp_while_body inv) ->
       st_typing f g (Tm_While inv cond body) (comp_while inv)

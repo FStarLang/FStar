@@ -68,7 +68,7 @@ let rec term_to_string (t:term)
       sprintf "(%s * %s)" (term_to_string p1)
                           (term_to_string p2)
                           
-    | Tm_ExistsSL u t body ->
+    | Tm_ExistsSL u t body _ ->
       sprintf "(exists<%s> (_:%s). %s)"
               (universe_to_string 0 u)
               (term_to_string t)
@@ -203,3 +203,6 @@ let rec st_term_to_string (t:st_term)
         (match post with
          | None -> ""
          | Some post -> sprintf " %s" (term_to_string post))
+
+    | Tm_Protect t ->
+      st_term_to_string t

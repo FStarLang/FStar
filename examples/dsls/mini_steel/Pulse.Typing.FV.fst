@@ -46,7 +46,7 @@ let rec freevars_close_term' (e:term) (x:var) (i:index)
       freevars_close_term' e1 x i;
       freevars_close_term' e2 x (i + 1)
 
-    | Tm_ExistsSL _ t b
+    | Tm_ExistsSL _ t b _
     | Tm_ForallSL _ t b ->
       freevars_close_term' t x i;    
       freevars_close_term' b x (i + 1)
@@ -133,6 +133,9 @@ let rec freevars_close_st_term' (t:st_term) (x:var) (i:index)
       freevars_close_term' t x i;
       freevars_close_term_opt' post x (i + 1)
 
+    | Tm_Protect t ->
+      freevars_close_st_term' t x i
+      
 let freevars_close_term (e:term) (x:var) (i:index)
   : Lemma 
     (ensures freevars (close_term' e x i) `Set.equal`
@@ -372,10 +375,10 @@ let rec st_typing_freevars (#f:_) (#g:_) (#t:_) (#c:_)
         freevars Tm_EmpInames `Set.union`
         (freevars tm_unit `Set.union`
         (freevars (open_term' p w 0) `Set.union`
-         freevars (Tm_ExistsSL u tt p)));
+         freevars (Tm_ExistsSL u tt p should_elim_true)));
       (Set.equal) {} 
         (freevars (open_term' p w 0) `Set.union`
-         freevars (Tm_ExistsSL u tt p));
+         freevars (Tm_ExistsSL u tt p should_elim_true));
       (Set.subset) { freevars_open_term p w 0 }
         (freevars p `Set.union` 
          freevars w `Set.union`

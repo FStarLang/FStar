@@ -69,7 +69,11 @@ let list_as_vprop_ctx f g (vp0 vp1 vp2:list term)
   (d:vprop_equiv f g (list_as_vprop vp0) (list_as_vprop vp1))
   : GTot (vprop_equiv f g (list_as_vprop (vp0 @ vp2)) (list_as_vprop (vp1 @ vp2)))
 
-  = admit ()
+  = let split_app = list_as_vprop_append _ _ vp0 vp2 in
+    let ctxt = VE_Ctxt _ _ _ _ _ d (VE_Refl _ (list_as_vprop vp2)) in
+    let split_app2 = VE_Sym _ _ _ (list_as_vprop_append _ _ vp1 vp2) in
+    VE_Trans _ _ _ _ split_app (VE_Trans _ _ _ _ ctxt split_app2)
+  
 
 let list_as_vprop_singleton f g
   (p q:term)
@@ -218,42 +222,74 @@ let vprop_equiv_swap_equiv (f:_) (g:_) (l0 l2:list term)
 //     let Some (| l, q, d, r |) = maybe_split_one_vprop f g p qs in
 //     vprop_equiv_swap_equiv f g l r p q d
 
+let framing_success f g req ctxt =
+  (frame:list term &
+   vprop_equiv f g (list_as_vprop (req @ frame)) (list_as_vprop ctxt))
+   
+let try_frame_result f g req ctxt = either (framing_success f g req ctxt) framing_failure
+
+
+let mk_framing_failure #f #g #req #req' #ctxt #ctxt'
+                       (unmatched_pre:term)
+                       (res:try_frame_result f g req ctxt)
+  : try_frame_result f g req' ctxt'
+  = match res with
+    | Inr failure -> 
+      Inr { failure with
+            unmatched_preconditions=
+              unmatched_pre::failure.unmatched_preconditions
+          }
+    | Inl (| frame, _ |) ->  
+      Inr { unmatched_preconditions = [unmatched_pre];
+            remaining_context = frame }
+            
 let rec try_split_vprop f g (req:list term) (ctxt:list term)
-  : T.Tac (option (frame:list term &
-                   vprop_equiv f g (list_as_vprop (req @ frame)) (list_as_vprop ctxt)))
+  : T.Tac 
+    (either (frame:list term &
+             vprop_equiv f g (list_as_vprop (req @ frame)) (list_as_vprop ctxt))
+            framing_failure)
   = match req with
-    | [] -> Some (| ctxt, VE_Refl g _ |)
+    | [] -> Inl (| ctxt, VE_Refl g _ |)
     | hd::tl ->
       match maybe_split_one_vprop f g hd ctxt with
-      | None -> None
+      | None -> mk_framing_failure hd (try_split_vprop f g tl ctxt)
+
       | Some (| l, q, d, r |) -> 
-        let d1 : vprop_equiv f g (list_as_vprop ctxt) (list_as_vprop (hd :: (l@r))) =
-          vprop_equiv_swap_equiv f g l r hd q d in
+        let d1
+          : vprop_equiv f g (list_as_vprop ctxt)
+                            (list_as_vprop (hd :: (l@r)))
+          = vprop_equiv_swap_equiv f g l r hd q d
+        in
         match try_split_vprop f g tl (l @ r) with
-        | None -> None
-        | Some (| frame, d |) ->
-          let d : vprop_equiv f g (list_as_vprop (tl @ frame)) (list_as_vprop (l @ r)) = d in
-          let dd : vprop_equiv f g (list_as_vprop (req @ frame)) (list_as_vprop (hd :: (l @ r))) = 
-              VE_Ctxt _ _ _ _ _ (VE_Refl _ hd) d
+        | Inr failure -> Inr failure
+        | Inl (| frame, d |) ->
+          let d
+            : vprop_equiv f g (list_as_vprop (tl @ frame))
+                              (list_as_vprop (l @ r))
+            = d
+          in
+          let dd
+            : vprop_equiv f g (list_as_vprop (req @ frame))
+                              (list_as_vprop (hd :: (l @ r)))
+            = VE_Ctxt _ _ _ _ _ (VE_Refl _ hd) d
           in
           let ddd = VE_Trans _ _ _ _ dd (VE_Sym _ _ _ d1) in
-          Some (| frame, ddd |)
+          Inl (| frame, ddd |)
                        
 let split_vprop (f:RT.fstar_top_env)
                 (g:env)
                 (ctxt:term)
                 (ctxt_typing: tot_typing f g ctxt Tm_VProp)
                 (req:term)
-   : T.Tac (frame:term &
-            tot_typing f g frame Tm_VProp &
-            vprop_equiv f g (Tm_Star req frame) ctxt)
+   : T.Tac (either (frame:term &
+                    tot_typing f g frame Tm_VProp &
+                    vprop_equiv f g (Tm_Star req frame) ctxt)
+                   framing_failure)
    = let ctxt_l = vprop_as_list ctxt in
      let req_l = vprop_as_list req in
      match try_split_vprop f g req_l ctxt_l with
-     | None -> T.fail (Printf.sprintf "Could not find frame: \n\tcontext = %s\n\trequires = %s\n"
-                                            (String.concat " ** " (T.map P.term_to_string ctxt_l))
-                                            (String.concat " ** " (T.map P.term_to_string req_l)))
-     | Some (| frame, veq |) ->
+     | Inr failure -> Inr failure 
+     | Inl (| frame, veq |) ->
        let d1 
          : vprop_equiv _ _ (Tm_Star (canon_vprop req) (list_as_vprop frame))
                            (list_as_vprop (req_l @ frame))
@@ -277,7 +313,7 @@ let split_vprop (f:RT.fstar_top_env)
          let star_typing = bk ctxt_typing in
          snd (star_typing_inversion _ _ _ _ star_typing)
        in
-       (| list_as_vprop frame, typing, d |)
+       Inl (| list_as_vprop frame, typing, d |)
 
 let rec check_equiv_emp (f:RT.fstar_top_env) (g:env) (vp:term)
   : option (vprop_equiv f g vp Tm_Emp)
@@ -303,25 +339,33 @@ let check_vprop_equiv
 
   : T.Tac (vprop_equiv f g vp1 vp2) =
 
-  let (| frame, _, d |) = split_vprop f g vp1 vp1_typing vp2 in
-  match check_equiv_emp f g frame with
-  | Some d_frame_equiv_emp ->
-    let d : vprop_equiv f g (Tm_Star vp2 frame) vp1 = d in
-    let d : vprop_equiv f g vp1 (Tm_Star vp2 frame) =
-      VE_Sym _ _ _ d in
-    let d' : vprop_equiv f g (Tm_Star vp2 frame) (Tm_Star vp2 Tm_Emp) =
-      VE_Ctxt _ _ _ _ _ (VE_Refl _ vp2) d_frame_equiv_emp in
-    let d : vprop_equiv f g vp1 (Tm_Star vp2 Tm_Emp) =
-      VE_Trans _ _ _ _ d d' in
-    let d' : vprop_equiv f g (Tm_Star vp2 Tm_Emp) (Tm_Star Tm_Emp vp2) = VE_Comm _ _ _ in
-    let d  : vprop_equiv f g vp1 (Tm_Star Tm_Emp vp2) = VE_Trans _ _ _ _ d d' in
-    let d' : vprop_equiv f g (Tm_Star Tm_Emp vp2) vp2 = VE_Unit _ _ in
-    VE_Trans _ _ _ _ d d'
-  | None ->
-    T.fail (Printf.sprintf "check_vprop_equiv: %s and %s are not equivalent, frame: %s\n"
-                 (P.term_to_string vp1)
-                 (P.term_to_string vp2)
-                 (P.term_to_string frame))
+  match split_vprop f g vp1 vp1_typing vp2 with
+  | Inr failure ->
+    T.fail (Printf.sprintf
+              "check_vprop_equiv: %s and %s are not equivalent; missing preconditions:\n%s\n"
+                (P.term_to_string vp1)
+                (P.term_to_string vp2)
+                (String.concat "\n" (T.map P.term_to_string failure.unmatched_preconditions)))
+                
+  | Inl (| frame, _, d |) ->
+    match check_equiv_emp f g frame with
+    | Some d_frame_equiv_emp ->
+      let d : vprop_equiv f g (Tm_Star vp2 frame) vp1 = d in
+      let d : vprop_equiv f g vp1 (Tm_Star vp2 frame) =
+        VE_Sym _ _ _ d in
+      let d' : vprop_equiv f g (Tm_Star vp2 frame) (Tm_Star vp2 Tm_Emp) =
+        VE_Ctxt _ _ _ _ _ (VE_Refl _ vp2) d_frame_equiv_emp in
+      let d : vprop_equiv f g vp1 (Tm_Star vp2 Tm_Emp) =
+        VE_Trans _ _ _ _ d d' in
+      let d' : vprop_equiv f g (Tm_Star vp2 Tm_Emp) (Tm_Star Tm_Emp vp2) = VE_Comm _ _ _ in
+      let d  : vprop_equiv f g vp1 (Tm_Star Tm_Emp vp2) = VE_Trans _ _ _ _ d d' in
+      let d' : vprop_equiv f g (Tm_Star Tm_Emp vp2) vp2 = VE_Unit _ _ in
+      VE_Trans _ _ _ _ d d'
+    | None ->
+      T.fail (Printf.sprintf "check_vprop_equiv: %s and %s are not equivalent, frame: %s\n"
+                             (P.term_to_string vp1)
+                             (P.term_to_string vp2)
+                             (P.term_to_string frame))
 #pop-options
 
 let freevars_comp_post (c:comp { stateful_comp c })
@@ -337,43 +381,46 @@ let try_frame_pre (#f:RT.fstar_top_env)
                   (pre_typing: tot_typing f g pre Tm_VProp)
                   (#c:comp { stateful_comp c })
                   (t_typing: st_typing f g t c)
-  : T.Tac (c':comp_st { comp_pre c' == pre } &
-           st_typing f g t c')
+  : T.Tac (either (c':comp_st { comp_pre c' == pre } &
+                   st_typing f g t c')
+                  framing_failure)
   = let s = st_comp_of_comp c in
-    let (| frame, frame_typing, ve |) = split_vprop f g pre pre_typing s.pre in
-    let t_typing
-      : st_typing f g t (add_frame c frame)
-      = T_Frame g t c frame frame_typing t_typing in
-    let x = fresh g in
-    let c' = add_frame c frame in
-    assert (None? (lookup g x));
-    FV.st_typing_freevars_inv t_typing x;
-    assert (~ (x `Set.mem` freevars_comp c'));
-    freevars_comp_post c';
-    assert (~ (x `Set.mem` freevars (comp_post c')));
-    let s' = st_comp_of_comp c' in
-    let ve: vprop_equiv f g s'.pre pre = ve in
-    let s'' = { s' with pre = pre } in
-    let c'' = c' `with_st_comp` s'' in
-    assert (comp_post c' == comp_post c'');
-    let g' = ((x, Inl (comp_res c'))::g) in
-    let ve: vprop_equiv f g (comp_pre c') (comp_pre c'') = ve in    
-    let ve' 
-      : vprop_equiv f g'
-                      (open_term (comp_post c') x)
-                      (open_term (comp_post c'') x)
-      = VE_Refl _ _
-    in
-    let pre_typing = check_vprop_no_inst f g (comp_pre c') in
-    let post_typing = check_vprop_no_inst f g' (open_term (comp_post c') x) in
-    let (| u, res_typing |) = check_universe f g (comp_res c') in
-    if u <> comp_u c' 
-    then T.fail "Unexpected universe"
-    else (
-      let st_equiv = ST_VPropEquiv g c' c'' x pre_typing res_typing post_typing ve ve' in
-      let t_typing = T_Equiv _ _ _ _ t_typing st_equiv in
-      (| c'', t_typing |)
-    )
+    match split_vprop f g pre pre_typing s.pre with
+    | Inr failure -> Inr failure
+    | Inl (| frame, frame_typing, ve |) ->
+      let t_typing
+        : st_typing f g t (add_frame c frame)
+        = T_Frame g t c frame frame_typing t_typing in
+      let x = fresh g in
+      let c' = add_frame c frame in
+      assert (None? (lookup g x));
+      FV.st_typing_freevars_inv t_typing x;
+      assert (~ (x `Set.mem` freevars_comp c'));
+      freevars_comp_post c';
+      assert (~ (x `Set.mem` freevars (comp_post c')));
+      let s' = st_comp_of_comp c' in
+      let ve: vprop_equiv f g s'.pre pre = ve in
+      let s'' = { s' with pre = pre } in
+      let c'' = c' `with_st_comp` s'' in
+      assert (comp_post c' == comp_post c'');
+      let g' = ((x, Inl (comp_res c'))::g) in
+      let ve: vprop_equiv f g (comp_pre c') (comp_pre c'') = ve in    
+      let ve' 
+        : vprop_equiv f g'
+                        (open_term (comp_post c') x)
+                        (open_term (comp_post c'') x)
+        = VE_Refl _ _
+      in
+      let pre_typing = check_vprop_no_inst f g (comp_pre c') in
+      let post_typing = check_vprop_no_inst f g' (open_term (comp_post c') x) in
+      let (| u, res_typing |) = check_universe f g (comp_res c') in
+      if u <> comp_u c' 
+      then T.fail "Unexpected universe"
+      else (
+        let st_equiv = ST_VPropEquiv g c' c'' x pre_typing res_typing post_typing ve ve' in
+        let t_typing = T_Equiv _ _ _ _ t_typing st_equiv in
+        Inl (| c'', t_typing |)
+      )
 
 let frame_empty (#f:RT.fstar_top_env)
                 (#g:env)

@@ -14,6 +14,24 @@ open Pulse.Checker.Bind
 module P = Pulse.Syntax.Printer
 module RTB = FStar.Tactics.Builtins
 module FV = Pulse.Typing.FV
+let terms_to_string (t:list term)
+  : T.Tac string 
+  = String.concat "\n" (T.map Pulse.Syntax.Printer.term_to_string t)
+
+exception Framing_failure of framing_failure
+
+let try_frame_pre (#f:RT.fstar_top_env)
+                  (#g:env)
+                  (#t:st_term)
+                  (#pre:term)
+                  (pre_typing: tot_typing f g pre Tm_VProp)
+                  (#c:comp_st)
+                  (t_typing: st_typing f g t c)
+  : T.Tac (c':comp_st { comp_pre c' == pre } &
+           st_typing f g t c')
+  = match Pulse.Checker.Framing.try_frame_pre pre_typing t_typing with
+    | Inl ok -> ok
+    | Inr fail -> T.raise (Framing_failure fail)
 
 #push-options "--z3rlimit_factor 2"
 let replace_equiv_post
@@ -117,6 +135,8 @@ let check_abs
     | _ -> T.fail "bad hint"
 
 let has_pure_vprops (pre:term) = L.existsb Tm_Pure? (vprop_as_list pre)
+let elim_pure_explicit_lid = mk_steel_wrapper_lid "elim_pure_explicit"
+
 
 let maybe_add_elim_pure (pre:term) (t:st_term) : T.Tac (bool & st_term) =
   let pure_props =
@@ -130,7 +150,9 @@ let maybe_add_elim_pure (pre:term) (t:st_term) : T.Tac (bool & st_term) =
   else
     true,
     L.fold_left (fun t (p:term) ->
-      let elim_pure_tm = Tm_STApp (Tm_FVar (mk_steel_wrapper_lid "elim_pure")) None p in
+      let elim_pure_tm = Tm_STApp (Tm_FVar elim_pure_explicit_lid)
+                                  None
+                                  p in
       Tm_Bind elim_pure_tm t) t pure_props
 
 #push-options "--z3rlimit_factor 20"
@@ -321,19 +343,19 @@ let check_elim_exists
       | Tm_Unknown -> (
         //There should be exactly one exists_ vprop in the context and we eliminate it      
         let ts = vprop_as_list pre in
-        let exist_tms = List.Tot.Base.filter (function | Tm_ExistsSL _ _ _ -> true | _ -> false) ts in
+        let exist_tms = List.Tot.Base.filter (function | Tm_ExistsSL _ _ _ _ -> true | _ -> false) ts in
         match exist_tms with
         | [one] -> one //shouldn't need to check this again
         | _ -> 
           T.fail 
             (Printf.sprintf "Could not decide which exists term to eliminate: choices are\n%s"
-               (String.concat "\n" (T.map Pulse.Syntax.Printer.term_to_string exist_tms)))
+               (terms_to_string exist_tms))
         )
       | _ -> t
   in
   let (| t, t_typing |) = check_vprop f g t in
   match t with
-  | Tm_ExistsSL u ty p ->
+  | Tm_ExistsSL u ty p _ ->
     // Could this come from inversion of t_typing?
     let (| u', ty_typing |) = check_universe f g ty in
     if u = u'
@@ -357,7 +379,7 @@ let check_intro_exists
   let Tm_IntroExists t e = t in
   let (| t, t_typing |) = check_vprop f g t in
   match t with
-  | Tm_ExistsSL u ty p ->
+  | Tm_ExistsSL u ty p _ ->
     // Could this come from inversion of t_typing?
     let (| u', ty_typing |) = check_universe f g ty in
     if u = u'
@@ -382,9 +404,9 @@ let check_while
 
   let Tm_While inv cond body = t in
   let (| inv, inv_typing |) =
-    check_vprop f g (Tm_ExistsSL U_zero tm_bool inv) in
+    check_vprop f g (Tm_ExistsSL U_zero tm_bool inv should_elim_true) in
   match inv with
-  | Tm_ExistsSL U_zero (Tm_FVar ["Prims"; "bool"]) inv ->
+  | Tm_ExistsSL U_zero (Tm_FVar ["Prims"; "bool"]) inv _ ->
     // Should get from inv_typing
     let cond_pre_typing =
       check_vprop_no_inst f g (comp_pre (comp_while_cond inv)) in
@@ -396,7 +418,7 @@ let check_while
       let body_pre_typing =
         check_vprop_no_inst f g (comp_pre (comp_while_body inv)) in
       let (| body, body_comp, body_typing |) =
-        check' allow_inst f g body (comp_pre (comp_while_body inv))
+          check' allow_inst f g body (comp_pre (comp_while_body inv))
           body_pre_typing (Some (comp_post (comp_while_body inv))) in
       if eq_comp body_comp (comp_while_body inv)
       then let d = T_While g inv cond body inv_typing cond_typing   body_typing in
@@ -518,7 +540,59 @@ let check_return
   let d = T_Return g c use_eq u ty t post x uty (E d) post_typing in
   repack (try_frame_pre pre_typing d) post_hint true
 
-#push-options "--print_implicits --print_universes --print_full_names"
+  
+let handle_framing_failure
+    (f:RT.fstar_top_env)
+    (g:env)
+    (t:st_term)
+    (pre:term)
+    (pre_typing: tot_typing f g pre Tm_VProp)
+    (post_hint:option term)
+    (failure:framing_failure)
+    (check:check_t)
+  : T.Tac (t:st_term &
+           c:comp{stateful_comp c ==> comp_pre c == pre} &
+           st_typing f g t c)
+  = let add_intro_pure p t =
+      let intro_pure_tm =
+        Tm_STApp
+          (Tm_PureApp 
+            (Tm_FVar (mk_steel_wrapper_lid "intro_pure"))
+            None
+            p)
+          None
+          (Tm_Constant Unit)
+      in
+      Tm_Bind intro_pure_tm t
+    in
+    T.print (Printf.sprintf
+                     "Handling framing failure in term:\n%s\n\
+                      with unmatched_pre={\n%s\n} and context={\n%s\n}"
+                     (P.st_term_to_string t)
+                     (terms_to_string failure.unmatched_preconditions)
+                     (terms_to_string failure.remaining_context));
+    let pures, rest = 
+      L.partition (function Tm_Pure _ -> true | _ -> false) failure.unmatched_preconditions
+    in
+    let t =
+      T.fold_left 
+        (fun t p ->
+          match p with
+          | Tm_Pure p -> add_intro_pure p t
+          | _ -> T.fail "Impossible")
+        (Tm_Protect t) //don't elim what we just intro'd here
+        pures
+    in
+    T.print 
+      (Printf.sprintf
+        "Retrying with %s"
+        (P.st_term_to_string t));
+    match rest with
+    | [] ->  check f g t pre pre_typing post_hint
+    | _ -> T.fail (Printf.sprintf 
+                      "Failed to satisfy the following preconditions:\n%s\n"
+                       (terms_to_string rest))
+
 let rec check' : bool -> check_t =
   fun (allow_inst:bool)
     (f:RT.fstar_top_env)
@@ -527,56 +601,63 @@ let rec check' : bool -> check_t =
     (pre:term)
     (pre_typing: tot_typing f g pre Tm_VProp)
     (post_hint:option term) ->
-
+  let open T in
   //
   // Should revisit this heuristic to add elim_pure
   //   whenever there is a pure vprop in the context
-  // This doesn't work well when we have intro_pure in the program
   //
-  // let t =
-  //   if has_pure_vprops pre &&
-  //      (match t with
-  //       | Tm_STApp (Tm_FVar l) _ _ -> l <> elim_pure_lid
-  //       | _ -> true)
-  //   then snd (maybe_add_elim_pure pre t)
-  //   else t in
-         // repack (try_frame_pre pre_typing d) post_hint true
+  let t =
+    match t with
+    | Tm_Protect t -> t
+    | _ ->
+      if has_pure_vprops pre &&
+        (match t with
+          | Tm_STApp (Tm_FVar l) _ _ -> l <> elim_pure_explicit_lid
+          | _ -> true)
+      then snd (maybe_add_elim_pure pre t)
+      else t
+  in
+  try 
+    match t with
+    | Tm_Protect _ -> T.fail "Protect should have been removed"
+    
+    | Tm_Return _ _ (Tm_BVar _) -> T.fail "not locally nameless"
+    | Tm_Return _ _ _ ->
+      check_return allow_inst f g t pre pre_typing post_hint
+  
+    | Tm_Abs _ _ _ _ _ ->
+      check_abs f g t pre pre_typing post_hint (check' true)
 
-  match t with
-  | Tm_Return _ _ (Tm_BVar _) -> T.fail "not locally nameless"
-  | Tm_Return _ _ _ ->
-    check_return allow_inst f g t pre pre_typing post_hint
+    | Tm_STApp _ _ _ ->
+      check_stapp allow_inst f g t pre pre_typing post_hint check'
 
-  | Tm_Abs _ _ _ _ _ ->
-    check_abs f g t pre pre_typing post_hint (check' true)
-
-  | Tm_STApp _ _ _ ->
-    check_stapp allow_inst f g t pre pre_typing post_hint check'
-
-  | Tm_Bind _ _ ->
-    check_bind f g t pre pre_typing post_hint (check' true)
+    | Tm_Bind _ _ ->
+      check_bind f g t pre pre_typing post_hint (check' true)
 
 
-  | Tm_If b e1 e2 post_if ->
-    let post =
-      match post_if, post_hint with
-      | None, Some p -> p
-      | Some p, None -> p
-      | _, _ -> T.fail "Either two annotations for if post or none"
-    in
-    check_if f g b e1 e2 pre pre_typing post (check' true)
+    | Tm_If b e1 e2 post_if ->
+      let post =
+        match post_if, post_hint with
+        | None, Some p -> p
+        | Some p, None -> p
+        | _, _ -> T.fail "Either two annotations for if post or none"
+      in
+      check_if f g b e1 e2 pre pre_typing post (check' true)
 
-  | Tm_ElimExists _ ->
-    check_elim_exists f g t pre pre_typing post_hint
+    | Tm_ElimExists _ ->
+      check_elim_exists f g t pre pre_typing post_hint
 
-  | Tm_IntroExists _ _ ->
-    check_intro_exists f g t pre pre_typing post_hint
+    | Tm_IntroExists _ _ ->
+      check_intro_exists f g t pre pre_typing post_hint
 
-  | Tm_While _ _ _ ->
-    check_while allow_inst f g t pre pre_typing post_hint check'
+    | Tm_While _ _ _ ->
+      check_while allow_inst f g t pre pre_typing post_hint check'
 
-  | Tm_Admit _ _ _ _ ->
-    check_admit f g t pre pre_typing post_hint
-#pop-options
+    | Tm_Admit _ _ _ _ ->
+      check_admit f g t pre pre_typing post_hint
+  with
+  | Framing_failure failure ->
+    handle_framing_failure f g t pre pre_typing post_hint failure (check' true)
+  | e -> T.raise e
 
 let check = check' true

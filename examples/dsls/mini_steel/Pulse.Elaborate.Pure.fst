@@ -259,7 +259,7 @@ let rec elab_term (top:term)
       let head = pack_ln (Tv_FVar (pack_fv star_lid)) in      
       R.mk_app head [(l, Q_Explicit); (r, Q_Explicit)]
       
-    | Tm_ExistsSL u t body
+    | Tm_ExistsSL u t body _
     | Tm_ForallSL u t body ->
       let u = elab_universe u in
       let t = elab_term t in

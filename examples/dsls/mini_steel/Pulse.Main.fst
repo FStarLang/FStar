@@ -92,7 +92,7 @@ and readback_exists_sl_body (g:R.env) (t:R.term)
       let u = U_unknown in
       let t = readback_maybe_unknown_ty bvv.bv_sort in
       let? body = readback_ty g body in
-      Inl (Tm_ExistsSL u t body)
+      Inl (Tm_ExistsSL u t body should_elim_true)
     | _ -> Inr "in readback exists: the arg not a lambda"
   
 and readback_ty (g:R.env) (t:R.term)
@@ -184,9 +184,10 @@ let rec shift_bvs_in_else (t:term) (n:nat) : Tac term =
   | Tm_Star l r ->
     Tm_Star (shift_bvs_in_else l n)
             (shift_bvs_in_else r n)
-  | Tm_ExistsSL u t body ->
+  | Tm_ExistsSL u t body se ->
     Tm_ExistsSL u (shift_bvs_in_else t n)
                   (shift_bvs_in_else body (n + 1))
+                  se
   | Tm_ForallSL u t body ->
     Tm_ForallSL u (shift_bvs_in_else t n)
                   (shift_bvs_in_else body (n + 1))
@@ -234,6 +235,8 @@ let rec shift_bvs_in_else_st (t:st_term) (n:nat) : Tac st_term =
                   | None -> None
                   | Some post -> Some (shift_bvs_in_else post (n + 1)))
 
+  | Tm_Protect t ->
+    Tm_Protect (shift_bvs_in_else_st t n)
 
 let try_seq (fs: list (R.term -> T.Tac (err 'b))) (x:R.term)
   : T.Tac (err 'b)
