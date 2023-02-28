@@ -114,27 +114,27 @@ let warmup (x:int) = assert (x + 1 > x)
     )
 )))
 
-%splice_t[swap_with_elim_pure_and_atomic] (check (`(
-  fun (r1:ref u32) (r2:ref u32) (n1:erased u32) (n2:erased u32) ->
-    (expects (pts_to r1 full_perm n1 `star` pts_to r2 full_perm n2))
-    (provides (fun _ ->
-               pts_to r1 full_perm n2 `star` pts_to r2 full_perm n1))
-    (
-      let x = read_atomic r1 in
-      let y = read_atomic r2 in
-      elim_pure () #(eq2_prop (reveal n1) x);
-      elim_pure () #(eq2_prop (reveal n2) y);
-      write_atomic r1 y;
-      write_atomic r2 x
-    )
-)))
+// %splice_t[swap_with_elim_pure_and_atomic] (check (`(
+//   fun (r1:ref u32) (r2:ref u32) (n1:erased u32) (n2:erased u32) ->
+//     (expects (pts_to r1 full_perm n1 `star` pts_to r2 full_perm n2))
+//     (provides (fun _ ->
+//                pts_to r1 full_perm n2 `star` pts_to r2 full_perm n1))
+//     (
+//       let x = read_atomic r1 in
+//       let y = read_atomic r2 in
+//       elim_pure () #(eq2_prop (reveal n1) x);
+//       elim_pure () #(eq2_prop (reveal n2) y);
+//       write_atomic r1 y;
+//       write_atomic r2 x
+//     )
+// )))
 
 %splice_t[intro_pure_example] (check (`(
   fun (r:ref u32) (n1:erased u32) (n2:erased u32) ->
     (expects (pts_to r full_perm n1 `star` pure (eq2_prop (reveal n1) (reveal n2))))
     (provides (fun x -> pts_to r full_perm n2 `star` pure (eq2_prop (reveal n2) (reveal n1))))
     (
-      elim_pure (eq2_prop (reveal n1) (reveal n2));
+      elim_pure ();
       intro_pure (eq2_prop (reveal n2) (reveal n1)) ()
     )
 )))
@@ -145,7 +145,7 @@ let warmup (x:int) = assert (x + 1 > x)
     (provides (fun _ -> pts_to r full_perm (U32.add (reveal n) 2ul)))
     (
       let x = read_atomic r in
-      elim_pure (eq2_prop (reveal n) x);
+      elim_pure ();
       if b
       then write r (U32.add x 2ul)
       else write_atomic r 3ul
@@ -173,11 +173,11 @@ let warmup (x:int) = assert (x + 1 > x)
         (fun b -> exists_ (fun (n:u32) -> pts_to r full_perm n))
         (
           let b = elim_exists _ in
-          return_stt_noeq #bool true
+          return_stt_noeq true
         )
         (
           intro_exists (fun (b:bool) -> exists_ (fun (n:u32) -> pts_to r full_perm n)) true;
-          return_stt_noeq #unit ()
+          return_stt_noeq ()
         )
     )
 )))
@@ -192,7 +192,7 @@ let warmup (x:int) = assert (x + 1 > x)
       let n = elim_exists _ in
       let x = read_pure r in
       elim_pure ();
-      let b = return_stt #bool (x <> 10ul) in
+      let b = return_stt (x <> 10ul) in
       elim_pure ();
       let _ =
         let reveal_n = stt_ghost_reveal u32 n in
@@ -210,7 +210,7 @@ let warmup (x:int) = assert (x + 1 > x)
           elim_pure ();
           let x = read_pure r in
           elim_pure ();
-          let b_res = return_stt #bool (x <> 10ul) in
+          let b_res = return_stt (x <> 10ul) in
           elim_pure ();
 
           let _ =

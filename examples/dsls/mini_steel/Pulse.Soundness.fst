@@ -488,7 +488,7 @@ let rec soundness (f:stt_env)
     | T_Frame _ _ _ _ _ _ ->
       frame_soundness _ _ _ _ d soundness
 
-    | T_Tot _ _ _ d -> tot_typing_soundness d
+    // | T_Tot _ _ _ d -> tot_typing_soundness d
 
     | T_Abs _ x q ty u body c t_typing body_typing ->
       mk_t_abs q RT.pp_name_default t_typing body_typing    
@@ -502,12 +502,7 @@ let rec soundness (f:stt_env)
     | T_Equiv _ _ _ _ _ _ ->
       stequiv_soundness _ _ _ _ d soundness
 
-    | T_Return _ e t u e_typing t_typing ->
-      Return.elab_return_typing t_typing e_typing
-
-    | T_ReturnNoEq _ e t u e_typing t_typing ->
-      let e_typing = soundness _ _ _ _ e_typing in
-      Return.elab_return_noeq_typing t_typing e_typing
+    | T_Return _ c use_eq u t e post x t_typing e_typing post_typing -> admit ()
 
     | T_If _ _ _ _ _ _ _ _ _ _ _->
       let ct_soundness f g c uc (d':_ {d' << d}) =

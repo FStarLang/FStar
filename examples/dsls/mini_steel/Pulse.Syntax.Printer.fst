@@ -142,8 +142,14 @@ let term_opt_to_string (t:option term)
 let rec st_term_to_string (t:st_term)
   : T.Tac string
   = match t with
-    | Tm_Return t ->
-      term_to_string t
+    | Tm_Return c use_eq t ->
+      sprintf "return_%s%s %s"
+        (match c with
+         | STT -> "stt"
+         | STT_Atomic -> "stt_atomic"
+         | STT_Ghost -> "stt_ghost")
+        (if use_eq then "" else "_noeq")
+        (term_to_string t)
       
     | Tm_STApp head q arg ->
       sprintf "(%s%s %s%s)"

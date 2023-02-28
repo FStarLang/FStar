@@ -94,7 +94,7 @@ let rec freevars_close_st_term' (t:st_term) (x:var) (i:index)
              (freevars_st t `set_minus` x)))
     (decreases t)
   = match t with
-    | Tm_Return t ->
+    | Tm_Return _ _ t ->
       freevars_close_term' t x i
 
     | Tm_STApp l _ r ->
@@ -294,8 +294,8 @@ let rec st_typing_freevars (#f:_) (#g:_) (#t:_) (#c:_)
     (decreases d)
 
  = match d with
-   | T_Tot _g e t dt ->
-      tot_typing_freevars dt
+   // | T_Tot _g e t dt ->
+   //    tot_typing_freevars dt
       
    | T_Abs _g  x _q ty _u body cres dt db ->
       tot_typing_freevars dt;
@@ -308,13 +308,15 @@ let rec st_typing_freevars (#f:_) (#g:_) (#t:_) (#c:_)
      tot_typing_freevars at;
      freevars_open_comp res arg 0
 
-
-   | T_Return _ _ _ _ tt _ ->
-     tot_typing_freevars tt
-     
-   | T_ReturnNoEq _ _ _ _ tt _ ->
-     st_typing_freevars tt
-
+   | T_Return _ c use_eq u t e post x t_typing e_typing post_typing ->
+     tot_typing_freevars t_typing;
+     tot_typing_freevars e_typing;
+     tot_typing_freevars post_typing;
+     freevars_open_term post (term_of_var x) 0;
+     let post =
+       if use_eq then Tm_Star post (Tm_Pure (mk_eq2 u t (null_bvar 0) e))
+       else post in
+     freevars_open_term post e 0
 
    | T_Lift _ _ _ _ d1 l ->
      st_typing_freevars d1

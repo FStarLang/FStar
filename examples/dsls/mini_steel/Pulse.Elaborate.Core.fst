@@ -8,17 +8,60 @@ open Pulse.Syntax
 open Pulse.Elaborate.Pure
 open Pulse.Typing
 
-let return_lid = mk_steel_wrapper_lid "return_stt"
-let return_noeq_lid = mk_steel_wrapper_lid "return_stt_noeq"
-let mk_return (u:R.universe) (ty:R.term) (t:R.term) 
-  : R.term
-  = let head = R.pack_ln (R.Tv_UInst (R.pack_fv return_lid) [u]) in
-    R.mk_app head [(ty, R.Q_Implicit); (t, R.Q_Explicit)]
+let return_stt_lid = mk_steel_wrapper_lid "return_stt"
+let return_stt_noeq_lid = mk_steel_wrapper_lid "return_stt_noeq"
+let return_stt_atomic_lid = mk_steel_wrapper_lid "return_stt_atomic"
+let return_stt_atomic_noeq_lid = mk_steel_wrapper_lid "return_stt_atomic_noeq"
+let return_stt_ghost_lid = mk_steel_wrapper_lid "return_stt_ghost"
+let return_stt_ghost_noeq_lid = mk_steel_wrapper_lid "return_stt_ghost_noeq"
 
-let mk_return_noeq (u:R.universe) (ty:R.term) (t:R.term) 
-  : R.term
-  = let head = R.pack_ln (R.Tv_UInst (R.pack_fv return_noeq_lid) [u]) in
-    R.mk_app head [(ty, R.Q_Implicit); (t, R.Q_Explicit)]
+let mk_stt_return (u:R.universe) (ty:R.term) (t:R.term) (post:R.term)
+  : R.term =
+  
+  let t = R.pack_ln (R.Tv_UInst (R.pack_fv return_stt_lid) [u]) in
+  let t = R.pack_ln (R.Tv_App t (ty, R.Q_Implicit)) in
+  let t = R.pack_ln (R.Tv_App t (t, R.Q_Explicit)) in
+  R.pack_ln (R.Tv_App t (post, R.Q_Explicit))
+
+let mk_stt_return_noeq (u:R.universe) (ty:R.term) (t:R.term) (post:R.term)
+  : R.term =
+  
+  let t = R.pack_ln (R.Tv_UInst (R.pack_fv return_stt_noeq_lid) [u]) in
+  let t = R.pack_ln (R.Tv_App t (ty, R.Q_Implicit)) in
+  let t = R.pack_ln (R.Tv_App t (t, R.Q_Explicit)) in
+  R.pack_ln (R.Tv_App t (post, R.Q_Explicit))
+
+let mk_stt_atomic_return (u:R.universe) (ty:R.term) (t:R.term) (post:R.term)
+  : R.term =
+  
+  let t = R.pack_ln (R.Tv_UInst (R.pack_fv return_stt_atomic_lid) [u]) in
+  let t = R.pack_ln (R.Tv_App t (ty, R.Q_Implicit)) in
+  let t = R.pack_ln (R.Tv_App t (t, R.Q_Explicit)) in
+  R.pack_ln (R.Tv_App t (post, R.Q_Explicit))
+
+let mk_stt_atomic_return_noeq (u:R.universe) (ty:R.term) (t:R.term) (post:R.term)
+  : R.term =
+  
+  let t = R.pack_ln (R.Tv_UInst (R.pack_fv return_stt_atomic_noeq_lid) [u]) in
+  let t = R.pack_ln (R.Tv_App t (ty, R.Q_Implicit)) in
+  let t = R.pack_ln (R.Tv_App t (t, R.Q_Explicit)) in
+  R.pack_ln (R.Tv_App t (post, R.Q_Explicit))
+
+let mk_stt_ghost_return (u:R.universe) (ty:R.term) (t:R.term) (post:R.term)
+  : R.term =
+  
+  let t = R.pack_ln (R.Tv_UInst (R.pack_fv return_stt_ghost_lid) [u]) in
+  let t = R.pack_ln (R.Tv_App t (ty, R.Q_Implicit)) in
+  let t = R.pack_ln (R.Tv_App t (t, R.Q_Explicit)) in
+  R.pack_ln (R.Tv_App t (post, R.Q_Explicit))
+
+let mk_stt_ghost_return_noeq (u:R.universe) (ty:R.term) (t:R.term) (post:R.term)
+  : R.term =
+  
+  let t = R.pack_ln (R.Tv_UInst (R.pack_fv return_stt_ghost_noeq_lid) [u]) in
+  let t = R.pack_ln (R.Tv_App t (ty, R.Q_Implicit)) in
+  let t = R.pack_ln (R.Tv_App t (t, R.Q_Explicit)) in
+  R.pack_ln (R.Tv_App t (post, R.Q_Explicit))
 
 // Wrapper.lift_stt_atomic<u> #a #pre #post e
 let mk_lift_atomic_stt (u:R.universe) (a pre post e:R.term)  =
@@ -334,7 +377,7 @@ let rec elab_st_typing (#f:RT.fstar_top_env)
                        (d:st_typing f g t c)
   : Tot R.term (decreases d)
   = match d with
-    | T_Tot _ t _ _ -> elab_term t
+    // | T_Tot _ t _ _ -> elab_term t
 
     | T_Abs _ x qual ty_pulse _u body _c ty_typing body_typing ->
       let ty = elab_term ty_pulse in
@@ -347,11 +390,19 @@ let rec elab_st_typing (#f:RT.fstar_top_env)
       let arg = elab_term arg in
       R.mk_app head [(arg, elab_qual qual)]
 
-    | T_Return _ e ty u _ _ ->
-      mk_return (elab_universe u) (elab_term ty) (elab_term e)
-
-    | T_ReturnNoEq _ _ ty u t_typing _ ->
-      mk_return_noeq (elab_universe u) (elab_term ty) (elab_st_typing t_typing)
+    | T_Return _ c use_eq u ty t post _ _ _ _ ->
+      let ru = elab_universe u in
+      let rty = elab_term ty in
+      let rt = elab_term t in
+      let rp = elab_term post in
+      let rp = mk_abs rty R.Q_Explicit rp in
+      (match c, use_eq with
+       | STT, true -> mk_stt_return ru rty rt rp
+       | STT, false -> mk_stt_return_noeq ru rty rt rp
+       | STT_Atomic, true -> mk_stt_atomic_return ru rty rt rp
+       | STT_Atomic, false -> mk_stt_atomic_return_noeq ru rty rt rp
+       | STT_Ghost, true -> mk_stt_ghost_return ru rty rt rp
+       | STT_Ghost, false -> mk_stt_ghost_return_noeq ru rty rt rp)
 
     | T_Bind _ e1 e2 c1 c2 x c e1_typing t_typing e2_typing bc ->
       let e1 = elab_st_typing e1_typing in
