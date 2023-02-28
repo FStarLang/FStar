@@ -221,9 +221,9 @@ let rec shift_bvs_in_else_st (t:st_term) (n:nat) : Tac st_term =
            | Some post -> Some (shift_bvs_in_else post (n + 1)))
   | Tm_ElimExists t ->
     Tm_ElimExists (shift_bvs_in_else t n)
-  | Tm_IntroExists t e ->
-    Tm_IntroExists (shift_bvs_in_else t n)
-                   (shift_bvs_in_else e n)
+  | Tm_IntroExists b t e ->
+    Tm_IntroExists b (shift_bvs_in_else t n)
+                     (shift_bvs_in_else e n)
   | Tm_While inv cond body ->
     Tm_While (shift_bvs_in_else inv (n + 1))
              (shift_bvs_in_else_st cond n)
@@ -283,7 +283,7 @@ let translate_intro_exists (g:RT.fstar_top_env) (t:R.term)
            | [(exists_body, _); (witness, _)] ->
              let? ex = readback_exists_sl_body g exists_body in
              let? w = readback_ty g witness in
-             Inl (Tm_IntroExists ex w)
+             Inl (Tm_IntroExists false ex w)
            | _ -> Inr "INTRO_EXISTS: Wrong number of arguments to intro_exists"
       else Inr "INTRO_EXISTS: Not an intro_exists"
     | _ -> Inr "INTRO_EXISTS: Not an application"
@@ -412,7 +412,7 @@ and translate_st_term (g:RT.fstar_top_env) (t:R.term)
       let? body = translate_st_term g body in 
       begin
       match def with
-      | Tm_IntroExists _ _ -> 
+      | Tm_IntroExists _ _ _ -> 
         Inl (Tm_Protect (Tm_Bind (Tm_Protect def) (Tm_Protect body)))
       | _ ->
         Inl (Tm_Bind def body)

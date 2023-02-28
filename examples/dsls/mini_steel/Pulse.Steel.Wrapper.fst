@@ -215,7 +215,9 @@ let intro_pure p _ = fun _ -> intro_pure p
 
 let elim_exists #a p = fun _ -> elim_exists ()
 
-let intro_exists #a p e = fun _ -> intro_exists (reveal e) p
+let intro_exists #a p e = fun _ -> intro_exists e p
+
+let intro_exists_erased #a p e = intro_exists p (reveal e)
 
 let while_loop inv cond body = fun _ -> while_loop inv cond body
 
@@ -224,3 +226,21 @@ let stt_ghost_reveal a x = fun _ -> noop (); reveal x
 let stt_admit _ _ _ = admit ()
 let stt_atomic_admit _ _ _ = admit ()
 let stt_ghost_admit _ _ _ = admit ()
+
+let stt_ghost_ni (#a:Type) (#p:vprop) (#q:a -> vprop)
+  : non_informative_witness (stt_ghost a emp_inames p q)
+  = fun x -> reveal x
+
+let ghost_app (#a:Type) (#b:a -> Type) 
+              ($f: (x:a -> b x))
+              (y:erased a)
+              ($w:(x:erased a -> non_informative_witness (b (reveal x))))
+  : b (reveal y)
+  = w y (hide (f (reveal y)))
+
+
+let ghost_app2 (#a:Type) (#b:a -> Type) (#p:a -> vprop) (#q: (x:a -> b x -> vprop))
+              (f: (x:a -> stt_ghost (b x) emp_inames (p x) (q x)))
+              (y:erased a)
+  : stt_ghost (b (reveal y)) emp_inames (p (reveal y)) (q (reveal y))
+  = ghost_app f y (fun _ -> stt_ghost_ni)

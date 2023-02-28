@@ -114,7 +114,7 @@ type st_term =
   | Tm_Bind       : e1:st_term -> e2:st_term -> st_term
   | Tm_If         : b:term -> then_:st_term -> else_:st_term -> post:option vprop -> st_term
   | Tm_ElimExists : vprop -> st_term
-  | Tm_IntroExists: term -> vprop -> st_term
+  | Tm_IntroExists: erased:bool -> term -> vprop -> st_term
   | Tm_While      : term -> st_term -> st_term -> st_term  // inv, cond, body
 
   | Tm_Admit      : ctag -> universe -> term -> option term -> st_term  // u, a:type_u, optional post
@@ -185,7 +185,7 @@ let rec freevars_st (t:st_term)
                 (Set.union (freevars_st e2) (freevars_opt post))
     | Tm_ElimExists p ->
       freevars p
-    | Tm_IntroExists e p ->
+    | Tm_IntroExists _ e p ->
       Set.union (freevars e) (freevars p)
     | Tm_While inv cond body ->
       Set.union (freevars inv)
@@ -283,7 +283,7 @@ let rec ln_st' (t:st_term) (i:int)
       ln_opt' post (i + 1)
   
     | Tm_ElimExists p -> ln' p i
-    | Tm_IntroExists e p -> ln' e i && ln' p i
+    | Tm_IntroExists _ e p -> ln' e i && ln' p i
   
     | Tm_While inv cond body ->
       ln' inv (i + 1) &&
@@ -413,9 +413,9 @@ let rec open_st_term' (t:st_term) (v:term) (i:index)
     | Tm_ElimExists p ->
       Tm_ElimExists (open_term' p v i)
       
-    | Tm_IntroExists e p ->
-      Tm_IntroExists (open_term' e v i)
-                     (open_term' p v i)
+    | Tm_IntroExists b e p ->
+      Tm_IntroExists b (open_term' e v i)
+                       (open_term' p v i)
 
     | Tm_While inv cond body ->
       Tm_While (open_term' inv v (i + 1))
@@ -549,9 +549,9 @@ let rec close_st_term' (t:st_term) (v:var) (i:index)
     | Tm_ElimExists p ->
       Tm_ElimExists (close_term' p v i)
       
-    | Tm_IntroExists e p ->
-      Tm_IntroExists (close_term' e v i)
-                     (close_term' p v i)
+    | Tm_IntroExists b e p ->
+      Tm_IntroExists b (close_term' e v i)
+                       (close_term' p v i)
 
     | Tm_While inv cond body ->
       Tm_While (close_term' inv v (i + 1))
@@ -717,14 +717,14 @@ let rec close_open_inverse_st'  (t:st_term)
       close_open_inverse' l x i;
       close_open_inverse' r x i
     
-    | Tm_IntroExists l r ->
+    | Tm_IntroExists _ l r ->
       close_open_inverse' l x i;
       close_open_inverse' r x i    
     
     | Tm_ElimExists t ->
       close_open_inverse' t x i
       
-    | Tm_IntroExists t e ->
+    | Tm_IntroExists _ t e ->
       close_open_inverse' t x i;
       close_open_inverse' e x i
 
@@ -867,7 +867,8 @@ let rec eq_st_term (t1 t2:st_term)
       eq_st_term t1 t2 &&
       eq_st_term k1 k2
       
-    | Tm_IntroExists l1 r1, Tm_IntroExists l2 r2 ->
+    | Tm_IntroExists b1 l1 r1, Tm_IntroExists b2 l2 r2 ->
+      b1 = b2 &&
       eq_tm l1 l2 &&
       eq_tm r1 r2
 

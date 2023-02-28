@@ -171,12 +171,52 @@ let bind_soundness
            (tot_typing_soundness reveal_b_typing)
 #pop-options
 
+
+let intro_exists_erased_soundness
+  (#f:stt_env)
+  (#g:env)
+  (#t:st_term)
+  (#c:comp)
+  (d:st_typing f g t c{T_IntroExistsErased? d})
+  : GTot (RT.typing (extend_env_l f g)
+                    (elab_st_typing d)
+                    (elab_comp c)) =
+  let t0 = t in
+  let T_IntroExistsErased _ u t p e t_typing p_typing e_typing = d in
+  let ru = elab_universe u in
+  let rt = elab_term t in
+  let rp = elab_term p in
+  let re = elab_term e in
+  let rt_typing : RT.typing _ rt (R.pack_ln (R.Tv_Type ru)) =
+      tot_typing_soundness t_typing in
+
+  let rp_typing
+      : RT.typing _
+                  (mk_exists ru rt (mk_abs rt R.Q_Explicit rp)) vprop_tm =
+      tot_typing_soundness p_typing
+  in
+  let rp_typing
+      : RT.typing _
+                  (mk_abs rt R.Q_Explicit rp)
+                  (mk_arrow (rt, R.Q_Explicit) vprop_tm) =
+        Exists.exists_inversion rp_typing
+  in
+  let re_typing : RT.typing _ re _ =
+      tot_typing_soundness e_typing
+  in
+  let reveal_re = elab_term (mk_reveal u t e) in
+  RT.beta_reduction rt R.Q_Explicit rp reveal_re;    
+  elab_open_commute' p (mk_reveal u t e) 0;
+    assert (elab_term (open_term' p (mk_reveal u t e) 0) ==
+           R.pack_ln (R.Tv_App (mk_abs rt R.Q_Explicit rp) (reveal_re, R.Q_Explicit)));
+  Exists.intro_exists_erased_soundness rt_typing rp_typing re_typing      
+
 let intro_exists_soundness
   (#f:stt_env)
   (#g:env)
   (#t:st_term)
   (#c:comp)
-  (d:st_typing f g t c{T_IntroExists? d})
+  (d:st_typing f g t c{T_IntroExists? d })
   : GTot (RT.typing (extend_env_l f g)
                     (elab_st_typing d)
                     (elab_comp c)) =
@@ -187,30 +227,27 @@ let intro_exists_soundness
   let rt = elab_term t in
   let rp = elab_term p in
   let re = elab_term e in
-
   let rt_typing : RT.typing _ rt (R.pack_ln (R.Tv_Type ru)) =
-    tot_typing_soundness t_typing in
-
+      tot_typing_soundness t_typing in
   let rp_typing
-    : RT.typing _
-        (mk_exists ru rt (mk_abs rt R.Q_Explicit rp)) vprop_tm =
-    tot_typing_soundness p_typing in
+      : RT.typing _
+                  (mk_exists ru rt (mk_abs rt R.Q_Explicit rp)) vprop_tm =
+      tot_typing_soundness p_typing in
   let rp_typing
-    : RT.typing _
-        (mk_abs rt R.Q_Explicit rp)
-        (mk_arrow (rt, R.Q_Explicit) vprop_tm) =
-    Exists.exists_inversion rp_typing in
-
-  let re_typing : RT.typing _ re rt =
-    tot_typing_soundness e_typing in
-
+      : RT.typing _
+                  (mk_abs rt R.Q_Explicit rp)
+                  (mk_arrow (rt, R.Q_Explicit) vprop_tm) =
+        Exists.exists_inversion rp_typing
+  in
+  let re_typing : RT.typing _ re _ =
+      tot_typing_soundness e_typing
+  in
   RT.beta_reduction rt R.Q_Explicit rp re;
-
   elab_open_commute' p e 0;
   assert (elab_term (open_term' p e 0) ==
           R.pack_ln (R.Tv_App (mk_abs rt R.Q_Explicit rp) (re, R.Q_Explicit)));
-
   Exists.intro_exists_soundness rt_typing rp_typing re_typing
+
 
 #push-options "--z3rlimit_factor 4"
 let elim_exists_soundness
@@ -527,8 +564,12 @@ let rec soundness (f:stt_env)
 
     | T_ElimExists _ _ _ _ _ _ _ ->
       elim_exists_soundness d
+
     | T_IntroExists _ _ _ _ _ _ _ _ ->
       intro_exists_soundness d
+
+    | T_IntroExistsErased _ _ _ _ _ _ _ _ ->
+      intro_exists_erased_soundness d
 
     | T_While _ _ _ _ _ _ _ ->
       while_soundness d soundness

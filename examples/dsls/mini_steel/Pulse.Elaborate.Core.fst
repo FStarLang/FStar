@@ -441,6 +441,13 @@ let rec elab_st_typing (#f:RT.fstar_top_env)
       let re = elab_term e in
       mk_intro_exists ru rt (mk_abs rt R.Q_Explicit rp) re
 
+    | T_IntroExistsErased _ u t p e _ _ _ ->
+      let ru = elab_universe u in
+      let rt = elab_term t in
+      let rp = elab_term p in
+      let re = elab_term e in
+      mk_intro_exists_erased ru rt (mk_abs rt R.Q_Explicit rp) re
+
     | T_While _ inv _ _ _ cond_typing body_typing ->
       let inv = elab_term inv in
       let cond = elab_st_typing cond_typing in
