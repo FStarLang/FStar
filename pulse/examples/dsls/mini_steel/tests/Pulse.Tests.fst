@@ -106,24 +106,20 @@ let warmup (x:int) = assert (x + 1 > x)
                pts_to r1 full_perm n2 `star` pts_to r2 full_perm n1))
     (
       let x = read_pure r1 in
-      elim_pure ();
       let y = read_pure r2 in
-      elim_pure ();
       write r1 y;
       write r2 x
     )
 )))
 
 %splice_t[swap_with_elim_pure_and_atomic] (check (`(
-  fun (r1:ref u32) (r2:ref u32) (n1:erased u32) (n2:erased u32) ->
+  fun (r1:ref UInt32.t) (r2:ref UInt32.t) (n1:erased UInt32.t) (n2:erased UInt32.t) ->
     (expects (pts_to r1 full_perm n1 `star` pts_to r2 full_perm n2))
     (provides (fun _ ->
                pts_to r1 full_perm n2 `star` pts_to r2 full_perm n1))
     (
       let x = read_atomic r1 in
-      elim_pure ();
       let y = read_atomic r2 in
-      elim_pure ();
       write_atomic r1 y;
       write_atomic r2 x
     )
@@ -134,8 +130,7 @@ let warmup (x:int) = assert (x + 1 > x)
     (expects (pts_to r full_perm n1 `star` pure (eq2_prop (reveal n1) (reveal n2))))
     (provides (fun x -> pts_to r full_perm n2 `star` pure (eq2_prop (reveal n2) (reveal n1))))
     (
-      elim_pure ();
-      intro_pure (eq2_prop (reveal n2) (reveal n1)) ()
+       ()
     )
 )))
 
@@ -145,7 +140,6 @@ let warmup (x:int) = assert (x + 1 > x)
     (provides (fun _ -> pts_to r full_perm (U32.add (reveal n) 2ul)))
     (
       let x = read_atomic r in
-      elim_pure ();
       if b
       then write r (U32.add x 2ul)
       else write_atomic r 3ul
@@ -159,7 +153,6 @@ let warmup (x:int) = assert (x + 1 > x)
     (
       let n = elim_exists _ in
       let reveal_n = stt_ghost_reveal UInt32.t n in
-      elim_pure ();
       intro_exists (fun n -> pts_to r full_perm n) reveal_n
     )
 )))
@@ -191,13 +184,9 @@ let warmup (x:int) = assert (x + 1 > x)
     (
       let n = elim_exists _ in
       let x = read_pure r in
-      elim_pure ();
       let b = return_stt (x <> 10ul) in
-      elim_pure ();
       let _ =
         let reveal_n = stt_ghost_reveal UInt32.t n in
-        elim_pure ();
-        intro_pure (iff_prop (b2t b) (reveal_n =!= 10ul)) ();
         intro_exists (fun n -> pts_to r full_perm n `star` pure (iff_prop (b2t b) (n =!= 10ul))) reveal_n;
         intro_exists (fun b -> exists_ (fun n -> pts_to r full_perm n `star` pure (iff_prop (b2t b) (n =!= 10ul)))) b in
 
@@ -207,16 +196,11 @@ let warmup (x:int) = assert (x + 1 > x)
         (
           let b = elim_exists _ in
           let n = elim_exists _ in
-          elim_pure ();
           let x = read_pure r in
-          elim_pure ();
           let b_res = return_stt (x <> 10ul) in
-          elim_pure ();
 
           let _ =
             let reveal_n = stt_ghost_reveal UInt32.t n in
-            elim_pure ();
-            intro_pure (iff_prop (b2t b_res) (reveal_n =!= 10ul)) ();
             intro_exists (fun n -> pts_to r full_perm n `star` pure (iff_prop (b2t b_res) (n =!= 10ul))) reveal_n in
           
           return_stt_noeq b_res
@@ -224,30 +208,23 @@ let warmup (x:int) = assert (x + 1 > x)
 
         (
           let n = elim_exists _ in
-          elim_pure ();
           let x = read_pure r in
-          elim_pure ();
           if FStar.UInt32.lt x 10ul
           then begin
             write r (FStar.UInt32.add x 1ul);
             let b_res = return_stt (FStar.UInt32.add x 1ul <> 10ul) in
-            elim_pure ();
-            intro_pure (iff_prop (b2t b_res) (FStar.UInt32.add x 1ul =!= 10ul)) ();
             intro_exists (fun n -> pts_to r full_perm n `star` pure (iff_prop (b2t b_res) (n =!= 10ul))) (FStar.UInt32.add x 1ul);
             intro_exists (fun b -> exists_ (fun n -> pts_to r full_perm n `star` pure (iff_prop (b2t b) (n =!= 10ul)))) b_res
           end
           else begin
             write r (FStar.UInt32.sub x 1ul);
             let b_res = return_stt (FStar.UInt32.sub x 1ul <> 10ul) in
-            elim_pure ();
-            intro_pure (iff_prop (b2t b_res) (FStar.UInt32.sub x 1ul =!= 10ul)) ();
             intro_exists (fun n -> pts_to r full_perm n `star` pure (iff_prop (b2t b_res) (n =!= 10ul))) (FStar.UInt32.sub x 1ul);
             intro_exists (fun b -> exists_ (fun n -> pts_to r full_perm n `star` pure (iff_prop (b2t b) (n =!= 10ul)))) b_res
           end
         );
 
       let _ = elim_exists _ in
-      elim_pure ();  // doesn't work without this last return, error in core variable not found ...
       return_stt_noeq ()
     )
 )))

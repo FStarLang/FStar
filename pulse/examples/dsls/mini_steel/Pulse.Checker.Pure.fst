@@ -33,7 +33,14 @@ let rtb_universe_of f e =
   let res = RTB.universe_of f e in
   debug (fun _ -> "Returned");
   res
-  
+
+let rtb_check_subtyping f t1 t2 =
+  debug (fun _ -> Printf.sprintf "Calling check_subtyping on %s <: %s"
+                              (T.term_to_string t1)
+                              (T.term_to_string t2));                           
+  let res = RTB.check_subtyping f t1 t2 in
+  debug (fun _ -> "Returned");
+  res
   
 let catch_all (f:unit -> Tac (option 'a))
   : Tac (option 'a)
@@ -74,7 +81,7 @@ let tc_expected_meta_callback (f:R.env) (e:R.term) (t:R.term)
     | None -> None
     | Some (e, te) ->
       //we have typing_token f e te
-      match catch_all (fun _ -> RTB.check_subtyping f te t) with
+      match catch_all (fun _ -> rtb_check_subtyping f te t) with
       | None -> None
       | Some p -> //p:squash (subtyping_token f te t)
         Some (| e,
@@ -148,7 +155,9 @@ let check_tot_with_expected_typ (f:RT.fstar_top_env) (g:env) (e:term) (t:term)
     let re = elab_term e in
     let rt = elab_term t in
     match tc_expected_meta_callback fg re rt with
-    | None -> T.fail "check_tot_with_expected_typ: Not typeable"
+    | None -> T.fail (Printf.sprintf "check_tot_with_expected_typ: %s not typeable at %s" 
+                                    (Pulse.Syntax.Printer.term_to_string e)
+                                    (Pulse.Syntax.Printer.term_to_string t))
     | Some (| re, tok |) ->
         match readback_ty re with
         | Some e -> (| e, tok |)

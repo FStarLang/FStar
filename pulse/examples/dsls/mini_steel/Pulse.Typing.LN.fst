@@ -57,7 +57,7 @@ let rec open_term_ln' (e:term)
       open_term_ln' e1 x i;
       open_term_ln' e2 x (i + 1)
 
-    | Tm_ExistsSL _ t b
+    | Tm_ExistsSL _ t b _
     | Tm_ForallSL _ t b ->
       open_term_ln' t x i;    
       open_term_ln' b x (i + 1)
@@ -144,6 +144,9 @@ let rec open_st_term_ln' (e:st_term)
       open_term_ln' t x i;
       open_term_ln_opt' post x (i + 1)
 
+    | Tm_Protect t ->
+      open_st_term_ln' t x i
+      
 let open_term_ln (e:term) (v:var)
   : Lemma 
     (requires ln (open_term e v))
@@ -194,7 +197,7 @@ let rec ln_weakening (e:term) (i j:int)
       ln_weakening e1 i j;
       ln_weakening e2 (i + 1) (j + 1)
 
-    | Tm_ExistsSL _ t b
+    | Tm_ExistsSL _ t b _
     | Tm_ForallSL _ t b ->
       ln_weakening t i j;    
       ln_weakening b (i + 1) (j + 1)
@@ -278,7 +281,10 @@ let rec ln_weakening_st (t:st_term) (i j:int)
     | Tm_Admit _ _ t post ->
       ln_weakening t i j;
       ln_weakening_opt post (i + 1) (j + 1)
-
+      
+    | Tm_Protect t ->
+      ln_weakening_st t i j
+      
 let rec open_term_ln_inv' (e:term)
                           (x:term { ln x })
                           (i:index)
@@ -318,7 +324,7 @@ let rec open_term_ln_inv' (e:term)
       open_term_ln_inv' e1 x i;
       open_term_ln_inv' e2 x (i + 1)
 
-    | Tm_ExistsSL _ t b
+    | Tm_ExistsSL _ t b _
     | Tm_ForallSL _ t b ->
       open_term_ln_inv' t x i;    
       open_term_ln_inv' b x (i + 1)
@@ -408,6 +414,9 @@ let rec open_term_ln_inv_st' (t:st_term)
       open_term_ln_inv' t x i;
       open_term_ln_inv_opt' post x (i + 1)
 
+    | Tm_Protect t ->
+      open_term_ln_inv_st' t x i
+      
 let rec close_term_ln' (e:term)
                        (x:var)
                        (i:index)
@@ -446,7 +455,7 @@ let rec close_term_ln' (e:term)
       close_term_ln' e1 x i;
       close_term_ln' e2 x (i + 1)
 
-    | Tm_ExistsSL _ t b
+    | Tm_ExistsSL _ t b _
     | Tm_ForallSL _ t b ->
       close_term_ln' t x i;    
       close_term_ln' b x (i + 1)
@@ -532,6 +541,9 @@ let rec close_st_term_ln' (t:st_term) (x:var) (i:index)
       close_term_ln' t x i;
       close_term_ln_opt' post x (i + 1)
 
+    | Tm_Protect t ->
+      close_st_term_ln' t x i
+      
 let close_comp_ln (c:comp) (v:var)
   : Lemma 
     (requires ln_c c)

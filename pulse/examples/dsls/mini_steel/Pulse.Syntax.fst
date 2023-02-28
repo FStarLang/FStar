@@ -49,6 +49,10 @@ type nm = {
 type qualifier =
   | Implicit
 
+let should_elim_t = FStar.Sealed.Inhabited.sealed false
+let should_elim_true : should_elim_t = FStar.Sealed.Inhabited.seal true
+let should_elim_false : should_elim_t = FStar.Sealed.Inhabited.seal false
+
 [@@ no_auto_projectors]
 noeq
 type term =
@@ -63,7 +67,7 @@ type term =
   | Tm_Emp        : term
   | Tm_Pure       : p:term -> term
   | Tm_Star       : l:vprop -> r:vprop -> term
-  | Tm_ExistsSL   : u:universe -> t:term -> body:vprop -> term
+  | Tm_ExistsSL   : u:universe -> t:term -> body:vprop -> should_elim:should_elim_t -> term
   | Tm_ForallSL   : u:universe -> t:term -> body:vprop -> term
   | Tm_Arrow      : b:binder -> q:option qualifier -> body:comp -> term 
   | Tm_Type       : universe -> term
@@ -114,6 +118,7 @@ type st_term =
   | Tm_While      : term -> st_term -> st_term -> st_term  // inv, cond, body
 
   | Tm_Admit      : ctag -> universe -> term -> option term -> st_term  // u, a:type_u, optional post
+  | Tm_Protect    : st_term -> st_term //Wrap a term to indicate that no proof-automation heuristics should be applied 
 
 let rec freevars (t:term) 
   : Set.set var
@@ -134,7 +139,7 @@ let rec freevars (t:term)
       Set.union (freevars b.binder_ty) (freevars body)
     | Tm_PureApp t1 _ t2
     | Tm_Star  t1 t2
-    | Tm_ExistsSL _ t1 t2
+    | Tm_ExistsSL _ t1 t2 _
     | Tm_ForallSL _ t1 t2 ->
       Set.union (freevars t1) (freevars t2)
     | Tm_Let t e1 e2 ->
@@ -187,6 +192,7 @@ let rec freevars_st (t:st_term)
                 (Set.union (freevars_st cond) (freevars_st body))
     | Tm_Admit _ _ t post ->
       Set.union (freevars t) (freevars_opt post)
+    | Tm_Protect t -> freevars_st t
 
 let rec ln' (t:term) (i:int) =
   match t with
@@ -221,7 +227,7 @@ let rec ln' (t:term) (i:int) =
   | Tm_Pure p ->
     ln' p i
 
-  | Tm_ExistsSL _ t body
+  | Tm_ExistsSL _ t body _
   | Tm_ForallSL _ t body ->
     ln' t i &&
     ln' body (i + 1)
@@ -288,6 +294,9 @@ let rec ln_st' (t:st_term) (i:int)
       ln' t i &&
       ln_opt' post (i + 1)
 
+    | Tm_Protect t ->
+      ln_st' t i
+
 let ln (t:term) = ln' t (-1)
 let ln_st (t:st_term) = ln_st' t (-1)
 let ln_c (c:comp) = ln_c' c (-1)
@@ -333,9 +342,10 @@ let rec open_term' (t:term) (v:term) (i:index)
       Tm_Star (open_term' l v i)
               (open_term' r v i)
               
-    | Tm_ExistsSL u t body ->
+    | Tm_ExistsSL u t body se ->
       Tm_ExistsSL u (open_term' t v i)
                     (open_term' body v (i + 1))
+                    se
                   
     | Tm_ForallSL u t body ->
       Tm_ForallSL u (open_term' t v i)
@@ -416,6 +426,9 @@ let rec open_st_term' (t:st_term) (v:term) (i:index)
       Tm_Admit c u (open_term' t v i)
                    (open_term_opt' post v (i + 1))
 
+    | Tm_Protect t ->
+      Tm_Protect (open_st_term' t v i)
+
 let open_term t v =
     open_term' t (Tm_Var {nm_ppname=RT.pp_name_default;nm_index=v}) 0
 
@@ -464,9 +477,10 @@ let rec close_term' (t:term) (v:var) (i:index)
       Tm_Star (close_term' l v i)
               (close_term' r v i)
               
-    | Tm_ExistsSL u t body ->
+    | Tm_ExistsSL u t body se ->
       Tm_ExistsSL u (close_term' t v i)
                     (close_term' body v (i + 1))
+                    se
                   
     | Tm_ForallSL u t body ->
       Tm_ForallSL u (close_term' t v i)
@@ -548,6 +562,9 @@ let rec close_st_term' (t:st_term) (v:var) (i:index)
       Tm_Admit c u (close_term' t v i)
                    (close_term_opt' post v (i + 1))
 
+    | Tm_Protect t ->
+      Tm_Protect (close_st_term' t v i)
+      
 let close_term t v = close_term' t v 0
 let close_st_term t v = close_st_term' t v 0
 let close_comp t v = close_comp' t v 0
@@ -635,7 +652,7 @@ let rec close_open_inverse' (t:term)
       close_open_inverse' e1 x i;
       close_open_inverse' e2 x (i + 1)
 
-    | Tm_ExistsSL _ t b
+    | Tm_ExistsSL _ t b _
     | Tm_ForallSL _ t b ->
       close_open_inverse' t x i;    
       close_open_inverse' b x (i + 1)
@@ -726,6 +743,9 @@ let rec close_open_inverse_st'  (t:st_term)
       close_open_inverse' t x i;
       close_open_inverse_opt' post x (i + 1)
 
+    | Tm_Protect t ->
+      close_open_inverse_st' t x i
+      
 let close_open_inverse (t:term) (x:var { ~(x `Set.mem` freevars t) } )
   : Lemma (ensures close_term (open_term t x) x == t)
           (decreases t)
@@ -783,7 +803,7 @@ let rec eq_tm (t1 t2:term)
       eq_tm t1 t2 &&
       eq_tm e1 e2 &&
       eq_tm e1' e2'
-    | Tm_ExistsSL u1 t1 b1, Tm_ExistsSL u2 t2 b2
+    | Tm_ExistsSL u1 t1 b1 _, Tm_ExistsSL u2 t2 b2 _
     | Tm_ForallSL u1 t1 b1, Tm_ForallSL u2 t2 b2 ->
       u1=u2 &&
       eq_tm t1 t2 &&
@@ -871,4 +891,7 @@ let rec eq_st_term (t1 t2:st_term)
       eq_tm t1 t2 &&
       eq_tm_opt post1 post2
 
+    | Tm_Protect t1, Tm_Protect t2 ->
+      eq_st_term t1 t2
+      
     | _ -> false
