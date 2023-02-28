@@ -121,9 +121,9 @@ let warmup (x:int) = assert (x + 1 > x)
                pts_to r1 full_perm n2 `star` pts_to r2 full_perm n1))
     (
       let x = read_atomic r1 in
+      elim_pure ();
       let y = read_atomic r2 in
-      elim_pure () #(eq2_prop (reveal n1) x);
-      elim_pure () #(eq2_prop (reveal n2) y);
+      elim_pure ();
       write_atomic r1 y;
       write_atomic r2 x
     )
@@ -134,7 +134,7 @@ let warmup (x:int) = assert (x + 1 > x)
     (expects (pts_to r full_perm n1 `star` pure (eq2_prop (reveal n1) (reveal n2))))
     (provides (fun x -> pts_to r full_perm n2 `star` pure (eq2_prop (reveal n2) (reveal n1))))
     (
-      elim_pure (eq2_prop (reveal n1) (reveal n2));
+      elim_pure ();
       intro_pure (eq2_prop (reveal n2) (reveal n1)) ()
     )
 )))
@@ -145,7 +145,7 @@ let warmup (x:int) = assert (x + 1 > x)
     (provides (fun _ -> pts_to r full_perm (U32.add (reveal n) 2ul)))
     (
       let x = read_atomic r in
-      elim_pure (eq2_prop (reveal n) x);
+      elim_pure ();
       if b
       then write r (U32.add x 2ul)
       else write_atomic r 3ul
