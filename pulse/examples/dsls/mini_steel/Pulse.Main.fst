@@ -200,6 +200,19 @@ let rec shift_bvs_in_else (t:term) (n:nat) : Tac term =
   | Tm_UVar _
   | Tm_Unknown -> t
 
+let shift_bvs_in_else_opt (t:option term) (n:nat) : Tac (option term) =
+    match t with
+    | None -> None
+    | Some t -> Some (shift_bvs_in_else t n)
+
+let rec shift_bvs_in_else_list (t:list term) (n:nat) : Tac (list term) =
+    match t with
+    | [] -> []
+    | hd::tl ->
+      shift_bvs_in_else hd n ::
+      shift_bvs_in_else_list tl n
+
+
 let rec shift_bvs_in_else_st (t:st_term) (n:nat) : Tac st_term =
   match t with
   | Tm_Return c use_eq t -> Tm_Return c use_eq (shift_bvs_in_else t n)
@@ -216,14 +229,12 @@ let rec shift_bvs_in_else_st (t:st_term) (n:nat) : Tac st_term =
     Tm_If (shift_bvs_in_else b n)
           (shift_bvs_in_else_st e1 n)
           (shift_bvs_in_else_st e2 n)
-          (match post with
-           | None -> None
-           | Some post -> Some (shift_bvs_in_else post (n + 1)))
+          (shift_bvs_in_else_opt post (n + 1))
   | Tm_ElimExists t ->
     Tm_ElimExists (shift_bvs_in_else t n)
   | Tm_IntroExists b t e ->
     Tm_IntroExists b (shift_bvs_in_else t n)
-                     (shift_bvs_in_else e n)
+                     (shift_bvs_in_else_list e n)
   | Tm_While inv cond body ->
     Tm_While (shift_bvs_in_else inv (n + 1))
              (shift_bvs_in_else_st cond n)
@@ -291,7 +302,7 @@ let translate_intro_exists (g:RT.fstar_top_env) (t:R.term)
            | [(exists_body, _); (witness, _)] ->
              let? ex = readback_exists_sl_body g exists_body in
              let? w = readback_ty g witness in
-             Inl (Tm_IntroExists false ex w)
+             Inl (Tm_IntroExists false ex [w])
            | _ -> Inr "INTRO_EXISTS: Wrong number of arguments to intro_exists"
       else Inr "INTRO_EXISTS: Not an intro_exists"
     | _ -> Inr "INTRO_EXISTS: Not an application"

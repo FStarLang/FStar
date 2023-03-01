@@ -98,6 +98,18 @@ let open_term_ln_opt' (t:option term) (x:term) (i:index)
     | None -> ()
     | Some t -> open_term_ln' t x i
 
+
+let rec open_term_ln_list' (t:list term) (x:term) (i:index)
+  : Lemma
+    (requires ln_list' (open_term_list' t x i) (i - 1))
+    (ensures ln_list' t i)
+    (decreases t)
+  = match t with
+    | [] -> ()
+    | hd::tl ->
+      open_term_ln' hd x i;
+      open_term_ln_list' tl x i      
+
 let rec open_st_term_ln' (e:st_term)
                          (x:term)
                          (i:index)
@@ -131,9 +143,9 @@ let rec open_st_term_ln' (e:st_term)
       open_term_ln_opt' post x (i + 1)      
 
     | Tm_ElimExists t -> open_term_ln' t x i
-    | Tm_IntroExists _ t e ->
-      open_term_ln' t x i;
-      open_term_ln' e x i
+    | Tm_IntroExists _ p e ->
+      open_term_ln' p x i;
+      open_term_ln_list' e x i
 
     | Tm_While inv cond body ->
       open_term_ln' inv x (i + 1);
@@ -244,6 +256,18 @@ let ln_weakening_opt (t:option term) (i j:int)
     | None -> ()
     | Some t -> ln_weakening t i j
 
+
+let rec ln_weakening_list (t:list term) (i j:int)
+  : Lemma
+    (requires ln_list' t i /\ i <= j)
+    (ensures ln_list' t j)
+    (decreases t)
+  = match t with
+    | [] -> ()
+    | hd::tl ->
+      ln_weakening hd i j;
+      ln_weakening_list tl i j
+
 let rec ln_weakening_st (t:st_term) (i j:int)
   : Lemma
     (requires ln_st' t i /\ i <= j)
@@ -256,9 +280,9 @@ let rec ln_weakening_st (t:st_term) (i j:int)
     | Tm_ElimExists t ->
       ln_weakening t i j
       
-    | Tm_IntroExists _ t e ->
-      ln_weakening t i j;
-      ln_weakening e i j
+    | Tm_IntroExists _ p e ->
+      ln_weakening p i j;
+      ln_weakening_list e i j
 
     | Tm_While inv cond body ->
       ln_weakening inv (i + 1) (j + 1);
@@ -383,6 +407,19 @@ let open_term_ln_inv_opt' (t:option term)
     | None -> ()
     | Some t -> open_term_ln_inv' t x i
 
+let rec open_term_ln_inv_list' (t:list term)
+                               (x:term { ln x })
+                               (i:index)
+  : Lemma
+    (requires ln_list' t i)
+    (ensures ln_list' (open_term_list' t x i) (i - 1))
+    (decreases t)
+  = match t with
+    | [] -> ()
+    | hd::tl ->
+      open_term_ln_inv' hd x i;
+      open_term_ln_inv_list' tl x i      
+
 let rec open_term_ln_inv_st' (t:st_term)
                              (x:term { ln x })
                              (i:index)
@@ -397,9 +434,9 @@ let rec open_term_ln_inv_st' (t:st_term)
     | Tm_ElimExists t ->
       open_term_ln_inv' t x i
       
-    | Tm_IntroExists _ t e ->
-      open_term_ln_inv' t x i;
-      open_term_ln_inv' e x i
+    | Tm_IntroExists _ p e ->
+      open_term_ln_inv' p x i;
+      open_term_ln_inv_list' e x i
 
     | Tm_While inv cond body ->
       open_term_ln_inv' inv x (i + 1);
@@ -520,6 +557,18 @@ let close_term_ln_opt' (t:option term) (x:var) (i:index)
     | None -> ()
     | Some t -> close_term_ln' t x i
 
+
+let rec close_term_ln_list' (t:list term) (x:var) (i:index)
+  : Lemma
+    (requires ln_list' t (i - 1))
+    (ensures ln_list' (close_term_list' t x i) i)
+    (decreases t)
+  = match t with
+    | [] -> ()
+    | hd::tl ->
+      close_term_ln' hd x i;
+      close_term_ln_list' tl x i
+
 let rec close_st_term_ln' (t:st_term) (x:var) (i:index)
   : Lemma
     (requires ln_st' t (i - 1))
@@ -532,9 +581,9 @@ let rec close_st_term_ln' (t:st_term) (x:var) (i:index)
     | Tm_ElimExists t ->
       close_term_ln' t x i
       
-    | Tm_IntroExists _ t e ->
-      close_term_ln' t x i;
-      close_term_ln' e x i
+    | Tm_IntroExists _ p e ->
+      close_term_ln' p x i;
+      close_term_ln_list' e x i
 
     | Tm_While inv cond body ->
       close_term_ln' inv x (i + 1);

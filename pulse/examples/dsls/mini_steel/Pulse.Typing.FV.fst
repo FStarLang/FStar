@@ -88,6 +88,17 @@ let freevars_close_term_opt' (t:option term) (x:var) (i:index)
     | None -> ()
     | Some t -> freevars_close_term' t x i
 
+let rec freevars_close_term_list' (t:list term) (x:var) (i:index)
+  : Lemma
+    (ensures (freevars_list (close_term_list' t x i) `Set.equal`
+             (freevars_list t `set_minus` x)))
+    (decreases t)
+  = match t with
+    | [] -> ()
+    | hd::tl ->
+      freevars_close_term' hd x i;
+      freevars_close_term_list' tl x i
+
 let rec freevars_close_st_term' (t:st_term) (x:var) (i:index)
   : Lemma
     (ensures (freevars_st (close_st_term' t x i) `Set.equal`
@@ -120,9 +131,9 @@ let rec freevars_close_st_term' (t:st_term) (x:var) (i:index)
     | Tm_ElimExists t ->
       freevars_close_term' t x i
       
-    | Tm_IntroExists _ t e ->
-      freevars_close_term' t x i;
-      freevars_close_term' e x i
+    | Tm_IntroExists _ p e ->
+      freevars_close_term' p x i;
+      freevars_close_term_list' e x i
 
     | Tm_While inv cond body ->
       freevars_close_term' inv x (i + 1);
