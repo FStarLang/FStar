@@ -277,3 +277,16 @@ val stt_ghost_reveal (a:Type) (x:erased a)
 val stt_admit (a:Type) (p:vprop) (q:a -> vprop) : stt a p q
 val stt_atomic_admit (a:Type) (p:vprop) (q:a -> vprop) : stt_atomic a emp_inames p q
 val stt_ghost_admit (a:Type) (p:vprop) (q:a -> vprop) : stt_ghost a emp_inames p q
+
+val stt_par
+  (#aL:Type u#a)
+  (#aR:Type u#a)
+  (#preL:vprop)
+  (#postL:aL -> vprop) 
+  (#preR:vprop)
+  (#postR:aR -> vprop)
+  (f:stt aL preL postL)
+  (g:stt aR preR postR)
+  : stt (aL & aR)
+        (preL `star` preR)
+        (fun x -> postL (fst x) `star` postR (snd x))

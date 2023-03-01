@@ -116,6 +116,7 @@ type st_term =
   | Tm_ElimExists : vprop -> st_term
   | Tm_IntroExists: term -> vprop -> st_term
   | Tm_While      : term -> st_term -> st_term -> st_term  // inv, cond, body
+  | Tm_Par        : term -> st_term -> term -> term -> st_term -> term -> st_term  // (pre, e, post) for left and right computations
 
   | Tm_Admit      : ctag -> universe -> term -> option term -> st_term  // u, a:type_u, optional post
   | Tm_Protect    : st_term -> st_term //Wrap a term to indicate that no proof-automation heuristics should be applied 
@@ -190,6 +191,15 @@ let rec freevars_st (t:st_term)
     | Tm_While inv cond body ->
       Set.union (freevars inv)
                 (Set.union (freevars_st cond) (freevars_st body))
+    | Tm_Par preL eL postL preR eR postR ->
+      Set.union
+        (Set.union (freevars preL)
+                   (Set.union (freevars_st eL)
+                              (freevars postL)))
+        (Set.union (freevars preR)
+                   (Set.union (freevars_st eR)
+                              (freevars postR)))
+
     | Tm_Admit _ _ t post ->
       Set.union (freevars t) (freevars_opt post)
     | Tm_Protect t -> freevars_st t
@@ -289,6 +299,14 @@ let rec ln_st' (t:st_term) (i:int)
       ln' inv (i + 1) &&
       ln_st' cond i &&
       ln_st' body i
+
+    | Tm_Par preL eL postL preR eR postR ->
+       ln' preL i &&
+       ln_st' eL i &&
+       ln' postL (i + 1) &&
+       ln' preR i &&
+       ln_st' eR i &&
+       ln' postR (i + 1)
 
     | Tm_Admit _ _ t post ->
       ln' t i &&
@@ -421,6 +439,14 @@ let rec open_st_term' (t:st_term) (v:term) (i:index)
       Tm_While (open_term' inv v (i + 1))
                (open_st_term' cond v i)
                (open_st_term' body v i)
+
+    | Tm_Par preL eL postL preR eR postR ->
+      Tm_Par (open_term' preL v i)
+             (open_st_term' eL v i)
+             (open_term' postL v (i + 1))
+             (open_term' preR v i)
+             (open_st_term' eR v i)
+             (open_term' postR v (i + 1))
 
     | Tm_Admit c u t post ->
       Tm_Admit c u (open_term' t v i)
@@ -557,6 +583,14 @@ let rec close_st_term' (t:st_term) (v:var) (i:index)
       Tm_While (close_term' inv v (i + 1))
                (close_st_term' cond v i)
                (close_st_term' body v i)
+
+    | Tm_Par preL eL postL preR eR postR ->
+      Tm_Par (close_term' preL v i)
+             (close_st_term' eL v i)
+             (close_term' postL v (i + 1))
+             (close_term' preR v i)
+             (close_st_term' eR v i)
+             (close_term' postR v (i + 1))
 
     | Tm_Admit c u t post ->
       Tm_Admit c u (close_term' t v i)
@@ -739,6 +773,14 @@ let rec close_open_inverse_st'  (t:st_term)
       close_open_inverse_st' t2 x i;
       close_open_inverse_opt' post x (i + 1)
 
+    | Tm_Par preL eL postL preR eR postR ->
+      close_open_inverse' preL x i;
+      close_open_inverse_st' eL x i;
+      close_open_inverse' postL x (i + 1);
+      close_open_inverse' preR x i;
+      close_open_inverse_st' eR x i;
+      close_open_inverse' postR x (i + 1)
+
     | Tm_Admit _ _ t post ->
       close_open_inverse' t x i;
       close_open_inverse_opt' post x (i + 1)
@@ -884,6 +926,15 @@ let rec eq_st_term (t1 t2:st_term)
       eq_tm inv1 inv2 &&
       eq_st_term cond1 cond2 &&
       eq_st_term body1 body2
+
+    | Tm_Par preL1 eL1 postL1 preR1 eR1 postR1,
+      Tm_Par preL2 eL2 postL2 preR2 eR2 postR2 ->      
+      eq_tm preL1 preL2 &&
+      eq_st_term eL1 eL2 &&
+      eq_tm postL1 postL2 &&
+      eq_tm preR1 preR2 &&
+      eq_st_term eR1 eR2 &&
+      eq_tm postR1 postR2
 
     | Tm_Admit c1 u1 t1 post1, Tm_Admit c2 u2 t2 post2 ->
       c1 = c2 &&

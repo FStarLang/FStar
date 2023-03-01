@@ -655,6 +655,9 @@ let rec check' : bool -> check_t =
 
     | Tm_Admit _ _ _ _ ->
       check_admit f g t pre pre_typing post_hint
+
+    | Tm_Par _ _ _ _ _ _ ->
+      T.fail "par: checker not yet implemented"
   with
   | Framing_failure failure ->
     handle_framing_failure f g t pre pre_typing post_hint failure (check' true)
