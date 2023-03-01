@@ -19,7 +19,7 @@ open Pulse.Elaborate.Core
 
 val elab_open_commute' (e:term)
                        (v:term)
-                         (n:index)
+                       (n:index)
   : Lemma (ensures
               RT.open_or_close_term' (elab_term e) (RT.OpenWith (elab_term v)) n ==
               elab_term (open_term' e v n))
