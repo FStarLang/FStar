@@ -503,7 +503,37 @@ let return_soundess
                     (elab_comp c)) =
 
   let T_Return _ ctag use_eq u t e post x t_typing e_typing post_typing = d in
-  admit ()
+  let ru = elab_universe u in
+  let rt = elab_term t in
+  let re = elab_term e in
+  let rpost = elab_term post in
+  let rpost = mk_abs rt R.Q_Explicit rpost in
+  let rt_typing : RT.typing _ rt (R.pack_ln (R.Tv_Type ru)) =
+    tot_typing_soundness t_typing in
+  let re_typing : RT.typing _ re rt =
+    tot_typing_soundness e_typing in
+  let rpost_typing
+    : RT.typing _ rpost
+                  (mk_arrow (rt, R.Q_Explicit) vprop_tm) =
+    mk_t_abs_tot f g RT.pp_name_default t_typing post_typing in
+
+  elab_open_commute' post e 0;
+  RT.beta_reduction rt R.Q_Explicit (elab_term post) re;
+  RT.beta_reduction_bv0 rt R.Q_Explicit (elab_term post);
+  
+  match ctag, use_eq with
+  | STT, true ->
+    Return.return_stt_typing rt_typing re_typing rpost_typing
+  | STT, false -> 
+    Return.return_stt_noeq_typing rt_typing re_typing rpost_typing
+  | STT_Atomic, true ->
+    Return.return_stt_atomic_typing rt_typing re_typing rpost_typing
+  | STT_Atomic, false -> 
+    Return.return_stt_atomic_noeq_typing rt_typing re_typing rpost_typing
+  | STT_Ghost, true ->
+    Return.return_stt_ghost_typing rt_typing re_typing rpost_typing
+  | STT_Ghost, false -> 
+    Return.return_stt_ghost_noeq_typing rt_typing re_typing rpost_typing
 
 #push-options "--query_stats --fuel 2 --ifuel 2"
 let rec soundness (f:stt_env)

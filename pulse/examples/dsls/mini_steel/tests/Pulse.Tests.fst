@@ -16,6 +16,16 @@ let expects = ()
 let provides = ()
 let while = ()
 
+[@@ expect_failure]
+%splice_t[tuple_test] (check (`(
+  fun (r:ref (U32.t & U32.t)) (n1:erased U32.t) (n2:erased U32.t) ->
+           (expects (pts_to r full_perm (reveal n1, reveal n2)))
+    (provides (fun _ -> pts_to r full_perm (reveal n1, reveal n2)))
+    (
+      read #(U32.t & U32.t) r
+    )
+)))
+
 (* Start up the solver and feed it the initial context *)
 let warmup (x:int) = assert (x + 1 > x)
 
@@ -43,9 +53,9 @@ let warmup (x:int) = assert (x + 1 > x)
     (provides (fun x ->
        pts_to r p x))
     (
-       read r 
+       read #U32.t r
     )
-)))       
+)))
 
 //Bound variable escapes scope
 [@@ expect_failure]
@@ -55,7 +65,7 @@ let warmup (x:int) = assert (x + 1 > x)
     (expects (
        pts_to r full_perm n))
     (
-       let x = read r in
+       let x = read #U32.t r in
        write r x
     )
 )))
@@ -71,8 +81,8 @@ let warmup (x:int) = assert (x + 1 > x)
       pts_to r1 full_perm n2 `star` 
       pts_to r2 full_perm n1))
     (
-      let x = read r1 in
-      let y = read r2 in
+      let x = read #U32.t r1 in
+      let y = read #U32.t r2 in
       write r1 y;
       write r2 x
     )
@@ -105,8 +115,8 @@ let warmup (x:int) = assert (x + 1 > x)
     (provides (fun _ ->
                pts_to r1 full_perm n2 `star` pts_to r2 full_perm n1))
     (
-      let x = read_pure r1 in
-      let y = read_pure r2 in
+      let x = read_pure #U32.t r1 in
+      let y = read_pure #U32.t r2 in
       write r1 y;
       write r2 x
     )
@@ -196,7 +206,7 @@ let warmup (x:int) = assert (x + 1 > x)
     (provides (fun _ -> pts_to r full_perm 10ul))
     (
       let n = elim_exists _ in
-      let x = read_pure r in
+      let x = read_pure #U32.t r in
       let b = return_stt (x <> 10ul) in
       let _ =
         let reveal_n = stt_ghost_reveal UInt32.t n in
@@ -209,7 +219,7 @@ let warmup (x:int) = assert (x + 1 > x)
         (
           let b = elim_exists _ in
           let n = elim_exists _ in
-          let x = read_pure r in
+          let x = read_pure #U32.t r in
           let b_res = return_stt (x <> 10ul) in
 
           let _ =
@@ -221,7 +231,7 @@ let warmup (x:int) = assert (x + 1 > x)
 
         (
           let n = elim_exists _ in
-          let x = read_pure r in
+          let x = read_pure #U32.t r in
           if FStar.UInt32.lt x 10ul
           then begin
             write r (FStar.UInt32.add x 1ul);

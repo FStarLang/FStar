@@ -26,7 +26,7 @@ let return_post_with_eq (u:universe) (a:term) (x:term) (p:term) : term =
     pack_ln (Tv_App t (eq2_tm, Q_Explicit)) in
 
   mk_abs a Q_Explicit star_tm
-  
+
 val return_stt_typing
   (#f:stt_env)
   (#g:env)
@@ -58,6 +58,70 @@ val return_stt_noeq_typing
   : GTot (RT.typing (extend_env_l f g)
                     (mk_stt_return u a x p)
                     (mk_stt_comp u a (pack_ln (Tv_App p (x, Q_Explicit))) p))
+
+val return_stt_atomic_typing
+  (#f:stt_env)
+  (#g:env)
+  (#u:universe)
+  (#a:term)
+  (#x:term)
+  (#p:term)
+  (a_typing:RT.typing (extend_env_l f g) a (pack_ln (Tv_Type u)))
+  (x_typing:RT.typing (extend_env_l f g) x a)
+  (p_typing:RT.typing (extend_env_l f g) p (mk_arrow (a, Q_Explicit) vprop_tm))
+
+  : GTot (RT.typing (extend_env_l f g)
+                    (mk_stt_atomic_return u a x p)
+                    (mk_stt_atomic_comp u a emp_inames_tm
+                       (pack_ln (Tv_App p (x, Q_Explicit)))
+                       (return_post_with_eq u a x p)))
+
+val return_stt_atomic_noeq_typing
+  (#f:stt_env)
+  (#g:env)
+  (#u:universe)
+  (#a:term)
+  (#x:term)
+  (#p:term)
+  (a_typing:RT.typing (extend_env_l f g) a (pack_ln (Tv_Type u)))
+  (x_typing:RT.typing (extend_env_l f g) x a)
+  (p_typing:RT.typing (extend_env_l f g) p (mk_arrow (a, Q_Explicit) vprop_tm))
+
+  : GTot (RT.typing (extend_env_l f g)
+                    (mk_stt_atomic_return_noeq u a x p)
+                    (mk_stt_atomic_comp u a emp_inames_tm (pack_ln (Tv_App p (x, Q_Explicit))) p))
+
+val return_stt_ghost_typing
+  (#f:stt_env)
+  (#g:env)
+  (#u:universe)
+  (#a:term)
+  (#x:term)
+  (#p:term)
+  (a_typing:RT.typing (extend_env_l f g) a (pack_ln (Tv_Type u)))
+  (x_typing:RT.typing (extend_env_l f g) x a)
+  (p_typing:RT.typing (extend_env_l f g) p (mk_arrow (a, Q_Explicit) vprop_tm))
+
+  : GTot (RT.typing (extend_env_l f g)
+                    (mk_stt_ghost_return u a x p)
+                    (mk_stt_ghost_comp u a emp_inames_tm
+                       (pack_ln (Tv_App p (x, Q_Explicit)))
+                       (return_post_with_eq u a x p)))
+
+val return_stt_ghost_noeq_typing
+  (#f:stt_env)
+  (#g:env)
+  (#u:universe)
+  (#a:term)
+  (#x:term)
+  (#p:term)
+  (a_typing:RT.typing (extend_env_l f g) a (pack_ln (Tv_Type u)))
+  (x_typing:RT.typing (extend_env_l f g) x a)
+  (p_typing:RT.typing (extend_env_l f g) p (mk_arrow (a, Q_Explicit) vprop_tm))
+
+  : GTot (RT.typing (extend_env_l f g)
+                    (mk_stt_ghost_return_noeq u a x p)
+                    (mk_stt_ghost_comp u a emp_inames_tm (pack_ln (Tv_App p (x, Q_Explicit))) p))
 
                       
   // : GTot (RT.typing (extend_env_l f g)

@@ -129,6 +129,14 @@ let rec freevars_close_st_term' (t:st_term) (x:var) (i:index)
       freevars_close_st_term' cond x i;
       freevars_close_st_term' body x i
 
+    | Tm_Par preL eL postL preR eR postR ->
+      freevars_close_term' preL x i;
+      freevars_close_st_term' eL x i;
+      freevars_close_term' postL x (i + 1);
+      freevars_close_term' preR x i;
+      freevars_close_st_term' eR x i;
+      freevars_close_term' postR x (i + 1)
+
     | Tm_Admit _ _ t post ->
       freevars_close_term' t x i;
       freevars_close_term_opt' post x (i + 1)
