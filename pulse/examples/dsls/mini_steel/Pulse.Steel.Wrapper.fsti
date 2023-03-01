@@ -4,6 +4,8 @@ open Steel.ST.Effect
 open Steel.Memory
 open Steel.ST.Util
 
+module U32 = FStar.UInt32
+
 (***** begin vprop_equiv *****)
 
 #set-options "--print_implicits --ugly --print_universes"
@@ -219,27 +221,27 @@ module R = Steel.ST.Reference
 
 open FStar.Ghost
 
-val read (r:R.ref UInt32.t) (#n:erased UInt32.t) (#p:perm)
-  : stt (x:UInt32.t{reveal n == x})
+val read (#a:Type) (r:R.ref a) (#n:erased a) (#p:perm)
+  : stt (x:a{reveal n == x})
         (R.pts_to r p n)
         (fun x -> R.pts_to r p n)
 
-val write (r:R.ref UInt32.t) (x:UInt32.t) (#n:erased UInt32.t)
+val write (#a:Type) (r:R.ref a) (x:a) (#n:erased a)
   : stt unit
         (R.pts_to r full_perm n) 
         (fun _ -> R.pts_to r full_perm (hide x))
 
-val read_pure (r:R.ref UInt32.t) (#n:erased UInt32.t) (#p:perm)
-  : stt UInt32.t
+val read_pure (#a:Type) (r:R.ref a) (#n:erased a) (#p:perm)
+  : stt a
         (R.pts_to r p n)
         (fun x -> R.pts_to r p n `star` pure (eq2_prop (reveal n) x))
 
-val read_atomic (r:R.ref UInt32.t) (#n:erased UInt32.t) (#p:perm)
-  : stt_atomic UInt32.t emp_inames
+val read_atomic (r:R.ref U32.t) (#n:erased U32.t) (#p:perm)
+  : stt_atomic U32.t emp_inames
                (R.pts_to r p n)
                (fun x -> R.pts_to r p n `star` pure (eq2_prop (reveal n) x))
 
-val write_atomic (r:R.ref UInt32.t) (x:UInt32.t) (#n:erased UInt32.t)
+val write_atomic (r:R.ref U32.t) (x:U32.t) (#n:erased U32.t)
   : stt_atomic unit emp_inames
         (R.pts_to r full_perm n) 
         (fun _ -> R.pts_to r full_perm (hide x))
