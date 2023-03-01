@@ -224,3 +224,5 @@ let stt_ghost_reveal a x = fun _ -> noop (); reveal x
 let stt_admit _ _ _ = admit ()
 let stt_atomic_admit _ _ _ = admit ()
 let stt_ghost_admit _ _ _ = admit ()
+
+let stt_par f g = fun _ -> par  f g
