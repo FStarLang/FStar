@@ -716,6 +716,10 @@ let rec st_typing_ln (#f:_) (#g:_) (#t:_) (#c:_)
       st_typing_ln body_typing;
       open_term_ln_inv' inv tm_false 0
 
+    | T_Par _ _ _ _ _ eL_typing eR_typing ->
+      st_typing_ln eL_typing;
+      st_typing_ln eR_typing
+
     | T_Admit _ s _ (STC _ _ x t_typing pre_typing post_typing) ->
       tot_typing_ln t_typing;
       tot_typing_ln pre_typing;

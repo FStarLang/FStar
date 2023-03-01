@@ -411,6 +411,7 @@ and translate_st_term (g:RT.fstar_top_env) (t:R.term)
       try_seq [translate_elim_exists g;
                translate_intro_exists g;
                translate_while g;
+               translate_par g;
                translate_admit g;
                translate_st_app_or_return g]
               t
@@ -458,6 +459,37 @@ and translate_while (g:RT.fstar_top_env) (t:R.term)
            | _ -> Inr "WHILE: Wrong number of arguments to while"
       else Inr "WHILE: Not while"
     | _ -> Inr "WHILE: Not a variable at the head"
+
+and translate_par (g:RT.fstar_top_env) (t:R.term)
+  : T.Tac (err st_term) =
+
+  let open R in
+  let head, args = R.collect_app t in
+  match inspect_ln head with
+  | Tv_FVar v ->
+    if inspect_fv v = ["Pulse"; "Tests"; "par"]
+    then match args with
+         | [(preL, _); (eL, _); (postL, _);
+            (preR, _); (eR, _); (postR, _)] ->
+
+           let? preL = readback_ty g preL in
+           let? eL = translate_st_term g eL in
+           let? postL =
+             match inspect_ln postL with
+             | Tv_Abs _ body -> readback_ty g body
+             | _ -> Inr "par: Expected postL to be an abstraction" in
+
+           let? preR = readback_ty g preR in
+           let? eR = translate_st_term g eR in
+           let? postR =
+             match inspect_ln postR with
+             | Tv_Abs _ body -> readback_ty g body
+             | _ -> Inr "par: Expected postR to be an abstraction" in
+
+           Inl (Tm_Par preL eL postL preR eR postR)
+         | _ -> Inr "par: Wrong number of arguments"
+    else Inr "par: not a par"
+  | _ -> Inr "par: Not a variable at the head"
 
 let check' (t:R.term) (g:RT.fstar_top_env)
   : T.Tac (r:(R.term & R.typ){RT.typing g (fst r) (snd r)})

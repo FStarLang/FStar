@@ -265,6 +265,19 @@ let mk_sub_stt_ghost (u:R.universe) (a opened pre1 pre2 post1 post2 e:R.term)  =
   let t = pack_ln (R.Tv_App t (`(), Q_Explicit)) in
   pack_ln (R.Tv_App t (e, Q_Explicit))
 
+let mk_par (u:R.universe) (aL aR preL postL preR postR eL eR:R.term) =
+  let open R in
+  let lid = mk_steel_wrapper_lid "stt_par" in
+  let t = pack_ln (Tv_UInst (R.pack_fv lid) [u]) in
+  let t = pack_ln (Tv_App t (aL, Q_Implicit)) in
+  let t = pack_ln (Tv_App t (aR, Q_Implicit)) in
+  let t = pack_ln (Tv_App t (preL, Q_Implicit)) in
+  let t = pack_ln (Tv_App t (postL, Q_Implicit)) in
+  let t = pack_ln (Tv_App t (preR, Q_Implicit)) in
+  let t = pack_ln (Tv_App t (postR, Q_Implicit)) in
+  let t = pack_ln (Tv_App t (eL, Q_Explicit)) in
+  pack_ln (Tv_App t (eR, Q_Implicit))
+
 let elab_frame (c:comp_st) (frame:term) (e:R.term) =
   let u = elab_universe (comp_u c) in
   let ty = elab_term (comp_res c) in
@@ -446,6 +459,25 @@ let rec elab_st_typing (#f:RT.fstar_top_env)
       let cond = elab_st_typing cond_typing in
       let body = elab_st_typing body_typing in
       mk_while (mk_abs bool_tm R.Q_Explicit inv) cond body
+
+    | T_Par _ eL cL eR cR eL_typing eR_typing ->
+      let ru = elab_universe (comp_u cL) in
+      let raL = elab_term (comp_res cL) in
+      let raR = elab_term (comp_res cR) in
+      let rpreL = elab_term (comp_pre cL) in
+      let rpostL = elab_term (comp_post cL) in
+      let rpreR = elab_term (comp_pre cR) in
+      let rpostR = elab_term (comp_post cR) in
+      let reL = elab_st_typing eL_typing in
+      let reR = elab_st_typing eR_typing in
+      mk_par ru
+        raL
+        raR
+        rpreL
+        (mk_abs raL R.Q_Explicit rpostL)
+        rpreR
+        (mk_abs raR R.Q_Explicit rpostR)
+        reL reR      
 
     | T_Admit _ {u;res;pre;post} c _ ->
       let ru = elab_universe u in

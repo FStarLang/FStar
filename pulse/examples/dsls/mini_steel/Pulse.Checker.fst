@@ -540,7 +540,6 @@ let check_return
   let d = T_Return g c use_eq u ty t post x uty (E d) post_typing in
   repack (try_frame_pre pre_typing d) post_hint true
 
-  
 let handle_framing_failure
     (f:RT.fstar_top_env)
     (g:env)
@@ -592,6 +591,40 @@ let handle_framing_failure
     | _ -> T.fail (Printf.sprintf 
                       "Failed to satisfy the following preconditions:\n%s\n"
                        (terms_to_string rest))
+
+let check_par
+  (allow_inst:bool)
+  (f:RT.fstar_top_env)
+  (g:env)
+  (t:st_term{Tm_Par? t})
+  (pre:term)
+  (pre_typing:tot_typing f g pre Tm_VProp)
+  (post_hint:option term)
+  (check':bool -> check_t)
+  : T.Tac (t:st_term &
+           c:comp{stateful_comp c ==> comp_pre c == pre} &
+           st_typing f g t c) =
+
+  let Tm_Par preL eL postL preR eR postR = t in
+  let (| preL, preL_typing |) =
+    check_tot_with_expected_typ f g preL Tm_VProp in
+  let (| preR, preR_typing |) =
+    check_tot_with_expected_typ f g preR Tm_VProp in
+
+  let (| eL, cL, eL_typing |) =
+    check' allow_inst f g eL preL (E preL_typing) (Some postL) in
+
+  if C_ST? cL
+  then
+    let (| eR, cR, eR_typing |) =
+      check' allow_inst f g eR preR (E preR_typing) (Some postR) in
+
+    if C_ST? cR && comp_u cL = comp_u cR
+    then
+      let d = T_Par _ _ _ _ _ eL_typing eR_typing in
+      repack (try_frame_pre pre_typing d) post_hint true
+    else T.fail "par: cR is not stt"
+  else T.fail "par: cL is not stt"
 
 let rec check' : bool -> check_t =
   fun (allow_inst:bool)
@@ -657,7 +690,7 @@ let rec check' : bool -> check_t =
       check_admit f g t pre pre_typing post_hint
 
     | Tm_Par _ _ _ _ _ _ ->
-      T.fail "par: checker not yet implemented"
+      check_par allow_inst f g t pre pre_typing post_hint check'
   with
   | Framing_failure failure ->
     handle_framing_failure f g t pre pre_typing post_hint failure (check' true)

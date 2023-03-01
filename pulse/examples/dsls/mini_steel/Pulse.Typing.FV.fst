@@ -406,6 +406,10 @@ let rec st_typing_freevars (#f:_) (#g:_) (#t:_) (#c:_)
      freevars_open_term inv tm_false 0;
      assert (freevars (open_term' inv tm_false 0) `Set.subset` freevars inv)
 
+   | T_Par _ _ _ _ _ eL_typing eR_typing ->
+     st_typing_freevars eL_typing;
+     st_typing_freevars eR_typing
+
    | T_Admit _ s _ (STC _ _ x t_typing pre_typing post_typing) ->
      tot_typing_freevars t_typing;
      tot_typing_freevars pre_typing;
