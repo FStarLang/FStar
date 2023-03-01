@@ -50,7 +50,7 @@ let mk_eq2_prop (u:universe)
 let mk_vprop_eq (e0 e1:term) : term =
   mk_eq2 (U_succ (U_succ U_zero)) Tm_VProp e0 e1
 
-let return_comp (c:ctag) (use_eq:bool) (u:universe) (t:term) (e:term) (post:term)
+let comp_return (c:ctag) (use_eq:bool) (u:universe) (t:term) (e:term) (post:term)
   : comp =
 
   let post_maybe_eq =
@@ -371,6 +371,22 @@ let comp_while (inv:term)
            post=open_term' inv tm_false 0
          }
 
+let tuple2_lid = ["FStar"; "Pervasives"; "Native"; "tuple2"]
+
+let mk_tuple2 (u1 u2:universe) (t1 t2:term) : term =
+  Tm_PureApp (Tm_PureApp (Tm_UInst tuple2_lid [u1; u2])
+                         None
+                         t1)
+             None t2
+
+let comp_par (cL:comp{C_ST? cL}) (cR:comp{C_ST? cR}) : comp =
+  C_ST {
+    u = comp_u cL;
+    res = mk_tuple2 (comp_u cL) (comp_u cR) (comp_res cL) (comp_res cR);
+    pre = Tm_Star (comp_pre cL) (comp_pre cR);
+    post = Tm_Star (comp_post cL) (comp_post cR)
+  }
+  
 let comp_admit (c:ctag) (s:st_comp) : comp =
   match c with
   | STT -> C_ST s
@@ -554,7 +570,7 @@ and st_typing (f:RT.fstar_top_env) : env -> st_term -> comp -> Type =
       universe_of f g t u ->
       tot_typing f g e t ->
       tot_typing f ((x, Inl t)::g) (open_term post x) Tm_VProp ->
-      st_typing f g (Tm_Return c use_eq e) (return_comp c use_eq u t e post)
+      st_typing f g (Tm_Return c use_eq e) (comp_return c use_eq u t e post)
 
   | T_Lift:
       g:env ->
@@ -650,6 +666,17 @@ and st_typing (f:RT.fstar_top_env) : env -> st_term -> comp -> Type =
       st_typing f g cond (comp_while_cond inv) ->
       st_typing f g body (comp_while_body inv) ->
       st_typing f g (Tm_While inv cond body) (comp_while inv)
+
+  | T_Par:
+      g:env ->
+      eL:st_term ->
+      cL:comp { C_ST? cL } ->
+      eR:st_term ->
+      cR:comp { C_ST? cR /\ comp_u cL == comp_u cR } ->
+      st_typing f g eL cL ->
+      st_typing f g eR cR ->
+      st_typing f g (Tm_Par Tm_Unknown eL Tm_Unknown Tm_Unknown eR Tm_Unknown)
+                    (comp_par cL cR)
 
   | T_Admit:
       g:env ->

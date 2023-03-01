@@ -563,6 +563,8 @@ let rec soundness (f:stt_env)
     | T_While _ _ _ _ _ _ _ ->
       while_soundness d soundness
 
+    | T_Par _ _ _ _ _ _ _ -> admit ()
+
     | T_Admit _ _ _ _ -> admit_soundess d
 #pop-options
 

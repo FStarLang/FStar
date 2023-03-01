@@ -15,16 +15,7 @@ module U32 = FStar.UInt32
 let expects = ()
 let provides = ()
 let while = ()
-
-[@@ expect_failure]
-%splice_t[tuple_test] (check (`(
-  fun (r:ref (U32.t & U32.t)) (n1:erased U32.t) (n2:erased U32.t) ->
-           (expects (pts_to r full_perm (reveal n1, reveal n2)))
-    (provides (fun _ -> pts_to r full_perm (reveal n1, reveal n2)))
-    (
-      read #(U32.t & U32.t) r
-    )
-)))
+let par = ()
 
 (* Start up the solver and feed it the initial context *)
 let warmup (x:int) = assert (x + 1 > x)
@@ -236,5 +227,33 @@ let warmup (x:int) = assert (x + 1 > x)
 
       let _ = elim_exists _ in
       return_stt_noeq ()
+    )
+)))
+
+[@@ expect_failure]
+%splice_t[tuple_test] (check (`(
+  fun (r:ref (U32.t & U32.t)) (n1:erased U32.t) (n2:erased U32.t) ->
+           (expects (pts_to r full_perm (reveal n1, reveal n2)))
+    (provides (fun _ -> pts_to r full_perm (reveal n1, reveal n2)))
+    (
+      read #(U32.t & U32.t) r
+    )
+)))
+
+%splice_t[test_par] (check (`(
+  fun (r1 r2:ref UInt32.t) (n1 n2:erased U32.t) ->
+    (expects (pts_to r1 full_perm n1 `star`
+              pts_to r2 full_perm n2))
+    (provides (fun _ -> pts_to r1 full_perm 1ul `star`
+                     pts_to r2 full_perm 1ul))
+    (
+      par
+        (pts_to r1 full_perm n1)
+        (write r1 1ul)
+        (fun _ -> pts_to r1 full_perm 1ul)
+
+        (pts_to r2 full_perm n2)
+        (write r2 1ul)
+        (fun _ -> pts_to r2 full_perm 1ul)
     )
 )))
