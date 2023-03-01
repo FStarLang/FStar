@@ -378,10 +378,16 @@ let intro_exists_vprop (st:st_term { Tm_IntroExists? st })  =
   match st with
   | Tm_IntroExists _ t _ -> t
 
+let intro_exists_witness_singleton (st:st_term)  = 
+  match st with
+  | Tm_IntroExists _ _ [_] -> true
+  | _ -> false
+
 let check_intro_exists_erased
   (f:RT.fstar_top_env)
   (g:env)
-  (st:st_term{Tm_IntroExists? st /\ is_intro_exists_erased st})
+  (st:st_term{intro_exists_witness_singleton st /\
+              is_intro_exists_erased st})
   (vprop_typing: option (tot_typing f g (intro_exists_vprop st) Tm_VProp))
   (pre:term)
   (pre_typing:tot_typing f g pre Tm_VProp)
@@ -390,7 +396,7 @@ let check_intro_exists_erased
            c:comp{stateful_comp c ==> comp_pre c == pre} &
            st_typing f g t c) =
 
-  let Tm_IntroExists _ t e = st in
+  let Tm_IntroExists _ t [e] = st in
   let (| t, t_typing |) = 
     match vprop_typing with
     | Some typing -> (| t, typing |)
@@ -414,7 +420,7 @@ let check_intro_exists_erased
 let check_intro_exists
   (f:RT.fstar_top_env)
   (g:env)
-  (st:st_term{Tm_IntroExists? st /\ not (is_intro_exists_erased st)})
+  (st:st_term{intro_exists_witness_singleton st /\ not (is_intro_exists_erased st)})
   (vprop_typing: option (tot_typing f g (intro_exists_vprop st) Tm_VProp))
   (pre:term)
   (pre_typing:tot_typing f g pre Tm_VProp)
@@ -423,7 +429,7 @@ let check_intro_exists
            c:comp{stateful_comp c ==> comp_pre c == pre} &
            st_typing f g t c) =
 
-  let Tm_IntroExists _ t e = st in
+  let Tm_IntroExists _ t [e] = st in
   let (| t, t_typing |) =
     match vprop_typing with
     | Some typing -> (| t, typing |)
@@ -446,7 +452,7 @@ let check_intro_exists
 let check_intro_exists_either
   (f:RT.fstar_top_env)
   (g:env)
-  (st:st_term{Tm_IntroExists? st})
+  (st:st_term{intro_exists_witness_singleton st})
   (vprop_typing: option (tot_typing f g (intro_exists_vprop st) Tm_VProp))
   (pre:term)
   (pre_typing:tot_typing f g pre Tm_VProp)
@@ -490,7 +496,7 @@ let maybe_infer_intro_exists
     let Tm_IntroExists erased t e = st in
     let (| t, t_typing |) = check_vprop f g t in
     match t, e with
-    | Tm_ExistsSL u ty p _, Tm_Unknown -> (
+    | Tm_ExistsSL u ty p _, [Tm_Unknown] -> (
       let uv = gen_uvar ty in
       let goal_vprop = open_term' p uv 0 in
       let goal_vprop = remove_pure_conjuncts goal_vprop in
@@ -509,15 +515,18 @@ let maybe_infer_intro_exists
             T.print
               (Printf.sprintf "Revealed sol to ... %s"
                                    (P.term_to_string sol));
-            check_intro_exists_erased f g (Tm_IntroExists true t sol) (Some t_typing) pre pre_typing post_hint
+            check_intro_exists_erased f g (Tm_IntroExists true t [sol]) (Some t_typing) pre pre_typing post_hint
           | _ ->
-            check_intro_exists f g (Tm_IntroExists false t sol) (Some t_typing) pre pre_typing post_hint
+            check_intro_exists f g (Tm_IntroExists false t [sol]) (Some t_typing) pre pre_typing post_hint
         )
         | _ ->
           T.fail "Unable to infer solution"
      )
 
-    | _ -> check_intro_exists_either f g (Tm_IntroExists erased t e) (Some t_typing) pre pre_typing post_hint
+    | _, [e] -> check_intro_exists_either f g (Tm_IntroExists erased t [e]) (Some t_typing) pre pre_typing post_hint
+
+    | _ -> T.fail "Not yet handling variadic intro exists"
+    
 
 let check_while
   (allow_inst:bool)

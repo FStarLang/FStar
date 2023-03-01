@@ -114,7 +114,7 @@ type st_term =
   | Tm_Bind       : e1:st_term -> e2:st_term -> st_term
   | Tm_If         : b:term -> then_:st_term -> else_:st_term -> post:option vprop -> st_term
   | Tm_ElimExists : vprop -> st_term
-  | Tm_IntroExists: erased:bool -> term -> vprop -> st_term
+  | Tm_IntroExists: erased:bool -> vprop -> witnesses:list term -> st_term
   | Tm_While      : term -> st_term -> st_term -> st_term  // inv, cond, body
   | Tm_Par        : term -> st_term -> term -> term -> st_term -> term -> st_term  // (pre, e, post) for left and right computations
 
@@ -167,6 +167,11 @@ let freevars_opt (t:option term) : Set.set var =
   | None -> Set.empty
   | Some t -> freevars t
 
+let rec freevars_list (t:list term) : Set.set var =
+  match t with
+  | [] -> Set.empty
+  | hd::tl -> freevars hd `Set.union` freevars_list tl
+
 let rec freevars_st (t:st_term)
   : Set.set var
   = match t with
@@ -187,7 +192,7 @@ let rec freevars_st (t:st_term)
     | Tm_ElimExists p ->
       freevars p
     | Tm_IntroExists _ e p ->
-      Set.union (freevars e) (freevars p)
+      Set.union (freevars e) (freevars_list p)
     | Tm_While inv cond body ->
       Set.union (freevars inv)
                 (Set.union (freevars_st cond) (freevars_st body))
@@ -266,6 +271,11 @@ let ln_opt' (t:option term) (i:int) : bool =
   | None -> true
   | Some t -> ln' t i
 
+let rec ln_list' (t:list term) (i:int) : bool =
+  match t with
+  | [] -> true
+  | hd::tl -> ln' hd i && ln_list' tl i
+
 let rec ln_st' (t:st_term) (i:int)
   : Tot bool
   = match t with
@@ -293,7 +303,7 @@ let rec ln_st' (t:st_term) (i:int)
       ln_opt' post (i + 1)
   
     | Tm_ElimExists p -> ln' p i
-    | Tm_IntroExists _ e p -> ln' e i && ln' p i
+    | Tm_IntroExists _ p e -> ln' p i && ln_list' e i
   
     | Tm_While inv cond body ->
       ln' inv (i + 1) &&
@@ -402,6 +412,13 @@ let open_term_opt' (t:option term) (v:term) (i:index)
     | None -> None
     | Some t -> Some (open_term' t v i)
 
+
+let rec open_term_list' (t:list term) (v:term) (i:index)
+  : Tot (list term)
+  = match t with
+    | [] -> []
+    | hd::tl -> open_term' hd v i :: open_term_list' tl v i
+
 let rec open_st_term' (t:st_term) (v:term) (i:index)
   : Tot st_term (decreases t)
   = match t with
@@ -431,9 +448,10 @@ let rec open_st_term' (t:st_term) (v:term) (i:index)
     | Tm_ElimExists p ->
       Tm_ElimExists (open_term' p v i)
       
-    | Tm_IntroExists b e p ->
-      Tm_IntroExists b (open_term' e v i)
-                       (open_term' p v i)
+    | Tm_IntroExists b p e ->
+      Tm_IntroExists b (open_term' p v i)
+                       (open_term_list' e v i)
+                             
 
     | Tm_While inv cond body ->
       Tm_While (open_term' inv v (i + 1))
@@ -546,6 +564,13 @@ let close_term_opt' (t:option term) (v:var) (i:index)
     | Some t -> Some (close_term' t v i)
 
 
+let rec close_term_list' (t:list term) (v:var) (i:index)
+  : Tot (list term)
+  = match t with
+    | [] -> []
+    | hd::tl -> close_term' hd v i :: close_term_list' tl v i
+
+
 let rec close_st_term' (t:st_term) (v:var) (i:index)
   : Tot st_term (decreases t)
   = match t with
@@ -575,9 +600,9 @@ let rec close_st_term' (t:st_term) (v:var) (i:index)
     | Tm_ElimExists p ->
       Tm_ElimExists (close_term' p v i)
       
-    | Tm_IntroExists b e p ->
-      Tm_IntroExists b (close_term' e v i)
-                       (close_term' p v i)
+    | Tm_IntroExists b p e ->
+      Tm_IntroExists b (close_term' p v i)
+                       (close_term_list' e v i)
 
     | Tm_While inv cond body ->
       Tm_While (close_term' inv v (i + 1))
@@ -725,6 +750,17 @@ let close_open_inverse_opt' (t:option term)
     | Some t -> close_open_inverse' t x i
 
 
+let rec close_open_inverse_list' (t:list term)
+                                 (x:var { ~(x `Set.mem` freevars_list t) })
+                                 (i:index)
+  : Lemma (ensures close_term_list' (open_term_list' t (term_of_var x) i) x i == t)
+  = match t with
+    | [] -> ()
+    | hd::tl ->
+      close_open_inverse' hd x i;
+      close_open_inverse_list' tl x i
+
+
 let rec close_open_inverse_st'  (t:st_term) 
                                 (x:var { ~(x `Set.mem` freevars_st t) } )
                                 (i:index)
@@ -751,17 +787,13 @@ let rec close_open_inverse_st'  (t:st_term)
       close_open_inverse' l x i;
       close_open_inverse' r x i
     
-    | Tm_IntroExists _ l r ->
-      close_open_inverse' l x i;
-      close_open_inverse' r x i    
+    | Tm_IntroExists _ p l ->
+      close_open_inverse' p x i;
+      close_open_inverse_list' l x i
     
     | Tm_ElimExists t ->
       close_open_inverse' t x i
       
-    | Tm_IntroExists _ t e ->
-      close_open_inverse' t x i;
-      close_open_inverse' e x i
-
     | Tm_While inv cond body ->
       close_open_inverse' inv x (i + 1);
       close_open_inverse_st' cond x i;
@@ -885,6 +917,15 @@ let eq_tm_opt (t1 t2:option term)
     | Some t1, Some t2 -> eq_tm t1 t2
     | _ -> false
 
+let rec eq_tm_list (t1 t2:list term)
+  : b:bool { b <==> (t1 == t2) }
+  = match t1, t2 with
+    | [], [] -> true
+    | h1::t1, h2::t2 ->
+      eq_tm h1 h2 &&
+      eq_tm_list t1 t2
+    | _ -> false
+
 let rec eq_st_term (t1 t2:st_term) 
   : b:bool { b <==> (t1 == t2) }
   = match t1, t2 with
@@ -909,10 +950,10 @@ let rec eq_st_term (t1 t2:st_term)
       eq_st_term t1 t2 &&
       eq_st_term k1 k2
       
-    | Tm_IntroExists b1 l1 r1, Tm_IntroExists b2 l2 r2 ->
+    | Tm_IntroExists b1 p1 l1, Tm_IntroExists b2 p2 l2 ->
       b1 = b2 &&
-      eq_tm l1 l2 &&
-      eq_tm r1 r2
+      eq_tm p1 p2 &&
+      eq_tm_list l1 l2
 
     | Tm_ElimExists p1, Tm_ElimExists p2 ->
       eq_tm p1 p2

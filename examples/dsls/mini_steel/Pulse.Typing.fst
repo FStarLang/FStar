@@ -648,7 +648,7 @@ and st_typing (f:RT.fstar_top_env) : env -> st_term -> comp -> Type =
       tot_typing f g t (Tm_Type u) ->
       tot_typing f g (Tm_ExistsSL u t p should_elim_false) Tm_VProp ->
       tot_typing f g e t ->
-      st_typing f g (Tm_IntroExists false e (Tm_ExistsSL u t p should_elim_false))
+      st_typing f g (Tm_IntroExists false (Tm_ExistsSL u t p should_elim_false) [e])
                     (comp_intro_exists u t p e)
 
   | T_IntroExistsErased:
@@ -660,7 +660,7 @@ and st_typing (f:RT.fstar_top_env) : env -> st_term -> comp -> Type =
       tot_typing f g t (Tm_Type u) ->
       tot_typing f g (Tm_ExistsSL u t p should_elim_false) Tm_VProp ->
       tot_typing f g e (mk_erased u t)  ->
-      st_typing f g (Tm_IntroExists true e (Tm_ExistsSL u t p should_elim_false))
+      st_typing f g (Tm_IntroExists true (Tm_ExistsSL u t p should_elim_false) [e])
                     (comp_intro_exists_erased u t p e)
 
   | T_While:

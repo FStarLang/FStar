@@ -138,6 +138,9 @@ let term_opt_to_string (t:option term)
     | None -> ""
     | Some t -> term_to_string t
 
+let term_list_to_string (sep:string) (t:list term)
+  : T.Tac string
+  = String.concat sep (T.map term_to_string t)
 
 let rec st_term_to_string (t:st_term)
   : T.Tac string
@@ -184,12 +187,12 @@ let rec st_term_to_string (t:st_term)
     | Tm_IntroExists false t e ->
       sprintf "intro_exists %s %s"
         (term_to_string t)
-        (term_to_string e)
+        (term_list_to_string " " e)
 
     | Tm_IntroExists true t e ->
       sprintf "intro_exists_erased %s %s"
         (term_to_string t)
-        (term_to_string e)
+        (term_list_to_string " " e)
 
     | Tm_While inv cond body ->
       sprintf "while<%s> (%s) {%s}"
