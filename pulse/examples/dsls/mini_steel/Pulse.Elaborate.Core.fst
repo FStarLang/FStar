@@ -276,7 +276,7 @@ let mk_par (u:R.universe) (aL aR preL postL preR postR eL eR:R.term) =
   let t = pack_ln (Tv_App t (preR, Q_Implicit)) in
   let t = pack_ln (Tv_App t (postR, Q_Implicit)) in
   let t = pack_ln (Tv_App t (eL, Q_Explicit)) in
-  pack_ln (Tv_App t (eR, Q_Implicit))
+  pack_ln (Tv_App t (eR, Q_Explicit))
 
 let elab_frame (c:comp_st) (frame:term) (e:R.term) =
   let u = elab_universe (comp_u c) in
