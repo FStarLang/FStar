@@ -750,3 +750,4 @@ and close_args_with_not_free_var (l:list R.argv) (x:var) (i:nat)
     close_args_with_not_free_var tl x i
 
 let beta_reduction _ _ _ _ = admit ()
+let beta_reduction_bv0 _ _ _ = admit ()

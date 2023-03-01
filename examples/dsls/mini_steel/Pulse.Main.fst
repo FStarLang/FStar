@@ -229,6 +229,14 @@ let rec shift_bvs_in_else_st (t:st_term) (n:nat) : Tac st_term =
              (shift_bvs_in_else_st cond n)
              (shift_bvs_in_else_st body n)
 
+  | Tm_Par preL eL postL preR eR postR ->
+    Tm_Par (shift_bvs_in_else preL n)
+           (shift_bvs_in_else_st eL n)
+           (shift_bvs_in_else postL (n + 1))
+           (shift_bvs_in_else preR n)
+           (shift_bvs_in_else_st eR n)
+           (shift_bvs_in_else postR (n + 1))
+
   | Tm_Admit c u t post ->
     Tm_Admit c u (shift_bvs_in_else t n)
                  (match post with

@@ -197,6 +197,15 @@ let rec st_term_to_string (t:st_term)
         (st_term_to_string cond)
         (st_term_to_string body)
 
+    | Tm_Par preL eL postL preR eR postR ->
+      sprintf "par (<%s> (%s) <%s) (<%s> (%s) <%s)"
+        (term_to_string preL)
+        (st_term_to_string eL)
+        (term_to_string postL)
+        (term_to_string preR)
+        (st_term_to_string eR)
+        (term_to_string postR)
+
     | Tm_Admit c u t post ->
       sprintf "%s<%s> %s%s"
         (match c with

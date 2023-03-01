@@ -184,17 +184,17 @@ let sub_stt_ghost #a #opened #pre1 pre2 #post1 post2 pf1 pf2 e =
 module R = Steel.ST.Reference
 open Steel.ST.Util
 
-let read r #n #p =
+let read #a r #n #p =
   fun _ ->
   let x = R.read r in
   return x
 
-let write r x #n
+let write #a r x #n
   = fun _ ->
     let _ = R.write r x in
     rewrite _ (R.pts_to r full_perm (hide x))
 
-let read_pure r #n #p =
+let read_pure #a r #n #p =
   fun _ ->
   let x = R.read r in
   return x
@@ -227,6 +227,7 @@ let stt_admit _ _ _ = admit ()
 let stt_atomic_admit _ _ _ = admit ()
 let stt_ghost_admit _ _ _ = admit ()
 
+
 let stt_ghost_ni (#a:Type) (#p:vprop) (#q:a -> vprop)
   : non_informative_witness (stt_ghost a emp_inames p q)
   = fun x -> reveal x
@@ -244,3 +245,6 @@ let ghost_app2 (#a:Type) (#b:a -> Type) (#p:a -> vprop) (#q: (x:a -> b x -> vpro
               (y:erased a)
   : stt_ghost (b (reveal y)) emp_inames (p (reveal y)) (q (reveal y))
   = ghost_app f y (fun _ -> stt_ghost_ni)
+
+let stt_par f g = fun _ -> par  f g
+

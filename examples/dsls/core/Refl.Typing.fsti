@@ -1211,10 +1211,14 @@ val close_with_not_free_var (t:R.term) (x:var) (i:nat)
 
 let binder_of_t_q t q = mk_binder pp_name_default 0 t q
 let mk_abs ty qual t : R.term =  R.pack_ln (R.Tv_Abs (binder_of_t_q ty qual) t)
+let bound_var i : R.term = R.pack_ln (R.Tv_BVar (R.pack_bv (make_bv i tun)))
 
 val beta_reduction (t:R.typ) (q:R.aqualv) (e:R.term) (arg:R.term)
   : Lemma (open_or_close_term' e (OpenWith arg) 0 ==
            R.pack_ln (R.Tv_App (mk_abs t q e) (arg, q)))
+
+val beta_reduction_bv0 (t:R.typ) (q:R.aqualv) (e:R.term)
+  : Lemma (R.pack_ln (R.Tv_App (mk_abs t q e) (bound_var 0, q)) == e)
 
 //
 // Type of the top-level tactic that would splice-in the definitions

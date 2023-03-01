@@ -140,6 +140,14 @@ let rec open_st_term_ln' (e:st_term)
       open_st_term_ln' cond x i;
       open_st_term_ln' body x i
 
+    | Tm_Par preL eL postL preR eR postR ->
+      open_term_ln' preL x i;
+      open_st_term_ln' eL x i;
+      open_term_ln' postL x (i + 1);
+      open_term_ln' preR x i;
+      open_st_term_ln' eR x i;
+      open_term_ln' postR x (i + 1)
+
     | Tm_Admit _ _ t post ->
       open_term_ln' t x i;
       open_term_ln_opt' post x (i + 1)
@@ -278,6 +286,14 @@ let rec ln_weakening_st (t:st_term) (i j:int)
       ln_weakening_st body (i + 1) (j + 1);
       ln_weakening_opt post (i + 2) (j + 2)
 
+    | Tm_Par preL eL postL preR eR postR ->
+      ln_weakening preL i j;
+      ln_weakening_st eL i j;
+      ln_weakening postL (i + 1) (j + 1);
+      ln_weakening preR i j;
+      ln_weakening_st eR i j;
+      ln_weakening postR (i + 1) (j + 1)
+
     | Tm_Admit _ _ t post ->
       ln_weakening t i j;
       ln_weakening_opt post (i + 1) (j + 1)
@@ -410,6 +426,14 @@ let rec open_term_ln_inv_st' (t:st_term)
       open_term_ln_inv_st' body x (i + 1);
       open_term_ln_inv_opt' post x (i + 2)
 
+    | Tm_Par preL eL postL preR eR postR ->
+      open_term_ln_inv' preL x i;
+      open_term_ln_inv_st' eL x i;
+      open_term_ln_inv' postL x (i + 1);
+      open_term_ln_inv' preR x i;
+      open_term_ln_inv_st' eR x i;
+      open_term_ln_inv' postR x (i + 1)
+
     | Tm_Admit _ _ t post ->
       open_term_ln_inv' t x i;
       open_term_ln_inv_opt' post x (i + 1)
@@ -536,6 +560,14 @@ let rec close_st_term_ln' (t:st_term) (x:var) (i:index)
       close_term_ln_opt' pre x (i + 1);
       close_st_term_ln' body x (i + 1);
       close_term_ln_opt' post x (i + 2)
+
+    | Tm_Par preL eL postL preR eR postR ->
+      close_term_ln' preL x i;
+      close_st_term_ln' eL x i;
+      close_term_ln' postL x (i + 1);
+      close_term_ln' preR x i;
+      close_st_term_ln' eR x i;
+      close_term_ln' postR x (i + 1)
 
     | Tm_Admit _ _ t post ->
       close_term_ln' t x i;

@@ -12,6 +12,10 @@ module RT = Refl.Typing
 
 let return_stt_typing _ _ _ = admit ()
 let return_stt_noeq_typing _ _ _ = admit ()
+let return_stt_atomic_typing _ _ _ = admit ()
+let return_stt_atomic_noeq_typing _ _ _ = admit ()
+let return_stt_ghost_typing _ _ _ = admit ()
+let return_stt_ghost_noeq_typing _ _ _ = admit ()
 
 // let var_as_bvar_term (v:var) = R.(pack_ln (Tv_BVar (RT.var_as_bv v)))
 
