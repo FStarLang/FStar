@@ -70,20 +70,45 @@ let readback_maybe_unknown_ty t =
   | None -> Tm_Unknown
 
 
-let rec try_readback_exists (g:R.env) (t:R.term)
-  : T.Tac (err term) =
+let readback_ty (g:R.env) (t:R.term)
+  : T.Tac (err term)
+  = match Readback.readback_ty t with
+    | None ->
+      unexpected_term "readback failed" t    
+    | Some t -> Inl t
 
-  match inspect_ln t with
-  | Tv_App hd (arg, _) ->
-    (match inspect_ln hd with
-     | Tv_FVar fv ->
-       if inspect_fv fv = exists_lid
-       then readback_exists_sl_body g arg
-       else Inr "try readback exists: not an exists lid"
-     | _ -> Inr "try readback exists: head not an fvar")
-  | _ -> Inr "try readback exists: not an app"
+let rec translate_vprop (g:R.env) (t:R.term)
+  : T.Tac (err vprop)
+  = let hd, _ = collect_app t in
+    match inspect_ln hd with
+    | Tv_FVar fv ->
+      let qn = inspect_fv fv in
+      if qn = exists_lid
+      then translate_exists g t
+      else if qn = exists_qn
+      then translate_exists_formula g t
+      else if qn = star_lid
+      then translate_star g t
+      else if qn = pure_lid
+      then translate_pure g t     
+      else readback_ty g t
 
-and readback_exists_sl_body (g:R.env) (t:R.term) 
+    | _ -> 
+      readback_ty g t
+
+and translate_exists (g:R.env) (t:R.term)
+  : T.Tac (err term)
+  = match inspect_ln t with
+    | Tv_App hd (arg, _) ->
+      (match inspect_ln hd with
+       | Tv_FVar fv ->
+         if inspect_fv fv = exists_lid
+         then translate_exists_sl_body g arg
+         else Inr "try readback exists: not an exists lid"
+       | _ -> Inr "try readback exists: head not an fvar")
+    | _ -> Inr "try readback exists: not an app"
+
+and translate_exists_sl_body (g:R.env) (t:R.term) 
   : T.Tac (err term)
   = match inspect_ln t with
     | Tv_Abs b body ->
@@ -91,26 +116,53 @@ and readback_exists_sl_body (g:R.env) (t:R.term)
       let bvv = inspect_bv bv in
       let u = U_unknown in
       let t = readback_maybe_unknown_ty bvv.bv_sort in
-      let? body = readback_ty g body in
+      let? body = translate_vprop g body in
       Inl (Tm_ExistsSL u t body should_elim_true)
     | _ -> Inr "in readback exists: the arg not a lambda"
-  
-and readback_ty (g:R.env) (t:R.term)
-  : T.Tac (err term)
-  = try match Readback.readback_ty t with
-        | None ->
-          (match try_readback_exists g t with
-           | Inl t -> Inl t
-           | _ -> unexpected_term "readback_ty failed" t)
-        | Some t -> Inl #term t
-    with 
-      | TacticFailure msg -> 
-        (match try_readback_exists g t with
-         | Inl t -> Inl t
-         | _ -> unexpected_term msg t)
 
-      | _ ->
-        unexpected_term "readback failed" t
+and translate_exists_formula (g:R.env) (t:R.term)
+  : T.Tac (err term)
+  = let fail () = 
+        Inr (Printf.sprintf "Not an exists formula: %s"
+                            (term_to_string t))
+    in
+    match term_as_formula t with
+    | Exists bv body ->
+      let bv = inspect_bv bv in
+      let t = readback_maybe_unknown_ty bv.bv_sort in
+      let? body = translate_vprop g body in
+      Inl (Tm_ExistsSL U_unknown t body should_elim_true)
+    | _ -> 
+      let hd, args = collect_app t in
+      match inspect_ln hd, args with
+      | Tv_FVar fv, [(arg, _)] ->
+        if inspect_fv fv = exists_qn
+        then translate_exists_sl_body g arg
+        else fail()
+      | _ -> fail()
+
+and translate_star (g:R.env) (t:R.term)
+  : T.Tac (err term)
+  = let hd, args = collect_app t in
+    match inspect_ln hd, args with
+    | Tv_FVar fv, [(l, _); (r, _)] ->
+      if inspect_fv fv = star_lid
+      then let? l = translate_vprop g l in
+           let? r = translate_vprop g r in
+           Inl (Tm_Star l r)
+      else Inr "Not a star"
+    | _ ->  Inr "Not a star"
+
+and translate_pure (g:R.env) (t:R.term)
+  : T.Tac (err term)
+  = let hd, args = collect_app t in
+    match inspect_ln hd, args with
+    | Tv_FVar fv, [(p, _)] ->
+      if inspect_fv fv = pure_lid
+      then let? p = readback_ty g p in
+           Inl (Tm_Pure p)
+      else Inr "Not a pure"
+    | _ ->  Inr "Not a pure"
 
 let readback_comp (t:R.term)
   : T.Tac (err comp)
@@ -123,7 +175,7 @@ let readback_comp (t:R.term)
       | _ ->
         unexpected_term "readback failed" t
 
-let transate_binder (g:R.env) (b:R.binder)
+let translate_binder (g:R.env) (b:R.binder)
   : T.Tac (err (binder & option qualifier))
   = let {binder_bv=bv; binder_qual=aq; binder_attrs=attrs} =
         R.inspect_binder b
@@ -149,7 +201,8 @@ let is_head_fv (t:R.term) (fv:list string) : option (list R.argv) =
 
 let expects_fv = ["Pulse";"Tests";"expects"]
 let provides_fv = ["Pulse";"Tests";"provides"]
-
+let intro_fv = ["Pulse";"Tests";"intro"]
+let elim_fv = ["Pulse";"Tests";"elim"]
 //
 // shift bvs > n by -1
 //
@@ -271,7 +324,7 @@ let try_seq (fs: list (R.term -> T.Tac (err 'b))) (x:R.term)
     in
     aux "" fs
 
-let translate_elim_exists (g:RT.fstar_top_env) (t:R.term)
+let translate_elim (g:RT.fstar_top_env) (t:R.term)
   : T.Tac (err st_term)
   = let open R in
     match inspect_ln t with
@@ -279,33 +332,42 @@ let translate_elim_exists (g:RT.fstar_top_env) (t:R.term)
       (match inspect_ln hd with
       | Tv_UInst v _
       | Tv_FVar v ->
-        if inspect_fv v = elim_exists_lid
-        then let ex =
-                 match readback_exists_sl_body g arg with
-                 | Inl ex -> ex
-                 | Inr _ -> Tm_Unknown
-             in
+        if inspect_fv v = elim_fv
+        then let? ex = translate_vprop g arg in
              Inl (Tm_ElimExists ex)
         else Inr "ELIM_EXISTS: Not elim_exists"
       | _ -> Inr "ELIM_EXISTS: Not a fv application")
     | _ -> Inr "ELIM_EXISTS: Not an application"
-  
-let translate_intro_exists (g:RT.fstar_top_env) (t:R.term)
+
+let rec map_err (f:'a -> T.Tac (err 'b)) (l:list 'a)
+  : T.Tac (err (list 'b))
+  = match l with
+    | [] -> Inl []
+    | hd::tl ->
+      let? hd = f hd in
+      let? tl = map_err f tl in
+      Inl (hd :: tl)
+
+let translate_intro (g:RT.fstar_top_env) (t:R.term)
   : T.Tac (err st_term)
   = let open R in
     let head, args = R.collect_app t in
     match inspect_ln head with
     | Tv_UInst fv _
     | Tv_FVar fv ->
-      if inspect_fv fv = intro_exists_lid
+      if inspect_fv fv = intro_fv
       then match args with
-           | [(exists_body, _); (witness, _)] ->
-             let? ex = readback_exists_sl_body g exists_body in
-             let? w = readback_ty g witness in
-             Inl (Tm_IntroExists false ex [w])
-           | _ -> Inr "INTRO_EXISTS: Wrong number of arguments to intro_exists"
-      else Inr "INTRO_EXISTS: Not an intro_exists"
-    | _ -> Inr "INTRO_EXISTS: Not an application"
+           | (exists_body, _)::witnesses -> (
+             let? ex = translate_vprop g exists_body in
+             let? w = map_err (fun (w, _) -> readback_ty g w) witnesses in
+             match ex with
+             | Tm_ExistsSL _ _ _ _ ->
+               Inl (Tm_IntroExists false ex w)
+             | _ -> Inr "INTRO: Unexpected formula, not an existential"
+           )
+           | _ -> Inr "INTRO: Wrong number of arguments to intro_exists"
+      else Inr "INTRO: Not an intro"
+    | _ -> Inr "INTRO: Not an application"
 
 //
 // The last option term is post,
@@ -358,7 +420,7 @@ let rec translate_term' (g:RT.fstar_top_env) (t:R.term)
   : T.Tac (err st_term)
   = match R.inspect_ln t with
     | R.Tv_Abs x body -> (
-      let? b, q = transate_binder g x in
+      let? b, q = translate_binder g x in
       let aux () = 
         let? body = translate_term g body in
         Inl (Tm_Abs b q (Some Tm_Emp) body None)
@@ -381,11 +443,11 @@ let rec translate_term' (g:RT.fstar_top_env) (t:R.term)
           | [(expects_arg, _); (provides, _); (body, _)] -> (
             match is_head_fv provides provides_fv with
             | Some [provides_arg, _] ->
-              let? pre = readback_ty g expects_arg in
+              let? pre = translate_vprop g expects_arg in
               let? post = 
                 match R.inspect_ln provides_arg with
                 | Tv_Abs _ provides_body ->
-                  readback_ty g provides_body
+                  translate_vprop g provides_body
                 | _ -> 
                   unexpected_term "'provides' should be an abstraction" provides_arg
               in
@@ -419,8 +481,8 @@ and translate_st_term (g:RT.fstar_top_env) (t:R.term)
       translate_st_app_or_return g t
       
     | R.Tv_App _ _ ->
-      try_seq [translate_elim_exists g;
-               translate_intro_exists g;
+      try_seq [translate_elim g;
+               translate_intro g;
                translate_while g;
                translate_admit g;
                translate_st_app_or_return g]
@@ -465,7 +527,7 @@ and translate_while (g:RT.fstar_top_env) (t:R.term)
            | [(inv, _); (cond, _); (body, _)] -> 
              let? inv = 
                match inspect_ln inv with
-               | Tv_Abs _ body -> readback_ty g body
+               | Tv_Abs _ body -> translate_vprop g body
                | _ ->
                  Inr "WHILE: Expected inv to be an abstraction"
              in
