@@ -369,7 +369,96 @@ let check_elim_exists
     else T.fail "Universe checking failed in elim_exists"
   | _ -> T.fail "elim_exists argument not a Tm_ExistsSL"
 
+let is_intro_exists_erased (st:st_term) = 
+  match st with
+  | Tm_IntroExists e _ _ -> e
+  | _ -> false
+
+let intro_exists_vprop (st:st_term { Tm_IntroExists? st })  = 
+  match st with
+  | Tm_IntroExists _ t _ -> t
+
+let check_intro_exists_erased
+  (f:RT.fstar_top_env)
+  (g:env)
+  (st:st_term{Tm_IntroExists? st /\ is_intro_exists_erased st})
+  (vprop_typing: option (tot_typing f g (intro_exists_vprop st) Tm_VProp))
+  (pre:term)
+  (pre_typing:tot_typing f g pre Tm_VProp)
+  (post_hint:option term)
+  : T.Tac (t:st_term &
+           c:comp{stateful_comp c ==> comp_pre c == pre} &
+           st_typing f g t c) =
+
+  let Tm_IntroExists _ t e = st in
+  let (| t, t_typing |) = 
+    match vprop_typing with
+    | Some typing -> (| t, typing |)
+    | _ -> check_vprop f g t
+  in
+  match t with
+  | Tm_ExistsSL u ty p _ ->
+    // Could this come from inversion of t_typing?
+    let (| u', ty_typing |) = check_universe f g ty in
+    if u = u'
+    then (
+      let (| e, e_typing |) = 
+          check_tot_with_expected_typ f g e (mk_erased u ty) in
+      let d = T_IntroExistsErased g u ty p e ty_typing t_typing (E e_typing) in
+      repack (try_frame_pre pre_typing d) post_hint true
+    )
+    else T.fail "Universe checking failed in intro_exists"
+  | _ -> T.fail "elim_exists argument not a Tm_ExistsSL"
+
+
 let check_intro_exists
+  (f:RT.fstar_top_env)
+  (g:env)
+  (st:st_term{Tm_IntroExists? st /\ not (is_intro_exists_erased st)})
+  (vprop_typing: option (tot_typing f g (intro_exists_vprop st) Tm_VProp))
+  (pre:term)
+  (pre_typing:tot_typing f g pre Tm_VProp)
+  (post_hint:option term)
+  : T.Tac (t:st_term &
+           c:comp{stateful_comp c ==> comp_pre c == pre} &
+           st_typing f g t c) =
+
+  let Tm_IntroExists _ t e = st in
+  let (| t, t_typing |) =
+    match vprop_typing with
+    | Some typing -> (| t, typing |)
+    | _ -> check_vprop f g t
+  in
+  match t with
+  | Tm_ExistsSL u ty p _ ->
+    // Could this come from inversion of t_typing?
+    let (| u', ty_typing |) = check_universe f g ty in
+    if u = u'
+    then (
+      let (| e, e_typing |) = 
+          check_tot_with_expected_typ f g e ty in
+      let d = T_IntroExists g u ty p e ty_typing t_typing (E e_typing) in
+      repack (try_frame_pre pre_typing d) post_hint true
+    )
+    else T.fail "Universe checking failed in intro_exists"
+  | _ -> T.fail "elim_exists argument not a Tm_ExistsSL"
+
+let check_intro_exists_either
+  (f:RT.fstar_top_env)
+  (g:env)
+  (st:st_term{Tm_IntroExists? st})
+  (vprop_typing: option (tot_typing f g (intro_exists_vprop st) Tm_VProp))
+  (pre:term)
+  (pre_typing:tot_typing f g pre Tm_VProp)
+  (post_hint:option term)
+  : T.Tac (t:st_term &
+           c:comp{stateful_comp c ==> comp_pre c == pre} &
+           st_typing f g t c)
+  = if is_intro_exists_erased st
+    then check_intro_exists_erased f g st vprop_typing pre pre_typing post_hint
+    else check_intro_exists f g st vprop_typing pre pre_typing post_hint
+    
+let maybe_infer_intro_exists
   (f:RT.fstar_top_env)
   (g:env)
   (st:st_term{Tm_IntroExists? st})
@@ -378,54 +467,57 @@ let check_intro_exists
   (post_hint:option term)
   : T.Tac (t:st_term &
            c:comp{stateful_comp c ==> comp_pre c == pre} &
-           st_typing f g t c) =
-
-  let Tm_IntroExists _erased t e = st in
-  let (| t, t_typing |) = check_vprop f g t in
-  match t with
-  | Tm_ExistsSL u ty p _ ->
-    // Could this come from inversion of t_typing?
-    let (| u', ty_typing |) = check_universe f g ty in
-    if u = u'
-    then (
-      let (| e, e_typing |) = 
-        match e with
-        | Tm_Unknown -> (
-          let uv = gen_uvar ty in
-          let goal_vprop = open_term' p uv 0 in
-          let open T in
-          try 
+           st_typing f g t c)
+  = let un_reveal t = 
+        match t with
+        | Tm_PureApp (Tm_PureApp (Tm_UInst l [_]) (Some Implicit) _)
+                     None arg ->
+          if l = reveal_lid
+          then Some arg
+          else None
+        | _ -> None
+    in
+    let remove_pure_conjuncts t =
+        match list_as_vprop 
+                 (T.filter 
+                   (function Tm_Pure _ | Tm_Emp -> false | _ -> true)
+                   (vprop_as_list t))
+        with
+        | Tm_Star t Tm_Emp -> t
+        | Tm_Star Tm_Emp t -> t        
+        | t -> t
+    in
+    let Tm_IntroExists erased t e = st in
+    let (| t, t_typing |) = check_vprop f g t in
+    match t, e with
+    | Tm_ExistsSL u ty p _, Tm_Unknown -> (
+      let uv = gen_uvar ty in
+      let goal_vprop = open_term' p uv 0 in
+      let goal_vprop = remove_pure_conjuncts goal_vprop in
+      let open T in
+      T.print
+          (Printf.sprintf "Calling witness inference with context = %s and goal=%s"
+                                   (P.term_to_string pre)
+                                   (P.term_to_string goal_vprop));
+        match Pulse.Checker.Inference.try_inst_uvs_in_goal [uv] pre goal_vprop with
+        | [_, sol] -> (
+          T.print
+            (Printf.sprintf "Inferred solution %s"
+                                   (P.term_to_string sol));
+          match un_reveal sol with
+          | Some sol ->
             T.print
-              (Printf.sprintf "Calling witness inference with context = %s and goal=%s"
-                              (P.term_to_string pre)
-                              (P.term_to_string goal_vprop));
-            match Pulse.Checker.Inference.try_inst_uvs_in_goal [uv] pre goal_vprop with
-            | [_, sol] -> 
-              T.print
-                (Printf.sprintf "Found solution: %s"
-                                (P.term_to_string sol));
-              (try
-                check_tot_with_expected_typ f g sol ty
-               with 
-               | _ ->
-                 T.fail "Could not typecheck solution at expected type")
-
-            | sols ->
-              T.fail (Printf.sprintf "Could not find solution for witness in %s"
-                                     (P.st_term_to_string st))
-          with
-          | _ -> 
-            T.fail (Printf.sprintf "Could not solve for witness in %s"
-                                   (P.st_term_to_string st))
+              (Printf.sprintf "Revealed sol to ... %s"
+                                   (P.term_to_string sol));
+            check_intro_exists_erased f g (Tm_IntroExists true t sol) (Some t_typing) pre pre_typing post_hint
+          | _ ->
+            check_intro_exists f g (Tm_IntroExists false t sol) (Some t_typing) pre pre_typing post_hint
         )
-        
-        | _ -> check_tot_with_expected_typ f g e ty
-      in
-      let d = T_IntroExists g u ty p e ty_typing t_typing (E e_typing) in
-      repack (try_frame_pre pre_typing d) post_hint true
-    )
-    else T.fail "Universe checking failed in intro_exists"
-  | _ -> T.fail "elim_exists argument not a Tm_ExistsSL"
+        | _ ->
+          T.fail "Unable to infer solution"
+     )
+
+    | _ -> check_intro_exists_either f g (Tm_IntroExists erased t e) (Some t_typing) pre pre_typing post_hint
 
 let check_while
   (allow_inst:bool)
@@ -582,7 +674,7 @@ let check_return
 let handle_framing_failure
     (f:RT.fstar_top_env)
     (g:env)
-    (t:st_term)
+    (t0:st_term)
     (pre:term)
     (pre_typing: tot_typing f g pre Tm_VProp)
     (post_hint:option term)
@@ -607,7 +699,7 @@ let handle_framing_failure
     T.print (Printf.sprintf
                      "Handling framing failure in term:\n%s\n\
                       with unmatched_pre={\n%s\n} and context={\n%s\n}"
-                     (P.st_term_to_string t)
+                     (P.st_term_to_string t0)
                      (terms_to_string failure.unmatched_preconditions)
                      (terms_to_string failure.remaining_context));
     let pures, rest = 
@@ -619,7 +711,7 @@ let handle_framing_failure
           match p with
           | Tm_Pure p -> add_intro_pure p t
           | _ -> T.fail "Impossible")
-        (Tm_Protect t) //don't elim what we just intro'd here
+        (Tm_Protect t0) //don't elim what we just intro'd here
         pures
     in
     T.print 
@@ -629,8 +721,10 @@ let handle_framing_failure
     match rest with
     | [] -> check f g t pre pre_typing post_hint
     | _ -> T.fail (Printf.sprintf 
-                      "Failed to satisfy the following preconditions:\n%s\n"
-                       (terms_to_string rest))
+                      "Failed to satisfy the following preconditions:\n%s\nContext has\n%s\nat command %s\n"
+                       (terms_to_string rest)
+                       (terms_to_string failure.remaining_context)
+                       (P.st_term_to_string t0))
 
 let rec maybe_add_elim_exists (g:env) (ctxt:list term) (t:st_term)
   : T.Tac st_term
@@ -705,7 +799,7 @@ let rec check' : bool -> check_t =
       check_elim_exists f g t pre pre_typing post_hint
 
     | Tm_IntroExists _ _ _ ->
-      check_intro_exists f g t pre pre_typing post_hint
+      maybe_infer_intro_exists f g t pre pre_typing post_hint
 
     | Tm_While _ _ _ ->
       check_while allow_inst f g t pre pre_typing post_hint check'

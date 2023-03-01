@@ -421,7 +421,7 @@ and translate_st_term (g:RT.fstar_top_env) (t:R.term)
       begin
       match def with
       | Tm_IntroExists _ _ _ -> 
-        Inl (Tm_Protect (Tm_Bind (Tm_Protect def) (Tm_Protect body)))
+        Inl (Tm_Bind (Tm_Protect def) (Tm_Protect body))
       | _ ->
         Inl (Tm_Bind def body)
       end
