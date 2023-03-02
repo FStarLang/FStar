@@ -264,9 +264,9 @@ val read_pred (_:unit) (#b:erased bool)
 
 %splice_t[test_par] (check (`(
   fun (r1 r2:ref U32.t) (n1 n2:erased U32.t) ->
-    (expects (pts_to r1 full_perm n1 `star`
+    (expects (pts_to r1 full_perm n1 *
               pts_to r2 full_perm n2))
-    (provides (fun _ -> pts_to r1 full_perm 1ul `star`
+    (provides (fun _ -> pts_to r1 full_perm 1ul *
                      pts_to r2 full_perm 1ul))
     (
       par
