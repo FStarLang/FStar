@@ -411,8 +411,8 @@ let try_frame_pre (#f:RT.fstar_top_env)
                         (open_term (comp_post c'') x)
         = VE_Refl _ _
       in
-      let pre_typing = check_vprop_no_inst f g (comp_pre c') in
-      let post_typing = check_vprop_no_inst f g' (open_term (comp_post c') x) in
+      let pre_typing = check_vprop_with_core f g (comp_pre c') in
+      let post_typing = check_vprop_with_core f g' (open_term (comp_post c') x) in
       let (| u, res_typing |) = check_universe f g (comp_res c') in
       if u <> comp_u c' 
       then T.fail "Unexpected universe"
@@ -444,7 +444,7 @@ let frame_empty (#f:RT.fstar_top_env)
     let x = fresh g in
     let pre_typing 
       : tot_typing f g (comp_pre c) Tm_VProp
-      = check_vprop_no_inst f g (comp_pre c)
+      = check_vprop_with_core f g (comp_pre c)
     in
     let (| u, res_typing |) = check_universe f g (comp_res c) in
     if u <> comp_u c
@@ -458,8 +458,8 @@ let frame_empty (#f:RT.fstar_top_env)
         : tot_typing f ((x, Inl (comp_res c))::g)
                        (open_term (comp_post c) x)
                        Tm_VProp
-        = check_vprop_no_inst f ((x, Inl (comp_res c))::g) 
-                                (open_term (comp_post c) x)
+        = check_vprop_with_core f ((x, Inl (comp_res c))::g) 
+                                  (open_term (comp_post c) x)
       in
       FV.st_typing_freevars_inv d x;
       freevars_comp_post c;
