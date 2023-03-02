@@ -203,6 +203,8 @@ let expects_fv = ["Pulse";"Tests";"expects"]
 let provides_fv = ["Pulse";"Tests";"provides"]
 let intro_fv = ["Pulse";"Tests";"intro"]
 let elim_fv = ["Pulse";"Tests";"elim"]
+let invariant_fv = ["Pulse";"Tests";"invariant"]
+let par_fv = ["Pulse"; "Tests"; "par"]
 //
 // shift bvs > n by -1
 //
@@ -527,10 +529,22 @@ and translate_while (g:RT.fstar_top_env) (t:R.term)
       then match args with
            | [(inv, _); (cond, _); (body, _)] -> 
              let? inv = 
-               match inspect_ln inv with
-               | Tv_Abs _ body -> translate_vprop g body
-               | _ ->
-                 Inr "WHILE: Expected inv to be an abstraction"
+               let hd, args = collect_app inv in
+               match inspect_ln hd, args with
+               | Tv_FVar fv, [(inv, _)] -> (
+                 if inspect_fv fv <> invariant_fv
+                 then Inr "WHILE: Expected while to be decorated with an invariant"
+                 else (
+                   match inspect_ln inv with
+                   | Tv_Abs _ body -> translate_vprop g body
+                   | _ ->
+                     Inr (Printf.sprintf 
+                           "WHILE: Expected inv to be an abstraction, got %s"
+                           (T.term_to_string inv))
+                 )
+               )
+               | _ -> 
+                  Inr "WHILE: Expected while to be decorated with an invariant"
              in
              let? cond = translate_st_term g cond in
              let? body = translate_st_term g body in
@@ -546,7 +560,7 @@ and translate_par (g:RT.fstar_top_env) (t:R.term)
   let head, args = R.collect_app t in
   match inspect_ln head with
   | Tv_FVar v ->
-    if inspect_fv v = ["Pulse"; "Tests"; "par"]
+    if inspect_fv v = par_fv
     then match args with
          | [(preL, _); (eL, _); (postL, _);
             (preR, _); (eR, _); (postR, _)] ->
