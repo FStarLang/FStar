@@ -44,3 +44,5 @@ val check_vprop_with_core (f:RT.fstar_top_env)
 
 val get_non_informative_witness (f:RT.fstar_top_env) (g:env) (u:universe) (t:term)
   : T.Tac (non_informative_t f g u t)
+
+val instantiate_implicits (f:RT.fstar_top_env) (g:env) (t:term) : T.Tac (term & term)
