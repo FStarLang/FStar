@@ -16,145 +16,146 @@ let expects = ()
 let provides = ()
 let while = ()
 let intro = ()
-// [@@ expect_failure]
-// %splice_t[tuple_test] (check (`(
-//   fun (r:ref (U32.t & U32.t)) (n1:erased U32.t) (n2:erased U32.t) ->
-//            (expects (pts_to r full_perm (reveal n1, reveal n2)))
-//     (provides (fun _ -> pts_to r full_perm (reveal n1, reveal n2)))
-//     (
-//       read #(U32.t & U32.t) r
-//     )
-// )))
 
-// (* Start up the solver and feed it the initial context *)
-// let warmup (x:int) = assert (x + 1 > x)
+[@@ expect_failure]
+%splice_t[tuple_test] (check (`(
+  fun (r:ref (U32.t & U32.t)) (n1:erased U32.t) (n2:erased U32.t) ->
+           (expects (pts_to r full_perm (reveal n1, reveal n2)))
+    (provides (fun _ -> pts_to r full_perm (reveal n1, reveal n2)))
+    (
+      read #(U32.t & U32.t) r
+    )
+)))
 
-// %splice_t[test_true] (check (`(true)))
+(* Start up the solver and feed it the initial context *)
+let warmup (x:int) = assert (x + 1 > x)
 
-// %splice_t[test_write_10] (check  (`(
-//    fun (x:ref UInt32.t)
-//      (#n:erased UInt32.t) -> 
-//      (expects (
-//         pts_to x full_perm n))
-//      (provides (fun _ ->
-//         pts_to x full_perm 0ul))
-//      (
-//        write x 1ul;
-//        write x 0ul
-//      )
-//    )))
+%splice_t[test_true] (check (`(true)))
 
-
-// %splice_t[test_read] (check (`(
-//   fun (r:ref UInt32.t)
-//     (#n:erased UInt32.t) (#p:perm) ->
-//     (expects (
-//        pts_to r p n))
-//     (provides (fun x ->
-//        pts_to r p x))
-//     (
-//        read #U32.t r
-//     )
-// )))
-
-// //Bound variable escapes scope
-// [@@ expect_failure]
-// %splice_t[test_read_alt_write] (check (`(
-//   fun (r:ref UInt32.t)
-//     (#n:erased UInt32.t) ->
-//     (expects (
-//        pts_to r full_perm n))
-//     (
-//        let x = read #U32.t r in
-//        write r x
-//     )
-// )))
+%splice_t[test_write_10] (check  (`(
+   fun (x:ref UInt32.t)
+     (#n:erased UInt32.t) -> 
+     (expects (
+        pts_to x full_perm n))
+     (provides (fun _ ->
+        pts_to x full_perm 0ul))
+     (
+       write x 1ul;
+       write x 0ul
+     )
+   )))
 
 
-// %splice_t[swap] (check (`(
-//   fun (r1 r2:ref UInt32.t)
-//     (#n1 #n2:erased UInt32.t) ->
-//     (expects  (
-//       pts_to r1 full_perm n1 `star` 
-//       pts_to r2 full_perm n2))
-//     (provides (fun _ ->
-//       pts_to r1 full_perm n2 `star` 
-//       pts_to r2 full_perm n1))
-//     (
-//       let x = read #U32.t r1 in
-//       let y = read #U32.t r2 in
-//       write r1 y;
-//       write r2 x
-//     )
-// )))
+%splice_t[test_read] (check (`(
+  fun (r:ref UInt32.t)
+    (#n:erased UInt32.t) (#p:perm) ->
+    (expects (
+       pts_to r p n))
+    (provides (fun x ->
+       pts_to r p x))
+    (
+       read #U32.t r
+    )
+)))
+
+//Bound variable escapes scope
+[@@ expect_failure]
+%splice_t[test_read_alt_write] (check (`(
+  fun (r:ref UInt32.t)
+    (#n:erased UInt32.t) ->
+    (expects (
+       pts_to r full_perm n))
+    (
+       let x = read #U32.t r in
+       write r x
+    )
+)))
 
 
-// %splice_t[call_swap2] (check (`(
-//   fun (r1 r2:ref UInt32.t)
-//     (#n1 #n2:erased UInt32.t) ->
-//     (expects  (
-//       pts_to r1 full_perm n1 `star` 
-//       pts_to r2 full_perm n2))
-//     (provides (fun _ -> 
-//       pts_to r1 full_perm n1 `star` 
-//       pts_to r2 full_perm n2))
-//     (
-//       swap r1 r2;
-//       swap r1 r2
-//     )
-// )))
+%splice_t[swap] (check (`(
+  fun (r1 r2:ref UInt32.t)
+    (#n1 #n2:erased UInt32.t) ->
+    (expects  (
+      pts_to r1 full_perm n1 `star` 
+      pts_to r2 full_perm n2))
+    (provides (fun _ ->
+      pts_to r1 full_perm n2 `star` 
+      pts_to r2 full_perm n1))
+    (
+      let x = read #U32.t r1 in
+      let y = read #U32.t r2 in
+      write r1 y;
+      write r2 x
+    )
+)))
 
 
-// //
-// // swap with elim_pure, bind of ghost and stt
-// //
+%splice_t[call_swap2] (check (`(
+  fun (r1 r2:ref UInt32.t)
+    (#n1 #n2:erased UInt32.t) ->
+    (expects  (
+      pts_to r1 full_perm n1 `star` 
+      pts_to r2 full_perm n2))
+    (provides (fun _ -> 
+      pts_to r1 full_perm n1 `star` 
+      pts_to r2 full_perm n2))
+    (
+      swap r1 r2;
+      swap r1 r2
+    )
+)))
 
-// %splice_t[swap_with_elim_pure] (check (`(
-//   fun (r1:ref UInt32.t) (r2:ref UInt32.t) (n1:erased UInt32.t) (n2:erased UInt32.t) ->
-//     (expects (pts_to r1 full_perm n1 `star` pts_to r2 full_perm n2))
-//     (provides (fun _ ->
-//                pts_to r1 full_perm n2 `star` pts_to r2 full_perm n1))
-//     (
-//       let x = read_pure #U32.t r1 in
-//       let y = read_pure #U32.t r2 in
-//       write r1 y;
-//       write r2 x
-//     )
-// )))
 
-// %splice_t[swap_with_elim_pure_and_atomic] (check (`(
-//   fun (r1:ref UInt32.t) (r2:ref UInt32.t) (n1:erased UInt32.t) (n2:erased UInt32.t) ->
-//     (expects (pts_to r1 full_perm n1 `star` pts_to r2 full_perm n2))
-//     (provides (fun _ ->
-//                pts_to r1 full_perm n2 `star` pts_to r2 full_perm n1))
-//     (
-//       let x = read_atomic r1 in
-//       let y = read_atomic r2 in
-//       write_atomic r1 y;
-//       write_atomic r2 x
-//     )
-// )))
+//
+// swap with elim_pure, bind of ghost and stt
+//
 
-// %splice_t[intro_pure_example] (check (`(
-//   fun (r:ref UInt32.t) (n1:erased UInt32.t) (n2:erased UInt32.t) ->
-//     (expects (pts_to r full_perm n1 `star` pure (eq2_prop (reveal n1) (reveal n2))))
-//     (provides (fun x -> pts_to r full_perm n2 `star` pure (eq2_prop (reveal n2) (reveal n1))))
-//     (
-//        ()
-//     )
-// )))
+%splice_t[swap_with_elim_pure] (check (`(
+  fun (r1:ref UInt32.t) (r2:ref UInt32.t) (n1:erased UInt32.t) (n2:erased UInt32.t) ->
+    (expects (pts_to r1 full_perm n1 `star` pts_to r2 full_perm n2))
+    (provides (fun _ ->
+               pts_to r1 full_perm n2 `star` pts_to r2 full_perm n1))
+    (
+      let x = read_pure #U32.t r1 in
+      let y = read_pure #U32.t r2 in
+      write r1 y;
+      write r2 x
+    )
+)))
 
-// %splice_t[if_example] (check (`(
-//   fun (r:ref UInt32.t) (n:erased UInt32.t{eq2_prop (U32.v (reveal n)) 1}) (b:bool) ->
-//     (expects (pts_to r full_perm n))
-//     (provides (fun _ -> pts_to r full_perm (U32.add (reveal n) 2ul)))
-//     (
-//       let x = read_atomic r in
-//       if b
-//       then write r (U32.add x 2ul)
-//       else write_atomic r 3ul
-//     )
-// )))
+%splice_t[swap_with_elim_pure_and_atomic] (check (`(
+  fun (r1:ref UInt32.t) (r2:ref UInt32.t) (n1:erased UInt32.t) (n2:erased UInt32.t) ->
+    (expects (pts_to r1 full_perm n1 `star` pts_to r2 full_perm n2))
+    (provides (fun _ ->
+               pts_to r1 full_perm n2 `star` pts_to r2 full_perm n1))
+    (
+      let x = read_atomic r1 in
+      let y = read_atomic r2 in
+      write_atomic r1 y;
+      write_atomic r2 x
+    )
+)))
+
+%splice_t[intro_pure_example] (check (`(
+  fun (r:ref UInt32.t) (n1:erased UInt32.t) (n2:erased UInt32.t) ->
+    (expects (pts_to r full_perm n1 `star` pure (eq2_prop (reveal n1) (reveal n2))))
+    (provides (fun x -> pts_to r full_perm n2 `star` pure (eq2_prop (reveal n2) (reveal n1))))
+    (
+       ()
+    )
+)))
+
+%splice_t[if_example] (check (`(
+  fun (r:ref UInt32.t) (n:erased UInt32.t{eq2_prop (U32.v (reveal n)) 1}) (b:bool) ->
+    (expects (pts_to r full_perm n))
+    (provides (fun _ -> pts_to r full_perm (U32.add (reveal n) 2ul)))
+    (
+      let x = read_atomic r in
+      if b
+      then write r (U32.add x 2ul)
+      else write_atomic r 3ul
+    )
+)))
 
 //#push-options "--ugly --print_implicits"
 %splice_t[elim_intro_exists] (check (`(
@@ -186,8 +187,7 @@ let intro = ()
     (expects (exists (b:bool) n. pts_to r full_perm n))
     (provides (fun _ -> exists n. pts_to r full_perm n))
     (
-      intro (exists n. pts_to r full_perm n) _;
-      intro (exists (b:bool) n. pts_to r full_perm n) false;
+      intro (exists (b:bool) n. pts_to r full_perm n) false _;
       while
         (fun b -> exists n. pts_to r full_perm n)
         (
@@ -195,65 +195,46 @@ let intro = ()
           return_stt_noeq true
         )
         (
-          intro (exists n. pts_to r full_perm n) _;
-          intro (exists (b:bool) n. pts_to r full_perm n) true;          
+          intro (exists (b:bool) n. pts_to r full_perm n) true _;
           return_stt_noeq ()
         )
     )
 )))
 
-#set-options "--fuel 2 --ifuel 2 --query_stats"
+#set-options "--fuel 2 --ifuel 2"
+
+
+%splice_t[infer_read_pure_ex] (check (`(
+  fun (r:ref UInt32.t) ->
+    (expects (exists n. pts_to r full_perm n))
+    (provides (fun _ -> exists n. pts_to r full_perm n))
+    (
+        let x = read_pure #U32.t r in
+        intro (exists n. pts_to r full_perm n) _
+    ))))
+
 
 %splice_t[while_count] (check (`(
   fun (r:ref UInt32.t) ->
     (expects (exists n. pts_to r full_perm n))
     (provides (fun _ -> pts_to r full_perm 10ul))
     (
-    //      let n = elim_exists _ in
-      let x = read_pure #U32.t r in
-      // let b = return_stt (x <> 10ul) in
-      let _ =
-        // let reveal_n = stt_ghost_reveal UInt32.t n in
-        intro (exists n. pts_to r full_perm n `star` pure (eq2_prop (n <> 10ul) (n <> 10ul))) _; //reveal_n;
-        intro (exists b n. pts_to r full_perm n `star` pure (eq2_prop b (n <> 10ul))) _ in
-
-      stt_admit unit))))
-//       while
-//         (fun b -> exists_ (fun n -> pts_to r full_perm n `star` pure (eq2_prop b (n <> 10ul))))
-     
-//         (
-//           // let b = elim_exists _ in
-//           // let n = elim_exists _ in
-//           let x = read_pure r in
-//           let b_res = return_stt (x <> 10ul) in
-
-//           let _ =
-// //            let reveal_n = stt_ghost_reveal UInt32.t n in
-//             intro_exists (fun n -> pts_to r full_perm n `star` pure (eq2_prop b_res (n <> 10ul))) _ in//reveal_n in
-          
-//           return_stt_noeq b_res
-//         )
-
-//         (
-//           // let n = elim_exists _ in
-//           let x = read_pure r in
-//           if FStar.UInt32.lt x 10ul
-//           then begin
-//             write r (FStar.UInt32.add x 1ul);
-//             let b_res = return_stt (FStar.UInt32.add x 1ul <> 10ul) in
-//             intro_exists (fun n -> pts_to r full_perm n `star` pure (eq2_prop b_res (n <> 10ul))) _; //(FStar.UInt32.add x 1ul);
-//             intro_exists (fun b -> exists_ (fun n -> pts_to r full_perm n `star` pure (eq2_prop b (n =!= 10ul)))) _ //b_res
-//           end
-//           else begin
-//             write r (FStar.UInt32.sub x 1ul);
-//             let b_res = return_stt (FStar.UInt32.sub x 1ul <> 10ul) in
-//             intro_exists (fun n -> pts_to r full_perm n `star` pure (eq2_prop b_res (n <> 10ul))) _;
-//             intro_exists (fun b -> exists_ (fun n -> pts_to r full_perm n `star` pure (eq2_prop b_res (n <> 10ul)))) _
-//           end
-//         );
-
-//       // let _ = elim_exists _ in
-//       return_stt_noeq ()
-//     )
-// )))
-
+      intro (exists b n. pts_to r full_perm n `star` pure (eq2_prop b (n <> 10ul))) _ _ ;
+      while
+        (fun b -> exists n. pts_to r full_perm n `star` pure (eq2_prop b (n <> 10ul)))
+        (let x = read_pure #U32.t r in
+         let b_res = return_stt (x <> 10ul) in
+         intro (exists n. pts_to r full_perm n `star` pure (eq2_prop b_res (n <> 10ul))) _;
+         return_stt_noeq b_res)
+        ( 
+          let x = read_pure #U32.t r in
+          if FStar.UInt32.lt x 10ul
+          then begin
+            write r (FStar.UInt32.add x 1ul);
+            intro (exists b n. pts_to r full_perm n `star` pure (eq2_prop b (n <> 10ul))) _ _
+          end
+          else begin
+            write r (FStar.UInt32.sub x 1ul);
+            intro (exists b n. pts_to r full_perm n `star` pure (eq2_prop b (n <> 10ul))) _ _                     end
+        );
+       ()))))

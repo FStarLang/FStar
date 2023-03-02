@@ -136,10 +136,15 @@ let check_tot (allow_inst:bool) (f:RT.fstar_top_env) (g:env) (t:term)
            typing f g t ty)
   = let fg = extend_env_l f g in
     let rt = elab_term t in
+    T.print (Printf.sprintf "check_tot (allow_inst %b): called on %s elaborated to %s"
+            allow_inst
+            (P.term_to_string t)
+            (T.term_to_string rt));
     match tc_maybe_inst allow_inst fg rt with
     | None -> 
         T.fail 
-          (Printf.sprintf "check_tot: %s elaborated to %s Not typeable"
+          (Printf.sprintf "check_tot (allow_inst %b): %s elaborated to %s Not typeable"
+            allow_inst
             (P.term_to_string t)
             (T.term_to_string rt))
     | Some (| rt, ty', tok |) ->
