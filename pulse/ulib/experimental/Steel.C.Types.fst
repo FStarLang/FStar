@@ -1672,27 +1672,35 @@ let union_switch_field0
 
 #pop-options
 
-(*
 
 /// Base arrays (without decay: explicit array types as top-level arrays or struct/union fields of array type)
 
 module A = Steel.C.Model.Array
 
-let base_array_t t _ n = A.array_pcm_carrier t n
+let base_array_t'
+  (t: Type0)
+  (n: Ghost.erased array_size_t)
+: Tot Type0
+= A.array_pcm_carrier t (Ghost.hide (Ghost.reveal n))
+
+let base_array_t t _ n = base_array_t' t n
 
 [@@noextract_to "krml"] // proof-only
 let base_array_fd
   (#t: Type)
   (td: typedef t)
-  (n: array_size_t)
+  (n: Ghost.erased array_size_t)
 : Tot (field_description_gen_t (base_array_index_t n))
 = {
     fd_nonempty = (let _ : base_array_index_t n = 0sz in ());
-    fd_type = A.array_range t n;
+    fd_type = A.array_range t (Ghost.hide (Ghost.reveal n));
     fd_typedef = (fun _ -> td);
   }
 
-let base_array0 tn td n = struct1 (base_array_fd td n)
+[@@noextract_to "krml"]
+let base_array1 (#t: Type0) (td: typedef t) (n: Ghost.erased array_size_t) : Tot (typedef (base_array_t' t n)) = struct1 (base_array_fd td n)
+
+let base_array0 tn td n = base_array1 td n
 
 let base_array_index a i = a i
 
@@ -1714,89 +1722,240 @@ let base_array_index_uninitialized tn n td i = ()
 
 let base_array_index_full td x = ()
 
-let has_base_array_cell #_ #_ #n #td r i r' =
-  SZ.v i < SZ.v n /\
-  has_struct_field_gen (base_array_fd td n) r i r'
+let base_array_index_t' (n: Ghost.erased array_size_t) : Tot eqtype =
+  A.array_domain (Ghost.hide (Ghost.reveal n))
+
+let base_array_index_t'_eq
+  (n: array_size_t)
+: Lemma
+  (base_array_index_t n == base_array_index_t' n)
+  [SMTPat (base_array_index_t n)]
+= // syntactic equality of refinement types
+  assert (base_array_index_t n == base_array_index_t' n) by (FStar.Tactics.trefl ())
+
+let array_as_field_marker
+  (n: Ghost.erased array_size_t)
+  (i: SZ.t)
+  (j: base_array_index_t' n)
+: Tot (base_array_index_t' n)
+= j
+
+#set-options "--print_implicits"
+
+let base_array1_eq
+  (#t: Type)
+  (n: Ghost.erased array_size_t)
+  (td: typedef t)
+: Lemma
+  (ref (base_array1 td n) == ref (struct1 #(base_array_index_t' n) (base_array_fd td n)))
+//  [SMTPat (ref (base_array1 td n))]
+= () // assert (ref (base_array1 td n) == ref (struct1 #(base_array_index_t' n) (base_array_fd td n))) by (FStar.Tactics.trefl ())
+
+[@@__reduce__]
+let has_base_array_cell_as_struct_field0
+  (#t: Type)
+  (#n: Ghost.erased array_size_t)
+  (#td: typedef t)
+  (r: ref (base_array1 td n))
+  (i: SZ.t)
+  (j: base_array_index_t' n)
+  (r': ref td)
+: Tot vprop
+= has_struct_field1 #(base_array_index_t' n) #(base_array_fd td n) r (array_as_field_marker n i j) r'
+
+let has_base_array_cell_as_struct_field
+  (#t: Type)
+  (#n: Ghost.erased array_size_t)
+  (#td: typedef t)
+  (r: ref (base_array1 td n))
+  (i: SZ.t)
+  (j: base_array_index_t' n)
+  (r': ref td)
+: Tot vprop
+= has_base_array_cell_as_struct_field0 r i j r'
+
+[@@__reduce__]
+let has_base_array_cell0
+  (#t: Type)
+  (#n: Ghost.erased array_size_t)
+  (#td: typedef t)
+  (r: ref (base_array1 td n))
+  (i: SZ.t)
+  (r': ref td)
+: Tot vprop
+= ST.exists_ (fun j ->
+    has_base_array_cell_as_struct_field r i j r' `star`
+    ST.pure (i == j)
+  )
+
+let has_base_array_cell1
+  (#t: Type)
+  (#n: Ghost.erased array_size_t)
+  (#td: typedef t)
+  (r: ref (base_array1 td n))
+  (i: SZ.t)
+  (r': ref td)
+: Tot vprop
+= has_base_array_cell0 r i r'
+
+let has_base_array_cell
+  r i r'
+= has_base_array_cell0 r i r'
+
+let has_base_array_cell_dup'
+  (#opened: _)
+  (#t: Type)
+  (#n: Ghost.erased array_size_t)
+  (#td: typedef t)
+  (r: ref (base_array1 td n))
+  (i: SZ.t)
+  (r': ref td)
+: ST.STGhostT unit opened
+    (has_base_array_cell1 r i r')
+    (fun _ -> has_base_array_cell1 r i r' `star` has_base_array_cell1 r i r')
+= ST.rewrite (has_base_array_cell1 r i r') (has_base_array_cell0 r i r');
+  let _ = ST.gen_elim () in
+  has_struct_field_dup'  #_ #(base_array_index_t' n) #(base_array_fd td n) (r) _ _;
+  ST.rewrite (has_base_array_cell0 r i r') (has_base_array_cell1 r i r');
+  ST.noop ();
+  ST.rewrite (has_base_array_cell0 r i r') (has_base_array_cell1 r i r')
+
+let has_base_array_cell_dup
+  r i r'
+= has_base_array_cell_dup' r i r'
+
+let has_base_array_cell_inj'
+  (#opened: _)
+  (#t: Type)
+  (#n: Ghost.erased array_size_t)
+  (#td: typedef t)
+  (r: ref (base_array1 td n))
+  (i: SZ.t)
+  (r1 r2: ref td)
+: ST.STGhostT unit opened
+    (has_base_array_cell1 r i r1 `star` has_base_array_cell1 r i r2)
+    (fun _ -> has_base_array_cell1 r i r1 `star` has_base_array_cell1 r i r2 `star` ref_equiv r1 r2)
+= ST.rewrite (has_base_array_cell1 r i r1) (has_base_array_cell0 r i r1);
+  let _ = ST.gen_elim () in
+  let j = ST.vpattern_replace (fun j -> has_base_array_cell_as_struct_field r i j _) in
+  ST.rewrite (has_base_array_cell1 r i r2) (has_base_array_cell0 r i r2);
+  let _ = ST.gen_elim () in
+  ST.vpattern_rewrite (fun j' -> has_base_array_cell_as_struct_field r i j _ `star` has_base_array_cell_as_struct_field r i j' _) j;
+  has_struct_field_inj' #_ #(base_array_index_t' n) #(base_array_fd td n) (r) _ r1 r2;
+  ST.rewrite (has_base_array_cell0 r i r2) (has_base_array_cell1 r i r2);
+  ST.rewrite (has_base_array_cell0 r i r1) (has_base_array_cell1 r i r1)
 
 let has_base_array_cell_inj
-  #_ #_ #_ #n #td r i r1 r2
-= has_struct_field_gen_inj (base_array_fd td n) r i r1 r2
+  r i r1 r2
+= has_base_array_cell_inj' r i r1 r2
+
+let has_base_array_cell_equiv_from'
+  (#opened: _)
+  (#t: Type)
+  (#n: Ghost.erased array_size_t)
+  (#td: typedef t)
+  (r1 r2: ref (base_array1 td n))
+  (i: SZ.t)
+  (r': ref td)
+: ST.STGhostT unit opened
+    (has_base_array_cell1 r1 i r' `star` ref_equiv r1 r2)
+    (fun _ -> has_base_array_cell1 r2 i r' `star` ref_equiv r1 r2)
+= ST.rewrite (has_base_array_cell1 r1 i r') (has_base_array_cell0 r1 i r');
+  let _ = ST.gen_elim () in
+  has_struct_field_equiv_from'  #_ #(base_array_index_t' n) #(base_array_fd td n) (r1) _ r' (r2);
+  ST.rewrite (has_base_array_cell0 r2 i r') (has_base_array_cell1 r2 i r')
+
+let has_base_array_cell_equiv_from
+  r1 r2 i r'
+= has_base_array_cell_equiv_from' r1 r2 i r'
+
+let has_base_array_cell_equiv_to'
+  (#opened: _)
+  (#t: Type)
+  (#n: Ghost.erased array_size_t)
+  (#td: typedef t)
+  (r: ref (base_array1 td n))
+  (i: SZ.t)
+  (r1 r2: ref td)
+: ST.STGhostT unit opened
+    (has_base_array_cell1 r i r1 `star` ref_equiv r1 r2)
+    (fun _ -> has_base_array_cell1 r i r2 `star` ref_equiv r1 r2)
+= ST.rewrite (has_base_array_cell1 r i r1) (has_base_array_cell0 r i r1);
+  let _ = ST.gen_elim () in
+  has_struct_field_equiv_to' r _ r1 r2;
+  ST.rewrite (has_base_array_cell0 r i r2) (has_base_array_cell1 r i r2)
+
+let has_base_array_cell_equiv_to
+  r i r1 r2
+= has_base_array_cell_equiv_to' r i r1 r2
 
 /// Array pointers (with decay)
 
 noeq
 type array_ref #t td = {
-  ar_base_size_token: TD.token;
   ar_base_size: Ghost.erased array_size_t;
-  ar_base: ref (base_array0 #t (TD.type_of_token ar_base_size_token) td ar_base_size);
+  ar_base: ref (base_array1 #t td ar_base_size);
   ar_offset: base_array_index_t ar_base_size;
 }
-let array_ref_base_size_type ar = TD.type_of_token ar.ar_base_size_token
 let array_ref_base_size ar = ar.ar_base_size
-let array_ref_base ar = ar.ar_base
+let has_array_ref_base ar r = ar.ar_base == r
+let has_array_ref_base_inj ar r1 r2 = ()
 let array_ref_offset ar = ar.ar_offset
-let array_ref_base_offset_inj a1 a2 =
-  TD.type_of_token_inj a1.ar_base_size_token a2.ar_base_size_token
+let array_ref_base_offset_inj a1 r1 a2 r2 = ()
 
-#push-options "--z3rlimit 16"
-
-#restart-solver
 let base_array_pcm_eq
   (#t: Type)
   (td: typedef t)
-  (n: array_size_t)
-  (tn: Type0)
+  (n: Ghost.erased array_size_t)
 : Lemma
-  (A.array_pcm td.pcm n == (base_array0 tn td n).pcm)
-  [SMTPat (base_array0 tn td n).pcm]
-= pcm0_ext (A.array_pcm td.pcm n) (base_array0 tn td n).pcm
+  (A.array_pcm td.pcm (Ghost.hide (Ghost.reveal n)) == (base_array1 td n).pcm)
+  [SMTPat (base_array1 td n).pcm]
+= pcm0_ext (A.array_pcm td.pcm (Ghost.hide (Ghost.reveal n))) (base_array1 td n).pcm
     (fun _ _ -> ())
     (fun x1 x2 ->
-      assert (op (A.array_pcm td.pcm n) x1 x2 `FX.feq` op (base_array0 tn td n).pcm x1 x2)
+      assert (op (A.array_pcm td.pcm (Ghost.hide (Ghost.reveal n))) x1 x2 `FX.feq` op (base_array1 td n).pcm x1 x2)
     )
     (fun _ -> ())
     ()
-
-#pop-options
-
-[@@noextract_to "krml"] // proof-only
-let coerce (#t1 t2: Type) (x1: t1) : Pure t2
-  (requires (t1 == t2))
-  (ensures (fun x2 ->
-    t1 == t2 /\
-    x1 == x2
-  ))
-= x1
 
 [@@noextract_to "krml"] // proof-only
 let model_array_of_array
   (#t: Type)
   (#td: typedef t)
   (a: array td)
-: Tot (A.array td.pcm)
+  (base: ref0_v (base_array1 td (dfst a).ar_base_size))
+: Tot (A.array base.base td.pcm)
 = let (| al, len |) = a in
   {
     base_len = Ghost.hide (Ghost.reveal al.ar_base_size);
-    base = coerce _ ((Some?.v al.ar_base).ref);
+    base = base.ref;
     offset = al.ar_offset;
     len = len;
     prf = ();
   }
 
+[@@__reduce__]
+let array_pts_to0
+  (#t: Type)
+  (#td: typedef t)
+  (r: array td)
+  (v: Ghost.erased (Seq.seq t))
+: Tot vprop
+= ST.exists_ (fun br -> ST.exists_ (fun p ->
+    HR.pts_to (dfst r).ar_base p br `star`
+    A.pts_to (model_array_of_array r br) v
+  ))
+
 let array_pts_to' r v =
-  A.pts_to (model_array_of_array r) v
+  array_pts_to0 r v
 
 let array_pts_to_length r v =
-  rewrite_slprop
-    (array_pts_to _ _)
-    (A.pts_to (model_array_of_array r) v)
-    (fun _ -> ());
-  A.pts_to_length _ _;
-  rewrite_slprop
-    (A.pts_to _ _)
-    (array_pts_to _ _)
-    (fun _ -> ())
+  ST.weaken (array_pts_to r v) (array_pts_to0 r v) (fun _ -> ());
+  let _ = ST.gen_elim () in
+  let _ = A.pts_to_length _ _ in
+  ST.weaken (array_pts_to0 r v) (array_pts_to r v) (fun _ -> ())
 
+(*
 #push-options "--z3rlimit 16"
 
 let ghost_array_of_base_focus
