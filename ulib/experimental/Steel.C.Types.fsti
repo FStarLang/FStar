@@ -1253,6 +1253,7 @@ val array_pts_to_length
     (fun _ -> True)
     (fun _ _ _ -> Seq.length v == SZ.v (dsnd r))
 
+(*
 let has_array_of_base
   (#t: Type)
   (#tn: Type0)
@@ -1292,7 +1293,6 @@ let seq_of_base_array
 : GTot (Seq.lseq t (SZ.v n))
 = Seq.init_ghost (SZ.v n) (fun i -> base_array_index v (SZ.uint_to_t i))
 
-(*
 val ghost_array_of_base_focus
   (#t: Type)
   (#tn: Type0)
