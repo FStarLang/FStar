@@ -115,13 +115,30 @@ let rec rebuild_head (head:term) (uvs:list term) (uv_sols:list (term & term))
       let app_node = Tm_PureApp head (Some Implicit) t2 in
       rebuild_head app_node tl uv_sols
 
-let try_inst_uvs_in_goal (uvs:list term)
-                         (ctxt:term)
+let try_inst_uvs_in_goal (ctxt:term)
                          (goal:vprop)
   : T.Tac (list (term & term))
-  = let ctxt = vprop_as_list ctxt in
-    infer_one_atomic_vprop goal ctxt []
-                             
+  = let uv_sols = [] in
+    let goal_list = vprop_as_list goal in
+    let ctxt_list = vprop_as_list ctxt in
+    let uv_sols =
+      T.fold_left
+        (fun uv_sols goal_vprop ->
+          infer_one_atomic_vprop goal_vprop ctxt_list uv_sols)
+        uv_sols
+        goal_list
+    in
+    uv_sols
+
+let print_solutions (l:list (term * term)) 
+  : T.Tac string
+  = String.concat "\n"
+      (T.map 
+        (fun (u, t) ->
+          Printf.sprintf "%s := %s" 
+                       (P.term_to_string u)
+                       (P.term_to_string t))
+        l)
 
 let infer
   (head:term)
@@ -142,20 +159,159 @@ let infer
   if List.Tot.length uvs = 0
   then T.fail "Inference did not find anything to infer"
   else begin
-    T.print (FStar.Printf.sprintf "infer: generated %d uvars, ctx: %s, st_comp.pre: %s\n"
+    T.print (FStar.Printf.sprintf "infer: generated %d uvars,\n\
+                                   ctx: {\n%s\n}\n\
+                                   st_comp.pre:{\n%s\n}"
                (List.Tot.length uvs)
-               (P.term_to_string ctxt_pre)
-               (P.term_to_string pre));
+               (P.term_list_to_string "\n" (vprop_as_list ctxt_pre))
+               (P.term_list_to_string "\n" (vprop_as_list pre)));
 
-    let uv_sols = [] in
-    
-    let pre_list = vprop_as_list pre in
-
-    let ctxt_pre_list = vprop_as_list ctxt_pre in
-
-    let uv_sols = T.fold_left (fun uv_sols st_pre_vprop ->
-      infer_one_atomic_vprop st_pre_vprop ctxt_pre_list uv_sols) uv_sols pre_list in
-
+    let uv_sols = try_inst_uvs_in_goal ctxt_pre pre in
+    T.print (Printf.sprintf "Got solutions: {\n%s\}"  (print_solutions uv_sols));
     let head = rebuild_head head uvs uv_sols in
+    T.print (Printf.sprintf "Rebuilt head= %s" (P.st_term_to_string head));
     head
   end
+
+let find_solution (sol:list (term * term)) (uv:int)
+  : option term
+  = let r =
+        List.Tot.find
+          (fun (u, t) ->
+            match u with
+            | Tm_UVar u -> u = uv
+            | _ -> false)
+        sol
+    in
+    match r with
+    | None -> None
+    | Some (_, t) -> Some t
+    
+let rec apply_solution (sol:list (term * term)) (t:term)
+  : term
+  = match t with
+    | Tm_BVar _
+    | Tm_Var _
+    | Tm_FVar _
+    | Tm_UInst _ _
+    | Tm_Constant _
+    | Tm_Emp
+    | Tm_VProp
+    | Tm_Inames
+    | Tm_EmpInames
+    | Tm_Type _ 
+    | Tm_Unknown -> t
+    | Tm_UVar uv -> (
+      match find_solution sol uv with
+      | None -> t
+      | Some t -> t
+    )
+      
+    | Tm_Refine b t ->
+      Tm_Refine (apply_solution_binder sol b)
+                (apply_solution sol t)
+
+    | Tm_PureApp head q arg ->
+      Tm_PureApp (apply_solution sol head)
+                 q
+                 (apply_solution sol arg)
+
+    | Tm_Let t e1 e2 ->
+      Tm_Let (apply_solution sol t)
+             (apply_solution sol e1)
+             (apply_solution sol e2)
+
+    | Tm_Pure p ->
+      Tm_Pure (apply_solution sol p)
+    | Tm_Star l r ->
+      Tm_Star (apply_solution sol l)
+              (apply_solution sol r)
+              
+    | Tm_ExistsSL u t body se ->
+      Tm_ExistsSL u (apply_solution sol t)
+                    (apply_solution sol body)
+                    se
+       
+    | Tm_ForallSL u t body ->
+      Tm_ForallSL u (apply_solution sol t)
+                    (apply_solution sol body)
+                    
+    | Tm_Arrow b q body ->
+      Tm_Arrow (apply_solution_binder sol b)
+               q
+               (apply_solution_comp sol body)
+
+and apply_solution_binder (sol:list (term & term))
+                          (b:binder)
+  : binder
+  = { b with binder_ty = apply_solution sol b.binder_ty }
+
+and apply_solution_comp (sol:list (term & term))
+                        (c:comp)
+  : comp
+  = match c with
+    | C_Tot t ->
+      C_Tot (apply_solution sol t)
+    | _ -> c //TODO?
+
+
+let rec contains_uvar (t:term)
+  : bool
+  = match t with
+    | Tm_BVar _
+    | Tm_Var _
+    | Tm_FVar _
+    | Tm_UInst _ _
+    | Tm_Constant _
+    | Tm_Emp
+    | Tm_VProp
+    | Tm_Inames
+    | Tm_EmpInames
+    | Tm_Type _ 
+    | Tm_Unknown -> false
+    | Tm_UVar _ -> true
+      
+    | Tm_Refine b t ->
+      contains_uvar_binder b ||
+      contains_uvar t
+
+    | Tm_PureApp head q arg ->
+      contains_uvar head ||
+      contains_uvar arg
+
+    | Tm_Let t e1 e2 ->
+      (contains_uvar t) ||
+      (contains_uvar e1) ||
+      (contains_uvar e2)
+
+    | Tm_Pure p ->
+      (contains_uvar p)
+      
+    | Tm_Star l r ->
+      (contains_uvar l) ||
+      (contains_uvar r)
+              
+    | Tm_ExistsSL u t body se ->
+      (contains_uvar t) ||
+      (contains_uvar body)
+       
+    | Tm_ForallSL u t body ->
+      (contains_uvar t) ||
+      (contains_uvar body)
+                    
+    | Tm_Arrow b q body ->
+      (contains_uvar_binder b) ||
+      (contains_uvar_comp body)
+
+and contains_uvar_binder  (b:binder)
+  : bool
+  = contains_uvar b.binder_ty
+
+and contains_uvar_comp  (c:comp)
+  : bool
+  = match c with
+    | C_Tot t ->
+      (contains_uvar t)
+    | _ -> true
+
+let try_unify (l r:term) = match_typ l r []

@@ -76,7 +76,8 @@ type term =
   | Tm_EmpInames  : term
   | Tm_UVar       : int -> term
   | Tm_Unknown    : term
-  
+
+
 and binder = {
   binder_ty     : term;
   binder_ppname : ppname;

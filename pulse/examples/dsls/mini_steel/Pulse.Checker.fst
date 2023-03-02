@@ -360,6 +360,9 @@ let check_elim_exists
   let (| t, t_typing |) = check_vprop f g t in
   match t with
   | Tm_ExistsSL u ty p _ ->
+    T.print (Printf.sprintf "LOG ELIM EXISTS: %s\n"
+                            (P.term_to_string t));
+
     // Could this come from inversion of t_typing?
     let (| u', ty_typing |) = check_universe f g ty in
     if u = u'
@@ -460,21 +463,113 @@ let check_intro_exists_either
   : T.Tac (t:st_term &
            c:comp{stateful_comp c ==> comp_pre c == pre} &
            st_typing f g t c)
-  = if is_intro_exists_erased st
+  = T.print (Printf.sprintf "LOG INTRO EXISTS: %s"
+                            (P.term_to_string (intro_exists_vprop st)));
+    if is_intro_exists_erased st
     then check_intro_exists_erased f g st vprop_typing pre pre_typing post_hint
     else check_intro_exists f g st vprop_typing pre pre_typing post_hint
-    
+
+let rec prepare_instantiations (out:list (vprop & either term term)) goal_vprop witnesses
+  : T.Tac (vprop & list (vprop & either term term))
+  = match witnesses, goal_vprop with
+    | [], _ -> 
+      goal_vprop, out
+      
+    | t :: witnesses, Tm_ExistsSL u ty p _ ->
+      let next_goal_vprop, inst =
+          match t with
+          | Tm_Unknown ->
+            let t = gen_uvar ty in
+            open_term' p t 0, Inr t
+          | _ ->
+            open_term' p t 0, Inl t
+      in
+      prepare_instantiations ((goal_vprop, inst)::out) next_goal_vprop witnesses
+    |  _ ->
+       T.fail "Unexpected number of instantiations in intro"
+
+
 let maybe_infer_intro_exists
   (f:RT.fstar_top_env)
   (g:env)
   (st:st_term{Tm_IntroExists? st})
   (pre:term)
-  (pre_typing:tot_typing f g pre Tm_VProp)
-  (post_hint:option term)
-  : T.Tac (t:st_term &
-           c:comp{stateful_comp c ==> comp_pre c == pre} &
-           st_typing f g t c)
-  = let un_reveal t = 
+  : T.Tac st_term
+  = let remove_pure_conjuncts t =
+        let rest, pure = 
+            List.Tot.partition
+              (function Tm_Pure _ | Tm_Emp -> false | _ -> true)
+              (vprop_as_list t)
+        in
+        let rest =
+          match list_as_vprop rest with
+          | Tm_Star t Tm_Emp -> t
+          | Tm_Star Tm_Emp t -> t        
+          | t -> t
+        in
+        rest, pure
+    in
+    let is_eq2 t =
+      match t with
+      | Tm_PureApp
+          (Tm_PureApp
+            (Tm_PureApp hd (Some Implicit) _)
+            None
+            l)
+          None
+          r -> (
+        match hd with
+        | Tm_FVar fv
+        | Tm_UInst fv _ ->
+          if fv = mk_steel_wrapper_lid "eq2_prop"
+          then Some (l, r)
+          else None
+        | _ -> None
+      )
+      | _ -> None
+    in
+    (* Weird: defining this here causes extraction to crash with
+       Failure("This should not happen (should have been handled at Tm_abs level)")
+     *)                                                                           
+    // let rec prepare_instantiations (out:list (vprop & term)) goal_vprop witnesses
+    //   : T.Tac (vprop & list (vprop & term))
+    //   = match witnesses, goal_vprop with
+    //     | [], _ -> 
+    //       goal_vprop, out
+    //     | t :: witnesses, Tm_ExistsSL u ty p _ ->
+    //       let inst =
+    //         match t with
+    //         | Tm_Unknown -> gen_uvar ty
+    //         | _ -> t
+    //       in
+    //       let next_goal_vprop = open_term' p inst 0 in
+    //       prepare_instantiations ((goal_vprop, inst)::out) next_goal_vprop witnesses
+    //     |  _ ->
+    //       T.fail "Unexpected number of instantiations in intro"
+    // in
+    let Tm_IntroExists erased t witnesses = st in
+    let (| t, t_typing |) = check_vprop f g t in
+    let goal_vprop, insts = prepare_instantiations [] t witnesses in
+    let goal_vprop, pure_conjuncts = remove_pure_conjuncts goal_vprop in      
+    let solutions = Pulse.Checker.Inference.try_inst_uvs_in_goal pre goal_vprop in
+    let maybe_solve_pure solutions p =
+      let p = Pulse.Checker.Inference.apply_solution solutions p in
+      match p with
+      | Tm_Pure p -> (
+          match is_eq2 p with
+          | Some (l, r) ->
+            let open Pulse.Checker.Inference in
+            if contains_uvar l
+            ||  contains_uvar r
+            then let sols = try_unify l r in
+                 sols@solutions
+            else solutions
+          | _ -> solutions
+        )
+      | _ -> solutions
+    in
+    let solutions = T.fold_left maybe_solve_pure solutions pure_conjuncts in
+    let un_reveal t = 
         match t with
         | Tm_PureApp (Tm_PureApp (Tm_UInst l [_]) (Some Implicit) _)
                      None arg ->
@@ -483,49 +578,76 @@ let maybe_infer_intro_exists
           else None
         | _ -> None
     in
-    let remove_pure_conjuncts t =
-        match list_as_vprop 
-                 (T.filter 
-                   (function Tm_Pure _ | Tm_Emp -> false | _ -> true)
-                   (vprop_as_list t))
-        with
-        | Tm_Star t Tm_Emp -> t
-        | Tm_Star Tm_Emp t -> t        
-        | t -> t
-    in
-    let Tm_IntroExists erased t e = st in
-    let (| t, t_typing |) = check_vprop f g t in
-    match t, e with
-    | Tm_ExistsSL u ty p _, [Tm_Unknown] -> (
-      let uv = gen_uvar ty in
-      let goal_vprop = open_term' p uv 0 in
-      let goal_vprop = remove_pure_conjuncts goal_vprop in
-      let open T in
-      T.print
-          (Printf.sprintf "Calling witness inference with context = %s and goal=%s"
-                                   (P.term_to_string pre)
-                                   (P.term_to_string goal_vprop));
-        match Pulse.Checker.Inference.try_inst_uvs_in_goal [uv] pre goal_vprop with
-        | [_, sol] -> (
-          T.print
-            (Printf.sprintf "Inferred solution %s"
-                                   (P.term_to_string sol));
+    let mk_hide (e:term) : term =
+        let hd = Tm_FVar hide_lid in
+        Tm_PureApp hd None e
+    in    
+    let solutions = 
+      List.Tot.map
+        (fun (u, v) -> 
+          let sol = Pulse.Checker.Inference.apply_solution solutions v in
           match un_reveal sol with
-          | Some sol ->
-            T.print
-              (Printf.sprintf "Revealed sol to ... %s"
-                                   (P.term_to_string sol));
-            check_intro_exists_erased f g (Tm_IntroExists true t [sol]) (Some t_typing) pre pre_typing post_hint
-          | _ ->
-            check_intro_exists f g (Tm_IntroExists false t [sol]) (Some t_typing) pre pre_typing post_hint
-        )
-        | _ ->
-          T.fail "Unable to infer solution"
-     )
+          | Some _ -> u, sol
+          | _ -> u, mk_hide sol)
+        solutions
+    in
+    let rec build_instantiations solutions insts
+      : T.Tac st_term 
+      = let one_inst (v, i) =
+          let v = Pulse.Checker.Inference.apply_solution solutions v in
+          match i with
+          | Inl user_provided ->
+            Tm_IntroExists false v [user_provided]
 
-    | _, [e] -> check_intro_exists_either f g (Tm_IntroExists erased t [e]) (Some t_typing) pre pre_typing post_hint
+          | Inr inferred ->
+            let sol = Pulse.Checker.Inference.apply_solution solutions inferred in
+            match un_reveal sol with
+            | Some sol ->
+              Tm_IntroExists true v [sol]
+            | _ ->
+              Tm_IntroExists true v [sol]
+        in
+        match insts with
+        | [] -> T.fail "Impossible"
+        | [hd] -> Tm_Protect (one_inst hd)
+        | hd::tl -> Tm_Protect 
+                    (Tm_Bind (Tm_Protect (one_inst hd))
+                             (build_instantiations solutions tl))
+    in
+    build_instantiations solutions insts
+    
+    
+    // match t, e with
+    // | Tm_ExistsSL u ty p _, [Tm_Unknown] -> (
+    //   let uv = gen_uvar ty in
+    //   let goal_vprop = open_term' p uv 0 in
+    //   let goal_vprop = remove_pure_conjuncts goal_vprop in
+    //   let open T in
+    //   T.print
+    //       (Printf.sprintf "Calling witness inference with context = %s and goal=%s"
+    //                                (P.term_to_string pre)
+    //                                (P.term_to_string goal_vprop));
+    //     match Pulse.Checker.Inference.try_inst_uvs_in_goal [uv] pre goal_vprop with
+    //     | [_, sol] -> (
+    //       T.print
+    //         (Printf.sprintf "Inferred solution %s"
+    //                                (P.term_to_string sol));
+    //       match un_reveal sol with
+    //       | Some sol ->
+    //         T.print
+    //           (Printf.sprintf "Revealed sol to ... %s"
+    //                                (P.term_to_string sol));
+    //         check_intro_exists_erased f g (Tm_IntroExists true t [sol]) (Some t_typing) pre pre_typing post_hint
+    //       | _ ->
+    //         check_intro_exists f g (Tm_IntroExists false t [sol]) (Some t_typing) pre pre_typing post_hint
+    //     )
+    //     | _ ->
+    //       T.fail "Unable to infer solution"
+    //  )
 
-    | _ -> T.fail "Not yet handling variadic intro exists"
+    // | _, [e] -> check_intro_exists_either f g (Tm_IntroExists erased t [e]) (Some t_typing) pre pre_typing post_hint
+
+    // | _ -> T.fail "Not yet handling variadic intro exists"
     
 
 let check_while
@@ -550,6 +672,7 @@ let check_while
     let cond_pre_typing =
       check_vprop_no_inst f g (comp_pre (comp_while_cond inv)) in
     let (| cond, cond_comp, cond_typing |) =
+      T.print "Check: While condition";
       check' allow_inst f g cond (comp_pre (comp_while_cond inv))
         cond_pre_typing (Some (comp_post (comp_while_cond inv))) in
     if eq_comp cond_comp (comp_while_cond inv)
@@ -557,16 +680,35 @@ let check_while
       let body_pre_typing =
         check_vprop_no_inst f g (comp_pre (comp_while_body inv)) in
       let (| body, body_comp, body_typing |) =
+          T.print "Check: While body";
           check' allow_inst f g body (comp_pre (comp_while_body inv))
           body_pre_typing (Some (comp_post (comp_while_body inv))) in
       if eq_comp body_comp (comp_while_body inv)
       then let d = T_While g inv cond body inv_typing cond_typing   body_typing in
+           T.print (Printf.sprintf
+                        "Check: Framing while\ninferred pre=%s\n required pre=%s\n"
+                        (P.term_to_string (comp_pre (comp_while inv)))
+                        (P.term_to_string pre));
            repack (try_frame_pre pre_typing d) post_hint true
       else T.fail "Cannot typecheck while loop body"
     end
     else T.fail "Cannot typecheck while loop condition"
   | _ -> T.fail "Typechecked invariant is not an exists"
 
+let maybe_log t =
+  match t with
+  | Tm_STApp (Tm_FVar l) None p ->
+    if l = elim_pure_explicit_lid
+    then T.print (Printf.sprintf "LOG ELIM PURE: %s\n"
+                    (P.term_to_string p))
+                    
+  | Tm_STApp (Tm_PureApp (Tm_FVar l) None p) None _ ->
+    if l = mk_steel_wrapper_lid "intro_pure"
+    then T.print (Printf.sprintf "LOG INTRO PURE: %s\n"
+                    (P.term_to_string p))  
+                    
+  | _ -> ()
+    
 let check_stapp
   (allow_inst:bool)
   (f:RT.fstar_top_env)
@@ -579,7 +721,7 @@ let check_stapp
   : T.Tac (t:st_term &
            c:comp{stateful_comp c ==> comp_pre c == pre} &
            st_typing f g t c) =
-
+  maybe_log t;
   let Tm_STApp head qual arg = t in
   let (| head, ty_head, dhead |) = check_tot allow_inst f g head in
   match ty_head with
@@ -735,7 +877,10 @@ let handle_framing_failure
                        (terms_to_string failure.remaining_context)
                        (P.st_term_to_string t0))
 
-let rec maybe_add_elim_exists (g:env) (ctxt:list term) (t:st_term)
+let rec maybe_add_elims
+           (g:env)
+           (ctxt:list term)
+           (t:st_term)
   : T.Tac st_term
   = match ctxt with
     | [] -> t
@@ -744,28 +889,76 @@ let rec maybe_add_elim_exists (g:env) (ctxt:list term) (t:st_term)
       let x = fresh g in
       let g = (x, Inl ty)::g in
       let b = open_term b x in
-      let t = maybe_add_elim_exists g [b] t in
+      let t = maybe_add_elims g [b] t in
       let t = close_st_term t x in
       let t = Tm_Bind e (Tm_Protect t) in
-      maybe_add_elim_exists g rest t
+      maybe_add_elims g rest t
+    | Tm_Pure p :: rest ->
+      let elim_pure_tm = Tm_STApp (Tm_FVar elim_pure_explicit_lid)
+                                  None
+                                  p 
+      in
+      Tm_Bind (Tm_Protect elim_pure_tm) 
+              (Tm_Protect (maybe_add_elims g rest t))
+
+    | Tm_Star p q :: rest ->
+      maybe_add_elims g (p :: q :: rest) t    
+      
     | _ :: rest ->
-      maybe_add_elim_exists g rest t
+      maybe_add_elims g rest t
 
 let rec unprotect t = 
   match t with
+  | Tm_Protect (Tm_Bind e1 e2) -> Tm_Bind (Tm_Protect e1) e2
+  | Tm_Protect (Tm_If b then_ else_ post) -> Tm_If b (Tm_Protect then_) (Tm_Protect else_) post
   | Tm_Protect t -> unprotect t
   | _ -> t
   
 let auto_elims (g:env) (ctxt:term) (t:st_term) =
   match t with
-  | Tm_Protect t -> unprotect t
+  | Tm_Protect _ -> unprotect t
   | _ ->
     let ctxt = vprop_as_list ctxt in
-    let t = snd (maybe_add_elim_pure ctxt t) in
-    let t = maybe_add_elim_exists g ctxt t in
+    let t = maybe_add_elims g ctxt t in 
     unprotect t
     
 
+let rec print_st_head (t:st_term) = 
+  match t with
+  | Tm_Abs _ _ _ _ _  -> "Abs"
+  | Tm_Protect p -> print_st_head p
+  | Tm_Return _ _ p -> print_head p
+  | Tm_Bind _ _ -> "Bind"
+  | Tm_If _ _ _ _ -> "If"
+  | Tm_While _ _ _ -> "While"
+  | Tm_Admit _ _ _ _ -> "Admit"
+  | Tm_Par _ _ _ _ _ _ -> "Par"
+  | Tm_STApp p _ _ -> print_head p
+  | Tm_IntroExists _ _ _ -> "IntroExists"
+  | Tm_ElimExists _ -> "ElimExists"  
+and print_head (t:term) =
+  match t with
+  | Tm_FVar fv
+  | Tm_UInst fv _ -> String.concat "." fv
+  | Tm_PureApp head _ _ -> print_head head
+  | _ -> "<pure term>"
+
+
+let rec print_skel (t:st_term) = 
+  match t with
+  | Tm_Abs _ _ _ body _  -> Printf.sprintf "(fun _ -> %s)" (print_skel body)
+  | Tm_Protect p -> Printf.sprintf "(Protect %s)" (print_skel p)
+  | Tm_Return _ _ p -> print_head p
+  | Tm_Bind e1 e2 -> Printf.sprintf "(Bind %s %s)" (print_skel e1) (print_skel e2)
+  | Tm_If _ _ _ _ -> "If"
+  | Tm_While _ _ _ -> "While"
+  | Tm_Admit _ _ _ _ -> "Admit"
+  | Tm_Par _ _ _ _ _ _ -> "Par"
+  | Tm_STApp p _ _ -> print_head p
+  | Tm_IntroExists _ _ _ -> "IntroExists"
+  | Tm_ElimExists _ -> "ElimExists"  
+
+  
 #push-options "--ifuel 2"
 let rec check' : bool -> check_t =
   fun (allow_inst:bool)
@@ -776,11 +969,17 @@ let rec check' : bool -> check_t =
     (pre_typing: tot_typing f g pre Tm_VProp)
     (post_hint:option term) ->
   let open T in
-  let t = auto_elims g pre t in
+  let t = 
+    if allow_inst
+    then auto_elims g pre t
+    else t
+  in
+  T.print (Printf.sprintf "Check: %s" (print_skel t));
   try 
     match t with
     | Tm_Protect _ -> T.fail "Protect should have been removed"
-    
+
+
     | Tm_Return _ _ (Tm_BVar _) -> T.fail "not locally nameless"
     | Tm_Return _ _ _ ->
       check_return allow_inst f g t pre pre_typing post_hint
@@ -807,8 +1006,16 @@ let rec check' : bool -> check_t =
     | Tm_ElimExists _ ->
       check_elim_exists f g t pre pre_typing post_hint
 
+    | Tm_IntroExists _ _ []
+    | Tm_IntroExists _ _ [Tm_Unknown]
+    | Tm_IntroExists _ _ (_::_::_) ->    
+      let unary_intros = maybe_infer_intro_exists f g t pre in
+      T.print (Printf.sprintf "Inferred unary_intros:\n%s\n"
+                              (P.st_term_to_string unary_intros));
+      check' allow_inst f g unary_intros pre pre_typing post_hint
+
     | Tm_IntroExists _ _ _ ->
-      maybe_infer_intro_exists f g t pre pre_typing post_hint
+      check_intro_exists_either f g t None pre pre_typing post_hint
 
     | Tm_While _ _ _ ->
       check_while allow_inst f g t pre pre_typing post_hint check'
