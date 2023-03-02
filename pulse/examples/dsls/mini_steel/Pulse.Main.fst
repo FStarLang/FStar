@@ -34,6 +34,8 @@ let main t pre : RT.dsl_tac_t = main' t pre
 // [@@plugin]
 // let parse_and_check (s:string) : RT.dsl_tac_t = main (parse s) Tm_Emp
 
+let tuple2_lid = ["FStar"; "Pervasives"; "Native"; "tuple2"]
+
 let err a = either a string
 
 let error #a msg : T.Tac (err a) = Inr msg
@@ -87,7 +89,7 @@ let rec translate_vprop (g:R.env) (t:R.term)
       then translate_exists g t
       else if qn = exists_qn
       then translate_exists_formula g t
-      else if qn = star_lid
+      else if qn = star_lid || qn = tuple2_lid
       then translate_star g t
       else if qn = pure_lid
       then translate_pure g t     
@@ -146,7 +148,8 @@ and translate_star (g:R.env) (t:R.term)
   = let hd, args = collect_app t in
     match inspect_ln hd, args with
     | Tv_FVar fv, [(l, _); (r, _)] ->
-      if inspect_fv fv = star_lid
+      let lid = inspect_fv fv in
+      if lid = star_lid || lid = tuple2_lid
       then let? l = translate_vprop g l in
            let? r = translate_vprop g r in
            Inl (Tm_Star l r)
