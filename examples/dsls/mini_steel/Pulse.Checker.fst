@@ -730,37 +730,55 @@ let check_stapp
            st_typing f g t c) =
   maybe_log t;
   let Tm_STApp head qual arg = t in
-  let (| head, ty_head, dhead |) = check_tot allow_inst f g head in
-  match ty_head with
-  | Tm_Arrow {binder_ty=formal;binder_ppname=ppname} bqual comp_typ ->
-    if qual = bqual
-    then
-      let (| arg, darg |) = check_tot_with_expected_typ f g arg formal in
-      match comp_typ with
-      | C_ST res
-      | C_STAtomic _ res
-      | C_STGhost _ res ->
-        // This is a real ST application
-        let d = T_STApp g head formal qual comp_typ arg (E dhead) (E darg) in
-        // opening_pure_comp_with_pure_term comp_typ arg 0;
-        repack (try_frame_pre pre_typing d) post_hint true
-      | C_Tot (Tm_Arrow _  (Some implicit) _) -> 
-        let head = Tm_PureApp head qual arg in
-        let C_Tot ty_head = open_comp_with comp_typ arg in
-        //Some implicits to follow
-        let t = Pulse.Checker.Inference.infer head ty_head pre in
-        check' false f g t pre pre_typing post_hint
 
-      | _ ->
-        T.fail
-          (Printf.sprintf
-             "Unexpected head type in stateful application (head: %s, comp_typ: %s, and arg: %s"
-             (P.term_to_string head)
-             (P.comp_to_string comp_typ)
-             (P.term_to_string arg))
-    else T.fail "Unexpected qualifier"
+  //
+  // c is the comp remaining after applying head to arg,
+  //
+  let infer_logical_implicits_and_check
+    (t:term)
+    (c:comp{C_Tot? c}) : T.Tac _ =
+
+    match c with
+    | C_Tot (Tm_Arrow _  (Some implicit) _) -> 
+      let C_Tot ty = c in
+      //Some implicits to follow
+      let t = Pulse.Checker.Inference.infer t ty pre in
+      check' false f g t pre pre_typing post_hint
+
+    | _ ->
+      T.fail
+        (Printf.sprintf
+           "Unexpected c in infer_logical_implicits_and_check (head: %s, comp_typ: %s, and arg: %s)"
+           (P.term_to_string head)
+           (P.comp_to_string c)
+           (P.term_to_string arg)) in
+
+  T.or_else
+    (fun _ -> let pure_app = Tm_PureApp head qual arg in
+            T.dump ("Calling check_tot_no_inst on %s" ^ (P.term_to_string pure_app));
+            let (| t, ty, _ |) = check_tot true f g pure_app in
+            infer_logical_implicits_and_check t (C_Tot ty))
+    (fun _ ->
+     let (| head, ty_head, dhead |) = check_tot allow_inst f g head in
+     match ty_head with
+     | Tm_Arrow {binder_ty=formal;binder_ppname=ppname} bqual comp_typ ->
+       if qual = bqual
+       then
+         let (| arg, darg |) = check_tot_with_expected_typ f g arg formal in
+         match comp_typ with
+         | C_ST res
+         | C_STAtomic _ res
+         | C_STGhost _ res ->
+           // This is a real ST application
+           let d = T_STApp g head formal qual comp_typ arg (E dhead) (E darg) in
+           repack (try_frame_pre pre_typing d) post_hint true
+         | _ ->
+           let t = Tm_PureApp head qual arg in
+           let comp_typ = open_comp_with comp_typ arg in
+           infer_logical_implicits_and_check t comp_typ
+       else T.fail "Unexpected qualifier"
     
-  | _ -> T.fail (Printf.sprintf "Unexpected head type in impure application: %s" (P.term_to_string ty_head))
+     | _ -> T.fail (Printf.sprintf "Unexpected head type in impure application: %s" (P.term_to_string ty_head)))
 
 let check_admit
   (f:RT.fstar_top_env)

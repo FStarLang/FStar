@@ -2292,6 +2292,15 @@ let refl_tc_term (g:env) (e:term) : tac (option (term & typ)) =
       BU.format1 "refl_tc_term: %s\n" (Print.term_to_string e));
     dbg_refl g (fun _ -> "refl_tc_term: starting tc {\n");
     let must_tot = true in
+    //
+    // we don't instantiate implicits at the end of e
+    // it is unlikely that we will be able to resolve them,
+    //   and refl typechecking API will fail if there are unresolved uvars
+    //
+    // note that this will still try to resolve implicits within e
+    // the typechecker does not check for this env flag for such implicits
+    //
+    let g = {g with instantiate_imp=false} in
     let e, _, _ = g.typeof_tot_or_gtot_term { g with phase1=true } e must_tot in
     let e, _, guard = g.typeof_tot_or_gtot_term g e must_tot in
     Rel.force_trivial_guard g guard;

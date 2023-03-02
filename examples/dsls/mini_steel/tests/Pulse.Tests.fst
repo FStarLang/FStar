@@ -56,7 +56,7 @@ let warmup (x:int) = assert (x + 1 > x)
     (provides (fun x ->
        pts_to r p x))
     (
-       read #U32.t r
+       read r
     )
 )))
 
@@ -68,7 +68,7 @@ let warmup (x:int) = assert (x + 1 > x)
     (expects (
        pts_to r full_perm n))
     (
-       let x = read #U32.t r in
+       let x = read r in
        write r x
     )
 )))
@@ -84,8 +84,8 @@ let warmup (x:int) = assert (x + 1 > x)
       pts_to r1 full_perm n2 `star` 
       pts_to r2 full_perm n1))
     (
-      let x = read #U32.t r1 in
-      let y = read #U32.t r2 in
+      let x = read r1 in
+      let y = read r2 in
       write r1 y;
       write r2 x
     )
@@ -118,8 +118,8 @@ let warmup (x:int) = assert (x + 1 > x)
     (provides (fun _ ->
                pts_to r1 full_perm n2 `star` pts_to r2 full_perm n1))
     (
-      let x = read_pure #U32.t r1 in
-      let y = read_pure #U32.t r2 in
+      let x = read_pure r1 in
+      let y = read_pure r2 in
       write r1 y;
       write r2 x
     )
@@ -235,7 +235,7 @@ val read_pred (_:unit) (#b:erased bool)
     (expects (exists n. pts_to r full_perm n))
     (provides (fun _ -> exists n. pts_to r full_perm n))
     (
-        let x = read_pure #U32.t r in
+        let x = read_pure r in
         ()
     ))))
 
@@ -249,10 +249,10 @@ val read_pred (_:unit) (#b:erased bool)
         (invariant (fun b ->
             exists n. pts_to r full_perm n `star`
                  pure (eq2_prop b (n <> 10ul))))
-        (let x = read_pure #U32.t r in
+        (let x = read_pure r in
          return_stt_noeq (x <> 10ul))
         ( 
-          let x = read_pure #U32.t r in
+          let x = read_pure r in
           if FStar.UInt32.lt x 10ul
           then (write r (FStar.UInt32.add x 1ul); ())
           else (write r (FStar.UInt32.sub x 1ul); ())
