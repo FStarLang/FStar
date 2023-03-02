@@ -2301,12 +2301,18 @@ let refl_tc_term (g:env) (e:term) : tac (option (term & typ)) =
     // the typechecker does not check for this env flag for such implicits
     //
     let g = {g with instantiate_imp=false} in
-    let e, _, _ = g.typeof_tot_or_gtot_term { g with phase1=true } e must_tot in
-    let e, _, guard = g.typeof_tot_or_gtot_term g e must_tot in
-    Rel.force_trivial_guard g guard;
+    //
+    // lax check to elaborate
+    //
+    let e =
+      let g = {g with phase1 = true; lax = true} in
+      let e, _, guard = g.typeof_tot_or_gtot_term g e must_tot in
+      Rel.force_trivial_guard g guard;
+      e in
     try 
      begin
      let e = SS.deep_compress false e in
+     // TODO: may be should we check here that e has no unresolved implicits?
      dbg_refl g (fun _ ->
        BU.format1 "} finished tc with e = %s\n"
          (Print.term_to_string e));
@@ -2331,29 +2337,6 @@ let refl_tc_term (g:env) (e:term) : tac (option (term & typ)) =
   else
     ret None
       
-  //   let e = N.remove_uvar_solutions g e in
-  //   dbg_refl g (fun _ ->
-  //     BU.format1 "} finished tc with e = %s\n"
-  //       (Print.term_to_string e));
-  //   if not (no_uvars_in_term e)
-  //   then Errors.raise_error (Errors.Fatal_IllTyped, "UVars remaing in term after tc_term callback") Range.dummyRange
-  //   else
-  //     let gh = fun g guard ->
-  //       Rel.force_trivial_guard g
-  //         {Env.trivial_guard with guard_f = NonTrivial guard};
-  //       true in
-  //     match Core.compute_term_type_handle_guards g e must_tot gh with
-  //     | Inl t ->
-  //       dbg_refl g (fun _ ->
-  //         BU.format2 "refl_tc_term for %s computed type %s\n"
-  //           (Print.term_to_string e)
-  //           (Print.term_to_string t));
-  //       e, t
-  //     | Inr err ->
-  //       dbg_refl g (fun _ -> BU.format1 "refl_tc_term failed: %s\n" (Core.print_error err));
-  //       Errors.raise_error (Errors.Fatal_IllTyped, "tc_term callback failed: " ^ Core.print_error err) Range.dummyRange)
-  // else ret None
-
 let refl_universe_of (g:env) (e:term) : tac (option universe) =
   let check_univ_var_resolved u =
     match SS.compress_univ u with
