@@ -754,7 +754,6 @@ let check_stapp
 
   T.or_else
     (fun _ -> let pure_app = Tm_PureApp head qual arg in
-            T.dump ("Calling check_tot_no_inst on %s" ^ (P.term_to_string pure_app));
             let (| t, ty, _ |) = check_tot f g pure_app in
             infer_logical_implicits_and_check t (C_Tot ty))
     (fun _ ->
