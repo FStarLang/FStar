@@ -1052,13 +1052,12 @@ let union_switch_field
 
 module SZ = FStar.SizeT
 
-(*
 // To be extracted as: t[tn]
 // Per the C standard, base array types must be of nonzero size
 inline_for_extraction [@@noextract_to "krml"]
 let array_size_t = (n: SZ.t { SZ.v n > 0 })
 val base_array_t (t: Type0) (tn: Type0 (* using Typenat (or Typestring for `#define`d constants) *)) (n: array_size_t) : Type0
-inline_for_extraction [@@noextract_to "krml"]
+inline_for_extraction [@@noextract_to "krml"] // MUST be syntactically equal to Steel.C.Model.Array.array_domain
 let base_array_index_t (n: array_size_t) : Tot eqtype = (i: SZ.t { SZ.v i < SZ.v n })
 [@@noextract_to "krml"]
 val base_array0 (#t: Type0) (tn: Type0) (td: typedef t) (n: array_size_t) : Tot (typedef (base_array_t t tn n))
@@ -1293,6 +1292,7 @@ let seq_of_base_array
 : GTot (Seq.lseq t (SZ.v n))
 = Seq.init_ghost (SZ.v n) (fun i -> base_array_index v (SZ.uint_to_t i))
 
+(*
 val ghost_array_of_base_focus
   (#t: Type)
   (#tn: Type0)
