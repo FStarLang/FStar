@@ -17,6 +17,7 @@ let provides = ()
 let while = ()
 let intro = ()
 let par = ()
+let invariant = ()
 
 [@@ expect_failure]
 %splice_t[tuple_test] (check (`(
@@ -190,7 +191,7 @@ let warmup (x:int) = assert (x + 1 > x)
     (
       intro (exists (b:bool) n. pts_to r full_perm n) false _;
       while
-        (fun b -> exists n. pts_to r full_perm n)
+        (invariant (fun b -> exists n. pts_to r full_perm n))
         (
           intro (exists n. pts_to r full_perm n) _;
           return_stt_noeq true
@@ -198,6 +199,30 @@ let warmup (x:int) = assert (x + 1 > x)
         (
           intro (exists (b:bool) n. pts_to r full_perm n) true _;
           return_stt_noeq ()
+        )
+    )
+)))
+
+
+assume
+val pred (b:bool) : vprop
+assume
+val read_pred (_:unit) (#b:erased bool)
+    : stt bool (pred b) (fun r -> pred r)
+    
+%splice_t[while_test_alt] (check (`(
+  fun (r:ref UInt32.t) ->
+    (expects (exists (b:bool) n. pts_to r full_perm n `star` pred b))
+    (provides (fun _ -> exists n. pts_to r full_perm n `star` pred false))
+    (
+      while
+        (invariant (fun b -> exists n. pts_to r full_perm n `star` pred b))
+        (
+          let x = read_pred () in
+          return_stt_noeq x
+        )
+        (
+          ()
         )
     )
 )))
@@ -211,7 +236,7 @@ let warmup (x:int) = assert (x + 1 > x)
     (provides (fun _ -> exists n. pts_to r full_perm n))
     (
         let x = read_pure #U32.t r in
-        intro (exists n. pts_to r full_perm n) _
+        ()
     ))))
 
 
@@ -220,26 +245,20 @@ let warmup (x:int) = assert (x + 1 > x)
     (expects (exists n. pts_to r full_perm n))
     (provides (fun _ -> pts_to r full_perm 10ul))
     (
-      intro (exists b n. pts_to r full_perm n `star` pure (eq2_prop b (n <> 10ul))) _ _ ;
       while
-        (fun b -> exists n. pts_to r full_perm n `star` pure (eq2_prop b (n <> 10ul)))
+        (invariant (fun b ->
+            exists n. pts_to r full_perm n `star`
+                 pure (eq2_prop b (n <> 10ul))))
         (let x = read_pure #U32.t r in
-         let b_res = return_stt (x <> 10ul) in
-         intro (exists n. pts_to r full_perm n `star` pure (eq2_prop b_res (n <> 10ul))) _;
-         return_stt_noeq b_res)
+         return_stt_noeq (x <> 10ul))
         ( 
           let x = read_pure #U32.t r in
           if FStar.UInt32.lt x 10ul
-          then begin
-            write r (FStar.UInt32.add x 1ul);
-            intro (exists b n. pts_to r full_perm n `star` pure (eq2_prop b (n <> 10ul))) _ _
-          end
-          else begin
-            write r (FStar.UInt32.sub x 1ul);
-            intro (exists b n. pts_to r full_perm n `star` pure (eq2_prop b (n <> 10ul))) _ _
-          end
+          then (write r (FStar.UInt32.add x 1ul); ())
+          else (write r (FStar.UInt32.sub x 1ul); ())
         );
-       ()))))
+      ())
+)))
 
 
 %splice_t[test_par] (check (`(

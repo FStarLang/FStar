@@ -472,6 +472,13 @@ let check_intro_exists_either
 let rec prepare_instantiations (out:list (vprop & either term term)) goal_vprop witnesses
   : T.Tac (vprop & list (vprop & either term term))
   = match witnesses, goal_vprop with
+    | [], Tm_ExistsSL u ty p _ ->  
+      let next_goal_vprop, inst =
+          let t = gen_uvar ty in
+          open_term' p t 0, Inr t
+      in
+      prepare_instantiations ((goal_vprop, inst)::out) next_goal_vprop []
+
     | [], _ -> 
       goal_vprop, out
       
@@ -864,18 +871,28 @@ let handle_framing_failure
         (Tm_Protect t0) //don't elim what we just intro'd here
         pures
     in
-    T.print 
-      (Printf.sprintf
-        "Retrying with %s"
-        (P.st_term_to_string t));
-    match rest with
-    | [] -> check f g t pre pre_typing post_hint
-    | _ -> T.fail (Printf.sprintf 
+    let rec handle_intro_exists rest t
+      : T.Tac (t:st_term &
+               c:comp{stateful_comp c ==> comp_pre c == pre} &
+               st_typing f g t c)
+      = match rest with
+        | [] -> check f g t pre pre_typing post_hint
+        | Tm_ExistsSL u ty p se :: rest ->
+          let t = 
+              Tm_Bind (Tm_Protect (Tm_IntroExists true 
+                                      (Tm_ExistsSL u ty p se)
+                                      []))
+                      (Tm_Protect t)
+          in
+          handle_intro_exists rest t
+        | _ ->
+          T.fail (Printf.sprintf 
                       "Failed to satisfy the following preconditions:\n%s\nContext has\n%s\nat command %s\n"
                        (terms_to_string rest)
                        (terms_to_string failure.remaining_context)
                        (P.st_term_to_string t0))
-
+    in
+    handle_intro_exists rest t
 
 let rec maybe_add_elims
            (g:env)
