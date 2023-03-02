@@ -16,6 +16,7 @@ let expects = ()
 let provides = ()
 let while = ()
 let intro = ()
+let par = ()
 
 [@@ expect_failure]
 %splice_t[tuple_test] (check (`(
@@ -235,6 +236,26 @@ let warmup (x:int) = assert (x + 1 > x)
           end
           else begin
             write r (FStar.UInt32.sub x 1ul);
-            intro (exists b n. pts_to r full_perm n `star` pure (eq2_prop b (n <> 10ul))) _ _                     end
+            intro (exists b n. pts_to r full_perm n `star` pure (eq2_prop b (n <> 10ul))) _ _
+          end
         );
        ()))))
+
+
+%splice_t[test_par] (check (`(
+  fun (r1 r2:ref UInt32.t) (n1 n2:erased U32.t) ->
+    (expects (pts_to r1 full_perm n1 `star`
+              pts_to r2 full_perm n2))
+    (provides (fun _ -> pts_to r1 full_perm 1ul `star`
+                     pts_to r2 full_perm 1ul))
+    (
+      par
+        (pts_to r1 full_perm n1)
+        (write r1 1ul)
+        (fun _ -> pts_to r1 full_perm 1ul)
+
+        (pts_to r2 full_perm n2)
+        (write r2 1ul)
+        (fun _ -> pts_to r2 full_perm 1ul)
+    )
+)))
