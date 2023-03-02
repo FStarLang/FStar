@@ -47,7 +47,7 @@ let replace_equiv_post
   let g_post = (x, Inl res_c)::g in
 
   let pre_c_typing : tot_typing f g pre_c Tm_VProp =
-    check_vprop_no_inst f g pre_c in
+    check_vprop_with_core f g pre_c in
   let res_c_typing : tot_typing f g res_c (Tm_Type u_c) =
     let (| u, ty |) = check_universe f g res_c in
     if u = u_c
@@ -56,7 +56,7 @@ let replace_equiv_post
   let post_c_opened = open_term post_c x in
   let post_c_typing
     : tot_typing f g_post (open_term post_c x) Tm_VProp
-    = check_vprop_no_inst f g_post post_c_opened in
+    = check_vprop_with_core f g_post post_c_opened in
 
   match post_hint with
   | None ->
@@ -104,7 +104,7 @@ let check_abs
            st_typing f g t c) =
   match t with  
   | Tm_Abs {binder_ty=t;binder_ppname=ppname} qual pre_hint body post_hint ->  (* {pre}  (fun (x:t) -> body) : ? { pre } *)
-    let (| t, _, _ |) = check_tot true f g t in //elaborate it first
+    let (| t, _, _ |) = check_tot f g t in //elaborate it first
     let (| u, t_typing |) = check_universe f g t in //then check that its universe ... We could collapse the two calls
     let x = fresh g in
     let g' = (x, Inl t) :: g in
@@ -112,7 +112,7 @@ let check_abs
       match pre_hint with
       | None -> T.fail "Cannot typecheck an function without a precondition"
       | Some pre_hint -> open_term pre_hint x in
-    match check_tot true f g' pre_opened with
+    match check_tot f g' pre_opened with
     | (| pre_opened, Tm_VProp, pre_typing |) ->
       let pre = close_term pre_opened x in
       let post =
@@ -136,7 +136,6 @@ let check_abs
 
 let has_pure_vprops (pre:term) = L.existsb Tm_Pure? (vprop_as_list pre)
 let elim_pure_explicit_lid = mk_steel_wrapper_lid "elim_pure_explicit"
-
 
 let maybe_add_elim_pure (pre:list term) (t:st_term) : T.Tac (bool & st_term) =
   let pure_props =
@@ -238,7 +237,7 @@ let check_comp (f:RT.fstar_top_env)
           let x = fresh g in
           assume (~(x `Set.mem` freevars (comp_post c)));
           let gx = (x, Inl st.res)::g in
-          let (| ty, post_typing |) = check_tot_no_inst f gx (open_term (comp_post c) x) in
+          let (| ty, post_typing |) = check_with_core f gx (open_term (comp_post c) x) in
           if not (eq_tm ty Tm_VProp)
           then T.fail "Ill-typed postcondition"
           else (
@@ -253,13 +252,13 @@ let check_comp (f:RT.fstar_top_env)
       CT_ST _ _ stc
     | C_STAtomic i st -> 
       let stc = check_st_comp st in
-      let (| ty, i_typing |) = check_tot_no_inst f g i in
+      let (| ty, i_typing |) = check_with_core f g i in
       if not (eq_tm ty Tm_Inames)
       then T.fail "Ill-typed inames"
       else CT_STAtomic _ _ _ (E i_typing) stc
     | C_STGhost i st -> 
       let stc = check_st_comp st in
-      let (| ty, i_typing |) = check_tot_no_inst f g i in
+      let (| ty, i_typing |) = check_with_core f g i in
       if not (eq_tm ty Tm_Inames)
       then T.fail "Ill-typed inames"
       else CT_STGhost _ _ _ (E i_typing) stc
@@ -291,7 +290,7 @@ let check_if (f:RT.fstar_top_env)
         //       we have typing of pre in g
         //       weakening should give typing of pre in g_then
         //
-        let pre_typing = check_vprop_no_inst f g_with_eq pre in
+        let pre_typing = check_vprop_with_core f g_with_eq pre in
         let (| br, c, br_typing |) =
             check f g_with_eq br pre pre_typing (Some post)
         in
@@ -677,7 +676,7 @@ let check_while
   | Tm_ExistsSL U_zero (Tm_FVar ["Prims"; "bool"]) inv _ ->
     // Should get from inv_typing
     let cond_pre_typing =
-      check_vprop_no_inst f g (comp_pre (comp_while_cond inv)) in
+      check_vprop_with_core f g (comp_pre (comp_while_cond inv)) in
     let (| cond, cond_comp, cond_typing |) =
       T.print "Check: While condition";
       check' allow_inst f g cond (comp_pre (comp_while_cond inv))
@@ -685,7 +684,7 @@ let check_while
     if eq_comp cond_comp (comp_while_cond inv)
     then begin
       let body_pre_typing =
-        check_vprop_no_inst f g (comp_pre (comp_while_body inv)) in
+        check_vprop_with_core f g (comp_pre (comp_while_body inv)) in
       let (| body, body_comp, body_typing |) =
           T.print "Check: While body";
           check' allow_inst f g body (comp_pre (comp_while_body inv))
@@ -756,10 +755,10 @@ let check_stapp
   T.or_else
     (fun _ -> let pure_app = Tm_PureApp head qual arg in
             T.dump ("Calling check_tot_no_inst on %s" ^ (P.term_to_string pure_app));
-            let (| t, ty, _ |) = check_tot true f g pure_app in
+            let (| t, ty, _ |) = check_tot f g pure_app in
             infer_logical_implicits_and_check t (C_Tot ty))
     (fun _ ->
-     let (| head, ty_head, dhead |) = check_tot allow_inst f g head in
+     let (| head, ty_head, dhead |) = check_tot f g head in
      match ty_head with
      | Tm_Arrow {binder_ty=formal;binder_ppname=ppname} bqual comp_typ ->
        if qual = bqual
@@ -828,7 +827,7 @@ let check_return
            st_typing f g t c) =
 
   let Tm_Return c use_eq t = t in
-  let (| t, u, ty, uty, d |) = check_tot_univ allow_inst f g t in
+  let (| t, u, ty, uty, d |) = check_tot_univ f g t in
   let x = fresh g in
   let (| post, post_typing |) =
     let post =

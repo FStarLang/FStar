@@ -150,7 +150,7 @@ let check_bind
         //would be nice to prove that this is typable as a lemma,
         //without having to re-check it
         let next_pre_typing : tot_typing f g' next_pre Tm_VProp
-          = check_vprop_no_inst f g' next_pre
+          = check_vprop_with_core f g' next_pre
         in
         let (| e2', c2, d2 |) = check f g' (open_st_term e2 x) next_pre next_pre_typing post_hint in
         FV.st_typing_freevars d2;
@@ -169,7 +169,7 @@ let check_bind
           then T.fail (Printf.sprintf "Bound variable %d escapes scope in postcondition %s" x (P.term_to_string s2.post))
           else (
             let s2_post_opened = open_term s2.post x in
-            let post_typing = check_vprop_no_inst f ((x, Inl s2.res)::g) s2_post_opened in
+            let post_typing = check_vprop_with_core f ((x, Inl s2.res)::g) s2_post_opened in
             //assume (~ (x `Set.mem` freevars_st e2_closed));
             mk_bind f g pre e1 e2_closed c1 c2 x d1 t_typing d2 res_typing post_typing
           )

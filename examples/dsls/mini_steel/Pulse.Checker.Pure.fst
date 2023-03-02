@@ -47,47 +47,6 @@ let catch_all (f:unit -> Tac (option 'a))
   = match T.catch f with
     | Inl exn -> None
     | Inr v -> v
-    
-let tc_no_inst (f:R.env) (e:R.term) 
-  : T.Tac (option (t:R.term & RT.typing f e t))
-  = let ropt = catch_all (fun _ -> rtb_core_check_term f e) in
-    match ropt with
-    | None -> None
-    | Some (t) ->
-      Some (| t, RT.T_Token _ _ _ (FStar.Squash.get_proof _) |)
-
-let tc_meta_callback (f:R.env) (e:R.term) 
-  : T.Tac (option (e:R.term & t:R.term & RT.typing f e t))
-  = let res =
-      match catch_all (fun _ -> rtb_tc_term f e) with
-      | None -> None
-      | Some (e, t) ->
-        Some (| e, t, RT.T_Token _ _ _ (FStar.Squash.get_proof _) |)
-    in
-    res
-
-let tc_maybe_inst (allow_inst:bool) (f:R.env) (e:R.term)
-  : T.Tac (option (e:R.term & t:R.term & RT.typing f e t))
-  = if allow_inst
-    then tc_meta_callback f e
-    else match tc_no_inst f e with
-         | None -> None
-         | Some (| t, d |) -> Some (| e, t, d |)
-  
-let tc_expected_meta_callback (f:R.env) (e:R.term) (t:R.term)
-  : T.Tac (option (e:R.term & RT.typing f e t))
-  = let ropt = catch_all (fun _ -> rtb_tc_term f e) in
-    match ropt with
-    | None -> None
-    | Some (e, te) ->
-      //we have typing_token f e te
-      match catch_all (fun _ -> rtb_check_subtyping f te t) with
-      | None -> None
-      | Some p -> //p:squash (subtyping_token f te t)
-        Some (| e,
-                RT.T_Sub _ _ _ _ (RT.T_Token _ _ _ (FStar.Squash.get_proof (RTB.typing_token f e te)))
-                             (RT.ST_Token _ _ _ p) |)
-
 
 let check_universe (f0:RT.fstar_top_env) (g:env) (t:term)
   : T.Tac (u:universe & universe_of f0 g t u)
@@ -107,8 +66,19 @@ let check_universe (f0:RT.fstar_top_env) (g:env) (t:term)
       match uopt with
       | None -> T.fail "check_universe: failed to readback the universe"
       | Some u -> (| u, E proof |)
-      
-let check_tot_univ (allow_inst:bool) (f:RT.fstar_top_env) (g:env) (t:term)
+
+
+let tc_meta_callback (f:R.env) (e:R.term) 
+  : T.Tac (option (e:R.term & t:R.term & RT.typing f e t))
+  = let res =
+      match catch_all (fun _ -> rtb_tc_term f e) with
+      | None -> None
+      | Some (e, t) ->
+        Some (| e, t, RT.T_Token _ _ _ (FStar.Squash.get_proof _) |)
+    in
+    res
+
+let check_tot_univ (f:RT.fstar_top_env) (g:env) (t:term)
   : T.Tac (t:term &
            u:universe &
            ty:term &
@@ -116,7 +86,7 @@ let check_tot_univ (allow_inst:bool) (f:RT.fstar_top_env) (g:env) (t:term)
            typing f g t ty)
   = let fg = extend_env_l f g in
     let rt = elab_term t in
-    match tc_maybe_inst allow_inst fg rt with
+    match tc_meta_callback fg rt with
     | None -> 
         T.fail
           (Printf.sprintf "check_tot_univ: %s elaborated to %s Not typeable"
@@ -130,21 +100,19 @@ let check_tot_univ (allow_inst:bool) (f:RT.fstar_top_env) (g:env) (t:term)
         let (| u, uty |) = check_universe f g ty in
         (| t, u, ty, uty, tok |)
 
-let check_tot (allow_inst:bool) (f:RT.fstar_top_env) (g:env) (t:term)
+let check_tot (f:RT.fstar_top_env) (g:env) (t:term)
   : T.Tac (t:term &
            ty:term &
            typing f g t ty)
   = let fg = extend_env_l f g in
     let rt = elab_term t in
-    T.print (Printf.sprintf "check_tot (allow_inst %b): called on %s elaborated to %s"
-            allow_inst
+    T.print (Printf.sprintf "check_tot : called on %s elaborated to %s"
             (P.term_to_string t)
             (T.term_to_string rt));
-    match tc_maybe_inst allow_inst fg rt with
+    match tc_meta_callback fg rt with
     | None -> 
         T.fail 
-          (Printf.sprintf "check_tot (allow_inst %b): %s elaborated to %s Not typeable"
-            allow_inst
+          (Printf.sprintf "check_tot : %s elaborated to %s Not typeable"
             (P.term_to_string t)
             (T.term_to_string rt))
     | Some (| rt, ty', tok |) ->
@@ -153,6 +121,20 @@ let check_tot (allow_inst:bool) (f:RT.fstar_top_env) (g:env) (t:term)
       | _, None -> T.fail "Inexpressible type/term"
       | Some t, Some ty -> 
         (| t, ty, tok |)
+
+let tc_expected_meta_callback (f:R.env) (e:R.term) (t:R.term)
+  : T.Tac (option (e:R.term & RT.typing f e t))
+  = let ropt = catch_all (fun _ -> rtb_tc_term f e) in
+    match ropt with
+    | None -> None
+    | Some (e, te) ->
+      //we have typing_token f e te
+      match catch_all (fun _ -> rtb_check_subtyping f te t) with
+      | None -> None
+      | Some p -> //p:squash (subtyping_token f te t)
+        Some (| e,
+                RT.T_Sub _ _ _ _ (RT.T_Token _ _ _ (FStar.Squash.get_proof (RTB.typing_token f e te)))
+                             (RT.ST_Token _ _ _ p) |)
 
 let check_tot_with_expected_typ (f:RT.fstar_top_env) (g:env) (e:term) (t:term)
   : T.Tac (e:term & typing f g e t)
@@ -168,12 +150,20 @@ let check_tot_with_expected_typ (f:RT.fstar_top_env) (g:env) (e:term) (t:term)
         | Some e -> (| e, tok |)
         | None -> T.fail "readback failed"
 
-let check_tot_no_inst (f:RT.fstar_top_env) (g:env) (t:term)
+let tc_with_core (f:R.env) (e:R.term) 
+  : T.Tac (option (t:R.term & RT.typing f e t))
+  = let ropt = catch_all (fun _ -> rtb_core_check_term f e) in
+    match ropt with
+    | None -> None
+    | Some (t) ->
+      Some (| t, RT.T_Token _ _ _ (FStar.Squash.get_proof _) |)
+
+let check_with_core (f:RT.fstar_top_env) (g:env) (t:term)
   : T.Tac (ty:term &
            typing f g t ty)
   = let fg = extend_env_l f g in
     let rt = elab_term t in
-    match tc_no_inst fg rt with
+    match tc_with_core fg rt with
     | None -> 
         T.fail 
           (Printf.sprintf "check_tot: %s elaborated to %s Not typeable"
@@ -187,22 +177,22 @@ let check_tot_no_inst (f:RT.fstar_top_env) (g:env) (t:term)
         | Some ty -> 
           (| ty, tok |)
 
-let check_vprop_no_inst (f:RT.fstar_top_env)
-                        (g:env)
-                        (t:term)
-  : T.Tac (tot_typing f g t Tm_VProp)
-  = let (| ty, d |) = check_tot_no_inst f g t in
-    match ty with
-    | Tm_VProp -> E d
-    | _ -> T.fail "Expected a vprop"
-
 let check_vprop (f:RT.fstar_top_env)
                 (g:env)
                 (t:term)
   : T.Tac (t:term & _:tot_typing f g t Tm_VProp)
-  = let (| t, ty, d |) = check_tot true f g t in
+  = let (| t, ty, d |) = check_tot f g t in
     match ty with
     | Tm_VProp -> (| t, E d |)
+    | _ -> T.fail "Expected a vprop"
+
+let check_vprop_with_core (f:RT.fstar_top_env)
+                          (g:env)
+                          (t:term)
+  : T.Tac (tot_typing f g t Tm_VProp)
+  = let (| ty, d |) = check_with_core f g t in
+    match ty with
+    | Tm_VProp -> E d
     | _ -> T.fail "Expected a vprop"
 
 let get_non_informative_witness f g u t
