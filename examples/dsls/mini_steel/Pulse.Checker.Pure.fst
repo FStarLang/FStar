@@ -42,6 +42,13 @@ let rtb_check_subtyping f t1 t2 =
   debug (fun _ -> "Returned");
   res
   
+let rtb_instantiate_implicits f t =
+  debug (fun _ -> Printf.sprintf "Calling elab_term on %s"
+                              (T.term_to_string t));
+  let res = RTB.instantiate_implicits f t in
+  debug (fun _ -> "Returned");
+  res
+  
 let catch_all (f:unit -> Tac (option 'a))
   : Tac (option 'a)
   = match T.catch f with
@@ -221,3 +228,18 @@ let get_non_informative_witness f g u t
     | Some e ->
       let (| x, y |) = check_tot_with_expected_typ f g e (non_informative_witness_t u t) in
       (|x, E y|)
+
+let instantiate_implicits (f:RT.fstar_top_env) (g:env) (t:term) =
+  let f = extend_env_l f g in
+  let rt = elab_term t in
+  let topt = catch_all (fun _ -> rtb_instantiate_implicits f rt) in
+  match topt with
+  | None -> T.fail (Printf.sprintf "%s elaborated to %s; Could not instantiate implicits"
+                       (P.term_to_string t)
+                       (T.term_to_string rt))
+  | Some (t, ty) ->
+    let topt = readback_ty t in
+    let tyopt = readback_ty ty in
+    match topt, tyopt with
+    | Some t, Some ty -> t, ty
+    | _ -> T.fail "instantiate_implicits: could not readback the resulting term/typ"

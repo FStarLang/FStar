@@ -186,6 +186,7 @@ let core_check_term         = from_tac_2 B.refl_core_check_term
 let tc_term                 = from_tac_2 B.refl_tc_term
 let universe_of             = from_tac_2 B.refl_universe_of
 let check_prop_validity     = from_tac_2 B.refl_check_prop_validity
+let instantiate_implicits   = from_tac_2 B.refl_instantiate_implicits
 
 (* The handlers need to "embed" their argument. *)
 let catch   (t: unit -> 'a __tac): ((exn, 'a) either) __tac = from_tac_1 TM.catch   (to_tac_0 (t ()))

@@ -455,3 +455,5 @@ type prop_validity_token (g:env) (t:term) =
          typing_token g e t}
 
 val check_prop_validity (g:env) (t:term) : Tac (option (prop_validity_token g t))
+
+val instantiate_implicits (g:env) (t:term) : Tac (option (term & typ))

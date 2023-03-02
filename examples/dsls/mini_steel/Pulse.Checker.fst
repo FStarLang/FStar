@@ -754,7 +754,7 @@ let check_stapp
 
   T.or_else
     (fun _ -> let pure_app = Tm_PureApp head qual arg in
-            let (| t, ty, _ |) = check_tot f g pure_app in
+            let t, ty = instantiate_implicits f g pure_app in
             infer_logical_implicits_and_check t (C_Tot ty))
     (fun _ ->
      let (| head, ty_head, dhead |) = check_tot f g head in

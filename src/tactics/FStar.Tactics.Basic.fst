@@ -2383,6 +2383,26 @@ let refl_check_prop_validity (g:env) (e:term) : tac (option unit) =
            {Env.trivial_guard with guard_f=NonTrivial e})
   else ret None
 
+let refl_instantiate_implicits (g:env) (e:term) : tac (option (term & typ)) =
+  if no_uvars_in_g g &&
+     no_uvars_in_term e
+  then refl_typing_builtin_wrapper (fun _ ->
+    dbg_refl g (fun _ ->
+      BU.format1 "refl_elab_term: %s\n" (Print.term_to_string e));
+    dbg_refl g (fun _ -> "refl_elab_term: starting tc {\n");
+    let must_tot = true in
+    let g = {g with instantiate_imp=false; phase1=true; lax=true} in
+    let e, t, guard = g.typeof_tot_or_gtot_term g e must_tot in
+    Rel.force_trivial_guard g guard;
+    let e = SS.deep_compress false e in
+    let t = SS.deep_compress false t in
+    dbg_refl g (fun _ ->
+      BU.format2 "} finished tc with e = %s and t = %s\n"
+        (Print.term_to_string e)
+        (Print.term_to_string t));
+    (e, t))
+  else ret None
+
 (**** Creating proper environments and proofstates ****)
 
 let tac_env (env:Env.env) : Env.env =

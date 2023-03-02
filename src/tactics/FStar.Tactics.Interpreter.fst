@@ -549,7 +549,11 @@ let () =
 
       mk_tac_step_2 0 "check_prop_validity"
         refl_check_prop_validity RE.e_env RE.e_term (e_option e_unit)
-        refl_check_prop_validity NRE.e_env NRE.e_term (NBET.e_option NBET.e_unit)
+        refl_check_prop_validity NRE.e_env NRE.e_term (NBET.e_option NBET.e_unit);
+
+      mk_tac_step_2 0 "elab_term"
+        refl_instantiate_implicits RE.e_env RE.e_term (e_option (e_tuple2 RE.e_term RE.e_term))
+        refl_instantiate_implicits NRE.e_env NRE.e_term (NBET.e_option (NBET.e_tuple2 NRE.e_term NRE.e_term));
 
     ]
 
