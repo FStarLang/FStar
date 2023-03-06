@@ -318,7 +318,7 @@ let rec st_typing_freevars (#f:_) (#g:_) (#t:_) (#c:_)
  = match d with
    // | T_Tot _g e t dt ->
    //    tot_typing_freevars dt
-      
+
    | T_Abs _g  x _q ty _u body cres dt db ->
       tot_typing_freevars dt;
       st_typing_freevars db;
@@ -441,9 +441,15 @@ let rec st_typing_freevars (#f:_) (#g:_) (#t:_) (#c:_)
      freevars_open_term inv tm_false 0;
      assert (freevars (open_term' inv tm_false 0) `Set.subset` freevars inv)
 
-   | T_Par _ _ _ _ _ eL_typing eR_typing ->
+   | T_Par _ _ cL _ cR x _ _ eL_typing eR_typing ->
+     let x_tm = term_of_var x in
+     let u = comp_u cL in
+     let aL = comp_res cL in
+     let aR = comp_res cR in
      st_typing_freevars eL_typing;
-     st_typing_freevars eR_typing
+     st_typing_freevars eR_typing;
+     freevars_open_term (comp_post cL) (Pulse.Typing.mk_fst u u aL aR x_tm) 0;
+     freevars_open_term (comp_post cR) (Pulse.Typing.mk_snd u u aL aR x_tm) 0
 
    | T_Admit _ s _ (STC _ _ x t_typing pre_typing post_typing) ->
      tot_typing_freevars t_typing;

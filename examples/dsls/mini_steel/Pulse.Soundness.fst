@@ -282,7 +282,7 @@ let intro_exists_soundness
   Exists.intro_exists_soundness rt_typing rp_typing re_typing
 
 
-#push-options "--z3rlimit_factor 4 --fuel 2 --ifuel 2"
+#push-options "--z3rlimit_factor 8 --fuel 2 --ifuel 2"
 let elim_exists_soundness
   (#f:stt_env)
   (#g:env)
@@ -368,7 +368,7 @@ let while_soundness
   While.while_soundness rinv_typing rcond_typing rbody_typing
 
 
-#push-options "--z3rlimit_factor 4"
+#push-options "--z3rlimit_factor 4 --fuel 4 --ifuel 2"
 let if_soundness
   (f:stt_env)
   (g:env)
@@ -696,7 +696,7 @@ let rec soundness (f:stt_env)
     | T_While _ _ _ _ _ _ _ ->
       while_soundness d soundness
 
-    | T_Par _ _ _ _ _ _ _ _ ->
+    | T_Par _ _ _ _ _ _ _ _ _ _ ->
       par_soundness d soundness
 
     | T_Admit _ _ _ _ -> admit_soundess d

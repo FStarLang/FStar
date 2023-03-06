@@ -771,9 +771,17 @@ let rec st_typing_ln (#f:_) (#g:_) (#t:_) (#c:_)
       st_typing_ln body_typing;
       open_term_ln_inv' inv tm_false 0
 
-    | T_Par _ _ _ _ _ eL_typing eR_typing ->
+    | T_Par _ _ cL _ cR x _ _ eL_typing eR_typing ->
+      let x_tm = term_of_var x in
+      let u = comp_u cL in
+      let aL = comp_res cL in
+      let aR = comp_res cR in
       st_typing_ln eL_typing;
-      st_typing_ln eR_typing
+      st_typing_ln eR_typing;
+      open_term_ln_inv' (comp_post cL) (Pulse.Typing.mk_fst u u aL aR x_tm) 0;
+      close_term_ln' (open_term' (comp_post cL) (Pulse.Typing.mk_fst u u aL aR x_tm) 0) x 0;
+      open_term_ln_inv' (comp_post cR) (Pulse.Typing.mk_snd u u aL aR x_tm) 0;
+      close_term_ln' (open_term' (comp_post cR) (Pulse.Typing.mk_snd u u aL aR x_tm) 0) x 0
 
     | T_Admit _ s _ (STC _ _ x t_typing pre_typing post_typing) ->
       tot_typing_ln t_typing;
