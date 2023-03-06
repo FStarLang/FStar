@@ -916,18 +916,15 @@ let e_qualifier =
                         Range.dummyRange
 
         | RD.Projector (l, i) ->
-            S.mk_Tm_app ref_qual_Projector.t [S.as_arg (embed e_lid rng l);
-                                              S.as_arg (embed e_ident rng i)]
+            S.mk_Tm_app ref_qual_Projector.t [S.as_arg (embed (e_tuple2 e_lid e_ident) rng (l, i))]
                         Range.dummyRange
 
         | RD.RecordType (ids1, ids2) ->
-            S.mk_Tm_app ref_qual_RecordType.t [S.as_arg (embed (e_list e_ident) rng ids1);
-                                               S.as_arg (embed (e_list e_ident) rng ids2)]
+            S.mk_Tm_app ref_qual_RecordType.t [S.as_arg (embed (e_tuple2 (e_list e_ident) (e_list e_ident)) rng (ids1, ids2))]
                         Range.dummyRange
 
         | RD.RecordConstructor (ids1, ids2) ->
-            S.mk_Tm_app ref_qual_RecordConstructor.t [S.as_arg (embed (e_list e_ident) rng ids1);
-                                                      S.as_arg (embed (e_list e_ident) rng ids2)]
+            S.mk_Tm_app ref_qual_RecordConstructor.t [S.as_arg (embed (e_tuple2 (e_list e_ident) (e_list e_ident)) rng (ids1, ids2))]
                         Range.dummyRange
 
         in { r with pos = rng }
@@ -1002,20 +999,17 @@ let e_qualifier =
             BU.bind_opt (unembed' w e_lid l) (fun l ->
             Some <| RD.Action l)
 
-        | Tm_fvar fv, [(l, _); (i, _)] when S.fv_eq_lid fv ref_qual_Projector.lid ->
-            BU.bind_opt (unembed' w e_lid l) (fun l ->
-            BU.bind_opt (unembed' w e_ident i) (fun i ->
-            Some <| RD.Projector (l, i)))
+        | Tm_fvar fv, [(payload, _)] when S.fv_eq_lid fv ref_qual_Projector.lid ->
+            BU.bind_opt (unembed' w (e_tuple2 e_lid e_ident) payload) (fun (l, i) ->
+            Some <| RD.Projector (l, i))
 
-        | Tm_fvar fv, [(ids1, _); (ids2, _)] when S.fv_eq_lid fv ref_qual_RecordType.lid ->
-            BU.bind_opt (unembed' w (e_list e_ident) ids1) (fun ids1 ->
-            BU.bind_opt (unembed' w (e_list e_ident) ids2) (fun ids2 ->
-            Some <| RD.RecordType (ids1, ids2)))
+        | Tm_fvar fv, [(payload, _)] when S.fv_eq_lid fv ref_qual_RecordType.lid ->
+            BU.bind_opt (unembed' w (e_tuple2 (e_list e_ident) (e_list e_ident)) payload) (fun (ids1, ids2) ->
+            Some <| RD.RecordType (ids1, ids2))
 
-        | Tm_fvar fv, [(ids1, _); (ids2, _)] when S.fv_eq_lid fv ref_qual_RecordConstructor.lid ->
-            BU.bind_opt (unembed' w (e_list e_ident) ids1) (fun ids1 ->
-            BU.bind_opt (unembed' w (e_list e_ident) ids2) (fun ids2 ->
-            Some <| RD.RecordConstructor (ids1, ids2)))
+        | Tm_fvar fv, [(payload, _)] when S.fv_eq_lid fv ref_qual_RecordConstructor.lid ->
+            BU.bind_opt (unembed' w (e_tuple2 (e_list e_ident) (e_list e_ident)) payload) (fun (ids1, ids2) ->
+            Some <| RD.RecordConstructor (ids1, ids2))
 
         | _ ->
             if w then
