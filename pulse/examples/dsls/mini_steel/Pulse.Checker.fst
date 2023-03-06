@@ -989,7 +989,7 @@ let rec print_skel (t:st_term) =
   | Tm_Par _ _ _ _ _ _ -> "Par"
   | Tm_STApp p _ _ -> print_head p
   | Tm_IntroExists _ _ _ -> "IntroExists"
-  | Tm_ElimExists _ -> "ElimExists"  
+  | Tm_ElimExists _ -> "ElimExists"
 
   
 #push-options "--ifuel 2"
@@ -1015,14 +1015,19 @@ let check_par
   let (| eL, cL, eL_typing |) =
     check' allow_inst f g eL preL (E preL_typing) (Some postL) in
 
+  // TODO: can we avoid checking cL and cR?
+
   if C_ST? cL
   then
+    let cL_typing = check_comp f g cL (E preL_typing) in
     let (| eR, cR, eR_typing |) =
       check' allow_inst f g eR preR (E preR_typing) (Some postR) in
 
     if C_ST? cR && comp_u cL = comp_u cR
     then
-      let d = T_Par _ _ _ _ _ eL_typing eR_typing in
+      let cR_typing = check_comp f g cR (E preR_typing) in
+      let x = fresh g in
+      let d = T_Par _ _ _ _ _ x cL_typing cR_typing eL_typing eR_typing in
       repack (try_frame_pre pre_typing d) post_hint true
     else T.fail "par: cR is not stt"
   else T.fail "par: cL is not stt"

@@ -721,6 +721,9 @@ and st_typing (f:RT.fstar_top_env) : env -> st_term -> comp -> Type =
       eR:st_term ->
       cR:comp { C_ST? cR /\ comp_u cL == comp_u cR } ->
       x:var { None? (lookup g x) } ->
+      // TODO: can comp_typing come from inversion of eL : cL and eR : cR?
+      comp_typing f g cL (comp_u cL) ->
+      comp_typing f g cR (comp_u cR) ->
       st_typing f g eL cL ->
       st_typing f g eR cR ->
       st_typing f g (Tm_Par Tm_Unknown eL Tm_Unknown Tm_Unknown eR Tm_Unknown)
