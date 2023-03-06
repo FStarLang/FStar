@@ -35,4 +35,3 @@ val elab_comp_open_commute (c:comp) (x:term)
 val elab_ln (t:term) (i:int)
   : Lemma (requires ln' t i)
           (ensures RT.ln' (elab_term t) i)
-

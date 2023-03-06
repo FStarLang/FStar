@@ -149,4 +149,55 @@ let elab_comp_open_commute (c:comp) (x:term)
   = RT.open_with_spec (elab_comp c) (elab_term x);
     elab_comp_open_commute' c x 0
 
-let elab_ln t i = admit ()
+let rec elab_ln t i =
+  match t with
+  | Tm_BVar _
+  | Tm_Var _
+  | Tm_FVar _
+  | Tm_UInst _ _
+  | Tm_Constant _ -> ()
+  | Tm_Refine b t ->
+    elab_ln b.binder_ty i;
+    elab_ln t (i + 1)
+  | Tm_PureApp head _ arg ->
+    elab_ln head i;
+    elab_ln arg i
+  | Tm_Let t e1 e2 ->
+    elab_ln t i;
+    elab_ln e1 i;
+    elab_ln e2 (i + 1)
+  | Tm_Emp -> ()
+  | Tm_Pure t -> elab_ln t i
+  | Tm_Star l r ->
+    elab_ln l i;
+    elab_ln r i
+  | Tm_ExistsSL _ t body _
+  | Tm_ForallSL _ t body ->
+    elab_ln t i;
+    elab_ln body (i + 1)
+  | Tm_Arrow b _ c ->
+    elab_ln b.binder_ty i;
+    elab_ln_comp c (i + 1)
+  | Tm_Type _
+  | Tm_VProp
+  | Tm_Inames
+  | Tm_EmpInames
+  | Tm_UVar _
+  | Tm_Unknown -> ()
+
+and elab_ln_comp (c:comp) (i:int)
+  : Lemma (requires ln_c' c i)
+          (ensures RT.ln' (elab_comp c) i) =
+
+  match c with
+  | C_Tot t -> elab_ln t i
+  | C_ST st ->
+    elab_ln st.res i;
+    elab_ln st.pre i;
+    elab_ln st.post (i + 1)
+  | C_STAtomic inames st
+  | C_STGhost inames st ->
+    elab_ln inames i;
+    elab_ln st.res i;
+    elab_ln st.pre i;
+    elab_ln st.post (i + 1)
