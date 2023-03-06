@@ -997,7 +997,7 @@ let ln (t:term) = ln' t (-1)
 let ln_comp (c:comp) = ln'_comp c (-1)
 
 val well_typed_terms_are_ln (g:R.env) (e:R.term) (t:R.term) (_:typing g e t)
-  : Lemma (ensures ln e)
+  : Lemma (ensures ln e /\ ln t)
 
 val type_correctness (g:R.env) (e:R.term) (t:R.term) (_:typing g e t)
   : GTot (u:R.universe & typing g t (tm_type u))
@@ -1214,8 +1214,10 @@ let mk_abs ty qual t : R.term =  R.pack_ln (R.Tv_Abs (binder_of_t_q ty qual) t)
 let bound_var i : R.term = R.pack_ln (R.Tv_BVar (R.pack_bv (make_bv i tun)))
 
 val beta_reduction (t:R.typ) (q:R.aqualv) (e:R.term) (arg:R.term)
-  : Lemma (open_or_close_term' e (OpenWith arg) 0 ==
-           R.pack_ln (R.Tv_App (mk_abs t q e) (arg, q)))
+  : Lemma
+      (requires ln' e 0 /\ ln arg)
+      (ensures open_or_close_term' e (OpenWith arg) 0 ==
+               R.pack_ln (R.Tv_App (mk_abs t q e) (arg, q)))
 
 //
 // Type of the top-level tactic that would splice-in the definitions

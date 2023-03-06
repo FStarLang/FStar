@@ -10,13 +10,6 @@ open Pulse.Elaborate.Pure
 open Pulse.Typing
 open Pulse.Elaborate.Core
 
-// val elab_pure_equiv (#f:RT.fstar_top_env)
-//                     (#g:env)
-//                     (#t:term)
-//                     (#c:comp { C_Tot? c })
-//                     (d:st_typing f g (Tm_Return t) c)
-//   : Lemma (ensures elab_st_typing d == elab_term t)
-
 val elab_open_commute' (e:term)
                        (v:term)
                        (n:index)
@@ -38,3 +31,8 @@ val elab_comp_close_commute (c:comp) (x:var)
 
 val elab_comp_open_commute (c:comp) (x:term)
   : Lemma (elab_comp (open_comp_with c x) == RT.open_with (elab_comp c) (elab_term x))
+
+val elab_ln (t:term) (i:int)
+  : Lemma (requires ln' t i)
+          (ensures RT.ln' (elab_term t) i)
+

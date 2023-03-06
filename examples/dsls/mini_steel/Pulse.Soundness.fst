@@ -52,13 +52,6 @@ let elab_comp_open_commute (c:comp) (x:term)
 
   elab_comp_open_commute c x
 
-let refl_beta_reduction (t:R.typ) (q:R.aqualv) (e:R.term) (arg:R.term)
-  : Lemma (RT.open_or_close_term' e (RT.OpenWith arg) 0 ==
-           R.pack_ln (R.Tv_App (mk_abs t q e) (arg, q)))
-          [SMTPat (R.Tv_App (mk_abs t q e) (arg, q))] =
-
-  RT.beta_reduction t q e arg
-
 let soundness_t (d:'a) = 
     f:stt_env ->
     g:env ->
@@ -205,6 +198,7 @@ let bind_soundness
            (tot_typing_soundness reveal_b_typing)
 #pop-options
 
+#push-options "--fuel 4 --ifuel 1"
 let intro_exists_erased_soundness
   (#f:stt_env)
   (#g:env)
@@ -238,10 +232,17 @@ let intro_exists_erased_soundness
       tot_typing_soundness e_typing
   in
   let reveal_re = elab_term (mk_reveal u t e) in
+
+  // reveal_re is ln
+  LN.tot_typing_ln e_typing;
+  elab_ln (mk_reveal u t e) (-1);
+
+  //rp is (ln' 0)
+  LN.tot_typing_ln p_typing;
+  elab_ln p 0;
+  
   RT.beta_reduction rt R.Q_Explicit rp reveal_re;    
-  elab_open_commute' p (mk_reveal u t e) 0;
-  assert (elab_term (open_term' p (mk_reveal u t e) 0) ==
-          R.pack_ln (R.Tv_App (mk_abs rt R.Q_Explicit rp) (reveal_re, R.Q_Explicit)));
+
   Exists.intro_exists_erased_soundness rt_typing rp_typing re_typing
 
 let intro_exists_soundness
@@ -275,14 +276,21 @@ let intro_exists_soundness
   let re_typing : RT.typing _ re _ =
       tot_typing_soundness e_typing
   in
+
+  // re is ln
+  LN.tot_typing_ln e_typing;
+  elab_ln e (-1);
+
+  //rp is (ln' 0)
+  LN.tot_typing_ln p_typing;
+  elab_ln p 0;
+
   RT.beta_reduction rt R.Q_Explicit rp re;
-  elab_open_commute' p e 0;
-  assert (elab_term (open_term' p e 0) ==
-          R.pack_ln (R.Tv_App (mk_abs rt R.Q_Explicit rp) (re, R.Q_Explicit)));
+
   Exists.intro_exists_soundness rt_typing rp_typing re_typing
+#pop-options
 
-
-#push-options "--z3rlimit_factor 8 --fuel 2 --ifuel 2"
+#push-options "--z3rlimit_factor 8 --fuel 4 --ifuel 2"
 let elim_exists_soundness
   (#f:stt_env)
   (#g:env)
@@ -313,6 +321,15 @@ let elim_exists_soundness
   let x_tm = Tm_Var {nm_index=x;nm_ppname=RT.pp_name_default} in
   let rx_tm = R.pack_ln (R.Tv_Var (R.pack_bv (RT.make_bv x tun))) in
   let rx_bv = R.pack_ln (R.Tv_BVar (R.pack_bv (RT.make_bv 0 tun))) in
+
+  // rt is ln
+  LN.tot_typing_ln t_typing;
+  elab_ln t (-1);
+
+  //rp is (ln' 0)
+  LN.tot_typing_ln p_typing;
+  elab_ln p 0;
+
   calc (==) {
     elab_term (close_term' (open_term' p (mk_reveal u t x_tm) 0) x 0);
        (==) {
@@ -323,7 +340,7 @@ let elim_exists_soundness
   Exists.elim_exists_soundness x rt_typing rp_typing
 #pop-options
 
-#push-options "--z3rlimit_factor 4 --query_stats"
+#push-options "--z3rlimit_factor 4 --fuel 4 --ifuel 2"
 let while_soundness
   (#f:stt_env)
   (#g:env)
@@ -352,6 +369,10 @@ let while_soundness
         (mk_stt_comp uzero bool_tm (mk_exists uzero bool_tm rinv) rinv) =
     soundness f g cond (comp_while_cond inv) cond_typing in
 
+  // (elab_term inv) is (ln 0)
+  LN.tot_typing_ln inv_typing;
+  elab_ln inv 0;
+
   elab_open_commute' inv tm_true 0;
   RT.beta_reduction bool_tm R.Q_Explicit (elab_term inv) true_tm;
 
@@ -366,7 +387,7 @@ let while_soundness
   RT.beta_reduction bool_tm R.Q_Explicit (elab_term inv) false_tm;
 
   While.while_soundness rinv_typing rcond_typing rbody_typing
-
+#pop-options
 
 #push-options "--z3rlimit_factor 4 --fuel 4 --ifuel 2"
 let if_soundness
@@ -455,7 +476,6 @@ let stc_soundness
   res_typing, pre_typing, post_typing
 
 #push-options "--query_stats --fuel 2 --ifuel 2 --z3rlimit_factor 2"
-
 let comp_typing_soundness (f:stt_env)
                           (g:env)
                           (c:comp)
@@ -503,6 +523,7 @@ let admit_soundess
   | STT_Ghost ->
     Admit.stt_ghost_admit_soundness rt_typing rpre_typing rpost_typing
 
+#push-options "--z3rlimit_factor 10 --fuel 4 --ifuel 2"
 let return_soundess
   (#f:stt_env)
   (#g:env)
@@ -528,6 +549,14 @@ let return_soundess
                   (mk_arrow (rt, R.Q_Explicit) vprop_tm) =
     mk_t_abs_tot f g RT.pp_name_default t_typing post_typing in
 
+  // re is ln
+  LN.tot_typing_ln e_typing;
+  elab_ln e (-1);
+
+  // (elab_term post) is (ln 0)
+  RT.well_typed_terms_are_ln _ rpost _ rpost_typing;
+  assert (RT.ln' (elab_term post) 0);
+
   elab_open_commute' post e 0;
   RT.beta_reduction rt R.Q_Explicit (elab_term post) re;
   
@@ -544,6 +573,7 @@ let return_soundess
     Return.return_stt_ghost_typing x rt_typing re_typing rpost_typing
   | STT_Ghost, false -> 
     Return.return_stt_ghost_noeq_typing rt_typing re_typing rpost_typing
+#pop-options
 
 #push-options "--z3rlimit_factor 10 --fuel 8 --ifuel 1"
 let par_soundness
@@ -599,6 +629,13 @@ let par_soundness
   let postL = comp_post cL in
   let postR = comp_post cR in
   let x_tm = term_of_var x in
+
+  // ln proofs for invoking the RT beta reduction
+  RT.well_typed_terms_are_ln _ _ _ raL_typing;
+  RT.well_typed_terms_are_ln _ _ _ raR_typing;
+  RT.well_typed_terms_are_ln _ _ _ rpostL_typing;
+  RT.well_typed_terms_are_ln _ _ _ rpostR_typing;
+
   calc (==) {
     elab_term (par_post uL uR aL aR postL postR x);
        (==) { }
