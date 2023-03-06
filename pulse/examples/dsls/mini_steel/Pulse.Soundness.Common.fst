@@ -329,3 +329,40 @@ val inversion_of_stt_typing (f:RT.fstar_top_env) (g:env) (c:comp_st)
           // _ |- (fun (x:t) -> post) : t -> vprop
           RT.typing (extend_env_l f g) (elab_comp_post c)
                                        (elab_term (Tm_Arrow (null_binder (comp_res c)) None (C_Tot Tm_VProp))))
+
+let soundness_t (d:'a) = 
+    f:stt_env ->
+    g:env ->
+    t:st_term ->
+    c:comp ->
+    d':st_typing f g t c{d' << d} ->
+    GTot (RT.typing (extend_env_l f g)
+                    (elab_st_typing d')
+                    (elab_comp c))
+
+let elab_open_commute' (e:term) (v:term) (n:index)
+  : Lemma (ensures
+             RT.open_or_close_term' (elab_term e) (RT.OpenWith (elab_term v)) n ==
+             elab_term (open_term' e v n))
+          [SMTPat (elab_term (open_term' e v n))] =
+
+  elab_open_commute' e v n
+
+let elab_close_commute' (e:term) (v:var) (n:index)
+  : Lemma (RT.open_or_close_term' (elab_term e) (RT.CloseVar v) n ==
+           elab_term (close_term' e v n))
+          [SMTPat (elab_term (close_term' e v n))] =
+
+  elab_close_commute' e v n
+
+let elab_comp_close_commute (c:comp) (x:var)
+  : Lemma (ensures elab_comp (close_comp c x) == RT.close_term (elab_comp c) x)
+          [SMTPat (elab_comp (close_comp c x))] =
+
+  elab_comp_close_commute c x
+
+let elab_comp_open_commute (c:comp) (x:term)
+  : Lemma (ensures elab_comp (open_comp_with c x) == RT.open_with (elab_comp c) (elab_term x))
+          [SMTPat (elab_comp (open_comp_with c x))] =
+
+  elab_comp_open_commute c x
