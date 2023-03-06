@@ -557,7 +557,7 @@ let par_soundness
                     (elab_st_typing d)
                     (elab_comp c)) =
 
-  let T_Par _ eL cL eR cR x eL_typing eR_typing = d in
+  let T_Par _ eL cL eR cR x cL_typing cR_typing eL_typing eR_typing = d in
 
   let ru = elab_universe (comp_u cL) in
   let raL = elab_term (comp_res cL) in
@@ -568,10 +568,6 @@ let par_soundness
   let rpostR = mk_abs raR R.Q_Explicit (elab_term (comp_post cR)) in
   let reL = elab_st_typing eL_typing in
   let reR = elab_st_typing eR_typing in
-
-  let cL_typing : comp_typing f g cL (comp_u cL) = magic () in
-  let cR_typing : comp_typing f g cR (comp_u cR) = magic () in
-  
 
   let reL_typing
     : RT.typing _ reL (elab_comp cL) =
@@ -700,7 +696,8 @@ let rec soundness (f:stt_env)
     | T_While _ _ _ _ _ _ _ ->
       while_soundness d soundness
 
-    | T_Par _ _ _ _ _ _ _ -> admit ()
+    | T_Par _ _ _ _ _ _ _ _ ->
+      par_soundness d soundness
 
     | T_Admit _ _ _ _ -> admit_soundess d
 #pop-options
