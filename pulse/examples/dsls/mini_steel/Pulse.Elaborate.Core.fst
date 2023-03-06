@@ -467,7 +467,7 @@ let rec elab_st_typing (#f:RT.fstar_top_env)
       let body = elab_st_typing body_typing in
       mk_while (mk_abs bool_tm R.Q_Explicit inv) cond body
 
-    | T_Par _ eL cL eR cR _ eL_typing eR_typing ->
+    | T_Par _ eL cL eR cR _ _ _ eL_typing eR_typing ->
       let ru = elab_universe (comp_u cL) in
       let raL = elab_term (comp_res cL) in
       let raR = elab_term (comp_res cR) in
