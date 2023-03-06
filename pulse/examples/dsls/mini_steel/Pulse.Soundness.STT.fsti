@@ -1,9 +1,9 @@
 module Pulse.Soundness.STT
-module RT = Refl.Typing
+
 module R = FStar.Reflection
-module L = FStar.List.Tot
-module T = FStar.Tactics
-open Pulse.Elaborate.Pure
+module RT = Refl.Typing
+
+open Pulse.Reflection.Util
 
 let post_type t = mk_arrow (t, R.Q_Explicit) vprop_tm
 let inames_tm = R.(pack_ln (Tv_FVar (pack_fv inames_lid)))
@@ -42,5 +42,3 @@ val stt_ghost_typing (#f:RT.fstar_env)//needs to bind stt
                      (_:RT.typing f pre vprop_tm)
                      (_:RT.typing f post (post_type t))
   : GTot (RT.typing f (mk_stt_ghost_comp u t inames pre post) (RT.tm_type u))
-
-               
