@@ -9,16 +9,6 @@ open Pulse.Elaborate.Pure
 open Pulse.Typing
 open Pulse.Elaborate.Core
 
-// #push-options "--ifuel 2"
-// let elab_pure_equiv (#f:RT.fstar_top_env)
-//                     (#g:env)
-//                     (#t:term)
-//                     (#c:comp { C_Tot? c })
-//                     (d:st_typing f g (Tm_Return t) c)
-//   : Lemma (ensures elab_st_typing d == elab_term t)
-//   = ()
-// #pop-options
-
 #push-options "--fuel 10 --ifuel 10 --z3rlimit_factor 5 --query_stats --z3cliopt 'smt.qi.eager_threshold=100'"
 
 let rec elab_open_commute' (e:term)
@@ -158,3 +148,5 @@ let elab_comp_open_commute (c:comp) (x:term)
   : Lemma (elab_comp (open_comp_with c x) == RT.open_with (elab_comp c) (elab_term x))
   = RT.open_with_spec (elab_comp c) (elab_term x);
     elab_comp_open_commute' c x 0
+
+let elab_ln t i = admit ()

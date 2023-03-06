@@ -7,9 +7,10 @@ open Pulse.Syntax
 open Pulse.Typing
 open Pulse.Elaborate.Pure
 
-assume
-val well_typed_terms_are_ln (g:R.env) (e:R.term) (t:R.term) (_:RT.typing g e t)
-  : Lemma (ensures RT.ln e /\ RT.ln t)
+let well_typed_terms_are_ln (g:R.env) (e:R.term) (t:R.term) (d:RT.typing g e t)
+  : Lemma (ensures RT.ln e /\ RT.ln t) =
+
+  RT.well_typed_terms_are_ln g e t d
 
 assume
 val elab_ln_inverse (e:term)
