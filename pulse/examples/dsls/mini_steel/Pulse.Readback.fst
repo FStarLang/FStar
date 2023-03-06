@@ -4,6 +4,7 @@ module L = FStar.List.Tot
 module T = FStar.Tactics
 module RT = Refl.Typing
 open Pulse.Syntax
+open Pulse.Reflection.Util
 open Pulse.Elaborate.Pure
 
 let (let?) (f:option 'a) (g:'a -> T.Tac (option 'b)) : T.Tac (option 'b) =

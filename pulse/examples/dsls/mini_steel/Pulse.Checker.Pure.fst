@@ -6,6 +6,7 @@ module T = FStar.Tactics
 open FStar.Tactics
 open FStar.List.Tot
 open Pulse.Syntax
+open Pulse.Reflection.Util
 open Pulse.Elaborate.Pure
 open Pulse.Typing
 open Pulse.Readback

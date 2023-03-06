@@ -5,6 +5,7 @@ module R = FStar.Reflection
 module RT = Refl.Typing
 open FStar.Tactics
 open Pulse.Syntax
+open Pulse.Reflection.Util
 open Pulse.Typing
 open Pulse.Checker
 open Pulse.Elaborate.Pure
