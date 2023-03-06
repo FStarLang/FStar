@@ -5,6 +5,7 @@ module L = FStar.List.Tot
 module T = FStar.Tactics
 open FStar.List.Tot
 open Pulse.Syntax
+open Pulse.Reflection.Util
 open Pulse.Elaborate.Pure
 open Pulse.Typing
 open Pulse.Elaborate
@@ -333,7 +334,7 @@ let elim_exists_soundness
   calc (==) {
     elab_term (close_term' (open_term' p (mk_reveal u t x_tm) 0) x 0);
        (==) {
-               RT.beta_reduction rt R.Q_Explicit rp (EPure.mk_reveal ru rt rx_tm)
+               RT.beta_reduction rt R.Q_Explicit rp (Pulse.Reflection.Util.mk_reveal ru rt rx_tm)
             }
     Exists.elim_exists_post_body ru rt (mk_abs rt R.Q_Explicit rp) x;
   };
@@ -651,10 +652,10 @@ let par_soundness
       0;
        (==) { RT.beta_reduction raL R.Q_Explicit
                 (elab_term postL)
-                (EPure.mk_fst ru ru raL raR (RT.var_as_term x));
+                (Pulse.Reflection.Util.mk_fst ru ru raL raR (RT.var_as_term x));
               RT.beta_reduction raR R.Q_Explicit
                 (elab_term postR)
-                (EPure.mk_snd ru ru raL raR (RT.var_as_term x)) }
+                (Pulse.Reflection.Util.mk_snd ru ru raL raR (RT.var_as_term x)) }
     Par.par_post ru raL raR rpostL rpostR x;
   };
   /////
