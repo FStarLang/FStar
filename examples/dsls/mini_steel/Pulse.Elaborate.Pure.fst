@@ -19,12 +19,44 @@ let unit_tm = R.pack_ln (R.Tv_FVar unit_fv)
 let bool_fv = R.pack_fv bool_lid
 let bool_tm = R.pack_ln (R.Tv_FVar bool_fv)
 
+let tuple2_lid = ["FStar"; "Pervasives"; "Native"; "tuple2"]
+let fst_lid = ["FStar"; "Pervasives"; "Native"; "fst"]
+let snd_lid = ["FStar"; "Pervasives"; "Native"; "snd"]
+
+let mk_tuple2 (u1 u2:R.universe) (a1 a2:R.term) : R.term =
+  let open R in
+  let t = pack_ln (Tv_UInst (pack_fv tuple2_lid) [u1; u2]) in
+  let t = pack_ln (Tv_App t (a1, Q_Explicit)) in
+  pack_ln (Tv_App t (a2, Q_Explicit))
+
+let mk_fst (u1 u2:R.universe) (a1 a2 e:R.term) : R.term =
+  let open R in
+  let t = pack_ln (Tv_UInst (pack_fv fst_lid) [u1; u2]) in
+  let t = pack_ln (Tv_App t (a1, Q_Implicit)) in
+  let t = pack_ln (Tv_App t (a2, Q_Implicit)) in
+  pack_ln (Tv_App t (e, Q_Explicit))
+  
+let mk_snd (u1 u2:R.universe) (a1 a2 e:R.term) : R.term =
+  let open R in
+  let t = pack_ln (Tv_UInst (pack_fv snd_lid) [u1; u2]) in
+  let t = pack_ln (Tv_App t (a1, Q_Implicit)) in
+  let t = pack_ln (Tv_App t (a2, Q_Implicit)) in
+  pack_ln (Tv_App t (e, Q_Explicit))
+
 let true_tm = R.pack_ln (R.Tv_Const (R.C_True))
 let false_tm = R.pack_ln (R.Tv_Const (R.C_False))
 
 let emp_lid = ["Steel"; "Effect"; "Common"; "emp"]
 let inames_lid = ["Steel"; "Memory"; "inames"]
+
 let star_lid = ["Steel"; "Effect"; "Common"; "star"]
+
+let mk_star (l r:R.term) : R.term =
+  let open R in
+  let t = pack_ln (Tv_FVar (pack_fv star_lid)) in
+  let t = pack_ln (Tv_App t (l, Q_Explicit)) in
+  pack_ln (Tv_App t (r, Q_Explicit))
+
 let pure_lid = ["Steel"; "ST"; "Util"; "pure"]
 let exists_lid = ["Steel"; "ST"; "Util"; "exists_"]
 let forall_lid = ["Steel"; "ST"; "Util"; "forall_"]
@@ -262,9 +294,8 @@ let rec elab_term (top:term)
 
     | Tm_Star l r ->
       let l = elab_term l in
-      let r = elab_term r in      
-      let head = pack_ln (Tv_FVar (pack_fv star_lid)) in      
-      R.mk_app head [(l, Q_Explicit); (r, Q_Explicit)]
+      let r = elab_term r in
+      mk_star l r
       
     | Tm_ExistsSL u t body _
     | Tm_ForallSL u t body ->

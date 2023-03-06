@@ -324,7 +324,7 @@ let elim_exists_post (u:universe) (t:term) (p:term) (x:var)
     let p = open_term' p (mk_reveal u t x_tm) 0 in
     close_term p x
 
-let comp_elim_exists (u:universe) (t:term) (p:term) (x:var)
+  let comp_elim_exists (u:universe) (t:term) (p:term) (x:var)
   : comp
   = C_STGhost Tm_EmpInames 
               {
@@ -381,20 +381,45 @@ let comp_while (inv:term)
            post=open_term' inv tm_false 0
          }
 
-let tuple2_lid = ["FStar"; "Pervasives"; "Native"; "tuple2"]
-
 let mk_tuple2 (u1 u2:universe) (t1 t2:term) : term =
   Tm_PureApp (Tm_PureApp (Tm_UInst tuple2_lid [u1; u2])
                          None
                          t1)
              None t2
 
-let comp_par (cL:comp{C_ST? cL}) (cR:comp{C_ST? cR}) : comp =
+let mk_fst (u1 u2:universe) (a1 a2 e:term) : term =
+  Tm_PureApp (Tm_PureApp (Tm_PureApp (Tm_UInst fst_lid [u1; u2]) (Some Implicit) a1)
+                         (Some Implicit) a2)
+             None
+             e
+
+let mk_snd (u1 u2:universe) (a1 a2 e:term) : term =
+  Tm_PureApp (Tm_PureApp (Tm_PureApp (Tm_UInst snd_lid [u1; u2]) (Some Implicit) a1)
+                         (Some Implicit) a2)
+             None
+             e
+
+let par_post (uL uR:universe) (aL aR postL postR:term) (x:var) : term =
+  let x_tm = term_of_var x in
+  
+  let postL = open_term' postL (mk_fst uL uR aL aR x_tm) 0 in
+  let postR = open_term' postR (mk_snd uL uR aL aR x_tm) 0 in
+  let post = Tm_Star postL postR in
+  close_term post x
+
+let comp_par (cL:comp{C_ST? cL}) (cR:comp{C_ST? cR}) (x:var) : comp =
+  let uL = comp_u cL in
+  let uR = comp_u cR in
+  let aL = comp_res cL in
+  let aR = comp_res cR in
+
+  let post = par_post uL uR aL aR (comp_post cL) (comp_post cR) x in
+
   C_ST {
-    u = comp_u cL;
-    res = mk_tuple2 (comp_u cL) (comp_u cR) (comp_res cL) (comp_res cR);
+    u = uL;
+    res = mk_tuple2 uL uR aL aR;
     pre = Tm_Star (comp_pre cL) (comp_pre cR);
-    post = Tm_Star (comp_post cL) (comp_post cR)
+    post
   }
   
 let comp_admit (c:ctag) (s:st_comp) : comp =
@@ -695,10 +720,11 @@ and st_typing (f:RT.fstar_top_env) : env -> st_term -> comp -> Type =
       cL:comp { C_ST? cL } ->
       eR:st_term ->
       cR:comp { C_ST? cR /\ comp_u cL == comp_u cR } ->
+      x:var { None? (lookup g x) } ->
       st_typing f g eL cL ->
       st_typing f g eR cR ->
       st_typing f g (Tm_Par Tm_Unknown eL Tm_Unknown Tm_Unknown eR Tm_Unknown)
-                    (comp_par cL cR)
+                    (comp_par cL cR x)
 
   | T_Admit:
       g:env ->

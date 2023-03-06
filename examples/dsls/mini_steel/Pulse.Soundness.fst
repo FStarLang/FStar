@@ -17,12 +17,47 @@ module Return = Pulse.Soundness.Return
 module Exists = Pulse.Soundness.Exists
 module While = Pulse.Soundness.While
 module Admit = Pulse.Soundness.Admit
+module Par = Pulse.Soundness.Par
 module LN = Pulse.Typing.LN
 module FV = Pulse.Typing.FV
 module STT = Pulse.Soundness.STT
 
 module Typing = Pulse.Typing
 module EPure = Pulse.Elaborate.Pure
+
+let elab_open_commute' (e:term) (v:term) (n:index)
+  : Lemma (ensures
+             RT.open_or_close_term' (elab_term e) (RT.OpenWith (elab_term v)) n ==
+             elab_term (open_term' e v n))
+          [SMTPat (elab_term (open_term' e v n))] =
+
+  elab_open_commute' e v n
+
+let elab_close_commute' (e:term) (v:var) (n:index)
+  : Lemma (RT.open_or_close_term' (elab_term e) (RT.CloseVar v) n ==
+           elab_term (close_term' e v n))
+          [SMTPat (elab_term (close_term' e v n))] =
+
+  elab_close_commute' e v n
+
+let elab_comp_close_commute (c:comp) (x:var)
+  : Lemma (ensures elab_comp (close_comp c x) == RT.close_term (elab_comp c) x)
+          [SMTPat (elab_comp (close_comp c x))] =
+
+  elab_comp_close_commute c x
+
+let elab_comp_open_commute (c:comp) (x:term)
+  : Lemma (ensures elab_comp (open_comp_with c x) == RT.open_with (elab_comp c) (elab_term x))
+          [SMTPat (elab_comp (open_comp_with c x))] =
+
+  elab_comp_open_commute c x
+
+let refl_beta_reduction (t:R.typ) (q:R.aqualv) (e:R.term) (arg:R.term)
+  : Lemma (RT.open_or_close_term' e (RT.OpenWith arg) 0 ==
+           R.pack_ln (R.Tv_App (mk_abs t q e) (arg, q)))
+          [SMTPat (R.Tv_App (mk_abs t q e) (arg, q))] =
+
+  RT.beta_reduction t q e arg
 
 let soundness_t (d:'a) = 
     f:stt_env ->
@@ -102,7 +137,6 @@ let stapp_soundness
     = tot_typing_soundness head_typing
   in
   let r_arg_typing = tot_typing_soundness arg_typing in
-  elab_comp_open_commute res arg;
   RT.T_App _ _ _ (binder_of_t_q_s (elab_term formal) (elab_qual q) RT.pp_name_default)
                  (elab_comp res)
                  r_head_typing
@@ -171,7 +205,6 @@ let bind_soundness
            (tot_typing_soundness reveal_b_typing)
 #pop-options
 
-
 let intro_exists_erased_soundness
   (#f:stt_env)
   (#g:env)
@@ -207,9 +240,9 @@ let intro_exists_erased_soundness
   let reveal_re = elab_term (mk_reveal u t e) in
   RT.beta_reduction rt R.Q_Explicit rp reveal_re;    
   elab_open_commute' p (mk_reveal u t e) 0;
-    assert (elab_term (open_term' p (mk_reveal u t e) 0) ==
-           R.pack_ln (R.Tv_App (mk_abs rt R.Q_Explicit rp) (reveal_re, R.Q_Explicit)));
-  Exists.intro_exists_erased_soundness rt_typing rp_typing re_typing      
+  assert (elab_term (open_term' p (mk_reveal u t e) 0) ==
+          R.pack_ln (R.Tv_App (mk_abs rt R.Q_Explicit rp) (reveal_re, R.Q_Explicit)));
+  Exists.intro_exists_erased_soundness rt_typing rp_typing re_typing
 
 let intro_exists_soundness
   (#f:stt_env)
@@ -534,6 +567,92 @@ let return_soundess
     Return.return_stt_ghost_typing rt_typing re_typing rpost_typing
   | STT_Ghost, false -> 
     Return.return_stt_ghost_noeq_typing rt_typing re_typing rpost_typing
+
+#push-options "--z3rlimit_factor 10 --fuel 8 --ifuel 1"
+let par_soundness
+  (#f:stt_env)
+  (#g:env)
+  (#t:st_term)
+  (#c:comp)
+  (d:st_typing f g t c{T_Par? d})
+  (soundness: soundness_t d)
+  : GTot (RT.typing (extend_env_l f g)
+                    (elab_st_typing d)
+                    (elab_comp c)) =
+
+  let T_Par _ eL cL eR cR x eL_typing eR_typing = d in
+
+  let ru = elab_universe (comp_u cL) in
+  let raL = elab_term (comp_res cL) in
+  let raR = elab_term (comp_res cR) in
+  let rpreL = elab_term (comp_pre cL) in
+  let rpostL = mk_abs raL R.Q_Explicit (elab_term (comp_post cL)) in
+  let rpreR = elab_term (comp_pre cR) in
+  let rpostR = mk_abs raR R.Q_Explicit (elab_term (comp_post cR)) in
+  let reL = elab_st_typing eL_typing in
+  let reR = elab_st_typing eR_typing in
+
+  let cL_typing : comp_typing f g cL (comp_u cL) = magic () in
+  let cR_typing : comp_typing f g cR (comp_u cR) = magic () in
+  
+
+  let reL_typing
+    : RT.typing _ reL (elab_comp cL) =
+    soundness f g eL cL eL_typing in
+
+  let reR_typing
+    : RT.typing _ reR (elab_comp cR) =
+    soundness f g eR cR eR_typing in
+
+  let (raL_typing, rpreL_typing, rpostL_typing)
+    : (RT.typing _ raL (R.pack_ln (R.Tv_Type ru)) &
+       RT.typing _ rpreL vprop_tm &
+       RT.typing _ rpostL (mk_arrow (raL, R.Q_Explicit) vprop_tm)) =
+
+    inversion_of_stt_typing f g cL ru (comp_typing_soundness f g cL (comp_u cL) cL_typing) in
+
+  let (raR_typing, rpreR_typing, rpostR_typing)
+    : (RT.typing _ raR (R.pack_ln (R.Tv_Type ru)) &
+       RT.typing _ rpreR vprop_tm &
+       RT.typing _ rpostR (mk_arrow (raR, R.Q_Explicit) vprop_tm)) =
+
+    inversion_of_stt_typing f g cR ru (comp_typing_soundness f g cR (comp_u cR) cR_typing) in
+
+  /////
+  let uL = comp_u cL in
+  let uR = comp_u cR in
+  let aL = comp_res cL in
+  let aR = comp_res cR in
+  let postL = comp_post cL in
+  let postR = comp_post cR in
+  let x_tm = term_of_var x in
+  calc (==) {
+    elab_term (par_post uL uR aL aR postL postR x);
+       (==) { }
+    RT.open_or_close_term'
+      (mk_star
+         (RT.open_or_close_term'
+            (elab_term postL)
+            (RT.OpenWith (elab_term (mk_fst uL uR aL aR x_tm))) 0)
+         (RT.open_or_close_term'
+            (elab_term postR)
+            (RT.OpenWith (elab_term (mk_snd uL uR aL aR x_tm))) 0))
+      (RT.CloseVar x)
+      0;
+       (==) { RT.beta_reduction raL R.Q_Explicit
+                (elab_term postL)
+                (EPure.mk_fst ru ru raL raR (RT.var_as_term x));
+              RT.beta_reduction raR R.Q_Explicit
+                (elab_term postR)
+                (EPure.mk_snd ru ru raL raR (RT.var_as_term x)) }
+    Par.par_post ru raL raR rpostL rpostR x;
+  };
+  /////
+
+  Par.par_soundness x raL_typing raR_typing rpreL_typing rpostL_typing
+    rpreR_typing rpostR_typing
+    reL_typing reR_typing
+#pop-options
 
 #push-options "--query_stats --fuel 2 --ifuel 2"
 let rec soundness (f:stt_env)

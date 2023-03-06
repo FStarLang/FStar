@@ -32,7 +32,7 @@ val exists_inversion
 
 let elim_exists_post_body (u:universe) (a:term) (p:term) =
   let erased_a = EPure.mk_erased u a in
-  let bv_0 = pack_ln (Tv_BVar (pack_bv (make_bv 0 tun))) in
+  let bv_0 = RT.bound_var 0 in
   let reveal_0 = EPure.mk_reveal u a bv_0 in
   pack_ln (Tv_App p (reveal_0, Q_Explicit))
 
