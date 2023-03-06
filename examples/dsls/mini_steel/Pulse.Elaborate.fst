@@ -201,3 +201,60 @@ and elab_ln_comp (c:comp) (i:int)
     elab_ln st.res i;
     elab_ln st.pre i;
     elab_ln st.post (i + 1)
+
+#push-options "--z3rlimit_factor 8"
+let rec elab_freevars_eq (e:term)
+  : Lemma (Set.equal (freevars e) (RT.freevars (elab_term e))) =
+  match e with
+  | Tm_BVar _
+  | Tm_Var _
+  | Tm_FVar _
+  | Tm_UInst _ _
+  | Tm_Constant _ -> ()
+  | Tm_Refine b t ->
+    elab_freevars_eq b.binder_ty;
+    elab_freevars_eq t
+  | Tm_PureApp head _ arg ->
+    elab_freevars_eq head;
+    elab_freevars_eq arg
+  | Tm_Let t e1 e2 ->
+    elab_freevars_eq t;
+    elab_freevars_eq e1;
+    elab_freevars_eq e2
+  | Tm_Emp -> ()
+  | Tm_Pure t -> elab_freevars_eq t
+  | Tm_Star l r ->
+    elab_freevars_eq l;
+    elab_freevars_eq r
+  | Tm_ExistsSL _ t body _
+  | Tm_ForallSL _ t body ->
+    elab_freevars_eq t;
+    elab_freevars_eq body
+  | Tm_Arrow b _ c ->
+    elab_freevars_eq b.binder_ty;
+    elab_freevars_comp_eq c
+  | Tm_Type _
+  | Tm_VProp
+  | Tm_Inames
+  | Tm_EmpInames
+  | Tm_UVar _
+  | Tm_Unknown -> ()
+
+and elab_freevars_comp_eq (c:comp)
+  : Lemma (Set.equal (freevars_comp c) (RT.freevars (elab_comp c))) =
+
+  match c with
+  | C_Tot t -> elab_freevars_eq t
+  | C_ST st ->
+    elab_freevars_eq st.res;
+    elab_freevars_eq st.pre;
+    elab_freevars_eq st.post
+  | C_STAtomic inames st
+  | C_STGhost inames st ->
+    elab_freevars_eq inames;
+    elab_freevars_eq st.res;
+    elab_freevars_eq st.pre;
+    elab_freevars_eq st.post
+#pop-options
+
+let elab_freevars e = elab_freevars_eq e

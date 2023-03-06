@@ -342,9 +342,3 @@ and elab_st_comp (c:st_comp)
     let pre = elab_term c.pre in
     let post = elab_term c.post in
     elab_universe c.u, res, pre, post
-   
-
-assume
-val elab_freevars_inverse (e:term)
-  : Lemma 
-    (ensures RT.freevars (elab_term e) == freevars e)

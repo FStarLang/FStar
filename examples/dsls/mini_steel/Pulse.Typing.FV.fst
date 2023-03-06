@@ -6,6 +6,7 @@ open FStar.List.Tot
 open Pulse.Syntax
 open Pulse.Typing
 open Pulse.Elaborate.Pure
+open Pulse.Elaborate
 open Pulse.Soundness.Common
 
 let vars_of_rt_env (g:R.env) = Set.intension (fun x -> Some? (RT.lookup_bvar g x))
@@ -206,8 +207,8 @@ let tot_typing_freevars (#f:_) (#g:_) (#t:_) (#ty:_)
   : Lemma 
     (ensures freevars t `Set.subset` vars_of_env g /\
              freevars ty `Set.subset` vars_of_env g)
-  = elab_freevars_inverse t;
-    elab_freevars_inverse ty;      
+  = elab_freevars t;
+    elab_freevars ty;      
     let E d = d in
     refl_typing_freevars d;
     assert (vars_of_env_r (extend_env_l f g) `Set.equal` (vars_of_env g))
@@ -243,7 +244,7 @@ let rec vprop_equiv_freevars (#f:_) (#g:_) (#t0 #t1:_) (v:vprop_equiv f g t0 t1)
     | VE_Ext g t0 t1 token ->
       let t : RT.typing (extend_env_l f g) token (elab_term (mk_vprop_eq t0 t1)) = RT.T_Token _ _ _ () in
       refl_typing_freevars t;
-      elab_freevars_inverse (mk_vprop_eq t0 t1)
+      elab_freevars (mk_vprop_eq t0 t1)
 
 let st_equiv_freevars #f #g (#c1 #c2:_)
                       (d:st_equiv f g c1 c2)
