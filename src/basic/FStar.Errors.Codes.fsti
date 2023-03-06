@@ -381,6 +381,7 @@ type raw_error =
   | Warning_FailedToCheckInitialTacticGoal
   | Warning_Adhoc_IndexedEffect_Combinator
   | Error_PluginDynlink
+  | Error_InternalQualifier
 
 type error_setting = raw_error * error_flag * int
 
