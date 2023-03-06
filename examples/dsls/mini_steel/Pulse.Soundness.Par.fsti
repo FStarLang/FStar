@@ -1,14 +1,12 @@
 module Pulse.Soundness.Par
 
 open FStar.Reflection
-open Refl.Typing
-open Pulse.Elaborate.Pure
-open Pulse.Elaborate.Core
+open Pulse.Reflection.Util
 
 module RT = Refl.Typing
 
 let par_post (u:universe) (aL aR:term) (postL postR:term) (x:var) : term =
-  let x_tm = var_as_term x in
+  let x_tm = RT.var_as_term x in
   let postL = pack_ln (Tv_App postL (mk_fst u u aL aR x_tm, Q_Explicit)) in
   let postR = pack_ln (Tv_App postR (mk_snd u u aL aR x_tm, Q_Explicit)) in
   let post = mk_star postL postR in

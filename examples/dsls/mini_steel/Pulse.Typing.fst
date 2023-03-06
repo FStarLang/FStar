@@ -1,6 +1,7 @@
 module Pulse.Typing
 module RT = Refl.Typing
 module R = FStar.Reflection
+open Pulse.Reflection.Util
 module L = FStar.List.Tot
 open FStar.List.Tot
 open Pulse.Syntax
