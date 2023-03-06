@@ -67,7 +67,7 @@ let mk_t_abs_tot (f:RT.fstar_top_env) (g:env)
     RT.well_typed_terms_are_ln _ _ _ r_body_typing;
     RT.open_close_inverse r_body x;
     elab_comp_close_commute c x;      
-    elab_freevars_inverse body;
+    elab_freevars body;
     assert (~ (x `Set.mem` RT.freevars (elab_term body)));
     assume (~ (x `Set.mem` RT.freevars (RT.close_term r_body x)));
     let d : RT.typing (extend_env_l f g)

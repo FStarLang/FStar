@@ -467,7 +467,7 @@ let stc_soundness
        (==) { elab_open_commute st.post x }
     RT.close_term (RT.open_term (elab_term st.post) x) x;
        (==) { 
-              elab_freevars_inverse st.post;
+              elab_freevars st.post;
               RT.close_open_inverse (elab_term st.post) x
             }
     elab_term st.post;
