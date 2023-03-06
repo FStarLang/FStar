@@ -886,6 +886,7 @@ let e_qualifier =
         let r =
         match q with
         | RD.Assumption                       -> ref_qual_Assumption.t
+        | RD.InternalAssumption               -> ref_qual_InternalAssumption.t
         | RD.New                              -> ref_qual_New.t
         | RD.Private                          -> ref_qual_Private.t
         | RD.Unfold_for_unification_and_vcgen -> ref_qual_Unfold_for_unification_and_vcgen.t
@@ -937,6 +938,9 @@ let e_qualifier =
         match (U.un_uinst hd).n, args with
         | Tm_fvar fv, [] when S.fv_eq_lid fv ref_qual_Assumption.lid ->
              Some RD.Assumption
+
+        | Tm_fvar fv, [] when S.fv_eq_lid fv ref_qual_InternalAssumption.lid ->
+             Some RD.InternalAssumption
 
         | Tm_fvar fv, [] when S.fv_eq_lid fv ref_qual_New.lid ->
              Some RD.New
