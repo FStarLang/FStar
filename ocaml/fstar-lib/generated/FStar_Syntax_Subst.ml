@@ -1919,7 +1919,7 @@ let rec (deep_compress :
           then t1
           else
             FStar_Errors.raise_err
-              (FStar_Errors.Error_UnexpectedUnresolvedUvar,
+              (FStar_Errors_Codes.Error_UnexpectedUnresolvedUvar,
                 "Internal error: unexpected unresolved uvar in deep_compress")
       | FStar_Syntax_Syntax.Tm_quoted (tm, qi) ->
           let qi1 =
@@ -2083,7 +2083,7 @@ and (deep_compress_univ :
           then u1
           else
             FStar_Errors.raise_err
-              (FStar_Errors.Error_UnexpectedUnresolvedUvar,
+              (FStar_Errors_Codes.Error_UnexpectedUnresolvedUvar,
                 "Internal error: unexpected unresolved (universe) uvar in deep_compress")
 and (deep_compress_meta :
   Prims.bool -> FStar_Syntax_Syntax.metadata -> FStar_Syntax_Syntax.metadata)

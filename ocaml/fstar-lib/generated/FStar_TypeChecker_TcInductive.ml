@@ -74,8 +74,15 @@ let (tc_tycon :
                                    (match uu___5 with
                                     | (t_type, u) ->
                                         let valid_type =
-                                          ((FStar_Syntax_Util.is_eqtype_no_unrefine
-                                              t)
+                                          (((FStar_Syntax_Util.is_eqtype_no_unrefine
+                                               t)
+                                              &&
+                                              (let uu___6 =
+                                                 FStar_Compiler_Effect.op_Bar_Greater
+                                                   s.FStar_Syntax_Syntax.sigquals
+                                                   (FStar_Compiler_List.contains
+                                                      FStar_Syntax_Syntax.Noeq) in
+                                               Prims.op_Negation uu___6))
                                              &&
                                              (let uu___6 =
                                                 FStar_Compiler_Effect.op_Bar_Greater
@@ -97,9 +104,9 @@ let (tc_tycon :
                                                   FStar_Ident.string_of_lid
                                                     tc in
                                                 FStar_Compiler_Util.format2
-                                                  "Type annotation %s for inductive %s is not Type or eqtype, or it is eqtype but contains unopteq qualifier"
+                                                  "Type annotation %s for inductive %s is not Type or eqtype, or it is eqtype but contains noeq/unopteq qualifiers"
                                                   uu___9 uu___10 in
-                                              (FStar_Errors.Error_InductiveAnnotNotAType,
+                                              (FStar_Errors_Codes.Error_InductiveAnnotNotAType,
                                                 uu___8) in
                                             FStar_Errors.raise_error uu___7
                                               s.FStar_Syntax_Syntax.sigrng)
@@ -293,7 +300,7 @@ let (tc_data :
                             then (env1, [], FStar_Syntax_Syntax.U_zero)
                             else
                               FStar_Errors.raise_error
-                                (FStar_Errors.Fatal_UnexpectedDataConstructor,
+                                (FStar_Errors_Codes.Fatal_UnexpectedDataConstructor,
                                   "Unexpected data constructor")
                                 se.FStar_Syntax_Syntax.sigrng in
                       (match uu___2 with
@@ -360,7 +367,7 @@ let (tc_data :
                                                   (FStar_Syntax_Util.comp_effect_name
                                                      c1) in
                                               FStar_Errors.raise_error
-                                                (FStar_Errors.Fatal_UnexpectedConstructorType,
+                                                (FStar_Errors_Codes.Fatal_UnexpectedConstructorType,
                                                   "Constructors cannot have effects")
                                                 uu___10)))
                              | uu___5 -> ([], t2) in
@@ -465,7 +472,7 @@ let (tc_data :
                                                           tuvs _uvs1
                                                       else
                                                         FStar_Errors.raise_error
-                                                          (FStar_Errors.Fatal_UnexpectedConstructorType,
+                                                          (FStar_Errors_Codes.Fatal_UnexpectedConstructorType,
                                                             "Length of annotated universes does not match inferred universes")
                                                           se.FStar_Syntax_Syntax.sigrng
                                                   | FStar_Syntax_Syntax.Tm_fvar
@@ -486,7 +493,7 @@ let (tc_data :
                                                           FStar_Compiler_Util.format2
                                                             "Expected a constructor of type %s; got %s"
                                                             uu___12 uu___13 in
-                                                        (FStar_Errors.Fatal_UnexpectedConstructorType,
+                                                        (FStar_Errors_Codes.Fatal_UnexpectedConstructorType,
                                                           uu___11) in
                                                       FStar_Errors.raise_error
                                                         uu___10
@@ -562,7 +569,7 @@ let (tc_data :
                                                                     "This parameter is not constant: expected %s, got %s"
                                                                     uu___19
                                                                     uu___20 in
-                                                                    (FStar_Errors.Error_BadInductiveParam,
+                                                                    (FStar_Errors_Codes.Error_BadInductiveParam,
                                                                     uu___18) in
                                                                   FStar_Errors.raise_error
                                                                     uu___17
@@ -595,7 +602,7 @@ let (tc_data :
                                                             FStar_Compiler_Util.format2
                                                               "The type of %s is %s, but since this is the result type of a constructor its type should be Type"
                                                               uu___15 uu___16 in
-                                                          (FStar_Errors.Fatal_WrongResultTypeAfterConstrutor,
+                                                          (FStar_Errors_Codes.Fatal_WrongResultTypeAfterConstrutor,
                                                             uu___14) in
                                                         FStar_Errors.raise_error
                                                           uu___13
@@ -1679,7 +1686,7 @@ let (check_inductive_well_typedness :
                 then
                   let uu___3 = FStar_TypeChecker_Env.get_range env in
                   FStar_Errors.raise_error
-                    (FStar_Errors.Fatal_NonInductiveInMutuallyDefinedType,
+                    (FStar_Errors_Codes.Fatal_NonInductiveInMutuallyDefinedType,
                       "Mutually defined type contains a non-inductive element")
                     uu___3
                 else ());
@@ -1812,7 +1819,7 @@ let (check_inductive_well_typedness :
                                                   FStar_Compiler_Util.format2
                                                     "Expected an inductive with type %s; got %s"
                                                     uu___7 uu___8 in
-                                                (FStar_Errors.Fatal_UnexpectedInductivetype,
+                                                (FStar_Errors_Codes.Fatal_UnexpectedInductivetype,
                                                   uu___6) in
                                               FStar_Errors.raise_error uu___5
                                                 se.FStar_Syntax_Syntax.sigrng in
@@ -1864,7 +1871,7 @@ let (check_inductive_well_typedness :
                                                     FStar_Compiler_Util.format2
                                                       "Could not get %s type parameters from val type %s"
                                                       uu___7 uu___8 in
-                                                  (FStar_Errors.Fatal_UnexpectedInductivetype,
+                                                  (FStar_Errors_Codes.Fatal_UnexpectedInductivetype,
                                                     uu___6) in
                                                 FStar_Errors.raise_error
                                                   uu___5
@@ -2854,7 +2861,7 @@ let (mk_data_operations :
                                 then ([], FStar_Syntax_Util.ktype0, true)
                                 else
                                   FStar_Errors.raise_error
-                                    (FStar_Errors.Fatal_UnexpectedDataConstructor,
+                                    (FStar_Errors_Codes.Fatal_UnexpectedDataConstructor,
                                       "Unexpected data constructor")
                                     se.FStar_Syntax_Syntax.sigrng in
                           (match uu___4 with

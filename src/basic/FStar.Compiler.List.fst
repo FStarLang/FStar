@@ -45,13 +45,11 @@ let rec length (l:list 'a)
 let rec nth (l:list 'a) (n:int)
   = if n < 0
     then failwith "nth takes a non-negative integer as input"
-    else if n=0 then
-        match l with
-        | [] -> failwith "not enough elements"
-        | hd::_ -> hd
-    else match l with
-        | [] ->  failwith "not enough elements"
-        | _::tl -> nth tl (n - 1)
+    else
+      match l with
+      | [] -> failwith "not enough elements"
+      | hd::tl ->
+        if n=0 then hd else nth tl (n-1)
 
 let rec count x l
   = match l with

@@ -949,7 +949,7 @@ let (check_id : FStar_Ident.ident -> unit) =
            FStar_Compiler_Util.format1
              "Invalid identifer '%s'; expected a symbol that begins with a lower-case character"
              uu___3 in
-         (FStar_Errors.Fatal_InvalidIdentifier, uu___2) in
+         (FStar_Errors_Codes.Fatal_InvalidIdentifier, uu___2) in
        let uu___2 = FStar_Ident.range_of_id id in
        FStar_Errors.raise_error uu___1 uu___2)
 let at_most_one :
@@ -969,7 +969,7 @@ let at_most_one :
               let uu___2 =
                 FStar_Compiler_Util.format1
                   "At most one %s is allowed on declarations" s in
-              (FStar_Errors.Fatal_MoreThanOneDeclaration, uu___2) in
+              (FStar_Errors_Codes.Fatal_MoreThanOneDeclaration, uu___2) in
             FStar_Errors.raise_error uu___1 r
 let (mk_decl :
   decl' -> FStar_Compiler_Range.range -> decoration Prims.list -> decl) =
@@ -1231,7 +1231,8 @@ let focusBranches :
       if should_filter
       then
         (FStar_Errors.log_issue r
-           (FStar_Errors.Warning_Filtered, "Focusing on only some cases");
+           (FStar_Errors_Codes.Warning_Filtered,
+             "Focusing on only some cases");
          (let focussed =
             let uu___1 =
               FStar_Compiler_List.filter FStar_Pervasives_Native.fst branches in
@@ -1254,7 +1255,7 @@ let focusLetBindings :
       if should_filter
       then
         (FStar_Errors.log_issue r
-           (FStar_Errors.Warning_Filtered,
+           (FStar_Errors_Codes.Warning_Filtered,
              "Focusing on only some cases in this (mutually) recursive definition");
          FStar_Compiler_List.map
            (fun uu___1 ->
@@ -1282,7 +1283,7 @@ let focusAttrLetBindings :
       if should_filter
       then
         (FStar_Errors.log_issue r
-           (FStar_Errors.Warning_Filtered,
+           (FStar_Errors_Codes.Warning_Filtered,
              "Focusing on only some cases in this (mutually) recursive definition");
          FStar_Compiler_List.map
            (fun uu___1 ->
@@ -1462,7 +1463,7 @@ let rec (as_mlist :
                (match d.d with
                 | TopLevelModule m' ->
                     FStar_Errors.raise_error
-                      (FStar_Errors.Fatal_UnexpectedModuleDeclaration,
+                      (FStar_Errors_Codes.Fatal_UnexpectedModuleDeclaration,
                         "Unexpected module declaration") d.drange
                 | uu___1 -> as_mlist ((m_name, m_decl), (d :: cur1)) ds1))
 let (as_frag : decl Prims.list -> inputFragment) =
@@ -1484,7 +1485,7 @@ let (as_frag : decl Prims.list -> inputFragment) =
                    | { d = TopLevelModule uu___4; drange = r; quals = uu___5;
                        attrs = uu___6;_} ->
                        FStar_Errors.raise_error
-                         (FStar_Errors.Fatal_UnexpectedModuleDeclaration,
+                         (FStar_Errors_Codes.Fatal_UnexpectedModuleDeclaration,
                            "Unexpected module declaration") r
                    | uu___4 -> ()) ds2;
               FStar_Pervasives.Inr ds2))
@@ -1813,7 +1814,7 @@ let rec (term_to_string : term -> Prims.string) =
           (string_of_let_qualifier q) uu___1 uu___2 uu___3
     | Let (uu___, uu___1, uu___2) ->
         FStar_Errors.raise_error
-          (FStar_Errors.Fatal_EmptySurfaceLet,
+          (FStar_Errors_Codes.Fatal_EmptySurfaceLet,
             "Internal error: found an invalid surface Let") x.range
     | LetOpen (lid, t) ->
         let uu___ = FStar_Ident.string_of_lid lid in
@@ -2411,7 +2412,7 @@ let (ident_of_binder :
       | TAnnotated (i, uu___) -> i
       | NoName uu___ ->
           FStar_Errors.raise_error
-            (FStar_Errors.Fatal_MissingQuantifierBinder,
+            (FStar_Errors_Codes.Fatal_MissingQuantifierBinder,
               "Wildcard binders in quantifiers are not allowed") r
 let (idents_of_binders :
   binder Prims.list ->

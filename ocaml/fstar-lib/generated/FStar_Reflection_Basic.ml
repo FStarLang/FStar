@@ -291,7 +291,7 @@ let rec (inspect_ln :
               FStar_Compiler_Util.format2
                 "inspect_ln: outside of expected syntax (%s, %s)\n" uu___4
                 uu___5 in
-            (FStar_Errors.Warning_CantInspect, uu___3) in
+            (FStar_Errors_Codes.Warning_CantInspect, uu___3) in
           FStar_Errors.log_issue t2.FStar_Syntax_Syntax.pos uu___2);
          FStar_Reflection_Data.Tv_Unknown)
 let (inspect_comp :
@@ -316,7 +316,7 @@ let (inspect_comp :
                 FStar_Compiler_Util.format1
                   "inspect_comp: inspecting comp with wf decreases clause is not yet supported: %s skipping the decreases clause"
                   uu___5 in
-              (FStar_Errors.Warning_CantInspect, uu___4) in
+              (FStar_Errors_Codes.Warning_CantInspect, uu___4) in
             FStar_Errors.log_issue c.FStar_Syntax_Syntax.pos uu___3);
            [])
       | uu___1 -> failwith "Impossible!" in

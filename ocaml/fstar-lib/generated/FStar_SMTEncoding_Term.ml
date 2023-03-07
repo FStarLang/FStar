@@ -1054,7 +1054,8 @@ let (mkQuant :
                            FStar_Compiler_Util.format1
                              "Pattern (%s) contains illegal symbols; dropping it"
                              uu___6 in
-                         (FStar_Errors.Warning_SMTPatternIllFormed, uu___5) in
+                         (FStar_Errors_Codes.Warning_SMTPatternIllFormed,
+                           uu___5) in
                        FStar_Errors.log_issue r uu___4);
                       [])) in
             if (FStar_Compiler_List.length vars) = Prims.int_zero

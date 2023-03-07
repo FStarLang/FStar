@@ -324,7 +324,7 @@ let (elim_tydef :
                                    FStar_Compiler_Util.format2
                                      "Expected parameter %s of %s to be unused in its definition and eliminated"
                                      p name in
-                                 (FStar_Errors.Error_RemoveUnusedTypeParameter,
+                                 (FStar_Errors_Codes.Error_RemoveUnusedTypeParameter,
                                    uu___5) in
                                FStar_Errors.log_issue range_of_tydef uu___4)
                             else ();
@@ -355,7 +355,7 @@ let (elim_tydef :
                                       FStar_Compiler_Util.format3
                                         "Parameter %s of %s is unused and must be eliminated for F#; add `[@@ remove_unused_type_parameters [%s; ...]]` to the interface signature; \nThis type definition is being dropped"
                                         uu___9 name uu___10 in
-                                    (FStar_Errors.Error_RemoveUnusedTypeParameter,
+                                    (FStar_Errors_Codes.Error_RemoveUnusedTypeParameter,
                                       uu___8) in
                                   FStar_Errors.log_issue range uu___7);
                                  FStar_Compiler_Effect.raise Drop_tydef)

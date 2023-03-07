@@ -59,7 +59,7 @@ let initialize_hints_db : 'uuuuu . Prims.string -> 'uuuuu -> unit =
                  FStar_Compiler_Util.format1
                    "Malformed JSON hints file: %s; ran without hints"
                    val_filename in
-               (FStar_Errors.Warning_CouldNotReadHints, uu___5) in
+               (FStar_Errors_Codes.Warning_CouldNotReadHints, uu___5) in
              FStar_Errors.log_issue FStar_Compiler_Range.dummyRange uu___4
            else ()
        | FStar_Compiler_Util.UnableToOpen ->
@@ -71,7 +71,7 @@ let initialize_hints_db : 'uuuuu . Prims.string -> 'uuuuu -> unit =
                  FStar_Compiler_Util.format1
                    "Unable to open hints file: %s; ran without hints"
                    val_filename in
-               (FStar_Errors.Warning_CouldNotReadHints, uu___5) in
+               (FStar_Errors_Codes.Warning_CouldNotReadHints, uu___5) in
              FStar_Errors.log_issue FStar_Compiler_Range.dummyRange uu___4
            else ())
 let (finalize_hints_db : Prims.string -> unit) =
@@ -548,8 +548,8 @@ let (query_errors :
                         match uu___3 with
                         | (uu___4, x, y) ->
                             let uu___5 = FStar_Errors.get_ctx () in
-                            (FStar_Errors.Error_Z3SolverError, x, y, uu___5))
-                     error_labels in
+                            (FStar_Errors_Codes.Error_Z3SolverError, x, y,
+                              uu___5)) error_labels in
                  {
                    error_reason = msg;
                    error_fuel = (settings.query_fuel);
@@ -662,7 +662,7 @@ let (errors_to_report : query_settings -> FStar_Errors.error Prims.list) =
           let uu___2 =
             let uu___3 =
               let uu___4 = FStar_Errors.get_ctx () in
-              (FStar_Errors.Error_Z3SolverError, msg, rng, uu___4) in
+              (FStar_Errors_Codes.Error_Z3SolverError, msg, rng, uu___4) in
             [uu___3] in
           FStar_TypeChecker_Err.errors_smt_detail settings.query_env uu___2
             (FStar_Pervasives.Inl "")
@@ -697,7 +697,7 @@ let (errors_to_report : query_settings -> FStar_Errors.error Prims.list) =
                        FStar_TypeChecker_Env.get_range settings.query_env in
                      FStar_TypeChecker_Err.log_issue settings.query_env
                        uu___6
-                       (FStar_Errors.Warning_SplitAndRetryQueries,
+                       (FStar_Errors_Codes.Warning_SplitAndRetryQueries,
                          "The verification condition was to be split into several atomic sub-goals, but this query has multiple sub-goals---the error report may be inaccurate"));
                     settings.query_all_labels)
                  else settings.query_all_labels in
@@ -709,8 +709,8 @@ let (errors_to_report : query_settings -> FStar_Errors.error Prims.list) =
                          let uu___6 =
                            let uu___7 =
                              let uu___8 = FStar_Errors.get_ctx () in
-                             (FStar_Errors.Error_Z3SolverError, msg, rng,
-                               uu___8) in
+                             (FStar_Errors_Codes.Error_Z3SolverError, msg,
+                               rng, uu___8) in
                            [uu___7] in
                          FStar_TypeChecker_Err.errors_smt_detail
                            settings.query_env uu___6
@@ -967,7 +967,7 @@ let (query_info : query_settings -> FStar_SMTEncoding_Z3.z3result -> unit) =
                                 then "(Hint-replay failed): "
                                 else "" in
                               FStar_Errors.log_issue range1
-                                (FStar_Errors.Warning_HitReplayFailed,
+                                (FStar_Errors_Codes.Warning_HitReplayFailed,
                                   (Prims.op_Hat tag1 msg))))))
       else ()
 let (store_hint : FStar_Compiler_Util.hint -> unit) =
@@ -1569,7 +1569,7 @@ let (ask_and_report_errors :
                                            (if total_ran < hi1
                                             then " (early abort)"
                                             else "") in
-                                       (FStar_Errors.Error_QuakeFailed,
+                                       (FStar_Errors_Codes.Error_QuakeFailed,
                                          uu___7) in
                                      FStar_TypeChecker_Err.log_issue env rng
                                        uu___6
@@ -1820,7 +1820,7 @@ let rec (do_solve :
                  then
                    FStar_TypeChecker_Err.log_issue tcenv
                      tcenv.FStar_TypeChecker_Env.range
-                     (FStar_Errors.Warning_SplitAndRetryQueries,
+                     (FStar_Errors_Codes.Warning_SplitAndRetryQueries,
                        "The verification condition succeeded after splitting it to localize potential errors, although the original non-split verification condition failed. If you want to rely on splitting queries for verifying your program please use the --split_queries option rather than relying on it implicitly.")
                  else ()))
            | FStar_SMTEncoding_Env.Inner_let_rec names ->
@@ -1835,7 +1835,7 @@ let rec (do_solve :
                      FStar_Compiler_Util.format1
                        "Could not encode the query since F* does not support precise smtencoding of inner let-recs yet (in this case %s)"
                        uu___6 in
-                   (FStar_Errors.Error_NonTopRecFunctionNotFullyEncoded,
+                   (FStar_Errors_Codes.Error_NonTopRecFunctionNotFullyEncoded,
                      uu___5) in
                  FStar_TypeChecker_Err.log_issue tcenv
                    tcenv.FStar_TypeChecker_Env.range uu___4)))
@@ -1855,7 +1855,7 @@ let (solve :
               FStar_Compiler_Util.format1
                 "Q = %s\nA query could not be solved internally, and --no_smt was given"
                 uu___3 in
-            (FStar_Errors.Error_NoSMTButNeeded, uu___2) in
+            (FStar_Errors_Codes.Error_NoSMTButNeeded, uu___2) in
           FStar_TypeChecker_Err.log_issue tcenv
             tcenv.FStar_TypeChecker_Env.range uu___1
         else

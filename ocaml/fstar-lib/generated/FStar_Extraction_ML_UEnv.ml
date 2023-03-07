@@ -314,7 +314,7 @@ let (try_lookup_fv :
                   FStar_Compiler_Util.format2
                     "Will not extract reference to variable `%s` since it is noextract; either remove its qualifier or add it to this definition. This error can be ignored with `--warn_error -%s`."
                     uu___4 uu___5 in
-                (FStar_Errors.Error_CallToErased, uu___3) in
+                (FStar_Errors_Codes.Error_CallToErased, uu___3) in
               FStar_Errors.log_issue r uu___2);
              FStar_Pervasives_Native.None)
         | FStar_Pervasives.Inl (false) -> FStar_Pervasives_Native.None

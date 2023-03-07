@@ -180,7 +180,7 @@ let (disentangle_abbrevs_from_bundle :
                                FStar_Ident.range_of_lid
                                  (fv.FStar_Syntax_Syntax.fv_name).FStar_Syntax_Syntax.v in
                              FStar_Errors.raise_error
-                               (FStar_Errors.Fatal_CycleInRecTypeAbbreviation,
+                               (FStar_Errors_Codes.Fatal_CycleInRecTypeAbbreviation,
                                  msg) uu___4
                            else unfold_abbrev se
                        | uu___3 -> t)

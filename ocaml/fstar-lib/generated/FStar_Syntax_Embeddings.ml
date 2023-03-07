@@ -427,7 +427,7 @@ let (e_unit : unit embedding) =
               let uu___3 =
                 let uu___4 = FStar_Syntax_Print.term_to_string t in
                 FStar_Compiler_Util.format1 "Not an embedded unit: %s" uu___4 in
-              (FStar_Errors.Warning_NotEmbedded, uu___3) in
+              (FStar_Errors_Codes.Warning_NotEmbedded, uu___3) in
             FStar_Errors.log_issue t0.FStar_Syntax_Syntax.pos uu___2)
          else ();
          FStar_Pervasives_Native.None) in
@@ -463,7 +463,7 @@ let (e_bool : Prims.bool embedding) =
               let uu___3 =
                 let uu___4 = FStar_Syntax_Print.term_to_string t0 in
                 FStar_Compiler_Util.format1 "Not an embedded bool: %s" uu___4 in
-              (FStar_Errors.Warning_NotEmbedded, uu___3) in
+              (FStar_Errors_Codes.Warning_NotEmbedded, uu___3) in
             FStar_Errors.log_issue t0.FStar_Syntax_Syntax.pos uu___2)
          else ();
          FStar_Pervasives_Native.None) in
@@ -497,7 +497,7 @@ let (e_char : FStar_Char.char embedding) =
               let uu___3 =
                 let uu___4 = FStar_Syntax_Print.term_to_string t0 in
                 FStar_Compiler_Util.format1 "Not an embedded char: %s" uu___4 in
-              (FStar_Errors.Warning_NotEmbedded, uu___3) in
+              (FStar_Errors_Codes.Warning_NotEmbedded, uu___3) in
             FStar_Errors.log_issue t0.FStar_Syntax_Syntax.pos uu___2)
          else ();
          FStar_Pervasives_Native.None) in
@@ -541,7 +541,7 @@ let (e_int : FStar_BigInt.t embedding) =
                      let uu___4 = FStar_Syntax_Print.term_to_string t0 in
                      FStar_Compiler_Util.format1 "Not an embedded int: %s"
                        uu___4 in
-                   (FStar_Errors.Warning_NotEmbedded, uu___3) in
+                   (FStar_Errors_Codes.Warning_NotEmbedded, uu___3) in
                  FStar_Errors.log_issue t0.FStar_Syntax_Syntax.pos uu___2)
               else ();
               FStar_Pervasives_Native.None)) in
@@ -575,7 +575,7 @@ let (e_string : Prims.string embedding) =
                 let uu___4 = FStar_Syntax_Print.term_to_string t0 in
                 FStar_Compiler_Util.format1 "Not an embedded string: %s"
                   uu___4 in
-              (FStar_Errors.Warning_NotEmbedded, uu___3) in
+              (FStar_Errors_Codes.Warning_NotEmbedded, uu___3) in
             FStar_Errors.log_issue t0.FStar_Syntax_Syntax.pos uu___2)
          else ();
          FStar_Pervasives_Native.None) in
@@ -697,7 +697,7 @@ let e_option :
                             let uu___6 = FStar_Syntax_Print.term_to_string t0 in
                             FStar_Compiler_Util.format1
                               "Not an embedded option: %s" uu___6 in
-                          (FStar_Errors.Warning_NotEmbedded, uu___5) in
+                          (FStar_Errors_Codes.Warning_NotEmbedded, uu___5) in
                         FStar_Errors.log_issue t0.FStar_Syntax_Syntax.pos
                           uu___4)
                      else ();
@@ -830,7 +830,7 @@ let e_tuple2 : 'a 'b . 'a embedding -> 'b embedding -> ('a * 'b) embedding =
                                 FStar_Syntax_Print.term_to_string t0 in
                               FStar_Compiler_Util.format1
                                 "Not an embedded pair: %s" uu___6 in
-                            (FStar_Errors.Warning_NotEmbedded, uu___5) in
+                            (FStar_Errors_Codes.Warning_NotEmbedded, uu___5) in
                           FStar_Errors.log_issue t0.FStar_Syntax_Syntax.pos
                             uu___4)
                        else ();
@@ -1008,7 +1008,8 @@ let e_tuple3 :
                                   FStar_Syntax_Print.term_to_string t0 in
                                 FStar_Compiler_Util.format1
                                   "Not an embedded pair: %s" uu___6 in
-                              (FStar_Errors.Warning_NotEmbedded, uu___5) in
+                              (FStar_Errors_Codes.Warning_NotEmbedded,
+                                uu___5) in
                             FStar_Errors.log_issue t0.FStar_Syntax_Syntax.pos
                               uu___4)
                          else ();
@@ -1212,7 +1213,7 @@ let e_either :
                                 FStar_Syntax_Print.term_to_string t0 in
                               FStar_Compiler_Util.format1
                                 "Not an embedded sum: %s" uu___6 in
-                            (FStar_Errors.Warning_NotEmbedded, uu___5) in
+                            (FStar_Errors_Codes.Warning_NotEmbedded, uu___5) in
                           FStar_Errors.log_issue t0.FStar_Syntax_Syntax.pos
                             uu___4)
                        else ();
@@ -1358,7 +1359,7 @@ let e_list : 'a . 'a embedding -> 'a Prims.list embedding =
                             let uu___6 = FStar_Syntax_Print.term_to_string t0 in
                             FStar_Compiler_Util.format1
                               "Not an embedded list: %s" uu___6 in
-                          (FStar_Errors.Warning_NotEmbedded, uu___5) in
+                          (FStar_Errors_Codes.Warning_NotEmbedded, uu___5) in
                         FStar_Errors.log_issue t0.FStar_Syntax_Syntax.pos
                           uu___4)
                      else ();
@@ -1613,7 +1614,7 @@ let (e_norm_step : norm_step embedding) =
                           let uu___6 = FStar_Syntax_Print.term_to_string t0 in
                           FStar_Compiler_Util.format1
                             "Not an embedded norm_step: %s" uu___6 in
-                        (FStar_Errors.Warning_NotEmbedded, uu___5) in
+                        (FStar_Errors_Codes.Warning_NotEmbedded, uu___5) in
                       FStar_Errors.log_issue t0.FStar_Syntax_Syntax.pos
                         uu___4)
                    else ();
@@ -1636,7 +1637,7 @@ let (e_range : FStar_Compiler_Range.range embedding) =
                 let uu___4 = FStar_Syntax_Print.term_to_string t0 in
                 FStar_Compiler_Util.format1 "Not an embedded range: %s"
                   uu___4 in
-              (FStar_Errors.Warning_NotEmbedded, uu___3) in
+              (FStar_Errors_Codes.Warning_NotEmbedded, uu___3) in
             FStar_Errors.log_issue t0.FStar_Syntax_Syntax.pos uu___2)
          else ();
          FStar_Pervasives_Native.None) in
@@ -2374,7 +2375,7 @@ let (e_vconfig : FStar_VConfig.vconfig embedding) =
                      let uu___6 = FStar_Syntax_Print.term_to_string t0 in
                      FStar_Compiler_Util.format1
                        "Not an embedded vconfig: %s" uu___6 in
-                   (FStar_Errors.Warning_NotEmbedded, uu___5) in
+                   (FStar_Errors_Codes.Warning_NotEmbedded, uu___5) in
                  FStar_Errors.log_issue t0.FStar_Syntax_Syntax.pos uu___4)
               else ();
               FStar_Pervasives_Native.None)) in

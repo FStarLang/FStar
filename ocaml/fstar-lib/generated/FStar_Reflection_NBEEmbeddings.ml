@@ -94,7 +94,7 @@ let (e_bv : FStar_Syntax_Syntax.bv FStar_TypeChecker_NBETerm.embedding) =
             let uu___3 =
               let uu___4 = FStar_TypeChecker_NBETerm.t_to_string t in
               FStar_Compiler_Util.format1 "Not an embedded bv: %s" uu___4 in
-            (FStar_Errors.Warning_NotEmbedded, uu___3) in
+            (FStar_Errors_Codes.Warning_NotEmbedded, uu___3) in
           FStar_Errors.log_issue FStar_Compiler_Range.dummyRange uu___2);
          FStar_Pervasives_Native.None) in
   mk_emb' embed_bv unembed_bv FStar_Reflection_Constants.fstar_refl_bv_fv
@@ -120,7 +120,7 @@ let (e_binder :
             let uu___3 =
               let uu___4 = FStar_TypeChecker_NBETerm.t_to_string t in
               FStar_Compiler_Util.format1 "Not an embedded binder: %s" uu___4 in
-            (FStar_Errors.Warning_NotEmbedded, uu___3) in
+            (FStar_Errors_Codes.Warning_NotEmbedded, uu___3) in
           FStar_Errors.log_issue FStar_Compiler_Range.dummyRange uu___2);
          FStar_Pervasives_Native.None) in
   mk_emb' embed_binder unembed_binder
@@ -214,7 +214,7 @@ let (e_aqualv :
             let uu___3 =
               let uu___4 = FStar_TypeChecker_NBETerm.t_to_string t in
               FStar_Compiler_Util.format1 "Not an embedded aqualv: %s" uu___4 in
-            (FStar_Errors.Warning_NotEmbedded, uu___3) in
+            (FStar_Errors_Codes.Warning_NotEmbedded, uu___3) in
           FStar_Errors.log_issue FStar_Compiler_Range.dummyRange uu___2);
          FStar_Pervasives_Native.None) in
   let uu___ =
@@ -245,7 +245,7 @@ let (e_fv : FStar_Syntax_Syntax.fv FStar_TypeChecker_NBETerm.embedding) =
             let uu___3 =
               let uu___4 = FStar_TypeChecker_NBETerm.t_to_string t in
               FStar_Compiler_Util.format1 "Not an embedded fvar: %s" uu___4 in
-            (FStar_Errors.Warning_NotEmbedded, uu___3) in
+            (FStar_Errors_Codes.Warning_NotEmbedded, uu___3) in
           FStar_Errors.log_issue FStar_Compiler_Range.dummyRange uu___2);
          FStar_Pervasives_Native.None) in
   mk_emb' embed_fv unembed_fv FStar_Reflection_Constants.fstar_refl_fv_fv
@@ -270,7 +270,7 @@ let (e_comp : FStar_Syntax_Syntax.comp FStar_TypeChecker_NBETerm.embedding) =
             let uu___3 =
               let uu___4 = FStar_TypeChecker_NBETerm.t_to_string t in
               FStar_Compiler_Util.format1 "Not an embedded comp: %s" uu___4 in
-            (FStar_Errors.Warning_NotEmbedded, uu___3) in
+            (FStar_Errors_Codes.Warning_NotEmbedded, uu___3) in
           FStar_Errors.log_issue FStar_Compiler_Range.dummyRange uu___2);
          FStar_Pervasives_Native.None) in
   mk_emb' embed_comp unembed_comp
@@ -296,7 +296,7 @@ let (e_env : FStar_TypeChecker_Env.env FStar_TypeChecker_NBETerm.embedding) =
             let uu___3 =
               let uu___4 = FStar_TypeChecker_NBETerm.t_to_string t in
               FStar_Compiler_Util.format1 "Not an embedded env: %s" uu___4 in
-            (FStar_Errors.Warning_NotEmbedded, uu___3) in
+            (FStar_Errors_Codes.Warning_NotEmbedded, uu___3) in
           FStar_Errors.log_issue FStar_Compiler_Range.dummyRange uu___2);
          FStar_Pervasives_Native.None) in
   mk_emb' embed_env unembed_env FStar_Reflection_Constants.fstar_refl_env_fv
@@ -437,7 +437,7 @@ let (e_const :
             let uu___3 =
               let uu___4 = FStar_TypeChecker_NBETerm.t_to_string t in
               FStar_Compiler_Util.format1 "Not an embedded vconst: %s" uu___4 in
-            (FStar_Errors.Warning_NotEmbedded, uu___3) in
+            (FStar_Errors_Codes.Warning_NotEmbedded, uu___3) in
           FStar_Errors.log_issue FStar_Compiler_Range.dummyRange uu___2);
          FStar_Pervasives_Native.None) in
   mk_emb' embed_const unembed_const
@@ -465,7 +465,7 @@ let (e_universe :
               let uu___4 = FStar_TypeChecker_NBETerm.t_to_string t in
               FStar_Compiler_Util.format1 "Not an embedded universe: %s"
                 uu___4 in
-            (FStar_Errors.Warning_NotEmbedded, uu___3) in
+            (FStar_Errors_Codes.Warning_NotEmbedded, uu___3) in
           FStar_Errors.log_issue FStar_Compiler_Range.dummyRange uu___2);
          FStar_Pervasives_Native.None) in
   mk_emb' embed_universe unembed_universe
@@ -622,7 +622,7 @@ let rec (e_pattern' :
                 let uu___5 = FStar_TypeChecker_NBETerm.t_to_string t in
                 FStar_Compiler_Util.format1 "Not an embedded pattern: %s"
                   uu___5 in
-              (FStar_Errors.Warning_NotEmbedded, uu___4) in
+              (FStar_Errors_Codes.Warning_NotEmbedded, uu___4) in
             FStar_Errors.log_issue FStar_Compiler_Range.dummyRange uu___3);
            FStar_Pervasives_Native.None) in
     mk_emb' embed_pattern unembed_pattern
@@ -882,7 +882,7 @@ let (e_universe_view :
               let uu___4 = FStar_TypeChecker_NBETerm.t_to_string t in
               FStar_Compiler_Util.format1 "Not an embedded universe view: %s"
                 uu___4 in
-            (FStar_Errors.Warning_NotEmbedded, uu___3) in
+            (FStar_Errors_Codes.Warning_NotEmbedded, uu___3) in
           FStar_Errors.log_issue FStar_Compiler_Range.dummyRange uu___2);
          FStar_Pervasives_Native.None) in
   mk_emb' embed_universe_view unembed_universe_view
@@ -1437,7 +1437,7 @@ let (e_term_view_aq :
                 let uu___4 = FStar_TypeChecker_NBETerm.t_to_string t in
                 FStar_Compiler_Util.format1 "Not an embedded term_view: %s"
                   uu___4 in
-              (FStar_Errors.Warning_NotEmbedded, uu___3) in
+              (FStar_Errors_Codes.Warning_NotEmbedded, uu___3) in
             FStar_Errors.log_issue FStar_Compiler_Range.dummyRange uu___2);
            FStar_Pervasives_Native.None) in
     mk_emb' embed_term_view unembed_term_view
@@ -1505,7 +1505,7 @@ let (e_bv_view :
               let uu___4 = FStar_TypeChecker_NBETerm.t_to_string t in
               FStar_Compiler_Util.format1 "Not an embedded bv_view: %s"
                 uu___4 in
-            (FStar_Errors.Warning_NotEmbedded, uu___3) in
+            (FStar_Errors_Codes.Warning_NotEmbedded, uu___3) in
           FStar_Errors.log_issue FStar_Compiler_Range.dummyRange uu___2);
          FStar_Pervasives_Native.None) in
   mk_emb' embed_bv_view unembed_bv_view
@@ -1674,7 +1674,7 @@ let (e_comp_view :
               let uu___4 = FStar_TypeChecker_NBETerm.t_to_string t in
               FStar_Compiler_Util.format1 "Not an embedded comp_view: %s"
                 uu___4 in
-            (FStar_Errors.Warning_NotEmbedded, uu___3) in
+            (FStar_Errors_Codes.Warning_NotEmbedded, uu___3) in
           FStar_Errors.log_issue FStar_Compiler_Range.dummyRange uu___2);
          FStar_Pervasives_Native.None) in
   mk_emb' embed_comp_view unembed_comp_view
@@ -1707,7 +1707,7 @@ let (e_order : FStar_Order.order FStar_TypeChecker_NBETerm.embedding) =
             let uu___3 =
               let uu___4 = FStar_TypeChecker_NBETerm.t_to_string t in
               FStar_Compiler_Util.format1 "Not an embedded order: %s" uu___4 in
-            (FStar_Errors.Warning_NotEmbedded, uu___3) in
+            (FStar_Errors_Codes.Warning_NotEmbedded, uu___3) in
           FStar_Errors.log_issue FStar_Compiler_Range.dummyRange uu___2);
          FStar_Pervasives_Native.None) in
   let uu___ =
@@ -1736,7 +1736,7 @@ let (e_sigelt :
             let uu___3 =
               let uu___4 = FStar_TypeChecker_NBETerm.t_to_string t in
               FStar_Compiler_Util.format1 "Not an embedded sigelt: %s" uu___4 in
-            (FStar_Errors.Warning_NotEmbedded, uu___3) in
+            (FStar_Errors_Codes.Warning_NotEmbedded, uu___3) in
           FStar_Errors.log_issue FStar_Compiler_Range.dummyRange uu___2);
          FStar_Pervasives_Native.None) in
   mk_emb' embed_sigelt unembed_sigelt
@@ -1828,7 +1828,7 @@ let (e_lb_view :
               let uu___4 = FStar_TypeChecker_NBETerm.t_to_string t in
               FStar_Compiler_Util.format1 "Not an embedded lb_view: %s"
                 uu___4 in
-            (FStar_Errors.Warning_NotEmbedded, uu___3) in
+            (FStar_Errors_Codes.Warning_NotEmbedded, uu___3) in
           FStar_Errors.log_issue FStar_Compiler_Range.dummyRange uu___2);
          FStar_Pervasives_Native.None) in
   mk_emb' embed_lb_view unembed_lb_view
@@ -1874,7 +1874,7 @@ let (e_letbinding :
               let uu___4 = FStar_TypeChecker_NBETerm.t_to_string t in
               FStar_Compiler_Util.format1 "Not an embedded letbinding: %s"
                 uu___4 in
-            (FStar_Errors.Warning_NotEmbedded, uu___3) in
+            (FStar_Errors_Codes.Warning_NotEmbedded, uu___3) in
           FStar_Errors.log_issue FStar_Compiler_Range.dummyRange uu___2);
          FStar_Pervasives_Native.None) in
   mk_emb' embed_letbinding unembed_letbinding
@@ -2040,7 +2040,7 @@ let (e_sigelt_view :
               let uu___4 = FStar_TypeChecker_NBETerm.t_to_string t in
               FStar_Compiler_Util.format1 "Not an embedded sigelt_view: %s"
                 uu___4 in
-            (FStar_Errors.Warning_NotEmbedded, uu___3) in
+            (FStar_Errors_Codes.Warning_NotEmbedded, uu___3) in
           FStar_Errors.log_issue FStar_Compiler_Range.dummyRange uu___2);
          FStar_Pervasives_Native.None) in
   mk_emb' embed_sigelt_view unembed_sigelt_view
@@ -2115,7 +2115,7 @@ let (e_exp : FStar_Reflection_Data.exp FStar_TypeChecker_NBETerm.embedding) =
             let uu___3 =
               let uu___4 = FStar_TypeChecker_NBETerm.t_to_string t in
               FStar_Compiler_Util.format1 "Not an embedded exp: %s" uu___4 in
-            (FStar_Errors.Warning_NotEmbedded, uu___3) in
+            (FStar_Errors_Codes.Warning_NotEmbedded, uu___3) in
           FStar_Errors.log_issue FStar_Compiler_Range.dummyRange uu___2);
          FStar_Pervasives_Native.None) in
   mk_emb' embed_exp unembed_exp FStar_Reflection_Constants.fstar_refl_exp_fv
@@ -2429,7 +2429,7 @@ let (e_qualifier :
               let uu___4 = FStar_TypeChecker_NBETerm.t_to_string t in
               FStar_Compiler_Util.format1 "Not an embedded qualifier: %s"
                 uu___4 in
-            (FStar_Errors.Warning_NotEmbedded, uu___3) in
+            (FStar_Errors_Codes.Warning_NotEmbedded, uu___3) in
           FStar_Errors.log_issue FStar_Compiler_Range.dummyRange uu___2);
          FStar_Pervasives_Native.None) in
   let uu___ =
