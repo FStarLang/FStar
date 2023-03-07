@@ -194,11 +194,6 @@ let write #a r x #n
     let _ = R.write r x in
     rewrite _ (R.pts_to r full_perm (hide x))
 
-let read_pure #a r #n #p =
-  fun _ ->
-  let x = R.read r in
-  return x
-
 let read_atomic r #n #p =
   fun _ ->
   let x = R.atomic_read_u32 r in
