@@ -221,6 +221,8 @@ module R = Steel.ST.Reference
 
 open FStar.Ghost
 
+(***** begin ref *****)
+
 val read (#a:Type) (r:R.ref a) (#n:erased a) (#p:perm)
   : stt a
         (R.pts_to r p n)
@@ -241,6 +243,58 @@ val write_atomic (r:R.ref U32.t) (x:U32.t) (#n:erased U32.t)
   : stt_atomic unit emp_inames
         (R.pts_to r full_perm n) 
         (fun _ -> R.pts_to r full_perm (hide x))
+
+(***** end ref *****)
+
+(***** begin ghost ref ******)
+
+module GR = Steel.ST.GhostReference
+
+val galloc (#a:Type0) (x:erased a)
+  : stt_ghost (GR.ref a) emp_inames emp (fun r -> GR.pts_to r full_perm x)
+
+val gread (#a:Type0) (r:GR.ref a) (#v:erased a) (#p:perm)
+  : stt_ghost (erased a) emp_inames
+      (GR.pts_to r p v)
+      (fun x -> GR.pts_to r p x `star` pure (eq2_prop v x))
+
+val gwrite (#a:Type0) (r:GR.ref a) (x:erased a) (#v:erased a)
+  : stt_ghost unit emp_inames
+      (GR.pts_to r full_perm v)
+      (fun _ -> GR.pts_to r full_perm x)
+
+val gshare (#a:Type0) (r:GR.ref a) (#v:erased a) (#p:perm)
+  : stt_ghost unit emp_inames
+      (GR.pts_to r p v)
+      (fun _ ->
+       GR.pts_to r (half_perm p) v `star`
+       GR.pts_to r (half_perm p) v)
+
+val ggather (#a:Type0) (r:GR.ref a) (#x0 #x1:erased a) (#p0 #p1:perm)
+  : stt_ghost unit emp_inames
+      (GR.pts_to r p0 x0 `star` GR.pts_to r p1 x1)
+      (fun _ -> GR.pts_to r (sum_perm p0 p1) x0 `star` pure (eq2_prop x0 x1))
+
+val gfree (#a:Type0) (r:GR.ref a) (#v:erased a)
+  : stt_ghost unit emp_inames
+      (GR.pts_to r full_perm v)
+      (fun _ -> emp)
+
+(***** end ghost ref *****)
+
+(***** begin spinlock *****)
+
+module Lock = Steel.ST.SpinLock
+
+val new_lock (p:vprop) : stt (Lock.lock p) p (fun _ -> emp)
+
+val acquire (#p:vprop) (l:Lock.lock p)
+  : stt unit emp (fun _ -> p)
+
+val release (#p:vprop) (l:Lock.lock p)
+  : stt unit p (fun _ -> emp)
+
+(***** end spinlock *****)
 
 val elim_pure_explicit (p:prop)
   : stt_ghost (squash p) emp_inames

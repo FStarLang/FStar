@@ -203,6 +203,21 @@ let read_atomic r #n #p =
 let write_atomic r x #n = fun _ ->
   R.atomic_write_u32 #_ #n r x
 
+module GR = Steel.ST.GhostReference
+
+let galloc x = fun _ -> GR.alloc x
+let gread r = fun _ -> let x = GR.read r in x
+let gwrite r x = fun _ -> GR.write r x
+let gshare r = fun _ -> GR.share r
+let ggather r = fun _ -> let _ = GR.gather r in ()
+let gfree r = fun _ -> GR.free r
+
+module Lock = Steel.ST.SpinLock
+
+let new_lock p = fun _ -> Lock.new_lock p
+let acquire l = fun _ -> Lock.acquire l
+let release l = fun _ -> Lock.release l
+
 let elim_pure_explicit p = fun _ -> elim_pure p
 let elim_pure _ #p = fun _ -> elim_pure p
 
@@ -242,4 +257,3 @@ let ghost_app2 (#a:Type) (#b:a -> Type) (#p:a -> vprop) (#q: (x:a -> b x -> vpro
   = ghost_app f y (fun _ -> stt_ghost_ni)
 
 let stt_par f g = fun _ -> par  f g
-
