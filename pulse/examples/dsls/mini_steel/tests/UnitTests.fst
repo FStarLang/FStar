@@ -1,4 +1,4 @@
-module Pulse.Tests
+module UnitTests
 module T = FStar.Tactics
 open Pulse.Syntax
 open Pulse.Main
@@ -10,14 +10,10 @@ open FStar.Ghost
 
 module U32 = FStar.UInt32
 
+open Tests.Common
+
 #push-options "--ide_id_info_off"
 #push-options "--print_universes --print_implicits"
-let expects = ()
-let provides = ()
-let while = ()
-let intro = ()
-let par = ()
-let invariant = ()
 
 [@@ expect_failure]
 %splice_t[tuple_test] (check (`(
