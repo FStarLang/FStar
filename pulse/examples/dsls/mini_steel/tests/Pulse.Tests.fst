@@ -56,7 +56,8 @@ let warmup (x:int) = assert (x + 1 > x)
     (provides (fun x ->
        pts_to r p x))
     (
-       read r
+       let x = read r in
+       return_stt_noeq x
     )
 )))
 
@@ -118,8 +119,8 @@ let warmup (x:int) = assert (x + 1 > x)
     (provides (fun _ ->
                pts_to r1 full_perm n2 * pts_to r2 full_perm n1))
     (
-      let x = read_pure r1 in
-      let y = read_pure r2 in
+      let x = read r1 in
+      let y = read r2 in
       write r1 y;
       write r2 x
     )
@@ -230,12 +231,12 @@ val read_pred (_:unit) (#b:erased bool)
 #set-options "--fuel 2 --ifuel 2"
 
 
-%splice_t[infer_read_pure_ex] (check (`(
+%splice_t[infer_read_ex] (check (`(
   fun (r:ref U32.t) ->
     (expects (exists n. pts_to r full_perm n))
     (provides (fun _ -> exists n. pts_to r full_perm n))
     (
-        let x = read_pure r in
+        let x = read r in
         ()
     ))))
 
@@ -250,7 +251,7 @@ val read_pred (_:unit) (#b:erased bool)
         (invariant (fun b ->
             exists n. pts_to r full_perm n *
                  pure (eq2_prop b (n <> 10ul))))
-        (let x = read_pure r in
+        (let x = read r in
          return_stt_noeq (x <> 10ul))
         ( 
           let x = read r in
