@@ -2600,7 +2600,7 @@ and (term_as_mlexpr' :
        | FStar_Syntax_Syntax.Tm_quoted
            (qt,
             { FStar_Syntax_Syntax.qkind = FStar_Syntax_Syntax.Quote_dynamic;
-              FStar_Syntax_Syntax.antiquotes = uu___1;_})
+              FStar_Syntax_Syntax.antiquotations = uu___1;_})
            ->
            let uu___2 =
              let uu___3 =
@@ -2636,38 +2636,37 @@ and (term_as_mlexpr' :
        | FStar_Syntax_Syntax.Tm_quoted
            (qt,
             { FStar_Syntax_Syntax.qkind = FStar_Syntax_Syntax.Quote_static;
-              FStar_Syntax_Syntax.antiquotes = aqs;_})
+              FStar_Syntax_Syntax.antiquotations = (shift, aqs);_})
            ->
            let uu___1 = FStar_Reflection_Basic.inspect_ln qt in
            (match uu___1 with
-            | FStar_Reflection_Data.Tv_Var bv ->
-                let uu___2 = FStar_Syntax_Syntax.lookup_aq bv aqs in
-                (match uu___2 with
-                 | FStar_Pervasives_Native.Some tm -> term_as_mlexpr g tm
-                 | FStar_Pervasives_Native.None ->
-                     let tv =
-                       let uu___3 =
-                         let uu___4 =
-                           FStar_Reflection_Embeddings.e_term_view_aq aqs in
-                         FStar_Syntax_Embeddings.embed uu___4
-                           (FStar_Reflection_Data.Tv_Var bv) in
-                       uu___3 t.FStar_Syntax_Syntax.pos
-                         FStar_Pervasives_Native.None
-                         FStar_Syntax_Embeddings.id_norm_cb in
-                     let t1 =
-                       let uu___3 =
-                         let uu___4 = FStar_Syntax_Syntax.as_arg tv in
-                         [uu___4] in
-                       FStar_Syntax_Util.mk_app
-                         (FStar_Reflection_Constants.refl_constant_term
-                            FStar_Reflection_Constants.fstar_refl_pack_ln)
-                         uu___3 in
-                     term_as_mlexpr g t1)
+            | FStar_Reflection_Data.Tv_BVar bv ->
+                if bv.FStar_Syntax_Syntax.index < shift
+                then
+                  let tv' = FStar_Reflection_Data.Tv_BVar bv in
+                  let tv =
+                    let uu___2 =
+                      FStar_Syntax_Embeddings.embed
+                        FStar_Reflection_Embeddings.e_term_view tv' in
+                    uu___2 t.FStar_Syntax_Syntax.pos
+                      FStar_Pervasives_Native.None
+                      FStar_Syntax_Embeddings.id_norm_cb in
+                  let t1 =
+                    let uu___2 =
+                      let uu___3 = FStar_Syntax_Syntax.as_arg tv in [uu___3] in
+                    FStar_Syntax_Util.mk_app
+                      (FStar_Reflection_Constants.refl_constant_term
+                         FStar_Reflection_Constants.fstar_refl_pack_ln)
+                      uu___2 in
+                  term_as_mlexpr g t1
+                else
+                  (let tm = FStar_Syntax_Syntax.lookup_aq bv (shift, aqs) in
+                   term_as_mlexpr g tm)
             | tv ->
                 let tv1 =
                   let uu___2 =
                     let uu___3 =
-                      FStar_Reflection_Embeddings.e_term_view_aq aqs in
+                      FStar_Reflection_Embeddings.e_term_view_aq (shift, aqs) in
                     FStar_Syntax_Embeddings.embed uu___3 tv in
                   uu___2 t.FStar_Syntax_Syntax.pos
                     FStar_Pervasives_Native.None

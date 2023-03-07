@@ -278,12 +278,12 @@ let rec (tag_of_term : FStar_Syntax_Syntax.term -> Prims.string) =
     | FStar_Syntax_Syntax.Tm_quoted
         (uu___,
          { FStar_Syntax_Syntax.qkind = FStar_Syntax_Syntax.Quote_static;
-           FStar_Syntax_Syntax.antiquotes = uu___1;_})
+           FStar_Syntax_Syntax.antiquotations = uu___1;_})
         -> "Tm_quoted (static)"
     | FStar_Syntax_Syntax.Tm_quoted
         (uu___,
          { FStar_Syntax_Syntax.qkind = FStar_Syntax_Syntax.Quote_dynamic;
-           FStar_Syntax_Syntax.antiquotes = uu___1;_})
+           FStar_Syntax_Syntax.antiquotations = uu___1;_})
         -> "Tm_quoted (dynamic)"
     | FStar_Syntax_Syntax.Tm_abs uu___ -> "Tm_abs"
     | FStar_Syntax_Syntax.Tm_arrow uu___ -> "Tm_arrow"
@@ -344,17 +344,11 @@ and (term_to_string : FStar_Syntax_Syntax.term -> Prims.string) =
            | FStar_Syntax_Syntax.Tm_quoted (tm, qi) ->
                (match qi.FStar_Syntax_Syntax.qkind with
                 | FStar_Syntax_Syntax.Quote_static ->
-                    let print_aq uu___3 =
-                      match uu___3 with
-                      | (bv, t) ->
-                          let uu___4 = bv_to_string bv in
-                          let uu___5 = term_to_string t in
-                          FStar_Compiler_Util.format2 "%s -> %s" uu___4
-                            uu___5 in
                     let uu___3 = term_to_string tm in
                     let uu___4 =
-                      (FStar_Common.string_of_list ()) print_aq
-                        qi.FStar_Syntax_Syntax.antiquotes in
+                      (FStar_Common.string_of_list ()) term_to_string
+                        (FStar_Pervasives_Native.snd
+                           qi.FStar_Syntax_Syntax.antiquotations) in
                     FStar_Compiler_Util.format2 "`(%s)%s" uu___3 uu___4
                 | FStar_Syntax_Syntax.Quote_dynamic ->
                     let uu___3 = term_to_string tm in

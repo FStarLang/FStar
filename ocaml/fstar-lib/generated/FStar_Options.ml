@@ -1934,7 +1934,7 @@ let (initial_ifuel : unit -> Prims.int) =
     let uu___1 = get_initial_ifuel () in
     let uu___2 = get_max_ifuel () in Prims.min uu___1 uu___2
 let (interactive : unit -> Prims.bool) =
-  fun uu___ -> (get_in ()) || (get_ide ())
+  fun uu___ -> ((get_in ()) || (get_ide ())) || (get_lsp ())
 let (lax : unit -> Prims.bool) = fun uu___ -> get_lax ()
 let (load : unit -> Prims.string Prims.list) = fun uu___ -> get_load ()
 let (load_cmxs : unit -> Prims.string Prims.list) =
