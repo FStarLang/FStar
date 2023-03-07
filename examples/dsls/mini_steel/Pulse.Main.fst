@@ -203,12 +203,16 @@ let is_head_fv (t:R.term) (fv:list string) : option (list R.argv) =
     else None
   | _ -> None
 
-let expects_fv = ["Pulse";"Tests";"expects"]
-let provides_fv = ["Pulse";"Tests";"provides"]
-let intro_fv = ["Pulse";"Tests";"intro"]
-let elim_fv = ["Pulse";"Tests";"elim"]
-let invariant_fv = ["Pulse";"Tests";"invariant"]
-let par_fv = ["Pulse"; "Tests"; "par"]
+let mk_tests_lid s = ["Tests"; "Common"; s]
+
+let expects_fv = mk_tests_lid "expects"
+let provides_fv = mk_tests_lid "provides"
+let intro_fv = mk_tests_lid "intro"
+let elim_fv = mk_tests_lid "elim"
+let while_fv = mk_tests_lid "while"
+let invariant_fv = mk_tests_lid "invariant"
+let par_fv = mk_tests_lid "par"
+
 //
 // shift bvs > n by -1
 //
@@ -529,7 +533,7 @@ and translate_while (g:RT.fstar_top_env) (t:R.term)
     let head, args = R.collect_app t in
     match inspect_ln head with
     | Tv_FVar v ->
-      if inspect_fv v = ["Pulse"; "Tests"; "while"]
+      if inspect_fv v = while_fv
       then match args with
            | [(inv, _); (cond, _); (body, _)] -> 
              let? inv = 
