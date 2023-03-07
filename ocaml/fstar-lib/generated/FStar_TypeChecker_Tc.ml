@@ -402,7 +402,7 @@ let (tc_inductive' :
                                        Prims.op_Hat uu___10
                                          " does not satisfy the strict positivity condition" in
                                      Prims.op_Hat "Inductive type " uu___9 in
-                                   (FStar_Errors.Error_InductiveTypeNotSatisfyPositivityCondition,
+                                   (FStar_Errors_Codes.Error_InductiveTypeNotSatisfyPositivityCondition,
                                      uu___8) in
                                  FStar_Errors.log_issue r uu___7
                            else ()) tcs;
@@ -435,7 +435,7 @@ let (tc_inductive' :
                                        Prims.op_Hat uu___11
                                          " does not satisfy the positivity condition" in
                                      Prims.op_Hat "Exception " uu___10 in
-                                   (FStar_Errors.Error_InductiveTypeNotSatisfyPositivityCondition,
+                                   (FStar_Errors_Codes.Error_InductiveTypeNotSatisfyPositivityCondition,
                                      uu___9) in
                                  FStar_Errors.log_issue
                                    d.FStar_Syntax_Syntax.sigrng uu___8
@@ -577,7 +577,8 @@ let (check_must_erase_attribute :
                                   FStar_Compiler_Util.format2
                                     "Values of type `%s` will be erased during extraction, but its interface hides this fact. Add the `must_erase_for_extraction` attribute to the `val %s` declaration for this symbol in the interface"
                                     uu___5 uu___6 in
-                                (FStar_Errors.Error_MustEraseMissing, uu___4) in
+                                (FStar_Errors_Codes.Error_MustEraseMissing,
+                                  uu___4) in
                               FStar_Errors.log_issue uu___2 uu___3
                             else
                               if has_attr && (Prims.op_Negation must_erase)
@@ -591,7 +592,7 @@ let (check_must_erase_attribute :
                                      FStar_Compiler_Util.format1
                                        "Values of type `%s` cannot be erased during extraction, but the `must_erase_for_extraction` attribute claims that it can. Please remove the attribute."
                                        uu___6 in
-                                   (FStar_Errors.Error_MustEraseMissing,
+                                   (FStar_Errors_Codes.Error_MustEraseMissing,
                                      uu___5) in
                                  FStar_Errors.log_issue uu___3 uu___4)
                               else ())
@@ -636,7 +637,7 @@ let (check_typeclass_instance_attribute :
                                FStar_Compiler_Util.format1
                                  "Instances must define instances of `class` types. Type %s is not a class"
                                  uu___10 in
-                             (FStar_Errors.Error_UnexpectedTypeclassInstance,
+                             (FStar_Errors_Codes.Error_UnexpectedTypeclassInstance,
                                uu___9) in
                            FStar_Errors.log_issue
                              (FStar_Syntax_Util.range_of_sigelt se) uu___8 in
@@ -661,13 +662,13 @@ let (check_typeclass_instance_attribute :
                          FStar_Compiler_Util.format1
                            "Instances are expected to be total. This instance has effect %s"
                            uu___8 in
-                       (FStar_Errors.Error_UnexpectedTypeclassInstance,
+                       (FStar_Errors_Codes.Error_UnexpectedTypeclassInstance,
                          uu___7) in
                      FStar_Errors.log_issue
                        (FStar_Syntax_Util.range_of_sigelt se) uu___6))
          | uu___1 ->
              FStar_Errors.log_issue (FStar_Syntax_Util.range_of_sigelt se)
-               (FStar_Errors.Error_UnexpectedTypeclassInstance,
+               (FStar_Errors_Codes.Error_UnexpectedTypeclassInstance,
                  "An `instance` is expected to be a non-recursive definition whose type is an instance of a `class`"))
 let proc_check_with :
   'a . FStar_Syntax_Syntax.attribute Prims.list -> (unit -> 'a) -> 'a =
@@ -716,7 +717,7 @@ let (handle_postprocess_with_attr :
                     FStar_Parser_Const.postprocess_with in
                 FStar_Compiler_Util.format1 "Ill-formed application of `%s`"
                   uu___5 in
-              (FStar_Errors.Warning_UnrecognizedAttribute, uu___4) in
+              (FStar_Errors_Codes.Warning_UnrecognizedAttribute, uu___4) in
             FStar_Errors.log_issue uu___2 uu___3);
            (ats1, FStar_Pervasives_Native.None))
 let (store_sigopts :
@@ -797,7 +798,7 @@ let (tc_sig_let :
                          FStar_Compiler_Util.format3
                            "Inconsistent qualifier annotations on %s; Expected {%s}, got {%s}"
                            uu___4 uu___5 uu___6 in
-                       (FStar_Errors.Fatal_InconsistentQualifierAnnotation,
+                       (FStar_Errors_Codes.Fatal_InconsistentQualifierAnnotation,
                          uu___3) in
                      FStar_Errors.raise_error uu___2 r) in
             let rename_parameters lb =
@@ -941,7 +942,7 @@ let (tc_sig_let :
                                           <> (FStar_Compiler_List.length uvs))
                                    then
                                      FStar_Errors.raise_error
-                                       (FStar_Errors.Fatal_IncoherentInlineUniverse,
+                                       (FStar_Errors_Codes.Fatal_IncoherentInlineUniverse,
                                          "Inline universes are incoherent with annotation from val declaration")
                                        r
                                    else ();
@@ -1001,7 +1002,7 @@ let (tc_sig_let :
                         (ats, (FStar_Pervasives_Native.Some tau))
                     | FStar_Pervasives_Native.Some (ats, args) ->
                         (FStar_Errors.log_issue r
-                           (FStar_Errors.Warning_UnrecognizedAttribute,
+                           (FStar_Errors_Codes.Warning_UnrecognizedAttribute,
                              "Ill-formed application of `preprocess_with`");
                          ((se.FStar_Syntax_Syntax.sigattrs),
                            FStar_Pervasives_Native.None)) in
@@ -1790,7 +1791,7 @@ let (tc_sig_let :
                                       } in
                                     let err s pos =
                                       FStar_Errors.raise_error
-                                        (FStar_Errors.Fatal_InconsistentQualifierAnnotation,
+                                        (FStar_Errors_Codes.Fatal_InconsistentQualifierAnnotation,
                                           s) pos in
                                     FStar_Compiler_Effect.op_Bar_Greater
                                       (FStar_Pervasives_Native.snd lbs1)
@@ -2122,7 +2123,7 @@ let (tc_decl' :
                                FStar_Errors.print_issue errs;
                              FStar_Errors.log_issue
                                se2.FStar_Syntax_Syntax.sigrng
-                               (FStar_Errors.Error_DidNotFail,
+                               (FStar_Errors_Codes.Error_DidNotFail,
                                  "This top-level definition was expected to fail, but it succeeded"))
                         | uu___8 ->
                             if expected_errors <> []
@@ -2158,7 +2159,7 @@ let (tc_decl' :
                                            "This top-level definition was expected to raise error codes %s, but it raised %s. Error #%s was raised %s times, instead of %s."
                                            uu___13 uu___14 uu___15 uu___16
                                            uu___17 in
-                                       (FStar_Errors.Error_DidNotFail,
+                                       (FStar_Errors_Codes.Error_DidNotFail,
                                          uu___12) in
                                      FStar_Errors.log_issue
                                        se2.FStar_Syntax_Syntax.sigrng uu___11)))
@@ -2861,7 +2862,7 @@ let (tc_decl' :
                        FStar_Compiler_Util.format1
                          "Top-level declaration %s for a name that is already used in this module; top-level declarations must be unique in their module"
                          uu___6 in
-                     (FStar_Errors.Fatal_AlreadyDefinedTopLevelDeclaration,
+                     (FStar_Errors_Codes.Fatal_AlreadyDefinedTopLevelDeclaration,
                        uu___5) in
                    FStar_Errors.raise_error uu___4 r
                  else ());
@@ -3029,7 +3030,7 @@ let (tc_decl' :
                        let uu___5 = FStar_Syntax_Print.lid_to_string lid in
                        FStar_Compiler_Util.format1
                          "Admitting a top-level assumption %s" uu___5 in
-                     (FStar_Errors.Warning_WarnOnUse, uu___4) in
+                     (FStar_Errors_Codes.Warning_WarnOnUse, uu___4) in
                    FStar_Errors.log_issue r uu___3)
                 else ();
                 (let env1 = FStar_TypeChecker_Env.set_range env r in
@@ -3232,7 +3233,8 @@ let (tc_decl' :
                                     FStar_Compiler_Util.format2
                                       "Splice declared the name %s but it was not defined.\nThose defined were: %s"
                                       uu___10 uu___11 in
-                                  (FStar_Errors.Fatal_SplicedUndef, uu___9) in
+                                  (FStar_Errors_Codes.Fatal_SplicedUndef,
+                                    uu___9) in
                                 FStar_Errors.raise_error uu___8 r
                             | uu___8 -> ()) lids;
                        (let dsenv =
@@ -3841,7 +3843,7 @@ let (add_sigelt_to_env :
                  FStar_Compiler_Util.format1
                    "add_sigelt_to_env: unexpected bare type/data constructor: %s"
                    uu___4 in
-               (FStar_Errors.Fatal_UnexpectedInductivetype, uu___3) in
+               (FStar_Errors_Codes.Fatal_UnexpectedInductivetype, uu___3) in
              FStar_Errors.raise_error uu___2 se.FStar_Syntax_Syntax.sigrng
          | FStar_Syntax_Syntax.Sig_datacon uu___1 ->
              let uu___2 =
@@ -3850,7 +3852,7 @@ let (add_sigelt_to_env :
                  FStar_Compiler_Util.format1
                    "add_sigelt_to_env: unexpected bare type/data constructor: %s"
                    uu___4 in
-               (FStar_Errors.Fatal_UnexpectedInductivetype, uu___3) in
+               (FStar_Errors_Codes.Fatal_UnexpectedInductivetype, uu___3) in
              FStar_Errors.raise_error uu___2 se.FStar_Syntax_Syntax.sigrng
          | FStar_Syntax_Syntax.Sig_declare_typ (uu___1, uu___2, uu___3) when
              FStar_Compiler_Effect.op_Bar_Greater

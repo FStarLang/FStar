@@ -200,7 +200,7 @@ let (parse :
                                  with_dsenv_of_env env1 uu___8)
                         | uu___5 ->
                             FStar_Errors.raise_err
-                              (FStar_Errors.Fatal_PreModuleMismatch,
+                              (FStar_Errors_Codes.Fatal_PreModuleMismatch,
                                 "mismatch between pre-module and module\n"))) in
             (match uu___2 with
              | (ast1, env1) ->
@@ -782,7 +782,7 @@ let (tc_one_fragment :
                               "Interactive mode only supports a single module at the top-level. Expected module %s"
                               uu___5 in
                           FStar_Errors.raise_error
-                            (FStar_Errors.Fatal_NonSingletonTopLevelModule,
+                            (FStar_Errors_Codes.Fatal_NonSingletonTopLevelModule,
                               msg) (range_of_first_mod_decl ast_modul1)
                         else ());
                        (let uu___4 =
@@ -806,7 +806,7 @@ let (tc_one_fragment :
                       FStar_Parser_AST.quals = uu___3;
                       FStar_Parser_AST.attrs = uu___4;_} ->
                       FStar_Errors.raise_error
-                        (FStar_Errors.Fatal_ModuleFirstStatement,
+                        (FStar_Errors_Codes.Fatal_ModuleFirstStatement,
                           "First statement must be a module declaration") rng)
              | FStar_Pervasives_Native.Some modul ->
                  let uu___1 =
@@ -867,7 +867,7 @@ let (load_interface_decls :
               FStar_Compiler_Util.format1
                 "Unexpected result from parsing %s; expected a single interface"
                 interface_file_name in
-            (FStar_Errors.Fatal_ParseErrors, uu___2) in
+            (FStar_Errors_Codes.Fatal_ParseErrors, uu___2) in
           FStar_Errors.raise_err uu___1
       | FStar_Parser_ParseIt.ParseError (err, msg, rng) ->
           FStar_Compiler_Effect.raise
@@ -1071,7 +1071,7 @@ let (tc_one_file :
                        let uu___5 =
                          FStar_Compiler_Util.format1
                            "Expected %s to already be checked" fn in
-                       (FStar_Errors.Error_AlreadyCachedAssertionFailure,
+                       (FStar_Errors_Codes.Error_AlreadyCachedAssertionFailure,
                          uu___5) in
                      FStar_Errors.raise_err uu___4
                    else ());
@@ -1086,7 +1086,7 @@ let (tc_one_file :
                          FStar_Compiler_Util.format1
                            "Cross-module inlining expects all modules to be checked first; %s was not checked"
                            fn in
-                       (FStar_Errors.Error_AlreadyCachedAssertionFailure,
+                       (FStar_Errors_Codes.Error_AlreadyCachedAssertionFailure,
                          uu___6) in
                      FStar_Errors.raise_err uu___5
                    else ());

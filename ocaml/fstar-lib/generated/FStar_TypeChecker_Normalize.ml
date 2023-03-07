@@ -1271,7 +1271,7 @@ let (unembed_binder :
         uu___1 false FStar_Syntax_Embeddings.id_norm_cb
     | FStar_Pervasives_Native.None ->
         (FStar_Errors.log_issue t.FStar_Syntax_Syntax.pos
-           (FStar_Errors.Warning_UnembedBinderKnot,
+           (FStar_Errors_Codes.Warning_UnembedBinderKnot,
              "unembed_binder_knot is unset!");
          FStar_Pervasives_Native.None)
 let (mk_psc_subst :
@@ -2645,7 +2645,7 @@ let (should_unfold :
                   "Unfolding name which is marked as a plugin: %s" uu___3 in
               (FStar_Errors.log_issue
                  (fv.FStar_Syntax_Syntax.fv_name).FStar_Syntax_Syntax.p
-                 (FStar_Errors.Warning_UnfoldPlugin, msg);
+                 (FStar_Errors_Codes.Warning_UnfoldPlugin, msg);
                (let uu___4 =
                   let uu___5 =
                     FStar_Compiler_Effect.op_Bang plugin_unfold_warn_ctr in
@@ -4893,7 +4893,7 @@ and (do_reify_monadic :
                                                              "bind_wp for layered effect %s is not an arrow with >= %s arguments (%s)"
                                                              uu___15 uu___16
                                                              uu___17 in
-                                                         (FStar_Errors.Fatal_UnexpectedEffect,
+                                                         (FStar_Errors_Codes.Fatal_UnexpectedEffect,
                                                            uu___14) in
                                                        FStar_Errors.raise_error
                                                          uu___13 rng in
@@ -5151,7 +5151,7 @@ and (do_reify_monadic :
                                  FStar_Compiler_Util.format1
                                    "Incompatibility between typechecker and normalizer; this monadic application contains impure terms %s\n"
                                    uu___8 in
-                               (FStar_Errors.Warning_Defensive, uu___7) in
+                               (FStar_Errors_Codes.Warning_Defensive, uu___7) in
                              FStar_Errors.log_issue
                                top2.FStar_Syntax_Syntax.pos uu___6
                            else ())
@@ -8221,7 +8221,7 @@ let (term_to_string :
                   let uu___4 = FStar_Compiler_Util.message_of_exn uu___ in
                   FStar_Compiler_Util.format1
                     "Normalization failed with error %s\n" uu___4 in
-                (FStar_Errors.Warning_NormalizationFailure, uu___3) in
+                (FStar_Errors_Codes.Warning_NormalizationFailure, uu___3) in
               FStar_Errors.log_issue t.FStar_Syntax_Syntax.pos uu___2);
              t) in
       FStar_Syntax_Print.term_to_string' env1.FStar_TypeChecker_Env.dsenv t1
@@ -8245,7 +8245,7 @@ let (comp_to_string :
                   let uu___4 = FStar_Compiler_Util.message_of_exn uu___ in
                   FStar_Compiler_Util.format1
                     "Normalization failed with error %s\n" uu___4 in
-                (FStar_Errors.Warning_NormalizationFailure, uu___3) in
+                (FStar_Errors_Codes.Warning_NormalizationFailure, uu___3) in
               FStar_Errors.log_issue c.FStar_Syntax_Syntax.pos uu___2);
              c) in
       FStar_Syntax_Print.comp_to_string' env1.FStar_TypeChecker_Env.dsenv c1

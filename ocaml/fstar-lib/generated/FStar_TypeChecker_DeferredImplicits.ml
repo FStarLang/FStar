@@ -307,7 +307,7 @@ let (find_user_tac_for_uvar :
                      FStar_Compiler_Util.format2
                        "Multiple resolve_implicits hooks are eligible for attribute %s; \nplease resolve the ambiguity by using the `override_resolve_implicits_handler` attribute to choose among these candidates {%s}"
                        attr candidates3 in
-                   (FStar_Errors.Warning_AmbiguousResolveImplicitsHook,
+                   (FStar_Errors_Codes.Warning_AmbiguousResolveImplicitsHook,
                      uu___3) in
                  FStar_Errors.log_issue u.FStar_Syntax_Syntax.ctx_uvar_range
                    uu___2);

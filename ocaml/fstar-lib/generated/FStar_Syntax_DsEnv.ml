@@ -2310,7 +2310,7 @@ let (push_top_level_rec_binding :
              let uu___3 =
                let uu___4 = FStar_Ident.string_of_lid l in
                Prims.op_Hat "Duplicate top-level names " uu___4 in
-             (FStar_Errors.Fatal_DuplicateTopLevelNames, uu___3) in
+             (FStar_Errors_Codes.Fatal_DuplicateTopLevelNames, uu___3) in
            let uu___3 = FStar_Ident.range_of_lid l in
            FStar_Errors.raise_error uu___2 uu___3)
 let (push_sigelt' : Prims.bool -> env -> FStar_Syntax_Syntax.sigelt -> env) =
@@ -2340,7 +2340,7 @@ let (push_sigelt' : Prims.bool -> env -> FStar_Syntax_Syntax.sigelt -> env) =
               FStar_Compiler_Util.format2
                 "Duplicate top-level names [%s]; previously declared at %s"
                 uu___2 r in
-            (FStar_Errors.Fatal_DuplicateTopLevelNames, uu___1) in
+            (FStar_Errors_Codes.Fatal_DuplicateTopLevelNames, uu___1) in
           let uu___1 = FStar_Ident.range_of_lid l in
           FStar_Errors.raise_error uu___ uu___1 in
         let globals = FStar_Compiler_Util.mk_ref env1.scope_mods in
@@ -2529,7 +2529,7 @@ let (push_namespace : env -> FStar_Ident.lident -> env) =
                    let uu___6 = FStar_Ident.string_of_lid ns in
                    FStar_Compiler_Util.format1 "Namespace %s cannot be found"
                      uu___6 in
-                 (FStar_Errors.Fatal_NameSpaceNotFound, uu___5) in
+                 (FStar_Errors_Codes.Fatal_NameSpaceNotFound, uu___5) in
                let uu___5 = FStar_Ident.range_of_lid ns in
                FStar_Errors.raise_error uu___4 uu___5)
         | FStar_Pervasives_Native.Some ns' -> (ns', Open_module) in
@@ -2606,7 +2606,8 @@ let (push_include : env -> FStar_Ident.lident -> env) =
                           let uu___6 = FStar_Ident.string_of_lid ns1 in
                           FStar_Compiler_Util.format1
                             "include: Module %s was not prepared" uu___6 in
-                        (FStar_Errors.Fatal_IncludeModuleNotPrepared, uu___5) in
+                        (FStar_Errors_Codes.Fatal_IncludeModuleNotPrepared,
+                          uu___5) in
                       let uu___5 = FStar_Ident.range_of_lid ns1 in
                       FStar_Errors.raise_error uu___4 uu___5))))
       | uu___1 ->
@@ -2615,7 +2616,7 @@ let (push_include : env -> FStar_Ident.lident -> env) =
               let uu___4 = FStar_Ident.string_of_lid ns in
               FStar_Compiler_Util.format1
                 "include: Module %s cannot be found" uu___4 in
-            (FStar_Errors.Fatal_ModuleNotFound, uu___3) in
+            (FStar_Errors_Codes.Fatal_ModuleNotFound, uu___3) in
           let uu___3 = FStar_Ident.range_of_lid ns in
           FStar_Errors.raise_error uu___2 uu___3
 let (push_module_abbrev :
@@ -2633,7 +2634,7 @@ let (push_module_abbrev :
              let uu___3 =
                let uu___4 = FStar_Ident.string_of_lid l in
                FStar_Compiler_Util.format1 "Module %s cannot be found" uu___4 in
-             (FStar_Errors.Fatal_ModuleNotFound, uu___3) in
+             (FStar_Errors_Codes.Fatal_ModuleNotFound, uu___3) in
            let uu___3 = FStar_Ident.range_of_lid l in
            FStar_Errors.raise_error uu___2 uu___3)
 let (check_admits :
@@ -2693,7 +2694,7 @@ let (check_admits :
                                    FStar_Compiler_Util.format1
                                      "Admitting %s without a definition"
                                      uu___7 in
-                                 (FStar_Errors.Warning_AdmitWithoutDefinition,
+                                 (FStar_Errors_Codes.Warning_AdmitWithoutDefinition,
                                    uu___6) in
                                FStar_Errors.log_issue uu___4 uu___5
                              else ());
@@ -3228,7 +3229,8 @@ let (prepare_module_or_interface :
                         let uu___6 = FStar_Ident.string_of_lid mname in
                         FStar_Compiler_Util.format1
                           "Duplicate module or interface name: %s" uu___6 in
-                      (FStar_Errors.Fatal_DuplicateModuleOrInterface, uu___5) in
+                      (FStar_Errors_Codes.Fatal_DuplicateModuleOrInterface,
+                        uu___5) in
                     let uu___5 = FStar_Ident.range_of_lid mname in
                     FStar_Errors.raise_error uu___4 uu___5
                   else ());
@@ -3248,7 +3250,7 @@ let (enter_monad_scope : env -> FStar_Ident.ident -> env) =
                   Prims.op_Hat ", but already in monad scope " uu___5 in
                 Prims.op_Hat uu___3 uu___4 in
               Prims.op_Hat "Trying to define monad " uu___2 in
-            (FStar_Errors.Fatal_MonadAlreadyDefined, uu___1) in
+            (FStar_Errors_Codes.Fatal_MonadAlreadyDefined, uu___1) in
           let uu___1 = FStar_Ident.range_of_id mname in
           FStar_Errors.raise_error uu___ uu___1
       | FStar_Pervasives_Native.None ->
@@ -3340,7 +3342,7 @@ let fail_or :
                        msg uu___4 uu___5 uu___6) in
             let uu___1 = FStar_Ident.range_of_lid lid in
             FStar_Errors.raise_error
-              (FStar_Errors.Fatal_IdentifierNotFound, msg1) uu___1
+              (FStar_Errors_Codes.Fatal_IdentifierNotFound, msg1) uu___1
         | FStar_Pervasives_Native.Some r -> r
 let fail_or2 :
   'a .
@@ -3358,7 +3360,7 @@ let fail_or2 :
                 let uu___4 = FStar_Ident.string_of_id id in
                 Prims.op_Hat uu___4 "]" in
               Prims.op_Hat "Identifier not found [" uu___3 in
-            (FStar_Errors.Fatal_IdentifierNotFound, uu___2) in
+            (FStar_Errors_Codes.Fatal_IdentifierNotFound, uu___2) in
           let uu___2 = FStar_Ident.range_of_id id in
           FStar_Errors.raise_error uu___1 uu___2
       | FStar_Pervasives_Native.Some r -> r

@@ -424,7 +424,7 @@ let (effect_indices_from_repr :
         fun err ->
           let err1 uu___ =
             FStar_Errors.raise_error
-              (FStar_Errors.Fatal_UnexpectedEffect, err) r in
+              (FStar_Errors_Codes.Fatal_UnexpectedEffect, err) r in
           let repr1 = FStar_Syntax_Subst.compress repr in
           if is_layered
           then
@@ -1407,16 +1407,6 @@ let (quals_of_sigelt :
 let (range_of_sigelt :
   FStar_Syntax_Syntax.sigelt -> FStar_Compiler_Range.range) =
   fun x -> x.FStar_Syntax_Syntax.sigrng
-let (range_of_lbname :
-  (FStar_Syntax_Syntax.bv, FStar_Syntax_Syntax.fv) FStar_Pervasives.either ->
-    FStar_Compiler_Range.range)
-  =
-  fun uu___ ->
-    match uu___ with
-    | FStar_Pervasives.Inl x -> FStar_Syntax_Syntax.range_of_bv x
-    | FStar_Pervasives.Inr fv ->
-        FStar_Ident.range_of_lid
-          (fv.FStar_Syntax_Syntax.fv_name).FStar_Syntax_Syntax.v
 let range_of_arg :
   'uuuuu 'uuuuu1 .
     ('uuuuu FStar_Syntax_Syntax.syntax * 'uuuuu1) ->
@@ -4011,12 +4001,12 @@ let (process_pragma :
          | FStar_Getopt.Success -> ()
          | FStar_Getopt.Help ->
              FStar_Errors.raise_error
-               (FStar_Errors.Fatal_FailToProcessPragma,
+               (FStar_Errors_Codes.Fatal_FailToProcessPragma,
                  "Failed to process pragma: use 'fstar --help' to see which options are available")
                r
          | FStar_Getopt.Error s1 ->
              FStar_Errors.raise_error
-               (FStar_Errors.Fatal_FailToProcessPragma,
+               (FStar_Errors_Codes.Fatal_FailToProcessPragma,
                  (Prims.op_Hat "Failed to process pragma: " s1)) r in
        match p with
        | FStar_Syntax_Syntax.SetOptions o -> set_options o
@@ -4038,7 +4028,7 @@ let (process_pragma :
            then ()
            else
              FStar_Errors.raise_error
-               (FStar_Errors.Fatal_FailToProcessPragma,
+               (FStar_Errors_Codes.Fatal_FailToProcessPragma,
                  "Cannot #pop-options, stack would become empty") r
        | FStar_Syntax_Syntax.PrintEffectsGraph -> ())
 let rec (unbound_variables :
@@ -4366,7 +4356,7 @@ let (smt_lemma_as_forall :
         | FStar_Pervasives_Native.Some l -> l
         | FStar_Pervasives_Native.None ->
             (FStar_Errors.log_issue e.FStar_Syntax_Syntax.pos
-               (FStar_Errors.Warning_NonListLiteralSMTPattern,
+               (FStar_Errors_Codes.Warning_NonListLiteralSMTPattern,
                  "SMT pattern is not a list literal; ignoring the pattern");
              []) in
       let one_pat p =
@@ -4392,7 +4382,7 @@ let (smt_lemma_as_forall :
                      FStar_Compiler_Util.format1
                        "Not an atomic SMT pattern: %s; patterns on lemmas must be a list of simple SMTPat's or a single SMTPatOr containing a list of lists of patterns"
                        uu___5 in
-                   (FStar_Errors.Error_IllSMTPat, uu___4) in
+                   (FStar_Errors_Codes.Error_IllSMTPat, uu___4) in
                  FStar_Errors.raise_error uu___3 p.FStar_Syntax_Syntax.pos) in
       let lemma_pats p =
         let elts = list_elements1 p in
@@ -4828,7 +4818,7 @@ let (check_mutual_universes :
              if uu___1
              then
                FStar_Errors.raise_error
-                 (FStar_Errors.Fatal_IncompatibleUniverse,
+                 (FStar_Errors_Codes.Fatal_IncompatibleUniverse,
                    "Mutually recursive definitions do not abstract over the same universes")
                  lb1.FStar_Syntax_Syntax.lbpos
              else ()) lbs1
