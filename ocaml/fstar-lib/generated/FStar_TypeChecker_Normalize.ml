@@ -7788,7 +7788,7 @@ and (norm_residual_comp :
     fun env1 ->
       fun rc ->
         let uu___ =
-          FStar_Compiler_Util.map_option (closure_as_term cfg env1)
+          FStar_Compiler_Util.map_option (norm cfg env1 [])
             rc.FStar_Syntax_Syntax.residual_typ in
         {
           FStar_Syntax_Syntax.residual_effect =
