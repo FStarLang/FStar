@@ -2971,7 +2971,7 @@ and norm_ascription cfg env (tc, tacopt, use_eq) =
   use_eq
 
 and norm_residual_comp cfg env (rc:residual_comp) : residual_comp =
-  {rc with residual_typ = BU.map_option (closure_as_term cfg env) rc.residual_typ}
+  {rc with residual_typ = BU.map_option (norm cfg env []) rc.residual_typ}
 
 let reflection_env_hook = BU.mk_ref None
 
