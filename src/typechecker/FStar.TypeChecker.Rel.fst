@@ -943,8 +943,9 @@ let destruct_flex_t' t : flex_t =
       Flex (t, uv, args)
     | _ -> failwith "Not a flex-uvar"
 
-(* Destruct a term into its uvar head and arguments *)
-let destruct_flex_t t wl : flex_t * worklist =
+(* Destruct a term into its uvar head and arguments. The wl is only
+used to track implicits. *)
+let destruct_flex_t (t:term) wl : flex_t * worklist =
   (* ensure_no_uvar_subst only uses the environment for debugging
    * flags, so it's safe to pass wl.tcenv *)
   let t, wl = ensure_no_uvar_subst wl.tcenv t wl in
@@ -2447,6 +2448,7 @@ and solve_rigid_flex_or_flex_rigid_subtyping
 
       let tx = UF.new_transaction () in
       begin
+      List.iter (def_check_prob "meet_or_join3_sub") sub_probs;
       match solve_t eq_prob ({wl' with defer_ok=NoDefer;
                                        wl_implicits = [];
                                        wl_deferred = [];
@@ -4874,10 +4876,13 @@ let solve_deferred_constraints env (g:guard_t) =
     try_solve_deferred_constraints defer_ok smt_ok deferred_to_tac_ok env g
 
 let solve_non_tactic_deferred_constraints maybe_defer_flex_flex env (g:guard_t) =
+  Errors.with_ctx "solve_non_tactic_deferred_constraints" (fun () ->
+    def_check_guard_wf Range.dummyRange "solve_non_tactic_deferred_constraints.g" env g;
     let defer_ok = if maybe_defer_flex_flex then DeferFlexFlexOnly else NoDefer in
     let smt_ok = true in
     let deferred_to_tac_ok = false in
     try_solve_deferred_constraints defer_ok smt_ok deferred_to_tac_ok env g
+  )
 
 // Discharge (the logical part of) a guard [g].
 //
