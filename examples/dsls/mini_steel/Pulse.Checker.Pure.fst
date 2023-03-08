@@ -139,10 +139,10 @@ let tc_expected_meta_callback (f:R.env) (e:R.term) (t:R.term)
       //we have typing_token f e te
       match catch_all (fun _ -> rtb_check_subtyping f te t) with
       | None -> None
-      | Some p -> //p:squash (subtyping_token f te t)
+      | Some p -> //p:subtyping_token f te t
         Some (| e,
                 RT.T_Sub _ _ _ _ (RT.T_Token _ _ _ (FStar.Squash.get_proof (RTB.typing_token f e te)))
-                             (RT.ST_Token _ _ _ p) |)
+                             (RT.ST_Token _ _ _ (FStar.Squash.return_squash p)) |)
 
 let check_tot_with_expected_typ (f:RT.fstar_top_env) (g:env) (e:term) (t:term)
   : T.Tac (e:term & typing f g e t)

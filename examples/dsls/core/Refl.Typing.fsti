@@ -560,6 +560,66 @@ and freevars_match_returns (m:match_returns_ascription)
     let as_ = freevars_opt as_ freevars in
     b `Set.union` ret `Set.union` as_
 
+[@@ no_auto_projectors]
+noeq
+type term_ctxt =
+  | Ctxt_hole            : term_ctxt
+  | Ctxt_app_head        : term_ctxt -> argv -> term_ctxt
+  | Ctxt_app_arg         : term -> aqualv -> term_ctxt -> term_ctxt
+  | Ctxt_abs_binder      : binder_ctxt -> term -> term_ctxt
+  | Ctxt_abs_body        : binder -> term_ctxt -> term_ctxt
+  | Ctxt_arrow_binder    : binder_ctxt -> comp -> term_ctxt
+  | Ctxt_arrow_comp      : binder -> comp_ctxt -> term_ctxt
+  | Ctxt_refine_bv       : bv_ctxt -> term -> term_ctxt
+  | Ctxt_refine_ref      : bv -> term_ctxt -> term_ctxt
+  | Ctxt_let_bv          : bool -> list term -> bv_ctxt -> term -> term -> term_ctxt
+  | Ctxt_let_def         : bool -> list term -> bv -> term_ctxt -> term -> term_ctxt
+  | Ctxt_let_body        : bool -> list term -> bv -> term -> term_ctxt -> term_ctxt
+  | Ctxt_match_scrutinee : term_ctxt -> option match_returns_ascription -> list branch -> term_ctxt
+
+and bv_ctxt =
+  | Ctxt_bv : sealed string -> int -> term_ctxt -> bv_ctxt
+
+and binder_ctxt =
+  | Ctxt_binder : bv_ctxt -> aqualv -> list term -> binder_ctxt
+
+and comp_ctxt =
+  | Ctxt_total  : term_ctxt -> comp_ctxt
+  | Ctxt_gtotal : term_ctxt -> comp_ctxt
+
+let rec apply_term_ctxt (e:term_ctxt) (t:term) : term =
+  match e with
+  | Ctxt_hole -> t
+  | Ctxt_app_head e arg -> pack_ln (Tv_App (apply_term_ctxt e t) arg)
+  | Ctxt_app_arg hd q e -> pack_ln (Tv_App hd (apply_term_ctxt e t, q))
+  | Ctxt_abs_binder b body -> pack_ln (Tv_Abs (apply_binder_ctxt b t) body)
+  | Ctxt_abs_body b e -> pack_ln (Tv_Abs b (apply_term_ctxt e t))
+  | Ctxt_arrow_binder b c -> pack_ln (Tv_Arrow (apply_binder_ctxt b t) c)
+  | Ctxt_arrow_comp b c -> pack_ln (Tv_Arrow b (apply_comp_ctxt c t))
+  | Ctxt_refine_bv b phi -> pack_ln (Tv_Refine (apply_bv_ctxt b t) phi)
+  | Ctxt_refine_ref b phi -> pack_ln (Tv_Refine b (apply_term_ctxt phi t))
+  | Ctxt_let_bv b attrs bv def body ->
+    pack_ln (Tv_Let b attrs (apply_bv_ctxt bv t) def body)
+  | Ctxt_let_def b attrs bv def body ->
+    pack_ln (Tv_Let b attrs bv (apply_term_ctxt def t) body)
+  | Ctxt_let_body b attrs bv def body ->
+    pack_ln (Tv_Let b attrs bv def (apply_term_ctxt body t))
+  | Ctxt_match_scrutinee sc ret brs ->
+    pack_ln (Tv_Match (apply_term_ctxt sc t) ret brs)
+
+and apply_bv_ctxt (b:bv_ctxt) (t:term) : bv =
+  let Ctxt_bv bv_ppname bv_index ty = b in
+  pack_bv {bv_ppname; bv_index; bv_sort=apply_term_ctxt ty t}
+
+and apply_binder_ctxt (b:binder_ctxt) (t:term) : binder =
+  let Ctxt_binder bv binder_qual binder_attrs = b in
+  pack_binder {binder_bv=apply_bv_ctxt bv t; binder_qual; binder_attrs}
+
+and apply_comp_ctxt (c:comp_ctxt) (t:term) : comp =
+  match c with
+  | Ctxt_total e -> pack_comp (C_Total (apply_term_ctxt e t))
+  | Ctxt_gtotal e -> pack_comp (C_GTotal (apply_term_ctxt e t))
+
 
 noeq
 type constant_typing: vconst -> term -> Type0 = 
@@ -794,6 +854,14 @@ and equiv : env -> term -> term -> Type0 =
       t1:term ->
       squash (FTB.equiv_token g t0 t1) ->
       equiv g t0 t1
+
+  | EQ_Ctxt:
+      g:env ->
+      t0:term ->
+      t1:term ->
+      ctxt:term_ctxt ->
+      equiv g t0 t1 ->
+      equiv g (apply_term_ctxt ctxt t0) (apply_term_ctxt ctxt t1)
 
 and branches_typing : env -> term -> term -> list branch -> term -> Type0 =
 

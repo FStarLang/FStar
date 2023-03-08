@@ -436,10 +436,10 @@ val equiv_token (g:env) (t0 t1:typ) : Type0
 val typing_token (g:env) (e:term) (t:typ) : Type0
 
 val check_subtyping (g:env) (t0 t1:typ)
-  : Tac (option (squash (subtyping_token g t0 t1)))
+  : Tac (option (subtyping_token g t0 t1))
 
 val check_equiv (g:env) (t0 t1:typ)
-  : Tac (option (squash (equiv_token g t0 t1)))
+  : Tac (option (equiv_token g t0 t1))
 
 val core_check_term (g:env) (e:term)
   : Tac (option (t:typ{typing_token g e t}))
