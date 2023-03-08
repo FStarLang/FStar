@@ -1,6 +1,5 @@
 FSTAR_HOME=../..
 FSTAR=$(FSTAR_HOME)/bin/fstar.exe $(OTHERFLAGS)
-FSTARTACLIB=$(FSTAR_HOME)/bin/fstar-tactics-lib/fstartaclib.cmxs
 
 # Tests for which the native tactics used in module named Sample.Test.fst are
 # declared in a corresponding module named Sample.fst
@@ -53,7 +52,7 @@ all: $(addsuffix .sep.test, $(TAC_MODULES)) $(addsuffix .test, $(ALL))
 	touch $@
 
 %.sep.test: %.fst %.ml
-	$(FSTAR) $*.Test.fst --load $*
+	$(FSTAR) $*.Test.fst --load $* --debug $* --debug_level tactics
 	touch $@
 
 %.ml: %.fst

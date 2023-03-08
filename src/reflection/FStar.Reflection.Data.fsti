@@ -92,6 +92,7 @@ type term_view =
 (* This is a mirror of FStar.Syntax.Syntax.qualifier *)
 type qualifier =
   | Assumption
+  | InternalAssumption
   | New
   | Private
   | Unfold_for_unification_and_vcgen
@@ -155,6 +156,6 @@ type exp =
     | Var of var
     | Mult of exp * exp
 
-(* Needed so this appears in the ocaml output for fstar-tactics-lib *)
+(* Needed so this appears in the ocaml output for the fstar tactics library *)
 type decls = list sigelt
 

@@ -772,9 +772,9 @@ let encode_top_level_let :
                     if fvb.fvb_thunked && vars = []
                     then let dummy_var = mk_fv ("@dummy", dummy_sort) in
                          let dummy_tm = Term.mkFreeV dummy_var Range.dummyRange in
-                         let app = Term.mkApp (fvb.smt_id, [dummy_tm]) (FStar.Syntax.Util.range_of_lbname lbn) in
+                         let app = Term.mkApp (fvb.smt_id, [dummy_tm]) (S.range_of_lbname lbn) in
                          [dummy_var], app
-                    else vars, maybe_curry_fvb (FStar.Syntax.Util.range_of_lbname lbn) fvb (List.map mkFreeV vars)
+                    else vars, maybe_curry_fvb (S.range_of_lbname lbn) fvb (List.map mkFreeV vars)
                 in
                 let is_logical =
                   match (SS.compress t_body).n with
@@ -792,7 +792,7 @@ let encode_top_level_let :
                 let make_eqn name pat app body =
                     //NS 05.25: This used to be mkImp(mk_and_l guards, mkEq(app, body))),
                     //But the guard is unnecessary given the pattern
-                    Util.mkAssume(mkForall (U.range_of_lbname lbn)
+                    Util.mkAssume(mkForall (S.range_of_lbname lbn)
                                            ([[pat]], vars, mkEq(app,body)),
                                   Some (BU.format1 "Equation for %s" (string_of_lid flid)),
                                   (name ^ "_" ^ fvb.smt_id))
@@ -894,7 +894,7 @@ let encode_top_level_let :
             let decl_g_tok = Term.DeclFun(gtok, [], Term_sort, Some "Token for fuel-instrumented partial applications") in
             let env0 = push_zfuel_name env0 fvb.fvar_lid g gtok in
             let vars_tm = List.map mkFreeV vars in
-            let rng = (FStar.Syntax.Util.range_of_lbname lbn) in
+            let rng = (S.range_of_lbname lbn) in
             let app = maybe_curry_fvb rng fvb (List.map mkFreeV vars) in
             let mk_g_app args = maybe_curry_app rng (Inl (Var g)) (fvb.smt_arity + 1) args in
             let gsapp = mk_g_app (mkApp("SFuel", [fuel_tm])::vars_tm) in
@@ -908,14 +908,14 @@ let encode_top_level_let :
             //   11/29/2018: Also guarding by the precondition of a Pure/Ghost function in addition to typing guards
             let eqn_g =
                 Util.mkAssume
-                    (mkForall' (U.range_of_lbname lbn)
+                    (mkForall' (S.range_of_lbname lbn)
                                ([[gsapp]], Some 0, fuel::vars, mkImp(guard, mkEq(gsapp, body_tm))),
                      Some (BU.format1 "Equation for fuel-instrumented recursive function: %s" (string_of_lid fvb.fvar_lid)),
                      "equation_with_fuel_" ^g) in
-            let eqn_f = Util.mkAssume(mkForall (U.range_of_lbname lbn) ([[app]], vars, mkEq(app, gmax)),
+            let eqn_f = Util.mkAssume(mkForall (S.range_of_lbname lbn) ([[app]], vars, mkEq(app, gmax)),
                                     Some "Correspondence of recursive function to instrumented version",
                                     ("@fuel_correspondence_"^g)) in
-            let eqn_g' = Util.mkAssume(mkForall (U.range_of_lbname lbn) ([[gsapp]], fuel::vars, mkEq(gsapp,  mk_g_app (Term.n_fuel 0::vars_tm))),
+            let eqn_g' = Util.mkAssume(mkForall (S.range_of_lbname lbn) ([[gsapp]], fuel::vars, mkEq(gsapp,  mk_g_app (Term.n_fuel 0::vars_tm))),
                                     Some "Fuel irrelevance",
                                     ("@fuel_irrelevance_" ^g)) in
             let aux_decls, g_typing =
@@ -930,14 +930,14 @@ let encode_top_level_let :
                   let guards = List.map (fun _ -> mkTrue) vars in
                   EncodeTerm.isTotFun_axioms rng head vars guards (U.is_pure_comp tres_comp)
                 in
-                Util.mkAssume(mkAnd(mkForall (U.range_of_lbname lbn) ([[tok_app]], fuel::vars, mkEq(tok_app, gapp)),
+                Util.mkAssume(mkAnd(mkForall (S.range_of_lbname lbn) ([[tok_app]], fuel::vars, mkEq(tok_app, gapp)),
                                     tot_fun_axioms),
                               Some "Fuel token correspondence",
                               ("fuel_token_correspondence_"^gtok))
               in
               let aux_decls, typing_corr =
                 let g_typing, d3 = encode_term_pred None tres env' gapp in
-                d3, [Util.mkAssume(mkForall (U.range_of_lbname lbn)
+                d3, [Util.mkAssume(mkForall (S.range_of_lbname lbn)
                                             ([[gapp]], fuel::vars, mkImp(guard, g_typing)),
                                     Some "Typing correspondence of token to term",
                                     ("token_correspondence_"^g))]

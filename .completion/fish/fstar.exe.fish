@@ -49,7 +49,6 @@ complete -c fstar.exe -l max_ifuel --description "non-negative integer  Number o
 complete -c fstar.exe -l MLish --description "Trigger various specializations for compiling the F* compiler itself (not meant for user code)"
 complete -c fstar.exe -l no_default_includes --description "Ignore the default module search paths"
 complete -c fstar.exe -l no_extract --description "module name  Deprecated: use --extract instead; Do not extract code from this module"
-complete -c fstar.exe -l no_load_fstartaclib --description "Do not attempt to load fstartaclib by default"
 complete -c fstar.exe -l no_location_info --description "Suppress location information in the generated OCaml output (only relevant with --codegen OCaml)"
 complete -c fstar.exe -l no_smt --description "Do not send any queries to the SMT solver, and fail on them instead"
 complete -c fstar.exe -l normalize_pure_terms_for_extraction --description "Extract top-level pure terms after normalizing them. This can lead to very large code, but can result in more partial evaluation and compile-time specialization."

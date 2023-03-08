@@ -39,7 +39,7 @@ let main = print_test ()
 
 (*
 $ bin/fstar.exe examples/bug-reports/bug460.fst --codegen OCaml
-$ ocamlfind ocamlopt -package batteries,stdint,fileutils,sqlite3,zarith -linkpkg -g -thread -w a+A-27 -I ulib/ml/ ulib/ml/fstarlib.cmxa Bug460.ml -o Bug460
+$ ocamlfind ocamlopt -package batteries,stdint,fileutils,sqlite3,zarith,fstar.lib -linkpkg -g -thread -w a+A-27 Bug460.ml -o Bug460
 $ ./Bug460
 Test (x = y) = true
 Test (x = z) = false

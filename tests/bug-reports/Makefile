@@ -49,7 +49,7 @@ SHOULD_VERIFY_CLOSED=Bug022.fst Bug024.fst Bug025.fst Bug026.fst Bug026b.fst Bug
   Bug2552.fst Bug2597.fst Bug2471_B.fst Bug2605.fst Bug2614.fst Bug2622.fst \
   Bug2635.fst Bug2637.fst Bug2641.fst Bug1486.fst PropProofs.fst \
   Bug2684a.fst Bug2684b.fst Bug2684c.fst Bug2684d.fst Bug2659b.fst\
-  Bug2756.fst MutualRecPositivity.fst Bug2806a.fst Bug2806b.fst Bug2806c.fst Bug2806d.fst
+  Bug2756.fst MutualRecPositivity.fst Bug2806a.fst Bug2806b.fst Bug2806c.fst Bug2806d.fst Bug2809.fst
 
 SHOULD_VERIFY_INTERFACE_CLOSED=Bug771.fsti Bug771b.fsti
 SHOULD_VERIFY_AND_WARN_CLOSED=Bug016.fst
@@ -136,7 +136,7 @@ CAPPED=$(subst Bug,Bug,$*)
 
 
 %.verify: %.fst
-	@echo '[CHECK     $<]'
+	$(call msg, "CHECK", $<)
 	$(Q)$(FSTAR) $(SIL) $^
 	@touch $@
 
@@ -161,7 +161,7 @@ iverify: $(subst .fsti,.iverify,$(SHOULD_VERIFY_INTERFACE_CLOSED))
 verify-maybe-close: $(subst .fst,.verify,$(SHOULD_VERIFY_MAYBE_CLOSE))
 
 %.not-verify: %.fst
-	@echo '[CHECKFAIL $<]'
+	$(call msg, "CHECKFAIL", $<)
 	$(Q)(! $(FSTAR) $(SIL) $^ >/dev/null 2>&1) || (echo "Negative test failed ($@)!" ; false)
 	@touch $@
 

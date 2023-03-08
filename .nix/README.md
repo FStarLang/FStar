@@ -43,11 +43,6 @@ To build/run/install/... `fstar-bootsrap`, just use
 `github:FStarLang/FStar#fstar-bootsrap` instead of
 `github:FStarLang/FStar`.
 
-## Building custom version of F\*
-
-The file `.nix/lib.nix` provides a fined grained Nix API to build
-custom F\*.
-
 ## Hacking on F\*
 
 Just run `nix develop` in your local clone of F\*, you will be dropped
