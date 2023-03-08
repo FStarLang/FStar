@@ -556,8 +556,7 @@ let gather
       Seq.length s1 == Seq.length s /\
       Seq.length s2 == Seq.length s /\
       (forall (i: nat) .
-        i < Seq.length s ==> (
-        composable p (Seq.index s1 i) (Seq.index s2 i) /\
+        (i < Seq.length s /\ composable p (Seq.index s1 i) (Seq.index s2 i)) ==> (
         op p (Seq.index s1 i) (Seq.index s2 i) == Seq.index s i
       ))
     )
@@ -566,11 +565,11 @@ let gather
   let _ = elim_pts_to r s2 in
   let a1 = array_pcm_carrier_of_seq r.len s1 in
   let a2 = array_pcm_carrier_of_seq r.len s2 in
+  let _ = R.gather _ (array_pcm_carrier_of_seq r.len s1) _ in
   assert (
     composable (array_pcm p r.len) a1 a2 /\
     op (array_pcm p r.len) a1 a2 `feq` array_pcm_carrier_of_seq r.len s
   );
-  let _ = R.gather _ (array_pcm_carrier_of_seq r.len s1) _ in
   intro_pts_to0 r _ s
 
 let sub
