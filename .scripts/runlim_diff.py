@@ -81,7 +81,9 @@ def parse_all(identifier):
 def diff_hashtables(hashtable1, hashtable2):
     diff = []
     for key in hashtable2:
-        if key in hashtable1:
+        if float(hashtable2[key]) == 0:
+            print(key + " has zero value?")
+        elif key in hashtable1:
             diff.append((key, hashtable1[key], hashtable2[key], (float(
                 hashtable1[key]) - float(hashtable2[key])) / float(hashtable2[key]) * 100))
         else:
