@@ -21,15 +21,27 @@ module S = FStar.Syntax.Syntax
 module SS = FStar.Syntax.Subst
 module U = FStar.Syntax.Util
 module BU = FStar.Compiler.Util
+module O = FStar.Options
+module G = FStar.Getopt
 
 let main argv =
     BU.print_string "Initializing ...\n";
     try
-        FStar.Main.setup_hooks();
-        Pars.init() |> ignore;
-        Norm.run_all ();
-        if Unif.run_all () then () else exit 1;
-        exit 0
+        let res, fs = O.parse_cmd_line () in
+        match res with
+        | G.Help ->
+          BU.print_string "F* unit tests. This binary can take the same options \
+                           as F*, but not all of them are meaningful.";
+          exit 0
+        | G.Error msg ->
+          BU.print_error msg; exit 1
+        | G.Empty
+        | G.Success ->
+          FStar.Main.setup_hooks();
+          Pars.init() |> ignore;
+          Norm.run_all ();
+          if Unif.run_all () then () else exit 1;
+          exit 0
     with 
       | Error(err, msg, r, _ctx) when not <| FStar.Options.trace_error() ->
          if r = FStar.Compiler.Range.dummyRange
