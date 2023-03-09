@@ -79,14 +79,9 @@ let lookup (s:param_state) (bv:bv) : Tac (binder & binder & binder) =
 let replace_var (s:param_state) (b:bool) (t:term) : Tac term =
   match inspect_ln t with
   | Tv_Var bv ->
-<<<<<<< HEAD
-    let (x, y, _) = lookup bvmap bv in
-    let bv = if b then (inspect_binder y).binder_bv else (inspect_binder x).binder_bv in
-    pack (Tv_Var bv)
-=======
     begin try
-      let (x, y, _) = lookup s bv in
-      let bv = if b then fst (inspect_binder y) else fst (inspect_binder x) in
+      let (x, y, _) = lookup bvmap bv in
+      let bv = if b then (inspect_binder y).binder_bv else (inspect_binder x).binder_bv in
       pack (Tv_Var bv)
     with
     (* Maybe we traversed a binder and there are variables not in the state.
@@ -94,7 +89,6 @@ let replace_var (s:param_state) (b:bool) (t:term) : Tac term =
     | NotFoundBV _ -> t
     | e -> raise e
     end
->>>>>>> _aseem_core_equatable
   | _ -> t
 
 let replace_by (s:param_state) (b:bool) (t:term) : Tac term =
@@ -111,16 +105,14 @@ let unit_param   = param_of_eqtype unit
 let string_param = param_of_eqtype string
 
 
-<<<<<<< HEAD
 let binder_set_qual (b:binder) (q:aqualv) : Tac binder =
   let bview = inspect_binder b in
   pack_binder {bview with binder_qual=q}
-=======
+
 let admit_param : #a0:Type -> #a1:Type -> (#aR: (a0 -> a1 -> Type0)) ->
                   u1:unit -> u2:unit -> unit_param u1 u2 ->
                   aR (admit ()) (admit ()) =
  fun () () _ -> admit ()
->>>>>>> _aseem_core_equatable
 
 let tapp q t1 t2 = pack (Tv_App t1 (t2, q))
 let tabs b t : Tac term = pack (Tv_Abs b t)
@@ -134,18 +126,12 @@ let rec param' (s:param_state) (t:term) : Tac term =
   | Tv_Var bv ->
     let (_, _, b) = lookup s bv in
     binder_to_term b
-<<<<<<< HEAD
-  | Tv_Arrow b c ->
-    let bv, (q, _attrs) =
-      let bview = inspect_binder b in
-      bview.binder_bv, (bview.binder_qual, bview.binder_attrs) in
-=======
-
   | Tv_Arrow b c -> //      t1 -> t2   ===  (x:t1) -> Tot t2
->>>>>>> _aseem_core_equatable
     begin match inspect_comp c with
     | C_Total t2 ->
-      let (_, (q, _)) = inspect_binder b in
+      let bv, (q, _attrs) =
+        let bview = inspect_binder b in
+        bview.binder_bv, (bview.binder_qual, bview.binder_attrs) in
 
       let (s', (bx0, bx1, bxR)) = push_binder b s in
 
@@ -165,20 +151,9 @@ let rec param' (s:param_state) (t:term) : Tac term =
 
  | Tv_Abs b t ->
     let abs b t : Tac term = pack (Tv_Abs b t) in
-<<<<<<< HEAD
-    let bv = (inspect_binder b).binder_bv in
-    let bvs = (inspect_bv bv).bv_sort in
-    let bx0 = fresh_binder_named "z0" (replace_by bvmap false bvs) in
-    let bx1 = fresh_binder_named "z1" (replace_by bvmap true bvs) in
-    let bxR = fresh_binder_named "zR" (`(`#(param' bvmap bvs)) (`#bx0) (`#bx1)) in
-    let bvmap' = update_bvmap bv bx0 bx1 bxR bvmap in
-    let t = param' bvmap' t in
-=======
-
     let (s', (bx0, bx1, bxR)) = push_binder b s in
 
     let t = param' s' t in
->>>>>>> _aseem_core_equatable
     abs bx0 (abs bx1 (abs bxR t))
 
   | Tv_Match t None brs ->
