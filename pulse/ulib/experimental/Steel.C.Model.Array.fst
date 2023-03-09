@@ -396,6 +396,21 @@ let cell
     (ensures (fun _ -> True))
 = struct_field (array_elements_pcm p len) i
 
+let ref_of_array_eq
+  (#base_t: Type)
+  (#t: Type)
+  (#p: pcm t)
+  (r: array base_t p)
+  (i: size_t)
+: Lemma
+  (requires (size_v i < size_v r.len))
+  (ensures (
+    R.ref_focus (ref_of_array r) (cell p r.len i) ==
+    R.ref_focus r.base (cell p r.base_len (r.offset `size_add` i))
+  ))
+= ref_focus_comp r.base (ref_of_array_conn r) (cell p r.len i);
+  substruct_field (array_elements_pcm p r.base_len) (array_elements_pcm p r.len) (small_to_large_index r.base_len r.offset r.len ()) (large_to_small_index r.base_len r.offset r.len ()) () i
+
 let g_focus_cell
   (#opened: _)
   (#base_t: Type)
@@ -479,8 +494,7 @@ let focus_cell
       r' == ref_focus (ref_of_array r) (cell p r.len i)
     )
 = let y = pts_to_elim_to_base r _ in
-  ref_focus_comp r.base (ref_of_array_conn r) (cell p r.len i);
-  substruct_field (array_elements_pcm p r.base_len) (array_elements_pcm p r.len) (small_to_large_index r.base_len r.offset r.len ()) (large_to_small_index r.base_len r.offset r.len ()) () i;
+  ref_of_array_eq r i;
   let r' = addr_of_struct_field r.base (r.offset `size_add` i) _ in
   pts_to_intro_from_base r _ _;
   A.change_equal_slprop (R.pts_to r' _) (R.pts_to r' _);
