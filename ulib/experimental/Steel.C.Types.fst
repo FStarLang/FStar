@@ -2200,7 +2200,10 @@ let has_array_cell0
 : Tot vprop
 = ST.exists_ (fun (j: SZ.t) ->
     has_base_array_cell1 (dfst a).ar_base (array_index_as_base_array_index_marker i j) r `star`
-    ST.pure (SZ.v j == SZ.v ((dfst a).ar_offset) + SZ.v i)
+    ST.pure (
+      SZ.v j == SZ.v ((dfst a).ar_offset) + SZ.v i /\
+      SZ.v i < SZ.v (dsnd a)
+    )
   )
 
 let has_array_cell1
@@ -2215,6 +2218,12 @@ let has_array_cell1
 let has_array_cell
   a i r
 = has_array_cell0 a i r
+
+let has_array_cell_post
+  a i r
+= ST.rewrite (has_array_cell a i r) (has_array_cell0 a i r);
+  let _ = ST.gen_elim () in
+  ST.rewrite (has_array_cell0 a i r) (has_array_cell a i r)
 
 let has_array_cell_has_base_array_cell
   a i r br
@@ -2233,7 +2242,8 @@ let has_base_array_cell_has_array_cell
 
 let has_array_cell_inj
   #_ #_ #td a i r1 r2
-= let br : ref (base_array0 unit (* dummy *) td (array_ref_base_size (dfst a))) = (dfst a).ar_base in
+= has_array_cell_post a i r1;
+  let br : ref (base_array0 unit (* dummy *) td (array_ref_base_size (dfst a))) = (dfst a).ar_base in
   let j1 = has_array_cell_has_base_array_cell a i r1 br in
   let j2 = has_array_cell_has_base_array_cell a i r2 br in
   ST.vpattern_rewrite (fun j2 -> has_base_array_cell _ j2 r2) j1;
@@ -2334,8 +2344,7 @@ let has_array_cell_drop
     (has_array_cell0 a i r)
     (has_array_cell a i r)
 
-assume
-val has_array_cell_elim
+let has_array_cell_elim
   (#opened: _)
   (#t: Type)
   (#td: typedef t)
@@ -2349,9 +2358,10 @@ val has_array_cell_elim
       HR.pts_to (dfst a).ar_base p b
     )
     (fun b' -> has_array_cell1 a i r `star`
-      HR.pts_to (dfst a).ar_base p b `star`
-      ST.exists_ (fun p' -> HR.pts_to r p' b')
-    )
+      ST.exists_ (fun p -> ST.exists_ (fun p' ->
+        HR.pts_to (dfst a).ar_base p b `star`
+        HR.pts_to r p' b'
+    )))
     True
     (fun b' ->
       let ar = model_array_of_array a b in
@@ -2359,6 +2369,31 @@ val has_array_cell_elim
       b'.base == b.base /\
       b'.ref == R.ref_focus (A.ref_of_array ar) (A.cell td.pcm ar.len i)
     )
+= 
+  ST.rewrite (has_array_cell1 a i r) (has_array_cell0 a i r);
+  let _ = ST.gen_elim () in
+  let j = ST.vpattern_replace (fun j -> has_base_array_cell1 _ j _) in
+  ST.rewrite (has_base_array_cell1 (dfst a).ar_base j r) (has_base_array_cell0 (dfst a).ar_base j r);
+  let _ = ST.gen_elim () in
+  let j' : base_array_index_t' (dfst a).ar_base_size = ST.vpattern_replace (fun j' -> has_base_array_cell_as_struct_field _ _ j' _) in
+  ST.rewrite (has_base_array_cell_as_struct_field (dfst a).ar_base j j' r) (has_struct_field0 #(base_array_index_t' (dfst a).ar_base_size) #(base_array_fd td (dfst a).ar_base_size) (dfst a).ar_base j' r);
+  let _ = ST.gen_elim () in
+  hr_gather b (dfst a).ar_base;
+  HR.share r;
+  HR.share (dfst a).ar_base;
+  has_struct_field1_intro #_ #(base_array_index_t' (dfst a).ar_base_size) #(base_array_fd td (dfst a).ar_base_size) (dfst a).ar_base j' r _ _ _ _ ();
+  ST.rewrite (has_struct_field1 #(base_array_index_t' (dfst a).ar_base_size) #(base_array_fd td (dfst a).ar_base_size) (dfst a).ar_base j' r) (has_base_array_cell_as_struct_field (dfst a).ar_base j j' r);
+  ST.rewrite
+    (has_base_array_cell0 (dfst a).ar_base j r)
+    (has_base_array_cell1 (dfst a).ar_base (array_index_as_base_array_index_marker i j) r);
+  ST.rewrite
+    (has_array_cell0 a i r)
+    (has_array_cell a i r);
+  A.ref_of_array_eq (model_array_of_array a b) i;
+  struct_field_eq_cell td (dfst a).ar_base_size j';
+  let b' = ST.vpattern_replace_erased (HR.pts_to r _) in
+  ST.noop ();
+  b'
 
 let ghost_array_cell_focus
   #_ #_ #td #s a i r
@@ -2373,8 +2408,7 @@ let ghost_array_cell_focus
   ST.rewrite (A.pts_to _ _) (A.pts_to (model_array_of_array a b) (Seq.upd s (SZ.v i) (unknown td)));
   ST.weaken (array_pts_to0 a (Seq.upd s (SZ.v i) (unknown td))) (array_pts_to a (Seq.upd s (SZ.v i) (unknown td))) (fun _ -> ())
 
-assume
-val has_array_cell_intro
+let has_array_cell_intro
   (#opened: _)
   (#t: Type)
   (#td: typedef t)
@@ -2397,6 +2431,18 @@ val has_array_cell_intro
       b'.ref == R.ref_focus (A.ref_of_array ar) (A.cell td.pcm ar.len i)
     )
     (fun _ -> True)
+= 
+  A.ref_of_array_eq (model_array_of_array a b) i;
+  let j : base_array_index_t' (dfst a).ar_base_size = (dfst a).ar_offset `SZ.add` i in
+  struct_field_eq_cell td (dfst a).ar_base_size j;
+  has_struct_field1_intro #_ #(base_array_index_t' (dfst a).ar_base_size) #(base_array_fd td (dfst a).ar_base_size) (dfst a).ar_base j r _ _ _ _ ();
+  ST.rewrite (has_struct_field1 #(base_array_index_t' (dfst a).ar_base_size) #(base_array_fd td (dfst a).ar_base_size) (dfst a).ar_base j r) (has_base_array_cell_as_struct_field (dfst a).ar_base j j r);
+  ST.rewrite
+    (has_base_array_cell0 (dfst a).ar_base j r)
+    (has_base_array_cell1 (dfst a).ar_base (array_index_as_base_array_index_marker i j) r);
+  ST.rewrite
+    (has_array_cell0 a i r)
+    (has_array_cell a i r)
 
 let ghost_array_cell
   #_ #_ #td #s a i
@@ -2470,7 +2516,45 @@ let array_ref_cell
   ST.noop ();
   return r
 
-let unarray_cell = magic ()
+let ar_unfocus_cell
+  (#opened: _)
+  (#base_t #base_t': Type)
+  (#t: Type)
+  (#p: pcm t)
+  (r: A.array base_t p)
+  (s: Seq.seq t)
+  (i: SZ.t)
+  (r': R.ref base_t' p)
+  (v: t)
+  (sq: squash (SZ.v i < SZ.v r.len /\ SZ.v i < Seq.length s))
+: SteelGhost unit opened
+    (A.pts_to r s `star` R.pts_to r' v)
+    (fun _ -> A.pts_to r (Seq.upd s (SZ.v i) v))
+    (fun _ -> 
+      base_t' == base_t /\
+      r' == R.ref_focus (A.ref_of_array r) (A.cell p r.len i) /\
+      Seq.index s (SZ.v i) == one p
+    )
+    (fun _ _ _ -> True)
+= let r1' : R.ref base_t p = coerce_eq () r' in
+  ST.rewrite (R.pts_to r' v) (R.pts_to r1' v);
+  A.unfocus_cell r s i r1' v ()
+
+let unarray_cell
+  #_ #_ #td #s #v a i r
+= array_pts_to_length _ _;
+  ST.weaken (array_pts_to a s) (array_pts_to0 a s) (fun _ -> ());
+  let _ = ST.gen_elim () in
+  let w = has_array_cell_elim a i r in
+  let _ = ST.gen_elim () in
+  ST.weaken (pts_to r v) (pts_to0 r v) (fun _ -> ());
+  let _ = ST.gen_elim () in
+  hr_gather (Ghost.reveal w) r;
+  ar_unfocus_cell _ _ i _ _ ();
+  let b = ST.vpattern_replace (HR.pts_to (dfst a).ar_base _) in
+  ST.rewrite (A.pts_to _ _) (A.pts_to (model_array_of_array a b) (Seq.upd s (SZ.v i) v));
+  ST.weaken (array_pts_to0 a (Seq.upd s (SZ.v i) v)) (array_pts_to a (Seq.upd s (SZ.v i) v)) (fun _ -> ());
+  has_array_cell_drop _ _ _
 
 #push-options "--split_queries --z3rlimit 16"
 
