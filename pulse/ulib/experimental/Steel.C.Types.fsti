@@ -1511,6 +1511,19 @@ val has_array_cell
   has_base_array_cell (array_ref_base (dfst a)) (array_ref_offset (dfst a) `SZ.add` i) r
 *)
 
+val has_array_cell_post
+  (#opened: _)
+  (#t: Type)
+  (#td: typedef t)
+  (a: array td)
+  (i: SZ.t)
+  (r': ref td)
+: SteelGhost unit opened
+    (has_array_cell a i r')
+    (fun _ -> has_array_cell a i r')
+    (fun _ -> True)
+    (fun _ _ _ -> SZ.v i < SZ.v (dsnd a))
+
 val has_array_cell_has_base_array_cell
   (#opened: _)
   (#t: Type)
@@ -1541,7 +1554,8 @@ val has_base_array_cell_has_array_cell
     (has_base_array_cell br i r)
     (fun j -> has_array_cell a j r)
     (fun _ -> has_array_ref_base (dfst a) br /\
-      SZ.v i >= SZ.v (array_ref_offset (dfst a))
+      SZ.v i >= SZ.v (array_ref_offset (dfst a)) /\
+      SZ.v i < SZ.v (array_ref_offset (dfst a)) + SZ.v (dsnd a)
     )
     (fun _ j _ ->
       SZ.v i == SZ.v (array_ref_offset (dfst a)) + SZ.v j
