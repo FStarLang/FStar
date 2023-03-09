@@ -259,7 +259,7 @@ let raise_arity_mismatch :
               FStar_Compiler_Util.format3
                 "Head symbol %s expects at least %s arguments; got only %s"
                 head uu___2 uu___3 in
-            (FStar_Errors.Fatal_SMTEncodingArityMismatch, uu___1) in
+            (FStar_Errors_Codes.Fatal_SMTEncodingArityMismatch, uu___1) in
           FStar_Errors.raise_error uu___ rng
 let (isTotFun_axioms :
   FStar_Compiler_Range.range ->
@@ -421,7 +421,7 @@ let check_pattern_vars :
                      FStar_Compiler_Util.format1
                        "SMT pattern misses at least one bound variable: %s"
                        uu___5 in
-                   (FStar_Errors.Warning_SMTPatternIllFormed, uu___4) in
+                   (FStar_Errors_Codes.Warning_SMTPatternIllFormed, uu___4) in
                  FStar_Errors.log_issue pos uu___3)
 type label =
   (FStar_SMTEncoding_Term.fv * Prims.string * FStar_Compiler_Range.range)
@@ -1115,7 +1115,7 @@ and (encode_deeply_embedded_quantifier :
                                                               = uu___7;_}::[])
                ->
                (FStar_Errors.log_issue t.FStar_Syntax_Syntax.pos
-                  (FStar_Errors.Warning_QuantifierWithoutPattern,
+                  (FStar_Errors_Codes.Warning_QuantifierWithoutPattern,
                     "Not encoding deeply embedded, unguarded quantifier to SMT");
                 (tm, decls))
            | uu___1 ->
@@ -2468,7 +2468,7 @@ and (encode_term :
                                                                     FStar_Compiler_Util.format1
                                                                     "No SMT pattern for partial application %s"
                                                                     uu___24 in
-                                                                    (FStar_Errors.Warning_SMTPatternIllFormed,
+                                                                    (FStar_Errors_Codes.Warning_SMTPatternIllFormed,
                                                                     uu___23) in
                                                                     FStar_Errors.log_issue
                                                                     t0.FStar_Syntax_Syntax.pos
@@ -2825,7 +2825,7 @@ and (encode_term :
                             FStar_Compiler_Util.format1
                               "Losing precision when encoding a function literal: %s\n(Unnannotated abstraction in the compiler ?)"
                               uu___6 in
-                          (FStar_Errors.Warning_FunctionLiteralPrecisionLoss,
+                          (FStar_Errors_Codes.Warning_FunctionLiteralPrecisionLoss,
                             uu___5) in
                         FStar_Errors.log_issue t0.FStar_Syntax_Syntax.pos
                           uu___4);
@@ -3492,7 +3492,7 @@ and (encode_smt_patterns :
                                               FStar_Compiler_Util.format2
                                                 "Pattern %s contains illegal sub-term (%s); dropping it"
                                                 uu___10 uu___11 in
-                                            (FStar_Errors.Warning_SMTPatternIllFormed,
+                                            (FStar_Errors_Codes.Warning_SMTPatternIllFormed,
                                               uu___9) in
                                           FStar_Errors.log_issue
                                             p.FStar_Syntax_Syntax.pos uu___8);

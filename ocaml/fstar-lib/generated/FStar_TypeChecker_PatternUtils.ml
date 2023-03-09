@@ -45,7 +45,7 @@ let rec (elaborate_pat :
                             FStar_Ident.range_of_lid
                               (fv.FStar_Syntax_Syntax.fv_name).FStar_Syntax_Syntax.v in
                           FStar_Errors.raise_error
-                            (FStar_Errors.Fatal_TooManyPatternArguments,
+                            (FStar_Errors_Codes.Fatal_TooManyPatternArguments,
                               "Too many pattern arguments") uu___6
                       | (uu___4::uu___5, []) ->
                           FStar_Compiler_Effect.op_Bar_Greater formals
@@ -84,7 +84,7 @@ let rec (elaborate_pat :
                                                FStar_Compiler_Util.format1
                                                  "Insufficient pattern arguments (%s)"
                                                  uu___10 in
-                                             (FStar_Errors.Fatal_InsufficientPatternArguments,
+                                             (FStar_Errors_Codes.Fatal_InsufficientPatternArguments,
                                                uu___9) in
                                            let uu___9 =
                                              FStar_Ident.range_of_lid
@@ -123,7 +123,7 @@ let rec (elaborate_pat :
                                         FStar_Compiler_Util.format1
                                           "This pattern (%s) binds an inaccesible argument; use a wildcard ('_') pattern"
                                           uu___8 in
-                                      (FStar_Errors.Fatal_InsufficientPatternArguments,
+                                      (FStar_Errors_Codes.Fatal_InsufficientPatternArguments,
                                         uu___7) in
                                     FStar_Errors.raise_error uu___6
                                       p1.FStar_Syntax_Syntax.p)
@@ -470,7 +470,8 @@ let (pat_as_exp :
                          FStar_Compiler_Util.format1
                            "The pattern variable \"%s\" was used more than once"
                            m in
-                       (FStar_Errors.Fatal_NonLinearPatternVars, uu___2) in
+                       (FStar_Errors_Codes.Fatal_NonLinearPatternVars,
+                         uu___2) in
                      FStar_Errors.raise_error err p3.FStar_Syntax_Syntax.p
                  | uu___2 -> (b, a, w, arg, guard, p3)) in
           let uu___ = one_pat env p in

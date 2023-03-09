@@ -9,34 +9,31 @@ More information on F\* can be found at www.fstar-lang.org
 
 See [INSTALL.md](https://github.com/FStarLang/FStar/blob/master/INSTALL.md)
 
-### Tutorial
+### Online book
 
-The [F\* tutorial] provides a first taste of verified programming in
-F\*, explaining things by example.
+An online book _Proof-oriented Programming In F*_ is in the works and regular updates are
+posted online. The book is available as a [PDF], or you can read it while trying out
+examples and exercises in your browser interface from this [tutorial page].
 
-[F\* tutorial]: https://www.fstar-lang.org/tutorial/
+[tutorial page]: https://www.fstar-lang.org/tutorial/
+[PDF]: http://fstar-lang.org/tutorial/proof-oriented-programming-in-fstar.pdf
 
 ### Wiki
 
-The [F\* wiki] contains additional, usually more in-depth, technical
-documentation on F\*.
+The [F\* wiki] contains additional technical documentation on F\*, and is especially useful
+for topics that are not yet covered by the book.
 
 [F\* wiki]: https://github.com/FStarLang/FStar/wiki
 
 ### Editing F* code
 
-You can edit F\* code using your favourite text editor, but Emacs, Visual Studio
-Code, Atom, and Vim have extensions that add special support for F\*, including
-for instance syntax highlighting, code completion, quick navigation, type hints,
-and interactive development.  More details on [editor support] on the [F\* wiki].
+You can edit F\* code using various text editor. Emacs has the best support currently,
+providing syntax highlighting, code completion and navigation, and interactive development,
+using [fstar-mode.el]. However, other editors also have limited support.
+More details on [editor support] are available on the [F\* wiki].
 
 [editor support]: https://github.com/FStarLang/FStar/wiki/Editor-support-for-F*
-
-You can also edit simple examples directly in your browser by using
-either the [online F\* editor] that's part of the [F\* tutorial].
-
-[online F\* editor]: https://www.fstar-lang.org/run.php
-[F\* tutorial]: https://www.fstar-lang.org/tutorial
+[fstar-mode.el]: https://github.com/FStarLang/fstar-mode.el
 
 ### Extracting and executing F* code
 
@@ -67,32 +64,16 @@ below.
 Users can also chat about F* or ask questions at this [Zulip
 forum](https://fstar.zulipchat.com).
 
-### Community mailing list
+### Mailing list
 
-The [fstar-club mailing list] is where
-various F* announcements are made to the general public (e.g. for
-releases, new papers, etc) and where users can ask questions, ask for
-help, discuss, provide feedback, announce jobs requiring at least 10
-years of F* experience, etc.
-[List archives] are public and [searchable], but only members can post.
-[Join here][fstar-club mailing list]!
+We also have a [mailing list] which we use mainly for announcements. 
 
-[fstar-club mailing list]: http://lists.gforge.inria.fr/mailman/listinfo/fstar-club
-
-[List archives]: https://lists.gforge.inria.fr/pipermail/fstar-club/
-[searchable]: https://mail-archive.com/fstar-club@lists.gforge.inria.fr/
-
-### Blog
-
-The [F\* for the masses] blog is also expected to become an important
-source of information and news on the F\* project.
-
-[F\* for the masses]: https://fstarlang.github.io/
+[mailing list]: https://groups.google.com/g/fstar-mailing-list
 
 ### Reporting issues
 
 Please report issues using the [F\* issue tracker] on GitHub.
-Before filing please use search to make sure the issue doesn't already exist.
+Before filing please search to make sure the issue doesn't already exist.
 We don't maintain old releases, so if possible please use the
 [online F\* editor] or directly [the GitHub sources] to check
 that your problem still exists on the `master` branch.

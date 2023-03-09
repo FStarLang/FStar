@@ -9,7 +9,7 @@ let (always : Prims.int -> Prims.bool -> unit) =
            let uu___2 =
              let uu___3 = FStar_Compiler_Util.string_of_int id in
              FStar_Compiler_Util.format1 "Assertion failed: test %s" uu___3 in
-           (FStar_Errors.Fatal_AssertionFailure, uu___2) in
+           (FStar_Errors_Codes.Fatal_AssertionFailure, uu___2) in
          FStar_Errors.raise_error uu___1 FStar_Compiler_Range.dummyRange)
 let (x : FStar_Syntax_Syntax.bv) =
   FStar_Syntax_Syntax.gen_bv "x" FStar_Pervasives_Native.None

@@ -62,7 +62,7 @@ let (check_and_gen :
                                        "Expected %s:%s to be universe-polymorphic in %s universes, but found %s (tscheme: %s)"
                                        eff_name comb uu___4 uu___5 uu___6 in
                                    FStar_Errors.raise_error
-                                     (FStar_Errors.Fatal_MismatchUniversePolymorphic,
+                                     (FStar_Errors_Codes.Fatal_MismatchUniversePolymorphic,
                                        error) t3.FStar_Syntax_Syntax.pos;
                                    (match us1 with
                                     | [] -> ()
@@ -94,7 +94,7 @@ let (check_and_gen :
                                                  "Expected and generalized universes in the declaration for %s:%s are different, input: %s, but after gen: %s"
                                                  eff_name comb uu___10
                                                  uu___11 in
-                                             (FStar_Errors.Fatal_UnexpectedNumberOfUniverse,
+                                             (FStar_Errors_Codes.Fatal_UnexpectedNumberOfUniverse,
                                                uu___9) in
                                            FStar_Errors.raise_error uu___8
                                              t3.FStar_Syntax_Syntax.pos)))
@@ -214,7 +214,7 @@ let (log_ad_hoc_combinator_warning :
           FStar_Compiler_Util.format1
             "Combinator %s is not a substitutive indexed effect combinator, it is better to make it one if possible for better performance and ease of use"
             comb_name in
-        (FStar_Errors.Warning_Adhoc_IndexedEffect_Combinator, uu___1) in
+        (FStar_Errors_Codes.Warning_Adhoc_IndexedEffect_Combinator, uu___1) in
       FStar_Errors.log_issue r uu___
 let (bind_combinator_kind :
   FStar_TypeChecker_Env.env ->
@@ -1467,7 +1467,7 @@ let (validate_indexed_effect_bind_shape :
                                               FStar_Compiler_Util.format2
                                                 "Type of %s is not an arrow with >= 4 binders (%s)"
                                                 bind_name uu___5 in
-                                            (FStar_Errors.Fatal_UnexpectedEffect,
+                                            (FStar_Errors_Codes.Fatal_UnexpectedEffect,
                                               uu___4) in
                                           FStar_Errors.raise_error uu___3 r in
                                     let uu___1 =
@@ -1491,7 +1491,7 @@ let (validate_indexed_effect_bind_shape :
                                                 FStar_Compiler_Util.format2
                                                   "Type of %s is not an arrow with >= 6 binders (%s)"
                                                   bind_name uu___5 in
-                                              (FStar_Errors.Fatal_UnexpectedEffect,
+                                              (FStar_Errors_Codes.Fatal_UnexpectedEffect,
                                                 uu___4) in
                                             FStar_Errors.raise_error uu___3 r))
                                       else (rest_bs, []) in
@@ -1675,7 +1675,7 @@ let (validate_indexed_effect_bind_shape :
                                                                     "Unexpected type of %s (%s)\n"
                                                                     bind_name
                                                                     uu___9 in
-                                                                    (FStar_Errors.Fatal_UnexpectedEffect,
+                                                                    (FStar_Errors_Codes.Fatal_UnexpectedEffect,
                                                                     uu___8) in
                                                                    FStar_Errors.raise_error
                                                                     uu___7 r
@@ -2504,7 +2504,8 @@ let (validate_indexed_effect_subcomp_shape :
                                   FStar_Compiler_Util.format2
                                     "Type of %s is not an arrow with >= 2 binders (%s)"
                                     subcomp_name uu___4 in
-                                (FStar_Errors.Fatal_UnexpectedEffect, uu___3) in
+                                (FStar_Errors_Codes.Fatal_UnexpectedEffect,
+                                  uu___3) in
                               FStar_Errors.raise_error uu___2 r in
                         let uu___ =
                           let uu___1 =
@@ -2611,7 +2612,7 @@ let (validate_indexed_effect_subcomp_shape :
                                                   FStar_Compiler_Util.format2
                                                     "Unexpected type of %s (%s)\n"
                                                     subcomp_name uu___7 in
-                                                (FStar_Errors.Fatal_UnexpectedEffect,
+                                                (FStar_Errors_Codes.Fatal_UnexpectedEffect,
                                                   uu___6) in
                                               FStar_Errors.raise_error uu___5
                                                 r
@@ -3244,7 +3245,8 @@ let (validate_indexed_effect_ite_shape :
                               FStar_Compiler_Util.format2
                                 "Type of %s is not an arrow with >= 4 binders (%s)"
                                 ite_name uu___4 in
-                            (FStar_Errors.Fatal_UnexpectedEffect, uu___3) in
+                            (FStar_Errors_Codes.Fatal_UnexpectedEffect,
+                              uu___3) in
                           FStar_Errors.raise_error uu___2 r in
                     let uu___ =
                       let uu___1 =
@@ -3337,7 +3339,7 @@ let (validate_indexed_effect_ite_shape :
                                             FStar_Compiler_Util.format2
                                               "Unexpected term for %s (%s)\n"
                                               ite_name uu___6 in
-                                          (FStar_Errors.Fatal_UnexpectedEffect,
+                                          (FStar_Errors_Codes.Fatal_UnexpectedEffect,
                                             uu___5) in
                                         FStar_Errors.raise_error uu___4 r
                                     | FStar_Pervasives_Native.Some g1 -> g1 in
@@ -3674,7 +3676,7 @@ let (validate_indexed_effect_lift_shape :
                           let uu___5 =
                             lift_t_shape_error
                               "either not an arrow, or not enough binders" in
-                          (FStar_Errors.Fatal_UnexpectedExpressionType,
+                          (FStar_Errors_Codes.Fatal_UnexpectedExpressionType,
                             uu___5) in
                         FStar_Errors.raise_error uu___4 r in
                   (match uu___1 with
@@ -3696,7 +3698,7 @@ let (validate_indexed_effect_lift_shape :
                              let uu___5 =
                                lift_t_shape_error
                                  "the lift combinator has an unexpected effect: it must either be PURE or if the source effect is erasable then may be GHOST" in
-                             (FStar_Errors.Fatal_UnexpectedExpressionType,
+                             (FStar_Errors_Codes.Fatal_UnexpectedExpressionType,
                                uu___5) in
                            FStar_Errors.raise_error uu___4 r
                          else ());
@@ -3800,7 +3802,7 @@ let (validate_indexed_effect_lift_shape :
                                                  FStar_Compiler_Util.format2
                                                    "Unexpected type of %s (%s)\n"
                                                    lift_name uu___9 in
-                                               (FStar_Errors.Fatal_UnexpectedEffect,
+                                               (FStar_Errors_Codes.Fatal_UnexpectedEffect,
                                                  uu___8) in
                                              FStar_Errors.raise_error uu___7
                                                r
@@ -3905,7 +3907,7 @@ let (tc_layered_eff_decl :
                       Prims.op_Hat
                         "Binders are not supported for layered effects ("
                         uu___6 in
-                    (FStar_Errors.Fatal_UnexpectedEffect, uu___5) in
+                    (FStar_Errors_Codes.Fatal_UnexpectedEffect, uu___5) in
                   let uu___5 =
                     FStar_Ident.range_of_lid ed.FStar_Syntax_Syntax.mname in
                   FStar_Errors.raise_error uu___4 uu___5)
@@ -4100,7 +4102,8 @@ let (tc_layered_eff_decl :
                              FStar_Compiler_Util.format5
                                "Type of %s:%s is not an arrow with >= %s binders (%s::%s)"
                                uu___9 comb uu___10 uu___11 uu___12 in
-                           (FStar_Errors.Fatal_UnexpectedEffect, uu___8) in
+                           (FStar_Errors_Codes.Fatal_UnexpectedEffect,
+                             uu___8) in
                          FStar_Errors.raise_error uu___7 r in
                        let return_repr =
                          let return_repr_ts =
@@ -5204,7 +5207,7 @@ let (tc_layered_eff_decl :
                                                    FStar_Compiler_Util.format3
                                                      "Action %s:%s has non-empty action params (%s)"
                                                      uu___17 uu___18 uu___19 in
-                                                 (FStar_Errors.Fatal_MalformedActionDeclaration,
+                                                 (FStar_Errors_Codes.Fatal_MalformedActionDeclaration,
                                                    uu___16) in
                                                FStar_Errors.raise_error
                                                  uu___15 r)
@@ -5587,7 +5590,7 @@ let (tc_layered_eff_decl :
                                                                     uu___26
                                                                     uu___27
                                                                     uu___28 in
-                                                                    (FStar_Errors.Fatal_ActionMustHaveFunctionType,
+                                                                    (FStar_Errors_Codes.Fatal_ActionMustHaveFunctionType,
                                                                     uu___25) in
                                                                    FStar_Errors.raise_error
                                                                     uu___24 r in
@@ -5701,7 +5704,7 @@ let (tc_layered_eff_decl :
                                                                     let uu___29
                                                                     =
                                                                     err_msg t in
-                                                                    (FStar_Errors.Fatal_ActionMustHaveFunctionType,
+                                                                    (FStar_Errors_Codes.Fatal_ActionMustHaveFunctionType,
                                                                     uu___29) in
                                                                     FStar_Errors.raise_error
                                                                     uu___28 r)
@@ -5713,7 +5716,7 @@ let (tc_layered_eff_decl :
                                                                     let uu___28
                                                                     =
                                                                     err_msg t in
-                                                                    (FStar_Errors.Fatal_ActionMustHaveFunctionType,
+                                                                    (FStar_Errors_Codes.Fatal_ActionMustHaveFunctionType,
                                                                     uu___28) in
                                                                     FStar_Errors.raise_error
                                                                     uu___27 r in
@@ -5783,7 +5786,7 @@ let (tc_layered_eff_decl :
                                                                     =
                                                                     err_msg
                                                                     k1 in
-                                                                    (FStar_Errors.Fatal_ActionMustHaveFunctionType,
+                                                                    (FStar_Errors_Codes.Fatal_ActionMustHaveFunctionType,
                                                                     uu___28) in
                                                                     FStar_Errors.raise_error
                                                                     uu___27 r in
@@ -5921,7 +5924,7 @@ let (tc_layered_eff_decl :
                                                                     uu___33
                                                                     uu___34
                                                                     uu___35 in
-                                                                    (FStar_Errors.Fatal_UnexpectedNumberOfUniverse,
+                                                                    (FStar_Errors_Codes.Fatal_UnexpectedNumberOfUniverse,
                                                                     uu___31) in
                                                                     FStar_Errors.raise_error
                                                                     uu___30 r)) in
@@ -6121,7 +6124,7 @@ let (tc_layered_eff_decl :
                                                              FStar_Compiler_Util.format1
                                                                "Reification of indexed effects (%s here) is supported only as a type coercion to the underlying representation type (no support for smt-based reasoning or extraction)"
                                                                uu___19 in
-                                                           (FStar_Errors.Warning_BleedingEdge_Feature,
+                                                           (FStar_Errors_Codes.Warning_BleedingEdge_Feature,
                                                              uu___18) in
                                                          FStar_Errors.log_issue
                                                            r uu___17);
@@ -6291,7 +6294,7 @@ let (tc_non_layered_eff_decl :
                                             FStar_Compiler_Util.format3
                                               "Expected and generalized universes in effect declaration for %s are different, expected: %s, but found %s"
                                               uu___14 uu___15 uu___16 in
-                                          (FStar_Errors.Fatal_UnexpectedNumberOfUniverse,
+                                          (FStar_Errors_Codes.Fatal_UnexpectedNumberOfUniverse,
                                             uu___13) in
                                         let uu___13 =
                                           FStar_Ident.range_of_lid
@@ -6484,7 +6487,7 @@ let (tc_non_layered_eff_decl :
                                                         uu___11 comb uu___12
                                                         uu___13 in
                                                     FStar_Errors.raise_error
-                                                      (FStar_Errors.Fatal_MismatchUniversePolymorphic,
+                                                      (FStar_Errors_Codes.Fatal_MismatchUniversePolymorphic,
                                                         error)
                                                       t3.FStar_Syntax_Syntax.pos)
                                                  else ();
@@ -6529,7 +6532,7 @@ let (tc_non_layered_eff_decl :
                                                                uu___16 comb
                                                                uu___17
                                                                uu___18 in
-                                                           (FStar_Errors.Fatal_UnexpectedNumberOfUniverse,
+                                                           (FStar_Errors_Codes.Fatal_UnexpectedNumberOfUniverse,
                                                              uu___15) in
                                                          FStar_Errors.raise_error
                                                            uu___14
@@ -7961,7 +7964,7 @@ let (tc_non_layered_eff_decl :
                                                                     "Actions must have function types (not: %s, a.k.a. %s)"
                                                                     uu___32
                                                                     uu___33 in
-                                                                    (FStar_Errors.Fatal_ActionMustHaveFunctionType,
+                                                                    (FStar_Errors_Codes.Fatal_ActionMustHaveFunctionType,
                                                                     uu___31) in
                                                                     FStar_Errors.raise_error
                                                                     uu___30
@@ -7998,7 +8001,7 @@ let (tc_non_layered_eff_decl :
                                                                     FStar_Compiler_Util.format1
                                                                     "Unexpected non trivial guard formula when checking action type shape (%s)"
                                                                     uu___33 in
-                                                                    (FStar_Errors.Fatal_ActionMustHaveFunctionType,
+                                                                    (FStar_Errors_Codes.Fatal_ActionMustHaveFunctionType,
                                                                     uu___32) in
                                                                     FStar_Errors.raise_error
                                                                     uu___31
@@ -8584,7 +8587,7 @@ let (check_lift_for_erasable_effects :
                 FStar_Compiler_Util.format3
                   "Error defining a lift/subcomp %s ~> %s: %s" uu___2 uu___3
                   reason in
-              (FStar_Errors.Fatal_UnexpectedEffect, uu___1) in
+              (FStar_Errors_Codes.Fatal_UnexpectedEffect, uu___1) in
             FStar_Errors.raise_error uu___ r in
           let m11 = FStar_TypeChecker_Env.norm_eff_name env m1 in
           let uu___ =
@@ -8627,7 +8630,7 @@ let (tc_lift :
                FStar_Compiler_Util.format1
                  "Cannot define a lift with same source and target (%s)"
                  uu___4 in
-             (FStar_Errors.Fatal_UnexpectedEffect, uu___3) in
+             (FStar_Errors_Codes.Fatal_UnexpectedEffect, uu___3) in
            FStar_Errors.raise_error uu___2 r
          else ());
         (let check_and_gen1 env1 t k =
@@ -8700,7 +8703,7 @@ let (tc_lift :
                                  FStar_Ident.string_of_lid eff_name in
                                FStar_Compiler_Util.format1
                                  "Effect %s cannot be reified" uu___10 in
-                             (FStar_Errors.Fatal_EffectCannotBeReified,
+                             (FStar_Errors_Codes.Fatal_EffectCannotBeReified,
                                uu___9) in
                            let uu___9 = FStar_TypeChecker_Env.get_range env in
                            FStar_Errors.raise_error uu___8 uu___9
@@ -9118,7 +9121,7 @@ let (tc_lift :
                                    FStar_Compiler_Util.format3
                                      "Sub effect wp must be polymorphic in exactly 1 universe; %s ~> %s has %s universes"
                                      uu___11 uu___12 uu___13 in
-                                 (FStar_Errors.Fatal_TooManyUniverse,
+                                 (FStar_Errors_Codes.Fatal_TooManyUniverse,
                                    uu___10) in
                                FStar_Errors.raise_error uu___9 r
                              else ());
@@ -9161,7 +9164,7 @@ let (tc_lift :
                                    FStar_Compiler_Util.format3
                                      "Sub effect lift must be polymorphic in exactly 1 universe; %s ~> %s has %s universes"
                                      uu___12 uu___13 uu___14 in
-                                 (FStar_Errors.Fatal_TooManyUniverse,
+                                 (FStar_Errors_Codes.Fatal_TooManyUniverse,
                                    uu___11) in
                                FStar_Errors.raise_error uu___10 r
                              else ());
@@ -9263,7 +9266,7 @@ let (tc_effect_abbrev :
                                                 FStar_Compiler_Util.format2
                                                   "Effect %s is marked as a default effect for %s, but it has more than one arguments"
                                                   uu___12 uu___13 in
-                                              (FStar_Errors.Fatal_UnexpectedEffect,
+                                              (FStar_Errors_Codes.Fatal_UnexpectedEffect,
                                                 uu___11) in
                                             FStar_Errors.raise_error uu___10
                                               r)
@@ -9271,7 +9274,7 @@ let (tc_effect_abbrev :
                                          FStar_Syntax_Syntax.bv_to_name x)
                                     | uu___7 ->
                                         FStar_Errors.raise_error
-                                          (FStar_Errors.Fatal_NotEnoughArgumentsForEffect,
+                                          (FStar_Errors_Codes.Fatal_NotEnoughArgumentsForEffect,
                                             "Effect abbreviations must bind at least the result type")
                                           r in
                                   let def_result_typ =
@@ -9295,7 +9298,7 @@ let (tc_effect_abbrev :
                                         FStar_Compiler_Util.format2
                                           "Result type of effect abbreviation `%s` does not match the result type of its definition `%s`"
                                           uu___10 uu___11 in
-                                      (FStar_Errors.Fatal_EffectAbbreviationResultTypeMismatch,
+                                      (FStar_Errors_Codes.Fatal_EffectAbbreviationResultTypeMismatch,
                                         uu___9) in
                                     FStar_Errors.raise_error uu___8 r
                                   else ());
@@ -9357,7 +9360,7 @@ let (tc_effect_abbrev :
                                                          "Effect abbreviations must be polymorphic in exactly 1 universe; %s has %s universes (%s)"
                                                          uu___14 uu___15
                                                          uu___16 in
-                                                     (FStar_Errors.Fatal_TooManyUniverse,
+                                                     (FStar_Errors_Codes.Fatal_TooManyUniverse,
                                                        uu___13) in
                                                    FStar_Errors.raise_error
                                                      uu___12 r)
@@ -9383,7 +9386,7 @@ let (check_polymonadic_bind_for_erasable_effects :
                   FStar_Compiler_Util.format4
                     "Error definition polymonadic bind (%s, %s) |> %s: %s"
                     uu___2 uu___3 uu___4 reason in
-                (FStar_Errors.Fatal_UnexpectedEffect, uu___1) in
+                (FStar_Errors_Codes.Fatal_UnexpectedEffect, uu___1) in
               FStar_Errors.raise_error uu___ r in
             let m1 = FStar_TypeChecker_Env.norm_eff_name env m in
             let n1 = FStar_TypeChecker_Env.norm_eff_name env n in
@@ -9534,7 +9537,7 @@ let (tc_polymonadic_bind :
                                       FStar_Compiler_Util.format1
                                         "Polymonadic binds (%s in this case) is an experimental feature;it is subject to some redesign in the future. Please keep us informed (on github etc.) about how you are using it"
                                         eff_name in
-                                    (FStar_Errors.Warning_BleedingEdge_Feature,
+                                    (FStar_Errors_Codes.Warning_BleedingEdge_Feature,
                                       uu___8) in
                                   FStar_Errors.log_issue r uu___7);
                                  (let uu___7 =
@@ -9628,7 +9631,7 @@ let (tc_polymonadic_subcomp :
                                     FStar_Compiler_Util.format1
                                       "Polymonadic subcomp (%s in this case) is an experimental feature;it is subject to some redesign in the future. Please keep us informed (on github etc.) about how you are using it"
                                       combinator_name in
-                                  (FStar_Errors.Warning_BleedingEdge_Feature,
+                                  (FStar_Errors_Codes.Warning_BleedingEdge_Feature,
                                     uu___8) in
                                 FStar_Errors.log_issue r uu___7);
                                (let uu___7 =

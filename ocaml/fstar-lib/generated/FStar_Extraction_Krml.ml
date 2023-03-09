@@ -2657,7 +2657,7 @@ and (translate_expr : env -> FStar_Extraction_ML_Syntax.mlexpr -> expr) =
                 uu___7
                 (FStar_Pervasives_Native.snd
                    e1.FStar_Extraction_ML_Syntax.loc) in
-            (FStar_Errors.Fatal_ExtractionUnsupported, uu___6) in
+            (FStar_Errors_Codes.Fatal_ExtractionUnsupported, uu___6) in
           FStar_Errors.raise_error uu___5 FStar_Compiler_Range.dummyRange
       | FStar_Extraction_ML_Syntax.MLE_App (head, args) ->
           let uu___ =
@@ -3046,7 +3046,7 @@ let (translate_type_decl :
                  let uu___8 =
                    FStar_Compiler_Util.format1
                      "Error extracting type definition %s to KaRaMeL\n" name1 in
-                 (FStar_Errors.Warning_DefinitionNotTranslated, uu___8) in
+                 (FStar_Errors_Codes.Warning_DefinitionNotTranslated, uu___8) in
                FStar_Errors.log_issue FStar_Compiler_Range.dummyRange uu___7);
               FStar_Pervasives_Native.None))
 let (translate_let :
@@ -3173,7 +3173,7 @@ let (translate_let :
                                FStar_Compiler_Util.format2
                                  "Error while extracting %s to KaRaMeL (%s)\n"
                                  uu___11 msg in
-                             (FStar_Errors.Warning_FunctionNotExtacted,
+                             (FStar_Errors_Codes.Warning_FunctionNotExtacted,
                                uu___10) in
                            FStar_Errors.log_issue
                              FStar_Compiler_Range.dummyRange uu___9);
@@ -3245,7 +3245,7 @@ let (translate_let :
                          FStar_Compiler_Util.format2
                            "Error extracting %s to KaRaMeL (%s)\n" uu___14
                            uu___15 in
-                       (FStar_Errors.Warning_DefinitionNotTranslated,
+                       (FStar_Errors_Codes.Warning_DefinitionNotTranslated,
                          uu___13) in
                      FStar_Errors.log_issue FStar_Compiler_Range.dummyRange
                        uu___12);
@@ -3291,7 +3291,8 @@ let (translate_let :
                          FStar_Compiler_Util.format2
                            "Error extracting %s to KaRaMeL (%s)\n" uu___7
                            uu___8 in
-                       (FStar_Errors.Warning_DefinitionNotTranslated, uu___6) in
+                       (FStar_Errors_Codes.Warning_DefinitionNotTranslated,
+                         uu___6) in
                      FStar_Errors.log_issue FStar_Compiler_Range.dummyRange
                        uu___5);
                     FStar_Pervasives_Native.Some
@@ -3308,7 +3309,7 @@ let (translate_let :
                 let uu___6 =
                   FStar_Compiler_Util.format1
                     "Not extracting %s to KaRaMeL\n" name1 in
-                (FStar_Errors.Warning_DefinitionNotTranslated, uu___6) in
+                (FStar_Errors_Codes.Warning_DefinitionNotTranslated, uu___6) in
               FStar_Errors.log_issue FStar_Compiler_Range.dummyRange uu___5);
              (match ts with
               | FStar_Pervasives_Native.Some (idents, t) ->

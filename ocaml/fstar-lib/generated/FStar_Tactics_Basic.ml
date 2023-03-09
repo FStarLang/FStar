@@ -466,7 +466,7 @@ let (proc_guard' :
                                             FStar_Compiler_Util.format1
                                               "Tactics admitted guard <%s>\n\n"
                                               uu___7 in
-                                          (FStar_Errors.Warning_TacAdmit,
+                                          (FStar_Errors_Codes.Warning_TacAdmit,
                                             uu___6) in
                                         FStar_Errors.log_issue
                                           e.FStar_TypeChecker_Env.range
@@ -1193,7 +1193,7 @@ let (tadmit_t : FStar_Syntax_Syntax.term -> unit FStar_Tactics_Monad.tac) =
                          FStar_Pervasives_Native.None ps g in
                      FStar_Compiler_Util.format1
                        "Tactics admitted goal <%s>\n\n" uu___5 in
-                   (FStar_Errors.Warning_TacAdmit, uu___4) in
+                   (FStar_Errors_Codes.Warning_TacAdmit, uu___4) in
                  FStar_Errors.log_issue uu___2 uu___3);
                 solve' g t)) in
     FStar_Compiler_Effect.op_Less_Bar
@@ -6386,7 +6386,7 @@ let rec (inspect :
                      FStar_Compiler_Util.format2
                        "inspect: outside of expected syntax (%s, %s)\n"
                        uu___6 uu___7 in
-                   (FStar_Errors.Warning_CantInspect, uu___5) in
+                   (FStar_Errors_Codes.Warning_CantInspect, uu___5) in
                  FStar_Errors.log_issue t2.FStar_Syntax_Syntax.pos uu___4);
                 FStar_Compiler_Effect.op_Less_Bar FStar_Tactics_Monad.ret
                   FStar_Reflection_Data.Tv_Unknown)) in

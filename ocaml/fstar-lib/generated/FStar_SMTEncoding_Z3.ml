@@ -132,7 +132,8 @@ let (parse_z3_version_lines :
     | uu___ -> FStar_Pervasives_Native.Some "No Z3 version string found"
 let (z3version_warning_message :
   unit ->
-    (FStar_Errors.raw_error * Prims.string) FStar_Pervasives_Native.option)
+    (FStar_Errors_Codes.raw_error * Prims.string)
+      FStar_Pervasives_Native.option)
   =
   fun uu___ ->
     let run_proc_result =
@@ -149,14 +150,14 @@ let (z3version_warning_message :
     match run_proc_result with
     | FStar_Pervasives_Native.None ->
         FStar_Pervasives_Native.Some
-          (FStar_Errors.Error_Z3InvocationError, "Could not run Z3")
+          (FStar_Errors_Codes.Error_Z3InvocationError, "Could not run Z3")
     | FStar_Pervasives_Native.Some out ->
         let uu___1 = parse_z3_version_lines out in
         (match uu___1 with
          | FStar_Pervasives_Native.None -> FStar_Pervasives_Native.None
          | FStar_Pervasives_Native.Some msg ->
              FStar_Pervasives_Native.Some
-               (FStar_Errors.Warning_Z3InvocationWarning, msg))
+               (FStar_Errors_Codes.Warning_Z3InvocationWarning, msg))
 let (check_z3version : unit -> unit) =
   fun uu___ ->
     let uu___1 =
@@ -551,7 +552,7 @@ let (smt_output_sections :
                                                -> Prims.op_Hat f ": ")
                                           (FStar_String.concat "\n" remaining) in
                                       FStar_Errors.log_issue r
-                                        (FStar_Errors.Warning_UnexpectedZ3Output,
+                                        (FStar_Errors_Codes.Warning_UnexpectedZ3Output,
                                           msg));
                                  (let uu___6 =
                                     FStar_Compiler_Util.must result_opt in

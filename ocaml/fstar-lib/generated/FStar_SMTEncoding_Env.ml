@@ -799,7 +799,7 @@ let fail_fvar_lookup : 'uuuuu . env_t -> FStar_Ident.lident -> 'uuuuu =
                 FStar_Compiler_Util.format1
                   "Name %s not found in the smtencoding env (the symbol is marked unfold, expected it to reduce)"
                   uu___4 in
-              (FStar_Errors.Fatal_IdentifierNotFound, uu___3) in
+              (FStar_Errors_Codes.Fatal_IdentifierNotFound, uu___3) in
             let uu___3 = FStar_Ident.range_of_lid a in
             FStar_Errors.raise_error uu___2 uu___3
           else

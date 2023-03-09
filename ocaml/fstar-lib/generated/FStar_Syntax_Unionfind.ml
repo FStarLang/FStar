@@ -115,7 +115,7 @@ let (fail_if_ro : unit -> unit) =
     if uu___1
     then
       FStar_Errors.raise_error
-        (FStar_Errors.Fatal_BadUvar,
+        (FStar_Errors_Codes.Fatal_BadUvar,
           "Internal error: UF graph was in read-only mode")
         FStar_Compiler_Range.dummyRange
     else ()
@@ -202,7 +202,7 @@ let (chk_v_t :
                FStar_Compiler_Util.format3
                  "Internal error: incompatible version for term unification variable %s: current version is %s; got version %s"
                  uu___4 uu___5 uu___6 in
-             (FStar_Errors.Fatal_BadUvar, uu___3) in
+             (FStar_Errors_Codes.Fatal_BadUvar, uu___3) in
            FStar_Errors.raise_error uu___2 rng)
 let (uvar_id : FStar_Syntax_Syntax.uvar -> Prims.int) =
   fun u ->
@@ -312,7 +312,7 @@ let (chk_v_u :
                FStar_Compiler_Util.format3
                  "Internal error: incompatible version for universe unification variable %s: current version is %s; got version %s"
                  uu___4 uu___5 uu___6 in
-             (FStar_Errors.Fatal_BadUvar, uu___3) in
+             (FStar_Errors_Codes.Fatal_BadUvar, uu___3) in
            FStar_Errors.raise_error uu___2 rng)
 let (set_univ_graph : ugraph -> unit) =
   fun ug ->
