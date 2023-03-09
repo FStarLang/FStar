@@ -693,7 +693,6 @@ val full_struct
   (full (struct0 tn n fields) s <==> (forall field . full (fields.fd_typedef field) (struct_get_field s field)))
   [SMTPat (full (struct0 tn n fields) s)]
 
-(*
 [@@noextract_to "krml"] // primitive
 val define_union0 (tn: Type0) (#tf: Type0) (n: string) (fields: field_description_t tf) : Tot Type0
 inline_for_extraction [@@noextract_to "krml"]
@@ -1050,7 +1049,6 @@ let union_switch_field
     r
     field
     (fields.fd_typedef field)
-*)
 
 module SZ = FStar.SizeT
 

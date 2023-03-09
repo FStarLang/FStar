@@ -1166,7 +1166,6 @@ let full_struct_gen
 
 let full_struct s = full_struct_gen s
 
-(*
 module U = Steel.C.Model.Union
 
 let define_union0 _ _ _ = unit
@@ -1595,7 +1594,7 @@ let ununion_field
   hr_share r;
   ST.rewrite (has_union_field0 r field r') (has_union_field r field r');
   ST.rewrite (R.pts_to _ _) (R.pts_to w.ref (union_set_field tn n fields field (Ghost.reveal v')));
-  ST.admit_ ()
+  ST.weaken (pts_to0 r (union_set_field tn n fields field (Ghost.reveal v'))) (pts_to r (union_set_field tn n fields field (Ghost.reveal v'))) (fun _ -> ())
 
 [@@noextract_to "krml"] // primitive
 let union_switch_field'
@@ -1672,7 +1671,6 @@ let union_switch_field0
 = union_switch_field0' t' r field td' ()
 
 #pop-options
-*)
 
 
 /// Base arrays (without decay: explicit array types as top-level arrays or struct/union fields of array type)
