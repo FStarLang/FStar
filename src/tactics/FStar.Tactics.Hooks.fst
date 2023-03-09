@@ -899,18 +899,20 @@ let splice (env:Env.env) (is_typed:bool) (lids:list Ident.lident) (tau:term) (rn
     in
 
     (* Check there are no internal qualifiers *)
-    let () = sigelts |> List.iter (fun se ->
-      se.sigquals |> List.iter (fun q ->
-        (* NOTE: Assumption is OK, a tactic can generate an axiom, but
-         * it will be reported with --report_assumes. *)
-        if is_internal_qualifier q then
-          Err.raise_error (Err.Error_InternalQualifier, BU.format2 "The qualifier %s is internal, it cannot be attached to spliced sigelt `%s`."
-                           (Print.qual_to_string q)
-                           (Print.sigelt_to_string_short se)) rng
-       ))
+    let () =
+      if is_typed then ()
+      else
+        sigelts |> List.iter (fun se ->
+        se.sigquals |> List.iter (fun q ->
+          (* NOTE: Assumption is OK, a tactic can generate an axiom, but
+           * it will be reported with --report_assumes. *)
+          if is_internal_qualifier q then
+            Err.raise_error (Err.Error_InternalQualifier, BU.format2 "The qualifier %s is internal, it cannot be attached to spliced sigelt `%s`."
+                             (Print.qual_to_string q)
+                             (Print.sigelt_to_string_short se)) rng
+         ))
     in
     sigelts
-
     end
   )
 

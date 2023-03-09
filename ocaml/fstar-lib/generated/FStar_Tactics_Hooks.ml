@@ -1967,35 +1967,38 @@ let (splice :
                                               FStar_Syntax_Syntax.sigopts =
                                                 (se.FStar_Syntax_Syntax.sigopts)
                                             })) in
-                                  FStar_Compiler_Effect.op_Bar_Greater
-                                    sigelts1
-                                    (FStar_Compiler_List.iter
-                                       (fun se ->
-                                          FStar_Compiler_Effect.op_Bar_Greater
-                                            se.FStar_Syntax_Syntax.sigquals
-                                            (FStar_Compiler_List.iter
-                                               (fun q ->
-                                                  let uu___11 =
-                                                    FStar_Syntax_Syntax.is_internal_qualifier
-                                                      q in
-                                                  if uu___11
-                                                  then
+                                  if is_typed
+                                  then ()
+                                  else
+                                    FStar_Compiler_Effect.op_Bar_Greater
+                                      sigelts1
+                                      (FStar_Compiler_List.iter
+                                         (fun se ->
+                                            FStar_Compiler_Effect.op_Bar_Greater
+                                              se.FStar_Syntax_Syntax.sigquals
+                                              (FStar_Compiler_List.iter
+                                                 (fun q ->
                                                     let uu___12 =
+                                                      FStar_Syntax_Syntax.is_internal_qualifier
+                                                        q in
+                                                    if uu___12
+                                                    then
                                                       let uu___13 =
                                                         let uu___14 =
-                                                          FStar_Syntax_Print.qual_to_string
-                                                            q in
-                                                        let uu___15 =
-                                                          FStar_Syntax_Print.sigelt_to_string_short
-                                                            se in
-                                                        FStar_Compiler_Util.format2
-                                                          "The qualifier %s is internal, it cannot be attached to spliced sigelt `%s`."
-                                                          uu___14 uu___15 in
-                                                      (FStar_Errors_Codes.Error_InternalQualifier,
-                                                        uu___13) in
-                                                    FStar_Errors.raise_error
-                                                      uu___12 rng
-                                                  else ()))));
+                                                          let uu___15 =
+                                                            FStar_Syntax_Print.qual_to_string
+                                                              q in
+                                                          let uu___16 =
+                                                            FStar_Syntax_Print.sigelt_to_string_short
+                                                              se in
+                                                          FStar_Compiler_Util.format2
+                                                            "The qualifier %s is internal, it cannot be attached to spliced sigelt `%s`."
+                                                            uu___15 uu___16 in
+                                                        (FStar_Errors_Codes.Error_InternalQualifier,
+                                                          uu___14) in
+                                                      FStar_Errors.raise_error
+                                                        uu___13 rng
+                                                    else ()))));
                                   (match () with | () -> sigelts1)))))))))
 let (mpreprocess :
   FStar_TypeChecker_Env.env ->
