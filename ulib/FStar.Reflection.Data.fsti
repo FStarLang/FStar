@@ -155,6 +155,7 @@ type sigelt_view =
 noeq
 type qualifier =
   | Assumption
+  | InternalAssumption
   | New
   | Private
   | Unfold_for_unification_and_vcgen

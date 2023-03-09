@@ -4445,7 +4445,7 @@ and (p_argTerm :
     | (u, FStar_Parser_AST.UnivApp) -> p_universe u
     | (e, FStar_Parser_AST.FsTypApp) ->
         (FStar_Errors.log_issue e.FStar_Parser_AST.range
-           (FStar_Errors.Warning_UnexpectedFsTypApp,
+           (FStar_Errors_Codes.Warning_UnexpectedFsTypApp,
              "Unexpected FsTypApp, output might not be formatted correctly.");
          (let uu___1 = p_indexingTerm e in
           FStar_Pprint.surround (Prims.of_int (2)) Prims.int_one

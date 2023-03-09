@@ -73,7 +73,7 @@ let (apply_constr_arrow :
                   FStar_Compiler_Util.format3
                     "Unexpected application of type parameters %s to a data constructor %s : %s"
                     uu___4 uu___5 uu___6 in
-                (FStar_Errors.Error_InductiveTypeNotSatisfyPositivityCondition,
+                (FStar_Errors_Codes.Error_InductiveTypeNotSatisfyPositivityCondition,
                   uu___3) in
               let uu___3 = FStar_Ident.range_of_lid dlid in
               FStar_Errors.raise_error uu___2 uu___3 in
@@ -400,7 +400,7 @@ let (mark_uniform_type_parameters :
                                          FStar_Compiler_Util.format1
                                            "Binder %s is marked strictly positive, but it is not uniformly recursive"
                                            uu___10 in
-                                       (FStar_Errors.Error_InductiveTypeNotSatisfyPositivityCondition,
+                                       (FStar_Errors_Codes.Error_InductiveTypeNotSatisfyPositivityCondition,
                                          uu___9) in
                                      let uu___9 =
                                        FStar_Syntax_Syntax.range_of_bv
@@ -605,7 +605,7 @@ let (check_no_index_occurrences_in_arities :
                           FStar_Compiler_Util.format3
                             "Type %s is not strictly positive since it instantiates a non-uniformly recursive parameter or index %s of %s"
                             uu___6 uu___7 uu___8 in
-                        (FStar_Errors.Error_InductiveTypeNotSatisfyPositivityCondition,
+                        (FStar_Errors_Codes.Error_InductiveTypeNotSatisfyPositivityCondition,
                           uu___5) in
                       FStar_Errors.raise_error uu___4
                         index1.FStar_Syntax_Syntax.pos
@@ -1107,7 +1107,7 @@ and (ty_strictly_positive_in_arguments_to_fvar :
                            FStar_Compiler_Util.format1
                              "Type of %s not found when checking positivity"
                              uu___5 in
-                         (FStar_Errors.Error_InductiveTypeNotSatisfyPositivityCondition,
+                         (FStar_Errors_Codes.Error_InductiveTypeNotSatisfyPositivityCondition,
                            uu___4) in
                        let uu___4 = FStar_Ident.range_of_lid fv in
                        FStar_Errors.raise_error uu___3 uu___4 in
@@ -1204,7 +1204,7 @@ and (ty_strictly_positive_in_datacon_of_applied_inductive :
                              FStar_Compiler_Util.format1
                                "Data constructor %s not found when checking positivity"
                                uu___4 in
-                           (FStar_Errors.Error_InductiveTypeNotSatisfyPositivityCondition,
+                           (FStar_Errors_Codes.Error_InductiveTypeNotSatisfyPositivityCondition,
                              uu___3) in
                          let uu___3 = FStar_Ident.range_of_lid dlid in
                          FStar_Errors.raise_error uu___2 uu___3 in
@@ -1311,7 +1311,7 @@ let (ty_strictly_positive_in_datacon_decl :
                         FStar_Compiler_Util.format1
                           "Error looking up data constructor %s when checking positivity"
                           uu___3 in
-                      (FStar_Errors.Error_InductiveTypeNotSatisfyPositivityCondition,
+                      (FStar_Errors_Codes.Error_InductiveTypeNotSatisfyPositivityCondition,
                         uu___2) in
                     let uu___2 = FStar_Ident.range_of_lid dlid in
                     FStar_Errors.raise_error uu___1 uu___2 in
@@ -1355,7 +1355,7 @@ let (ty_strictly_positive_in_datacon_decl :
                                     FStar_Compiler_Util.format1
                                       "Binder %s is marked strictly positive, but its use in the definition is not"
                                       uu___6 in
-                                  (FStar_Errors.Error_InductiveTypeNotSatisfyPositivityCondition,
+                                  (FStar_Errors_Codes.Error_InductiveTypeNotSatisfyPositivityCondition,
                                     uu___5) in
                                 let uu___5 =
                                   FStar_Syntax_Syntax.range_of_bv

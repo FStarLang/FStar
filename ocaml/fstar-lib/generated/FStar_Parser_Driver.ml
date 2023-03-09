@@ -46,7 +46,8 @@ let (parse_file :
         ->
         let msg = FStar_Compiler_Util.format1 "%s: expected a module\n" fn in
         let r = FStar_Compiler_Range.dummyRange in
-        FStar_Errors.raise_error (FStar_Errors.Fatal_ModuleExpected, msg) r
+        FStar_Errors.raise_error
+          (FStar_Errors_Codes.Fatal_ModuleExpected, msg) r
     | FStar_Parser_ParseIt.ParseError (e, msg, r) ->
         FStar_Errors.raise_error (e, msg) r
     | FStar_Parser_ParseIt.Term uu___1 ->

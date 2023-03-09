@@ -236,6 +236,7 @@ let (uu___is_Tv_Unknown : term_view -> Prims.bool) =
   fun projectee -> match projectee with | Tv_Unknown -> true | uu___ -> false
 type qualifier =
   | Assumption 
+  | InternalAssumption 
   | New 
   | Private 
   | Unfold_for_unification_and_vcgen 
@@ -262,6 +263,9 @@ type qualifier =
   | OnlyName 
 let (uu___is_Assumption : qualifier -> Prims.bool) =
   fun projectee -> match projectee with | Assumption -> true | uu___ -> false
+let (uu___is_InternalAssumption : qualifier -> Prims.bool) =
+  fun projectee ->
+    match projectee with | InternalAssumption -> true | uu___ -> false
 let (uu___is_New : qualifier -> Prims.bool) =
   fun projectee -> match projectee with | New -> true | uu___ -> false
 let (uu___is_Private : qualifier -> Prims.bool) =

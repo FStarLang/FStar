@@ -72,7 +72,8 @@ let (gen_wps_for_free :
                                FStar_Syntax_Print.comp_to_string comp in
                              FStar_Compiler_Util.format1
                                "wp_a contains non-Tot arrow: %s" uu___5 in
-                           (FStar_Errors.Error_UnexpectedDM4FType, uu___4) in
+                           (FStar_Errors_Codes.Error_UnexpectedDM4FType,
+                             uu___4) in
                          FStar_Errors.raise_error uu___3
                            comp.FStar_Syntax_Syntax.pos in
                    let uu___2 = collect_binders rest in
@@ -84,7 +85,7 @@ let (gen_wps_for_free :
                        let uu___5 = FStar_Syntax_Print.term_to_string t1 in
                        FStar_Compiler_Util.format1
                          "wp_a doesn't end in Type0, but rather in %s" uu___5 in
-                     (FStar_Errors.Error_UnexpectedDM4FType, uu___4) in
+                     (FStar_Errors_Codes.Error_UnexpectedDM4FType, uu___4) in
                    FStar_Errors.raise_error uu___3 t1.FStar_Syntax_Syntax.pos in
              let mk_lid name = FStar_Syntax_Util.dm4f_lid ed name in
              let gamma =
@@ -1328,7 +1329,7 @@ let (nm_of_comp : FStar_Syntax_Syntax.comp' FStar_Syntax_Syntax.syntax -> nm)
             let uu___3 = FStar_Syntax_Print.comp_to_string c in
             FStar_Compiler_Util.format1
               "[nm_of_comp]: unexpected computation type %s" uu___3 in
-          (FStar_Errors.Error_UnexpectedDM4FType, uu___2) in
+          (FStar_Errors_Codes.Error_UnexpectedDM4FType, uu___2) in
         FStar_Errors.raise_error uu___1 c.FStar_Syntax_Syntax.pos
 let (string_of_nm : nm -> Prims.string) =
   fun uu___ ->
@@ -1500,7 +1501,7 @@ and (star_type' :
                 let uu___3 = string_of_set FStar_Syntax_Print.bv_to_string s in
                 FStar_Compiler_Util.format2
                   "Dependency found in term %s : %s" uu___2 uu___3 in
-              (FStar_Errors.Warning_DependencyFound, uu___1) in
+              (FStar_Errors_Codes.Warning_DependencyFound, uu___1) in
             FStar_Errors.log_issue t2.FStar_Syntax_Syntax.pos uu___ in
           let rec is_non_dependent_arrow ty n =
             let uu___ =
@@ -1568,7 +1569,7 @@ and (star_type' :
                       let uu___5 = FStar_Syntax_Print.term_to_string ty in
                       FStar_Compiler_Util.format1
                         "Not a dependent arrow : %s" uu___5 in
-                    (FStar_Errors.Warning_NotDependentArrow, uu___4) in
+                    (FStar_Errors_Codes.Warning_NotDependentArrow, uu___4) in
                   FStar_Errors.log_issue ty.FStar_Syntax_Syntax.pos uu___3);
                  false) in
           let rec is_valid_application head1 =
@@ -1620,7 +1621,7 @@ and (star_type' :
                                   FStar_Compiler_Util.format1
                                     "Got a term which might be a non-dependent user-defined data-type %s\n"
                                     uu___10 in
-                                (FStar_Errors.Warning_NondependentUserDefinedDataType,
+                                (FStar_Errors_Codes.Warning_NondependentUserDefinedDataType,
                                   uu___9) in
                               FStar_Errors.log_issue
                                 head1.FStar_Syntax_Syntax.pos uu___8);
@@ -1653,7 +1654,7 @@ and (star_type' :
                  FStar_Compiler_Util.format1
                    "For now, only [either], [option] and [eq2] are supported in the definition language (got: %s)"
                    uu___4 in
-               (FStar_Errors.Fatal_WrongTerm, uu___3) in
+               (FStar_Errors_Codes.Fatal_WrongTerm, uu___3) in
              FStar_Errors.raise_err uu___2)
       | FStar_Syntax_Syntax.Tm_bvar uu___ -> t1
       | FStar_Syntax_Syntax.Tm_name uu___ -> t1
@@ -1736,7 +1737,7 @@ and (star_type' :
               FStar_Compiler_Util.format1
                 "Ascriptions with tactics are outside of the definition language: %s"
                 uu___7 in
-            (FStar_Errors.Fatal_TermOutsideOfDefLanguage, uu___6) in
+            (FStar_Errors_Codes.Fatal_TermOutsideOfDefLanguage, uu___6) in
           FStar_Errors.raise_err uu___5
       | FStar_Syntax_Syntax.Tm_refine uu___ ->
           let uu___1 =
@@ -1744,7 +1745,7 @@ and (star_type' :
               let uu___3 = FStar_Syntax_Print.term_to_string t1 in
               FStar_Compiler_Util.format1
                 "Tm_refine is outside of the definition language: %s" uu___3 in
-            (FStar_Errors.Fatal_TermOutsideOfDefLanguage, uu___2) in
+            (FStar_Errors_Codes.Fatal_TermOutsideOfDefLanguage, uu___2) in
           FStar_Errors.raise_err uu___1
       | FStar_Syntax_Syntax.Tm_uinst uu___ ->
           let uu___1 =
@@ -1752,7 +1753,7 @@ and (star_type' :
               let uu___3 = FStar_Syntax_Print.term_to_string t1 in
               FStar_Compiler_Util.format1
                 "Tm_uinst is outside of the definition language: %s" uu___3 in
-            (FStar_Errors.Fatal_TermOutsideOfDefLanguage, uu___2) in
+            (FStar_Errors_Codes.Fatal_TermOutsideOfDefLanguage, uu___2) in
           FStar_Errors.raise_err uu___1
       | FStar_Syntax_Syntax.Tm_quoted uu___ ->
           let uu___1 =
@@ -1760,7 +1761,7 @@ and (star_type' :
               let uu___3 = FStar_Syntax_Print.term_to_string t1 in
               FStar_Compiler_Util.format1
                 "Tm_quoted is outside of the definition language: %s" uu___3 in
-            (FStar_Errors.Fatal_TermOutsideOfDefLanguage, uu___2) in
+            (FStar_Errors_Codes.Fatal_TermOutsideOfDefLanguage, uu___2) in
           FStar_Errors.raise_err uu___1
       | FStar_Syntax_Syntax.Tm_constant uu___ ->
           let uu___1 =
@@ -1769,7 +1770,7 @@ and (star_type' :
               FStar_Compiler_Util.format1
                 "Tm_constant is outside of the definition language: %s"
                 uu___3 in
-            (FStar_Errors.Fatal_TermOutsideOfDefLanguage, uu___2) in
+            (FStar_Errors_Codes.Fatal_TermOutsideOfDefLanguage, uu___2) in
           FStar_Errors.raise_err uu___1
       | FStar_Syntax_Syntax.Tm_match uu___ ->
           let uu___1 =
@@ -1777,7 +1778,7 @@ and (star_type' :
               let uu___3 = FStar_Syntax_Print.term_to_string t1 in
               FStar_Compiler_Util.format1
                 "Tm_match is outside of the definition language: %s" uu___3 in
-            (FStar_Errors.Fatal_TermOutsideOfDefLanguage, uu___2) in
+            (FStar_Errors_Codes.Fatal_TermOutsideOfDefLanguage, uu___2) in
           FStar_Errors.raise_err uu___1
       | FStar_Syntax_Syntax.Tm_let uu___ ->
           let uu___1 =
@@ -1785,7 +1786,7 @@ and (star_type' :
               let uu___3 = FStar_Syntax_Print.term_to_string t1 in
               FStar_Compiler_Util.format1
                 "Tm_let is outside of the definition language: %s" uu___3 in
-            (FStar_Errors.Fatal_TermOutsideOfDefLanguage, uu___2) in
+            (FStar_Errors_Codes.Fatal_TermOutsideOfDefLanguage, uu___2) in
           FStar_Errors.raise_err uu___1
       | FStar_Syntax_Syntax.Tm_uvar uu___ ->
           let uu___1 =
@@ -1793,7 +1794,7 @@ and (star_type' :
               let uu___3 = FStar_Syntax_Print.term_to_string t1 in
               FStar_Compiler_Util.format1
                 "Tm_uvar is outside of the definition language: %s" uu___3 in
-            (FStar_Errors.Fatal_TermOutsideOfDefLanguage, uu___2) in
+            (FStar_Errors_Codes.Fatal_TermOutsideOfDefLanguage, uu___2) in
           FStar_Errors.raise_err uu___1
       | FStar_Syntax_Syntax.Tm_unknown ->
           let uu___ =
@@ -1801,7 +1802,7 @@ and (star_type' :
               let uu___2 = FStar_Syntax_Print.term_to_string t1 in
               FStar_Compiler_Util.format1
                 "Tm_unknown is outside of the definition language: %s" uu___2 in
-            (FStar_Errors.Fatal_TermOutsideOfDefLanguage, uu___1) in
+            (FStar_Errors_Codes.Fatal_TermOutsideOfDefLanguage, uu___1) in
           FStar_Errors.raise_err uu___
       | FStar_Syntax_Syntax.Tm_lazy i ->
           let uu___ = FStar_Syntax_Util.unfold_lazy i in
@@ -1850,7 +1851,7 @@ let rec (is_C : FStar_Syntax_Syntax.typ -> Prims.bool) =
                   let uu___5 = FStar_Syntax_Print.term_to_string t in
                   FStar_Compiler_Util.format1 "Not a C-type (A * C): %s"
                     uu___5 in
-                (FStar_Errors.Error_UnexpectedDM4FType, uu___4) in
+                (FStar_Errors_Codes.Error_UnexpectedDM4FType, uu___4) in
               FStar_Errors.raise_error uu___3 t.FStar_Syntax_Syntax.pos
             else ());
            true)
@@ -1871,7 +1872,7 @@ let rec (is_C : FStar_Syntax_Syntax.typ -> Prims.bool) =
                   let uu___6 = FStar_Syntax_Print.term_to_string t in
                   FStar_Compiler_Util.format1 "Not a C-type (C * A): %s"
                     uu___6 in
-                (FStar_Errors.Error_UnexpectedDM4FType, uu___5) in
+                (FStar_Errors_Codes.Error_UnexpectedDM4FType, uu___5) in
               FStar_Errors.raise_error uu___4 t.FStar_Syntax_Syntax.pos
             else ());
            false)
@@ -1887,7 +1888,7 @@ let rec (is_C : FStar_Syntax_Syntax.typ -> Prims.bool) =
                      let uu___6 = FStar_Syntax_Print.term_to_string t1 in
                      FStar_Compiler_Util.format1 "Not a C-type (C -> C): %s"
                        uu___6 in
-                   (FStar_Errors.Error_UnexpectedDM4FType, uu___5) in
+                   (FStar_Errors_Codes.Error_UnexpectedDM4FType, uu___5) in
                  FStar_Errors.raise_error uu___4 t1.FStar_Syntax_Syntax.pos
                else ());
               true)
@@ -1960,7 +1961,7 @@ let rec (check :
                       FStar_Compiler_Util.format3
                         "[check]: the expression [%s] has type [%s] but should have type [%s]"
                         uu___4 uu___5 uu___6 in
-                    (FStar_Errors.Fatal_TypeMismatch, uu___3) in
+                    (FStar_Errors_Codes.Fatal_TypeMismatch, uu___3) in
                   FStar_Errors.raise_err uu___2
                 else () in
               (match (rec_nm, context_nm) with
@@ -1979,7 +1980,7 @@ let rec (check :
                        FStar_Compiler_Util.format3
                          "[check %s]: got an effectful computation [%s] in lieu of a pure computation [%s]"
                          uu___3 uu___4 uu___5 in
-                     (FStar_Errors.Fatal_EffectfulAndPureComputationMismatch,
+                     (FStar_Errors_Codes.Fatal_EffectfulAndPureComputationMismatch,
                        uu___2) in
                    FStar_Errors.raise_err uu___1) in
         let ensure_m env2 e2 =
@@ -1995,7 +1996,7 @@ let rec (check :
                   Prims.op_Hat
                     "let-bound monadic body has a non-monadic continuation or a branch of a match is monadic and the others aren't : "
                     uu___2 in
-                (FStar_Errors.Fatal_LetBoundMonadicMismatch, uu___1) in
+                (FStar_Errors_Codes.Fatal_LetBoundMonadicMismatch, uu___1) in
               FStar_Errors.raise_error uu___ e2.FStar_Syntax_Syntax.pos
           | M uu___ ->
               let uu___1 = check env2 e2 context_nm in strip_m uu___1 in
@@ -2496,7 +2497,7 @@ and (infer :
               let uu___7 = FStar_Syntax_Print.term_to_string e in
               FStar_Compiler_Util.format1 "DMFF: Ill-applied constant %s"
                 uu___7 in
-            (FStar_Errors.Fatal_IllAppliedConstant, uu___6) in
+            (FStar_Errors_Codes.Fatal_IllAppliedConstant, uu___6) in
           FStar_Errors.raise_error uu___5 e.FStar_Syntax_Syntax.pos
       | FStar_Syntax_Syntax.Tm_app
           ({
@@ -2512,7 +2513,7 @@ and (infer :
               let uu___7 = FStar_Syntax_Print.term_to_string e in
               FStar_Compiler_Util.format1 "DMFF: Ill-applied constant %s"
                 uu___7 in
-            (FStar_Errors.Fatal_IllAppliedConstant, uu___6) in
+            (FStar_Errors_Codes.Fatal_IllAppliedConstant, uu___6) in
           FStar_Errors.raise_error uu___5 e.FStar_Syntax_Syntax.pos
       | FStar_Syntax_Syntax.Tm_app (head, args) ->
           let uu___1 = check_n env1 head in
@@ -2553,7 +2554,7 @@ and (infer :
                            FStar_Syntax_Print.term_to_string t_head in
                          FStar_Compiler_Util.format1
                            "%s: not a function type" uu___6 in
-                       (FStar_Errors.Fatal_NotFunctionType, uu___5) in
+                       (FStar_Errors_Codes.Fatal_NotFunctionType, uu___5) in
                      FStar_Errors.raise_err uu___4 in
                let uu___2 = flatten t_head in
                (match uu___2 with
@@ -2573,7 +2574,7 @@ and (infer :
                             FStar_Compiler_Util.format3
                               "The head of this application, after being applied to %s arguments, is an effectful computation (leaving %s arguments to be applied). Please let-bind the head applied to the %s first arguments."
                               uu___6 uu___7 uu___8 in
-                          (FStar_Errors.Fatal_BinderAndArgsLengthMismatch,
+                          (FStar_Errors_Codes.Fatal_BinderAndArgsLengthMismatch,
                             uu___5) in
                         FStar_Errors.raise_err uu___4)
                      else ();
@@ -2781,7 +2782,7 @@ and (mk_match :
                                     (s_body, u_body, body))))
                        | uu___5 ->
                            FStar_Errors.raise_err
-                             (FStar_Errors.Fatal_WhenClauseNotSupported,
+                             (FStar_Errors_Codes.Fatal_WhenClauseNotSupported,
                                "No when clauses in the definition language"))
                     branches in
                 FStar_Compiler_List.split uu___3 in
@@ -3237,7 +3238,7 @@ and (trans_F_ :
              let uu___3 =
                let uu___4 = FStar_Syntax_Print.term_to_string c in
                FStar_Compiler_Util.format1 "Not a DM4F C-type: %s" uu___4 in
-             (FStar_Errors.Error_UnexpectedDM4FType, uu___3) in
+             (FStar_Errors_Codes.Error_UnexpectedDM4FType, uu___3) in
            FStar_Errors.raise_error uu___2 c.FStar_Syntax_Syntax.pos
          else ());
         (let mk x = FStar_Syntax_Syntax.mk x c.FStar_Syntax_Syntax.pos in
@@ -3290,7 +3291,7 @@ and (trans_F_ :
                                              FStar_Compiler_Util.format2
                                                "Incoherent implicit qualifiers %s %s\n"
                                                uu___13 uu___14 in
-                                           (FStar_Errors.Warning_IncoherentImplicitQualifier,
+                                           (FStar_Errors_Codes.Warning_IncoherentImplicitQualifier,
                                              uu___12) in
                                          FStar_Errors.log_issue
                                            head.FStar_Syntax_Syntax.pos
@@ -3562,7 +3563,7 @@ let (cps_and_elaborate :
                           -> (a, effect_marker)
                       | uu___7 ->
                           raise_error
-                            (FStar_Errors.Fatal_BadSignatureShape,
+                            (FStar_Errors_Codes.Fatal_BadSignatureShape,
                               "bad shape for effect-for-free signature") in
                     (match uu___5 with
                      | (a, effect_marker) ->
@@ -3699,7 +3700,7 @@ let (cps_and_elaborate :
                                                    FStar_Compiler_Util.format2
                                                      "Computation for [%s] is not total : %s !"
                                                      uu___16 uu___17 in
-                                                 (FStar_Errors.Fatal_ComputationNotTotal,
+                                                 (FStar_Errors_Codes.Fatal_ComputationNotTotal,
                                                    uu___15) in
                                                FStar_Errors.raise_err uu___14
                                              else ());
@@ -3832,7 +3833,7 @@ let (cps_and_elaborate :
                                                                uu___18
                                                                uu___19 in
                                                            raise_error
-                                                             (FStar_Errors.Fatal_WrongBodyTypeForReturnWP,
+                                                             (FStar_Errors_Codes.Fatal_WrongBodyTypeForReturnWP,
                                                                error_msg) in
                                                          ((match what' with
                                                            | FStar_Pervasives_Native.None
@@ -3923,7 +3924,7 @@ let (cps_and_elaborate :
                                                                 rc_gtot)))))
                                            | uu___15 ->
                                                raise_error
-                                                 (FStar_Errors.Fatal_UnexpectedReturnShape,
+                                                 (FStar_Errors_Codes.Fatal_UnexpectedReturnShape,
                                                    "unexpected shape for return") in
                                          let return_wp1 =
                                            let uu___14 =
@@ -3943,7 +3944,7 @@ let (cps_and_elaborate :
                                                     rc_gtot)
                                            | uu___15 ->
                                                raise_error
-                                                 (FStar_Errors.Fatal_UnexpectedReturnShape,
+                                                 (FStar_Errors_Codes.Fatal_UnexpectedReturnShape,
                                                    "unexpected shape for return") in
                                          let bind_wp1 =
                                            let uu___14 =
@@ -3958,7 +3959,7 @@ let (cps_and_elaborate :
                                                  body what
                                            | uu___15 ->
                                                raise_error
-                                                 (FStar_Errors.Fatal_UnexpectedBindShape,
+                                                 (FStar_Errors_Codes.Fatal_UnexpectedBindShape,
                                                    "unexpected shape for bind") in
                                          let apply_close t =
                                            if
@@ -4479,7 +4480,7 @@ let (cps_and_elaborate :
                                                                     "Impossible to generate DM effect: no post candidate %s (Type variable does not appear)"
                                                                     uu___23 in
                                                                     FStar_Errors.raise_err
-                                                                    (FStar_Errors.Fatal_ImpossibleToGenerateDMEffect,
+                                                                    (FStar_Errors_Codes.Fatal_ImpossibleToGenerateDMEffect,
                                                                     err_msg)
                                                                     | 
                                                                     uu___23
@@ -4494,7 +4495,7 @@ let (cps_and_elaborate :
                                                                     "Impossible to generate DM effect: multiple post candidates %s"
                                                                     uu___24 in
                                                                     FStar_Errors.raise_err
-                                                                    (FStar_Errors.Fatal_ImpossibleToGenerateDMEffect,
+                                                                    (FStar_Errors_Codes.Fatal_ImpossibleToGenerateDMEffect,
                                                                     err_msg) in
                                                                     let uu___23
                                                                     =
@@ -4521,7 +4522,7 @@ let (cps_and_elaborate :
                                                                   FStar_Compiler_Util.format1
                                                                     "Impossible: pre/post arrow %s"
                                                                     uu___24 in
-                                                                (FStar_Errors.Fatal_ImpossiblePrePostArrow,
+                                                                (FStar_Errors_Codes.Fatal_ImpossiblePrePostArrow,
                                                                   uu___23) in
                                                               raise_error
                                                                 uu___22))
@@ -4534,7 +4535,7 @@ let (cps_and_elaborate :
                                                         FStar_Compiler_Util.format1
                                                           "Impossible: pre/post abs %s"
                                                           uu___21 in
-                                                      (FStar_Errors.Fatal_ImpossiblePrePostAbs,
+                                                      (FStar_Errors_Codes.Fatal_ImpossiblePrePostAbs,
                                                         uu___20) in
                                                     raise_error uu___19 in
                                               (match uu___16 with

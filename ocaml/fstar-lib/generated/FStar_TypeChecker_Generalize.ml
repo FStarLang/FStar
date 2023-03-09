@@ -100,7 +100,8 @@ let (check_universe_generalization :
                 Prims.op_Hat
                   "Generalized universe in a term containing explicit universe annotation : "
                   uu___3 in
-              (FStar_Errors.Fatal_UnexpectedGeneralizedUniverse, uu___2) in
+              (FStar_Errors_Codes.Fatal_UnexpectedGeneralizedUniverse,
+                uu___2) in
             FStar_Errors.raise_error uu___1 t.FStar_Syntax_Syntax.pos
 let (generalize_universes :
   FStar_TypeChecker_Env.env ->
@@ -331,7 +332,7 @@ let (gen :
                              let uu___11 =
                                FStar_TypeChecker_Env.get_range env in
                              FStar_Errors.raise_error
-                               (FStar_Errors.Fatal_IncompatibleSetOfUniverse,
+                               (FStar_Errors_Codes.Fatal_IncompatibleSetOfUniverse,
                                  msg) uu___11)) in
                let force_uvars_eq lec2 u1 u2 =
                  let uvars_subseteq u11 u21 =
@@ -366,7 +367,7 @@ let (gen :
                              let uu___11 =
                                FStar_TypeChecker_Env.get_range env in
                              FStar_Errors.raise_error
-                               (FStar_Errors.Fatal_IncompatibleNumberOfTypes,
+                               (FStar_Errors_Codes.Fatal_IncompatibleNumberOfTypes,
                                  msg) uu___11)) in
                let lecs1 =
                  let uu___3 = FStar_Compiler_List.tl lecs in
@@ -398,7 +399,7 @@ let (gen :
                            FStar_Compiler_Util.format3
                              "Failed to resolve implicit argument of type '%s' in the type of %s (%s)"
                              uu___6 uu___7 uu___8 in
-                         (FStar_Errors.Fatal_FailToResolveImplicitArgument,
+                         (FStar_Errors_Codes.Fatal_FailToResolveImplicitArgument,
                            uu___5) in
                        FStar_Errors.raise_error uu___4 rng in
                  FStar_Compiler_Effect.op_Bar_Greater uvs1

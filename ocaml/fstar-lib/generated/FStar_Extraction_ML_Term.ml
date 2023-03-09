@@ -37,7 +37,7 @@ let (eraseTypeDeep :
 let fail :
   'uuuuu .
     FStar_Compiler_Range.range ->
-      (FStar_Errors.raw_error * Prims.string) -> 'uuuuu
+      (FStar_Errors_Codes.raw_error * Prims.string) -> 'uuuuu
   = fun r -> fun err -> FStar_Errors.raise_error err r
 let err_ill_typed_application :
   'uuuuu 'uuuuu1 .
@@ -76,7 +76,7 @@ let err_ill_typed_application :
                 FStar_Compiler_Util.format4
                   "Ill-typed application: source application is %s \n translated prefix to %s at type %s\n remaining args are %s\n"
                   uu___2 uu___3 uu___4 uu___5 in
-              (FStar_Errors.Fatal_IllTyped, uu___1) in
+              (FStar_Errors_Codes.Fatal_IllTyped, uu___1) in
             fail t.FStar_Syntax_Syntax.pos uu___
 let err_ill_typed_erasure :
   'uuuuu .
@@ -95,7 +95,7 @@ let err_ill_typed_erasure :
             FStar_Compiler_Util.format1
               "Erased value found where a value of type %s was expected"
               uu___2 in
-          (FStar_Errors.Fatal_IllTyped, uu___1) in
+          (FStar_Errors_Codes.Fatal_IllTyped, uu___1) in
         fail pos uu___
 let err_value_restriction :
   'uuuuu . FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax -> 'uuuuu =
@@ -107,7 +107,7 @@ let err_value_restriction :
         FStar_Compiler_Util.format2
           "Refusing to generalize because of the value restriction: (%s) %s"
           uu___2 uu___3 in
-      (FStar_Errors.Fatal_ValueRestriction, uu___1) in
+      (FStar_Errors_Codes.Fatal_ValueRestriction, uu___1) in
     fail t.FStar_Syntax_Syntax.pos uu___
 let (err_unexpected_eff :
   FStar_Extraction_ML_UEnv.uenv ->
@@ -133,7 +133,7 @@ let (err_unexpected_eff :
                 FStar_Compiler_Util.format4
                   "for expression %s of type %s, Expected effect %s; got effect %s"
                   uu___2 uu___3 uu___4 uu___5 in
-              (FStar_Errors.Warning_ExtractionUnexpectedEffect, uu___1) in
+              (FStar_Errors_Codes.Warning_ExtractionUnexpectedEffect, uu___1) in
             FStar_Errors.log_issue t.FStar_Syntax_Syntax.pos uu___
 let (effect_as_etag :
   FStar_Extraction_ML_UEnv.uenv ->
@@ -713,7 +713,7 @@ let (apply_coercion :
                    FStar_Compiler_Util.format2
                      "Inserted an unsafe type coercion in generated code from %s to %s; this may be unsound in F#"
                      uu___4 uu___5 in
-                 (FStar_Errors.Warning_NoMagicInFSharp, uu___3) in
+                 (FStar_Errors_Codes.Warning_NoMagicInFSharp, uu___3) in
                FStar_Errors.log_issue pos uu___2
              else ());
             (let mk_fun binder body =
@@ -1506,7 +1506,7 @@ let rec (extract_one_pat :
                           FStar_Compiler_Util.format1
                             "Cannot extract this pattern, the %s constructor was erased"
                             uu___5 in
-                        (FStar_Errors.Error_ErasedCtor, uu___4) in
+                        (FStar_Errors_Codes.Error_ErasedCtor, uu___4) in
                       FStar_Errors.raise_error uu___3
                         (f.FStar_Syntax_Syntax.fv_name).FStar_Syntax_Syntax.p in
                 (match uu___1 with
@@ -3558,12 +3558,12 @@ and (term_as_mlexpr' :
                        | uu___6 ->
                            (FStar_Errors.log_issue
                               top1.FStar_Syntax_Syntax.pos
-                              (FStar_Errors.Warning_UnrecognizedAttribute,
+                              (FStar_Errors_Codes.Warning_UnrecognizedAttribute,
                                 "Ignoring ill-formed application of `rename_let`");
                             FStar_Pervasives_Native.None))
                   | FStar_Pervasives_Native.Some uu___4 ->
                       (FStar_Errors.log_issue top1.FStar_Syntax_Syntax.pos
-                         (FStar_Errors.Warning_UnrecognizedAttribute,
+                         (FStar_Errors_Codes.Warning_UnrecognizedAttribute,
                            "Ignoring ill-formed application of `rename_let`");
                        FStar_Pervasives_Native.None)
                   | FStar_Pervasives_Native.None ->

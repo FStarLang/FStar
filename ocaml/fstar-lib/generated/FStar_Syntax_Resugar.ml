@@ -2040,7 +2040,7 @@ and (resugar_pat' :
                 if uu___2
                 then
                   FStar_Errors.log_issue p1.FStar_Syntax_Syntax.p
-                    (FStar_Errors.Warning_NilGivenExplicitArgs,
+                    (FStar_Errors_Codes.Warning_NilGivenExplicitArgs,
                       "Prims.Nil given explicit arguments")
                 else ());
                mk (FStar_Parser_AST.PatList []))
@@ -2071,7 +2071,8 @@ and (resugar_pat' :
                          FStar_Compiler_Util.format1
                            "Prims.Cons applied to %s explicit arguments"
                            uu___5 in
-                       (FStar_Errors.Warning_ConsAppliedExplicitArgs, uu___4) in
+                       (FStar_Errors_Codes.Warning_ConsAppliedExplicitArgs,
+                         uu___4) in
                      FStar_Errors.log_issue p1.FStar_Syntax_Syntax.p uu___3);
                     resugar_plain_pat_cons fv args))
           | FStar_Syntax_Syntax.Pat_cons (fv, uu___, args) when

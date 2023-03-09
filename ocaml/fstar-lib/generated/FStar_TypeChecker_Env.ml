@@ -2406,19 +2406,19 @@ let (find_in_sigtab :
       let uu___ = FStar_Ident.string_of_lid lid in
       FStar_Compiler_Util.smap_try_find (sigtab env1) uu___
 let (name_not_found :
-  FStar_Ident.lid -> (FStar_Errors.raw_error * Prims.string)) =
+  FStar_Ident.lid -> (FStar_Errors_Codes.raw_error * Prims.string)) =
   fun l ->
     let uu___ =
       let uu___1 = FStar_Ident.string_of_lid l in
       FStar_Compiler_Util.format1 "Name \"%s\" not found" uu___1 in
-    (FStar_Errors.Fatal_NameNotFound, uu___)
+    (FStar_Errors_Codes.Fatal_NameNotFound, uu___)
 let (variable_not_found :
-  FStar_Syntax_Syntax.bv -> (FStar_Errors.raw_error * Prims.string)) =
+  FStar_Syntax_Syntax.bv -> (FStar_Errors_Codes.raw_error * Prims.string)) =
   fun v ->
     let uu___ =
       let uu___1 = FStar_Syntax_Print.bv_to_string v in
       FStar_Compiler_Util.format1 "Variable \"%s\" not found" uu___1 in
-    (FStar_Errors.Fatal_VariableNotFound, uu___)
+    (FStar_Errors_Codes.Fatal_VariableNotFound, uu___)
 let (new_u_univ : unit -> FStar_Syntax_Syntax.universe) =
   fun uu___ ->
     let uu___1 =
@@ -2490,7 +2490,7 @@ let (check_effect_is_not_a_template :
             "Effect template %s should be applied to arguments for its binders (%s) before it can be used at an effect position"
             uu___ uu___1 in
         FStar_Errors.raise_error
-          (FStar_Errors.Fatal_NotEnoughArgumentsForEffect, msg) rng
+          (FStar_Errors_Codes.Fatal_NotEnoughArgumentsForEffect, msg) rng
       else ()
 let (inst_effect_fun_with :
   FStar_Syntax_Syntax.universes ->
@@ -3828,7 +3828,7 @@ let (num_effect_indices :
                 let uu___4 = FStar_Syntax_Print.term_to_string sig_t in
                 FStar_Compiler_Util.format2
                   "Signature for %s not an arrow (%s)" uu___3 uu___4 in
-              (FStar_Errors.Fatal_UnexpectedSignatureForMonad, uu___2) in
+              (FStar_Errors_Codes.Fatal_UnexpectedSignatureForMonad, uu___2) in
             FStar_Errors.raise_error uu___1 r
 let (lookup_effect_quals :
   env -> FStar_Ident.lident -> FStar_Syntax_Syntax.qualifier Prims.list) =
@@ -4091,7 +4091,7 @@ let (num_inductive_uniform_ty_params :
                    FStar_Compiler_Util.format1
                      "Internal error: Inductive %s is not decorated with its uniform type parameters"
                      uu___16 in
-                 (FStar_Errors.Fatal_UnexpectedInductivetype, uu___15) in
+                 (FStar_Errors_Codes.Fatal_UnexpectedInductivetype, uu___15) in
                let uu___15 = FStar_Ident.range_of_lid lid in
                FStar_Errors.raise_error uu___14 uu___15
            | FStar_Pervasives_Native.Some n -> FStar_Pervasives_Native.Some n)
@@ -4179,7 +4179,7 @@ let (get_lid_valued_effect_attr :
                                    FStar_Compiler_Util.format2
                                      "The argument for the effect attribute for %s is not a constant string, it is %s\n"
                                      uu___8 uu___9 in
-                                 (FStar_Errors.Fatal_UnexpectedEffect,
+                                 (FStar_Errors_Codes.Fatal_UnexpectedEffect,
                                    uu___7) in
                                FStar_Errors.raise_error uu___6
                                  t.FStar_Syntax_Syntax.pos)))
@@ -4273,7 +4273,7 @@ let (join :
                 let uu___4 = FStar_Syntax_Print.lid_to_string l2 in
                 FStar_Compiler_Util.format2
                   "Effects %s and %s cannot be composed" uu___3 uu___4 in
-              (FStar_Errors.Fatal_EffectsCannotBeComposed, uu___2) in
+              (FStar_Errors_Codes.Fatal_EffectsCannotBeComposed, uu___2) in
             FStar_Errors.raise_error uu___1 env1.range
         | FStar_Pervasives_Native.Some t -> t
 let (monad_leq :
@@ -4405,7 +4405,7 @@ let (def_check_vars_in_set :
                    FStar_Compiler_Util.format4
                      "Internal: term is not closed (%s).\nt = (%s)\nFVs = (%s)\nScope = (%s)\n"
                      msg uu___4 uu___5 uu___6 in
-                 (FStar_Errors.Warning_Defensive, uu___3) in
+                 (FStar_Errors_Codes.Warning_Defensive, uu___3) in
                FStar_Errors.log_issue rng uu___2
              else ())
           else ()
@@ -4644,7 +4644,7 @@ let rec (unfold_effect_abbrev :
                         FStar_Compiler_Util.format3
                           "Effect constructor is not fully applied; expected %s args, got %s args, i.e., %s"
                           uu___6 uu___7 uu___8 in
-                      (FStar_Errors.Fatal_ConstructorArgLengthMismatch,
+                      (FStar_Errors_Codes.Fatal_ConstructorArgLengthMismatch,
                         uu___5) in
                     FStar_Errors.raise_error uu___4
                       comp.FStar_Syntax_Syntax.pos)
@@ -4713,7 +4713,7 @@ let effect_repr_aux :
                        "Not enough arguments for effect %s, This usually happens when you use a partially applied DM4F effect, like [TAC int] instead of [Tac int] (given:%s, expected:%s)."
                        uu___2 uu___3 uu___4 in
                    FStar_Errors.raise_error
-                     (FStar_Errors.Fatal_NotEnoughArgumentsForEffect,
+                     (FStar_Errors_Codes.Fatal_NotEnoughArgumentsForEffect,
                        message) r) in
           let effect_name =
             norm_eff_name env1 (FStar_Syntax_Util.comp_effect_name c) in
@@ -4819,7 +4819,7 @@ let (reify_comp :
                let uu___4 = FStar_Ident.string_of_lid l in
                FStar_Compiler_Util.format1 "Effect %s cannot be reified"
                  uu___4 in
-             (FStar_Errors.Fatal_EffectCannotBeReified, uu___3) in
+             (FStar_Errors_Codes.Fatal_EffectCannotBeReified, uu___3) in
            let uu___3 = get_range env1 in
            FStar_Errors.raise_error uu___2 uu___3
          else ());
@@ -5223,7 +5223,7 @@ let (update_effect_lattice :
                   FStar_Compiler_Util.format3
                     "Adding an edge %s~>%s induces a cycle %s" uu___3 uu___4
                     uu___5 in
-                (FStar_Errors.Fatal_Effects_Ordering_Coherence, uu___2) in
+                (FStar_Errors_Codes.Fatal_Effects_Ordering_Coherence, uu___2) in
               FStar_Errors.raise_error uu___1 env1.range
             else () in
           let new_i_edge_target =
@@ -5276,7 +5276,7 @@ let (update_effect_lattice :
                         FStar_Compiler_Util.format1
                           "Divergent computations cannot be included in an effect %s marked 'total'"
                           uu___4 in
-                      (FStar_Errors.Fatal_DivergentComputationCannotBeIncludedInTotal,
+                      (FStar_Errors_Codes.Fatal_DivergentComputationCannotBeIncludedInTotal,
                         uu___3) in
                     let uu___3 = get_range env1 in
                     FStar_Errors.raise_error uu___2 uu___3
@@ -5344,7 +5344,7 @@ let (update_effect_lattice :
                           let uu___3 =
                             FStar_Compiler_Util.format1
                               "Effects %s have incomparable upper bounds" s in
-                          (FStar_Errors.Fatal_Effects_Ordering_Coherence,
+                          (FStar_Errors_Codes.Fatal_Effects_Ordering_Coherence,
                             uu___3) in
                         FStar_Errors.raise_error uu___2 env1.range
                       else FStar_Compiler_List.op_At lubs joins1) [] in

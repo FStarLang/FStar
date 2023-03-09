@@ -577,7 +577,7 @@ let (preprocess :
                                          FStar_Compiler_Util.format1
                                            "Tactic returned proof-relevant goal: %s"
                                            uu___9 in
-                                       (FStar_Errors.Fatal_TacticProofRelevantGoal,
+                                       (FStar_Errors_Codes.Fatal_TacticProofRelevantGoal,
                                          uu___8) in
                                      FStar_Errors.raise_error uu___7
                                        env.FStar_TypeChecker_Env.range
@@ -1453,7 +1453,7 @@ let (synthesize :
                                    uu___7 guard))
                            | FStar_Pervasives_Native.None ->
                                FStar_Errors.raise_error
-                                 (FStar_Errors.Fatal_OpenGoalsInSynthesis,
+                                 (FStar_Errors_Codes.Fatal_OpenGoalsInSynthesis,
                                    "synthesis left open goals")
                                  typ.FStar_Syntax_Syntax.pos) gs;
                       w))))
@@ -1544,7 +1544,7 @@ let (solve_implicits :
                                   let uu___7 =
                                     FStar_TypeChecker_Env.get_range env in
                                   FStar_Errors.raise_error
-                                    (FStar_Errors.Fatal_OpenGoalsInSynthesis,
+                                    (FStar_Errors_Codes.Fatal_OpenGoalsInSynthesis,
                                       "synthesis left open goals") uu___7))))))
 let (find_user_tac_for_attr :
   FStar_TypeChecker_Env.env ->
@@ -1644,7 +1644,7 @@ let (handle_smt_goal :
                                        let uu___7 =
                                          FStar_TypeChecker_Env.get_range env in
                                        FStar_Errors.raise_error
-                                         (FStar_Errors.Fatal_OpenGoalsInSynthesis,
+                                         (FStar_Errors_Codes.Fatal_OpenGoalsInSynthesis,
                                            "Handling an SMT goal by tactic left non-prop open goals")
                                          uu___7)))) in
                gs
@@ -1868,7 +1868,7 @@ let (splice :
                                  if uu___8
                                  then
                                    FStar_Errors.raise_error
-                                     (FStar_Errors.Fatal_OpenGoalsInSynthesis,
+                                     (FStar_Errors_Codes.Fatal_OpenGoalsInSynthesis,
                                        "splice left open goals") rng
                                  else ());
                                 (let lids' =
@@ -1899,7 +1899,7 @@ let (splice :
                                               FStar_Compiler_Util.format2
                                                 "Splice declared the name %s but it was not defined.\nThose defined were: %s"
                                                 uu___12 uu___13 in
-                                            (FStar_Errors.Fatal_SplicedUndef,
+                                            (FStar_Errors_Codes.Fatal_SplicedUndef,
                                               uu___11) in
                                           FStar_Errors.raise_error uu___10
                                             rng
@@ -1934,7 +1934,7 @@ let (splice :
                                                      FStar_Compiler_Util.format1
                                                        "Tactic returned bad sigelt: %s\nIf you wanted to splice an inductive type, call `pack` providing a `Sg_Inductive` to get a proper sigelt."
                                                        uu___14 in
-                                                   (FStar_Errors.Error_BadSplice,
+                                                   (FStar_Errors_Codes.Error_BadSplice,
                                                      uu___13) in
                                                  FStar_Errors.raise_error
                                                    uu___12 rng
@@ -1948,7 +1948,7 @@ let (splice :
                                                      FStar_Compiler_Util.format1
                                                        "Tactic returned bad sigelt: %s\nIf you wanted to splice an inductive type, call `pack` providing a `Sg_Inductive` to get a proper sigelt."
                                                        uu___14 in
-                                                   (FStar_Errors.Error_BadSplice,
+                                                   (FStar_Errors_Codes.Error_BadSplice,
                                                      uu___13) in
                                                  FStar_Errors.raise_error
                                                    uu___12 rng
@@ -1967,7 +1967,36 @@ let (splice :
                                               FStar_Syntax_Syntax.sigopts =
                                                 (se.FStar_Syntax_Syntax.sigopts)
                                             })) in
-                                  sigelts1))))))))
+                                  FStar_Compiler_Effect.op_Bar_Greater
+                                    sigelts1
+                                    (FStar_Compiler_List.iter
+                                       (fun se ->
+                                          FStar_Compiler_Effect.op_Bar_Greater
+                                            se.FStar_Syntax_Syntax.sigquals
+                                            (FStar_Compiler_List.iter
+                                               (fun q ->
+                                                  let uu___11 =
+                                                    FStar_Syntax_Syntax.is_internal_qualifier
+                                                      q in
+                                                  if uu___11
+                                                  then
+                                                    let uu___12 =
+                                                      let uu___13 =
+                                                        let uu___14 =
+                                                          FStar_Syntax_Print.qual_to_string
+                                                            q in
+                                                        let uu___15 =
+                                                          FStar_Syntax_Print.sigelt_to_string_short
+                                                            se in
+                                                        FStar_Compiler_Util.format2
+                                                          "The qualifier %s is internal, it cannot be attached to spliced sigelt `%s`."
+                                                          uu___14 uu___15 in
+                                                      (FStar_Errors_Codes.Error_InternalQualifier,
+                                                        uu___13) in
+                                                    FStar_Errors.raise_error
+                                                      uu___12 rng
+                                                  else ()))));
+                                  (match () with | () -> sigelts1)))))))))
 let (mpreprocess :
   FStar_TypeChecker_Env.env ->
     FStar_Syntax_Syntax.term ->
@@ -2079,7 +2108,7 @@ let (postprocess :
                                           uu___9 guard))
                                   | FStar_Pervasives_Native.None ->
                                       FStar_Errors.raise_error
-                                        (FStar_Errors.Fatal_OpenGoalsInSynthesis,
+                                        (FStar_Errors_Codes.Fatal_OpenGoalsInSynthesis,
                                           "postprocessing left open goals")
                                         typ.FStar_Syntax_Syntax.pos) gs;
                              (let tagged_imps =

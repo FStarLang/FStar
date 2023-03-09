@@ -4117,7 +4117,7 @@ let (config' :
               then
                 (let uu___14 = FStar_TypeChecker_Env.get_range e in
                  FStar_Errors.log_issue uu___14
-                   (FStar_Errors.Warning_WarnOnUse,
+                   (FStar_Errors_Codes.Warning_WarnOnUse,
                      "The 'UNSOUND_EraseErasableArgs' setting is for debugging only; it is not sound"))
               else ();
               b in

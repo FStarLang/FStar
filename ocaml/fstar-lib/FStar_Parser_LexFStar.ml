@@ -7,6 +7,7 @@ module Hashtbl = BatHashtbl
 module Sedlexing = FStar_Sedlexing
 module L = Sedlexing
 module E = FStar_Errors
+module Codes = FStar_Errors_Codes
 
 let ba_of_string s = Array.init (String.length s) (fun i -> Char.code (String.get s i))
 let array_trim_both a n m = Array.sub a n (Array.length a - n - m)
@@ -500,7 +501,7 @@ match%sedlex lexbuf with
  | ident -> let id = L.lexeme lexbuf in
    if FStar_Compiler_Util.starts_with id FStar_Ident.reserved_prefix
    then FStar_Errors.raise_error
-                    (FStar_Errors.Fatal_ReservedPrefix,
+                    (Codes.Fatal_ReservedPrefix,
                      FStar_Ident.reserved_prefix  ^ " is a reserved prefix for an identifier")
                     (current_range lexbuf);
    Hashtbl.find_option keywords id |> Option.default (IDENT id)
@@ -512,7 +513,7 @@ match%sedlex lexbuf with
  | (uint8 | char8) ->
    let c = clean_number (L.lexeme lexbuf) in
    let cv = int_of_string c in
-   if cv < 0 || cv > 255 then fail lexbuf (E.Fatal_SyntaxError, "Out-of-range character literal")
+   if cv < 0 || cv > 255 then fail lexbuf (Codes.Fatal_SyntaxError, "Out-of-range character literal")
    else UINT8 (c)
  | int8 -> INT8 (clean_number (L.lexeme lexbuf), false)
  | uint16 -> UINT16 (clean_number (L.lexeme lexbuf))
@@ -525,7 +526,7 @@ match%sedlex lexbuf with
  | range -> RANGE (L.lexeme lexbuf)
  | real -> REAL(trim_right lexbuf 1)
  | (integer | xinteger | ieee64 | xieee64), Plus ident_char ->
-   fail lexbuf (E.Fatal_SyntaxError, "This is not a valid numeric literal: " ^ L.lexeme lexbuf)
+   fail lexbuf (Codes.Fatal_SyntaxError, "This is not a valid numeric literal: " ^ L.lexeme lexbuf)
 
  | "(*" ->
    let inner, buffer, startpos = start_comment lexbuf in
@@ -583,7 +584,7 @@ match%sedlex lexbuf with
  | ".[||]"                  -> OP_MIXFIX_ACCESS (L.lexeme lexbuf)
 
  | eof -> EOF
- | _ -> fail lexbuf (E.Fatal_SyntaxError, "unexpected char")
+ | _ -> fail lexbuf (Codes.Fatal_SyntaxError, "unexpected char")
 
 and one_line_comment pre lexbuf =
 match%sedlex lexbuf with
@@ -603,7 +604,7 @@ match%sedlex lexbuf with
    (* position info must be set since the start of the string *)
    lexbuf.Sedlexing.start_p <- start_pos;
    STRING (Buffer.contents buffer)
- | eof -> fail lexbuf (E.Fatal_SyntaxError, "unterminated string")
+ | eof -> fail lexbuf (Codes.Fatal_SyntaxError, "unterminated string")
  | any ->
   Buffer.add_string buffer (L.lexeme lexbuf);
   string buffer start_pos lexbuf

@@ -35,6 +35,23 @@ open FStar.VConfig
 // This is set in FStar.Main.main, where all modules are in-scope.
 let lazy_chooser : ref (option (lazy_kind -> lazyinfo -> term)) = mk_ref None
 
+let is_internal_qualifier (q:qualifier) : bool =
+  match q with
+  | Visible_default
+  | Discriminator _
+  | Projector _
+  | RecordType _
+  | RecordConstructor _
+  | Action _
+  | ExceptionConstructor
+  | HasMaskedEffect
+  | Effect
+  | OnlyName
+  | InternalAssumption ->
+      true
+  | _ ->
+      false
+
 let mod_name (m: modul) = m.name
 
 let contains_reflectable (l: list qualifier): bool =

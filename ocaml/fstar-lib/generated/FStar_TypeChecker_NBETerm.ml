@@ -1534,7 +1534,7 @@ let (e_norm_step : FStar_Syntax_Embeddings.norm_step embedding) =
               let uu___4 = t_to_string t0 in
               FStar_Compiler_Util.format1 "Not an embedded norm_step: %s"
                 uu___4 in
-            (FStar_Errors.Warning_NotEmbedded, uu___3) in
+            (FStar_Errors_Codes.Warning_NotEmbedded, uu___3) in
           FStar_Errors.log_issue FStar_Compiler_Range.dummyRange uu___2);
          FStar_Pervasives_Native.None) in
   let uu___ =

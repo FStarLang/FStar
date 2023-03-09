@@ -886,8 +886,8 @@ let splice (env:Env.env) (is_typed:bool) (lids:list Ident.lident) (tau:term) (rn
       BU.print1 "splice: got decls = {\n\n%s\n\n}\n"
                  (FStar.Common.string_of_list Print.sigelt_to_string sigelts);
 
+    (* Check for bare Sig_datacon and Sig_inductive_typ, and abort if so. Also set range. *)
     let sigelts = sigelts |> List.map (fun se ->
-        (* Check for bare Sig_datacon and Sig_inductive_typ, and abort if so. *)
         begin match se.sigel with
         | Sig_datacon _
         | Sig_inductive_typ _ ->
@@ -897,7 +897,20 @@ let splice (env:Env.env) (is_typed:bool) (lids:list Ident.lident) (tau:term) (rn
         end;
         { se with sigrng = rng })
     in
+
+    (* Check there are no internal qualifiers *)
+    let () = sigelts |> List.iter (fun se ->
+      se.sigquals |> List.iter (fun q ->
+        (* NOTE: Assumption is OK, a tactic can generate an axiom, but
+         * it will be reported with --report_assumes. *)
+        if is_internal_qualifier q then
+          Err.raise_error (Err.Error_InternalQualifier, BU.format2 "The qualifier %s is internal, it cannot be attached to spliced sigelt `%s`."
+                           (Print.qual_to_string q)
+                           (Print.sigelt_to_string_short se)) rng
+       ))
+    in
     sigelts
+
     end
   )
 
