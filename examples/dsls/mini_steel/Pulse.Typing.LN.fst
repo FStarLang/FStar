@@ -642,7 +642,15 @@ let lift_comp_ln #f #g #c1 #c2 (d:lift_comp f g c1 c2)
     (ensures ln_c c2)    
   = ()
 
-
+let tot_typing_ln (#f:_) (#g:_) (#e:_) (#t:_)
+                  (d:tot_typing f g e t)
+  : Lemma 
+    (ensures ln e /\ ln t)
+  = let E dt = d in
+    well_typed_terms_are_ln _ _ _ dt;
+    elab_ln_inverse e;
+    elab_ln_inverse t
+  
 let rec vprop_equiv_ln (#f:_) (#g:_) (#t0 #t1:_) (v:vprop_equiv f g t0 t1)
   : Lemma (ensures ln t0 <==> ln t1)
           (decreases v)
@@ -660,11 +668,9 @@ let rec vprop_equiv_ln (#f:_) (#g:_) (#t0 #t1:_) (v:vprop_equiv f g t0 t1)
     | VE_Comm g t0 t1 -> ()
     | VE_Assoc g t0 t1 t2 -> ()
     | VE_Ext g t0 t1 token ->
-      let t : RT.typing (extend_env_l f g) token (elab_term (mk_vprop_eq t0 t1)) =
-        RT.T_Token _ _ _ ()
-      in
-      well_typed_terms_are_ln _ _ _ t;
-      elab_ln_inverse (mk_vprop_eq t0 t1)
+      let d0, d1 = vprop_eq_typing_inversion _ _ _ _ token in
+      tot_typing_ln d0;
+      tot_typing_ln d1
 
 let st_equiv_ln #f #g #c1 #c2 (d:st_equiv f g c1 c2)
   : Lemma 
@@ -682,15 +688,6 @@ let bind_comp_ln #f #g #x #c1 #c2 #c (d:bind_comp f g x c1 c2 c)
     (ensures ln_c c)
   = ()
 
-let tot_typing_ln (#f:_) (#g:_) (#e:_) (#t:_)
-                  (d:tot_typing f g e t)
-  : Lemma 
-    (ensures ln e /\ ln t)
-  = let E dt = d in
-    well_typed_terms_are_ln _ _ _ dt;
-    elab_ln_inverse e;
-    elab_ln_inverse t
-  
 #push-options "--query_stats --fuel 8 --ifuel 8 --z3rlimit_factor 20"
 let rec st_typing_ln (#f:_) (#g:_) (#t:_) (#c:_)
                      (d:st_typing f g t c)

@@ -7033,13 +7033,20 @@ let (refl_check_relation :
                        dbg_refl g
                          (fun uu___5 -> "refl_check_relation: succeeded"))
                   | FStar_Pervasives.Inr err ->
-                      let uu___4 =
-                        let uu___5 =
-                          let uu___6 = FStar_TypeChecker_Core.print_error err in
-                          Prims.op_Hat "check_relation failed: " uu___6 in
-                        (FStar_Errors.Fatal_IllTyped, uu___5) in
-                      FStar_Errors.raise_error uu___4
-                        FStar_Compiler_Range.dummyRange))
+                      (dbg_refl g
+                         (fun uu___5 ->
+                            let uu___6 =
+                              FStar_TypeChecker_Core.print_error err in
+                            FStar_Compiler_Util.format1
+                              "refl_check_relation failed: %s\n" uu___6);
+                       (let uu___5 =
+                          let uu___6 =
+                            let uu___7 =
+                              FStar_TypeChecker_Core.print_error err in
+                            Prims.op_Hat "check_relation failed: " uu___7 in
+                          (FStar_Errors.Fatal_IllTyped, uu___6) in
+                        FStar_Errors.raise_error uu___5
+                          FStar_Compiler_Range.dummyRange))))
           else FStar_Tactics_Monad.ret FStar_Pervasives_Native.None
 let (refl_check_subtyping :
   env ->

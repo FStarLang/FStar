@@ -122,8 +122,7 @@ let check_one_vprop f g (p q:term) : T.Tac (option (vprop_equiv f g p q)) =
     then
       let v0 = elab_term p in
       let v1 = elab_term q in
-      let vprop_eq_tm = vprop_eq_tm v0 v1 in
-      match T.check_prop_validity (extend_env_l f g) vprop_eq_tm with
+      match T.check_equiv (extend_env_l f g) v0 v1 with
       | Some token -> Some (VE_Ext g p q token)
       | None -> None
     else None

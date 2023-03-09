@@ -2252,7 +2252,9 @@ let refl_check_relation (g:env) (t0 t1:typ) (rel:relation)
          | Inl (Some guard_f) ->
            Rel.force_trivial_guard g {Env.trivial_guard with guard_f=NonTrivial guard_f};
            dbg_refl g (fun _ -> "refl_check_relation: succeeded")
-         | Inr err -> Errors.raise_error (Errors.Fatal_IllTyped, "check_relation failed: " ^ (Core.print_error err)) Range.dummyRange)
+         | Inr err ->
+           dbg_refl g (fun _ -> BU.format1 "refl_check_relation failed: %s\n" (Core.print_error err));
+           Errors.raise_error (Errors.Fatal_IllTyped, "check_relation failed: " ^ (Core.print_error err)) Range.dummyRange)
   else ret None
 
 let refl_check_subtyping (g:env) (t0 t1:typ) : tac (option unit) =

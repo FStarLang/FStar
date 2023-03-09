@@ -129,14 +129,43 @@ let vprop_equiv_ext_type : R.term =
        )
     )
 
+let inst_vprop_equiv_ext_aux #g #v0 #v1
+  (token:T.equiv_token g v0 v1)
+  : GTot (RT.equiv g (stt_vprop_equiv v0 v0) (stt_vprop_equiv v0 v1)) =
+
+  let ctxt = RT.Ctxt_app_arg
+    (R.pack_ln (R.Tv_App stt_vprop_equiv_tm (v0, R.Q_Explicit)))
+    R.Q_Explicit
+    RT.Ctxt_hole in
+
+  RT.EQ_Ctxt _ _ _ ctxt (RT.EQ_Token _ _ _ (Squash.return_squash token))
+
 let inst_vprop_equiv_ext #g #v0 #v1
   (d0:RT.typing g v0 vprop_tm)
   (d1:RT.typing g v1 vprop_tm)
-  (token:T.prop_validity_token g (vprop_eq_tm v0 v1))
+  (token:T.equiv_token g v0 v1)
   : GTot (pf:R.term &
-          RT.typing g pf (stt_vprop_equiv v0 v1))
-  = admit ()
+          RT.typing g pf (stt_vprop_equiv v0 v1)) =
 
+  let (| pf, typing |)
+    : (pf:R.term &
+       RT.typing g pf (stt_vprop_equiv v0 v0)) =
+    inst_vprop_equiv_refl d0 in
+
+  let d_st_equiv
+    : RT.equiv g (stt_vprop_equiv v0 v0) (stt_vprop_equiv v0 v1) =
+    inst_vprop_equiv_ext_aux token in
+
+  let sub_typing
+    : RT.sub_typing g (stt_vprop_equiv v0 v0) (stt_vprop_equiv v0 v1)
+    = RT.ST_Equiv _ _ _ d_st_equiv in
+
+  let pf_typing
+    : RT.typing g pf (stt_vprop_equiv v0 v1) =
+    RT.T_Sub _ _ _ _ typing sub_typing in
+
+  (| pf, pf_typing |)
+    
 #push-options "--z3rlimit_factor 4"
 let rec vprop_equiv_soundness (#f:stt_env) (#g:env) (#v0 #v1:term) 
                               (d:tot_typing f g v0 Tm_VProp)
