@@ -208,7 +208,7 @@ type vprop_equiv (f:RT.fstar_top_env) : env -> term -> term -> Type =
      g:env ->
      t0:term ->
      t1:term ->
-     FTB.prop_validity_token (extend_env_l f g) (elab_term (mk_vprop_eq t0 t1)) ->
+     FTB.equiv_token (extend_env_l f g) (elab_term t0) (elab_term t1) ->
      vprop_equiv f g t0 t1
 
   // | VE_Ex:
@@ -762,8 +762,9 @@ let star_typing_inversion (f:_) (g:_) (t0 t1:term) (d:tot_typing f g (Tm_Star t0
   = admit()
 
 let vprop_eq_typing_inversion (f:RT.fstar_top_env) g (t0 t1:term)
-                              (token:FTB.prop_validity_token (extend_env_l f g)
-                                                             (elab_term (mk_vprop_eq t0 t1)))
+                              (token:FTB.equiv_token (extend_env_l f g)
+                                                     (elab_term t0)
+                                                     (elab_term t1))
   : (tot_typing f g t0 Tm_VProp &
      tot_typing f g t1 Tm_VProp)
   = admit ()

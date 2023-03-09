@@ -242,9 +242,9 @@ let rec vprop_equiv_freevars (#f:_) (#g:_) (#t0 #t1:_) (v:vprop_equiv f g t0 t1)
     | VE_Comm g t0 t1 -> ()
     | VE_Assoc g t0 t1 t2 -> ()
     | VE_Ext g t0 t1 token ->
-      let t : RT.typing (extend_env_l f g) token (elab_term (mk_vprop_eq t0 t1)) = RT.T_Token _ _ _ () in
-      refl_typing_freevars t;
-      elab_freevars (mk_vprop_eq t0 t1)
+      let d0, d1 = vprop_eq_typing_inversion _ _ _ _ token in
+      tot_typing_freevars d0;
+      tot_typing_freevars d1
 
 let st_equiv_freevars #f #g (#c1 #c2:_)
                       (d:st_equiv f g c1 c2)
