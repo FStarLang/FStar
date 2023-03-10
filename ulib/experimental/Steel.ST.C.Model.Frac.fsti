@@ -1,9 +1,9 @@
-module Steel.C.Model.Frac
+module Steel.ST.C.Model.Frac
+open Steel.ST.Util
 
 module P = FStar.PCM
 open Steel.C.Model.PCM
-open Steel.C.Model.Ref
-open Steel.Effect
+open Steel.ST.C.Model.Ref
 
 /// Fractional permissions: from Steel.HigherReference
 open Steel.FractionalPermission
@@ -48,63 +48,19 @@ let frac_pcm_fpu
 val frac_pcm_write
   (#a:Type) (#b: Type)
   (r: ref a (pcm_frac #b)) (x: Ghost.erased (fractional b)) (y: b)
-: Steel unit (r `pts_to` x) (fun _ -> r `pts_to` Some (y, full_perm))
-  (requires (fun _ -> Some? x /\ snd (Some?.v x) == full_perm))
-  (ensures (fun _ _ _ -> True))
+: ST unit (r `pts_to` x) (fun _ -> r `pts_to` Some (y, full_perm))
+  (requires (Some? x /\ snd (Some?.v x) == full_perm))
+  (ensures (fun _ -> True))
 
 val frac_pcm_read
   (#a:Type) (#b: Type)
   (r: ref a (pcm_frac #b)) (x: Ghost.erased (fractional b))
-: Steel b (r `pts_to` x) (fun _ -> r `pts_to` x)
-  (requires (fun _ -> Some? x))
-  (ensures (fun _ y _ -> Some? x /\ y == fst (Some?.v (Ghost.reveal x))))
+: ST b (r `pts_to` x) (fun _ -> r `pts_to` x)
+  (requires (Some? x))
+  (ensures (fun y -> Some? x /\ y == fst (Some?.v (Ghost.reveal x))))
 
 val exclusive_frac
   (#a: Type)
   (x: option (a & perm))
 : Lemma
   (exclusive pcm_frac x <==> ((exists (y: a) . True) ==> (Some? x /\ full_perm `lesser_equal_perm` snd (Some?.v x))))
-
-let frac_view
-  (a: Type)
-  (p: perm)
-: Tot (sel_view (pcm_frac #a) a false)
-= {
-  to_view_prop = (fun x -> Some? x == true);
-  to_view = (fun x -> let Some (v, _) = x in v);
-  to_carrier = (fun v -> Some (v, p));
-  to_carrier_not_one = ();
-  to_view_frame = (fun v frame -> ());
-}
-
-let frac_read_sel
-  (#a: Type u#0) (#b: Type u#0)
-  (#p: perm)
-  (r: ref a (pcm_frac #b))
-: Steel b
-  (pts_to_view r (frac_view _ p))
-  (fun _ -> pts_to_view r (frac_view _ p))
-  (requires (fun _ -> True))
-  (ensures (fun h res h' ->
-    res == h (pts_to_view r (frac_view _ p)) /\
-    res == h' (pts_to_view r (frac_view _ p))
-  ))
-= ref_read_sel r (frac_view _ p)
-
-let frac_write_sel
-  (#a: Type u#0) (#b: Type u#0)
-  (#p: perm)
-  (r: ref a (pcm_frac #b))
-  (w: b)
-: Steel unit
-  (pts_to_view r (frac_view _ p))
-  (fun _ -> pts_to_view r (frac_view _ p))
-  (requires (fun _ -> p == full_perm))
-  (ensures (fun h _ h' ->
-    w == h' (pts_to_view r (frac_view _ p))
-  ))
-=
-  let _ = pts_to_view_elim r (frac_view _ _) in
-  frac_pcm_write r _ w;
-  pts_to_view_intro r _ (frac_view _ p) w
-
