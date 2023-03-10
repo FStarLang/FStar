@@ -5,137 +5,6 @@ open FStar.FunctionalExtensionality
 
 friend Steel.C.Model.Ref.Base
 
-let mk_id_ref
-  (#a: Type0)
-  (p: pcm a)
-  (r0: Steel.Memory.ref (U.raise_t u#0 u#1 a) (fstar_pcm_of_pcm (U.raise_pcm u#0 u#1 p)))
-: Tot (ref a p)
-=
-  let p' : pcm u#1 _ = U.raise_pcm u#0 u#1 p in
-  let fp = fstar_pcm_of_pcm p' in
-  NonNull ({ p = p; q = p; pl = connection_id p; r = r0 })
-
-#push-options "--z3rlimit 16"
-
-let ref_alloc #a p x =
-  let x' : U.raise_t u#0 u#1 a = U.raise_val u#0 u#1 x in
-  let p' : pcm u#1 _ = U.raise_pcm u#0 u#1 p in
-//  let fp : P.pcm u#1 _ = fstar_pcm_of_pcm p' in // FIXME: I can define this local definition, but WHY WHY WHY can't I USE it?
-  compatible_refl p' x';
-  let r0 : Steel.Memory.ref (U.raise_t u#0 u#1 a) (fstar_pcm_of_pcm (U.raise_pcm u#0 u#1 p)) = Steel.PCMReference.alloc #_ #(fstar_pcm_of_pcm (U.raise_pcm u#0 u#1 p)) x' in
-  let r : ref a p = mk_id_ref p r0 in
-  connection_compose_id_right (lower_conn r);
-  A.change_equal_slprop (r0 `mpts_to` _) (r `pts_to` x);
-  A.return r
-
-let ref_free #a #b #p #x r =
-  // TODO: use Steel.PCMReference.free, but we are blocked by (p.refine (one p)), which we explicitly excluded in Steel.C.Model.PCM
-  A.drop (pts_to _ _)
-
-#pop-options
-
-let gfocus r l s x =
-  connection_compose_assoc (lower_conn r) (NonNull?.v r).pl l;
-  A.change_equal_slprop
-    (r `pts_to` s)
-    (ref_focus r l `pts_to` x)
-
-let focus r l s x =
-  let r' = t_ref_focus r l in
-  gfocus r l s x;
-  A.change_equal_slprop
-    (ref_focus r l `pts_to` x)
-    (r' `pts_to` x);
-  A.return r'
-
-let unfocus r r' l x =
-  connection_compose_assoc (lower_conn r') (NonNull?.v r').pl l;
-  A.change_equal_slprop
-    (r `pts_to` x)
-    (r' `pts_to` l.conn_small_to_large.morph x)
-
-let split r xy x y =
-  let c = raise_pl r in
-  let xy2 = Ghost.hide (c.conn_small_to_large.morph xy) in
-  let x2 = Ghost.hide (c.conn_small_to_large.morph x) in
-  let y2 = Ghost.hide (c.conn_small_to_large.morph y) in
-  assert (composable (raise_p r) x2 y2);
-  A.change_equal_slprop
-    (r `pts_to` xy)
-    ((NonNull?.v r).r `mpts_to` xy2);
-  Steel.PCMReference.split (NonNull?.v r).r
-    xy2
-    x2
-    y2;
-  A.change_equal_slprop
-    ((NonNull?.v r).r `mpts_to` x2)
-    (r `pts_to` x);
-  A.change_equal_slprop
-    ((NonNull?.v r).r `mpts_to` y2)
-    (r `pts_to` y)
-
-let mgather
-  (#inames: _) (#a:Type) (#p:P.pcm a)
-  (r:Steel.Memory.ref a p) (v0:Ghost.erased a) (v1:Ghost.erased a)
-: A.SteelGhostT (_:unit{P.composable p v0 v1}) inames
-    (mpts_to r v0 `star` mpts_to r v1)
-    (fun _ -> mpts_to r (P.op p v0 v1))
-= Steel.PCMReference.gather r v0 v1
-
-let gather #inames #a #b #p r x y =
-  let c = raise_pl r in
-  let x2 = Ghost.hide (c.conn_small_to_large.morph x) in
-  let y2 = Ghost.hide (c.conn_small_to_large.morph y) in
-  A.change_equal_slprop
-    (r `pts_to` x)
-    ((NonNull?.v r).r `mpts_to` x2);
-  A.change_equal_slprop
-    (r `pts_to` y)
-    ((NonNull?.v r).r `mpts_to` y2);
-  mgather (NonNull?.v r).r
-    x2
-    y2;
-  assert (composable (raise_p r) x2 y2);
-  assert (
-    let x' = c.conn_large_to_small.morph x2 in
-    let y' = c.conn_large_to_small.morph y2 in
-    composable p x' y' /\
-    Ghost.reveal x == x' /\ Ghost.reveal y == y'
-  );
-  A.change_equal_slprop _ (r `pts_to` op p x y)
-
-let ref_read (#p: pcm 'b) (#x: Ghost.erased 'b) (r: ref 'a p)
-: Steel 'b
-    (r `pts_to` x)
-    (fun _ -> r `pts_to` x)
-    (requires fun _ -> True)
-    (ensures fun _ x' _ -> compatible p x x')
-= let w = Ghost.hide ((raise_pl r).conn_small_to_large.morph x) in
-  A.change_equal_slprop (r `pts_to` x) ((NonNull?.v r).r `mpts_to` w);
-  let w' = Steel.PCMReference.read (NonNull?.v r).r w in
-  A.change_equal_slprop ((NonNull?.v r).r `mpts_to` w) (r `pts_to` x);
-  let x' = (raise_pl r).conn_large_to_small.morph w' in
-  compatible_morphism (raise_pl r).conn_large_to_small w w';
-  A.return x'
-
-let ref_upd_act (r: ref 'a 'p) (x: Ghost.erased 'b { ~ (Ghost.reveal x == one 'p) }) (y: Ghost.erased 'b) (f: frame_preserving_upd 'p x y)
-: Tot (M.action_except unit Set.empty (hp_of (r `pts_to` x)) (fun _ -> hp_of (r `pts_to` y)))
-= let c = raise_pl r in
-  let x' = Ghost.hide (c.conn_small_to_large.morph x) in
-  let y' = Ghost.hide (c.conn_small_to_large.morph y) in
-  M.upd_gen Set.empty (NonNull?.v r).r x' y' (fstar_fpu_of_fpu (raise_p r) x' y' (mk_restricted_frame_preserving_upd (c.conn_lift_frame_preserving_upd ({ fpu_lift_dom_x = x; fpu_lift_dom_y = y; fpu_lift_dom_f = restricted_frame_preserving_upd_intro f; }) )))
-
-let as_action (#p:vprop)
-              (#q:vprop)
-              (f:M.action_except unit Set.empty (hp_of p) (fun _ -> hp_of q))
-: SteelT unit p (fun x -> q)
-= A.change_slprop_rel p (to_vprop (hp_of p)) (fun _ _ -> True) (fun m -> ());
-  let x = Steel.Effect.as_action f in
-  A.change_slprop_rel (to_vprop (hp_of q)) q (fun _ _ -> True) (fun m -> ());
-  A.return x
-
-let ref_upd r x y f = as_action (ref_upd_act r x y f)
-
 let pts_to_view_explicit
   (#a: Type u#0) (#b: Type u#b) (#p: pcm b)
   (r: ref a p)
@@ -366,6 +235,8 @@ let compatible_elim'
     op pcm frame x == y
   })
 = compatible_elim pcm x y
+
+module STC = Steel.ST.Coercions
 
 let ref_read_sel
   (#a: Type u#0) (#b: Type u#b) (#p: pcm b)
