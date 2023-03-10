@@ -1,51 +1,53 @@
 module Steel.C.Model.Frac
+include Steel.ST.C.Model.Frac
 
+module STC = Steel.ST.Coercions // to use frac_pcm_write
+module P = FStar.PCM
 open Steel.C.Model.PCM
 open Steel.C.Model.Ref
 open Steel.Effect
-open Steel.Effect.Atomic
-  
 open Steel.FractionalPermission
 
-let frac_pcm_write r x y
-= ref_upd r x (Some (y, full_perm)) (frac_pcm_fpu x y);
-  change_equal_slprop (r `pts_to` _) (r `pts_to` _)
+let frac_view
+  (a: Type)
+  (p: perm)
+: Tot (sel_view (pcm_frac #a) a false)
+= {
+  to_view_prop = (fun x -> Some? x == true);
+  to_view = (fun x -> let Some (v, _) = x in v);
+  to_carrier = (fun v -> Some (v, p));
+  to_carrier_not_one = ();
+  to_view_frame = (fun v frame -> ());
+}
 
-let frac_pcm_read r x
-= let y' = ref_read r in
-  assert (Some? y' /\ fst (Some?.v (Ghost.reveal x)) == fst (Some?.v y'));
-  fst (Some?.v y')
+let frac_read_sel
+  (#a: Type u#0) (#b: Type u#0)
+  (#p: perm)
+  (r: ref a (pcm_frac #b))
+: Steel b
+  (pts_to_view r (frac_view _ p))
+  (fun _ -> pts_to_view r (frac_view _ p))
+  (requires (fun _ -> True))
+  (ensures (fun h res h' ->
+    res == h (pts_to_view r (frac_view _ p)) /\
+    res == h' (pts_to_view r (frac_view _ p))
+  ))
+= ref_read_sel r (frac_view _ p)
 
-let exclusive_frac
-  (#a: Type)
-  (x: option (a & perm))
-: Lemma
-  (exclusive pcm_frac x <==> ((exists (y: a) . True) ==> (Some? x /\ full_perm `lesser_equal_perm` snd (Some?.v x))))
-= match x with
-  | None ->
-    if FStar.StrongExcludedMiddle.strong_excluded_middle (exists (y: a). True)
-    then begin
-      let y = FStar.IndefiniteDescription.indefinite_description_ghost a (fun _ -> True) in
-      let frame = Some (y, full_perm) in
-      assert (~ (frame == one pcm_frac));
-      assert (composable pcm_frac x frame)
-    end else begin
-      let phi
-        (frame: option (a & perm))
-      : Lemma
-        (frame == None)
-      = match frame with
-        | None -> ()
-        | Some (z, _) -> assert (exists (y: a) . True)
-      in
-      Classical.forall_intro phi
-    end
-  | Some (y, p) ->
-    assert (exists (z: a) . True);
-    if FStar.StrongExcludedMiddle.strong_excluded_middle (full_perm `lesser_equal_perm` p)
-    then ()
-    else begin
-      let frame = Some (y, MkPerm (let open FStar.Real in one -. p.v)) in
-      assert (composable pcm_frac x frame);
-      assert (~ (frame == one pcm_frac))
-    end
+let frac_write_sel
+  (#a: Type u#0) (#b: Type u#0)
+  (#p: perm)
+  (r: ref a (pcm_frac #b))
+  (w: b)
+: Steel unit
+  (pts_to_view r (frac_view _ p))
+  (fun _ -> pts_to_view r (frac_view _ p))
+  (requires (fun _ -> p == full_perm))
+  (ensures (fun h _ h' ->
+    w == h' (pts_to_view r (frac_view _ p))
+  ))
+=
+  let _ = pts_to_view_elim r (frac_view _ _) in
+  frac_pcm_write r _ w;
+  pts_to_view_intro r _ (frac_view _ p) w
+
