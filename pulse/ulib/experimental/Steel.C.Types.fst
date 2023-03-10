@@ -2083,6 +2083,11 @@ let a_pts_to_elim_to_base
     )
 = A.pts_to_elim_to_base r x
 
+#pop-options
+
+#push-options "--z3rlimit 32"
+#restart-solver
+
 let unarray_of_base0
   (#t: Type)
   (#opened: _)
@@ -2112,11 +2117,11 @@ let unarray_of_base0
   ST.weaken (pts_to0 r y') (pts_to r y') (fun _ -> ());
   y'
 
+#pop-options
+
 let unarray_of_base
   #t #tn #_ #n #td #v r a
 = unarray_of_base0 r a
-
-#pop-options
 
 (*
 let has_array_of_ref
