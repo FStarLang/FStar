@@ -1,5 +1,6 @@
-module Steel.C.Types
+module Steel.ST.C.Types
 open Steel.C.Model.PCM
+open Steel.ST.GenElim
 
 #set-options "--smtencoding.elim_box true --smtencoding.l_arith_repr native --smtencoding.nl_arith_repr native"
 
@@ -91,9 +92,7 @@ let unknown td = one td.pcm
 let mk_fraction_unknown td p = td.mk_fraction_one p
 let mk_fraction_eq_unknown td v p = td.mk_fraction_eq_one v p
 
-module R = Steel.C.Model.Ref
-module RST = Steel.ST.C.Model.Ref
-module ST = Steel.ST.GenElim
+module R = Steel.ST.C.Model.Ref
 
 noeq
 type ref0_v (#t: Type) (td: typedef t) : Type u#1 = {
@@ -133,12 +132,12 @@ let pts_to0
   (r: ptr td)
   (v: t)
 : Tot vprop
-= ST.exists_ (fun p -> ST.exists_ (fun w ->
+= exists_ (fun p -> exists_ (fun w ->
     HR.pts_to r p w `star`
     r_pts_to w.ref v
   ))
 
-let _pts_to r v = hp_of (pts_to0 r v)
+let pts_to r v = pts_to0 r v
 
 let pts_to_intro
   (#opened: _)
@@ -148,13 +147,13 @@ let pts_to_intro
   (p: P.perm)
   (w1 w2: ref0_v td)
   (v: t)
-: ST.STGhost unit opened
+: STGhost unit opened
     (HR.pts_to r p w1 `star` R.pts_to w2.ref v)
     (fun _ -> pts_to r v)
     (w1 == w2)
     (fun _ -> True)
-= ST.vpattern_rewrite (HR.pts_to r p) w2;
-  ST.weaken (pts_to0 r v) (pts_to r v) (fun _ -> ())
+= vpattern_rewrite (HR.pts_to r p) w2;
+  rewrite (pts_to0 r v) (pts_to r v)
 
 let is_null
   p
@@ -167,7 +166,7 @@ let ref_equiv0
   (#td: typedef t)
   (r1 r2: ref td)
 : Tot vprop
-= ST.exists_ (fun p1 -> ST.exists_ (fun p2 -> ST.exists_ (fun w ->
+= exists_ (fun p1 -> exists_ (fun p2 -> exists_ (fun w ->
     HR.pts_to r1 p1 w `star`
     HR.pts_to r2 p2 w
   )))
@@ -184,37 +183,37 @@ let ref_equiv_dup'
   (#t: Type)
   (#td: typedef t)
   (r1 r2: ref td)
-: ST.STGhostT unit opened
+: STGhostT unit opened
     (ref_equiv r1 r2)
     (fun _ -> ref_equiv r1 r2 `star` ref_equiv r1 r2)
-= ST.rewrite (ref_equiv r1 r2) (ref_equiv0 r1 r2);
-  let _ = ST.gen_elim () in
+= rewrite (ref_equiv r1 r2) (ref_equiv0 r1 r2);
+  let _ = gen_elim () in
   HR.share r1;
   HR.share r2;
-  ST.rewrite (ref_equiv0 r1 r2) (ref_equiv r1 r2);
-  ST.noop ();
-  ST.rewrite (ref_equiv0 r1 r2) (ref_equiv r1 r2)
+  rewrite (ref_equiv0 r1 r2) (ref_equiv r1 r2);
+  noop ();
+  rewrite (ref_equiv0 r1 r2) (ref_equiv r1 r2)
 
 let ref_equiv_sym'
   (#opened: _)
   (#t: Type)
   (#td: typedef t)
   (r1 r2: ref td)
-: ST.STGhostT unit opened
+: STGhostT unit opened
     (ref_equiv r1 r2)
     (fun _ -> ref_equiv r1 r2 `star` ref_equiv r2 r1)
 = ref_equiv_dup' r1 r2;
-  ST.rewrite (ref_equiv r1 r2) (ref_equiv0 r1 r2);
-  let _ = ST.gen_elim () in
-  ST.noop ();
-  ST.rewrite (ref_equiv0 r2 r1) (ref_equiv r2 r1)
+  rewrite (ref_equiv r1 r2) (ref_equiv0 r1 r2);
+  let _ = gen_elim () in
+  noop ();
+  rewrite (ref_equiv0 r2 r1) (ref_equiv r2 r1)
 
 let hr_share (#a:Type)
           (#uses:_)
           (#p:P.perm)
           (#v:a)
           (r:HR.ref a)
-  : ST.STGhostT unit uses
+  : STGhostT unit uses
       (HR.pts_to r p v)
       (fun _ -> HR.pts_to r (P.half_perm p) v `star` HR.pts_to r (P.half_perm p) v)
 = HR.share #_ #_ #_ #v r
@@ -225,7 +224,7 @@ let hr_gather
   (#p0 #p1:P.perm)
   (v0 #v1:a)
   (r:HR.ref a)
-: ST.STGhost unit uses
+: STGhost unit uses
       (HR.pts_to r p0 v0 `star` HR.pts_to r p1 v1)
       (fun _ -> HR.pts_to r (P.sum_perm p0 p1) v0)
       (requires True)
@@ -237,62 +236,51 @@ let ref_equiv_trans'
   (#t: Type)
   (#td: typedef t)
   (r1 r2 r3: ref td)
-: ST.STGhostT unit opened
+: STGhostT unit opened
     (ref_equiv r1 r2 `star` ref_equiv r2 r3)
     (fun _ -> ref_equiv r1 r2 `star` ref_equiv r2 r3 `star` ref_equiv r1 r3)
-= ST.rewrite (ref_equiv r1 r2) (ref_equiv0 r1 r2);
-  let _ = ST.gen_elim () in
-  let w = ST.vpattern_replace (fun w -> HR.pts_to r1 _ w `star` HR.pts_to r2 _ w) in
-  let p2 = ST.vpattern_replace (fun p -> HR.pts_to r2 p _) in
-  ST.rewrite (ref_equiv r2 r3) (ref_equiv0 r2 r3);
-  let _ = ST.gen_elim () in
+= rewrite (ref_equiv r1 r2) (ref_equiv0 r1 r2);
+  let _ = gen_elim () in
+  let w = vpattern_replace (fun w -> HR.pts_to r1 _ w `star` HR.pts_to r2 _ w) in
+  let p2 = vpattern_replace (fun p -> HR.pts_to r2 p _) in
+  rewrite (ref_equiv r2 r3) (ref_equiv0 r2 r3);
+  let _ = gen_elim () in
   HR.pts_to_injective_eq #_ #_ #_ #_ #w #_ r2;
-  ST.vpattern_rewrite (HR.pts_to r3 _) w;
+  vpattern_rewrite (HR.pts_to r3 _) w;
   hr_share r1;
   hr_share r3;
   HR.gather p2 r2;
   hr_share r2;
-  ST.noop ();
-  ST.rewrite (ref_equiv0 r1 r2) (ref_equiv r1 r2);
-  ST.rewrite (ref_equiv0 r2 r3) (ref_equiv r2 r3);
-  ST.rewrite (ref_equiv0 r1 r3) (ref_equiv r1 r3)
+  noop ();
+  rewrite (ref_equiv0 r1 r2) (ref_equiv r1 r2);
+  rewrite (ref_equiv0 r2 r3) (ref_equiv r2 r3);
+  rewrite (ref_equiv0 r1 r3) (ref_equiv r1 r3)
 
 let hr_share_imbalance (#a:Type)
           (#uses:_)
           (#p:P.perm)
           (#v:a)
           (r:HR.ref a)
-  : ST.STGhostT P.perm uses
+  : STGhostT P.perm uses
       (HR.pts_to r p v)
-      (fun p1 -> HR.pts_to r p1 v `star` ST.exists_ (fun p2 -> HR.pts_to r p2 v))
+      (fun p1 -> HR.pts_to r p1 v `star` exists_ (fun p2 -> HR.pts_to r p2 v))
 = HR.share #_ #_ #_ #v r;
   _
 
 #set-options "--ide_id_info_off"
 
-let pts_to_equiv'
-  (#opened: _)
-  (#t: Type)
-  (#td: typedef t)
-  (r1 r2: ref td)
-  (v: Ghost.erased t)
-: ST.STGhostT unit opened
-    (ref_equiv r1 r2 `star` pts_to r1 v)
-    (fun _ -> ref_equiv r1 r2 `star` pts_to r2 v)
-= ST.rewrite (ref_equiv r1 r2) (ref_equiv0 r1 r2);
-  let _ = ST.gen_elim () in
-  let w = ST.vpattern_replace (fun w -> HR.pts_to r1 _ w `star` HR.pts_to r2 _ w) in
-  ST.weaken (pts_to r1 v) (pts_to0 r1 v) (fun _ -> ());
-  let _ = ST.gen_elim () in
-  hr_gather w r1;
-  hr_share r2;
-  ST.rewrite (R.pts_to _ _) (R.pts_to w.ref v);
-  ST.weaken (pts_to0 r2 v) (pts_to r2 v) (fun _ -> ());
-  ST.rewrite (ref_equiv0 r1 r2) (ref_equiv r1 r2)
-
 let pts_to_equiv
   r1 r2 v
-= pts_to_equiv' r1 r2 v
+= rewrite (ref_equiv r1 r2) (ref_equiv0 r1 r2);
+  let _ = gen_elim () in
+  let w = vpattern_replace (fun w -> HR.pts_to r1 _ w `star` HR.pts_to r2 _ w) in
+  rewrite (pts_to r1 v) (pts_to0 r1 v);
+  let _ = gen_elim () in
+  hr_gather w r1;
+  hr_share r2;
+  rewrite (R.pts_to _ _) (R.pts_to w.ref v);
+  rewrite (pts_to0 r2 v) (pts_to r2 v);
+  rewrite (ref_equiv0 r1 r2) (ref_equiv r1 r2)
 
 [@@__steel_reduce__; __reduce__]
 let freeable0
@@ -300,159 +288,96 @@ let freeable0
   (#td: typedef t)
   (r: ref td)
 : Tot vprop
-= ST.exists_ (fun p -> ST.exists_ (fun w ->
+= exists_ (fun p -> exists_ (fun w ->
     HR.pts_to r p w `star`
-    ST.pure (R.freeable w.ref)
+    pure (R.freeable w.ref)
   ))
 
 let freeable
   r
 = freeable0 r
 
-let freeable_dup'
-  (#opened: _)
-  (#t: Type)
-  (#td: typedef t)
-  (r: ref td)
-: ST.STGhostT unit opened
-    (freeable r)
-    (fun _ -> freeable r `star` freeable r)
-= ST.rewrite (freeable r) (freeable0 r);
-  let _ = ST.gen_elim () in
-  HR.share r;
-  ST.noop ();
-  ST.rewrite (freeable0 r) (freeable r);
-  ST.noop ();
-  ST.rewrite (freeable0 r) (freeable r)
-
-module STC = Steel.ST.Coercions
-
 let freeable_dup
   r
-= let _ = freeable_dup' r in
-  noop ()
-
-let freeable_equiv'
-  (#opened: _)
-  (#t: Type)
-  (#td: typedef t)
-  (r1 r2: ref td)
-: ST.STGhostT unit opened
-    (ref_equiv r1 r2 `star` freeable r1)
-    (fun _ -> ref_equiv r1 r2 `star` freeable r2)
-= ST.rewrite (ref_equiv r1 r2) (ref_equiv0 r1 r2);
-  let _ = ST.gen_elim () in
-  let w = ST.vpattern_replace (fun w -> HR.pts_to r1 _ w `star` HR.pts_to r2 _ w) in
-  ST.rewrite (freeable r1) (freeable0 r1);
-  let _ = ST.gen_elim () in
-  hr_gather w r1;
-  HR.share r2;
-  ST.rewrite (freeable0 r2) (freeable r2);
-  ST.rewrite (ref_equiv0 r1 r2) (ref_equiv r1 r2)
+= rewrite (freeable r) (freeable0 r);
+  let _ = gen_elim () in
+  HR.share r;
+  noop ();
+  rewrite (freeable0 r) (freeable r);
+  noop ();
+  rewrite (freeable0 r) (freeable r)
 
 let freeable_equiv
   r1 r2
-= freeable_equiv' r1 r2
+= rewrite (ref_equiv r1 r2) (ref_equiv0 r1 r2);
+  let _ = gen_elim () in
+  let w = vpattern_replace (fun w -> HR.pts_to r1 _ w `star` HR.pts_to r2 _ w) in
+  rewrite (freeable r1) (freeable0 r1);
+  let _ = gen_elim () in
+  hr_gather w r1;
+  HR.share r2;
+  rewrite (freeable0 r2) (freeable r2);
+  rewrite (ref_equiv0 r1 r2) (ref_equiv r1 r2)
 
-let alloc'
-  (#t: Type)
-  (td: typedef t)
-: ST.STT (ptr td)
-    emp
-    (fun p -> pts_to_or_null p (uninitialized td) `star` freeable_or_null p)
-= let r = RST.ref_alloc td.pcm td.uninitialized in
+let alloc
+  td
+= let r = R.ref_alloc td.pcm td.uninitialized in
   let w = {
     base = _;
     ref = r;
   }
   in
-  ST.rewrite (R.pts_to _ _) (R.pts_to w.ref (uninitialized td));
+  rewrite (R.pts_to _ _) (R.pts_to w.ref (uninitialized td));
   let res = HR.alloc w in
   HR.share res;
   HR.pts_to_not_null res;
-  ST.weaken (pts_to0 res (uninitialized td)) (pts_to_or_null res (uninitialized td)) (fun _ -> ());
-  ST.weaken (freeable0 res) (freeable_or_null res) (fun _ -> ());
-  ST.return res
-
-let alloc
-  td
-= alloc' td
-
-let free'
-  (#t: Type)
-  (#td: typedef t)
-  (#v: Ghost.erased t)
-  (r: ref td)
-: ST.ST unit
-    (pts_to r v `star` freeable r)
-    (fun _ -> emp)
-    (
-      full td v
-    )
-    (fun _ -> True)
-= ST.weaken (pts_to r v) (pts_to0 r v) (fun _ -> ());
-  let _ = ST.gen_elim () in
-  let w = HR.read r in
-  ST.rewrite (R.pts_to _ _) (R.pts_to w.ref v);
-  ST.rewrite (freeable r) (freeable0 r);
-  let _ = ST.gen_elim () in
-  hr_gather w r;
-  RST.ref_free w.ref;
-  ST.drop (HR.pts_to _ _ _);
-  ST.return ()
+  rewrite (pts_to0 res (uninitialized td)) (pts_to_or_null res (uninitialized td));
+  rewrite (freeable0 res) (freeable_or_null res);
+  return res
 
 let free
-  r
-= free' r
-
-let mk_fraction_split_gen'
-  (#opened: _)
-  (#t: Type) (#td: typedef t) (r: ref td) (v: t { fractionable td v }) (p p1 p2: P.perm)
-: ST.STGhost unit opened
-  (pts_to r (mk_fraction td v p))
-  (fun _ -> pts_to r (mk_fraction td v p1) `star` pts_to r (mk_fraction td v p2))
-  (p == p1 `P.sum_perm` p2 /\ p `P.lesser_equal_perm` P.full_perm)
-  (fun _ -> True)
-= ST.weaken (pts_to _ _) (pts_to0 r (mk_fraction td v p)) (fun _ -> ());
-  let _ = ST.gen_elim () in
-  let w = ST.vpattern_replace (HR.pts_to r _) in
-  td.mk_fraction_split v p1 p2;
-  td.mk_fraction_join v p1 p2;
-  ST.rewrite
-    (R.pts_to _ _)
-    (R.pts_to w.ref (op td.pcm (td.mk_fraction v p1) (td.mk_fraction v p2)));
-  RST.split _ _ (td.mk_fraction v p1) (td.mk_fraction v p2);
-  HR.share r;
-  ST.weaken (pts_to0 r (td.mk_fraction v p1)) (pts_to r (mk_fraction td v p1)) (fun _ -> ());
-  ST.weaken (pts_to0 r (td.mk_fraction v p2)) (pts_to r (mk_fraction td v p2)) (fun _ -> ())
+  #_ #_ #v r
+= rewrite (pts_to r v) (pts_to0 r v);
+  let _ = gen_elim () in
+  let w = HR.read r in
+  rewrite (R.pts_to _ _) (R.pts_to w.ref v);
+  rewrite (freeable r) (freeable0 r);
+  let _ = gen_elim () in
+  hr_gather w r;
+  R.ref_free w.ref;
+  drop (HR.pts_to _ _ _);
+  return ()
 
 let mk_fraction_split_gen
-  r v p p1 p2
-= mk_fraction_split_gen' r v p p1 p2
-
-let mk_fraction_join'
-  (#opened: _)
-  (#t: Type) (#td: typedef t) (r: ref td) (v: t { fractionable td v }) (p1 p2: P.perm)
-: ST.STGhostT unit opened
-  (pts_to r (mk_fraction td v p1) `star` pts_to r (mk_fraction td v p2))
-  (fun _ -> pts_to r (mk_fraction td v (p1 `P.sum_perm` p2)))
-= ST.weaken (pts_to r (mk_fraction td v p1)) (pts_to0 r (mk_fraction td v p1)) (fun _ -> ());
-  let _ = ST.gen_elim () in
-  let w = ST.vpattern_replace (HR.pts_to r _) in
-  ST.rewrite (R.pts_to _ _) (R.pts_to w.ref (td.mk_fraction v p1));
-  ST.weaken (pts_to r (mk_fraction td v p2)) (pts_to0 r (mk_fraction td v p2)) (fun _ -> ());
-  let _ = ST.gen_elim () in
-  hr_gather w r;
-  ST.rewrite (R.pts_to _ (mk_fraction _ _ p2)) (R.pts_to w.ref (td.mk_fraction v p2));
-  let _ = RST.gather w.ref (td.mk_fraction v p1) _ in
+  #_ #_ #td r v p p1 p2
+= rewrite (pts_to _ _) (pts_to0 r (mk_fraction td v p));
+  let _ = gen_elim () in
+  let w = vpattern_replace (HR.pts_to r _) in
+  td.mk_fraction_split v p1 p2;
   td.mk_fraction_join v p1 p2;
-  ST.weaken (pts_to0 r _) (pts_to r _) (fun _ -> ())
+  rewrite
+    (R.pts_to _ _)
+    (R.pts_to w.ref (op td.pcm (td.mk_fraction v p1) (td.mk_fraction v p2)));
+  R.split _ _ (td.mk_fraction v p1) (td.mk_fraction v p2);
+  HR.share r;
+  rewrite (pts_to0 r (td.mk_fraction v p1)) (pts_to r (mk_fraction td v p1));
+  rewrite (pts_to0 r (td.mk_fraction v p2)) (pts_to r (mk_fraction td v p2))
 
 let mk_fraction_join
-  r v p1 p2
-= mk_fraction_join' r v p1 p2
+  #_ #_ #td r v p1 p2
+= rewrite (pts_to r (mk_fraction td v p1)) (pts_to0 r (mk_fraction td v p1));
+  let _ = gen_elim () in
+  let w = vpattern_replace (HR.pts_to r _) in
+  rewrite (R.pts_to _ _) (R.pts_to w.ref (td.mk_fraction v p1));
+  rewrite (pts_to r (mk_fraction td v p2)) (pts_to0 r (mk_fraction td v p2));
+  let _ = gen_elim () in
+  hr_gather w r;
+  rewrite (R.pts_to _ (mk_fraction _ _ p2)) (R.pts_to w.ref (td.mk_fraction v p2));
+  let _ = R.gather w.ref (td.mk_fraction v p1) _ in
+  td.mk_fraction_join v p1 p2;
+  rewrite (pts_to0 r _) (pts_to r _)
 
-module F = Steel.C.Model.Frac
+module F = Steel.ST.C.Model.Frac
 
 let scalar_t t = F.fractional (option t)
 
@@ -531,75 +456,48 @@ let mk_scalar_inj v1 v2 p1 p2 = ()
 
 #restart-solver
 
-let scalar_unique'
-  (#opened: _)
-  (#t: Type)
-  (v1 v2: t)
-  (p1 p2: P.perm)
-  (r: ref (scalar t))
-: ST.STGhost unit opened
-    (pts_to r (mk_fraction (scalar t) (mk_scalar v1) p1) `star` pts_to r (mk_fraction (scalar t) (mk_scalar v2) p2))
-    (fun _ -> pts_to r (mk_fraction (scalar t) (mk_scalar v1) p1) `star` pts_to r (mk_fraction (scalar t) (mk_scalar v2) p2))
-    True
-    (fun _ -> v1 == v2 /\ (p1 `P.sum_perm` p2) `P.lesser_equal_perm` P.full_perm)
-= ST.weaken (pts_to r (mk_fraction (scalar t) (mk_scalar v1) p1)) (pts_to0 r (Some (Some v1, p1))) (fun _ -> ());
-  let _ = ST.gen_elim () in
-  let w = ST.vpattern_replace (HR.pts_to r _) in
-  ST.rewrite (r_pts_to _ (Some (Some v1, p1))) (R.pts_to w.ref (Some (Some v1, p1)));
-  ST.weaken (pts_to r _) (pts_to0 r (Some (Some v2, p2))) (fun _ -> ());
-  let _ = ST.gen_elim () in
-  hr_gather w r;
-  ST.rewrite (r_pts_to _ (Some (Some v2, p2))) (R.pts_to w.ref (Some (Some v2, p2)));
-  let _ = RST.gather w.ref (Some (Some v1, p1)) (Some (Some v2, p2)) in
-  RST.split w.ref _ (Some (Some v1, p1)) (Some (Some v2, p2));
-  HR.share r;
-  ST.noop (); // FIXME: WHY WHY WHY?
-  ST.weaken (pts_to0 r (Some (Some v1, p1))) (pts_to r (mk_fraction (scalar _) (mk_scalar v1) p1)) (fun _ -> ());
-  ST.weaken (pts_to0 r (Some (Some v2, p2))) (pts_to r (mk_fraction (scalar _) (mk_scalar v2) p2)) (fun _ -> ())
-
 let scalar_unique
-  v1 v2 p1 p2 r0
-= scalar_unique' v1 v2 p1 p2 r0
+  #_ #t v1 v2 p1 p2 r
+= rewrite (pts_to r (mk_fraction (scalar t) (mk_scalar v1) p1)) (pts_to0 r (Some (Some v1, p1)));
+  let _ = gen_elim () in
+  let w = vpattern_replace (HR.pts_to r _) in
+  rewrite (r_pts_to _ (Some (Some v1, p1))) (R.pts_to w.ref (Some (Some v1, p1)));
+  rewrite (pts_to r _) (pts_to0 r (Some (Some v2, p2)));
+  let _ = gen_elim () in
+  hr_gather w r;
+  rewrite (r_pts_to _ (Some (Some v2, p2))) (R.pts_to w.ref (Some (Some v2, p2)));
+  let _ = R.gather w.ref (Some (Some v1, p1)) (Some (Some v2, p2)) in
+  R.split w.ref _ (Some (Some v1, p1)) (Some (Some v2, p2));
+  HR.share r;
+  noop (); // FIXME: WHY WHY WHY?
+  rewrite (pts_to0 r (Some (Some v1, p1))) (pts_to r (mk_fraction (scalar _) (mk_scalar v1) p1));
+  rewrite (pts_to0 r (Some (Some v2, p2))) (pts_to r (mk_fraction (scalar _) (mk_scalar v2) p2))
 
 #pop-options
 
-let read0' (#t: Type) (#v: Ghost.erased t) (#p: P.perm) (r: ref (scalar t)) : ST.ST t
-  (pts_to r (mk_fraction (scalar t) (mk_scalar (Ghost.reveal v)) p))
-  (fun _ -> pts_to r (mk_fraction (scalar t) (mk_scalar (Ghost.reveal v)) p))
-  (True)
-  (fun v' -> v' == Ghost.reveal v)
-= ST.weaken (pts_to r _) (pts_to0 r (Some (Some (Ghost.reveal v), p))) (fun _ -> ());
-  let _ = ST.gen_elim () in
-  let w = HR.read r in
-  ST.vpattern_rewrite (HR.pts_to r _) w;
-  ST.rewrite (r_pts_to _ _) (R.pts_to w.ref (Some (Some (Ghost.reveal v), p)));
-  let v' = RST.ref_read w.ref in
-  let Some (Some v0, _) = v' in
-  ST.rewrite (R.pts_to _ _) (r_pts_to w.ref (Some (Some (Ghost.reveal v), p)));
-  ST.weaken (pts_to0 r (Some (Some (Ghost.reveal v), p))) (pts_to r (mk_fraction (scalar t) (mk_scalar (Ghost.reveal v)) p)) (fun _ -> ());
-  ST.return v0
-
 let read0
-  r0
-= read0' r0
-
-let write' (#t: Type) (#v: Ghost.erased (scalar_t t)) (r: ref (scalar t)) (v': t) : ST.ST unit
-  (pts_to r v)
-  (fun _ -> pts_to r (mk_fraction (scalar t) (mk_scalar v') P.full_perm))
-  (full (scalar t) v)
-  (fun _ -> True)
-= ST.weaken (pts_to r _) (pts_to0 r (Ghost.reveal v)) (fun _ -> ());
-  let _ = ST.gen_elim () in
+  #t #v #p r
+= rewrite (pts_to r _) (pts_to0 r (Some (Some (Ghost.reveal v), p)));
+  let _ = gen_elim () in
   let w = HR.read r in
-  ST.vpattern_rewrite (HR.pts_to r _) w;
-  ST.rewrite (r_pts_to _ _) (R.pts_to w.ref (Ghost.reveal v));
-  RST.ref_upd w.ref _ _ (R.base_fpu _ _ (Some (Some v', P.full_perm)));
-  ST.rewrite (R.pts_to _ _) (r_pts_to w.ref (Some (Some (Ghost.reveal v'), P.full_perm)));
-  ST.weaken (pts_to0 r (Some (Some (Ghost.reveal v'), P.full_perm))) (pts_to r (mk_fraction (scalar t) (mk_scalar (Ghost.reveal v')) P.full_perm)) (fun _ -> ())
+  vpattern_rewrite (HR.pts_to r _) w;
+  rewrite (r_pts_to _ _) (R.pts_to w.ref (Some (Some (Ghost.reveal v), p)));
+  let v' = R.ref_read w.ref in
+  let Some (Some v0, _) = v' in
+  rewrite (R.pts_to _ _) (r_pts_to w.ref (Some (Some (Ghost.reveal v), p)));
+  rewrite (pts_to0 r (Some (Some (Ghost.reveal v), p))) (pts_to r (mk_fraction (scalar t) (mk_scalar (Ghost.reveal v)) p));
+  return v0
 
 let write
-  r0 v'
-= write' r0 v'
+  #t #v r v'
+= rewrite (pts_to r _) (pts_to0 r (Ghost.reveal v));
+  let _ = gen_elim () in
+  let w = HR.read r in
+  vpattern_rewrite (HR.pts_to r _) w;
+  rewrite (r_pts_to _ _) (R.pts_to w.ref (Ghost.reveal v));
+  R.ref_upd w.ref _ _ (R.base_fpu _ _ (Some (Some v', P.full_perm)));
+  rewrite (R.pts_to _ _) (r_pts_to w.ref (Some (Some (Ghost.reveal v'), P.full_perm)));
+  rewrite (pts_to0 r (Some (Some (Ghost.reveal v'), P.full_perm))) (pts_to r (mk_fraction (scalar t) (mk_scalar (Ghost.reveal v')) P.full_perm))
 
 let field_t_nil = unit
 let field_t_cons _ _ _ = unit
@@ -642,7 +540,7 @@ let fd_gen_of_nonempty_fd (#tf: Type0) (fd: nonempty_field_description_t tf) : T
   fd_typedef = (fun (s: field_t fd) -> fd.fd_typedef s);
 }
 
-module S = Steel.C.Model.Struct
+module S = Steel.ST.C.Model.Struct
 
 [@@noextract_to "krml"] // proof-only
 let struct_field_pcm
@@ -811,10 +709,10 @@ let has_struct_field0
   (field: field_t)
   (r': ref (fields.fd_typedef field))
 : Tot vprop
-= ST.exists_ (fun p -> ST.exists_ (fun w -> ST.exists_ (fun p' -> ST.exists_ (fun w' ->
+= exists_ (fun p -> exists_ (fun w -> exists_ (fun p' -> exists_ (fun w' ->
     HR.pts_to r p w `star`
     HR.pts_to r' p' w' `star`
-    ST.pure (has_struct_field_gen fields w field w')
+    pure (has_struct_field_gen fields w field w')
   ))))
 
 let has_struct_field1
@@ -837,18 +735,18 @@ let has_struct_field_dup'
   (r: ref (struct1 fields))
   (field: field_t)
   (r': ref (fields.fd_typedef field))
-: ST.STGhostT unit opened
+: STGhostT unit opened
     (has_struct_field1 r field r')
     (fun _ -> has_struct_field1 r field r' `star` has_struct_field1 r field r')
 =
-  ST.rewrite (has_struct_field1 r field r') (has_struct_field0 r field r');
-  let _ = ST.gen_elim () in
+  rewrite (has_struct_field1 r field r') (has_struct_field0 r field r');
+  let _ = gen_elim () in
   HR.share r;
   HR.share r';
-  ST.noop ();
-  ST.rewrite (has_struct_field0 r field r') (has_struct_field1 r field r');
-  ST.noop ();
-  ST.rewrite (has_struct_field0 r field r') (has_struct_field1 r field r')
+  noop ();
+  rewrite (has_struct_field0 r field r') (has_struct_field1 r field r');
+  noop ();
+  rewrite (has_struct_field0 r field r') (has_struct_field1 r field r')
 
 let has_struct_field_dup
   r field r'
@@ -861,24 +759,24 @@ let has_struct_field_inj'
   (r: ref (struct1 fields))
   (field: field_t)
   (r1 r2: ref (fields.fd_typedef field))
-: ST.STGhostT unit opened
+: STGhostT unit opened
     (has_struct_field1 r field r1 `star` has_struct_field1 r field r2)
     (fun _ -> has_struct_field1 r field r1 `star` has_struct_field1 r field r2 `star` ref_equiv r1 r2)
 =
-  ST.rewrite (has_struct_field1 r field r1) (has_struct_field0 r field r1);
-  let _ = ST.gen_elim () in
-  let w = ST.vpattern_replace (HR.pts_to r _) in
-  let w1 = ST.vpattern_replace (HR.pts_to r1 _) in
-  ST.rewrite (has_struct_field1 r field r2) (has_struct_field0 r field r2);
-  let _ = ST.gen_elim () in
+  rewrite (has_struct_field1 r field r1) (has_struct_field0 r field r1);
+  let _ = gen_elim () in
+  let w = vpattern_replace (HR.pts_to r _) in
+  let w1 = vpattern_replace (HR.pts_to r1 _) in
+  rewrite (has_struct_field1 r field r2) (has_struct_field0 r field r2);
+  let _ = gen_elim () in
   hr_gather w r;
-  ST.vpattern_rewrite (HR.pts_to r2 _) w1;
+  vpattern_rewrite (HR.pts_to r2 _) w1;
   hr_share r;
   hr_share r1;
-  ST.rewrite (has_struct_field0 r field r1) (has_struct_field1 r field r1);
+  rewrite (has_struct_field0 r field r1) (has_struct_field1 r field r1);
   hr_share r2;
-  ST.rewrite (has_struct_field0 r field r2) (has_struct_field1 r field r2);
-  ST.rewrite (ref_equiv0 r1 r2) (ref_equiv r1 r2)
+  rewrite (has_struct_field0 r field r2) (has_struct_field1 r field r2);
+  rewrite (ref_equiv0 r1 r2) (ref_equiv r1 r2)
 
 let has_struct_field_inj
   r field r1 r2
@@ -892,18 +790,18 @@ let has_struct_field_equiv_from'
   (field: field_t)
   (r': ref (fields.fd_typedef field))
   (r2: ref (struct1 fields))
-: ST.STGhostT unit opened
+: STGhostT unit opened
     (ref_equiv r1 r2 `star` has_struct_field1 r1 field r')
     (fun _ -> ref_equiv r1 r2 `star` has_struct_field1 r2 field r')
-= ST.rewrite (ref_equiv r1 r2) (ref_equiv0 r1 r2);
-  let _ = ST.gen_elim () in
-  let w = ST.vpattern_replace (fun w -> HR.pts_to r1 _ w `star` HR.pts_to r2 _ w) in
-  ST.rewrite (has_struct_field1 r1 field r') (has_struct_field0 r1 field r');
-  let _ = ST.gen_elim () in
+= rewrite (ref_equiv r1 r2) (ref_equiv0 r1 r2);
+  let _ = gen_elim () in
+  let w = vpattern_replace (fun w -> HR.pts_to r1 _ w `star` HR.pts_to r2 _ w) in
+  rewrite (has_struct_field1 r1 field r') (has_struct_field0 r1 field r');
+  let _ = gen_elim () in
   hr_gather w r1;
   hr_share r2;
-  ST.rewrite (has_struct_field0 r2 field r') (has_struct_field1 r2 field r');
-  ST.rewrite (ref_equiv0 r1 r2) (ref_equiv r1 r2)
+  rewrite (has_struct_field0 r2 field r') (has_struct_field1 r2 field r');
+  rewrite (ref_equiv0 r1 r2) (ref_equiv r1 r2)
 
 let has_struct_field_equiv_from
   r1 field r' r2
@@ -917,18 +815,18 @@ let has_struct_field_equiv_to'
   (field: field_t)
   (r1': ref (fields.fd_typedef field))
   (r2': ref (fields.fd_typedef field))
-: ST.STGhostT unit opened
+: STGhostT unit opened
     (ref_equiv r1' r2' `star` has_struct_field1 r field r1')
     (fun _ -> ref_equiv r1' r2' `star` has_struct_field1 r field r2')
-= ST.rewrite (ref_equiv r1' r2') (ref_equiv0 r1' r2');
-  let _ = ST.gen_elim () in
-  let w = ST.vpattern_replace (fun w -> HR.pts_to r1' _ w `star` HR.pts_to r2' _ w) in
-  ST.rewrite (has_struct_field1 r field r1') (has_struct_field0 r field r1');
-  let _ = ST.gen_elim () in
+= rewrite (ref_equiv r1' r2') (ref_equiv0 r1' r2');
+  let _ = gen_elim () in
+  let w = vpattern_replace (fun w -> HR.pts_to r1' _ w `star` HR.pts_to r2' _ w) in
+  rewrite (has_struct_field1 r field r1') (has_struct_field0 r field r1');
+  let _ = gen_elim () in
   hr_gather w r1';
   hr_share r2';
-  ST.rewrite (has_struct_field0 r field r2') (has_struct_field1 r field r2');
-  ST.rewrite (ref_equiv0 r1' r2') (ref_equiv r1' r2')
+  rewrite (has_struct_field0 r field r2') (has_struct_field1 r field r2');
+  rewrite (ref_equiv0 r1' r2') (ref_equiv r1' r2')
 
 let has_struct_field_equiv_to
   r field r1 r2
@@ -942,17 +840,17 @@ let ghost_struct_field_focus'
   (r: ref (struct1 fields))
   (field: field_t)
   (r': ref (fields.fd_typedef field))
-: ST.STGhostT unit opened
+: STGhostT unit opened
     (has_struct_field1 r field r' `star` pts_to r v)
     (fun _ -> has_struct_field1 r field r' `star` pts_to r (t_struct_set_field field (unknown (fields.fd_typedef field)) v) `star` pts_to r' (t_struct_get_field v field))
-= ST.rewrite (has_struct_field1 r field r') (has_struct_field0 r field r');
-  let _ = ST.gen_elim () in
-  let w = ST.vpattern_replace (HR.pts_to r _) in
-  let w' = ST.vpattern_replace (HR.pts_to r' _) in
-  ST.weaken (pts_to r v) (pts_to0 r v) (fun _ -> ());
-  let _ = ST.gen_elim () in
+= rewrite (has_struct_field1 r field r') (has_struct_field0 r field r');
+  let _ = gen_elim () in
+  let w = vpattern_replace (HR.pts_to r _) in
+  let w' = vpattern_replace (HR.pts_to r' _) in
+  rewrite (pts_to r v) (pts_to0 r v);
+  let _ = gen_elim () in
   hr_gather w r;
-  ST.rewrite (r_pts_to _ _) (R.pts_to w.ref (Ghost.reveal v));
+  rewrite (r_pts_to _ _) (R.pts_to w.ref (Ghost.reveal v));
   let prf
     (f': field_t)
     (x: (fields.fd_type f'))
@@ -968,14 +866,14 @@ let ghost_struct_field_focus'
   let vf = S.field_to_struct_f (struct_field_pcm _) field (t_struct_get_field v field) in
   assert (composable (struct_pcm _) v' vf);
   assert (op (struct_pcm _) v' vf `FX.feq` v);
-  RST.split w.ref _ v' vf;
-  RST.gfocus w.ref (S.struct_field (struct_field_pcm _) field) vf (t_struct_get_field v field);
+  R.split w.ref _ v' vf;
+  R.gfocus w.ref (S.struct_field (struct_field_pcm _) field) vf (t_struct_get_field v field);
   hr_share r;
   hr_share r';
-  ST.rewrite (has_struct_field0 r field r') (has_struct_field1 r field r');
-  ST.weaken (pts_to0 r v') (pts_to r (t_struct_set_field field (unknown (fields.fd_typedef field)) v)) (fun _ -> ());
-  ST.rewrite (R.pts_to _ _) (r_pts_to w'.ref (t_struct_get_field v field));
-  ST.weaken (pts_to0 r' (t_struct_get_field v field)) (pts_to r' (t_struct_get_field v field)) (fun _ -> ())
+  rewrite (has_struct_field0 r field r') (has_struct_field1 r field r');
+  rewrite (pts_to0 r v') (pts_to r (t_struct_set_field field (unknown (fields.fd_typedef field)) v));
+  rewrite (R.pts_to _ _) (r_pts_to w'.ref (t_struct_get_field v field));
+  rewrite (pts_to0 r' (t_struct_get_field v field)) (pts_to r' (t_struct_get_field v field))
   
 let ghost_struct_field_focus
   r field r'
@@ -991,13 +889,13 @@ let ghost_struct_field'
   (#v: Ghost.erased (struct_t1 fields))
   (r: ref (struct1 fields))
   (field: field_t)
-: ST.STGhostT (Ghost.erased (ref (fields.fd_typedef field))) opened
+: STGhostT (Ghost.erased (ref (fields.fd_typedef field))) opened
     (pts_to r v)
     (fun r' -> pts_to r (t_struct_set_field field (unknown (fields.fd_typedef field)) v) `star` pts_to r' (t_struct_get_field v field) `star` has_struct_field1 r field r')
-= ST.weaken (pts_to r v) (pts_to0 r v) (fun _ -> ());
-  let _ = ST.gen_elim () in
-  let w = ST.vpattern_replace (HR.pts_to r _) in
-  ST.rewrite (r_pts_to _ _) (r_pts_to w.ref (Ghost.reveal v));
+= rewrite (pts_to r v) (pts_to0 r v);
+  let _ = gen_elim () in
+  let w = vpattern_replace (HR.pts_to r _) in
+  rewrite (r_pts_to _ _) (r_pts_to w.ref (Ghost.reveal v));
   let w' = {
     base = w.base;
     ref = R.ref_focus w.ref (S.struct_field (struct_field_pcm (fields)) field);
@@ -1006,13 +904,13 @@ let ghost_struct_field'
   let gr' = GHR.alloc w' in
   let r1' = GHR.reveal_ref gr' in
   GHR.reveal_pts_to gr' P.full_perm w';
-  ST.rewrite_equiv (GHR.pts_to _ _ _) (HR.pts_to r1' P.full_perm w');
+  rewrite_equiv (GHR.pts_to _ _ _) (HR.pts_to r1' P.full_perm w');
   HR.pts_to_not_null r1';
   let r' = Ghost.hide r1' in
-  ST.rewrite (HR.pts_to r1' P.full_perm w') (HR.pts_to r' P.full_perm w');
+  rewrite (HR.pts_to r1' P.full_perm w') (HR.pts_to r' P.full_perm w');
   hr_share r;
-  ST.rewrite (has_struct_field0 r field r') (has_struct_field1 r field r');
-  ST.weaken (pts_to0 r (Ghost.reveal v)) (pts_to r v) (fun _ -> ());
+  rewrite (has_struct_field0 r field r') (has_struct_field1 r field r');
+  rewrite (pts_to0 r (Ghost.reveal v)) (pts_to r v);
   ghost_struct_field_focus' r field r';
   r'
 
@@ -1027,14 +925,14 @@ let struct_field'
   (#v: Ghost.erased (struct_t1 fields))
   (r: ref (struct1 fields))
   (field: field_t)
-: ST.STT (ref (fields.fd_typedef field))
+: STT (ref (fields.fd_typedef field))
     (pts_to r v)
     (fun r' -> pts_to r (t_struct_set_field field (unknown (fields.fd_typedef field)) v) `star` pts_to r' (t_struct_get_field v field) `star` has_struct_field1 r field r')
-= ST.weaken (pts_to r v) (pts_to0 r v) (fun _ -> ());
-  let _ = ST.gen_elim () in
+= rewrite (pts_to r v) (pts_to0 r v);
+  let _ = gen_elim () in
   let w = HR.read r in
-  ST.vpattern_rewrite (HR.pts_to r _) w;
-  ST.rewrite (r_pts_to _ _) (r_pts_to w.ref (Ghost.reveal v));
+  vpattern_rewrite (HR.pts_to r _) w;
+  rewrite (r_pts_to _ _) (r_pts_to w.ref (Ghost.reveal v));
   let w' = {
     base = w.base;
     ref = R.ref_focus w.ref (S.struct_field (struct_field_pcm (fields)) field);
@@ -1042,18 +940,18 @@ let struct_field'
   in
   let r' = HR.alloc w' in
   hr_share r;
-  ST.rewrite (has_struct_field0 r field r') (has_struct_field1 r field r');
-  ST.weaken (pts_to0 r (Ghost.reveal v)) (pts_to r v) (fun _ -> ());
+  rewrite (has_struct_field0 r field r') (has_struct_field1 r field r');
+  rewrite (pts_to0 r (Ghost.reveal v)) (pts_to r v);
   ghost_struct_field_focus' r field r';
-  ST.return r'
+  return r'
 
 let struct_field0
   t' #_ #_ #v r field td'
 = let r1' = struct_field' r field in
   let r' : ref td' = r1' in
-  ST.rewrite (pts_to r1' _) (pts_to r' (struct_get_field v field));
-  ST.rewrite (has_struct_field1 _ _ _) (has_struct_field r field r');
-  ST.return r'
+  rewrite (pts_to r1' _) (pts_to r' (struct_get_field v field));
+  rewrite (has_struct_field1 _ _ _) (has_struct_field r field r');
+  return r'
 
 let r_unfocus (#opened:_)
   (#ta #ta' #tb #tc: Type)
@@ -1061,7 +959,7 @@ let r_unfocus (#opened:_)
   (#q: pcm tc)
   (r: R.ref ta q) (r': R.ref ta' p)
   (l: Steel.C.Model.Connection.connection p q) (x: tc)
-: ST.STGhost (Ghost.erased tb) opened
+: STGhost (Ghost.erased tb) opened
     (r `R.pts_to` x)
     (fun x' -> r' `R.pts_to` x')
     (requires
@@ -1069,9 +967,9 @@ let r_unfocus (#opened:_)
       r == R.ref_focus r' l)
     (ensures fun x' -> Ghost.reveal x' == l.conn_small_to_large.morph x)
 = let r1 : R.ref ta' q = r in
-  ST.rewrite (r `R.pts_to` x) (r1 `R.pts_to` x);
-  RST.unfocus r1 r' l x;
-  let x' = ST.vpattern_replace_erased (R.pts_to r') in
+  rewrite (r `R.pts_to` x) (r1 `R.pts_to` x);
+  R.unfocus r1 r' l x;
+  let x' = vpattern_replace_erased (R.pts_to r') in
   x'
 
 let unstruct_field'
@@ -1083,25 +981,25 @@ let unstruct_field'
   (field: field_t)
   (#v': Ghost.erased (fields.fd_type field))
   (r': ref (fields.fd_typedef field))
-: ST.STGhost unit opened
+: STGhost unit opened
     (has_struct_field1 r field r' `star` pts_to r v `star` pts_to r' v')
     (fun _ -> has_struct_field1 r field r' `star` pts_to r (t_struct_set_field field v' v))
     (
       t_struct_get_field v field == unknown (fields.fd_typedef field)
     )
     (fun _ -> True)
-= ST.rewrite (has_struct_field1 r field r') (has_struct_field0 r field r');
-  let _ = ST.gen_elim () in
-  let w = ST.vpattern_replace (HR.pts_to r _) in
-  let w' = ST.vpattern_replace (HR.pts_to r' _) in
-  ST.weaken (pts_to r v) (pts_to0 r v) (fun _ -> ());
-  let _ = ST.gen_elim () in
+= rewrite (has_struct_field1 r field r') (has_struct_field0 r field r');
+  let _ = gen_elim () in
+  let w = vpattern_replace (HR.pts_to r _) in
+  let w' = vpattern_replace (HR.pts_to r' _) in
+  rewrite (pts_to r v) (pts_to0 r v);
+  let _ = gen_elim () in
   hr_gather w r;
-  ST.rewrite (r_pts_to _ (Ghost.reveal v)) (R.pts_to w.ref (Ghost.reveal v));
-  ST.weaken (pts_to r' v') (pts_to0 r' v') (fun _ -> ());
-  let _ = ST.gen_elim () in
+  rewrite (r_pts_to _ (Ghost.reveal v)) (R.pts_to w.ref (Ghost.reveal v));
+  rewrite (pts_to r' v') (pts_to0 r' v');
+  let _ = gen_elim () in
   hr_gather w' r';
-  ST.rewrite (r_pts_to _ (Ghost.reveal v')) (R.pts_to w'.ref (Ghost.reveal v'));
+  rewrite (r_pts_to _ (Ghost.reveal v')) (R.pts_to w'.ref (Ghost.reveal v'));
   let prf
     (f': field_t)
     (x: (fields.fd_type f'))
@@ -1117,10 +1015,10 @@ let unstruct_field'
   assert (composable (struct_pcm _) v vf);
   assert (op (struct_pcm _) v vf `FX.feq` t_struct_set_field field v' v);
   let _ = r_unfocus w'.ref w.ref (coerce_eq () (S.struct_field (struct_field_pcm fields) field)) _ in
-  let _ = RST.gather w.ref (Ghost.reveal v) _ in
+  let _ = R.gather w.ref (Ghost.reveal v) _ in
   hr_share r;
-  ST.rewrite (has_struct_field0 r field r') (has_struct_field1 r field r');
-  ST.weaken (pts_to0 r _) (pts_to r _) (fun _ -> ())
+  rewrite (has_struct_field0 r field r') (has_struct_field1 r field r');
+  rewrite (pts_to0 r _) (pts_to r _)
 
 let unstruct_field
   r field r'
@@ -1166,7 +1064,7 @@ let full_struct_gen
 
 let full_struct s = full_struct_gen s
 
-module U = Steel.C.Model.Union
+module U = Steel.ST.C.Model.Union
 
 let define_union0 _ _ _ = unit
 
@@ -1421,10 +1319,10 @@ let has_union_field0
   (field: field_t fields)
   (r': ref (fields.fd_typedef field))
 : Tot vprop
-= ST.exists_ (fun p -> ST.exists_ (fun w -> ST.exists_ (fun p' -> ST.exists_ (fun w' ->
+= exists_ (fun p -> exists_ (fun w -> exists_ (fun p' -> exists_ (fun w' ->
     HR.pts_to r p w `star`
     HR.pts_to r' p' w' `star`
-    ST.pure (has_union_field_gen w field w')
+    pure (has_union_field_gen w field w')
   ))))
 
 let has_union_field
@@ -1435,59 +1333,59 @@ let has_union_field
 
 let has_union_field_dup
   r field r'
-= ST.rewrite (has_union_field r field r') (has_union_field0 r field r');
-  let _ = ST.gen_elim () in
+= rewrite (has_union_field r field r') (has_union_field0 r field r');
+  let _ = gen_elim () in
   hr_share r;
   hr_share r';
-  ST.noop ();
-  ST.rewrite (has_union_field0 r field r') (has_union_field r field r');
-  ST.noop ();
-  ST.rewrite (has_union_field0 r field r') (has_union_field r field r')
+  noop ();
+  rewrite (has_union_field0 r field r') (has_union_field r field r');
+  noop ();
+  rewrite (has_union_field0 r field r') (has_union_field r field r')
 
 #push-options "--z3rlimit 16"
 
 let has_union_field_inj
   r field r1 r2
-= ST.rewrite (has_union_field r field r1) (has_union_field0 r field r1);
-  let _ = ST.gen_elim () in
-  let w = ST.vpattern_replace (HR.pts_to r _) in
-  ST.rewrite (has_union_field r field r2) (has_union_field0 r field r2);
-  let _ = ST.gen_elim () in
+= rewrite (has_union_field r field r1) (has_union_field0 r field r1);
+  let _ = gen_elim () in
+  let w = vpattern_replace (HR.pts_to r _) in
+  rewrite (has_union_field r field r2) (has_union_field0 r field r2);
+  let _ = gen_elim () in
   hr_gather w r;
   hr_share r;
   hr_share r1;
-  ST.rewrite (has_union_field0 r field r1) (has_union_field r field r1);
+  rewrite (has_union_field0 r field r1) (has_union_field r field r1);
   hr_share r2;
-  ST.rewrite (has_union_field0 r field r2) (has_union_field r field r2);
-  let w' = ST.vpattern_replace (HR.pts_to r1 _) in
-  ST.vpattern_rewrite (HR.pts_to r2 _) w';
-  ST.rewrite (ref_equiv0 r1 r2) (ref_equiv r1 r2)
+  rewrite (has_union_field0 r field r2) (has_union_field r field r2);
+  let w' = vpattern_replace (HR.pts_to r1 _) in
+  vpattern_rewrite (HR.pts_to r2 _) w';
+  rewrite (ref_equiv0 r1 r2) (ref_equiv r1 r2)
 
 #pop-options
 
 let has_union_field_equiv_from
   r1 r2 field r'
-= ST.rewrite (ref_equiv r1 r2) (ref_equiv0 r1 r2);
-  let _ = ST.gen_elim () in
-  let w = ST.vpattern_replace (fun w -> HR.pts_to r1 _ w `star` HR.pts_to r2 _ w) in
-  ST.rewrite (has_union_field r1 field r') (has_union_field0 r1 field r');
-  let _ = ST.gen_elim () in
+= rewrite (ref_equiv r1 r2) (ref_equiv0 r1 r2);
+  let _ = gen_elim () in
+  let w = vpattern_replace (fun w -> HR.pts_to r1 _ w `star` HR.pts_to r2 _ w) in
+  rewrite (has_union_field r1 field r') (has_union_field0 r1 field r');
+  let _ = gen_elim () in
   hr_gather w r1;
   hr_share r2;
-  ST.rewrite (has_union_field0 r2 field r') (has_union_field r2 field r');
-  ST.rewrite (ref_equiv0 r1 r2) (ref_equiv r1 r2)
+  rewrite (has_union_field0 r2 field r') (has_union_field r2 field r');
+  rewrite (ref_equiv0 r1 r2) (ref_equiv r1 r2)
 
 let has_union_field_equiv_to
   r field r1' r2'
-= ST.rewrite (ref_equiv r1' r2') (ref_equiv0 r1' r2');
-  let _ = ST.gen_elim () in
-  let w = ST.vpattern_replace (fun w -> HR.pts_to r1' _ w `star` HR.pts_to r2' _ w) in
-  ST.rewrite (has_union_field r field r1') (has_union_field0 r field r1');
-  let _ = ST.gen_elim () in
+= rewrite (ref_equiv r1' r2') (ref_equiv0 r1' r2');
+  let _ = gen_elim () in
+  let w = vpattern_replace (fun w -> HR.pts_to r1' _ w `star` HR.pts_to r2' _ w) in
+  rewrite (has_union_field r field r1') (has_union_field0 r field r1');
+  let _ = gen_elim () in
   hr_gather w r1';
   hr_share r2';
-  ST.rewrite (has_union_field0 r field r2') (has_union_field r field r2');
-  ST.rewrite (ref_equiv0 r1' r2') (ref_equiv r1' r2')
+  rewrite (has_union_field0 r field r2') (has_union_field r field r2');
+  rewrite (ref_equiv0 r1' r2') (ref_equiv r1' r2')
 
 #push-options "--z3rlimit 16"
 
@@ -1495,28 +1393,28 @@ let has_union_field_equiv_to
 
 let ghost_union_field_focus
   #_ #tn #_ #n #fields #v r field r'
-= ST.rewrite (has_union_field r field r') (has_union_field0 r field r');
-  let _ = ST.gen_elim () in
-  let w = ST.vpattern_replace (HR.pts_to r _) in
-  let w' = ST.vpattern_replace (HR.pts_to r' _) in
-  ST.weaken (pts_to r v) (pts_to0 r v) (fun _ -> ());
-  let _ = ST.gen_elim () in
+= rewrite (has_union_field r field r') (has_union_field0 r field r');
+  let _ = gen_elim () in
+  let w = vpattern_replace (HR.pts_to r _) in
+  let w' = vpattern_replace (HR.pts_to r' _) in
+  rewrite (pts_to r v) (pts_to0 r v);
+  let _ = gen_elim () in
   hr_gather w r;
-  ST.rewrite (r_pts_to _ _) (R.pts_to w.ref (Ghost.reveal v));
+  rewrite (r_pts_to _ _) (R.pts_to w.ref (Ghost.reveal v));
   let v' = U.field_to_union_f (union_field_pcm fields) (Some field) (union_get_field v field) in
   assert (v' `FX.feq` v);
-  RST.gfocus w.ref (U.union_field (union_field_pcm fields) (Some field)) v (union_get_field v field);
-  ST.rewrite (R.pts_to _ _) (R.pts_to w'.ref (union_get_field v field));
+  R.gfocus w.ref (U.union_field (union_field_pcm fields) (Some field)) v (union_get_field v field);
+  rewrite (R.pts_to _ _) (R.pts_to w'.ref (union_get_field v field));
   hr_share r';
-  ST.weaken (pts_to0 r' _) (pts_to r' _) (fun _ -> ());
-  ST.rewrite (has_union_field0 r field r') (has_union_field r field r')
+  rewrite (pts_to0 r' _) (pts_to r' _);
+  rewrite (has_union_field0 r field r') (has_union_field r field r')
 
 let ghost_union_field
   #_ #tn #_ #n #fields #v r field
-= ST.weaken (pts_to r v) (pts_to0 r v) (fun _ -> ());
-  let _ = ST.gen_elim () in
-  let w = ST.vpattern_replace (HR.pts_to r _) in
-  ST.rewrite (r_pts_to _ _) (r_pts_to w.ref (Ghost.reveal v));
+= rewrite (pts_to r v) (pts_to0 r v);
+  let _ = gen_elim () in
+  let w = vpattern_replace (HR.pts_to r _) in
+  rewrite (r_pts_to _ _) (r_pts_to w.ref (Ghost.reveal v));
   let w' = {
     base = w.base;
     ref = R.ref_focus w.ref (U.union_field (union_field_pcm (fields)) (Some field));
@@ -1525,13 +1423,13 @@ let ghost_union_field
   let gr' = GHR.alloc w' in
   let r1' = GHR.reveal_ref gr' in
   GHR.reveal_pts_to gr' P.full_perm w';
-  ST.rewrite_equiv (GHR.pts_to _ _ _) (HR.pts_to r1' P.full_perm w');
+  rewrite_equiv (GHR.pts_to _ _ _) (HR.pts_to r1' P.full_perm w');
   HR.pts_to_not_null r1';
   let r' = Ghost.hide r1' in
-  ST.rewrite (HR.pts_to r1' P.full_perm w') (HR.pts_to r' P.full_perm w');
+  rewrite (HR.pts_to r1' P.full_perm w') (HR.pts_to r' P.full_perm w');
   hr_share r;
-  ST.rewrite (has_union_field0 r field r') (has_union_field r field r');
-  ST.weaken (pts_to0 r (Ghost.reveal v)) (pts_to r v) (fun _ -> ());
+  rewrite (has_union_field0 r field r') (has_union_field r field r');
+  rewrite (pts_to0 r (Ghost.reveal v)) (pts_to r v);
   ghost_union_field_focus r field r';
   r'
 
@@ -1544,14 +1442,14 @@ let union_field'
   (#v: Ghost.erased (union_t0 tn n fields))
   (r: ref (union0 tn n fields))
   (field: field_t fields {union_get_case v == Some field})
-: SteelT (ref (fields.fd_typedef field))
+: STT (ref (fields.fd_typedef field))
     (pts_to r v)
     (fun r' -> has_union_field r field r' `star` pts_to r' (union_get_field v field))
-= ST.weaken (pts_to r v) (pts_to0 r v) (fun _ -> ());
-  let _ = ST.gen_elim () in
+= rewrite (pts_to r v) (pts_to0 r v);
+  let _ = gen_elim () in
   let w = HR.read r in
-  ST.vpattern_rewrite (HR.pts_to r _) w;
-  ST.rewrite (r_pts_to _ _) (r_pts_to w.ref (Ghost.reveal v));
+  vpattern_rewrite (HR.pts_to r _) w;
+  rewrite (r_pts_to _ _) (r_pts_to w.ref (Ghost.reveal v));
   let w' = {
     base = w.base;
     ref = R.ref_focus w.ref (U.union_field (union_field_pcm (fields)) (Some field));
@@ -1559,18 +1457,18 @@ let union_field'
   in
   let r' = HR.alloc w' in
   hr_share r;
-  ST.rewrite (has_union_field0 r field r') (has_union_field r field r');
-  ST.weaken (pts_to0 r (Ghost.reveal v)) (pts_to r v) (fun _ -> ());
+  rewrite (has_union_field0 r field r') (has_union_field r field r');
+  rewrite (pts_to0 r (Ghost.reveal v)) (pts_to r v);
   ghost_union_field_focus r field r';
-  ST.return r'
+  return r'
 
 let union_field0
   t' r field td'
 =
   let r' = union_field' r field in
   let res : ref td' = r' in
-  change_equal_slprop (pts_to r' _) (pts_to res _);
-  ST.rewrite (has_union_field r field _) (has_union_field r field res);
+  rewrite (pts_to r' _) (pts_to res _);
+  rewrite (has_union_field r field _) (has_union_field r field res);
   return res
 
 #pop-options
@@ -1582,19 +1480,19 @@ let union_field0
 
 let ununion_field
   #_ #tn #_ #n #fields r field #v' r'
-= ST.rewrite (has_union_field r field r') (has_union_field0 r field r');
-  let _ = ST.gen_elim () in
-  let w = ST.vpattern_replace (HR.pts_to r _) in
-  let w' = ST.vpattern_replace (HR.pts_to r' _) in
-  ST.weaken (pts_to r' v') (pts_to0 r' v') (fun _ -> ());
-  let _= ST.gen_elim () in
+= rewrite (has_union_field r field r') (has_union_field0 r field r');
+  let _ = gen_elim () in
+  let w = vpattern_replace (HR.pts_to r _) in
+  let w' = vpattern_replace (HR.pts_to r' _) in
+  rewrite (pts_to r' v') (pts_to0 r' v');
+  let _= gen_elim () in
   hr_gather w' r';
-  ST.rewrite (r_pts_to _ _) (R.pts_to w'.ref (Ghost.reveal v'));
+  rewrite (r_pts_to _ _) (R.pts_to w'.ref (Ghost.reveal v'));
   let _ = r_unfocus w'.ref w.ref (coerce_eq () (U.union_field (union_field_pcm fields) (Some field))) _ in
   hr_share r;
-  ST.rewrite (has_union_field0 r field r') (has_union_field r field r');
-  ST.rewrite (R.pts_to _ _) (R.pts_to w.ref (union_set_field tn n fields field (Ghost.reveal v')));
-  ST.weaken (pts_to0 r (union_set_field tn n fields field (Ghost.reveal v'))) (pts_to r (union_set_field tn n fields field (Ghost.reveal v'))) (fun _ -> ())
+  rewrite (has_union_field0 r field r') (has_union_field r field r');
+  rewrite (R.pts_to _ _) (R.pts_to w.ref (union_set_field tn n fields field (Ghost.reveal v')));
+  rewrite (pts_to0 r (union_set_field tn n fields field (Ghost.reveal v'))) (pts_to r (union_set_field tn n fields field (Ghost.reveal v')))
 
 [@@noextract_to "krml"] // primitive
 let union_switch_field'
@@ -1605,40 +1503,24 @@ let union_switch_field'
   (#v: Ghost.erased (union_t0 tn n fields))
   (r: ref (union0 tn n fields))
   (field: field_t fields)
-: Steel (ref (fields.fd_typedef field))
-    (pts_to r v)
-    (fun r' -> has_union_field r field r' `star` pts_to r' (uninitialized (fields.fd_typedef field)))
-    (fun _ -> full (union0 tn n fields) v)
-    (fun _ r' _ -> True)
-= ST.weaken (pts_to r v) (pts_to0 r v) (fun _ -> ());
-  let _ = ST.gen_elim () in
-  let w = HR.read r in
-  ST.vpattern_rewrite (HR.pts_to r _) w;
-  ST.rewrite (r_pts_to _ _) (R.pts_to w.ref (Ghost.reveal v));
-  let v' : union_t0 tn n fields = U.field_to_union_f (union_field_pcm fields) (Some field) (fields.fd_typedef field).uninitialized in
-  RST.ref_upd w.ref _ _ (R.base_fpu (union_pcm tn n fields) _ v');
-  ST.weaken (pts_to0 r v') (pts_to r v') (fun _ -> ());
-  let r' = union_field' r field in
-  ST.rewrite (pts_to r' _) (pts_to r' (uninitialized (fields.fd_typedef field)));
-  ST.return r'
-
-#pop-options
-
-[@@noextract_to "krml"] // primitive
-let union_switch_field1'
-  (#tn: Type0)
-  (#tf: Type0)
-  (#n: string)
-  (#fields: field_description_t tf)
-  (#v: Ghost.erased (union_t0 tn n fields))
-  (r: ref (union0 tn n fields))
-  (field: field_t fields)
-: ST.ST (ref (fields.fd_typedef field))
+: ST (ref (fields.fd_typedef field))
     (pts_to r v)
     (fun r' -> has_union_field r field r' `star` pts_to r' (uninitialized (fields.fd_typedef field)))
     (full (union0 tn n fields) v)
     (fun _ -> True)
-= STC.coerce_steel (fun _ -> union_switch_field' r field)
+= rewrite (pts_to r v) (pts_to0 r v);
+  let _ = gen_elim () in
+  let w = HR.read r in
+  vpattern_rewrite (HR.pts_to r _) w;
+  rewrite (r_pts_to _ _) (R.pts_to w.ref (Ghost.reveal v));
+  let v' : union_t0 tn n fields = U.field_to_union_f (union_field_pcm fields) (Some field) (fields.fd_typedef field).uninitialized in
+  R.ref_upd w.ref _ _ (R.base_fpu (union_pcm tn n fields) _ v');
+  rewrite (pts_to0 r v') (pts_to r v');
+  let r' = union_field' r field in
+  rewrite (pts_to r' _) (pts_to r' (uninitialized (fields.fd_typedef field)));
+  return r'
+
+#pop-options
 
 [@@noextract_to "krml"] // primitive
 let union_switch_field0'
@@ -1655,16 +1537,16 @@ let union_switch_field0'
     t' ==  fields.fd_type field /\
     td' == fields.fd_typedef field
   ))
-: ST.ST (ref td') // need to write the pcm carrier value, so this cannot be Ghost or Atomic
+: ST (ref td') // need to write the pcm carrier value, so this cannot be Ghost or Atomic
     (pts_to r v)
     (fun r' -> has_union_field r field (coerce_eq () r') `star` pts_to r' (Ghost.hide (coerce_eq () (uninitialized (fields.fd_typedef field)))))
     (full (union0 tn n fields) v)
     (fun _ -> True)
-= let r' = union_switch_field1' #tn #tf #n #fields #v r field in
+= let r' = union_switch_field' #tn #tf #n #fields #v r field in
   let res : ref td' = r' in
-  ST.rewrite (pts_to r' _) (pts_to res (Ghost.hide (coerce_eq () (uninitialized (fields.fd_typedef field)))));
-  ST.rewrite (has_union_field r field _) (has_union_field r field (coerce_eq () res));
-  ST.return res
+  rewrite (pts_to r' _) (pts_to res (Ghost.hide (coerce_eq () (uninitialized (fields.fd_typedef field)))));
+  rewrite (has_union_field r field _) (has_union_field r field (coerce_eq () res));
+  return res
 
 let union_switch_field0
   t' r field td'
@@ -1675,7 +1557,7 @@ let union_switch_field0
 
 /// Base arrays (without decay: explicit array types as top-level arrays or struct/union fields of array type)
 
-module A = Steel.C.Model.Array
+module A = Steel.ST.C.Model.Array
 
 let base_array_t'
   (t: Type0)
@@ -1783,9 +1665,9 @@ let has_base_array_cell0
   (i: SZ.t)
   (r': ref td)
 : Tot vprop
-= ST.exists_ (fun j ->
+= exists_ (fun j ->
     has_base_array_cell_as_struct_field r i j r' `star`
-    ST.pure (i == j)
+    pure (i == j)
   )
 
 let has_base_array_cell1
@@ -1804,9 +1686,9 @@ let has_base_array_cell
 
 let has_base_array_cell_post
   r i r'
-= ST.rewrite (has_base_array_cell r i r') (has_base_array_cell0 r i r');
-  let _ = ST.gen_elim () in
-  ST.rewrite (has_base_array_cell0 r i r') (has_base_array_cell r i r')
+= rewrite (has_base_array_cell r i r') (has_base_array_cell0 r i r');
+  let _ = gen_elim () in
+  rewrite (has_base_array_cell0 r i r') (has_base_array_cell r i r')
 
 let has_base_array_cell_dup'
   (#opened: _)
@@ -1816,15 +1698,15 @@ let has_base_array_cell_dup'
   (r: ref (base_array1 td n))
   (i: SZ.t)
   (r': ref td)
-: ST.STGhostT unit opened
+: STGhostT unit opened
     (has_base_array_cell1 r i r')
     (fun _ -> has_base_array_cell1 r i r' `star` has_base_array_cell1 r i r')
-= ST.rewrite (has_base_array_cell1 r i r') (has_base_array_cell0 r i r');
-  let _ = ST.gen_elim () in
+= rewrite (has_base_array_cell1 r i r') (has_base_array_cell0 r i r');
+  let _ = gen_elim () in
   has_struct_field_dup'  #_ #(base_array_index_t' n) #(base_array_fd td n) (r) _ _;
-  ST.rewrite (has_base_array_cell0 r i r') (has_base_array_cell1 r i r');
-  ST.noop ();
-  ST.rewrite (has_base_array_cell0 r i r') (has_base_array_cell1 r i r')
+  rewrite (has_base_array_cell0 r i r') (has_base_array_cell1 r i r');
+  noop ();
+  rewrite (has_base_array_cell0 r i r') (has_base_array_cell1 r i r')
 
 let has_base_array_cell_dup
   r i r'
@@ -1838,18 +1720,18 @@ let has_base_array_cell_inj'
   (r: ref (base_array1 td n))
   (i: SZ.t)
   (r1 r2: ref td)
-: ST.STGhostT unit opened
+: STGhostT unit opened
     (has_base_array_cell1 r i r1 `star` has_base_array_cell1 r i r2)
     (fun _ -> has_base_array_cell1 r i r1 `star` has_base_array_cell1 r i r2 `star` ref_equiv r1 r2)
-= ST.rewrite (has_base_array_cell1 r i r1) (has_base_array_cell0 r i r1);
-  let _ = ST.gen_elim () in
-  let j = ST.vpattern_replace (fun j -> has_base_array_cell_as_struct_field r i j _) in
-  ST.rewrite (has_base_array_cell1 r i r2) (has_base_array_cell0 r i r2);
-  let _ = ST.gen_elim () in
-  ST.vpattern_rewrite (fun j' -> has_base_array_cell_as_struct_field r i j _ `star` has_base_array_cell_as_struct_field r i j' _) j;
+= rewrite (has_base_array_cell1 r i r1) (has_base_array_cell0 r i r1);
+  let _ = gen_elim () in
+  let j = vpattern_replace (fun j -> has_base_array_cell_as_struct_field r i j _) in
+  rewrite (has_base_array_cell1 r i r2) (has_base_array_cell0 r i r2);
+  let _ = gen_elim () in
+  vpattern_rewrite (fun j' -> has_base_array_cell_as_struct_field r i j _ `star` has_base_array_cell_as_struct_field r i j' _) j;
   has_struct_field_inj' #_ #(base_array_index_t' n) #(base_array_fd td n) (r) _ r1 r2;
-  ST.rewrite (has_base_array_cell0 r i r2) (has_base_array_cell1 r i r2);
-  ST.rewrite (has_base_array_cell0 r i r1) (has_base_array_cell1 r i r1)
+  rewrite (has_base_array_cell0 r i r2) (has_base_array_cell1 r i r2);
+  rewrite (has_base_array_cell0 r i r1) (has_base_array_cell1 r i r1)
 
 let has_base_array_cell_inj
   r i r1 r2
@@ -1863,13 +1745,13 @@ let has_base_array_cell_equiv_from'
   (r1 r2: ref (base_array1 td n))
   (i: SZ.t)
   (r': ref td)
-: ST.STGhostT unit opened
+: STGhostT unit opened
     (has_base_array_cell1 r1 i r' `star` ref_equiv r1 r2)
     (fun _ -> has_base_array_cell1 r2 i r' `star` ref_equiv r1 r2)
-= ST.rewrite (has_base_array_cell1 r1 i r') (has_base_array_cell0 r1 i r');
-  let _ = ST.gen_elim () in
+= rewrite (has_base_array_cell1 r1 i r') (has_base_array_cell0 r1 i r');
+  let _ = gen_elim () in
   has_struct_field_equiv_from'  #_ #(base_array_index_t' n) #(base_array_fd td n) (r1) _ r' (r2);
-  ST.rewrite (has_base_array_cell0 r2 i r') (has_base_array_cell1 r2 i r')
+  rewrite (has_base_array_cell0 r2 i r') (has_base_array_cell1 r2 i r')
 
 let has_base_array_cell_equiv_from
   r1 r2 i r'
@@ -1883,13 +1765,13 @@ let has_base_array_cell_equiv_to'
   (r: ref (base_array1 td n))
   (i: SZ.t)
   (r1 r2: ref td)
-: ST.STGhostT unit opened
+: STGhostT unit opened
     (has_base_array_cell1 r i r1 `star` ref_equiv r1 r2)
     (fun _ -> has_base_array_cell1 r i r2 `star` ref_equiv r1 r2)
-= ST.rewrite (has_base_array_cell1 r i r1) (has_base_array_cell0 r i r1);
-  let _ = ST.gen_elim () in
+= rewrite (has_base_array_cell1 r i r1) (has_base_array_cell0 r i r1);
+  let _ = gen_elim () in
   has_struct_field_equiv_to' r _ r1 r2;
-  ST.rewrite (has_base_array_cell0 r i r2) (has_base_array_cell1 r i r2)
+  rewrite (has_base_array_cell0 r i r2) (has_base_array_cell1 r i r2)
 
 let has_base_array_cell_equiv_to
   r i r1 r2
@@ -1948,37 +1830,37 @@ let array_pts_to0
   (r: array td)
   (v: Ghost.erased (Seq.seq t))
 : Tot vprop
-= ST.exists_ (fun br -> ST.exists_ (fun p ->
+= exists_ (fun br -> exists_ (fun p ->
     HR.pts_to (dfst r).ar_base p br `star`
     A.pts_to (model_array_of_array r br) v
   ))
 
-let array_pts_to' r v =
+let array_pts_to r v =
   array_pts_to0 r v
 
 let array_pts_to_length r v =
-  ST.weaken (array_pts_to r v) (array_pts_to0 r v) (fun _ -> ());
-  let _ = ST.gen_elim () in
+  rewrite (array_pts_to r v) (array_pts_to0 r v);
+  let _ = gen_elim () in
   let _ = A.pts_to_length _ _ in
-  ST.weaken (array_pts_to0 r v) (array_pts_to r v) (fun _ -> ())
+  rewrite (array_pts_to0 r v) (array_pts_to r v)
 
 #push-options "--z3rlimit 16"
 #restart-solver
 
 let ghost_array_of_base_focus
   #_ #_ #_ #_ #td #v r a
-= ST.weaken (pts_to r v) (pts_to0 r v) (fun _ -> ());
-  let _ = ST.gen_elim () in
-  let w = ST.vpattern_replace (HR.pts_to r _) in
+= rewrite (pts_to r v) (pts_to0 r v);
+  let _ = gen_elim () in
+  let w = vpattern_replace (HR.pts_to r _) in
   let w' : ref0_v (base_array1 td (dfst a).ar_base_size) = coerce_eq () w in
   assert ((model_array_of_array a w').base == w.ref);
-  ST.rewrite (r_pts_to _ _) (R.pts_to (model_array_of_array a w').base v);
+  rewrite (r_pts_to _ _) (R.pts_to (model_array_of_array a w').base v);
   assert (seq_of_base_array v `Seq.equal` A.seq_of_array_pcm_carrier v);
   A.array_pcm_carrier_of_seq_of_array_pcm_carrier v;
   A.pts_to_intro_from_base (model_array_of_array a w')  v (seq_of_base_array v);
-  let p = ST.vpattern_replace (fun p -> HR.pts_to _ p _) in
-  ST.rewrite (HR.pts_to _ _ _) (HR.pts_to (dfst a).ar_base p w');
-  ST.weaken (array_pts_to0 a (seq_of_base_array v)) (array_pts_to a (seq_of_base_array v)) (fun _ -> ())
+  let p = vpattern_replace (fun p -> HR.pts_to _ p _) in
+  rewrite (HR.pts_to _ _ _) (HR.pts_to (dfst a).ar_base p w');
+  rewrite (array_pts_to0 a (seq_of_base_array v)) (array_pts_to a (seq_of_base_array v))
 
 #pop-options
 
@@ -2005,11 +1887,11 @@ let array_of_base0
   (#td: typedef t)
   (#v: Ghost.erased (base_array_t t tn n))
   (r: ref (base_array0 tn td n))
-: SteelAtomicBase (a: array td { has_array_of_base r a }) false opened Unobservable
+: STAtomicBase (a: array td { has_array_of_base r a }) false opened Unobservable
     (pts_to r v)
     (fun a -> array_pts_to a (seq_of_base_array v))
+    (True)
     (fun _ -> True)
-    (fun _ _ _ -> True)
 =
   let al : array_ref td = {
     ar_base_size = n;
@@ -2020,21 +1902,13 @@ let array_of_base0
   in
   let a : (a: array td { has_array_of_base r a }) = (| al, Ghost.hide (Ghost.reveal n) |) in
   ghost_array_of_base_focus r a;
-  ST.return a
+  return a
 
 let array_ref_of_base
   #_ #tn #_ #n #td #v r
-= let ar : array td = array_of_base0 r in
+=
+  let ar = array_of_base0 r in
   let a : array_ref td = dfst ar in
-  intro_pure _;
-  intro_exists ar (fun (ar: array td) ->
-      array_pts_to ar (seq_of_base_array v) `star` pure (
-        dfst ar == a /\
-        array_ref_base_size a == Ghost.reveal n /\
-        array_ref_offset a == 0sz /\
-        has_array_of_base r ar /\
-        Ghost.reveal (dsnd ar) == Ghost.reveal n
-    ));
   return a
 
 #push-options "--z3rlimit 16 --split_queries"
@@ -2065,27 +1939,9 @@ let has_array_of_base'
     array_ref_offset al == 0sz /\
     Ghost.reveal len == n
 
-let a_pts_to_elim_to_base
-  (#opened: _)
-  (#base_t: Type)
-  (#t: Type)
-  (#p: pcm t)
-  (r: A.array base_t p)
-  (x: Seq.seq t)
-: SteelGhost (Ghost.erased (A.array_pcm_carrier t r.base_len)) opened
-    (A.pts_to r x)
-    (fun y -> r_pts_to r.base y)
-    (fun _ -> True)
-    (fun _ y _ ->
-      Seq.length x == A.size_v r.len /\
-      Ghost.reveal y == (A.ref_of_array_conn r).conn_small_to_large.morph (A.array_pcm_carrier_of_seq r.len x) /\
-      Ghost.reveal y == S.substruct_to_struct_f (A.array_elements_pcm p r.base_len) (A.array_elements_pcm p r.len) (A.small_to_large_index r.base_len r.offset r.len ()) (A.large_to_small_index r.base_len r.offset r.len ()) () (A.array_pcm_carrier_of_seq r.len x)
-    )
-= A.pts_to_elim_to_base r x
-
 #pop-options
 
-#push-options "--z3rlimit 32"
+#push-options "--z3rlimit 64"
 #restart-solver
 
 let unarray_of_base0
@@ -2096,25 +1952,25 @@ let unarray_of_base0
   (#v: Ghost.erased (Seq.seq t))
   (r: ref (base_array1 td n))
   (a: array td)
-: SteelGhost (Ghost.erased (base_array_t' t n)) opened
+: STGhost (Ghost.erased (base_array_t' t n)) opened
     (array_pts_to a v)
     (fun v' -> pts_to r v')
-    (fun _ ->
+    (
       has_array_of_base' r a
     )
-    (fun _ v' _ -> Ghost.reveal v `Seq.equal` seq_of_base_array0 v')
-= ST.weaken (array_pts_to a v) (array_pts_to0 a v) (fun _ -> ());
-  let _ = ST.gen_elim () in
-  let p = ST.vpattern_replace (fun p -> HR.pts_to _ p _) in
-  let ba = ST.vpattern_replace (HR.pts_to _ _) in
+    (fun v' -> Ghost.reveal v `Seq.equal` seq_of_base_array0 v')
+= rewrite (array_pts_to a v) (array_pts_to0 a v);
+  let _ = gen_elim () in
+  let p = vpattern_replace (fun p -> HR.pts_to _ p _) in
+  let ba = vpattern_replace (HR.pts_to _ _) in
   let ba' : ref0_v (base_array1 td n) = coerce_eq () ba in
-  ST.rewrite (HR.pts_to _ _ _) (HR.pts_to r p ba');
+  rewrite (HR.pts_to _ _ _) (HR.pts_to r p ba');
   let m = model_array_of_array a ba in
-  ST.rewrite (A.pts_to _ _) (A.pts_to m v);
-  let y : Ghost.erased (A.array_pcm_carrier t m.base_len) = a_pts_to_elim_to_base m v in
+  rewrite (A.pts_to _ _) (A.pts_to m v);
+  let y : Ghost.erased (A.array_pcm_carrier t m.base_len) = A.pts_to_elim_to_base m v in
   let y' : Ghost.erased (base_array_t' t n) = Ghost.hide (Ghost.reveal y) in
-  change_equal_slprop (r_pts_to _ _) (r_pts_to ba'.ref (Ghost.reveal y'));
-  ST.weaken (pts_to0 r y') (pts_to r y') (fun _ -> ());
+  rewrite (r_pts_to _ _) (r_pts_to ba'.ref (Ghost.reveal y'));
+  rewrite (pts_to0 r y') (pts_to r y');
   y'
 
 #pop-options
@@ -2201,9 +2057,9 @@ let has_array_cell0
   (i: SZ.t)
   (r: ref td)
 : Tot vprop
-= ST.exists_ (fun (j: SZ.t) ->
+= exists_ (fun (j: SZ.t) ->
     has_base_array_cell1 (dfst a).ar_base (array_index_as_base_array_index_marker i j) r `star`
-    ST.pure (
+    pure (
       SZ.v j == SZ.v ((dfst a).ar_offset) + SZ.v i /\
       SZ.v i < SZ.v (dsnd a)
     )
@@ -2224,23 +2080,23 @@ let has_array_cell
 
 let has_array_cell_post
   a i r
-= ST.rewrite (has_array_cell a i r) (has_array_cell0 a i r);
-  let _ = ST.gen_elim () in
-  ST.rewrite (has_array_cell0 a i r) (has_array_cell a i r)
+= rewrite (has_array_cell a i r) (has_array_cell0 a i r);
+  let _ = gen_elim () in
+  rewrite (has_array_cell0 a i r) (has_array_cell a i r)
 
 let has_array_cell_has_base_array_cell
   a i r br
-= ST.rewrite (has_array_cell a i r) (has_array_cell0 a i r);
-  let _ = ST.gen_elim () in
-  let j = ST.vpattern_replace_erased (fun j -> has_base_array_cell1 _ j r) in
-  ST.rewrite (has_base_array_cell1 _ _ _) (has_base_array_cell br j r);
+= rewrite (has_array_cell a i r) (has_array_cell0 a i r);
+  let _ = gen_elim () in
+  let j = vpattern_replace_erased (fun j -> has_base_array_cell1 _ j r) in
+  rewrite (has_base_array_cell1 _ _ _) (has_base_array_cell br j r);
   j
 
 let has_base_array_cell_has_array_cell
   a i r br
 = let j : Ghost.erased SZ.t = Ghost.hide (i `SZ.sub` (dfst a).ar_offset) in
-  ST.rewrite (has_base_array_cell br i r) (has_base_array_cell1 (dfst a).ar_base (array_index_as_base_array_index_marker j i) r);
-  ST.rewrite (has_array_cell0 a j r) (has_array_cell a j r);
+  rewrite (has_base_array_cell br i r) (has_base_array_cell1 (dfst a).ar_base (array_index_as_base_array_index_marker j i) r);
+  rewrite (has_array_cell0 a j r) (has_array_cell a j r);
   j
 
 let has_array_cell_inj
@@ -2249,12 +2105,12 @@ let has_array_cell_inj
   let br : ref (base_array0 unit (* dummy *) td (array_ref_base_size (dfst a))) = (dfst a).ar_base in
   let j1 = has_array_cell_has_base_array_cell a i r1 br in
   let j2 = has_array_cell_has_base_array_cell a i r2 br in
-  ST.vpattern_rewrite (fun j2 -> has_base_array_cell _ j2 r2) j1;
+  vpattern_rewrite (fun j2 -> has_base_array_cell _ j2 r2) j1;
   has_base_array_cell_inj br j1 r1 r2;
   let _ = has_base_array_cell_has_array_cell a j1 r1 br in
-  ST.vpattern_rewrite (fun i -> has_array_cell _ i r1) i;
+  vpattern_rewrite (fun i -> has_array_cell _ i r1) i;
   let _ = has_base_array_cell_has_array_cell a j1 r2 br in
-  ST.vpattern_rewrite (fun i -> has_array_cell _ i r2) i
+  vpattern_rewrite (fun i -> has_array_cell _ i r2) i
   
 
 #restart-solver
@@ -2264,9 +2120,9 @@ let struct_field_eq_cell
   (n: array_size_t)
   (k: base_array_index_t n)
 : Lemma
-  (Steel.C.Model.Struct.struct_field (struct_field_pcm (base_array_fd td n)) k == A.cell td.pcm n k)
+  (Steel.ST.C.Model.Struct.struct_field (struct_field_pcm (base_array_fd td n)) k == A.cell td.pcm n k)
 = // assert_norm (A.array_domain n == base_array_index_t n);
-  Steel.C.Model.Struct.struct_field_ext #(A.array_domain n) #(A.array_range t n) (struct_field_pcm (base_array_fd td n)) (A.array_elements_pcm td.pcm n) (fun _ -> ()) k
+  Steel.ST.C.Model.Struct.struct_field_ext #(A.array_domain n) #(A.array_range t n) (struct_field_pcm (base_array_fd td n)) (A.array_elements_pcm td.pcm n) (fun _ -> ()) k
 
 (*
 #push-options "--split_queries --z3rlimit 16"
@@ -2298,7 +2154,7 @@ let has_struct_field1_intro
   (p': P.perm)
   (w': ref0_v (fields.fd_typedef field))
   ()
-: ST.STGhost unit opened
+: STGhost unit opened
     (HR.pts_to r p w `star` HR.pts_to r' p' w')
     (fun _ ->
       has_struct_field1 r field r'
@@ -2307,8 +2163,8 @@ let has_struct_field1_intro
       has_struct_field_gen fields w field w'
     )
     (fun _ -> True)
-= ST.noop ();
-  ST.rewrite
+= noop ();
+  rewrite
     (has_struct_field0 r field r')
     (has_struct_field1 r field r')
 
@@ -2321,29 +2177,29 @@ let has_array_cell_drop
   (#b': ref0_v td)
   (i: SZ.t)
   (r: ref td)
-: ST.STGhostT unit opened
+: STGhostT unit opened
     (has_array_cell1 a i r `star`
       HR.pts_to r p' b'
     )
     (fun _ -> has_array_cell1 a i r)
-= ST.rewrite (has_array_cell1 a i r) (has_array_cell0 a i r);
-  let _ = ST.gen_elim () in
-  let j = ST.vpattern_replace (fun j -> has_base_array_cell1 _ j _) in
-  ST.rewrite (has_base_array_cell1 (dfst a).ar_base j r) (has_base_array_cell0 (dfst a).ar_base j r);
-  let _ = ST.gen_elim () in
-  let j' : base_array_index_t' (dfst a).ar_base_size = ST.vpattern_replace (fun j' -> has_base_array_cell_as_struct_field _ _ j' _) in
-  ST.rewrite (has_base_array_cell_as_struct_field (dfst a).ar_base j j' r) (has_struct_field0 #(base_array_index_t' (dfst a).ar_base_size) #(base_array_fd td (dfst a).ar_base_size) (dfst a).ar_base j' r);
-  let _ = ST.gen_elim () in
+= rewrite (has_array_cell1 a i r) (has_array_cell0 a i r);
+  let _ = gen_elim () in
+  let j = vpattern_replace (fun j -> has_base_array_cell1 _ j _) in
+  rewrite (has_base_array_cell1 (dfst a).ar_base j r) (has_base_array_cell0 (dfst a).ar_base j r);
+  let _ = gen_elim () in
+  let j' : base_array_index_t' (dfst a).ar_base_size = vpattern_replace (fun j' -> has_base_array_cell_as_struct_field _ _ j' _) in
+  rewrite (has_base_array_cell_as_struct_field (dfst a).ar_base j j' r) (has_struct_field0 #(base_array_index_t' (dfst a).ar_base_size) #(base_array_fd td (dfst a).ar_base_size) (dfst a).ar_base j' r);
+  let _ = gen_elim () in
   HR.gather p' r;
   has_struct_field1_intro
     #_ #(base_array_index_t' (dfst a).ar_base_size) #(base_array_fd td (dfst a).ar_base_size) (dfst a).ar_base j' r _ _ _ _ ();
-  ST.rewrite
+  rewrite
     (has_struct_field1 #(base_array_index_t' (dfst a).ar_base_size) #(base_array_fd td (dfst a).ar_base_size) (dfst a).ar_base j' r)
     (has_base_array_cell_as_struct_field (dfst a).ar_base j j' r);
-  ST.rewrite
+  rewrite
     (has_base_array_cell0 (dfst a).ar_base j r)
     (has_base_array_cell1 (dfst a).ar_base (array_index_as_base_array_index_marker i j) r);
-  ST.rewrite
+  rewrite
     (has_array_cell0 a i r)
     (has_array_cell a i r)
 
@@ -2356,12 +2212,12 @@ let has_array_cell_elim
   (#b: ref0_v (base_array1 td (dfst a).ar_base_size))
   (i: SZ.t)
   (r: ref td)
-: ST.STGhost (Ghost.erased (ref0_v td)) opened
+: STGhost (Ghost.erased (ref0_v td)) opened
     (has_array_cell1 a i r `star`
       HR.pts_to (dfst a).ar_base p b
     )
     (fun b' -> has_array_cell1 a i r `star`
-      ST.exists_ (fun p -> ST.exists_ (fun p' ->
+      exists_ (fun p -> exists_ (fun p' ->
         HR.pts_to (dfst a).ar_base p b `star`
         HR.pts_to r p' b'
     )))
@@ -2373,43 +2229,43 @@ let has_array_cell_elim
       b'.ref == R.ref_focus (A.ref_of_array ar) (A.cell td.pcm ar.len i)
     )
 = 
-  ST.rewrite (has_array_cell1 a i r) (has_array_cell0 a i r);
-  let _ = ST.gen_elim () in
-  let j = ST.vpattern_replace (fun j -> has_base_array_cell1 _ j _) in
-  ST.rewrite (has_base_array_cell1 (dfst a).ar_base j r) (has_base_array_cell0 (dfst a).ar_base j r);
-  let _ = ST.gen_elim () in
-  let j' : base_array_index_t' (dfst a).ar_base_size = ST.vpattern_replace (fun j' -> has_base_array_cell_as_struct_field _ _ j' _) in
-  ST.rewrite (has_base_array_cell_as_struct_field (dfst a).ar_base j j' r) (has_struct_field0 #(base_array_index_t' (dfst a).ar_base_size) #(base_array_fd td (dfst a).ar_base_size) (dfst a).ar_base j' r);
-  let _ = ST.gen_elim () in
+  rewrite (has_array_cell1 a i r) (has_array_cell0 a i r);
+  let _ = gen_elim () in
+  let j = vpattern_replace (fun j -> has_base_array_cell1 _ j _) in
+  rewrite (has_base_array_cell1 (dfst a).ar_base j r) (has_base_array_cell0 (dfst a).ar_base j r);
+  let _ = gen_elim () in
+  let j' : base_array_index_t' (dfst a).ar_base_size = vpattern_replace (fun j' -> has_base_array_cell_as_struct_field _ _ j' _) in
+  rewrite (has_base_array_cell_as_struct_field (dfst a).ar_base j j' r) (has_struct_field0 #(base_array_index_t' (dfst a).ar_base_size) #(base_array_fd td (dfst a).ar_base_size) (dfst a).ar_base j' r);
+  let _ = gen_elim () in
   hr_gather b (dfst a).ar_base;
   HR.share r;
   HR.share (dfst a).ar_base;
   has_struct_field1_intro #_ #(base_array_index_t' (dfst a).ar_base_size) #(base_array_fd td (dfst a).ar_base_size) (dfst a).ar_base j' r _ _ _ _ ();
-  ST.rewrite (has_struct_field1 #(base_array_index_t' (dfst a).ar_base_size) #(base_array_fd td (dfst a).ar_base_size) (dfst a).ar_base j' r) (has_base_array_cell_as_struct_field (dfst a).ar_base j j' r);
-  ST.rewrite
+  rewrite (has_struct_field1 #(base_array_index_t' (dfst a).ar_base_size) #(base_array_fd td (dfst a).ar_base_size) (dfst a).ar_base j' r) (has_base_array_cell_as_struct_field (dfst a).ar_base j j' r);
+  rewrite
     (has_base_array_cell0 (dfst a).ar_base j r)
     (has_base_array_cell1 (dfst a).ar_base (array_index_as_base_array_index_marker i j) r);
-  ST.rewrite
+  rewrite
     (has_array_cell0 a i r)
     (has_array_cell a i r);
   A.ref_of_array_eq (model_array_of_array a b) i;
   struct_field_eq_cell td (dfst a).ar_base_size j';
-  let b' = ST.vpattern_replace_erased (HR.pts_to r _) in
-  ST.noop ();
+  let b' = vpattern_replace_erased (HR.pts_to r _) in
+  noop ();
   b'
 
 let ghost_array_cell_focus
   #_ #_ #td #s a i r
-= ST.weaken (array_pts_to a s) (array_pts_to0 a s) (fun _ -> ());
-  let _ = ST.gen_elim () in
-  let b = ST.vpattern_replace (HR.pts_to (dfst a).ar_base _) in
+= rewrite (array_pts_to a s) (array_pts_to0 a s);
+  let _ = gen_elim () in
+  let b = vpattern_replace (HR.pts_to (dfst a).ar_base _) in
   let r' = has_array_cell_elim a i r in
-  let _ = ST.gen_elim () in
+  let _ = gen_elim () in
   let _ = A.g_focus_cell _ _ i () in
-  ST.rewrite (R.pts_to _ _) (R.pts_to r'.ref (Seq.index s (SZ.v i)));
-  ST.weaken (pts_to0 r (Seq.index s (SZ.v i))) (pts_to r (Seq.index s (SZ.v i))) (fun _ -> ());
-  ST.rewrite (A.pts_to _ _) (A.pts_to (model_array_of_array a b) (Seq.upd s (SZ.v i) (unknown td)));
-  ST.weaken (array_pts_to0 a (Seq.upd s (SZ.v i) (unknown td))) (array_pts_to a (Seq.upd s (SZ.v i) (unknown td))) (fun _ -> ())
+  rewrite (R.pts_to _ _) (R.pts_to r'.ref (Seq.index s (SZ.v i)));
+  rewrite (pts_to0 r (Seq.index s (SZ.v i))) (pts_to r (Seq.index s (SZ.v i)));
+  rewrite (A.pts_to _ _) (A.pts_to (model_array_of_array a b) (Seq.upd s (SZ.v i) (unknown td)));
+  rewrite (array_pts_to0 a (Seq.upd s (SZ.v i) (unknown td))) (array_pts_to a (Seq.upd s (SZ.v i) (unknown td)))
 
 let has_array_cell_intro
   (#opened: _)
@@ -2422,7 +2278,7 @@ let has_array_cell_intro
   (#b': ref0_v td)
   (i: SZ.t)
   (r: ref td)
-: ST.STGhost unit opened
+: STGhost unit opened
     (HR.pts_to (dfst a).ar_base p b `star`
       HR.pts_to r p' b'
     )
@@ -2439,22 +2295,22 @@ let has_array_cell_intro
   let j : base_array_index_t' (dfst a).ar_base_size = (dfst a).ar_offset `SZ.add` i in
   struct_field_eq_cell td (dfst a).ar_base_size j;
   has_struct_field1_intro #_ #(base_array_index_t' (dfst a).ar_base_size) #(base_array_fd td (dfst a).ar_base_size) (dfst a).ar_base j r _ _ _ _ ();
-  ST.rewrite (has_struct_field1 #(base_array_index_t' (dfst a).ar_base_size) #(base_array_fd td (dfst a).ar_base_size) (dfst a).ar_base j r) (has_base_array_cell_as_struct_field (dfst a).ar_base j j r);
-  ST.rewrite
+  rewrite (has_struct_field1 #(base_array_index_t' (dfst a).ar_base_size) #(base_array_fd td (dfst a).ar_base_size) (dfst a).ar_base j r) (has_base_array_cell_as_struct_field (dfst a).ar_base j j r);
+  rewrite
     (has_base_array_cell0 (dfst a).ar_base j r)
     (has_base_array_cell1 (dfst a).ar_base (array_index_as_base_array_index_marker i j) r);
-  ST.rewrite
+  rewrite
     (has_array_cell0 a i r)
     (has_array_cell a i r)
 
 let ghost_array_cell
   #_ #_ #td #s a i
 = array_pts_to_length _ _;
-  ST.weaken (array_pts_to a s) (array_pts_to0 a s) (fun _ -> ());
-  let _ = ST.gen_elim () in
+  rewrite (array_pts_to a s) (array_pts_to0 a s);
+  let _ = gen_elim () in
   HR.share _;
-  ST.weaken (array_pts_to0 a s) (array_pts_to a s) (fun _ -> ());
-  let b = ST.vpattern_replace (HR.pts_to (dfst a).ar_base _) in
+  rewrite (array_pts_to0 a s) (array_pts_to a s);
+  let b = vpattern_replace (HR.pts_to (dfst a).ar_base _) in
   let ar = model_array_of_array a b in
   let b' = {
     base = b.base;
@@ -2464,13 +2320,13 @@ let ghost_array_cell
   let ghr = GHR.alloc b' in
   GHR.reveal_pts_to ghr P.full_perm b';
   let hr = GHR.reveal_ref ghr in
-  ST.rewrite_equiv (GHR.pts_to _ _ _) (HR.pts_to hr P.full_perm b');
+  rewrite_equiv (GHR.pts_to _ _ _) (HR.pts_to hr P.full_perm b');
   HR.pts_to_not_null hr;
   let r : (r: Ghost.erased (ref td) { SZ.v i < Seq.length s /\ Seq.length s == SZ.v (dsnd a) }) = hr in
-  ST.vpattern_rewrite (fun hr -> HR.pts_to hr P.full_perm b') r;
+  vpattern_rewrite (fun hr -> HR.pts_to hr P.full_perm b') r;
   has_array_cell_intro a i r;
   let _ = ghost_array_cell_focus a i r in
-  ST.noop ();
+  noop ();
   r
 
 [@@ noextract_to "krml"]
@@ -2480,20 +2336,20 @@ let array_cell0
   (#s: Ghost.erased (Seq.seq t))
   (a: array td)
   (i: SZ.t)
-: Steel (r: ref td { SZ.v i < Seq.length s /\ Seq.length s == SZ.v (dsnd a) })
+: ST (r: ref td { SZ.v i < Seq.length s /\ Seq.length s == SZ.v (dsnd a) })
     (array_pts_to a s)
     (fun r -> array_pts_to a (Seq.upd s (SZ.v i) (unknown td)) `star` pts_to r (Seq.index s (SZ.v i)) `star` has_array_cell a i r)
-    (fun _ ->
+    (
       (SZ.v i < Seq.length s \/ SZ.v i < SZ.v (dsnd a))
     )
-    (fun _ _ _ -> True)
+    (fun _ -> True)
 = array_pts_to_length _ _;
-  ST.weaken (array_pts_to a s) (array_pts_to0 a s) (fun _ -> ());
-  let _ = ST.gen_elim () in
+  rewrite (array_pts_to a s) (array_pts_to0 a s);
+  let _ = gen_elim () in
   HR.share _;
-  ST.weaken (array_pts_to0 a s) (array_pts_to a s) (fun _ -> ());
+  rewrite (array_pts_to0 a s) (array_pts_to a s);
   let b = HR.read (dfst a).ar_base in
-  ST.vpattern_rewrite (HR.pts_to (dfst a).ar_base _) b;
+  vpattern_rewrite (HR.pts_to (dfst a).ar_base _) b;
   let ar = model_array_of_array a b in
   A.ref_of_array_eq ar i;
   let b' = {
@@ -2504,19 +2360,19 @@ let array_cell0
   let hr = HR.alloc b' in
   HR.pts_to_not_null hr;
   let r : (r: ref td { SZ.v i < Seq.length s /\ Seq.length s == SZ.v (dsnd a) }) = hr in
-  ST.vpattern_rewrite (fun hr -> HR.pts_to hr P.full_perm b') r;
+  vpattern_rewrite (fun hr -> HR.pts_to hr P.full_perm b') r;
   has_array_cell_intro a i r;
   let _ = ghost_array_cell_focus a i r in
-  ST.noop ();
+  noop ();
   return r
 
 let array_ref_cell
   #_ #td #s a len i
 = let r0 : (r: ref td { SZ.v i < Seq.length s /\ Seq.length s == SZ.v (dsnd ((| a, len |) <: array td)) }) = array_cell0 _ _ in
   let r : (r: ref td { SZ.v i < Seq.length s /\ Seq.length s == SZ.v len }) = r0 in
-  ST.vpattern_rewrite (fun r -> pts_to r _) r;
-  ST.vpattern_rewrite (has_array_cell _ _) r;
-  ST.noop ();
+  vpattern_rewrite (fun r -> pts_to r _) r;
+  vpattern_rewrite (has_array_cell _ _) r;
+  noop ();
   return r
 
 let ar_unfocus_cell
@@ -2530,33 +2386,33 @@ let ar_unfocus_cell
   (r': R.ref base_t' p)
   (v: t)
   (sq: squash (SZ.v i < SZ.v r.len /\ SZ.v i < Seq.length s))
-: SteelGhost unit opened
+: STGhost unit opened
     (A.pts_to r s `star` R.pts_to r' v)
     (fun _ -> A.pts_to r (Seq.upd s (SZ.v i) v))
-    (fun _ -> 
+    (
       base_t' == base_t /\
       r' == R.ref_focus (A.ref_of_array r) (A.cell p r.len i) /\
       Seq.index s (SZ.v i) == one p
     )
-    (fun _ _ _ -> True)
+    (fun _ -> True)
 = let r1' : R.ref base_t p = coerce_eq () r' in
-  ST.rewrite (R.pts_to r' v) (R.pts_to r1' v);
+  rewrite (R.pts_to r' v) (R.pts_to r1' v);
   A.unfocus_cell r s i r1' v ()
 
 let unarray_cell
   #_ #_ #td #s #v a i r
 = array_pts_to_length _ _;
-  ST.weaken (array_pts_to a s) (array_pts_to0 a s) (fun _ -> ());
-  let _ = ST.gen_elim () in
+  rewrite (array_pts_to a s) (array_pts_to0 a s);
+  let _ = gen_elim () in
   let w = has_array_cell_elim a i r in
-  let _ = ST.gen_elim () in
-  ST.weaken (pts_to r v) (pts_to0 r v) (fun _ -> ());
-  let _ = ST.gen_elim () in
+  let _ = gen_elim () in
+  rewrite (pts_to r v) (pts_to0 r v);
+  let _ = gen_elim () in
   hr_gather (Ghost.reveal w) r;
   ar_unfocus_cell _ _ i _ _ ();
-  let b = ST.vpattern_replace (HR.pts_to (dfst a).ar_base _) in
-  ST.rewrite (A.pts_to _ _) (A.pts_to (model_array_of_array a b) (Seq.upd s (SZ.v i) v));
-  ST.weaken (array_pts_to0 a (Seq.upd s (SZ.v i) v)) (array_pts_to a (Seq.upd s (SZ.v i) v)) (fun _ -> ());
+  let b = vpattern_replace (HR.pts_to (dfst a).ar_base _) in
+  rewrite (A.pts_to _ _) (A.pts_to (model_array_of_array a b) (Seq.upd s (SZ.v i) v));
+  rewrite (array_pts_to0 a (Seq.upd s (SZ.v i) v)) (array_pts_to a (Seq.upd s (SZ.v i) v));
   has_array_cell_drop _ _ _
 
 #push-options "--split_queries --z3rlimit 16"
@@ -2586,22 +2442,22 @@ let ghost_array_split
   #_ #_ #td #s a i
 = array_pts_to_length _ _;
   let sq : squash (SZ.v i <= SZ.v (dsnd a) /\ Seq.length s == SZ.v (dsnd a)) = () in
-  ST.weaken (array_pts_to a s) (array_pts_to0 a s) (fun _ -> ());
-  let _ = ST.gen_elim () in
-  let br : Ghost.erased (ref0_v (base_array1 td (dfst a).ar_base_size)) = ST.vpattern_replace_erased (HR.pts_to _ _) in
+  rewrite (array_pts_to a s) (array_pts_to0 a s);
+  let _ = gen_elim () in
+  let br : Ghost.erased (ref0_v (base_array1 td (dfst a).ar_base_size)) = vpattern_replace_erased (HR.pts_to _ _) in
   A.g_split _ _ i ();
   HR.share _;
-  let p = ST.vpattern_replace (fun p -> HR.pts_to _ p _ `star` HR.pts_to _ p _) in
+  let p = vpattern_replace (fun p -> HR.pts_to _ p _ `star` HR.pts_to _ p _) in
   let br_l : Ghost.erased (ref0_v (base_array1 td (dfst (array_split_l a i)).ar_base_size)) = coerce_eq () br in
-  ST.rewrite (HR.pts_to _ _ _) (HR.pts_to (dfst (array_split_l a i)).ar_base p br_l);
-  ST.rewrite (A.pts_to _ (Seq.slice s 0 _)) (A.pts_to (model_array_of_array (array_split_l a i) br_l) (Seq.slice s 0 (SZ.v i)));
-  ST.noop ();
-  ST.weaken (array_pts_to0 (array_split_l a i) (Seq.slice s 0 (SZ.v i))) (array_pts_to (array_split_l a i) (Seq.slice s 0 (SZ.v i))) (fun _ -> ());
+  rewrite (HR.pts_to _ _ _) (HR.pts_to (dfst (array_split_l a i)).ar_base p br_l);
+  rewrite (A.pts_to _ (Seq.slice s 0 _)) (A.pts_to (model_array_of_array (array_split_l a i) br_l) (Seq.slice s 0 (SZ.v i)));
+  noop ();
+  rewrite (array_pts_to0 (array_split_l a i) (Seq.slice s 0 (SZ.v i))) (array_pts_to (array_split_l a i) (Seq.slice s 0 (SZ.v i)));
   let br_r : Ghost.erased (ref0_v (base_array1 td (dfst (array_split_r a i)).ar_base_size)) = coerce_eq () br in
-  ST.rewrite (HR.pts_to _ _ _) (HR.pts_to (dfst (array_split_r a i)).ar_base p br_r);
-  ST.rewrite (A.pts_to _ _) (A.pts_to (model_array_of_array (array_split_r a i) br_r) (Seq.slice s (SZ.v i) (Seq.length s)));
-  ST.noop ();
-  ST.weaken (array_pts_to0 (array_split_r a i) (Seq.slice s (SZ.v i) (Seq.length s))) (array_pts_to (array_split_r a i) (Seq.slice s (SZ.v i) (Seq.length s))) (fun _ -> ());
+  rewrite (HR.pts_to _ _ _) (HR.pts_to (dfst (array_split_r a i)).ar_base p br_r);
+  rewrite (A.pts_to _ _) (A.pts_to (model_array_of_array (array_split_r a i) br_r) (Seq.slice s (SZ.v i) (Seq.length s)));
+  noop ();
+  rewrite (array_pts_to0 (array_split_r a i) (Seq.slice s (SZ.v i) (Seq.length s))) (array_pts_to (array_split_r a i) (Seq.slice s (SZ.v i) (Seq.length s)));
   sq
 
 let t_array_split_r
@@ -2631,7 +2487,7 @@ let hr_gather_by_perm
   (#v2: t2)
   (p1: P.perm)
   (p2: P.perm)
-: ST.STGhost unit opened
+: STGhost unit opened
     (HR.pts_to r1 p1 v1 `star` HR.pts_to r2 p2 v2)
     (fun _ -> HR.pts_to r1 (p1 `P.sum_perm` p2) v1)
     (t1 == t2 /\
@@ -2640,7 +2496,7 @@ let hr_gather_by_perm
       t1 == t2 /\
       r1 == r2 /\
       v1 == v2)
-= ST.rewrite (HR.pts_to r2 p2 v2) (HR.pts_to r1 p2 (coerce_eq () v2));
+= rewrite (HR.pts_to r2 p2 v2) (HR.pts_to r1 p2 (coerce_eq () v2));
   HR.gather p2 r1
 
 let ar_join
@@ -2653,37 +2509,37 @@ let ar_join
   (al: A.array base_tl p)
   (ar: A.array base_tr p)
   (sl0 sr0: Seq.seq t)
-: SteelGhost unit opened
+: STGhost unit opened
     (A.pts_to al sl0 `star` A.pts_to ar sr0)
     (fun _ -> A.pts_to a (sl0 `Seq.append` sr0))
-    (fun _ ->
+    (
       SZ.v i <= SZ.v a.len /\
       base_t == base_tl /\
       base_t == base_tr /\
       al == A.split_l a i /\
       ar == A.split_r a i
     )
-    (fun _ _ _ -> True)
+    (fun _ -> True)
 = let al' : A.array base_t p = coerce_eq () al in
   let ar' : A.array base_t p = coerce_eq () ar in
-  ST.rewrite (A.pts_to al sl0) (A.pts_to al' sl0);
-  ST.rewrite (A.pts_to ar sr0) (A.pts_to ar' sr0);
+  rewrite (A.pts_to al sl0) (A.pts_to al' sl0);
+  rewrite (A.pts_to ar sr0) (A.pts_to ar' sr0);
   A.join a i al' ar' _ _
 
 let array_join
   #_ #_ #td #sl #sr a al ar i
-= ST.weaken (array_pts_to al sl) (array_pts_to0 al sl) (fun _ -> ());
-  let _ = ST.gen_elim () in
-  let br_l : ref0_v (base_array1 td (dfst al).ar_base_size) = ST.vpattern_replace (HR.pts_to _ _) in
-  let pl = ST.vpattern_replace (fun p -> HR.pts_to _ p _) in
+= rewrite (array_pts_to al sl) (array_pts_to0 al sl);
+  let _ = gen_elim () in
+  let br_l : ref0_v (base_array1 td (dfst al).ar_base_size) = vpattern_replace (HR.pts_to _ _) in
+  let pl = vpattern_replace (fun p -> HR.pts_to _ p _) in
   let br : ref0_v (base_array1 td (dfst a).ar_base_size) = coerce_eq () br_l in
-  ST.rewrite (HR.pts_to _ _ _) (HR.pts_to (dfst a).ar_base pl br);
-  ST.weaken (array_pts_to ar sr) (array_pts_to0 ar sr) (fun _ -> ());
-  let _ = ST.gen_elim () in
-  let pr = ST.vpattern_replace (fun pr -> HR.pts_to _ pl _ `star` HR.pts_to _ pr _) in
+  rewrite (HR.pts_to _ _ _) (HR.pts_to (dfst a).ar_base pl br);
+  rewrite (array_pts_to ar sr) (array_pts_to0 ar sr);
+  let _ = gen_elim () in
+  let pr = vpattern_replace (fun pr -> HR.pts_to _ pl _ `star` HR.pts_to _ pr _) in
   hr_gather_by_perm pl pr;
   ar_join (model_array_of_array a br) i _ _ sl sr;
-  ST.weaken (array_pts_to0 a (sl `Seq.append` sr)) (array_pts_to a (sl `Seq.append` sr)) (fun _ -> ())
+  rewrite (array_pts_to0 a (sl `Seq.append` sr)) (array_pts_to a (sl `Seq.append` sr))
 
 let ar_share
   (#opened: _)
@@ -2702,30 +2558,30 @@ let ar_share
       op p (Seq.index s1 i) (Seq.index s2 i) == Seq.index s i
     ))
   ))
-: SteelGhost unit opened
+: STGhost unit opened
     (A.pts_to r s)
     (fun _ -> A.pts_to r s1 `star` A.pts_to r s2)
-    (fun _ ->
+    (
       Seq.length s1 == Seq.length s /\
       Seq.length s2 == Seq.length s
     )
-    (fun _ _ _ -> True)
+    (fun _ -> True)
 = Classical.forall_intro (Classical.move_requires prf);
   A.share r s s1 s2
 
 let mk_fraction_seq_split_gen
   #_ #_ #td r v p p1 p2
-= ST.weaken (array_pts_to r (mk_fraction_seq td v p)) (array_pts_to0 r (mk_fraction_seq td v p)) (fun _ -> ());
-  let _ = ST.gen_elim () in
-  let br = ST.vpattern_replace (HR.pts_to _ _) in
-  ST.rewrite (A.pts_to _ _) (A.pts_to (model_array_of_array r br) (mk_fraction_seq td v p));
+= rewrite (array_pts_to r (mk_fraction_seq td v p)) (array_pts_to0 r (mk_fraction_seq td v p));
+  let _ = gen_elim () in
+  let br = vpattern_replace (HR.pts_to _ _) in
+  rewrite (A.pts_to _ _) (A.pts_to (model_array_of_array r br) (mk_fraction_seq td v p));
   ar_share _ _ (mk_fraction_seq td v p1) (mk_fraction_seq td v p2) (fun i ->
     td.mk_fraction_split (Seq.index v i) p1 p2;
     td.mk_fraction_join (Seq.index v i) p1 p2
   );
   HR.share _;
-  ST.weaken (array_pts_to0 r (mk_fraction_seq td v p1)) (array_pts_to r (mk_fraction_seq td v p1)) (fun _ -> ());
-  ST.weaken (array_pts_to0 r (mk_fraction_seq td v p2)) (array_pts_to r (mk_fraction_seq td v p2)) (fun _ -> ())
+  rewrite (array_pts_to0 r (mk_fraction_seq td v p1)) (array_pts_to r (mk_fraction_seq td v p1));
+  rewrite (array_pts_to0 r (mk_fraction_seq td v p2)) (array_pts_to r (mk_fraction_seq td v p2))
 
 let ar_gather
   (#opened: _)
@@ -2747,28 +2603,28 @@ let ar_gather
       op p (Seq.index s1 i) (Seq.index s2 i) == Seq.index s i
     ))
   ))
-: SteelGhost unit opened
+: STGhost unit opened
     (A.pts_to r s1 `star` A.pts_to r s2)
     (fun _ -> A.pts_to r s)
-    (fun _ ->
+    (
       Seq.length s1 == Seq.length s /\
       Seq.length s2 == Seq.length s
     )
-    (fun _ _ _ -> True)
+    (fun _ -> True)
 = Classical.forall_intro (Classical.move_requires prf);
   A.gather r s s1 s2
 
 let mk_fraction_seq_join
   #_ #_ #td r v p1 p2
-= ST.weaken (array_pts_to r (mk_fraction_seq td v p1)) (array_pts_to0 r (mk_fraction_seq td v p1)) (fun _ -> ());
-  let _ = ST.gen_elim () in
-  let br = ST.vpattern_replace (HR.pts_to _ _) in
-  ST.rewrite (A.pts_to _ _) (A.pts_to (model_array_of_array r br) (mk_fraction_seq td v p1));
-  ST.weaken (array_pts_to r (mk_fraction_seq td v p2)) (array_pts_to0 r (mk_fraction_seq td v p2)) (fun _ -> ());
-  let _ = ST.gen_elim () in
+= rewrite (array_pts_to r (mk_fraction_seq td v p1)) (array_pts_to0 r (mk_fraction_seq td v p1));
+  let _ = gen_elim () in
+  let br = vpattern_replace (HR.pts_to _ _) in
+  rewrite (A.pts_to _ _) (A.pts_to (model_array_of_array r br) (mk_fraction_seq td v p1));
+  rewrite (array_pts_to r (mk_fraction_seq td v p2)) (array_pts_to0 r (mk_fraction_seq td v p2));
+  let _ = gen_elim () in
   hr_gather br (dfst r).ar_base;
-  ST.rewrite (A.pts_to _ (mk_fraction_seq _ _ p2)) (A.pts_to (model_array_of_array r br) (mk_fraction_seq td v p2));
+  rewrite (A.pts_to _ (mk_fraction_seq _ _ p2)) (A.pts_to (model_array_of_array r br) (mk_fraction_seq td v p2));
   ar_gather _ (mk_fraction_seq td v (p1 `P.sum_perm` p2)) (mk_fraction_seq td v p1) (mk_fraction_seq td v p2) (fun i ->
     td.mk_fraction_join (Seq.index v i) p1 p2
   );
-  ST.weaken (array_pts_to0 r (mk_fraction_seq td v (p1 `P.sum_perm` p2))) (array_pts_to r (mk_fraction_seq td v (p1 `P.sum_perm` p2))) (fun _ -> ())
+  rewrite (array_pts_to0 r (mk_fraction_seq td v (p1 `P.sum_perm` p2))) (array_pts_to r (mk_fraction_seq td v (p1 `P.sum_perm` p2)))
