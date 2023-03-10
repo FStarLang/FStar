@@ -708,7 +708,8 @@ let (init_env : FStar_Parser_Dep.deps -> FStar_TypeChecker_Env.env) =
 let (tc_one_fragment :
   FStar_Syntax_Syntax.modul FStar_Pervasives_Native.option ->
     FStar_TypeChecker_Env.env_t ->
-      FStar_Parser_ParseIt.input_frag ->
+      (FStar_Parser_ParseIt.input_frag, FStar_Parser_AST.decl)
+        FStar_Pervasives.either ->
         (FStar_Syntax_Syntax.modul FStar_Pervasives_Native.option *
           FStar_TypeChecker_Env.env))
   =
@@ -749,100 +750,110 @@ let (tc_one_fragment :
                uu___5)
               -> d
           | uu___ -> FStar_Compiler_Range.dummyRange in
-        let uu___ = FStar_Parser_Driver.parse_fragment frag in
-        match uu___ with
-        | FStar_Parser_Driver.Empty -> (curmod, env)
-        | FStar_Parser_Driver.Decls [] -> (curmod, env)
-        | FStar_Parser_Driver.Modul ast_modul ->
+        let check_module_name_declaration ast_modul =
+          let uu___ =
             let uu___1 =
-              let uu___2 =
-                FStar_ToSyntax_Interleave.interleave_module ast_modul false in
-              FStar_Compiler_Effect.op_Less_Bar (with_dsenv_of_tcenv env)
-                uu___2 in
-            (match uu___1 with
-             | (ast_modul1, env1) ->
-                 let uu___2 =
-                   let uu___3 =
-                     FStar_ToSyntax_ToSyntax.partial_ast_modul_to_modul
-                       curmod ast_modul1 in
-                   FStar_Compiler_Effect.op_Less_Bar
-                     (with_dsenv_of_tcenv env1) uu___3 in
-                 (match uu___2 with
-                  | (modul, env2) ->
-                      ((let uu___4 =
-                          let uu___5 = acceptable_mod_name modul in
-                          Prims.op_Negation uu___5 in
-                        if uu___4
-                        then
-                          let msg =
-                            let uu___5 =
-                              let uu___6 = fname env2 in
-                              FStar_Parser_Dep.module_name_of_file uu___6 in
-                            FStar_Compiler_Util.format1
-                              "Interactive mode only supports a single module at the top-level. Expected module %s"
-                              uu___5 in
-                          FStar_Errors.raise_error
-                            (FStar_Errors.Fatal_NonSingletonTopLevelModule,
-                              msg) (range_of_first_mod_decl ast_modul1)
-                        else ());
-                       (let uu___4 =
-                          let uu___5 =
+              FStar_ToSyntax_Interleave.interleave_module ast_modul false in
+            FStar_Compiler_Effect.op_Less_Bar (with_dsenv_of_tcenv env)
+              uu___1 in
+          match uu___ with
+          | (ast_modul1, env1) ->
+              let uu___1 =
+                let uu___2 =
+                  FStar_ToSyntax_ToSyntax.partial_ast_modul_to_modul curmod
+                    ast_modul1 in
+                FStar_Compiler_Effect.op_Less_Bar (with_dsenv_of_tcenv env1)
+                  uu___2 in
+              (match uu___1 with
+               | (modul, env2) ->
+                   ((let uu___3 =
+                       let uu___4 = acceptable_mod_name modul in
+                       Prims.op_Negation uu___4 in
+                     if uu___3
+                     then
+                       let msg =
+                         let uu___4 =
+                           let uu___5 = fname env2 in
+                           FStar_Parser_Dep.module_name_of_file uu___5 in
+                         FStar_Compiler_Util.format1
+                           "Interactive mode only supports a single module at the top-level. Expected module %s"
+                           uu___4 in
+                       FStar_Errors.raise_error
+                         (FStar_Errors.Fatal_NonSingletonTopLevelModule, msg)
+                         (range_of_first_mod_decl ast_modul1)
+                     else ());
+                    (let uu___3 =
+                       let uu___4 =
+                         FStar_Syntax_DsEnv.syntax_only
+                           env2.FStar_TypeChecker_Env.dsenv in
+                       if uu___4
+                       then (modul, env2)
+                       else FStar_TypeChecker_Tc.tc_partial_modul env2 modul in
+                     match uu___3 with
+                     | (modul1, env3) ->
+                         ((FStar_Pervasives_Native.Some modul1), env3)))) in
+        let check_decls ast_decls =
+          match curmod with
+          | FStar_Pervasives_Native.None ->
+              let uu___ = FStar_Compiler_List.hd ast_decls in
+              (match uu___ with
+               | { FStar_Parser_AST.d = uu___1;
+                   FStar_Parser_AST.drange = rng;
+                   FStar_Parser_AST.quals = uu___2;
+                   FStar_Parser_AST.attrs = uu___3;_} ->
+                   FStar_Errors.raise_error
+                     (FStar_Errors.Fatal_ModuleFirstStatement,
+                       "First statement must be a module declaration") rng)
+          | FStar_Pervasives_Native.Some modul ->
+              let uu___ =
+                FStar_Compiler_Util.fold_map
+                  (fun env1 ->
+                     fun a_decl ->
+                       let uu___1 =
+                         let uu___2 =
+                           FStar_ToSyntax_Interleave.prefix_with_interface_decls
+                             modul.FStar_Syntax_Syntax.name a_decl in
+                         FStar_Compiler_Effect.op_Less_Bar
+                           (with_dsenv_of_tcenv env1) uu___2 in
+                       match uu___1 with | (decls, env2) -> (env2, decls))
+                  env ast_decls in
+              (match uu___ with
+               | (env1, ast_decls_l) ->
+                   let uu___1 =
+                     let uu___2 =
+                       FStar_ToSyntax_ToSyntax.decls_to_sigelts
+                         (FStar_Compiler_List.flatten ast_decls_l) in
+                     FStar_Compiler_Effect.op_Less_Bar
+                       (with_dsenv_of_tcenv env1) uu___2 in
+                   (match uu___1 with
+                    | (sigelts, env2) ->
+                        let uu___2 =
+                          let uu___3 =
                             FStar_Syntax_DsEnv.syntax_only
                               env2.FStar_TypeChecker_Env.dsenv in
-                          if uu___5
-                          then (modul, env2)
+                          if uu___3
+                          then (modul, [], env2)
                           else
-                            FStar_TypeChecker_Tc.tc_partial_modul env2 modul in
-                        match uu___4 with
-                        | (modul1, env3) ->
-                            ((FStar_Pervasives_Native.Some modul1), env3)))))
-        | FStar_Parser_Driver.Decls ast_decls ->
-            (match curmod with
-             | FStar_Pervasives_Native.None ->
-                 let uu___1 = FStar_Compiler_List.hd ast_decls in
-                 (match uu___1 with
-                  | { FStar_Parser_AST.d = uu___2;
-                      FStar_Parser_AST.drange = rng;
-                      FStar_Parser_AST.quals = uu___3;
-                      FStar_Parser_AST.attrs = uu___4;_} ->
-                      FStar_Errors.raise_error
-                        (FStar_Errors.Fatal_ModuleFirstStatement,
-                          "First statement must be a module declaration") rng)
-             | FStar_Pervasives_Native.Some modul ->
-                 let uu___1 =
-                   FStar_Compiler_Util.fold_map
-                     (fun env1 ->
-                        fun a_decl ->
-                          let uu___2 =
-                            let uu___3 =
-                              FStar_ToSyntax_Interleave.prefix_with_interface_decls
-                                modul.FStar_Syntax_Syntax.name a_decl in
-                            FStar_Compiler_Effect.op_Less_Bar
-                              (with_dsenv_of_tcenv env1) uu___3 in
-                          match uu___2 with | (decls, env2) -> (env2, decls))
-                     env ast_decls in
-                 (match uu___1 with
-                  | (env1, ast_decls_l) ->
-                      let uu___2 =
-                        let uu___3 =
-                          FStar_ToSyntax_ToSyntax.decls_to_sigelts
-                            (FStar_Compiler_List.flatten ast_decls_l) in
-                        FStar_Compiler_Effect.op_Less_Bar
-                          (with_dsenv_of_tcenv env1) uu___3 in
-                      (match uu___2 with
-                       | (sigelts, env2) ->
-                           let uu___3 =
-                             let uu___4 =
-                               FStar_Syntax_DsEnv.syntax_only
-                                 env2.FStar_TypeChecker_Env.dsenv in
-                             if uu___4
-                             then (modul, [], env2)
-                             else
-                               FStar_TypeChecker_Tc.tc_more_partial_modul
-                                 env2 modul sigelts in
-                           (match uu___3 with
-                            | (modul1, uu___4, env3) ->
-                                ((FStar_Pervasives_Native.Some modul1), env3)))))
+                            FStar_TypeChecker_Tc.tc_more_partial_modul env2
+                              modul sigelts in
+                        (match uu___2 with
+                         | (modul1, uu___3, env3) ->
+                             ((FStar_Pervasives_Native.Some modul1), env3)))) in
+        match frag with
+        | FStar_Pervasives.Inr d ->
+            (match d.FStar_Parser_AST.d with
+             | FStar_Parser_AST.TopLevelModule lid ->
+                 check_module_name_declaration
+                   (FStar_Parser_AST.Module (lid, [d]))
+             | uu___ -> check_decls [d])
+        | FStar_Pervasives.Inl frag1 ->
+            let uu___ = FStar_Parser_Driver.parse_fragment frag1 in
+            (match uu___ with
+             | FStar_Parser_Driver.Empty -> (curmod, env)
+             | FStar_Parser_Driver.Decls [] -> (curmod, env)
+             | FStar_Parser_Driver.Modul ast_modul ->
+                 check_module_name_declaration ast_modul
+             | FStar_Parser_Driver.Decls ast_decls -> check_decls ast_decls)
 let (load_interface_decls :
   FStar_TypeChecker_Env.env -> Prims.string -> FStar_TypeChecker_Env.env_t) =
   fun env ->

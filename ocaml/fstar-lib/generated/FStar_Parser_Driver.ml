@@ -27,6 +27,8 @@ let (parse_fragment : FStar_Parser_ParseIt.input_frag -> fragment) =
         Empty
     | FStar_Parser_ParseIt.ASTFragment (FStar_Pervasives.Inr decls, uu___1)
         -> Decls decls
+    | FStar_Parser_ParseIt.IncrementalFragment (decls, uu___1, uu___2) ->
+        Decls decls
     | FStar_Parser_ParseIt.ParseError (e, msg, r) ->
         FStar_Errors.raise_error (e, msg) r
     | FStar_Parser_ParseIt.Term uu___1 ->

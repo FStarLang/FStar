@@ -167,7 +167,9 @@ let (check_frag :
           (fun uu___ ->
              match () with
              | () ->
-                 let uu___1 = FStar_Universal.tc_one_fragment curmod env frag in
+                 let uu___1 =
+                   FStar_Universal.tc_one_fragment curmod env
+                     (FStar_Pervasives.Inl frag) in
                  (match uu___1 with
                   | (m, env1) ->
                       let uu___2 =

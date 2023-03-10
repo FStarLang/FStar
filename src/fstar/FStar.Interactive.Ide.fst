@@ -28,13 +28,16 @@ open FStar.Errors
 open FStar.Interactive.JsonHelper
 open FStar.Interactive.QueryHelper
 open FStar.Interactive.PushHelper
+open FStar.Interactive.ReplState
+open FStar.Interactive.Ide.Types
+module BU = FStar.Compiler.Util
 
 open FStar.Universal
 open FStar.TypeChecker.Env
 open FStar.TypeChecker.Common
 open FStar.Interactive
 open FStar.Parser.ParseIt
-
+open FStar.Interactive.Ide.Types
 module SS = FStar.Syntax.Syntax
 module DsEnv = FStar.Syntax.DsEnv
 module TcErr = FStar.TypeChecker.Err
@@ -73,28 +76,7 @@ let with_captured_errors' env sigint_handler f =
 let with_captured_errors env sigint_handler f =
   if Options.trace_error () then f env
   else with_captured_errors' env sigint_handler f
-
-(*************************)
-(* REPL tasks and states *)
-(*************************)
-
-let t0 = Util.now ()
-
-(** Create a timed_fname with a dummy modtime **)
-let dummy_tf_of_fname fname =
-  { tf_fname = fname;
-    tf_modtime = t0 }
-
-let string_of_timed_fname { tf_fname = fname; tf_modtime = modtime } =
-  if modtime = t0 then Util.format1 "{ %s }" fname
-  else Util.format2 "{ %s; %s }" fname (string_of_time modtime)
-
-type push_query =
-  { push_kind: push_kind;
-    push_code: string;
-    push_line: int; push_column: int;
-    push_peek_only: bool }
-
+  
 (** Tasks describing each snapshot of the REPL state. **)
 
 type env_t = TcEnv.env
@@ -111,17 +93,6 @@ let nothing_left_to_pop st =
 (*********************)
 (* Dependency checks *)
 (*********************)
-
-let string_of_repl_task = function
-  | LDInterleaved (intf, impl) ->
-    Util.format2 "LDInterleaved (%s, %s)" (string_of_timed_fname intf) (string_of_timed_fname impl)
-  | LDSingle intf_or_impl ->
-    Util.format1 "LDSingle %s" (string_of_timed_fname intf_or_impl)
-  | LDInterfaceOfCurrentFile intf ->
-    Util.format1 "LDInterfaceOfCurrentFile %s" (string_of_timed_fname intf)
-  | PushFragment frag ->
-    Util.format1 "PushFragment { code = %s }" frag.frag_text
-  | Noop -> "Noop {}"
 
 (** Push, run `task`, and pop if it fails.
 
@@ -218,106 +189,6 @@ let run_repl_ld_transactions (st: repl_state) (tasks: list repl_task)
 
   aux st tasks (List.rev st.repl_deps_stack)
 
-(*****************************************)
-(* Reading queries and writing responses *)
-(*****************************************)
-
-let js_pushkind s : push_kind = match js_str s with
-  | "syntax" -> SyntaxCheck
-  | "lax" -> LaxCheck
-  | "full" -> FullCheck
-  | _ -> js_fail "push_kind" s
-
-let js_reductionrule s = match js_str s with
-  | "beta" -> FStar.TypeChecker.Env.Beta
-  | "delta" -> FStar.TypeChecker.Env.UnfoldUntil SS.delta_constant
-  | "iota" -> FStar.TypeChecker.Env.Iota
-  | "zeta" -> FStar.TypeChecker.Env.Zeta
-  | "reify" -> FStar.TypeChecker.Env.Reify
-  | "pure-subterms" -> FStar.TypeChecker.Env.PureSubtermsWithinComputations
-  | _ -> js_fail "reduction rule" s
-
-type completion_context =
-| CKCode
-| CKOption of bool (* #set-options (false) or #reset-options (true) *)
-| CKModuleOrNamespace of bool (* modules *) * bool (* namespaces *)
-
-let js_optional_completion_context k =
-  match k with
-  | None -> CKCode
-  | Some k ->
-    match js_str k with
-    | "symbol" // Backwards compatibility
-    | "code" -> CKCode
-    | "set-options" -> CKOption false
-    | "reset-options" -> CKOption true
-    | "open"
-    | "let-open" -> CKModuleOrNamespace (true, true)
-    | "include"
-    | "module-alias" -> CKModuleOrNamespace (true, false)
-    | _ ->
-      js_fail "completion context (code, set-options, reset-options, \
-open, let-open, include, module-alias)" k
-
-type lookup_context =
-| LKSymbolOnly
-| LKModule
-| LKOption
-| LKCode
-
-let js_optional_lookup_context k =
-  match k with
-  | None -> LKSymbolOnly // Backwards-compatible default
-  | Some k ->
-    match js_str k with
-    | "symbol-only" -> LKSymbolOnly
-    | "code" -> LKCode
-    | "set-options"
-    | "reset-options" -> LKOption
-    | "open"
-    | "let-open"
-    | "include"
-    | "module-alias" -> LKModule
-    | _ ->
-      js_fail "lookup context (symbol-only, code, set-options, reset-options, \
-open, let-open, include, module-alias)" k
-
-type position = string * int * int
-
-type query' =
-| Exit
-| DescribeProtocol
-| DescribeRepl
-| Segment of string (* File contents *)
-| Pop
-| Push of push_query
-| VfsAdd of option string (* fname *) * string (* contents *)
-| AutoComplete of string * completion_context
-| Lookup of string * lookup_context * option position * list string
-| Compute of string * option (list FStar.TypeChecker.Env.step)
-| Search of string
-| GenericError of string
-| ProtocolViolation of string
-and query = { qq: query'; qid: string }
-
-let query_needs_current_module = function
-  | Exit | DescribeProtocol | DescribeRepl | Segment _
-  | Pop | Push { push_peek_only = false } | VfsAdd _
-  | GenericError _ | ProtocolViolation _ -> false
-  | Push _ | AutoComplete _ | Lookup _ | Compute _ | Search _ -> true
-
-let interactive_protocol_vernum = 2
-
-let interactive_protocol_features =
-  ["autocomplete"; "autocomplete/context";
-   "compute"; "compute/reify"; "compute/pure-subterms";
-   "describe-protocol"; "describe-repl"; "exit";
-   "lookup"; "lookup/context"; "lookup/documentation"; "lookup/definition";
-   "peek"; "pop"; "push"; "search"; "segment";
-   "vfs-add"; "tactic-ranges"; "interrupt"; "progress"]
-
-type query_status = | QueryOK | QueryNOK | QueryViolatesProtocol
-
 let wrap_js_failure qid expected got =
   { qid = qid;
     qq = ProtocolViolation (Util.format2 "JSON decoding failed: expected %s, got %s"
@@ -350,10 +221,11 @@ let unpack_interactive_query json =
            | "describe-repl" -> DescribeRepl
            | "segment" -> Segment (arg "code" |> js_str)
            | "peek" | "push" -> Push ({ push_kind = arg "kind" |> js_pushkind;
-                                       push_code = arg "code" |> js_str;
+                                       push_code_or_decl = Inl (arg "code" |> js_str);
                                        push_line = arg "line" |> js_int;
                                        push_column = arg "column" |> js_int;
                                        push_peek_only = query = "peek" })
+           | "full-buffer" -> FullBuffer (arg "code" |> js_str)
            | "autocomplete" -> AutoComplete (arg "partial-symbol" |> js_str,
                                             try_arg "context" |> js_optional_completion_context)
            | "lookup" -> Lookup (arg "symbol" |> js_str,
@@ -395,29 +267,6 @@ let read_interactive_query stream : query =
 
 let json_of_opt json_of_a opt_a =
   Util.dflt JsonNull (Util.map_option json_of_a opt_a)
-
-let json_of_issue_level i =
-  JsonStr (match i with
-           | ENotImplemented -> "not-implemented"
-           | EInfo -> "info"
-           | EWarning -> "warning"
-           | EError -> "error")
-
-let json_of_issue issue =
-  JsonAssoc <|
-     [("level", json_of_issue_level issue.issue_level)]
-    @(match issue.issue_number with
-      | None -> []
-      | Some n -> [("number", JsonInt n)])
-    @[("message", JsonStr (issue_message issue));
-      ("ranges", JsonList
-                   ((match issue.issue_range with
-                     | None -> []
-                     | Some r -> [json_of_use_range r]) @
-                    (match issue.issue_range with
-                     | Some r when def_range r <> use_range r ->
-                       [json_of_def_range r]
-                     | _ -> [])))]
 
 let alist_of_symbol_lookup_result lr =
   [("name", JsonStr lr.slr_name);
@@ -660,6 +509,9 @@ let write_progress stage contents_alist =
   let js_contents = ("stage", stage) :: contents_alist in
   write_json (json_of_message "progress" (JsonAssoc js_contents))
 
+let write_error contents =
+  write_json (json_of_message "error" (JsonAssoc contents))
+
 let write_repl_ld_task_progress task =
   match task with
   | LDInterleaved (_, tf) | LDSingle tf | LDInterfaceOfCurrentFile tf ->
@@ -686,26 +538,65 @@ let rephrase_dependency_error issue =
                format1 "Error while computing or loading dependencies:\n%s"
                        issue.issue_msg }
 
-let run_push_without_deps st query =
+let write_full_buffer_fragment_progress (di:either FStar.Parser.AST.decl (list issue)) =
+    match di with
+    | Inl d ->
+      write_progress (Some "full-buffer-fragment-ok")
+                     ["ranges", json_of_def_range d.FStar.Parser.AST.drange]
+    | Inr issues ->
+      let qid =
+        match !repl_current_qid with
+        | None -> "unknown"
+        | Some q -> q
+      in
+      write_json (json_of_response qid QueryNOK (JsonList (List.map json_of_issue issues)))
+
+
+let run_push_without_deps st query
+  : (query_status & json) & either repl_state int =
   let set_nosynth_flag st flag =
     { st with repl_env = { st.repl_env with nosynth = flag } } in
 
-  let { push_code = text; push_line = line; push_column = column;
-        push_peek_only = peek_only; push_kind = push_kind } = query in
+  let { push_code_or_decl = code_or_decl;
+        push_line = line;
+        push_column = column;
+        push_peek_only = peek_only;
+        push_kind = push_kind } = query in
 
-  let frag = { frag_fname = "<input>"; frag_text = text; frag_line = line; frag_col = column } in
 
   let _ =
     if FStar.Options.ide_id_info_off()
     then TcEnv.toggle_id_info st.repl_env false
     else TcEnv.toggle_id_info st.repl_env true
   in
+  let frag =
+    match code_or_decl with
+    | Inl text ->
+      Inl { frag_fname = "<input>"; frag_text = text; frag_line = line; frag_col = column }
+    | Inr decl -> 
+      Inr decl
+    in
   let st = set_nosynth_flag st peek_only in
   let success, st = run_repl_transaction st push_kind peek_only (PushFragment frag) in
   let st = set_nosynth_flag st false in
 
   let status = if success || peek_only then QueryOK else QueryNOK in
-  let json_errors = JsonList (collect_errors () |> List.map json_of_issue) in
+  let errs = collect_errors () in
+  let has_error = 
+      List.existsb 
+        (fun i -> 
+          match i.issue_level with
+          | EError | ENotImplemented -> true
+          | _ -> false)
+        errs
+  in
+  let _ = 
+    match code_or_decl with
+    | Inr d when not has_error ->
+      write_full_buffer_fragment_progress (Inl d)
+    | _ -> ()
+  in
+  let json_errors = JsonList (errs |> List.map json_of_issue) in
   let st = if success then { st with repl_line = line; repl_column = column } else st in
   ((status, json_errors), Inl st)
 
@@ -843,8 +734,8 @@ let run_with_parsed_and_tc_term st term line column continuation =
     | _ -> None in
 
   let parse frag =
-    match FStar.Parser.ParseIt.parse (FStar.Parser.ParseIt.Toplevel frag) with
-    | FStar.Parser.ParseIt.ASTFragment (Inr decls, _) -> Some decls
+    match FStar.Parser.ParseIt.parse (FStar.Parser.ParseIt.Incremental frag) with
+    | FStar.Parser.ParseIt.IncrementalFragment (decls, _, _err) -> Some decls
     | _ -> None in
 
   let desugar env decls =
@@ -997,21 +888,28 @@ let run_search st search_str =
     with InvalidSearch s -> (QueryNOK, JsonStr s) in
   (results, Inl st)
 
-let run_query st (q: query') : (query_status * json) * either repl_state int =
-  match q with
-  | Exit -> run_exit st
-  | DescribeProtocol -> run_describe_protocol st
-  | DescribeRepl -> run_describe_repl st
-  | GenericError message -> run_generic_error st message
-  | ProtocolViolation query -> run_protocol_violation st query
-  | Segment c -> run_segment st c
-  | VfsAdd (fname, contents) -> run_vfs_add st fname contents
-  | Push pquery -> run_push st pquery
-  | Pop -> run_pop st
-  | AutoComplete (search_term, context) -> run_autocomplete st search_term context
-  | Lookup (symbol, context, pos_opt, rq_info) -> run_lookup st symbol context pos_opt rq_info
-  | Compute (term, rules) -> run_compute st term rules
-  | Search term -> run_search st term
+let as_json_list (q: (query_status & json) & either repl_state int)
+  : (query_status & list json) & either repl_state int
+  = let (q, j), s = q in
+    (q, [j]), s
+
+let run_query_result = (query_status * list json) * either repl_state int 
+
+let rec fold_query (f:repl_state -> query -> run_query_result)
+                   (l:list query)
+                   (st:repl_state)
+                   (responses: list json)
+  : run_query_result
+  = match l with
+    | [] -> (QueryOK, responses), Inl st
+    | q::l ->
+      let (status, resp), st' = f st q in
+      let responses = responses @ resp in
+      match status, st' with
+      | QueryOK, Inl st ->
+        fold_query f l st responses
+      | _ ->
+        (status, responses), st'
 
 let validate_query st (q: query) : query =
   match q.qq with
@@ -1022,16 +920,43 @@ let validate_query st (q: query) : query =
           { qid = q.qid; qq = GenericError "Current module unset" }
         | _ -> q
 
-let validate_and_run_query st query =
+
+let rec run_query st (q: query) : (query_status * list json) * either repl_state int =
+  match q.qq with
+  | Exit -> as_json_list (run_exit st)
+  | DescribeProtocol -> as_json_list (run_describe_protocol st)
+  | DescribeRepl -> as_json_list (run_describe_repl st)
+  | GenericError message -> as_json_list (run_generic_error st message)
+  | ProtocolViolation query -> as_json_list (run_protocol_violation st query)
+  | Segment c -> as_json_list (run_segment st c)
+  | VfsAdd (fname, contents) -> as_json_list (run_vfs_add st fname contents)
+  | Push pquery -> as_json_list (run_push st pquery)
+  | Pop -> as_json_list (run_pop st)
+  | FullBuffer code ->
+    let queries = 
+      FStar.Interactive.Incremental.run_full_buffer st q.qid code write_full_buffer_fragment_progress
+    in
+    fold_query validate_and_run_query queries st []
+  | AutoComplete (search_term, context) ->
+    as_json_list (run_autocomplete st search_term context)
+  | Lookup (symbol, context, pos_opt, rq_info) ->
+    as_json_list (run_lookup st symbol context pos_opt rq_info)
+  | Compute (term, rules) ->
+    as_json_list (run_compute st term rules)
+  | Search term ->
+    as_json_list (run_search st term)
+and validate_and_run_query st query =
   let query = validate_query st query in
   repl_current_qid := Some query.qid;
-  run_query st query.qq
+  if Options.debug_any ()
+  then BU.print2 "Running query %s: %s\n" query.qid (query_to_string query);
+  run_query st query
 
 (** This is the body of the JavaScript port's main loop. **)
 let js_repl_eval st query =
-  let (status, response), st_opt = validate_and_run_query st query in
-  let js_response = json_of_response query.qid status response in
-  js_response, st_opt
+  let (status, responses), st_opt = validate_and_run_query st query in
+  let js_responses = List.map (json_of_response query.qid status) responses in
+  js_responses, st_opt
 
 let js_repl_eval_js st query_js =
   js_repl_eval st (deserialize_interactive_query query_js)
@@ -1039,7 +964,7 @@ let js_repl_eval_js st query_js =
 let js_repl_eval_str st query_str =
   let js_response, st_opt =
     js_repl_eval st (parse_interactive_query query_str) in
-  (Util.string_of_json js_response), st_opt
+  (List.map Util.string_of_json js_response), st_opt
 
 (** This too is called from FStar.js **)
 let js_repl_init_opts () =
@@ -1057,9 +982,14 @@ let js_repl_init_opts () =
 
 (** This is the main loop for the desktop version **)
 let rec go st : int =
+  if Options.debug_any ()
+  then (
+    FStar.Compiler.Util.print1 "Repl stack is:\n%s\n"
+                               (string_of_repl_stack (!repl_stack))
+  );
   let query = read_interactive_query st.repl_stdin in
-  let (status, response), state_opt = validate_and_run_query st query in
-  write_response query.qid status response;
+  let (status, responses), state_opt = validate_and_run_query st query in
+  List.iter (write_response query.qid status) responses;
   match state_opt with
   | Inl st' -> go st'
   | Inr exitcode -> exitcode
@@ -1091,8 +1021,6 @@ let install_ide_mode_hooks printer =
   FStar.Compiler.Util.set_printer (interactive_printer printer);
   FStar.Errors.set_handler interactive_error_handler
 
-let initial_range =
-  Range.mk_range "<input>" (Range.mk_pos 1 0) (Range.mk_pos 1 0)
 
 let build_initial_repl_state (filename: string) =
   let env = init_env FStar.Parser.Dep.empty_deps in

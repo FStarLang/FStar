@@ -565,7 +565,7 @@ let (pars_and_tc_fragment : Prims.string -> unit) =
                           let uu___4 =
                             FStar_Compiler_Effect.op_Bang test_mod_ref in
                           FStar_Universal.tc_one_fragment uu___4 tcenv
-                            (frag, FStar_Pervasives_Native.None) in
+                            (FStar_Pervasives.Inl frag) in
                         (match uu___3 with
                          | (test_mod', tcenv') ->
                              (FStar_Compiler_Effect.op_Colon_Equals

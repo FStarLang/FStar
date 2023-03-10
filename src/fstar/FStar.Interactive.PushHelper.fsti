@@ -26,6 +26,7 @@ open FStar.Compiler.Util
 open FStar.Ident
 open FStar.TypeChecker.Env
 open FStar.Interactive.JsonHelper
+open FStar.Interactive.ReplState
 
 module DsEnv = FStar.Syntax.DsEnv
 module CTable = FStar.Interactive.CompletionTable

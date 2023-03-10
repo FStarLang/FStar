@@ -174,35 +174,32 @@ let tc_one_fragment curmod (env:TcEnv.env_t) frag =
     | Parser.AST.Interface (_, { Parser.AST.drange = d } :: _, _) -> d
     | _ -> Range.dummyRange in
 
-  match Parser.Driver.parse_fragment frag with
-  | Parser.Driver.Empty
-  | Parser.Driver.Decls [] ->
-    (curmod, env)
-
-  | Parser.Driver.Modul ast_modul ->
-    (* It may seem surprising that this function, whose name indicates that
-       it type-checks a fragment, can actually parse an entire module.
-       Actually, this is an abuse, and just means that we're type-checking the
-       first chunk. *)
-    let ast_modul, env =
-      with_dsenv_of_tcenv env <| FStar.ToSyntax.Interleave.interleave_module ast_modul false in
-    let modul, env =
-      with_dsenv_of_tcenv env <| Desugar.partial_ast_modul_to_modul curmod ast_modul in
-    if not (acceptable_mod_name modul) then
-    begin
-       let msg : string =
-           BU.format1 "Interactive mode only supports a single module at the top-level. Expected module %s"
-                       (Parser.Dep.module_name_of_file (fname env))
-       in
-       Errors.raise_error (Errors.Fatal_NonSingletonTopLevelModule, msg)
-                             (range_of_first_mod_decl ast_modul)
-    end;
-    let modul, env =
-        if DsEnv.syntax_only env.dsenv then modul, env
-        else Tc.tc_partial_modul env modul
-    in
-    (Some modul, env)
-  | Parser.Driver.Decls ast_decls ->
+  let check_module_name_declaration ast_modul = 
+      (* It may seem surprising that this function, whose name indicates that
+         it type-checks a fragment, can actually parse an entire module.
+         Actually, this is an abuse, and just means that we're type-checking the
+         first chunk. *)
+      let ast_modul, env =
+        with_dsenv_of_tcenv env <| FStar.ToSyntax.Interleave.interleave_module ast_modul false in
+      let modul, env =
+        with_dsenv_of_tcenv env <| Desugar.partial_ast_modul_to_modul curmod ast_modul in
+      if not (acceptable_mod_name modul) then
+      begin
+        let msg : string =
+            BU.format1 "Interactive mode only supports a single module at the top-level. Expected module %s"
+                                    (Parser.Dep.module_name_of_file (fname env))
+        in
+        Errors.raise_error (Errors.Fatal_NonSingletonTopLevelModule, msg)
+                                                                     (range_of_first_mod_decl ast_modul)
+      end;
+      let modul, env =
+          if DsEnv.syntax_only env.dsenv then modul, env
+          else Tc.tc_partial_modul env modul
+      in
+      (Some modul, env)
+  in
+  
+  let check_decls ast_decls =
     match curmod with
     | None ->
       let { Parser.AST.drange = rng } = List.hd ast_decls in
@@ -222,7 +219,29 @@ let tc_one_fragment curmod (env:TcEnv.env_t) frag =
       let modul, _, env  = if DsEnv.syntax_only env.dsenv then (modul, [], env)
                         else Tc.tc_more_partial_modul env modul sigelts in
       (Some modul, env)
+  in
+  match frag with
+  | Inr d -> (
+    match d.d with
+    | FStar.Parser.AST.TopLevelModule lid ->
+      check_module_name_declaration (FStar.Parser.AST.Module(lid, [d]))
+    | _ -> 
+      check_decls [d]
+  )
 
+  | Inl frag -> (
+    match Parser.Driver.parse_fragment frag with
+    | Parser.Driver.Empty
+    | Parser.Driver.Decls [] ->
+      (curmod, env)
+
+    | Parser.Driver.Modul ast_modul ->
+      check_module_name_declaration ast_modul
+
+    | Parser.Driver.Decls ast_decls ->
+      check_decls ast_decls
+  )
+    
 let load_interface_decls env interface_file_name : TcEnv.env_t =
   let r = Pars.parse (Pars.Filename interface_file_name) in
   match r with

@@ -30,6 +30,7 @@ open FStar.Universal
 open FStar.Parser.ParseIt
 open FStar.TypeChecker.Env
 open FStar.Interactive.JsonHelper
+open FStar.Interactive.ReplState
 
 module U = FStar.Compiler.Util
 module SS = FStar.Syntax.Syntax
@@ -370,5 +371,5 @@ let full_lax text st =
   match ld_deps st with
   | Inl (st, deps) ->
       let names = add_module_completions st.repl_fname deps st.repl_names in
-      repl_tx ({ st with repl_names = names }) LaxCheck (PushFragment frag)
+      repl_tx ({ st with repl_names = names }) LaxCheck (PushFragment (Inl frag))
   | Inr st -> None, st

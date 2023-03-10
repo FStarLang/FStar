@@ -24,6 +24,7 @@ open FStar.Compiler.Range
 open FStar.Errors
 open FStar.Universal
 open FStar.Interactive.JsonHelper
+open FStar.Interactive.ReplState
 
 module U = FStar.Compiler.Util
 module QH = FStar.Interactive.QueryHelper

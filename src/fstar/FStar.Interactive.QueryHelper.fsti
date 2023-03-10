@@ -18,11 +18,13 @@
  * queries; this file collects helpers for them                  *)
 
 module FStar.Interactive.QueryHelper
-open FStar open FStar.Compiler
+open FStar
+open FStar.Compiler
 open FStar.Compiler.Range
 open FStar.Compiler.Util
 open FStar.TypeChecker.Env
 open FStar.Interactive.JsonHelper
+open FStar.Interactive.ReplState
 
 module TcErr = FStar.TypeChecker.Err
 module TcEnv = FStar.TypeChecker.Env
