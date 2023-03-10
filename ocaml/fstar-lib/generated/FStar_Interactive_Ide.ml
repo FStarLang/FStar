@@ -27,7 +27,7 @@ let with_captured_errors' :
                             "minimized version of the program that triggered the error.")))) in
             ((let uu___2 = FStar_TypeChecker_Env.get_range env in
               FStar_Errors.log_issue uu___2
-                (FStar_Errors.Error_IDEAssertionFailure, msg1));
+                (FStar_Errors_Codes.Error_IDEAssertionFailure, msg1));
              FStar_Pervasives_Native.None)
         | FStar_Compiler_Util.SigInt ->
             (FStar_Compiler_Util.print_string "Interrupted";
@@ -2553,7 +2553,8 @@ let (interactive_mode : Prims.string -> unit) =
      if uu___3
      then
        FStar_Errors.log_issue FStar_Compiler_Range.dummyRange
-         (FStar_Errors.Warning_IDEIgnoreCodeGen, "--ide: ignoring --codegen")
+         (FStar_Errors_Codes.Warning_IDEIgnoreCodeGen,
+           "--ide: ignoring --codegen")
      else ());
     (let init = build_initial_repl_state filename in
      let uu___3 = FStar_Options.trace_error () in

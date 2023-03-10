@@ -341,6 +341,8 @@ let (ref_Sg_Val : refl_constant) = fstar_refl_data_const "Sg_Val"
 let (ref_Unk : refl_constant) = fstar_refl_data_const "Unk"
 let (ref_qual_Assumption : refl_constant) =
   fstar_refl_data_const "Assumption"
+let (ref_qual_InternalAssumption : refl_constant) =
+  fstar_refl_data_const "InternalAssumption"
 let (ref_qual_New : refl_constant) = fstar_refl_data_const "New"
 let (ref_qual_Private : refl_constant) = fstar_refl_data_const "Private"
 let (ref_qual_Unfold_for_unification_and_vcgen : refl_constant) =

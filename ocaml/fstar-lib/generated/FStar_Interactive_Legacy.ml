@@ -341,7 +341,7 @@ let rec (read_chunk : unit -> input_chunks) =
                    (false, uu___5, uu___6)
                | uu___5 ->
                    (FStar_Errors.log_issue FStar_Compiler_Range.dummyRange
-                      (FStar_Errors.Warning_WrongErrorLocation,
+                      (FStar_Errors_Codes.Warning_WrongErrorLocation,
                         (Prims.op_Hat
                            "Error locations may be wrong, unrecognized string after #push: "
                            lc_lax));
@@ -367,7 +367,7 @@ let rec (read_chunk : unit -> input_chunks) =
                     Info uu___7))
               | uu___5 ->
                   (FStar_Errors.log_issue FStar_Compiler_Range.dummyRange
-                     (FStar_Errors.Error_IDEUnrecognized,
+                     (FStar_Errors_Codes.Error_IDEUnrecognized,
                        (Prims.op_Hat "Unrecognized \"#info\" request: " l));
                    FStar_Compiler_Effect.exit Prims.int_one))
            else
@@ -379,7 +379,7 @@ let rec (read_chunk : unit -> input_chunks) =
                      Completions prefix)
                 | uu___6 ->
                     (FStar_Errors.log_issue FStar_Compiler_Range.dummyRange
-                       (FStar_Errors.Error_IDEUnrecognized,
+                       (FStar_Errors_Codes.Error_IDEUnrecognized,
                          (Prims.op_Hat
                             "Unrecognized \"#completions\" request: " l));
                      FStar_Compiler_Effect.exit Prims.int_one))
@@ -441,7 +441,7 @@ let (deps_of_our_file :
                            FStar_Compiler_Util.format2
                              "Found %s and %s but not an interface + implementation"
                              intf impl in
-                         (FStar_Errors.Warning_MissingInterfaceOrImplementation,
+                         (FStar_Errors_Codes.Warning_MissingInterfaceOrImplementation,
                            uu___5) in
                        FStar_Errors.log_issue FStar_Compiler_Range.dummyRange
                          uu___4
@@ -454,7 +454,7 @@ let (deps_of_our_file :
                          FStar_Compiler_Util.format1
                            "Unexpected: ended up with %s"
                            (FStar_String.concat " " same_name) in
-                       (FStar_Errors.Warning_UnexpectedFile, uu___5) in
+                       (FStar_Errors_Codes.Warning_UnexpectedFile, uu___5) in
                      FStar_Errors.log_issue FStar_Compiler_Range.dummyRange
                        uu___4);
                     FStar_Pervasives_Native.None) in
@@ -869,7 +869,7 @@ let rec (go :
                       | [] ->
                           (FStar_Errors.log_issue
                              FStar_Compiler_Range.dummyRange
-                             (FStar_Errors.Error_IDETooManyPops,
+                             (FStar_Errors_Codes.Error_IDETooManyPops,
                                "too many pops");
                            FStar_Compiler_Effect.exit Prims.int_one)
                       | hd::tl -> (hd, tl) in
@@ -923,7 +923,7 @@ let (interactive_mode : Prims.string -> unit) =
      if uu___1
      then
        FStar_Errors.log_issue FStar_Compiler_Range.dummyRange
-         (FStar_Errors.Warning_IDEIgnoreCodeGen,
+         (FStar_Errors_Codes.Warning_IDEIgnoreCodeGen,
            "code-generation is not supported in interactive mode, ignoring the codegen flag")
      else ());
     (let uu___1 = deps_of_our_file filename in

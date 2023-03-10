@@ -3,6 +3,7 @@ open FStar_Errors
 open FStar_Syntax_Syntax
 open Lexing
 open FStar_Sedlexing
+module Codes = FStar_Errors_Codes
 
 type filename = string
 
@@ -23,7 +24,7 @@ type parse_frag =
     | Incremental of input_frag
     | Fragment of input_frag
 
-type parse_error = (FStar_Errors.raw_error * string * FStar_Compiler_Range.range)
+type parse_error = (Codes.raw_error * string * FStar_Compiler_Range.range)
 
 type parse_result =
     | ASTFragment of (FStar_Parser_AST.inputFragment * (string * FStar_Compiler_Range.range) list)
@@ -35,4 +36,4 @@ val parse: parse_frag -> parse_result
 
 val find_file: string -> string
 
-val parse_warn_error: string -> FStar_Errors.error_setting list 
+val parse_warn_error: string -> Codes.error_setting list 

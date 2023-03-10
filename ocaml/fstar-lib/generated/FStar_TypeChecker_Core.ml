@@ -1005,11 +1005,11 @@ let no_guard : 'a . 'a result -> 'a result =
 let (equatable : env -> FStar_Syntax_Syntax.term -> Prims.bool) =
   fun g ->
     fun t ->
-      let uu___ = FStar_Syntax_Util.head_and_args t in
-      match uu___ with
-      | (head, uu___1) ->
-          FStar_TypeChecker_Rel.may_relate_with_logical_guard g.tcenv true
-            head
+      let uu___ =
+        FStar_Compiler_Effect.op_Bar_Greater t
+          FStar_Syntax_Util.leftmost_head in
+      FStar_Compiler_Effect.op_Bar_Greater uu___
+        (FStar_TypeChecker_Rel.may_relate_with_logical_guard g.tcenv true)
 let (apply_predicate :
   FStar_Syntax_Syntax.binder ->
     FStar_Syntax_Syntax.term ->

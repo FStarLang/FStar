@@ -133,7 +133,7 @@ let none_to_empty_list x =
 %type <FStar_Parser_AST.decl option> oneDeclOrEOF
 %type <FStar_Parser_AST.term> term
 %type <FStar_Ident.ident> lident
-%type <(FStar_Errors.flag * string) list> warn_error_list
+%type <(FStar_Errors_Codes.error_flag * string) list> warn_error_list
 %%
 
 (* inputFragment is used at the same time for whole files and fragment of codes (for interactive mode) *)

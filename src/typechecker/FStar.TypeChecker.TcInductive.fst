@@ -74,12 +74,15 @@ let tc_tycon (env:env_t)     (* environment that contains all mutually defined t
 
          let k = U.arrow indices (S.mk_Total t) in
          let t_type, u = U.type_u() in
-         //AR: allow only Type and eqtype, nothing else
-         let valid_type = (U.is_eqtype_no_unrefine t && not (s.sigquals |> List.contains Unopteq)) ||
+         //AR: allow only Type and eqtype, nothing else.
+         // If the annotation is eqtype, then the type cannot contain the noeq qualifier
+         // nor the unopteq qualifier. That is, if the user wants to annotate an inductive
+         // as eqtype, they must run the full hasEq check
+         let valid_type = (U.is_eqtype_no_unrefine t && not (s.sigquals |> List.contains Noeq) && not (s.sigquals |> List.contains Unopteq)) ||
                           (teq_nosmt_force env t t_type) in
          if not valid_type then
              raise_error (Errors.Error_InductiveAnnotNotAType,
-                          (BU.format2 "Type annotation %s for inductive %s is not Type or eqtype, or it is eqtype but contains unopteq qualifier"
+                          (BU.format2 "Type annotation %s for inductive %s is not Type or eqtype, or it is eqtype but contains noeq/unopteq qualifiers"
                                                 (Print.term_to_string t)
                                                 (Ident.string_of_lid tc))) s.sigrng;
 

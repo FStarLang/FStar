@@ -157,8 +157,8 @@ let (__do_rewrite :
                              FStar_Pervasives_Native.Some uu___3)) ()
                with
                | FStar_Errors.Error
-                   (FStar_Errors.Error_LayeredMissingAnnot, uu___2, uu___3,
-                    uu___4)
+                   (FStar_Errors_Codes.Error_LayeredMissingAnnot, uu___2,
+                    uu___3, uu___4)
                    -> FStar_Pervasives_Native.None
                | e -> FStar_Compiler_Effect.raise e in
              match res with

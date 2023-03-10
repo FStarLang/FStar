@@ -202,7 +202,7 @@ let (deps_and_repl_ld_tasks_of_our_file :
                          let uu___5 =
                            FStar_Compiler_Util.format1
                              "Expecting an interface, got %s" intf in
-                         (FStar_Errors.Fatal_MissingInterface, uu___5) in
+                         (FStar_Errors_Codes.Fatal_MissingInterface, uu___5) in
                        FStar_Errors.raise_err uu___4
                      else ());
                     (let uu___4 =
@@ -214,7 +214,8 @@ let (deps_and_repl_ld_tasks_of_our_file :
                          let uu___6 =
                            FStar_Compiler_Util.format1
                              "Expecting an implementation, got %s" impl in
-                         (FStar_Errors.Fatal_MissingImplementation, uu___6) in
+                         (FStar_Errors_Codes.Fatal_MissingImplementation,
+                           uu___6) in
                        FStar_Errors.raise_err uu___5
                      else ());
                     (let uu___4 =
@@ -235,7 +236,8 @@ let (deps_and_repl_ld_tasks_of_our_file :
                        let uu___5 =
                          FStar_Compiler_Util.format message
                            [our_mod_name; mods_str] in
-                       (FStar_Errors.Fatal_TooManyOrTooFewFileMatch, uu___5) in
+                       (FStar_Errors_Codes.Fatal_TooManyOrTooFewFileMatch,
+                         uu___5) in
                      FStar_Errors.raise_err uu___4);
                     []) in
              let tasks = repl_ld_tasks_of_deps real_deps intf_tasks in

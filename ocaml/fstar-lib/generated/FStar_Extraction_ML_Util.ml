@@ -762,14 +762,14 @@ let (not_implemented_warning :
               let uu___3 =
                 let uu___4 =
                   FStar_Errors.lookup
-                    FStar_Errors.Warning_PluginNotImplemented in
+                    FStar_Errors_Codes.Warning_PluginNotImplemented in
                 FStar_Errors.error_number uu___4 in
               FStar_Compiler_Effect.op_Less_Bar
                 FStar_Compiler_Util.string_of_int uu___3 in
             FStar_Compiler_Util.format3
               "Plugin %s can not run natively because %s (use --warn_error -%s to carry on)."
               t msg uu___2 in
-          (FStar_Errors.Warning_PluginNotImplemented, uu___1) in
+          (FStar_Errors_Codes.Warning_PluginNotImplemented, uu___1) in
         FStar_Errors.log_issue r uu___
 type emb_loc =
   | Syntax_term 

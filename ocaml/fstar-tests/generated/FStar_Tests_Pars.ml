@@ -45,7 +45,8 @@ let (parse_mod :
           (FStar_Pervasives.Inr uu___1, uu___2) ->
           let msg =
             FStar_Compiler_Util.format1 "%s: expected a module\n" mod_name in
-          FStar_Errors.raise_error (FStar_Errors.Fatal_ModuleExpected, msg)
+          FStar_Errors.raise_error
+            (FStar_Errors_Codes.Fatal_ModuleExpected, msg)
             FStar_Compiler_Range.dummyRange
       | FStar_Parser_ParseIt.Term uu___1 ->
           failwith
@@ -582,7 +583,7 @@ let (pars_and_tc_fragment : Prims.string -> unit) =
                                          FStar_Compiler_Util.string_of_int n in
                                        FStar_Compiler_Util.format1
                                          "%s errors were reported" uu___9 in
-                                     (FStar_Errors.Fatal_ErrorsReported,
+                                     (FStar_Errors_Codes.Fatal_ErrorsReported,
                                        uu___8) in
                                    FStar_Errors.raise_err uu___7))
                                else ())))) ()
@@ -590,7 +591,7 @@ let (pars_and_tc_fragment : Prims.string -> unit) =
                | uu___2 ->
                    (report ();
                     FStar_Errors.raise_err
-                      (FStar_Errors.Fatal_TcOneFragmentFailed,
+                      (FStar_Errors_Codes.Fatal_TcOneFragmentFailed,
                         (Prims.op_Hat "tc_one_fragment failed: " s))))) ()
      with
      | uu___1 ->

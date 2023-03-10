@@ -20,7 +20,7 @@ open FStar.Compiler.Range
 (** A (short) identifier for a local name.
  *  e.g. x in `fun x -> ...` *)
 // IN F*: [@@ PpxDerivingYoJson; PpxDerivingShow ]
-val ident : Type0
+new val ident : Type0
 
 // type ident
 
@@ -82,7 +82,7 @@ val path_of_ns          : ipath -> path
     the last one denotes a name, and all the others denote a
     module path that qualifies the name. *)
 // IN F*: [@@ PpxDerivingYoJson; PpxDerivingShow ]
-val lident : Type0
+new val lident : Type0
 
 // IN F*: [@@ PpxDerivingYoJson; PpxDerivingShow ]
 type lid = lident
