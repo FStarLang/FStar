@@ -2,37 +2,27 @@ module Steel.C.Opt
 
 open Steel.C.Model.PCM
 module A = Steel.Effect.Atomic
+module STC = Steel.ST.Coercions
 
-let opt_read r =
-  A.change_equal_slprop (r `pts_to` _) (r `pts_to` _);
-  let Some x = ref_read r in
-  x
 
-let opt_write #a #b #x r y =
-  A.change_equal_slprop (r `pts_to` _) (r `pts_to` _);
-  ref_upd r (Some (Ghost.reveal x)) (Some y) (fun (Some _) -> Some y);
-  A.change_equal_slprop (r `pts_to` _) (r `pts_to` _)
+let opt_read_sel
+  #a #b r
+= ref_read_sel r (opt_view b)
 
-let opt_pcm_write
-  (#a:Type) (#b: Type)
-  (r: ref a (opt_pcm #b)) (x: Ghost.erased (option b)) (y: b)
-: Steel unit (r `pts_to` x) (fun _ -> r `pts_to` Some y)
-  (requires (fun _ -> Some? x))
-  (ensures (fun _ _ _ -> True))
-= A.change_equal_slprop (r `pts_to` _) (r `pts_to` _);
-  ref_upd r x (Some y) (opt_pcm_fpu x y);
-  A.change_equal_slprop (r `pts_to` _) (r `pts_to` _)
+let opt_write_sel
+  #a #b r w
+=
+  let _ = pts_to_view_elim r (opt_view _) in
+  opt_pcm_write r _ w;
+  pts_to_view_intro r _ (opt_view _) w
 
-let opt_pcm_read
-  (#a:Type) (#b: Type)
-  (r: ref a (opt_pcm #b)) (x: Ghost.erased (option b))
-: Steel b (r `pts_to` x) (fun _ -> r `pts_to` x)
-  (requires (fun _ -> Some? x))
-  (ensures (fun _ y _ -> Ghost.reveal x == Some y))
-= A.change_equal_slprop (r `pts_to` _) (r `pts_to` _);
-  let y' = ref_read r in
-  assert (Ghost.reveal x == y');
-  Some?.v y'
+let ref_opt_read
+  #a #b r
+= ref_read_sel r (opt_view b)
+
+let ref_opt_write
+  #a #b r w
+= opt_write_sel r w
 
 let malloc
   #c x
