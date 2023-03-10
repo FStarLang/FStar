@@ -92,12 +92,16 @@ let check_extension fn =
 type parse_frag =
     | Filename of filename
     | Toplevel of input_frag
+    | Incremental of input_frag
     | Fragment of input_frag
+
+type parse_error = (FStar_Errors.raw_error * string * FStar_Compiler_Range.range)
 
 type parse_result =
     | ASTFragment of (FStar_Parser_AST.inputFragment * (string * FStar_Compiler_Range.range) list)
+    | IncrementalFragment of (FStar_Parser_AST.decl list * (string * FStar_Compiler_Range.range) list * parse_error option)
     | Term of FStar_Parser_AST.term
-    | ParseError of (FStar_Errors.raw_error * string * FStar_Compiler_Range.range)
+    | ParseError of parse_error
 
 let parse fn =
   FStar_Parser_Util.warningHandler := (function
@@ -109,6 +113,7 @@ let parse fn =
         let f', contents = read_file f in
         (try create contents f' 1 0, f'
          with _ -> raise_err (Fatal_InvalidUTF8Encoding, U.format1 "File %s has invalid UTF-8 encoding.\n" f'))
+    | Incremental s
     | Toplevel s
     | Fragment s ->
       create s.frag_text s.frag_fname (Z.to_int s.frag_line) (Z.to_int s.frag_col), "<input>"
@@ -118,12 +123,54 @@ let parse fn =
     let tok = FStar_Parser_LexFStar.token lexbuf in
     (tok, lexbuf.start_p, lexbuf.cur_p)
   in
+  let err_of_parse_error () =
+      let pos = FStar_Parser_Util.pos_of_lexpos lexbuf.cur_p in
+      let r = FStar_Compiler_Range.mk_range filename pos pos in
+      Fatal_SyntaxError, "Syntax error", r
+  in
+
+  let parse_incremental_decls () =
+      let parse_one_decl = MenhirLib.Convert.Simplified.traditional2revised FStar_Parser_Parse.oneDeclOrEOF in
+      let open FStar_Pervasives in
+      let rec parse decls =
+        let _, _, r = err_of_parse_error () in
+        let d =
+          try
+            Inl (parse_one_decl lexer)
+          with 
+          | FStar_Errors.Error(e, msg, r, _ctx) ->
+            Inr (e, msg, r)
+
+          | Parsing.Parse_error as _e ->
+            Inr (err_of_parse_error ())
+        in
+        match d with
+        | Inl None -> List.rev decls, None
+        | Inl (Some d) -> 
+          if not (FStar_Parser_AST.decl_syntax_is_delimited d)
+          then rollback lexbuf;
+          parse (d::decls)
+        | Inr err -> List.rev decls, Some err
+      in
+      parse []
+  in
+  let parse_incremental_fragment () =
+      let decls, err_opt = parse_incremental_decls () in
+      match err_opt with
+      | None ->
+        FStar_Parser_AST.as_frag decls
+      | Some (e, msg, r) ->
+        raise (FStar_Errors.Error(e, msg, r, []))
+  in
 
   try
     match fn with
     | Filename _
     | Toplevel _ -> begin
-      let fileOrFragment = MenhirLib.Convert.Simplified.traditional2revised FStar_Parser_Parse.inputFragment lexer in
+       let fileOrFragment =
+         if FStar_Options.debug_any()
+         then parse_incremental_fragment ()
+         else MenhirLib.Convert.Simplified.traditional2revised FStar_Parser_Parse.inputFragment lexer in
       let frags = match fileOrFragment with
           | FStar_Pervasives.Inl modul ->
              if has_extension filename interface_extensions
@@ -135,6 +182,11 @@ let parse fn =
           | _ -> fileOrFragment
       in ASTFragment (frags, FStar_Parser_Util.flush_comments ())
       end
+      
+    | Incremental _ ->
+      let decls, err_opt = parse_incremental_decls () in
+      IncrementalFragment(decls, FStar_Parser_Util.flush_comments(), err_opt)
+    
     | Fragment _ ->
       Term (MenhirLib.Convert.Simplified.traditional2revised FStar_Parser_Parse.term lexer)
   with
@@ -145,9 +197,7 @@ let parse fn =
       ParseError (e, msg, r)
 
     | Parsing.Parse_error as _e ->
-      let pos = FStar_Parser_Util.pos_of_lexpos lexbuf.cur_p in
-      let r = FStar_Compiler_Range.mk_range filename pos pos in
-      ParseError (Fatal_SyntaxError, "Syntax error", r)
+      ParseError (err_of_parse_error())
 
 (** Parsing of command-line error/warning/silent flags. *)
 let parse_warn_error s =

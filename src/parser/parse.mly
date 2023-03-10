@@ -128,7 +128,9 @@ let none_to_empty_list x =
 %start inputFragment
 %start term
 %start warn_error_list
+%start oneDeclOrEOF
 %type <FStar_Parser_AST.inputFragment> inputFragment
+%type <FStar_Parser_AST.decl option> oneDeclOrEOF
 %type <FStar_Parser_AST.term> term
 %type <FStar_Ident.ident> lident
 %type <(FStar_Errors.flag * string) list> warn_error_list
@@ -141,6 +143,9 @@ inputFragment:
         as_frag decls
       }
 
+oneDeclOrEOF:
+  | EOF { None }
+  | d=decl { Some d }
 
 /******************************************************************************/
 /*                      Top level declarations                                */
@@ -410,7 +415,7 @@ effectDecl:
 
 subEffect:
   | src_eff=quident SQUIGGLY_RARROW tgt_eff=quident EQUALS lift=simpleTerm
-      { { msource = src_eff; mdest = tgt_eff; lift_op = NonReifiableLift lift } }
+      { { msource = src_eff; mdest = tgt_eff; lift_op = NonReifiableLift lift; braced=false } }
   | src_eff=quident SQUIGGLY_RARROW tgt_eff=quident
     LBRACE
       lift1=separated_pair(IDENT, EQUALS, simpleTerm)
@@ -422,9 +427,9 @@ subEffect:
        | None ->
           begin match lift1 with
           | ("lift", lift) ->
-             { msource = src_eff; mdest = tgt_eff; lift_op = LiftForFree lift }
+             { msource = src_eff; mdest = tgt_eff; lift_op = LiftForFree lift; braced=true }
           | ("lift_wp", lift_wp) ->
-             { msource = src_eff; mdest = tgt_eff; lift_op = NonReifiableLift lift_wp }
+             { msource = src_eff; mdest = tgt_eff; lift_op = NonReifiableLift lift_wp; braced=true }
           | _ ->
              raise_error (Fatal_UnexpectedIdentifier, "Unexpected identifier; expected {'lift', and possibly 'lift_wp'}") (lhs parseState)
           end
@@ -435,7 +440,7 @@ subEffect:
                   | "lift", "lift_wp" -> tm2, tm1
                   | _ -> raise_error (Fatal_UnexpectedIdentifier, "Unexpected identifier; expected {'lift', 'lift_wp'}") (lhs parseState)
           in
-          { msource = src_eff; mdest = tgt_eff; lift_op = ReifiableLift (lift, lift_wp) }
+          { msource = src_eff; mdest = tgt_eff; lift_op = ReifiableLift (lift, lift_wp); braced=true }
      }
 
 polymonadic_bind:

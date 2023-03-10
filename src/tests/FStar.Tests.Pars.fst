@@ -164,7 +164,7 @@ let pars_and_tc_fragment (s:string) =
         let tcenv = init() in
         let frag = frag_of_text s in
         try
-          let test_mod', tcenv' = FStar.Universal.tc_one_fragment !test_mod_ref tcenv frag in
+          let test_mod', tcenv' = FStar.Universal.tc_one_fragment !test_mod_ref tcenv (frag, None) in
           test_mod_ref := test_mod';
           tcenv_ref := Some tcenv';
           let n = get_err_count () in
@@ -196,3 +196,23 @@ let test_hashes () =
   aux 100;
   Options.init()
   
+let parse_incremental_decls () =
+  let source = 
+    "module Demo\n\
+     let f x = match x with | Some x -> true | None -> false\n\
+     let test y = if Some? y then f y else true\n\
+     let some junk )("
+  in
+  let open FStar.Parser.ParseIt in
+  let input = Incremental { frag_fname = "Demo.fst";
+                            frag_text = source;
+                            frag_line = 0;
+                            frag_col = 0 } in
+  let open FStar.Compiler.Range in
+  match parse input with
+  | IncrementalFragment ([d0;d1;d2], _, Some (_, _, rng))
+    when (let p = start_of_range rng in
+          line_of_pos p = 3 && col_of_pos p = 15) ->
+    ()
+  | _ ->
+    failwith "Incremental parsing failed"
