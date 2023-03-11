@@ -1,10 +1,11 @@
 module PointStruct2
-open Steel.C.Types
+open Steel.ST.Util
+open Steel.ST.C.Types
 
 module U32 = FStar.UInt32
 module C = C // for _zero_for_deref
 
-let swap (#v1 #v2: Ghost.erased U32.t) (r1 r2: ref (scalar U32.t)) : SteelT unit
+let swap (#v1 #v2: Ghost.erased U32.t) (r1 r2: ref (scalar U32.t)) : STT unit
   ((r1 `pts_to` mk_scalar (Ghost.reveal v1)) `star` (r2 `pts_to` mk_scalar (Ghost.reveal v2)))
   (fun _ -> (r1 `pts_to` mk_scalar (Ghost.reveal v2)) `star` (r2 `pts_to` mk_scalar (Ghost.reveal v1)))
 = let x1 = read r1 in
@@ -29,13 +30,13 @@ let point = struct "PointStruct2.point" point_fields
 #push-options "--query_stats --fuel 0"
 
 let swap_struct (p: ref point) (v: Ghost.erased (typeof point))
-: Steel (Ghost.erased (typeof point))
+: ST (Ghost.erased (typeof point))
     (p `pts_to` v)
     (fun v' -> p `pts_to` v')
-    (requires fun _ ->
+    (requires
       exists (vx vy: U32.t) . struct_get_field v "x" == mk_scalar vx /\ struct_get_field v "y" == mk_scalar vy
     )
-    (ensures fun _ v' _ ->
+    (ensures fun v' ->
       struct_get_field v' "x" == struct_get_field v "y" /\
       struct_get_field v' "y" == struct_get_field v "x"
     )
@@ -47,6 +48,8 @@ let swap_struct (p: ref point) (v: Ghost.erased (typeof point))
   write py x;
   unstruct_field p "x" px;
   unstruct_field p "y" py;
+  drop (has_struct_field _ _ px);
+  drop (has_struct_field _ _ _);
   return _
 
 #pop-options
