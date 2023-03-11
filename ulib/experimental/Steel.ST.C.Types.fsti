@@ -85,7 +85,7 @@ val null (#t: Type) (td: typedef t) : Tot (ptr td)
 inline_for_extraction [@@noextract_to "krml"]
 let ref (#t: Type) (td: typedef t) : Tot Type0 = (p: ptr td { ~ (p == null td) })
 
-val pts_to (#t: Type) (#td: typedef t) (r: ref td) (v: Ghost.erased t) : vprop
+val pts_to (#t: Type) (#td: typedef t) (r: ref td) ([@@@smt_fallback] v: Ghost.erased t) : vprop
 
 let pts_to_or_null
   (#t: Type) (#td: typedef t) (p: ptr td) (v: Ghost.erased t) : vprop
