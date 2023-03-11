@@ -38,5 +38,6 @@ open FStar.Interactive.Ide.Types
 val run_full_buffer (st:repl_state)
                     (qid:string)
                     (code:string)
+                    (full:bool)
                     (write_full_buffer_fragment_progress: either decl (list issue) -> unit)
   : list query

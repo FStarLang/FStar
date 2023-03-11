@@ -136,6 +136,7 @@ let (__proj__Mkpush_query__item__push_code_or_decl :
     match projectee with
     | { push_kind; push_line; push_column; push_peek_only;
         push_code_or_decl;_} -> push_code_or_decl
+type lookup_symbol_range = FStar_Compiler_Util.json
 type query' =
   | Exit 
   | DescribeProtocol 
@@ -146,13 +147,14 @@ type query' =
   | VfsAdd of (Prims.string FStar_Pervasives_Native.option * Prims.string) 
   | AutoComplete of (Prims.string * completion_context) 
   | Lookup of (Prims.string * lookup_context * position
-  FStar_Pervasives_Native.option * Prims.string Prims.list) 
+  FStar_Pervasives_Native.option * Prims.string Prims.list *
+  lookup_symbol_range FStar_Pervasives_Native.option) 
   | Compute of (Prims.string * FStar_TypeChecker_Env.step Prims.list
   FStar_Pervasives_Native.option) 
   | Search of Prims.string 
   | GenericError of Prims.string 
   | ProtocolViolation of Prims.string 
-  | FullBuffer of Prims.string 
+  | FullBuffer of (Prims.string * Prims.bool) 
 and query = {
   qq: query' ;
   qid: Prims.string }
@@ -190,7 +192,8 @@ let (uu___is_Lookup : query' -> Prims.bool) =
 let (__proj__Lookup__item___0 :
   query' ->
     (Prims.string * lookup_context * position FStar_Pervasives_Native.option
-      * Prims.string Prims.list))
+      * Prims.string Prims.list * lookup_symbol_range
+      FStar_Pervasives_Native.option))
   = fun projectee -> match projectee with | Lookup _0 -> _0
 let (uu___is_Compute : query' -> Prims.bool) =
   fun projectee -> match projectee with | Compute _0 -> true | uu___ -> false
@@ -216,7 +219,7 @@ let (__proj__ProtocolViolation__item___0 : query' -> Prims.string) =
 let (uu___is_FullBuffer : query' -> Prims.bool) =
   fun projectee ->
     match projectee with | FullBuffer _0 -> true | uu___ -> false
-let (__proj__FullBuffer__item___0 : query' -> Prims.string) =
+let (__proj__FullBuffer__item___0 : query' -> (Prims.string * Prims.bool)) =
   fun projectee -> match projectee with | FullBuffer _0 -> _0
 let (__proj__Mkquery__item__qq : query -> query') =
   fun projectee -> match projectee with | { qq; qid;_} -> qq

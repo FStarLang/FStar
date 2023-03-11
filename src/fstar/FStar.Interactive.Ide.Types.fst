@@ -120,6 +120,8 @@ type push_query =
     push_peek_only: bool;
     push_code_or_decl: either string FStar.Parser.AST.decl}
 
+type lookup_symbol_range = json
+
 type query' =
 | Exit
 | DescribeProtocol
@@ -129,12 +131,12 @@ type query' =
 | Push of push_query
 | VfsAdd of option string (* fname *) * string (* contents *)
 | AutoComplete of string * completion_context
-| Lookup of string * lookup_context * option position * list string
+| Lookup of string * lookup_context * option position * list string * option lookup_symbol_range
 | Compute of string * option (list FStar.TypeChecker.Env.step)
 | Search of string
 | GenericError of string
 | ProtocolViolation of string
-| FullBuffer of string 
+| FullBuffer of string & bool //if true, check the buffer, otherwise just find verified prefix
 and query = { qq: query'; qid: string }
 
 let push_query_to_string pq =

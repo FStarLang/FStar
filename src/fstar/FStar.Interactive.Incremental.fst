@@ -170,6 +170,7 @@ let inspect_repl_stack (s:repl_stack_t)
 let run_full_buffer (st:repl_state)
                     (qid:string)
                     (code:string)
+                    (full:bool)
                     (write_full_buffer_fragment_progress: either decl (list issue) -> unit)
   : list query
   = let parse_result = 
@@ -200,16 +201,16 @@ let run_full_buffer (st:repl_state)
         let queries = 
             run_qst (inspect_repl_stack (!repl_stack) decls write_full_buffer_fragment_progress) qid
         in
-        log_syntax_issues err_opt;
+        if full then log_syntax_issues err_opt;
         if Options.debug_any()
         then (
           BU.print1 "Generating queries\n%s\n" 
                     (String.concat "\n" (List.map query_to_string queries))
         );
-        queries
+        if full then queries else []
         
       | ParseError err ->
-        log_syntax_issues (Some err);
+        if full then log_syntax_issues (Some err);
         []
       | _ -> 
         failwith "Unexpected parse result"

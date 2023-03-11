@@ -213,6 +213,11 @@ let unpack_interactive_query json =
       | Some JsonNull -> None
       | other -> other in
 
+    let read_position err loc =
+        assoc err "filename" loc |> js_str,
+        assoc err "line" loc |> js_int,
+        assoc err "column" loc |> js_int
+    in
     { qid = qid;
       qq = match query with
            | "exit" -> Exit
@@ -225,18 +230,16 @@ let unpack_interactive_query json =
                                        push_line = arg "line" |> js_int;
                                        push_column = arg "column" |> js_int;
                                        push_peek_only = query = "peek" })
-           | "full-buffer" -> FullBuffer (arg "code" |> js_str)
+           | "full-buffer" -> FullBuffer (arg "code" |> js_str, (arg "kind" |> js_str) = "full")
            | "autocomplete" -> AutoComplete (arg "partial-symbol" |> js_str,
                                             try_arg "context" |> js_optional_completion_context)
            | "lookup" -> Lookup (arg "symbol" |> js_str,
                                 try_arg "context" |> js_optional_lookup_context,
                                 try_arg "location"
                                   |> Util.map_option js_assoc
-                                  |> Util.map_option (fun loc ->
-                                      (assoc "[location]" "filename" loc |> js_str,
-                                       assoc "[location]" "line" loc |> js_int,
-                                       assoc "[location]" "column" loc |> js_int)),
-                                arg "requested-info" |> js_list js_str)
+                                  |> Util.map_option (read_position "[location]"),
+                                arg "requested-info" |> js_list js_str,
+                                try_arg "symbol-range")
            | "compute" -> Compute (arg "term" |> js_str,
                                   try_arg "rules"
                                     |> Util.map_option (js_list js_reductionrule))
@@ -268,12 +271,14 @@ let read_interactive_query stream : query =
 let json_of_opt json_of_a opt_a =
   Util.dflt JsonNull (Util.map_option json_of_a opt_a)
 
-let alist_of_symbol_lookup_result lr =
+let alist_of_symbol_lookup_result lr symbol symrange_opt=
   [("name", JsonStr lr.slr_name);
    ("defined-at", json_of_opt json_of_def_range lr.slr_def_range);
    ("type", json_of_opt JsonStr lr.slr_typ);
    ("documentation", json_of_opt JsonStr lr.slr_doc);
-   ("definition", json_of_opt JsonStr lr.slr_def)]
+   ("definition", json_of_opt JsonStr lr.slr_def);
+   ("symbol-range", json_of_opt (fun x -> x) symrange_opt);
+   ("symbol", JsonStr symbol)]
 
 let alist_of_protocol_info =
   let js_version = JsonInt interactive_protocol_vernum in
@@ -620,10 +625,11 @@ let run_push st query =
   else
     run_push_without_deps st query
 
-let run_symbol_lookup st symbol pos_opt requested_info =
+let run_symbol_lookup st symbol pos_opt requested_info (symbol_range_opt:option json) =
   match QH.symlookup st.repl_env symbol pos_opt requested_info with
   | None -> Inl "Symbol not found"
-  | Some result -> Inr ("symbol", alist_of_symbol_lookup_result result)
+  | Some result -> 
+    Inr ("symbol", alist_of_symbol_lookup_result result symbol symbol_range_opt)
 
 let run_option_lookup opt_name =
   let _, trimmed_name = trim_option_name opt_name in
@@ -641,22 +647,22 @@ let run_module_lookup st symbol =
   | Some (CTable.Namespace ns_info) ->
     Inr ("namespace", CTable.alist_of_ns_info ns_info)
 
-let run_code_lookup st symbol pos_opt requested_info =
-  match run_symbol_lookup st symbol pos_opt requested_info with
+let run_code_lookup st symbol pos_opt requested_info symrange_opt=
+  match run_symbol_lookup st symbol pos_opt requested_info symrange_opt with
   | Inr alist -> Inr alist
   | Inl _ -> match run_module_lookup st symbol with
             | Inr alist -> Inr alist
             | Inl err_msg -> Inl "No such symbol, module, or namespace."
 
-let run_lookup' st symbol context pos_opt requested_info =
+let run_lookup' st symbol context pos_opt requested_info symrange =
   match context with
-  | LKSymbolOnly -> run_symbol_lookup st symbol pos_opt requested_info
+  | LKSymbolOnly -> run_symbol_lookup st symbol pos_opt requested_info symrange
   | LKModule -> run_module_lookup st symbol
   | LKOption -> run_option_lookup symbol
-  | LKCode -> run_code_lookup st symbol pos_opt requested_info
+  | LKCode -> run_code_lookup st symbol pos_opt requested_info symrange
 
-let run_lookup st symbol context pos_opt requested_info =
-  match run_lookup' st symbol context pos_opt requested_info with
+let run_lookup st symbol context pos_opt requested_info symrange =
+  match run_lookup' st symbol context pos_opt requested_info symrange with
   | Inl err_msg ->
     ((QueryNOK, JsonStr err_msg), Inl st)
   | Inr (kind, info) ->
@@ -932,15 +938,15 @@ let rec run_query st (q: query) : (query_status * list json) * either repl_state
   | VfsAdd (fname, contents) -> as_json_list (run_vfs_add st fname contents)
   | Push pquery -> as_json_list (run_push st pquery)
   | Pop -> as_json_list (run_pop st)
-  | FullBuffer code ->
+  | FullBuffer (code, full) ->
     let queries = 
-      FStar.Interactive.Incremental.run_full_buffer st q.qid code write_full_buffer_fragment_progress
+      FStar.Interactive.Incremental.run_full_buffer st q.qid code full write_full_buffer_fragment_progress
     in
     fold_query validate_and_run_query queries st []
   | AutoComplete (search_term, context) ->
     as_json_list (run_autocomplete st search_term context)
-  | Lookup (symbol, context, pos_opt, rq_info) ->
-    as_json_list (run_lookup st symbol context pos_opt rq_info)
+  | Lookup (symbol, context, pos_opt, rq_info, symrange) ->
+    as_json_list (run_lookup st symbol context pos_opt rq_info symrange)
   | Compute (term, rules) ->
     as_json_list (run_compute st term rules)
   | Search term ->

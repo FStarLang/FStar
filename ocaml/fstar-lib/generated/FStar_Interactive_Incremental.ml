@@ -174,83 +174,89 @@ let (run_full_buffer :
   FStar_Interactive_ReplState.repl_state ->
     Prims.string ->
       Prims.string ->
-        ((FStar_Parser_AST.decl, FStar_Errors.issue Prims.list)
-           FStar_Pervasives.either -> unit)
-          -> FStar_Interactive_Ide_Types.query Prims.list)
+        Prims.bool ->
+          ((FStar_Parser_AST.decl, FStar_Errors.issue Prims.list)
+             FStar_Pervasives.either -> unit)
+            -> FStar_Interactive_Ide_Types.query Prims.list)
   =
   fun st ->
     fun qid1 ->
       fun code ->
-        fun write_full_buffer_fragment_progress ->
-          let parse_result =
-            let uu___ =
-              let uu___1 =
-                let uu___2 =
-                  FStar_Compiler_Range.file_of_range
-                    FStar_Interactive_Ide_Types.initial_range in
-                let uu___3 =
-                  let uu___4 =
-                    FStar_Compiler_Range.start_of_range
+        fun full ->
+          fun write_full_buffer_fragment_progress ->
+            let parse_result =
+              let uu___ =
+                let uu___1 =
+                  let uu___2 =
+                    FStar_Compiler_Range.file_of_range
                       FStar_Interactive_Ide_Types.initial_range in
-                  FStar_Compiler_Range.line_of_pos uu___4 in
-                let uu___4 =
-                  let uu___5 =
-                    FStar_Compiler_Range.start_of_range
-                      FStar_Interactive_Ide_Types.initial_range in
-                  FStar_Compiler_Range.col_of_pos uu___5 in
-                {
-                  FStar_Parser_ParseIt.frag_fname = uu___2;
-                  FStar_Parser_ParseIt.frag_text = code;
-                  FStar_Parser_ParseIt.frag_line = uu___3;
-                  FStar_Parser_ParseIt.frag_col = uu___4
-                } in
-              FStar_Parser_ParseIt.Incremental uu___1 in
-            FStar_Parser_ParseIt.parse uu___ in
-          let log_syntax_issues err =
-            match err with
-            | FStar_Pervasives_Native.None -> ()
-            | FStar_Pervasives_Native.Some (raw_error, msg, range) ->
-                let uu___ = FStar_Errors.lookup raw_error in
-                (match uu___ with
-                 | (uu___1, uu___2, num) ->
-                     let issue =
-                       {
-                         FStar_Errors.issue_msg = msg;
-                         FStar_Errors.issue_level = FStar_Errors.EError;
-                         FStar_Errors.issue_range =
-                           (FStar_Pervasives_Native.Some range);
-                         FStar_Errors.issue_number =
-                           (FStar_Pervasives_Native.Some num);
-                         FStar_Errors.issue_ctx = []
-                       } in
-                     write_full_buffer_fragment_progress
-                       (FStar_Pervasives.Inr [issue])) in
-          let qs =
-            match parse_result with
-            | FStar_Parser_ParseIt.IncrementalFragment
-                (decls, uu___, err_opt) ->
-                let queries =
-                  let uu___1 =
-                    let uu___2 =
-                      FStar_Compiler_Effect.op_Bang
-                        FStar_Interactive_PushHelper.repl_stack in
-                    inspect_repl_stack uu___2 decls
-                      write_full_buffer_fragment_progress in
-                  run_qst uu___1 qid1 in
-                (log_syntax_issues err_opt;
-                 (let uu___3 = FStar_Options.debug_any () in
-                  if uu___3
-                  then
+                  let uu___3 =
                     let uu___4 =
-                      let uu___5 =
-                        FStar_Compiler_List.map
-                          FStar_Interactive_Ide_Types.query_to_string queries in
-                      FStar_String.concat "\n" uu___5 in
-                    FStar_Compiler_Util.print1 "Generating queries\n%s\n"
-                      uu___4
-                  else ());
-                 queries)
-            | FStar_Parser_ParseIt.ParseError err ->
-                (log_syntax_issues (FStar_Pervasives_Native.Some err); [])
-            | uu___ -> failwith "Unexpected parse result" in
-          qs
+                      FStar_Compiler_Range.start_of_range
+                        FStar_Interactive_Ide_Types.initial_range in
+                    FStar_Compiler_Range.line_of_pos uu___4 in
+                  let uu___4 =
+                    let uu___5 =
+                      FStar_Compiler_Range.start_of_range
+                        FStar_Interactive_Ide_Types.initial_range in
+                    FStar_Compiler_Range.col_of_pos uu___5 in
+                  {
+                    FStar_Parser_ParseIt.frag_fname = uu___2;
+                    FStar_Parser_ParseIt.frag_text = code;
+                    FStar_Parser_ParseIt.frag_line = uu___3;
+                    FStar_Parser_ParseIt.frag_col = uu___4
+                  } in
+                FStar_Parser_ParseIt.Incremental uu___1 in
+              FStar_Parser_ParseIt.parse uu___ in
+            let log_syntax_issues err =
+              match err with
+              | FStar_Pervasives_Native.None -> ()
+              | FStar_Pervasives_Native.Some (raw_error, msg, range) ->
+                  let uu___ = FStar_Errors.lookup raw_error in
+                  (match uu___ with
+                   | (uu___1, uu___2, num) ->
+                       let issue =
+                         {
+                           FStar_Errors.issue_msg = msg;
+                           FStar_Errors.issue_level = FStar_Errors.EError;
+                           FStar_Errors.issue_range =
+                             (FStar_Pervasives_Native.Some range);
+                           FStar_Errors.issue_number =
+                             (FStar_Pervasives_Native.Some num);
+                           FStar_Errors.issue_ctx = []
+                         } in
+                       write_full_buffer_fragment_progress
+                         (FStar_Pervasives.Inr [issue])) in
+            let qs =
+              match parse_result with
+              | FStar_Parser_ParseIt.IncrementalFragment
+                  (decls, uu___, err_opt) ->
+                  let queries =
+                    let uu___1 =
+                      let uu___2 =
+                        FStar_Compiler_Effect.op_Bang
+                          FStar_Interactive_PushHelper.repl_stack in
+                      inspect_repl_stack uu___2 decls
+                        write_full_buffer_fragment_progress in
+                    run_qst uu___1 qid1 in
+                  (if full then log_syntax_issues err_opt else ();
+                   (let uu___3 = FStar_Options.debug_any () in
+                    if uu___3
+                    then
+                      let uu___4 =
+                        let uu___5 =
+                          FStar_Compiler_List.map
+                            FStar_Interactive_Ide_Types.query_to_string
+                            queries in
+                        FStar_String.concat "\n" uu___5 in
+                      FStar_Compiler_Util.print1 "Generating queries\n%s\n"
+                        uu___4
+                    else ());
+                   if full then queries else [])
+              | FStar_Parser_ParseIt.ParseError err ->
+                  (if full
+                   then log_syntax_issues (FStar_Pervasives_Native.Some err)
+                   else ();
+                   [])
+              | uu___ -> failwith "Unexpected parse result" in
+            qs

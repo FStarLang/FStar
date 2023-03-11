@@ -319,6 +319,20 @@ let (unpack_interactive_query :
                | FStar_Pervasives_Native.Some (FStar_Compiler_Util.JsonNull)
                    -> FStar_Pervasives_Native.None
                | other -> other in
+             let read_position err loc =
+               let uu___1 =
+                 let uu___2 = assoc err "filename" loc in
+                 FStar_Compiler_Effect.op_Bar_Greater uu___2
+                   FStar_Interactive_JsonHelper.js_str in
+               let uu___2 =
+                 let uu___3 = assoc err "line" loc in
+                 FStar_Compiler_Effect.op_Bar_Greater uu___3
+                   FStar_Interactive_JsonHelper.js_int in
+               let uu___3 =
+                 let uu___4 = assoc err "column" loc in
+                 FStar_Compiler_Effect.op_Bar_Greater uu___4
+                   FStar_Interactive_JsonHelper.js_int in
+               (uu___1, uu___2, uu___3) in
              let uu___1 =
                match query with
                | "exit" -> FStar_Interactive_Ide_Types.Exit
@@ -392,9 +406,17 @@ let (unpack_interactive_query :
                    FStar_Interactive_Ide_Types.Push uu___2
                | "full-buffer" ->
                    let uu___2 =
-                     let uu___3 = arg "code" in
-                     FStar_Compiler_Effect.op_Bar_Greater uu___3
-                       FStar_Interactive_JsonHelper.js_str in
+                     let uu___3 =
+                       let uu___4 = arg "code" in
+                       FStar_Compiler_Effect.op_Bar_Greater uu___4
+                         FStar_Interactive_JsonHelper.js_str in
+                     let uu___4 =
+                       let uu___5 =
+                         let uu___6 = arg "kind" in
+                         FStar_Compiler_Effect.op_Bar_Greater uu___6
+                           FStar_Interactive_JsonHelper.js_str in
+                       uu___5 = "full" in
+                     (uu___3, uu___4) in
                    FStar_Interactive_Ide_Types.FullBuffer uu___2
                | "autocomplete" ->
                    let uu___2 =
@@ -426,28 +448,14 @@ let (unpack_interactive_query :
                               FStar_Interactive_JsonHelper.js_assoc) in
                        FStar_Compiler_Effect.op_Bar_Greater uu___6
                          (FStar_Compiler_Util.map_option
-                            (fun loc ->
-                               let uu___7 =
-                                 let uu___8 =
-                                   assoc "[location]" "filename" loc in
-                                 FStar_Compiler_Effect.op_Bar_Greater uu___8
-                                   FStar_Interactive_JsonHelper.js_str in
-                               let uu___8 =
-                                 let uu___9 = assoc "[location]" "line" loc in
-                                 FStar_Compiler_Effect.op_Bar_Greater uu___9
-                                   FStar_Interactive_JsonHelper.js_int in
-                               let uu___9 =
-                                 let uu___10 =
-                                   assoc "[location]" "column" loc in
-                                 FStar_Compiler_Effect.op_Bar_Greater uu___10
-                                   FStar_Interactive_JsonHelper.js_int in
-                               (uu___7, uu___8, uu___9))) in
+                            (read_position "[location]")) in
                      let uu___6 =
                        let uu___7 = arg "requested-info" in
                        FStar_Compiler_Effect.op_Bar_Greater uu___7
                          (FStar_Interactive_JsonHelper.js_list
                             FStar_Interactive_JsonHelper.js_str) in
-                     (uu___3, uu___4, uu___5, uu___6) in
+                     let uu___7 = try_arg "symbol-range" in
+                     (uu___3, uu___4, uu___5, uu___6, uu___7) in
                    FStar_Interactive_Ide_Types.Lookup uu___2
                | "compute" ->
                    let uu___2 =
@@ -547,42 +555,53 @@ let json_of_opt :
       FStar_Compiler_Util.dflt FStar_Compiler_Util.JsonNull uu___
 let (alist_of_symbol_lookup_result :
   FStar_Interactive_QueryHelper.sl_reponse ->
-    (Prims.string * FStar_Compiler_Util.json) Prims.list)
+    Prims.string ->
+      FStar_Compiler_Util.json FStar_Pervasives_Native.option ->
+        (Prims.string * FStar_Compiler_Util.json) Prims.list)
   =
   fun lr ->
-    let uu___ =
-      let uu___1 =
-        let uu___2 =
-          json_of_opt FStar_Compiler_Range.json_of_def_range
-            lr.FStar_Interactive_QueryHelper.slr_def_range in
-        ("defined-at", uu___2) in
-      let uu___2 =
-        let uu___3 =
-          let uu___4 =
-            json_of_opt (fun uu___5 -> FStar_Compiler_Util.JsonStr uu___5)
-              lr.FStar_Interactive_QueryHelper.slr_typ in
-          ("type", uu___4) in
-        let uu___4 =
-          let uu___5 =
-            let uu___6 =
-              json_of_opt (fun uu___7 -> FStar_Compiler_Util.JsonStr uu___7)
-                lr.FStar_Interactive_QueryHelper.slr_doc in
-            ("documentation", uu___6) in
-          let uu___6 =
-            let uu___7 =
-              let uu___8 =
+    fun symbol ->
+      fun symrange_opt ->
+        let uu___ =
+          let uu___1 =
+            let uu___2 =
+              json_of_opt FStar_Compiler_Range.json_of_def_range
+                lr.FStar_Interactive_QueryHelper.slr_def_range in
+            ("defined-at", uu___2) in
+          let uu___2 =
+            let uu___3 =
+              let uu___4 =
                 json_of_opt
-                  (fun uu___9 -> FStar_Compiler_Util.JsonStr uu___9)
-                  lr.FStar_Interactive_QueryHelper.slr_def in
-              ("definition", uu___8) in
-            [uu___7] in
-          uu___5 :: uu___6 in
-        uu___3 :: uu___4 in
-      uu___1 :: uu___2 in
-    ("name",
-      (FStar_Compiler_Util.JsonStr
-         (lr.FStar_Interactive_QueryHelper.slr_name)))
-      :: uu___
+                  (fun uu___5 -> FStar_Compiler_Util.JsonStr uu___5)
+                  lr.FStar_Interactive_QueryHelper.slr_typ in
+              ("type", uu___4) in
+            let uu___4 =
+              let uu___5 =
+                let uu___6 =
+                  json_of_opt
+                    (fun uu___7 -> FStar_Compiler_Util.JsonStr uu___7)
+                    lr.FStar_Interactive_QueryHelper.slr_doc in
+                ("documentation", uu___6) in
+              let uu___6 =
+                let uu___7 =
+                  let uu___8 =
+                    json_of_opt
+                      (fun uu___9 -> FStar_Compiler_Util.JsonStr uu___9)
+                      lr.FStar_Interactive_QueryHelper.slr_def in
+                  ("definition", uu___8) in
+                let uu___8 =
+                  let uu___9 =
+                    let uu___10 = json_of_opt (fun x -> x) symrange_opt in
+                    ("symbol-range", uu___10) in
+                  [uu___9; ("symbol", (FStar_Compiler_Util.JsonStr symbol))] in
+                uu___7 :: uu___8 in
+              uu___5 :: uu___6 in
+            uu___3 :: uu___4 in
+          uu___1 :: uu___2 in
+        ("name",
+          (FStar_Compiler_Util.JsonStr
+             (lr.FStar_Interactive_QueryHelper.slr_name)))
+          :: uu___
 let (alist_of_protocol_info :
   (Prims.string * FStar_Compiler_Util.json) Prims.list) =
   let js_version =
@@ -1519,27 +1538,31 @@ let (run_symbol_lookup :
       FStar_Interactive_QueryHelper.position FStar_Pervasives_Native.option
         ->
         Prims.string Prims.list ->
-          (Prims.string,
-            (Prims.string * (Prims.string * FStar_Compiler_Util.json)
-              Prims.list))
-            FStar_Pervasives.either)
+          FStar_Compiler_Util.json FStar_Pervasives_Native.option ->
+            (Prims.string,
+              (Prims.string * (Prims.string * FStar_Compiler_Util.json)
+                Prims.list))
+              FStar_Pervasives.either)
   =
   fun st ->
     fun symbol ->
       fun pos_opt ->
         fun requested_info ->
-          let uu___ =
-            FStar_Interactive_QueryHelper.symlookup
-              st.FStar_Interactive_ReplState.repl_env symbol pos_opt
-              requested_info in
-          match uu___ with
-          | FStar_Pervasives_Native.None ->
-              FStar_Pervasives.Inl "Symbol not found"
-          | FStar_Pervasives_Native.Some result ->
-              let uu___1 =
-                let uu___2 = alist_of_symbol_lookup_result result in
-                ("symbol", uu___2) in
-              FStar_Pervasives.Inr uu___1
+          fun symbol_range_opt ->
+            let uu___ =
+              FStar_Interactive_QueryHelper.symlookup
+                st.FStar_Interactive_ReplState.repl_env symbol pos_opt
+                requested_info in
+            match uu___ with
+            | FStar_Pervasives_Native.None ->
+                FStar_Pervasives.Inl "Symbol not found"
+            | FStar_Pervasives_Native.Some result ->
+                let uu___1 =
+                  let uu___2 =
+                    alist_of_symbol_lookup_result result symbol
+                      symbol_range_opt in
+                  ("symbol", uu___2) in
+                FStar_Pervasives.Inr uu___1
 let (run_option_lookup :
   Prims.string ->
     (Prims.string,
@@ -1599,32 +1622,7 @@ let (run_code_lookup :
       FStar_Interactive_QueryHelper.position FStar_Pervasives_Native.option
         ->
         Prims.string Prims.list ->
-          (Prims.string,
-            (Prims.string * (Prims.string * FStar_Compiler_Util.json)
-              Prims.list))
-            FStar_Pervasives.either)
-  =
-  fun st ->
-    fun symbol ->
-      fun pos_opt ->
-        fun requested_info ->
-          let uu___ = run_symbol_lookup st symbol pos_opt requested_info in
-          match uu___ with
-          | FStar_Pervasives.Inr alist -> FStar_Pervasives.Inr alist
-          | FStar_Pervasives.Inl uu___1 ->
-              let uu___2 = run_module_lookup st symbol in
-              (match uu___2 with
-               | FStar_Pervasives.Inr alist -> FStar_Pervasives.Inr alist
-               | FStar_Pervasives.Inl err_msg ->
-                   FStar_Pervasives.Inl
-                     "No such symbol, module, or namespace.")
-let (run_lookup' :
-  FStar_Interactive_ReplState.repl_state ->
-    Prims.string ->
-      FStar_Interactive_Ide_Types.lookup_context ->
-        FStar_Interactive_QueryHelper.position FStar_Pervasives_Native.option
-          ->
-          Prims.string Prims.list ->
+          FStar_Compiler_Util.json FStar_Pervasives_Native.option ->
             (Prims.string,
               (Prims.string * (Prims.string * FStar_Compiler_Util.json)
                 Prims.list))
@@ -1632,18 +1630,48 @@ let (run_lookup' :
   =
   fun st ->
     fun symbol ->
+      fun pos_opt ->
+        fun requested_info ->
+          fun symrange_opt ->
+            let uu___ =
+              run_symbol_lookup st symbol pos_opt requested_info symrange_opt in
+            match uu___ with
+            | FStar_Pervasives.Inr alist -> FStar_Pervasives.Inr alist
+            | FStar_Pervasives.Inl uu___1 ->
+                let uu___2 = run_module_lookup st symbol in
+                (match uu___2 with
+                 | FStar_Pervasives.Inr alist -> FStar_Pervasives.Inr alist
+                 | FStar_Pervasives.Inl err_msg ->
+                     FStar_Pervasives.Inl
+                       "No such symbol, module, or namespace.")
+let (run_lookup' :
+  FStar_Interactive_ReplState.repl_state ->
+    Prims.string ->
+      FStar_Interactive_Ide_Types.lookup_context ->
+        FStar_Interactive_QueryHelper.position FStar_Pervasives_Native.option
+          ->
+          Prims.string Prims.list ->
+            FStar_Compiler_Util.json FStar_Pervasives_Native.option ->
+              (Prims.string,
+                (Prims.string * (Prims.string * FStar_Compiler_Util.json)
+                  Prims.list))
+                FStar_Pervasives.either)
+  =
+  fun st ->
+    fun symbol ->
       fun context ->
         fun pos_opt ->
           fun requested_info ->
-            match context with
-            | FStar_Interactive_Ide_Types.LKSymbolOnly ->
-                run_symbol_lookup st symbol pos_opt requested_info
-            | FStar_Interactive_Ide_Types.LKModule ->
-                run_module_lookup st symbol
-            | FStar_Interactive_Ide_Types.LKOption ->
-                run_option_lookup symbol
-            | FStar_Interactive_Ide_Types.LKCode ->
-                run_code_lookup st symbol pos_opt requested_info
+            fun symrange ->
+              match context with
+              | FStar_Interactive_Ide_Types.LKSymbolOnly ->
+                  run_symbol_lookup st symbol pos_opt requested_info symrange
+              | FStar_Interactive_Ide_Types.LKModule ->
+                  run_module_lookup st symbol
+              | FStar_Interactive_Ide_Types.LKOption ->
+                  run_option_lookup symbol
+              | FStar_Interactive_Ide_Types.LKCode ->
+                  run_code_lookup st symbol pos_opt requested_info symrange
 let run_lookup :
   'uuuuu .
     FStar_Interactive_ReplState.repl_state ->
@@ -1652,27 +1680,30 @@ let run_lookup :
           FStar_Interactive_QueryHelper.position
             FStar_Pervasives_Native.option ->
             Prims.string Prims.list ->
-              ((FStar_Interactive_Ide_Types.query_status *
-                FStar_Compiler_Util.json) *
-                (FStar_Interactive_ReplState.repl_state, 'uuuuu)
-                FStar_Pervasives.either)
+              FStar_Compiler_Util.json FStar_Pervasives_Native.option ->
+                ((FStar_Interactive_Ide_Types.query_status *
+                  FStar_Compiler_Util.json) *
+                  (FStar_Interactive_ReplState.repl_state, 'uuuuu)
+                  FStar_Pervasives.either)
   =
   fun st ->
     fun symbol ->
       fun context ->
         fun pos_opt ->
           fun requested_info ->
-            let uu___ = run_lookup' st symbol context pos_opt requested_info in
-            match uu___ with
-            | FStar_Pervasives.Inl err_msg ->
-                ((FStar_Interactive_Ide_Types.QueryNOK,
-                   (FStar_Compiler_Util.JsonStr err_msg)),
-                  (FStar_Pervasives.Inl st))
-            | FStar_Pervasives.Inr (kind, info) ->
-                ((FStar_Interactive_Ide_Types.QueryOK,
-                   (FStar_Compiler_Util.JsonAssoc
-                      (("kind", (FStar_Compiler_Util.JsonStr kind)) :: info))),
-                  (FStar_Pervasives.Inl st))
+            fun symrange ->
+              let uu___ =
+                run_lookup' st symbol context pos_opt requested_info symrange in
+              match uu___ with
+              | FStar_Pervasives.Inl err_msg ->
+                  ((FStar_Interactive_Ide_Types.QueryNOK,
+                     (FStar_Compiler_Util.JsonStr err_msg)),
+                    (FStar_Pervasives.Inl st))
+              | FStar_Pervasives.Inr (kind, info) ->
+                  ((FStar_Interactive_Ide_Types.QueryOK,
+                     (FStar_Compiler_Util.JsonAssoc
+                        (("kind", (FStar_Compiler_Util.JsonStr kind)) ::
+                        info))), (FStar_Pervasives.Inl st))
 let run_code_autocomplete :
   'uuuuu .
     FStar_Interactive_ReplState.repl_state ->
@@ -2338,18 +2369,18 @@ let rec (run_query :
           let uu___ = run_push st pquery in as_json_list uu___
       | FStar_Interactive_Ide_Types.Pop ->
           let uu___ = run_pop st in as_json_list uu___
-      | FStar_Interactive_Ide_Types.FullBuffer code ->
+      | FStar_Interactive_Ide_Types.FullBuffer (code, full) ->
           let queries =
             FStar_Interactive_Incremental.run_full_buffer st
-              q.FStar_Interactive_Ide_Types.qid code
+              q.FStar_Interactive_Ide_Types.qid code full
               write_full_buffer_fragment_progress in
           fold_query validate_and_run_query queries st []
       | FStar_Interactive_Ide_Types.AutoComplete (search_term1, context) ->
           let uu___ = run_autocomplete st search_term1 context in
           as_json_list uu___
       | FStar_Interactive_Ide_Types.Lookup
-          (symbol, context, pos_opt, rq_info) ->
-          let uu___ = run_lookup st symbol context pos_opt rq_info in
+          (symbol, context, pos_opt, rq_info, symrange) ->
+          let uu___ = run_lookup st symbol context pos_opt rq_info symrange in
           as_json_list uu___
       | FStar_Interactive_Ide_Types.Compute (term, rules) ->
           let uu___ = run_compute st term rules in as_json_list uu___
