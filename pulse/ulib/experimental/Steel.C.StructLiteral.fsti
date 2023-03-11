@@ -265,7 +265,6 @@ val extract_field_unextracted'
     (fst (extract_field tag fields excluded field v) `struct_get` field' == v `struct_get` field'))
     [SMTPat (extract_field tag fields excluded field v)]
 
-(*
 val addr_of_struct_field_ref
   (#tag: Type0) (#fields: c_fields) (#excluded: excluded_fields)
   (field: field_of fields)
@@ -352,8 +351,7 @@ val unaddr_of_struct_field_ref
 
 open Steel.C.Reference
 
-(* TODO make abstract *)
-let addr_of_struct_field''
+val addr_of_struct_field''
   (return_view_type: Type0)
   (return_carrier: Type0)
   (tag: Type0) (fields: c_fields) (excluded: excluded_fields)
@@ -385,7 +383,7 @@ let addr_of_struct_field''
         snd (extract_field tag fields excluded field
         (h (p `pts_to_view` struct_view tag fields excluded))) ==
          h' (q `pts_to_view` (fields.get_field field).view))
-= addr_of_struct_field_ref #'a #tag #fields #excluded field p
+// = addr_of_struct_field_ref #'a #tag #fields #excluded field p
 
 (** Take the address of a field of a struct.
     The above definitions are set up so that calls to addr_of_struct_field are erased to calls to addr_of_struct_field'' with
@@ -399,8 +397,7 @@ let addr_of_struct_field''
     Calls to [norm] are used to compute the type of values pointed to
     by the returned reference, and to ensure that the Steel tactic
     will be able to unify vprops properly. *)
-inline_for_extraction noextract
-let addr_of_struct_field
+val addr_of_struct_field
   (#tag: Type0) (#fields: c_fields) (#excluded: excluded_fields)
   (field: field_of fields)
   (p: ref 'a (struct tag fields) (struct_pcm tag fields))
@@ -430,13 +427,16 @@ let addr_of_struct_field
         snd (extract_field tag fields excluded field
         (h (p `pts_to_view` struct_view tag fields excluded)))
         == h' (q `pts_to_view` (fields.get_field field).view))
+
+(*
 = addr_of_struct_field''
     (normalize (fields.get_field field).view_type)
     (normalize (fields.get_field field).carrier)
     tag fields excluded field p
+*)
 
 (** Inverse of unaddr_of_struct_field. *)
-let unaddr_of_struct_field
+val unaddr_of_struct_field
   (#tag: Type0) (#fields: c_fields) (#excluded: excluded_fields)
   (field: field_of fields)
   (p: ref 'a (struct tag fields) (struct_pcm tag fields))
@@ -466,7 +466,7 @@ let unaddr_of_struct_field
         snd (extract_field tag fields (remove field excluded) field
         (h' (p `pts_to_view` struct_view tag fields (remove field excluded)))) ==
          h (q `pts_to_view` (fields.get_field field).view))
-=
+// =
 //let unaddr_of_struct_field #a #tag #fields #excluded field p q =
-  unaddr_of_struct_field_ref' field p q
+ // unaddr_of_struct_field_ref' field p q
 
