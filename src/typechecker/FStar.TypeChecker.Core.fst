@@ -514,8 +514,7 @@ let no_guard (g:result 'a)
       | err -> err
       
 let equatable g t = 
-  let head, _ = U.head_and_args t in
-  Rel.may_relate_with_logical_guard g.tcenv true head
+  t |> U.leftmost_head |> Rel.may_relate_with_logical_guard g.tcenv true
 
 let apply_predicate x p = fun e -> Subst.subst [NT(x.binder_bv, e)] p
 
