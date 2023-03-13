@@ -4300,9 +4300,9 @@ let rec (norm :
                                   (rec_env, (lb.FStar_Syntax_Syntax.lbdef))))
                         (FStar_Pervasives_Native.snd lbs) memos in
                     let body_env =
-                      FStar_Compiler_List.fold_right
-                        (fun lb ->
-                           fun env2 ->
+                      FStar_Compiler_List.fold_left
+                        (fun env2 ->
+                           fun lb ->
                              let uu___5 =
                                let uu___6 =
                                  let uu___7 =
@@ -4313,9 +4313,13 @@ let rec (norm :
                                      uu___8, false) in
                                  Clos uu___7 in
                                (FStar_Pervasives_Native.None, uu___6) in
-                             uu___5 :: env2)
-                        (FStar_Pervasives_Native.snd lbs) env1 in
-                    norm cfg body_env stack2 body)
+                             uu___5 :: env2) env1
+                        (FStar_Pervasives_Native.snd lbs) in
+                    (FStar_TypeChecker_Cfg.log cfg
+                       (fun uu___6 ->
+                          FStar_Compiler_Util.print1
+                            "reducing with knot %s\n" "");
+                     norm cfg body_env stack2 body))
            | FStar_Syntax_Syntax.Tm_meta (head, m) ->
                (FStar_TypeChecker_Cfg.log cfg
                   (fun uu___3 ->

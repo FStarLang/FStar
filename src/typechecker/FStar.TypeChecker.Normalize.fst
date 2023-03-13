@@ -1628,8 +1628,11 @@ let rec norm : cfg -> env -> stack -> term -> term =
                     let rec_env = (None, Clos(env, fix_f_i, memo, true))::rec_env in
                     rec_env, memo::memos, i + 1) (snd lbs) (env, [], 0) in
             let _ = List.map2 (fun lb memo -> memo := Some (rec_env, lb.lbdef)) (snd lbs) memos in //tying the knot
-            let body_env = List.fold_right (fun lb env -> (None, Clos(rec_env, lb.lbdef, BU.mk_ref None, false))::env)
-                               (snd lbs) env in
+            // NB: fold_left, since the binding structure of lbs is that righmost is closer, while in the env leftmost
+            // is closer. In other words, the last element of lbs is index 0 for body, hence needs to be pushed last.
+            let body_env = List.fold_left (fun env lb -> (None, Clos(rec_env, lb.lbdef, BU.mk_ref None, false))::env)
+                               env (snd lbs) in
+            log cfg (fun () -> BU.print1 "reducing with knot %s\n" "");
             norm cfg body_env stack body
 
           | Tm_meta (head, m) ->
