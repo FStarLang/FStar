@@ -2665,18 +2665,44 @@ and rebuild (cfg:cfg) (env:env) (stack:stack) (t:term) : term =
           (not (Ident.lid_equals norm_m PC.effect_TAC_lid)) &&
           norm_m |> Env.is_layered_effect cfg.tcenv in
 
+        let can_reify_for_extraction m =
+          let norm_m = Env.norm_eff_name cfg.tcenv m in
+          let mode = (Env.get_effect_decl cfg.tcenv norm_m).extraction_mode in
+          mode = S.Extract_reify in
+
         begin match (SS.compress t).n with
         | Tm_meta (_, Meta_monadic (m, _))
           when m |> is_non_tac_layered_effect && not cfg.steps.for_extraction ->
           fallback (BU.format1
                       "Meta_monadic for a non-TAC layered effect %s in non-extraction mode"
                       (Ident.string_of_lid m)) ()
+
+        | Tm_meta (_, Meta_monadic (m, _))
+          when is_non_tac_layered_effect m &&
+               cfg.steps.for_extraction    &&
+               not (can_reify_for_extraction m)  ->
+          raise_error (Errors.Fatal_UnexpectedEffect,
+                       BU.format1 "Cannot reify %s for extraction"
+                          (Ident.string_of_lid m)) t.pos
+
         | Tm_meta (_, Meta_monadic_lift (msrc, mtgt, _))
           when (is_non_tac_layered_effect msrc || is_non_tac_layered_effect mtgt) &&
                not cfg.steps.for_extraction ->
           fallback (BU.format2
                     "Meta_monadic_lift for a non-TAC layered effect %s ~> %s in non extraction mode"
                     (Ident.string_of_lid msrc) (Ident.string_of_lid mtgt)) ()
+
+        | Tm_meta (_, Meta_monadic_lift (msrc, mtgt, _))
+          when cfg.steps.for_extraction &&
+               ((is_non_tac_layered_effect msrc &&
+                 not (can_reify_for_extraction msrc)) ||
+                (is_non_tac_layered_effect mtgt &&
+                 not (can_reify_for_extraction mtgt))) ->
+
+          raise_error (Errors.Fatal_UnexpectedEffect,
+                       BU.format2 "Cannot reify %s ~> %s for extraction"
+                          (Ident.string_of_lid msrc)
+                          (Ident.string_of_lid mtgt)) t.pos
 
         | Tm_meta (t, Meta_monadic (m, ty)) ->
            do_reify_monadic (fallback " (1)") cfg env stack t m ty

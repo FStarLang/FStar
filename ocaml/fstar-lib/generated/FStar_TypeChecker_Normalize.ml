@@ -7036,6 +7036,16 @@ and (rebuild :
                       (FStar_Compiler_Effect.op_Bar_Greater norm_m
                          (FStar_TypeChecker_Env.is_layered_effect
                             cfg.FStar_TypeChecker_Cfg.tcenv)) in
+                  let can_reify_for_extraction m =
+                    let norm_m =
+                      FStar_TypeChecker_Env.norm_eff_name
+                        cfg.FStar_TypeChecker_Cfg.tcenv m in
+                    let mode =
+                      let uu___3 =
+                        FStar_TypeChecker_Env.get_effect_decl
+                          cfg.FStar_TypeChecker_Cfg.tcenv norm_m in
+                      uu___3.FStar_Syntax_Syntax.extraction_mode in
+                    mode = FStar_Syntax_Syntax.Extract_reify in
                   let uu___3 =
                     let uu___4 = FStar_Syntax_Subst.compress t1 in
                     uu___4.FStar_Syntax_Syntax.n in
@@ -7056,6 +7066,23 @@ and (rebuild :
                            uu___7 in
                        fallback uu___6 ()
                    | FStar_Syntax_Syntax.Tm_meta
+                       (uu___4, FStar_Syntax_Syntax.Meta_monadic (m, uu___5))
+                       when
+                       ((is_non_tac_layered_effect m) &&
+                          (cfg.FStar_TypeChecker_Cfg.steps).FStar_TypeChecker_Cfg.for_extraction)
+                         &&
+                         (let uu___6 = can_reify_for_extraction m in
+                          Prims.op_Negation uu___6)
+                       ->
+                       let uu___6 =
+                         let uu___7 =
+                           let uu___8 = FStar_Ident.string_of_lid m in
+                           FStar_Compiler_Util.format1
+                             "Cannot reify %s for extraction" uu___8 in
+                         (FStar_Errors_Codes.Fatal_UnexpectedEffect, uu___7) in
+                       FStar_Errors.raise_error uu___6
+                         t1.FStar_Syntax_Syntax.pos
+                   | FStar_Syntax_Syntax.Tm_meta
                        (uu___4, FStar_Syntax_Syntax.Meta_monadic_lift
                         (msrc, mtgt, uu___5))
                        when
@@ -7072,6 +7099,30 @@ and (rebuild :
                            "Meta_monadic_lift for a non-TAC layered effect %s ~> %s in non extraction mode"
                            uu___7 uu___8 in
                        fallback uu___6 ()
+                   | FStar_Syntax_Syntax.Tm_meta
+                       (uu___4, FStar_Syntax_Syntax.Meta_monadic_lift
+                        (msrc, mtgt, uu___5))
+                       when
+                       (cfg.FStar_TypeChecker_Cfg.steps).FStar_TypeChecker_Cfg.for_extraction
+                         &&
+                         (((is_non_tac_layered_effect msrc) &&
+                             (let uu___6 = can_reify_for_extraction msrc in
+                              Prims.op_Negation uu___6))
+                            ||
+                            ((is_non_tac_layered_effect mtgt) &&
+                               (let uu___6 = can_reify_for_extraction mtgt in
+                                Prims.op_Negation uu___6)))
+                       ->
+                       let uu___6 =
+                         let uu___7 =
+                           let uu___8 = FStar_Ident.string_of_lid msrc in
+                           let uu___9 = FStar_Ident.string_of_lid mtgt in
+                           FStar_Compiler_Util.format2
+                             "Cannot reify %s ~> %s for extraction" uu___8
+                             uu___9 in
+                         (FStar_Errors_Codes.Fatal_UnexpectedEffect, uu___7) in
+                       FStar_Errors.raise_error uu___6
+                         t1.FStar_Syntax_Syntax.pos
                    | FStar_Syntax_Syntax.Tm_meta
                        (t2, FStar_Syntax_Syntax.Meta_monadic (m, ty)) ->
                        do_reify_monadic (fallback " (1)") cfg env2 stack1 t2
