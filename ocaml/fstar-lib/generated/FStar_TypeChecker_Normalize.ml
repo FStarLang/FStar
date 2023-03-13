@@ -8228,7 +8228,11 @@ let (term_to_string :
                 (FStar_Errors_Codes.Warning_NormalizationFailure, uu___3) in
               FStar_Errors.log_issue t.FStar_Syntax_Syntax.pos uu___2);
              t) in
-      FStar_Syntax_Print.term_to_string' env1.FStar_TypeChecker_Env.dsenv t1
+      let uu___ =
+        FStar_Syntax_DsEnv.set_current_module
+          env1.FStar_TypeChecker_Env.dsenv
+          env1.FStar_TypeChecker_Env.curmodule in
+      FStar_Syntax_Print.term_to_string' uu___ t1
 let (comp_to_string :
   FStar_TypeChecker_Env.env -> FStar_Syntax_Syntax.comp -> Prims.string) =
   fun env1 ->
@@ -8252,7 +8256,11 @@ let (comp_to_string :
                 (FStar_Errors_Codes.Warning_NormalizationFailure, uu___3) in
               FStar_Errors.log_issue c.FStar_Syntax_Syntax.pos uu___2);
              c) in
-      FStar_Syntax_Print.comp_to_string' env1.FStar_TypeChecker_Env.dsenv c1
+      let uu___ =
+        FStar_Syntax_DsEnv.set_current_module
+          env1.FStar_TypeChecker_Env.dsenv
+          env1.FStar_TypeChecker_Env.curmodule in
+      FStar_Syntax_Print.comp_to_string' uu___ c1
 let (normalize_refinement :
   FStar_TypeChecker_Env.steps ->
     FStar_TypeChecker_Env.env ->

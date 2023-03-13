@@ -353,13 +353,18 @@ let (may_shorten : FStar_Ident.lident -> Prims.bool) =
     | "Prims.Cons" -> false
     | uu___1 ->
         let uu___2 = is_tuple_constructor_lid lid in Prims.op_Negation uu___2
+let (maybe_shorten_lid :
+  FStar_Syntax_DsEnv.env -> FStar_Ident.lident -> FStar_Ident.lident) =
+  fun env ->
+    fun lid ->
+      let uu___ = may_shorten lid in
+      if uu___ then FStar_Syntax_DsEnv.shorten_lid env lid else lid
 let (maybe_shorten_fv :
   FStar_Syntax_DsEnv.env -> FStar_Syntax_Syntax.fv -> FStar_Ident.lident) =
   fun env ->
     fun fv ->
       let lid = (fv.FStar_Syntax_Syntax.fv_name).FStar_Syntax_Syntax.v in
-      let uu___ = may_shorten lid in
-      if uu___ then FStar_Syntax_DsEnv.shorten_lid env lid else lid
+      maybe_shorten_lid env lid
 let (serialize_machine_integer_desc :
   (FStar_Const.signedness * FStar_Const.width) -> Prims.string) =
   fun uu___ ->
@@ -1814,12 +1819,15 @@ and (resugar_comp' :
                  let uu___2 =
                    let uu___3 =
                      let uu___4 =
+                       maybe_shorten_lid env
+                         c1.FStar_Syntax_Syntax.effect_name in
+                     let uu___5 =
                        FStar_Compiler_List.map
                          (fun t -> (t, FStar_Parser_AST.Nothing))
                          (FStar_Compiler_List.op_At pre2
                             (FStar_Compiler_List.op_At (post2 :: decrease)
                                pats2)) in
-                     ((c1.FStar_Syntax_Syntax.effect_name), uu___4) in
+                     (uu___4, uu___5) in
                    FStar_Parser_AST.Construct uu___3 in
                  mk uu___2)
           else
@@ -1854,14 +1862,23 @@ and (resugar_comp' :
                           aux (FStar_Compiler_List.op_At es l) tl
                       | uu___4 -> aux l tl) in
                let decrease = aux [] c1.FStar_Syntax_Syntax.flags in
-               mk
-                 (FStar_Parser_AST.Construct
-                    ((c1.FStar_Syntax_Syntax.effect_name),
-                      (FStar_Compiler_List.op_At (result :: decrease) args)))
+               let uu___3 =
+                 let uu___4 =
+                   let uu___5 =
+                     maybe_shorten_lid env c1.FStar_Syntax_Syntax.effect_name in
+                   (uu___5,
+                     (FStar_Compiler_List.op_At (result :: decrease) args)) in
+                 FStar_Parser_AST.Construct uu___4 in
+               mk uu___3
              else
-               mk
-                 (FStar_Parser_AST.Construct
-                    ((c1.FStar_Syntax_Syntax.effect_name), [result])))
+               (let uu___4 =
+                  let uu___5 =
+                    let uu___6 =
+                      maybe_shorten_lid env
+                        c1.FStar_Syntax_Syntax.effect_name in
+                    (uu___6, [result]) in
+                  FStar_Parser_AST.Construct uu___5 in
+                mk uu___4))
 and (resugar_binder' :
   FStar_Syntax_DsEnv.env ->
     FStar_Syntax_Syntax.binder ->
