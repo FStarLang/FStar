@@ -45,6 +45,15 @@ val unknown (#t: Type0) (td: typedef t) : Ghost t
   (requires True)
   (ensures (fun y -> fractionable td y))
 
+val full_not_unknown
+  (#t: Type)
+  (td: typedef t)
+  (v: t)
+: Lemma
+  (requires (full td v))
+  (ensures (~ (v == unknown td)))
+  [SMTPat (full td v)]
+
 val mk_fraction_unknown (#t: Type0) (td: typedef t) (p: P.perm) : Lemma
   (ensures (mk_fraction td (unknown td) p == unknown td))
 

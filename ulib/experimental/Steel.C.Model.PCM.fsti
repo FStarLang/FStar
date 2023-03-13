@@ -408,5 +408,5 @@ let pcm (a: Type) : Tot Type =
     (forall (x:a) (y:a{composable p x y}).{:pattern (composable p x y)}
       op p x y == one p ==> x == one p /\ y == one p) /\ // necessary to lift frame-preserving updates to unions
     (forall (x:a) . {:pattern (p_refine p x)} p_refine p x ==> exclusive p x) /\ // nice to have, but not used yet
-    (~ (p_refine p (one p))) // necessary to maintain (refine ==> exclusive) for uninit
+    (~ (p_refine p (one p))) // necessary to maintain (refine ==> exclusive) for uninit, also necessary to prove full_not_unknown
   })

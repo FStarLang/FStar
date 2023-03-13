@@ -89,6 +89,10 @@ let uninitialized td = td.uninitialized
 
 let unknown td = one td.pcm
 
+let full_not_unknown
+  td v
+= ()
+
 let mk_fraction_unknown td p = td.mk_fraction_one p
 let mk_fraction_eq_unknown td v p = td.mk_fraction_eq_one v p
 
