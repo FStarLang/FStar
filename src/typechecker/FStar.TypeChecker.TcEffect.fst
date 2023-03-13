@@ -1788,6 +1788,31 @@ Errors.with_ctx (BU.format1 "While checking layered effect definition `%s`" (str
       [sig_assume_reify]
     else [] in
 
+  // extraction mode
+  let extraction_mode =
+    let us, a_b, rest_bs =
+      let us, t = let us, t, _ = signature in us, t in
+      match (SS.compress t).n with
+      | Tm_arrow (bs, _) ->
+        let a_b::rest_bs = SS.open_binders bs in
+        us, a_b, rest_bs
+      | _ -> failwith "Impossible!"  // there are multiple places above where we have relied on sig being an arrow
+    in
+    let env = Env.push_univ_vars env0 us in
+    let env = Env.push_binders env [a_b] in
+    let _, r = List.fold_left (fun (env, r) b ->
+      let r = r && N.non_info_norm env b.binder_bv.sort in
+      Env.push_binders env [b], r) (env, true) rest_bs in
+    if r && Substitutive_combinator? bind_kind
+    then S.Extract_reify
+    else S.Extract_none
+  in
+
+  if Env.debug env0 <| Options.Other "LayeredEffectsTc"
+  then BU.print2 "Effect %s has extraction mode %s\n"
+         (string_of_lid ed.mname)
+         (Print.eff_extraction_mode_to_string extraction_mode);
+
   let tschemes_of (us, t, ty) k = (us, t), (us, ty), k in
   let tschemes_of2 (us, t, ty) = (us, t), (us, ty) in
 
@@ -1802,7 +1827,8 @@ Errors.with_ctx (BU.format1 "While checking layered effect definition `%s`" (str
   { ed with
     signature     = Layered_eff_sig (num_effect_params, (let us, t, _ = signature in (us, t)));
     combinators   = combinators;
-    actions       = List.map (tc_action env0) ed.actions },
+    actions       = List.map (tc_action env0) ed.actions;
+    extraction_mode },
   reify_sigelt
 )
 

@@ -676,6 +676,11 @@ let eff_combinators_to_string = function
   | DM4F_eff combs -> wp_eff_combinators_to_string combs
   | Layered_eff combs -> layered_eff_combinators_to_string combs
 
+let eff_extraction_mode_to_string = function
+  | Extract_none -> "none"
+  | Extract_reify -> "reify"
+  | Extract_primitive -> "primitive"
+
 let eff_decl_to_string' for_free r q ed =
  if not (Options.ugly()) then
     Pretty.eff_decl_to_string' for_free r q ed
