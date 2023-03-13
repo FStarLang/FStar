@@ -472,7 +472,7 @@ let rec translate_type_without_decay env t: typ =
       TQualified (must (lident_of_typestring tag))
 
   | MLTY_Named ([tag; _; _; _], p) when
-    BU.starts_with (Syntax.string_of_mlpath p) "Steel.C.Types.struct_t0"
+    BU.starts_with (Syntax.string_of_mlpath p) "Steel.ST.C.Types.struct_t0"
     ->
       TQualified (must (lident_of_typestring tag))
 
@@ -487,12 +487,12 @@ let rec translate_type_without_decay env t: typ =
       TBuf (translate_type_without_decay env arg)
 
   | MLTY_Named ([arg; _], p) when
-    Syntax.string_of_mlpath p = "Steel.C.Types.ptr"
+    Syntax.string_of_mlpath p = "Steel.ST.C.Types.ptr"
     ->
       TBuf (translate_type_without_decay env arg)
 
   | MLTY_Named ([arg], p) when
-    Syntax.string_of_mlpath p = "Steel.C.Types.scalar_t"
+    Syntax.string_of_mlpath p = "Steel.ST.C.Types.scalar_t"
     ->
       translate_type_without_decay env arg
 
@@ -814,7 +814,7 @@ and translate_expr env e: expr =
 
   | MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, _) }, [ _ (* typedef *) ])
     when (
-          string_of_mlpath p = "Steel.C.Types.alloc" ||
+          string_of_mlpath p = "Steel.ST.C.Types.alloc" ||
           false) ->
       EBufCreateNoInit (ManuallyManaged, EConstant (UInt32, "1"))
 
@@ -851,7 +851,7 @@ and translate_expr env e: expr =
       EBufFree (translate_expr env e2)
 
   | MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, _) }, [ _ (* typedef *); _ (* v *); e ]) when
-       string_of_mlpath p = "Steel.C.Types.free" ->
+       string_of_mlpath p = "Steel.ST.C.Types.free" ->
       EBufFree (translate_expr env e)
 
   (* Generic buffer operations. *)
@@ -1061,7 +1061,7 @@ and translate_expr env e: expr =
     -> generate_is_null (translate_type env t) (translate_expr env e)
 
   | MLE_App ({expr=MLE_TApp ({expr=MLE_Name p}, [t])}, [_ (* opened *); _ (* td *); _ (* v *); e])
-    when string_of_mlpath p = "Steel.C.Types.is_null"
+    when string_of_mlpath p = "Steel.ST.C.Types.is_null"
     -> generate_is_null (translate_type env t) (translate_expr env e)
   
   | MLE_App ({expr=MLE_TApp ({expr=MLE_Name p}, [t])}, _)
@@ -1070,7 +1070,7 @@ and translate_expr env e: expr =
 
   | MLE_App ({expr=MLE_TApp ({expr=MLE_Name p}, t::_)}, [_ (* pcm *)])
     when string_of_mlpath p = "Steel.C.Reference.null"
-    || string_of_mlpath p = "Steel.C.Types.null"
+    || string_of_mlpath p = "Steel.ST.C.Types.null"
     -> EBufNull (translate_type env t)
 
 (* END support for the Steel null pointer *)
@@ -1093,15 +1093,15 @@ and translate_expr env e: expr =
         field_name))
 
   | MLE_App ({expr=MLE_TApp ({expr=MLE_Name p}, _)},
-             [_ (* opened *)
-               ; ({expr=MLE_Const (MLC_String struct_name)})
+             [
+               ({expr=MLE_Const (MLC_String struct_name)})
                ; _ (* fields *)
                ; _ (* v *)
                ; r
                ; ({expr=MLE_Const (MLC_String field_name)})
                ; _ (* td' *)
              ])
-    when string_of_mlpath p = "Steel.C.Types.struct_field0" ->
+    when string_of_mlpath p = "Steel.ST.C.Types.struct_field0" ->
       EAddrOf (EField (
         TQualified (must (lident_of_string struct_name)),
         EBufRead (translate_expr env r, EQualified (["C"], "_zero_for_deref")),
@@ -1136,11 +1136,11 @@ and translate_expr env e: expr =
         translate_expr env x)
 
   | MLE_App ({expr=MLE_TApp ({expr=MLE_Name p}, _)}, [_ (* value *) ; _ (* perm *) ; r])
-    when string_of_mlpath p = "Steel.C.Types.read0" ->
+    when string_of_mlpath p = "Steel.ST.C.Types.read0" ->
       EBufRead (translate_expr env r, EQualified (["C"], "_zero_for_deref"))
 
   | MLE_App ({expr=MLE_TApp ({expr=MLE_Name p}, _)}, [_ (* value *); r; x])
-    when string_of_mlpath p = "Steel.C.Types.write" ->
+    when string_of_mlpath p = "Steel.ST.C.Types.write" ->
       EAssign (
         EBufRead (translate_expr env r, EQualified (["C"], "_zero_for_deref")),
         translate_expr env x)
@@ -1365,12 +1365,12 @@ let parse_steel_c_fields env (fields: mlty): option (list _) =
         match fields with
         | MLTY_Named ([], p)
           when Syntax.string_of_mlpath p = "Steel.C.Fields.c_fields_t_nil"
-          || Syntax.string_of_mlpath p = "Steel.C.Types.field_t_nil"
+          || Syntax.string_of_mlpath p = "Steel.ST.C.Types.field_t_nil"
           -> Some []
           
         | MLTY_Named ([field; t; fields], p)
           when Syntax.string_of_mlpath p = "Steel.C.Fields.c_fields_t_cons"
-          || Syntax.string_of_mlpath p = "Steel.C.Types.field_t_cons"
+          || Syntax.string_of_mlpath p = "Steel.ST.C.Types.field_t_cons"
           ->
           opt_bind (string_of_typestring field) (fun field ->
           if field = "" then go fields else
@@ -1430,7 +1430,7 @@ let translate_type_decl env ty: option decl =
       define_struct tag fields
 
     | {tydecl_defn=Some (MLTD_Abbrev (MLTY_Named ([tag; fields; _; _], p)))}
-      when Syntax.string_of_mlpath p = "Steel.C.Types.define_struct0"
+      when Syntax.string_of_mlpath p = "Steel.ST.C.Types.define_struct0"
       ->
       define_struct tag fields
 
