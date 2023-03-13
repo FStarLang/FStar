@@ -2695,7 +2695,7 @@ let remove_reify (t: S.term): S.term =
   then t
   else
     let head, args = U.head_and_args t in
-    if (match (SS.compress head).n with Tm_constant (FStar.Const.Const_reify _) -> true | _ -> false)
+    if (match (SS.compress head).n with Tm_constant FStar.Const.Const_reify -> true | _ -> false)
     then begin match args with
         | [x] -> fst x
         | _ -> failwith "Impossible : Reify applied to multiple arguments after normalization."
@@ -3322,6 +3322,11 @@ let must_erase_for_extraction (g:env) (t:typ) =
         res
     in
     aux g t
+
+let effect_extraction_mode env l =
+  l |> Env.norm_eff_name env
+    |> Env.get_effect_decl env
+    |> (fun ed -> ed.extraction_mode)
 
 let fresh_effect_repr env r eff_name signature_ts repr_ts_opt u a_tm =
   let fail t = raise_error (Err.unexpected_signature_for_monad env eff_name t) r in

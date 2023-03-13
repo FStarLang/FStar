@@ -9024,7 +9024,9 @@ let rec (elim_uvars :
                              FStar_Syntax_Syntax.combinators = uu___5;
                              FStar_Syntax_Syntax.actions = uu___6;
                              FStar_Syntax_Syntax.eff_attrs =
-                               (ed.FStar_Syntax_Syntax.eff_attrs)
+                               (ed.FStar_Syntax_Syntax.eff_attrs);
+                             FStar_Syntax_Syntax.extraction_mode =
+                               (ed.FStar_Syntax_Syntax.extraction_mode)
                            } in
                          {
                            FStar_Syntax_Syntax.sigel =

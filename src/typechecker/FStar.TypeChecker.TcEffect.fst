@@ -1790,6 +1790,9 @@ Errors.with_ctx (BU.format1 "While checking layered effect definition `%s`" (str
 
   // extraction mode
   let extraction_mode =
+    if U.has_attribute ed.eff_attrs PC.primitive_extraction_attr
+    then S.Extract_primitive
+    else
     let us, a_b, rest_bs =
       let us, t = let us, t, _ = signature in us, t in
       match (SS.compress t).n with

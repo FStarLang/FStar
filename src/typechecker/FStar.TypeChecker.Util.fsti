@@ -154,6 +154,8 @@ val must_erase_for_extraction: env -> term -> bool
 
 //layered effect utilities
 
+val effect_extraction_mode : env -> lident -> eff_extraction_mode
+
 (*
  * This function returns ed.repr<u> a ?u1 ... ?un (note that u must be the universe of a)
  *   where ?u1 ... ?un are unification variables, one for each index of the layered effect
@@ -192,4 +194,3 @@ val make_record_fields_in_order : env -> unresolved_constructor -> option (eithe
                                 not_found:(ident -> option 'a) ->
                                 Range.range ->
                                 list 'a
-

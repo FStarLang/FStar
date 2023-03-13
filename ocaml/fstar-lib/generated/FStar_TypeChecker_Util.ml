@@ -7017,22 +7017,23 @@ let (check_sigelt_quals :
                  FStar_Syntax_Syntax.signature = uu___5;
                  FStar_Syntax_Syntax.combinators = uu___6;
                  FStar_Syntax_Syntax.actions = uu___7;
-                 FStar_Syntax_Syntax.eff_attrs = uu___8;_}
+                 FStar_Syntax_Syntax.eff_attrs = uu___8;
+                 FStar_Syntax_Syntax.extraction_mode = uu___9;_}
                ->
                if
                  Prims.op_Negation
                    (FStar_Compiler_List.contains
                       FStar_Syntax_Syntax.TotalEffect quals)
                then
-                 let uu___9 =
-                   let uu___10 =
-                     let uu___11 = FStar_Ident.string_of_lid eff_name in
+                 let uu___10 =
+                   let uu___11 =
+                     let uu___12 = FStar_Ident.string_of_lid eff_name in
                      FStar_Compiler_Util.format1
                        "Effect %s is marked erasable but only total effects are allowed to be erasable"
-                       uu___11 in
+                       uu___12 in
                    (FStar_Errors_Codes.Fatal_QulifierListNotPermitted,
-                     uu___10) in
-                 FStar_Errors.raise_error uu___9 r
+                     uu___11) in
+                 FStar_Errors.raise_error uu___10 r
                else ()
            | uu___2 ->
                FStar_Errors.raise_error
@@ -7243,6 +7244,20 @@ let (must_erase_for_extraction :
          else ());
         res in
       aux g t
+let (effect_extraction_mode :
+  FStar_TypeChecker_Env.env ->
+    FStar_Ident.lident -> FStar_Syntax_Syntax.eff_extraction_mode)
+  =
+  fun env ->
+    fun l ->
+      let uu___ =
+        let uu___1 =
+          FStar_Compiler_Effect.op_Bar_Greater l
+            (FStar_TypeChecker_Env.norm_eff_name env) in
+        FStar_Compiler_Effect.op_Bar_Greater uu___1
+          (FStar_TypeChecker_Env.get_effect_decl env) in
+      FStar_Compiler_Effect.op_Bar_Greater uu___
+        (fun ed -> ed.FStar_Syntax_Syntax.extraction_mode)
 let (fresh_effect_repr :
   FStar_TypeChecker_Env.env ->
     FStar_Compiler_Range.range ->

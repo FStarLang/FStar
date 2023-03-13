@@ -1100,6 +1100,8 @@ val effect_param : unit
   *)
 val bind_has_range_args : unit
 
+val primitive_extraction : unit
+
 (** A binder in a definition/declaration may optionally be annotated as strictly_positive
     When the let definition is used in a data constructor type in an inductive
     definition, this annotation is used to check the positivity of the inductive

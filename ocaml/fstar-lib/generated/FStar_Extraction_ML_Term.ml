@@ -135,6 +135,27 @@ let (err_unexpected_eff :
                   uu___2 uu___3 uu___4 uu___5 in
               (FStar_Errors_Codes.Warning_ExtractionUnexpectedEffect, uu___1) in
             FStar_Errors.log_issue t.FStar_Syntax_Syntax.pos uu___
+let err_cannot_reify_effect_for_extraction :
+  'uuuuu . FStar_Ident.lident -> FStar_Compiler_Range.range -> 'uuuuu =
+  fun l ->
+    fun r ->
+      let uu___ =
+        let uu___1 =
+          let uu___2 = FStar_Ident.string_of_lid l in
+          FStar_Compiler_Util.format1 "Cannot reify %s effect for extraction"
+            uu___2 in
+        (FStar_Errors_Codes.Fatal_UnexpectedEffect, uu___1) in
+      FStar_Errors.raise_error uu___ r
+let err_cannot_extract_effect :
+  'uuuuu . FStar_Ident.lident -> FStar_Compiler_Range.range -> 'uuuuu =
+  fun l ->
+    fun r ->
+      let uu___ =
+        let uu___1 =
+          let uu___2 = FStar_Ident.string_of_lid l in
+          FStar_Compiler_Util.format1 "Cannot extract effect %s" uu___2 in
+        (FStar_Errors_Codes.Fatal_UnexpectedEffect, uu___1) in
+      FStar_Errors.raise_error uu___ r
 let (effect_as_etag :
   FStar_Extraction_ML_UEnv.uenv ->
     FStar_Ident.lident -> FStar_Extraction_ML_Syntax.e_tag)
@@ -977,24 +998,47 @@ let maybe_reify_comp :
   fun g ->
     fun env ->
       fun c ->
-        let c1 = comp_no_args c in
-        let uu___ =
-          let uu___1 =
-            let uu___2 =
-              FStar_Compiler_Effect.op_Bar_Greater c1
-                FStar_Syntax_Util.comp_effect_name in
-            FStar_Compiler_Effect.op_Bar_Greater uu___2
-              (FStar_TypeChecker_Env.norm_eff_name env) in
-          FStar_Compiler_Effect.op_Bar_Greater uu___1
-            (FStar_TypeChecker_Env.is_reifiable_effect env) in
-        if uu___
+        let extraction_mode =
+          let uu___ =
+            FStar_Compiler_Effect.op_Bar_Greater c
+              FStar_Syntax_Util.comp_effect_name in
+          FStar_Compiler_Effect.op_Bar_Greater uu___
+            (FStar_TypeChecker_Util.effect_extraction_mode env) in
+        if extraction_mode = FStar_Syntax_Syntax.Extract_reify
         then
-          let uu___1 =
-            FStar_TypeChecker_Env.reify_comp env c1
+          let uu___ =
+            FStar_TypeChecker_Env.reify_comp env c
               FStar_Syntax_Syntax.U_unknown in
-          FStar_Compiler_Effect.op_Bar_Greater uu___1
+          FStar_Compiler_Effect.op_Bar_Greater uu___
             (FStar_TypeChecker_Normalize.normalize extraction_norm_steps env)
-        else FStar_Syntax_Util.comp_result c1
+        else
+          if extraction_mode = FStar_Syntax_Syntax.Extract_primitive
+          then FStar_Syntax_Util.comp_result c
+          else
+            (let uu___2 =
+               FStar_Compiler_Effect.op_Bar_Greater c
+                 FStar_Syntax_Util.comp_effect_name in
+             err_cannot_extract_effect uu___2 c.FStar_Syntax_Syntax.pos)
+let (maybe_reify_term :
+  FStar_TypeChecker_Env.env ->
+    FStar_Syntax_Syntax.term ->
+      FStar_Ident.lident -> FStar_Syntax_Syntax.term)
+  =
+  fun env ->
+    fun t ->
+      fun l ->
+        let extraction_mode =
+          FStar_TypeChecker_Util.effect_extraction_mode env l in
+        if extraction_mode = FStar_Syntax_Syntax.Extract_reify
+        then
+          FStar_TypeChecker_Util.reify_body env
+            [FStar_TypeChecker_Env.Inlining;
+            FStar_TypeChecker_Env.ForExtraction;
+            FStar_TypeChecker_Env.Unascribe] t
+        else
+          if extraction_mode = FStar_Syntax_Syntax.Extract_primitive
+          then t
+          else err_cannot_extract_effect l t.FStar_Syntax_Syntax.pos
 let rec (translate_term_to_mlty :
   FStar_Extraction_ML_UEnv.uenv ->
     FStar_Syntax_Syntax.term -> FStar_Extraction_ML_Syntax.mlty)
@@ -2847,18 +2891,9 @@ and (term_as_mlexpr' :
                        match rcopt with
                        | FStar_Pervasives_Native.Some rc ->
                            let uu___3 =
-                             let uu___4 =
-                               FStar_Extraction_ML_UEnv.tcenv_of_uenv env in
-                             FStar_TypeChecker_Env.is_reifiable_rc uu___4 rc in
-                           if uu___3
-                           then
-                             let uu___4 =
-                               FStar_Extraction_ML_UEnv.tcenv_of_uenv env in
-                             FStar_TypeChecker_Util.reify_body uu___4
-                               [FStar_TypeChecker_Env.Inlining;
-                               FStar_TypeChecker_Env.ForExtraction;
-                               FStar_TypeChecker_Env.Unascribe] body1
-                           else body1
+                             FStar_Extraction_ML_UEnv.tcenv_of_uenv env in
+                           maybe_reify_term uu___3 body1
+                             rc.FStar_Syntax_Syntax.residual_effect
                        | FStar_Pervasives_Native.None ->
                            (FStar_Extraction_ML_UEnv.debug g
                               (fun uu___4 ->

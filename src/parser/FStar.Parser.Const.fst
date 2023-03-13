@@ -370,6 +370,7 @@ let default_effect_attr = psconst "default_effect"
 let top_level_effect_attr = psconst "top_level_effect"
 let effect_parameter_attr = psconst "effect_param"
 let bind_has_range_args_attr = psconst "bind_has_range_args"
+let primitive_extraction_attr = psconst "primitive_extraction"
 let binder_strictly_positive_attr = psconst "strictly_positive"
 let no_auto_projectors_attr = psconst "no_auto_projectors"
 let no_subtping_attr_lid = psconst "no_subtyping"
@@ -402,11 +403,7 @@ let const_to_string x = match x with
   | Const_range r -> FStar.Compiler.Range.string_of_range r
   | Const_range_of -> "range_of"
   | Const_set_range_of -> "set_range_of"
-  | Const_reify lopt ->
-    U.format1 "reify%s"
-      (match lopt with
-       | None -> ""
-       | Some l -> U.format1 "<%s>" (string_of_lid l))
+  | Const_reify -> "reify"
   | Const_reflect l -> U.format1 "[[%s.reflect]]" (sli l)
 
 

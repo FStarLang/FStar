@@ -2736,38 +2736,31 @@ and (tc_maybe_toplevel_term :
                                      FStar_Compiler_List.hd
                                        c1.FStar_Syntax_Syntax.comp_univs in
                                    let e3 =
-                                     let uu___13 =
-                                       (FStar_TypeChecker_Env.is_layered_effect
-                                          env1
-                                          c1.FStar_Syntax_Syntax.effect_name)
-                                         &&
-                                         (Prims.op_Negation
-                                            env1.FStar_TypeChecker_Env.phase1) in
-                                     if uu___13
+                                     if false
                                      then
                                        let reify_val_tm =
-                                         let uu___14 =
-                                           let uu___15 =
+                                         let uu___13 =
+                                           let uu___14 =
                                              FStar_Parser_Const.layered_effect_reify_val_lid
                                                c1.FStar_Syntax_Syntax.effect_name
                                                e2.FStar_Syntax_Syntax.pos in
                                            FStar_Compiler_Effect.op_Bar_Greater
-                                             uu___15
+                                             uu___14
                                              FStar_Syntax_Syntax.tconst in
                                          FStar_Syntax_Syntax.mk_Tm_uinst
-                                           uu___14 [u_c] in
+                                           uu___13 [u_c] in
                                        let thunked_e =
-                                         let uu___14 =
-                                           let uu___15 =
-                                             let uu___16 =
-                                               let uu___17 =
-                                                 let uu___18 =
+                                         let uu___13 =
+                                           let uu___14 =
+                                             let uu___15 =
+                                               let uu___16 =
+                                                 let uu___17 =
                                                    FStar_Syntax_Syntax.null_bv
                                                      FStar_Syntax_Syntax.t_unit in
                                                  FStar_Syntax_Syntax.mk_binder
-                                                   uu___18 in
-                                               [uu___17] in
-                                             (uu___16, e2,
+                                                   uu___17 in
+                                               [uu___16] in
+                                             (uu___15, e2,
                                                (FStar_Pervasives_Native.Some
                                                   {
                                                     FStar_Syntax_Syntax.residual_effect
@@ -2779,8 +2772,8 @@ and (tc_maybe_toplevel_term :
                                                     FStar_Syntax_Syntax.residual_flags
                                                       = []
                                                   })) in
-                                           FStar_Syntax_Syntax.Tm_abs uu___15 in
-                                         FStar_Syntax_Syntax.mk uu___14
+                                           FStar_Syntax_Syntax.Tm_abs uu___14 in
+                                         FStar_Syntax_Syntax.mk uu___13
                                            e2.FStar_Syntax_Syntax.pos in
                                        let implicit_args =
                                          let a_arg =
@@ -2790,22 +2783,22 @@ and (tc_maybe_toplevel_term :
                                            FStar_Compiler_Effect.op_Bar_Greater
                                              c1.FStar_Syntax_Syntax.effect_args
                                              (FStar_Compiler_List.map
-                                                (fun uu___14 ->
-                                                   match uu___14 with
-                                                   | (t, uu___15) ->
+                                                (fun uu___13 ->
+                                                   match uu___13 with
+                                                   | (t, uu___14) ->
                                                        FStar_Syntax_Syntax.iarg
                                                          t)) in
                                          a_arg :: indices_args in
-                                       let uu___14 =
-                                         let uu___15 =
-                                           let uu___16 =
+                                       let uu___13 =
+                                         let uu___14 =
+                                           let uu___15 =
                                              FStar_Syntax_Syntax.as_arg
                                                thunked_e in
-                                           [uu___16] in
+                                           [uu___15] in
                                          FStar_Compiler_List.op_At
-                                           implicit_args uu___15 in
+                                           implicit_args uu___14 in
                                        FStar_Syntax_Syntax.mk_Tm_app
-                                         reify_val_tm uu___14
+                                         reify_val_tm uu___13
                                          e2.FStar_Syntax_Syntax.pos
                                      else
                                        FStar_Syntax_Syntax.mk

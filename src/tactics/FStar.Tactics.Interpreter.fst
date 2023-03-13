@@ -52,6 +52,7 @@ module TcComm  = FStar.TypeChecker.Common
 module TcRel   = FStar.TypeChecker.Rel
 module TcTerm  = FStar.TypeChecker.TcTerm
 module U       = FStar.Syntax.Util
+module PC      = FStar.Parser.Const
 
 let tacdbg = BU.mk_ref false
 

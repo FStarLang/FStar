@@ -1330,6 +1330,13 @@ let (eff_combinators_to_string :
         wp_eff_combinators_to_string combs
     | FStar_Syntax_Syntax.Layered_eff combs ->
         layered_eff_combinators_to_string combs
+let (eff_extraction_mode_to_string :
+  FStar_Syntax_Syntax.eff_extraction_mode -> Prims.string) =
+  fun uu___ ->
+    match uu___ with
+    | FStar_Syntax_Syntax.Extract_none -> "none"
+    | FStar_Syntax_Syntax.Extract_reify -> "reify"
+    | FStar_Syntax_Syntax.Extract_primitive -> "primitive"
 let (eff_decl_to_string' :
   Prims.bool ->
     FStar_Compiler_Range.range ->

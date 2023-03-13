@@ -339,6 +339,8 @@ let (top_level_effect_attr : FStar_Ident.lident) = psconst "top_level_effect"
 let (effect_parameter_attr : FStar_Ident.lident) = psconst "effect_param"
 let (bind_has_range_args_attr : FStar_Ident.lident) =
   psconst "bind_has_range_args"
+let (primitive_extraction_attr : FStar_Ident.lident) =
+  psconst "primitive_extraction"
 let (binder_strictly_positive_attr : FStar_Ident.lident) =
   psconst "strictly_positive"
 let (no_auto_projectors_attr : FStar_Ident.lident) =

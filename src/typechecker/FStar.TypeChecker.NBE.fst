@@ -479,7 +479,7 @@ let rec translate (cfg:config) (bs:list t) (e:term) : t =
       | _ -> translate_fv cfg bs (S.set_range_of_fv fvar e.pos)
       end
 
-    | Tm_app({n=Tm_constant (FC.Const_reify _)},   arg::more::args)
+    | Tm_app({n=Tm_constant FC.Const_reify},   arg::more::args)
     | Tm_app({n=Tm_constant (FC.Const_reflect _)}, arg::more::args) ->
       let head, _ = U.head_and_args e in
       let head = S.mk_Tm_app head [arg] e.pos in
@@ -492,7 +492,7 @@ let rec translate (cfg:config) (bs:list t) (e:term) : t =
     | Tm_app({n=Tm_constant (FC.Const_reflect _)}, [arg]) ->
       mk_t <| Reflect (translate cfg bs (fst arg))
 
-    | Tm_app({n=Tm_constant (FC.Const_reify _)}, [arg])
+    | Tm_app({n=Tm_constant FC.Const_reify}, [arg])
         when cfg.core_cfg.steps.reify_ ->
       assert (not cfg.core_cfg.reifying);
       let cfg = reifying_true cfg in
