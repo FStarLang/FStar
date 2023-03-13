@@ -940,7 +940,7 @@ and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked 
 
   (* Unary operators. Explicitly curry extra arguments *)
   | Tm_app({n=Tm_constant Const_range_of}, a::hd::rest)
-  | Tm_app({n=Tm_constant Const_reify}, a::hd::rest)
+  | Tm_app({n=Tm_constant (Const_reify _)}, a::hd::rest)
   | Tm_app({n=Tm_constant (Const_reflect _)}, a::hd::rest) ->
     let rest = hd::rest in //no 'as' clauses in F* yet, so we need to do this ugliness
     let unary_op, _ = U.head_and_args top in
@@ -973,7 +973,7 @@ and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked 
   | Tm_app({n=Tm_constant Const_set_range_of}, _) ->
     raise_error (Errors.Fatal_IllAppliedConstant, BU.format1 "Ill-applied constant %s" (Print.term_to_string top)) e.pos
 
-  | Tm_app({n=Tm_constant Const_reify}, [(e, aqual)]) ->
+  | Tm_app({n=Tm_constant (Const_reify _)}, [(e, aqual)]) ->
     if Option.isSome aqual
     then Errors.log_issue e.pos
            (Errors.Warning_IrrelevantQualifierOnArgumentToReify,
@@ -988,6 +988,9 @@ and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked 
     let c, g_c =
       let c, g_c = TcComm.lcomp_comp c in
       Env.unfold_effect_abbrev env c, g_c in
+
+    let reify_op = {reify_op with
+                    n=Tm_constant (Const_reify (Some c.effect_name))} in
 
     if not (is_user_reifiable_effect env c.effect_name) then
       raise_error (Errors.Fatal_EffectCannotBeReified,
@@ -1010,8 +1013,9 @@ and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked 
       // The rewriting happens in phase 2
       //   This is consistent with the usual inference of indexed effect indices in phase 2
       //
-      if Env.is_layered_effect env c.effect_name &&
-         not env.phase1
+      // if Env.is_layered_effect env c.effect_name &&
+      //    not env.phase1
+      if false
       then 
            // reify__M<u_c>
            let reify_val_tm =
@@ -1836,7 +1840,7 @@ and tc_constant (env:env_t) r (c:sconst) : typ =
       | Const_range _ -> t_range
       | Const_range_of
       | Const_set_range_of
-      | Const_reify
+      | Const_reify _
       | Const_reflect _ ->
         raise_error (Errors.Fatal_IllTyped, BU.format1 "Ill-typed %s: this constant must be fully applied"
                                  (Const.const_to_string c)) r
@@ -4653,7 +4657,7 @@ let rec __typeof_tot_or_gtot_term_fastpath (env:env) (t:term) (must_tot:bool) : 
   | Tm_bvar _ -> failwith ("Impossible: " ^ Print.term_to_string t)
 
   (* Can't (easily) do this one efficiently, just return None *)
-  | Tm_constant Const_reify
+  | Tm_constant (Const_reify _)
   | Tm_constant (Const_reflect _) -> None
 
   //For the following nodes, use the universe_of_aux function

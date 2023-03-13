@@ -805,7 +805,7 @@ let should_reify cfg stack =
         | s -> s
     in
     match drop_irrel stack with
-    | App (_, {n=Tm_constant FC.Const_reify}, _, _) :: _ ->
+    | App (_, {n=Tm_constant (FC.Const_reify _)}, _, _) :: _ ->
         // BU.print1 "Found a reify on the stack. %s" "" ;
         cfg.steps.reify_
     | _ -> false
@@ -1490,7 +1490,7 @@ let rec norm : cfg -> env -> stack -> term -> term =
             begin match stack with
               | Match _ :: _
               | Arg _ :: _
-              | App (_, {n=Tm_constant FC.Const_reify}, _, _) :: _
+              | App (_, {n=Tm_constant (FC.Const_reify _)}, _, _) :: _
               | MemoLazy _ :: _ when cfg.steps.beta ->
                 log cfg  (fun () -> BU.print_string "+++ Dropping ascription \n");
                 norm cfg env stack t1 //ascriptions should not block reduction
@@ -1787,7 +1787,7 @@ and reduce_impure_comp cfg env stack (head : term) // monadic term
 and do_reify_monadic fallback cfg env stack (top : term) (m : monad_name) (t : typ) : term =
     (* Precondition: the stack head is an App (reify, ...) *)
     begin match stack with
-    | App (_, {n=Tm_constant FC.Const_reify}, _, _) :: _ -> ()
+    | App (_, {n=Tm_constant (FC.Const_reify _)}, _, _) :: _ -> ()
     | _ -> failwith (BU.format1 "INTERNAL ERROR: do_reify_monadic: bad stack: %s" (stack_to_string stack))
     end;
     let top0 = top in

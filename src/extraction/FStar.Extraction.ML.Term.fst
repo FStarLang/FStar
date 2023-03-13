@@ -105,6 +105,11 @@ let err_unexpected_eff env t ty f0 f1 =
                         (eff_to_string f0)
                         (eff_to_string f1))
 
+let err_cannot_extract_effect l r =
+  Errors.raise_error
+    (Errors.Fatal_UnexpectedEffect,
+     BU.format1 "Cannot extract effect %s" (string_of_lid l)) r
+
 (***********************************************************************)
 (* Translating an effect lid to an e_tag = {E_PURE, E_ERASABLE, E_IMPURE} *)
 (***********************************************************************)
@@ -653,22 +658,14 @@ let comp_no_args c =
  *     Tm_ascribed as well (in case it is a comp annotation
  *)
 let maybe_reify_comp g (env:TcEnv.env) (c:S.comp) : S.term =
-  (*
-   * AR: this is subtle
-   *     it replaces all the effect indices with unit
-   *     which is bad for indexed effects in general
-   *     but currently (as of 11/06/19) our layered effect indices are erasable anyway
-   *     since they are assumed to be unit for combinators application too
-   *
-   *     if and when that is fixed, this call should also be conditional-ed under if (not layered effect)
-   *)
-  let c = comp_no_args c in
-
   //AR: normalize the reified comp, to inline definitions that reification may have introduced
-  if c |> U.comp_effect_name |> TcEnv.norm_eff_name env |> TcEnv.is_reifiable_effect env
+  let l = c |> U.comp_effect_name |> TcEnv.norm_eff_name env in
+  let ed = TcEnv.get_effect_decl env l in
+  if ed.extraction_mode = Extract_reify
   then TcEnv.reify_comp env c S.U_unknown |> N.normalize extraction_norm_steps env
-  else U.comp_result c
-
+  else if ed.extraction_mode = Extract_primitive
+  then U.comp_result c
+  else err_cannot_extract_effect l c.pos
 
 let rec translate_term_to_mlty (g:uenv) (t0:term) : mlty =
     let arg_as_mlty (g:uenv) (a, _) : mlty =
@@ -1487,9 +1484,14 @@ and term_as_mlexpr' (g:uenv) (top:term) : (mlexpr * e_tag * mlty) =
           let body =
             match rcopt with
             | Some rc ->
-                if TcEnv.is_reifiable_rc (tcenv_of_uenv env) rc
-                then TcUtil.reify_body (tcenv_of_uenv env) [TcEnv.Inlining; TcEnv.ForExtraction; TcEnv.Unascribe] body
-                else body
+              let tcenv = tcenv_of_uenv env in
+              let l = TcEnv.norm_eff_name tcenv rc.residual_effect in
+              let ed = TcEnv.get_effect_decl tcenv l in
+              if ed.extraction_mode = Extract_reify
+              then TcUtil.reify_body (tcenv_of_uenv env) [TcEnv.Inlining; TcEnv.ForExtraction; TcEnv.Unascribe] body
+              else if ed.extraction_mode = Extract_primitive
+              then body
+              else err_cannot_extract_effect l body.pos
             | None -> debug g (fun () -> BU.print1 "No computation type for: %s\n" (Print.term_to_string body)); body in
           let ml_body, f, t = term_as_mlexpr env body in
           let f, tfun = List.fold_right
@@ -1544,9 +1546,20 @@ and term_as_mlexpr' (g:uenv) (top:term) : (mlexpr * e_tag * mlty) =
               |> N.normalize [Env.Beta; Env.Iota; Env.Zeta; Env.EraseUniverses; Env.AllowUnboundUniverses; Env.ForExtraction] (tcenv_of_uenv g)
               |> term_as_mlexpr g
 
-            | Tm_constant Const_reify ->
-              let e = TcUtil.reify_body_with_arg (tcenv_of_uenv g) [TcEnv.Inlining; TcEnv.ForExtraction; TcEnv.Unascribe] head (List.hd args) in
-              let tm = S.mk_Tm_app (TcUtil.remove_reify e) (List.tl args) t.pos in
+            | Tm_constant (Const_reify None) ->
+              failwith "Impossible! reify without effect annotation"
+
+            | Tm_constant (Const_reify (Some l)) ->
+              let l_extraction_mode =
+                let ed = TcEnv.get_effect_decl (tcenv_of_uenv g) l in
+                ed.extraction_mode in
+              let tm =
+                if l_extraction_mode = S.Extract_reify
+                then let e = TcUtil.reify_body_with_arg (tcenv_of_uenv g) [TcEnv.Inlining; TcEnv.ForExtraction; TcEnv.Unascribe] head (List.hd args) in
+                     S.mk_Tm_app (TcUtil.remove_reify e) (List.tl args) t.pos
+                else if l_extraction_mode = S.Extract_primitive
+                then S.mk_Tm_app (fst (List.hd args)) (List.tl args) t.pos
+                else err_cannot_extract_effect l t.pos in
               term_as_mlexpr g tm
 
             | _ ->

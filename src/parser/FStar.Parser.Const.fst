@@ -402,7 +402,11 @@ let const_to_string x = match x with
   | Const_range r -> FStar.Compiler.Range.string_of_range r
   | Const_range_of -> "range_of"
   | Const_set_range_of -> "set_range_of"
-  | Const_reify -> "reify"
+  | Const_reify lopt ->
+    U.format1 "reify%s"
+      (match lopt with
+       | None -> ""
+       | Some l -> U.format1 "<%s>" (string_of_lid l))
   | Const_reflect l -> U.format1 "[[%s.reflect]]" (sli l)
 
 

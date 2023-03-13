@@ -48,8 +48,9 @@ type sconst =
   | Const_string      of string * FStar.Compiler.Range.range                (* UTF-8 encoded *)
   | Const_range_of                                           (* `range_of` primitive *)
   | Const_set_range_of                                       (* `set_range_of` primitive *)
-  | Const_range       of FStar.Compiler.Range.range                         (* not denotable by the programmer *)
-  | Const_reify                                              (* a coercion from a computation to a Tot term *)
+  | Const_range       of FStar.Compiler.Range.range          (* not denotable by the programmer *)
+  | Const_reify       of option Ident.lid                    (* a coercion from a computation to its underlying repr *)
+                                                             (* lid is populated by the typechecker *)
   | Const_reflect     of Ident.lid                           (* a coercion from a Tot term to an l-computation type *)
 
 let eq_const c1 c2 =

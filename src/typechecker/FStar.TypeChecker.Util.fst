@@ -2695,7 +2695,7 @@ let remove_reify (t: S.term): S.term =
   then t
   else
     let head, args = U.head_and_args t in
-    if (match (SS.compress head).n with Tm_constant FStar.Const.Const_reify -> true | _ -> false)
+    if (match (SS.compress head).n with Tm_constant (FStar.Const.Const_reify _) -> true | _ -> false)
     then begin match args with
         | [x] -> fst x
         | _ -> failwith "Impossible : Reify applied to multiple arguments after normalization."
