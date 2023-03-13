@@ -20,15 +20,19 @@ FSTAR_OPTIONS = --cache_checked_modules \
 
 FSTAR = $(FSTAR_EXE) $(FSTAR_OPTIONS)
 
-ALL_SOURCE_FILES = $(wildcard *.fst *.fsti)
+ALL_SOURCE_FILES = $(filter-out LList.fst,$(wildcard *.fst *.fsti))
+NO_EXTRACT_MODULES=PointStruct HaclExample ScalarUnion
+EXTRACT_SOURCE_FILES = $(filter-out $(addsuffix .fst,$(NO_EXTRACT_MODULES)),$(ALL_SOURCE_FILES))
 
 # We need to add some Low* files to the dependency roots, because F* extracts Steel.C null to LowStar null
 # since the KaRaMeL AST does not have a node for null
 # TODO: This should be removed, and support for Steel.C null should be directly added to KaRaMeL instead
 SOME_LOWSTAR_FILES = $(FSTAR_HOME)/ulib/LowStar.Monotonic.Buffer.fst $(FSTAR_HOME)/ulib/LowStar.Buffer.fst
 
+comma=,
+
 .depend: $(ALL_SOURCE_FILES) Makefile
-	$(FSTAR) --dep full $(ALL_SOURCE_FILES) $(SOME_LOWSTAR_FILES) --extract 'krml:*,-Prims,-FStar.MSTTotal,-FStar.NMSTTotal,-FStar.MST,-FStar.NMST' > $@.tmp
+	$(FSTAR) --dep full $(ALL_SOURCE_FILES) $(SOME_LOWSTAR_FILES) --extract 'krml:* $(addprefix -,$(NO_EXTRACT_MODULES))'  > $@.tmp
 	mv $@.tmp $@
 
 depend: .depend
@@ -60,7 +64,7 @@ ifdef KRML_HOME
 	$(FSTAR) $(notdir $(subst .checked,,$<)) --codegen krml \
 	--extract_module $(basename $(notdir $(subst .checked,,$<)))
 
-ALL_MODULE_NAMES=$(basename $(ALL_SOURCE_FILES))
+ALL_MODULE_NAMES=$(basename $(EXTRACT_SOURCE_FILES))
 FILTERED_KRML_FILES=$(filter-out FStar_NMST.krml Steel_%.krml,$(ALL_KRML_FILES))
 
 extract: $(FILTERED_KRML_FILES)
