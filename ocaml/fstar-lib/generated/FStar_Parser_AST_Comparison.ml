@@ -26,7 +26,23 @@ let eq_option :
            t21) -> f t11 t21
         | uu___ -> false
 let (eq_sconst : FStar_Const.sconst -> FStar_Const.sconst -> Prims.bool) =
-  fun c1 -> fun c2 -> false
+  fun c1 ->
+    fun c2 ->
+      match (c1, c2) with
+      | (FStar_Const.Const_effect, FStar_Const.Const_effect) -> true
+      | (FStar_Const.Const_unit, FStar_Const.Const_unit) -> true
+      | (FStar_Const.Const_bool b1, FStar_Const.Const_bool b2) -> b1 = b2
+      | (FStar_Const.Const_int (s1, sw1), FStar_Const.Const_int (s2, sw2)) ->
+          (s1 = s2) && (sw1 = sw2)
+      | (FStar_Const.Const_char c11, FStar_Const.Const_char c21) -> c11 = c21
+      | (FStar_Const.Const_string (s1, uu___), FStar_Const.Const_string
+         (s2, uu___1)) -> s1 = s2
+      | (FStar_Const.Const_real s1, FStar_Const.Const_real s2) -> s1 = s2
+      | (FStar_Const.Const_range r1, FStar_Const.Const_range r2) -> r1 = r2
+      | (FStar_Const.Const_reify, FStar_Const.Const_reify) -> true
+      | (FStar_Const.Const_reflect l1, FStar_Const.Const_reflect l2) ->
+          FStar_Ident.lid_equals l1 l2
+      | uu___ -> false
 let rec (eq_term :
   FStar_Parser_AST.term -> FStar_Parser_AST.term -> Prims.bool) =
   fun t1 -> fun t2 -> eq_term' t1.FStar_Parser_AST.tm t2.FStar_Parser_AST.tm

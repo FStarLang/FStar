@@ -138,6 +138,7 @@ let parse fn =
         let _, _, r = err_of_parse_error () in
         let d =
           try
+            FStar_Ident.reset_gensym();
             Inl (parse_one_decl lexer)
           with 
           | FStar_Errors.Error(e, msg, r, _ctx) ->

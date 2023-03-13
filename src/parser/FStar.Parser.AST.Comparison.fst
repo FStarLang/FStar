@@ -37,7 +37,6 @@ let eq_list (f: 'a -> 'a -> bool) (t1 t2:list 'a)
   = List.length t1 = List.length t2 &&
     List.forall2 f t1 t2
 
-// eq_opt: A equality on option a
 let eq_option (f: 'a -> 'a -> bool) (t1 t2:option 'a)
   : bool
   = match t1, t2 with
@@ -45,7 +44,19 @@ let eq_option (f: 'a -> 'a -> bool) (t1 t2:option 'a)
     | Some t1, Some t2 -> f t1 t2
     | _ -> false
 
-let eq_sconst (c1 c2: sconst) : bool = false
+let eq_sconst (c1 c2: sconst) : bool =
+    match c1, c2 with
+    | Const_effect, Const_effect -> true
+    | Const_unit, Const_unit -> true
+    | Const_bool b1, Const_bool b2 -> b1 = b2
+    | Const_int (s1, sw1), Const_int (s2, sw2) -> s1=s2 && sw1=sw2
+    | Const_char c1, Const_char c2 -> c1 = c2
+    | Const_string (s1, _), Const_string (s2, _) -> s1 = s2
+    | Const_real s1, Const_real s2 -> s1 = s2
+    | Const_range r1, Const_range r2 -> r1 = r2
+    | Const_reify, Const_reify -> true
+    | Const_reflect l1, Const_reflect l2 -> Ident.lid_equals l1 l2
+    | _ -> false
 
 let rec eq_term (t1 t2:term)
   : bool
