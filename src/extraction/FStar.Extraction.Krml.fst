@@ -473,6 +473,7 @@ let rec translate_type_without_decay env t: typ =
 
   | MLTY_Named ([tag; _; _; _], p) when
     BU.starts_with (Syntax.string_of_mlpath p) "Steel.ST.C.Types.struct_t0"
+    || BU.starts_with (Syntax.string_of_mlpath p) "Steel.ST.C.Types.union_t0"
     ->
       TQualified (must (lident_of_typestring tag))
 
@@ -1101,7 +1102,10 @@ and translate_expr env e: expr =
                ; ({expr=MLE_Const (MLC_String field_name)})
                ; _ (* td' *)
              ])
-    when string_of_mlpath p = "Steel.ST.C.Types.struct_field0" ->
+    when string_of_mlpath p = "Steel.ST.C.Types.struct_field0"
+    || string_of_mlpath p = "Steel.ST.C.Types.union_field0"
+    || string_of_mlpath p = "Steel.ST.C.Types.union_switch_field0"
+    ->
       EAddrOf (EField (
         TQualified (must (lident_of_string struct_name)),
         EBufRead (translate_expr env r, EQualified (["C"], "_zero_for_deref")),
@@ -1423,6 +1427,21 @@ let translate_type_decl env ty: option decl =
             List.map (fun (field, ty) -> (field, (ty, true))) fields))
         end
     in
+    let define_union
+      tag fields
+    =
+        (* JL: TODO remove/improve these print commands *)
+        print_endline "Parsing union definition.";
+        begin match lident_of_typestring tag with
+        | None ->
+          BU.print1 "Failed to parse union tag from %s.\n"
+            (FStar.Extraction.ML.Code.string_of_mlty ([], "") tag);
+          None
+        | Some p ->
+          let fields = must (parse_steel_c_fields env fields) in
+          Some (DUntaggedUnion (p, [], 0, fields))
+        end
+    in
     match ty with
     | {tydecl_defn=Some (MLTD_Abbrev (MLTY_Named ([tag; fields], p)))}
       when Syntax.string_of_mlpath p = "Steel.C.StructLiteral.mk_struct_def"
@@ -1433,6 +1452,11 @@ let translate_type_decl env ty: option decl =
       when Syntax.string_of_mlpath p = "Steel.ST.C.Types.define_struct0"
       ->
       define_struct tag fields
+
+    | {tydecl_defn=Some (MLTD_Abbrev (MLTY_Named ([tag; fields; _; _], p)))}
+      when Syntax.string_of_mlpath p = "Steel.ST.C.Types.define_union0"
+      ->
+      define_union tag fields
 
     | {tydecl_defn=Some (MLTD_Abbrev (MLTY_Named ([tag; fields], p)))}
       when Syntax.string_of_mlpath p = "Steel.C.UnionLiteral.mk_union_def"
