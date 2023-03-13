@@ -3327,6 +3327,15 @@ let rec desugar_effect env d (quals: qualifiers) (is_layered:bool) eff_name eff_
           bind_repr = if rr then Some (lookup "bind") else None
         }) in
 
+    let extraction_mode =
+      if is_layered
+      then S.Extract_none  // will be populated by the typechecker
+      else if for_free
+      then if BU.for_some (function S.Reifiable -> true | _ -> false) qualifiers
+           then S.Extract_reify
+           else S.Extract_primitive
+      else S.Extract_primitive in
+
     let sigel = Sig_new_effect ({
       mname = mname;
       cattributes = [];
@@ -3336,6 +3345,7 @@ let rec desugar_effect env d (quals: qualifiers) (is_layered:bool) eff_name eff_
       combinators = combinators;
       actions = actions;
       eff_attrs = List.map (desugar_term env) attrs;
+      extraction_mode
     }) in
 
     let se = ({
@@ -3411,6 +3421,7 @@ and desugar_redefine_effect env d trans_qual quals eff_name eff_binders defn =
                 })
                 ed.actions;
             eff_attrs   = ed.eff_attrs;
+            extraction_mode = ed.extraction_mode;
     } in
     let se =
       { sigel = Sig_new_effect ed;
