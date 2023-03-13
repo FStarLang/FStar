@@ -20,7 +20,7 @@ FSTAR_OPTIONS = --cache_checked_modules \
 
 FSTAR = $(FSTAR_EXE) $(FSTAR_OPTIONS)
 
-ALL_SOURCE_FILES = $(filter-out LList.fst,$(wildcard *.fst *.fsti))
+ALL_SOURCE_FILES = $(wildcard *.fst *.fsti)
 
 # We need to add some Low* files to the dependency roots, because F* extracts Steel.C null to LowStar null
 # since the KaRaMeL AST does not have a node for null
