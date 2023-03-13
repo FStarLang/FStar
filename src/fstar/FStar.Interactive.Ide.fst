@@ -276,9 +276,15 @@ let alist_of_symbol_lookup_result lr symbol symrange_opt=
    ("defined-at", json_of_opt json_of_def_range lr.slr_def_range);
    ("type", json_of_opt JsonStr lr.slr_typ);
    ("documentation", json_of_opt JsonStr lr.slr_doc);
-   ("definition", json_of_opt JsonStr lr.slr_def);
-   ("symbol-range", json_of_opt (fun x -> x) symrange_opt);
-   ("symbol", JsonStr symbol)]
+   ("definition", json_of_opt JsonStr lr.slr_def)] @ (
+    // echo back the symbol-range and symbol, if symbol-range was provided
+    // (don't include it otherwise, for backwards compat with fstar-mode.el)
+    match symrange_opt with
+    | None -> []
+    | Some symrange -> 
+     [("symbol-range", json_of_opt (fun x -> x) symrange_opt);
+      ("symbol", JsonStr symbol)]
+  )
 
 let alist_of_protocol_info =
   let js_version = JsonInt interactive_protocol_vernum in

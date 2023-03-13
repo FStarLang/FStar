@@ -565,43 +565,48 @@ let (alist_of_symbol_lookup_result :
         let uu___ =
           let uu___1 =
             let uu___2 =
-              json_of_opt FStar_Compiler_Range.json_of_def_range
-                lr.FStar_Interactive_QueryHelper.slr_def_range in
-            ("defined-at", uu___2) in
-          let uu___2 =
+              let uu___3 =
+                json_of_opt FStar_Compiler_Range.json_of_def_range
+                  lr.FStar_Interactive_QueryHelper.slr_def_range in
+              ("defined-at", uu___3) in
             let uu___3 =
               let uu___4 =
-                json_of_opt
-                  (fun uu___5 -> FStar_Compiler_Util.JsonStr uu___5)
-                  lr.FStar_Interactive_QueryHelper.slr_typ in
-              ("type", uu___4) in
-            let uu___4 =
+                let uu___5 =
+                  json_of_opt
+                    (fun uu___6 -> FStar_Compiler_Util.JsonStr uu___6)
+                    lr.FStar_Interactive_QueryHelper.slr_typ in
+                ("type", uu___5) in
               let uu___5 =
                 let uu___6 =
-                  json_of_opt
-                    (fun uu___7 -> FStar_Compiler_Util.JsonStr uu___7)
-                    lr.FStar_Interactive_QueryHelper.slr_doc in
-                ("documentation", uu___6) in
-              let uu___6 =
+                  let uu___7 =
+                    json_of_opt
+                      (fun uu___8 -> FStar_Compiler_Util.JsonStr uu___8)
+                      lr.FStar_Interactive_QueryHelper.slr_doc in
+                  ("documentation", uu___7) in
                 let uu___7 =
                   let uu___8 =
-                    json_of_opt
-                      (fun uu___9 -> FStar_Compiler_Util.JsonStr uu___9)
-                      lr.FStar_Interactive_QueryHelper.slr_def in
-                  ("definition", uu___8) in
-                let uu___8 =
-                  let uu___9 =
-                    let uu___10 = json_of_opt (fun x -> x) symrange_opt in
-                    ("symbol-range", uu___10) in
-                  [uu___9; ("symbol", (FStar_Compiler_Util.JsonStr symbol))] in
-                uu___7 :: uu___8 in
-              uu___5 :: uu___6 in
-            uu___3 :: uu___4 in
-          uu___1 :: uu___2 in
-        ("name",
-          (FStar_Compiler_Util.JsonStr
-             (lr.FStar_Interactive_QueryHelper.slr_name)))
-          :: uu___
+                    let uu___9 =
+                      json_of_opt
+                        (fun uu___10 -> FStar_Compiler_Util.JsonStr uu___10)
+                        lr.FStar_Interactive_QueryHelper.slr_def in
+                    ("definition", uu___9) in
+                  [uu___8] in
+                uu___6 :: uu___7 in
+              uu___4 :: uu___5 in
+            uu___2 :: uu___3 in
+          ("name",
+            (FStar_Compiler_Util.JsonStr
+               (lr.FStar_Interactive_QueryHelper.slr_name)))
+            :: uu___1 in
+        let uu___1 =
+          match symrange_opt with
+          | FStar_Pervasives_Native.None -> []
+          | FStar_Pervasives_Native.Some symrange ->
+              let uu___2 =
+                let uu___3 = json_of_opt (fun x -> x) symrange_opt in
+                ("symbol-range", uu___3) in
+              [uu___2; ("symbol", (FStar_Compiler_Util.JsonStr symbol))] in
+        FStar_Compiler_List.op_At uu___ uu___1
 let (alist_of_protocol_info :
   (Prims.string * FStar_Compiler_Util.json) Prims.list) =
   let js_version =
