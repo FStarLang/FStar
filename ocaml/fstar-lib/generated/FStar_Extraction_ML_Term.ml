@@ -955,40 +955,6 @@ let (extraction_norm_steps : FStar_TypeChecker_Env.step Prims.list) =
     extraction_norm_steps_core in
   let uu___ = FStar_Options.use_nbe_for_extraction () in
   if uu___ then extraction_norm_steps_nbe else extraction_norm_steps_core
-let (comp_no_args :
-  FStar_Syntax_Syntax.comp' FStar_Syntax_Syntax.syntax ->
-    FStar_Syntax_Syntax.comp' FStar_Syntax_Syntax.syntax)
-  =
-  fun c ->
-    match c.FStar_Syntax_Syntax.n with
-    | FStar_Syntax_Syntax.Total uu___ -> c
-    | FStar_Syntax_Syntax.GTotal uu___ -> c
-    | FStar_Syntax_Syntax.Comp ct ->
-        let effect_args =
-          FStar_Compiler_List.map
-            (fun uu___ ->
-               match uu___ with
-               | (uu___1, aq) -> (FStar_Syntax_Syntax.t_unit, aq))
-            ct.FStar_Syntax_Syntax.effect_args in
-        let ct1 =
-          {
-            FStar_Syntax_Syntax.comp_univs =
-              (ct.FStar_Syntax_Syntax.comp_univs);
-            FStar_Syntax_Syntax.effect_name =
-              (ct.FStar_Syntax_Syntax.effect_name);
-            FStar_Syntax_Syntax.result_typ =
-              (ct.FStar_Syntax_Syntax.result_typ);
-            FStar_Syntax_Syntax.effect_args = effect_args;
-            FStar_Syntax_Syntax.flags = (ct.FStar_Syntax_Syntax.flags)
-          } in
-        let c1 =
-          {
-            FStar_Syntax_Syntax.n = (FStar_Syntax_Syntax.Comp ct1);
-            FStar_Syntax_Syntax.pos = (c.FStar_Syntax_Syntax.pos);
-            FStar_Syntax_Syntax.vars = (c.FStar_Syntax_Syntax.vars);
-            FStar_Syntax_Syntax.hash_code = (c.FStar_Syntax_Syntax.hash_code)
-          } in
-        c1
 let maybe_reify_comp :
   'uuuuu .
     'uuuuu ->

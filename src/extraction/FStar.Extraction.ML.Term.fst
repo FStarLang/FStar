@@ -648,16 +648,6 @@ let extraction_norm_steps =
   then extraction_norm_steps_nbe
   else extraction_norm_steps_core
 
-let comp_no_args c =
-    match c.n with
-    | Total _
-    | GTotal _ -> c
-    | Comp ct ->
-       let effect_args = List.map (fun (_, aq) -> (S.t_unit, aq)) ct.effect_args in
-       let ct = { ct with effect_args = effect_args } in
-       let c = { c with n = Comp ct } in
-       c
-
 let maybe_reify_comp g (env:TcEnv.env) (c:S.comp) : S.term =
   let extraction_mode =
     c |> U.comp_effect_name

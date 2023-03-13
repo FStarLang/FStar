@@ -1103,6 +1103,14 @@ let maybe_drop_rc_typ cfg (rc:residual_comp) : residual_comp =
   then {rc with residual_typ = None}
   else rc
 
+let get_extraction_mode env m =
+  let norm_m = Env.norm_eff_name env m in
+  (Env.get_effect_decl env norm_m).extraction_mode
+
+let can_reify_for_extraction env m =
+  (get_extraction_mode env m) = S.Extract_reify
+
+
 (* GM: Please consider this function private outside of this recursive
  * group, and call `normalize` instead. `normalize` will print timing
  * information when --debug_level NormTop is given, which makes it a
@@ -2158,7 +2166,8 @@ and norm_comp : cfg -> env -> comp -> comp =
               //this should later preseve args that must be retained for layered effects
               let effect_args =
                 ct.effect_args |>
-                (if cfg.steps.for_extraction
+                (if cfg.steps.for_extraction &&
+                    not (get_extraction_mode cfg.tcenv ct.effect_name = Extract_reify)
                  then List.map (fun _ -> S.unit_const |> S.as_arg)
                  else List.mapi (fun idx (a, i) -> (norm cfg env [] a, i))) in
               let flags = ct.flags |> List.map (function
@@ -2665,11 +2674,6 @@ and rebuild (cfg:cfg) (env:env) (stack:stack) (t:term) : term =
           (not (Ident.lid_equals norm_m PC.effect_TAC_lid)) &&
           norm_m |> Env.is_layered_effect cfg.tcenv in
 
-        let can_reify_for_extraction m =
-          let norm_m = Env.norm_eff_name cfg.tcenv m in
-          let mode = (Env.get_effect_decl cfg.tcenv norm_m).extraction_mode in
-          mode = S.Extract_reify in
-
         begin match (SS.compress t).n with
         | Tm_meta (_, Meta_monadic (m, _))
           when m |> is_non_tac_layered_effect && not cfg.steps.for_extraction ->
@@ -2680,7 +2684,7 @@ and rebuild (cfg:cfg) (env:env) (stack:stack) (t:term) : term =
         | Tm_meta (_, Meta_monadic (m, _))
           when is_non_tac_layered_effect m &&
                cfg.steps.for_extraction    &&
-               not (can_reify_for_extraction m)  ->
+               not (can_reify_for_extraction cfg.tcenv m)  ->
           raise_error (Errors.Fatal_UnexpectedEffect,
                        BU.format1 "Cannot reify %s for extraction"
                           (Ident.string_of_lid m)) t.pos
@@ -2695,9 +2699,9 @@ and rebuild (cfg:cfg) (env:env) (stack:stack) (t:term) : term =
         | Tm_meta (_, Meta_monadic_lift (msrc, mtgt, _))
           when cfg.steps.for_extraction &&
                ((is_non_tac_layered_effect msrc &&
-                 not (can_reify_for_extraction msrc)) ||
+                 not (can_reify_for_extraction cfg.tcenv msrc)) ||
                 (is_non_tac_layered_effect mtgt &&
-                 not (can_reify_for_extraction mtgt))) ->
+                 not (can_reify_for_extraction cfg.tcenv mtgt))) ->
 
           raise_error (Errors.Fatal_UnexpectedEffect,
                        BU.format2 "Cannot reify %s ~> %s for extraction"

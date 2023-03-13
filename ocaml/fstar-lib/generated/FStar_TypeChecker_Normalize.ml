@@ -2867,6 +2867,21 @@ let (maybe_drop_rc_typ :
             (rc.FStar_Syntax_Syntax.residual_flags)
         }
       else rc
+let (get_extraction_mode :
+  FStar_TypeChecker_Env.env ->
+    FStar_Ident.lident -> FStar_Syntax_Syntax.eff_extraction_mode)
+  =
+  fun env1 ->
+    fun m ->
+      let norm_m = FStar_TypeChecker_Env.norm_eff_name env1 m in
+      let uu___ = FStar_TypeChecker_Env.get_effect_decl env1 norm_m in
+      uu___.FStar_Syntax_Syntax.extraction_mode
+let (can_reify_for_extraction :
+  FStar_TypeChecker_Env.env -> FStar_Ident.lident -> Prims.bool) =
+  fun env1 ->
+    fun m ->
+      let uu___ = get_extraction_mode env1 m in
+      uu___ = FStar_Syntax_Syntax.Extract_reify
 let rec (norm :
   FStar_TypeChecker_Cfg.cfg ->
     env -> stack -> FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.term)
@@ -5507,23 +5522,32 @@ and (norm_comp :
              }
          | FStar_Syntax_Syntax.Comp ct ->
              let effect_args =
+               let uu___1 =
+                 let uu___2 =
+                   (cfg.FStar_TypeChecker_Cfg.steps).FStar_TypeChecker_Cfg.for_extraction
+                     &&
+                     (let uu___3 =
+                        let uu___4 =
+                          get_extraction_mode cfg.FStar_TypeChecker_Cfg.tcenv
+                            ct.FStar_Syntax_Syntax.effect_name in
+                        uu___4 = FStar_Syntax_Syntax.Extract_reify in
+                      Prims.op_Negation uu___3) in
+                 if uu___2
+                 then
+                   FStar_Compiler_List.map
+                     (fun uu___3 ->
+                        FStar_Compiler_Effect.op_Bar_Greater
+                          FStar_Syntax_Syntax.unit_const
+                          FStar_Syntax_Syntax.as_arg)
+                 else
+                   FStar_Compiler_List.mapi
+                     (fun idx ->
+                        fun uu___4 ->
+                          match uu___4 with
+                          | (a, i) ->
+                              let uu___5 = norm cfg env1 [] a in (uu___5, i)) in
                FStar_Compiler_Effect.op_Bar_Greater
-                 ct.FStar_Syntax_Syntax.effect_args
-                 (if
-                    (cfg.FStar_TypeChecker_Cfg.steps).FStar_TypeChecker_Cfg.for_extraction
-                  then
-                    FStar_Compiler_List.map
-                      (fun uu___1 ->
-                         FStar_Compiler_Effect.op_Bar_Greater
-                           FStar_Syntax_Syntax.unit_const
-                           FStar_Syntax_Syntax.as_arg)
-                  else
-                    FStar_Compiler_List.mapi
-                      (fun idx ->
-                         fun uu___2 ->
-                           match uu___2 with
-                           | (a, i) ->
-                               let uu___3 = norm cfg env1 [] a in (uu___3, i))) in
+                 ct.FStar_Syntax_Syntax.effect_args uu___1 in
              let flags =
                FStar_Compiler_Effect.op_Bar_Greater
                  ct.FStar_Syntax_Syntax.flags
@@ -7036,16 +7060,6 @@ and (rebuild :
                       (FStar_Compiler_Effect.op_Bar_Greater norm_m
                          (FStar_TypeChecker_Env.is_layered_effect
                             cfg.FStar_TypeChecker_Cfg.tcenv)) in
-                  let can_reify_for_extraction m =
-                    let norm_m =
-                      FStar_TypeChecker_Env.norm_eff_name
-                        cfg.FStar_TypeChecker_Cfg.tcenv m in
-                    let mode =
-                      let uu___3 =
-                        FStar_TypeChecker_Env.get_effect_decl
-                          cfg.FStar_TypeChecker_Cfg.tcenv norm_m in
-                      uu___3.FStar_Syntax_Syntax.extraction_mode in
-                    mode = FStar_Syntax_Syntax.Extract_reify in
                   let uu___3 =
                     let uu___4 = FStar_Syntax_Subst.compress t1 in
                     uu___4.FStar_Syntax_Syntax.n in
@@ -7071,7 +7085,9 @@ and (rebuild :
                        ((is_non_tac_layered_effect m) &&
                           (cfg.FStar_TypeChecker_Cfg.steps).FStar_TypeChecker_Cfg.for_extraction)
                          &&
-                         (let uu___6 = can_reify_for_extraction m in
+                         (let uu___6 =
+                            can_reify_for_extraction
+                              cfg.FStar_TypeChecker_Cfg.tcenv m in
                           Prims.op_Negation uu___6)
                        ->
                        let uu___6 =
@@ -7106,11 +7122,15 @@ and (rebuild :
                        (cfg.FStar_TypeChecker_Cfg.steps).FStar_TypeChecker_Cfg.for_extraction
                          &&
                          (((is_non_tac_layered_effect msrc) &&
-                             (let uu___6 = can_reify_for_extraction msrc in
+                             (let uu___6 =
+                                can_reify_for_extraction
+                                  cfg.FStar_TypeChecker_Cfg.tcenv msrc in
                               Prims.op_Negation uu___6))
                             ||
                             ((is_non_tac_layered_effect mtgt) &&
-                               (let uu___6 = can_reify_for_extraction mtgt in
+                               (let uu___6 =
+                                  can_reify_for_extraction
+                                    cfg.FStar_TypeChecker_Cfg.tcenv mtgt in
                                 Prims.op_Negation uu___6)))
                        ->
                        let uu___6 =
