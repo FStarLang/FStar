@@ -485,21 +485,28 @@ type effect_signature =
   | Layered_eff_sig of int & tscheme  // (n, ts) where n is the number of effect parameters (all upfront) in the effect signature
   | WP_eff_sig of tscheme
 
+type eff_extraction_mode =
+  | Extract_none
+  | Extract_reify
+  | Extract_primitive
+
 type eff_decl = {
-  mname       : lident;      // STATE_h
+  mname           : lident;      // STATE_h
 
-  cattributes : list cflag;
+  cattributes     : list cflag;
 
-  univs       : univ_names;  // u#heap
-  binders     : binders;     // (heap:Type u#heap), univs and binders are in the scope of the rest of the combinators
+  univs           : univ_names;  // u#heap
+  binders         : binders;     // (heap:Type u#heap), univs and binders are in the scope of the rest of the combinators
 
-  signature   : effect_signature;
+  signature       : effect_signature;
 
-  combinators : eff_combinators;
+  combinators     : eff_combinators;
 
-  actions     : list action;
+  actions         : list action;
 
-  eff_attrs   : list attribute
+  eff_attrs       : list attribute;
+
+  extraction_mode : eff_extraction_mode;
 }
 
 
