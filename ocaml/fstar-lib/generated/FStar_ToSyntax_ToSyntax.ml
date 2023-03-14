@@ -7771,6 +7771,7 @@ let rec (desugar_effect :
                                           if is_layered
                                           then
                                             FStar_Syntax_Syntax.Extract_none
+                                              ""
                                           else
                                             if for_free
                                             then

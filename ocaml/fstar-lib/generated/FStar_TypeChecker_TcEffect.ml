@@ -6194,14 +6194,39 @@ let (tc_layered_eff_decl :
                                                        (env1, true) rest_bs in
                                                    (match uu___17 with
                                                     | (uu___18, r) ->
-                                                        if
-                                                          r &&
-                                                            (FStar_Syntax_Syntax.uu___is_Substitutive_combinator
-                                                               bind_kind)
+                                                        let uu___19 =
+                                                          (r &&
+                                                             (FStar_Syntax_Syntax.uu___is_Substitutive_combinator
+                                                                bind_kind))
+                                                            &&
+                                                            ((FStar_Compiler_List.contains
+                                                                FStar_Syntax_Syntax.Reifiable
+                                                                quals)
+                                                               ||
+                                                               (FStar_Ident.lid_equals
+                                                                  ed.FStar_Syntax_Syntax.mname
+                                                                  FStar_Parser_Const.effect_TAC_lid)) in
+                                                        if uu___19
                                                         then
                                                           FStar_Syntax_Syntax.Extract_reify
                                                         else
-                                                          FStar_Syntax_Syntax.Extract_none)) in
+                                                          (let m =
+                                                             if
+                                                               Prims.op_Negation
+                                                                 r
+                                                             then
+                                                               "one or more effect indices are informative"
+                                                             else
+                                                               if
+                                                                 Prims.op_Negation
+                                                                   (FStar_Syntax_Syntax.uu___is_Substitutive_combinator
+                                                                    bind_kind)
+                                                               then
+                                                                 "bind is not substitutive"
+                                                               else
+                                                                 "the effect is not reifiable" in
+                                                           FStar_Syntax_Syntax.Extract_none
+                                                             m))) in
                                           (let uu___15 =
                                              FStar_Compiler_Effect.op_Less_Bar
                                                (FStar_TypeChecker_Env.debug

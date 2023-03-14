@@ -1423,12 +1423,14 @@ let (uu___is_WP_eff_sig : effect_signature -> Prims.bool) =
 let (__proj__WP_eff_sig__item___0 : effect_signature -> tscheme) =
   fun projectee -> match projectee with | WP_eff_sig _0 -> _0
 type eff_extraction_mode =
-  | Extract_none 
+  | Extract_none of Prims.string 
   | Extract_reify 
   | Extract_primitive 
 let (uu___is_Extract_none : eff_extraction_mode -> Prims.bool) =
   fun projectee ->
-    match projectee with | Extract_none -> true | uu___ -> false
+    match projectee with | Extract_none _0 -> true | uu___ -> false
+let (__proj__Extract_none__item___0 : eff_extraction_mode -> Prims.string) =
+  fun projectee -> match projectee with | Extract_none _0 -> _0
 let (uu___is_Extract_reify : eff_extraction_mode -> Prims.bool) =
   fun projectee ->
     match projectee with | Extract_reify -> true | uu___ -> false

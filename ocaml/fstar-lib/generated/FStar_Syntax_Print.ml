@@ -1334,7 +1334,8 @@ let (eff_extraction_mode_to_string :
   FStar_Syntax_Syntax.eff_extraction_mode -> Prims.string) =
   fun uu___ ->
     match uu___ with
-    | FStar_Syntax_Syntax.Extract_none -> "none"
+    | FStar_Syntax_Syntax.Extract_none s ->
+        FStar_Compiler_Util.format1 "none (%s)" s
     | FStar_Syntax_Syntax.Extract_reify -> "reify"
     | FStar_Syntax_Syntax.Extract_primitive -> "primitive"
 let (eff_decl_to_string' :
