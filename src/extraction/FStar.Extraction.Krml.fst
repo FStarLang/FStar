@@ -489,6 +489,7 @@ let rec translate_type_without_decay env t: typ =
 
   | MLTY_Named ([arg; _], p) when
     Syntax.string_of_mlpath p = "Steel.ST.C.Types.ptr"
+    || Syntax.string_of_mlpath p = "Steel.ST.C.Types.array_ref"
     ->
       TBuf (translate_type_without_decay env arg)
 
@@ -499,6 +500,7 @@ let rec translate_type_without_decay env t: typ =
 
   | MLTY_Named ([t; n; s], p)
     when Syntax.string_of_mlpath p = "Steel.C.Array.Base.array_view_type_sized"
+     || Syntax.string_of_mlpath p = "Steel.ST.C.Types.base_array_t"
     ->
       TArray (
         translate_type_without_decay env t,
@@ -1148,6 +1150,29 @@ and translate_expr env e: expr =
       EAssign (
         EBufRead (translate_expr env r, EQualified (["C"], "_zero_for_deref")),
         translate_expr env x)
+
+  | MLE_App ({expr=MLE_TApp ({expr=MLE_Name p}, _)}, [
+      _ (* opened *);
+      _ (* n *);
+      _ (* typedef *);
+      _ (* v *);
+      r
+    ])
+    when string_of_mlpath p = "Steel.ST.C.Types.array_ref_of_base" ->
+      // this is not a true read, this is how Karamel models arrays decaying into pointers
+      EBufRead (translate_expr env r, EQualified (["C"], "_zero_for_deref"))
+
+  | MLE_App ({expr=MLE_TApp ({expr=MLE_Name p}, _)}, [
+      _ (* typedef *);
+      _ (* s *);
+      a;
+      _ (* len *);
+      i
+    ])
+    when string_of_mlpath p = "Steel.ST.C.Types.array_ref_cell"
+    || string_of_mlpath p = "Steel.ST.C.Types.array_ref_split"
+    ->
+      EBufSub (translate_expr env a, translate_expr env i)
 
   | MLE_App ({expr=MLE_TApp ({expr=MLE_Name p}, _)}, [_ (* opened *); r; _ (* r_to *); _ (* sq *) ])
     when string_of_mlpath p = "Steel.C.Array.Base.ref_of_array_from" ->
