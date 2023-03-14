@@ -1010,9 +1010,8 @@ and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked 
       // The rewriting happens in phase 2
       //   This is consistent with the usual inference of indexed effect indices in phase 2
       //
-      // if Env.is_layered_effect env c.effect_name &&
-      //    not env.phase1
-      if false
+      if Env.is_layered_effect env c.effect_name &&
+         not env.phase1
       then 
            // reify__M<u_c>
            let reify_val_tm =

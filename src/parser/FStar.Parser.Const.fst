@@ -527,11 +527,16 @@ let match_returns_def_name = reserved_prefix ^ "_ret_"
 //
 // lid for the reify function assume val for an indexed effect
 //
+let layered_effect_reify_val_prefix = "reify___"
+
 let layered_effect_reify_val_lid (eff_name:lident) (r:range) : lident =
   let ns = Ident.ns_of_lid eff_name in
-  let reify_fn_name = "reify___" ^ (eff_name |> ident_of_lid |> string_of_id) in
+  let reify_fn_name = layered_effect_reify_val_prefix ^ (eff_name |> ident_of_lid |> string_of_id) in
   lid_of_ns_and_id ns (mk_ident (reify_fn_name, r))
 
+let is_layered_effect_reify_lid (l:lident) =
+  let s = l |> Ident.ids_of_lid |> List.last |> Ident.string_of_id in
+  U.starts_with s layered_effect_reify_val_prefix
 
 let steel_memory_inv_lid = FStar.Ident.lid_of_path ["Steel"; "Memory"; "inv"] FStar.Compiler.Range.dummyRange
 

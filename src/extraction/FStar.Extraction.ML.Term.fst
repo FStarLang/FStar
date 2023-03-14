@@ -1274,6 +1274,26 @@ let extract_lb_iface (g:uenv) (lbs:letbindings)
                 g
                 lbs
 
+let is_reify (head:S.term) : bool =
+  match (head |> SS.compress |> U.unascribe).n with
+  | Tm_constant Const_reify -> true
+  | Tm_fvar fv
+  | Tm_uinst ({n=Tm_fvar fv}, _) ->
+    PC.is_layered_effect_reify_lid (lid_of_fv fv)
+  | _ -> false
+
+let get_reify_expr (head:S.term) (args:S.args) : S.term & S.args =
+  match (head |> SS.compress |> U.unascribe).n with
+  | Tm_constant Const_reify ->
+    fst (List.hd args), List.tl args
+
+  | _ ->
+    let _, args = List.span (fun (_, q) -> Some? q && (Some?.v q).aqual_implicit) args in
+    let (t, _)::tl = args in
+    match (SS.compress t).n with
+     | Tm_abs (_, t, _) -> t, tl
+     | _ -> failwith "Impossible!"
+
 //The main extraction function
 let rec check_term_as_mlexpr (g:uenv) (e:term) (f:e_tag) (ty:mlty) :  (mlexpr * mlty) =
     debug g
@@ -1539,9 +1559,10 @@ and term_as_mlexpr' (g:uenv) (top:term) : (mlexpr * e_tag * mlty) =
               |> N.normalize [Env.Beta; Env.Iota; Env.Zeta; Env.EraseUniverses; Env.AllowUnboundUniverses; Env.ForExtraction] (tcenv_of_uenv g)
               |> term_as_mlexpr g
 
-            | Tm_constant Const_reify ->
-              let e = TcUtil.reify_body_with_arg (tcenv_of_uenv g) [TcEnv.Inlining; TcEnv.ForExtraction; TcEnv.Unascribe] head (List.hd args) in
-              let tm = S.mk_Tm_app (TcUtil.remove_reify e) (List.tl args) t.pos in
+            | _ when is_reify head ->
+              let e, args = get_reify_expr head args in
+              let e = TcUtil.reify_body (tcenv_of_uenv g) [TcEnv.Inlining; TcEnv.ForExtraction; TcEnv.Unascribe] e in
+              let tm = S.mk_Tm_app (TcUtil.remove_reify e) args t.pos in
               term_as_mlexpr g tm
 
             | _ ->

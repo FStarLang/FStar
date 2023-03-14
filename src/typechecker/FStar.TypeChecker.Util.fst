@@ -2679,17 +2679,6 @@ let reify_body (env:Env.env) (steps:Env.steps) (t:S.term) : S.term =
         (Print.term_to_string tm') ;
     tm'
 
-let reify_body_with_arg (env:Env.env) (steps:Env.steps) (head:S.term) (arg:S.arg): S.term =
-    let tm = S.mk (S.Tm_app(head, [arg])) head.pos in
-    let tm' = N.normalize
-      ([Env.Beta; Env.Reify; Env.Eager_unfolding; Env.EraseUniverses; Env.AllowUnboundUniverses; Env.Exclude Env.Zeta]@steps)
-      env tm in
-    if Env.debug env <| Options.Other "SMTEncodingReify"
-    then BU.print2 "Reified body %s \nto %s\n"
-        (Print.term_to_string tm)
-        (Print.term_to_string tm') ;
-    tm'
-
 let remove_reify (t: S.term): S.term =
   if (match (SS.compress t).n with | Tm_app _ -> false | _ -> true)
   then t

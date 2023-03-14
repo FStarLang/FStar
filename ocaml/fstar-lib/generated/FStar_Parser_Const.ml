@@ -557,6 +557,7 @@ let (or_elim_lid : FStar_Ident.lid) = classical_sugar_lid "or_elim"
 let (and_elim_lid : FStar_Ident.lid) = classical_sugar_lid "and_elim"
 let (match_returns_def_name : Prims.string) =
   FStar_String.op_Hat FStar_Ident.reserved_prefix "_ret_"
+let (layered_effect_reify_val_prefix : Prims.string) = "reify___"
 let (layered_effect_reify_val_lid :
   FStar_Ident.lident -> FStar_Compiler_Range.range -> FStar_Ident.lident) =
   fun eff_name ->
@@ -569,9 +570,18 @@ let (layered_effect_reify_val_lid :
               FStar_Ident.ident_of_lid in
           FStar_Compiler_Effect.op_Bar_Greater uu___1
             FStar_Ident.string_of_id in
-        FStar_String.op_Hat "reify___" uu___ in
+        FStar_String.op_Hat layered_effect_reify_val_prefix uu___ in
       let uu___ = FStar_Ident.mk_ident (reify_fn_name, r) in
       FStar_Ident.lid_of_ns_and_id ns uu___
+let (is_layered_effect_reify_lid : FStar_Ident.lident -> Prims.bool) =
+  fun l ->
+    let s =
+      let uu___ =
+        let uu___1 =
+          FStar_Compiler_Effect.op_Bar_Greater l FStar_Ident.ids_of_lid in
+        FStar_Compiler_Effect.op_Bar_Greater uu___1 FStar_Compiler_List.last in
+      FStar_Compiler_Effect.op_Bar_Greater uu___ FStar_Ident.string_of_id in
+    FStar_Compiler_Util.starts_with s layered_effect_reify_val_prefix
 let (steel_memory_inv_lid : FStar_Ident.lident) =
   FStar_Ident.lid_of_path ["Steel"; "Memory"; "inv"]
     FStar_Compiler_Range.dummyRange

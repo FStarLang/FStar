@@ -2167,10 +2167,14 @@ and (encode_term :
                        | (FStar_Syntax_Syntax.Tm_constant
                           (FStar_Const.Const_reify), uu___6) ->
                            let e0 =
-                             let uu___7 = FStar_Compiler_List.hd args_e1 in
-                             FStar_TypeChecker_Util.reify_body_with_arg
-                               env.FStar_SMTEncoding_Env.tcenv [] head1
-                               uu___7 in
+                             let uu___7 =
+                               let uu___8 =
+                                 FStar_Compiler_Effect.op_Bar_Greater args_e1
+                                   FStar_Compiler_List.hd in
+                               FStar_Compiler_Effect.op_Bar_Greater uu___8
+                                 FStar_Pervasives_Native.fst in
+                             FStar_TypeChecker_Util.reify_body
+                               env.FStar_SMTEncoding_Env.tcenv [] uu___7 in
                            ((let uu___8 =
                                FStar_Compiler_Effect.op_Less_Bar
                                  (FStar_TypeChecker_Env.debug

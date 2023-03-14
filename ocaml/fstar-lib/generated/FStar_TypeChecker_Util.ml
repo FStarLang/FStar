@@ -5941,41 +5941,6 @@ let (reify_body :
               uu___4
           else ());
          tm')
-let (reify_body_with_arg :
-  FStar_TypeChecker_Env.env ->
-    FStar_TypeChecker_Env.steps ->
-      FStar_Syntax_Syntax.term ->
-        FStar_Syntax_Syntax.arg -> FStar_Syntax_Syntax.term)
-  =
-  fun env ->
-    fun steps ->
-      fun head ->
-        fun arg ->
-          let tm =
-            FStar_Syntax_Syntax.mk (FStar_Syntax_Syntax.Tm_app (head, [arg]))
-              head.FStar_Syntax_Syntax.pos in
-          let tm' =
-            FStar_TypeChecker_Normalize.normalize
-              (FStar_Compiler_List.op_At
-                 [FStar_TypeChecker_Env.Beta;
-                 FStar_TypeChecker_Env.Reify;
-                 FStar_TypeChecker_Env.Eager_unfolding;
-                 FStar_TypeChecker_Env.EraseUniverses;
-                 FStar_TypeChecker_Env.AllowUnboundUniverses;
-                 FStar_TypeChecker_Env.Exclude FStar_TypeChecker_Env.Zeta]
-                 steps) env tm in
-          (let uu___1 =
-             FStar_Compiler_Effect.op_Less_Bar
-               (FStar_TypeChecker_Env.debug env)
-               (FStar_Options.Other "SMTEncodingReify") in
-           if uu___1
-           then
-             let uu___2 = FStar_Syntax_Print.term_to_string tm in
-             let uu___3 = FStar_Syntax_Print.term_to_string tm' in
-             FStar_Compiler_Util.print2 "Reified body %s \nto %s\n" uu___2
-               uu___3
-           else ());
-          tm'
 let (remove_reify : FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.term) =
   fun t ->
     let uu___ =
