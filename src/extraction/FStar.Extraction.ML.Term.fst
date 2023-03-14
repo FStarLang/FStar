@@ -105,7 +105,7 @@ let err_unexpected_eff env t ty f0 f1 =
                         (eff_to_string f0)
                         (eff_to_string f1))
 
-let err_cannot_extract_effect l r s =
+let err_cannot_extract_effect (l:lident) (r:Range.range) (s:string) =
   Errors.raise_error
     (Errors.Fatal_UnexpectedEffect,
      BU.format2 "Cannot extract effect %s (%s)" (string_of_lid l) s) r
@@ -1273,6 +1273,13 @@ let extract_lb_iface (g:uenv) (lbs:letbindings)
                 g
                 lbs
 
+//
+// At the time of typechecking, we replace `reify e`
+//   with `reify___M (fun _ -> e)` when `M` is an indexed effect
+//
+// So at the time of extraction, we need to identify applications
+//   `reify___M (fun _ -> e)` as reify
+//
 let is_reify (head:S.term) : bool =
   match (head |> SS.compress |> U.unascribe).n with
   | Tm_constant Const_reify -> true
@@ -1281,13 +1288,19 @@ let is_reify (head:S.term) : bool =
     PC.is_layered_effect_reify_lid (lid_of_fv fv)
   | _ -> false
 
+//
+// Precondition: is_reify head
+//
+// Returns the term which should be reified, and rest of the args
+//
 let get_reify_expr (head:S.term) (args:S.args) : S.term & S.args =
   match (head |> SS.compress |> U.unascribe).n with
-  | Tm_constant Const_reify ->
-    fst (List.hd args), List.tl args
+  | Tm_constant Const_reify -> fst (List.hd args), List.tl args
 
   | _ ->
-    let _, args = List.span (fun (_, q) -> Some? q && (Some?.v q).aqual_implicit) args in
+    // case where we have reify___M (fun _ -> e)
+    let _, args = List.span (fun (_, q) ->
+      Some? q && (Some?.v q).aqual_implicit) args in
     let (t, _)::tl = args in
     match (SS.compress t).n with
      | Tm_abs (_, t, _) -> t, tl
@@ -1399,6 +1412,11 @@ and term_as_mlexpr' (g:uenv) (top:term) : (mlexpr * e_tag * mlty) =
           end
 
         | Tm_meta(t, Meta_monadic (m, _)) ->
+          //
+          // A meta monadic node
+          // We should have taken care of it when we were reifying the Tm_abs
+          // But it is ok, if the effect is primitive
+          //
           let t = SS.compress t in
           begin match t.n with
             | Tm_let((false, [lb]), body) when (BU.is_left lb.lbname) ->

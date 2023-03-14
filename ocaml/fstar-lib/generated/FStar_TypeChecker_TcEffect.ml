@@ -6131,102 +6131,127 @@ let (tc_layered_eff_decl :
                                                         [sig_assume_reify]))
                                             else [] in
                                           let extraction_mode =
-                                            let uu___14 =
+                                            let has_primitive_extraction =
                                               FStar_Syntax_Util.has_attribute
                                                 ed.FStar_Syntax_Syntax.eff_attrs
                                                 FStar_Parser_Const.primitive_extraction_attr in
-                                            if uu___14
+                                            let is_reifiable =
+                                              FStar_Compiler_List.contains
+                                                FStar_Syntax_Syntax.Reifiable
+                                                quals in
+                                            if
+                                              has_primitive_extraction &&
+                                                is_reifiable
                                             then
-                                              FStar_Syntax_Syntax.Extract_primitive
+                                              let uu___14 =
+                                                let uu___15 =
+                                                  let uu___16 =
+                                                    FStar_Ident.string_of_lid
+                                                      ed.FStar_Syntax_Syntax.mname in
+                                                  FStar_Compiler_Util.format1
+                                                    "Effect %s is declared to be both primitive extraction and reifiable"
+                                                    uu___16 in
+                                                (FStar_Errors_Codes.Fatal_UnexpectedEffect,
+                                                  uu___15) in
+                                              let uu___15 =
+                                                FStar_Ident.range_of_lid
+                                                  ed.FStar_Syntax_Syntax.mname in
+                                              FStar_Errors.raise_error
+                                                uu___14 uu___15
                                             else
-                                              (let uu___16 =
-                                                 let uu___17 =
-                                                   let uu___18 = signature in
-                                                   match uu___18 with
-                                                   | (us, t, uu___19) ->
-                                                       (us, t) in
-                                                 match uu___17 with
-                                                 | (us, t) ->
-                                                     let uu___18 =
-                                                       let uu___19 =
-                                                         FStar_Syntax_Subst.compress
-                                                           t in
-                                                       uu___19.FStar_Syntax_Syntax.n in
-                                                     (match uu___18 with
-                                                      | FStar_Syntax_Syntax.Tm_arrow
-                                                          (bs, uu___19) ->
-                                                          let uu___20 =
-                                                            FStar_Syntax_Subst.open_binders
-                                                              bs in
-                                                          (match uu___20 with
-                                                           | a_b::rest_bs ->
-                                                               (us, a_b,
-                                                                 rest_bs))
-                                                      | uu___19 ->
-                                                          failwith
-                                                            "Impossible!") in
-                                               match uu___16 with
-                                               | (us, a_b, rest_bs) ->
-                                                   let env =
-                                                     FStar_TypeChecker_Env.push_univ_vars
-                                                       env0 us in
-                                                   let env1 =
-                                                     FStar_TypeChecker_Env.push_binders
-                                                       env [a_b] in
+                                              if has_primitive_extraction
+                                              then
+                                                FStar_Syntax_Syntax.Extract_primitive
+                                              else
+                                                (let uu___16 =
                                                    let uu___17 =
-                                                     FStar_Compiler_List.fold_left
-                                                       (fun uu___18 ->
-                                                          fun b ->
-                                                            match uu___18
-                                                            with
-                                                            | (env2, r) ->
-                                                                let r1 =
-                                                                  r &&
-                                                                    (
-                                                                    FStar_TypeChecker_Normalize.non_info_norm
+                                                     let uu___18 = signature in
+                                                     match uu___18 with
+                                                     | (us, t, uu___19) ->
+                                                         (us, t) in
+                                                   match uu___17 with
+                                                   | (us, t) ->
+                                                       let uu___18 =
+                                                         let uu___19 =
+                                                           FStar_Syntax_Subst.compress
+                                                             t in
+                                                         uu___19.FStar_Syntax_Syntax.n in
+                                                       (match uu___18 with
+                                                        | FStar_Syntax_Syntax.Tm_arrow
+                                                            (bs, uu___19) ->
+                                                            let uu___20 =
+                                                              FStar_Syntax_Subst.open_binders
+                                                                bs in
+                                                            (match uu___20
+                                                             with
+                                                             | a_b::rest_bs
+                                                                 ->
+                                                                 (us, a_b,
+                                                                   rest_bs))
+                                                        | uu___19 ->
+                                                            failwith
+                                                              "Impossible!") in
+                                                 match uu___16 with
+                                                 | (us, a_b, rest_bs) ->
+                                                     let env =
+                                                       FStar_TypeChecker_Env.push_univ_vars
+                                                         env0 us in
+                                                     let env1 =
+                                                       FStar_TypeChecker_Env.push_binders
+                                                         env [a_b] in
+                                                     let uu___17 =
+                                                       FStar_Compiler_List.fold_left
+                                                         (fun uu___18 ->
+                                                            fun b ->
+                                                              match uu___18
+                                                              with
+                                                              | (env2, r) ->
+                                                                  let r1 =
+                                                                    r &&
+                                                                    (FStar_TypeChecker_Normalize.non_info_norm
                                                                     env2
                                                                     (b.FStar_Syntax_Syntax.binder_bv).FStar_Syntax_Syntax.sort) in
-                                                                let uu___19 =
-                                                                  FStar_TypeChecker_Env.push_binders
+                                                                  let uu___19
+                                                                    =
+                                                                    FStar_TypeChecker_Env.push_binders
                                                                     env2 
                                                                     [b] in
-                                                                (uu___19, r1))
-                                                       (env1, true) rest_bs in
-                                                   (match uu___17 with
-                                                    | (uu___18, r) ->
-                                                        let uu___19 =
-                                                          (r &&
-                                                             (FStar_Syntax_Syntax.uu___is_Substitutive_combinator
-                                                                bind_kind))
-                                                            &&
-                                                            ((FStar_Compiler_List.contains
-                                                                FStar_Syntax_Syntax.Reifiable
-                                                                quals)
-                                                               ||
-                                                               (FStar_Ident.lid_equals
-                                                                  ed.FStar_Syntax_Syntax.mname
-                                                                  FStar_Parser_Const.effect_TAC_lid)) in
-                                                        if uu___19
-                                                        then
-                                                          FStar_Syntax_Syntax.Extract_reify
-                                                        else
-                                                          (let m =
-                                                             if
-                                                               Prims.op_Negation
-                                                                 r
-                                                             then
-                                                               "one or more effect indices are informative"
-                                                             else
+                                                                  (uu___19,
+                                                                    r1))
+                                                         (env1, true) rest_bs in
+                                                     (match uu___17 with
+                                                      | (uu___18, r) ->
+                                                          let uu___19 =
+                                                            (r &&
+                                                               (FStar_Syntax_Syntax.uu___is_Substitutive_combinator
+                                                                  bind_kind))
+                                                              &&
+                                                              (is_reifiable
+                                                                 ||
+                                                                 (FStar_Ident.lid_equals
+                                                                    ed.FStar_Syntax_Syntax.mname
+                                                                    FStar_Parser_Const.effect_TAC_lid)) in
+                                                          if uu___19
+                                                          then
+                                                            FStar_Syntax_Syntax.Extract_reify
+                                                          else
+                                                            (let m =
                                                                if
                                                                  Prims.op_Negation
-                                                                   (FStar_Syntax_Syntax.uu___is_Substitutive_combinator
-                                                                    bind_kind)
+                                                                   r
                                                                then
-                                                                 "bind is not substitutive"
+                                                                 "one or more effect indices are informative"
                                                                else
-                                                                 "the effect is not reifiable" in
-                                                           FStar_Syntax_Syntax.Extract_none
-                                                             m))) in
+                                                                 if
+                                                                   Prims.op_Negation
+                                                                    (FStar_Syntax_Syntax.uu___is_Substitutive_combinator
+                                                                    bind_kind)
+                                                                 then
+                                                                   "bind is not substitutive"
+                                                                 else
+                                                                   "the effect is not reifiable" in
+                                                             FStar_Syntax_Syntax.Extract_none
+                                                               m))) in
                                           (let uu___15 =
                                              FStar_Compiler_Effect.op_Less_Bar
                                                (FStar_TypeChecker_Env.debug

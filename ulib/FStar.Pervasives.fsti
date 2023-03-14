@@ -1100,6 +1100,16 @@ val effect_param : unit
   *)
 val bind_has_range_args : unit
 
+
+(** An indexed effect definition may be annotated with
+    this attribute to indicate that the effect should be
+    extracted "natively". E.g., the `bind` of the effect is
+    extracted to primitive `let` bindings
+
+    As an example, `Steel` effects (the effect for concurrent
+    separation logic) are marked as such
+
+  *)
 val primitive_extraction : unit
 
 (** A binder in a definition/declaration may optionally be annotated as strictly_positive

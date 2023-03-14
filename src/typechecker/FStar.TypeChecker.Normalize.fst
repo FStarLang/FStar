@@ -1103,11 +1103,11 @@ let maybe_drop_rc_typ cfg (rc:residual_comp) : residual_comp =
   then {rc with residual_typ = None}
   else rc
 
-let get_extraction_mode env m =
+let get_extraction_mode env (m:Ident.lident) =
   let norm_m = Env.norm_eff_name env m in
   (Env.get_effect_decl env norm_m).extraction_mode
 
-let can_reify_for_extraction env m =
+let can_reify_for_extraction env (m:Ident.lident) =
   (get_extraction_mode env m) = S.Extract_reify
 
 
@@ -2162,8 +2162,10 @@ and norm_comp : cfg -> env -> comp -> comp =
               { mk_GTotal t with pos = comp.pos }
 
             | Comp ct ->
-              //if for extraction then erase effect args to unit
-              //this should later preseve args that must be retained for layered effects
+              //
+              // if cfg.for_extraction and the effect extraction is not by reification,
+              // then drop the effect arguments
+              //
               let effect_args =
                 ct.effect_args |>
                 (if cfg.steps.for_extraction &&
@@ -2676,7 +2678,8 @@ and rebuild (cfg:cfg) (env:env) (stack:stack) (t:term) : term =
 
         begin match (SS.compress t).n with
         | Tm_meta (_, Meta_monadic (m, _))
-          when m |> is_non_tac_layered_effect && not cfg.steps.for_extraction ->
+          when is_non_tac_layered_effect m &&
+               not cfg.steps.for_extraction ->
           fallback (BU.format1
                       "Meta_monadic for a non-TAC layered effect %s in non-extraction mode"
                       (Ident.string_of_lid m)) ()
@@ -2684,13 +2687,28 @@ and rebuild (cfg:cfg) (env:env) (stack:stack) (t:term) : term =
         | Tm_meta (_, Meta_monadic (m, _))
           when is_non_tac_layered_effect m &&
                cfg.steps.for_extraction    &&
-               not (can_reify_for_extraction cfg.tcenv m)  ->
+               S.Extract_none? (get_extraction_mode cfg.tcenv m) ->
+          //
+          // If the effect is an indexed effect, that is non-extractable
+          //
+          let S.Extract_none msg = get_extraction_mode cfg.tcenv m in
           raise_error (Errors.Fatal_UnexpectedEffect,
-                       BU.format1 "Cannot reify %s for extraction"
-                          (Ident.string_of_lid m)) t.pos
+                       BU.format2 "Normalizer cannot reify effect %s for extraction since %s"
+                          (Ident.string_of_lid m) msg) t.pos
+
+        | Tm_meta (_, Meta_monadic (m, _))
+          when is_non_tac_layered_effect m &&
+               cfg.steps.for_extraction    &&
+               get_extraction_mode cfg.tcenv m = S.Extract_primitive ->
+
+          // If primitive extraction, don't reify
+          fallback (BU.format1
+                      "Meta_monadic for a non-TAC layered effect %s which is Extract_primtiive"
+                      (Ident.string_of_lid m)) ()
 
         | Tm_meta (_, Meta_monadic_lift (msrc, mtgt, _))
-          when (is_non_tac_layered_effect msrc || is_non_tac_layered_effect mtgt) &&
+          when (is_non_tac_layered_effect msrc ||
+                is_non_tac_layered_effect mtgt) &&
                not cfg.steps.for_extraction ->
           fallback (BU.format2
                     "Meta_monadic_lift for a non-TAC layered effect %s ~> %s in non extraction mode"
@@ -2699,12 +2717,12 @@ and rebuild (cfg:cfg) (env:env) (stack:stack) (t:term) : term =
         | Tm_meta (_, Meta_monadic_lift (msrc, mtgt, _))
           when cfg.steps.for_extraction &&
                ((is_non_tac_layered_effect msrc &&
-                 not (can_reify_for_extraction cfg.tcenv msrc)) ||
+                 S.Extract_none? (get_extraction_mode cfg.tcenv msrc)) ||
                 (is_non_tac_layered_effect mtgt &&
-                 not (can_reify_for_extraction cfg.tcenv mtgt))) ->
+                 S.Extract_none? (get_extraction_mode cfg.tcenv mtgt))) ->
 
           raise_error (Errors.Fatal_UnexpectedEffect,
-                       BU.format2 "Cannot reify %s ~> %s for extraction"
+                       BU.format2 "Normalizer cannot reify %s ~> %s for extraction"
                           (Ident.string_of_lid msrc)
                           (Ident.string_of_lid mtgt)) t.pos
 

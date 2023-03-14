@@ -1788,35 +1788,45 @@ Errors.with_ctx (BU.format1 "While checking layered effect definition `%s`" (str
       [sig_assume_reify]
     else [] in
 
-  // extraction mode
+  // set extraction mode
   let extraction_mode =
-    if U.has_attribute ed.eff_attrs PC.primitive_extraction_attr
-    then S.Extract_primitive
-    else
-      let us, a_b, rest_bs =
-        let us, t = let us, t, _ = signature in us, t in
-        match (SS.compress t).n with
-        | Tm_arrow (bs, _) ->
-          let a_b::rest_bs = SS.open_binders bs in
-          us, a_b, rest_bs
-        | _ -> failwith "Impossible!"  // there are multiple places above where we have relied on sig being an arrow
-      in
-      let env = Env.push_univ_vars env0 us in
-      let env = Env.push_binders env [a_b] in
-      let _, r = List.fold_left (fun (env, r) b ->
-        let r = r && N.non_info_norm env b.binder_bv.sort in
-        Env.push_binders env [b], r) (env, true) rest_bs in
-      if r &&
-         Substitutive_combinator? bind_kind &&
-         (List.contains Reifiable quals || lid_equals ed.mname PC.effect_TAC_lid)
-      then S.Extract_reify
-      else let m =
-             if not r
-             then "one or more effect indices are informative"
-             else if not (Substitutive_combinator? bind_kind)
-             then "bind is not substitutive"
-             else "the effect is not reifiable" in      
-           S.Extract_none m
+    let has_primitive_extraction =
+      U.has_attribute ed.eff_attrs PC.primitive_extraction_attr in
+    let is_reifiable = List.contains Reifiable quals in
+
+    if has_primitive_extraction && is_reifiable
+    then raise_error (Errors.Fatal_UnexpectedEffect,
+                      BU.format1 "Effect %s is declared to be both primitive extraction and reifiable"
+                        (string_of_lid ed.mname)) (Ident.range_of_lid ed.mname)
+    else begin
+      if has_primitive_extraction
+      then S.Extract_primitive
+      else
+        let us, a_b, rest_bs =
+          let us, t = let us, t, _ = signature in us, t in
+          match (SS.compress t).n with
+          | Tm_arrow (bs, _) ->
+            let a_b::rest_bs = SS.open_binders bs in
+            us, a_b, rest_bs
+          | _ -> failwith "Impossible!"  // there are multiple places above where we have relied on sig being an arrow
+        in
+        let env = Env.push_univ_vars env0 us in
+        let env = Env.push_binders env [a_b] in
+        let _, r = List.fold_left (fun (env, r) b ->
+          let r = r && N.non_info_norm env b.binder_bv.sort in
+          Env.push_binders env [b], r) (env, true) rest_bs in
+        if r &&
+           Substitutive_combinator? bind_kind &&
+           (is_reifiable || lid_equals ed.mname PC.effect_TAC_lid)
+        then S.Extract_reify
+        else let m =
+               if not r
+               then "one or more effect indices are informative"
+               else if not (Substitutive_combinator? bind_kind)
+               then "bind is not substitutive"
+               else "the effect is not reifiable" in      
+             S.Extract_none m
+    end
   in
 
   if Env.debug env0 <| Options.Other "LayeredEffectsTc"

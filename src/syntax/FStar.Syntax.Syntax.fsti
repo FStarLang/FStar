@@ -485,10 +485,14 @@ type effect_signature =
   | Layered_eff_sig of int & tscheme  // (n, ts) where n is the number of effect parameters (all upfront) in the effect signature
   | WP_eff_sig of tscheme
 
+//
+// For primitive and DM4F effects, this is set in ToSyntax
+// For indexed effects, typechecker sets it (in TcEffect)
+//
 type eff_extraction_mode =
-  | Extract_none of string
-  | Extract_reify
-  | Extract_primitive
+  | Extract_none of string  // Effect cannot be extracted
+  | Extract_reify           // Effect can be extracted with reification
+  | Extract_primitive       // Effect is primitive
 
 type eff_decl = {
   mname           : lident;      // STATE_h
