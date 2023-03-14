@@ -83,7 +83,8 @@ let int_of_typenat (t: mlty): option int =
   in
   go t
 
-let _ = register_translate_type_without_decay begin fun env t ->
+let my_types_without_decay () = 
+  register_translate_type_without_decay begin fun env t ->
   match t with
   
   | MLTY_Named ([tag; _; _], p) when
@@ -134,7 +135,7 @@ let _ = register_translate_type_without_decay begin fun env t ->
   | _ -> raise NotSupportedByKrmlExtension
 end
 
-let _ = register_translate_type begin fun env t ->
+let my_types () = register_translate_type begin fun env t ->
   match t with
   | MLTY_Named ([t; _; _], p)
     when Syntax.string_of_mlpath p = "Steel.C.Array.Base.array_view_type_sized"
@@ -150,7 +151,7 @@ let _ = register_translate_type begin fun env t ->
   | _ -> raise NotSupportedByKrmlExtension
 end
 
-let _ = register_translate_expr begin fun env e ->
+let my_exprs () = register_translate_expr begin fun env e ->
   match e.expr with
   | MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, _) }, [ _ (* typedef *) ])
     when (
@@ -406,7 +407,7 @@ let define_union
     let fields = must (parse_steel_c_fields env fields) in
     Some (DUntaggedUnion (p, [], 0, fields))
 
-let _ = register_translate_type_decl begin fun env ty ->
+let my_type_decls () = register_translate_type_decl begin fun env ty ->
     match ty with
     | {tydecl_defn=Some (MLTD_Abbrev (MLTY_Named ([tag; fields], p)))}
       when Syntax.string_of_mlpath p = "Steel.C.StructLiteral.mk_struct_def"
@@ -441,3 +442,9 @@ let _ = register_translate_type_decl begin fun env ty ->
       end
     | _ -> raise NotSupportedByKrmlExtension
 end
+
+let register () =
+  my_types_without_decay ();
+  my_types ();
+  my_exprs ();
+  my_type_decls ()
