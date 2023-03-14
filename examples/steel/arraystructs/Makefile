@@ -12,7 +12,7 @@ ifdef KRML_HOME
 KRML_EXE = $(KRML_HOME)/krml
 endif
 
-world: verify # test
+world: verify test
 
 FSTAR_OPTIONS = --cache_checked_modules \
 		--cmi \
