@@ -105,15 +105,10 @@ let err_unexpected_eff env t ty f0 f1 =
                         (eff_to_string f0)
                         (eff_to_string f1))
 
-let err_cannot_reify_effect_for_extraction l r =
+let err_cannot_extract_effect l r s =
   Errors.raise_error
     (Errors.Fatal_UnexpectedEffect,
-     BU.format1 "Cannot reify %s effect for extraction" (string_of_lid l)) r
-
-let err_cannot_extract_effect l r =
-  Errors.raise_error
-    (Errors.Fatal_UnexpectedEffect,
-     BU.format1 "Cannot extract effect %s" (string_of_lid l)) r
+     BU.format2 "Cannot extract effect %s (%s)" (string_of_lid l) s) r
 
 (***********************************************************************)
 (* Translating an effect lid to an e_tag = {E_PURE, E_ERASABLE, E_IMPURE} *)
@@ -657,7 +652,8 @@ let maybe_reify_comp g (env:TcEnv.env) (c:S.comp) : S.term =
        |> N.normalize extraction_norm_steps env
   else if extraction_mode = S.Extract_primitive
   then U.comp_result c
-  else err_cannot_extract_effect (c |> U.comp_effect_name) c.pos
+  else let S.Extract_none s = extraction_mode in
+       err_cannot_extract_effect (c |> U.comp_effect_name) c.pos s
 
 let maybe_reify_term (env:TcEnv.env) (t:S.term) (l:lident) : S.term  =
   let extraction_mode = TcUtil.effect_extraction_mode env l in
@@ -665,7 +661,8 @@ let maybe_reify_term (env:TcEnv.env) (t:S.term) (l:lident) : S.term  =
   then TcUtil.reify_body env [TcEnv.Inlining; TcEnv.ForExtraction; TcEnv.Unascribe] t
   else if extraction_mode = S.Extract_primitive
   then t
-  else err_cannot_extract_effect l t.pos
+  else let S.Extract_none s = extraction_mode in
+       err_cannot_extract_effect l t.pos s
 
 let rec translate_term_to_mlty (g:uenv) (t0:term) : mlty =
     let arg_as_mlty (g:uenv) (a, _) : mlty =

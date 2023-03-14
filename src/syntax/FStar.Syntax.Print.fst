@@ -677,7 +677,7 @@ let eff_combinators_to_string = function
   | Layered_eff combs -> layered_eff_combinators_to_string combs
 
 let eff_extraction_mode_to_string = function
-  | Extract_none -> "none"
+  | Extract_none s -> U.format1 "none (%s)" s
   | Extract_reify -> "reify"
   | Extract_primitive -> "primitive"
 
