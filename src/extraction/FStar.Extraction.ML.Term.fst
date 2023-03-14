@@ -652,8 +652,10 @@ let maybe_reify_comp g (env:TcEnv.env) (c:S.comp) : S.term =
        |> N.normalize extraction_norm_steps env
   else if extraction_mode = S.Extract_primitive
   then U.comp_result c
-  else let S.Extract_none s = extraction_mode in
+  else if S.Extract_none? extraction_mode
+  then let S.Extract_none s = extraction_mode in
        err_cannot_extract_effect (c |> U.comp_effect_name) c.pos s
+  else err_cannot_extract_effect (c |> U.comp_effect_name) c.pos ""
 
 let maybe_reify_term (env:TcEnv.env) (t:S.term) (l:lident) : S.term  =
   let extraction_mode = TcUtil.effect_extraction_mode env l in
@@ -1400,11 +1402,15 @@ and term_as_mlexpr' (g:uenv) (top:term) : (mlexpr * e_tag * mlty) =
           let t = SS.compress t in
           begin match t.n with
             | Tm_let((false, [lb]), body) when (BU.is_left lb.lbname) ->
-              let ed, qualifiers = must (TypeChecker.Env.effect_decl_opt (tcenv_of_uenv g) m) in
-              if not (TcEnv.is_reifiable_effect (tcenv_of_uenv g) ed.mname)
+              let tcenv = tcenv_of_uenv g in
+              let ed, qualifiers = must (TypeChecker.Env.effect_decl_opt tcenv m) in
+              if TcUtil.effect_extraction_mode tcenv ed.mname = S.Extract_primitive
               then term_as_mlexpr g t
               else
-                failwith "This should not happen (should have been handled at Tm_abs level)"
+                failwith
+                  (BU.format1
+                     "This should not happen (should have been handled at Tm_abs level for effect %s)"
+                     (string_of_lid ed.mname))
             | _ -> term_as_mlexpr g t
          end
 
