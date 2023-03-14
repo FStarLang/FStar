@@ -3,7 +3,7 @@ open Steel.ST.Util
 open Steel.ST.C.Types
 
 module U32 = FStar.UInt32
-module C = C // for _zero_for_deref
+// module C = C // for _zero_for_deref
 
 let swap (#v1 #v2: Ghost.erased U32.t) (r1 r2: ref (scalar U32.t)) : STT unit
   ((r1 `pts_to` mk_scalar (Ghost.reveal v1)) `star` (r2 `pts_to` mk_scalar (Ghost.reveal v2)))
