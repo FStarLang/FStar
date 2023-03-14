@@ -13,16 +13,17 @@ include $(FSTAR_HOME)/src/Makefile.boot.common
 OUTPUT_DIRECTORY = $(CURDIR)
 FSTAR_C=$(RUNLIM) $(FSTAR_EXE) $(SIL) $(FSTAR_BOOT_OPTIONS) --already_cached 'FStar'
 
-extract: ExtractSteelC.ml
+EXTRACT_FILES=ExtractSteelC.ml
+extract: $(EXTRACT_FILES)
 
 # And then, in a separate invocation, from each .checked.lax we
 # extract an .ml file
-%.ml: %.fst
+$(EXTRACT_FILES): %.ml: %.fst
 	$(call msg, "EXTRACT", $(notdir $@))
 	$(Q)$(BENCHMARK_PRE) $(FSTAR_C) $< \
 		   --odir "$(OUTPUT_DIRECTORY)" \
                    --codegen OCaml \
                    --extract_module $(basename $(notdir $<))
 
-$(CURDIR)/bin/fstar.exe: ExtractSteelC.fst ExtractSteelC.fsti Makefile
+$(CURDIR)/bin/fstar.exe: ExtractSteelC.fst ExtractSteelC.fsti Makefile main.ml
 	OCAMLPATH=$(FSTAR_HOME)/lib dune build && dune install --prefix=$(CURDIR)
