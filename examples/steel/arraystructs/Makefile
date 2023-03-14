@@ -2,14 +2,19 @@ all: world
 
 FSTAR_HOME ?= $(realpath $(dir $(shell which fstar.exe))/..)
 export FSTAR_HOME
+ifdef KRML_HOME # FIXME: should be HAS_OCAML
 FSTAR_EXE = $(CURDIR)/my_fstar/bin/fstar.exe
+else # no KRML_HOME
+FSTAR_EXE = $(FSTAR_HOME)/bin/fstar.exe
+endif
 FSTAR_LIB ?= $(realpath $(FSTAR_HOME)/ulib)
 export FSTAR_LIB
 
-INCLUDE_PATH = $(FSTAR_HOME)/ulib/.cache $(FSTAR_HOME)/ulib/experimental $(KRML_HOME)/krmllib $(KRML_HOME)/krmllib/obj
+INCLUDE_PATH := $(FSTAR_HOME)/ulib/.cache $(FSTAR_HOME)/ulib/experimental
 
 ifdef KRML_HOME
 KRML_EXE = $(KRML_HOME)/krml
+INCLUDE_PATH += $(KRML_HOME)/krmllib $(KRML_HOME)/krmllib/obj
 endif
 
 world: verify test
@@ -27,23 +32,25 @@ ALL_SOURCE_FILES = $(filter-out LList.fst,$(wildcard *.fst *.fsti))
 NO_EXTRACT_MODULES=PointStruct HaclExample ScalarUnion
 EXTRACT_SOURCE_FILES = $(filter-out $(addsuffix .fst,$(NO_EXTRACT_MODULES)),$(ALL_SOURCE_FILES))
 
+comma=,
+
+ifdef KRML_HOME # FIXME: should be HAS_OCAML
 # We need to add some Low* files to the dependency roots, because F* extracts Steel.C null to LowStar null
 # since the KaRaMeL AST does not have a node for null
 # TODO: This should be removed, and support for Steel.C null should be directly added to KaRaMeL instead
-SOME_LOWSTAR_FILES = $(FSTAR_HOME)/ulib/LowStar.Monotonic.Buffer.fst $(FSTAR_HOME)/ulib/LowStar.Buffer.fst
+SOME_LOWSTAR_FILES = $(FSTAR_HOME)/ulib/LowStar.Monotonic.Buffer.fst $(FSTAR_HOME)/ulib/LowStar.Buffer.fst $(KRML_HOME)/krmllib/C.fst
+MY_FSTAR=$(FSTAR_EXE)
+$(FSTAR_EXE):
+	+$(MAKE) -C my_fstar
+endif
 
-comma=,
-
-.depend: $(ALL_SOURCE_FILES) Makefile $(FSTAR_EXE)
+.depend: $(ALL_SOURCE_FILES) Makefile $(MY_FSTAR)
 	$(FSTAR) --dep full $(ALL_SOURCE_FILES) $(SOME_LOWSTAR_FILES) --extract 'krml:* -FStar $(addprefix -,$(NO_EXTRACT_MODULES))'  > $@.tmp
 	mv $@.tmp $@
 
 depend: .depend
 
 -include .depend
-
-$(FSTAR_EXE):
-	+$(MAKE) -C my_fstar
 
 $(ALL_CHECKED_FILES): %.checked:
 	$(FSTAR) $<
