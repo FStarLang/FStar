@@ -28,73 +28,79 @@ let (fetch_eq_side :
                        | FStar_Reflection_Data.Tv_App (squash, (g1, uu___2))
                            ->
                            Obj.magic
-                             (FStar_Tactics_Effect.tac_bind
-                                (Prims.mk_range
-                                   "FStar.Tactics.PatternMatching.fst"
-                                   (Prims.of_int (66)) (Prims.of_int (11))
-                                   (Prims.of_int (66)) (Prims.of_int (25)))
-                                (Prims.mk_range
-                                   "FStar.Tactics.PatternMatching.fst"
-                                   (Prims.of_int (66)) (Prims.of_int (4))
-                                   (Prims.of_int (87)) (Prims.of_int (51)))
-                                (Obj.magic
-                                   (FStar_Tactics_Builtins.inspect squash))
-                                (fun uu___3 ->
+                             (Obj.repr
+                                (FStar_Tactics_Effect.tac_bind
+                                   (Prims.mk_range
+                                      "FStar.Tactics.PatternMatching.fst"
+                                      (Prims.of_int (66)) (Prims.of_int (11))
+                                      (Prims.of_int (66)) (Prims.of_int (25)))
+                                   (Prims.mk_range
+                                      "FStar.Tactics.PatternMatching.fst"
+                                      (Prims.of_int (66)) (Prims.of_int (4))
+                                      (Prims.of_int (87)) (Prims.of_int (51)))
+                                   (Obj.magic
+                                      (FStar_Tactics_Builtins.inspect squash))
                                    (fun uu___3 ->
-                                      match uu___3 with
-                                      | FStar_Reflection_Data.Tv_UInst
-                                          (squash1, uu___4) ->
-                                          if
-                                            (FStar_Reflection_Derived.fv_to_string
-                                               squash1)
-                                              =
-                                              (FStar_Reflection_Derived.flatten_name
-                                                 FStar_Reflection_Const.squash_qn)
-                                          then
-                                            Obj.magic
-                                              (FStar_Tactics_Effect.tac_bind
-                                                 (Prims.mk_range
-                                                    "FStar.Tactics.PatternMatching.fst"
-                                                    (Prims.of_int (70))
-                                                    (Prims.of_int (16))
-                                                    (Prims.of_int (70))
-                                                    (Prims.of_int (25)))
-                                                 (Prims.mk_range
-                                                    "FStar.Tactics.PatternMatching.fst"
-                                                    (Prims.of_int (70))
-                                                    (Prims.of_int (9))
-                                                    (Prims.of_int (85))
-                                                    (Prims.of_int (48)))
-                                                 (Obj.magic
-                                                    (FStar_Tactics_Builtins.inspect
-                                                       g1))
-                                                 (fun uu___5 ->
-                                                    (fun uu___5 ->
-                                                       match uu___5 with
-                                                       | FStar_Reflection_Data.Tv_App
-                                                           (eq_type_x,
-                                                            (y, uu___6))
-                                                           ->
-                                                           Obj.magic
-                                                             (FStar_Tactics_Effect.tac_bind
-                                                                (Prims.mk_range
-                                                                   "FStar.Tactics.PatternMatching.fst"
-                                                                   (Prims.of_int (72))
-                                                                   (Prims.of_int (19))
-                                                                   (Prims.of_int (72))
-                                                                   (Prims.of_int (36)))
-                                                                (Prims.mk_range
-                                                                   "FStar.Tactics.PatternMatching.fst"
-                                                                   (Prims.of_int (72))
-                                                                   (Prims.of_int (12))
-                                                                   (Prims.of_int (84))
-                                                                   (Prims.of_int (39)))
-                                                                (Obj.magic
-                                                                   (FStar_Tactics_Builtins.inspect
+                                      (fun uu___3 ->
+                                         match uu___3 with
+                                         | FStar_Reflection_Data.Tv_UInst
+                                             (squash1, uu___4) ->
+                                             Obj.magic
+                                               (Obj.repr
+                                                  (if
+                                                     (FStar_Reflection_Derived.fv_to_string
+                                                        squash1)
+                                                       =
+                                                       (FStar_Reflection_Derived.flatten_name
+                                                          FStar_Reflection_Const.squash_qn)
+                                                   then
+                                                     Obj.repr
+                                                       (FStar_Tactics_Effect.tac_bind
+                                                          (Prims.mk_range
+                                                             "FStar.Tactics.PatternMatching.fst"
+                                                             (Prims.of_int (70))
+                                                             (Prims.of_int (16))
+                                                             (Prims.of_int (70))
+                                                             (Prims.of_int (25)))
+                                                          (Prims.mk_range
+                                                             "FStar.Tactics.PatternMatching.fst"
+                                                             (Prims.of_int (70))
+                                                             (Prims.of_int (9))
+                                                             (Prims.of_int (85))
+                                                             (Prims.of_int (48)))
+                                                          (Obj.magic
+                                                             (FStar_Tactics_Builtins.inspect
+                                                                g1))
+                                                          (fun uu___5 ->
+                                                             (fun uu___5 ->
+                                                                match uu___5
+                                                                with
+                                                                | FStar_Reflection_Data.Tv_App
+                                                                    (eq_type_x,
+                                                                    (y,
+                                                                    uu___6))
+                                                                    ->
+                                                                    Obj.magic
+                                                                    (Obj.repr
+                                                                    (FStar_Tactics_Effect.tac_bind
+                                                                    (Prims.mk_range
+                                                                    "FStar.Tactics.PatternMatching.fst"
+                                                                    (Prims.of_int (72))
+                                                                    (Prims.of_int (19))
+                                                                    (Prims.of_int (72))
+                                                                    (Prims.of_int (36)))
+                                                                    (Prims.mk_range
+                                                                    "FStar.Tactics.PatternMatching.fst"
+                                                                    (Prims.of_int (72))
+                                                                    (Prims.of_int (12))
+                                                                    (Prims.of_int (84))
+                                                                    (Prims.of_int (39)))
+                                                                    (Obj.magic
+                                                                    (FStar_Tactics_Builtins.inspect
                                                                     eq_type_x))
-                                                                (fun uu___7
-                                                                   ->
-                                                                   (fun
+                                                                    (fun
+                                                                    uu___7 ->
+                                                                    (fun
                                                                     uu___7 ->
                                                                     match uu___7
                                                                     with
@@ -105,6 +111,7 @@ let (fetch_eq_side :
                                                                     uu___8))
                                                                     ->
                                                                     Obj.magic
+                                                                    (Obj.repr
                                                                     (FStar_Tactics_Effect.tac_bind
                                                                     (Prims.mk_range
                                                                     "FStar.Tactics.PatternMatching.fst"
@@ -134,6 +141,7 @@ let (fetch_eq_side :
                                                                     uu___10))
                                                                     ->
                                                                     Obj.magic
+                                                                    (Obj.repr
                                                                     (FStar_Tactics_Effect.tac_bind
                                                                     (Prims.mk_range
                                                                     "FStar.Tactics.PatternMatching.fst"
@@ -153,9 +161,6 @@ let (fetch_eq_side :
                                                                     (fun
                                                                     uu___11
                                                                     ->
-                                                                    (fun
-                                                                    uu___11
-                                                                    ->
                                                                     match uu___11
                                                                     with
                                                                     | 
@@ -163,126 +168,123 @@ let (fetch_eq_side :
                                                                     (eq1,
                                                                     uu___12)
                                                                     ->
-                                                                    Obj.magic
-                                                                    (Obj.repr
-                                                                    (if
+                                                                    if
                                                                     (FStar_Reflection_Derived.fv_to_string
                                                                     eq1) =
                                                                     (FStar_Reflection_Derived.flatten_name
                                                                     FStar_Reflection_Const.eq2_qn)
                                                                     then
-                                                                    Obj.repr
-                                                                    (FStar_Tactics_Effect.lift_div_tac
+                                                                    FStar_Tactics_Effect.lift_div_tac
                                                                     (fun
                                                                     uu___13
-                                                                    -> (x, y)))
+                                                                    -> (x, y))
                                                                     else
-                                                                    Obj.repr
-                                                                    (FStar_Tactics_Derived.fail
-                                                                    "not an equality")))
+                                                                    FStar_Tactics_Derived.fail
+                                                                    "not an equality"
                                                                     | 
                                                                     FStar_Reflection_Data.Tv_FVar
                                                                     eq1 ->
-                                                                    Obj.magic
-                                                                    (Obj.repr
-                                                                    (if
+                                                                    if
                                                                     (FStar_Reflection_Derived.fv_to_string
                                                                     eq1) =
                                                                     (FStar_Reflection_Derived.flatten_name
                                                                     FStar_Reflection_Const.eq2_qn)
                                                                     then
-                                                                    Obj.repr
-                                                                    (FStar_Tactics_Effect.lift_div_tac
+                                                                    FStar_Tactics_Effect.lift_div_tac
                                                                     (fun
                                                                     uu___12
-                                                                    -> (x, y)))
+                                                                    -> (x, y))
                                                                     else
-                                                                    Obj.repr
-                                                                    (FStar_Tactics_Derived.fail
-                                                                    "not an equality")))
+                                                                    FStar_Tactics_Derived.fail
+                                                                    "not an equality"
                                                                     | 
                                                                     uu___12
                                                                     ->
-                                                                    Obj.magic
-                                                                    (Obj.repr
-                                                                    (FStar_Tactics_Derived.fail
+                                                                    FStar_Tactics_Derived.fail
                                                                     "not an app2 of fvar: ")))
-                                                                    uu___11))
                                                                     | 
                                                                     uu___10
                                                                     ->
                                                                     Obj.magic
+                                                                    (Obj.repr
                                                                     (FStar_Tactics_Derived.fail
-                                                                    "not an app3"))
-                                                                    uu___9))
+                                                                    "not an app3")))
+                                                                    uu___9)))
                                                                     | 
                                                                     uu___8 ->
                                                                     Obj.magic
+                                                                    (Obj.repr
                                                                     (FStar_Tactics_Derived.fail
-                                                                    "not an app2"))
-                                                                    uu___7))
-                                                       | uu___6 ->
-                                                           Obj.magic
-                                                             (FStar_Tactics_Derived.fail
-                                                                "not an app under squash"))
-                                                      uu___5))
-                                          else
-                                            Obj.magic
-                                              (FStar_Tactics_Derived.fail
-                                                 "not a squash")
-                                      | FStar_Reflection_Data.Tv_FVar squash1
-                                          ->
-                                          if
-                                            (FStar_Reflection_Derived.fv_to_string
-                                               squash1)
-                                              =
-                                              (FStar_Reflection_Derived.flatten_name
-                                                 FStar_Reflection_Const.squash_qn)
-                                          then
-                                            Obj.magic
-                                              (FStar_Tactics_Effect.tac_bind
-                                                 (Prims.mk_range
-                                                    "FStar.Tactics.PatternMatching.fst"
-                                                    (Prims.of_int (70))
-                                                    (Prims.of_int (16))
-                                                    (Prims.of_int (70))
-                                                    (Prims.of_int (25)))
-                                                 (Prims.mk_range
-                                                    "FStar.Tactics.PatternMatching.fst"
-                                                    (Prims.of_int (70))
-                                                    (Prims.of_int (9))
-                                                    (Prims.of_int (85))
-                                                    (Prims.of_int (48)))
-                                                 (Obj.magic
-                                                    (FStar_Tactics_Builtins.inspect
-                                                       g1))
-                                                 (fun uu___4 ->
-                                                    (fun uu___4 ->
-                                                       match uu___4 with
-                                                       | FStar_Reflection_Data.Tv_App
-                                                           (eq_type_x,
-                                                            (y, uu___5))
-                                                           ->
-                                                           Obj.magic
-                                                             (FStar_Tactics_Effect.tac_bind
-                                                                (Prims.mk_range
-                                                                   "FStar.Tactics.PatternMatching.fst"
-                                                                   (Prims.of_int (72))
-                                                                   (Prims.of_int (19))
-                                                                   (Prims.of_int (72))
-                                                                   (Prims.of_int (36)))
-                                                                (Prims.mk_range
-                                                                   "FStar.Tactics.PatternMatching.fst"
-                                                                   (Prims.of_int (72))
-                                                                   (Prims.of_int (12))
-                                                                   (Prims.of_int (84))
-                                                                   (Prims.of_int (39)))
-                                                                (Obj.magic
-                                                                   (FStar_Tactics_Builtins.inspect
+                                                                    "not an app2")))
+                                                                    uu___7)))
+                                                                | uu___6 ->
+                                                                    Obj.magic
+                                                                    (Obj.repr
+                                                                    (FStar_Tactics_Derived.fail
+                                                                    "not an app under squash")))
+                                                               uu___5))
+                                                   else
+                                                     Obj.repr
+                                                       (FStar_Tactics_Derived.fail
+                                                          "not a squash")))
+                                         | FStar_Reflection_Data.Tv_FVar
+                                             squash1 ->
+                                             Obj.magic
+                                               (Obj.repr
+                                                  (if
+                                                     (FStar_Reflection_Derived.fv_to_string
+                                                        squash1)
+                                                       =
+                                                       (FStar_Reflection_Derived.flatten_name
+                                                          FStar_Reflection_Const.squash_qn)
+                                                   then
+                                                     Obj.repr
+                                                       (FStar_Tactics_Effect.tac_bind
+                                                          (Prims.mk_range
+                                                             "FStar.Tactics.PatternMatching.fst"
+                                                             (Prims.of_int (70))
+                                                             (Prims.of_int (16))
+                                                             (Prims.of_int (70))
+                                                             (Prims.of_int (25)))
+                                                          (Prims.mk_range
+                                                             "FStar.Tactics.PatternMatching.fst"
+                                                             (Prims.of_int (70))
+                                                             (Prims.of_int (9))
+                                                             (Prims.of_int (85))
+                                                             (Prims.of_int (48)))
+                                                          (Obj.magic
+                                                             (FStar_Tactics_Builtins.inspect
+                                                                g1))
+                                                          (fun uu___4 ->
+                                                             (fun uu___4 ->
+                                                                match uu___4
+                                                                with
+                                                                | FStar_Reflection_Data.Tv_App
+                                                                    (eq_type_x,
+                                                                    (y,
+                                                                    uu___5))
+                                                                    ->
+                                                                    Obj.magic
+                                                                    (Obj.repr
+                                                                    (FStar_Tactics_Effect.tac_bind
+                                                                    (Prims.mk_range
+                                                                    "FStar.Tactics.PatternMatching.fst"
+                                                                    (Prims.of_int (72))
+                                                                    (Prims.of_int (19))
+                                                                    (Prims.of_int (72))
+                                                                    (Prims.of_int (36)))
+                                                                    (Prims.mk_range
+                                                                    "FStar.Tactics.PatternMatching.fst"
+                                                                    (Prims.of_int (72))
+                                                                    (Prims.of_int (12))
+                                                                    (Prims.of_int (84))
+                                                                    (Prims.of_int (39)))
+                                                                    (Obj.magic
+                                                                    (FStar_Tactics_Builtins.inspect
                                                                     eq_type_x))
-                                                                (fun uu___6
-                                                                   ->
-                                                                   (fun
+                                                                    (fun
+                                                                    uu___6 ->
+                                                                    (fun
                                                                     uu___6 ->
                                                                     match uu___6
                                                                     with
@@ -293,6 +295,7 @@ let (fetch_eq_side :
                                                                     uu___7))
                                                                     ->
                                                                     Obj.magic
+                                                                    (Obj.repr
                                                                     (FStar_Tactics_Effect.tac_bind
                                                                     (Prims.mk_range
                                                                     "FStar.Tactics.PatternMatching.fst"
@@ -322,6 +325,7 @@ let (fetch_eq_side :
                                                                     uu___9))
                                                                     ->
                                                                     Obj.magic
+                                                                    (Obj.repr
                                                                     (FStar_Tactics_Effect.tac_bind
                                                                     (Prims.mk_range
                                                                     "FStar.Tactics.PatternMatching.fst"
@@ -341,9 +345,6 @@ let (fetch_eq_side :
                                                                     (fun
                                                                     uu___10
                                                                     ->
-                                                                    (fun
-                                                                    uu___10
-                                                                    ->
                                                                     match uu___10
                                                                     with
                                                                     | 
@@ -351,81 +352,76 @@ let (fetch_eq_side :
                                                                     (eq1,
                                                                     uu___11)
                                                                     ->
-                                                                    Obj.magic
-                                                                    (Obj.repr
-                                                                    (if
+                                                                    if
                                                                     (FStar_Reflection_Derived.fv_to_string
                                                                     eq1) =
                                                                     (FStar_Reflection_Derived.flatten_name
                                                                     FStar_Reflection_Const.eq2_qn)
                                                                     then
-                                                                    Obj.repr
-                                                                    (FStar_Tactics_Effect.lift_div_tac
+                                                                    FStar_Tactics_Effect.lift_div_tac
                                                                     (fun
                                                                     uu___12
-                                                                    -> (x, y)))
+                                                                    -> (x, y))
                                                                     else
-                                                                    Obj.repr
-                                                                    (FStar_Tactics_Derived.fail
-                                                                    "not an equality")))
+                                                                    FStar_Tactics_Derived.fail
+                                                                    "not an equality"
                                                                     | 
                                                                     FStar_Reflection_Data.Tv_FVar
                                                                     eq1 ->
-                                                                    Obj.magic
-                                                                    (Obj.repr
-                                                                    (if
+                                                                    if
                                                                     (FStar_Reflection_Derived.fv_to_string
                                                                     eq1) =
                                                                     (FStar_Reflection_Derived.flatten_name
                                                                     FStar_Reflection_Const.eq2_qn)
                                                                     then
-                                                                    Obj.repr
-                                                                    (FStar_Tactics_Effect.lift_div_tac
+                                                                    FStar_Tactics_Effect.lift_div_tac
                                                                     (fun
                                                                     uu___11
-                                                                    -> (x, y)))
+                                                                    -> (x, y))
                                                                     else
-                                                                    Obj.repr
-                                                                    (FStar_Tactics_Derived.fail
-                                                                    "not an equality")))
+                                                                    FStar_Tactics_Derived.fail
+                                                                    "not an equality"
                                                                     | 
                                                                     uu___11
                                                                     ->
-                                                                    Obj.magic
-                                                                    (Obj.repr
-                                                                    (FStar_Tactics_Derived.fail
+                                                                    FStar_Tactics_Derived.fail
                                                                     "not an app2 of fvar: ")))
-                                                                    uu___10))
                                                                     | 
                                                                     uu___9 ->
                                                                     Obj.magic
+                                                                    (Obj.repr
                                                                     (FStar_Tactics_Derived.fail
-                                                                    "not an app3"))
-                                                                    uu___8))
+                                                                    "not an app3")))
+                                                                    uu___8)))
                                                                     | 
                                                                     uu___7 ->
                                                                     Obj.magic
+                                                                    (Obj.repr
                                                                     (FStar_Tactics_Derived.fail
-                                                                    "not an app2"))
-                                                                    uu___6))
-                                                       | uu___5 ->
-                                                           Obj.magic
-                                                             (FStar_Tactics_Derived.fail
-                                                                "not an app under squash"))
-                                                      uu___4))
-                                          else
-                                            Obj.magic
-                                              (FStar_Tactics_Derived.fail
-                                                 "not a squash")
-                                      | uu___4 ->
-                                          Obj.magic
-                                            (FStar_Tactics_Derived.fail
-                                               "not an app of fvar at top level"))
-                                     uu___3))
+                                                                    "not an app2")))
+                                                                    uu___6)))
+                                                                | uu___5 ->
+                                                                    Obj.magic
+                                                                    (Obj.repr
+                                                                    (FStar_Tactics_Derived.fail
+                                                                    "not an app under squash")))
+                                                               uu___4))
+                                                   else
+                                                     Obj.repr
+                                                       (FStar_Tactics_Derived.fail
+                                                          "not a squash")))
+                                         | uu___4 ->
+                                             Obj.magic
+                                               (Obj.repr
+                                                  (FStar_Tactics_Derived.fail
+                                                     "not an app of fvar at top level")))
+                                        uu___3)))
                        | uu___2 ->
                            Obj.magic
-                             (FStar_Tactics_Derived.fail
-                                "not an app at top level")) uu___1))) uu___1)
+                             (Obj.repr
+                                (FStar_Tactics_Derived.fail
+                                   "not an app at top level"))) uu___1)))
+           uu___1)
 let mustfail :
   'a .
     (unit -> ('a, unit) FStar_Tactics_Effect.tac_repr) ->
@@ -441,15 +437,11 @@ let mustfail :
            (Prims.of_int (130)) (Prims.of_int (4)) (Prims.of_int (132))
            (Prims.of_int (16))) (Obj.magic (FStar_Tactics_Derived.trytac t))
         (fun uu___ ->
-           (fun uu___ ->
-              match uu___ with
-              | FStar_Pervasives_Native.Some uu___1 ->
-                  Obj.magic (Obj.repr (FStar_Tactics_Derived.fail message))
-              | FStar_Pervasives_Native.None ->
-                  Obj.magic
-                    (Obj.repr
-                       (FStar_Tactics_Effect.lift_div_tac (fun uu___1 -> ()))))
-             uu___)
+           match uu___ with
+           | FStar_Pervasives_Native.Some uu___1 ->
+               FStar_Tactics_Derived.fail message
+           | FStar_Pervasives_Native.None ->
+               FStar_Tactics_Effect.lift_div_tac (fun uu___1 -> ()))
 let (implies_intro' : unit -> (unit, unit) FStar_Tactics_Effect.tac_repr) =
   fun uu___ ->
     FStar_Tactics_Effect.tac_bind
@@ -1045,10 +1037,8 @@ let lift_exn_tac :
                           (Prims.of_int (268)) (Prims.of_int (18))
                           (Prims.of_int (268)) (Prims.of_int (61)))
                        (Obj.magic (string_of_match_exception ex))
-                       (fun uu___ ->
-                          (fun uu___ ->
-                             Obj.magic (FStar_Tactics_Derived.fail uu___))
-                            uu___)))) uu___1 uu___
+                       (fun uu___ -> FStar_Tactics_Derived.fail uu___))))
+        uu___1 uu___
 let lift_exn_tactic :
   'a 'b .
     ('a -> 'b match_res) -> 'a -> ('b, unit) FStar_Tactics_Effect.tac_repr
@@ -1073,10 +1063,8 @@ let lift_exn_tactic :
                           (Prims.of_int (273)) (Prims.of_int (18))
                           (Prims.of_int (273)) (Prims.of_int (61)))
                        (Obj.magic (string_of_match_exception ex))
-                       (fun uu___ ->
-                          (fun uu___ ->
-                             Obj.magic (FStar_Tactics_Derived.fail uu___))
-                            uu___)))) uu___1 uu___
+                       (fun uu___ -> FStar_Tactics_Derived.fail uu___))))
+        uu___1 uu___
 type bindings = (varname * FStar_Reflection_Types.term) Prims.list
 let (string_of_bindings :
   bindings -> (Prims.string, unit) FStar_Tactics_Effect.tac_repr) =
@@ -1496,10 +1484,8 @@ let (match_term :
                              (Prims.of_int (338)) (Prims.of_int (20))
                              (Prims.of_int (338)) (Prims.of_int (63)))
                           (Obj.magic (string_of_match_exception ex))
-                          (fun uu___1 ->
-                             (fun uu___1 ->
-                                Obj.magic (FStar_Tactics_Derived.fail uu___1))
-                               uu___1)))) uu___)
+                          (fun uu___1 -> FStar_Tactics_Derived.fail uu___1))))
+             uu___)
 let debug : 'uuuuu . 'uuuuu -> (unit, unit) FStar_Tactics_Effect.tac_repr =
   fun uu___ ->
     (fun msg ->
@@ -1663,13 +1649,9 @@ let assoc_varname_fail :
            match FStar_List_Tot_Base.assoc key ls with
            | FStar_Pervasives_Native.None ->
                Obj.magic
-                 (Obj.repr
-                    (FStar_Tactics_Derived.fail
-                       (Prims.strcat "Not found: " key)))
+                 (FStar_Tactics_Derived.fail (Prims.strcat "Not found: " key))
            | FStar_Pervasives_Native.Some x ->
-               Obj.magic
-                 (Obj.repr
-                    (FStar_Tactics_Effect.lift_div_tac (fun uu___ -> x))))
+               Obj.magic (FStar_Tactics_Effect.lift_div_tac (fun uu___ -> x)))
         uu___1 uu___
 let ms_locate_hyp :
   'a .
@@ -1712,98 +1694,123 @@ let rec solve_mp_for_single_hyp :
           (matching_solution -> ('a, unit) FStar_Tactics_Effect.tac_repr) ->
             matching_solution -> ('a, unit) FStar_Tactics_Effect.tac_repr
   =
-  fun name ->
-    fun pat ->
-      fun hypotheses ->
-        fun body ->
-          fun part_sol ->
-            match hypotheses with
-            | [] -> FStar_Tactics_Derived.fail "No matching hypothesis"
-            | h::hs ->
-                FStar_Tactics_Derived.or_else
-                  (fun uu___ ->
-                     FStar_Tactics_Effect.tac_bind
-                       (Prims.mk_range "FStar.Tactics.PatternMatching.fst"
-                          (Prims.of_int (448)) (Prims.of_int (15))
-                          (Prims.of_int (448)) (Prims.of_int (73)))
-                       (Prims.mk_range "FStar.Tactics.PatternMatching.fst"
-                          (Prims.of_int (448)) (Prims.of_int (9))
-                          (Prims.of_int (453)) (Prims.of_int (73)))
-                       (Obj.magic
-                          (interp_pattern_aux pat part_sol.ms_vars
-                             (FStar_Reflection_Derived.type_of_binder h)))
-                       (fun uu___1 ->
-                          (fun uu___1 ->
-                             match uu___1 with
-                             | Failure ex ->
-                                 Obj.magic
-                                   (FStar_Tactics_Effect.tac_bind
-                                      (Prims.mk_range
-                                         "FStar.Tactics.PatternMatching.fst"
-                                         (Prims.of_int (450))
-                                         (Prims.of_int (16))
-                                         (Prims.of_int (450))
-                                         (Prims.of_int (74)))
-                                      (Prims.mk_range
-                                         "FStar.Tactics.PatternMatching.fst"
-                                         (Prims.of_int (450))
-                                         (Prims.of_int (11))
-                                         (Prims.of_int (450))
-                                         (Prims.of_int (74)))
-                                      (Obj.magic
-                                         (FStar_Tactics_Effect.tac_bind
-                                            (Prims.mk_range
-                                               "FStar.Tactics.PatternMatching.fst"
-                                               (Prims.of_int (450))
-                                               (Prims.of_int (43))
-                                               (Prims.of_int (450))
-                                               (Prims.of_int (73)))
-                                            (Prims.mk_range "prims.fst"
-                                               (Prims.of_int (606))
-                                               (Prims.of_int (19))
-                                               (Prims.of_int (606))
-                                               (Prims.of_int (31)))
-                                            (Obj.magic
-                                               (string_of_match_exception ex))
-                                            (fun uu___2 ->
-                                               FStar_Tactics_Effect.lift_div_tac
-                                                 (fun uu___3 ->
-                                                    Prims.strcat
-                                                      "Failed to match hyp: "
-                                                      uu___2))))
-                                      (fun uu___2 ->
-                                         (fun uu___2 ->
-                                            Obj.magic
-                                              (FStar_Tactics_Derived.fail
-                                                 uu___2)) uu___2))
-                             | Success bindings1 ->
-                                 Obj.magic
-                                   (FStar_Tactics_Effect.tac_bind
-                                      (Prims.mk_range
-                                         "FStar.Tactics.PatternMatching.fst"
-                                         (Prims.of_int (452))
-                                         (Prims.of_int (35))
-                                         (Prims.of_int (452))
-                                         (Prims.of_int (37)))
-                                      (Prims.mk_range
-                                         "FStar.Tactics.PatternMatching.fst"
-                                         (Prims.of_int (453))
-                                         (Prims.of_int (11))
-                                         (Prims.of_int (453))
-                                         (Prims.of_int (73)))
-                                      (FStar_Tactics_Effect.lift_div_tac
-                                         (fun uu___2 -> (name, h) ::
-                                            (part_sol.ms_hyps)))
-                                      (fun uu___2 ->
-                                         (fun ms_hyps ->
-                                            Obj.magic
-                                              (body
-                                                 {
-                                                   ms_vars = bindings1;
-                                                   ms_hyps
-                                                 })) uu___2))) uu___1))
-                  (fun uu___ ->
-                     solve_mp_for_single_hyp name pat hs body part_sol)
+  fun uu___4 ->
+    fun uu___3 ->
+      fun uu___2 ->
+        fun uu___1 ->
+          fun uu___ ->
+            (fun name ->
+               fun pat ->
+                 fun hypotheses ->
+                   fun body ->
+                     fun part_sol ->
+                       match hypotheses with
+                       | [] ->
+                           Obj.magic
+                             (Obj.repr
+                                (FStar_Tactics_Derived.fail
+                                   "No matching hypothesis"))
+                       | h::hs ->
+                           Obj.magic
+                             (Obj.repr
+                                (FStar_Tactics_Derived.or_else
+                                   (fun uu___ ->
+                                      FStar_Tactics_Effect.tac_bind
+                                        (Prims.mk_range
+                                           "FStar.Tactics.PatternMatching.fst"
+                                           (Prims.of_int (448))
+                                           (Prims.of_int (15))
+                                           (Prims.of_int (448))
+                                           (Prims.of_int (73)))
+                                        (Prims.mk_range
+                                           "FStar.Tactics.PatternMatching.fst"
+                                           (Prims.of_int (448))
+                                           (Prims.of_int (9))
+                                           (Prims.of_int (453))
+                                           (Prims.of_int (73)))
+                                        (Obj.magic
+                                           (interp_pattern_aux pat
+                                              part_sol.ms_vars
+                                              (FStar_Reflection_Derived.type_of_binder
+                                                 h)))
+                                        (fun uu___1 ->
+                                           (fun uu___1 ->
+                                              match uu___1 with
+                                              | Failure ex ->
+                                                  Obj.magic
+                                                    (FStar_Tactics_Effect.tac_bind
+                                                       (Prims.mk_range
+                                                          "FStar.Tactics.PatternMatching.fst"
+                                                          (Prims.of_int (450))
+                                                          (Prims.of_int (16))
+                                                          (Prims.of_int (450))
+                                                          (Prims.of_int (74)))
+                                                       (Prims.mk_range
+                                                          "FStar.Tactics.PatternMatching.fst"
+                                                          (Prims.of_int (450))
+                                                          (Prims.of_int (11))
+                                                          (Prims.of_int (450))
+                                                          (Prims.of_int (74)))
+                                                       (Obj.magic
+                                                          (FStar_Tactics_Effect.tac_bind
+                                                             (Prims.mk_range
+                                                                "FStar.Tactics.PatternMatching.fst"
+                                                                (Prims.of_int (450))
+                                                                (Prims.of_int (43))
+                                                                (Prims.of_int (450))
+                                                                (Prims.of_int (73)))
+                                                             (Prims.mk_range
+                                                                "prims.fst"
+                                                                (Prims.of_int (606))
+                                                                (Prims.of_int (19))
+                                                                (Prims.of_int (606))
+                                                                (Prims.of_int (31)))
+                                                             (Obj.magic
+                                                                (string_of_match_exception
+                                                                   ex))
+                                                             (fun uu___2 ->
+                                                                FStar_Tactics_Effect.lift_div_tac
+                                                                  (fun uu___3
+                                                                    ->
+                                                                    Prims.strcat
+                                                                    "Failed to match hyp: "
+                                                                    uu___2))))
+                                                       (fun uu___2 ->
+                                                          FStar_Tactics_Derived.fail
+                                                            uu___2))
+                                              | Success bindings1 ->
+                                                  Obj.magic
+                                                    (FStar_Tactics_Effect.tac_bind
+                                                       (Prims.mk_range
+                                                          "FStar.Tactics.PatternMatching.fst"
+                                                          (Prims.of_int (452))
+                                                          (Prims.of_int (35))
+                                                          (Prims.of_int (452))
+                                                          (Prims.of_int (37)))
+                                                       (Prims.mk_range
+                                                          "FStar.Tactics.PatternMatching.fst"
+                                                          (Prims.of_int (453))
+                                                          (Prims.of_int (11))
+                                                          (Prims.of_int (453))
+                                                          (Prims.of_int (73)))
+                                                       (FStar_Tactics_Effect.lift_div_tac
+                                                          (fun uu___2 ->
+                                                             (name, h) ::
+                                                             (part_sol.ms_hyps)))
+                                                       (fun uu___2 ->
+                                                          (fun ms_hyps ->
+                                                             Obj.magic
+                                                               (body
+                                                                  {
+                                                                    ms_vars =
+                                                                    bindings1;
+                                                                    ms_hyps
+                                                                  })) uu___2)))
+                                             uu___1))
+                                   (fun uu___ ->
+                                      solve_mp_for_single_hyp name pat hs
+                                        body part_sol)))) uu___4 uu___3
+              uu___2 uu___1 uu___
 let rec solve_mp_for_hyps :
   'a .
     (varname * pattern) Prims.list ->
@@ -1898,10 +1905,8 @@ let solve_mp :
                                                            "Failed to match goal: "
                                                            uu___1))))
                                            (fun uu___1 ->
-                                              (fun uu___1 ->
-                                                 Obj.magic
-                                                   (FStar_Tactics_Derived.fail
-                                                      uu___1)) uu___1)))
+                                              FStar_Tactics_Derived.fail
+                                                uu___1)))
                                | Success bindings1 ->
                                    Obj.magic
                                      (Obj.repr
@@ -2042,10 +2047,8 @@ let (pattern_of_term :
                            (Prims.of_int (532)) (Prims.of_int (20))
                            (Prims.of_int (532)) (Prims.of_int (63)))
                         (Obj.magic (string_of_match_exception ex))
-                        (fun uu___1 ->
-                           (fun uu___1 ->
-                              Obj.magic (FStar_Tactics_Derived.fail uu___1))
-                             uu___1)))) uu___)
+                        (fun uu___1 -> FStar_Tactics_Derived.fail uu___1))))
+           uu___)
 type 'a hyp = FStar_Reflection_Types.binder
 type 'a pm_goal = unit
 let (hyp_qn : Prims.string) = "FStar.Tactics.PatternMatching.hyp"
@@ -2205,8 +2208,6 @@ let (classify_abspat_binder :
                                                                     (
                                                                     fun
                                                                     uu___2 ->
-                                                                    (fun
-                                                                    uu___2 ->
                                                                     match uu___2
                                                                     with
                                                                     | 
@@ -2214,32 +2215,25 @@ let (classify_abspat_binder :
                                                                     ((uu___3,
                                                                     goal_typ)::[])
                                                                     ->
-                                                                    Obj.magic
-                                                                    (Obj.repr
-                                                                    (FStar_Tactics_Effect.lift_div_tac
+                                                                    FStar_Tactics_Effect.lift_div_tac
                                                                     (fun
                                                                     uu___4 ->
                                                                     (ABKGoal,
-                                                                    goal_typ))))
+                                                                    goal_typ))
                                                                     | 
                                                                     Success
                                                                     uu___3 ->
-                                                                    Obj.magic
-                                                                    (Obj.repr
-                                                                    (FStar_Tactics_Derived.fail
-                                                                    "classifiy_abspat_binder: impossible (2)"))
+                                                                    FStar_Tactics_Derived.fail
+                                                                    "classifiy_abspat_binder: impossible (2)"
                                                                     | 
                                                                     Failure
                                                                     uu___3 ->
-                                                                    Obj.magic
-                                                                    (Obj.repr
-                                                                    (FStar_Tactics_Effect.lift_div_tac
+                                                                    FStar_Tactics_Effect.lift_div_tac
                                                                     (fun
                                                                     uu___4 ->
                                                                     ((ABKVar
                                                                     typ),
-                                                                    typ)))))
-                                                                    uu___2))))
+                                                                    typ))))))
                                                        uu___))) uu___)))
                                  uu___))) uu___))) uu___)
 let rec (binders_and_body_of_abs :

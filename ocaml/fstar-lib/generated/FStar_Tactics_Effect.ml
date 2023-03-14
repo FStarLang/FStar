@@ -49,9 +49,9 @@ let __proj__TAC__item__bind = tac_bind
 type ('a, 'wp, 'uuuuu, 'uuuuu1) lift_div_tac_wp = 'wp
 let lift_div_tac : 'a 'wp . (unit -> 'a) -> ('a, 'wp) tac_repr =
   fun f -> fun ps -> FStar_Tactics_Result.Success ((f ()), ps)
-let (get : unit -> (FStar_Tactics_Types.proofstate, unit) tac_repr) =
+let (get : unit -> (FStar_Tactics_Types.proofstate, Obj.t) tac_repr) =
   fun uu___ -> fun ps -> FStar_Tactics_Result.Success (ps, ps)
-let raise : 'a . Prims.exn -> ('a, unit) tac_repr =
+let raise : 'a . Prims.exn -> ('a, Obj.t) tac_repr =
   fun e -> fun ps -> FStar_Tactics_Result.Failed (e, ps)
 type ('uuuuu, 'p) with_tactic = 'p
 let (rewrite_with_tactic :

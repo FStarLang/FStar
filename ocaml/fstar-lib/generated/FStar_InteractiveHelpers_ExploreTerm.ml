@@ -1556,13 +1556,21 @@ let rec (inst_comp :
                                     match () with
                                     | () -> inst_comp_once e c t)
                                  (fun uu___ ->
-                                    match uu___ with
-                                    | FStar_InteractiveHelpers_Base.MetaAnalysis
-                                        msg ->
-                                        FStar_InteractiveHelpers_Base.mfail
-                                          (Prims.strcat "inst_comp: error: "
-                                             msg)
-                                    | err -> FStar_Tactics_Effect.raise err)))
+                                    (fun uu___ ->
+                                       match uu___ with
+                                       | FStar_InteractiveHelpers_Base.MetaAnalysis
+                                           msg ->
+                                           Obj.magic
+                                             (Obj.repr
+                                                (FStar_InteractiveHelpers_Base.mfail
+                                                   (Prims.strcat
+                                                      "inst_comp: error: "
+                                                      msg)))
+                                       | err ->
+                                           Obj.magic
+                                             (Obj.repr
+                                                (FStar_Tactics_Effect.raise
+                                                   err))) uu___)))
                            (fun uu___ ->
                               (fun c' -> Obj.magic (inst_comp e c' tl'))
                                 uu___)))) uu___2 uu___1 uu___
@@ -1661,54 +1669,68 @@ let (_abs_update_typ :
                                                "_abs_update_typ: inconsistent state"))
                                      uu___1))) uu___1))
             (fun uu___ ->
-               match uu___ with
-               | FStar_InteractiveHelpers_Base.MetaAnalysis msg ->
-                   FStar_Tactics_Effect.tac_bind
-                     (Prims.mk_range
-                        "FStar.InteractiveHelpers.ExploreTerm.fst"
-                        (Prims.of_int (303)) (Prims.of_int (10))
-                        (Prims.of_int (303)) (Prims.of_int (93)))
-                     (Prims.mk_range
-                        "FStar.InteractiveHelpers.ExploreTerm.fst"
-                        (Prims.of_int (303)) (Prims.of_int (4))
-                        (Prims.of_int (303)) (Prims.of_int (93)))
-                     (Obj.magic
-                        (FStar_Tactics_Effect.tac_bind
-                           (Prims.mk_range
-                              "FStar.InteractiveHelpers.ExploreTerm.fst"
-                              (Prims.of_int (303)) (Prims.of_int (61))
-                              (Prims.of_int (303)) (Prims.of_int (92)))
-                           (Prims.mk_range "prims.fst" (Prims.of_int (606))
-                              (Prims.of_int (19)) (Prims.of_int (606))
-                              (Prims.of_int (31)))
-                           (Obj.magic
-                              (FStar_Tactics_Effect.tac_bind
-                                 (Prims.mk_range
-                                    "FStar.InteractiveHelpers.ExploreTerm.fst"
-                                    (Prims.of_int (303)) (Prims.of_int (61))
-                                    (Prims.of_int (303)) (Prims.of_int (78)))
-                                 (Prims.mk_range "prims.fst"
-                                    (Prims.of_int (606)) (Prims.of_int (19))
-                                    (Prims.of_int (606)) (Prims.of_int (31)))
-                                 (Obj.magic
-                                    (FStar_Tactics_Builtins.term_to_string ty))
+               (fun uu___ ->
+                  match uu___ with
+                  | FStar_InteractiveHelpers_Base.MetaAnalysis msg ->
+                      Obj.magic
+                        (Obj.repr
+                           (FStar_Tactics_Effect.tac_bind
+                              (Prims.mk_range
+                                 "FStar.InteractiveHelpers.ExploreTerm.fst"
+                                 (Prims.of_int (303)) (Prims.of_int (10))
+                                 (Prims.of_int (303)) (Prims.of_int (93)))
+                              (Prims.mk_range
+                                 "FStar.InteractiveHelpers.ExploreTerm.fst"
+                                 (Prims.of_int (303)) (Prims.of_int (4))
+                                 (Prims.of_int (303)) (Prims.of_int (93)))
+                              (Obj.magic
+                                 (FStar_Tactics_Effect.tac_bind
+                                    (Prims.mk_range
+                                       "FStar.InteractiveHelpers.ExploreTerm.fst"
+                                       (Prims.of_int (303))
+                                       (Prims.of_int (61))
+                                       (Prims.of_int (303))
+                                       (Prims.of_int (92)))
+                                    (Prims.mk_range "prims.fst"
+                                       (Prims.of_int (606))
+                                       (Prims.of_int (19))
+                                       (Prims.of_int (606))
+                                       (Prims.of_int (31)))
+                                    (Obj.magic
+                                       (FStar_Tactics_Effect.tac_bind
+                                          (Prims.mk_range
+                                             "FStar.InteractiveHelpers.ExploreTerm.fst"
+                                             (Prims.of_int (303))
+                                             (Prims.of_int (61))
+                                             (Prims.of_int (303))
+                                             (Prims.of_int (78)))
+                                          (Prims.mk_range "prims.fst"
+                                             (Prims.of_int (606))
+                                             (Prims.of_int (19))
+                                             (Prims.of_int (606))
+                                             (Prims.of_int (31)))
+                                          (Obj.magic
+                                             (FStar_Tactics_Builtins.term_to_string
+                                                ty))
+                                          (fun uu___1 ->
+                                             FStar_Tactics_Effect.lift_div_tac
+                                               (fun uu___2 ->
+                                                  Prims.strcat uu___1
+                                                    (Prims.strcat ":\n" msg)))))
+                                    (fun uu___1 ->
+                                       FStar_Tactics_Effect.lift_div_tac
+                                         (fun uu___2 ->
+                                            Prims.strcat
+                                              "_abs_update_typ: could not find an arrow in: "
+                                              uu___1))))
+                              (fun uu___1 ->
                                  (fun uu___1 ->
-                                    FStar_Tactics_Effect.lift_div_tac
-                                      (fun uu___2 ->
-                                         Prims.strcat uu___1
-                                           (Prims.strcat ":\n" msg)))))
-                           (fun uu___1 ->
-                              FStar_Tactics_Effect.lift_div_tac
-                                (fun uu___2 ->
-                                   Prims.strcat
-                                     "_abs_update_typ: could not find an arrow in: "
-                                     uu___1))))
-                     (fun uu___1 ->
-                        (fun uu___1 ->
-                           Obj.magic
-                             (FStar_InteractiveHelpers_Base.mfail uu___1))
-                          uu___1)
-               | err -> FStar_Tactics_Effect.raise err)
+                                    Obj.magic
+                                      (FStar_InteractiveHelpers_Base.mfail
+                                         uu___1)) uu___1)))
+                  | err ->
+                      Obj.magic (Obj.repr (FStar_Tactics_Effect.raise err)))
+                 uu___)
 let (abs_update_typ_or_comp :
   FStar_Reflection_Types.binder ->
     typ_or_comp ->
@@ -1780,14 +1802,12 @@ let (abs_update_opt_typ_or_comp :
                                  | FStar_InteractiveHelpers_Base.MetaAnalysis
                                      msg ->
                                      Obj.magic
-                                       (Obj.repr
-                                          (FStar_Tactics_Effect.lift_div_tac
-                                             (fun uu___1 ->
-                                                FStar_Pervasives_Native.None)))
+                                       (FStar_Tactics_Effect.lift_div_tac
+                                          (fun uu___1 ->
+                                             FStar_Pervasives_Native.None))
                                  | err ->
                                      Obj.magic
-                                       (Obj.repr
-                                          (FStar_Tactics_Effect.raise err)))
+                                       (FStar_Tactics_Effect.raise err))
                                 uu___)))) uu___2 uu___1 uu___
 let rec (_flush_typ_or_comp_comp :
   Prims.bool ->
@@ -2315,62 +2335,77 @@ let (flush_typ_or_comp :
                                         uu___1)
                              | TC_Comp (c, pl, n) -> flush_comp pl n c))
                      (fun uu___ ->
-                        match uu___ with
-                        | FStar_InteractiveHelpers_Base.MetaAnalysis msg ->
-                            FStar_Tactics_Effect.tac_bind
-                              (Prims.mk_range
-                                 "FStar.InteractiveHelpers.ExploreTerm.fst"
-                                 (Prims.of_int (379)) (Prims.of_int (15))
-                                 (Prims.of_int (379)) (Prims.of_int (90)))
-                              (Prims.mk_range
-                                 "FStar.InteractiveHelpers.ExploreTerm.fst"
-                                 (Prims.of_int (379)) (Prims.of_int (9))
-                                 (Prims.of_int (379)) (Prims.of_int (90)))
-                              (Obj.magic
-                                 (FStar_Tactics_Effect.tac_bind
-                                    (Prims.mk_range
-                                       "FStar.InteractiveHelpers.ExploreTerm.fst"
-                                       (Prims.of_int (379))
-                                       (Prims.of_int (50))
-                                       (Prims.of_int (379))
-                                       (Prims.of_int (89)))
-                                    (Prims.mk_range "prims.fst"
-                                       (Prims.of_int (606))
-                                       (Prims.of_int (19))
-                                       (Prims.of_int (606))
-                                       (Prims.of_int (31)))
-                                    (Obj.magic
-                                       (FStar_Tactics_Effect.tac_bind
-                                          (Prims.mk_range
-                                             "FStar.InteractiveHelpers.ExploreTerm.fst"
-                                             (Prims.of_int (379))
-                                             (Prims.of_int (50))
-                                             (Prims.of_int (379))
-                                             (Prims.of_int (75)))
-                                          (Prims.mk_range "prims.fst"
-                                             (Prims.of_int (606))
-                                             (Prims.of_int (19))
-                                             (Prims.of_int (606))
-                                             (Prims.of_int (31)))
-                                          (Obj.magic
-                                             (typ_or_comp_to_string tyc))
+                        (fun uu___ ->
+                           match uu___ with
+                           | FStar_InteractiveHelpers_Base.MetaAnalysis msg
+                               ->
+                               Obj.magic
+                                 (Obj.repr
+                                    (FStar_Tactics_Effect.tac_bind
+                                       (Prims.mk_range
+                                          "FStar.InteractiveHelpers.ExploreTerm.fst"
+                                          (Prims.of_int (379))
+                                          (Prims.of_int (15))
+                                          (Prims.of_int (379))
+                                          (Prims.of_int (90)))
+                                       (Prims.mk_range
+                                          "FStar.InteractiveHelpers.ExploreTerm.fst"
+                                          (Prims.of_int (379))
+                                          (Prims.of_int (9))
+                                          (Prims.of_int (379))
+                                          (Prims.of_int (90)))
+                                       (Obj.magic
+                                          (FStar_Tactics_Effect.tac_bind
+                                             (Prims.mk_range
+                                                "FStar.InteractiveHelpers.ExploreTerm.fst"
+                                                (Prims.of_int (379))
+                                                (Prims.of_int (50))
+                                                (Prims.of_int (379))
+                                                (Prims.of_int (89)))
+                                             (Prims.mk_range "prims.fst"
+                                                (Prims.of_int (606))
+                                                (Prims.of_int (19))
+                                                (Prims.of_int (606))
+                                                (Prims.of_int (31)))
+                                             (Obj.magic
+                                                (FStar_Tactics_Effect.tac_bind
+                                                   (Prims.mk_range
+                                                      "FStar.InteractiveHelpers.ExploreTerm.fst"
+                                                      (Prims.of_int (379))
+                                                      (Prims.of_int (50))
+                                                      (Prims.of_int (379))
+                                                      (Prims.of_int (75)))
+                                                   (Prims.mk_range
+                                                      "prims.fst"
+                                                      (Prims.of_int (606))
+                                                      (Prims.of_int (19))
+                                                      (Prims.of_int (606))
+                                                      (Prims.of_int (31)))
+                                                   (Obj.magic
+                                                      (typ_or_comp_to_string
+                                                         tyc))
+                                                   (fun uu___1 ->
+                                                      FStar_Tactics_Effect.lift_div_tac
+                                                        (fun uu___2 ->
+                                                           Prims.strcat
+                                                             uu___1
+                                                             (Prims.strcat
+                                                                ":\n" msg)))))
+                                             (fun uu___1 ->
+                                                FStar_Tactics_Effect.lift_div_tac
+                                                  (fun uu___2 ->
+                                                     Prims.strcat
+                                                       "flush_typ_or_comp failed on: "
+                                                       uu___1))))
+                                       (fun uu___1 ->
                                           (fun uu___1 ->
-                                             FStar_Tactics_Effect.lift_div_tac
-                                               (fun uu___2 ->
-                                                  Prims.strcat uu___1
-                                                    (Prims.strcat ":\n" msg)))))
-                                    (fun uu___1 ->
-                                       FStar_Tactics_Effect.lift_div_tac
-                                         (fun uu___2 ->
-                                            Prims.strcat
-                                              "flush_typ_or_comp failed on: "
-                                              uu___1))))
-                              (fun uu___1 ->
-                                 (fun uu___1 ->
-                                    Obj.magic
-                                      (FStar_InteractiveHelpers_Base.mfail
-                                         uu___1)) uu___1)
-                        | err -> FStar_Tactics_Effect.raise err))) uu___)
+                                             Obj.magic
+                                               (FStar_InteractiveHelpers_Base.mfail
+                                                  uu___1)) uu___1)))
+                           | err ->
+                               Obj.magic
+                                 (Obj.repr (FStar_Tactics_Effect.raise err)))
+                          uu___))) uu___)
 let (safe_arg_typ_or_comp :
   Prims.bool ->
     FStar_Reflection_Types.env ->
