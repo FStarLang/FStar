@@ -25,6 +25,11 @@ open FStar.Parser.AST
 open FStar.Errors
 open FStar.Interactive.Ide.Types
 
+type fragment_progress =
+   | FragmentStarted of decl
+   | FragmentSuccess of decl
+   | FragmentError of list issue
+
 (* Translates a full-buffer(qid, code) query by
    1. Parsing the code into its declarations
    2. Finding a prefix of the repl state that matches a prefix of the declarations
@@ -39,5 +44,5 @@ val run_full_buffer (st:repl_state)
                     (qid:string)
                     (code:string)
                     (full:bool)
-                    (write_full_buffer_fragment_progress: either decl (list issue) -> unit)
+                    (write_full_buffer_fragment_progress: fragment_progress -> unit)
   : list query

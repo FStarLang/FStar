@@ -1237,12 +1237,20 @@ let (rephrase_dependency_error : FStar_Errors.issue -> FStar_Errors.issue) =
       FStar_Errors.issue_ctx = (issue.FStar_Errors.issue_ctx)
     }
 let (write_full_buffer_fragment_progress :
-  (FStar_Parser_AST.decl, FStar_Errors.issue Prims.list)
-    FStar_Pervasives.either -> unit)
-  =
+  FStar_Interactive_Incremental.fragment_progress -> unit) =
   fun di ->
     match di with
-    | FStar_Pervasives.Inl d ->
+    | FStar_Interactive_Incremental.FragmentStarted d ->
+        let uu___ =
+          let uu___1 =
+            let uu___2 =
+              FStar_Compiler_Range.json_of_def_range
+                d.FStar_Parser_AST.drange in
+            ("ranges", uu___2) in
+          [uu___1] in
+        write_progress
+          (FStar_Pervasives_Native.Some "full-buffer-fragment-started") uu___
+    | FStar_Interactive_Incremental.FragmentSuccess d ->
         let uu___ =
           let uu___1 =
             let uu___2 =
@@ -1252,7 +1260,7 @@ let (write_full_buffer_fragment_progress :
           [uu___1] in
         write_progress
           (FStar_Pervasives_Native.Some "full-buffer-fragment-ok") uu___
-    | FStar_Pervasives.Inr issues ->
+    | FStar_Interactive_Incremental.FragmentError issues ->
         let qid =
           let uu___ = FStar_Compiler_Effect.op_Bang repl_current_qid in
           match uu___ with
@@ -1442,7 +1450,7 @@ let (run_push_without_deps :
                   | FStar_Pervasives.Inr d when Prims.op_Negation has_error
                       ->
                       write_full_buffer_fragment_progress
-                        (FStar_Pervasives.Inl d)
+                        (FStar_Interactive_Incremental.FragmentSuccess d)
                   | uu___4 -> ());
                  (let json_errors =
                     let uu___4 =
@@ -2391,6 +2399,7 @@ let rec (run_query :
           let uu___ = run_compute st term rules in as_json_list uu___
       | FStar_Interactive_Ide_Types.Search term ->
           let uu___ = run_search st term in as_json_list uu___
+      | FStar_Interactive_Ide_Types.Callback f -> f st
 and (validate_and_run_query :
   FStar_Interactive_ReplState.repl_state ->
     FStar_Interactive_Ide_Types.query -> run_query_result)

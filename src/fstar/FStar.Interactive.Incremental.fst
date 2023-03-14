@@ -87,8 +87,9 @@ let as_query (q:query')
         qid=qid_prefix ^ "." ^ string_of_int i
       }
 
-let push_decl (d:decl)
-  : qst query
+let push_decl (write_full_buffer_fragment_progress: fragment_progress -> unit)
+              (d:decl)              
+  : qst (list query)
   = let open FStar.Compiler.Range in
     let pq = {
         push_kind = FullCheck;
@@ -97,11 +98,19 @@ let push_decl (d:decl)
         push_peek_only = false;
         push_code_or_decl = Inr d
     } in
-    as_query (Push pq)
+    let progress st =
+      write_full_buffer_fragment_progress (FragmentStarted d);
+      (QueryOK, []), Inl st
+    in
+    let! cb = as_query (Callback progress) in
+    let! push = as_query (Push pq) in
+    return [cb; push]
     
-let push_decls (ds:list decl)
+let push_decls (write_full_buffer_fragment_progress : fragment_progress -> unit)
+               (ds:list decl)
   : qst (list query)
-  = map push_decl ds
+  = let! qs = map (push_decl write_full_buffer_fragment_progress) ds in
+    return (List.flatten qs)
   
 let pop_entries (e:list repl_stack_entry_t)
   : qst (list query)
@@ -118,9 +127,10 @@ let response_success (d:decl)
   
 let inspect_repl_stack (s:repl_stack_t)
                        (ds:list decl)
-                       (write_full_buffer_fragment_progress: either decl (list issue) -> unit)                       
+                       (write_full_buffer_fragment_progress: fragment_progress -> unit)                       
   : qst (list query) // & list json)
   = let entries = List.rev s in
+    let push_decls = push_decls write_full_buffer_fragment_progress in
     match BU.prefix_until 
              (function (_, (PushFragment _, _)) -> true | _ -> false)
              entries          
@@ -149,7 +159,7 @@ let inspect_repl_stack (s:repl_stack_t)
             | PushFragment (Inr d') ->
               if eq_decl d d'
               then (
-                write_full_buffer_fragment_progress (Inl d);
+                write_full_buffer_fragment_progress (FragmentSuccess d);
                 matching_prefix entries ds
               )
               else let! pops = pop_entries (e::entries) in
@@ -171,7 +181,7 @@ let run_full_buffer (st:repl_state)
                     (qid:string)
                     (code:string)
                     (full:bool)
-                    (write_full_buffer_fragment_progress: either decl (list issue) -> unit)
+                    (write_full_buffer_fragment_progress: fragment_progress -> unit)
   : list query
   = let parse_result = 
         P.parse (Incremental { 
@@ -193,7 +203,7 @@ let run_full_buffer (st:repl_state)
             issue_number = Some num;
             issue_ctx = []
         } in
-        write_full_buffer_fragment_progress (Inr [issue])
+        write_full_buffer_fragment_progress (FragmentError [issue])
     in
     let qs = 
       match parse_result with

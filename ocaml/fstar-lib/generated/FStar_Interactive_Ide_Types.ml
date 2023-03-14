@@ -137,6 +137,22 @@ let (__proj__Mkpush_query__item__push_code_or_decl :
     | { push_kind; push_line; push_column; push_peek_only;
         push_code_or_decl;_} -> push_code_or_decl
 type lookup_symbol_range = FStar_Compiler_Util.json
+type query_status =
+  | QueryOK 
+  | QueryNOK 
+  | QueryViolatesProtocol 
+let (uu___is_QueryOK : query_status -> Prims.bool) =
+  fun projectee -> match projectee with | QueryOK -> true | uu___ -> false
+let (uu___is_QueryNOK : query_status -> Prims.bool) =
+  fun projectee -> match projectee with | QueryNOK -> true | uu___ -> false
+let (uu___is_QueryViolatesProtocol : query_status -> Prims.bool) =
+  fun projectee ->
+    match projectee with | QueryViolatesProtocol -> true | uu___ -> false
+type callback_t =
+  FStar_Interactive_ReplState.repl_state ->
+    ((query_status * FStar_Compiler_Util.json Prims.list) *
+      (FStar_Interactive_ReplState.repl_state, Prims.int)
+      FStar_Pervasives.either)
 type query' =
   | Exit 
   | DescribeProtocol 
@@ -155,6 +171,7 @@ type query' =
   | GenericError of Prims.string 
   | ProtocolViolation of Prims.string 
   | FullBuffer of (Prims.string * Prims.bool) 
+  | Callback of callback_t 
 and query = {
   qq: query' ;
   qid: Prims.string }
@@ -221,6 +238,11 @@ let (uu___is_FullBuffer : query' -> Prims.bool) =
     match projectee with | FullBuffer _0 -> true | uu___ -> false
 let (__proj__FullBuffer__item___0 : query' -> (Prims.string * Prims.bool)) =
   fun projectee -> match projectee with | FullBuffer _0 -> _0
+let (uu___is_Callback : query' -> Prims.bool) =
+  fun projectee ->
+    match projectee with | Callback _0 -> true | uu___ -> false
+let (__proj__Callback__item___0 : query' -> callback_t) =
+  fun projectee -> match projectee with | Callback _0 -> _0
 let (__proj__Mkquery__item__qq : query -> query') =
   fun projectee -> match projectee with | { qq; qid;_} -> qq
 let (__proj__Mkquery__item__qid : query -> Prims.string) =
@@ -270,6 +292,7 @@ let (query_to_string : query -> Prims.string) =
     | GenericError uu___ -> "GenericError"
     | ProtocolViolation uu___ -> "ProtocolViolation"
     | FullBuffer uu___ -> "FullBuffer"
+    | Callback uu___ -> "Callback"
 let (query_needs_current_module : query' -> Prims.bool) =
   fun uu___ ->
     match uu___ with
@@ -286,6 +309,7 @@ let (query_needs_current_module : query' -> Prims.bool) =
     | GenericError uu___1 -> false
     | ProtocolViolation uu___1 -> false
     | FullBuffer uu___1 -> false
+    | Callback uu___1 -> false
     | Push uu___1 -> true
     | AutoComplete uu___1 -> true
     | Lookup uu___1 -> true
@@ -315,17 +339,6 @@ let (interactive_protocol_features : Prims.string Prims.list) =
   "interrupt";
   "progress";
   "full-buffer"]
-type query_status =
-  | QueryOK 
-  | QueryNOK 
-  | QueryViolatesProtocol 
-let (uu___is_QueryOK : query_status -> Prims.bool) =
-  fun projectee -> match projectee with | QueryOK -> true | uu___ -> false
-let (uu___is_QueryNOK : query_status -> Prims.bool) =
-  fun projectee -> match projectee with | QueryNOK -> true | uu___ -> false
-let (uu___is_QueryViolatesProtocol : query_status -> Prims.bool) =
-  fun projectee ->
-    match projectee with | QueryViolatesProtocol -> true | uu___ -> false
 let (json_of_issue_level :
   FStar_Errors.issue_level -> FStar_Compiler_Util.json) =
   fun i ->

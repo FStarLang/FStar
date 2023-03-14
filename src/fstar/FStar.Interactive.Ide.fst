@@ -549,12 +549,16 @@ let rephrase_dependency_error issue =
                format1 "Error while computing or loading dependencies:\n%s"
                        issue.issue_msg }
 
-let write_full_buffer_fragment_progress (di:either FStar.Parser.AST.decl (list issue)) =
+let write_full_buffer_fragment_progress (di:Incremental.fragment_progress) =
+    let open FStar.Interactive.Incremental in
     match di with
-    | Inl d ->
+    | FragmentStarted d ->
+      write_progress (Some "full-buffer-fragment-started")
+                     ["ranges", json_of_def_range d.FStar.Parser.AST.drange]
+    | FragmentSuccess d ->
       write_progress (Some "full-buffer-fragment-ok")
                      ["ranges", json_of_def_range d.FStar.Parser.AST.drange]
-    | Inr issues ->
+    | FragmentError issues ->
       let qid =
         match !repl_current_qid with
         | None -> "unknown"
@@ -604,7 +608,7 @@ let run_push_without_deps st query
   let _ = 
     match code_or_decl with
     | Inr d when not has_error ->
-      write_full_buffer_fragment_progress (Inl d)
+      write_full_buffer_fragment_progress (Incremental.FragmentSuccess d)
     | _ -> ()
   in
   let json_errors = JsonList (errs |> List.map json_of_issue) in
@@ -957,6 +961,8 @@ let rec run_query st (q: query) : (query_status * list json) * either repl_state
     as_json_list (run_compute st term rules)
   | Search term ->
     as_json_list (run_search st term)
+  | Callback f ->
+    f st
 and validate_and_run_query st query =
   let query = validate_query st query in
   repl_current_qid := Some query.qid;

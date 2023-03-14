@@ -1,4 +1,26 @@
 open Prims
+type fragment_progress =
+  | FragmentStarted of FStar_Parser_AST.decl 
+  | FragmentSuccess of FStar_Parser_AST.decl 
+  | FragmentError of FStar_Errors.issue Prims.list 
+let (uu___is_FragmentStarted : fragment_progress -> Prims.bool) =
+  fun projectee ->
+    match projectee with | FragmentStarted _0 -> true | uu___ -> false
+let (__proj__FragmentStarted__item___0 :
+  fragment_progress -> FStar_Parser_AST.decl) =
+  fun projectee -> match projectee with | FragmentStarted _0 -> _0
+let (uu___is_FragmentSuccess : fragment_progress -> Prims.bool) =
+  fun projectee ->
+    match projectee with | FragmentSuccess _0 -> true | uu___ -> false
+let (__proj__FragmentSuccess__item___0 :
+  fragment_progress -> FStar_Parser_AST.decl) =
+  fun projectee -> match projectee with | FragmentSuccess _0 -> _0
+let (uu___is_FragmentError : fragment_progress -> Prims.bool) =
+  fun projectee ->
+    match projectee with | FragmentError _0 -> true | uu___ -> false
+let (__proj__FragmentError__item___0 :
+  fragment_progress -> FStar_Errors.issue Prims.list) =
+  fun projectee -> match projectee with | FragmentError _0 -> _0
 type qid = (Prims.string * Prims.int)
 type 'a qst = qid -> ('a * qid)
 let return : 'a . 'a -> 'a qst = fun x -> fun q -> (x, q)
@@ -51,31 +73,47 @@ let (as_query :
                } in
              return uu___1)
 let (push_decl :
-  FStar_Parser_AST.decl -> FStar_Interactive_Ide_Types.query qst) =
-  fun d ->
-    let pq =
-      let uu___ =
+  (fragment_progress -> unit) ->
+    FStar_Parser_AST.decl -> FStar_Interactive_Ide_Types.query Prims.list qst)
+  =
+  fun write_full_buffer_fragment_progress ->
+    fun d ->
+      let pq =
+        let uu___ =
+          let uu___1 =
+            FStar_Compiler_Range.start_of_range d.FStar_Parser_AST.drange in
+          FStar_Compiler_Range.line_of_pos uu___1 in
         let uu___1 =
-          FStar_Compiler_Range.start_of_range d.FStar_Parser_AST.drange in
-        FStar_Compiler_Range.line_of_pos uu___1 in
-      let uu___1 =
-        let uu___2 =
-          FStar_Compiler_Range.start_of_range d.FStar_Parser_AST.drange in
-        FStar_Compiler_Range.col_of_pos uu___2 in
-      {
-        FStar_Interactive_Ide_Types.push_kind =
-          FStar_Interactive_PushHelper.FullCheck;
-        FStar_Interactive_Ide_Types.push_line = uu___;
-        FStar_Interactive_Ide_Types.push_column = uu___1;
-        FStar_Interactive_Ide_Types.push_peek_only = false;
-        FStar_Interactive_Ide_Types.push_code_or_decl =
-          (FStar_Pervasives.Inr d)
-      } in
-    as_query (FStar_Interactive_Ide_Types.Push pq)
+          let uu___2 =
+            FStar_Compiler_Range.start_of_range d.FStar_Parser_AST.drange in
+          FStar_Compiler_Range.col_of_pos uu___2 in
+        {
+          FStar_Interactive_Ide_Types.push_kind =
+            FStar_Interactive_PushHelper.FullCheck;
+          FStar_Interactive_Ide_Types.push_line = uu___;
+          FStar_Interactive_Ide_Types.push_column = uu___1;
+          FStar_Interactive_Ide_Types.push_peek_only = false;
+          FStar_Interactive_Ide_Types.push_code_or_decl =
+            (FStar_Pervasives.Inr d)
+        } in
+      let progress st =
+        write_full_buffer_fragment_progress (FragmentStarted d);
+        ((FStar_Interactive_Ide_Types.QueryOK, []),
+          (FStar_Pervasives.Inl st)) in
+      let uu___ = as_query (FStar_Interactive_Ide_Types.Callback progress) in
+      op_let_Bang uu___
+        (fun cb ->
+           let uu___1 = as_query (FStar_Interactive_Ide_Types.Push pq) in
+           op_let_Bang uu___1 (fun push -> return [cb; push]))
 let (push_decls :
-  FStar_Parser_AST.decl Prims.list ->
-    FStar_Interactive_Ide_Types.query Prims.list qst)
-  = fun ds -> map push_decl ds
+  (fragment_progress -> unit) ->
+    FStar_Parser_AST.decl Prims.list ->
+      FStar_Interactive_Ide_Types.query Prims.list qst)
+  =
+  fun write_full_buffer_fragment_progress ->
+    fun ds ->
+      let uu___ = map (push_decl write_full_buffer_fragment_progress) ds in
+      op_let_Bang uu___ (fun qs -> return (FStar_Compiler_List.flatten qs))
 let (pop_entries :
   FStar_Interactive_ReplState.repl_stack_entry_t Prims.list ->
     FStar_Interactive_Ide_Types.query Prims.list qst)
@@ -105,14 +143,14 @@ let (response_success :
 let (inspect_repl_stack :
   FStar_Interactive_ReplState.repl_stack_t ->
     FStar_Parser_AST.decl Prims.list ->
-      ((FStar_Parser_AST.decl, FStar_Errors.issue Prims.list)
-         FStar_Pervasives.either -> unit)
-        -> FStar_Interactive_Ide_Types.query Prims.list qst)
+      (fragment_progress -> unit) ->
+        FStar_Interactive_Ide_Types.query Prims.list qst)
   =
   fun s ->
     fun ds ->
       fun write_full_buffer_fragment_progress ->
         let entries = FStar_Compiler_List.rev s in
+        let push_decls1 = push_decls write_full_buffer_fragment_progress in
         let uu___ =
           FStar_Compiler_Util.prefix_until
             (fun uu___1 ->
@@ -123,7 +161,7 @@ let (inspect_repl_stack :
                | uu___2 -> false) entries in
         match uu___ with
         | FStar_Pervasives_Native.None ->
-            let uu___1 = push_decls ds in
+            let uu___1 = push_decls1 ds in
             op_let_Bang uu___1 (fun ds1 -> return ds1)
         | FStar_Pervasives_Native.Some (prefix, first_push, rest) ->
             let entries1 = first_push :: rest in
@@ -141,7 +179,7 @@ let (inspect_repl_stack :
                        let uu___1 = pop_entries (e :: entries3) in
                        op_let_Bang uu___1
                          (fun pops ->
-                            let uu___2 = push_decls (d :: ds2) in
+                            let uu___2 = push_decls1 (d :: ds2) in
                             op_let_Bang uu___2
                               (fun pushes ->
                                  return
@@ -152,19 +190,19 @@ let (inspect_repl_stack :
                        if uu___1
                        then
                          (write_full_buffer_fragment_progress
-                            (FStar_Pervasives.Inl d);
+                            (FragmentSuccess d);
                           matching_prefix entries3 ds2)
                        else
                          (let uu___3 = pop_entries (e :: entries3) in
                           op_let_Bang uu___3
                             (fun pops ->
-                               let uu___4 = push_decls (d :: ds2) in
+                               let uu___4 = push_decls1 (d :: ds2) in
                                op_let_Bang uu___4
                                  (fun pushes ->
                                     return
                                       (FStar_Compiler_List.op_At pops pushes)))))
               | ([], ds2) ->
-                  let uu___1 = push_decls ds2 in
+                  let uu___1 = push_decls1 ds2 in
                   op_let_Bang uu___1 (fun pushes -> return pushes)
               | (es, []) ->
                   let uu___1 = pop_entries es in
@@ -175,9 +213,8 @@ let (run_full_buffer :
     Prims.string ->
       Prims.string ->
         Prims.bool ->
-          ((FStar_Parser_AST.decl, FStar_Errors.issue Prims.list)
-             FStar_Pervasives.either -> unit)
-            -> FStar_Interactive_Ide_Types.query Prims.list)
+          (fragment_progress -> unit) ->
+            FStar_Interactive_Ide_Types.query Prims.list)
   =
   fun st ->
     fun qid1 ->
@@ -226,7 +263,7 @@ let (run_full_buffer :
                            FStar_Errors.issue_ctx = []
                          } in
                        write_full_buffer_fragment_progress
-                         (FStar_Pervasives.Inr [issue])) in
+                         (FragmentError [issue])) in
             let qs =
               match parse_result with
               | FStar_Parser_ParseIt.IncrementalFragment

@@ -41,7 +41,11 @@ module TcErr = FStar.TypeChecker.Err
 module TcEnv = FStar.TypeChecker.Env
 module CTable = FStar.Interactive.CompletionTable
 module QH = FStar.Interactive.QueryHelper
+module RS = FStar.Interactive.ReplState
 
+(***********************)
+(* Global state setup *)
+(***********************)
 let initial_range =
   Range.mk_range "<input>" (Range.mk_pos 1 0) (Range.mk_pos 1 0)
 
@@ -122,6 +126,10 @@ type push_query =
 
 type lookup_symbol_range = json
 
+type query_status = | QueryOK | QueryNOK | QueryViolatesProtocol
+
+type callback_t = RS.repl_state -> (query_status * list json) * either RS.repl_state int
+
 type query' =
 | Exit
 | DescribeProtocol
@@ -137,6 +145,7 @@ type query' =
 | GenericError of string
 | ProtocolViolation of string
 | FullBuffer of string & bool //if true, check the buffer, otherwise just find verified prefix
+| Callback of callback_t
 and query = { qq: query'; qid: string }
 
 let push_query_to_string pq =
@@ -173,13 +182,13 @@ let query_to_string q = match q.qq with
 | GenericError _ -> "GenericError"
 | ProtocolViolation _ -> "ProtocolViolation"
 | FullBuffer _ -> "FullBuffer"
-
+| Callback _ -> "Callback"
 
 
 let query_needs_current_module = function
   | Exit | DescribeProtocol | DescribeRepl | Segment _
   | Pop | Push { push_peek_only = false } | VfsAdd _
-  | GenericError _ | ProtocolViolation _ | FullBuffer _ -> false
+  | GenericError _ | ProtocolViolation _ | FullBuffer _ | Callback _ -> false
   | Push _ | AutoComplete _ | Lookup _ | Compute _ | Search _ -> true
 
 let interactive_protocol_vernum = 2
@@ -191,9 +200,6 @@ let interactive_protocol_features =
    "lookup"; "lookup/context"; "lookup/documentation"; "lookup/definition";
    "peek"; "pop"; "push"; "search"; "segment";
    "vfs-add"; "tactic-ranges"; "interrupt"; "progress"; "full-buffer"]
-
-type query_status = | QueryOK | QueryNOK | QueryViolatesProtocol
-
 
 let json_of_issue_level i =
   JsonStr (match i with
