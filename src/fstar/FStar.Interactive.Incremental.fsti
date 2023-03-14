@@ -28,6 +28,7 @@ open FStar.Interactive.Ide.Types
 type fragment_progress =
    | FragmentStarted of decl
    | FragmentSuccess of decl
+   | FragmentFailed of decl
    | FragmentError of list issue
 
 (* Translates a full-buffer(qid, code) query by

@@ -558,6 +558,9 @@ let write_full_buffer_fragment_progress (di:Incremental.fragment_progress) =
     | FragmentSuccess d ->
       write_progress (Some "full-buffer-fragment-ok")
                      ["ranges", json_of_def_range d.FStar.Parser.AST.drange]
+    | FragmentFailed d ->
+      write_progress (Some "full-buffer-fragment-failed")
+                     ["ranges", json_of_def_range d.FStar.Parser.AST.drange]
     | FragmentError issues ->
       let qid =
         match !repl_current_qid with
@@ -607,8 +610,10 @@ let run_push_without_deps st query
   in
   let _ = 
     match code_or_decl with
-    | Inr d when not has_error ->
-      write_full_buffer_fragment_progress (Incremental.FragmentSuccess d)
+    | Inr d ->
+      if not has_error
+      then write_full_buffer_fragment_progress (Incremental.FragmentSuccess d)
+      else write_full_buffer_fragment_progress (Incremental.FragmentFailed d)
     | _ -> ()
   in
   let json_errors = JsonList (errs |> List.map json_of_issue) in

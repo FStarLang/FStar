@@ -1260,6 +1260,16 @@ let (write_full_buffer_fragment_progress :
           [uu___1] in
         write_progress
           (FStar_Pervasives_Native.Some "full-buffer-fragment-ok") uu___
+    | FStar_Interactive_Incremental.FragmentFailed d ->
+        let uu___ =
+          let uu___1 =
+            let uu___2 =
+              FStar_Compiler_Range.json_of_def_range
+                d.FStar_Parser_AST.drange in
+            ("ranges", uu___2) in
+          [uu___1] in
+        write_progress
+          (FStar_Pervasives_Native.Some "full-buffer-fragment-failed") uu___
     | FStar_Interactive_Incremental.FragmentError issues ->
         let qid =
           let uu___ = FStar_Compiler_Effect.op_Bang repl_current_qid in
@@ -1447,10 +1457,14 @@ let (run_push_without_deps :
                        | FStar_Errors.ENotImplemented -> true
                        | uu___3 -> false) errs in
                 ((match code_or_decl with
-                  | FStar_Pervasives.Inr d when Prims.op_Negation has_error
-                      ->
-                      write_full_buffer_fragment_progress
-                        (FStar_Interactive_Incremental.FragmentSuccess d)
+                  | FStar_Pervasives.Inr d ->
+                      if Prims.op_Negation has_error
+                      then
+                        write_full_buffer_fragment_progress
+                          (FStar_Interactive_Incremental.FragmentSuccess d)
+                      else
+                        write_full_buffer_fragment_progress
+                          (FStar_Interactive_Incremental.FragmentFailed d)
                   | uu___4 -> ());
                  (let json_errors =
                     let uu___4 =

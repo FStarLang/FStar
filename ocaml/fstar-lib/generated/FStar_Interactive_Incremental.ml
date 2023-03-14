@@ -2,6 +2,7 @@ open Prims
 type fragment_progress =
   | FragmentStarted of FStar_Parser_AST.decl 
   | FragmentSuccess of FStar_Parser_AST.decl 
+  | FragmentFailed of FStar_Parser_AST.decl 
   | FragmentError of FStar_Errors.issue Prims.list 
 let (uu___is_FragmentStarted : fragment_progress -> Prims.bool) =
   fun projectee ->
@@ -15,6 +16,12 @@ let (uu___is_FragmentSuccess : fragment_progress -> Prims.bool) =
 let (__proj__FragmentSuccess__item___0 :
   fragment_progress -> FStar_Parser_AST.decl) =
   fun projectee -> match projectee with | FragmentSuccess _0 -> _0
+let (uu___is_FragmentFailed : fragment_progress -> Prims.bool) =
+  fun projectee ->
+    match projectee with | FragmentFailed _0 -> true | uu___ -> false
+let (__proj__FragmentFailed__item___0 :
+  fragment_progress -> FStar_Parser_AST.decl) =
+  fun projectee -> match projectee with | FragmentFailed _0 -> _0
 let (uu___is_FragmentError : fragment_progress -> Prims.bool) =
   fun projectee ->
     match projectee with | FragmentError _0 -> true | uu___ -> false
