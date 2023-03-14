@@ -2,33 +2,31 @@ include ../../Makefile.include
 
 include $(FSTAR_ULIB)/ml/Makefile.include
 
-all: ParametricST.cmp InformativeIndices.errcmp
+all: ../HoareST.cmp ParametricST.cmp InformativeIndices.errcmp
 
-accept: ParametricST.accept InformativeIndices.erraccept
+accept: ../HoareST.accept ParametricST.accept InformativeIndices.erraccept
 
 FSTAR_ARGS=$(FSTAR_DEFAULT_ARGS) --odir out --codegen OCaml --warn_error -333-330
 
-%.gen: %.fst
-	$(FSTAR) $(FSTAR_ARGS) --extract $* $<
-	$(OCAMLOPT) out/$*.ml -o out/$*.exe
-	./out/$*.exe >out/$*.out 2>&1
-
-%.errgen: %.fst
-	-$(FSTAR) $(FSTAR_ARGS) --extract $* $< > out/$*.err 2>&1
-
-%.errcmp: %.errgen
-	diff -u --strip-trailing-cr $*.expected out/$*.err
+%.gen: %.fst out
+	$(FSTAR) $(FSTAR_ARGS) --extract $(*F) $<
+	$(OCAMLOPT) out/$(*F).ml -o out/$(*F).exe
+	./out/$(*F).exe >out/$(*F).out 2>&1
 
 %.cmp: %.gen
-	diff -u --strip-trailing-cr $*.expected out/$*.out
+	diff -u --strip-trailing-cr $(*F).expected out/$(*F).out
 
 %.accept: %.gen
-	cp out/$*.out $*.expected
+	cp out/$(*F).out $(*F).expected
+
+%.errgen: %.fst out
+	-$(FSTAR) $(FSTAR_ARGS) --extract $(*F) $< >out/$(*F).err 2>&1
+
+%.errcmp: %.errgen
+	diff -u --strip-trailing-cr $(*F).expected out/$(*F).err
 
 %.erraccept: %.errgen
-	cp out/$*.err $*.expected
-
-parametricst: out ParametricST.cmp
+	cp out/$(*F).err $(*F).expected
 
 out:
 	mkdir -p out
