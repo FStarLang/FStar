@@ -244,7 +244,7 @@ function fstar_default_build () {
     # .gitignore.
     echo "Searching for a diff in ocaml/*/generated"
     if ! git diff --exit-code ocaml/*/generated ; then
-        echo "GIT DIFF: the files in the list above have a git diff"
+        echo " *** GIT DIFF: the files in the list above have a git diff"
         echo false >$status_file
     fi
 
