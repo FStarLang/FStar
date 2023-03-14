@@ -486,7 +486,7 @@ type effect_signature =
   | WP_eff_sig of tscheme
 
 type eff_extraction_mode =
-  | Extract_none
+  | Extract_none of string
   | Extract_reify
   | Extract_primitive
 
