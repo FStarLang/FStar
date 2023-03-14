@@ -146,6 +146,7 @@ type query' =
 | ProtocolViolation of string
 | FullBuffer of string & bool //if true, check the buffer, otherwise just find verified prefix
 | Callback of callback_t
+| Format of string
 and query = { qq: query'; qid: string }
 
 let push_query_to_string pq =
@@ -183,12 +184,12 @@ let query_to_string q = match q.qq with
 | ProtocolViolation _ -> "ProtocolViolation"
 | FullBuffer _ -> "FullBuffer"
 | Callback _ -> "Callback"
-
+| Format _ -> "Format"
 
 let query_needs_current_module = function
   | Exit | DescribeProtocol | DescribeRepl | Segment _
   | Pop | Push { push_peek_only = false } | VfsAdd _
-  | GenericError _ | ProtocolViolation _ | FullBuffer _ | Callback _ -> false
+  | GenericError _ | ProtocolViolation _ | FullBuffer _ | Callback _ | Format _ -> false
   | Push _ | AutoComplete _ | Lookup _ | Compute _ | Search _ -> true
 
 let interactive_protocol_vernum = 2
@@ -199,7 +200,8 @@ let interactive_protocol_features =
    "describe-protocol"; "describe-repl"; "exit";
    "lookup"; "lookup/context"; "lookup/documentation"; "lookup/definition";
    "peek"; "pop"; "push"; "search"; "segment";
-   "vfs-add"; "tactic-ranges"; "interrupt"; "progress"; "full-buffer"]
+   "vfs-add"; "tactic-ranges"; "interrupt"; "progress";
+   "full-buffer"; "format"]
 
 let json_of_issue_level i =
   JsonStr (match i with

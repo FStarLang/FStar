@@ -47,3 +47,7 @@ val run_full_buffer (st:repl_state)
                     (full:bool)
                     (write_full_buffer_fragment_progress: fragment_progress -> unit)
   : list query
+
+val format_code (st:repl_state)
+                (code:string)
+  : either string (list issue)

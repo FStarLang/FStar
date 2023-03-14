@@ -177,32 +177,38 @@ let inspect_repl_stack (s:repl_stack_t)
       in
       matching_prefix entries ds 
       
+let parse_code (code:string) =
+    P.parse (Incremental { 
+                         frag_fname = Range.file_of_range initial_range;
+                         frag_text = code;
+                         frag_line = Range.line_of_pos (Range.start_of_range initial_range);
+                         frag_col = Range.col_of_pos (Range.start_of_range initial_range);
+                })
+    
+
+let syntax_issue (raw_error, msg, range) =
+    let _, _, num = FStar.Errors.lookup raw_error in
+    let issue = { 
+        issue_msg = msg;
+        issue_level = EError;
+        issue_range = Some range;
+        issue_number = Some num;
+        issue_ctx = []
+    } in
+    issue
+
 let run_full_buffer (st:repl_state)
                     (qid:string)
                     (code:string)
                     (full:bool)
                     (write_full_buffer_fragment_progress: fragment_progress -> unit)
   : list query
-  = let parse_result = 
-        P.parse (Incremental { 
-                         frag_fname = Range.file_of_range initial_range;
-                         frag_text = code;
-                         frag_line = Range.line_of_pos (Range.start_of_range initial_range);
-                         frag_col = Range.col_of_pos (Range.start_of_range initial_range);
-                })
-    in
+  = let parse_result = parse_code code in
     let log_syntax_issues err =
       match err with
       | None -> ()
-      | Some (raw_error, msg, range) ->
-        let _, _, num = FStar.Errors.lookup raw_error in
-        let issue = { 
-            issue_msg = msg;
-            issue_level = EError;
-            issue_range = Some range;
-            issue_number = Some num;
-            issue_ctx = []
-        } in
+      | Some err ->
+        let issue = syntax_issue err in
         write_full_buffer_fragment_progress (FragmentError [issue])
     in
     let qs = 
@@ -226,3 +232,24 @@ let run_full_buffer (st:repl_state)
         failwith "Unexpected parse result"
     in
     qs
+
+let format_code (st:repl_state) (code:string)
+  = let parse_result = parse_code code in
+    match parse_result with
+    | IncrementalFragment (decls, _, None) ->
+      let doc_to_string doc =
+          FStar.Pprint.pretty_string (float_of_string "1.0") 100 doc
+      in
+      let formatted_code =
+        List.map 
+          (fun d -> doc_to_string (FStar.Parser.ToDocument.decl_to_document d))
+          decls
+        |> String.concat "\n\n"
+      in
+      Inl formatted_code
+    | IncrementalFragment (_, _, Some err) ->
+      Inr [syntax_issue err]
+    | ParseError err ->
+      Inr [syntax_issue err]
+    | _ ->
+      failwith "Unexpected parse result"

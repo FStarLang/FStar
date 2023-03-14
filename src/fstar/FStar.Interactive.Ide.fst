@@ -246,6 +246,7 @@ let unpack_interactive_query json =
            | "search" -> Search (arg "terms" |> js_str)
            | "vfs-add" -> VfsAdd (try_arg "filename" |> Util.map_option js_str,
                                  arg "contents" |> js_str)
+           | "format" -> Format (arg "code" |> js_str)
            | _ -> ProtocolViolation (Util.format1 "Unknown query '%s'" query) }
   with
   | InvalidQuery msg -> { qid = qid; qq = ProtocolViolation msg }
@@ -909,6 +910,16 @@ let run_search st search_str =
     with InvalidSearch s -> (QueryNOK, JsonStr s) in
   (results, Inl st)
 
+let run_format_code st code =
+  let code_or_err = FStar.Interactive.Incremental.format_code st code in
+  match code_or_err with
+  | Inl code -> 
+    let result = JsonAssoc ["formatted-code", JsonStr code] in 
+    (QueryOK, result), Inl st
+  | Inr issue ->
+    let result = JsonAssoc ["formatted-code-issue", JsonList (List.map json_of_issue issue)] in 
+    (QueryNOK, result), Inl st
+
 let as_json_list (q: (query_status & json) & either repl_state int)
   : (query_status & list json) & either repl_state int
   = let (q, j), s = q in
@@ -968,6 +979,8 @@ let rec run_query st (q: query) : (query_status * list json) * either repl_state
     as_json_list (run_search st term)
   | Callback f ->
     f st
+  | Format code ->
+    as_json_list (run_format_code st code)
 and validate_and_run_query st query =
   let query = validate_query st query in
   repl_current_qid := Some query.qid;

@@ -172,6 +172,7 @@ type query' =
   | ProtocolViolation of Prims.string 
   | FullBuffer of (Prims.string * Prims.bool) 
   | Callback of callback_t 
+  | Format of Prims.string 
 and query = {
   qq: query' ;
   qid: Prims.string }
@@ -243,6 +244,10 @@ let (uu___is_Callback : query' -> Prims.bool) =
     match projectee with | Callback _0 -> true | uu___ -> false
 let (__proj__Callback__item___0 : query' -> callback_t) =
   fun projectee -> match projectee with | Callback _0 -> _0
+let (uu___is_Format : query' -> Prims.bool) =
+  fun projectee -> match projectee with | Format _0 -> true | uu___ -> false
+let (__proj__Format__item___0 : query' -> Prims.string) =
+  fun projectee -> match projectee with | Format _0 -> _0
 let (__proj__Mkquery__item__qq : query -> query') =
   fun projectee -> match projectee with | { qq; qid;_} -> qq
 let (__proj__Mkquery__item__qid : query -> Prims.string) =
@@ -293,6 +298,7 @@ let (query_to_string : query -> Prims.string) =
     | ProtocolViolation uu___ -> "ProtocolViolation"
     | FullBuffer uu___ -> "FullBuffer"
     | Callback uu___ -> "Callback"
+    | Format uu___ -> "Format"
 let (query_needs_current_module : query' -> Prims.bool) =
   fun uu___ ->
     match uu___ with
@@ -310,6 +316,7 @@ let (query_needs_current_module : query' -> Prims.bool) =
     | ProtocolViolation uu___1 -> false
     | FullBuffer uu___1 -> false
     | Callback uu___1 -> false
+    | Format uu___1 -> false
     | Push uu___1 -> true
     | AutoComplete uu___1 -> true
     | Lookup uu___1 -> true
@@ -338,7 +345,8 @@ let (interactive_protocol_features : Prims.string Prims.list) =
   "tactic-ranges";
   "interrupt";
   "progress";
-  "full-buffer"]
+  "full-buffer";
+  "format"]
 let (json_of_issue_level :
   FStar_Errors.issue_level -> FStar_Compiler_Util.json) =
   fun i ->

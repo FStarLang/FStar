@@ -490,6 +490,12 @@ let (unpack_interactive_query :
                          FStar_Interactive_JsonHelper.js_str in
                      (uu___3, uu___4) in
                    FStar_Interactive_Ide_Types.VfsAdd uu___2
+               | "format" ->
+                   let uu___2 =
+                     let uu___3 = arg "code" in
+                     FStar_Compiler_Effect.op_Bar_Greater uu___3
+                       FStar_Interactive_JsonHelper.js_str in
+                   FStar_Interactive_Ide_Types.Format uu___2
                | uu___2 ->
                    let uu___3 =
                      FStar_Compiler_Util.format1 "Unknown query '%s'" query in
@@ -2293,6 +2299,39 @@ let run_search :
             (FStar_Interactive_Ide_Types.QueryNOK,
               (FStar_Compiler_Util.JsonStr s)) in
       (results, (FStar_Pervasives.Inl st))
+let run_format_code :
+  'uuuuu .
+    FStar_Interactive_ReplState.repl_state ->
+      Prims.string ->
+        ((FStar_Interactive_Ide_Types.query_status *
+          FStar_Compiler_Util.json) *
+          (FStar_Interactive_ReplState.repl_state, 'uuuuu)
+          FStar_Pervasives.either)
+  =
+  fun st ->
+    fun code ->
+      let code_or_err = FStar_Interactive_Incremental.format_code st code in
+      match code_or_err with
+      | FStar_Pervasives.Inl code1 ->
+          let result =
+            FStar_Compiler_Util.JsonAssoc
+              [("formatted-code", (FStar_Compiler_Util.JsonStr code1))] in
+          ((FStar_Interactive_Ide_Types.QueryOK, result),
+            (FStar_Pervasives.Inl st))
+      | FStar_Pervasives.Inr issue ->
+          let result =
+            let uu___ =
+              let uu___1 =
+                let uu___2 =
+                  let uu___3 =
+                    FStar_Compiler_List.map
+                      FStar_Interactive_Ide_Types.json_of_issue issue in
+                  FStar_Compiler_Util.JsonList uu___3 in
+                ("formatted-code-issue", uu___2) in
+              [uu___1] in
+            FStar_Compiler_Util.JsonAssoc uu___ in
+          ((FStar_Interactive_Ide_Types.QueryNOK, result),
+            (FStar_Pervasives.Inl st))
 let (as_json_list :
   ((FStar_Interactive_Ide_Types.query_status * FStar_Compiler_Util.json) *
     (FStar_Interactive_ReplState.repl_state, Prims.int)
@@ -2414,6 +2453,8 @@ let rec (run_query :
       | FStar_Interactive_Ide_Types.Search term ->
           let uu___ = run_search st term in as_json_list uu___
       | FStar_Interactive_Ide_Types.Callback f -> f st
+      | FStar_Interactive_Ide_Types.Format code ->
+          let uu___ = run_format_code st code in as_json_list uu___
 and (validate_and_run_query :
   FStar_Interactive_ReplState.repl_state ->
     FStar_Interactive_Ide_Types.query -> run_query_result)

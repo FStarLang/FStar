@@ -215,6 +215,52 @@ let (inspect_repl_stack :
                   let uu___1 = pop_entries es in
                   op_let_Bang uu___1 (fun pops -> return pops) in
             matching_prefix entries1 ds
+let (parse_code : Prims.string -> FStar_Parser_ParseIt.parse_result) =
+  fun code ->
+    let uu___ =
+      let uu___1 =
+        let uu___2 =
+          FStar_Compiler_Range.file_of_range
+            FStar_Interactive_Ide_Types.initial_range in
+        let uu___3 =
+          let uu___4 =
+            FStar_Compiler_Range.start_of_range
+              FStar_Interactive_Ide_Types.initial_range in
+          FStar_Compiler_Range.line_of_pos uu___4 in
+        let uu___4 =
+          let uu___5 =
+            FStar_Compiler_Range.start_of_range
+              FStar_Interactive_Ide_Types.initial_range in
+          FStar_Compiler_Range.col_of_pos uu___5 in
+        {
+          FStar_Parser_ParseIt.frag_fname = uu___2;
+          FStar_Parser_ParseIt.frag_text = code;
+          FStar_Parser_ParseIt.frag_line = uu___3;
+          FStar_Parser_ParseIt.frag_col = uu___4
+        } in
+      FStar_Parser_ParseIt.Incremental uu___1 in
+    FStar_Parser_ParseIt.parse uu___
+let (syntax_issue :
+  (FStar_Errors_Codes.raw_error * Prims.string * FStar_Compiler_Range.range)
+    -> FStar_Errors.issue)
+  =
+  fun uu___ ->
+    match uu___ with
+    | (raw_error, msg, range) ->
+        let uu___1 = FStar_Errors.lookup raw_error in
+        (match uu___1 with
+         | (uu___2, uu___3, num) ->
+             let issue =
+               {
+                 FStar_Errors.issue_msg = msg;
+                 FStar_Errors.issue_level = FStar_Errors.EError;
+                 FStar_Errors.issue_range =
+                   (FStar_Pervasives_Native.Some range);
+                 FStar_Errors.issue_number =
+                   (FStar_Pervasives_Native.Some num);
+                 FStar_Errors.issue_ctx = []
+               } in
+             issue)
 let (run_full_buffer :
   FStar_Interactive_ReplState.repl_state ->
     Prims.string ->
@@ -228,49 +274,13 @@ let (run_full_buffer :
       fun code ->
         fun full ->
           fun write_full_buffer_fragment_progress ->
-            let parse_result =
-              let uu___ =
-                let uu___1 =
-                  let uu___2 =
-                    FStar_Compiler_Range.file_of_range
-                      FStar_Interactive_Ide_Types.initial_range in
-                  let uu___3 =
-                    let uu___4 =
-                      FStar_Compiler_Range.start_of_range
-                        FStar_Interactive_Ide_Types.initial_range in
-                    FStar_Compiler_Range.line_of_pos uu___4 in
-                  let uu___4 =
-                    let uu___5 =
-                      FStar_Compiler_Range.start_of_range
-                        FStar_Interactive_Ide_Types.initial_range in
-                    FStar_Compiler_Range.col_of_pos uu___5 in
-                  {
-                    FStar_Parser_ParseIt.frag_fname = uu___2;
-                    FStar_Parser_ParseIt.frag_text = code;
-                    FStar_Parser_ParseIt.frag_line = uu___3;
-                    FStar_Parser_ParseIt.frag_col = uu___4
-                  } in
-                FStar_Parser_ParseIt.Incremental uu___1 in
-              FStar_Parser_ParseIt.parse uu___ in
+            let parse_result = parse_code code in
             let log_syntax_issues err =
               match err with
               | FStar_Pervasives_Native.None -> ()
-              | FStar_Pervasives_Native.Some (raw_error, msg, range) ->
-                  let uu___ = FStar_Errors.lookup raw_error in
-                  (match uu___ with
-                   | (uu___1, uu___2, num) ->
-                       let issue =
-                         {
-                           FStar_Errors.issue_msg = msg;
-                           FStar_Errors.issue_level = FStar_Errors.EError;
-                           FStar_Errors.issue_range =
-                             (FStar_Pervasives_Native.Some range);
-                           FStar_Errors.issue_number =
-                             (FStar_Pervasives_Native.Some num);
-                           FStar_Errors.issue_ctx = []
-                         } in
-                       write_full_buffer_fragment_progress
-                         (FragmentError [issue])) in
+              | FStar_Pervasives_Native.Some err1 ->
+                  let issue = syntax_issue err1 in
+                  write_full_buffer_fragment_progress (FragmentError [issue]) in
             let qs =
               match parse_result with
               | FStar_Parser_ParseIt.IncrementalFragment
@@ -304,3 +314,35 @@ let (run_full_buffer :
                    [])
               | uu___ -> failwith "Unexpected parse result" in
             qs
+let (format_code :
+  FStar_Interactive_ReplState.repl_state ->
+    Prims.string ->
+      (Prims.string, FStar_Errors.issue Prims.list) FStar_Pervasives.either)
+  =
+  fun st ->
+    fun code ->
+      let parse_result = parse_code code in
+      match parse_result with
+      | FStar_Parser_ParseIt.IncrementalFragment
+          (decls, uu___, FStar_Pervasives_Native.None) ->
+          let doc_to_string doc =
+            FStar_Pprint.pretty_string
+              (FStar_Compiler_Util.float_of_string "1.0")
+              (Prims.of_int (100)) doc in
+          let formatted_code =
+            let uu___1 =
+              FStar_Compiler_List.map
+                (fun d ->
+                   let uu___2 = FStar_Parser_ToDocument.decl_to_document d in
+                   doc_to_string uu___2) decls in
+            FStar_Compiler_Effect.op_Bar_Greater uu___1
+              (FStar_String.concat "\n\n") in
+          FStar_Pervasives.Inl formatted_code
+      | FStar_Parser_ParseIt.IncrementalFragment
+          (uu___, uu___1, FStar_Pervasives_Native.Some err) ->
+          let uu___2 = let uu___3 = syntax_issue err in [uu___3] in
+          FStar_Pervasives.Inr uu___2
+      | FStar_Parser_ParseIt.ParseError err ->
+          let uu___ = let uu___1 = syntax_issue err in [uu___1] in
+          FStar_Pervasives.Inr uu___
+      | uu___ -> failwith "Unexpected parse result"
