@@ -1326,8 +1326,8 @@ let rec (interp_pattern_aux :
                                                                     "FStar.Tactics.PatternMatching.fst"
                                                                     (Prims.of_int (312))
                                                                     (Prims.of_int (6))
-                                                                    (Prims.of_int (312))
-                                                                    (Prims.of_int (63)))
+                                                                    (Prims.of_int (314))
+                                                                    (Prims.of_int (21)))
                                                                     (Obj.magic
                                                                     (interp_pattern_aux
                                                                     p_hd
@@ -1354,8 +1354,8 @@ let rec (interp_pattern_aux :
                                                                     "FStar.Tactics.PatternMatching.fst"
                                                                     (Prims.of_int (313))
                                                                     (Prims.of_int (6))
-                                                                    (Prims.of_int (313))
-                                                                    (Prims.of_int (61)))
+                                                                    (Prims.of_int (314))
+                                                                    (Prims.of_int (21)))
                                                                     (Obj.magic
                                                                     (interp_pattern_aux
                                                                     p_arg
@@ -1439,8 +1439,8 @@ let (interp_pattern :
            (Prims.of_int (329)) (Prims.of_int (24)) (Prims.of_int (329))
            (Prims.of_int (52)))
         (Prims.mk_range "FStar.Tactics.PatternMatching.fst"
-           (Prims.of_int (329)) (Prims.of_int (4)) (Prims.of_int (329))
-           (Prims.of_int (55))) (Obj.magic (interp_pattern_aux pat [] tm))
+           (Prims.of_int (329)) (Prims.of_int (4)) (Prims.of_int (330))
+           (Prims.of_int (43))) (Obj.magic (interp_pattern_aux pat [] tm))
         (fun uu___ ->
            (fun uu___ ->
               Obj.magic
@@ -1966,7 +1966,7 @@ let rec (pattern_of_term_ex :
                            (Prims.of_int (517)) (Prims.of_int (37)))
                         (Prims.mk_range "FStar.Tactics.PatternMatching.fst"
                            (Prims.of_int (517)) (Prims.of_int (5))
-                           (Prims.of_int (517)) (Prims.of_int (40)))
+                           (Prims.of_int (519)) (Prims.of_int (28)))
                         (Obj.magic (pattern_of_term_ex f))
                         (fun uu___2 ->
                            (fun uu___2 ->
@@ -1984,8 +1984,8 @@ let rec (pattern_of_term_ex :
                                            "FStar.Tactics.PatternMatching.fst"
                                            (Prims.of_int (518))
                                            (Prims.of_int (5))
-                                           (Prims.of_int (518))
-                                           (Prims.of_int (40)))
+                                           (Prims.of_int (519))
+                                           (Prims.of_int (28)))
                                         (Obj.magic (pattern_of_term_ex x))
                                         (fun uu___3 ->
                                            (fun uu___3 ->
