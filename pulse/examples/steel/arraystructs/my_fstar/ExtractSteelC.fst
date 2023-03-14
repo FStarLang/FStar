@@ -92,8 +92,8 @@ let _ = register_translate_type_without_decay begin fun env t ->
       TQualified (must (lident_of_typestring tag))
 
   | MLTY_Named ([tag; _; _; _], p) when
-    BU.starts_with (Syntax.string_of_mlpath p) "Steel.ST.C.Types.struct_t0"
-    || BU.starts_with (Syntax.string_of_mlpath p) "Steel.ST.C.Types.union_t0"
+    BU.starts_with (Syntax.string_of_mlpath p) "Steel.ST.C.Types.Struct.struct_t0"
+    || BU.starts_with (Syntax.string_of_mlpath p) "Steel.ST.C.Types.Union.union_t0"
     ->
       TQualified (must (lident_of_typestring tag))
 
@@ -108,19 +108,19 @@ let _ = register_translate_type_without_decay begin fun env t ->
       TBuf (translate_type_without_decay env arg)
 
   | MLTY_Named ([arg; _], p) when
-    Syntax.string_of_mlpath p = "Steel.ST.C.Types.ptr"
-    || Syntax.string_of_mlpath p = "Steel.ST.C.Types.array_ref"
+    Syntax.string_of_mlpath p = "Steel.ST.C.Types.Base.ptr"
+    || Syntax.string_of_mlpath p = "Steel.ST.C.Types.Array.array_ref"
     ->
       TBuf (translate_type_without_decay env arg)
 
   | MLTY_Named ([arg], p) when
-    Syntax.string_of_mlpath p = "Steel.ST.C.Types.scalar_t"
+    Syntax.string_of_mlpath p = "Steel.ST.C.Types.Scalar.scalar_t"
     ->
       translate_type_without_decay env arg
 
   | MLTY_Named ([t; n; s], p)
     when Syntax.string_of_mlpath p = "Steel.C.Array.Base.array_view_type_sized"
-     || Syntax.string_of_mlpath p = "Steel.ST.C.Types.base_array_t"
+     || Syntax.string_of_mlpath p = "Steel.ST.C.Types.Array.base_array_t"
     ->
       TArray (
         translate_type_without_decay env t,
@@ -138,7 +138,7 @@ let _ = register_translate_type begin fun env t ->
   match t with
   | MLTY_Named ([t; _; _], p)
     when Syntax.string_of_mlpath p = "Steel.C.Array.Base.array_view_type_sized"
-     || Syntax.string_of_mlpath p = "Steel.ST.C.Types.base_array_t"
+     || Syntax.string_of_mlpath p = "Steel.ST.C.Types.Array.base_array_t"
     ->
       TBuf (translate_type_without_decay env t)
       
@@ -154,7 +154,7 @@ let _ = register_translate_expr begin fun env e ->
   match e.expr with
   | MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, _) }, [ _ (* typedef *) ])
     when (
-          string_of_mlpath p = "Steel.ST.C.Types.alloc" ||
+          string_of_mlpath p = "Steel.ST.C.Types.Base.alloc" ||
           false) ->
       EBufCreateNoInit (ManuallyManaged, EConstant (UInt32, "1"))
 
@@ -182,7 +182,7 @@ let _ = register_translate_expr begin fun env e ->
       EBufFree (translate_expr env e2)
 
   | MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, _) }, [ _ (* typedef *); _ (* v *); e ]) when
-       string_of_mlpath p = "Steel.ST.C.Types.free" ->
+       string_of_mlpath p = "Steel.ST.C.Types.Base.free" ->
       EBufFree (translate_expr env e)
 
 (* BEGIN support for the Steel null pointer. *)
@@ -196,7 +196,7 @@ let _ = register_translate_expr begin fun env e ->
     -> generate_is_null (translate_type env t) (translate_expr env e)
 
   | MLE_App ({expr=MLE_TApp ({expr=MLE_Name p}, [t])}, [_ (* opened *); _ (* td *); _ (* v *); e])
-    when string_of_mlpath p = "Steel.ST.C.Types.is_null"
+    when string_of_mlpath p = "Steel.ST.C.Types.Base.is_null"
     -> generate_is_null (translate_type env t) (translate_expr env e)
   
   | MLE_App ({expr=MLE_TApp ({expr=MLE_Name p}, [t])}, _)
@@ -205,7 +205,7 @@ let _ = register_translate_expr begin fun env e ->
 
   | MLE_App ({expr=MLE_TApp ({expr=MLE_Name p}, t::_)}, [_ (* pcm *)])
     when string_of_mlpath p = "Steel.C.Reference.null"
-    || string_of_mlpath p = "Steel.ST.C.Types.null"
+    || string_of_mlpath p = "Steel.ST.C.Types.Base.null"
     -> EBufNull (translate_type env t)
 
 (* END support for the Steel null pointer *)
@@ -237,9 +237,9 @@ let _ = register_translate_expr begin fun env e ->
                ; ({expr=MLE_Const (MLC_String field_name)})
                ; _ (* td' *)
              ])
-    when string_of_mlpath p = "Steel.ST.C.Types.struct_field0"
-    || string_of_mlpath p = "Steel.ST.C.Types.union_field0"
-    || string_of_mlpath p = "Steel.ST.C.Types.union_switch_field0"
+    when string_of_mlpath p = "Steel.ST.C.Types.Struct.struct_field0"
+    || string_of_mlpath p = "Steel.ST.C.Types.Union.union_field0"
+    || string_of_mlpath p = "Steel.ST.C.Types.Union.union_switch_field0"
     ->
       EAddrOf (EField (
         TQualified (must (lident_of_string struct_name)),
@@ -275,11 +275,11 @@ let _ = register_translate_expr begin fun env e ->
         translate_expr env x)
 
   | MLE_App ({expr=MLE_TApp ({expr=MLE_Name p}, _)}, [_ (* value *) ; _ (* perm *) ; r])
-    when string_of_mlpath p = "Steel.ST.C.Types.read0" ->
+    when string_of_mlpath p = "Steel.ST.C.Types.Scalar.read0" ->
       EBufRead (translate_expr env r, EQualified (["C"], "_zero_for_deref"))
 
   | MLE_App ({expr=MLE_TApp ({expr=MLE_Name p}, _)}, [_ (* value *); r; x])
-    when string_of_mlpath p = "Steel.ST.C.Types.write" ->
+    when string_of_mlpath p = "Steel.ST.C.Types.Scalar.write" ->
       EAssign (
         EBufRead (translate_expr env r, EQualified (["C"], "_zero_for_deref")),
         translate_expr env x)
@@ -291,7 +291,7 @@ let _ = register_translate_expr begin fun env e ->
       _ (* v *);
       r
     ])
-    when string_of_mlpath p = "Steel.ST.C.Types.array_ref_of_base" ->
+    when string_of_mlpath p = "Steel.ST.C.Types.Array.array_ref_of_base" ->
       // this is not a true read, this is how Karamel models arrays decaying into pointers
       EBufRead (translate_expr env r, EQualified (["C"], "_zero_for_deref"))
 
@@ -302,8 +302,8 @@ let _ = register_translate_expr begin fun env e ->
       _ (* len *);
       i
     ])
-    when string_of_mlpath p = "Steel.ST.C.Types.array_ref_cell"
-    || string_of_mlpath p = "Steel.ST.C.Types.array_ref_split"
+    when string_of_mlpath p = "Steel.ST.C.Types.Array.array_ref_cell"
+    || string_of_mlpath p = "Steel.ST.C.Types.Array.array_ref_split"
     ->
       EBufSub (translate_expr env a, translate_expr env i)
 
@@ -339,12 +339,12 @@ let parse_steel_c_fields env (fields: mlty): option (list _) =
         match fields with
         | MLTY_Named ([], p)
           when Syntax.string_of_mlpath p = "Steel.C.Fields.c_fields_t_nil"
-          || Syntax.string_of_mlpath p = "Steel.ST.C.Types.field_t_nil"
+          || Syntax.string_of_mlpath p = "Steel.ST.C.Types.Fields.field_t_nil"
           -> Some []
           
         | MLTY_Named ([field; t; fields], p)
           when Syntax.string_of_mlpath p = "Steel.C.Fields.c_fields_t_cons"
-          || Syntax.string_of_mlpath p = "Steel.ST.C.Types.field_t_cons"
+          || Syntax.string_of_mlpath p = "Steel.ST.C.Types.Fields.field_t_cons"
           ->
           opt_bind (string_of_typestring field) (fun field ->
           if field = "" then go fields else
@@ -414,12 +414,12 @@ let _ = register_translate_type_decl begin fun env ty ->
       define_struct env tag fields
 
     | {tydecl_defn=Some (MLTD_Abbrev (MLTY_Named ([tag; fields; _; _], p)))}
-      when Syntax.string_of_mlpath p = "Steel.ST.C.Types.define_struct0"
+      when Syntax.string_of_mlpath p = "Steel.ST.C.Types.Struct.define_struct0"
       ->
       define_struct env tag fields
 
     | {tydecl_defn=Some (MLTD_Abbrev (MLTY_Named ([tag; fields; _; _], p)))}
-      when Syntax.string_of_mlpath p = "Steel.ST.C.Types.define_union0"
+      when Syntax.string_of_mlpath p = "Steel.ST.C.Types.Union.define_union0"
       ->
       define_union env tag fields
 
