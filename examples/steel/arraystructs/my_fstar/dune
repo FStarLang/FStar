@@ -1,0 +1,17 @@
+(executable
+ (name main)
+ (public_name fstar.exe)
+ (libraries
+    fstar.lib
+ )
+ (modules Main ExtractSteelC)
+ (link_flags "-linkall")
+ (modes (native exe))
+ (flags (:standard -w -A))
+)
+
+(rule
+  (target "ExtractSteelC.ml")
+  (deps "ExtractSteelC.fst" "ExtractSteelC.fsti" "Makefile")
+  (action (run make extract))
+)

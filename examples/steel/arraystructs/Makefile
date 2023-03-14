@@ -1,7 +1,10 @@
 all: world
 
 FSTAR_HOME ?= $(realpath $(dir $(shell which fstar.exe))/..)
-FSTAR_EXE = $(FSTAR_HOME)/bin/fstar.exe
+export FSTAR_HOME
+FSTAR_EXE = $(CURDIR)/my_fstar/bin/fstar.exe
+FSTAR_LIB ?= $(realpath $(FSTAR_HOME)/ulib)
+export FSTAR_LIB
 
 INCLUDE_PATH = $(FSTAR_HOME)/ulib/.cache $(FSTAR_HOME)/ulib/experimental $(KRML_HOME)/krmllib $(KRML_HOME)/krmllib/obj
 
@@ -31,13 +34,16 @@ SOME_LOWSTAR_FILES = $(FSTAR_HOME)/ulib/LowStar.Monotonic.Buffer.fst $(FSTAR_HOM
 
 comma=,
 
-.depend: $(ALL_SOURCE_FILES) Makefile
-	$(FSTAR) --dep full $(ALL_SOURCE_FILES) $(SOME_LOWSTAR_FILES) --extract 'krml:* $(addprefix -,$(NO_EXTRACT_MODULES))'  > $@.tmp
+.depend: $(ALL_SOURCE_FILES) Makefile $(FSTAR_EXE)
+	$(FSTAR) --dep full $(ALL_SOURCE_FILES) $(SOME_LOWSTAR_FILES) --extract 'krml:* -FStar $(addprefix -,$(NO_EXTRACT_MODULES))'  > $@.tmp
 	mv $@.tmp $@
 
 depend: .depend
 
 -include .depend
+
+$(FSTAR_EXE):
+	+$(MAKE) -C my_fstar
 
 $(ALL_CHECKED_FILES): %.checked:
 	$(FSTAR) $<
