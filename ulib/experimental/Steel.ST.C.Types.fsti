@@ -449,12 +449,28 @@ val struct_get_field_other
 : Lemma
   (requires (field' <> field))
   (ensures (struct_get_field (struct_set_field field v s) field' == struct_get_field s field'))
+
+let struct_get_field_pat
+  (#tn: Type0)
+  (#tf: Type0)
+  (#n: string)
+  (#fields: nonempty_field_description_t tf)
+  (s: struct_t0 tn n fields)
+  (field: field_t fields)
+  (v: fields.fd_type field)
+  (field': field_t fields)
+: Lemma
+  (struct_get_field (struct_set_field field v s) field' == (if field' = field then v else struct_get_field s field'))
   [SMTPat (struct_get_field (struct_set_field field v s) field')]
+= if field' = field
+  then ()
+  else struct_get_field_other s field v field'
 
 [@@noextract_to "krml"] // proof-only
 val struct0 (tn: Type0) (#tf: Type0) (n: string) (fields: nonempty_field_description_t tf) : Tot (typedef (struct_t0 tn n fields))
 
-[@@noextract_to "krml"] // proof-only
+inline_for_extraction
+[@@noextract_to "krml"; norm_field_attr] // proof-only
 let struct (#tf: Type0) (n: string) (#tn: Type0) (# [solve_mk_string_t ()] prf: squash (norm norm_typestring (mk_string_t n == tn))) (fields: nonempty_field_description_t tf) : Tot (typedef (struct_t0 tn n fields))
 = struct0 tn #tf n fields
 
@@ -624,6 +640,29 @@ val unstruct_field
     )
     (fun _ -> True)
 
+let unstruct_field_alt
+  (#opened: _)
+  (#tn: Type0)
+  (#tf: Type0)
+  (#n: string)
+  (#fields: nonempty_field_description_t tf)
+  (#v: Ghost.erased (struct_t0 tn n fields))
+  (r: ref (struct0 tn n fields))
+  (field: field_t fields)
+  (#v': Ghost.erased (fields.fd_type field))
+  (r': ref (fields.fd_typedef field))
+: STGhost (Ghost.erased (struct_t0 tn n fields)) opened
+    (has_struct_field r field r' `star` pts_to r v `star` pts_to r' v')
+    (fun s' -> has_struct_field r field r' `star` pts_to r s')
+    (
+      struct_get_field v field == unknown (fields.fd_typedef field)
+    )
+    (fun s' -> 
+      Ghost.reveal s' == struct_set_field field v' v
+    )
+= unstruct_field r field r';
+  _
+
 val fractionable_struct
   (#tn: Type0)
   (#tf: Type0)
@@ -745,7 +784,8 @@ val union_set_field_same
 [@@noextract_to "krml"] // proof-only
 val union0 (tn: Type0) (#tf: Type0) (n: string) (fields: field_description_t tf) : Tot (typedef (union_t0 tn n fields))
 
-[@@noextract_to "krml"] // proof-only
+inline_for_extraction
+[@@noextract_to "krml"; norm_field_attr] // proof-only
 let union (#tf: Type0) (n: string) (#tn: Type0) (# [solve_mk_string_t ()] prf: squash (norm norm_typestring (mk_string_t n == tn))) (fields: field_description_t tf) : Tot (typedef (union_t0 tn n fields))
 = union0 tn #tf n fields
 
@@ -1039,6 +1079,12 @@ inline_for_extraction [@@noextract_to "krml"] // MUST be syntactically equal to 
 let base_array_index_t (n: array_size_t) : Tot eqtype = (i: SZ.t { SZ.v i < SZ.v n })
 [@@noextract_to "krml"]
 val base_array0 (#t: Type0) (tn: Type0) (td: typedef t) (n: array_size_t) : Tot (typedef (base_array_t t tn n))
+
+inline_for_extraction
+[@@noextract_to "krml"] // proof-only
+let base_array (#t: Type0) (#tn: Type0) (td: typedef t) (n: nat {SZ.fits n /\ n > 0}) (# [solve_nat_t_of_nat ()] prf: squash (norm norm_typenat (nat_t_of_nat n == tn))) : Tot (typedef (base_array_t t tn (SZ.uint_to_t n)))
+= base_array0 tn td (SZ.uint_to_t n)
+
 val base_array_index (#t: Type0) (#tn: Type0) (#n: array_size_t) (a: base_array_t t tn n) (i: base_array_index_t n) : GTot t
 val base_array_eq (#t: Type0) (#tn: Type0) (#n: array_size_t) (a1 a2: base_array_t t tn n) : Ghost prop
   (requires True)
@@ -1213,6 +1259,13 @@ let array_len_t (#t: Type) (#td: typedef t) (r: array_ref td) : Tot Type0 =
 
 inline_for_extraction [@@noextract_to "krml"]
 let array (#t: Type) (td: typedef t) : Tot Type0 = (r: array_ref td & array_len_t r)
+
+let array_length
+  (#t: Type)
+  (#td: typedef t)
+  (a: array td)
+: GTot nat
+= SZ.v (dsnd a)
 
 val array_pts_to
   (#t: Type)
@@ -1789,3 +1842,14 @@ val mk_fraction_seq_join
 : STGhostT unit opened
   (array_pts_to r (mk_fraction_seq td v p1) `star` array_pts_to r (mk_fraction_seq td v p2))
   (fun _ -> array_pts_to r (mk_fraction_seq td v (p1 `P.sum_perm` p2)))
+
+let full_seq (#t: Type) (td: typedef t) (v: Seq.seq t) : GTot prop =
+  forall (i: nat { i < Seq.length v }) . {:pattern (Seq.index v i)} full td (Seq.index v i)
+
+let full_seq_seq_of_base_array
+  (#t: Type0) (tn: Type0) (td: typedef t) (#n: array_size_t)
+  (b: base_array_t t tn n)
+: Lemma
+  (ensures (full_seq td (seq_of_base_array b) <==> full (base_array0 tn td n) b))
+  [SMTPat (full_seq td (seq_of_base_array b))]
+= assert (forall (i: base_array_index_t n) . base_array_index b i == Seq.index (seq_of_base_array b) (SZ.v i))
