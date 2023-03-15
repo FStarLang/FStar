@@ -1,3 +1,3 @@
 module ExtractSteelC
 
-val register: unit -> FStar.Compiler.Effect.ML unit
+val main: unit -> FStar.Compiler.Effect.ML unit

@@ -380,7 +380,7 @@ exception NotSupportedByKrmlExtension
 
 let translate_type_without_decay_t = env -> mlty -> ML typ
 let ref_translate_type_without_decay : ref translate_type_without_decay_t = mk_ref (fun _ _ -> raise NotSupportedByKrmlExtension)
-let register_translate_type_without_decay
+let register_pre_translate_type_without_decay
   (f: translate_type_without_decay_t)
 : ML unit
 = let before : translate_type_without_decay_t = !ref_translate_type_without_decay in
@@ -390,13 +390,22 @@ let register_translate_type_without_decay
     with NotSupportedByKrmlExtension -> before e t
   in
   ref_translate_type_without_decay := after
-
+let register_post_translate_type_without_decay
+  (f: translate_type_without_decay_t)
+: ML unit
+= let before : translate_type_without_decay_t = !ref_translate_type_without_decay in
+  let after : translate_type_without_decay_t = fun e t ->
+    try
+      before e t
+    with NotSupportedByKrmlExtension -> f e t
+  in
+  ref_translate_type_without_decay := after
 let translate_type_without_decay env t = !ref_translate_type_without_decay env t
 
 // The outermost array type constructor decays to pointer
 let translate_type_t = env -> mlty -> ML typ
 let ref_translate_type : ref translate_type_t = mk_ref (fun _ _ -> raise NotSupportedByKrmlExtension)
-let register_translate_type
+let register_pre_translate_type
   (f: translate_type_t)
 : ML unit
 = let before : translate_type_t = !ref_translate_type in
@@ -406,12 +415,21 @@ let register_translate_type
     with NotSupportedByKrmlExtension -> before e t
   in
   ref_translate_type := after
-
+let register_post_translate_type
+  (f: translate_type_t)
+: ML unit
+= let before : translate_type_t = !ref_translate_type in
+  let after : translate_type_t = fun e t ->
+    try
+      before e t
+    with NotSupportedByKrmlExtension -> f e t
+  in
+  ref_translate_type := after
 let translate_type env t = !ref_translate_type env t
 
 let translate_expr_t = env -> mlexpr -> ML expr
 let ref_translate_expr : ref translate_expr_t = mk_ref (fun _ _ -> raise NotSupportedByKrmlExtension)
-let register_translate_expr
+let register_pre_translate_expr
   (f: translate_expr_t)
 : ML unit
 = let before : translate_expr_t = !ref_translate_expr in
@@ -421,12 +439,21 @@ let register_translate_expr
     with NotSupportedByKrmlExtension -> before e t
   in
   ref_translate_expr := after
-
+let register_post_translate_expr
+  (f: translate_expr_t)
+: ML unit
+= let before : translate_expr_t = !ref_translate_expr in
+  let after : translate_expr_t = fun e t ->
+    try
+      before e t
+    with NotSupportedByKrmlExtension -> f e t
+  in
+  ref_translate_expr := after
 let translate_expr (env: env) (e: mlexpr) = !ref_translate_expr env e
 
 let translate_type_decl_t = env -> one_mltydecl -> ML (option decl)
 let ref_translate_type_decl : ref translate_type_decl_t = mk_ref (fun _ _ -> raise NotSupportedByKrmlExtension)
-let register_translate_type_decl
+let register_pre_translate_type_decl
   (f: translate_type_decl_t)
 : ML unit
 = let before : translate_type_decl_t = !ref_translate_type_decl in
@@ -436,7 +463,16 @@ let register_translate_type_decl
     with NotSupportedByKrmlExtension -> before e t
   in
   ref_translate_type_decl := after
-
+let register_post_translate_type_decl
+  (f: translate_type_decl_t)
+: ML unit
+= let before : translate_type_decl_t = !ref_translate_type_decl in
+  let after : translate_type_decl_t = fun e t ->
+    try
+      before e t
+    with NotSupportedByKrmlExtension -> f e t
+  in
+  ref_translate_type_decl := after
 let translate_type_decl env ty: option decl =
   if List.mem Syntax.NoExtract ty.tydecl_meta then
     None
@@ -1380,8 +1416,8 @@ let translate (MLLib modules): list file =
         None
   ) modules
 
-let _ =
-  register_translate_type_without_decay translate_type_without_decay';
-  register_translate_type translate_type';
-  register_translate_type_decl translate_type_decl';
-  register_translate_expr translate_expr'
+let init () =
+  register_post_translate_type_without_decay translate_type_without_decay';
+  register_post_translate_type translate_type';
+  register_post_translate_type_decl translate_type_decl';
+  register_post_translate_expr translate_expr'
