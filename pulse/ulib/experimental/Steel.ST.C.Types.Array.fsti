@@ -169,7 +169,7 @@ val has_base_array_cell_equiv_to
 [@@noextract_to "krml"] // primitive
 val array_ptr (#t: Type) (td: typedef t) : Tot Type0
 [@@noextract_to "krml"] // primitive
-val null_array_ptr (#t: Type) (td: typedef t) : GTot (array_ptr td)
+val null_array_ptr (#t: Type) (td: typedef t) : Tot (array_ptr td)
 val g_array_ptr_is_null (#t: Type) (#td: typedef t) (a: array_ptr td) : Ghost bool
   (requires True)
   (ensures (fun y -> y == true <==> a == null_array_ptr _))
@@ -402,6 +402,44 @@ val unarray_of_base
       has_array_of_base r a
     )
     (fun v' -> Ghost.reveal v `Seq.equal` seq_of_base_array v')
+
+[@@noextract_to "krml"] // primitive
+val array_ptr_alloc
+  (#t: Type)
+  (td: typedef t)
+  (sz: SZ.t { SZ.v sz > 0 })
+: STT (array_ptr td)
+    emp
+    (fun a ->
+      exists_ (fun (ar: array_or_null td) -> exists_ (fun (s: Seq.seq t) ->
+      array_pts_to_or_null ar s `star` pure (
+      dfst ar == a /\
+      (g_array_is_null ar == false ==> array_length ar == SZ.v sz) /\
+      Ghost.reveal s `Seq.equal` FStar.Seq.create (SZ.v sz) (uninitialized td)
+    ))))
+
+inline_for_extraction [@@noextract_to "krml"]
+let array_alloc
+  (#t: Type)
+  (td: typedef t)
+  (sz: SZ.t { SZ.v sz > 0 })
+: STT (array_or_null td)
+    emp
+    (fun ar ->
+      exists_ (fun s ->
+      array_pts_to_or_null ar s `star` pure (
+      (g_array_is_null ar == false ==> array_length ar == SZ.v sz) /\
+      Ghost.reveal s == FStar.Seq.create (SZ.v sz) (uninitialized td)
+    )))
+= let a : array_ptr td = array_ptr_alloc td sz in
+  let ar' : Ghost.erased (array_or_null td) = elim_exists () in
+  let s = elim_exists () in
+  elim_pure _;
+  let len : array_len_t a = dsnd ar' in
+  let ar = (| a, len |) in
+  rewrite (array_pts_to_or_null _ _) (array_pts_to_or_null ar s);
+  noop ();
+  return ar
 
 (*
 val has_array_of_ref

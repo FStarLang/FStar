@@ -316,23 +316,69 @@ let array_pts_to_length r v =
   let _ = A.pts_to_length _ _ in
   rewrite (array_pts_to0 r v) (array_pts_to r v)
 
+let has_array_of_base'
+  (#t: Type)
+  (#n: array_size_t)
+  (#td: typedef t)
+  (r: ref (base_array1 td n))
+  (a: array td)
+: GTot prop
+=   let (| al, len |) = a in
+    array_ref_base_size al == n /\
+    al.ar_base == r /\
+    array_ref_offset al == 0sz /\
+    Ghost.reveal len == n
+
+#push-options "--z3rlimit 16 --split_queries"
+
+#restart-solver
+
+let base_array_index' (#t: Type0) (#n: array_size_t) (a: base_array_t' t n)
+(i: base_array_index_t n) : GTot t
+= a i
+
+let seq_of_base_array0
+  (#t: Type)
+  (#n: array_size_t)
+  (v: base_array_t' t n)
+: GTot (Seq.lseq t (SZ.v n))
+= Seq.init_ghost (SZ.v n) (fun i -> base_array_index' v (SZ.uint_to_t i))
+
+#pop-options
+
+
 #push-options "--z3rlimit 16"
 #restart-solver
 
-let ghost_array_of_base_focus
-  #_ #_ #_ #_ #td #v r a
+let ghost_array_of_base_focus'
+  (#t: Type)
+  (#opened: _)
+  (#n: Ghost.erased array_size_t)
+  (#td: typedef t)
+  (#v: Ghost.erased (base_array_t' t n))
+  (r: ref (base_array1 td n))
+  (a: array td)
+: STGhost unit opened
+    (pts_to r v)
+    (fun _ -> array_pts_to a (seq_of_base_array0 v))
+    (has_array_of_base' r a)
+    (fun _ -> True)
 = rewrite (pts_to r v) (pts_to0 r v);
   let _ = gen_elim () in
   let w = vpattern_replace (HR.pts_to r _) in
   let w' : ref0_v (base_array1 td (dfst a).ar_base_size) = coerce_eq () w in
   assert ((model_array_of_array a w').base == w.ref);
   rewrite (r_pts_to _ _) (R.pts_to (model_array_of_array a w').base v);
-  assert (seq_of_base_array v `Seq.equal` A.seq_of_array_pcm_carrier v);
+  assert (seq_of_base_array0 v `Seq.equal` A.seq_of_array_pcm_carrier v);
   A.array_pcm_carrier_of_seq_of_array_pcm_carrier v;
-  A.pts_to_intro_from_base (model_array_of_array a w')  v (seq_of_base_array v);
+  A.pts_to_intro_from_base (model_array_of_array a w')  v (seq_of_base_array0 v);
   let p = vpattern_replace (fun p -> HR.pts_to _ p _) in
   rewrite (HR.pts_to _ _ _) (HR.pts_to (dfst a).ar_base p w');
-  rewrite (array_pts_to0 a (seq_of_base_array v)) (array_pts_to a (seq_of_base_array v))
+  rewrite (array_pts_to0 a (seq_of_base_array0 v)) (array_pts_to a (seq_of_base_array0 v))
+
+let ghost_array_of_base_focus
+  #_ #_ #_ #_ #td #v r a
+= ghost_array_of_base_focus' r a
 
 #pop-options
 
@@ -354,15 +400,14 @@ let ghost_array_of_base
 [@@noextract_to "krml"] // primitive
 let array_of_base0
   (#t: Type)
-  (#tn: Type0)
   (#opened: _)
   (#n: Ghost.erased array_size_t)
   (#td: typedef t)
-  (#v: Ghost.erased (base_array_t t tn n))
-  (r: ref (base_array0 tn td n))
-: STAtomicBase (a: array td { has_array_of_base r a }) false opened Unobservable
+  (#v: Ghost.erased (base_array_t' t n))
+  (r: ref (base_array1 td n))
+: STAtomicBase (a: array td { has_array_of_base' r a }) false opened Unobservable
     (pts_to r v)
-    (fun a -> array_pts_to a (seq_of_base_array v))
+    (fun a -> array_pts_to a (seq_of_base_array0 v))
     (True)
     (fun _ -> True)
 =
@@ -374,8 +419,8 @@ let array_of_base0
     ar_prf = ();
   }
   in
-  let a : (a: array td { has_array_of_base r a }) = (| al, Ghost.hide (Ghost.reveal n) |) in
-  ghost_array_of_base_focus r a;
+  let a : (a: array td { has_array_of_base' r a }) = (| al, Ghost.hide (Ghost.reveal n) |) in
+  ghost_array_of_base_focus' r a;
   return a
 
 let array_ref_of_base
@@ -384,36 +429,6 @@ let array_ref_of_base
   let ar = array_of_base0 r in
   let a : array_ref td = dfst ar in
   return a
-
-#push-options "--z3rlimit 16 --split_queries"
-
-#restart-solver
-
-let base_array_index' (#t: Type0) (#n: array_size_t) (a: base_array_t' t n)
-(i: base_array_index_t n) : GTot t
-= a i
-
-let seq_of_base_array0
-  (#t: Type)
-  (#n: array_size_t)
-  (v: base_array_t' t n)
-: GTot (Seq.lseq t (SZ.v n))
-= Seq.init_ghost (SZ.v n) (fun i -> base_array_index' v (SZ.uint_to_t i))
-
-let has_array_of_base'
-  (#t: Type)
-  (#n: array_size_t)
-  (#td: typedef t)
-  (r: ref (base_array1 td n))
-  (a: array td)
-: GTot prop
-=   let (| al, len |) = a in
-    array_ref_base_size al == n /\
-    al.ar_base == r /\
-    array_ref_offset al == 0sz /\
-    Ghost.reveal len == n
-
-#pop-options
 
 #push-options "--z3rlimit 64"
 #restart-solver
@@ -452,6 +467,29 @@ let unarray_of_base0
 let unarray_of_base
   #t #tn #_ #n #td #v r a
 = unarray_of_base0 r a
+
+let array_ptr_alloc
+  #t td sz
+= let base = alloc (base_array1 td sz) in
+  if is_null base
+  then begin
+    noop ();
+    let a = null_array_ptr td in
+    let ar : array_or_null td = (| a, Ghost.hide 0sz |) in
+    rewrite (pts_to_or_null _ _) (array_pts_to_or_null ar (seq_of_base_array0 (uninitialized (base_array1 td sz))));
+    drop (freeable_or_null _);
+    return a
+  end else begin
+    noop ();
+    let sq: squash (~ (base == null _)) = () in
+    noop ();
+    rewrite (pts_to_or_null _ _) (pts_to base (uninitialized (base_array1 td sz)));
+    let ar : array td = array_of_base0 base in
+    rewrite (array_pts_to ar _) (array_pts_to_or_null ar (seq_of_base_array0 (uninitialized (base_array1 td sz))));
+    let a = dfst ar in
+    drop (freeable_or_null _);
+    return a
+  end
 
 (*
 let has_array_of_ref
