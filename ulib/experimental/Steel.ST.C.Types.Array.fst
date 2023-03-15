@@ -405,11 +405,11 @@ let array_of_base0
   (#td: typedef t)
   (#v: Ghost.erased (base_array_t' t n))
   (r: ref (base_array1 td n))
-: STAtomicBase (a: array td { has_array_of_base' r a }) false opened Unobservable
+: STAtomicBase (array td) false opened Unobservable
     (pts_to r v)
     (fun a -> array_pts_to a (seq_of_base_array0 v))
     (True)
-    (fun _ -> True)
+    (fun a -> has_array_of_base' r a)
 =
   let al : array_ref td = {
     ar_is_null = false;
@@ -468,6 +468,17 @@ let unarray_of_base
   #t #tn #_ #n #td #v r a
 = unarray_of_base0 r a
 
+[@@ __reduce__ ]
+let freeable_array0
+  (#t: Type) (#td: typedef t) (a: array td)
+: Tot vprop
+= freeable (dfst a).ar_base `star`
+  pure (has_array_of_base' (dfst a).ar_base a)
+
+let freeable_array
+  a
+= freeable_array0 a
+
 let array_ptr_alloc
   #t td sz
 = let base = alloc (base_array1 td sz) in
@@ -477,7 +488,7 @@ let array_ptr_alloc
     let a = null_array_ptr td in
     let ar : array_or_null td = (| a, Ghost.hide 0sz |) in
     rewrite (pts_to_or_null _ _) (array_pts_to_or_null ar (seq_of_base_array0 (uninitialized (base_array1 td sz))));
-    drop (freeable_or_null _);
+    rewrite (freeable_or_null _) (freeable_or_null_array ar);
     return a
   end else begin
     noop ();
@@ -487,9 +498,35 @@ let array_ptr_alloc
     let ar : array td = array_of_base0 base in
     rewrite (array_pts_to ar _) (array_pts_to_or_null ar (seq_of_base_array0 (uninitialized (base_array1 td sz))));
     let a = dfst ar in
-    drop (freeable_or_null _);
+    rewrite (freeable_or_null _) (freeable (dfst ar).ar_base);
+    rewrite (freeable_array0 ar) (freeable_or_null_array ar);
     return a
   end
+
+#push-options "--z3rlimit 16"
+#restart-solver
+
+let full_seq_seq_of_base_array'
+  (#t: Type0) (td: typedef t) (#n: array_size_t)
+  (b: base_array_t' t n)
+: Lemma
+  (ensures (full_seq td (seq_of_base_array0 b) <==> full (base_array1 td n) b))
+= assert (forall (i: base_array_index_t n) . base_array_index' b i == Seq.index (seq_of_base_array0 b) (SZ.v i))
+
+let array_ref_free
+  #t #td #s a len
+= rewrite (freeable_array _) (freeable_array0 (| a, len |));
+  elim_pure _;
+  let len0 : Ghost.erased array_size_t = Ghost.hide (Ghost.reveal len) in
+  let r : ref (base_array1 td len0) = a.ar_base in
+  array_pts_to_length _ _;
+  let s' = unarray_of_base0 r (| a, len |) in
+  full_seq_seq_of_base_array' td s';
+  rewrite (pts_to _ _) (pts_to r s');
+  rewrite (freeable _) (freeable r);
+  free r
+
+#pop-options
 
 (*
 let has_array_of_ref

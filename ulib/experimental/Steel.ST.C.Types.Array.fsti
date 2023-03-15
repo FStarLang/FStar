@@ -403,6 +403,21 @@ val unarray_of_base
     )
     (fun v' -> Ghost.reveal v `Seq.equal` seq_of_base_array v')
 
+val freeable_array
+  (#t: Type)
+  (#td: typedef t)
+  (a: array td)
+: Tot vprop
+
+let freeable_or_null_array
+  (#t: Type)
+  (#td: typedef t)
+  (a: array_or_null td)
+: Tot vprop
+= if g_array_is_null a
+  then emp
+  else freeable_array a
+
 [@@noextract_to "krml"] // primitive
 val array_ptr_alloc
   (#t: Type)
@@ -412,6 +427,7 @@ val array_ptr_alloc
     emp
     (fun a ->
       exists_ (fun (ar: array_or_null td) -> exists_ (fun (s: Seq.seq t) ->
+      freeable_or_null_array ar `star`
       array_pts_to_or_null ar s `star` pure (
       dfst ar == a /\
       (g_array_is_null ar == false ==> array_length ar == SZ.v sz) /\
@@ -426,6 +442,7 @@ let array_alloc
 : STT (array_or_null td)
     emp
     (fun ar ->
+      freeable_or_null_array ar `star`
       exists_ (fun s ->
       array_pts_to_or_null ar s `star` pure (
       (g_array_is_null ar == false ==> array_length ar == SZ.v sz) /\
@@ -438,8 +455,50 @@ let array_alloc
   let len : array_len_t a = dsnd ar' in
   let ar = (| a, len |) in
   rewrite (array_pts_to_or_null _ _) (array_pts_to_or_null ar s);
+  rewrite (freeable_or_null_array _) (freeable_or_null_array ar);
   noop ();
   return ar
+
+let full_seq (#t: Type) (td: typedef t) (v: Seq.seq t) : GTot prop =
+  forall (i: nat { i < Seq.length v }) . {:pattern (Seq.index v i)} full td (Seq.index v i)
+
+let full_seq_seq_of_base_array
+  (#t: Type0) (tn: Type0) (td: typedef t) (#n: array_size_t)
+  (b: base_array_t t tn n)
+: Lemma
+  (ensures (full_seq td (seq_of_base_array b) <==> full (base_array0 tn td n) b))
+  [SMTPat (full_seq td (seq_of_base_array b))]
+= assert (forall (i: base_array_index_t n) . base_array_index b i == Seq.index (seq_of_base_array b) (SZ.v i))
+
+[@@noextract_to "krml"] // primitive
+val array_ref_free
+  (#t: Type)
+  (#td: typedef t)
+  (#s: Ghost.erased (Seq.seq t))
+  (a: array_ref td)
+  (n: array_len_t a)
+: ST unit
+    (freeable_array (| a, n |) `star` array_pts_to (| a, n |) s)
+    (fun _ -> emp)
+    (full_seq td s)
+    (fun _ -> True)
+
+inline_for_extraction [@@noextract_to "krml"]
+let array_free
+  (#t: Type)
+  (#td: typedef t)
+  (#s: Ghost.erased (Seq.seq t))
+  (a: array td)
+: ST unit
+    (freeable_array a `star` array_pts_to a s)
+    (fun _ -> emp)
+    (full_seq td s)
+    (fun _ -> True)
+= let al = dfst a in
+  let n: array_len_t al = dsnd a in
+  rewrite (freeable_array _) (freeable_array (| al, n |));
+  rewrite (array_pts_to _ _) (array_pts_to (| al, n |) s);
+  array_ref_free al n
 
 (*
 val has_array_of_ref
@@ -855,14 +914,3 @@ val mk_fraction_seq_join
 : STGhostT unit opened
   (array_pts_to r (mk_fraction_seq td v p1) `star` array_pts_to r (mk_fraction_seq td v p2))
   (fun _ -> array_pts_to r (mk_fraction_seq td v (p1 `P.sum_perm` p2)))
-
-let full_seq (#t: Type) (td: typedef t) (v: Seq.seq t) : GTot prop =
-  forall (i: nat { i < Seq.length v }) . {:pattern (Seq.index v i)} full td (Seq.index v i)
-
-let full_seq_seq_of_base_array
-  (#t: Type0) (tn: Type0) (td: typedef t) (#n: array_size_t)
-  (b: base_array_t t tn n)
-: Lemma
-  (ensures (full_seq td (seq_of_base_array b) <==> full (base_array0 tn td n) b))
-  [SMTPat (full_seq td (seq_of_base_array b))]
-= assert (forall (i: base_array_index_t n) . base_array_index b i == Seq.index (seq_of_base_array b) (SZ.v i))
