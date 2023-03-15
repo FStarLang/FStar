@@ -170,8 +170,11 @@ val has_base_array_cell_equiv_to
 val array_ptr (#t: Type) (td: typedef t) : Tot Type0
 [@@noextract_to "krml"] // primitive
 val null_array_ptr (#t: Type) (td: typedef t) : GTot (array_ptr td)
+val g_array_ptr_is_null (#t: Type) (#td: typedef t) (a: array_ptr td) : Ghost bool
+  (requires True)
+  (ensures (fun y -> y == true <==> a == null_array_ptr _))
 inline_for_extraction [@@noextract_to "krml"]
-let array_ref (#t: Type) (td: typedef t) = (a: array_ptr td { ~ (a == null_array_ptr td) })
+let array_ref (#t: Type) (td: typedef t) = (a: array_ptr td { g_array_ptr_is_null a == false })
 
 (*
 val array_ref_base_size_type (#t: Type) (#td: typedef t) (a: array_ref td) : GTot Type0
@@ -203,8 +206,11 @@ let array_len_t (#t: Type) (#td: typedef t) (r: array_ptr td) : Tot Type0 =
 inline_for_extraction [@@noextract_to "krml"]
 let array_or_null (#t: Type) (td: typedef t) : Tot Type0 = (r: array_ptr td & array_len_t r)
 
+let g_array_is_null (#t: Type) (#td: typedef t) (a: array_or_null td) : GTot bool =
+  g_array_ptr_is_null (dfst a)
+
 inline_for_extraction [@@noextract_to "krml"]
-let array (#t: Type) (td: typedef t) : Tot Type0 = (a: array_or_null td { ~ (dfst a == null_array_ptr _) })
+let array (#t: Type) (td: typedef t) : Tot Type0 = (a: array_or_null td { g_array_is_null a == false })
 
 let array_length
   (#t: Type)
@@ -219,6 +225,29 @@ val array_pts_to
   (r: array td)
   (v: Ghost.erased (Seq.seq t))
 : Tot vprop
+
+let array_pts_to_or_null
+  (#t: Type)
+  (#td: typedef t)
+  (r: array_or_null td)
+  (v: Ghost.erased (Seq.seq t))
+: Tot vprop
+= if g_array_is_null r
+  then emp
+  else array_pts_to r v
+
+inline_for_extraction [@@noextract_to "krml"]
+val array_is_null
+  (#t: Type)
+  (#opened: _)
+  (#td: typedef t)
+  (#v: Ghost.erased (Seq.seq t))
+  (r: array_or_null td)
+: STAtomicBase bool false opened Unobservable
+    (array_pts_to_or_null r v)
+    (fun _ -> array_pts_to_or_null r v)
+    (True)
+    (fun b -> b == g_array_is_null r)
 
 val array_pts_to_length
   (#opened: _)

@@ -253,6 +253,7 @@ let null_array_ptr td = {
   ar_offset = 0sz;
   ar_prf = ();
 }
+let g_array_ptr_is_null a = a.ar_is_null 
 let array_ref_base_size ar = if ar.ar_is_null then 0sz else ar.ar_base_size
 let has_array_ref_base ar r = ar.ar_base == r
 let has_array_ref_base_inj ar r1 r2 = ()
@@ -304,6 +305,10 @@ let array_pts_to0
 
 let array_pts_to r v =
   array_pts_to0 r v
+
+let array_is_null
+  r
+= return (HR.is_null (dfst r).ar_base)
 
 let array_pts_to_length r v =
   rewrite (array_pts_to r v) (array_pts_to0 r v);
