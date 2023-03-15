@@ -5,6 +5,14 @@ open FStar.Tactics
 
 let test1 () = IA.of_list [0;1;2]
 
+// Decidable equality
+let _ = assert (test1 () = test1 ())
+
+let test_f () = IA.of_list [fun (x:int) -> x]
+
+[@@expect_failure]
+let _ = assert (test_f () = test_f ())
+
 let test2 () = assert_norm (IA.index (IA.of_list [0;1;2]) 1 == 1)
 
 let goal_is_true () : Tac unit = 
@@ -51,3 +59,6 @@ let test_length_correspondence (l:list 'a) = assert (IA.length (IA.of_list l) ==
 
 let test_index_correspondence (l:list 'a) (i:nat{ i < L.length l }) = assert (IA.index (IA.of_list l) i == L.index l i)
 
+noeq type test_pos =
+| Test : test_pos
+| Array : IA.t test_pos -> test_pos
