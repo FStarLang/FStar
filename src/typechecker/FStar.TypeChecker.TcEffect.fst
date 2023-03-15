@@ -1777,14 +1777,10 @@ Errors.with_ctx (BU.format1 "While checking layered effect definition `%s`" (str
         let lid = PC.layered_effect_reify_val_lid ed.mname r in
         { sigel = Sig_declare_typ (lid, us, reify_val_t);
           sigrng = r;
-          sigquals = [Assumption];
+          sigquals = [Assumption;NoExtract];
           sigmeta = default_sigmeta;
           sigattrs = [];
           sigopts = None } in
-      log_issue r (Errors.Warning_BleedingEdge_Feature,
-                   BU.format1 "Reification of indexed effects (%s here) is supported only as a type coercion \
-                     to the underlying representation type (no support for smt-based reasoning or extraction)"
-                     (string_of_lid ed.mname));
       [sig_assume_reify]
     else [] in
 

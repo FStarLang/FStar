@@ -34,7 +34,3 @@ let lift_PURE_M (a:Type) (wp:pure_wp a) (f:unit -> PURE a wp)
 sub_effect PURE ~> M = lift_PURE_M
 
 let ret (#a:Type) (x:a) : M a 1 = M?.reflect x
-
-let test () : M int 2 =
-  let x = ret 1 in
-  ret x

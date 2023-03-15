@@ -138,18 +138,20 @@ let (err_unexpected_eff :
 let err_cannot_extract_effect :
   'uuuuu .
     FStar_Ident.lident ->
-      FStar_Compiler_Range.range -> Prims.string -> 'uuuuu
+      FStar_Compiler_Range.range -> Prims.string -> Prims.string -> 'uuuuu
   =
   fun l ->
     fun r ->
-      fun s ->
-        let uu___ =
-          let uu___1 =
-            let uu___2 = FStar_Ident.string_of_lid l in
-            FStar_Compiler_Util.format2 "Cannot extract effect %s (%s)"
-              uu___2 s in
-          (FStar_Errors_Codes.Fatal_UnexpectedEffect, uu___1) in
-        FStar_Errors.raise_error uu___ r
+      fun reason ->
+        fun ctxt ->
+          let uu___ =
+            let uu___1 =
+              let uu___2 = FStar_Ident.string_of_lid l in
+              FStar_Compiler_Util.format3
+                "Cannot extract effect %s because %s (when extracting %s)"
+                uu___2 reason ctxt in
+            (FStar_Errors_Codes.Fatal_UnexpectedEffect, uu___1) in
+          FStar_Errors.raise_error uu___ r
 let (effect_as_etag :
   FStar_Extraction_ML_UEnv.uenv ->
     FStar_Ident.lident -> FStar_Extraction_ML_Syntax.e_tag)
@@ -983,13 +985,16 @@ let maybe_reify_comp :
                    let uu___3 =
                      FStar_Compiler_Effect.op_Bar_Greater c
                        FStar_Syntax_Util.comp_effect_name in
+                   let uu___4 = FStar_Syntax_Print.comp_to_string c in
                    err_cannot_extract_effect uu___3 c.FStar_Syntax_Syntax.pos
-                     s)
+                     s uu___4)
             else
               (let uu___3 =
                  FStar_Compiler_Effect.op_Bar_Greater c
                    FStar_Syntax_Util.comp_effect_name in
-               err_cannot_extract_effect uu___3 c.FStar_Syntax_Syntax.pos "")
+               let uu___4 = FStar_Syntax_Print.comp_to_string c in
+               err_cannot_extract_effect uu___3 c.FStar_Syntax_Syntax.pos ""
+                 uu___4)
 let (maybe_reify_term :
   FStar_TypeChecker_Env.env ->
     FStar_Syntax_Syntax.term ->
@@ -1013,7 +1018,9 @@ let (maybe_reify_term :
             (let uu___2 = extraction_mode in
              match uu___2 with
              | FStar_Syntax_Syntax.Extract_none s ->
-                 err_cannot_extract_effect l t.FStar_Syntax_Syntax.pos s)
+                 let uu___3 = FStar_Syntax_Print.term_to_string t in
+                 err_cannot_extract_effect l t.FStar_Syntax_Syntax.pos s
+                   uu___3)
 let rec (translate_term_to_mlty :
   FStar_Extraction_ML_UEnv.uenv ->
     FStar_Syntax_Syntax.term -> FStar_Extraction_ML_Syntax.mlty)

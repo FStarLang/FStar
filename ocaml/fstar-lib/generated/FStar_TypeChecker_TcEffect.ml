@@ -6106,7 +6106,8 @@ let (tc_layered_eff_decl :
                                                              = r;
                                                            FStar_Syntax_Syntax.sigquals
                                                              =
-                                                             [FStar_Syntax_Syntax.Assumption];
+                                                             [FStar_Syntax_Syntax.Assumption;
+                                                             FStar_Syntax_Syntax.NoExtract];
                                                            FStar_Syntax_Syntax.sigmeta
                                                              =
                                                              FStar_Syntax_Syntax.default_sigmeta;
@@ -6116,19 +6117,7 @@ let (tc_layered_eff_decl :
                                                              =
                                                              FStar_Pervasives_Native.None
                                                          } in
-                                                       ((let uu___17 =
-                                                           let uu___18 =
-                                                             let uu___19 =
-                                                               FStar_Ident.string_of_lid
-                                                                 ed.FStar_Syntax_Syntax.mname in
-                                                             FStar_Compiler_Util.format1
-                                                               "Reification of indexed effects (%s here) is supported only as a type coercion to the underlying representation type (no support for smt-based reasoning or extraction)"
-                                                               uu___19 in
-                                                           (FStar_Errors_Codes.Warning_BleedingEdge_Feature,
-                                                             uu___18) in
-                                                         FStar_Errors.log_issue
-                                                           r uu___17);
-                                                        [sig_assume_reify]))
+                                                       [sig_assume_reify])
                                             else [] in
                                           let extraction_mode =
                                             let has_primitive_extraction =
