@@ -167,16 +167,23 @@ val has_base_array_cell_equiv_to
 // ghost length of an array.
 
 [@@noextract_to "krml"] // primitive
-val array_ref (#t: Type) (td: typedef t) : Tot Type0
+val array_ptr (#t: Type) (td: typedef t) : Tot Type0
+[@@noextract_to "krml"] // primitive
+val null_array_ptr (#t: Type) (td: typedef t) : GTot (array_ptr td)
+inline_for_extraction [@@noextract_to "krml"]
+let array_ref (#t: Type) (td: typedef t) = (a: array_ptr td { ~ (a == null_array_ptr td) })
+
 (*
 val array_ref_base_size_type (#t: Type) (#td: typedef t) (a: array_ref td) : GTot Type0
 *)
-val array_ref_base_size (#t: Type) (#td: typedef t) (a: array_ref td) : GTot array_size_t
+val array_ref_base_size (#t: Type) (#td: typedef t) (a: array_ptr td) : Ghost SZ.t
+  (requires True)
+  (ensures (fun y -> SZ.v y == 0 <==> a == null_array_ptr _))
 val has_array_ref_base (#t: Type) (#td: typedef t) (a: array_ref td) (#ty: Type) (r: ref (base_array0 ty td (array_ref_base_size a))) : GTot prop
 val has_array_ref_base_inj (#t: Type) (#td: typedef t) (a: array_ref td) (#ty: Type) (r1 r2: ref (base_array0 ty td (array_ref_base_size a))) : Lemma
   (requires (has_array_ref_base a r1 /\ has_array_ref_base a r2))
   (ensures (r1 == r2))
-val array_ref_offset (#t: Type) (#td: typedef t) (a: array_ref td) : Ghost SZ.t
+val array_ref_offset (#t: Type) (#td: typedef t) (a: array_ptr td) : Ghost SZ.t
   (requires True)
   (ensures (fun y -> SZ.v y <= SZ.v (array_ref_base_size a)))
 val array_ref_base_offset_inj (#t: Type) (#td: typedef t) (#ty: Type) (a1: array_ref td) (r1: ref (base_array0 ty td (array_ref_base_size a1))) (a2: array_ref td) (r2: ref (base_array0 ty td (array_ref_base_size a2))) : Lemma
@@ -190,11 +197,14 @@ val array_ref_base_offset_inj (#t: Type) (#td: typedef t) (#ty: Type) (a1: array
   (ensures (a1 == a2))
 
 inline_for_extraction [@@noextract_to "krml"]
-let array_len_t (#t: Type) (#td: typedef t) (r: array_ref td) : Tot Type0 =
+let array_len_t (#t: Type) (#td: typedef t) (r: array_ptr td) : Tot Type0 =
   (len: Ghost.erased SZ.t { SZ.v (array_ref_offset r) + SZ.v len <= SZ.v (array_ref_base_size r) })
 
 inline_for_extraction [@@noextract_to "krml"]
-let array (#t: Type) (td: typedef t) : Tot Type0 = (r: array_ref td & array_len_t r)
+let array_or_null (#t: Type) (td: typedef t) : Tot Type0 = (r: array_ptr td & array_len_t r)
+
+inline_for_extraction [@@noextract_to "krml"]
+let array (#t: Type) (td: typedef t) : Tot Type0 = (a: array_or_null td { ~ (dfst a == null_array_ptr _) })
 
 let array_length
   (#t: Type)

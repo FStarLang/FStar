@@ -235,13 +235,25 @@ let has_base_array_cell_equiv_to
 /// Array pointers (with decay)
 
 noeq
-type array_ref #t td = {
+type array_ptr #t td = {
+  ar_is_null: Ghost.erased bool;
   ar_base_size: Ghost.erased array_size_t;
-  ar_base: ref (base_array1 #t td ar_base_size);
+  ar_base: ptr (base_array1 #t td ar_base_size);
   ar_offset: SZ.t;
-  ar_prf: squash (SZ.v ar_offset <= SZ.v ar_base_size);
+  ar_prf: squash (
+    SZ.v ar_offset <= SZ.v ar_base_size /\
+    (Ghost.reveal ar_is_null == true <==> ar_base == null _) /\
+    (ar_base == null _ ==> (SZ.v ar_base_size == 1 /\ SZ.v ar_offset == 0))
+  );
 }
-let array_ref_base_size ar = ar.ar_base_size
+let null_array_ptr td = {
+  ar_is_null = true;
+  ar_base_size = 1sz;
+  ar_base = null _;
+  ar_offset = 0sz;
+  ar_prf = ();
+}
+let array_ref_base_size ar = if ar.ar_is_null then 0sz else ar.ar_base_size
 let has_array_ref_base ar r = ar.ar_base == r
 let has_array_ref_base_inj ar r1 r2 = ()
 let array_ref_offset ar = ar.ar_offset
@@ -323,6 +335,7 @@ let ghost_array_of_base
   #_ #tn #_ #n #td #v r
 =
   let al : array_ref td = {
+    ar_is_null = false;
     ar_base_size = n;
     ar_base = r;
     ar_offset = 0sz;
@@ -349,6 +362,7 @@ let array_of_base0
     (fun _ -> True)
 =
   let al : array_ref td = {
+    ar_is_null = false;
     ar_base_size = n;
     ar_base = r;
     ar_offset = 0sz;
