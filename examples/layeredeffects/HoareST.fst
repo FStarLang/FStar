@@ -77,7 +77,6 @@ let if_then_else (a:Type)
   (fun h0 r h1 -> (p ==> post_f h0 r h1) /\ ((~ p) ==> post_g h0 r h1))
 
 [@@ top_level_effect "HoareST.HoareSTT"; primitive_extraction]
-reifiable
 reflectable
 effect {
   HoareST (a:Type) (pre:pre_t) (post:post_t a)
