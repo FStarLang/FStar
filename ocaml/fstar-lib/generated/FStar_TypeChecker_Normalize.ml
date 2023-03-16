@@ -1834,11 +1834,11 @@ let (should_reify :
           (uu___1,
            {
              FStar_Syntax_Syntax.n = FStar_Syntax_Syntax.Tm_constant
-               (FStar_Const.Const_reify);
-             FStar_Syntax_Syntax.pos = uu___2;
-             FStar_Syntax_Syntax.vars = uu___3;
-             FStar_Syntax_Syntax.hash_code = uu___4;_},
-           uu___5, uu___6))::uu___7
+               (FStar_Const.Const_reify uu___2);
+             FStar_Syntax_Syntax.pos = uu___3;
+             FStar_Syntax_Syntax.vars = uu___4;
+             FStar_Syntax_Syntax.hash_code = uu___5;_},
+           uu___6, uu___7))::uu___8
           -> (cfg.FStar_TypeChecker_Cfg.steps).FStar_TypeChecker_Cfg.reify_
       | uu___1 -> false
 let rec (maybe_weakly_reduced :
@@ -3762,16 +3762,16 @@ let rec (norm :
                      {
                        FStar_Syntax_Syntax.n =
                          FStar_Syntax_Syntax.Tm_constant
-                         (FStar_Const.Const_reify);
-                       FStar_Syntax_Syntax.pos = uu___3;
-                       FStar_Syntax_Syntax.vars = uu___4;
-                       FStar_Syntax_Syntax.hash_code = uu___5;_},
-                     uu___6, uu___7))::uu___8
+                         (FStar_Const.Const_reify uu___3);
+                       FStar_Syntax_Syntax.pos = uu___4;
+                       FStar_Syntax_Syntax.vars = uu___5;
+                       FStar_Syntax_Syntax.hash_code = uu___6;_},
+                     uu___7, uu___8))::uu___9
                     when
                     (cfg.FStar_TypeChecker_Cfg.steps).FStar_TypeChecker_Cfg.beta
                     ->
                     (FStar_TypeChecker_Cfg.log cfg
-                       (fun uu___10 ->
+                       (fun uu___11 ->
                           FStar_Compiler_Util.print_string
                             "+++ Dropping ascription \n");
                      norm cfg env1 stack2 t11)
@@ -4602,11 +4602,11 @@ and (do_reify_monadic :
                       {
                         FStar_Syntax_Syntax.n =
                           FStar_Syntax_Syntax.Tm_constant
-                          (FStar_Const.Const_reify);
-                        FStar_Syntax_Syntax.pos = uu___2;
-                        FStar_Syntax_Syntax.vars = uu___3;
-                        FStar_Syntax_Syntax.hash_code = uu___4;_},
-                      uu___5, uu___6))::uu___7
+                          (FStar_Const.Const_reify uu___2);
+                        FStar_Syntax_Syntax.pos = uu___3;
+                        FStar_Syntax_Syntax.vars = uu___4;
+                        FStar_Syntax_Syntax.hash_code = uu___5;_},
+                      uu___6, uu___7))::uu___8
                      -> ()
                  | uu___1 ->
                      let uu___2 =
@@ -4716,7 +4716,9 @@ and (do_reify_monadic :
                                               let uu___11 =
                                                 let uu___12 =
                                                   FStar_Syntax_Util.mk_reify
-                                                    body in
+                                                    body
+                                                    (FStar_Pervasives_Native.Some
+                                                       m) in
                                                 ((false, [lb1]), uu___12) in
                                               FStar_Syntax_Syntax.Tm_let
                                                 uu___11 in
@@ -4749,13 +4751,15 @@ and (do_reify_monadic :
                                             (let rng =
                                                top2.FStar_Syntax_Syntax.pos in
                                              let head =
-                                               FStar_Compiler_Effect.op_Less_Bar
-                                                 FStar_Syntax_Util.mk_reify
-                                                 lb.FStar_Syntax_Syntax.lbdef in
+                                               FStar_Syntax_Util.mk_reify
+                                                 lb.FStar_Syntax_Syntax.lbdef
+                                                 (FStar_Pervasives_Native.Some
+                                                    m) in
                                              let body1 =
-                                               FStar_Compiler_Effect.op_Less_Bar
-                                                 FStar_Syntax_Util.mk_reify
-                                                 body in
+                                               FStar_Syntax_Util.mk_reify
+                                                 body
+                                                 (FStar_Pervasives_Native.Some
+                                                    m) in
                                              let body_rc =
                                                {
                                                  FStar_Syntax_Syntax.residual_effect
@@ -5183,7 +5187,9 @@ and (do_reify_monadic :
                                FStar_Compiler_Util.print2
                                  "Reified (2) <%s> to %s\n" uu___7 "");
                           (let uu___6 = FStar_Compiler_List.tl stack1 in
-                           let uu___7 = FStar_Syntax_Util.mk_reify top2 in
+                           let uu___7 =
+                             FStar_Syntax_Util.mk_reify top2
+                               (FStar_Pervasives_Native.Some m) in
                            norm cfg env1 uu___6 uu___7) in
                         let fallback2 uu___4 =
                           FStar_TypeChecker_Cfg.log cfg
@@ -5229,7 +5235,8 @@ and (do_reify_monadic :
                                else
                                  (let t1 =
                                     let uu___9 =
-                                      FStar_Syntax_Util.mk_reify head in
+                                      FStar_Syntax_Util.mk_reify head
+                                        (FStar_Pervasives_Native.Some m) in
                                     FStar_Syntax_Syntax.mk_Tm_app uu___9 args
                                       t.FStar_Syntax_Syntax.pos in
                                   let uu___9 = FStar_Compiler_List.tl stack1 in
@@ -5262,7 +5269,8 @@ and (do_reify_monadic :
                                 match uu___3 with
                                 | (pat, wopt, tm) ->
                                     let uu___4 =
-                                      FStar_Syntax_Util.mk_reify tm in
+                                      FStar_Syntax_Util.mk_reify tm
+                                        (FStar_Pervasives_Native.Some m) in
                                     (pat, wopt, uu___4))) in
                       let tm =
                         FStar_Syntax_Syntax.mk
@@ -5440,7 +5448,9 @@ and (reify_lift :
                       let uu___8 =
                         FStar_TypeChecker_Env.is_reifiable_effect env1 msrc in
                       if uu___8
-                      then FStar_Syntax_Util.mk_reify e
+                      then
+                        FStar_Syntax_Util.mk_reify e
+                          (FStar_Pervasives_Native.Some msrc)
                       else
                         (let uu___10 =
                            let uu___11 =

@@ -994,10 +994,12 @@ let (maybe_reify_term :
         let uu___ = FStar_TypeChecker_Util.effect_extraction_mode env l in
         match uu___ with
         | FStar_Syntax_Syntax.Extract_reify ->
-            FStar_TypeChecker_Util.reify_body env
+            let uu___1 =
+              FStar_Syntax_Util.mk_reify t (FStar_Pervasives_Native.Some l) in
+            FStar_TypeChecker_Util.norm_reify env
               [FStar_TypeChecker_Env.Inlining;
               FStar_TypeChecker_Env.ForExtraction;
-              FStar_TypeChecker_Env.Unascribe] t
+              FStar_TypeChecker_Env.Unascribe] uu___1
         | FStar_Syntax_Syntax.Extract_primitive -> t
         | FStar_Syntax_Syntax.Extract_none s ->
             let uu___1 = FStar_Syntax_Print.term_to_string t in
@@ -2406,73 +2408,6 @@ let (extract_lb_iface :
                         let uu___4 = FStar_Compiler_Util.right lbname in
                         (uu___4, exp_binding) in
                       (env1, uu___3))) g lbs1
-let (is_reify : FStar_Syntax_Syntax.term -> Prims.bool) =
-  fun head ->
-    let uu___ =
-      let uu___1 =
-        let uu___2 =
-          FStar_Compiler_Effect.op_Bar_Greater head
-            FStar_Syntax_Subst.compress in
-        FStar_Compiler_Effect.op_Bar_Greater uu___2
-          FStar_Syntax_Util.unascribe in
-      uu___1.FStar_Syntax_Syntax.n in
-    match uu___ with
-    | FStar_Syntax_Syntax.Tm_constant (FStar_Const.Const_reify) -> true
-    | FStar_Syntax_Syntax.Tm_fvar fv ->
-        let uu___1 = FStar_Syntax_Syntax.lid_of_fv fv in
-        FStar_Parser_Const.is_layered_effect_reify_lid uu___1
-    | FStar_Syntax_Syntax.Tm_uinst
-        ({ FStar_Syntax_Syntax.n = FStar_Syntax_Syntax.Tm_fvar fv;
-           FStar_Syntax_Syntax.pos = uu___1;
-           FStar_Syntax_Syntax.vars = uu___2;
-           FStar_Syntax_Syntax.hash_code = uu___3;_},
-         uu___4)
-        ->
-        let uu___5 = FStar_Syntax_Syntax.lid_of_fv fv in
-        FStar_Parser_Const.is_layered_effect_reify_lid uu___5
-    | uu___1 -> false
-let (get_reify_expr :
-  FStar_Syntax_Syntax.term ->
-    FStar_Syntax_Syntax.args ->
-      (FStar_Syntax_Syntax.term * FStar_Syntax_Syntax.args))
-  =
-  fun head ->
-    fun args ->
-      let uu___ =
-        let uu___1 =
-          let uu___2 =
-            FStar_Compiler_Effect.op_Bar_Greater head
-              FStar_Syntax_Subst.compress in
-          FStar_Compiler_Effect.op_Bar_Greater uu___2
-            FStar_Syntax_Util.unascribe in
-        uu___1.FStar_Syntax_Syntax.n in
-      match uu___ with
-      | FStar_Syntax_Syntax.Tm_constant (FStar_Const.Const_reify) ->
-          let uu___1 =
-            let uu___2 = FStar_Compiler_List.hd args in
-            FStar_Pervasives_Native.fst uu___2 in
-          let uu___2 = FStar_Compiler_List.tl args in (uu___1, uu___2)
-      | uu___1 ->
-          let uu___2 =
-            FStar_Compiler_List.span
-              (fun uu___3 ->
-                 match uu___3 with
-                 | (uu___4, q) ->
-                     (FStar_Pervasives_Native.uu___is_Some q) &&
-                       (FStar_Pervasives_Native.__proj__Some__item__v q).FStar_Syntax_Syntax.aqual_implicit)
-              args in
-          (match uu___2 with
-           | (uu___3, args1) ->
-               let uu___4 = args1 in
-               (match uu___4 with
-                | (t, uu___5)::tl ->
-                    let uu___6 =
-                      let uu___7 = FStar_Syntax_Subst.compress t in
-                      uu___7.FStar_Syntax_Syntax.n in
-                    (match uu___6 with
-                     | FStar_Syntax_Syntax.Tm_abs (uu___7, t1, uu___8) ->
-                         (t1, tl)
-                     | uu___7 -> failwith "Impossible!")))
 let rec (check_term_as_mlexpr :
   FStar_Extraction_ML_UEnv.uenv ->
     FStar_Syntax_Syntax.term ->
@@ -3091,21 +3026,28 @@ and (term_as_mlexpr' :
                   FStar_Compiler_Effect.op_Bar_Greater t uu___4 in
                 FStar_Compiler_Effect.op_Bar_Greater uu___3
                   (term_as_mlexpr g)
-            | uu___2 when is_reify head ->
-                let uu___3 = get_reify_expr head args in
-                (match uu___3 with
-                 | (e, args1) ->
-                     let e1 =
-                       let uu___4 = FStar_Extraction_ML_UEnv.tcenv_of_uenv g in
-                       FStar_TypeChecker_Util.reify_body uu___4
-                         [FStar_TypeChecker_Env.Inlining;
-                         FStar_TypeChecker_Env.ForExtraction;
-                         FStar_TypeChecker_Env.Unascribe] e in
-                     let tm =
-                       let uu___4 = FStar_TypeChecker_Util.remove_reify e1 in
-                       FStar_Syntax_Syntax.mk_Tm_app uu___4 args1
-                         t.FStar_Syntax_Syntax.pos in
-                     term_as_mlexpr g tm)
+            | FStar_Syntax_Syntax.Tm_constant (FStar_Const.Const_reify lopt)
+                ->
+                let e =
+                  let uu___2 = FStar_Extraction_ML_UEnv.tcenv_of_uenv g in
+                  let uu___3 =
+                    let uu___4 =
+                      let uu___5 =
+                        FStar_Compiler_Effect.op_Bar_Greater args
+                          FStar_Compiler_List.hd in
+                      FStar_Compiler_Effect.op_Bar_Greater uu___5
+                        FStar_Pervasives_Native.fst in
+                    FStar_Syntax_Util.mk_reify uu___4 lopt in
+                  FStar_TypeChecker_Util.norm_reify uu___2
+                    [FStar_TypeChecker_Env.Inlining;
+                    FStar_TypeChecker_Env.ForExtraction;
+                    FStar_TypeChecker_Env.Unascribe] uu___3 in
+                let tm =
+                  let uu___2 = FStar_TypeChecker_Util.remove_reify e in
+                  let uu___3 = FStar_Compiler_List.tl args in
+                  FStar_Syntax_Syntax.mk_Tm_app uu___2 uu___3
+                    t.FStar_Syntax_Syntax.pos in
+                term_as_mlexpr g tm
             | uu___2 ->
                 let rec extract_app is_data uu___3 uu___4 restArgs =
                   match (uu___3, uu___4) with

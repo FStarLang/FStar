@@ -34,7 +34,7 @@ type sconst =
   | Const_range_of 
   | Const_set_range_of 
   | Const_range of FStar_Compiler_Range.range 
-  | Const_reify 
+  | Const_reify of FStar_Ident.lid FStar_Pervasives_Native.option 
   | Const_reflect of FStar_Ident.lid [@@deriving yojson,show]
 let (uu___is_Const_effect : sconst -> Prims.bool) =
   fun projectee ->
@@ -82,7 +82,10 @@ let (__proj__Const_range__item___0 : sconst -> FStar_Compiler_Range.range) =
   fun projectee -> match projectee with | Const_range _0 -> _0
 let (uu___is_Const_reify : sconst -> Prims.bool) =
   fun projectee ->
-    match projectee with | Const_reify -> true | uu___ -> false
+    match projectee with | Const_reify _0 -> true | uu___ -> false
+let (__proj__Const_reify__item___0 :
+  sconst -> FStar_Ident.lid FStar_Pervasives_Native.option) =
+  fun projectee -> match projectee with | Const_reify _0 -> _0
 let (uu___is_Const_reflect : sconst -> Prims.bool) =
   fun projectee ->
     match projectee with | Const_reflect _0 -> true | uu___ -> false

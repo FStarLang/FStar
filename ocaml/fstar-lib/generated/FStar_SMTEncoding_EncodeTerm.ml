@@ -2165,35 +2165,70 @@ and (encode_term :
                           (arg, uu___6)::(rng, uu___7)::[]) ->
                            encode_term arg env
                        | (FStar_Syntax_Syntax.Tm_constant
-                          (FStar_Const.Const_reify), uu___6) ->
-                           let e0 =
-                             let uu___7 =
-                               let uu___8 =
-                                 FStar_Compiler_Effect.op_Bar_Greater args_e1
-                                   FStar_Compiler_List.hd in
-                               FStar_Compiler_Effect.op_Bar_Greater uu___8
-                                 FStar_Pervasives_Native.fst in
-                             FStar_TypeChecker_Util.reify_body
-                               env.FStar_SMTEncoding_Env.tcenv [] uu___7 in
-                           ((let uu___8 =
-                               FStar_Compiler_Effect.op_Less_Bar
-                                 (FStar_TypeChecker_Env.debug
-                                    env.FStar_SMTEncoding_Env.tcenv)
-                                 (FStar_Options.Other "SMTEncodingReify") in
-                             if uu___8
-                             then
+                          (FStar_Const.Const_reify lopt), uu___6) ->
+                           let fallback uu___7 =
+                             let f =
+                               FStar_SMTEncoding_Env.varops.FStar_SMTEncoding_Env.fresh
+                                 env.FStar_SMTEncoding_Env.current_module_name
+                                 "Tm_reify" in
+                             let decl =
+                               FStar_SMTEncoding_Term.DeclFun
+                                 (f, [], FStar_SMTEncoding_Term.Term_sort,
+                                   (FStar_Pervasives_Native.Some
+                                      "Imprecise reify")) in
+                             let uu___8 =
                                let uu___9 =
-                                 FStar_Syntax_Print.term_to_string e0 in
-                               FStar_Compiler_Util.print1
-                                 "Result of normalization %s\n" uu___9
-                             else ());
-                            (let e =
-                               let uu___8 =
-                                 FStar_TypeChecker_Util.remove_reify e0 in
-                               let uu___9 = FStar_Compiler_List.tl args_e1 in
-                               FStar_Syntax_Syntax.mk_Tm_app uu___8 uu___9
-                                 t0.FStar_Syntax_Syntax.pos in
-                             encode_term e env))
+                                 FStar_SMTEncoding_Term.mk_fv
+                                   (f, FStar_SMTEncoding_Term.Term_sort) in
+                               FStar_Compiler_Effect.op_Less_Bar
+                                 FStar_SMTEncoding_Util.mkFreeV uu___9 in
+                             let uu___9 =
+                               FStar_Compiler_Effect.op_Bar_Greater [decl]
+                                 FStar_SMTEncoding_Term.mk_decls_trivial in
+                             (uu___8, uu___9) in
+                           (match lopt with
+                            | FStar_Pervasives_Native.None -> fallback ()
+                            | FStar_Pervasives_Native.Some l when
+                                let uu___7 =
+                                  FStar_Compiler_Effect.op_Bar_Greater l
+                                    (FStar_TypeChecker_Env.norm_eff_name
+                                       env.FStar_SMTEncoding_Env.tcenv) in
+                                FStar_Compiler_Effect.op_Bar_Greater uu___7
+                                  (FStar_TypeChecker_Env.is_layered_effect
+                                     env.FStar_SMTEncoding_Env.tcenv)
+                                -> fallback ()
+                            | uu___7 ->
+                                let e0 =
+                                  let uu___8 =
+                                    let uu___9 =
+                                      let uu___10 =
+                                        FStar_Compiler_Effect.op_Bar_Greater
+                                          args_e1 FStar_Compiler_List.hd in
+                                      FStar_Compiler_Effect.op_Bar_Greater
+                                        uu___10 FStar_Pervasives_Native.fst in
+                                    FStar_Syntax_Util.mk_reify uu___9 lopt in
+                                  FStar_TypeChecker_Util.norm_reify
+                                    env.FStar_SMTEncoding_Env.tcenv [] uu___8 in
+                                ((let uu___9 =
+                                    FStar_Compiler_Effect.op_Less_Bar
+                                      (FStar_TypeChecker_Env.debug
+                                         env.FStar_SMTEncoding_Env.tcenv)
+                                      (FStar_Options.Other "SMTEncodingReify") in
+                                  if uu___9
+                                  then
+                                    let uu___10 =
+                                      FStar_Syntax_Print.term_to_string e0 in
+                                    FStar_Compiler_Util.print1
+                                      "Result of normalization %s\n" uu___10
+                                  else ());
+                                 (let e =
+                                    let uu___9 =
+                                      FStar_TypeChecker_Util.remove_reify e0 in
+                                    let uu___10 =
+                                      FStar_Compiler_List.tl args_e1 in
+                                    FStar_Syntax_Syntax.mk_Tm_app uu___9
+                                      uu___10 t0.FStar_Syntax_Syntax.pos in
+                                  encode_term e env)))
                        | (FStar_Syntax_Syntax.Tm_constant
                           (FStar_Const.Const_reflect uu___6),
                           (arg, uu___7)::[]) -> encode_term arg env
@@ -2855,8 +2890,12 @@ and (encode_term :
                                    env.FStar_SMTEncoding_Env.tcenv rc in
                                if uu___7
                                then
-                                 FStar_TypeChecker_Util.reify_body
-                                   env.FStar_SMTEncoding_Env.tcenv [] body1
+                                 let uu___8 =
+                                   FStar_Syntax_Util.mk_reify body1
+                                     (FStar_Pervasives_Native.Some
+                                        (rc.FStar_Syntax_Syntax.residual_effect)) in
+                                 FStar_TypeChecker_Util.norm_reify
+                                   env.FStar_SMTEncoding_Env.tcenv [] uu___8
                                else body1 in
                              let uu___7 = encode_term body2 envbody in
                              (match uu___7 with
