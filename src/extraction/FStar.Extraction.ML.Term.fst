@@ -645,27 +645,23 @@ let extraction_norm_steps =
   else extraction_norm_steps_core
 
 let maybe_reify_comp g (env:TcEnv.env) (c:S.comp) : S.term =
-  let extraction_mode =
-    c |> U.comp_effect_name
-      |> TcUtil.effect_extraction_mode env  in
-  if extraction_mode = S.Extract_reify
-  then TcEnv.reify_comp env c S.U_unknown
-       |> N.normalize extraction_norm_steps env
-  else if extraction_mode = S.Extract_primitive
-  then U.comp_result c
-  else if S.Extract_none? extraction_mode
-  then let S.Extract_none s = extraction_mode in
-       err_cannot_extract_effect (c |> U.comp_effect_name) c.pos s (Print.comp_to_string c)
-  else err_cannot_extract_effect (c |> U.comp_effect_name) c.pos "" (Print.comp_to_string c)
+  match c |> U.comp_effect_name
+          |> TcUtil.effect_extraction_mode env with
+  | S.Extract_reify ->
+    TcEnv.reify_comp env c S.U_unknown
+    |> N.normalize extraction_norm_steps env
+  | S.Extract_primitive -> U.comp_result c
+  | S.Extract_none s ->
+    err_cannot_extract_effect (c |> U.comp_effect_name) c.pos s (Print.comp_to_string c)
 
 let maybe_reify_term (env:TcEnv.env) (t:S.term) (l:lident) : S.term  =
-  let extraction_mode = TcUtil.effect_extraction_mode env l in
-  if extraction_mode = S.Extract_reify
-  then TcUtil.reify_body env [TcEnv.Inlining; TcEnv.ForExtraction; TcEnv.Unascribe] t
-  else if extraction_mode = S.Extract_primitive
-  then t
-  else let S.Extract_none s = extraction_mode in
-       err_cannot_extract_effect l t.pos s (Print.term_to_string t)
+  match TcUtil.effect_extraction_mode env l with
+  | S.Extract_reify ->
+    TcUtil.reify_body env
+      [TcEnv.Inlining; TcEnv.ForExtraction; TcEnv.Unascribe] t
+  | S.Extract_primitive -> t
+  | S.Extract_none s ->
+    err_cannot_extract_effect l t.pos s (Print.term_to_string t)
 
 let rec translate_term_to_mlty (g:uenv) (t0:term) : mlty =
     let arg_as_mlty (g:uenv) (a, _) : mlty =
