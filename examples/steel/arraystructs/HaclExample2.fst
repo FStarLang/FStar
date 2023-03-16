@@ -79,23 +79,25 @@ let do_something_with_precomp
   noop ();
   return (null _)
 
-(*
 let test_alloc_free
   ()
 : STT unit
     emp
     (fun _ -> emp)
 =
-  let a = alloc (scalar bool) true (mk_size_t 42ul) in
-  if Steel.C.Array.is_null a
+  let a = array_alloc (scalar bool) 42sz in
+  let _ = gen_elim () in
+  if array_is_null a
   then begin
-    Steel.C.Array.elim_varray_or_null_none a
+    rewrite (array_pts_to_or_null _ _) emp;
+    rewrite (freeable_or_null_array _) emp;
+    noop ()
   end else begin
-    Steel.C.Array.elim_varray_or_null_some a;
-    free a
-  end;
-  return ()
-*)
+    let s = vpattern_replace (array_pts_to_or_null _) in
+    rewrite (array_pts_to_or_null _ _) (array_pts_to a s);
+    rewrite (freeable_or_null_array _) (freeable_array a);
+    array_free a
+  end
 
 #push-options "--fuel 0 --print_universes --print_implicits --z3rlimit 128"
 #restart-solver
