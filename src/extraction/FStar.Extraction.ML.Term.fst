@@ -657,8 +657,9 @@ let maybe_reify_comp g (env:TcEnv.env) (c:S.comp) : S.term =
 let maybe_reify_term (env:TcEnv.env) (t:S.term) (l:lident) : S.term  =
   match TcUtil.effect_extraction_mode env l with
   | S.Extract_reify ->
-    TcUtil.reify_body env
-      [TcEnv.Inlining; TcEnv.ForExtraction; TcEnv.Unascribe] t
+    TcUtil.norm_reify env
+      [TcEnv.Inlining; TcEnv.ForExtraction; TcEnv.Unascribe]
+      (U.mk_reify t (Some l))
   | S.Extract_primitive -> t
   | S.Extract_none s ->
     err_cannot_extract_effect l t.pos s (Print.term_to_string t)
@@ -1270,39 +1271,6 @@ let extract_lb_iface (g:uenv) (lbs:letbindings)
                 g
                 lbs
 
-//
-// At the time of typechecking, we replace `reify e`
-//   with `reify___M (fun _ -> e)` when `M` is an indexed effect
-//
-// So at the time of extraction, we need to identify applications
-//   `reify___M (fun _ -> e)` as reify
-//
-let is_reify (head:S.term) : bool =
-  match (head |> SS.compress |> U.unascribe).n with
-  | Tm_constant Const_reify -> true
-  | Tm_fvar fv
-  | Tm_uinst ({n=Tm_fvar fv}, _) ->
-    PC.is_layered_effect_reify_lid (lid_of_fv fv)
-  | _ -> false
-
-//
-// Precondition: is_reify head
-//
-// Returns the term which should be reified, and rest of the args
-//
-let get_reify_expr (head:S.term) (args:S.args) : S.term & S.args =
-  match (head |> SS.compress |> U.unascribe).n with
-  | Tm_constant Const_reify -> fst (List.hd args), List.tl args
-
-  | _ ->
-    // case where we have reify___M (fun _ -> e)
-    let _, args = List.span (fun (_, q) ->
-      Some? q && (Some?.v q).aqual_implicit) args in
-    let (t, _)::tl = args in
-    match (SS.compress t).n with
-     | Tm_abs (_, t, _) -> t, tl
-     | _ -> failwith "Impossible!"
-
 //The main extraction function
 let rec check_term_as_mlexpr (g:uenv) (e:term) (f:e_tag) (ty:mlty) :  (mlexpr * mlty) =
     debug g
@@ -1577,10 +1545,11 @@ and term_as_mlexpr' (g:uenv) (top:term) : (mlexpr * e_tag * mlty) =
               |> N.normalize [Env.Beta; Env.Iota; Env.Zeta; Env.EraseUniverses; Env.AllowUnboundUniverses; Env.ForExtraction] (tcenv_of_uenv g)
               |> term_as_mlexpr g
 
-            | _ when is_reify head ->
-              let e, args = get_reify_expr head args in
-              let e = TcUtil.reify_body (tcenv_of_uenv g) [TcEnv.Inlining; TcEnv.ForExtraction; TcEnv.Unascribe] e in
-              let tm = S.mk_Tm_app (TcUtil.remove_reify e) args t.pos in
+            | Tm_constant (Const_reify lopt) ->
+              let e = TcUtil.norm_reify (tcenv_of_uenv g)
+                [TcEnv.Inlining; TcEnv.ForExtraction; TcEnv.Unascribe]
+                (U.mk_reify (args |> List.hd |> fst) lopt) in
+              let tm = S.mk_Tm_app (TcUtil.remove_reify e) (List.tl args) t.pos in
               term_as_mlexpr g tm
 
             | _ ->

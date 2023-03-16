@@ -805,7 +805,7 @@ let should_reify cfg stack =
         | s -> s
     in
     match drop_irrel stack with
-    | App (_, {n=Tm_constant FC.Const_reify}, _, _) :: _ ->
+    | App (_, {n=Tm_constant (FC.Const_reify _)}, _, _) :: _ ->
         // BU.print1 "Found a reify on the stack. %s" "" ;
         cfg.steps.reify_
     | _ -> false
@@ -1498,7 +1498,7 @@ let rec norm : cfg -> env -> stack -> term -> term =
             begin match stack with
               | Match _ :: _
               | Arg _ :: _
-              | App (_, {n=Tm_constant FC.Const_reify}, _, _) :: _
+              | App (_, {n=Tm_constant (FC.Const_reify _)}, _, _) :: _
               | MemoLazy _ :: _ when cfg.steps.beta ->
                 log cfg  (fun () -> BU.print_string "+++ Dropping ascription \n");
                 norm cfg env stack t1 //ascriptions should not block reduction
@@ -1795,7 +1795,7 @@ and reduce_impure_comp cfg env stack (head : term) // monadic term
 and do_reify_monadic fallback cfg env stack (top : term) (m : monad_name) (t : typ) : term =
     (* Precondition: the stack head is an App (reify, ...) *)
     begin match stack with
-    | App (_, {n=Tm_constant FC.Const_reify}, _, _) :: _ -> ()
+    | App (_, {n=Tm_constant (FC.Const_reify _)}, _, _) :: _ -> ()
     | _ -> failwith (BU.format1 "INTERNAL ERROR: do_reify_monadic: bad stack: %s" (stack_to_string stack))
     end;
     let top0 = top in
@@ -1837,7 +1837,7 @@ and do_reify_monadic fallback cfg env stack (top : term) (m : monad_name) (t : t
           (* which can be optimised to a non-monadic let-binding [let x = e in body] *)
           | Some e ->
             let lb = {lb with lbeff=PC.effect_PURE_lid; lbdef=e} in
-            norm cfg env (List.tl stack) (S.mk (Tm_let((false, [lb]), U.mk_reify body)) top.pos)
+            norm cfg env (List.tl stack) (S.mk (Tm_let((false, [lb]), U.mk_reify body (Some m))) top.pos)
           | None ->
             if (match is_return body with Some ({n=Tm_bvar y}) -> S.bv_eq x y | _ -> false)
             then
@@ -1850,9 +1850,9 @@ and do_reify_monadic fallback cfg env stack (top : term) (m : monad_name) (t : t
               (* since we wouldn't rematch on an already raised exception *)
               let rng = top.pos in
 
-              let head = U.mk_reify <| lb.lbdef in
+              let head = U.mk_reify lb.lbdef (Some m) in
 
-              let body = U.mk_reify <| body in
+              let body = U.mk_reify body (Some m) in
               (* TODO : Check that there is no sensible cflags to pass in the residual_comp *)
               let body_rc = {
                 residual_effect=m;
@@ -2008,7 +2008,7 @@ and do_reify_monadic fallback cfg env stack (top : term) (m : monad_name) (t : t
          * Why is it not calling rebuild? I'm gonna keep it for now. *)
         let fallback1 () =
             log cfg (fun () -> BU.print2 "Reified (2) <%s> to %s\n" (Print.term_to_string top0) "");
-            norm cfg env (List.tl stack) (U.mk_reify top)
+            norm cfg env (List.tl stack) (U.mk_reify top (Some m))
         in
         let fallback2 () =
             log cfg (fun () -> BU.print2 "Reified (3) <%s> to %s\n" (Print.term_to_string top0) "");
@@ -2034,7 +2034,7 @@ and do_reify_monadic fallback cfg env stack (top : term) (m : monad_name) (t : t
             else
 
             (* Turn it info (reify head) args, then do_unfold_fv will kick in on the head *)
-            let t = S.mk_Tm_app (U.mk_reify head) args t.pos in
+            let t = S.mk_Tm_app (U.mk_reify head (Some m)) args t.pos in
             norm cfg env (List.tl stack) t
 
         | _ ->
@@ -2054,7 +2054,7 @@ and do_reify_monadic fallback cfg env stack (top : term) (m : monad_name) (t : t
       (* Commutation of reify with match, note that the scrutinee should never be effectful    *)
       (* (should be checked at typechecking and elaborated with an explicit binding if needed) *)
       (* reify (match e with p -> e') ~> match e with p -> reify e' *)
-      let branches = branches |> List.map (fun (pat, wopt, tm) -> pat, wopt, U.mk_reify tm) in
+      let branches = branches |> List.map (fun (pat, wopt, tm) -> pat, wopt, U.mk_reify tm (Some m)) in
       let tm = mk (Tm_match(e, asc_opt, branches, lopt)) top.pos in
       norm cfg env (List.tl stack) tm
 
@@ -2127,7 +2127,7 @@ and reify_lift cfg e msrc mtgt t : term =
        *)
       let e =
         if Env.is_reifiable_effect env msrc
-        then U.mk_reify e
+        then U.mk_reify e (Some msrc)
         else S.mk
                (Tm_abs ([S.null_binder S.t_unit], e,
                         Some ({ residual_effect = msrc; residual_typ = Some t; residual_flags = [] })))

@@ -49,7 +49,8 @@ type sconst =
   | Const_range_of                                           (* `range_of` primitive *)
   | Const_set_range_of                                       (* `set_range_of` primitive *)
   | Const_range       of FStar.Compiler.Range.range          (* not denotable by the programmer *)
-  | Const_reify                                              (* a coercion from a computation to its underlying repr *)
+  | Const_reify       of option Ident.lid                    (* a coercion from a computation to its underlying repr *)
+                                                             (* decorated optionally with the computation effect name *)
   | Const_reflect     of Ident.lid                           (* a coercion from a Tot term to an l-computation type *)
 
 let eq_const c1 c2 =

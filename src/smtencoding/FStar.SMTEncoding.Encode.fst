@@ -692,8 +692,10 @@ let encode_top_level_let :
       let binders, body, comp =
           let tcenv = Env.push_binders tcenv binders in
           if is_smt_reifiable_comp tcenv comp
-          then let comp = reify_comp tcenv comp U_unknown in
-               let body = TcUtil.reify_body tcenv [] body in
+          then let eff_name = comp |> U.comp_effect_name in
+               let comp = reify_comp tcenv comp U_unknown in
+               let body = TcUtil.norm_reify tcenv []
+                 (U.mk_reify body (Some eff_name)) in
                let more_binders, body, comp = aux comp body in
                binders@more_binders, body, comp
           else binders, body, comp

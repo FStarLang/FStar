@@ -2664,27 +2664,26 @@ let pure_or_ghost_pre_and_post env comp =
 
          end
 
-(* [reify_body env t] assumes that [t] has a reifiable computation type *)
-(* that is env |- t : M t' for some effect M and type t' where M is reifiable *)
-(* and returns the result of reifying t *)
-let reify_body (env:Env.env) (steps:Env.steps) (t:S.term) : S.term =
-    def_check_closed_in_env t.pos "reify_body" env t;
-    let tm = U.mk_reify t in
-    let tm' = N.normalize
+(* [norm_reify env t] assumes that [t] has the shape reify t0 *)
+(* where env |- t0 : M t' for some effect M and type t' where M is reifiable *)
+(* and returns the result of reducing t with reification on *)
+let norm_reify (env:Env.env) (steps:Env.steps) (t:S.term) : S.term =
+    def_check_closed_in_env t.pos "norm_reify" env t;
+    let t' = N.normalize
       ([Env.Beta; Env.Reify; Env.Eager_unfolding; Env.EraseUniverses; Env.AllowUnboundUniverses; Env.Exclude Env.Zeta]@steps)
-      env tm in
+      env t in
     if Env.debug env <| Options.Other "SMTEncodingReify"
     then BU.print2 "Reified body %s \nto %s\n"
-        (Print.term_to_string tm)
-        (Print.term_to_string tm') ;
-    tm'
+        (Print.term_to_string t)
+        (Print.term_to_string t') ;
+    t'
 
 let remove_reify (t: S.term): S.term =
   if (match (SS.compress t).n with | Tm_app _ -> false | _ -> true)
   then t
   else
     let head, args = U.head_and_args t in
-    if (match (SS.compress head).n with Tm_constant FStar.Const.Const_reify -> true | _ -> false)
+    if (match (SS.compress head).n with Tm_constant (FStar.Const.Const_reify _) -> true | _ -> false)
     then begin match args with
         | [x] -> fst x
         | _ -> failwith "Impossible : Reify applied to multiple arguments after normalization."
