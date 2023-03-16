@@ -206,8 +206,13 @@ let array_len_t (#t: Type) (#td: typedef t) (r: array_ptr td) : Tot Type0 =
 inline_for_extraction [@@noextract_to "krml"]
 let array_or_null (#t: Type) (td: typedef t) : Tot Type0 = (r: array_ptr td & array_len_t r)
 
+inline_for_extraction [@@noextract_to "krml"]
+let array_ptr_of (#t: Type) (#td: typedef t) (ar: array_or_null td) : Tot (array_ptr td) =
+  match ar with
+  | (| a, _ |) -> a
+
 let g_array_is_null (#t: Type) (#td: typedef t) (a: array_or_null td) : GTot bool =
-  g_array_ptr_is_null (dfst a)
+  g_array_ptr_is_null (array_ptr_of a)
 
 inline_for_extraction [@@noextract_to "krml"]
 let array (#t: Type) (td: typedef t) : Tot Type0 = (a: array_or_null td { g_array_is_null a == false })
@@ -262,7 +267,7 @@ let array_is_null
     (fun _ -> array_pts_to_or_null r v)
     (True)
     (fun b -> b == g_array_is_null r)
-= let a = dfst r in
+= let a = array_ptr_of r in
   let len : array_len_t a = dsnd r in
   rewrite (array_pts_to_or_null _ _) (array_pts_to_or_null (| a, len |) v);
   let res = array_ptr_is_null a len in
@@ -360,7 +365,7 @@ let array_ref_of_base_post
   (ar: array td)
 : GTot prop
 =
-       dfst ar == a /\
+       array_ptr_of ar == a /\
         array_ref_base_size a == Ghost.reveal n /\
         array_ref_offset a == 0sz /\
         has_array_of_base r ar /\
@@ -449,7 +454,7 @@ val array_ptr_alloc
       exists_ (fun (ar: array_or_null td) -> exists_ (fun (s: Seq.seq t) ->
       freeable_or_null_array ar `star`
       array_pts_to_or_null ar s `star` pure (
-      dfst ar == a /\
+      array_ptr_of ar == a /\
       (g_array_is_null ar == false ==> array_length ar == SZ.v sz) /\
       Ghost.reveal s `Seq.equal` FStar.Seq.create (SZ.v sz) (uninitialized td)
     ))))
@@ -514,7 +519,7 @@ let array_free
     (fun _ -> emp)
     (full_seq td s)
     (fun _ -> True)
-= let al = dfst a in
+= let al = array_ptr_of a in
   let n: array_len_t al = dsnd a in
   rewrite (freeable_array _) (freeable_array (| al, n |));
   rewrite (array_pts_to _ _) (array_pts_to (| al, n |) s);
@@ -625,7 +630,7 @@ val has_array_cell
 : Tot vprop
 (*
 = SZ.v i < SZ.v (dsnd a) /\
-  has_base_array_cell (array_ref_base (dfst a)) (array_ref_offset (dfst a) `SZ.add` i) r
+  has_base_array_cell (array_ref_base (array_ptr_of a)) (array_ref_offset (array_ptr_of a) `SZ.add` i) r
 *)
 
 val has_array_cell_post
@@ -649,13 +654,13 @@ val has_array_cell_has_base_array_cell
   (i: SZ.t)
   (r: ref td)
   (#ty: Type)
-  (br: ref (base_array0 ty td (array_ref_base_size (dfst a))))
+  (br: ref (base_array0 ty td (array_ref_base_size (array_ptr_of a))))
 : STGhost (Ghost.erased SZ.t) opened
     (has_array_cell a i r)
     (fun j -> has_base_array_cell br j r)
-    (has_array_ref_base (dfst a) br)
+    (has_array_ref_base (array_ptr_of a) br)
     (fun j ->
-      SZ.v j == SZ.v (array_ref_offset (dfst a)) + SZ.v i
+      SZ.v j == SZ.v (array_ref_offset (array_ptr_of a)) + SZ.v i
     )
 
 val has_base_array_cell_has_array_cell
@@ -666,16 +671,16 @@ val has_base_array_cell_has_array_cell
   (i: SZ.t)
   (r: ref td)
   (#ty: Type)
-  (br: ref (base_array0 ty td (array_ref_base_size (dfst a))))
+  (br: ref (base_array0 ty td (array_ref_base_size (array_ptr_of a))))
 : STGhost (Ghost.erased SZ.t) opened
     (has_base_array_cell br i r)
     (fun j -> has_array_cell a j r)
-    (has_array_ref_base (dfst a) br /\
-      SZ.v i >= SZ.v (array_ref_offset (dfst a)) /\
-      SZ.v i < SZ.v (array_ref_offset (dfst a)) + SZ.v (dsnd a)
+    (has_array_ref_base (array_ptr_of a) br /\
+      SZ.v i >= SZ.v (array_ref_offset (array_ptr_of a)) /\
+      SZ.v i < SZ.v (array_ref_offset (array_ptr_of a)) + SZ.v (dsnd a)
     )
     (fun j ->
-      SZ.v i == SZ.v (array_ref_offset (dfst a)) + SZ.v j
+      SZ.v i == SZ.v (array_ref_offset (array_ptr_of a)) + SZ.v j
     )
 
 val has_array_cell_inj
@@ -695,7 +700,7 @@ val has_array_cell_inj
       has_array_cell a i r2 `star`
       ref_equiv r1 r2
     )
-// = has_base_array_cell_inj (array_ref_base (dfst a)) (array_ref_offset (dfst a) `SZ.add` i) r1 r2
+// = has_base_array_cell_inj (array_ref_base (array_ptr_of a)) (array_ref_offset (array_ptr_of a) `SZ.add` i) r1 r2
 
 (*
 val has_array_cell_array_of_ref
@@ -853,7 +858,7 @@ val array_ref_split
     (fun _ -> array_pts_to (array_split_l (| al, len |) i) (Seq.slice s 0 (SZ.v i)) `star`
       array_pts_to (array_split_r (| al, len |) i) (Seq.slice s (SZ.v i) (Seq.length s)))
     (SZ.v i <= SZ.v len \/ SZ.v i <= Seq.length s)
-    (fun ar -> ar == dfst (array_split_r (| al, len |) i))
+    (fun ar -> ar == array_ptr_of (array_split_r (| al, len |) i))
 
 inline_for_extraction [@@noextract_to "krml"]
 let array_split
