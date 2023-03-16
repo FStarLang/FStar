@@ -30,11 +30,7 @@ clean:
 	rm -f .depend *.checked parsing/*.checked
 	rm -rf out
 
-llextract:
-	fstar.exe --codegen OCaml --extract '-* LL' --odir out LL.fst
-	krml -skip-compilation -tmpdir out -I parsing Buffers.fst parsing/Flights.fst parsing/FlightsExn.fst parsing/FlightsStExn.fst
-
-.PHONY: all depend verify verify-all clean llextract extraction
+.PHONY: all depend verify verify-all clean extraction
 
 %.fsti-in %.fst-in:
 	@echo --warn_error -330-274-241
