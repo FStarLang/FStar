@@ -110,7 +110,7 @@ let my_types_without_decay () =
 
   | MLTY_Named ([arg; _], p) when
     Syntax.string_of_mlpath p = "Steel.ST.C.Types.Base.ptr"
-    || Syntax.string_of_mlpath p = "Steel.ST.C.Types.Array.array_ref"
+    || Syntax.string_of_mlpath p = "Steel.ST.C.Types.Array.array_ptr"
     ->
       TBuf (translate_type_without_decay env arg)
 
@@ -165,6 +165,12 @@ let my_exprs () = register_pre_translate_expr begin fun env e ->
           false) ->
       EBufCreate (ManuallyManaged, translate_expr env e1, translate_expr env e2)
 
+  | MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, _) }, [ _ (* td *); sz ])
+    when (
+          string_of_mlpath p = "Steel.ST.C.Types.Array.array_ptr_alloc" ||
+          false) ->
+      EBufCreateNoInit (ManuallyManaged, translate_expr env sz)
+
   | MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, _) }, [ e ])
     when (
           string_of_mlpath p = "Steel.C.Opt.malloc" ||
@@ -182,11 +188,21 @@ let my_exprs () = register_pre_translate_expr begin fun env e ->
           false) ->
       EBufFree (translate_expr env e2)
 
+  | MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, _) }, [ _(* td *); _ (* s *); e2; _ (* len *) ])
+    when (
+          string_of_mlpath p = "Steel.ST.C.Types.Array.array_ref_free" ||
+          false) ->
+      EBufFree (translate_expr env e2)
+
   | MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, _) }, [ _ (* typedef *); _ (* v *); e ]) when
        string_of_mlpath p = "Steel.ST.C.Types.Base.free" ->
       EBufFree (translate_expr env e)
 
 (* BEGIN support for the Steel null pointer. *)
+
+  | MLE_App ({expr=MLE_TApp ({expr=MLE_Name p}, [t])}, [_ (* opened *); _ (* td *); _ (* v *); e; _ (* len *) ])
+    when string_of_mlpath p = "Steel.ST.C.Types.Array.array_ptr_is_null"
+    -> generate_is_null (translate_type env t) (translate_expr env e)
 
   | MLE_App ({expr=MLE_TApp ({expr=MLE_Name p}, [t])}, [_ (* opened *); e; _ (* a' *); _ (* sq *) ])
     when string_of_mlpath p = "Steel.C.Array.Base.is_null_from"
@@ -202,6 +218,7 @@ let my_exprs () = register_pre_translate_expr begin fun env e ->
   
   | MLE_App ({expr=MLE_TApp ({expr=MLE_Name p}, [t])}, _)
     when Syntax.string_of_mlpath p = "Steel.C.Array.Base.null_from"
+    || Syntax.string_of_mlpath p = "Steel.ST.C.Types.Array.null_array_ptr"
     -> EBufNull (translate_type env t)
 
   | MLE_App ({expr=MLE_TApp ({expr=MLE_Name p}, t::_)}, [_ (* pcm *)])
