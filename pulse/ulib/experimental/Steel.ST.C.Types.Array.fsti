@@ -236,8 +236,22 @@ let array_pts_to_or_null
   then emp
   else array_pts_to r v
 
+[@@noextract_to "krml"] // primitive
+val array_ptr_is_null
+  (#t: Type)
+  (#opened: _)
+  (#td: typedef t)
+  (#v: Ghost.erased (Seq.seq t))
+  (r: array_ptr td)
+  (len: array_len_t r)
+: STAtomicBase bool false opened Unobservable
+    (array_pts_to_or_null (| r, len |) v)
+    (fun _ -> array_pts_to_or_null (| r, len |) v)
+    (True)
+    (fun b -> b == g_array_is_null (| r, len |))
+
 inline_for_extraction [@@noextract_to "krml"]
-val array_is_null
+let array_is_null
   (#t: Type)
   (#opened: _)
   (#td: typedef t)
@@ -248,6 +262,12 @@ val array_is_null
     (fun _ -> array_pts_to_or_null r v)
     (True)
     (fun b -> b == g_array_is_null r)
+= let a = dfst r in
+  let len : array_len_t a = dsnd r in
+  rewrite (array_pts_to_or_null _ _) (array_pts_to_or_null (| a, len |) v);
+  let res = array_ptr_is_null a len in
+  rewrite (array_pts_to_or_null _ _) (array_pts_to_or_null r v);
+  return res
 
 val array_pts_to_length
   (#opened: _)

@@ -306,9 +306,9 @@ let array_pts_to0
 let array_pts_to r v =
   array_pts_to0 r v
 
-let array_is_null
-  r
-= return (HR.is_null (dfst r).ar_base)
+let array_ptr_is_null
+  r _
+= return (HR.is_null r.ar_base)
 
 let array_pts_to_length r v =
   rewrite (array_pts_to r v) (array_pts_to0 r v);
