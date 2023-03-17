@@ -315,6 +315,8 @@ let (top_level_effect_attr : FStar_Ident.lident) = psconst "top_level_effect"
 let (effect_parameter_attr : FStar_Ident.lident) = psconst "effect_param"
 let (bind_has_range_args_attr : FStar_Ident.lident) =
   psconst "bind_has_range_args"
+let (primitive_extraction_attr : FStar_Ident.lident) =
+  psconst "primitive_extraction"
 let (binder_strictly_positive_attr : FStar_Ident.lident) =
   psconst "strictly_positive"
 let (no_auto_projectors_attr : FStar_Ident.lident) =
@@ -355,7 +357,14 @@ let (const_to_string : FStar_Const.sconst -> Prims.string) =
     | FStar_Const.Const_range r -> FStar_Compiler_Range.string_of_range r
     | FStar_Const.Const_range_of -> "range_of"
     | FStar_Const.Const_set_range_of -> "set_range_of"
-    | FStar_Const.Const_reify -> "reify"
+    | FStar_Const.Const_reify lopt ->
+        let uu___ =
+          match lopt with
+          | FStar_Pervasives_Native.None -> ""
+          | FStar_Pervasives_Native.Some l ->
+              let uu___1 = FStar_Ident.string_of_lid l in
+              FStar_Compiler_Util.format1 "<%s>" uu___1 in
+        FStar_Compiler_Util.format1 "reify%s" uu___
     | FStar_Const.Const_reflect l ->
         let uu___ = sli l in
         FStar_Compiler_Util.format1 "[[%s.reflect]]" uu___
@@ -564,21 +573,6 @@ let (or_elim_lid : FStar_Ident.lid) = classical_sugar_lid "or_elim"
 let (and_elim_lid : FStar_Ident.lid) = classical_sugar_lid "and_elim"
 let (match_returns_def_name : Prims.string) =
   FStar_String.op_Hat FStar_Ident.reserved_prefix "_ret_"
-let (layered_effect_reify_val_lid :
-  FStar_Ident.lident -> FStar_Compiler_Range.range -> FStar_Ident.lident) =
-  fun eff_name ->
-    fun r ->
-      let ns = FStar_Ident.ns_of_lid eff_name in
-      let reify_fn_name =
-        let uu___ =
-          let uu___1 =
-            FStar_Compiler_Effect.op_Bar_Greater eff_name
-              FStar_Ident.ident_of_lid in
-          FStar_Compiler_Effect.op_Bar_Greater uu___1
-            FStar_Ident.string_of_id in
-        FStar_String.op_Hat "reify___" uu___ in
-      let uu___ = FStar_Ident.mk_ident (reify_fn_name, r) in
-      FStar_Ident.lid_of_ns_and_id ns uu___
 let (steel_memory_inv_lid : FStar_Ident.lident) =
   FStar_Ident.lid_of_path ["Steel"; "Memory"; "inv"]
     FStar_Compiler_Range.dummyRange

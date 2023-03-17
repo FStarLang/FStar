@@ -7767,6 +7767,29 @@ let rec (desugar_effect :
                                               ([], eff_t1)), uu___7)) in
                                    (match uu___4 with
                                     | (eff_sig, combinators) ->
+                                        let extraction_mode =
+                                          if is_layered
+                                          then
+                                            FStar_Syntax_Syntax.Extract_none
+                                              ""
+                                          else
+                                            if for_free
+                                            then
+                                              (let uu___6 =
+                                                 FStar_Compiler_Util.for_some
+                                                   (fun uu___7 ->
+                                                      match uu___7 with
+                                                      | FStar_Syntax_Syntax.Reifiable
+                                                          -> true
+                                                      | uu___8 -> false)
+                                                   qualifiers in
+                                               if uu___6
+                                               then
+                                                 FStar_Syntax_Syntax.Extract_reify
+                                               else
+                                                 FStar_Syntax_Syntax.Extract_primitive)
+                                            else
+                                              FStar_Syntax_Syntax.Extract_primitive in
                                         let sigel =
                                           let uu___5 =
                                             let uu___6 =
@@ -7787,7 +7810,9 @@ let rec (desugar_effect :
                                               FStar_Syntax_Syntax.actions =
                                                 actions1;
                                               FStar_Syntax_Syntax.eff_attrs =
-                                                uu___6
+                                                uu___6;
+                                              FStar_Syntax_Syntax.extraction_mode
+                                                = extraction_mode
                                             } in
                                           FStar_Syntax_Syntax.Sig_new_effect
                                             uu___5 in
@@ -7984,7 +8009,9 @@ and (desugar_redefine_effect :
                                    FStar_Syntax_Syntax.combinators = uu___6;
                                    FStar_Syntax_Syntax.actions = uu___7;
                                    FStar_Syntax_Syntax.eff_attrs =
-                                     (ed.FStar_Syntax_Syntax.eff_attrs)
+                                     (ed.FStar_Syntax_Syntax.eff_attrs);
+                                   FStar_Syntax_Syntax.extraction_mode =
+                                     (ed.FStar_Syntax_Syntax.extraction_mode)
                                  } in
                                let se =
                                  let uu___5 =
@@ -9389,7 +9416,9 @@ let (add_modul_to_env :
                   FStar_Syntax_Syntax.combinators = uu___4;
                   FStar_Syntax_Syntax.actions = uu___5;
                   FStar_Syntax_Syntax.eff_attrs =
-                    (ed.FStar_Syntax_Syntax.eff_attrs)
+                    (ed.FStar_Syntax_Syntax.eff_attrs);
+                  FStar_Syntax_Syntax.extraction_mode =
+                    (ed.FStar_Syntax_Syntax.extraction_mode)
                 } in
           let push_sigelt env se =
             match se.FStar_Syntax_Syntax.sigel with

@@ -4763,7 +4763,7 @@ and (p_constant : FStar_Const.sconst -> FStar_Pprint.document) =
     | FStar_Const.Const_set_range_of -> str "set_range_of"
     | FStar_Const.Const_range r ->
         let uu___1 = FStar_Compiler_Range.string_of_range r in str uu___1
-    | FStar_Const.Const_reify -> str "reify"
+    | FStar_Const.Const_reify uu___1 -> str "reify"
     | FStar_Const.Const_reflect lid ->
         let uu___1 = p_quident lid in
         let uu___2 =

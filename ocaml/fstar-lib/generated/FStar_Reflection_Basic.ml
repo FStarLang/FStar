@@ -116,7 +116,7 @@ let (inspect_const :
     | FStar_Const.Const_bool (false) -> FStar_Reflection_Data.C_False
     | FStar_Const.Const_string (s, uu___) -> FStar_Reflection_Data.C_String s
     | FStar_Const.Const_range r -> FStar_Reflection_Data.C_Range r
-    | FStar_Const.Const_reify -> FStar_Reflection_Data.C_Reify
+    | FStar_Const.Const_reify uu___ -> FStar_Reflection_Data.C_Reify
     | FStar_Const.Const_reflect l ->
         let uu___ = FStar_Ident.path_of_lid l in
         FStar_Reflection_Data.C_Reflect uu___
@@ -424,7 +424,8 @@ let (pack_const : FStar_Reflection_Data.vconst -> FStar_Syntax_Syntax.sconst)
     | FStar_Reflection_Data.C_String s ->
         FStar_Const.Const_string (s, FStar_Compiler_Range.dummyRange)
     | FStar_Reflection_Data.C_Range r -> FStar_Const.Const_range r
-    | FStar_Reflection_Data.C_Reify -> FStar_Const.Const_reify
+    | FStar_Reflection_Data.C_Reify ->
+        FStar_Const.Const_reify FStar_Pervasives_Native.None
     | FStar_Reflection_Data.C_Reflect ns ->
         let uu___ =
           FStar_Ident.lid_of_path ns FStar_Compiler_Range.dummyRange in
