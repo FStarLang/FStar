@@ -2583,11 +2583,17 @@ let (encode_top_level_let :
                         comp in
                     if uu___3
                     then
+                      let eff_name =
+                        FStar_Compiler_Effect.op_Bar_Greater comp
+                          FStar_Syntax_Util.comp_effect_name in
                       let comp1 =
                         FStar_TypeChecker_Env.reify_comp tcenv1 comp
                           FStar_Syntax_Syntax.U_unknown in
                       let body1 =
-                        FStar_TypeChecker_Util.reify_body tcenv1 [] body in
+                        let uu___4 =
+                          FStar_Syntax_Util.mk_reify body
+                            (FStar_Pervasives_Native.Some eff_name) in
+                        FStar_TypeChecker_Util.norm_reify tcenv1 [] uu___4 in
                       let uu___4 = aux comp1 body1 in
                       match uu___4 with
                       | (more_binders, body2, comp2) ->
