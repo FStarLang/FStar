@@ -28,7 +28,7 @@ FSTAR_OPTIONS = --cache_checked_modules \
 
 FSTAR = $(FSTAR_EXE) $(FSTAR_OPTIONS)
 
-ALL_SOURCE_FILES = $(filter-out LList.fst,$(wildcard *.fst *.fsti))
+ALL_SOURCE_FILES = $(wildcard *.fst *.fsti)
 NO_EXTRACT_MODULES=PointStruct HaclExample ScalarUnion
 EXTRACT_SOURCE_FILES = $(filter-out $(addsuffix .fst,$(NO_EXTRACT_MODULES)),$(ALL_SOURCE_FILES))
 

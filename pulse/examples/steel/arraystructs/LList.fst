@@ -1,5 +1,6 @@
 module LList
-open Steel.C.Types
+open Steel.ST.GenElim
+open Steel.ST.C.Types
 
 module U32 = FStar.UInt32
 
@@ -19,117 +20,83 @@ let _ = define_struct0 cell_n "LList.cell" cell_fields
 inline_for_extraction noextract
 let cell = struct0 cell_n "LList.cell" cell_fields
 
-let rec llist' (p: ptr cell) (l: Ghost.erased (list U32.t)) : Tot vprop (decreases (Ghost.reveal l)) =
+[@@__reduce__]
+let llist_nil (p: ptr cell) : Tot vprop =
+  pure (p == null _)
+
+[@@__reduce__]
+let llist_cons (p: ptr cell) (a: U32.t) (q: Ghost.erased (list U32.t)) (llist: (ptr cell -> (l: Ghost.erased (list U32.t) { List.Tot.length l < List.Tot.length (a :: q) }) -> Tot vprop)) : Tot vprop =
+  exists_ (fun (p1: ref cell) -> exists_ (fun (p2: ptr cell) ->
+    pts_to p1 (struct_set_field "hd" (mk_scalar a) (struct_set_field "tl" (mk_scalar (p2 <: void_ptr)) (unknown cell))) `star`
+    llist p2 q `star`
+    freeable p1 `star`
+    pure (p == p1)
+  ))
+
+let rec llist (p: ptr cell) (l: Ghost.erased (list U32.t)) : Tot vprop (decreases (List.Tot.length l)) =
   match Ghost.reveal l with
-  | [] -> pure (p == null _)
-  | a :: q ->
-    h_exists (fun (_: squash (~ (p == null _) /\ freeable p)) ->
-      h_exists (fun (p' : ptr cell) ->
-      pts_to p (struct_set_field "hd" (mk_scalar a) (struct_set_field "tl" (mk_scalar (p' <: void_ptr)) (unknown cell))) `star`
-      llist' p' q
-    ))
+  | [] -> llist_nil p
+  | a :: q -> llist_cons p a q llist
 
-[@@__steel_reduce__]
-let llist (p: ptr cell) (l: Ghost.erased (list U32.t)) : Tot vprop = VUnit ({
-  hp = hp_of (llist' p l);
-  t = _;
-  sel = trivial_selector _;
-})
+let intro_llist_cons
+  (#opened: _)
+  (p1: ref cell) (#v1: Ghost.erased (typeof cell)) (p2: ptr cell) (a: U32.t) (q: Ghost.erased (list U32.t))
+: STGhost unit opened
+    (pts_to p1 v1 `star`
+      llist p2 q `star`
+      freeable p1
+    )
+    (fun _ -> llist p1 (a :: q))
+    (Ghost.reveal v1 `struct_eq` struct_set_field "hd" (mk_scalar a) (struct_set_field "tl" (mk_scalar (p2 <: void_ptr)) (unknown cell)))
+    (fun _ -> True)
+= noop ();
+  rewrite_with_tactic (llist_cons p1 a q llist) (llist p1 (a :: q))
 
-let change_slprop_by_norm
-  (#opened: _) (p q: vprop)
-: SteelGhost unit opened p (fun _ -> q) (fun _ -> normalize (hp_of p == hp_of q)) (fun _ _ _ -> True)
-= rewrite_slprop p q (fun _ -> ())
+let elim_llist_cons
+  (#opened: _)
+  (p1: ptr cell) (a: U32.t) (q: Ghost.erased (list U32.t))
+: STGhostT (p2: Ghost.erased (ptr cell) { ~ (p1 == null _) }) opened
+    (llist p1 (a :: q))
+    (fun p2 ->
+      pts_to p1 (struct_set_field "hd" (mk_scalar a) (struct_set_field "tl" (mk_scalar (p2 <: void_ptr)) (unknown cell))) `star`
+      llist p2 q `star`
+      freeable p1
+    )
+= rewrite_with_tactic (llist p1 (a :: q)) (llist_cons p1 a q llist);
+  let _ = gen_elim () in
+  let p2' = vpattern_erased (fun x -> llist x q) in
+  let p2 : (p2: Ghost.erased (ptr cell) { ~ (p1 == null _) }) = p2' in
+  vpattern_rewrite (fun x -> llist x q) p2;
+  rewrite (pts_to _ _) (pts_to _ _);
+  rewrite (freeable _) (freeable _);
+  _
 
-let llist_intro_nil (#opened: _) (p: ptr cell) : SteelGhost unit opened
-  emp
-  (fun _ -> llist p [])
-  (fun _ -> p == null _)
-  (fun _ _ _ -> True)
-= intro_pure (p == null _);
-  change_slprop_by_norm
-    (pure (p == null _))
-    (llist p [])
-
-let llist_intro_cons (#opened: _) (p: ref cell) (s: Ghost.erased (typeof cell)) (a: U32.t) (p' : ptr cell) (q: Ghost.erased (list U32.t)) : SteelGhost unit opened
-  (pts_to p s `star` llist p' q)
-  (fun _ -> llist p (a :: q))
-  (fun _ ->
-    freeable p /\
-    s `struct_eq` struct_set_field "hd" (mk_scalar a) (struct_set_field "tl" (mk_scalar (p' <: void_ptr)) (unknown cell))
-  )
-  (fun _ _ _ -> True)
-= change_equal_slprop (pts_to p s) (pts_to p (struct_set_field "hd" (mk_scalar a) (struct_set_field "tl" (mk_scalar (p' <: void_ptr)) (unknown cell))));
-  intro_exists p' (fun (p' : ptr cell) -> pts_to p (struct_set_field "hd" (mk_scalar a) (struct_set_field "tl" (mk_scalar (p' <: void_ptr)) (unknown cell))) `star`
-      llist p' q
-  );
-  intro_exists () (fun (_: squash (~ (p == null _) /\ freeable p)) ->
-    h_exists (fun (p' : ptr cell) -> pts_to p (struct_set_field "hd" (mk_scalar a) (struct_set_field "tl" (mk_scalar (p' <: void_ptr)) (unknown cell))) `star`
-      llist p' q
-  ));
-  change_slprop_by_norm
-    (h_exists _)
-    (llist p (a :: q))
-
-let llist_elim_nil (#opened: _) (p: ptr cell) (l: Ghost.erased (list U32.t)) : SteelGhost unit opened
-  (llist p l)
-  (fun _ -> emp)
-  (fun _ -> Nil? l)
-  (fun _ _ _ -> p == null _)
-= change_equal_slprop (llist p l) (llist p []);
-  change_slprop_by_norm
-    (llist p [])
-    (pure (p == null _));
-  elim_pure _
-
-let llist_elim_cons (#opened: _) (p: ptr cell) (l: Ghost.erased (list U32.t)) (sq: squash (Cons? l))
-: SteelGhostT (p': Ghost.erased (ptr cell) { ~ (p == null _) /\ freeable p }) opened
-  (llist p l)
-  (fun p' ->
-    pts_to p (struct_set_field "hd" (mk_scalar (List.Tot.hd l)) (struct_set_field "tl" (mk_scalar (p' <: void_ptr)) (unknown cell))) `star`
-    llist p' (List.Tot.tl l)
-  )
-= let a :: q = Ghost.reveal l in
-  change_equal_slprop (llist p l) (llist p (a :: q));
-  change_slprop_by_norm
-    (llist p (a :: q))
-    (h_exists (fun (_: squash (~ (p == null _) /\ freeable p)) ->
-      h_exists (fun (p' : ptr cell) ->
-      pts_to p (struct_set_field "hd" (mk_scalar a) (struct_set_field "tl" (mk_scalar (p' <: void_ptr)) (unknown cell))) `star`
-      llist p' q
-    )));
-  let prf : Ghost.erased (squash (~ (p == null _) /\ freeable p)) = witness_exists () in
-  let _ = Ghost.reveal prf in
-  let p1 = witness_exists () in
-  let p' : (p': Ghost.erased (ptr cell) { ~ (p == null _) /\ freeable p }) = p1 in
-  change_equal_slprop
-    (pts_to p (struct_set_field "hd" (mk_scalar a) (struct_set_field "tl" (mk_scalar (p1 <: void_ptr)) (unknown cell))))
-    (pts_to p (struct_set_field "hd" (mk_scalar (List.Tot.hd l)) (struct_set_field "tl" (mk_scalar (p' <: void_ptr)) (unknown cell))));
-  change_equal_slprop
-    (llist _ q)
-    (llist p' (List.Tot.tl l));
-  p'
-
-[@@__steel_reduce__]
-let pllist
+[@@__reduce__]
+let pllist0
   (p: ref (scalar (ptr cell)))
   (l: Ghost.erased (list U32.t))
 : Tot vprop
-= h_exists (fun (pc: ptr cell) ->
+= exists_ (fun (pc: ptr cell) ->
     pts_to p (mk_scalar pc) `star`
     llist pc l
   )
 
+let pllist
+  (p: ref (scalar (ptr cell)))
+  (l: Ghost.erased (list U32.t))
+: Tot vprop
+= pllist0 p l
+
 let pllist_get
   (#l: Ghost.erased (list U32.t))
   (p: ref (scalar (ptr cell)))
-: SteelT (ptr cell)
+: STT (ptr cell)
     (pllist p l)
     (fun pc -> pts_to p (mk_scalar (Ghost.reveal pc)) `star` llist pc l)
-= let _ = witness_exists () in
+= rewrite (pllist p l) (pllist0 p l);
+  let _ = gen_elim () in
   let pc = read p in
-  change_equal_slprop (pts_to p _) (pts_to p (mk_scalar (Ghost.reveal pc)));
-  change_equal_slprop (llist _ _) (llist pc l);
+  vpattern_rewrite (fun x -> llist x l) pc;
   return pc
 
 let pllist_put
@@ -137,37 +104,30 @@ let pllist_put
   (#l: Ghost.erased (list U32.t))
   (p: ref (scalar (ptr cell)))
   (pc: ptr cell)
-: Steel unit
+: ST unit
     (pts_to p v `star` llist pc l)
     (fun _ -> pllist p l)
-    (fun _ -> full (scalar (ptr cell)) v)
-    (fun _ _ _ -> True)
+    (full (scalar (ptr cell)) v)
+    (fun _ -> True)
 = write p pc;
-  intro_exists pc (fun (pc: ptr cell) ->
-    pts_to p (mk_scalar pc) `star`
-    llist pc l
-  );
-  change_slprop_by_norm
-    (h_exists (fun (pc: ptr cell) ->
-      pts_to p (mk_scalar pc) `star`
-      llist pc l
-    ))
-    (pllist p l)
+  rewrite (pllist0 p l) (pllist p l)
 
 let push
   (#l: Ghost.erased (list U32.t))
   (a: U32.t)
   (p: ref (scalar (ptr cell)))
-: SteelT bool
+: STT bool
     (pllist p l)
     (fun b -> pllist p (if b then a :: l else l))
 = let c = alloc cell in
   if is_null c
   then begin
-    assert_null c;
+    rewrite (pts_to_or_null _ _) emp;
+    rewrite (freeable_or_null _) emp;
     return false
   end else begin
-    assert_not_null c;
+    rewrite (pts_to_or_null _ _) (pts_to c (uninitialized cell));
+    rewrite (freeable_or_null c) (freeable c);
     let p_tl = pllist_get p in
     let c_hd = struct_field c "hd" in
     let c_tl = struct_field c "tl" in
@@ -175,8 +135,10 @@ let push
     write c_tl p_tl;
     unstruct_field c "tl" c_tl;
     unstruct_field c "hd" c_hd;
-    llist_intro_cons c _ a p_tl _;
+    intro_llist_cons c p_tl a l;
     pllist_put p c;
+    drop (has_struct_field c "hd" _);
+    drop (has_struct_field _ _ _);
     return true
   end
 
@@ -184,31 +146,35 @@ let pop
   (#l: Ghost.erased (list U32.t))
   (p: ref (scalar (ptr cell)))
   (sq: squash (Cons? l))
-: Steel U32.t
+: ST U32.t
     (pllist p l)
     (fun _ -> pllist p (List.Tot.tl l))
-    (fun _ -> True)
-    (fun _ res _ -> res == List.Tot.hd l)
-= let c = pllist_get p in
-  let _ = llist_elim_cons c _ () in
+    (True)
+    (fun res -> res == List.Tot.hd l)
+= rewrite (pllist p l) (pllist p (List.Tot.hd l :: List.Tot.tl l));
+  let c = pllist_get p in
+  let _ = elim_llist_cons c (List.Tot.hd l) (List.Tot.tl l) in
   let c_hd = struct_field c "hd" in
   let c_tl = struct_field c "tl" in
   let res = read c_hd in
   let p_tl = read c_tl in
+  vpattern_rewrite (fun x -> llist x _) p_tl;
   unstruct_field c "tl" c_tl;
   unstruct_field c "hd" c_hd;
   free c;
-  change_equal_slprop (llist _ _) (llist p_tl (List.Tot.tl l));
   pllist_put p p_tl;
+  drop (has_struct_field c "hd" _);
+  drop (has_struct_field _ _ _);
   return res
 
 let init
   (#v: Ghost.erased (scalar_t (ptr cell)))
   (r: ref (scalar (ptr cell)))
-: Steel unit
+: ST unit
     (pts_to r v)
     (fun _ -> pllist r [])
-    (fun _ -> full (scalar (ptr cell)) v)
-    (fun _ _ _ -> True)
-= llist_intro_nil (null _);
+    (full (scalar (ptr cell)) v)
+    (fun _ -> True)
+= noop ();
+  rewrite (llist_nil (null _)) (llist (null _) []);
   pllist_put r (null _)
