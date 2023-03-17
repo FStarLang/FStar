@@ -23,7 +23,7 @@ open Steel.Memory
 include Steel.Effect.Common
 module STAG = Steel.ST.Effect.AtomicAndGhost
 
-[@@ ite_soundness_by ite_attr]
+[@@ ite_soundness_by ite_attr; primitive_extraction]
 total
 reflectable
 effect {
