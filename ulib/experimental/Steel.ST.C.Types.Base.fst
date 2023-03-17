@@ -506,3 +506,5 @@ let r_unfocus (#opened:_)
   R.unfocus r1 r' l x;
   let x' = vpattern_replace_erased (R.pts_to r') in
   x'
+
+irreducible let norm_field_attr = ()
