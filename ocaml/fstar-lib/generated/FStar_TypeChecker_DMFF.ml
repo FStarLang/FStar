@@ -1286,7 +1286,9 @@ let (gen_wps_for_free :
                         FStar_Syntax_Syntax.actions =
                           (ed.FStar_Syntax_Syntax.actions);
                         FStar_Syntax_Syntax.eff_attrs =
-                          (ed.FStar_Syntax_Syntax.eff_attrs)
+                          (ed.FStar_Syntax_Syntax.eff_attrs);
+                        FStar_Syntax_Syntax.extraction_mode =
+                          (ed.FStar_Syntax_Syntax.extraction_mode)
                       })))))
 type env_ = env
 let (get_env : env -> FStar_TypeChecker_Env.env) = fun env1 -> env1.tcenv
@@ -4660,7 +4662,10 @@ let (cps_and_elaborate :
                                                            = actions1;
                                                          FStar_Syntax_Syntax.eff_attrs
                                                            =
-                                                           (ed.FStar_Syntax_Syntax.eff_attrs)
+                                                           (ed.FStar_Syntax_Syntax.eff_attrs);
+                                                         FStar_Syntax_Syntax.extraction_mode
+                                                           =
+                                                           (ed.FStar_Syntax_Syntax.extraction_mode)
                                                        } in
                                                      let uu___20 =
                                                        gen_wps_for_free env2

@@ -1554,7 +1554,8 @@ let (should_strongly_reduce : FStar_Syntax_Syntax.term -> Prims.bool) =
           let uu___3 = FStar_Syntax_Subst.compress h in
           uu___3.FStar_Syntax_Syntax.n in
         (match uu___2 with
-         | FStar_Syntax_Syntax.Tm_constant (FStar_Const.Const_reify) -> true
+         | FStar_Syntax_Syntax.Tm_constant (FStar_Const.Const_reify uu___3)
+             -> true
          | uu___3 -> false)
 let (whnf :
   FStar_TypeChecker_Env.env ->
@@ -2827,13 +2828,13 @@ let rec (head_matches :
            FStar_Syntax_Syntax.Tm_uinst (g, uu___1)) ->
             let uu___2 = head_matches env f g in
             FStar_Compiler_Effect.op_Bar_Greater uu___2 head_match
-        | (FStar_Syntax_Syntax.Tm_constant (FStar_Const.Const_reify),
-           FStar_Syntax_Syntax.Tm_constant (FStar_Const.Const_reify)) ->
-            FullMatch
-        | (FStar_Syntax_Syntax.Tm_constant (FStar_Const.Const_reify), uu___)
-            -> HeadMatch true
-        | (uu___, FStar_Syntax_Syntax.Tm_constant (FStar_Const.Const_reify))
-            -> HeadMatch true
+        | (FStar_Syntax_Syntax.Tm_constant (FStar_Const.Const_reify uu___),
+           FStar_Syntax_Syntax.Tm_constant (FStar_Const.Const_reify uu___1))
+            -> FullMatch
+        | (FStar_Syntax_Syntax.Tm_constant (FStar_Const.Const_reify uu___),
+           uu___1) -> HeadMatch true
+        | (uu___, FStar_Syntax_Syntax.Tm_constant (FStar_Const.Const_reify
+           uu___1)) -> HeadMatch true
         | (FStar_Syntax_Syntax.Tm_constant c, FStar_Syntax_Syntax.Tm_constant
            d) ->
             let uu___ = FStar_Const.eq_const c d in

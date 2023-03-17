@@ -18,7 +18,6 @@ module DM4F_layered5
 
 (* Same as DM4F, but layered over a layered PURE without monotonicity *)
 open ID5
-open FStar.Tactics
 open DM4F_Utils
 
 unfold
@@ -56,12 +55,6 @@ let bind_wp (#a:Type) (#b:Type) (#st:Type0)
   (w1 : wp st a) (w2 : a -> wp st b) : wp st b =
   fun s0 p -> w1 s0 (fun y s1 -> w2 y s1 p)
 
-[@@ resolve_implicits; refine]
-let resolve_tac () : Tac unit =
-  compute ();
-  explode ();
-  ()
-  
 let bind (a:Type) (b:Type) (st:Type0)
   (wp_c : wp st a)
   (wp_f : a -> wp st b)
@@ -148,3 +141,7 @@ let add_via_state (x y : int) : ST int int (fun s0 p -> p (x+y) s0) =
   let r = get () in
   put o;
   r
+
+let main =
+  let r, n = reify (reify (add_via_state 1 2) 3) (Ghost.hide (fun _ -> True)) () in
+  FStar.IO.print_string (FStar.Printf.sprintf "%d:%d\n" r n)

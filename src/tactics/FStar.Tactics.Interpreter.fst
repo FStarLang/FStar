@@ -97,7 +97,7 @@ let unembed_tactic_0 (eb:embedding 'b) (embedded_tac_b:term) (ncb:norm_cb) : tac
     let rng = embedded_tac_b.pos in
 
     (* First, reify it from Tac a into __tac a *)
-    let embedded_tac_b = U.mk_reify embedded_tac_b in
+    let embedded_tac_b = U.mk_reify embedded_tac_b (Some FStar.Parser.Const.effect_TAC_lid) in
 
     let tm = S.mk_Tm_app embedded_tac_b
                          [S.as_arg (embed E.e_proofstate rng proof_state ncb)]

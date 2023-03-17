@@ -760,22 +760,22 @@ let rec (translate :
          | FStar_Syntax_Syntax.Tm_app
              ({
                 FStar_Syntax_Syntax.n = FStar_Syntax_Syntax.Tm_constant
-                  (FStar_Const.Const_reify);
-                FStar_Syntax_Syntax.pos = uu___2;
-                FStar_Syntax_Syntax.vars = uu___3;
-                FStar_Syntax_Syntax.hash_code = uu___4;_},
+                  (FStar_Const.Const_reify uu___2);
+                FStar_Syntax_Syntax.pos = uu___3;
+                FStar_Syntax_Syntax.vars = uu___4;
+                FStar_Syntax_Syntax.hash_code = uu___5;_},
               arg::more::args)
              ->
-             let uu___5 = FStar_Syntax_Util.head_and_args e in
-             (match uu___5 with
-              | (head, uu___6) ->
+             let uu___6 = FStar_Syntax_Util.head_and_args e in
+             (match uu___6 with
+              | (head, uu___7) ->
                   let head1 =
                     FStar_Syntax_Syntax.mk_Tm_app head [arg]
                       e.FStar_Syntax_Syntax.pos in
-                  let uu___7 =
+                  let uu___8 =
                     FStar_Syntax_Syntax.mk_Tm_app head1 (more :: args)
                       e.FStar_Syntax_Syntax.pos in
-                  translate cfg bs uu___7)
+                  translate cfg bs uu___8)
          | FStar_Syntax_Syntax.Tm_app
              ({
                 FStar_Syntax_Syntax.n = FStar_Syntax_Syntax.Tm_constant
@@ -823,10 +823,10 @@ let rec (translate :
          | FStar_Syntax_Syntax.Tm_app
              ({
                 FStar_Syntax_Syntax.n = FStar_Syntax_Syntax.Tm_constant
-                  (FStar_Const.Const_reify);
-                FStar_Syntax_Syntax.pos = uu___2;
-                FStar_Syntax_Syntax.vars = uu___3;
-                FStar_Syntax_Syntax.hash_code = uu___4;_},
+                  (FStar_Const.Const_reify uu___2);
+                FStar_Syntax_Syntax.pos = uu___3;
+                FStar_Syntax_Syntax.vars = uu___4;
+                FStar_Syntax_Syntax.hash_code = uu___5;_},
               arg::[])
              when
              ((cfg.core_cfg).FStar_TypeChecker_Cfg.steps).FStar_TypeChecker_Cfg.reify_
@@ -2436,7 +2436,9 @@ and (translate_monadic :
                             then fallback2 ()
                             else
                               (let e2 =
-                                 let uu___7 = FStar_Syntax_Util.mk_reify head in
+                                 let uu___7 =
+                                   FStar_Syntax_Util.mk_reify head
+                                     FStar_Pervasives_Native.None in
                                  FStar_Syntax_Syntax.mk_Tm_app uu___7 args
                                    e1.FStar_Syntax_Syntax.pos in
                                let uu___7 = reifying_false cfg in
@@ -2450,7 +2452,9 @@ and (translate_monadic :
                           (fun uu___1 ->
                              match uu___1 with
                              | (pat, wopt, tm) ->
-                                 let uu___2 = FStar_Syntax_Util.mk_reify tm in
+                                 let uu___2 =
+                                   FStar_Syntax_Util.mk_reify tm
+                                     (FStar_Pervasives_Native.Some m) in
                                  (pat, wopt, uu___2))) in
                    let tm =
                      FStar_Syntax_Syntax.mk
