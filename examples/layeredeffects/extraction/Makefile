@@ -2,7 +2,7 @@ include ../../Makefile.include
 
 include $(FSTAR_ULIB)/ml/Makefile.include
 
-FILES=../LL ../HoareST ParametricST
+FILES=../MSeqExn ../LL ../HoareST ParametricST
 
 all: $(addsuffix .cmp, $(FILES)) DM4F_layered5_cmp #InformativeIndices.errcmp
 

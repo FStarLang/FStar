@@ -1546,11 +1546,15 @@ and term_as_mlexpr' (g:uenv) (top:term) : (mlexpr * e_tag * mlty) =
               |> term_as_mlexpr g
 
             | Tm_constant (Const_reify lopt) ->
-              let e = TcUtil.norm_reify (tcenv_of_uenv g)
-                [TcEnv.Inlining; TcEnv.ForExtraction; TcEnv.Unascribe]
-                (U.mk_reify (args |> List.hd |> fst) lopt) in
-              let tm = S.mk_Tm_app (TcUtil.remove_reify e) (List.tl args) t.pos in
-              term_as_mlexpr g tm
+              (match lopt with
+               | Some l ->
+                 let e = maybe_reify_term (tcenv_of_uenv g) (args |> List.hd |> fst) l in
+                 let tm = S.mk_Tm_app (TcUtil.remove_reify e) (List.tl args) t.pos in
+                 term_as_mlexpr g tm
+               | None ->
+                 raise_error (Errors.Fatal_ExtractionUnsupported,
+                              BU.format1 "Cannot extract %s (reify effect is not set)"
+                                (Print.term_to_string top)) top.pos)
 
             | _ ->
 

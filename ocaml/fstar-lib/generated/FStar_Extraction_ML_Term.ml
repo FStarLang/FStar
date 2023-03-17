@@ -3028,26 +3028,34 @@ and (term_as_mlexpr' :
                   (term_as_mlexpr g)
             | FStar_Syntax_Syntax.Tm_constant (FStar_Const.Const_reify lopt)
                 ->
-                let e =
-                  let uu___2 = FStar_Extraction_ML_UEnv.tcenv_of_uenv g in
-                  let uu___3 =
-                    let uu___4 =
-                      let uu___5 =
-                        FStar_Compiler_Effect.op_Bar_Greater args
-                          FStar_Compiler_List.hd in
-                      FStar_Compiler_Effect.op_Bar_Greater uu___5
-                        FStar_Pervasives_Native.fst in
-                    FStar_Syntax_Util.mk_reify uu___4 lopt in
-                  FStar_TypeChecker_Util.norm_reify uu___2
-                    [FStar_TypeChecker_Env.Inlining;
-                    FStar_TypeChecker_Env.ForExtraction;
-                    FStar_TypeChecker_Env.Unascribe] uu___3 in
-                let tm =
-                  let uu___2 = FStar_TypeChecker_Util.remove_reify e in
-                  let uu___3 = FStar_Compiler_List.tl args in
-                  FStar_Syntax_Syntax.mk_Tm_app uu___2 uu___3
-                    t.FStar_Syntax_Syntax.pos in
-                term_as_mlexpr g tm
+                (match lopt with
+                 | FStar_Pervasives_Native.Some l ->
+                     let e =
+                       let uu___2 = FStar_Extraction_ML_UEnv.tcenv_of_uenv g in
+                       let uu___3 =
+                         let uu___4 =
+                           FStar_Compiler_Effect.op_Bar_Greater args
+                             FStar_Compiler_List.hd in
+                         FStar_Compiler_Effect.op_Bar_Greater uu___4
+                           FStar_Pervasives_Native.fst in
+                       maybe_reify_term uu___2 uu___3 l in
+                     let tm =
+                       let uu___2 = FStar_TypeChecker_Util.remove_reify e in
+                       let uu___3 = FStar_Compiler_List.tl args in
+                       FStar_Syntax_Syntax.mk_Tm_app uu___2 uu___3
+                         t.FStar_Syntax_Syntax.pos in
+                     term_as_mlexpr g tm
+                 | FStar_Pervasives_Native.None ->
+                     let uu___2 =
+                       let uu___3 =
+                         let uu___4 = FStar_Syntax_Print.term_to_string top1 in
+                         FStar_Compiler_Util.format1
+                           "Cannot extract %s (reify effect is not set)"
+                           uu___4 in
+                       (FStar_Errors_Codes.Fatal_ExtractionUnsupported,
+                         uu___3) in
+                     FStar_Errors.raise_error uu___2
+                       top1.FStar_Syntax_Syntax.pos)
             | uu___2 ->
                 let rec extract_app is_data uu___3 uu___4 restArgs =
                   match (uu___3, uu___4) with
