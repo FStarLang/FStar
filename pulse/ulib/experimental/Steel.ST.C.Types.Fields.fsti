@@ -8,14 +8,6 @@ val field_t_nil: Type0
 [@@noextract_to "krml"] // primitive
 val field_t_cons (fn: Type0) (ft: Type0) (fc: Type0): Type0
 
-val norm_field_attr : unit
-
-noextract
-let norm_field_steps = [
-  delta_attr [`%norm_field_attr];
-  iota; zeta; primops;
-]
-
 inline_for_extraction [@@noextract_to "krml"; norm_field_attr]
 noeq
 type field_description_t (t: Type0) : Type u#1 = {

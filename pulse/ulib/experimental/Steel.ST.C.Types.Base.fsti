@@ -245,3 +245,11 @@ val mk_fraction_join
 : STGhostT unit opened
   (pts_to r (mk_fraction td v p1) `star` pts_to r (mk_fraction td v p2))
   (fun _ -> pts_to r (mk_fraction td v (p1 `P.sum_perm` p2)))
+
+val norm_field_attr : unit
+
+noextract
+let norm_field_steps = [
+  delta_attr [`%norm_field_attr];
+  iota; zeta; primops;
+]
