@@ -225,7 +225,7 @@ let has_base_array_cell_equiv_to'
     (fun _ -> has_base_array_cell1 r i r2 `star` ref_equiv r1 r2)
 = rewrite (has_base_array_cell1 r i r1) (has_base_array_cell0 r i r1);
   let _ = gen_elim () in
-  has_struct_field_equiv_to' r _ r1 r2;
+  has_struct_field_equiv_to'  #_ #(base_array_index_t' n) #(base_array_fd td n) r _ r1 (r2);
   rewrite (has_base_array_cell0 r i r2) (has_base_array_cell1 r i r2)
 
 let has_base_array_cell_equiv_to
@@ -275,13 +275,27 @@ let base_array_pcm_eq
     (fun _ -> ())
     ()
 
+let model_array_of_array_precond
+  (#t: Type)
+  (#td: typedef t)
+  (a: array td)
+  (base: ref0_v)
+: GTot prop
+=
+  base.t == base_array_t' t (array_ptr_of a).ar_base_size /\
+  base.td == base_array1 td (array_ptr_of a).ar_base_size
+      
 [@@noextract_to "krml"] // proof-only
 let model_array_of_array
   (#t: Type)
   (#td: typedef t)
   (a: array td)
-  (base: ref0_v (base_array1 td (array_ptr_of a).ar_base_size))
-: Tot (A.array base.base td.pcm)
+  (base: ref0_v)
+: Pure (A.array base.base td.pcm)
+    (requires (
+      model_array_of_array_precond a base
+    ))
+    (ensures (fun _ -> True))
 = let (| al, len |) = a in
   {
     base_len = Ghost.hide (Ghost.reveal al.ar_base_size);
@@ -291,6 +305,17 @@ let model_array_of_array
     prf = ();
   }
 
+let has_model_array_of_array
+  (#t: Type)
+  (#td: typedef t)
+  (a: array td)
+  (base: ref0_v)
+  (ar: A.array base.base td.pcm)
+: GTot prop
+= 
+  model_array_of_array_precond a base /\
+  model_array_of_array a base == ar
+
 [@@__reduce__]
 let array_pts_to0
   (#t: Type)
@@ -298,23 +323,75 @@ let array_pts_to0
   (r: array td)
   (v: Ghost.erased (Seq.seq t))
 : Tot vprop
-= exists_ (fun br -> exists_ (fun p ->
+= exists_ (fun br -> exists_ (fun p -> exists_ (fun (a: A.array br.base td.pcm) ->
     HR.pts_to (array_ptr_of r).ar_base p br `star`
-    A.pts_to (model_array_of_array r br) v
-  ))
+    A.pts_to a v `star`
+    pure (has_model_array_of_array r br a)
+  )))
 
 let array_pts_to r v =
   array_pts_to0 r v
+
+let array_pts_to_intro
+  (#opened: _)
+  (#t: Type)
+  (#td: typedef t)
+  (r: array td)
+  (v: Ghost.erased (Seq.seq t))
+  (br: ref0_v)
+  (p: P.perm)
+  (sq: squash (model_array_of_array_precond r br))
+: STGhostT unit opened
+    (
+      HR.pts_to (array_ptr_of r).ar_base p br `star`
+      A.pts_to (model_array_of_array r br) v
+    )
+    (fun _ -> array_pts_to r v)
+= noop ();
+  intro_exists p (fun p -> exists_ (fun (a: A.array br.base td.pcm) ->
+    HR.pts_to (array_ptr_of r).ar_base p br `star`
+    A.pts_to a v `star`
+    pure (has_model_array_of_array r br a)
+  ));
+  rewrite (array_pts_to0 r v) (array_pts_to r v)
+
+let array_pts_to_res_t
+  (#t: Type)
+  (#td: typedef t)
+  (r: array td)
+: Tot Type
+= (br: Ghost.erased ref0_v { model_array_of_array_precond r br })
+
+let array_pts_to_elim
+  (#opened: _)
+  (#t: Type)
+  (#td: typedef t)
+  (r: array td)
+  (v: Ghost.erased (Seq.seq t))
+: STGhostT (array_pts_to_res_t r) opened
+    (array_pts_to r v)
+    (fun br -> exists_ (fun p ->
+      HR.pts_to (array_ptr_of r).ar_base p br `star`
+      A.pts_to (model_array_of_array r br) v
+    ))
+= rewrite (array_pts_to _ _) (array_pts_to0 r v);
+  let _ = gen_elim () in
+  let p = vpattern_replace (fun p -> HR.pts_to _ p _) in
+  let br0 = vpattern_replace_erased (HR.pts_to _ _) in
+  let br : array_pts_to_res_t r = br0 in
+  rewrite (HR.pts_to _ _ _) (HR.pts_to (array_ptr_of r).ar_base p br);
+  rewrite (A.pts_to _ _) (A.pts_to (model_array_of_array r br) v);
+  br
 
 let array_ptr_is_null
   r _
 = return (HR.is_null r.ar_base)
 
 let array_pts_to_length r v =
-  rewrite (array_pts_to r v) (array_pts_to0 r v);
+  let _ = array_pts_to_elim _ _ in
   let _ = gen_elim () in
   let _ = A.pts_to_length _ _ in
-  rewrite (array_pts_to0 r v) (array_pts_to r v)
+  array_pts_to_intro _ _ _ _ ()
 
 let has_array_of_base'
   (#t: Type)
@@ -366,15 +443,15 @@ let ghost_array_of_base_focus'
 = rewrite (pts_to r v) (pts_to0 r v);
   let _ = gen_elim () in
   let w = vpattern_replace (HR.pts_to r _) in
-  let w' : ref0_v (base_array1 td (array_ptr_of a).ar_base_size) = coerce_eq () w in
-  assert ((model_array_of_array a w').base == w.ref);
-  rewrite (r_pts_to _ _) (R.pts_to (model_array_of_array a w').base v);
+  let rr = get_ref r in
+  assert ((model_array_of_array a w).base == rr);
+  rewrite (r_pts_to _ _) (R.pts_to (model_array_of_array a w).base v);
   assert (seq_of_base_array0 v `Seq.equal` A.seq_of_array_pcm_carrier v);
   A.array_pcm_carrier_of_seq_of_array_pcm_carrier v;
-  A.pts_to_intro_from_base (model_array_of_array a w')  v (seq_of_base_array0 v);
+  A.pts_to_intro_from_base (model_array_of_array a w)  v (seq_of_base_array0 v);
   let p = vpattern_replace (fun p -> HR.pts_to _ p _) in
-  rewrite (HR.pts_to _ _ _) (HR.pts_to (array_ptr_of a).ar_base p w');
-  rewrite (array_pts_to0 a (seq_of_base_array0 v)) (array_pts_to a (seq_of_base_array0 v))
+  rewrite (HR.pts_to _ _ _) (HR.pts_to (array_ptr_of a).ar_base p w);
+  array_pts_to_intro a (seq_of_base_array0 v) w _ ()
 
 let ghost_array_of_base_focus
   #_ #_ #_ #_ #td #v r a
@@ -448,18 +525,17 @@ let unarray_of_base0
       has_array_of_base' r a
     )
     (fun v' -> Ghost.reveal v `Seq.equal` seq_of_base_array0 v')
-= rewrite (array_pts_to a v) (array_pts_to0 a v);
+= let ba = array_pts_to_elim a v in
   let _ = gen_elim () in
   let p = vpattern_replace (fun p -> HR.pts_to _ p _) in
-  let ba = vpattern_replace (HR.pts_to _ _) in
-  let ba' : ref0_v (base_array1 td n) = coerce_eq () ba in
-  rewrite (HR.pts_to _ _ _) (HR.pts_to r p ba');
+  rewrite (HR.pts_to _ _ _) (HR.pts_to r p ba);
   let m = model_array_of_array a ba in
   rewrite (A.pts_to _ _) (A.pts_to m v);
   let y : Ghost.erased (A.array_pcm_carrier t m.base_len) = A.pts_to_elim_to_base m v in
+  let rr : R.ref ba.base (base_array1 td n).pcm = coerce_eq () m.base in
   let y' : Ghost.erased (base_array_t' t n) = Ghost.hide (Ghost.reveal y) in
-  rewrite (r_pts_to _ _) (r_pts_to ba'.ref (Ghost.reveal y'));
-  rewrite (pts_to0 r y') (pts_to r y');
+  rewrite (R.pts_to _ _) (r_pts_to rr y');
+  pts_to_intro r p ba rr y';
   y'
 
 #pop-options
@@ -699,9 +775,9 @@ let has_struct_field1_intro
   (field: field_t)
   (r': ref (fields.fd_typedef field))
   (p: P.perm)
-  (w: ref0_v (struct1 fields))
+  (w: ref0_v)
   (p': P.perm)
-  (w': ref0_v (fields.fd_typedef field))
+  (w': ref0_v)
   ()
 : STGhost unit opened
     (HR.pts_to r p w `star` HR.pts_to r' p' w')
@@ -723,7 +799,7 @@ let has_array_cell_drop
   (#td: typedef t)
   (a: array td)
   (#p': P.perm)
-  (#b': ref0_v td)
+  (#b': ref0_v)
   (i: SZ.t)
   (r: ref td)
 : STGhostT unit opened
@@ -758,10 +834,10 @@ let has_array_cell_elim
   (#td: typedef t)
   (#p: P.perm)
   (a: array td)
-  (#b: ref0_v (base_array1 td (array_ptr_of a).ar_base_size))
+  (#b: ref0_v)
   (i: SZ.t)
   (r: ref td)
-: STGhost (Ghost.erased (ref0_v td)) opened
+: STGhost (Ghost.erased (ref0_v)) opened
     (has_array_cell1 a i r `star`
       HR.pts_to (array_ptr_of a).ar_base p b
     )
@@ -772,10 +848,14 @@ let has_array_cell_elim
     )))
     True
     (fun b' ->
-      let ar = model_array_of_array a b in
-      SZ.v i < SZ.v ar.len /\
+      model_array_of_array_precond a b /\
       b'.base == b.base /\
-      b'.ref == R.ref_focus (A.ref_of_array ar) (A.cell td.pcm ar.len i)
+      b'.t == t /\
+      b'.td == td /\
+      begin let ar = model_array_of_array a b in
+        SZ.v i < SZ.v ar.len /\
+        b'.ref == R.ref_focus (A.ref_of_array ar) (A.cell td.pcm ar.len i)
+      end
     )
 = 
   rewrite (has_array_cell1 a i r) (has_array_cell0 a i r);
@@ -811,10 +891,9 @@ let ghost_array_cell_focus
   let r' = has_array_cell_elim a i r in
   let _ = gen_elim () in
   let _ = A.g_focus_cell _ _ i () in
-  rewrite (R.pts_to _ _) (R.pts_to r'.ref (Seq.index s (SZ.v i)));
-  rewrite (pts_to0 r (Seq.index s (SZ.v i))) (pts_to r (Seq.index s (SZ.v i)));
+  pts_to_intro_rewrite r _ (Seq.index s (SZ.v i));
   rewrite (A.pts_to _ _) (A.pts_to (model_array_of_array a b) (Seq.upd s (SZ.v i) (unknown td)));
-  rewrite (array_pts_to0 a (Seq.upd s (SZ.v i) (unknown td))) (array_pts_to a (Seq.upd s (SZ.v i) (unknown td)))
+  array_pts_to_intro a (Seq.upd s (SZ.v i) (unknown td)) _ _ ()
 
 let has_array_cell_intro
   (#opened: _)
@@ -822,9 +901,9 @@ let has_array_cell_intro
   (#td: typedef t)
   (#p: P.perm)
   (a: array td)
-  (#b: ref0_v (base_array1 td (array_ptr_of a).ar_base_size))
+  (#b: ref0_v)
   (#p': P.perm)
-  (#b': ref0_v td)
+  (#b': ref0_v)
   (i: SZ.t)
   (r: ref td)
 : STGhost unit opened
@@ -833,10 +912,14 @@ let has_array_cell_intro
     )
     (fun _ -> has_array_cell1 a i r)
     (
-      let ar = model_array_of_array a b in
+      model_array_of_array_precond a b /\
+      begin let ar = model_array_of_array a b in
       SZ.v i < SZ.v ar.len /\
       b'.base == b.base /\
+      b'.t == t /\
+      b'.td == td /\
       b'.ref == R.ref_focus (A.ref_of_array ar) (A.cell td.pcm ar.len i)
+      end
     )
     (fun _ -> True)
 = 
@@ -855,13 +938,14 @@ let has_array_cell_intro
 let ghost_array_cell
   #_ #_ #td #s a i
 = array_pts_to_length _ _;
-  rewrite (array_pts_to a s) (array_pts_to0 a s);
+  let b = array_pts_to_elim a s in
   let _ = gen_elim () in
   HR.share _;
-  rewrite (array_pts_to0 a s) (array_pts_to a s);
-  let b = vpattern_replace (HR.pts_to (array_ptr_of a).ar_base _) in
+  array_pts_to_intro a s _ _ ();
   let ar = model_array_of_array a b in
   let b' = {
+    t = _;
+    td = td;
     base = b.base;
     ref = R.ref_focus (A.ref_of_array ar) (A.cell td.pcm ar.len i);
   }
@@ -893,15 +977,17 @@ let array_cell0
     )
     (fun _ -> True)
 = array_pts_to_length _ _;
-  rewrite (array_pts_to a s) (array_pts_to0 a s);
+  let _ = array_pts_to_elim a s in
   let _ = gen_elim () in
   HR.share _;
-  rewrite (array_pts_to0 a s) (array_pts_to a s);
+  array_pts_to_intro a s _ _ ();
   let b = HR.read (array_ptr_of a).ar_base in
   vpattern_rewrite (HR.pts_to (array_ptr_of a).ar_base _) b;
   let ar = model_array_of_array a b in
   A.ref_of_array_eq ar i;
   let b' = {
+    t = _;
+    td = td;
     base = b.base;
     ref = R.ref_focus ar.base (A.cell td.pcm ar.base_len (ar.offset `SZ.add`  i));
   }
@@ -951,7 +1037,7 @@ let ar_unfocus_cell
 let unarray_cell
   #_ #_ #td #s #v a i r
 = array_pts_to_length _ _;
-  rewrite (array_pts_to a s) (array_pts_to0 a s);
+  let b = array_pts_to_elim a s in
   let _ = gen_elim () in
   let w = has_array_cell_elim a i r in
   let _ = gen_elim () in
@@ -959,9 +1045,8 @@ let unarray_cell
   let _ = gen_elim () in
   hr_gather (Ghost.reveal w) r;
   ar_unfocus_cell _ _ i _ _ ();
-  let b = vpattern_replace (HR.pts_to (array_ptr_of a).ar_base _) in
   rewrite (A.pts_to _ _) (A.pts_to (model_array_of_array a b) (Seq.upd s (SZ.v i) v));
-  rewrite (array_pts_to0 a (Seq.upd s (SZ.v i) v)) (array_pts_to a (Seq.upd s (SZ.v i) v));
+  array_pts_to_intro a (Seq.upd s (SZ.v i) v) _ _ ();
   has_array_cell_drop _ _ _
 
 #push-options "--split_queries --z3rlimit 16"
@@ -991,22 +1076,17 @@ let ghost_array_split
   #_ #_ #td #s a i
 = array_pts_to_length _ _;
   let sq : squash (SZ.v i <= SZ.v (dsnd a) /\ Seq.length s == SZ.v (dsnd a)) = () in
-  rewrite (array_pts_to a s) (array_pts_to0 a s);
+  let br = array_pts_to_elim a s in
   let _ = gen_elim () in
-  let br : Ghost.erased (ref0_v (base_array1 td (array_ptr_of a).ar_base_size)) = vpattern_replace_erased (HR.pts_to _ _) in
   A.g_split _ _ i ();
   HR.share _;
   let p = vpattern_replace (fun p -> HR.pts_to _ p _ `star` HR.pts_to _ p _) in
-  let br_l : Ghost.erased (ref0_v (base_array1 td (array_ptr_of (array_split_l a i)).ar_base_size)) = coerce_eq () br in
-  rewrite (HR.pts_to _ _ _) (HR.pts_to (array_ptr_of (array_split_l a i)).ar_base p br_l);
-  rewrite (A.pts_to _ (Seq.slice s 0 _)) (A.pts_to (model_array_of_array (array_split_l a i) br_l) (Seq.slice s 0 (SZ.v i)));
-  noop ();
-  rewrite (array_pts_to0 (array_split_l a i) (Seq.slice s 0 (SZ.v i))) (array_pts_to (array_split_l a i) (Seq.slice s 0 (SZ.v i)));
-  let br_r : Ghost.erased (ref0_v (base_array1 td (array_ptr_of (array_split_r a i)).ar_base_size)) = coerce_eq () br in
-  rewrite (HR.pts_to _ _ _) (HR.pts_to (array_ptr_of (array_split_r a i)).ar_base p br_r);
-  rewrite (A.pts_to _ _) (A.pts_to (model_array_of_array (array_split_r a i) br_r) (Seq.slice s (SZ.v i) (Seq.length s)));
-  noop ();
-  rewrite (array_pts_to0 (array_split_r a i) (Seq.slice s (SZ.v i) (Seq.length s))) (array_pts_to (array_split_r a i) (Seq.slice s (SZ.v i) (Seq.length s)));
+  rewrite (HR.pts_to _ _ _) (HR.pts_to (array_ptr_of (array_split_l a i)).ar_base p br);
+  rewrite (A.pts_to _ (Seq.slice s 0 _)) (A.pts_to (model_array_of_array (array_split_l a i) br) (Seq.slice s 0 (SZ.v i)));
+  array_pts_to_intro (array_split_l a i) (Seq.slice s 0 (SZ.v i)) _ _ ();
+  rewrite (HR.pts_to _ _ _) (HR.pts_to (array_ptr_of (array_split_r a i)).ar_base p br);
+  rewrite (A.pts_to _ _) (A.pts_to (model_array_of_array (array_split_r a i) br) (Seq.slice s (SZ.v i) (Seq.length s)));
+  array_pts_to_intro (array_split_r a i) (Seq.slice s (SZ.v i) (Seq.length s)) _ _ ();
   sq
 
 let t_array_split_r
@@ -1077,18 +1157,17 @@ let ar_join
 
 let array_join
   #_ #_ #td #sl #sr a al ar i
-= rewrite (array_pts_to al sl) (array_pts_to0 al sl);
+= let br = array_pts_to_elim al sl in
   let _ = gen_elim () in
-  let br_l : ref0_v (base_array1 td (array_ptr_of al).ar_base_size) = vpattern_replace (HR.pts_to _ _) in
   let pl = vpattern_replace (fun p -> HR.pts_to _ p _) in
-  let br : ref0_v (base_array1 td (array_ptr_of a).ar_base_size) = coerce_eq () br_l in
-  rewrite (HR.pts_to _ _ _) (HR.pts_to (array_ptr_of a).ar_base pl br);
-  rewrite (array_pts_to ar sr) (array_pts_to0 ar sr);
+  vpattern_rewrite (fun x -> HR.pts_to x pl _) (array_ptr_of a).ar_base;
+  let _ = array_pts_to_elim ar sr in
   let _ = gen_elim () in
   let pr = vpattern_replace (fun pr -> HR.pts_to _ pl _ `star` HR.pts_to _ pr _) in
+  vpattern_rewrite (fun x -> HR.pts_to x pr _) (array_ptr_of a).ar_base;
   hr_gather_by_perm pl pr;
   ar_join (model_array_of_array a br) i _ _ sl sr;
-  rewrite (array_pts_to0 a (sl `Seq.append` sr)) (array_pts_to a (sl `Seq.append` sr))
+  array_pts_to_intro a (sl `Seq.append` sr) _ _ ()
 
 let ar_share
   (#opened: _)
@@ -1120,17 +1199,16 @@ let ar_share
 
 let mk_fraction_seq_split_gen
   #_ #_ #td r v p p1 p2
-= rewrite (array_pts_to r (mk_fraction_seq td v p)) (array_pts_to0 r (mk_fraction_seq td v p));
+= let br = array_pts_to_elim r (mk_fraction_seq td v p) in
   let _ = gen_elim () in
-  let br = vpattern_replace (HR.pts_to _ _) in
   rewrite (A.pts_to _ _) (A.pts_to (model_array_of_array r br) (mk_fraction_seq td v p));
   ar_share _ _ (mk_fraction_seq td v p1) (mk_fraction_seq td v p2) (fun i ->
     td.mk_fraction_split (Seq.index v i) p1 p2;
     td.mk_fraction_join (Seq.index v i) p1 p2
   );
   HR.share _;
-  rewrite (array_pts_to0 r (mk_fraction_seq td v p1)) (array_pts_to r (mk_fraction_seq td v p1));
-  rewrite (array_pts_to0 r (mk_fraction_seq td v p2)) (array_pts_to r (mk_fraction_seq td v p2))
+  array_pts_to_intro r (mk_fraction_seq td v p1) _ _ ();
+  array_pts_to_intro r (mk_fraction_seq td v p2) _ _ ()
 
 let ar_gather
   (#opened: _)
@@ -1165,15 +1243,14 @@ let ar_gather
 
 let mk_fraction_seq_join
   #_ #_ #td r v p1 p2
-= rewrite (array_pts_to r (mk_fraction_seq td v p1)) (array_pts_to0 r (mk_fraction_seq td v p1));
+= let br = array_pts_to_elim r (mk_fraction_seq td v p1) in
   let _ = gen_elim () in
-  let br = vpattern_replace (HR.pts_to _ _) in
   rewrite (A.pts_to _ _) (A.pts_to (model_array_of_array r br) (mk_fraction_seq td v p1));
-  rewrite (array_pts_to r (mk_fraction_seq td v p2)) (array_pts_to0 r (mk_fraction_seq td v p2));
+  let _ = array_pts_to_elim r (mk_fraction_seq td v p2) in
   let _ = gen_elim () in
-  hr_gather br (array_ptr_of r).ar_base;
+  hr_gather (Ghost.reveal br) (array_ptr_of r).ar_base;
   rewrite (A.pts_to _ (mk_fraction_seq _ _ p2)) (A.pts_to (model_array_of_array r br) (mk_fraction_seq td v p2));
   ar_gather _ (mk_fraction_seq td v (p1 `P.sum_perm` p2)) (mk_fraction_seq td v p1) (mk_fraction_seq td v p2) (fun i ->
     td.mk_fraction_join (Seq.index v i) p1 p2
   );
-  rewrite (array_pts_to0 r (mk_fraction_seq td v (p1 `P.sum_perm` p2))) (array_pts_to r (mk_fraction_seq td v (p1 `P.sum_perm` p2)))
+  array_pts_to_intro r (mk_fraction_seq td v (p1 `P.sum_perm` p2)) _ _ ()

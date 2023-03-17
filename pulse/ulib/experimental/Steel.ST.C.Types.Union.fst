@@ -245,28 +245,32 @@ let full_union
   Classical.move_requires (U.exclusive_union_elim (union_field_pcm fields) s) (Some field) 
 
 let has_union_field_gen
-  (#tn: Type0)
+  (tn: Type0)
   (#tf: Type0)
-  (#n: string)
+  (n: string)
   (#fields: field_description_t tf)
-  (r: ref0_v (union0 tn n fields))
+  (r: ref0_v)
   (field: field_t fields)
-  (r': ref0_v (fields.fd_typedef field))
+  (r': ref0_v)
 : GTot prop
 = r'.base == r.base /\
+  r.t == union_t0 tn n fields /\
+  r.td == union0 tn n fields /\
+  r'.t == fields.fd_type field /\
+  r'.td == fields.fd_typedef field /\
   r'.ref == R.ref_focus r.ref (U.union_field (union_field_pcm fields) (Some field))
 
 let has_union_field_gen_inj
-  (#tn: Type0)
+  (tn: Type0)
   (#tf: Type0)
-  (#n: string)
+  (n: string)
   (#fields: field_description_t tf)
-  (r: ref0_v (union0 tn n fields))
+  (r: ref0_v)
   (field: field_t fields)
-  (r1': ref0_v (fields.fd_typedef field))
-  (r2': ref0_v (fields.fd_typedef field))
+  (r1': ref0_v)
+  (r2': ref0_v)
 : Lemma
-  (requires (has_union_field_gen r field r1' /\ has_union_field_gen r field r2'))
+  (requires (has_union_field_gen tn n r field r1' /\ has_union_field_gen tn n r field r2'))
   (ensures (r1' == r2'))
 = ()
 
@@ -283,7 +287,7 @@ let has_union_field0
 = exists_ (fun p -> exists_ (fun w -> exists_ (fun p' -> exists_ (fun w' ->
     HR.pts_to r p w `star`
     HR.pts_to r' p' w' `star`
-    pure (has_union_field_gen w field w')
+    pure (has_union_field_gen tn n w field w')
   ))))
 
 let has_union_field
@@ -309,7 +313,7 @@ let has_union_field_dup
 #push-options "--z3rlimit 64"
 
 let has_union_field_inj
-  r field r1 r2
+  #_ #tn #_ #n r field r1 r2
 = rewrite (has_union_field r field r1) (has_union_field0 r field r1);
   let _ = gen_elim () in
   let w = vpattern_replace (HR.pts_to r _) in
@@ -323,7 +327,7 @@ let has_union_field_inj
   rewrite (has_union_field0 r field r2) (has_union_field r field r2);
   let w' = vpattern_replace (HR.pts_to r1 _) in
   let w2' = vpattern_replace (HR.pts_to r2 _) in
-  has_union_field_gen_inj w field w' w2';
+  has_union_field_gen_inj tn n w field w' w2';
   vpattern_rewrite (HR.pts_to r2 _) w';
   rewrite (ref_equiv0 r1 r2) (ref_equiv r1 r2)
 
@@ -365,13 +369,14 @@ let ghost_union_field_focus
   rewrite (pts_to r v) (pts_to0 r v);
   let _ = gen_elim () in
   hr_gather w r;
-  rewrite (r_pts_to _ _) (R.pts_to w.ref (Ghost.reveal v));
+  let rr = get_ref r in
   let v' = U.field_to_union_f (union_field_pcm fields) (Some field) (union_get_field v field) in
   assert (v' `FX.feq` v);
-  R.gfocus w.ref (U.union_field (union_field_pcm fields) (Some field)) v (union_get_field v field);
-  rewrite (R.pts_to _ _) (R.pts_to w'.ref (union_get_field v field));
+  R.gfocus rr (U.union_field (union_field_pcm fields) (Some field)) v (union_get_field v field);
+//  let rr' = get_ref r' in
   hr_share r';
-  rewrite (pts_to0 r' _) (pts_to r' _);
+//  pts_to_intro_rewrite r' rr' _ ;
+  pts_to_intro_rewrite r' _ _ ;
   rewrite (has_union_field0 r field r') (has_union_field r field r')
 
 let ghost_union_field
@@ -379,10 +384,12 @@ let ghost_union_field
 = rewrite (pts_to r v) (pts_to0 r v);
   let _ = gen_elim () in
   let w = vpattern_replace (HR.pts_to r _) in
-  rewrite (r_pts_to _ _) (r_pts_to w.ref (Ghost.reveal v));
+  let rr = get_ref r in
   let w' = {
     base = w.base;
-    ref = R.ref_focus w.ref (U.union_field (union_field_pcm (fields)) (Some field));
+    t = fields.fd_type field;
+    td = fields.fd_typedef field;
+    ref = R.ref_focus rr (U.union_field (union_field_pcm (fields)) (Some field));
   }
   in
   let gr' = GHR.alloc w' in
@@ -394,7 +401,7 @@ let ghost_union_field
   rewrite (HR.pts_to r1' P.full_perm w') (HR.pts_to r' P.full_perm w');
   hr_share r;
   rewrite (has_union_field0 r field r') (has_union_field r field r');
-  rewrite (pts_to0 r (Ghost.reveal v)) (pts_to r v);
+  pts_to_intro r _ _ rr _;
   ghost_union_field_focus r field r';
   r'
 
@@ -414,16 +421,18 @@ let union_field'
   let _ = gen_elim () in
   let w = HR.read r in
   vpattern_rewrite (HR.pts_to r _) w;
-  rewrite (r_pts_to _ _) (r_pts_to w.ref (Ghost.reveal v));
+  let rr = read_ref r in
   let w' = {
     base = w.base;
-    ref = R.ref_focus w.ref (U.union_field (union_field_pcm (fields)) (Some field));
+    t = fields.fd_type field;
+    td = fields.fd_typedef field;
+    ref = R.ref_focus rr (U.union_field (union_field_pcm (fields)) (Some field));
   }
   in
   let r' = HR.alloc w' in
   hr_share r;
   rewrite (has_union_field0 r field r') (has_union_field r field r');
-  rewrite (pts_to0 r (Ghost.reveal v)) (pts_to r v);
+  pts_to_intro r _ _ rr _;
   ghost_union_field_focus r field r';
   return r'
 
@@ -443,14 +452,14 @@ let ununion_field
   let w = vpattern_replace (HR.pts_to r _) in
   let w' = vpattern_replace (HR.pts_to r' _) in
   rewrite (pts_to r' v') (pts_to0 r' v');
-  let _= gen_elim () in
+  let _ = gen_elim () in
   hr_gather w' r';
-  rewrite (r_pts_to _ _) (R.pts_to w'.ref (Ghost.reveal v'));
-  let _ = r_unfocus w'.ref w.ref (coerce_eq () (U.union_field (union_field_pcm fields) (Some field))) _ in
+  let rr : R.ref w.base (union0 tn n fields).pcm = coerce_eq () w.ref in
+  let rr' = get_ref r' in
+  let x = r_unfocus rr' rr (coerce_eq () (U.union_field (union_field_pcm fields) (Some field))) _ in
   hr_share r;
   rewrite (has_union_field0 r field r') (has_union_field r field r');
-  rewrite (R.pts_to _ _) (R.pts_to w.ref (union_set_field tn n fields field (Ghost.reveal v')));
-  rewrite (pts_to0 r (union_set_field tn n fields field (Ghost.reveal v'))) (pts_to r (union_set_field tn n fields field (Ghost.reveal v')))
+  pts_to_intro_rewrite r rr #x _
 
 [@@noextract_to "krml"] // primitive
 let union_switch_field'
@@ -470,10 +479,10 @@ let union_switch_field'
   let _ = gen_elim () in
   let w = HR.read r in
   vpattern_rewrite (HR.pts_to r _) w;
-  rewrite (r_pts_to _ _) (R.pts_to w.ref (Ghost.reveal v));
+  let rr = read_ref r in
   let v' : union_t0 tn n fields = U.field_to_union_f (union_field_pcm fields) (Some field) (fields.fd_typedef field).uninitialized in
-  R.ref_upd w.ref _ _ (R.base_fpu (union_pcm tn n fields) _ v');
-  rewrite (pts_to0 r v') (pts_to r v');
+  R.ref_upd rr _ _ (R.base_fpu (union_pcm tn n fields) _ v');
+  pts_to_intro r _ _ rr v' ;
   let r' = union_field' r field in
   rewrite (pts_to r' _) (pts_to r' (uninitialized (fields.fd_typedef field)));
   return r'

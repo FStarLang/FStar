@@ -129,16 +129,19 @@ let struct1
   );
 }
 
-
 let has_struct_field_gen
   (#field_t: eqtype)
   (fields: field_description_gen_t field_t)
-  (r: ref0_v (struct1 fields))
+  (r: ref0_v)
   (field: field_t)
-  (r': ref0_v (fields.fd_typedef field))
+  (r': ref0_v)
 : GTot prop
 = r'.base == r.base /\
-  r'.ref == R.ref_focus r.ref (S.struct_field (struct_field_pcm fields) field)
+  r.t == struct_t1 fields /\
+  r.td == struct1 fields /\
+  r'.t == fields.fd_type field /\
+  r'.td == fields.fd_typedef field /\
+  r'.ref == coerce_eq () (R.ref_focus r.ref (S.struct_field (struct_field_pcm fields) field))
 
 [@@__reduce__]
 let has_struct_field0
@@ -271,11 +274,10 @@ let ghost_struct_field_focus'
 = rewrite (has_struct_field1 r field r') (has_struct_field0 r field r');
   let _ = gen_elim () in
   let w = vpattern_replace (HR.pts_to r _) in
-  let w' = vpattern_replace (HR.pts_to r' _) in
   rewrite (pts_to r v) (pts_to0 r v);
   let _ = gen_elim () in
   hr_gather w r;
-  rewrite (r_pts_to _ _) (R.pts_to w.ref (Ghost.reveal v));
+  let rr = get_ref r in
   let prf
     (f': field_t)
     (x: (fields.fd_type f'))
@@ -291,14 +293,13 @@ let ghost_struct_field_focus'
   let vf = S.field_to_struct_f (struct_field_pcm _) field (t_struct_get_field v field) in
   assert (composable (struct_pcm _) v' vf);
   assert (op (struct_pcm _) v' vf `FX.feq` v);
-  R.split w.ref _ v' vf;
-  R.gfocus w.ref (S.struct_field (struct_field_pcm _) field) vf (t_struct_get_field v field);
+  R.split rr _ v' vf;
+  R.gfocus rr (S.struct_field (struct_field_pcm _) field) vf (t_struct_get_field v field);
   hr_share r;
   hr_share r';
   rewrite (has_struct_field0 r field r') (has_struct_field1 r field r');
-  rewrite (pts_to0 r v') (pts_to r (t_struct_set_field field (unknown (fields.fd_typedef field)) v));
-  rewrite (R.pts_to _ _) (r_pts_to w'.ref (t_struct_get_field v field));
-  rewrite (pts_to0 r' (t_struct_get_field v field)) (pts_to r' (t_struct_get_field v field))
+  pts_to_intro_rewrite r rr _;
+  pts_to_intro_rewrite r' _ _
 
 module GHR = Steel.ST.GhostHigherReference
 
@@ -315,10 +316,12 @@ let ghost_struct_field'
 = rewrite (pts_to r v) (pts_to0 r v);
   let _ = gen_elim () in
   let w = vpattern_replace (HR.pts_to r _) in
-  rewrite (r_pts_to _ _) (r_pts_to w.ref (Ghost.reveal v));
+  let rr = get_ref r in
   let w' = {
     base = w.base;
-    ref = R.ref_focus w.ref (S.struct_field (struct_field_pcm (fields)) field);
+    t = fields.fd_type field;
+    td = fields.fd_typedef field;
+    ref = R.ref_focus rr (S.struct_field (struct_field_pcm (fields)) field);
   }
   in
   let gr' = GHR.alloc w' in
@@ -330,7 +333,7 @@ let ghost_struct_field'
   rewrite (HR.pts_to r1' P.full_perm w') (HR.pts_to r' P.full_perm w');
   hr_share r;
   rewrite (has_struct_field0 r field r') (has_struct_field1 r field r');
-  rewrite (pts_to0 r (Ghost.reveal v)) (pts_to r v);
+  pts_to_intro r _ _ rr _;
   ghost_struct_field_focus' r field r';
   r'
 
@@ -347,16 +350,18 @@ let struct_field'
   let _ = gen_elim () in
   let w = HR.read r in
   vpattern_rewrite (HR.pts_to r _) w;
-  rewrite (r_pts_to _ _) (r_pts_to w.ref (Ghost.reveal v));
+  let rr = read_ref r in
   let w' = {
     base = w.base;
-    ref = R.ref_focus w.ref (S.struct_field (struct_field_pcm (fields)) field);
+    t = fields.fd_type field;
+    td = fields.fd_typedef field;
+    ref = R.ref_focus rr (S.struct_field (struct_field_pcm (fields)) field);
   }
   in
   let r' = HR.alloc w' in
   hr_share r;
   rewrite (has_struct_field0 r field r') (has_struct_field1 r field r');
-  rewrite (pts_to0 r (Ghost.reveal v)) (pts_to r v);
+  pts_to_intro r _ _ rr _;
   ghost_struct_field_focus' r field r';
   return r'
 
@@ -383,11 +388,11 @@ let unstruct_field'
   rewrite (pts_to r v) (pts_to0 r v);
   let _ = gen_elim () in
   hr_gather w r;
-  rewrite (r_pts_to _ (Ghost.reveal v)) (R.pts_to w.ref (Ghost.reveal v));
+  let rr = get_ref r in
   rewrite (pts_to r' v') (pts_to0 r' v');
   let _ = gen_elim () in
   hr_gather w' r';
-  rewrite (r_pts_to _ (Ghost.reveal v')) (R.pts_to w'.ref (Ghost.reveal v'));
+  let rr' = get_ref r' in
   let prf
     (f': field_t)
     (x: (fields.fd_type f'))
@@ -402,11 +407,11 @@ let unstruct_field'
   let vf = S.field_to_struct_f (struct_field_pcm _) field v' in
   assert (composable (struct_pcm _) v vf);
   assert (op (struct_pcm _) v vf `FX.feq` t_struct_set_field field v' v);
-  let _ = r_unfocus w'.ref w.ref (coerce_eq () (S.struct_field (struct_field_pcm fields) field)) _ in
-  let _ = R.gather w.ref (Ghost.reveal v) _ in
+  let _ = r_unfocus rr' rr (coerce_eq () (S.struct_field (struct_field_pcm fields) field)) _ in
+  let _ = R.gather rr (Ghost.reveal v) _ in
   hr_share r;
   rewrite (has_struct_field0 r field r') (has_struct_field1 r field r');
-  rewrite (pts_to0 r _) (pts_to r _)
+  pts_to_intro_rewrite r rr _
 
 let full_struct_gen
   (#field_t: eqtype)
