@@ -60,7 +60,6 @@ val mk_fraction_eq_unknown (#t: Type0) (td: typedef t) (v: t) (p: P.perm) : Lemm
   (ensures (v == unknown td))
 
 
-(*
 // To be extracted as: void*
 
 // FIXME: Currently, Karamel does not directly support
@@ -75,19 +74,16 @@ val void_ptr : Type0
 [@@noextract_to "krml"] // primitive
 val void_null: void_ptr
 
-[@@noextract_to "krml"] // proof-only
-val type_of_ptr (p: void_ptr { ~ (p == void_null) }) : GTot Type0
-val typedef_of_ptr (p: void_ptr { ~ (p == void_null) }) : GTot (typedef (type_of_ptr p))
-
 // To be extracted as: *t
 [@@noextract_to "krml"] // primitive
-let ptr (#t: Type) (td: typedef t) : Tot Type0 = (p: void_ptr { (~ (p == void_null)) ==> (type_of_ptr p == t /\ typedef_of_ptr p == td) })
+let ptr_gen (t: Type) : Tot Type0 = void_ptr
 [@@noextract_to "krml"] // primitive
-let null (#t: Type) (td: typedef t) : Tot (ptr td) = void_null
-*)
+let null_gen (t: Type) : Tot (ptr_gen t) = void_null
 
-val ptr (#t: Type) (td: typedef t) : Tot Type0
-val null (#t: Type) (td: typedef t) : Tot (ptr td)
+inline_for_extraction [@@noextract_to "krml"] // primitive
+let ptr (#t: Type) (td: typedef t) : Tot Type0 = ptr_gen t
+inline_for_extraction [@@noextract_to "krml"] // primitive
+let null (#t: Type) (td: typedef t) : Tot (ptr td) = null_gen t
 
 inline_for_extraction [@@noextract_to "krml"]
 let ref (#t: Type) (td: typedef t) : Tot Type0 = (p: ptr td { ~ (p == null td) })

@@ -100,35 +100,35 @@ let mk_fraction_eq_unknown td v p = td.mk_fraction_eq_one v p
 module R = Steel.ST.C.Model.Ref
 
 noeq
-type ref0_v (#t: Type) (td: typedef t) : Type u#1 = {
+type ref0_v : Type u#1 = {
   base: Type0;
+  t: Type;
+  td: typedef t;
   ref: R.ref base td.pcm;
 }
 
 module HR = Steel.ST.HigherReference
 
-let ptr #t td = HR.ref (ref0_v td)
-let null td = HR.null
-
-(*
-noeq
-type ref0 : Type0 = {
-  dest: TD.token;
-  typedef: typedef (TD.type_of_token dest);
-  ref: R.ref typedef.pcm;
-}
-
-let void_ptr = option ref0
-let void_null = None
-let type_of_ptr p = TD.type_of_token (Some?.v p).dest
-let typedef_of_ptr p = (Some?.v p).typedef
-*)
+let void_ptr = HR.ref ref0_v
+let void_null = HR.null
 
 let r_pts_to
   (#a: Type u#0) (#b: Type u#b) (#p: pcm b)
   (r: R.ref a p) (v: b)
 : vprop
 = R.pts_to r v
+
+let pts_to_cond
+  (#t: Type)
+  (#td: typedef t)
+  (r: ptr td)
+  (w: ref0_v)
+  (r': R.ref w.base td.pcm)
+: GTot prop
+=
+      t == w.t /\
+      td == w.td /\
+      r' == w.ref
 
 [@@__reduce__]
 let pts_to0
@@ -137,12 +137,26 @@ let pts_to0
   (r: ptr td)
   (v: t)
 : Tot vprop
-= exists_ (fun p -> exists_ (fun w ->
+= exists_ (fun p -> exists_ (fun w -> exists_ (fun (r': R.ref w.base td.pcm) ->
     HR.pts_to r p w `star`
-    r_pts_to w.ref v
-  ))
+    r_pts_to r' v `star`
+    pure (pts_to_cond r w r')
+  )))
 
 let pts_to r v = pts_to0 r v
+
+let pts_to_intro_precond
+  (#t: Type)
+  (#td: typedef t)
+  (r: ref td)
+  (w: ref0_v)
+  (#tbase: Type)
+  (r': R.ref tbase td.pcm)
+: GTot prop
+= tbase == w.base /\
+      t == w.t /\
+      td == w.td /\
+      r' == w.ref
 
 let pts_to_intro
   (#opened: _)
@@ -150,14 +164,23 @@ let pts_to_intro
   (#td: typedef t)
   (r: ref td)
   (p: P.perm)
-  (w1 w2: ref0_v td)
+  (w: ref0_v)
+  (#tbase: Type)
+  (r': R.ref tbase td.pcm)
   (v: t)
 : STGhost unit opened
-    (HR.pts_to r p w1 `star` R.pts_to w2.ref v)
+    (HR.pts_to r p w `star` R.pts_to r' v)
     (fun _ -> pts_to r v)
-    (w1 == w2)
+    (pts_to_intro_precond r w r')
     (fun _ -> True)
-= vpattern_rewrite (HR.pts_to r p) w2;
+= let r2 : R.ref w.base td.pcm = coerce_eq () r' in
+  rewrite (R.pts_to r' v) (r_pts_to #w.base #t #td.pcm r2 v);
+  intro_pure (pts_to_cond r w r2);
+  intro_exists r2 (fun (r': R.ref w.base td.pcm) ->
+    HR.pts_to r p w `star`
+    r_pts_to r' v `star`
+    pure (pts_to_cond r w r')
+  );
   rewrite (pts_to0 r v) (pts_to r v)
 
 let is_null
@@ -283,8 +306,7 @@ let pts_to_equiv
   let _ = gen_elim () in
   hr_gather w r1;
   hr_share r2;
-  rewrite (R.pts_to _ _) (R.pts_to w.ref v);
-  rewrite (pts_to0 r2 v) (pts_to r2 v);
+  pts_to_intro r2 _ _ _ _;
   rewrite (ref_equiv0 r1 r2) (ref_equiv r1 r2)
 
 [@@__steel_reduce__; __reduce__]
@@ -329,58 +351,142 @@ let alloc
 = let r = R.ref_alloc td.pcm td.uninitialized in
   let w = {
     base = _;
+    t = _;
+    td = td;
     ref = r;
   }
   in
-  rewrite (R.pts_to _ _) (R.pts_to w.ref (uninitialized td));
-  let res = HR.alloc w in
+  let res : ptr td = HR.alloc w in
   HR.share res;
   HR.pts_to_not_null res;
-  rewrite (pts_to0 res (uninitialized td)) (pts_to_or_null res (uninitialized td));
+  pts_to_intro res _ _ r _;
+  rewrite (pts_to _ _) (pts_to_or_null res (uninitialized td));
   rewrite (freeable0 res) (freeable_or_null res);
+  return res
+
+[@@noextract_to "krml"]
+let read_ref
+  (#t: Type)
+  (#td: typedef t)
+  (#p: P.perm)
+  (#v: Ghost.erased t)
+  (#w: Ghost.erased ref0_v)
+  (#tbase: Type0)
+  (#r': Ghost.erased (R.ref tbase td.pcm))
+  (r: ref td)
+: ST (R.ref w.base td.pcm)
+    (HR.pts_to r p w `star`
+      r_pts_to r' v)
+    (fun r' -> HR.pts_to r p w `star`
+      R.pts_to r' v)
+    (tbase == w.base /\
+      t == w.t /\
+      td == w.td /\
+      Ghost.reveal r' == coerce_eq () w.ref
+    )
+    (fun r' ->
+    tbase == w.base /\
+      t == w.t /\
+      td == w.td /\
+      r' == coerce_eq () w.ref
+    )
+= let w0 = HR.read r in
+  let res : R.ref w.base td.pcm = coerce_eq () w0.ref in
+  rewrite (r_pts_to _ _) (R.pts_to res v);
   return res
 
 let free
   #_ #_ #v r
 = rewrite (pts_to r v) (pts_to0 r v);
   let _ = gen_elim () in
-  let w = HR.read r in
-  rewrite (R.pts_to _ _) (R.pts_to w.ref v);
+  let w = vpattern_replace_erased (HR.pts_to r _) in
+  let r' = read_ref r in
   rewrite (freeable r) (freeable0 r);
   let _ = gen_elim () in
-  hr_gather w r;
-  R.ref_free w.ref;
+  hr_gather (Ghost.reveal w) r;
+  R.ref_free r';
   drop (HR.pts_to _ _ _);
   return ()
+
+let get_ref
+  (#opened: _)
+  (#t: Type)
+  (#td: typedef t)
+  (#p: P.perm)
+  (#v: t)
+  (#w: ref0_v)
+  (#tbase: Type0)
+  (#r': R.ref tbase td.pcm)
+  (r: ref td)
+: STGhost (R.ref w.base td.pcm) opened
+    (HR.pts_to r p w `star`
+      r_pts_to r' v)
+    (fun r' -> HR.pts_to r p w `star`
+      R.pts_to r' v)
+    (tbase == w.base /\
+      t == w.t /\
+      td == w.td /\
+      Ghost.reveal r' == coerce_eq () w.ref
+    )
+    (fun r' ->
+    tbase == w.base /\
+      t == w.t /\
+      td == w.td /\
+      r' == coerce_eq () w.ref
+    )
+= let res : R.ref w.base td.pcm = coerce_eq () w.ref in
+  rewrite (r_pts_to _ _) (R.pts_to res v);
+  res
+
+let pts_to_intro_rewrite
+  (#opened: _)
+  (#t: Type)
+  (#td: typedef t)
+  (r: ref td)
+  (#p: P.perm)
+  (#w: ref0_v)
+  (#tbase: Type)
+  (r': R.ref tbase td.pcm)
+  (#v: t)
+  (v': Ghost.erased t)
+: STGhost unit opened
+    (HR.pts_to r p w `star` R.pts_to r' v)
+    (fun _ -> pts_to r v')
+    (pts_to_intro_precond r w r' /\
+      v == Ghost.reveal v'
+    )
+    (fun _ -> True)
+= pts_to_intro r p w r' v;
+  vpattern_rewrite (pts_to r) v'
 
 let mk_fraction_split_gen
   #_ #_ #td r v p p1 p2
 = rewrite (pts_to _ _) (pts_to0 r (mk_fraction td v p));
   let _ = gen_elim () in
-  let w = vpattern_replace (HR.pts_to r _) in
+  let r' = get_ref r in
   td.mk_fraction_split v p1 p2;
   td.mk_fraction_join v p1 p2;
   rewrite
     (R.pts_to _ _)
-    (R.pts_to w.ref (op td.pcm (td.mk_fraction v p1) (td.mk_fraction v p2)));
+    (R.pts_to r' (op td.pcm (td.mk_fraction v p1) (td.mk_fraction v p2)));
   R.split _ _ (td.mk_fraction v p1) (td.mk_fraction v p2);
   HR.share r;
-  rewrite (pts_to0 r (td.mk_fraction v p1)) (pts_to r (mk_fraction td v p1));
-  rewrite (pts_to0 r (td.mk_fraction v p2)) (pts_to r (mk_fraction td v p2))
+  pts_to_intro_rewrite r r' #(td.mk_fraction v p1) (mk_fraction td v p1);
+  pts_to_intro_rewrite r r' #(td.mk_fraction v p2) (mk_fraction td v p2)
 
 let mk_fraction_join
   #_ #_ #td r v p1 p2
 = rewrite (pts_to r (mk_fraction td v p1)) (pts_to0 r (mk_fraction td v p1));
   let _ = gen_elim () in
   let w = vpattern_replace (HR.pts_to r _) in
-  rewrite (R.pts_to _ _) (R.pts_to w.ref (td.mk_fraction v p1));
+  let r' = get_ref r in
   rewrite (pts_to r (mk_fraction td v p2)) (pts_to0 r (mk_fraction td v p2));
   let _ = gen_elim () in
   hr_gather w r;
-  rewrite (R.pts_to _ (mk_fraction _ _ p2)) (R.pts_to w.ref (td.mk_fraction v p2));
-  let _ = R.gather w.ref (td.mk_fraction v p1) _ in
+  rewrite (R.pts_to _ (mk_fraction _ _ p2)) (R.pts_to r' (td.mk_fraction v p2));
+  let _ = R.gather r' (mk_fraction td v p1) _ in
   td.mk_fraction_join v p1 p2;
-  rewrite (pts_to0 r _) (pts_to r _)
+  pts_to_intro_rewrite r r' _
 
 let r_unfocus (#opened:_)
   (#ta #ta' #tb #tc: Type)

@@ -93,17 +93,16 @@ let scalar_unique
 = rewrite (pts_to r (mk_fraction (scalar t) (mk_scalar v1) p1)) (pts_to0 r (Some (Some v1, p1)));
   let _ = gen_elim () in
   let w = vpattern_replace (HR.pts_to r _) in
-  rewrite (r_pts_to _ (Some (Some v1, p1))) (R.pts_to w.ref (Some (Some v1, p1)));
+  let r' = get_ref r in
   rewrite (pts_to r _) (pts_to0 r (Some (Some v2, p2)));
   let _ = gen_elim () in
   hr_gather w r;
-  rewrite (r_pts_to _ (Some (Some v2, p2))) (R.pts_to w.ref (Some (Some v2, p2)));
-  let _ = R.gather w.ref (Some (Some v1, p1)) (Some (Some v2, p2)) in
-  R.split w.ref _ (Some (Some v1, p1)) (Some (Some v2, p2));
+  rewrite (r_pts_to _ (Some (Some v2, p2))) (R.pts_to r' (Some (Some v2, p2)));
+  let _ = R.gather r' (Some (Some v1, p1)) (Some (Some v2, p2)) in
+  R.split r' _ (Some (Some v1, p1)) (Some (Some v2, p2));
   HR.share r;
-  noop (); // FIXME: WHY WHY WHY?
-  rewrite (pts_to0 r (Some (Some v1, p1))) (pts_to r (mk_fraction (scalar _) (mk_scalar v1) p1));
-  rewrite (pts_to0 r (Some (Some v2, p2))) (pts_to r (mk_fraction (scalar _) (mk_scalar v2) p2))
+  pts_to_intro_rewrite r r' #(Some (Some v1, p1)) (mk_fraction (scalar _) (mk_scalar v1) p1);
+  pts_to_intro_rewrite r r' #(Some (Some v2, p2)) (mk_fraction (scalar _) (mk_scalar v2) p2)
 
 #pop-options
 
@@ -111,22 +110,16 @@ let read0
   #t #v #p r
 = rewrite (pts_to r _) (pts_to0 r (Some (Some (Ghost.reveal v), p)));
   let _ = gen_elim () in
-  let w = HR.read r in
-  vpattern_rewrite (HR.pts_to r _) w;
-  rewrite (r_pts_to _ _) (R.pts_to w.ref (Some (Some (Ghost.reveal v), p)));
-  let v' = R.ref_read w.ref in
+  let r' = read_ref r in
+  let v' = R.ref_read r' in
   let Some (Some v0, _) = v' in
-  rewrite (R.pts_to _ _) (r_pts_to w.ref (Some (Some (Ghost.reveal v), p)));
-  rewrite (pts_to0 r (Some (Some (Ghost.reveal v), p))) (pts_to r (mk_fraction (scalar t) (mk_scalar (Ghost.reveal v)) p));
+  pts_to_intro_rewrite r r' _;
   return v0
 
 let write
   #t #v r v'
 = rewrite (pts_to r _) (pts_to0 r (Ghost.reveal v));
   let _ = gen_elim () in
-  let w = HR.read r in
-  vpattern_rewrite (HR.pts_to r _) w;
-  rewrite (r_pts_to _ _) (R.pts_to w.ref (Ghost.reveal v));
-  R.ref_upd w.ref _ _ (R.base_fpu _ _ (Some (Some v', P.full_perm)));
-  rewrite (R.pts_to _ _) (r_pts_to w.ref (Some (Some (Ghost.reveal v'), P.full_perm)));
-  rewrite (pts_to0 r (Some (Some (Ghost.reveal v'), P.full_perm))) (pts_to r (mk_fraction (scalar t) (mk_scalar (Ghost.reveal v')) P.full_perm))
+  let r' = read_ref r in
+  R.ref_upd r' _ _ (R.base_fpu _ _ (Some (Some v', P.full_perm)));
+  pts_to_intro_rewrite r r' _
