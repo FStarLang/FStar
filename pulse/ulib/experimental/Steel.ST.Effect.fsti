@@ -158,7 +158,9 @@ let if_then_else (a:Type)
 /// 
 /// If the effect appears at the top-level, make sure it is constrained as per STTop
 
-[@@ite_soundness_by ite_attr; top_level_effect "Steel.ST.Effect.STTop"]
+[@@ ite_soundness_by ite_attr;
+    top_level_effect "Steel.ST.Effect.STTop";
+    primitive_extraction ]
 reflectable
 effect {
   STBase
