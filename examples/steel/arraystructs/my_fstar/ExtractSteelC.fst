@@ -109,8 +109,12 @@ let my_types_without_decay () =
       TBuf (translate_type_without_decay env arg)
 
   | MLTY_Named ([arg; _], p) when
-    Syntax.string_of_mlpath p = "Steel.ST.C.Types.Base.ptr"
-    || Syntax.string_of_mlpath p = "Steel.ST.C.Types.Array.array_ptr"
+      Syntax.string_of_mlpath p = "Steel.ST.C.Types.Array.array_ptr"
+    ->
+      TBuf (translate_type_without_decay env arg)
+
+  | MLTY_Named ([arg], p) when
+      Syntax.string_of_mlpath p = "Steel.ST.C.Types.Base.ptr_gen"
     ->
       TBuf (translate_type_without_decay env arg)
 
@@ -223,7 +227,10 @@ let my_exprs () = register_pre_translate_expr begin fun env e ->
 
   | MLE_App ({expr=MLE_TApp ({expr=MLE_Name p}, t::_)}, [_ (* pcm *)])
     when string_of_mlpath p = "Steel.C.Reference.null"
-    || string_of_mlpath p = "Steel.ST.C.Types.Base.null"
+    -> EBufNull (translate_type env t)
+
+  | MLE_TApp ({expr=MLE_Name p}, [t]) when
+      string_of_mlpath p = "Steel.ST.C.Types.Base.null_gen"
     -> EBufNull (translate_type env t)
 
 (* END support for the Steel null pointer *)
