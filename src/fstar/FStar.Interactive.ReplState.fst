@@ -21,7 +21,7 @@ open FStar.Errors
 open FStar.Compiler.Util
 open FStar.Compiler.Range
 open FStar.TypeChecker.Env
-
+(*
 module U = FStar.Compiler.Util
 module TcEnv = FStar.TypeChecker.Env
 module PI = FStar.Parser.ParseIt
@@ -47,17 +47,22 @@ type repl_task =
   | PushFragment of either PI.input_frag FStar.Parser.AST.decl (* code fragment *)
   | Noop (* Used by compute *)
 
-type repl_state = { repl_line: int; repl_column: int; repl_fname: string;
-                    repl_deps_stack: repl_stack_t;
-                    repl_curmod: optmod_t;
-                    repl_env: TcEnv.env;
-                    repl_stdin: stream_reader;
-                    repl_names: CTable.table }
-and repl_stack_t = list repl_stack_entry_t
-and repl_stack_entry_t = repl_depth_t * (repl_task * repl_state)
+type repl_state (a:Type) = {
+    repl_line: int;
+    repl_column: int;
+    repl_fname: string;
+    repl_deps_stack: repl_stack_t a;
+    repl_curmod: optmod_t;
+    repl_env: TcEnv.env;
+    repl_stdin: stream_reader;
+    repl_names: CTable.table;
+    repl_buffered_input_queries: list a
+}
+and repl_stack_t a = list (repl_stack_entry_t a)
+and repl_stack_entry_t a = repl_depth_t * (repl_task * repl_state a)
 
 // Global repl_state, keeping state of different buffers
-type grepl_state = { grepl_repls: U.psmap repl_state; grepl_stdin: stream_reader }
+type grepl_state = { grepl_repls: U.psmap (repl_state unit); grepl_stdin: stream_reader }
 
 
 (*************************)
@@ -91,7 +96,7 @@ let string_of_repl_task = function
 module BU = FStar.Compiler.Util
 
 let string_of_repl_stack_entry
-  : repl_stack_entry_t -> string
+  : repl_stack_entry_t _ -> string
   = fun ((depth, i), (task, state)) ->
       BU.format "{depth=%s; task=%s}"
                 [string_of_int i;
@@ -102,7 +107,7 @@ let string_of_repl_stack s =
   String.concat ";\n\t\t"
                 (List.map string_of_repl_stack_entry s)
 
-let repl_state_to_string (r:repl_state)
+let repl_state_to_string (r:repl_state 'a)
   : string
   = BU.format 
     "{\n\t\
@@ -119,3 +124,4 @@ let repl_state_to_string (r:repl_state)
        | None -> "None"
        | Some m -> Ident.string_of_lid m.name);
       string_of_repl_stack r.repl_deps_stack]
+*)

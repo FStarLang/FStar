@@ -210,7 +210,7 @@ let (parse_lsp_query :
         }
     | FStar_Pervasives_Native.Some request -> deserialize_lsp_query request
 let (repl_state_init :
-  Prims.string -> FStar_Interactive_ReplState.repl_state) =
+  Prims.string -> FStar_Interactive_Ide_Types.repl_state) =
   fun fname ->
     let intial_range =
       let uu___ = FStar_Compiler_Range.mk_pos Prims.int_one Prims.int_zero in
@@ -220,23 +220,24 @@ let (repl_state_init :
     let env1 = FStar_TypeChecker_Env.set_range env intial_range in
     let uu___ = FStar_Compiler_Util.open_stdin () in
     {
-      FStar_Interactive_ReplState.repl_line = Prims.int_one;
-      FStar_Interactive_ReplState.repl_column = Prims.int_zero;
-      FStar_Interactive_ReplState.repl_fname = fname;
-      FStar_Interactive_ReplState.repl_deps_stack = [];
-      FStar_Interactive_ReplState.repl_curmod = FStar_Pervasives_Native.None;
-      FStar_Interactive_ReplState.repl_env = env1;
-      FStar_Interactive_ReplState.repl_stdin = uu___;
-      FStar_Interactive_ReplState.repl_names =
-        FStar_Interactive_CompletionTable.empty
+      FStar_Interactive_Ide_Types.repl_line = Prims.int_one;
+      FStar_Interactive_Ide_Types.repl_column = Prims.int_zero;
+      FStar_Interactive_Ide_Types.repl_fname = fname;
+      FStar_Interactive_Ide_Types.repl_deps_stack = [];
+      FStar_Interactive_Ide_Types.repl_curmod = FStar_Pervasives_Native.None;
+      FStar_Interactive_Ide_Types.repl_env = env1;
+      FStar_Interactive_Ide_Types.repl_stdin = uu___;
+      FStar_Interactive_Ide_Types.repl_names =
+        FStar_Interactive_CompletionTable.empty;
+      FStar_Interactive_Ide_Types.repl_buffered_input_queries = []
     }
 type optresponse =
   FStar_Interactive_JsonHelper.assoct FStar_Pervasives_Native.option
 type either_gst_exit =
-  (FStar_Interactive_ReplState.grepl_state, Prims.int)
+  (FStar_Interactive_Ide_Types.grepl_state, Prims.int)
     FStar_Pervasives.either
 let (invoke_full_lax :
-  FStar_Interactive_ReplState.grepl_state ->
+  FStar_Interactive_Ide_Types.grepl_state ->
     Prims.string ->
       Prims.string -> Prims.bool -> (optresponse * either_gst_exit))
   =
@@ -253,7 +254,7 @@ let (invoke_full_lax :
              | (diag, st') ->
                  let repls =
                    FStar_Compiler_Util.psmap_add
-                     gst.FStar_Interactive_ReplState.grepl_repls fname st' in
+                     gst.FStar_Interactive_Ide_Types.grepl_repls fname st' in
                  let diag1 =
                    if FStar_Compiler_Util.is_some diag
                    then diag
@@ -264,13 +265,13 @@ let (invoke_full_lax :
                  (diag1,
                    (FStar_Pervasives.Inl
                       {
-                        FStar_Interactive_ReplState.grepl_repls = repls;
-                        FStar_Interactive_ReplState.grepl_stdin =
-                          (gst.FStar_Interactive_ReplState.grepl_stdin)
+                        FStar_Interactive_Ide_Types.grepl_repls = repls;
+                        FStar_Interactive_Ide_Types.grepl_stdin =
+                          (gst.FStar_Interactive_Ide_Types.grepl_stdin)
                       }))) in
           let uu___ =
             FStar_Compiler_Util.psmap_try_find
-              gst.FStar_Interactive_ReplState.grepl_repls fname in
+              gst.FStar_Interactive_Ide_Types.grepl_repls fname in
           match uu___ with
           | FStar_Pervasives_Native.Some uu___1 ->
               if force
@@ -278,7 +279,7 @@ let (invoke_full_lax :
               else (FStar_Pervasives_Native.None, (FStar_Pervasives.Inl gst))
           | FStar_Pervasives_Native.None -> aux ()
 let (run_query :
-  FStar_Interactive_ReplState.grepl_state ->
+  FStar_Interactive_Ide_Types.grepl_state ->
     FStar_Interactive_JsonHelper.lquery -> (optresponse * either_gst_exit))
   =
   fun gst ->
@@ -334,7 +335,7 @@ let (run_query :
       | FStar_Interactive_JsonHelper.Completion (txpos, ctx) ->
           let uu___ =
             FStar_Compiler_Util.psmap_try_find
-              gst.FStar_Interactive_ReplState.grepl_repls
+              gst.FStar_Interactive_Ide_Types.grepl_repls
               txpos.FStar_Interactive_JsonHelper.path in
           (match uu___ with
            | FStar_Pervasives_Native.Some st ->
@@ -349,13 +350,13 @@ let (run_query :
       | FStar_Interactive_JsonHelper.Hover txpos ->
           let uu___ =
             FStar_Compiler_Util.psmap_try_find
-              gst.FStar_Interactive_ReplState.grepl_repls
+              gst.FStar_Interactive_Ide_Types.grepl_repls
               txpos.FStar_Interactive_JsonHelper.path in
           (match uu___ with
            | FStar_Pervasives_Native.Some st ->
                let uu___1 =
                  FStar_Interactive_QueryHelper.hoverlookup
-                   st.FStar_Interactive_ReplState.repl_env txpos in
+                   st.FStar_Interactive_Ide_Types.repl_env txpos in
                (uu___1, (FStar_Pervasives.Inl gst))
            | FStar_Pervasives_Native.None ->
                (FStar_Interactive_JsonHelper.nullResponse,
@@ -369,13 +370,13 @@ let (run_query :
       | FStar_Interactive_JsonHelper.Definition txpos ->
           let uu___ =
             FStar_Compiler_Util.psmap_try_find
-              gst.FStar_Interactive_ReplState.grepl_repls
+              gst.FStar_Interactive_Ide_Types.grepl_repls
               txpos.FStar_Interactive_JsonHelper.path in
           (match uu___ with
            | FStar_Pervasives_Native.Some st ->
                let uu___1 =
                  FStar_Interactive_QueryHelper.deflookup
-                   st.FStar_Interactive_ReplState.repl_env txpos in
+                   st.FStar_Interactive_Ide_Types.repl_env txpos in
                (uu___1, (FStar_Pervasives.Inl gst))
            | FStar_Pervasives_Native.None ->
                (FStar_Interactive_JsonHelper.nullResponse,
@@ -495,9 +496,9 @@ let rec (read_lsp_query :
         (FStar_Compiler_Util.print_error "[E] Malformed Content Header\n";
          read_lsp_query stream)
     | FStar_Interactive_JsonHelper.InputExhausted -> read_lsp_query stream
-let rec (go : FStar_Interactive_ReplState.grepl_state -> Prims.int) =
+let rec (go : FStar_Interactive_Ide_Types.grepl_state -> Prims.int) =
   fun gst ->
-    let query = read_lsp_query gst.FStar_Interactive_ReplState.grepl_stdin in
+    let query = read_lsp_query gst.FStar_Interactive_Ide_Types.grepl_stdin in
     let uu___ = run_query gst query.FStar_Interactive_JsonHelper.q in
     match uu___ with
     | (r, state_opt) ->
@@ -523,8 +524,8 @@ let (start_server : unit -> unit) =
         let uu___3 = FStar_Compiler_Util.psmap_empty () in
         let uu___4 = FStar_Compiler_Util.open_stdin () in
         {
-          FStar_Interactive_ReplState.grepl_repls = uu___3;
-          FStar_Interactive_ReplState.grepl_stdin = uu___4
+          FStar_Interactive_Ide_Types.grepl_repls = uu___3;
+          FStar_Interactive_Ide_Types.grepl_stdin = uu___4
         } in
       go uu___2 in
     FStar_Compiler_Effect.exit uu___1

@@ -30,7 +30,7 @@ open FStar.Universal
 open FStar.Parser.ParseIt
 open FStar.TypeChecker.Env
 open FStar.Interactive.JsonHelper
-open FStar.Interactive.ReplState
+open FStar.Interactive.Ide.Types
 
 module U = FStar.Compiler.Util
 module SS = FStar.Syntax.Syntax

@@ -26,8 +26,6 @@ open FStar.Getopt
 open FStar.Ident
 open FStar.Errors
 open FStar.Interactive.JsonHelper
-open FStar.Interactive.QueryHelper
-open FStar.Interactive.PushHelper
 
 open FStar.Universal
 open FStar.TypeChecker.Env
@@ -40,8 +38,8 @@ module DsEnv = FStar.Syntax.DsEnv
 module TcErr = FStar.TypeChecker.Err
 module TcEnv = FStar.TypeChecker.Env
 module CTable = FStar.Interactive.CompletionTable
-module QH = FStar.Interactive.QueryHelper
-module RS = FStar.Interactive.ReplState
+module PI = FStar.Parser.ParseIt
+module U = FStar.Compiler.Util
 
 (***********************)
 (* Global state setup *)
@@ -50,46 +48,11 @@ let initial_range =
   Range.mk_range "<input>" (Range.mk_pos 1 0) (Range.mk_pos 1 0)
 
 
-(*****************************************)
-(* Reading queries and writing responses *)
-(*****************************************)
-
-let js_pushkind s : push_kind = match js_str s with
-  | "syntax" -> SyntaxCheck
-  | "lax" -> LaxCheck
-  | "full" -> FullCheck
-  | _ -> js_fail "push_kind" s
-
-let js_reductionrule s = match js_str s with
-  | "beta" -> FStar.TypeChecker.Env.Beta
-  | "delta" -> FStar.TypeChecker.Env.UnfoldUntil SS.delta_constant
-  | "iota" -> FStar.TypeChecker.Env.Iota
-  | "zeta" -> FStar.TypeChecker.Env.Zeta
-  | "reify" -> FStar.TypeChecker.Env.Reify
-  | "pure-subterms" -> FStar.TypeChecker.Env.PureSubtermsWithinComputations
-  | _ -> js_fail "reduction rule" s
 
 type completion_context =
 | CKCode
 | CKOption of bool (* #set-options (false) or #reset-options (true) *)
 | CKModuleOrNamespace of bool (* modules *) * bool (* namespaces *)
-
-let js_optional_completion_context k =
-  match k with
-  | None -> CKCode
-  | Some k ->
-    match js_str k with
-    | "symbol" // Backwards compatibility
-    | "code" -> CKCode
-    | "set-options" -> CKOption false
-    | "reset-options" -> CKOption true
-    | "open"
-    | "let-open" -> CKModuleOrNamespace (true, true)
-    | "include"
-    | "module-alias" -> CKModuleOrNamespace (true, false)
-    | _ ->
-      js_fail "completion context (code, set-options, reset-options, \
-open, let-open, include, module-alias)" k
 
 type lookup_context =
 | LKSymbolOnly
@@ -97,25 +60,9 @@ type lookup_context =
 | LKOption
 | LKCode
 
-let js_optional_lookup_context k =
-  match k with
-  | None -> LKSymbolOnly // Backwards-compatible default
-  | Some k ->
-    match js_str k with
-    | "symbol-only" -> LKSymbolOnly
-    | "code" -> LKCode
-    | "set-options"
-    | "reset-options" -> LKOption
-    | "open"
-    | "let-open"
-    | "include"
-    | "module-alias" -> LKModule
-    | _ ->
-      js_fail "lookup context (symbol-only, code, set-options, reset-options, \
-open, let-open, include, module-alias)" k
-
 type position = string * int * int
 
+type push_kind = | SyntaxCheck | LaxCheck | FullCheck
 
 type push_query =
   { push_kind: push_kind;
@@ -128,7 +75,29 @@ type lookup_symbol_range = json
 
 type query_status = | QueryOK | QueryNOK | QueryViolatesProtocol
 
-type callback_t = RS.repl_state -> (query_status * list json) * either RS.repl_state int
+(* Types concerning repl *)
+type repl_depth_t = TcEnv.tcenv_depth_t * int
+type optmod_t = option Syntax.Syntax.modul
+
+type timed_fname =
+  { tf_fname: string;
+    tf_modtime: time }
+
+(** Every snapshot pushed in the repl stack is annotated with one of these.  The
+``LD``-prefixed (“Load Dependency”) onces are useful when loading or updating
+dependencies, as they carry enough information to determine whether a dependency
+is stale. **)
+type repl_task =
+  | LDInterleaved of timed_fname * timed_fname (* (interface * implementation) *)
+  | LDSingle of timed_fname (* interface or implementation *)
+  | LDInterfaceOfCurrentFile of timed_fname (* interface *)
+  | PushFragment of either PI.input_frag FStar.Parser.AST.decl (* code fragment *)
+  | Noop (* Used by compute *)
+
+type full_buffer_request_kind =
+  | Full : full_buffer_request_kind
+  | Cache : full_buffer_request_kind
+  | ReloadDeps : full_buffer_request_kind
 
 type query' =
 | Exit
@@ -144,10 +113,90 @@ type query' =
 | Search of string
 | GenericError of string
 | ProtocolViolation of string
-| FullBuffer of string & bool //if true, check the buffer, otherwise just find verified prefix
+| FullBuffer of string & full_buffer_request_kind
 | Callback of callback_t
 | Format of string
+| Cancel of option position
 and query = { qq: query'; qid: string }
+and callback_t = repl_state -> (query_status * list json) * either repl_state int
+and repl_state = {
+    repl_line: int;
+    repl_column: int;
+    repl_fname: string;
+    repl_deps_stack: repl_stack_t;
+    repl_curmod: optmod_t;
+    repl_env: TcEnv.env;
+    repl_stdin: stream_reader;
+    repl_names: CTable.table;
+    repl_buffered_input_queries: list query
+}
+and repl_stack_t = list repl_stack_entry_t
+and repl_stack_entry_t  = repl_depth_t * (repl_task * repl_state)
+
+// Global repl_state, keeping state of different buffers
+type grepl_state = { grepl_repls: U.psmap repl_state; grepl_stdin: stream_reader }
+
+
+(*************************)
+(* REPL tasks and states *)
+(*************************)
+
+let t0 = Util.now ()
+
+(** Create a timed_fname with a dummy modtime **)
+let dummy_tf_of_fname fname =
+  { tf_fname = fname;
+    tf_modtime = t0 }
+
+let string_of_timed_fname { tf_fname = fname; tf_modtime = modtime } =
+  if modtime = t0 then Util.format1 "{ %s }" fname
+  else Util.format2 "{ %s; %s }" fname (string_of_time modtime)
+
+let string_of_repl_task = function
+  | LDInterleaved (intf, impl) ->
+    Util.format2 "LDInterleaved (%s, %s)" (string_of_timed_fname intf) (string_of_timed_fname impl)
+  | LDSingle intf_or_impl ->
+    Util.format1 "LDSingle %s" (string_of_timed_fname intf_or_impl)
+  | LDInterfaceOfCurrentFile intf ->
+    Util.format1 "LDInterfaceOfCurrentFile %s" (string_of_timed_fname intf)
+  | PushFragment (Inl frag) ->
+    Util.format1 "PushFragment { code = %s }" frag.frag_text
+  | PushFragment (Inr d) ->
+    Util.format1 "PushFragment { decl = %s }" (FStar.Parser.AST.decl_to_string d)
+  | Noop -> "Noop {}"
+
+module BU = FStar.Compiler.Util
+
+let string_of_repl_stack_entry
+  : repl_stack_entry_t -> string
+  = fun ((depth, i), (task, state)) ->
+      BU.format "{depth=%s; task=%s}"
+                [string_of_int i;
+                string_of_repl_task task]
+                
+
+let string_of_repl_stack s =
+  String.concat ";\n\t\t"
+                (List.map string_of_repl_stack_entry s)
+
+let repl_state_to_string (r:repl_state)
+  : string
+  = BU.format 
+    "{\n\t\
+      repl_line=%s;\n\t\
+      repl_column=%s;\n\t\
+      repl_fname=%s;\n\t\
+      repl_cur_mod=%s;\n\t\      
+      repl_deps_stack={%s}\n\
+     }"
+     [string_of_int r.repl_line;
+      string_of_int r.repl_column;
+      r.repl_fname;
+      (match r.repl_curmod with
+       | None -> "None"
+       | Some m -> Ident.string_of_lid m.name);
+      string_of_repl_stack r.repl_deps_stack]
+
 
 let push_query_to_string pq =
   let pk =
@@ -185,6 +234,7 @@ let query_to_string q = match q.qq with
 | FullBuffer _ -> "FullBuffer"
 | Callback _ -> "Callback"
 | Format _ -> "Format"
+| Cancel _ -> "Cancel"
 
 let query_needs_current_module = function
   | Exit | DescribeProtocol | DescribeRepl | Segment _
@@ -201,7 +251,7 @@ let interactive_protocol_features =
    "lookup"; "lookup/context"; "lookup/documentation"; "lookup/definition";
    "peek"; "pop"; "push"; "search"; "segment";
    "vfs-add"; "tactic-ranges"; "interrupt"; "progress";
-   "full-buffer"; "format"]
+   "full-buffer"; "format"; "cancel"]
 
 let json_of_issue_level i =
   JsonStr (match i with
@@ -225,3 +275,57 @@ let json_of_issue issue =
                      | Some r when def_range r <> use_range r ->
                        [json_of_def_range r]
                      | _ -> [])))]
+
+(*****************************************)
+(* Reading queries and writing responses *)
+(*****************************************)
+
+let js_pushkind s : push_kind = match js_str s with
+  | "syntax" -> SyntaxCheck
+  | "lax" -> LaxCheck
+  | "full" -> FullCheck
+  | _ -> js_fail "push_kind" s
+
+let js_reductionrule s = match js_str s with
+  | "beta" -> FStar.TypeChecker.Env.Beta
+  | "delta" -> FStar.TypeChecker.Env.UnfoldUntil SS.delta_constant
+  | "iota" -> FStar.TypeChecker.Env.Iota
+  | "zeta" -> FStar.TypeChecker.Env.Zeta
+  | "reify" -> FStar.TypeChecker.Env.Reify
+  | "pure-subterms" -> FStar.TypeChecker.Env.PureSubtermsWithinComputations
+  | _ -> js_fail "reduction rule" s
+
+let js_optional_completion_context k =
+  match k with
+  | None -> CKCode
+  | Some k ->
+    match js_str k with
+    | "symbol" // Backwards compatibility
+    | "code" -> CKCode
+    | "set-options" -> CKOption false
+    | "reset-options" -> CKOption true
+    | "open"
+    | "let-open" -> CKModuleOrNamespace (true, true)
+    | "include"
+    | "module-alias" -> CKModuleOrNamespace (true, false)
+    | _ ->
+      js_fail "completion context (code, set-options, reset-options, \
+open, let-open, include, module-alias)" k
+
+let js_optional_lookup_context k =
+  match k with
+  | None -> LKSymbolOnly // Backwards-compatible default
+  | Some k ->
+    match js_str k with
+    | "symbol-only" -> LKSymbolOnly
+    | "code" -> LKCode
+    | "set-options"
+    | "reset-options" -> LKOption
+    | "open"
+    | "let-open"
+    | "include"
+    | "module-alias" -> LKModule
+    | _ ->
+      js_fail "lookup context (symbol-only, code, set-options, reset-options, \
+open, let-open, include, module-alias)" k
+

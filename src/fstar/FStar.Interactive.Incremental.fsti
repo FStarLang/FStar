@@ -44,7 +44,7 @@ type fragment_progress =
 val run_full_buffer (st:repl_state)
                     (qid:string)
                     (code:string)
-                    (full:bool)
+                    (full:full_buffer_request_kind)
                     (write_full_buffer_fragment_progress: fragment_progress -> unit)
   : list query
 

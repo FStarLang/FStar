@@ -96,7 +96,7 @@ let (push_decl :
           FStar_Compiler_Range.col_of_pos uu___2 in
         {
           FStar_Interactive_Ide_Types.push_kind =
-            FStar_Interactive_PushHelper.FullCheck;
+            FStar_Interactive_Ide_Types.FullCheck;
           FStar_Interactive_Ide_Types.push_line = uu___;
           FStar_Interactive_Ide_Types.push_column = uu___1;
           FStar_Interactive_Ide_Types.push_peek_only = false;
@@ -122,7 +122,7 @@ let (push_decls :
       let uu___ = map (push_decl write_full_buffer_fragment_progress) ds in
       op_let_Bang uu___ (fun qs -> return (FStar_Compiler_List.flatten qs))
 let (pop_entries :
-  FStar_Interactive_ReplState.repl_stack_entry_t Prims.list ->
+  FStar_Interactive_Ide_Types.repl_stack_entry_t Prims.list ->
     FStar_Interactive_Ide_Types.query Prims.list qst)
   = fun e -> map (fun uu___ -> as_query FStar_Interactive_Ide_Types.Pop) e
 let (response_success :
@@ -147,8 +147,11 @@ let (response_success :
                   ("query-id", (FStar_Compiler_Util.JsonStr q));
                   ("status", (FStar_Compiler_Util.JsonStr "success"));
                   ("contents", contents)]))
+let repl_task :
+  'uuuuu 'uuuuu1 'uuuuu2 . ('uuuuu * ('uuuuu1 * 'uuuuu2)) -> 'uuuuu1 =
+  fun uu___ -> match uu___ with | (uu___1, (p, uu___2)) -> p
 let (inspect_repl_stack :
-  FStar_Interactive_ReplState.repl_stack_t ->
+  FStar_Interactive_Ide_Types.repl_stack_t ->
     FStar_Parser_AST.decl Prims.list ->
       (fragment_progress -> unit) ->
         FStar_Interactive_Ide_Types.query Prims.list qst)
@@ -163,7 +166,7 @@ let (inspect_repl_stack :
             (fun uu___1 ->
                match uu___1 with
                | (uu___2,
-                  (FStar_Interactive_ReplState.PushFragment uu___3, uu___4))
+                  (FStar_Interactive_Ide_Types.PushFragment uu___3, uu___4))
                    -> true
                | uu___2 -> false) entries in
         match uu___ with
@@ -172,16 +175,16 @@ let (inspect_repl_stack :
             op_let_Bang uu___1 (fun ds1 -> return ds1)
         | FStar_Pervasives_Native.Some (prefix, first_push, rest) ->
             let entries1 = first_push :: rest in
-            let repl_task uu___1 =
+            let repl_task1 uu___1 =
               match uu___1 with | (uu___2, (p, uu___3)) -> p in
             let rec matching_prefix entries2 ds1 =
               match (entries2, ds1) with
               | ([], []) -> return []
               | (e::entries3, d::ds2) ->
-                  (match repl_task e with
-                   | FStar_Interactive_ReplState.Noop ->
+                  (match repl_task1 e with
+                   | FStar_Interactive_Ide_Types.Noop ->
                        matching_prefix entries3 (d :: ds2)
-                   | FStar_Interactive_ReplState.PushFragment
+                   | FStar_Interactive_Ide_Types.PushFragment
                        (FStar_Pervasives.Inl frag) ->
                        let uu___1 = pop_entries (e :: entries3) in
                        op_let_Bang uu___1
@@ -191,7 +194,7 @@ let (inspect_repl_stack :
                               (fun pushes ->
                                  return
                                    (FStar_Compiler_List.op_At pops pushes)))
-                   | FStar_Interactive_ReplState.PushFragment
+                   | FStar_Interactive_Ide_Types.PushFragment
                        (FStar_Pervasives.Inr d') ->
                        let uu___1 = FStar_Parser_AST_Comparison.eq_decl d d' in
                        if uu___1
@@ -215,6 +218,30 @@ let (inspect_repl_stack :
                   let uu___1 = pop_entries es in
                   op_let_Bang uu___1 (fun pops -> return pops) in
             matching_prefix entries1 ds
+let reload_deps :
+  'uuuuu 'uuuuu1 .
+    ('uuuuu * (FStar_Interactive_Ide_Types.repl_task * 'uuuuu1)) Prims.list
+      -> FStar_Interactive_Ide_Types.query Prims.list qst
+  =
+  fun repl_stack ->
+    let pop_until_deps entries =
+      let uu___ =
+        FStar_Compiler_Util.prefix_until
+          (fun e ->
+             match repl_task e with
+             | FStar_Interactive_Ide_Types.PushFragment uu___1 -> false
+             | FStar_Interactive_Ide_Types.Noop -> false
+             | uu___1 -> true) entries in
+      match uu___ with
+      | FStar_Pervasives_Native.None -> return []
+      | FStar_Pervasives_Native.Some (prefix, uu___1, uu___2) ->
+          let uu___3 = as_query FStar_Interactive_Ide_Types.Pop in
+          op_let_Bang uu___3
+            (fun pop ->
+               let uu___4 =
+                 FStar_Compiler_List.map (fun uu___5 -> pop) prefix in
+               return uu___4) in
+    pop_until_deps repl_stack
 let (parse_code : Prims.string -> FStar_Parser_ParseIt.parse_result) =
   fun code ->
     let uu___ =
@@ -262,17 +289,17 @@ let (syntax_issue :
                } in
              issue)
 let (run_full_buffer :
-  FStar_Interactive_ReplState.repl_state ->
+  FStar_Interactive_Ide_Types.repl_state ->
     Prims.string ->
       Prims.string ->
-        Prims.bool ->
+        FStar_Interactive_Ide_Types.full_buffer_request_kind ->
           (fragment_progress -> unit) ->
             FStar_Interactive_Ide_Types.query Prims.list)
   =
   fun st ->
     fun qid1 ->
       fun code ->
-        fun full ->
+        fun request_type ->
           fun write_full_buffer_fragment_progress ->
             let parse_result = parse_code code in
             let log_syntax_issues err =
@@ -285,37 +312,77 @@ let (run_full_buffer :
               match parse_result with
               | FStar_Parser_ParseIt.IncrementalFragment
                   (decls, uu___, err_opt) ->
-                  let queries =
-                    let uu___1 =
-                      let uu___2 =
-                        FStar_Compiler_Effect.op_Bang
-                          FStar_Interactive_PushHelper.repl_stack in
-                      inspect_repl_stack uu___2 decls
-                        write_full_buffer_fragment_progress in
-                    run_qst uu___1 qid1 in
-                  (if full then log_syntax_issues err_opt else ();
-                   (let uu___3 = FStar_Options.debug_any () in
-                    if uu___3
-                    then
-                      let uu___4 =
-                        let uu___5 =
-                          FStar_Compiler_List.map
-                            FStar_Interactive_Ide_Types.query_to_string
-                            queries in
-                        FStar_String.concat "\n" uu___5 in
-                      FStar_Compiler_Util.print1 "Generating queries\n%s\n"
-                        uu___4
-                    else ());
-                   if full then queries else [])
+                  (match request_type with
+                   | FStar_Interactive_Ide_Types.Full ->
+                       let queries =
+                         let uu___1 =
+                           let uu___2 =
+                             FStar_Compiler_Effect.op_Bang
+                               FStar_Interactive_PushHelper.repl_stack in
+                           inspect_repl_stack uu___2 decls
+                             write_full_buffer_fragment_progress in
+                         run_qst uu___1 qid1 in
+                       (if request_type = FStar_Interactive_Ide_Types.Full
+                        then log_syntax_issues err_opt
+                        else ();
+                        (let uu___3 = FStar_Options.debug_any () in
+                         if uu___3
+                         then
+                           let uu___4 =
+                             let uu___5 =
+                               FStar_Compiler_List.map
+                                 FStar_Interactive_Ide_Types.query_to_string
+                                 queries in
+                             FStar_String.concat "\n" uu___5 in
+                           FStar_Compiler_Util.print1
+                             "Generating queries\n%s\n" uu___4
+                         else ());
+                        if request_type = FStar_Interactive_Ide_Types.Full
+                        then queries
+                        else [])
+                   | FStar_Interactive_Ide_Types.Cache ->
+                       let queries =
+                         let uu___1 =
+                           let uu___2 =
+                             FStar_Compiler_Effect.op_Bang
+                               FStar_Interactive_PushHelper.repl_stack in
+                           inspect_repl_stack uu___2 decls
+                             write_full_buffer_fragment_progress in
+                         run_qst uu___1 qid1 in
+                       (if request_type = FStar_Interactive_Ide_Types.Full
+                        then log_syntax_issues err_opt
+                        else ();
+                        (let uu___3 = FStar_Options.debug_any () in
+                         if uu___3
+                         then
+                           let uu___4 =
+                             let uu___5 =
+                               FStar_Compiler_List.map
+                                 FStar_Interactive_Ide_Types.query_to_string
+                                 queries in
+                             FStar_String.concat "\n" uu___5 in
+                           FStar_Compiler_Util.print1
+                             "Generating queries\n%s\n" uu___4
+                         else ());
+                        if request_type = FStar_Interactive_Ide_Types.Full
+                        then queries
+                        else [])
+                   | FStar_Interactive_Ide_Types.ReloadDeps ->
+                       let uu___1 =
+                         let uu___2 =
+                           FStar_Compiler_Effect.op_Bang
+                             FStar_Interactive_PushHelper.repl_stack in
+                         reload_deps uu___2 in
+                       run_qst uu___1 qid1)
               | FStar_Parser_ParseIt.ParseError err ->
-                  (if full
+                  (if request_type = FStar_Interactive_Ide_Types.Full
                    then log_syntax_issues (FStar_Pervasives_Native.Some err)
                    else ();
                    [])
               | uu___ -> failwith "Unexpected parse result" in
             qs
 let (format_code :
-  FStar_Interactive_ReplState.repl_state ->
+  FStar_Interactive_Ide_Types.repl_state ->
     Prims.string ->
       (Prims.string, FStar_Errors.issue Prims.list) FStar_Pervasives.either)
   =

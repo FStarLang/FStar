@@ -26,13 +26,12 @@ open FStar.Compiler.Util
 open FStar.Ident
 open FStar.TypeChecker.Env
 open FStar.Interactive.JsonHelper
-open FStar.Interactive.ReplState
+open FStar.Interactive.Ide.Types
 
 module DsEnv = FStar.Syntax.DsEnv
 module CTable = FStar.Interactive.CompletionTable
 module TcEnv = FStar.TypeChecker.Env
 
-type push_kind = | SyntaxCheck | LaxCheck | FullCheck
 type ctx_depth_t = int * int * solver_depth_t * int
 type deps_t = FStar.Parser.Dep.deps
 type either_replst = either repl_state repl_state

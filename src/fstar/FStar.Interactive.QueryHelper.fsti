@@ -24,7 +24,7 @@ open FStar.Compiler.Range
 open FStar.Compiler.Util
 open FStar.TypeChecker.Env
 open FStar.Interactive.JsonHelper
-open FStar.Interactive.ReplState
+open FStar.Interactive.Ide.Types
 
 module TcErr = FStar.TypeChecker.Err
 module TcEnv = FStar.TypeChecker.Env

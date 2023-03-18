@@ -124,7 +124,9 @@ let response_success (d:decl)
                        ("query-id", JsonStr q);
                        ("status", JsonStr "success");
                        ("contents", contents)])
-  
+
+let repl_task (_, (p, _)) = p
+
 let inspect_repl_stack (s:repl_stack_t)
                        (ds:list decl)
                        (write_full_buffer_fragment_progress: fragment_progress -> unit)                       
@@ -177,6 +179,22 @@ let inspect_repl_stack (s:repl_stack_t)
       in
       matching_prefix entries ds 
       
+let reload_deps repl_stack =
+  let pop_until_deps entries
+  : qst (list query)
+  = match BU.prefix_until
+            (fun e -> match repl_task e with
+                      | PushFragment _ | Noop -> false
+                      | _ -> true)
+            entries
+    with
+    | None -> return []
+    | Some (prefix, _, _) ->
+      let! pop = as_query Pop in
+      return (List.map (fun _ -> pop) prefix)
+  in
+  pop_until_deps repl_stack
+
 let parse_code (code:string) =
     P.parse (Incremental { 
                          frag_fname = Range.file_of_range initial_range;
@@ -200,7 +218,7 @@ let syntax_issue (raw_error, msg, range) =
 let run_full_buffer (st:repl_state)
                     (qid:string)
                     (code:string)
-                    (full:bool)
+                    (request_type:full_buffer_request_kind)
                     (write_full_buffer_fragment_progress: fragment_progress -> unit)
   : list query
   = let parse_result = parse_code code in
@@ -213,20 +231,26 @@ let run_full_buffer (st:repl_state)
     in
     let qs = 
       match parse_result with
-      | IncrementalFragment (decls, _, err_opt) ->
-        let queries = 
-            run_qst (inspect_repl_stack (!repl_stack) decls write_full_buffer_fragment_progress) qid
-        in
-        if full then log_syntax_issues err_opt;
-        if Options.debug_any()
-        then (
-          BU.print1 "Generating queries\n%s\n" 
-                    (String.concat "\n" (List.map query_to_string queries))
-        );
-        if full then queries else []
+      | IncrementalFragment (decls, _, err_opt) -> (
+        match request_type with
+        | Full | Cache ->
+          let queries = 
+              run_qst (inspect_repl_stack (!repl_stack) decls write_full_buffer_fragment_progress) qid
+          in
+          if request_type = Full then log_syntax_issues err_opt;
+          if Options.debug_any()
+          then (
+            BU.print1 "Generating queries\n%s\n" 
+                      (String.concat "\n" (List.map query_to_string queries))
+          );
+          if request_type = Full then queries else []
+
+        | ReloadDeps ->
+          run_qst (reload_deps (!repl_stack)) qid
+      )
         
       | ParseError err ->
-        if full then log_syntax_issues (Some err);
+        if request_type = Full then log_syntax_issues (Some err);
         []
       | _ -> 
         failwith "Unexpected parse result"

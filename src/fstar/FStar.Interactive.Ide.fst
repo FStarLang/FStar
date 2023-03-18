@@ -218,6 +218,12 @@ let unpack_interactive_query json =
         assoc err "line" loc |> js_int,
         assoc err "column" loc |> js_int
     in
+    let parse_full_buffer_kind = function
+      | "full" -> Full
+      | "cache" -> Cache
+      | "reload-deps" -> ReloadDeps
+      | _ -> raise (InvalidQuery "Invalid full-buffer kind")
+    in
     { qid = qid;
       qq = match query with
            | "exit" -> Exit
@@ -230,7 +236,7 @@ let unpack_interactive_query json =
                                        push_line = arg "line" |> js_int;
                                        push_column = arg "column" |> js_int;
                                        push_peek_only = query = "peek" })
-           | "full-buffer" -> FullBuffer (arg "code" |> js_str, (arg "kind" |> js_str) = "full")
+           | "full-buffer" -> FullBuffer (arg "code" |> js_str, parse_full_buffer_kind (arg "kind" |> js_str))
            | "autocomplete" -> AutoComplete (arg "partial-symbol" |> js_str,
                                             try_arg "context" |> js_optional_completion_context)
            | "lookup" -> Lookup (arg "symbol" |> js_str,
@@ -264,11 +270,40 @@ let parse_interactive_query query_str : query =
   | None -> { qid = "?"; qq = ProtocolViolation "Json parsing failed." }
   | Some request -> deserialize_interactive_query request
 
-let read_interactive_query stream : query =
-  match Util.read_line stream with
-  | None -> exit 0
-  | Some line -> parse_interactive_query line
+let buffer_input_queries (st:repl_state) : repl_state =
+  let rec aux qs (st:repl_state) : repl_state =
+    let done qs st =
+        {st with repl_buffered_input_queries =
+                 st.repl_buffered_input_queries @ List.rev qs}
+    in
+    if not (Util.poll_stdin (float_of_string "0.0"))
+    then done qs st
+    else (
+      match Util.read_line st.repl_stdin with
+      | None ->
+        done qs st
 
+      | Some line -> 
+        let q = parse_interactive_query line in
+        match q.qq with
+        | Cancel _ -> 
+          //Cancel drains all buffered queries
+          {st with repl_buffered_input_queries = [q] }
+        | _ -> aux (q :: qs) st
+    )
+  in
+  aux [] st
+
+let read_interactive_query (st:repl_state) : query & repl_state =
+    match st.repl_buffered_input_queries with
+    | [] -> (
+      match Util.read_line st.repl_stdin with
+      | None -> exit 0
+      | Some line -> parse_interactive_query line, st
+    )
+    | q :: qs ->
+      q, { st with repl_buffered_input_queries = qs }
+  
 let json_of_opt json_of_a opt_a =
   Util.dflt JsonNull (Util.map_option json_of_a opt_a)
 
@@ -939,6 +974,7 @@ let rec fold_query (f:repl_state -> query -> run_query_result)
       let responses = responses @ resp in
       match status, st' with
       | QueryOK, Inl st ->
+        let st = buffer_input_queries st in
         fold_query f l st responses
       | _ ->
         (status, responses), st'
@@ -1023,7 +1059,7 @@ let rec go st : int =
     FStar.Compiler.Util.print1 "Repl stack is:\n%s\n"
                                (string_of_repl_stack (!repl_stack))
   );
-  let query = read_interactive_query st.repl_stdin in
+  let query, st = read_interactive_query st in
   let (status, responses), state_opt = validate_and_run_query st query in
   List.iter (write_response query.qid status) responses;
   match state_opt with
@@ -1062,10 +1098,15 @@ let build_initial_repl_state (filename: string) =
   let env = init_env FStar.Parser.Dep.empty_deps in
   let env = FStar.TypeChecker.Env.set_range env initial_range in
 
-  { repl_line = 1; repl_column = 0; repl_fname = filename;
-    repl_curmod = None; repl_env = env; repl_deps_stack = [];
+  { repl_line = 1;
+    repl_column = 0;
+    repl_fname = filename;
+    repl_curmod = None;
+    repl_env = env;
+    repl_deps_stack = [];
     repl_stdin = open_stdin ();
-    repl_names = CompletionTable.empty }
+    repl_names = CompletionTable.empty;
+    repl_buffered_input_queries = [] }
 
 let interactive_mode' init_st =
   write_hello ();
