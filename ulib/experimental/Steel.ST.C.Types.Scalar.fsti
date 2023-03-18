@@ -6,7 +6,7 @@ module P = Steel.FractionalPermission
 
 // To be extracted as: t
 [@@noextract_to "krml"] // primitive
-val scalar_t (t: Type0) : Type0
+val scalar_t ( [@@@strictly_positive] t: Type0) : Type0
 [@@noextract_to "krml"] // proof-only
 val scalar (t: Type) : typedef (scalar_t t)
 val mk_scalar (#t: Type) (v: t) : Ghost (scalar_t t)

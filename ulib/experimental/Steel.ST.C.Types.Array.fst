@@ -235,21 +235,21 @@ let has_base_array_cell_equiv_to
 /// Array pointers (with decay)
 
 noeq
-type array_ptr #t td = {
+type array_ptr_gen t = {
   ar_is_null: Ghost.erased bool;
   ar_base_size: Ghost.erased array_size_t;
-  ar_base: ptr (base_array1 #t td ar_base_size);
+  ar_base: ptr_gen (base_array_t' t ar_base_size);
   ar_offset: SZ.t;
   ar_prf: squash (
     SZ.v ar_offset <= SZ.v ar_base_size /\
-    (Ghost.reveal ar_is_null == true <==> ar_base == null _) /\
-    (ar_base == null _ ==> (SZ.v ar_base_size == 1 /\ SZ.v ar_offset == 0))
+    (Ghost.reveal ar_is_null == true <==> ar_base == void_null) /\
+    (ar_base == void_null ==> (SZ.v ar_base_size == 1 /\ SZ.v ar_offset == 0))
   );
 }
 let null_array_ptr td = {
   ar_is_null = true;
   ar_base_size = 1sz;
-  ar_base = null _;
+  ar_base = null_gen _;
   ar_offset = 0sz;
   ar_prf = ();
 }
@@ -548,7 +548,7 @@ let unarray_of_base
 let freeable_array0
   (#t: Type) (#td: typedef t) (a: array td)
 : Tot vprop
-= freeable (array_ptr_of a).ar_base `star`
+= freeable #_ #(base_array1 #t td (array_ptr_of a).ar_base_size) (array_ptr_of a).ar_base `star`
   pure (has_array_of_base' (array_ptr_of a).ar_base a)
 
 let freeable_array
@@ -574,7 +574,7 @@ let array_ptr_alloc
     let ar : array td = array_of_base0 base in
     rewrite (array_pts_to ar _) (array_pts_to_or_null ar (seq_of_base_array0 (uninitialized (base_array1 td sz))));
     let a = array_ptr_of ar in
-    rewrite (freeable_or_null _) (freeable (array_ptr_of ar).ar_base);
+    rewrite (freeable_or_null _) (freeable #_ #(base_array1 #t td (array_ptr_of ar).ar_base_size) (array_ptr_of ar).ar_base);
     rewrite (freeable_array0 ar) (freeable_or_null_array ar);
     return a
   end
