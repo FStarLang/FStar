@@ -10,7 +10,7 @@ module SZ = FStar.SizeT
 // Per the C standard, base array types must be of nonzero size
 inline_for_extraction [@@noextract_to "krml"]
 let array_size_t = (n: SZ.t { SZ.v n > 0 })
-val base_array_t (t: Type0) (tn: Type0 (* using Typenat (or Typestring for `#define`d constants) *)) (n: array_size_t) : Type0
+val base_array_t ([@@@strictly_positive] t: Type0) (tn: Type0 (* using Typenat (or Typestring for `#define`d constants) *)) (n: array_size_t) : Type0
 inline_for_extraction [@@noextract_to "krml"] // MUST be syntactically equal to Steel.C.Model.Array.array_domain
 let base_array_index_t (n: array_size_t) : Tot eqtype = (i: SZ.t { SZ.v i < SZ.v n })
 [@@noextract_to "krml"]
@@ -167,7 +167,9 @@ val has_base_array_cell_equiv_to
 // ghost length of an array.
 
 [@@noextract_to "krml"] // primitive
-val array_ptr (#t: Type) (td: typedef t) : Tot Type0
+val array_ptr_gen ([@@@strictly_positive] t: Type0) : Tot Type0
+inline_for_extraction [@@noextract_to "krml"] // primitive
+let array_ptr (#t: Type) (td: typedef t) = array_ptr_gen t
 [@@noextract_to "krml"] // primitive
 val null_array_ptr (#t: Type) (td: typedef t) : Tot (array_ptr td)
 val g_array_ptr_is_null (#t: Type) (#td: typedef t) (a: array_ptr td) : Ghost bool
