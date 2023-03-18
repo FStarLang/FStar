@@ -108,8 +108,8 @@ let my_types_without_decay () =
     ->
       TBuf (translate_type_without_decay env arg)
 
-  | MLTY_Named ([arg; _], p) when
-      Syntax.string_of_mlpath p = "Steel.ST.C.Types.Array.array_ptr"
+  | MLTY_Named ([arg], p) when
+      Syntax.string_of_mlpath p = "Steel.ST.C.Types.Array.array_ptr_gen"
     ->
       TBuf (translate_type_without_decay env arg)
 
@@ -268,6 +268,21 @@ let my_exprs () = register_pre_translate_expr begin fun env e ->
     ->
       EAddrOf (EField (
         TQualified (must (lident_of_string struct_name)),
+        EBufRead (translate_expr env r, EQualified (["C"], "_zero_for_deref")),
+        field_name))
+
+  | MLE_App ({expr=MLE_TApp ({expr=MLE_Name p}, _)},
+             [
+               _ (* struct_def *)
+               ; _ (* v *)
+               ; r
+               ; ({expr=MLE_Const (MLC_String field_name)})
+               ; _ (* td' *)
+             ])
+    when string_of_mlpath p = "Steel.ST.C.Types.UserStruct.struct_field0"
+    ->
+      EAddrOf (EField (
+        assert_lid env r.mlty,
         EBufRead (translate_expr env r, EQualified (["C"], "_zero_for_deref")),
         field_name))
 
