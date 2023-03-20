@@ -172,6 +172,7 @@ let default_effect _ = ()
 let top_level_effect _ = ()
 let effect_param = ()
 let bind_has_range_args = ()
+let primitive_extraction = ()
 
 let strictly_positive = ()
 

@@ -3417,19 +3417,21 @@ let (action_as_lb :
         }
 let (mk_reify :
   FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax ->
-    FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax)
+    FStar_Ident.lident FStar_Pervasives_Native.option ->
+      FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax)
   =
   fun t ->
-    let reify_ =
-      FStar_Syntax_Syntax.mk
-        (FStar_Syntax_Syntax.Tm_constant FStar_Const.Const_reify)
-        t.FStar_Syntax_Syntax.pos in
-    let uu___ =
-      let uu___1 =
-        let uu___2 = let uu___3 = FStar_Syntax_Syntax.as_arg t in [uu___3] in
-        (reify_, uu___2) in
-      FStar_Syntax_Syntax.Tm_app uu___1 in
-    FStar_Syntax_Syntax.mk uu___ t.FStar_Syntax_Syntax.pos
+    fun lopt ->
+      let reify_ =
+        FStar_Syntax_Syntax.mk
+          (FStar_Syntax_Syntax.Tm_constant (FStar_Const.Const_reify lopt))
+          t.FStar_Syntax_Syntax.pos in
+      let uu___ =
+        let uu___1 =
+          let uu___2 = let uu___3 = FStar_Syntax_Syntax.as_arg t in [uu___3] in
+          (reify_, uu___2) in
+        FStar_Syntax_Syntax.Tm_app uu___1 in
+      FStar_Syntax_Syntax.mk uu___ t.FStar_Syntax_Syntax.pos
 let (mk_reflect :
   FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax ->
     FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax)

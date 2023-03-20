@@ -76,8 +76,8 @@ let if_then_else (a:Type)
   (fun h -> (p ==> pre_f h) /\ ((~ p) ==> pre_g h))
   (fun h0 r h1 -> (p ==> post_f h0 r h1) /\ ((~ p) ==> post_g h0 r h1))
 
-[@@ top_level_effect "HoareST.HoareSTT"]
-reifiable reflectable
+[@@ top_level_effect "HoareST.HoareSTT"; primitive_extraction]
+reflectable
 effect {
   HoareST (a:Type) (pre:pre_t) (post:post_t a)
   with {repr; return; bind; subcomp; if_then_else}
@@ -234,6 +234,4 @@ let copy (#a:Type0) (s:array a)
 
 effect HoareSTT (a:Type) (post:post_t a) = HoareST a (fun _ -> True) post
 
-#push-options "--warn_error -272"  // silence top-level effects warning
-let r : ref int = alloc 2
-#pop-options
+let main = FStar.IO.print_string "Hello!"

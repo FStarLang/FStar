@@ -1339,7 +1339,7 @@ constant:
       }
   | n=SIZET { Const_int (n, Some (Unsigned, Sizet)) }
   (* TODO : What about reflect ? There is also a constant representing it *)
-  | REIFY   { Const_reify }
+  | REIFY   { Const_reify None }
   | RANGE_OF     { Const_range_of }
   | SET_RANGE_OF { Const_set_range_of }
 

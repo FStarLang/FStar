@@ -290,9 +290,7 @@ let (expected_expression_of_type :
           match uu___ with
           | (s1, s2) ->
               let uu___1 =
-                let uu___2 =
-                  FStar_Syntax_Print.term_to_string'
-                    env.FStar_TypeChecker_Env.dsenv e in
+                let uu___2 = FStar_Syntax_Print.term_to_string e in
                 FStar_Compiler_Util.format3
                   "Expected expression of type \"%s\"; got expression \"%s\" of type \"%s\""
                   s1 uu___2 s2 in

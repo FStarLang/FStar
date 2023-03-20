@@ -1,13 +1,16 @@
 # 330 - experimental features
 # 333 - no hints
-OTHERFLAGS+=--already_cached 'Prims FStar LowStar' --include parsing --warn_error -330-333
+OTHERFLAGS+=--already_cached 'Prims FStar LowStar' --warn_error -330-333
 include ../Makefile.include
 
 NO_VERIFY=Buffers.fst
 
 ROOTS=$(wildcard *.fst)
 
-all: verify
+all: verify extraction
+
+extraction:
+	$(MAKE) -C extraction
 
 .depend:
 	$(FSTAR) --dep full $(ROOTS) > .depend
@@ -27,11 +30,7 @@ clean:
 	rm -f .depend *.checked parsing/*.checked
 	rm -rf out
 
-extract:
-	fstar.exe --codegen OCaml --extract '-* LL' --odir out LL.fst
-	krml -skip-compilation -tmpdir out -I parsing Buffers.fst parsing/Flights.fst parsing/FlightsExn.fst parsing/FlightsStExn.fst
-
-.PHONY: all depend verify verify-all clean extract
+.PHONY: all depend verify verify-all clean extraction
 
 %.fsti-in %.fst-in:
 	@echo --warn_error -330-274-241

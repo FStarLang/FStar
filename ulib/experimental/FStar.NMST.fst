@@ -94,6 +94,7 @@ let if_then_else
     (fun s0 -> (p ==> req_then s0) /\ ((~ p) ==> req_else s0))
     (fun s0 x s1 -> (p ==> ens_then s0 x s1) /\ ((~ p) ==> ens_else s0 x s1))
 
+[@@ primitive_extraction]
 reflectable
 effect {
   NMSTATE (a:Type)

@@ -801,7 +801,7 @@ let rec extract_sigelt_iface (g:uenv) (se:sigelt) : uenv * iface =
       failwith "impossible: trying to extract Sig_fail"
 
     | Sig_new_effect ed ->
-      if Env.is_reifiable_effect (tcenv_of_uenv g) ed.mname
+      if TcUtil.effect_extraction_mode (tcenv_of_uenv g) ed.mname = S.Extract_reify
       && List.isEmpty ed.binders //we do not extract parameterized effects
       then let env, iface, _ = extract_reifiable_effect g ed in
            env, iface

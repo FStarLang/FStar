@@ -20,17 +20,6 @@ let (comp_to_string' :
         (fun uu___ ->
            let e = FStar_Syntax_Resugar.resugar_comp' env c in
            let d = FStar_Parser_ToDocument.term_to_document e in pp d)
-let (sigelt_to_string' :
-  FStar_Syntax_DsEnv.env -> FStar_Syntax_Syntax.sigelt -> Prims.string) =
-  fun env ->
-    fun se ->
-      FStar_Ident.with_frozen_gensym
-        (fun uu___ ->
-           let uu___1 = FStar_Syntax_Resugar.resugar_sigelt' env se in
-           match uu___1 with
-           | FStar_Pervasives_Native.None -> ""
-           | FStar_Pervasives_Native.Some d ->
-               let d1 = FStar_Parser_ToDocument.decl_to_document d in pp d1)
 let (term_to_string : FStar_Syntax_Syntax.term -> Prims.string) =
   fun tm ->
     FStar_Ident.with_frozen_gensym
@@ -43,15 +32,6 @@ let (comp_to_string : FStar_Syntax_Syntax.comp -> Prims.string) =
       (fun uu___ ->
          let e = FStar_Syntax_Resugar.resugar_comp c in
          let d = FStar_Parser_ToDocument.term_to_document e in pp d)
-let (sigelt_to_string : FStar_Syntax_Syntax.sigelt -> Prims.string) =
-  fun se ->
-    FStar_Ident.with_frozen_gensym
-      (fun uu___ ->
-         let uu___1 = FStar_Syntax_Resugar.resugar_sigelt se in
-         match uu___1 with
-         | FStar_Pervasives_Native.None -> ""
-         | FStar_Pervasives_Native.Some d ->
-             let d1 = FStar_Parser_ToDocument.decl_to_document d in pp d1)
 let (univ_to_string : FStar_Syntax_Syntax.universe -> Prims.string) =
   fun u ->
     FStar_Ident.with_frozen_gensym
@@ -86,6 +66,15 @@ let (binder_to_string' :
            | FStar_Pervasives_Native.None -> ""
            | FStar_Pervasives_Native.Some e ->
                let d = FStar_Parser_ToDocument.binder_to_document e in pp d)
+let (sigelt_to_string : FStar_Syntax_Syntax.sigelt -> Prims.string) =
+  fun se ->
+    FStar_Ident.with_frozen_gensym
+      (fun uu___ ->
+         let uu___1 = FStar_Syntax_Resugar.resugar_sigelt se in
+         match uu___1 with
+         | FStar_Pervasives_Native.None -> ""
+         | FStar_Pervasives_Native.Some d ->
+             let d1 = FStar_Parser_ToDocument.decl_to_document d in pp d1)
 let (eff_decl_to_string' :
   Prims.bool ->
     FStar_Compiler_Range.range ->
