@@ -99,9 +99,15 @@ type parse_frag =
 
 type parse_error = (Codes.raw_error * string * FStar_Compiler_Range.range)
 
+
+type code_fragment = {
+   range: FStar_Compiler_Range.range;
+   code: string;
+}
+
 type parse_result =
     | ASTFragment of (FStar_Parser_AST.inputFragment * (string * FStar_Compiler_Range.range) list)
-    | IncrementalFragment of (FStar_Parser_AST.decl list * (string * FStar_Compiler_Range.range) list * parse_error option)
+    | IncrementalFragment of ((FStar_Parser_AST.decl * code_fragment) list * (string * FStar_Compiler_Range.range) list * parse_error option)
     | Term of FStar_Parser_AST.term
     | ParseError of parse_error
 
@@ -109,33 +115,48 @@ let parse fn =
   FStar_Parser_Util.warningHandler := (function
     | e -> Printf.printf "There was some warning (TODO)\n");
 
-  let lexbuf, filename = match fn with
+  let lexbuf, filename, contents = match fn with
     | Filename f ->
         check_extension f;
         let f', contents = read_file f in
-        (try create contents f' 1 0, f'
+        (try create contents f' 1 0, f', contents
          with _ -> raise_err (Fatal_InvalidUTF8Encoding, U.format1 "File %s has invalid UTF-8 encoding.\n" f'))
     | Incremental s
     | Toplevel s
     | Fragment s ->
-      create s.frag_text s.frag_fname (Z.to_int s.frag_line) (Z.to_int s.frag_col), "<input>"
+      create s.frag_text s.frag_fname (Z.to_int s.frag_line) (Z.to_int s.frag_col), "<input>", s.frag_text
   in
 
   let lexer () =
     let tok = FStar_Parser_LexFStar.token lexbuf in
     (tok, lexbuf.start_p, lexbuf.cur_p)
   in
-  let err_of_parse_error () =
-      let pos = FStar_Parser_Util.pos_of_lexpos lexbuf.cur_p in
-      let r = FStar_Compiler_Range.mk_range filename pos pos in
-      Fatal_SyntaxError, "Syntax error", r
+  let range_of_positions start fin = 
+    let start_pos = FStar_Parser_Util.pos_of_lexpos start in
+    let end_pos = FStar_Parser_Util.pos_of_lexpos fin in
+    FStar_Compiler_Range.mk_range filename start_pos end_pos
   in
-
+  let err_of_parse_error () =
+      let pos = lexbuf.cur_p in
+      Fatal_SyntaxError,
+      "Syntax error",
+      range_of_positions pos pos
+  in
   let parse_incremental_decls () =
       let parse_one_decl = MenhirLib.Convert.Simplified.traditional2revised FStar_Parser_Parse.oneDeclOrEOF in
+      let contents_at =
+        let lines = U.splitlines contents in
+        fun (start_pos:Lexing.position) (end_pos:Lexing.position) ->
+          let suffix = FStar_Compiler_Util.nth_tail (Z.of_int (start_pos.pos_lnum - 1)) lines in
+          let text, _ =  FStar_Compiler_Util.first_N (Z.of_int (end_pos.pos_lnum - start_pos.pos_lnum)) suffix in
+          let range = range_of_positions start_pos end_pos in
+            { range;
+              code = FStar_String.concat "\n" text }
+      in
       let open FStar_Pervasives in
       let rec parse decls =
         let _, _, r = err_of_parse_error () in
+        let start_pos = current_pos lexbuf in
         let d =
           try
             FStar_Ident.reset_gensym();
@@ -144,7 +165,7 @@ let parse fn =
           | FStar_Errors.Error(e, msg, r, _ctx) ->
             Inr (e, msg, r)
 
-          | Parsing.Parse_error as _e ->
+          | Parsing.Parse_error as _e -> 
             Inr (err_of_parse_error ())
         in
         match d with
@@ -152,7 +173,9 @@ let parse fn =
         | Inl (Some d) -> 
           if not (FStar_Parser_AST.decl_syntax_is_delimited d)
           then rollback lexbuf;
-          parse (d::decls)
+          let end_pos = current_pos lexbuf in
+          let raw_contents = contents_at start_pos end_pos in
+          parse ((d, raw_contents)::decls)
         | Inr err -> List.rev decls, Some err
       in
       parse []
@@ -161,7 +184,7 @@ let parse fn =
       let decls, err_opt = parse_incremental_decls () in
       match err_opt with
       | None ->
-        FStar_Parser_AST.as_frag decls
+        FStar_Parser_AST.as_frag (List.map fst decls)
       | Some (e, msg, r) ->
         raise (FStar_Errors.Error(e, msg, r, []))
   in

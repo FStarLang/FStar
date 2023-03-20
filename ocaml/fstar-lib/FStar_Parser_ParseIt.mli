@@ -26,9 +26,14 @@ type parse_frag =
 
 type parse_error = (Codes.raw_error * string * FStar_Compiler_Range.range)
 
+type code_fragment = {
+   range : FStar_Compiler_Range.range;
+   code: string;
+}
+
 type parse_result =
     | ASTFragment of (FStar_Parser_AST.inputFragment * (string * FStar_Compiler_Range.range) list)
-    | IncrementalFragment of (FStar_Parser_AST.decl list * (string * FStar_Compiler_Range.range) list * parse_error option)
+    | IncrementalFragment of ((FStar_Parser_AST.decl * code_fragment) list * (string * FStar_Compiler_Range.range) list * parse_error option)
     | Term of FStar_Parser_AST.term
     | ParseError of parse_error
 

@@ -65,11 +65,15 @@ type position = string * int * int
 type push_kind = | SyntaxCheck | LaxCheck | FullCheck
 
 type push_query =
-  { push_kind: push_kind;
+  { 
+    push_kind: push_kind;
     push_line: int;
     push_column: int;
     push_peek_only: bool;
-    push_code_or_decl: either string FStar.Parser.AST.decl}
+    //Either a string: Just the raw content of a document fragment
+    //Or a parsed document fragment and the raw content it corresponds to
+    push_code_or_decl: either string (FStar.Parser.AST.decl * PI.code_fragment)
+  }
 
 type lookup_symbol_range = json
 
@@ -208,7 +212,7 @@ let push_query_to_string pq =
   let code_or_decl =
     match pq.push_code_or_decl with
     | Inl code -> code
-    | Inr decl -> FStar.Parser.AST.decl_to_string decl
+    | Inr (_decl, code) -> code.code
   in
   FStar.Compiler.Util.format "{ push_kind = %s; push_line = %s; \
                push_column = %s; push_peek_only = %s; push_code_or_decl = %s }"

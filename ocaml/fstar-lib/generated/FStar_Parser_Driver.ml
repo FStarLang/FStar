@@ -6,6 +6,8 @@ type fragment =
   | Empty 
   | Modul of FStar_Parser_AST.modul 
   | Decls of FStar_Parser_AST.decl Prims.list 
+  | DeclsWithContent of (FStar_Parser_AST.decl *
+  FStar_Parser_ParseIt.code_fragment) Prims.list 
 let (uu___is_Empty : fragment -> Prims.bool) =
   fun projectee -> match projectee with | Empty -> true | uu___ -> false
 let (uu___is_Modul : fragment -> Prims.bool) =
@@ -16,6 +18,13 @@ let (uu___is_Decls : fragment -> Prims.bool) =
   fun projectee -> match projectee with | Decls _0 -> true | uu___ -> false
 let (__proj__Decls__item___0 : fragment -> FStar_Parser_AST.decl Prims.list)
   = fun projectee -> match projectee with | Decls _0 -> _0
+let (uu___is_DeclsWithContent : fragment -> Prims.bool) =
+  fun projectee ->
+    match projectee with | DeclsWithContent _0 -> true | uu___ -> false
+let (__proj__DeclsWithContent__item___0 :
+  fragment ->
+    (FStar_Parser_AST.decl * FStar_Parser_ParseIt.code_fragment) Prims.list)
+  = fun projectee -> match projectee with | DeclsWithContent _0 -> _0
 let (parse_fragment : FStar_Parser_ParseIt.input_frag -> fragment) =
   fun frag ->
     let uu___ =
@@ -28,7 +37,7 @@ let (parse_fragment : FStar_Parser_ParseIt.input_frag -> fragment) =
     | FStar_Parser_ParseIt.ASTFragment (FStar_Pervasives.Inr decls, uu___1)
         -> Decls decls
     | FStar_Parser_ParseIt.IncrementalFragment (decls, uu___1, uu___2) ->
-        Decls decls
+        DeclsWithContent decls
     | FStar_Parser_ParseIt.ParseError (e, msg, r) ->
         FStar_Errors.raise_error (e, msg) r
     | FStar_Parser_ParseIt.Term uu___1 ->

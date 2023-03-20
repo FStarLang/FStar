@@ -88,15 +88,16 @@ let as_query (q:query')
       }
 
 let push_decl (write_full_buffer_fragment_progress: fragment_progress -> unit)
-              (d:decl)              
+              (ds:decl * code_fragment)              
   : qst (list query)
   = let open FStar.Compiler.Range in
+    let d, s = ds in
     let pq = {
         push_kind = FullCheck;
         push_line = line_of_pos (start_of_range d.drange);
         push_column = col_of_pos (start_of_range d.drange);
         push_peek_only = false;
-        push_code_or_decl = Inr d
+        push_code_or_decl = Inr ds
     } in
     let progress st =
       write_full_buffer_fragment_progress (FragmentStarted d);
@@ -107,7 +108,7 @@ let push_decl (write_full_buffer_fragment_progress: fragment_progress -> unit)
     return [cb; push]
     
 let push_decls (write_full_buffer_fragment_progress : fragment_progress -> unit)
-               (ds:list decl)
+               (ds:list (decl & code_fragment))
   : qst (list query)
   = let! qs = map (push_decl write_full_buffer_fragment_progress) ds in
     return (List.flatten qs)
@@ -128,7 +129,7 @@ let response_success (d:decl)
 let repl_task (_, (p, _)) = p
 
 let inspect_repl_stack (s:repl_stack_t)
-                       (ds:list decl)
+                       (ds:list (decl & code_fragment))
                        (write_full_buffer_fragment_progress: fragment_progress -> unit)                       
   : qst (list query) // & list json)
   = let entries = List.rev s in
@@ -144,7 +145,7 @@ let inspect_repl_stack (s:repl_stack_t)
     | Some (prefix, first_push, rest) ->
       let entries = first_push :: rest in
       let repl_task (_, (p, _)) = p in
-      let rec matching_prefix entries ds
+      let rec matching_prefix entries (ds:list (decl & code_fragment))
         : qst (list query)
         = match entries, ds with
           | [], [] ->
@@ -159,7 +160,7 @@ let inspect_repl_stack (s:repl_stack_t)
               let! pushes = push_decls (d::ds) in
               return (pops @ pushes)
             | PushFragment (Inr d') ->
-              if eq_decl d d'
+              if eq_decl (fst d) d'
               then (
                 write_full_buffer_fragment_progress (FragmentSuccess d);
                 matching_prefix entries ds
@@ -266,7 +267,7 @@ let format_code (st:repl_state) (code:string)
       in
       let formatted_code =
         List.map 
-          (fun d -> doc_to_string (FStar.Parser.ToDocument.decl_to_document d))
+          (fun (d, _) -> doc_to_string (FStar.Parser.ToDocument.decl_to_document d))
           decls
         |> String.concat "\n\n"
       in

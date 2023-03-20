@@ -100,7 +100,7 @@ If `must_rollback` is set, always pop.  Returns a pair: a boolean indicating
 success, and a new REPL state. **)
 let run_repl_transaction st push_kind must_rollback task =
   let st = push_repl "run_repl_transaction" push_kind task st in
-  let env, finish_name_tracking = track_name_changes st.repl_env in // begin name tracking…
+  let env, finish_name_tracking = track_name_changes st.repl_env in // begin name tracking …
 
   let check_success () =
     get_err_count () = 0 && not must_rollback in
@@ -112,7 +112,7 @@ let run_repl_transaction st push_kind must_rollback task =
     | Some (curmod, env) when check_success () -> curmod, env, true
     | _ -> st.repl_curmod, env, false in
 
-  let env, name_events = finish_name_tracking env in // …end name tracking
+  let env, name_events = finish_name_tracking env in //  …end name tracking
   let st =
     if success then
       let st = { st with repl_env = env; repl_curmod = curmod } in
@@ -127,7 +127,7 @@ let run_repl_transaction st push_kind must_rollback task =
 Returns a new REPL state, wrapped in ``Inl`` to indicate complete success or
 ``Inr`` to indicate a partial failure.  That new state has an updated
 ``repl_deps_stack``, containing loaded dependencies in reverse order compared to
-the original list of tasks: the first dependencies (prims, …) come first; the
+the original list of tasks: the first dependencies (prims, ...) come first; the
 current file's interface comes last.
 
 The original value of the ``repl_deps_stack`` field in ``st`` is used to skip
@@ -253,6 +253,7 @@ let unpack_interactive_query json =
            | "vfs-add" -> VfsAdd (try_arg "filename" |> Util.map_option js_str,
                                  arg "contents" |> js_str)
            | "format" -> Format (arg "code" |> js_str)
+           | "cancel" -> Cancel (Some("<input>", arg "cancel-line" |> js_int, arg "cancel-column" |> js_int))
            | _ -> ProtocolViolation (Util.format1 "Unknown query '%s'" query) }
   with
   | InvalidQuery msg -> { qid = qid; qq = ProtocolViolation msg }
@@ -587,13 +588,18 @@ let rephrase_dependency_error issue =
 
 let write_full_buffer_fragment_progress (di:Incremental.fragment_progress) =
     let open FStar.Interactive.Incremental in
+    let json_of_code_fragment (cf:FStar.Parser.ParseIt.code_fragment) =
+        JsonAssoc ["range", json_of_def_range cf.range;
+                   "code", JsonStr cf.code]
+    in
     match di with
     | FragmentStarted d ->
       write_progress (Some "full-buffer-fragment-started")
                      ["ranges", json_of_def_range d.FStar.Parser.AST.drange]
-    | FragmentSuccess d ->
+    | FragmentSuccess (d, cf) ->
       write_progress (Some "full-buffer-fragment-ok")
-                     ["ranges", json_of_def_range d.FStar.Parser.AST.drange]
+                     ["ranges", json_of_def_range d.FStar.Parser.AST.drange;
+                      "code-fragment", json_of_code_fragment cf]
     | FragmentFailed d ->
       write_progress (Some "full-buffer-fragment-failed")
                      ["ranges", json_of_def_range d.FStar.Parser.AST.drange]
@@ -627,7 +633,7 @@ let run_push_without_deps st query
     match code_or_decl with
     | Inl text ->
       Inl { frag_fname = "<input>"; frag_text = text; frag_line = line; frag_col = column }
-    | Inr decl -> 
+    | Inr (decl, _code) -> 
       Inr decl
     in
   let st = set_nosynth_flag st peek_only in
@@ -646,10 +652,10 @@ let run_push_without_deps st query
   in
   let _ = 
     match code_or_decl with
-    | Inr d ->
+    | Inr ds ->
       if not has_error
-      then write_full_buffer_fragment_progress (Incremental.FragmentSuccess d)
-      else write_full_buffer_fragment_progress (Incremental.FragmentFailed d)
+      then write_full_buffer_fragment_progress (Incremental.FragmentSuccess ds)
+      else write_full_buffer_fragment_progress (Incremental.FragmentFailed (fst ds))
     | _ -> ()
   in
   let json_errors = JsonList (errs |> List.map json_of_issue) in
@@ -792,7 +798,7 @@ let run_with_parsed_and_tc_term st term line column continuation =
 
   let parse frag =
     match FStar.Parser.ParseIt.parse (FStar.Parser.ParseIt.Incremental frag) with
-    | FStar.Parser.ParseIt.IncrementalFragment (decls, _, _err) -> Some decls
+    | FStar.Parser.ParseIt.IncrementalFragment (decls, _, _err) -> Some (List.map fst decls)
     | _ -> None in
 
   let desugar env decls =
@@ -962,6 +968,29 @@ let as_json_list (q: (query_status & json) & either repl_state int)
 
 let run_query_result = (query_status * list json) * either repl_state int 
 
+let maybe_cancel_queries st l = 
+  match st.repl_buffered_input_queries with
+  | { qq = Cancel p } :: rest -> (
+    let st = { st with repl_buffered_input_queries = rest } in
+    match p with
+    | None -> //If no range, then cancel all remaining queries
+      [], st
+    | Some p -> //Cancel all queries that are within the range
+      let query_ahead_of p q =
+        let _, l, c = p in
+        match q.qq with
+        | Push pq -> pq.push_line >= l
+        | _ -> false
+      in
+      let l = 
+        match BU.prefix_until (query_ahead_of p) l with
+        | None -> l
+        | Some (l, _, _) -> l
+      in
+      l, st
+  )
+  | _ -> l, st
+
 let rec fold_query (f:repl_state -> query -> run_query_result)
                    (l:list query)
                    (st:repl_state)
@@ -975,6 +1004,7 @@ let rec fold_query (f:repl_state -> query -> run_query_result)
       match status, st' with
       | QueryOK, Inl st ->
         let st = buffer_input_queries st in
+        let l, st = maybe_cancel_queries st l in
         fold_query f l st responses
       | _ ->
         (status, responses), st'
@@ -1017,6 +1047,9 @@ let rec run_query st (q: query) : (query_status * list json) * either repl_state
     f st
   | Format code ->
     as_json_list (run_format_code st code)
+  | Cancel _ ->
+    //This should be handled in the fold_query loop above
+    (QueryOK, []), Inl st
 and validate_and_run_query st query =
   let query = validate_query st query in
   repl_current_qid := Some query.qid;

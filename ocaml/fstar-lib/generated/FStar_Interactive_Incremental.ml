@@ -1,7 +1,8 @@
 open Prims
 type fragment_progress =
   | FragmentStarted of FStar_Parser_AST.decl 
-  | FragmentSuccess of FStar_Parser_AST.decl 
+  | FragmentSuccess of (FStar_Parser_AST.decl *
+  FStar_Parser_ParseIt.code_fragment) 
   | FragmentFailed of FStar_Parser_AST.decl 
   | FragmentError of FStar_Errors.issue Prims.list 
 let (uu___is_FragmentStarted : fragment_progress -> Prims.bool) =
@@ -14,8 +15,9 @@ let (uu___is_FragmentSuccess : fragment_progress -> Prims.bool) =
   fun projectee ->
     match projectee with | FragmentSuccess _0 -> true | uu___ -> false
 let (__proj__FragmentSuccess__item___0 :
-  fragment_progress -> FStar_Parser_AST.decl) =
-  fun projectee -> match projectee with | FragmentSuccess _0 -> _0
+  fragment_progress ->
+    (FStar_Parser_AST.decl * FStar_Parser_ParseIt.code_fragment))
+  = fun projectee -> match projectee with | FragmentSuccess _0 -> _0
 let (uu___is_FragmentFailed : fragment_progress -> Prims.bool) =
   fun projectee ->
     match projectee with | FragmentFailed _0 -> true | uu___ -> false
@@ -81,41 +83,46 @@ let (as_query :
              return uu___1)
 let (push_decl :
   (fragment_progress -> unit) ->
-    FStar_Parser_AST.decl -> FStar_Interactive_Ide_Types.query Prims.list qst)
+    (FStar_Parser_AST.decl * FStar_Parser_ParseIt.code_fragment) ->
+      FStar_Interactive_Ide_Types.query Prims.list qst)
   =
   fun write_full_buffer_fragment_progress ->
-    fun d ->
-      let pq =
-        let uu___ =
+    fun ds ->
+      let uu___ = ds in
+      match uu___ with
+      | (d, s) ->
+          let pq =
+            let uu___1 =
+              let uu___2 =
+                FStar_Compiler_Range.start_of_range d.FStar_Parser_AST.drange in
+              FStar_Compiler_Range.line_of_pos uu___2 in
+            let uu___2 =
+              let uu___3 =
+                FStar_Compiler_Range.start_of_range d.FStar_Parser_AST.drange in
+              FStar_Compiler_Range.col_of_pos uu___3 in
+            {
+              FStar_Interactive_Ide_Types.push_kind =
+                FStar_Interactive_Ide_Types.FullCheck;
+              FStar_Interactive_Ide_Types.push_line = uu___1;
+              FStar_Interactive_Ide_Types.push_column = uu___2;
+              FStar_Interactive_Ide_Types.push_peek_only = false;
+              FStar_Interactive_Ide_Types.push_code_or_decl =
+                (FStar_Pervasives.Inr ds)
+            } in
+          let progress st =
+            write_full_buffer_fragment_progress (FragmentStarted d);
+            ((FStar_Interactive_Ide_Types.QueryOK, []),
+              (FStar_Pervasives.Inl st)) in
           let uu___1 =
-            FStar_Compiler_Range.start_of_range d.FStar_Parser_AST.drange in
-          FStar_Compiler_Range.line_of_pos uu___1 in
-        let uu___1 =
-          let uu___2 =
-            FStar_Compiler_Range.start_of_range d.FStar_Parser_AST.drange in
-          FStar_Compiler_Range.col_of_pos uu___2 in
-        {
-          FStar_Interactive_Ide_Types.push_kind =
-            FStar_Interactive_Ide_Types.FullCheck;
-          FStar_Interactive_Ide_Types.push_line = uu___;
-          FStar_Interactive_Ide_Types.push_column = uu___1;
-          FStar_Interactive_Ide_Types.push_peek_only = false;
-          FStar_Interactive_Ide_Types.push_code_or_decl =
-            (FStar_Pervasives.Inr d)
-        } in
-      let progress st =
-        write_full_buffer_fragment_progress (FragmentStarted d);
-        ((FStar_Interactive_Ide_Types.QueryOK, []),
-          (FStar_Pervasives.Inl st)) in
-      let uu___ = as_query (FStar_Interactive_Ide_Types.Callback progress) in
-      op_let_Bang uu___
-        (fun cb ->
-           let uu___1 = as_query (FStar_Interactive_Ide_Types.Push pq) in
-           op_let_Bang uu___1 (fun push -> return [cb; push]))
+            as_query (FStar_Interactive_Ide_Types.Callback progress) in
+          op_let_Bang uu___1
+            (fun cb ->
+               let uu___2 = as_query (FStar_Interactive_Ide_Types.Push pq) in
+               op_let_Bang uu___2 (fun push -> return [cb; push]))
 let (push_decls :
   (fragment_progress -> unit) ->
-    FStar_Parser_AST.decl Prims.list ->
-      FStar_Interactive_Ide_Types.query Prims.list qst)
+    (FStar_Parser_AST.decl * FStar_Parser_ParseIt.code_fragment) Prims.list
+      -> FStar_Interactive_Ide_Types.query Prims.list qst)
   =
   fun write_full_buffer_fragment_progress ->
     fun ds ->
@@ -152,7 +159,8 @@ let repl_task :
   fun uu___ -> match uu___ with | (uu___1, (p, uu___2)) -> p
 let (inspect_repl_stack :
   FStar_Interactive_Ide_Types.repl_stack_t ->
-    FStar_Parser_AST.decl Prims.list ->
+    (FStar_Parser_AST.decl * FStar_Parser_ParseIt.code_fragment) Prims.list
+      ->
       (fragment_progress -> unit) ->
         FStar_Interactive_Ide_Types.query Prims.list qst)
   =
@@ -196,7 +204,9 @@ let (inspect_repl_stack :
                                    (FStar_Compiler_List.op_At pops pushes)))
                    | FStar_Interactive_Ide_Types.PushFragment
                        (FStar_Pervasives.Inr d') ->
-                       let uu___1 = FStar_Parser_AST_Comparison.eq_decl d d' in
+                       let uu___1 =
+                         FStar_Parser_AST_Comparison.eq_decl
+                           (FStar_Pervasives_Native.fst d) d' in
                        if uu___1
                        then
                          (write_full_buffer_fragment_progress
@@ -399,9 +409,12 @@ let (format_code :
           let formatted_code =
             let uu___1 =
               FStar_Compiler_List.map
-                (fun d ->
-                   let uu___2 = FStar_Parser_ToDocument.decl_to_document d in
-                   doc_to_string uu___2) decls in
+                (fun uu___2 ->
+                   match uu___2 with
+                   | (d, uu___3) ->
+                       let uu___4 =
+                         FStar_Parser_ToDocument.decl_to_document d in
+                       doc_to_string uu___4) decls in
             FStar_Compiler_Effect.op_Bar_Greater uu___1
               (FStar_String.concat "\n\n") in
           FStar_Pervasives.Inl formatted_code

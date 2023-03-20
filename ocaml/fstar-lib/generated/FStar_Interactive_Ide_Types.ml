@@ -53,7 +53,10 @@ type push_query =
   push_column: Prims.int ;
   push_peek_only: Prims.bool ;
   push_code_or_decl:
-    (Prims.string, FStar_Parser_AST.decl) FStar_Pervasives.either }
+    (Prims.string,
+      (FStar_Parser_AST.decl * FStar_Parser_ParseIt.code_fragment))
+      FStar_Pervasives.either
+    }
 let (__proj__Mkpush_query__item__push_kind : push_query -> push_kind) =
   fun projectee ->
     match projectee with
@@ -75,7 +78,10 @@ let (__proj__Mkpush_query__item__push_peek_only : push_query -> Prims.bool) =
     | { push_kind = push_kind1; push_line; push_column; push_peek_only;
         push_code_or_decl;_} -> push_peek_only
 let (__proj__Mkpush_query__item__push_code_or_decl :
-  push_query -> (Prims.string, FStar_Parser_AST.decl) FStar_Pervasives.either)
+  push_query ->
+    (Prims.string,
+      (FStar_Parser_AST.decl * FStar_Parser_ParseIt.code_fragment))
+      FStar_Pervasives.either)
   =
   fun projectee ->
     match projectee with
@@ -430,7 +436,7 @@ let (push_query_to_string : push_query -> Prims.string) =
     let code_or_decl =
       match pq.push_code_or_decl with
       | FStar_Pervasives.Inl code -> code
-      | FStar_Pervasives.Inr decl -> FStar_Parser_AST.decl_to_string decl in
+      | FStar_Pervasives.Inr (_decl, code) -> code.FStar_Parser_ParseIt.code in
     let uu___ =
       let uu___1 =
         let uu___2 = FStar_Compiler_Util.string_of_int pq.push_line in
