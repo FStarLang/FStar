@@ -767,6 +767,21 @@ let has_array_cell_array_of_ref
 #pop-options
 *)
 
+let has_struct_field_gen
+  (#field_t: eqtype)
+  (fields: field_description_gen_t field_t)
+  (r: ref0_v)
+  (field: field_t)
+  (r': ref0_v)
+: GTot prop
+= r'.base == r.base /\
+  r.t == struct_t1 fields /\
+  r.td == struct1 fields /\
+  r'.t == fields.fd_type field /\
+  r'.td == fields.fd_typedef field /\
+  r'.ref == coerce_eq () (R.ref_focus r.ref (Steel.ST.C.Model.Struct.struct_field (struct_field_pcm fields) field))
+
+
 let has_struct_field1_intro
   (#opened: _)
   (#field_t: eqtype)
