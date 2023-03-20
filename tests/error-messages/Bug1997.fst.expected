@@ -1,29 +1,29 @@
 Module after desugaring:
 module Bug1997
 Declarations: [
-let Bug1997.op_Equals_Hat a b = a + b
-let Bug1997.test1 a b c = a =^ b =^ c
-let Bug1997.test2 a b c = a =^ b =^ c
-let Bug1997.test3 a b c = a =^ (b =^ c)
+let op_Equals_Hat a b = a + b
+let test1 a b c = a =^ b =^ c
+let test2 a b c = a =^ b =^ c
+let test3 a b c = a =^ (b =^ c)
 private
 let _ = FStar.Pervasives.assert_norm (Bug1997.test1 == Bug1997.test2)
 
-let Bug1997.imp_assoc_0 p q r = p ==> q ==> r
-let Bug1997.imp_assoc_1 p q r = p ==> q ==> r
-let Bug1997.imp_assoc_2 p q r = (p ==> q) ==> r
+let imp_assoc_0 p q r = p ==> q ==> r
+let imp_assoc_1 p q r = p ==> q ==> r
+let imp_assoc_2 p q r = (p ==> q) ==> r
 private
 let _ = FStar.Pervasives.assert_norm (Bug1997.imp_assoc_0 == Bug1997.imp_assoc_1)
 
-let Bug1997.imp_iff_0 p q r = p ==> q <==> r
-let Bug1997.imp_iff_1 p q r = p ==> q <==> r
-let Bug1997.imp_iff_2 p q r = p ==> (q <==> r)
+let imp_iff_0 p q r = p ==> q <==> r
+let imp_iff_1 p q r = p ==> q <==> r
+let imp_iff_2 p q r = p ==> (q <==> r)
 private
 let _ = FStar.Pervasives.assert_norm (Bug1997.imp_iff_0 == Bug1997.imp_iff_1)
 
-let Bug1997.imp_conj_1 p q r s = p ==> q /\ r ==> s
-let Bug1997.imp_conj_2 p q r s = (p ==> q) /\ (r ==> s)
-let Bug1997.imp_conj_3 p q r s = p ==> q /\ (r ==> s)
-let Bug1997.imp_conj_4 p q r s = p ==> q /\ r ==> s
+let imp_conj_1 p q r s = p ==> q /\ r ==> s
+let imp_conj_2 p q r s = (p ==> q) /\ (r ==> s)
+let imp_conj_3 p q r s = p ==> q /\ (r ==> s)
+let imp_conj_4 p q r s = p ==> q /\ r ==> s
 private
 let _ = FStar.Pervasives.assert_norm (Bug1997.imp_conj_1 == Bug1997.imp_conj_4)
 
@@ -31,10 +31,10 @@ let _ = FStar.Pervasives.assert_norm (Bug1997.imp_conj_1 == Bug1997.imp_conj_4)
 
 
 
-let Bug1997.impneg1 p q r = p ==> q /\ ~p ==> r
-let Bug1997.impneg2 p q r = (p ==> q) /\ (~p ==> r)
-let Bug1997.impneg3 p q r = p ==> q /\ (~p ==> r)
-let Bug1997.impneg4 p q r = p ==> q /\ ~p ==> r
+let impneg1 p q r = p ==> q /\ ~p ==> r
+let impneg2 p q r = (p ==> q) /\ (~p ==> r)
+let impneg3 p q r = p ==> q /\ (~p ==> r)
+let impneg4 p q r = p ==> q /\ ~p ==> r
 private
 let _ = FStar.Pervasives.assert_norm (Bug1997.impneg1 == Bug1997.impneg4)
 
@@ -42,18 +42,18 @@ let _ = FStar.Pervasives.assert_norm (Bug1997.impneg1 == Bug1997.impneg4)
 
 
 
-let Bug1997.cd1 p q r = p /\ q \/ r
-let Bug1997.cd2 p q r = p /\ q \/ r
-let Bug1997.cd3 p q r = p /\ (q \/ r)
+let cd1 p q r = p /\ q \/ r
+let cd2 p q r = p /\ q \/ r
+let cd3 p q r = p /\ (q \/ r)
 private
 let _ = FStar.Pervasives.assert_norm (Bug1997.cd1 == Bug1997.cd2)
 
 
-let Bug1997.m0 p q r s = p /\ (q \/ r) /\ s
-let Bug1997.m1 p q r s = p /\ q \/ r /\ s
-let Bug1997.m2 p q r s = p /\ q \/ r /\ s
-let Bug1997.m3 p q r s = p /\ q \/ r /\ s
-let Bug1997.m4 p q r s = p /\ q \/ r /\ s
+let m0 p q r s = p /\ (q \/ r) /\ s
+let m1 p q r s = p /\ q \/ r /\ s
+let m2 p q r s = p /\ q \/ r /\ s
+let m3 p q r s = p /\ q \/ r /\ s
+let m4 p q r s = p /\ q \/ r /\ s
 private
 let _ = FStar.Pervasives.assert_norm (Bug1997.m1 == Bug1997.m2)
 private
@@ -64,11 +64,11 @@ let _ = FStar.Pervasives.assert_norm (Bug1997.m1 == Bug1997.m4)
 
 
 
-let Bug1997.n0 p q r s = p \/ q /\ r \/ s
-let Bug1997.n1 p q r s = p \/ q /\ r \/ s
-let Bug1997.n2 p q r s = (p \/ q) /\ r \/ s
-let Bug1997.n3 p q r s = (p \/ q) /\ (r \/ s)
-let Bug1997.n4 p q r s = p \/ q /\ (r \/ s)
+let n0 p q r s = p \/ q /\ r \/ s
+let n1 p q r s = p \/ q /\ r \/ s
+let n2 p q r s = (p \/ q) /\ r \/ s
+let n3 p q r s = (p \/ q) /\ (r \/ s)
+let n4 p q r s = p \/ q /\ (r \/ s)
 private
 let _ = FStar.Pervasives.assert_norm (Bug1997.n0 == Bug1997.n1)
 
@@ -79,29 +79,29 @@ let _ = FStar.Pervasives.assert_norm (Bug1997.n0 == Bug1997.n1)
 
 ]
 Exports: [
-let Bug1997.op_Equals_Hat a b = a + b
-let Bug1997.test1 a b c = a =^ b =^ c
-let Bug1997.test2 a b c = a =^ b =^ c
-let Bug1997.test3 a b c = a =^ (b =^ c)
+let op_Equals_Hat a b = a + b
+let test1 a b c = a =^ b =^ c
+let test2 a b c = a =^ b =^ c
+let test3 a b c = a =^ (b =^ c)
 private
 let _ = FStar.Pervasives.assert_norm (Bug1997.test1 == Bug1997.test2)
 
-let Bug1997.imp_assoc_0 p q r = p ==> q ==> r
-let Bug1997.imp_assoc_1 p q r = p ==> q ==> r
-let Bug1997.imp_assoc_2 p q r = (p ==> q) ==> r
+let imp_assoc_0 p q r = p ==> q ==> r
+let imp_assoc_1 p q r = p ==> q ==> r
+let imp_assoc_2 p q r = (p ==> q) ==> r
 private
 let _ = FStar.Pervasives.assert_norm (Bug1997.imp_assoc_0 == Bug1997.imp_assoc_1)
 
-let Bug1997.imp_iff_0 p q r = p ==> q <==> r
-let Bug1997.imp_iff_1 p q r = p ==> q <==> r
-let Bug1997.imp_iff_2 p q r = p ==> (q <==> r)
+let imp_iff_0 p q r = p ==> q <==> r
+let imp_iff_1 p q r = p ==> q <==> r
+let imp_iff_2 p q r = p ==> (q <==> r)
 private
 let _ = FStar.Pervasives.assert_norm (Bug1997.imp_iff_0 == Bug1997.imp_iff_1)
 
-let Bug1997.imp_conj_1 p q r s = p ==> q /\ r ==> s
-let Bug1997.imp_conj_2 p q r s = (p ==> q) /\ (r ==> s)
-let Bug1997.imp_conj_3 p q r s = p ==> q /\ (r ==> s)
-let Bug1997.imp_conj_4 p q r s = p ==> q /\ r ==> s
+let imp_conj_1 p q r s = p ==> q /\ r ==> s
+let imp_conj_2 p q r s = (p ==> q) /\ (r ==> s)
+let imp_conj_3 p q r s = p ==> q /\ (r ==> s)
+let imp_conj_4 p q r s = p ==> q /\ r ==> s
 private
 let _ = FStar.Pervasives.assert_norm (Bug1997.imp_conj_1 == Bug1997.imp_conj_4)
 
@@ -109,10 +109,10 @@ let _ = FStar.Pervasives.assert_norm (Bug1997.imp_conj_1 == Bug1997.imp_conj_4)
 
 
 
-let Bug1997.impneg1 p q r = p ==> q /\ ~p ==> r
-let Bug1997.impneg2 p q r = (p ==> q) /\ (~p ==> r)
-let Bug1997.impneg3 p q r = p ==> q /\ (~p ==> r)
-let Bug1997.impneg4 p q r = p ==> q /\ ~p ==> r
+let impneg1 p q r = p ==> q /\ ~p ==> r
+let impneg2 p q r = (p ==> q) /\ (~p ==> r)
+let impneg3 p q r = p ==> q /\ (~p ==> r)
+let impneg4 p q r = p ==> q /\ ~p ==> r
 private
 let _ = FStar.Pervasives.assert_norm (Bug1997.impneg1 == Bug1997.impneg4)
 
@@ -120,18 +120,18 @@ let _ = FStar.Pervasives.assert_norm (Bug1997.impneg1 == Bug1997.impneg4)
 
 
 
-let Bug1997.cd1 p q r = p /\ q \/ r
-let Bug1997.cd2 p q r = p /\ q \/ r
-let Bug1997.cd3 p q r = p /\ (q \/ r)
+let cd1 p q r = p /\ q \/ r
+let cd2 p q r = p /\ q \/ r
+let cd3 p q r = p /\ (q \/ r)
 private
 let _ = FStar.Pervasives.assert_norm (Bug1997.cd1 == Bug1997.cd2)
 
 
-let Bug1997.m0 p q r s = p /\ (q \/ r) /\ s
-let Bug1997.m1 p q r s = p /\ q \/ r /\ s
-let Bug1997.m2 p q r s = p /\ q \/ r /\ s
-let Bug1997.m3 p q r s = p /\ q \/ r /\ s
-let Bug1997.m4 p q r s = p /\ q \/ r /\ s
+let m0 p q r s = p /\ (q \/ r) /\ s
+let m1 p q r s = p /\ q \/ r /\ s
+let m2 p q r s = p /\ q \/ r /\ s
+let m3 p q r s = p /\ q \/ r /\ s
+let m4 p q r s = p /\ q \/ r /\ s
 private
 let _ = FStar.Pervasives.assert_norm (Bug1997.m1 == Bug1997.m2)
 private
@@ -142,11 +142,11 @@ let _ = FStar.Pervasives.assert_norm (Bug1997.m1 == Bug1997.m4)
 
 
 
-let Bug1997.n0 p q r s = p \/ q /\ r \/ s
-let Bug1997.n1 p q r s = p \/ q /\ r \/ s
-let Bug1997.n2 p q r s = (p \/ q) /\ r \/ s
-let Bug1997.n3 p q r s = (p \/ q) /\ (r \/ s)
-let Bug1997.n4 p q r s = p \/ q /\ (r \/ s)
+let n0 p q r s = p \/ q /\ r \/ s
+let n1 p q r s = p \/ q /\ r \/ s
+let n2 p q r s = (p \/ q) /\ r \/ s
+let n3 p q r s = (p \/ q) /\ (r \/ s)
+let n4 p q r s = p \/ q /\ (r \/ s)
 private
 let _ = FStar.Pervasives.assert_norm (Bug1997.n0 == Bug1997.n1)
 
@@ -160,29 +160,29 @@ let _ = FStar.Pervasives.assert_norm (Bug1997.n0 == Bug1997.n1)
 Module before type checking:
 module Bug1997
 Declarations: [
-let Bug1997.op_Equals_Hat a b = a + b
-let Bug1997.test1 a b c = a =^ b =^ c
-let Bug1997.test2 a b c = a =^ b =^ c
-let Bug1997.test3 a b c = a =^ (b =^ c)
+let op_Equals_Hat a b = a + b
+let test1 a b c = a =^ b =^ c
+let test2 a b c = a =^ b =^ c
+let test3 a b c = a =^ (b =^ c)
 private
 let _ = FStar.Pervasives.assert_norm (Bug1997.test1 == Bug1997.test2)
 
-let Bug1997.imp_assoc_0 p q r = p ==> q ==> r
-let Bug1997.imp_assoc_1 p q r = p ==> q ==> r
-let Bug1997.imp_assoc_2 p q r = (p ==> q) ==> r
+let imp_assoc_0 p q r = p ==> q ==> r
+let imp_assoc_1 p q r = p ==> q ==> r
+let imp_assoc_2 p q r = (p ==> q) ==> r
 private
 let _ = FStar.Pervasives.assert_norm (Bug1997.imp_assoc_0 == Bug1997.imp_assoc_1)
 
-let Bug1997.imp_iff_0 p q r = p ==> q <==> r
-let Bug1997.imp_iff_1 p q r = p ==> q <==> r
-let Bug1997.imp_iff_2 p q r = p ==> (q <==> r)
+let imp_iff_0 p q r = p ==> q <==> r
+let imp_iff_1 p q r = p ==> q <==> r
+let imp_iff_2 p q r = p ==> (q <==> r)
 private
 let _ = FStar.Pervasives.assert_norm (Bug1997.imp_iff_0 == Bug1997.imp_iff_1)
 
-let Bug1997.imp_conj_1 p q r s = p ==> q /\ r ==> s
-let Bug1997.imp_conj_2 p q r s = (p ==> q) /\ (r ==> s)
-let Bug1997.imp_conj_3 p q r s = p ==> q /\ (r ==> s)
-let Bug1997.imp_conj_4 p q r s = p ==> q /\ r ==> s
+let imp_conj_1 p q r s = p ==> q /\ r ==> s
+let imp_conj_2 p q r s = (p ==> q) /\ (r ==> s)
+let imp_conj_3 p q r s = p ==> q /\ (r ==> s)
+let imp_conj_4 p q r s = p ==> q /\ r ==> s
 private
 let _ = FStar.Pervasives.assert_norm (Bug1997.imp_conj_1 == Bug1997.imp_conj_4)
 
@@ -190,10 +190,10 @@ let _ = FStar.Pervasives.assert_norm (Bug1997.imp_conj_1 == Bug1997.imp_conj_4)
 
 
 
-let Bug1997.impneg1 p q r = p ==> q /\ ~p ==> r
-let Bug1997.impneg2 p q r = (p ==> q) /\ (~p ==> r)
-let Bug1997.impneg3 p q r = p ==> q /\ (~p ==> r)
-let Bug1997.impneg4 p q r = p ==> q /\ ~p ==> r
+let impneg1 p q r = p ==> q /\ ~p ==> r
+let impneg2 p q r = (p ==> q) /\ (~p ==> r)
+let impneg3 p q r = p ==> q /\ (~p ==> r)
+let impneg4 p q r = p ==> q /\ ~p ==> r
 private
 let _ = FStar.Pervasives.assert_norm (Bug1997.impneg1 == Bug1997.impneg4)
 
@@ -201,18 +201,18 @@ let _ = FStar.Pervasives.assert_norm (Bug1997.impneg1 == Bug1997.impneg4)
 
 
 
-let Bug1997.cd1 p q r = p /\ q \/ r
-let Bug1997.cd2 p q r = p /\ q \/ r
-let Bug1997.cd3 p q r = p /\ (q \/ r)
+let cd1 p q r = p /\ q \/ r
+let cd2 p q r = p /\ q \/ r
+let cd3 p q r = p /\ (q \/ r)
 private
 let _ = FStar.Pervasives.assert_norm (Bug1997.cd1 == Bug1997.cd2)
 
 
-let Bug1997.m0 p q r s = p /\ (q \/ r) /\ s
-let Bug1997.m1 p q r s = p /\ q \/ r /\ s
-let Bug1997.m2 p q r s = p /\ q \/ r /\ s
-let Bug1997.m3 p q r s = p /\ q \/ r /\ s
-let Bug1997.m4 p q r s = p /\ q \/ r /\ s
+let m0 p q r s = p /\ (q \/ r) /\ s
+let m1 p q r s = p /\ q \/ r /\ s
+let m2 p q r s = p /\ q \/ r /\ s
+let m3 p q r s = p /\ q \/ r /\ s
+let m4 p q r s = p /\ q \/ r /\ s
 private
 let _ = FStar.Pervasives.assert_norm (Bug1997.m1 == Bug1997.m2)
 private
@@ -223,11 +223,11 @@ let _ = FStar.Pervasives.assert_norm (Bug1997.m1 == Bug1997.m4)
 
 
 
-let Bug1997.n0 p q r s = p \/ q /\ r \/ s
-let Bug1997.n1 p q r s = p \/ q /\ r \/ s
-let Bug1997.n2 p q r s = (p \/ q) /\ r \/ s
-let Bug1997.n3 p q r s = (p \/ q) /\ (r \/ s)
-let Bug1997.n4 p q r s = p \/ q /\ (r \/ s)
+let n0 p q r s = p \/ q /\ r \/ s
+let n1 p q r s = p \/ q /\ r \/ s
+let n2 p q r s = (p \/ q) /\ r \/ s
+let n3 p q r s = (p \/ q) /\ (r \/ s)
+let n4 p q r s = p \/ q /\ (r \/ s)
 private
 let _ = FStar.Pervasives.assert_norm (Bug1997.n0 == Bug1997.n1)
 
@@ -238,29 +238,29 @@ let _ = FStar.Pervasives.assert_norm (Bug1997.n0 == Bug1997.n1)
 
 ]
 Exports: [
-let Bug1997.op_Equals_Hat a b = a + b
-let Bug1997.test1 a b c = a =^ b =^ c
-let Bug1997.test2 a b c = a =^ b =^ c
-let Bug1997.test3 a b c = a =^ (b =^ c)
+let op_Equals_Hat a b = a + b
+let test1 a b c = a =^ b =^ c
+let test2 a b c = a =^ b =^ c
+let test3 a b c = a =^ (b =^ c)
 private
 let _ = FStar.Pervasives.assert_norm (Bug1997.test1 == Bug1997.test2)
 
-let Bug1997.imp_assoc_0 p q r = p ==> q ==> r
-let Bug1997.imp_assoc_1 p q r = p ==> q ==> r
-let Bug1997.imp_assoc_2 p q r = (p ==> q) ==> r
+let imp_assoc_0 p q r = p ==> q ==> r
+let imp_assoc_1 p q r = p ==> q ==> r
+let imp_assoc_2 p q r = (p ==> q) ==> r
 private
 let _ = FStar.Pervasives.assert_norm (Bug1997.imp_assoc_0 == Bug1997.imp_assoc_1)
 
-let Bug1997.imp_iff_0 p q r = p ==> q <==> r
-let Bug1997.imp_iff_1 p q r = p ==> q <==> r
-let Bug1997.imp_iff_2 p q r = p ==> (q <==> r)
+let imp_iff_0 p q r = p ==> q <==> r
+let imp_iff_1 p q r = p ==> q <==> r
+let imp_iff_2 p q r = p ==> (q <==> r)
 private
 let _ = FStar.Pervasives.assert_norm (Bug1997.imp_iff_0 == Bug1997.imp_iff_1)
 
-let Bug1997.imp_conj_1 p q r s = p ==> q /\ r ==> s
-let Bug1997.imp_conj_2 p q r s = (p ==> q) /\ (r ==> s)
-let Bug1997.imp_conj_3 p q r s = p ==> q /\ (r ==> s)
-let Bug1997.imp_conj_4 p q r s = p ==> q /\ r ==> s
+let imp_conj_1 p q r s = p ==> q /\ r ==> s
+let imp_conj_2 p q r s = (p ==> q) /\ (r ==> s)
+let imp_conj_3 p q r s = p ==> q /\ (r ==> s)
+let imp_conj_4 p q r s = p ==> q /\ r ==> s
 private
 let _ = FStar.Pervasives.assert_norm (Bug1997.imp_conj_1 == Bug1997.imp_conj_4)
 
@@ -268,10 +268,10 @@ let _ = FStar.Pervasives.assert_norm (Bug1997.imp_conj_1 == Bug1997.imp_conj_4)
 
 
 
-let Bug1997.impneg1 p q r = p ==> q /\ ~p ==> r
-let Bug1997.impneg2 p q r = (p ==> q) /\ (~p ==> r)
-let Bug1997.impneg3 p q r = p ==> q /\ (~p ==> r)
-let Bug1997.impneg4 p q r = p ==> q /\ ~p ==> r
+let impneg1 p q r = p ==> q /\ ~p ==> r
+let impneg2 p q r = (p ==> q) /\ (~p ==> r)
+let impneg3 p q r = p ==> q /\ (~p ==> r)
+let impneg4 p q r = p ==> q /\ ~p ==> r
 private
 let _ = FStar.Pervasives.assert_norm (Bug1997.impneg1 == Bug1997.impneg4)
 
@@ -279,18 +279,18 @@ let _ = FStar.Pervasives.assert_norm (Bug1997.impneg1 == Bug1997.impneg4)
 
 
 
-let Bug1997.cd1 p q r = p /\ q \/ r
-let Bug1997.cd2 p q r = p /\ q \/ r
-let Bug1997.cd3 p q r = p /\ (q \/ r)
+let cd1 p q r = p /\ q \/ r
+let cd2 p q r = p /\ q \/ r
+let cd3 p q r = p /\ (q \/ r)
 private
 let _ = FStar.Pervasives.assert_norm (Bug1997.cd1 == Bug1997.cd2)
 
 
-let Bug1997.m0 p q r s = p /\ (q \/ r) /\ s
-let Bug1997.m1 p q r s = p /\ q \/ r /\ s
-let Bug1997.m2 p q r s = p /\ q \/ r /\ s
-let Bug1997.m3 p q r s = p /\ q \/ r /\ s
-let Bug1997.m4 p q r s = p /\ q \/ r /\ s
+let m0 p q r s = p /\ (q \/ r) /\ s
+let m1 p q r s = p /\ q \/ r /\ s
+let m2 p q r s = p /\ q \/ r /\ s
+let m3 p q r s = p /\ q \/ r /\ s
+let m4 p q r s = p /\ q \/ r /\ s
 private
 let _ = FStar.Pervasives.assert_norm (Bug1997.m1 == Bug1997.m2)
 private
@@ -301,11 +301,11 @@ let _ = FStar.Pervasives.assert_norm (Bug1997.m1 == Bug1997.m4)
 
 
 
-let Bug1997.n0 p q r s = p \/ q /\ r \/ s
-let Bug1997.n1 p q r s = p \/ q /\ r \/ s
-let Bug1997.n2 p q r s = (p \/ q) /\ r \/ s
-let Bug1997.n3 p q r s = (p \/ q) /\ (r \/ s)
-let Bug1997.n4 p q r s = p \/ q /\ (r \/ s)
+let n0 p q r s = p \/ q /\ r \/ s
+let n1 p q r s = p \/ q /\ r \/ s
+let n2 p q r s = (p \/ q) /\ r \/ s
+let n3 p q r s = (p \/ q) /\ (r \/ s)
+let n4 p q r s = p \/ q /\ (r \/ s)
 private
 let _ = FStar.Pervasives.assert_norm (Bug1997.n0 == Bug1997.n1)
 
@@ -394,108 +394,108 @@ Bug1997.fst(92,19-92,49): (Error 19) assertion failed (Also see: prims.fst(96,32
 Module after type checking:
 module Bug1997
 Declarations: [
-let Bug1997.op_Equals_Hat a b = a + b
-let Bug1997.test1 a b c = a =^ b =^ c
-let Bug1997.test2 a b c = a =^ b =^ c
-let Bug1997.test3 a b c = a =^ (b =^ c)
+let op_Equals_Hat a b = a + b
+let test1 a b c = a =^ b =^ c
+let test2 a b c = a =^ b =^ c
+let test3 a b c = a =^ (b =^ c)
 private
 let _ = FStar.Pervasives.assert_norm (Bug1997.test1 == Bug1997.test2)
-let Bug1997.imp_assoc_0 p q r = p ==> q ==> r
-let Bug1997.imp_assoc_1 p q r = p ==> q ==> r
-let Bug1997.imp_assoc_2 p q r = (p ==> q) ==> r
+let imp_assoc_0 p q r = p ==> q ==> r
+let imp_assoc_1 p q r = p ==> q ==> r
+let imp_assoc_2 p q r = (p ==> q) ==> r
 private
 let _ = FStar.Pervasives.assert_norm (Bug1997.imp_assoc_0 == Bug1997.imp_assoc_1)
-let Bug1997.imp_iff_0 p q r = p ==> q <==> r
-let Bug1997.imp_iff_1 p q r = p ==> q <==> r
-let Bug1997.imp_iff_2 p q r = p ==> (q <==> r)
+let imp_iff_0 p q r = p ==> q <==> r
+let imp_iff_1 p q r = p ==> q <==> r
+let imp_iff_2 p q r = p ==> (q <==> r)
 private
 let _ = FStar.Pervasives.assert_norm (Bug1997.imp_iff_0 == Bug1997.imp_iff_1)
-let Bug1997.imp_conj_1 p q r s = p ==> q /\ r ==> s
-let Bug1997.imp_conj_2 p q r s = (p ==> q) /\ (r ==> s)
-let Bug1997.imp_conj_3 p q r s = p ==> q /\ (r ==> s)
-let Bug1997.imp_conj_4 p q r s = p ==> q /\ r ==> s
+let imp_conj_1 p q r s = p ==> q /\ r ==> s
+let imp_conj_2 p q r s = (p ==> q) /\ (r ==> s)
+let imp_conj_3 p q r s = p ==> q /\ (r ==> s)
+let imp_conj_4 p q r s = p ==> q /\ r ==> s
 private
 let _ = FStar.Pervasives.assert_norm (Bug1997.imp_conj_1 == Bug1997.imp_conj_4)
-let Bug1997.impneg1 p q r = p ==> q /\ ~p ==> r
-let Bug1997.impneg2 p q r = (p ==> q) /\ (~p ==> r)
-let Bug1997.impneg3 p q r = p ==> q /\ (~p ==> r)
-let Bug1997.impneg4 p q r = p ==> q /\ ~p ==> r
+let impneg1 p q r = p ==> q /\ ~p ==> r
+let impneg2 p q r = (p ==> q) /\ (~p ==> r)
+let impneg3 p q r = p ==> q /\ (~p ==> r)
+let impneg4 p q r = p ==> q /\ ~p ==> r
 private
 let _ = FStar.Pervasives.assert_norm (Bug1997.impneg1 == Bug1997.impneg4)
-let Bug1997.cd1 p q r = p /\ q \/ r
-let Bug1997.cd2 p q r = p /\ q \/ r
-let Bug1997.cd3 p q r = p /\ (q \/ r)
+let cd1 p q r = p /\ q \/ r
+let cd2 p q r = p /\ q \/ r
+let cd3 p q r = p /\ (q \/ r)
 private
 let _ = FStar.Pervasives.assert_norm (Bug1997.cd1 == Bug1997.cd2)
-let Bug1997.m0 p q r s = p /\ (q \/ r) /\ s
-let Bug1997.m1 p q r s = p /\ q \/ r /\ s
-let Bug1997.m2 p q r s = p /\ q \/ r /\ s
-let Bug1997.m3 p q r s = p /\ q \/ r /\ s
-let Bug1997.m4 p q r s = p /\ q \/ r /\ s
+let m0 p q r s = p /\ (q \/ r) /\ s
+let m1 p q r s = p /\ q \/ r /\ s
+let m2 p q r s = p /\ q \/ r /\ s
+let m3 p q r s = p /\ q \/ r /\ s
+let m4 p q r s = p /\ q \/ r /\ s
 private
 let _ = FStar.Pervasives.assert_norm (Bug1997.m1 == Bug1997.m2)
 private
 let _ = FStar.Pervasives.assert_norm (Bug1997.m1 == Bug1997.m3)
 private
 let _ = FStar.Pervasives.assert_norm (Bug1997.m1 == Bug1997.m4)
-let Bug1997.n0 p q r s = p \/ q /\ r \/ s
-let Bug1997.n1 p q r s = p \/ q /\ r \/ s
-let Bug1997.n2 p q r s = (p \/ q) /\ r \/ s
-let Bug1997.n3 p q r s = (p \/ q) /\ (r \/ s)
-let Bug1997.n4 p q r s = p \/ q /\ (r \/ s)
+let n0 p q r s = p \/ q /\ r \/ s
+let n1 p q r s = p \/ q /\ r \/ s
+let n2 p q r s = (p \/ q) /\ r \/ s
+let n3 p q r s = (p \/ q) /\ (r \/ s)
+let n4 p q r s = p \/ q /\ (r \/ s)
 private
 let _ = FStar.Pervasives.assert_norm (Bug1997.n0 == Bug1997.n1)
 ]
 Exports: [
-let Bug1997.op_Equals_Hat a b = a + b
-let Bug1997.test1 a b c = a =^ b =^ c
-let Bug1997.test2 a b c = a =^ b =^ c
-let Bug1997.test3 a b c = a =^ (b =^ c)
+let op_Equals_Hat a b = a + b
+let test1 a b c = a =^ b =^ c
+let test2 a b c = a =^ b =^ c
+let test3 a b c = a =^ (b =^ c)
 private
 let _ = FStar.Pervasives.assert_norm (Bug1997.test1 == Bug1997.test2)
-let Bug1997.imp_assoc_0 p q r = p ==> q ==> r
-let Bug1997.imp_assoc_1 p q r = p ==> q ==> r
-let Bug1997.imp_assoc_2 p q r = (p ==> q) ==> r
+let imp_assoc_0 p q r = p ==> q ==> r
+let imp_assoc_1 p q r = p ==> q ==> r
+let imp_assoc_2 p q r = (p ==> q) ==> r
 private
 let _ = FStar.Pervasives.assert_norm (Bug1997.imp_assoc_0 == Bug1997.imp_assoc_1)
-let Bug1997.imp_iff_0 p q r = p ==> q <==> r
-let Bug1997.imp_iff_1 p q r = p ==> q <==> r
-let Bug1997.imp_iff_2 p q r = p ==> (q <==> r)
+let imp_iff_0 p q r = p ==> q <==> r
+let imp_iff_1 p q r = p ==> q <==> r
+let imp_iff_2 p q r = p ==> (q <==> r)
 private
 let _ = FStar.Pervasives.assert_norm (Bug1997.imp_iff_0 == Bug1997.imp_iff_1)
-let Bug1997.imp_conj_1 p q r s = p ==> q /\ r ==> s
-let Bug1997.imp_conj_2 p q r s = (p ==> q) /\ (r ==> s)
-let Bug1997.imp_conj_3 p q r s = p ==> q /\ (r ==> s)
-let Bug1997.imp_conj_4 p q r s = p ==> q /\ r ==> s
+let imp_conj_1 p q r s = p ==> q /\ r ==> s
+let imp_conj_2 p q r s = (p ==> q) /\ (r ==> s)
+let imp_conj_3 p q r s = p ==> q /\ (r ==> s)
+let imp_conj_4 p q r s = p ==> q /\ r ==> s
 private
 let _ = FStar.Pervasives.assert_norm (Bug1997.imp_conj_1 == Bug1997.imp_conj_4)
-let Bug1997.impneg1 p q r = p ==> q /\ ~p ==> r
-let Bug1997.impneg2 p q r = (p ==> q) /\ (~p ==> r)
-let Bug1997.impneg3 p q r = p ==> q /\ (~p ==> r)
-let Bug1997.impneg4 p q r = p ==> q /\ ~p ==> r
+let impneg1 p q r = p ==> q /\ ~p ==> r
+let impneg2 p q r = (p ==> q) /\ (~p ==> r)
+let impneg3 p q r = p ==> q /\ (~p ==> r)
+let impneg4 p q r = p ==> q /\ ~p ==> r
 private
 let _ = FStar.Pervasives.assert_norm (Bug1997.impneg1 == Bug1997.impneg4)
-let Bug1997.cd1 p q r = p /\ q \/ r
-let Bug1997.cd2 p q r = p /\ q \/ r
-let Bug1997.cd3 p q r = p /\ (q \/ r)
+let cd1 p q r = p /\ q \/ r
+let cd2 p q r = p /\ q \/ r
+let cd3 p q r = p /\ (q \/ r)
 private
 let _ = FStar.Pervasives.assert_norm (Bug1997.cd1 == Bug1997.cd2)
-let Bug1997.m0 p q r s = p /\ (q \/ r) /\ s
-let Bug1997.m1 p q r s = p /\ q \/ r /\ s
-let Bug1997.m2 p q r s = p /\ q \/ r /\ s
-let Bug1997.m3 p q r s = p /\ q \/ r /\ s
-let Bug1997.m4 p q r s = p /\ q \/ r /\ s
+let m0 p q r s = p /\ (q \/ r) /\ s
+let m1 p q r s = p /\ q \/ r /\ s
+let m2 p q r s = p /\ q \/ r /\ s
+let m3 p q r s = p /\ q \/ r /\ s
+let m4 p q r s = p /\ q \/ r /\ s
 private
 let _ = FStar.Pervasives.assert_norm (Bug1997.m1 == Bug1997.m2)
 private
 let _ = FStar.Pervasives.assert_norm (Bug1997.m1 == Bug1997.m3)
 private
 let _ = FStar.Pervasives.assert_norm (Bug1997.m1 == Bug1997.m4)
-let Bug1997.n0 p q r s = p \/ q /\ r \/ s
-let Bug1997.n1 p q r s = p \/ q /\ r \/ s
-let Bug1997.n2 p q r s = (p \/ q) /\ r \/ s
-let Bug1997.n3 p q r s = (p \/ q) /\ (r \/ s)
-let Bug1997.n4 p q r s = p \/ q /\ (r \/ s)
+let n0 p q r s = p \/ q /\ r \/ s
+let n1 p q r s = p \/ q /\ r \/ s
+let n2 p q r s = (p \/ q) /\ r \/ s
+let n3 p q r s = (p \/ q) /\ (r \/ s)
+let n4 p q r s = p \/ q /\ (r \/ s)
 private
 let _ = FStar.Pervasives.assert_norm (Bug1997.n0 == Bug1997.n1)
 ]

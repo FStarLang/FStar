@@ -1,33 +1,29 @@
 Module after desugaring:
 module Bug2820
 Declarations: [
-let Bug2820.basic _ =
-  () <: FStar.Pervasives.Lemma (ensures forall (x: x: _{x + 1 == 1 + x}). Prims.l_True)
+let basic _ = () <: FStar.Pervasives.Lemma (ensures forall (x: x: _{x + 1 == 1 + x}). Prims.l_True)
 ]
 Exports: [
-let Bug2820.basic _ =
-  () <: FStar.Pervasives.Lemma (ensures forall (x: x: _{x + 1 == 1 + x}). Prims.l_True)
+let basic _ = () <: FStar.Pervasives.Lemma (ensures forall (x: x: _{x + 1 == 1 + x}). Prims.l_True)
 ]
 
 Module before type checking:
 module Bug2820
 Declarations: [
-let Bug2820.basic _ =
-  () <: FStar.Pervasives.Lemma (ensures forall (x: x: _{x + 1 == 1 + x}). Prims.l_True)
+let basic _ = () <: FStar.Pervasives.Lemma (ensures forall (x: x: _{x + 1 == 1 + x}). Prims.l_True)
 ]
 Exports: [
-let Bug2820.basic _ =
-  () <: FStar.Pervasives.Lemma (ensures forall (x: x: _{x + 1 == 1 + x}). Prims.l_True)
+let basic _ = () <: FStar.Pervasives.Lemma (ensures forall (x: x: _{x + 1 == 1 + x}). Prims.l_True)
 ]
 
 Module after type checking:
 module Bug2820
 Declarations: [
-let Bug2820.basic _ =
+let basic _ =
   () <: FStar.Pervasives.Lemma (ensures forall (x: Prims.int{x + 1 == 1 + x}). Prims.l_True)
 ]
 Exports: [
-let Bug2820.basic _ =
+let basic _ =
   () <: FStar.Pervasives.Lemma (ensures forall (x: Prims.int{x + 1 == 1 + x}). Prims.l_True)
 ]
 
