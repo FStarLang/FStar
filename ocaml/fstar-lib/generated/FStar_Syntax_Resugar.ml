@@ -2751,7 +2751,49 @@ let (resugar_sigelt' :
             (let mk e =
                FStar_Syntax_Syntax.mk e se.FStar_Syntax_Syntax.sigrng in
              let dummy = mk FStar_Syntax_Syntax.Tm_unknown in
-             let desugared_let = mk (FStar_Syntax_Syntax.Tm_let (lbs, dummy)) in
+             let nopath_lbs uu___3 =
+               match uu___3 with
+               | (is_rec, lbs1) ->
+                   let nopath fv =
+                     let uu___4 =
+                       let uu___5 =
+                         let uu___6 =
+                           let uu___7 = FStar_Syntax_Syntax.lid_of_fv fv in
+                           FStar_Ident.ident_of_lid uu___7 in
+                         [uu___6] in
+                       FStar_Ident.lid_of_ids uu___5 in
+                     FStar_Syntax_Syntax.lid_as_fv uu___4
+                       FStar_Syntax_Syntax.delta_constant
+                       FStar_Pervasives_Native.None in
+                   let lbs2 =
+                     FStar_Compiler_List.map
+                       (fun lb ->
+                          let uu___4 =
+                            let uu___5 =
+                              let uu___6 =
+                                FStar_Compiler_Util.right
+                                  lb.FStar_Syntax_Syntax.lbname in
+                              FStar_Compiler_Effect.op_Less_Bar nopath uu___6 in
+                            FStar_Pervasives.Inr uu___5 in
+                          {
+                            FStar_Syntax_Syntax.lbname = uu___4;
+                            FStar_Syntax_Syntax.lbunivs =
+                              (lb.FStar_Syntax_Syntax.lbunivs);
+                            FStar_Syntax_Syntax.lbtyp =
+                              (lb.FStar_Syntax_Syntax.lbtyp);
+                            FStar_Syntax_Syntax.lbeff =
+                              (lb.FStar_Syntax_Syntax.lbeff);
+                            FStar_Syntax_Syntax.lbdef =
+                              (lb.FStar_Syntax_Syntax.lbdef);
+                            FStar_Syntax_Syntax.lbattrs =
+                              (lb.FStar_Syntax_Syntax.lbattrs);
+                            FStar_Syntax_Syntax.lbpos =
+                              (lb.FStar_Syntax_Syntax.lbpos)
+                          }) lbs1 in
+                   (is_rec, lbs2) in
+             let lbs1 = nopath_lbs lbs in
+             let desugared_let =
+               mk (FStar_Syntax_Syntax.Tm_let (lbs1, dummy)) in
              let t = resugar_term' env desugared_let in
              match t.FStar_Parser_AST.tm with
              | FStar_Parser_AST.Let (isrec, lets, uu___3) ->

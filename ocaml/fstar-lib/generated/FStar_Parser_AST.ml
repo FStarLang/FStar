@@ -2293,6 +2293,19 @@ let (id_of_tycon : tycon -> Prims.string) =
     | TyconRecord (i, uu___1, uu___2, uu___3, uu___4) ->
         FStar_Ident.string_of_id i
     | TyconVariant (i, uu___1, uu___2, uu___3) -> FStar_Ident.string_of_id i
+let (string_of_pragma : pragma -> Prims.string) =
+  fun uu___ ->
+    match uu___ with
+    | SetOptions s -> FStar_Compiler_Util.format1 "set-options \"%s\"" s
+    | ResetOptions s ->
+        FStar_Compiler_Util.format1 "reset-options \"%s\""
+          (FStar_Compiler_Util.dflt "" s)
+    | PushOptions s ->
+        FStar_Compiler_Util.format1 "push-options \"%s\""
+          (FStar_Compiler_Util.dflt "" s)
+    | PopOptions -> "pop-options"
+    | RestartSolver -> "restart-solver"
+    | PrintEffectsGraph -> "print-effects-graph"
 let (decl_to_string : decl -> Prims.string) =
   fun d ->
     match d.d with
@@ -2374,7 +2387,8 @@ let (decl_to_string : decl -> Prims.string) =
           Prims.op_Hat uu___1 uu___2 in
         Prims.op_Hat "splice[" uu___
     | SubEffect uu___ -> "sub_effect"
-    | Pragma uu___ -> "pragma"
+    | Pragma p ->
+        let uu___ = string_of_pragma p in Prims.op_Hat "pragma #" uu___
 let (modul_to_string : modul -> Prims.string) =
   fun m ->
     match m with
