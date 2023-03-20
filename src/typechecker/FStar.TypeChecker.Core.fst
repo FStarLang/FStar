@@ -1248,7 +1248,7 @@ and check' (g:env) (e:term)
     match c with
     | Const_range_of
     | Const_set_range_of
-    | Const_reify
+    | Const_reify _
     | Const_reflect _ ->
       fail "Unhandled constant"
 

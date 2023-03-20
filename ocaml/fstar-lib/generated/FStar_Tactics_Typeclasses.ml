@@ -4,13 +4,18 @@ let rec first :
     ('a -> ('b, unit) FStar_Tactics_Effect.tac_repr) ->
       'a Prims.list -> ('b, unit) FStar_Tactics_Effect.tac_repr
   =
-  fun f ->
-    fun l ->
-      match l with
-      | [] -> FStar_Tactics_Derived.fail "no cands"
-      | x::xs ->
-          FStar_Tactics_Derived.or_else (fun uu___ -> f x)
-            (fun uu___ -> first f xs)
+  fun uu___1 ->
+    fun uu___ ->
+      (fun f ->
+         fun l ->
+           match l with
+           | [] ->
+               Obj.magic (Obj.repr (FStar_Tactics_Derived.fail "no cands"))
+           | x::xs ->
+               Obj.magic
+                 (Obj.repr
+                    (FStar_Tactics_Derived.or_else (fun uu___ -> f x)
+                       (fun uu___ -> first f xs)))) uu___1 uu___
 let rec (tcresolve' :
   FStar_Reflection_Types.term Prims.list ->
     Prims.int -> (unit, unit) FStar_Tactics_Effect.tac_repr)
@@ -23,10 +28,8 @@ let rec (tcresolve' :
         (Prims.mk_range "FStar.Tactics.Typeclasses.fst" (Prims.of_int (45))
            (Prims.of_int (4)) (Prims.of_int (50)) (Prims.of_int (137)))
         (if fuel <= Prims.int_zero
-         then Obj.magic (Obj.repr (FStar_Tactics_Derived.fail "out of fuel"))
-         else
-           Obj.magic
-             (Obj.repr (FStar_Tactics_Effect.lift_div_tac (fun uu___1 -> ()))))
+         then FStar_Tactics_Derived.fail "out of fuel"
+         else FStar_Tactics_Effect.lift_div_tac (fun uu___1 -> ()))
         (fun uu___ ->
            (fun uu___ ->
               Obj.magic
@@ -72,15 +75,10 @@ let rec (tcresolve' :
                                               (FStar_Reflection_Builtins.term_eq
                                                  g) seen
                                           then
-                                            Obj.magic
-                                              (Obj.repr
-                                                 (FStar_Tactics_Derived.fail
-                                                    "loop"))
+                                            FStar_Tactics_Derived.fail "loop"
                                           else
-                                            Obj.magic
-                                              (Obj.repr
-                                                 (FStar_Tactics_Effect.lift_div_tac
-                                                    (fun uu___3 -> ()))))
+                                            FStar_Tactics_Effect.lift_div_tac
+                                              (fun uu___3 -> ()))
                                          (fun uu___2 ->
                                             (fun uu___2 ->
                                                Obj.magic
@@ -155,11 +153,7 @@ let rec (tcresolve' :
                                                                     uu___5))))
                                                                     (fun
                                                                     uu___5 ->
-                                                                    (fun
-                                                                    uu___5 ->
-                                                                    Obj.magic
-                                                                    (FStar_Tactics_Derived.fail
-                                                                    uu___5))
+                                                                    FStar_Tactics_Derived.fail
                                                                     uu___5)))))
                                                          uu___3))) uu___2)))
                                    uu___2))) uu___1))) uu___)
@@ -360,11 +354,15 @@ let (tcresolve : unit -> (unit, unit) FStar_Tactics_Effect.tac_repr) =
                  (fun uu___2 ->
                     match () with | () -> tcresolve' [] (Prims.of_int (16)))
                  (fun uu___2 ->
-                    match uu___2 with
-                    | FStar_Tactics_Common.TacticFailure s ->
-                        FStar_Tactics_Derived.fail
-                          (Prims.strcat "Typeclass resolution failed: " s)
-                    | e -> FStar_Tactics_Effect.raise e))) uu___1)
+                    (fun uu___2 ->
+                       match uu___2 with
+                       | FStar_Tactics_Common.TacticFailure s ->
+                           Obj.magic
+                             (FStar_Tactics_Derived.fail
+                                (Prims.strcat "Typeclass resolution failed: "
+                                   s))
+                       | e -> Obj.magic (FStar_Tactics_Effect.raise e))
+                      uu___2))) uu___1)
 let _ =
   FStar_Tactics_Native.register_tactic "FStar.Tactics.Typeclasses.tcresolve"
     (Prims.of_int (2))
@@ -1100,11 +1098,14 @@ let (mk_class :
                                                                     FStar_Pervasives_Native.None
                                                                     ->
                                                                     Obj.magic
+                                                                    (Obj.repr
                                                                     (FStar_Tactics_Derived.fail
-                                                                    "mk_class: proj not found?")
+                                                                    "mk_class: proj not found?"))
                                                                     | 
                                                                     FStar_Pervasives_Native.Some
                                                                     se1 ->
+                                                                    Obj.magic
+                                                                    (Obj.repr
                                                                     (match 
                                                                     FStar_Reflection_Builtins.inspect_sigelt
                                                                     se1
@@ -1113,7 +1114,7 @@ let (mk_class :
                                                                     FStar_Reflection_Data.Sg_Let
                                                                     (uu___10,
                                                                     lbs) ->
-                                                                    Obj.magic
+                                                                    Obj.repr
                                                                     (FStar_Tactics_Effect.tac_bind
                                                                     (Prims.mk_range
                                                                     "FStar.Tactics.Typeclasses.fst"
@@ -1154,9 +1155,9 @@ let (mk_class :
                                                                     | 
                                                                     uu___10
                                                                     ->
-                                                                    Obj.magic
+                                                                    Obj.repr
                                                                     (FStar_Tactics_Derived.fail
-                                                                    "mk_class: proj not Sg_Let?")))
+                                                                    "mk_class: proj not Sg_Let?"))))
                                                                     uu___9)))
                                                                     (fun
                                                                     uu___9 ->
@@ -1241,12 +1242,14 @@ let (mk_class :
                                                                     | 
                                                                     [] ->
                                                                     Obj.magic
+                                                                    (Obj.repr
                                                                     (FStar_Tactics_Derived.fail
-                                                                    "mk_class: impossible, no binders")
+                                                                    "mk_class: impossible, no binders"))
                                                                     | 
                                                                     b1::bs'
                                                                     ->
                                                                     Obj.magic
+                                                                    (Obj.repr
                                                                     (FStar_Tactics_Effect.tac_bind
                                                                     (Prims.mk_range
                                                                     "FStar.Tactics.Typeclasses.fst"
@@ -1311,7 +1314,7 @@ let (mk_class :
                                                                     :: bs'))
                                                                     cod2))
                                                                     uu___12)))
-                                                                    uu___11))))
+                                                                    uu___11)))))
                                                                     uu___10)))
                                                                     uu___9)))
                                                                     (fun

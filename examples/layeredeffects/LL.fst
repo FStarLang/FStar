@@ -352,3 +352,9 @@ let test () : Exn int True (fun _ -> True)
 
 let test_st () : Pure (option int) True (fun _ -> True)
 = reify (test ()) ()
+
+let main =
+  let nopt = test_st () in
+  FStar.IO.print_string (match nopt with
+                         | None -> FStar.All.failwith "Unexpected none"
+                         | Some n -> FStar.Printf.sprintf "Output: %d\n" n)

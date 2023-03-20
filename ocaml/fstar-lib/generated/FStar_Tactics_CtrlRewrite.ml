@@ -22,8 +22,8 @@ let (__do_rewrite :
               let uu___1 = FStar_Syntax_Subst.compress tm in
               uu___1.FStar_Syntax_Syntax.n in
             match uu___ with
-            | FStar_Syntax_Syntax.Tm_constant (FStar_Const.Const_reify) ->
-                true
+            | FStar_Syntax_Syntax.Tm_constant (FStar_Const.Const_reify
+                uu___1) -> true
             | FStar_Syntax_Syntax.Tm_constant (FStar_Const.Const_reflect
                 uu___1) -> true
             | FStar_Syntax_Syntax.Tm_constant (FStar_Const.Const_range_of) ->

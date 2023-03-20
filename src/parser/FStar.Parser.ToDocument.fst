@@ -2170,7 +2170,7 @@ and p_constant = function
   | Const_range_of -> str "range_of"
   | Const_set_range_of -> str "set_range_of"
   | Const_range r -> str (Range.string_of_range r)
-  | Const_reify -> str "reify"
+  | Const_reify _ -> str "reify"
   | Const_reflect lid -> p_quident lid ^^ qmark ^^ dot ^^ str "reflect"
 
 and p_universe u = str "u#" ^^ p_atomicUniverse u
@@ -2255,4 +2255,3 @@ let modul_with_comments_to_document (m:modul) comments =
   let comments = !comment_stack in
   comment_stack := [] ;
   (initial_comment ^^ doc, comments)
-

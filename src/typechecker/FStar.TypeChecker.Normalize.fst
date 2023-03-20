@@ -805,7 +805,7 @@ let should_reify cfg stack =
         | s -> s
     in
     match drop_irrel stack with
-    | App (_, {n=Tm_constant FC.Const_reify}, _, _) :: _ ->
+    | App (_, {n=Tm_constant (FC.Const_reify _)}, _, _) :: _ ->
         // BU.print1 "Found a reify on the stack. %s" "" ;
         cfg.steps.reify_
     | _ -> false
@@ -1102,6 +1102,14 @@ let maybe_drop_rc_typ cfg (rc:residual_comp) : residual_comp =
   if cfg.steps.for_extraction
   then {rc with residual_typ = None}
   else rc
+
+let get_extraction_mode env (m:Ident.lident) =
+  let norm_m = Env.norm_eff_name env m in
+  (Env.get_effect_decl env norm_m).extraction_mode
+
+let can_reify_for_extraction env (m:Ident.lident) =
+  (get_extraction_mode env m) = S.Extract_reify
+
 
 (* GM: Please consider this function private outside of this recursive
  * group, and call `normalize` instead. `normalize` will print timing
@@ -1490,7 +1498,7 @@ let rec norm : cfg -> env -> stack -> term -> term =
             begin match stack with
               | Match _ :: _
               | Arg _ :: _
-              | App (_, {n=Tm_constant FC.Const_reify}, _, _) :: _
+              | App (_, {n=Tm_constant (FC.Const_reify _)}, _, _) :: _
               | MemoLazy _ :: _ when cfg.steps.beta ->
                 log cfg  (fun () -> BU.print_string "+++ Dropping ascription \n");
                 norm cfg env stack t1 //ascriptions should not block reduction
@@ -1628,8 +1636,11 @@ let rec norm : cfg -> env -> stack -> term -> term =
                     let rec_env = (None, Clos(env, fix_f_i, memo, true))::rec_env in
                     rec_env, memo::memos, i + 1) (snd lbs) (env, [], 0) in
             let _ = List.map2 (fun lb memo -> memo := Some (rec_env, lb.lbdef)) (snd lbs) memos in //tying the knot
-            let body_env = List.fold_right (fun lb env -> (None, Clos(rec_env, lb.lbdef, BU.mk_ref None, false))::env)
-                               (snd lbs) env in
+            // NB: fold_left, since the binding structure of lbs is that righmost is closer, while in the env leftmost
+            // is closer. In other words, the last element of lbs is index 0 for body, hence needs to be pushed last.
+            let body_env = List.fold_left (fun env lb -> (None, Clos(rec_env, lb.lbdef, BU.mk_ref None, false))::env)
+                               env (snd lbs) in
+            log cfg (fun () -> BU.print1 "reducing with knot %s\n" "");
             norm cfg body_env stack body
 
           | Tm_meta (head, m) ->
@@ -1784,7 +1795,7 @@ and reduce_impure_comp cfg env stack (head : term) // monadic term
 and do_reify_monadic fallback cfg env stack (top : term) (m : monad_name) (t : typ) : term =
     (* Precondition: the stack head is an App (reify, ...) *)
     begin match stack with
-    | App (_, {n=Tm_constant FC.Const_reify}, _, _) :: _ -> ()
+    | App (_, {n=Tm_constant (FC.Const_reify _)}, _, _) :: _ -> ()
     | _ -> failwith (BU.format1 "INTERNAL ERROR: do_reify_monadic: bad stack: %s" (stack_to_string stack))
     end;
     let top0 = top in
@@ -1826,7 +1837,7 @@ and do_reify_monadic fallback cfg env stack (top : term) (m : monad_name) (t : t
           (* which can be optimised to a non-monadic let-binding [let x = e in body] *)
           | Some e ->
             let lb = {lb with lbeff=PC.effect_PURE_lid; lbdef=e} in
-            norm cfg env (List.tl stack) (S.mk (Tm_let((false, [lb]), U.mk_reify body)) top.pos)
+            norm cfg env (List.tl stack) (S.mk (Tm_let((false, [lb]), U.mk_reify body (Some m))) top.pos)
           | None ->
             if (match is_return body with Some ({n=Tm_bvar y}) -> S.bv_eq x y | _ -> false)
             then
@@ -1839,9 +1850,9 @@ and do_reify_monadic fallback cfg env stack (top : term) (m : monad_name) (t : t
               (* since we wouldn't rematch on an already raised exception *)
               let rng = top.pos in
 
-              let head = U.mk_reify <| lb.lbdef in
+              let head = U.mk_reify lb.lbdef (Some m) in
 
-              let body = U.mk_reify <| body in
+              let body = U.mk_reify body (Some m) in
               (* TODO : Check that there is no sensible cflags to pass in the residual_comp *)
               let body_rc = {
                 residual_effect=m;
@@ -1997,7 +2008,7 @@ and do_reify_monadic fallback cfg env stack (top : term) (m : monad_name) (t : t
          * Why is it not calling rebuild? I'm gonna keep it for now. *)
         let fallback1 () =
             log cfg (fun () -> BU.print2 "Reified (2) <%s> to %s\n" (Print.term_to_string top0) "");
-            norm cfg env (List.tl stack) (U.mk_reify top)
+            norm cfg env (List.tl stack) (U.mk_reify top (Some m))
         in
         let fallback2 () =
             log cfg (fun () -> BU.print2 "Reified (3) <%s> to %s\n" (Print.term_to_string top0) "");
@@ -2023,7 +2034,7 @@ and do_reify_monadic fallback cfg env stack (top : term) (m : monad_name) (t : t
             else
 
             (* Turn it info (reify head) args, then do_unfold_fv will kick in on the head *)
-            let t = S.mk_Tm_app (U.mk_reify head) args t.pos in
+            let t = S.mk_Tm_app (U.mk_reify head (Some m)) args t.pos in
             norm cfg env (List.tl stack) t
 
         | _ ->
@@ -2043,7 +2054,7 @@ and do_reify_monadic fallback cfg env stack (top : term) (m : monad_name) (t : t
       (* Commutation of reify with match, note that the scrutinee should never be effectful    *)
       (* (should be checked at typechecking and elaborated with an explicit binding if needed) *)
       (* reify (match e with p -> e') ~> match e with p -> reify e' *)
-      let branches = branches |> List.map (fun (pat, wopt, tm) -> pat, wopt, U.mk_reify tm) in
+      let branches = branches |> List.map (fun (pat, wopt, tm) -> pat, wopt, U.mk_reify tm (Some m)) in
       let tm = mk (Tm_match(e, asc_opt, branches, lopt)) top.pos in
       norm cfg env (List.tl stack) tm
 
@@ -2116,7 +2127,7 @@ and reify_lift cfg e msrc mtgt t : term =
        *)
       let e =
         if Env.is_reifiable_effect env msrc
-        then U.mk_reify e
+        then U.mk_reify e (Some msrc)
         else S.mk
                (Tm_abs ([S.null_binder S.t_unit], e,
                         Some ({ residual_effect = msrc; residual_typ = Some t; residual_flags = [] })))
@@ -2151,11 +2162,14 @@ and norm_comp : cfg -> env -> comp -> comp =
               { mk_GTotal t with pos = comp.pos }
 
             | Comp ct ->
-              //if for extraction then erase effect args to unit
-              //this should later preseve args that must be retained for layered effects
+              //
+              // if cfg.for_extraction and the effect extraction is not by reification,
+              // then drop the effect arguments
+              //
               let effect_args =
                 ct.effect_args |>
-                (if cfg.steps.for_extraction
+                (if cfg.steps.for_extraction &&
+                    not (get_extraction_mode cfg.tcenv ct.effect_name = Extract_reify)
                  then List.map (fun _ -> S.unit_const |> S.as_arg)
                  else List.mapi (fun idx (a, i) -> (norm cfg env [] a, i))) in
               let flags = ct.flags |> List.map (function
@@ -2664,16 +2678,53 @@ and rebuild (cfg:cfg) (env:env) (stack:stack) (t:term) : term =
 
         begin match (SS.compress t).n with
         | Tm_meta (_, Meta_monadic (m, _))
-          when m |> is_non_tac_layered_effect && not cfg.steps.for_extraction ->
+          when is_non_tac_layered_effect m &&
+               not cfg.steps.for_extraction ->
           fallback (BU.format1
                       "Meta_monadic for a non-TAC layered effect %s in non-extraction mode"
                       (Ident.string_of_lid m)) ()
+
+        | Tm_meta (_, Meta_monadic (m, _))
+          when is_non_tac_layered_effect m &&
+               cfg.steps.for_extraction    &&
+               S.Extract_none? (get_extraction_mode cfg.tcenv m) ->
+          //
+          // If the effect is an indexed effect, that is non-extractable
+          //
+          let S.Extract_none msg = get_extraction_mode cfg.tcenv m in
+          raise_error (Errors.Fatal_UnexpectedEffect,
+                       BU.format2 "Normalizer cannot reify effect %s for extraction since %s"
+                          (Ident.string_of_lid m) msg) t.pos
+
+        | Tm_meta (_, Meta_monadic (m, _))
+          when is_non_tac_layered_effect m &&
+               cfg.steps.for_extraction    &&
+               get_extraction_mode cfg.tcenv m = S.Extract_primitive ->
+
+          // If primitive extraction, don't reify
+          fallback (BU.format1
+                      "Meta_monadic for a non-TAC layered effect %s which is Extract_primtiive"
+                      (Ident.string_of_lid m)) ()
+
         | Tm_meta (_, Meta_monadic_lift (msrc, mtgt, _))
-          when (is_non_tac_layered_effect msrc || is_non_tac_layered_effect mtgt) &&
+          when (is_non_tac_layered_effect msrc ||
+                is_non_tac_layered_effect mtgt) &&
                not cfg.steps.for_extraction ->
           fallback (BU.format2
                     "Meta_monadic_lift for a non-TAC layered effect %s ~> %s in non extraction mode"
                     (Ident.string_of_lid msrc) (Ident.string_of_lid mtgt)) ()
+
+        | Tm_meta (_, Meta_monadic_lift (msrc, mtgt, _))
+          when cfg.steps.for_extraction &&
+               ((is_non_tac_layered_effect msrc &&
+                 S.Extract_none? (get_extraction_mode cfg.tcenv msrc)) ||
+                (is_non_tac_layered_effect mtgt &&
+                 S.Extract_none? (get_extraction_mode cfg.tcenv mtgt))) ->
+
+          raise_error (Errors.Fatal_UnexpectedEffect,
+                       BU.format2 "Normalizer cannot reify %s ~> %s for extraction"
+                          (Ident.string_of_lid msrc)
+                          (Ident.string_of_lid mtgt)) t.pos
 
         | Tm_meta (t, Meta_monadic (m, ty)) ->
            do_reify_monadic (fallback " (1)") cfg env stack t m ty

@@ -424,7 +424,7 @@ let (repl_state_to_string : repl_state -> Prims.string) =
         uu___3 :: uu___4 in
       uu___1 :: uu___2 in
     FStar_Compiler_Util.format
-      "{\n\trepl_line=%s;\n\trepl_column=%s;\n\trepl_fname=%s;\n\trepl_cur_mod=%s;\n\t\\      \r\n      repl_deps_stack={%s}\n}"
+      "{\n\trepl_line=%s;\n\trepl_column=%s;\n\trepl_fname=%s;\n\trepl_cur_mod=%s;\n\t\\      \n      repl_deps_stack={%s}\n}"
       uu___
 let (push_query_to_string : push_query -> Prims.string) =
   fun pq ->
