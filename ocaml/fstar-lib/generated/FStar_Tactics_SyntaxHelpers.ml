@@ -123,11 +123,7 @@ let (collect_abs :
               match uu___ with
               | (bs, t') -> ((FStar_List_Tot_Base.rev bs), t')))
 let fail : 'a . Prims.string -> ('a, unit) FStar_Tactics_Effect.tac_repr =
-  fun uu___ ->
-    (fun m ->
-       Obj.magic
-         (FStar_Tactics_Effect.raise (FStar_Tactics_Common.TacticFailure m)))
-      uu___
+  fun m -> FStar_Tactics_Effect.raise (FStar_Tactics_Common.TacticFailure m)
 let rec (mk_arr :
   FStar_Reflection_Types.binder Prims.list ->
     FStar_Reflection_Types.comp ->
