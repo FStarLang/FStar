@@ -892,9 +892,11 @@ let (arith_to_bv_tac : unit -> (unit, unit) FStar_Tactics_Effect.tac_repr) =
                                                                 "arith_to_bv_tac: unexpected: "
                                                                 uu___4))))
                                                 (fun uu___4 ->
-                                                   FStar_Tactics_Derived.fail
-                                                     uu___4))) uu___3)))
-                           uu___3))) uu___2))
+                                                   (fun uu___4 ->
+                                                      Obj.magic
+                                                        (FStar_Tactics_Derived.fail
+                                                           uu___4)) uu___4)))
+                                      uu___3))) uu___3))) uu___2))
 let (bv_tac : unit -> (unit, unit) FStar_Tactics_Effect.tac_repr) =
   fun uu___ ->
     FStar_Tactics_Derived.focus

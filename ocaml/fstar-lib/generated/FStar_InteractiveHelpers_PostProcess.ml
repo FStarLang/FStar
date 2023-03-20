@@ -2146,29 +2146,22 @@ let (pp_analyze_effectful_term :
                                    (fun uu___2 -> Obj.magic (end_proof ()))
                                      uu___2))) uu___2))
             (fun uu___1 ->
-               (fun uu___1 ->
-                  match uu___1 with
-                  | FStar_InteractiveHelpers_Base.MetaAnalysis msg ->
-                      Obj.magic
-                        (Obj.repr
-                           (FStar_Tactics_Effect.tac_bind
-                              (Prims.mk_range
-                                 "FStar.InteractiveHelpers.PostProcess.fst"
-                                 (Prims.of_int (256)) (Prims.of_int (29))
-                                 (Prims.of_int (256)) (Prims.of_int (49)))
-                              (Prims.mk_range
-                                 "FStar.InteractiveHelpers.PostProcess.fst"
-                                 (Prims.of_int (256)) (Prims.of_int (51))
-                                 (Prims.of_int (256)) (Prims.of_int (63)))
-                              (Obj.magic
-                                 (FStar_InteractiveHelpers_Output.printout_failure
-                                    msg))
-                              (fun uu___2 ->
-                                 (fun uu___2 -> Obj.magic (end_proof ()))
-                                   uu___2)))
-                  | err ->
-                      Obj.magic (Obj.repr (FStar_Tactics_Effect.raise err)))
-                 uu___1)
+               match uu___1 with
+               | FStar_InteractiveHelpers_Base.MetaAnalysis msg ->
+                   FStar_Tactics_Effect.tac_bind
+                     (Prims.mk_range
+                        "FStar.InteractiveHelpers.PostProcess.fst"
+                        (Prims.of_int (256)) (Prims.of_int (29))
+                        (Prims.of_int (256)) (Prims.of_int (49)))
+                     (Prims.mk_range
+                        "FStar.InteractiveHelpers.PostProcess.fst"
+                        (Prims.of_int (256)) (Prims.of_int (51))
+                        (Prims.of_int (256)) (Prims.of_int (63)))
+                     (Obj.magic
+                        (FStar_InteractiveHelpers_Output.printout_failure msg))
+                     (fun uu___2 ->
+                        (fun uu___2 -> Obj.magic (end_proof ())) uu___2)
+               | err -> FStar_Tactics_Effect.raise err)
 let _ =
   FStar_Tactics_Native.register_tactic
     "FStar.InteractiveHelpers.PostProcess.pp_analyze_effectful_term"
@@ -2612,27 +2605,20 @@ let (pp_split_assert_conjs :
                                (fun uu___2 -> Obj.magic (end_proof ()))
                                  uu___2))) uu___2))
         (fun uu___1 ->
-           (fun uu___1 ->
-              match uu___1 with
-              | FStar_InteractiveHelpers_Base.MetaAnalysis msg ->
-                  Obj.magic
-                    (Obj.repr
-                       (FStar_Tactics_Effect.tac_bind
-                          (Prims.mk_range
-                             "FStar.InteractiveHelpers.PostProcess.fst"
-                             (Prims.of_int (356)) (Prims.of_int (29))
-                             (Prims.of_int (356)) (Prims.of_int (49)))
-                          (Prims.mk_range
-                             "FStar.InteractiveHelpers.PostProcess.fst"
-                             (Prims.of_int (356)) (Prims.of_int (51))
-                             (Prims.of_int (356)) (Prims.of_int (63)))
-                          (Obj.magic
-                             (FStar_InteractiveHelpers_Output.printout_failure
-                                msg))
-                          (fun uu___2 ->
-                             (fun uu___2 -> Obj.magic (end_proof ())) uu___2)))
-              | err -> Obj.magic (Obj.repr (FStar_Tactics_Effect.raise err)))
-             uu___1)
+           match uu___1 with
+           | FStar_InteractiveHelpers_Base.MetaAnalysis msg ->
+               FStar_Tactics_Effect.tac_bind
+                 (Prims.mk_range "FStar.InteractiveHelpers.PostProcess.fst"
+                    (Prims.of_int (356)) (Prims.of_int (29))
+                    (Prims.of_int (356)) (Prims.of_int (49)))
+                 (Prims.mk_range "FStar.InteractiveHelpers.PostProcess.fst"
+                    (Prims.of_int (356)) (Prims.of_int (51))
+                    (Prims.of_int (356)) (Prims.of_int (63)))
+                 (Obj.magic
+                    (FStar_InteractiveHelpers_Output.printout_failure msg))
+                 (fun uu___2 ->
+                    (fun uu___2 -> Obj.magic (end_proof ())) uu___2)
+           | err -> FStar_Tactics_Effect.raise err)
 let _ =
   FStar_Tactics_Native.register_tactic
     "FStar.InteractiveHelpers.PostProcess.pp_split_assert_conjs"
@@ -6927,27 +6913,20 @@ let (pp_unfold_in_assert_or_assume :
                                (fun uu___2 -> Obj.magic (end_proof ()))
                                  uu___2))) uu___2))
         (fun uu___1 ->
-           (fun uu___1 ->
-              match uu___1 with
-              | FStar_InteractiveHelpers_Base.MetaAnalysis msg ->
-                  Obj.magic
-                    (Obj.repr
-                       (FStar_Tactics_Effect.tac_bind
-                          (Prims.mk_range
-                             "FStar.InteractiveHelpers.PostProcess.fst"
-                             (Prims.of_int (748)) (Prims.of_int (29))
-                             (Prims.of_int (748)) (Prims.of_int (49)))
-                          (Prims.mk_range
-                             "FStar.InteractiveHelpers.PostProcess.fst"
-                             (Prims.of_int (748)) (Prims.of_int (51))
-                             (Prims.of_int (748)) (Prims.of_int (63)))
-                          (Obj.magic
-                             (FStar_InteractiveHelpers_Output.printout_failure
-                                msg))
-                          (fun uu___2 ->
-                             (fun uu___2 -> Obj.magic (end_proof ())) uu___2)))
-              | err -> Obj.magic (Obj.repr (FStar_Tactics_Effect.raise err)))
-             uu___1)
+           match uu___1 with
+           | FStar_InteractiveHelpers_Base.MetaAnalysis msg ->
+               FStar_Tactics_Effect.tac_bind
+                 (Prims.mk_range "FStar.InteractiveHelpers.PostProcess.fst"
+                    (Prims.of_int (748)) (Prims.of_int (29))
+                    (Prims.of_int (748)) (Prims.of_int (49)))
+                 (Prims.mk_range "FStar.InteractiveHelpers.PostProcess.fst"
+                    (Prims.of_int (748)) (Prims.of_int (51))
+                    (Prims.of_int (748)) (Prims.of_int (63)))
+                 (Obj.magic
+                    (FStar_InteractiveHelpers_Output.printout_failure msg))
+                 (fun uu___2 ->
+                    (fun uu___2 -> Obj.magic (end_proof ())) uu___2)
+           | err -> FStar_Tactics_Effect.raise err)
 let _ =
   FStar_Tactics_Native.register_tactic
     "FStar.InteractiveHelpers.PostProcess.pp_unfold_in_assert_or_assume"

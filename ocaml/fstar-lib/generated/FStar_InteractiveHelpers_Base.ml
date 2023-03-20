@@ -946,9 +946,7 @@ let (__proj__MetaAnalysis__item__uu___ : Prims.exn -> Prims.string) =
   fun projectee -> match projectee with | MetaAnalysis uu___ -> uu___
 let mfail :
   'uuuuu . Prims.string -> ('uuuuu, unit) FStar_Tactics_Effect.tac_repr =
-  fun uu___ ->
-    (fun str -> Obj.magic (FStar_Tactics_Effect.raise (MetaAnalysis str)))
-      uu___
+  fun str -> FStar_Tactics_Effect.raise (MetaAnalysis str)
 let (print_dbg :
   Prims.bool -> Prims.string -> (unit, unit) FStar_Tactics_Effect.tac_repr) =
   fun uu___1 ->
