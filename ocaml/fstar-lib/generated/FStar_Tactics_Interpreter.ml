@@ -208,7 +208,10 @@ let unembed_tactic_0 :
         FStar_Tactics_Monad.bind FStar_Tactics_Monad.get
           (fun proof_state ->
              let rng = embedded_tac_b.FStar_Syntax_Syntax.pos in
-             let embedded_tac_b1 = FStar_Syntax_Util.mk_reify embedded_tac_b in
+             let embedded_tac_b1 =
+               FStar_Syntax_Util.mk_reify embedded_tac_b
+                 (FStar_Pervasives_Native.Some
+                    FStar_Parser_Const.effect_TAC_lid) in
              let tm =
                let uu___ =
                  let uu___1 =

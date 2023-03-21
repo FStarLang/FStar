@@ -1422,6 +1422,21 @@ let (uu___is_WP_eff_sig : effect_signature -> Prims.bool) =
     match projectee with | WP_eff_sig _0 -> true | uu___ -> false
 let (__proj__WP_eff_sig__item___0 : effect_signature -> tscheme) =
   fun projectee -> match projectee with | WP_eff_sig _0 -> _0
+type eff_extraction_mode =
+  | Extract_none of Prims.string 
+  | Extract_reify 
+  | Extract_primitive 
+let (uu___is_Extract_none : eff_extraction_mode -> Prims.bool) =
+  fun projectee ->
+    match projectee with | Extract_none _0 -> true | uu___ -> false
+let (__proj__Extract_none__item___0 : eff_extraction_mode -> Prims.string) =
+  fun projectee -> match projectee with | Extract_none _0 -> _0
+let (uu___is_Extract_reify : eff_extraction_mode -> Prims.bool) =
+  fun projectee ->
+    match projectee with | Extract_reify -> true | uu___ -> false
+let (uu___is_Extract_primitive : eff_extraction_mode -> Prims.bool) =
+  fun projectee ->
+    match projectee with | Extract_primitive -> true | uu___ -> false
 type eff_decl =
   {
   mname: FStar_Ident.lident ;
@@ -1431,48 +1446,56 @@ type eff_decl =
   signature: effect_signature ;
   combinators: eff_combinators ;
   actions: action Prims.list ;
-  eff_attrs: attribute Prims.list }
+  eff_attrs: attribute Prims.list ;
+  extraction_mode: eff_extraction_mode }
 let (__proj__Mkeff_decl__item__mname : eff_decl -> FStar_Ident.lident) =
   fun projectee ->
     match projectee with
     | { mname; cattributes; univs; binders = binders1; signature;
-        combinators; actions; eff_attrs;_} -> mname
+        combinators; actions; eff_attrs; extraction_mode;_} -> mname
 let (__proj__Mkeff_decl__item__cattributes : eff_decl -> cflag Prims.list) =
   fun projectee ->
     match projectee with
     | { mname; cattributes; univs; binders = binders1; signature;
-        combinators; actions; eff_attrs;_} -> cattributes
+        combinators; actions; eff_attrs; extraction_mode;_} -> cattributes
 let (__proj__Mkeff_decl__item__univs : eff_decl -> univ_names) =
   fun projectee ->
     match projectee with
     | { mname; cattributes; univs; binders = binders1; signature;
-        combinators; actions; eff_attrs;_} -> univs
+        combinators; actions; eff_attrs; extraction_mode;_} -> univs
 let (__proj__Mkeff_decl__item__binders : eff_decl -> binders) =
   fun projectee ->
     match projectee with
     | { mname; cattributes; univs; binders = binders1; signature;
-        combinators; actions; eff_attrs;_} -> binders1
+        combinators; actions; eff_attrs; extraction_mode;_} -> binders1
 let (__proj__Mkeff_decl__item__signature : eff_decl -> effect_signature) =
   fun projectee ->
     match projectee with
     | { mname; cattributes; univs; binders = binders1; signature;
-        combinators; actions; eff_attrs;_} -> signature
+        combinators; actions; eff_attrs; extraction_mode;_} -> signature
 let (__proj__Mkeff_decl__item__combinators : eff_decl -> eff_combinators) =
   fun projectee ->
     match projectee with
     | { mname; cattributes; univs; binders = binders1; signature;
-        combinators; actions; eff_attrs;_} -> combinators
+        combinators; actions; eff_attrs; extraction_mode;_} -> combinators
 let (__proj__Mkeff_decl__item__actions : eff_decl -> action Prims.list) =
   fun projectee ->
     match projectee with
     | { mname; cattributes; univs; binders = binders1; signature;
-        combinators; actions; eff_attrs;_} -> actions
+        combinators; actions; eff_attrs; extraction_mode;_} -> actions
 let (__proj__Mkeff_decl__item__eff_attrs : eff_decl -> attribute Prims.list)
   =
   fun projectee ->
     match projectee with
     | { mname; cattributes; univs; binders = binders1; signature;
-        combinators; actions; eff_attrs;_} -> eff_attrs
+        combinators; actions; eff_attrs; extraction_mode;_} -> eff_attrs
+let (__proj__Mkeff_decl__item__extraction_mode :
+  eff_decl -> eff_extraction_mode) =
+  fun projectee ->
+    match projectee with
+    | { mname; cattributes; univs; binders = binders1; signature;
+        combinators; actions; eff_attrs; extraction_mode;_} ->
+        extraction_mode
 type sig_metadata =
   {
   sigmeta_active: Prims.bool ;
@@ -1886,6 +1909,15 @@ let (range_of_ropt :
     match uu___ with
     | FStar_Pervasives_Native.None -> FStar_Compiler_Range.dummyRange
     | FStar_Pervasives_Native.Some r -> r
+let (gen_bv' :
+  FStar_Ident.ident ->
+    FStar_Compiler_Range.range FStar_Pervasives_Native.option -> typ -> bv)
+  =
+  fun id ->
+    fun r ->
+      fun t ->
+        let uu___ = FStar_Ident.next_id () in
+        { ppname = id; index = uu___; sort = t }
 let (gen_bv :
   Prims.string ->
     FStar_Compiler_Range.range FStar_Pervasives_Native.option -> typ -> bv)
@@ -1894,8 +1926,7 @@ let (gen_bv :
     fun r ->
       fun t ->
         let id = FStar_Ident.mk_ident (s, (range_of_ropt r)) in
-        let uu___ = FStar_Ident.next_id () in
-        { ppname = id; index = uu___; sort = t }
+        gen_bv' id r t
 let (new_bv :
   FStar_Compiler_Range.range FStar_Pervasives_Native.option -> typ -> bv) =
   fun ropt -> fun t -> gen_bv FStar_Ident.reserved_prefix ropt t

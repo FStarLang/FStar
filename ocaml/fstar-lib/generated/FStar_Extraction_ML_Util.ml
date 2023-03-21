@@ -43,7 +43,7 @@ let (mlconst_of_const' :
         failwith "Unhandled constant: range_of/set_range_of"
     | FStar_Const.Const_real uu___ ->
         failwith "Unhandled constant: real/reify/reflect"
-    | FStar_Const.Const_reify ->
+    | FStar_Const.Const_reify uu___ ->
         failwith "Unhandled constant: real/reify/reflect"
     | FStar_Const.Const_reflect uu___ ->
         failwith "Unhandled constant: real/reify/reflect"

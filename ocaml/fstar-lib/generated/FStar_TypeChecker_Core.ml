@@ -2485,7 +2485,7 @@ and (check' :
           (match c with
            | FStar_Const.Const_range_of -> fail "Unhandled constant"
            | FStar_Const.Const_set_range_of -> fail "Unhandled constant"
-           | FStar_Const.Const_reify -> fail "Unhandled constant"
+           | FStar_Const.Const_reify uu___ -> fail "Unhandled constant"
            | FStar_Const.Const_reflect uu___ -> fail "Unhandled constant"
            | uu___ ->
                let t =

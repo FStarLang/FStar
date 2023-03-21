@@ -139,8 +139,7 @@ val short_circuit_head: term -> bool
 val maybe_add_implicit_binders: env -> binders -> binders
 val fvar_const: env -> lident -> term
 val mk_toplevel_definition: env -> lident -> term -> sigelt * term
-val reify_body: env -> steps -> term -> term
-val reify_body_with_arg: env -> steps -> term -> arg -> term
+val norm_reify: env -> steps -> term -> term
 val remove_reify: term -> term
 
 //decorating terms with monadic operators
@@ -153,6 +152,8 @@ val check_sigelt_quals: env -> sigelt -> unit
 val must_erase_for_extraction: env -> term -> bool
 
 //layered effect utilities
+
+val effect_extraction_mode : env -> lident -> eff_extraction_mode
 
 (*
  * This function returns ed.repr<u> a ?u1 ... ?un (note that u must be the universe of a)
@@ -192,4 +193,3 @@ val make_record_fields_in_order : env -> unresolved_constructor -> option (eithe
                                 not_found:(ident -> option 'a) ->
                                 Range.range ->
                                 list 'a
-

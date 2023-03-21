@@ -1649,10 +1649,11 @@ let rec (extract_sigelt_iface :
              failwith "impossible: trying to extract Sig_fail"
          | FStar_Syntax_Syntax.Sig_new_effect ed ->
              let uu___2 =
-               (let uu___3 = FStar_Extraction_ML_UEnv.tcenv_of_uenv g in
-                FStar_TypeChecker_Env.is_reifiable_effect uu___3
-                  ed.FStar_Syntax_Syntax.mname)
-                 &&
+               (let uu___3 =
+                  let uu___4 = FStar_Extraction_ML_UEnv.tcenv_of_uenv g in
+                  FStar_TypeChecker_Util.effect_extraction_mode uu___4
+                    ed.FStar_Syntax_Syntax.mname in
+                uu___3 = FStar_Syntax_Syntax.Extract_reify) &&
                  (FStar_Compiler_List.isEmpty ed.FStar_Syntax_Syntax.binders) in
              if uu___2
              then
