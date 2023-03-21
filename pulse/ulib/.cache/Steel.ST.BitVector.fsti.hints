@@ -1,42 +1,17 @@
 [
-  "^\rë†<yñQ6©“Q)Q\u0013M",
+  "2ËRWVÅÎºóÔa½`|,j",
   [
-    [
-      "Steel.ST.BitVector.pts_to_length",
-      1,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "c2646fb16c1fdaa239acf09ba6b1946f"
-    ],
-    [
-      "Steel.ST.BitVector.alloc",
-      1,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query",
-        "refinement_interpretation_Tm_refine_9e7f68c38e43484e77069094f4fd88d3"
-      ],
-      0,
-      "a5640207732e68857cb95babc719a8c7"
-    ],
     [
       "Steel.ST.BitVector.bv_is_set",
       1,
       2,
       1,
       [
-        "@MaxIFuel_assumption", "@query", "b2t_def",
-        "equation_FStar.UInt.fits", "equation_FStar.UInt.min_int",
-        "equation_FStar.UInt.size", "primitive_Prims.op_AmpAmp",
-        "primitive_Prims.op_LessThanOrEqual",
-        "projection_inverse_BoxBool_proj_0",
-        "refinement_interpretation_Tm_refine_2ce108babc6ed3819eacd1b797e2708c"
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_e6db31ac56ddf9a30d2e6d65c32872a6"
       ],
       0,
-      "6f5319bbe3ec6bc5012193816bb7a46c"
+      "5830b7a8a78042b605848bf2fe170db9"
     ],
     [
       "Steel.ST.BitVector.bv_set",
@@ -44,15 +19,11 @@
       2,
       1,
       [
-        "@MaxIFuel_assumption", "@query", "b2t_def",
-        "equation_FStar.UInt.fits", "equation_FStar.UInt.min_int",
-        "equation_FStar.UInt.size", "primitive_Prims.op_AmpAmp",
-        "primitive_Prims.op_LessThanOrEqual",
-        "projection_inverse_BoxBool_proj_0",
-        "refinement_interpretation_Tm_refine_2ce108babc6ed3819eacd1b797e2708c"
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_e6db31ac56ddf9a30d2e6d65c32872a6"
       ],
       0,
-      "e07df89cd5c8b0a188193cfa8c1f0d93"
+      "e39a34d8ca2d1165d51275805f647b22"
     ],
     [
       "Steel.ST.BitVector.bv_unset",
@@ -60,15 +31,11 @@
       2,
       1,
       [
-        "@MaxIFuel_assumption", "@query", "b2t_def",
-        "equation_FStar.UInt.fits", "equation_FStar.UInt.min_int",
-        "equation_FStar.UInt.size", "primitive_Prims.op_AmpAmp",
-        "primitive_Prims.op_LessThanOrEqual",
-        "projection_inverse_BoxBool_proj_0",
-        "refinement_interpretation_Tm_refine_2ce108babc6ed3819eacd1b797e2708c"
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_e6db31ac56ddf9a30d2e6d65c32872a6"
       ],
       0,
-      "7bec4b50e53b4384c3a1529e299dfff4"
+      "99c7340c96a6e11a6e262603db62ef23"
     ]
   ]
 ]
