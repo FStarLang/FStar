@@ -1,0 +1,354 @@
+[
+  "Š\u0012ðÛ:\u00123%[\u0010¢‘\u0005\u0002÷5",
+  [
+    [
+      "Divergence.collatz",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "Prims_pretyping_ae567c2fb75be05905677af440075565",
+        "equation_Prims.pos",
+        "function_token_typing_Prims.__cache_version_number__",
+        "int_inversion", "primitive_Prims.op_Addition",
+        "primitive_Prims.op_Division", "primitive_Prims.op_Equality",
+        "primitive_Prims.op_Modulus", "primitive_Prims.op_Multiply",
+        "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_Tm_refine_774ba3f728d91ead8ef40be66c9802e5"
+      ],
+      0,
+      "e08c7d27ef7a884e32558bc43c8567d9"
+    ],
+    [
+      "Divergence.last",
+      1,
+      2,
+      1,
+      [
+        "@MaxFuel_assumption", "@MaxIFuel_assumption",
+        "@fuel_correspondence_FStar.List.Tot.Base.length.fuel_instrumented",
+        "@query", "Prims_pretyping_3862c4e8ff39bfc3871b6a47e7ff5b2e",
+        "data_elim_Prims.Cons", "disc_equation_Prims.Cons",
+        "equation_Prims.nat",
+        "equation_with_fuel_FStar.List.Tot.Base.length.fuel_instrumented",
+        "fuel_guarded_inversion_Prims.list", "primitive_Prims.op_Addition",
+        "primitive_Prims.op_Subtraction",
+        "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "refinement_interpretation_Tm_refine_7aac12c24449a22c34d98a0ea8ed4a32",
+        "token_correspondence_FStar.List.Tot.Base.length.fuel_instrumented"
+      ],
+      0,
+      "ff498457ad99867f42826240121ebbf0"
+    ],
+    [
+      "Divergence.collatz_ends_in_one",
+      1,
+      2,
+      1,
+      [
+        "@MaxFuel_assumption", "@MaxIFuel_assumption",
+        "@fuel_correspondence_FStar.List.Tot.Base.index.fuel_instrumented",
+        "@fuel_correspondence_FStar.List.Tot.Base.length.fuel_instrumented",
+        "@fuel_irrelevance_FStar.List.Tot.Base.index.fuel_instrumented",
+        "@fuel_irrelevance_FStar.List.Tot.Base.length.fuel_instrumented",
+        "@query", "Prims_pretyping_ae567c2fb75be05905677af440075565",
+        "constructor_distinct_Prims.Cons", "constructor_distinct_Prims.Nil",
+        "data_elim_Prims.Cons", "data_typing_intro_Prims.Cons@tok",
+        "data_typing_intro_Prims.Nil@tok", "disc_equation_Prims.Cons",
+        "equation_Divergence.last", "equation_FStar.List.Tot.Base.hd",
+        "equation_FStar.List.Tot.Base.tail",
+        "equation_FStar.List.Tot.Base.tl", "equation_Prims.nat",
+        "equation_Prims.pos",
+        "equation_with_fuel_FStar.List.Tot.Base.index.fuel_instrumented",
+        "equation_with_fuel_FStar.List.Tot.Base.length.fuel_instrumented",
+        "function_token_typing_Prims.__cache_version_number__",
+        "int_inversion", "int_typing", "primitive_Prims.op_Addition",
+        "primitive_Prims.op_Division", "primitive_Prims.op_Equality",
+        "primitive_Prims.op_Modulus", "primitive_Prims.op_Multiply",
+        "primitive_Prims.op_Subtraction",
+        "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_BoxInt_proj_0",
+        "projection_inverse_Prims.Cons_a",
+        "projection_inverse_Prims.Cons_hd",
+        "projection_inverse_Prims.Cons_tl", "projection_inverse_Prims.Nil_a",
+        "refinement_interpretation_Tm_refine_50732f790886afa96724b7eed66700ce",
+        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "refinement_interpretation_Tm_refine_774ba3f728d91ead8ef40be66c9802e5",
+        "refinement_interpretation_Tm_refine_7aac12c24449a22c34d98a0ea8ed4a32",
+        "refinement_interpretation_Tm_refine_c86aba5c6243e6b7f9a4b0ad41b4e9a0",
+        "refinement_kinding_Tm_refine_774ba3f728d91ead8ef40be66c9802e5",
+        "token_correspondence_FStar.List.Tot.Base.length.fuel_instrumented",
+        "typing_FStar.List.Tot.Base.length"
+      ],
+      0,
+      "b6676df70dad9727b2ecb99dcdea6f5e"
+    ],
+    [
+      "Divergence.collatz_spec",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "Prims_pretyping_ae567c2fb75be05905677af440075565",
+        "assumption_Prims.list__uu___haseq",
+        "binder_x_70c70f423c5da3add6b3671d32bcbfad_1",
+        "binder_x_f26957a7e62b271a8736230b1e9c83c1_0",
+        "disc_equation_Prims.Cons", "disc_equation_Prims.Nil",
+        "equation_Prims.eqtype", "equation_Prims.pos",
+        "fuel_guarded_inversion_Prims.list",
+        "function_token_typing_Prims.__cache_version_number__",
+        "function_token_typing_Prims.int",
+        "haseqTm_refine_774ba3f728d91ead8ef40be66c9802e5", "int_inversion",
+        "primitive_Prims.op_Addition", "primitive_Prims.op_Division",
+        "primitive_Prims.op_Equality", "primitive_Prims.op_Modulus",
+        "primitive_Prims.op_Multiply", "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
+        "refinement_interpretation_Tm_refine_774ba3f728d91ead8ef40be66c9802e5",
+        "refinement_kinding_Tm_refine_774ba3f728d91ead8ef40be66c9802e5",
+        "subterm_ordering_Prims.Cons"
+      ],
+      0,
+      "19d8eab012114d84457c5d64d1dfbb9a"
+    ],
+    [
+      "Divergence.collatz'",
+      1,
+      2,
+      1,
+      [
+        "@MaxFuel_assumption", "@MaxIFuel_assumption",
+        "@fuel_correspondence_Divergence.collatz_spec.fuel_instrumented",
+        "@fuel_irrelevance_Divergence.collatz_spec.fuel_instrumented",
+        "@query", "Prims_pretyping_3862c4e8ff39bfc3871b6a47e7ff5b2e",
+        "Prims_pretyping_ae567c2fb75be05905677af440075565", "bool_inversion",
+        "constructor_distinct_Prims.Cons", "constructor_distinct_Prims.Nil",
+        "data_typing_intro_Prims.Cons@tok",
+        "data_typing_intro_Prims.Nil@tok", "equation_Prims.pos",
+        "equation_with_fuel_Divergence.collatz_spec.fuel_instrumented",
+        "function_token_typing_Prims.__cache_version_number__",
+        "int_inversion", "primitive_Prims.op_Addition",
+        "primitive_Prims.op_AmpAmp", "primitive_Prims.op_Division",
+        "primitive_Prims.op_Equality", "primitive_Prims.op_Modulus",
+        "primitive_Prims.op_Multiply", "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_BoxInt_proj_0",
+        "projection_inverse_Prims.Cons_a",
+        "projection_inverse_Prims.Cons_hd",
+        "projection_inverse_Prims.Cons_tl",
+        "refinement_interpretation_Tm_refine_774ba3f728d91ead8ef40be66c9802e5",
+        "refinement_interpretation_Tm_refine_9b2a281f8fed74e32d77e052a3c7c218",
+        "refinement_interpretation_Tm_refine_c75e231937ae07b5f75917ca4d6f1c9d",
+        "refinement_kinding_Tm_refine_774ba3f728d91ead8ef40be66c9802e5",
+        "typing_Divergence.collatz_spec"
+      ],
+      0,
+      "7684607f34142e2d2af3120ff15e77df"
+    ],
+    [
+      "Divergence.term",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Divergence.var",
+        "equation_Prims.eqtype", "equation_Prims.nat",
+        "function_token_typing_Prims.int",
+        "haseqTm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
+      ],
+      0,
+      "d87d8ecd602b64590d1e88b46f16d52c"
+    ],
+    [
+      "Divergence.__proj__Var__item___0",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_cdd50521e9c03cc2d185a28f1ee1af46"
+      ],
+      0,
+      "1d1759b3782175aab98612be5be3f23c"
+    ],
+    [
+      "Divergence.__proj__Int__item___0",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_412b22bcd22c0ff134f850a6e38558cd"
+      ],
+      0,
+      "46f186d8eafca0087c14dc4a458d9e5e"
+    ],
+    [
+      "Divergence.__proj__Lam__item___0",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_111879f7c1a479de6f84866f8b3a1ca1"
+      ],
+      0,
+      "a7db6be6395ede45fec8b4b05a6ef2d6"
+    ],
+    [
+      "Divergence.__proj__App__item___0",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_f01e7d484d7a97acf2fd967415f36ddb"
+      ],
+      0,
+      "34271e23fc85d041b198ca4eea6f19a9"
+    ],
+    [
+      "Divergence.__proj__App__item___1",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_f01e7d484d7a97acf2fd967415f36ddb"
+      ],
+      0,
+      "d01e3e1b60f4672f0b747fb6e1b12fbc"
+    ],
+    [
+      "Divergence.subst",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "Divergence_pretyping_2466c66f231b9f78ed0fd59decc90f33",
+        "binder_x_2466c66f231b9f78ed0fd59decc90f33_1",
+        "binder_x_2466c66f231b9f78ed0fd59decc90f33_2",
+        "binder_x_9092d3017d56c8b246cd36719f3e8791_0",
+        "disc_equation_Divergence.App", "disc_equation_Divergence.Int",
+        "disc_equation_Divergence.Lam", "disc_equation_Divergence.Var",
+        "equation_Divergence.var", "equation_Prims.eqtype",
+        "equation_Prims.nat", "fuel_guarded_inversion_Divergence.term",
+        "function_token_typing_Prims.int",
+        "haseqTm_refine_542f9d4f129664613f2483a6c88bc7c2", "int_inversion",
+        "primitive_Prims.op_Addition", "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
+        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "subterm_ordering_Divergence.App", "subterm_ordering_Divergence.Lam"
+      ],
+      0,
+      "790a09065120d0e02409f573ecbef2eb"
+    ],
+    [
+      "Divergence.interpret",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_Divergence.App",
+        "disc_equation_Divergence.Int", "disc_equation_Divergence.Lam",
+        "disc_equation_Divergence.Var",
+        "fuel_guarded_inversion_Divergence.term",
+        "projection_inverse_BoxBool_proj_0"
+      ],
+      0,
+      "53f2f906b338c5724250da6649ef899e"
+    ],
+    [
+      "Divergence.__proj__DErr__item___0",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_ad29e06a7f7d5073ace7a1c2a3ec13f8"
+      ],
+      0,
+      "98e24baf0c6e8daa69df8ae673902854"
+    ],
+    [
+      "Divergence.__proj__DInt__item___0",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_4d4850cc1f5cf9c0b93b593ebbdcbfb5"
+      ],
+      0,
+      "6fb4dbd7832147ed5f2beadbeb322c4c"
+    ],
+    [
+      "Divergence.__proj__DFun__item___0",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_0d7b78c2bec10e6dab76d83ddf094d02"
+      ],
+      0,
+      "5aa9033134b0a37def9681cb4275630f"
+    ],
+    [
+      "Divergence.shift",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.nat",
+        "int_inversion", "primitive_Prims.op_Equality",
+        "primitive_Prims.op_Subtraction", "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2"
+      ],
+      0,
+      "6bf767d1e662af02cc00495b7946eccc"
+    ],
+    [
+      "Divergence.denote",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_Divergence.App",
+        "disc_equation_Divergence.DErr", "disc_equation_Divergence.DFun",
+        "disc_equation_Divergence.DInt", "disc_equation_Divergence.Int",
+        "disc_equation_Divergence.Lam", "disc_equation_Divergence.Var",
+        "fuel_guarded_inversion_Divergence.dyn",
+        "fuel_guarded_inversion_Divergence.term",
+        "projection_inverse_BoxBool_proj_0"
+      ],
+      0,
+      "27a8ecd03d3bf24e5b0ab66235104294"
+    ],
+    [
+      "Divergence.div",
+      1,
+      2,
+      1,
+      [ "@query", "primitive_Prims.op_Equality" ],
+      0,
+      "4016070b2e3876354195b976b17f417f"
+    ],
+    [
+      "Divergence.mod",
+      1,
+      2,
+      1,
+      [ "@query", "primitive_Prims.op_Equality" ],
+      0,
+      "f345beb36fc19122911b8cf36a8462b4"
+    ]
+  ]
+]

@@ -1,0 +1,44 @@
+[
+  "²Á´1;•!*‘öÖ>\u0013¸Ä_",
+  [
+    [
+      "Part1.Quicksort.Main.string_of_int_list",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "aa47c0141a1282c67e60a9a57972a582"
+    ],
+    [
+      "Part1.Quicksort.Main.main",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "equation_Part1.Quicksort.Generic.total_order", "int_inversion",
+        "primitive_Prims.op_LessThanOrEqual",
+        "projection_inverse_BoxBool_proj_0",
+        "token_correspondence_Prims.op_LessThanOrEqual"
+      ],
+      0,
+      "082f647937a431d6b72b1016de997092"
+    ],
+    [
+      "Part1.Quicksort.Main.uu___5",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "equation_Part1.Quicksort.Generic.total_order", "int_inversion",
+        "primitive_Prims.op_LessThanOrEqual",
+        "projection_inverse_BoxBool_proj_0",
+        "token_correspondence_Prims.op_LessThanOrEqual"
+      ],
+      0,
+      "ea5b8924f223771d5f5041262dbf3698"
+    ]
+  ]
+]

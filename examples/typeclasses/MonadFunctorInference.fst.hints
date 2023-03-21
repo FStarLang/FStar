@@ -36,7 +36,7 @@
         "typing_MonadFunctorInference.st_monad"
       ],
       0,
-      "c4f2bca49f3a13f9f017a15f57b97afd"
+      "a16cd42597cac2af1fa742cf18d6b36d"
     ],
     [
       "MonadFunctorInference.opt_monad",
@@ -45,7 +45,7 @@
       1,
       [ "@query", "lemma_FStar.Pervasives.invertOption" ],
       0,
-      "60783418c5d7fd49db73fa8d9399d82b"
+      "eb2d0e782c9e3572b09c1bc38e93d673"
     ],
     [
       "MonadFunctorInference.div",
@@ -54,7 +54,7 @@
       1,
       [ "@query", "primitive_Prims.op_Equality" ],
       0,
-      "b50f49125564f7f6fd1abe956e2880c2"
+      "acee8a1dbdbd470c450dd99a9f54ddd2"
     ],
     [
       "MonadFunctorInference.option_functor",
@@ -63,7 +63,7 @@
       1,
       [ "@query", "lemma_FStar.Pervasives.invertOption" ],
       0,
-      "0c752cd36ca9b1ad35a3f85e4a603bc7"
+      "bd63941f5a8faab503bdc3307841acde"
     ]
   ]
 ]

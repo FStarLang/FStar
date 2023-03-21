@@ -1,5 +1,5 @@
 [
-  "\u0014xø)“,K\u0014’ášïI¥¾Ö",
+  "\u0014\u0001\f\t0Ôáüi¼‡šX+Vs",
   [
     [
       "ID2.return",
@@ -8,7 +8,7 @@
       1,
       [ "@query" ],
       0,
-      "7c928f9fefeeb6cb6b31a2380a948e83"
+      "3c6a48054f7972abe4c712bb3364629b"
     ],
     [
       "ID2.bind",
@@ -33,7 +33,7 @@
         "typing_Tm_abs_d0f415a5361a9d7988d8e425dc193472"
       ],
       0,
-      "b59b4ab002bb8ce0d5aae93bc6195f41"
+      "e101b94e66a2d59dd828c54bfea007ad"
     ],
     [
       "ID2.subcomp",
@@ -52,7 +52,7 @@
         "typing_Tm_abs_5e34897418ce4950a4effcc8c159cf53"
       ],
       0,
-      "fc47a3be182bde364c9247b1dde5dc05"
+      "dbb9dc0a3b2c540386b805332f493f79"
     ],
     [
       "ID2.if_then_else_wp",
@@ -64,7 +64,7 @@
         "refinement_interpretation_Tm_refine_4c9fcb91d9b375e2e26411eb85d293f5"
       ],
       0,
-      "1cf6903d66ac0dd14c252f3fb360defb"
+      "5a3f86e6e48a9e469ea5adf8bba3bbe8"
     ],
     [
       "ID2.ID",
@@ -76,7 +76,7 @@
         "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
       ],
       0,
-      "24da120978c6e8dee5fe1a6cf559d903"
+      "b26879e84100ab12509a25f0c85ec062"
     ],
     [
       "ID2.ID",
@@ -84,11 +84,23 @@
       2,
       1,
       [
+        "@MaxIFuel_assumption", "@query", "b2t_def", "equation_Prims.squash",
+        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
+      ],
+      0,
+      "d930d5e916d36943b3b923cbfe7df3f9"
+    ],
+    [
+      "ID2.ID",
+      3,
+      2,
+      1,
+      [
         "@MaxIFuel_assumption", "@query",
         "refinement_interpretation_Tm_refine_de09779676242898794a0b057d5f5bb4"
       ],
       0,
-      "2ca8ffb4060e4558be51991aa4b10875"
+      "daf32cce6ce10b10d4e4277016342705"
     ],
     [
       "ID2.lift_pure_nd",
@@ -115,7 +127,7 @@
         "typing_Tm_abs_927a276ce23d88dbe79a87bbe56dc445"
       ],
       0,
-      "681e65e2efd07b418b7b7deb4ca0ed2f"
+      "2f9d35a2e2c65f0def59d1beb921aaf6"
     ],
     [
       "ID2.count",
@@ -124,7 +136,7 @@
       1,
       [ "@query" ],
       0,
-      "ec40fb8f26225db99d419c2b7263bf13"
+      "c823054dd4700f2664f32c87c191e474"
     ],
     [
       "ID2.count",
@@ -143,7 +155,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "c6ac020a4124079356130e19e017e00f"
+      "ea07a5ee7a033d0edf7498ae1fc102c0"
     ],
     [
       "ID2.test_f",
@@ -152,7 +164,7 @@
       1,
       [ "@query", "int_typing" ],
       0,
-      "0025cf01ace7f3d9e82bae64a2f7981d"
+      "c0d7b3510c18996d7e047a20cb5b289f"
     ],
     [
       "ID2.test_f",
@@ -161,7 +173,7 @@
       1,
       [ "@query" ],
       0,
-      "0036874898bea537b27c4da0cee2612c"
+      "fa03eb4cd955ebbd1a193bdefe3d785c"
     ],
     [
       "ID2.test_2",
@@ -170,10 +182,10 @@
       1,
       [ "@query", "int_typing" ],
       0,
-      "5f1f2e4f05afaa8d2f28787a41bdc95e"
+      "9d57a837818feea7b4c5833064739464"
     ],
     [
-      "ID2.Id", 1, 2, 1, [ "@query" ], 0, "f0513c64e251eebd920f05b12c06316c"
+      "ID2.Id", 1, 2, 1, [ "@query" ], 0, "4ed01237f840603414f7ec03aee553c8"
     ],
     [
       "ID2.sum",
@@ -191,7 +203,7 @@
         "subterm_ordering_Prims.Cons"
       ],
       0,
-      "466aa2d583c01638503d48fd5d524c98"
+      "7991f8a686f2bf5595956817323c3eb8"
     ]
   ]
 ]

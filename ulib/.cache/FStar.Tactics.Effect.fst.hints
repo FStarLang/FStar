@@ -17,7 +17,7 @@
         "true_interp"
       ],
       0,
-      "ca26093d93065cca1f5d16115ffaf99d"
+      "134637a4996071a9180043312e7156b6"
     ],
     [
       "FStar.Tactics.Effect.tac_return_wp",
@@ -29,7 +29,7 @@
         "data_typing_intro_FStar.Tactics.Result.Success@tok"
       ],
       0,
-      "0eedf3e58b7cf2adfa80c5b791581824"
+      "6d089f13f016e6b834bbc80c4e8f3a31"
     ],
     [
       "FStar.Tactics.Effect.tac_return",
@@ -38,7 +38,7 @@
       1,
       [ "@query" ],
       0,
-      "972b22725b9963870e144174638a77c7"
+      "0860a77f7496ddd3fc19d866dca75b9d"
     ],
     [
       "FStar.Tactics.Effect.tac_bind_wp",
@@ -60,7 +60,7 @@
         "typing_Tm_abs_898fced1d2b8c3711183b386ac2e3d36"
       ],
       0,
-      "ea2951590f962ae5c4a45f64e5a16c05"
+      "8c6dca174cf9f492928650fc748b5e7d"
     ],
     [
       "FStar.Tactics.Effect.tac_wp_compact",
@@ -73,7 +73,7 @@
         "refinement_interpretation_Tm_refine_8b22c2769f6907ec32a8bea96d54292a"
       ],
       0,
-      "f9562f83f367dcb097cb68d8a290a547"
+      "0f64680900da9dcc6809c541e609b61d"
     ],
     [
       "FStar.Tactics.Effect.tac_if_then_else_wp",
@@ -86,7 +86,7 @@
         "refinement_interpretation_Tm_refine_8b22c2769f6907ec32a8bea96d54292a"
       ],
       0,
-      "d691ed2487160292325e739bace8a716"
+      "1b4deeb25b1bb7e4cc938185c891ff0a"
     ],
     [
       "FStar.Tactics.Effect.tac_subcomp",
@@ -103,7 +103,7 @@
         "true_interp"
       ],
       0,
-      "fc2dfc8067e97c0e576852e98fb2b0a1"
+      "4196badbdafc083994f8a2f1609446e8"
     ],
     [
       "FStar.Tactics.Effect.TAC",
@@ -115,7 +115,7 @@
         "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
       ],
       0,
-      "33271cae2e4aa5ea0d1628b9344d771f"
+      "a7e6d533da4a35f685690d9dddbb97f0"
     ],
     [
       "FStar.Tactics.Effect.TAC",
@@ -123,11 +123,23 @@
       2,
       1,
       [
+        "@MaxIFuel_assumption", "@query", "b2t_def", "equation_Prims.squash",
+        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
+      ],
+      0,
+      "cc2ff8224312b9fd257ca40f749c2bb1"
+    ],
+    [
+      "FStar.Tactics.Effect.TAC",
+      3,
+      2,
+      1,
+      [
         "@MaxIFuel_assumption", "@query",
         "refinement_interpretation_Tm_refine_de09779676242898794a0b057d5f5bb4"
       ],
       0,
-      "4e222dfbc9d61d450071ccf3527ffbcc"
+      "bddfb6b1c1e5803e6fad8974cf9dab3a"
     ],
     [
       "FStar.Tactics.Effect.TacH",
@@ -136,7 +148,7 @@
       1,
       [ "@query" ],
       0,
-      "e9a62a8dfa584b6d2fefa1237d8d1b9e"
+      "222af4fbc77de14a6dbb3109dea01f8b"
     ],
     [
       "FStar.Tactics.Effect.lift_div_tac_wp",
@@ -155,7 +167,7 @@
         "typing_Tm_abs_7959fb2584d24c5d132481891ec37d35"
       ],
       0,
-      "657016bb9d4084aef3375b76e7d817ad"
+      "9d713a11add0014d5cbbc9b79c243d6d"
     ],
     [
       "FStar.Tactics.Effect.lift_div_tac",
@@ -176,7 +188,7 @@
         "typing_Tm_abs_dfda88e986ce94fbe725c23d8f502305"
       ],
       0,
-      "a02f8c3fe98324ccfe623e77c886f494"
+      "48d90648a2ede7c8cb10e6c23f0eb633"
     ],
     [
       "FStar.Tactics.Effect.get",
@@ -189,7 +201,7 @@
         "function_token_typing_FStar.Tactics.Types.proofstate"
       ],
       0,
-      "0576bdc8f14e3167d6df7300435c6035"
+      "4147453165d1e1dee72b0b2848966c62"
     ],
     [
       "FStar.Tactics.Effect.raise",
@@ -201,7 +213,7 @@
         "data_typing_intro_FStar.Tactics.Result.Failed@tok"
       ],
       0,
-      "b3c1c858c74ea8a0e19558583379697e"
+      "2da254f0673792622dd8d6cebb7ea173"
     ],
     [
       "FStar.Tactics.Effect.assert_by_tactic",
@@ -213,7 +225,7 @@
         "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
       ],
       0,
-      "59cde0b2d158f27ea4a96b319384d0da"
+      "ff6905becd40b8c9d7abf1e0d6c6b82a"
     ],
     [
       "FStar.Tactics.Effect.unfold_with_tactic",
@@ -222,7 +234,7 @@
       1,
       [ "@query", "equation_FStar.Tactics.Effect.with_tactic" ],
       0,
-      "7229f66b3f22dcff0aad578755c6ff2c"
+      "e95494976774a6dd9d391d0842a4cabd"
     ],
     [
       "FStar.Tactics.Effect.unfold_rewrite_with_tactic",
@@ -231,7 +243,7 @@
       1,
       [ "@query", "equation_FStar.Tactics.Effect.rewrite_with_tactic" ],
       0,
-      "2a44db1aa4dced41ba37db4cf9329743"
+      "a40388dc95b4745f031e67c582c197a3"
     ]
   ]
 ]

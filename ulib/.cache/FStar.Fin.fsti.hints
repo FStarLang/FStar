@@ -1,0 +1,71 @@
+[
+  "+¬°\u000fE4\u0005\u0003æ\t¤Š/Œ\u0015þ",
+  [
+    [
+      "FStar.Fin.vect",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.eqtype",
+        "equation_Prims.nat", "function_token_typing_Prims.int",
+        "haseqTm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
+      ],
+      0,
+      "a26aa5486685fe88c21cdff7c8a39649"
+    ],
+    [
+      "FStar.Fin.seqn",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.eqtype",
+        "equation_Prims.nat", "function_token_typing_Prims.int",
+        "haseqTm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
+      ],
+      0,
+      "354742d62624c3f18cd6b2b0a87f0300"
+    ],
+    [
+      "FStar.Fin.find",
+      1,
+      2,
+      1,
+      [
+        "@query", "lemma_FStar.Pervasives.invertOption",
+        "typing_FStar.Fin.in_"
+      ],
+      0,
+      "df3de3eda0bf84252a87f77d83ec4bfa"
+    ],
+    [
+      "FStar.Fin.pigeonhole",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_FStar.Fin.under",
+        "equation_Prims.eqtype", "equation_Prims.nat", "equation_Prims.pos",
+        "function_token_typing_Prims.int",
+        "haseqTm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "haseqTm_refine_c1424615841f28cac7fc34e92b7ff33c",
+        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
+        "refinement_interpretation_Tm_refine_774ba3f728d91ead8ef40be66c9802e5"
+      ],
+      0,
+      "1648725502641634a59127a945a67288"
+    ],
+    [
+      "FStar.Fin.find_eq",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "052c06fc39ea9ec44d5be0316e67a74e"
+    ]
+  ]
+]

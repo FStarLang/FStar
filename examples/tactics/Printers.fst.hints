@@ -1,6 +1,35 @@
 [
-  "Œ÷†∞V⁄ê.qù\tW∞ê˜Ó",
+  "∂ìâÆÆW·:˜\u000b€b¨¬\u007fÀ",
   [
+    [
+      "Printers.mk_printer_fun",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "FStar.Reflection.Data_pretyping_ee655bc751cef679bca813f86c407d6b",
+        "FStar.Reflection.Types_pretyping_b57262eead998d474939c05a17e1ffab",
+        "constructor_distinct_FStar.Tactics.Result.Failed",
+        "constructor_distinct_FStar.Tactics.Result.Success",
+        "data_elim_FStar.Tactics.Result.Success",
+        "data_typing_intro_FStar.Reflection.Data.Tv_Unknown@tok",
+        "equation_FStar.Reflection.Types.name",
+        "equation_FStar.Reflection.Types.typ",
+        "fuel_guarded_inversion_FStar.Tactics.Result.__result",
+        "function_token_typing_FStar.Reflection.Types.sigelt",
+        "lemma_FStar.Pervasives.invertOption",
+        "projection_inverse_FStar.Tactics.Result.Failed_a",
+        "projection_inverse_FStar.Tactics.Result.Failed_exn",
+        "projection_inverse_FStar.Tactics.Result.Failed_ps",
+        "projection_inverse_FStar.Tactics.Result.Success_a",
+        "projection_inverse_FStar.Tactics.Result.Success_ps",
+        "projection_inverse_FStar.Tactics.Result.Success_v",
+        "typing_FStar.Reflection.Builtins.lookup_typ"
+      ],
+      0,
+      "5f42e87a98c08a0415407543ac0e1092"
+    ],
     [
       "Printers.maplast",
       1,
@@ -13,7 +42,7 @@
         "fuel_guarded_inversion_Prims.list", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "a5c6b09148508a98b84dabb513318cef"
+      "2898069db3b57bb0d020cf76a8dbf21f"
     ],
     [
       "Printers.__proj__A__item___0",
@@ -26,7 +55,7 @@
         "refinement_interpretation_Tm_refine_1a7b69b43f7b02549720ebdb7731aa7f"
       ],
       0,
-      "feabae922e9e72aca8b557b5a743c60c"
+      "6661709109549f5a21df8720f77da36b"
     ],
     [
       "Printers.__proj__A__item___1",
@@ -39,7 +68,7 @@
         "refinement_interpretation_Tm_refine_1a7b69b43f7b02549720ebdb7731aa7f"
       ],
       0,
-      "082d5d9b23bab3d152905c30705b4608"
+      "6eec665a69facbc60488bb15cdc832a3"
     ],
     [
       "Printers.__proj__B__item___0",
@@ -52,7 +81,7 @@
         "refinement_interpretation_Tm_refine_c8b4b75e38b41b48b268ea0a3f90e3cd"
       ],
       0,
-      "997a355bf3e9c2289456155250b655fa"
+      "27bce512c92265677ea2be5d73db46b2"
     ],
     [
       "Printers.__proj__B__item___1",
@@ -65,7 +94,7 @@
         "refinement_interpretation_Tm_refine_c8b4b75e38b41b48b268ea0a3f90e3cd"
       ],
       0,
-      "6066e43c8d22ace5597724c40346a7b4"
+      "4c1edc316ac19fce00b735121170b48e"
     ],
     [
       "Printers.__proj__D__item___0",
@@ -78,7 +107,7 @@
         "refinement_interpretation_Tm_refine_3c3099d8265cd24e0a96805751c994d1"
       ],
       0,
-      "174c331171c418ca66c019ad318c6842"
+      "060f709f6bdb6cc2fe974e9fb6ca3920"
     ],
     [
       "Printers.__proj__E__item___0",
@@ -91,7 +120,7 @@
         "refinement_interpretation_Tm_refine_410bdfe840bb48a5ed0357e092bfc39f"
       ],
       0,
-      "58afbe82cf75a151aac9552ba0784cf8"
+      "d23386398fa042ee4416cd762e9079fa"
     ],
     [
       "Printers.__proj__F__item___0",
@@ -104,7 +133,7 @@
         "refinement_interpretation_Tm_refine_9c3e9566abf10c7d01bd5254baeab0f0"
       ],
       0,
-      "8b3ac0ff1b3a6d779511ae30776e7ede"
+      "4bd19d15a802ad4e5bfffc31b7b28fb3"
     ],
     [
       "Printers.t1_print",
@@ -119,7 +148,16 @@
         "subterm_ordering_Printers.B", "subterm_ordering_Printers.E"
       ],
       0,
-      "f777a10c00c03de77eb4bf2412e0a703"
+      "88aae5593734855d68be17ae7643715e"
+    ],
+    [
+      "Printers.uu___110",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "fd107099258b609d81bdce5fbd2eb662"
     ],
     [
       "Printers.uu___111",
@@ -128,7 +166,7 @@
       1,
       [ "@query" ],
       0,
-      "a5b81380208e59471e48d444dedadc81"
+      "5c5ebabd1212d1d41d99e3c02fa742cf"
     ],
     [
       "Printers.uu___112",
@@ -137,7 +175,7 @@
       1,
       [ "@query" ],
       0,
-      "aa1b02544bc29eded0da40d285abff2d"
+      "bdefbb5b2eb6a1b5cbd1bf8727665f3e"
     ],
     [
       "Printers.uu___113",
@@ -146,7 +184,7 @@
       1,
       [ "@query" ],
       0,
-      "9f53f78a9809bc4eadce5aaa7866e21f"
+      "e422a812520b83bd60ae01d8a397207d"
     ],
     [
       "Printers.uu___114",
@@ -155,7 +193,7 @@
       1,
       [ "@query" ],
       0,
-      "f0531f8e838fee1acf2503a94ed49808"
+      "7977c16ffd270711472061adf65fcc53"
     ],
     [
       "Printers.uu___115",
@@ -164,16 +202,7 @@
       1,
       [ "@query" ],
       0,
-      "a16b17559994dd7f94e9f53d9c289fb0"
-    ],
-    [
-      "Printers.uu___116",
-      1,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "6b20b6c836ace7f9127e572b962845ad"
+      "63d76ce1c0e06d3e5acf3df3f460f989"
     ]
   ]
 ]

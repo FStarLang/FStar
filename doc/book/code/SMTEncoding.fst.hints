@@ -1,0 +1,34 @@
+[
+  "ôíáyl¯4ZZÓ5@v=\u001a8",
+  [
+    [
+      "SMTEncoding.factorial",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "binder_x_bb4e1c9af0265270f8e7a5f250f730e2_0", "equation_Prims.nat",
+        "int_inversion", "int_typing", "primitive_Prims.op_Equality",
+        "primitive_Prims.op_Multiply", "primitive_Prims.op_Subtraction",
+        "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "well-founded-ordering-on-nat"
+      ],
+      0,
+      "e889bf9a9f83b50c754fd31aaeda58aa"
+    ],
+    [
+      "SMTEncoding.force_a_query",
+      1,
+      2,
+      1,
+      [
+        "@query", "equation_Prims.l_True", "equation_SMTEncoding.id",
+        "true_interp"
+      ],
+      0,
+      "011cd3801dfb25d57f6084ff3a038bbb"
+    ]
+  ]
+]

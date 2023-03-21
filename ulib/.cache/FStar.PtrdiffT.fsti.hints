@@ -1,6 +1,27 @@
 [
-  "k^)¸k\u0013ÎuªZŸ\u0003Uõd\u0007",
+  "ªj\tV&\\ò$Îå}ânKî\u0019",
   [
+    [
+      "FStar.PtrdiffT.ptrdiff_v_inj",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "28465ccb37880c497098609e61e5967a"
+    ],
+    [
+      "FStar.PtrdiffT.ptrdiff_int_to_t_inj",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.squash",
+        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
+      ],
+      0,
+      "c357d5edae16a302047711350d511c5d"
+    ],
     [
       "FStar.PtrdiffT.zero",
       1,
@@ -8,7 +29,48 @@
       1,
       [ "@query" ],
       0,
-      "95f3c179b1c61af342b9e89c006b5882"
+      "54b74cec82ac9b93dbbf03e0a58b311d"
+    ],
+    [
+      "FStar.PtrdiffT.div",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_6ae084591a21f7d4bed34f2acf042fb3"
+      ],
+      0,
+      "d18209157a8f1a581d4c32c545c8c58f"
+    ],
+    [
+      "FStar.PtrdiffT.mod_spec",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.abs",
+        "int_inversion", "primitive_Prims.op_Division",
+        "primitive_Prims.op_GreaterThanOrEqual", "primitive_Prims.op_Minus",
+        "primitive_Prims.op_Multiply", "primitive_Prims.op_Subtraction",
+        "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_Tm_refine_ac60b3a483ff3158afbeff9eb077e91b"
+      ],
+      0,
+      "f715b15fcebae4430d2f41e46e3b8543"
+    ],
+    [
+      "FStar.PtrdiffT.rem",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_6ae084591a21f7d4bed34f2acf042fb3"
+      ],
+      0,
+      "f3b78c22038631950e50edc28c81e315"
     ]
   ]
 ]

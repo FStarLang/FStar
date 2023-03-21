@@ -1,5 +1,5 @@
 [
-  "T\u001a\u0004\u0016Ô=fd_Ç‹0g°l\t",
+  "\u0001óè´˚É¯°µ_ıÛßt:F",
   [
     [
       "GenericTotalDM4A.return",
@@ -8,7 +8,7 @@
       1,
       [ "@query", "equation_GenericTotalDM4A.equiv" ],
       0,
-      "e7be30b5ba74a24217117378b8e0fd68"
+      "4fb35b7705f1ae14d9e2851ca8ae32c6"
     ],
     [
       "GenericTotalDM4A.bind",
@@ -32,7 +32,7 @@
         "token_correspondence_GenericTotalDM4A.stronger"
       ],
       0,
-      "b7fb247662bad8464849864b4c75c878"
+      "d7cc89fefb7454b1381353d5202efd9c"
     ],
     [
       "GenericTotalDM4A.subcomp",
@@ -50,7 +50,7 @@
         "typing_GenericTotalDM4A.interp", "typing_GenericTotalDM4A.stronger"
       ],
       0,
-      "c1489228b3d56a479e4d789df024d858"
+      "8a6d2493fea0eeeffec683e19a4fa164"
     ],
     [
       "GenericTotalDM4A.DM4A",
@@ -68,11 +68,29 @@
         "typing_GenericTotalDM4A.stronger"
       ],
       0,
-      "b6e77d1419e8755d0d24ffa648b59b8b"
+      "79a40ff8a602f9116eb416bbba69d6ea"
     ],
     [
       "GenericTotalDM4A.DM4A",
       2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "b2t_def", "bool_inversion",
+        "equation_FStar.Preorder.preorder",
+        "equation_FStar.Preorder.preorder_rel",
+        "equation_FStar.Preorder.reflexive", "equation_Prims.squash",
+        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c",
+        "refinement_interpretation_Tm_refine_bd10f09297e0e7dc08314f7d9211801c",
+        "token_correspondence_GenericTotalDM4A.stronger",
+        "typing_GenericTotalDM4A.stronger"
+      ],
+      0,
+      "4635f79293fef99bf19533952d7b5bf0"
+    ],
+    [
+      "GenericTotalDM4A.DM4A",
+      3,
       2,
       1,
       [
@@ -86,7 +104,7 @@
         "typing_GenericTotalDM4A.stronger"
       ],
       0,
-      "43d7ecb906ccc71ed8779a7f3a6079e5"
+      "5490fd2352e7c034e929d85517a14558"
     ]
   ]
 ]

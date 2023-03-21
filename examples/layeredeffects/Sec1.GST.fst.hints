@@ -1,5 +1,5 @@
 [
-  "\r`Ç¹«;·¥kÊ/¬t#¤X",
+  "çÒØw\bN{õ×\f žFb»i",
   [
     [
       "Sec1.GST.gst",
@@ -12,7 +12,7 @@
         "projection_inverse_BoxBool_proj_0"
       ],
       0,
-      "65f20f4917756e858d13d362db5da885"
+      "3544cff36fb5635067e3b9ef7f3f1fbc"
     ],
     [
       "Sec1.GST.lift",
@@ -38,7 +38,7 @@
         "typing_Tm_abs_2d5879fa2d03ea229bbae67ba018b9e1"
       ],
       0,
-      "ca5c0506885fe799e6ad1ac5b9c34888"
+      "8e98bfd043a58cd94610ec90fb68cac0"
     ],
     [
       "Sec1.GST.bind_homogeneous",
@@ -54,7 +54,7 @@
         "projection_inverse_BoxBool_proj_0"
       ],
       0,
-      "3e0ddc9a90003233668ea0ea33ff5a21"
+      "68352e273acd156a9b88e4db72f250ff"
     ],
     [
       "Sec1.GST.bind",
@@ -75,7 +75,25 @@
         "typing_Sec1.GST.lift", "typing_Sec1.GST.op"
       ],
       0,
-      "9c678692324bd983845d17a1b60beebc"
+      "d9078e933f911850cd123d258a081a75"
+    ],
+    [
+      "Sec1.GST.lift_pure",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "28340002d45439e0829791f36c95e301"
+    ],
+    [
+      "Sec1.GST.5588",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "5e7d5315b6dd966995d54d79493b015f"
     ]
   ]
 ]

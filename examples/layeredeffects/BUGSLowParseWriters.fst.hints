@@ -1,5 +1,5 @@
 [
-  "wZ;ÈÈ¯°[\u0001}x\u001fÉ2ëƒ",
+  "/ÿãôªÉ®!\u0018¦äö¦¤Jœ",
   [
     [
       "BUGSLowParseWriters.__proj__Correct__item___0",
@@ -11,7 +11,7 @@
         "refinement_interpretation_Tm_refine_663361c39544907ac5067c9c50873bd4"
       ],
       0,
-      "961ba811f92f75a9ca7908c2261b8861"
+      "4b51deef687fa7d2fe69e17d1684b52e"
     ],
     [
       "BUGSLowParseWriters.__proj__Error__item___0",
@@ -23,7 +23,7 @@
         "refinement_interpretation_Tm_refine_3b282434ccd43fdb008018983e216134"
       ],
       0,
-      "9756c1e748807e3783d427da1dc1e674"
+      "af5a49cbc303a87bd2337a266a1f9310"
     ],
     [
       "BUGSLowParseWriters.read_repr_spec",
@@ -39,7 +39,7 @@
         "refinement_interpretation_Tm_refine_a21d04f2177efa608733964b5aa08d52"
       ],
       0,
-      "5aec9f0a92e55d04121a5bc705abed80"
+      "c0e540590425e89747ab99087635752d"
     ],
     [
       "BUGSLowParseWriters.read_return_spec",
@@ -52,7 +52,7 @@
         "projection_inverse_BUGSLowParseWriters.Correct_a"
       ],
       0,
-      "b669be73073603f84783be8f1e6d5275"
+      "40e206575ed529f7b98c7561e34e61cb"
     ],
     [
       "BUGSLowParseWriters.read_bind_spec",
@@ -71,7 +71,7 @@
         "projection_inverse_BoxBool_proj_0"
       ],
       0,
-      "5a98cdb91f199a7e206199cc26c2e664"
+      "a4c8a58a15e33d7842f254feae4f698e"
     ],
     [
       "BUGSLowParseWriters.read_subcomp_spec",
@@ -83,7 +83,7 @@
         "data_elim_BUGSLowParseWriters.Correct"
       ],
       0,
-      "88eeb63cc376bf18f6e59ac113356007"
+      "f9e6046fb72f07ad44e39d18c70665b3"
     ],
     [
       "BUGSLowParseWriters.read_subcomp",
@@ -92,7 +92,7 @@
       1,
       [ "@query" ],
       0,
-      "02c1d96d11d024f75898e13df42c7c4f"
+      "b11cf29e15daa506a58e49566ae66766"
     ],
     [
       "BUGSLowParseWriters.ERead",
@@ -104,7 +104,7 @@
         "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
       ],
       0,
-      "45c85acc4cc40f00760a49f415e16c02"
+      "92486dbec266a14ef068accc3af437a0"
     ],
     [
       "BUGSLowParseWriters.ERead",
@@ -112,11 +112,23 @@
       2,
       1,
       [
+        "@MaxIFuel_assumption", "@query", "b2t_def", "equation_Prims.squash",
+        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
+      ],
+      0,
+      "5531de45f76e19c7e471378a9b8129e2"
+    ],
+    [
+      "BUGSLowParseWriters.ERead",
+      3,
+      2,
+      1,
+      [
         "@MaxIFuel_assumption", "@query",
         "refinement_interpretation_Tm_refine_de09779676242898794a0b057d5f5bb4"
       ],
       0,
-      "7cc065d18e60b1f873827b10d6b85271"
+      "f29a9f4e1393645ff5dfc39bd02e18c5"
     ],
     [
       "BUGSLowParseWriters.lift_pure_read_spec",
@@ -145,16 +157,7 @@
         "typing_Tm_abs_5e34897418ce4950a4effcc8c159cf53"
       ],
       0,
-      "798d2fa3338b4fe6d693d18e9ac521a1"
-    ],
-    [
-      "BUGSLowParseWriters.lift_pure_read",
-      1,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "9e1150d769dc8ebd5ef7a8392f632267"
+      "77fbd515594dc882f0817e7704288b57"
     ],
     [
       "BUGSLowParseWriters.read_bind_spec'",
@@ -166,7 +169,7 @@
         "projection_inverse_BoxBool_proj_0"
       ],
       0,
-      "2e34fc26b9ec8bf6b8aff72295e4c5d4"
+      "510d5ed0a74130df5f364706d582ca90"
     ]
   ]
 ]

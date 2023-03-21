@@ -1,0 +1,87 @@
+[
+  "s‰ZÕ´\u000b^n0\"Š®JbÀã",
+  [
+    [
+      "FactorialTailRec.factorial",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "binder_x_bb4e1c9af0265270f8e7a5f250f730e2_0", "equation_Prims.nat",
+        "int_inversion", "int_typing", "primitive_Prims.op_Equality",
+        "primitive_Prims.op_Multiply", "primitive_Prims.op_Subtraction",
+        "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "well-founded-ordering-on-nat"
+      ],
+      0,
+      "d5a0afe93c156459c0dcfe53eefa0794"
+    ],
+    [
+      "FactorialTailRec.factorial_tail",
+      1,
+      2,
+      1,
+      [
+        "@MaxFuel_assumption", "@MaxIFuel_assumption",
+        "@fuel_correspondence_FactorialTailRec.factorial.fuel_instrumented",
+        "@fuel_irrelevance_FactorialTailRec.factorial.fuel_instrumented",
+        "@query", "Prims_pretyping_ae567c2fb75be05905677af440075565",
+        "binder_x_bb4e1c9af0265270f8e7a5f250f730e2_0",
+        "binder_x_bb4e1c9af0265270f8e7a5f250f730e2_1", "equation_Prims.nat",
+        "equation_with_fuel_FactorialTailRec.factorial.fuel_instrumented",
+        "function_token_typing_Prims.__cache_version_number__",
+        "int_inversion", "int_typing", "primitive_Prims.op_Equality",
+        "primitive_Prims.op_Multiply", "primitive_Prims.op_Subtraction",
+        "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "well-founded-ordering-on-nat"
+      ],
+      0,
+      "87a1382c87c1865cc90e69fb23b92422"
+    ],
+    [
+      "FactorialTailRec.fact",
+      1,
+      2,
+      1,
+      [
+        "@MaxFuel_assumption", "@MaxIFuel_assumption",
+        "@fuel_correspondence_FactorialTailRec.factorial.fuel_instrumented",
+        "@query", "equation_Prims.nat",
+        "equation_with_fuel_FactorialTailRec.factorial.fuel_instrumented",
+        "int_inversion", "primitive_Prims.op_Multiply",
+        "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "typing_FactorialTailRec.factorial"
+      ],
+      0,
+      "b8262ed493914773280fe6d218cd3748"
+    ],
+    [
+      "FactorialTailRec.factorial_tail_alt",
+      1,
+      2,
+      1,
+      [
+        "@MaxFuel_assumption", "@MaxIFuel_assumption",
+        "@fuel_correspondence_FactorialTailRec.factorial.fuel_instrumented",
+        "@fuel_irrelevance_FactorialTailRec.factorial.fuel_instrumented",
+        "@query", "Prims_pretyping_ae567c2fb75be05905677af440075565",
+        "binder_x_bb4e1c9af0265270f8e7a5f250f730e2_0",
+        "binder_x_bb4e1c9af0265270f8e7a5f250f730e2_1", "equation_Prims.nat",
+        "equation_with_fuel_FactorialTailRec.factorial.fuel_instrumented",
+        "function_token_typing_Prims.__cache_version_number__",
+        "int_inversion", "primitive_Prims.op_Equality",
+        "primitive_Prims.op_Multiply", "primitive_Prims.op_Subtraction",
+        "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "refinement_interpretation_Tm_refine_da367d9a9dd1b377dc5c03c935e8319e",
+        "well-founded-ordering-on-nat"
+      ],
+      0,
+      "857d048bb8d39ab740ad3c352bba717f"
+    ]
+  ]
+]

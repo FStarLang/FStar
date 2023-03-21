@@ -1,5 +1,5 @@
 [
-  "yQ„Æs\u0016™?\u001c÷ay’ò È",
+  "8Çˆê×Å\ršqrXXQ$mL",
   [
     [
       "GradedMonad.monoid_nat_plus",
@@ -13,7 +13,38 @@
         "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2"
       ],
       0,
-      "acf5e9345a05175f0aaaf4ff148a7266"
+      "ad3c7f8f9a188e5d6cd60daaf263dd73"
+    ],
+    [
+      "GradedMonad.count_bind",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_a44985b7c511fba5ee2addbf6c22f4fa"
+      ],
+      0,
+      "1f0930f114aca824de59c16ff8019cc8"
+    ],
+    [
+      "GradedMonad.test2",
+      1,
+      2,
+      1,
+      [
+        "@query", "equation_GradedMonad.monoid_nat_plus",
+        "equation_GradedMonad.op", "equation_Prims.nat",
+        "interpretation_Tm_abs_70e5908d0ca8274b808ff953e2be9cf5",
+        "interpretation_Tm_abs_cfa108ea2e44f8f80ea74d6b8d851c76",
+        "primitive_Prims.op_Addition",
+        "proj_equation_GradedMonad.Mkmonoid_op",
+        "projection_inverse_BoxInt_proj_0",
+        "projection_inverse_GradedMonad.Mkmonoid_op",
+        "token_correspondence_GradedMonad.op"
+      ],
+      0,
+      "f7b0336ccdb0200d05d5184808796033"
     ]
   ]
 ]

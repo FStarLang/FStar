@@ -1,0 +1,157 @@
+[
+  "´Q÷I39ú=çf™\u0016¿ä–ö",
+  [
+    [
+      "AdHocEffectPolymorphism.eff",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "disc_equation_AdHocEffectPolymorphism.G",
+        "disc_equation_AdHocEffectPolymorphism.T",
+        "fuel_guarded_inversion_AdHocEffectPolymorphism.eff_tag",
+        "projection_inverse_BoxBool_proj_0"
+      ],
+      0,
+      "7851eb12e96286f1ce2cad7dd775ec26"
+    ],
+    [
+      "AdHocEffectPolymorphism.elim_tot",
+      1,
+      2,
+      1,
+      [ "@query", "assumption_AdHocEffectPolymorphism.eff_tag__uu___haseq" ],
+      0,
+      "87ae00fe3b74c14ec853f54660cb0d6a"
+    ],
+    [
+      "AdHocEffectPolymorphism.elim_tot",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "constructor_distinct_AdHocEffectPolymorphism.T",
+        "equality_tok_AdHocEffectPolymorphism.T@tok",
+        "equation_AdHocEffectPolymorphism.eff",
+        "refinement_interpretation_Tm_refine_3d79f9587edb6fce694621aacef574f4"
+      ],
+      0,
+      "b6d9735da407b07e88c1225598b24708"
+    ],
+    [
+      "AdHocEffectPolymorphism.elim_gtot",
+      1,
+      2,
+      1,
+      [ "@query", "assumption_AdHocEffectPolymorphism.eff_tag__uu___haseq" ],
+      0,
+      "f4bf5732c1b06c0304f4648b09a28283"
+    ],
+    [
+      "AdHocEffectPolymorphism.elim_gtot",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "constructor_distinct_AdHocEffectPolymorphism.G",
+        "equality_tok_AdHocEffectPolymorphism.G@tok",
+        "equation_AdHocEffectPolymorphism.eff",
+        "refinement_interpretation_Tm_refine_b3f3fc301d11a45e47f02d6e4e9e143b"
+      ],
+      0,
+      "9ed1c8e733ae61e29d58d7077aedbb37"
+    ],
+    [
+      "AdHocEffectPolymorphism.return",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "AdHocEffectPolymorphism_interpretation_Tm_arrow_f733943e720921049fb5d7431c9f04d2",
+        "AdHocEffectPolymorphism_interpretation_Tm_ghost_arrow_c147251bfc1ff7e35f16290189e09a47",
+        "constructor_distinct_AdHocEffectPolymorphism.G",
+        "constructor_distinct_AdHocEffectPolymorphism.T",
+        "disc_equation_AdHocEffectPolymorphism.G",
+        "disc_equation_AdHocEffectPolymorphism.T",
+        "equality_tok_AdHocEffectPolymorphism.G@tok",
+        "equality_tok_AdHocEffectPolymorphism.T@tok",
+        "fuel_guarded_inversion_AdHocEffectPolymorphism.eff_tag",
+        "projection_inverse_BoxBool_proj_0",
+        "typing_Tm_abs_b68e73a4efe6a575c72f28a07914e6c3"
+      ],
+      0,
+      "c19c052560e85f6bbcbc9a5c4840eff9"
+    ],
+    [
+      "AdHocEffectPolymorphism.op_let_Bang",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "constructor_distinct_AdHocEffectPolymorphism.G",
+        "constructor_distinct_AdHocEffectPolymorphism.T",
+        "disc_equation_AdHocEffectPolymorphism.G",
+        "disc_equation_AdHocEffectPolymorphism.T",
+        "equality_tok_AdHocEffectPolymorphism.G@tok",
+        "equality_tok_AdHocEffectPolymorphism.T@tok",
+        "fuel_guarded_inversion_AdHocEffectPolymorphism.eff_tag",
+        "projection_inverse_BoxBool_proj_0",
+        "typing_Tm_abs_8e12540a24fc84fc634302f2b8934aa4",
+        "typing_Tm_abs_e0231376ac4f1e1c1f86bc97f17fb9b1"
+      ],
+      0,
+      "7bd36bbd117678c2cc512bc0f077f846"
+    ],
+    [
+      "AdHocEffectPolymorphism.map",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "AdHocEffectPolymorphism_pretyping_aba3a3f6bd49314895416739be88c0d4",
+        "binder_x_3dddec8ced2db740e4e8aaf70542be7a_6",
+        "data_typing_intro_AdHocEffectPolymorphism.T@tok",
+        "disc_equation_Prims.Cons", "disc_equation_Prims.Nil",
+        "equation_Prims.op_Equals_Equals_Equals",
+        "fuel_guarded_inversion_Prims.list",
+        "projection_inverse_BoxBool_proj_0", "subterm_ordering_Prims.Cons"
+      ],
+      0,
+      "abe2b38d817f984b3522b0f7e0b241f5"
+    ],
+    [
+      "AdHocEffectPolymorphism.inc",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.nat",
+        "primitive_Prims.op_Addition", "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2"
+      ],
+      0,
+      "ce4aae681c30b078425e9086a8285c66"
+    ],
+    [
+      "AdHocEffectPolymorphism.ginc",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.nat",
+        "primitive_Prims.op_Addition", "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "refinement_kinding_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "typing_FStar.Ghost.reveal"
+      ],
+      0,
+      "2cb0e504f819b127d9e17b3c81c0a121"
+    ]
+  ]
+]
