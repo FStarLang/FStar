@@ -8,7 +8,11 @@ git checkout version.txt
 
 # Publish the release with the GitHub CLI
 gh="gh -R $git_org/FStar"
-branchname=master
+if [[ -n "$CI_BRANCH" ]] ; then
+    branchname="$CI_BRANCH"
+else
+    branchname=master
+fi
 
 function upload_archive () {
     archive="$1"
@@ -21,4 +25,10 @@ function upload_archive () {
 
 upload_archive $BUILD_PACKAGE
 rm -rf release
+
+# If we are running from CI, open a pull request
+if [[ -n "$CI_BRANCH" ]] ; then
+    $gh pr create --base "$CI_BRANCH" --title "Release $my_tag" --fill
+fi
+
 popd
