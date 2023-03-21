@@ -1,19 +1,6 @@
 module Steel.ST.C.Model.Rewrite
 
-open Steel.C.Model.PCM
-open Steel.C.Model.Connection
-
 module P = FStar.PCM
-
-noeq
-type rewrite_elts (from: Type) (to: Type) = {
-  rewrite_from_to : (from -> Tot to);
-  rewrite_to_from: (to -> Tot from);
-  rewrite_equiv : squash (
-    (forall (x: from) . rewrite_to_from (rewrite_from_to x) == x) /\
-    (forall (y: to) . rewrite_from_to (rewrite_to_from y) == y)
-  );
-}
 
 let fstar_rewrite_pcm
   (#from #to: Type)
@@ -42,23 +29,18 @@ let rewrite_pcm
 = let fp = fstar_pcm_of_pcm p in
   pcm_of_fstar_pcm (fstar_rewrite_pcm p rewrite)
 
-let rewrite_iso
-  (#from #to: Type)
-  (p: pcm from)
-  (rewrite: rewrite_elts from to)
-: Tot (isomorphism p (rewrite_pcm p rewrite))
-= mkisomorphism
-    (mkmorphism
-      rewrite.rewrite_from_to
-      ()
-      (fun _ _ -> ())
-    )
-    (mkmorphism
-      rewrite.rewrite_to_from
-      ()
-      (fun _ _ -> ())
-    )
-    ()
-    ()
-    (fun _ -> ())
-    (fun _ -> ())
+let rewrite_pcm_composable
+  p rewrite x1 x2
+= ()
+
+let rewrite_pcm_op
+  p rewrite x1 x2
+= ()
+
+let rewrite_pcm_one
+  p rewrite
+= ()
+
+let rewrite_pcm_refine
+  p rewrite x
+= ()
