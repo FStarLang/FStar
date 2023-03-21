@@ -5,6 +5,7 @@ open FStar.Sealed
 open FStar.Tactics
 
 let test1 (x y : int) =
+  sealed_singl (seal x) (seal y);
   assert (seal x == seal y)
 
 [@@expect_failure [19]]
