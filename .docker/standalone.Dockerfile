@@ -81,7 +81,7 @@ ARG CI_TARGET=uregressions
 ARG CI_THREADS=24
 ARG CI_BRANCH=master
 ARG CI_NO_KARAMEL=
-RUN --mount=type=secret,id=DZOMO_GITHUB_TOKEN eval $(opam env) && CI_NO_KARAMEL=$CI_NO_KARAMEL DZOMO_GITHUB_TOKEN=$(sudo cat /run/secrets/DZOMO_GITHUB_TOKEN) .docker/build/build-standalone.sh $CI_TARGET $CI_THREADS $CI_BRANCH
+RUN --mount=type=secret,id=DZOMO_GITHUB_TOKEN eval $(opam env) && Z3_LICENSE="$(opam config expand '%{prefix}%')/.opam-switch/sources/z3.4.8.5/LICENSE.txt" CI_NO_KARAMEL=$CI_NO_KARAMEL DZOMO_GITHUB_TOKEN=$(sudo cat /run/secrets/DZOMO_GITHUB_TOKEN) .docker/build/build-standalone.sh $CI_TARGET $CI_THREADS $CI_BRANCH
 
 WORKDIR $HOME
 ENV FSTAR_HOME $HOME/FStar
