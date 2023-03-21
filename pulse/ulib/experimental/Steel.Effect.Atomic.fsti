@@ -281,7 +281,7 @@ let if_then_else (a:Type)
 
 /// Assembling the combinators defined above into an actual effect
 /// The total keyword ensures that all ghost and atomic computations terminate.
-[@@ ite_soundness_by ite_attr]
+[@@ ite_soundness_by ite_attr; primitive_extraction]
 total
 reflectable
 effect {
