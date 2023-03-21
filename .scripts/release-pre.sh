@@ -18,7 +18,7 @@ git_org=FStarLang
 git_remote=
 
 # Check if the user has provided a GitHub authentication token
-[[ -n $SATS_TOKEN ]]
+[[ -n $GH_TOKEN ]]
 
 # Detect the F* directory and enter it
 FSTAR_HOST_HOME=$(cd `dirname $0`/.. && pwd)

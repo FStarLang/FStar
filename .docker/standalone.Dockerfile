@@ -32,6 +32,15 @@ ENV HOME /home/opam
 WORKDIR $HOME
 SHELL ["/bin/bash", "--login", "-c"]
 
+# Install GitHub CLI
+# From https://github.com/cli/cli/blob/trunk/docs/install_linux.md#debian-ubuntu-linux-raspberry-pi-os-apt
+RUN { type -p curl >/dev/null || sudo apt-get install curl -y ; } \
+    && curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg | sudo dd of=/usr/share/keyrings/githubcli-archive-keyring.gpg \
+    && sudo chmod go+r /usr/share/keyrings/githubcli-archive-keyring.gpg \
+    && echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" | sudo tee /etc/apt/sources.list.d/github-cli.list > /dev/null \
+    && sudo apt-get update \
+    && sudo apt-get install gh -y
+
 # CI dependencies: .NET Core
 # Repository install may incur some (transient?) failures (see for instance https://github.com/dotnet/sdk/issues/27082 )
 # So, we use manual install instead, from https://docs.microsoft.com/en-us/dotnet/core/install/linux-scripted-manual#manual-install

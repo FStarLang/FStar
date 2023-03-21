@@ -6,15 +6,19 @@
 pushd "$FSTAR_HOST_HOME"
 git checkout version.txt
 
-# Publish the release
-docker build -t fstar-release \
-       --build-arg SATS_FILE=$BUILD_PACKAGE \
-       --build-arg SATS_TAG=$my_tag \
-       --build-arg SATS_COMMITISH=$this_commit \
-       --build-arg SATS_TOKEN=$SATS_TOKEN \
-       --build-arg SATS_SLUG=$git_org/FStar \
-       -f ".docker/release.Dockerfile" \
-       release
-docker image rm -f fstar-release
+# Publish the release with the GitHub CLI
+gh="gh -R $git_org/FStar"
+branchname=master
+
+function upload_archive () {
+    archive="$1"
+    if ! $gh release view $my_tag ; then
+        $gh release create --prerelease --generate-notes --target $branchname $my_tag $archive
+    else
+        $gh release upload $my_tag $archive
+    fi
+}
+
+upload_archive $BUILD_PACKAGE
 rm -rf release
 popd
