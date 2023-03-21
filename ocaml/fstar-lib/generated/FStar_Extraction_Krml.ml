@@ -17,6 +17,8 @@ type decl =
   | DTypeAbstractStruct of (Prims.string Prims.list * Prims.string) 
   | DExternal of (cc FStar_Pervasives_Native.option * flag Prims.list *
   (Prims.string Prims.list * Prims.string) * typ * Prims.string Prims.list) 
+  | DUntaggedUnion of ((Prims.string Prims.list * Prims.string) * flag
+  Prims.list * Prims.int * (Prims.string * typ) Prims.list) 
 and cc =
   | StdCall 
   | CDecl 
@@ -146,6 +148,7 @@ and typ =
   | TApp of ((Prims.string Prims.list * Prims.string) * typ Prims.list) 
   | TTuple of typ Prims.list 
   | TConstBuf of typ 
+  | TArray of (typ * (width * Prims.string)) 
 let (uu___is_DGlobal : decl -> Prims.bool) =
   fun projectee -> match projectee with | DGlobal _0 -> true | uu___ -> false
 let (__proj__DGlobal__item___0 :
@@ -212,6 +215,14 @@ let (__proj__DExternal__item___0 :
     (cc FStar_Pervasives_Native.option * flag Prims.list * (Prims.string
       Prims.list * Prims.string) * typ * Prims.string Prims.list))
   = fun projectee -> match projectee with | DExternal _0 -> _0
+let (uu___is_DUntaggedUnion : decl -> Prims.bool) =
+  fun projectee ->
+    match projectee with | DUntaggedUnion _0 -> true | uu___ -> false
+let (__proj__DUntaggedUnion__item___0 :
+  decl ->
+    ((Prims.string Prims.list * Prims.string) * flag Prims.list * Prims.int *
+      (Prims.string * typ) Prims.list))
+  = fun projectee -> match projectee with | DUntaggedUnion _0 -> _0
 let (uu___is_StdCall : cc -> Prims.bool) =
   fun projectee -> match projectee with | StdCall -> true | uu___ -> false
 let (uu___is_CDecl : cc -> Prims.bool) =
@@ -596,6 +607,10 @@ let (uu___is_TConstBuf : typ -> Prims.bool) =
     match projectee with | TConstBuf _0 -> true | uu___ -> false
 let (__proj__TConstBuf__item___0 : typ -> typ) =
   fun projectee -> match projectee with | TConstBuf _0 -> _0
+let (uu___is_TArray : typ -> Prims.bool) =
+  fun projectee -> match projectee with | TArray _0 -> true | uu___ -> false
+let (__proj__TArray__item___0 : typ -> (typ * (width * Prims.string))) =
+  fun projectee -> match projectee with | TArray _0 -> _0
 type ident = Prims.string
 type fields_t = (Prims.string * (typ * Prims.bool)) Prims.list
 type branches_t =
@@ -847,7 +862,133 @@ let (generate_is_null : typ -> expr -> expr) =
     fun x ->
       let dummy = UInt64 in
       EApp ((ETypApp ((EOp (Eq, dummy)), [TBuf t])), [x; EBufNull t])
-let rec (translate_type : env -> FStar_Extraction_ML_Syntax.mlty -> typ) =
+exception NotSupportedByKrmlExtension 
+let (uu___is_NotSupportedByKrmlExtension : Prims.exn -> Prims.bool) =
+  fun projectee ->
+    match projectee with
+    | NotSupportedByKrmlExtension -> true
+    | uu___ -> false
+type translate_type_without_decay_t =
+  env -> FStar_Extraction_ML_Syntax.mlty -> typ
+let (ref_translate_type_without_decay :
+  translate_type_without_decay_t FStar_Compiler_Effect.ref) =
+  FStar_Compiler_Util.mk_ref
+    (fun uu___ ->
+       fun uu___1 -> FStar_Compiler_Effect.raise NotSupportedByKrmlExtension)
+let (register_pre_translate_type_without_decay :
+  translate_type_without_decay_t -> unit) =
+  fun f ->
+    let before =
+      FStar_Compiler_Effect.op_Bang ref_translate_type_without_decay in
+    let after e t =
+      try (fun uu___ -> match () with | () -> f e t) ()
+      with | NotSupportedByKrmlExtension -> before e t in
+    FStar_Compiler_Effect.op_Colon_Equals ref_translate_type_without_decay
+      after
+let (register_post_translate_type_without_decay :
+  translate_type_without_decay_t -> unit) =
+  fun f ->
+    let before =
+      FStar_Compiler_Effect.op_Bang ref_translate_type_without_decay in
+    let after e t =
+      try (fun uu___ -> match () with | () -> before e t) ()
+      with | NotSupportedByKrmlExtension -> f e t in
+    FStar_Compiler_Effect.op_Colon_Equals ref_translate_type_without_decay
+      after
+let (translate_type_without_decay :
+  env -> FStar_Extraction_ML_Syntax.mlty -> typ) =
+  fun env1 ->
+    fun t ->
+      let uu___ =
+        FStar_Compiler_Effect.op_Bang ref_translate_type_without_decay in
+      uu___ env1 t
+type translate_type_t = env -> FStar_Extraction_ML_Syntax.mlty -> typ
+let (ref_translate_type : translate_type_t FStar_Compiler_Effect.ref) =
+  FStar_Compiler_Util.mk_ref
+    (fun uu___ ->
+       fun uu___1 -> FStar_Compiler_Effect.raise NotSupportedByKrmlExtension)
+let (register_pre_translate_type : translate_type_t -> unit) =
+  fun f ->
+    let before = FStar_Compiler_Effect.op_Bang ref_translate_type in
+    let after e t =
+      try (fun uu___ -> match () with | () -> f e t) ()
+      with | NotSupportedByKrmlExtension -> before e t in
+    FStar_Compiler_Effect.op_Colon_Equals ref_translate_type after
+let (register_post_translate_type : translate_type_t -> unit) =
+  fun f ->
+    let before = FStar_Compiler_Effect.op_Bang ref_translate_type in
+    let after e t =
+      try (fun uu___ -> match () with | () -> before e t) ()
+      with | NotSupportedByKrmlExtension -> f e t in
+    FStar_Compiler_Effect.op_Colon_Equals ref_translate_type after
+let (translate_type : env -> FStar_Extraction_ML_Syntax.mlty -> typ) =
+  fun env1 ->
+    fun t ->
+      let uu___ = FStar_Compiler_Effect.op_Bang ref_translate_type in
+      uu___ env1 t
+type translate_expr_t = env -> FStar_Extraction_ML_Syntax.mlexpr -> expr
+let (ref_translate_expr : translate_expr_t FStar_Compiler_Effect.ref) =
+  FStar_Compiler_Util.mk_ref
+    (fun uu___ ->
+       fun uu___1 -> FStar_Compiler_Effect.raise NotSupportedByKrmlExtension)
+let (register_pre_translate_expr : translate_expr_t -> unit) =
+  fun f ->
+    let before = FStar_Compiler_Effect.op_Bang ref_translate_expr in
+    let after e t =
+      try (fun uu___ -> match () with | () -> f e t) ()
+      with | NotSupportedByKrmlExtension -> before e t in
+    FStar_Compiler_Effect.op_Colon_Equals ref_translate_expr after
+let (register_post_translate_expr : translate_expr_t -> unit) =
+  fun f ->
+    let before = FStar_Compiler_Effect.op_Bang ref_translate_expr in
+    let after e t =
+      try (fun uu___ -> match () with | () -> before e t) ()
+      with | NotSupportedByKrmlExtension -> f e t in
+    FStar_Compiler_Effect.op_Colon_Equals ref_translate_expr after
+let (translate_expr : env -> FStar_Extraction_ML_Syntax.mlexpr -> expr) =
+  fun env1 ->
+    fun e ->
+      let uu___ = FStar_Compiler_Effect.op_Bang ref_translate_expr in
+      uu___ env1 e
+type translate_type_decl_t =
+  env ->
+    FStar_Extraction_ML_Syntax.one_mltydecl ->
+      decl FStar_Pervasives_Native.option
+let (ref_translate_type_decl :
+  translate_type_decl_t FStar_Compiler_Effect.ref) =
+  FStar_Compiler_Util.mk_ref
+    (fun uu___ ->
+       fun uu___1 -> FStar_Compiler_Effect.raise NotSupportedByKrmlExtension)
+let (register_pre_translate_type_decl : translate_type_decl_t -> unit) =
+  fun f ->
+    let before = FStar_Compiler_Effect.op_Bang ref_translate_type_decl in
+    let after e t =
+      try (fun uu___ -> match () with | () -> f e t) ()
+      with | NotSupportedByKrmlExtension -> before e t in
+    FStar_Compiler_Effect.op_Colon_Equals ref_translate_type_decl after
+let (register_post_translate_type_decl : translate_type_decl_t -> unit) =
+  fun f ->
+    let before = FStar_Compiler_Effect.op_Bang ref_translate_type_decl in
+    let after e t =
+      try (fun uu___ -> match () with | () -> before e t) ()
+      with | NotSupportedByKrmlExtension -> f e t in
+    FStar_Compiler_Effect.op_Colon_Equals ref_translate_type_decl after
+let (translate_type_decl :
+  env ->
+    FStar_Extraction_ML_Syntax.one_mltydecl ->
+      decl FStar_Pervasives_Native.option)
+  =
+  fun env1 ->
+    fun ty ->
+      if
+        FStar_Compiler_List.mem FStar_Extraction_ML_Syntax.NoExtract
+          ty.FStar_Extraction_ML_Syntax.tydecl_meta
+      then FStar_Pervasives_Native.None
+      else
+        (let uu___1 = FStar_Compiler_Effect.op_Bang ref_translate_type_decl in
+         uu___1 env1 ty)
+let rec (translate_type_without_decay' :
+  env -> FStar_Extraction_ML_Syntax.mlty -> typ) =
   fun env1 ->
     fun t ->
       match t with
@@ -857,8 +998,9 @@ let rec (translate_type : env -> FStar_Extraction_ML_Syntax.mlty -> typ) =
           let uu___ = find_t env1 name1 in TBound uu___
       | FStar_Extraction_ML_Syntax.MLTY_Fun (t1, uu___, t2) ->
           let uu___1 =
-            let uu___2 = translate_type env1 t1 in
-            let uu___3 = translate_type env1 t2 in (uu___2, uu___3) in
+            let uu___2 = translate_type_without_decay env1 t1 in
+            let uu___3 = translate_type_without_decay env1 t2 in
+            (uu___2, uu___3) in
           TArrow uu___1
       | FStar_Extraction_ML_Syntax.MLTY_Erased -> TUnit
       | FStar_Extraction_ML_Syntax.MLTY_Named ([], p) when
@@ -888,7 +1030,8 @@ let rec (translate_type : env -> FStar_Extraction_ML_Syntax.mlty -> typ) =
             ||
             (let uu___2 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
              uu___2 = "FStar.HyperStack.ST.s_mref")
-          -> let uu___2 = translate_type env1 arg in TBuf uu___2
+          ->
+          let uu___2 = translate_type_without_decay env1 arg in TBuf uu___2
       | FStar_Extraction_ML_Syntax.MLTY_Named (arg::uu___::[], p) when
           ((((((((((let uu___1 =
                       FStar_Extraction_ML_Syntax.string_of_mlpath p in
@@ -925,18 +1068,21 @@ let rec (translate_type : env -> FStar_Extraction_ML_Syntax.mlty -> typ) =
             ||
             (let uu___1 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
              uu___1 = "FStar.HyperStack.ST.mmmref")
-          -> let uu___1 = translate_type env1 arg in TBuf uu___1
+          ->
+          let uu___1 = translate_type_without_decay env1 arg in TBuf uu___1
       | FStar_Extraction_ML_Syntax.MLTY_Named (arg::uu___::uu___1::[], p)
           when
           let uu___2 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
           uu___2 = "LowStar.Monotonic.Buffer.mbuffer" ->
-          let uu___2 = translate_type env1 arg in TBuf uu___2
+          let uu___2 = translate_type_without_decay env1 arg in TBuf uu___2
       | FStar_Extraction_ML_Syntax.MLTY_Named (arg::[], p) when
           (let uu___ = FStar_Extraction_ML_Syntax.string_of_mlpath p in
            uu___ = "LowStar.ConstBuffer.const_buffer") ||
             (let uu___ = FStar_Extraction_ML_Syntax.string_of_mlpath p in
              uu___ = "Steel.TLArray.t")
-          -> let uu___ = translate_type env1 arg in TConstBuf uu___
+          ->
+          let uu___ = translate_type_without_decay env1 arg in
+          TConstBuf uu___
       | FStar_Extraction_ML_Syntax.MLTY_Named (arg::[], p) when
           ((((((((((((((((let uu___ =
                             FStar_Extraction_ML_Syntax.string_of_mlpath p in
@@ -996,16 +1142,18 @@ let rec (translate_type : env -> FStar_Extraction_ML_Syntax.mlty -> typ) =
             ||
             (let uu___ = FStar_Extraction_ML_Syntax.string_of_mlpath p in
              uu___ = "Steel.ST.HigherArray.ptr")
-          -> let uu___ = translate_type env1 arg in TBuf uu___
+          -> let uu___ = translate_type_without_decay env1 arg in TBuf uu___
       | FStar_Extraction_ML_Syntax.MLTY_Named (uu___::arg::[], p) when
           (let uu___1 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
            uu___1 = "FStar.HyperStack.s_ref") ||
             (let uu___1 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
              uu___1 = "FStar.HyperStack.ST.s_ref")
-          -> let uu___1 = translate_type env1 arg in TBuf uu___1
+          ->
+          let uu___1 = translate_type_without_decay env1 arg in TBuf uu___1
       | FStar_Extraction_ML_Syntax.MLTY_Named (arg::[], p) when
           let uu___ = FStar_Extraction_ML_Syntax.string_of_mlpath p in
-          uu___ = "FStar.Universe.raise_t" -> translate_type env1 arg
+          uu___ = "FStar.Universe.raise_t" ->
+          translate_type_without_decay env1 arg
       | FStar_Extraction_ML_Syntax.MLTY_Named (uu___::[], p) when
           let uu___1 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
           uu___1 = "FStar.Ghost.erased" -> TAny
@@ -1015,19 +1163,26 @@ let rec (translate_type : env -> FStar_Extraction_ML_Syntax.mlty -> typ) =
           ((ns = ["Prims"]) || (ns = ["FStar"; "Pervasives"; "Native"])) &&
             (FStar_Compiler_Util.starts_with t1 "tuple")
           ->
-          let uu___ = FStar_Compiler_List.map (translate_type env1) args in
+          let uu___ =
+            FStar_Compiler_List.map (translate_type_without_decay env1) args in
           TTuple uu___
       | FStar_Extraction_ML_Syntax.MLTY_Named (args, lid) ->
           if (FStar_Compiler_List.length args) > Prims.int_zero
           then
             let uu___ =
-              let uu___1 = FStar_Compiler_List.map (translate_type env1) args in
+              let uu___1 =
+                FStar_Compiler_List.map (translate_type_without_decay env1)
+                  args in
               (lid, uu___1) in
             TApp uu___
           else TQualified lid
       | FStar_Extraction_ML_Syntax.MLTY_Tuple ts ->
-          let uu___ = FStar_Compiler_List.map (translate_type env1) ts in
+          let uu___ =
+            FStar_Compiler_List.map (translate_type_without_decay env1) ts in
           TTuple uu___
+and (translate_type' : env -> FStar_Extraction_ML_Syntax.mlty -> typ) =
+  fun env1 ->
+    fun t -> match t with | t1 -> translate_type_without_decay env1 t1
 and (translate_binders :
   env ->
     (Prims.string * FStar_Extraction_ML_Syntax.mlty) Prims.list ->
@@ -1043,7 +1198,7 @@ and (translate_binder :
       | (name1, typ1) ->
           let uu___1 = translate_type env1 typ1 in
           { name = name1; typ = uu___1; mut = false }
-and (translate_expr : env -> FStar_Extraction_ML_Syntax.mlexpr -> expr) =
+and (translate_expr' : env -> FStar_Extraction_ML_Syntax.mlexpr -> expr) =
   fun env1 ->
     fun e ->
       match e.FStar_Extraction_ML_Syntax.expr with
@@ -2517,6 +2672,22 @@ and (translate_expr : env -> FStar_Extraction_ML_Syntax.mlexpr -> expr) =
       | FStar_Extraction_ML_Syntax.MLE_App
           ({
              FStar_Extraction_ML_Syntax.expr =
+               FStar_Extraction_ML_Syntax.MLE_TApp
+               ({
+                  FStar_Extraction_ML_Syntax.expr =
+                    FStar_Extraction_ML_Syntax.MLE_Name p;
+                  FStar_Extraction_ML_Syntax.mlty = uu___;
+                  FStar_Extraction_ML_Syntax.loc = uu___1;_},
+                uu___2);
+             FStar_Extraction_ML_Syntax.mlty = uu___3;
+             FStar_Extraction_ML_Syntax.loc = uu___4;_},
+           uu___5::uu___6::e1::[])
+          when
+          let uu___7 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
+          uu___7 = "Steel.Effect.Atomic.return" -> translate_expr env1 e1
+      | FStar_Extraction_ML_Syntax.MLE_App
+          ({
+             FStar_Extraction_ML_Syntax.expr =
                FStar_Extraction_ML_Syntax.MLE_Name p;
              FStar_Extraction_ML_Syntax.mlty = uu___;
              FStar_Extraction_ML_Syntax.loc = uu___1;_},
@@ -2927,128 +3098,122 @@ and (mk_op_app :
             let uu___1 = FStar_Compiler_List.map (translate_expr env1) args in
             ((EOp (op1, w)), uu___1) in
           EApp uu___
-let (translate_type_decl :
+let (translate_type_decl' :
   env ->
     FStar_Extraction_ML_Syntax.one_mltydecl ->
       decl FStar_Pervasives_Native.option)
   =
   fun env1 ->
     fun ty ->
-      if
-        FStar_Compiler_List.mem FStar_Extraction_ML_Syntax.NoExtract
-          ty.FStar_Extraction_ML_Syntax.tydecl_meta
-      then FStar_Pervasives_Native.None
-      else
-        (match ty with
-         | { FStar_Extraction_ML_Syntax.tydecl_assumed = assumed;
-             FStar_Extraction_ML_Syntax.tydecl_name = name1;
-             FStar_Extraction_ML_Syntax.tydecl_ignored = uu___1;
-             FStar_Extraction_ML_Syntax.tydecl_parameters = args;
-             FStar_Extraction_ML_Syntax.tydecl_meta = flags;
-             FStar_Extraction_ML_Syntax.tydecl_defn =
-               FStar_Pervasives_Native.Some
-               (FStar_Extraction_ML_Syntax.MLTD_Abbrev t);_}
-             ->
-             let name2 = ((env1.module_name), name1) in
-             let env2 =
-               FStar_Compiler_List.fold_left
-                 (fun env3 -> fun name3 -> extend_t env3 name3) env1 args in
-             if
-               assumed &&
-                 (FStar_Compiler_List.mem
-                    FStar_Extraction_ML_Syntax.CAbstract flags)
-             then FStar_Pervasives_Native.Some (DTypeAbstractStruct name2)
-             else
-               if assumed
-               then
-                 (let name3 =
-                    FStar_Extraction_ML_Syntax.string_of_mlpath name2 in
-                  FStar_Compiler_Util.print1_warning
-                    "Not extracting type definition %s to KaRaMeL (assumed type)\n"
-                    name3;
-                  FStar_Pervasives_Native.None)
-               else
-                 (let uu___4 =
-                    let uu___5 =
-                      let uu___6 = translate_flags flags in
-                      let uu___7 = translate_type env2 t in
-                      (name2, uu___6, (FStar_Compiler_List.length args),
-                        uu___7) in
-                    DTypeAlias uu___5 in
-                  FStar_Pervasives_Native.Some uu___4)
-         | { FStar_Extraction_ML_Syntax.tydecl_assumed = uu___1;
-             FStar_Extraction_ML_Syntax.tydecl_name = name1;
-             FStar_Extraction_ML_Syntax.tydecl_ignored = uu___2;
-             FStar_Extraction_ML_Syntax.tydecl_parameters = args;
-             FStar_Extraction_ML_Syntax.tydecl_meta = flags;
-             FStar_Extraction_ML_Syntax.tydecl_defn =
-               FStar_Pervasives_Native.Some
-               (FStar_Extraction_ML_Syntax.MLTD_Record fields);_}
-             ->
-             let name2 = ((env1.module_name), name1) in
-             let env2 =
-               FStar_Compiler_List.fold_left
-                 (fun env3 -> fun name3 -> extend_t env3 name3) env1 args in
-             let uu___3 =
-               let uu___4 =
-                 let uu___5 = translate_flags flags in
-                 let uu___6 =
-                   FStar_Compiler_List.map
-                     (fun uu___7 ->
-                        match uu___7 with
-                        | (f, t) ->
-                            let uu___8 =
-                              let uu___9 = translate_type env2 t in
-                              (uu___9, false) in
-                            (f, uu___8)) fields in
-                 (name2, uu___5, (FStar_Compiler_List.length args), uu___6) in
-               DTypeFlat uu___4 in
-             FStar_Pervasives_Native.Some uu___3
-         | { FStar_Extraction_ML_Syntax.tydecl_assumed = uu___1;
-             FStar_Extraction_ML_Syntax.tydecl_name = name1;
-             FStar_Extraction_ML_Syntax.tydecl_ignored = uu___2;
-             FStar_Extraction_ML_Syntax.tydecl_parameters = args;
-             FStar_Extraction_ML_Syntax.tydecl_meta = flags;
-             FStar_Extraction_ML_Syntax.tydecl_defn =
-               FStar_Pervasives_Native.Some
-               (FStar_Extraction_ML_Syntax.MLTD_DType branches1);_}
-             ->
-             let name2 = ((env1.module_name), name1) in
-             let flags1 = translate_flags flags in
-             let env2 = FStar_Compiler_List.fold_left extend_t env1 args in
-             let uu___3 =
-               let uu___4 =
-                 let uu___5 =
-                   FStar_Compiler_List.map
-                     (fun uu___6 ->
-                        match uu___6 with
-                        | (cons, ts) ->
-                            let uu___7 =
-                              FStar_Compiler_List.map
-                                (fun uu___8 ->
-                                   match uu___8 with
-                                   | (name3, t) ->
-                                       let uu___9 =
-                                         let uu___10 = translate_type env2 t in
-                                         (uu___10, false) in
-                                       (name3, uu___9)) ts in
-                            (cons, uu___7)) branches1 in
-                 (name2, flags1, (FStar_Compiler_List.length args), uu___5) in
-               DTypeVariant uu___4 in
-             FStar_Pervasives_Native.Some uu___3
-         | { FStar_Extraction_ML_Syntax.tydecl_assumed = uu___1;
-             FStar_Extraction_ML_Syntax.tydecl_name = name1;
-             FStar_Extraction_ML_Syntax.tydecl_ignored = uu___2;
-             FStar_Extraction_ML_Syntax.tydecl_parameters = uu___3;
-             FStar_Extraction_ML_Syntax.tydecl_meta = uu___4;
-             FStar_Extraction_ML_Syntax.tydecl_defn = uu___5;_} ->
-             ((let uu___7 =
-                 let uu___8 =
-                   FStar_Compiler_Util.format1
-                     "Error extracting type definition %s to KaRaMeL\n" name1 in
-                 (FStar_Errors_Codes.Warning_DefinitionNotTranslated, uu___8) in
-               FStar_Errors.log_issue FStar_Compiler_Range.dummyRange uu___7);
-              FStar_Pervasives_Native.None))
+      match ty with
+      | { FStar_Extraction_ML_Syntax.tydecl_assumed = assumed;
+          FStar_Extraction_ML_Syntax.tydecl_name = name1;
+          FStar_Extraction_ML_Syntax.tydecl_ignored = uu___;
+          FStar_Extraction_ML_Syntax.tydecl_parameters = args;
+          FStar_Extraction_ML_Syntax.tydecl_meta = flags;
+          FStar_Extraction_ML_Syntax.tydecl_defn =
+            FStar_Pervasives_Native.Some
+            (FStar_Extraction_ML_Syntax.MLTD_Abbrev t);_}
+          ->
+          let name2 = ((env1.module_name), name1) in
+          let env2 =
+            FStar_Compiler_List.fold_left
+              (fun env3 -> fun name3 -> extend_t env3 name3) env1 args in
+          if
+            assumed &&
+              (FStar_Compiler_List.mem FStar_Extraction_ML_Syntax.CAbstract
+                 flags)
+          then FStar_Pervasives_Native.Some (DTypeAbstractStruct name2)
+          else
+            if assumed
+            then
+              (let name3 = FStar_Extraction_ML_Syntax.string_of_mlpath name2 in
+               FStar_Compiler_Util.print1_warning
+                 "Not extracting type definition %s to KaRaMeL (assumed type)\n"
+                 name3;
+               FStar_Pervasives_Native.None)
+            else
+              (let uu___3 =
+                 let uu___4 =
+                   let uu___5 = translate_flags flags in
+                   let uu___6 = translate_type env2 t in
+                   (name2, uu___5, (FStar_Compiler_List.length args), uu___6) in
+                 DTypeAlias uu___4 in
+               FStar_Pervasives_Native.Some uu___3)
+      | { FStar_Extraction_ML_Syntax.tydecl_assumed = uu___;
+          FStar_Extraction_ML_Syntax.tydecl_name = name1;
+          FStar_Extraction_ML_Syntax.tydecl_ignored = uu___1;
+          FStar_Extraction_ML_Syntax.tydecl_parameters = args;
+          FStar_Extraction_ML_Syntax.tydecl_meta = flags;
+          FStar_Extraction_ML_Syntax.tydecl_defn =
+            FStar_Pervasives_Native.Some
+            (FStar_Extraction_ML_Syntax.MLTD_Record fields);_}
+          ->
+          let name2 = ((env1.module_name), name1) in
+          let env2 =
+            FStar_Compiler_List.fold_left
+              (fun env3 -> fun name3 -> extend_t env3 name3) env1 args in
+          let uu___2 =
+            let uu___3 =
+              let uu___4 = translate_flags flags in
+              let uu___5 =
+                FStar_Compiler_List.map
+                  (fun uu___6 ->
+                     match uu___6 with
+                     | (f, t) ->
+                         let uu___7 =
+                           let uu___8 = translate_type_without_decay env2 t in
+                           (uu___8, false) in
+                         (f, uu___7)) fields in
+              (name2, uu___4, (FStar_Compiler_List.length args), uu___5) in
+            DTypeFlat uu___3 in
+          FStar_Pervasives_Native.Some uu___2
+      | { FStar_Extraction_ML_Syntax.tydecl_assumed = uu___;
+          FStar_Extraction_ML_Syntax.tydecl_name = name1;
+          FStar_Extraction_ML_Syntax.tydecl_ignored = uu___1;
+          FStar_Extraction_ML_Syntax.tydecl_parameters = args;
+          FStar_Extraction_ML_Syntax.tydecl_meta = flags;
+          FStar_Extraction_ML_Syntax.tydecl_defn =
+            FStar_Pervasives_Native.Some
+            (FStar_Extraction_ML_Syntax.MLTD_DType branches1);_}
+          ->
+          let name2 = ((env1.module_name), name1) in
+          let flags1 = translate_flags flags in
+          let env2 = FStar_Compiler_List.fold_left extend_t env1 args in
+          let uu___2 =
+            let uu___3 =
+              let uu___4 =
+                FStar_Compiler_List.map
+                  (fun uu___5 ->
+                     match uu___5 with
+                     | (cons, ts) ->
+                         let uu___6 =
+                           FStar_Compiler_List.map
+                             (fun uu___7 ->
+                                match uu___7 with
+                                | (name3, t) ->
+                                    let uu___8 =
+                                      let uu___9 =
+                                        translate_type_without_decay env2 t in
+                                      (uu___9, false) in
+                                    (name3, uu___8)) ts in
+                         (cons, uu___6)) branches1 in
+              (name2, flags1, (FStar_Compiler_List.length args), uu___4) in
+            DTypeVariant uu___3 in
+          FStar_Pervasives_Native.Some uu___2
+      | { FStar_Extraction_ML_Syntax.tydecl_assumed = uu___;
+          FStar_Extraction_ML_Syntax.tydecl_name = name1;
+          FStar_Extraction_ML_Syntax.tydecl_ignored = uu___1;
+          FStar_Extraction_ML_Syntax.tydecl_parameters = uu___2;
+          FStar_Extraction_ML_Syntax.tydecl_meta = uu___3;
+          FStar_Extraction_ML_Syntax.tydecl_defn = uu___4;_} ->
+          ((let uu___6 =
+              let uu___7 =
+                FStar_Compiler_Util.format1
+                  "Error extracting type definition %s to KaRaMeL\n" name1 in
+              (FStar_Errors_Codes.Warning_DefinitionNotTranslated, uu___7) in
+            FStar_Errors.log_issue FStar_Compiler_Range.dummyRange uu___6);
+           FStar_Pervasives_Native.None)
 let (translate_let :
   env ->
     FStar_Extraction_ML_Syntax.mlletflavor ->
@@ -3389,3 +3554,9 @@ let (translate : FStar_Extraction_ML_Syntax.mllib -> file Prims.list) =
                      "Unable to translate module: %s because:\n  %s\n" m_name
                      uu___3);
                   FStar_Pervasives_Native.None)) modules
+let (init : unit -> unit) =
+  fun uu___ ->
+    register_post_translate_type_without_decay translate_type_without_decay';
+    register_post_translate_type translate_type';
+    register_post_translate_type_decl translate_type_decl';
+    register_post_translate_expr translate_expr'
