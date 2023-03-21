@@ -148,7 +148,7 @@ let parse fn =
         let lines = U.splitlines contents in
         fun (start_pos:Lexing.position) (end_pos:Lexing.position) ->
           let suffix = FStar_Compiler_Util.nth_tail (Z.of_int (if start_pos.pos_lnum > 0 then start_pos.pos_lnum - 1 else 0)) lines in
-          let text, _ =  FStar_Compiler_Util.first_N (Z.of_int (end_pos.pos_lnum - start_pos.pos_lnum)) suffix in
+          let text, _ =  FStar_Compiler_Util.first_N (Z.of_int (if end_pos.pos_lnum = start_pos.pos_lnum then 1 else end_pos.pos_lnum - start_pos.pos_lnum)) suffix in
           let range = range_of_positions start_pos end_pos in
             { range;
               code = FStar_String.concat "\n" text }
