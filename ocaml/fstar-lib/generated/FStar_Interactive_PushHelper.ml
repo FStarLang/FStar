@@ -368,7 +368,7 @@ let (run_repl_task :
               FStar_Universal.load_interface_decls env
                 intf.FStar_Interactive_Ide_Types.tf_fname in
             (curmod, uu___)
-        | FStar_Interactive_Ide_Types.PushFragment frag ->
+        | FStar_Interactive_Ide_Types.PushFragment (frag, uu___) ->
             FStar_Universal.tc_one_fragment curmod env frag
         | FStar_Interactive_Ide_Types.Noop -> (curmod, env)
 let (query_of_ids :
@@ -903,5 +903,6 @@ let (full_lax :
                  (st1.FStar_Interactive_Ide_Types.repl_buffered_input_queries)
              } FStar_Interactive_Ide_Types.LaxCheck
              (FStar_Interactive_Ide_Types.PushFragment
-                (FStar_Pervasives.Inl frag))
+                ((FStar_Pervasives.Inl frag),
+                  FStar_Interactive_Ide_Types.LaxCheck))
        | FStar_Pervasives.Inr st1 -> (FStar_Pervasives_Native.None, st1))

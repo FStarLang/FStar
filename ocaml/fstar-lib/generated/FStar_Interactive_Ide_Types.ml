@@ -116,8 +116,8 @@ type repl_task =
   | LDInterleaved of (timed_fname * timed_fname) 
   | LDSingle of timed_fname 
   | LDInterfaceOfCurrentFile of timed_fname 
-  | PushFragment of (FStar_Parser_ParseIt.input_frag, FStar_Parser_AST.decl)
-  FStar_Pervasives.either 
+  | PushFragment of ((FStar_Parser_ParseIt.input_frag, FStar_Parser_AST.decl)
+  FStar_Pervasives.either * push_kind) 
   | Noop 
 let (uu___is_LDInterleaved : repl_task -> Prims.bool) =
   fun projectee ->
@@ -142,8 +142,8 @@ let (uu___is_PushFragment : repl_task -> Prims.bool) =
     match projectee with | PushFragment _0 -> true | uu___ -> false
 let (__proj__PushFragment__item___0 :
   repl_task ->
-    (FStar_Parser_ParseIt.input_frag, FStar_Parser_AST.decl)
-      FStar_Pervasives.either)
+    ((FStar_Parser_ParseIt.input_frag, FStar_Parser_AST.decl)
+      FStar_Pervasives.either * push_kind))
   = fun projectee -> match projectee with | PushFragment _0 -> _0
 let (uu___is_Noop : repl_task -> Prims.bool) =
   fun projectee -> match projectee with | Noop -> true | uu___ -> false
@@ -151,12 +151,25 @@ type full_buffer_request_kind =
   | Full 
   | Cache 
   | ReloadDeps 
+  | VerifyToPosition of position 
+  | LaxToPosition of position 
 let (uu___is_Full : full_buffer_request_kind -> Prims.bool) =
   fun projectee -> match projectee with | Full -> true | uu___ -> false
 let (uu___is_Cache : full_buffer_request_kind -> Prims.bool) =
   fun projectee -> match projectee with | Cache -> true | uu___ -> false
 let (uu___is_ReloadDeps : full_buffer_request_kind -> Prims.bool) =
   fun projectee -> match projectee with | ReloadDeps -> true | uu___ -> false
+let (uu___is_VerifyToPosition : full_buffer_request_kind -> Prims.bool) =
+  fun projectee ->
+    match projectee with | VerifyToPosition _0 -> true | uu___ -> false
+let (__proj__VerifyToPosition__item___0 :
+  full_buffer_request_kind -> position) =
+  fun projectee -> match projectee with | VerifyToPosition _0 -> _0
+let (uu___is_LaxToPosition : full_buffer_request_kind -> Prims.bool) =
+  fun projectee ->
+    match projectee with | LaxToPosition _0 -> true | uu___ -> false
+let (__proj__LaxToPosition__item___0 : full_buffer_request_kind -> position)
+  = fun projectee -> match projectee with | LaxToPosition _0 -> _0
 type query' =
   | Exit 
   | DescribeProtocol 
@@ -384,12 +397,12 @@ let (string_of_repl_task : repl_task -> Prims.string) =
     | LDInterfaceOfCurrentFile intf ->
         let uu___1 = string_of_timed_fname intf in
         FStar_Compiler_Util.format1 "LDInterfaceOfCurrentFile %s" uu___1
-    | PushFragment (FStar_Pervasives.Inl frag) ->
+    | PushFragment (FStar_Pervasives.Inl frag, uu___1) ->
         FStar_Compiler_Util.format1 "PushFragment { code = %s }"
           frag.FStar_Parser_ParseIt.frag_text
-    | PushFragment (FStar_Pervasives.Inr d) ->
-        let uu___1 = FStar_Parser_AST.decl_to_string d in
-        FStar_Compiler_Util.format1 "PushFragment { decl = %s }" uu___1
+    | PushFragment (FStar_Pervasives.Inr d, uu___1) ->
+        let uu___2 = FStar_Parser_AST.decl_to_string d in
+        FStar_Compiler_Util.format1 "PushFragment { decl = %s }" uu___2
     | Noop -> "Noop {}"
 let (string_of_repl_stack_entry : repl_stack_entry_t -> Prims.string) =
   fun uu___ ->

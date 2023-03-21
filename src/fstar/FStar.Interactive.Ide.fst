@@ -218,10 +218,18 @@ let unpack_interactive_query json =
         assoc err "line" loc |> js_int,
         assoc err "column" loc |> js_int
     in
+    let read_to_position () =
+      let to_pos = arg "to-position" |> js_assoc in
+      "<input>",
+      assoc  "to-position.line" "line" to_pos  |> js_int, 
+      assoc "to-position.column" "column"  to_pos |> js_int
+    in
     let parse_full_buffer_kind = function
       | "full" -> Full
       | "cache" -> Cache
       | "reload-deps" -> ReloadDeps
+      | "verify-to-position" -> VerifyToPosition (read_to_position ())
+      | "lax-to-position" -> LaxToPosition (read_to_position ())
       | _ -> raise (InvalidQuery "Invalid full-buffer kind")
     in
     { qid = qid;
@@ -596,8 +604,12 @@ let write_full_buffer_fragment_progress (di:Incremental.fragment_progress) =
     | FragmentStarted d ->
       write_progress (Some "full-buffer-fragment-started")
                      ["ranges", json_of_def_range d.FStar.Parser.AST.drange]
-    | FragmentSuccess (d, cf) ->
+    | FragmentSuccess (d, cf, FullCheck) ->
       write_progress (Some "full-buffer-fragment-ok")
+                     ["ranges", json_of_def_range d.FStar.Parser.AST.drange;
+                      "code-fragment", json_of_code_fragment cf]
+    | FragmentSuccess (d, cf, LaxCheck) ->
+      write_progress (Some "full-buffer-fragment-lax-ok")
                      ["ranges", json_of_def_range d.FStar.Parser.AST.drange;
                       "code-fragment", json_of_code_fragment cf]
     | FragmentFailed d ->
@@ -637,7 +649,7 @@ let run_push_without_deps st query
       Inr decl
     in
   let st = set_nosynth_flag st peek_only in
-  let success, st = run_repl_transaction st push_kind peek_only (PushFragment frag) in
+  let success, st = run_repl_transaction st push_kind peek_only (PushFragment (frag, push_kind)) in
   let st = set_nosynth_flag st false in
 
   let status = if success || peek_only then QueryOK else QueryNOK in
@@ -652,10 +664,10 @@ let run_push_without_deps st query
   in
   let _ = 
     match code_or_decl with
-    | Inr ds ->
+    | Inr (d, s) ->
       if not has_error
-      then write_full_buffer_fragment_progress (Incremental.FragmentSuccess ds)
-      else write_full_buffer_fragment_progress (Incremental.FragmentFailed (fst ds))
+      then write_full_buffer_fragment_progress (Incremental.FragmentSuccess (d, s, push_kind))
+      else write_full_buffer_fragment_progress (Incremental.FragmentFailed d)
     | _ -> ()
   in
   let json_errors = JsonList (errs |> List.map json_of_issue) in
@@ -969,11 +981,16 @@ let as_json_list (q: (query_status & json) & either repl_state int)
 let run_query_result = (query_status * list json) * either repl_state int 
 
 let maybe_cancel_queries st l = 
+  let log_cancellation l = 
+      if Options.debug_any()
+      then List.iter (fun q -> BU.print1 "Cancelling query: %s\n" (query_to_string q)) l
+  in
   match st.repl_buffered_input_queries with
   | { qq = Cancel p } :: rest -> (
     let st = { st with repl_buffered_input_queries = rest } in
     match p with
     | None -> //If no range, then cancel all remaining queries
+      log_cancellation l;
       [], st
     | Some p -> //Cancel all queries that are within the range
       let query_ahead_of p q =
@@ -985,7 +1002,9 @@ let maybe_cancel_queries st l =
       let l = 
         match BU.prefix_until (query_ahead_of p) l with
         | None -> l
-        | Some (l, _, _) -> l
+        | Some (l, q, qs) ->
+          log_cancellation (q::qs);
+          l
       in
       l, st
   )
@@ -1153,7 +1172,6 @@ let interactive_mode' init_st =
 
 let interactive_mode (filename:string): unit =
   install_ide_mode_hooks write_json;
-
   // Ignore unexpected interrupts (some methods override this handler)
   Util.set_sigint_handler Util.sigint_ignore;
 

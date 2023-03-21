@@ -341,11 +341,31 @@ let (unpack_interactive_query :
                  FStar_Compiler_Effect.op_Bar_Greater uu___4
                    FStar_Interactive_JsonHelper.js_int in
                (uu___1, uu___2, uu___3) in
+             let read_to_position uu___1 =
+               let to_pos =
+                 let uu___2 = arg "to-position" in
+                 FStar_Compiler_Effect.op_Bar_Greater uu___2
+                   FStar_Interactive_JsonHelper.js_assoc in
+               let uu___2 =
+                 let uu___3 = assoc "to-position.line" "line" to_pos in
+                 FStar_Compiler_Effect.op_Bar_Greater uu___3
+                   FStar_Interactive_JsonHelper.js_int in
+               let uu___3 =
+                 let uu___4 = assoc "to-position.column" "column" to_pos in
+                 FStar_Compiler_Effect.op_Bar_Greater uu___4
+                   FStar_Interactive_JsonHelper.js_int in
+               ("<input>", uu___2, uu___3) in
              let parse_full_buffer_kind uu___1 =
                match uu___1 with
                | "full" -> FStar_Interactive_Ide_Types.Full
                | "cache" -> FStar_Interactive_Ide_Types.Cache
                | "reload-deps" -> FStar_Interactive_Ide_Types.ReloadDeps
+               | "verify-to-position" ->
+                   let uu___2 = read_to_position () in
+                   FStar_Interactive_Ide_Types.VerifyToPosition uu___2
+               | "lax-to-position" ->
+                   let uu___2 = read_to_position () in
+                   FStar_Interactive_Ide_Types.LaxToPosition uu___2
                | uu___2 ->
                    FStar_Compiler_Effect.raise
                      (FStar_Interactive_JsonHelper.InvalidQuery
@@ -1397,7 +1417,8 @@ let (write_full_buffer_fragment_progress :
           [uu___1] in
         write_progress
           (FStar_Pervasives_Native.Some "full-buffer-fragment-started") uu___
-    | FStar_Interactive_Incremental.FragmentSuccess (d, cf) ->
+    | FStar_Interactive_Incremental.FragmentSuccess
+        (d, cf, FStar_Interactive_Ide_Types.FullCheck) ->
         let uu___ =
           let uu___1 =
             let uu___2 =
@@ -1412,6 +1433,22 @@ let (write_full_buffer_fragment_progress :
           uu___1 :: uu___2 in
         write_progress
           (FStar_Pervasives_Native.Some "full-buffer-fragment-ok") uu___
+    | FStar_Interactive_Incremental.FragmentSuccess
+        (d, cf, FStar_Interactive_Ide_Types.LaxCheck) ->
+        let uu___ =
+          let uu___1 =
+            let uu___2 =
+              FStar_Compiler_Range.json_of_def_range
+                d.FStar_Parser_AST.drange in
+            ("ranges", uu___2) in
+          let uu___2 =
+            let uu___3 =
+              let uu___4 = json_of_code_fragment cf in
+              ("code-fragment", uu___4) in
+            [uu___3] in
+          uu___1 :: uu___2 in
+        write_progress
+          (FStar_Pervasives_Native.Some "full-buffer-fragment-lax-ok") uu___
     | FStar_Interactive_Incremental.FragmentFailed d ->
         let uu___ =
           let uu___1 =
@@ -1595,7 +1632,7 @@ let (run_push_without_deps :
             let st1 = set_nosynth_flag st peek_only in
             let uu___2 =
               run_repl_transaction st1 push_kind peek_only
-                (FStar_Interactive_Ide_Types.PushFragment frag) in
+                (FStar_Interactive_Ide_Types.PushFragment (frag, push_kind)) in
             match uu___2 with
             | (success, st2) ->
                 let st3 = set_nosynth_flag st2 false in
@@ -1612,15 +1649,15 @@ let (run_push_without_deps :
                        | FStar_Errors.ENotImplemented -> true
                        | uu___3 -> false) errs in
                 ((match code_or_decl with
-                  | FStar_Pervasives.Inr ds ->
+                  | FStar_Pervasives.Inr (d, s) ->
                       if Prims.op_Negation has_error
                       then
                         write_full_buffer_fragment_progress
-                          (FStar_Interactive_Incremental.FragmentSuccess ds)
+                          (FStar_Interactive_Incremental.FragmentSuccess
+                             (d, s, push_kind))
                       else
                         write_full_buffer_fragment_progress
-                          (FStar_Interactive_Incremental.FragmentFailed
-                             (FStar_Pervasives_Native.fst ds))
+                          (FStar_Interactive_Incremental.FragmentFailed d)
                   | uu___4 -> ());
                  (let json_errors =
                     let uu___4 =
@@ -2511,6 +2548,15 @@ let (maybe_cancel_queries :
   =
   fun st ->
     fun l ->
+      let log_cancellation l1 =
+        let uu___ = FStar_Options.debug_any () in
+        if uu___
+        then
+          FStar_Compiler_List.iter
+            (fun q ->
+               let uu___1 = FStar_Interactive_Ide_Types.query_to_string q in
+               FStar_Compiler_Util.print1 "Cancelling query: %s\n" uu___1) l1
+        else () in
       match st.FStar_Interactive_Ide_Types.repl_buffered_input_queries with
       | {
           FStar_Interactive_Ide_Types.qq = FStar_Interactive_Ide_Types.Cancel
@@ -2537,7 +2583,7 @@ let (maybe_cancel_queries :
               FStar_Interactive_Ide_Types.repl_buffered_input_queries = rest
             } in
           (match p with
-           | FStar_Pervasives_Native.None -> ([], st1)
+           | FStar_Pervasives_Native.None -> (log_cancellation l; ([], st1))
            | FStar_Pervasives_Native.Some p1 ->
                let query_ahead_of p2 q =
                  let uu___1 = p2 in
@@ -2552,7 +2598,8 @@ let (maybe_cancel_queries :
                    FStar_Compiler_Util.prefix_until (query_ahead_of p1) l in
                  match uu___1 with
                  | FStar_Pervasives_Native.None -> l
-                 | FStar_Pervasives_Native.Some (l2, uu___2, uu___3) -> l2 in
+                 | FStar_Pervasives_Native.Some (l2, q, qs) ->
+                     (log_cancellation (q :: qs); l2) in
                (l1, st1))
       | uu___ -> (l, st)
 let rec (fold_query :

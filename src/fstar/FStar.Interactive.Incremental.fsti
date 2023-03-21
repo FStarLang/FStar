@@ -27,7 +27,7 @@ open FStar.Interactive.Ide.Types
 
 type fragment_progress =
    | FragmentStarted of decl
-   | FragmentSuccess of (decl & FStar.Parser.ParseIt.code_fragment)
+   | FragmentSuccess of (decl & FStar.Parser.ParseIt.code_fragment & push_kind)
    | FragmentFailed of decl
    | FragmentError of list issue
 
@@ -51,3 +51,4 @@ val run_full_buffer (st:repl_state)
 val format_code (st:repl_state)
                 (code:string)
   : either string (list issue)
+ 

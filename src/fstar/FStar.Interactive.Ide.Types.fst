@@ -95,14 +95,16 @@ type repl_task =
   | LDInterleaved of timed_fname * timed_fname (* (interface * implementation) *)
   | LDSingle of timed_fname (* interface or implementation *)
   | LDInterfaceOfCurrentFile of timed_fname (* interface *)
-  | PushFragment of either PI.input_frag FStar.Parser.AST.decl (* code fragment *)
+  | PushFragment of either PI.input_frag FStar.Parser.AST.decl * push_kind (* code fragment *)
   | Noop (* Used by compute *)
 
 type full_buffer_request_kind =
   | Full : full_buffer_request_kind
   | Cache : full_buffer_request_kind
   | ReloadDeps : full_buffer_request_kind
-
+  | VerifyToPosition of position
+  | LaxToPosition of position
+  
 type query' =
 | Exit
 | DescribeProtocol
@@ -163,9 +165,9 @@ let string_of_repl_task = function
     Util.format1 "LDSingle %s" (string_of_timed_fname intf_or_impl)
   | LDInterfaceOfCurrentFile intf ->
     Util.format1 "LDInterfaceOfCurrentFile %s" (string_of_timed_fname intf)
-  | PushFragment (Inl frag) ->
+  | PushFragment (Inl frag, _) ->
     Util.format1 "PushFragment { code = %s }" frag.frag_text
-  | PushFragment (Inr d) ->
+  | PushFragment (Inr d, _) ->
     Util.format1 "PushFragment { decl = %s }" (FStar.Parser.AST.decl_to_string d)
   | Noop -> "Noop {}"
 

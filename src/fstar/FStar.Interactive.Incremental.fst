@@ -87,13 +87,14 @@ let as_query (q:query')
         qid=qid_prefix ^ "." ^ string_of_int i
       }
 
-let push_decl (write_full_buffer_fragment_progress: fragment_progress -> unit)
+let push_decl (push_kind:push_kind)
+              (write_full_buffer_fragment_progress: fragment_progress -> unit)
               (ds:decl * code_fragment)              
   : qst (list query)
   = let open FStar.Compiler.Range in
     let d, s = ds in
     let pq = {
-        push_kind = FullCheck;
+        push_kind;
         push_line = line_of_pos (start_of_range d.drange);
         push_column = col_of_pos (start_of_range d.drange);
         push_peek_only = false;
@@ -107,10 +108,11 @@ let push_decl (write_full_buffer_fragment_progress: fragment_progress -> unit)
     let! push = as_query (Push pq) in
     return [cb; push]
     
-let push_decls (write_full_buffer_fragment_progress : fragment_progress -> unit)
+let push_decls (push_kind:push_kind)
+               (write_full_buffer_fragment_progress : fragment_progress -> unit)
                (ds:list (decl & code_fragment))
   : qst (list query)
-  = let! qs = map (push_decl write_full_buffer_fragment_progress) ds in
+  = let! qs = map (push_decl push_kind write_full_buffer_fragment_progress) ds in
     return (List.flatten qs)
   
 let pop_entries (e:list repl_stack_entry_t)
@@ -130,10 +132,11 @@ let repl_task (_, (p, _)) = p
 
 let inspect_repl_stack (s:repl_stack_t)
                        (ds:list (decl & code_fragment))
+                       (push_kind : push_kind)
                        (write_full_buffer_fragment_progress: fragment_progress -> unit)                       
   : qst (list query) // & list json)
   = let entries = List.rev s in
-    let push_decls = push_decls write_full_buffer_fragment_progress in
+    let push_decls = push_decls push_kind write_full_buffer_fragment_progress in
     match BU.prefix_until 
              (function (_, (PushFragment _, _)) -> true | _ -> false)
              entries          
@@ -155,14 +158,15 @@ let inspect_repl_stack (s:repl_stack_t)
             match repl_task e with
             | Noop -> 
               matching_prefix entries (d::ds)
-            | PushFragment (Inl frag) ->
+            | PushFragment (Inl frag, _) ->
               let! pops = pop_entries  (e::entries) in
               let! pushes = push_decls (d::ds) in
               return (pops @ pushes)
-            | PushFragment (Inr d') ->
+            | PushFragment (Inr d', pk) ->
               if eq_decl (fst d) d'
               then (
-                write_full_buffer_fragment_progress (FragmentSuccess d);
+                let d, s = d in
+                write_full_buffer_fragment_progress (FragmentSuccess (d, s, pk));
                 matching_prefix entries ds
               )
               else let! pops = pop_entries (e::entries) in
@@ -230,13 +234,35 @@ let run_full_buffer (st:repl_state)
         let issue = syntax_issue err in
         write_full_buffer_fragment_progress (FragmentError [issue])
     in
+    let filter_decls decls =
+      match request_type with
+      | VerifyToPosition (_, line, _col)
+      | LaxToPosition (_, line, _col) ->
+        BU.print1 "Got to-position: %s" (string_of_int line);
+        List.filter
+          (fun (d, _) ->
+            let start = Range.start_of_range d.drange in
+            let start_line = Range.line_of_pos start in
+            start_line <= line)
+          decls
+      | _ -> decls
+    in
     let qs = 
       match parse_result with
       | IncrementalFragment (decls, _, err_opt) -> (
+        let decls = filter_decls decls in
         match request_type with
-        | Full | Cache ->
+        | ReloadDeps ->
+          run_qst (reload_deps (!repl_stack)) qid
+
+        | _ ->
+          let push_kind = 
+            match request_type with
+            | LaxToPosition _ -> LaxCheck
+            | _ -> FullCheck
+          in
           let queries = 
-              run_qst (inspect_repl_stack (!repl_stack) decls write_full_buffer_fragment_progress) qid
+              run_qst (inspect_repl_stack (!repl_stack) decls push_kind write_full_buffer_fragment_progress) qid
           in
           if request_type = Full then log_syntax_issues err_opt;
           if Options.debug_any()
@@ -244,10 +270,8 @@ let run_full_buffer (st:repl_state)
             BU.print1 "Generating queries\n%s\n" 
                       (String.concat "\n" (List.map query_to_string queries))
           );
-          if request_type = Full then queries else []
+          if request_type <> Cache then queries else []
 
-        | ReloadDeps ->
-          run_qst (reload_deps (!repl_stack)) qid
       )
         
       | ParseError err ->
