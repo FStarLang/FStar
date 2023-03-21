@@ -561,7 +561,7 @@ let rec translate_type_without_decay' env t: typ =
   | MLTY_Named ([arg], p) when
     Syntax.string_of_mlpath p = "FStar.Universe.raise_t"
     ->
-      translate_type env arg
+      translate_type_without_decay env arg
 
   | MLTY_Named ([_], p) when (Syntax.string_of_mlpath p = "FStar.Ghost.erased") ->
       TAny
@@ -1222,7 +1222,7 @@ let translate_type_decl' env ty: option decl =
         let name = env.module_name, name in
         let env = List.fold_left (fun env name -> extend_t env name) env args in
         Some (DTypeFlat (name, translate_flags flags, List.length args, List.map (fun (f, t) ->
-          f, (translate_type env t, false)) fields))
+          f, (translate_type_without_decay env t, false)) fields))
 
     | {tydecl_name=name;
        tydecl_parameters=args;
@@ -1233,7 +1233,7 @@ let translate_type_decl' env ty: option decl =
         let env = List.fold_left extend_t env args in
         Some (DTypeVariant (name, flags, List.length args, List.map (fun (cons, ts) ->
           cons, List.map (fun (name, t) ->
-            name, (translate_type env t, false)
+            name, (translate_type_without_decay env t, false)
           ) ts
         ) branches))
     | {tydecl_name=name} ->
