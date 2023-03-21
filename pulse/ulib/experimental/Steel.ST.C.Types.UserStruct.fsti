@@ -40,6 +40,11 @@ let set_aux
 let set (#t: Type) (sd: struct_def t) (x: t) (f: field_t sd.fields) (v: sd.field_desc.fd_type f) : Tot t =
   sd.mk (set_aux sd x f v)
 
+let get_set (#t: Type) (sd: struct_def t) (x: t) (f: field_t sd.fields) (v: sd.field_desc.fd_type f) (f' : field_t sd.fields) : Lemma
+  (sd.get (set sd x f v) f' == (if f = f' then v else sd.get x f'))
+  [SMTPat (sd.get (set sd x f v) f')]
+= sd.get_mk (set_aux sd x f v) f'
+
 [@@noextract_to "krml"]
 val struct_typedef
   (#t: Type)
@@ -136,7 +141,7 @@ val struct_field0
   })
 : STT (ref td')
     (pts_to r v)
-    (fun r' -> has_struct_field r field r' `star` pts_to r (set sd v field (unknown (sd.field_desc.fd_typedef field))) `star` pts_to r' (sd.get v field))
+    (fun r' -> has_struct_field r field (coerce_eq () r') `star` pts_to r (set sd (Ghost.reveal v) field (unknown (sd.field_desc.fd_typedef field))) `star` pts_to #_ #(sd.field_desc.fd_typedef field) (coerce_eq () r') (sd.get (Ghost.reveal v) field))
 
 inline_for_extraction [@@noextract_to "krml"] // primitive
 let struct_field
