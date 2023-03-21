@@ -533,7 +533,7 @@ let rec translate (cfg:config) (bs:list t) (e:term) : t =
         | None -> None
         | Some (b, asc) ->
           let b, bs =
-            let x = new_bv None (readback cfg (translate cfg bs b.binder_bv.sort)) in
+            let x = gen_bv' b.binder_bv.ppname None (readback cfg (translate cfg bs b.binder_bv.sort)) in
             mk_binder x, mkAccuVar x::bs in
           let asc =
             match asc with
@@ -569,10 +569,10 @@ let rec translate (cfg:config) (bs:list t) (e:term) : t =
               in
               (bs', Pat_cons (fvar, us_opt, List.rev args'))
             | Pat_var bvar ->
-              let x = S.new_bv None (readback cfg (translate cfg bs bvar.sort)) in
+              let x = S.gen_bv' bvar.ppname None (readback cfg (translate cfg bs bvar.sort)) in
               (mkAccuVar x :: bs, Pat_var x)
             | Pat_wild bvar ->
-              let x = S.new_bv None (readback cfg (translate cfg bs bvar.sort)) in
+              let x = S.gen_bv' bvar.ppname None (readback cfg (translate cfg bs bvar.sort)) in
               (mkAccuVar x :: bs, Pat_wild x)
             | Pat_dot_term eopt ->
               (bs,
