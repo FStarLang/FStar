@@ -3,6 +3,7 @@ on:
   push:
     branches-ignore:
     - _**
+    - john_ml_steel_c
   pull_request:
   workflow_dispatch:
     inputs:
