@@ -80,7 +80,7 @@ let replace_var (s:param_state) (b:bool) (t:term) : Tac term =
   match inspect_ln t with
   | Tv_Var bv ->
     begin try
-      let (x, y, _) = lookup bvmap bv in
+      let (x, y, _) = lookup s bv in
       let bv = if b then (inspect_binder y).binder_bv else (inspect_binder x).binder_bv in
       pack (Tv_Var bv)
     with
@@ -266,17 +266,19 @@ and param_br (s:param_state) (br : branch) : Tac branch =
   (pat', param' s' t)
 
 and push_binder (b:binder) (s:param_state) : Tac (param_state & (binder & binder & binder)) =
-  let (bv, (q, _)) = inspect_binder b in
+  let bv, q =
+    let bview = inspect_binder b in
+    bview.binder_bv, bview.binder_qual in
   let typ = (inspect_bv bv).bv_sort in
-  let name = (inspect_bv bv).bv_ppname in
+  let name = unseal ((inspect_bv bv).bv_ppname) in
   let bx0 = fresh_binder_named (name^"0") (replace_by s false typ) in
   let bx1 = fresh_binder_named (name^"1") (replace_by s true typ) in
   let bxr = fresh_binder_named (name^"R") (`(`#(param' s typ)) (`#bx0) (`#bx1)) in
 
   (* respect implicits *)
-  let bx0 = binder_set_qual q bx0 in
-  let bx1 = binder_set_qual q bx1 in
-  let bxr = binder_set_qual q bxr in
+  let bx0 = binder_set_qual bx0 q in
+  let bx1 = binder_set_qual bx1 q in
+  let bxr = binder_set_qual bxr q in
 
   let s = push_bv_to_state bv bx0 bx1 bxr s in
   (s, (bx0, bx1, bxr))
