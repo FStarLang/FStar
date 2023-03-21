@@ -17,7 +17,10 @@ KRML_EXE = $(KRML_HOME)/krml
 INCLUDE_PATH += $(KRML_HOME)/krmllib $(KRML_HOME)/krmllib/obj
 endif
 
-world: verify test
+world: verify test fstlib
+
+fstlib:
+	+$(MAKE) -C $@
 
 FSTAR_OPTIONS = --cache_checked_modules \
 		--cmi \
@@ -104,4 +107,4 @@ test:
 
 endif # KRML_HOME
 
-.PHONY: all world verify clean depend test
+.PHONY: all world verify clean depend test fstlib
