@@ -39,7 +39,8 @@ let (eq_sconst : FStar_Const.sconst -> FStar_Const.sconst -> Prims.bool) =
          (s2, uu___1)) -> s1 = s2
       | (FStar_Const.Const_real s1, FStar_Const.Const_real s2) -> s1 = s2
       | (FStar_Const.Const_range r1, FStar_Const.Const_range r2) -> r1 = r2
-      | (FStar_Const.Const_reify, FStar_Const.Const_reify) -> true
+      | (FStar_Const.Const_reify uu___, FStar_Const.Const_reify uu___1) ->
+          true
       | (FStar_Const.Const_reflect l1, FStar_Const.Const_reflect l2) ->
           FStar_Ident.lid_equals l1 l2
       | uu___ -> false

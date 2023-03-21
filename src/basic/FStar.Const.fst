@@ -48,8 +48,9 @@ type sconst =
   | Const_string      of string * FStar.Compiler.Range.range                (* UTF-8 encoded *)
   | Const_range_of                                           (* `range_of` primitive *)
   | Const_set_range_of                                       (* `set_range_of` primitive *)
-  | Const_range       of FStar.Compiler.Range.range                         (* not denotable by the programmer *)
-  | Const_reify                                              (* a coercion from a computation to a Tot term *)
+  | Const_range       of FStar.Compiler.Range.range          (* not denotable by the programmer *)
+  | Const_reify       of option Ident.lid                    (* a coercion from a computation to its underlying repr *)
+                                                             (* decorated optionally with the computation effect name *)
   | Const_reflect     of Ident.lid                           (* a coercion from a Tot term to an l-computation type *)
 
 let eq_const c1 c2 =
@@ -59,6 +60,7 @@ let eq_const c1 c2 =
       o1=o2
     | Const_string(a, _), Const_string(b, _) -> a=b
     | Const_reflect l1, Const_reflect l2 -> Ident.lid_equals l1 l2
+    | Const_reify _, Const_reify _ -> true
     | _ -> c1=c2
 
 open FStar.BigInt

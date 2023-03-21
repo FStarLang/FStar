@@ -44,6 +44,10 @@ let eq_option (f: 'a -> 'a -> bool) (t1 t2:option 'a)
     | Some t1, Some t2 -> f t1 t2
     | _ -> false
 
+
+//
+// TODO: There is an eq_const in FStar.Const.fst, can we use that?
+//
 let eq_sconst (c1 c2: sconst) : bool =
     match c1, c2 with
     | Const_effect, Const_effect -> true
@@ -54,7 +58,7 @@ let eq_sconst (c1 c2: sconst) : bool =
     | Const_string (s1, _), Const_string (s2, _) -> s1 = s2
     | Const_real s1, Const_real s2 -> s1 = s2
     | Const_range r1, Const_range r2 -> r1 = r2
-    | Const_reify, Const_reify -> true
+    | Const_reify _, Const_reify _ -> true
     | Const_reflect l1, Const_reflect l2 -> Ident.lid_equals l1 l2
     | _ -> false
 

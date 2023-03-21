@@ -2506,23 +2506,23 @@ and (tc_maybe_toplevel_term :
         | FStar_Syntax_Syntax.Tm_app
             ({
                FStar_Syntax_Syntax.n = FStar_Syntax_Syntax.Tm_constant
-                 (FStar_Const.Const_reify);
-               FStar_Syntax_Syntax.pos = uu___2;
-               FStar_Syntax_Syntax.vars = uu___3;
-               FStar_Syntax_Syntax.hash_code = uu___4;_},
+                 (FStar_Const.Const_reify uu___2);
+               FStar_Syntax_Syntax.pos = uu___3;
+               FStar_Syntax_Syntax.vars = uu___4;
+               FStar_Syntax_Syntax.hash_code = uu___5;_},
              a::hd::rest)
             ->
             let rest1 = hd :: rest in
-            let uu___5 = FStar_Syntax_Util.head_and_args top in
-            (match uu___5 with
-             | (unary_op, uu___6) ->
+            let uu___6 = FStar_Syntax_Util.head_and_args top in
+            (match uu___6 with
+             | (unary_op, uu___7) ->
                  let head =
-                   let uu___7 =
+                   let uu___8 =
                      FStar_Compiler_Range.union_ranges
                        unary_op.FStar_Syntax_Syntax.pos
                        (FStar_Pervasives_Native.fst a).FStar_Syntax_Syntax.pos in
                    FStar_Syntax_Syntax.mk
-                     (FStar_Syntax_Syntax.Tm_app (unary_op, [a])) uu___7 in
+                     (FStar_Syntax_Syntax.Tm_app (unary_op, [a])) uu___8 in
                  let t =
                    FStar_Syntax_Syntax.mk
                      (FStar_Syntax_Syntax.Tm_app (head, rest1))
@@ -2679,10 +2679,10 @@ and (tc_maybe_toplevel_term :
         | FStar_Syntax_Syntax.Tm_app
             ({
                FStar_Syntax_Syntax.n = FStar_Syntax_Syntax.Tm_constant
-                 (FStar_Const.Const_reify);
-               FStar_Syntax_Syntax.pos = uu___2;
-               FStar_Syntax_Syntax.vars = uu___3;
-               FStar_Syntax_Syntax.hash_code = uu___4;_},
+                 (FStar_Const.Const_reify uu___2);
+               FStar_Syntax_Syntax.pos = uu___3;
+               FStar_Syntax_Syntax.vars = uu___4;
+               FStar_Syntax_Syntax.hash_code = uu___5;_},
              (e1, aqual)::[])
             ->
             (if FStar_Compiler_Option.isSome aqual
@@ -2691,173 +2691,88 @@ and (tc_maybe_toplevel_term :
                  (FStar_Errors_Codes.Warning_IrrelevantQualifierOnArgumentToReify,
                    "Qualifier on argument to reify is irrelevant and will be ignored")
              else ();
-             (let uu___6 = FStar_TypeChecker_Env.clear_expected_typ env1 in
-              match uu___6 with
-              | (env0, uu___7) ->
-                  let uu___8 = tc_term env0 e1 in
-                  (match uu___8 with
+             (let uu___7 = FStar_TypeChecker_Env.clear_expected_typ env1 in
+              match uu___7 with
+              | (env0, uu___8) ->
+                  let uu___9 = tc_term env0 e1 in
+                  (match uu___9 with
                    | (e2, c, g) ->
-                       let uu___9 = FStar_Syntax_Util.head_and_args top in
-                       (match uu___9 with
-                        | (reify_op, uu___10) ->
-                            let uu___11 =
-                              let uu___12 =
-                                FStar_TypeChecker_Common.lcomp_comp c in
-                              match uu___12 with
-                              | (c1, g_c) ->
+                       let uu___10 =
+                         let uu___11 = FStar_TypeChecker_Common.lcomp_comp c in
+                         match uu___11 with
+                         | (c1, g_c) ->
+                             let uu___12 =
+                               FStar_TypeChecker_Env.unfold_effect_abbrev
+                                 env1 c1 in
+                             (uu___12, g_c) in
+                       (match uu___10 with
+                        | (c1, g_c) ->
+                            ((let uu___12 =
+                                let uu___13 =
+                                  FStar_TypeChecker_Env.is_user_reifiable_effect
+                                    env1 c1.FStar_Syntax_Syntax.effect_name in
+                                Prims.op_Negation uu___13 in
+                              if uu___12
+                              then
+                                let uu___13 =
+                                  let uu___14 =
+                                    let uu___15 =
+                                      FStar_Ident.string_of_lid
+                                        c1.FStar_Syntax_Syntax.effect_name in
+                                    FStar_Compiler_Util.format1
+                                      "Effect %s cannot be reified" uu___15 in
+                                  (FStar_Errors_Codes.Fatal_EffectCannotBeReified,
+                                    uu___14) in
+                                FStar_Errors.raise_error uu___13
+                                  e2.FStar_Syntax_Syntax.pos
+                              else ());
+                             (let u_c =
+                                FStar_Compiler_List.hd
+                                  c1.FStar_Syntax_Syntax.comp_univs in
+                              let e3 =
+                                FStar_Syntax_Util.mk_reify e2
+                                  (FStar_Pervasives_Native.Some
+                                     (c1.FStar_Syntax_Syntax.effect_name)) in
+                              let repr =
+                                let uu___12 = FStar_Syntax_Syntax.mk_Comp c1 in
+                                FStar_TypeChecker_Env.reify_comp env1 uu___12
+                                  u_c in
+                              let c2 =
+                                let uu___12 =
+                                  FStar_TypeChecker_Env.is_total_effect env1
+                                    c1.FStar_Syntax_Syntax.effect_name in
+                                if uu___12
+                                then
                                   let uu___13 =
-                                    FStar_TypeChecker_Env.unfold_effect_abbrev
-                                      env1 c1 in
-                                  (uu___13, g_c) in
-                            (match uu___11 with
-                             | (c1, g_c) ->
-                                 ((let uu___13 =
-                                     let uu___14 =
-                                       FStar_TypeChecker_Env.is_user_reifiable_effect
-                                         env1
-                                         c1.FStar_Syntax_Syntax.effect_name in
-                                     Prims.op_Negation uu___14 in
-                                   if uu___13
-                                   then
-                                     let uu___14 =
-                                       let uu___15 =
-                                         let uu___16 =
-                                           FStar_Ident.string_of_lid
-                                             c1.FStar_Syntax_Syntax.effect_name in
-                                         FStar_Compiler_Util.format1
-                                           "Effect %s cannot be reified"
-                                           uu___16 in
-                                       (FStar_Errors_Codes.Fatal_EffectCannotBeReified,
-                                         uu___15) in
-                                     FStar_Errors.raise_error uu___14
-                                       e2.FStar_Syntax_Syntax.pos
-                                   else ());
-                                  (let u_c =
-                                     FStar_Compiler_List.hd
-                                       c1.FStar_Syntax_Syntax.comp_univs in
-                                   let e3 =
-                                     let uu___13 =
-                                       (FStar_TypeChecker_Env.is_layered_effect
-                                          env1
-                                          c1.FStar_Syntax_Syntax.effect_name)
-                                         &&
-                                         (Prims.op_Negation
-                                            env1.FStar_TypeChecker_Env.phase1) in
-                                     if uu___13
-                                     then
-                                       let reify_val_tm =
-                                         let uu___14 =
-                                           let uu___15 =
-                                             FStar_Parser_Const.layered_effect_reify_val_lid
-                                               c1.FStar_Syntax_Syntax.effect_name
-                                               e2.FStar_Syntax_Syntax.pos in
-                                           FStar_Compiler_Effect.op_Bar_Greater
-                                             uu___15
-                                             FStar_Syntax_Syntax.tconst in
-                                         FStar_Syntax_Syntax.mk_Tm_uinst
-                                           uu___14 [u_c] in
-                                       let thunked_e =
-                                         let uu___14 =
-                                           let uu___15 =
-                                             let uu___16 =
-                                               let uu___17 =
-                                                 let uu___18 =
-                                                   FStar_Syntax_Syntax.null_bv
-                                                     FStar_Syntax_Syntax.t_unit in
-                                                 FStar_Syntax_Syntax.mk_binder
-                                                   uu___18 in
-                                               [uu___17] in
-                                             (uu___16, e2,
-                                               (FStar_Pervasives_Native.Some
-                                                  {
-                                                    FStar_Syntax_Syntax.residual_effect
-                                                      =
-                                                      (c1.FStar_Syntax_Syntax.effect_name);
-                                                    FStar_Syntax_Syntax.residual_typ
-                                                      =
-                                                      FStar_Pervasives_Native.None;
-                                                    FStar_Syntax_Syntax.residual_flags
-                                                      = []
-                                                  })) in
-                                           FStar_Syntax_Syntax.Tm_abs uu___15 in
-                                         FStar_Syntax_Syntax.mk uu___14
-                                           e2.FStar_Syntax_Syntax.pos in
-                                       let implicit_args =
-                                         let a_arg =
-                                           FStar_Syntax_Syntax.iarg
-                                             c1.FStar_Syntax_Syntax.result_typ in
-                                         let indices_args =
-                                           FStar_Compiler_Effect.op_Bar_Greater
-                                             c1.FStar_Syntax_Syntax.effect_args
-                                             (FStar_Compiler_List.map
-                                                (fun uu___14 ->
-                                                   match uu___14 with
-                                                   | (t, uu___15) ->
-                                                       FStar_Syntax_Syntax.iarg
-                                                         t)) in
-                                         a_arg :: indices_args in
-                                       let uu___14 =
-                                         let uu___15 =
-                                           let uu___16 =
-                                             FStar_Syntax_Syntax.as_arg
-                                               thunked_e in
-                                           [uu___16] in
-                                         FStar_Compiler_List.op_At
-                                           implicit_args uu___15 in
-                                       FStar_Syntax_Syntax.mk_Tm_app
-                                         reify_val_tm uu___14
-                                         e2.FStar_Syntax_Syntax.pos
-                                     else
-                                       FStar_Syntax_Syntax.mk
-                                         (FStar_Syntax_Syntax.Tm_app
-                                            (reify_op, [(e2, aqual)]))
-                                         top.FStar_Syntax_Syntax.pos in
-                                   let repr =
-                                     let uu___13 =
-                                       FStar_Syntax_Syntax.mk_Comp c1 in
-                                     FStar_TypeChecker_Env.reify_comp env1
-                                       uu___13 u_c in
-                                   let c2 =
-                                     let uu___13 =
-                                       FStar_TypeChecker_Env.is_total_effect
-                                         env1
-                                         c1.FStar_Syntax_Syntax.effect_name in
-                                     if uu___13
-                                     then
-                                       let uu___14 =
-                                         FStar_Syntax_Syntax.mk_Total repr in
-                                       FStar_Compiler_Effect.op_Bar_Greater
-                                         uu___14
-                                         FStar_TypeChecker_Common.lcomp_of_comp
-                                     else
-                                       (let ct =
-                                          {
-                                            FStar_Syntax_Syntax.comp_univs =
-                                              [u_c];
-                                            FStar_Syntax_Syntax.effect_name =
-                                              FStar_Parser_Const.effect_Dv_lid;
-                                            FStar_Syntax_Syntax.result_typ =
-                                              repr;
-                                            FStar_Syntax_Syntax.effect_args =
-                                              [];
-                                            FStar_Syntax_Syntax.flags = []
-                                          } in
-                                        let uu___15 =
-                                          FStar_Syntax_Syntax.mk_Comp ct in
-                                        FStar_Compiler_Effect.op_Bar_Greater
-                                          uu___15
-                                          FStar_TypeChecker_Common.lcomp_of_comp) in
-                                   let uu___13 =
-                                     comp_check_expected_typ env1 e3 c2 in
-                                   match uu___13 with
-                                   | (e4, c3, g') ->
-                                       let uu___14 =
-                                         let uu___15 =
-                                           FStar_TypeChecker_Env.conj_guard
-                                             g_c g' in
-                                         FStar_TypeChecker_Env.conj_guard g
-                                           uu___15 in
-                                       (e4, c3, uu___14))))))))
+                                    FStar_Syntax_Syntax.mk_Total repr in
+                                  FStar_Compiler_Effect.op_Bar_Greater
+                                    uu___13
+                                    FStar_TypeChecker_Common.lcomp_of_comp
+                                else
+                                  (let ct =
+                                     {
+                                       FStar_Syntax_Syntax.comp_univs = [u_c];
+                                       FStar_Syntax_Syntax.effect_name =
+                                         FStar_Parser_Const.effect_Dv_lid;
+                                       FStar_Syntax_Syntax.result_typ = repr;
+                                       FStar_Syntax_Syntax.effect_args = [];
+                                       FStar_Syntax_Syntax.flags = []
+                                     } in
+                                   let uu___14 =
+                                     FStar_Syntax_Syntax.mk_Comp ct in
+                                   FStar_Compiler_Effect.op_Bar_Greater
+                                     uu___14
+                                     FStar_TypeChecker_Common.lcomp_of_comp) in
+                              let uu___12 =
+                                comp_check_expected_typ env1 e3 c2 in
+                              match uu___12 with
+                              | (e4, c3, g') ->
+                                  let uu___13 =
+                                    let uu___14 =
+                                      FStar_TypeChecker_Env.conj_guard g_c g' in
+                                    FStar_TypeChecker_Env.conj_guard g
+                                      uu___14 in
+                                  (e4, c3, uu___13)))))))
         | FStar_Syntax_Syntax.Tm_app
             ({
                FStar_Syntax_Syntax.n = FStar_Syntax_Syntax.Tm_constant
@@ -4674,15 +4589,15 @@ and (tc_constant :
                     uu___2 in
                 (FStar_Errors_Codes.Fatal_IllTyped, uu___1) in
               FStar_Errors.raise_error uu___ r
-          | FStar_Const.Const_reify ->
-              let uu___ =
-                let uu___1 =
-                  let uu___2 = FStar_Parser_Const.const_to_string c in
+          | FStar_Const.Const_reify uu___ ->
+              let uu___1 =
+                let uu___2 =
+                  let uu___3 = FStar_Parser_Const.const_to_string c in
                   FStar_Compiler_Util.format1
                     "Ill-typed %s: this constant must be fully applied"
-                    uu___2 in
-                (FStar_Errors_Codes.Fatal_IllTyped, uu___1) in
-              FStar_Errors.raise_error uu___ r
+                    uu___3 in
+                (FStar_Errors_Codes.Fatal_IllTyped, uu___2) in
+              FStar_Errors.raise_error uu___1 r
           | FStar_Const.Const_reflect uu___ ->
               let uu___1 =
                 let uu___2 =
@@ -12632,7 +12547,7 @@ let rec (__typeof_tot_or_gtot_term_fastpath :
               let uu___2 = FStar_Syntax_Print.term_to_string t1 in
               Prims.op_Hat "Impossible: " uu___2 in
             failwith uu___1
-        | FStar_Syntax_Syntax.Tm_constant (FStar_Const.Const_reify) ->
+        | FStar_Syntax_Syntax.Tm_constant (FStar_Const.Const_reify uu___) ->
             FStar_Pervasives_Native.None
         | FStar_Syntax_Syntax.Tm_constant (FStar_Const.Const_reflect uu___)
             -> FStar_Pervasives_Native.None

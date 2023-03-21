@@ -66,7 +66,7 @@ let __do_rewrite
    *)
   let should_skip =
     match (SS.compress tm).n with
-    | S.Tm_constant Const.Const_reify
+    | S.Tm_constant (Const.Const_reify _)
     | S.Tm_constant (Const.Const_reflect _)
     | S.Tm_constant Const.Const_range_of
     | S.Tm_constant Const.Const_set_range_of ->

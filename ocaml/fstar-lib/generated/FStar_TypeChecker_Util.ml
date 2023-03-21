@@ -5908,7 +5908,7 @@ let (pure_or_ghost_pre_and_post :
                                 norm uu___12 in
                               (uu___10, uu___11)))
                 | uu___4 -> failwith "Impossible"))
-let (reify_body :
+let (norm_reify :
   FStar_TypeChecker_Env.env ->
     FStar_TypeChecker_Env.steps ->
       FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.term)
@@ -5917,9 +5917,8 @@ let (reify_body :
     fun steps ->
       fun t ->
         FStar_TypeChecker_Env.def_check_closed_in_env
-          t.FStar_Syntax_Syntax.pos "reify_body" env t;
-        (let tm = FStar_Syntax_Util.mk_reify t in
-         let tm' =
+          t.FStar_Syntax_Syntax.pos "norm_reify" env t;
+        (let t' =
            FStar_TypeChecker_Normalize.normalize
              (FStar_Compiler_List.op_At
                 [FStar_TypeChecker_Env.Beta;
@@ -5928,54 +5927,19 @@ let (reify_body :
                 FStar_TypeChecker_Env.EraseUniverses;
                 FStar_TypeChecker_Env.AllowUnboundUniverses;
                 FStar_TypeChecker_Env.Exclude FStar_TypeChecker_Env.Zeta]
-                steps) env tm in
+                steps) env t in
          (let uu___2 =
             FStar_Compiler_Effect.op_Less_Bar
               (FStar_TypeChecker_Env.debug env)
               (FStar_Options.Other "SMTEncodingReify") in
           if uu___2
           then
-            let uu___3 = FStar_Syntax_Print.term_to_string tm in
-            let uu___4 = FStar_Syntax_Print.term_to_string tm' in
+            let uu___3 = FStar_Syntax_Print.term_to_string t in
+            let uu___4 = FStar_Syntax_Print.term_to_string t' in
             FStar_Compiler_Util.print2 "Reified body %s \nto %s\n" uu___3
               uu___4
           else ());
-         tm')
-let (reify_body_with_arg :
-  FStar_TypeChecker_Env.env ->
-    FStar_TypeChecker_Env.steps ->
-      FStar_Syntax_Syntax.term ->
-        FStar_Syntax_Syntax.arg -> FStar_Syntax_Syntax.term)
-  =
-  fun env ->
-    fun steps ->
-      fun head ->
-        fun arg ->
-          let tm =
-            FStar_Syntax_Syntax.mk (FStar_Syntax_Syntax.Tm_app (head, [arg]))
-              head.FStar_Syntax_Syntax.pos in
-          let tm' =
-            FStar_TypeChecker_Normalize.normalize
-              (FStar_Compiler_List.op_At
-                 [FStar_TypeChecker_Env.Beta;
-                 FStar_TypeChecker_Env.Reify;
-                 FStar_TypeChecker_Env.Eager_unfolding;
-                 FStar_TypeChecker_Env.EraseUniverses;
-                 FStar_TypeChecker_Env.AllowUnboundUniverses;
-                 FStar_TypeChecker_Env.Exclude FStar_TypeChecker_Env.Zeta]
-                 steps) env tm in
-          (let uu___1 =
-             FStar_Compiler_Effect.op_Less_Bar
-               (FStar_TypeChecker_Env.debug env)
-               (FStar_Options.Other "SMTEncodingReify") in
-           if uu___1
-           then
-             let uu___2 = FStar_Syntax_Print.term_to_string tm in
-             let uu___3 = FStar_Syntax_Print.term_to_string tm' in
-             FStar_Compiler_Util.print2 "Reified body %s \nto %s\n" uu___2
-               uu___3
-           else ());
-          tm'
+         t')
 let (remove_reify : FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.term) =
   fun t ->
     let uu___ =
@@ -5996,8 +5960,8 @@ let (remove_reify : FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.term) =
                let uu___5 = FStar_Syntax_Subst.compress head in
                uu___5.FStar_Syntax_Syntax.n in
              match uu___4 with
-             | FStar_Syntax_Syntax.Tm_constant (FStar_Const.Const_reify) ->
-                 true
+             | FStar_Syntax_Syntax.Tm_constant (FStar_Const.Const_reify
+                 uu___5) -> true
              | uu___5 -> false in
            if uu___3
            then
@@ -7017,22 +6981,23 @@ let (check_sigelt_quals :
                  FStar_Syntax_Syntax.signature = uu___5;
                  FStar_Syntax_Syntax.combinators = uu___6;
                  FStar_Syntax_Syntax.actions = uu___7;
-                 FStar_Syntax_Syntax.eff_attrs = uu___8;_}
+                 FStar_Syntax_Syntax.eff_attrs = uu___8;
+                 FStar_Syntax_Syntax.extraction_mode = uu___9;_}
                ->
                if
                  Prims.op_Negation
                    (FStar_Compiler_List.contains
                       FStar_Syntax_Syntax.TotalEffect quals)
                then
-                 let uu___9 =
-                   let uu___10 =
-                     let uu___11 = FStar_Ident.string_of_lid eff_name in
+                 let uu___10 =
+                   let uu___11 =
+                     let uu___12 = FStar_Ident.string_of_lid eff_name in
                      FStar_Compiler_Util.format1
                        "Effect %s is marked erasable but only total effects are allowed to be erasable"
-                       uu___11 in
+                       uu___12 in
                    (FStar_Errors_Codes.Fatal_QulifierListNotPermitted,
-                     uu___10) in
-                 FStar_Errors.raise_error uu___9 r
+                     uu___11) in
+                 FStar_Errors.raise_error uu___10 r
                else ()
            | uu___2 ->
                FStar_Errors.raise_error
@@ -7243,6 +7208,20 @@ let (must_erase_for_extraction :
          else ());
         res in
       aux g t
+let (effect_extraction_mode :
+  FStar_TypeChecker_Env.env ->
+    FStar_Ident.lident -> FStar_Syntax_Syntax.eff_extraction_mode)
+  =
+  fun env ->
+    fun l ->
+      let uu___ =
+        let uu___1 =
+          FStar_Compiler_Effect.op_Bar_Greater l
+            (FStar_TypeChecker_Env.norm_eff_name env) in
+        FStar_Compiler_Effect.op_Bar_Greater uu___1
+          (FStar_TypeChecker_Env.get_effect_decl env) in
+      FStar_Compiler_Effect.op_Bar_Greater uu___
+        (fun ed -> ed.FStar_Syntax_Syntax.extraction_mode)
 let (fresh_effect_repr :
   FStar_TypeChecker_Env.env ->
     FStar_Compiler_Range.range ->
