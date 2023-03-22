@@ -17,7 +17,7 @@
         "subterm_ordering_Prims.Cons"
       ],
       0,
-      "11fdf3f301072a332ef0cad983a23f47"
+      "9cef53192dc35d61abe1d0e183497572"
     ],
     [
       "Part1.Quicksort.Permutation.append",
@@ -32,7 +32,7 @@
         "projection_inverse_BoxBool_proj_0", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "3b11b1df0cdbe36c1ec609b171268155"
+      "ad147e6de491b810ec30dd7284627832"
     ],
     [
       "Part1.Quicksort.Permutation.sorted",
@@ -52,7 +52,7 @@
         "subterm_ordering_Prims.Cons", "typing_Prims.__proj__Cons__item__tl"
       ],
       0,
-      "a796c72ca366aa4ec8f6b267302968d7"
+      "2aa9cbc3754d8d61e13b4996c5f0ce8b"
     ],
     [
       "Part1.Quicksort.Permutation.count",
@@ -72,7 +72,7 @@
         "subterm_ordering_Prims.Cons"
       ],
       0,
-      "04d4ea12a60b9f833b0de885e45c0678"
+      "a5cad7400af467b1d9659e2a2294b643"
     ],
     [
       "Part1.Quicksort.Permutation.is_permutation",
@@ -86,7 +86,7 @@
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "e896281803c9ea9092d4529a2ec91f06"
+      "5b960d49b7881801039f8f7003e5941e"
     ],
     [
       "Part1.Quicksort.Permutation.append_count",
@@ -121,7 +121,7 @@
         "typing_Part1.Quicksort.Permutation.count"
       ],
       0,
-      "433d3559718c321d8dc37972951cee71"
+      "63a0135778b7d64ede57e77de2e875e4"
     ],
     [
       "Part1.Quicksort.Permutation.partition",
@@ -160,7 +160,7 @@
         "typing_Part1.Quicksort.Permutation.length"
       ],
       0,
-      "9fa66e03b1b5eb054483d85622ed5e26"
+      "31de18eef0f3ad8156861b6ea0b4fd1a"
     ],
     [
       "Part1.Quicksort.Permutation.sort",
@@ -205,7 +205,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "a69d586630726ac7e1a359a95db11f44"
+      "1138022ca2646cd5b487d457f65c6be8"
     ],
     [
       "Part1.Quicksort.Permutation.sorted_concat",
@@ -258,7 +258,7 @@
         "typing_Part1.Quicksort.Permutation.sorted"
       ],
       0,
-      "99d3743920b03c5a2906ad560bdb1419"
+      "9d7d5e71c64c519cecebc61514f8b702"
     ]
   ]
 ]

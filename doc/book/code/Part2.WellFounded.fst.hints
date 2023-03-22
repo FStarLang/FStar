@@ -15,7 +15,7 @@
         "well_founded_ordering_on_codomain_Part2.WellFounded.AccIntro"
       ],
       0,
-      "d8a0593e04d3d8b5fd2861dfe0cfd047"
+      "207ede69ab8d53426ffb9492eef46536"
     ],
     [
       "Part2.WellFounded.wf_lt_nat",
@@ -32,7 +32,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "3b58c64ab16084ed9448cda09465b300"
+      "78f56c2f51971f084a70ccacef9252e4"
     ],
     [
       "Part2.WellFounded.subrel_wf",
@@ -48,7 +48,7 @@
         "well_founded_ordering_on_codomain_Part2.WellFounded.AccIntro"
       ],
       0,
-      "4c22c8202c6122aafdd5311bd9c3135f"
+      "e94c88ec7135febeeef1b1b849593165"
     ],
     [
       "Part2.WellFounded.inverse_image_wf",
@@ -67,7 +67,7 @@
         "well_founded_ordering_on_codomain_Part2.WellFounded.AccIntro"
       ],
       0,
-      "3035c0f3618e0484c7cb2c4e1588ff94"
+      "ab7054f157f4e9ab21d8271436abe03c"
     ],
     [
       "Part2.WellFounded.negate",
@@ -80,7 +80,7 @@
         "refinement_interpretation_Tm_refine_53244119120a0c2642bc1a0709e77283"
       ],
       0,
-      "84490bb7d71392a076823cabb452584e"
+      "9d1678cd20c75485f6aef25fb83232e1"
     ],
     [
       "Part2.WellFounded.__proj__Left_lex__item__x1",
@@ -92,7 +92,7 @@
         "refinement_interpretation_Tm_refine_f095a3e83ff7224da51a49875b4e334e"
       ],
       0,
-      "6b8dd45eceb08e558ec0b602f69e7fa2"
+      "e7984277edc1779d18787af27eeaed6c"
     ],
     [
       "Part2.WellFounded.__proj__Left_lex__item__x2",
@@ -104,7 +104,7 @@
         "refinement_interpretation_Tm_refine_f095a3e83ff7224da51a49875b4e334e"
       ],
       0,
-      "c10d527d003ea32a9a4c25ca328b256f"
+      "89d12a86fe0205363613051349806767"
     ],
     [
       "Part2.WellFounded.__proj__Left_lex__item__y1",
@@ -118,7 +118,7 @@
         "refinement_interpretation_Tm_refine_f095a3e83ff7224da51a49875b4e334e"
       ],
       0,
-      "575d55fd8f06aa141004e9e9147e46c4"
+      "c3680508ac8c6e892d7c858eb627b7c5"
     ],
     [
       "Part2.WellFounded.__proj__Left_lex__item__y2",
@@ -132,7 +132,7 @@
         "refinement_interpretation_Tm_refine_f095a3e83ff7224da51a49875b4e334e"
       ],
       0,
-      "b865d7697b3cbc5ad9aa34472e114d7d"
+      "11e2948c3fe4b274184bf7719e5e26b9"
     ],
     [
       "Part2.WellFounded.__proj__Left_lex__item___4",
@@ -146,7 +146,7 @@
         "refinement_interpretation_Tm_refine_f095a3e83ff7224da51a49875b4e334e"
       ],
       0,
-      "0639a29a39f8e043589ab3c2ef99af6e"
+      "293bb15585a5f4db942c14b1acbd2dc7"
     ],
     [
       "Part2.WellFounded.__proj__Right_lex__item__x",
@@ -158,7 +158,7 @@
         "refinement_interpretation_Tm_refine_cf363fc3bd1f4d47c2eb173795e82412"
       ],
       0,
-      "bec147fcab15d859c0492a8892ec8074"
+      "9c39fcdb852dcc780183e9375615cd82"
     ],
     [
       "Part2.WellFounded.__proj__Right_lex__item__y1",
@@ -172,7 +172,7 @@
         "refinement_interpretation_Tm_refine_cf363fc3bd1f4d47c2eb173795e82412"
       ],
       0,
-      "64ddf17ad3c9def1c20455a10aeb7d00"
+      "ece768c6330527e55a709121b201ecfa"
     ],
     [
       "Part2.WellFounded.__proj__Right_lex__item__y2",
@@ -186,7 +186,7 @@
         "refinement_interpretation_Tm_refine_cf363fc3bd1f4d47c2eb173795e82412"
       ],
       0,
-      "d0ad2cc2871f3b36f48e506f7ef6a754"
+      "9799cb4db225b8f6e3f08f538ba77661"
     ],
     [
       "Part2.WellFounded.__proj__Right_lex__item___3",
@@ -200,7 +200,7 @@
         "refinement_interpretation_Tm_refine_cf363fc3bd1f4d47c2eb173795e82412"
       ],
       0,
-      "0c71daaefe5bc9773c3e11812b658fa0"
+      "493b14197f8db5609bf2f96f8e8b1e91"
     ],
     [
       "Part2.WellFounded.mk_lt_nat",
@@ -214,7 +214,7 @@
         "refinement_interpretation_Tm_refine_8233d76b57e95451540fc312b717fa79"
       ],
       0,
-      "6f92722dbc401eb2385edab9b1936ddb"
+      "b7548fb4284d45fb911cfa5f3c54821e"
     ],
     [
       "Part2.WellFounded.mk_lex_order_nat_pair",
@@ -229,7 +229,7 @@
         "refinement_interpretation_Tm_refine_a6b719ee0ec38710e48ce4f7ee6fd3eb"
       ],
       0,
-      "af84dde5369431d2eccf6b84488cb6c2"
+      "3efa307d7d3422388c1072d1d9602b8b"
     ],
     [
       "Part2.WellFounded.ackermann'",
@@ -250,7 +250,7 @@
         "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2"
       ],
       0,
-      "a94fc8c9c2071822c918653f9d9fe776"
+      "87b822519e40a81a14ebf8e632297aa3"
     ],
     [
       "Part2.WellFounded.coerce",
@@ -266,7 +266,7 @@
         "well_founded_ordering_on_codomain_Part2.WellFounded.AccIntro"
       ],
       0,
-      "5f3bbe4e2ac6e07ee712873c5d9a3dcb"
+      "c48319065989ea8b8a74aaf4ca951753"
     ],
     [
       "Part2.WellFounded.ackermann_wf",
@@ -289,7 +289,7 @@
         "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2"
       ],
       0,
-      "e43218022153ef040572a0995e37e80b"
+      "295038cf1ddb8143ec44d4a8028d56f6"
     ]
   ]
 ]

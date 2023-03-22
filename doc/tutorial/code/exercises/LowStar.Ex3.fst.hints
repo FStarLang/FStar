@@ -34,7 +34,7 @@
         "typing_LowStar.Monotonic.Buffer.len"
       ],
       0,
-      "72b497ee3f9d85465261a6f81d072292"
+      "4506dbb96786360fdf92a188cfd0b94c"
     ],
     [
       "LowStar.Ex3.pop",
@@ -61,7 +61,7 @@
         "typing_LowStar.Monotonic.Buffer.get"
       ],
       0,
-      "8f467d6bdc3f4d5c0a99a23ba791ebbf"
+      "cb718693ed69f51b5d40bc39be209118"
     ],
     [
       "LowStar.Ex3.malloc",
@@ -90,7 +90,7 @@
         "typing_FStar.Monotonic.HyperStack.get_tip"
       ],
       0,
-      "f50bc28236f165bdf854584ff267a8e6"
+      "4b21ccc024f5734bc1d53c07eb61f4ca"
     ]
   ]
 ]

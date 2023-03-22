@@ -1,5 +1,5 @@
 [
-  "_0žFØûpÒ´Ÿßt€6O¾",
+  "¦þ[Ü`“ùŒ\u0019ojâ×ê\\M",
   [
     [
       "FStar.ImmutableArray.index_spec",
@@ -13,7 +13,43 @@
         "@query", "lemma_FStar.ImmutableArray.length_spec"
       ],
       0,
-      "e1d446072dd47367378e07395f9a848d"
+      "4a1f08c23a9efea3651853642e7de3b6"
+    ],
+    [
+      "FStar.ImmutableArray.of_list_precedes",
+      1,
+      2,
+      1,
+      [ "@query", "lemma_FStar.ImmutableArray.to_list_of_list" ],
+      0,
+      "eb054e42ffb8d04a1c0b9def82bcd64c"
+    ],
+    [
+      "FStar.ImmutableArray.elem_precedes",
+      1,
+      2,
+      1,
+      [
+        "@MaxFuel_assumption", "@MaxIFuel_assumption",
+        "@fuel_correspondence_FStar.List.Tot.Base.index.fuel_instrumented",
+        "@fuel_correspondence_FStar.List.Tot.Base.length.fuel_instrumented",
+        "@fuel_correspondence_FStar.List.Tot.Base.memP.fuel_instrumented",
+        "@fuel_irrelevance_FStar.List.Tot.Base.index.fuel_instrumented",
+        "@fuel_irrelevance_FStar.List.Tot.Base.length.fuel_instrumented",
+        "@fuel_irrelevance_FStar.List.Tot.Base.memP.fuel_instrumented",
+        "@query",
+        "FStar.ImmutableArray.Base_pretyping_13b729c1dbeb58e29660bee13e833fb3",
+        "equation_Prims.nat", "int_inversion",
+        "lemma_FStar.ImmutableArray.index_spec",
+        "lemma_FStar.ImmutableArray.length_spec",
+        "lemma_FStar.List.Tot.Properties.lemma_index_memP",
+        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "refinement_interpretation_Tm_refine_bf2fa1226f2c9a0f6671df3e80ddcb8e",
+        "refinement_interpretation_Tm_refine_edb064fdc83c1f3b2d617f591ddbc683",
+        "typing_FStar.ImmutableArray.to_list"
+      ],
+      0,
+      "3c49f006579da7ce977ad2f0a03a54b5"
     ]
   ]
 ]

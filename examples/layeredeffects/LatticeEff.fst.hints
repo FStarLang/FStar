@@ -11,7 +11,7 @@
         "refinement_interpretation_Tm_refine_754b00004f4a881ff74d076ab276dfe1"
       ],
       0,
-      "256dac7c11f15b3ec8a3aa860e5aa3e3"
+      "d3ead132bcd18f11010290a6f38566cb"
     ],
     [
       "LatticeEff.interp",
@@ -20,7 +20,7 @@
       1,
       [ "@query", "assumption_LatticeEff.eff_label__uu___haseq" ],
       0,
-      "e44d30e91edad396e589cb51424b3226"
+      "9593cf506ed8d0d9cc14a05de9e157c5"
     ],
     [
       "LatticeEff.interp_at",
@@ -65,7 +65,7 @@
         "typing_FStar.List.Tot.Base.mem", "typing_FStar.List.Tot.Base.op_At"
       ],
       0,
-      "bd1342b768be8894847164de65265880"
+      "f114a2f86499fbc19b0375035c07c5f4"
     ],
     [
       "LatticeEff.sublist",
@@ -74,7 +74,7 @@
       1,
       [ "@query", "assumption_LatticeEff.eff_label__uu___haseq" ],
       0,
-      "862b3cb00719b8291e9e61263ebef05d"
+      "9f583aca3079974bd7d4aa5785020f7c"
     ],
     [
       "LatticeEff.sublist_refl",
@@ -83,7 +83,7 @@
       1,
       [ "@query", "equation_LatticeEff.sublist" ],
       0,
-      "bc39c97c56021323b998136cec97e038"
+      "545c3dda334adec443292b7ac9b12547"
     ],
     [
       "LatticeEff.interp_sublist",
@@ -117,7 +117,7 @@
         "typing_FStar.List.Tot.Base.mem"
       ],
       0,
-      "cde0c8ca64ce06f807e40f9c19cee573"
+      "b9b2b7d9d48f8e62509f7b85b322713f"
     ],
     [
       "LatticeEff.sublist_at",
@@ -153,7 +153,7 @@
         "typing_FStar.List.Tot.Base.mem", "typing_FStar.List.Tot.Base.op_At"
       ],
       0,
-      "dc66bf6b9f3828b1ed6534aaadd6c807"
+      "f07ea64d6b9cb7667431cd35106898f2"
     ],
     [
       "LatticeEff.ann_le",
@@ -167,7 +167,7 @@
         "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
       ],
       0,
-      "fc1a95645c45fe4704e7fae72a373a21"
+      "19eca0f43a6c74e4d29ed1987762cadd"
     ],
     [
       "LatticeEff.return",
@@ -187,7 +187,7 @@
         "token_correspondence_LatticeEff.wpof2"
       ],
       0,
-      "38719872823feaeb5fb757116d4e29d7"
+      "229307a9817dddb830cf98dac2d7f3fa"
     ],
     [
       "LatticeEff.bind",
@@ -236,7 +236,7 @@
         "typing_tok_LatticeEff.WR@tok"
       ],
       0,
-      "f2ae88d1b35f98f926f75c98613b0753"
+      "d778cc688717d8296236dc53746ab3b7"
     ],
     [
       "LatticeEff.subcomp",
@@ -264,7 +264,7 @@
         "typing_tok_LatticeEff.EXN@tok", "typing_tok_LatticeEff.WR@tok"
       ],
       0,
-      "01722702eeb4a2156633701571a0a163"
+      "839294381824012126dd823e2f845e3d"
     ],
     [
       "LatticeEff.EFF",
@@ -273,7 +273,7 @@
       1,
       [ "@query", "lemma_LatticeEff.sublist_at" ],
       0,
-      "aef087bccda0b4cdb9658769c729c88a"
+      "114529a561c3c3e18aba2e1a1d07a7e1"
     ],
     [
       "LatticeEff.EFF",
@@ -282,7 +282,7 @@
       1,
       [ "@query", "lemma_LatticeEff.sublist_at" ],
       0,
-      "d799e2df09a1676246d33713edad71df"
+      "2d92c81834fcc5ce080dd9e63bf1d040"
     ],
     [
       "LatticeEff.EFF",
@@ -291,7 +291,7 @@
       1,
       [ "@query", "lemma_LatticeEff.sublist_at" ],
       0,
-      "f686746cd592f42e9b48b516ad98ca72"
+      "c4314a819bae3c5642172d8729ecda53"
     ],
     [
       "LatticeEff.lift_pure_eff",
@@ -322,16 +322,16 @@
         "typing_Tm_abs_5e34897418ce4950a4effcc8c159cf53"
       ],
       0,
-      "2a48655136912d7bfc54d1b58181034c"
+      "ccf7eb7119de4dcf29481d64038dbba8"
     ],
     [
-      "LatticeEff.8926",
+      "LatticeEff.8816",
       1,
       2,
       1,
       [ "@query" ],
       0,
-      "f3071084c42d7a4359c0a975528a52f4"
+      "ce6d65fb1506567143aa2ceb102683e7"
     ],
     [
       "LatticeEff.get",
@@ -352,7 +352,7 @@
         "token_correspondence_LatticeEff.wpof2"
       ],
       0,
-      "e7f22c03046cfbc4c43b00d33373ccc8"
+      "bca46f39d538eaf54a6be8f8093679b7"
     ],
     [
       "LatticeEff.op_Bang",
@@ -377,7 +377,7 @@
         "typing_FStar.Monotonic.Heap.sel"
       ],
       0,
-      "d46eb720eb1350899279fedcd8d25722"
+      "3e483568e9b4e0b1e2819509a0db64bc"
     ],
     [
       "LatticeEff.op_Colon_Equals",
@@ -419,7 +419,7 @@
         "typing_tok_LatticeEff.WR@tok", "unit_inversion", "unit_typing"
       ],
       0,
-      "67652ba70b25e31cff32ede973216798"
+      "2fcc235290f9f48e9026dafb90a0cd06"
     ],
     [
       "LatticeEff.put",
@@ -458,7 +458,7 @@
         "typing_tok_LatticeEff.WR@tok", "unit_typing"
       ],
       0,
-      "493e8fffab09ba6c81ecb6384a650697"
+      "1eb8b746f429c5081700a5447209b505"
     ],
     [
       "LatticeEff.raise",
@@ -489,7 +489,7 @@
         "typing_tok_LatticeEff.EXN@tok"
       ],
       0,
-      "48c1b5104f1a90cfc78efa99c0304e82"
+      "ff034b38525fc36cffc0a345577e5aa6"
     ],
     [
       "LatticeEff.test0",
@@ -513,7 +513,7 @@
         "unit_typing"
       ],
       0,
-      "2853f6abed1a8fd2b8389352a49b5758"
+      "f4098824887b4b068d7cb4505e4173a2"
     ],
     [
       "LatticeEff.test1",
@@ -541,7 +541,7 @@
         "typing_tok_LatticeEff.WR@tok", "unit_typing"
       ],
       0,
-      "1a79bf8694d400d15347f719b9d58cae"
+      "1904f24f6c57e9a94c758bdb0b5a7040"
     ],
     [
       "LatticeEff.sublist_at_self",
@@ -554,7 +554,7 @@
         "projection_inverse_BoxBool_proj_0"
       ],
       0,
-      "0969b07784be52af20403982026dd4f2"
+      "b71d73e4c0cf5f2a56e3a41475495256"
     ],
     [
       "LatticeEff.labpoly",
@@ -567,7 +567,7 @@
         "lemma_LatticeEff.sublist_at_self"
       ],
       0,
-      "4ee63b7e11c436eb49588cf47ae818b4"
+      "caadf6df8ba78c261901ac3b6d1eadaa"
     ],
     [
       "LatticeEff.catch",
@@ -604,7 +604,7 @@
         "typing_tok_LatticeEff.EXN@tok", "typing_tok_LatticeEff.WR@tok"
       ],
       0,
-      "341709cf24e7ebc6fdd9d4afd2f2f107"
+      "65c9b4c07d02520abe96b0cdb16194ed"
     ],
     [
       "LatticeEff.g",
@@ -627,7 +627,7 @@
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "791391a5ba54e2bc0f474e6493396fb2"
+      "33bc4678997fc94526b4f6199880b096"
     ],
     [
       "LatticeEff.test_catch",
@@ -656,7 +656,7 @@
         "unit_typing"
       ],
       0,
-      "2fee549381e4e50812ba2655ef38d6b7"
+      "a26c3c102a898792244ce034522bdd76"
     ]
   ]
 ]
