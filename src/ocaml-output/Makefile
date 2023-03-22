@@ -155,7 +155,7 @@ endif
 	$(INSTALL_EXEC) -m 644 -D ../../doc/Makefile.include $(PREFIX)/share/fstar/doc/Makefile.include
 	$(call install_dir,doc/tutorial,share/fstar/doc/tutorial)
 
-NAME=fstar_$(VERSION)_$(PLATFORM)
+PACKAGE_NAME ?= fstar
 
 ifeq ($(OS),Windows_NT)
   Z3_NAME=z3.exe
@@ -186,7 +186,7 @@ package:
 	if test -z "$(Z3_LICENSE)" ; then echo Please set Z3_LICENSE to the location of the license file for Z3 ; false ; fi
 	@# Clean previous packages.
 	! [ -d "$(package_prefix)" ]
-	rm -f $(NAME).zip $(NAME).tar.gz
+	rm -f $(PACKAGE_NAME).zip $(PACKAGE_NAME).tar.gz
 	@# Install F* into the package
 	+PREFIX=$(package_prefix) $(MAKE) install
 	@# Make the F* ulib F# DLL (NOT the nuget package)
@@ -201,24 +201,10 @@ ifeq ($(OS),Windows_NT)
 	cp $(shell which libgmp-10.dll) $(package_prefix)/bin
 	cp $(Z3_DIR)/*.exe $(Z3_DIR)/*.dll $(Z3_DIR)/*.lib $(package_prefix)/bin
 	chmod a+x $(package_prefix)/bin/z3.exe $(package_prefix)/bin/*.dll
-	zip -r -9 $(NAME).zip fstar
+	zip -r -9 $(PACKAGE_NAME).zip fstar
 else
 	cp $(Z3_DIR)/z3 $(package_prefix)/bin
-	tar czf $(NAME).tar.gz fstar
-endif
-
-# This rule produces the package into an archive file fstar.tar.gz (or
-# fstar.zip), whose filename does not contain the version and
-# platform, and stores the original file name into
-# version_platform.txt
-
-package_unknown_platform: package
-ifeq ($(OS),Windows_NT)
-	echo $(NAME).zip > version_platform.txt
-	mv $(NAME).tar.gz fstar.zip
-else
-	echo $(NAME).tar.gz > version_platform.txt
-	mv $(NAME).tar.gz fstar.tar.gz
+	tar czf $(PACKAGE_NAME).tar.gz fstar
 endif
 
 .PHONY: clean
