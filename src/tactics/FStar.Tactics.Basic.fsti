@@ -117,7 +117,8 @@ val comp_to_string         : comp -> tac string
 val term_eq_old            : term -> term -> tac bool
 val with_compat_pre_core   : Z.t -> tac 'a -> tac 'a
 
-(*****)
+(***** Callbacks for the meta DSL framework *****)
+
 val refl_check_subtyping       : env -> typ -> typ -> tac (option unit)
 val refl_check_equiv           : env -> typ -> typ -> tac (option unit)
 val refl_core_check_term       : env -> term -> tac (option typ)

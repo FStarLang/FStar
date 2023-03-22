@@ -1249,31 +1249,3 @@ val mk_total_step_20 :
   NBET.embedding 'nt20 ->
   NBET.embedding 'nr ->
   Cfg.primitive_step
-
-(***** Refl typing *****)
-
-val mk_refl_typing_step_2 :
-  string ->
-  ('t1 -> 't2 -> tac 'r) ->
-  embedding 't1 ->
-  embedding 't2 ->
-  er:embedding 'r ->
-  ('nt1 -> 'nt2 -> tac 'nr) ->
-  NBET.embedding 'nt1 ->
-  NBET.embedding 'nt2 ->
-  NBET.embedding 'nr ->
-  Cfg.primitive_step
-
-val mk_refl_typing_step_3 :
-  string ->
-  ('t1 -> 't2 -> 't3 -> tac 'r) ->
-  embedding 't1 ->
-  embedding 't2 ->
-  embedding 't3 ->
-  er:embedding 'r ->
-  ('nt1 -> 'nt2 -> 'nt3 -> tac 'nr) ->
-  NBET.embedding 'nt1 ->
-  NBET.embedding 'nt2 ->
-  NBET.embedding 'nt3 ->
-  NBET.embedding 'nr ->
-  Cfg.primitive_step

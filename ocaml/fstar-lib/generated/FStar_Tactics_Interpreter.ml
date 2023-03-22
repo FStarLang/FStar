@@ -1806,7 +1806,7 @@ let (uu___156 : unit) =
                                                                     uu___176 in
                                                                     FStar_Tactics_InterpFuns.mk_tac_step_2
                                                                     Prims.int_zero
-                                                                    "elab_term"
+                                                                    "instantiate_implicits"
                                                                     FStar_Tactics_Basic.refl_instantiate_implicits
                                                                     FStar_Reflection_Embeddings.e_env
                                                                     FStar_Reflection_Embeddings.e_term

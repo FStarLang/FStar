@@ -7556,8 +7556,10 @@ let (refl_instantiate_implicits :
              dbg_refl g
                (fun uu___3 ->
                   let uu___4 = FStar_Syntax_Print.term_to_string e in
-                  FStar_Compiler_Util.format1 "refl_elab_term: %s\n" uu___4);
-             dbg_refl g (fun uu___4 -> "refl_elab_term: starting tc {\n");
+                  FStar_Compiler_Util.format1
+                    "refl_instantiate_implicits: %s\n" uu___4);
+             dbg_refl g
+               (fun uu___4 -> "refl_instantiate_implicits: starting tc {\n");
              (let must_tot = true in
               let g1 =
                 {

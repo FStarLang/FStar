@@ -576,7 +576,8 @@ type sigelt' =
                           * comp
                           * list cflag
   | Sig_pragma            of pragma
-  | Sig_splice            of bool * list lident * term    // bool true indicates a typed splice that does not re-typecheck the generated sigelt
+  | Sig_splice            of bool * list lident * term  (* bool true indicates a typed splice that does not re-typecheck the generated sigelt *)
+                                                        (* it is an experimental feature added as part of the meta DSL framework *)
 
   | Sig_polymonadic_bind  of lident * lident * lident * tscheme * tscheme * option indexed_effect_combinator_kind  //(m, n) |> p, the polymonadic term, and its type
   | Sig_polymonadic_subcomp of lident * lident * tscheme * tscheme * option indexed_effect_combinator_kind  //m <: n, the polymonadic subcomp term, and its type

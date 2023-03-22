@@ -2202,7 +2202,7 @@ let with_compat_pre_core (n:Z.t) (f:tac 'a) : tac 'a =
             FStar.Options.pop ();
             r)
 
-(***** Refl typing builtins *****)
+(***** Builtins used in the meta DSL framework *****)
 
 let dbg_refl (g:env) (msg:unit -> string) =
   if Env.debug g <| Options.Other "ReflTc"
@@ -2390,8 +2390,8 @@ let refl_instantiate_implicits (g:env) (e:term) : tac (option (term & typ)) =
      no_uvars_in_term e
   then refl_typing_builtin_wrapper (fun _ ->
     dbg_refl g (fun _ ->
-      BU.format1 "refl_elab_term: %s\n" (Print.term_to_string e));
-    dbg_refl g (fun _ -> "refl_elab_term: starting tc {\n");
+      BU.format1 "refl_instantiate_implicits: %s\n" (Print.term_to_string e));
+    dbg_refl g (fun _ -> "refl_instantiate_implicits: starting tc {\n");
     let must_tot = true in
     let g = {g with instantiate_imp=false; phase1=true; lax=true} in
     let e, t, guard = g.typeof_tot_or_gtot_term g e must_tot in

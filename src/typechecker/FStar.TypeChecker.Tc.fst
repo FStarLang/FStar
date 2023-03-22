@@ -825,7 +825,8 @@ let tc_decl' env0 se: list sigelt * list sigelt * Env.env =
     let env = { env with dsenv = dsenv } in
 
     if Env.debug env Options.Low then
-        BU.print1 "Splice returned sigelts {\n%s\n}\n" (String.concat "\n" <| List.map Print.sigelt_to_string ses);
+      BU.print1 "Splice returned sigelts {\n%s\n}\n"
+        (String.concat "\n" <| List.map Print.sigelt_to_string ses);
 
     if is_typed
     then ses, [], env
