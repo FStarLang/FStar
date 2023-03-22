@@ -1,0 +1,215 @@
+[
+  "×Cç\u0006Ï\u0000\r¦^%)+(*ÔÙ",
+  [
+    [
+      "Alex.g",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.nat",
+        "primitive_Prims.op_Addition", "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2"
+      ],
+      0,
+      "7ebb3b3176e748be1047ba70c1b05a15"
+    ],
+    [
+      "Alex.find_above_for_g",
+      1,
+      0,
+      0,
+      [
+        "@MaxIFuel_assumption", "@query", "function_token_typing_Alex.f",
+        "refinement_interpretation_Tm_refine_4a238e1e06eccc65deba555c9a504c92"
+      ],
+      0,
+      "5f1f45d585ea82cb92a1a8d3fef99e02"
+    ],
+    [
+      "Alex.find_above_for_g",
+      2,
+      0,
+      0,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Alex.unbounded",
+        "equation_Prims.nat", "function_token_typing_Alex.f",
+        "int_inversion",
+        "refinement_interpretation_Tm_refine_4a238e1e06eccc65deba555c9a504c92",
+        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "token_correspondence_Alex.f"
+      ],
+      0,
+      "8e68d4bb30c280c7679b996dd4b13952"
+    ],
+    [
+      "Alex.find_above_for_g",
+      3,
+      0,
+      0,
+      [
+        "@MaxIFuel_assumption", "@query", "b2t_def", "equation_Prims.squash",
+        "primitive_Prims.op_GreaterThan",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
+      ],
+      0,
+      "9ebf2ab1d405c3ad6131b28161942b2f"
+    ],
+    [
+      "Alex.find_above_for_g",
+      4,
+      0,
+      0,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "primitive_Prims.op_GreaterThanOrEqual",
+        "primitive_Prims.op_Subtraction",
+        "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_Tm_refine_a3a13cdccab52590994745b5bb12473a"
+      ],
+      0,
+      "cbd59994e7a6226f7d95e95522ec0b21"
+    ],
+    [
+      "Alex.find_above_for_g",
+      5,
+      0,
+      0,
+      [
+        "@MaxIFuel_assumption", "@query", "b2t_def", "equation_Alex.g",
+        "equation_Prims.nat", "int_inversion", "primitive_Prims.op_Addition",
+        "primitive_Prims.op_GreaterThan", "primitive_Prims.op_Subtraction",
+        "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2"
+      ],
+      0,
+      "ed7ecc8207464647dbdce14774394c15"
+    ],
+    [
+      "Alex.find_above_for_g",
+      6,
+      0,
+      0,
+      [
+        "@MaxIFuel_assumption", "@query", "b2t_def",
+        "primitive_Prims.op_GreaterThan",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_15400c4215b69aceb1c3cfd351472b2e"
+      ],
+      0,
+      "df703765c02378c05d724e5606cd66a7"
+    ],
+    [
+      "Alex.find_above_for_g",
+      7,
+      0,
+      0,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "primitive_Prims.op_GreaterThanOrEqual",
+        "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_Tm_refine_e9f390a1043f17040e387fd036cf3d27"
+      ],
+      0,
+      "c279c96e5487a9c283eea4080ba561bc"
+    ],
+    [
+      "Alex.find_above_for_g",
+      8,
+      0,
+      0,
+      [
+        "@MaxIFuel_assumption", "@query", "b2t_def",
+        "equation_Alex.unbounded", "equation_Prims.abs",
+        "equation_Prims.nat", "function_token_typing_Alex.f",
+        "primitive_Prims.op_GreaterThan",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_4a238e1e06eccc65deba555c9a504c92",
+        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "token_correspondence_Alex.f", "typing_Alex.f", "typing_Prims.abs"
+      ],
+      0,
+      "00dcb5af56e68c1b50090f2be834f61f"
+    ],
+    [
+      "Alex.find_above_for_g",
+      9,
+      0,
+      0,
+      [
+        "@MaxIFuel_assumption", "@query", "b2t_def", "equation_Prims.nat",
+        "equation_Prims.squash", "int_inversion",
+        "primitive_Prims.op_GreaterThan",
+        "primitive_Prims.op_LessThanOrEqual",
+        "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c",
+        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2"
+      ],
+      0,
+      "dfc3c2fe8f52dc5d20e62336e96dedd1"
+    ],
+    [
+      "Alex.find_above_for_g",
+      10,
+      0,
+      0,
+      [
+        "@query", "b2t_def", "primitive_Prims.op_GreaterThan",
+        "primitive_Prims.op_Subtraction",
+        "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_BoxInt_proj_0"
+      ],
+      0,
+      "dd913b347115f19e108ec41700de7235"
+    ],
+    [
+      "Alex.find_above_for_g",
+      11,
+      0,
+      0,
+      [
+        "@MaxIFuel_assumption", "@query", "b2t_def", "equation_Alex.g",
+        "equation_Prims.nat", "equation_Prims.squash", "int_inversion",
+        "primitive_Prims.op_Addition", "primitive_Prims.op_GreaterThan",
+        "primitive_Prims.op_Subtraction",
+        "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c",
+        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2"
+      ],
+      0,
+      "0be0d93cf63f614bd6161e0ad1416e15"
+    ],
+    [
+      "Alex.find_above_for_g",
+      12,
+      0,
+      0,
+      [
+        "@MaxIFuel_assumption", "@query", "b2t_def",
+        "primitive_Prims.op_GreaterThan",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_15400c4215b69aceb1c3cfd351472b2e"
+      ],
+      0,
+      "46aa5dcbef7a93149def7cd56139fcef"
+    ],
+    [
+      "Alex.find_above_for_g",
+      13,
+      0,
+      0,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_1d4f03e8e79cf9ecd2b8649fb87af988",
+        "refinement_interpretation_Tm_refine_8a82f3e93a1f1af98ddbbd4ccb78ba02"
+      ],
+      0,
+      "a4cba4e4422b52e17d92e53fdb0e1b17"
+    ]
+  ]
+]

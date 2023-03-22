@@ -693,6 +693,7 @@ val is_top_level:   list letbinding -> bool
 val freshen_bv:     bv -> bv
 val freshen_binder:  binder -> binder
 val gen_bv:         string -> option Range.range -> typ -> bv
+val gen_bv':        ident -> option Range.range -> typ -> bv
 val new_bv:         option range -> typ -> bv
 val new_univ_name:  option range -> univ_name
 val lid_as_fv:      lident -> delta_depth -> option fv_qual -> fv
