@@ -501,7 +501,8 @@ let check_sub_typing (f:RT.fstar_top_env)
          match token_opt with
          | None -> T.fail "Not subtypes"
          | Some token ->
-           S_ELab sg t0 t1 (RT.ST_Token f' t0' t1' token)
+           S_ELab sg t0 t1
+             (RT.ST_Token f' t0' t1' (FStar.Squash.return_squash token))
 
 let weaken (f:RT.fstar_top_env) (sg:src_env) (hyp:var { None? (lookup sg hyp) } ) (b:s_exp) (t0 t1:s_ty)
   : T.Tac (t:s_ty &
