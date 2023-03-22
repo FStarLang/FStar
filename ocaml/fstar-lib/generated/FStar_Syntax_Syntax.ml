@@ -1902,6 +1902,15 @@ let (range_of_ropt :
     match uu___ with
     | FStar_Pervasives_Native.None -> FStar_Compiler_Range.dummyRange
     | FStar_Pervasives_Native.Some r -> r
+let (gen_bv' :
+  FStar_Ident.ident ->
+    FStar_Compiler_Range.range FStar_Pervasives_Native.option -> typ -> bv)
+  =
+  fun id ->
+    fun r ->
+      fun t ->
+        let uu___ = FStar_Ident.next_id () in
+        { ppname = id; index = uu___; sort = t }
 let (gen_bv :
   Prims.string ->
     FStar_Compiler_Range.range FStar_Pervasives_Native.option -> typ -> bv)
@@ -1910,8 +1919,7 @@ let (gen_bv :
     fun r ->
       fun t ->
         let id = FStar_Ident.mk_ident (s, (range_of_ropt r)) in
-        let uu___ = FStar_Ident.next_id () in
-        { ppname = id; index = uu___; sort = t }
+        gen_bv' id r t
 let (new_bv :
   FStar_Compiler_Range.range FStar_Pervasives_Native.option -> typ -> bv) =
   fun ropt -> fun t -> gen_bv FStar_Ident.reserved_prefix ropt t

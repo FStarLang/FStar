@@ -187,9 +187,14 @@ let is_null_binder (b:binder) = is_null_bv b.binder_bv
 let range_of_ropt = function
     | None -> dummyRange
     | Some r -> r
-let gen_bv : string -> option Range.range -> typ -> bv = fun s r t ->
-  let id = mk_ident(s, range_of_ropt r) in
+
+let gen_bv' (id : ident) (r : option Range.range) (t : typ) : bv =
   {ppname=id; index=Ident.next_id(); sort=t}
+
+let gen_bv (s : string) (r : option Range.range) (t : typ) : bv =
+  let id = mk_ident(s, range_of_ropt r) in
+  gen_bv' id r t
+
 let new_bv ropt t = gen_bv Ident.reserved_prefix ropt t
 let freshen_bv bv =
     if is_null_bv bv
