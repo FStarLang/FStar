@@ -1,0 +1,164 @@
+[
+  "ªãâK€è\u0002\u0004†≥ï1\"\u001f\u0013W",
+  [
+    [
+      "Steel.ArrayRef.selp",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_ef2f5541167ae7cac42d26ecac16d703"
+      ],
+      0,
+      "6f168b38a68008e3defc6086fe4102f0"
+    ],
+    [
+      "Steel.ArrayRef.sel",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_65a9d48625685c0742c5ade6fa1403d1"
+      ],
+      0,
+      "58266953abb24c145aa798e32e73e0e9"
+    ],
+    [
+      "Steel.ArrayRef.elim_vptrp",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "c71b71908aa426ae865953be6c605a01"
+    ],
+    [
+      "Steel.ArrayRef.intro_vptr",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "ae1ba89cff681fc1405553343e554f2e"
+    ],
+    [
+      "Steel.ArrayRef.elim_vptr",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "3bcd92afd5812ad1640fdd5ad85804a2"
+    ],
+    [
+      "Steel.ArrayRef.malloc",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "02c671d11a4580417e0407f86d889c93"
+    ],
+    [
+      "Steel.ArrayRef.readp",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "data_typing_intro_Steel.Effect.Common.VUnit@tok",
+        "fuel_guarded_inversion_Steel.FractionalPermission.perm",
+        "lemma_Steel.Effect.Common.can_be_split_refl",
+        "typing_Steel.ArrayRef.vptr_"
+      ],
+      0,
+      "0b5712d6fa499177537e77cdc636633e"
+    ],
+    [
+      "Steel.ArrayRef.read",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "6d1723baee44e627e6d2af6d86d1e979"
+    ],
+    [
+      "Steel.ArrayRef.write",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "d1b6bae43f7901c1b5bcfcc8f101094b"
+    ],
+    [
+      "Steel.ArrayRef.share",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "data_typing_intro_Steel.Effect.Common.VUnit@tok",
+        "fuel_guarded_inversion_Steel.FractionalPermission.perm",
+        "lemma_Steel.Effect.Common.can_be_split_refl",
+        "lemma_Steel.Effect.Common.can_be_split_star_l",
+        "typing_Steel.ArrayRef.vptr_",
+        "typing_Steel.FractionalPermission.half_perm"
+      ],
+      0,
+      "a5d68c205d6e105f887537f83c4dd589"
+    ],
+    [
+      "Steel.ArrayRef.gather_gen",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "data_typing_intro_Steel.Effect.Common.VUnit@tok",
+        "fuel_guarded_inversion_Steel.FractionalPermission.perm",
+        "lemma_Steel.Effect.Common.can_be_split_refl",
+        "lemma_Steel.Effect.Common.can_be_split_star_l",
+        "lemma_Steel.Effect.Common.can_be_split_star_r",
+        "typing_Steel.ArrayRef.vptr_"
+      ],
+      0,
+      "1cfc3d100abf5d39e66f256031bb0361"
+    ],
+    [
+      "Steel.ArrayRef.gather",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "data_typing_intro_Steel.Effect.Common.VUnit@tok",
+        "fuel_guarded_inversion_Steel.FractionalPermission.perm",
+        "lemma_Steel.Effect.Common.can_be_split_refl",
+        "lemma_Steel.Effect.Common.can_be_split_star_l",
+        "typing_Steel.ArrayRef.vptr_",
+        "typing_Steel.FractionalPermission.half_perm"
+      ],
+      0,
+      "332cb9420199c466aef1056a1e71f3a1"
+    ],
+    [
+      "Steel.ArrayRef.vptrp_not_null",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "data_typing_intro_Steel.Effect.Common.VUnit@tok",
+        "fuel_guarded_inversion_Steel.FractionalPermission.perm",
+        "lemma_Steel.Effect.Common.can_be_split_refl",
+        "typing_Steel.ArrayRef.vptr_"
+      ],
+      0,
+      "f22ea7c0ebed124b3aac63f2e46f3377"
+    ]
+  ]
+]

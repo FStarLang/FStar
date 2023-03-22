@@ -1,5 +1,5 @@
 [
-  "\u0010˜\u000b\u001f»ïä·\u000e@AÉR3[ó",
+  "ªº\u0003)hN ≈„¿é\u001d1VÒ^",
   [
     [
       "Steel.GhostMonotonicReference.raise_preorder",
@@ -16,7 +16,7 @@
         "typing_FStar.Universe.downgrade_val"
       ],
       0,
-      "8e930b6bb97bb6ef90513b2d2e63d071"
+      "b6250eed920377ae3eca01b181ee3afd"
     ],
     [
       "Steel.GhostMonotonicReference.alloc",
@@ -28,7 +28,7 @@
         "equation_Steel.GhostMonotonicReference.pts_to_sl"
       ],
       0,
-      "3cf25e957b5c6de6188f0bf325047839"
+      "97c1592b0e92d9c1c6a07ffe7bf235ff"
     ],
     [
       "Steel.GhostMonotonicReference.write",
@@ -44,7 +44,7 @@
         "lemma_FStar.Universe.downgrade_val_raise_val"
       ],
       0,
-      "8a69ccc522a5c11ab71939f2556b319c"
+      "4b4587eca02acf8ae18565d4eb59be59"
     ],
     [
       "Steel.GhostMonotonicReference.witness",
@@ -57,17 +57,16 @@
         "equation_Steel.GhostMonotonicReference.lift_property",
         "equation_Steel.GhostMonotonicReference.raise_preorder",
         "equation_Steel.GhostMonotonicReference.stable_property",
-        "equation_Steel.GhostMonotonicReference.witnessed",
         "function_token_typing_Steel.GhostMonotonicReference.lift_property",
         "interpretation_Tm_abs_606bd25446a5871d87f8562d8358385a",
         "interpretation_Tm_abs_7ef80e11d602832fa45cd7d1743dc360",
         "lemma_FStar.Universe.downgrade_val_raise_val",
         "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c",
         "refinement_interpretation_Tm_refine_a1f58262bcd794ed927b444f9f475459",
-        "typing_FStar.Universe.downgrade_val"
+        "typing_FStar.Ghost.reveal", "typing_FStar.Universe.downgrade_val"
       ],
       0,
-      "1347bdcd8d535e78a417ebd0c7b7a467"
+      "1f2bb77f65a1ed5eaed6bd2888dff025"
     ],
     [
       "Steel.GhostMonotonicReference.recall",
@@ -76,13 +75,13 @@
       1,
       [
         "@query", "equation_Steel.GhostMonotonicReference.lift_property",
-        "equation_Steel.GhostMonotonicReference.witnessed",
         "interpretation_Tm_abs_606bd25446a5871d87f8562d8358385a",
         "lemma_FStar.Universe.downgrade_val_raise_val",
-        "token_correspondence_Steel.GhostMonotonicReference.lift_property"
+        "token_correspondence_Steel.GhostMonotonicReference.lift_property",
+        "typing_FStar.Ghost.reveal"
       ],
       0,
-      "20a6aeb568cd8107e428b85ec2d98d83"
+      "db5ba91cc30e0f9b75e33dc80d9bc316"
     ],
     [
       "Steel.GhostMonotonicReference.share",
@@ -91,7 +90,7 @@
       1,
       [ "@query" ],
       0,
-      "c9d9809331e1d9f0c5cffe213fa88064"
+      "86a7942e56a57bbf3e4ba8c7a132d66d"
     ],
     [
       "Steel.GhostMonotonicReference.gather",
@@ -100,7 +99,7 @@
       1,
       [ "@query" ],
       0,
-      "ac4a92c685610880184d605021efdfed"
+      "77c80e33d73c37dd3c664405b67a16fa"
     ]
   ]
 ]
