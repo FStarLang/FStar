@@ -28,9 +28,9 @@ fi
 
 diag "*** Make package (clean build directory first) ***"
 if [[ -z $OS ]] ; then
-    OS=$(uname -o)
+    OS=$(uname)
 fi
-if [[ $OS = Cygwin ]] ; then
+if echo $OS | grep -i '^cygwin' ; then
     OS=Windows_NT
 fi
 if [[ $OS = Windows_NT ]] ; then
