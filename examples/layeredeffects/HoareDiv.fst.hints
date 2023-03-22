@@ -1,5 +1,5 @@
 [
-  "{Y3…käÚB˛LV˚jã¨Ó",
+  "™mB›z‚≤GnIv\u0007ù‘æß",
   [
     [
       "HoareDiv.repr",
@@ -8,7 +8,7 @@
       1,
       [ "@query" ],
       0,
-      "fcda428e47ded9d3c075159d7793abf3"
+      "f802459b071cf0f9e44a8157d03ba47f"
     ],
     [
       "HoareDiv.bind",
@@ -17,7 +17,7 @@
       1,
       [ "@query" ],
       0,
-      "b6a58fd73a69d14c5426f05cd3247459"
+      "9bcd4ec68b1a1b2e3bbaf0815d7af0ac"
     ],
     [
       "HoareDiv.subcomp",
@@ -26,7 +26,7 @@
       1,
       [ "@query", "equation_HoareDiv.repr" ],
       0,
-      "49f8238e0d1597526c77cd3806aaefc6"
+      "9e831fb3883186bd9d0a7f5d7c9def4c"
     ],
     [
       "HoareDiv.HoareDiv",
@@ -38,7 +38,7 @@
         "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
       ],
       0,
-      "079c5dedd9a4c25e5ad0273584893434"
+      "f36c2d442c1f3f758498e2fd15d7907c"
     ],
     [
       "HoareDiv.HoareDiv",
@@ -46,11 +46,23 @@
       2,
       1,
       [
+        "@MaxIFuel_assumption", "@query", "b2t_def", "equation_Prims.squash",
+        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
+      ],
+      0,
+      "171897fe7fe9d84992be617e3fab9997"
+    ],
+    [
+      "HoareDiv.HoareDiv",
+      3,
+      2,
+      1,
+      [
         "@MaxIFuel_assumption", "@query",
         "refinement_interpretation_Tm_refine_de09779676242898794a0b057d5f5bb4"
       ],
       0,
-      "f2883772df5e90b4e80179630ecd05d9"
+      "26fbcc1631351c8b5e7512edb7cb9b00"
     ],
     [
       "HoareDiv.lift_pure_meff",
@@ -76,7 +88,7 @@
         "typing_Tm_abs_b66a28ec01f7bbb11191891e2b8510ec"
       ],
       0,
-      "542b28ceaa6ccefbee98c7c852e15887"
+      "628d1a9633d23d08c7ec4264c16cdcc4"
     ]
   ]
 ]

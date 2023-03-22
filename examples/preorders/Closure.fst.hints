@@ -12,7 +12,7 @@
         "fuel_guarded_inversion_Closure.state"
       ],
       0,
-      "30e9c7b35d294c787885b4e0a9c2d11f"
+      "bc579a8c2426b247434c2ec1b80c1a7d"
     ],
     [
       "Closure.reachable_from_B",
@@ -34,7 +34,7 @@
         "typing_tok_Closure.B@tok"
       ],
       0,
-      "fbe5aee8294224c75bda3855e60b81e8"
+      "00cbce962db9bfcd0cdacc63b4cef497"
     ],
     [
       "Closure.__proj__Start__item__retried",
@@ -47,7 +47,7 @@
         "refinement_interpretation_Tm_refine_9b8feac8e67696762ba27b558e40f256"
       ],
       0,
-      "206e469c3272605f1850d8bcbb3eb2c4"
+      "67d6116ca852fea27f3a04ea6e3db357"
     ],
     [
       "Closure.__proj__Hello__item__retried",
@@ -60,7 +60,7 @@
         "refinement_interpretation_Tm_refine_8abf72c04d002ce86c7c7f261e811ec5"
       ],
       0,
-      "62f8c7e1c8a0e6fb221938b35ba07aef"
+      "3a31d3b11c614f3be6f8fdcbc5623ff3"
     ],
     [
       "Closure.__proj__Hello__item__ch",
@@ -73,7 +73,7 @@
         "refinement_interpretation_Tm_refine_8abf72c04d002ce86c7c7f261e811ec5"
       ],
       0,
-      "446dcedb2a86b7c133bc91f84a5b7157"
+      "ba00f375cd07cbf8f4cc0a77121ddf43"
     ],
     [
       "Closure.__proj__Transcript12__item__ch",
@@ -87,7 +87,7 @@
         "refinement_interpretation_Tm_refine_8be6d7d0f86d71af96581ee9ae09ad53"
       ],
       0,
-      "df962779a69eedc9ab858e633b1b3764"
+      "c9a02ec332b0a98de42f7cf2cbb2cda5"
     ],
     [
       "Closure.__proj__Transcript12__item__sh",
@@ -101,7 +101,7 @@
         "refinement_interpretation_Tm_refine_8be6d7d0f86d71af96581ee9ae09ad53"
       ],
       0,
-      "bc00160fc11bd4f166c7ebde610920f0"
+      "a2002962db563e1afd733efd82547995"
     ],
     [
       "Closure.__proj__Transcript12__item__rest",
@@ -115,7 +115,7 @@
         "refinement_interpretation_Tm_refine_8be6d7d0f86d71af96581ee9ae09ad53"
       ],
       0,
-      "c510aeb3c14cc65da7cc0fac2d27dfae"
+      "55a366c1d56f67e890c212b9851458c2"
     ],
     [
       "Closure.__proj__Transcript13__item__retried",
@@ -129,7 +129,7 @@
         "refinement_interpretation_Tm_refine_c3bb8422e22464cd744542b84591ff3f"
       ],
       0,
-      "c0156abc33a384ffef345ff98063afd9"
+      "4dc41f5886363b8c0fa7ee28066750a0"
     ],
     [
       "Closure.__proj__Transcript13__item__ch",
@@ -143,7 +143,7 @@
         "refinement_interpretation_Tm_refine_c3bb8422e22464cd744542b84591ff3f"
       ],
       0,
-      "02202f6f166297ce547fa2fc9dec137d"
+      "e17ddd3e2cb0b9b604314139e22900ba"
     ],
     [
       "Closure.__proj__Transcript13__item__sh",
@@ -157,7 +157,7 @@
         "refinement_interpretation_Tm_refine_c3bb8422e22464cd744542b84591ff3f"
       ],
       0,
-      "ad08ea10d0185c53fe9613439c3e19e9"
+      "cfca27e756703122ba1bdd3d01fbb5cb"
     ],
     [
       "Closure.__proj__Transcript13__item__rest",
@@ -171,7 +171,7 @@
         "refinement_interpretation_Tm_refine_c3bb8422e22464cd744542b84591ff3f"
       ],
       0,
-      "48a895c1ee231edc80dadfebde034c2e"
+      "e1967bfdbf42d0b92658ea5742084e31"
     ],
     [
       "Closure.transcript_size",
@@ -185,7 +185,7 @@
         "fuel_guarded_inversion_Closure.transcript_t"
       ],
       0,
-      "7188908c029f4889cad37ed4534ef313"
+      "1d9b3980f1a6bdc9b427aaba640dde09"
     ],
     [
       "Closure.client_state",
@@ -204,7 +204,7 @@
         "typing_Closure.max_transcript_size"
       ],
       0,
-      "f2fb66528cb52025ab9ba84dbaa225b1"
+      "853087e14ae96ba8045f64b326e0adf6"
     ],
     [
       "Closure.__proj__C_truncated_ClientHello__item__transcript",
@@ -218,7 +218,7 @@
         "refinement_interpretation_Tm_refine_ee2d48a428eec18a9bf958fc9b3867d8"
       ],
       0,
-      "906e9945185b4d845d816fd756acedeb"
+      "305f0e3033d57a107b43383e2ed1e2dd"
     ],
     [
       "Closure.__proj__C_truncated_ClientHello__item__offer",
@@ -234,7 +234,7 @@
         "refinement_interpretation_Tm_refine_ee2d48a428eec18a9bf958fc9b3867d8"
       ],
       0,
-      "0fc39901675228d2a71d399f0448e017"
+      "91da84852c08ccf2b7fe533095a9fae7"
     ],
     [
       "Closure.__proj__C_wait_ServerHello__item__transcript",
@@ -248,7 +248,7 @@
         "refinement_interpretation_Tm_refine_ba03bb475e226de884d5d34396eaf785"
       ],
       0,
-      "641b2d246938a4459f4523ec958ecca4"
+      "07f7d2459e751acc40db40b6430eba65"
     ],
     [
       "Closure.__proj__C_wait_ServerHello__item__offer",
@@ -264,7 +264,7 @@
         "refinement_interpretation_Tm_refine_ba03bb475e226de884d5d34396eaf785"
       ],
       0,
-      "dca9007c96662ea3ae23b68e439757f7"
+      "afea8d980bccb22f755600c522a5ce43"
     ],
     [
       "Closure.__proj__C13_wait_Finished1__item__transcript",
@@ -278,7 +278,7 @@
         "refinement_interpretation_Tm_refine_d027e86d743ce1c67ee5fe0ba7862796"
       ],
       0,
-      "bb23671f46c335a3bacadc6fceff6da9"
+      "d18e4b191efa656e41dff5b3d99f0ba9"
     ],
     [
       "Closure.__proj__C13_wait_Finished1__item__mode",
@@ -301,7 +301,7 @@
         "typing_Closure.max_transcript_size"
       ],
       0,
-      "65e8ca138260565e4f9ad05341e61d56"
+      "408b77325a3ad0514c5e49a612cfe95c"
     ],
     [
       "Closure.__proj__C13_wait_Finished1__item__mode",
@@ -326,7 +326,7 @@
         "typing_Closure.max_transcript_size"
       ],
       0,
-      "90604be18df93dcca166d3170e04b4a4"
+      "11d6f33e51325c7dc6700f4f8982da67"
     ],
     [
       "Closure.t",
@@ -346,7 +346,7 @@
         "typing_tok_Closure.C_init@tok"
       ],
       0,
-      "acc78b5739f5ba730e54aa5189af8624"
+      "d2c171cee776c5f42fddfe484e1e502e"
     ],
     [
       "Closure.__proj__C_State__item___0",
@@ -366,7 +366,7 @@
         "typing_tok_Closure.C_init@tok"
       ],
       0,
-      "f8d4f1ede91d6fa8cabec2a3a15cfd83"
+      "c37f425c04ca24078449657d99816688"
     ],
     [
       "Closure.__proj__C_State__item___0",
@@ -388,7 +388,7 @@
         "typing_Closure.mrel", "typing_tok_Closure.C_init@tok"
       ],
       0,
-      "0139dc7500e0dc73c4fcf29d861bd8c9"
+      "da0bca28becf4f415b08de1eb9227d0c"
     ],
     [
       "Closure.p",
@@ -408,7 +408,7 @@
         "typing_tok_Closure.C_init@tok"
       ],
       0,
-      "ba4d8223af9d803d7cb7b4fab830076a"
+      "b4de0f58777411b4ad7828503c7ee613"
     ],
     [
       "Closure.p",
@@ -431,7 +431,7 @@
         "typing_tok_Closure.C_init@tok"
       ],
       0,
-      "0af80f3384e7e499cafedc365599ae3b"
+      "00f6a8cde5ee7988ae7fa9a4be5fa4f3"
     ],
     [
       "Closure.witness_offer",
@@ -456,7 +456,7 @@
         "typing_tok_Closure.C_init@tok"
       ],
       0,
-      "6a7c859f3cff0db1740034a1dda6d7c2"
+      "e462689f4274fc09343793ed571cca63"
     ],
     [
       "Closure.witness_offer",
@@ -481,7 +481,6 @@
         "equation_Closure.step",
         "equation_FStar.HyperStack.ST.is_live_for_rw_in",
         "equation_FStar.HyperStack.ST.mreference",
-        "equation_FStar.Monotonic.HyperStack.contains",
         "equation_FStar.Monotonic.HyperStack.mreference",
         "equation_FStar.Monotonic.HyperStack.sel",
         "equation_FStar.Preorder.preorder",
@@ -501,7 +500,7 @@
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__2",
         "projection_inverse_FStar.Pervasives.Native.Some_v",
         "refinement_interpretation_Tm_refine_003cbb363565c5358e7ed8a8d7dba6d4",
-        "refinement_interpretation_Tm_refine_58b493790886f0a649f1c9027d6253f0",
+        "refinement_interpretation_Tm_refine_ac697d48149b5a2f11438cf2cfca3dff",
         "refinement_interpretation_Tm_refine_bd10f09297e0e7dc08314f7d9211801c",
         "refinement_interpretation_Tm_refine_e7e923946014b0c6cc9ff41f66d976a4",
         "refinement_interpretation_Tm_refine_eb9a13cc726cbb4e9bfc9f80fc2e3938",
@@ -511,7 +510,7 @@
         "typing_tok_Closure.C_init@tok"
       ],
       0,
-      "2f402a0d9051a4c6e8f51238678cb4c2"
+      "0fbb95768857366979e65da38a3259b0"
     ]
   ]
 ]
