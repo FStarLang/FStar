@@ -17,7 +17,7 @@
         "typing_Steel.Primitive.ForkJoin.maybe_p"
       ],
       0,
-      "dd56805e59d2a645feece7d3e08d4c79"
+      "976f9162b3f7f14732199a23e3ad82a2"
     ],
     [
       "Steel.Primitive.ForkJoin.intro_maybe_p_true",
@@ -26,7 +26,7 @@
       1,
       [ "@query", "equation_Steel.Primitive.ForkJoin.maybe_p" ],
       0,
-      "5c6d63c7b4b21988860e92064925d5e4"
+      "35c27deb93f6862d8ddf31d426ec9297"
     ],
     [
       "Steel.Primitive.ForkJoin.fork",
@@ -44,7 +44,7 @@
         "true_interp", "typing_Steel.Effect.Common.true_p"
       ],
       0,
-      "c9d028a3bcc207d7fc49bdd5ef5de1f4"
+      "0950d55b2ba9afae31bcc9263a79563d"
     ],
     [
       "Steel.Primitive.ForkJoin.join",
@@ -82,7 +82,7 @@
         "typing_Steel.Reference.pts_to"
       ],
       0,
-      "35ba49fdf8d5e1f26d232f61e31f68f5"
+      "2963370f4ee86c532c9d3132f52cb925"
     ]
   ]
 ]
