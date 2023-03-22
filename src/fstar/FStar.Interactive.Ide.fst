@@ -738,7 +738,12 @@ let run_lookup st symbol context pos_opt requested_info symrange =
 
 let run_code_autocomplete st search_term =
   let result = QH.ck_completion st search_term in
-  let js = List.map CTable.json_of_completion_result result in
+  let result_correlator : CTable.completion_result = {
+    completion_match_length = 0;
+    completion_annotation = "<search term>";
+    completion_candidate = search_term
+  } in
+  let js = List.map CTable.json_of_completion_result (result@[result_correlator]) in
   ((QueryOK, JsonList js), Inl st)
 
 let run_module_autocomplete st search_term modules namespaces =

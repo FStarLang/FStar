@@ -1941,9 +1941,19 @@ let run_code_autocomplete :
   fun st ->
     fun search_term ->
       let result = FStar_Interactive_QueryHelper.ck_completion st search_term in
+      let result_correlator =
+        {
+          FStar_Interactive_CompletionTable.completion_match_length =
+            Prims.int_zero;
+          FStar_Interactive_CompletionTable.completion_candidate =
+            search_term;
+          FStar_Interactive_CompletionTable.completion_annotation =
+            "<search term>"
+        } in
       let js =
         FStar_Compiler_List.map
-          FStar_Interactive_CompletionTable.json_of_completion_result result in
+          FStar_Interactive_CompletionTable.json_of_completion_result
+          (FStar_Compiler_List.op_At result [result_correlator]) in
       ((FStar_Interactive_Ide_Types.QueryOK,
          (FStar_Compiler_Util.JsonList js)), (FStar_Pervasives.Inl st))
 let run_module_autocomplete :
