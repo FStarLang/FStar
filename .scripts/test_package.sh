@@ -22,41 +22,45 @@ diag () {
 	echo -e "${YELLOW}$1${NC}"
 }
 
-diag "*** Make package (clean build directory first) ***"
-git clean -ffdx src/ocaml-output release
-make -j6 package
-cd src/ocaml-output
-
 if [[ -z "$CURRENT_VERSION" ]] ; then
   CURRENT_VERSION=$(cat fstar/version.txt | sed 's!^v!!' | sed 's!'"\r"'$!!')
 fi
 
+diag "*** Make package (clean build directory first) ***"
+if [[ -z $OS ]] ; then
+    OS=$(uname -o)
+fi
+if [[ $OS = Cygwin ]] ; then
+    OS=Windows_NT
+fi
+if [[ $OS = Windows_NT ]] ; then
+    ext=.zip
+else
+    ext=.tar.gz
+fi
+TYPE="_${OS}_$(uname -m)"
+PACKAGE_NAME=fstar_$CURRENT_VERSION$TYPE
+git clean -ffdx src/ocaml-output release
+PACKAGE_NAME=$PACKAGE_NAME make -j6 package
+cd src/ocaml-output
+
 diag "*** Unzip and verify the Package  ***"
-TIME_STAMP=$(date +%Y%m%d%H%M)
-COMMIT=_$(git rev-parse --short HEAD)
-
 mkdir "$FSTAR_HOST_HOME/release"
-
 rm -rf /tmp/fstar_package
 mkdir /tmp/fstar_package
 cd /tmp/fstar_package
-TYPE="_Windows_x64.zip"
-BUILD_PACKAGE_FILENAME=fstar_$CURRENT_VERSION$TYPE
+BUILD_PACKAGE_FILENAME=$PACKAGE_NAME$ext
 BUILD_PACKAGE="$FSTAR_HOST_HOME/src/ocaml-output/$BUILD_PACKAGE_FILENAME"
 if [[ -f $BUILD_PACKAGE ]] ; then
-  unzip -o $BUILD_PACKAGE
+  if [[ $ext = .zip ]] ; then
+      unzip -o $BUILD_PACKAGE
+  else
+      tar xf $BUILD_PACKAGE
+  fi
 else
   echo -e "src/ocaml-output/make package did not create ${BUILD_PACKAGE_FILENAME}"
-  TYPE="_Linux_x86_64.tar.gz"
-  BUILD_PACKAGE_FILENAME=fstar_$CURRENT_VERSION$TYPE
-  BUILD_PACKAGE="$FSTAR_HOST_HOME/src/ocaml-output/$BUILD_PACKAGE_FILENAME"
-  if [[ -f $BUILD_PACKAGE ]] ; then
-    tar xf $BUILD_PACKAGE
-  else
-    echo -e "src/ocaml-output/make package did not create ${BUILD_PACKAGE_FILENAME}"
-    echo -e "* ${RED}FAIL!${NC}"
-    exit 1
-  fi
+  echo -e "* ${RED}FAIL!${NC}"
+  exit 1
 fi
 NEW_BUILD_PACKAGE="$FSTAR_HOST_HOME/release/$BUILD_PACKAGE_FILENAME"
 cp "$BUILD_PACKAGE" "$NEW_BUILD_PACKAGE"
