@@ -39,7 +39,6 @@ module TcErr = FStar.TypeChecker.Err
 module TcEnv = FStar.TypeChecker.Env
 module CTable = FStar.Interactive.CompletionTable
 open FStar.Interactive.Ide.Types
-open FStar.Interactive.ReplState
 module P = FStar.Parser.ParseIt
 module BU = FStar.Compiler.Util
 open FStar.Parser.AST
@@ -250,12 +249,15 @@ let run_full_buffer (st:repl_state)
     let qs = 
       match parse_result with
       | IncrementalFragment (decls, _, err_opt) -> (
-        let decls = filter_decls decls in
-        match request_type with
-        | ReloadDeps ->
-          run_qst (reload_deps (!repl_stack)) qid
+        match request_type, decls with
+        | ReloadDeps, d::_ ->
+          run_qst (let! queries = reload_deps (!repl_stack) in
+                   let! push_mod = push_decl FullCheck write_full_buffer_fragment_progress d in
+                   return (queries @ push_mod))
+                  qid
 
         | _ ->
+          let decls = filter_decls decls in
           let push_kind = 
             match request_type with
             | LaxToPosition _ -> LaxCheck

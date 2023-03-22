@@ -28,7 +28,6 @@ open FStar.Errors
 open FStar.Interactive.JsonHelper
 open FStar.Interactive.QueryHelper
 open FStar.Interactive.PushHelper
-open FStar.Interactive.ReplState
 open FStar.Interactive.Ide.Types
 module BU = FStar.Compiler.Util
 

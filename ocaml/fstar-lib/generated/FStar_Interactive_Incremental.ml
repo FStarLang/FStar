@@ -368,16 +368,28 @@ let (run_full_buffer :
               match parse_result with
               | FStar_Parser_ParseIt.IncrementalFragment
                   (decls, uu___, err_opt) ->
-                  let decls1 = filter_decls decls in
-                  (match request_type with
-                   | FStar_Interactive_Ide_Types.ReloadDeps ->
-                       let uu___1 =
-                         let uu___2 =
-                           FStar_Compiler_Effect.op_Bang
-                             FStar_Interactive_PushHelper.repl_stack in
-                         reload_deps uu___2 in
-                       run_qst uu___1 qid1
+                  (match (request_type, decls) with
+                   | (FStar_Interactive_Ide_Types.ReloadDeps, d::uu___1) ->
+                       let uu___2 =
+                         let uu___3 =
+                           let uu___4 =
+                             FStar_Compiler_Effect.op_Bang
+                               FStar_Interactive_PushHelper.repl_stack in
+                           reload_deps uu___4 in
+                         op_let_Bang uu___3
+                           (fun queries ->
+                              let uu___4 =
+                                push_decl
+                                  FStar_Interactive_Ide_Types.FullCheck
+                                  write_full_buffer_fragment_progress d in
+                              op_let_Bang uu___4
+                                (fun push_mod ->
+                                   return
+                                     (FStar_Compiler_List.op_At queries
+                                        push_mod))) in
+                       run_qst uu___2 qid1
                    | uu___1 ->
+                       let decls1 = filter_decls decls in
                        let push_kind =
                          match request_type with
                          | FStar_Interactive_Ide_Types.LaxToPosition uu___2

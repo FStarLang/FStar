@@ -20,7 +20,6 @@ open FStar.Compiler.Effect
 open FStar.Compiler.List
 open FStar
 open FStar.Compiler
-open FStar.Interactive.ReplState
 open FStar.Parser.AST
 open FStar.Errors
 open FStar.Interactive.Ide.Types
