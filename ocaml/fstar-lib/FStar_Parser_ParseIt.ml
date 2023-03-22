@@ -146,15 +146,24 @@ let parse fn =
       let parse_one_decl = MenhirLib.Convert.Simplified.traditional2revised FStar_Parser_Parse.oneDeclOrEOF in
       let contents_at =
         let lines = U.splitlines contents in
+        (* Find the raw content of the input from the line of the start_pos to the end_pos.
+           This is used by Interactive.Incremental to record exactly the raw content of the
+           fragment that was checked *) 
         fun (start_pos:Lexing.position) (end_pos:Lexing.position) ->
+          (* discard all lines until the start line *)
           let suffix = FStar_Compiler_Util.nth_tail (Z.of_int (if start_pos.pos_lnum > 0 then start_pos.pos_lnum - 1 else 0)) lines in
+          (* Take all the lines between the start and end lines *)
           let text, rest = FStar_Compiler_Util.first_N (Z.of_int (end_pos.pos_lnum - start_pos.pos_lnum)) suffix in
           let text = 
+          (* For the last line itself, take the prefix of it up to the character of the end_pos *)
             match rest with
             | last::_ ->
               let col = end_pos.pos_cnum - end_pos.pos_bol in
               if col > 0
               then (
+                (* Don't index directly into the string, since this is a UTF-8 string.
+                   Convert first to a list of charaters, index into that, and then convert
+                   back to a string *)
                 let chars = FStar_String.list_of_string last in
                 if col <= List.length chars
                 then (
@@ -175,10 +184,11 @@ let parse fn =
       in
       let open FStar_Pervasives in
       let rec parse decls =
-        let _, _, r = err_of_parse_error () in
         let start_pos = current_pos lexbuf in
         let d =
           try
+            (* Reset the gensym between decls, to ensure determinism, 
+               otherwise, every _ is parsed as different name *)
             FStar_Ident.reset_gensym();
             Inl (parse_one_decl lexer)
           with 
@@ -191,6 +201,13 @@ let parse fn =
         match d with
         | Inl None -> List.rev decls, None
         | Inl (Some d) -> 
+          (* The parser may advance the lexer beyond the decls last token.
+             E.g., in `let f x = 0 let g = 1`, we will have parsed the decl for `f`
+                   but the lexer will have advanced to `let ^ g ...` since the
+                   parser will have looked ahead.
+                   Rollback the lexer one token for declarations whose syntax
+                   requires such lookahead to complete a production.
+          *)
           if not (FStar_Parser_AST.decl_syntax_is_delimited d)
           then rollback lexbuf;
           let end_pos = current_pos lexbuf in
@@ -213,10 +230,9 @@ let parse fn =
     match fn with
     | Filename _
     | Toplevel _ -> begin
-       let fileOrFragment =
-         if FStar_Options.debug_any()
-         then parse_incremental_fragment ()
-         else MenhirLib.Convert.Simplified.traditional2revised FStar_Parser_Parse.inputFragment lexer in
+      let fileOrFragment =
+          MenhirLib.Convert.Simplified.traditional2revised FStar_Parser_Parse.inputFragment lexer
+      in
       let frags = match fileOrFragment with
           | FStar_Pervasives.Inl modul ->
              if has_extension filename interface_extensions

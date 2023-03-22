@@ -140,28 +140,6 @@ let (pop_entries :
   FStar_Interactive_Ide_Types.repl_stack_entry_t Prims.list ->
     FStar_Interactive_Ide_Types.query Prims.list qst)
   = fun e -> map (fun uu___ -> as_query FStar_Interactive_Ide_Types.Pop) e
-let (response_success :
-  FStar_Parser_AST.decl -> FStar_Compiler_Util.json qst) =
-  fun d ->
-    op_let_Bang get_qid
-      (fun uu___ ->
-         match uu___ with
-         | (q, uu___1) ->
-             let contents =
-               let uu___2 =
-                 let uu___3 =
-                   let uu___4 =
-                     FStar_Compiler_Range.json_of_def_range
-                       d.FStar_Parser_AST.drange in
-                   ("ranges", uu___4) in
-                 [uu___3] in
-               FStar_Compiler_Util.JsonAssoc uu___2 in
-             return
-               (FStar_Compiler_Util.JsonAssoc
-                  [("kind", (FStar_Compiler_Util.JsonStr "response"));
-                  ("query-id", (FStar_Compiler_Util.JsonStr q));
-                  ("status", (FStar_Compiler_Util.JsonStr "success"));
-                  ("contents", contents)]))
 let repl_task :
   'uuuuu 'uuuuu1 'uuuuu2 . ('uuuuu * ('uuuuu1 * 'uuuuu2)) -> 'uuuuu1 =
   fun uu___ -> match uu___ with | (uu___1, (p, uu___2)) -> p

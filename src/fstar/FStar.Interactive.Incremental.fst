@@ -86,6 +86,9 @@ let as_query (q:query')
         qid=qid_prefix ^ "." ^ string_of_int i
       }
 
+(* Push a decl for checking, and before it runs,
+   print a progress message "fragment-started"
+   for the decl that is about to run *)
 let push_decl (push_kind:push_kind)
               (write_full_buffer_fragment_progress: fragment_progress -> unit)
               (ds:decl * code_fragment)              
@@ -118,22 +121,17 @@ let pop_entries (e:list repl_stack_entry_t)
   : qst (list query)
   = map (fun _ -> as_query Pop) e
   
-let response_success (d:decl)
-  : qst json
-  = let! (q, _) = get_qid in
-    let contents = JsonAssoc (["ranges", json_of_def_range d.drange]) in
-    return (JsonAssoc [("kind", JsonStr "response");
-                       ("query-id", JsonStr q);
-                       ("status", JsonStr "success");
-                       ("contents", contents)])
-
 let repl_task (_, (p, _)) = p
 
+(* Find a prefix of the repl stack that matche a prefix of the decls ds, 
+   pop the rest of the stack
+   and push the remaining suffix of decls
+*)
 let inspect_repl_stack (s:repl_stack_t)
                        (ds:list (decl & code_fragment))
                        (push_kind : push_kind)
                        (write_full_buffer_fragment_progress: fragment_progress -> unit)                       
-  : qst (list query) // & list json)
+  : qst (list query)
   = let entries = List.rev s in
     let push_decls = push_decls push_kind write_full_buffer_fragment_progress in
     match BU.prefix_until 
@@ -182,7 +180,9 @@ let inspect_repl_stack (s:repl_stack_t)
            return pops
       in
       matching_prefix entries ds 
-      
+
+(* A reload_deps request just pops away the entire stack of PushFragments.
+   We also push on just the `module A` declaration after popping. That's done below. *)
 let reload_deps repl_stack =
   let pop_until_deps entries
   : qst (list query)
@@ -199,6 +199,7 @@ let reload_deps repl_stack =
   in
   pop_until_deps repl_stack
 
+(* A utility to parse a chunk, used both in full_buffer and formatting *)
 let parse_code (code:string) =
     P.parse (Incremental { 
                          frag_fname = Range.file_of_range initial_range;
@@ -207,7 +208,7 @@ let parse_code (code:string) =
                          frag_col = Range.col_of_pos (Range.start_of_range initial_range);
                 })
     
-
+(* Format FStar.Errors.error into a JSON error message *)
 let syntax_issue (raw_error, msg, range) =
     let _, _, num = FStar.Errors.lookup raw_error in
     let issue = { 
@@ -219,6 +220,7 @@ let syntax_issue (raw_error, msg, range) =
     } in
     issue
 
+(* See comment in the interface file *)
 let run_full_buffer (st:repl_state)
                     (qid:string)
                     (code:string)
@@ -284,6 +286,7 @@ let run_full_buffer (st:repl_state)
     in
     qs
 
+(* See comment in interface file *)
 let format_code (st:repl_state) (code:string)
   = let parse_result = parse_code code in
     match parse_result with

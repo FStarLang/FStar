@@ -24,6 +24,7 @@ open FStar.Parser.AST
 open FStar.Errors
 open FStar.Interactive.Ide.Types
 
+(* Various kinds of progress messages to print back to the client *)
 type fragment_progress =
    | FragmentStarted of decl
    | FragmentSuccess of (decl & FStar.Parser.ParseIt.code_fragment & push_kind)
@@ -47,6 +48,7 @@ val run_full_buffer (st:repl_state)
                     (write_full_buffer_fragment_progress: fragment_progress -> unit)
   : list query
 
+(* Pretty-print the code for reformatting, or return a syntax error *)
 val format_code (st:repl_state)
                 (code:string)
   : either string (list issue)

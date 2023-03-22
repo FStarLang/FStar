@@ -21,4 +21,6 @@ open FStar.Compiler.Effect
 open FStar.Compiler.List
 open FStar.Parser.AST
 
+(* Check if two decls are equal, ignoring range metadata.
+   Used in FStar.Interactive.Incremental *)
 val eq_decl (d1 d2:decl) : bool

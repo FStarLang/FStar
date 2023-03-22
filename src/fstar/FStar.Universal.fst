@@ -222,6 +222,7 @@ let tc_one_fragment curmod (env:TcEnv.env_t) frag =
   in
   match frag with
   | Inr d -> (
+    //We already have a parsed decl, usually from FStar.Interactive.Incremental
     match d.d with
     | FStar.Parser.AST.TopLevelModule lid ->
       check_module_name_declaration (FStar.Parser.AST.Module(lid, [d]))

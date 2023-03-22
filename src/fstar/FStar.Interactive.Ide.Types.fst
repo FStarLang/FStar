@@ -119,9 +119,18 @@ type query' =
 | Search of string
 | GenericError of string
 | ProtocolViolation of string
+// FullBuffer: To check the full contents of a document.
+// FStar.Interactive.Incremental parses it into chunks and turns this into several Push queries
 | FullBuffer of string & full_buffer_request_kind
+// Callback: This is an internal query, it cannot be raised by a client.
+// It is useful to inject operations into the query stream.
+// e.g., Incremental uses it print progress messages to the client in between
+// processing a stream of Pushes that result from a chunking a FullBuffer
 | Callback of callback_t
+// Format: pretty-print the F* code in the selection
 | Format of string
+// Cancel: Cancel any remaining pushes that are at or beyond the provided position.
+// Cancel all requests if the position is None
 | Cancel of option position
 and query = { qq: query'; qid: string }
 and callback_t = repl_state -> (query_status * list json) * either repl_state int
