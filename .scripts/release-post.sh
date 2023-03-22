@@ -14,6 +14,11 @@ else
     branchname=master
 fi
 
+# push the tag if needed
+if $need_to_push_tag ; then
+    git push "https://$GH_TOKEN@github.com/$git_org/FStar.git" $my_tag
+fi
+
 function upload_archive () {
     archive="$1"
     if ! $gh release view $my_tag ; then
