@@ -429,6 +429,13 @@ for code that breaks with the core typechecker. *)
 val with_compat_pre_core : #a:Type -> n:int -> f:(unit -> Tac a) -> Tac a
 
 
+
+(***** APIs used in the meta DSL framework *****)
+
+(** Meta DSL framework is an experimental feature
+    See examples/dsls/ for more details
+    Following APIs are part of the framework *)
+
 val subtyping_token (g:env) (t0 t1:typ) : Type0
 
 val equiv_token (g:env) (t0 t1:typ) : Type0
@@ -454,6 +461,8 @@ type prop_validity_token (g:env) (t:term) =
   e:term{typing_token g t (pack_ln (Tv_FVar (pack_fv prop_qn))) /\
          typing_token g e t}
 
-val check_prop_validity (g:env) (t:term) : Tac (option (prop_validity_token g t))
+val check_prop_validity (g:env) (t:term)
+  : Tac (option (prop_validity_token g t))
 
-val instantiate_implicits (g:env) (t:term) : Tac (option (term & typ))
+val instantiate_implicits (g:env) (t:term)
+  : Tac (option (term & typ))
