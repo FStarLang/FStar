@@ -738,17 +738,24 @@ type lift =
   {
   msource: FStar_Ident.lid ;
   mdest: FStar_Ident.lid ;
-  lift_op: lift_op }
+  lift_op: lift_op ;
+  braced: Prims.bool }
 let (__proj__Mklift__item__msource : lift -> FStar_Ident.lid) =
   fun projectee ->
-    match projectee with | { msource; mdest; lift_op = lift_op1;_} -> msource
+    match projectee with
+    | { msource; mdest; lift_op = lift_op1; braced;_} -> msource
 let (__proj__Mklift__item__mdest : lift -> FStar_Ident.lid) =
   fun projectee ->
-    match projectee with | { msource; mdest; lift_op = lift_op1;_} -> mdest
+    match projectee with
+    | { msource; mdest; lift_op = lift_op1; braced;_} -> mdest
 let (__proj__Mklift__item__lift_op : lift -> lift_op) =
   fun projectee ->
     match projectee with
-    | { msource; mdest; lift_op = lift_op1;_} -> lift_op1
+    | { msource; mdest; lift_op = lift_op1; braced;_} -> lift_op1
+let (__proj__Mklift__item__braced : lift -> Prims.bool) =
+  fun projectee ->
+    match projectee with
+    | { msource; mdest; lift_op = lift_op1; braced;_} -> braced
 type pragma =
   | SetOptions of Prims.string 
   | ResetOptions of Prims.string FStar_Pervasives_Native.option 
@@ -2426,3 +2433,13 @@ let (idents_of_binders :
     fun r ->
       FStar_Compiler_Effect.op_Bar_Greater bs
         (FStar_Compiler_List.map (ident_of_binder r))
+let (decl_syntax_is_delimited : decl -> Prims.bool) =
+  fun d ->
+    match d.d with
+    | Pragma uu___ -> true
+    | NewEffect (DefineEffect uu___) -> true
+    | LayeredEffect (DefineEffect uu___) -> true
+    | SubEffect
+        { msource = uu___; mdest = uu___1; lift_op = uu___2; braced = true;_}
+        -> true
+    | uu___ -> false

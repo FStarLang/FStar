@@ -1,5 +1,5 @@
 [
-  "1ËVxŠ\u000b%4\u0019‘\"w¬ˆñò",
+  "[Ø<1åÛ5½\u0006íNÌ×Î\u000b÷",
   [
     [
       "GT.coerce",
@@ -11,7 +11,7 @@
         "refinement_interpretation_Tm_refine_754b00004f4a881ff74d076ab276dfe1"
       ],
       0,
-      "77d8946ccaf9be7f9150365e2ce05b72"
+      "536e74e427786cb97d8de2f60852b28d"
     ],
     [
       "GT.m",
@@ -24,7 +24,7 @@
         "fuel_guarded_inversion_GT.idx", "projection_inverse_BoxBool_proj_0"
       ],
       0,
-      "dee6d6147904024ef874fc50a7e435ee"
+      "41917bc6546c068934a68fea2bc78620"
     ],
     [
       "GT.return",
@@ -43,7 +43,7 @@
         "typing_Tm_abs_b68e73a4efe6a575c72f28a07914e6c3"
       ],
       0,
-      "c552fe7edb580afa868213a707f7d406"
+      "cf4602f16f4b2be2a2464757723354a3"
     ],
     [
       "GT.bind",
@@ -60,7 +60,7 @@
         "typing_Tm_abs_24309c3cadd869b94b5601201277f265"
       ],
       0,
-      "95803293431d6212caa9b35a2c8817db"
+      "1d14afc033421c3c897f10f56d352a1b"
     ],
     [
       "GT.r_map",
@@ -77,7 +77,7 @@
         "projection_inverse_BoxBool_proj_0", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "cf71ea3cf80c052ebfb64eacecaec26c"
+      "439b7b84c036d916ca158fb393526eae"
     ],
     [
       "GT.lift_pure_gtd",
@@ -86,18 +86,21 @@
       1,
       [
         "@MaxIFuel_assumption", "@query",
-        "GT_interpretation_Tm_arrow_61bb9550f39772f18eaab129c43c3788",
-        "GT_interpretation_Tm_arrow_8aae13b96fb0be58b929fe6db466cb69",
-        "GT_interpretation_Tm_arrow_c4804ca26ade2f3859400eebcb37ddbd",
+        "FStar.Monotonic.Pure_interpretation_Tm_arrow_61bb9550f39772f18eaab129c43c3788",
+        "FStar.Monotonic.Pure_interpretation_Tm_arrow_c4804ca26ade2f3859400eebcb37ddbd",
         "GT_interpretation_Tm_arrow_f733943e720921049fb5d7431c9f04d2",
         "GT_interpretation_Tm_ghost_arrow_c147251bfc1ff7e35f16290189e09a47",
         "Prims_interpretation_Tm_arrow_2eaa01e78f73e9bab5d0955fc1a662da",
+        "Prims_interpretation_Tm_arrow_92458cff82f9ffee1f6e26a1c0c579f3",
         "constructor_distinct_GT.D", "constructor_distinct_GT.G",
         "constructor_distinct_GT.T", "disc_equation_GT.D",
         "disc_equation_GT.G", "disc_equation_GT.T", "equality_tok_GT.D@tok",
         "equality_tok_GT.G@tok", "equality_tok_GT.T@tok", "equation_GT.m",
-        "equation_Prims.logical", "fuel_guarded_inversion_GT.idx",
+        "equation_Prims.l_True", "equation_Prims.logical",
+        "equation_Prims.pure_post", "equation_Prims.pure_post_",
+        "fuel_guarded_inversion_GT.idx",
         "function_token_typing_Prims.l_True",
+        "interpretation_Tm_abs_5e34897418ce4950a4effcc8c159cf53",
         "interpretation_Tm_abs_735bfa0400a12573ed48312f042e45e7",
         "projection_inverse_BoxBool_proj_0",
         "refinement_interpretation_Tm_refine_9d7e1da4c8ccc98f1562bffecfa030b6",
@@ -105,7 +108,10 @@
         "typing_Tm_abs_735bfa0400a12573ed48312f042e45e7"
       ],
       0,
-      "cb6b2b87e2f000b639a25d870774e7ba"
+      "4e40a07a48ee58d0630ffc134085dfe3"
+    ],
+    [
+      "GT.8441", 1, 2, 1, [ "@query" ], 0, "746045a40d5ea30beb73b814d77ea4f1"
     ],
     [
       "GT.map",
@@ -118,7 +124,7 @@
         "projection_inverse_BoxBool_proj_0", "unit_typing"
       ],
       0,
-      "13bc22bcf8d19c8497b05e8638d7bb3b"
+      "283de229797c4c02a7a591d71b9938db"
     ],
     [
       "GT.appn",
@@ -133,16 +139,7 @@
         "unit_typing"
       ],
       0,
-      "9e427aa5d6fce439d404c8dfa0c6489e"
-    ],
-    [
-      "GT.labs0",
-      1,
-      2,
-      1,
-      [ "@MaxIFuel_assumption", "@query", "int_inversion" ],
-      0,
-      "86eb5b7fceafc1337438c6861f878ae6"
+      "2edccfb050e503f2fea7fd1ad4ccc088"
     ],
     [
       "GT.labs",
@@ -157,7 +154,7 @@
         "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2"
       ],
       0,
-      "42e01c238023ee3a1692aec140538ce0"
+      "2a72643d9910cf7afd5c7471143a04d4"
     ]
   ]
 ]

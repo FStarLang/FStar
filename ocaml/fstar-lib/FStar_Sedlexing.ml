@@ -53,6 +53,8 @@ let create (s:string) fn loffset coffset =
     mark_val = 0;
   }
 
+let current_pos b = b.start_p
+  
 let start b =
   b.mark <- b.cur;
   b.mark_val <- (-1);

@@ -30,6 +30,7 @@ open FStar.Universal
 open FStar.Parser.ParseIt
 open FStar.TypeChecker.Env
 open FStar.Interactive.JsonHelper
+open FStar.Interactive.Ide.Types
 
 module U = FStar.Compiler.Util
 module SS = FStar.Syntax.Syntax
@@ -165,7 +166,7 @@ let run_repl_task (curmod: optmod_t) (env: env_t) (task: repl_task) : optmod_t *
     curmod, tc_one env None intf_or_impl.tf_fname
   | LDInterfaceOfCurrentFile intf ->
     curmod, Universal.load_interface_decls env intf.tf_fname
-  | PushFragment frag ->
+  | PushFragment (frag, _) ->
     tc_one_fragment curmod env frag
   | Noop ->
     curmod, env
@@ -370,5 +371,5 @@ let full_lax text st =
   match ld_deps st with
   | Inl (st, deps) ->
       let names = add_module_completions st.repl_fname deps st.repl_names in
-      repl_tx ({ st with repl_names = names }) LaxCheck (PushFragment frag)
+      repl_tx ({ st with repl_names = names }) LaxCheck (PushFragment (Inl frag, LaxCheck))
   | Inr st -> None, st

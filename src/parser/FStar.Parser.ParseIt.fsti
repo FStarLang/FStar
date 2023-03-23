@@ -39,12 +39,21 @@ val get_file_last_modification_time: fname:string -> time
 type parse_frag =
     | Filename of filename
     | Toplevel of input_frag
+    | Incremental of input_frag
     | Fragment of input_frag
+
+type parse_error = (Errors.raw_error * string * Range.range)
+
+type code_fragment = {
+    code: string;
+    range: FStar.Compiler.Range.range;
+}
 
 type parse_result =
     | ASTFragment of (AST.inputFragment * list (string * Range.range))
+    | IncrementalFragment of (list (AST.decl & code_fragment) & list (string * Range.range) & option parse_error)
     | Term of AST.term
-    | ParseError of (Errors.raw_error * string * Range.range)
+    | ParseError of parse_error
 
 val parse: parse_frag -> parse_result // either (AST.inputFragment * list (string * Range.range)) , (string * Range.range)
 val find_file: string -> string

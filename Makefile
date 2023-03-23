@@ -1,4 +1,4 @@
-.PHONY: all package clean boot 1 2 3 hints bench output install uninstall package_unknown_platform
+.PHONY: all package clean boot 1 2 3 hints bench output install uninstall package
 
 include .common.mk
 
@@ -62,8 +62,13 @@ dune-bootstrap:
 .PHONY: boot
 
 boot:
-	+$(MAKE) dune
-	+$(MAKE) dune-bootstrap
+	+$(MAKE) dune-extract-all
+	$(Q)cp version.txt $(DUNE_SNAPSHOT)/
+	@# Call Dune to build the snapshot.
+	@echo "  DUNE BUILD"
+	$(Q)cd $(DUNE_SNAPSHOT) && dune build --profile release
+	@echo "  RAW INSTALL"
+	$(Q)cp ocaml/_build/default/fstar/main.exe $(FSTAR_CURDIR)/bin/fstar.exe
 
 install:
 	$(Q)+$(MAKE) -C src/ocaml-output install
@@ -82,9 +87,6 @@ uninstall:
 
 package: all
 	$(Q)+$(MAKE) -C src/ocaml-output package
-
-package_unknown_platform: all
-	$(Q)+$(MAKE) -C src/ocaml-output package_unknown_platform
 
 .PHONY: clean-intermediate
 

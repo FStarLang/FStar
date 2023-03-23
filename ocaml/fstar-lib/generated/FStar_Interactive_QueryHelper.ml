@@ -108,6 +108,10 @@ let (symlookup :
                 match name_or_lid with
                 | FStar_Pervasives.Inl name1 -> name1
                 | FStar_Pervasives.Inr lid -> FStar_Ident.string_of_lid lid in
+              let str_of_opt uu___ =
+                match uu___ with
+                | FStar_Pervasives_Native.None -> "<none>"
+                | FStar_Pervasives_Native.Some s -> s in
               let typ_str =
                 if FStar_Compiler_List.mem "type" requested_info
                 then
@@ -171,7 +175,7 @@ let mod_filter :
           (pth, uu___2) in
         FStar_Pervasives_Native.Some uu___1
 let (ck_completion :
-  FStar_Interactive_JsonHelper.repl_state ->
+  FStar_Interactive_Ide_Types.repl_state ->
     Prims.string ->
       FStar_Interactive_CompletionTable.completion_result Prims.list)
   =
@@ -180,10 +184,10 @@ let (ck_completion :
       let needle = FStar_Compiler_Util.split search_term "." in
       let mods_and_nss =
         FStar_Interactive_CompletionTable.autocomplete_mod_or_ns
-          st.FStar_Interactive_JsonHelper.repl_names needle mod_filter in
+          st.FStar_Interactive_Ide_Types.repl_names needle mod_filter in
       let lids =
         FStar_Interactive_CompletionTable.autocomplete_lid
-          st.FStar_Interactive_JsonHelper.repl_names needle in
+          st.FStar_Interactive_Ide_Types.repl_names needle in
       FStar_Compiler_List.op_At lids mods_and_nss
 let (deflookup :
   FStar_TypeChecker_Env.env ->
@@ -235,7 +239,7 @@ let (hoverlookup :
                      ("value", (FStar_Compiler_Util.JsonStr hovertxt))]))])
       | uu___1 -> FStar_Interactive_JsonHelper.nullResponse
 let (complookup :
-  FStar_Interactive_JsonHelper.repl_state ->
+  FStar_Interactive_Ide_Types.repl_state ->
     FStar_Interactive_JsonHelper.txdoc_pos ->
       FStar_Interactive_JsonHelper.assoct FStar_Pervasives_Native.option)
   =
