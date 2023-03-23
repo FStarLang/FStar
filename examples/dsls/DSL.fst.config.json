@@ -1,0 +1,15 @@
+{
+	"fstar_exe": "fstar.exe",
+	"options": [
+		"--already_cached",
+		"Prims,FStar,Steel"
+	],
+	"include_dirs": [
+		"core",
+		"mini_steel",
+		"mini_steel/tests",
+		"bool_refinement",
+		"dependent_bool_refinement",
+		"stlc"
+	]
+}
