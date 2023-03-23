@@ -568,8 +568,8 @@ and lidents_of_term' (t:term')
   | Construct (lid, ts) -> lid :: concat_map (fun (t, _) -> lidents_of_term t) ts
   | Abs (ps, t) -> concat_map lidents_of_pattern ps @ lidents_of_term t
   | App (t1, t2, _) -> lidents_of_term t1 @ lidents_of_term t2
-  | Let (_, lbs, t) -> concat_map (fun (_, (_, t)) -> lidents_of_term t) lbs @ lidents_of_term t
-  | LetOperator (lbs, t) -> concat_map (fun (_, _, t) -> lidents_of_term t) lbs @ lidents_of_term t
+  | Let (_, lbs, t) -> concat_map (fun (_, (p, t)) -> lidents_of_pattern p @ lidents_of_term t) lbs @ lidents_of_term t
+  | LetOperator (lbs, t) -> concat_map (fun (_, p, t) -> lidents_of_pattern p @ lidents_of_term t) lbs @ lidents_of_term t
   | LetOpen (lid, t) -> lid :: lidents_of_term t
   | LetOpenRecord (t1, t2, t3) -> lidents_of_term t1 @ lidents_of_term t2 @ lidents_of_term t3
   | Seq (t1, t2) -> lidents_of_term t1 @ lidents_of_term t2
@@ -604,13 +604,31 @@ and lidents_of_term' (t:term')
   | IntroImplies (t1, t2, b, t3) -> lidents_of_term t1 @ lidents_of_term t2 @ lidents_of_term t3
   | IntroOr (b, t1, t2, t3) -> lidents_of_term t1 @ lidents_of_term t2 @ lidents_of_term t3
   | IntroAnd (t1, t2, t3, t4) -> lidents_of_term t1 @ lidents_of_term t2 @ lidents_of_term t3 @ lidents_of_term t4
-  | ElimForall (bs, t1, ts) -> lidents_of_term t1 @ concat_map lidents_of_term ts
-  | ElimExists (bs, t1, t2, b, t3) -> lidents_of_term t1 @ lidents_of_term t2 @ lidents_of_term t3
+  | ElimForall (bs, t1, ts) -> concat_map lidents_of_binder bs @ lidents_of_term t1 @ concat_map lidents_of_term ts
+  | ElimExists (bs, t1, t2, b, t3) -> concat_map lidents_of_binder bs @ lidents_of_term t1 @ lidents_of_term t2 @ lidents_of_term t3
   | ElimImplies (t1, t2, t3) -> lidents_of_term t1 @ lidents_of_term t2 @ lidents_of_term t3
   | ElimOr (t1, t2, t3, b1, t4, b2, t5) -> lidents_of_term t1 @ lidents_of_term t2 @ lidents_of_term t3 @ lidents_of_term t4 @ lidents_of_term t5
   | ElimAnd (t1, t2, t3, b1, b2, t4) -> lidents_of_term t1 @ lidents_of_term t2 @ lidents_of_term t3 @ lidents_of_term t4
 and lidents_of_branch (p, _, t) = lidents_of_pattern p @ lidents_of_term t
 and lidents_of_calc_step = function
   | CalcStep (t1, t2, t3) -> lidents_of_term t1 @ lidents_of_term t2 @ lidents_of_term t3
-and lidents_of_pattern _ = []
-and lidents_of_binder _ = []
+and lidents_of_pattern p =
+  match p.pat with
+  | PatWild _ -> []
+  | PatConst _ -> []
+  | PatApp (p, ps) -> lidents_of_pattern p @ concat_map lidents_of_pattern ps
+  | PatVar (i, _, _) -> []
+  | PatName lid -> [lid]
+  | PatTvar (i, _, _) -> []
+  | PatList ps -> concat_map lidents_of_pattern ps
+  | PatTuple (ps, _) -> concat_map lidents_of_pattern ps
+  | PatRecord ps -> concat_map (fun (_, p) -> lidents_of_pattern p) ps
+  | PatAscribed (p, (t1, t2)) -> lidents_of_pattern p @ lidents_of_term t1 @ opt_map lidents_of_term t2
+  | PatOr ps -> concat_map lidents_of_pattern ps
+  | PatOp _ -> []
+  | PatVQuote t -> lidents_of_term t
+and lidents_of_binder b =
+  match b.b with
+  | Annotated (_, t)
+  | TAnnotated(_, t) -> lidents_of_term t
+  | _ -> []

@@ -655,15 +655,21 @@ and (lidents_of_term' :
           (concat_map ())
             (fun uu___2 ->
                match uu___2 with
-               | (uu___3, (uu___4, t2)) -> lidents_of_term t2) lbs in
+               | (uu___3, (p, t2)) ->
+                   let uu___4 = lidents_of_pattern p in
+                   let uu___5 = lidents_of_term t2 in
+                   FStar_Compiler_List.op_At uu___4 uu___5) lbs in
         let uu___2 = lidents_of_term t1 in
         FStar_Compiler_List.op_At uu___1 uu___2
     | FStar_Parser_AST.LetOperator (lbs, t1) ->
         let uu___ =
           (concat_map ())
             (fun uu___1 ->
-               match uu___1 with | (uu___2, uu___3, t2) -> lidents_of_term t2)
-            lbs in
+               match uu___1 with
+               | (uu___2, p, t2) ->
+                   let uu___3 = lidents_of_pattern p in
+                   let uu___4 = lidents_of_term t2 in
+                   FStar_Compiler_List.op_At uu___3 uu___4) lbs in
         let uu___1 = lidents_of_term t1 in
         FStar_Compiler_List.op_At uu___ uu___1
     | FStar_Parser_AST.LetOpen (lid, t1) ->
@@ -785,14 +791,20 @@ and (lidents_of_term' :
           FStar_Compiler_List.op_At uu___2 uu___3 in
         FStar_Compiler_List.op_At uu___ uu___1
     | FStar_Parser_AST.ElimForall (bs, t1, ts) ->
-        let uu___ = lidents_of_term t1 in
-        let uu___1 = (concat_map ()) lidents_of_term ts in
+        let uu___ = (concat_map ()) lidents_of_binder bs in
+        let uu___1 =
+          let uu___2 = lidents_of_term t1 in
+          let uu___3 = (concat_map ()) lidents_of_term ts in
+          FStar_Compiler_List.op_At uu___2 uu___3 in
         FStar_Compiler_List.op_At uu___ uu___1
     | FStar_Parser_AST.ElimExists (bs, t1, t2, b, t3) ->
-        let uu___ = lidents_of_term t1 in
+        let uu___ = (concat_map ()) lidents_of_binder bs in
         let uu___1 =
-          let uu___2 = lidents_of_term t2 in
-          let uu___3 = lidents_of_term t3 in
+          let uu___2 = lidents_of_term t1 in
+          let uu___3 =
+            let uu___4 = lidents_of_term t2 in
+            let uu___5 = lidents_of_term t3 in
+            FStar_Compiler_List.op_At uu___4 uu___5 in
           FStar_Compiler_List.op_At uu___2 uu___3 in
         FStar_Compiler_List.op_At uu___ uu___1
     | FStar_Parser_AST.ElimImplies (t1, t2, t3) ->
@@ -849,6 +861,38 @@ and (lidents_of_calc_step :
         FStar_Compiler_List.op_At uu___1 uu___2
 and (lidents_of_pattern :
   FStar_Parser_AST.pattern -> FStar_Ident.lident Prims.list) =
-  fun uu___ -> []
+  fun p ->
+    match p.FStar_Parser_AST.pat with
+    | FStar_Parser_AST.PatWild uu___ -> []
+    | FStar_Parser_AST.PatConst uu___ -> []
+    | FStar_Parser_AST.PatApp (p1, ps) ->
+        let uu___ = lidents_of_pattern p1 in
+        let uu___1 = (concat_map ()) lidents_of_pattern ps in
+        FStar_Compiler_List.op_At uu___ uu___1
+    | FStar_Parser_AST.PatVar (i, uu___, uu___1) -> []
+    | FStar_Parser_AST.PatName lid -> [lid]
+    | FStar_Parser_AST.PatTvar (i, uu___, uu___1) -> []
+    | FStar_Parser_AST.PatList ps -> (concat_map ()) lidents_of_pattern ps
+    | FStar_Parser_AST.PatTuple (ps, uu___) ->
+        (concat_map ()) lidents_of_pattern ps
+    | FStar_Parser_AST.PatRecord ps ->
+        (concat_map ())
+          (fun uu___ ->
+             match uu___ with | (uu___1, p1) -> lidents_of_pattern p1) ps
+    | FStar_Parser_AST.PatAscribed (p1, (t1, t2)) ->
+        let uu___ = lidents_of_pattern p1 in
+        let uu___1 =
+          let uu___2 = lidents_of_term t1 in
+          let uu___3 = opt_map lidents_of_term t2 in
+          FStar_Compiler_List.op_At uu___2 uu___3 in
+        FStar_Compiler_List.op_At uu___ uu___1
+    | FStar_Parser_AST.PatOr ps -> (concat_map ()) lidents_of_pattern ps
+    | FStar_Parser_AST.PatOp uu___ -> []
+    | FStar_Parser_AST.PatVQuote t -> lidents_of_term t
 and (lidents_of_binder :
-  FStar_Parser_AST.binder -> FStar_Ident.lident Prims.list) = fun uu___ -> []
+  FStar_Parser_AST.binder -> FStar_Ident.lident Prims.list) =
+  fun b ->
+    match b.FStar_Parser_AST.b with
+    | FStar_Parser_AST.Annotated (uu___, t) -> lidents_of_term t
+    | FStar_Parser_AST.TAnnotated (uu___, t) -> lidents_of_term t
+    | uu___ -> []
