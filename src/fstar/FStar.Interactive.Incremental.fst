@@ -86,10 +86,43 @@ let as_query (q:query')
         qid=qid_prefix ^ "." ^ string_of_int i
       }
 
+(* This function dumps a symbol table for the decl that has just been checked *)
+let dump_symbols_of_term (t:term)
+: qst (list query)
+= let lids = FStar.Parser.AST.Comparison.lidents_of_term t in
+  let lookup_lid l = 
+    let r = Ident.range_of_lid l in
+    let start_pos = Range.start_of_range r in
+    let end_pos = Range.end_of_range r in
+    let start_line = Range.line_of_pos start_pos in
+    let start_col = Range.col_of_pos start_pos in
+    let end_line = Range.line_of_pos end_pos in
+    let end_col = Range.col_of_pos end_pos in
+    let position = "<input>", start_line, start_col in
+    as_query (Lookup(Ident.string_of_lid l,
+                     LKCode,
+                     Some position,
+                     ["type"; "documentation"; "defined-at"],
+                     Some (JsonAssoc [("fname", JsonStr "<input>");
+                                      ("beg", JsonList [JsonInt start_line; JsonInt start_col]);
+                                      ("end", JsonList [JsonInt end_line; JsonInt end_col])])))
+  in
+  map lookup_lid lids
+
+let dump_symbols (d:decl)
+: qst (list query)
+= let open FStar.Parser.AST in
+  match d.d with
+  | TopLevelLet (_, defs) ->
+    let! queries = map (fun (_, t) -> dump_symbols_of_term t) defs in
+    return (List.concat queries)
+  | _ -> return []
+
 (* Push a decl for checking, and before it runs,
    print a progress message "fragment-started"
    for the decl that is about to run *)
 let push_decl (push_kind:push_kind)
+              (with_symbols:bool)
               (write_full_buffer_fragment_progress: fragment_progress -> unit)
               (ds:decl * code_fragment)              
   : qst (list query)
@@ -108,13 +141,21 @@ let push_decl (push_kind:push_kind)
     in
     let! cb = as_query (Callback progress) in
     let! push = as_query (Push pq) in
-    return [cb; push]
+    if with_symbols
+    then (
+      let! lookups = dump_symbols d in
+      return ([cb; push] @ lookups)
+    )
+    else (
+      return [cb; push]
+    )
     
 let push_decls (push_kind:push_kind)
+               (with_symbols:bool)
                (write_full_buffer_fragment_progress : fragment_progress -> unit)
                (ds:list (decl & code_fragment))
   : qst (list query)
-  = let! qs = map (push_decl push_kind write_full_buffer_fragment_progress) ds in
+  = let! qs = map (push_decl push_kind with_symbols write_full_buffer_fragment_progress) ds in
     return (List.flatten qs)
   
 let pop_entries (e:list repl_stack_entry_t)
@@ -130,10 +171,11 @@ let repl_task (_, (p, _)) = p
 let inspect_repl_stack (s:repl_stack_t)
                        (ds:list (decl & code_fragment))
                        (push_kind : push_kind)
+                       (with_symbols:bool)
                        (write_full_buffer_fragment_progress: fragment_progress -> unit)                       
   : qst (list query)
   = let entries = List.rev s in
-    let push_decls = push_decls push_kind write_full_buffer_fragment_progress in
+    let push_decls = push_decls push_kind with_symbols write_full_buffer_fragment_progress in
     match BU.prefix_until 
              (function (_, (PushFragment _, _)) -> true | _ -> false)
              entries          
@@ -239,7 +281,6 @@ let run_full_buffer (st:repl_state)
       match request_type with
       | VerifyToPosition (_, line, _col)
       | LaxToPosition (_, line, _col) ->
-        BU.print1 "Got to-position: %s" (string_of_int line);
         List.filter
           (fun (d, _) ->
             let start = Range.start_of_range d.drange in
@@ -248,13 +289,14 @@ let run_full_buffer (st:repl_state)
           decls
       | _ -> decls
     in
+    let with_symbols = request_type = FullBufferWithSymbols in
     let qs = 
       match parse_result with
       | IncrementalFragment (decls, _, err_opt) -> (
         match request_type, decls with
         | ReloadDeps, d::_ ->
           run_qst (let! queries = reload_deps (!repl_stack) in
-                   let! push_mod = push_decl FullCheck write_full_buffer_fragment_progress d in
+                   let! push_mod = push_decl FullCheck with_symbols write_full_buffer_fragment_progress d in
                    return (queries @ push_mod))
                   qid
 
@@ -263,10 +305,12 @@ let run_full_buffer (st:repl_state)
           let push_kind = 
             match request_type with
             | LaxToPosition _ -> LaxCheck
+            | FullBufferWithSymbols -> LaxCheck
             | _ -> FullCheck
           in
+
           let queries = 
-              run_qst (inspect_repl_stack (!repl_stack) decls push_kind write_full_buffer_fragment_progress) qid
+              run_qst (inspect_repl_stack (!repl_stack) decls push_kind with_symbols write_full_buffer_fragment_progress) qid
           in
           if request_type = Full then log_syntax_issues err_opt;
           if Options.debug_any()

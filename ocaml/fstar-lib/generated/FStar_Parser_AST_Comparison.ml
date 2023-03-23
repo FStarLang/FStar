@@ -605,3 +605,250 @@ and (eq_decl : FStar_Parser_AST.decl -> FStar_Parser_AST.decl -> Prims.bool)
             d2.FStar_Parser_AST.quals))
         &&
         (eq_list eq_term d1.FStar_Parser_AST.attrs d2.FStar_Parser_AST.attrs)
+let concat_map :
+  'uuuuu 'uuuuu1 .
+    unit ->
+      ('uuuuu -> 'uuuuu1 Prims.list) ->
+        'uuuuu Prims.list -> 'uuuuu1 Prims.list
+  = fun uu___ -> FStar_Compiler_List.collect
+let opt_map :
+  'uuuuu 'a .
+    ('a -> 'uuuuu Prims.list) ->
+      'a FStar_Pervasives_Native.option -> 'uuuuu Prims.list
+  =
+  fun f ->
+    fun x ->
+      match x with
+      | FStar_Pervasives_Native.None -> []
+      | FStar_Pervasives_Native.Some x1 -> f x1
+let rec (lidents_of_term :
+  FStar_Parser_AST.term -> FStar_Ident.lident Prims.list) =
+  fun t -> lidents_of_term' t.FStar_Parser_AST.tm
+and (lidents_of_term' :
+  FStar_Parser_AST.term' -> FStar_Ident.lident Prims.list) =
+  fun t ->
+    match t with
+    | FStar_Parser_AST.Wild -> []
+    | FStar_Parser_AST.Const uu___ -> []
+    | FStar_Parser_AST.Op (s, ts) -> (concat_map ()) lidents_of_term ts
+    | FStar_Parser_AST.Tvar uu___ -> []
+    | FStar_Parser_AST.Uvar uu___ -> []
+    | FStar_Parser_AST.Var lid -> [lid]
+    | FStar_Parser_AST.Name lid -> [lid]
+    | FStar_Parser_AST.Projector (lid, uu___) -> [lid]
+    | FStar_Parser_AST.Construct (lid, ts) ->
+        let uu___ =
+          (concat_map ())
+            (fun uu___1 ->
+               match uu___1 with | (t1, uu___2) -> lidents_of_term t1) ts in
+        lid :: uu___
+    | FStar_Parser_AST.Abs (ps, t1) ->
+        let uu___ = (concat_map ()) lidents_of_pattern ps in
+        let uu___1 = lidents_of_term t1 in
+        FStar_Compiler_List.op_At uu___ uu___1
+    | FStar_Parser_AST.App (t1, t2, uu___) ->
+        let uu___1 = lidents_of_term t1 in
+        let uu___2 = lidents_of_term t2 in
+        FStar_Compiler_List.op_At uu___1 uu___2
+    | FStar_Parser_AST.Let (uu___, lbs, t1) ->
+        let uu___1 =
+          (concat_map ())
+            (fun uu___2 ->
+               match uu___2 with
+               | (uu___3, (uu___4, t2)) -> lidents_of_term t2) lbs in
+        let uu___2 = lidents_of_term t1 in
+        FStar_Compiler_List.op_At uu___1 uu___2
+    | FStar_Parser_AST.LetOperator (lbs, t1) ->
+        let uu___ =
+          (concat_map ())
+            (fun uu___1 ->
+               match uu___1 with | (uu___2, uu___3, t2) -> lidents_of_term t2)
+            lbs in
+        let uu___1 = lidents_of_term t1 in
+        FStar_Compiler_List.op_At uu___ uu___1
+    | FStar_Parser_AST.LetOpen (lid, t1) ->
+        let uu___ = lidents_of_term t1 in lid :: uu___
+    | FStar_Parser_AST.LetOpenRecord (t1, t2, t3) ->
+        let uu___ = lidents_of_term t1 in
+        let uu___1 =
+          let uu___2 = lidents_of_term t2 in
+          let uu___3 = lidents_of_term t3 in
+          FStar_Compiler_List.op_At uu___2 uu___3 in
+        FStar_Compiler_List.op_At uu___ uu___1
+    | FStar_Parser_AST.Seq (t1, t2) ->
+        let uu___ = lidents_of_term t1 in
+        let uu___1 = lidents_of_term t2 in
+        FStar_Compiler_List.op_At uu___ uu___1
+    | FStar_Parser_AST.Bind (uu___, t1, t2) ->
+        let uu___1 = lidents_of_term t1 in
+        let uu___2 = lidents_of_term t2 in
+        FStar_Compiler_List.op_At uu___1 uu___2
+    | FStar_Parser_AST.If (t1, uu___, uu___1, t2, t3) ->
+        let uu___2 = lidents_of_term t1 in
+        let uu___3 =
+          let uu___4 = lidents_of_term t2 in
+          let uu___5 = lidents_of_term t3 in
+          FStar_Compiler_List.op_At uu___4 uu___5 in
+        FStar_Compiler_List.op_At uu___2 uu___3
+    | FStar_Parser_AST.Match (t1, uu___, uu___1, bs) ->
+        let uu___2 = lidents_of_term t1 in
+        let uu___3 = (concat_map ()) lidents_of_branch bs in
+        FStar_Compiler_List.op_At uu___2 uu___3
+    | FStar_Parser_AST.TryWith (t1, bs) ->
+        let uu___ = lidents_of_term t1 in
+        let uu___1 = (concat_map ()) lidents_of_branch bs in
+        FStar_Compiler_List.op_At uu___ uu___1
+    | FStar_Parser_AST.Ascribed (t1, t2, uu___, uu___1) ->
+        let uu___2 = lidents_of_term t1 in
+        let uu___3 = lidents_of_term t2 in
+        FStar_Compiler_List.op_At uu___2 uu___3
+    | FStar_Parser_AST.Record (t1, ts) ->
+        let uu___ =
+          (concat_map ())
+            (fun uu___1 ->
+               match uu___1 with | (uu___2, t2) -> lidents_of_term t2) ts in
+        let uu___1 = opt_map lidents_of_term t1 in
+        FStar_Compiler_List.op_At uu___ uu___1
+    | FStar_Parser_AST.Project (t1, uu___) -> lidents_of_term t1
+    | FStar_Parser_AST.Product (ts, t1) ->
+        let uu___ = (concat_map ()) lidents_of_binder ts in
+        let uu___1 = lidents_of_term t1 in
+        FStar_Compiler_List.op_At uu___ uu___1
+    | FStar_Parser_AST.Sum (ts, t1) ->
+        let uu___ =
+          (concat_map ())
+            (fun uu___1 ->
+               match uu___1 with
+               | FStar_Pervasives.Inl b -> lidents_of_binder b
+               | FStar_Pervasives.Inr t2 -> lidents_of_term t2) ts in
+        let uu___1 = lidents_of_term t1 in
+        FStar_Compiler_List.op_At uu___ uu___1
+    | FStar_Parser_AST.QForall (bs, _pats, t1) -> lidents_of_term t1
+    | FStar_Parser_AST.QExists (bs, _pats, t1) -> lidents_of_term t1
+    | FStar_Parser_AST.Refine (b, t1) -> lidents_of_term t1
+    | FStar_Parser_AST.NamedTyp (i, t1) -> lidents_of_term t1
+    | FStar_Parser_AST.Paren t1 -> lidents_of_term t1
+    | FStar_Parser_AST.Requires (t1, uu___) -> lidents_of_term t1
+    | FStar_Parser_AST.Ensures (t1, uu___) -> lidents_of_term t1
+    | FStar_Parser_AST.LexList ts -> (concat_map ()) lidents_of_term ts
+    | FStar_Parser_AST.WFOrder (t1, t2) ->
+        let uu___ = lidents_of_term t1 in
+        let uu___1 = lidents_of_term t2 in
+        FStar_Compiler_List.op_At uu___ uu___1
+    | FStar_Parser_AST.Decreases (t1, uu___) -> lidents_of_term t1
+    | FStar_Parser_AST.Labeled (t1, uu___, uu___1) -> lidents_of_term t1
+    | FStar_Parser_AST.Discrim lid -> [lid]
+    | FStar_Parser_AST.Attributes ts -> (concat_map ()) lidents_of_term ts
+    | FStar_Parser_AST.Antiquote t1 -> lidents_of_term t1
+    | FStar_Parser_AST.Quote (t1, uu___) -> lidents_of_term t1
+    | FStar_Parser_AST.VQuote t1 -> lidents_of_term t1
+    | FStar_Parser_AST.CalcProof (t1, t2, ts) ->
+        let uu___ = lidents_of_term t1 in
+        let uu___1 =
+          let uu___2 = lidents_of_term t2 in
+          let uu___3 = (concat_map ()) lidents_of_calc_step ts in
+          FStar_Compiler_List.op_At uu___2 uu___3 in
+        FStar_Compiler_List.op_At uu___ uu___1
+    | FStar_Parser_AST.IntroForall (bs, t1, t2) ->
+        let uu___ = lidents_of_term t1 in
+        let uu___1 = lidents_of_term t2 in
+        FStar_Compiler_List.op_At uu___ uu___1
+    | FStar_Parser_AST.IntroExists (bs, t1, ts, t2) ->
+        let uu___ = lidents_of_term t1 in
+        let uu___1 =
+          let uu___2 = (concat_map ()) lidents_of_term ts in
+          let uu___3 = lidents_of_term t2 in
+          FStar_Compiler_List.op_At uu___2 uu___3 in
+        FStar_Compiler_List.op_At uu___ uu___1
+    | FStar_Parser_AST.IntroImplies (t1, t2, b, t3) ->
+        let uu___ = lidents_of_term t1 in
+        let uu___1 =
+          let uu___2 = lidents_of_term t2 in
+          let uu___3 = lidents_of_term t3 in
+          FStar_Compiler_List.op_At uu___2 uu___3 in
+        FStar_Compiler_List.op_At uu___ uu___1
+    | FStar_Parser_AST.IntroOr (b, t1, t2, t3) ->
+        let uu___ = lidents_of_term t1 in
+        let uu___1 =
+          let uu___2 = lidents_of_term t2 in
+          let uu___3 = lidents_of_term t3 in
+          FStar_Compiler_List.op_At uu___2 uu___3 in
+        FStar_Compiler_List.op_At uu___ uu___1
+    | FStar_Parser_AST.IntroAnd (t1, t2, t3, t4) ->
+        let uu___ = lidents_of_term t1 in
+        let uu___1 =
+          let uu___2 = lidents_of_term t2 in
+          let uu___3 =
+            let uu___4 = lidents_of_term t3 in
+            let uu___5 = lidents_of_term t4 in
+            FStar_Compiler_List.op_At uu___4 uu___5 in
+          FStar_Compiler_List.op_At uu___2 uu___3 in
+        FStar_Compiler_List.op_At uu___ uu___1
+    | FStar_Parser_AST.ElimForall (bs, t1, ts) ->
+        let uu___ = lidents_of_term t1 in
+        let uu___1 = (concat_map ()) lidents_of_term ts in
+        FStar_Compiler_List.op_At uu___ uu___1
+    | FStar_Parser_AST.ElimExists (bs, t1, t2, b, t3) ->
+        let uu___ = lidents_of_term t1 in
+        let uu___1 =
+          let uu___2 = lidents_of_term t2 in
+          let uu___3 = lidents_of_term t3 in
+          FStar_Compiler_List.op_At uu___2 uu___3 in
+        FStar_Compiler_List.op_At uu___ uu___1
+    | FStar_Parser_AST.ElimImplies (t1, t2, t3) ->
+        let uu___ = lidents_of_term t1 in
+        let uu___1 =
+          let uu___2 = lidents_of_term t2 in
+          let uu___3 = lidents_of_term t3 in
+          FStar_Compiler_List.op_At uu___2 uu___3 in
+        FStar_Compiler_List.op_At uu___ uu___1
+    | FStar_Parser_AST.ElimOr (t1, t2, t3, b1, t4, b2, t5) ->
+        let uu___ = lidents_of_term t1 in
+        let uu___1 =
+          let uu___2 = lidents_of_term t2 in
+          let uu___3 =
+            let uu___4 = lidents_of_term t3 in
+            let uu___5 =
+              let uu___6 = lidents_of_term t4 in
+              let uu___7 = lidents_of_term t5 in
+              FStar_Compiler_List.op_At uu___6 uu___7 in
+            FStar_Compiler_List.op_At uu___4 uu___5 in
+          FStar_Compiler_List.op_At uu___2 uu___3 in
+        FStar_Compiler_List.op_At uu___ uu___1
+    | FStar_Parser_AST.ElimAnd (t1, t2, t3, b1, b2, t4) ->
+        let uu___ = lidents_of_term t1 in
+        let uu___1 =
+          let uu___2 = lidents_of_term t2 in
+          let uu___3 =
+            let uu___4 = lidents_of_term t3 in
+            let uu___5 = lidents_of_term t4 in
+            FStar_Compiler_List.op_At uu___4 uu___5 in
+          FStar_Compiler_List.op_At uu___2 uu___3 in
+        FStar_Compiler_List.op_At uu___ uu___1
+and (lidents_of_branch :
+  (FStar_Parser_AST.pattern * FStar_Parser_AST.term
+    FStar_Pervasives_Native.option * FStar_Parser_AST.term) ->
+    FStar_Ident.lident Prims.list)
+  =
+  fun uu___ ->
+    match uu___ with
+    | (p, uu___1, t) ->
+        let uu___2 = lidents_of_pattern p in
+        let uu___3 = lidents_of_term t in
+        FStar_Compiler_List.op_At uu___2 uu___3
+and (lidents_of_calc_step :
+  FStar_Parser_AST.calc_step -> FStar_Ident.lident Prims.list) =
+  fun uu___ ->
+    match uu___ with
+    | FStar_Parser_AST.CalcStep (t1, t2, t3) ->
+        let uu___1 = lidents_of_term t1 in
+        let uu___2 =
+          let uu___3 = lidents_of_term t2 in
+          let uu___4 = lidents_of_term t3 in
+          FStar_Compiler_List.op_At uu___3 uu___4 in
+        FStar_Compiler_List.op_At uu___1 uu___2
+and (lidents_of_pattern :
+  FStar_Parser_AST.pattern -> FStar_Ident.lident Prims.list) =
+  fun uu___ -> []
+and (lidents_of_binder :
+  FStar_Parser_AST.binder -> FStar_Ident.lident Prims.list) = fun uu___ -> []

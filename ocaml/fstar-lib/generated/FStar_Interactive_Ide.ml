@@ -358,6 +358,8 @@ let (unpack_interactive_query :
              let parse_full_buffer_kind uu___1 =
                match uu___1 with
                | "full" -> FStar_Interactive_Ide_Types.Full
+               | "full-with-symbols" ->
+                   FStar_Interactive_Ide_Types.FullBufferWithSymbols
                | "cache" -> FStar_Interactive_Ide_Types.Cache
                | "reload-deps" -> FStar_Interactive_Ide_Types.ReloadDeps
                | "verify-to-position" ->

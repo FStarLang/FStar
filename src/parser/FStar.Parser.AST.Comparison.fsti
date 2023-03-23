@@ -24,3 +24,5 @@ open FStar.Parser.AST
 (* Check if two decls are equal, ignoring range metadata.
    Used in FStar.Interactive.Incremental *)
 val eq_decl (d1 d2:decl) : bool
+
+val lidents_of_term (t:term) : list FStar.Ident.lident

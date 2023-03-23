@@ -100,6 +100,7 @@ type repl_task =
 
 type full_buffer_request_kind =
   | Full : full_buffer_request_kind
+  | FullBufferWithSymbols : full_buffer_request_kind
   | Cache : full_buffer_request_kind
   | ReloadDeps : full_buffer_request_kind
   | VerifyToPosition of position
@@ -241,7 +242,14 @@ let query_to_string q = match q.qq with
 | Push pq -> "(Push " ^ push_query_to_string pq ^ ")"
 | VfsAdd _ -> "VfsAdd"
 | AutoComplete _ -> "AutoComplete"
-| Lookup _ -> "Lookup"
+| Lookup(s, _lc, pos, features, _sr) ->
+  BU.format3 "(Lookup %s %s [%s])"
+              s (match pos with
+                 | None -> "None"
+                 | Some (f, i, j) ->
+                   BU.format3 "(%s, %s, %s)"
+                              f (string_of_int i) (string_of_int j))
+                (String.concat "; " features)
 | Compute _ -> "Compute"
 | Search _ -> "Search"
 | GenericError _ -> "GenericError"

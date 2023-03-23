@@ -149,12 +149,17 @@ let (uu___is_Noop : repl_task -> Prims.bool) =
   fun projectee -> match projectee with | Noop -> true | uu___ -> false
 type full_buffer_request_kind =
   | Full 
+  | FullBufferWithSymbols 
   | Cache 
   | ReloadDeps 
   | VerifyToPosition of position 
   | LaxToPosition of position 
 let (uu___is_Full : full_buffer_request_kind -> Prims.bool) =
   fun projectee -> match projectee with | Full -> true | uu___ -> false
+let (uu___is_FullBufferWithSymbols : full_buffer_request_kind -> Prims.bool)
+  =
+  fun projectee ->
+    match projectee with | FullBufferWithSymbols -> true | uu___ -> false
 let (uu___is_Cache : full_buffer_request_kind -> Prims.bool) =
   fun projectee -> match projectee with | Cache -> true | uu___ -> false
 let (uu___is_ReloadDeps : full_buffer_request_kind -> Prims.bool) =
@@ -478,7 +483,16 @@ let (query_to_string : query -> Prims.string) =
         Prims.op_Hat "(Push " uu___
     | VfsAdd uu___ -> "VfsAdd"
     | AutoComplete uu___ -> "AutoComplete"
-    | Lookup uu___ -> "Lookup"
+    | Lookup (s, _lc, pos, features, _sr) ->
+        let uu___ =
+          match pos with
+          | FStar_Pervasives_Native.None -> "None"
+          | FStar_Pervasives_Native.Some (f, i, j) ->
+              let uu___1 = FStar_Compiler_Util.string_of_int i in
+              let uu___2 = FStar_Compiler_Util.string_of_int j in
+              FStar_Compiler_Util.format3 "(%s, %s, %s)" f uu___1 uu___2 in
+        FStar_Compiler_Util.format3 "(Lookup %s %s [%s])" s uu___
+          (FStar_String.concat "; " features)
     | Compute uu___ -> "Compute"
     | Search uu___ -> "Search"
     | GenericError uu___ -> "GenericError"

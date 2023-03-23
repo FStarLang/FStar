@@ -225,6 +225,7 @@ let unpack_interactive_query json =
     in
     let parse_full_buffer_kind = function
       | "full" -> Full
+      | "full-with-symbols" -> FullBufferWithSymbols
       | "cache" -> Cache
       | "reload-deps" -> ReloadDeps
       | "verify-to-position" -> VerifyToPosition (read_to_position ())
@@ -696,7 +697,7 @@ let run_push st query =
 let run_symbol_lookup st symbol pos_opt requested_info (symbol_range_opt:option json) =
   match QH.symlookup st.repl_env symbol pos_opt requested_info with
   | None -> Inl "Symbol not found"
-  | Some result -> 
+  | Some result ->
     Inr ("symbol", alist_of_symbol_lookup_result result symbol symbol_range_opt)
 
 let run_option_lookup opt_name =

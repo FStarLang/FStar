@@ -320,26 +320,19 @@ let (handle_error : Prims.exn -> unit) =
     report_errors []
 let main : 'uuuuu . unit -> 'uuuuu =
   fun uu___ ->
-    try
-      (fun uu___1 ->
-         match () with
-         | () ->
-             (setup_hooks ();
-              (let uu___3 = FStar_Compiler_Util.record_time go in
-               match uu___3 with
-               | (uu___4, time) ->
-                   ((let uu___6 = FStar_Options.query_stats () in
-                     if uu___6
-                     then
-                       let uu___7 = FStar_Compiler_Util.string_of_int time in
-                       let uu___8 =
-                         let uu___9 = FStar_Getopt.cmdline () in
-                         FStar_String.concat " " uu___9 in
-                       FStar_Compiler_Util.print2_error
-                         "TOTAL TIME %s ms: %s\n" uu___7 uu___8
-                     else ());
-                    cleanup ();
-                    FStar_Compiler_Effect.exit Prims.int_zero)))) ()
-    with
-    | uu___1 ->
-        (handle_error uu___1; FStar_Compiler_Effect.exit Prims.int_one)
+    setup_hooks ();
+    (let uu___2 = FStar_Compiler_Util.record_time go in
+     match uu___2 with
+     | (uu___3, time) ->
+         ((let uu___5 = FStar_Options.query_stats () in
+           if uu___5
+           then
+             let uu___6 = FStar_Compiler_Util.string_of_int time in
+             let uu___7 =
+               let uu___8 = FStar_Getopt.cmdline () in
+               FStar_String.concat " " uu___8 in
+             FStar_Compiler_Util.print2_error "TOTAL TIME %s ms: %s\n" uu___6
+               uu___7
+           else ());
+          cleanup ();
+          FStar_Compiler_Effect.exit Prims.int_zero))

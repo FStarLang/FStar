@@ -547,3 +547,70 @@ and eq_decl (d1 d2:decl) : bool =
   eq_decl' d1.d d2.d &&
   eq_list eq_qualifier d1.quals d2.quals &&
   eq_list eq_term d1.attrs d2.attrs
+
+let concat_map = List.collect
+let opt_map f (x:option 'a) = match x with | None -> [] | Some x -> f x
+
+let rec lidents_of_term (t:term)
+: list FStar.Ident.lident
+= lidents_of_term' t.tm
+and lidents_of_term' (t:term')
+: list FStar.Ident.lident
+= match t with
+  | Wild -> []
+  | Const _ -> []
+  | Op (s, ts) -> concat_map lidents_of_term ts
+  | Tvar _ -> []
+  | Uvar _ -> []
+  | Var lid -> [lid]
+  | Name lid -> [lid]
+  | Projector (lid, _) -> [lid]
+  | Construct (lid, ts) -> lid :: concat_map (fun (t, _) -> lidents_of_term t) ts
+  | Abs (ps, t) -> concat_map lidents_of_pattern ps @ lidents_of_term t
+  | App (t1, t2, _) -> lidents_of_term t1 @ lidents_of_term t2
+  | Let (_, lbs, t) -> concat_map (fun (_, (_, t)) -> lidents_of_term t) lbs @ lidents_of_term t
+  | LetOperator (lbs, t) -> concat_map (fun (_, _, t) -> lidents_of_term t) lbs @ lidents_of_term t
+  | LetOpen (lid, t) -> lid :: lidents_of_term t
+  | LetOpenRecord (t1, t2, t3) -> lidents_of_term t1 @ lidents_of_term t2 @ lidents_of_term t3
+  | Seq (t1, t2) -> lidents_of_term t1 @ lidents_of_term t2
+  | Bind (_, t1, t2) -> lidents_of_term t1 @ lidents_of_term t2
+  | If (t1, _, _, t2, t3) -> lidents_of_term t1 @ lidents_of_term t2 @ lidents_of_term t3
+  | Match (t, _, _, bs) -> lidents_of_term t @ concat_map lidents_of_branch bs
+  | TryWith (t, bs) -> lidents_of_term t @ concat_map lidents_of_branch bs
+  | Ascribed (t1, t2, _, _) -> lidents_of_term t1 @ lidents_of_term t2
+  | Record (t, ts) -> concat_map (fun (_, t) -> lidents_of_term t) ts @ opt_map lidents_of_term t
+  | Project (t, _) -> lidents_of_term t
+  | Product (ts, t) -> concat_map lidents_of_binder ts @ lidents_of_term t
+  | Sum (ts, t) -> concat_map (function Inl b -> lidents_of_binder b | Inr t -> lidents_of_term t) ts @ lidents_of_term t
+  | QForall (bs, _pats, t) -> lidents_of_term t
+  | QExists (bs, _pats, t) -> lidents_of_term t
+  | Refine (b, t) -> lidents_of_term t
+  | NamedTyp (i, t) -> lidents_of_term t
+  | Paren t -> lidents_of_term t
+  | Requires (t, _) -> lidents_of_term t
+  | Ensures (t, _) -> lidents_of_term t
+  | LexList ts -> concat_map lidents_of_term ts
+  | WFOrder (t1, t2) -> lidents_of_term t1 @ lidents_of_term t2
+  | Decreases (t, _) -> lidents_of_term t
+  | Labeled (t, _, _) -> lidents_of_term t
+  | Discrim lid -> [lid]
+  | Attributes ts -> concat_map lidents_of_term ts
+  | Antiquote t -> lidents_of_term t
+  | Quote (t, _) -> lidents_of_term t
+  | VQuote t -> lidents_of_term t
+  | CalcProof (t1, t2, ts) -> lidents_of_term t1 @ lidents_of_term t2 @ concat_map lidents_of_calc_step ts
+  | IntroForall (bs, t1, t2) -> lidents_of_term t1 @ lidents_of_term t2
+  | IntroExists (bs, t1, ts, t2) -> lidents_of_term t1 @ concat_map lidents_of_term ts @ lidents_of_term t2
+  | IntroImplies (t1, t2, b, t3) -> lidents_of_term t1 @ lidents_of_term t2 @ lidents_of_term t3
+  | IntroOr (b, t1, t2, t3) -> lidents_of_term t1 @ lidents_of_term t2 @ lidents_of_term t3
+  | IntroAnd (t1, t2, t3, t4) -> lidents_of_term t1 @ lidents_of_term t2 @ lidents_of_term t3 @ lidents_of_term t4
+  | ElimForall (bs, t1, ts) -> lidents_of_term t1 @ concat_map lidents_of_term ts
+  | ElimExists (bs, t1, t2, b, t3) -> lidents_of_term t1 @ lidents_of_term t2 @ lidents_of_term t3
+  | ElimImplies (t1, t2, t3) -> lidents_of_term t1 @ lidents_of_term t2 @ lidents_of_term t3
+  | ElimOr (t1, t2, t3, b1, t4, b2, t5) -> lidents_of_term t1 @ lidents_of_term t2 @ lidents_of_term t3 @ lidents_of_term t4 @ lidents_of_term t5
+  | ElimAnd (t1, t2, t3, b1, b2, t4) -> lidents_of_term t1 @ lidents_of_term t2 @ lidents_of_term t3 @ lidents_of_term t4
+and lidents_of_branch (p, _, t) = lidents_of_pattern p @ lidents_of_term t
+and lidents_of_calc_step = function
+  | CalcStep (t1, t2, t3) -> lidents_of_term t1 @ lidents_of_term t2 @ lidents_of_term t3
+and lidents_of_pattern _ = []
+and lidents_of_binder _ = []

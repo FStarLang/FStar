@@ -44,7 +44,7 @@ let (term_to_string :
   fun tcenv ->
     fun t ->
       with_printed_effect_args
-        (fun uu___ -> FStar_TypeChecker_Normalize.term_to_string tcenv t)
+        (fun uu___ -> FStar_Syntax_Print.term_to_string t)
 let (sigelt_to_string : FStar_Syntax_Syntax.sigelt -> Prims.string) =
   fun se ->
     with_printed_effect_args
@@ -108,6 +108,10 @@ let (symlookup :
                 match name_or_lid with
                 | FStar_Pervasives.Inl name1 -> name1
                 | FStar_Pervasives.Inr lid -> FStar_Ident.string_of_lid lid in
+              let str_of_opt uu___ =
+                match uu___ with
+                | FStar_Pervasives_Native.None -> "<none>"
+                | FStar_Pervasives_Native.Some s -> s in
               let typ_str =
                 if FStar_Compiler_List.mem "type" requested_info
                 then
