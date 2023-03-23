@@ -15,7 +15,7 @@
 
    Authors: N. Swamy and Copilot
 *)
-module FStar.Parser.AST.Comparison
+module FStar.Parser.AST.Util
 open FStar.Pervasives
 open FStar.Compiler.Effect
 open FStar.Compiler.List
@@ -25,4 +25,4 @@ open FStar.Parser.AST
    Used in FStar.Interactive.Incremental *)
 val eq_decl (d1 d2:decl) : bool
 
-val lidents_of_term (t:term) : list FStar.Ident.lident
+val lidents_of_decl (t:decl) : list FStar.Ident.lident

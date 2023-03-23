@@ -83,54 +83,42 @@ let (as_query :
                  FStar_Interactive_Ide_Types.qid = uu___2
                } in
              return uu___1)
-let (dump_symbols_of_term :
-  FStar_Parser_AST.term -> FStar_Interactive_Ide_Types.query Prims.list qst)
-  =
-  fun t ->
-    let lids = FStar_Parser_AST_Comparison.lidents_of_term t in
-    let lookup_lid l =
-      let r = FStar_Ident.range_of_lid l in
-      let start_pos = FStar_Compiler_Range.start_of_range r in
-      let end_pos = FStar_Compiler_Range.end_of_range r in
-      let start_line = FStar_Compiler_Range.line_of_pos start_pos in
-      let start_col = FStar_Compiler_Range.col_of_pos start_pos in
-      let end_line = FStar_Compiler_Range.line_of_pos end_pos in
-      let end_col = FStar_Compiler_Range.col_of_pos end_pos in
-      let position = ("<input>", start_line, start_col) in
-      let uu___ =
-        let uu___1 =
-          let uu___2 = FStar_Ident.string_of_lid l in
-          (uu___2, FStar_Interactive_Ide_Types.LKCode,
-            (FStar_Pervasives_Native.Some position),
-            ["type"; "documentation"; "defined-at"],
-            (FStar_Pervasives_Native.Some
-               (FStar_Compiler_Util.JsonAssoc
-                  [("fname", (FStar_Compiler_Util.JsonStr "<input>"));
-                  ("beg",
-                    (FStar_Compiler_Util.JsonList
-                       [FStar_Compiler_Util.JsonInt start_line;
-                       FStar_Compiler_Util.JsonInt start_col]));
-                  ("end",
-                    (FStar_Compiler_Util.JsonList
-                       [FStar_Compiler_Util.JsonInt end_line;
-                       FStar_Compiler_Util.JsonInt end_col]))]))) in
-        FStar_Interactive_Ide_Types.Lookup uu___1 in
-      as_query uu___ in
-    map lookup_lid lids
+let (dump_symbols_for_lid :
+  FStar_Ident.lident -> FStar_Interactive_Ide_Types.query qst) =
+  fun l ->
+    let r = FStar_Ident.range_of_lid l in
+    let start_pos = FStar_Compiler_Range.start_of_range r in
+    let end_pos = FStar_Compiler_Range.end_of_range r in
+    let start_line = FStar_Compiler_Range.line_of_pos start_pos in
+    let start_col = FStar_Compiler_Range.col_of_pos start_pos in
+    let end_line = FStar_Compiler_Range.line_of_pos end_pos in
+    let end_col = FStar_Compiler_Range.col_of_pos end_pos in
+    let position = ("<input>", start_line, start_col) in
+    let uu___ =
+      let uu___1 =
+        let uu___2 = FStar_Ident.string_of_lid l in
+        (uu___2, FStar_Interactive_Ide_Types.LKCode,
+          (FStar_Pervasives_Native.Some position),
+          ["type"; "documentation"; "defined-at"],
+          (FStar_Pervasives_Native.Some
+             (FStar_Compiler_Util.JsonAssoc
+                [("fname", (FStar_Compiler_Util.JsonStr "<input>"));
+                ("beg",
+                  (FStar_Compiler_Util.JsonList
+                     [FStar_Compiler_Util.JsonInt start_line;
+                     FStar_Compiler_Util.JsonInt start_col]));
+                ("end",
+                  (FStar_Compiler_Util.JsonList
+                     [FStar_Compiler_Util.JsonInt end_line;
+                     FStar_Compiler_Util.JsonInt end_col]))]))) in
+      FStar_Interactive_Ide_Types.Lookup uu___1 in
+    as_query uu___
 let (dump_symbols :
   FStar_Parser_AST.decl -> FStar_Interactive_Ide_Types.query Prims.list qst)
   =
   fun d ->
-    match d.FStar_Parser_AST.d with
-    | FStar_Parser_AST.TopLevelLet (uu___, defs) ->
-        let uu___1 =
-          map
-            (fun uu___2 ->
-               match uu___2 with | (uu___3, t) -> dump_symbols_of_term t)
-            defs in
-        op_let_Bang uu___1
-          (fun queries -> return (FStar_Compiler_List.concat queries))
-    | uu___ -> return []
+    let ls = FStar_Parser_AST_Util.lidents_of_decl d in
+    map dump_symbols_for_lid ls
 let (push_decl :
   FStar_Interactive_Ide_Types.push_kind ->
     Prims.bool ->
@@ -263,7 +251,7 @@ let (inspect_repl_stack :
                        | FStar_Interactive_Ide_Types.PushFragment
                            (FStar_Pervasives.Inr d', pk) ->
                            let uu___1 =
-                             FStar_Parser_AST_Comparison.eq_decl
+                             FStar_Parser_AST_Util.eq_decl
                                (FStar_Pervasives_Native.fst d) d' in
                            if uu___1
                            then

@@ -15,7 +15,7 @@
 
    Authors: N. Swamy and Copilot
 *)
-module FStar.Parser.AST.Comparison
+module FStar.Parser.AST.Util
 open FStar.Pervasives
 open FStar.Compiler.Effect
 open FStar.Compiler.List
@@ -632,3 +632,69 @@ and lidents_of_binder b =
   | Annotated (_, t)
   | TAnnotated(_, t) -> lidents_of_term t
   | _ -> []
+
+let lidents_of_tycon_record (_, _, _, t) =
+  lidents_of_term t
+
+let lidents_of_constructor_payload (t:constructor_payload) =
+  match t with
+  | VpOfNotation t -> lidents_of_term t
+  | VpArbitrary t -> lidents_of_term t
+  | VpRecord (tc, None) -> concat_map lidents_of_tycon_record tc
+  | VpRecord (tc, Some t) -> concat_map lidents_of_tycon_record tc @ lidents_of_term t
+  
+let lidents_of_tycon_variant (tc:(ident * option constructor_payload * attributes_)) =
+  match tc with
+  | _, None, _ -> []
+  | _, Some t, _ -> lidents_of_constructor_payload t
+
+let lidents_of_tycon (tc:tycon) =
+  match tc with
+  | TyconAbstract (_, bs, k) -> concat_map lidents_of_binder bs @ opt_map lidents_of_term k
+  | TyconAbbrev (_, bs, k, t) -> concat_map lidents_of_binder bs @ opt_map lidents_of_term k @ lidents_of_term t
+  | TyconRecord (_, bs, k, _, tcs) ->
+    concat_map lidents_of_binder bs @
+    opt_map lidents_of_term k @
+    concat_map lidents_of_tycon_record tcs
+  | TyconVariant (_, bs, k, tcs) -> 
+    concat_map lidents_of_binder bs @
+    opt_map lidents_of_term k @
+    concat_map lidents_of_tycon_variant tcs
+
+let lidents_of_lift (l:lift) = 
+  [l.msource; l.mdest]@
+  (match l.lift_op with
+   | NonReifiableLift t -> lidents_of_term t
+   | ReifiableLift (t1, t2) -> lidents_of_term t1 @ lidents_of_term t2
+   | LiftForFree t -> lidents_of_term t)
+
+let rec lidents_of_decl (d:decl) =
+  match d.d with
+  | TopLevelModule _ -> []
+  | Open l
+  | Friend l
+  | Include l
+  | ModuleAbbrev (_, l) -> [l]
+  | TopLevelLet (_q, lbs) -> concat_map (fun (p, t) -> lidents_of_pattern p @ lidents_of_term t) lbs
+  | Tycon (_, _, tcs) -> concat_map lidents_of_tycon tcs
+  | Val (_, t) -> lidents_of_term t
+  | Exception (_, None) -> []
+  | Exception (_, Some t) -> lidents_of_term t
+  | NewEffect ed
+  | LayeredEffect ed -> lidents_of_effect_decl ed
+  | SubEffect lift -> lidents_of_lift lift
+  | Polymonadic_bind(l0, l1, l2, t) -> l0::l1::l2::lidents_of_term t
+  | Polymonadic_subcomp(l0, l1, t) -> l0::l1::lidents_of_term t
+  | Pragma _ -> []
+  | Assume (_, t) -> lidents_of_term t
+  | Splice (_, t) -> lidents_of_term t
+
+and lidents_of_effect_decl (ed:effect_decl) =
+  match ed with
+  | DefineEffect  (_, bs, t, ds) ->
+    concat_map lidents_of_binder bs @
+    lidents_of_term t @
+    concat_map lidents_of_decl ds
+  | RedefineEffect (_, bs, t) -> 
+    concat_map lidents_of_binder bs @
+    lidents_of_term t

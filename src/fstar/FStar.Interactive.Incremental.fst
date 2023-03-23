@@ -42,7 +42,7 @@ open FStar.Interactive.Ide.Types
 module P = FStar.Parser.ParseIt
 module BU = FStar.Compiler.Util
 open FStar.Parser.AST
-open FStar.Parser.AST.Comparison
+open FStar.Parser.AST.Util
 
 let qid = string & int
 let qst a = qid -> a & qid
@@ -87,36 +87,30 @@ let as_query (q:query')
       }
 
 (* This function dumps a symbol table for the decl that has just been checked *)
-let dump_symbols_of_term (t:term)
-: qst (list query)
-= let lids = FStar.Parser.AST.Comparison.lidents_of_term t in
-  let lookup_lid l = 
-    let r = Ident.range_of_lid l in
-    let start_pos = Range.start_of_range r in
-    let end_pos = Range.end_of_range r in
-    let start_line = Range.line_of_pos start_pos in
-    let start_col = Range.col_of_pos start_pos in
-    let end_line = Range.line_of_pos end_pos in
-    let end_col = Range.col_of_pos end_pos in
-    let position = "<input>", start_line, start_col in
-    as_query (Lookup(Ident.string_of_lid l,
-                     LKCode,
-                     Some position,
-                     ["type"; "documentation"; "defined-at"],
-                     Some (JsonAssoc [("fname", JsonStr "<input>");
-                                      ("beg", JsonList [JsonInt start_line; JsonInt start_col]);
-                                      ("end", JsonList [JsonInt end_line; JsonInt end_col])])))
-  in
-  map lookup_lid lids
+let dump_symbols_for_lid (l:lident)
+: qst query
+= let r = Ident.range_of_lid l in
+  let start_pos = Range.start_of_range r in
+  let end_pos = Range.end_of_range r in
+  let start_line = Range.line_of_pos start_pos in
+  let start_col = Range.col_of_pos start_pos in
+  let end_line = Range.line_of_pos end_pos in
+  let end_col = Range.col_of_pos end_pos in
+  let position = "<input>", start_line, start_col in
+  as_query (Lookup(Ident.string_of_lid l,
+                    LKCode,
+                    Some position,
+                    ["type"; "documentation"; "defined-at"],
+                    Some (JsonAssoc [("fname", JsonStr "<input>");
+                                    ("beg", JsonList [JsonInt start_line; JsonInt start_col]);
+                                    ("end", JsonList [JsonInt end_line; JsonInt end_col])])))
 
 let dump_symbols (d:decl)
 : qst (list query)
 = let open FStar.Parser.AST in
-  match d.d with
-  | TopLevelLet (_, defs) ->
-    let! queries = map (fun (_, t) -> dump_symbols_of_term t) defs in
-    return (List.concat queries)
-  | _ -> return []
+  let ls = lidents_of_decl d in
+  map dump_symbols_for_lid ls
+
 
 (* Push a decl for checking, and before it runs,
    print a progress message "fragment-started"

@@ -896,3 +896,126 @@ and (lidents_of_binder :
     | FStar_Parser_AST.Annotated (uu___, t) -> lidents_of_term t
     | FStar_Parser_AST.TAnnotated (uu___, t) -> lidents_of_term t
     | uu___ -> []
+let lidents_of_tycon_record :
+  'uuuuu 'uuuuu1 'uuuuu2 .
+    ('uuuuu * 'uuuuu1 * 'uuuuu2 * FStar_Parser_AST.term) ->
+      FStar_Ident.lident Prims.list
+  =
+  fun uu___ ->
+    match uu___ with | (uu___1, uu___2, uu___3, t) -> lidents_of_term t
+let (lidents_of_constructor_payload :
+  FStar_Parser_AST.constructor_payload -> FStar_Ident.lident Prims.list) =
+  fun t ->
+    match t with
+    | FStar_Parser_AST.VpOfNotation t1 -> lidents_of_term t1
+    | FStar_Parser_AST.VpArbitrary t1 -> lidents_of_term t1
+    | FStar_Parser_AST.VpRecord (tc, FStar_Pervasives_Native.None) ->
+        (concat_map ()) lidents_of_tycon_record tc
+    | FStar_Parser_AST.VpRecord (tc, FStar_Pervasives_Native.Some t1) ->
+        let uu___ = (concat_map ()) lidents_of_tycon_record tc in
+        let uu___1 = lidents_of_term t1 in
+        FStar_Compiler_List.op_At uu___ uu___1
+let (lidents_of_tycon_variant :
+  (FStar_Ident.ident * FStar_Parser_AST.constructor_payload
+    FStar_Pervasives_Native.option * FStar_Parser_AST.attributes_) ->
+    FStar_Ident.lident Prims.list)
+  =
+  fun tc ->
+    match tc with
+    | (uu___, FStar_Pervasives_Native.None, uu___1) -> []
+    | (uu___, FStar_Pervasives_Native.Some t, uu___1) ->
+        lidents_of_constructor_payload t
+let (lidents_of_tycon :
+  FStar_Parser_AST.tycon -> FStar_Ident.lident Prims.list) =
+  fun tc ->
+    match tc with
+    | FStar_Parser_AST.TyconAbstract (uu___, bs, k) ->
+        let uu___1 = (concat_map ()) lidents_of_binder bs in
+        let uu___2 = opt_map lidents_of_term k in
+        FStar_Compiler_List.op_At uu___1 uu___2
+    | FStar_Parser_AST.TyconAbbrev (uu___, bs, k, t) ->
+        let uu___1 = (concat_map ()) lidents_of_binder bs in
+        let uu___2 =
+          let uu___3 = opt_map lidents_of_term k in
+          let uu___4 = lidents_of_term t in
+          FStar_Compiler_List.op_At uu___3 uu___4 in
+        FStar_Compiler_List.op_At uu___1 uu___2
+    | FStar_Parser_AST.TyconRecord (uu___, bs, k, uu___1, tcs) ->
+        let uu___2 = (concat_map ()) lidents_of_binder bs in
+        let uu___3 =
+          let uu___4 = opt_map lidents_of_term k in
+          let uu___5 = (concat_map ()) lidents_of_tycon_record tcs in
+          FStar_Compiler_List.op_At uu___4 uu___5 in
+        FStar_Compiler_List.op_At uu___2 uu___3
+    | FStar_Parser_AST.TyconVariant (uu___, bs, k, tcs) ->
+        let uu___1 = (concat_map ()) lidents_of_binder bs in
+        let uu___2 =
+          let uu___3 = opt_map lidents_of_term k in
+          let uu___4 = (concat_map ()) lidents_of_tycon_variant tcs in
+          FStar_Compiler_List.op_At uu___3 uu___4 in
+        FStar_Compiler_List.op_At uu___1 uu___2
+let (lidents_of_lift :
+  FStar_Parser_AST.lift -> FStar_Ident.lident Prims.list) =
+  fun l ->
+    let uu___ =
+      match l.FStar_Parser_AST.lift_op with
+      | FStar_Parser_AST.NonReifiableLift t -> lidents_of_term t
+      | FStar_Parser_AST.ReifiableLift (t1, t2) ->
+          let uu___1 = lidents_of_term t1 in
+          let uu___2 = lidents_of_term t2 in
+          FStar_Compiler_List.op_At uu___1 uu___2
+      | FStar_Parser_AST.LiftForFree t -> lidents_of_term t in
+    FStar_Compiler_List.op_At
+      [l.FStar_Parser_AST.msource; l.FStar_Parser_AST.mdest] uu___
+let rec (lidents_of_decl :
+  FStar_Parser_AST.decl -> FStar_Ident.lident Prims.list) =
+  fun d ->
+    match d.FStar_Parser_AST.d with
+    | FStar_Parser_AST.TopLevelModule uu___ -> []
+    | FStar_Parser_AST.Open l -> [l]
+    | FStar_Parser_AST.Friend l -> [l]
+    | FStar_Parser_AST.Include l -> [l]
+    | FStar_Parser_AST.ModuleAbbrev (uu___, l) -> [l]
+    | FStar_Parser_AST.TopLevelLet (_q, lbs) ->
+        (concat_map ())
+          (fun uu___ ->
+             match uu___ with
+             | (p, t) ->
+                 let uu___1 = lidents_of_pattern p in
+                 let uu___2 = lidents_of_term t in
+                 FStar_Compiler_List.op_At uu___1 uu___2) lbs
+    | FStar_Parser_AST.Tycon (uu___, uu___1, tcs) ->
+        (concat_map ()) lidents_of_tycon tcs
+    | FStar_Parser_AST.Val (uu___, t) -> lidents_of_term t
+    | FStar_Parser_AST.Exception (uu___, FStar_Pervasives_Native.None) -> []
+    | FStar_Parser_AST.Exception (uu___, FStar_Pervasives_Native.Some t) ->
+        lidents_of_term t
+    | FStar_Parser_AST.NewEffect ed -> lidents_of_effect_decl ed
+    | FStar_Parser_AST.LayeredEffect ed -> lidents_of_effect_decl ed
+    | FStar_Parser_AST.SubEffect lift -> lidents_of_lift lift
+    | FStar_Parser_AST.Polymonadic_bind (l0, l1, l2, t) ->
+        let uu___ =
+          let uu___1 = let uu___2 = lidents_of_term t in l2 :: uu___2 in l1
+            :: uu___1 in
+        l0 :: uu___
+    | FStar_Parser_AST.Polymonadic_subcomp (l0, l1, t) ->
+        let uu___ = let uu___1 = lidents_of_term t in l1 :: uu___1 in l0 ::
+          uu___
+    | FStar_Parser_AST.Pragma uu___ -> []
+    | FStar_Parser_AST.Assume (uu___, t) -> lidents_of_term t
+    | FStar_Parser_AST.Splice (uu___, t) -> lidents_of_term t
+and (lidents_of_effect_decl :
+  FStar_Parser_AST.effect_decl -> FStar_Ident.lident Prims.list) =
+  fun ed ->
+    match ed with
+    | FStar_Parser_AST.DefineEffect (uu___, bs, t, ds) ->
+        let uu___1 = (concat_map ()) lidents_of_binder bs in
+        let uu___2 =
+          let uu___3 = lidents_of_term t in
+          let uu___4 = (concat_map ()) lidents_of_decl ds in
+          FStar_Compiler_List.op_At uu___3 uu___4 in
+        FStar_Compiler_List.op_At uu___1 uu___2
+    | FStar_Parser_AST.RedefineEffect (uu___, bs, t) ->
+        let uu___1 = (concat_map ()) lidents_of_binder bs in
+        let uu___2 = lidents_of_term t in
+        FStar_Compiler_List.op_At uu___1 uu___2
