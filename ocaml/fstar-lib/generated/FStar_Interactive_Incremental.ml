@@ -88,41 +88,35 @@ let (dump_symbols_of_term :
   =
   fun t ->
     let lids = FStar_Parser_AST_Comparison.lidents_of_term t in
-    (let uu___1 = FStar_Parser_AST.term_to_string t in
-     let uu___2 =
-       let uu___3 = FStar_Compiler_List.map FStar_Ident.string_of_lid lids in
-       FStar_String.concat ", " uu___3 in
-     FStar_Compiler_Util.print2 "Dumping symbols for %s { %s }\n" uu___1
-       uu___2);
-    (let lookup_lid l =
-       let r = FStar_Ident.range_of_lid l in
-       let start_pos = FStar_Compiler_Range.start_of_range r in
-       let end_pos = FStar_Compiler_Range.end_of_range r in
-       let start_line = FStar_Compiler_Range.line_of_pos start_pos in
-       let start_col = FStar_Compiler_Range.col_of_pos start_pos in
-       let end_line = FStar_Compiler_Range.line_of_pos end_pos in
-       let end_col = FStar_Compiler_Range.col_of_pos end_pos in
-       let position = ("<input>", start_line, start_col) in
-       let uu___1 =
-         let uu___2 =
-           let uu___3 = FStar_Ident.string_of_lid l in
-           (uu___3, FStar_Interactive_Ide_Types.LKCode,
-             (FStar_Pervasives_Native.Some position),
-             ["type"; "documentation"; "defined-at"],
-             (FStar_Pervasives_Native.Some
-                (FStar_Compiler_Util.JsonAssoc
-                   [("fname", (FStar_Compiler_Util.JsonStr "<input>"));
-                   ("beg",
-                     (FStar_Compiler_Util.JsonList
-                        [FStar_Compiler_Util.JsonInt start_line;
-                        FStar_Compiler_Util.JsonInt start_col]));
-                   ("end",
-                     (FStar_Compiler_Util.JsonList
-                        [FStar_Compiler_Util.JsonInt end_line;
-                        FStar_Compiler_Util.JsonInt end_col]))]))) in
-         FStar_Interactive_Ide_Types.Lookup uu___2 in
-       as_query uu___1 in
-     map lookup_lid lids)
+    let lookup_lid l =
+      let r = FStar_Ident.range_of_lid l in
+      let start_pos = FStar_Compiler_Range.start_of_range r in
+      let end_pos = FStar_Compiler_Range.end_of_range r in
+      let start_line = FStar_Compiler_Range.line_of_pos start_pos in
+      let start_col = FStar_Compiler_Range.col_of_pos start_pos in
+      let end_line = FStar_Compiler_Range.line_of_pos end_pos in
+      let end_col = FStar_Compiler_Range.col_of_pos end_pos in
+      let position = ("<input>", start_line, start_col) in
+      let uu___ =
+        let uu___1 =
+          let uu___2 = FStar_Ident.string_of_lid l in
+          (uu___2, FStar_Interactive_Ide_Types.LKCode,
+            (FStar_Pervasives_Native.Some position),
+            ["type"; "documentation"; "defined-at"],
+            (FStar_Pervasives_Native.Some
+               (FStar_Compiler_Util.JsonAssoc
+                  [("fname", (FStar_Compiler_Util.JsonStr "<input>"));
+                  ("beg",
+                    (FStar_Compiler_Util.JsonList
+                       [FStar_Compiler_Util.JsonInt start_line;
+                       FStar_Compiler_Util.JsonInt start_col]));
+                  ("end",
+                    (FStar_Compiler_Util.JsonList
+                       [FStar_Compiler_Util.JsonInt end_line;
+                       FStar_Compiler_Util.JsonInt end_col]))]))) in
+        FStar_Interactive_Ide_Types.Lookup uu___1 in
+      as_query uu___ in
+    map lookup_lid lids
 let (dump_symbols :
   FStar_Parser_AST.decl -> FStar_Interactive_Ide_Types.query Prims.list qst)
   =

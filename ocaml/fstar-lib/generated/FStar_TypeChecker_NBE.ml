@@ -923,7 +923,8 @@ let rec (translate :
                            translate cfg bs
                              (b.FStar_Syntax_Syntax.binder_bv).FStar_Syntax_Syntax.sort in
                          readback cfg uu___5 in
-                       FStar_Syntax_Syntax.new_bv
+                       FStar_Syntax_Syntax.gen_bv'
+                         (b.FStar_Syntax_Syntax.binder_bv).FStar_Syntax_Syntax.ppname
                          FStar_Pervasives_Native.None uu___4 in
                      let uu___4 = FStar_Syntax_Syntax.mk_binder x in
                      let uu___5 =
@@ -1002,7 +1003,8 @@ let rec (translate :
                            let uu___5 =
                              translate cfg1 bs1 bvar.FStar_Syntax_Syntax.sort in
                            readback cfg1 uu___5 in
-                         FStar_Syntax_Syntax.new_bv
+                         FStar_Syntax_Syntax.gen_bv'
+                           bvar.FStar_Syntax_Syntax.ppname
                            FStar_Pervasives_Native.None uu___4 in
                        let uu___4 =
                          let uu___5 = FStar_TypeChecker_NBETerm.mkAccuVar x in
@@ -1014,7 +1016,8 @@ let rec (translate :
                            let uu___5 =
                              translate cfg1 bs1 bvar.FStar_Syntax_Syntax.sort in
                            readback cfg1 uu___5 in
-                         FStar_Syntax_Syntax.new_bv
+                         FStar_Syntax_Syntax.gen_bv'
+                           bvar.FStar_Syntax_Syntax.ppname
                            FStar_Pervasives_Native.None uu___4 in
                        let uu___4 =
                          let uu___5 = FStar_TypeChecker_NBETerm.mkAccuVar x in
