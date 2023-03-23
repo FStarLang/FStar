@@ -1,3 +1,4 @@
+module Z = FStar_BigInt
 let failwith x = failwith x
 let exit i = exit (Z.to_int i)
 let pipe_right a f = f a

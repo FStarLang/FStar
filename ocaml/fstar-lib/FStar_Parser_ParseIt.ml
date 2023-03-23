@@ -1,3 +1,4 @@
+module Z = FStar_BigInt
 module U = FStar_Compiler_Util
 open FStar_Errors
 open FStar_Syntax_Syntax

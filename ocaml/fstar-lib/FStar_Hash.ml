@@ -1,3 +1,4 @@
+module Z = FStar_BigInt
 module BU = FStar_Compiler_Util
 type hash_code = int
 let of_int (i:Z.t) = Z.to_int i

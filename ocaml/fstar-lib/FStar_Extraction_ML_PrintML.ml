@@ -10,6 +10,8 @@ open Longident
 
 open FStar_Extraction_ML_Syntax
 
+module Z = FStar_BigInt
+
 (* Global state used for the name of the ML module being pprinted.
    current_module is only set once in build_ast and read once in
    path_to_ident. This is done in order to avoid clutter. *)
@@ -119,7 +121,7 @@ let build_constant (c: mlconstant): Parsetree.constant =
     | FStar_Const.Sizet -> with_w "64" in
   match c with
   | MLC_Int (v, None) ->
-      let s = match Z.of_string v with
+      let s = match Z.big_int_of_string v with
         | x when x = Z.zero -> "Prims.int_zero"
         | x when x = Z.one -> "Prims.int_one"
         | x when (min_of_int_const < x) && (x < max_of_int_const) ->
@@ -131,7 +133,7 @@ let build_constant (c: mlconstant): Parsetree.constant =
   | MLC_Int (v, Some (FStar_Const.Unsigned, FStar_Const.Int8)) ->
       Const.integer v
   | MLC_Int (v, Some (s, w)) ->
-      let s = match Z.of_string v with
+      let s = match Z.big_int_of_string v with
         | x when x = Z.zero ->
             BatString.concat "" [stdint_module s w; ".zero"]
         | x when x = Z.one ->

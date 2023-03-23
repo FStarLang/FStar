@@ -4,5 +4,6 @@ type uint64 = M.t
 type t = M.t
 let n = Prims.of_int 64
 
-let uint_to_t x = M.of_string (Z.to_string x)
+module Z = FStar_BigInt
+let uint_to_t x = M.of_string (Z.string_of_big_int x)
 let __uint_to_t = uint_to_t

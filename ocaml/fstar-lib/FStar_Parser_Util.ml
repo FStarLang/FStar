@@ -1,3 +1,4 @@
+module Z = FStar_BigInt
 open FStar_Compiler_Range
 open Lexing
 

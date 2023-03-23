@@ -1,3 +1,4 @@
+module Z = FStar_BigInt
 module U8 = FStar_UInt8
 module U16 = FStar_UInt16
 module U32 = FStar_UInt32
@@ -68,13 +69,13 @@ let split_ (b:bytes) (k:Z.t) =
     split b (U32.of_int k)
 
 let fits_in_k_bytes (n:Z.t) (k:Z.t) = (* expects k to fit in an int *)
-    Z.leq Z.zero n &&
-    Z.leq n (Z.of_int (BatInt.pow 2 (8 * Z.to_int k)))
+    Z.le_big_int Z.zero n &&
+    Z.le_big_int n (Z.of_int (BatInt.pow 2 (8 * Z.to_int k)))
 type 'a uint_k = Z.t
 
 let rec repr_bytes (n:Z.t) =
   if Z.to_int n < 256 then Z.of_int 1
-  else Z.add (Z.of_int 1) (repr_bytes (Z.div n (Z.of_int 256)))
+  else Z.add_big_int (Z.of_int 1) (repr_bytes (Z.div_big_int n (Z.of_int 256)))
 
 let lemma_repr_bytes_values (n:Z.t) = ()
 let repr_bytes_size (k:Z.t) (n:'a uint_k) = ()
@@ -83,7 +84,7 @@ let int_of_bytes (b:bytes) =
     let len = String.length b in
     let n = Z.of_int 256 in
     for y = 0 to len-1 do
-        x := Z.add (Z.mul n !x) (Z.of_int (get b (U32.of_native_int y)))
+        x := Z.add_big_int (Z.mult_big_int n !x) (Z.of_int (get b (U32.of_native_int y)))
     done;
     !x
 

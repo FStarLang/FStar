@@ -1,3 +1,4 @@
+module Z = FStar_BigInt
 let make i c = BatUTF8.init (Z.to_int i) (fun _ -> BatUChar.chr c)
 let strcat s t = s ^ t
 let op_Hat s t =  strcat s t

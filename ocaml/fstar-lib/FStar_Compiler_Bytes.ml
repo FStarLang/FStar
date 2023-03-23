@@ -1,3 +1,5 @@
+module Z = FStar_BigInt
+
 let b0 n =  (n land 0xFF)
 let b1 n =  ((n lsr 8) land 0xFF)
 let b2 n =  ((n lsr 16) land 0xFF)

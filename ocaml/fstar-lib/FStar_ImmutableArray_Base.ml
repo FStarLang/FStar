@@ -1,3 +1,5 @@
+module Z = FStar_BigInt
+
 type 'a t = 'a array
 
 let of_list (l:'a list) = Array.of_list l

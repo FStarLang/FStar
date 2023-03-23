@@ -24,6 +24,8 @@ let doc_of_string = PPrint.string
 let doc_of_bool b = PPrint.string (string_of_bool b)
 let blank_buffer_doc = [ ("", PPrint.empty) ]
 
+module Z = FStar_BigInt
+
 let substring s ofs len =
     PPrint.substring s (Z.to_int ofs) (Z.to_int len)
 

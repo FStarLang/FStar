@@ -1,3 +1,4 @@
+module Z = FStar_BigInt
 let max_int = Z.of_int max_int
 let is_letter c = if c > 255 then false else BatChar.is_letter (BatChar.chr c)
 let is_digit  c = if c > 255 then false else BatChar.is_digit  (BatChar.chr c)
@@ -395,8 +396,8 @@ let psmap_modify (m: 'value psmap) (k: string) (upd: 'value option -> 'value) =
 let psmap_merge (m1: 'value psmap) (m2: 'value psmap) : 'value psmap =
   psmap_fold m1 (fun k v m -> psmap_add m k v) m2
 
-module ZHashtbl = BatHashtbl.Make(Z)
-module ZMap = BatMap.Make(Z)
+module ZHashtbl = BatHashtbl.Make(Z.HashedType)
+module ZMap = BatMap.Make(Z.OrderedType)
 
 type 'value imap = 'value ZHashtbl.t
 let imap_create (i:Z.t) : 'value imap = ZHashtbl.create (Z.to_int i)
@@ -513,7 +514,7 @@ let unicode_of_string (string:string) =
 let base64_encode s = BatBase64.str_encode s
 let base64_decode s = BatBase64.str_decode s
 let char_of_int i = Z.to_int i
-let int_of_string = Z.of_string
+let int_of_string = Z.big_int_of_string
 let safe_int_of_string x = try Some (int_of_string x) with Invalid_argument _ -> None
 let int_of_char x = Z.of_int x
 let int_of_byte x = x
@@ -529,7 +530,7 @@ let float_of_int64 = BatInt64.to_float
 let int_of_int32 i = i
 let int32_of_int i = BatInt32.of_int i
 
-let string_of_int = Z.to_string
+let string_of_int = Z.string_of_big_int
 let string_of_bool = string_of_bool
 let string_of_int32 = BatInt32.to_string
 let string_of_int64 = BatInt64.to_string
@@ -865,8 +866,8 @@ let for_range lo hi f =
   done
 
 
-let incr r = FStar_ST.(Z.(write r (read r + one)))
-let decr r = FStar_ST.(Z.(write r (read r - one)))
+let incr r = FStar_ST.(Z.(write r (add_big_int (read r) one)))
+let decr r = FStar_ST.(Z.(write r (sub_big_int (read r) one)))
 let geq (i:int) (j:int) = i >= j
 
 let get_exec_dir () = Filename.dirname (Sys.executable_name)
@@ -1049,7 +1050,7 @@ let touch_file (fname:string) : unit =
   (* Sets access and modification times to current time *)
   Unix.utimes fname 0.0 0.0
 
-let ensure_decimal s = Z.to_string (Z.of_string s)
+let ensure_decimal s = Z.string_of_big_int (Z.big_int_of_string s)
 
 let measure_execution_time tag f =
   let t = Sys.time () in
@@ -1229,30 +1230,30 @@ type width = | Int8 | Int16 | Int32 | Int64
 
 let rec z_pow2 n =
   if n = Z.zero then Z.one
-  else Z.mul (Z.of_string "2") (z_pow2 (Z.sub n Z.one))
+  else Z.mult_big_int (Z.big_int_of_string "2") (z_pow2 (Z.sub_big_int n Z.one))
 
 let bounds signedness width =
     let n =
         match width with
-        | Int8 -> Z.of_string "8"
-        | Int16 -> Z.of_string "16"
-        | Int32 -> Z.of_string "32"
-        | Int64 -> Z.of_string "64"
+        | Int8 -> Z.big_int_of_string "8"
+        | Int16 -> Z.big_int_of_string "16"
+        | Int32 -> Z.big_int_of_string "32"
+        | Int64 -> Z.big_int_of_string "64"
     in
     let lower, upper =
       match signedness with
       | Unsigned ->
-        Z.zero, Z.sub (z_pow2 n) Z.one
+        Z.zero, Z.sub_big_int (z_pow2 n) Z.one
       | Signed ->
-        let upper = z_pow2 (Z.sub n Z.one) in
-        Z.neg upper, Z.sub upper Z.one
+        let upper = z_pow2 (Z.sub_big_int n Z.one) in
+        Z.minus_big_int upper, Z.sub_big_int upper Z.one
     in
     lower, upper
 
 let within_bounds repr signedness width =
   let lower, upper = bounds signedness width in
-  let value = Z.of_string (ensure_decimal repr) in
-  Z.leq lower value && Z.leq value upper
+  let value = Z.big_int_of_string (ensure_decimal repr) in
+  Z.le_big_int lower value && Z.le_big_int value upper
 
 let print_array (f: 'a -> string) 
                 (s: 'a array)

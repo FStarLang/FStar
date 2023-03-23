@@ -1,9 +1,10 @@
-type int = Z.t[@printer Z.pp_print][@@deriving show]
-let of_int = Z.of_int
-let int_zero = Z.zero
-let int_one = Z.one
-let parse_int = Z.of_string
-let to_string = Z.to_string
+type int = FStar_BigInt.t [@printer FStar_BigInt.pp_print]
+let pp_int = FStar_BigInt.pp_print
+let of_int = FStar_BigInt.of_int
+let int_zero = FStar_BigInt.zero
+let int_one = FStar_BigInt.one
+let parse_int = FStar_BigInt.big_int_of_string
+let to_string = FStar_BigInt.string_of_big_int
 
 type tmp = string [@@deriving yojson]
 let int_to_yojson x = tmp_to_yojson (to_string x)
@@ -111,17 +112,17 @@ let op_AmpAmp x y = x && y
 let op_BarBar x y  = x || y
 let op_Negation x = not x
 
-let ( + )     = Z.add
-let ( - )     = Z.sub
-let ( * )     = Z.mul
-let ( / )     = Z.ediv
-let ( <= )    = Z.leq
-let ( >= )    = Z.geq
-let ( < )     = Z.lt
-let ( > )     = Z.gt
-let ( mod )   = Z.erem
-let ( ~- )    = Z.neg
-let abs       = Z.abs
+let ( + )     = FStar_BigInt.add_big_int
+let ( - )     = FStar_BigInt.sub_big_int
+let ( * )     = FStar_BigInt.mult_big_int
+let ( / )     = FStar_BigInt.ediv_big_int
+let ( <= )    = FStar_BigInt.le_big_int
+let ( >= )    = FStar_BigInt.ge_big_int
+let ( < )     = FStar_BigInt.lt_big_int
+let ( > )     = FStar_BigInt.gt_big_int
+let ( mod )   = FStar_BigInt.erem_big_int
+let ( ~- )    = FStar_BigInt.minus_big_int
+let abs       = FStar_BigInt.abs_big_int
 
 let op_Multiply x y = x * y
 let op_Subtraction x y = x - y
@@ -190,7 +191,7 @@ let op_Modulus x y = x mod y
 let op_Division x y = x / y
 let rec (pow2 : nat -> pos) =
   fun x  ->
-    Z.shift_left Z.one (Z.to_int x)
+    FStar_BigInt.shift_left_big_int FStar_BigInt.one x
 
 let (min : int -> int -> int) =
   fun x  -> fun y  -> if x <= y then x else y

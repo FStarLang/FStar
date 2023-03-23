@@ -1,3 +1,4 @@
+module Z = FStar_BigInt
 exception EOF
 type fd_read = in_channel
 type fd_write = out_channel

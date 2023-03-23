@@ -1,3 +1,4 @@
+module Z = FStar_BigInt
 module UChar = BatUChar
 
 module U32 = FStar_UInt32

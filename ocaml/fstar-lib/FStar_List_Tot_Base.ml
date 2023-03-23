@@ -1,6 +1,7 @@
 (* We give an implementation here using OCaml's BatList,
    which provide tail-recursive versions of most functions.
    The rest we implement manually. *)
+module Z = FStar_BigInt
 
 let isEmpty l = l = []
 let hd = BatList.hd
@@ -21,7 +22,7 @@ let index l i = BatList.nth l (Z.to_int i)
 
 let rec count x = function
   | [] -> Prims.int_zero
-  | hd::tl -> if x=hd then Z.add Prims.int_one (count x tl) else count x tl
+  | hd::tl -> if x=hd then Z.add_big_int Prims.int_one (count x tl) else count x tl
 
 let rev_acc l r = BatList.rev_append l r
 let rev = BatList.rev
@@ -64,12 +65,12 @@ let rec unzip3 = function
      (x::xs,y::ys,z::zs)
 
 let splitAt n l = BatList.split_at (Z.to_int n) l
-let unsnoc l = let l1, l2 = splitAt (Z.sub (length l) Z.one) l in l1, hd l2
+let unsnoc l = let l1, l2 = splitAt (Z.sub_big_int (length l) Z.one) l in l1, hd l2
 let split3 l i = let a, a1 = splitAt i l in let b :: c = a1 in a, b, c
 
-let bool_of_compare f x y = Z.gt (f x y) Z.zero
+let bool_of_compare f x y = Z.gt_big_int (f x y) Z.zero
 let compare_of_bool =
-  fun rel -> fun x -> fun y -> if (rel x y) then Z.one else (if x = y then Z.zero else (Z.neg Z.one))
+  fun rel -> fun x -> fun y -> if (rel x y) then Z.one else (if x = y then Z.zero else (Z.minus_big_int Z.one))
 let sortWith f l = BatList.sort (fun x y -> Z.to_int (f x y)) l
 let list_unref l = l
 let list_ref _ l = l

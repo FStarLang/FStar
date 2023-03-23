@@ -1,3 +1,4 @@
+module Z = FStar_BigInt
 open Dynlink
 
 module U = FStar_Compiler_Util

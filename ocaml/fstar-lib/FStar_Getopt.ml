@@ -1,3 +1,4 @@
+module Z = FStar_BigInt
 let noshort = 0
 type 'a opt_variant =
   | ZeroArgs of (unit -> 'a)

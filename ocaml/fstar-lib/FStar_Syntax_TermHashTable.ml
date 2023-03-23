@@ -1,3 +1,4 @@
+module Z = FStar_BigInt
 module S = FStar_Syntax_Syntax
 module P = FStar_Profiling
 module BU = FStar_Compiler_Util

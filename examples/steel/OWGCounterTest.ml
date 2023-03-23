@@ -4,6 +4,7 @@
  * Ideally we would write it in F* and extract,
  *   but need to sort out how to write main function in Steel effect
  *)
+module Z = FStar_BigInt
 let main =
   let r = Steel_Reference.alloc_pt (Z.of_int 0) in
   OWGCounter.incr_main () r;

@@ -4,7 +4,7 @@
  (public_name fstar.lib)
  (libraries
     batteries
-    zarith
+;    zarith
     stdint
     yojson
     ppxlib
@@ -14,6 +14,7 @@
     process
     sedlex
  )
+ (modules_without_implementation FStar_BigInt)
  (modes native)
  (wrapped false)
  (preprocess (pps ppx_deriving.show ppx_deriving_yojson sedlex.ppx))
