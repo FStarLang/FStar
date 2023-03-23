@@ -44,7 +44,7 @@ let (term_to_string :
   fun tcenv ->
     fun t ->
       with_printed_effect_args
-        (fun uu___ -> FStar_Syntax_Print.term_to_string t)
+        (fun uu___ -> FStar_TypeChecker_Normalize.term_to_string tcenv t)
 let (sigelt_to_string : FStar_Syntax_Syntax.sigelt -> Prims.string) =
   fun se ->
     with_printed_effect_args

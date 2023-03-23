@@ -42,7 +42,7 @@ let with_printed_effect_args k =
     (fun () -> Options.set_option "print_effect_args" (Options.Bool true); k ())
 
 let term_to_string tcenv t =
-  with_printed_effect_args (fun () -> FStar.Syntax.Print.term_to_string t) //FStar.TypeChecker.Normalize.term_to_string tcenv t)
+  with_printed_effect_args (fun () -> FStar.TypeChecker.Normalize.term_to_string tcenv t)
 
 let sigelt_to_string se =
   with_printed_effect_args (fun () -> Syntax.Print.sigelt_to_string se)

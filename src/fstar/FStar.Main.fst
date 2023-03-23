@@ -232,7 +232,7 @@ let handle_error e =
     report_errors []
 
 let main () =
-  // try
+  try
     setup_hooks ();
     let _, time = Util.record_time go in
     if FStar.Options.query_stats()
@@ -241,6 +241,6 @@ let main () =
               (String.concat " " (FStar.Getopt.cmdline()));
     cleanup ();
     exit 0
-  // with
-  // | e -> handle_error e;
-  //       exit 1
+  with
+  | e -> handle_error e;
+        exit 1
