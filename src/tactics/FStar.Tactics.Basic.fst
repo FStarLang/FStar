@@ -2423,6 +2423,26 @@ let refl_maybe_relate_after_unfolding (g:env) (t0 t1:typ)
          s)
   else ret None
 
+let refl_maybe_unfold_head (g:env) (e:term) : tac (option term) =
+  if no_uvars_in_g g &&
+     no_uvars_in_term e
+  then refl_typing_builtin_wrapper (fun _ ->
+    dbg_refl g (fun _ ->
+      BU.format1 "refl_maybe_unfold_head: %s {\n" (Print.term_to_string e));
+    let eopt = N.maybe_unfold_head g e in
+    dbg_refl g (fun _ ->
+      BU.format1 "} eopt = %s\n"
+        (match eopt with
+         | None -> "none"
+         | Some e -> Print.term_to_string e));
+    if eopt = None
+    then Errors.raise_error (Errors.Fatal_UnexpectedTerm,
+                             BU.format1
+                               "Could not unfold head: %s\n"
+                               (Print.term_to_string e)) e.pos
+    else eopt |> must)
+  else ret None
+
 (**** Creating proper environments and proofstates ****)
 
 let tac_env (env:Env.env) : Env.env =

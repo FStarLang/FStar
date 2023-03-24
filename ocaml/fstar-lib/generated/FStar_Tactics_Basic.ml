@@ -7710,6 +7710,46 @@ let (refl_maybe_relate_after_unfolding :
                        uu___5);
                 s))
         else FStar_Tactics_Monad.ret FStar_Pervasives_Native.None
+let (refl_maybe_unfold_head :
+  env ->
+    FStar_Syntax_Syntax.term ->
+      FStar_Syntax_Syntax.term FStar_Pervasives_Native.option
+        FStar_Tactics_Monad.tac)
+  =
+  fun g ->
+    fun e ->
+      let uu___ = (no_uvars_in_g g) && (no_uvars_in_term e) in
+      if uu___
+      then
+        refl_typing_builtin_wrapper
+          (fun uu___1 ->
+             dbg_refl g
+               (fun uu___3 ->
+                  let uu___4 = FStar_Syntax_Print.term_to_string e in
+                  FStar_Compiler_Util.format1
+                    "refl_maybe_unfold_head: %s {\n" uu___4);
+             (let eopt = FStar_TypeChecker_Normalize.maybe_unfold_head g e in
+              dbg_refl g
+                (fun uu___4 ->
+                   let uu___5 =
+                     match eopt with
+                     | FStar_Pervasives_Native.None -> "none"
+                     | FStar_Pervasives_Native.Some e1 ->
+                         FStar_Syntax_Print.term_to_string e1 in
+                   FStar_Compiler_Util.format1 "} eopt = %s\n" uu___5);
+              if eopt = FStar_Pervasives_Native.None
+              then
+                (let uu___4 =
+                   let uu___5 =
+                     let uu___6 = FStar_Syntax_Print.term_to_string e in
+                     FStar_Compiler_Util.format1
+                       "Could not unfold head: %s\n" uu___6 in
+                   (FStar_Errors_Codes.Fatal_UnexpectedTerm, uu___5) in
+                 FStar_Errors.raise_error uu___4 e.FStar_Syntax_Syntax.pos)
+              else
+                FStar_Compiler_Effect.op_Bar_Greater eopt
+                  FStar_Compiler_Util.must))
+      else FStar_Tactics_Monad.ret FStar_Pervasives_Native.None
 let (tac_env : FStar_TypeChecker_Env.env -> FStar_TypeChecker_Env.env) =
   fun env1 ->
     let uu___ = FStar_TypeChecker_Env.clear_expected_typ env1 in

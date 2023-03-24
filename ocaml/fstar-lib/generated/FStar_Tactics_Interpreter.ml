@@ -1840,7 +1840,33 @@ let (uu___156 : unit) =
                                                                     FStar_Reflection_NBEEmbeddings.e_term
                                                                     FStar_Reflection_NBEEmbeddings.e_term
                                                                     uu___177 in
-                                                                    [uu___175] in
+                                                                    let uu___176
+                                                                    =
+                                                                    let uu___177
+                                                                    =
+                                                                    let uu___178
+                                                                    =
+                                                                    FStar_Syntax_Embeddings.e_option
+                                                                    FStar_Reflection_Embeddings.e_term in
+                                                                    let uu___179
+                                                                    =
+                                                                    FStar_TypeChecker_NBETerm.e_option
+                                                                    FStar_Reflection_NBEEmbeddings.e_term in
+                                                                    FStar_Tactics_InterpFuns.mk_tac_step_2
+                                                                    Prims.int_zero
+                                                                    "maybe_unfold_head"
+                                                                    FStar_Tactics_Basic.refl_maybe_unfold_head
+                                                                    FStar_Reflection_Embeddings.e_env
+                                                                    FStar_Reflection_Embeddings.e_term
+                                                                    uu___178
+                                                                    FStar_Tactics_Basic.refl_maybe_unfold_head
+                                                                    FStar_Reflection_NBEEmbeddings.e_env
+                                                                    FStar_Reflection_NBEEmbeddings.e_term
+                                                                    uu___179 in
+                                                                    [uu___177] in
+                                                                    uu___175
+                                                                    ::
+                                                                    uu___176 in
                                                                     uu___173
                                                                     ::
                                                                     uu___174 in

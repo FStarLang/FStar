@@ -563,6 +563,10 @@ let () =
         refl_maybe_relate_after_unfolding RE.e_env RE.e_term RE.e_term (e_option E.e_unfold_side)
         refl_maybe_relate_after_unfolding NRE.e_env NRE.e_term NRE.e_term (NBET.e_option E.e_unfold_side_nbe);
 
+      mk_tac_step_2 0 "maybe_unfold_head"
+        refl_maybe_unfold_head RE.e_env RE.e_term (e_option RE.e_term)
+        refl_maybe_unfold_head NRE.e_env NRE.e_term (NBET.e_option NRE.e_term);
+
     ]
 
 let unembed_tactic_1_alt (ea:embedding 'a) (er:embedding 'r) (f:term) (ncb:norm_cb) : option ('a -> tac 'r) =

@@ -469,3 +469,6 @@ val instantiate_implicits (g:env) (t:term)
 
 val maybe_relate_after_unfolding (g:env) (t1 t2:term)
   : Tac (option unfold_side)
+
+val maybe_unfold_head (g:env) (t0:term)
+  : Tac (option (t1:term{equiv_token g t0 t1}))
