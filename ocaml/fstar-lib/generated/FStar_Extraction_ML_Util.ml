@@ -43,7 +43,7 @@ let (mlconst_of_const' :
         failwith "Unhandled constant: range_of/set_range_of"
     | FStar_Const.Const_real uu___ ->
         failwith "Unhandled constant: real/reify/reflect"
-    | FStar_Const.Const_reify ->
+    | FStar_Const.Const_reify uu___ ->
         failwith "Unhandled constant: real/reify/reflect"
     | FStar_Const.Const_reflect uu___ ->
         failwith "Unhandled constant: real/reify/reflect"
@@ -762,14 +762,14 @@ let (not_implemented_warning :
               let uu___3 =
                 let uu___4 =
                   FStar_Errors.lookup
-                    FStar_Errors.Warning_PluginNotImplemented in
+                    FStar_Errors_Codes.Warning_PluginNotImplemented in
                 FStar_Errors.error_number uu___4 in
               FStar_Compiler_Effect.op_Less_Bar
                 FStar_Compiler_Util.string_of_int uu___3 in
             FStar_Compiler_Util.format3
               "Plugin %s can not run natively because %s (use --warn_error -%s to carry on)."
               t msg uu___2 in
-          (FStar_Errors.Warning_PluginNotImplemented, uu___1) in
+          (FStar_Errors_Codes.Warning_PluginNotImplemented, uu___1) in
         FStar_Errors.log_issue r uu___
 type emb_loc =
   | Syntax_term 

@@ -2583,11 +2583,17 @@ let (encode_top_level_let :
                         comp in
                     if uu___3
                     then
+                      let eff_name =
+                        FStar_Compiler_Effect.op_Bar_Greater comp
+                          FStar_Syntax_Util.comp_effect_name in
                       let comp1 =
                         FStar_TypeChecker_Env.reify_comp tcenv1 comp
                           FStar_Syntax_Syntax.U_unknown in
                       let body1 =
-                        FStar_TypeChecker_Util.reify_body tcenv1 [] body in
+                        let uu___4 =
+                          FStar_Syntax_Util.mk_reify body
+                            (FStar_Pervasives_Native.Some eff_name) in
+                        FStar_TypeChecker_Util.norm_reify tcenv1 [] uu___4 in
                       let uu___4 = aux comp1 body1 in
                       match uu___4 with
                       | (more_binders, body2, comp2) ->
@@ -2763,7 +2769,7 @@ let (encode_top_level_let :
                                                            FStar_Compiler_Range.dummyRange in
                                                        let app =
                                                          let uu___15 =
-                                                           FStar_Syntax_Util.range_of_lbname
+                                                           FStar_Syntax_Syntax.range_of_lbname
                                                              lbn in
                                                          FStar_SMTEncoding_Term.mkApp
                                                            ((fvb.FStar_SMTEncoding_Env.smt_id),
@@ -2773,7 +2779,7 @@ let (encode_top_level_let :
                                                      else
                                                        (let uu___16 =
                                                           let uu___17 =
-                                                            FStar_Syntax_Util.range_of_lbname
+                                                            FStar_Syntax_Syntax.range_of_lbname
                                                               lbn in
                                                           let uu___18 =
                                                             FStar_Compiler_List.map
@@ -2823,7 +2829,7 @@ let (encode_top_level_let :
                                                           let uu___15 =
                                                             let uu___16 =
                                                               let uu___17 =
-                                                                FStar_Syntax_Util.range_of_lbname
+                                                                FStar_Syntax_Syntax.range_of_lbname
                                                                   lbn in
                                                               let uu___18 =
                                                                 let uu___19 =
@@ -3241,7 +3247,7 @@ let (encode_top_level_let :
                                                                     FStar_SMTEncoding_Util.mkFreeV
                                                                     vars in
                                                                     let rng =
-                                                                    FStar_Syntax_Util.range_of_lbname
+                                                                    FStar_Syntax_Syntax.range_of_lbname
                                                                     lbn in
                                                                     let app =
                                                                     let uu___20
@@ -3310,7 +3316,7 @@ let (encode_top_level_let :
                                                                     =
                                                                     let uu___23
                                                                     =
-                                                                    FStar_Syntax_Util.range_of_lbname
+                                                                    FStar_Syntax_Syntax.range_of_lbname
                                                                     lbn in
                                                                     let uu___24
                                                                     =
@@ -3365,7 +3371,7 @@ let (encode_top_level_let :
                                                                     =
                                                                     let uu___23
                                                                     =
-                                                                    FStar_Syntax_Util.range_of_lbname
+                                                                    FStar_Syntax_Syntax.range_of_lbname
                                                                     lbn in
                                                                     let uu___24
                                                                     =
@@ -3396,7 +3402,7 @@ let (encode_top_level_let :
                                                                     =
                                                                     let uu___23
                                                                     =
-                                                                    FStar_Syntax_Util.range_of_lbname
+                                                                    FStar_Syntax_Syntax.range_of_lbname
                                                                     lbn in
                                                                     let uu___24
                                                                     =
@@ -3505,7 +3511,7 @@ let (encode_top_level_let :
                                                                     =
                                                                     let uu___26
                                                                     =
-                                                                    FStar_Syntax_Util.range_of_lbname
+                                                                    FStar_Syntax_Syntax.range_of_lbname
                                                                     lbn in
                                                                     let uu___27
                                                                     =
@@ -3558,7 +3564,7 @@ let (encode_top_level_let :
                                                                     =
                                                                     let uu___28
                                                                     =
-                                                                    FStar_Syntax_Util.range_of_lbname
+                                                                    FStar_Syntax_Syntax.range_of_lbname
                                                                     lbn in
                                                                     let uu___29
                                                                     =
@@ -3806,7 +3812,7 @@ let (encode_top_level_let :
                                                else "its") in
                                           let uu___12 =
                                             FStar_Errors.get_ctx () in
-                                          (FStar_Errors.Warning_DefinitionNotTranslated,
+                                          (FStar_Errors_Codes.Warning_DefinitionNotTranslated,
                                             uu___11, r, uu___12) in
                                         [uu___10] in
                                       FStar_TypeChecker_Err.add_errors
@@ -5354,7 +5360,7 @@ and (encode_sigelt' :
                                                                     FStar_Compiler_Util.format1
                                                                     "Inductive type parameter %s must be a variable ; You may want to change it to an index."
                                                                     uu___20 in
-                                                                   (FStar_Errors.Fatal_NonVariableInductiveTypeParameter,
+                                                                   (FStar_Errors_Codes.Fatal_NonVariableInductiveTypeParameter,
                                                                     uu___19) in
                                                                  FStar_Errors.raise_error
                                                                    uu___18
@@ -6027,7 +6033,7 @@ and (encode_sigelt' :
                                                                     FStar_Compiler_Util.format1
                                                                     "Inductive type parameter %s must be a variable ; You may want to change it to an index."
                                                                     uu___16 in
-                                                                   (FStar_Errors.Fatal_NonVariableInductiveTypeParameter,
+                                                                   (FStar_Errors_Codes.Fatal_NonVariableInductiveTypeParameter,
                                                                     uu___15) in
                                                                  FStar_Errors.raise_error
                                                                    uu___14
@@ -6681,7 +6687,7 @@ and (encode_sigelt' :
                                                           FStar_Compiler_Util.format2
                                                             "Constructor %s builds an unexpected type %s\n"
                                                             uu___16 uu___17 in
-                                                        (FStar_Errors.Warning_ConstructorBuildsUnexpectedType,
+                                                        (FStar_Errors_Codes.Warning_ConstructorBuildsUnexpectedType,
                                                           uu___15) in
                                                       FStar_Errors.log_issue
                                                         se.FStar_Syntax_Syntax.sigrng

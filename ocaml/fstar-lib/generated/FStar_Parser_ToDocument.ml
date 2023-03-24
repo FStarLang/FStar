@@ -4442,7 +4442,7 @@ and (p_argTerm :
     | (u, FStar_Parser_AST.UnivApp) -> p_universe u
     | (e, FStar_Parser_AST.FsTypApp) ->
         (FStar_Errors.log_issue e.FStar_Parser_AST.range
-           (FStar_Errors.Warning_UnexpectedFsTypApp,
+           (FStar_Errors_Codes.Warning_UnexpectedFsTypApp,
              "Unexpected FsTypApp, output might not be formatted correctly.");
          (let uu___1 = p_indexingTerm e in
           FStar_Pprint.surround (Prims.of_int (2)) Prims.int_one
@@ -4760,7 +4760,7 @@ and (p_constant : FStar_Const.sconst -> FStar_Pprint.document) =
     | FStar_Const.Const_set_range_of -> str "set_range_of"
     | FStar_Const.Const_range r ->
         let uu___1 = FStar_Compiler_Range.string_of_range r in str uu___1
-    | FStar_Const.Const_reify -> str "reify"
+    | FStar_Const.Const_reify uu___1 -> str "reify"
     | FStar_Const.Const_reflect lid ->
         let uu___1 = p_quident lid in
         let uu___2 =

@@ -776,7 +776,7 @@ let (detail_errors :
                   if hint_replay
                   then
                     FStar_Errors.log_issue r
-                      (FStar_Errors.Warning_HintFailedToReplayProof,
+                      (FStar_Errors_Codes.Warning_HintFailedToReplayProof,
                         (Prims.op_Hat
                            "Hint failed to replay this sub-proof: " msg1))
                   else
@@ -786,7 +786,8 @@ let (detail_errors :
                          FStar_Compiler_Util.format2
                            "XX: proof obligation at %s failed\n\t%s\n" uu___6
                            msg1 in
-                       (FStar_Errors.Error_ProofObligationFailed, uu___5) in
+                       (FStar_Errors_Codes.Error_ProofObligationFailed,
+                         uu___5) in
                      FStar_Errors.log_issue r uu___4) in
           let elim labs =
             FStar_Compiler_Effect.op_Bar_Greater labs

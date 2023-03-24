@@ -12249,7 +12249,7 @@ let es =     ( xs ) in
     Obj.repr(
 # 3124 "parse.mly"
     (let _1 = () in
-            ( Const_reify ))
+            ( Const_reify None ))
 # 12240 "parse.ml"
                : 'constant))
 ; (fun __caml_parser_env ->
@@ -12355,7 +12355,7 @@ let es =     ( xs ) in
     (let (e, _2) = (_1, ()) in
                      ( e ))
 # 12344 "parse.ml"
-               : (FStar_Errors.flag * string) list))
+               : (FStar_Errors_Codes.error_flag * string) list))
 ; (fun __caml_parser_env ->
     let _1 = (Parsing.peek_val __caml_parser_env 1 : 'flag) in
     let _2 = (Parsing.peek_val __caml_parser_env 0 : 'range) in
@@ -12657,5 +12657,5 @@ let inputFragment (lexfun : Lexing.lexbuf -> token) (lexbuf : Lexing.lexbuf) =
 let term (lexfun : Lexing.lexbuf -> token) (lexbuf : Lexing.lexbuf) =
    (Parsing.yyparse yytables 2 lexfun lexbuf : FStar_Parser_AST.term)
 let warn_error_list (lexfun : Lexing.lexbuf -> token) (lexbuf : Lexing.lexbuf) =
-   (Parsing.yyparse yytables 3 lexfun lexbuf : (FStar_Errors.flag * string) list)
+   (Parsing.yyparse yytables 3 lexfun lexbuf : (FStar_Errors_Codes.error_flag * string) list)
 ;;

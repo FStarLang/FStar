@@ -86,7 +86,7 @@ let rec (prefix_with_iface_decls :
                        | uu___3 -> false))
                ->
                FStar_Errors.raise_error
-                 (FStar_Errors.Fatal_AbstractTypeDeclarationInInterface,
+                 (FStar_Errors_Codes.Fatal_AbstractTypeDeclarationInInterface,
                    "Interface contains an abstract 'type' declaration; use 'val' instead")
                  impl.FStar_Parser_AST.drange
            | FStar_Parser_AST.Val (x, t) ->
@@ -121,7 +121,7 @@ let rec (prefix_with_iface_decls :
                         FStar_Compiler_Util.format2
                           "Expected the definition of %s to precede %s"
                           uu___3 uu___4 in
-                      (FStar_Errors.Fatal_WrongDefinitionOrder, uu___2) in
+                      (FStar_Errors_Codes.Fatal_WrongDefinitionOrder, uu___2) in
                     FStar_Errors.raise_error uu___1
                       impl.FStar_Parser_AST.drange
                   else (iface, [qualify_karamel_private impl]))
@@ -165,7 +165,7 @@ let rec (prefix_with_iface_decls :
                                  FStar_Compiler_Util.format2
                                    "%s is out of order with the definition of %s"
                                    uu___6 uu___7 in
-                               (FStar_Errors.Fatal_WrongDefinitionOrder,
+                               (FStar_Errors_Codes.Fatal_WrongDefinitionOrder,
                                  uu___5) in
                              FStar_Errors.raise_error uu___4
                                iface_hd1.FStar_Parser_AST.drange
@@ -199,7 +199,7 @@ let (check_initial_interface :
                        | uu___3 -> false))
                ->
                FStar_Errors.raise_error
-                 (FStar_Errors.Fatal_AbstractTypeDeclarationInInterface,
+                 (FStar_Errors_Codes.Fatal_AbstractTypeDeclarationInInterface,
                    "Interface contains an abstract 'type' declaration; use 'val' instead")
                  hd.FStar_Parser_AST.drange
            | FStar_Parser_AST.Val (x, t) ->
@@ -214,7 +214,8 @@ let (check_initial_interface :
                      FStar_Compiler_Util.format2
                        "'val %s' and 'let %s' cannot both be provided in an interface"
                        uu___3 uu___4 in
-                   (FStar_Errors.Fatal_BothValAndLetInInterface, uu___2) in
+                   (FStar_Errors_Codes.Fatal_BothValAndLetInInterface,
+                     uu___2) in
                  FStar_Errors.raise_error uu___1 hd.FStar_Parser_AST.drange
                else
                  (let uu___2 =
@@ -225,7 +226,7 @@ let (check_initial_interface :
                   if uu___2
                   then
                     FStar_Errors.raise_error
-                      (FStar_Errors.Fatal_AssumeValInInterface,
+                      (FStar_Errors_Codes.Fatal_AssumeValInInterface,
                         "Interfaces cannot use `assume val x : t`; just write `val x : t` instead")
                       hd.FStar_Parser_AST.drange
                   else ())
@@ -397,7 +398,7 @@ let ml_mode_check_initial_interface :
                           | uu___3 -> false))
                   ->
                   FStar_Errors.raise_error
-                    (FStar_Errors.Fatal_AbstractTypeDeclarationInInterface,
+                    (FStar_Errors_Codes.Fatal_AbstractTypeDeclarationInInterface,
                       "Interface contains an abstract 'type' declaration; use 'val' instead")
                     d.FStar_Parser_AST.drange
               | FStar_Parser_AST.Tycon uu___ -> true
@@ -468,7 +469,7 @@ let (initialize_interface :
                 let uu___4 = FStar_Ident.string_of_lid mname in
                 FStar_Compiler_Util.format1
                   "Interface %s has already been processed" uu___4 in
-              (FStar_Errors.Fatal_InterfaceAlreadyProcessed, uu___3) in
+              (FStar_Errors_Codes.Fatal_InterfaceAlreadyProcessed, uu___3) in
             let uu___3 = FStar_Ident.range_of_lid mname in
             FStar_Errors.raise_error uu___2 uu___3
         | FStar_Pervasives_Native.None ->
@@ -583,7 +584,7 @@ let (interleave_module :
                                     FStar_Compiler_Util.format2
                                       "Some interface elements were not implemented by module %s:\n\t%s"
                                       uu___7 err in
-                                  (FStar_Errors.Fatal_InterfaceNotImplementedByModule,
+                                  (FStar_Errors_Codes.Fatal_InterfaceNotImplementedByModule,
                                     uu___6) in
                                 let uu___6 = FStar_Ident.range_of_lid l in
                                 FStar_Errors.raise_error uu___5 uu___6

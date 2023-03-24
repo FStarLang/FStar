@@ -1375,9 +1375,14 @@ let (split_let_rec_types_and_terms :
               let uu___1 =
                 let uu___2 =
                   let uu___3 =
-                    Obj.magic
-                      (FStar_Compiler_List.map
-                         (fun lb1 -> lb1.FStar_Syntax_Syntax.lbname) lbs1) in
+                    FStar_Compiler_List.map
+                      (fun lb1 ->
+                         let uu___4 =
+                           FStar_Compiler_Effect.op_Bar_Greater
+                             lb1.FStar_Syntax_Syntax.lbname
+                             FStar_Compiler_Util.right in
+                         FStar_Compiler_Effect.op_Bar_Greater uu___4
+                           FStar_Syntax_Syntax.lid_of_fv) lbs1 in
                   ((true, lbs1), uu___3) in
                 FStar_Syntax_Syntax.Sig_let uu___2 in
               {
@@ -1644,10 +1649,11 @@ let rec (extract_sigelt_iface :
              failwith "impossible: trying to extract Sig_fail"
          | FStar_Syntax_Syntax.Sig_new_effect ed ->
              let uu___2 =
-               (let uu___3 = FStar_Extraction_ML_UEnv.tcenv_of_uenv g in
-                FStar_TypeChecker_Env.is_reifiable_effect uu___3
-                  ed.FStar_Syntax_Syntax.mname)
-                 &&
+               (let uu___3 =
+                  let uu___4 = FStar_Extraction_ML_UEnv.tcenv_of_uenv g in
+                  FStar_TypeChecker_Util.effect_extraction_mode uu___4
+                    ed.FStar_Syntax_Syntax.mname in
+                uu___3 = FStar_Syntax_Syntax.Extract_reify) &&
                  (FStar_Compiler_List.isEmpty ed.FStar_Syntax_Syntax.binders) in
              if uu___2
              then
@@ -1975,7 +1981,7 @@ let (maybe_register_plugin :
          | FStar_Pervasives_Native.None -> []
          | FStar_Pervasives_Native.Some arity_opt ->
              (match se.FStar_Syntax_Syntax.sigel with
-              | FStar_Syntax_Syntax.Sig_let (lbs, lids) ->
+              | FStar_Syntax_Syntax.Sig_let (lbs, uu___3) ->
                   let mk_registration lb =
                     let fv =
                       FStar_Compiler_Util.right lb.FStar_Syntax_Syntax.lbname in
@@ -1983,17 +1989,17 @@ let (maybe_register_plugin :
                       (fv.FStar_Syntax_Syntax.fv_name).FStar_Syntax_Syntax.v in
                     let fv_t = lb.FStar_Syntax_Syntax.lbtyp in
                     let ml_name_str =
-                      let uu___3 =
-                        let uu___4 = FStar_Ident.string_of_lid fv_lid in
-                        FStar_Extraction_ML_Syntax.MLC_String uu___4 in
-                      FStar_Extraction_ML_Syntax.MLE_Const uu___3 in
-                    let uu___3 =
+                      let uu___4 =
+                        let uu___5 = FStar_Ident.string_of_lid fv_lid in
+                        FStar_Extraction_ML_Syntax.MLC_String uu___5 in
+                      FStar_Extraction_ML_Syntax.MLE_Const uu___4 in
+                    let uu___4 =
                       FStar_Extraction_ML_Util.interpret_plugin_as_term_fun g
                         fv fv_t arity_opt ml_name_str in
-                    match uu___3 with
+                    match uu___4 with
                     | FStar_Pervasives_Native.Some
                         (interp, nbe_interp, arity, plugin) ->
-                        let uu___4 =
+                        let uu___5 =
                           if plugin
                           then
                             ((["FStar_Tactics_Native"], "register_plugin"),
@@ -2001,7 +2007,7 @@ let (maybe_register_plugin :
                           else
                             ((["FStar_Tactics_Native"], "register_tactic"),
                               [interp]) in
-                        (match uu___4 with
+                        (match uu___5 with
                          | (register, args) ->
                              let h =
                                FStar_Compiler_Effect.op_Less_Bar
@@ -2010,13 +2016,13 @@ let (maybe_register_plugin :
                                  (FStar_Extraction_ML_Syntax.MLE_Name
                                     register) in
                              let arity1 =
-                               let uu___5 =
-                                 let uu___6 =
-                                   let uu___7 =
+                               let uu___6 =
+                                 let uu___7 =
+                                   let uu___8 =
                                      FStar_Compiler_Util.string_of_int arity in
-                                   (uu___7, FStar_Pervasives_Native.None) in
-                                 FStar_Extraction_ML_Syntax.MLC_Int uu___6 in
-                               FStar_Extraction_ML_Syntax.MLE_Const uu___5 in
+                                   (uu___8, FStar_Pervasives_Native.None) in
+                                 FStar_Extraction_ML_Syntax.MLC_Int uu___7 in
+                               FStar_Extraction_ML_Syntax.MLE_Const uu___6 in
                              let app =
                                FStar_Compiler_Effect.op_Less_Bar
                                  (FStar_Extraction_ML_Syntax.with_ty
@@ -2152,7 +2158,7 @@ let rec (extract_sig :
                        | FStar_Pervasives_Native.Some uu___7 ->
                            (FStar_Errors.log_issue
                               se1.FStar_Syntax_Syntax.sigrng
-                              (FStar_Errors.Warning_UnrecognizedAttribute,
+                              (FStar_Errors_Codes.Warning_UnrecognizedAttribute,
                                 "Ill-formed application of 'postprocess_for_extraction_with'");
                             FStar_Pervasives_Native.None) in
                      let postprocess_lb tau lb =
@@ -2235,7 +2241,7 @@ let rec (extract_sig :
                                       FStar_Compiler_Util.format1
                                         "Ill-formed application of 'normalize_for_extraction': normalization steps '%s' could not be interpreted"
                                         uu___14 in
-                                    (FStar_Errors.Warning_UnrecognizedAttribute,
+                                    (FStar_Errors_Codes.Warning_UnrecognizedAttribute,
                                       uu___13) in
                                   FStar_Errors.log_issue
                                     se1.FStar_Syntax_Syntax.sigrng uu___12);
@@ -2243,7 +2249,7 @@ let rec (extract_sig :
                        | FStar_Pervasives_Native.Some uu___7 ->
                            (FStar_Errors.log_issue
                               se1.FStar_Syntax_Syntax.sigrng
-                              (FStar_Errors.Warning_UnrecognizedAttribute,
+                              (FStar_Errors_Codes.Warning_UnrecognizedAttribute,
                                 "Ill-formed application of 'normalize_for_extraction'");
                             FStar_Pervasives_Native.None) in
                      let norm_one_lb steps lb =

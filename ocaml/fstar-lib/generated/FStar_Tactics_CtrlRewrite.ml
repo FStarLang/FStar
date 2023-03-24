@@ -22,8 +22,8 @@ let (__do_rewrite :
               let uu___1 = FStar_Syntax_Subst.compress tm in
               uu___1.FStar_Syntax_Syntax.n in
             match uu___ with
-            | FStar_Syntax_Syntax.Tm_constant (FStar_Const.Const_reify) ->
-                true
+            | FStar_Syntax_Syntax.Tm_constant (FStar_Const.Const_reify
+                uu___1) -> true
             | FStar_Syntax_Syntax.Tm_constant (FStar_Const.Const_reflect
                 uu___1) -> true
             | FStar_Syntax_Syntax.Tm_constant (FStar_Const.Const_range_of) ->
@@ -157,8 +157,8 @@ let (__do_rewrite :
                              FStar_Pervasives_Native.Some uu___3)) ()
                with
                | FStar_Errors.Error
-                   (FStar_Errors.Error_LayeredMissingAnnot, uu___2, uu___3,
-                    uu___4)
+                   (FStar_Errors_Codes.Error_LayeredMissingAnnot, uu___2,
+                    uu___3, uu___4)
                    -> FStar_Pervasives_Native.None
                | e -> FStar_Compiler_Effect.raise e in
              match res with

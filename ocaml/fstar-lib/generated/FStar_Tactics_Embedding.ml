@@ -160,7 +160,7 @@ let (e_proofstate :
                 let uu___5 = FStar_Syntax_Print.term_to_string t in
                 FStar_Compiler_Util.format1
                   "Not an embedded proofstate: %s\n" uu___5 in
-              (FStar_Errors.Warning_NotEmbedded, uu___4) in
+              (FStar_Errors_Codes.Warning_NotEmbedded, uu___4) in
             FStar_Errors.log_issue t.FStar_Syntax_Syntax.pos uu___3)
          else ();
          FStar_Pervasives_Native.None) in
@@ -242,7 +242,7 @@ let (e_proofstate_nbe :
                 let uu___6 = FStar_TypeChecker_NBETerm.t_to_string t in
                 FStar_Compiler_Util.format1
                   "Not an embedded NBE proofstate: %s\n" uu___6 in
-              (FStar_Errors.Warning_NotEmbedded, uu___5) in
+              (FStar_Errors_Codes.Warning_NotEmbedded, uu___5) in
             FStar_Errors.log_issue FStar_Compiler_Range.dummyRange uu___4
           else ());
          FStar_Pervasives_Native.None) in
@@ -279,7 +279,7 @@ let (e_goal : FStar_Tactics_Types.goal FStar_Syntax_Embeddings.embedding) =
               let uu___4 =
                 let uu___5 = FStar_Syntax_Print.term_to_string t in
                 FStar_Compiler_Util.format1 "Not an embedded goal: %s" uu___5 in
-              (FStar_Errors.Warning_NotEmbedded, uu___4) in
+              (FStar_Errors_Codes.Warning_NotEmbedded, uu___4) in
             FStar_Errors.log_issue t.FStar_Syntax_Syntax.pos uu___3)
          else ();
          FStar_Pervasives_Native.None) in
@@ -331,7 +331,7 @@ let (e_goal_nbe :
                 let uu___6 = FStar_TypeChecker_NBETerm.t_to_string t in
                 FStar_Compiler_Util.format1 "Not an embedded NBE goal: %s"
                   uu___6 in
-              (FStar_Errors.Warning_NotEmbedded, uu___5) in
+              (FStar_Errors_Codes.Warning_NotEmbedded, uu___5) in
             FStar_Errors.log_issue FStar_Compiler_Range.dummyRange uu___4
           else ());
          FStar_Pervasives_Native.None) in
@@ -510,7 +510,7 @@ let e_result :
                   let uu___6 = FStar_Syntax_Print.term_to_string t in
                   FStar_Compiler_Util.format1
                     "Not an embedded tactic result: %s" uu___6 in
-                (FStar_Errors.Warning_NotEmbedded, uu___5) in
+                (FStar_Errors_Codes.Warning_NotEmbedded, uu___5) in
               FStar_Errors.log_issue t.FStar_Syntax_Syntax.pos uu___4)
            else ();
            FStar_Pervasives_Native.None) in
@@ -634,7 +634,7 @@ let (e_direction :
                 let uu___5 = FStar_Syntax_Print.term_to_string t in
                 FStar_Compiler_Util.format1 "Not an embedded direction: %s"
                   uu___5 in
-              (FStar_Errors.Warning_NotEmbedded, uu___4) in
+              (FStar_Errors_Codes.Warning_NotEmbedded, uu___4) in
             FStar_Errors.log_issue t.FStar_Syntax_Syntax.pos uu___3)
          else ();
          FStar_Pervasives_Native.None) in
@@ -666,7 +666,7 @@ let (e_direction_nbe :
                 let uu___6 = FStar_TypeChecker_NBETerm.t_to_string t in
                 FStar_Compiler_Util.format1 "Not an embedded direction: %s"
                   uu___6 in
-              (FStar_Errors.Warning_NotEmbedded, uu___5) in
+              (FStar_Errors_Codes.Warning_NotEmbedded, uu___5) in
             FStar_Errors.log_issue FStar_Compiler_Range.dummyRange uu___4
           else ());
          FStar_Pervasives_Native.None) in
@@ -707,7 +707,7 @@ let (e_ctrl_flag :
                 let uu___5 = FStar_Syntax_Print.term_to_string t in
                 FStar_Compiler_Util.format1 "Not an embedded ctrl_flag: %s"
                   uu___5 in
-              (FStar_Errors.Warning_NotEmbedded, uu___4) in
+              (FStar_Errors_Codes.Warning_NotEmbedded, uu___4) in
             FStar_Errors.log_issue t.FStar_Syntax_Syntax.pos uu___3)
          else ();
          FStar_Pervasives_Native.None) in
@@ -742,7 +742,7 @@ let (e_ctrl_flag_nbe :
                 let uu___6 = FStar_TypeChecker_NBETerm.t_to_string t in
                 FStar_Compiler_Util.format1 "Not an embedded ctrl_flag: %s"
                   uu___6 in
-              (FStar_Errors.Warning_NotEmbedded, uu___5) in
+              (FStar_Errors_Codes.Warning_NotEmbedded, uu___5) in
             FStar_Errors.log_issue FStar_Compiler_Range.dummyRange uu___4
           else ());
          FStar_Pervasives_Native.None) in
@@ -787,7 +787,7 @@ let (e_guard_policy :
                 let uu___5 = FStar_Syntax_Print.term_to_string t in
                 FStar_Compiler_Util.format1
                   "Not an embedded guard_policy: %s" uu___5 in
-              (FStar_Errors.Warning_NotEmbedded, uu___4) in
+              (FStar_Errors_Codes.Warning_NotEmbedded, uu___4) in
             FStar_Errors.log_issue t.FStar_Syntax_Syntax.pos uu___3)
          else ();
          FStar_Pervasives_Native.None) in

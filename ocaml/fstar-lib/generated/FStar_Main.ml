@@ -84,7 +84,7 @@ let (load_native_tactics : unit -> unit) =
             let uu___2 =
               let uu___3 =
                 FStar_Compiler_Util.format1 "Could not find %s to load" cmxs in
-              (FStar_Errors.Fatal_FailToCompileNativeTactic, uu___3) in
+              (FStar_Errors_Codes.Fatal_FailToCompileNativeTactic, uu___3) in
             FStar_Errors.raise_err uu___2
           else
             (let uu___3 =
@@ -97,7 +97,8 @@ let (load_native_tactics : unit -> unit) =
                      FStar_Compiler_Util.format1
                        "Failed to compile native tactic; extracted module %s not found"
                        uu___6 in
-                   (FStar_Errors.Fatal_FailToCompileNativeTactic, uu___5) in
+                   (FStar_Errors_Codes.Fatal_FailToCompileNativeTactic,
+                     uu___5) in
                  FStar_Errors.raise_err uu___4
              | FStar_Pervasives_Native.Some ml ->
                  let dir = FStar_Compiler_Util.dirname ml in
@@ -111,7 +112,7 @@ let (load_native_tactics : unit -> unit) =
                            FStar_Compiler_Util.format1
                              "Failed to compile native tactic; compiled object %s not found"
                              cmxs in
-                         (FStar_Errors.Fatal_FailToCompileNativeTactic,
+                         (FStar_Errors_Codes.Fatal_FailToCompileNativeTactic,
                            uu___7) in
                        FStar_Errors.raise_err uu___6
                    | FStar_Pervasives_Native.Some f -> f))) in
@@ -197,13 +198,13 @@ let go : 'uuuuu . 'uuuuu -> unit =
                              | [] ->
                                  (FStar_Errors.log_issue
                                     FStar_Compiler_Range.dummyRange
-                                    (FStar_Errors.Error_MissingFileName,
+                                    (FStar_Errors_Codes.Error_MissingFileName,
                                       "--ide: Name of current file missing in command line invocation\n");
                                   FStar_Compiler_Effect.exit Prims.int_one)
                              | uu___13::uu___14::uu___15 ->
                                  (FStar_Errors.log_issue
                                     FStar_Compiler_Range.dummyRange
-                                    (FStar_Errors.Error_TooManyFiles,
+                                    (FStar_Errors_Codes.Error_TooManyFiles,
                                       "--ide: Too many files in command line invocation\n");
                                   FStar_Compiler_Effect.exit Prims.int_one)
                              | filename::[] ->
@@ -245,7 +246,7 @@ let go : 'uuuuu . 'uuuuu -> unit =
                                            Prims.int_zero))))
                            else
                              FStar_Errors.raise_error
-                               (FStar_Errors.Error_MissingFileName,
+                               (FStar_Errors_Codes.Error_MissingFileName,
                                  "No file provided")
                                FStar_Compiler_Range.dummyRange)))))))
 let (lazy_chooser :
@@ -296,7 +297,8 @@ let (setup_hooks : unit -> unit) =
       (FStar_Pervasives_Native.Some FStar_Reflection_Embeddings.e_binder)
 let (handle_error : Prims.exn -> unit) =
   fun e ->
-    if FStar_Errors.handleable e then FStar_Errors.err_exn e else ();
+    (let uu___1 = FStar_Errors.handleable e in
+     if uu___1 then FStar_Errors.err_exn e else ());
     (let uu___2 = FStar_Options.trace_error () in
      if uu___2
      then
@@ -305,13 +307,15 @@ let (handle_error : Prims.exn -> unit) =
        FStar_Compiler_Util.print2_error "Unexpected error\n%s\n%s\n" uu___3
          uu___4
      else
-       if Prims.op_Negation (FStar_Errors.handleable e)
-       then
-         (let uu___4 = FStar_Compiler_Util.message_of_exn e in
+       (let uu___4 =
+          let uu___5 = FStar_Errors.handleable e in Prims.op_Negation uu___5 in
+        if uu___4
+        then
+          let uu___5 = FStar_Compiler_Util.message_of_exn e in
           FStar_Compiler_Util.print1_error
             "Unexpected error; please file a bug report, ideally with a minimized version of the source program that triggered the error.\n%s\n"
-            uu___4)
-       else ());
+            uu___5
+        else ()));
     cleanup ();
     report_errors []
 let main : 'uuuuu . unit -> 'uuuuu =

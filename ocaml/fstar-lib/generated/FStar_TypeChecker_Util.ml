@@ -130,7 +130,7 @@ let (check_uvars :
               FStar_Compiler_Util.format2
                 "Unconstrained unification variables %s in type signature %s; please add an annotation"
                 us uu___7 in
-            (FStar_Errors.Error_UncontrainedUnificationVar, uu___6) in
+            (FStar_Errors_Codes.Error_UncontrainedUnificationVar, uu___6) in
           FStar_Errors.log_issue r uu___5);
          FStar_Options.pop ())
       else ()
@@ -179,7 +179,7 @@ let (extract_let_rec_annotation :
                        FStar_Syntax_Subst.open_comp bs c
                    | uu___7 ->
                        FStar_Errors.raise_error
-                         (FStar_Errors.Fatal_LetRecArgumentMismatch,
+                         (FStar_Errors_Codes.Fatal_LetRecArgumentMismatch,
                            "Recursive functions must be introduced at arrow types")
                          rng in
                  let reconcile_let_rec_ascription_and_body_type tarr
@@ -220,7 +220,7 @@ let (extract_let_rec_annotation :
                                       (FStar_Compiler_List.length bs')
                                   then
                                     FStar_Errors.raise_error
-                                      (FStar_Errors.Fatal_LetRecArgumentMismatch,
+                                      (FStar_Errors_Codes.Fatal_LetRecArgumentMismatch,
                                         "Arity mismatch on let rec annotation")
                                       rng
                                   else ();
@@ -264,7 +264,7 @@ let (extract_let_rec_annotation :
                                       (pfx', FStar_Syntax_Syntax.DECREASES
                                        d', sfx')) ->
                                        (FStar_Errors.log_issue rng
-                                          (FStar_Errors.Warning_DeprecatedGeneric,
+                                          (FStar_Errors_Codes.Warning_DeprecatedGeneric,
                                             "Multiple decreases clauses on this definition; the decreases clause on the declaration is ignored, please remove it");
                                         move_decreases d
                                           (FStar_Compiler_List.op_At pfx sfx)
@@ -338,7 +338,7 @@ let (extract_let_rec_annotation :
                                 FStar_Compiler_Util.format1
                                   "Expected a 'let rec' to be annotated with a value type; got a computation type %s"
                                   uu___10 in
-                              (FStar_Errors.Fatal_UnexpectedComputationTypeForLetRec,
+                              (FStar_Errors_Codes.Fatal_UnexpectedComputationTypeForLetRec,
                                 uu___9) in
                             FStar_Errors.raise_error uu___8 rng)
                      | FStar_Syntax_Syntax.Tm_ascribed
@@ -415,7 +415,7 @@ let (extract_let_rec_annotation :
                                             FStar_Compiler_Util.format1
                                               "Equality ascription in this case (%s) is not yet supported, please use subtyping"
                                               uu___14 in
-                                          (FStar_Errors.Fatal_NotSupported,
+                                          (FStar_Errors_Codes.Fatal_NotSupported,
                                             uu___13) in
                                         FStar_Errors.raise_error uu___12
                                           t3.FStar_Syntax_Syntax.pos)
@@ -500,7 +500,7 @@ let (extract_let_rec_annotation :
                              FStar_Compiler_Util.format1
                                "Expected the definition of a 'let rec' to be a function literal; got %s"
                                uu___9 in
-                           (FStar_Errors.Fatal_UnexpectedComputationTypeForLetRec,
+                           (FStar_Errors_Codes.Fatal_UnexpectedComputationTypeForLetRec,
                              uu___8) in
                          FStar_Errors.raise_error uu___7
                            e3.FStar_Syntax_Syntax.pos in
@@ -656,7 +656,7 @@ let (effect_args_from_repr :
               FStar_Compiler_Util.format2
                 "Could not get effect args from repr %s with is_layered %s"
                 uu___3 uu___4 in
-            (FStar_Errors.Fatal_UnexpectedEffect, uu___2) in
+            (FStar_Errors_Codes.Fatal_UnexpectedEffect, uu___2) in
           FStar_Errors.raise_error uu___1 r in
         let repr1 = FStar_Syntax_Subst.compress repr in
         if is_layered
@@ -854,7 +854,8 @@ let (join_effects :
                           FStar_Compiler_Util.format2
                             "Effects %s and %s cannot be composed" uu___5
                             uu___6 in
-                        (FStar_Errors.Fatal_EffectsCannotBeComposed, uu___4) in
+                        (FStar_Errors_Codes.Fatal_EffectsCannotBeComposed,
+                          uu___4) in
                       FStar_Errors.raise_error uu___3
                         env.FStar_TypeChecker_Env.range))
 let (join_lcomp :
@@ -943,7 +944,7 @@ let (lift_comps_sep_guards :
                         c21.FStar_Syntax_Syntax.effect_name in
                     FStar_Compiler_Util.format2
                       "Effects %s and %s cannot be composed" uu___3 uu___4 in
-                  (FStar_Errors.Fatal_EffectsCannotBeComposed, uu___2) in
+                  (FStar_Errors_Codes.Fatal_EffectsCannotBeComposed, uu___2) in
                 FStar_Errors.raise_error uu___1
                   env.FStar_TypeChecker_Env.range
 let (lift_comps :
@@ -1661,7 +1662,7 @@ let (ad_hoc_indexed_bind_substs :
                           FStar_Compiler_Util.format2
                             "bind %s does not have proper shape (reason:%s)"
                             uu___1 s in
-                        (FStar_Errors.Fatal_UnexpectedEffect, uu___) in
+                        (FStar_Errors_Codes.Fatal_UnexpectedEffect, uu___) in
                       let num_range_binders =
                         if has_range_binders
                         then (Prims.of_int (2))
@@ -1991,7 +1992,7 @@ let (mk_indexed_return :
                        FStar_Compiler_Util.format3
                          "%s.return %s does not have proper shape (reason:%s)"
                          uu___4 uu___5 s in
-                     (FStar_Errors.Fatal_UnexpectedEffect, uu___3) in
+                     (FStar_Errors_Codes.Fatal_UnexpectedEffect, uu___3) in
                    let uu___3 =
                      let uu___4 =
                        let uu___5 = FStar_Syntax_Subst.compress return_t in
@@ -2212,7 +2213,7 @@ let (mk_indexed_bind :
                                          FStar_Compiler_Util.format2
                                            "Cannot apply bind %s since %s is not erasable and one of the computations is informative"
                                            uu___7 uu___8 in
-                                       (FStar_Errors.Fatal_UnexpectedEffect,
+                                       (FStar_Errors_Codes.Fatal_UnexpectedEffect,
                                          uu___6) in
                                      FStar_Errors.raise_error uu___5 r1
                                    else ());
@@ -3638,7 +3639,7 @@ let (assume_result_eq_pure_term_in_m :
                 FStar_Compiler_Util.format1
                   "assume_result_eq_pure_term cannot inline an non-inlineable lc : %s"
                   uu___3 in
-              (FStar_Errors.Fatal_UnexpectedTerm, uu___2) in
+              (FStar_Errors_Codes.Fatal_UnexpectedTerm, uu___2) in
             FStar_Errors.raise_error uu___1 e.FStar_Syntax_Syntax.pos
           else
             (let uu___2 = refine () in
@@ -4019,7 +4020,7 @@ let (ad_hoc_indexed_ite_substs :
                     FStar_Compiler_Util.format2
                       "conjunction %s does not have proper shape (reason:%s)"
                       uu___1 s in
-                  (FStar_Errors.Fatal_UnexpectedEffect, uu___) in
+                  (FStar_Errors_Codes.Fatal_UnexpectedEffect, uu___) in
                 let uu___ =
                   if (FStar_Compiler_List.length bs) >= (Prims.of_int (4))
                   then
@@ -4183,7 +4184,7 @@ let (mk_layered_conjunction :
                       FStar_Compiler_Util.format2
                         "conjunction %s does not have proper shape (reason:%s)"
                         uu___1 s in
-                    (FStar_Errors.Fatal_UnexpectedEffect, uu___) in
+                    (FStar_Errors_Codes.Fatal_UnexpectedEffect, uu___) in
                   let uu___ =
                     let uu___1 =
                       let uu___2 =
@@ -4833,7 +4834,7 @@ let (universe_of_comp :
                       FStar_Compiler_Util.format1
                         "Effect %s is marked total but does not have a repr"
                         uu___6 in
-                    (FStar_Errors.Fatal_EffectCannotBeReified, uu___5) in
+                    (FStar_Errors_Codes.Fatal_EffectCannotBeReified, uu___5) in
                   FStar_Errors.raise_error uu___4 c.FStar_Syntax_Syntax.pos
               | FStar_Pervasives_Native.Some tm ->
                   env.FStar_TypeChecker_Env.universe_of env tm))
@@ -5047,7 +5048,8 @@ let (coerce_with :
                             FStar_Compiler_Util.format1
                               "Coercion %s was not found in the environment, not coercing."
                               uu___4 in
-                          (FStar_Errors.Warning_CoercionNotFound, uu___3) in
+                          (FStar_Errors_Codes.Warning_CoercionNotFound,
+                            uu___3) in
                         FStar_Errors.log_issue e.FStar_Syntax_Syntax.pos
                           uu___2);
                        (e, lc))
@@ -5822,7 +5824,7 @@ let (pure_or_ghost_pre_and_post :
                         FStar_Compiler_Util.format1
                           "Effect constructor is not fully applied; got %s"
                           uu___6 in
-                      (FStar_Errors.Fatal_EffectConstructorNotFullyApplied,
+                      (FStar_Errors_Codes.Fatal_EffectConstructorNotFullyApplied,
                         uu___5) in
                     FStar_Errors.raise_error uu___4
                       comp.FStar_Syntax_Syntax.pos)
@@ -5906,7 +5908,7 @@ let (pure_or_ghost_pre_and_post :
                                 norm uu___12 in
                               (uu___10, uu___11)))
                 | uu___4 -> failwith "Impossible"))
-let (reify_body :
+let (norm_reify :
   FStar_TypeChecker_Env.env ->
     FStar_TypeChecker_Env.steps ->
       FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.term)
@@ -5915,9 +5917,8 @@ let (reify_body :
     fun steps ->
       fun t ->
         FStar_TypeChecker_Env.def_check_closed_in_env
-          t.FStar_Syntax_Syntax.pos "reify_body" env t;
-        (let tm = FStar_Syntax_Util.mk_reify t in
-         let tm' =
+          t.FStar_Syntax_Syntax.pos "norm_reify" env t;
+        (let t' =
            FStar_TypeChecker_Normalize.normalize
              (FStar_Compiler_List.op_At
                 [FStar_TypeChecker_Env.Beta;
@@ -5926,54 +5927,19 @@ let (reify_body :
                 FStar_TypeChecker_Env.EraseUniverses;
                 FStar_TypeChecker_Env.AllowUnboundUniverses;
                 FStar_TypeChecker_Env.Exclude FStar_TypeChecker_Env.Zeta]
-                steps) env tm in
+                steps) env t in
          (let uu___2 =
             FStar_Compiler_Effect.op_Less_Bar
               (FStar_TypeChecker_Env.debug env)
               (FStar_Options.Other "SMTEncodingReify") in
           if uu___2
           then
-            let uu___3 = FStar_Syntax_Print.term_to_string tm in
-            let uu___4 = FStar_Syntax_Print.term_to_string tm' in
+            let uu___3 = FStar_Syntax_Print.term_to_string t in
+            let uu___4 = FStar_Syntax_Print.term_to_string t' in
             FStar_Compiler_Util.print2 "Reified body %s \nto %s\n" uu___3
               uu___4
           else ());
-         tm')
-let (reify_body_with_arg :
-  FStar_TypeChecker_Env.env ->
-    FStar_TypeChecker_Env.steps ->
-      FStar_Syntax_Syntax.term ->
-        FStar_Syntax_Syntax.arg -> FStar_Syntax_Syntax.term)
-  =
-  fun env ->
-    fun steps ->
-      fun head ->
-        fun arg ->
-          let tm =
-            FStar_Syntax_Syntax.mk (FStar_Syntax_Syntax.Tm_app (head, [arg]))
-              head.FStar_Syntax_Syntax.pos in
-          let tm' =
-            FStar_TypeChecker_Normalize.normalize
-              (FStar_Compiler_List.op_At
-                 [FStar_TypeChecker_Env.Beta;
-                 FStar_TypeChecker_Env.Reify;
-                 FStar_TypeChecker_Env.Eager_unfolding;
-                 FStar_TypeChecker_Env.EraseUniverses;
-                 FStar_TypeChecker_Env.AllowUnboundUniverses;
-                 FStar_TypeChecker_Env.Exclude FStar_TypeChecker_Env.Zeta]
-                 steps) env tm in
-          (let uu___1 =
-             FStar_Compiler_Effect.op_Less_Bar
-               (FStar_TypeChecker_Env.debug env)
-               (FStar_Options.Other "SMTEncodingReify") in
-           if uu___1
-           then
-             let uu___2 = FStar_Syntax_Print.term_to_string tm in
-             let uu___3 = FStar_Syntax_Print.term_to_string tm' in
-             FStar_Compiler_Util.print2 "Reified body %s \nto %s\n" uu___2
-               uu___3
-           else ());
-          tm'
+         t')
 let (remove_reify : FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.term) =
   fun t ->
     let uu___ =
@@ -5994,8 +5960,8 @@ let (remove_reify : FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.term) =
                let uu___5 = FStar_Syntax_Subst.compress head in
                uu___5.FStar_Syntax_Syntax.n in
              match uu___4 with
-             | FStar_Syntax_Syntax.Tm_constant (FStar_Const.Const_reify) ->
-                 true
+             | FStar_Syntax_Syntax.Tm_constant (FStar_Const.Const_reify
+                 uu___5) -> true
              | uu___5 -> false in
            if uu___3
            then
@@ -6099,7 +6065,8 @@ let (maybe_instantiate :
                         FStar_Compiler_Util.format3
                           "Expected a term with %s implicit arguments, but %s has only %s"
                           uu___6 uu___7 uu___8 in
-                      (FStar_Errors.Fatal_MissingImplicitArguments, uu___5) in
+                      (FStar_Errors_Codes.Fatal_MissingImplicitArguments,
+                        uu___5) in
                     let uu___5 = FStar_TypeChecker_Env.get_range env in
                     FStar_Errors.raise_error uu___4 uu___5
                   else
@@ -6391,7 +6358,8 @@ let (check_top_level :
                                FStar_Compiler_Util.format1
                                  "Indexed effect %s cannot be used as a top-level effect"
                                  uu___8 in
-                             (FStar_Errors.Fatal_UnexpectedEffect, uu___7) in
+                             (FStar_Errors_Codes.Fatal_UnexpectedEffect,
+                               uu___7) in
                            let uu___7 = FStar_TypeChecker_Env.get_range env in
                            FStar_Errors.raise_error uu___6 uu___7
                        | FStar_Pervasives_Native.Some top_level_eff ->
@@ -6418,7 +6386,7 @@ let (check_top_level :
                                        FStar_Compiler_Util.format2
                                          "Could not find top-level effect abbreviation %s for %s"
                                          uu___10 uu___11 in
-                                     (FStar_Errors.Fatal_UnexpectedEffect,
+                                     (FStar_Errors_Codes.Fatal_UnexpectedEffect,
                                        uu___9) in
                                    let uu___9 =
                                      FStar_TypeChecker_Env.get_range env in
@@ -6500,7 +6468,7 @@ let (check_top_level :
                                                       FStar_Compiler_Util.format2
                                                         "Could not unify %s and %s when checking top-level effect"
                                                         uu___13 uu___14 in
-                                                    (FStar_Errors.Fatal_UnexpectedEffect,
+                                                    (FStar_Errors_Codes.Fatal_UnexpectedEffect,
                                                       uu___12) in
                                                   let uu___12 =
                                                     FStar_TypeChecker_Env.get_range
@@ -6948,7 +6916,7 @@ let (check_sigelt_quals :
             (Prims.op_Negation se_has_erasable_attr)
         then
           FStar_Errors.raise_error
-            (FStar_Errors.Fatal_QulifierListNotPermitted,
+            (FStar_Errors_Codes.Fatal_QulifierListNotPermitted,
               "Mismatch of attributes between declaration and definition: Declaration is marked `erasable` but the definition is not")
             r
         else ();
@@ -6957,7 +6925,7 @@ let (check_sigelt_quals :
             se_has_erasable_attr
         then
           FStar_Errors.raise_error
-            (FStar_Errors.Fatal_QulifierListNotPermitted,
+            (FStar_Errors_Codes.Fatal_QulifierListNotPermitted,
               "Mismatch of attributed between declaration and definition: Definition is marked `erasable` but the declaration is not")
             r
         else ();
@@ -6977,7 +6945,7 @@ let (check_sigelt_quals :
                if uu___3
                then
                  FStar_Errors.raise_error
-                   (FStar_Errors.Fatal_QulifierListNotPermitted,
+                   (FStar_Errors_Codes.Fatal_QulifierListNotPermitted,
                      "Incompatible attributes and qualifiers: erasable types do not support decidable equality and must be marked `noeq`")
                    r
                else ()
@@ -7000,7 +6968,8 @@ let (check_sigelt_quals :
                           FStar_Compiler_Util.format1
                             "Illegal attribute: the `erasable` attribute is only permitted on inductive type definitions and abbreviations for non-informative types. %s is considered informative."
                             uu___9 in
-                        (FStar_Errors.Fatal_QulifierListNotPermitted, uu___8) in
+                        (FStar_Errors_Codes.Fatal_QulifierListNotPermitted,
+                          uu___8) in
                       FStar_Errors.raise_error uu___7
                         body.FStar_Syntax_Syntax.pos
                     else ())
@@ -7012,25 +6981,27 @@ let (check_sigelt_quals :
                  FStar_Syntax_Syntax.signature = uu___5;
                  FStar_Syntax_Syntax.combinators = uu___6;
                  FStar_Syntax_Syntax.actions = uu___7;
-                 FStar_Syntax_Syntax.eff_attrs = uu___8;_}
+                 FStar_Syntax_Syntax.eff_attrs = uu___8;
+                 FStar_Syntax_Syntax.extraction_mode = uu___9;_}
                ->
                if
                  Prims.op_Negation
                    (FStar_Compiler_List.contains
                       FStar_Syntax_Syntax.TotalEffect quals)
                then
-                 let uu___9 =
-                   let uu___10 =
-                     let uu___11 = FStar_Ident.string_of_lid eff_name in
+                 let uu___10 =
+                   let uu___11 =
+                     let uu___12 = FStar_Ident.string_of_lid eff_name in
                      FStar_Compiler_Util.format1
                        "Effect %s is marked erasable but only total effects are allowed to be erasable"
-                       uu___11 in
-                   (FStar_Errors.Fatal_QulifierListNotPermitted, uu___10) in
-                 FStar_Errors.raise_error uu___9 r
+                       uu___12 in
+                   (FStar_Errors_Codes.Fatal_QulifierListNotPermitted,
+                     uu___11) in
+                 FStar_Errors.raise_error uu___10 r
                else ()
            | uu___2 ->
                FStar_Errors.raise_error
-                 (FStar_Errors.Fatal_QulifierListNotPermitted,
+                 (FStar_Errors_Codes.Fatal_QulifierListNotPermitted,
                    "Illegal attribute: the `erasable` attribute is only permitted on inductive type definitions and abbreviations for non-informative types")
                  r)
         else () in
@@ -7045,7 +7016,7 @@ let (check_sigelt_quals :
         if uu___
         then
           FStar_Errors.raise_error
-            (FStar_Errors.Fatal_InconsistentQualifierAnnotation,
+            (FStar_Errors_Codes.Fatal_InconsistentQualifierAnnotation,
               "Illegal attribute: no_subtyping attribute is allowed only on let-bindings")
             se1.FStar_Syntax_Syntax.sigrng
         else () in
@@ -7076,7 +7047,7 @@ let (check_sigelt_quals :
                FStar_Compiler_Util.format2
                  "The qualifier list \"[%s]\" is not permissible for this element%s"
                  uu___4 msg in
-             (FStar_Errors.Fatal_QulifierListNotPermitted, uu___3) in
+             (FStar_Errors_Codes.Fatal_QulifierListNotPermitted, uu___3) in
            FStar_Errors.raise_error uu___2 r in
          let err msg = err' (Prims.op_Hat ": " msg) in
          let err'1 uu___2 = err' "" in
@@ -7237,6 +7208,20 @@ let (must_erase_for_extraction :
          else ());
         res in
       aux g t
+let (effect_extraction_mode :
+  FStar_TypeChecker_Env.env ->
+    FStar_Ident.lident -> FStar_Syntax_Syntax.eff_extraction_mode)
+  =
+  fun env ->
+    fun l ->
+      let uu___ =
+        let uu___1 =
+          FStar_Compiler_Effect.op_Bar_Greater l
+            (FStar_TypeChecker_Env.norm_eff_name env) in
+        FStar_Compiler_Effect.op_Bar_Greater uu___1
+          (FStar_TypeChecker_Env.get_effect_decl env) in
+      FStar_Compiler_Effect.op_Bar_Greater uu___
+        (fun ed -> ed.FStar_Syntax_Syntax.extraction_mode)
 let (fresh_effect_repr :
   FStar_TypeChecker_Env.env ->
     FStar_Compiler_Range.range ->
@@ -7447,7 +7432,7 @@ let (check_non_informative_type_for_lift :
                   FStar_Compiler_Util.format3
                     "Cannot lift erasable expression from %s ~> %s since its type %s is informative"
                     uu___3 uu___4 uu___5 in
-                (FStar_Errors.Error_TypeError, uu___2) in
+                (FStar_Errors_Codes.Error_TypeError, uu___2) in
               FStar_Errors.raise_error uu___1 r
             else ()
 let (substitutive_indexed_lift_substs :
@@ -7576,7 +7561,7 @@ let (ad_hoc_indexed_lift_substs :
                    let uu___3 =
                      lift_t_shape_error
                        "either not an arrow or not enough binders" in
-                   (FStar_Errors.Fatal_UnexpectedEffect, uu___3) in
+                   (FStar_Errors_Codes.Fatal_UnexpectedEffect, uu___3) in
                  FStar_Errors.raise_error uu___2 r) in
             match uu___ with
             | (a_b, (rest_bs, f_b::[])) ->
@@ -7822,7 +7807,7 @@ let lift_tf_layered_effect_term :
                       FStar_Compiler_Util.format1
                         "lift_t tscheme %s is not an arrow with enough binders"
                         uu___4 in
-                    (FStar_Errors.Fatal_UnexpectedEffect, uu___3) in
+                    (FStar_Errors_Codes.Fatal_UnexpectedEffect, uu___3) in
                   FStar_Errors.raise_error uu___2
                     (FStar_Pervasives_Native.snd lift_t).FStar_Syntax_Syntax.pos in
             let args =
@@ -7859,7 +7844,7 @@ let (get_field_projector_name :
                   FStar_Compiler_Util.format3
                     "Data constructor %s does not have enough binders (has %s, tried %s)"
                     uu___4 uu___5 uu___6 in
-                (FStar_Errors.Fatal_UnexpectedDataConstructor, uu___3) in
+                (FStar_Errors_Codes.Fatal_UnexpectedDataConstructor, uu___3) in
               let uu___3 = FStar_TypeChecker_Env.get_range env in
               FStar_Errors.raise_error uu___2 uu___3 in
             let uu___2 =
@@ -8340,7 +8325,7 @@ let (find_record_or_dc_from_typ :
                     let uu___3 = FStar_Ident.string_of_lid f in
                     FStar_Compiler_Util.format1
                       "Field name %s could not be resolved" uu___3 in
-                  (FStar_Errors.Fatal_IdentifierNotFound, uu___2) in
+                  (FStar_Errors_Codes.Fatal_IdentifierNotFound, uu___2) in
                 let uu___2 = FStar_Ident.range_of_lid f in
                 FStar_Errors.raise_error uu___1 uu___2
             | FStar_Pervasives_Native.Some tn ->
@@ -8353,7 +8338,7 @@ let (find_record_or_dc_from_typ :
                          let uu___4 = FStar_Ident.string_of_lid tn in
                          FStar_Compiler_Util.format1
                            "Record name %s not found" uu___4 in
-                       (FStar_Errors.Fatal_NameNotFound, uu___3) in
+                       (FStar_Errors_Codes.Fatal_NameNotFound, uu___3) in
                      let uu___3 = FStar_Ident.range_of_lid tn in
                      FStar_Errors.raise_error uu___2 uu___3) in
           let rdc =
@@ -8555,7 +8540,7 @@ let make_record_fields_in_order :
                                                 FStar_Compiler_Util.format2
                                                   "Field %s of record type %s is missing"
                                                   uu___8 uu___9 in
-                                              (FStar_Errors.Fatal_MissingFieldInRecord,
+                                              (FStar_Errors_Codes.Fatal_MissingFieldInRecord,
                                                 uu___7) in
                                             FStar_Errors.raise_error uu___6
                                               rng
@@ -8573,7 +8558,7 @@ let make_record_fields_in_order :
                                            FStar_Compiler_Util.format2
                                              "Field %s of record type %s is given multiple assignments"
                                              uu___8 uu___9 in
-                                         (FStar_Errors.Fatal_MissingFieldInRecord,
+                                         (FStar_Errors_Codes.Fatal_MissingFieldInRecord,
                                            uu___7) in
                                        FStar_Errors.raise_error uu___6 rng)))
                     (fas, []) rdc.FStar_Syntax_DsEnv.fields in
@@ -8591,6 +8576,7 @@ let make_record_fields_in_order :
                               FStar_Compiler_Util.format2
                                 "Field %s is redundant for type %s" uu___6
                                 uu___7 in
-                            (FStar_Errors.Fatal_MissingFieldInRecord, uu___5) in
+                            (FStar_Errors_Codes.Fatal_MissingFieldInRecord,
+                              uu___5) in
                           FStar_Errors.raise_error uu___4 rng);
                      FStar_Compiler_List.rev as_rev)

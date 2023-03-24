@@ -1554,7 +1554,8 @@ let (should_strongly_reduce : FStar_Syntax_Syntax.term -> Prims.bool) =
           let uu___3 = FStar_Syntax_Subst.compress h in
           uu___3.FStar_Syntax_Syntax.n in
         (match uu___2 with
-         | FStar_Syntax_Syntax.Tm_constant (FStar_Const.Const_reify) -> true
+         | FStar_Syntax_Syntax.Tm_constant (FStar_Const.Const_reify uu___3)
+             -> true
          | uu___3 -> false)
 let (whnf :
   FStar_TypeChecker_Env.env ->
@@ -2827,13 +2828,13 @@ let rec (head_matches :
            FStar_Syntax_Syntax.Tm_uinst (g, uu___1)) ->
             let uu___2 = head_matches env f g in
             FStar_Compiler_Effect.op_Bar_Greater uu___2 head_match
-        | (FStar_Syntax_Syntax.Tm_constant (FStar_Const.Const_reify),
-           FStar_Syntax_Syntax.Tm_constant (FStar_Const.Const_reify)) ->
-            FullMatch
-        | (FStar_Syntax_Syntax.Tm_constant (FStar_Const.Const_reify), uu___)
-            -> HeadMatch true
-        | (uu___, FStar_Syntax_Syntax.Tm_constant (FStar_Const.Const_reify))
-            -> HeadMatch true
+        | (FStar_Syntax_Syntax.Tm_constant (FStar_Const.Const_reify uu___),
+           FStar_Syntax_Syntax.Tm_constant (FStar_Const.Const_reify uu___1))
+            -> FullMatch
+        | (FStar_Syntax_Syntax.Tm_constant (FStar_Const.Const_reify uu___),
+           uu___1) -> HeadMatch true
+        | (uu___, FStar_Syntax_Syntax.Tm_constant (FStar_Const.Const_reify
+           uu___1)) -> HeadMatch true
         | (FStar_Syntax_Syntax.Tm_constant c, FStar_Syntax_Syntax.Tm_constant
            d) ->
             let uu___ = FStar_Const.eq_const c d in
@@ -4447,7 +4448,7 @@ let (apply_ad_hoc_indexed_subcomp :
                            let uu___3 =
                              stronger_t_shape_error
                                "not an arrow or not enough binders" in
-                           (FStar_Errors.Fatal_UnexpectedExpressionType,
+                           (FStar_Errors_Codes.Fatal_UnexpectedExpressionType,
                              uu___3) in
                          FStar_Errors.raise_error uu___2 r1) in
                     match uu___ with
@@ -11522,7 +11523,8 @@ and (solve_t' : tprob -> worklist -> solution) =
                     FStar_Compiler_Util.format4
                       "Internal error: unexpected flex-flex of %s and %s\n>>> (%s) -- (%s)"
                       uu___11 uu___12 uu___13 uu___14 in
-                  (FStar_Errors.Fatal_UnificationNotWellFormed, uu___10) in
+                  (FStar_Errors_Codes.Fatal_UnificationNotWellFormed,
+                    uu___10) in
                 FStar_Errors.raise_error uu___9 t1.FStar_Syntax_Syntax.pos
             | (uu___7, FStar_Syntax_Syntax.Tm_let uu___8) ->
                 let uu___9 =
@@ -11534,7 +11536,8 @@ and (solve_t' : tprob -> worklist -> solution) =
                     FStar_Compiler_Util.format4
                       "Internal error: unexpected flex-flex of %s and %s\n>>> (%s) -- (%s)"
                       uu___11 uu___12 uu___13 uu___14 in
-                  (FStar_Errors.Fatal_UnificationNotWellFormed, uu___10) in
+                  (FStar_Errors_Codes.Fatal_UnificationNotWellFormed,
+                    uu___10) in
                 FStar_Errors.raise_error uu___9 t1.FStar_Syntax_Syntax.pos
             | uu___7 ->
                 let uu___8 = FStar_Thunk.mkv "head tag mismatch" in
@@ -11930,7 +11933,7 @@ and (solve_c :
                             FStar_Compiler_Util.format3
                               "Cannot lift erasable expression from %s ~> %s since its type %s is informative"
                               uu___10 uu___11 uu___12 in
-                          (FStar_Errors.Error_TypeError, uu___9) in
+                          (FStar_Errors_Codes.Error_TypeError, uu___9) in
                         FStar_Errors.raise_error uu___8 r
                       else ());
                      (let uu___7 =
@@ -12120,7 +12123,7 @@ and (solve_c :
                           FStar_Compiler_Util.format2
                             "Lift between wp-effects (%s~>%s) should not have returned a non-trivial guard"
                             uu___7 uu___8 in
-                        (FStar_Errors.Fatal_UnexpectedEffect, uu___6) in
+                        (FStar_Errors_Codes.Fatal_UnexpectedEffect, uu___6) in
                       FStar_Errors.raise_error uu___5 r
                     else FStar_TypeChecker_Env.comp_to_comp_typ env c) in
          let uu___1 =
@@ -12170,7 +12173,7 @@ and (solve_c :
                       FStar_Compiler_Util.format2
                         "Got effects %s and %s, expected normalized effects"
                         uu___7 uu___8 in
-                    (FStar_Errors.Fatal_ExpectNormalizedEffect, uu___6) in
+                    (FStar_Errors_Codes.Fatal_ExpectNormalizedEffect, uu___6) in
                   FStar_Errors.raise_error uu___5
                     env.FStar_TypeChecker_Env.range in
             match uu___3 with
@@ -13191,7 +13194,7 @@ let (solve_universe_inequalities' :
                    let uu___5 = FStar_Syntax_Print.univ_to_string u2 in
                    FStar_Compiler_Util.format2
                      "Universe %s and %s are incompatible" uu___4 uu___5 in
-                 (FStar_Errors.Fatal_IncompatibleUniverse, uu___3) in
+                 (FStar_Errors_Codes.Fatal_IncompatibleUniverse, uu___3) in
                let uu___3 = FStar_TypeChecker_Env.get_range env in
                FStar_Errors.raise_error uu___2 uu___3) in
             let equiv v v' =
@@ -13332,7 +13335,7 @@ let (solve_universe_inequalities' :
                 else ());
                (let uu___5 = FStar_TypeChecker_Env.get_range env in
                 FStar_Errors.raise_error
-                  (FStar_Errors.Fatal_FailToSolveUniverseInEquality,
+                  (FStar_Errors_Codes.Fatal_FailToSolveUniverseInEquality,
                     "Failed to solve universe inequalities for inductives")
                   uu___5))
 let (solve_universe_inequalities :
@@ -13385,7 +13388,7 @@ let (try_solve_deferred_constraints :
                    | (d, s) ->
                        let msg = explain wl d s in
                        FStar_Errors.raise_error
-                         (FStar_Errors.Fatal_ErrorInSolveDeferredConstraints,
+                         (FStar_Errors_Codes.Fatal_ErrorInSolveDeferredConstraints,
                            msg) (p_loc d) in
                  (let uu___3 =
                     FStar_Compiler_Effect.op_Less_Bar
@@ -13785,7 +13788,7 @@ let (discharge_guard_no_smt :
       | FStar_Pervasives_Native.None ->
           let uu___1 = FStar_TypeChecker_Env.get_range env in
           FStar_Errors.raise_error
-            (FStar_Errors.Fatal_ExpectTrivialPreCondition,
+            (FStar_Errors_Codes.Fatal_ExpectTrivialPreCondition,
               "Expected a trivial pre-condition") uu___1
 let (discharge_guard :
   FStar_TypeChecker_Env.env ->
@@ -14307,7 +14310,7 @@ let (check_implicit_solution_and_discharge_guard :
                                   FStar_Compiler_Util.format5
                                     "Core checking failed for implicit %s (is_tac: %s) (reason: %s) (%s <: %s)"
                                     uu___7 uu___8 imp_reason uu___9 uu___10 in
-                                (FStar_Errors.Fatal_FailToResolveImplicitArgument,
+                                (FStar_Errors_Codes.Fatal_FailToResolveImplicitArgument,
                                   uu___6) in
                               FStar_Errors.raise_error uu___5 imp_range)) in
                 let uu___2 =
@@ -14838,7 +14841,7 @@ let (force_trivial_guard :
                FStar_Compiler_Util.format3
                  "Failed to resolve implicit argument %s of type %s introduced for %s"
                  uu___4 uu___5 imp.FStar_TypeChecker_Common.imp_reason in
-             (FStar_Errors.Fatal_FailToResolveImplicitArgument, uu___3) in
+             (FStar_Errors_Codes.Fatal_FailToResolveImplicitArgument, uu___3) in
            FStar_Errors.raise_error uu___2
              imp.FStar_TypeChecker_Common.imp_range)
 let (subtype_nosmt_force :
