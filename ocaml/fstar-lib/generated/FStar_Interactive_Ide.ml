@@ -1923,7 +1923,7 @@ let run_lookup :
                 run_lookup' st symbol context pos_opt requested_info symrange in
               match uu___ with
               | FStar_Pervasives.Inl err_msg ->
-                  ((FStar_Interactive_Ide_Types.QueryNOK,
+                  ((FStar_Interactive_Ide_Types.QueryOK,
                      (FStar_Compiler_Util.JsonStr err_msg)),
                     (FStar_Pervasives.Inl st))
               | FStar_Pervasives.Inr (kind, info) ->

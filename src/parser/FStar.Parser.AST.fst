@@ -995,5 +995,6 @@ let decl_syntax_is_delimited (d:decl) =
   | NewEffect (DefineEffect _)
   | LayeredEffect (DefineEffect _)
   | SubEffect {braced=true} -> true
+  | Tycon(_, b, _) -> b
   | _ -> false
 

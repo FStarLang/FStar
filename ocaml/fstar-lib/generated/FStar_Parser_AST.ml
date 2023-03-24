@@ -2438,4 +2438,5 @@ let (decl_syntax_is_delimited : decl -> Prims.bool) =
     | SubEffect
         { msource = uu___; mdest = uu___1; lift_op = uu___2; braced = true;_}
         -> true
+    | Tycon (uu___, b, uu___1) -> b
     | uu___ -> false

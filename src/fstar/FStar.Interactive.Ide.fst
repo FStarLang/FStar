@@ -733,7 +733,8 @@ let run_lookup' st symbol context pos_opt requested_info symrange =
 let run_lookup st symbol context pos_opt requested_info symrange =
   match run_lookup' st symbol context pos_opt requested_info symrange with
   | Inl err_msg ->
-    ((QueryNOK, JsonStr err_msg), Inl st)
+    // No result found, but don't fail the query
+    ((QueryOK, JsonStr err_msg), Inl st)
   | Inr (kind, info) ->
     ((QueryOK, JsonAssoc (("kind", JsonStr kind) :: info)), Inl st)
 
