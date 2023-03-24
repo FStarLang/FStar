@@ -1425,13 +1425,20 @@ let (compute_eterm_info :
                                                                     parameters))))
                                                   uu___2))) uu___2))
                          (fun uu___1 ->
-                            match uu___1 with
-                            | FStar_Tactics_Common.TacticFailure msg ->
-                                FStar_InteractiveHelpers_Base.mfail
-                                  (Prims.strcat
-                                     "compute_eterm_info: failure: '"
-                                     (Prims.strcat msg "'"))
-                            | e1 -> FStar_Tactics_Effect.raise e1))) uu___)
+                            (fun uu___1 ->
+                               match uu___1 with
+                               | FStar_Tactics_Common.TacticFailure msg ->
+                                   Obj.magic
+                                     (Obj.repr
+                                        (FStar_InteractiveHelpers_Base.mfail
+                                           (Prims.strcat
+                                              "compute_eterm_info: failure: '"
+                                              (Prims.strcat msg "'"))))
+                               | e1 ->
+                                   Obj.magic
+                                     (Obj.repr
+                                        (FStar_Tactics_Effect.raise e1)))
+                              uu___1))) uu___)
 let (has_refinement :
   FStar_InteractiveHelpers_ExploreTerm.type_info -> Prims.bool) =
   fun ty ->

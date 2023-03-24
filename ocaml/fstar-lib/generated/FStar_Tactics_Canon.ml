@@ -1028,10 +1028,8 @@ let (canon_point_entry : unit -> (unit, unit) FStar_Tactics_Effect.tac_repr)
                                                            "impossible: "
                                                            uu___4))))
                                            (fun uu___4 ->
-                                              (fun uu___4 ->
-                                                 Obj.magic
-                                                   (FStar_Tactics_Derived.fail
-                                                      uu___4)) uu___4)))
-                                 uu___2))) uu___2))) uu___1)
+                                              FStar_Tactics_Derived.fail
+                                                uu___4))) uu___2))) uu___2)))
+           uu___1)
 let (canon : unit -> (unit, unit) FStar_Tactics_Effect.tac_repr) =
   fun uu___ -> FStar_Tactics_Derived.pointwise canon_point_entry
