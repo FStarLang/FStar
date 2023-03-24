@@ -111,6 +111,9 @@ type parse_result =
     | Term of FStar_Parser_AST.term
     | ParseError of parse_error
 
+module BU = FStar_Compiler_Util
+module Range = FStar_Compiler_Range
+
 let parse fn =
   FStar_Parser_Util.warningHandler := (function
     | e -> Printf.printf "There was some warning (TODO)\n");
@@ -146,41 +149,86 @@ let parse fn =
       let parse_one_decl = MenhirLib.Convert.Simplified.traditional2revised FStar_Parser_Parse.oneDeclOrEOF in
       let contents_at =
         let lines = U.splitlines contents in
-        (* Find the raw content of the input from the line of the start_pos to the end_pos.
-           This is used by Interactive.Incremental to record exactly the raw content of the
-           fragment that was checked *) 
-        fun (start_pos:Lexing.position) (end_pos:Lexing.position) ->
-          (* discard all lines until the start line *)
-          let suffix = FStar_Compiler_Util.nth_tail (Z.of_int (if start_pos.pos_lnum > 0 then start_pos.pos_lnum - 1 else 0)) lines in
-          (* Take all the lines between the start and end lines *)
-          let text, rest = FStar_Compiler_Util.first_N (Z.of_int (end_pos.pos_lnum - start_pos.pos_lnum)) suffix in
-          let text = 
-          (* For the last line itself, take the prefix of it up to the character of the end_pos *)
-            match rest with
-            | last::_ ->
-              let col = end_pos.pos_cnum - end_pos.pos_bol in
-              if col > 0
-              then (
+        let split_line_at_col line col =
+            if col > 0
+            then (
                 (* Don't index directly into the string, since this is a UTF-8 string.
                    Convert first to a list of charaters, index into that, and then convert
                    back to a string *)
-                let chars = FStar_String.list_of_string last in
+                let chars = FStar_String.list_of_string line in
                 if col <= List.length chars
                 then (
-                  let chars, _ = FStar_Compiler_Util.first_N (Z.of_int col) chars in
-                  let last = FStar_String.string_of_list chars in
-                  text@[last]
+                  let prefix, suffix = FStar_Compiler_Util.first_N (Z.of_int col) chars in
+                  Some (FStar_String.string_of_list prefix, 
+                        FStar_String.string_of_list suffix)
                 )
                 else (
-                  text
+                  None
                 )
-              )
-              else text
+            )
+            else None
+        in
+        let line_from_col line pos =
+          match split_line_at_col line pos with
+          | None -> None
+          | Some (_, p) -> Some p
+        in
+        let line_to_col line pos =
+          match split_line_at_col line pos with
+          | None -> None
+          | Some (p, _) -> Some p
+        in
+        (* Find the raw content of the input from the line of the start_pos to the end_pos.
+           This is used by Interactive.Incremental to record exactly the raw content of the
+           fragment that was checked *) 
+        fun (range:Range.range) ->
+          (* discard all lines until the start line *)
+          let start_pos = Range.start_of_range range in
+          let end_pos = Range.end_of_range range in
+          let start_line = Z.to_int (Range.line_of_pos start_pos) in
+          let start_col = Z.to_int (Range.col_of_pos start_pos) in
+          let end_line = Z.to_int (Range.line_of_pos end_pos) in
+          let end_col = Z.to_int (Range.col_of_pos end_pos) in          
+          let suffix = 
+            FStar_Compiler_Util.nth_tail 
+              (Z.of_int (if start_line > 0 then start_line - 1 else 0))
+              lines
+          in
+          (* Take all the lines between the start and end lines *)
+          let text, rest =
+            FStar_Compiler_Util.first_N
+              (Z.of_int (end_line - start_line))
+              suffix
+          in
+          let text =
+            match text with
+            | first_line::rest -> (
+              match line_from_col first_line start_col with
+              | Some s -> s :: rest
+              | _ -> text
+            )
             | _ -> text
           in
-          let range = range_of_positions start_pos end_pos in
-            { range;
-              code = FStar_String.concat "\n" text }
+          let text = 
+          (* For the last line itself, take the prefix of it up to the character of the end_pos *)
+            match rest with
+            | last::_ -> (
+              match line_to_col last end_col with
+              | None -> text
+              | Some last ->
+                (* The last line is also the first line *)
+                match text with
+                | [] -> (
+                  match line_from_col last start_col with
+                  | None -> [last]
+                  | Some l -> [l]
+                )
+                | _ -> text @ [last]
+            )
+            | _ -> text
+          in
+          { range;
+            code = FStar_String.concat "\n" text }
       in
       let open FStar_Pervasives in
       let rec parse decls =
@@ -208,10 +256,25 @@ let parse fn =
                    Rollback the lexer one token for declarations whose syntax
                    requires such lookahead to complete a production.
           *)
-          if not (FStar_Parser_AST.decl_syntax_is_delimited d)
-          then rollback lexbuf;
-          let end_pos = current_pos lexbuf in
-          let raw_contents = contents_at start_pos end_pos in
+          let end_pos =
+            if not (FStar_Parser_AST.decl_syntax_is_delimited d)
+            then (
+              rollback lexbuf;
+              current_pos lexbuf
+            )
+            else (
+              current_pos lexbuf
+            )
+          in
+          let raw_contents = contents_at d.drange in
+          if FStar_Options.debug_any()
+          then (
+            FStar_Compiler_Util.print4 "Parsed decl@%s=%s\nRaw contents@%s=%s\n"
+              (FStar_Compiler_Range.string_of_def_range d.drange)
+              (FStar_Parser_AST.decl_to_string d)
+              (FStar_Compiler_Range.string_of_def_range raw_contents.range)
+              raw_contents.code
+          );
           parse ((d, raw_contents)::decls)
         | Inr err -> List.rev decls, Some err
       in
@@ -231,7 +294,9 @@ let parse fn =
     | Filename _
     | Toplevel _ -> begin
       let fileOrFragment =
-          MenhirLib.Convert.Simplified.traditional2revised FStar_Parser_Parse.inputFragment lexer
+        if FStar_Options.debug_any()
+        then parse_incremental_fragment()
+        else MenhirLib.Convert.Simplified.traditional2revised FStar_Parser_Parse.inputFragment lexer
       in
       let frags = match fileOrFragment with
           | FStar_Pervasives.Inl modul ->

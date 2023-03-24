@@ -630,7 +630,8 @@ and lidents_of_pattern p =
 and lidents_of_binder b =
   match b.b with
   | Annotated (_, t)
-  | TAnnotated(_, t) -> lidents_of_term t
+  | TAnnotated(_, t)
+  | NoName t -> lidents_of_term t
   | _ -> []
 
 let lidents_of_tycon_record (_, _, _, t) =
