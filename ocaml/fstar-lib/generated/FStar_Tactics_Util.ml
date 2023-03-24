@@ -496,3 +496,39 @@ let rec tryFind :
                                        (fun uu___1 -> true)))
                              else Obj.magic (Obj.repr (tryFind f tl))) uu___))))
         uu___1 uu___
+let rec fold_left2 :
+  'a 'b 'c .
+    ('a -> 'b -> 'c -> ('a, unit) FStar_Tactics_Effect.tac_repr) ->
+      'a ->
+        'b Prims.list ->
+          'c Prims.list -> ('a, unit) FStar_Tactics_Effect.tac_repr
+  =
+  fun uu___3 ->
+    fun uu___2 ->
+      fun uu___1 ->
+        fun uu___ ->
+          (fun f ->
+             fun x ->
+               fun l1 ->
+                 fun l2 ->
+                   match (l1, l2) with
+                   | ([], []) ->
+                       Obj.magic
+                         (Obj.repr
+                            (FStar_Tactics_Effect.lift_div_tac
+                               (fun uu___ -> x)))
+                   | (hd1::tl1, hd2::tl2) ->
+                       Obj.magic
+                         (Obj.repr
+                            (FStar_Tactics_Effect.tac_bind
+                               (Prims.mk_range "FStar.Tactics.Util.fst"
+                                  (Prims.of_int (117)) (Prims.of_int (17))
+                                  (Prims.of_int (117)) (Prims.of_int (30)))
+                               (Prims.mk_range "FStar.Tactics.Util.fst"
+                                  (Prims.of_int (117)) (Prims.of_int (4))
+                                  (Prims.of_int (117)) (Prims.of_int (38)))
+                               (Obj.magic (f x hd1 hd2))
+                               (fun uu___ ->
+                                  (fun uu___ ->
+                                     Obj.magic (fold_left2 f uu___ tl1 tl2))
+                                    uu___)))) uu___3 uu___2 uu___1 uu___
