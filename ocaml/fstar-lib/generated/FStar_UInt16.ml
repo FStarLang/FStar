@@ -8,7 +8,8 @@ type uint16 = M.t
 type t = M.t
 let n = Prims.of_int 16
 
-let uint_to_t x = M.of_string (Z.to_string x)
+module Z = FStar_BigInt
+let uint_to_t x = M.of_string (Z.string_of_big_int x)
 let __uint_to_t = uint_to_t
 (* This .ml.body file is concatenated to every .ml.prefix file in this
  * directory (ulib/ml/) to generate the OCaml realizations for machine
@@ -36,9 +37,9 @@ let mul           = M.mul
 let mul_underspec = M.mul
 let mul_mod       = M.mul
 
-(* Conversions to Zarith's int *)
-let to_int (x:t) : Z.t = Z.of_string (M.to_string x)
-let of_int (x:Z.t) : t = M.of_string (Z.to_string x)
+(* Conversions to mathematical integers *)
+let to_int (x:t) : Z.t = Z.big_int_of_string (M.to_string x)
+let of_int (x:Z.t) : t = M.of_string (Z.string_of_big_int x)
 
 (* Conversion to native ints; these are potentially unsafe and not part
  * of the interface: they are meant to be called only from OCaml code
