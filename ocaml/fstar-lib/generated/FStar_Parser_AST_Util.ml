@@ -897,6 +897,7 @@ and (lidents_of_binder :
     match b.FStar_Parser_AST.b with
     | FStar_Parser_AST.Annotated (uu___, t) -> lidents_of_term t
     | FStar_Parser_AST.TAnnotated (uu___, t) -> lidents_of_term t
+    | FStar_Parser_AST.NoName t -> lidents_of_term t
     | uu___ -> []
 let lidents_of_tycon_record :
   'uuuuu 'uuuuu1 'uuuuu2 .
