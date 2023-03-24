@@ -558,7 +558,7 @@ let maybe_infer_intro_exists
     let (| t, t_typing |) = check_vprop f g t in
     let goal_vprop, insts = prepare_instantiations [] t witnesses in
     let goal_vprop, pure_conjuncts = remove_pure_conjuncts goal_vprop in      
-    let solutions = Pulse.Checker.Inference.try_inst_uvs_in_goal pre goal_vprop in
+    let solutions = Pulse.Checker.Inference.try_inst_uvs_in_goal f g pre goal_vprop in
     let maybe_solve_pure solutions p =
       let p = Pulse.Checker.Inference.apply_solution solutions p in
       match p with
@@ -568,7 +568,7 @@ let maybe_infer_intro_exists
             let open Pulse.Checker.Inference in
             if contains_uvar l
             ||  contains_uvar r
-            then let sols = try_unify l r in
+            then let sols = try_unify f g l r in
                  sols@solutions
             else solutions
           | _ -> solutions
@@ -742,7 +742,7 @@ let check_stapp
     | C_Tot (Tm_Arrow _  (Some implicit) _) -> 
       let C_Tot ty = c in
       //Some implicits to follow
-      let t = Pulse.Checker.Inference.infer t ty pre in
+      let t = Pulse.Checker.Inference.infer f g t ty pre in
       check' false f g t pre pre_typing post_hint
 
     | _ ->

@@ -7,8 +7,10 @@ open Pulse.Syntax
 open Pulse.Elaborate.Pure
 open Pulse.Typing
 open Pulse.Checker.Framing
+open Pulse.Readback
 module P = Pulse.Syntax.Printer
 
+module R  = FStar.Reflection
 module RT = Refl.Typing
 
 let rec gen_uvars (t_head:term) : T.Tac (list term & comp) =
@@ -40,7 +42,12 @@ let rec check_valid_solution (t1 t2:term) (uv_sols:list (term & term))
          else T.fail "check_valid_solution failed"
     else (t1', t2')::(check_valid_solution t1 t2 tl)
 
-let rec match_typ (t1 t2:term) (uv_sols:list (term & term))
+//
+// t1 and t2 are atomic vprops
+//
+let rec match_typ
+  (f:R.env) (g:env)
+  (t1 t2:term) (uv_sols:list (term & term))
   : T.Tac (list (term & term)) =
 
   match t1, t2 with
@@ -48,16 +55,59 @@ let rec match_typ (t1 t2:term) (uv_sols:list (term & term))
     check_valid_solution t1 t2 uv_sols
   | _, Tm_UVar _ -> T.fail "match_typ: t2 is a uvar"
 
-  | Tm_PureApp head1 arg_qual1 arg1, Tm_PureApp head2 arg_qual2 arg2 ->
-    if arg_qual1 = arg_qual2
-    then let uv_sols = match_typ head1 head2 uv_sols in
-         match_typ arg1 arg2 uv_sols
+  | Tm_Pure t1, Tm_Pure t2 ->
+    match_typ f g t1 t2 uv_sols
+
+  | Tm_ExistsSL u1 t1 body1 _, Tm_ExistsSL u2 t2 body2 _
+  | Tm_ForallSL u1 t1 body1, Tm_ForallSL u2 t2 body2 ->
+    if u1 = u2
+    then let uv_sols = match_typ f g t1 t2 uv_sols in
+         match_typ f g body1 body2 uv_sols
     else uv_sols
 
-  | Tm_Pure t1, Tm_Pure t2 ->
-    match_typ t1 t2 uv_sols
-    
-  | _, _ -> uv_sols
+  | _, _ ->
+    let try_head_match t1 t2 =
+      let hd1, args1 = leftmost_head_and_args t1 in
+      let hd2, args2 = leftmost_head_and_args t2 in
+      if eq_tm hd1 hd2 &&
+         L.length args1 = L.length args2 &&
+         L.fold_left2 (fun b (q1, _) (q2, _) -> q1 = q2) true args1 args2
+      then Some (T.fold_left2 (fun uv_sols (_, arg1) (_, arg2) ->
+                   match_typ f g arg1 arg2 uv_sols) uv_sols args1 args2)
+      else None in
+
+    let uv_sols_opt = try_head_match t1 t2 in
+    if None? uv_sols_opt
+    then
+      let fg = extend_env_l f g in
+      let s =
+        T.maybe_relate_after_unfolding fg (elab_term t1) (elab_term t2) in
+      match s with
+      | None
+      | Some T.Neither -> uv_sols
+      | _ ->
+        let Some s = s in
+        let try_unfold_head t : T.Tac (option term) =
+          let topt = T.maybe_unfold_head fg (elab_term t) in
+          match topt with
+          | None -> None
+          | Some t ->
+            match readback_ty t with
+            | None -> None
+            | Some t -> Some t in
+        let t1opt : option term =
+          if s = T.Left || s = T.Both
+          then try_unfold_head t1
+          else Some t1 in
+        let t2opt =
+          if s = T.Right || s = T.Both
+          then try_unfold_head t2
+          else Some t2 in
+        match t1opt, t2opt with
+        | None, _
+        | _, None -> uv_sols
+        | Some t1, Some t2 -> match_typ f g t1 t2 uv_sols
+    else Some?.v uv_sols_opt
 
 let rec atomic_vprop_has_uvar (t:term) : bool =
   match t with
@@ -79,7 +129,7 @@ let rec atomic_vprops_may_match (t1:term) (t2:term) : bool =
     atomic_vprops_may_match x y
   | _, _ -> eq_tm t1 t2
 
-let infer_one_atomic_vprop (t:term) (ctxt:list term) (uv_sols:list (term & term))
+let infer_one_atomic_vprop (f:R.env) (g:env) (t:term) (ctxt:list term) (uv_sols:list (term & term))
   : T.Tac (list (term & term)) =
 
   if atomic_vprop_has_uvar t
@@ -94,7 +144,7 @@ let infer_one_atomic_vprop (t:term) (ctxt:list term) (uv_sols:list (term & term)
       //                    (P.term_to_string t)
       //                    (P.term_to_string (List.Tot.hd matching_ctxt))
       //                    (List.Tot.length uv_sols)) in 
-      let uv_sols = match_typ t (List.Tot.hd matching_ctxt) uv_sols in
+      let uv_sols = match_typ f g t (List.Tot.hd matching_ctxt) uv_sols in
       // T.print (FStar.Printf.sprintf "post matching, uv_sols has %d solutions\n"
       //            (List.Tot.length uv_sols));
       uv_sols
@@ -115,8 +165,7 @@ let rec rebuild_head (head:term) (uvs:list term) (uv_sols:list (term & term))
       let app_node = Tm_PureApp head (Some Implicit) t2 in
       rebuild_head app_node tl uv_sols
 
-let try_inst_uvs_in_goal (ctxt:term)
-                         (goal:vprop)
+let try_inst_uvs_in_goal (f:R.env) (g:env) (ctxt:term) (goal:vprop)
   : T.Tac (list (term & term))
   = let uv_sols = [] in
     let goal_list = vprop_as_list goal in
@@ -124,7 +173,7 @@ let try_inst_uvs_in_goal (ctxt:term)
     let uv_sols =
       T.fold_left
         (fun uv_sols goal_vprop ->
-          infer_one_atomic_vprop goal_vprop ctxt_list uv_sols)
+          infer_one_atomic_vprop f g goal_vprop ctxt_list uv_sols)
         uv_sols
         goal_list
     in
@@ -140,7 +189,7 @@ let print_solutions (l:list (term * term))
                        (P.term_to_string t))
         l)
 
-let infer
+let infer f g
   (head:term)
   (t_head:term)
   (ctxt_pre:term)
@@ -166,7 +215,7 @@ let infer
                (P.term_list_to_string "\n" (vprop_as_list ctxt_pre))
                (P.term_list_to_string "\n" (vprop_as_list pre)));
 
-    let uv_sols = try_inst_uvs_in_goal ctxt_pre pre in
+    let uv_sols = try_inst_uvs_in_goal f g ctxt_pre pre in
     T.print (Printf.sprintf "Got solutions: {\n%s\}"  (print_solutions uv_sols));
     let head = rebuild_head head uvs uv_sols in
     T.print (Printf.sprintf "Rebuilt head= %s" (P.st_term_to_string head));
@@ -314,4 +363,4 @@ and contains_uvar_comp  (c:comp)
       (contains_uvar t)
     | _ -> true
 
-let try_unify (l r:term) = match_typ l r []
+let try_unify f g (l r:term) = match_typ f g l r []

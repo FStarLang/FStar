@@ -989,3 +989,10 @@ let rec eq_st_term (t1 t2:st_term)
       eq_st_term t1 t2
       
     | _ -> false
+
+let rec leftmost_head_and_args (t:term) : term & list (option qualifier & term) =
+  match t with
+  | Tm_PureApp hd q arg ->
+    let hd, args = leftmost_head_and_args hd in
+    hd, args@[q, arg]
+  | _ -> t, []
