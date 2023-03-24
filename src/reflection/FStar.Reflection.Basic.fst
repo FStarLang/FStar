@@ -154,7 +154,7 @@ let inspect_const (c:sconst) : vconst =
     | FStar.Const.Const_bool false -> C_False
     | FStar.Const.Const_string (s, _) -> C_String s
     | FStar.Const.Const_range r -> C_Range r
-    | FStar.Const.Const_reify -> C_Reify
+    | FStar.Const.Const_reify _ -> C_Reify
     | FStar.Const.Const_reflect l -> C_Reflect (Ident.path_of_lid l)
     | _ -> failwith (BU.format1 "unknown constant: %s" (Print.const_to_string c))
 
@@ -361,7 +361,7 @@ let pack_const (c:vconst) : sconst =
     | C_False        -> C.Const_bool false
     | C_String s     -> C.Const_string (s, Range.dummyRange)
     | C_Range  r     -> C.Const_range r
-    | C_Reify        -> C.Const_reify
+    | C_Reify        -> C.Const_reify None
     | C_Reflect ns   -> C.Const_reflect (Ident.lid_of_path ns Range.dummyRange)
 
 // TODO: pass in range?

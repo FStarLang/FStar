@@ -1,4 +1,4 @@
-.PHONY: all package clean boot 1 2 3 hints bench output install uninstall package_unknown_platform
+.PHONY: all package clean boot 1 2 3 hints bench output install uninstall package
 
 include .common.mk
 
@@ -83,9 +83,6 @@ uninstall:
 package: all
 	$(Q)+$(MAKE) -C src/ocaml-output package
 
-package_unknown_platform: all
-	$(Q)+$(MAKE) -C src/ocaml-output package_unknown_platform
-
 .PHONY: clean-intermediate
 
 # Removes everything created by `make all`. MUST NOT be used when
@@ -135,10 +132,10 @@ ci-uregressions-ulong:
 1: dune-fstar
 
 2:
+	+$(MAKE) -C src/ocaml-output generated-files
 	+$(MAKE) -C src ocaml
 	+$(MAKE) dune-fstar
 
 3:
-	+$(MAKE) dune-fstar
-	+$(MAKE) -C src ocaml
-	+$(MAKE) dune-fstar
+	+$(MAKE) 1
+	+$(MAKE) 2

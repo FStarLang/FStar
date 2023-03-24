@@ -100,6 +100,7 @@ let if_then_else
     (fun s -> (b2t p ==> req_then s) /\ ((~ (b2t p)) ==> req_else s))
     (fun s0 x s1 -> (b2t p ==> ens_then s0 x s1) /\ ((~ (b2t p)) ==> ens_else s0 x s1))
 
+[@@ primitive_extraction]
 total
 reflectable
 effect {

@@ -888,10 +888,6 @@ let quals_of_sigelt (x: sigelt) = x.sigquals
 
 let range_of_sigelt (x: sigelt) = x.sigrng
 
-let range_of_lbname = function
-  | Inl x -> range_of_bv  x
-  | Inr fv -> range_of_lid fv.fv_name.v
-
 let range_of_arg (hd, _) = hd.pos
 
 let range_of_args args r =
@@ -1723,8 +1719,8 @@ let action_as_lb eff_lid a pos =
     sigopts = None; }
 
 (* Some reification utilities *)
-let mk_reify t =
-    let reify_ = mk (Tm_constant(FStar.Const.Const_reify)) t.pos in
+let mk_reify t (lopt:option Ident.lident) =
+    let reify_ = mk (Tm_constant (FStar.Const.Const_reify lopt)) t.pos in
     mk (Tm_app(reify_, [as_arg t])) t.pos
 
 let mk_reflect t =

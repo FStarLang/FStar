@@ -3,6 +3,7 @@ open FStar_Errors
 open FStar_Syntax_Syntax
 open Lexing
 open FStar_Sedlexing
+module Codes = FStar_Errors_Codes
 
 type filename = string
 
@@ -97,7 +98,7 @@ type parse_frag =
 type parse_result =
     | ASTFragment of (FStar_Parser_AST.inputFragment * (string * FStar_Compiler_Range.range) list)
     | Term of FStar_Parser_AST.term
-    | ParseError of (FStar_Errors.raw_error * string * FStar_Compiler_Range.range)
+    | ParseError of (Codes.raw_error * string * FStar_Compiler_Range.range)
 
 let parse fn =
   FStar_Parser_Util.warningHandler := (function

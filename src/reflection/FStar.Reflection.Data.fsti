@@ -132,6 +132,7 @@ type sigelt_view =
 (* This is a mirror of FStar.Syntax.Syntax.qualifier *)
 type qualifier =
   | Assumption
+  | InternalAssumption
   | New
   | Private
   | Unfold_for_unification_and_vcgen

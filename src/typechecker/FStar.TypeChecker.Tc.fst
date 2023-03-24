@@ -736,7 +736,6 @@ let tc_decl' env0 se: list sigelt * list sigelt * Env.env =
         if do_two_phases env then run_phase1 (fun _ ->
           let ne =
             TcEff.tc_eff_decl ({ env with phase1 = true; lax = true }) ne se.sigquals se.sigattrs
-            |> fst
             |> (fun ne -> { se with sigel = Sig_new_effect ne })
             |> N.elim_uvars env |> U.eff_decl_of_new_effect in
           if Env.debug env <| Options.Other "TwoPhases"
@@ -744,9 +743,9 @@ let tc_decl' env0 se: list sigelt * list sigelt * Env.env =
                  (Print.sigelt_to_string ({ se with sigel = Sig_new_effect ne }));
           ne)
         else ne in
-      let ne, ses = TcEff.tc_eff_decl env ne se.sigquals se.sigattrs in
+      let ne = TcEff.tc_eff_decl env ne se.sigquals se.sigattrs in
       let se = { se with sigel = Sig_new_effect(ne) } in
-      [se], ses, env0
+      [se], [], env0
 
   | Sig_sub_effect(sub) ->  //no need to two-phase here, since lifts are already lax checked
     let sub = TcEff.tc_lift env sub r in

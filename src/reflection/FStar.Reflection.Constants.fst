@@ -238,6 +238,7 @@ let ref_Unk            = fstar_refl_data_const "Unk"
 
 (* qualifiers *)
 let ref_qual_Assumption                       = fstar_refl_data_const "Assumption"
+let ref_qual_InternalAssumption               = fstar_refl_data_const "InternalAssumption"
 let ref_qual_New                              = fstar_refl_data_const "New"
 let ref_qual_Private                          = fstar_refl_data_const "Private"
 let ref_qual_Unfold_for_unification_and_vcgen = fstar_refl_data_const "Unfold_for_unification_and_vcgen"

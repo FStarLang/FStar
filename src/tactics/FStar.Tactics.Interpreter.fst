@@ -97,7 +97,7 @@ let unembed_tactic_0 (eb:embedding 'b) (embedded_tac_b:term) (ncb:norm_cb) : tac
     let rng = embedded_tac_b.pos in
 
     (* First, reify it from Tac a into __tac a *)
-    let embedded_tac_b = U.mk_reify embedded_tac_b in
+    let embedded_tac_b = U.mk_reify embedded_tac_b (Some FStar.Parser.Const.effect_TAC_lid) in
 
     let tm = S.mk_Tm_app embedded_tac_b
                          [S.as_arg (embed E.e_proofstate rng proof_state ncb)]
@@ -440,6 +440,10 @@ let () =
       mk_tac_step_2 0 "uvar_env"
         uvar_env RE.e_env (e_option RE.e_term) RE.e_term
         uvar_env NRE.e_env (NBET.e_option NRE.e_term) NRE.e_term;
+
+      mk_tac_step_2 0 "ghost_uvar_env"
+        ghost_uvar_env RE.e_env  RE.e_term  RE.e_term
+        ghost_uvar_env NRE.e_env NRE.e_term NRE.e_term;
 
       mk_tac_step_1 0 "fresh_universe_uvar"
         fresh_universe_uvar e_unit RE.e_term
