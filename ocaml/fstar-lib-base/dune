@@ -1,7 +1,7 @@
 (include_subdirs unqualified)
 (library
- (name fstar_lib)
- (public_name fstar.lib)
+ (name fstar_lib_base)
+ (public_name fstar.lib.base)
  (libraries
     batteries
 ;    zarith
@@ -14,7 +14,7 @@
     process
     sedlex
  )
- (modules_without_implementation FStar_BigInt)
+ (virtual_modules FStar_BigInt)
  (modes native)
  (wrapped false)
  (preprocess (pps ppx_deriving.show ppx_deriving_yojson sedlex.ppx))

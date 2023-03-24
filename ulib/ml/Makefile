@@ -14,7 +14,7 @@ INTFILES_RAW=\
 FSTAR_HOME ?= $(realpath ../..)
 DUNE_SNAPSHOT ?= $(FSTAR_HOME)/ocaml
 
-TARGET_DIR=$(DUNE_SNAPSHOT)/fstar-lib/generated/
+TARGET_DIR=$(DUNE_SNAPSHOT)/fstar-lib-base/generated/
 INTFILES=$(addprefix $(TARGET_DIR),$(INTFILES_RAW))
 
 intfiles: $(INTFILES)

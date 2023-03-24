@@ -16,7 +16,7 @@ FSTAR_HOME = ../..
 DUNE_SNAPSHOT ?= $(realpath $(FSTAR_HOME)/ocaml)
 export DUNE_SNAPSHOT
 
-FStar_Parser_Parse_ml=$(DUNE_SNAPSHOT)/fstar-lib/generated/FStar_Parser_Parse.ml
+FStar_Parser_Parse_ml=$(DUNE_SNAPSHOT)/fstar-lib-base/generated/FStar_Parser_Parse.ml
 
 # The string "Madoko" if madoko is installed, something else otherwise.
 MADOKO = $(shell madoko --version 2>/dev/null | cut -c -6)

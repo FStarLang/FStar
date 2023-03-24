@@ -40,8 +40,8 @@ dune: dune-fstar
 # can be rebuilt with an existing fstar.exe
 clean-dune-snapshot: clean-intermediate
 	cd $(DUNE_SNAPSHOT) && { dune clean || true ; }
-	rm -rf $(DUNE_SNAPSHOT)/fstar-lib/generated/*
-	rm -rf $(DUNE_SNAPSHOT)/fstar-lib/dynamic/*
+	rm -rf $(DUNE_SNAPSHOT)/fstar-lib-base/generated/*
+	rm -rf $(DUNE_SNAPSHOT)/fstar-lib-base/dynamic/*
 
 .PHONY: dune-extract-all
 

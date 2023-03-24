@@ -13,7 +13,7 @@ buildDunePackage {
 
   prePatch = ''
     cd ocaml
-    patchShebangs fstar-lib/make_fstar_version.sh
+    patchShebangs fstar-lib-base/make_fstar_version.sh
   '';
 
   nativeBuildInputs = [ installShellFiles makeWrapper removeReferencesTo ];
