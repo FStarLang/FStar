@@ -2405,6 +2405,24 @@ let refl_instantiate_implicits (g:env) (e:term) : tac (option (term & typ)) =
     (e, t))
   else ret None
 
+let refl_maybe_relate_after_unfolding (g:env) (t0 t1:typ)
+  : tac (option Core.side) =
+
+  if no_uvars_in_g g &&
+     no_uvars_in_term t0 &&
+     no_uvars_in_term t1
+  then refl_typing_builtin_wrapper (fun _ ->
+         dbg_refl g (fun _ ->
+           BU.format2 "refl_maybe_relate_after_unfolding: %s and %s {\n"
+             (Print.term_to_string t0)
+             (Print.term_to_string t1));
+         let s = Core.maybe_relate_after_unfolding g t0 t1 in
+         dbg_refl g (fun _ ->
+           BU.format1 "} returning side: %s\n"
+             (Core.side_to_string s));
+         s)
+  else ret None
+
 (**** Creating proper environments and proofstates ****)
 
 let tac_env (env:Env.env) : Env.env =

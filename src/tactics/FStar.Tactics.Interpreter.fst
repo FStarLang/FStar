@@ -559,6 +559,10 @@ let () =
         refl_instantiate_implicits RE.e_env RE.e_term (e_option (e_tuple2 RE.e_term RE.e_term))
         refl_instantiate_implicits NRE.e_env NRE.e_term (NBET.e_option (NBET.e_tuple2 NRE.e_term NRE.e_term));
 
+      mk_tac_step_3 0 "maybe_relate_after_unfolding"
+        refl_maybe_relate_after_unfolding RE.e_env RE.e_term RE.e_term (e_option E.e_unfold_side)
+        refl_maybe_relate_after_unfolding NRE.e_env NRE.e_term NRE.e_term (NBET.e_option E.e_unfold_side_nbe);
+
     ]
 
 let unembed_tactic_1_alt (ea:embedding 'a) (er:embedding 'r) (f:term) (ncb:norm_cb) : option ('a -> tac 'r) =

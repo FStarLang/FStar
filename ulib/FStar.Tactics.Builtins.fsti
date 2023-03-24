@@ -466,3 +466,6 @@ val check_prop_validity (g:env) (t:term)
 
 val instantiate_implicits (g:env) (t:term)
   : Tac (option (term & typ))
+
+val maybe_relate_after_unfolding (g:env) (t1 t2:term)
+  : Tac (option unfold_side)

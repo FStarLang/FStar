@@ -29,12 +29,13 @@ open FStar.Reflection.Data
 open FStar.Tactics.Types
 open FStar.Tactics.Monad
 
-module BU    = FStar.Compiler.Util
-module EMB   = FStar.Syntax.Embeddings
-module O     = FStar.Options
-module Range = FStar.Compiler.Range
-module Z     = FStar.BigInt
+module BU     = FStar.Compiler.Util
+module EMB    = FStar.Syntax.Embeddings
+module O      = FStar.Options
+module Range  = FStar.Compiler.Range
+module Z      = FStar.BigInt
 module TcComm = FStar.TypeChecker.Common
+module Core   = FStar.TypeChecker.Core
 
 (* Internal utilities *)
 val goal_typedness_deps : goal -> list ctx_uvar
@@ -119,10 +120,11 @@ val with_compat_pre_core   : Z.t -> tac 'a -> tac 'a
 
 (***** Callbacks for the meta DSL framework *****)
 
-val refl_check_subtyping       : env -> typ -> typ -> tac (option unit)
-val refl_check_equiv           : env -> typ -> typ -> tac (option unit)
-val refl_core_check_term       : env -> term -> tac (option typ)
-val refl_tc_term               : env -> term -> tac (option (term & typ))
-val refl_universe_of           : env -> term -> tac (option universe)
-val refl_check_prop_validity   : env -> term -> tac (option unit)
-val refl_instantiate_implicits : env -> term -> tac (option (term & typ))
+val refl_check_subtyping              : env -> typ -> typ -> tac (option unit)
+val refl_check_equiv                  : env -> typ -> typ -> tac (option unit)
+val refl_core_check_term              : env -> term -> tac (option typ)
+val refl_tc_term                      : env -> term -> tac (option (term & typ))
+val refl_universe_of                  : env -> term -> tac (option universe)
+val refl_check_prop_validity          : env -> term -> tac (option unit)
+val refl_instantiate_implicits        : env -> term -> tac (option (term & typ))
+val refl_maybe_relate_after_unfolding : env -> term -> term -> tac (option Core.side)
