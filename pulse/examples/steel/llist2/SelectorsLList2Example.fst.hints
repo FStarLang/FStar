@@ -1,0 +1,59 @@
+[
+  "β)Γ+_λυQΚ\u0002ω°0K",
+  [
+    [
+      "SelectorsLList2Example.mk_cell",
+      1,
+      2,
+      1,
+      [
+        "@query", "equation_SelectorsLList2Example.data",
+        "equation_SelectorsLList2Example.next"
+      ],
+      0,
+      "6b2436fdbda0fdd516e02fbb9894226c"
+    ],
+    [
+      "SelectorsLList2Example.is_null",
+      1,
+      2,
+      1,
+      [ "@query", "equation_SelectorsLList2Example.null_llist" ],
+      0,
+      "a1949170e4d16469fabc2f3392c50deb"
+    ],
+    [
+      "SelectorsLList2Example.is_nil",
+      1,
+      2,
+      1,
+      [ "@query", "equation_SelectorsLList2Example.null_llist" ],
+      0,
+      "eaec20cca33bce2d15bd3bdb13a2463f"
+    ],
+    [
+      "SelectorsLList2Example.intro_llist_cons",
+      1,
+      2,
+      1,
+      [
+        "@query", "equation_SelectorsLList2Example.data",
+        "equation_SelectorsLList2Example.next"
+      ],
+      0,
+      "8730fefb6e87436972b31d4d6394f6ca"
+    ],
+    [
+      "SelectorsLList2Example.tail",
+      1,
+      2,
+      1,
+      [
+        "@query", "equation_SelectorsLList2Example.mk_cell",
+        "equation_SelectorsLList2Example.null_llist"
+      ],
+      0,
+      "cd66ad7038338d7bfda39428c494f9ca"
+    ]
+  ]
+]
