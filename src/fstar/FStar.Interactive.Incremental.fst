@@ -287,6 +287,7 @@ let run_full_buffer (st:repl_state)
     let qs = 
       match parse_result with
       | IncrementalFragment (decls, _, err_opt) -> (
+        BU.print1 "Parsed %s declarations\n" (string_of_int (List.length decls));
         match request_type, decls with
         | ReloadDeps, d::_ ->
           run_qst (let! queries = reload_deps (!repl_stack) in

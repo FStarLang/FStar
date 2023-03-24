@@ -10,6 +10,7 @@ clean: $(addsuffix .clean, $(ALL_TEST_DIRS))
 
 %.all: %
 	+$(MAKE) -C $^ all
+	python test-incremental.py
 
 %.clean: %
 	+$(MAKE) -C $^ clean
