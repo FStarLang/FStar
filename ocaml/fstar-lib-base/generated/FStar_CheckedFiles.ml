@@ -238,8 +238,12 @@ let (load_checked_file : Prims.string -> Prims.string -> cache_t) =
                 if x.version <> cache_version_number
                 then
                   let msg =
-                    FStar_Compiler_Util.format1
-                      "checked file %s has incorrect version" checked_fn in
+                    let uu___3 =
+                      FStar_Compiler_Util.string_of_int cache_version_number in
+                    let uu___4 = FStar_Compiler_Util.string_of_int x.version in
+                    FStar_Compiler_Util.format3
+                      "checked file %s has incorrect version: expected %s, got %s"
+                      checked_fn uu___3 uu___4 in
                   add_and_return ((Invalid msg), (FStar_Pervasives.Inl msg))
                 else
                   (let current_digest = FStar_Compiler_Util.digest_of_file fn in

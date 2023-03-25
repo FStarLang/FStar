@@ -215,7 +215,7 @@ let load_checked_file (fn:string) (checked_fn:string) :cache_t =
            add_and_return (Invalid msg, Inl msg)
          | Some (x) ->
            if x.version <> cache_version_number
-           then let msg = BU.format1 "checked file %s has incorrect version" checked_fn in
+           then let msg = BU.format3 "checked file %s has incorrect version: expected %s, got %s" checked_fn (BU.string_of_int cache_version_number) (BU.string_of_int x.version) in
                 add_and_return (Invalid msg, Inl msg)
            else let current_digest = BU.digest_of_file fn in
                 if x.digest <> current_digest
