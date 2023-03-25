@@ -9,6 +9,6 @@
  (modes native)
  (preprocess (pps ppx_deriving.show ppx_deriving_yojson sedlex.ppx))
  (enabled_if
-   (= %{profile} num)
+   (<> %{profile} zarith)
  )
 )

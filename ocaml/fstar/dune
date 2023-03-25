@@ -8,15 +8,15 @@
  (modules fstar_zarith)
  (modes (native exe))
  (enabled_if
-   (<> %{profile} num)
+   (= %{profile} zarith)
  )
 )
 
 (rule
   (target fstar_test.exe)
-  (deps fstar_zarith.exe)
+  (deps fstar_num.exe)
   (action
-    (copy fstar_zarith.exe fstar_test.exe)
+    (copy fstar_num.exe fstar_test.exe)
   )
   (enabled_if
     (= %{profile} test)
@@ -32,7 +32,7 @@
  (modules fstar_num)
  (modes (native exe))
  (enabled_if
-   (= %{profile} num)
+   (<> %{profile} zarith)
  )
 )
 
