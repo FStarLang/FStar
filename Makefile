@@ -118,8 +118,9 @@ output:
 
 .PHONY: ci-utest-prelude
 
+ci-utest-prelude: FSTAR_BUILD_PROFILE=test
 ci-utest-prelude:
-	$(Q)+$(MAKE) dune FSTAR_BUILD_PROFILE=test
+	$(Q)+$(MAKE) dune
 	$(Q)+$(MAKE) dune-bootstrap
 	$(Q)+$(MAKE) -C src ocaml-unit-tests
 	$(Q)+$(MAKE) -C ulib ulib-in-fsharp    #build ulibfs
