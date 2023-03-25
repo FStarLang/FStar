@@ -1,2 +1,0 @@
-{"query-id":"1","query":"vfs-add","args":{"filename":null,"contents":"module FullBuffer\nlet f x = match x with | Some x -> true | None -> false\nlet test y = if Some? y then f y else true\n"}}
-{"query-id":"2","query":"full-buffer","args":{"kind":"full","code":"module FullBuffer\nlet f x = match x with | Some x -> true | None -> false\nlet test y = if Some? y then f y else true\nlet test2 : bool = 0\n","line":1,"column":0}}
