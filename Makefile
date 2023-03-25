@@ -19,7 +19,10 @@ else
 endif
 
 .PHONY: dune dune-fstar verify-ulib
-FSTAR_BUILD_PROFILE ?= release
+
+FSTAR_BUILD_PROFILE ?= zarith
+export FSTAR_BUILD_PROFILE
+
 dune-fstar:
 	$(Q)cp version.txt $(DUNE_SNAPSHOT)/
 	@# Call Dune to build the snapshot.

@@ -1,10 +1,42 @@
 (include_subdirs unqualified)
 (executable
- (name main)
- (public_name fstar.exe)
+ (name fstar_zarith)
  (libraries
     fstar_lib
  )
  (link_flags "-linkall")
+ (modules fstar_zarith)
  (modes (native exe))
+ (enabled_if
+   (<> %{profile} num)
+ )
+)
+
+(rule
+  (target fstar_test.exe)
+  (deps fstar_zarith.exe)
+  (action
+    (copy fstar_zarith.exe fstar_test.exe)
+  )
+  (enabled_if
+    (= %{profile} test)
+  )
+)
+
+(executable
+ (name fstar_num)
+ (libraries
+    fstar_lib_num
+ )
+ (link_flags "-linkall")
+ (modules fstar_num)
+ (modes (native exe))
+ (enabled_if
+   (= %{profile} num)
+ )
+)
+
+(install
+  (section bin)
+  (files (fstar_%{profile}.exe as fstar.exe))
 )

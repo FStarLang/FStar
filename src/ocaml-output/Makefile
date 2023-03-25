@@ -127,8 +127,6 @@ else
   FSTAR_PREFIX=$(PREFIX)
 endif
 
-FSTAR_BUILD_PROFILE ?= release
-
 install:
 	@# Rebuild everything
 	+$(MAKE) -C $(FSTAR_HOME)
