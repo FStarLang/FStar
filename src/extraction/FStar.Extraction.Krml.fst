@@ -42,15 +42,21 @@ module FC = FStar.Const
 - v30: Added EBufDiff
 *)
 
+#set-options "--print_full_names"
+
+(* See comment in FStar.BigInt.krmlint *)
+type krmlint = FStar.BigInt.krmlint
+let to_krmlint = FStar.BigInt.krmlint_of_int_fs
+
 (* COPY-PASTED ****************************************************************)
 
 type decl =
-  | DGlobal of list flag * lident * int * typ * expr
-  | DFunction of option cc * list flag * int * typ * lident * list binder * expr
-  | DTypeAlias of lident * list flag * int * typ
-  | DTypeFlat of lident * list flag * int * fields_t
+  | DGlobal of list flag * lident * krmlint * typ * expr
+  | DFunction of option cc * list flag * krmlint * typ * lident * list binder * expr
+  | DTypeAlias of lident * list flag * krmlint * typ
+  | DTypeFlat of lident * list flag * krmlint * fields_t
   | DUnusedRetainedForBackwardsCompat of option cc * list flag * lident * typ
-  | DTypeVariant of lident * list flag * int * branches_t
+  | DTypeVariant of lident * list flag * krmlint * branches_t
   | DTypeAbstractStruct of lident
   | DExternal of option cc * list flag * lident * typ * list ident
 
@@ -164,7 +170,7 @@ and width =
 and constant = width * string
 
 (* a De Bruijn index *)
-and var = int
+and var = krmlint
 
 and binder = {
   name: ident;
@@ -186,13 +192,12 @@ and typ =
   | TBool
   | TAny
   | TArrow of typ * typ
-  | TBound of int
+  | TBound of krmlint
   | TApp of lident * list typ
   | TTuple of list typ
   | TConstBuf of typ
 
-
-let current_version: version = 28
+let current_version: version = FStar.BigInt.krmlint_of_int_fs 28
 
 (* Utilities *****************************************************************)
 
@@ -380,7 +385,7 @@ let rec translate_type env t: typ =
   | MLTY_Top ->
       TAny
   | MLTY_Var name ->
-      TBound (find_t env name)
+      TBound (to_krmlint (find_t env name))
   | MLTY_Fun (t1, _, t2) ->
       TArrow (translate_type env t1, translate_type env t2)
   | MLTY_Erased ->
@@ -492,7 +497,7 @@ and translate_expr env e: expr =
       translate_constant c
 
   | MLE_Var name ->
-      EBound (find env name)
+      EBound (to_krmlint (find env name))
 
   // Some of these may not appear beneath an [EApp] node because of partial applications
   | MLE_Name ([ "FStar"; m ], op) when (is_machine_int m && is_op op) ->
@@ -1100,7 +1105,7 @@ let translate_type_decl env ty: option decl =
           // JP: TODO: shall we be smarter here?
           None
         else
-          Some (DTypeAlias (name, translate_flags flags, List.length args, translate_type env t))
+          Some (DTypeAlias (name, translate_flags flags, to_krmlint (List.length args), translate_type env t))
 
     | {tydecl_name=name;
        tydecl_parameters=args;
@@ -1108,7 +1113,7 @@ let translate_type_decl env ty: option decl =
        tydecl_defn=Some (MLTD_Record fields)} ->
         let name = env.module_name, name in
         let env = List.fold_left (fun env name -> extend_t env name) env args in
-        Some (DTypeFlat (name, translate_flags flags, List.length args, List.map (fun (f, t) ->
+        Some (DTypeFlat (name, translate_flags flags, to_krmlint (List.length args), List.map (fun (f, t) ->
           f, (translate_type env t, false)) fields))
 
     | {tydecl_name=name;
@@ -1118,7 +1123,7 @@ let translate_type_decl env ty: option decl =
         let name = env.module_name, name in
         let flags = translate_flags flags in
         let env = List.fold_left extend_t env args in
-        Some (DTypeVariant (name, flags, List.length args, List.map (fun (cons, ts) ->
+        Some (DTypeVariant (name, flags, to_krmlint (List.length args), List.map (fun (cons, ts) ->
           cons, List.map (fun (name, t) ->
             name, (translate_type env t, false)
           ) ts
@@ -1185,14 +1190,14 @@ let translate_let env flavor lb: option decl =
         in
         begin try
           let body = translate_expr env body in
-          Some (DFunction (cc, meta, List.length tvars, t, name, binders, body))
+          Some (DFunction (cc, meta, to_krmlint (List.length tvars), t, name, binders, body))
         with e ->
           // JP: TODO: figure out what are the remaining things we don't extract
           let msg = BU.print_exn e in
           Errors. log_issue Range.dummyRange
           (Errors.Warning_FunctionNotExtacted, (BU.format2 "Error while extracting %s to KaRaMeL (%s)\n" (Syntax.string_of_mlpath name) msg));
           let msg = "This function was not extracted:\n" ^ msg in
-          Some (DFunction (cc, meta, List.length tvars, t, name, binders, EAbortS msg))
+          Some (DFunction (cc, meta, to_krmlint (List.length tvars), t, name, binders, EAbortS msg))
         end
 
   | {
@@ -1213,10 +1218,10 @@ let translate_let env flavor lb: option decl =
       let name = env.module_name, name in
       begin try
         let expr = List.map (translate_expr env) (list_elements l) in
-        Some (DGlobal (meta, name, List.length tvars, t, EBufCreateL (Eternal, expr)))
+        Some (DGlobal (meta, name, to_krmlint (List.length tvars), t, EBufCreateL (Eternal, expr)))
       with e ->
           Errors. log_issue Range.dummyRange (Errors.Warning_DefinitionNotTranslated, (BU.format2 "Error extracting %s to KaRaMeL (%s)\n" (Syntax.string_of_mlpath name) (BU.print_exn e)));
-          Some (DGlobal (meta, name, List.length tvars, t, EAny))
+          Some (DGlobal (meta, name, to_krmlint (List.length tvars), t, EAny))
         end
   | {
       mllb_name = name;
@@ -1234,10 +1239,10 @@ let translate_let env flavor lb: option decl =
         let name = env.module_name, name in
         begin try
           let expr = translate_expr env expr in
-          Some (DGlobal (meta, name, List.length tvars, t, expr))
+          Some (DGlobal (meta, name, to_krmlint (List.length tvars), t, expr))
         with e ->
           Errors. log_issue Range.dummyRange (Errors.Warning_DefinitionNotTranslated, (BU.format2 "Error extracting %s to KaRaMeL (%s)\n" (Syntax.string_of_mlpath name) (BU.print_exn e)));
-          Some (DGlobal (meta, name, List.length tvars, t, EAny))
+          Some (DGlobal (meta, name, to_krmlint (List.length tvars), t, EAny))
         end
 
   | { mllb_name = name; mllb_tysc = ts } ->

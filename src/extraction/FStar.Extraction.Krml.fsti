@@ -21,7 +21,7 @@ type program = list decl
 type file = string * program
 
 (** Versioned binary writing/reading of ASTs *)
-type version = int
+type version = FStar.BigInt.krmlint
 type binary_format = version * list file
 
 val current_version: version

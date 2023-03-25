@@ -57,3 +57,15 @@ val of_int_fs: (int -> bigint)
 val to_int_fs: (bigint -> int)
 
 val of_hex: string -> bigint
+
+(* we need to expose the integer type used in the Karamel AST. In
+   practice, Karamel is using OCaml integers, but F* has long used
+   Zarith's integers, whose representation coincide with OCaml
+   integers for values small enough.  With other implementations such
+   as num, this no longer holds, so we need to abstract over Karamel
+   AST integers now as well.
+
+   FIXME: should this move to a separate interface?
+*)
+type krmlint
+val krmlint_of_int_fs: int -> krmlint
