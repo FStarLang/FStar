@@ -95,12 +95,14 @@ type repl_task =
   | LDInterleaved of timed_fname * timed_fname (* (interface * implementation) *)
   | LDSingle of timed_fname (* interface or implementation *)
   | LDInterfaceOfCurrentFile of timed_fname (* interface *)
-  | PushFragment of either PI.input_frag FStar.Parser.AST.decl * push_kind (* code fragment *)
+  | PushFragment of either PI.input_frag FStar.Parser.AST.decl (* code fragment *)
+                  * push_kind (* FullCheck, LaxCheck, SyntaxCheck *)
+                  * list json (* any warnings that were raised while checking this fragment *)
   | Noop (* Used by compute *)
 
 type full_buffer_request_kind =
   | Full : full_buffer_request_kind
-  | FullBufferWithSymbols : full_buffer_request_kind
+  | LaxWithSymbols : full_buffer_request_kind
   | Cache : full_buffer_request_kind
   | ReloadDeps : full_buffer_request_kind
   | VerifyToPosition of position
@@ -175,9 +177,9 @@ let string_of_repl_task = function
     Util.format1 "LDSingle %s" (string_of_timed_fname intf_or_impl)
   | LDInterfaceOfCurrentFile intf ->
     Util.format1 "LDInterfaceOfCurrentFile %s" (string_of_timed_fname intf)
-  | PushFragment (Inl frag, _) ->
+  | PushFragment (Inl frag, _, _) ->
     Util.format1 "PushFragment { code = %s }" frag.frag_text
-  | PushFragment (Inr d, _) ->
+  | PushFragment (Inr d, _, _) ->
     Util.format1 "PushFragment { decl = %s }" (FStar.Parser.AST.decl_to_string d)
   | Noop -> "Noop {}"
 
@@ -262,7 +264,8 @@ let query_to_string q = match q.qq with
 let query_needs_current_module = function
   | Exit | DescribeProtocol | DescribeRepl | Segment _
   | Pop | Push { push_peek_only = false } | VfsAdd _
-  | GenericError _ | ProtocolViolation _ | FullBuffer _ | Callback _ | Format _ -> false
+  | GenericError _ | ProtocolViolation _
+  | FullBuffer _ | Callback _ | Format _ | Cancel _ -> false
   | Push _ | AutoComplete _ | Lookup _ | Compute _ | Search _ -> true
 
 let interactive_protocol_vernum = 2

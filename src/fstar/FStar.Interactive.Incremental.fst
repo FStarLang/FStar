@@ -167,7 +167,7 @@ let inspect_repl_stack (s:repl_stack_t)
                        (push_kind : push_kind)
                        (with_symbols:bool)
                        (write_full_buffer_fragment_progress: fragment_progress -> unit)                       
-  : qst (list query)
+  : qst (list query & list json)
   = let entries = List.rev s in
     let push_decls = push_decls push_kind with_symbols write_full_buffer_fragment_progress in
     match BU.prefix_until 
@@ -176,46 +176,46 @@ let inspect_repl_stack (s:repl_stack_t)
     with
     | None ->
       let! ds = push_decls ds in
-      return ds
+      return (ds, [])
     
     | Some (prefix, first_push, rest) ->
       let entries = first_push :: rest in
       let repl_task (_, (p, _)) = p in
-      let rec matching_prefix entries (ds:list (decl & code_fragment))
-        : qst (list query)
+      let rec matching_prefix (accum:list json) entries (ds:list (decl & code_fragment))
+        : qst (list query & list json)
         = match entries, ds with
           | [], [] ->
-            return []
+            return ([], accum)
             
           | e::entries, d::ds -> (
             match repl_task e with
             | Noop -> 
-              matching_prefix entries (d::ds)
-            | PushFragment (Inl frag, _) ->
-              let! pops = pop_entries  (e::entries) in
+              matching_prefix accum entries (d::ds)
+            | PushFragment (Inl frag, _, _) ->
+              let! pops = pop_entries (e::entries) in
               let! pushes = push_decls (d::ds) in
-              return (pops @ pushes)
-            | PushFragment (Inr d', pk) ->
+              return (pops @ pushes, accum)
+            | PushFragment (Inr d', pk, issues) ->
               if eq_decl (fst d) d'
               then (
                 let d, s = d in
                 write_full_buffer_fragment_progress (FragmentSuccess (d, s, pk));
-                matching_prefix entries ds
+                matching_prefix (issues@accum) entries ds
               )
               else let! pops = pop_entries (e::entries) in
                    let! pushes = push_decls (d::ds) in
-                   return (pops @ pushes)
+                   return (pops @ pushes, accum)
             )
 
          | [], ds ->
            let! pushes = push_decls ds in
-           return pushes
+           return (pushes, accum)
 
          | es, [] ->
            let! pops = pop_entries es in
-           return pops
+           return (pops, accum)
       in
-      matching_prefix entries ds 
+      matching_prefix [] entries ds 
 
 (* A reload_deps request just pops away the entire stack of PushFragments.
    We also push on just the `module A` declaration after popping. That's done below. *)
@@ -262,7 +262,7 @@ let run_full_buffer (st:repl_state)
                     (code:string)
                     (request_type:full_buffer_request_kind)
                     (write_full_buffer_fragment_progress: fragment_progress -> unit)
-  : list query
+  : list query & list json
   = let parse_result = parse_code code in
     let log_syntax_issues err =
       match err with
@@ -283,16 +283,18 @@ let run_full_buffer (st:repl_state)
           decls
       | _ -> decls
     in
-    let with_symbols = request_type = FullBufferWithSymbols in
+    let with_symbols = request_type = LaxWithSymbols in
     let qs = 
       match parse_result with
       | IncrementalFragment (decls, _, err_opt) -> (
+        // This is a diagnostic message that is send to the IDE as an info message
+        // The script test-incremental.py in tests/ide/ depends on this message
         BU.print1 "Parsed %s declarations\n" (string_of_int (List.length decls));
         match request_type, decls with
         | ReloadDeps, d::_ ->
           run_qst (let! queries = reload_deps (!repl_stack) in
                    let! push_mod = push_decl FullCheck with_symbols write_full_buffer_fragment_progress d in
-                   return (queries @ push_mod))
+                   return (queries @ push_mod, []))
                   qid
 
         | _ ->
@@ -300,26 +302,26 @@ let run_full_buffer (st:repl_state)
           let push_kind = 
             match request_type with
             | LaxToPosition _ -> LaxCheck
-            | FullBufferWithSymbols -> LaxCheck
+            | LaxWithSymbols -> LaxCheck
             | _ -> FullCheck
           in
 
-          let queries = 
+          let queries, issues = 
               run_qst (inspect_repl_stack (!repl_stack) decls push_kind with_symbols write_full_buffer_fragment_progress) qid
           in
-          if request_type = Full then log_syntax_issues err_opt;
+          if request_type <> Cache then log_syntax_issues err_opt;
           if Options.debug_any()
           then (
             BU.print1 "Generating queries\n%s\n" 
                       (String.concat "\n" (List.map query_to_string queries))
           );
-          if request_type <> Cache then queries else []
+          if request_type <> Cache then (queries, issues) else ([] , issues)
 
       )
         
       | ParseError err ->
         if request_type = Full then log_syntax_issues (Some err);
-        []
+        [], []
       | _ -> 
         failwith "Unexpected parse result"
     in

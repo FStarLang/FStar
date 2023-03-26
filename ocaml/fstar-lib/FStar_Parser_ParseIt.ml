@@ -267,6 +267,7 @@ let parse fn =
             )
           in
           let raw_contents = contents_at d.drange in
+          (*
           if FStar_Options.debug_any()
           then (
             FStar_Compiler_Util.print4 "Parsed decl@%s=%s\nRaw contents@%s=%s\n"
@@ -275,6 +276,7 @@ let parse fn =
               (FStar_Compiler_Range.string_of_def_range raw_contents.range)
               raw_contents.code
           );
+          *)
           parse ((d, raw_contents)::decls)
         | Inr err -> List.rev decls, Some err
       in
@@ -294,9 +296,7 @@ let parse fn =
     | Filename _
     | Toplevel _ -> begin
       let fileOrFragment =
-        if FStar_Options.debug_any()
-        then parse_incremental_fragment()
-        else MenhirLib.Convert.Simplified.traditional2revised FStar_Parser_Parse.inputFragment lexer
+          MenhirLib.Convert.Simplified.traditional2revised FStar_Parser_Parse.inputFragment lexer
       in
       let frags = match fileOrFragment with
           | FStar_Pervasives.Inl modul ->

@@ -72,7 +72,7 @@ let (nothing_left_to_pop :
          st.FStar_Interactive_Ide_Types.repl_deps_stack)
 let (run_repl_transaction :
   FStar_Interactive_Ide_Types.repl_state ->
-    FStar_Interactive_Ide_Types.push_kind ->
+    FStar_Interactive_Ide_Types.push_kind FStar_Pervasives_Native.option ->
       Prims.bool ->
         FStar_Interactive_Ide_Types.repl_task ->
           (Prims.bool * FStar_Interactive_Ide_Types.repl_state))
@@ -226,7 +226,9 @@ let (run_repl_ld_transactions :
                   then FStar_Interactive_Ide_Types.LaxCheck
                   else FStar_Interactive_Ide_Types.FullCheck in
                 let uu___3 =
-                  run_repl_transaction st1 push_kind false timestamped_task in
+                  run_repl_transaction st1
+                    (FStar_Pervasives_Native.Some push_kind) false
+                    timestamped_task in
                 match uu___3 with
                 | (success, st2) ->
                     if success
@@ -358,8 +360,8 @@ let (unpack_interactive_query :
              let parse_full_buffer_kind uu___1 =
                match uu___1 with
                | "full" -> FStar_Interactive_Ide_Types.Full
-               | "full-with-symbols" ->
-                   FStar_Interactive_Ide_Types.FullBufferWithSymbols
+               | "lax-with-symbols" ->
+                   FStar_Interactive_Ide_Types.LaxWithSymbols
                | "cache" -> FStar_Interactive_Ide_Types.Cache
                | "reload-deps" -> FStar_Interactive_Ide_Types.ReloadDeps
                | "verify-to-position" ->
@@ -1633,8 +1635,10 @@ let (run_push_without_deps :
                   FStar_Pervasives.Inr decl in
             let st1 = set_nosynth_flag st peek_only in
             let uu___2 =
-              run_repl_transaction st1 push_kind peek_only
-                (FStar_Interactive_Ide_Types.PushFragment (frag, push_kind)) in
+              run_repl_transaction st1
+                (FStar_Pervasives_Native.Some push_kind) peek_only
+                (FStar_Interactive_Ide_Types.PushFragment
+                   (frag, push_kind, [])) in
             match uu___2 with
             | (success, st2) ->
                 let st3 = set_nosynth_flag st2 false in
@@ -1667,30 +1671,35 @@ let (run_push_without_deps :
                         (FStar_Compiler_List.map
                            FStar_Interactive_Ide_Types.json_of_issue) in
                     FStar_Compiler_Util.JsonList uu___4 in
-                  let st4 =
-                    if success
-                    then
-                      {
-                        FStar_Interactive_Ide_Types.repl_line = line;
-                        FStar_Interactive_Ide_Types.repl_column = column;
-                        FStar_Interactive_Ide_Types.repl_fname =
-                          (st3.FStar_Interactive_Ide_Types.repl_fname);
-                        FStar_Interactive_Ide_Types.repl_deps_stack =
-                          (st3.FStar_Interactive_Ide_Types.repl_deps_stack);
-                        FStar_Interactive_Ide_Types.repl_curmod =
-                          (st3.FStar_Interactive_Ide_Types.repl_curmod);
-                        FStar_Interactive_Ide_Types.repl_env =
-                          (st3.FStar_Interactive_Ide_Types.repl_env);
-                        FStar_Interactive_Ide_Types.repl_stdin =
-                          (st3.FStar_Interactive_Ide_Types.repl_stdin);
-                        FStar_Interactive_Ide_Types.repl_names =
-                          (st3.FStar_Interactive_Ide_Types.repl_names);
-                        FStar_Interactive_Ide_Types.repl_buffered_input_queries
-                          =
-                          (st3.FStar_Interactive_Ide_Types.repl_buffered_input_queries)
-                      }
-                    else st3 in
-                  ((status, json_errors), (FStar_Pervasives.Inl st4))))))
+                  (match (errs, status) with
+                   | (uu___5::uu___6, FStar_Interactive_Ide_Types.QueryOK) ->
+                       FStar_Interactive_PushHelper.add_issues_to_push_fragment
+                         [json_errors]
+                   | uu___5 -> ());
+                  (let st4 =
+                     if success
+                     then
+                       {
+                         FStar_Interactive_Ide_Types.repl_line = line;
+                         FStar_Interactive_Ide_Types.repl_column = column;
+                         FStar_Interactive_Ide_Types.repl_fname =
+                           (st3.FStar_Interactive_Ide_Types.repl_fname);
+                         FStar_Interactive_Ide_Types.repl_deps_stack =
+                           (st3.FStar_Interactive_Ide_Types.repl_deps_stack);
+                         FStar_Interactive_Ide_Types.repl_curmod =
+                           (st3.FStar_Interactive_Ide_Types.repl_curmod);
+                         FStar_Interactive_Ide_Types.repl_env =
+                           (st3.FStar_Interactive_Ide_Types.repl_env);
+                         FStar_Interactive_Ide_Types.repl_stdin =
+                           (st3.FStar_Interactive_Ide_Types.repl_stdin);
+                         FStar_Interactive_Ide_Types.repl_names =
+                           (st3.FStar_Interactive_Ide_Types.repl_names);
+                         FStar_Interactive_Ide_Types.repl_buffered_input_queries
+                           =
+                           (st3.FStar_Interactive_Ide_Types.repl_buffered_input_queries)
+                       }
+                     else st3 in
+                   ((status, json_errors), (FStar_Pervasives.Inl st4)))))))
 let (run_push_with_deps :
   FStar_Interactive_Ide_Types.repl_state ->
     FStar_Interactive_Ide_Types.push_query ->
@@ -2091,7 +2100,8 @@ let run_and_rewind :
       fun task ->
         let st1 =
           FStar_Interactive_PushHelper.push_repl "run_and_rewind"
-            FStar_Interactive_Ide_Types.FullCheck
+            (FStar_Pervasives_Native.Some
+               FStar_Interactive_Ide_Types.FullCheck)
             FStar_Interactive_Ide_Types.Noop st in
         let results =
           try
@@ -2712,11 +2722,13 @@ let rec (run_query :
       | FStar_Interactive_Ide_Types.Pop ->
           let uu___ = run_pop st in as_json_list uu___
       | FStar_Interactive_Ide_Types.FullBuffer (code, full) ->
-          let queries =
+          let uu___ =
             FStar_Interactive_Incremental.run_full_buffer st
               q.FStar_Interactive_Ide_Types.qid code full
               write_full_buffer_fragment_progress in
-          fold_query validate_and_run_query queries st []
+          (match uu___ with
+           | (queries, issues) ->
+               fold_query validate_and_run_query queries st issues)
       | FStar_Interactive_Ide_Types.AutoComplete (search_term1, context) ->
           let uu___ = run_autocomplete st search_term1 context in
           as_json_list uu___

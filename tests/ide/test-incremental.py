@@ -10,8 +10,45 @@ import re
 # The path to the F* executable
 fstar = sys.argv[1]
 
+# approximating a test to decide if a string is an F* comment
+# some ulib files have trailing comments in a variety of styles
+def is_comment(str):
+    if (str.startswith("(*") and str.endswith("*)")):
+        return True
+    lines = str.splitlines()
+    for line in lines:
+        if (line.startswith("(*") and line.endswith("*)")):
+            continue
+        if not line.startswith("//"):
+            return False
+    return True
+
+def get_contents_in_range(file_lines, start_pos, end_pos):
+    start_line = start_pos[0]
+    start_col = start_pos[1]
+    lines = []
+    if (end_pos == None):
+        lines.append(file_lines[start_line - 1][start_col:])
+        lines.extend(file_lines[start_line:])
+        lines = "\n".join(lines)
+        return lines
+    end_line = end_pos[0]
+    end_col = end_pos[1]
+    # Skip the prefix of file_lines until start_line
+    # take all the lines between start_line and end_line
+    if (start_line < end_line):
+        lines.append(file_lines[start_line - 1][start_col:])
+        lines.extend(file_lines[start_line:end_line - 1])
+        lines.append(file_lines[end_line - 1][:end_col])
+    elif (start_line == end_line):
+        lines.append(file_lines[start_line - 1][start_col:end_col])
+    # print (f"lines = {lines}")
+    lines = "\n".join(lines)
+    return lines
+
 # A function to validate the response from F* interactive mode
-def validate_response(response):
+def validate_response(response, file_contents):
+    file_lines = file_contents.splitlines()
     # parse the each line of the response into a JSON object
     # if the line is not valid JSON, print an error message and exit
     # store the JSON objects in a list
@@ -93,6 +130,7 @@ def validate_response(response):
     # The first message in the pair has contents.stage = "full-buffer-fragment-started"
     # The second message in the pair has contents.stage = "full-buffer-fragment-lax-ok"
     num_successes = 1
+    last_fragment_end = [0, 0]
     for j in range(i + 2, len(json_objects) - 1, 2):
         if json_objects[j]["kind"] != "message":
             break
@@ -102,8 +140,24 @@ def validate_response(response):
             break
         if json_objects[j + 1]["contents"]["stage"] != "full-buffer-fragment-lax-ok":
             break
+        # {"stage":"full-buffer-fragment-lax-ok","ranges":{"fname":"<input>","beg":[16,0],"end":[16,29]},"code-fragment":{"range":{"fname":"<input>","beg":[16,0],"end":[16,29]},"code":"module FStar.Reflection.Arith"}
+        lax_ok = json_objects[j + 1]["contents"]
+        code_frag = lax_ok["code-fragment"]
+        start_pos = code_frag["range"]["beg"]
+        end_pos = code_frag["range"]["end"]
+        last_fragment_end = end_pos
+        lines = get_contents_in_range(file_lines, start_pos, end_pos)
+        # join the lines together with newlines
+        if code_frag["code"] != lines:
+            print(f"Code fragment does not match the code: Expected {code_frag['code']} but got {lines}")
+            return False
         num_successes = num_successes + 1
 
+    remaining_lines = get_contents_in_range(file_lines, last_fragment_end, None)
+    remaining_lines = remaining_lines.strip()
+    if remaining_lines != "" and not (is_comment(remaining_lines)):
+        print(f"Remaining lines are not empty: {remaining_lines}")
+        return False
     if num_successes != num_decls:
         print(f"Number of successes {num_successes} does not match number of declarations {num_decls}")
         return False
@@ -141,13 +195,13 @@ def test_file(file):
     with open(filepath, "r") as f:
         contents = f.read()
     # Escape the contents of the file for JSON
-    contents = json.dumps(contents)
+    json_contents = json.dumps(contents)
     # print(contents)
     # Format the contents of the file into a request for the F* ide
     # The first line is a JSON object initializing the ide
     # The second line is a JSON object containing the contents of the file
     # The third line is an exit command
-    request = f'{{"query-id":"1", "query": "vfs-add", "args":{{"filename":null, "contents": {contents}}}}}\n{{"query-id":"2", "query": "full-buffer", "args":{{"kind": "full-with-symbols", "code": {contents}, "line":1, "column":0}}}}\n{{"query-id":"3", "query": "exit", "args":{{}}}}\n'
+    request = f'{{"query-id":"1", "query": "vfs-add", "args":{{"filename":null, "contents": {json_contents}}}}}\n{{"query-id":"2", "query": "full-buffer", "args":{{"kind": "lax-with-symbols", "code": {json_contents}, "line":1, "column":0}}}}\n{{"query-id":"3", "query": "exit", "args":{{}}}}\n'
     # print the request to the console for debugging
     #print(request)
     # Run fstar on the file with the request as stdin
@@ -163,11 +217,11 @@ def test_file(file):
         print(p.stdout.read())
         return False
     # Parse the response into a list of lines
-    lines = response.splitlines()
+    # lines = response.splitlines()
     # Print the number of lines in the response
-    #print(f"Response has {len(lines)} lines")
+    # print(f"Response: {response}")
     # Validate the response
-    return validate_response(response)
+    return validate_response(response, contents)
 
 # List all files in ../../ulib
 files = os.listdir("../../ulib")
@@ -178,7 +232,7 @@ succeeded = True
 for file in files:
     # If the test fails, exit with code 1
     if not test_file(file):
-        print(f"Failed test on {file}")
+        print(f" *** Failed test on {file}")
         succeeded = False
 
 if succeeded:

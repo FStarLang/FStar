@@ -106,10 +106,22 @@ let snapshot_env env msg : repl_depth_t * env_t =
   let opt_depth, () = Options.snapshot () in
   (ctx_depth, opt_depth), env
 
-let push_repl msg push_kind task st =
+let push_repl msg push_kind_opt task st =
   let depth, env = snapshot_env st.repl_env msg in
   repl_stack := (depth, (task, st)) :: !repl_stack;
-  { st with repl_env = set_check_kind env push_kind } // repl_env is the only mutable part of st
+  match push_kind_opt with
+  | None -> st
+  | Some push_kind ->
+    { st with repl_env = set_check_kind env push_kind } // repl_env is the only mutable part of st
+
+(* Record the issues that were raised by the last push *)
+let add_issues_to_push_fragment (issues: list json) =
+  match !repl_stack with
+  | (depth, (PushFragment(frag, push_kind, i), st))::rest -> (
+    let pf = PushFragment(frag, push_kind, issues @ i) in
+    repl_stack := (depth, (pf, st)) :: rest
+  )
+  | _ -> ()
 
 (** Revert to a previous checkpoint.
 
@@ -166,7 +178,7 @@ let run_repl_task (curmod: optmod_t) (env: env_t) (task: repl_task) : optmod_t *
     curmod, tc_one env None intf_or_impl.tf_fname
   | LDInterfaceOfCurrentFile intf ->
     curmod, Universal.load_interface_decls env intf.tf_fname
-  | PushFragment (frag, _) ->
+  | PushFragment (frag, _, _) ->
     tc_one_fragment curmod env frag
   | Noop ->
     curmod, env
@@ -251,7 +263,7 @@ let track_name_changes (env: env_t)
 // variant of run_repl_transaction in IDE
 let repl_tx st push_kind task =
   try
-    let st = push_repl "repl_tx" push_kind task st in
+    let st = push_repl "repl_tx" (Some push_kind) task st in
     let env, finish_name_tracking = track_name_changes st.repl_env in // begin name tracking
     let curmod, env = run_repl_task st.repl_curmod env task in
     let st = { st with repl_curmod = curmod; repl_env = env } in
@@ -371,5 +383,5 @@ let full_lax text st =
   match ld_deps st with
   | Inl (st, deps) ->
       let names = add_module_completions st.repl_fname deps st.repl_names in
-      repl_tx ({ st with repl_names = names }) LaxCheck (PushFragment (Inl frag, LaxCheck))
+      repl_tx ({ st with repl_names = names }) LaxCheck (PushFragment (Inl frag, LaxCheck, []))
   | Inr st -> None, st

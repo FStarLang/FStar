@@ -47,7 +47,8 @@ val repl_stack : ref repl_stack_t
 val set_check_kind : env_t -> push_kind -> env_t
 
 // Push an Pop, directly copied over from IDE
-val push_repl : string -> push_kind -> repl_task -> repl_state -> repl_state
+val push_repl : string -> option push_kind -> repl_task -> repl_state -> repl_state
+val add_issues_to_push_fragment (issues: list json) : unit
 val pop_repl : string -> repl_state -> repl_state
 
 // Factored out from IDE for use by LSP as well

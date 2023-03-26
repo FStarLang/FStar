@@ -117,7 +117,8 @@ type repl_task =
   | LDSingle of timed_fname 
   | LDInterfaceOfCurrentFile of timed_fname 
   | PushFragment of ((FStar_Parser_ParseIt.input_frag, FStar_Parser_AST.decl)
-  FStar_Pervasives.either * push_kind) 
+  FStar_Pervasives.either * push_kind * FStar_Compiler_Util.json Prims.list)
+  
   | Noop 
 let (uu___is_LDInterleaved : repl_task -> Prims.bool) =
   fun projectee ->
@@ -143,23 +144,23 @@ let (uu___is_PushFragment : repl_task -> Prims.bool) =
 let (__proj__PushFragment__item___0 :
   repl_task ->
     ((FStar_Parser_ParseIt.input_frag, FStar_Parser_AST.decl)
-      FStar_Pervasives.either * push_kind))
+      FStar_Pervasives.either * push_kind * FStar_Compiler_Util.json
+      Prims.list))
   = fun projectee -> match projectee with | PushFragment _0 -> _0
 let (uu___is_Noop : repl_task -> Prims.bool) =
   fun projectee -> match projectee with | Noop -> true | uu___ -> false
 type full_buffer_request_kind =
   | Full 
-  | FullBufferWithSymbols 
+  | LaxWithSymbols 
   | Cache 
   | ReloadDeps 
   | VerifyToPosition of position 
   | LaxToPosition of position 
 let (uu___is_Full : full_buffer_request_kind -> Prims.bool) =
   fun projectee -> match projectee with | Full -> true | uu___ -> false
-let (uu___is_FullBufferWithSymbols : full_buffer_request_kind -> Prims.bool)
-  =
+let (uu___is_LaxWithSymbols : full_buffer_request_kind -> Prims.bool) =
   fun projectee ->
-    match projectee with | FullBufferWithSymbols -> true | uu___ -> false
+    match projectee with | LaxWithSymbols -> true | uu___ -> false
 let (uu___is_Cache : full_buffer_request_kind -> Prims.bool) =
   fun projectee -> match projectee with | Cache -> true | uu___ -> false
 let (uu___is_ReloadDeps : full_buffer_request_kind -> Prims.bool) =
@@ -402,12 +403,12 @@ let (string_of_repl_task : repl_task -> Prims.string) =
     | LDInterfaceOfCurrentFile intf ->
         let uu___1 = string_of_timed_fname intf in
         FStar_Compiler_Util.format1 "LDInterfaceOfCurrentFile %s" uu___1
-    | PushFragment (FStar_Pervasives.Inl frag, uu___1) ->
+    | PushFragment (FStar_Pervasives.Inl frag, uu___1, uu___2) ->
         FStar_Compiler_Util.format1 "PushFragment { code = %s }"
           frag.FStar_Parser_ParseIt.frag_text
-    | PushFragment (FStar_Pervasives.Inr d, uu___1) ->
-        let uu___2 = FStar_Parser_AST.decl_to_string d in
-        FStar_Compiler_Util.format1 "PushFragment { decl = %s }" uu___2
+    | PushFragment (FStar_Pervasives.Inr d, uu___1, uu___2) ->
+        let uu___3 = FStar_Parser_AST.decl_to_string d in
+        FStar_Compiler_Util.format1 "PushFragment { decl = %s }" uu___3
     | Noop -> "Noop {}"
 let (string_of_repl_stack_entry : repl_stack_entry_t -> Prims.string) =
   fun uu___ ->
@@ -519,6 +520,7 @@ let (query_needs_current_module : query' -> Prims.bool) =
     | FullBuffer uu___1 -> false
     | Callback uu___1 -> false
     | Format uu___1 -> false
+    | Cancel uu___1 -> false
     | Push uu___1 -> true
     | AutoComplete uu___1 -> true
     | Lookup uu___1 -> true
