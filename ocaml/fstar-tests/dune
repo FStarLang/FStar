@@ -6,4 +6,7 @@
     fstar_lib
  )
  (modes (native exe))
+ (enabled_if
+   (= %{profile} test)
+ )
 )
