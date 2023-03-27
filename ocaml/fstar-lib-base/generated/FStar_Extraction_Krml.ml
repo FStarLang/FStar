@@ -1,19 +1,22 @@
 open Prims
+type krmlint = FStar_BigInt.krmlint
+let (to_krmlint : Prims.int -> FStar_BigInt.krmlint) =
+  FStar_BigInt.krmlint_of_int_fs
 type decl =
   | DGlobal of (flag Prims.list * (Prims.string Prims.list * Prims.string) *
-  Prims.int * typ * expr) 
+  krmlint * typ * expr) 
   | DFunction of (cc FStar_Pervasives_Native.option * flag Prims.list *
-  Prims.int * typ * (Prims.string Prims.list * Prims.string) * binder
+  krmlint * typ * (Prims.string Prims.list * Prims.string) * binder
   Prims.list * expr) 
   | DTypeAlias of ((Prims.string Prims.list * Prims.string) * flag Prims.list
-  * Prims.int * typ) 
+  * krmlint * typ) 
   | DTypeFlat of ((Prims.string Prims.list * Prims.string) * flag Prims.list
-  * Prims.int * (Prims.string * (typ * Prims.bool)) Prims.list) 
+  * krmlint * (Prims.string * (typ * Prims.bool)) Prims.list) 
   | DUnusedRetainedForBackwardsCompat of (cc FStar_Pervasives_Native.option *
   flag Prims.list * (Prims.string Prims.list * Prims.string) * typ) 
   | DTypeVariant of ((Prims.string Prims.list * Prims.string) * flag
-  Prims.list * Prims.int * (Prims.string * (Prims.string * (typ *
-  Prims.bool)) Prims.list) Prims.list) 
+  Prims.list * krmlint * (Prims.string * (Prims.string * (typ * Prims.bool))
+  Prims.list) Prims.list) 
   | DTypeAbstractStruct of (Prims.string Prims.list * Prims.string) 
   | DExternal of (cc FStar_Pervasives_Native.option * flag Prims.list *
   (Prims.string Prims.list * Prims.string) * typ * Prims.string Prims.list) 
@@ -41,7 +44,7 @@ and lifetime =
   | Stack 
   | ManuallyManaged 
 and expr =
-  | EBound of Prims.int 
+  | EBound of krmlint 
   | EQualified of (Prims.string Prims.list * Prims.string) 
   | EConstant of (width * Prims.string) 
   | EUnit 
@@ -142,7 +145,7 @@ and typ =
   | TBool 
   | TAny 
   | TArrow of (typ * typ) 
-  | TBound of Prims.int 
+  | TBound of krmlint 
   | TApp of ((Prims.string Prims.list * Prims.string) * typ Prims.list) 
   | TTuple of typ Prims.list 
   | TConstBuf of typ 
@@ -150,7 +153,7 @@ let (uu___is_DGlobal : decl -> Prims.bool) =
   fun projectee -> match projectee with | DGlobal _0 -> true | uu___ -> false
 let (__proj__DGlobal__item___0 :
   decl ->
-    (flag Prims.list * (Prims.string Prims.list * Prims.string) * Prims.int *
+    (flag Prims.list * (Prims.string Prims.list * Prims.string) * krmlint *
       typ * expr))
   = fun projectee -> match projectee with | DGlobal _0 -> _0
 let (uu___is_DFunction : decl -> Prims.bool) =
@@ -158,7 +161,7 @@ let (uu___is_DFunction : decl -> Prims.bool) =
     match projectee with | DFunction _0 -> true | uu___ -> false
 let (__proj__DFunction__item___0 :
   decl ->
-    (cc FStar_Pervasives_Native.option * flag Prims.list * Prims.int * typ *
+    (cc FStar_Pervasives_Native.option * flag Prims.list * krmlint * typ *
       (Prims.string Prims.list * Prims.string) * binder Prims.list * expr))
   = fun projectee -> match projectee with | DFunction _0 -> _0
 let (uu___is_DTypeAlias : decl -> Prims.bool) =
@@ -166,7 +169,7 @@ let (uu___is_DTypeAlias : decl -> Prims.bool) =
     match projectee with | DTypeAlias _0 -> true | uu___ -> false
 let (__proj__DTypeAlias__item___0 :
   decl ->
-    ((Prims.string Prims.list * Prims.string) * flag Prims.list * Prims.int *
+    ((Prims.string Prims.list * Prims.string) * flag Prims.list * krmlint *
       typ))
   = fun projectee -> match projectee with | DTypeAlias _0 -> _0
 let (uu___is_DTypeFlat : decl -> Prims.bool) =
@@ -174,7 +177,7 @@ let (uu___is_DTypeFlat : decl -> Prims.bool) =
     match projectee with | DTypeFlat _0 -> true | uu___ -> false
 let (__proj__DTypeFlat__item___0 :
   decl ->
-    ((Prims.string Prims.list * Prims.string) * flag Prims.list * Prims.int *
+    ((Prims.string Prims.list * Prims.string) * flag Prims.list * krmlint *
       (Prims.string * (typ * Prims.bool)) Prims.list))
   = fun projectee -> match projectee with | DTypeFlat _0 -> _0
 let (uu___is_DUnusedRetainedForBackwardsCompat : decl -> Prims.bool) =
@@ -194,7 +197,7 @@ let (uu___is_DTypeVariant : decl -> Prims.bool) =
     match projectee with | DTypeVariant _0 -> true | uu___ -> false
 let (__proj__DTypeVariant__item___0 :
   decl ->
-    ((Prims.string Prims.list * Prims.string) * flag Prims.list * Prims.int *
+    ((Prims.string Prims.list * Prims.string) * flag Prims.list * krmlint *
       (Prims.string * (Prims.string * (typ * Prims.bool)) Prims.list)
       Prims.list))
   = fun projectee -> match projectee with | DTypeVariant _0 -> _0
@@ -269,7 +272,7 @@ let (uu___is_ManuallyManaged : lifetime -> Prims.bool) =
     match projectee with | ManuallyManaged -> true | uu___ -> false
 let (uu___is_EBound : expr -> Prims.bool) =
   fun projectee -> match projectee with | EBound _0 -> true | uu___ -> false
-let (__proj__EBound__item___0 : expr -> Prims.int) =
+let (__proj__EBound__item___0 : expr -> krmlint) =
   fun projectee -> match projectee with | EBound _0 -> _0
 let (uu___is_EQualified : expr -> Prims.bool) =
   fun projectee ->
@@ -580,7 +583,7 @@ let (__proj__TArrow__item___0 : typ -> (typ * typ)) =
   fun projectee -> match projectee with | TArrow _0 -> _0
 let (uu___is_TBound : typ -> Prims.bool) =
   fun projectee -> match projectee with | TBound _0 -> true | uu___ -> false
-let (__proj__TBound__item___0 : typ -> Prims.int) =
+let (__proj__TBound__item___0 : typ -> krmlint) =
   fun projectee -> match projectee with | TBound _0 -> _0
 let (uu___is_TApp : typ -> Prims.bool) =
   fun projectee -> match projectee with | TApp _0 -> true | uu___ -> false
@@ -604,13 +607,14 @@ type fsdoc = Prims.string
 type branch = (pattern * expr)
 type branches = (pattern * expr) Prims.list
 type constant = (width * Prims.string)
-type var = Prims.int
+type var = krmlint
 type lident = (Prims.string Prims.list * Prims.string)
 type program = decl Prims.list
 type file = (Prims.string * program)
-type version = Prims.int
+type version = FStar_BigInt.krmlint
 type binary_format = (version * file Prims.list)
-let (current_version : version) = (Prims.of_int (28))
+let (current_version : version) =
+  FStar_BigInt.krmlint_of_int_fs (Prims.of_int (28))
 let fst3 : 'uuuuu 'uuuuu1 'uuuuu2 . ('uuuuu * 'uuuuu1 * 'uuuuu2) -> 'uuuuu =
   fun uu___ -> match uu___ with | (x, uu___1, uu___2) -> x
 let snd3 : 'uuuuu 'uuuuu1 'uuuuu2 . ('uuuuu * 'uuuuu1 * 'uuuuu2) -> 'uuuuu1 =
@@ -854,7 +858,8 @@ let rec (translate_type : env -> FStar_Extraction_ML_Syntax.mlty -> typ) =
       | FStar_Extraction_ML_Syntax.MLTY_Tuple [] -> TAny
       | FStar_Extraction_ML_Syntax.MLTY_Top -> TAny
       | FStar_Extraction_ML_Syntax.MLTY_Var name1 ->
-          let uu___ = find_t env1 name1 in TBound uu___
+          let uu___ = let uu___1 = find_t env1 name1 in to_krmlint uu___1 in
+          TBound uu___
       | FStar_Extraction_ML_Syntax.MLTY_Fun (t1, uu___, t2) ->
           let uu___1 =
             let uu___2 = translate_type env1 t1 in
@@ -1050,7 +1055,8 @@ and (translate_expr : env -> FStar_Extraction_ML_Syntax.mlexpr -> expr) =
       | FStar_Extraction_ML_Syntax.MLE_Tuple [] -> EUnit
       | FStar_Extraction_ML_Syntax.MLE_Const c -> translate_constant c
       | FStar_Extraction_ML_Syntax.MLE_Var name1 ->
-          let uu___ = find env1 name1 in EBound uu___
+          let uu___ = let uu___1 = find env1 name1 in to_krmlint uu___1 in
+          EBound uu___
       | FStar_Extraction_ML_Syntax.MLE_Name ("FStar"::m::[], op1) when
           (is_machine_int m) && (is_op op1) ->
           let uu___ =
@@ -2971,9 +2977,10 @@ let (translate_type_decl :
                  (let uu___4 =
                     let uu___5 =
                       let uu___6 = translate_flags flags in
-                      let uu___7 = translate_type env2 t in
-                      (name2, uu___6, (FStar_Compiler_List.length args),
-                        uu___7) in
+                      let uu___7 =
+                        to_krmlint (FStar_Compiler_List.length args) in
+                      let uu___8 = translate_type env2 t in
+                      (name2, uu___6, uu___7, uu___8) in
                     DTypeAlias uu___5 in
                   FStar_Pervasives_Native.Some uu___4)
          | { FStar_Extraction_ML_Syntax.tydecl_assumed = uu___1;
@@ -2992,16 +2999,17 @@ let (translate_type_decl :
              let uu___3 =
                let uu___4 =
                  let uu___5 = translate_flags flags in
-                 let uu___6 =
+                 let uu___6 = to_krmlint (FStar_Compiler_List.length args) in
+                 let uu___7 =
                    FStar_Compiler_List.map
-                     (fun uu___7 ->
-                        match uu___7 with
+                     (fun uu___8 ->
+                        match uu___8 with
                         | (f, t) ->
-                            let uu___8 =
-                              let uu___9 = translate_type env2 t in
-                              (uu___9, false) in
-                            (f, uu___8)) fields in
-                 (name2, uu___5, (FStar_Compiler_List.length args), uu___6) in
+                            let uu___9 =
+                              let uu___10 = translate_type env2 t in
+                              (uu___10, false) in
+                            (f, uu___9)) fields in
+                 (name2, uu___5, uu___6, uu___7) in
                DTypeFlat uu___4 in
              FStar_Pervasives_Native.Some uu___3
          | { FStar_Extraction_ML_Syntax.tydecl_assumed = uu___1;
@@ -3018,22 +3026,23 @@ let (translate_type_decl :
              let env2 = FStar_Compiler_List.fold_left extend_t env1 args in
              let uu___3 =
                let uu___4 =
-                 let uu___5 =
+                 let uu___5 = to_krmlint (FStar_Compiler_List.length args) in
+                 let uu___6 =
                    FStar_Compiler_List.map
-                     (fun uu___6 ->
-                        match uu___6 with
+                     (fun uu___7 ->
+                        match uu___7 with
                         | (cons, ts) ->
-                            let uu___7 =
+                            let uu___8 =
                               FStar_Compiler_List.map
-                                (fun uu___8 ->
-                                   match uu___8 with
+                                (fun uu___9 ->
+                                   match uu___9 with
                                    | (name3, t) ->
-                                       let uu___9 =
-                                         let uu___10 = translate_type env2 t in
-                                         (uu___10, false) in
-                                       (name3, uu___9)) ts in
-                            (cons, uu___7)) branches1 in
-                 (name2, flags1, (FStar_Compiler_List.length args), uu___5) in
+                                       let uu___10 =
+                                         let uu___11 = translate_type env2 t in
+                                         (uu___11, false) in
+                                       (name3, uu___10)) ts in
+                            (cons, uu___8)) branches1 in
+                 (name2, flags1, uu___5, uu___6) in
                DTypeVariant uu___4 in
              FStar_Pervasives_Native.Some uu___3
          | { FStar_Extraction_ML_Syntax.tydecl_assumed = uu___1;
@@ -3157,11 +3166,15 @@ let (translate_let :
                           match () with
                           | () ->
                               let body1 = translate_expr env4 body in
-                              FStar_Pervasives_Native.Some
-                                (DFunction
-                                   (cc1, meta1,
-                                     (FStar_Compiler_List.length tvars), t1,
-                                     name2, binders, body1))) ()
+                              let uu___8 =
+                                let uu___9 =
+                                  let uu___10 =
+                                    to_krmlint
+                                      (FStar_Compiler_List.length tvars) in
+                                  (cc1, meta1, uu___10, t1, name2, binders,
+                                    body1) in
+                                DFunction uu___9 in
+                              FStar_Pervasives_Native.Some uu___8) ()
                      with
                      | e ->
                          let msg = FStar_Compiler_Util.print_exn e in
@@ -3180,11 +3193,15 @@ let (translate_let :
                           (let msg1 =
                              Prims.op_Hat
                                "This function was not extracted:\n" msg in
-                           FStar_Pervasives_Native.Some
-                             (DFunction
-                                (cc1, meta1,
-                                  (FStar_Compiler_List.length tvars), t1,
-                                  name2, binders, (EAbortS msg1))))))))
+                           let uu___9 =
+                             let uu___10 =
+                               let uu___11 =
+                                 to_krmlint
+                                   (FStar_Compiler_List.length tvars) in
+                               (cc1, meta1, uu___11, t1, name2, binders,
+                                 (EAbortS msg1)) in
+                             DFunction uu___10 in
+                           FStar_Pervasives_Native.Some uu___9)))))
         | { FStar_Extraction_ML_Syntax.mllb_name = name1;
             FStar_Extraction_ML_Syntax.mllb_tysc =
               FStar_Pervasives_Native.Some (tvars, t);
@@ -3230,11 +3247,14 @@ let (translate_let :
                           let uu___11 = list_elements l in
                           FStar_Compiler_List.map (translate_expr env2)
                             uu___11 in
-                        FStar_Pervasives_Native.Some
-                          (DGlobal
-                             (meta1, name2,
-                               (FStar_Compiler_List.length tvars), t1,
-                               (EBufCreateL (Eternal, expr1))))) ()
+                        let uu___11 =
+                          let uu___12 =
+                            let uu___13 =
+                              to_krmlint (FStar_Compiler_List.length tvars) in
+                            (meta1, name2, uu___13, t1,
+                              (EBufCreateL (Eternal, expr1))) in
+                          DGlobal uu___12 in
+                        FStar_Pervasives_Native.Some uu___11) ()
                with
                | uu___10 ->
                    ((let uu___12 =
@@ -3249,10 +3269,13 @@ let (translate_let :
                          uu___13) in
                      FStar_Errors.log_issue FStar_Compiler_Range.dummyRange
                        uu___12);
-                    FStar_Pervasives_Native.Some
-                      (DGlobal
-                         (meta1, name2, (FStar_Compiler_List.length tvars),
-                           t1, EAny))))
+                    (let uu___12 =
+                       let uu___13 =
+                         let uu___14 =
+                           to_krmlint (FStar_Compiler_List.length tvars) in
+                         (meta1, name2, uu___14, t1, EAny) in
+                       DGlobal uu___13 in
+                     FStar_Pervasives_Native.Some uu___12)))
         | { FStar_Extraction_ML_Syntax.mllb_name = name1;
             FStar_Extraction_ML_Syntax.mllb_tysc =
               FStar_Pervasives_Native.Some (tvars, t);
@@ -3276,11 +3299,13 @@ let (translate_let :
                     match () with
                     | () ->
                         let expr2 = translate_expr env2 expr1 in
-                        FStar_Pervasives_Native.Some
-                          (DGlobal
-                             (meta1, name2,
-                               (FStar_Compiler_List.length tvars), t1, expr2)))
-                   ()
+                        let uu___4 =
+                          let uu___5 =
+                            let uu___6 =
+                              to_krmlint (FStar_Compiler_List.length tvars) in
+                            (meta1, name2, uu___6, t1, expr2) in
+                          DGlobal uu___5 in
+                        FStar_Pervasives_Native.Some uu___4) ()
                with
                | uu___3 ->
                    ((let uu___5 =
@@ -3295,10 +3320,13 @@ let (translate_let :
                          uu___6) in
                      FStar_Errors.log_issue FStar_Compiler_Range.dummyRange
                        uu___5);
-                    FStar_Pervasives_Native.Some
-                      (DGlobal
-                         (meta1, name2, (FStar_Compiler_List.length tvars),
-                           t1, EAny))))
+                    (let uu___5 =
+                       let uu___6 =
+                         let uu___7 =
+                           to_krmlint (FStar_Compiler_List.length tvars) in
+                         (meta1, name2, uu___7, t1, EAny) in
+                       DGlobal uu___6 in
+                     FStar_Pervasives_Native.Some uu___5)))
         | { FStar_Extraction_ML_Syntax.mllb_name = name1;
             FStar_Extraction_ML_Syntax.mllb_tysc = ts;
             FStar_Extraction_ML_Syntax.mllb_add_unit = uu___;
