@@ -1,19 +1,11 @@
 open Prims
-let (name_of_bv : FStar_Reflection_Types.bv -> Prims.string) =
-  fun bv ->
-    (FStar_Reflection_Builtins.inspect_bv bv).FStar_Reflection_Data.bv_ppname
 let (type_of_bv : FStar_Reflection_Types.bv -> FStar_Reflection_Types.typ) =
   fun bv ->
     (FStar_Reflection_Builtins.inspect_bv bv).FStar_Reflection_Data.bv_sort
-let (bv_to_string : FStar_Reflection_Types.bv -> Prims.string) =
-  fun bv ->
-    let bvv = FStar_Reflection_Builtins.inspect_bv bv in
-    bvv.FStar_Reflection_Data.bv_ppname
 let (bv_of_binder :
   FStar_Reflection_Types.binder -> FStar_Reflection_Types.bv) =
   fun b ->
-    let uu___ = FStar_Reflection_Builtins.inspect_binder b in
-    match uu___ with | (bv, uu___1) -> bv
+    (FStar_Reflection_Builtins.inspect_binder b).FStar_Reflection_Data.binder_bv
 let rec (inspect_ln_unascribe :
   FStar_Reflection_Types.term -> FStar_Reflection_Data.term_view) =
   fun t ->
@@ -26,20 +18,24 @@ let rec (inspect_ln_unascribe :
 let (mk_binder : FStar_Reflection_Types.bv -> FStar_Reflection_Types.binder)
   =
   fun bv ->
-    FStar_Reflection_Builtins.pack_binder bv FStar_Reflection_Data.Q_Explicit
-      []
+    FStar_Reflection_Builtins.pack_binder
+      {
+        FStar_Reflection_Data.binder_bv = bv;
+        FStar_Reflection_Data.binder_qual = FStar_Reflection_Data.Q_Explicit;
+        FStar_Reflection_Data.binder_attrs = []
+      }
 let (mk_implicit_binder :
   FStar_Reflection_Types.bv -> FStar_Reflection_Types.binder) =
   fun bv ->
-    FStar_Reflection_Builtins.pack_binder bv FStar_Reflection_Data.Q_Implicit
-      []
-let (name_of_binder : FStar_Reflection_Types.binder -> Prims.string) =
-  fun b -> name_of_bv (bv_of_binder b)
+    FStar_Reflection_Builtins.pack_binder
+      {
+        FStar_Reflection_Data.binder_bv = bv;
+        FStar_Reflection_Data.binder_qual = FStar_Reflection_Data.Q_Implicit;
+        FStar_Reflection_Data.binder_attrs = []
+      }
 let (type_of_binder :
   FStar_Reflection_Types.binder -> FStar_Reflection_Types.typ) =
   fun b -> type_of_bv (bv_of_binder b)
-let (binder_to_string : FStar_Reflection_Types.binder -> Prims.string) =
-  fun b -> bv_to_string (bv_of_binder b)
 let rec (flatten_name : FStar_Reflection_Types.name -> Prims.string) =
   fun ns ->
     match ns with
@@ -320,10 +316,15 @@ let (binder_set_qual :
   =
   fun q ->
     fun b ->
-      let uu___ = FStar_Reflection_Builtins.inspect_binder b in
-      match uu___ with
-      | (bv, (uu___1, attrs)) ->
-          FStar_Reflection_Builtins.pack_binder bv q attrs
+      let bview = FStar_Reflection_Builtins.inspect_binder b in
+      FStar_Reflection_Builtins.pack_binder
+        {
+          FStar_Reflection_Data.binder_bv =
+            (bview.FStar_Reflection_Data.binder_bv);
+          FStar_Reflection_Data.binder_qual = q;
+          FStar_Reflection_Data.binder_attrs =
+            (bview.FStar_Reflection_Data.binder_attrs)
+        }
 let (add_check_with :
   FStar_VConfig.vconfig ->
     FStar_Reflection_Types.sigelt -> FStar_Reflection_Types.sigelt)

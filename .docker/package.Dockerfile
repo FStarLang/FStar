@@ -37,7 +37,7 @@ ENV PATH=${PATH}:$DOTNET_ROOT:$DOTNET_ROOT/tools
 ADD --chown=opam:opam ./ FStar/
 
 # Build the package, 
-RUN eval $(opam env) && env Z3_LICENSE="$(opam config expand '%{prefix}%')/.opam-switch/sources/z3.4.8.5/LICENSE.txt" OTHERFLAGS='--admit_smt_queries true' make -C FStar -j $opamthreads package_unknown_platform
+RUN eval $(opam env) && env Z3_LICENSE="$(opam config expand '%{prefix}%')/.opam-switch/sources/z3.4.8.5/LICENSE.txt" OTHERFLAGS='--admit_smt_queries true' make -C FStar -j $opamthreads package
 
 # Create a separate image to test the package
 

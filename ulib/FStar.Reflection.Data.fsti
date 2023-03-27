@@ -53,11 +53,23 @@ type aqualv =
 
 type argv = term * aqualv
 
+(* The type of a string observable only with a tactic.
+   All values of type ppname_t are provably equal *)
+let ppname_t = FStar.Sealed.Inhabited.sealed ""
+let as_ppname (x:string) : ppname_t = FStar.Sealed.Inhabited.seal x
+
 noeq
 type bv_view = {
-    bv_ppname : string;
+    bv_ppname : ppname_t;
     bv_index : int;
     bv_sort : typ;
+}
+
+noeq
+type binder_view = {
+  binder_bv : bv;
+  binder_qual : aqualv;
+  binder_attrs : list term
 }
 
 noeq

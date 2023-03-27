@@ -131,6 +131,7 @@ val e_tuple3      : embedding 'a -> embedding 'b -> embedding 'c -> embedding ('
 val e_either      : embedding 'a -> embedding 'b -> embedding (either 'a 'b)
 val e_string_list : embedding (list string)
 val e_arrow       : embedding 'a -> embedding 'b -> embedding ('a -> 'b)
+val e_sealed      : embedding 'a -> embedding 'a
 
 val mk_any_emb : typ -> embedding term
 

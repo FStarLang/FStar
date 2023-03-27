@@ -1,4 +1,4 @@
-.PHONY: all package clean boot 1 2 3 hints bench output install uninstall package_unknown_platform
+.PHONY: all package clean boot 1 2 3 hints bench output install uninstall package
 
 include .common.mk
 
@@ -19,13 +19,14 @@ else
 endif
 
 .PHONY: dune dune-fstar verify-ulib
+FSTAR_BUILD_PROFILE ?= release
 dune-fstar:
 	$(Q)cp version.txt $(DUNE_SNAPSHOT)/
 	@# Call Dune to build the snapshot.
 	@echo "  DUNE BUILD"
-	$(Q)cd $(DUNE_SNAPSHOT) && dune build --profile release
+	$(Q)cd $(DUNE_SNAPSHOT) && dune build --profile=$(FSTAR_BUILD_PROFILE)
 	@echo "  DUNE INSTALL"
-	$(Q)cd $(DUNE_SNAPSHOT) && dune install --prefix=$(FSTAR_CURDIR)
+	$(Q)cd $(DUNE_SNAPSHOT) && dune install --profile=$(FSTAR_BUILD_PROFILE) --prefix=$(FSTAR_CURDIR)
 
 verify-ulib:
 	+$(MAKE) -C ulib
@@ -83,9 +84,6 @@ uninstall:
 package: all
 	$(Q)+$(MAKE) -C src/ocaml-output package
 
-package_unknown_platform: all
-	$(Q)+$(MAKE) -C src/ocaml-output package_unknown_platform
-
 .PHONY: clean-intermediate
 
 # Removes everything created by `make all`. MUST NOT be used when
@@ -117,7 +115,8 @@ output:
 
 .PHONY: ci-utest-prelude
 
-ci-utest-prelude: dune
+ci-utest-prelude:
+	$(Q)+$(MAKE) dune FSTAR_BUILD_PROFILE=test
 	$(Q)+$(MAKE) dune-bootstrap
 	$(Q)+$(MAKE) -C src ocaml-unit-tests
 	$(Q)+$(MAKE) -C ulib ulib-in-fsharp    #build ulibfs

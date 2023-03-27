@@ -1,5 +1,5 @@
 [
-  "–\n*2_=\bOzôÑˇ1\u001aùâ",
+  "Z\u00168øÄ\u0014yqµÂW†⁄¢éŒ",
   [
     [
       "Part2.STInt.left_identity",
@@ -10,17 +10,19 @@
         "@MaxIFuel_assumption", "@query",
         "Prims_pretyping_ae567c2fb75be05905677af440075565",
         "equation_Part2.STInt.bind", "equation_Part2.STInt.feq",
-        "equation_Part2.STInt.return",
+        "equation_Part2.STInt.op_let_Bang", "equation_Part2.STInt.return",
         "function_token_typing_Prims.__cache_version_number__",
         "int_inversion",
         "interpretation_Tm_abs_936ba95a022a0abfa58b689a8bbd5c1f",
         "interpretation_Tm_abs_bdc06410776c1d9adee9aeba485b40ed",
         "interpretation_Tm_abs_e073df67031809c3d262fb52887e406d",
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__1",
-        "projection_inverse_FStar.Pervasives.Native.Mktuple2__2"
+        "projection_inverse_FStar.Pervasives.Native.Mktuple2__2",
+        "token_correspondence_Part2.STInt.bind",
+        "token_correspondence_Part2.STInt.op_let_Bang"
       ],
       0,
-      "eeb5cd159cf9873b6f1e86d8f75634cb"
+      "3a048ebb4191a40694dd480b9ac01eed"
     ],
     [
       "Part2.STInt.right_identity",
@@ -32,15 +34,19 @@
         "Part2.STInt_interpretation_Tm_arrow_484ac694053f9cf14a2c5a94a3797972",
         "Prims_pretyping_ae567c2fb75be05905677af440075565",
         "equation_Part2.STInt.bind", "equation_Part2.STInt.feq",
-        "equation_Part2.STInt.return", "equation_Part2.STInt.st",
+        "equation_Part2.STInt.op_let_Bang", "equation_Part2.STInt.return",
+        "equation_Part2.STInt.st",
         "fuel_guarded_inversion_FStar.Pervasives.Native.tuple2",
         "function_token_typing_Prims.__cache_version_number__",
+        "int_inversion",
         "interpretation_Tm_abs_3b2327e0d5d64b42a0024d66220d6d69",
         "interpretation_Tm_abs_936ba95a022a0abfa58b689a8bbd5c1f",
-        "interpretation_Tm_abs_bdc06410776c1d9adee9aeba485b40ed"
+        "interpretation_Tm_abs_bdc06410776c1d9adee9aeba485b40ed",
+        "token_correspondence_Part2.STInt.bind",
+        "token_correspondence_Part2.STInt.op_let_Bang"
       ],
       0,
-      "d473d53697eb9e36e97e5c968a61c93a"
+      "45286b8a02d5e90c25e25e5d8f081aab"
     ],
     [
       "Part2.STInt.associativity",
@@ -48,13 +54,17 @@
       2,
       1,
       [
-        "@query", "equation_Part2.STInt.bind", "equation_Part2.STInt.feq",
+        "@MaxIFuel_assumption", "@query", "equation_Part2.STInt.bind",
+        "equation_Part2.STInt.feq", "equation_Part2.STInt.op_let_Bang",
+        "int_inversion",
+        "interpretation_Tm_abs_a249274efcab075478109520c4247ed6",
         "interpretation_Tm_abs_bdc06410776c1d9adee9aeba485b40ed",
         "interpretation_Tm_abs_e073df67031809c3d262fb52887e406d",
-        "interpretation_Tm_abs_e95823adbd23ea1ba7af1c33444b8086"
+        "token_correspondence_Part2.STInt.bind",
+        "token_correspondence_Part2.STInt.op_let_Bang"
       ],
       0,
-      "38dfdcf61dcf079386e3a42aefc08b94"
+      "5ffc7e1c4863add03e11ca1af01db75e"
     ],
     [
       "Part2.STInt.redundant_read_elim",
@@ -65,14 +75,17 @@
         "@MaxIFuel_assumption", "@query",
         "Prims_pretyping_ae567c2fb75be05905677af440075565",
         "equation_Part2.STInt.bind", "equation_Part2.STInt.feq",
-        "equation_Part2.STInt.read",
+        "equation_Part2.STInt.op_let_Bang", "equation_Part2.STInt.read",
         "function_token_typing_Prims.__cache_version_number__",
         "interpretation_Tm_abs_bdc06410776c1d9adee9aeba485b40ed",
         "interpretation_Tm_abs_eb1f19aba18df6f48faf7cef222b16d6",
-        "projection_inverse_FStar.Pervasives.Native.Mktuple2__2"
+        "projection_inverse_FStar.Pervasives.Native.Mktuple2__1",
+        "projection_inverse_FStar.Pervasives.Native.Mktuple2__2",
+        "token_correspondence_Part2.STInt.bind",
+        "token_correspondence_Part2.STInt.op_let_Bang"
       ],
       0,
-      "45e952d58c5633e02d44ffb94044af56"
+      "3c966cdf2a44ac2bae77bff936f39e0e"
     ],
     [
       "Part2.STInt.redundant_write_elim",
@@ -81,14 +94,16 @@
       1,
       [
         "@MaxIFuel_assumption", "@query", "equation_Part2.STInt.bind",
-        "equation_Part2.STInt.feq", "equation_Part2.STInt.write",
-        "int_inversion",
+        "equation_Part2.STInt.feq", "equation_Part2.STInt.op_let_Bang",
+        "equation_Part2.STInt.write", "int_inversion",
         "interpretation_Tm_abs_03e66b6f12eb85069ed3f8523b7cfb8c",
         "interpretation_Tm_abs_21135f7a40394ea9900bf22c6ef80c5e",
-        "interpretation_Tm_abs_bdc06410776c1d9adee9aeba485b40ed"
+        "interpretation_Tm_abs_bdc06410776c1d9adee9aeba485b40ed",
+        "token_correspondence_Part2.STInt.bind",
+        "token_correspondence_Part2.STInt.op_let_Bang"
       ],
       0,
-      "0947122e1f0d28de89d3c8199d22f616"
+      "786fae916c8e1ce1dd5dbf360c83783c"
     ],
     [
       "Part2.STInt.read_write_noop",
@@ -99,18 +114,20 @@
         "@MaxIFuel_assumption", "@query",
         "Prims_pretyping_ae567c2fb75be05905677af440075565",
         "equation_Part2.STInt.bind", "equation_Part2.STInt.feq",
-        "equation_Part2.STInt.read", "equation_Part2.STInt.return",
-        "equation_Part2.STInt.write",
+        "equation_Part2.STInt.op_let_Bang", "equation_Part2.STInt.read",
+        "equation_Part2.STInt.return", "equation_Part2.STInt.write",
         "function_token_typing_Prims.__cache_version_number__",
         "interpretation_Tm_abs_03e66b6f12eb85069ed3f8523b7cfb8c",
         "interpretation_Tm_abs_936ba95a022a0abfa58b689a8bbd5c1f",
         "interpretation_Tm_abs_bdc06410776c1d9adee9aeba485b40ed",
         "interpretation_Tm_abs_ee0ee74b04a411cf3ff1be2a9fd06b1e",
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__1",
-        "projection_inverse_FStar.Pervasives.Native.Mktuple2__2"
+        "projection_inverse_FStar.Pervasives.Native.Mktuple2__2",
+        "token_correspondence_Part2.STInt.bind",
+        "token_correspondence_Part2.STInt.op_let_Bang"
       ],
       0,
-      "d7b9deb3f25d547edf396c74a3b379a1"
+      "268aad618b6414dfd86d5285b0abb836"
     ]
   ]
 ]
