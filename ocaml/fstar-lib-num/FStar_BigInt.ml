@@ -127,11 +127,49 @@ let lt_big_int = ( < )
 let ge_big_int = ( >= )
 let gt_big_int = ( > )
 
-let logand_big_int = cbinop Big_int.and_big_int
-let logor_big_int = cbinop Big_int.or_big_int
-let logxor_big_int = cbinop Big_int.xor_big_int
+(* Bitwise not is not provided by Big_int, but the identity is well-known *)
 let lognot_big_int' x =
   Big_int.sub_big_int (Big_int.minus_big_int x) Big_int.unit_big_int
+
+(* Big_int bitwise operators operate on nonnegative values only.  So
+   we need to extend their domains to negative values with De Morgan
+   identities and left-truncatures.
+
+   If a is nonnegative and b is negative, then `bitwise_truncate a b`
+   computes b with its "lead ones" truncated to match the size of
+   a. This is enough to compute "bitwise and".
+*)
+let bitwise_truncate a b =
+  let not_b = lognot_big_int' b in
+  let nbits = BatBig_int.num_bits_big_int a in
+  let significant_bits = Big_int.sub_big_int (Big_int.power_int_positive_int 2 nbits) Big_int.unit_big_int in
+  Big_int.xor_big_int not_b significant_bits
+let bitwise_and_pos_neg a b =
+  Big_int.and_big_int a (bitwise_truncate a b)
+let big_int_is_nonnegative x =
+  Big_int.sign_big_int x >= 0
+let logand_big_int' a b =
+  match big_int_is_nonnegative a, big_int_is_nonnegative b with
+  | true, true -> Big_int.and_big_int a b
+  | true, false -> bitwise_and_pos_neg a b
+  | false, true -> bitwise_and_pos_neg b a
+  | _ -> lognot_big_int' (Big_int.or_big_int (lognot_big_int' a) (lognot_big_int' b))
+let logor_big_int' a b =
+  if big_int_is_nonnegative a && big_int_is_nonnegative b
+  then Big_int.or_big_int a b
+  else lognot_big_int' (logand_big_int' (lognot_big_int' a) (lognot_big_int' b))
+let logxor_big_int' a b =
+  match big_int_is_nonnegative a, big_int_is_nonnegative b with
+  | true, true -> Big_int.xor_big_int a b
+  | false, false -> Big_int.xor_big_int (lognot_big_int' a) (lognot_big_int' b)
+  | _ ->
+     logor_big_int'
+       (logand_big_int' (lognot_big_int' a) b)
+       (logand_big_int' (lognot_big_int' b) a)
+  
+let logand_big_int = cbinop logand_big_int'
+let logor_big_int = cbinop logor_big_int'
+let logxor_big_int = cbinop logxor_big_int'
 let lognot_big_int = cunop lognot_big_int'
 
 let shift_left_big_int' x y =
