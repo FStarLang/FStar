@@ -127,11 +127,13 @@ else
   FSTAR_PREFIX=$(PREFIX)
 endif
 
+FSTAR_BUILD_PROFILE ?= release
+
 install:
 	@# Rebuild everything
 	+$(MAKE) -C $(FSTAR_HOME)
 	@# Install the binary and the binary library
-	cd $(DUNE_SNAPSHOT) && dune install --prefix=$(FSTAR_PREFIX)
+	cd $(DUNE_SNAPSHOT) && dune install --profile=$(FSTAR_BUILD_PROFILE) --prefix=$(FSTAR_PREFIX)
 	@# Then the standard library sources and checked files
 	+$(MAKE) -C $(FSTAR_HOME)/ulib install
 	@# Then the rest
