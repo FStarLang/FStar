@@ -741,9 +741,9 @@ let (display_version : unit -> unit) =
       let uu___4 = FStar_Compiler_Effect.op_Bang _compiler in
       let uu___5 = FStar_Compiler_Effect.op_Bang _date in
       let uu___6 = FStar_Compiler_Effect.op_Bang _commit in
-      FStar_Compiler_Util.format5
-        "F* %s\nplatform=%s\ncompiler=%s\ndate=%s\ncommit=%s\n" uu___2 uu___3
-        uu___4 uu___5 uu___6 in
+      FStar_Compiler_Util.format6
+        "F* %s\nplatform=%s\ncompiler=%s\ndate=%s\ncommit=%s\nflavor=%s\n"
+        uu___2 uu___3 uu___4 uu___5 uu___6 FStar_BigInt.flavor in
     FStar_Compiler_Util.print_string uu___1
 let display_usage_aux :
   'uuuuu 'uuuuu1 .
