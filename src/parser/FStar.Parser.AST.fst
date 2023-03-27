@@ -935,6 +935,14 @@ let id_of_tycon = function
   | TyconRecord(i, _, _, _, _)
   | TyconVariant(i, _, _, _) -> (string_of_id i)
 
+let string_of_pragma = function
+  | SetOptions s ->   Util.format1 "set-options \"%s\""   s
+  | ResetOptions s -> Util.format1 "reset-options \"%s\"" (Util.dflt "" s)
+  | PushOptions s ->  Util.format1 "push-options \"%s\""  (Util.dflt "" s)
+  | PopOptions -> "pop-options"
+  | RestartSolver -> "restart-solver"
+  | PrintEffectsGraph -> "print-effects-graph"
+
 let decl_to_string (d:decl) = match d.d with
   | TopLevelModule l -> "module " ^ (string_of_lid l)
   | Open l -> "open " ^ (string_of_lid l)
@@ -958,7 +966,7 @@ let decl_to_string (d:decl) = match d.d with
                     (string_of_lid l1) (string_of_lid l2)
   | Splice (ids, t) -> "splice[" ^ (String.concat ";" <| List.map (fun i -> (string_of_id i)) ids) ^ "] (" ^ term_to_string t ^ ")"
   | SubEffect _ -> "sub_effect"
-  | Pragma _ -> "pragma"
+  | Pragma p -> "pragma #" ^ string_of_pragma p
 
 let modul_to_string (m:modul) = match m with
     | Module (_, decls)

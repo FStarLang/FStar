@@ -198,7 +198,7 @@ let unexpected_implicit_argument =
 let expected_expression_of_type env t1 e t2 =
   let s1, s2 = err_msg_type_strings env t1 t2 in
   (Errors.Fatal_UnexpectedExpressionType, (format3 "Expected expression of type \"%s\"; got expression \"%s\" of type \"%s\""
-    s1 (Print.term_to_string e) s2))
+    s1 (Print.term_to_string' env.dsenv e) s2))
 
 let expected_pattern_of_type env t1 e t2 =
   let s1, s2 = err_msg_type_strings env t1 t2 in

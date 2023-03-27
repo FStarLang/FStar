@@ -110,7 +110,7 @@ bench:
 # reviewed before checking in.
 output:
 	$(Q)+$(MAKE) -C tests/error-messages accept
-	$(Q)+$(MAKE) -C tests/interactive accept
+	$(Q)+$(MAKE) -C tests/ide/emacs accept
 	$(Q)+$(MAKE) -C tests/bug-reports output-accept
 
 .PHONY: ci-utest-prelude
