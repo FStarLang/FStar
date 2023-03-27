@@ -4,7 +4,7 @@ let (core_check :
     FStar_Syntax_Syntax.term ->
       FStar_Syntax_Syntax.term ->
         Prims.bool ->
-          (FStar_Reflection_Data.typ FStar_Pervasives_Native.option,
+          (FStar_Syntax_Syntax.typ FStar_Pervasives_Native.option,
             FStar_TypeChecker_Core.error) FStar_Pervasives.either)
   =
   fun env ->
@@ -73,7 +73,7 @@ let (tts :
   FStar_TypeChecker_Env.env -> FStar_Syntax_Syntax.term -> Prims.string) =
   FStar_TypeChecker_Normalize.term_to_string
 let (set_uvar_expected_typ :
-  FStar_Syntax_Syntax.ctx_uvar -> FStar_Reflection_Data.typ -> unit) =
+  FStar_Syntax_Syntax.ctx_uvar -> FStar_Syntax_Syntax.typ -> unit) =
   fun u ->
     fun t ->
       let dec =
@@ -113,7 +113,7 @@ let (mark_goal_implicit_already_checked : FStar_Tactics_Types.goal -> unit) =
   fun g -> mark_uvar_as_already_checked g.FStar_Tactics_Types.goal_ctx_uvar
 let (goal_with_type :
   FStar_Tactics_Types.goal ->
-    FStar_Reflection_Data.typ -> FStar_Tactics_Types.goal)
+    FStar_Syntax_Syntax.typ -> FStar_Tactics_Types.goal)
   =
   fun g ->
     fun t ->
@@ -300,7 +300,7 @@ let fail4 :
             let uu___ = FStar_Compiler_Util.format4 msg x y z w in
             FStar_Tactics_Monad.fail uu___
 let (destruct_eq' :
-  FStar_Reflection_Data.typ ->
+  FStar_Syntax_Syntax.typ ->
     (FStar_Syntax_Syntax.term * FStar_Syntax_Syntax.term)
       FStar_Pervasives_Native.option)
   =
@@ -341,7 +341,7 @@ let (destruct_eq' :
                        -> FStar_Pervasives_Native.Some (e1, e2)
                    | uu___5 -> FStar_Pervasives_Native.None)))
 let (destruct_eq :
-  FStar_Reflection_Data.typ ->
+  FStar_Syntax_Syntax.typ ->
     (FStar_Syntax_Syntax.term * FStar_Syntax_Syntax.term)
       FStar_Pervasives_Native.option)
   =
@@ -1240,7 +1240,7 @@ let (curms : unit -> FStar_BigInt.t FStar_Tactics_Monad.tac) =
 let (__tc :
   env ->
     FStar_Syntax_Syntax.term ->
-      (FStar_Syntax_Syntax.term * FStar_Reflection_Data.typ *
+      (FStar_Syntax_Syntax.term * FStar_Syntax_Syntax.typ *
         FStar_TypeChecker_Common.guard_t) FStar_Tactics_Monad.tac)
   =
   fun e ->
@@ -1381,7 +1381,7 @@ let (__tc :
 let (__tc_ghost :
   env ->
     FStar_Syntax_Syntax.term ->
-      (FStar_Syntax_Syntax.term * FStar_Reflection_Data.typ *
+      (FStar_Syntax_Syntax.term * FStar_Syntax_Syntax.typ *
         FStar_TypeChecker_Common.guard_t) FStar_Tactics_Monad.tac)
   =
   fun e ->
@@ -1998,7 +1998,7 @@ let (tcc :
 let (tc :
   env ->
     FStar_Syntax_Syntax.term ->
-      FStar_Reflection_Data.typ FStar_Tactics_Monad.tac)
+      FStar_Syntax_Syntax.typ FStar_Tactics_Monad.tac)
   =
   fun e ->
     fun t ->
@@ -4755,7 +4755,7 @@ let (lax_on : unit -> Prims.bool FStar_Tactics_Monad.tac) =
               uu___2.FStar_TypeChecker_Env.lax) in
          FStar_Tactics_Monad.ret uu___1)
 let (unquote :
-  FStar_Reflection_Data.typ ->
+  FStar_Syntax_Syntax.typ ->
     FStar_Syntax_Syntax.term ->
       FStar_Syntax_Syntax.term FStar_Tactics_Monad.tac)
   =
@@ -4812,7 +4812,7 @@ let (unquote :
         (FStar_Tactics_Monad.wrap_err "unquote") uu___
 let (uvar_env :
   env ->
-    FStar_Reflection_Data.typ FStar_Pervasives_Native.option ->
+    FStar_Syntax_Syntax.typ FStar_Pervasives_Native.option ->
       FStar_Syntax_Syntax.term FStar_Tactics_Monad.tac)
   =
   fun env1 ->
@@ -4870,7 +4870,7 @@ let (uvar_env :
                               | (t, uvar_t) -> FStar_Tactics_Monad.ret t))))
 let (ghost_uvar_env :
   env ->
-    FStar_Reflection_Data.typ ->
+    FStar_Syntax_Syntax.typ ->
       FStar_Syntax_Syntax.term FStar_Tactics_Monad.tac)
   =
   fun env1 ->
@@ -5256,8 +5256,7 @@ let (launch_process :
                  "launch_process: will not run anything unless --unsafe_tactic_exec is provided")
 let (fresh_bv_named :
   Prims.string ->
-    FStar_Reflection_Data.typ ->
-      FStar_Syntax_Syntax.bv FStar_Tactics_Monad.tac)
+    FStar_Syntax_Syntax.typ -> FStar_Syntax_Syntax.bv FStar_Tactics_Monad.tac)
   =
   fun nm ->
     fun t ->
@@ -5266,7 +5265,7 @@ let (fresh_bv_named :
            let uu___1 =
              FStar_Syntax_Syntax.gen_bv nm FStar_Pervasives_Native.None t in
            FStar_Tactics_Monad.ret uu___1)
-let (change : FStar_Reflection_Data.typ -> unit FStar_Tactics_Monad.tac) =
+let (change : FStar_Syntax_Syntax.typ -> unit FStar_Tactics_Monad.tac) =
   fun ty ->
     let uu___ =
       let uu___1 =
@@ -6557,7 +6556,7 @@ let (pack_curried :
     FStar_Syntax_Syntax.term FStar_Tactics_Monad.tac)
   = fun tv -> pack' tv true
 let (lget :
-  FStar_Reflection_Data.typ ->
+  FStar_Syntax_Syntax.typ ->
     Prims.string -> FStar_Syntax_Syntax.term FStar_Tactics_Monad.tac)
   =
   fun ty ->
@@ -6575,7 +6574,7 @@ let (lget :
       FStar_Compiler_Effect.op_Less_Bar (FStar_Tactics_Monad.wrap_err "lget")
         uu___
 let (lset :
-  FStar_Reflection_Data.typ ->
+  FStar_Syntax_Syntax.typ ->
     Prims.string -> FStar_Syntax_Syntax.term -> unit FStar_Tactics_Monad.tac)
   =
   fun _ty ->
@@ -7263,7 +7262,7 @@ let (proofstate_of_goals :
 let (proofstate_of_goal_ty :
   FStar_Compiler_Range.range ->
     env ->
-      FStar_Reflection_Data.typ ->
+      FStar_Syntax_Syntax.typ ->
         (FStar_Tactics_Types.proofstate * FStar_Syntax_Syntax.term))
   =
   fun rng ->

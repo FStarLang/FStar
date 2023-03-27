@@ -21,7 +21,6 @@ open FStar.Compiler.Effect
 open FStar.Compiler.List
 open FStar.Compiler
 open FStar.Compiler.Util
-open FStar.Syntax.Syntax
 open FStar.Reflection.Data
 open FStar.Reflection.Basic
 open FStar.Tactics.Result
@@ -31,6 +30,7 @@ open FStar.Tactics.Basic
 open FStar.Tactics.Types
 open FStar.Tactics.Monad
 open FStar.Tactics.Common
+open FStar.Syntax.Syntax
 
 module Print  = FStar.Syntax.Print
 module BU     = FStar.Compiler.Util

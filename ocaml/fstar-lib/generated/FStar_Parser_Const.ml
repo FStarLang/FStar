@@ -593,3 +593,7 @@ let (fext_on_domain_lid : FStar_Ident.lident) = fext_lid "on_domain"
 let (fext_on_dom_lid : FStar_Ident.lident) = fext_lid "on_dom"
 let (fext_on_domain_g_lid : FStar_Ident.lident) = fext_lid "on_domain_g"
 let (fext_on_dom_g_lid : FStar_Ident.lident) = fext_lid "on_dom_g"
+let (sealed_lid : FStar_Ident.lident) = p2l ["FStar"; "Sealed"; "sealed"]
+let (seal_lid : FStar_Ident.lident) = p2l ["FStar"; "Sealed"; "seal"]
+let (unseal_lid : FStar_Ident.lident) =
+  p2l ["FStar"; "Tactics"; "Builtins"; "unseal"]
