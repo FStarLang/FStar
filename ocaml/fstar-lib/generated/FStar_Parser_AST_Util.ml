@@ -871,7 +871,8 @@ and (lidents_of_pattern :
         let uu___ = lidents_of_pattern p1 in
         let uu___1 = (concat_map ()) lidents_of_pattern ps in
         FStar_Compiler_List.op_At uu___ uu___1
-    | FStar_Parser_AST.PatVar (i, uu___, uu___1) -> []
+    | FStar_Parser_AST.PatVar (i, uu___, uu___1) ->
+        let uu___2 = FStar_Ident.lid_of_ids [i] in [uu___2]
     | FStar_Parser_AST.PatName lid -> [lid]
     | FStar_Parser_AST.PatTvar (i, uu___, uu___1) -> []
     | FStar_Parser_AST.PatList ps -> (concat_map ()) lidents_of_pattern ps

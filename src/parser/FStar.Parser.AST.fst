@@ -994,9 +994,12 @@ let idents_of_binders bs r =
 
 let decl_syntax_is_delimited (d:decl) = 
   match d.d with
+  | Pragma (ResetOptions None) -> false
+  | Pragma (PushOptions None) -> false
   | Pragma _
   | NewEffect (DefineEffect _)
   | LayeredEffect (DefineEffect _)
   | SubEffect {braced=true} -> true
+  | Tycon(_, b, _) -> b
   | _ -> false
 

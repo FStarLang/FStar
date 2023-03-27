@@ -618,7 +618,7 @@ and lidents_of_pattern p =
   | PatWild _ -> []
   | PatConst _ -> []
   | PatApp (p, ps) -> lidents_of_pattern p @ concat_map lidents_of_pattern ps
-  | PatVar (i, _, _) -> []
+  | PatVar (i, _, _) -> [FStar.Ident.lid_of_ids [i]]
   | PatName lid -> [lid]
   | PatTvar (i, _, _) -> []
   | PatList ps -> concat_map lidents_of_pattern ps

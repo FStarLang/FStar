@@ -251,13 +251,13 @@ let (snapshot_env :
            | (opt_depth, ()) -> ((ctx_depth, opt_depth), env1))
 let (push_repl :
   Prims.string ->
-    FStar_Interactive_Ide_Types.push_kind ->
+    FStar_Interactive_Ide_Types.push_kind FStar_Pervasives_Native.option ->
       FStar_Interactive_Ide_Types.repl_task ->
         FStar_Interactive_Ide_Types.repl_state ->
           FStar_Interactive_Ide_Types.repl_state)
   =
   fun msg ->
-    fun push_kind ->
+    fun push_kind_opt ->
       fun task ->
         fun st ->
           let uu___ =
@@ -268,26 +268,44 @@ let (push_repl :
                   let uu___3 = FStar_Compiler_Effect.op_Bang repl_stack in
                   (depth, (task, st)) :: uu___3 in
                 FStar_Compiler_Effect.op_Colon_Equals repl_stack uu___2);
-               (let uu___2 = set_check_kind env push_kind in
-                {
-                  FStar_Interactive_Ide_Types.repl_line =
-                    (st.FStar_Interactive_Ide_Types.repl_line);
-                  FStar_Interactive_Ide_Types.repl_column =
-                    (st.FStar_Interactive_Ide_Types.repl_column);
-                  FStar_Interactive_Ide_Types.repl_fname =
-                    (st.FStar_Interactive_Ide_Types.repl_fname);
-                  FStar_Interactive_Ide_Types.repl_deps_stack =
-                    (st.FStar_Interactive_Ide_Types.repl_deps_stack);
-                  FStar_Interactive_Ide_Types.repl_curmod =
-                    (st.FStar_Interactive_Ide_Types.repl_curmod);
-                  FStar_Interactive_Ide_Types.repl_env = uu___2;
-                  FStar_Interactive_Ide_Types.repl_stdin =
-                    (st.FStar_Interactive_Ide_Types.repl_stdin);
-                  FStar_Interactive_Ide_Types.repl_names =
-                    (st.FStar_Interactive_Ide_Types.repl_names);
-                  FStar_Interactive_Ide_Types.repl_buffered_input_queries =
-                    (st.FStar_Interactive_Ide_Types.repl_buffered_input_queries)
-                }))
+               (match push_kind_opt with
+                | FStar_Pervasives_Native.None -> st
+                | FStar_Pervasives_Native.Some push_kind ->
+                    let uu___2 = set_check_kind env push_kind in
+                    {
+                      FStar_Interactive_Ide_Types.repl_line =
+                        (st.FStar_Interactive_Ide_Types.repl_line);
+                      FStar_Interactive_Ide_Types.repl_column =
+                        (st.FStar_Interactive_Ide_Types.repl_column);
+                      FStar_Interactive_Ide_Types.repl_fname =
+                        (st.FStar_Interactive_Ide_Types.repl_fname);
+                      FStar_Interactive_Ide_Types.repl_deps_stack =
+                        (st.FStar_Interactive_Ide_Types.repl_deps_stack);
+                      FStar_Interactive_Ide_Types.repl_curmod =
+                        (st.FStar_Interactive_Ide_Types.repl_curmod);
+                      FStar_Interactive_Ide_Types.repl_env = uu___2;
+                      FStar_Interactive_Ide_Types.repl_stdin =
+                        (st.FStar_Interactive_Ide_Types.repl_stdin);
+                      FStar_Interactive_Ide_Types.repl_names =
+                        (st.FStar_Interactive_Ide_Types.repl_names);
+                      FStar_Interactive_Ide_Types.repl_buffered_input_queries
+                        =
+                        (st.FStar_Interactive_Ide_Types.repl_buffered_input_queries)
+                    }))
+let (add_issues_to_push_fragment :
+  FStar_Compiler_Util.json Prims.list -> unit) =
+  fun issues ->
+    let uu___ = FStar_Compiler_Effect.op_Bang repl_stack in
+    match uu___ with
+    | (depth,
+       (FStar_Interactive_Ide_Types.PushFragment (frag, push_kind, i), st))::rest
+        ->
+        let pf =
+          FStar_Interactive_Ide_Types.PushFragment
+            (frag, push_kind, (FStar_Compiler_List.op_At issues i)) in
+        FStar_Compiler_Effect.op_Colon_Equals repl_stack ((depth, (pf, st))
+          :: rest)
+    | uu___1 -> ()
 let (rollback_env :
   FStar_TypeChecker_Env.solver_t ->
     Prims.string ->
@@ -368,7 +386,7 @@ let (run_repl_task :
               FStar_Universal.load_interface_decls env
                 intf.FStar_Interactive_Ide_Types.tf_fname in
             (curmod, uu___)
-        | FStar_Interactive_Ide_Types.PushFragment (frag, uu___) ->
+        | FStar_Interactive_Ide_Types.PushFragment (frag, uu___, uu___1) ->
             FStar_Universal.tc_one_fragment curmod env frag
         | FStar_Interactive_Ide_Types.Noop -> (curmod, env)
 let (query_of_ids :
@@ -575,7 +593,9 @@ let (repl_tx :
           (fun uu___ ->
              match () with
              | () ->
-                 let st1 = push_repl "repl_tx" push_kind task st in
+                 let st1 =
+                   push_repl "repl_tx"
+                     (FStar_Pervasives_Native.Some push_kind) task st in
                  let uu___1 =
                    track_name_changes
                      st1.FStar_Interactive_Ide_Types.repl_env in
@@ -904,5 +924,5 @@ let (full_lax :
              } FStar_Interactive_Ide_Types.LaxCheck
              (FStar_Interactive_Ide_Types.PushFragment
                 ((FStar_Pervasives.Inl frag),
-                  FStar_Interactive_Ide_Types.LaxCheck))
+                  FStar_Interactive_Ide_Types.LaxCheck, []))
        | FStar_Pervasives.Inr st1 -> (FStar_Pervasives_Native.None, st1))

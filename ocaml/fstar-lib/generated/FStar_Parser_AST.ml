@@ -2436,10 +2436,13 @@ let (idents_of_binders :
 let (decl_syntax_is_delimited : decl -> Prims.bool) =
   fun d ->
     match d.d with
+    | Pragma (ResetOptions (FStar_Pervasives_Native.None)) -> false
+    | Pragma (PushOptions (FStar_Pervasives_Native.None)) -> false
     | Pragma uu___ -> true
     | NewEffect (DefineEffect uu___) -> true
     | LayeredEffect (DefineEffect uu___) -> true
     | SubEffect
         { msource = uu___; mdest = uu___1; lift_op = uu___2; braced = true;_}
         -> true
+    | Tycon (uu___, b, uu___1) -> b
     | uu___ -> false

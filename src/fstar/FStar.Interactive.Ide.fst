@@ -171,7 +171,7 @@ let run_repl_ld_transactions (st: repl_state) (tasks: list repl_task)
       Options.restore_cmd_line_options false |> ignore;
       let timestamped_task = update_task_timestamps task in
       let push_kind = if Options.lax () then LaxCheck else FullCheck in
-      let success, st = run_repl_transaction st push_kind false timestamped_task in
+      let success, st = run_repl_transaction st (Some push_kind) false timestamped_task in
       if success then aux ({ st with repl_deps_stack = !repl_stack }) tasks []
       else Inr st
 
@@ -225,7 +225,7 @@ let unpack_interactive_query json =
     in
     let parse_full_buffer_kind = function
       | "full" -> Full
-      | "full-with-symbols" -> FullBufferWithSymbols
+      | "lax-with-symbols" -> LaxWithSymbols
       | "cache" -> Cache
       | "reload-deps" -> ReloadDeps
       | "verify-to-position" -> VerifyToPosition (read_to_position ())
@@ -649,7 +649,7 @@ let run_push_without_deps st query
       Inr decl
     in
   let st = set_nosynth_flag st peek_only in
-  let success, st = run_repl_transaction st push_kind peek_only (PushFragment (frag, push_kind)) in
+  let success, st = run_repl_transaction st (Some push_kind) peek_only (PushFragment (frag, push_kind, [])) in
   let st = set_nosynth_flag st false in
 
   let status = if success || peek_only then QueryOK else QueryNOK in
@@ -671,6 +671,11 @@ let run_push_without_deps st query
     | _ -> ()
   in
   let json_errors = JsonList (errs |> List.map json_of_issue) in
+  let _ = 
+    match errs, status with
+    | _::_, QueryOK -> add_issues_to_push_fragment [json_errors]
+    | _ -> ()
+  in
   let st = if success then { st with repl_line = line; repl_column = column } else st in
   ((status, json_errors), Inl st)
 
@@ -733,7 +738,8 @@ let run_lookup' st symbol context pos_opt requested_info symrange =
 let run_lookup st symbol context pos_opt requested_info symrange =
   match run_lookup' st symbol context pos_opt requested_info symrange with
   | Inl err_msg ->
-    ((QueryNOK, JsonStr err_msg), Inl st)
+    // No result found, but don't fail the query
+    ((QueryOK, JsonStr err_msg), Inl st)
   | Inr (kind, info) ->
     ((QueryOK, JsonAssoc (("kind", JsonStr kind) :: info)), Inl st)
 
@@ -798,7 +804,7 @@ let run_autocomplete st search_term context =
     run_module_autocomplete st search_term modules namespaces
 
 let run_and_rewind st sigint_default task =
-  let st = push_repl "run_and_rewind" FullCheck Noop st in
+  let st = push_repl "run_and_rewind" (Some FullCheck) Noop st in
   let results =
     try Util.with_sigint_handler Util.sigint_raise (fun _ -> Inl <| task st)
     with | Util.SigInt -> Inl sigint_default
@@ -1061,10 +1067,10 @@ let rec run_query st (q: query) : (query_status * list json) * either repl_state
   | Push pquery -> as_json_list (run_push st pquery)
   | Pop -> as_json_list (run_pop st)
   | FullBuffer (code, full) ->
-    let queries = 
+    let queries, issues = 
       FStar.Interactive.Incremental.run_full_buffer st q.qid code full write_full_buffer_fragment_progress
     in
-    fold_query validate_and_run_query queries st []
+    fold_query validate_and_run_query queries st issues
   | AutoComplete (search_term, context) ->
     as_json_list (run_autocomplete st search_term context)
   | Lookup (symbol, context, pos_opt, rq_info, symrange) ->
