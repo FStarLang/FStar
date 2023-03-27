@@ -268,5 +268,7 @@ module OrderedType : BatInterfaces.OrderedType with type t = bigint = struct
   let compare = cfrom2 Big_int.compare_big_int
 end
 
+let flavor = "num"
+
 type krmlint = int
 let krmlint_of_int_fs = to_int

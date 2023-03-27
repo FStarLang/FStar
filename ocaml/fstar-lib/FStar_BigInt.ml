@@ -58,5 +58,7 @@ let to_int64 = Z.to_int64
 module HashedType : BatHashtbl.HashedType with type t = t = Z
 module OrderedType : BatInterfaces.OrderedType with type t = t = Z
 
+let flavor = "zarith"
+
 type krmlint = int
 let krmlint_of_int_fs = to_int

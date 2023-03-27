@@ -73,6 +73,9 @@ module HashedType: BatHashtbl.HashedType with type t = t
 (* Needed by FStar_Compiler_Util.ZMap *)
 module OrderedType: BatInterfaces.OrderedType with type t = t
 
+(* Which bigint implementation are we using? Shown with --version *)
+val flavor: string
+
 (* Karamel integers. See comments in FStar.BigInt.fsti *)
 type krmlint = int
 val krmlint_of_int_fs : t -> krmlint

@@ -58,6 +58,9 @@ val to_int_fs: (bigint -> int)
 
 val of_hex: string -> bigint
 
+(* Which bigint implementation are we using? Shown with --version *)
+val flavor: string
+
 (* we need to expose the integer type used in the Karamel AST. In
    practice, Karamel is using OCaml integers, but F* has long used
    Zarith's integers, whose representation coincide with OCaml

@@ -481,8 +481,8 @@ let _date = Util.mk_ref " not set"
 let _commit = Util.mk_ref ""
 
 let display_version () =
-  Util.print_string (Util.format5 "F* %s\nplatform=%s\ncompiler=%s\ndate=%s\ncommit=%s\n"
-                                  !_version !_platform !_compiler !_date !_commit)
+  Util.print_string (Util.format6 "F* %s\nplatform=%s\ncompiler=%s\ndate=%s\ncommit=%s\nflavor=%s\n"
+                                  !_version !_platform !_compiler !_date !_commit FStar.BigInt.flavor)
 
 let display_usage_aux specs =
   Util.print_string "fstar.exe [options] file[s] [@respfile...]\n";
