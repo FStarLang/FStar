@@ -236,34 +236,3 @@ val cas_u32 (#uses:inames)
       uses
       (pts_to r full_perm v)
       (fun b -> if b then pts_to r full_perm v_new else pts_to r full_perm v)
-
-// A reinterpretation of pts_to with selectors
-
-module C = Steel.ST.Combinators
-
-val ptrp (#a:Type0) (r:ref a) ([@@@smt_fallback] p: perm) : slprop u#1
-val ptrp_sel (#a:Type0) (r:ref a) (p: perm) : selector a (ptrp r p)
-
-[@@ __steel_reduce__]
-let vptr' #a r p : vprop' =
-  {hp = ptrp r p;
-   t = a;
-   sel = ptrp_sel r p}
-
-[@@ __steel_reduce__]
-unfold
-let vptrp (#a: Type) (r: ref a) ([@@@smt_fallback] p: perm) = VUnit (vptr' r p)
-
-val vptrp_intro
-  (#inames: _)
-  (#a: Type) (r: ref a) (p: perm) (v: a)
-: STGhostT unit inames
-    (pts_to r p v)
-    (fun _ -> vptrp r p `vrefine` C.equals v)
-
-val vptrp_elim
-  (#inames: _)
-  (#a: Type) (r: ref a) (p: perm) (v: a)
-: STGhostT unit inames
-    (vptrp r p `vrefine` C.equals v)
-    (fun _ -> pts_to r p v)
