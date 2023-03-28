@@ -1,5 +1,6 @@
 # This makefile is included from several other makefiles in the tree.
-# Its only purpose is to enable configurably 'silent' rules, that do not
+
+# It enables configurably 'silent' rules, that do not
 # print output unless V=1 is set. When writing a rule, you can do as
 # follows (taken from src/Makefile.boot):
 #
@@ -17,6 +18,9 @@
 #
 # Besides that, when not using V=1, F* receives the --silent flag to
 # reduce non-critical output.
+
+# It also defines some other utilities for resource monitoring and
+# paths manipulation for cygwin
 
 Q?=@
 SIL?=--silent
@@ -48,3 +52,8 @@ ifneq ($(RESOURCEMONITOR),)
 	endif
 	RUNLIM=runlim -p -o $@.$(MONPREFIX)runlim
 endif
+
+# Can be called as $(call maybe_cygwin_path,...)
+#   where ... is the argument
+
+maybe_cygwin_path=$(if ($(ifeq ($(OS),Windows_NT) "y" endif)),$(shell cygpath -m $(1)),$(1))
