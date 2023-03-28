@@ -12,7 +12,10 @@ INTFILES_RAW=\
 	FStar_UInt64.ml
 
 FSTAR_HOME ?= $(realpath ../..)
-DUNE_SNAPSHOT ?= $(FSTAR_HOME)/ocaml
+
+include $(FSTAR_HOME)/.common.mk
+
+DUNE_SNAPSHOT ?= $(call maybe_cygwin_path,$(FSTAR_HOME)/ocaml)
 
 TARGET_DIR=$(DUNE_SNAPSHOT)/fstar-lib/generated/
 INTFILES=$(addprefix $(TARGET_DIR),$(INTFILES_RAW))
