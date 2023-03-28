@@ -810,6 +810,26 @@ val array_ref_shift
       array_ref_offset y == array_ref_offset a `SZ.add` i
     ))
 
+val array_ref_shift_zero
+  (#t: Type)
+  (#td: typedef t)
+  (a: array_ref td)
+: Lemma
+    (ensures (
+      array_ref_shift a 0sz == a
+    ))
+
+val array_ref_shift_assoc
+  (#t: Type)
+  (#td: typedef t)
+  (a: array_ref td)
+  (i1 i2: SZ.t)
+: Lemma
+    (requires (SZ.v (array_ref_offset a) + SZ.v i1 + SZ.v i2 <= SZ.v (array_ref_base_size a)))
+    (ensures (
+      array_ref_shift a (SZ.add i1 i2) == array_ref_shift (array_ref_shift a i1) i2
+    ))
+
 inline_for_extraction [@@noextract_to "krml"]
 let array_split_l
   (#t: Type)

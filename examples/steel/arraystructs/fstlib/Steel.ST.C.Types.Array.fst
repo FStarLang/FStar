@@ -1087,6 +1087,14 @@ let array_ref_shift
   a i
 = t_array_ref_shift a i
 
+let array_ref_shift_zero
+  a
+= ()
+
+let array_ref_shift_assoc
+  a i1 i2
+= ()
+
 let ghost_array_split
   #_ #_ #td #s a i
 = array_pts_to_length _ _;
