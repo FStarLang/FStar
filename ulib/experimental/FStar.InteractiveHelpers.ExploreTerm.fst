@@ -574,7 +574,7 @@ and explore_pattern dbg dfs #a f x ge0 pat =
 /// Returns the list of free variables contained in a term
 val free_in : term -> Tac (list bv)
 let free_in t =
-  let same_name (bv1 bv2 : bv) : Tot bool =
+  let same_name (bv1 bv2 : bv) : Tac bool =
     name_of_bv bv1 = name_of_bv bv2
   in
   let update_free (fl:list bv) (ge:genv) (pl:list (genv & term_view))
@@ -582,12 +582,11 @@ let free_in t =
     Tac (list bv & ctrl_flag) =
     match tv with
     | Tv_Var bv | Tv_BVar bv ->
-      let bvv = inspect_bv bv in
       (* Check if the binding was not introduced during the traversal *)
-      begin match genv_get_from_name ge bvv.bv_ppname with
+      begin match genv_get_from_name ge (name_of_bv bv) with
       | None ->
         (* Check if we didn't already count the binding *)
-        let fl' = if Some? (List.Tot.tryFind (same_name bv) fl) then fl else bv :: fl in
+        let fl' = if Tactics.tryFind (same_name bv) fl then fl else bv :: fl in
         fl', Continue
       | Some _ -> fl, Continue
       end

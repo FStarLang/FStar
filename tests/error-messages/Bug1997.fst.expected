@@ -1,942 +1,318 @@
 Module after desugaring:
 module Bug1997
 Declarations: [
-[@ ]
-let  op_Equals_Hat  : _ = fun a b -> a + b
-[@ ]
-let  test1  : _ = fun a b c -> a =^ b =^ c
-[@ ]
-let  test2  : _ = fun a b c -> a =^ b =^ c
-[@ ]
-let  test3  : _ = fun a b c -> a =^ (b =^ c)
-[@ ]
-private let  uu___11  : _ = FStar.Pervasives.assert_norm (Bug1997.test1 == Bug1997.test2)
-[@ (FStar.Pervasives.expect_failure)]
-(* Sig_fail false [] *)
-[@ ]
-private let  uu___12  : _ = FStar.Pervasives.assert_norm (Bug1997.test1 == Bug1997.test3)
-(* / Sig_fail*)
+let op_Equals_Hat a b = a + b
+let test1 a b c = a =^ b =^ c
+let test2 a b c = a =^ b =^ c
+let test3 a b c = a =^ (b =^ c)
+private
+let _ = FStar.Pervasives.assert_norm (Bug1997.test1 == Bug1997.test2)
 
-[@ ]
-logic let  imp_assoc_0  : _ = fun p q r -> p ==> q ==> r
-[@ ]
-logic let  imp_assoc_1  : _ = fun p q r -> p ==> q ==> r
-[@ ]
-logic let  imp_assoc_2  : _ = fun p q r -> (p ==> q) ==> r
-[@ ]
-private let  uu___22  : _ = FStar.Pervasives.assert_norm (Bug1997.imp_assoc_0 == Bug1997.imp_assoc_1)
-[@ (FStar.Pervasives.expect_failure)]
-(* Sig_fail false [] *)
-[@ ]
-private let  uu___23  : _ = FStar.Pervasives.assert_norm (Bug1997.imp_assoc_1 == Bug1997.imp_assoc_2)
-(* / Sig_fail*)
+let imp_assoc_0 p q r = p ==> q ==> r
+let imp_assoc_1 p q r = p ==> q ==> r
+let imp_assoc_2 p q r = (p ==> q) ==> r
+private
+let _ = FStar.Pervasives.assert_norm (Bug1997.imp_assoc_0 == Bug1997.imp_assoc_1)
 
-[@ ]
-logic let  imp_iff_0  : _ = fun p q r -> p ==> q <==> r
-[@ ]
-logic let  imp_iff_1  : _ = fun p q r -> p ==> q <==> r
-[@ ]
-logic let  imp_iff_2  : _ = fun p q r -> p ==> (q <==> r)
-[@ ]
-private let  uu___33  : _ = FStar.Pervasives.assert_norm (Bug1997.imp_iff_0 == Bug1997.imp_iff_1)
-[@ (FStar.Pervasives.expect_failure)]
-(* Sig_fail false [] *)
-[@ ]
-private let  uu___34  : _ = FStar.Pervasives.assert_norm (Bug1997.imp_iff_1 == Bug1997.imp_iff_2)
-(* / Sig_fail*)
+let imp_iff_0 p q r = p ==> q <==> r
+let imp_iff_1 p q r = p ==> q <==> r
+let imp_iff_2 p q r = p ==> (q <==> r)
+private
+let _ = FStar.Pervasives.assert_norm (Bug1997.imp_iff_0 == Bug1997.imp_iff_1)
 
-[@ ]
-logic let  imp_conj_1  : _ = fun p q r s -> p ==> q /\ r ==> s
-[@ ]
-logic let  imp_conj_2  : _ = fun p q r s -> (p ==> q) /\ (r ==> s)
-[@ ]
-logic let  imp_conj_3  : _ = fun p q r s -> p ==> q /\ (r ==> s)
-[@ ]
-logic let  imp_conj_4  : _ = fun p q r s -> p ==> q /\ r ==> s
-[@ ]
-private let  uu___51  : _ = FStar.Pervasives.assert_norm (Bug1997.imp_conj_1 == Bug1997.imp_conj_4)
-[@ (FStar.Pervasives.expect_failure)]
-(* Sig_fail false [] *)
-[@ ]
-private let  uu___52  : _ = FStar.Pervasives.assert_norm (Bug1997.imp_conj_1 == Bug1997.imp_conj_3)
-(* / Sig_fail*)
+let imp_conj_1 p q r s = p ==> q /\ r ==> s
+let imp_conj_2 p q r s = (p ==> q) /\ (r ==> s)
+let imp_conj_3 p q r s = p ==> q /\ (r ==> s)
+let imp_conj_4 p q r s = p ==> q /\ r ==> s
+private
+let _ = FStar.Pervasives.assert_norm (Bug1997.imp_conj_1 == Bug1997.imp_conj_4)
 
-[@ (FStar.Pervasives.expect_failure)]
-(* Sig_fail false [] *)
-[@ ]
-private let  uu___53  : _ = FStar.Pervasives.assert_norm (Bug1997.imp_conj_1 == Bug1997.imp_conj_2)
-(* / Sig_fail*)
 
-[@ (FStar.Pervasives.expect_failure)]
-(* Sig_fail false [] *)
-[@ ]
-private let  uu___54  : _ = FStar.Pervasives.assert_norm (Bug1997.imp_conj_2 == Bug1997.imp_conj_3)
-(* / Sig_fail*)
 
-[@ (FStar.Pervasives.expect_failure)]
-(* Sig_fail false [] *)
-[@ ]
-private let  uu___55  : _ = FStar.Pervasives.assert_norm (Bug1997.imp_conj_2 == Bug1997.imp_conj_4)
-(* / Sig_fail*)
 
-[@ (FStar.Pervasives.expect_failure)]
-(* Sig_fail false [] *)
-[@ ]
-private let  uu___56  : _ = FStar.Pervasives.assert_norm (Bug1997.imp_conj_3 == Bug1997.imp_conj_4)
-(* / Sig_fail*)
 
-[@ ]
-logic let  impneg1  : _ = fun p q r -> p ==> q /\ ~p ==> r
-[@ ]
-logic let  impneg2  : _ = fun p q r -> (p ==> q) /\ (~p ==> r)
-[@ ]
-logic let  impneg3  : _ = fun p q r -> p ==> q /\ (~p ==> r)
-[@ ]
-logic let  impneg4  : _ = fun p q r -> p ==> q /\ ~p ==> r
-[@ ]
-private let  uu___69  : _ = FStar.Pervasives.assert_norm (Bug1997.impneg1 == Bug1997.impneg4)
-[@ (FStar.Pervasives.expect_failure)]
-(* Sig_fail false [] *)
-[@ ]
-private let  uu___70  : _ = FStar.Pervasives.assert_norm (Bug1997.impneg1 == Bug1997.impneg3)
-(* / Sig_fail*)
+let impneg1 p q r = p ==> q /\ ~p ==> r
+let impneg2 p q r = (p ==> q) /\ (~p ==> r)
+let impneg3 p q r = p ==> q /\ (~p ==> r)
+let impneg4 p q r = p ==> q /\ ~p ==> r
+private
+let _ = FStar.Pervasives.assert_norm (Bug1997.impneg1 == Bug1997.impneg4)
 
-[@ (FStar.Pervasives.expect_failure)]
-(* Sig_fail false [] *)
-[@ ]
-private let  uu___71  : _ = FStar.Pervasives.assert_norm (Bug1997.impneg1 == Bug1997.impneg2)
-(* / Sig_fail*)
 
-[@ (FStar.Pervasives.expect_failure)]
-(* Sig_fail false [] *)
-[@ ]
-private let  uu___72  : _ = FStar.Pervasives.assert_norm (Bug1997.impneg2 == Bug1997.impneg3)
-(* / Sig_fail*)
 
-[@ (FStar.Pervasives.expect_failure)]
-(* Sig_fail false [] *)
-[@ ]
-private let  uu___73  : _ = FStar.Pervasives.assert_norm (Bug1997.impneg2 == Bug1997.impneg4)
-(* / Sig_fail*)
 
-[@ (FStar.Pervasives.expect_failure)]
-(* Sig_fail false [] *)
-[@ ]
-private let  uu___74  : _ = FStar.Pervasives.assert_norm (Bug1997.impneg3 == Bug1997.impneg4)
-(* / Sig_fail*)
 
-[@ ]
-logic let  cd1  : _ = fun p q r -> p /\ q \/ r
-[@ ]
-logic let  cd2  : _ = fun p q r -> p /\ q \/ r
-[@ ]
-logic let  cd3  : _ = fun p q r -> p /\ (q \/ r)
-[@ ]
-private let  uu___84  : _ = FStar.Pervasives.assert_norm (Bug1997.cd1 == Bug1997.cd2)
-[@ (FStar.Pervasives.expect_failure)]
-(* Sig_fail false [] *)
-[@ ]
-private let  uu___85  : _ = FStar.Pervasives.assert_norm (Bug1997.cd1 == Bug1997.cd3)
-(* / Sig_fail*)
+let cd1 p q r = p /\ q \/ r
+let cd2 p q r = p /\ q \/ r
+let cd3 p q r = p /\ (q \/ r)
+private
+let _ = FStar.Pervasives.assert_norm (Bug1997.cd1 == Bug1997.cd2)
 
-[@ (FStar.Pervasives.expect_failure)]
-(* Sig_fail false [] *)
-[@ ]
-private let  uu___86  : _ = FStar.Pervasives.assert_norm (Bug1997.cd2 == Bug1997.cd3)
-(* / Sig_fail*)
 
-[@ ]
-logic let  m0  : _ = fun p q r s -> p /\ (q \/ r) /\ s
-[@ ]
-logic let  m1  : _ = fun p q r s -> p /\ q \/ r /\ s
-[@ ]
-logic let  m2  : _ = fun p q r s -> p /\ q \/ r /\ s
-[@ ]
-logic let  m3  : _ = fun p q r s -> p /\ q \/ r /\ s
-[@ ]
-logic let  m4  : _ = fun p q r s -> p /\ q \/ r /\ s
-[@ ]
-private let  uu___107  : _ = FStar.Pervasives.assert_norm (Bug1997.m1 == Bug1997.m2)
-[@ ]
-private let  uu___108  : _ = FStar.Pervasives.assert_norm (Bug1997.m1 == Bug1997.m3)
-[@ ]
-private let  uu___109  : _ = FStar.Pervasives.assert_norm (Bug1997.m1 == Bug1997.m4)
-[@ (FStar.Pervasives.expect_failure)]
-(* Sig_fail false [] *)
-[@ ]
-private let  uu___110  : _ = FStar.Pervasives.assert_norm (Bug1997.m0 == Bug1997.m1)
-(* / Sig_fail*)
+let m0 p q r s = p /\ (q \/ r) /\ s
+let m1 p q r s = p /\ q \/ r /\ s
+let m2 p q r s = p /\ q \/ r /\ s
+let m3 p q r s = p /\ q \/ r /\ s
+let m4 p q r s = p /\ q \/ r /\ s
+private
+let _ = FStar.Pervasives.assert_norm (Bug1997.m1 == Bug1997.m2)
+private
+let _ = FStar.Pervasives.assert_norm (Bug1997.m1 == Bug1997.m3)
+private
+let _ = FStar.Pervasives.assert_norm (Bug1997.m1 == Bug1997.m4)
 
-[@ (FStar.Pervasives.expect_failure)]
-(* Sig_fail false [] *)
-[@ ]
-private let  uu___111  : _ = FStar.Pervasives.assert_norm (Bug1997.m0 == Bug1997.m2)
-(* / Sig_fail*)
 
-[@ (FStar.Pervasives.expect_failure)]
-(* Sig_fail false [] *)
-[@ ]
-private let  uu___112  : _ = FStar.Pervasives.assert_norm (Bug1997.m0 == Bug1997.m3)
-(* / Sig_fail*)
 
-[@ (FStar.Pervasives.expect_failure)]
-(* Sig_fail false [] *)
-[@ ]
-private let  uu___113  : _ = FStar.Pervasives.assert_norm (Bug1997.m0 == Bug1997.m4)
-(* / Sig_fail*)
 
-[@ ]
-logic let  n0  : _ = fun p q r s -> p \/ q /\ r \/ s
-[@ ]
-logic let  n1  : _ = fun p q r s -> p \/ q /\ r \/ s
-[@ ]
-logic let  n2  : _ = fun p q r s -> (p \/ q) /\ r \/ s
-[@ ]
-logic let  n3  : _ = fun p q r s -> (p \/ q) /\ (r \/ s)
-[@ ]
-logic let  n4  : _ = fun p q r s -> p \/ q /\ (r \/ s)
-[@ ]
-private let  uu___134  : _ = FStar.Pervasives.assert_norm (Bug1997.n0 == Bug1997.n1)
-[@ (FStar.Pervasives.expect_failure)]
-(* Sig_fail false [] *)
-[@ ]
-private let  uu___135  : _ = FStar.Pervasives.assert_norm (Bug1997.n1 == Bug1997.n2)
-(* / Sig_fail*)
+let n0 p q r s = p \/ q /\ r \/ s
+let n1 p q r s = p \/ q /\ r \/ s
+let n2 p q r s = (p \/ q) /\ r \/ s
+let n3 p q r s = (p \/ q) /\ (r \/ s)
+let n4 p q r s = p \/ q /\ (r \/ s)
+private
+let _ = FStar.Pervasives.assert_norm (Bug1997.n0 == Bug1997.n1)
 
-[@ (FStar.Pervasives.expect_failure)]
-(* Sig_fail false [] *)
-[@ ]
-private let  uu___136  : _ = FStar.Pervasives.assert_norm (Bug1997.n1 == Bug1997.n3)
-(* / Sig_fail*)
 
-[@ (FStar.Pervasives.expect_failure)]
-(* Sig_fail false [] *)
-[@ ]
-private let  uu___137  : _ = FStar.Pervasives.assert_norm (Bug1997.n1 == Bug1997.n4)
-(* / Sig_fail*)
 
-[@ (FStar.Pervasives.expect_failure)]
-(* Sig_fail false [] *)
-[@ ]
-private let  uu___138  : _ = FStar.Pervasives.assert_norm (Bug1997.n2 == Bug1997.n3)
-(* / Sig_fail*)
 
-[@ (FStar.Pervasives.expect_failure)]
-(* Sig_fail false [] *)
-[@ ]
-private let  uu___139  : _ = FStar.Pervasives.assert_norm (Bug1997.n2 == Bug1997.n4)
-(* / Sig_fail*)
 
-[@ (FStar.Pervasives.expect_failure)]
-(* Sig_fail false [] *)
-[@ ]
-private let  uu___140  : _ = FStar.Pervasives.assert_norm (Bug1997.n3 == Bug1997.n4)
-(* / Sig_fail*)
 
 ]
 Exports: [
-[@ ]
-let  op_Equals_Hat  : _ = fun a b -> a + b
-[@ ]
-let  test1  : _ = fun a b c -> a =^ b =^ c
-[@ ]
-let  test2  : _ = fun a b c -> a =^ b =^ c
-[@ ]
-let  test3  : _ = fun a b c -> a =^ (b =^ c)
-[@ ]
-private let  uu___11  : _ = FStar.Pervasives.assert_norm (Bug1997.test1 == Bug1997.test2)
-[@ (FStar.Pervasives.expect_failure)]
-(* Sig_fail false [] *)
-[@ ]
-private let  uu___12  : _ = FStar.Pervasives.assert_norm (Bug1997.test1 == Bug1997.test3)
-(* / Sig_fail*)
+let op_Equals_Hat a b = a + b
+let test1 a b c = a =^ b =^ c
+let test2 a b c = a =^ b =^ c
+let test3 a b c = a =^ (b =^ c)
+private
+let _ = FStar.Pervasives.assert_norm (Bug1997.test1 == Bug1997.test2)
 
-[@ ]
-logic let  imp_assoc_0  : _ = fun p q r -> p ==> q ==> r
-[@ ]
-logic let  imp_assoc_1  : _ = fun p q r -> p ==> q ==> r
-[@ ]
-logic let  imp_assoc_2  : _ = fun p q r -> (p ==> q) ==> r
-[@ ]
-private let  uu___22  : _ = FStar.Pervasives.assert_norm (Bug1997.imp_assoc_0 == Bug1997.imp_assoc_1)
-[@ (FStar.Pervasives.expect_failure)]
-(* Sig_fail false [] *)
-[@ ]
-private let  uu___23  : _ = FStar.Pervasives.assert_norm (Bug1997.imp_assoc_1 == Bug1997.imp_assoc_2)
-(* / Sig_fail*)
+let imp_assoc_0 p q r = p ==> q ==> r
+let imp_assoc_1 p q r = p ==> q ==> r
+let imp_assoc_2 p q r = (p ==> q) ==> r
+private
+let _ = FStar.Pervasives.assert_norm (Bug1997.imp_assoc_0 == Bug1997.imp_assoc_1)
 
-[@ ]
-logic let  imp_iff_0  : _ = fun p q r -> p ==> q <==> r
-[@ ]
-logic let  imp_iff_1  : _ = fun p q r -> p ==> q <==> r
-[@ ]
-logic let  imp_iff_2  : _ = fun p q r -> p ==> (q <==> r)
-[@ ]
-private let  uu___33  : _ = FStar.Pervasives.assert_norm (Bug1997.imp_iff_0 == Bug1997.imp_iff_1)
-[@ (FStar.Pervasives.expect_failure)]
-(* Sig_fail false [] *)
-[@ ]
-private let  uu___34  : _ = FStar.Pervasives.assert_norm (Bug1997.imp_iff_1 == Bug1997.imp_iff_2)
-(* / Sig_fail*)
+let imp_iff_0 p q r = p ==> q <==> r
+let imp_iff_1 p q r = p ==> q <==> r
+let imp_iff_2 p q r = p ==> (q <==> r)
+private
+let _ = FStar.Pervasives.assert_norm (Bug1997.imp_iff_0 == Bug1997.imp_iff_1)
 
-[@ ]
-logic let  imp_conj_1  : _ = fun p q r s -> p ==> q /\ r ==> s
-[@ ]
-logic let  imp_conj_2  : _ = fun p q r s -> (p ==> q) /\ (r ==> s)
-[@ ]
-logic let  imp_conj_3  : _ = fun p q r s -> p ==> q /\ (r ==> s)
-[@ ]
-logic let  imp_conj_4  : _ = fun p q r s -> p ==> q /\ r ==> s
-[@ ]
-private let  uu___51  : _ = FStar.Pervasives.assert_norm (Bug1997.imp_conj_1 == Bug1997.imp_conj_4)
-[@ (FStar.Pervasives.expect_failure)]
-(* Sig_fail false [] *)
-[@ ]
-private let  uu___52  : _ = FStar.Pervasives.assert_norm (Bug1997.imp_conj_1 == Bug1997.imp_conj_3)
-(* / Sig_fail*)
+let imp_conj_1 p q r s = p ==> q /\ r ==> s
+let imp_conj_2 p q r s = (p ==> q) /\ (r ==> s)
+let imp_conj_3 p q r s = p ==> q /\ (r ==> s)
+let imp_conj_4 p q r s = p ==> q /\ r ==> s
+private
+let _ = FStar.Pervasives.assert_norm (Bug1997.imp_conj_1 == Bug1997.imp_conj_4)
 
-[@ (FStar.Pervasives.expect_failure)]
-(* Sig_fail false [] *)
-[@ ]
-private let  uu___53  : _ = FStar.Pervasives.assert_norm (Bug1997.imp_conj_1 == Bug1997.imp_conj_2)
-(* / Sig_fail*)
 
-[@ (FStar.Pervasives.expect_failure)]
-(* Sig_fail false [] *)
-[@ ]
-private let  uu___54  : _ = FStar.Pervasives.assert_norm (Bug1997.imp_conj_2 == Bug1997.imp_conj_3)
-(* / Sig_fail*)
 
-[@ (FStar.Pervasives.expect_failure)]
-(* Sig_fail false [] *)
-[@ ]
-private let  uu___55  : _ = FStar.Pervasives.assert_norm (Bug1997.imp_conj_2 == Bug1997.imp_conj_4)
-(* / Sig_fail*)
 
-[@ (FStar.Pervasives.expect_failure)]
-(* Sig_fail false [] *)
-[@ ]
-private let  uu___56  : _ = FStar.Pervasives.assert_norm (Bug1997.imp_conj_3 == Bug1997.imp_conj_4)
-(* / Sig_fail*)
 
-[@ ]
-logic let  impneg1  : _ = fun p q r -> p ==> q /\ ~p ==> r
-[@ ]
-logic let  impneg2  : _ = fun p q r -> (p ==> q) /\ (~p ==> r)
-[@ ]
-logic let  impneg3  : _ = fun p q r -> p ==> q /\ (~p ==> r)
-[@ ]
-logic let  impneg4  : _ = fun p q r -> p ==> q /\ ~p ==> r
-[@ ]
-private let  uu___69  : _ = FStar.Pervasives.assert_norm (Bug1997.impneg1 == Bug1997.impneg4)
-[@ (FStar.Pervasives.expect_failure)]
-(* Sig_fail false [] *)
-[@ ]
-private let  uu___70  : _ = FStar.Pervasives.assert_norm (Bug1997.impneg1 == Bug1997.impneg3)
-(* / Sig_fail*)
+let impneg1 p q r = p ==> q /\ ~p ==> r
+let impneg2 p q r = (p ==> q) /\ (~p ==> r)
+let impneg3 p q r = p ==> q /\ (~p ==> r)
+let impneg4 p q r = p ==> q /\ ~p ==> r
+private
+let _ = FStar.Pervasives.assert_norm (Bug1997.impneg1 == Bug1997.impneg4)
 
-[@ (FStar.Pervasives.expect_failure)]
-(* Sig_fail false [] *)
-[@ ]
-private let  uu___71  : _ = FStar.Pervasives.assert_norm (Bug1997.impneg1 == Bug1997.impneg2)
-(* / Sig_fail*)
 
-[@ (FStar.Pervasives.expect_failure)]
-(* Sig_fail false [] *)
-[@ ]
-private let  uu___72  : _ = FStar.Pervasives.assert_norm (Bug1997.impneg2 == Bug1997.impneg3)
-(* / Sig_fail*)
 
-[@ (FStar.Pervasives.expect_failure)]
-(* Sig_fail false [] *)
-[@ ]
-private let  uu___73  : _ = FStar.Pervasives.assert_norm (Bug1997.impneg2 == Bug1997.impneg4)
-(* / Sig_fail*)
 
-[@ (FStar.Pervasives.expect_failure)]
-(* Sig_fail false [] *)
-[@ ]
-private let  uu___74  : _ = FStar.Pervasives.assert_norm (Bug1997.impneg3 == Bug1997.impneg4)
-(* / Sig_fail*)
 
-[@ ]
-logic let  cd1  : _ = fun p q r -> p /\ q \/ r
-[@ ]
-logic let  cd2  : _ = fun p q r -> p /\ q \/ r
-[@ ]
-logic let  cd3  : _ = fun p q r -> p /\ (q \/ r)
-[@ ]
-private let  uu___84  : _ = FStar.Pervasives.assert_norm (Bug1997.cd1 == Bug1997.cd2)
-[@ (FStar.Pervasives.expect_failure)]
-(* Sig_fail false [] *)
-[@ ]
-private let  uu___85  : _ = FStar.Pervasives.assert_norm (Bug1997.cd1 == Bug1997.cd3)
-(* / Sig_fail*)
+let cd1 p q r = p /\ q \/ r
+let cd2 p q r = p /\ q \/ r
+let cd3 p q r = p /\ (q \/ r)
+private
+let _ = FStar.Pervasives.assert_norm (Bug1997.cd1 == Bug1997.cd2)
 
-[@ (FStar.Pervasives.expect_failure)]
-(* Sig_fail false [] *)
-[@ ]
-private let  uu___86  : _ = FStar.Pervasives.assert_norm (Bug1997.cd2 == Bug1997.cd3)
-(* / Sig_fail*)
 
-[@ ]
-logic let  m0  : _ = fun p q r s -> p /\ (q \/ r) /\ s
-[@ ]
-logic let  m1  : _ = fun p q r s -> p /\ q \/ r /\ s
-[@ ]
-logic let  m2  : _ = fun p q r s -> p /\ q \/ r /\ s
-[@ ]
-logic let  m3  : _ = fun p q r s -> p /\ q \/ r /\ s
-[@ ]
-logic let  m4  : _ = fun p q r s -> p /\ q \/ r /\ s
-[@ ]
-private let  uu___107  : _ = FStar.Pervasives.assert_norm (Bug1997.m1 == Bug1997.m2)
-[@ ]
-private let  uu___108  : _ = FStar.Pervasives.assert_norm (Bug1997.m1 == Bug1997.m3)
-[@ ]
-private let  uu___109  : _ = FStar.Pervasives.assert_norm (Bug1997.m1 == Bug1997.m4)
-[@ (FStar.Pervasives.expect_failure)]
-(* Sig_fail false [] *)
-[@ ]
-private let  uu___110  : _ = FStar.Pervasives.assert_norm (Bug1997.m0 == Bug1997.m1)
-(* / Sig_fail*)
+let m0 p q r s = p /\ (q \/ r) /\ s
+let m1 p q r s = p /\ q \/ r /\ s
+let m2 p q r s = p /\ q \/ r /\ s
+let m3 p q r s = p /\ q \/ r /\ s
+let m4 p q r s = p /\ q \/ r /\ s
+private
+let _ = FStar.Pervasives.assert_norm (Bug1997.m1 == Bug1997.m2)
+private
+let _ = FStar.Pervasives.assert_norm (Bug1997.m1 == Bug1997.m3)
+private
+let _ = FStar.Pervasives.assert_norm (Bug1997.m1 == Bug1997.m4)
 
-[@ (FStar.Pervasives.expect_failure)]
-(* Sig_fail false [] *)
-[@ ]
-private let  uu___111  : _ = FStar.Pervasives.assert_norm (Bug1997.m0 == Bug1997.m2)
-(* / Sig_fail*)
 
-[@ (FStar.Pervasives.expect_failure)]
-(* Sig_fail false [] *)
-[@ ]
-private let  uu___112  : _ = FStar.Pervasives.assert_norm (Bug1997.m0 == Bug1997.m3)
-(* / Sig_fail*)
 
-[@ (FStar.Pervasives.expect_failure)]
-(* Sig_fail false [] *)
-[@ ]
-private let  uu___113  : _ = FStar.Pervasives.assert_norm (Bug1997.m0 == Bug1997.m4)
-(* / Sig_fail*)
 
-[@ ]
-logic let  n0  : _ = fun p q r s -> p \/ q /\ r \/ s
-[@ ]
-logic let  n1  : _ = fun p q r s -> p \/ q /\ r \/ s
-[@ ]
-logic let  n2  : _ = fun p q r s -> (p \/ q) /\ r \/ s
-[@ ]
-logic let  n3  : _ = fun p q r s -> (p \/ q) /\ (r \/ s)
-[@ ]
-logic let  n4  : _ = fun p q r s -> p \/ q /\ (r \/ s)
-[@ ]
-private let  uu___134  : _ = FStar.Pervasives.assert_norm (Bug1997.n0 == Bug1997.n1)
-[@ (FStar.Pervasives.expect_failure)]
-(* Sig_fail false [] *)
-[@ ]
-private let  uu___135  : _ = FStar.Pervasives.assert_norm (Bug1997.n1 == Bug1997.n2)
-(* / Sig_fail*)
+let n0 p q r s = p \/ q /\ r \/ s
+let n1 p q r s = p \/ q /\ r \/ s
+let n2 p q r s = (p \/ q) /\ r \/ s
+let n3 p q r s = (p \/ q) /\ (r \/ s)
+let n4 p q r s = p \/ q /\ (r \/ s)
+private
+let _ = FStar.Pervasives.assert_norm (Bug1997.n0 == Bug1997.n1)
 
-[@ (FStar.Pervasives.expect_failure)]
-(* Sig_fail false [] *)
-[@ ]
-private let  uu___136  : _ = FStar.Pervasives.assert_norm (Bug1997.n1 == Bug1997.n3)
-(* / Sig_fail*)
 
-[@ (FStar.Pervasives.expect_failure)]
-(* Sig_fail false [] *)
-[@ ]
-private let  uu___137  : _ = FStar.Pervasives.assert_norm (Bug1997.n1 == Bug1997.n4)
-(* / Sig_fail*)
 
-[@ (FStar.Pervasives.expect_failure)]
-(* Sig_fail false [] *)
-[@ ]
-private let  uu___138  : _ = FStar.Pervasives.assert_norm (Bug1997.n2 == Bug1997.n3)
-(* / Sig_fail*)
 
-[@ (FStar.Pervasives.expect_failure)]
-(* Sig_fail false [] *)
-[@ ]
-private let  uu___139  : _ = FStar.Pervasives.assert_norm (Bug1997.n2 == Bug1997.n4)
-(* / Sig_fail*)
 
-[@ (FStar.Pervasives.expect_failure)]
-(* Sig_fail false [] *)
-[@ ]
-private let  uu___140  : _ = FStar.Pervasives.assert_norm (Bug1997.n3 == Bug1997.n4)
-(* / Sig_fail*)
 
 ]
 
 Module before type checking:
 module Bug1997
 Declarations: [
-[@ ]
-let  op_Equals_Hat  : _ = fun a b -> a + b
-[@ ]
-let  test1  : _ = fun a b c -> a =^ b =^ c
-[@ ]
-let  test2  : _ = fun a b c -> a =^ b =^ c
-[@ ]
-let  test3  : _ = fun a b c -> a =^ (b =^ c)
-[@ ]
-private let  uu___11  : _ = FStar.Pervasives.assert_norm (Bug1997.test1 == Bug1997.test2)
-[@ (FStar.Pervasives.expect_failure)]
-(* Sig_fail false [] *)
-[@ ]
-private let  uu___12  : _ = FStar.Pervasives.assert_norm (Bug1997.test1 == Bug1997.test3)
-(* / Sig_fail*)
+let op_Equals_Hat a b = a + b
+let test1 a b c = a =^ b =^ c
+let test2 a b c = a =^ b =^ c
+let test3 a b c = a =^ (b =^ c)
+private
+let _ = FStar.Pervasives.assert_norm (Bug1997.test1 == Bug1997.test2)
 
-[@ ]
-logic let  imp_assoc_0  : _ = fun p q r -> p ==> q ==> r
-[@ ]
-logic let  imp_assoc_1  : _ = fun p q r -> p ==> q ==> r
-[@ ]
-logic let  imp_assoc_2  : _ = fun p q r -> (p ==> q) ==> r
-[@ ]
-private let  uu___22  : _ = FStar.Pervasives.assert_norm (Bug1997.imp_assoc_0 == Bug1997.imp_assoc_1)
-[@ (FStar.Pervasives.expect_failure)]
-(* Sig_fail false [] *)
-[@ ]
-private let  uu___23  : _ = FStar.Pervasives.assert_norm (Bug1997.imp_assoc_1 == Bug1997.imp_assoc_2)
-(* / Sig_fail*)
+let imp_assoc_0 p q r = p ==> q ==> r
+let imp_assoc_1 p q r = p ==> q ==> r
+let imp_assoc_2 p q r = (p ==> q) ==> r
+private
+let _ = FStar.Pervasives.assert_norm (Bug1997.imp_assoc_0 == Bug1997.imp_assoc_1)
 
-[@ ]
-logic let  imp_iff_0  : _ = fun p q r -> p ==> q <==> r
-[@ ]
-logic let  imp_iff_1  : _ = fun p q r -> p ==> q <==> r
-[@ ]
-logic let  imp_iff_2  : _ = fun p q r -> p ==> (q <==> r)
-[@ ]
-private let  uu___33  : _ = FStar.Pervasives.assert_norm (Bug1997.imp_iff_0 == Bug1997.imp_iff_1)
-[@ (FStar.Pervasives.expect_failure)]
-(* Sig_fail false [] *)
-[@ ]
-private let  uu___34  : _ = FStar.Pervasives.assert_norm (Bug1997.imp_iff_1 == Bug1997.imp_iff_2)
-(* / Sig_fail*)
+let imp_iff_0 p q r = p ==> q <==> r
+let imp_iff_1 p q r = p ==> q <==> r
+let imp_iff_2 p q r = p ==> (q <==> r)
+private
+let _ = FStar.Pervasives.assert_norm (Bug1997.imp_iff_0 == Bug1997.imp_iff_1)
 
-[@ ]
-logic let  imp_conj_1  : _ = fun p q r s -> p ==> q /\ r ==> s
-[@ ]
-logic let  imp_conj_2  : _ = fun p q r s -> (p ==> q) /\ (r ==> s)
-[@ ]
-logic let  imp_conj_3  : _ = fun p q r s -> p ==> q /\ (r ==> s)
-[@ ]
-logic let  imp_conj_4  : _ = fun p q r s -> p ==> q /\ r ==> s
-[@ ]
-private let  uu___51  : _ = FStar.Pervasives.assert_norm (Bug1997.imp_conj_1 == Bug1997.imp_conj_4)
-[@ (FStar.Pervasives.expect_failure)]
-(* Sig_fail false [] *)
-[@ ]
-private let  uu___52  : _ = FStar.Pervasives.assert_norm (Bug1997.imp_conj_1 == Bug1997.imp_conj_3)
-(* / Sig_fail*)
+let imp_conj_1 p q r s = p ==> q /\ r ==> s
+let imp_conj_2 p q r s = (p ==> q) /\ (r ==> s)
+let imp_conj_3 p q r s = p ==> q /\ (r ==> s)
+let imp_conj_4 p q r s = p ==> q /\ r ==> s
+private
+let _ = FStar.Pervasives.assert_norm (Bug1997.imp_conj_1 == Bug1997.imp_conj_4)
 
-[@ (FStar.Pervasives.expect_failure)]
-(* Sig_fail false [] *)
-[@ ]
-private let  uu___53  : _ = FStar.Pervasives.assert_norm (Bug1997.imp_conj_1 == Bug1997.imp_conj_2)
-(* / Sig_fail*)
 
-[@ (FStar.Pervasives.expect_failure)]
-(* Sig_fail false [] *)
-[@ ]
-private let  uu___54  : _ = FStar.Pervasives.assert_norm (Bug1997.imp_conj_2 == Bug1997.imp_conj_3)
-(* / Sig_fail*)
 
-[@ (FStar.Pervasives.expect_failure)]
-(* Sig_fail false [] *)
-[@ ]
-private let  uu___55  : _ = FStar.Pervasives.assert_norm (Bug1997.imp_conj_2 == Bug1997.imp_conj_4)
-(* / Sig_fail*)
 
-[@ (FStar.Pervasives.expect_failure)]
-(* Sig_fail false [] *)
-[@ ]
-private let  uu___56  : _ = FStar.Pervasives.assert_norm (Bug1997.imp_conj_3 == Bug1997.imp_conj_4)
-(* / Sig_fail*)
 
-[@ ]
-logic let  impneg1  : _ = fun p q r -> p ==> q /\ ~p ==> r
-[@ ]
-logic let  impneg2  : _ = fun p q r -> (p ==> q) /\ (~p ==> r)
-[@ ]
-logic let  impneg3  : _ = fun p q r -> p ==> q /\ (~p ==> r)
-[@ ]
-logic let  impneg4  : _ = fun p q r -> p ==> q /\ ~p ==> r
-[@ ]
-private let  uu___69  : _ = FStar.Pervasives.assert_norm (Bug1997.impneg1 == Bug1997.impneg4)
-[@ (FStar.Pervasives.expect_failure)]
-(* Sig_fail false [] *)
-[@ ]
-private let  uu___70  : _ = FStar.Pervasives.assert_norm (Bug1997.impneg1 == Bug1997.impneg3)
-(* / Sig_fail*)
+let impneg1 p q r = p ==> q /\ ~p ==> r
+let impneg2 p q r = (p ==> q) /\ (~p ==> r)
+let impneg3 p q r = p ==> q /\ (~p ==> r)
+let impneg4 p q r = p ==> q /\ ~p ==> r
+private
+let _ = FStar.Pervasives.assert_norm (Bug1997.impneg1 == Bug1997.impneg4)
 
-[@ (FStar.Pervasives.expect_failure)]
-(* Sig_fail false [] *)
-[@ ]
-private let  uu___71  : _ = FStar.Pervasives.assert_norm (Bug1997.impneg1 == Bug1997.impneg2)
-(* / Sig_fail*)
 
-[@ (FStar.Pervasives.expect_failure)]
-(* Sig_fail false [] *)
-[@ ]
-private let  uu___72  : _ = FStar.Pervasives.assert_norm (Bug1997.impneg2 == Bug1997.impneg3)
-(* / Sig_fail*)
 
-[@ (FStar.Pervasives.expect_failure)]
-(* Sig_fail false [] *)
-[@ ]
-private let  uu___73  : _ = FStar.Pervasives.assert_norm (Bug1997.impneg2 == Bug1997.impneg4)
-(* / Sig_fail*)
 
-[@ (FStar.Pervasives.expect_failure)]
-(* Sig_fail false [] *)
-[@ ]
-private let  uu___74  : _ = FStar.Pervasives.assert_norm (Bug1997.impneg3 == Bug1997.impneg4)
-(* / Sig_fail*)
 
-[@ ]
-logic let  cd1  : _ = fun p q r -> p /\ q \/ r
-[@ ]
-logic let  cd2  : _ = fun p q r -> p /\ q \/ r
-[@ ]
-logic let  cd3  : _ = fun p q r -> p /\ (q \/ r)
-[@ ]
-private let  uu___84  : _ = FStar.Pervasives.assert_norm (Bug1997.cd1 == Bug1997.cd2)
-[@ (FStar.Pervasives.expect_failure)]
-(* Sig_fail false [] *)
-[@ ]
-private let  uu___85  : _ = FStar.Pervasives.assert_norm (Bug1997.cd1 == Bug1997.cd3)
-(* / Sig_fail*)
+let cd1 p q r = p /\ q \/ r
+let cd2 p q r = p /\ q \/ r
+let cd3 p q r = p /\ (q \/ r)
+private
+let _ = FStar.Pervasives.assert_norm (Bug1997.cd1 == Bug1997.cd2)
 
-[@ (FStar.Pervasives.expect_failure)]
-(* Sig_fail false [] *)
-[@ ]
-private let  uu___86  : _ = FStar.Pervasives.assert_norm (Bug1997.cd2 == Bug1997.cd3)
-(* / Sig_fail*)
 
-[@ ]
-logic let  m0  : _ = fun p q r s -> p /\ (q \/ r) /\ s
-[@ ]
-logic let  m1  : _ = fun p q r s -> p /\ q \/ r /\ s
-[@ ]
-logic let  m2  : _ = fun p q r s -> p /\ q \/ r /\ s
-[@ ]
-logic let  m3  : _ = fun p q r s -> p /\ q \/ r /\ s
-[@ ]
-logic let  m4  : _ = fun p q r s -> p /\ q \/ r /\ s
-[@ ]
-private let  uu___107  : _ = FStar.Pervasives.assert_norm (Bug1997.m1 == Bug1997.m2)
-[@ ]
-private let  uu___108  : _ = FStar.Pervasives.assert_norm (Bug1997.m1 == Bug1997.m3)
-[@ ]
-private let  uu___109  : _ = FStar.Pervasives.assert_norm (Bug1997.m1 == Bug1997.m4)
-[@ (FStar.Pervasives.expect_failure)]
-(* Sig_fail false [] *)
-[@ ]
-private let  uu___110  : _ = FStar.Pervasives.assert_norm (Bug1997.m0 == Bug1997.m1)
-(* / Sig_fail*)
+let m0 p q r s = p /\ (q \/ r) /\ s
+let m1 p q r s = p /\ q \/ r /\ s
+let m2 p q r s = p /\ q \/ r /\ s
+let m3 p q r s = p /\ q \/ r /\ s
+let m4 p q r s = p /\ q \/ r /\ s
+private
+let _ = FStar.Pervasives.assert_norm (Bug1997.m1 == Bug1997.m2)
+private
+let _ = FStar.Pervasives.assert_norm (Bug1997.m1 == Bug1997.m3)
+private
+let _ = FStar.Pervasives.assert_norm (Bug1997.m1 == Bug1997.m4)
 
-[@ (FStar.Pervasives.expect_failure)]
-(* Sig_fail false [] *)
-[@ ]
-private let  uu___111  : _ = FStar.Pervasives.assert_norm (Bug1997.m0 == Bug1997.m2)
-(* / Sig_fail*)
 
-[@ (FStar.Pervasives.expect_failure)]
-(* Sig_fail false [] *)
-[@ ]
-private let  uu___112  : _ = FStar.Pervasives.assert_norm (Bug1997.m0 == Bug1997.m3)
-(* / Sig_fail*)
 
-[@ (FStar.Pervasives.expect_failure)]
-(* Sig_fail false [] *)
-[@ ]
-private let  uu___113  : _ = FStar.Pervasives.assert_norm (Bug1997.m0 == Bug1997.m4)
-(* / Sig_fail*)
 
-[@ ]
-logic let  n0  : _ = fun p q r s -> p \/ q /\ r \/ s
-[@ ]
-logic let  n1  : _ = fun p q r s -> p \/ q /\ r \/ s
-[@ ]
-logic let  n2  : _ = fun p q r s -> (p \/ q) /\ r \/ s
-[@ ]
-logic let  n3  : _ = fun p q r s -> (p \/ q) /\ (r \/ s)
-[@ ]
-logic let  n4  : _ = fun p q r s -> p \/ q /\ (r \/ s)
-[@ ]
-private let  uu___134  : _ = FStar.Pervasives.assert_norm (Bug1997.n0 == Bug1997.n1)
-[@ (FStar.Pervasives.expect_failure)]
-(* Sig_fail false [] *)
-[@ ]
-private let  uu___135  : _ = FStar.Pervasives.assert_norm (Bug1997.n1 == Bug1997.n2)
-(* / Sig_fail*)
+let n0 p q r s = p \/ q /\ r \/ s
+let n1 p q r s = p \/ q /\ r \/ s
+let n2 p q r s = (p \/ q) /\ r \/ s
+let n3 p q r s = (p \/ q) /\ (r \/ s)
+let n4 p q r s = p \/ q /\ (r \/ s)
+private
+let _ = FStar.Pervasives.assert_norm (Bug1997.n0 == Bug1997.n1)
 
-[@ (FStar.Pervasives.expect_failure)]
-(* Sig_fail false [] *)
-[@ ]
-private let  uu___136  : _ = FStar.Pervasives.assert_norm (Bug1997.n1 == Bug1997.n3)
-(* / Sig_fail*)
 
-[@ (FStar.Pervasives.expect_failure)]
-(* Sig_fail false [] *)
-[@ ]
-private let  uu___137  : _ = FStar.Pervasives.assert_norm (Bug1997.n1 == Bug1997.n4)
-(* / Sig_fail*)
 
-[@ (FStar.Pervasives.expect_failure)]
-(* Sig_fail false [] *)
-[@ ]
-private let  uu___138  : _ = FStar.Pervasives.assert_norm (Bug1997.n2 == Bug1997.n3)
-(* / Sig_fail*)
 
-[@ (FStar.Pervasives.expect_failure)]
-(* Sig_fail false [] *)
-[@ ]
-private let  uu___139  : _ = FStar.Pervasives.assert_norm (Bug1997.n2 == Bug1997.n4)
-(* / Sig_fail*)
 
-[@ (FStar.Pervasives.expect_failure)]
-(* Sig_fail false [] *)
-[@ ]
-private let  uu___140  : _ = FStar.Pervasives.assert_norm (Bug1997.n3 == Bug1997.n4)
-(* / Sig_fail*)
 
 ]
 Exports: [
-[@ ]
-let  op_Equals_Hat  : _ = fun a b -> a + b
-[@ ]
-let  test1  : _ = fun a b c -> a =^ b =^ c
-[@ ]
-let  test2  : _ = fun a b c -> a =^ b =^ c
-[@ ]
-let  test3  : _ = fun a b c -> a =^ (b =^ c)
-[@ ]
-private let  uu___11  : _ = FStar.Pervasives.assert_norm (Bug1997.test1 == Bug1997.test2)
-[@ (FStar.Pervasives.expect_failure)]
-(* Sig_fail false [] *)
-[@ ]
-private let  uu___12  : _ = FStar.Pervasives.assert_norm (Bug1997.test1 == Bug1997.test3)
-(* / Sig_fail*)
+let op_Equals_Hat a b = a + b
+let test1 a b c = a =^ b =^ c
+let test2 a b c = a =^ b =^ c
+let test3 a b c = a =^ (b =^ c)
+private
+let _ = FStar.Pervasives.assert_norm (Bug1997.test1 == Bug1997.test2)
 
-[@ ]
-logic let  imp_assoc_0  : _ = fun p q r -> p ==> q ==> r
-[@ ]
-logic let  imp_assoc_1  : _ = fun p q r -> p ==> q ==> r
-[@ ]
-logic let  imp_assoc_2  : _ = fun p q r -> (p ==> q) ==> r
-[@ ]
-private let  uu___22  : _ = FStar.Pervasives.assert_norm (Bug1997.imp_assoc_0 == Bug1997.imp_assoc_1)
-[@ (FStar.Pervasives.expect_failure)]
-(* Sig_fail false [] *)
-[@ ]
-private let  uu___23  : _ = FStar.Pervasives.assert_norm (Bug1997.imp_assoc_1 == Bug1997.imp_assoc_2)
-(* / Sig_fail*)
+let imp_assoc_0 p q r = p ==> q ==> r
+let imp_assoc_1 p q r = p ==> q ==> r
+let imp_assoc_2 p q r = (p ==> q) ==> r
+private
+let _ = FStar.Pervasives.assert_norm (Bug1997.imp_assoc_0 == Bug1997.imp_assoc_1)
 
-[@ ]
-logic let  imp_iff_0  : _ = fun p q r -> p ==> q <==> r
-[@ ]
-logic let  imp_iff_1  : _ = fun p q r -> p ==> q <==> r
-[@ ]
-logic let  imp_iff_2  : _ = fun p q r -> p ==> (q <==> r)
-[@ ]
-private let  uu___33  : _ = FStar.Pervasives.assert_norm (Bug1997.imp_iff_0 == Bug1997.imp_iff_1)
-[@ (FStar.Pervasives.expect_failure)]
-(* Sig_fail false [] *)
-[@ ]
-private let  uu___34  : _ = FStar.Pervasives.assert_norm (Bug1997.imp_iff_1 == Bug1997.imp_iff_2)
-(* / Sig_fail*)
+let imp_iff_0 p q r = p ==> q <==> r
+let imp_iff_1 p q r = p ==> q <==> r
+let imp_iff_2 p q r = p ==> (q <==> r)
+private
+let _ = FStar.Pervasives.assert_norm (Bug1997.imp_iff_0 == Bug1997.imp_iff_1)
 
-[@ ]
-logic let  imp_conj_1  : _ = fun p q r s -> p ==> q /\ r ==> s
-[@ ]
-logic let  imp_conj_2  : _ = fun p q r s -> (p ==> q) /\ (r ==> s)
-[@ ]
-logic let  imp_conj_3  : _ = fun p q r s -> p ==> q /\ (r ==> s)
-[@ ]
-logic let  imp_conj_4  : _ = fun p q r s -> p ==> q /\ r ==> s
-[@ ]
-private let  uu___51  : _ = FStar.Pervasives.assert_norm (Bug1997.imp_conj_1 == Bug1997.imp_conj_4)
-[@ (FStar.Pervasives.expect_failure)]
-(* Sig_fail false [] *)
-[@ ]
-private let  uu___52  : _ = FStar.Pervasives.assert_norm (Bug1997.imp_conj_1 == Bug1997.imp_conj_3)
-(* / Sig_fail*)
+let imp_conj_1 p q r s = p ==> q /\ r ==> s
+let imp_conj_2 p q r s = (p ==> q) /\ (r ==> s)
+let imp_conj_3 p q r s = p ==> q /\ (r ==> s)
+let imp_conj_4 p q r s = p ==> q /\ r ==> s
+private
+let _ = FStar.Pervasives.assert_norm (Bug1997.imp_conj_1 == Bug1997.imp_conj_4)
 
-[@ (FStar.Pervasives.expect_failure)]
-(* Sig_fail false [] *)
-[@ ]
-private let  uu___53  : _ = FStar.Pervasives.assert_norm (Bug1997.imp_conj_1 == Bug1997.imp_conj_2)
-(* / Sig_fail*)
 
-[@ (FStar.Pervasives.expect_failure)]
-(* Sig_fail false [] *)
-[@ ]
-private let  uu___54  : _ = FStar.Pervasives.assert_norm (Bug1997.imp_conj_2 == Bug1997.imp_conj_3)
-(* / Sig_fail*)
 
-[@ (FStar.Pervasives.expect_failure)]
-(* Sig_fail false [] *)
-[@ ]
-private let  uu___55  : _ = FStar.Pervasives.assert_norm (Bug1997.imp_conj_2 == Bug1997.imp_conj_4)
-(* / Sig_fail*)
 
-[@ (FStar.Pervasives.expect_failure)]
-(* Sig_fail false [] *)
-[@ ]
-private let  uu___56  : _ = FStar.Pervasives.assert_norm (Bug1997.imp_conj_3 == Bug1997.imp_conj_4)
-(* / Sig_fail*)
 
-[@ ]
-logic let  impneg1  : _ = fun p q r -> p ==> q /\ ~p ==> r
-[@ ]
-logic let  impneg2  : _ = fun p q r -> (p ==> q) /\ (~p ==> r)
-[@ ]
-logic let  impneg3  : _ = fun p q r -> p ==> q /\ (~p ==> r)
-[@ ]
-logic let  impneg4  : _ = fun p q r -> p ==> q /\ ~p ==> r
-[@ ]
-private let  uu___69  : _ = FStar.Pervasives.assert_norm (Bug1997.impneg1 == Bug1997.impneg4)
-[@ (FStar.Pervasives.expect_failure)]
-(* Sig_fail false [] *)
-[@ ]
-private let  uu___70  : _ = FStar.Pervasives.assert_norm (Bug1997.impneg1 == Bug1997.impneg3)
-(* / Sig_fail*)
+let impneg1 p q r = p ==> q /\ ~p ==> r
+let impneg2 p q r = (p ==> q) /\ (~p ==> r)
+let impneg3 p q r = p ==> q /\ (~p ==> r)
+let impneg4 p q r = p ==> q /\ ~p ==> r
+private
+let _ = FStar.Pervasives.assert_norm (Bug1997.impneg1 == Bug1997.impneg4)
 
-[@ (FStar.Pervasives.expect_failure)]
-(* Sig_fail false [] *)
-[@ ]
-private let  uu___71  : _ = FStar.Pervasives.assert_norm (Bug1997.impneg1 == Bug1997.impneg2)
-(* / Sig_fail*)
 
-[@ (FStar.Pervasives.expect_failure)]
-(* Sig_fail false [] *)
-[@ ]
-private let  uu___72  : _ = FStar.Pervasives.assert_norm (Bug1997.impneg2 == Bug1997.impneg3)
-(* / Sig_fail*)
 
-[@ (FStar.Pervasives.expect_failure)]
-(* Sig_fail false [] *)
-[@ ]
-private let  uu___73  : _ = FStar.Pervasives.assert_norm (Bug1997.impneg2 == Bug1997.impneg4)
-(* / Sig_fail*)
 
-[@ (FStar.Pervasives.expect_failure)]
-(* Sig_fail false [] *)
-[@ ]
-private let  uu___74  : _ = FStar.Pervasives.assert_norm (Bug1997.impneg3 == Bug1997.impneg4)
-(* / Sig_fail*)
 
-[@ ]
-logic let  cd1  : _ = fun p q r -> p /\ q \/ r
-[@ ]
-logic let  cd2  : _ = fun p q r -> p /\ q \/ r
-[@ ]
-logic let  cd3  : _ = fun p q r -> p /\ (q \/ r)
-[@ ]
-private let  uu___84  : _ = FStar.Pervasives.assert_norm (Bug1997.cd1 == Bug1997.cd2)
-[@ (FStar.Pervasives.expect_failure)]
-(* Sig_fail false [] *)
-[@ ]
-private let  uu___85  : _ = FStar.Pervasives.assert_norm (Bug1997.cd1 == Bug1997.cd3)
-(* / Sig_fail*)
+let cd1 p q r = p /\ q \/ r
+let cd2 p q r = p /\ q \/ r
+let cd3 p q r = p /\ (q \/ r)
+private
+let _ = FStar.Pervasives.assert_norm (Bug1997.cd1 == Bug1997.cd2)
 
-[@ (FStar.Pervasives.expect_failure)]
-(* Sig_fail false [] *)
-[@ ]
-private let  uu___86  : _ = FStar.Pervasives.assert_norm (Bug1997.cd2 == Bug1997.cd3)
-(* / Sig_fail*)
 
-[@ ]
-logic let  m0  : _ = fun p q r s -> p /\ (q \/ r) /\ s
-[@ ]
-logic let  m1  : _ = fun p q r s -> p /\ q \/ r /\ s
-[@ ]
-logic let  m2  : _ = fun p q r s -> p /\ q \/ r /\ s
-[@ ]
-logic let  m3  : _ = fun p q r s -> p /\ q \/ r /\ s
-[@ ]
-logic let  m4  : _ = fun p q r s -> p /\ q \/ r /\ s
-[@ ]
-private let  uu___107  : _ = FStar.Pervasives.assert_norm (Bug1997.m1 == Bug1997.m2)
-[@ ]
-private let  uu___108  : _ = FStar.Pervasives.assert_norm (Bug1997.m1 == Bug1997.m3)
-[@ ]
-private let  uu___109  : _ = FStar.Pervasives.assert_norm (Bug1997.m1 == Bug1997.m4)
-[@ (FStar.Pervasives.expect_failure)]
-(* Sig_fail false [] *)
-[@ ]
-private let  uu___110  : _ = FStar.Pervasives.assert_norm (Bug1997.m0 == Bug1997.m1)
-(* / Sig_fail*)
+let m0 p q r s = p /\ (q \/ r) /\ s
+let m1 p q r s = p /\ q \/ r /\ s
+let m2 p q r s = p /\ q \/ r /\ s
+let m3 p q r s = p /\ q \/ r /\ s
+let m4 p q r s = p /\ q \/ r /\ s
+private
+let _ = FStar.Pervasives.assert_norm (Bug1997.m1 == Bug1997.m2)
+private
+let _ = FStar.Pervasives.assert_norm (Bug1997.m1 == Bug1997.m3)
+private
+let _ = FStar.Pervasives.assert_norm (Bug1997.m1 == Bug1997.m4)
 
-[@ (FStar.Pervasives.expect_failure)]
-(* Sig_fail false [] *)
-[@ ]
-private let  uu___111  : _ = FStar.Pervasives.assert_norm (Bug1997.m0 == Bug1997.m2)
-(* / Sig_fail*)
 
-[@ (FStar.Pervasives.expect_failure)]
-(* Sig_fail false [] *)
-[@ ]
-private let  uu___112  : _ = FStar.Pervasives.assert_norm (Bug1997.m0 == Bug1997.m3)
-(* / Sig_fail*)
 
-[@ (FStar.Pervasives.expect_failure)]
-(* Sig_fail false [] *)
-[@ ]
-private let  uu___113  : _ = FStar.Pervasives.assert_norm (Bug1997.m0 == Bug1997.m4)
-(* / Sig_fail*)
 
-[@ ]
-logic let  n0  : _ = fun p q r s -> p \/ q /\ r \/ s
-[@ ]
-logic let  n1  : _ = fun p q r s -> p \/ q /\ r \/ s
-[@ ]
-logic let  n2  : _ = fun p q r s -> (p \/ q) /\ r \/ s
-[@ ]
-logic let  n3  : _ = fun p q r s -> (p \/ q) /\ (r \/ s)
-[@ ]
-logic let  n4  : _ = fun p q r s -> p \/ q /\ (r \/ s)
-[@ ]
-private let  uu___134  : _ = FStar.Pervasives.assert_norm (Bug1997.n0 == Bug1997.n1)
-[@ (FStar.Pervasives.expect_failure)]
-(* Sig_fail false [] *)
-[@ ]
-private let  uu___135  : _ = FStar.Pervasives.assert_norm (Bug1997.n1 == Bug1997.n2)
-(* / Sig_fail*)
+let n0 p q r s = p \/ q /\ r \/ s
+let n1 p q r s = p \/ q /\ r \/ s
+let n2 p q r s = (p \/ q) /\ r \/ s
+let n3 p q r s = (p \/ q) /\ (r \/ s)
+let n4 p q r s = p \/ q /\ (r \/ s)
+private
+let _ = FStar.Pervasives.assert_norm (Bug1997.n0 == Bug1997.n1)
 
-[@ (FStar.Pervasives.expect_failure)]
-(* Sig_fail false [] *)
-[@ ]
-private let  uu___136  : _ = FStar.Pervasives.assert_norm (Bug1997.n1 == Bug1997.n3)
-(* / Sig_fail*)
 
-[@ (FStar.Pervasives.expect_failure)]
-(* Sig_fail false [] *)
-[@ ]
-private let  uu___137  : _ = FStar.Pervasives.assert_norm (Bug1997.n1 == Bug1997.n4)
-(* / Sig_fail*)
 
-[@ (FStar.Pervasives.expect_failure)]
-(* Sig_fail false [] *)
-[@ ]
-private let  uu___138  : _ = FStar.Pervasives.assert_norm (Bug1997.n2 == Bug1997.n3)
-(* / Sig_fail*)
 
-[@ (FStar.Pervasives.expect_failure)]
-(* Sig_fail false [] *)
-[@ ]
-private let  uu___139  : _ = FStar.Pervasives.assert_norm (Bug1997.n2 == Bug1997.n4)
-(* / Sig_fail*)
 
-[@ (FStar.Pervasives.expect_failure)]
-(* Sig_fail false [] *)
-[@ ]
-private let  uu___140  : _ = FStar.Pervasives.assert_norm (Bug1997.n3 == Bug1997.n4)
-(* / Sig_fail*)
 
 ]
 
@@ -1018,172 +394,110 @@ Bug1997.fst(92,19-92,49): (Error 19) assertion failed (Also see: prims.fst(96,32
 Module after type checking:
 module Bug1997
 Declarations: [
-[@ ]
-visible let  op_Equals_Hat  : a: Prims.int -> b: Prims.int -> Prims.int = fun a b -> a + b
-[@ ]
-visible let  test1  : a: Prims.int -> b: Prims.int -> c: Prims.int -> Prims.int = fun a b c -> a =^ b =^ c
-[@ ]
-visible let  test2  : a: Prims.int -> b: Prims.int -> c: Prims.int -> Prims.int = fun a b c -> a =^ b =^ c
-[@ ]
-visible let  test3  : a: Prims.int -> b: Prims.int -> c: Prims.int -> Prims.int = fun a b c -> a =^ (b =^ c)
-[@ ]
-visible private let  uu___11  : Prims.unit = FStar.Pervasives.assert_norm (Bug1997.test1 == Bug1997.test2)
-[@ ]
-visible logic let  imp_assoc_0  : p: Prims.prop -> q: Prims.prop -> r: Prims.prop -> Prims.logical = fun p q r -> p ==> q ==> r
-[@ ]
-visible logic let  imp_assoc_1  : p: Prims.prop -> q: Prims.prop -> r: Prims.prop -> Prims.logical = fun p q r -> p ==> q ==> r
-[@ ]
-visible logic let  imp_assoc_2  : p: Prims.prop -> q: Prims.prop -> r: Prims.prop -> Prims.logical = fun p q r -> (p ==> q) ==> r
-[@ ]
-visible private let  uu___22  : Prims.unit = FStar.Pervasives.assert_norm (Bug1997.imp_assoc_0 == Bug1997.imp_assoc_1)
-[@ ]
-visible logic let  imp_iff_0  : p: Prims.prop -> q: Prims.prop -> r: Prims.prop -> Prims.logical = fun p q r -> p ==> q <==> r
-[@ ]
-visible logic let  imp_iff_1  : p: Prims.prop -> q: Prims.prop -> r: Prims.prop -> Prims.logical = fun p q r -> p ==> q <==> r
-[@ ]
-visible logic let  imp_iff_2  : p: Prims.prop -> q: Prims.prop -> r: Prims.prop -> Prims.logical = fun p q r -> p ==> (q <==> r)
-[@ ]
-visible private let  uu___33  : Prims.unit = FStar.Pervasives.assert_norm (Bug1997.imp_iff_0 == Bug1997.imp_iff_1)
-[@ ]
-visible logic let  imp_conj_1  : p: Prims.prop -> q: Prims.prop -> r: Prims.prop -> s: Prims.prop -> Prims.logical = fun p q r s -> p ==> q /\ r ==> s
-[@ ]
-visible logic let  imp_conj_2  : p: Prims.prop -> q: Prims.prop -> r: Prims.prop -> s: Prims.prop -> Prims.logical = fun p q r s -> (p ==> q) /\ (r ==> s)
-[@ ]
-visible logic let  imp_conj_3  : p: Prims.prop -> q: Prims.prop -> r: Prims.prop -> s: Prims.prop -> Prims.logical = fun p q r s -> p ==> q /\ (r ==> s)
-[@ ]
-visible logic let  imp_conj_4  : p: Prims.prop -> q: Prims.prop -> r: Prims.prop -> s: Prims.prop -> Prims.logical = fun p q r s -> p ==> q /\ r ==> s
-[@ ]
-visible private let  uu___51  : Prims.unit = FStar.Pervasives.assert_norm (Bug1997.imp_conj_1 == Bug1997.imp_conj_4)
-[@ ]
-visible logic let  impneg1  : p: Prims.prop -> q: Prims.prop -> r: Prims.prop -> Prims.logical = fun p q r -> p ==> q /\ ~p ==> r
-[@ ]
-visible logic let  impneg2  : p: Prims.prop -> q: Prims.prop -> r: Prims.prop -> Prims.logical = fun p q r -> (p ==> q) /\ (~p ==> r)
-[@ ]
-visible logic let  impneg3  : p: Prims.prop -> q: Prims.prop -> r: Prims.prop -> Prims.logical = fun p q r -> p ==> q /\ (~p ==> r)
-[@ ]
-visible logic let  impneg4  : p: Prims.prop -> q: Prims.prop -> r: Prims.prop -> Prims.logical = fun p q r -> p ==> q /\ ~p ==> r
-[@ ]
-visible private let  uu___69  : Prims.unit = FStar.Pervasives.assert_norm (Bug1997.impneg1 == Bug1997.impneg4)
-[@ ]
-visible logic let  cd1  : p: Prims.prop -> q: Prims.prop -> r: Prims.prop -> Prims.logical = fun p q r -> p /\ q \/ r
-[@ ]
-visible logic let  cd2  : p: Prims.prop -> q: Prims.prop -> r: Prims.prop -> Prims.logical = fun p q r -> p /\ q \/ r
-[@ ]
-visible logic let  cd3  : p: Prims.prop -> q: Prims.prop -> r: Prims.prop -> Prims.logical = fun p q r -> p /\ (q \/ r)
-[@ ]
-visible private let  uu___84  : Prims.unit = FStar.Pervasives.assert_norm (Bug1997.cd1 == Bug1997.cd2)
-[@ ]
-visible logic let  m0  : p: Prims.prop -> q: Prims.prop -> r: Prims.prop -> s: Prims.prop -> Prims.logical = fun p q r s -> p /\ (q \/ r) /\ s
-[@ ]
-visible logic let  m1  : p: Prims.prop -> q: Prims.prop -> r: Prims.prop -> s: Prims.prop -> Prims.logical = fun p q r s -> p /\ q \/ r /\ s
-[@ ]
-visible logic let  m2  : p: Prims.prop -> q: Prims.prop -> r: Prims.prop -> s: Prims.prop -> Prims.logical = fun p q r s -> p /\ q \/ r /\ s
-[@ ]
-visible logic let  m3  : p: Prims.prop -> q: Prims.prop -> r: Prims.prop -> s: Prims.prop -> Prims.logical = fun p q r s -> p /\ q \/ r /\ s
-[@ ]
-visible logic let  m4  : p: Prims.prop -> q: Prims.prop -> r: Prims.prop -> s: Prims.prop -> Prims.logical = fun p q r s -> p /\ q \/ r /\ s
-[@ ]
-visible private let  uu___107  : Prims.unit = FStar.Pervasives.assert_norm (Bug1997.m1 == Bug1997.m2)
-[@ ]
-visible private let  uu___108  : Prims.unit = FStar.Pervasives.assert_norm (Bug1997.m1 == Bug1997.m3)
-[@ ]
-visible private let  uu___109  : Prims.unit = FStar.Pervasives.assert_norm (Bug1997.m1 == Bug1997.m4)
-[@ ]
-visible logic let  n0  : p: Prims.prop -> q: Prims.prop -> r: Prims.prop -> s: Prims.prop -> Prims.logical = fun p q r s -> p \/ q /\ r \/ s
-[@ ]
-visible logic let  n1  : p: Prims.prop -> q: Prims.prop -> r: Prims.prop -> s: Prims.prop -> Prims.logical = fun p q r s -> p \/ q /\ r \/ s
-[@ ]
-visible logic let  n2  : p: Prims.prop -> q: Prims.prop -> r: Prims.prop -> s: Prims.prop -> Prims.logical = fun p q r s -> (p \/ q) /\ r \/ s
-[@ ]
-visible logic let  n3  : p: Prims.prop -> q: Prims.prop -> r: Prims.prop -> s: Prims.prop -> Prims.logical = fun p q r s -> (p \/ q) /\ (r \/ s)
-[@ ]
-visible logic let  n4  : p: Prims.prop -> q: Prims.prop -> r: Prims.prop -> s: Prims.prop -> Prims.logical = fun p q r s -> p \/ q /\ (r \/ s)
-[@ ]
-visible private let  uu___134  : Prims.unit = FStar.Pervasives.assert_norm (Bug1997.n0 == Bug1997.n1)
+let op_Equals_Hat a b = a + b
+let test1 a b c = a =^ b =^ c
+let test2 a b c = a =^ b =^ c
+let test3 a b c = a =^ (b =^ c)
+private
+let _ = FStar.Pervasives.assert_norm (Bug1997.test1 == Bug1997.test2)
+let imp_assoc_0 p q r = p ==> q ==> r
+let imp_assoc_1 p q r = p ==> q ==> r
+let imp_assoc_2 p q r = (p ==> q) ==> r
+private
+let _ = FStar.Pervasives.assert_norm (Bug1997.imp_assoc_0 == Bug1997.imp_assoc_1)
+let imp_iff_0 p q r = p ==> q <==> r
+let imp_iff_1 p q r = p ==> q <==> r
+let imp_iff_2 p q r = p ==> (q <==> r)
+private
+let _ = FStar.Pervasives.assert_norm (Bug1997.imp_iff_0 == Bug1997.imp_iff_1)
+let imp_conj_1 p q r s = p ==> q /\ r ==> s
+let imp_conj_2 p q r s = (p ==> q) /\ (r ==> s)
+let imp_conj_3 p q r s = p ==> q /\ (r ==> s)
+let imp_conj_4 p q r s = p ==> q /\ r ==> s
+private
+let _ = FStar.Pervasives.assert_norm (Bug1997.imp_conj_1 == Bug1997.imp_conj_4)
+let impneg1 p q r = p ==> q /\ ~p ==> r
+let impneg2 p q r = (p ==> q) /\ (~p ==> r)
+let impneg3 p q r = p ==> q /\ (~p ==> r)
+let impneg4 p q r = p ==> q /\ ~p ==> r
+private
+let _ = FStar.Pervasives.assert_norm (Bug1997.impneg1 == Bug1997.impneg4)
+let cd1 p q r = p /\ q \/ r
+let cd2 p q r = p /\ q \/ r
+let cd3 p q r = p /\ (q \/ r)
+private
+let _ = FStar.Pervasives.assert_norm (Bug1997.cd1 == Bug1997.cd2)
+let m0 p q r s = p /\ (q \/ r) /\ s
+let m1 p q r s = p /\ q \/ r /\ s
+let m2 p q r s = p /\ q \/ r /\ s
+let m3 p q r s = p /\ q \/ r /\ s
+let m4 p q r s = p /\ q \/ r /\ s
+private
+let _ = FStar.Pervasives.assert_norm (Bug1997.m1 == Bug1997.m2)
+private
+let _ = FStar.Pervasives.assert_norm (Bug1997.m1 == Bug1997.m3)
+private
+let _ = FStar.Pervasives.assert_norm (Bug1997.m1 == Bug1997.m4)
+let n0 p q r s = p \/ q /\ r \/ s
+let n1 p q r s = p \/ q /\ r \/ s
+let n2 p q r s = (p \/ q) /\ r \/ s
+let n3 p q r s = (p \/ q) /\ (r \/ s)
+let n4 p q r s = p \/ q /\ (r \/ s)
+private
+let _ = FStar.Pervasives.assert_norm (Bug1997.n0 == Bug1997.n1)
 ]
 Exports: [
-[@ ]
-visible let  op_Equals_Hat  : a: Prims.int -> b: Prims.int -> Prims.int = fun a b -> a + b
-[@ ]
-visible let  test1  : a: Prims.int -> b: Prims.int -> c: Prims.int -> Prims.int = fun a b c -> a =^ b =^ c
-[@ ]
-visible let  test2  : a: Prims.int -> b: Prims.int -> c: Prims.int -> Prims.int = fun a b c -> a =^ b =^ c
-[@ ]
-visible let  test3  : a: Prims.int -> b: Prims.int -> c: Prims.int -> Prims.int = fun a b c -> a =^ (b =^ c)
-[@ ]
-visible private let  uu___11  : Prims.unit = FStar.Pervasives.assert_norm (Bug1997.test1 == Bug1997.test2)
-[@ ]
-visible logic let  imp_assoc_0  : p: Prims.prop -> q: Prims.prop -> r: Prims.prop -> Prims.logical = fun p q r -> p ==> q ==> r
-[@ ]
-visible logic let  imp_assoc_1  : p: Prims.prop -> q: Prims.prop -> r: Prims.prop -> Prims.logical = fun p q r -> p ==> q ==> r
-[@ ]
-visible logic let  imp_assoc_2  : p: Prims.prop -> q: Prims.prop -> r: Prims.prop -> Prims.logical = fun p q r -> (p ==> q) ==> r
-[@ ]
-visible private let  uu___22  : Prims.unit = FStar.Pervasives.assert_norm (Bug1997.imp_assoc_0 == Bug1997.imp_assoc_1)
-[@ ]
-visible logic let  imp_iff_0  : p: Prims.prop -> q: Prims.prop -> r: Prims.prop -> Prims.logical = fun p q r -> p ==> q <==> r
-[@ ]
-visible logic let  imp_iff_1  : p: Prims.prop -> q: Prims.prop -> r: Prims.prop -> Prims.logical = fun p q r -> p ==> q <==> r
-[@ ]
-visible logic let  imp_iff_2  : p: Prims.prop -> q: Prims.prop -> r: Prims.prop -> Prims.logical = fun p q r -> p ==> (q <==> r)
-[@ ]
-visible private let  uu___33  : Prims.unit = FStar.Pervasives.assert_norm (Bug1997.imp_iff_0 == Bug1997.imp_iff_1)
-[@ ]
-visible logic let  imp_conj_1  : p: Prims.prop -> q: Prims.prop -> r: Prims.prop -> s: Prims.prop -> Prims.logical = fun p q r s -> p ==> q /\ r ==> s
-[@ ]
-visible logic let  imp_conj_2  : p: Prims.prop -> q: Prims.prop -> r: Prims.prop -> s: Prims.prop -> Prims.logical = fun p q r s -> (p ==> q) /\ (r ==> s)
-[@ ]
-visible logic let  imp_conj_3  : p: Prims.prop -> q: Prims.prop -> r: Prims.prop -> s: Prims.prop -> Prims.logical = fun p q r s -> p ==> q /\ (r ==> s)
-[@ ]
-visible logic let  imp_conj_4  : p: Prims.prop -> q: Prims.prop -> r: Prims.prop -> s: Prims.prop -> Prims.logical = fun p q r s -> p ==> q /\ r ==> s
-[@ ]
-visible private let  uu___51  : Prims.unit = FStar.Pervasives.assert_norm (Bug1997.imp_conj_1 == Bug1997.imp_conj_4)
-[@ ]
-visible logic let  impneg1  : p: Prims.prop -> q: Prims.prop -> r: Prims.prop -> Prims.logical = fun p q r -> p ==> q /\ ~p ==> r
-[@ ]
-visible logic let  impneg2  : p: Prims.prop -> q: Prims.prop -> r: Prims.prop -> Prims.logical = fun p q r -> (p ==> q) /\ (~p ==> r)
-[@ ]
-visible logic let  impneg3  : p: Prims.prop -> q: Prims.prop -> r: Prims.prop -> Prims.logical = fun p q r -> p ==> q /\ (~p ==> r)
-[@ ]
-visible logic let  impneg4  : p: Prims.prop -> q: Prims.prop -> r: Prims.prop -> Prims.logical = fun p q r -> p ==> q /\ ~p ==> r
-[@ ]
-visible private let  uu___69  : Prims.unit = FStar.Pervasives.assert_norm (Bug1997.impneg1 == Bug1997.impneg4)
-[@ ]
-visible logic let  cd1  : p: Prims.prop -> q: Prims.prop -> r: Prims.prop -> Prims.logical = fun p q r -> p /\ q \/ r
-[@ ]
-visible logic let  cd2  : p: Prims.prop -> q: Prims.prop -> r: Prims.prop -> Prims.logical = fun p q r -> p /\ q \/ r
-[@ ]
-visible logic let  cd3  : p: Prims.prop -> q: Prims.prop -> r: Prims.prop -> Prims.logical = fun p q r -> p /\ (q \/ r)
-[@ ]
-visible private let  uu___84  : Prims.unit = FStar.Pervasives.assert_norm (Bug1997.cd1 == Bug1997.cd2)
-[@ ]
-visible logic let  m0  : p: Prims.prop -> q: Prims.prop -> r: Prims.prop -> s: Prims.prop -> Prims.logical = fun p q r s -> p /\ (q \/ r) /\ s
-[@ ]
-visible logic let  m1  : p: Prims.prop -> q: Prims.prop -> r: Prims.prop -> s: Prims.prop -> Prims.logical = fun p q r s -> p /\ q \/ r /\ s
-[@ ]
-visible logic let  m2  : p: Prims.prop -> q: Prims.prop -> r: Prims.prop -> s: Prims.prop -> Prims.logical = fun p q r s -> p /\ q \/ r /\ s
-[@ ]
-visible logic let  m3  : p: Prims.prop -> q: Prims.prop -> r: Prims.prop -> s: Prims.prop -> Prims.logical = fun p q r s -> p /\ q \/ r /\ s
-[@ ]
-visible logic let  m4  : p: Prims.prop -> q: Prims.prop -> r: Prims.prop -> s: Prims.prop -> Prims.logical = fun p q r s -> p /\ q \/ r /\ s
-[@ ]
-visible private let  uu___107  : Prims.unit = FStar.Pervasives.assert_norm (Bug1997.m1 == Bug1997.m2)
-[@ ]
-visible private let  uu___108  : Prims.unit = FStar.Pervasives.assert_norm (Bug1997.m1 == Bug1997.m3)
-[@ ]
-visible private let  uu___109  : Prims.unit = FStar.Pervasives.assert_norm (Bug1997.m1 == Bug1997.m4)
-[@ ]
-visible logic let  n0  : p: Prims.prop -> q: Prims.prop -> r: Prims.prop -> s: Prims.prop -> Prims.logical = fun p q r s -> p \/ q /\ r \/ s
-[@ ]
-visible logic let  n1  : p: Prims.prop -> q: Prims.prop -> r: Prims.prop -> s: Prims.prop -> Prims.logical = fun p q r s -> p \/ q /\ r \/ s
-[@ ]
-visible logic let  n2  : p: Prims.prop -> q: Prims.prop -> r: Prims.prop -> s: Prims.prop -> Prims.logical = fun p q r s -> (p \/ q) /\ r \/ s
-[@ ]
-visible logic let  n3  : p: Prims.prop -> q: Prims.prop -> r: Prims.prop -> s: Prims.prop -> Prims.logical = fun p q r s -> (p \/ q) /\ (r \/ s)
-[@ ]
-visible logic let  n4  : p: Prims.prop -> q: Prims.prop -> r: Prims.prop -> s: Prims.prop -> Prims.logical = fun p q r s -> p \/ q /\ (r \/ s)
-[@ ]
-visible private let  uu___134  : Prims.unit = FStar.Pervasives.assert_norm (Bug1997.n0 == Bug1997.n1)
+let op_Equals_Hat a b = a + b
+let test1 a b c = a =^ b =^ c
+let test2 a b c = a =^ b =^ c
+let test3 a b c = a =^ (b =^ c)
+private
+let _ = FStar.Pervasives.assert_norm (Bug1997.test1 == Bug1997.test2)
+let imp_assoc_0 p q r = p ==> q ==> r
+let imp_assoc_1 p q r = p ==> q ==> r
+let imp_assoc_2 p q r = (p ==> q) ==> r
+private
+let _ = FStar.Pervasives.assert_norm (Bug1997.imp_assoc_0 == Bug1997.imp_assoc_1)
+let imp_iff_0 p q r = p ==> q <==> r
+let imp_iff_1 p q r = p ==> q <==> r
+let imp_iff_2 p q r = p ==> (q <==> r)
+private
+let _ = FStar.Pervasives.assert_norm (Bug1997.imp_iff_0 == Bug1997.imp_iff_1)
+let imp_conj_1 p q r s = p ==> q /\ r ==> s
+let imp_conj_2 p q r s = (p ==> q) /\ (r ==> s)
+let imp_conj_3 p q r s = p ==> q /\ (r ==> s)
+let imp_conj_4 p q r s = p ==> q /\ r ==> s
+private
+let _ = FStar.Pervasives.assert_norm (Bug1997.imp_conj_1 == Bug1997.imp_conj_4)
+let impneg1 p q r = p ==> q /\ ~p ==> r
+let impneg2 p q r = (p ==> q) /\ (~p ==> r)
+let impneg3 p q r = p ==> q /\ (~p ==> r)
+let impneg4 p q r = p ==> q /\ ~p ==> r
+private
+let _ = FStar.Pervasives.assert_norm (Bug1997.impneg1 == Bug1997.impneg4)
+let cd1 p q r = p /\ q \/ r
+let cd2 p q r = p /\ q \/ r
+let cd3 p q r = p /\ (q \/ r)
+private
+let _ = FStar.Pervasives.assert_norm (Bug1997.cd1 == Bug1997.cd2)
+let m0 p q r s = p /\ (q \/ r) /\ s
+let m1 p q r s = p /\ q \/ r /\ s
+let m2 p q r s = p /\ q \/ r /\ s
+let m3 p q r s = p /\ q \/ r /\ s
+let m4 p q r s = p /\ q \/ r /\ s
+private
+let _ = FStar.Pervasives.assert_norm (Bug1997.m1 == Bug1997.m2)
+private
+let _ = FStar.Pervasives.assert_norm (Bug1997.m1 == Bug1997.m3)
+private
+let _ = FStar.Pervasives.assert_norm (Bug1997.m1 == Bug1997.m4)
+let n0 p q r s = p \/ q /\ r \/ s
+let n1 p q r s = p \/ q /\ r \/ s
+let n2 p q r s = (p \/ q) /\ r \/ s
+let n3 p q r s = (p \/ q) /\ (r \/ s)
+let n4 p q r s = p \/ q /\ (r \/ s)
+private
+let _ = FStar.Pervasives.assert_norm (Bug1997.n0 == Bug1997.n1)
 ]
 
 Verified module: Bug1997

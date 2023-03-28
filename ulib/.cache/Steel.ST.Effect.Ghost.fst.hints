@@ -11,7 +11,7 @@
         "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
       ],
       0,
-      "f887ee8e5219e0c5252cffaac118d0dc"
+      "ed1d3e105e6f62259bde9ee1169df839"
     ],
     [
       "Steel.ST.Effect.Ghost.STGhostBase",
@@ -23,7 +23,7 @@
         "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
       ],
       0,
-      "a33e568520a0ed2ee3802c554823b248"
+      "6a8ff6c96a73e06d29354d2eb678f85f"
     ],
     [
       "Steel.ST.Effect.Ghost.STGhostBase",
@@ -31,11 +31,11 @@
       2,
       1,
       [
-        "@MaxIFuel_assumption", "@query",
-        "refinement_interpretation_Tm_refine_de09779676242898794a0b057d5f5bb4"
+        "@MaxIFuel_assumption", "@query", "b2t_def", "equation_Prims.squash",
+        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
       ],
       0,
-      "b98be2a30a682b3b2f545916a60b2dc7"
+      "5813d73fc303f0b7594e8fecfd15e087"
     ],
     [
       "Steel.ST.Effect.Ghost.STGhostBase",
@@ -47,7 +47,31 @@
         "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
       ],
       0,
-      "e5a023709a756f1241cd5184baa9d442"
+      "f70f7f4f0667e29080cbebc5be48326b"
+    ],
+    [
+      "Steel.ST.Effect.Ghost.STGhostBase",
+      5,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_de09779676242898794a0b057d5f5bb4"
+      ],
+      0,
+      "2576921fb63336cffe904237e68c1680"
+    ],
+    [
+      "Steel.ST.Effect.Ghost.STGhostBase",
+      6,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.squash",
+        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
+      ],
+      0,
+      "f390424ff5bc53bb6601d0d6f00a07ac"
     ],
     [
       "Steel.ST.Effect.Ghost.extract_fact0",
@@ -80,7 +104,7 @@
         "unit_inversion"
       ],
       0,
-      "0b21e8261f74eb6d493b3d931de59715"
+      "514c099b978ff8eaebd6fe194cf28a4f"
     ]
   ]
 ]

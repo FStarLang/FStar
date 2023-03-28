@@ -21,8 +21,8 @@ open FStar.Tactics
 
 let badtm () : Tac term =
     pack (Tv_BVar (pack_bv ({ bv_index  = 0;
-                              bv_sort   = (`int);
-                              bv_ppname = "ouch"; })))
+                              bv_ppname = seal "ouch";
+                              bv_sort   = (`int); })))
 
 (* We do get a warning about the normalizer failing though, so
 silence it. *)

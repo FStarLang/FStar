@@ -1673,44 +1673,93 @@ let (resolve_to_fully_qualified_name :
   =
   fun env1 ->
     fun l ->
-      let uu___ = try_lookup_lid env1 l in
-      match uu___ with
-      | FStar_Pervasives_Native.None -> FStar_Pervasives_Native.None
-      | FStar_Pervasives_Native.Some e ->
-          let uu___1 =
-            let uu___2 = FStar_Syntax_Subst.compress e in
-            uu___2.FStar_Syntax_Syntax.n in
-          (match uu___1 with
-           | FStar_Syntax_Syntax.Tm_fvar fv ->
-               FStar_Pervasives_Native.Some
-                 ((fv.FStar_Syntax_Syntax.fv_name).FStar_Syntax_Syntax.v)
-           | uu___2 -> FStar_Pervasives_Native.None)
+      let r =
+        let uu___ = try_lookup_name true false env1 l in
+        match uu___ with
+        | FStar_Pervasives_Native.Some (Term_name (e, attrs)) ->
+            let uu___1 =
+              let uu___2 = FStar_Syntax_Subst.compress e in
+              uu___2.FStar_Syntax_Syntax.n in
+            (match uu___1 with
+             | FStar_Syntax_Syntax.Tm_fvar fv ->
+                 FStar_Pervasives_Native.Some
+                   ((fv.FStar_Syntax_Syntax.fv_name).FStar_Syntax_Syntax.v)
+             | uu___2 -> FStar_Pervasives_Native.None)
+        | FStar_Pervasives_Native.Some (Eff_name (o, l1)) ->
+            FStar_Pervasives_Native.Some l1
+        | FStar_Pervasives_Native.None -> FStar_Pervasives_Native.None in
+      r
+let (is_abbrev :
+  env ->
+    FStar_Ident.lident -> FStar_Ident.ipath FStar_Pervasives_Native.option)
+  =
+  fun env1 ->
+    fun lid ->
+      FStar_Compiler_List.tryPick
+        (fun uu___ ->
+           match uu___ with
+           | Module_abbrev (id, ns) when FStar_Ident.lid_equals lid ns ->
+               FStar_Pervasives_Native.Some [id]
+           | uu___1 -> FStar_Pervasives_Native.None) env1.scope_mods
+let (try_shorten_abbrev :
+  env ->
+    FStar_Ident.ipath ->
+      (FStar_Ident.ipath * FStar_Ident.ident Prims.list)
+        FStar_Pervasives_Native.option)
+  =
+  fun env1 ->
+    fun ns ->
+      let rec aux ns1 rest =
+        match ns1 with
+        | [] -> FStar_Pervasives_Native.None
+        | hd::tl ->
+            let uu___ =
+              let uu___1 =
+                FStar_Ident.lid_of_ids (FStar_Compiler_List.rev ns1) in
+              is_abbrev env1 uu___1 in
+            (match uu___ with
+             | FStar_Pervasives_Native.Some short ->
+                 FStar_Pervasives_Native.Some (short, rest)
+             | uu___1 -> aux tl (hd :: rest)) in
+      aux (FStar_Compiler_List.rev ns) []
 let (shorten_lid' : env -> FStar_Ident.lident -> FStar_Ident.lident) =
   fun env1 ->
-    fun lid ->
+    fun lid0 ->
+      let id0 = FStar_Ident.ident_of_lid lid0 in
+      let ns0 = FStar_Ident.ns_of_lid lid0 in
       let uu___ =
-        let uu___1 = FStar_Ident.ns_of_lid lid in
-        shorten_module_path env1 uu___1 true in
+        let uu___1 = try_shorten_abbrev env1 ns0 in
+        match uu___1 with
+        | FStar_Pervasives_Native.None -> ([], ns0)
+        | FStar_Pervasives_Native.Some (ns, rest) -> (ns, rest) in
       match uu___ with
-      | (uu___1, short) ->
-          let uu___2 = FStar_Ident.ident_of_lid lid in
-          FStar_Ident.lid_of_ns_and_id short uu___2
+      | (pref, ns) ->
+          let rec tails l =
+            match l with
+            | [] -> [[]]
+            | uu___1::tl -> let uu___2 = tails tl in l :: uu___2 in
+          let suffs = let uu___1 = tails ns in FStar_Compiler_List.rev uu___1 in
+          let try1 lid' =
+            let uu___1 = resolve_to_fully_qualified_name env1 lid' in
+            match uu___1 with
+            | FStar_Pervasives_Native.Some lid2 when
+                FStar_Ident.lid_equals lid2 lid0 -> true
+            | uu___2 -> false in
+          let rec go nss =
+            match nss with
+            | ns1::rest ->
+                let lid' =
+                  FStar_Ident.lid_of_ns_and_id
+                    (FStar_Compiler_List.op_At pref ns1) id0 in
+                let uu___1 = try1 lid' in if uu___1 then lid' else go rest
+            | [] -> lid0 in
+          let r = go suffs in r
 let (shorten_lid : env -> FStar_Ident.lid -> FStar_Ident.lid) =
   fun env1 ->
-    fun lid ->
+    fun lid0 ->
       match env1.curmodule with
-      | FStar_Pervasives_Native.None -> shorten_lid' env1 lid
-      | uu___ ->
-          let lid_without_ns =
-            let uu___1 = FStar_Ident.ident_of_lid lid in
-            FStar_Ident.lid_of_ns_and_id [] uu___1 in
-          let uu___1 = resolve_to_fully_qualified_name env1 lid_without_ns in
-          (match uu___1 with
-           | FStar_Pervasives_Native.Some lid' when
-               let uu___2 = FStar_Ident.string_of_lid lid' in
-               let uu___3 = FStar_Ident.string_of_lid lid in uu___2 = uu___3
-               -> lid_without_ns
-           | uu___2 -> shorten_lid' env1 lid)
+      | FStar_Pervasives_Native.None -> lid0
+      | uu___ -> shorten_lid' env1 lid0
 let (try_lookup_lid_with_attributes_no_resolve :
   env ->
     FStar_Ident.lident ->

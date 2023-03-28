@@ -221,10 +221,12 @@ let may_shorten lid =
   | "Prims.Cons" -> false
   | _ -> not (is_tuple_constructor_lid lid)
 
-let maybe_shorten_fv env fv =
-  let lid = fv.fv_name.v in
+let maybe_shorten_lid env lid : lident =
   if may_shorten lid then DsEnv.shorten_lid env lid else lid
 
+let maybe_shorten_fv env fv : lident =
+  let lid = fv.fv_name.v in
+  maybe_shorten_lid env lid
 
 let serialize_machine_integer_desc (s,w) =
   BU.format3 "FStar.%sInt%s.__%sint_to_t"
@@ -1003,7 +1005,7 @@ and resugar_comp' (env: DsEnv.env) (c:S.comp) : A.term =
       in
       let decrease = aux [] c.flags in
 
-      mk (A.Construct(c.effect_name, List.map (fun t -> (t, A.Nothing)) (pre@post::decrease@pats)))
+      mk (A.Construct(maybe_shorten_lid env c.effect_name, List.map (fun t -> (t, A.Nothing)) (pre@post::decrease@pats)))
 
     else if (Options.print_effect_args()) then
       (* let universe = List.map (fun u -> resugar_universe u) c.comp_univs in *)
@@ -1022,9 +1024,9 @@ and resugar_comp' (env: DsEnv.env) (c:S.comp) : A.term =
          | _ -> aux l tl
       in
       let decrease = aux [] c.flags in
-      mk (A.Construct(c.effect_name, result::decrease@args))
+      mk (A.Construct(maybe_shorten_lid env c.effect_name, result::decrease@args))
     else
-      mk (A.Construct(c.effect_name, [result]))
+      mk (A.Construct(maybe_shorten_lid env c.effect_name, [result]))
 
 and resugar_binder' env (b:S.binder) r : option A.binder =
   BU.map_opt (resugar_bqual env b.binder_qual) begin fun imp ->
@@ -1392,6 +1394,14 @@ let resugar_sigelt' env se : option A.decl =
     else
       let mk e = S.mk e se.sigrng in
       let dummy = mk Tm_unknown in
+      (* This function turns each resolved top-level lid being defined into an
+       * ident without a path, so it gets printed correctly. *)
+      let nopath_lbs ((is_rec, lbs) : letbindings) : letbindings =
+        let nopath fv = lid_as_fv (lid_of_ids [ident_of_lid (lid_of_fv fv)]) delta_constant None in
+        let lbs = List.map (fun lb ->  { lb with lbname = Inr (nopath <| right lb.lbname)} ) lbs in
+        (is_rec, lbs)
+      in
+      let lbs = nopath_lbs lbs in
       let desugared_let = mk (Tm_let(lbs, dummy)) in
       let t = resugar_term' env desugared_let in
       begin match t.tm with

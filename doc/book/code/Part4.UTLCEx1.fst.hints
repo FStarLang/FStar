@@ -1,0 +1,223 @@
+[
+  "©ù\u0012∏ÙîM\u0005y}ü\u001eä~[\u001e",
+  [
+    [
+      "Part4.UTLCEx1.term",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Part4.UTLCEx1.var",
+        "equation_Prims.eqtype", "equation_Prims.nat",
+        "function_token_typing_Prims.int",
+        "haseqTm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
+      ],
+      0,
+      "36cd46876069aeea099fda0b681cf68d"
+    ],
+    [
+      "Part4.UTLCEx1.__proj__Var__item___0",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_d9b7d79b3de8de761e37900c421312d6"
+      ],
+      0,
+      "2eedbb2fbdd14a5bcb748fa1d418fbd8"
+    ],
+    [
+      "Part4.UTLCEx1.__proj__Int__item___0",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_f5cb51cd6c4512d168a64a25fcb1f009"
+      ],
+      0,
+      "0a3f3349321786d9497adc3d4c8e5a71"
+    ],
+    [
+      "Part4.UTLCEx1.__proj__Lam__item___0",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_e2821279e37b7e4d56c35062dfda424c"
+      ],
+      0,
+      "2108f12bb5aae5804e31f95329d1db19"
+    ],
+    [
+      "Part4.UTLCEx1.__proj__App__item___0",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_92b3b3b7fb8c1c7efa51e31e2cfaa929"
+      ],
+      0,
+      "4cc363d664d6e475e685aa06474d61ea"
+    ],
+    [
+      "Part4.UTLCEx1.__proj__App__item___1",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_92b3b3b7fb8c1c7efa51e31e2cfaa929"
+      ],
+      0,
+      "30008bc082d25a3d2f24e21de1f0f9d5"
+    ],
+    [
+      "Part4.UTLCEx1.closed'",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "Part4.UTLCEx1_pretyping_9491e674fcc82794b99776b13f9f7d1a",
+        "binder_x_9491e674fcc82794b99776b13f9f7d1a_0",
+        "disc_equation_Part4.UTLCEx1.App", "disc_equation_Part4.UTLCEx1.Int",
+        "disc_equation_Part4.UTLCEx1.Lam", "disc_equation_Part4.UTLCEx1.Var",
+        "fuel_guarded_inversion_Part4.UTLCEx1.term",
+        "projection_inverse_BoxBool_proj_0",
+        "subterm_ordering_Part4.UTLCEx1.App",
+        "subterm_ordering_Part4.UTLCEx1.Lam"
+      ],
+      0,
+      "9d18e7e83df609e081c25077e16edc30"
+    ],
+    [
+      "Part4.UTLCEx1.closed'_weaken",
+      1,
+      2,
+      1,
+      [
+        "@MaxFuel_assumption", "@MaxIFuel_assumption",
+        "@fuel_correspondence_Part4.UTLCEx1.closed_.fuel_instrumented",
+        "@fuel_irrelevance_Part4.UTLCEx1.closed_.fuel_instrumented",
+        "@query", "Part4.UTLCEx1_pretyping_9491e674fcc82794b99776b13f9f7d1a",
+        "binder_x_9491e674fcc82794b99776b13f9f7d1a_0",
+        "binder_x_ae567c2fb75be05905677af440075565_1",
+        "binder_x_ae567c2fb75be05905677af440075565_2", "bool_inversion",
+        "constructor_distinct_Part4.UTLCEx1.App",
+        "constructor_distinct_Part4.UTLCEx1.Int",
+        "constructor_distinct_Part4.UTLCEx1.Lam",
+        "constructor_distinct_Part4.UTLCEx1.Var",
+        "disc_equation_Part4.UTLCEx1.App", "disc_equation_Part4.UTLCEx1.Int",
+        "disc_equation_Part4.UTLCEx1.Lam", "disc_equation_Part4.UTLCEx1.Var",
+        "equation_with_fuel_Part4.UTLCEx1.closed_.fuel_instrumented",
+        "fuel_guarded_inversion_Part4.UTLCEx1.term", "int_inversion",
+        "primitive_Prims.op_Addition", "primitive_Prims.op_AmpAmp",
+        "primitive_Prims.op_LessThanOrEqual",
+        "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_BoxInt_proj_0",
+        "projection_inverse_Part4.UTLCEx1.App__0",
+        "projection_inverse_Part4.UTLCEx1.App__1",
+        "projection_inverse_Part4.UTLCEx1.Int__0",
+        "projection_inverse_Part4.UTLCEx1.Lam__0",
+        "projection_inverse_Part4.UTLCEx1.Var__0",
+        "refinement_interpretation_Tm_refine_af80a4431de3bad45f241e104fe1e2b2",
+        "subterm_ordering_Part4.UTLCEx1.App",
+        "subterm_ordering_Part4.UTLCEx1.Lam",
+        "token_correspondence_Part4.UTLCEx1.closed_.fuel_instrumented",
+        "typing_Part4.UTLCEx1.closed_", "typing_Part4.UTLCEx1.uu___is_Int"
+      ],
+      0,
+      "caf669256f11544ede72704cc2795892"
+    ],
+    [
+      "Part4.UTLCEx1.subst",
+      1,
+      2,
+      1,
+      [
+        "@MaxFuel_assumption", "@MaxIFuel_assumption",
+        "@fuel_correspondence_Part4.UTLCEx1.closed_.fuel_instrumented",
+        "@fuel_irrelevance_Part4.UTLCEx1.closed_.fuel_instrumented",
+        "@query", "Part4.UTLCEx1_pretyping_9491e674fcc82794b99776b13f9f7d1a",
+        "binder_x_0604a77979be37c12b7ebe95757d92c1_1",
+        "binder_x_7cbe29122cdf563fa23b2ad8a5a970ae_0",
+        "binder_x_b335d24ace6d1b1db19215a20ca241b2_2", "bool_inversion",
+        "constructor_distinct_Part4.UTLCEx1.App",
+        "constructor_distinct_Part4.UTLCEx1.Int",
+        "constructor_distinct_Part4.UTLCEx1.Lam",
+        "constructor_distinct_Part4.UTLCEx1.Var",
+        "disc_equation_Part4.UTLCEx1.App", "disc_equation_Part4.UTLCEx1.Int",
+        "disc_equation_Part4.UTLCEx1.Lam", "disc_equation_Part4.UTLCEx1.Var",
+        "equation_Part4.UTLCEx1.closed", "equation_Part4.UTLCEx1.var",
+        "equation_Prims.eqtype", "equation_Prims.nat",
+        "equation_with_fuel_Part4.UTLCEx1.closed_.fuel_instrumented",
+        "fuel_guarded_inversion_Part4.UTLCEx1.term",
+        "function_token_typing_Prims.int",
+        "haseqTm_refine_542f9d4f129664613f2483a6c88bc7c2", "int_inversion",
+        "int_typing", "primitive_Prims.op_Addition",
+        "primitive_Prims.op_AmpAmp", "primitive_Prims.op_Equality",
+        "primitive_Prims.op_LessThanOrEqual",
+        "primitive_Prims.op_Subtraction",
+        "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_BoxInt_proj_0",
+        "projection_inverse_Part4.UTLCEx1.App__0",
+        "projection_inverse_Part4.UTLCEx1.App__1",
+        "projection_inverse_Part4.UTLCEx1.Int__0",
+        "projection_inverse_Part4.UTLCEx1.Lam__0",
+        "projection_inverse_Part4.UTLCEx1.Var__0",
+        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
+        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "refinement_interpretation_Tm_refine_ba946dc31f3e0dbbdfff3cd126b9215c",
+        "refinement_interpretation_Tm_refine_d3c905dd14322c27e4532895d391844f",
+        "refinement_interpretation_Tm_refine_f1d8293da4f41779dbc94f611d8ef6ea",
+        "refinement_interpretation_Tm_refine_fc59cd67aae6da8fa8919bfcaa2723ae",
+        "subterm_ordering_Part4.UTLCEx1.App",
+        "subterm_ordering_Part4.UTLCEx1.Lam",
+        "token_correspondence_Part4.UTLCEx1.closed_.fuel_instrumented",
+        "typing_Part4.UTLCEx1.closed", "typing_Part4.UTLCEx1.closed_",
+        "typing_Part4.UTLCEx1.uu___is_Var"
+      ],
+      0,
+      "cc7f066f983b93cc4737ec6fb03904b4"
+    ],
+    [
+      "Part4.UTLCEx1.interpret",
+      1,
+      2,
+      1,
+      [
+        "@MaxFuel_assumption", "@MaxIFuel_assumption",
+        "@fuel_correspondence_Part4.UTLCEx1.closed_.fuel_instrumented",
+        "@fuel_irrelevance_Part4.UTLCEx1.closed_.fuel_instrumented",
+        "@query", "bool_inversion", "constructor_distinct_Part4.UTLCEx1.App",
+        "constructor_distinct_Part4.UTLCEx1.Lam",
+        "data_elim_FStar.Pervasives.Native.Some",
+        "data_elim_Part4.UTLCEx1.Var",
+        "data_typing_intro_Part4.UTLCEx1.Lam@tok",
+        "disc_equation_Part4.UTLCEx1.App", "disc_equation_Part4.UTLCEx1.Int",
+        "disc_equation_Part4.UTLCEx1.Lam", "equation_Part4.UTLCEx1.closed",
+        "equation_Part4.UTLCEx1.var", "equation_Prims.nat",
+        "equation_with_fuel_Part4.UTLCEx1.closed_.fuel_instrumented",
+        "fuel_guarded_inversion_Part4.UTLCEx1.term", "int_typing",
+        "primitive_Prims.op_Addition", "primitive_Prims.op_AmpAmp",
+        "primitive_Prims.op_LessThanOrEqual",
+        "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_BoxInt_proj_0",
+        "projection_inverse_Part4.UTLCEx1.App__0",
+        "projection_inverse_Part4.UTLCEx1.App__1",
+        "projection_inverse_Part4.UTLCEx1.Lam__0",
+        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "refinement_interpretation_Tm_refine_fc59cd67aae6da8fa8919bfcaa2723ae",
+        "token_correspondence_Part4.UTLCEx1.closed_.fuel_instrumented",
+        "typing_Part4.UTLCEx1.closed"
+      ],
+      0,
+      "11f977cf1b19536683826a35edfb9612"
+    ]
+  ]
+]

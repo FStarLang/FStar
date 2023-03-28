@@ -98,7 +98,7 @@ let filter_no_method_binders (bs:binders)
   : binders
   = let has_no_method_attr (b:binder)
       : bool
-      = let _, (_, attrs) = inspect_binder b in
+      = let attrs = (inspect_binder b).binder_attrs in
         let is_no_method (t:term)
           : bool
           = match inspect_ln t with
@@ -146,7 +146,11 @@ let mk_class (nm:string) : Tac decls =
                   let sfv = pack_fv (ns @ [s]) in
                   let dbv = fresh_bv_named "d" cod in
                   let tcr = (`tcresolve) in
-                  let tcdict = pack_binder dbv (Q_Meta tcr) [] in
+                  let tcdict = pack_binder {
+                    binder_bv=dbv;
+                    binder_qual=Q_Meta tcr;
+                    binder_attrs=[]
+                  } in
                   let proj_name = cur_module () @ [base ^ s] in
                   let proj = pack (Tv_FVar (pack_fv proj_name)) in
 
@@ -168,8 +172,12 @@ let mk_class (nm:string) : Tac decls =
                     match bs with
                     | [] -> fail "mk_class: impossible, no binders"
                     | b1::bs' ->
-                        let (bv, aq) = inspect_binder b1 in
-                        let b1 = pack_binder bv (Q_Meta tcr) [] in
+                        let bv = (inspect_binder b1).binder_bv in
+                        let b1 = pack_binder {
+                          binder_bv=bv;
+                          binder_qual=Q_Meta tcr;
+                          binder_attrs=[]
+                        } in
                         mk_arr_curried (ps@(b1::bs')) cod
                   in
 
@@ -189,7 +197,7 @@ let mk_class (nm:string) : Tac decls =
                   let lb = pack_lb lbv in
                   let se = pack_sigelt (Sg_Let false [lb]) in
                   let se = set_sigelt_quals to_propagate se in
-                  let _, (_, attrs) = inspect_binder b in
+                  let attrs = (inspect_binder b).binder_attrs in
                   let se = set_sigelt_attrs attrs se in
                   //dump ("trying to return : " ^ term_to_string (quote se));
                   se
