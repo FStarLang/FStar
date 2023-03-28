@@ -208,7 +208,7 @@ let rec on_sub_pat vfs (p0 : pat) : pat =
     mk (Pat_var ((f_binding_bv vfs) bv))
 
   | Pat_wild bv ->
-    mk (Pat_var ((f_binding_bv vfs) bv))
+    mk (Pat_wild ((f_binding_bv vfs) bv))
 
   | Pat_dot_term t ->
     mk (Pat_dot_term (map_opt t (f_term vfs)))
