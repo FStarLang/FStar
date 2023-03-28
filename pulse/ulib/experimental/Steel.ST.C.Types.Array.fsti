@@ -940,7 +940,7 @@ val mk_fraction_seq_split_gen
 : STGhost unit opened
   (array_pts_to r (mk_fraction_seq td v p))
   (fun _ -> array_pts_to r (mk_fraction_seq td v p1) `star` array_pts_to r (mk_fraction_seq td v p2))
-  (p == p1 `P.sum_perm` p2 /\ p `P.lesser_equal_perm` P.full_perm)
+  (p == p1 `P.sum_perm` p2 /\ (p `P.lesser_equal_perm` P.full_perm \/ Seq.length v == 0))
   (fun _ -> True)
 
 let mk_fraction_seq_split
