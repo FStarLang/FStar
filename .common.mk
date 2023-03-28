@@ -56,4 +56,4 @@ endif
 # Can be called as $(call maybe_cygwin_path,...)
 #   where ... is the argument
 
-maybe_cygwin_path=$(if ($(ifeq ($(OS),Windows_NT) "y" endif)),$(shell cygpath -m $(1)),$(1))
+maybe_cygwin_path=$(if $(findstring $(OS),Windows_NT),$(shell cygpath -m $(1)),$(1))
