@@ -1004,6 +1004,11 @@ let tc_decls env ses =
               t))
         (Some (Ident.string_of_lid (Env.current_module env)))
         "FStar.TypeChecker.Tc.chec_uvars"; //update the id_info table after having removed their uvars
+
+    // Compress all checked sigelts
+    let ses' = ses' |> List.map (Compress.deep_compress_se false) in
+
+    // Add to the environment
     let env = ses' |> List.fold_left (fun env se -> add_sigelt_to_env env se false) env in
     UF.reset();
 
@@ -1108,9 +1113,8 @@ let tc_modul (env0:env) (m:modul) (iface_exists:bool) :(modul * env) =
   //AR: push env, this will also push solver, and then finish_partial_modul will do the pop
   let env0 = push_context env0 msg in
   let modul, env = tc_partial_modul env0 m in
-  // Compress all sigelts so we write a good checked file, plus we make
-  // sure that we are not leaking uvars, names, etc.
-  let modul = deep_compress_modul modul in
+  // Note: all sigelts returned by tc_partial_modul must already be compressed
+  // by Syntax.compress.deep_compress, so they are safe to output.
   finish_partial_modul false iface_exists env modul
 
 let load_checked_module (en:env) (m:modul) :env =
