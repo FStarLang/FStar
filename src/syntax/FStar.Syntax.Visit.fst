@@ -352,6 +352,7 @@ let rec on_sub_sigelt' vfs (se : sigelt') : sigelt' =
       combinators = on_sub_combinators vfs ed.combinators;
       actions     = map (on_sub_action vfs) ed.actions;
       eff_attrs   = map (f_term vfs) ed.eff_attrs;
+      extraction_mode = ed.extraction_mode;
     }
     in
     Sig_new_effect ed

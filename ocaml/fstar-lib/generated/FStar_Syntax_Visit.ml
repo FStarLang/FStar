@@ -613,7 +613,9 @@ let rec (on_sub_sigelt' :
               FStar_Syntax_Syntax.signature = uu___1;
               FStar_Syntax_Syntax.combinators = uu___2;
               FStar_Syntax_Syntax.actions = uu___3;
-              FStar_Syntax_Syntax.eff_attrs = uu___4
+              FStar_Syntax_Syntax.eff_attrs = uu___4;
+              FStar_Syntax_Syntax.extraction_mode =
+                (ed.FStar_Syntax_Syntax.extraction_mode)
             } in
           FStar_Syntax_Syntax.Sig_new_effect ed1
       | FStar_Syntax_Syntax.Sig_sub_effect se1 ->
