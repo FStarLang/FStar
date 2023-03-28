@@ -943,7 +943,7 @@ and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked 
 
   (* Unary operators. Explicitly curry extra arguments *)
   | Tm_app({n=Tm_constant Const_range_of}, a::hd::rest)
-  | Tm_app({n=Tm_constant Const_reify}, a::hd::rest)
+  | Tm_app({n=Tm_constant (Const_reify _)}, a::hd::rest)
   | Tm_app({n=Tm_constant (Const_reflect _)}, a::hd::rest) ->
     let rest = hd::rest in //no 'as' clauses in F* yet, so we need to do this ugliness
     let unary_op, _ = U.head_and_args top in
@@ -976,7 +976,7 @@ and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked 
   | Tm_app({n=Tm_constant Const_set_range_of}, _) ->
     raise_error (Errors.Fatal_IllAppliedConstant, BU.format1 "Ill-applied constant %s" (Print.term_to_string top)) e.pos
 
-  | Tm_app({n=Tm_constant Const_reify}, [(e, aqual)]) ->
+  | Tm_app({n=Tm_constant (Const_reify _)}, [(e, aqual)]) ->
     if Option.isSome aqual
     then Errors.log_issue e.pos
            (Errors.Warning_IrrelevantQualifierOnArgumentToReify,
@@ -987,7 +987,6 @@ and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked 
     //
     let env0, _ = Env.clear_expected_typ env in
     let e, c, g = tc_term env0 e in
-    let reify_op, _ = U.head_and_args top in
     let c, g_c =
       let c, g_c = TcComm.lcomp_comp c in
       Env.unfold_effect_abbrev env c, g_c in
@@ -998,49 +997,7 @@ and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked 
                   e.pos;
     let u_c = List.hd c.comp_univs in
 
-    let e =
-      //
-      // AR:
-      // Indexed effects reification is supported only as a type coercion from
-      //   (M a is) to (M.repr a is)
-      // We achieve this by:
-      //
-      // For a reifiable indexed effect, the typechecker adds an
-      //   assume val reify__M (#a:Type) (#is:_) ($f:unit -> M a is) : (Tot/Div) M.repr a is
-      //
-      // Then (reify e) is rewritten as reify__M (fun _ -> e)
-      //
-      // The rewriting happens in phase 2
-      //   This is consistent with the usual inference of indexed effect indices in phase 2
-      //
-      if Env.is_layered_effect env c.effect_name &&
-         not env.phase1
-      then 
-           // reify__M<u_c>
-           let reify_val_tm =
-             S.mk_Tm_uinst
-               (Const.layered_effect_reify_val_lid c.effect_name e.pos |> S.tconst)
-               [u_c] in
-           // fun _ -> e
-           let thunked_e =
-             S.mk (Tm_abs (
-                     [S.mk_binder (S.null_bv S.t_unit)],
-                     e,
-                     Some ({residual_effect=c.effect_name;
-                            residual_typ=None;
-                            residual_flags=[]}))) e.pos in
-           // #a, #is
-           let implicit_args =
-             let a_arg = S.iarg c.result_typ in
-             let indices_args =
-             c.effect_args |> List.map (fun (t, _) -> S.iarg t) in
-             a_arg::indices_args in
-           // reify__M<u> #a #is (fun _ -> e)
-           mk_Tm_app
-             reify_val_tm
-             (implicit_args@[S.as_arg thunked_e])
-             e.pos
-      else mk (Tm_app(reify_op, [(e, aqual)])) top.pos in
+    let e = U.mk_reify e (Some c.effect_name) in
     let repr = Env.reify_comp env (S.mk_Comp c) u_c in
     let c =
         if is_total_effect env c.effect_name
@@ -1839,7 +1796,7 @@ and tc_constant (env:env_t) r (c:sconst) : typ =
       | Const_range _ -> t_range
       | Const_range_of
       | Const_set_range_of
-      | Const_reify
+      | Const_reify _
       | Const_reflect _ ->
         raise_error (Errors.Fatal_IllTyped, BU.format1 "Ill-typed %s: this constant must be fully applied"
                                  (Const.const_to_string c)) r
@@ -4656,7 +4613,7 @@ let rec __typeof_tot_or_gtot_term_fastpath (env:env) (t:term) (must_tot:bool) : 
   | Tm_bvar _ -> failwith ("Impossible: " ^ Print.term_to_string t)
 
   (* Can't (easily) do this one efficiently, just return None *)
-  | Tm_constant Const_reify
+  | Tm_constant (Const_reify _)
   | Tm_constant (Const_reflect _) -> None
 
   //For the following nodes, use the universe_of_aux function

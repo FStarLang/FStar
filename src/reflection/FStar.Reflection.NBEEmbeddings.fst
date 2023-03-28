@@ -596,6 +596,30 @@ let e_bv_view =
     in
     mk_emb' embed_bv_view unembed_bv_view fstar_refl_bv_view_fv
 
+let e_attribute  = e_term
+let e_attributes = e_list e_attribute
+
+let e_binder_view =
+  let embed_binder_view cb (bview:binder_view) : t =
+    mkConstruct ref_Mk_binder.fv [] [as_arg (embed e_bv cb bview.binder_bv);
+                                     as_arg (embed e_aqualv cb bview.binder_qual);
+                                     as_arg (embed e_attributes cb bview.binder_attrs)] in
+
+  let unembed_binder_view cb (t:t) : option binder_view =
+    match t.nbe_t with
+    | Construct (fv, _, [(attrs, _); (q, _); (bv, _)])
+      when S.fv_eq_lid fv ref_Mk_binder.lid ->
+      BU.bind_opt (unembed e_bv cb bv) (fun bv ->
+      BU.bind_opt (unembed e_aqualv cb q) (fun q ->
+      BU.bind_opt (unembed e_attributes cb attrs) (fun attrs ->
+      Some <| RD.({binder_bv=bv;binder_qual=q;binder_attrs=attrs}))))
+
+    | _ ->
+      Err.log_issue Range.dummyRange (Err.Warning_NotEmbedded, (BU.format1 "Not an embedded binder_view: %s" (t_to_string t)));
+            None
+    in
+    mk_emb' embed_binder_view unembed_binder_view fstar_refl_binder_view_fv
+
 let e_comp_view =
     let embed_comp_view cb (cv : comp_view) : t =
         match cv with
@@ -719,9 +743,6 @@ let e_lb_view =
     in
     mk_emb' embed_lb_view unembed_lb_view fstar_refl_lb_view_fv
 
-let e_attribute  = e_term
-let e_attributes = e_list e_attribute
-
 (* embeds as a string list *)
 let e_lid : embedding I.lid =
     let embed rng lid : t =
@@ -827,8 +848,6 @@ let e_exp =
             None
     in
     mk_emb' embed_exp unembed_exp fstar_refl_exp_fv
-
-let e_binder_view = e_tuple2 e_bv (e_tuple2 e_aqualv (e_list e_term))
 
 let e_qualifier =
     let embed cb (q:RD.qualifier) : t =

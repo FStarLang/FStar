@@ -240,24 +240,28 @@ let rec (solve_gen_unit_elim :
                                                             (t2,
                                                              FStar_Reflection_Data.Q_Explicit)::[]
                                                             ->
-                                                            FStar_Tactics_Effect.tac_bind
-                                                              (Prims.mk_range
-                                                                 "Steel.ST.GenElim.Base.fsti"
-                                                                 (Prims.of_int (335))
-                                                                 (Prims.of_int (20))
-                                                                 (Prims.of_int (335))
-                                                                 (Prims.of_int (42)))
-                                                              (Prims.mk_range
-                                                                 "Steel.ST.GenElim.Base.fsti"
-                                                                 (Prims.of_int (336))
-                                                                 (Prims.of_int (10))
-                                                                 (Prims.of_int (337))
-                                                                 (Prims.of_int (68)))
-                                                              (Obj.magic
-                                                                 (solve_gen_unit_elim
+                                                            Obj.repr
+                                                              (FStar_Tactics_Effect.tac_bind
+                                                                 (Prims.mk_range
+                                                                    "Steel.ST.GenElim.Base.fsti"
+                                                                    (Prims.of_int (335))
+                                                                    (Prims.of_int (20))
+                                                                    (Prims.of_int (335))
+                                                                    (Prims.of_int (42)))
+                                                                 (Prims.mk_range
+                                                                    "Steel.ST.GenElim.Base.fsti"
+                                                                    (Prims.of_int (336))
+                                                                    (Prims.of_int (10))
+                                                                    (Prims.of_int (337))
+                                                                    (Prims.of_int (68)))
+                                                                 (Obj.magic
+                                                                    (
+                                                                    solve_gen_unit_elim
                                                                     t1))
-                                                              (fun uu___5 ->
-                                                                 (fun t1' ->
+                                                                 (fun uu___5
+                                                                    ->
+                                                                    (fun t1'
+                                                                    ->
                                                                     Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
                                                                     (Prims.mk_range
@@ -294,10 +298,11 @@ let rec (solve_gen_unit_elim :
                                                                     FStar_Reflection_Data.Q_Explicit);
                                                                     (t2',
                                                                     FStar_Reflection_Data.Q_Explicit)]))))
-                                                                   uu___5)
+                                                                    uu___5))
                                                         | uu___5 ->
-                                                            FStar_Tactics_Derived.fail
-                                                              "ill-formed star"))
+                                                            Obj.repr
+                                                              (FStar_Tactics_Derived.fail
+                                                                 "ill-formed star")))
                                                 else
                                                   Obj.magic
                                                     (Obj.repr
@@ -429,25 +434,19 @@ let rec (solve_gen_elim :
                                          (body,
                                           FStar_Reflection_Data.Q_Explicit)::[]
                                          ->
-                                         Obj.magic
-                                           (Obj.repr
-                                              (FStar_Tactics_Effect.lift_div_tac
-                                                 (fun uu___3 ->
-                                                    ([(ty,
-                                                        FStar_Reflection_Data.Q_Implicit)],
-                                                      body))))
+                                         FStar_Tactics_Effect.lift_div_tac
+                                           (fun uu___3 ->
+                                              ([(ty,
+                                                  FStar_Reflection_Data.Q_Implicit)],
+                                                body))
                                      | (body,
                                         FStar_Reflection_Data.Q_Explicit)::[]
                                          ->
-                                         Obj.magic
-                                           (Obj.repr
-                                              (FStar_Tactics_Effect.lift_div_tac
-                                                 (fun uu___3 -> ([], body))))
+                                         FStar_Tactics_Effect.lift_div_tac
+                                           (fun uu___3 -> ([], body))
                                      | uu___3 ->
-                                         Obj.magic
-                                           (Obj.repr
-                                              (FStar_Tactics_Derived.fail
-                                                 "ill-formed exists_")))
+                                         FStar_Tactics_Derived.fail
+                                           "ill-formed exists_")
                                     (fun uu___3 ->
                                        (fun uu___3 ->
                                           match uu___3 with
@@ -805,35 +804,37 @@ let rec (solve_gen_elim :
                                                       (tr,
                                                        FStar_Reflection_Data.Q_Explicit)::[]
                                                       ->
-                                                      FStar_Tactics_Effect.tac_bind
-                                                        (Prims.mk_range
-                                                           "Steel.ST.GenElim.Base.fsti"
-                                                           (Prims.of_int (383))
-                                                           (Prims.of_int (15))
-                                                           (Prims.of_int (383))
-                                                           (Prims.of_int (42)))
-                                                        (Prims.mk_range
-                                                           "Steel.ST.GenElim.Base.fsti"
-                                                           (Prims.of_int (383))
-                                                           (Prims.of_int (12))
-                                                           (Prims.of_int (396))
-                                                           (Prims.of_int (72)))
-                                                        (Obj.magic
-                                                           (term_has_head tl
-                                                              (FStar_Reflection_Builtins.pack_ln
-                                                                 (FStar_Reflection_Data.Tv_FVar
+                                                      Obj.repr
+                                                        (FStar_Tactics_Effect.tac_bind
+                                                           (Prims.mk_range
+                                                              "Steel.ST.GenElim.Base.fsti"
+                                                              (Prims.of_int (383))
+                                                              (Prims.of_int (15))
+                                                              (Prims.of_int (383))
+                                                              (Prims.of_int (42)))
+                                                           (Prims.mk_range
+                                                              "Steel.ST.GenElim.Base.fsti"
+                                                              (Prims.of_int (383))
+                                                              (Prims.of_int (12))
+                                                              (Prims.of_int (396))
+                                                              (Prims.of_int (72)))
+                                                           (Obj.magic
+                                                              (term_has_head
+                                                                 tl
+                                                                 (FStar_Reflection_Builtins.pack_ln
                                                                     (
-                                                                    FStar_Reflection_Builtins.pack_fv
+                                                                    FStar_Reflection_Data.Tv_FVar
+                                                                    (FStar_Reflection_Builtins.pack_fv
                                                                     ["Steel";
                                                                     "ST";
                                                                     "Util";
                                                                     "exists_"])))))
-                                                        (fun uu___5 ->
                                                            (fun uu___5 ->
-                                                              if uu___5
-                                                              then
-                                                                Obj.magic
-                                                                  (FStar_Tactics_Effect.tac_bind
+                                                              (fun uu___5 ->
+                                                                 if uu___5
+                                                                 then
+                                                                   Obj.magic
+                                                                    (FStar_Tactics_Effect.tac_bind
                                                                     (Prims.mk_range
                                                                     "Steel.ST.GenElim.Base.fsti"
                                                                     (Prims.of_int (385))
@@ -958,9 +959,9 @@ let rec (solve_gen_elim :
                                                                     FStar_Reflection_Data.Q_Explicit)]))))
                                                                     uu___6)))
                                                                     uu___6))
-                                                              else
-                                                                Obj.magic
-                                                                  (FStar_Tactics_Effect.tac_bind
+                                                                 else
+                                                                   Obj.magic
+                                                                    (FStar_Tactics_Effect.tac_bind
                                                                     (Prims.mk_range
                                                                     "Steel.ST.GenElim.Base.fsti"
                                                                     (Prims.of_int (394))
@@ -1017,10 +1018,11 @@ let rec (solve_gen_elim :
                                                                     (tr',
                                                                     FStar_Reflection_Data.Q_Explicit)]))))
                                                                     uu___7)))
-                                                             uu___5)
+                                                                uu___5))
                                                   | uu___5 ->
-                                                      FStar_Tactics_Derived.fail
-                                                        "ill-formed star"))
+                                                      Obj.repr
+                                                        (FStar_Tactics_Derived.fail
+                                                           "ill-formed star")))
                                           else
                                             Obj.magic
                                               (Obj.repr
@@ -1782,78 +1784,70 @@ let (solve_gen_elim_prop :
                                     FStar_Tactics_Effect.lift_div_tac
                                       (fun uu___3 -> Prims.op_Negation uu___2))))
                            (fun uu___2 ->
-                              (fun uu___2 ->
-                                 if uu___2
-                                 then
-                                   Obj.magic
-                                     (Obj.repr
-                                        (FStar_Tactics_Derived.fail
-                                           "not a squash goal"))
-                                 else
-                                   Obj.magic
-                                     (Obj.repr
-                                        (FStar_Tactics_Effect.lift_div_tac
-                                           (fun uu___4 -> ())))) uu___2)))
+                              if uu___2
+                              then
+                                FStar_Tactics_Derived.fail
+                                  "not a squash goal"
+                              else
+                                FStar_Tactics_Effect.lift_div_tac
+                                  (fun uu___4 -> ()))))
                      (fun uu___2 ->
                         (fun uu___2 ->
                            match tl with
                            | (body1, FStar_Reflection_Data.Q_Explicit)::[] ->
                                Obj.magic
-                                 (FStar_Tactics_Effect.tac_bind
-                                    (Prims.mk_range
-                                       "Steel.ST.GenElim.Base.fsti"
-                                       (Prims.of_int (571))
-                                       (Prims.of_int (21))
-                                       (Prims.of_int (571))
-                                       (Prims.of_int (40)))
-                                    (Prims.mk_range
-                                       "Steel.ST.GenElim.Base.fsti"
-                                       (Prims.of_int (571))
-                                       (Prims.of_int (4))
-                                       (Prims.of_int (603))
-                                       (Prims.of_int (7)))
-                                    (FStar_Tactics_Effect.lift_div_tac
+                                 (Obj.repr
+                                    (FStar_Tactics_Effect.tac_bind
+                                       (Prims.mk_range
+                                          "Steel.ST.GenElim.Base.fsti"
+                                          (Prims.of_int (571))
+                                          (Prims.of_int (21))
+                                          (Prims.of_int (571))
+                                          (Prims.of_int (40)))
+                                       (Prims.mk_range
+                                          "Steel.ST.GenElim.Base.fsti"
+                                          (Prims.of_int (571))
+                                          (Prims.of_int (4))
+                                          (Prims.of_int (603))
+                                          (Prims.of_int (7)))
+                                       (FStar_Tactics_Effect.lift_div_tac
+                                          (fun uu___3 ->
+                                             FStar_Reflection_Derived.collect_app
+                                               body1))
                                        (fun uu___3 ->
-                                          FStar_Reflection_Derived.collect_app
-                                            body1))
-                                    (fun uu___3 ->
-                                       (fun uu___3 ->
-                                          match uu___3 with
-                                          | (hd1, tl1) ->
-                                              Obj.magic
-                                                (FStar_Tactics_Effect.tac_bind
-                                                   (Prims.mk_range
-                                                      "Steel.ST.GenElim.Base.fsti"
-                                                      (Prims.of_int (572))
-                                                      (Prims.of_int (4))
-                                                      (Prims.of_int (573))
-                                                      (Prims.of_int (42)))
-                                                   (Prims.mk_range
-                                                      "Steel.ST.GenElim.Base.fsti"
-                                                      (Prims.of_int (574))
-                                                      (Prims.of_int (10))
-                                                      (Prims.of_int (602))
-                                                      (Prims.of_int (44)))
-                                                   (if
-                                                      Prims.op_Negation
-                                                        (is_fvar hd1
-                                                           "Steel.ST.GenElim.Base.gen_elim_prop")
-                                                    then
-                                                      Obj.magic
-                                                        (Obj.repr
-                                                           (FStar_Tactics_Derived.fail
-                                                              "not a gen_elim_prop goal"))
-                                                    else
-                                                      Obj.magic
-                                                        (Obj.repr
-                                                           (FStar_Tactics_Effect.lift_div_tac
-                                                              (fun uu___5 ->
-                                                                 ()))))
-                                                   (fun uu___4 ->
+                                          (fun uu___3 ->
+                                             match uu___3 with
+                                             | (hd1, tl1) ->
+                                                 Obj.magic
+                                                   (FStar_Tactics_Effect.tac_bind
+                                                      (Prims.mk_range
+                                                         "Steel.ST.GenElim.Base.fsti"
+                                                         (Prims.of_int (572))
+                                                         (Prims.of_int (4))
+                                                         (Prims.of_int (573))
+                                                         (Prims.of_int (42)))
+                                                      (Prims.mk_range
+                                                         "Steel.ST.GenElim.Base.fsti"
+                                                         (Prims.of_int (574))
+                                                         (Prims.of_int (10))
+                                                         (Prims.of_int (602))
+                                                         (Prims.of_int (44)))
+                                                      (if
+                                                         Prims.op_Negation
+                                                           (is_fvar hd1
+                                                              "Steel.ST.GenElim.Base.gen_elim_prop")
+                                                       then
+                                                         FStar_Tactics_Derived.fail
+                                                           "not a gen_elim_prop goal"
+                                                       else
+                                                         FStar_Tactics_Effect.lift_div_tac
+                                                           (fun uu___5 -> ()))
                                                       (fun uu___4 ->
-                                                         match FStar_List_Tot_Base.filter
-                                                                 (fun uu___5
-                                                                    ->
+                                                         (fun uu___4 ->
+                                                            match FStar_List_Tot_Base.filter
+                                                                    (
+                                                                    fun
+                                                                    uu___5 ->
                                                                     match uu___5
                                                                     with
                                                                     | 
@@ -1861,35 +1855,37 @@ let (solve_gen_elim_prop :
                                                                     x) ->
                                                                     FStar_Reflection_Data.uu___is_Q_Explicit
                                                                     x) tl1
-                                                         with
-                                                         | (enable_nondep_opt_tm,
-                                                            uu___5)::
-                                                             (p, uu___6)::
-                                                             (a, uu___7)::
-                                                             (q, uu___8)::
-                                                             (post, uu___9)::[]
-                                                             ->
-                                                             Obj.magic
-                                                               (FStar_Tactics_Effect.tac_bind
-                                                                  (Prims.mk_range
+                                                            with
+                                                            | (enable_nondep_opt_tm,
+                                                               uu___5)::
+                                                                (p, uu___6)::
+                                                                (a, uu___7)::
+                                                                (q, uu___8)::
+                                                                (post,
+                                                                 uu___9)::[]
+                                                                ->
+                                                                Obj.magic
+                                                                  (Obj.repr
+                                                                    (FStar_Tactics_Effect.tac_bind
+                                                                    (Prims.mk_range
                                                                     "Steel.ST.GenElim.Base.fsti"
                                                                     (Prims.of_int (576))
                                                                     (Prims.of_int (30))
                                                                     (Prims.of_int (576))
                                                                     (Prims.of_int (74)))
-                                                                  (Prims.mk_range
+                                                                    (Prims.mk_range
                                                                     "Steel.ST.GenElim.Base.fsti"
                                                                     (Prims.of_int (577))
                                                                     (Prims.of_int (6))
                                                                     (Prims.of_int (601))
                                                                     (Prims.of_int (44)))
-                                                                  (Obj.magic
+                                                                    (Obj.magic
                                                                     (FStar_Tactics_Builtins.term_eq_old
                                                                     enable_nondep_opt_tm
                                                                     (FStar_Reflection_Builtins.pack_ln
                                                                     (FStar_Reflection_Data.Tv_Const
                                                                     FStar_Reflection_Data.C_True))))
-                                                                  (fun
+                                                                    (fun
                                                                     uu___10
                                                                     ->
                                                                     (fun
@@ -2416,16 +2412,19 @@ let (solve_gen_elim_prop :
                                                                     uu___10)))
                                                                     uu___10)))
                                                                     uu___10)))
-                                                                    uu___10))
-                                                         | uu___5 ->
-                                                             Obj.magic
-                                                               (FStar_Tactics_Derived.fail
-                                                                  "ill formed gen_elim_prop"))
-                                                        uu___4))) uu___3))
+                                                                    uu___10)))
+                                                            | uu___5 ->
+                                                                Obj.magic
+                                                                  (Obj.repr
+                                                                    (FStar_Tactics_Derived.fail
+                                                                    "ill formed gen_elim_prop")))
+                                                           uu___4))) uu___3)))
                            | uu___3 ->
                                Obj.magic
-                                 (FStar_Tactics_Derived.fail
-                                    "ill-formed squash")) uu___2))) uu___1)
+                                 (Obj.repr
+                                    (FStar_Tactics_Derived.fail
+                                       "ill-formed squash"))) uu___2)))
+           uu___1)
 let (solve_gen_elim_prop_placeholder :
   unit -> (Prims.bool, unit) FStar_Tactics_Effect.tac_repr) =
   fun uu___ ->
@@ -2477,78 +2476,70 @@ let (solve_gen_elim_prop_placeholder :
                                     FStar_Tactics_Effect.lift_div_tac
                                       (fun uu___3 -> Prims.op_Negation uu___2))))
                            (fun uu___2 ->
-                              (fun uu___2 ->
-                                 if uu___2
-                                 then
-                                   Obj.magic
-                                     (Obj.repr
-                                        (FStar_Tactics_Derived.fail
-                                           "not a squash goal"))
-                                 else
-                                   Obj.magic
-                                     (Obj.repr
-                                        (FStar_Tactics_Effect.lift_div_tac
-                                           (fun uu___4 -> ())))) uu___2)))
+                              if uu___2
+                              then
+                                FStar_Tactics_Derived.fail
+                                  "not a squash goal"
+                              else
+                                FStar_Tactics_Effect.lift_div_tac
+                                  (fun uu___4 -> ()))))
                      (fun uu___2 ->
                         (fun uu___2 ->
                            match tl with
                            | (body1, FStar_Reflection_Data.Q_Explicit)::[] ->
                                Obj.magic
-                                 (FStar_Tactics_Effect.tac_bind
-                                    (Prims.mk_range
-                                       "Steel.ST.GenElim.Base.fsti"
-                                       (Prims.of_int (615))
-                                       (Prims.of_int (21))
-                                       (Prims.of_int (615))
-                                       (Prims.of_int (40)))
-                                    (Prims.mk_range
-                                       "Steel.ST.GenElim.Base.fsti"
-                                       (Prims.of_int (615))
-                                       (Prims.of_int (4))
-                                       (Prims.of_int (643))
-                                       (Prims.of_int (7)))
-                                    (FStar_Tactics_Effect.lift_div_tac
+                                 (Obj.repr
+                                    (FStar_Tactics_Effect.tac_bind
+                                       (Prims.mk_range
+                                          "Steel.ST.GenElim.Base.fsti"
+                                          (Prims.of_int (615))
+                                          (Prims.of_int (21))
+                                          (Prims.of_int (615))
+                                          (Prims.of_int (40)))
+                                       (Prims.mk_range
+                                          "Steel.ST.GenElim.Base.fsti"
+                                          (Prims.of_int (615))
+                                          (Prims.of_int (4))
+                                          (Prims.of_int (643))
+                                          (Prims.of_int (7)))
+                                       (FStar_Tactics_Effect.lift_div_tac
+                                          (fun uu___3 ->
+                                             FStar_Reflection_Derived.collect_app
+                                               body1))
                                        (fun uu___3 ->
-                                          FStar_Reflection_Derived.collect_app
-                                            body1))
-                                    (fun uu___3 ->
-                                       (fun uu___3 ->
-                                          match uu___3 with
-                                          | (hd1, tl1) ->
-                                              Obj.magic
-                                                (FStar_Tactics_Effect.tac_bind
-                                                   (Prims.mk_range
-                                                      "Steel.ST.GenElim.Base.fsti"
-                                                      (Prims.of_int (616))
-                                                      (Prims.of_int (4))
-                                                      (Prims.of_int (617))
-                                                      (Prims.of_int (54)))
-                                                   (Prims.mk_range
-                                                      "Steel.ST.GenElim.Base.fsti"
-                                                      (Prims.of_int (618))
-                                                      (Prims.of_int (10))
-                                                      (Prims.of_int (642))
-                                                      (Prims.of_int (56)))
-                                                   (if
-                                                      Prims.op_Negation
-                                                        (is_fvar hd1
-                                                           "Steel.ST.GenElim.Base.gen_elim_prop_placeholder")
-                                                    then
-                                                      Obj.magic
-                                                        (Obj.repr
-                                                           (FStar_Tactics_Derived.fail
-                                                              "not a gen_elim_prop_placeholder goal"))
-                                                    else
-                                                      Obj.magic
-                                                        (Obj.repr
-                                                           (FStar_Tactics_Effect.lift_div_tac
-                                                              (fun uu___5 ->
-                                                                 ()))))
-                                                   (fun uu___4 ->
+                                          (fun uu___3 ->
+                                             match uu___3 with
+                                             | (hd1, tl1) ->
+                                                 Obj.magic
+                                                   (FStar_Tactics_Effect.tac_bind
+                                                      (Prims.mk_range
+                                                         "Steel.ST.GenElim.Base.fsti"
+                                                         (Prims.of_int (616))
+                                                         (Prims.of_int (4))
+                                                         (Prims.of_int (617))
+                                                         (Prims.of_int (54)))
+                                                      (Prims.mk_range
+                                                         "Steel.ST.GenElim.Base.fsti"
+                                                         (Prims.of_int (618))
+                                                         (Prims.of_int (10))
+                                                         (Prims.of_int (642))
+                                                         (Prims.of_int (56)))
+                                                      (if
+                                                         Prims.op_Negation
+                                                           (is_fvar hd1
+                                                              "Steel.ST.GenElim.Base.gen_elim_prop_placeholder")
+                                                       then
+                                                         FStar_Tactics_Derived.fail
+                                                           "not a gen_elim_prop_placeholder goal"
+                                                       else
+                                                         FStar_Tactics_Effect.lift_div_tac
+                                                           (fun uu___5 -> ()))
                                                       (fun uu___4 ->
-                                                         match FStar_List_Tot_Base.filter
-                                                                 (fun uu___5
-                                                                    ->
+                                                         (fun uu___4 ->
+                                                            match FStar_List_Tot_Base.filter
+                                                                    (
+                                                                    fun
+                                                                    uu___5 ->
                                                                     match uu___5
                                                                     with
                                                                     | 
@@ -2556,29 +2547,31 @@ let (solve_gen_elim_prop_placeholder :
                                                                     x) ->
                                                                     FStar_Reflection_Data.uu___is_Q_Explicit
                                                                     x) tl1
-                                                         with
-                                                         | (enable_nondep_opt_tm,
-                                                            uu___5)::
-                                                             (p, uu___6)::
-                                                             (a, uu___7)::
-                                                             (q, uu___8)::
-                                                             (post, uu___9)::[]
-                                                             ->
-                                                             Obj.magic
-                                                               (FStar_Tactics_Effect.tac_bind
-                                                                  (Prims.mk_range
+                                                            with
+                                                            | (enable_nondep_opt_tm,
+                                                               uu___5)::
+                                                                (p, uu___6)::
+                                                                (a, uu___7)::
+                                                                (q, uu___8)::
+                                                                (post,
+                                                                 uu___9)::[]
+                                                                ->
+                                                                Obj.magic
+                                                                  (Obj.repr
+                                                                    (FStar_Tactics_Effect.tac_bind
+                                                                    (Prims.mk_range
                                                                     "Steel.ST.GenElim.Base.fsti"
                                                                     (Prims.of_int (620))
                                                                     (Prims.of_int (6))
                                                                     (Prims.of_int (621))
                                                                     (Prims.of_int (47)))
-                                                                  (Prims.mk_range
+                                                                    (Prims.mk_range
                                                                     "Steel.ST.GenElim.Base.fsti"
                                                                     (Prims.of_int (622))
                                                                     (Prims.of_int (6))
                                                                     (Prims.of_int (641))
                                                                     (Prims.of_int (10)))
-                                                                  (Obj.magic
+                                                                    (Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
                                                                     (Prims.mk_range
                                                                     "Steel.ST.GenElim.Base.fsti"
@@ -2622,25 +2615,17 @@ let (solve_gen_elim_prop_placeholder :
                                                                     (fun
                                                                     uu___10
                                                                     ->
-                                                                    (fun
-                                                                    uu___10
-                                                                    ->
                                                                     if
                                                                     uu___10
                                                                     then
-                                                                    Obj.magic
-                                                                    (Obj.repr
-                                                                    (FStar_Tactics_Derived.fail
-                                                                    "pre-resource not solved yet"))
+                                                                    FStar_Tactics_Derived.fail
+                                                                    "pre-resource not solved yet"
                                                                     else
-                                                                    Obj.magic
-                                                                    (Obj.repr
-                                                                    (FStar_Tactics_Effect.lift_div_tac
+                                                                    FStar_Tactics_Effect.lift_div_tac
                                                                     (fun
                                                                     uu___12
                                                                     -> ()))))
-                                                                    uu___10)))
-                                                                  (fun
+                                                                    (fun
                                                                     uu___10
                                                                     ->
                                                                     (fun
@@ -2806,17 +2791,13 @@ let (solve_gen_elim_prop_placeholder :
                                                                     &&
                                                                     post_is_uvar)
                                                                     then
-                                                                    Obj.magic
-                                                                    (Obj.repr
-                                                                    (FStar_Tactics_Derived.fail
-                                                                    "gen_elim_prop_placeholder is already solved"))
+                                                                    FStar_Tactics_Derived.fail
+                                                                    "gen_elim_prop_placeholder is already solved"
                                                                     else
-                                                                    Obj.magic
-                                                                    (Obj.repr
-                                                                    (FStar_Tactics_Effect.lift_div_tac
+                                                                    FStar_Tactics_Effect.lift_div_tac
                                                                     (fun
                                                                     uu___12
-                                                                    -> ()))))
+                                                                    -> ()))
                                                                     (fun
                                                                     uu___11
                                                                     ->
@@ -3215,16 +3196,19 @@ let (solve_gen_elim_prop_placeholder :
                                                                     uu___11)))
                                                                     uu___11)))
                                                                     uu___11)))
-                                                                    uu___10))
-                                                         | uu___5 ->
-                                                             Obj.magic
-                                                               (FStar_Tactics_Derived.fail
-                                                                  "ill-formed gen_elim_prop_placeholder"))
-                                                        uu___4))) uu___3))
+                                                                    uu___10)))
+                                                            | uu___5 ->
+                                                                Obj.magic
+                                                                  (Obj.repr
+                                                                    (FStar_Tactics_Derived.fail
+                                                                    "ill-formed gen_elim_prop_placeholder")))
+                                                           uu___4))) uu___3)))
                            | uu___3 ->
                                Obj.magic
-                                 (FStar_Tactics_Derived.fail
-                                    "ill-formed squash")) uu___2))) uu___1)
+                                 (Obj.repr
+                                    (FStar_Tactics_Derived.fail
+                                       "ill-formed squash"))) uu___2)))
+           uu___1)
 let (init_resolve_tac : unit -> (unit, unit) FStar_Tactics_Effect.tac_repr) =
   fun uu___ ->
     Steel_Effect_Common.init_resolve_tac'

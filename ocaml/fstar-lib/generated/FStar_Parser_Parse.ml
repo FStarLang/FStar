@@ -10103,7 +10103,7 @@ let attrs =     ( Some x ) in
 let op =               ( mk_ident ("let" ^ op, rhs parseState 1) ) in
     ( let lbs = (op, b)::lbs in
       mk_term (LetOperator ( List.map (fun (op, (pat, tm)) -> (op, pat, tm)) lbs
-			   , e)) (rhs2 parseState 1 4) Expr
+			   , e)) (rhs2 parseState 1 5) Expr
     ))
 # 10095 "parse.ml"
                : 'noSeqTerm))
@@ -12249,7 +12249,7 @@ let es =     ( xs ) in
     Obj.repr(
 # 3124 "parse.mly"
     (let _1 = () in
-            ( Const_reify ))
+            ( Const_reify None ))
 # 12240 "parse.ml"
                : 'constant))
 ; (fun __caml_parser_env ->

@@ -673,6 +673,11 @@ let eff_combinators_to_string = function
   | DM4F_eff combs -> wp_eff_combinators_to_string combs
   | Layered_eff combs -> layered_eff_combinators_to_string combs
 
+let eff_extraction_mode_to_string = function
+  | Extract_none s -> U.format1 "none (%s)" s
+  | Extract_reify -> "reify"
+  | Extract_primitive -> "primitive"
+
 let eff_decl_to_string' for_free r q ed =
  if not (Options.ugly()) then
     Pretty.eff_decl_to_string' for_free r q ed
@@ -718,9 +723,9 @@ let pragma_to_string (p:pragma) : string =
   | PopOptions            -> "#pop-options"
 
 let rec sigelt_to_string (x: sigelt) =
- // if not (Options.ugly()) then
- //    Pretty.sigelt_to_string x
- // else
+  if not (Options.ugly()) then
+     Pretty.sigelt_to_string x
+  else
    let basic =
       match x.sigel with
       | Sig_pragma p -> pragma_to_string p
@@ -784,6 +789,11 @@ let rec sigelt_to_string (x: sigelt) =
       match x.sigattrs with
       | [] -> "[@ ]" ^ "\n" ^ basic //It is important to keep this empty attribute marker since the Vale type extractor uses it as a delimiter
       | _ -> attrs_to_string x.sigattrs ^ "\n" ^ basic
+
+let sigelt_to_string' env x =
+  if Options.ugly ()
+  then sigelt_to_string x
+  else Pretty.sigelt_to_string' env x
 
 (* A "short" version of printing a sigelt. Meant to (usually) be a small string
 suitable to embed in an error message. No need to be fully faithful to

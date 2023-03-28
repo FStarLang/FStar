@@ -81,7 +81,7 @@ let replace_var (s:param_state) (b:bool) (t:term) : Tac term =
   | Tv_Var bv ->
     begin try
       let (x, y, _) = lookup s bv in
-      let bv = if b then fst (inspect_binder y) else fst (inspect_binder x) in
+      let bv = if b then (inspect_binder y).binder_bv else (inspect_binder x).binder_bv in
       pack (Tv_Var bv)
     with
     (* Maybe we traversed a binder and there are variables not in the state.
@@ -126,9 +126,8 @@ let rec param' (s:param_state) (t:term) : Tac term =
   | Tv_Arrow b c -> //      t1 -> t2   ===  (x:t1) -> Tot t2
     begin match inspect_comp c with
     | C_Total t2 ->
-      let (_, (q, _)) = inspect_binder b in
-
       let (s', (bx0, bx1, bxR)) = push_binder b s in
+      let q = (inspect_binder b).binder_qual in
 
       let bf0 = fresh_binder_named "f0" (replace_by s false t) in
       let bf1 = fresh_binder_named "f1" (replace_by s true t) in
@@ -262,12 +261,14 @@ and param_br (s:param_state) (br : branch) : Tac branch =
   (pat', param' s' t)
 
 and push_binder (b:binder) (s:param_state) : Tac (param_state & (binder & binder & binder)) =
-  let (bv, (q, _)) = inspect_binder b in
+  let bv = (inspect_binder b).binder_bv in
+  let q = (inspect_binder b).binder_qual in
   let typ = (inspect_bv bv).bv_sort in
   let name = (inspect_bv bv).bv_ppname in
-  let bx0 = fresh_binder_named (name^"0") (replace_by s false typ) in
-  let bx1 = fresh_binder_named (name^"1") (replace_by s true typ) in
-  let bxr = fresh_binder_named (name^"R") (`(`#(param' s typ)) (`#bx0) (`#bx1)) in
+  let decor (s : sealed string) (t : string) : Tac string = (unseal s ^ t) in
+  let bx0 = fresh_binder_named (decor name "0") (replace_by s false typ) in
+  let bx1 = fresh_binder_named (decor name "1") (replace_by s true typ) in
+  let bxr = fresh_binder_named (decor name "R") (`(`#(param' s typ)) (`#bx0) (`#bx1)) in
 
   (* respect implicits *)
   let bx0 = binder_set_qual q bx0 in

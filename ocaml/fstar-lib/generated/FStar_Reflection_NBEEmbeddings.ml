@@ -1523,6 +1523,74 @@ let (e_bv_view :
          FStar_Pervasives_Native.None) in
   mk_emb' embed_bv_view unembed_bv_view
     FStar_Reflection_Constants.fstar_refl_bv_view_fv
+let (e_attribute :
+  FStar_Syntax_Syntax.attribute FStar_TypeChecker_NBETerm.embedding) = e_term
+let (e_attributes :
+  FStar_Syntax_Syntax.attribute Prims.list
+    FStar_TypeChecker_NBETerm.embedding)
+  = FStar_TypeChecker_NBETerm.e_list e_attribute
+let (e_binder_view :
+  FStar_Reflection_Data.binder_view FStar_TypeChecker_NBETerm.embedding) =
+  let embed_binder_view cb bview =
+    let uu___ =
+      let uu___1 =
+        let uu___2 =
+          FStar_TypeChecker_NBETerm.embed e_bv cb
+            bview.FStar_Reflection_Data.binder_bv in
+        FStar_TypeChecker_NBETerm.as_arg uu___2 in
+      let uu___2 =
+        let uu___3 =
+          let uu___4 =
+            FStar_TypeChecker_NBETerm.embed e_aqualv cb
+              bview.FStar_Reflection_Data.binder_qual in
+          FStar_TypeChecker_NBETerm.as_arg uu___4 in
+        let uu___4 =
+          let uu___5 =
+            let uu___6 =
+              FStar_TypeChecker_NBETerm.embed e_attributes cb
+                bview.FStar_Reflection_Data.binder_attrs in
+            FStar_TypeChecker_NBETerm.as_arg uu___6 in
+          [uu___5] in
+        uu___3 :: uu___4 in
+      uu___1 :: uu___2 in
+    mkConstruct
+      FStar_Reflection_Constants.ref_Mk_binder.FStar_Reflection_Constants.fv
+      [] uu___ in
+  let unembed_binder_view cb t =
+    match t.FStar_TypeChecker_NBETerm.nbe_t with
+    | FStar_TypeChecker_NBETerm.Construct
+        (fv, uu___, (attrs, uu___1)::(q, uu___2)::(bv, uu___3)::[]) when
+        FStar_Syntax_Syntax.fv_eq_lid fv
+          FStar_Reflection_Constants.ref_Mk_binder.FStar_Reflection_Constants.lid
+        ->
+        let uu___4 = FStar_TypeChecker_NBETerm.unembed e_bv cb bv in
+        FStar_Compiler_Util.bind_opt uu___4
+          (fun bv1 ->
+             let uu___5 = FStar_TypeChecker_NBETerm.unembed e_aqualv cb q in
+             FStar_Compiler_Util.bind_opt uu___5
+               (fun q1 ->
+                  let uu___6 =
+                    FStar_TypeChecker_NBETerm.unembed e_attributes cb attrs in
+                  FStar_Compiler_Util.bind_opt uu___6
+                    (fun attrs1 ->
+                       FStar_Compiler_Effect.op_Less_Bar
+                         (fun uu___7 -> FStar_Pervasives_Native.Some uu___7)
+                         {
+                           FStar_Reflection_Data.binder_bv = bv1;
+                           FStar_Reflection_Data.binder_qual = q1;
+                           FStar_Reflection_Data.binder_attrs = attrs1
+                         })))
+    | uu___ ->
+        ((let uu___2 =
+            let uu___3 =
+              let uu___4 = FStar_TypeChecker_NBETerm.t_to_string t in
+              FStar_Compiler_Util.format1 "Not an embedded binder_view: %s"
+                uu___4 in
+            (FStar_Errors_Codes.Warning_NotEmbedded, uu___3) in
+          FStar_Errors.log_issue FStar_Compiler_Range.dummyRange uu___2);
+         FStar_Pervasives_Native.None) in
+  mk_emb' embed_binder_view unembed_binder_view
+    FStar_Reflection_Constants.fstar_refl_binder_view_fv
 let (e_comp_view :
   FStar_Reflection_Data.comp_view FStar_TypeChecker_NBETerm.embedding) =
   let embed_comp_view cb cv =
@@ -1846,12 +1914,6 @@ let (e_lb_view :
          FStar_Pervasives_Native.None) in
   mk_emb' embed_lb_view unembed_lb_view
     FStar_Reflection_Constants.fstar_refl_lb_view_fv
-let (e_attribute :
-  FStar_Syntax_Syntax.attribute FStar_TypeChecker_NBETerm.embedding) = e_term
-let (e_attributes :
-  FStar_Syntax_Syntax.attribute Prims.list
-    FStar_TypeChecker_NBETerm.embedding)
-  = FStar_TypeChecker_NBETerm.e_list e_attribute
 let (e_lid : FStar_Ident.lid FStar_TypeChecker_NBETerm.embedding) =
   let embed rng lid =
     let uu___ = FStar_Ident.path_of_lid lid in
@@ -2132,12 +2194,6 @@ let (e_exp : FStar_Reflection_Data.exp FStar_TypeChecker_NBETerm.embedding) =
           FStar_Errors.log_issue FStar_Compiler_Range.dummyRange uu___2);
          FStar_Pervasives_Native.None) in
   mk_emb' embed_exp unembed_exp FStar_Reflection_Constants.fstar_refl_exp_fv
-let (e_binder_view :
-  FStar_Reflection_Data.binder_view FStar_TypeChecker_NBETerm.embedding) =
-  let uu___ =
-    let uu___1 = FStar_TypeChecker_NBETerm.e_list e_term in
-    FStar_TypeChecker_NBETerm.e_tuple2 e_aqualv uu___1 in
-  FStar_TypeChecker_NBETerm.e_tuple2 e_bv uu___
 let (e_qualifier :
   FStar_Reflection_Data.qualifier FStar_TypeChecker_NBETerm.embedding) =
   let embed cb q =

@@ -246,7 +246,7 @@ and hash_constant =
   | Const_range_of -> of_int 353
   | Const_set_range_of -> of_int 359
   | Const_range r -> mix (of_int 367) (of_string (Range.string_of_range r))
-  | Const_reify -> of_int 367
+  | Const_reify _ -> of_int 367
   | Const_reflect l -> mix (of_int 373) (hash_lid l)
 
 and hash_sw (s, w) =
@@ -489,7 +489,7 @@ and equal_constant c1 c2 =
   | Const_range_of, Const_range_of
   | Const_set_range_of, Const_set_range_of -> true
   | Const_range r1, Const_range r2 -> Range.compare r1 r2 = 0
-  | Const_reify, Const_reify -> true
+  | Const_reify _, Const_reify _ -> true
   | Const_reflect l1, Const_reflect l2 -> Ident.lid_equals l1 l2
   | _ -> false
 

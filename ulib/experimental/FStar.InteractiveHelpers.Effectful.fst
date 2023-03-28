@@ -93,7 +93,7 @@ let rec decompose_application_aux (e : env) (t : term) :
       | Some hd_ty' ->
         match inspect hd_ty' with
         | Tv_Arrow b c ->
-          let bv, _ = inspect_binder b in
+          let bv = (inspect_binder b).binder_bv in
           let bview = inspect_bv bv in
           let ty = bview.bv_sort in
           Some (get_type_info_from_type ty)

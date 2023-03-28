@@ -1,0 +1,62 @@
+[
+  "qº§‘Ø’4®\u000b¨Ç¼ýJ>¨",
+  [
+    [
+      "Russell.zero",
+      1,
+      2,
+      1,
+      [ "@query", "equation_Prims.l_False", "false_interp" ],
+      0,
+      "26c67619653c8067bb147cbd962e3b3e"
+    ],
+    [
+      "Russell.x_in_delta_x_not_in_delta",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "eq2-interp",
+        "equation_FStar.Pervasives.dfst", "equation_Prims.eq2",
+        "equation_Prims.squash", "equation_Russell.delta",
+        "equation_Russell.delta_big", "equation_Russell.set",
+        "proj_equation_Prims.Mkdtuple2__1", "proj_equation_Russell.Set_f",
+        "proj_equation_Russell.Set_x",
+        "projection_inverse_Prims.Mkdtuple2__1",
+        "projection_inverse_Russell.Set_f",
+        "projection_inverse_Russell.Set_x",
+        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c",
+        "token_correspondence_FStar.Pervasives.dfst",
+        "token_correspondence_Russell.__proj__Set__item__f"
+      ],
+      0,
+      "0e6d2cde3afe32df2ef9b18bab0e21c8"
+    ],
+    [
+      "Russell.x_not_mem_x_x_mem_delta",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "Prims_interpretation_Tm_arrow_2eaa01e78f73e9bab5d0955fc1a662da",
+        "Russell_interpretation_Tm_arrow_7a21556c5f72d0ab3a596800ca76b4da",
+        "data_typing_intro_Prims.Mkdtuple2@tok",
+        "equation_FStar.Pervasives.dfst", "equation_Russell.delta",
+        "equation_Russell.delta_big", "equation_Russell.set",
+        "function_token_typing_Russell.set",
+        "interpretation_Tm_abs_00c6031da87949e271baff96ec88e49e",
+        "proj_equation_Prims.Mkdtuple2__1", "proj_equation_Russell.Set_f",
+        "proj_equation_Russell.Set_x",
+        "projection_inverse_Prims.Mkdtuple2__1",
+        "projection_inverse_Russell.Set_f",
+        "projection_inverse_Russell.Set_x",
+        "token_correspondence_FStar.Pervasives.dfst",
+        "token_correspondence_Russell.__proj__Set__item__f",
+        "typing_Tm_abs_00c6031da87949e271baff96ec88e49e"
+      ],
+      0,
+      "08abf40f5954b19385ab2afab6d4428a"
+    ]
+  ]
+]

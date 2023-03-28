@@ -1,0 +1,60 @@
+[
+  "ùî≥w\f∆˝\u0014\u0010\u0003Ê>Å±¨y",
+  [
+    [
+      "Part3.MonadsAndFunctors.get_put_identity",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "equation_FStar.FunctionalExtensionality.feq",
+        "equation_Part3.MonadsAndFunctors.bind",
+        "equation_Part3.MonadsAndFunctors.get",
+        "equation_Part3.MonadsAndFunctors.get_put",
+        "equation_Part3.MonadsAndFunctors.noop",
+        "equation_Part3.MonadsAndFunctors.put",
+        "equation_Part3.MonadsAndFunctors.return",
+        "equation_Part3.MonadsAndFunctors.st_monad",
+        "fuel_guarded_inversion_Part3.MonadsAndFunctors.monad",
+        "interpretation_Tm_abs_6fe7781f05550e647ef9348567de2f4a",
+        "interpretation_Tm_abs_79991cb66008561c642fa3e96942b94c",
+        "interpretation_Tm_abs_7b635665b13d92867e2a7a394f6a2045",
+        "interpretation_Tm_abs_80bae2cedda8810a1873ff1bc009da67",
+        "interpretation_Tm_abs_c0d0000c389ad35def48694f32ab1308",
+        "interpretation_Tm_abs_cb72b10530b50327b78d3bba5e7a9f66",
+        "interpretation_Tm_abs_e63dccd4c4d84c40c92b7577b02d7e3b",
+        "proj_equation_Part3.MonadsAndFunctors.Mkmonad_bind",
+        "proj_equation_Part3.MonadsAndFunctors.Mkmonad_return",
+        "projection_inverse_FStar.Pervasives.Native.Mktuple2__1",
+        "projection_inverse_FStar.Pervasives.Native.Mktuple2__2",
+        "projection_inverse_Part3.MonadsAndFunctors.Mkmonad_bind",
+        "projection_inverse_Part3.MonadsAndFunctors.Mkmonad_m",
+        "projection_inverse_Part3.MonadsAndFunctors.Mkmonad_return",
+        "token_correspondence_Part3.MonadsAndFunctors.bind",
+        "token_correspondence_Part3.MonadsAndFunctors.return",
+        "typing_Part3.MonadsAndFunctors.st_monad"
+      ],
+      0,
+      "16fce7b1160b94bb1a7895bf9d49ee43"
+    ],
+    [
+      "Part3.MonadsAndFunctors.opt_monad",
+      1,
+      2,
+      1,
+      [ "@query", "lemma_FStar.Pervasives.invertOption" ],
+      0,
+      "5354e4a59e089a2f10218950e1a262d7"
+    ],
+    [
+      "Part3.MonadsAndFunctors.div",
+      1,
+      2,
+      1,
+      [ "@query", "primitive_Prims.op_Equality" ],
+      0,
+      "bd0e79469dd66b406f4681743d887d1f"
+    ]
+  ]
+]

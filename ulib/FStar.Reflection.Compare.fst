@@ -47,9 +47,9 @@ let compare_const (c1 c2 : vconst) : order =
     | C_Reflect _, _ -> Lt   | _, C_Reflect _ -> Gt
 
 let compare_binder (b1 b2 : binder) : order =
-    let bv1, _ = inspect_binder b1 in
-    let bv2, _ = inspect_binder b2 in
-    compare_bv bv1 bv2
+    let bview1 = inspect_binder b1 in
+    let bview2 = inspect_binder b2 in
+    compare_bv bview1.binder_bv bview2.binder_bv
 
 let compare_ident (i1 i2:ident) : order =
   order_from_int (compare_string (fst i1) (fst i2))

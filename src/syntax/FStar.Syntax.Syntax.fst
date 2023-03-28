@@ -64,13 +64,8 @@ let contains_reflectable (l: list qualifier): bool =
 let withinfo v r = {v=v; p=r}
 let withsort v = withinfo v dummyRange
 
-let bv_eq (bv1:bv) (bv2:bv) = bv1.index=bv2.index
-
-let order_bv x y =
-  let i = String.compare (string_of_id x.ppname) (string_of_id y.ppname) in
-  if i = 0
-  then x.index - y.index
-  else i
+let order_bv (x y : bv) : int  = x.index - y.index
+let bv_eq    (x y : bv) : bool = order_bv x y = 0
 
 let order_ident x y = String.compare (string_of_id x) (string_of_id y)
 let order_fv x y = String.compare (string_of_lid x) (string_of_lid y)
@@ -196,9 +191,14 @@ let is_null_binder (b:binder) = is_null_bv b.binder_bv
 let range_of_ropt = function
     | None -> dummyRange
     | Some r -> r
-let gen_bv : string -> option Range.range -> typ -> bv = fun s r t ->
-  let id = mk_ident(s, range_of_ropt r) in
+
+let gen_bv' (id : ident) (r : option Range.range) (t : typ) : bv =
   {ppname=id; index=Ident.next_id(); sort=t}
+
+let gen_bv (s : string) (r : option Range.range) (t : typ) : bv =
+  let id = mk_ident(s, range_of_ropt r) in
+  gen_bv' id r t
+
 let new_bv ropt t = gen_bv Ident.reserved_prefix ropt t
 let freshen_bv bv =
     if is_null_bv bv
@@ -352,6 +352,10 @@ let t_tuple3_of t1 t2 t3 = mk_Tm_app
 let t_either_of t1 t2 = mk_Tm_app
   (mk_Tm_uinst (tabbrev PC.either_lid) [U_zero;U_zero])
   [as_arg t1; as_arg t2]
+  Range.dummyRange
+let t_sealed_of t = mk_Tm_app
+  (mk_Tm_uinst (tabbrev PC.sealed_lid) [U_zero])
+  [as_arg t]
   Range.dummyRange
 
 let unit_const_with_range r = mk (Tm_constant FStar.Const.Const_unit) r

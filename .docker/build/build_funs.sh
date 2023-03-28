@@ -114,6 +114,11 @@ function refresh_fstar_hints() {
     refresh_hints "https://$DZOMO_GITHUB_TOKEN@github.com/FStarLang/FStar.git" "git_add_fstar_snapshot" "regenerate hints + ocaml snapshot" "."
 }
 
+# Do we need to update the version number and publish a release?
+function is_release_branch () {
+    [[ "$1" = master || "$1" = _release ]]
+}
+
 # Note: this performs an _approximate_ refresh of the hints, in the sense that
 # since the hint refreshing job takes about 80 minutes, it's very likely someone
 # merged to $CI_BRANCH in the meanwhile, which would invalidate some hints. So, we
@@ -156,7 +161,7 @@ function refresh_hints() {
 
     # Update the version number in version.txt and fstar.opam, and if
     # so, commit. Do this only for the master branch.
-    if [[ $CI_BRANCH = master ]] ; then
+    if is_release_branch $CI_BRANCH ; then
 	update_version_number
     fi
 
@@ -190,6 +195,12 @@ function refresh_hints() {
     # Push.
     git checkout -b BuildHints-$CI_BRANCH
     git push $remote BuildHints-$CI_BRANCH
+
+    # Publish a release
+    if is_release_branch $CI_BRANCH ; then
+        # Make and test a release
+        FSTAR_HOME= KRML_HOME= GH_TOKEN=$DZOMO_GITHUB_TOKEN CI_BRANCH=$CI_BRANCH .scripts/process_build.sh
+    fi
 }
 
 function fstar_binary_build () {
@@ -244,7 +255,7 @@ function fstar_default_build () {
     # .gitignore.
     echo "Searching for a diff in ocaml/*/generated"
     if ! git diff --exit-code ocaml/*/generated ; then
-        echo "GIT DIFF: the files in the list above have a git diff"
+        echo " *** GIT DIFF: the files in the list above have a git diff"
         echo false >$status_file
     fi
 

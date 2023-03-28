@@ -951,12 +951,25 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
         | Tm_constant Const_set_range_of, [(arg, _); (rng, _)] ->
             encode_term arg env
 
-        | Tm_constant Const_reify, _ (* (_::_::_) *) ->
-            let e0 = TcUtil.reify_body_with_arg env.tcenv [] head (List.hd args_e) in
+        | Tm_constant (Const_reify lopt), _ ->
+          let fallback () =
+            let f = varops.fresh env.current_module_name "Tm_reify" in
+            let decl =
+              Term.DeclFun (f, [], Term_sort, Some "Imprecise reify") in
+            mkFreeV <| mk_fv (f, Term_sort), [decl] |> mk_decls_trivial in
+
+          (match lopt with
+           | None -> fallback ()
+           | Some l
+             when l |> Env.norm_eff_name env.tcenv
+                    |> Env.is_layered_effect env.tcenv -> fallback ()
+           | _ ->             
+            let e0 = TcUtil.norm_reify env.tcenv []
+              (U.mk_reify (args_e |> List.hd |> fst) lopt) in
             if Env.debug env.tcenv <| Options.Other "SMTEncodingReify"
             then BU.print1 "Result of normalization %s\n" (Print.term_to_string e0);
             let e = S.mk_Tm_app (TcUtil.remove_reify e0) (List.tl args_e) t0.pos in
-            encode_term e env
+            encode_term e env)
 
         | Tm_constant (Const_reflect _), [(arg, _)] ->
             encode_term arg env
@@ -1168,7 +1181,8 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
               else
                 let vars, guards, envbody, decls, _ = encode_binders None bs env in
                 let body = if is_smt_reifiable_rc env.tcenv rc
-                           then TcUtil.reify_body env.tcenv [] body
+                           then TcUtil.norm_reify env.tcenv []
+                                  (U.mk_reify body (Some rc.residual_effect))
                            else body
                 in
                 let body, decls' = encode_term body envbody in

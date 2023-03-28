@@ -38,7 +38,14 @@
 module FStar.ImmutableArray.Base
 
 (* The main type of immutable arrays *)
-val t (a:Type u#a) : Type u#a
+new
+val t ([@@@strictly_positive] a:Type u#a) : Type u#a
+
+(* An array supports equality when its elements also do. *)
+val array_has_eq (a : Type) : Lemma
+  (requires hasEq a)
+  (ensures hasEq (t a))
+  [SMTPat (hasEq (t a))]
 
 (* Creating an immutable array from a list *)
 val of_list (#a:Type u#a) (l:list a) : Tot (t a)

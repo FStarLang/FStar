@@ -370,6 +370,7 @@ let default_effect_attr = psconst "default_effect"
 let top_level_effect_attr = psconst "top_level_effect"
 let effect_parameter_attr = psconst "effect_param"
 let bind_has_range_args_attr = psconst "bind_has_range_args"
+let primitive_extraction_attr = psconst "primitive_extraction"
 let binder_strictly_positive_attr = psconst "strictly_positive"
 let no_auto_projectors_attr = psconst "no_auto_projectors"
 let no_subtping_attr_lid = psconst "no_subtyping"
@@ -402,7 +403,11 @@ let const_to_string x = match x with
   | Const_range r -> FStar.Compiler.Range.string_of_range r
   | Const_range_of -> "range_of"
   | Const_set_range_of -> "set_range_of"
-  | Const_reify -> "reify"
+  | Const_reify lopt ->
+    U.format1 "reify%s"
+      (match lopt with
+       | None -> ""
+       | Some l -> U.format1 "<%s>" (string_of_lid l))    
   | Const_reflect l -> U.format1 "[[%s.reflect]]" (sli l)
 
 
@@ -523,15 +528,6 @@ let and_elim_lid = classical_sugar_lid "and_elim"
 
 let match_returns_def_name = reserved_prefix ^ "_ret_"
 
-//
-// lid for the reify function assume val for an indexed effect
-//
-let layered_effect_reify_val_lid (eff_name:lident) (r:range) : lident =
-  let ns = Ident.ns_of_lid eff_name in
-  let reify_fn_name = "reify___" ^ (eff_name |> ident_of_lid |> string_of_id) in
-  lid_of_ns_and_id ns (mk_ident (reify_fn_name, r))
-
-
 let steel_memory_inv_lid = FStar.Ident.lid_of_path ["Steel"; "Memory"; "inv"] FStar.Compiler.Range.dummyRange
 
 let steel_new_invariant_lid = FStar.Ident.lid_of_path ["Steel"; "Effect"; "Atomic"; "new_invariant"] FStar.Compiler.Range.dummyRange
@@ -550,3 +546,7 @@ let fext_on_domain_lid = fext_lid "on_domain"
 let fext_on_dom_lid = fext_lid "on_dom"
 let fext_on_domain_g_lid = fext_lid "on_domain_g"
 let fext_on_dom_g_lid = fext_lid "on_dom_g"
+
+let sealed_lid      = p2l ["FStar"; "Sealed"; "sealed"]
+let seal_lid        = p2l ["FStar"; "Sealed"; "seal"]
+let unseal_lid      = p2l ["FStar"; "Tactics"; "Builtins"; "unseal"]

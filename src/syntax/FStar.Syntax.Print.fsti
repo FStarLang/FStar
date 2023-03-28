@@ -44,6 +44,7 @@ val univ_to_string        : universe -> string
 val univs_to_string       : universes -> string
 val attrs_to_string       : list attribute -> string
 val sigelt_to_string      : sigelt -> string
+val sigelt_to_string'     : DsEnv.env -> sigelt -> string
 val sigelt_to_string_short: sigelt -> string
 val tag_of_sigelt         : sigelt -> string
 val binder_to_string      : binder -> string
@@ -57,6 +58,8 @@ val indexed_effect_binder_kind_to_string
                           : indexed_effect_binder_kind -> string
 val indexed_effect_combinator_kind_to_string
                           : indexed_effect_combinator_kind -> string
+val eff_extraction_mode_to_string
+                          : eff_extraction_mode -> string
 val eff_decl_to_string    : bool -> eff_decl -> string
 val sub_eff_to_string     : sub_eff -> string
 val subst_to_string       : subst_t -> string

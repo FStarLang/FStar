@@ -1728,65 +1728,51 @@ Errors.with_ctx (BU.format1 "While checking layered effect definition `%s`" (str
 
     act in
 
-  //
-  // If the effect is reifiable, create an
-  //   assume val reify_M (#a:Type) ... ($f:unit -> M a is) : M.repr a is
-  //
-  // The toplevel tc loop will typecheck reify_sigelt
-  //
-  let reify_sigelt =
-    if List.contains Reifiable quals
-    then
-      let env = env0 in
-      let r = range_of_lid ed.mname in
-      let a, u_a = fresh_a_and_u_a "a" in
-      let rest_bs =
-        let signature_ts = let us, t, _ = signature in us, t in
-        TcUtil.layered_effect_indices_as_binders env r ed.mname signature_ts u_a (a.binder_bv |> S.bv_to_name) in
-      let f_binder =
-        let thunked_t = U.arrow [S.null_bv S.t_unit |> S.mk_binder]
-          ({comp_univs = [];
-            effect_name = ed.mname;
-            result_typ = S.bv_to_name a.binder_bv;
-            effect_args = rest_bs |> List.map (fun b -> as_arg (S.bv_to_name b.binder_bv));
-            flags=[]} |> S.mk_Comp) in
-        S.mk_binder_with_attrs
-          (S.null_bv thunked_t)
-          (Some Equality)
-          [] in
-      let bs = a::rest_bs in
-      let applied_repr : term =
-        let repr_ts = let us, t, _ = repr in us, t in
-        let repr = Env.inst_tscheme_with repr_ts [u_a] |> snd in
-        mk_Tm_app repr
-          (bs |> List.map (fun b -> S.bv_to_name b.binder_bv, U.aqual_of_binder b))
-          r in
-      let reify_val_t =
-        let bs =
-          bs |> List.map (fun b -> {b with binder_qual = Some (Implicit false); binder_attrs = []}) in
-        U.arrow (bs@[f_binder])
-        (if List.contains S.TotalEffect quals
-         then S.mk_Total applied_repr
-         else { comp_univs = [];
-                effect_name = PC.effect_Dv_lid;
-                result_typ = applied_repr;
-                effect_args = [];
-                flags = [] } |> S.mk_Comp) in
-      let us, reify_val_t = Gen.generalize_universes env reify_val_t in
-      let sig_assume_reify =
-        let lid = PC.layered_effect_reify_val_lid ed.mname r in
-        { sigel = Sig_declare_typ (lid, us, reify_val_t);
-          sigrng = r;
-          sigquals = [Assumption];
-          sigmeta = default_sigmeta;
-          sigattrs = [];
-          sigopts = None } in
-      log_issue r (Errors.Warning_BleedingEdge_Feature,
-                   BU.format1 "Reification of indexed effects (%s here) is supported only as a type coercion \
-                     to the underlying representation type (no support for smt-based reasoning or extraction)"
-                     (string_of_lid ed.mname));
-      [sig_assume_reify]
-    else [] in
+  // set extraction mode
+  let extraction_mode =
+    let has_primitive_extraction =
+      U.has_attribute ed.eff_attrs PC.primitive_extraction_attr in
+    let is_reifiable = List.contains Reifiable quals in
+
+    if has_primitive_extraction && is_reifiable
+    then raise_error (Errors.Fatal_UnexpectedEffect,
+                      BU.format1 "Effect %s is declared to be both primitive extraction and reifiable"
+                        (string_of_lid ed.mname)) (Ident.range_of_lid ed.mname)
+    else begin
+      if has_primitive_extraction
+      then S.Extract_primitive
+      else
+        let us, a_b, rest_bs =
+          let us, t = let us, t, _ = signature in us, t in
+          match (SS.compress t).n with
+          | Tm_arrow (bs, _) ->
+            let a_b::rest_bs = SS.open_binders bs in
+            us, a_b, rest_bs
+          | _ -> failwith "Impossible!"  // there are multiple places above where we have relied on sig being an arrow
+        in
+        let env = Env.push_univ_vars env0 us in
+        let env = Env.push_binders env [a_b] in
+        let _, r = List.fold_left (fun (env, r) b ->
+          let r = r && N.non_info_norm env b.binder_bv.sort in
+          Env.push_binders env [b], r) (env, true) rest_bs in
+        if r &&
+           Substitutive_combinator? bind_kind &&
+           (is_reifiable || lid_equals ed.mname PC.effect_TAC_lid)
+        then S.Extract_reify
+        else let m =
+               if not r
+               then "one or more effect indices are informative"
+               else if not (Substitutive_combinator? bind_kind)
+               then "bind is not substitutive"
+               else "the effect is not reifiable" in      
+             S.Extract_none m
+    end
+  in
+
+  if Env.debug env0 <| Options.Other "LayeredEffectsTc"
+  then BU.print2 "Effect %s has extraction mode %s\n"
+         (string_of_lid ed.mname)
+         (Print.eff_extraction_mode_to_string extraction_mode);
 
   let tschemes_of (us, t, ty) k = (us, t), (us, ty), k in
   let tschemes_of2 (us, t, ty) = (us, t), (us, ty) in
@@ -1802,9 +1788,9 @@ Errors.with_ctx (BU.format1 "While checking layered effect definition `%s`" (str
   { ed with
     signature     = Layered_eff_sig (num_effect_params, (let us, t, _ = signature in (us, t)));
     combinators   = combinators;
-    actions       = List.map (tc_action env0) ed.actions },
-  reify_sigelt
-)
+    actions       = List.map (tc_action env0) ed.actions;
+    extraction_mode }
+  )
 
 let tc_non_layered_eff_decl env0 (ed:S.eff_decl) (_quals : list qualifier) (_attrs : list S.attribute) : S.eff_decl =
 Errors.with_ctx (BU.format1 "While checking effect definition `%s`" (string_of_lid ed.mname)) (fun () ->
@@ -2239,7 +2225,7 @@ Errors.with_ctx (BU.format1 "While checking effect definition `%s`" (string_of_l
 let tc_eff_decl env ed quals attrs =
   if ed |> U.is_layered
   then tc_layered_eff_decl env ed quals attrs
-  else tc_non_layered_eff_decl env ed quals attrs, []
+  else tc_non_layered_eff_decl env ed quals attrs
 
 let monad_signature env m s =
  let fail () = raise_error (Err.unexpected_signature_for_monad env m s) (range_of_lid m) in

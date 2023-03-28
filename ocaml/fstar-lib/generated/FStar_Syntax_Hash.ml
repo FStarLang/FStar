@@ -472,7 +472,7 @@ and (hash_constant : FStar_Syntax_Syntax.sconst -> FStar_Hash.hash_code mm) =
           let uu___3 = FStar_Compiler_Range.string_of_range r in
           of_string uu___3 in
         mix uu___1 uu___2
-    | FStar_Const.Const_reify -> of_int (Prims.of_int (367))
+    | FStar_Const.Const_reify uu___1 -> of_int (Prims.of_int (367))
     | FStar_Const.Const_reflect l ->
         let uu___1 = of_int (Prims.of_int (373)) in
         let uu___2 = hash_lid l in mix uu___1 uu___2
@@ -971,7 +971,8 @@ and (equal_constant :
          | (FStar_Const.Const_range r1, FStar_Const.Const_range r2) ->
              let uu___2 = FStar_Compiler_Range.compare r1 r2 in
              uu___2 = Prims.int_zero
-         | (FStar_Const.Const_reify, FStar_Const.Const_reify) -> true
+         | (FStar_Const.Const_reify uu___2, FStar_Const.Const_reify uu___3)
+             -> true
          | (FStar_Const.Const_reflect l1, FStar_Const.Const_reflect l2) ->
              FStar_Ident.lid_equals l1 l2
          | uu___2 -> false)

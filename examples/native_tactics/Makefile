@@ -14,7 +14,8 @@ TAC_MODULES=Print\
     Evens\
     Embeddings\
     Plugins\
-    Registers.List
+    Registers.List\
+    Sealed.Plugins
 
 # Tests for which the native tatics are declared and used in the same module
 ALL=Apply\

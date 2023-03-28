@@ -811,7 +811,7 @@ noSeqTerm:
   | op=let_op b=letoperatorbinding lbs=list(op=and_op b=letoperatorbinding {(op, b)}) IN e=term
     { let lbs = (op, b)::lbs in
       mk_term (LetOperator ( List.map (fun (op, (pat, tm)) -> (op, pat, tm)) lbs
-			   , e)) (rhs2 parseState 1 4) Expr
+			   , e)) (rhs2 parseState 1 5) Expr
     }
   | FUNCTION pbs=left_flexible_nonempty_list(BAR, patternBranch)
       {
@@ -1339,7 +1339,7 @@ constant:
       }
   | n=SIZET { Const_int (n, Some (Unsigned, Sizet)) }
   (* TODO : What about reflect ? There is also a constant representing it *)
-  | REIFY   { Const_reify }
+  | REIFY   { Const_reify None }
   | RANGE_OF     { Const_range_of }
   | SET_RANGE_OF { Const_set_range_of }
 

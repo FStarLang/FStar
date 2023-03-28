@@ -135,6 +135,23 @@ let (err_unexpected_eff :
                   uu___2 uu___3 uu___4 uu___5 in
               (FStar_Errors_Codes.Warning_ExtractionUnexpectedEffect, uu___1) in
             FStar_Errors.log_issue t.FStar_Syntax_Syntax.pos uu___
+let err_cannot_extract_effect :
+  'uuuuu .
+    FStar_Ident.lident ->
+      FStar_Compiler_Range.range -> Prims.string -> Prims.string -> 'uuuuu
+  =
+  fun l ->
+    fun r ->
+      fun reason ->
+        fun ctxt ->
+          let uu___ =
+            let uu___1 =
+              let uu___2 = FStar_Ident.string_of_lid l in
+              FStar_Compiler_Util.format3
+                "Cannot extract effect %s because %s (when extracting %s)"
+                uu___2 reason ctxt in
+            (FStar_Errors_Codes.Fatal_UnexpectedEffect, uu___1) in
+          FStar_Errors.raise_error uu___ r
 let (effect_as_etag :
   FStar_Extraction_ML_UEnv.uenv ->
     FStar_Ident.lident -> FStar_Extraction_ML_Syntax.e_tag)
@@ -934,40 +951,6 @@ let (extraction_norm_steps : FStar_TypeChecker_Env.step Prims.list) =
     extraction_norm_steps_core in
   let uu___ = FStar_Options.use_nbe_for_extraction () in
   if uu___ then extraction_norm_steps_nbe else extraction_norm_steps_core
-let (comp_no_args :
-  FStar_Syntax_Syntax.comp' FStar_Syntax_Syntax.syntax ->
-    FStar_Syntax_Syntax.comp' FStar_Syntax_Syntax.syntax)
-  =
-  fun c ->
-    match c.FStar_Syntax_Syntax.n with
-    | FStar_Syntax_Syntax.Total uu___ -> c
-    | FStar_Syntax_Syntax.GTotal uu___ -> c
-    | FStar_Syntax_Syntax.Comp ct ->
-        let effect_args =
-          FStar_Compiler_List.map
-            (fun uu___ ->
-               match uu___ with
-               | (uu___1, aq) -> (FStar_Syntax_Syntax.t_unit, aq))
-            ct.FStar_Syntax_Syntax.effect_args in
-        let ct1 =
-          {
-            FStar_Syntax_Syntax.comp_univs =
-              (ct.FStar_Syntax_Syntax.comp_univs);
-            FStar_Syntax_Syntax.effect_name =
-              (ct.FStar_Syntax_Syntax.effect_name);
-            FStar_Syntax_Syntax.result_typ =
-              (ct.FStar_Syntax_Syntax.result_typ);
-            FStar_Syntax_Syntax.effect_args = effect_args;
-            FStar_Syntax_Syntax.flags = (ct.FStar_Syntax_Syntax.flags)
-          } in
-        let c1 =
-          {
-            FStar_Syntax_Syntax.n = (FStar_Syntax_Syntax.Comp ct1);
-            FStar_Syntax_Syntax.pos = (c.FStar_Syntax_Syntax.pos);
-            FStar_Syntax_Syntax.vars = (c.FStar_Syntax_Syntax.vars);
-            FStar_Syntax_Syntax.hash_code = (c.FStar_Syntax_Syntax.hash_code)
-          } in
-        c1
 let maybe_reify_comp :
   'uuuuu .
     'uuuuu ->
@@ -977,24 +960,50 @@ let maybe_reify_comp :
   fun g ->
     fun env ->
       fun c ->
-        let c1 = comp_no_args c in
         let uu___ =
           let uu___1 =
-            let uu___2 =
-              FStar_Compiler_Effect.op_Bar_Greater c1
+            FStar_Compiler_Effect.op_Bar_Greater c
+              FStar_Syntax_Util.comp_effect_name in
+          FStar_Compiler_Effect.op_Bar_Greater uu___1
+            (FStar_TypeChecker_Util.effect_extraction_mode env) in
+        match uu___ with
+        | FStar_Syntax_Syntax.Extract_reify ->
+            let uu___1 =
+              FStar_TypeChecker_Env.reify_comp env c
+                FStar_Syntax_Syntax.U_unknown in
+            FStar_Compiler_Effect.op_Bar_Greater uu___1
+              (FStar_TypeChecker_Normalize.normalize extraction_norm_steps
+                 env)
+        | FStar_Syntax_Syntax.Extract_primitive ->
+            FStar_Syntax_Util.comp_result c
+        | FStar_Syntax_Syntax.Extract_none s ->
+            let uu___1 =
+              FStar_Compiler_Effect.op_Bar_Greater c
                 FStar_Syntax_Util.comp_effect_name in
-            FStar_Compiler_Effect.op_Bar_Greater uu___2
-              (FStar_TypeChecker_Env.norm_eff_name env) in
-          FStar_Compiler_Effect.op_Bar_Greater uu___1
-            (FStar_TypeChecker_Env.is_reifiable_effect env) in
-        if uu___
-        then
-          let uu___1 =
-            FStar_TypeChecker_Env.reify_comp env c1
-              FStar_Syntax_Syntax.U_unknown in
-          FStar_Compiler_Effect.op_Bar_Greater uu___1
-            (FStar_TypeChecker_Normalize.normalize extraction_norm_steps env)
-        else FStar_Syntax_Util.comp_result c1
+            let uu___2 = FStar_Syntax_Print.comp_to_string c in
+            err_cannot_extract_effect uu___1 c.FStar_Syntax_Syntax.pos s
+              uu___2
+let (maybe_reify_term :
+  FStar_TypeChecker_Env.env ->
+    FStar_Syntax_Syntax.term ->
+      FStar_Ident.lident -> FStar_Syntax_Syntax.term)
+  =
+  fun env ->
+    fun t ->
+      fun l ->
+        let uu___ = FStar_TypeChecker_Util.effect_extraction_mode env l in
+        match uu___ with
+        | FStar_Syntax_Syntax.Extract_reify ->
+            let uu___1 =
+              FStar_Syntax_Util.mk_reify t (FStar_Pervasives_Native.Some l) in
+            FStar_TypeChecker_Util.norm_reify env
+              [FStar_TypeChecker_Env.Inlining;
+              FStar_TypeChecker_Env.ForExtraction;
+              FStar_TypeChecker_Env.Unascribe] uu___1
+        | FStar_Syntax_Syntax.Extract_primitive -> t
+        | FStar_Syntax_Syntax.Extract_none s ->
+            let uu___1 = FStar_Syntax_Print.term_to_string t in
+            err_cannot_extract_effect l t.FStar_Syntax_Syntax.pos s uu___1
 let rec (translate_term_to_mlty :
   FStar_Extraction_ML_UEnv.uenv ->
     FStar_Syntax_Syntax.term -> FStar_Extraction_ML_Syntax.mlty)
@@ -2684,25 +2693,28 @@ and (term_as_mlexpr' :
            (match t2.FStar_Syntax_Syntax.n with
             | FStar_Syntax_Syntax.Tm_let ((false, lb::[]), body) when
                 FStar_Compiler_Util.is_left lb.FStar_Syntax_Syntax.lbname ->
+                let tcenv = FStar_Extraction_ML_UEnv.tcenv_of_uenv g in
                 let uu___2 =
-                  let uu___3 =
-                    let uu___4 = FStar_Extraction_ML_UEnv.tcenv_of_uenv g in
-                    FStar_TypeChecker_Env.effect_decl_opt uu___4 m in
+                  let uu___3 = FStar_TypeChecker_Env.effect_decl_opt tcenv m in
                   FStar_Compiler_Util.must uu___3 in
                 (match uu___2 with
                  | (ed, qualifiers) ->
                      let uu___3 =
                        let uu___4 =
-                         let uu___5 =
-                           FStar_Extraction_ML_UEnv.tcenv_of_uenv g in
-                         FStar_TypeChecker_Env.is_reifiable_effect uu___5
+                         FStar_TypeChecker_Util.effect_extraction_mode tcenv
                            ed.FStar_Syntax_Syntax.mname in
-                       Prims.op_Negation uu___4 in
+                       uu___4 = FStar_Syntax_Syntax.Extract_primitive in
                      if uu___3
                      then term_as_mlexpr g t2
                      else
-                       failwith
-                         "This should not happen (should have been handled at Tm_abs level)")
+                       (let uu___5 =
+                          let uu___6 =
+                            FStar_Ident.string_of_lid
+                              ed.FStar_Syntax_Syntax.mname in
+                          FStar_Compiler_Util.format1
+                            "This should not happen (should have been handled at Tm_abs level for effect %s)"
+                            uu___6 in
+                        failwith uu___5))
             | uu___2 -> term_as_mlexpr g t2)
        | FStar_Syntax_Syntax.Tm_meta
            (t1, FStar_Syntax_Syntax.Meta_monadic_lift (m1, _m2, _ty)) when
@@ -2846,18 +2858,9 @@ and (term_as_mlexpr' :
                        match rcopt with
                        | FStar_Pervasives_Native.Some rc ->
                            let uu___3 =
-                             let uu___4 =
-                               FStar_Extraction_ML_UEnv.tcenv_of_uenv env in
-                             FStar_TypeChecker_Env.is_reifiable_rc uu___4 rc in
-                           if uu___3
-                           then
-                             let uu___4 =
-                               FStar_Extraction_ML_UEnv.tcenv_of_uenv env in
-                             FStar_TypeChecker_Util.reify_body uu___4
-                               [FStar_TypeChecker_Env.Inlining;
-                               FStar_TypeChecker_Env.ForExtraction;
-                               FStar_TypeChecker_Env.Unascribe] body1
-                           else body1
+                             FStar_Extraction_ML_UEnv.tcenv_of_uenv env in
+                           maybe_reify_term uu___3 body1
+                             rc.FStar_Syntax_Syntax.residual_effect
                        | FStar_Pervasives_Native.None ->
                            (FStar_Extraction_ML_UEnv.debug g
                               (fun uu___4 ->
@@ -3022,20 +3025,36 @@ and (term_as_mlexpr' :
                   FStar_Compiler_Effect.op_Bar_Greater t uu___4 in
                 FStar_Compiler_Effect.op_Bar_Greater uu___3
                   (term_as_mlexpr g)
-            | FStar_Syntax_Syntax.Tm_constant (FStar_Const.Const_reify) ->
-                let e =
-                  let uu___2 = FStar_Extraction_ML_UEnv.tcenv_of_uenv g in
-                  let uu___3 = FStar_Compiler_List.hd args in
-                  FStar_TypeChecker_Util.reify_body_with_arg uu___2
-                    [FStar_TypeChecker_Env.Inlining;
-                    FStar_TypeChecker_Env.ForExtraction;
-                    FStar_TypeChecker_Env.Unascribe] head uu___3 in
-                let tm =
-                  let uu___2 = FStar_TypeChecker_Util.remove_reify e in
-                  let uu___3 = FStar_Compiler_List.tl args in
-                  FStar_Syntax_Syntax.mk_Tm_app uu___2 uu___3
-                    t.FStar_Syntax_Syntax.pos in
-                term_as_mlexpr g tm
+            | FStar_Syntax_Syntax.Tm_constant (FStar_Const.Const_reify lopt)
+                ->
+                (match lopt with
+                 | FStar_Pervasives_Native.Some l ->
+                     let e =
+                       let uu___2 = FStar_Extraction_ML_UEnv.tcenv_of_uenv g in
+                       let uu___3 =
+                         let uu___4 =
+                           FStar_Compiler_Effect.op_Bar_Greater args
+                             FStar_Compiler_List.hd in
+                         FStar_Compiler_Effect.op_Bar_Greater uu___4
+                           FStar_Pervasives_Native.fst in
+                       maybe_reify_term uu___2 uu___3 l in
+                     let tm =
+                       let uu___2 = FStar_TypeChecker_Util.remove_reify e in
+                       let uu___3 = FStar_Compiler_List.tl args in
+                       FStar_Syntax_Syntax.mk_Tm_app uu___2 uu___3
+                         t.FStar_Syntax_Syntax.pos in
+                     term_as_mlexpr g tm
+                 | FStar_Pervasives_Native.None ->
+                     let uu___2 =
+                       let uu___3 =
+                         let uu___4 = FStar_Syntax_Print.term_to_string top1 in
+                         FStar_Compiler_Util.format1
+                           "Cannot extract %s (reify effect is not set)"
+                           uu___4 in
+                       (FStar_Errors_Codes.Fatal_ExtractionUnsupported,
+                         uu___3) in
+                     FStar_Errors.raise_error uu___2
+                       top1.FStar_Syntax_Syntax.pos)
             | uu___2 ->
                 let rec extract_app is_data uu___3 uu___4 restArgs =
                   match (uu___3, uu___4) with

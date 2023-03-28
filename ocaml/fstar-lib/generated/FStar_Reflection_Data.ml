@@ -88,6 +88,40 @@ let (uu___is_Q_Meta : aqualv -> Prims.bool) =
 let (__proj__Q_Meta__item___0 : aqualv -> FStar_Syntax_Syntax.term) =
   fun projectee -> match projectee with | Q_Meta _0 -> _0
 type argv = (FStar_Syntax_Syntax.term * aqualv)
+let (as_ppname : Prims.string -> Prims.string) = fun x -> x
+type bv_view =
+  {
+  bv_ppname: Prims.string ;
+  bv_index: FStar_BigInt.t ;
+  bv_sort: typ }
+let (__proj__Mkbv_view__item__bv_ppname : bv_view -> Prims.string) =
+  fun projectee ->
+    match projectee with | { bv_ppname; bv_index; bv_sort;_} -> bv_ppname
+let (__proj__Mkbv_view__item__bv_index : bv_view -> FStar_BigInt.t) =
+  fun projectee ->
+    match projectee with | { bv_ppname; bv_index; bv_sort;_} -> bv_index
+let (__proj__Mkbv_view__item__bv_sort : bv_view -> typ) =
+  fun projectee ->
+    match projectee with | { bv_ppname; bv_index; bv_sort;_} -> bv_sort
+type binder_view =
+  {
+  binder_bv: FStar_Syntax_Syntax.bv ;
+  binder_qual: aqualv ;
+  binder_attrs: FStar_Syntax_Syntax.term Prims.list }
+let (__proj__Mkbinder_view__item__binder_bv :
+  binder_view -> FStar_Syntax_Syntax.bv) =
+  fun projectee ->
+    match projectee with
+    | { binder_bv; binder_qual; binder_attrs;_} -> binder_bv
+let (__proj__Mkbinder_view__item__binder_qual : binder_view -> aqualv) =
+  fun projectee ->
+    match projectee with
+    | { binder_bv; binder_qual; binder_attrs;_} -> binder_qual
+let (__proj__Mkbinder_view__item__binder_attrs :
+  binder_view -> FStar_Syntax_Syntax.term Prims.list) =
+  fun projectee ->
+    match projectee with
+    | { binder_bv; binder_qual; binder_attrs;_} -> binder_attrs
 type universe_view =
   | Uv_Zero 
   | Uv_Succ of FStar_Syntax_Syntax.universe 
@@ -234,6 +268,86 @@ let (__proj__Tv_AscribedC__item___0 :
   = fun projectee -> match projectee with | Tv_AscribedC _0 -> _0
 let (uu___is_Tv_Unknown : term_view -> Prims.bool) =
   fun projectee -> match projectee with | Tv_Unknown -> true | uu___ -> false
+let (notAscription : term_view -> Prims.bool) =
+  fun tv ->
+    (Prims.op_Negation (uu___is_Tv_AscribedT tv)) &&
+      (Prims.op_Negation (uu___is_Tv_AscribedC tv))
+type comp_view =
+  | C_Total of typ 
+  | C_GTotal of typ 
+  | C_Lemma of (FStar_Syntax_Syntax.term * FStar_Syntax_Syntax.term *
+  FStar_Syntax_Syntax.term) 
+  | C_Eff of (universes * name * FStar_Syntax_Syntax.term * argv Prims.list *
+  FStar_Syntax_Syntax.term Prims.list) 
+let (uu___is_C_Total : comp_view -> Prims.bool) =
+  fun projectee -> match projectee with | C_Total _0 -> true | uu___ -> false
+let (__proj__C_Total__item___0 : comp_view -> typ) =
+  fun projectee -> match projectee with | C_Total _0 -> _0
+let (uu___is_C_GTotal : comp_view -> Prims.bool) =
+  fun projectee ->
+    match projectee with | C_GTotal _0 -> true | uu___ -> false
+let (__proj__C_GTotal__item___0 : comp_view -> typ) =
+  fun projectee -> match projectee with | C_GTotal _0 -> _0
+let (uu___is_C_Lemma : comp_view -> Prims.bool) =
+  fun projectee -> match projectee with | C_Lemma _0 -> true | uu___ -> false
+let (__proj__C_Lemma__item___0 :
+  comp_view ->
+    (FStar_Syntax_Syntax.term * FStar_Syntax_Syntax.term *
+      FStar_Syntax_Syntax.term))
+  = fun projectee -> match projectee with | C_Lemma _0 -> _0
+let (uu___is_C_Eff : comp_view -> Prims.bool) =
+  fun projectee -> match projectee with | C_Eff _0 -> true | uu___ -> false
+let (__proj__C_Eff__item___0 :
+  comp_view ->
+    (universes * name * FStar_Syntax_Syntax.term * argv Prims.list *
+      FStar_Syntax_Syntax.term Prims.list))
+  = fun projectee -> match projectee with | C_Eff _0 -> _0
+type ctor = (name * typ)
+type lb_view =
+  {
+  lb_fv: FStar_Syntax_Syntax.fv ;
+  lb_us: FStar_Syntax_Syntax.univ_name Prims.list ;
+  lb_typ: typ ;
+  lb_def: FStar_Syntax_Syntax.term }
+let (__proj__Mklb_view__item__lb_fv : lb_view -> FStar_Syntax_Syntax.fv) =
+  fun projectee ->
+    match projectee with | { lb_fv; lb_us; lb_typ; lb_def;_} -> lb_fv
+let (__proj__Mklb_view__item__lb_us :
+  lb_view -> FStar_Syntax_Syntax.univ_name Prims.list) =
+  fun projectee ->
+    match projectee with | { lb_fv; lb_us; lb_typ; lb_def;_} -> lb_us
+let (__proj__Mklb_view__item__lb_typ : lb_view -> typ) =
+  fun projectee ->
+    match projectee with | { lb_fv; lb_us; lb_typ; lb_def;_} -> lb_typ
+let (__proj__Mklb_view__item__lb_def : lb_view -> FStar_Syntax_Syntax.term) =
+  fun projectee ->
+    match projectee with | { lb_fv; lb_us; lb_typ; lb_def;_} -> lb_def
+type sigelt_view =
+  | Sg_Let of (Prims.bool * FStar_Syntax_Syntax.letbinding Prims.list) 
+  | Sg_Inductive of (name * FStar_Syntax_Syntax.univ_name Prims.list *
+  FStar_Syntax_Syntax.binder Prims.list * typ * ctor Prims.list) 
+  | Sg_Val of (name * FStar_Syntax_Syntax.univ_name Prims.list * typ) 
+  | Unk 
+let (uu___is_Sg_Let : sigelt_view -> Prims.bool) =
+  fun projectee -> match projectee with | Sg_Let _0 -> true | uu___ -> false
+let (__proj__Sg_Let__item___0 :
+  sigelt_view -> (Prims.bool * FStar_Syntax_Syntax.letbinding Prims.list)) =
+  fun projectee -> match projectee with | Sg_Let _0 -> _0
+let (uu___is_Sg_Inductive : sigelt_view -> Prims.bool) =
+  fun projectee ->
+    match projectee with | Sg_Inductive _0 -> true | uu___ -> false
+let (__proj__Sg_Inductive__item___0 :
+  sigelt_view ->
+    (name * FStar_Syntax_Syntax.univ_name Prims.list *
+      FStar_Syntax_Syntax.binder Prims.list * typ * ctor Prims.list))
+  = fun projectee -> match projectee with | Sg_Inductive _0 -> _0
+let (uu___is_Sg_Val : sigelt_view -> Prims.bool) =
+  fun projectee -> match projectee with | Sg_Val _0 -> true | uu___ -> false
+let (__proj__Sg_Val__item___0 :
+  sigelt_view -> (name * FStar_Syntax_Syntax.univ_name Prims.list * typ)) =
+  fun projectee -> match projectee with | Sg_Val _0 -> _0
+let (uu___is_Unk : sigelt_view -> Prims.bool) =
+  fun projectee -> match projectee with | Unk -> true | uu___ -> false
 type qualifier =
   | Assumption 
   | InternalAssumption 
@@ -340,98 +454,6 @@ let (uu___is_Effect : qualifier -> Prims.bool) =
 let (uu___is_OnlyName : qualifier -> Prims.bool) =
   fun projectee -> match projectee with | OnlyName -> true | uu___ -> false
 type qualifiers = qualifier Prims.list
-type bv_view =
-  {
-  bv_ppname: Prims.string ;
-  bv_index: FStar_BigInt.t ;
-  bv_sort: typ }
-let (__proj__Mkbv_view__item__bv_ppname : bv_view -> Prims.string) =
-  fun projectee ->
-    match projectee with | { bv_ppname; bv_index; bv_sort;_} -> bv_ppname
-let (__proj__Mkbv_view__item__bv_index : bv_view -> FStar_BigInt.t) =
-  fun projectee ->
-    match projectee with | { bv_ppname; bv_index; bv_sort;_} -> bv_index
-let (__proj__Mkbv_view__item__bv_sort : bv_view -> typ) =
-  fun projectee ->
-    match projectee with | { bv_ppname; bv_index; bv_sort;_} -> bv_sort
-type binder_view =
-  (FStar_Syntax_Syntax.bv * (aqualv * FStar_Syntax_Syntax.term Prims.list))
-type comp_view =
-  | C_Total of typ 
-  | C_GTotal of typ 
-  | C_Lemma of (FStar_Syntax_Syntax.term * FStar_Syntax_Syntax.term *
-  FStar_Syntax_Syntax.term) 
-  | C_Eff of (universes * name * FStar_Syntax_Syntax.term * argv Prims.list *
-  FStar_Syntax_Syntax.term Prims.list) 
-let (uu___is_C_Total : comp_view -> Prims.bool) =
-  fun projectee -> match projectee with | C_Total _0 -> true | uu___ -> false
-let (__proj__C_Total__item___0 : comp_view -> typ) =
-  fun projectee -> match projectee with | C_Total _0 -> _0
-let (uu___is_C_GTotal : comp_view -> Prims.bool) =
-  fun projectee ->
-    match projectee with | C_GTotal _0 -> true | uu___ -> false
-let (__proj__C_GTotal__item___0 : comp_view -> typ) =
-  fun projectee -> match projectee with | C_GTotal _0 -> _0
-let (uu___is_C_Lemma : comp_view -> Prims.bool) =
-  fun projectee -> match projectee with | C_Lemma _0 -> true | uu___ -> false
-let (__proj__C_Lemma__item___0 :
-  comp_view ->
-    (FStar_Syntax_Syntax.term * FStar_Syntax_Syntax.term *
-      FStar_Syntax_Syntax.term))
-  = fun projectee -> match projectee with | C_Lemma _0 -> _0
-let (uu___is_C_Eff : comp_view -> Prims.bool) =
-  fun projectee -> match projectee with | C_Eff _0 -> true | uu___ -> false
-let (__proj__C_Eff__item___0 :
-  comp_view ->
-    (universes * name * FStar_Syntax_Syntax.term * argv Prims.list *
-      FStar_Syntax_Syntax.term Prims.list))
-  = fun projectee -> match projectee with | C_Eff _0 -> _0
-type ctor = (name * typ)
-type lb_view =
-  {
-  lb_fv: FStar_Syntax_Syntax.fv ;
-  lb_us: FStar_Syntax_Syntax.univ_name Prims.list ;
-  lb_typ: typ ;
-  lb_def: FStar_Syntax_Syntax.term }
-let (__proj__Mklb_view__item__lb_fv : lb_view -> FStar_Syntax_Syntax.fv) =
-  fun projectee ->
-    match projectee with | { lb_fv; lb_us; lb_typ; lb_def;_} -> lb_fv
-let (__proj__Mklb_view__item__lb_us :
-  lb_view -> FStar_Syntax_Syntax.univ_name Prims.list) =
-  fun projectee ->
-    match projectee with | { lb_fv; lb_us; lb_typ; lb_def;_} -> lb_us
-let (__proj__Mklb_view__item__lb_typ : lb_view -> typ) =
-  fun projectee ->
-    match projectee with | { lb_fv; lb_us; lb_typ; lb_def;_} -> lb_typ
-let (__proj__Mklb_view__item__lb_def : lb_view -> FStar_Syntax_Syntax.term) =
-  fun projectee ->
-    match projectee with | { lb_fv; lb_us; lb_typ; lb_def;_} -> lb_def
-type sigelt_view =
-  | Sg_Let of (Prims.bool * FStar_Syntax_Syntax.letbinding Prims.list) 
-  | Sg_Inductive of (name * FStar_Syntax_Syntax.univ_name Prims.list *
-  FStar_Syntax_Syntax.binder Prims.list * typ * ctor Prims.list) 
-  | Sg_Val of (name * FStar_Syntax_Syntax.univ_name Prims.list * typ) 
-  | Unk 
-let (uu___is_Sg_Let : sigelt_view -> Prims.bool) =
-  fun projectee -> match projectee with | Sg_Let _0 -> true | uu___ -> false
-let (__proj__Sg_Let__item___0 :
-  sigelt_view -> (Prims.bool * FStar_Syntax_Syntax.letbinding Prims.list)) =
-  fun projectee -> match projectee with | Sg_Let _0 -> _0
-let (uu___is_Sg_Inductive : sigelt_view -> Prims.bool) =
-  fun projectee ->
-    match projectee with | Sg_Inductive _0 -> true | uu___ -> false
-let (__proj__Sg_Inductive__item___0 :
-  sigelt_view ->
-    (name * FStar_Syntax_Syntax.univ_name Prims.list *
-      FStar_Syntax_Syntax.binder Prims.list * typ * ctor Prims.list))
-  = fun projectee -> match projectee with | Sg_Inductive _0 -> _0
-let (uu___is_Sg_Val : sigelt_view -> Prims.bool) =
-  fun projectee -> match projectee with | Sg_Val _0 -> true | uu___ -> false
-let (__proj__Sg_Val__item___0 :
-  sigelt_view -> (name * FStar_Syntax_Syntax.univ_name Prims.list * typ)) =
-  fun projectee -> match projectee with | Sg_Val _0 -> _0
-let (uu___is_Unk : sigelt_view -> Prims.bool) =
-  fun projectee -> match projectee with | Unk -> true | uu___ -> false
 type var = FStar_BigInt.t
 type exp =
   | Unit 
