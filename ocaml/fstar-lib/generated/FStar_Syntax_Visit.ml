@@ -330,7 +330,7 @@ let rec (on_sub_pat :
       | FStar_Syntax_Syntax.Pat_wild bv ->
           let uu___ =
             let uu___1 = f_binding_bv vfs bv in
-            FStar_Syntax_Syntax.Pat_var uu___1 in
+            FStar_Syntax_Syntax.Pat_wild uu___1 in
           mk uu___
       | FStar_Syntax_Syntax.Pat_dot_term t ->
           let uu___ =

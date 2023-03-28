@@ -4457,8 +4457,12 @@ let (tc_decls :
                                     FStar_TypeChecker_Env.Iota;
                                   FStar_TypeChecker_Env.NoFullNorm] env2 t))
                         uu___8 "FStar.TypeChecker.Tc.chec_uvars");
-                     (let env3 =
+                     (let ses'2 =
                         FStar_Compiler_Effect.op_Bar_Greater ses'1
+                          (FStar_Compiler_List.map
+                             (FStar_Syntax_Compress.deep_compress_se false)) in
+                      let env3 =
+                        FStar_Compiler_Effect.op_Bar_Greater ses'2
                           (FStar_Compiler_List.fold_left
                              (fun env4 ->
                                 fun se1 -> add_sigelt_to_env env4 se1 false)
@@ -4479,7 +4483,7 @@ let (tc_decls :
                                     let uu___13 =
                                       FStar_Syntax_Print.sigelt_to_string se1 in
                                     Prims.op_Hat uu___13 "\n" in
-                                  Prims.op_Hat s uu___12) "" ses'1 in
+                                  Prims.op_Hat s uu___12) "" ses'2 in
                          FStar_Compiler_Util.print1 "Checked: %s\n" uu___11
                        else ());
                       (let uu___11 =
@@ -4493,9 +4497,9 @@ let (tc_decls :
                             FStar_Compiler_List.iter
                               (fun se1 ->
                                  (env3.FStar_TypeChecker_Env.solver).FStar_TypeChecker_Env.encode_sig
-                                   env3 se1) ses'1) uu___11
+                                   env3 se1) ses'2) uu___11
                          "FStar.TypeChecker.Tc.encode_sig");
-                      (((FStar_Compiler_List.rev_append ses'1 ses1), env3),
+                      (((FStar_Compiler_List.rev_append ses'2 ses1), env3),
                         ses_elaborated1))))) in
       let process_one_decl_timed acc se =
         FStar_TypeChecker_Core.clear_memo_table ();
@@ -4532,7 +4536,7 @@ let (tc_decls :
                ([], env) ses) in
       match uu___ with
       | (ses1, env1) -> ((FStar_Compiler_List.rev_append ses1 []), env1)
-let (uu___924 : unit) =
+let (uu___925 : unit) =
   FStar_Compiler_Effect.op_Colon_Equals tc_decls_knot
     (FStar_Pervasives_Native.Some tc_decls)
 let (snapshot_context :
@@ -4794,9 +4798,7 @@ let (tc_modul :
         let env01 = push_context env0 msg in
         let uu___ = tc_partial_modul env01 m in
         match uu___ with
-        | (modul, env) ->
-            let modul1 = deep_compress_modul modul in
-            finish_partial_modul false iface_exists env modul1
+        | (modul, env) -> finish_partial_modul false iface_exists env modul
 let (load_checked_module :
   FStar_TypeChecker_Env.env ->
     FStar_Syntax_Syntax.modul -> FStar_TypeChecker_Env.env)
