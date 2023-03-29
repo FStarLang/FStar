@@ -410,6 +410,8 @@ let ghost_pts_to_injective_eq (#a:_) (#u:_) (#p #q:_) (r:ghost_ref a) (v0 v1:Gho
     (ensures fun _ _ _ -> v0 == v1)
   = H.ghost_pts_to_injective_eq #_ #_ #p #q r (raise_erased v0) (raise_erased v1)
 
+let ghost_pts_to_perm r = H.ghost_pts_to_perm r
+
 let ghost_read_pt #a #u #p #v r =
   let x = H.ghost_read r in
   let x' = hide (U.downgrade_val (reveal x)) in

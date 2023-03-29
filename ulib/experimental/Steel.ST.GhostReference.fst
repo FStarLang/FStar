@@ -44,6 +44,8 @@ let pts_to_injective_eq (#a:_)
   = coerce_ghost
     (fun _ -> R.ghost_pts_to_injective_eq #a #u #p #q r (hide v0) (hide v1))
 
+let pts_to_perm r = coerce_ghost (fun _ -> R.ghost_pts_to_perm r)
+
 let alloc (#a:Type)
           (#u:_)
           (x:erased a)
