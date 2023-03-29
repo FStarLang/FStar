@@ -77,6 +77,23 @@ type typedef (t: Type0) : Type0 = {
     (requires (fractionable v /\ mk_fraction v p == one pcm))
     (ensures (v == one pcm))
   );
+  mk_fraction_full_composable: (
+    (v1: t) ->
+    (p1: P.perm) ->
+    (v2: t) ->
+    (p2: P.perm) ->
+    Lemma
+    (requires (
+      exclusive pcm v1 /\ p_refine pcm v1 /\
+      exclusive pcm v2 /\ p_refine pcm v2 /\
+      fractionable v1 /\ fractionable v2 /\
+      composable pcm (mk_fraction v1 p1) (mk_fraction v2 p2)
+    ))
+    (ensures (
+      v1 == v2 /\
+      (p1 `P.sum_perm` p2) `P.lesser_equal_perm` P.full_perm
+    ))
+  );
 }
 
 let fractionable td x = td.fractionable x == true
@@ -487,6 +504,34 @@ let mk_fraction_join
   let _ = R.gather r' (mk_fraction td v p1) _ in
   td.mk_fraction_join v p1 p2;
   pts_to_intro_rewrite r r' _
+
+let fractional_permissions_theorem
+  (#opened: _)
+  (#t: Type)
+  (#td: typedef t)
+  (v1: t { fractionable td v1 })
+  (v2: t { fractionable td v2 })
+  (p1 p2: P.perm)
+  (r: ref td)
+: STGhost unit opened
+    (pts_to r (mk_fraction td v1 p1) `star` pts_to r (mk_fraction td v2 p2))
+    (fun _ -> pts_to r (mk_fraction td v1 p1) `star` pts_to r (mk_fraction td v2 p2))
+    (full td v1 /\ full td v2)
+    (fun _ -> v1 == v2 /\ (p1 `P.sum_perm` p2) `P.lesser_equal_perm` P.full_perm)
+= rewrite (pts_to r (mk_fraction td v1 p1)) (pts_to0 r (mk_fraction td v1 p1));
+  let _ = gen_elim () in
+  let w = vpattern_replace (HR.pts_to r _) in
+  let rr = get_ref r in
+  rewrite (pts_to r (mk_fraction td v2 p2)) (pts_to0 r (mk_fraction td v2 p2));
+  let _ = gen_elim () in
+  hr_gather w r;
+  rewrite (R.pts_to _ (mk_fraction td v2 p2)) (R.pts_to rr (mk_fraction td v2 p2));
+  let _ = R.gather rr (mk_fraction td v1 p1) (mk_fraction td v2 p2) in
+  td.mk_fraction_full_composable v1 p1 v2 p2;
+  R.split rr _ (mk_fraction td v1 p1) (mk_fraction td v2 p2);
+  hr_share r;
+  rewrite (pts_to0 r (mk_fraction td v2 p2)) (pts_to r (mk_fraction td v2 p2));
+  rewrite (pts_to0 r (mk_fraction td v1 p1)) (pts_to r (mk_fraction td v1 p1))
 
 let r_unfocus (#opened:_)
   (#ta #ta' #tb #tc: Type)

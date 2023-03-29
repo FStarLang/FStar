@@ -1277,3 +1277,46 @@ let mk_fraction_seq_join
     td.mk_fraction_join (Seq.index v i) p1 p2
   );
   array_pts_to_intro r (mk_fraction_seq td v (p1 `P.sum_perm` p2)) _ _ ()
+
+#restart-solver
+
+let array_fractional_permissions_theorem
+  (#opened: _)
+  (#t: Type)
+  (#td: typedef t)
+  (v1: Seq.seq t { fractionable_seq td v1 })
+  (v2: Seq.seq t { fractionable_seq td v2 })
+  (p1 p2: P.perm)
+  (r: array td)
+: STGhost unit opened
+    (array_pts_to r (mk_fraction_seq td v1 p1) `star` array_pts_to r (mk_fraction_seq td v2 p2))
+    (fun _ -> array_pts_to r (mk_fraction_seq td v1 p1) `star` array_pts_to r (mk_fraction_seq td v2 p2))
+    (full_seq td v1 /\ full_seq td v2)
+    (fun _ -> v1 == v2 /\ (array_length r > 0 ==> (p1 `P.sum_perm` p2) `P.lesser_equal_perm` P.full_perm))
+= array_pts_to_length r (mk_fraction_seq td v1 p1);
+  array_pts_to_length r (mk_fraction_seq td v2 p2);
+  let br = array_pts_to_elim r (mk_fraction_seq td v1 p1) in
+  let _ = gen_elim () in
+  rewrite (A.pts_to _ _) (A.pts_to (model_array_of_array r br) (mk_fraction_seq td v1 p1));
+  let _ = array_pts_to_elim r (mk_fraction_seq td v2 p2) in
+  let _ = gen_elim () in
+  hr_gather (Ghost.reveal br) (array_ptr_of r).ar_base;
+  rewrite (A.pts_to _ (mk_fraction_seq _ _ p2)) (A.pts_to (model_array_of_array r br) (mk_fraction_seq td v2 p2));
+  let _ = A.gather_exists _ (mk_fraction_seq td v1 p1) (mk_fraction_seq td v2 p2) in
+  let prf
+    (i: nat)
+  : Lemma
+    (requires (i < array_length r))
+    (ensures (
+      i < array_length r /\
+      Seq.index v1 i == Seq.index v2 i /\
+      (p1 `P.sum_perm` p2) `P.lesser_equal_perm` P.full_perm
+    ))
+  = td.mk_fraction_full_composable (Seq.index v1 i) p1 (Seq.index v2 i) p2
+  in
+  Classical.forall_intro (Classical.move_requires prf);
+  assert (v1 `Seq.equal` v2);
+  A.share _ _ (mk_fraction_seq td v1 p1) (mk_fraction_seq td v2 p2);
+  HR.share _;
+  array_pts_to_intro r (mk_fraction_seq td v1 p1) _ _ ();
+  array_pts_to_intro r (mk_fraction_seq td v2 p2) _ _ ()
