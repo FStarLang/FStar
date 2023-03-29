@@ -370,4 +370,5 @@ let default_settings : list error_setting =
     Warning_Adhoc_IndexedEffect_Combinator            , CWarning, 352;
     Error_PluginDynlink                               , CError, 353;
     Error_InternalQualifier                           , CAlwaysError, 354;
+    Warning_NameEscape                                , CWarning, 355;
     ]

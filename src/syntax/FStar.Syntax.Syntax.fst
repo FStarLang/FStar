@@ -31,6 +31,7 @@ open FStar.Compiler.Dyn
 module O = FStar.Options
 module PC = FStar.Parser.Const
 open FStar.VConfig
+module Err = FStar.Errors
 
 // This is set in FStar.Main.main, where all modules are in-scope.
 let lazy_chooser : ref (option (lazy_kind -> lazyinfo -> term)) = mk_ref None
@@ -79,13 +80,16 @@ let set_range_of_bv x r = {x with ppname = set_id_range r x.ppname }
 
 (* Helpers *)
 let on_antiquoted (f : (term -> term)) (qi : quoteinfo) : quoteinfo =
-    let aq = List.map (fun (bv, t) -> (bv, f t)) qi.antiquotes in
-    { qi with antiquotes = aq }
+  let (s, aqs) = qi.antiquotations in
+  let aqs' = List.map f aqs in
+  { qi with antiquotations = (s, aqs') }
 
-let lookup_aq (bv : bv) (aq : antiquotations) : option term =
-    match List.tryFind (fun (bv', _) -> bv_eq bv bv') aq with
-    | Some (_, e) -> Some e
-    | None -> None
+(* Requires that bv.index is in scope. *)
+let lookup_aq (bv : bv) (aq : antiquotations) : term =
+    try List.nth (snd aq) (List.length (snd aq) - 1 - bv.index + fst aq) // subtract shift
+    with
+    | _ ->
+      failwith "antiquotation out of bounds"
 
 (*********************************************************************************)
 (* Syntax builders *)

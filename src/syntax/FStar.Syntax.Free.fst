@@ -158,7 +158,7 @@ let rec free_names_and_uvs' tm (use_cache:use_cache_t) : free_vars_and_fvars =
 
       | Tm_quoted (tm, qi) ->
         begin match qi.qkind with
-        | Quote_static  -> List.fold_left (fun n (_, t) -> union n (free_names_and_uvars t use_cache)) no_free_vars qi.antiquotes
+        | Quote_static  -> List.fold_left (fun n t -> union n (free_names_and_uvars t use_cache)) no_free_vars (snd qi.antiquotations)
         | Quote_dynamic -> free_names_and_uvars tm use_cache
         end
 

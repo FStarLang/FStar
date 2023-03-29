@@ -5,6 +5,7 @@ type 'a opt_variant =
 type 'a opt' = FStar_Char.char * string * 'a opt_variant * string
 type opt = unit opt'
 type parse_cmdline_res =
+  | Empty
   | Help
   | Error of string
   | Success
@@ -14,6 +15,8 @@ let bind l f =
     | Help
     | Error _ -> l
     | Success -> f ()
+    (* | Empty  *)
+    (* ^ Empty does not occur internally. *)
 
 (* Returns None if this wasn't an option arg (did not start with "-")
  * Otherwise, returns Some (o, s) where [s] is the trimmed option, and [o]
@@ -61,7 +64,7 @@ let parse_array specs others args offset =
   parse specs others args offset (Array.length args - 1) 0
 
 let parse_cmdline specs others =
-  if Array.length Sys.argv = 1 then Help
+  if Array.length Sys.argv = 1 then Empty
   else parse_array specs others Sys.argv 1
 
 let parse_string specs others (str:string) =

@@ -205,11 +205,8 @@ and term_to_string x =
       | Tm_quoted (tm, qi) ->
         begin match qi.qkind with
         | Quote_static ->
-            let print_aq (bv, t) =
-              U.format2 "%s -> %s" (bv_to_string bv) (term_to_string t)
-            in
             U.format2 "`(%s)%s" (term_to_string tm)
-                                (FStar.Common.string_of_list print_aq qi.antiquotes)
+                                (FStar.Common.string_of_list term_to_string (snd qi.antiquotations))
         | Quote_dynamic ->
             U.format1 "quote (%s)" (term_to_string tm)
         end
