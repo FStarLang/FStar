@@ -198,7 +198,7 @@ First we explain how to get a working OCaml setup on your machine.
 
 ### Prerequisites: Working OCaml setup  ###
 
-The steps require a working OCaml setup. OCaml version from 4.08.0 to 4.14.X should work.
+The steps require a working OCaml setup. OCaml version from 4.10.0 to 4.14.X should work.
 
 #### Instructions for Windows ####
 
