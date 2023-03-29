@@ -414,6 +414,19 @@ let ghost_gather r = gather (reveal r)
 let ghost_pts_to_injective_eq #_ #_ #p0 #p1 r v0 v1 =
   higher_ref_pts_to_injective_eq #_ #_ #p0 #p1 #v0 #v1 (reveal r)
 
+let ghost_pts_to_perm #a #_ #p #v r =
+  let v_old : erased (fractional a) = Ghost.hide (Some (Ghost.reveal v, p)) in
+    rewrite_slprop
+      (ghost_pts_to r p v)
+      (RP.pts_to r v_old `star` pure (perm_ok p))
+      (fun _ -> ());
+    elim_pure (perm_ok p);
+    intro_pure (perm_ok p);
+    rewrite_slprop
+      (RP.pts_to r v_old `star` pure (perm_ok p))
+      (ghost_pts_to r p v)
+      (fun _ -> ())
+
 let ghost_read #a #u #p #v r
   = let v1 : erased (fractional a) = Ghost.hide (Some (Ghost.reveal v, p)) in
     rewrite_slprop (pts_to r p v) (RP.pts_to r v1 `star` pure (perm_ok p)) (fun _ -> ());

@@ -227,6 +227,14 @@ val ghost_pts_to_injective_eq (#a:_) (#u:_) (#p #q:_) (r:ghost_ref a) (v0 v1:Gho
     (requires fun _ -> True)
     (ensures fun _ _ _ -> v0 == v1)
 
+/// A permission is always no greater than one
+val ghost_pts_to_perm (#a: _) (#u: _) (#p: _) (#v: _) (r: ghost_ref a)
+  : SteelGhost unit u
+      (ghost_pts_to r p v)
+      (fun _ -> ghost_pts_to r p v)
+      (fun _ -> True)
+      (fun _ _ _ -> p `lesser_equal_perm` full_perm)
+
 val ghost_read (#a:Type) (#u:_) (#p:perm) (#v:erased a) (r:ghost_ref a)
   : SteelGhost (erased a) u (ghost_pts_to r p v) (fun x -> ghost_pts_to r p x)
            (requires fun _ -> True)
