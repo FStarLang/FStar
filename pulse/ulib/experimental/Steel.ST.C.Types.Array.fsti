@@ -961,3 +961,17 @@ val mk_fraction_seq_join
 : STGhostT unit opened
   (array_pts_to r (mk_fraction_seq td v p1) `star` array_pts_to r (mk_fraction_seq td v p2))
   (fun _ -> array_pts_to r (mk_fraction_seq td v (p1 `P.sum_perm` p2)))
+
+val array_fractional_permissions_theorem
+  (#opened: _)
+  (#t: Type)
+  (#td: typedef t)
+  (v1: Seq.seq t { fractionable_seq td v1 })
+  (v2: Seq.seq t { fractionable_seq td v2 })
+  (p1 p2: P.perm)
+  (r: array td)
+: STGhost unit opened
+    (array_pts_to r (mk_fraction_seq td v1 p1) `star` array_pts_to r (mk_fraction_seq td v2 p2))
+    (fun _ -> array_pts_to r (mk_fraction_seq td v1 p1) `star` array_pts_to r (mk_fraction_seq td v2 p2))
+    (full_seq td v1 /\ full_seq td v2)
+    (fun _ -> v1 == v2 /\ (array_length r > 0 ==> (p1 `P.sum_perm` p2) `P.lesser_equal_perm` P.full_perm))

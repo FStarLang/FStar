@@ -552,6 +552,44 @@ let share
   intro_pts_to0 r a1 s1;
   intro_pts_to0 r a2 s2
 
+let gather_exists
+  (#opened: _)
+  (#base_t: Type)
+  (#t: Type)
+  (#p: pcm t)
+  (r: array base_t p)
+  (s1 s2: Seq.seq t)
+: STGhost (Ghost.erased (Seq.seq t)) opened
+    (pts_to r s1 `star` pts_to r s2)
+    (fun s -> pts_to r s)
+    (
+      Seq.length s1 == Seq.length s2
+    )
+    (fun s ->
+      Seq.length s1 == Seq.length s /\
+      Seq.length s2 == Seq.length s /\
+      (forall (i: nat) .
+        i < Seq.length s ==> (
+        composable p (Seq.index s1 i) (Seq.index s2 i) /\
+        op p (Seq.index s1 i) (Seq.index s2 i) == Seq.index s i
+      ))
+    )
+= let _ = elim_pts_to r s1 in
+  let _ = elim_pts_to r s2 in
+  let a1 = array_pcm_carrier_of_seq r.len s1 in
+  let a2 = array_pcm_carrier_of_seq r.len s2 in
+  let _ = R.gather _ (array_pcm_carrier_of_seq r.len s1) _ in
+  let v = vpattern_replace (R.pts_to _) in
+  let s = seq_of_array_pcm_carrier v in 
+  assert (
+    composable (array_pcm p r.len) a1 a2 /\
+    op (array_pcm p r.len) a1 a2 `feq` array_pcm_carrier_of_seq r.len s
+  );
+  assert (forall (i: nat) . i < Seq.length s ==>  composable p (a1 (SZ.uint_to_t i)) (a2 (SZ.uint_to_t i)));
+  intro_pts_to0 r _ s;
+  noop ();
+  s
+
 let gather
   (#opened: _)
   (#base_t: Type)
@@ -571,16 +609,9 @@ let gather
       ))
     )
     (fun _ -> True)
-= let _ = elim_pts_to r s1 in
-  let _ = elim_pts_to r s2 in
-  let a1 = array_pcm_carrier_of_seq r.len s1 in
-  let a2 = array_pcm_carrier_of_seq r.len s2 in
-  let _ = R.gather _ (array_pcm_carrier_of_seq r.len s1) _ in
-  assert (
-    composable (array_pcm p r.len) a1 a2 /\
-    op (array_pcm p r.len) a1 a2 `feq` array_pcm_carrier_of_seq r.len s
-  );
-  intro_pts_to0 r _ s
+= let s' = gather_exists r s1 s2 in
+  assert (s `Seq.equal` s');
+  vpattern_rewrite (pts_to r) s
 
 let sub
   (#base_t: Type)

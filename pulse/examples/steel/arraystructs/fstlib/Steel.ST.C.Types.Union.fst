@@ -193,6 +193,22 @@ let union0
       (union_field_typedef fields f).mk_fraction_eq_one (v f) p
     )
   );
+  mk_fraction_full_composable = (fun v1 p1 v2 p2 ->
+    let co1 = U.case_of_union _ v1 in
+    let co2 = U.case_of_union _ v2 in
+    assert (Some? co1);
+    assert (Some? co2);
+    let Some c1 = co1 in
+    let Some c2 = co2 in
+    U.exclusive_union_elim (union_field_pcm fields) v1 c1;
+    U.exclusive_union_elim (union_field_pcm fields) v2 c2;
+    Classical.move_requires ((union_field_typedef fields c1).mk_fraction_eq_one (v1 c1)) p1;
+    Classical.move_requires ((union_field_typedef fields c2).mk_fraction_eq_one (v2 c2)) p2;
+    U.union_comp_elim0 (union_field_pcm fields) (union_mk_fraction v1 p1) (union_mk_fraction v2 p2) c1 c2;
+    assert (c1 == c2);
+    (union_field_typedef fields c1).mk_fraction_full_composable (v1 c1) p1 (v2 c1) p2;
+    assert (v1 `FX.feq` v2)
+  );
 }
 
 #pop-options

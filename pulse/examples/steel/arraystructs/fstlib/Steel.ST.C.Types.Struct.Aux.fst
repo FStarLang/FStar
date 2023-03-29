@@ -119,6 +119,13 @@ let struct1
       (fields.fd_typedef f).mk_fraction_eq_one (v f) p
     )
   );
+  mk_fraction_full_composable = (fun v1 p1 v2 p2 ->
+    let f = FStar.IndefiniteDescription.indefinite_description_ghost field_t (fun _ -> True) in
+    (fields.fd_typedef f).mk_fraction_full_composable (v1 f) p1 (v2 f) p2;
+    struct_eq_intro v1 v2 (fun f ->
+      (fields.fd_typedef f).mk_fraction_full_composable (v1 f) p1 (v2 f) p2
+    )
+  );    
 }
 
 [@@__reduce__]

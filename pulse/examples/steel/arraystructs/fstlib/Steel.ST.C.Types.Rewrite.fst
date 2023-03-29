@@ -23,4 +23,5 @@ let rewrite_typedef
     mk_fraction_split = (fun y p1 p2 -> td.mk_fraction_split (rewrite.rewrite_to_from y) p1 p2);
     mk_fraction_join = (fun y p1 p2 -> td.mk_fraction_join (rewrite.rewrite_to_from y) p1 p2);
     mk_fraction_eq_one = (fun y p -> td.mk_fraction_eq_one (rewrite.rewrite_to_from y) p);
+    mk_fraction_full_composable = (fun v1 p1 v2 p2 -> td.mk_fraction_full_composable (rewrite.rewrite_to_from v1) p1 (rewrite.rewrite_to_from v2) p2);
   }

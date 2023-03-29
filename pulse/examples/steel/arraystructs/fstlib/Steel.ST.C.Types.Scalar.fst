@@ -76,6 +76,7 @@ let scalar t = {
     | _ -> ()
   );
   mk_fraction_eq_one = (fun v p -> ());
+  mk_fraction_full_composable = (fun _ _ _ _ -> ());
 }
 
 let mk_scalar v = (Some (Some v, P.full_perm))
@@ -83,28 +84,6 @@ let mk_scalar v = (Some (Some v, P.full_perm))
 let mk_scalar_fractionable v p = ()
 
 let mk_scalar_inj v1 v2 p1 p2 = ()
-
-#push-options "--z3rlimit 16"
-
-#restart-solver
-
-let scalar_unique
-  #_ #t v1 v2 p1 p2 r
-= rewrite (pts_to r (mk_fraction (scalar t) (mk_scalar v1) p1)) (pts_to0 r (Some (Some v1, p1)));
-  let _ = gen_elim () in
-  let w = vpattern_replace (HR.pts_to r _) in
-  let r' = get_ref r in
-  rewrite (pts_to r _) (pts_to0 r (Some (Some v2, p2)));
-  let _ = gen_elim () in
-  hr_gather w r;
-  rewrite (r_pts_to _ (Some (Some v2, p2))) (R.pts_to r' (Some (Some v2, p2)));
-  let _ = R.gather r' (Some (Some v1, p1)) (Some (Some v2, p2)) in
-  R.split r' _ (Some (Some v1, p1)) (Some (Some v2, p2));
-  HR.share r;
-  pts_to_intro_rewrite r r' #(Some (Some v1, p1)) (mk_fraction (scalar _) (mk_scalar v1) p1);
-  pts_to_intro_rewrite r r' #(Some (Some v2, p2)) (mk_fraction (scalar _) (mk_scalar v2) p2)
-
-#pop-options
 
 let read0
   #t #v #p r

@@ -246,6 +246,20 @@ val mk_fraction_join
   (pts_to r (mk_fraction td v p1) `star` pts_to r (mk_fraction td v p2))
   (fun _ -> pts_to r (mk_fraction td v (p1 `P.sum_perm` p2)))
 
+val fractional_permissions_theorem
+  (#opened: _)
+  (#t: Type)
+  (#td: typedef t)
+  (v1: t { fractionable td v1 })
+  (v2: t { fractionable td v2 })
+  (p1 p2: P.perm)
+  (r: ref td)
+: STGhost unit opened
+    (pts_to r (mk_fraction td v1 p1) `star` pts_to r (mk_fraction td v2 p2))
+    (fun _ -> pts_to r (mk_fraction td v1 p1) `star` pts_to r (mk_fraction td v2 p2))
+    (full td v1 /\ full td v2)
+    (fun _ -> v1 == v2 /\ (p1 `P.sum_perm` p2) `P.lesser_equal_perm` P.full_perm)
+
 val norm_field_attr : unit
 
 noextract

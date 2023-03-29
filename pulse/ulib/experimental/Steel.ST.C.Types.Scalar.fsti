@@ -33,7 +33,7 @@ val mk_scalar_inj
   (ensures (v1 == v2 /\ p1 == p2))
   [SMTPat [mk_fraction (scalar t) (mk_scalar v1) p1; mk_fraction (scalar t) (mk_scalar v2) p2]]
 
-val scalar_unique
+let scalar_unique
   (#opened: _)
   (#t: Type)
   (v1 v2: t)
@@ -44,6 +44,8 @@ val scalar_unique
     (fun _ -> pts_to r (mk_fraction (scalar t) (mk_scalar v1) p1) `star` pts_to r (mk_fraction (scalar t) (mk_scalar v2) p2))
     (True)
     (fun _ -> v1 == v2 /\ (p1 `P.sum_perm` p2) `P.lesser_equal_perm` P.full_perm)
+= fractional_permissions_theorem (mk_scalar v1) (mk_scalar v2) p1 p2 r;
+  mk_scalar_inj v1 v2 P.full_perm P.full_perm
 
 [@@noextract_to "krml"] // primitive
 val read0 (#t: Type) (#v: Ghost.erased t) (#p: P.perm) (r: ref (scalar t)) : ST t
