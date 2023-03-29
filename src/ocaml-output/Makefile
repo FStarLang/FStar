@@ -13,7 +13,7 @@ OCAMLLEX=ocamllex
 FSTAR_OCAMLBUILD_EXTRAS ?= -cflag -g
 
 FSTAR_HOME = ../..
-DUNE_SNAPSHOT ?= $(realpath $(FSTAR_HOME)/ocaml)
+DUNE_SNAPSHOT ?= $(call maybe_cygwin_path,$(realpath $(FSTAR_HOME)/ocaml))
 export DUNE_SNAPSHOT
 
 FStar_Parser_Parse_ml=$(DUNE_SNAPSHOT)/fstar-lib/generated/FStar_Parser_Parse.ml
@@ -119,13 +119,9 @@ install_dir = cd ../../$(1) && find . -type f -exec $(INSTALL_EXEC) -m 644 -D {}
 # Install FStar into $(PREFIX) using the standard Unix directory
 # structure.
 
-ifeq ($(OS),Windows_NT)
-  # On Cygwin, the `--prefix` option to dune only
-  # supports Windows paths.
-  FSTAR_PREFIX=$(shell cygpath -m $(PREFIX))
-else
-  FSTAR_PREFIX=$(PREFIX)
-endif
+# On Cygwin, the `--prefix` option to dune only
+# supports Windows paths.
+FSTAR_PREFIX=$(call maybe_cygwin_path,$(PREFIX))
 
 FSTAR_BUILD_PROFILE ?= release
 
@@ -174,13 +170,9 @@ endif
 # Create a zip / tar.gz package of FStar that contains a Z3 binary and
 # proper license files.
 
-ifeq ($(OS),Windows_NT)
-  # On Cygwin, the `--prefix` option to dune only
-  # supports Windows paths.
-  package_prefix=$(shell cygpath -m $(CURDIR))/fstar
-else
-  package_prefix=$(CURDIR)/fstar
-endif
+# On Cygwin, the `--prefix` option to dune only
+# supports Windows paths.
+package_prefix=$(call maybe_cygwin_path,$(CURDIR)/fstar)
 
 package_dir = cd ../../$(1) && find . -type f -exec $(INSTALL_EXEC) -m 644 -D {} $(package_prefix)/$(2)/{} \;
 

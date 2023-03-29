@@ -16,7 +16,7 @@ FSTAR_BOOT ?= $(FSTAR)
 # FSTAR_C: This is the way in which we invoke F* for boostrapping
 #   -- we use automatic dependence analysis based on files in ulib, src/{basic, ...} and boot
 #   -- MLish and lax tune type-inference for use with unverified ML programs
-DUNE_SNAPSHOT ?= $(FSTAR_HOME)/ocaml
+DUNE_SNAPSHOT ?= $(call maybe_cygwin_path,$(FSTAR_HOME)/ocaml)
 OUTPUT_DIRECTORY = $(DUNE_SNAPSHOT)/fstar-lib/generated
 FSTAR_C=$(RUNLIM) $(FSTAR_BOOT) $(SIL) $(FSTAR_BOOT_OPTIONS) --cache_checked_modules
 
