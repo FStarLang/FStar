@@ -4,19 +4,15 @@ include .common.mk
 
 all: dune
 
-DUNE_SNAPSHOT ?= $(CURDIR)/ocaml
+DUNE_SNAPSHOT ?= $(call maybe_cygwin_path,$(CURDIR)/ocaml)
 
 # The directory where we install files when doing "make install".
 # Overridden via the command-line by the OPAM invocation.
 PREFIX ?= /usr/local
 
-ifeq ($(OS),Windows_NT)
-  # On Cygwin, the `--prefix` option to dune only
-  # supports Windows paths.
-  FSTAR_CURDIR=$(shell cygpath -m $(CURDIR))
-else
-  FSTAR_CURDIR=$(CURDIR)
-endif
+# On Cygwin, the `--prefix` option to dune only
+# supports Windows paths.
+FSTAR_CURDIR=$(call maybe_cygwin_path,$(CURDIR))
 
 .PHONY: dune dune-fstar verify-ulib
 FSTAR_BUILD_PROFILE ?= release
