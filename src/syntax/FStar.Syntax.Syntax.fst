@@ -31,6 +31,7 @@ open FStar.Compiler.Dyn
 module O = FStar.Options
 module PC = FStar.Parser.Const
 open FStar.VConfig
+module Err = FStar.Errors
 
 // This is set in FStar.Main.main, where all modules are in-scope.
 let lazy_chooser : ref (option (lazy_kind -> lazyinfo -> term)) = mk_ref None
@@ -63,13 +64,8 @@ let contains_reflectable (l: list qualifier): bool =
 let withinfo v r = {v=v; p=r}
 let withsort v = withinfo v dummyRange
 
-let bv_eq (bv1:bv) (bv2:bv) = bv1.index=bv2.index
-
-let order_bv x y =
-  let i = String.compare (string_of_id x.ppname) (string_of_id y.ppname) in
-  if i = 0
-  then x.index - y.index
-  else i
+let order_bv (x y : bv) : int  = x.index - y.index
+let bv_eq    (x y : bv) : bool = order_bv x y = 0
 
 let order_ident x y = String.compare (string_of_id x) (string_of_id y)
 let order_fv x y = String.compare (string_of_lid x) (string_of_lid y)
@@ -84,13 +80,16 @@ let set_range_of_bv x r = {x with ppname = set_id_range r x.ppname }
 
 (* Helpers *)
 let on_antiquoted (f : (term -> term)) (qi : quoteinfo) : quoteinfo =
-    let aq = List.map (fun (bv, t) -> (bv, f t)) qi.antiquotes in
-    { qi with antiquotes = aq }
+  let (s, aqs) = qi.antiquotations in
+  let aqs' = List.map f aqs in
+  { qi with antiquotations = (s, aqs') }
 
-let lookup_aq (bv : bv) (aq : antiquotations) : option term =
-    match List.tryFind (fun (bv', _) -> bv_eq bv bv') aq with
-    | Some (_, e) -> Some e
-    | None -> None
+(* Requires that bv.index is in scope. *)
+let lookup_aq (bv : bv) (aq : antiquotations) : term =
+    try List.nth (snd aq) (List.length (snd aq) - 1 - bv.index + fst aq) // subtract shift
+    with
+    | _ ->
+      failwith "antiquotation out of bounds"
 
 (*********************************************************************************)
 (* Syntax builders *)
@@ -353,6 +352,10 @@ let t_tuple3_of t1 t2 t3 = mk_Tm_app
 let t_either_of t1 t2 = mk_Tm_app
   (mk_Tm_uinst (tabbrev PC.either_lid) [U_zero;U_zero])
   [as_arg t1; as_arg t2]
+  Range.dummyRange
+let t_sealed_of t = mk_Tm_app
+  (mk_Tm_uinst (tabbrev PC.sealed_lid) [U_zero])
+  [as_arg t]
   Range.dummyRange
 
 let unit_const_with_range r = mk (Tm_constant FStar.Const.Const_unit) r

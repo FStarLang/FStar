@@ -16,9 +16,9 @@
 
 module FStar.Tactics.CtrlRewrite
 
-open FStar.Syntax.Syntax
 open FStar.Tactics.Types
 open FStar.Tactics.Monad
+open FStar.Syntax.Syntax
 
 module Z = FStar.BigInt
 

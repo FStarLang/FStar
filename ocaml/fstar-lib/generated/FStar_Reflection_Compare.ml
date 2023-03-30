@@ -64,12 +64,11 @@ let (compare_binder :
   =
   fun b1 ->
     fun b2 ->
-      let uu___ = FStar_Reflection_Builtins.inspect_binder b1 in
-      match uu___ with
-      | (bv1, uu___1) ->
-          let uu___2 = FStar_Reflection_Builtins.inspect_binder b2 in
-          (match uu___2 with
-           | (bv2, uu___3) -> FStar_Reflection_Builtins.compare_bv bv1 bv2)
+      let bview1 = FStar_Reflection_Builtins.inspect_binder b1 in
+      let bview2 = FStar_Reflection_Builtins.inspect_binder b2 in
+      FStar_Reflection_Builtins.compare_bv
+        bview1.FStar_Reflection_Data.binder_bv
+        bview2.FStar_Reflection_Data.binder_bv
 let (compare_ident :
   FStar_Reflection_Types.ident ->
     FStar_Reflection_Types.ident -> FStar_Order.order)

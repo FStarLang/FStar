@@ -39,7 +39,15 @@ let comp_to_string' env (c:comp) : string = Ident.with_frozen_gensym (fun () ->
   pp d
 )
 
-(* These two are duplicated instead of being a special case
+let sigelt_to_string' env (se:sigelt) : string = Ident.with_frozen_gensym (fun () ->
+  match Resugar.resugar_sigelt' env se with
+  | None -> ""
+  | Some d ->
+    let d = ToDocument.decl_to_document d in
+    pp d
+)
+
+(* These three are duplicated instead of being a special case
 of the above so we can reuse the empty_env created at module
 load time for DsEnv. Otherwise we need to create another empty
 DsEnv.env here. *)
@@ -53,6 +61,14 @@ let comp_to_string (c:comp) : string = Ident.with_frozen_gensym (fun () ->
   let e = Resugar.resugar_comp c in
   let d = ToDocument.term_to_document e in
   pp d
+)
+
+let sigelt_to_string (se:sigelt) : string = Ident.with_frozen_gensym (fun () ->
+  match Resugar.resugar_sigelt se with
+  | None -> ""
+  | Some d ->
+    let d = ToDocument.decl_to_document d in
+    pp d
 )
 
 let univ_to_string (u:universe) : string = Ident.with_frozen_gensym (fun () ->
@@ -78,14 +94,6 @@ let binder_to_string' is_arrow (b:binder) : string = Ident.with_frozen_gensym (f
   | None -> ""
   | Some e ->
     let d = ToDocument.binder_to_document e in
-    pp d
-)
-
-let sigelt_to_string (se:sigelt) : string = Ident.with_frozen_gensym (fun () ->
-  match Resugar.resugar_sigelt se with
-  | None -> ""
-  | Some d ->
-    let d = ToDocument.decl_to_document d in
     pp d
 )
 

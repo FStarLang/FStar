@@ -1097,10 +1097,9 @@ let rec (eq_tm :
               Equal bs1 bs2 in
           eq_and uu___ (fun uu___1 -> eq_comp c1 c2)
       | uu___ -> Unknown
-and (eq_antiquotes :
-  (FStar_Syntax_Syntax.bv * FStar_Syntax_Syntax.term) Prims.list ->
-    (FStar_Syntax_Syntax.bv * FStar_Syntax_Syntax.term) Prims.list ->
-      eq_result)
+and (eq_antiquotations :
+  FStar_Syntax_Syntax.term Prims.list ->
+    FStar_Syntax_Syntax.term Prims.list -> eq_result)
   =
   fun a1 ->
     fun a2 ->
@@ -1108,22 +1107,14 @@ and (eq_antiquotes :
       | ([], []) -> Equal
       | ([], uu___) -> NotEqual
       | (uu___, []) -> NotEqual
-      | ((x1, t1)::a11, (x2, t2)::a21) ->
-          let uu___ =
-            let uu___1 = FStar_Syntax_Syntax.bv_eq x1 x2 in
-            Prims.op_Negation uu___1 in
-          if uu___
-          then NotEqual
-          else
-            (let uu___2 = eq_tm t1 t2 in
-             match uu___2 with
-             | NotEqual -> NotEqual
-             | Unknown ->
-                 let uu___3 = eq_antiquotes a11 a21 in
-                 (match uu___3 with
-                  | NotEqual -> NotEqual
-                  | uu___4 -> Unknown)
-             | Equal -> eq_antiquotes a11 a21)
+      | (t1::a11, t2::a21) ->
+          let uu___ = eq_tm t1 t2 in
+          (match uu___ with
+           | NotEqual -> NotEqual
+           | Unknown ->
+               let uu___1 = eq_antiquotations a11 a21 in
+               (match uu___1 with | NotEqual -> NotEqual | uu___2 -> Unknown)
+           | Equal -> eq_antiquotations a11 a21)
 and (branch_matches :
   (FStar_Syntax_Syntax.pat' FStar_Syntax_Syntax.withinfo_t *
     FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax
@@ -1219,8 +1210,9 @@ let (eq_quoteinfo :
       if q1.FStar_Syntax_Syntax.qkind <> q2.FStar_Syntax_Syntax.qkind
       then NotEqual
       else
-        eq_antiquotes q1.FStar_Syntax_Syntax.antiquotes
-          q2.FStar_Syntax_Syntax.antiquotes
+        eq_antiquotations
+          (FStar_Pervasives_Native.snd q1.FStar_Syntax_Syntax.antiquotations)
+          (FStar_Pervasives_Native.snd q2.FStar_Syntax_Syntax.antiquotations)
 let (eq_bqual :
   FStar_Syntax_Syntax.binder_qualifier FStar_Pervasives_Native.option ->
     FStar_Syntax_Syntax.binder_qualifier FStar_Pervasives_Native.option ->

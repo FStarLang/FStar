@@ -253,7 +253,7 @@ and letbinding =
 and quoteinfo =
   {
   qkind: quote_kind ;
-  antiquotes: (bv * term' syntax) Prims.list }
+  antiquotations: (Prims.int * term' syntax Prims.list) }
 and comp_typ =
   {
   comp_univs: universes ;
@@ -610,11 +610,11 @@ let (__proj__Mkletbinding__item__lbpos :
     match projectee with
     | { lbname; lbunivs; lbtyp; lbeff; lbdef; lbattrs; lbpos;_} -> lbpos
 let (__proj__Mkquoteinfo__item__qkind : quoteinfo -> quote_kind) =
-  fun projectee -> match projectee with | { qkind; antiquotes;_} -> qkind
-let (__proj__Mkquoteinfo__item__antiquotes :
-  quoteinfo -> (bv * term' syntax) Prims.list) =
+  fun projectee -> match projectee with | { qkind; antiquotations;_} -> qkind
+let (__proj__Mkquoteinfo__item__antiquotations :
+  quoteinfo -> (Prims.int * term' syntax Prims.list)) =
   fun projectee ->
-    match projectee with | { qkind; antiquotes;_} -> antiquotes
+    match projectee with | { qkind; antiquotations;_} -> antiquotations
 let (__proj__Mkcomp_typ__item__comp_univs : comp_typ -> universes) =
   fun projectee ->
     match projectee with
@@ -995,7 +995,7 @@ type pat = pat' withinfo_t
 type branch =
   (pat' withinfo_t * term' syntax FStar_Pervasives_Native.option * term'
     syntax)
-type antiquotations = (bv * term' syntax) Prims.list
+type antiquotations = (Prims.int * term' syntax Prims.list)
 type typ = term' syntax
 type aqual = arg_qualifier FStar_Pervasives_Native.option
 type arg = (term' syntax * arg_qualifier FStar_Pervasives_Native.option)
@@ -1695,16 +1695,9 @@ let withinfo : 'a . 'a -> FStar_Compiler_Range.range -> 'a withinfo_t =
   fun v -> fun r -> { v; p = r }
 let withsort : 'a . 'a -> 'a withinfo_t =
   fun v -> withinfo v FStar_Compiler_Range.dummyRange
+let (order_bv : bv -> bv -> Prims.int) = fun x -> fun y -> x.index - y.index
 let (bv_eq : bv -> bv -> Prims.bool) =
-  fun bv1 -> fun bv2 -> bv1.index = bv2.index
-let (order_bv : bv -> bv -> Prims.int) =
-  fun x ->
-    fun y ->
-      let i =
-        let uu___ = FStar_Ident.string_of_id x.ppname in
-        let uu___1 = FStar_Ident.string_of_id y.ppname in
-        FStar_String.compare uu___ uu___1 in
-      if i = Prims.int_zero then x.index - y.index else i
+  fun x -> fun y -> let uu___ = order_bv x y in uu___ = Prims.int_zero
 let (order_ident : FStar_Ident.ident -> FStar_Ident.ident -> Prims.int) =
   fun x ->
     fun y ->
@@ -1732,24 +1725,25 @@ let (set_range_of_bv : bv -> FStar_Compiler_Range.range -> bv) =
 let (on_antiquoted : (term -> term) -> quoteinfo -> quoteinfo) =
   fun f ->
     fun qi ->
-      let aq =
-        FStar_Compiler_List.map
-          (fun uu___ ->
-             match uu___ with | (bv1, t) -> let uu___1 = f t in (bv1, uu___1))
-          qi.antiquotes in
-      { qkind = (qi.qkind); antiquotes = aq }
-let (lookup_aq : bv -> antiquotations -> term FStar_Pervasives_Native.option)
-  =
+      let uu___ = qi.antiquotations in
+      match uu___ with
+      | (s, aqs) ->
+          let aqs' = FStar_Compiler_List.map f aqs in
+          { qkind = (qi.qkind); antiquotations = (s, aqs') }
+let (lookup_aq : bv -> antiquotations -> term) =
   fun bv1 ->
     fun aq ->
-      let uu___ =
-        FStar_Compiler_List.tryFind
-          (fun uu___1 -> match uu___1 with | (bv', uu___2) -> bv_eq bv1 bv')
-          aq in
-      match uu___ with
-      | FStar_Pervasives_Native.Some (uu___1, e) ->
-          FStar_Pervasives_Native.Some e
-      | FStar_Pervasives_Native.None -> FStar_Pervasives_Native.None
+      try
+        (fun uu___ ->
+           match () with
+           | () ->
+               FStar_Compiler_List.nth (FStar_Pervasives_Native.snd aq)
+                 ((((FStar_Compiler_List.length
+                       (FStar_Pervasives_Native.snd aq))
+                      - Prims.int_one)
+                     - bv1.index)
+                    + (FStar_Pervasives_Native.fst aq))) ()
+      with | uu___ -> failwith "antiquotation out of bounds"
 let syn :
   'uuuuu 'uuuuu1 'uuuuu2 .
     'uuuuu -> 'uuuuu1 -> ('uuuuu1 -> 'uuuuu -> 'uuuuu2) -> 'uuuuu2
@@ -2242,6 +2236,13 @@ let (t_either_of : term -> term -> term) =
         let uu___2 = as_arg t1 in
         let uu___3 = let uu___4 = as_arg t2 in [uu___4] in uu___2 :: uu___3 in
       mk_Tm_app uu___ uu___1 FStar_Compiler_Range.dummyRange
+let (t_sealed_of : term -> term) =
+  fun t ->
+    let uu___ =
+      let uu___1 = tabbrev FStar_Parser_Const.sealed_lid in
+      mk_Tm_uinst uu___1 [U_zero] in
+    let uu___1 = let uu___2 = as_arg t in [uu___2] in
+    mk_Tm_app uu___ uu___1 FStar_Compiler_Range.dummyRange
 let (unit_const_with_range : FStar_Compiler_Range.range -> term) =
   fun r -> mk (Tm_constant FStar_Const.Const_unit) r
 let (unit_const : term) =

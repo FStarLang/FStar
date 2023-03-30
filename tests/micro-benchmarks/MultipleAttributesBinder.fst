@@ -23,11 +23,11 @@ noeq type binder =
 type binders = list binder
 
 let binder_from_term (b : T.binder) : T.Tac binder =
-    let (bv, (qual, a)) = T.inspect_binder b in
+    let (bv, (qual, a)) =
+      let bview = T.inspect_binder b in
+      bview.binder_bv, (bview.binder_qual, bview.binder_attrs) in
     let q = match qual with | T.Q_Implicit -> "Implicit" | T.Q_Explicit -> "Explicit" | T.Q_Meta _ -> "Meta" in
-    let bvv = T.inspect_bv bv in
-    let open FStar.Tactics in
-    { name = bvv.bv_ppname; qual = q; attrs = a }
+    { name = T.name_of_bv bv; qual = q; attrs = a }
 
 let rec binders_from_arrow (ty : T.term) : T.Tac binders =
     match T.inspect_ln ty with

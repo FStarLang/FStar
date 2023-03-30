@@ -83,11 +83,8 @@ let mlexpr_of_range (r:Range.range) : mlexpr' =
     let cstr (s : string) : mlexpr =
         MLC_String s |> MLE_Const |> with_ty ml_string_ty
     in
-    let drop_path (s : string) : string =
-       match String.split ['/'] s with
-       | [] -> s
-       | l -> List.last l
-    in
+    let drop_path = BU.basename in
+
     // This is not being fully faithful since it disregards
     // the use_range, but I assume that's not too bad.
     //
@@ -502,6 +499,7 @@ let interpret_plugin_as_term_fun (env:UEnv.uenv) (fv:fv) (t:typ) (arity_opt:opti
               (PC.norm_step_lid, 0, "norm_step"), Syntax_term;
               (PC.list_lid, 1, "list"), Syntax_term;
               (PC.option_lid, 1, "option"), Syntax_term;
+              (PC.sealed_lid, 1, "sealed"), Syntax_term;
               (PC.mk_tuple_lid 2 Range.dummyRange, 2, "tuple2"), Syntax_term;
               (RC.fstar_refl_types_lid "term", 0, "term"), Refl_emb;
               (RC.fstar_refl_types_lid "sigelt", 0, "sigelt"), Refl_emb;
@@ -572,8 +570,7 @@ let interpret_plugin_as_term_fun (env:UEnv.uenv) (fv:fv) (t:typ) (arity_opt:opti
                 args
                 |> List.map (fun (t, _) -> mk_embedding l env t)
             in
-            let nm = string_of_id (ident_of_lid fv.fv_name.v) in
-            let (_, t_arity, _trepr_head), loc_embedding =
+            let (_, t_arity, nm), loc_embedding =
                 BU.find_opt
                     (fun ((x, _, _), _) -> fv_eq_lid fv x)
                     (known_type_constructors l)

@@ -51,6 +51,8 @@ open FStar.Reflection.Constants
  * unembed : from user to compiler
  *)
 
+let noaqs : antiquotations = (0, [])
+
 (* -------------------------------------------------------------------------------------- *)
 (* ------------------------------------- EMBEDDINGS ------------------------------------- *)
 (* -------------------------------------------------------------------------------------- *)
@@ -117,22 +119,14 @@ let rec mapM_opt (f : ('a -> option 'b)) (l : list 'a) : option (list 'b) =
 
 let e_term_aq aq =
     let embed_term cb (t:term) : NBETerm.t =
-        let qi = { qkind = Quote_static; antiquotes = aq } in
+        let qi = { qkind = Quote_static; antiquotations = aq } in
         mk_t (NBETerm.Quote (t, qi))
     in
-    let rec unembed_term cb (t:NBETerm.t) : option term =
-        (* let apply_antiquotes (t:term) (aq:antiquotations) : option term = *)
-        (*     BU.bind_opt (mapM_opt (fun (bv, b, e) -> *)
-        (*                            if b *)
-        (*                            then Some (NT (bv, e)) *)
-        (*                            else BU.bind_opt (unembed_term e) (fun e -> Some (NT (bv, e)))) *)
-        (*                       aq) (fun s -> *)
-        (*     Some (SS.subst s t)) *)
-        (* in *)
+    let unembed_term cb (t:NBETerm.t) : option term =
         match t.nbe_t with
         | NBETerm.Quote (tm, qi) ->
-            // antiquotes!!????
-            Some tm
+            (* Just reuse the code from Reflection *)
+            Syntax.Embeddings.unembed (Reflection.Embeddings.e_term_aq (0, [])) (S.mk (Tm_quoted (tm, qi)) Range.dummyRange) false Syntax.Embeddings.id_norm_cb
         | _ ->
             None
     in
@@ -141,7 +135,7 @@ let e_term_aq aq =
     ; NBETerm.typ = mkFV fstar_refl_term_fv [] []
     ; NBETerm.emb_typ = fv_as_emb_typ fstar_refl_term_fv }
 
-let e_term = e_term_aq []
+let e_term = e_term_aq (0, [])
 
 let e_aqualv =
     let embed_aqualv cb (q : aqualv) : t =
@@ -273,7 +267,7 @@ let e_universe =
     in
     mk_emb' embed_universe unembed_universe fstar_refl_universe_fv
 
-let rec e_pattern' () =
+let rec e_pattern_aq aq =
     let embed_pattern cb (p : pattern) : t =
         match p with
         | Pat_Constant c ->
@@ -282,7 +276,7 @@ let rec e_pattern' () =
             mkConstruct ref_Pat_Cons.fv [] 
               [as_arg (embed e_fv cb fv);
                as_arg (embed (e_option (e_list e_universe)) cb us_opt);
-               as_arg (embed (e_list (e_tuple2 (e_pattern' ()) e_bool)) cb ps)]
+               as_arg (embed (e_list (e_tuple2 (e_pattern_aq aq) e_bool)) cb ps)]
         | Pat_Var bv ->
             mkConstruct ref_Pat_Var.fv [] [as_arg (embed e_bv cb bv)]
         | Pat_Wild bv ->
@@ -299,7 +293,7 @@ let rec e_pattern' () =
         | Construct (fv, [], [(ps, _); (us_opt, _); (f, _)]) when S.fv_eq_lid fv ref_Pat_Cons.lid ->
             BU.bind_opt (unembed e_fv cb f) (fun f ->
             BU.bind_opt (unembed (e_option (e_list e_universe)) cb us_opt) (fun us ->            
-            BU.bind_opt (unembed (e_list (e_tuple2 (e_pattern' ()) e_bool)) cb ps) (fun ps ->
+            BU.bind_opt (unembed (e_list (e_tuple2 (e_pattern_aq aq) e_bool)) cb ps) (fun ps ->
             Some <| Pat_Cons (f, us, ps))))
 
         | Construct (fv, [], [(bv, _)]) when S.fv_eq_lid fv ref_Pat_Var.lid ->
@@ -320,12 +314,12 @@ let rec e_pattern' () =
     in
     mk_emb' embed_pattern unembed_pattern fstar_refl_pattern_fv
 
-let e_pattern = e_pattern' ()
+let e_pattern = e_pattern_aq noaqs
 
 let e_branch = e_tuple2 e_pattern e_term
 let e_argv   = e_tuple2 e_term    e_aqualv
 
-let e_branch_aq aq = e_tuple2 e_pattern      (e_term_aq aq)
+let e_branch_aq aq = e_tuple2 (e_pattern_aq aq) (e_term_aq aq)
 let e_argv_aq   aq = e_tuple2 (e_term_aq aq) e_aqualv
 
 let e_match_returns_annotation =
@@ -423,6 +417,7 @@ let e_universe_view =
   mk_emb' embed_universe_view unembed_universe_view fstar_refl_universe_view_fv
 
 let e_term_view_aq aq =
+    let shift (s, aqs) = (s + 1, aqs) in
     let embed_term_view cb (tv:term_view) : t =
         match tv with
         | Tv_FVar fv ->
@@ -443,7 +438,7 @@ let e_term_view_aq aq =
             mkConstruct ref_Tv_App.fv [] [as_arg (embed (e_term_aq aq) cb hd); as_arg (embed (e_argv_aq aq) cb a)]
 
         | Tv_Abs (b, t) ->
-            mkConstruct ref_Tv_Abs.fv [] [as_arg (embed e_binder cb b); as_arg (embed (e_term_aq aq) cb t)]
+            mkConstruct ref_Tv_Abs.fv [] [as_arg (embed e_binder cb b); as_arg (embed (e_term_aq (shift aq)) cb t)]
 
         | Tv_Arrow (b, c) ->
             mkConstruct ref_Tv_Arrow.fv [] [as_arg (embed e_binder cb b); as_arg (embed e_comp cb c)]
@@ -452,7 +447,7 @@ let e_term_view_aq aq =
             mkConstruct ref_Tv_Type.fv [] [as_arg (embed e_universe cb u)]
 
         | Tv_Refine (bv, t) ->
-            mkConstruct ref_Tv_Refine.fv [] [as_arg (embed e_bv cb bv); as_arg (embed (e_term_aq aq) cb t)]
+            mkConstruct ref_Tv_Refine.fv [] [as_arg (embed e_bv cb bv); as_arg (embed (e_term_aq (shift aq)) cb t)]
 
         | Tv_Const c ->
             mkConstruct ref_Tv_Const.fv [] [as_arg (embed e_const cb c)]
@@ -465,7 +460,7 @@ let e_term_view_aq aq =
                                    as_arg (embed (e_list e_term) cb attrs);
                                    as_arg (embed e_bv cb b);
                                    as_arg (embed (e_term_aq aq) cb t1);
-                                   as_arg (embed (e_term_aq aq) cb t2)]
+                                   as_arg (embed (e_term_aq (shift aq)) cb t2)]
 
         | Tv_Match (t, ret_opt, brs) ->
             mkConstruct ref_Tv_Match.fv [] [
@@ -579,8 +574,7 @@ let e_term_view_aq aq =
     in
     mk_emb' embed_term_view unembed_term_view fstar_refl_term_view_fv
 
-
-let e_term_view = e_term_view_aq []
+let e_term_view = e_term_view_aq (0, [])
 
 let e_bv_view =
     let embed_bv_view cb (bvv:bv_view) : t =
@@ -601,6 +595,30 @@ let e_bv_view =
             None
     in
     mk_emb' embed_bv_view unembed_bv_view fstar_refl_bv_view_fv
+
+let e_attribute  = e_term
+let e_attributes = e_list e_attribute
+
+let e_binder_view =
+  let embed_binder_view cb (bview:binder_view) : t =
+    mkConstruct ref_Mk_binder.fv [] [as_arg (embed e_bv cb bview.binder_bv);
+                                     as_arg (embed e_aqualv cb bview.binder_qual);
+                                     as_arg (embed e_attributes cb bview.binder_attrs)] in
+
+  let unembed_binder_view cb (t:t) : option binder_view =
+    match t.nbe_t with
+    | Construct (fv, _, [(attrs, _); (q, _); (bv, _)])
+      when S.fv_eq_lid fv ref_Mk_binder.lid ->
+      BU.bind_opt (unembed e_bv cb bv) (fun bv ->
+      BU.bind_opt (unembed e_aqualv cb q) (fun q ->
+      BU.bind_opt (unembed e_attributes cb attrs) (fun attrs ->
+      Some <| RD.({binder_bv=bv;binder_qual=q;binder_attrs=attrs}))))
+
+    | _ ->
+      Err.log_issue Range.dummyRange (Err.Warning_NotEmbedded, (BU.format1 "Not an embedded binder_view: %s" (t_to_string t)));
+            None
+    in
+    mk_emb' embed_binder_view unembed_binder_view fstar_refl_binder_view_fv
 
 let e_comp_view =
     let embed_comp_view cb (cv : comp_view) : t =
@@ -725,9 +743,6 @@ let e_lb_view =
     in
     mk_emb' embed_lb_view unembed_lb_view fstar_refl_lb_view_fv
 
-let e_attribute  = e_term
-let e_attributes = e_list e_attribute
-
 (* embeds as a string list *)
 let e_lid : embedding I.lid =
     let embed rng lid : t =
@@ -833,8 +848,6 @@ let e_exp =
             None
     in
     mk_emb' embed_exp unembed_exp fstar_refl_exp_fv
-
-let e_binder_view = e_tuple2 e_bv (e_tuple2 e_aqualv (e_list e_term))
 
 let e_qualifier =
     let embed cb (q:RD.qualifier) : t =

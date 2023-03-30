@@ -1408,6 +1408,27 @@ let (_debug_print_var :
                                                                     (FStar_Tactics_Effect.tac_bind
                                                                     (Prims.mk_range
                                                                     "FStar.InteractiveHelpers.Output.fst"
+                                                                    (Prims.of_int (166))
+                                                                    (Prims.of_int (32))
+                                                                    (Prims.of_int (166))
+                                                                    (Prims.of_int (45)))
+                                                                    (Prims.mk_range
+                                                                    "FStar.InteractiveHelpers.Output.fst"
+                                                                    (Prims.of_int (166))
+                                                                    (Prims.of_int (32))
+                                                                    (Prims.of_int (168))
+                                                                    (Prims.of_int (48)))
+                                                                    (Obj.magic
+                                                                    (FStar_Tactics_Derived.name_of_bv
+                                                                    bv))
+                                                                    (fun
+                                                                    uu___4 ->
+                                                                    (fun
+                                                                    uu___4 ->
+                                                                    Obj.magic
+                                                                    (FStar_Tactics_Effect.tac_bind
+                                                                    (Prims.mk_range
+                                                                    "FStar.InteractiveHelpers.Output.fst"
                                                                     (Prims.of_int (167))
                                                                     (Prims.of_int (11))
                                                                     (Prims.of_int (168))
@@ -1464,38 +1485,39 @@ let (_debug_print_var :
                                                                     (FStar_Tactics_Builtins.term_to_string
                                                                     b.FStar_Reflection_Data.bv_sort))
                                                                     (fun
-                                                                    uu___4 ->
+                                                                    uu___5 ->
                                                                     FStar_Tactics_Effect.lift_div_tac
                                                                     (fun
-                                                                    uu___5 ->
+                                                                    uu___6 ->
                                                                     Prims.strcat
                                                                     "; sort: "
-                                                                    uu___4))))
-                                                                    (fun
-                                                                    uu___4 ->
-                                                                    FStar_Tactics_Effect.lift_div_tac
+                                                                    uu___5))))
                                                                     (fun
                                                                     uu___5 ->
+                                                                    FStar_Tactics_Effect.lift_div_tac
+                                                                    (fun
+                                                                    uu___6 ->
                                                                     Prims.strcat
                                                                     (Prims.string_of_int
                                                                     b.FStar_Reflection_Data.bv_index)
-                                                                    uu___4))))
-                                                                    (fun
-                                                                    uu___4 ->
-                                                                    FStar_Tactics_Effect.lift_div_tac
+                                                                    uu___5))))
                                                                     (fun
                                                                     uu___5 ->
+                                                                    FStar_Tactics_Effect.lift_div_tac
+                                                                    (fun
+                                                                    uu___6 ->
                                                                     Prims.strcat
                                                                     "; index: "
-                                                                    uu___4))))
-                                                                    (fun
-                                                                    uu___4 ->
-                                                                    FStar_Tactics_Effect.lift_div_tac
+                                                                    uu___5))))
                                                                     (fun
                                                                     uu___5 ->
+                                                                    FStar_Tactics_Effect.lift_div_tac
+                                                                    (fun
+                                                                    uu___6 ->
                                                                     Prims.strcat
-                                                                    b.FStar_Reflection_Data.bv_ppname
-                                                                    uu___4))))
+                                                                    uu___4
+                                                                    uu___5))))
+                                                                    uu___4)))
                                                                     (fun
                                                                     uu___4 ->
                                                                     FStar_Tactics_Effect.lift_div_tac

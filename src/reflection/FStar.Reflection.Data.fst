@@ -27,3 +27,18 @@ module Ident = FStar.Ident
 module Range = FStar.Compiler.Range
 module Z     = FStar.BigInt
 open FStar.Ident
+
+(* These two functions are in ulib/FStar.Reflection.Data.fsti
+   But, they are not extracted from there.
+
+   Instead, these functions are extraction from this file. It is 
+   not sufficient to place these functions in the interface
+   src/reflection/FStar.Reflection.Data.fsti since this module, like the 
+   rest of the compiler, is extracted in MLish mode. Which means that
+   functions in the interface are not supported for extraction. So, 
+   we include them in this module implementation file to force them
+   to be extracted *)
+let as_ppname (x:string) : Tot string = x
+
+let notAscription (tv:term_view) : Tot bool =
+  not (Tv_AscribedT? tv) && not (Tv_AscribedC? tv)

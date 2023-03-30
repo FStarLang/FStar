@@ -2,7 +2,7 @@ FSTAR_HOME=../..
 
 FSTAR_FILES=$(wildcard *.fst)
 
-all: verify-all
+all: verify-all Hacl.Meta.Use.fst.test
 
 include $(FSTAR_HOME)/examples/Makefile.common
 
@@ -13,3 +13,10 @@ clean:
 	$(Q)rm -f .depend
 	$(Q)rm -rf _cache
 	$(Q)rm -rf _output
+
+Hacl_Meta.ml:
+	$(Q)$(FSTAR) Hacl.Meta.fst --codegen Plugin
+
+Hacl.Meta.Use.fst.test: Hacl.Meta.Use.fst Hacl_Meta.ml
+	$(Q)$(FSTAR) $< --load Hacl.Meta
+	@touch $@

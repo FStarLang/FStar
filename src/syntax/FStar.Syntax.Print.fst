@@ -205,11 +205,8 @@ and term_to_string x =
       | Tm_quoted (tm, qi) ->
         begin match qi.qkind with
         | Quote_static ->
-            let print_aq (bv, t) =
-              U.format2 "%s -> %s" (bv_to_string bv) (term_to_string t)
-            in
             U.format2 "`(%s)%s" (term_to_string tm)
-                                (FStar.Common.string_of_list print_aq qi.antiquotes)
+                                (FStar.Common.string_of_list term_to_string (snd qi.antiquotations))
         | Quote_dynamic ->
             U.format1 "quote (%s)" (term_to_string tm)
         end
@@ -726,9 +723,9 @@ let pragma_to_string (p:pragma) : string =
   | PopOptions            -> "#pop-options"
 
 let rec sigelt_to_string (x: sigelt) =
- // if not (Options.ugly()) then
- //    Pretty.sigelt_to_string x
- // else
+  if not (Options.ugly()) then
+     Pretty.sigelt_to_string x
+  else
    let basic =
       match x.sigel with
       | Sig_pragma p -> pragma_to_string p
@@ -792,6 +789,11 @@ let rec sigelt_to_string (x: sigelt) =
       match x.sigattrs with
       | [] -> "[@ ]" ^ "\n" ^ basic //It is important to keep this empty attribute marker since the Vale type extractor uses it as a delimiter
       | _ -> attrs_to_string x.sigattrs ^ "\n" ^ basic
+
+let sigelt_to_string' env x =
+  if Options.ugly ()
+  then sigelt_to_string x
+  else Pretty.sigelt_to_string' env x
 
 (* A "short" version of printing a sigelt. Meant to (usually) be a small string
 suitable to embed in an error message. No need to be fully faithful to
