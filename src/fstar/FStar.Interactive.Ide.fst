@@ -1123,11 +1123,6 @@ let js_repl_init_opts () =
 
 (** This is the main loop for the desktop version **)
 let rec go st : int =
-  if Options.debug_any ()
-  then (
-    FStar.Compiler.Util.print1 "Repl stack is:\n%s\n"
-                               (string_of_repl_stack (!repl_stack))
-  );
   let query, st = read_interactive_query st in
   let (status, responses), state_opt = validate_and_run_query st query in
   List.iter (write_response query.qid status) responses;

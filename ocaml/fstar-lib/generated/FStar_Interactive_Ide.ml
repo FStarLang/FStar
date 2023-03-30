@@ -2829,28 +2829,18 @@ let (js_repl_init_opts : unit -> unit) =
               | uu___2 -> ()))
 let rec (go : FStar_Interactive_Ide_Types.repl_state -> Prims.int) =
   fun st ->
-    (let uu___1 = FStar_Options.debug_any () in
-     if uu___1
-     then
-       let uu___2 =
-         let uu___3 =
-           FStar_Compiler_Effect.op_Bang
-             FStar_Interactive_PushHelper.repl_stack in
-         FStar_Interactive_Ide_Types.string_of_repl_stack uu___3 in
-       FStar_Compiler_Util.print1 "Repl stack is:\n%s\n" uu___2
-     else ());
-    (let uu___1 = read_interactive_query st in
-     match uu___1 with
-     | (query, st1) ->
-         let uu___2 = validate_and_run_query st1 query in
-         (match uu___2 with
-          | ((status, responses), state_opt) ->
-              (FStar_Compiler_List.iter
-                 (write_response query.FStar_Interactive_Ide_Types.qid status)
-                 responses;
-               (match state_opt with
-                | FStar_Pervasives.Inl st' -> go st'
-                | FStar_Pervasives.Inr exitcode -> exitcode))))
+    let uu___ = read_interactive_query st in
+    match uu___ with
+    | (query, st1) ->
+        let uu___1 = validate_and_run_query st1 query in
+        (match uu___1 with
+         | ((status, responses), state_opt) ->
+             (FStar_Compiler_List.iter
+                (write_response query.FStar_Interactive_Ide_Types.qid status)
+                responses;
+              (match state_opt with
+               | FStar_Pervasives.Inl st' -> go st'
+               | FStar_Pervasives.Inr exitcode -> exitcode)))
 let (interactive_error_handler : FStar_Errors.error_handler) =
   let issues = FStar_Compiler_Util.mk_ref [] in
   let add_one e =
