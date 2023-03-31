@@ -598,7 +598,7 @@ let write_full_buffer_fragment_progress (di:Incremental.fragment_progress) =
     let open FStar.Interactive.Incremental in
     let json_of_code_fragment (cf:FStar.Parser.ParseIt.code_fragment) =
         JsonAssoc ["range", json_of_def_range cf.range;
-                   "code", JsonStr cf.code]
+                   "code-digest", JsonStr (BU.digest_of_string cf.code)]
     in
     match di with
     | FragmentStarted d ->

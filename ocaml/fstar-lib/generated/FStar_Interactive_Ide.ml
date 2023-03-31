@@ -1406,9 +1406,16 @@ let (write_full_buffer_fragment_progress :
             FStar_Compiler_Range.json_of_def_range
               cf.FStar_Parser_ParseIt.range in
           ("range", uu___2) in
-        [uu___1;
-        ("code",
-          (FStar_Compiler_Util.JsonStr (cf.FStar_Parser_ParseIt.code)))] in
+        let uu___2 =
+          let uu___3 =
+            let uu___4 =
+              let uu___5 =
+                FStar_Compiler_Util.digest_of_string
+                  cf.FStar_Parser_ParseIt.code in
+              FStar_Compiler_Util.JsonStr uu___5 in
+            ("code-digest", uu___4) in
+          [uu___3] in
+        uu___1 :: uu___2 in
       FStar_Compiler_Util.JsonAssoc uu___ in
     match di with
     | FStar_Interactive_Incremental.FragmentStarted d ->
