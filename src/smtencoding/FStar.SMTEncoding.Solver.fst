@@ -1084,6 +1084,7 @@ type solver_cfg = {
   facts            : list (list string * bool);
   valid_intro      : bool;
   valid_elim       : bool;
+  z3version        : string;
 }
 
 let _last_cfg : ref (option solver_cfg) = BU.mk_ref None
@@ -1095,6 +1096,7 @@ let get_cfg env : solver_cfg =
     ; facts            = env.proof_ns
     ; valid_intro      = Options.smtencoding_valid_intro ()
     ; valid_elim       = Options.smtencoding_valid_elim ()
+    ; z3version        = Options.z3_version ()
     }
 
 let save_cfg env =

@@ -384,6 +384,8 @@ type raw_error =
   | Error_InternalQualifier
   | Warning_NameEscape
   | Warning_UnexpectedZ3Stderr
+  | Warning_SolverMismatch
+  | Warning_SolverVersionMismatch
 
 type error_setting = raw_error * error_flag * int
 
