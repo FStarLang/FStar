@@ -126,14 +126,12 @@ let rec param' (s:param_state) (t:term) : Tac term =
   | Tv_Var bv ->
     let (_, _, b) = lookup s bv in
     binder_to_term b
+
   | Tv_Arrow b c -> //      t1 -> t2   ===  (x:t1) -> Tot t2
     begin match inspect_comp c with
     | C_Total t2 ->
-      let bv, (q, _attrs) =
-        let bview = inspect_binder b in
-        bview.binder_bv, (bview.binder_qual, bview.binder_attrs) in
-
       let (s', (bx0, bx1, bxR)) = push_binder b s in
+      let q = (inspect_binder b).binder_qual in
 
       let bf0 = fresh_binder_named "f0" (replace_by s false t) in
       let bf1 = fresh_binder_named "f1" (replace_by s true t) in
@@ -266,14 +264,14 @@ and param_br (s:param_state) (br : branch) : Tac branch =
   (pat', param' s' t)
 
 and push_binder (b:binder) (s:param_state) : Tac (param_state & (binder & binder & binder)) =
-  let bv, q =
-    let bview = inspect_binder b in
-    bview.binder_bv, bview.binder_qual in
+  let bv = (inspect_binder b).binder_bv in
+  let q = (inspect_binder b).binder_qual in
   let typ = (inspect_bv bv).bv_sort in
-  let name = unseal ((inspect_bv bv).bv_ppname) in
-  let bx0 = fresh_binder_named (name^"0") (replace_by s false typ) in
-  let bx1 = fresh_binder_named (name^"1") (replace_by s true typ) in
-  let bxr = fresh_binder_named (name^"R") (`(`#(param' s typ)) (`#bx0) (`#bx1)) in
+  let name = (inspect_bv bv).bv_ppname in
+  let decor (s : sealed string) (t : string) : Tac string = (unseal s ^ t) in
+  let bx0 = fresh_binder_named (decor name "0") (replace_by s false typ) in
+  let bx1 = fresh_binder_named (decor name "1") (replace_by s true typ) in
+  let bxr = fresh_binder_named (decor name "R") (`(`#(param' s typ)) (`#bx0) (`#bx1)) in
 
   (* respect implicits *)
   let bx0 = binder_set_qual bx0 q in

@@ -1785,23 +1785,20 @@ and (tc_maybe_toplevel_term :
               match uu___2 with
               | FStar_Pervasives.Inl x -> x
               | FStar_Pervasives.Inr uu___3 -> failwith "projl fail" in
-            let non_trivial_antiquotes qi1 =
-              let is_name t =
+            let non_trivial_antiquotations qi1 =
+              let is_not_name t =
                 let uu___2 =
                   let uu___3 = FStar_Syntax_Subst.compress t in
                   uu___3.FStar_Syntax_Syntax.n in
                 match uu___2 with
-                | FStar_Syntax_Syntax.Tm_name uu___3 -> true
-                | uu___3 -> false in
-              FStar_Compiler_Util.for_some
-                (fun uu___2 ->
-                   match uu___2 with
-                   | (uu___3, t) ->
-                       let uu___4 = is_name t in Prims.op_Negation uu___4)
-                qi1.FStar_Syntax_Syntax.antiquotes in
+                | FStar_Syntax_Syntax.Tm_name uu___3 -> false
+                | uu___3 -> true in
+              FStar_Compiler_Util.for_some is_not_name
+                (FStar_Pervasives_Native.snd
+                   qi1.FStar_Syntax_Syntax.antiquotations) in
             (match qi.FStar_Syntax_Syntax.qkind with
              | FStar_Syntax_Syntax.Quote_static when
-                 non_trivial_antiquotes qi ->
+                 non_trivial_antiquotations qi ->
                  let e0 = e in
                  let newbvs =
                    FStar_Compiler_List.map
@@ -1809,15 +1806,17 @@ and (tc_maybe_toplevel_term :
                         FStar_Syntax_Syntax.new_bv
                           FStar_Pervasives_Native.None
                           FStar_Syntax_Syntax.t_term)
-                     qi.FStar_Syntax_Syntax.antiquotes in
+                     (FStar_Pervasives_Native.snd
+                        qi.FStar_Syntax_Syntax.antiquotations) in
                  let z =
-                   FStar_Compiler_List.zip qi.FStar_Syntax_Syntax.antiquotes
-                     newbvs in
+                   FStar_Compiler_List.zip
+                     (FStar_Pervasives_Native.snd
+                        qi.FStar_Syntax_Syntax.antiquotations) newbvs in
                  let lbs =
                    FStar_Compiler_List.map
                      (fun uu___2 ->
                         match uu___2 with
-                        | ((bv, t), bv') ->
+                        | (t, bv') ->
                             FStar_Syntax_Util.close_univs_and_mk_letbinding
                               FStar_Pervasives_Native.None
                               (FStar_Pervasives.Inl bv') []
@@ -1826,16 +1825,17 @@ and (tc_maybe_toplevel_term :
                               t.FStar_Syntax_Syntax.pos) z in
                  let qi1 =
                    let uu___2 =
-                     FStar_Compiler_List.map
-                       (fun uu___3 ->
-                          match uu___3 with
-                          | ((bv, uu___4), bv') ->
-                              let uu___5 = FStar_Syntax_Syntax.bv_to_name bv' in
-                              (bv, uu___5)) z in
+                     let uu___3 =
+                       FStar_Compiler_List.map
+                         (fun uu___4 ->
+                            match uu___4 with
+                            | (t, bv') -> FStar_Syntax_Syntax.bv_to_name bv')
+                         z in
+                     (Prims.int_zero, uu___3) in
                    {
                      FStar_Syntax_Syntax.qkind =
                        (qi.FStar_Syntax_Syntax.qkind);
-                     FStar_Syntax_Syntax.antiquotes = uu___2
+                     FStar_Syntax_Syntax.antiquotations = uu___2
                    } in
                  let nq =
                    FStar_Syntax_Syntax.mk
@@ -1861,31 +1861,42 @@ and (tc_maybe_toplevel_term :
                             top.FStar_Syntax_Syntax.pos) nq lbs in
                  tc_maybe_toplevel_term env1 e1
              | FStar_Syntax_Syntax.Quote_static ->
-                 let aqs = qi.FStar_Syntax_Syntax.antiquotes in
+                 let aqs =
+                   FStar_Pervasives_Native.snd
+                     qi.FStar_Syntax_Syntax.antiquotations in
                  let env_tm =
                    FStar_TypeChecker_Env.set_expected_typ env1
                      FStar_Syntax_Syntax.t_term in
                  let uu___2 =
-                   FStar_Compiler_List.fold_right
+                   FStar_Compiler_List.fold_left
                      (fun uu___3 ->
-                        fun uu___4 ->
-                          match (uu___3, uu___4) with
-                          | ((bv, tm), (aqs_rev, guard)) ->
-                              let uu___5 = tc_term env_tm tm in
-                              (match uu___5 with
-                               | (tm1, uu___6, g) ->
-                                   let uu___7 =
-                                     FStar_TypeChecker_Env.conj_guard g guard in
-                                   (((bv, tm1) :: aqs_rev), uu___7))) aqs
-                     ([], FStar_TypeChecker_Env.trivial_guard) in
+                        fun aq_tm ->
+                          match uu___3 with
+                          | (aqs_rev, guard, env_tm1) ->
+                              let uu___4 = tc_term env_tm1 aq_tm in
+                              (match uu___4 with
+                               | (aq_tm1, uu___5, _g) ->
+                                   let env_tm2 =
+                                     let uu___6 =
+                                       FStar_Syntax_Syntax.new_bv
+                                         FStar_Pervasives_Native.None
+                                         FStar_Syntax_Syntax.t_term in
+                                     FStar_TypeChecker_Env.push_bv env_tm1
+                                       uu___6 in
+                                   let uu___6 =
+                                     FStar_TypeChecker_Env.conj_guard _g
+                                       guard in
+                                   ((aq_tm1 :: aqs_rev), uu___6, env_tm2)))
+                     ([], FStar_TypeChecker_Env.trivial_guard, env_tm) aqs in
                  (match uu___2 with
-                  | (aqs_rev, guard) ->
+                  | (aqs_rev, guard, _env) ->
                       let qi1 =
                         {
                           FStar_Syntax_Syntax.qkind =
                             (qi.FStar_Syntax_Syntax.qkind);
-                          FStar_Syntax_Syntax.antiquotes =
-                            (FStar_Compiler_List.rev aqs_rev)
+                          FStar_Syntax_Syntax.antiquotations =
+                            (Prims.int_zero,
+                              (FStar_Compiler_List.rev aqs_rev))
                         } in
                       let tm =
                         FStar_Syntax_Syntax.mk

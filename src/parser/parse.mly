@@ -818,7 +818,7 @@ noSeqTerm:
   | op=let_op b=letoperatorbinding lbs=list(op=and_op b=letoperatorbinding {(op, b)}) IN e=term
     { let lbs = (op, b)::lbs in
       mk_term (LetOperator ( List.map (fun (op, (pat, tm)) -> (op, pat, tm)) lbs
-			   , e)) (rhs2 parseState 1 4) Expr
+			   , e)) (rhs2 parseState 1 5) Expr
     }
   | FUNCTION pbs=left_flexible_nonempty_list(BAR, patternBranch)
       {

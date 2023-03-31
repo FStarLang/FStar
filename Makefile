@@ -4,28 +4,25 @@ include .common.mk
 
 all: dune
 
-DUNE_SNAPSHOT ?= $(CURDIR)/ocaml
+DUNE_SNAPSHOT ?= $(call maybe_cygwin_path,$(CURDIR)/ocaml)
 
 # The directory where we install files when doing "make install".
 # Overridden via the command-line by the OPAM invocation.
 PREFIX ?= /usr/local
 
-ifeq ($(OS),Windows_NT)
-  # On Cygwin, the `--prefix` option to dune only
-  # supports Windows paths.
-  FSTAR_CURDIR=$(shell cygpath -m $(CURDIR))
-else
-  FSTAR_CURDIR=$(CURDIR)
-endif
+# On Cygwin, the `--prefix` option to dune only
+# supports Windows paths.
+FSTAR_CURDIR=$(call maybe_cygwin_path,$(CURDIR))
 
 .PHONY: dune dune-fstar verify-ulib
+FSTAR_BUILD_PROFILE ?= release
 dune-fstar:
 	$(Q)cp version.txt $(DUNE_SNAPSHOT)/
 	@# Call Dune to build the snapshot.
 	@echo "  DUNE BUILD"
-	$(Q)cd $(DUNE_SNAPSHOT) && dune build --profile release
+	$(Q)cd $(DUNE_SNAPSHOT) && dune build --profile=$(FSTAR_BUILD_PROFILE)
 	@echo "  DUNE INSTALL"
-	$(Q)cd $(DUNE_SNAPSHOT) && dune install --prefix=$(FSTAR_CURDIR)
+	$(Q)cd $(DUNE_SNAPSHOT) && dune install --profile=$(FSTAR_BUILD_PROFILE) --prefix=$(FSTAR_CURDIR)
 
 verify-ulib:
 	+$(MAKE) -C ulib
@@ -114,12 +111,13 @@ bench:
 # reviewed before checking in.
 output:
 	$(Q)+$(MAKE) -C tests/error-messages accept
-	$(Q)+$(MAKE) -C tests/interactive accept
+	$(Q)+$(MAKE) -C tests/ide/emacs accept
 	$(Q)+$(MAKE) -C tests/bug-reports output-accept
 
 .PHONY: ci-utest-prelude
 
-ci-utest-prelude: dune
+ci-utest-prelude:
+	$(Q)+$(MAKE) dune FSTAR_BUILD_PROFILE=test
 	$(Q)+$(MAKE) dune-bootstrap
 	$(Q)+$(MAKE) -C src ocaml-unit-tests
 	$(Q)+$(MAKE) -C ulib ulib-in-fsharp    #build ulibfs

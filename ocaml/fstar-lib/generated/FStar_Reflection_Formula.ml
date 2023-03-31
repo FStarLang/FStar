@@ -158,7 +158,7 @@ let (mk_Forall :
                      ((FStar_Reflection_Builtins.pack_bv
                          {
                            FStar_Reflection_Data.bv_ppname =
-                             (FStar_Sealed.seal "x");
+                             (FStar_Reflection_Data.as_ppname "x");
                            FStar_Reflection_Data.bv_index = Prims.int_zero;
                            FStar_Reflection_Data.bv_sort = typ
                          }),
@@ -170,7 +170,8 @@ let (mk_Forall :
                                       (FStar_Reflection_Builtins.pack_bv
                                          {
                                            FStar_Reflection_Data.bv_ppname =
-                                             (FStar_Sealed.seal "x");
+                                             (FStar_Reflection_Data.as_ppname
+                                                "x");
                                            FStar_Reflection_Data.bv_index =
                                              Prims.int_zero;
                                            FStar_Reflection_Data.bv_sort =
@@ -194,7 +195,7 @@ let (mk_Exists :
                      ((FStar_Reflection_Builtins.pack_bv
                          {
                            FStar_Reflection_Data.bv_ppname =
-                             (FStar_Sealed.seal "x");
+                             (FStar_Reflection_Data.as_ppname "x");
                            FStar_Reflection_Data.bv_index = Prims.int_zero;
                            FStar_Reflection_Data.bv_sort = typ
                          }),
@@ -206,7 +207,8 @@ let (mk_Exists :
                                       (FStar_Reflection_Builtins.pack_bv
                                          {
                                            FStar_Reflection_Data.bv_ppname =
-                                             (FStar_Sealed.seal "x");
+                                             (FStar_Reflection_Data.as_ppname
+                                                "x");
                                            FStar_Reflection_Data.bv_index =
                                              Prims.int_zero;
                                            FStar_Reflection_Data.bv_sort =

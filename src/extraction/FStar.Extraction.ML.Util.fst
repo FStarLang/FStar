@@ -83,11 +83,8 @@ let mlexpr_of_range (r:Range.range) : mlexpr' =
     let cstr (s : string) : mlexpr =
         MLC_String s |> MLE_Const |> with_ty ml_string_ty
     in
-    let drop_path (s : string) : string =
-       match String.split ['/'] s with
-       | [] -> s
-       | l -> List.last l
-    in
+    let drop_path = BU.basename in
+
     // This is not being fully faithful since it disregards
     // the use_range, but I assume that's not too bad.
     //

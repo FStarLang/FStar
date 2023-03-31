@@ -358,7 +358,10 @@ and eq_calc_step (CalcStep (t1, t2, t3)) (CalcStep (t4, t5, t6)) =
     eq_term t2 t5 &&
     eq_term t3 t6
 
-and eq_binder (b1 b2:binder) = eq_binder' b1.b b2.b
+and eq_binder (b1 b2:binder) =
+  eq_binder' b1.b b2.b &&
+  eq_aqual b1.aqual b2.aqual &&
+  eq_list eq_term b1.battributes b2.battributes
 
 and eq_binder' (b1 b2:binder') =
   match b1, b2 with

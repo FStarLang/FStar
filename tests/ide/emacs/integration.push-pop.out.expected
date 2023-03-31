@@ -93,7 +93,7 @@
 {"kind": "response", "query-id": "130", "response": [], "status": "success"}
 {"kind": "response", "query-id": "133", "response": [], "status": "success"}
 {"kind": "response", "query-id": "137", "response": [{"level": "error", "message": "Syntax error", "number": 168, "ranges": [{"beg": [13, 4], "end": [13, 4], "fname": "<input>"}]}], "status": "success"}
-{"kind": "response", "query-id": "159", "response": [{"level": "error", "message": "Expected expression of type \"Type0\"; got expression \"Integration.xx\" of type \"nat\"", "number": 189, "ranges": [{"beg": [13, 15], "end": [13, 20], "fname": "<input>"}]}], "status": "success"}
+{"kind": "response", "query-id": "159", "response": [{"level": "error", "message": "Expected expression of type \"Type0\"; got expression \"xx\" of type \"nat\"", "number": 189, "ranges": [{"beg": [13, 15], "end": [13, 20], "fname": "<input>"}]}], "status": "success"}
 {"kind": "response", "query-id": "163", "response": [], "status": "success"}
 {"kind": "response", "query-id": "164", "response": [], "status": "success"}
 {"kind": "response", "query-id": "165", "response": [{"level": "error", "message": "assertion failed; The SMT solver could not prove the query. Use --query_stats for more details.", "number": 19, "ranges": [{"beg": [13, 8], "end": [13, 14], "fname": "<input>"}, {"beg": [13, 15], "end": [13, 23], "fname": "<input>"}]}], "status": "failure"}

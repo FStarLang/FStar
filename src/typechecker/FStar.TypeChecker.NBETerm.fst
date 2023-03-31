@@ -596,7 +596,8 @@ let e_norm_step =
     in
     mk_emb em un (mkFV (lid_as_fv PC.norm_step_lid delta_constant None) [] []) (SE.emb_typ_of SE.e_norm_step)
 
-// Embedding at option type
+// Embedding a sealed term. This just calls the embedding for a but also
+// adds a `seal` marker to the result. The unembedding removes it.
 let e_sealed (ea : embedding 'a) =
     let etyp =
         ET_app(PC.sealed_lid |> Ident.string_of_lid, [ea.emb_typ])

@@ -8332,7 +8332,11 @@ let (term_to_string :
                 (FStar_Errors_Codes.Warning_NormalizationFailure, uu___3) in
               FStar_Errors.log_issue t.FStar_Syntax_Syntax.pos uu___2);
              t) in
-      FStar_Syntax_Print.term_to_string' env1.FStar_TypeChecker_Env.dsenv t1
+      let uu___ =
+        FStar_Syntax_DsEnv.set_current_module
+          env1.FStar_TypeChecker_Env.dsenv
+          env1.FStar_TypeChecker_Env.curmodule in
+      FStar_Syntax_Print.term_to_string' uu___ t1
 let (comp_to_string :
   FStar_TypeChecker_Env.env -> FStar_Syntax_Syntax.comp -> Prims.string) =
   fun env1 ->
@@ -8356,7 +8360,11 @@ let (comp_to_string :
                 (FStar_Errors_Codes.Warning_NormalizationFailure, uu___3) in
               FStar_Errors.log_issue c.FStar_Syntax_Syntax.pos uu___2);
              c) in
-      FStar_Syntax_Print.comp_to_string' env1.FStar_TypeChecker_Env.dsenv c1
+      let uu___ =
+        FStar_Syntax_DsEnv.set_current_module
+          env1.FStar_TypeChecker_Env.dsenv
+          env1.FStar_TypeChecker_Env.curmodule in
+      FStar_Syntax_Print.comp_to_string' uu___ c1
 let (normalize_refinement :
   FStar_TypeChecker_Env.steps ->
     FStar_TypeChecker_Env.env ->
@@ -8733,14 +8741,13 @@ let (elim_uvars_aux_tc :
           | (univ_names1, t1) ->
               let t2 = remove_uvar_solutions env1 t1 in
               let t3 = FStar_Syntax_Subst.close_univ_vars univ_names1 t2 in
-              let t4 = FStar_Syntax_Subst.deep_compress false t3 in
               let uu___1 =
                 match binders with
-                | [] -> ([], (FStar_Pervasives.Inl t4))
+                | [] -> ([], (FStar_Pervasives.Inl t3))
                 | uu___2 ->
                     let uu___3 =
                       let uu___4 =
-                        let uu___5 = FStar_Syntax_Subst.compress t4 in
+                        let uu___5 = FStar_Syntax_Subst.compress t3 in
                         uu___5.FStar_Syntax_Syntax.n in
                       (uu___4, tc) in
                     (match uu___3 with
@@ -8753,7 +8760,7 @@ let (elim_uvars_aux_tc :
                            (FStar_Pervasives.Inl
                               (FStar_Syntax_Util.comp_result c)))
                      | (uu___4, FStar_Pervasives.Inl uu___5) ->
-                         ([], (FStar_Pervasives.Inl t4))
+                         ([], (FStar_Pervasives.Inl t3))
                      | uu___4 -> failwith "Impossible") in
               (match uu___1 with
                | (binders1, tc1) -> (univ_names1, binders1, tc1))
@@ -8903,11 +8910,9 @@ let rec (elim_uvars :
                     | (opening, lbunivs) ->
                         let elim t =
                           let uu___1 =
-                            let uu___2 =
-                              let uu___3 = FStar_Syntax_Subst.subst opening t in
-                              remove_uvar_solutions env1 uu___3 in
-                            FStar_Syntax_Subst.close_univ_vars lbunivs uu___2 in
-                          FStar_Syntax_Subst.deep_compress false uu___1 in
+                            let uu___2 = FStar_Syntax_Subst.subst opening t in
+                            remove_uvar_solutions env1 uu___2 in
+                          FStar_Syntax_Subst.close_univ_vars lbunivs uu___1 in
                         let lbtyp = elim lb.FStar_Syntax_Syntax.lbtyp in
                         let lbdef = elim lb.FStar_Syntax_Syntax.lbdef in
                         {
