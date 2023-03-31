@@ -45,6 +45,7 @@ module Rel    = FStar.TypeChecker.Rel
 module SF     = FStar.Syntax.Free
 module S      = FStar.Syntax.Syntax
 module SS     = FStar.Syntax.Subst
+module SC     = FStar.Syntax.Compress
 module TcComm = FStar.TypeChecker.Common
 module TcTerm = FStar.TypeChecker.TcTerm
 module TcUtil = FStar.TypeChecker.Util
@@ -2313,7 +2314,7 @@ let refl_tc_term (g:env) (e:term) : tac (option (term & typ)) =
       e in
     try 
      begin
-     let e = SS.deep_compress false e in
+     let e = SC.deep_compress false e in
      // TODO: may be should we check here that e has no unresolved implicits?
      dbg_refl g (fun _ ->
        BU.format1 "} finished tc with e = %s\n"
@@ -2396,8 +2397,8 @@ let refl_instantiate_implicits (g:env) (e:term) : tac (option (term & typ)) =
     let g = {g with instantiate_imp=false; phase1=true; lax=true} in
     let e, t, guard = g.typeof_tot_or_gtot_term g e must_tot in
     Rel.force_trivial_guard g guard;
-    let e = SS.deep_compress false e in
-    let t = SS.deep_compress false t in
+    let e = SC.deep_compress false e in
+    let t = SC.deep_compress false t in
     dbg_refl g (fun _ ->
       BU.format2 "} finished tc with e = %s and t = %s\n"
         (Print.term_to_string e)

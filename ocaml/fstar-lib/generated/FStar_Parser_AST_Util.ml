@@ -360,7 +360,13 @@ and (eq_calc_step :
           ((eq_term t1 t4) && (eq_term t2 t5)) && (eq_term t3 t6)
 and (eq_binder :
   FStar_Parser_AST.binder -> FStar_Parser_AST.binder -> Prims.bool) =
-  fun b1 -> fun b2 -> eq_binder' b1.FStar_Parser_AST.b b2.FStar_Parser_AST.b
+  fun b1 ->
+    fun b2 ->
+      ((eq_binder' b1.FStar_Parser_AST.b b2.FStar_Parser_AST.b) &&
+         (eq_aqual b1.FStar_Parser_AST.aqual b2.FStar_Parser_AST.aqual))
+        &&
+        (eq_list eq_term b1.FStar_Parser_AST.battributes
+           b2.FStar_Parser_AST.battributes)
 and (eq_binder' :
   FStar_Parser_AST.binder' -> FStar_Parser_AST.binder' -> Prims.bool) =
   fun b1 ->

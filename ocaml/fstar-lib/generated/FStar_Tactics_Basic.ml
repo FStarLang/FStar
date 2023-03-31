@@ -7353,7 +7353,7 @@ let (refl_tc_term :
                 (fun uu___4 ->
                    match () with
                    | () ->
-                       let e2 = FStar_Syntax_Subst.deep_compress false e1 in
+                       let e2 = FStar_Syntax_Compress.deep_compress false e1 in
                        (dbg_refl g1
                           (fun uu___6 ->
                              let uu___7 =
@@ -7666,8 +7666,8 @@ let (refl_instantiate_implicits :
               match uu___4 with
               | (e1, t, guard) ->
                   (FStar_TypeChecker_Rel.force_trivial_guard g1 guard;
-                   (let e2 = FStar_Syntax_Subst.deep_compress false e1 in
-                    let t1 = FStar_Syntax_Subst.deep_compress false t in
+                   (let e2 = FStar_Syntax_Compress.deep_compress false e1 in
+                    let t1 = FStar_Syntax_Compress.deep_compress false t in
                     dbg_refl g1
                       (fun uu___7 ->
                          let uu___8 = FStar_Syntax_Print.term_to_string e2 in

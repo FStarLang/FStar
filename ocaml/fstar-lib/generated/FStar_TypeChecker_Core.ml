@@ -4269,7 +4269,7 @@ let (compute_term_type_handle_guards :
     fun e ->
       fun must_tot ->
         fun gh ->
-          let e1 = FStar_Syntax_Subst.deep_compress true e in
+          let e1 = FStar_Syntax_Compress.deep_compress true e in
           let uu___ =
             check_term_top_gh g e1 FStar_Pervasives_Native.None must_tot
               (FStar_Pervasives_Native.Some gh) in

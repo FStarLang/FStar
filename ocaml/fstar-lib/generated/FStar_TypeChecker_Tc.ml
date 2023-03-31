@@ -4422,8 +4422,12 @@ let (tc_decls :
                                     FStar_TypeChecker_Env.Iota;
                                   FStar_TypeChecker_Env.NoFullNorm] env2 t))
                         uu___8 "FStar.TypeChecker.Tc.chec_uvars");
-                     (let env3 =
+                     (let ses'2 =
                         FStar_Compiler_Effect.op_Bar_Greater ses'1
+                          (FStar_Compiler_List.map
+                             (FStar_Syntax_Compress.deep_compress_se false)) in
+                      let env3 =
+                        FStar_Compiler_Effect.op_Bar_Greater ses'2
                           (FStar_Compiler_List.fold_left
                              (fun env4 ->
                                 fun se1 -> add_sigelt_to_env env4 se1 false)
@@ -4444,7 +4448,7 @@ let (tc_decls :
                                     let uu___13 =
                                       FStar_Syntax_Print.sigelt_to_string se1 in
                                     Prims.op_Hat uu___13 "\n" in
-                                  Prims.op_Hat s uu___12) "" ses'1 in
+                                  Prims.op_Hat s uu___12) "" ses'2 in
                          FStar_Compiler_Util.print1 "Checked: %s\n" uu___11
                        else ());
                       (let uu___11 =
@@ -4458,9 +4462,9 @@ let (tc_decls :
                             FStar_Compiler_List.iter
                               (fun se1 ->
                                  (env3.FStar_TypeChecker_Env.solver).FStar_TypeChecker_Env.encode_sig
-                                   env3 se1) ses'1) uu___11
+                                   env3 se1) ses'2) uu___11
                          "FStar.TypeChecker.Tc.encode_sig");
-                      (((FStar_Compiler_List.rev_append ses'1 ses1), env3),
+                      (((FStar_Compiler_List.rev_append ses'2 ses1), env3),
                         ses_elaborated1))))) in
       let process_one_decl_timed acc se =
         FStar_TypeChecker_Core.clear_memo_table ();
@@ -4497,7 +4501,7 @@ let (tc_decls :
                ([], env) ses) in
       match uu___ with
       | (ses1, env1) -> ((FStar_Compiler_List.rev_append ses1 []), env1)
-let (uu___916 : unit) =
+let (uu___917 : unit) =
   FStar_Compiler_Effect.op_Colon_Equals tc_decls_knot
     (FStar_Pervasives_Native.Some tc_decls)
 let (snapshot_context :
@@ -4734,6 +4738,17 @@ let (finish_partial_modul :
              pop_context env uu___3 in
            FStar_Compiler_Effect.op_Bar_Greater uu___2 (fun uu___3 -> ()));
           (m, env)
+let (deep_compress_modul :
+  FStar_Syntax_Syntax.modul -> FStar_Syntax_Syntax.modul) =
+  fun m ->
+    let uu___ =
+      FStar_Compiler_List.map (FStar_Syntax_Compress.deep_compress_se false)
+        m.FStar_Syntax_Syntax.declarations in
+    {
+      FStar_Syntax_Syntax.name = (m.FStar_Syntax_Syntax.name);
+      FStar_Syntax_Syntax.declarations = uu___;
+      FStar_Syntax_Syntax.is_interface = (m.FStar_Syntax_Syntax.is_interface)
+    }
 let (tc_modul :
   FStar_TypeChecker_Env.env ->
     FStar_Syntax_Syntax.modul ->
@@ -4755,12 +4770,13 @@ let (load_checked_module :
   =
   fun en ->
     fun m ->
+      let m1 = deep_compress_modul m in
       let env =
         FStar_TypeChecker_Env.set_current_module en
-          m.FStar_Syntax_Syntax.name in
+          m1.FStar_Syntax_Syntax.name in
       let env1 =
         let uu___ =
-          let uu___1 = FStar_Ident.string_of_lid m.FStar_Syntax_Syntax.name in
+          let uu___1 = FStar_Ident.string_of_lid m1.FStar_Syntax_Syntax.name in
           Prims.op_Hat "Internals for " uu___1 in
         push_context env uu___ in
       let env2 =
@@ -4775,8 +4791,8 @@ let (load_checked_module :
                        let uu___1 =
                          FStar_TypeChecker_Env.lookup_sigelt env4 lid in
                        ()));
-               env4) env1 m.FStar_Syntax_Syntax.declarations in
-      let uu___ = finish_partial_modul true true env2 m in
+               env4) env1 m1.FStar_Syntax_Syntax.declarations in
+      let uu___ = finish_partial_modul true true env2 m1 in
       match uu___ with | (uu___1, env3) -> env3
 let (check_module :
   FStar_TypeChecker_Env.env ->
