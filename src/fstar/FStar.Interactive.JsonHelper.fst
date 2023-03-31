@@ -65,6 +65,9 @@ let js_fail expected got =
 let js_int : json -> int = function
   | JsonInt i -> i
   | other -> js_fail "int" other
+let js_bool : json -> bool = function
+  | JsonBool b -> b
+  | other -> js_fail "int" other
 let js_str : json -> string = function
   | JsonStr s -> s
   | other -> js_fail "string" other

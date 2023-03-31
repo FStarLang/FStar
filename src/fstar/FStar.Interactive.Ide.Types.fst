@@ -102,7 +102,7 @@ type repl_task =
 
 type full_buffer_request_kind =
   | Full : full_buffer_request_kind
-  | LaxWithSymbols : full_buffer_request_kind
+  | Lax : full_buffer_request_kind
   | Cache : full_buffer_request_kind
   | ReloadDeps : full_buffer_request_kind
   | VerifyToPosition of position
@@ -124,7 +124,7 @@ type query' =
 | ProtocolViolation of string
 // FullBuffer: To check the full contents of a document.
 // FStar.Interactive.Incremental parses it into chunks and turns this into several Push queries
-| FullBuffer of string & full_buffer_request_kind
+| FullBuffer of string & full_buffer_request_kind & bool //bool is with_symbol
 // Callback: This is an internal query, it cannot be raised by a client.
 // It is useful to inject operations into the query stream.
 // e.g., Incremental uses it print progress messages to the client in between

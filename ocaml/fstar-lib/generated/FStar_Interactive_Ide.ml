@@ -357,20 +357,19 @@ let (unpack_interactive_query :
                  FStar_Compiler_Effect.op_Bar_Greater uu___4
                    FStar_Interactive_JsonHelper.js_int in
                ("<input>", uu___2, uu___3) in
-             let parse_full_buffer_kind uu___1 =
-               match uu___1 with
+             let parse_full_buffer_kind kind =
+               match kind with
                | "full" -> FStar_Interactive_Ide_Types.Full
-               | "lax-with-symbols" ->
-                   FStar_Interactive_Ide_Types.LaxWithSymbols
+               | "lax" -> FStar_Interactive_Ide_Types.Lax
                | "cache" -> FStar_Interactive_Ide_Types.Cache
                | "reload-deps" -> FStar_Interactive_Ide_Types.ReloadDeps
                | "verify-to-position" ->
-                   let uu___2 = read_to_position () in
-                   FStar_Interactive_Ide_Types.VerifyToPosition uu___2
+                   let uu___1 = read_to_position () in
+                   FStar_Interactive_Ide_Types.VerifyToPosition uu___1
                | "lax-to-position" ->
-                   let uu___2 = read_to_position () in
-                   FStar_Interactive_Ide_Types.LaxToPosition uu___2
-               | uu___2 ->
+                   let uu___1 = read_to_position () in
+                   FStar_Interactive_Ide_Types.LaxToPosition uu___1
+               | uu___1 ->
                    FStar_Compiler_Effect.raise
                      (FStar_Interactive_JsonHelper.InvalidQuery
                         "Invalid full-buffer kind") in
@@ -457,7 +456,11 @@ let (unpack_interactive_query :
                          FStar_Compiler_Effect.op_Bar_Greater uu___6
                            FStar_Interactive_JsonHelper.js_str in
                        parse_full_buffer_kind uu___5 in
-                     (uu___3, uu___4) in
+                     let uu___5 =
+                       let uu___6 = arg "with-symbols" in
+                       FStar_Compiler_Effect.op_Bar_Greater uu___6
+                         FStar_Interactive_JsonHelper.js_bool in
+                     (uu___3, uu___4, uu___5) in
                    FStar_Interactive_Ide_Types.FullBuffer uu___2
                | "autocomplete" ->
                    let uu___2 =
@@ -1418,6 +1421,9 @@ let (write_full_buffer_fragment_progress :
         uu___1 :: uu___2 in
       FStar_Compiler_Util.JsonAssoc uu___ in
     match di with
+    | FStar_Interactive_Incremental.FullBufferStarted ->
+        write_progress (FStar_Pervasives_Native.Some "full-buffer-started")
+          []
     | FStar_Interactive_Incremental.FragmentStarted d ->
         let uu___ =
           let uu___1 =
@@ -1484,6 +1490,9 @@ let (write_full_buffer_fragment_progress :
             FStar_Compiler_Util.JsonList uu___2 in
           json_of_response qid FStar_Interactive_Ide_Types.QueryNOK uu___1 in
         FStar_Interactive_JsonHelper.write_json uu___
+    | FStar_Interactive_Incremental.FullBufferFinished ->
+        write_progress (FStar_Pervasives_Native.Some "full-buffer-finished")
+          []
 let (run_push_without_deps :
   FStar_Interactive_Ide_Types.repl_state ->
     FStar_Interactive_Ide_Types.push_query ->
@@ -2640,30 +2649,29 @@ let rec (fold_query :
      FStar_Interactive_Ide_Types.query -> run_query_result)
     ->
     FStar_Interactive_Ide_Types.query Prims.list ->
-      FStar_Interactive_Ide_Types.repl_state ->
-        FStar_Compiler_Util.json Prims.list -> run_query_result)
+      FStar_Interactive_Ide_Types.repl_state -> run_query_result)
   =
   fun f ->
     fun l ->
       fun st ->
-        fun responses ->
-          match l with
-          | [] ->
-              ((FStar_Interactive_Ide_Types.QueryOK, responses),
-                (FStar_Pervasives.Inl st))
-          | q::l1 ->
-              let uu___ = f st q in
-              (match uu___ with
-               | ((status, resp), st') ->
-                   let responses1 = FStar_Compiler_List.op_At responses resp in
-                   (match (status, st') with
-                    | (FStar_Interactive_Ide_Types.QueryOK,
-                       FStar_Pervasives.Inl st1) ->
-                        let st2 = buffer_input_queries st1 in
-                        let uu___1 = maybe_cancel_queries st2 l1 in
-                        (match uu___1 with
-                         | (l2, st3) -> fold_query f l2 st3 responses1)
-                    | uu___1 -> ((status, responses1), st')))
+        match l with
+        | [] ->
+            ((FStar_Interactive_Ide_Types.QueryOK, []),
+              (FStar_Pervasives.Inl st))
+        | q::l1 ->
+            let uu___ = f st q in
+            (match uu___ with
+             | ((status, responses), st') ->
+                 (FStar_Compiler_List.iter
+                    (write_response q.FStar_Interactive_Ide_Types.qid status)
+                    responses;
+                  (match (status, st') with
+                   | (FStar_Interactive_Ide_Types.QueryOK,
+                      FStar_Pervasives.Inl st1) ->
+                       let st2 = buffer_input_queries st1 in
+                       let uu___2 = maybe_cancel_queries st2 l1 in
+                       (match uu___2 with | (l2, st3) -> fold_query f l2 st3)
+                   | uu___2 -> ((status, []), st'))))
 let (validate_query :
   FStar_Interactive_Ide_Types.repl_state ->
     FStar_Interactive_Ide_Types.query -> FStar_Interactive_Ide_Types.query)
@@ -2728,14 +2736,23 @@ let rec (run_query :
           let uu___ = run_push st pquery in as_json_list uu___
       | FStar_Interactive_Ide_Types.Pop ->
           let uu___ = run_pop st in as_json_list uu___
-      | FStar_Interactive_Ide_Types.FullBuffer (code, full) ->
-          let uu___ =
-            FStar_Interactive_Incremental.run_full_buffer st
-              q.FStar_Interactive_Ide_Types.qid code full
-              write_full_buffer_fragment_progress in
-          (match uu___ with
-           | (queries, issues) ->
-               fold_query validate_and_run_query queries st issues)
+      | FStar_Interactive_Ide_Types.FullBuffer
+          (code, full_kind, with_symbols) ->
+          (write_full_buffer_fragment_progress
+             FStar_Interactive_Incremental.FullBufferStarted;
+           (let uu___1 =
+              FStar_Interactive_Incremental.run_full_buffer st
+                q.FStar_Interactive_Ide_Types.qid code full_kind with_symbols
+                write_full_buffer_fragment_progress in
+            match uu___1 with
+            | (queries, issues) ->
+                (FStar_Compiler_List.iter
+                   (write_response q.FStar_Interactive_Ide_Types.qid
+                      FStar_Interactive_Ide_Types.QueryOK) issues;
+                 (let res = fold_query validate_and_run_query queries st in
+                  write_full_buffer_fragment_progress
+                    FStar_Interactive_Incremental.FullBufferFinished;
+                  res))))
       | FStar_Interactive_Ide_Types.AutoComplete (search_term1, context) ->
           let uu___ = run_autocomplete st search_term1 context in
           as_json_list uu___

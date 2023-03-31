@@ -151,16 +151,15 @@ let (uu___is_Noop : repl_task -> Prims.bool) =
   fun projectee -> match projectee with | Noop -> true | uu___ -> false
 type full_buffer_request_kind =
   | Full 
-  | LaxWithSymbols 
+  | Lax 
   | Cache 
   | ReloadDeps 
   | VerifyToPosition of position 
   | LaxToPosition of position 
 let (uu___is_Full : full_buffer_request_kind -> Prims.bool) =
   fun projectee -> match projectee with | Full -> true | uu___ -> false
-let (uu___is_LaxWithSymbols : full_buffer_request_kind -> Prims.bool) =
-  fun projectee ->
-    match projectee with | LaxWithSymbols -> true | uu___ -> false
+let (uu___is_Lax : full_buffer_request_kind -> Prims.bool) =
+  fun projectee -> match projectee with | Lax -> true | uu___ -> false
 let (uu___is_Cache : full_buffer_request_kind -> Prims.bool) =
   fun projectee -> match projectee with | Cache -> true | uu___ -> false
 let (uu___is_ReloadDeps : full_buffer_request_kind -> Prims.bool) =
@@ -193,7 +192,7 @@ type query' =
   | Search of Prims.string 
   | GenericError of Prims.string 
   | ProtocolViolation of Prims.string 
-  | FullBuffer of (Prims.string * full_buffer_request_kind) 
+  | FullBuffer of (Prims.string * full_buffer_request_kind * Prims.bool) 
   | Callback of
   (repl_state ->
      ((query_status * FStar_Compiler_Util.json Prims.list) * (repl_state,
@@ -277,7 +276,7 @@ let (uu___is_FullBuffer : query' -> Prims.bool) =
   fun projectee ->
     match projectee with | FullBuffer _0 -> true | uu___ -> false
 let (__proj__FullBuffer__item___0 :
-  query' -> (Prims.string * full_buffer_request_kind)) =
+  query' -> (Prims.string * full_buffer_request_kind * Prims.bool)) =
   fun projectee -> match projectee with | FullBuffer _0 -> _0
 let (uu___is_Callback : query' -> Prims.bool) =
   fun projectee ->

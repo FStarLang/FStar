@@ -41,6 +41,7 @@ val write_jsonrpc : json -> unit // Only used in LSP
 val js_fail : string -> json -> 'a
 
 val js_int : json -> int
+val js_bool : json -> bool
 val js_str : json -> string
 val js_list : (json -> 'a) -> json -> list 'a
 val js_assoc : json -> assoct
