@@ -218,6 +218,8 @@ let new_lock p = fun _ -> Lock.new_lock p
 let acquire l = fun _ -> Lock.acquire l
 let release l = fun _ -> Lock.release l
 
+let rewrite p q _ = fun _ -> rewrite_equiv p q
+
 let elim_pure_explicit p = fun _ -> elim_pure p
 let elim_pure _ #p = fun _ -> elim_pure p
 

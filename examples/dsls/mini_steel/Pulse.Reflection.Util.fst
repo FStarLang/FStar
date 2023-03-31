@@ -477,3 +477,11 @@ let mk_par (u:R.universe) (aL aR preL postL preR postR eL eR:R.term) =
   let t = pack_ln (Tv_App t (postR, Q_Implicit)) in
   let t = pack_ln (Tv_App t (eL, Q_Explicit)) in
   pack_ln (Tv_App t (eR, Q_Explicit))
+
+let mk_rewrite (p q:R.term) =
+  let open R in
+  let lid = mk_steel_wrapper_lid "rewrite" in
+  let t = pack_ln (Tv_FVar (pack_fv lid)) in
+  let t = pack_ln (Tv_App t (p, Q_Explicit)) in
+  let t = pack_ln (Tv_App t (q, Q_Explicit)) in
+  pack_ln (Tv_App t (`(), Q_Explicit))

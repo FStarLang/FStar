@@ -422,6 +422,14 @@ let comp_par (cL:comp{C_ST? cL}) (cR:comp{C_ST? cR}) (x:var) : comp =
     pre = Tm_Star (comp_pre cL) (comp_pre cR);
     post
   }
+
+let comp_rewrite (p q:vprop) : comp =
+  C_STGhost Tm_EmpInames {
+    u = U_zero;
+    res = tm_unit;
+    pre = p;
+    post = q
+  }
   
 let comp_admit (c:ctag) (s:st_comp) : comp =
   match c with
@@ -729,6 +737,16 @@ and st_typing (f:RT.fstar_top_env) : env -> st_term -> comp -> Type =
       st_typing f g eR cR ->
       st_typing f g (Tm_Par Tm_Unknown eL Tm_Unknown Tm_Unknown eR Tm_Unknown)
                     (comp_par cL cR x)
+
+  | T_Rewrite:
+      g:env ->
+      p:term ->
+      q:term ->
+      tot_typing f g p Tm_VProp ->
+      tot_typing f g q Tm_VProp ->
+      vprop_equiv f g p q ->
+      st_typing f g (Tm_Rewrite p q)
+                    (comp_rewrite p q)
 
   | T_Admit:
       g:env ->

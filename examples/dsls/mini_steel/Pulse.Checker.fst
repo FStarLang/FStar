@@ -1033,6 +1033,19 @@ let check_par
     else T.fail "par: cR is not stt"
   else T.fail "par: cL is not stt"
 
+let check_rewrite
+  (f:RT.fstar_top_env)
+  (g:env)
+  (t:st_term{Tm_Rewrite? t})
+  (pre:term)
+  (pre_typing:tot_typing f g pre Tm_VProp)
+  (post_hint:option term)
+  : T.Tac (t:st_term &
+           c:comp{stateful_comp c ==> comp_pre c == pre} &
+           st_typing f g t c) =
+
+  let Tm_Rewrite p q = t in
+
 let rec check' : bool -> check_t =
   fun (allow_inst:bool)
     (f:RT.fstar_top_env)

@@ -296,6 +296,9 @@ val release (#p:vprop) (l:Lock.lock p)
 
 (***** end spinlock *****)
 
+val rewrite (p q:vprop) (_:vprop_equiv p q)
+  : stt_ghost unit emp_inames p (fun _ -> q)
+
 val elim_pure_explicit (p:prop)
   : stt_ghost (squash p) emp_inames
               (pure p)
