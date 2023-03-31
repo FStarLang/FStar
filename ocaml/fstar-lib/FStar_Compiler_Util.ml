@@ -119,7 +119,8 @@ let start_process'
   let (stdin_r, stdin_w) = Unix.pipe () in
   Unix.set_close_on_exec stdin_w;
   Unix.set_close_on_exec stdout_r;
-  let pid = Unix.create_process prog (Array.of_list (prog :: args)) stdin_r stdout_w stdout_w in
+  (* Capture stdout, leave stderr unchanged. *)
+  let pid = Unix.create_process prog (Array.of_list (prog :: args)) stdin_r stdout_w Unix.stderr in
   Unix.close stdin_r;
   Unix.close stdout_w;
   let proc = { pid = pid; id = prog ^ ":" ^ id;
