@@ -426,6 +426,7 @@ let z3_options = BU.mk_ref
      (set-option :produce-unsat-cores true)\n\
      (set-option :model true)\n\
      (set-option :smt.case_split 3)\n\
+     (set-option :smt.arith.solver 2)\n\
      (set-option :smt.relevancy 2)\n"
 
 // Use by F*.js
