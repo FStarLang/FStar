@@ -1944,18 +1944,31 @@ let run_lookup :
         fun pos_opt ->
           fun requested_info ->
             fun symrange ->
-              let uu___ =
-                run_lookup' st symbol context pos_opt requested_info symrange in
-              match uu___ with
-              | FStar_Pervasives.Inl err_msg ->
+              try
+                (fun uu___ ->
+                   match () with
+                   | () ->
+                       let uu___1 =
+                         run_lookup' st symbol context pos_opt requested_info
+                           symrange in
+                       (match uu___1 with
+                        | FStar_Pervasives.Inl err_msg ->
+                            ((FStar_Interactive_Ide_Types.QueryOK,
+                               (FStar_Compiler_Util.JsonStr err_msg)),
+                              (FStar_Pervasives.Inl st))
+                        | FStar_Pervasives.Inr (kind, info) ->
+                            ((FStar_Interactive_Ide_Types.QueryOK,
+                               (FStar_Compiler_Util.JsonAssoc
+                                  (("kind",
+                                     (FStar_Compiler_Util.JsonStr kind))
+                                  :: info))), (FStar_Pervasives.Inl st)))) ()
+              with
+              | uu___ ->
                   ((FStar_Interactive_Ide_Types.QueryOK,
-                     (FStar_Compiler_Util.JsonStr err_msg)),
+                     (FStar_Compiler_Util.JsonStr
+                        (Prims.op_Hat "Lookup of "
+                           (Prims.op_Hat symbol " failed")))),
                     (FStar_Pervasives.Inl st))
-              | FStar_Pervasives.Inr (kind, info) ->
-                  ((FStar_Interactive_Ide_Types.QueryOK,
-                     (FStar_Compiler_Util.JsonAssoc
-                        (("kind", (FStar_Compiler_Util.JsonStr kind)) ::
-                        info))), (FStar_Pervasives.Inl st))
 let run_code_autocomplete :
   'uuuuu .
     FStar_Interactive_Ide_Types.repl_state ->

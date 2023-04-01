@@ -746,12 +746,16 @@ let run_lookup' st symbol context pos_opt requested_info symrange =
   | LKCode -> run_code_lookup st symbol pos_opt requested_info symrange
 
 let run_lookup st symbol context pos_opt requested_info symrange =
-  match run_lookup' st symbol context pos_opt requested_info symrange with
-  | Inl err_msg ->
-    // No result found, but don't fail the query
-    ((QueryOK, JsonStr err_msg), Inl st)
-  | Inr (kind, info) ->
-    ((QueryOK, JsonAssoc (("kind", JsonStr kind) :: info)), Inl st)
+  try
+    match run_lookup' st symbol context pos_opt requested_info symrange with
+    | Inl err_msg ->
+      // No result found, but don't fail the query
+      ((QueryOK, JsonStr err_msg), Inl st)
+    | Inr (kind, info) ->
+      ((QueryOK, JsonAssoc (("kind", JsonStr kind) :: info)), Inl st)
+  with
+  | _ -> ((QueryOK, JsonStr ("Lookup of " ^ symbol^ " failed")), Inl st)
+
 
 let run_code_autocomplete st search_term =
   let result = QH.ck_completion st search_term in

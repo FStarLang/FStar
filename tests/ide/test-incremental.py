@@ -5,6 +5,7 @@ import sys
 import subprocess
 import json
 import re
+import hashlib
 
 
 # The path to the F* executable
@@ -46,6 +47,52 @@ def get_contents_in_range(file_lines, start_pos, end_pos):
     lines = "\n".join(lines)
     return lines
 
+def check_one_fragment(file_lines, json_objects, from_line):
+    l = from_line
+    # The line from_line is the first line of the fragment
+    if json_objects[l]["kind"] != "message" or json_objects[l]["level"] != "progress" or json_objects[l]["contents"]["stage"] != "full-buffer-fragment-started":
+        print(f"Expected a full-buffer-fragment-started message at line {l} got {json_objects[l]}")
+        return None
+    l += 1
+    if json_objects[l]["kind"] != "message" or json_objects[l]["level"] != "progress" or json_objects[l]["contents"]["stage"] != "full-buffer-fragment-lax-ok":
+        print(f"Expected a full-buffer-fragment-lax-ok message at line {l} got {json_objects[l]}")
+        return None
+    lax_ok = json_objects[l]["contents"]
+    code_frag = lax_ok["code-fragment"]
+    start_pos = code_frag["range"]["beg"]
+    end_pos = code_frag["range"]["end"]
+    last_fragment_end = end_pos
+    lines = get_contents_in_range(file_lines, start_pos, end_pos)
+    # compute an MD5 hash of the lines
+    # if the hash does not match the hash in the message, print an error message
+    # and return False
+    hash = hashlib.md5(lines.encode()).hexdigest()
+    if hash != code_frag["code-digest"]:
+        print(f"Hash does not match: Expected {hash} but got {code_frag['code-digest']}")
+        return None
+    # # join the lines together with newlines
+    # if code_frag["code"] != lines:
+    #     print(f"Code fragment does not match the code: Expected {code_frag['code']} but got {lines}")
+    #     return None
+    l += 1
+    # Next line has the form {"kind":"response","query-id":"2.91","status":"success","response":[]}
+    if json_objects[l]["kind"] != "response":
+        return None
+    if json_objects[l]["status"] != "success":
+        return None
+    l += 1
+    # Next several lines have status "success" and kind=response
+    while (l < len(json_objects)):
+        # print(f"Checking line {l} contents {json_objects[l]}")
+        # if the line has a status field
+        if json_objects[l]["kind"] != "response":
+            break
+        if json_objects[l]["status"] != "success":
+            print(f"Expected a success response at line {l} got {json_objects[l]}")
+            return None
+        l += 1
+    return (l, last_fragment_end)
+
 # A function to validate the response from F* interactive mode
 def validate_response(response, file_contents):
     file_lines = file_contents.splitlines()
@@ -74,40 +121,46 @@ def validate_response(response, file_contents):
     if json_objects[1]["status"] != "success":
         print("Second line does not have status success")
         return False
-  
+
+    l = 2
+    if json_objects[l]["level"] != "progress" or json_objects[l]["contents"]["stage"] != "full-buffer-started":
+        print("Third line is not a message")
+        return False
+    
+    l=3
     # Third line has the form {"kind":"message","query-id":"2","level":"info","contents":"Parsed 138 declarations\n"}
-    if json_objects[2]["kind"] != "message":
-        print(f"Second line is not a message {json_objects[2]}")
+    if json_objects[l]["kind"] != "message":
+        print(f"Third line is not a message {json_objects[2]}")
         return False
-    if json_objects[2]["query-id"] != "2":
-        print("Second line does not have query-id 2")
+    if json_objects[l]["query-id"] != "2":
+        print("Third line does not have query-id 2")
         return False
-    if json_objects[2]["level"] != "info":
-        print("Second line does not have level info")
+    if json_objects[l]["level"] != "info":
+        print("Third line does not have level info")
         return False
     # the contents should match a regular expression of the form "Parsed \d+ declarations"
     # store the number of declarations in a variable
-    if not re.match(r"Parsed \d+ declarations", json_objects[2]["contents"]):
+    if not re.match(r"Parsed \d+ declarations", json_objects[l]["contents"]):
         print("Second line does not have the correct contents")
         return False
     # Check that the number of declarations is 138
-    num_decls = int(re.search(r"\d+", json_objects[2]["contents"]).group())
- 
+    num_decls = int(re.search(r"\d+", json_objects[l]["contents"]).group())
+    l=4
     # Fourth line has kind "message" and level "progress" and contents.stage = "full-buffer-fragment-started"
-    if json_objects[3]["kind"] != "message":
+    if json_objects[l]["kind"] != "message":
         print("Third line is not a message")
         return False
-    if json_objects[3]["level"] != "progress":
+    if json_objects[l]["level"] != "progress":
         print("Third line does not have level progress")
         return False
-    if json_objects[3]["contents"]["stage"] != "full-buffer-fragment-started":
+    if json_objects[l]["contents"]["stage"] != "full-buffer-fragment-started":
         print("Third line does not have stage full-buffer-fragment-started")
         return False
-
+    l=5
     # Next several messages are progress messages with contents.stage = "loading-dependency"
     # Check all of these messages for the correct kind, level, and stage and stop
     # when the first message with a different kind or level or stage is found
-    for i in range(4, len(json_objects) - 1):
+    for i in range(l, len(json_objects) - 1):
         if json_objects[i]["kind"] != "message":
             break
         if json_objects[i]["level"] != "progress":
@@ -118,10 +171,17 @@ def validate_response(response, file_contents):
     if json_objects[i]["contents"]["stage"] != None:
         print(f"Message {i} has contents {json_objects[i]} does not have stage None")
         return False
+    i += 1
     # the next message has conents.stage = "full-buffer-fragment-lax-ok"
-    if json_objects[i + 1]["contents"]["stage"] != "full-buffer-fragment-lax-ok":
+    if json_objects[i]["contents"]["stage"] != "full-buffer-fragment-lax-ok":
         print("Message does not have stage full-buffer-fragment-lax-ok")
         return False
+    i += 1
+    # the next message has conents.stage = "full-buffer-fragment-lax-ok"
+    if json_objects[i]["status"] != "success":
+        print(f"Message does not have success message at line {i}")
+        return False
+    i += 1
     # Then, we have a sequence of pairs of messages
     # where the first message in the pair has contents.stage = "full-buffer-fragment-started"
     # and the second message in the pair has contents.stage = "full-buffer-fragment-lax-ok"
@@ -131,28 +191,18 @@ def validate_response(response, file_contents):
     # The second message in the pair has contents.stage = "full-buffer-fragment-lax-ok"
     num_successes = 1
     last_fragment_end = [0, 0]
-    for j in range(i + 2, len(json_objects) - 1, 2):
-        if json_objects[j]["kind"] != "message":
+    while (i < len(json_objects) - 1):
+        if json_objects[i]["kind"] != "message":
             break
-        if json_objects[j]["level"] != "progress":
+        if json_objects[i]["level"] != "progress":
             break
-        if json_objects[j]["contents"]["stage"] != "full-buffer-fragment-started":
+        if json_objects[i]["contents"]["stage"] != "full-buffer-fragment-started":
             break
-        if json_objects[j + 1]["contents"]["stage"] != "full-buffer-fragment-lax-ok":
-            break
-        # {"stage":"full-buffer-fragment-lax-ok","ranges":{"fname":"<input>","beg":[16,0],"end":[16,29]},"code-fragment":{"range":{"fname":"<input>","beg":[16,0],"end":[16,29]},"code":"module FStar.Reflection.Arith"}
-        lax_ok = json_objects[j + 1]["contents"]
-        code_frag = lax_ok["code-fragment"]
-        start_pos = code_frag["range"]["beg"]
-        end_pos = code_frag["range"]["end"]
-        last_fragment_end = end_pos
-        lines = get_contents_in_range(file_lines, start_pos, end_pos)
-        # join the lines together with newlines
-        if code_frag["code"] != lines:
-            print(f"Code fragment does not match the code: Expected {code_frag['code']} but got {lines}")
+        res = check_one_fragment(file_lines, json_objects, i)
+        if res == None:
             return False
-        num_successes = num_successes + 1
-
+        (i, last_fragment_end) = res
+        num_successes += 1
     remaining_lines = get_contents_in_range(file_lines, last_fragment_end, None)
     remaining_lines = remaining_lines.strip()
     if remaining_lines != "" and not (is_comment(remaining_lines)):
@@ -162,24 +212,16 @@ def validate_response(response, file_contents):
         print(f"Number of successes {num_successes} does not match number of declarations {num_decls}")
         return False
     
-    # The next sequence of messages have status success and query-id "2"
-    # Check all of these messages for the correct kind and status and stop
-    # when the first message with a different kind or status is found
-    for k in range(j + 1, len(json_objects)):
-        if json_objects[k]["kind"] != "response":
-            break
-        if json_objects[k]["status"] != "success":
-            break
-        if json_objects[k]["query-id"] != "2":
-            break
-
-    # check that k is the index of the last message
-    if k != len(json_objects) - 1:
-        print(f"Unexpected last message at index {k}, contents = {json_objects[k]}")
+    # check that i is the index of the secod last message
+    if i != len(json_objects) - 2:
+        print(f"Unexpected last message at index {i}, contents = {json_objects[i]}")
         return False
-
+    if json_objects[i]["kind"] != "message" or json_objects[i]["level"] != "progress" or json_objects[i]["contents"]["stage"] != "full-buffer-finished":
+        print(f"Unexpected last message at index {i}, contents = {json_objects[i]}")
+        return False
+    i += 1
     # The last message has query-id "3" and status "success"
-    if json_objects[k]["query-id"] != "3":
+    if json_objects[i]["query-id"] != "3":
         print("Last message does not have query-id 3")
         return False
     
@@ -201,9 +243,9 @@ def test_file(file):
     # The first line is a JSON object initializing the ide
     # The second line is a JSON object containing the contents of the file
     # The third line is an exit command
-    request = f'{{"query-id":"1", "query": "vfs-add", "args":{{"filename":null, "contents": {json_contents}}}}}\n{{"query-id":"2", "query": "full-buffer", "args":{{"kind": "lax-with-symbols", "code": {json_contents}, "line":1, "column":0}}}}\n{{"query-id":"3", "query": "exit", "args":{{}}}}\n'
+    request = f'{{"query-id":"1", "query": "vfs-add", "args":{{"filename":null, "contents": {json_contents}}}}}\n{{"query-id":"2", "query": "full-buffer", "args":{{"kind": "lax", "with-symbols":true, "code": {json_contents}, "line":1, "column":0}}}}\n{{"query-id":"3", "query": "exit", "args":{{}}}}\n'
     # print the request to the console for debugging
-    #print(request)
+    # print(request)
     # Run fstar on the file with the request as stdin
     p = subprocess.run([fstar, "--admit_smt_queries", "true", "--ide", file], input=request, encoding="utf-8", stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     # Read the response from stdout
