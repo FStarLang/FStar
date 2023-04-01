@@ -242,7 +242,7 @@ let (inspect_repl_stack :
                   match uu___1 with | (uu___2, (p, uu___3)) -> p in
                 let rec matching_prefix accum lookups entries2 ds1 =
                   match (entries2, ds1) with
-                  | ([], []) -> return ([], accum)
+                  | ([], []) -> return (lookups, accum)
                   | (e::entries3, d::ds2) ->
                       (match repl_task1 e with
                        | FStar_Interactive_Ide_Types.Noop ->
@@ -256,8 +256,9 @@ let (inspect_repl_stack :
                                 op_let_Bang uu___4
                                   (fun pushes ->
                                      return
-                                       ((FStar_Compiler_List.op_At pops
-                                           pushes), accum)))
+                                       ((FStar_Compiler_List.op_At lookups
+                                           (FStar_Compiler_List.op_At pops
+                                              pushes)), accum)))
                        | FStar_Interactive_Ide_Types.PushFragment
                            (FStar_Pervasives.Inr d', pk, issues) ->
                            let uu___1 =
@@ -299,10 +300,17 @@ let (inspect_repl_stack :
                   | ([], ds2) ->
                       let uu___1 = push_decls1 ds2 in
                       op_let_Bang uu___1
-                        (fun pushes -> return (pushes, accum))
+                        (fun pushes ->
+                           return
+                             ((FStar_Compiler_List.op_At lookups pushes),
+                               accum))
                   | (es, []) ->
                       let uu___1 = pop_entries es in
-                      op_let_Bang uu___1 (fun pops -> return (pops, accum)) in
+                      op_let_Bang uu___1
+                        (fun pops ->
+                           return
+                             ((FStar_Compiler_List.op_At lookups pops),
+                               accum)) in
                 matching_prefix [] [] entries1 ds
 let reload_deps :
   'uuuuu 'uuuuu1 .

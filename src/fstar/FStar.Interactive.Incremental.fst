@@ -185,7 +185,7 @@ let inspect_repl_stack (s:repl_stack_t)
         : qst (list query & list json)
         = match entries, ds with
           | [], [] ->
-            return ([], accum)
+            return (lookups, accum)
             
           | e::entries, d::ds -> (
             match repl_task e with
@@ -194,7 +194,7 @@ let inspect_repl_stack (s:repl_stack_t)
             | PushFragment (Inl frag, _, _) ->
               let! pops = pop_entries (e::entries) in
               let! pushes = push_decls (d::ds) in
-              return (pops @ pushes, accum)
+              return (lookups @ pops @ pushes, accum)
             | PushFragment (Inr d', pk, issues) ->
               if eq_decl (fst d) d'
               then (
@@ -213,11 +213,11 @@ let inspect_repl_stack (s:repl_stack_t)
 
          | [], ds ->
            let! pushes = push_decls ds in
-           return (pushes, accum)
+           return (lookups@pushes, accum)
 
          | es, [] ->
            let! pops = pop_entries es in
-           return (pops, accum)
+           return (lookups@pops, accum)
       in
       matching_prefix [] [] entries ds 
 
